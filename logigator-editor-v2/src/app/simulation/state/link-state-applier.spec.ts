@@ -118,6 +118,24 @@ describe('LinkStateApplier', () => {
     expect(applier.consumeChanged()).toBe(false);
   });
 
+  it('counts visible link flips only, cumulatively', () => {
+    const wire = stubWire();
+    // Link 0 carries a target, link 1 is an empty sparse slot.
+    const applier = new LinkStateApplier([target([wire]), target([])]);
+
+    expect(applier.switchedLinks).toBe(0);
+    // An empty slot flips state but has no visual — not counted.
+    applier.setLink(1, true);
+    expect(applier.switchedLinks).toBe(0);
+    applier.setLink(0, true);
+    applier.setLink(0, false);
+    // A no-op re-apply is not a flip.
+    applier.setLink(0, false);
+    expect(applier.switchedLinks).toBe(2);
+    // Denominator for the activity percentage: the full link-id space.
+    expect(applier.totalLinks).toBe(2);
+  });
+
   it('resets every powered link to unpowered', () => {
     const wires = [stubWire(), stubWire()];
     const applier = new LinkStateApplier(wires.map((w) => target([w])));

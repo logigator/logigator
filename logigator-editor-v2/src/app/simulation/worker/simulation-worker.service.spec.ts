@@ -217,6 +217,40 @@ describe('SimulationWorkerService', () => {
     expect(wire.setPowered).toHaveBeenCalledExactlyOnceWith(true);
   });
 
+  it('tallies full and delta snapshots (empty deltas included)', async () => {
+    await service.startSession(DESCRIPTOR, hooks);
+    expect(service.snapshotCounts).toEqual({ full: 0, delta: 0 });
+
+    const emitDelta = (reqId: number, ids: number[], values: number[]): void =>
+      fakeWorker.emit({
+        kind: 'snapshot',
+        reqId,
+        tick: reqId,
+        isDelta: true,
+        ...packSnapshot(
+          undefined,
+          new Uint8Array(new Uint32Array(ids).buffer),
+          new Uint8Array(values)
+        )
+      });
+
+    emitDelta(1, [0], [0b1]);
+    emitDelta(2, [], []); // empty delta still counts
+    fakeWorker.emit({
+      kind: 'snapshot',
+      reqId: 3,
+      tick: 3,
+      isDelta: false,
+      ...packSnapshot(undefined, null, new Uint8Array([0b1]))
+    });
+
+    expect(service.snapshotCounts).toEqual({ full: 1, delta: 2 });
+
+    // A fresh session resets the tallies.
+    await service.startSession(DESCRIPTOR, hooks);
+    expect(service.snapshotCounts).toEqual({ full: 0, delta: 0 });
+  });
+
   it('computes the measured rate from consecutive status reports', async () => {
     await service.startSession(DESCRIPTOR, hooks);
 

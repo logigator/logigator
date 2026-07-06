@@ -5,6 +5,7 @@ import { RendererType, type Renderer, type WebGLRenderer } from 'pixi.js';
 import { environment } from '../../environments/environment';
 import { ProjectService } from '../project/project.service';
 import { BoardCompilerService } from '../simulation/compiler/board-compiler.service';
+import { SimulationService } from '../simulation/simulation.service';
 import { RendererService } from '../rendering/renderer.service';
 import { PersistenceService } from '../persistence/persistence.service';
 import { ToastService } from '../logging/toast.service';
@@ -21,6 +22,7 @@ import { pickTextFile } from '../utils/file-picker';
 export class DebugMenuService {
   private readonly projectService = inject(ProjectService);
   private readonly boardCompiler = inject(BoardCompilerService);
+  private readonly simulation = inject(SimulationService);
   private readonly rendererService = inject(RendererService);
   private readonly persistence = inject(PersistenceService);
   private readonly toast = inject(ToastService);
@@ -40,6 +42,10 @@ export class DebugMenuService {
         {
           label: 'Print renderer mode',
           command: () => this.printRendererMode()
+        },
+        {
+          label: 'Print simulation snapshot stats',
+          command: () => this.printSnapshotStats()
         },
         { label: 'Spawn test toasts', command: () => this.spawnTestToasts() },
         { separator: true },
@@ -76,6 +82,38 @@ export class DebugMenuService {
     const mode = this.rendererMode(renderer);
     console.log('[debug] renderer mode:', mode, renderer);
     this.toast.info(`Renderer: ${mode}`, 'DebugMenuService');
+  }
+
+  /**
+   * Dumps the running session's snapshot tallies: full vs delta snapshot
+   * counts and the average number of visible link flips per snapshot (how
+   * active the board is). A high full-snapshot share means the engine keeps
+   * exceeding its delta threshold — a very busy board.
+   */
+  private printSnapshotStats(): void {
+    const stats = this.simulation.snapshotStats;
+    if (!stats) {
+      this.toast.warn('No active simulation session.', 'DebugMenuService');
+      return;
+    }
+    const fullPercent =
+      stats.total > 0 ? Math.round((stats.full / stats.total) * 100) : 0;
+    console.log('[debug] simulation snapshots', {
+      full: stats.full,
+      delta: stats.delta,
+      total: stats.total,
+      fullPercent,
+      switchedLinks: stats.switchedLinks,
+      totalLinks: stats.totalLinks,
+      avgSwitchedPerFrame: +stats.avgSwitchedPerFrame.toFixed(1),
+      avgSwitchedPercent: +stats.avgSwitchedPercent.toFixed(2)
+    });
+    this.toast.info(
+      `Snapshots: ${stats.full} full (${fullPercent}%) / ${stats.delta} delta · ` +
+        `~${stats.avgSwitchedPerFrame.toFixed(1)} links/frame ` +
+        `(${stats.avgSwitchedPercent.toFixed(2)}% of ${stats.totalLinks})`,
+      'DebugMenuService'
+    );
   }
 
   /** Fires one toast of every severity to eyeball the stack and its styling. */

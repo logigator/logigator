@@ -24,6 +24,7 @@ export interface SnapshotApplier {
 export class LinkStateApplier implements SnapshotApplier {
   private readonly _powered: boolean[];
   private _changed = false;
+  private _switchedLinks = 0;
 
   constructor(private readonly targets: readonly LinkRenderTargets[]) {
     this._powered = targets.map(() => false);
@@ -36,6 +37,7 @@ export class LinkStateApplier implements SnapshotApplier {
     }
     if (target.wires.length > 0 || target.ports.length > 0) {
       this._changed = true;
+      this._switchedLinks++;
     }
     this._powered[linkId] = powered;
     for (const wire of target.wires) {
@@ -59,6 +61,20 @@ export class LinkStateApplier implements SnapshotApplier {
     const changed = this._changed;
     this._changed = false;
     return changed;
+  }
+
+  /**
+   * Cumulative count of visible link state flips since construction — a link
+   * with at least one wire or port stub, counted each time its powered state
+   * actually changes. A debug measure of how much of the board is switching.
+   */
+  public get switchedLinks(): number {
+    return this._switchedLinks;
+  }
+
+  /** Total number of links in the session (the dense link-id space). */
+  public get totalLinks(): number {
+    return this._powered.length;
   }
 
   /** Delta snapshot: bit `i` of `packedValues` is the new state of `ids[i]`. */

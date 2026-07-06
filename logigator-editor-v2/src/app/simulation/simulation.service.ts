@@ -119,6 +119,40 @@ export class SimulationService {
   }
 
   /**
+   * Debug telemetry for the running session: how many full vs delta snapshots
+   * have been applied, and how many visible link flips they carried on average
+   * (a measure of board activity). Null when no session's applier exists.
+   */
+  public get snapshotStats(): {
+    full: number;
+    delta: number;
+    total: number;
+    switchedLinks: number;
+    totalLinks: number;
+    avgSwitchedPerFrame: number;
+    avgSwitchedPercent: number;
+  } | null {
+    const applier = this._applier;
+    if (!applier) {
+      return null;
+    }
+    const { full, delta } = this.workerService.snapshotCounts;
+    const total = full + delta;
+    const totalLinks = applier.totalLinks;
+    const avgSwitchedPerFrame = total > 0 ? applier.switchedLinks / total : 0;
+    return {
+      full,
+      delta,
+      total,
+      switchedLinks: applier.switchedLinks,
+      totalLinks,
+      avgSwitchedPerFrame,
+      avgSwitchedPercent:
+        totalLinks > 0 ? (avgSwitchedPerFrame / totalLinks) * 100 : 0
+    };
+  }
+
+  /**
    * Registers a secondary applier (a watch over an inner circuit) to receive
    * every snapshot alongside the board applier. Returns the unregister
    * function. The registration does not survive the session — exit() clears

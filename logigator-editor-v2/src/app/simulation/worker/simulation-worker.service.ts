@@ -91,11 +91,10 @@ export class SimulationWorkerService {
   private statusTimer: ReturnType<typeof setInterval> | null = null;
   private snapshotInFlight = false;
   private wantFullSnapshot = false;
-  // Whether the in-flight snapshot request asked for a full one — lets the
-  // handler tell a routine full (seed/reset) from an engine delta→full fallback.
-  private lastRequestedFull = false;
-  // Gates the one first-snapshot debug line per session (never per frame).
-  private loggedFirstSnapshot = false;
+  // Debug tallies of snapshots applied this session, by kind (empty deltas
+  // included). Read via {@link snapshotCounts}; reset per session.
+  private fullSnapshots = 0;
+  private deltaSnapshots = 0;
   private lastStatus: { tick: number; at: number } | null = null;
 
   private readonly _measuredHz = signal(0);
@@ -107,6 +106,15 @@ export class SimulationWorkerService {
   public readonly tick = this._tick.asReadonly();
 
   /**
+   * Snapshots applied since the session started, split by kind (`full` counts
+   * engine delta→full fallbacks and seed/reset fulls alike; `delta` counts
+   * empty deltas too). A debug readout — reset on every {@link startSession}.
+   */
+  public get snapshotCounts(): { full: number; delta: number } {
+    return { full: this.fullSnapshots, delta: this.deltaSnapshots };
+  }
+
+  /**
    * Spawns the worker, waits for the WASM engine to come up, and builds the
    * simulation from the descriptor. Resolves once the session can run.
    */
@@ -116,7 +124,8 @@ export class SimulationWorkerService {
   ): Promise<void> {
     this.endSession();
     this.hooks = hooks;
-    this.loggedFirstSnapshot = false;
+    this.fullSnapshots = 0;
+    this.deltaSnapshots = 0;
     const worker = this.createWorker();
     this.worker = worker;
     const ready = new Promise<void>((resolve, reject) => {
@@ -289,7 +298,6 @@ export class SimulationWorkerService {
     this.snapshotInFlight = true;
     const full = this.wantFullSnapshot;
     this.wantFullSnapshot = false;
-    this.lastRequestedFull = full;
     this._post({ kind: 'requestSnapshot', full });
   }
 
@@ -377,19 +385,10 @@ export class SimulationWorkerService {
       case 'snapshot': {
         this.snapshotInFlight = false;
         this._tick.set(msg.tick);
-        // Rate-limited debug only: the first snapshot of the session, and any
-        // engine delta→full fallback (a full arrived where a delta was asked).
-        if (!this.loggedFirstSnapshot) {
-          this.loggedFirstSnapshot = true;
-          this.logging.debug(
-            `first snapshot (isDelta=${msg.isDelta}, tick=${msg.tick})`,
-            'SimulationWorker'
-          );
-        } else if (!msg.isDelta && !this.lastRequestedFull) {
-          this.logging.debug(
-            `delta→full fallback at tick ${msg.tick}`,
-            'SimulationWorker'
-          );
+        if (msg.isDelta) {
+          this.deltaSnapshots++;
+        } else {
+          this.fullSnapshots++;
         }
         const applier = this.hooks?.applier;
         if (applier) {
