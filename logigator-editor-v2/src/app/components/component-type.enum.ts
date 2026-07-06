@@ -16,6 +16,8 @@ export const enum BuiltInComponentType {
   RNG = 16,
   DECODER = 18,
   ENCODER = 19,
+  MUX = 20,
+  DEMUX = 21,
   // INPUT/OUTPUT plug components define a custom component's ports.
   INPUT = 100,
   OUTPUT = 101,

@@ -130,6 +130,22 @@ const en = {
         description:
           '2^n-to-n binary encoder. Outputs the binary index of the highest powered input.'
       },
+      MUX: {
+        name: 'Multiplexer',
+        description:
+          'Routes the data input addressed by the select lines to the single output.',
+        options: {
+          selectLines: 'Select lines'
+        }
+      },
+      DEMUX: {
+        name: 'Demultiplexer',
+        description:
+          'Routes the data input I to the output addressed by the select lines.',
+        options: {
+          selectLines: 'Select lines'
+        }
+      },
       TEXT: {
         name: 'Text',
         description:

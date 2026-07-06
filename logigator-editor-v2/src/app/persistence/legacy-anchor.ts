@@ -38,6 +38,8 @@ export const LEGACY_BODY_WIDTHS: Record<number, number> = {
   [BuiltInComponentType.RNG]: 3,
   [BuiltInComponentType.DECODER]: 3,
   [BuiltInComponentType.ENCODER]: 3,
+  [BuiltInComponentType.MUX]: 3,
+  [BuiltInComponentType.DEMUX]: 3,
   [BuiltInComponentType.INPUT]: 1,
   [BuiltInComponentType.OUTPUT]: 1,
   [BuiltInComponentType.BUTTON]: 1,

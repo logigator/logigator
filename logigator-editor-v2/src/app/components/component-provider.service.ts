@@ -16,6 +16,8 @@ import { srFfComponentConfig } from './component-types/sr-ff/sr-ff.config';
 import { rngComponentConfig } from './component-types/rng/rng.config';
 import { decoderComponentConfig } from './component-types/decoder/decoder.config';
 import { encoderComponentConfig } from './component-types/encoder/encoder.config';
+import { muxComponentConfig } from './component-types/mux/mux.config';
+import { demuxComponentConfig } from './component-types/demux/demux.config';
 import { textComponentConfig } from './component-types/text/text.config';
 import { inputComponentConfig } from './component-types/input/input.config';
 import { outputComponentConfig } from './component-types/output/output.config';
@@ -39,6 +41,8 @@ const BUILT_IN_COMPONENTS: ComponentConfig<any>[] = [
   rngComponentConfig,
   decoderComponentConfig,
   encoderComponentConfig,
+  muxComponentConfig,
+  demuxComponentConfig,
   textComponentConfig,
   inputComponentConfig,
   outputComponentConfig,

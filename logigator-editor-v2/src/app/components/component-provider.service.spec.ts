@@ -74,10 +74,12 @@ describe('ComponentProviderService', () => {
         BuiltInComponentType.SR_FF,
         BuiltInComponentType.RNG,
         BuiltInComponentType.DECODER,
-        BuiltInComponentType.ENCODER
+        BuiltInComponentType.ENCODER,
+        BuiltInComponentType.MUX,
+        BuiltInComponentType.DEMUX
       ])
     );
-    expect(service.advancedComponents().map((c) => c.type)).toHaveLength(9);
+    expect(service.advancedComponents().map((c) => c.type)).toHaveLength(11);
     expect(service.userComponents()).toEqual([]);
     // TODO: vitest-migration: Verify this matches strict array content (multiset equality). Vitest's arrayContaining is a subset check.
     expect(service.ioComponents().map((c) => c.type)).toHaveLength(2);

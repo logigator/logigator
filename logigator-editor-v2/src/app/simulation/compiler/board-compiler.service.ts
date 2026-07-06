@@ -42,6 +42,8 @@ const UNIT_TYPES: ReadonlySet<number> = new Set([
   BuiltInComponentType.RNG,
   BuiltInComponentType.DECODER,
   BuiltInComponentType.ENCODER,
+  BuiltInComponentType.MUX,
+  BuiltInComponentType.DEMUX,
   BuiltInComponentType.BUTTON,
   BuiltInComponentType.LEVER,
   BuiltInComponentType.ROM
@@ -193,6 +195,8 @@ export class BoardCompilerService {
       }
       case BuiltInComponentType.CLOCK:
         return { ops: [component.options['speed'].value as number] };
+      case BuiltInComponentType.MUX:
+        return { ops: [component.options['selectLines'].value as number] };
       default:
         return {};
     }
