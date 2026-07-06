@@ -24,6 +24,8 @@ import { BuiltInComponentType } from '../components/component-type.enum';
 export const LEGACY_BODY_WIDTHS: Record<number, number> = {
   [BuiltInComponentType.NOT]: 2,
   [BuiltInComponentType.AND]: 2,
+  [BuiltInComponentType.OR]: 2,
+  [BuiltInComponentType.XOR]: 2,
   [BuiltInComponentType.TEXT]: 1,
   [BuiltInComponentType.ROM]: 3,
   [BuiltInComponentType.INPUT]: 1,

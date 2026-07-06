@@ -98,7 +98,7 @@ describe('v0ToV1Migration', () => {
     const result = migrate({
       project: {
         elements: [
-          { t: 3, p: [0, 0] }, // OR — not supported in v1
+          { t: 98, p: [0, 0] }, // unassigned built-in id — unknown
           { t: 1, p: [5, 5], i: 1, o: 1 } // NOT — supported
         ]
       }
@@ -107,7 +107,7 @@ describe('v0ToV1Migration', () => {
     expect(result.components.length).toBe(1);
     expect(result.components[0].type).toBe(1);
     expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining('Unknown component type ID: 3'),
+      expect.stringContaining('Unknown component type ID: 98'),
       'v0ToV1Migration'
     );
   });

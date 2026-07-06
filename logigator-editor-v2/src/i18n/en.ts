@@ -56,6 +56,16 @@ const en = {
         description:
           'A AND gate is a digital logic gate that implements logical conjunction. It behaves according to the truth table shown at right. A HIGH output (1) results only if both the inputs to the AND gate are HIGH (1). If neither or only one input to the AND gate is HIGH, a LOW output results.'
       },
+      OR: {
+        name: 'OR Gate',
+        description:
+          'An OR gate is a digital logic gate that implements logical disjunction. A HIGH output (1) results if at least one input to the OR gate is HIGH (1). Only if every input is LOW (0), a LOW output results.'
+      },
+      XOR: {
+        name: 'XOR Gate',
+        description:
+          'An XOR gate is a digital logic gate that implements exclusive disjunction. A HIGH output (1) results if an odd number of inputs to the XOR gate are HIGH (1).'
+      },
       ROM: {
         name: 'ROM',
         description:

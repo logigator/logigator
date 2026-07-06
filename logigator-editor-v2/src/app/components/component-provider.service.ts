@@ -3,6 +3,8 @@ import { ComponentConfig } from './component-config.model';
 import { ComponentCategory } from './component-category.enum';
 import { notComponentConfig } from './component-types/not/not.config';
 import { andComponentConfig } from './component-types/and/and.config';
+import { orComponentConfig } from './component-types/or/or.config';
+import { xorComponentConfig } from './component-types/xor/xor.config';
 import { romComponentConfig } from './component-types/rom/rom.config';
 import { textComponentConfig } from './component-types/text/text.config';
 import { inputComponentConfig } from './component-types/input/input.config';
@@ -14,6 +16,8 @@ import { leverComponentConfig } from './component-types/lever/lever.config';
 const BUILT_IN_COMPONENTS: ComponentConfig<any>[] = [
   notComponentConfig,
   andComponentConfig,
+  orComponentConfig,
+  xorComponentConfig,
   romComponentConfig,
   textComponentConfig,
   inputComponentConfig,

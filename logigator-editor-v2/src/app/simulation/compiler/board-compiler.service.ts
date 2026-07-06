@@ -30,6 +30,8 @@ import {
 const UNIT_TYPES: ReadonlySet<number> = new Set([
   BuiltInComponentType.NOT,
   BuiltInComponentType.AND,
+  BuiltInComponentType.OR,
+  BuiltInComponentType.XOR,
   BuiltInComponentType.BUTTON,
   BuiltInComponentType.LEVER,
   BuiltInComponentType.ROM
