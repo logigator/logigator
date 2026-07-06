@@ -100,6 +100,21 @@ const en = {
           dataEditorTitle: 'Edit ROM contents'
         }
       },
+      D_FF: {
+        name: 'D Flip-Flop',
+        description:
+          'Holds one bit of state. The state on D is saved on the rising edge of CLK; Q carries the state and !Q its inverse.'
+      },
+      JK_FF: {
+        name: 'JK Flip-Flop',
+        description:
+          'Holds one bit of state. On the rising edge of CLK, a HIGH J sets and a HIGH K resets the state; both HIGH toggle it. Q carries the state and !Q its inverse.'
+      },
+      SR_FF: {
+        name: 'SR Flip-Flop',
+        description:
+          'Holds one bit of state. On the rising edge of CLK, a HIGH S sets and a HIGH R resets the state. Q carries the state and !Q its inverse.'
+      },
       TEXT: {
         name: 'Text',
         description:

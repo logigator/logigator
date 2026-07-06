@@ -68,10 +68,13 @@ describe('ComponentProviderService', () => {
       expect.arrayContaining([
         BuiltInComponentType.HALF_ADDER,
         BuiltInComponentType.FULL_ADDER,
-        BuiltInComponentType.ROM
+        BuiltInComponentType.ROM,
+        BuiltInComponentType.D_FF,
+        BuiltInComponentType.JK_FF,
+        BuiltInComponentType.SR_FF
       ])
     );
-    expect(service.advancedComponents().map((c) => c.type)).toHaveLength(3);
+    expect(service.advancedComponents().map((c) => c.type)).toHaveLength(6);
     expect(service.userComponents()).toEqual([]);
     // TODO: vitest-migration: Verify this matches strict array content (multiset equality). Vitest's arrayContaining is a subset check.
     expect(service.ioComponents().map((c) => c.type)).toHaveLength(2);

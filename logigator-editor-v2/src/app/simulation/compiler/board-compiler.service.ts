@@ -36,6 +36,9 @@ const UNIT_TYPES: ReadonlySet<number> = new Set([
   BuiltInComponentType.CLOCK,
   BuiltInComponentType.HALF_ADDER,
   BuiltInComponentType.FULL_ADDER,
+  BuiltInComponentType.D_FF,
+  BuiltInComponentType.JK_FF,
+  BuiltInComponentType.SR_FF,
   BuiltInComponentType.BUTTON,
   BuiltInComponentType.LEVER,
   BuiltInComponentType.ROM

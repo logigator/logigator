@@ -10,6 +10,9 @@ export const enum BuiltInComponentType {
   HALF_ADDER = 10,
   FULL_ADDER = 11,
   ROM = 12,
+  D_FF = 13,
+  JK_FF = 14,
+  SR_FF = 15,
   // INPUT/OUTPUT plug components define a custom component's ports.
   INPUT = 100,
   OUTPUT = 101,

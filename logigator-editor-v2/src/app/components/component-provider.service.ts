@@ -10,6 +10,9 @@ import { clockComponentConfig } from './component-types/clock/clock.config';
 import { halfAdderComponentConfig } from './component-types/half-adder/half-adder.config';
 import { fullAdderComponentConfig } from './component-types/full-adder/full-adder.config';
 import { romComponentConfig } from './component-types/rom/rom.config';
+import { dFfComponentConfig } from './component-types/d-ff/d-ff.config';
+import { jkFfComponentConfig } from './component-types/jk-ff/jk-ff.config';
+import { srFfComponentConfig } from './component-types/sr-ff/sr-ff.config';
 import { textComponentConfig } from './component-types/text/text.config';
 import { inputComponentConfig } from './component-types/input/input.config';
 import { outputComponentConfig } from './component-types/output/output.config';
@@ -27,6 +30,9 @@ const BUILT_IN_COMPONENTS: ComponentConfig<any>[] = [
   halfAdderComponentConfig,
   fullAdderComponentConfig,
   romComponentConfig,
+  dFfComponentConfig,
+  jkFfComponentConfig,
+  srFfComponentConfig,
   textComponentConfig,
   inputComponentConfig,
   outputComponentConfig,
