@@ -24,7 +24,6 @@ const en = {
     copy: 'Copy',
     follow: 'Follow',
     clearConfirm: 'Clear all memory contents?',
-    copied: 'Copied to clipboard.',
     copyFailed: 'Could not copy to clipboard.'
   },
   settings: {
@@ -464,9 +463,6 @@ const en = {
       'Something went wrong. Some actions may not have completed — see the browser console for details.'
   },
   clipboard: {
-    nothingToCopy: 'Nothing selected to copy.',
-    nothingToCut: 'Nothing selected to cut.',
-    empty: 'Clipboard is empty.',
     pastePartial:
       'Some elements could not be pasted — their component type is no longer available.'
   },

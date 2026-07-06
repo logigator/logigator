@@ -35,7 +35,6 @@ export class ClipboardService {
   public copy(project: Project): void {
     const sm = project.selectionManager;
     if (sm.isEmpty) {
-      this.toast.info(this.transloco.translate('clipboard.nothingToCopy'));
       return;
     }
     this._clipboard = {
@@ -50,7 +49,6 @@ export class ClipboardService {
 
   public cut(project: Project): void {
     if (project.selectionManager.isEmpty) {
-      this.toast.info(this.transloco.translate('clipboard.nothingToCut'));
       return;
     }
     this.copy(project);
@@ -64,7 +62,6 @@ export class ClipboardService {
 
   public paste(project: Project): void {
     if (!this._clipboard) {
-      this.toast.info(this.transloco.translate('clipboard.empty'));
       return;
     }
     const { components, wires } = this._clipboard;
