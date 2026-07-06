@@ -20,6 +20,9 @@ import { WorkMode } from '../../work-mode/work-mode.enum';
 import { TickerScheduler } from '../../rendering/ticker-scheduler';
 import { EditorSettingsService } from '../../settings/editor-settings.service';
 import { FpsCounterComponent } from './fps-counter/fps-counter.component';
+import { LoggingService } from '../../logging/logging.service';
+import { ToastService } from '../../logging/toast.service';
+import { TranslocoService } from '@jsverse/transloco';
 import { PointerController } from '../../rendering/interaction/pointer-controller';
 import { WorkModeRouter } from '../../rendering/interaction/work-mode-router';
 import {
@@ -39,6 +42,9 @@ export class BoardComponent implements OnInit, OnDestroy {
   private readonly assetsService = inject(AssetsService);
   private readonly workModeService = inject(WorkModeService);
   private readonly rendererService = inject(RendererService);
+  private readonly loggingService = inject(LoggingService);
+  private readonly toastService = inject(ToastService);
+  private readonly translocoService = inject(TranslocoService);
   protected readonly editorSettings = inject(EditorSettingsService);
 
   @ViewChild('canvas', { static: true })
@@ -142,39 +148,56 @@ export class BoardComponent implements OnInit, OnDestroy {
   }
 
   async ngOnInit(): Promise<void> {
-    await this.assetsService.init();
+    try {
+      await this.assetsService.init();
 
-    const lease = await this.rendererService.acquire();
-    if (this._destroyed) {
-      lease.release();
-      return;
+      const lease = await this.rendererService.acquire();
+      if (this._destroyed) {
+        lease.release();
+        return;
+      }
+      this._lease = lease;
+
+      this._measureView();
+      // The canvas fills the host via CSS; the backing store follows per render.
+      // Observe the host so layout changes that don't resize the window (e.g.
+      // the side bar disappearing in simulation mode) still resize the board.
+      this._resizeObserver = new ResizeObserver(() => this._onHostResize());
+      this._resizeObserver.observe(this.hostEl.nativeElement);
+
+      this._controller = new PointerController({
+        canvas: this.canvas.nativeElement,
+        project: () => this._router.project,
+        nav: {
+          pan: (delta) => this._router.project?.pan(delta),
+          zoomIn: (center) => this._router.project?.zoomIn(center),
+          zoomOut: (center) => this._router.project?.zoomOut(center),
+          zoomBy: (factor, center) =>
+            this._router.project?.zoomBy(factor, center),
+          setActive: (active) =>
+            this._router.project?.triggerTicker(active ? 'on' : 'off')
+        },
+        tool: this._router,
+        onCursorMove: (grid) => this._cursorMove$.next(grid)
+      });
+
+      this.loaded.set(true);
+
+      // Records which backend (WebGPU/WebGL/Canvas) the shared renderer
+      // settled on when this board acquired it.
+      this.loggingService.debug(
+        'Renderer acquired: ' + this.rendererService.renderer?.type,
+        'BoardComponent'
+      );
+    } catch (err) {
+      // The canvas otherwise silently never appears; keep `loaded` false so the
+      // board stays hidden rather than showing a dead surface.
+      this.toastService.error(
+        this.translocoService.translate('editor.rendererInitFailed'),
+        'BoardComponent',
+        err
+      );
     }
-    this._lease = lease;
-
-    this._measureView();
-    // The canvas fills the host via CSS; the backing store follows per render.
-    // Observe the host so layout changes that don't resize the window (e.g.
-    // the side bar disappearing in simulation mode) still resize the board.
-    this._resizeObserver = new ResizeObserver(() => this._onHostResize());
-    this._resizeObserver.observe(this.hostEl.nativeElement);
-
-    this._controller = new PointerController({
-      canvas: this.canvas.nativeElement,
-      project: () => this._router.project,
-      nav: {
-        pan: (delta) => this._router.project?.pan(delta),
-        zoomIn: (center) => this._router.project?.zoomIn(center),
-        zoomOut: (center) => this._router.project?.zoomOut(center),
-        zoomBy: (factor, center) =>
-          this._router.project?.zoomBy(factor, center),
-        setActive: (active) =>
-          this._router.project?.triggerTicker(active ? 'on' : 'off')
-      },
-      tool: this._router,
-      onCursorMove: (grid) => this._cursorMove$.next(grid)
-    });
-
-    this.loaded.set(true);
   }
 
   ngOnDestroy(): void {

@@ -17,6 +17,7 @@ import { NewComponentDialogComponent } from './new-component-dialog/new-componen
 import { ShortcutManagerComponent } from '../shortcuts/shortcut-manager/shortcut-manager.component';
 import { ExportImageDialogComponent } from './export-image-dialog/export-image-dialog.component';
 import { DebugMenuService } from './debug-menu.service';
+import { ToastService } from '../logging/toast.service';
 
 /**
  * Builds the File/Edit/View/Help menu model and owns the commands behind it.
@@ -35,6 +36,7 @@ export class EditorMenuService {
   private readonly shortcutService = inject(ShortcutService);
   private readonly saveCoordinator = inject(SaveCoordinatorService);
   private readonly debugMenuService = inject(DebugMenuService);
+  private readonly toastService = inject(ToastService);
 
   /**
    * Rebuilt whenever the active language changes so labels stay translated.
@@ -255,8 +257,19 @@ export class EditorMenuService {
 
   private exportFile(): void {
     const project = this.projectService.mainProject();
-    if (project) {
+    if (!project) return;
+    try {
       this.persistenceService.exportProjectToFile(project);
+      this.toastService.success(
+        this.translocoService.translate('persistence.projectExported'),
+        'EditorMenuService'
+      );
+    } catch (err) {
+      this.toastService.error(
+        this.translocoService.translate('persistence.exportFailed'),
+        'EditorMenuService',
+        err
+      );
     }
   }
 

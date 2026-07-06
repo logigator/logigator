@@ -1,10 +1,12 @@
 import {
   ApplicationConfig,
+  ErrorHandler,
   inject,
   isDevMode,
   provideAppInitializer,
   provideZonelessChangeDetection
 } from '@angular/core';
+import { GlobalErrorHandler } from './logging/global-error-handler';
 import { firstValueFrom } from 'rxjs';
 import { provideTransloco, TranslocoService } from '@jsverse/transloco';
 import { TranslationLoaderService } from './translation/translation-loader.service';
@@ -13,6 +15,7 @@ import { provideTranslocoPersistLang } from '@jsverse/transloco-persist-lang';
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    { provide: ErrorHandler, useClass: GlobalErrorHandler },
     provideZonelessChangeDetection(),
     provideTransloco({
       config: {

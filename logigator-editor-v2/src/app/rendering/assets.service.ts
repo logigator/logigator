@@ -1,9 +1,11 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { Assets, BitmapFont, Cache, TextStyleOptions } from 'pixi.js';
+import { TranslocoService } from '@jsverse/transloco';
 import robotoMonoUrl from '@assets/roboto-mono-regular-subset.woff2';
 import dseg7Url from '@assets/DSEG7Modern-BoldItalic.woff2';
 import dseg14Url from '@assets/DSEG14Modern-BoldItalic.woff2';
 import { CANVAS_FONT_CHARS, CANVAS_FONT_FAMILY } from '../utils/text-fit';
+import { ToastService } from '../logging/toast.service';
 import {
   SEGMENT_FONT_7,
   SEGMENT_FONT_14,
@@ -28,6 +30,9 @@ const BAKE_SEGMENT_14_FAMILY = 'DSEG14 Canvas';
   providedIn: 'root'
 })
 export class AssetsService {
+  private readonly toast = inject(ToastService);
+  private readonly transloco = inject(TranslocoService);
+
   constructor() {
     for (const [alias, src] of [
       [BAKE_FONT_FAMILY, robotoMonoUrl],
@@ -43,11 +48,20 @@ export class AssetsService {
   async init() {
     // The FontFaces must be loaded before the installs below rasterize the
     // atlases, or the glyphs get baked from a fallback font.
-    await Assets.load([
-      BAKE_FONT_FAMILY,
-      BAKE_SEGMENT_7_FAMILY,
-      BAKE_SEGMENT_14_FAMILY
-    ]);
+    try {
+      await Assets.load([
+        BAKE_FONT_FAMILY,
+        BAKE_SEGMENT_7_FAMILY,
+        BAKE_SEGMENT_14_FAMILY
+      ]);
+    } catch (err) {
+      this.toast.error(
+        this.transloco.translate('editor.fontLoadFailed'),
+        'AssetsService',
+        err
+      );
+      throw err;
+    }
 
     // All canvas text renders as BitmapText from these atlases; zooming only
     // scales glyph quads, so no text is ever re-rasterized. Glyphs are baked

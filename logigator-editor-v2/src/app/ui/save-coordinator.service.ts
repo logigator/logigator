@@ -5,7 +5,6 @@ import { TranslocoService } from '@jsverse/transloco';
 import { PersistenceService } from '../persistence/persistence.service';
 import { ProjectMetadataStore } from '../persistence/project-metadata.store';
 import { ToastService } from '../logging/toast.service';
-import { LoggingService } from '../logging/logging.service';
 import { Project } from '../project/project';
 import {
   SaveProjectDialogComponent,
@@ -28,7 +27,6 @@ export class SaveCoordinatorService {
   private readonly dialogService = inject(DialogService);
   private readonly translocoService = inject(TranslocoService);
   private readonly toast = inject(ToastService);
-  private readonly logging = inject(LoggingService);
 
   async requestSave(project: Project): Promise<void> {
     const metadata = this.metadataStore.getMetadata(project);
@@ -57,9 +55,12 @@ export class SaveCoordinatorService {
       } else {
         await this.persistence.saveDraftAsLocal(project, result.name);
       }
-    } catch {
-      this.logging.error('Failed to save project', 'SaveCoordinatorService');
-      this.toast.error('Failed to save project');
+    } catch (err) {
+      this.toast.error(
+        this.translocoService.translate('persistence.saveFailedGeneric'),
+        'SaveCoordinatorService',
+        err
+      );
     }
   }
 

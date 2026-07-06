@@ -5,6 +5,7 @@ import { Project } from '../../project/project';
 import { Component } from '../../components/component';
 import { getStaticDI } from '../../utils/get-di';
 import { ComponentProviderService } from '../../components/component-provider.service';
+import { LoggingService } from '../../logging/logging.service';
 
 export class RemoveComponentsAction extends Action {
   private readonly _components: SerializedComponent[];
@@ -12,6 +13,8 @@ export class RemoveComponentsAction extends Action {
   private readonly componentProviderService = getStaticDI(
     ComponentProviderService
   );
+
+  private readonly logging = getStaticDI(LoggingService);
 
   constructor(...components: Component[]);
   constructor(...components: SerializedComponent[]);
@@ -39,7 +42,13 @@ export class RemoveComponentsAction extends Action {
   undo(project: Project): void {
     for (const component of this._components) {
       const config = this.componentProviderService.getComponent(component.type);
-      if (!config) continue;
+      if (!config) {
+        this.logging.warn(
+          `skipping restore of unresolvable component type ${component.type} (id ${component.id})`,
+          'RemoveComponentsAction'
+        );
+        continue;
+      }
       project.addComponent(Component.deserialize(component, config));
     }
   }

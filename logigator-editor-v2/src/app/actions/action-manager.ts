@@ -1,10 +1,14 @@
 import { Observable, Subject } from 'rxjs';
 import { Action } from './action';
 import { Project } from '../project/project';
+import { LoggingService } from '../logging/logging.service';
+import { getStaticDI } from '../utils/get-di';
 
 export class ActionManager {
   private _history: Action[] = [];
   private _pointer = 0;
+
+  private readonly logging = getStaticDI(LoggingService);
 
   private readonly _actionChange$ = new Subject<void>();
   public readonly actionChange$: Observable<void> =
@@ -16,6 +20,10 @@ export class ActionManager {
     this._history.splice(this._pointer, Infinity, action);
     this._pointer = this._history.length;
     action.do(this.project);
+    this.logging.debug(
+      `push ${action.constructor.name} → pointer ${this._pointer}, history ${this._history.length}`,
+      'ActionManager'
+    );
     this._actionChange$.next();
   }
 
@@ -28,6 +36,10 @@ export class ActionManager {
   public register(action: Action): void {
     this._history.splice(this._pointer, Infinity, action);
     this._pointer = this._history.length;
+    this.logging.debug(
+      `register ${action.constructor.name} without do() → pointer ${this._pointer}, history ${this._history.length}`,
+      'ActionManager'
+    );
     this._actionChange$.next();
   }
 
@@ -38,12 +50,22 @@ export class ActionManager {
     // real history pointer moves. Lazy `this.project.selectionManager`
     // access matters — Project constructs actionManager (this) before
     // selectionManager, so reading it at construction time would NPE.
-    if (this.project.selectionManager.rollbackPendingCut()) return;
+    if (this.project.selectionManager.rollbackPendingCut()) {
+      this.logging.debug(
+        'undo consumed by pending scissor-cut rollback; pointer unchanged',
+        'ActionManager'
+      );
+      return;
+    }
 
     if (!this.undoAvailable) return;
 
     const action = this._history[--this._pointer];
     action.undo(this.project);
+    this.logging.debug(
+      `undo ${action.constructor.name} → pointer ${this._pointer}`,
+      'ActionManager'
+    );
     this._actionChange$.next();
   }
 
@@ -52,10 +74,18 @@ export class ActionManager {
 
     const action = this._history[this._pointer++];
     action.do(this.project);
+    this.logging.debug(
+      `redo ${action.constructor.name} → pointer ${this._pointer}`,
+      'ActionManager'
+    );
     this._actionChange$.next();
   }
 
   public clear(): void {
+    this.logging.debug(
+      `clear dropping ${this._history.length} action(s)`,
+      'ActionManager'
+    );
     this._history = [];
     this._pointer = 0;
   }

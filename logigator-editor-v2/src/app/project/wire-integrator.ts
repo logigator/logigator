@@ -3,6 +3,8 @@ import { Wire } from '../wires/wire';
 import { WireDirection } from '../wires/wire-direction.enum';
 import { WireSnapshot } from '../wires/wire-snapshot.model';
 import type { Component } from '../components/component';
+import { getStaticDI } from '../utils/get-di';
+import { LoggingService } from '../logging/logging.service';
 
 export interface MovedWireEntry {
   wire: Wire;
@@ -278,6 +280,14 @@ export class WireIntegrator {
     let changed = true;
     while (changed) {
       if (iteration >= MAX_ITERATIONS) {
+        getStaticDI(LoggingService).error(
+          `Fixed-point loop did not converge in ${MAX_ITERATIONS} iterations; ` +
+            `input: addedWires=${addedWires.length} removedWires=${removedWires.length} ` +
+            `movedWires=${movedWires.length} addedComponentPorts=${addedComponentPorts.length} ` +
+            `removedComponentPorts=${removedComponentPorts.length} movedComponentPorts=${movedComponentPorts.length}; ` +
+            `candidates=${candidates.size} freshLive=${freshLive.size} liveOriginalsToRemove=${liveOriginalsToRemove.size}`,
+          'WireIntegrator'
+        );
         throw new Error(
           `WireIntegrator: fixed-point loop did not converge in ${MAX_ITERATIONS} iterations`
         );
@@ -348,10 +358,15 @@ export class WireIntegrator {
       }
     }
 
-    return {
+    const output = {
       toAdd: [...freshLive],
       toRemove: [...liveOriginalsToRemove]
     };
+    getStaticDI(LoggingService).debug(
+      `integrate converged in ${iteration} pass(es); wires added=${output.toAdd.length} removed=${output.toRemove.length}`,
+      'WireIntegrator'
+    );
+    return output;
   }
 
   private _interiorContains(w: Wire, p: Point): boolean {

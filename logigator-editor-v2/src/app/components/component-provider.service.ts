@@ -1,6 +1,7 @@
-import { computed, Injectable, Signal, signal } from '@angular/core';
+import { computed, inject, Injectable, Signal, signal } from '@angular/core';
 import { ComponentConfig } from './component-config.model';
 import { ComponentCategory } from './component-category.enum';
+import { LoggingService } from '../logging/logging.service';
 import { notComponentConfig } from './component-types/not/not.config';
 import { andComponentConfig } from './component-types/and/and.config';
 import { orComponentConfig } from './component-types/or/or.config';
@@ -71,6 +72,8 @@ export class ComponentProviderService {
     new Map(BUILT_IN_COMPONENTS.map((config) => [config.type, config]))
   );
 
+  private readonly logging = inject(LoggingService);
+
   public readonly basicComponents = this._categorySignal(
     ComponentCategory.BASIC
   );
@@ -86,12 +89,20 @@ export class ComponentProviderService {
   }
 
   public register(config: ComponentConfig): void {
+    this.logging.debug(
+      `register type ${config.type} (category ${config.category})`,
+      'ComponentProviderService'
+    );
     this._configs.update((configs) =>
       new Map(configs).set(config.type, config)
     );
   }
 
   public unregister(typeId: number): void {
+    this.logging.debug(
+      `unregister type ${typeId} (category ${this._configs().get(typeId)?.category})`,
+      'ComponentProviderService'
+    );
     this._configs.update((configs) => {
       if (!configs.has(typeId)) return configs;
       const next = new Map(configs);

@@ -2,6 +2,7 @@ import { inject, Injectable, signal } from '@angular/core';
 import { filter, Observable, Subject } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 import { ComponentProviderService } from '../component-provider.service';
+import { LoggingService } from '../../logging/logging.service';
 import { CUSTOM_TYPE_ID_BASE } from '../component-type.enum';
 import {
   CustomComponentDefinition,
@@ -39,6 +40,7 @@ type DefinitionInit = Omit<CustomComponentDefinition, 'typeId'>;
 })
 export class CustomComponentRegistry {
   private readonly _provider = inject(ComponentProviderService);
+  private readonly logging = inject(LoggingService);
 
   private _nextTypeId = CUSTOM_TYPE_ID_BASE;
   private readonly _definitions = new Map<number, CustomComponentDefinition>();
@@ -197,6 +199,10 @@ export class CustomComponentRegistry {
       }
     }
 
+    this.logging.debug(
+      `ingested ${defs.length} snapshots, remap size ${remap.size}`,
+      'CustomComponentRegistry'
+    );
     return remap;
   }
 
@@ -211,7 +217,10 @@ export class CustomComponentRegistry {
     patch: CustomComponentSummaryPatch
   ): void {
     const def = this._definitions.get(masterTypeId);
-    if (!def || def.kind !== 'master') return;
+    if (!def || def.kind !== 'master') {
+      this._noopMaster('updateDefinition', masterTypeId);
+      return;
+    }
 
     def.numInputs = patch.numInputs;
     def.numOutputs = patch.numOutputs;
@@ -238,7 +247,10 @@ export class CustomComponentRegistry {
     circuit: SerializedCircuitBody
   ): void {
     const def = this._definitions.get(masterTypeId);
-    if (!def || def.kind !== 'master') return;
+    if (!def || def.kind !== 'master') {
+      this._noopMaster('setMasterCircuit', masterTypeId);
+      return;
+    }
     def.circuit = cloneCircuit(circuit);
     this._masterToSnapshotTypeId.delete(masterTypeId);
     this._recomputeDependencies(masterTypeId, circuit);
@@ -262,6 +274,18 @@ export class CustomComponentRegistry {
       if (dependencyMaster !== undefined) deps.add(dependencyMaster);
     }
     this._dependencies.set(masterTypeId, deps);
+    this.logging.debug(
+      `dependencies for master ${masterTypeId}: {${[...deps].join(', ')}}`,
+      'CustomComponentRegistry'
+    );
+  }
+
+  /** Debug trail for a guard that no-ops on an unknown or non-master type id. */
+  private _noopMaster(method: string, masterTypeId: number): void {
+    this.logging.debug(
+      `${method} no-op: type id ${masterTypeId} is unknown or not a master`,
+      'CustomComponentRegistry'
+    );
   }
 
   /**
@@ -273,7 +297,10 @@ export class CustomComponentRegistry {
    */
   public setMasterVersion(masterTypeId: number, version: number): void {
     const def = this._definitions.get(masterTypeId);
-    if (!def || def.kind !== 'master') return;
+    if (!def || def.kind !== 'master') {
+      this._noopMaster('setMasterVersion', masterTypeId);
+      return;
+    }
     def.version = version;
     this._masterToSnapshotTypeId.delete(masterTypeId);
   }
@@ -348,7 +375,10 @@ export class CustomComponentRegistry {
     version: number
   ): void {
     const def = this._definitions.get(masterTypeId);
-    if (!def || def.kind !== 'master') return;
+    if (!def || def.kind !== 'master') {
+      this._noopMaster('promoteMaster', masterTypeId);
+      return;
+    }
     const oldId = def.id;
     if (oldId !== undefined) {
       this._idToMasterTypeId.delete(oldId);

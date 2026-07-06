@@ -1,3 +1,6 @@
+import { environment } from '../../environments/environment';
+import { LogLevel } from '../logging/log-level.enum';
+
 export function Timed(
   target: unknown,
   key: string,
@@ -28,12 +31,16 @@ function setupTimedDecorator(
     const result = originalMethod.apply(this, args);
     const end = performance.now();
 
-    // eslint-disable-next-line no-console
-    console.log(
-      `Execution time for "%s": %s ms`,
-      propertyKey,
-      (end - start).toFixed(2)
-    );
+    // Gate on the same verbosity as LoggingService.debug; this decorator has no
+    // DI so it reads the environment directly rather than injecting the service.
+    if (LogLevel.Debug >= environment.loggingVerbosity) {
+      // eslint-disable-next-line no-console
+      console.debug(
+        `Execution time for "%s": %s ms`,
+        propertyKey,
+        (end - start).toFixed(2)
+      );
+    }
     return result;
   };
 }

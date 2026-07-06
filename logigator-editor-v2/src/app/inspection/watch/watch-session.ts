@@ -1,6 +1,7 @@
 import { Component } from '../../components/component';
 import { ComponentProviderService } from '../../components/component-provider.service';
 import { SwitchComponent } from '../../components/component-types/switch/switch.component';
+import { LoggingService } from '../../logging/logging.service';
 import { LinkRenderTargets } from '../../simulation/compiler/compiled-board.model';
 import { WatchLevelInfo } from '../../simulation/compiler/watch-index';
 import {
@@ -54,6 +55,12 @@ export class WatchSession {
       wireNets.length !== wires.length ||
       portNets.length !== components.length
     ) {
+      getStaticDI(LoggingService).debug(
+        `watch shape mismatch: wireNets ${wireNets.length} vs wires ` +
+          `${wires.length}, portNets ${portNets.length} vs components ` +
+          `${components.length}`,
+        'WatchSession'
+      );
       for (const component of components) component.destroy({ children: true });
       for (const wire of wires) wire.destroy();
       throw new Error(

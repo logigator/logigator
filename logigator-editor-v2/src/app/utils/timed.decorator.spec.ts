@@ -1,13 +1,23 @@
 /* eslint-disable no-console, @typescript-eslint/no-empty-function */
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Timed } from './timed.decorator';
+import { environment } from '../../environments/environment';
+import { LogLevel } from '../logging/log-level.enum';
 
 describe('Timed decorator', () => {
+  const originalVerbosity = environment.loggingVerbosity;
+
   beforeEach(() => {
-    vi.spyOn(console, 'log')
+    vi.spyOn(console, 'debug')
       .mockImplementation(() => {})
       .mockClear();
+    // The decorator gates on the same verbosity as LoggingService.debug.
+    environment.loggingVerbosity = LogLevel.Debug;
+  });
+
+  afterEach(() => {
+    environment.loggingVerbosity = originalVerbosity;
   });
 
   describe('applied to a method', () => {
@@ -30,7 +40,7 @@ describe('Timed decorator', () => {
       expect(f.compute(21)).toBe(42);
     });
 
-    it('console.log is called once per method invocation', () => {
+    it('console.debug is called once per method invocation', () => {
       class Fixture {
         greet(): string {
           return 'hello';
@@ -44,10 +54,10 @@ describe('Timed decorator', () => {
       const f = new Fixture();
       f.greet();
 
-      expect(console.log).toHaveBeenCalledTimes(1);
+      expect(console.debug).toHaveBeenCalledTimes(1);
     });
 
-    it('console.log message contains the property name', () => {
+    it('console.debug message contains the property name', () => {
       class Fixture {
         myOperation(): void {
           // no-op
@@ -64,14 +74,14 @@ describe('Timed decorator', () => {
 
       new Fixture().myOperation();
 
-      expect(console.log).toHaveBeenCalledWith(
+      expect(console.debug).toHaveBeenCalledWith(
         expect.any(String),
         'myOperation',
         expect.any(String)
       );
     });
 
-    it('console.log is called once per call when invoked multiple times', () => {
+    it('console.debug is called once per call when invoked multiple times', () => {
       class Fixture {
         run(): number {
           return 1;
@@ -87,7 +97,7 @@ describe('Timed decorator', () => {
       f.run();
       f.run();
 
-      expect(console.log).toHaveBeenCalledTimes(3);
+      expect(console.debug).toHaveBeenCalledTimes(3);
     });
 
     it('decorated method still executes its original logic', () => {
@@ -167,7 +177,7 @@ describe('Timed decorator', () => {
       expect(new Fixture().answer).toBe(42);
     });
 
-    it('console.log is called once when the getter is read', () => {
+    it('console.debug is called once when the getter is read', () => {
       class Fixture {
         // eslint-disable-next-line @typescript-eslint/class-literal-property-style
         get label(): string {
@@ -182,10 +192,10 @@ describe('Timed decorator', () => {
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       new Fixture().label;
 
-      expect(console.log).toHaveBeenCalledTimes(1);
+      expect(console.debug).toHaveBeenCalledTimes(1);
     });
 
-    it('console.log message contains the getter property name', () => {
+    it('console.debug message contains the getter property name', () => {
       class Fixture {
         // eslint-disable-next-line @typescript-eslint/class-literal-property-style
         get myProp(): number {
@@ -204,7 +214,7 @@ describe('Timed decorator', () => {
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       new Fixture().myProp;
 
-      expect(console.log).toHaveBeenCalledWith(
+      expect(console.debug).toHaveBeenCalledWith(
         expect.any(String),
         'myProp',
         expect.any(String)
@@ -254,7 +264,7 @@ describe('Timed decorator', () => {
       expect(stored).toBe(42);
     });
 
-    it('console.log is called when the setter is invoked', () => {
+    it('console.debug is called when the setter is invoked', () => {
       class Fixture {
         set label(_v: string) {}
       }
@@ -265,7 +275,7 @@ describe('Timed decorator', () => {
 
       new Fixture().label = 'test';
 
-      expect(console.log).toHaveBeenCalledTimes(1);
+      expect(console.debug).toHaveBeenCalledTimes(1);
     });
   });
 });

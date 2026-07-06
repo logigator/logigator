@@ -39,7 +39,6 @@ export class ClockComponent extends Component<ClockOptions> {
   // The body is one row taller than its single port row, giving the symbol its
   // own line below the labels (legacy geometry, mirrored by the frozen
   // LEGACY_MIN_BODY_HEIGHTS entry).
-  // eslint-disable-next-line @typescript-eslint/class-literal-property-style
   protected override get bodyGridHeight(): number {
     return 2;
   }

@@ -52,7 +52,7 @@ export class DebugMenuService {
   private printCompiledBoard(): void {
     const project = this.projectService.activeProject();
     if (!project) {
-      this.toast.warn('No active project to compile.');
+      this.toast.warn('No active project to compile.', 'DebugMenuService');
       return;
     }
     try {
@@ -60,33 +60,36 @@ export class DebugMenuService {
       console.log('[debug] compiled board', compiled);
     } catch (err) {
       console.error('[debug] failed to compile board', err);
-      this.toast.error('Failed to compile board — see console.');
+      this.toast.error(
+        'Failed to compile board — see console.',
+        'DebugMenuService'
+      );
     }
   }
 
   private printRendererMode(): void {
     const renderer = this.rendererService.renderer;
     if (!renderer) {
-      this.toast.warn('Renderer is not ready yet.');
+      this.toast.warn('Renderer is not ready yet.', 'DebugMenuService');
       return;
     }
     const mode = this.rendererMode(renderer);
     console.log('[debug] renderer mode:', mode, renderer);
-    this.toast.info(`Renderer: ${mode}`);
+    this.toast.info(`Renderer: ${mode}`, 'DebugMenuService');
   }
 
   /** Fires one toast of every severity to eyeball the stack and its styling. */
   private spawnTestToasts(): void {
-    this.toast.success('A success toast.');
-    this.toast.info('An info toast.');
-    this.toast.warn('A warning toast.');
-    this.toast.error('An error toast.');
+    this.toast.success('A success toast.', 'DebugMenuService');
+    this.toast.info('An info toast.', 'DebugMenuService');
+    this.toast.warn('A warning toast.', 'DebugMenuService');
+    this.toast.error('An error toast.', 'DebugMenuService');
   }
 
   private generateDump(): void {
     const project = this.projectService.activeProject();
     if (!project) {
-      this.toast.warn('No active project to dump.');
+      this.toast.warn('No active project to dump.', 'DebugMenuService');
       return;
     }
     this.persistence.exportProjectDumpToFile(project);
@@ -97,11 +100,16 @@ export class DebugMenuService {
       if (content === null) return;
       this.persistence
         .importProjectDump(content)
-        .then(() => this.toast.success('Project dump imported.'))
+        .then(() =>
+          this.toast.success('Project dump imported.', 'DebugMenuService')
+        )
         .catch((err: unknown) => {
           const message = err instanceof Error ? err.message : String(err);
           console.error('[debug] failed to import dump', err);
-          this.toast.error(`Failed to import dump: ${message}`);
+          this.toast.error(
+            `Failed to import dump: ${message}`,
+            'DebugMenuService'
+          );
         });
     });
   }

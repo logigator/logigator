@@ -35,7 +35,7 @@ import {
 } from '@logigator/ui';
 import { InspectionService } from './inspection/inspection.service';
 import { InspectionSheetComponent } from './inspection/inspection-sheet.component';
-import { TranslocoDirective } from '@jsverse/transloco';
+import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { WorkMode } from './work-mode/work-mode.enum';
 import { WorkModeService } from './work-mode/work-mode.service';
 import { LayoutService } from './layout/layout.service';
@@ -53,6 +53,8 @@ import { SimulationControlsComponent } from './ui/simulation-controls/simulation
 import { ComponentListComponent } from './ui/side-bar/component-list/component-list.component';
 import { PortsPanelComponent } from './ui/ports-panel/ports-panel.component';
 import { UserSettingsComponent } from './ui/user-settings/user-settings.component';
+import { LoggingService } from './logging/logging.service';
+import { ToastService } from './logging/toast.service';
 
 @Component({
   selector: 'app-root',
@@ -103,6 +105,9 @@ export class AppComponent {
   // Injected for its side effects: nothing renders it, but it must live from
   // startup to catch the first simulation session's inspect taps.
   private readonly inspectionService = inject(InspectionService);
+  private readonly loggingService = inject(LoggingService);
+  private readonly toastService = inject(ToastService);
+  private readonly translocoService = inject(TranslocoService);
 
   protected readonly cursorPosition = signal<Point>(new Point(0, 0));
 
@@ -157,11 +162,20 @@ export class AppComponent {
     // through the alias — both need the alias map in place. Masters then load
     // concurrently.
     void (async () => {
-      await this.persistenceService.preloadComponentIdAliases();
-      await Promise.all([
-        this.persistenceService.preloadBrowserMasters(),
-        this.persistenceService.preloadServerMasters()
-      ]);
+      try {
+        await this.persistenceService.preloadComponentIdAliases();
+        await Promise.all([
+          this.persistenceService.preloadBrowserMasters(),
+          this.persistenceService.preloadServerMasters()
+        ]);
+        this.loggingService.info('Editor ready', 'AppComponent');
+      } catch (err) {
+        this.toastService.warn(
+          this.translocoService.translate('library.loadFailed'),
+          'AppComponent',
+          err
+        );
+      }
     })();
 
     if (!this.routerService.matches(this.location.path())) {

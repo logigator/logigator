@@ -1,5 +1,8 @@
 import type { MockedObject } from 'vitest';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { Injector } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+import { setStaticDIInjector } from '../utils/get-di';
 import { ActionManager } from './action-manager';
 import { Project } from '../project/project';
 import { makeAction } from '../../testing/action-mocks';
@@ -20,6 +23,7 @@ describe('ActionManager', () => {
   let manager: ActionManager;
 
   beforeEach(() => {
+    setStaticDIInjector(TestBed.inject(Injector));
     project = makeProject();
     manager = new ActionManager(project);
   });

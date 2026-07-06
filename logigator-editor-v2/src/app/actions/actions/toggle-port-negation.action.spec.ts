@@ -1,5 +1,8 @@
 import type { MockedObject } from 'vitest';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { Injector } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+import { setStaticDIInjector } from '../../utils/get-di';
 import { TogglePortNegationAction } from './toggle-port-negation.action';
 import type { Component } from '../../components/component';
 import type { Project } from '../../project/project';
@@ -9,6 +12,7 @@ describe('TogglePortNegationAction', () => {
   let project: MockedObject<Project>;
 
   beforeEach(() => {
+    setStaticDIInjector(TestBed.inject(Injector));
     component = {
       setPortNegated: vi.fn().mockName('Component.setPortNegated')
     } as unknown as MockedObject<Component>;

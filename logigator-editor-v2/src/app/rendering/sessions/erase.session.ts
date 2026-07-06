@@ -11,6 +11,9 @@ import { RemoveComponentsAction } from '../../actions/actions/remove-components.
 import { RemoveWiresAction } from '../../actions/actions/remove-wires.action';
 import { getStaticDI } from '../../utils/get-di';
 import { ComponentProviderService } from '../../components/component-provider.service';
+import { LoggingService } from '../../logging/logging.service';
+import { ToastService } from '../../logging/toast.service';
+import { TranslocoService } from '@jsverse/transloco';
 
 export class EraseSession implements DragSession {
   private readonly _deletedComponentIds = new Set<number>();
@@ -58,10 +61,24 @@ export class EraseSession implements DragSession {
     for (const wire of this._deletedWires) {
       this.project.addWire(Wire.deserialize(wire));
     }
+    let dropped = 0;
     for (const comp of this._deletedComponents) {
       const config = this.componentProviderService.getComponent(comp.type);
-      if (!config) continue;
+      if (!config) {
+        getStaticDI(LoggingService).warn(
+          `Erased component of unresolved type "${comp.type}" cannot be restored; it is dropped`,
+          'EraseSession'
+        );
+        dropped++;
+        continue;
+      }
       this.project.addComponent(Component.deserialize(comp, config));
+    }
+    if (dropped > 0) {
+      getStaticDI(ToastService).warn(
+        getStaticDI(TranslocoService).translate('editor.eraseRestoreFailed'),
+        'EraseSession'
+      );
     }
   }
 

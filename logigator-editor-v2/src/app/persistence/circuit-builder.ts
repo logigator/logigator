@@ -3,6 +3,8 @@ import { Component } from '../components/component';
 import { Wire } from '../wires/wire';
 import { ComponentProviderService } from '../components/component-provider.service';
 import { SerializedCircuitBody } from './serialized-circuit';
+import { getStaticDI } from '../utils/get-di';
+import { LoggingService } from '../logging/logging.service';
 
 export function buildProject(components: Component[], wires: Wire[]): Project {
   const project = new Project();
@@ -33,6 +35,11 @@ export function instantiateBody(
           },
           config
         )
+      );
+    } else {
+      getStaticDI(LoggingService).warn(
+        `Dropped element with unresolved type ${c.type} at [${c.pos[0]}, ${c.pos[1]}]`,
+        'circuit-builder'
       );
     }
   }

@@ -11,6 +11,9 @@ import { SubCircuitWatchComponent } from '../../inspection/watch/sub-circuit-wat
 import { SerializedCircuitBody } from '../../persistence/serialized-circuit';
 import { CompiledBoard } from '../../simulation/compiler/compiled-board.model';
 import { SimulationService } from '../../simulation/simulation.service';
+import { LoggingService } from '../../logging/logging.service';
+import { ToastService } from '../../logging/toast.service';
+import { TranslocoService } from '@jsverse/transloco';
 import { getStaticDI } from '../../utils/get-di';
 import { CustomComponent } from './custom-component';
 
@@ -168,6 +171,10 @@ export class SubCircuitWatch extends ComponentInspection {
   ): void {
     const definition = copy.definition;
     if (!definition.circuit) {
+      getStaticDI(ToastService).warn(
+        getStaticDI(TranslocoService).translate('watch.noInnerCircuit'),
+        'SubCircuitWatch'
+      );
       return;
     }
     const path = `${parent.path}/${bodyIndex}`;
@@ -184,6 +191,10 @@ export class SubCircuitWatch extends ComponentInspection {
   ): WatchLevel {
     const info = this.board.watch.infoFor(path);
     if (!info) {
+      getStaticDI(LoggingService).error(
+        `no watch info for "${name}" at path "${path}"`,
+        'SubCircuitWatch'
+      );
       throw new Error(`"${name}" has no watchable circuit in this simulation`);
     }
     return {

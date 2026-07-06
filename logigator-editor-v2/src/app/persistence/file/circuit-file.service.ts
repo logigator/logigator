@@ -6,6 +6,7 @@ import { ComponentProviderService } from '../../components/component-provider.se
 import { ComponentConfig } from '../../components/component-config.model';
 import { CUSTOM_TYPE_ID_BASE } from '../../components/component-type.enum';
 import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
+import { TranslocoService } from '@jsverse/transloco';
 import { LoggingService } from '../../logging/logging.service';
 import { ToastService } from '../../logging/toast.service';
 import { MigrationContext } from './migrations/migration';
@@ -56,6 +57,7 @@ export class CircuitFileService {
   private readonly registry = inject(CustomComponentRegistry);
   private readonly logging = inject(LoggingService);
   private readonly toast = inject(ToastService);
+  private readonly transloco = inject(TranslocoService);
 
   private get migrationContext(): MigrationContext {
     return {
@@ -169,10 +171,13 @@ export class CircuitFileService {
     }
 
     if (skippedCustom > 0) {
-      const plural = skippedCustom === 1 ? '' : 's';
       this.toast.warn(
-        `${skippedCustom} custom component${plural} could not be loaded — ` +
-          `${skippedCustom === 1 ? 'its' : 'their'} definition is missing — and ${skippedCustom === 1 ? 'was' : 'were'} skipped.`
+        skippedCustom === 1
+          ? this.transloco.translate('persistence.skippedCustomOne')
+          : this.transloco.translate('persistence.skippedCustomMany', {
+              count: skippedCustom
+            }),
+        'CircuitFileService'
       );
     }
 

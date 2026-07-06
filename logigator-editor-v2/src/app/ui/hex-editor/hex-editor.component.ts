@@ -28,6 +28,7 @@ import {
   resizeBuffer,
   writeWord
 } from '../../utils/packed-buffer';
+import { ToastService } from '../../logging/toast.service';
 
 type HexView = 'word' | 'byte';
 type Radix = 'hex' | 'decimal' | 'octal' | 'binary';
@@ -87,6 +88,7 @@ export class HexEditorComponent {
   private readonly layout = inject(LayoutService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly transloco = inject(TranslocoService);
+  private readonly toastService = inject(ToastService);
 
   /** Initial contents as a packed buffer; padded/truncated to the table size. */
   public readonly data = input<Uint8Array>(new Uint8Array(0));
@@ -409,7 +411,23 @@ export class HexEditorComponent {
   }
 
   protected copyAll(): void {
-    void navigator.clipboard?.writeText(this.dump());
+    // Optional chaining short-circuits to `undefined` when the Clipboard API is
+    // absent, so guard the absence case before attaching to the promise.
+    const copied = navigator.clipboard?.writeText(this.dump());
+    if (!copied) {
+      this.toastService.warn(
+        this.transloco.translate('hexEditor.copyFailed'),
+        'HexEditorComponent'
+      );
+      return;
+    }
+    void copied.catch((err: unknown) =>
+      this.toastService.warn(
+        this.transloco.translate('hexEditor.copyFailed'),
+        'HexEditorComponent',
+        err
+      )
+    );
   }
 
   protected goto(): void {

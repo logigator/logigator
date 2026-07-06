@@ -84,7 +84,10 @@ export class InspectionService {
     } catch (err) {
       // A watch can legitimately fail to open (e.g. the definition no longer
       // matches the compiled board) — surface it instead of crashing the tap.
-      this.toastService.error(err instanceof Error ? err.message : String(err));
+      this.toastService.error(
+        err instanceof Error ? err.message : String(err),
+        'InspectionService'
+      );
       return;
     }
     const entry: OpenInspection = { component, inspection };

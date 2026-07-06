@@ -67,7 +67,8 @@ export class ServerPersistenceGateway {
 
     if (!detail.newFormat) {
       this.toast.warn(
-        this.transloco.translate('persistence.legacyProjectWarning')
+        this.transloco.translate('persistence.legacyProjectWarning'),
+        'ServerPersistenceGateway'
       );
     }
 
@@ -168,7 +169,7 @@ export class ServerPersistenceGateway {
     if (this.metadataStore.dirtyVersion(project) === versionAtSnapshot) {
       this.metadataStore.clearDirty(project);
     }
-    this.toast.success('Project saved');
+    this.toast.success('Project saved', 'ServerPersistenceGateway');
     void this._uploadPreview(project, response.id);
     return response.id;
   }
@@ -235,11 +236,11 @@ export class ServerPersistenceGateway {
     try {
       await firstValueFrom(this.userApi.get());
     } catch {
-      this.logging.error(
-        `Cannot clone share ${linkId}: user not authenticated`,
-        'PersistenceService'
+      this.toast.error(
+        this.transloco.translate('persistence.shareAuthRequired'),
+        'ServerPersistenceGateway',
+        `Cannot clone share ${linkId}: user not authenticated`
       );
-      this.toast.error(`Cannot clone share ${linkId}: user not authenticated`);
       throw new AuthRequiredError();
     }
 
@@ -416,8 +417,14 @@ export class ServerPersistenceGateway {
     let summaries;
     try {
       summaries = await firstValueFrom(this.componentApi.list());
-    } catch {
-      // Not authenticated (401) or offline — no cloud library to preload.
+    } catch (err) {
+      // Usually not authenticated (401) or offline — no cloud library to
+      // preload. Logged at debug so a genuine failure is still traceable
+      // without nagging signed-out users.
+      this.logging.debug(
+        `Server master preload skipped: ${formatHttpError(err)}`,
+        'ServerPersistenceGateway'
+      );
       return;
     }
 
@@ -479,21 +486,26 @@ export class ServerPersistenceGateway {
       if (this.metadataStore.dirtyVersion(project) === versionAtSnapshot) {
         this.metadataStore.clearDirty(project);
       }
-      this.toast.success('Project saved');
+      this.toast.success(
+        this.transloco.translate('persistence.projectSaved'),
+        'ServerPersistenceGateway'
+      );
       void this._uploadPreview(project, metadata.id);
     } catch (err) {
       if (this._isVersionMismatch(err)) {
-        this.logging.error(
-          'Version mismatch — reload required',
-          'PersistenceService'
+        this.toast.error(
+          this.transloco.translate('persistence.versionMismatch'),
+          'ServerPersistenceGateway',
+          err
         );
-        this.toast.error('Version mismatch — reload required');
       } else {
-        this.logging.error(
-          `Save failed: ${formatHttpError(err)}`,
-          'PersistenceService'
+        this.toast.error(
+          this.transloco.translate('persistence.saveFailed', {
+            detail: formatHttpError(err)
+          }),
+          'ServerPersistenceGateway',
+          err
         );
-        this.toast.error(`Save failed: ${formatHttpError(err)}`);
       }
       throw err;
     }
@@ -530,20 +542,25 @@ export class ServerPersistenceGateway {
       if (this.metadataStore.dirtyVersion(project) === versionAtSnapshot) {
         this.metadataStore.clearDirty(project);
       }
-      this.toast.success('Component saved');
+      this.toast.success(
+        this.transloco.translate('persistence.componentSaved'),
+        'ServerPersistenceGateway'
+      );
     } catch (err) {
       if (this._isVersionMismatch(err)) {
-        this.logging.error(
-          'Version mismatch — reload required',
-          'PersistenceService'
+        this.toast.error(
+          this.transloco.translate('persistence.versionMismatch'),
+          'ServerPersistenceGateway',
+          err
         );
-        this.toast.error('Version mismatch — reload required');
       } else {
-        this.logging.error(
-          `Save failed: ${formatHttpError(err)}`,
-          'PersistenceService'
+        this.toast.error(
+          this.transloco.translate('persistence.saveFailed', {
+            detail: formatHttpError(err)
+          }),
+          'ServerPersistenceGateway',
+          err
         );
-        this.toast.error(`Save failed: ${formatHttpError(err)}`);
       }
       throw err;
     }

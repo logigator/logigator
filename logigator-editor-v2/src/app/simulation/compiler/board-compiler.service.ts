@@ -1,4 +1,5 @@
 import { inject, Injectable } from '@angular/core';
+import { LoggingService } from '../../logging/logging.service';
 import { Component } from '../../components/component';
 import { ComponentProviderService } from '../../components/component-provider.service';
 import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
@@ -170,6 +171,7 @@ function buildPortNetLookup(nets: Net[]): Map<Component, number[]> {
 export class BoardCompilerService {
   private readonly provider = inject(ComponentProviderService);
   private readonly registry = inject(CustomComponentRegistry);
+  private readonly logging = inject(LoggingService);
 
   // Keyed by snapshot type id; snapshots are frozen, so entries never
   // invalidate for the lifetime of the session.
@@ -212,6 +214,7 @@ export class BoardCompilerService {
   }
 
   public compile(project: Project): CompiledBoard {
+    const done = this.logging.time('compile board', 'BoardCompiler');
     const ctx: EmitContext = {
       uf: new UnionFind(),
       units: [],
@@ -303,6 +306,13 @@ export class BoardCompilerService {
     for (const [typeId, template] of this._templates) {
       templateTables.set(typeId, template.watch);
     }
+
+    this.logging.info(
+      `compiled board: ${descriptorComponents.length} units, ${links} links, ` +
+        `${ctx.diagnostics.length} diagnostics`,
+      'BoardCompiler'
+    );
+    done();
 
     return {
       descriptor: { links, components: descriptorComponents },
@@ -532,6 +542,10 @@ export class BoardCompilerService {
    * extracted, and destroyed again — it is never added to a Project.
    */
   private _buildTemplate(def: CustomComponentDefinition): CompiledTemplate {
+    const done = this.logging.time(
+      `build template "${def.name}"`,
+      'BoardCompiler'
+    );
     const { components, wires } = instantiateBody(this.provider, def.circuit!);
     try {
       const ctx: EmitContext = {
@@ -653,6 +667,7 @@ export class BoardCompilerService {
         });
       }
 
+      done();
       return {
         netCount: canonical.size,
         units,

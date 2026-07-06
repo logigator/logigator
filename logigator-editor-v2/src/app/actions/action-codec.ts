@@ -10,6 +10,8 @@ import { MoveWiresAction } from './actions/move-wires.action';
 import { ChangeOptionAction } from './actions/change-option.action';
 import { TogglePortNegationAction } from './actions/toggle-port-negation.action';
 import { deserializeMoveEntries } from './actions/move-entry.model';
+import { LoggingService } from '../logging/logging.service';
+import { getStaticDI } from '../utils/get-di';
 
 /**
  * Reconstructs an {@link Action} from its `Action.serialize()` output — the read
@@ -51,6 +53,10 @@ export function deserializeAction(dto: SerializedAction): Action {
       // Unknown/future type from a malformed or newer dump: fail at parse time
       // rather than leaking `undefined` into the restored stack (which would
       // crash on the next undo/redo).
+      getStaticDI(LoggingService).warn(
+        `unknown serialized action type: ${(dto as { type?: string }).type}`,
+        'ActionCodec'
+      );
       throw new Error(
         `Unknown serialized action type: ${(dto as { type?: string }).type}`
       );

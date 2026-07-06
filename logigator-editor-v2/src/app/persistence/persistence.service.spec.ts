@@ -688,9 +688,10 @@ describe('PersistenceService', () => {
       expect(Array.from(project.components).length).toBe(2);
       // Server reads route through the v0→v1 migration, which drops unknown
       // types with a warning. LoggingService.warn forwards to
-      // console.warn('[%s] %o', context, message).
+      // console.warn('%c[%s]', style, context, message).
       expect(warnSpy).toHaveBeenCalledWith(
-        '[%s] %o',
+        '%c[%s]',
+        'color:#888',
         'v0ToV1Migration',
         expect.stringContaining('Unknown component type ID: 999')
       );

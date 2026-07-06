@@ -1,11 +1,14 @@
 /* eslint-disable no-console, @typescript-eslint/no-empty-function */
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { LoggingService } from './logging.service';
+import { LogLevel } from './log-level.enum';
+import { environment } from '../../environments/environment';
 
 describe('LoggingService', () => {
   let service: LoggingService;
+  const originalVerbosity = environment.loggingVerbosity;
 
   beforeEach(() => {
     // Spy on console methods and suppress output — these tests assert on the spy
@@ -26,8 +29,15 @@ describe('LoggingService', () => {
       .mockImplementation(() => {})
       .mockClear();
 
+    // Print everything so the per-level assertions below aren't gated out.
+    environment.loggingVerbosity = LogLevel.Debug;
+
     TestBed.configureTestingModule({});
     service = TestBed.inject(LoggingService);
+  });
+
+  afterEach(() => {
+    environment.loggingVerbosity = originalVerbosity;
   });
 
   it('should be created', () => {
@@ -38,7 +48,8 @@ describe('LoggingService', () => {
     it('passes the context and message to console.error', () => {
       service.error('err-msg', 'err-ctx');
       expect(console.error).toHaveBeenCalledWith(
-        '[%s] %o',
+        '%c[%s]',
+        'color:#888',
         'err-ctx',
         'err-msg'
       );
@@ -49,7 +60,8 @@ describe('LoggingService', () => {
     it('passes the context and message to console.warn', () => {
       service.warn('warn-msg', 'warn-ctx');
       expect(console.warn).toHaveBeenCalledWith(
-        '[%s] %o',
+        '%c[%s]',
+        'color:#888',
         'warn-ctx',
         'warn-msg'
       );
@@ -59,7 +71,12 @@ describe('LoggingService', () => {
   describe('log', () => {
     it('passes the context and message to console.log', () => {
       service.log('log-msg', 'log-ctx');
-      expect(console.log).toHaveBeenCalledWith('[%s] %o', 'log-ctx', 'log-msg');
+      expect(console.log).toHaveBeenCalledWith(
+        '%c[%s]',
+        'color:#888',
+        'log-ctx',
+        'log-msg'
+      );
     });
   });
 
@@ -67,7 +84,8 @@ describe('LoggingService', () => {
     it('passes the context and message to console.info', () => {
       service.info('info-msg', 'info-ctx');
       expect(console.info).toHaveBeenCalledWith(
-        '[%s] %o',
+        '%c[%s]',
+        'color:#888',
         'info-ctx',
         'info-msg'
       );
@@ -78,9 +96,50 @@ describe('LoggingService', () => {
     it('passes the context and message to console.debug', () => {
       service.debug('debug-msg', 'debug-ctx');
       expect(console.debug).toHaveBeenCalledWith(
-        '[%s] %o',
+        '%c[%s]',
+        'color:#888',
         'debug-ctx',
         'debug-msg'
+      );
+    });
+  });
+
+  describe('verbosity gating', () => {
+    it('drops messages below the configured verbosity', () => {
+      environment.loggingVerbosity = LogLevel.Warn;
+
+      service.debug('d', 'ctx');
+      service.info('i', 'ctx');
+      service.log('l', 'ctx');
+      expect(console.debug).not.toHaveBeenCalled();
+      expect(console.info).not.toHaveBeenCalled();
+      expect(console.log).not.toHaveBeenCalled();
+
+      service.warn('w', 'ctx');
+      service.error('e', 'ctx');
+      expect(console.warn).toHaveBeenCalledOnce();
+      expect(console.error).toHaveBeenCalledOnce();
+    });
+
+    it('suppresses everything at Silent', () => {
+      environment.loggingVerbosity = LogLevel.Silent;
+      service.error('e', 'ctx');
+      service.warn('w', 'ctx');
+      expect(console.error).not.toHaveBeenCalled();
+      expect(console.warn).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('time', () => {
+    it('logs the elapsed time at debug level when stopped', () => {
+      const stop = service.time('do work', 'ctx');
+      expect(console.debug).not.toHaveBeenCalled();
+      stop();
+      expect(console.debug).toHaveBeenCalledWith(
+        '%c[%s]',
+        'color:#888',
+        'ctx',
+        expect.stringMatching(/^do work took [\d.]+ ms$/)
       );
     });
   });

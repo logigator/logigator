@@ -2,12 +2,14 @@ import { computed, inject, Injectable, signal } from '@angular/core';
 import { WorkMode } from './work-mode.enum';
 import { ComponentType } from '../components/component-type.enum';
 import { ComponentProviderService } from '../components/component-provider.service';
+import { LoggingService } from '../logging/logging.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class WorkModeService {
   private readonly componentProviderService = inject(ComponentProviderService);
+  private readonly logging = inject(LoggingService);
 
   // Navigate-first: the board boots ready to pan, not to mutate.
   private readonly _mode = signal<WorkMode>(WorkMode.PAN);
@@ -30,12 +32,17 @@ export class WorkModeService {
       );
     }
     if (this._mode() === WorkMode.SIMULATION) {
+      this.logging.debug(
+        `mode change to ${mode} rejected: editing is locked during simulation`,
+        'WorkModeService'
+      );
       return; // editing is locked while a simulation runs
     }
     if (mode !== WorkMode.COMPONENT_PLACEMENT) {
       this.setSelectedComponentType(null);
     }
 
+    this.logging.debug(`setMode ${this._mode()} → ${mode}`, 'WorkModeService');
     this._mode.set(mode);
   }
 
@@ -48,6 +55,10 @@ export class WorkModeService {
 
   public setSelectedComponentType(componentType: ComponentType | null): void {
     if (this._mode() === WorkMode.SIMULATION) {
+      this.logging.debug(
+        `component-type selection ${componentType} ignored: editing is locked during simulation`,
+        'WorkModeService'
+      );
       return;
     }
     this._selectedComponentType.set(componentType);
