@@ -39,4 +39,15 @@ export class ConnectionPoint extends Graphics {
       (scale * environment.gridSize);
     this.scale.set(sizeInGridUnits);
   }
+
+  /**
+   * Re-fetches the dot's context after a theme change. The cache is
+   * theme-keyed, so this returns a freshly-coloured context; the instance's
+   * selection tint and scale carry over untouched.
+   */
+  public refreshTheme(): void {
+    this.context = this._graphicsProviderService.getGraphicsContext(
+      ConnectionPointGraphics
+    );
+  }
 }

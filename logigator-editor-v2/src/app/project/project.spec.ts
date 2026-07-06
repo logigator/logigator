@@ -299,6 +299,28 @@ describe('Project connection-point integration', () => {
     expect(cpAt(project, new Point(2.5, 2.5))).toBe(true);
   });
 
+  it('applyTheme restyles existing CPs in place (same instance, tint kept)', () => {
+    const h1 = makeWire(0, 2, WireDirection.HORIZONTAL, 2);
+    const h2 = makeWire(2, 2, WireDirection.HORIZONTAL, 3);
+    const v = makeWire(2, 0, WireDirection.VERTICAL, 2);
+    project.addWire(h1);
+    project.addWire(h2);
+    project.addWire(v);
+
+    const jn = new Point(2.5, 2.5);
+    const cp = project.connectionPoints.getCpAt(jn);
+    expect(cp).toBeDefined();
+    cp!.tint = 0xff0000;
+
+    project.applyTheme(false);
+
+    // A theme change recolours in place: the dot is neither destroyed nor
+    // replaced, and its selection tint survives the context swap.
+    expect(project.connectionPoints.getCpAt(jn)).toBe(cp);
+    expect(cp!.destroyed).toBe(false);
+    expect(cp!.tint).toBe(0xff0000);
+  });
+
   it('detachForDrag does not remove existing CPs, reattachFromDrag does not recompute', () => {
     const h1 = makeWire(0, 2, WireDirection.HORIZONTAL, 2);
     const h2 = makeWire(2, 2, WireDirection.HORIZONTAL, 3);

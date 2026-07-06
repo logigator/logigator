@@ -111,7 +111,13 @@ export class Project extends Container {
   /**
    * Re-fetches every theme-dependent GraphicsContext after a theme change. The
    * cache is theme-keyed, so redrawing each element picks up the new colors.
-   * Runs once on construction (a no-op on the still-empty scene).
+   * A no-op on a still-empty scene.
+   *
+   * Connection points only swap their theme-keyed context — a theme change
+   * never alters which dots exist, so this restyles them in place rather than
+   * re-deriving them from the quad tree. Their selection tint lives on the
+   * instance and survives the context swap, exactly as it does for components
+   * and wires.
    *
    * @param triggerRender request an on-screen frame after redrawing. Pass
    * `false` when redrawing only to feed an offscreen snapshot (dual-theme
@@ -125,14 +131,7 @@ export class Project extends Container {
     for (const wire of this._wires.items) {
       wire.refreshTheme();
     }
-    this._connectionPoints.recomputeAll(
-      this._wires.items,
-      this._components.items
-    );
-    // recomputeAll recreates every CP instance, so their selection tint is lost
-    // (component/wire tint lives on the object and survives redraw). Re-apply it
-    // to the new CPs. Selected components and wires keep their own tint.
-    this.selectionManager.retintCps();
+    this._connectionPoints.refreshTheme();
     if (triggerRender) this._ticker$.next('single');
   }
 
@@ -295,10 +294,18 @@ export class Project extends Container {
     this._pasteRequest$.next({ components, wires });
   }
 
-  public addComponent(component: Component) {
+  /**
+   * @param deferConnectionPoints skip the incremental connection-point
+   * recompute for this add. Bulk loaders pass `true` and follow the batch with
+   * a single {@link recomputeConnectionPoints}, which derives every dot in one
+   * de-duplicated pass instead of one overlapping quad-tree query per element.
+   */
+  public addComponent(component: Component, deferConnectionPoints = false) {
     component.applyScale(this.scale.x);
     this._components.insert(component);
-    this._connectionPoints.onComponentAdded(component.connectionPoints);
+    if (!deferConnectionPoints) {
+      this._connectionPoints.onComponentAdded(component.connectionPoints);
+    }
     this._portsChangeSubs.set(
       component.id,
       component.portsChange$.subscribe(({ oldPorts, newPorts }) => {
@@ -355,10 +362,29 @@ export class Project extends Container {
     this._ticker$.next('single');
   }
 
-  public addWire(wire: Wire) {
+  /**
+   * @param deferConnectionPoints skip the incremental connection-point
+   * recompute for this add. See {@link addComponent} for the batch-load pattern.
+   */
+  public addWire(wire: Wire, deferConnectionPoints = false) {
     wire.applyScale(this.scale.x);
     this._wires.insert(wire);
-    this._connectionPoints.onWireAdded(Wire.snapshot(wire));
+    if (!deferConnectionPoints) {
+      this._connectionPoints.onWireAdded(Wire.snapshot(wire));
+    }
+    this._ticker$.next('single');
+  }
+
+  /**
+   * Derives every connection point from the current circuit in one pass. Used
+   * after a batch of deferred adds (see {@link addComponent}) to build all dots
+   * once rather than incrementally per element.
+   */
+  public recomputeConnectionPoints(): void {
+    this._connectionPoints.recomputeAll(
+      this._wires.items,
+      this._components.items
+    );
     this._ticker$.next('single');
   }
 

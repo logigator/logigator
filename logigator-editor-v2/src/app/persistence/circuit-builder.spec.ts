@@ -1,10 +1,13 @@
 import { beforeEach, describe, expect, it } from 'vitest';
+import { Point } from 'pixi.js';
 import { TestBed } from '@angular/core/testing';
 import { configureTestBed } from '../../testing/configure-test-bed';
 import { BuiltInComponentType } from '../components/component-type.enum';
 import { ComponentProviderService } from '../components/component-provider.service';
-import { instantiateBody } from './circuit-builder';
+import { buildProject, instantiateBody } from './circuit-builder';
 import { SerializedCircuitBody } from './serialized-circuit';
+import { WireDirection } from '../wires/wire-direction.enum';
+import { makeWire } from '../../testing/factories';
 
 // The simulation watch tables are keyed by element position in the body
 // arrays: the compiler records against one instantiateBody run and a watch
@@ -55,5 +58,28 @@ describe('instantiateBody order contract', () => {
 
     components.forEach((c) => c.destroy({ children: true }));
     wires.forEach((w) => w.destroy());
+  });
+});
+
+// buildProject adds every element with connection-point derivation deferred,
+// then derives all dots in a single pass. This pins that the batched result
+// matches the incremental one: a 3-wire T-junction still produces its CP.
+describe('buildProject connection-point derivation', () => {
+  beforeEach(() => {
+    configureTestBed();
+  });
+
+  it('derives the T-junction CP after a deferred batch load', () => {
+    const wires = [
+      makeWire(0, 2, WireDirection.HORIZONTAL, 2),
+      makeWire(2, 2, WireDirection.HORIZONTAL, 3),
+      makeWire(2, 0, WireDirection.VERTICAL, 2)
+    ];
+
+    const project = buildProject([], wires);
+
+    expect(project.connectionPoints.hasCpAt(new Point(2.5, 2.5))).toBe(true);
+
+    project.destroy({ children: true });
   });
 });

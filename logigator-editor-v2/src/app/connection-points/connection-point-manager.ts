@@ -77,6 +77,18 @@ export class ConnectionPointManager {
     }
   }
 
+  /**
+   * Re-colours every existing CP for a theme change without touching topology.
+   * CP existence/position depend only on the circuit, not the theme, so a theme
+   * switch never adds or removes dots — it only swaps their theme-keyed context.
+   * Much cheaper than {@link recomputeAll}, which re-queries the quad tree.
+   */
+  public refreshTheme(): void {
+    for (const cp of this._cps.values()) {
+      cp.refreshTheme();
+    }
+  }
+
   public recomputeAt(p: Point): void {
     const shouldExist = this._evaluateAt(p);
     const key = this._key(p);

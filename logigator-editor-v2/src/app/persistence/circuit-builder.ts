@@ -8,8 +8,12 @@ import { LoggingService } from '../logging/logging.service';
 
 export function buildProject(components: Component[], wires: Wire[]): Project {
   const project = new Project();
-  for (const c of components) project.addComponent(c);
-  for (const w of wires) project.addWire(w);
+  // Defer connection-point derivation: adding each element incrementally would
+  // run one overlapping quad-tree query per element. Add them all, then derive
+  // every dot in a single de-duplicated pass.
+  for (const c of components) project.addComponent(c, true);
+  for (const w of wires) project.addWire(w, true);
+  project.recomputeConnectionPoints();
   return project;
 }
 
