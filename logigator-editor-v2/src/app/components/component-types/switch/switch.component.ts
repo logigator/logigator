@@ -1,4 +1,4 @@
-import { DestroyOptions, Graphics } from 'pixi.js';
+import { DestroyOptions } from 'pixi.js';
 import { Subject, takeUntil } from 'rxjs';
 import { Component } from '../../component';
 import { SwitchGraphics } from '../../../rendering/graphics/switch.graphics';
@@ -62,12 +62,10 @@ export class SwitchComponent extends Component<SwitchOptions> {
   }
 
   protected draw(): void {
-    this.addBody(1, 1);
-
-    const bar = new Graphics(
-      this.geometryService.getGraphicsContext(SwitchGraphics, this.isOn)
+    // The square switch body replaces the standard chamfered body entirely.
+    this.addScaledGraphics((scale) =>
+      this.geometryService.getGraphicsContext(SwitchGraphics, scale, this.isOn)
     );
-    this.addChild(bar);
   }
 
   public override destroy(options?: DestroyOptions): void {
