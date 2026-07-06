@@ -6,6 +6,16 @@ import { LoggingService } from '../logging/logging.service';
 
 type Quadrant = 'nw' | 'ne' | 'sw' | 'se';
 
+// Entries of this size and up are their own PixiJS render groups. A culled
+// flip marks the nearest ancestor render group's instruction set dirty, and a
+// dirty group rebuilds (and re-batches) in full — but instruction collection
+// stops at child render groups, so grouping the upper strata keeps each
+// rebuild bounded to one entry-sized region: the cull flips of viewport-edge
+// entries during a pan re-batch a handful of elements, never the whole scene.
+// Lowering the threshold shrinks the rebuild regions but raises the number of
+// render groups, each of which breaks batching and adds fixed per-frame cost.
+const RENDER_GROUP_MIN_SIZE = 32;
+
 class QuadTreeEntry<T extends GridElement> extends Container {
   branchItems: Container<T> = this.addChild(new Container<T>());
   leafItems: Container<T> | null = this.addChild(new Container<T>());
@@ -15,21 +25,18 @@ class QuadTreeEntry<T extends GridElement> extends Container {
   // The container itself always sits at position (0, 0) so that elements
   // reparented between entries never shift their world coordinates.
   //
-  // The same region also drives native culling: cullArea (in grid units, the
-  // entry's local space) lets PixiJS's Culler test the branch against the
-  // viewport via a single transformed-rect intersection. When the branch is
-  // off-screen its whole subtree is skipped — the quad tree makes culling
-  // sublinear without any per-element work for hidden regions.
-  //
-  // Culling stops at the entry level: the element containers are marked
-  // cullableChildren = false, so the Culler never descends to individual
-  // components/wires. An on-screen entry renders all its elements; an
-  // off-screen entry is culled whole. No element is ever bounds-checked.
+  // The same region also drives culling: QuadTreeContainer.cull() tests it
+  // against the grid-space view rectangle and sets the plain PixiJS `culled`
+  // flag at the entry level only. An on-screen entry renders all its
+  // elements; an off-screen entry is culled whole and its subtree skipped —
+  // both by the cull walk and at render time, where a culled render group
+  // never executes. No element is ever bounds-checked.
   constructor(x: number, y: number, size: number) {
     const region = new Rectangle(x, y, size, size);
-    super({ boundsArea: region, cullable: true, cullArea: region });
-    this.branchItems.cullableChildren = false;
-    this.leafItems!.cullableChildren = false;
+    super({
+      boundsArea: region,
+      isRenderGroup: size >= RENDER_GROUP_MIN_SIZE
+    });
   }
 
   get size() {
@@ -226,6 +233,27 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
   }
 
   /**
+   * Culls entries against a view rectangle in grid coordinates: an entry
+   * whose region misses the view gets its `culled` flag set and its subtree
+   * skipped; intersecting branches recurse so their children are re-tested.
+   * Pure rectangle math — the camera transform is folded into the view rect
+   * by the caller once, never applied per entry.
+   */
+  public cull(view: Rectangle): void {
+    this.cullEntry(this._tree, view);
+  }
+
+  private cullEntry(entry: QuadTreeEntry<T>, view: Rectangle): void {
+    const culled = !view.intersects(entry.boundsArea);
+    entry.culled = culled;
+    if (culled || !entry.branches) return;
+    this.cullEntry(entry.branches.nw, view);
+    this.cullEntry(entry.branches.ne, view);
+    this.cullEntry(entry.branches.sw, view);
+    this.cullEntry(entry.branches.se, view);
+  }
+
+  /**
    * Expands the quad tree by doubling its size.
    * @private
    */
@@ -363,10 +391,7 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
     }
 
     if (childrenCount < QuadTreeContainer.MIN_BRANCH_ELEMENTS) {
-      const leaf = new Container<T>();
-      // Cull at the entry level only — never descend to the elements.
-      leaf.cullableChildren = false;
-      entry.leafItems = entry.addChild(leaf);
+      entry.leafItems = entry.addChild(new Container<T>());
 
       for (const child of Object.values(entry.branches)) {
         for (const element of [...child.branchItems.children]) {

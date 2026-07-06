@@ -1,4 +1,4 @@
-import { Container, Matrix, Point } from 'pixi.js';
+import { Container, Matrix, Point, Rectangle } from 'pixi.js';
 import { Observable, Subject } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { Grid } from '../rendering/grid';
@@ -122,6 +122,19 @@ export class ViewportController {
       scale: this._container.scale.x,
       viewportSize: this._viewPortSize.clone()
     };
+  }
+
+  /**
+   * Writes the viewport rectangle in grid coordinates into `out` and returns
+   * it. Allocation-free so the per-frame cull pass can reuse one rectangle.
+   */
+  public gridView(out: Rectangle): Rectangle {
+    const factor = this._container.scale.x * environment.gridSize;
+    out.x = -this._container.position.x / factor;
+    out.y = -this._container.position.y / factor;
+    out.width = this._viewPortSize.x / factor;
+    out.height = this._viewPortSize.y / factor;
+    return out;
   }
 
   public get gridPosition(): Point {

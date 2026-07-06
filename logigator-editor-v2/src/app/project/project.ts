@@ -40,6 +40,8 @@ export class Project extends Container {
 
   private readonly _wireIntegrator = new WireIntegrator();
   private readonly _viewport: ViewportController;
+  // Reused by the per-frame cull pass (see cull()).
+  private readonly _cullView = new Rectangle();
   // Render-loop signals for the hosting canvas (TickerScheduler on the board,
   // the direct re-blit subscription on a watch).
   private readonly _ticker$ = new Subject<TickerSignal>();
@@ -162,6 +164,19 @@ export class Project extends Container {
 
   public resizeViewport(width: number, height: number): void {
     this._viewport.resizeViewport(width, height);
+  }
+
+  /**
+   * Entry-level cull pass: flags quad-tree entries outside the current
+   * viewport as culled so their render groups are skipped at render time. The
+   * board runs this before every blit; offscreen consumers (minimap, image
+   * export, watches) render un-culled instead via `uncullTree`, and the next
+   * board frame re-culls.
+   */
+  public cull(): void {
+    const view = this._viewport.gridView(this._cullView);
+    this._wires.cull(view);
+    this._components.cull(view);
   }
 
   public pan(point: Point): void {

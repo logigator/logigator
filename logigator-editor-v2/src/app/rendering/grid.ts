@@ -17,10 +17,6 @@ export class Grid extends Container {
   constructor() {
     super();
 
-    // Grid chunks are repositioned every frame to fill the viewport, so they are
-    // always on-screen — skip the Culler's per-chunk bounds checks.
-    this.cullableChildren = false;
-
     this.boundsArea = new Rectangle(
       -Number.MAX_VALUE / 2,
       -Number.MAX_VALUE / 2,

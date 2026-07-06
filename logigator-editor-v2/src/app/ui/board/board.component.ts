@@ -10,7 +10,7 @@ import {
   signal,
   ViewChild
 } from '@angular/core';
-import { Culler, Point, Rectangle, Ticker } from 'pixi.js';
+import { Point, Rectangle, Ticker } from 'pixi.js';
 import { ThemingService } from '../../theming/theming.service';
 import { Project } from '../../project/project';
 import { AssetsService } from '../../rendering/assets.service';
@@ -66,7 +66,7 @@ export class BoardComponent implements OnInit, OnDestroy {
   private _destroyed = false;
   private _renderScheduler: TickerScheduler | null = null;
   private _resizeObserver: ResizeObserver | null = null;
-  /** The host's CSS box — the visible area the cull pass tests against. */
+  /** The host's CSS box — fed to the project as its viewport size. */
   private readonly _view = new Rectangle();
 
   // All canvas input runs through the DOM pointer controller (PixiJS event
@@ -213,16 +213,17 @@ export class BoardComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * One board frame: cull the scene against the viewport (recomputing
-   * transforms so a pan/zoom can't leave newly-revealed edge elements hidden),
-   * then blit through the shared renderer.
+   * One board frame: cull the project's quad trees against the viewport, then
+   * blit through the shared renderer. The cull runs on every ticker-driven
+   * render, so the culled set stays current through pan/zoom without extra
+   * scheduling.
    */
   private _renderFrame(): void {
     const project = this.project();
     if (!project || !this._lease) {
       return;
     }
-    Culler.shared.cull(project, this._view, false);
+    project.cull();
     this._lease.render(project, this.canvas.nativeElement);
   }
 

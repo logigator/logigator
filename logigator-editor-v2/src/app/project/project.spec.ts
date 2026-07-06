@@ -6,6 +6,7 @@ import { Wire } from '../wires/wire';
 import { WireDirection } from '../wires/wire-direction.enum';
 import { Direction } from '../utils/direction';
 import { makeAnd, makeWire } from '../../testing/factories';
+import { environment } from '../../environments/environment';
 
 describe('Project.hasComponentCollision', () => {
   let project: Project;
@@ -709,5 +710,70 @@ describe('Project portsChange$ rebucket', () => {
     target.numInputs = 50;
 
     expect([...project.queryComponentsInRange(farRect)]).toContain(target);
+  });
+});
+
+describe('Project.cull', () => {
+  let project: Project;
+
+  const gridSize = environment.gridSize;
+
+  beforeEach(() => {
+    configureTestBed();
+    project = new Project();
+    // A 10×10 grid-unit viewport at scale 1.
+    project.resizeViewport(gridSize * 10, gridSize * 10);
+  });
+
+  afterEach(() => {
+    project.destroy({ children: true });
+  });
+
+  /** True if the element renders as culled, i.e. any ancestor is culled. */
+  function isCulled(element: Container): boolean {
+    for (let c: Container | null = element; c; c = c.parent) {
+      if (c.culled) return true;
+    }
+    return false;
+  }
+
+  it('keeps on-screen components and wires visible', () => {
+    const comp = makeAnd(2);
+    comp.position.set(2, 2);
+    project.addComponent(comp);
+    const wire = makeWire(5, 5, WireDirection.HORIZONTAL, 3);
+    project.addWire(wire);
+
+    project.cull();
+
+    expect(isCulled(comp)).toBe(false);
+    expect(isCulled(wire)).toBe(false);
+  });
+
+  it('culls both trees when the viewport is panned off the circuit', () => {
+    const comp = makeAnd(2);
+    comp.position.set(2, 2);
+    project.addComponent(comp);
+    const wire = makeWire(5, 5, WireDirection.HORIZONTAL, 3);
+    project.addWire(wire);
+
+    project.setPosition(new Point(-gridSize * 1000, -gridSize * 1000));
+    project.cull();
+
+    expect(isCulled(comp)).toBe(true);
+    expect(isCulled(wire)).toBe(true);
+  });
+
+  it('panning back re-reveals culled elements', () => {
+    const comp = makeAnd(2);
+    comp.position.set(2, 2);
+    project.addComponent(comp);
+
+    project.setPosition(new Point(-gridSize * 1000, -gridSize * 1000));
+    project.cull();
+    project.setPosition(new Point(0, 0));
+    project.cull();
+
+    expect(isCulled(comp)).toBe(false);
   });
 });

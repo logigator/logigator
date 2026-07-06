@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import 'pixi.js/math-extras';
 import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { Container, Point } from 'pixi.js';
+import { Container, Point, Rectangle } from 'pixi.js';
 import { setStaticDIInjector } from '../utils/get-di';
 import { ViewportController, ViewportState } from './viewport-controller';
 import { Grid } from '../rendering/grid';
@@ -131,6 +131,43 @@ describe('ViewportController', () => {
       const gp = viewport.gridPosition;
       expect(gp.x).toBeCloseTo(5, 5);
       expect(gp.y).toBeCloseTo(3, 5);
+    });
+  });
+
+  describe('gridView', () => {
+    it('covers the viewport in grid units at scale 1', () => {
+      viewport.resizeViewport(
+        environment.gridSize * 40,
+        environment.gridSize * 30
+      );
+      const view = viewport.gridView(new Rectangle());
+      expect(view.x).toBeCloseTo(0, 10);
+      expect(view.y).toBeCloseTo(0, 10);
+      expect(view.width).toBeCloseTo(40, 5);
+      expect(view.height).toBeCloseTo(30, 5);
+    });
+
+    it('offsets the origin by the pan and scales the size by the zoom', () => {
+      viewport.resizeViewport(
+        environment.gridSize * 40,
+        environment.gridSize * 30
+      );
+      viewport.setPosition(
+        new Point(environment.gridSize * -5, environment.gridSize * -3)
+      );
+      viewport.zoomIn(new Point(0, 0));
+
+      const view = viewport.gridView(new Rectangle());
+      // Zoom anchored at the (panned) origin keeps the top-left corner fixed.
+      expect(view.x).toBeCloseTo(5, 5);
+      expect(view.y).toBeCloseTo(3, 5);
+      expect(view.width).toBeCloseTo(40 / 1.2, 5);
+      expect(view.height).toBeCloseTo(30 / 1.2, 5);
+    });
+
+    it('writes into and returns the passed rectangle', () => {
+      const out = new Rectangle();
+      expect(viewport.gridView(out)).toBe(out);
     });
   });
 

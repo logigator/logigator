@@ -578,4 +578,70 @@ describe('QuadTreeContainer', () => {
       expect(queryAll().filter((x) => x === c).length).toBe(1);
     });
   });
+
+  // ── cull ──────────────────────────────────────────────────────────────────
+
+  describe('cull', () => {
+    /** True if the item renders as culled, i.e. any ancestor entry is culled. */
+    function isCulled(item: TestItem): boolean {
+      for (let c: Container | null = item; c; c = c.parent) {
+        if (c.culled) return true;
+      }
+      return false;
+    }
+
+    /** Inserts a 5-item cluster (forces a leaf split) around (x, y). */
+    function insertCluster(x: number, y: number): TestItem[] {
+      const items = [
+        makeItem(x, y, 1, 1),
+        makeItem(x + 2, y, 1, 1),
+        makeItem(x, y + 2, 1, 1),
+        makeItem(x + 2, y + 2, 1, 1),
+        makeItem(x + 1, y + 1, 1, 1)
+      ];
+      for (const item of items) tree.insert(item);
+      return items;
+    }
+
+    it('culls entries outside the view and keeps intersecting ones', () => {
+      const near = insertCluster(2, 2);
+      const far = insertCluster(40, 40);
+
+      tree.cull(new Rectangle(0, 0, 10, 10));
+
+      for (const item of near) expect(isCulled(item)).toBe(false);
+      for (const item of far) expect(isCulled(item)).toBe(true);
+    });
+
+    it('culls everything when the view misses the whole tree', () => {
+      const items = insertCluster(2, 2);
+
+      tree.cull(new Rectangle(100, 100, 10, 10));
+
+      for (const item of items) expect(isCulled(item)).toBe(true);
+    });
+
+    it('re-culling against a moved view reveals previously culled entries', () => {
+      const near = insertCluster(2, 2);
+      const far = insertCluster(40, 40);
+
+      tree.cull(new Rectangle(0, 0, 10, 10));
+      tree.cull(new Rectangle(38, 38, 10, 10));
+
+      for (const item of far) expect(isCulled(item)).toBe(false);
+      for (const item of near) expect(isCulled(item)).toBe(true);
+    });
+
+    it('a view covering everything culls nothing', () => {
+      const near = insertCluster(2, 2);
+      const far = insertCluster(40, 40);
+
+      tree.cull(new Rectangle(0, 0, 10, 10));
+      tree.cull(new Rectangle(0, 0, 64, 64));
+
+      for (const item of [...near, ...far]) {
+        expect(isCulled(item)).toBe(false);
+      }
+    });
+  });
 });
