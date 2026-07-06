@@ -60,8 +60,6 @@ export class Project extends Container {
   private readonly _inspectRequest$ = new Subject<Component>();
 
   private readonly _connectionPoints = new ConnectionPointManager(
-    (rect) => this.queryWiresInRange(rect),
-    (rect) => this.queryComponentsInRange(rect),
     () => this.scale.x
   );
   private readonly _portsChangeSubs = new Map<number, Subscription>();
@@ -470,6 +468,11 @@ export class Project extends Container {
     for (const w of wires) {
       this._wires.remove(w);
     }
+    // Drop the pre-drag termination counts (the elements are still at their old
+    // positions here); reattachFromDrag re-adds them at the new ones. Existing
+    // dots stay put until the settle pass — this only keeps the count map in
+    // step with quad-tree membership.
+    this._connectionPoints.removeTerminations(components, wires);
     this._ticker$.next('single');
   }
 
@@ -483,6 +486,9 @@ export class Project extends Container {
     for (const w of wires) {
       if (!w.destroyed) this._wires.insert(w);
     }
+    // Re-add termination counts at the post-drag positions (destroyed elements
+    // are skipped in both places, so their counts stay dropped).
+    this._connectionPoints.addTerminations(components, wires);
     this._ticker$.next('single');
   }
 

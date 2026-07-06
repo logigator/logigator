@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { Point, Rectangle } from 'pixi.js';
+import { Point } from 'pixi.js';
 import { setStaticDIInjector } from '../utils/get-di';
 import { ConnectionPointManager } from './connection-point-manager';
 import { Wire } from '../wires/wire';
@@ -10,21 +10,11 @@ import { WireDirection } from '../wires/wire-direction.enum';
 import { Component } from '../components/component';
 import { makeAnd, makeWire } from '../../testing/factories';
 
-function makeManager(
-  wires: Wire[],
-  components: Component[] = []
-): ConnectionPointManager {
-  function* wireQuery(rect: Rectangle): Generator<Wire> {
-    for (const w of wires) {
-      if (w.gridBounds.intersects(rect)) yield w;
-    }
-  }
-  function* compQuery(rect: Rectangle): Generator<Component> {
-    for (const c of components) {
-      if (c.gridBounds.intersects(rect)) yield c;
-    }
-  }
-  return new ConnectionPointManager(wireQuery, compQuery, () => 1);
+// The manager derives connection points from termination counts it maintains
+// through its own notifications, so tests build state by calling onWireAdded /
+// onComponentAdded / recomputeAll — not through any injected spatial query.
+function makeManager(): ConnectionPointManager {
+  return new ConnectionPointManager(() => 1);
 }
 
 const snap = Wire.snapshot;
@@ -49,7 +39,7 @@ describe('ConnectionPointManager', () => {
   it('single wire endpoint, nothing else — no CP', () => {
     const w = makeWire(0, 0, WireDirection.HORIZONTAL, 3);
     wires.push(w);
-    const mgr = makeManager(wires);
+    const mgr = makeManager();
     mgr.onWireAdded(snap(w));
     expect(mgr.hasCpAt(w.connectionPoints[0])).toBe(false);
     expect(mgr.hasCpAt(w.connectionPoints[1])).toBe(false);
@@ -59,7 +49,7 @@ describe('ConnectionPointManager', () => {
     const h = makeWire(0, 0, WireDirection.HORIZONTAL, 3);
     const v = makeWire(3, 0, WireDirection.VERTICAL, 3);
     wires.push(h, v);
-    const mgr = makeManager(wires);
+    const mgr = makeManager();
     mgr.onWireAdded(snap(h));
     mgr.onWireAdded(snap(v));
     expect(mgr.hasCpAt(new Point(3.5, 0.5))).toBe(false);
@@ -69,7 +59,7 @@ describe('ConnectionPointManager', () => {
     const h = makeWire(0, 2, WireDirection.HORIZONTAL, 5);
     const v = makeWire(2, 0, WireDirection.VERTICAL, 4);
     wires.push(h, v);
-    const mgr = makeManager(wires);
+    const mgr = makeManager();
     mgr.onWireAdded(snap(h));
     mgr.onWireAdded(snap(v));
     // Interior-on-interior is allowed and does not form a CP under the new rule.
@@ -81,7 +71,7 @@ describe('ConnectionPointManager', () => {
     const h2 = makeWire(2, 2, WireDirection.HORIZONTAL, 3);
     const v = makeWire(2, 0, WireDirection.VERTICAL, 2);
     wires.push(h1, h2, v);
-    const mgr = makeManager(wires);
+    const mgr = makeManager();
     mgr.onWireAdded(snap(h1));
     mgr.onWireAdded(snap(h2));
     mgr.onWireAdded(snap(v));
@@ -94,7 +84,7 @@ describe('ConnectionPointManager', () => {
     const v1 = makeWire(2, 0, WireDirection.VERTICAL, 2);
     const v2 = makeWire(2, 2, WireDirection.VERTICAL, 2);
     wires.push(h1, h2, v1, v2);
-    const mgr = makeManager(wires);
+    const mgr = makeManager();
     for (const w of wires) mgr.onWireAdded(snap(w));
     expect(mgr.hasCpAt(new Point(2.5, 2.5))).toBe(true);
   });
@@ -102,7 +92,7 @@ describe('ConnectionPointManager', () => {
   it('port-only at P, no wires — no CP', () => {
     const comp = makeAnd(2, Direction.E, 0, 0);
     components.push(comp);
-    const mgr = makeManager(wires, components);
+    const mgr = makeManager();
     mgr.onComponentAdded(comp.connectionPoints);
     const tip = comp.connectionPoints[0];
     expect(mgr.hasCpAt(tip)).toBe(false);
@@ -115,7 +105,7 @@ describe('ConnectionPointManager', () => {
     const wireToPort = new Wire(WireDirection.HORIZONTAL, 3);
     wireToPort.position.set(-3.5, 0.5);
     wires.push(wireToPort);
-    const mgr = makeManager(wires, components);
+    const mgr = makeManager();
     mgr.onComponentAdded(comp.connectionPoints);
     mgr.onWireAdded(snap(wireToPort));
     expect(mgr.hasCpAt(portTip)).toBe(false);
@@ -130,7 +120,7 @@ describe('ConnectionPointManager', () => {
     const w2 = new Wire(WireDirection.VERTICAL, 3);
     w2.position.set(-0.5, -2.5); // end at (-0.5, 0.5)
     wires.push(w1, w2);
-    const mgr = makeManager(wires, components);
+    const mgr = makeManager();
     mgr.onComponentAdded(comp.connectionPoints);
     mgr.onWireAdded(snap(w1));
     mgr.onWireAdded(snap(w2));
@@ -145,7 +135,7 @@ describe('ConnectionPointManager', () => {
     const h2 = makeWire(2, 2, WireDirection.HORIZONTAL, 3);
     const v = makeWire(2, 0, WireDirection.VERTICAL, 2);
     wires.push(h1, h2);
-    const mgr = makeManager(wires);
+    const mgr = makeManager();
     mgr.onWireAdded(snap(h1));
     mgr.onWireAdded(snap(h2));
     expect(mgr.hasCpAt(new Point(2.5, 2.5))).toBe(false);
@@ -159,7 +149,7 @@ describe('ConnectionPointManager', () => {
     const h2 = makeWire(2, 2, WireDirection.HORIZONTAL, 3);
     const v = makeWire(2, 0, WireDirection.VERTICAL, 2);
     wires.push(h1, h2, v);
-    const mgr = makeManager(wires);
+    const mgr = makeManager();
     mgr.onWireAdded(snap(h1));
     mgr.onWireAdded(snap(h2));
     mgr.onWireAdded(snap(v));
@@ -176,7 +166,7 @@ describe('ConnectionPointManager', () => {
     const h2 = makeWire(2, 2, WireDirection.HORIZONTAL, 3);
     const v = makeWire(2, 0, WireDirection.VERTICAL, 2);
     wires.push(h1, h2, v);
-    const mgr = makeManager(wires);
+    const mgr = makeManager();
     mgr.onWireAdded(snap(h1));
     mgr.onWireAdded(snap(h2));
     mgr.onWireAdded(snap(v));
@@ -201,7 +191,7 @@ describe('ConnectionPointManager', () => {
     const v2 = makeWire(7, 0, WireDirection.VERTICAL, 2);
 
     wires.push(h1, h2, v1, h3, h4, v2);
-    const mgr = makeManager(wires);
+    const mgr = makeManager();
     mgr.recomputeAll(wires, components);
     expect(mgr.hasCpAt(new Point(2.5, 2.5))).toBe(true);
     expect(mgr.hasCpAt(new Point(7.5, 2.5))).toBe(true);
@@ -212,7 +202,7 @@ describe('ConnectionPointManager', () => {
     const h2 = makeWire(2, 2, WireDirection.HORIZONTAL, 3);
     const v = makeWire(2, 0, WireDirection.VERTICAL, 2);
     wires.push(h1, h2, v);
-    const mgr = makeManager(wires);
+    const mgr = makeManager();
     mgr.recomputeAll(wires, components);
     const before = mgr.layer.children.length;
 
@@ -227,7 +217,7 @@ describe('ConnectionPointManager', () => {
   it('affectedPointsForWire returns just the wire endpoints', () => {
     const h = makeWire(0, 0, WireDirection.HORIZONTAL, 5);
     wires.push(h);
-    const mgr = makeManager(wires);
+    const mgr = makeManager();
     const points = [...mgr.affectedPointsForWire(h)];
     expect(points.length).toBe(2);
     const hasStart = points.some((p) => p.x === 0.5 && p.y === 0.5);
@@ -239,7 +229,7 @@ describe('ConnectionPointManager', () => {
   it('affectedPointsForSnapshot returns just the snapshot endpoints', () => {
     const h = makeWire(0, 0, WireDirection.HORIZONTAL, 5);
     wires.push(h);
-    const mgr = makeManager(wires);
+    const mgr = makeManager();
     const points = [...mgr.affectedPointsForSnapshot(snap(h))];
     expect(points.length).toBe(2);
   });

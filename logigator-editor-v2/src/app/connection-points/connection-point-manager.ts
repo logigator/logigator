@@ -1,4 +1,4 @@
-import { Container, Point, Rectangle } from 'pixi.js';
+import { Container, Point } from 'pixi.js';
 import { Wire } from '../wires/wire';
 import { WireSnapshot } from '../wires/wire-snapshot.model';
 import { Component } from '../components/component';
@@ -26,28 +26,55 @@ export class ConnectionPointManager {
 
   private readonly _cps = new Map<string, ConnectionPoint>();
 
-  constructor(
-    private readonly queryWiresInRange: (rect: Rectangle) => Generator<Wire>,
-    private readonly queryComponentsInRange: (
-      rect: Rectangle
-    ) => Generator<Component>,
-    private readonly getScale: () => number
-  ) {}
+  // How many wire endpoints / component ports terminate at each "x,y". A dot
+  // exists iff this reaches 3 (see _evaluateAt), so maintaining it incrementally
+  // turns CP evaluation into a map lookup instead of a quad-tree range query.
+  // Kept in lock-step with the project's wire/component membership: every
+  // add/remove/move/detach path adjusts it at the affected points.
+  private readonly _terminationCounts = new Map<string, number>();
+
+  constructor(private readonly getScale: () => number) {}
 
   public onWireAdded(snapshot: WireSnapshot): void {
+    this._changeWireTerminations(snapshot, +1);
     this._recomputeForWireChange(snapshot);
   }
 
   public onWireRemoved(snapshot: WireSnapshot): void {
+    this._changeWireTerminations(snapshot, -1);
     this._recomputeForWireChange(snapshot);
   }
 
   public onComponentAdded(ports: readonly Point[]): void {
+    for (const p of ports) this._changeTermination(p, +1);
     this._recomputeForComponentChange(ports);
   }
 
   public onComponentRemoved(ports: readonly Point[]): void {
+    for (const p of ports) this._changeTermination(p, -1);
     this._recomputeForComponentChange(ports);
+  }
+
+  /**
+   * Adjusts termination counts for a set of elements without recomputing any
+   * dots. Used by the drag lifecycle: detach removes the counts at the pre-drag
+   * positions, reattach re-adds them at the post-drag positions, keeping the
+   * count map mirroring quad-tree membership so the settle pass (and any wire
+   * splits/merges) sees correct counts. The visible dots are reconciled once at
+   * the end via recomputeCpsForMovedSelection.
+   */
+  public addTerminations(
+    components: Iterable<Component>,
+    wires: Iterable<Wire>
+  ): void {
+    this._changeTerminationsOf(components, wires, +1);
+  }
+
+  public removeTerminations(
+    components: Iterable<Component>,
+    wires: Iterable<Wire>
+  ): void {
+    this._changeTerminationsOf(components, wires, -1);
   }
 
   public recomputeAll(
@@ -60,13 +87,22 @@ export class ConnectionPointManager {
     }
     this._cps.clear();
 
+    // items yields one-shot iterators, so materialize before the two passes.
+    const components = [...allComponents];
+    const wires = [...allWires];
+
+    // Rebuild the termination counts from scratch in one linear pass, then
+    // derive each unique candidate point from the map.
+    this._terminationCounts.clear();
+    this._changeTerminationsOf(components, wires, +1);
+
     const candidates = new PointSet();
-    for (const wire of allWires) {
+    for (const wire of wires) {
       const [start, end] = wire.connectionPoints;
       candidates.add(start);
       candidates.add(end);
     }
-    for (const comp of allComponents) {
+    for (const comp of components) {
       for (const p of comp.connectionPoints) {
         candidates.add(p);
       }
@@ -235,23 +271,42 @@ export class ConnectionPointManager {
   private _evaluateAt(p: Point): boolean {
     // Under the split-on-touch invariants, wire interiors never contain a wire
     // endpoint or component port, so termination counting collapses to exact
-    // endpoint-equality. A CP exists iff at least 3 things terminate at P.
-    const queryRect = new Rectangle(p.x - 1, p.y - 1, 2, 2);
-    let terminations = 0;
-    for (const wire of this.queryWiresInRange(queryRect)) {
-      const [start, end] = wire.connectionPoints;
-      if (start.x === p.x && start.y === p.y) terminations++;
-      if (end.x === p.x && end.y === p.y) terminations++;
-      if (terminations >= 3) return true;
+    // endpoint-equality — which the maintained count map already holds. A CP
+    // exists iff at least 3 things terminate at P.
+    return (this._terminationCounts.get(this._key(p)) ?? 0) >= 3;
+  }
+
+  private _changeWireTerminations(snap: WireSnapshot, delta: number): void {
+    this._changeTermination(snap.start, delta);
+    this._changeTermination(snap.end, delta);
+  }
+
+  private _changeTerminationsOf(
+    components: Iterable<Component>,
+    wires: Iterable<Wire>,
+    delta: number
+  ): void {
+    // Multiplicity matters: two endpoints landing on one point count as two, so
+    // this never de-duplicates the way the candidate PointSet does.
+    for (const c of components) {
+      if (c.destroyed) continue;
+      for (const p of c.connectionPoints) this._changeTermination(p, delta);
     }
-    for (const comp of this.queryComponentsInRange(queryRect)) {
-      for (const port of comp.connectionPoints) {
-        if (port.x === p.x && port.y === p.y) {
-          terminations++;
-          if (terminations >= 3) return true;
-        }
-      }
+    for (const w of wires) {
+      if (w.destroyed) continue;
+      const [start, end] = w.connectionPoints;
+      this._changeTermination(start, delta);
+      this._changeTermination(end, delta);
     }
-    return false;
+  }
+
+  private _changeTermination(p: Point, delta: number): void {
+    const key = this._key(p);
+    const next = (this._terminationCounts.get(key) ?? 0) + delta;
+    if (next <= 0) {
+      this._terminationCounts.delete(key);
+    } else {
+      this._terminationCounts.set(key, next);
+    }
   }
 }

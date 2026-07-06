@@ -321,6 +321,61 @@ describe('Project connection-point integration', () => {
     expect(cp!.tint).toBe(0xff0000);
   });
 
+  // The drag lifecycle maintains termination counts out of band: detach drops
+  // them at the old positions, reattach re-adds them at the new ones, and the
+  // settle pass reconciles the visible dots. These two pin that a drag which
+  // changes a junction's termination count flips the CP correctly.
+  it('dragging an endpoint onto a 2-termination point creates a CP', () => {
+    const h1 = makeWire(0, 2, WireDirection.HORIZONTAL, 2); // end (2.5,2.5)
+    const v = makeWire(2, 0, WireDirection.VERTICAL, 2); // end (2.5,2.5)
+    project.addWire(h1);
+    project.addWire(v);
+    const jn = new Point(2.5, 2.5);
+    expect(cpAt(project, jn)).toBe(false); // T=2, no dot
+
+    const mover = makeWire(5, 5, WireDirection.HORIZONTAL, 2);
+    project.addWire(mover);
+    const oldSnap = Wire.snapshot(mover);
+
+    // Drag it so its start lands on the junction: detach (old pos) → move →
+    // reattach (new pos) → settle.
+    project.detachForDrag([], [mover]);
+    mover.position.set(mover.position.x - 3, mover.position.y - 3);
+    project.reattachFromDrag([], [mover]);
+    project.connectionPoints.recomputeCpsForMovedSelection(
+      new Map(),
+      [oldSnap],
+      [],
+      [mover]
+    );
+
+    expect(cpAt(project, jn)).toBe(true); // T=3 now
+  });
+
+  it('dragging an endpoint away from a 3-junction destroys its CP', () => {
+    const h1 = makeWire(0, 2, WireDirection.HORIZONTAL, 2);
+    const h2 = makeWire(2, 2, WireDirection.HORIZONTAL, 3);
+    const v = makeWire(2, 0, WireDirection.VERTICAL, 2);
+    project.addWire(h1);
+    project.addWire(h2);
+    project.addWire(v);
+    const jn = new Point(2.5, 2.5);
+    expect(cpAt(project, jn)).toBe(true); // T=3
+
+    const oldSnap = Wire.snapshot(v);
+    project.detachForDrag([], [v]);
+    v.position.set(v.position.x + 4, v.position.y);
+    project.reattachFromDrag([], [v]);
+    project.connectionPoints.recomputeCpsForMovedSelection(
+      new Map(),
+      [oldSnap],
+      [],
+      [v]
+    );
+
+    expect(cpAt(project, jn)).toBe(false); // T=2 now
+  });
+
   it('detachForDrag does not remove existing CPs, reattachFromDrag does not recompute', () => {
     const h1 = makeWire(0, 2, WireDirection.HORIZONTAL, 2);
     const h2 = makeWire(2, 2, WireDirection.HORIZONTAL, 3);
