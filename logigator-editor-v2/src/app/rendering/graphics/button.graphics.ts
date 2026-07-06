@@ -1,4 +1,4 @@
-import { GraphicsContext } from 'pixi.js';
+import { StaticGraphicsContext } from './static-graphics-context';
 import { PX } from '../../utils/grid';
 import { getStaticDI } from '../../utils/get-di';
 import { ThemingService } from '../../theming/theming.service';
@@ -8,7 +8,7 @@ import { ThemingService } from '../../theming/theming.service';
  * chamfered standard body — with an inset inner square that fills with the
  * wire color while the button is pressed.
  */
-export class ButtonGraphics extends GraphicsContext {
+export class ButtonGraphics extends StaticGraphicsContext {
   constructor(scale: number, pressed: boolean) {
     super();
 

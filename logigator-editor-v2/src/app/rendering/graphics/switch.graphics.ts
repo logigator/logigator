@@ -1,4 +1,4 @@
-import { GraphicsContext } from 'pixi.js';
+import { StaticGraphicsContext } from './static-graphics-context';
 import { PX } from '../../utils/grid';
 import { getStaticDI } from '../../utils/get-di';
 import { ThemingService } from '../../theming/theming.service';
@@ -9,7 +9,7 @@ import { ThemingService } from '../../theming/theming.service';
  * the top, filled with the wire color. Off: it sits at the bottom as an empty
  * outline.
  */
-export class SwitchGraphics extends GraphicsContext {
+export class SwitchGraphics extends StaticGraphicsContext {
   constructor(scale: number, on: boolean) {
     super();
 

@@ -1,10 +1,10 @@
-import { GraphicsContext } from 'pixi.js';
+import { StaticGraphicsContext } from './static-graphics-context';
 import { fromGrid } from '../../utils/grid';
 import { environment } from '../../../environments/environment';
 import { getStaticDI } from '../../utils/get-di';
 import { ThemingService } from '../../theming/theming.service';
 
-export class GridGraphics extends GraphicsContext {
+export class GridGraphics extends StaticGraphicsContext {
   constructor(size: number, scale: number) {
     super();
 

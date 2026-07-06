@@ -1,9 +1,9 @@
-import { GraphicsContext } from 'pixi.js';
+import { StaticGraphicsContext } from './static-graphics-context';
 import { PX } from '../../utils/grid';
 import { getStaticDI } from '../../utils/get-di';
 import { ThemingService } from '../../theming/theming.service';
 
-export class ComponentGraphics extends GraphicsContext {
+export class ComponentGraphics extends StaticGraphicsContext {
   constructor(width: number, height: number, scale: number) {
     super();
 

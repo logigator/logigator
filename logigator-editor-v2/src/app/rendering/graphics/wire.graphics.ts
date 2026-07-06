@@ -1,4 +1,4 @@
-import { GraphicsContext } from 'pixi.js';
+import { StaticGraphicsContext } from './static-graphics-context';
 import { getStaticDI } from '../../utils/get-di';
 import { ThemingService } from '../../theming/theming.service';
 
@@ -14,7 +14,7 @@ export const POWERED_WIRE_THICKNESS = 3;
 export const POWERED_WIRE_PIVOT =
   (POWERED_WIRE_THICKNESS - 1) / (2 * POWERED_WIRE_THICKNESS);
 
-export class WireGraphics extends GraphicsContext {
+export class WireGraphics extends StaticGraphicsContext {
   constructor() {
     super();
 

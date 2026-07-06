@@ -1,4 +1,4 @@
-import { GraphicsContext } from 'pixi.js';
+import { StaticGraphicsContext } from './static-graphics-context';
 
 /**
  * An LED's body: a grid-cell-filling disc, drawn white so the lit state is a
@@ -6,7 +6,7 @@ import { GraphicsContext } from 'pixi.js';
  * change PixiJS patches in place, so a blinking LED never triggers a redraw
  * or context swap during simulation (see WireGraphics).
  */
-export class LedGraphics extends GraphicsContext {
+export class LedGraphics extends StaticGraphicsContext {
   constructor() {
     super();
 

@@ -1,4 +1,4 @@
-import { GraphicsContext } from 'pixi.js';
+import { StaticGraphicsContext } from './static-graphics-context';
 import { PX } from '../../utils/grid';
 import { getStaticDI } from '../../utils/get-di';
 import { ThemingService } from '../../theming/theming.service';
@@ -19,7 +19,7 @@ export const NEGATION_BUBBLE_STROKE = 2 * PX;
  * lit state, so all bubbles share one context and the context survives zoom
  * unchanged (mirroring the port stub).
  */
-export class NegationBubbleGraphics extends GraphicsContext {
+export class NegationBubbleGraphics extends StaticGraphicsContext {
   constructor(lit = false) {
     super();
 

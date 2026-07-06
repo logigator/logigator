@@ -1,8 +1,8 @@
-import { GraphicsContext } from 'pixi.js';
+import { StaticGraphicsContext } from './static-graphics-context';
 import { getStaticDI } from '../../utils/get-di';
 import { ThemingService } from '../../theming/theming.service';
 
-export class ConnectionPointGraphics extends GraphicsContext {
+export class ConnectionPointGraphics extends StaticGraphicsContext {
   constructor() {
     super();
 

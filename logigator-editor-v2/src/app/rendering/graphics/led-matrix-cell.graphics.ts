@@ -1,11 +1,11 @@
-import { GraphicsContext } from 'pixi.js';
+import { StaticGraphicsContext } from './static-graphics-context';
 
 /**
  * One LED-matrix cell: a white unit square shared by every cell — each cell's
  * `Graphics` tints it to the theme's on/off LED color, so state changes are a
  * tint write instead of a context swap.
  */
-export class LedMatrixCellGraphics extends GraphicsContext {
+export class LedMatrixCellGraphics extends StaticGraphicsContext {
   constructor() {
     super();
 

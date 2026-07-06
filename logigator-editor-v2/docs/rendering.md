@@ -312,6 +312,8 @@ When an inserted element falls outside the current root, `expand()` doubles the 
 
 Angular `Injectable` (root-provided) that deduplicates `GraphicsContext` instances. PixiJS `GraphicsContext` objects hold the vertex/geometry data for a shape and can be shared across many `Graphics` display objects — sharing avoids rebuilding the same geometry repeatedly.
 
+Only `StaticGraphicsContext` subclasses are cacheable (see below): the cache never evicts, and every cached context is baked once in its constructor and immutable afterwards.
+
 ```ts
 getGraphicsContext<T extends CacheableGraphics>(
   graphics: T,
@@ -327,7 +329,11 @@ Both `Wire` and `Grid` call this service via `getStaticDI` (the static DI escape
 
 ## `graphics/` — `GraphicsContext` subclasses
 
-All three extend `GraphicsContext` directly. They are constructed with parameters and immediately draw into the context in the constructor body. Instances are meant to be shared (via `GraphicsProviderService`), not mutated after creation.
+All extend `StaticGraphicsContext` (`graphics/static-graphics-context.ts`), which extends `GraphicsContext`. They are constructed with parameters and immediately draw into the context in the constructor body. Instances are shared (via `GraphicsProviderService`) and never mutated after creation.
+
+### `StaticGraphicsContext`
+
+The base class encodes the baked-once/immutable contract in a perf-critical way: it drops all `update`/`unload` subscriptions (`on`/`once` no-op for those events) and opts out of the renderer's GPU garbage collection (`autoGarbageCollect = false`, so a dropped `unload` notification can never leave attached `Graphics` holding stale batch clones). Neither event can carry information on an immutable, never-collected context, and empty listener lists make a context swap (`graphics.context = other`) O(1) per `Graphics`. With the stock subscriptions, eventemitter3 rebuilds the shared context's listener array on every detach, so the zoom-step swap wave over a big board (thousands of attached `Graphics` per context) is quadratic — the dominant cost in zoom profiles.
 
 ### `ComponentGraphics`
 

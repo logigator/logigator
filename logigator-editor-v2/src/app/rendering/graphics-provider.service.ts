@@ -1,8 +1,12 @@
 import { inject, Injectable } from '@angular/core';
 import { GraphicsContext } from 'pixi.js';
 import { ThemingService } from '../theming/theming.service';
+import { StaticGraphicsContext } from './graphics/static-graphics-context';
 
-type CacheableGraphics = new (...args: never[]) => GraphicsContext;
+// Cached contexts are shared across many Graphics and live forever, which is
+// exactly the contract StaticGraphicsContext encodes — plain GraphicsContext
+// subclasses are not cacheable here.
+type CacheableGraphics = new (...args: never[]) => StaticGraphicsContext;
 
 @Injectable({
   providedIn: 'root'
