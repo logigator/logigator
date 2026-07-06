@@ -1,15 +1,16 @@
 import { GraphicsContext } from 'pixi.js';
-import { getStaticDI } from '../../utils/get-di';
-import { ThemingService } from '../../theming/theming.service';
 
-/** An LED's body: a grid-cell-filling disc, tinted by its lit state. */
+/**
+ * An LED's body: a grid-cell-filling disc, drawn white so the lit state is a
+ * pure tint (white × tint = the exact theme color). Tint is a color-path
+ * change PixiJS patches in place, so a blinking LED never triggers a redraw
+ * or context swap during simulation (see WireGraphics).
+ */
 export class LedGraphics extends GraphicsContext {
-  constructor(lit: boolean) {
+  constructor() {
     super();
 
-    const theme = getStaticDI(ThemingService).currentTheme();
-
     this.circle(0.5, 0.5, 0.5);
-    this.fill(lit ? theme.ledOn : theme.ledOff);
+    this.fill(0xffffff);
   }
 }

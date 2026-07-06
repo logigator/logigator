@@ -17,6 +17,7 @@ import { ComponentGraphics } from '../rendering/graphics/component.graphics';
 import { environment } from '../../environments/environment';
 import { PX } from '../utils/grid';
 import {
+  POWERED_WIRE_PIVOT,
   POWERED_WIRE_THICKNESS,
   WireGraphics
 } from '../rendering/graphics/wire.graphics';
@@ -98,8 +99,11 @@ export abstract class Component<
   // Stub graphics in `connectionPoints` order, rebuilt by _drawConnections.
   private _portStubs: Graphics[] = [];
   // Inverter-bubble graphics keyed by `connectionPoints` index, only for
-  // negated ports; rebuilt by _drawConnections alongside the stubs.
+  // negated ports; rebuilt by _drawConnections alongside the stubs. Each
+  // bubble is an unlit base plus a lit variant stacked on top whose alpha
+  // toggles with the gate-side value during simulation.
   private _portBubbles = new Map<number, Graphics>();
+  private _litPortBubbles = new Map<number, Graphics>();
   // Scale-dependent visual updates registered during draw(). applyScale runs
   // these in place on zoom instead of rebuilding the whole visual tree (which
   // would re-rasterize every Text on every zoom step). Reset on each _draw().
@@ -323,8 +327,9 @@ export abstract class Component<
 
   /**
    * Adds a Graphics whose shared GraphicsContext depends on zoom scale, swapping
-   * to the correctly-scaled cached context on every applyScale. Context swaps are
-   * cheap (no geometry rebuild), so this stays fast on large projects.
+   * to the correctly-scaled cached context on every applyScale. Context swaps
+   * are affordable at zoom-gesture rate, but never swap contexts per
+   * simulation frame — see WireGraphics for the costs involved.
    */
   protected addScaledGraphics(
     contextFor: (scale: number) => GraphicsContext
@@ -397,6 +402,11 @@ export abstract class Component<
     return this._portBubbles;
   }
 
+  /** The lit bubble variants stacked on the {@link portBubbles} bases. */
+  public get litPortBubbles(): ReadonlyMap<number, Graphics> {
+    return this._litPortBubbles;
+  }
+
   /** Negated input-port indices (0-based within the input group). Read-only. */
   public get negatedInputs(): ReadonlySet<number> {
     return this._negatedInputs;
@@ -452,8 +462,10 @@ export abstract class Component<
   }
 
   /**
-   * Swaps one port stub between the powered (thick) and unpowered shared
-   * contexts during simulation. `portIndex` follows `connectionPoints` order.
+   * Thickens one port stub while its link is powered during simulation.
+   * `portIndex` follows `connectionPoints` order. This is the per-frame hot
+   * path, so state lands as transform (stub) and alpha (bubble) only — never
+   * a context swap or redraw (see WireGraphics).
    */
   public setPortPowered(portIndex: number, powered: boolean): void {
     if (powered) {
@@ -463,14 +475,14 @@ export abstract class Component<
     }
     const stub = this._portStubs[portIndex];
     if (stub) {
-      stub.context = this._stubContext(powered);
+      this._applyStubThickness(stub, portIndex, this._appliedScale);
     }
     // A negated port's bubble shows the gate-side value (link XOR negated):
     // the bubble exists only where negated, so that is the inverse of the
     // link's powered state.
-    const bubble = this._portBubbles.get(portIndex);
-    if (bubble) {
-      bubble.context = this._bubbleContext(!powered);
+    const lit = this._litPortBubbles.get(portIndex);
+    if (lit) {
+      lit.alpha = powered ? 0 : 1;
     }
   }
 
@@ -486,21 +498,31 @@ export abstract class Component<
   /** Resets all port stubs (and bubbles) to unpowered. */
   public clearPortPower(): void {
     this._poweredPorts.clear();
-    for (const stub of this._portStubs) {
-      stub.context = this._stubContext(false);
+    for (const [portIndex, stub] of this._portStubs.entries()) {
+      this._applyStubThickness(stub, portIndex, this._appliedScale);
     }
-    for (const bubble of this._portBubbles.values()) {
-      bubble.context = this._bubbleContext(false);
+    for (const lit of this._litPortBubbles.values()) {
+      lit.alpha = 0;
     }
   }
 
-  private _stubContext(powered: boolean) {
-    return powered
-      ? this.geometryService.getGraphicsContext(
-          WireGraphics,
-          POWERED_WIRE_THICKNESS
-        )
-      : this.geometryService.getGraphicsContext(WireGraphics);
+  /**
+   * Cross-axis transform of a stub: 1 screen pixel, times
+   * POWERED_WIRE_THICKNESS while the port's link is powered, mirrored per
+   * _stubThicknessSign. The pivot keeps the powered scale-up centred on the
+   * unpowered pixel (sign-independent, see POWERED_WIRE_PIVOT).
+   */
+  private _applyStubThickness(
+    stub: Graphics,
+    portIndex: number,
+    scale: number
+  ): void {
+    const powered = this._poweredPorts.has(portIndex);
+    stub.scale.y =
+      (PX / scale) *
+      this._stubThicknessSign *
+      (powered ? POWERED_WIRE_THICKNESS : 1);
+    stub.pivot.y = powered ? POWERED_WIRE_PIVOT : 0;
   }
 
   private _bubbleContext(lit: boolean): GraphicsContext {
@@ -585,6 +607,7 @@ export abstract class Component<
     this._rotationCounterContainers = [];
     this._portStubs = [];
     this._portBubbles = new Map();
+    this._litPortBubbles = new Map();
     this._rescalers = [];
 
     this.draw();
@@ -692,19 +715,19 @@ export abstract class Component<
 
     for (let i = 0; i < n; i++) {
       const portIndex = type === 'inputs' ? i : this._numInputs + i;
-      const wire = new Graphics(
-        this._poweredPorts.has(portIndex) ? this._stubContext(true) : geometry
-      );
+      const wire = new Graphics(geometry);
       wire.position.set(0, i + 0.5);
+      wire.scale.x = 0.5;
       // Stub stays 1 screen pixel thick: scale.y compensates for zoom. The
       // shared wire rect hangs its whole thickness on the +y side of the
       // centre-line, and Wire renders it at 0° or +90°, so the pixel always
       // lands below (horizontal) or left (vertical) of the line. The W/N
       // rotations map +y to the opposite screen side, which would leave the
-      // stub one pixel off the wire it touches — mirror scale.y so the stub
-      // fills the same pixel as the wire.
+      // stub one pixel off the wire it touches — the sign mirror in
+      // _applyStubThickness makes the stub fill the same pixel as the wire.
+      // Runs immediately, so a redraw re-applies any surviving powered state.
       this.onApplyScale((scale) =>
-        wire.scale.set(0.5, (PX / scale) * this._stubThicknessSign)
+        this._applyStubThickness(wire, portIndex, scale)
       );
       this._portStubs[portIndex] = wire;
       container.addChild(wire);
@@ -714,7 +737,9 @@ export abstract class Component<
         // the stub — the classic inverter look. Added after the stub so it
         // draws on top. Grid-sized (no rescaler), so it scales with the body
         // and its context survives zoom like the stub. Drawn unlit; the
-        // gate-side power tint is applied later via setPortPowered.
+        // gate-side power state is applied later via setPortPowered, which
+        // fades the lit variant in over the base instead of swapping contexts
+        // (alpha is a color-path change PixiJS patches in place).
         const bubble = new Graphics(this._bubbleContext(false));
         const localX =
           type === 'inputs'
@@ -723,6 +748,12 @@ export abstract class Component<
         bubble.position.set(localX, i + 0.5);
         this._portBubbles.set(portIndex, bubble);
         container.addChild(bubble);
+
+        const lit = new Graphics(this._bubbleContext(true));
+        lit.position.copyFrom(bubble.position);
+        lit.alpha = 0;
+        this._litPortBubbles.set(portIndex, lit);
+        container.addChild(lit);
       }
 
       if (labels.length > i) {

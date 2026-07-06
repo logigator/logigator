@@ -3,6 +3,7 @@ import { WireDirection } from './wire-direction.enum';
 import { getStaticDI } from '../utils/get-di';
 import { GraphicsProviderService } from '../rendering/graphics-provider.service';
 import {
+  POWERED_WIRE_PIVOT,
   POWERED_WIRE_THICKNESS,
   WireGraphics
 } from '../rendering/graphics/wire.graphics';
@@ -20,9 +21,11 @@ export class Wire extends Graphics implements Connectable {
 
   private _id: number;
 
-  // Survives a theme refresh: refreshTheme() re-applies it to the rebuilt
-  // context, mirroring Component's _poweredPorts.
+  // Powered state and the zoom-derived cross-axis scale, combined by
+  // _applyThickness. Kept separately so a zoom change during simulation
+  // preserves the powered thickness and vice versa.
   private _powered = false;
+  private _baseScaleY = 1;
 
   public static serialize(wire: Wire): SerializedWire {
     return {
@@ -137,33 +140,38 @@ export class Wire extends Graphics implements Connectable {
   }
 
   /**
-   * Swaps between the powered (thick) and unpowered shared contexts during
-   * simulation. Color is unchanged; only the thickness differs.
+   * Thickens the wire during simulation. This is the per-frame hot path, so
+   * the state is pure transform on the one shared context — PixiJS patches
+   * transform changes into the existing batch in place (see WireGraphics for
+   * why a context swap here would be catastrophic).
    */
   public setPowered(powered: boolean): void {
     this._powered = powered;
-    this.context = powered
-      ? this.graphicsProviderService.getGraphicsContext(
-          WireGraphics,
-          POWERED_WIRE_THICKNESS
-        )
-      : this.graphicsProviderService.getGraphicsContext(WireGraphics);
+    this._applyThickness();
   }
 
   /**
-   * Re-fetches the wire's context after a theme change, preserving powered
-   * thickness. The cache is theme-keyed, so this returns a freshly-coloured
-   * context.
+   * Re-fetches the wire's context after a theme change. The cache is
+   * theme-keyed, so this returns a freshly-coloured context; the powered
+   * transform carries over untouched.
    */
   public refreshTheme(): void {
-    this.setPowered(this._powered);
+    this.context =
+      this.graphicsProviderService.getGraphicsContext(WireGraphics);
   }
 
   public applyScale(scale: number): void {
     // Wire is a leaf Graphics with no _visualSpace wrapper, so it absorbs the
     // gridSize factor here. Component takes care of this via its _visualSpace
     // counter-scaling instead.
-    this.scale.y = 1 / (scale * environment.gridSize);
+    this._baseScaleY = 1 / (scale * environment.gridSize);
+    this._applyThickness();
+  }
+
+  private _applyThickness(): void {
+    this.scale.y =
+      this._baseScaleY * (this._powered ? POWERED_WIRE_THICKNESS : 1);
+    this.pivot.y = this._powered ? POWERED_WIRE_PIVOT : 0;
   }
 
   public get connectionPoints(): [Point, Point] {

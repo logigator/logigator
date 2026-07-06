@@ -258,6 +258,15 @@ touches links that actually changed:
   pose sync and the per-frame "did anything I target change" dirty flag that
   drives on-demand watch re-renders.
 
+Everything downstream of `setLink` renders powered state as **transform, tint
+or alpha only** (wire/stub cross-axis scale, LED tint, bubble alpha) — PixiJS
+patches those into the existing batches in place. Swapping a `GraphicsContext`,
+toggling `visible`/`renderable` or redrawing children here instead would churn
+the shared context's listener list (a linear scan per swap — quadratic across a
+blinking board) _and_ flag the render group for a full instruction rebuild
+every frame; that combination once dropped a circuit from 120 fps to 1 fps.
+See the _Constant-Width Stroke_ section of `wires.md`.
+
 The worker bridge only sees the `SnapshotApplier` interface
 (`applyDelta`/`applyFull`). `SimulationService` hands it a **fan-out** wrapper:
 the board applier first, then every watch applier registered via

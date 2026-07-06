@@ -5,14 +5,28 @@ import { ThemingService } from '../../theming/theming.service';
 /** Thickness of a powered wire/stub during simulation (unpowered = 1). */
 export const POWERED_WIRE_THICKNESS = 3;
 
+/**
+ * Cross-axis pivot that keeps the powered scale-up centred: the unit rect
+ * spans y ∈ [0, 1], and scaling by t about pivot (t-1)/(2t) lands on
+ * y ∈ [-(t-1)/2, 1+(t-1)/2] — the extra thickness extends symmetrically
+ * around the unpowered pixel. Holds for mirrored (negative) scales too.
+ */
+export const POWERED_WIRE_PIVOT =
+  (POWERED_WIRE_THICKNESS - 1) / (2 * POWERED_WIRE_THICKNESS);
+
 export class WireGraphics extends GraphicsContext {
-  constructor(thickness = 1) {
+  constructor() {
     super();
 
     const themingService = getStaticDI(ThemingService);
-    // Extra thickness extends symmetrically around the wire centre-line (the
-    // 1×1 rect of the default thickness is the alignment reference).
-    this.rect(0, -(thickness - 1) / 2, 1, thickness);
+    // A 1×1 rect hanging its thickness on the +y side of the centre-line.
+    // Powered thickness is expressed by the owning Graphics' cross-axis scale
+    // (with POWERED_WIRE_PIVOT keeping it centred), never by a context swap:
+    // reassigning a Graphics context detaches/re-attaches listeners on the
+    // shared context (a linear scan over every attached wire/stub) and flags
+    // the render group for a full instruction rebuild, while transform
+    // changes patch the batch in place.
+    this.rect(0, 0, 1, 1);
     this.fill(themingService.currentTheme().wire);
   }
 }
