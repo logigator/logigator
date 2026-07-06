@@ -79,6 +79,16 @@ const en = {
           speed: 'Delay'
         }
       },
+      HALF_ADDER: {
+        name: 'Half Adder',
+        description:
+          'Adds up two 1-bit numbers. S carries the sum bit and C the carry bit.'
+      },
+      FULL_ADDER: {
+        name: 'Full Adder',
+        description:
+          'Adds up three 1-bit numbers (two summands and a carry-in). S carries the sum bit and C the carry bit.'
+      },
       ROM: {
         name: 'ROM',
         description:

@@ -7,6 +7,8 @@ export const enum BuiltInComponentType {
   DELAY = 5,
   CLOCK = 6,
   TEXT = 7,
+  HALF_ADDER = 10,
+  FULL_ADDER = 11,
   ROM = 12,
   // INPUT/OUTPUT plug components define a custom component's ports.
   INPUT = 100,

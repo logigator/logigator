@@ -28,6 +28,8 @@ export const LEGACY_BODY_WIDTHS: Record<number, number> = {
   [BuiltInComponentType.XOR]: 2,
   [BuiltInComponentType.DELAY]: 2,
   [BuiltInComponentType.CLOCK]: 3,
+  [BuiltInComponentType.HALF_ADDER]: 3,
+  [BuiltInComponentType.FULL_ADDER]: 3,
   [BuiltInComponentType.TEXT]: 1,
   [BuiltInComponentType.ROM]: 3,
   [BuiltInComponentType.INPUT]: 1,
