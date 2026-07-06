@@ -25,7 +25,7 @@ const addEventListener = self.addEventListener as (
 ) => void;
 
 /** Changed-link fraction above which the engine falls back to a full snapshot. */
-const DELTA_THRESHOLD = 0.125;
+const DELTA_THRESHOLD = 0.2;
 
 const BUFFER_POOL_LIMIT = 4;
 

@@ -92,7 +92,7 @@
       severity="secondary"
     ></lg-button>
     <span class="text-sm opacity-70 select-none">
-      {{ t('toolBar.measuredHz', { hz: measuredHz() | si: 0 }) }}
+      {{ t('toolBar.measuredHz', { hz: measuredHz() | si: 2 : 1000 }) }}
       &middot;
       {{ t('toolBar.ticks', { ticks: simTick() }) }}
     </span>
