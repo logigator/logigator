@@ -48,7 +48,7 @@ export class Project extends Container {
     components: Component[];
     wires: Wire[];
   }>();
-  // User-input components (button/lever) clicked while in simulation mode.
+  // User-input components (button/switch) clicked while in simulation mode.
   // The model layer stays service-free: SimulationService subscribes while a
   // simulation is active.
   private readonly _userInput$ = new Subject<Component>();

@@ -25,7 +25,8 @@ export const enum BuiltInComponentType {
   OUTPUT = 101,
   // User-input components driving a running simulation.
   BUTTON = 200,
-  LEVER = 201,
+  // The old editor names id 201 LEVER; only the display name changed.
+  SWITCH = 201,
   LED = 202,
   SEGMENT_DISPLAY = 203,
   LED_MATRIX = 204

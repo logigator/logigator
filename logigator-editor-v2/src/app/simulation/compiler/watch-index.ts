@@ -27,7 +27,7 @@ export interface WatchTemplateTables {
   wireNets: Int32Array;
   /** Body component index → per-portIndex template-local net id. */
   portNets: Int32Array[];
-  /** Body component index of a direct lever/button → template-local unit index. */
+  /** Body component index of a direct switch/button → template-local unit index. */
   userInputs: ReadonlyMap<number, number>;
   /** Body component index of a direct nested custom → its bridge. */
   children: ReadonlyMap<number, WatchChildBridge>;
@@ -50,7 +50,7 @@ export interface WatchLevelInfo {
   linkOfLocalNet: Int32Array;
   /** The level's template tables (`wireNets`/`portNets`/`children`). */
   tables: WatchTemplateTables;
-  /** Global unit index of a direct lever/button, by body component index. */
+  /** Global unit index of a direct switch/button, by body component index. */
   unitIndexFor(bodyComponentIndex: number): number | undefined;
 }
 

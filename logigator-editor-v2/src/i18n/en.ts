@@ -185,8 +185,8 @@ const en = {
         description:
           'A momentary push button. While the simulation is running, clicking it emits a single pulse on its output.'
       },
-      LEVER: {
-        name: 'Lever',
+      SWITCH: {
+        name: 'Switch',
         description:
           'A latching switch. While the simulation is running, clicking it toggles its output between on and off.'
       },

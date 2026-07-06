@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { configureTestBed } from '../../testing/configure-test-bed';
-import { makeAnd, makeButton, makeLever } from '../../testing/factories';
+import { makeAnd, makeButton, makeSwitch } from '../../testing/factories';
 import {
   FakeSimulationWorker,
   ManualFrameScheduler
@@ -121,7 +121,7 @@ describe('SimulationService', () => {
   });
 
   it('runs through play/pause and tracks the run state', async () => {
-    project.addComponent(makeLever());
+    project.addComponent(makeSwitch());
     await enterAndBoot();
 
     service.play();
@@ -139,7 +139,7 @@ describe('SimulationService', () => {
   });
 
   it('starts a worker-paced run when sync mode is off', async () => {
-    project.addComponent(makeLever());
+    project.addComponent(makeSwitch());
     await enterAndBoot();
     service.toggleSyncMode(); // off → continuous
 
@@ -154,7 +154,7 @@ describe('SimulationService', () => {
   });
 
   it('re-paces a running target-mode simulation when the rate changes', async () => {
-    project.addComponent(makeLever());
+    project.addComponent(makeSwitch());
     await enterAndBoot();
     service.toggleTargetMode();
     expect(service.mode()).toBe('target');
@@ -179,7 +179,7 @@ describe('SimulationService', () => {
   });
 
   it('re-paces with the unit multiplier when the unit changes', async () => {
-    project.addComponent(makeLever());
+    project.addComponent(makeSwitch());
     await enterAndBoot();
     service.toggleTargetMode();
     service.setTargetValue(5);
@@ -216,7 +216,7 @@ describe('SimulationService', () => {
   });
 
   it('steps only while paused', async () => {
-    project.addComponent(makeLever());
+    project.addComponent(makeSwitch());
     await enterAndBoot();
 
     service.step();
@@ -230,38 +230,38 @@ describe('SimulationService', () => {
   });
 
   it('stop resets the engine and clears sim visuals', async () => {
-    const lever = makeLever();
-    project.addComponent(lever);
+    const switchComp = makeSwitch();
+    project.addComponent(switchComp);
     await enterAndBoot();
-    project.emitUserInput(lever);
-    expect(lever.isOn).toBe(true);
+    project.emitUserInput(switchComp);
+    expect(switchComp.isOn).toBe(true);
 
     service.stop();
 
     await vi.waitFor(() =>
       expect(fakeWorker.postedOfKind('stop')).toHaveLength(1)
     );
-    await vi.waitFor(() => expect(lever.isOn).toBe(false));
+    await vi.waitFor(() => expect(switchComp.isOn).toBe(false));
     expect(service.state()).toBe('ready');
   });
 
-  it('toggles a lever on canvas user input and forwards a Cont event', async () => {
-    const lever = makeLever();
-    project.addComponent(lever);
+  it('toggles a switch on canvas user input and forwards a Cont event', async () => {
+    const switchComp = makeSwitch();
+    project.addComponent(switchComp);
     await enterAndBoot();
 
-    project.emitUserInput(lever);
-    expect(lever.isOn).toBe(true);
+    project.emitUserInput(switchComp);
+    expect(switchComp.isOn).toBe(true);
 
     const inputs = fakeWorker.postedOfKind('triggerInput');
     expect(inputs).toHaveLength(1);
     expect(inputs[0]).toMatchObject({ event: 0, state: [true] });
     expect(inputs[0].componentIndex).toBe(
-      service.board!.userInputs.get(lever.id)
+      service.board!.userInputs.get(switchComp.id)
     );
 
-    project.emitUserInput(lever);
-    expect(lever.isOn).toBe(false);
+    project.emitUserInput(switchComp);
+    expect(switchComp.isOn).toBe(false);
     expect(fakeWorker.postedOfKind('triggerInput')[1]).toMatchObject({
       event: 0,
       state: [false]
@@ -289,7 +289,7 @@ describe('SimulationService', () => {
   });
 
   it('fans snapshots out to registered watch appliers, seeded by a full one', async () => {
-    project.addComponent(makeLever());
+    project.addComponent(makeSwitch());
     await enterAndBoot();
     const watch = { applyDelta: vi.fn(), applyFull: vi.fn() };
 
@@ -339,7 +339,7 @@ describe('SimulationService', () => {
   });
 
   it('drops watch appliers on exit', async () => {
-    project.addComponent(makeLever());
+    project.addComponent(makeSwitch());
     await enterAndBoot();
     const watch = { applyDelta: vi.fn(), applyFull: vi.fn() };
     service.registerApplier(watch);
@@ -358,15 +358,15 @@ describe('SimulationService', () => {
   });
 
   it('exit resets sim state and restores PAN mode', async () => {
-    const lever = makeLever();
-    project.addComponent(lever);
+    const switchComp = makeSwitch();
+    project.addComponent(switchComp);
     await enterAndBoot();
-    project.emitUserInput(lever);
+    project.emitUserInput(switchComp);
 
     service.exit();
 
     expect(workModeService.mode()).toBe(WorkMode.PAN);
-    expect(lever.isOn).toBe(false);
+    expect(switchComp.isOn).toBe(false);
     expect(service.board).toBeNull();
     expect(service.applier).toBeNull();
     expect(service.state()).toBe('inactive');
@@ -374,13 +374,13 @@ describe('SimulationService', () => {
   });
 
   it('ignores user input after exit', () => {
-    const lever = makeLever();
-    project.addComponent(lever);
+    const switchComp = makeSwitch();
+    project.addComponent(switchComp);
     service.enter();
     service.exit();
 
-    project.emitUserInput(lever);
+    project.emitUserInput(switchComp);
 
-    expect(lever.isOn).toBe(false);
+    expect(switchComp.isOn).toBe(false);
   });
 });

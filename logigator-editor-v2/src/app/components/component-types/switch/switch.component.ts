@@ -1,22 +1,22 @@
 import { DestroyOptions, Graphics } from 'pixi.js';
 import { Subject, takeUntil } from 'rxjs';
 import { Component } from '../../component';
-import { LeverGraphics } from '../../../rendering/graphics/lever.graphics';
-import { leverComponentConfig, LeverOptions } from './lever.config';
+import { SwitchGraphics } from '../../../rendering/graphics/switch.graphics';
+import { switchComponentConfig, SwitchOptions } from './switch.config';
 
 /**
  * A latching switch (simulation user input, Cont event). The on/off state is
  * transient sim visuals on the instance — not an option: it is not undoable
  * and not persisted, and is cleared on simulation stop/exit.
  */
-export class LeverComponent extends Component<LeverOptions> {
-  public readonly config = leverComponentConfig;
+export class SwitchComponent extends Component<SwitchOptions> {
+  public readonly config = switchComponentConfig;
 
   private readonly destroy$ = new Subject<void>();
 
   private _on = false;
 
-  constructor(options: LeverOptions) {
+  constructor(options: SwitchOptions) {
     super(0, 1, options.direction.value, options);
 
     this.options.direction.onChange$
@@ -65,7 +65,7 @@ export class LeverComponent extends Component<LeverOptions> {
     this.addBody(1, 1);
 
     const bar = new Graphics(
-      this.geometryService.getGraphicsContext(LeverGraphics, this.isOn)
+      this.geometryService.getGraphicsContext(SwitchGraphics, this.isOn)
     );
     this.addChild(bar);
   }

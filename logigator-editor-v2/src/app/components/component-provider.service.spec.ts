@@ -88,7 +88,7 @@ describe('ComponentProviderService', () => {
     expect(service.ioComponents().map((c) => c.type)).toEqual(
       expect.arrayContaining([
         BuiltInComponentType.BUTTON,
-        BuiltInComponentType.LEVER,
+        BuiltInComponentType.SWITCH,
         BuiltInComponentType.LED,
         BuiltInComponentType.SEGMENT_DISPLAY,
         BuiltInComponentType.LED_MATRIX

@@ -13,7 +13,7 @@ import {
   makeAnd,
   makeButton,
   makeInput,
-  makeLever
+  makeSwitch
 } from '../../testing/factories';
 import { AndComponent } from './component-types/and/and.component';
 import { configureTestBed } from '../../testing/configure-test-bed';
@@ -354,7 +354,7 @@ describe('Component symbol rendering', () => {
   });
 
   it('renders no symbol on components with a dedicated body visual', () => {
-    for (const comp of [makeButton(), makeLever()]) {
+    for (const comp of [makeButton(), makeSwitch()]) {
       let texts = 0;
       const walk = (c: Container): void => {
         for (const child of c.children) {

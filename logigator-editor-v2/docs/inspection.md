@@ -154,7 +154,7 @@ component layer and `inspection/watch/`:
   `ComponentInspection`, declared by every custom config. It owns a
   **breadcrumb stack** of `WatchLevel`s; the last level is visible. The title
   is the joined level names (`Nest › Blink`). `activate(component)` routes a
-  click on the visible copy: a nested custom pushes a level, a lever/button
+  click on the visible copy: a nested custom pushes a level, a switch/button
   triggers its engine unit (`SimulationService.triggerUnitInput`, with the
   unit index resolved through the watch index), and any other inspectable
   opens its regular data inspector **on the watch copy** — tracked per level
@@ -165,7 +165,7 @@ component layer and `inspection/watch/`:
   compiled board's watch index (`board.watch.infoFor(path)` — see
   `simulation.md`). It registers with the simulation's snapshot fan-out and
   requests a full seed snapshot; the first full snapshot also poses copied
-  levers from their output-link power. Construction **fails loudly** if the
+  switches from their output-link power. Construction **fails loudly** if the
   body shape disagrees with the index tables.
 - Watch canvases lease the **app-wide shared renderer**
   (`rendering/renderer.service.ts`, see `rendering.md`) — the same one the

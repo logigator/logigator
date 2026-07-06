@@ -10,8 +10,8 @@ import { InputComponent } from '../app/components/component-types/input/input.co
 import { inputComponentConfig } from '../app/components/component-types/input/input.config';
 import { ButtonComponent } from '../app/components/component-types/button/button.component';
 import { buttonComponentConfig } from '../app/components/component-types/button/button.config';
-import { LeverComponent } from '../app/components/component-types/lever/lever.component';
-import { leverComponentConfig } from '../app/components/component-types/lever/lever.config';
+import { SwitchComponent } from '../app/components/component-types/switch/switch.component';
+import { switchComponentConfig } from '../app/components/component-types/switch/switch.config';
 import { RomComponent } from '../app/components/component-types/rom/rom.component';
 import { romComponentConfig } from '../app/components/component-types/rom/rom.config';
 import { Direction } from '../app/utils/direction';
@@ -68,13 +68,13 @@ export function makeButton(px = 0, py = 0): ButtonComponent {
   return button;
 }
 
-/** LeverComponent at the given grid position. */
-export function makeLever(px = 0, py = 0): LeverComponent {
-  const lever = new LeverComponent({
-    direction: leverComponentConfig.options.direction.clone()
+/** SwitchComponent at the given grid position. */
+export function makeSwitch(px = 0, py = 0): SwitchComponent {
+  const switchComp = new SwitchComponent({
+    direction: switchComponentConfig.options.direction.clone()
   });
-  lever.position.set(px, py);
-  return lever;
+  switchComp.position.set(px, py);
+  return switchComp;
 }
 
 /** RomComponent with the given table shape, contents blob, and grid position. */

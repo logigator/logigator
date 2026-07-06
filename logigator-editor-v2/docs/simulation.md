@@ -44,7 +44,7 @@ CompiledBoard ── descriptor ─────────────► worke
    │                                                  │ snapshot (per frame, pulled)
    ├── mapping (link id → wires + ports) ──┐          ▼
    │                                       │   SimulationWorkerService
-   └── userInputs (button/lever → index)   │          │ applyDelta / applyFull
+   └── userInputs (button/switch → index)   │          │ applyDelta / applyFull
                                            ▼          ▼
                                     LinkStateApplier → wire.setPowered / component.setPortPowered
 ```
@@ -84,7 +84,7 @@ stable; sorting makes the submission order — and with it `triggerInput` indice
 and the engine's output layout — reproducible). For each component:
 
 - **Unit types** (the gates, `DELAY`, `CLOCK`, the adders and flip-flops,
-  `RNG`, `RAM`, decoder/encoder, mux/demux, `BUTTON`, `LEVER`, `ROM` — the
+  `RNG`, `RAM`, decoder/encoder, mux/demux, `BUTTON`, `SWITCH`, `ROM` — the
   `UNIT_TYPES` set) are emitted as one `EmittedUnit` with its pins recorded as
   union-find node ids. Three types carry an `ops` blob: `ROM` (contents
   bit-packed by `rom-data.codec.ts` — `encodeRomOps`, over the generic
@@ -127,7 +127,7 @@ open time from a fresh `instantiateBody` run:
   across `instantiateBody` runs — the order contract is pinned by
   `persistence/circuit-builder.spec.ts`; live ids are session-assigned and are
   not): `wireNets` (wire index → template-local net id), `portNets` (component
-  index → per-port local net id), `userInputs` (direct lever/button index →
+  index → per-port local net id), `userInputs` (direct switch/button index →
   template-local unit index), and `children` (nested-custom index →
   `WatchChildBridge { typeId, netMap, unitBase }`). To make every wire
   addressable, template compression assigns local ids to **all** net classes —
@@ -142,7 +142,7 @@ open time from a fresh `instantiateBody` run:
 top-level record (`linkOfLocalNet_child[n] = linkOfLocalNet_parent[netMap[n]]`,
 unit bases add). Pure integer composition, memoized, safe to hold for the
 session. `unitIndexFor(bodyIndex)` yields the global engine unit index of an
-inner lever/button — what `triggerUnitInput` sends.
+inner switch/button — what `triggerUnitInput` sends.
 
 ### Custom-component flattening
 
@@ -254,7 +254,7 @@ touches links that actually changed:
 - `setLink` fans a change out to `wire.setPowered()` and
   `component.setPortPowered()` for every render target on that link.
 - `reset()` drives everything unpowered.
-- `isPowered(link)` / `consumeChanged()` — read-backs for watches: the lever
+- `isPowered(link)` / `consumeChanged()` — read-backs for watches: the switch
   pose sync and the per-frame "did anything I target change" dirty flag that
   drives on-demand watch re-renders.
 
@@ -320,11 +320,11 @@ main-thread from status-poll tick deltas), `tick`.
 In `SIMULATION` mode the `WorkModeRouter`'s `down` starts a `PanSession` (the
 same one-finger / left-drag pan as `WorkMode.PAN`), but editing stays locked:
 the session's tap callback — fired only when the press never crosses the pan
-threshold — hit-tests for a button/lever under the cursor and emits it on
+threshold — hit-tests for a button/switch under the cursor and emits it on
 `Project.userInput$`. A drag pans instead of activating anything.
 `SimulationService._onUserInput` reacts:
 
-- **Lever** — toggles its visual state and forwards `INPUT_EVENT_CONT` (set and
+- **Switch** — toggles its visual state and forwards `INPUT_EVENT_CONT` (set and
   hold) with the new on/off value.
 - **Button** — sets pressed, forwards `INPUT_EVENT_PULSE` (one-tick), and clears
   the pressed visual after `BUTTON_FLASH_MS`.
@@ -332,7 +332,7 @@ threshold — hit-tests for a button/lever under the cursor and emits it on
 The board index sent to the engine comes from `CompiledBoard.userInputs`
 (`Component.id` → board submission index).
 
-Inner levers/buttons clicked in a **watch** go through
+Inner switches/buttons clicked in a **watch** go through
 `triggerUnitInput(unitIndex, component, repaint)` instead: the unit index is
 already resolved through the watch index (`infoFor(path).unitIndexFor(i)`),
 `component` is the watch's fresh copy (its visuals toggle/flash), and

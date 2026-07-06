@@ -21,7 +21,7 @@ describe('instantiateBody order contract', () => {
   it('instantiates components and wires in body array order', () => {
     const body: SerializedCircuitBody = {
       components: [
-        { type: BuiltInComponentType.LEVER, pos: [0, 0], options: {} },
+        { type: BuiltInComponentType.SWITCH, pos: [0, 0], options: {} },
         { type: BuiltInComponentType.AND, pos: [4, 0], options: {} },
         { type: BuiltInComponentType.NOT, pos: [10, 0], options: {} },
         { type: BuiltInComponentType.BUTTON, pos: [0, 6], options: {} }

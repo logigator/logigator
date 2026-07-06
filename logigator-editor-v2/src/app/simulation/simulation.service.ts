@@ -2,7 +2,7 @@ import { computed, inject, Injectable, signal } from '@angular/core';
 import { Observable, Subject, Subscription } from 'rxjs';
 import { Component } from '../components/component';
 import { ButtonComponent } from '../components/component-types/button/button.component';
-import { LeverComponent } from '../components/component-types/lever/lever.component';
+import { SwitchComponent } from '../components/component-types/switch/switch.component';
 import { ToastService } from '../logging/toast.service';
 import { Project } from '../project/project';
 import { ProjectService } from '../project/project.service';
@@ -359,7 +359,7 @@ export class SimulationService {
   }
 
   /**
-   * Activates a lever/button whose engine unit index is already resolved —
+   * Activates a switch/button whose engine unit index is already resolved —
    * the path for inner user inputs clicked in a watch, where `component` is
    * the watch's fresh copy (its visuals toggle/flash) and `unitIndex` comes
    * from the watch index (`infoFor(path).unitIndexFor(bodyIndex)`). `repaint`
@@ -373,13 +373,13 @@ export class SimulationService {
     this._activate(component, unitIndex, repaint);
   }
 
-  /** Shared lever/button activation: visuals plus the engine input event. */
+  /** Shared switch/button activation: visuals plus the engine input event. */
   private _activate(
     component: Component,
     unitIndex: number | undefined,
     repaint: () => void
   ): void {
-    if (component instanceof LeverComponent) {
+    if (component instanceof SwitchComponent) {
       component.toggle();
       if (unitIndex !== undefined) {
         this.workerService.triggerInput(unitIndex, INPUT_EVENT_CONT, [

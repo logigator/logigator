@@ -24,7 +24,7 @@ import { textComponentConfig } from './component-types/text/text.config';
 import { inputComponentConfig } from './component-types/input/input.config';
 import { outputComponentConfig } from './component-types/output/output.config';
 import { buttonComponentConfig } from './component-types/button/button.config';
-import { leverComponentConfig } from './component-types/lever/lever.config';
+import { switchComponentConfig } from './component-types/switch/switch.config';
 import { ledComponentConfig } from './component-types/led/led.config';
 import { segmentDisplayComponentConfig } from './component-types/segment-display/segment-display.config';
 import { ledMatrixComponentConfig } from './component-types/led-matrix/led-matrix.config';
@@ -54,7 +54,7 @@ const BUILT_IN_COMPONENTS: ComponentConfig<any>[] = [
   inputComponentConfig,
   outputComponentConfig,
   buttonComponentConfig,
-  leverComponentConfig,
+  switchComponentConfig,
   ledComponentConfig,
   segmentDisplayComponentConfig,
   ledMatrixComponentConfig

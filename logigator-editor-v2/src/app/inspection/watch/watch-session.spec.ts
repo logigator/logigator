@@ -2,14 +2,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { Point } from 'pixi.js';
 import { configureTestBed } from '../../../testing/configure-test-bed';
-import { makeLever } from '../../../testing/factories';
+import { makeSwitch } from '../../../testing/factories';
 import {
   FakeSimulationWorker,
   ManualFrameScheduler
 } from '../../../testing/fake-simulation-worker';
 import { Component } from '../../components/component';
 import { ComponentProviderService } from '../../components/component-provider.service';
-import { LeverComponent } from '../../components/component-types/lever/lever.component';
+import { SwitchComponent } from '../../components/component-types/switch/switch.component';
 import { outputComponentConfig } from '../../components/component-types/output/output.config';
 import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
 import { Project } from '../../project/project';
@@ -65,15 +65,15 @@ describe('WatchSession', () => {
     project.destroy({ children: true });
   });
 
-  /** Snapshot with a lever driving its single output plug. */
-  function registerLeverBox(): number {
-    const lever = makeLever(0, 0);
+  /** Snapshot with a switch driving its single output plug. */
+  function registerSwitchBox(): number {
+    const switchComp = makeSwitch(0, 0);
     const plug = Component.deserialize(
       { pos: [8, 0], options: { label: '', index: 0 } },
       outputComponentConfig
     );
     const wire = wireBetween(
-      lever.connectionPoints[0],
+      switchComp.connectionPoints[0],
       plug.connectionPoints[0]
     );
     const serialize = (c: Component) => {
@@ -82,16 +82,16 @@ describe('WatchSession', () => {
     };
     const w = Wire.serialize(wire);
     const circuit = {
-      components: [serialize(lever), serialize(plug)],
+      components: [serialize(switchComp), serialize(plug)],
       wires: [{ pos: w.pos, direction: w.direction, length: w.length }]
     };
-    lever.destroy({ children: true });
+    switchComp.destroy({ children: true });
     plug.destroy({ children: true });
     wire.destroy();
     return registry.registerSnapshot({
       kind: 'snapshot',
       source: 'browser',
-      name: 'LeverBox',
+      name: 'SwitchBox',
       symbol: 'LB',
       description: '',
       numInputs: 0,
@@ -102,8 +102,8 @@ describe('WatchSession', () => {
   }
 
   async function enterWithInstance(): Promise<{ instanceId: number }> {
-    const leverBox = registerLeverBox();
-    const config = provider.getComponent(leverBox)!;
+    const switchBox = registerSwitchBox();
+    const config = provider.getComponent(switchBox)!;
     const instance = Component.deserialize(
       { pos: [0, 0], options: { direction: 0 } },
       config
@@ -141,15 +141,15 @@ describe('WatchSession', () => {
     session.destroy();
   });
 
-  it('lights the fresh copy from snapshots and syncs the lever pose', async () => {
+  it('lights the fresh copy from snapshots and syncs the switch pose', async () => {
     const { instanceId } = await enterWithInstance();
     const session = openSession(instanceId);
     const copiedWire = session.wires[0];
-    const copiedLever = session.components[0] as LeverComponent;
+    const copiedSwitch = session.components[0] as SwitchComponent;
     const setPowered = vi.spyOn(copiedWire, 'setPowered');
 
-    // The board's only unit is the inner lever; its output link is powered.
-    const leverLink = simulation.board!.descriptor.components[0].outputs[0];
+    // The board's only unit is the inner switch; its output link is powered.
+    const switchLink = simulation.board!.descriptor.components[0].outputs[0];
     fakeWorker.emit({
       kind: 'snapshot',
       reqId: 99,
@@ -158,14 +158,14 @@ describe('WatchSession', () => {
       ...packSnapshot(
         undefined,
         null,
-        fullBits(simulation.board!.descriptor.links, [leverLink])
+        fullBits(simulation.board!.descriptor.links, [switchLink])
       )
     });
 
     expect(setPowered).toHaveBeenCalledWith(true);
-    // First frame after the seed: needs a render and poses the lever.
+    // First frame after the seed: needs a render and poses the switch.
     expect(session.onFrame()).toBe(true);
-    expect(copiedLever.isOn).toBe(true);
+    expect(copiedSwitch.isOn).toBe(true);
     // Nothing changed since — no render needed.
     expect(session.onFrame()).toBe(false);
     session.destroy();
@@ -177,7 +177,7 @@ describe('WatchSession', () => {
     const setPowered = vi.spyOn(session.wires[0], 'setPowered');
 
     session.destroy();
-    const leverLink = simulation.board!.descriptor.components[0].outputs[0];
+    const switchLink = simulation.board!.descriptor.components[0].outputs[0];
     fakeWorker.emit({
       kind: 'snapshot',
       reqId: 99,
@@ -186,7 +186,7 @@ describe('WatchSession', () => {
       ...packSnapshot(
         undefined,
         null,
-        fullBits(simulation.board!.descriptor.links, [leverLink])
+        fullBits(simulation.board!.descriptor.links, [switchLink])
       )
     });
 

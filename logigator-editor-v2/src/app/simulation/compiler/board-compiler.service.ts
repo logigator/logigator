@@ -47,15 +47,15 @@ const UNIT_TYPES: ReadonlySet<number> = new Set([
   BuiltInComponentType.MUX,
   BuiltInComponentType.DEMUX,
   BuiltInComponentType.BUTTON,
-  BuiltInComponentType.LEVER,
+  BuiltInComponentType.SWITCH,
   BuiltInComponentType.ROM
 ]);
 
 /**
- * The simulator's UserInput type id. The editor's BUTTON and LEVER are both
+ * The simulator's UserInput type id. The editor's BUTTON and SWITCH are both
  * UserInputs to the engine and must emit this exact type — the engine rejects
  * any other id (it previously accepted the whole 200–299 block). Button vs.
- * lever behaviour is a `Pulse`/`Cont` distinction made at `triggerInput` time
+ * switch behaviour is a `Pulse`/`Cont` distinction made at `triggerInput` time
  * from the component instance, not from the descriptor type.
  */
 const ENGINE_USER_INPUT_TYPE = 200;
@@ -123,7 +123,7 @@ interface EmitContext {
   uf: UnionFind;
   units: EmittedUnit[];
   diagnostics: CompileDiagnostic[];
-  /** Directly emitted button/lever: component id → unit index in this pass. */
+  /** Directly emitted button/switch: component id → unit index in this pass. */
   userInputs: Map<number, number>;
   /** Directly placed custom instances, keyed by component id. */
   instances: Map<number, EmittedInstance>;
@@ -397,7 +397,7 @@ export class BoardCompilerService {
     if (UNIT_TYPES.has(type)) {
       const isUserInput =
         type === BuiltInComponentType.BUTTON ||
-        type === BuiltInComponentType.LEVER;
+        type === BuiltInComponentType.SWITCH;
       if (isUserInput) {
         ctx.userInputs.set(component.id, ctx.units.length);
       }

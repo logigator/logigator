@@ -3,8 +3,8 @@ import { PX } from '../../utils/grid';
 import { getStaticDI } from '../../utils/get-di';
 import { ThemingService } from '../../theming/theming.service';
 
-/** A lever's switch bar: drawn at the bottom while off, at the top while on. */
-export class LeverGraphics extends GraphicsContext {
+/** A switch's switch bar: drawn at the bottom while off, at the top while on. */
+export class SwitchGraphics extends GraphicsContext {
   constructor(on: boolean) {
     super();
 

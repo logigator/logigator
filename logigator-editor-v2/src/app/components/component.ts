@@ -210,7 +210,7 @@ export abstract class Component<
   /**
    * Symbol rendered centred in the body — normally the config's sidebar
    * symbol. Null (the default) for components whose body carries its own
-   * visual identity instead (button, lever, free text). Overrides must read a
+   * visual identity instead (button, switch, free text). Overrides must read a
    * module-level config constant, not `this.config`: this is evaluated during
    * the base constructor's draw, before the subclass `config` field is
    * assigned.
@@ -377,7 +377,7 @@ export abstract class Component<
   }
 
   /**
-   * Resets transient simulation visual state (button pressed, lever on) when
+   * Resets transient simulation visual state (button pressed, switch on) when
    * a simulation stops. No-op for components without sim state.
    */
   public clearSimState(): void {
