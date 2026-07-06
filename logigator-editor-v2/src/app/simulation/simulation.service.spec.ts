@@ -117,11 +117,7 @@ describe('SimulationService', () => {
 
     expect(workModeService.mode()).toBe(WorkMode.PAN);
     expect(service.state()).toBe('inactive');
-    expect(error).toHaveBeenCalledWith(
-      'engine died',
-      undefined,
-      'SimulationService'
-    );
+    expect(error).toHaveBeenCalledWith('engine died', 'SimulationService');
   });
 
   it('runs through play/pause and tracks the run state', async () => {

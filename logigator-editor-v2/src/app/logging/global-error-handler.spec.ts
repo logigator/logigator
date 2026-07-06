@@ -53,7 +53,10 @@ describe('GlobalErrorHandler', () => {
     now += 100;
     handler.handleError(new Error('c'));
     expect(toast.error).toHaveBeenCalledTimes(1);
-    expect(toast.error).toHaveBeenCalledWith('logging.unexpectedError');
+    expect(toast.error).toHaveBeenCalledWith(
+      'logging.unexpectedError',
+      'GlobalErrorHandler'
+    );
   });
 
   it('toasts again once the cooldown has elapsed', () => {
