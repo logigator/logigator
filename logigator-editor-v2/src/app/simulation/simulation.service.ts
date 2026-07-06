@@ -149,7 +149,10 @@ export class SimulationService {
     }
     const project = this.projectService.activeProject();
     if (!project) {
-      this.logging.info('enter skipped: no active project', 'SimulationService');
+      this.logging.info(
+        'enter skipped: no active project',
+        'SimulationService'
+      );
       return;
     }
 

@@ -388,7 +388,10 @@ export class PersistenceService {
         return;
       }
       this._replaceMainProject(project);
-      this.logging.info(`Loaded project ${uuid} (server)`, 'PersistenceService');
+      this.logging.info(
+        `Loaded project ${uuid} (server)`,
+        'PersistenceService'
+      );
       if (!opts?.skipUrlUpdate) {
         this.location.go(`/project/${uuid}`);
       }
@@ -419,7 +422,10 @@ export class PersistenceService {
       } else {
         this._replaceMainProject(project);
       }
-      this.logging.info(`Loaded share ${linkId} (${type})`, 'PersistenceService');
+      this.logging.info(
+        `Loaded share ${linkId} (${type})`,
+        'PersistenceService'
+      );
     } catch (e) {
       if (token === this._shareLoadToken) {
         this.toast.error(

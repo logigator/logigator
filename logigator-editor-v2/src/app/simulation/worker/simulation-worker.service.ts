@@ -130,7 +130,9 @@ export class SimulationWorkerService {
     // A message that can't be deserialized never reaches onmessage — route it
     // into the same failure path as onerror.
     worker.onmessageerror = () =>
-      this._fail(this.transloco.translate('simulation.workerMessageUnreadable'));
+      this._fail(
+        this.transloco.translate('simulation.workerMessageUnreadable')
+      );
     await ready;
     if (this.worker !== worker) {
       throw new Error('Simulation session ended');

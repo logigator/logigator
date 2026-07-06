@@ -423,7 +423,8 @@ export class HexEditorComponent {
       return;
     }
     void copied.then(
-      () => this.toastService.info(this.transloco.translate('hexEditor.copied')),
+      () =>
+        this.toastService.info(this.transloco.translate('hexEditor.copied')),
       (err: unknown) =>
         this.toastService.warn(
           this.transloco.translate('hexEditor.copyFailed'),

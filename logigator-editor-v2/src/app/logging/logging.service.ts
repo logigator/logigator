@@ -49,7 +49,10 @@ export class LoggingService {
   public time(label: string, context: string): () => void {
     const start = performance.now();
     return () => {
-      this.debug(`${label} took ${(performance.now() - start).toFixed(2)} ms`, context);
+      this.debug(
+        `${label} took ${(performance.now() - start).toFixed(2)} ms`,
+        context
+      );
     };
   }
 }

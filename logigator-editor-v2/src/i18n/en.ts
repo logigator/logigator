@@ -482,7 +482,8 @@ const en = {
     projectExported: 'Project exported to file.',
     exportFailed: 'Could not export the project to a file.',
     browserSaveFailed: 'Could not save the project to browser storage.',
-    browserComponentSaveFailed: 'Could not save the component to browser storage.',
+    browserComponentSaveFailed:
+      'Could not save the component to browser storage.',
     saveFailed: 'Could not save: {{detail}}',
     saveFailedGeneric: 'Could not save the project.',
     createFailed: 'Could not create the project: {{detail}}',
