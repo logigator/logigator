@@ -58,7 +58,7 @@ export class UploadComponentDialogComponent {
     | undefined;
 
   protected readonly name = this.data?.name ?? '';
-  protected readonly isPublic = signal(false);
+  protected readonly isPublic = signal(true);
   protected readonly dependencies = signal<
     { name: string; masterTypeId: number | null }[]
   >([]);
