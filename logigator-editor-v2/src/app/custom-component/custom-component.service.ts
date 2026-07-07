@@ -9,8 +9,6 @@ import { CustomComponent } from '../components/custom/custom-component';
 import { Action } from '../actions/action';
 import { UpdateInstanceAction } from '../actions/actions/update-instance.action';
 import { ToastService } from '../logging/toast.service';
-import { TranslocoService } from '@jsverse/transloco';
-import { UserService } from '../user/user.service';
 import { DefinitionBinding } from './definition-binding';
 
 export interface NewComponentMeta {
@@ -41,8 +39,6 @@ export class CustomComponentService {
   private readonly metadataStore = inject(ProjectMetadataStore);
   private readonly persistence = inject(PersistenceService);
   private readonly toast = inject(ToastService);
-  private readonly transloco = inject(TranslocoService);
-  private readonly user = inject(UserService);
 
   private readonly _bindings = new Map<Project, DefinitionBinding>();
 
@@ -102,16 +98,22 @@ export class CustomComponentService {
    * the palette tile and the editor stay one definition.
    */
   public async openComponentForEdit(masterId: string): Promise<void> {
-    const open = this._findOpenEditor(masterId);
+    // The caller may pass a placed instance's frozen snapshot id, which — if the
+    // master was promoted to the cloud after that snapshot was taken — is the
+    // pre-promotion (browser) id. Resolve it to the master's current id through
+    // the promotion alias so the open-editor match and the load both use the id
+    // the store/API actually knows (otherwise the server GET 404s until reload).
+    const id = this.registry.currentIdForId(masterId);
+    const open = this._findOpenEditor(id);
     if (open) {
       this.projectService.setActiveProject(open);
       return;
     }
     try {
       const { project, masterTypeId } =
-        this._sourceForMaster(masterId) === 'server'
-          ? await this.persistence.loadServerComponent(masterId)
-          : await this.persistence.loadComponentForEdit(masterId);
+        this._sourceForMaster(id) === 'server'
+          ? await this.persistence.loadServerComponent(id)
+          : await this.persistence.loadComponentForEdit(id);
       this._openEditor(project, masterTypeId);
     } catch {
       this.toast.error('Failed to open component', 'CustomComponentService');
@@ -192,124 +194,6 @@ export class CustomComponentService {
     // real instance is created by the action's add on do(). Drop this one.
     replacement.destroy({ children: true });
     return action;
-  }
-
-  /**
-   * The local components embedded in a master (transitively), each with its master
-   * type id when it is still a registered browser master (`null` when it only
-   * survives embedded). Used to warn the user before an upload that they ride along
-   * as copies, and to drive "upload with dependencies". Empty when the lookup fails.
-   */
-  public async localDependencies(
-    masterTypeId: number
-  ): Promise<{ name: string; masterTypeId: number | null }[]> {
-    try {
-      return await this.persistence.localDependencies(masterTypeId);
-    } catch {
-      return [];
-    }
-  }
-
-  /**
-   * Uploads (moves) a local master to the user's cloud library at the chosen
-   * visibility. Requires being signed in. Embedded local components ride along as
-   * copies and stay in the local library; only the chosen component moves to the
-   * cloud. The caller is responsible for confirming with the user first.
-   */
-  public async uploadComponent(
-    masterTypeId: number,
-    isPublic = false
-  ): Promise<void> {
-    const def = this.registry.getDefinition(masterTypeId);
-    if (!def || def.kind !== 'master' || def.source !== 'browser') return;
-
-    if (this.user.user() === null) {
-      this.toast.error(
-        this.transloco.translate('uploadComponent.signInRequired'),
-        'CustomComponentService'
-      );
-      return;
-    }
-
-    try {
-      await this.persistence.promoteComponentToServer(masterTypeId, isPublic);
-      this.toast.success(
-        this.transloco.translate('uploadComponent.success'),
-        'CustomComponentService'
-      );
-    } catch {
-      this.toast.error(
-        this.transloco.translate('uploadComponent.failure'),
-        'CustomComponentService'
-      );
-    }
-  }
-
-  /**
-   * Uploads a local master **and** each resolvable local dependency to the cloud as
-   * separate library entries, all at the chosen visibility. The server model has no
-   * linking, so every entry stays self-contained (the master still embeds its own
-   * copies); the dependencies simply also appear in the user's cloud library.
-   *
-   * The master is uploaded first — it is the primary intent and self-contained, so
-   * if it fails nothing else is attempted. Dependencies are then uploaded
-   * best-effort: each is independent and individually irreversible, so a single
-   * failure is reported as a count rather than unwinding the rest.
-   */
-  public async uploadComponentWithDependencies(
-    masterTypeId: number,
-    isPublic = false
-  ): Promise<void> {
-    const def = this.registry.getDefinition(masterTypeId);
-    if (!def || def.kind !== 'master' || def.source !== 'browser') return;
-
-    if (this.user.user() === null) {
-      this.toast.error(
-        this.transloco.translate('uploadComponent.signInRequired'),
-        'CustomComponentService'
-      );
-      return;
-    }
-
-    // Resolve the dependency ids *before* promoting the master — promotion deletes
-    // the master's browser record, which is where the dependency list is read from.
-    const dependencyIds = (await this.localDependencies(masterTypeId))
-      .map((d) => d.masterTypeId)
-      .filter((id): id is number => id !== null);
-
-    try {
-      await this.persistence.promoteComponentToServer(masterTypeId, isPublic);
-    } catch {
-      this.toast.error(
-        this.transloco.translate('uploadComponent.failure'),
-        'CustomComponentService'
-      );
-      return;
-    }
-
-    let failed = 0;
-    for (const id of dependencyIds) {
-      try {
-        await this.persistence.promoteComponentToServer(id, isPublic);
-      } catch {
-        failed++;
-      }
-    }
-
-    if (failed > 0) {
-      this.toast.warn(
-        this.transloco.translate('uploadComponent.partialFailure', {
-          failed,
-          total: dependencyIds.length
-        }),
-        'CustomComponentService'
-      );
-    } else {
-      this.toast.success(
-        this.transloco.translate('uploadComponent.success'),
-        'CustomComponentService'
-      );
-    }
   }
 
   /**

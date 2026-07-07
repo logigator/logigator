@@ -4,6 +4,7 @@ import { configureTestBed } from '../../testing/configure-test-bed';
 import { CustomComponentService } from './custom-component.service';
 import { ProjectService } from '../project/project.service';
 import { ProjectMetadataStore } from '../persistence/project-metadata.store';
+import { PersistenceService } from '../persistence/persistence.service';
 import { CustomComponentRegistry } from '../components/custom/custom-component-registry.service';
 import { ComponentProviderService } from '../components/component-provider.service';
 import { Project } from '../project/project';
@@ -25,6 +26,7 @@ describe('CustomComponentService', () => {
   let metadataStore: ProjectMetadataStore;
   let registry: CustomComponentRegistry;
   let provider: ComponentProviderService;
+  let persistence: PersistenceService;
   let main: Project;
 
   beforeEach(() => {
@@ -40,6 +42,7 @@ describe('CustomComponentService', () => {
     metadataStore = TestBed.inject(ProjectMetadataStore);
     registry = TestBed.inject(CustomComponentRegistry);
     provider = TestBed.inject(ComponentProviderService);
+    persistence = TestBed.inject(PersistenceService);
 
     main = new Project();
     metadataStore.register(main, {
@@ -117,6 +120,31 @@ describe('CustomComponentService', () => {
     vi.advanceTimersByTime(1);
 
     expect(registry.getDefinition(masterTypeId)?.numInputs).toBe(1);
+  });
+
+  it('opens a promoted master by its current server id, not a placed snapshot stale id', async () => {
+    // A local master, placed in the project (the snapshot freezes the browser id).
+    const masterTypeId = registry.createMaster(
+      { id: 'browser-dep', name: 'Dep', symbol: 'D' },
+      'browser'
+    );
+    const instance = placeInstance(masterTypeId, main);
+    const staleId = registry.idForTypeId(instance.config.type);
+    expect(staleId).toBe('browser-dep');
+
+    // The master is uploaded to the cloud (e.g. as a project dependency): the
+    // registry flips it to a server id and keeps the old id as an alias.
+    registry.promoteMaster(masterTypeId, 'srv-new', 2);
+
+    const load = vi
+      .spyOn(persistence, 'loadServerComponent')
+      .mockResolvedValue({ project: new Project(), masterTypeId });
+
+    // Editing the still-placed instance passes the frozen (old) id; it must be
+    // resolved to the current server id before the API load, not sent verbatim.
+    await service.openComponentForEdit(staleId!);
+
+    expect(load).toHaveBeenCalledWith('srv-new');
   });
 
   it('a ChangeOptionAction marks the project dirty and undo reverts the value', () => {
