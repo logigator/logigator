@@ -14,12 +14,15 @@ import { CustomComponentService } from '../../../custom-component/custom-compone
 @Component({
   selector: 'app-update-instance-action',
   imports: [LgButton],
+  // `display: contents` so this action's host adds no flex-gap slot to the
+  // settings form when hidden; the button aligns itself as a direct flex item.
+  host: { class: 'contents' },
   template: `@if (updatable()) {
     <lg-button
       size="sm"
       severity="warn"
       label="Update to latest"
-      class="float-right"
+      class="self-end"
       (onClick)="update()"
     />
   }`

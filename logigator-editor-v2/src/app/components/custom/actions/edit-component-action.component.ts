@@ -14,10 +14,13 @@ import { ToastService } from '../../../logging/toast.service';
 @Component({
   selector: 'app-edit-component-action',
   imports: [LgButton],
+  // `display: contents` so a hidden/empty action host adds no flex-gap slot to
+  // the settings form; the button aligns itself as a direct flex item.
+  host: { class: 'contents' },
   template: `<lg-button
     size="sm"
     label="Edit component"
-    class="float-right"
+    class="self-end"
     (onClick)="edit()"
   />`
 })
