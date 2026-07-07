@@ -137,8 +137,10 @@ wire. So its two halves are treated asymmetrically:
   `CircuitFileService.decode`, which runs the **same `v0ToV1` migration** that legacy
   file import uses. There is no separate server decoder. Reads are therefore validated by
   the migration (malformed elements throw `InvalidFileError`); unknown component types are
-  dropped with a warning; server `dependencies` are ignored (server custom-components are
-  unsupported — reviving them is a future native-API version + migration).
+  dropped with a warning. Custom components **do** round-trip (R14): each server
+  `dependencies[]` entry carries an additive embedded `snapshot`, which the migration's
+  `decodeDependencies` revives into native `definitions[]`. A reference-only dependency
+  (no embedded `snapshot`, the old always-latest model) is skipped.
 - **Encode is throwaway.** `server-circuit.codec.ts` is the only place that packs a live
   `Project` back into the v0 wire shape (`ServerCircuitV0 = { elements, dependencies }`)
   for PUT/save. It reads each config's `legacyV0Slots` descriptor (below) **in reverse**
@@ -365,6 +367,10 @@ deduplicates concurrent saves.
 | `createProject(name, …)`                                                 | POST + initial PUT (`server.serializeProject`), register, set as main, update URL.                                                                                                                                                                                                                                                                            |
 | `saveDraftAsLocal(project, name)`                                        | First save of a never-saved draft to the browser store: applies the chosen `name`, then `_doBrowserSave` (generates id, `/local/:id`). Bypasses the `saveProject` dirty-guard so a pristine board can still be named and persisted.                                                                                                                           |
 | `saveDraftAsServer(project, name, isPublic)`                             | First save of a never-saved draft to the server: `server.promoteToServer` (POST create + PUT current content, flipping the **live** project's metadata to `source:'server'` — no fresh empty project, so circuit + undo history are preserved) → navigate to `/project/:id`.                                                                                  |
+| `promoteProjectToServer(project, isPublic)`                              | Uploads an **already-saved local** project to the cloud: `server.promoteToServer` on the live project → navigate → **delete the orphaned browser record** (a _move_, best-effort). Rejects a fresh draft (that goes through the save-draft flow). A silent primitive — no toast (the `UploadCoordinatorService` owns the outcome toast).                       |
+| `uploadStoredProjectToServer(id, isPublic)`                              | Uploads a browser project by store id (the Open dialog's local list, possibly not the open one). Delegates to `promoteProjectToServer` when `id` is the open project; otherwise uploads a throwaway project built from the stored record (`server.createServerProjectFromProject`) and deletes that record on success. Silent primitive (see above).          |
+| `promoteComponentToServer(masterTypeId, isPublic)`                       | Uploads (moves) a **browser** library master to the cloud: server round-trip → registry `promoteMaster` (new server id, old id kept as an alias) → persist the `oldId→newId` id-map → delete the browser record → re-point any open editor tab. Silent primitive — the coordinator toasts.                                                                    |
+| `localDependencies(masterTypeId)` / `localDependenciesOfProject(project)` / `localDependenciesOfStoredProject(id)` | The **local** custom components a circuit embeds transitively, as `{ name, masterTypeId \| null }[]`, **children-before-parents**. The three sources are a stored component master (read from its record), a live project (walked over the registry), and a stored project (read from its record; falls back to the live walk when it is the open project). Cloud-sourced embeds are omitted; `masterTypeId` is `null` for an embed that no longer resolves to a browser master (rides along as a copy only). Drives the upload dialog. |
 | `loadShare` / `loadShareAsMain` / `cloneShare`                           | Share read paths (`source:'share'`, dirty tracking disabled); decode via the same server v0 route.                                                                                                                                                                                                                                                            |
 | `createAndSetEmptyProject()`                                             | Blank `source:'browser'` project with empty id (name `'Untitled'`), set as main. **Not written to storage** until the first save. Used both on a project-less page load and by the **New Project** menu action — no name/destination is asked up front; that prompt is deferred to the first save (see `SaveCoordinatorService` in `ui.md`).                  |
 | `exportProjectToJson(project)`                                           | Reads name from metadata, delegates to `circuitFile.toJson`. Source-agnostic. Returns the JSON string — triggering a download is a UI concern.                                                                                                                                                                                                                |
@@ -387,6 +393,34 @@ All funnel through the same `Component`/`Wire` instances. The API uses the legac
 encoding (decoded through the migration); the browser target and files use the native v1
 envelope — which is why a file import is simply "decode, then browser-save the re-encoded
 blob."
+
+### Upload to cloud (promotion)
+
+Moving a local project or component to the cloud is one flow with two entry
+shapes, orchestrated by `UploadCoordinatorService` (`ui/upload/`, see `ui.md`).
+`PersistenceService` provides the primitives; the coordinator sequences them:
+
+1. **Analyze** — `localDependencies*` returns the local custom components the
+   circuit embeds, ordered children-before-parents.
+2. **Prompt** — the shared upload dialog collects visibility and which resolvable
+   dependencies to promote as their own cloud library entries (all preselected).
+3. **Upload dependencies first**, in order, then the target. Each
+   `promoteComponentToServer` records an `oldId→newId` alias in the registry;
+   because serialization resolves provenance ids **through that alias**
+   (`CustomComponentRegistry.currentIdForId`, applied in `collectSnapshots`), a
+   parent uploaded afterwards references the cloud entries created before it.
+   This is the only "linking" the server model has — entries stay self-contained
+   (the parent still embeds its own copy), the id is just kept current so the
+   copy is recognizably the same component. A dependency **not** selected (or one
+   that no longer resolves to a browser master) rides along only as an embedded
+   copy; the dialog warns that such copies can no longer be updated as
+   components elsewhere. On the first failure the sequence stops — everything not
+   yet uploaded is untouched, so a retry (which re-analyzes, dropping the
+   now-cloud dependencies) resumes cleanly.
+
+The **id rewrite is device-local safety**, not cosmetics: the alias table lives
+only in this browser, so writing a captured pre-promotion id into a document
+that lands on the server would strand the reference on every other device.
 
 ---
 

@@ -11,9 +11,11 @@
         [loading]="loadingLocal()"
         [page]="localPage()"
         [totalItems]="localTotal()"
+        [showUpload]="true"
         (open)="openLocalProject($event)"
         (delete)="deleteLocalConfirmed($event)"
         (rename)="renameLocal($event)"
+        (upload)="uploadLocal($event)"
         (pageChange)="localPage.set($event)"
         (searchChange)="onLocalSearch($event)"
       />

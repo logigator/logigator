@@ -19,7 +19,8 @@ import {
   LgInputIcon,
   LgInputText,
   LgPaginator,
-  type LgPaginatorState
+  type LgPaginatorState,
+  LgTooltip
 } from '@logigator/ui';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 
@@ -43,6 +44,7 @@ const NAME_MAX_LENGTH = 20;
     LgIconField,
     LgInputIcon,
     LgPaginator,
+    LgTooltip,
     TranslocoDirective
   ],
   templateUrl: './project-list.component.html'
@@ -56,10 +58,13 @@ export class ProjectListComponent {
   readonly loading = input(false);
   readonly page = input(0);
   readonly totalItems = input(0);
+  /** Whether each row offers an upload-to-cloud button (local projects only). */
+  readonly showUpload = input(false);
 
   readonly open = output<string>();
   readonly delete = output<ProjectListItem>();
   readonly rename = output<{ id: string; name: string }>();
+  readonly upload = output<ProjectListItem>();
   readonly pageChange = output<number>();
   readonly searchChange = output<string>();
 
@@ -116,6 +121,12 @@ export class ProjectListComponent {
   protected cancelRename(event: Event): void {
     event.stopPropagation();
     this.editingId.set(null);
+  }
+
+  protected onUploadClick(event: Event, item: ProjectListItem): void {
+    event.stopPropagation();
+    event.preventDefault();
+    this.upload.emit(item);
   }
 
   protected onDeleteClick(event: Event, item: ProjectListItem): void {

@@ -1,0 +1,104 @@
+<div *transloco="let t" class="flex flex-col gap-4">
+  <p>
+    {{
+      t(
+        kind === 'component'
+          ? 'uploadDialog.introComponent'
+          : 'uploadDialog.introProject',
+        { name: name }
+      )
+    }}
+  </p>
+
+  @if (dependencies.length) {
+    <div class="flex flex-col gap-2">
+      <div class="flex items-center justify-between gap-2">
+        <span>{{ t('uploadDialog.depsTitle') }}</span>
+        @if (uploadableDependencies.length > 1) {
+          <lg-button
+            size="sm"
+            [text]="true"
+            [label]="
+              t(
+                allSelected()
+                  ? 'uploadDialog.deselectAll'
+                  : 'uploadDialog.selectAll'
+              )
+            "
+            (onClick)="toggleAll()"
+          />
+        }
+      </div>
+      <p class="m-0 text-sm text-muted">{{ t('uploadDialog.depsHint') }}</p>
+      <ul class="m-0 flex list-none flex-col gap-2 p-0">
+        @for (dep of dependencies; track $index) {
+          @if (dep.masterTypeId !== null) {
+            <li class="flex items-center gap-2">
+              <lg-checkbox
+                [inputId]="'upload-dep-' + $index"
+                [ngModel]="selected().has(dep.masterTypeId)"
+                (ngModelChange)="toggleDependency(dep.masterTypeId, $event)"
+                [ngModelOptions]="{ standalone: true }"
+              />
+              <label [for]="'upload-dep-' + $index">{{ dep.name }}</label>
+            </li>
+          } @else {
+            <li class="flex items-center gap-2 text-muted">
+              <lg-checkbox disabled />
+              <span>{{ dep.name }}</span>
+              <i
+                class="ph ph-info cursor-help"
+                [lgTooltip]="t('uploadDialog.unresolvableHint')"
+              ></i>
+            </li>
+          }
+        }
+      </ul>
+      @if (excludedCount() > 0) {
+        <lg-message severity="warn">
+          {{ t('uploadDialog.excludedWarning', { count: excludedCount() }) }}
+        </lg-message>
+      }
+    </div>
+  }
+
+  @if (userService.user()) {
+    <div class="flex gap-2 items-center">
+      <lg-toggle-switch
+        inputId="upload-public"
+        [ngModel]="isPublic()"
+        (ngModelChange)="isPublic.set($event)"
+        [ngModelOptions]="{ standalone: true }"
+      />
+      <label for="upload-public">{{ t('uploadDialog.public') }}</label>
+      <i
+        class="ph ph-info cursor-help text-surface-500"
+        [lgTooltip]="
+          t(
+            kind === 'component'
+              ? 'uploadDialog.publicInfoComponent'
+              : 'uploadDialog.publicInfoProject'
+          )
+        "
+      ></i>
+    </div>
+  } @else {
+    <lg-message severity="warn">
+      {{ t('uploadDialog.notLoggedIn') }}
+    </lg-message>
+  }
+
+  <div class="flex justify-end gap-2">
+    <lg-button
+      severity="secondary"
+      [outlined]="true"
+      [label]="t('uploadDialog.cancel')"
+      (onClick)="cancel()"
+    />
+    <lg-button
+      [label]="t('uploadDialog.upload')"
+      [disabled]="!userService.user()"
+      (onClick)="upload()"
+    />
+  </div>
+</div>

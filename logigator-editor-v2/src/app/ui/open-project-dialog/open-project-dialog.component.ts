@@ -17,6 +17,7 @@ import {
 } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { PersistenceService } from '../../persistence/persistence.service';
+import { UploadCoordinatorService } from '../upload/upload-coordinator.service';
 import { ToastService } from '../../logging/toast.service';
 import { UserService } from '../../user/user.service';
 import {
@@ -43,6 +44,7 @@ const PAGE_SIZE = 20;
 export class OpenProjectDialogComponent implements OnInit {
   private readonly ref = inject(DialogRef);
   private readonly persistenceService = inject(PersistenceService);
+  private readonly uploadCoordinator = inject(UploadCoordinatorService);
   private readonly toastService = inject(ToastService);
   private readonly transloco = inject(TranslocoService);
   protected readonly userService = inject(UserService);
@@ -150,6 +152,19 @@ export class OpenProjectDialogComponent implements OnInit {
           err
         );
       });
+  }
+
+  protected async uploadLocal(item: ProjectListItem): Promise<void> {
+    const uploaded = await this.uploadCoordinator.requestUpload({
+      kind: 'stored-project',
+      id: item.id,
+      name: item.name
+    });
+    if (!uploaded) return;
+    // Moved to the cloud: the local record is gone, so refresh the local list
+    // (and the server list if it has been loaded) to reflect the relocation.
+    this.loadLocalProjects();
+    if (this.serverLoaded()) void this.loadServerProjects(this.serverPage());
   }
 
   protected renameLocal(change: { id: string; name: string }): void {

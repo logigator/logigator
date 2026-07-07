@@ -269,6 +269,9 @@ const en = {
           save: {
             label: 'Save'
           },
+          uploadCloud: {
+            label: 'Upload to cloud'
+          },
           exportFile: {
             label: 'Export to file'
           },
@@ -338,6 +341,7 @@ const en = {
     chooseFile: 'Choose File',
     deleteProject: 'Delete Project',
     renameProject: 'Rename Project',
+    uploadProject: 'Upload to cloud',
     cancelRename: 'Cancel',
     deleteConfirmMessage:
       'Are you sure you want to delete "{{name}}"? This cannot be undone.',
@@ -388,28 +392,41 @@ const en = {
   },
   uploadComponent: {
     button: 'Upload to cloud',
-    signInTooltip: 'Sign in to upload to the cloud',
-    dialogHeader: 'Upload to cloud',
-    intro:
-      '“{{name}}” is moved out of your local library and stored on your account.',
-    depsTitle:
-      'It embeds these local components as copies, which stay in your local library:',
+    signInTooltip: 'Sign in to upload to the cloud'
+  },
+  uploadDialog: {
+    header: 'Upload to cloud',
+    introProject:
+      '“{{name}}” is moved out of browser storage and stored on your account, so you can reach it from any device.',
+    introComponent:
+      '“{{name}}” is moved out of your local library and stored on your account, so you can use it from any device.',
+    depsTitle: 'Local components in this circuit',
+    depsHint:
+      'Selected components are uploaded to your cloud library first and the upload references them. Unselected ones only ride along as embedded copies.',
+    selectAll: 'Select all',
+    deselectAll: 'Deselect all',
+    unresolvableHint:
+      'No longer in your local library — always rides along as an embedded copy.',
+    excludedWarning:
+      '{{count}} local component(s) will not get a cloud library entry. Their embedded copies keep working, but on other devices they cannot be edited or updated as components anymore.',
     public: 'Public',
-    publicInfo:
+    publicInfoProject:
+      'Public projects are published on your profile and accessible to everyone via a share link. Private projects are only visible to you.',
+    publicInfoComponent:
       'Public components are published on your profile and accessible to everyone via a share link. Private components are only visible to you.',
-    notLoggedIn: 'You must be logged in to upload components to your account.',
+    notLoggedIn: 'You must be logged in to upload to your account.',
     cancel: 'Cancel',
     upload: 'Upload',
-    uploadWithDeps: 'Upload with dependencies',
-    withDepsConfirm:
-      'This also uploads {{count}} local component(s) to your account with the same visibility. They become separate cloud components. Continue?',
-    withDepsAccept: 'Upload all',
-    withDepsReject: 'Cancel',
-    signInRequired: 'Sign in to upload components to the cloud',
-    success: 'Component uploaded to the cloud',
-    failure: 'Failed to upload component',
-    partialFailure:
-      'Component uploaded, but {{failed}} of {{total}} dependencies failed'
+    analyzeFailed: 'Could not read the circuit to prepare the upload.',
+    dependencyFailed:
+      'Could not upload component “{{name}}”. Nothing further was uploaded — try again.',
+    uploadFailed: 'Could not upload “{{name}}” to the cloud.'
+  },
+  sourceIndicator: {
+    cloudTitle: 'Saved in your cloud account',
+    localTitle: 'Saved in this browser only',
+    draftTitle: 'Not saved yet — save it to the cloud or this browser',
+    shareTitle: 'Opened from a share link — read-only'
   },
   toolBar: {
     save: 'Save',
@@ -474,6 +491,7 @@ const en = {
     componentSaved: 'Component saved.',
     componentSavedBrowser: 'Component saved to browser storage.',
     componentUploaded: 'Component uploaded to your cloud library.',
+    projectUploaded: 'Project uploaded to your cloud account.',
     projectCreated: 'Project created.',
     projectExported: 'Project exported to file.',
     exportFailed: 'Could not export the project to a file.',

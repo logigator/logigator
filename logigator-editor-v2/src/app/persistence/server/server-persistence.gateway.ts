@@ -169,8 +169,41 @@ export class ServerPersistenceGateway {
     if (this.metadataStore.dirtyVersion(project) === versionAtSnapshot) {
       this.metadataStore.clearDirty(project);
     }
-    this.toast.success('Project saved', 'ServerPersistenceGateway');
     void this._uploadPreview(project, response.id);
+    return response.id;
+  }
+
+  /**
+   * Creates a server project from an arbitrary project's current circuit — pure
+   * transport, touching no metadata store. Mirrors {@link promoteToServer}
+   * without the live-project metadata flip, dirty handling or board preview, so
+   * it is safe for a throwaway project built from a stored record (used to upload
+   * a not-currently-open local project). Returns the new server id.
+   */
+  async createServerProjectFromProject(
+    project: Project,
+    name: string,
+    isPublic: boolean
+  ): Promise<string> {
+    const response = await firstValueFrom(
+      this.projectApi.create({
+        name,
+        public: isPublic ? 'true' : 'false'
+      })
+    );
+    const { elements, dependencies } = server.serializeProject(
+      project,
+      this.registry,
+      this.provider
+    );
+    await firstValueFrom(
+      this.projectApi.save(response.id, {
+        oldHash: response.elementsFile?.hash ?? '',
+        dependencies,
+        elements,
+        newFormat: true
+      })
+    );
     return response.id;
   }
 

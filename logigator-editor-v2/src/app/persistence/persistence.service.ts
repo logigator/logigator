@@ -23,6 +23,8 @@ import { ComponentProviderService } from '../components/component-provider.servi
 import { deriveSummary } from '../custom-component/definition-derivation';
 import { DefinitionBinding } from '../custom-component/definition-binding';
 import { buildProject, instantiateBody } from './circuit-builder';
+import { CUSTOM_TYPE_ID_BASE } from '../components/component-type.enum';
+import type { SnapshotDefinition } from './serialized-circuit';
 import { formatHttpError } from './persistence-errors';
 import { ServerPersistenceGateway } from './server/server-persistence.gateway';
 import { downloadBlob } from '../utils/download';
@@ -30,6 +32,19 @@ import { ProjectDump, PROJECT_DUMP_VERSION } from './dump/project-dump.types';
 import { deserializeAction } from '../actions/action-codec';
 
 export { AuthRequiredError } from './persistence-errors';
+
+/**
+ * One **local** custom component that a circuit about to be uploaded embeds
+ * (transitively). `masterTypeId` is set when it is still a registered browser
+ * master — those can be promoted to the cloud as their own library entries —
+ * and `null` when the dependency only survives as an embedded snapshot copy.
+ * Lists are ordered children-before-parents, so uploading resolvable entries
+ * in order lets every later upload reference its already-promoted children.
+ */
+export interface LocalUploadDependency {
+  name: string;
+  masterTypeId: number | null;
+}
 
 @Injectable({ providedIn: 'root' })
 export class PersistenceService {
@@ -201,7 +216,8 @@ export class PersistenceService {
    * First save of a fresh draft to the **server**: creates the project record
    * and PUTs the current circuit (see
    * {@link ServerPersistenceGateway.promoteToServer}), then navigates to
-   * `/project/:id`.
+   * `/project/:id`. Owns the saved-toast — the gateway promote is also used by
+   * the upload flow, which reports differently.
    */
   async saveDraftAsServer(
     project: Project,
@@ -210,6 +226,88 @@ export class PersistenceService {
   ): Promise<void> {
     const id = await this.server.promoteToServer(project, name, isPublic);
     this.location.go(`/project/${id}`);
+    this.toast.success(
+      this.transloco.translate('persistence.projectSaved'),
+      'PersistenceService'
+    );
+  }
+
+  /**
+   * Uploads an already-saved **local** project to the cloud — the project
+   * analogue of component upload. Promotes the live project (preserving its
+   * circuit + undo history and its embedded custom snapshots), navigates to
+   * `/project/:id`, then deletes the now-orphaned browser record so the project
+   * *moves* to the cloud rather than being copied. Rejects a project that is not
+   * a stored browser project (a fresh draft goes through the save-draft flow).
+   */
+  async promoteProjectToServer(
+    project: Project,
+    isPublic: boolean
+  ): Promise<void> {
+    const metadata = this.metadataStore.getMetadata(project);
+    if (
+      !metadata ||
+      metadata.type !== 'project' ||
+      metadata.source !== 'browser' ||
+      !metadata.id
+    ) {
+      throw new Error('Not a stored local project');
+    }
+    const oldId = metadata.id;
+
+    // The server round-trip is the only fail-able, irreversible step. Until it
+    // returns, nothing local has changed and the upload can be retried.
+    await this.server.promoteToServer(project, metadata.name, isPublic);
+    this.location.go(`/project/${this.metadataStore.getMetadata(project)!.id}`);
+
+    // Now cloud-backed — drop the orphaned browser record. Best-effort: the
+    // upload already committed, so a cleanup failure must not surface as an error.
+    try {
+      await this.browserStore.delete(oldId);
+    } catch {
+      this.logging.warn(
+        `Project ${oldId} uploaded to the cloud, but local cleanup failed`,
+        'PersistenceService'
+      );
+    }
+  }
+
+  /**
+   * Uploads a browser project by its store id, which may be a project other than
+   * the currently open one (the Open dialog's local list). When the id is the
+   * open main project it delegates to {@link promoteProjectToServer} so the live
+   * state (including unsaved edits) and metadata flip are used; otherwise it
+   * uploads a throwaway project built from the stored record and deletes that
+   * record on success (a *move*, mirroring {@link promoteComponentToServer}).
+   */
+  async uploadStoredProjectToServer(
+    id: string,
+    isPublic: boolean
+  ): Promise<void> {
+    const main = this.projectService.mainProject();
+    if (main && this.metadataStore.getMetadata(main)?.id === id) {
+      await this.promoteProjectToServer(main, isPublic);
+      return;
+    }
+
+    const record = await this.browserStore.get(id);
+    if (!record) throw new Error(`No browser project with id ${id}`);
+
+    // Upload first (the only fail-able step); build the throwaway project only to
+    // serialize it, and always tear it down.
+    await this._withProjectFromContent(record.content, (temp) =>
+      this.server.createServerProjectFromProject(temp, record.name, isPublic)
+    );
+
+    // Uploaded — drop the local record so the project moves to the cloud.
+    try {
+      await this.browserStore.delete(id);
+    } catch {
+      this.logging.warn(
+        `Project ${id} uploaded to the cloud, but local cleanup failed`,
+        'PersistenceService'
+      );
+    }
   }
 
   /**
@@ -573,60 +671,141 @@ export class PersistenceService {
   }
 
   /**
-   * Names of the **local** custom components a browser master embeds (transitively),
-   * for the upload-to-cloud confirmation. Built from the master's stored circuit:
-   * each embedded custom whose provenance master is still browser-sourced (or can
-   * no longer be resolved) is listed — those already in the cloud are omitted.
-   * Returns an empty list for a server master or one with no local dependencies.
-   */
-  async localDependencyNames(masterTypeId: number): Promise<string[]> {
-    return (await this.localDependencies(masterTypeId)).map((d) => d.name);
-  }
-
-  /**
-   * The **local** custom components a browser master embeds (transitively), each
-   * paired with its registry master type id when it is still a registered browser
-   * master — `null` when the dependency only survives as an embedded snapshot and
-   * can no longer be resolved to its own master. Only the resolvable ones can be
-   * promoted to the cloud as separate library entries; the rest always ride along
-   * as embedded copies. Server-sourced embeds are omitted (already in the cloud).
-   * Drives the upload-to-cloud dialog: its names warn the user, its ids feed an
-   * "upload with dependencies". Empty for a server master or one with no local deps.
+   * The **local** custom components a browser master embeds (transitively).
+   * Read straight from the master's stored record — the transitive closure is
+   * already baked in at save time — without building a live project or ingesting
+   * throwaway definitions into the registry. Empty for a server master or one
+   * with no local dependencies. Drives the upload-to-cloud dialog.
    */
   async localDependencies(
     masterTypeId: number
-  ): Promise<{ name: string; masterTypeId: number | null }[]> {
+  ): Promise<LocalUploadDependency[]> {
     const def = this.registry.getDefinition(masterTypeId);
     if (!def || def.kind !== 'master' || !def.id) return [];
     const record = await this.browserComponentStore.get(def.id);
     if (!record) return [];
+    return this._classifyLocalDependencies(
+      this._depsFromFileDefinitions(
+        this.circuitFile.peekDefinitions(record.content)
+      )
+    );
+  }
 
-    // Read the embedded snapshot definitions straight from the stored file — the
-    // transitive closure is already baked in at save time — without building a
-    // live project or ingesting throwaway definitions into the registry. Each
-    // embedded custom whose provenance master is still browser-sourced (or can no
-    // longer be resolved) is a local component that rides along as a copy.
+  /**
+   * The **local** custom components a live project places (transitively) —
+   * the project analogue of {@link localDependencies}, walked over the registry
+   * definitions of the placed snapshots so unsaved edits are reflected.
+   */
+  localDependenciesOfProject(project: Project): LocalUploadDependency[] {
+    const entries: { name: string; sourceId?: string }[] = [];
+    const visited = new Set<number>();
+    // Post-order DFS: a definition is emitted only after everything it places,
+    // so the result is children-before-parents (the upload order — a parent's
+    // snapshot then references its already-promoted children).
+    const visit = (typeId: number): void => {
+      if (visited.has(typeId)) return;
+      visited.add(typeId);
+      const def = this.registry.getDefinition(typeId);
+      if (!def) return; // built-in
+      for (const c of def.circuit?.components ?? []) visit(c.type);
+      entries.push({ name: def.name, sourceId: def.id });
+    };
+    for (const component of project.components) {
+      visit(component.config.type);
+    }
+    return this._classifyLocalDependencies(entries);
+  }
+
+  /**
+   * The **local** custom components a stored browser project embeds
+   * (transitively), read from its record like {@link localDependencies}. When
+   * `id` is the currently open main project it walks the live project instead
+   * (mirroring {@link uploadStoredProjectToServer}, which uploads the live
+   * state), so unsaved edits are reflected. Rejects if no record exists.
+   */
+  async localDependenciesOfStoredProject(
+    id: string
+  ): Promise<LocalUploadDependency[]> {
+    const main = this.projectService.mainProject();
+    if (main && this.metadataStore.getMetadata(main)?.id === id) {
+      return this.localDependenciesOfProject(main);
+    }
+    const record = await this.browserStore.get(id);
+    if (!record) throw new Error(`No browser project with id ${id}`);
+    return this._classifyLocalDependencies(
+      this._depsFromFileDefinitions(
+        this.circuitFile.peekDefinitions(record.content)
+      )
+    );
+  }
+
+  /**
+   * Orders embedded file definitions children-before-parents via a post-order
+   * DFS over their inter-definition references (each definition's body places
+   * others by file-local type id). `peekDefinitions` yields them
+   * ancestors-first (collect order), which reversed is *not* a valid topological
+   * order once a dependency is shared, so the graph is walked explicitly.
+   */
+  private _depsFromFileDefinitions(
+    defs: SnapshotDefinition[]
+  ): { name: string; sourceId?: string }[] {
+    const byLocalType = new Map<number, SnapshotDefinition>();
+    for (const def of defs) byLocalType.set(def.type, def);
+
+    const ordered: SnapshotDefinition[] = [];
+    const visited = new Set<number>();
+    const visit = (localType: number): void => {
+      if (visited.has(localType)) return;
+      visited.add(localType);
+      const def = byLocalType.get(localType);
+      if (!def) return;
+      for (const c of def.components) {
+        if (c.type >= CUSTOM_TYPE_ID_BASE) visit(c.type);
+      }
+      ordered.push(def);
+    };
+    for (const def of defs) visit(def.type);
+
+    return ordered.map((def) => ({ name: def.name, sourceId: def.source?.id }));
+  }
+
+  /**
+   * Shared tail of the dependency queries: classifies embedded definitions —
+   * already in children-before-parents order — into {@link LocalUploadDependency}s,
+   * preserving that order (which the coordinator uploads in). Server-sourced
+   * entries are omitted (already in the cloud — resolution goes through the
+   * promotion alias, so a dependency uploaded earlier drops out even when the
+   * document still references its old id), and the list is deduplicated per
+   * master (several snapshots of one master — e.g. frozen at different versions —
+   * are one dependency; the first, deepest occurrence wins).
+   */
+  private _classifyLocalDependencies(
+    entries: { name: string; sourceId?: string }[]
+  ): LocalUploadDependency[] {
     const seen = new Set<string>();
-    const deps: { name: string; masterTypeId: number | null }[] = [];
-    for (const dep of this.circuitFile.peekDefinitions(record.content)) {
-      const masterId = dep.source?.id;
-      const resolvedMasterTypeId =
-        masterId !== undefined
-          ? this.registry.masterTypeIdForId(masterId)
+    const deps: LocalUploadDependency[] = [];
+    for (const entry of entries) {
+      const masterTypeId =
+        entry.sourceId !== undefined
+          ? this.registry.masterTypeIdForId(entry.sourceId)
           : undefined;
       const master =
-        resolvedMasterTypeId !== undefined
-          ? this.registry.getDefinition(resolvedMasterTypeId)
+        masterTypeId !== undefined
+          ? this.registry.getDefinition(masterTypeId)
           : undefined;
       // Already in the cloud — its copy is fine, nothing local to mention.
       if (master?.source === 'server') continue;
-      if (seen.has(dep.name)) continue;
-      seen.add(dep.name);
+      const key =
+        masterTypeId !== undefined
+          ? `master:${masterTypeId}`
+          : `orphan:${entry.sourceId ?? entry.name}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
       deps.push({
-        name: dep.name,
+        name: master?.name ?? entry.name,
         masterTypeId:
-          master?.source === 'browser' && resolvedMasterTypeId !== undefined
-            ? resolvedMasterTypeId
+          master?.source === 'browser' && masterTypeId !== undefined
+            ? masterTypeId
             : null
       });
     }
@@ -659,25 +838,18 @@ export class PersistenceService {
     // Upload to the server first — the only irreversible, fail-able step. If it
     // throws, nothing local has changed: the master is still browser-sourced, the
     // record is intact and the upload button stays visible for a retry.
-    const { components, wires } = this.circuitFile.fromJson(record.content);
-    const temp = buildProject(components, wires);
-    let newId: string;
-    let version: number;
-    let newHash: string;
-    try {
-      ({
-        id: newId,
-        version,
-        hash: newHash
-      } = await this.server.promoteComponentFromProject(temp, {
+    const {
+      id: newId,
+      version,
+      hash: newHash
+    } = await this._withProjectFromContent(record.content, (temp) =>
+      this.server.promoteComponentFromProject(temp, {
         name: def.name,
         symbol: def.symbol,
         description: def.description,
         isPublic
-      }));
-    } finally {
-      temp.destroy();
-    }
+      })
+    );
 
     // The component now lives in the cloud — past the point of no return. Persist
     // the durable old→new alias and drop the local record *before* the in-memory
@@ -705,10 +877,6 @@ export class PersistenceService {
     // identity so a later save routes to the cloud instead of re-creating the
     // browser record that was just deleted.
     this._reconcilePromotedEditor(oldId, newId, newHash);
-    this.toast.success(
-      this.transloco.translate('persistence.componentUploaded'),
-      'PersistenceService'
-    );
   }
 
   /**
@@ -883,6 +1051,24 @@ export class PersistenceService {
   }
 
   // -- Private helpers -----------------------------------------------------
+
+  /**
+   * Builds a throwaway project from stored circuit JSON, runs `fn` on it (a
+   * serialize-and-upload step), and always tears the project down. Shared by
+   * the upload paths that push a stored record without opening it.
+   */
+  private async _withProjectFromContent<T>(
+    content: string,
+    fn: (project: Project) => Promise<T>
+  ): Promise<T> {
+    const { components, wires } = this.circuitFile.fromJson(content);
+    const temp = buildProject(components, wires);
+    try {
+      return await fn(temp);
+    } finally {
+      temp.destroy();
+    }
+  }
 
   /**
    * Creates a browser library master for every custom directly placed in an

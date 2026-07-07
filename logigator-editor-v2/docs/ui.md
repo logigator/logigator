@@ -176,6 +176,20 @@ Errors are caught and surfaced as a toast centrally here, so the three call site
 
 ---
 
+### `UploadCoordinatorService`
+
+**File:** `upload/upload-coordinator.service.ts`
+
+Single entry point for **moving anything local to the cloud** — projects and custom components share one pipeline. `requestUpload(target)` takes a discriminated `UploadTarget` (`project` = the open project, `stored-project` = a browser project by id from the Open dialog's local list, `component` = a local library master) and runs the same three steps regardless of kind:
+
+1. **Analyze** the target's embedded local dependencies (`PersistenceService.localDependencies*`).
+2. **Prompt** with the shared `UploadDialogComponent` (visibility + a checkbox list of the resolvable dependencies, all preselected; an inline warning when any is excluded; unresolvable embeds shown disabled).
+3. **Upload** the selected dependencies first (children-before-parents), then the target, via the `PersistenceService` primitives. On the first failure it stops and toasts — everything not yet uploaded is untouched, so a retry re-analyzes and resumes.
+
+The coordinator **owns every upload toast**; the `PersistenceService` primitives (`promoteProjectToServer`, `uploadStoredProjectToServer`, `promoteComponentToServer`) are silent, so the two layers never double-toast. `requestUpload` resolves `true` when the target committed, so list callers (the Open dialog) refresh. Like `SaveCoordinatorService`, it lives in `ui/` because it orchestrates a dialog. Wired from the title-bar/File-menu (open project), the Open dialog's per-row cloud button (stored project), and the component-actions **Upload to cloud** button (`upload-component-action.component.ts`). See `persistence.md` → "Upload to cloud (promotion)" for the id-linking mechanics.
+
+---
+
 ### `SideBarComponent`
 
 **File:** `side-bar/side-bar.component.ts`

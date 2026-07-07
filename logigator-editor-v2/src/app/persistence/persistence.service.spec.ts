@@ -577,6 +577,127 @@ describe('PersistenceService', () => {
     });
   });
 
+  describe('promoteProjectToServer', () => {
+    it('uploads the live project, flips metadata, navigates and deletes the browser record', async () => {
+      const project = new Project();
+      metadataStore.register(project, {
+        id: 'browser-1',
+        name: 'Local',
+        type: 'project',
+        source: 'browser',
+        hash: '',
+        isPublic: false
+      });
+      metadataStore.markDirty(project);
+      await service.saveProject(project);
+      expect(browserStore.records.has('browser-1')).toBe(true);
+
+      const promise = service.promoteProjectToServer(project, true);
+
+      const postReq = httpMock.expectOne(PROJECTS_LIST_URL);
+      expect(postReq.request.method).toBe('POST');
+      expect(postReq.request.body).toEqual({ name: 'Local', public: 'true' });
+      postReq.flush(projectSummaryResponse({ id: 'srv-uuid', hash: 'h0' }));
+
+      await Promise.resolve();
+
+      const putReq = httpMock.expectOne(PROJECT_URL('srv-uuid'));
+      expect(putReq.request.method).toBe('PUT');
+      putReq.flush(projectSummaryResponse({ id: 'srv-uuid', hash: 'h1' }));
+
+      await promise;
+
+      const metadata = metadataStore.getMetadata(project)!;
+      expect(metadata.source).toBe('server');
+      expect(metadata.id).toBe('srv-uuid');
+      expect(metadata.isPublic).toBe(true);
+      expect(locationGo).toHaveBeenCalledWith('/project/srv-uuid');
+      // Moved, not copied: the old browser record is gone.
+      expect(browserStore.records.has('browser-1')).toBe(false);
+    });
+
+    it('rejects a fresh draft (no stored id) without any HTTP call', async () => {
+      const project = service.createAndSetEmptyProject();
+      await expect(
+        service.promoteProjectToServer(project, false)
+      ).rejects.toThrow();
+    });
+  });
+
+  describe('uploadStoredProjectToServer', () => {
+    it('delegates to the live path when the id is the open project', async () => {
+      const project = new Project();
+      metadataStore.register(project, {
+        id: 'browser-1',
+        name: 'Local',
+        type: 'project',
+        source: 'browser',
+        hash: '',
+        isPublic: false
+      });
+      metadataStore.markDirty(project);
+      await service.saveProject(project);
+      projectService.setMainProject(project);
+
+      const promise = service.uploadStoredProjectToServer('browser-1', false);
+
+      const postReq = httpMock.expectOne(PROJECTS_LIST_URL);
+      expect(postReq.request.body).toEqual({ name: 'Local', public: 'false' });
+      postReq.flush(projectSummaryResponse({ id: 'srv-uuid', hash: 'h0' }));
+      await Promise.resolve();
+      httpMock
+        .expectOne(PROJECT_URL('srv-uuid'))
+        .flush(projectSummaryResponse({ id: 'srv-uuid', hash: 'h1' }));
+
+      await promise;
+
+      expect(metadataStore.getMetadata(project)!.source).toBe('server');
+      expect(browserStore.records.has('browser-1')).toBe(false);
+    });
+
+    it('uploads a stored record via a throwaway project and deletes it, leaving the open project untouched', async () => {
+      // A stored local project that is NOT the open one.
+      const stored = new Project();
+      metadataStore.register(stored, {
+        id: 'stored-1',
+        name: 'Archived',
+        type: 'project',
+        source: 'browser',
+        hash: '',
+        isPublic: false
+      });
+      metadataStore.markDirty(stored);
+      await service.saveProject(stored);
+      expect(browserStore.records.has('stored-1')).toBe(true);
+
+      // The open project is a different, fresh draft.
+      const main = service.createAndSetEmptyProject();
+
+      const promise = service.uploadStoredProjectToServer('stored-1', true);
+
+      // The temp path reads the stored record (an await) before issuing the POST,
+      // so let that microtask settle before asserting the request.
+      await Promise.resolve();
+      const postReq = httpMock.expectOne(PROJECTS_LIST_URL);
+      expect(postReq.request.body).toEqual({
+        name: 'Archived',
+        public: 'true'
+      });
+      postReq.flush(projectSummaryResponse({ id: 'srv-uuid', hash: 'h0' }));
+      await Promise.resolve();
+      httpMock
+        .expectOne(PROJECT_URL('srv-uuid'))
+        .flush(projectSummaryResponse({ id: 'srv-uuid', hash: 'h1' }));
+
+      await promise;
+
+      // The stored record moved to the cloud; the open project is unchanged.
+      expect(browserStore.records.has('stored-1')).toBe(false);
+      expect(projectService.mainProject()).toBe(main);
+      expect(metadataStore.getMetadata(main)!.source).toBe('browser');
+    });
+  });
+
   describe('createProject', () => {
     it('POSTs, then PUTs initial empty save, sets as main, updates URL', async () => {
       const promise = service.createProject('My Project', undefined, false);
@@ -1407,7 +1528,7 @@ describe('PersistenceService', () => {
       expect(registry.getDefinition(serverType)?.source).toBe('server');
     });
 
-    it('localDependencyNames returns [] for a master with no embedded customs', async () => {
+    it('localDependencies returns [] for a master with no embedded customs', async () => {
       const circuitFile = TestBed.inject(CircuitFileService);
       await componentStore.save({
         id: 'local-2',
@@ -1424,10 +1545,10 @@ describe('PersistenceService', () => {
         { id: 'local-2', symbol: 'P' },
         'browser'
       );
-      expect(await service.localDependencyNames(masterTypeId)).toEqual([]);
+      expect(await service.localDependencies(masterTypeId)).toEqual([]);
     });
 
-    it('localDependencyNames lists the local customs a master embeds', async () => {
+    it('localDependencies lists the local customs a master embeds, with resolvable master type ids', async () => {
       const circuitFile = TestBed.inject(CircuitFileService);
       // Local dependency master B, embedded by master A.
       const bType = registry.createMaster(
@@ -1455,7 +1576,111 @@ describe('PersistenceService', () => {
         'browser'
       );
 
-      expect(await service.localDependencyNames(aType)).toEqual(['Dep B']);
+      expect(await service.localDependencies(aType)).toEqual([
+        { name: 'Dep B', masterTypeId: bType }
+      ]);
+    });
+
+    it('localDependencies omits a dependency already promoted to the cloud', async () => {
+      const circuitFile = TestBed.inject(CircuitFileService);
+      const bType = registry.createMaster(
+        { id: 'dep-b', symbol: 'B', name: 'Dep B' },
+        'browser'
+      );
+      const aProject = new Project();
+      placeSnapshot(aProject, bType);
+      const contentA = circuitFile.toJson(aProject, 'A');
+      aProject.destroy();
+
+      await componentStore.save({
+        id: 'local-a',
+        version: 1,
+        name: 'A',
+        symbol: 'A',
+        description: '',
+        numInputs: 0,
+        numOutputs: 0,
+        labels: [],
+        content: contentA
+      });
+      const aType = registry.createMaster(
+        { id: 'local-a', symbol: 'A', name: 'A' },
+        'browser'
+      );
+
+      // B is now in the cloud: promoting flips its source and records the alias,
+      // so the stored snapshot's old id resolves to a server master.
+      registry.promoteMaster(bType, 'srv-b', 2);
+
+      expect(await service.localDependencies(aType)).toEqual([]);
+    });
+
+    it('localDependenciesOfProject walks a live project, children before parents', () => {
+      // C (leaf) embedded by B; the live project places B.
+      const cType = registry.createMaster(
+        { id: 'dep-c', symbol: 'C', name: 'Dep C' },
+        'browser'
+      );
+      // B's circuit places C — reference C's type id directly (the walk resolves
+      // any custom type through its provenance id, master or snapshot alike).
+      const bType = registry.createMaster(
+        {
+          id: 'dep-b',
+          symbol: 'B',
+          name: 'Dep B',
+          circuit: {
+            components: [{ type: cType, pos: [0, 0], options: {} }],
+            wires: []
+          }
+        },
+        'browser'
+      );
+
+      const project = new Project();
+      placeSnapshot(project, bType);
+      const deps = service.localDependenciesOfProject(project);
+      project.destroy();
+
+      // Children before parents: C precedes B (upload order).
+      expect(deps.map((d) => d.name)).toEqual(['Dep C', 'Dep B']);
+      expect(deps.map((d) => d.masterTypeId)).toEqual([cType, bType]);
+    });
+
+    it('localDependenciesOfProject orders a diamond children-before-parents', () => {
+      // A places B and C; both B and C place D. Every dependency must precede
+      // each one that embeds it — a plain reverse of collect order would put the
+      // shared D after one of its parents.
+      const ref = (type: number) => ({ type, pos: [0, 0] as [number, number], options: {} });
+      const dType = registry.createMaster({ id: 'd', name: 'D' }, 'browser');
+      const bType = registry.createMaster(
+        { id: 'b', name: 'B', circuit: { components: [ref(dType)], wires: [] } },
+        'browser'
+      );
+      const cType = registry.createMaster(
+        { id: 'c', name: 'C', circuit: { components: [ref(dType)], wires: [] } },
+        'browser'
+      );
+      const aType = registry.createMaster(
+        {
+          id: 'a',
+          name: 'A',
+          circuit: { components: [ref(bType), ref(cType)], wires: [] }
+        },
+        'browser'
+      );
+
+      const project = new Project();
+      placeSnapshot(project, aType);
+      const order = service
+        .localDependenciesOfProject(project)
+        .map((d) => d.name);
+      project.destroy();
+
+      const idx = (n: string) => order.indexOf(n);
+      expect(idx('D')).toBeLessThan(idx('B'));
+      expect(idx('D')).toBeLessThan(idx('C'));
+      expect(idx('B')).toBeLessThan(idx('A'));
+      expect(idx('C')).toBeLessThan(idx('A'));
     });
 
     it('preloadServerMasters registers cloud masters from the list alone (no per-component fetch)', async () => {

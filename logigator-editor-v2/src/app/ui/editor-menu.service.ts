@@ -12,6 +12,7 @@ import { ClipboardService } from '../clipboard/clipboard.service';
 import { ShortcutService } from '../shortcuts/shortcut.service';
 import { ShortcutActionEnum } from '../shortcuts/shortcut-action.enum';
 import { SaveCoordinatorService } from './save-coordinator.service';
+import { UploadCoordinatorService } from './upload/upload-coordinator.service';
 import { OpenProjectDialogComponent } from './open-project-dialog/open-project-dialog.component';
 import { NewComponentDialogComponent } from './new-component-dialog/new-component-dialog.component';
 import { ShortcutManagerComponent } from '../shortcuts/shortcut-manager/shortcut-manager.component';
@@ -35,6 +36,7 @@ export class EditorMenuService {
   private readonly clipboardService = inject(ClipboardService);
   private readonly shortcutService = inject(ShortcutService);
   private readonly saveCoordinator = inject(SaveCoordinatorService);
+  private readonly uploadCoordinator = inject(UploadCoordinatorService);
   private readonly debugMenuService = inject(DebugMenuService);
   private readonly toastService = inject(ToastService);
 
@@ -88,6 +90,17 @@ export class EditorMenuService {
             shortcut: this.shortcutService.binding(ShortcutActionEnum.SAVE)(),
             command: () => this.saveProject()
           },
+          ...(this.canUploadMainProject()
+            ? [
+                {
+                  label: this.translocoService.translate(
+                    'titleBar.menuBar.file.items.uploadCloud.label'
+                  ),
+                  icon: 'ph ph-cloud-arrow-up',
+                  command: () => this.uploadProject()
+                }
+              ]
+            : []),
           {
             label: this.translocoService.translate(
               'titleBar.menuBar.file.items.exportFile.label'
@@ -253,6 +266,30 @@ export class EditorMenuService {
   private saveProject(): void {
     const project = this.projectService.activeProject();
     if (project) void this.saveCoordinator.requestSave(project);
+  }
+
+  /**
+   * Whether the open project is a stored **local** project — the only case that
+   * can be moved to the cloud. Reads the metadata signal so the menu item toggles
+   * as the source flips (e.g. right after an upload).
+   */
+  private canUploadMainProject(): boolean {
+    const project = this.projectService.mainProject();
+    const metadata = project
+      ? this.projectMetadataStore.getMetadata(project)
+      : null;
+    return (
+      metadata?.type === 'project' &&
+      metadata.source === 'browser' &&
+      metadata.id !== ''
+    );
+  }
+
+  private uploadProject(): void {
+    const project = this.projectService.mainProject();
+    if (project) {
+      void this.uploadCoordinator.requestUpload({ kind: 'project', project });
+    }
   }
 
   private exportFile(): void {

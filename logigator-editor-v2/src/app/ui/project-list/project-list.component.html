@@ -52,6 +52,8 @@
                 severity="secondary"
                 [text]="true"
                 [ariaLabel]="t('openProjectDialog.cancelRename')"
+                [lgTooltip]="t('openProjectDialog.cancelRename')"
+                tooltipPosition="bottom"
                 (mousedown)="$event.preventDefault()"
                 (click)="cancelRename($event)"
               />
@@ -62,10 +64,22 @@
               <span class="text-sm text-muted">
                 {{ item.lastEdited | date: 'mediumDate' }}
               </span>
+              @if (showUpload()) {
+                <lg-button
+                  icon="ph ph-cloud-arrow-up"
+                  [text]="true"
+                  [ariaLabel]="t('openProjectDialog.uploadProject')"
+                  [lgTooltip]="t('openProjectDialog.uploadProject')"
+                  tooltipPosition="bottom"
+                  (click)="onUploadClick($event, item)"
+                />
+              }
               <lg-button
                 icon="ph ph-pencil-simple"
                 [text]="true"
                 [ariaLabel]="t('openProjectDialog.renameProject')"
+                [lgTooltip]="t('openProjectDialog.renameProject')"
+                tooltipPosition="bottom"
                 (click)="startRename($event, item)"
               />
               <lg-button
@@ -73,6 +87,8 @@
                 severity="danger"
                 [text]="true"
                 [ariaLabel]="t('openProjectDialog.deleteProject')"
+                [lgTooltip]="t('openProjectDialog.deleteProject')"
+                tooltipPosition="bottom"
                 (click)="onDeleteClick($event, item)"
               />
             </span>
