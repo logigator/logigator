@@ -3,7 +3,17 @@
     <a class="relative w-40 h-8" href="/" target="_blank">
       <img [ngSrc]="logoUrl" alt="Logo" fill priority />
     </a>
-    <h1 class="text-xl font-bold mx-4">{{ projectName() }}</h1>
+    <h1 class="text-xl font-bold mx-2">{{ projectName() }}</h1>
+    @if (sourceChip(); as source) {
+      <app-source-indicator
+        *transloco="let t"
+        [source]="source"
+        [serverTitle]="t('sourceIndicator.cloudTitle')"
+        [browserTitle]="t('sourceIndicator.localTitle')"
+        [draftTitle]="t('sourceIndicator.draftTitle')"
+        [shareTitle]="t('sourceIndicator.shareTitle')"
+      />
+    }
   </ng-template>
   <ng-template #end>
     <app-user-settings />
