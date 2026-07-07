@@ -121,9 +121,15 @@ export function serializeProject(
   );
 
   const dependencies: DependencyMapping[] = definitions.map((def) => ({
-    // Provenance back to the library master; '' for a never-saved-to-library
-    // local (promotion into the server library is a deferred follow-up).
-    id: def.source?.id ?? '',
+    // The mapping id links to a server library component, which the backend
+    // validates as one the user owns. Only a dependency that resolves to a
+    // registered **server** master qualifies; a local (browser) custom — or any
+    // id the backend could not own — is sent as '' so it rides along solely via
+    // the embedded snapshot (no dependency row). `def.source.id` is already the
+    // current id (collectSnapshots rewrites it through the promotion alias), so a
+    // dependency promoted earlier in this same upload now resolves to a server
+    // master and links correctly.
+    id: serverDependencyId(def.source?.id, registry),
     model: def.type, // file-local id, matches the body `t` and the snapshot
     snapshot: {
       version: def.source?.version ?? 1,
@@ -138,6 +144,25 @@ export function serializeProject(
   }));
 
   return { elements, dependencies };
+}
+
+/**
+ * The mapping id to send for a dependency: its own id when it resolves to a
+ * registered **server** master (a cloud library component the user owns), or ''
+ * otherwise (local/browser custom, or an id with no owned server master) so the
+ * backend skips the dependency row and relies on the embedded snapshot. Mirrors
+ * the backend's `getOwnedComponentOrThrow` contract — sending a browser id (or a
+ * non-owned server id) is what triggers "Component for mapping not found".
+ */
+function serverDependencyId(
+  id: string | undefined,
+  registry: CustomComponentRegistry
+): string {
+  if (id === undefined) return '';
+  const masterTypeId = registry.masterTypeIdForId(id);
+  const master =
+    masterTypeId !== undefined ? registry.getDefinition(masterTypeId) : undefined;
+  return master?.source === 'server' ? id : '';
 }
 
 /**

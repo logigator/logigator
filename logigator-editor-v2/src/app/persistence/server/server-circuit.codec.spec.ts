@@ -342,6 +342,29 @@ describe('server-circuit.codec', () => {
       ).toBe(1);
     });
 
+    it('sends an empty mapping id for a local (browser) dependency', () => {
+      // A local custom the backend does not own must ride along via the embedded
+      // snapshot only — sending its browser id would fail getOwnedComponentOrThrow
+      // with "Component for mapping not found".
+      const master = registry.createMaster(
+        { id: 'browser-uuid', symbol: 'L', numInputs: 0, numOutputs: 0 },
+        'browser'
+      );
+      const snapType = registry.snapshot(master).typeId;
+      const config = provider.getComponent(snapType)!;
+      const project = new Project();
+      project.addComponent(
+        config.create({ direction: config.options['direction'].clone() })
+      );
+
+      const { dependencies } = encode(project);
+
+      expect(dependencies.length).toBe(1);
+      // No dependency row on the backend, but the snapshot still carries it.
+      expect(dependencies[0].id).toBe('');
+      expect(dependencies[0].snapshot).toBeDefined();
+    });
+
     it('re-anchors a rotated built-in inside a snapshot body', () => {
       // A snapshot body is decoded through the same v0→v1 migration, so encode
       // must reverse the pivot re-anchor for its inner built-ins. OUTPUT plug
