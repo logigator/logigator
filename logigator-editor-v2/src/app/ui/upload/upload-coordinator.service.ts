@@ -35,7 +35,14 @@ export type UploadTarget =
       project: Project;
       name: string;
       isPublic: boolean;
-    };
+    }
+  /**
+   * An already-saved **server** project being re-saved after it gained local
+   * components (which the backend rejects as dependencies). Promotes the chosen
+   * ones — riding the project's own visibility — then re-saves. Only routed here
+   * when the project actually embeds local components.
+   */
+  | { kind: 'save-server'; project: Project };
 
 /**
  * Single entry point for moving anything local to the cloud — projects and
@@ -73,16 +80,18 @@ export class UploadCoordinatorService {
       return false;
     }
 
-    // A first server save already has its name + visibility from the save dialog,
-    // so when it embeds no local components there is nothing left to decide —
-    // skip the dialog and save straight away. Every other case prompts.
+    // When visibility is already decided upstream (a first server save, or a
+    // re-save riding the project's own visibility) and there are no local
+    // components left to choose, there is nothing to decide — skip the dialog.
+    // Every other case prompts.
+    const preset = this._presetVisibility(target);
     let isPublic: boolean;
     let dependencyMasterTypeIds: number[];
-    if (target.kind === 'draft-to-server' && dependencies.length === 0) {
-      isPublic = target.isPublic;
+    if (preset !== undefined && dependencies.length === 0) {
+      isPublic = preset;
       dependencyMasterTypeIds = [];
     } else {
-      const result = await this._prompt(target, name, dependencies);
+      const result = await this._prompt(target, name, dependencies, preset);
       if (!result) return false;
       isPublic = result.isPublic;
       dependencyMasterTypeIds = result.dependencyMasterTypeIds;
@@ -103,11 +112,30 @@ export class UploadCoordinatorService {
       return false;
     }
 
-    this.toast.success(
-      this.transloco.translate(this._successKey(target)),
-      'UploadCoordinatorService'
-    );
+    // A plain re-save (`save-server`) reports its own outcome via `saveProject`;
+    // every other target's primitive is silent, so the coordinator toasts.
+    const successKey = this._successKey(target);
+    if (successKey) {
+      this.toast.success(
+        this.transloco.translate(successKey),
+        'UploadCoordinatorService'
+      );
+    }
     return true;
+  }
+
+  /**
+   * The visibility already chosen for a target outside the upload dialog, or
+   * `undefined` when the dialog must ask. A first server save carries it from the
+   * save dialog; a server re-save rides the project's own visibility. Either way
+   * the dialog locks the toggle, so it is purely about component selection.
+   */
+  private _presetVisibility(target: UploadTarget): boolean | undefined {
+    if (target.kind === 'draft-to-server') return target.isPublic;
+    if (target.kind === 'save-server') {
+      return this.metadataStore.getMetadata(target.project)?.isPublic ?? false;
+    }
+    return undefined;
   }
 
   /**
@@ -144,6 +172,8 @@ export class UploadCoordinatorService {
     // A first server save reads as a save, not a move — and matches the message
     // the no-dependency path showed before this went through the upload flow.
     if (target.kind === 'draft-to-server') return 'persistence.projectSaved';
+    // A re-save reports its own outcome via saveProject; don't double-toast.
+    if (target.kind === 'save-server') return undefined;
     return 'persistence.projectUploaded';
   }
 
@@ -182,6 +212,13 @@ export class UploadCoordinatorService {
             target.project
           )
         };
+      case 'save-server':
+        return {
+          name: this.metadataStore.getMetadata(target.project)?.name ?? '',
+          dependencies: this.persistence.localDependenciesOfProject(
+            target.project
+          )
+        };
     }
   }
 
@@ -208,13 +245,16 @@ export class UploadCoordinatorService {
           target.name,
           isPublic
         );
+      case 'save-server':
+        return this.persistence.saveProject(target.project);
     }
   }
 
   private _prompt(
     target: UploadTarget,
     name: string,
-    dependencies: LocalUploadDependency[]
+    dependencies: LocalUploadDependency[],
+    presetIsPublic: boolean | undefined
   ): Promise<UploadDialogResult | undefined> {
     const ref = this.dialogService.open(UploadDialogComponent, {
       header: this.transloco.translate('uploadDialog.header'),
@@ -225,10 +265,9 @@ export class UploadCoordinatorService {
         kind: this._dialogKind(target),
         name,
         dependencies,
-        // A first server save already chose visibility in the save dialog; lock
-        // it so the dialog is purely about which components to promote.
-        presetIsPublic:
-          target.kind === 'draft-to-server' ? target.isPublic : undefined
+        // When visibility is decided upstream, lock it so the dialog is purely
+        // about which local components to promote.
+        presetIsPublic
       } satisfies UploadDialogData
     });
     if (!ref) return Promise.resolve(undefined);
@@ -239,7 +278,11 @@ export class UploadCoordinatorService {
 
   private _dialogKind(target: UploadTarget): UploadDialogData['kind'] {
     if (target.kind === 'component') return 'component';
-    if (target.kind === 'draft-to-server') return 'draft';
+    // Both the first-save and re-save shapes present the same choice: which
+    // embedded local components to promote alongside the project.
+    if (target.kind === 'draft-to-server' || target.kind === 'save-server') {
+      return 'draft';
+    }
     return 'project';
   }
 }

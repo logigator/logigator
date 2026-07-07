@@ -30,6 +30,7 @@ describe('SaveCoordinatorService', () => {
     saveProject: ReturnType<typeof vi.fn>;
     saveDraftAsLocal: ReturnType<typeof vi.fn>;
     saveDraftAsServer: ReturnType<typeof vi.fn>;
+    localDependenciesOfProject: ReturnType<typeof vi.fn>;
   };
   let uploadCoordinator: { requestUpload: ReturnType<typeof vi.fn> };
   let getMetadata: ReturnType<typeof vi.fn>;
@@ -40,7 +41,8 @@ describe('SaveCoordinatorService', () => {
     persistence = {
       saveProject: vi.fn().mockResolvedValue(undefined),
       saveDraftAsLocal: vi.fn().mockResolvedValue(undefined),
-      saveDraftAsServer: vi.fn().mockResolvedValue(undefined)
+      saveDraftAsServer: vi.fn().mockResolvedValue(undefined),
+      localDependenciesOfProject: vi.fn().mockReturnValue([])
     };
     uploadCoordinator = { requestUpload: vi.fn().mockResolvedValue(true) };
     getMetadata = vi.fn();
@@ -68,14 +70,32 @@ describe('SaveCoordinatorService', () => {
     expect(persistence.saveProject).toHaveBeenCalledWith(project);
   });
 
-  it('saves a server project directly, no prompt', async () => {
+  it('saves a server project directly when it has no local components', async () => {
     setup();
     getMetadata.mockReturnValue(meta({ id: 'abc', source: 'server' }));
 
     await service.requestSave(project);
 
-    expect(dialogOpen).not.toHaveBeenCalled();
+    expect(uploadCoordinator.requestUpload).not.toHaveBeenCalled();
     expect(persistence.saveProject).toHaveBeenCalledWith(project);
+  });
+
+  it('routes a server project with local components through the upload flow', async () => {
+    setup();
+    getMetadata.mockReturnValue(meta({ id: 'abc', source: 'server' }));
+    persistence.localDependenciesOfProject.mockReturnValue([
+      { name: 'Local', masterTypeId: 7 }
+    ]);
+
+    await service.requestSave(project);
+
+    // The local components are promoted before the save; saveProject is called
+    // by the coordinator, not directly here.
+    expect(uploadCoordinator.requestUpload).toHaveBeenCalledWith({
+      kind: 'save-server',
+      project
+    });
+    expect(persistence.saveProject).not.toHaveBeenCalled();
   });
 
   it('treats a component editor as already-persisted, no prompt', async () => {

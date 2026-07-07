@@ -398,19 +398,23 @@ blob."
 
 Moving a local project or component to the cloud is one flow with several entry
 shapes, orchestrated by `UploadCoordinatorService` (`ui/upload/`, see `ui.md`) —
-an open project, a stored project, a component master, and a **fresh draft being
-saved to the server for the first time** (`SaveCoordinatorService` routes the
-server destination here so an unsaved project's embedded local components get the
-same treatment as a promotion). `PersistenceService` provides the primitives; the
-coordinator sequences them:
+an open project, a stored project, a component master, a **fresh draft being
+saved to the server for the first time**, and an **already-saved server project
+re-saved after it gained local components** (`SaveCoordinatorService` routes both
+server-save shapes here so embedded local components get the same treatment as a
+promotion — the backend rejects a dependency whose id it does not own, so a local
+custom must either be promoted or ride along via its embedded snapshot with an
+empty mapping id). `PersistenceService` provides the primitives; the coordinator
+sequences them:
 
 1. **Analyze** — `localDependencies*` returns the local custom components the
    circuit embeds, ordered children-before-parents.
 2. **Prompt** — the shared upload dialog collects visibility and which resolvable
    dependencies to promote as their own cloud library entries (all preselected).
-   For the first-server-save shape, visibility is already chosen in the save
-   dialog (the toggle is hidden), and the dialog is skipped entirely when the
-   draft embeds no local components — so the common case stays a single dialog.
+   For the two server-save shapes, visibility is already fixed (the first save's
+   choice, or the project's own visibility), so the toggle is hidden and the
+   dialog is skipped entirely when there are no local components — the common case
+   stays a single dialog (or none). Cancelling the dialog aborts the save.
 3. **Upload dependencies first**, in order, then the target. Each
    `promoteComponentToServer` records an `oldId→newId` alias in the registry;
    because serialization resolves provenance ids **through that alias**
@@ -428,6 +432,15 @@ coordinator sequences them:
 The **id rewrite is device-local safety**, not cosmetics: the alias table lives
 only in this browser, so writing a captured pre-promotion id into a document
 that lands on the server would strand the reference on every other device.
+
+**Dependency mapping id (`server-circuit.codec.ts`).** The `dependencies[].id`
+the codec sends is the mapping to a server library component, which the backend
+validates as one the user owns (`getOwnedComponentOrThrow`). Only a dependency
+that resolves to a registered **server** master gets its id; a local (browser)
+custom — or any id with no owned server master — is sent as `''`, so the backend
+creates no dependency row and relies on the embedded snapshot. Sending a browser
+id here is what produced the "Component for mapping not found" error, and it is
+why an unpromoted / unselected local dependency no longer breaks a save.
 
 ---
 

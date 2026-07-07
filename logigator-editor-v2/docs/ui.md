@@ -170,7 +170,8 @@ Clicking any drawing-tool button calls `WorkModeService.setMode(mode)`. Because 
 Single entry point for the **Save** action, shared by the title bar, tool bar and Ctrl+S shortcut (`ShortcutService`). `requestSave(project)` decides whether a save needs a name/destination prompt first:
 
 - A **never-saved project draft** (`type:'project'`, `source:'browser'`, empty id — the blank board created on a project-less page load or via New Project) opens `SaveProjectDialogComponent` (name + Server/Local destination + Public flag). On confirm, a **local** destination routes to `PersistenceService.saveDraftAsLocal`; a **server** destination is handed to `UploadCoordinatorService` (a `draft-to-server` upload) so any local custom components the draft embeds are offered for cloud upload + linking, exactly like promoting an already-saved project. Cancelling either dialog does nothing.
-- Everything already persisted (server projects, browser projects with an id, component editors) goes straight to `PersistenceService.saveProject`.
+- An **already-saved server project** that has gained local custom components is handed to `UploadCoordinatorService` (a `save-server` upload) so those components are promoted + linked before the save (the backend rejects local dependencies). Only routed when the project actually embeds local components; cancelling the dialog aborts the save.
+- Everything else already persisted (server projects with no local components, browser projects with an id, component editors) goes straight to `PersistenceService.saveProject`.
 
 Errors are caught and surfaced as a toast centrally here, so the three call sites just `void requestSave(project)`. The service lives in `ui/` (not `persistence/`) because it orchestrates a dialog; persistence stays UI-free. `SaveProjectDialogComponent` only collects input — it closes with a `SaveProjectDialogResult` (or `undefined`) and performs no persistence itself.
 
@@ -180,7 +181,7 @@ Errors are caught and surfaced as a toast centrally here, so the three call site
 
 **File:** `upload/upload-coordinator.service.ts`
 
-Single entry point for **moving anything local to the cloud** — projects and custom components share one pipeline. `requestUpload(target)` takes a discriminated `UploadTarget` (`project` = the open project, `stored-project` = a browser project by id from the Open dialog's local list, `component` = a local library master, `draft-to-server` = a never-saved project draft being saved to the server for the first time) and runs the same three steps regardless of kind:
+Single entry point for **moving anything local to the cloud** — projects and custom components share one pipeline. `requestUpload(target)` takes a discriminated `UploadTarget` (`project` = the open project, `stored-project` = a browser project by id from the Open dialog's local list, `component` = a local library master, `draft-to-server` = a never-saved project draft being saved to the server for the first time, `save-server` = an already-saved server project re-saved after it gained local components) and runs the same three steps regardless of kind:
 
 1. **Analyze** the target's embedded local dependencies (`PersistenceService.localDependencies*`).
 2. **Prompt** with the shared `UploadDialogComponent` (visibility + a checkbox list of the resolvable dependencies, all preselected; an inline warning when any is excluded; unresolvable embeds shown disabled). For `draft-to-server` the visibility was already chosen in the save dialog (the toggle is hidden via `presetIsPublic`), and the prompt is **skipped entirely** when the draft embeds no local components.

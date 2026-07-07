@@ -21,6 +21,7 @@ describe('UploadCoordinatorService', () => {
     uploadStoredProjectToServer: ReturnType<typeof vi.fn>;
     promoteComponentToServer: ReturnType<typeof vi.fn>;
     saveDraftAsServer: ReturnType<typeof vi.fn>;
+    saveProject: ReturnType<typeof vi.fn>;
   };
   let toast: {
     success: ReturnType<typeof vi.fn>;
@@ -37,7 +38,8 @@ describe('UploadCoordinatorService', () => {
       promoteProjectToServer: vi.fn().mockResolvedValue(undefined),
       uploadStoredProjectToServer: vi.fn().mockResolvedValue(undefined),
       promoteComponentToServer: vi.fn().mockResolvedValue(undefined),
-      saveDraftAsServer: vi.fn().mockResolvedValue(undefined)
+      saveDraftAsServer: vi.fn().mockResolvedValue(undefined),
+      saveProject: vi.fn().mockResolvedValue(undefined)
     };
     toast = { success: vi.fn(), error: vi.fn(), warn: vi.fn() };
     dialogOpen = vi.fn().mockReturnValue({ onClose: of(dialogResult) });
@@ -224,6 +226,53 @@ describe('UploadCoordinatorService', () => {
       expect(result).toBe(false);
       expect(persistence.saveDraftAsServer).not.toHaveBeenCalled();
       expect(toast.error).toHaveBeenCalledOnce();
+    });
+  });
+
+  describe('save-server', () => {
+    function setupWithMeta(dialogResult?: UploadDialogResult): void {
+      setup(dialogResult);
+      // getMetadata is mocked in setup() to return { name: 'P' }; add visibility
+      // so the preset (project's own visibility) resolves.
+      TestBed.inject(ProjectMetadataStore).getMetadata = vi
+        .fn()
+        .mockReturnValue({ name: 'P', isPublic: false });
+    }
+
+    it('prompts, promotes the chosen components, then re-saves the project', async () => {
+      setupWithMeta({ isPublic: false, dependencyMasterTypeIds: [11] });
+      persistence.localDependenciesOfProject.mockReturnValue([
+        { name: 'a', masterTypeId: 11 }
+      ]);
+      const order: string[] = [];
+      persistence.promoteComponentToServer.mockImplementation((id: number) => {
+        order.push(`dep-${id}`);
+        return Promise.resolve();
+      });
+      persistence.saveProject.mockImplementation(() => {
+        order.push('save');
+        return Promise.resolve();
+      });
+
+      const result = await service.requestUpload({ kind: 'save-server', project });
+
+      expect(result).toBe(true);
+      expect(order).toEqual(['dep-11', 'save']);
+      // saveProject reports its own outcome, so the coordinator stays quiet.
+      expect(toast.success).not.toHaveBeenCalled();
+    });
+
+    it('aborts the save when the dialog is cancelled', async () => {
+      setupWithMeta(undefined);
+      persistence.localDependenciesOfProject.mockReturnValue([
+        { name: 'a', masterTypeId: 11 }
+      ]);
+
+      const result = await service.requestUpload({ kind: 'save-server', project });
+
+      expect(result).toBe(false);
+      expect(persistence.promoteComponentToServer).not.toHaveBeenCalled();
+      expect(persistence.saveProject).not.toHaveBeenCalled();
     });
   });
 });

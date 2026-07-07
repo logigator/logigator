@@ -41,6 +41,21 @@ export class SaveCoordinatorService {
 
     try {
       if (!isFreshDraft) {
+        // A server project that has gained local custom components can't be
+        // saved as-is (the backend rejects local dependencies), so route it
+        // through the upload flow to promote them first. Cancelling aborts the
+        // save. Everything else saves directly.
+        if (
+          metadata.type === 'project' &&
+          metadata.source === 'server' &&
+          this.persistence.localDependenciesOfProject(project).length > 0
+        ) {
+          await this.uploadCoordinator.requestUpload({
+            kind: 'save-server',
+            project
+          });
+          return;
+        }
         await this.persistence.saveProject(project);
         return;
       }
