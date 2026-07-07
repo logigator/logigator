@@ -120,7 +120,7 @@ export function serializeProject(
     ])
   );
 
-  const dependencies: DependencyMapping[] = definitions.map((def) => ({
+  const dependencies: DependencyMapping[] = definitions.map((def) => {
     // The mapping id links to a server library component, which the backend
     // validates as one the user owns. Only a dependency that resolves to a
     // registered **server** master qualifies; a local (browser) custom — or any
@@ -129,19 +129,27 @@ export function serializeProject(
     // current id (collectSnapshots rewrites it through the promotion alias), so a
     // dependency promoted earlier in this same upload now resolves to a server
     // master and links correctly.
-    id: serverDependencyId(def.source?.id, registry),
-    model: def.type, // file-local id, matches the body `t` and the snapshot
-    snapshot: {
-      version: def.source?.version ?? 1,
-      name: def.name,
-      symbol: def.symbol,
-      description: def.description,
-      numInputs: def.numInputs,
-      numOutputs: def.numOutputs,
-      labels: [...def.labels],
-      elements: encodeDefinitionElements(def, provider, customDims)
-    }
-  }));
+    const serverId = serverDependencyId(def.source?.id, registry);
+    return {
+      id: serverId,
+      model: def.type, // file-local id, matches the body `t` and the snapshot
+      snapshot: {
+        version: def.source?.version ?? 1,
+        // A local custom has no server mapping id; carry its local-library id in
+        // the snapshot so the author's own device can re-link it to the local
+        // library (and keep editing it) instead of treating it as an anonymous
+        // copy. Absent once the dependency lives in the cloud (its id is above).
+        localId: serverId === '' ? def.source?.id : undefined,
+        name: def.name,
+        symbol: def.symbol,
+        description: def.description,
+        numInputs: def.numInputs,
+        numOutputs: def.numOutputs,
+        labels: [...def.labels],
+        elements: encodeDefinitionElements(def, provider, customDims)
+      }
+    };
+  });
 
   return { elements, dependencies };
 }

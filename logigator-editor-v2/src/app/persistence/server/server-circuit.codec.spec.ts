@@ -342,10 +342,11 @@ describe('server-circuit.codec', () => {
       ).toBe(1);
     });
 
-    it('sends an empty mapping id for a local (browser) dependency', () => {
+    it('sends an empty mapping id but keeps the local id in the snapshot', () => {
       // A local custom the backend does not own must ride along via the embedded
-      // snapshot only — sending its browser id would fail getOwnedComponentOrThrow
-      // with "Component for mapping not found".
+      // snapshot only — sending its browser id as the mapping id would fail
+      // getOwnedComponentOrThrow with "Component for mapping not found". Its local
+      // library id travels in the snapshot so the author's device can re-link it.
       const master = registry.createMaster(
         { id: 'browser-uuid', symbol: 'L', numInputs: 0, numOutputs: 0 },
         'browser'
@@ -360,9 +361,34 @@ describe('server-circuit.codec', () => {
       const { dependencies } = encode(project);
 
       expect(dependencies.length).toBe(1);
-      // No dependency row on the backend, but the snapshot still carries it.
+      // No dependency row on the backend, but the snapshot carries it + the id.
       expect(dependencies[0].id).toBe('');
-      expect(dependencies[0].snapshot).toBeDefined();
+      expect(dependencies[0].snapshot!.localId).toBe('browser-uuid');
+    });
+
+    it('re-links a local dependency from the snapshot local id on decode', () => {
+      const master = registry.createMaster(
+        { id: 'browser-uuid', symbol: 'L', numInputs: 0, numOutputs: 0 },
+        'browser'
+      );
+      const snapType = registry.snapshot(master).typeId;
+      const config = provider.getComponent(snapType)!;
+      const project = new Project();
+      project.addComponent(
+        config.create({ direction: config.options['direction'].clone() })
+      );
+
+      const { elements, dependencies } = encode(project);
+      const reopened = decode(elements, dependencies);
+
+      // The revived snapshot carries the local id as its provenance, so the
+      // registry resolves it back to the still-present local master (editable).
+      const instance = [...reopened.components].find(
+        (c) => c.config.type >= CUSTOM_TYPE_ID_BASE
+      )!;
+      const def = registry.getDefinition(instance.config.type)!;
+      expect(def.id).toBe('browser-uuid');
+      expect(registry.masterTypeIdForId('browser-uuid')).toBe(master);
     });
 
     it('re-anchors a rotated built-in inside a snapshot body', () => {

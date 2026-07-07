@@ -217,11 +217,14 @@ function decodeDependencies(
       ctx,
       customDims
     );
-    const id = dep.id ?? dep.dependency?.id;
+    // Server mapping id first (the owned cloud component), then a local library
+    // id carried in the snapshot for a custom that was never uploaded — so the
+    // author's own device re-links it to the local library. `||` (not `??`)
+    // because an unpromoted local dependency sends an empty mapping id.
+    const id = dep.id || dep.dependency?.id || dep.snapshot.localId;
     definitions.push({
       type: dep.model,
-      source:
-        id !== undefined ? { id, version: dep.snapshot.version } : undefined,
+      source: id ? { id, version: dep.snapshot.version } : undefined,
       name: dep.snapshot.name,
       symbol: dep.snapshot.symbol,
       description: dep.snapshot.description,

@@ -1,6 +1,7 @@
 import {
 	IsArray,
 	IsInt,
+	IsOptional,
 	IsString,
 	Length,
 	MaxLength,
@@ -20,6 +21,22 @@ export class DependencySnapshot {
 
 	@IsInt()
 	version: number;
+
+	/**
+	 * Additive, optional — the id of the **local** (browser) library master this
+	 * copy was frozen from, for a custom that was not uploaded to the cloud (so
+	 * `ProjectMapping.id` is empty and no dependency row exists). Stored verbatim
+	 * in the circuit blob and echoed back on read; the server never resolves it,
+	 * validates ownership, or creates a dependency row from it. It lets the editor
+	 * re-link an embedded local custom to the author's own local library so it
+	 * stays editable there; on any other device it is simply an unknown id and the
+	 * component remains an embedded copy. Kept lenient (a stored hint, not a
+	 * reference) so a malformed value never blocks the save.
+	 */
+	@IsOptional()
+	@IsString()
+	@MaxLength(36)
+	localId?: string;
 
 	@IsString()
 	@MaxLength(20)

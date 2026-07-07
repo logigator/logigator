@@ -442,6 +442,18 @@ creates no dependency row and relies on the embedded snapshot. Sending a browser
 id here is what produced the "Component for mapping not found" error, and it is
 why an unpromoted / unselected local dependency no longer breaks a save.
 
+**Keeping the local-library link (`snapshot.localId`).** An unpromoted local
+custom would otherwise lose all trace of *which* local component it was, so its
+embedded snapshot carries an additive `localId` — the browser-library id it was
+frozen from (a strictly backwards-compatible optional field on the backend's
+`DependencySnapshot`, stored verbatim in the circuit blob and echoed on read,
+never resolved or ownership-checked server-side). On decode, provenance resolves
+to `mapping.id || dependency.id || snapshot.localId`, so on the author's own
+device the embedded custom re-links to the still-present local master and stays
+editable/updatable. On any other device the id is unknown and it remains a plain
+embedded copy. Promoting the component later switches it back to a real
+`mapping.id` and drops `localId`.
+
 ---
 
 ## `ProjectMetadataStore`
