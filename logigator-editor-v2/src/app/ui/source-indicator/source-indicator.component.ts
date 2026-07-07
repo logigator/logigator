@@ -1,19 +1,22 @@
 import { Component, computed, input } from '@angular/core';
+import { LgBadge } from '@logigator/ui';
 
 /**
  * Cloud/local provenance indicator for a custom component, in two variants:
  *
- * - `chip` (default) — a pill with an icon + "Cloud"/"Local" label, shown in the
- *   component-settings header.
+ * - `chip` (default) — a solid {@link LgBadge} pill with an icon + "Cloud"/"Local"
+ *   label. Being a filled badge it stays legible on any surface.
  * - `badge` — a small corner glyph, overlaid on a palette tile (the tile is the
  *   positioned ancestor; the host is `display: contents` so the absolute badge
- *   anchors to the tile exactly as the inline markup did).
+ *   anchors to the tile exactly as the inline markup did). Too small for a full
+ *   `LgBadge`, so it stays a bespoke dot.
  *
- * Owns the icon, colour and tooltip wording so both call sites stay in sync.
+ * Owns the icon, colour and tooltip wording so every call site stays in sync.
  */
 @Component({
   selector: 'app-source-indicator',
   host: { class: 'contents' },
+  imports: [LgBadge],
   template: `@if (variant() === 'badge') {
       <span
         class="absolute -top-1.5 -left-1.5 flex items-center justify-center w-4 h-4 rounded-full bg-content border border-border"
@@ -26,24 +29,20 @@ import { Component, computed, input } from '@angular/core';
         }
       </span>
     } @else {
-      <span
-        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-normal border"
-        [class]="
-          isServer()
-            ? 'text-sky-400 border-sky-400/40'
-            : 'text-muted border-border'
-        "
+      <lg-badge
+        rounded
+        [severity]="isServer() ? 'info' : 'secondary'"
         [title]="title()"
       >
         <i [class]="isServer() ? 'ph ph-cloud' : 'ph ph-browser'"></i>
         {{ isServer() ? 'Cloud' : 'Local' }}
-      </span>
+      </lg-badge>
     }`
 })
 export class SourceIndicatorComponent {
-  /** Which library the component lives in. */
+  /** Which library the component/project lives in. */
   public readonly source = input.required<'server' | 'browser'>();
-  /** Visual form: a labelled pill (`chip`) or a tile corner glyph (`badge`). */
+  /** Visual form: a labelled `LgBadge` pill (`chip`) or a tile corner glyph (`badge`). */
   public readonly variant = input<'chip' | 'badge'>('chip');
 
   protected readonly isServer = computed(() => this.source() === 'server');

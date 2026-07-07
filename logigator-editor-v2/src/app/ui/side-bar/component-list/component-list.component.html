@@ -27,12 +27,9 @@
           <ng-template #header>
             <span class="flex items-center gap-2 w-full font-semibold">
               {{ t(cat.labelKey) }}
-              <lg-badge
-                rounded
-                class="ml-auto mr-2"
-                [value]="cat.components.length"
-                severity="secondary"
-              ></lg-badge>
+              <lg-badge rounded class="ml-auto mr-2" severity="secondary">{{
+                cat.components.length
+              }}</lg-badge>
             </span>
           </ng-template>
           <app-component-list-category

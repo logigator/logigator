@@ -2,7 +2,7 @@ import { booleanAttribute, Component, computed, input } from '@angular/core';
 import { LgSeverity } from '../../tokens/severity';
 
 const BASE =
-  'inline-flex h-6 min-w-6 items-center justify-center px-2 text-xs font-bold leading-none';
+  'inline-flex h-6 min-w-6 items-center justify-center gap-1 px-2 text-xs font-bold leading-none';
 
 // Solid (filled) treatment per severity, on the themeable primary/surface/state
 // palette. Tag and Badge map secondary differently — encoded separately.
@@ -17,14 +17,16 @@ const SEVERITY: Record<'primary' | LgSeverity, string> = {
   danger: 'bg-error text-white'
 };
 
-/** A small count/label pill. `rounded` makes it a full pill (default rounded-md). */
+/**
+ * A small count/label pill. Its content is projected, so it can hold plain text,
+ * a number, or an icon + label. `rounded` makes it a full pill (default rounded-md).
+ */
 @Component({
   selector: 'lg-badge',
   host: { class: 'inline-flex' },
-  template: `<span [class]="classes()">{{ value() }}</span>`
+  template: `<span [class]="classes()"><ng-content /></span>`
 })
 export class LgBadge {
-  readonly value = input<string | number>();
   readonly severity = input<LgSeverity>();
   readonly rounded = input(false, { transform: booleanAttribute });
 
