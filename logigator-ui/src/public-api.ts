@@ -41,6 +41,7 @@ export { LgInputIcon } from './components/icon-field/input-icon';
 export { LgInputText } from './components/input-text/input-text';
 export { LgTextarea } from './components/textarea/textarea';
 export { LgToggleSwitch } from './components/toggle-switch/toggle-switch';
+export { LgCheckbox } from './components/checkbox/checkbox';
 export { LgSelectButton } from './components/select-button/select-button';
 export { LgInputNumber } from './components/input-number/input-number';
 export { LgSlider } from './components/slider/slider';
