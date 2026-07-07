@@ -344,6 +344,27 @@ export class CustomComponentRegistry {
   }
 
   /**
+   * Resolves an id through the promotion alias map to its current value — the
+   * server id for a promoted browser id, the input unchanged otherwise. Serialize
+   * paths write this instead of a snapshot's captured provenance id, so a circuit
+   * saved after a dependency's upload references the cloud entry (and stays
+   * resolvable on other devices, where the local alias table does not exist).
+   */
+  public currentIdForId(id: string): string {
+    let current = id;
+    // Promotion is one-way (browser -> server), so the chain is a single hop
+    // today; walk defensively with a cycle guard anyway.
+    const seen = new Set<string>([current]);
+    let next = this._idAliases.get(current);
+    while (next !== undefined && !seen.has(next)) {
+      seen.add(next);
+      current = next;
+      next = this._idAliases.get(current);
+    }
+    return current;
+  }
+
+  /**
    * Resolves any custom type id to its master entry: a master returns itself, a
    * snapshot follows its provenance id (through the promotion alias). Returns
    * undefined for a built-in, unknown, or unresolvable type id.

@@ -112,6 +112,21 @@ describe('snapshots codec', () => {
       expect(sessionToLocal.get(snapB)).toBe(1000);
     });
 
+    it('rewrites a snapshot provenance id through the promotion alias', () => {
+      // A snapshot frozen while its master was local captured the browser id.
+      const masterB = registry.createMaster({ id: 'id-b', symbol: 'B' }, 'browser');
+      const snapB = registry.snapshot(masterB).typeId;
+
+      // The master is then uploaded to the cloud, which records old -> new.
+      registry.promoteMaster(masterB, 'srv-b', 2);
+
+      const { definitions } = collectSnapshots(fakeProject([snapB]), registry);
+      // The written document references the master's current (server) id, while
+      // the frozen version stays as captured — otherwise the id would strand on
+      // any other device (the alias table is device-local).
+      expect(definitions[0].source).toEqual({ id: 'srv-b', version: 1 });
+    });
+
     it('dedups repeated placements of the same snapshot', () => {
       const master = registry.createMaster({ symbol: 'M' }, 'browser');
       const snap = registry.snapshot(master).typeId;

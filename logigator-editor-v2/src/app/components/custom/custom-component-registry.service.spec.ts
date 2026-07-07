@@ -574,4 +574,24 @@ describe('CustomComponentRegistry', () => {
       expect(registry.revision()).toBeGreaterThan(before);
     });
   });
+
+  describe('currentIdForId', () => {
+    it('returns an id unchanged when it has no alias', () => {
+      expect(registry.currentIdForId('local-1')).toBe('local-1');
+    });
+
+    it('follows a promotion alias to the current id', () => {
+      registry.registerIdAlias('local-1', 'server-1');
+      expect(registry.currentIdForId('local-1')).toBe('server-1');
+    });
+
+    it('walks a chain of aliases and terminates on a cycle', () => {
+      registry.registerIdAlias('a', 'b');
+      registry.registerIdAlias('b', 'c');
+      expect(registry.currentIdForId('a')).toBe('c');
+      // A pathological cycle must not hang.
+      registry.registerIdAlias('c', 'a');
+      expect(registry.currentIdForId('a')).toBe('c');
+    });
+  });
 });

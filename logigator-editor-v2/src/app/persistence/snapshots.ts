@@ -116,9 +116,15 @@ export function collectSnapshots(
     const circuit = def.circuit ?? { components: [], wires: [] };
     return {
       type: sessionToLocal.get(sessionType)!,
+      // Provenance id resolved through the promotion alias map: a snapshot
+      // frozen before its master's upload-to-cloud captured the browser id, but
+      // the written document must reference the master's *current* (server) id —
+      // the alias table is device-local, so a stale id would be stranded
+      // everywhere else. The frozen version is kept as-is (it identifies which
+      // state the snapshot froze, not where the master lives).
       source:
         def.id !== undefined && def.version !== undefined
-          ? { id: def.id, version: def.version }
+          ? { id: registry.currentIdForId(def.id), version: def.version }
           : undefined,
       name: def.name,
       symbol: def.symbol,
