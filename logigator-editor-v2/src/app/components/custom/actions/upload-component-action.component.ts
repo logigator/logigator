@@ -47,7 +47,7 @@ export class UploadComponentActionComponent {
 
   private readonly resolved = computed(() => {
     this.registry.revision(); // recompute after a promotion flips the source
-    return this.registry.resolveMaster(this.context().component.config.type);
+    return this.registry.resolveMaster(this.context().config.type);
   });
 
   protected readonly visible = computed(

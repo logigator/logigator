@@ -38,9 +38,10 @@ export class ComponentSettingsComponent {
   // callback that a renderer invokes on edit: the ghost writes its option
   // directly (the eventual AddComponentsAction captures the final values); a
   // placed component routes the write through ChangeOptionAction (undoable +
-  // dirty-tracked). A placed component additionally carries its config's
-  // inspector actions + the context they act on; the ghost has none (the
-  // buttons are instance-scoped).
+  // dirty-tracked). Both branches carry the config's inspector actions and a
+  // context to act on; the ghost has no instance, so its context omits
+  // component/project and instance-scoped actions (e.g. update-to-latest) hide
+  // themselves on the null component.
   protected readonly componentSettings = computed(() => {
     // Hidden during simulation: editing is locked, and the mode switch has
     // already cleared selection and placement state anyway.
@@ -57,8 +58,8 @@ export class ComponentSettingsComponent {
         commit: (key: string, value: unknown) => {
           ghost.options[key].value = value;
         },
-        actions: [],
-        context: null,
+        actions: ghost.actions ?? [],
+        context: { config: ghost, component: null, project: null },
         source: this._customSource(ghost.type)
       };
     }
@@ -78,7 +79,7 @@ export class ComponentSettingsComponent {
           );
         },
         actions: selected.config.actions ?? [],
-        context: { component: selected, project },
+        context: { config: selected.config, component: selected, project },
         source: this._customSource(selected.config.type)
       };
     }

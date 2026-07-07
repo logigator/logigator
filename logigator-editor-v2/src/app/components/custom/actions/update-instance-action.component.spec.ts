@@ -12,6 +12,7 @@ describe('UpdateInstanceActionComponent', () => {
 
     fixture = TestBed.createComponent(UpdateInstanceActionComponent);
     fixture.componentRef.setInput('context', {
+      config: { type: 1 },
       component: { config: { type: 1 } },
       project: {}
     } as unknown as ComponentActionContext);

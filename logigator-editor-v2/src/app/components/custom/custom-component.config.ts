@@ -61,9 +61,11 @@ export function buildCustomComponentConfig(
     options: {
       direction: new DirectionComponentOption()
     },
-    // Inspector actions for a placed instance: open its master, and (when behind)
-    // pull the latest. Rendered generically by the settings panel; only a
-    // selected snapshot instance ever surfaces them.
+    // Inspector actions rendered generically by the settings panel, each gating
+    // its own visibility. Edit and upload are config-scoped, so they surface on
+    // both a selected placed instance and a palette/ghost selection;
+    // update-to-latest hides itself unless a selected snapshot instance is behind
+    // its master.
     actions: [
       new EditComponentAction(),
       new UpdateInstanceComponentAction(),

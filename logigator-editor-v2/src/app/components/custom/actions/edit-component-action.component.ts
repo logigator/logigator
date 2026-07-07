@@ -30,7 +30,7 @@ export class EditComponentActionComponent {
   private readonly transloco = inject(TranslocoService);
 
   protected edit(): void {
-    const id = this.registry.idForTypeId(this.context().component.config.type);
+    const id = this.registry.idForTypeId(this.context().config.type);
     if (id === undefined) {
       this.toast.error(
         this.transloco.translate('componentActions.sourceUnavailable'),

@@ -137,7 +137,11 @@ exposes that exact config (hence `component.config.type === def.typeId`, which t
 serializer relies on). A custom name/description is a user string cast to the
 `TranslationKey` contract (built-ins stay type-safe). A master config also carries
 the [inspector actions](actions-system.md) (`EditComponentAction`,
-`UpdateInstanceComponentAction`) surfaced when an instance is selected.
+`UpdateInstanceComponentAction`, `UploadComponentAction`). Each renderer gates its
+own visibility off the context: edit and upload are config-scoped and surface on
+both a selected instance and a palette/ghost selection; update-to-latest hides
+itself when `context.component` is null (palette/ghost) and shows only for a
+selected instance behind its master.
 
 ## `CustomComponent` (rendering)
 

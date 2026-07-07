@@ -31,9 +31,9 @@ export class UpdateInstanceActionComponent {
   private readonly customComponentService = inject(CustomComponentService);
 
   protected readonly updatable = computed(() => {
-    const def = this.registry.getDefinition(
-      this.context().component.config.type
-    );
+    // Acts on a live instance, so it never surfaces on a palette/ghost selection.
+    if (!this.context().component) return false;
+    const def = this.registry.getDefinition(this.context().config.type);
     if (def?.id === undefined) return false;
     const masterTypeId = this.registry.masterTypeIdForId(def.id);
     const master =
@@ -49,7 +49,9 @@ export class UpdateInstanceActionComponent {
 
   protected async update(): Promise<void> {
     const { component, project } = this.context();
-    if (!(component instanceof CustomComponent)) return;
+    // instanceOnly: only ever rendered with a live instance + project, but the
+    // context types them nullable for the palette/ghost case.
+    if (!project || !(component instanceof CustomComponent)) return;
     // The master may be a summary-only cloud preload; load its circuit first.
     const def = this.registry.getDefinition(component.config.type);
     const masterTypeId =
