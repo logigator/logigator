@@ -15,10 +15,15 @@ import { LocalUploadDependency } from '../../persistence/persistence.service';
 
 export interface UploadDialogData {
   /** Wording variant; a stored project opens as `'project'`. */
-  kind: 'project' | 'component';
+  kind: 'project' | 'component' | 'draft';
   name: string;
   /** Local components the circuit embeds, children-before-parents. */
   dependencies: LocalUploadDependency[];
+  /**
+   * When set, visibility is already decided (a first server save chose it in the
+   * save dialog): the toggle is hidden and this value is returned as-is.
+   */
+  presetIsPublic?: boolean;
 }
 
 export interface UploadDialogResult {
@@ -66,13 +71,17 @@ export class UploadDialogComponent {
   protected readonly name = this.data?.name ?? '';
   protected readonly dependencies = this.data?.dependencies ?? [];
 
+  /** Visibility already chosen upstream: hide the toggle and return it as-is. */
+  protected readonly lockedIsPublic = this.data?.presetIsPublic;
+  protected readonly visibilityLocked = this.lockedIsPublic !== undefined;
+
   /** The dependencies that still resolve to a browser master — uploadable. */
   protected readonly uploadableDependencies = this.dependencies.filter(
     (d): d is LocalUploadDependency & { masterTypeId: number } =>
       d.masterTypeId !== null
   );
 
-  protected readonly isPublic = signal(true);
+  protected readonly isPublic = signal(this.lockedIsPublic ?? true);
   protected readonly selected = signal<ReadonlySet<number>>(
     new Set(this.uploadableDependencies.map((d) => d.masterTypeId))
   );

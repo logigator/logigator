@@ -366,7 +366,7 @@ deduplicates concurrent saves.
 | `saveProject(project)`                                                   | No-op unless dirty. Dispatches on metadata: `comp`+`browser` → `_doBrowserComponentSave`; `server` → `server.serializeProject` + PUT (clears dirty only if no edit landed mid-round-trip; logs `VersionMismatch`); `browser` → `circuitFile.toJson` + `BrowserProjectStore.save` (a fresh draft is promoted to `/local/:id`). `share` is read-only → no-op.   |
 | `createProject(name, …)`                                                 | POST + initial PUT (`server.serializeProject`), register, set as main, update URL.                                                                                                                                                                                                                                                                            |
 | `saveDraftAsLocal(project, name)`                                        | First save of a never-saved draft to the browser store: applies the chosen `name`, then `_doBrowserSave` (generates id, `/local/:id`). Bypasses the `saveProject` dirty-guard so a pristine board can still be named and persisted.                                                                                                                           |
-| `saveDraftAsServer(project, name, isPublic)`                             | First save of a never-saved draft to the server: `server.promoteToServer` (POST create + PUT current content, flipping the **live** project's metadata to `source:'server'` — no fresh empty project, so circuit + undo history are preserved) → navigate to `/project/:id`.                                                                                  |
+| `saveDraftAsServer(project, name, isPublic)`                             | First save of a never-saved draft to the server: `server.promoteToServer` (POST create + PUT current content, flipping the **live** project's metadata to `source:'server'` — no fresh empty project, so circuit + undo history are preserved) → navigate to `/project/:id`. A silent primitive — its sole caller is the `UploadCoordinatorService` (a first server save runs through the upload flow so embedded local components are handled), which owns the toast.                                                                                  |
 | `promoteProjectToServer(project, isPublic)`                              | Uploads an **already-saved local** project to the cloud: `server.promoteToServer` on the live project → navigate → **delete the orphaned browser record** (a _move_, best-effort). Rejects a fresh draft (that goes through the save-draft flow). A silent primitive — no toast (the `UploadCoordinatorService` owns the outcome toast).                       |
 | `uploadStoredProjectToServer(id, isPublic)`                              | Uploads a browser project by store id (the Open dialog's local list, possibly not the open one). Delegates to `promoteProjectToServer` when `id` is the open project; otherwise uploads a throwaway project built from the stored record (`server.createServerProjectFromProject`) and deletes that record on success. Silent primitive (see above).          |
 | `promoteComponentToServer(masterTypeId, isPublic)`                       | Uploads (moves) a **browser** library master to the cloud: server round-trip → registry `promoteMaster` (new server id, old id kept as an alias) → persist the `oldId→newId` id-map → delete the browser record → re-point any open editor tab. Silent primitive — the coordinator toasts.                                                                    |
@@ -396,14 +396,21 @@ blob."
 
 ### Upload to cloud (promotion)
 
-Moving a local project or component to the cloud is one flow with two entry
-shapes, orchestrated by `UploadCoordinatorService` (`ui/upload/`, see `ui.md`).
-`PersistenceService` provides the primitives; the coordinator sequences them:
+Moving a local project or component to the cloud is one flow with several entry
+shapes, orchestrated by `UploadCoordinatorService` (`ui/upload/`, see `ui.md`) —
+an open project, a stored project, a component master, and a **fresh draft being
+saved to the server for the first time** (`SaveCoordinatorService` routes the
+server destination here so an unsaved project's embedded local components get the
+same treatment as a promotion). `PersistenceService` provides the primitives; the
+coordinator sequences them:
 
 1. **Analyze** — `localDependencies*` returns the local custom components the
    circuit embeds, ordered children-before-parents.
 2. **Prompt** — the shared upload dialog collects visibility and which resolvable
    dependencies to promote as their own cloud library entries (all preselected).
+   For the first-server-save shape, visibility is already chosen in the save
+   dialog (the toggle is hidden), and the dialog is skipped entirely when the
+   draft embeds no local components — so the common case stays a single dialog.
 3. **Upload dependencies first**, in order, then the target. Each
    `promoteComponentToServer` records an `oldId→newId` alias in the registry;
    because serialization resolves provenance ids **through that alias**

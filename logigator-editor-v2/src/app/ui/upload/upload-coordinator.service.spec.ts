@@ -20,6 +20,7 @@ describe('UploadCoordinatorService', () => {
     promoteProjectToServer: ReturnType<typeof vi.fn>;
     uploadStoredProjectToServer: ReturnType<typeof vi.fn>;
     promoteComponentToServer: ReturnType<typeof vi.fn>;
+    saveDraftAsServer: ReturnType<typeof vi.fn>;
   };
   let toast: {
     success: ReturnType<typeof vi.fn>;
@@ -35,7 +36,8 @@ describe('UploadCoordinatorService', () => {
       localDependencies: vi.fn().mockResolvedValue([]),
       promoteProjectToServer: vi.fn().mockResolvedValue(undefined),
       uploadStoredProjectToServer: vi.fn().mockResolvedValue(undefined),
-      promoteComponentToServer: vi.fn().mockResolvedValue(undefined)
+      promoteComponentToServer: vi.fn().mockResolvedValue(undefined),
+      saveDraftAsServer: vi.fn().mockResolvedValue(undefined)
     };
     toast = { success: vi.fn(), error: vi.fn(), warn: vi.fn() };
     dialogOpen = vi.fn().mockReturnValue({ onClose: of(dialogResult) });
@@ -148,5 +150,80 @@ describe('UploadCoordinatorService', () => {
     expect(result).toBe(false);
     expect(dialogOpen).not.toHaveBeenCalled();
     expect(toast.error).toHaveBeenCalledOnce();
+  });
+
+  describe('draft-to-server', () => {
+    it('saves without a dialog when the draft has no local components', async () => {
+      setup();
+      persistence.localDependenciesOfProject.mockReturnValue([]);
+
+      const result = await service.requestUpload({
+        kind: 'draft-to-server',
+        project,
+        name: 'Fresh',
+        isPublic: true
+      });
+
+      expect(result).toBe(true);
+      expect(dialogOpen).not.toHaveBeenCalled();
+      expect(persistence.saveDraftAsServer).toHaveBeenCalledWith(
+        project,
+        'Fresh',
+        true
+      );
+      expect(toast.success).toHaveBeenCalledOnce();
+    });
+
+    it('prompts, uploads dependencies first, then saves the draft', async () => {
+      setup({ isPublic: false, dependencyMasterTypeIds: [11, 22] });
+      // The dialog is shown because the draft embeds local components.
+      persistence.localDependenciesOfProject.mockReturnValue([
+        { name: 'a', masterTypeId: 11 },
+        { name: 'b', masterTypeId: 22 }
+      ]);
+      const order: string[] = [];
+      persistence.promoteComponentToServer.mockImplementation((id: number) => {
+        order.push(`dep-${id}`);
+        return Promise.resolve();
+      });
+      persistence.saveDraftAsServer.mockImplementation(() => {
+        order.push('save');
+        return Promise.resolve();
+      });
+
+      const result = await service.requestUpload({
+        kind: 'draft-to-server',
+        project,
+        name: 'Fresh',
+        isPublic: true
+      });
+
+      expect(result).toBe(true);
+      expect(dialogOpen).toHaveBeenCalledOnce();
+      // Visibility from the save dialog is locked into the upload dialog data.
+      expect(dialogOpen.mock.calls[0][1].data.presetIsPublic).toBe(true);
+      expect(order).toEqual(['dep-11', 'dep-22', 'save']);
+    });
+
+    it('does not save the draft when a dependency upload fails', async () => {
+      setup({ isPublic: true, dependencyMasterTypeIds: [11] });
+      persistence.localDependenciesOfProject.mockReturnValue([
+        { name: 'a', masterTypeId: 11 }
+      ]);
+      persistence.promoteComponentToServer.mockRejectedValue(
+        new Error('boom')
+      );
+
+      const result = await service.requestUpload({
+        kind: 'draft-to-server',
+        project,
+        name: 'Fresh',
+        isPublic: true
+      });
+
+      expect(result).toBe(false);
+      expect(persistence.saveDraftAsServer).not.toHaveBeenCalled();
+      expect(toast.error).toHaveBeenCalledOnce();
+    });
   });
 });

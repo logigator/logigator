@@ -6,6 +6,7 @@ import { PersistenceService } from '../persistence/persistence.service';
 import { ProjectMetadataStore } from '../persistence/project-metadata.store';
 import { ToastService } from '../logging/toast.service';
 import { Project } from '../project/project';
+import { UploadCoordinatorService } from './upload/upload-coordinator.service';
 import {
   SaveProjectDialogComponent,
   SaveProjectDialogResult
@@ -27,6 +28,7 @@ export class SaveCoordinatorService {
   private readonly dialogService = inject(DialogService);
   private readonly translocoService = inject(TranslocoService);
   private readonly toast = inject(ToastService);
+  private readonly uploadCoordinator = inject(UploadCoordinatorService);
 
   async requestSave(project: Project): Promise<void> {
     const metadata = this.metadataStore.getMetadata(project);
@@ -47,11 +49,16 @@ export class SaveCoordinatorService {
       if (!result) return; // dialog cancelled
 
       if (result.destination === 'server') {
-        await this.persistence.saveDraftAsServer(
+        // A first server save runs through the upload flow so any local custom
+        // components the draft embeds are offered for cloud upload + linking,
+        // exactly like promoting an already-saved project. The coordinator owns
+        // its own dialog, error and success toasts.
+        await this.uploadCoordinator.requestUpload({
+          kind: 'draft-to-server',
           project,
-          result.name,
-          result.isPublic
-        );
+          name: result.name,
+          isPublic: result.isPublic
+        });
       } else {
         await this.persistence.saveDraftAsLocal(project, result.name);
       }

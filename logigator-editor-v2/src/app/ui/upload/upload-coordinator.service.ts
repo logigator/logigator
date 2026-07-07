@@ -23,7 +23,19 @@ export type UploadTarget =
   /** A browser project by store id (the Open dialog's local list). */
   | { kind: 'stored-project'; id: string; name: string }
   /** A local custom-component master (the component actions panel). */
-  | { kind: 'component'; masterTypeId: number };
+  | { kind: 'component'; masterTypeId: number }
+  /**
+   * A never-saved project draft being saved to the server for the first time.
+   * Its name + visibility are already chosen in the save dialog, so the upload
+   * dialog is shown only to pick which embedded local components to promote —
+   * and skipped entirely when there are none.
+   */
+  | {
+      kind: 'draft-to-server';
+      project: Project;
+      name: string;
+      isPublic: boolean;
+    };
 
 /**
  * Single entry point for moving anything local to the cloud — projects and
@@ -61,19 +73,58 @@ export class UploadCoordinatorService {
       return false;
     }
 
-    const result = await this._prompt(target, name, dependencies);
-    if (!result) return false;
+    // A first server save already has its name + visibility from the save dialog,
+    // so when it embeds no local components there is nothing left to decide —
+    // skip the dialog and save straight away. Every other case prompts.
+    let isPublic: boolean;
+    let dependencyMasterTypeIds: number[];
+    if (target.kind === 'draft-to-server' && dependencies.length === 0) {
+      isPublic = target.isPublic;
+      dependencyMasterTypeIds = [];
+    } else {
+      const result = await this._prompt(target, name, dependencies);
+      if (!result) return false;
+      isPublic = result.isPublic;
+      dependencyMasterTypeIds = result.dependencyMasterTypeIds;
+    }
 
-    // Dependencies first, children-before-parents: each promotion registers an
-    // id alias, and serialization resolves provenance through those aliases, so
-    // every subsequent upload references the cloud entries created before it.
-    for (const masterTypeId of result.dependencyMasterTypeIds) {
+    if (!(await this._uploadDependencies(dependencyMasterTypeIds, isPublic))) {
+      return false;
+    }
+
+    try {
+      await this._uploadTarget(target, isPublic);
+    } catch (err) {
+      this.toast.error(
+        this.transloco.translate('uploadDialog.uploadFailed', { name }),
+        'UploadCoordinatorService',
+        err
+      );
+      return false;
+    }
+
+    this.toast.success(
+      this.transloco.translate(this._successKey(target)),
+      'UploadCoordinatorService'
+    );
+    return true;
+  }
+
+  /**
+   * Uploads the chosen dependencies first, children-before-parents: each
+   * promotion registers an id alias, and serialization resolves provenance
+   * through those aliases, so every subsequent upload (and the target) references
+   * the cloud entries created before it. Returns `false` on the first failure —
+   * nothing after it is uploaded, so a retry re-analyzes cleanly.
+   */
+  private async _uploadDependencies(
+    masterTypeIds: number[],
+    isPublic: boolean
+  ): Promise<boolean> {
+    for (const masterTypeId of masterTypeIds) {
       const depName = this.registry.getDefinition(masterTypeId)?.name ?? '';
       try {
-        await this.persistence.promoteComponentToServer(
-          masterTypeId,
-          result.isPublic
-        );
+        await this.persistence.promoteComponentToServer(masterTypeId, isPublic);
       } catch (err) {
         this.toast.error(
           this.transloco.translate('uploadDialog.dependencyFailed', {
@@ -85,27 +136,15 @@ export class UploadCoordinatorService {
         return false;
       }
     }
-
-    try {
-      await this._uploadTarget(target, result.isPublic);
-    } catch (err) {
-      this.toast.error(
-        this.transloco.translate('uploadDialog.uploadFailed', { name }),
-        'UploadCoordinatorService',
-        err
-      );
-      return false;
-    }
-
-    this.toast.success(
-      this.transloco.translate(
-        target.kind === 'component'
-          ? 'persistence.componentUploaded'
-          : 'persistence.projectUploaded'
-      ),
-      'UploadCoordinatorService'
-    );
     return true;
+  }
+
+  private _successKey(target: UploadTarget) {
+    if (target.kind === 'component') return 'persistence.componentUploaded';
+    // A first server save reads as a save, not a move — and matches the message
+    // the no-dependency path showed before this went through the upload flow.
+    if (target.kind === 'draft-to-server') return 'persistence.projectSaved';
+    return 'persistence.projectUploaded';
   }
 
   /** The target's display name and embedded local dependencies. */
@@ -134,6 +173,15 @@ export class UploadCoordinatorService {
             target.masterTypeId
           )
         };
+      case 'draft-to-server':
+        // The draft's metadata name is still 'Untitled' until the save writes
+        // the chosen one, so take it from the target.
+        return {
+          name: target.name,
+          dependencies: this.persistence.localDependenciesOfProject(
+            target.project
+          )
+        };
     }
   }
 
@@ -154,6 +202,12 @@ export class UploadCoordinatorService {
           target.masterTypeId,
           isPublic
         );
+      case 'draft-to-server':
+        return this.persistence.saveDraftAsServer(
+          target.project,
+          target.name,
+          isPublic
+        );
     }
   }
 
@@ -168,14 +222,24 @@ export class UploadCoordinatorService {
       modal: true,
       closable: true,
       data: {
-        kind: target.kind === 'component' ? 'component' : 'project',
+        kind: this._dialogKind(target),
         name,
-        dependencies
+        dependencies,
+        // A first server save already chose visibility in the save dialog; lock
+        // it so the dialog is purely about which components to promote.
+        presetIsPublic:
+          target.kind === 'draft-to-server' ? target.isPublic : undefined
       } satisfies UploadDialogData
     });
     if (!ref) return Promise.resolve(undefined);
     return firstValueFrom(ref.onClose) as Promise<
       UploadDialogResult | undefined
     >;
+  }
+
+  private _dialogKind(target: UploadTarget): UploadDialogData['kind'] {
+    if (target.kind === 'component') return 'component';
+    if (target.kind === 'draft-to-server') return 'draft';
+    return 'project';
   }
 }

@@ -400,6 +400,8 @@ const en = {
       '“{{name}}” is moved out of browser storage and stored on your account, so you can reach it from any device.',
     introComponent:
       '“{{name}}” is moved out of your local library and stored on your account, so you can use it from any device.',
+    introDraft:
+      '“{{name}}” embeds these local components. Choose which to upload to your cloud library alongside it.',
     depsTitle: 'Local components in this circuit',
     depsHint:
       'Selected components are uploaded to your cloud library first and the upload references them. Unselected ones only ride along as embedded copies.',

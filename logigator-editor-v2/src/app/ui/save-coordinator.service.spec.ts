@@ -9,6 +9,7 @@ import {
   ProjectMetadataStore
 } from '../persistence/project-metadata.store';
 import { Project } from '../project/project';
+import { UploadCoordinatorService } from './upload/upload-coordinator.service';
 import { configureTestBed } from '../../testing/configure-test-bed';
 
 function meta(overrides: Partial<ProjectMetadata> = {}): ProjectMetadata {
@@ -30,6 +31,7 @@ describe('SaveCoordinatorService', () => {
     saveDraftAsLocal: ReturnType<typeof vi.fn>;
     saveDraftAsServer: ReturnType<typeof vi.fn>;
   };
+  let uploadCoordinator: { requestUpload: ReturnType<typeof vi.fn> };
   let getMetadata: ReturnType<typeof vi.fn>;
   let dialogOpen: ReturnType<typeof vi.fn>;
   const project = {} as Project;
@@ -40,11 +42,16 @@ describe('SaveCoordinatorService', () => {
       saveDraftAsLocal: vi.fn().mockResolvedValue(undefined),
       saveDraftAsServer: vi.fn().mockResolvedValue(undefined)
     };
+    uploadCoordinator = { requestUpload: vi.fn().mockResolvedValue(true) };
     getMetadata = vi.fn();
     dialogOpen = vi.fn().mockReturnValue({ onClose: of(dialogResult) });
 
     configureTestBed([
       { provide: PersistenceService, useValue: persistence },
+      {
+        provide: UploadCoordinatorService,
+        useValue: uploadCoordinator
+      },
       { provide: ProjectMetadataStore, useValue: { getMetadata } },
       { provide: DialogService, useValue: { open: dialogOpen } }
     ]);
@@ -95,17 +102,21 @@ describe('SaveCoordinatorService', () => {
     expect(persistence.saveProject).not.toHaveBeenCalled();
   });
 
-  it('prompts a fresh draft and saves it to the server with visibility', async () => {
+  it('routes a fresh draft server save through the upload coordinator', async () => {
     setup({ name: 'Server Circuit', destination: 'server', isPublic: true });
     getMetadata.mockReturnValue(meta());
 
     await service.requestSave(project);
 
-    expect(persistence.saveDraftAsServer).toHaveBeenCalledWith(
+    // The server draft goes through the upload flow (so embedded local
+    // components are handled) rather than straight to saveDraftAsServer.
+    expect(uploadCoordinator.requestUpload).toHaveBeenCalledWith({
+      kind: 'draft-to-server',
       project,
-      'Server Circuit',
-      true
-    );
+      name: 'Server Circuit',
+      isPublic: true
+    });
+    expect(persistence.saveDraftAsServer).not.toHaveBeenCalled();
     expect(persistence.saveDraftAsLocal).not.toHaveBeenCalled();
   });
 

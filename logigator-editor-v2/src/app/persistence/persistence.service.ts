@@ -216,8 +216,9 @@ export class PersistenceService {
    * First save of a fresh draft to the **server**: creates the project record
    * and PUTs the current circuit (see
    * {@link ServerPersistenceGateway.promoteToServer}), then navigates to
-   * `/project/:id`. Owns the saved-toast — the gateway promote is also used by
-   * the upload flow, which reports differently.
+   * `/project/:id`. A silent primitive — its sole caller is the
+   * `UploadCoordinatorService` (a first server save goes through the upload
+   * flow so any embedded local components are handled), which owns the toast.
    */
   async saveDraftAsServer(
     project: Project,
@@ -226,10 +227,6 @@ export class PersistenceService {
   ): Promise<void> {
     const id = await this.server.promoteToServer(project, name, isPublic);
     this.location.go(`/project/${id}`);
-    this.toast.success(
-      this.transloco.translate('persistence.projectSaved'),
-      'PersistenceService'
-    );
   }
 
   /**

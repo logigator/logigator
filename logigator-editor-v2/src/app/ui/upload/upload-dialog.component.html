@@ -4,7 +4,9 @@
       t(
         kind === 'component'
           ? 'uploadDialog.introComponent'
-          : 'uploadDialog.introProject',
+          : kind === 'draft'
+            ? 'uploadDialog.introDraft'
+            : 'uploadDialog.introProject',
         { name: name }
       )
     }}
@@ -62,30 +64,32 @@
     </div>
   }
 
-  @if (userService.user()) {
-    <div class="flex gap-2 items-center">
-      <lg-toggle-switch
-        inputId="upload-public"
-        [ngModel]="isPublic()"
-        (ngModelChange)="isPublic.set($event)"
-        [ngModelOptions]="{ standalone: true }"
-      />
-      <label for="upload-public">{{ t('uploadDialog.public') }}</label>
-      <i
-        class="ph ph-info cursor-help text-surface-500"
-        [lgTooltip]="
-          t(
-            kind === 'component'
-              ? 'uploadDialog.publicInfoComponent'
-              : 'uploadDialog.publicInfoProject'
-          )
-        "
-      ></i>
-    </div>
-  } @else {
-    <lg-message severity="warn">
-      {{ t('uploadDialog.notLoggedIn') }}
-    </lg-message>
+  @if (!visibilityLocked) {
+    @if (userService.user()) {
+      <div class="flex gap-2 items-center">
+        <lg-toggle-switch
+          inputId="upload-public"
+          [ngModel]="isPublic()"
+          (ngModelChange)="isPublic.set($event)"
+          [ngModelOptions]="{ standalone: true }"
+        />
+        <label for="upload-public">{{ t('uploadDialog.public') }}</label>
+        <i
+          class="ph ph-info cursor-help text-surface-500"
+          [lgTooltip]="
+            t(
+              kind === 'component'
+                ? 'uploadDialog.publicInfoComponent'
+                : 'uploadDialog.publicInfoProject'
+            )
+          "
+        ></i>
+      </div>
+    } @else {
+      <lg-message severity="warn">
+        {{ t('uploadDialog.notLoggedIn') }}
+      </lg-message>
+    }
   }
 
   <div class="flex justify-end gap-2">
