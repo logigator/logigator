@@ -401,16 +401,12 @@ const en = {
     introComponent:
       '“{{name}}” is moved out of your local library and stored on your account, so you can use it from any device.',
     introDraft:
-      '“{{name}}” embeds these local components. Choose which to upload to your cloud library alongside it.',
-    depsTitle: 'Local components in this circuit',
+      '“{{name}}” embeds these local components. They will be uploaded to your cloud library alongside it.',
+    depsTitle: 'These local components will also be published',
     depsHint:
-      'Selected components are uploaded to your cloud library first and the upload references them. Unselected ones only ride along as embedded copies.',
-    selectAll: 'Select all',
-    deselectAll: 'Deselect all',
-    unresolvableHint:
-      'No longer in your local library — always rides along as an embedded copy.',
-    excludedWarning:
-      '{{count}} local component(s) will not get a cloud library entry. Their embedded copies keep working, but on other devices they cannot be edited or updated as components anymore.',
+      'A cloud project can only contain cloud components, so each of these is uploaded to your cloud library first and then referenced.',
+    unresolvableWarning:
+      '{{count}} embedded component(s) can no longer be published (their library entry is gone) and will remain plain embedded copies.',
     public: 'Public',
     publicInfoProject:
       'Public projects are published on your profile and accessible to everyone via a share link. Private projects are only visible to you.',
@@ -423,6 +419,15 @@ const en = {
     dependencyFailed:
       'Could not upload component “{{name}}”. Nothing further was uploaded — try again.',
     uploadFailed: 'Could not upload “{{name}}” to the cloud.'
+  },
+  closeTab: {
+    header: 'Unsaved changes',
+    message: '“{{name}}” has unsaved changes. Save them before closing?',
+    promotionWarning:
+      'Saving will also publish {{count}} local component(s) to your cloud library.',
+    save: 'Save',
+    discard: 'Discard',
+    cancel: 'Cancel'
   },
   sourceIndicator: {
     cloudTitle: 'Saved in your cloud account',

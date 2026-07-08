@@ -18,14 +18,6 @@ import type { ProjectElement } from './project-element';
 export interface DependencySnapshot {
   /** The master version this copy was taken at. */
   version: number;
-  /**
-   * Additive — the **local** (browser) library id this copy was frozen from,
-   * present only for a local custom not uploaded to the cloud (so the mapping
-   * `id` is empty). The server stores it verbatim and never resolves it; the
-   * editor uses it to re-link the embedded custom to the author's own local
-   * library so it stays editable there. Unknown on any other device.
-   */
-  localId?: string;
   name: string;
   symbol: string;
   description: string;

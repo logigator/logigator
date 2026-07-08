@@ -1,10 +1,9 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   DialogConfig,
   DialogRef,
   LgButton,
-  LgCheckbox,
   LgMessage,
   LgToggleSwitch,
   LgTooltip
@@ -28,30 +27,22 @@ export interface UploadDialogData {
 
 export interface UploadDialogResult {
   isPublic: boolean;
-  /**
-   * The local dependencies the user chose to upload as their own cloud library
-   * entries, preserving the children-before-parents input order so the
-   * coordinator can upload them sequentially and let each parent reference its
-   * already-promoted children.
-   */
-  dependencyMasterTypeIds: number[];
 }
 
 /**
- * Collects the options for moving a local project or component to the cloud:
- * visibility (public/private) and, when the circuit embeds local custom
- * components, which of them to upload as their own library entries (checkbox
- * list, all preselected). Excluding a dependency severs its cloud copy from the
- * local library entry — an inline warning spells that out. Collects input only —
- * it closes with an {@link UploadDialogResult} (or `undefined` when cancelled);
- * the {@link UploadCoordinatorService} performs the upload. Visibility defaults
- * to public, matching the create dialogs.
+ * Confirms moving a local project or component to the cloud and collects its
+ * visibility. A cloud document may only contain cloud components, so **every**
+ * resolvable local component the circuit embeds is published alongside it — the
+ * dialog lists them for transparency but there is no per-component opt-out (the
+ * {@link UploadCoordinatorService} promotes them all). A component that no longer
+ * resolves to a library master cannot be published and stays an embedded copy; an
+ * inline warning calls that out. Collects input only — it closes with an
+ * {@link UploadDialogResult} (or `undefined` when cancelled).
  */
 @Component({
   selector: 'app-upload-dialog',
   imports: [
     FormsModule,
-    LgCheckbox,
     LgToggleSwitch,
     LgTooltip,
     LgButton,
@@ -75,53 +66,22 @@ export class UploadDialogComponent {
   protected readonly lockedIsPublic = this.data?.presetIsPublic;
   protected readonly visibilityLocked = this.lockedIsPublic !== undefined;
 
-  /** The dependencies that still resolve to a browser master — uploadable. */
-  protected readonly uploadableDependencies = this.dependencies.filter(
-    (d): d is LocalUploadDependency & { masterTypeId: number } =>
-      d.masterTypeId !== null
+  /** Resolvable local components — these get published alongside the target. */
+  protected readonly publishedDependencies = this.dependencies.filter(
+    (d) => d.masterTypeId !== null
   );
+  /** Embedded-only components that can no longer be published (master gone). */
+  protected readonly unresolvableCount = this.dependencies.filter(
+    (d) => d.masterTypeId === null
+  ).length;
 
   protected readonly isPublic = signal(this.lockedIsPublic ?? true);
-  protected readonly selected = signal<ReadonlySet<number>>(
-    new Set(this.uploadableDependencies.map((d) => d.masterTypeId))
-  );
-
-  protected readonly allSelected = computed(
-    () => this.selected().size === this.uploadableDependencies.length
-  );
-  /** Local components that will NOT get their own cloud entry (unchecked or unresolvable). */
-  protected readonly excludedCount = computed(
-    () => this.dependencies.length - this.selected().size
-  );
-
-  protected toggleDependency(masterTypeId: number, checked: boolean): void {
-    const next = new Set(this.selected());
-    if (checked) {
-      next.add(masterTypeId);
-    } else {
-      next.delete(masterTypeId);
-    }
-    this.selected.set(next);
-  }
-
-  protected toggleAll(): void {
-    this.selected.set(
-      this.allSelected()
-        ? new Set()
-        : new Set(this.uploadableDependencies.map((d) => d.masterTypeId))
-    );
-  }
 
   protected cancel(): void {
     this.ref.close();
   }
 
   protected upload(): void {
-    this.ref.close({
-      isPublic: this.isPublic(),
-      dependencyMasterTypeIds: this.uploadableDependencies
-        .filter((d) => this.selected().has(d.masterTypeId))
-        .map((d) => d.masterTypeId)
-    } satisfies UploadDialogResult);
+    this.ref.close({ isPublic: this.isPublic() } satisfies UploadDialogResult);
   }
 }

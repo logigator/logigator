@@ -123,23 +123,19 @@ export function serializeProject(
   const dependencies: DependencyMapping[] = definitions.map((def) => {
     // The mapping id links to a server library component, which the backend
     // validates as one the user owns. Only a dependency that resolves to a
-    // registered **server** master qualifies; a local (browser) custom — or any
-    // id the backend could not own — is sent as '' so it rides along solely via
-    // the embedded snapshot (no dependency row). `def.source.id` is already the
-    // current id (collectSnapshots rewrites it through the promotion alias), so a
-    // dependency promoted earlier in this same upload now resolves to a server
-    // master and links correctly.
-    const serverId = serverDependencyId(def.source?.id, registry);
+    // registered **server** master qualifies; anything else is sent as '' so it
+    // rides along solely via the embedded snapshot (no dependency row). Under the
+    // one-directional rule a cloud save has no local dependencies (they are
+    // promoted first), so this normally yields a real id for every dependency;
+    // the '' path is a defensive fallback that degrades to an orphan on reload
+    // rather than failing the save. `def.source.id` is already the current id
+    // (collectSnapshots rewrites it through the promotion alias), so a dependency
+    // promoted earlier in this same upload resolves to its server master here.
     return {
-      id: serverId,
+      id: serverDependencyId(def.source?.id, registry),
       model: def.type, // file-local id, matches the body `t` and the snapshot
       snapshot: {
         version: def.source?.version ?? 1,
-        // A local custom has no server mapping id; carry its local-library id in
-        // the snapshot so the author's own device can re-link it to the local
-        // library (and keep editing it) instead of treating it as an anonymous
-        // copy. Absent once the dependency lives in the cloud (its id is above).
-        localId: serverId === '' ? def.source?.id : undefined,
         name: def.name,
         symbol: def.symbol,
         description: def.description,

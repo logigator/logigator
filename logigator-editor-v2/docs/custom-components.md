@@ -196,9 +196,11 @@ active one, and the [tab bar](ui.md) switches between them.
   the master's circuit (the universal embedded-snapshot path) from its library —
   server (GET) or the browser `components` store — and opens a tab. A reused master
   shares its session type id, so the palette tile and editor stay one definition.
-- `closeComponent(project)` — saves a dirty editor to its store before disposing
-  it; a clean editor is disposed straight away. The master definition itself stays
-  registered (it remains in the palette).
+- `closeComponent(project)` — a clean editor is disposed straight away; a dirty one
+  prompts **Save / Discard / Cancel** (dismiss = cancel). Saving a cloud component
+  that embeds local components promotes them first (the prompt folds in that
+  warning); see [`dependencies-and-promotion.md`](dependencies-and-promotion.md)
+  §8.1. The master definition itself stays registered (it remains in the palette).
 - `buildInstanceUpdate(instance)` — see [Per-instance update](#per-instance-update).
 
 ### `DefinitionBinding` — keep a master's summary current

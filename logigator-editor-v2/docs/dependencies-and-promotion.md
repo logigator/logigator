@@ -53,6 +53,12 @@ the pieces it builds on and only cross-reference here:
   uses in `definitions[]` (native) / `dependencies[]` (server). Losing the master
   never loses the circuit.
 
+**The one-directional rule.** A **cloud** document may contain only **cloud**
+components; a local document may use cloud components, but a browser-local custom
+may not live inside a cloud document — it is promoted to the cloud first (enforced at
+save, [§8](#8-one-directional-rule-no-local-in-cloud)). "Cloud-in-local" is allowed;
+"local-in-cloud" is not.
+
 > Full model, id spaces, invariants, and cycle prevention live in
 > [`custom-components.md`](custom-components.md). The essentials repeated here are
 > only what the dependency/promotion flows depend on.
@@ -188,7 +194,6 @@ Each `dependencies[]` entry is a `DependencyMapping`:
   model: number,       // the file-local type id — matches the body `t` and snapshot
   snapshot: {          // the additive frozen copy (R14)
     version, name, symbol, description, numInputs, numOutputs, labels,
-    localId?,          // the browser-library id, when this is a local custom
     elements           // positional body of the snapshot's circuit
   } }
 ```
@@ -201,16 +206,20 @@ else — a local (browser) custom, an unregistered/foreign id — is sent as `''
   a **dependency row** (used for the server-side dependency graph: share cloning,
   etc.). An empty `id` creates **no row** — the dependency rides solely on its
   embedded `snapshot`.
-- **Gotcha:** sending a *browser* id here was the "Component for mapping not found"
-  bug. A browser id is not an owned server component, so it must be `''`. This is
-  also why an unpromoted/unselected local dependency does not break a save.
+- Under the [one-directional rule](#8-one-directional-rule-no-local-in-cloud) a cloud
+  save has **no** local dependencies (they are promoted first), so in practice every
+  entry gets a real id. The `''` path is a defensive fallback: a local custom that
+  somehow reaches a cloud serialize (a bypass) is embedded with `id:''` and no
+  re-link hint, so it loads as a recoverable **orphan** — never the "Component for
+  mapping not found" crash (that only happens if a *browser id* is sent, which
+  `serverDependencyId` never does).
 
 **The snapshot blob round-trips whole.** `serializeStoredCircuit` stores each
 mapping's `snapshot` verbatim in the circuit file, and `buildDependencyResponse`
 echoes it back on read — so **any field inside `snapshot` survives a round-trip with
-no backend storage changes** (this is why `localId` was cheap to add). The backend
-`DependencySnapshot` DTO must still *declare* every field, because validation runs
-`forbidNonWhitelisted: true` — an undeclared field is rejected, not ignored (see
+no backend storage changes**. The backend `DependencySnapshot` DTO must still
+*declare* every field it accepts, because validation runs `forbidNonWhitelisted:
+true` — an undeclared field is rejected, not ignored (see
 [§11](#11-backend-contract--deployment)).
 
 **`synthesizeMissingSnapshots`.** For an old-editor document whose dependency rows
@@ -222,16 +231,17 @@ Non-leaf reference-only deps stay unresolved and are dropped on load (§10).
 ### 4.3 Decode: resolving provenance
 
 The `v0ToV1` migration's `decodeDependencies` revives each embedded `snapshot` into
-a native `SnapshotDefinition`. Provenance resolves in priority order:
+a native `SnapshotDefinition`. Provenance:
 
 ```
-id     = mapping.id  ||  dependency.id  ||  snapshot.localId
-origin = (mapping.id || dependency.id) ? 'server' : 'browser'
+id     = mapping.id || dependency.id      // the owned cloud component
+origin = 'server'                          // a server dependency is always cloud
 ```
 
-- `mapping.id` / `dependency.id` — an owned cloud component ⇒ **cloud origin**.
-- `snapshot.localId` — a local custom that was never uploaded ⇒ **browser origin**.
-- none ⇒ `source = undefined` (an anonymous local, or a legacy reference-only dep).
+- A present mapping id ⇒ a cloud dependency ⇒ **cloud origin** (`'server'`).
+- No id (`''`) ⇒ `source = undefined` — no provenance survives, so the instance
+  loads as an embedded **orphan** (recoverable via restore). This covers a legacy
+  reference-only dep and the bypass case above.
 
 A reference-only dependency (no embedded `snapshot`) is skipped here; its body
 elements then surface as unresolved customs and are dropped with a warning (§10).
@@ -252,17 +262,19 @@ For every custom in a document's closure, at save time:
                               │ yes                         │ no (browser / unresolvable)
                               ▼                             ▼
        ── NATIVE FILE / BROWSER ──────────    definitions[]: source { id, version, origin }
-       definitions[]: source { id, version,      (origin 'browser'; id may be a lost id — kept
-       origin } — id is the current id           for same-device re-link and orphan recovery)
-       ─────────────────────────────────────
-       ── SERVER (v0) ───────────────────────    ── SERVER (v0) ───────────────────────────────
-       mapping.id  = id  (owned server)          mapping.id       = ''      (no dep row)
-       snapshot.localId = (absent)               snapshot.localId = id      (browser re-link hint)
-       → backend creates a dependency ROW        → backend stores snapshot only
+       definitions[]: source { id, version,      (a browser dependency in a local doc,
+       origin } — id is the current id           allowed — origin 'browser'; a lost id is
+       ─────────────────────────────────────     kept for same-device re-link / orphan recovery)
+       ── SERVER (v0) ───────────────────────    ── SERVER (v0) — should not occur ────────────
+       mapping.id = id  (owned server)           mapping.id = ''   (defensive: embedded, no dep
+       → backend creates a dependency ROW        row; loads as an orphan). A local dep is
+                                                 promoted BEFORE a cloud save (see §7/§8).
 ```
 
 The **snapshot circuit is always embedded**, in every branch. The only variable is
-*whether a dependency link/id is recorded* and *which library it points at*.
+*whether a dependency link/id is recorded* and *which library it points at*. A local
+dependency in a **cloud** document is not a normal state — it is promoted to the
+cloud first ([§8](#8-one-directional-rule-no-local-in-cloud)).
 
 ---
 
@@ -314,11 +326,12 @@ pipeline for every entry shape, orchestrated by `UploadCoordinatorService`
 | `draft-to-server` | first save of a never-saved draft to the server | `saveDraftAsServer` |
 | `save-server` | re-saving an already-cloud project that gained local customs | `saveProject` |
 
-`SaveCoordinatorService` routes the two save shapes here: a first server save
-(`draft-to-server`) and a re-save of a cloud project that embeds local customs
-(`save-server`) both need the promotion treatment, because the backend rejects a
-local dependency id. It only routes `save-server` when the project actually embeds
-local customs; otherwise it saves directly.
+`SaveCoordinatorService` routes the server-save shapes here: a first server save
+(`draft-to-server`) and a re-save of a **server project or component editor** that
+embeds local customs (`save-server`) both need the promotion treatment, because a
+cloud document may only contain cloud components. It only routes `save-server` when
+the document actually embeds local customs; otherwise it saves directly. The
+tab-close flow ([§8.1](#81-the-tab-close-flow)) is a fourth trigger.
 
 ### 7.2 The sequence
 
@@ -327,12 +340,13 @@ local customs; otherwise it saves directly.
    │
    ├─ 1. ANALYZE   localDependencies* → local customs embedded, CHILDREN-BEFORE-PARENTS
    │
-   ├─ 2. PROMPT    upload dialog: visibility + which resolvable deps to promote
-   │               (all preselected). Skipped when visibility is preset AND no local
-   │               deps (draft-to-server / save-server common case). Cancel ⇒ abort.
+   ├─ 2. PROMPT    upload dialog: visibility + an INFORMATIONAL list of the local
+   │               components that will be published (promotion is mandatory — no
+   │               opt-out). Skipped when visibility is preset AND no local deps
+   │               (draft-to-server / save-server common case). Cancel ⇒ abort.
    │
-   ├─ 3. UPLOAD DEPENDENCIES FIRST, in child→parent order:
-   │       for each selected dep:  promoteComponentToServer(dep)
+   ├─ 3. PROMOTE EVERY RESOLVABLE DEPENDENCY, in child→parent order:
+   │       for each dep:  promoteComponentToServer(dep)
    │         → registry.promoteMaster records oldId→newId alias
    │         → because serialize resolves ids through the alias, the NEXT upload
    │           (and the target) references the already-promoted child by its cloud id
@@ -340,6 +354,12 @@ local customs; otherwise it saves directly.
    │
    └─ 4. UPLOAD TARGET   promote/save the project or component itself
 ```
+
+**Promotion is mandatory (one-directional rule, §8).** The dialog lists the local
+components that will be published but offers no per-component opt-out — a cloud
+document cannot keep a local dependency. A dependency that no longer resolves to a
+library master (an already-embedded orphan) cannot be published; it stays an
+embedded copy and the dialog warns about it.
 
 **Children-before-parents ordering is a true topological (post-order DFS) sort**,
 not a reversed collect order — a reversed pre-order mis-orders a *diamond* (a shared
@@ -356,29 +376,57 @@ coordinator suppresses its toast for `save-server`.)
 **Linking semantics.** The server model has no first-class linking; every entry
 stays self-contained (a parent still embeds its own copy of a child). Promotion's
 only "link" is keeping the id current via the alias, so the embedded copy is
-*recognizably the same component*. A dependency the user does **not** select stays
-local and rides along as an embedded copy — the dialog warns that such copies can no
-longer be updated as components elsewhere.
+*recognizably the same component*.
 
 ---
 
-## 8. Keeping the local-library link inside a cloud document (`localId`)
+## 8. One-directional rule: no local-in-cloud
 
-The **local-dependency-in-a-cloud-document** case. When a local custom is embedded
-in a *server* project/component and is **not** promoted, its `mapping.id` must be
-`''` (§4.2) — which would erase all trace of *which* local component it was. To
-preserve editability on the author's own device, its browser-library id is carried
-in `snapshot.localId`:
+**A cloud document may contain only cloud components.** A *local* project may still
+use *cloud* components (cloud-in-local is fine — the natural "use a published thing
+in private work" direction), but the reverse — a browser-local custom embedded in a
+server project or component — is disallowed. Putting a local component into cloud
+work publishes it (promotion, §7); there is no "keep it local inside the cloud
+document" option.
 
-- Additive, optional field on the backend `DependencySnapshot` DTO; stored verbatim,
-  echoed on read, **never resolved or ownership-checked** server-side.
-- On decode, provenance resolves to `mapping.id || dependency.id || snapshot.localId`
-  (§4.3), so on the **author's own device** the embedded custom re-links to the
-  still-present local master and stays editable/updatable.
-- On **any other device**, the id is unknown → it remains a plain embedded copy (an
-  orphan for that device — §9).
-- Promoting the component later switches it back to a real `mapping.id` and drops
-  `localId`.
+This is enforced **at save**, not at placement: you edit freely, and any cloud save
+of a document that embeds local customs promotes them first (mandatory). It gives a
+one-sentence mental model ("cloud projects contain cloud components") and removes the
+old confusing "half-editable embedded copy" state. Consequences:
+
+- **No `localId`.** The earlier mechanism that let a local component live inside a
+  cloud document (re-linkable only on the author's device) is gone. The frontend no
+  longer sends or reads it; the backend DTO field is kept, deprecated and ignored,
+  only so an older editor mid-deploy is not rejected by `forbidNonWhitelisted`.
+- **A bypass degrades to an orphan, not a crash.** If a local dependency ever reaches
+  a cloud serialize without promotion, it is embedded with `mapping.id:''` and no
+  provenance → a restorable orphan on reload (§9). No data loss, no 400.
+- **Files still hold cloud deps.** Because cloud-in-local is allowed, exporting a
+  cloud project to a native file (which carries cloud dependency ids) and importing
+  it round-trips fine.
+
+### 8.1 The tab-close flow
+
+Closing a component-editor tab funnels through `CustomComponentService.closeComponent`:
+
+```
+ close tab
+   │ dirty?
+   ├─ no  → dispose
+   └─ yes → CloseTabDialogComponent (Save / Discard / Cancel; dismiss = Cancel)
+              │
+              ├─ Save    → uploadCoordinator.promoteLocalDepsAndSave(project)
+              │             (a cloud comp with local deps promotes them first — NO
+              │              second dialog; the close dialog already carried the
+              │              promotion warning) → dispose on success, else keep open
+              ├─ Discard → dispose without saving
+              └─ Cancel  → keep the tab open (the safe default for a stray dismissal)
+```
+
+`promoteLocalDepsAndSave` is the no-dialog core: for a server document it promotes
+every resolvable local dependency (children-first, at the document's own visibility),
+then saves; for a browser document it just saves. The close dialog folds the
+promotion warning inline so the user is never hit with two modals.
 
 ---
 
@@ -395,8 +443,9 @@ How orphans arise:
 | --- | --- |
 | You deleted the cloud component your project depends on | `server` |
 | You opened someone else's shared cloud project referencing *their* cloud component | `server` |
-| A cloud project embedding *your* local custom (`localId`) opened on a **different** device | `browser` |
 | You are **signed out**, so no cloud masters are loaded — every cloud dep looks lost | `server` |
+| A local project's local dependency isn't in this browser's library (a hand-carried native file whose customs weren't adopted) | `browser` |
+| A local dependency reached a cloud save via a bypass (no promotion) — degraded, `id:''` | `undefined` → treated as `browser` |
 | A file/document authored before `origin` existed | `undefined` → treated as `browser` |
 
 ### Restore (`restoreOrphanToLibrary`)
@@ -410,8 +459,8 @@ needed).
   snapshot (no id) mints a fresh id and `relinkSnapshotProvenance` re-points the
   snapshot.
 - **Reusing the id is server-safe** — server ids are always server-minted (the
-  client never dictates one), and a browser id only ever travels as an opaque
-  `localId`. So no server collision is possible.
+  client never dictates one), and a browser id never travels to the server as an
+  identity. So no server collision is possible.
 
 ### The origin bit decides whether to *offer* restore
 
@@ -453,23 +502,25 @@ what *else* happens.
 | # | Scenario | Mapping id (server) / `source.id` (native) | Dep row (server) | On reload / other device |
 | --- | --- | --- | --- | --- |
 | 1 | **Local dep in a local document** | native `source.id` = browser id | n/a | re-links to browser master; editable |
-| 2 | **Local dep in a cloud document, promoted** | server id (its own new cloud id) | yes | re-links to cloud master everywhere |
-| 3 | **Local dep in a cloud document, NOT promoted** | `id:''`, `snapshot.localId` = browser id | no | author's device re-links; other devices = embedded copy (orphan) |
-| 4 | **Cloud dep in a local document** | native `source.id` = cloud id | n/a | re-links to cloud master if loaded; else orphan (origin `server`) |
+| 2 | **Local dep in a cloud document** | **not allowed** — promoted to the cloud at save (§8), becoming a cloud dep (row 5) | — | after save it is a cloud dependency everywhere |
+| 3 | **Local dep reaches a cloud save unpromoted** (bypass) | `id:''`, no provenance | no | loads as a restorable **orphan** (no crash) |
+| 4 | **Cloud dep in a local document** | native `source.id` = cloud id, origin `server` | n/a | re-links to cloud master if loaded; else orphan |
 | 5 | **Cloud dep in a cloud document** | server id | yes | re-links to cloud master everywhere |
-| 6 | **Local dep inside a local dep** (nesting) | each custom = its own definition; parent circuit references child's file-local id | per §4.2 rules recursively | full closure embedded; each re-links per its own origin |
+| 6 | **Local dep inside a local dep** (nesting) | each custom = its own definition; parent circuit references child's file-local id | per §4.2 recursively | full closure embedded; each re-links per its own origin |
 | 7 | **Cloud dep inside a local dep** | inner definition's `source.id` = cloud id | per §4.2 | inner re-links to cloud master if present |
 | 8 | **Recursive dependency (A→…→A)** | — | — | **prevented at author time** (`wouldCycle`); never serialized |
-| 9 | **Diamond (A→B, A→C, B→D, C→D)** | D emitted once; upload order D→B,C→A | — | shared D re-links once; topological upload order |
+| 9 | **Diamond (A→B, A→C, B→D, C→D)** | D emitted once; promote order D→B,C→A | — | shared D promotes/links once; topological order |
 | 10 | **Orphan — deleted/foreign cloud master** | `source.id` = lost cloud id, origin `server` | none | renders; edit ⇒ restore (signed in) or sign-in (signed out) |
-| 11 | **Orphan — local master on another device** | `source.id` = browser id (from `localId`), origin `browser` | none | renders; edit ⇒ restore |
+| 11 | **Orphan — local master missing on this device** | `source.id` = browser id, origin `browser` | n/a | renders; edit ⇒ restore |
 | 12 | **Absent snapshot (reference-only)** | — | (row may exist) | element **dropped** with a counted warning |
 
 Cross-cutting guarantees:
 
+- **A cloud document only ever contains cloud components** (§8) — a local dependency
+  is promoted before a cloud save, or (bypass) degrades to a restorable orphan.
 - **No dependency is ever silently lost** — every custom in the closure is embedded,
-  so the worst case for a mis-classified/unpromoted dependency is "embedded copy,"
-  never a broken circuit. The one hard-loss case (#12) is user-visible via a toast.
+  so the worst case is "embedded copy / orphan," never a broken circuit. The one
+  hard-loss case (#12) is user-visible via a toast.
 - **Promotion is a move, not a copy** — the browser record is deleted and the id is
   aliased, so a promoted component is not duplicated across libraries.
 - **Restore is a copy into the browser library** — it does not touch the (gone)
@@ -486,17 +537,20 @@ Cross-cutting guarantees:
 - `ProjectMapping { id, model, snapshot }` — `id` is `''` **or** an owned server
   component uuid; a non-empty id is validated by `getOwnedComponentOrThrow` and
   creates a `ComponentDependency` / `ProjectDependency` row. `''` ⇒ no row.
-- `DependencySnapshot` — the frozen embedded circuit + summary + optional `localId`.
-  Stored verbatim in the circuit blob (`serializeStoredCircuit`) and echoed on read
+- `DependencySnapshot` — the frozen embedded circuit + summary. Stored verbatim in
+  the circuit blob (`serializeStoredCircuit`) and echoed on read
   (`buildDependencyResponse`), so fields inside it round-trip without storage
   changes. `synthesizeMissingSnapshots` backfills leaf masters for old documents.
+  It still declares a deprecated, ignored `localId` field (the frontend no longer
+  sends it) — see the deployment note.
 - **`forbidNonWhitelisted: true`** (global validation): any field the DTO does not
   declare is **rejected with 400**, not stripped.
 
-> ⚠️ **Deployment order.** Because unknown fields are rejected, an editor that sends
-> a new `DependencySnapshot`/`ProjectMapping` field (e.g. `localId`) will 400 unless
-> the backend DTO change deploys **first, or together with** the editor. Every
-> additive wire field here carries this coupling.
+> ⚠️ **Deployment order (both directions).** Because unknown fields are rejected:
+> *adding* a wire field means the backend DTO must deploy **first / together with**
+> the editor; *removing* one (like `localId`) means the field must stay accepted-and-
+> ignored on the backend until no editor still sends it — hence `localId` is retained
+> on the DTO as deprecated rather than deleted outright.
 
 ---
 
@@ -507,10 +561,13 @@ Cross-cutting guarantees:
 - **Frozen version is never rewritten.** Only `source.id`/`origin` are re-resolved
   at serialize time; the version stays as captured so "update available" stays
   correct.
+- **A cloud document may only contain cloud components** (§8). Local deps are
+  promoted at save; enforced across *every* cloud-save path (project save, first
+  server save, component-editor save, tab-close save), since a bypass now degrades
+  to an orphan instead of the old graceful `localId` re-link.
 - **Empty mapping id for local/foreign deps.** A browser (or non-owned) id in
-  `mapping.id` = the "Component for mapping not found" 400. Send `''`.
-- **`||` not `??` in decode provenance.** An unpromoted local dep sends an *empty
-  string* mapping id, which must fall through to `localId`.
+  `mapping.id` = the "Component for mapping not found" 400. Send `''`. `serverDependencyId`
+  never sends a browser id, so a bypass orphans rather than crashes.
 - **Topological (post-order) dependency order**, not reversed pre-order — diamonds
   break under a naive reverse.
 - **Serialize resolves ids through the alias** (`currentIdForId`) — device-local
@@ -518,7 +575,7 @@ Cross-cutting guarantees:
 - **`origin` is the *current* master origin**, resolved live at collect time — a
   promoted master serializes as `server` even from an old snapshot.
 - **Reusing an id on restore is server-safe** — server ids are server-minted; a
-  browser id only travels as opaque `localId`.
+  browser id never travels to the server as an identity.
 - **Reappear-collision edge** — an undeleted cloud master vs a local restore/reuse
   of its id: `masterTypeIdForId` gives direct precedence over the alias, but the
   startup preload order decides which registers under the shared id. Rare

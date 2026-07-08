@@ -217,22 +217,16 @@ function decodeDependencies(
       ctx,
       customDims
     );
-    // Server mapping id first (the owned cloud component), then a local library
-    // id carried in the snapshot for a custom that was never uploaded — so the
-    // author's own device re-links it to the local library. `||` (not `??`)
-    // because an unpromoted local dependency sends an empty mapping id. Which
-    // field the id came from is the master's library origin (drives orphan
-    // recovery): a mapping id ⇒ cloud, a snapshot `localId` ⇒ local.
-    const serverId = dep.id || dep.dependency?.id;
-    const id = serverId || dep.snapshot.localId;
+    // A server dependency carries an owned cloud-component mapping id; the
+    // current model allows only cloud dependencies in a cloud document, so a
+    // present id is always cloud-origin. A missing id (`''`, e.g. a legacy
+    // reference-only or a bypass) leaves no provenance — the instance loads as an
+    // embedded orphan, recoverable via restore.
+    const id = dep.id || dep.dependency?.id;
     definitions.push({
       type: dep.model,
       source: id
-        ? {
-            id,
-            version: dep.snapshot.version,
-            origin: serverId ? 'server' : 'browser'
-          }
+        ? { id, version: dep.snapshot.version, origin: 'server' }
         : undefined,
       name: dep.snapshot.name,
       symbol: dep.snapshot.symbol,

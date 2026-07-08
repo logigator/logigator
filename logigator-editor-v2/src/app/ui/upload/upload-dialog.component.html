@@ -12,56 +12,24 @@
     }}
   </p>
 
-  @if (dependencies.length) {
+  @if (publishedDependencies.length) {
     <div class="flex flex-col gap-2">
-      <div class="flex items-center justify-between gap-2">
-        <span>{{ t('uploadDialog.depsTitle') }}</span>
-        @if (uploadableDependencies.length > 1) {
-          <lg-button
-            size="sm"
-            [text]="true"
-            [label]="
-              t(
-                allSelected()
-                  ? 'uploadDialog.deselectAll'
-                  : 'uploadDialog.selectAll'
-              )
-            "
-            (onClick)="toggleAll()"
-          />
-        }
-      </div>
+      <span>{{ t('uploadDialog.depsTitle') }}</span>
       <p class="m-0 text-sm text-muted">{{ t('uploadDialog.depsHint') }}</p>
-      <ul class="m-0 flex list-none flex-col gap-2 p-0">
-        @for (dep of dependencies; track $index) {
-          @if (dep.masterTypeId !== null) {
-            <li class="flex items-center gap-2">
-              <lg-checkbox
-                [inputId]="'upload-dep-' + $index"
-                [ngModel]="selected().has(dep.masterTypeId)"
-                (ngModelChange)="toggleDependency(dep.masterTypeId, $event)"
-                [ngModelOptions]="{ standalone: true }"
-              />
-              <label [for]="'upload-dep-' + $index">{{ dep.name }}</label>
-            </li>
-          } @else {
-            <li class="flex items-center gap-2 text-muted">
-              <lg-checkbox disabled />
-              <span>{{ dep.name }}</span>
-              <i
-                class="ph ph-info cursor-help"
-                [lgTooltip]="t('uploadDialog.unresolvableHint')"
-              ></i>
-            </li>
-          }
+      <ul class="m-0 flex list-disc flex-col gap-1 pl-5">
+        @for (dep of publishedDependencies; track $index) {
+          <li>{{ dep.name }}</li>
         }
       </ul>
-      @if (excludedCount() > 0) {
-        <lg-message severity="warn">
-          {{ t('uploadDialog.excludedWarning', { count: excludedCount() }) }}
-        </lg-message>
-      }
     </div>
+  }
+
+  @if (unresolvableCount > 0) {
+    <lg-message severity="warn">
+      {{
+        t('uploadDialog.unresolvableWarning', { count: unresolvableCount })
+      }}
+    </lg-message>
   }
 
   @if (!visibilityLocked) {

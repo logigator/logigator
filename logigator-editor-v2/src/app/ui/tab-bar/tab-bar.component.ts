@@ -90,7 +90,7 @@ export class TabBarComponent {
 
   protected close(project: Project): void {
     if (this.isSimulation()) return;
-    this.customComponentService.closeComponent(project);
+    void this.customComponentService.closeComponent(project);
   }
 
   protected drop(event: LgTabReorder): void {

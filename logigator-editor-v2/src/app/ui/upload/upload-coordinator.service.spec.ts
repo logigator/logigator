@@ -72,7 +72,7 @@ describe('UploadCoordinatorService', () => {
   });
 
   it('uploads the project and toasts success when there are no dependencies', async () => {
-    setup({ isPublic: true, dependencyMasterTypeIds: [] });
+    setup({ isPublic: true });
     const result = await service.requestUpload({ kind: 'project', project });
     expect(result).toBe(true);
     expect(persistence.promoteProjectToServer).toHaveBeenCalledWith(
@@ -82,8 +82,13 @@ describe('UploadCoordinatorService', () => {
     expect(toast.success).toHaveBeenCalledOnce();
   });
 
-  it('uploads selected dependencies before the target, in the given order', async () => {
-    setup({ isPublic: false, dependencyMasterTypeIds: [11, 22] });
+  it('promotes every resolvable dependency before the target, children-first', async () => {
+    setup({ isPublic: false });
+    // The analysis (not the dialog) determines what is promoted — all resolvable.
+    persistence.localDependenciesOfProject.mockReturnValue([
+      { name: 'a', masterTypeId: 11 },
+      { name: 'b', masterTypeId: 22 }
+    ]);
     const order: string[] = [];
     persistence.promoteComponentToServer.mockImplementation((id: number) => {
       order.push(`dep-${id}`);
@@ -100,7 +105,11 @@ describe('UploadCoordinatorService', () => {
   });
 
   it('stops and does not upload the target when a dependency fails', async () => {
-    setup({ isPublic: false, dependencyMasterTypeIds: [11, 22] });
+    setup({ isPublic: false });
+    persistence.localDependenciesOfProject.mockReturnValue([
+      { name: 'a', masterTypeId: 11 },
+      { name: 'b', masterTypeId: 22 }
+    ]);
     persistence.promoteComponentToServer.mockImplementation((id: number) =>
       id === 11 ? Promise.resolve() : Promise.reject(new Error('boom'))
     );
@@ -115,7 +124,7 @@ describe('UploadCoordinatorService', () => {
   });
 
   it('routes a component target to promoteComponentToServer', async () => {
-    setup({ isPublic: true, dependencyMasterTypeIds: [] });
+    setup({ isPublic: true });
     const result = await service.requestUpload({
       kind: 'component',
       masterTypeId: 42
@@ -125,7 +134,7 @@ describe('UploadCoordinatorService', () => {
   });
 
   it('routes a stored-project target to uploadStoredProjectToServer', async () => {
-    setup({ isPublic: false, dependencyMasterTypeIds: [] });
+    setup({ isPublic: false });
     await service.requestUpload({
       kind: 'stored-project',
       id: 'abc',
@@ -138,7 +147,7 @@ describe('UploadCoordinatorService', () => {
   });
 
   it('toasts and returns false when analysis throws, without prompting', async () => {
-    setup({ isPublic: false, dependencyMasterTypeIds: [] });
+    setup({ isPublic: false });
     persistence.localDependenciesOfStoredProject.mockRejectedValue(
       new Error('no record')
     );
@@ -177,7 +186,7 @@ describe('UploadCoordinatorService', () => {
     });
 
     it('prompts, uploads dependencies first, then saves the draft', async () => {
-      setup({ isPublic: false, dependencyMasterTypeIds: [11, 22] });
+      setup({ isPublic: false });
       // The dialog is shown because the draft embeds local components.
       persistence.localDependenciesOfProject.mockReturnValue([
         { name: 'a', masterTypeId: 11 },
@@ -208,7 +217,7 @@ describe('UploadCoordinatorService', () => {
     });
 
     it('does not save the draft when a dependency upload fails', async () => {
-      setup({ isPublic: true, dependencyMasterTypeIds: [11] });
+      setup({ isPublic: true });
       persistence.localDependenciesOfProject.mockReturnValue([
         { name: 'a', masterTypeId: 11 }
       ]);
@@ -240,7 +249,7 @@ describe('UploadCoordinatorService', () => {
     }
 
     it('prompts, promotes the chosen components, then re-saves the project', async () => {
-      setupWithMeta({ isPublic: false, dependencyMasterTypeIds: [11] });
+      setupWithMeta({ isPublic: false });
       persistence.localDependenciesOfProject.mockReturnValue([
         { name: 'a', masterTypeId: 11 }
       ]);

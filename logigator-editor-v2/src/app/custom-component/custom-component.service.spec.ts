@@ -1,7 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
+import { of } from 'rxjs';
+import { DialogService } from '@logigator/ui';
 import { configureTestBed } from '../../testing/configure-test-bed';
 import { CustomComponentService } from './custom-component.service';
+import { UploadCoordinatorService } from '../ui/upload/upload-coordinator.service';
 import { ProjectService } from '../project/project.service';
 import { ProjectMetadataStore } from '../persistence/project-metadata.store';
 import { PersistenceService } from '../persistence/persistence.service';
@@ -92,19 +95,83 @@ describe('CustomComponentService', () => {
     expect(metadataStore.getMetadata(editor)?.type).toBe('comp');
   });
 
-  it('closeComponent disposes the editor and reverts to the main project', async () => {
+  it('closeComponent disposes a clean editor without prompting', async () => {
     const editor = await service.createComponent({
       name: 'X',
       symbol: 'X',
       description: '',
       source: 'browser'
     });
+    const open = vi.spyOn(TestBed.inject(DialogService), 'open');
 
-    service.closeComponent(editor);
+    await service.closeComponent(editor);
 
+    expect(open).not.toHaveBeenCalled();
     expect(projectService.openComponents()).not.toContain(editor);
     expect(projectService.activeProject()).toBe(main);
     expect(metadataStore.getMetadata(editor)).toBeUndefined();
+  });
+
+  it('closeComponent on a dirty editor: Discard disposes without saving', async () => {
+    const editor = await service.createComponent({
+      name: 'X',
+      symbol: 'X',
+      description: '',
+      source: 'browser'
+    });
+    metadataStore.markDirty(editor);
+    vi.spyOn(TestBed.inject(DialogService), 'open').mockReturnValue({
+      onClose: of('discard')
+    } as never);
+    const save = vi.spyOn(
+      TestBed.inject(UploadCoordinatorService),
+      'promoteLocalDepsAndSave'
+    );
+
+    await service.closeComponent(editor);
+
+    expect(save).not.toHaveBeenCalled();
+    expect(projectService.openComponents()).not.toContain(editor);
+  });
+
+  it('closeComponent on a dirty editor: Save promotes+saves then disposes', async () => {
+    const editor = await service.createComponent({
+      name: 'X',
+      symbol: 'X',
+      description: '',
+      source: 'browser'
+    });
+    metadataStore.markDirty(editor);
+    vi.spyOn(TestBed.inject(DialogService), 'open').mockReturnValue({
+      onClose: of('save')
+    } as never);
+    const save = vi
+      .spyOn(TestBed.inject(UploadCoordinatorService), 'promoteLocalDepsAndSave')
+      .mockResolvedValue(true);
+
+    await service.closeComponent(editor);
+
+    expect(save).toHaveBeenCalledWith(editor);
+    expect(projectService.openComponents()).not.toContain(editor);
+  });
+
+  it('closeComponent on a dirty editor: Cancel keeps the tab open', async () => {
+    const editor = await service.createComponent({
+      name: 'X',
+      symbol: 'X',
+      description: '',
+      source: 'browser'
+    });
+    metadataStore.markDirty(editor);
+    // Dismissed dialog resolves undefined.
+    vi.spyOn(TestBed.inject(DialogService), 'open').mockReturnValue({
+      onClose: of(undefined)
+    } as never);
+
+    await service.closeComponent(editor);
+
+    expect(projectService.openComponents()).toContain(editor);
+    expect(metadataStore.getMetadata(editor)).toBeDefined();
   });
 
   it('keeps the master summary in sync with its plugs (DefinitionBinding)', async () => {

@@ -10,7 +10,15 @@ import { Action } from '../actions/action';
 import { UpdateInstanceAction } from '../actions/actions/update-instance.action';
 import { ToastService } from '../logging/toast.service';
 import { TranslocoService } from '@jsverse/transloco';
+import { firstValueFrom } from 'rxjs';
+import { DialogService } from '@logigator/ui';
 import { DefinitionBinding } from './definition-binding';
+import { UploadCoordinatorService } from '../ui/upload/upload-coordinator.service';
+import {
+  CloseTabChoice,
+  CloseTabDialogComponent,
+  CloseTabDialogData
+} from '../ui/close-tab-dialog/close-tab-dialog.component';
 
 export interface NewComponentMeta {
   name: string;
@@ -39,6 +47,8 @@ export class CustomComponentService {
   private readonly projectService = inject(ProjectService);
   private readonly metadataStore = inject(ProjectMetadataStore);
   private readonly persistence = inject(PersistenceService);
+  private readonly uploadCoordinator = inject(UploadCoordinatorService);
+  private readonly dialogService = inject(DialogService);
   private readonly toast = inject(ToastService);
   private readonly transloco = inject(TranslocoService);
 
@@ -169,21 +179,65 @@ export class CustomComponentService {
   }
 
   /**
-   * Closes a component editor tab. A dirty editor is saved to its store before
-   * being disposed (so edits are not lost); a clean editor is disposed straight
-   * away. Disposing tears down the binding, the tab and the editor Project — the
-   * master definition itself stays registered (it remains in the palette).
+   * Closes a component editor tab. A clean editor is disposed straight away; a
+   * dirty one prompts **Save / Discard / Cancel** first (dismissing the dialog
+   * cancels, keeping the tab, so work is never lost by accident). Saving a cloud
+   * component that embeds local components publishes those to the cloud library —
+   * that warning is folded into the same dialog. On a failed save the tab is kept
+   * open so the user can retry.
    */
-  public closeComponent(project: Project): void {
-    if (this.metadataStore.isDirty(project)) {
-      // Save fully before disposing — the save reads the live project.
-      void this.persistence
-        .saveProject(project)
-        .catch(() => undefined)
-        .then(() => this._disposeEditor(project));
+  public async closeComponent(project: Project): Promise<void> {
+    if (!this.metadataStore.isDirty(project)) {
+      this._disposeEditor(project);
       return;
     }
-    this._disposeEditor(project);
+
+    const choice = await this._promptClose(project);
+    if (choice === 'discard') {
+      this._disposeEditor(project);
+    } else if (choice === 'save') {
+      if (await this.uploadCoordinator.promoteLocalDepsAndSave(project)) {
+        this._disposeEditor(project);
+      }
+      // else: save failed (already toasted) — keep the tab open for a retry.
+    }
+    // dismissed (cancel) — keep the tab open.
+  }
+
+  /**
+   * Opens the close-confirmation dialog for a dirty editor, folding in the
+   * cloud-promotion warning when saving would publish embedded local components
+   * (a cloud document with resolvable local deps). Resolves the user's choice, or
+   * `undefined` when the dialog is dismissed (cancel).
+   */
+  private _promptClose(
+    project: Project
+  ): Promise<CloseTabChoice | undefined> {
+    const metadata = this.metadataStore.getMetadata(project);
+    const localDepCount =
+      metadata?.source === 'server'
+        ? this.persistence
+            .localDependenciesOfProject(project)
+            .filter((d) => d.masterTypeId !== null).length
+        : 0;
+
+    const ref = this.dialogService.open(CloseTabDialogComponent, {
+      header: this.transloco.translate('closeTab.header'),
+      width: '28rem',
+      modal: true,
+      closable: true,
+      data: {
+        name: metadata?.name ?? 'Untitled',
+        promotionWarning:
+          localDepCount > 0
+            ? this.transloco.translate('closeTab.promotionWarning', {
+                count: localDepCount
+              })
+            : undefined
+      } satisfies CloseTabDialogData
+    });
+    if (!ref) return Promise.resolve(undefined);
+    return firstValueFrom(ref.onClose) as Promise<CloseTabChoice | undefined>;
   }
 
   private _disposeEditor(project: Project): void {

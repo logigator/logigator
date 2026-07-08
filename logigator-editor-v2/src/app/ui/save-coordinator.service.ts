@@ -41,12 +41,11 @@ export class SaveCoordinatorService {
 
     try {
       if (!isFreshDraft) {
-        // A server project that has gained local custom components can't be
-        // saved as-is (the backend rejects local dependencies), so route it
-        // through the upload flow to promote them first. Cancelling aborts the
-        // save. Everything else saves directly.
+        // A server document (project or component editor) that has gained local
+        // custom components can't be saved as-is — a cloud document may only
+        // contain cloud components. Route it through the upload flow to promote
+        // them first; cancelling aborts the save. Everything else saves directly.
         if (
-          metadata.type === 'project' &&
           metadata.source === 'server' &&
           this.persistence.localDependenciesOfProject(project).length > 0
         ) {

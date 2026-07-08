@@ -342,11 +342,12 @@ describe('server-circuit.codec', () => {
       ).toBe(1);
     });
 
-    it('sends an empty mapping id but keeps the local id in the snapshot', () => {
-      // A local custom the backend does not own must ride along via the embedded
-      // snapshot only — sending its browser id as the mapping id would fail
-      // getOwnedComponentOrThrow with "Component for mapping not found". Its local
-      // library id travels in the snapshot so the author's device can re-link it.
+    // The one-directional rule bans a local (browser) custom inside a cloud
+    // document — the coordinator promotes it first. If one still reaches the
+    // codec (a bypass), it must not fail the save: it serializes with an empty
+    // mapping id (no dependency row, no browser id sent) and carries no re-link
+    // hint, so it degrades to an orphan on reload rather than crashing.
+    function placeLocalCustom(): Project {
       const master = registry.createMaster(
         { id: 'browser-uuid', symbol: 'L', numInputs: 0, numOutputs: 0 },
         'browser'
@@ -357,41 +358,31 @@ describe('server-circuit.codec', () => {
       project.addComponent(
         config.create({ direction: config.options['direction'].clone() })
       );
+      return project;
+    }
 
-      const { dependencies } = encode(project);
+    it('sends an empty mapping id and no local id for a local dependency', () => {
+      const { dependencies } = encode(placeLocalCustom());
 
       expect(dependencies.length).toBe(1);
-      // No dependency row on the backend, but the snapshot carries it + the id.
       expect(dependencies[0].id).toBe('');
-      expect(dependencies[0].snapshot!.localId).toBe('browser-uuid');
+      // No re-link hint travels to the cloud anymore.
+      expect(
+        (dependencies[0].snapshot as { localId?: string }).localId
+      ).toBeUndefined();
     });
 
-    it('re-links a local dependency from the snapshot local id on decode', () => {
-      const master = registry.createMaster(
-        { id: 'browser-uuid', symbol: 'L', numInputs: 0, numOutputs: 0 },
-        'browser'
-      );
-      const snapType = registry.snapshot(master).typeId;
-      const config = provider.getComponent(snapType)!;
-      const project = new Project();
-      project.addComponent(
-        config.create({ direction: config.options['direction'].clone() })
-      );
+    it('decodes a local dependency in a cloud document as an orphan', () => {
+      const encoded = encode(placeLocalCustom());
+      const reopened = decode(encoded.elements, encoded.dependencies);
 
-      const { elements, dependencies } = encode(project);
-      const reopened = decode(elements, dependencies);
-
-      // The revived snapshot carries the local id as its provenance, so the
-      // registry resolves it back to the still-present local master (editable).
       const instance = [...reopened.components].find(
         (c) => c.config.type >= CUSTOM_TYPE_ID_BASE
       )!;
       const def = registry.getDefinition(instance.config.type)!;
-      expect(def.id).toBe('browser-uuid');
-      // Local-origin: the id came from the snapshot localId, so the revived
-      // snapshot is marked browser-sourced (drives orphan recovery).
-      expect(def.source).toBe('browser');
-      expect(registry.masterTypeIdForId('browser-uuid')).toBe(master);
+      // No provenance survived, so it resolves to no master — a restorable orphan.
+      expect(def.id).toBeUndefined();
+      expect(registry.resolveMaster(instance.config.type)).toBeUndefined();
     });
 
     it('re-anchors a rotated built-in inside a snapshot body', () => {

@@ -82,22 +82,23 @@ export class UploadCoordinatorService {
 
     // When visibility is already decided upstream (a first server save, or a
     // re-save riding the project's own visibility) and there are no local
-    // components left to choose, there is nothing to decide — skip the dialog.
-    // Every other case prompts.
+    // components to publish, there is nothing to decide — skip the dialog. Every
+    // other case prompts (the dialog now only confirms + collects visibility;
+    // promotion is mandatory, so there is no per-component choice).
     const preset = this._presetVisibility(target);
     let isPublic: boolean;
-    let dependencyMasterTypeIds: number[];
     if (preset !== undefined && dependencies.length === 0) {
       isPublic = preset;
-      dependencyMasterTypeIds = [];
     } else {
       const result = await this._prompt(target, name, dependencies, preset);
       if (!result) return false;
       isPublic = result.isPublic;
-      dependencyMasterTypeIds = result.dependencyMasterTypeIds;
     }
 
-    if (!(await this._uploadDependencies(dependencyMasterTypeIds, isPublic))) {
+    // A cloud document may only contain cloud components, so promote **every**
+    // resolvable local dependency (children-before-parents). An unresolvable one
+    // (no library master) cannot be promoted and rides along as an embedded copy.
+    if (!(await this._uploadDependencies(this._resolvable(dependencies), isPublic))) {
       return false;
     }
 
@@ -125,6 +126,32 @@ export class UploadCoordinatorService {
   }
 
   /**
+   * Promotes a document's local components (if it is a cloud document) and then
+   * saves it — **without** a dialog, for callers that have already obtained the
+   * user's consent (the tab-close prompt). A browser document just saves (local
+   * components are fine there). Local components ride the document's own
+   * visibility. Returns whether everything committed; `saveProject` reports its
+   * own outcome, so no toast is emitted here beyond a dependency failure.
+   */
+  async promoteLocalDepsAndSave(project: Project): Promise<boolean> {
+    const metadata = this.metadataStore.getMetadata(project);
+    if (metadata?.source === 'server') {
+      const deps = this._resolvable(
+        this.persistence.localDependenciesOfProject(project)
+      );
+      if (!(await this._uploadDependencies(deps, metadata.isPublic))) {
+        return false;
+      }
+    }
+    try {
+      await this.persistence.saveProject(project);
+      return true;
+    } catch {
+      return false; // saveProject already surfaced the error
+    }
+  }
+
+  /**
    * The visibility already chosen for a target outside the upload dialog, or
    * `undefined` when the dialog must ask. A first server save carries it from the
    * save dialog; a server re-save rides the project's own visibility. Either way
@@ -136,6 +163,13 @@ export class UploadCoordinatorService {
       return this.metadataStore.getMetadata(target.project)?.isPublic ?? false;
     }
     return undefined;
+  }
+
+  /** The resolvable local dependencies' master type ids, children-before-parents. */
+  private _resolvable(dependencies: LocalUploadDependency[]): number[] {
+    return dependencies
+      .map((d) => d.masterTypeId)
+      .filter((id): id is number => id !== null);
   }
 
   /**
