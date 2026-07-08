@@ -310,17 +310,13 @@ export class CustomComponentRegistry {
   }
 
   /**
-   * Masters-only reverse lookup: persistent id -> masterTypeId. Falls back
-   * through the promotion alias map, so an id captured before an upload-to-cloud
-   * still resolves to the (now-server) master under its new id.
+   * Masters-only reverse lookup: persistent id -> masterTypeId. Resolves through
+   * the promotion alias chain first (via {@link currentIdForId}), so an id
+   * captured before an upload-to-cloud still resolves to the (now-server) master
+   * under its current id.
    */
   public masterTypeIdForId(id: string): number | undefined {
-    const direct = this._idToMasterTypeId.get(id);
-    if (direct !== undefined) return direct;
-    const aliased = this._idAliases.get(id);
-    return aliased !== undefined
-      ? this._idToMasterTypeId.get(aliased)
-      : undefined;
+    return this._idToMasterTypeId.get(this.currentIdForId(id));
   }
 
   /**

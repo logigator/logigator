@@ -1,10 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import {
   SourceIndicatorComponent,
   SourceIndicatorState
 } from './source-indicator.component';
+import { configureTestBed } from '../../../testing/configure-test-bed';
 
 @Component({
   imports: [SourceIndicatorComponent],
@@ -26,6 +27,10 @@ function setup() {
 }
 
 describe('SourceIndicatorComponent', () => {
+  beforeEach(() => {
+    configureTestBed([], [HostComponent]);
+  });
+
   it('labels each state distinctly in the chip variant', () => {
     const f = setup();
     const text = () =>

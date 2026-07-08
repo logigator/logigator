@@ -80,53 +80,33 @@ export class ServerPersistenceGateway {
     description?: string,
     isPublic?: boolean
   ): Promise<{ project: Project; id: string }> {
-    const response = await firstValueFrom(
-      this.projectApi.create({
-        name,
-        description,
-        public: isPublic ? 'true' : 'false'
-      })
-    );
-
     const project = new Project();
+    const { id, hash } = await this._createAndSaveServerProject(
+      project,
+      name,
+      isPublic ?? false,
+      description
+    );
     this.metadataStore.register(project, {
-      id: response.id,
+      id,
       name,
       type: 'project',
       source: 'server',
-      hash: response.elementsFile?.hash ?? '',
+      hash,
       isPublic: isPublic ?? false
     });
-
-    const { elements, dependencies } = server.serializeProject(
-      project,
-      this.registry,
-      this.provider
-    );
-    const saveResponse = await firstValueFrom(
-      this.projectApi.save(response.id, {
-        oldHash: response.elementsFile?.hash ?? '',
-        dependencies,
-        elements,
-        newFormat: true
-      })
-    );
-    this.metadataStore.updateHash(
-      project,
-      saveResponse.elementsFile?.hash ?? ''
-    );
-
-    return { project, id: response.id };
+    return { project, id };
   }
 
   /**
    * Promotes a fresh in-memory draft to a **server** project without discarding
-   * its circuit or undo history: POSTs `/api/project` to create the record,
-   * flips the project's metadata to `source:'server'`, then PUTs its current
-   * content. Mirrors {@link createProject}, but operates on the live project
-   * instead of a fresh empty one. Returns the new server id. The dirty-version
-   * snapshot guard matches {@link saveProject}: an edit landing mid-promote
-   * keeps the project dirty.
+   * its circuit or undo history: POSTs `/api/project` to create the record and
+   * PUTs its current content, then flips the project's metadata to
+   * `source:'server'` — but only once that round-trip commits, so a failed
+   * create/PUT leaves the live project an untouched local draft (retryable)
+   * rather than a half-promoted record. Returns the new server id. The
+   * dirty-version snapshot guard matches {@link saveProject}: an edit landing
+   * mid-promote keeps the project dirty.
    */
   async promoteToServer(
     project: Project,
@@ -134,21 +114,59 @@ export class ServerPersistenceGateway {
     isPublic: boolean
   ): Promise<string> {
     const versionAtSnapshot = this.metadataStore.dirtyVersion(project);
-    const response = await firstValueFrom(
-      this.projectApi.create({
-        name,
-        public: isPublic ? 'true' : 'false'
-      })
+    const { id, hash } = await this._createAndSaveServerProject(
+      project,
+      name,
+      isPublic
     );
 
     this.metadataStore.update(project, {
       source: 'server',
-      id: response.id,
+      id,
       name,
       isPublic,
-      hash: response.elementsFile?.hash ?? ''
+      hash
     });
+    if (this.metadataStore.dirtyVersion(project) === versionAtSnapshot) {
+      this.metadataStore.clearDirty(project);
+    }
+    void this._uploadPreview(project, id);
+    return id;
+  }
 
+  /**
+   * Creates a server project from an arbitrary project's current circuit — pure
+   * transport, touching no metadata store, board preview or dirty state, so it is
+   * safe for a throwaway project built from a stored record (uploading a
+   * not-currently-open local project). Returns the new server id.
+   */
+  async createServerProjectFromProject(
+    project: Project,
+    name: string,
+    isPublic: boolean
+  ): Promise<string> {
+    return (await this._createAndSaveServerProject(project, name, isPublic)).id;
+  }
+
+  /**
+   * Creates a server project record and PUTs `project`'s current circuit into it
+   * in one round-trip, returning the new id and its post-save hash. The shared
+   * transport core behind create, promote and throwaway-upload; touches no
+   * metadata store, board preview or dirty state.
+   */
+  private async _createAndSaveServerProject(
+    project: Project,
+    name: string,
+    isPublic: boolean,
+    description?: string
+  ): Promise<{ id: string; hash: string }> {
+    const response = await firstValueFrom(
+      this.projectApi.create({
+        name,
+        description,
+        public: isPublic ? 'true' : 'false'
+      })
+    );
     const { elements, dependencies } = server.serializeProject(
       project,
       this.registry,
@@ -162,49 +180,7 @@ export class ServerPersistenceGateway {
         newFormat: true
       })
     );
-    this.metadataStore.updateHash(
-      project,
-      saveResponse.elementsFile?.hash ?? ''
-    );
-    if (this.metadataStore.dirtyVersion(project) === versionAtSnapshot) {
-      this.metadataStore.clearDirty(project);
-    }
-    void this._uploadPreview(project, response.id);
-    return response.id;
-  }
-
-  /**
-   * Creates a server project from an arbitrary project's current circuit — pure
-   * transport, touching no metadata store. Mirrors {@link promoteToServer}
-   * without the live-project metadata flip, dirty handling or board preview, so
-   * it is safe for a throwaway project built from a stored record (used to upload
-   * a not-currently-open local project). Returns the new server id.
-   */
-  async createServerProjectFromProject(
-    project: Project,
-    name: string,
-    isPublic: boolean
-  ): Promise<string> {
-    const response = await firstValueFrom(
-      this.projectApi.create({
-        name,
-        public: isPublic ? 'true' : 'false'
-      })
-    );
-    const { elements, dependencies } = server.serializeProject(
-      project,
-      this.registry,
-      this.provider
-    );
-    await firstValueFrom(
-      this.projectApi.save(response.id, {
-        oldHash: response.elementsFile?.hash ?? '',
-        dependencies,
-        elements,
-        newFormat: true
-      })
-    );
-    return response.id;
+    return { id: response.id, hash: saveResponse.elementsFile?.hash ?? '' };
   }
 
   listProjects(

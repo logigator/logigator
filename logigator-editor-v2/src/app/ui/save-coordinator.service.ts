@@ -41,13 +41,17 @@ export class SaveCoordinatorService {
 
     try {
       if (!isFreshDraft) {
-        // A server document (project or component editor) that has gained local
-        // custom components can't be saved as-is — a cloud document may only
-        // contain cloud components. Route it through the upload flow to promote
-        // them first; cancelling aborts the save. Everything else saves directly.
+        // A server document (project or component editor) that has gained a
+        // *promotable* local custom component can't be saved as-is — a cloud
+        // document may only contain cloud components. Route it through the upload
+        // flow to promote those first; cancelling aborts the save. An orphan
+        // (masterTypeId null) can't be promoted and rides along as an embedded
+        // copy, so it does not force the dialog — the save proceeds directly.
         if (
           metadata.source === 'server' &&
-          this.persistence.localDependenciesOfProject(project).length > 0
+          this.persistence
+            .localDependenciesOfProject(project)
+            .some((dep) => dep.masterTypeId !== null)
         ) {
           await this.uploadCoordinator.requestUpload({
             kind: 'save-server',

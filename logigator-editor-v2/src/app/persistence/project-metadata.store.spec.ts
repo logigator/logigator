@@ -198,6 +198,19 @@ describe('ProjectMetadataStore', () => {
       expect(store.getMetadata(project)!.id).toBe('generated-id');
     });
 
+    it('notifies reactive readers when a draft gains its store id', () => {
+      const project = new Project();
+      store.register(project, makeMetadata({ id: '' }));
+      const id = computed(() => store.getMetadata(project)?.id);
+
+      expect(id()).toBe('');
+      store.updateId(project, 'generated-id');
+      // Re-`set`s the entry rather than mutating in place, so the title-bar chip
+      // and File-menu upload item that read the id through a computed re-resolve
+      // after a draft's first local save.
+      expect(id()).toBe('generated-id');
+    });
+
     it('is a no-op for unknown project', () => {
       const project = new Project();
       expect(() => store.updateId(project, 'x')).not.toThrow();

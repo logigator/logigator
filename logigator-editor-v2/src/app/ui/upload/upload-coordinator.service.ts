@@ -81,13 +81,16 @@ export class UploadCoordinatorService {
     }
 
     // When visibility is already decided upstream (a first server save, or a
-    // re-save riding the project's own visibility) and there are no local
-    // components to publish, there is nothing to decide — skip the dialog. Every
-    // other case prompts (the dialog now only confirms + collects visibility;
-    // promotion is mandatory, so there is no per-component choice).
+    // re-save riding the project's own visibility) and there is nothing
+    // promotable to publish, there is nothing to decide — skip the dialog. Only
+    // resolvable dependencies are ever promoted, so an orphan-only document (no
+    // library master to publish) skips too. Every other case prompts (the dialog
+    // now only confirms + collects visibility; promotion is mandatory, so there
+    // is no per-component choice).
+    const resolvable = this._resolvable(dependencies);
     const preset = this._presetVisibility(target);
     let isPublic: boolean;
-    if (preset !== undefined && dependencies.length === 0) {
+    if (preset !== undefined && resolvable.length === 0) {
       isPublic = preset;
     } else {
       const result = await this._prompt(target, name, dependencies, preset);
@@ -98,18 +101,23 @@ export class UploadCoordinatorService {
     // A cloud document may only contain cloud components, so promote **every**
     // resolvable local dependency (children-before-parents). An unresolvable one
     // (no library master) cannot be promoted and rides along as an embedded copy.
-    if (!(await this._uploadDependencies(this._resolvable(dependencies), isPublic))) {
+    if (!(await this._uploadDependencies(resolvable, isPublic))) {
       return false;
     }
 
     try {
       await this._uploadTarget(target, isPublic);
     } catch (err) {
-      this.toast.error(
-        this.transloco.translate('uploadDialog.uploadFailed', { name }),
-        'UploadCoordinatorService',
-        err
-      );
+      // `save-server` delegates to `saveProject`, which surfaces its own error;
+      // toasting here too would stack a second error. Every other target's
+      // primitive is silent, so the coordinator reports the failure.
+      if (target.kind !== 'save-server') {
+        this.toast.error(
+          this.transloco.translate('uploadDialog.uploadFailed', { name }),
+          'UploadCoordinatorService',
+          err
+        );
+      }
       return false;
     }
 
@@ -203,8 +211,7 @@ export class UploadCoordinatorService {
 
   private _successKey(target: UploadTarget) {
     if (target.kind === 'component') return 'persistence.componentUploaded';
-    // A first server save reads as a save, not a move — and matches the message
-    // the no-dependency path showed before this went through the upload flow.
+    // A first server save reads as a save, not a move.
     if (target.kind === 'draft-to-server') return 'persistence.projectSaved';
     // A re-save reports its own outcome via saveProject; don't double-toast.
     if (target.kind === 'save-server') return undefined;

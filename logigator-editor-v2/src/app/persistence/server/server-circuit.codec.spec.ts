@@ -366,7 +366,7 @@ describe('server-circuit.codec', () => {
 
       expect(dependencies.length).toBe(1);
       expect(dependencies[0].id).toBe('');
-      // No re-link hint travels to the cloud anymore.
+      // No re-link hint travels to the cloud.
       expect(
         (dependencies[0].snapshot as { localId?: string }).localId
       ).toBeUndefined();

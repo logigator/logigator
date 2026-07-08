@@ -7,8 +7,8 @@ import type { ComponentConfigView } from './component-config.model';
  * What a {@link ComponentAction} renderer operates on: the component config the
  * action belongs to, plus — in placed-instance mode — the selected instance and
  * its project. The palette/ghost supplies only `config` (there is no instance
- * behind a placement ghost), so `component`/`project` are null there; actions that
- * need a live instance opt out via {@link ComponentAction.instanceOnly}.
+ * behind a placement ghost), so `component`/`project` are null there; an action
+ * that needs a live instance gates its own visibility on `context.component`.
  */
 export interface ComponentActionContext {
   config: ComponentConfigView;

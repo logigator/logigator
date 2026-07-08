@@ -216,9 +216,9 @@ export class PersistenceService {
    * First save of a fresh draft to the **server**: creates the project record
    * and PUTs the current circuit (see
    * {@link ServerPersistenceGateway.promoteToServer}), then navigates to
-   * `/project/:id`. A silent primitive — its sole caller is the
-   * `UploadCoordinatorService` (a first server save goes through the upload
-   * flow so any embedded local components are handled), which owns the toast.
+   * `/project/:id`. A silent primitive: it emits no toast, leaving success and
+   * error reporting to the upload flow that drives it (which also handles any
+   * embedded local components first).
    */
   async saveDraftAsServer(
     project: Project,
@@ -257,16 +257,9 @@ export class PersistenceService {
     await this.server.promoteToServer(project, metadata.name, isPublic);
     this.location.go(`/project/${this.metadataStore.getMetadata(project)!.id}`);
 
-    // Now cloud-backed — drop the orphaned browser record. Best-effort: the
-    // upload already committed, so a cleanup failure must not surface as an error.
-    try {
-      await this.browserStore.delete(oldId);
-    } catch {
-      this.logging.warn(
-        `Project ${oldId} uploaded to the cloud, but local cleanup failed`,
-        'PersistenceService'
-      );
-    }
+    // Now cloud-backed — drop the orphaned browser record so the project moves
+    // to the cloud rather than being copied.
+    await this._dropBrowserProjectRecord(oldId);
   }
 
   /**
@@ -297,14 +290,7 @@ export class PersistenceService {
     );
 
     // Uploaded — drop the local record so the project moves to the cloud.
-    try {
-      await this.browserStore.delete(id);
-    } catch {
-      this.logging.warn(
-        `Project ${id} uploaded to the cloud, but local cleanup failed`,
-        'PersistenceService'
-      );
-    }
+    await this._dropBrowserProjectRecord(id);
   }
 
   /**
@@ -1068,6 +1054,22 @@ export class PersistenceService {
   }
 
   /**
+   * Deletes a browser project record after its content has been uploaded to the
+   * cloud, so the project *moves* rather than being copied. Best-effort: the
+   * upload already committed, so a cleanup failure is logged, not surfaced.
+   */
+  private async _dropBrowserProjectRecord(id: string): Promise<void> {
+    try {
+      await this.browserStore.delete(id);
+    } catch {
+      this.logging.warn(
+        `Project ${id} uploaded to the cloud, but local cleanup failed`,
+        'PersistenceService'
+      );
+    }
+  }
+
+  /**
    * Creates a browser library master for every custom directly placed in an
    * imported project that has no local master yet, so it appears in the palette
    * and survives a reload. Already-known masters (matched by provenance id) are
@@ -1092,12 +1094,18 @@ export class PersistenceService {
     }
   }
 
+  /**
+   * Builds a browser-library master from a snapshot definition's frozen circuit
+   * (its own nested snapshots re-emitted as self-contained content) and registers
+   * it, returning the new master's id. By default the store mints a fresh id at
+   * version 1; `options` can reuse a specific id (so placed instances re-link
+   * with no extra work) and adopt the snapshot's frozen version.
+   */
   private async _adoptSnapshotAsMaster(
-    def: CustomComponentDefinition
-  ): Promise<void> {
+    def: CustomComponentDefinition,
+    options?: { id?: string; version?: number }
+  ): Promise<string> {
     const circuit = def.circuit ?? { components: [], wires: [] };
-    // Re-emit the snapshot's circuit (+ its own nested snapshots) as the new
-    // master's self-contained content.
     const { components, wires } = instantiateBody(this.provider, circuit);
     const tmp = buildProject(components, wires);
     let content: string;
@@ -1107,30 +1115,22 @@ export class PersistenceService {
       tmp.destroy();
     }
 
-    const record = await this.browserComponentStore.save({
-      version: 1,
+    const summary = {
+      version: options?.version ?? 1,
       name: def.name,
       symbol: def.symbol,
       description: def.description,
       numInputs: def.numInputs,
       numOutputs: def.numOutputs,
-      labels: def.labels,
+      labels: def.labels
+    };
+    const record = await this.browserComponentStore.save({
+      id: options?.id,
+      ...summary,
       content
     });
-    this.registry.createMaster(
-      {
-        id: record.id,
-        version: 1,
-        name: def.name,
-        symbol: def.symbol,
-        description: def.description,
-        numInputs: def.numInputs,
-        numOutputs: def.numOutputs,
-        labels: def.labels,
-        circuit
-      },
-      'browser'
-    );
+    this.registry.createMaster({ id: record.id, ...summary, circuit }, 'browser');
+    return record.id;
   }
 
   /**
@@ -1140,13 +1140,14 @@ export class PersistenceService {
    * the frozen snapshot's circuit (at its frozen version) and returns the new
    * master's id, or `null` when the type is not a restorable orphan.
    *
-   * Re-linking: the new master reuses the snapshot's own provenance id when it
-   * has one, so every placed instance that references it resolves to the new
-   * master with no further change; an anonymous snapshot (no id) mints a fresh
-   * id and the snapshot is re-pointed at it. Always restores to the **browser**
-   * library — no login required. The caller decides *whether* to offer this (a
-   * lost cloud master while signed out is likely just unloaded — see the restore
-   * action).
+   * Re-linking: the new master reuses the snapshot's own provenance id only when
+   * it is a **browser**-origin id, so every placed instance that references it
+   * resolves to the new master with no further change. An anonymous snapshot (no
+   * id) or a **cloud**-origin one mints a fresh id and the snapshot is re-pointed
+   * at it — reusing a cloud uuid in the browser store would collide with the real
+   * cloud entry once it reloads. Always restores to the **browser** library — no
+   * login required. The caller decides *whether* to offer this (a lost cloud
+   * master while signed out is likely just unloaded, not deleted).
    */
   async restoreOrphanToLibrary(typeId: number): Promise<string | null> {
     const def = this.registry.getDefinition(typeId);
@@ -1154,56 +1155,21 @@ export class PersistenceService {
     // Already resolvable ⇒ not an orphan; nothing to restore.
     if (this.registry.resolveMaster(typeId)) return null;
 
-    const circuit = def.circuit ?? { components: [], wires: [] };
-    const { components, wires } = instantiateBody(this.provider, circuit);
-    const tmp = buildProject(components, wires);
-    let content: string;
-    try {
-      content = this.circuitFile.toJson(tmp, def.name);
-    } finally {
-      tmp.destroy();
-    }
-
-    const version = def.version ?? 1;
-    // Reuse the snapshot's own id so instances re-link with no extra work; the
-    // store mints one when the snapshot is anonymous. A cloud-origin id reused
-    // here only ever lives in the browser store — the server never adopts a
-    // client-supplied id — so it cannot collide server-side.
-    const record = await this.browserComponentStore.save({
-      id: def.id || undefined,
-      version,
-      name: def.name,
-      symbol: def.symbol,
-      description: def.description,
-      numInputs: def.numInputs,
-      numOutputs: def.numOutputs,
-      labels: def.labels,
-      content
+    const reuseId = def.source === 'browser' ? def.id || undefined : undefined;
+    const newId = await this._adoptSnapshotAsMaster(def, {
+      id: reuseId,
+      version: def.version ?? 1
     });
-    this.registry.createMaster(
-      {
-        id: record.id,
-        version,
-        name: def.name,
-        symbol: def.symbol,
-        description: def.description,
-        numInputs: def.numInputs,
-        numOutputs: def.numOutputs,
-        labels: def.labels,
-        circuit
-      },
-      'browser'
-    );
-    // Anonymous snapshot: its id could not be reused, so re-point it (and thus
-    // its instances) at the freshly-minted master.
-    if (def.id !== record.id) {
-      this.registry.relinkSnapshotProvenance(typeId, record.id);
+    // A fresh id was minted (anonymous or cloud-origin snapshot): re-point it
+    // (and thus its instances) at the new master.
+    if (def.id !== newId) {
+      this.registry.relinkSnapshotProvenance(typeId, newId);
     }
     this.logging.info(
-      `Restored orphan component ${def.name} -> ${record.id}`,
+      `Restored orphan component ${def.name} -> ${newId}`,
       'PersistenceService'
     );
-    return record.id;
+    return newId;
   }
 
   /**

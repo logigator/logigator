@@ -121,21 +121,24 @@ export class ProjectMetadataStore {
   /**
    * Sets the store id after a project is first written to its backing store
    * (e.g. a fresh browser project promoted into IndexedDB on its first save).
+   * Re-`set`s the map entry rather than mutating in place, so reactive readers
+   * (the title-bar source chip, the File-menu upload item) observe a draft
+   * gaining its store id.
    */
   public updateId(project: Project, id: string): void {
     const entry = this._entries.get(project);
-    if (entry) {
-      entry.metadata.id = id;
-    }
+    if (!entry) return;
+    this._entries.set(project, {
+      ...entry,
+      metadata: { ...entry.metadata, id }
+    });
   }
 
   /**
-   * Merges `patch` into a project's metadata. Unlike {@link updateId} /
-   * {@link updateHash} (which mutate in place because nothing reactive reads
-   * those fields), this re-`set`s the map entry so reactive readers — e.g. the
-   * title bar's project-name computed — observe the change. Used by the
-   * first-save flow to apply the user-chosen name and, when promoting a draft to
-   * the server, to flip `source`/`id`/`isPublic` in one step.
+   * Merges `patch` into a project's metadata by re-`set`ting the map entry, so
+   * reactive readers observe the change (e.g. flipping `source`/`id`/`isPublic`
+   * when a draft is promoted to the server, or applying a chosen name).
+   * {@link updateHash} mutates in place instead — nothing reactive reads the hash.
    */
   public update(project: Project, patch: Partial<ProjectMetadata>): void {
     const entry = this._entries.get(project);
