@@ -139,8 +139,9 @@ wire. So its two halves are treated asymmetrically:
   the migration (malformed elements throw `InvalidFileError`); unknown component types are
   dropped with a warning. Custom components **do** round-trip (R14): each server
   `dependencies[]` entry carries an additive embedded `snapshot`, which the migration's
-  `decodeDependencies` revives into native `definitions[]`. A reference-only dependency
-  (no embedded `snapshot`, the old always-latest model) is skipped.
+  `decodeDependencies` revives into native `definitions[]` (provenance resolution, the
+  `mapping.id`/`localId` rule, and reference-only handling are in
+  [`dependencies-and-promotion.md`](dependencies-and-promotion.md)).
 - **Encode is throwaway.** `server-circuit.codec.ts` is the only place that packs a live
   `Project` back into the v0 wire shape (`ServerCircuitV0 = { elements, dependencies }`)
   for PUT/save. It reads each config's `legacyV0Slots` descriptor (below) **in reverse**
@@ -294,21 +295,21 @@ component it (transitively) uses, so it can be loaded with no library present.
   - `SerializedComponentBody` `{ type, pos, options }`, `SerializedWireBody`
     `{ pos, direction, length }`, `SerializedCircuitBody` `{ components, wires }`.
   - `SnapshotDefinition extends SerializedCircuitBody` — a frozen custom: a **file-local**
-    `type` id, `source?: { id, version }` provenance (the axis-2 master version), and the
-    display fields (`name`, `symbol`, `numInputs`, …).
+    `type` id, `source?: { id, version, origin? }` provenance (id + the axis-2 master
+    version + the master's library origin), and the display fields (`name`, `symbol`,
+    `numInputs`, …).
   - `cloneComponentBody` / `cloneCircuit` (deep copy) and `remapComponentTypes`
     (translate `type` ids through a map; ids absent from the map pass through).
 - **`snapshots.ts`** — the universal codec, owning _which_ customs a document embeds and
   the session ↔ file-local type-id remap (but not a byte layout — each target encodes the
-  body its own way):
-  - `serializeProjectBody` / `serializeComponentBody` / `serializeWireBody` turn live
-    instances into the native body.
-  - `collectSnapshots(project, registry)` walks the customs a project transitively places
-    (depth-first, body order), assigns **file-local** ids from `CUSTOM_TYPE_ID_BASE`,
-    rewrites nested references to those ids, and returns
-    `{ definitions, sessionToLocal }`. Deterministic and session-order-independent.
-  - Ingesting them — registering snapshots + producing the file-local → session remap —
-    is `CustomComponentRegistry.ingestSnapshots(defs)`, since it mutates the registry.
+  body its own way): `serializeProjectBody` and the `collectSnapshots` /
+  `CustomComponentRegistry.ingestSnapshots` round-trip.
+
+The transitive-closure walk, file-local numbering, provenance (`source.id`/`version`/
+`origin`) resolution, nesting/recursion, and how every transport carries these snapshots
+are documented in
+**[`dependencies-and-promotion.md`](dependencies-and-promotion.md)** (the single
+reference for the dependency/promotion system).
 
 The `SerializedComponent`/`SerializedWire` snapshot used by **undo/redo** is a separate
 in-memory shape, not a persistence format.
@@ -366,11 +367,11 @@ deduplicates concurrent saves.
 | `saveProject(project)`                                                   | No-op unless dirty. Dispatches on metadata: `comp`+`browser` → `_doBrowserComponentSave`; `server` → `server.serializeProject` + PUT (clears dirty only if no edit landed mid-round-trip; logs `VersionMismatch`); `browser` → `circuitFile.toJson` + `BrowserProjectStore.save` (a fresh draft is promoted to `/local/:id`). `share` is read-only → no-op.   |
 | `createProject(name, …)`                                                 | POST + initial PUT (`server.serializeProject`), register, set as main, update URL.                                                                                                                                                                                                                                                                            |
 | `saveDraftAsLocal(project, name)`                                        | First save of a never-saved draft to the browser store: applies the chosen `name`, then `_doBrowserSave` (generates id, `/local/:id`). Bypasses the `saveProject` dirty-guard so a pristine board can still be named and persisted.                                                                                                                           |
-| `saveDraftAsServer(project, name, isPublic)`                             | First save of a never-saved draft to the server: `server.promoteToServer` (POST create + PUT current content, flipping the **live** project's metadata to `source:'server'` — no fresh empty project, so circuit + undo history are preserved) → navigate to `/project/:id`. A silent primitive — its sole caller is the `UploadCoordinatorService` (a first server save runs through the upload flow so embedded local components are handled), which owns the toast.                                                                                  |
+| `saveDraftAsServer(project, name, isPublic)`                             | First save of a never-saved draft to the server: `server.promoteToServer` (POST create + PUT current content, flipping the **live** project's metadata to `source:'server'` — no fresh empty project, so circuit + undo history are preserved) → navigate to `/project/:id`. A silent primitive routed through `UploadCoordinatorService` (see [`dependencies-and-promotion.md`](dependencies-and-promotion.md)), which owns the toast.                                                                                  |
 | `promoteProjectToServer(project, isPublic)`                              | Uploads an **already-saved local** project to the cloud: `server.promoteToServer` on the live project → navigate → **delete the orphaned browser record** (a _move_, best-effort). Rejects a fresh draft (that goes through the save-draft flow). A silent primitive — no toast (the `UploadCoordinatorService` owns the outcome toast).                       |
 | `uploadStoredProjectToServer(id, isPublic)`                              | Uploads a browser project by store id (the Open dialog's local list, possibly not the open one). Delegates to `promoteProjectToServer` when `id` is the open project; otherwise uploads a throwaway project built from the stored record (`server.createServerProjectFromProject`) and deletes that record on success. Silent primitive (see above).          |
 | `promoteComponentToServer(masterTypeId, isPublic)`                       | Uploads (moves) a **browser** library master to the cloud: server round-trip → registry `promoteMaster` (new server id, old id kept as an alias) → persist the `oldId→newId` id-map → delete the browser record → re-point any open editor tab. Silent primitive — the coordinator toasts.                                                                    |
-| `localDependencies(masterTypeId)` / `localDependenciesOfProject(project)` / `localDependenciesOfStoredProject(id)` | The **local** custom components a circuit embeds transitively, as `{ name, masterTypeId \| null }[]`, **children-before-parents**. The three sources are a stored component master (read from its record), a live project (walked over the registry), and a stored project (read from its record; falls back to the live walk when it is the open project). Cloud-sourced embeds are omitted; `masterTypeId` is `null` for an embed that no longer resolves to a browser master (rides along as a copy only). Drives the upload dialog. |
+| `localDependencies(masterTypeId)` / `localDependenciesOfProject(project)` / `localDependenciesOfStoredProject(id)` | The **local** custom components a circuit embeds transitively (component master / live project / stored project), children-before-parents, driving the upload dialog. See [`dependencies-and-promotion.md`](dependencies-and-promotion.md). |
 | `loadShare` / `loadShareAsMain` / `cloneShare`                           | Share read paths (`source:'share'`, dirty tracking disabled); decode via the same server v0 route.                                                                                                                                                                                                                                                            |
 | `createAndSetEmptyProject()`                                             | Blank `source:'browser'` project with empty id (name `'Untitled'`), set as main. **Not written to storage** until the first save. Used both on a project-less page load and by the **New Project** menu action — no name/destination is asked up front; that prompt is deferred to the first save (see `SaveCoordinatorService` in `ui.md`).                  |
 | `exportProjectToJson(project)`                                           | Reads name from metadata, delegates to `circuitFile.toJson`. Source-agnostic. Returns the JSON string — triggering a download is a UI concern.                                                                                                                                                                                                                |
@@ -394,92 +395,16 @@ encoding (decoded through the migration); the browser target and files use the n
 envelope — which is why a file import is simply "decode, then browser-save the re-encoded
 blob."
 
-### Upload to cloud (promotion)
+### Dependencies, promotion & orphan recovery
 
-Moving a local project or component to the cloud is one flow with several entry
-shapes, orchestrated by `UploadCoordinatorService` (`ui/upload/`, see `ui.md`) —
-an open project, a stored project, a component master, a **fresh draft being
-saved to the server for the first time**, and an **already-saved server project
-re-saved after it gained local components** (`SaveCoordinatorService` routes both
-server-save shapes here so embedded local components get the same treatment as a
-promotion — the backend rejects a dependency whose id it does not own, so a local
-custom must either be promoted or ride along via its embedded snapshot with an
-empty mapping id). `PersistenceService` provides the primitives; the coordinator
-sequences them:
-
-1. **Analyze** — `localDependencies*` returns the local custom components the
-   circuit embeds, ordered children-before-parents.
-2. **Prompt** — the shared upload dialog collects visibility and which resolvable
-   dependencies to promote as their own cloud library entries (all preselected).
-   For the two server-save shapes, visibility is already fixed (the first save's
-   choice, or the project's own visibility), so the toggle is hidden and the
-   dialog is skipped entirely when there are no local components — the common case
-   stays a single dialog (or none). Cancelling the dialog aborts the save.
-3. **Upload dependencies first**, in order, then the target. Each
-   `promoteComponentToServer` records an `oldId→newId` alias in the registry;
-   because serialization resolves provenance ids **through that alias**
-   (`CustomComponentRegistry.currentIdForId`, applied in `collectSnapshots`), a
-   parent uploaded afterwards references the cloud entries created before it.
-   This is the only "linking" the server model has — entries stay self-contained
-   (the parent still embeds its own copy), the id is just kept current so the
-   copy is recognizably the same component. A dependency **not** selected (or one
-   that no longer resolves to a browser master) rides along only as an embedded
-   copy; the dialog warns that such copies can no longer be updated as
-   components elsewhere. On the first failure the sequence stops — everything not
-   yet uploaded is untouched, so a retry (which re-analyzes, dropping the
-   now-cloud dependencies) resumes cleanly.
-
-The **id rewrite is device-local safety**, not cosmetics: the alias table lives
-only in this browser, so writing a captured pre-promotion id into a document
-that lands on the server would strand the reference on every other device.
-
-**Dependency mapping id (`server-circuit.codec.ts`).** The `dependencies[].id`
-the codec sends is the mapping to a server library component, which the backend
-validates as one the user owns (`getOwnedComponentOrThrow`). Only a dependency
-that resolves to a registered **server** master gets its id; a local (browser)
-custom — or any id with no owned server master — is sent as `''`, so the backend
-creates no dependency row and relies on the embedded snapshot. Sending a browser
-id here is what produced the "Component for mapping not found" error, and it is
-why an unpromoted / unselected local dependency no longer breaks a save.
-
-**Keeping the local-library link (`snapshot.localId`).** An unpromoted local
-custom would otherwise lose all trace of *which* local component it was, so its
-embedded snapshot carries an additive `localId` — the browser-library id it was
-frozen from (a strictly backwards-compatible optional field on the backend's
-`DependencySnapshot`, stored verbatim in the circuit blob and echoed on read,
-never resolved or ownership-checked server-side). On decode, provenance resolves
-to `mapping.id || dependency.id || snapshot.localId`, so on the author's own
-device the embedded custom re-links to the still-present local master and stays
-editable/updatable. On any other device the id is unknown and it remains a plain
-embedded copy. Promoting the component later switches it back to a real
-`mapping.id` and drops `localId`.
-
-### Orphan recovery (restore to library)
-
-A placed custom whose master can no longer be resolved in *any* library is an
-**orphan** — but it is not broken: its circuit still rides in the document's
-embedded snapshot, so it renders and simulates fine. Only *editing* was a
-dead-end. `restoreOrphanToLibrary(typeId)` rebuilds a **browser** master from the
-frozen snapshot's circuit (at its frozen version) so the user can edit it again;
-the edit affordance offers this via the settings panel (see `ui.md`).
-
-- **Re-linking** reuses the snapshot's own provenance id as the new master's id,
-  so every placed instance referencing it resolves to the restore with no further
-  change (an anonymous snapshot with no id mints a fresh one, and
-  `CustomComponentRegistry.relinkSnapshotProvenance` re-points it). Always browser
-  — no login needed. Reusing an id can't collide server-side: server ids are
-  always server-minted, and a browser id only ever travels as an opaque
-  `snapshot.localId`.
-- **Origin bit.** Whether the lost master was cloud- or local-sourced is
-  preserved so the *caller* can decide whether to offer restore: `SnapshotDefinition.source.origin`
-  is set at decode (`'server'` when the id came from a `mapping.id`, `'browser'`
-  from a `snapshot.localId`) and applied by `CustomComponentRegistry.ingestSnapshots`
-  as the ingested snapshot's `source` (defaulting to `'browser'` for older
-  documents that omit it). `collectSnapshots` writes the master's *current* origin
-  so a promoted master round-trips as `'server'`. The restore action restores a
-  local-origin orphan directly, but a cloud-origin orphan **while signed out**
-  prompts sign-in instead — it is probably just unloaded, and restoring locally
-  would duplicate an owned cloud master.
+How a document carries the custom components it uses, how a local component is
+**promoted** to the cloud, how ids are re-mapped so references survive, and how a
+lost master is recovered — the whole story, including the `dependencies[].id`
+mapping rule, `snapshot.localId`, the promotion alias, and orphan restore — lives
+in **[`dependencies-and-promotion.md`](dependencies-and-promotion.md)**. The
+`PersistenceService` methods above (`promote*`, `uploadStoredProjectToServer`,
+`saveDraftAsServer`, `restoreOrphanToLibrary`, `localDependencies*`) are the
+primitives that document sequences.
 
 ---
 

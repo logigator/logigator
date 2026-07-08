@@ -144,13 +144,10 @@ itself when `context.component` is null (palette/ghost) and shows only for a
 selected instance behind its master.
 
 `EditComponentAction` also handles the **orphan** case — a placed custom whose
-master no longer resolves in any library, though its circuit is still embedded so
-it renders fine. Instead of dead-ending, it degrades by the snapshot's origin
-(see `persistence.md` → "Orphan recovery"): a lost **local** master (or unknown
-origin) offers **Restore & edit** (`PersistenceService.restoreOrphanToLibrary` →
-open), and a lost **cloud** master while signed out offers a disabled **Sign in
-to edit** (it is probably just unloaded). The settings panel marks an orphan with
-the source indicator's `embedded` chip.
+master no longer resolves in any library — by degrading to *Restore & edit* or a
+*Sign in* prompt rather than dead-ending. That decision, the origin bit it keys
+off, and the restore itself are documented in
+[`dependencies-and-promotion.md`](dependencies-and-promotion.md).
 
 ## `CustomComponent` (rendering)
 
@@ -255,19 +252,16 @@ single predicate.
   `UpdateInstanceAction` needs no guard (re-snapshotting an already-placed master
   adds no edge).
 
-## Persistence & unresolved snapshots
+## Persistence, dependencies & unresolved snapshots
 
 Saving embeds a frozen snapshot of every custom the document transitively uses;
-loading ingests them and renders from the embedded circuit with zero extra
-fetches — see [`persistence.md`](persistence.md). Because a placed instance carries
-its own circuit, it always resolves regardless of whether its library master still
-exists; a deleted/renamed master only disables "Update to latest".
+loading ingests them and renders from the embedded circuit with zero extra fetches.
+Because a placed instance carries its own circuit, it always resolves regardless of
+whether its library master still exists; a deleted/renamed master only disables
+"Update to latest" (and turns the instance into an **orphan** the user can restore).
 
-The one genuinely unresolvable case is a body `t` whose snapshot is **absent** — an
-old reference-only server document, or one an old client re-saved and stripped of
-the additive `snapshot` field. There is **no tombstone**: the element is **skipped
-with a warning** (`CircuitFileService.deserialize`, the single load chokepoint),
-counted, and surfaced as one aggregated toast so the loss is user-visible. A
-custom-range `t` resolves **only** through the snapshot remap (never falling through
-to its own value, which could alias an unrelated session type, since file-local and
-session custom ids both count up from `CUSTOM_TYPE_ID_BASE`).
+How documents carry these dependencies across every transport, how a component is
+**promoted** to the cloud, how ids are re-mapped, and how orphaned or genuinely
+**absent** snapshots are handled (there is no tombstone — an absent snapshot is
+skipped with a counted warning) is the subject of
+**[`dependencies-and-promotion.md`](dependencies-and-promotion.md)**.
