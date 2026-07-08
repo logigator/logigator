@@ -1,7 +1,6 @@
 import {
 	IsArray,
 	IsInt,
-	IsOptional,
 	IsString,
 	Length,
 	MaxLength,
@@ -21,19 +20,6 @@ export class DependencySnapshot {
 
 	@IsInt()
 	version: number;
-
-	/**
-	 * @deprecated The editor no longer sends or reads this — the current model
-	 * disallows a local (browser) custom inside a cloud document (it must be
-	 * promoted first). Kept, accepted, and ignored **only** so an older editor
-	 * that still sends it is not rejected by `forbidNonWhitelisted` during a
-	 * deploy overlap; remove once no such client remains. Never resolved,
-	 * ownership-checked, or turned into a dependency row.
-	 */
-	@IsOptional()
-	@IsString()
-	@MaxLength(36)
-	localId?: string;
 
 	@IsString()
 	@MaxLength(20)

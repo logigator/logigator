@@ -395,9 +395,10 @@ one-sentence mental model ("cloud projects contain cloud components") and remove
 old confusing "half-editable embedded copy" state. Consequences:
 
 - **No `localId`.** The earlier mechanism that let a local component live inside a
-  cloud document (re-linkable only on the author's device) is gone. The frontend no
-  longer sends or reads it; the backend DTO field is kept, deprecated and ignored,
-  only so an older editor mid-deploy is not rejected by `forbidNonWhitelisted`.
+  cloud document (re-linkable only on the author's device) is gone — removed from the
+  frontend (codec/decode/model) and from the backend `DependencySnapshot` DTO. Under
+  `forbidNonWhitelisted`, dropping the DTO field means the editor that stops sending
+  it must deploy **before** the backend removes it (see the deployment note).
 - **A bypass degrades to an orphan, not a crash.** If a local dependency ever reaches
   a cloud serialize without promotion, it is embedded with `mapping.id:''` and no
   provenance → a restorable orphan on reload (§9). No data loss, no 400.
@@ -541,16 +542,16 @@ Cross-cutting guarantees:
   the circuit blob (`serializeStoredCircuit`) and echoed on read
   (`buildDependencyResponse`), so fields inside it round-trip without storage
   changes. `synthesizeMissingSnapshots` backfills leaf masters for old documents.
-  It still declares a deprecated, ignored `localId` field (the frontend no longer
-  sends it) — see the deployment note.
 - **`forbidNonWhitelisted: true`** (global validation): any field the DTO does not
   declare is **rejected with 400**, not stripped.
 
 > ⚠️ **Deployment order (both directions).** Because unknown fields are rejected:
 > *adding* a wire field means the backend DTO must deploy **first / together with**
-> the editor; *removing* one (like `localId`) means the field must stay accepted-and-
-> ignored on the backend until no editor still sends it — hence `localId` is retained
-> on the DTO as deprecated rather than deleted outright.
+> the editor; *removing* one (as `localId` was) means the editor that stops sending
+> it must deploy **before** the backend drops the field, or an in-flight save from an
+> old editor 400s. An old document that still carries `localId` inside a stored
+> snapshot blob is unaffected — the blob is echoed verbatim on read and the field is
+> simply ignored, never re-validated against the DTO.
 
 ---
 
