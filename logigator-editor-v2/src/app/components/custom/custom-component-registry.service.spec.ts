@@ -595,7 +595,9 @@ describe('CustomComponentRegistry', () => {
     }
 
     it('adopts the carried origin as the snapshot source', () => {
-      expect(registry.getDefinition(ingestOne('server'))?.source).toBe('server');
+      expect(registry.getDefinition(ingestOne('server'))?.source).toBe(
+        'server'
+      );
     });
 
     it('defaults to browser when no origin is carried', () => {
@@ -620,7 +622,10 @@ describe('CustomComponentRegistry', () => {
         }
       ]);
       const snapType = remap.get(1000)!;
-      const master = registry.createMaster({ id: 'fresh', symbol: 'S' }, 'browser');
+      const master = registry.createMaster(
+        { id: 'fresh', symbol: 'S' },
+        'browser'
+      );
 
       registry.relinkSnapshotProvenance(snapType, 'fresh');
 

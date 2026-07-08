@@ -165,7 +165,9 @@ function serverDependencyId(
   if (id === undefined) return '';
   const masterTypeId = registry.masterTypeIdForId(id);
   const master =
-    masterTypeId !== undefined ? registry.getDefinition(masterTypeId) : undefined;
+    masterTypeId !== undefined
+      ? registry.getDefinition(masterTypeId)
+      : undefined;
   return master?.source === 'server' ? id : '';
 }
 

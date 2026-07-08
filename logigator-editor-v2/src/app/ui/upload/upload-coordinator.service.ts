@@ -263,7 +263,10 @@ export class UploadCoordinatorService {
     }
   }
 
-  private _uploadTarget(target: UploadTarget, isPublic: boolean): Promise<void> {
+  private _uploadTarget(
+    target: UploadTarget,
+    isPublic: boolean
+  ): Promise<void> {
     switch (target.kind) {
       case 'project':
         return this.persistence.promoteProjectToServer(

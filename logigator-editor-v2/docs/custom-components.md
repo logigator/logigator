@@ -144,8 +144,8 @@ itself when `context.component` is null (palette/ghost) and shows only for a
 selected instance behind its master.
 
 `EditComponentAction` also handles the **orphan** case — a placed custom whose
-master no longer resolves in any library — by degrading to *Restore & edit* or a
-*Sign in* prompt rather than dead-ending. That decision, the origin bit it keys
+master no longer resolves in any library — by degrading to _Restore & edit_ or a
+_Sign in_ prompt rather than dead-ending. That decision, the origin bit it keys
 off, and the restore itself are documented in
 [`dependencies-and-promotion.md`](dependencies-and-promotion.md).
 

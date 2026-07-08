@@ -93,7 +93,9 @@ export class EditComponentActionComponent {
   protected edit(): void {
     const resolved = this.resolved();
     if (resolved) {
-      void this.customComponentService.openComponentForEdit(resolved.master.id!);
+      void this.customComponentService.openComponentForEdit(
+        resolved.master.id!
+      );
     }
   }
 

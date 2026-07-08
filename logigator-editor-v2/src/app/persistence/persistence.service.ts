@@ -1129,7 +1129,10 @@ export class PersistenceService {
       ...summary,
       content
     });
-    this.registry.createMaster({ id: record.id, ...summary, circuit }, 'browser');
+    this.registry.createMaster(
+      { id: record.id, ...summary, circuit },
+      'browser'
+    );
     return record.id;
   }
 

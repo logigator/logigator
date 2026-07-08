@@ -118,7 +118,10 @@ describe('snapshots codec', () => {
 
     it('rewrites a snapshot provenance id through the promotion alias', () => {
       // A snapshot frozen while its master was local captured the browser id.
-      const masterB = registry.createMaster({ id: 'id-b', symbol: 'B' }, 'browser');
+      const masterB = registry.createMaster(
+        { id: 'id-b', symbol: 'B' },
+        'browser'
+      );
       const snapB = registry.snapshot(masterB).typeId;
 
       // The master is then uploaded to the cloud, which records old -> new.

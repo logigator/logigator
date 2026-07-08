@@ -146,7 +146,10 @@ describe('CustomComponentService', () => {
       onClose: of('save')
     } as never);
     const save = vi
-      .spyOn(TestBed.inject(UploadCoordinatorService), 'promoteLocalDepsAndSave')
+      .spyOn(
+        TestBed.inject(UploadCoordinatorService),
+        'promoteLocalDepsAndSave'
+      )
       .mockResolvedValue(true);
 
     await service.closeComponent(editor);

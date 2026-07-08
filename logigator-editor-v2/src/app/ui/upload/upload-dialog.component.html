@@ -26,9 +26,7 @@
 
   @if (unresolvableCount > 0) {
     <lg-message severity="warn">
-      {{
-        t('uploadDialog.unresolvableWarning', { count: unresolvableCount })
-      }}
+      {{ t('uploadDialog.unresolvableWarning', { count: unresolvableCount }) }}
     </lg-message>
   }
 

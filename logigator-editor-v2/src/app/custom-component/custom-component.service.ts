@@ -210,9 +210,7 @@ export class CustomComponentService {
    * (a cloud document with resolvable local deps). Resolves the user's choice, or
    * `undefined` when the dialog is dismissed (cancel).
    */
-  private _promptClose(
-    project: Project
-  ): Promise<CloseTabChoice | undefined> {
+  private _promptClose(project: Project): Promise<CloseTabChoice | undefined> {
     const metadata = this.metadataStore.getMetadata(project);
     const localDepCount =
       metadata?.source === 'server'

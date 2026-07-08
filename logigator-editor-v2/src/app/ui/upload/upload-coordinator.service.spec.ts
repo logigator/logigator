@@ -221,9 +221,7 @@ describe('UploadCoordinatorService', () => {
       persistence.localDependenciesOfProject.mockReturnValue([
         { name: 'a', masterTypeId: 11 }
       ]);
-      persistence.promoteComponentToServer.mockRejectedValue(
-        new Error('boom')
-      );
+      persistence.promoteComponentToServer.mockRejectedValue(new Error('boom'));
 
       const result = await service.requestUpload({
         kind: 'draft-to-server',
@@ -263,7 +261,10 @@ describe('UploadCoordinatorService', () => {
         return Promise.resolve();
       });
 
-      const result = await service.requestUpload({ kind: 'save-server', project });
+      const result = await service.requestUpload({
+        kind: 'save-server',
+        project
+      });
 
       expect(result).toBe(true);
       expect(order).toEqual(['dep-11', 'save']);
@@ -277,7 +278,10 @@ describe('UploadCoordinatorService', () => {
         { name: 'a', masterTypeId: 11 }
       ]);
 
-      const result = await service.requestUpload({ kind: 'save-server', project });
+      const result = await service.requestUpload({
+        kind: 'save-server',
+        project
+      });
 
       expect(result).toBe(false);
       expect(persistence.promoteComponentToServer).not.toHaveBeenCalled();

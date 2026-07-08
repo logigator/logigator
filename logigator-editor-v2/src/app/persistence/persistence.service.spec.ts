@@ -1651,14 +1651,26 @@ describe('PersistenceService', () => {
       // A places B and C; both B and C place D. Every dependency must precede
       // each one that embeds it — a plain reverse of collect order would put the
       // shared D after one of its parents.
-      const ref = (type: number) => ({ type, pos: [0, 0] as [number, number], options: {} });
+      const ref = (type: number) => ({
+        type,
+        pos: [0, 0] as [number, number],
+        options: {}
+      });
       const dType = registry.createMaster({ id: 'd', name: 'D' }, 'browser');
       const bType = registry.createMaster(
-        { id: 'b', name: 'B', circuit: { components: [ref(dType)], wires: [] } },
+        {
+          id: 'b',
+          name: 'B',
+          circuit: { components: [ref(dType)], wires: [] }
+        },
         'browser'
       );
       const cType = registry.createMaster(
-        { id: 'c', name: 'C', circuit: { components: [ref(dType)], wires: [] } },
+        {
+          id: 'c',
+          name: 'C',
+          circuit: { components: [ref(dType)], wires: [] }
+        },
         'browser'
       );
       const aType = registry.createMaster(
@@ -1687,7 +1699,9 @@ describe('PersistenceService', () => {
     // Ingests one orphan snapshot (no master resolves for its id) and returns
     // its session type id.
     function ingestOrphan(
-      source: { id: string; version: number; origin?: 'server' | 'browser' } | undefined
+      source:
+        | { id: string; version: number; origin?: 'server' | 'browser' }
+        | undefined
     ): number {
       const remap = registry.ingestSnapshots([
         {
