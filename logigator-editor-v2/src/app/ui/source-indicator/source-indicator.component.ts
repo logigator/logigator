@@ -2,7 +2,12 @@ import { Component, computed, input } from '@angular/core';
 import { LgBadge, LgSeverity } from '@logigator/ui';
 
 /** Where the shown circuit lives / its persistence state. */
-export type SourceIndicatorState = 'server' | 'browser' | 'draft' | 'share';
+export type SourceIndicatorState =
+  | 'server'
+  | 'browser'
+  | 'draft'
+  | 'share'
+  | 'embedded';
 
 interface StateStyle {
   icon: string;
@@ -24,10 +29,12 @@ interface StateStyle {
  *   anchors to the tile exactly as the inline markup did). Too small for a full
  *   `LgBadge`, so it stays a bespoke dot.
  *
- * Four states: `server` (cloud), `browser` (saved locally), `draft` (never saved
- * yet) and `share` (opened read-only from a share link). Owns the icon, colour
- * and label per state so every call site stays in sync; tooltips are overridable
- * (defaults suit a component) so hosts can localize them.
+ * Five states: `server` (cloud), `browser` (saved locally), `draft` (never saved
+ * yet), `share` (opened read-only from a share link) and `embedded` (a placed
+ * custom whose library master is gone — its circuit survives only as the embedded
+ * copy). Owns the icon, colour and label per state so every call site stays in
+ * sync; tooltips are overridable (defaults suit a component) so hosts can
+ * localize them.
  */
 @Component({
   selector: 'app-source-indicator',
@@ -58,6 +65,9 @@ export class SourceIndicatorComponent {
   public readonly browserTitle = input<string>('Saved in this browser only');
   public readonly draftTitle = input<string>('Not saved yet');
   public readonly shareTitle = input<string>('Opened from a share link');
+  public readonly embeddedTitle = input<string>(
+    'Embedded copy — its library component is no longer available'
+  );
 
   private static readonly STYLES: Record<SourceIndicatorState, StateStyle> = {
     server: {
@@ -83,6 +93,12 @@ export class SourceIndicatorComponent {
       severity: 'success',
       glyph: 'text-emerald-400',
       label: 'Shared'
+    },
+    embedded: {
+      icon: 'ph ph-package',
+      severity: 'warn',
+      glyph: 'text-warn',
+      label: 'Embedded'
     }
   };
 
@@ -100,6 +116,8 @@ export class SourceIndicatorComponent {
         return this.draftTitle();
       case 'share':
         return this.shareTitle();
+      case 'embedded':
+        return this.embeddedTitle();
     }
   });
 }

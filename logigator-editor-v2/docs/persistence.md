@@ -454,6 +454,33 @@ editable/updatable. On any other device the id is unknown and it remains a plain
 embedded copy. Promoting the component later switches it back to a real
 `mapping.id` and drops `localId`.
 
+### Orphan recovery (restore to library)
+
+A placed custom whose master can no longer be resolved in *any* library is an
+**orphan** — but it is not broken: its circuit still rides in the document's
+embedded snapshot, so it renders and simulates fine. Only *editing* was a
+dead-end. `restoreOrphanToLibrary(typeId)` rebuilds a **browser** master from the
+frozen snapshot's circuit (at its frozen version) so the user can edit it again;
+the edit affordance offers this via the settings panel (see `ui.md`).
+
+- **Re-linking** reuses the snapshot's own provenance id as the new master's id,
+  so every placed instance referencing it resolves to the restore with no further
+  change (an anonymous snapshot with no id mints a fresh one, and
+  `CustomComponentRegistry.relinkSnapshotProvenance` re-points it). Always browser
+  — no login needed. Reusing an id can't collide server-side: server ids are
+  always server-minted, and a browser id only ever travels as an opaque
+  `snapshot.localId`.
+- **Origin bit.** Whether the lost master was cloud- or local-sourced is
+  preserved so the *caller* can decide whether to offer restore: `SnapshotDefinition.source.origin`
+  is set at decode (`'server'` when the id came from a `mapping.id`, `'browser'`
+  from a `snapshot.localId`) and applied by `CustomComponentRegistry.ingestSnapshots`
+  as the ingested snapshot's `source` (defaulting to `'browser'` for older
+  documents that omit it). `collectSnapshots` writes the master's *current* origin
+  so a promoted master round-trips as `'server'`. The restore action restores a
+  local-origin orphan directly, but a cloud-origin orphan **while signed out**
+  prompts sign-in instead — it is probably just unloaded, and restoring locally
+  would duplicate an owned cloud master.
+
 ---
 
 ## `ProjectMetadataStore`

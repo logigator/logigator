@@ -107,7 +107,11 @@ describe('snapshots codec', () => {
       expect(definitions[0].symbol).toBe('B');
       expect(definitions[0].numInputs).toBe(1);
       expect(definitions[0].labels).toEqual(['i', 'o']);
-      expect(definitions[0].source).toEqual({ id: 'id-b', version: 1 });
+      expect(definitions[0].source).toEqual({
+        id: 'id-b',
+        version: 1,
+        origin: 'browser'
+      });
       // The body remap covers the directly-placed snapshot.
       expect(sessionToLocal.get(snapB)).toBe(1000);
     });
@@ -121,10 +125,14 @@ describe('snapshots codec', () => {
       registry.promoteMaster(masterB, 'srv-b', 2);
 
       const { definitions } = collectSnapshots(fakeProject([snapB]), registry);
-      // The written document references the master's current (server) id, while
-      // the frozen version stays as captured — otherwise the id would strand on
-      // any other device (the alias table is device-local).
-      expect(definitions[0].source).toEqual({ id: 'srv-b', version: 1 });
+      // The written document references the master's current (server) id and
+      // origin, while the frozen version stays as captured — otherwise the id
+      // would strand on any other device (the alias table is device-local).
+      expect(definitions[0].source).toEqual({
+        id: 'srv-b',
+        version: 1,
+        origin: 'server'
+      });
     });
 
     it('dedups repeated placements of the same snapshot', () => {

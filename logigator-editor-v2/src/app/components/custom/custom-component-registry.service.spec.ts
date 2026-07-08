@@ -575,6 +575,60 @@ describe('CustomComponentRegistry', () => {
     });
   });
 
+  describe('ingestSnapshots origin', () => {
+    function ingestOne(origin?: 'server' | 'browser'): number {
+      const remap = registry.ingestSnapshots([
+        {
+          type: 1000,
+          source: { id: 'x', version: 1, origin },
+          name: 'N',
+          symbol: 'S',
+          description: '',
+          numInputs: 0,
+          numOutputs: 0,
+          labels: [],
+          components: [],
+          wires: []
+        }
+      ]);
+      return remap.get(1000)!;
+    }
+
+    it('adopts the carried origin as the snapshot source', () => {
+      expect(registry.getDefinition(ingestOne('server'))?.source).toBe('server');
+    });
+
+    it('defaults to browser when no origin is carried', () => {
+      expect(registry.getDefinition(ingestOne())?.source).toBe('browser');
+    });
+  });
+
+  describe('relinkSnapshotProvenance', () => {
+    it('re-points a snapshot at a new master id and marks it browser', () => {
+      const remap = registry.ingestSnapshots([
+        {
+          type: 1000,
+          source: undefined,
+          name: 'N',
+          symbol: 'S',
+          description: '',
+          numInputs: 0,
+          numOutputs: 0,
+          labels: [],
+          components: [],
+          wires: []
+        }
+      ]);
+      const snapType = remap.get(1000)!;
+      const master = registry.createMaster({ id: 'fresh', symbol: 'S' }, 'browser');
+
+      registry.relinkSnapshotProvenance(snapType, 'fresh');
+
+      expect(registry.getDefinition(snapType)?.id).toBe('fresh');
+      expect(registry.resolveMaster(snapType)?.masterTypeId).toBe(master);
+    });
+  });
+
   describe('currentIdForId', () => {
     it('returns an id unchanged when it has no alias', () => {
       expect(registry.currentIdForId('local-1')).toBe('local-1');

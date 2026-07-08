@@ -388,6 +388,9 @@ describe('server-circuit.codec', () => {
       )!;
       const def = registry.getDefinition(instance.config.type)!;
       expect(def.id).toBe('browser-uuid');
+      // Local-origin: the id came from the snapshot localId, so the revived
+      // snapshot is marked browser-sourced (drives orphan recovery).
+      expect(def.source).toBe('browser');
       expect(registry.masterTypeIdForId('browser-uuid')).toBe(master);
     });
 
@@ -525,6 +528,9 @@ describe('server-circuit.codec', () => {
       expect(def.id).toBe('master-uuid');
       expect(def.version).toBe(3);
       expect(def.labels).toEqual(['A', 'Q']);
+      // Cloud-origin: the id came from the server mapping, so the revived
+      // snapshot is marked server-sourced.
+      expect(def.source).toBe('server');
     });
 
     it('ignores element i/o on load — counts come from the snapshot', () => {

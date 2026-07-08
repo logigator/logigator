@@ -25,6 +25,7 @@ import { Component } from '../components/component';
 import { Point } from 'pixi.js';
 import { MoveComponentsAction } from '../actions/actions/move-components.action';
 import { SerializedCircuitBody } from './serialized-circuit';
+import { CUSTOM_TYPE_ID_BASE } from '../components/component-type.enum';
 import {
   FakeBrowserComponentStore,
   FakeBrowserProjectStore,
@@ -1681,6 +1682,66 @@ describe('PersistenceService', () => {
       expect(idx('D')).toBeLessThan(idx('C'));
       expect(idx('B')).toBeLessThan(idx('A'));
       expect(idx('C')).toBeLessThan(idx('A'));
+    });
+
+    // Ingests one orphan snapshot (no master resolves for its id) and returns
+    // its session type id.
+    function ingestOrphan(
+      source: { id: string; version: number; origin?: 'server' | 'browser' } | undefined
+    ): number {
+      const remap = registry.ingestSnapshots([
+        {
+          type: CUSTOM_TYPE_ID_BASE,
+          source,
+          name: 'Lost',
+          symbol: 'L',
+          description: '',
+          numInputs: 0,
+          numOutputs: 0,
+          labels: [],
+          components: [],
+          wires: []
+        }
+      ]);
+      return remap.get(CUSTOM_TYPE_ID_BASE)!;
+    }
+
+    it('restoreOrphanToLibrary reuses the id and re-links instances', async () => {
+      const snapType = ingestOrphan({
+        id: 'lost-local',
+        version: 2,
+        origin: 'browser'
+      });
+      expect(registry.resolveMaster(snapType)).toBeUndefined();
+
+      const masterId = await service.restoreOrphanToLibrary(snapType);
+
+      expect(masterId).toBe('lost-local');
+      // Re-linked: the placed snapshot now resolves to the restored master.
+      const resolved = registry.resolveMaster(snapType);
+      expect(resolved?.master.source).toBe('browser');
+      expect(resolved?.master.version).toBe(2); // frozen version adopted
+      expect(await componentStore.get('lost-local')).toBeDefined();
+    });
+
+    it('restoreOrphanToLibrary mints a fresh id for an anonymous snapshot', async () => {
+      const snapType = ingestOrphan(undefined);
+      expect(registry.resolveMaster(snapType)).toBeUndefined();
+
+      const masterId = await service.restoreOrphanToLibrary(snapType);
+
+      expect(masterId).toBeTruthy();
+      // The snapshot was re-pointed at the fresh master, so it resolves now.
+      expect(registry.resolveMaster(snapType)?.master.id).toBe(masterId);
+    });
+
+    it('restoreOrphanToLibrary returns null for a non-orphan', async () => {
+      const master = registry.createMaster(
+        { id: 'has-master', symbol: 'M' },
+        'browser'
+      );
+      const snapType = registry.snapshot(master).typeId;
+      expect(await service.restoreOrphanToLibrary(snapType)).toBeNull();
     });
 
     it('preloadServerMasters registers cloud masters from the list alone (no per-component fetch)', async () => {

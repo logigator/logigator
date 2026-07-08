@@ -9,6 +9,7 @@ import { CustomComponent } from '../components/custom/custom-component';
 import { Action } from '../actions/action';
 import { UpdateInstanceAction } from '../actions/actions/update-instance.action';
 import { ToastService } from '../logging/toast.service';
+import { TranslocoService } from '@jsverse/transloco';
 import { DefinitionBinding } from './definition-binding';
 
 export interface NewComponentMeta {
@@ -39,6 +40,7 @@ export class CustomComponentService {
   private readonly metadataStore = inject(ProjectMetadataStore);
   private readonly persistence = inject(PersistenceService);
   private readonly toast = inject(ToastService);
+  private readonly transloco = inject(TranslocoService);
 
   private readonly _bindings = new Map<Project, DefinitionBinding>();
 
@@ -118,6 +120,34 @@ export class CustomComponentService {
     } catch {
       this.toast.error('Failed to open component', 'CustomComponentService');
     }
+  }
+
+  /**
+   * Recovers an **orphaned** placed custom — one whose master is no longer in any
+   * library, though its circuit is still embedded — by restoring it into the
+   * browser library, then opening it for editing. Restores at the frozen version;
+   * every instance that referenced it re-links to the new master. No-op if the
+   * type is not a restorable orphan.
+   */
+  public async restoreOrphanAndEdit(typeId: number): Promise<void> {
+    let masterId: string | null;
+    try {
+      masterId = await this.persistence.restoreOrphanToLibrary(typeId);
+    } catch {
+      masterId = null;
+    }
+    if (!masterId) {
+      this.toast.error(
+        this.transloco.translate('componentActions.restoreFailed'),
+        'CustomComponentService'
+      );
+      return;
+    }
+    this.toast.success(
+      this.transloco.translate('componentActions.restored'),
+      'CustomComponentService'
+    );
+    await this.openComponentForEdit(masterId);
   }
 
   /** Adds the editor as a tab, focuses it, and attaches its definition binding. */

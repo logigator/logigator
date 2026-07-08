@@ -532,8 +532,15 @@ const en = {
     noInnerCircuit: 'This component has no inner circuit to inspect.'
   },
   componentActions: {
-    sourceUnavailable:
-      "This component's source is unavailable and can't be opened for editing."
+    edit: 'Edit component',
+    restore: 'Restore & edit',
+    restoreTooltip:
+      "This component's library master is gone, but its circuit is embedded. Restore it to your browser library to edit it.",
+    restored: 'Component restored to your browser library.',
+    restoreFailed: 'Could not restore this component.',
+    signInToEdit: 'Sign in to edit',
+    signInTooltip:
+      'This component lives in your cloud library. Sign in to load and edit it.'
   },
   library: {
     loadFailed: 'Some saved components could not be loaded.'

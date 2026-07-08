@@ -46,6 +46,10 @@ describe('SourceIndicatorComponent', () => {
     f.componentInstance.source.set('share');
     f.detectChanges();
     expect(text()).toBe('Shared');
+
+    f.componentInstance.source.set('embedded');
+    f.detectChanges();
+    expect(text()).toBe('Embedded');
   });
 
   it('uses the per-state tooltip override', () => {

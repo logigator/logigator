@@ -13,7 +13,10 @@ import { TranslocoService } from '@jsverse/transloco';
 import { ChangeOptionAction } from '../../actions/actions/change-option.action';
 import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
 import { CUSTOM_TYPE_ID_BASE } from '../../components/component-type.enum';
-import { SourceIndicatorComponent } from '../source-indicator/source-indicator.component';
+import {
+  SourceIndicatorComponent,
+  SourceIndicatorState
+} from '../source-indicator/source-indicator.component';
 
 @Component({
   selector: 'app-component-settings',
@@ -105,15 +108,16 @@ export class ComponentSettingsComponent {
   });
 
   /**
-   * The cloud/local library of a custom component (master or placed snapshot),
-   * resolved through its master so a placed instance reads the master's current
-   * source. `null` for built-ins. Reads the registry revision so the chip
-   * re-resolves after an upload-to-cloud flips the source.
+   * The library/state chip for a custom component (master or placed snapshot):
+   * its master's `server`/`browser` library when resolvable, or `embedded` when
+   * the master is gone but the circuit still rides in the document (an orphan).
+   * `null` for built-ins. Reads the registry revision so the chip re-resolves
+   * after an upload-to-cloud flips the source or a restore re-links an orphan.
    */
-  private _customSource(typeId: number): 'server' | 'browser' | null {
+  private _customSource(typeId: number): SourceIndicatorState | null {
     this.registry.revision();
     if (typeId < CUSTOM_TYPE_ID_BASE) return null;
-    return this.registry.resolveMaster(typeId)?.master.source ?? null;
+    return this.registry.resolveMaster(typeId)?.master.source ?? 'embedded';
   }
 
   /** Resolves display text: translates a key, returns a literal verbatim. */

@@ -44,7 +44,16 @@ export interface SerializedCircuitBody {
 export interface SnapshotDefinition extends SerializedCircuitBody {
   /** File-/document-local type id; remapped to a session type id on load. */
   type: number;
-  source?: { id: string; version: number };
+  /**
+   * Provenance back to the library master. `origin` records which library that
+   * master lived in — `'server'` when the id came from a server dependency
+   * mapping, `'browser'` for a local custom (carried in `snapshot.localId`);
+   * absent/`undefined` when unknown (older documents). It drives the orphan
+   * recovery affordance: a lost cloud master while signed out is likely just
+   * unloaded (offer sign-in), a lost local master can be restored to the browser
+   * library.
+   */
+  source?: { id: string; version: number; origin?: 'server' | 'browser' };
   name: string;
   symbol: string;
   description: string;

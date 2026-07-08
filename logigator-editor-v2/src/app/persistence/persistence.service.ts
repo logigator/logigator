@@ -1134,6 +1134,79 @@ export class PersistenceService {
   }
 
   /**
+   * Restores an **orphaned** custom instance — one whose master can no longer be
+   * resolved in any library, though its circuit is still embedded — into the
+   * browser library, so the user can edit it again. Builds a browser master from
+   * the frozen snapshot's circuit (at its frozen version) and returns the new
+   * master's id, or `null` when the type is not a restorable orphan.
+   *
+   * Re-linking: the new master reuses the snapshot's own provenance id when it
+   * has one, so every placed instance that references it resolves to the new
+   * master with no further change; an anonymous snapshot (no id) mints a fresh
+   * id and the snapshot is re-pointed at it. Always restores to the **browser**
+   * library — no login required. The caller decides *whether* to offer this (a
+   * lost cloud master while signed out is likely just unloaded — see the restore
+   * action).
+   */
+  async restoreOrphanToLibrary(typeId: number): Promise<string | null> {
+    const def = this.registry.getDefinition(typeId);
+    if (!def || def.kind !== 'snapshot') return null;
+    // Already resolvable ⇒ not an orphan; nothing to restore.
+    if (this.registry.resolveMaster(typeId)) return null;
+
+    const circuit = def.circuit ?? { components: [], wires: [] };
+    const { components, wires } = instantiateBody(this.provider, circuit);
+    const tmp = buildProject(components, wires);
+    let content: string;
+    try {
+      content = this.circuitFile.toJson(tmp, def.name);
+    } finally {
+      tmp.destroy();
+    }
+
+    const version = def.version ?? 1;
+    // Reuse the snapshot's own id so instances re-link with no extra work; the
+    // store mints one when the snapshot is anonymous. A cloud-origin id reused
+    // here only ever lives in the browser store — the server never adopts a
+    // client-supplied id — so it cannot collide server-side.
+    const record = await this.browserComponentStore.save({
+      id: def.id || undefined,
+      version,
+      name: def.name,
+      symbol: def.symbol,
+      description: def.description,
+      numInputs: def.numInputs,
+      numOutputs: def.numOutputs,
+      labels: def.labels,
+      content
+    });
+    this.registry.createMaster(
+      {
+        id: record.id,
+        version,
+        name: def.name,
+        symbol: def.symbol,
+        description: def.description,
+        numInputs: def.numInputs,
+        numOutputs: def.numOutputs,
+        labels: def.labels,
+        circuit
+      },
+      'browser'
+    );
+    // Anonymous snapshot: its id could not be reused, so re-point it (and thus
+    // its instances) at the freshly-minted master.
+    if (def.id !== record.id) {
+      this.registry.relinkSnapshotProvenance(typeId, record.id);
+    }
+    this.logging.info(
+      `Restored orphan component ${def.name} -> ${record.id}`,
+      'PersistenceService'
+    );
+    return record.id;
+  }
+
+  /**
    * Returns the stored circuit JSON with its top-level `name` replaced. Browser
    * blobs are always current-version with a top-level `name` (every write path
    * goes through `CircuitFileService.toJson`), so a structural rewrite suffices —

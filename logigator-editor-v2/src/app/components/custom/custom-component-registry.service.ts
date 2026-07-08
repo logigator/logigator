@@ -162,10 +162,10 @@ export class CustomComponentRegistry {
       this._store({
         typeId,
         kind: 'snapshot',
-        // Embedded snapshots carry only `{id, version}` provenance, not which
-        // library it came from; default to 'browser' (best-effort — opening a
-        // file offers no "update" anyway).
-        source: 'browser',
+        // Record the master's library origin (server vs browser) when the
+        // document carried it, so an orphaned instance can be recovered
+        // correctly; default to 'browser' for older documents that omit it.
+        source: def.source?.origin ?? 'browser',
         id: def.source?.id,
         version: def.source?.version,
         name: def.name,
@@ -341,6 +341,22 @@ export class CustomComponentRegistry {
    */
   public isPromotedId(id: string): boolean {
     return this._idAliases.has(id);
+  }
+
+  /**
+   * Re-points an orphaned **snapshot** at a freshly-restored master by stamping
+   * its provenance id (and marking it browser-sourced). Used only when the
+   * snapshot had no reusable id of its own (an anonymous local custom), so the
+   * placed instances resolve to the new master. Bumps the revision so signal
+   * readers (the settings panel chip / actions) re-resolve. No-op for a master
+   * or unknown type id.
+   */
+  public relinkSnapshotProvenance(snapshotTypeId: number, newId: string): void {
+    const def = this._definitions.get(snapshotTypeId);
+    if (!def || def.kind !== 'snapshot') return;
+    def.id = newId;
+    def.source = 'browser';
+    this._revision.update((r) => r + 1);
   }
 
   /**

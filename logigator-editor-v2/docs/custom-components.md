@@ -143,6 +143,15 @@ both a selected instance and a palette/ghost selection; update-to-latest hides
 itself when `context.component` is null (palette/ghost) and shows only for a
 selected instance behind its master.
 
+`EditComponentAction` also handles the **orphan** case — a placed custom whose
+master no longer resolves in any library, though its circuit is still embedded so
+it renders fine. Instead of dead-ending, it degrades by the snapshot's origin
+(see `persistence.md` → "Orphan recovery"): a lost **local** master (or unknown
+origin) offers **Restore & edit** (`PersistenceService.restoreOrphanToLibrary` →
+open), and a lost **cloud** master while signed out offers a disabled **Sign in
+to edit** (it is probably just unloaded). The settings panel marks an orphan with
+the source indicator's `embedded` chip.
+
 ## `CustomComponent` (rendering)
 
 A single `Component<{ direction }>` subclass backs **every** custom type — the

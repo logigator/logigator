@@ -220,11 +220,20 @@ function decodeDependencies(
     // Server mapping id first (the owned cloud component), then a local library
     // id carried in the snapshot for a custom that was never uploaded — so the
     // author's own device re-links it to the local library. `||` (not `??`)
-    // because an unpromoted local dependency sends an empty mapping id.
-    const id = dep.id || dep.dependency?.id || dep.snapshot.localId;
+    // because an unpromoted local dependency sends an empty mapping id. Which
+    // field the id came from is the master's library origin (drives orphan
+    // recovery): a mapping id ⇒ cloud, a snapshot `localId` ⇒ local.
+    const serverId = dep.id || dep.dependency?.id;
+    const id = serverId || dep.snapshot.localId;
     definitions.push({
       type: dep.model,
-      source: id ? { id, version: dep.snapshot.version } : undefined,
+      source: id
+        ? {
+            id,
+            version: dep.snapshot.version,
+            origin: serverId ? 'server' : 'browser'
+          }
+        : undefined,
       name: dep.snapshot.name,
       symbol: dep.snapshot.symbol,
       description: dep.snapshot.description,
