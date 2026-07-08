@@ -173,13 +173,19 @@ export class SimulationService {
   }
 
   /**
-   * Compiles the active project, enters simulation mode, and boots the
-   * worker. On compile diagnostics, surfaces a toast and stays in the
-   * previous mode; on worker failure, reports and leaves simulation mode.
+   * Switches to the main project, compiles it, enters simulation mode, and
+   * boots the worker. On compile diagnostics, surfaces a toast and stays in
+   * the previous mode; on worker failure, reports and leaves simulation mode.
    */
   public enter(): void {
     if (this.workModeService.mode() === WorkMode.SIMULATION) {
       return;
+    }
+    // Simulation always runs the main project. If a custom-component editor is
+    // the active tab, switch back to the main project before compiling.
+    const mainProject = this.projectService.mainProject();
+    if (mainProject && this.projectService.activeProject() !== mainProject) {
+      this.projectService.setActiveProject(mainProject);
     }
     const project = this.projectService.activeProject();
     if (!project) {

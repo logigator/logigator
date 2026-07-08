@@ -15,7 +15,9 @@
     ></app-side-bar>
   }
   <div class="grow flex flex-col min-w-0">
-    <app-tab-bar></app-tab-bar>
+    @if (!isSimulation()) {
+      <app-tab-bar></app-tab-bar>
+    }
     <div class="relative grow">
       <!-- One canvas for every device; only the chrome around it swaps. -->
       <app-board

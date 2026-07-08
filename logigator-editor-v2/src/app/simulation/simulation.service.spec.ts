@@ -68,6 +68,21 @@ describe('SimulationService', () => {
     expect(service.state()).toBe('starting');
   });
 
+  it('switches to the main project before entering simulation', () => {
+    project.addComponent(makeAnd(2, undefined, 0, 0));
+    const projectService = TestBed.inject(ProjectService);
+    const componentEditor = new Project();
+    projectService.addOpenComponent(componentEditor);
+    projectService.setActiveProject(componentEditor);
+
+    service.enter();
+
+    expect(projectService.activeProject()).toBe(project);
+    expect(workModeService.mode()).toBe(WorkMode.SIMULATION);
+
+    componentEditor.destroy({ children: true });
+  });
+
   it('reaches ready once the worker session is up', async () => {
     project.addComponent(makeAnd(2, undefined, 0, 0));
 
