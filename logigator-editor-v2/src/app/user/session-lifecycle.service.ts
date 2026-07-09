@@ -213,7 +213,10 @@ export class SessionLifecycleService {
       modal: true,
       closable: true,
       data: {
-        names: dirty.map(({ metadata }) => metadata.name),
+        items: dirty.map(({ project, metadata }) => ({
+          name: metadata.name,
+          lastEditedAt: this.metadataStore.lastEditedAt(project)
+        })),
         promotionWarning:
           promotable.size > 0
             ? this.transloco.translate('logoutDialog.promotionWarning', {

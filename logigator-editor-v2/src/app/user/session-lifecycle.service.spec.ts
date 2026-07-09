@@ -220,7 +220,9 @@ describe('SessionLifecycleService', () => {
 
       expect(dialogService.open).toHaveBeenCalled();
       const config = dialogService.open.mock.calls[0][1];
-      expect(config.data.names).toEqual(['Dirty Cloud']);
+      expect(config.data.items.map((i: { name: string }) => i.name)).toEqual([
+        'Dirty Cloud'
+      ]);
       expect(logout).not.toHaveBeenCalled();
       expect(persistence.clearServerMasters).not.toHaveBeenCalled();
     });

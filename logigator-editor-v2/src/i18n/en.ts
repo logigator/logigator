@@ -558,7 +558,8 @@ const en = {
       'Saving will also publish {{count}} local component(s) to your cloud library.',
     save: 'Save & Log Out',
     discard: 'Log Out without Saving',
-    cancel: 'Cancel'
+    cancel: 'Cancel',
+    edited: 'Edited {{relative}}'
   },
   session: {
     loggedOut: 'Logged out.',

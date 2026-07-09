@@ -1,11 +1,22 @@
 <div *transloco="let t" class="flex flex-col gap-4">
   <p>{{ t('logoutDialog.message') }}</p>
 
-  <ul class="list-disc pl-5">
-    @for (name of names; track name) {
-      <li>{{ name }}</li>
+  <lg-list>
+    @for (item of items; track item.name) {
+      <lg-list-item leadingIcon="ph ph-file">
+        {{ item.name }}
+        @if (item.lastEditedAt) {
+          <ng-template #subtitle>
+            {{
+              t('logoutDialog.edited', {
+                relative: item.lastEditedAt | relativeTime
+              })
+            }}
+          </ng-template>
+        }
+      </lg-list-item>
     }
-  </ul>
+  </lg-list>
 
   @if (promotionWarning) {
     <lg-message severity="warn">{{ promotionWarning }}</lg-message>

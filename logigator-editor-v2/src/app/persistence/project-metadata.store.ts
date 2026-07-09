@@ -23,6 +23,8 @@ interface ProjectEntry {
   dirty: WritableSignal<boolean>;
   /** Monotonic counter incremented on every markDirty call (even when already dirty). */
   dirtyVersion: number;
+  /** Epoch-ms of the most recent markDirty; absent until the first local edit. */
+  lastEditedAt?: number;
   actionSub?: Subscription;
 }
 
@@ -102,7 +104,17 @@ export class ProjectMetadataStore {
     const entry = this._entries.get(project);
     if (!entry) return;
     entry.dirtyVersion++;
+    entry.lastEditedAt = Date.now();
     entry.dirty.set(true);
+  }
+
+  /**
+   * Epoch-ms of the project's most recent local edit (its last `markDirty`), or
+   * `undefined` if it has not been edited this session. A one-shot snapshot,
+   * not reactive — the logout confirmation reads it once when it opens.
+   */
+  public lastEditedAt(project: Project): number | undefined {
+    return this._entries.get(project)?.lastEditedAt;
   }
 
   public clearDirty(project: Project): void {

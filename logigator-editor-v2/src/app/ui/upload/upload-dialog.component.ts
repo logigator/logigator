@@ -4,6 +4,8 @@ import {
   DialogConfig,
   DialogRef,
   LgButton,
+  LgList,
+  LgListItem,
   LgMessage,
   LgToggleSwitch,
   LgTooltip
@@ -46,6 +48,8 @@ export interface UploadDialogResult {
     LgToggleSwitch,
     LgTooltip,
     LgButton,
+    LgList,
+    LgListItem,
     LgMessage,
     TranslocoDirective
   ],

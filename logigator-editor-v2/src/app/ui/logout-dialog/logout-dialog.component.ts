@@ -1,10 +1,25 @@
 import { Component, inject } from '@angular/core';
-import { DialogConfig, DialogRef, LgButton, LgMessage } from '@logigator/ui';
+import {
+  DialogConfig,
+  DialogRef,
+  LgButton,
+  LgList,
+  LgListItem,
+  LgMessage
+} from '@logigator/ui';
 import { TranslocoDirective } from '@jsverse/transloco';
+import { RelativeTimePipe } from '../../utils/relative-time/relative-time.pipe';
+
+/** One dirty cloud document the dialog offers to save. */
+export interface LogoutDialogItem {
+  name: string;
+  /** Epoch-ms of its last local edit; absent if unknown (no subtitle shown). */
+  lastEditedAt?: number;
+}
 
 export interface LogoutDialogData {
-  /** Display names of the dirty cloud documents that would be affected. */
-  names: string[];
+  /** The dirty cloud documents that would be affected. */
+  items: LogoutDialogItem[];
   /**
    * When saving would also publish embedded local components to the cloud
    * library, the warning shown for it. Absent otherwise.
@@ -23,7 +38,14 @@ export type LogoutChoice = 'save' | 'discard';
  */
 @Component({
   selector: 'app-logout-dialog',
-  imports: [LgButton, LgMessage, TranslocoDirective],
+  imports: [
+    LgButton,
+    LgList,
+    LgListItem,
+    LgMessage,
+    TranslocoDirective,
+    RelativeTimePipe
+  ],
   templateUrl: './logout-dialog.component.html'
 })
 export class LogoutDialogComponent {
@@ -32,7 +54,7 @@ export class LogoutDialogComponent {
 
   private readonly data = this.config.data as LogoutDialogData | undefined;
 
-  protected readonly names = this.data?.names ?? [];
+  protected readonly items = this.data?.items ?? [];
   protected readonly promotionWarning = this.data?.promotionWarning;
 
   protected save(): void {
