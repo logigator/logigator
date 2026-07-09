@@ -607,6 +607,7 @@ export class PersistenceService {
               numInputs: record.numInputs,
               numOutputs: record.numOutputs,
               labels: record.labels,
+              lastEdited: record.lastEdited,
               circuit
             },
             'browser'
@@ -963,7 +964,8 @@ export class PersistenceService {
           description: record.description,
           numInputs: record.numInputs,
           numOutputs: record.numOutputs,
-          labels: record.labels
+          labels: record.labels,
+          lastEdited: record.lastEdited
         },
         'browser'
       );
@@ -1217,7 +1219,7 @@ export class PersistenceService {
       content
     });
     this.registry.createMaster(
-      { id: record.id, ...summary, circuit },
+      { id: record.id, ...summary, lastEdited: record.lastEdited, circuit },
       'browser'
     );
     return record.id;
@@ -1303,7 +1305,7 @@ export class PersistenceService {
       this.metadataStore.clearDirty(project);
     }
     this.toast.success(
-      this.transloco.translate('persistence.projectSavedBrowser'),
+      this.transloco.translate('persistence.projectSavedLocal'),
       'PersistenceService'
     );
   }
@@ -1330,7 +1332,7 @@ export class PersistenceService {
     // older version can detect "a newer master exists" and offer the update button.
     const newVersion = (master?.version ?? 0) + 1;
 
-    await this.browserComponentStore.save({
+    const record = await this.browserComponentStore.save({
       id: metadata.id || undefined,
       version: newVersion,
       name: metadata.name,
@@ -1344,16 +1346,18 @@ export class PersistenceService {
 
     // Adopt the bumped version so the in-memory master reflects it, invalidates
     // the placement snapshot cache, and placed instances behind this version can
-    // detect "a newer master exists".
+    // detect "a newer master exists". Re-stamp the save time so the palette
+    // re-sorts the just-edited master to the top.
     if (masterTypeId !== undefined) {
       this.registry.setMasterVersion(masterTypeId, newVersion);
+      this.registry.setMasterLastEdited(masterTypeId, record.lastEdited);
     }
 
     if (this.metadataStore.dirtyVersion(project) === versionAtSnapshot) {
       this.metadataStore.clearDirty(project);
     }
     this.toast.success(
-      this.transloco.translate('persistence.componentSavedBrowser'),
+      this.transloco.translate('persistence.componentSavedLocal'),
       'PersistenceService'
     );
   }

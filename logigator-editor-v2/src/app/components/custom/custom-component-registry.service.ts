@@ -60,11 +60,15 @@ export class CustomComponentRegistry {
   // master content so subsequent placements get a fresh snapshot.
   private readonly _masterToSnapshotTypeId = new Map<number, number>();
   private readonly _change$ = new Subject<CustomComponentDefinition>();
-  // Bumped on mutations that change a master's identity/source (currently
-  // promotion). Lets signal-based readers (the settings panel chip + upload
-  // button) recompute a master's resolved source after an upload-to-cloud.
+  // Bumped on mutations that change a master's palette-visible metadata: its
+  // identity/source (promotion) or its last-edited time (a save). Lets
+  // signal-based readers (the settings panel chip + upload button, the palette's
+  // newest-first ordering) recompute after such a change.
   private readonly _revision = signal(0);
-  /** Increments whenever a master is promoted; a dependency for reactive readers. */
+  /**
+   * Increments whenever a master is promoted or re-stamped as edited; a
+   * dependency for reactive readers.
+   */
   public readonly revision = this._revision.asReadonly();
 
   /**
@@ -90,6 +94,9 @@ export class CustomComponentRegistry {
       numInputs: meta.numInputs ?? 0,
       numOutputs: meta.numOutputs ?? 0,
       labels: meta.labels ? [...meta.labels] : [],
+      // A master without a supplied timestamp is one being created now, so it
+      // sorts to the top of the palette; preloads pass the persisted value.
+      lastEdited: meta.lastEdited ?? Date.now(),
       circuit: meta.circuit ? cloneCircuit(meta.circuit) : undefined
     });
     this._idToMasterTypeId.set(id, typeId);
@@ -303,6 +310,21 @@ export class CustomComponentRegistry {
     }
     def.version = version;
     this._masterToSnapshotTypeId.delete(masterTypeId);
+  }
+
+  /**
+   * Records a **master's** last-edited time (epoch ms; defaults to now) so the
+   * palette re-sorts it to the top after a save. Bumps {@link revision} to notify
+   * the signal-based ordering. No-ops for a snapshot or unknown type id.
+   */
+  public setMasterLastEdited(masterTypeId: number, lastEdited?: number): void {
+    const def = this._definitions.get(masterTypeId);
+    if (!def || def.kind !== 'master') {
+      this._noopMaster('setMasterLastEdited', masterTypeId);
+      return;
+    }
+    def.lastEdited = lastEdited ?? Date.now();
+    this._revision.update((r) => r + 1);
   }
 
   public getDefinition(typeId: number): CustomComponentDefinition | undefined {

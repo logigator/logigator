@@ -138,28 +138,54 @@ export class ComponentListComponent {
   }
 
   /**
-   * The palette's user (master) components, cycle-filtered while editing a
-   * component: placing the edited master itself or any master that (transitively)
-   * depends on it would close a cycle, so both are excluded ([§H]).
+   * The palette's user (master) components, newest-edited first and cycle-filtered
+   * while editing a component: placing the edited master itself or any master that
+   * (transitively) depends on it would close a cycle, so both are excluded ([§H]).
    */
   public readonly userComponents = computed(() => {
+    // A registry save/promotion re-stamps a master and bumps this revision; read
+    // it so the ordering below recomputes when a master's `lastEdited` changes.
+    this.registry.revision();
+
     const all = this.componentProviderService.userComponents();
     const active = this.projectService.activeProject();
     const meta = active ? this.metadataStore.getMetadata(active) : undefined;
-    if (meta?.type !== 'comp' || !meta.id) return all;
+    const masterTypeId =
+      meta?.type === 'comp' && meta.id
+        ? this.registry.masterTypeIdForId(meta.id)
+        : undefined;
 
-    const masterTypeId = this.registry.masterTypeIdForId(meta.id);
-    if (masterTypeId === undefined) return all;
+    const visible =
+      masterTypeId === undefined
+        ? all
+        : all.filter(
+            (config) => !this.registry.wouldCycle(masterTypeId, config.type)
+          );
 
-    return all.filter(
-      (config) => !this.registry.wouldCycle(masterTypeId, config.type)
-    );
+    return this.sortByLastEdited(visible);
   });
 
   private matches(config: ComponentConfig, search: string): boolean {
-    const name = resolveLocalizableText(config.name, (key) =>
+    return this.name(config).toLowerCase().includes(search);
+  }
+
+  private name(config: ComponentConfig): string {
+    return resolveLocalizableText(config.name, (key) =>
       this.translocoService.translate(key)
     );
-    return name.toLowerCase().includes(search);
+  }
+
+  /**
+   * Orders masters by their `lastEdited` time (newest first), falling back to a
+   * case-insensitive name compare so equal timestamps stay deterministic. Masters
+   * with no recorded timestamp sort last.
+   */
+  private sortByLastEdited(configs: ComponentConfig[]): ComponentConfig[] {
+    return [...configs].sort((a, b) => {
+      const ta = this.registry.getDefinition(a.type)?.lastEdited ?? 0;
+      const tb = this.registry.getDefinition(b.type)?.lastEdited ?? 0;
+      if (tb !== ta) return tb - ta;
+      return this.name(a).localeCompare(this.name(b));
+    });
   }
 }

@@ -3,6 +3,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { ComponentListComponent } from './component-list.component';
 import { configureTestBed } from '../../../../testing/configure-test-bed';
+import { CustomComponentRegistry } from '../../../components/custom/custom-component-registry.service';
 
 describe('ComponentListComponent', () => {
   let component: ComponentListComponent;
@@ -55,5 +56,36 @@ describe('ComponentListComponent', () => {
     component.onPanelChange(['basic']);
     // Search still owns the open state, so the manual toggle is discarded.
     expect(component.openPanels()).toEqual([]);
+  });
+
+  it('orders user components newest-edited first', () => {
+    const registry = TestBed.inject(CustomComponentRegistry);
+    const older = registry.createMaster(
+      { symbol: 'O', name: 'Older', lastEdited: 1000 },
+      'browser'
+    );
+    const newer = registry.createMaster(
+      { symbol: 'N', name: 'Newer', lastEdited: 2000 },
+      'browser'
+    );
+
+    const order = component.userComponents().map((config) => config.type);
+    expect(order.indexOf(newer)).toBeLessThan(order.indexOf(older));
+  });
+
+  it('re-sorts a master to the top when it is re-stamped as edited', () => {
+    const registry = TestBed.inject(CustomComponentRegistry);
+    const a = registry.createMaster(
+      { symbol: 'A', name: 'A', lastEdited: 1000 },
+      'browser'
+    );
+    const b = registry.createMaster(
+      { symbol: 'B', name: 'B', lastEdited: 2000 },
+      'browser'
+    );
+    expect(component.userComponents()[0].type).toBe(b);
+
+    registry.setMasterLastEdited(a, 3000);
+    expect(component.userComponents()[0].type).toBe(a);
   });
 });

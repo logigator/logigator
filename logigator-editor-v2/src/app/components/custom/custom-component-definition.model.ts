@@ -32,6 +32,13 @@ export interface CustomComponentDefinition {
   id?: string;
   /** Master: its current monotonic version. Snapshot: the master version this copy was taken at. */
   version?: number;
+  /**
+   * Masters only: epoch-ms of the master's last save, used to order the USER
+   * palette newest-first. Normalised to epoch ms regardless of library (the
+   * browser store keeps epoch ms, the server sends an ISO string). Absent on
+   * snapshots (never listed).
+   */
+  lastEdited?: number;
   name: string;
   symbol: string;
   description: string;

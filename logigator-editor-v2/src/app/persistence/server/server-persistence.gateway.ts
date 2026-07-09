@@ -29,6 +29,17 @@ import { BoardSnapshotService } from '../../rendering/board-snapshot.service';
 import { UserService } from '../../user/user.service';
 
 /**
+ * Parses an API ISO timestamp into epoch ms for the registry's numeric
+ * `lastEdited` (which the palette sorts by), or `undefined` when absent/unparsable
+ * so the registry falls back to now.
+ */
+function isoToEpoch(iso: string | undefined): number | undefined {
+  if (!iso) return undefined;
+  const t = Date.parse(iso);
+  return Number.isFinite(t) ? t : undefined;
+}
+
+/**
  * Server transport + codec + metadata + build, returning `Project`s. Owns every
  * method coupled to the legacy positional API; the facade keeps main-slot
  * orchestration, navigation and dirty-dispatch. Deleted wholesale when the
@@ -395,7 +406,8 @@ export class ServerPersistenceGateway {
           description: detail.description,
           numInputs: detail.numInputs,
           numOutputs: detail.numOutputs,
-          labels: detail.labels
+          labels: detail.labels,
+          lastEdited: isoToEpoch(detail.lastEdited)
         },
         'server'
       );
@@ -450,7 +462,8 @@ export class ServerPersistenceGateway {
           description: summary.description,
           numInputs: summary.numInputs,
           numOutputs: summary.numOutputs,
-          labels: summary.labels
+          labels: summary.labels,
+          lastEdited: isoToEpoch(summary.lastEdited)
           // circuit omitted — loaded on demand by ensureServerMasterCircuit
         },
         'server'
@@ -533,8 +546,16 @@ export class ServerPersistenceGateway {
       // Adopt the server's save-time version stamp; without it (e.g. a backend
       // that does not yet implement the additive change) the master version is
       // left unchanged, so placed instances are not spuriously flagged stale.
-      if (response.version !== undefined && masterTypeId !== undefined) {
-        this.registry.setMasterVersion(masterTypeId, response.version);
+      if (masterTypeId !== undefined) {
+        if (response.version !== undefined) {
+          this.registry.setMasterVersion(masterTypeId, response.version);
+        }
+        // Re-stamp the save time (server value when present, else now) so the
+        // palette re-sorts the just-edited master to the top.
+        this.registry.setMasterLastEdited(
+          masterTypeId,
+          isoToEpoch(response.lastEdited)
+        );
       }
       if (this.metadataStore.dirtyVersion(project) === versionAtSnapshot) {
         this.metadataStore.clearDirty(project);
