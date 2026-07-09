@@ -51,8 +51,7 @@ export class MemoryDataOptionInputComponent implements ComponentOptionInput<stri
 
     // The editor is decoupled from the dialog, so bridge its outputs here:
     // commit + trim on save, close on either save or cancel.
-    ref.onChildComponentLoaded.subscribe((instance) => {
-      const editor = instance as HexEditorComponent;
+    ref.onChildComponentLoaded.subscribe((editor) => {
       editor.saved.subscribe((bytes) => {
         this.commit()(bytesToBase64(trimTrailingZeros(bytes)));
         ref.close();

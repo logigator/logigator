@@ -6,6 +6,7 @@ import { Subscription } from 'rxjs';
 import { LgFocusTrap } from '../../internal/focus-trap';
 import { createGlobalOverlay } from '../../internal/overlay';
 import { DialogConfig } from './dialog-config';
+import { DialogDataOf, DialogResultOf } from './dialog-content';
 import { DialogRef } from './dialog-ref';
 import {
   DIALOG_CHILD_COMPONENT,
@@ -24,10 +25,10 @@ export class DialogService {
   private readonly focusTrapFactory = inject(ConfigurableFocusTrapFactory);
   private readonly parentInjector = inject(Injector);
 
-  open<C, R = unknown>(
+  open<C, R = DialogResultOf<C>>(
     component: Type<C>,
-    config: DialogConfig = {}
-  ): DialogRef<R> {
+    config: DialogConfig<DialogDataOf<C>, C> = {}
+  ): DialogRef<R, C> {
     const modal = config.modal ?? true;
     const overlayRef = createGlobalOverlay(this.overlay, {
       placement: 'center',
@@ -36,7 +37,7 @@ export class DialogService {
     const focusTrap = new LgFocusTrap(this.focusTrapFactory);
     const subscription = new Subscription();
 
-    const dialogRef = new DialogRef<R>(() => {
+    const dialogRef = new DialogRef<R, C>(() => {
       subscription.unsubscribe();
       focusTrap.release();
       overlayRef.dispose();

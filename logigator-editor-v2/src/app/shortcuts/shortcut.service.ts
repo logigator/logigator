@@ -21,8 +21,8 @@ import { ClipboardService } from '../clipboard/clipboard.service';
 import { WorkModeService } from '../work-mode/work-mode.service';
 import { WorkMode } from '../work-mode/work-mode.enum';
 import { BuiltInComponentType } from '../components/component-type.enum';
-import { OpenProjectDialogComponent } from '../ui/open-project-dialog/open-project-dialog.component';
-import { NewComponentDialogComponent } from '../ui/new-component-dialog/new-component-dialog.component';
+import { OpenProjectDialogComponent } from '../ui/dialogs/open-project-dialog/open-project-dialog.component';
+import { NewComponentDialogComponent } from '../ui/dialogs/new-component-dialog/new-component-dialog.component';
 import { ToastService } from '../logging/toast.service';
 import { LoggingService } from '../logging/logging.service';
 

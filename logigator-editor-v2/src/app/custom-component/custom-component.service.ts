@@ -16,9 +16,8 @@ import { DefinitionBinding } from './definition-binding';
 import { UploadCoordinatorService } from '../ui/upload/upload-coordinator.service';
 import {
   CloseTabChoice,
-  CloseTabDialogComponent,
-  CloseTabDialogData
-} from '../ui/close-tab-dialog/close-tab-dialog.component';
+  CloseTabDialogComponent
+} from '../ui/dialogs/close-tab-dialog/close-tab-dialog.component';
 
 export interface NewComponentMeta {
   name: string;
@@ -242,10 +241,10 @@ export class CustomComponentService {
                 count: localDepCount
               })
             : undefined
-      } satisfies CloseTabDialogData
+      }
     });
     if (!ref) return Promise.resolve(undefined);
-    return firstValueFrom(ref.onClose) as Promise<CloseTabChoice | undefined>;
+    return firstValueFrom(ref.onClose);
   }
 
   private _disposeEditor(project: Project): void {

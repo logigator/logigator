@@ -1,9 +1,8 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
-  DialogConfig,
-  DialogRef,
   LgButton,
+  LgDialogContent,
   LgInputText,
   LgMessage,
   LgSelectButton,
@@ -11,7 +10,12 @@ import {
   LgTooltip
 } from '@logigator/ui';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
-import { UserService } from '../../user/user.service';
+import { UserService } from '../../../user/user.service';
+
+/** The pre-fill passed to the save dialog. */
+export interface SaveProjectDialogData {
+  name: string;
+}
 
 export interface SaveProjectDialogResult {
   name: string;
@@ -42,9 +46,10 @@ const NAME_MAX_LENGTH = 20;
   ],
   templateUrl: './save-project-dialog.component.html'
 })
-export class SaveProjectDialogComponent {
-  private readonly ref = inject(DialogRef);
-  private readonly config = inject(DialogConfig);
+export class SaveProjectDialogComponent extends LgDialogContent<
+  SaveProjectDialogData,
+  SaveProjectDialogResult
+> {
   private readonly transloco = inject(TranslocoService);
   protected readonly userService = inject(UserService);
 
@@ -59,9 +64,7 @@ export class SaveProjectDialogComponent {
     }
   ];
 
-  protected readonly name = signal<string>(
-    (this.config.data as { name?: string } | undefined)?.name ?? ''
-  );
+  protected readonly name = signal<string>(this.dialogData?.name ?? '');
   protected readonly destination = signal<'server' | 'local'>('server');
   protected readonly isPublic = signal(true);
   protected readonly nameMaxLength = NAME_MAX_LENGTH;
@@ -75,10 +78,10 @@ export class SaveProjectDialogComponent {
 
   protected save(): void {
     if (!this.canSave) return;
-    this.ref.close({
+    this.dialogRef.close({
       name: this.name().trim(),
       destination: this.destination(),
       isPublic: this.isPublic()
-    } satisfies SaveProjectDialogResult);
+    });
   }
 }

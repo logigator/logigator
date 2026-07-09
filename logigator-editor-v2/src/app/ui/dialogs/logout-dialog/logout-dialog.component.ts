@@ -1,14 +1,13 @@
-import { Component, inject } from '@angular/core';
+import { Component } from '@angular/core';
 import {
-  DialogConfig,
-  DialogRef,
   LgButton,
+  LgDialogContent,
   LgList,
   LgListItem,
   LgMessage
 } from '@logigator/ui';
 import { TranslocoDirective } from '@jsverse/transloco';
-import { RelativeTimePipe } from '../../utils/relative-time/relative-time.pipe';
+import { RelativeTimePipe } from '../../../utils/relative-time/relative-time.pipe';
 
 /** One dirty cloud document the dialog offers to save. */
 export interface LogoutDialogItem {
@@ -48,24 +47,22 @@ export type LogoutChoice = 'save' | 'discard';
   ],
   templateUrl: './logout-dialog.component.html'
 })
-export class LogoutDialogComponent {
-  private readonly ref = inject(DialogRef);
-  private readonly config = inject(DialogConfig);
-
-  private readonly data = this.config.data as LogoutDialogData | undefined;
-
-  protected readonly items = this.data?.items ?? [];
-  protected readonly promotionWarning = this.data?.promotionWarning;
+export class LogoutDialogComponent extends LgDialogContent<
+  LogoutDialogData,
+  LogoutChoice
+> {
+  protected readonly items = this.dialogData?.items ?? [];
+  protected readonly promotionWarning = this.dialogData?.promotionWarning;
 
   protected save(): void {
-    this.ref.close('save' satisfies LogoutChoice);
+    this.dialogRef.close('save');
   }
 
   protected discard(): void {
-    this.ref.close('discard' satisfies LogoutChoice);
+    this.dialogRef.close('discard');
   }
 
   protected cancel(): void {
-    this.ref.close();
+    this.dialogRef.close();
   }
 }

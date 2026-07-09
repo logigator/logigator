@@ -2,9 +2,8 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import {
-  DialogConfig,
-  DialogRef,
   LgButton,
+  LgDialogContent,
   LgIconField,
   LgInputIcon,
   LgInputText,
@@ -13,11 +12,11 @@ import {
   LgTooltip
 } from '@logigator/ui';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
-import { ProjectApiService } from '../../api/services/project-api.service';
-import { ComponentApiService } from '../../api/services/component-api.service';
-import { ProjectMetadataStore } from '../../persistence/project-metadata.store';
-import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
-import { ToastService } from '../../logging/toast.service';
+import { ProjectApiService } from '../../../api/services/project-api.service';
+import { ComponentApiService } from '../../../api/services/component-api.service';
+import { ProjectMetadataStore } from '../../../persistence/project-metadata.store';
+import { CustomComponentRegistry } from '../../../components/custom/custom-component-registry.service';
+import { ToastService } from '../../../logging/toast.service';
 
 /** The share-mutating subset both the project and component PATCH accept. */
 interface ShareLinkPatch {
@@ -78,9 +77,7 @@ export type ShareDialogData =
   ],
   templateUrl: './share-dialog.component.html'
 })
-export class ShareDialogComponent {
-  private readonly ref = inject(DialogRef);
-  private readonly config = inject(DialogConfig);
+export class ShareDialogComponent extends LgDialogContent<ShareDialogData> {
   private readonly projectApi = inject(ProjectApiService);
   private readonly componentApi = inject(ComponentApiService);
   private readonly metadataStore = inject(ProjectMetadataStore);
@@ -88,7 +85,7 @@ export class ShareDialogComponent {
   private readonly toast = inject(ToastService);
   private readonly transloco = inject(TranslocoService);
 
-  private readonly data = this.config.data as ShareDialogData;
+  private readonly data = this.dialogData!;
 
   protected readonly kind = this.data.kind;
   protected readonly name = this.data.name;
@@ -190,6 +187,6 @@ export class ShareDialogComponent {
   }
 
   protected close(): void {
-    this.ref.close();
+    this.dialogRef.close();
   }
 }

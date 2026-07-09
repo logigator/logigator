@@ -17,19 +17,16 @@ import {
   Subject
 } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { PersistenceService } from '../../persistence/persistence.service';
-import { UploadCoordinatorService } from '../upload/upload-coordinator.service';
-import { ToastService } from '../../logging/toast.service';
-import { UserService } from '../../user/user.service';
+import { PersistenceService } from '../../../persistence/persistence.service';
+import { UploadCoordinatorService } from '../../upload/upload-coordinator.service';
+import { ToastService } from '../../../logging/toast.service';
+import { UserService } from '../../../user/user.service';
 import {
   ProjectListComponent,
   type ProjectListItem
-} from '../project-list/project-list.component';
-import {
-  ShareDialogComponent,
-  type ShareDialogData
-} from '../share-dialog/share-dialog.component';
-import type { BrowserProjectSummary } from '../../persistence/browser/browser-project.types';
+} from '../../project-list/project-list.component';
+import { ShareDialogComponent } from '../share-dialog/share-dialog.component';
+import type { BrowserProjectSummary } from '../../../persistence/browser/browser-project.types';
 
 const PAGE_SIZE = 20;
 
@@ -274,7 +271,7 @@ export class OpenProjectDialogComponent implements OnInit {
         name: item.name,
         link: item.link ?? '',
         isPublic: item.isPublic ?? false
-      } satisfies ShareDialogData
+      }
     });
     // The share dialog PATCHes link/visibility; refresh the list so the row's
     // stored values (which seed a later share) reflect any change.

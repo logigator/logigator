@@ -13,7 +13,7 @@ import { UploadCoordinatorService } from './upload/upload-coordinator.service';
 import {
   SaveProjectDialogComponent,
   SaveProjectDialogResult
-} from './save-project-dialog/save-project-dialog.component';
+} from './dialogs/save-project-dialog/save-project-dialog.component';
 
 /**
  * Single entry point for the "Save" action shared by the title bar, tool bar
@@ -108,8 +108,6 @@ export class SaveCoordinatorService {
       data: { name: currentName }
     });
     if (!ref) return Promise.resolve(undefined);
-    return firstValueFrom(ref.onClose) as Promise<
-      SaveProjectDialogResult | undefined
-    >;
+    return firstValueFrom(ref.onClose);
   }
 }

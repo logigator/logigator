@@ -15,7 +15,7 @@ import {
   UploadDialogComponent,
   UploadDialogData,
   UploadDialogResult
-} from './upload-dialog.component';
+} from '../dialogs/upload-dialog/upload-dialog.component';
 
 /** What is being moved to the cloud. */
 export type UploadTarget =
@@ -317,12 +317,10 @@ export class UploadCoordinatorService {
         // When visibility is decided upstream, lock it so the dialog is purely
         // about which local components to promote.
         presetIsPublic
-      } satisfies UploadDialogData
+      }
     });
     if (!ref) return Promise.resolve(undefined);
-    return firstValueFrom(ref.onClose) as Promise<
-      UploadDialogResult | undefined
-    >;
+    return firstValueFrom(ref.onClose);
   }
 
   private _dialogKind(target: UploadTarget): UploadDialogData['kind'] {

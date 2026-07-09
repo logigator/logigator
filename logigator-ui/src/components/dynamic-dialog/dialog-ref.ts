@@ -12,14 +12,14 @@ import { Observable, ReplaySubject, Subject } from 'rxjs';
  *   after its inputs are applied. A `ReplaySubject(1)` so a late subscriber
  *   still receives the instance.
  */
-export class DialogRef<R = unknown> {
+export class DialogRef<R = unknown, Instance = unknown> {
   private readonly closeSubject = new Subject<R | undefined>();
-  private readonly childLoadedSubject = new ReplaySubject<unknown>(1);
+  private readonly childLoadedSubject = new ReplaySubject<Instance>(1);
   private settled = false;
 
   readonly onClose: Observable<R | undefined> =
     this.closeSubject.asObservable();
-  readonly onChildComponentLoaded: Observable<unknown> =
+  readonly onChildComponentLoaded: Observable<Instance> =
     this.childLoadedSubject.asObservable();
 
   /**
@@ -41,7 +41,7 @@ export class DialogRef<R = unknown> {
   }
 
   /** @internal The container reports the instantiated child component here. */
-  notifyChildLoaded(instance: unknown): void {
+  notifyChildLoaded(instance: Instance): void {
     this.childLoadedSubject.next(instance);
   }
 }

@@ -3,10 +3,7 @@ import { DialogService, LgButton } from '@logigator/ui';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { ComponentActionContext } from '../../component-action';
 import { CustomComponentRegistry } from '../custom-component-registry.service';
-import {
-  ShareDialogComponent,
-  ShareDialogData
-} from '../../../ui/share-dialog/share-dialog.component';
+import { ShareDialogComponent } from '../../../ui/dialogs/share-dialog/share-dialog.component';
 import { resolveMasterSignal } from './resolve-master.signal';
 
 /**
@@ -67,7 +64,7 @@ export class ShareComponentActionComponent {
         name: master.name,
         link: master.link ?? '',
         isPublic: master.isPublic ?? false
-      } satisfies ShareDialogData
+      }
     });
   }
 }

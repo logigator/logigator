@@ -72,7 +72,15 @@ export { LgScroller } from './components/scroller/scroller';
 
 export { DialogService } from './components/dynamic-dialog/dialog.service';
 export { DialogRef } from './components/dynamic-dialog/dialog-ref';
-export { DialogConfig } from './components/dynamic-dialog/dialog-config';
+export {
+  DialogConfig,
+  type DialogInputs
+} from './components/dynamic-dialog/dialog-config';
+export {
+  LgDialogContent,
+  type DialogDataOf,
+  type DialogResultOf
+} from './components/dynamic-dialog/dialog-content';
 
 export { WindowService } from './components/window/window.service';
 export { WindowRef } from './components/window/window-ref';

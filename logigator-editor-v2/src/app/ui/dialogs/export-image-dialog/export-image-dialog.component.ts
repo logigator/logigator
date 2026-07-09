@@ -9,13 +9,13 @@ import {
   LgToggleSwitch
 } from '@logigator/ui';
 import { TranslocoDirective } from '@jsverse/transloco';
-import { ProjectService } from '../../project/project.service';
-import { ProjectMetadataStore } from '../../persistence/project-metadata.store';
+import { ProjectService } from '../../../project/project.service';
+import { ProjectMetadataStore } from '../../../persistence/project-metadata.store';
 import {
   ImageExportService,
   ImageFormat
-} from '../../rendering/image-export.service';
-import { Project } from '../../project/project';
+} from '../../../rendering/image-export.service';
+import { Project } from '../../../project/project';
 
 /** Slider default; converted to a 0–1 quality on export. */
 const DEFAULT_QUALITY_PERCENT = 92;

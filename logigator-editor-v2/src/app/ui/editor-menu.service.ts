@@ -13,14 +13,11 @@ import { ShortcutService } from '../shortcuts/shortcut.service';
 import { ShortcutActionEnum } from '../shortcuts/shortcut-action.enum';
 import { SaveCoordinatorService } from './save-coordinator.service';
 import { UploadCoordinatorService } from './upload/upload-coordinator.service';
-import { OpenProjectDialogComponent } from './open-project-dialog/open-project-dialog.component';
-import { NewComponentDialogComponent } from './new-component-dialog/new-component-dialog.component';
+import { OpenProjectDialogComponent } from './dialogs/open-project-dialog/open-project-dialog.component';
+import { NewComponentDialogComponent } from './dialogs/new-component-dialog/new-component-dialog.component';
 import { ShortcutManagerComponent } from '../shortcuts/shortcut-manager/shortcut-manager.component';
-import { ExportImageDialogComponent } from './export-image-dialog/export-image-dialog.component';
-import {
-  ShareDialogComponent,
-  ShareDialogData
-} from './share-dialog/share-dialog.component';
+import { ExportImageDialogComponent } from './dialogs/export-image-dialog/export-image-dialog.component';
+import { ShareDialogComponent } from './dialogs/share-dialog/share-dialog.component';
 import { DebugMenuService } from './debug-menu.service';
 import { ToastService } from '../logging/toast.service';
 
@@ -336,7 +333,7 @@ export class EditorMenuService {
         name: metadata.name,
         link: metadata.link ?? '',
         isPublic: metadata.isPublic ?? false
-      } satisfies ShareDialogData
+      }
     });
   }
 

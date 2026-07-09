@@ -1,9 +1,8 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
-  DialogConfig,
-  DialogRef,
   LgButton,
+  LgDialogContent,
   LgList,
   LgListItem,
   LgMessage,
@@ -11,8 +10,8 @@ import {
   LgTooltip
 } from '@logigator/ui';
 import { TranslocoDirective } from '@jsverse/transloco';
-import { UserService } from '../../user/user.service';
-import { LocalUploadDependency } from '../../persistence/persistence.service';
+import { UserService } from '../../../user/user.service';
+import { LocalUploadDependency } from '../../../persistence/persistence.service';
 
 export interface UploadDialogData {
   /** Wording variant; a stored project opens as `'project'`. */
@@ -55,12 +54,13 @@ export interface UploadDialogResult {
   ],
   templateUrl: './upload-dialog.component.html'
 })
-export class UploadDialogComponent {
-  private readonly ref = inject(DialogRef);
-  private readonly config = inject(DialogConfig);
+export class UploadDialogComponent extends LgDialogContent<
+  UploadDialogData,
+  UploadDialogResult
+> {
   protected readonly userService = inject(UserService);
 
-  private readonly data = this.config.data as UploadDialogData | undefined;
+  private readonly data = this.dialogData;
 
   protected readonly kind = this.data?.kind ?? 'project';
   protected readonly name = this.data?.name ?? '';
@@ -82,10 +82,10 @@ export class UploadDialogComponent {
   protected readonly isPublic = signal(this.lockedIsPublic ?? true);
 
   protected cancel(): void {
-    this.ref.close();
+    this.dialogRef.close();
   }
 
   protected upload(): void {
-    this.ref.close({ isPublic: this.isPublic() } satisfies UploadDialogResult);
+    this.dialogRef.close({ isPublic: this.isPublic() });
   }
 }

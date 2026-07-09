@@ -9,7 +9,7 @@ import { CustomComponentRegistry } from '../../components/custom/custom-componen
 import { ToastService } from '../../logging/toast.service';
 import { Project } from '../../project/project';
 import { configureTestBed } from '../../../testing/configure-test-bed';
-import { UploadDialogResult } from './upload-dialog.component';
+import { UploadDialogResult } from '../dialogs/upload-dialog/upload-dialog.component';
 
 describe('UploadCoordinatorService', () => {
   let service: UploadCoordinatorService;

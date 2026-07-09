@@ -11,6 +11,7 @@ import { firstValueFrom } from 'rxjs';
 import { DialogService } from './dialog.service';
 import { DialogConfig } from './dialog-config';
 import { DialogRef } from './dialog-ref';
+import { LgDialogContent } from './dialog-content';
 
 @Component({
   selector: 'lg-test-dialog-child',
@@ -37,6 +38,22 @@ class ConfigReadingChild {
   protected readonly name = (this.config.data as { name?: string })?.name;
 }
 
+interface ContractData {
+  name: string;
+}
+type ContractResult = 'ok' | 'cancel';
+
+@Component({
+  selector: 'lg-test-contract-child',
+  template: `<span class="c-name">{{ dialogData?.name }}</span>`
+})
+class ContractChild extends LgDialogContent<ContractData, ContractResult> {
+  // `dialogData` and `dialogRef` come from the base, already typed — no casts.
+  confirm(): void {
+    this.dialogRef.close('ok');
+  }
+}
+
 function container(): Element | null {
   return document.querySelector('.cdk-overlay-container');
 }
@@ -46,17 +63,64 @@ function panel(): HTMLElement | null {
 }
 
 /** Open a dialog and run one CD pass so the container's ngAfterViewInit fires. */
-function open(config: DialogConfig = {}): DialogRef {
-  const ref = TestBed.inject(DialogService).open(TestDialogChild, config);
+function open(
+  config: DialogConfig<unknown, TestDialogChild> = {}
+): DialogRef<unknown, TestDialogChild> {
+  const ref = TestBed.inject(DialogService).open<TestDialogChild, unknown>(
+    TestDialogChild,
+    config
+  );
   TestBed.inject(ApplicationRef).tick();
   return ref;
 }
+
+// Type-level guard: `inputValues` is type-checked against the opened
+// component's `input()` signals. This locks in `DialogInputs` — a regression
+// that widens it back to `{}` (silently dropping every check) would let the
+// `@ts-expect-error` lines compile clean and fail this build. Never invoked
+// (the fake `svc` would deref null); it exists only to be type-checked.
+// eslint-disable-next-line @typescript-eslint/no-unused-expressions
+() => {
+  const svc = null as unknown as DialogService;
+  svc.open(TestDialogChild, { inputValues: { wordSize: 4, label: 'x' } });
+  // @ts-expect-error wordSize must be a number
+  svc.open(TestDialogChild, { inputValues: { wordSize: 'nope' } });
+  // @ts-expect-error `saved` is an output, not a settable input
+  svc.open(TestDialogChild, { inputValues: { saved: 'x' } });
+
+  // A contract component (extends LgDialogContent) has its `data` and result
+  // inferred from the component alone — no type arguments. The assignment holds
+  // only if `onClose` is typed `ContractResult | undefined` (not `unknown`); the
+  // `@ts-expect-error` lines hold only if `data` is checked against ContractData.
+  const ref = svc.open(ContractChild, { data: { name: 'x' } });
+  const result: Promise<ContractResult | undefined> = firstValueFrom(
+    ref.onClose
+  );
+  void result;
+  // @ts-expect-error `data` must match ContractData (name: string)
+  svc.open(ContractChild, { data: { name: 42 } });
+  // @ts-expect-error unknown data key rejected against ContractData
+  svc.open(ContractChild, { data: { nope: true } });
+};
 
 describe('DialogService', () => {
   afterEach(() => {
     document
       .querySelectorAll('.cdk-overlay-container')
       .forEach((el) => el.remove());
+  });
+
+  it('feeds a contract component its typed data and closes with its result', async () => {
+    const ref = TestBed.inject(DialogService).open(ContractChild, {
+      data: { name: 'demo' }
+    });
+    TestBed.inject(ApplicationRef).tick();
+    expect(container()?.querySelector('.c-name')?.textContent).toContain(
+      'demo'
+    );
+    const closed = firstValueFrom(ref.onClose);
+    ref.close('ok');
+    expect(await closed).toBe('ok');
   });
 
   it('renders the child component inside a centred dialog panel', () => {

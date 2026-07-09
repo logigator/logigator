@@ -19,9 +19,8 @@ import { LoggingService } from '../logging/logging.service';
 import { Project } from '../project/project';
 import {
   LogoutChoice,
-  LogoutDialogComponent,
-  LogoutDialogData
-} from '../ui/logout-dialog/logout-dialog.component';
+  LogoutDialogComponent
+} from '../ui/dialogs/logout-dialog/logout-dialog.component';
 
 /** A registered document together with its metadata. */
 interface DocumentHandle {
@@ -223,9 +222,9 @@ export class SessionLifecycleService {
                 count: promotable.size
               })
             : undefined
-      } satisfies LogoutDialogData
+      }
     });
     if (!ref) return Promise.resolve(undefined);
-    return firstValueFrom(ref.onClose) as Promise<LogoutChoice | undefined>;
+    return firstValueFrom(ref.onClose);
   }
 }

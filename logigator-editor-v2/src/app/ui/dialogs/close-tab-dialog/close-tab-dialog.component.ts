@@ -1,5 +1,5 @@
-import { Component, inject } from '@angular/core';
-import { DialogConfig, DialogRef, LgButton, LgMessage } from '@logigator/ui';
+import { Component } from '@angular/core';
+import { LgButton, LgDialogContent, LgMessage } from '@logigator/ui';
 import { TranslocoDirective } from '@jsverse/transloco';
 
 export interface CloseTabDialogData {
@@ -27,24 +27,22 @@ export type CloseTabChoice = 'save' | 'discard';
   imports: [LgButton, LgMessage, TranslocoDirective],
   templateUrl: './close-tab-dialog.component.html'
 })
-export class CloseTabDialogComponent {
-  private readonly ref = inject(DialogRef);
-  private readonly config = inject(DialogConfig);
-
-  private readonly data = this.config.data as CloseTabDialogData | undefined;
-
-  protected readonly name = this.data?.name ?? '';
-  protected readonly promotionWarning = this.data?.promotionWarning;
+export class CloseTabDialogComponent extends LgDialogContent<
+  CloseTabDialogData,
+  CloseTabChoice
+> {
+  protected readonly name = this.dialogData?.name ?? '';
+  protected readonly promotionWarning = this.dialogData?.promotionWarning;
 
   protected save(): void {
-    this.ref.close('save' satisfies CloseTabChoice);
+    this.dialogRef.close('save');
   }
 
   protected discard(): void {
-    this.ref.close('discard' satisfies CloseTabChoice);
+    this.dialogRef.close('discard');
   }
 
   protected cancel(): void {
-    this.ref.close();
+    this.dialogRef.close();
   }
 }

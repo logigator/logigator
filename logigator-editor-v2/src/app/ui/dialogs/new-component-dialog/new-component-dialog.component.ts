@@ -10,8 +10,8 @@ import {
   LgTooltip
 } from '@logigator/ui';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
-import { CustomComponentService } from '../../custom-component/custom-component.service';
-import { UserService } from '../../user/user.service';
+import { CustomComponentService } from '../../../custom-component/custom-component.service';
+import { UserService } from '../../../user/user.service';
 
 /**
  * Collects the metadata for a new custom component (name, symbol, description,
