@@ -873,7 +873,9 @@ export class PersistenceService {
     const {
       id: newId,
       version,
-      hash: newHash
+      hash: newHash,
+      link: newLink,
+      isPublic: newIsPublic
     } = await this._withProjectFromContent(record.content, (temp) =>
       this.server.promoteComponentFromProject(temp, {
         name: def.name,
@@ -900,7 +902,10 @@ export class PersistenceService {
       );
     }
 
-    this.registry.promoteMaster(masterTypeId, newId, version);
+    this.registry.promoteMaster(masterTypeId, newId, version, {
+      link: newLink,
+      isPublic: newIsPublic
+    });
     this.logging.info(
       `Promoted component ${oldId} -> ${newId} (v${version})`,
       'PersistenceService'

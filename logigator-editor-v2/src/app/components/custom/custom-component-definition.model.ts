@@ -49,6 +49,14 @@ export interface CustomComponentDefinition {
   /** Port labels, inputs first then outputs, in plug-index order. */
   labels: string[];
   /**
+   * Server masters only: the share-link token (`showShareLinks`), captured from
+   * the summary/response when the master is registered so the share dialog reads
+   * it without an extra fetch. Absent for browser masters and snapshots.
+   */
+  link?: string;
+  /** Server masters only: whether the component is published publicly. */
+  isPublic?: boolean;
+  /**
    * The definition's own circuit in the native body encoding, holding **session**
    * type ids. For a snapshot: travels embedded with the host document (present
    * once loaded). For a master: materialised from its open editor Project (see

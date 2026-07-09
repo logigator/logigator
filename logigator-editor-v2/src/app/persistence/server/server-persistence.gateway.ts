@@ -301,7 +301,9 @@ export class ServerPersistenceGateway {
         version: response.version ?? 1,
         name: meta.name,
         symbol: meta.symbol,
-        description: meta.description
+        description: meta.description,
+        link: response.link,
+        isPublic: response.public
       },
       'server'
     );
@@ -356,7 +358,13 @@ export class ServerPersistenceGateway {
       description: string;
       isPublic?: boolean;
     }
-  ): Promise<{ id: string; version: number; hash: string }> {
+  ): Promise<{
+    id: string;
+    version: number;
+    hash: string;
+    link?: string;
+    isPublic: boolean;
+  }> {
     const response = await firstValueFrom(
       this.componentApi.create({
         name: meta.name,
@@ -375,7 +383,9 @@ export class ServerPersistenceGateway {
     return {
       id: response.id,
       version: saveResponse.version ?? response.version ?? 1,
-      hash: saveResponse.elementsFile?.hash ?? ''
+      hash: saveResponse.elementsFile?.hash ?? '',
+      link: response.link,
+      isPublic: response.public
     };
   }
 
@@ -407,6 +417,8 @@ export class ServerPersistenceGateway {
           numInputs: detail.numInputs,
           numOutputs: detail.numOutputs,
           labels: detail.labels,
+          link: detail.link,
+          isPublic: detail.public,
           lastEdited: isoToEpoch(detail.lastEdited)
         },
         'server'
@@ -463,6 +475,8 @@ export class ServerPersistenceGateway {
           numInputs: summary.numInputs,
           numOutputs: summary.numOutputs,
           labels: summary.labels,
+          link: summary.link,
+          isPublic: summary.public,
           lastEdited: isoToEpoch(summary.lastEdited)
           // circuit omitted — loaded on demand by ensureServerMasterCircuit
         },

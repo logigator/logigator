@@ -5,6 +5,7 @@ import { ComponentActionContext } from '../../component-action';
 import { CustomComponentRegistry } from '../custom-component-registry.service';
 import { UserService } from '../../../user/user.service';
 import { UploadCoordinatorService } from '../../../ui/upload/upload-coordinator.service';
+import { resolveMasterSignal } from './resolve-master.signal';
 
 /**
  * Renderer for {@link UploadComponentAction}: a button shown only when the
@@ -37,10 +38,10 @@ export class UploadComponentActionComponent {
   private readonly uploadCoordinator = inject(UploadCoordinatorService);
   private readonly userService = inject(UserService);
 
-  private readonly resolved = computed(() => {
-    this.registry.revision(); // recompute after a promotion flips the source
-    return this.registry.resolveMaster(this.context().config.type);
-  });
+  private readonly resolved = resolveMasterSignal(
+    this.registry,
+    () => this.context().config.type
+  );
 
   protected readonly visible = computed(
     () => this.resolved()?.master.source === 'browser'

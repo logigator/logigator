@@ -80,7 +80,7 @@ export class ComponentController {
 		const enriched = await synthesizeMissingSnapshots(dependencies, snapshots);
 
 		return {
-			...classToPlain(component),
+			...classToPlain(component, {groups: ['showShareLinks']}),
 			dependencies: buildDependencyResponse(dependencies, enriched),
 			elements,
 			newFormat: component.newFormat
@@ -157,6 +157,7 @@ export class ComponentController {
 
 	@Patch('/:componentId')
 	@UseBefore(CheckAuthenticatedApiMiddleware)
+	@ResponseClassTransformOptions({groups: ['showShareLinks']})
 	public async update(@Param('componentId') componentId: string, @CurrentUser() user: User, @Body() body: UpdateComponent) {
 		const component = await this.componentRepo.getOwnedComponentOrThrow(componentId, user);
 
@@ -166,7 +167,7 @@ export class ComponentController {
 			component.description = body.description;
 		if (body.symbol)
 			component.symbol = body.symbol;
-		if (body.public)
+		if (body.public !== undefined)
 			component.public = body.public;
 		if (body.updateLink)
 			component.link = uuid();

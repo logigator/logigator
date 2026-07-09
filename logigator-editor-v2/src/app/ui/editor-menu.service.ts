@@ -328,7 +328,7 @@ export class EditorMenuService {
       width: '32rem',
       modal: true,
       closable: true,
-      data: { project } satisfies ShareDialogData
+      data: { kind: 'project', project } satisfies ShareDialogData
     });
   }
 

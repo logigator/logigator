@@ -43,7 +43,13 @@
     <label for="share-public">{{ t('shareDialog.public') }}</label>
     <i
       class="ph ph-info cursor-help text-muted"
-      [lgTooltip]="t('shareDialog.publicInfo')"
+      [lgTooltip]="
+        t(
+          kind === 'component'
+            ? 'shareDialog.publicInfoComponent'
+            : 'shareDialog.publicInfoProject'
+        )
+      "
     ></i>
   </div>
 

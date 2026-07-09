@@ -94,6 +94,8 @@ export class CustomComponentRegistry {
       numInputs: meta.numInputs ?? 0,
       numOutputs: meta.numOutputs ?? 0,
       labels: meta.labels ? [...meta.labels] : [],
+      link: meta.link,
+      isPublic: meta.isPublic,
       // A master without a supplied timestamp is one being created now, so it
       // sorts to the top of the palette; preloads pass the persisted value.
       lastEdited: meta.lastEdited ?? Date.now(),
@@ -327,6 +329,25 @@ export class CustomComponentRegistry {
     this._revision.update((r) => r + 1);
   }
 
+  /**
+   * Updates a **server master's** share link and/or public visibility after the
+   * share dialog mutates them, so the value stays fresh for the rest of the
+   * session (the dialog reads it back without a fetch). No revision bump — share
+   * info is not palette-visible. No-ops for a snapshot or unknown type id.
+   */
+  public setMasterShareInfo(
+    masterTypeId: number,
+    patch: { link?: string; isPublic?: boolean }
+  ): void {
+    const def = this._definitions.get(masterTypeId);
+    if (!def || def.kind !== 'master') {
+      this._noopMaster('setMasterShareInfo', masterTypeId);
+      return;
+    }
+    if (patch.link !== undefined) def.link = patch.link;
+    if (patch.isPublic !== undefined) def.isPublic = patch.isPublic;
+  }
+
   public getDefinition(typeId: number): CustomComponentDefinition | undefined {
     return this._definitions.get(typeId);
   }
@@ -427,7 +448,8 @@ export class CustomComponentRegistry {
   public promoteMaster(
     masterTypeId: number,
     newId: string,
-    version: number
+    version: number,
+    shareInfo?: { link?: string; isPublic?: boolean }
   ): void {
     const def = this._definitions.get(masterTypeId);
     if (!def || def.kind !== 'master') {
@@ -442,6 +464,9 @@ export class CustomComponentRegistry {
     def.source = 'server';
     def.id = newId;
     def.version = version;
+    // The component gained its cloud identity, hence its share link + visibility.
+    def.link = shareInfo?.link;
+    def.isPublic = shareInfo?.isPublic;
     this._idToMasterTypeId.set(newId, masterTypeId);
     this._masterToSnapshotTypeId.delete(masterTypeId);
     this._provider.register(buildCustomComponentConfig(def));

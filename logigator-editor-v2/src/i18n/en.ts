@@ -399,6 +399,7 @@ const en = {
   },
   shareDialog: {
     header: 'Share project',
+    headerComponent: 'Share component',
     intro:
       'Anyone with this link can open “{{name}}” read-only and clone it into their own library.',
     linkLabel: 'Share link',
@@ -411,11 +412,16 @@ const en = {
     linkRegenerated: 'A new share link was generated.',
     regenerateFailed: 'Could not regenerate the share link.',
     public: 'Public',
-    publicInfo:
+    publicInfoProject:
       'Public projects are published on your profile and discoverable by everyone. Private projects are reachable only via the share link.',
+    publicInfoComponent:
+      'Public components are published on your profile and discoverable by everyone. Private components are reachable only via the share link.',
     visibilityUpdated: 'Visibility updated.',
-    visibilityFailed: 'Could not update the project visibility.',
+    visibilityFailed: 'Could not update the visibility.',
     close: 'Close'
+  },
+  shareComponent: {
+    button: 'Share'
   },
   uploadDialog: {
     header: 'Upload to cloud',

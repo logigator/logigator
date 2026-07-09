@@ -8,6 +8,7 @@ import { SubCircuitWatch } from './sub-circuit-watch';
 import { EditComponentAction } from './actions/edit-component.component-action';
 import { UpdateInstanceComponentAction } from './actions/update-instance.component-action';
 import { UploadComponentAction } from './actions/upload-component.component-action';
+import { ShareComponentAction } from './actions/share-component.component-action';
 
 /**
  * Option set for every custom component instance. Unlike built-ins, a custom
@@ -69,7 +70,8 @@ export function buildCustomComponentConfig(
     actions: [
       new EditComponentAction(),
       new UpdateInstanceComponentAction(),
-      new UploadComponentAction()
+      new UploadComponentAction(),
+      new ShareComponentAction()
     ],
     // Tapping a placed instance during simulation opens a live watch of its
     // inner circuit.
