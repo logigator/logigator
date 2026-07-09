@@ -1,4 +1,12 @@
 import 'vitest-canvas-mock';
+import { environment } from './src/environments/environment';
+import { LogLevel } from './src/app/logging/log-level.enum';
+
+// The unit-test builder applies the `development` file replacement, whose
+// verbosity is Debug — flooding the test output with log traces. Silence all
+// logging so the test output stays clean. Specs asserting on emitted logs raise
+// the verbosity themselves and restore it after.
+environment.loggingVerbosity = LogLevel.Silent;
 
 // jsdom lacks ResizeObserver, which BoardComponent uses to re-measure the
 // canvas. A no-op stub keeps board instantiation from throwing in tests.

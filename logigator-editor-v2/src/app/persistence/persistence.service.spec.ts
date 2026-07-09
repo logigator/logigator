@@ -13,6 +13,7 @@ import { ProjectService } from '../project/project.service';
 import { Project } from '../project/project';
 import { ProjectElement } from '../api/models/project-element';
 import { environment } from '../../environments/environment';
+import { LogLevel } from '../logging/log-level.enum';
 import { InvalidFileError } from './file/circuit-file.errors';
 import { BrowserProjectStore } from './browser/browser-project.store';
 import { BrowserComponentStore } from './browser/browser-component.store';
@@ -928,23 +929,31 @@ describe('PersistenceService', () => {
         { t: 1, p: [10, 0], i: 1, o: 1 } // NOT — known
       ];
       const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      // Tests run at Silent verbosity; raise it so the migration's warning is
+      // actually emitted for this assertion.
+      const originalVerbosity = environment.loggingVerbosity;
+      environment.loggingVerbosity = LogLevel.Warn;
 
-      const promise = service.loadProject('test-uuid');
-      httpMock
-        .expectOne(PROJECT_URL('test-uuid'))
-        .flush(projectDetailResponse({ elements }));
+      try {
+        const promise = service.loadProject('test-uuid');
+        httpMock
+          .expectOne(PROJECT_URL('test-uuid'))
+          .flush(projectDetailResponse({ elements }));
 
-      const project = await promise;
-      expect(Array.from(project.components).length).toBe(2);
-      // Server reads route through the v0→v1 migration, which drops unknown
-      // types with a warning. LoggingService.warn forwards to
-      // console.warn('%c[%s]', style, context, message).
-      expect(warnSpy).toHaveBeenCalledWith(
-        '%c[%s]',
-        'color:#888',
-        'v0ToV1Migration',
-        expect.stringContaining('Unknown component type ID: 999')
-      );
+        const project = await promise;
+        expect(Array.from(project.components).length).toBe(2);
+        // Server reads route through the v0→v1 migration, which drops unknown
+        // types with a warning. LoggingService.warn forwards to
+        // console.warn('%c[%s]', style, context, message).
+        expect(warnSpy).toHaveBeenCalledWith(
+          '%c[%s]',
+          'color:#888',
+          'v0ToV1Migration',
+          expect.stringContaining('Unknown component type ID: 999')
+        );
+      } finally {
+        environment.loggingVerbosity = originalVerbosity;
+      }
     });
   });
 

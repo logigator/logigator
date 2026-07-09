@@ -14,6 +14,7 @@ import { outputComponentConfig } from '../../components/component-types/output/o
 import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
 import { Project } from '../../project/project';
 import { ProjectService } from '../../project/project.service';
+import { EditorSettingsService } from '../../settings/editor-settings.service';
 import { SimulationService } from '../../simulation/simulation.service';
 import { packSnapshot } from '../../simulation/worker/protocol';
 import {
@@ -56,6 +57,8 @@ describe('WatchSession', () => {
     simulation = TestBed.inject(SimulationService);
     registry = TestBed.inject(CustomComponentRegistry);
     provider = TestBed.inject(ComponentProviderService);
+    // Keep the boot paused so the watch is set up before the run advances.
+    TestBed.inject(EditorSettingsService).autoStartSimulation.set(false);
     project = new Project();
     TestBed.inject(ProjectService).setMainProject(project);
   });

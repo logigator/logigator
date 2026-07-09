@@ -10,6 +10,7 @@ import { Component } from '../components/component';
 import { ComponentProviderService } from '../components/component-provider.service';
 import { CustomComponentRegistry } from '../components/custom/custom-component-registry.service';
 import { ToastService } from '../logging/toast.service';
+import { EditorSettingsService } from '../settings/editor-settings.service';
 import { Project } from '../project/project';
 import { ProjectService } from '../project/project.service';
 import { WorkMode } from '../work-mode/work-mode.enum';
@@ -42,6 +43,9 @@ describe('SimulationService', () => {
     service = TestBed.inject(SimulationService);
     workModeService = TestBed.inject(WorkModeService);
     toastService = TestBed.inject(ToastService);
+    // These tests drive the run controls by hand and assert on a paused boot;
+    // keep auto-start off (its own test below covers the on path).
+    TestBed.inject(EditorSettingsService).autoStartSimulation.set(false);
     project = new Project();
     TestBed.inject(ProjectService).setMainProject(project);
   });
@@ -92,6 +96,15 @@ describe('SimulationService', () => {
     const inits = fakeWorker.postedOfKind('init');
     expect(inits).toHaveLength(1);
     expect(inits[0].descriptor).toEqual(service.board!.descriptor);
+  });
+
+  it('auto-starts the run after boot when the setting is on', async () => {
+    TestBed.inject(EditorSettingsService).autoStartSimulation.set(true);
+    project.addComponent(makeSwitch());
+
+    service.enter();
+
+    await vi.waitFor(() => expect(service.isRunning()).toBe(true));
   });
 
   it('refuses to enter on diagnostics and reports via toast', () => {
