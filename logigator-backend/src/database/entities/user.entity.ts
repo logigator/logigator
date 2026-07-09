@@ -22,6 +22,7 @@ import {Exclude, Expose, Transform} from 'class-transformer';
 @Check(`(login_type = 'local' and password is not null) or (login_type != 'local')`)
 export class User {
 
+	@Expose({groups: ['privateUserData']})
 	@PrimaryGeneratedColumn('uuid')
 	id: string;
 
