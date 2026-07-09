@@ -29,22 +29,27 @@
         <!-- Inspection windows float over the board, under the toast stack. -->
         <lg-window-outlet class="z-[1000]" />
 
-        <!-- Bottom-right overlay stack: toasts ride in normal flow above the
-             minimap, so a collapsed or hidden minimap simply lets them settle
-             into the corner. The wrapper owns placement + z-index and lets
-             pointer events fall through; each child re-enables its own. -->
+        <!-- Bottom-left overlay stack: toasts ride in normal flow above the
+             component-settings card, so with no selection they settle into the
+             corner. The wrapper owns placement + z-index and lets pointer events
+             fall through; each child re-enables its own. -->
         <div
-          class="pointer-events-none absolute right-3 bottom-3 z-[1100] flex flex-col items-end"
+          class="pointer-events-none absolute left-3 bottom-3 z-[1100] flex max-w-96 flex-col items-start"
         >
-          <lg-toast [embedded]="true" position="bottom-right" />
-          @if (
-            editorSettings.showMinimap.value() && rendererService.available()
-          ) {
-            <app-minimap [project]="projectService.activeProject()" />
-          }
+          <lg-toast [embedded]="true" position="bottom-left" />
+          <app-component-settings
+            class="pointer-events-auto"
+            [floating]="false"
+          ></app-component-settings>
         </div>
 
-        <app-component-settings></app-component-settings>
+        <!-- Bottom-right: the minimap keeps its own corner. -->
+        @if (editorSettings.showMinimap.value() && rendererService.available()) {
+          <app-minimap
+            class="absolute right-3 bottom-3 z-[1100]"
+            [project]="projectService.activeProject()"
+          />
+        }
       } @else {
         <lg-toast position="bottom-left" />
 

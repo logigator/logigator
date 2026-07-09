@@ -80,11 +80,9 @@ export class MinimapComponent implements OnDestroy {
     this.layout.isCompact() ? PANEL_SIZE_COMPACT : PANEL_SIZE_REGULAR
   );
   /**
-   * Desktop: in normal flow at the bottom of the app shell's bottom-right
-   * overlay stack, sitting below the toasts (the FPS counter owns the
-   * top-left, the floating component-settings card the bottom-left). The
-   * wrapper owns placement, so the host carries no inset of its own — only
-   * `pointer-events-auto` to re-enable input through the pass-through wrapper.
+   * Desktop: owns the bottom-right corner (the FPS counter owns the top-left,
+   * the toasts and component-settings card the bottom-left). The app shell
+   * places the host, so it carries only `pointer-events-auto`.
    * Compact: right-edge stack above the zoom FAB, below the status pill.
    */
   protected readonly hostClasses = computed(() =>
