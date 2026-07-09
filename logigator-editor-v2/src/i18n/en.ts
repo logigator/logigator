@@ -354,6 +354,7 @@ const en = {
     searchPlaceholder: 'Search projects...',
     searchButton: 'Search',
     noSearchResults: 'No projects found',
+    lastEdited: 'Last edited',
     errors: {
       listLocal: 'Could not load your local projects.',
       openLocal: 'Could not open the local project.',
