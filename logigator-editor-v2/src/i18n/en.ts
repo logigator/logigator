@@ -30,7 +30,7 @@ const en = {
     options: {
       fpsCounter: 'FPS Counter',
       showGrid: 'Show Grid',
-      showMinimap: 'Show Minimap'
+      autoStartSimulation: 'Auto-start simulation'
     }
   },
   minimap: {

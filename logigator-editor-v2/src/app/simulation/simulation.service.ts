@@ -9,6 +9,7 @@ import { Project } from '../project/project';
 import { ProjectService } from '../project/project.service';
 import { ShortcutActionEnum } from '../shortcuts/shortcut-action.enum';
 import { ShortcutService } from '../shortcuts/shortcut.service';
+import { EditorSettingsService } from '../settings/editor-settings.service';
 import { WorkMode } from '../work-mode/work-mode.enum';
 import { WorkModeService } from '../work-mode/work-mode.service';
 import { BoardCompilerService } from './compiler/board-compiler.service';
@@ -53,6 +54,7 @@ export class SimulationService {
   private readonly logging = inject(LoggingService);
   private readonly toastService = inject(ToastService);
   private readonly workerService = inject(SimulationWorkerService);
+  private readonly settings = inject(EditorSettingsService);
 
   private readonly _state = signal<SimulationState>('inactive');
   public readonly state = computed(this._state);
@@ -245,6 +247,9 @@ export class SimulationService {
         if (this._state() === 'starting') {
           this._state.set('ready');
           this.logging.info('engine ready', 'SimulationService');
+          if (this.settings.autoStartSimulation.value()) {
+            this.play();
+          }
         }
       })
       .catch((err: Error) => {

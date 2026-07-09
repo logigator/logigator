@@ -44,9 +44,7 @@
         </div>
 
         <!-- Bottom-right: the minimap keeps its own corner. -->
-        @if (
-          editorSettings.showMinimap.value() && rendererService.available()
-        ) {
+        @if (rendererService.available()) {
           <app-minimap
             class="absolute right-3 bottom-3 z-[1100]"
             [project]="projectService.activeProject()"
@@ -66,9 +64,7 @@
           <app-zoom-fab
             class="pointer-events-auto absolute bottom-24 right-3"
           ></app-zoom-fab>
-          @if (
-            editorSettings.showMinimap.value() && rendererService.available()
-          ) {
+          @if (rendererService.available()) {
             <app-minimap [project]="projectService.activeProject()" />
           }
           @if (!isSimulation()) {

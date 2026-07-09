@@ -29,17 +29,17 @@ export class EditorSettingsService {
     () => this.persist()
   );
 
-  public readonly showMinimap = new EditorSetting(
-    'showMinimap',
-    'settings.options.showMinimap',
-    this.stored['showMinimap'] ?? true,
+  public readonly autoStartSimulation = new EditorSetting(
+    'autoStartSimulation',
+    'settings.options.autoStartSimulation',
+    this.stored['autoStartSimulation'] ?? true,
     () => this.persist()
   );
 
   public readonly settings: readonly EditorSetting[] = [
     this.fpsCounter,
     this.showGrid,
-    this.showMinimap
+    this.autoStartSimulation
   ];
 
   private load(): Record<string, boolean> {
