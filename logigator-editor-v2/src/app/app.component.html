@@ -44,7 +44,9 @@
         </div>
 
         <!-- Bottom-right: the minimap keeps its own corner. -->
-        @if (editorSettings.showMinimap.value() && rendererService.available()) {
+        @if (
+          editorSettings.showMinimap.value() && rendererService.available()
+        ) {
           <app-minimap
             class="absolute right-3 bottom-3 z-[1100]"
             [project]="projectService.activeProject()"
