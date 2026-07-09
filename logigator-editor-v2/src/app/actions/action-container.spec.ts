@@ -43,11 +43,6 @@ describe('ActionContainer', () => {
   // ── length ────────────────────────────────────────────────────────────────
 
   describe('length', () => {
-    it('returns 1 for a container with a single action', () => {
-      const container = new ActionContainer(makeAction());
-      expect(container.length).toBe(1);
-    });
-
     it('returns the correct count for multiple constructor actions', () => {
       const container = new ActionContainer(
         makeAction(),
@@ -157,19 +152,6 @@ describe('ActionContainer', () => {
   // ── add() ─────────────────────────────────────────────────────────────────
 
   describe('add()', () => {
-    it('increases length by 1', () => {
-      const container = new ActionContainer(makeAction());
-      expect(container.length).toBe(1);
-      container.add(makeAction());
-      expect(container.length).toBe(2);
-    });
-
-    it('increases length correctly when adding to an empty container', () => {
-      const container = new ActionContainer();
-      container.add(makeAction());
-      expect(container.length).toBe(1);
-    });
-
     it('the added action is included in a subsequent do()', () => {
       const existing = makeAction();
       const added = makeAction();
@@ -225,14 +207,6 @@ describe('ActionContainer', () => {
 
       // a2 was appended last, so it is undone first
       expect(callOrder).toEqual(['a2', 'a1']);
-    });
-
-    it('multiple add() calls accumulate correctly', () => {
-      const container = new ActionContainer();
-      container.add(makeAction());
-      container.add(makeAction());
-      container.add(makeAction());
-      expect(container.length).toBe(3);
     });
   });
 });

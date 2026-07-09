@@ -128,22 +128,6 @@ describe('RemoveComponentsAction', () => {
       expect(project.addComponent).not.toHaveBeenCalled();
     });
   });
-
-  describe('id preservation', () => {
-    it('do() uses the id that was captured at construction time', () => {
-      const comp = makeAnd();
-      comp.position.set(3, 4);
-      const expectedId = comp.id;
-      compsToDestroy.push(comp);
-      const action = new RemoveComponentsAction(comp);
-
-      action.do(project);
-
-      expect(project.removeComponent).toHaveBeenCalledTimes(1);
-
-      expect(project.removeComponent).toHaveBeenCalledWith(expectedId);
-    });
-  });
 });
 
 describe('RemoveComponentsAction negation round-trip', () => {

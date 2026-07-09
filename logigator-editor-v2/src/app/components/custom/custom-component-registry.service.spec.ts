@@ -18,10 +18,6 @@ describe('CustomComponentRegistry', () => {
     provider = TestBed.inject(ComponentProviderService);
   });
 
-  it('is created', () => {
-    expect(registry).toBeTruthy();
-  });
-
   describe('createMaster', () => {
     it('allocates ids from CUSTOM_TYPE_ID_BASE upward', () => {
       const a = registry.createMaster({ symbol: 'A' }, 'browser');

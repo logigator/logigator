@@ -54,12 +54,6 @@ describe('AppComponent', () => {
     );
   });
 
-  it('should create the app', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app).toBeTruthy();
-  });
-
   it('renders the desktop shell at the default (non-compact) breakpoint', () => {
     // matchMedia is stubbed to matches:false (vitest.setup.ts), so isCompact is
     // false and the shell takes its desktop branch.

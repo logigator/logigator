@@ -41,17 +41,6 @@ describe('QuadTreeContainer', () => {
     );
   }
 
-  // ── Sanity check ──────────────────────────────────────────────────────────
-
-  it('gridBounds reflects the item position and size', () => {
-    const c = makeItem(10, 20, 30, 40);
-    const r = c.gridBounds;
-    expect(r.x).toBe(10);
-    expect(r.y).toBe(20);
-    expect(r.width).toBe(30);
-    expect(r.height).toBe(40);
-  });
-
   // ── insert / queryRange (no split) ────────────────────────────────────────
 
   describe('insert / queryRange', () => {

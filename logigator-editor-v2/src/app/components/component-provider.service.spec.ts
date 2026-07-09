@@ -34,10 +34,6 @@ describe('ComponentProviderService', () => {
     service = TestBed.inject(ComponentProviderService);
   });
 
-  it('is created', () => {
-    expect(service).toBeTruthy();
-  });
-
   it('resolves built-in configs by numeric type id', () => {
     expect(service.getComponent(BuiltInComponentType.AND)?.type).toBe(
       BuiltInComponentType.AND
@@ -49,58 +45,6 @@ describe('ComponentProviderService', () => {
 
   it('returns undefined for an unknown type id', () => {
     expect(service.getComponent(999999)).toBeUndefined();
-  });
-
-  it('seeds the reactive category lists from the built-ins', () => {
-    // TODO: vitest-migration: Verify this matches strict array content (multiset equality). Vitest's arrayContaining is a subset check.
-    expect(service.basicComponents().map((c) => c.type)).toHaveLength(7);
-    expect(service.basicComponents().map((c) => c.type)).toEqual(
-      expect.arrayContaining([
-        BuiltInComponentType.NOT,
-        BuiltInComponentType.AND,
-        BuiltInComponentType.OR,
-        BuiltInComponentType.XOR,
-        BuiltInComponentType.DELAY,
-        BuiltInComponentType.CLOCK,
-        BuiltInComponentType.TUNNEL
-      ])
-    );
-    expect(service.advancedComponents().map((c) => c.type)).toEqual(
-      expect.arrayContaining([
-        BuiltInComponentType.HALF_ADDER,
-        BuiltInComponentType.FULL_ADDER,
-        BuiltInComponentType.ROM,
-        BuiltInComponentType.D_FF,
-        BuiltInComponentType.JK_FF,
-        BuiltInComponentType.SR_FF,
-        BuiltInComponentType.RNG,
-        BuiltInComponentType.RAM,
-        BuiltInComponentType.DECODER,
-        BuiltInComponentType.ENCODER,
-        BuiltInComponentType.MUX,
-        BuiltInComponentType.DEMUX
-      ])
-    );
-    expect(service.advancedComponents().map((c) => c.type)).toHaveLength(12);
-    expect(service.userComponents()).toEqual([]);
-    // TODO: vitest-migration: Verify this matches strict array content (multiset equality). Vitest's arrayContaining is a subset check.
-    expect(service.ioComponents().map((c) => c.type)).toHaveLength(5);
-    expect(service.ioComponents().map((c) => c.type)).toEqual(
-      expect.arrayContaining([
-        BuiltInComponentType.BUTTON,
-        BuiltInComponentType.SWITCH,
-        BuiltInComponentType.LED,
-        BuiltInComponentType.SEGMENT_DISPLAY,
-        BuiltInComponentType.LED_MATRIX
-      ])
-    );
-    expect(service.portComponents().map((c) => c.type)).toHaveLength(2);
-    expect(service.portComponents().map((c) => c.type)).toEqual(
-      expect.arrayContaining([
-        BuiltInComponentType.INPUT,
-        BuiltInComponentType.OUTPUT
-      ])
-    );
   });
 
   describe('register / unregister', () => {

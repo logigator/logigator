@@ -20,10 +20,6 @@ describe('ComponentListCategoryComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('arms placement and closes the open mobile sheet on selection', async () => {
     const mobileUi = TestBed.inject(MobileUiService);
     const workMode = TestBed.inject(WorkModeService);

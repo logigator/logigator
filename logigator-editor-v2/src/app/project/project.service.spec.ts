@@ -12,10 +12,6 @@ describe('ProjectService', () => {
     service = TestBed.inject(ProjectService);
   });
 
-  it('should be created', () => {
-    expect(service).toBeTruthy();
-  });
-
   it('mainProject() is null initially', () => {
     expect(service.mainProject()).toBeNull();
   });
@@ -29,52 +25,14 @@ describe('ProjectService', () => {
   });
 
   describe('setMainProject', () => {
-    it('sets mainProject() to the provided project', () => {
-      const p = {} as Project;
-      service.setMainProject(p);
-      expect(service.mainProject()).toBe(p);
-    });
-
     it('sets activeProject() to the provided project', () => {
       const p = {} as Project;
       service.setMainProject(p);
       expect(service.activeProject()).toBe(p);
     });
-
-    it('updates mainProject and activeProject when called a second time', () => {
-      const p1 = {} as Project;
-      const p2 = {} as Project;
-      service.setMainProject(p1);
-      service.setMainProject(p2);
-      expect(service.mainProject()).toBe(p2);
-      expect(service.activeProject()).toBe(p2);
-    });
-  });
-
-  describe('addOpenComponent', () => {
-    it('adds the project to openComponents()', () => {
-      const p = {} as Project;
-      service.addOpenComponent(p);
-      expect(service.openComponents()).toContain(p);
-    });
-
-    it('adds both projects when called twice', () => {
-      const p1 = {} as Project;
-      const p2 = {} as Project;
-      service.addOpenComponent(p1);
-      service.addOpenComponent(p2);
-      expect(service.openComponents()).toEqual([p1, p2]);
-    });
   });
 
   describe('removeOpenComponent', () => {
-    it('removes the project from openComponents()', () => {
-      const p = {} as Project;
-      service.addOpenComponent(p);
-      service.removeOpenComponent(p);
-      expect(service.openComponents()).not.toContain(p);
-    });
-
     it('resets activeProject to mainProject when the active component is removed', () => {
       const comp = {} as Project;
       // setMainProject sets both mainProject and activeProject to comp

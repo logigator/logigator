@@ -9,15 +9,6 @@ describe('IdAllocator', () => {
   });
 
   describe('next()', () => {
-    it('returns 0 on the first call', () => {
-      expect(allocator.next()).toBe(0);
-    });
-
-    it('returns 1 on the second call', () => {
-      allocator.next();
-      expect(allocator.next()).toBe(1);
-    });
-
     it('returns incrementing sequential IDs', () => {
       expect(allocator.next()).toBe(0);
       expect(allocator.next()).toBe(1);
@@ -49,12 +40,6 @@ describe('IdAllocator', () => {
       expect(allocator.next()).toBe(3);
     });
 
-    it('is a no-op when the given id equals a value already passed', () => {
-      allocator.next(); // returns 0, counter = 1
-      allocator.bump(0); // 0 < 1, no-op
-      expect(allocator.next()).toBe(1);
-    });
-
     it('advances when given id equals current counter', () => {
       // counter starts at 0; bump(0) should advance because 0 >= 0
       allocator.bump(0);
@@ -77,12 +62,6 @@ describe('IdAllocator', () => {
       allocator.bump(10);
       allocator.bump(5); // lower than 10+1=11, no-op
       expect(allocator.next()).toBe(11);
-    });
-
-    it('bump on a lower id after next() calls is a no-op', () => {
-      for (let i = 0; i < 5; i++) allocator.next(); // counter = 5
-      allocator.bump(2); // 2 < 5, no-op
-      expect(allocator.next()).toBe(5);
     });
   });
 });

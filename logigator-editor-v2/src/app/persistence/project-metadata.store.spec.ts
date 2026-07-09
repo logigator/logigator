@@ -102,17 +102,6 @@ describe('ProjectMetadataStore', () => {
       expect(store.isDirty(project)).toBe(true);
     });
 
-    it('markDirty is idempotent on the flag', () => {
-      const project = new Project();
-      store.register(project, makeMetadata());
-
-      store.markDirty(project);
-      store.markDirty(project);
-      store.markDirty(project);
-
-      expect(store.isDirty(project)).toBe(true);
-    });
-
     it('clearDirty clears the dirty flag', () => {
       const project = new Project();
       store.register(project, makeMetadata());

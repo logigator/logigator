@@ -40,10 +40,6 @@ describe('LoggingService', () => {
     environment.loggingVerbosity = originalVerbosity;
   });
 
-  it('should be created', () => {
-    expect(service).toBeTruthy();
-  });
-
   describe('error', () => {
     it('passes the context and message to console.error', () => {
       service.error('err-msg', 'err-ctx');

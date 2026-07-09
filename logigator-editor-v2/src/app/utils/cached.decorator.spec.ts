@@ -70,12 +70,6 @@ describe('Cached decorator', () => {
       expect(f.callCount).toBe(1);
     });
 
-    it('returns the correct value on the first read', () => {
-      const Fixture = makeSimpleClass(() => 99);
-      const f = new Fixture();
-      expect(f.value).toBe(99);
-    });
-
     // NOTE: The Cached implementation stores the cache object on the *prototype*
     // (`target[cacheKey] = { key: null, val: null }`), not on each instance.
     // Therefore all instances of the same decorated class share one cache slot.

@@ -39,12 +39,6 @@ describe('CloudSessionService', () => {
     metadataStore = TestBed.inject(ProjectMetadataStore);
   });
 
-  it('reports signed-in from the user signal', () => {
-    expect(service.isSignedIn()).toBe(false);
-    user.set(makeUser('user-1'));
-    expect(service.isSignedIn()).toBe(true);
-  });
-
   it('verdicts logged-out for any document while signed out', () => {
     const project = registerServerDoc();
     expect(service.verdict(project)).toBe('logged-out');

@@ -43,18 +43,6 @@ describe('PastePlacementSession', () => {
   // ── constructor ─────────────────────────────────────────────────────────────
 
   describe('constructor', () => {
-    it('adds components to dragLayer', () => {
-      const comp = makeAnd(2, Direction.E, 3, 0);
-      session = new PastePlacementSession(project, dragLayer, [comp], []);
-      expect(dragLayer.children).toContain(comp);
-    });
-
-    it('adds wires to dragLayer', () => {
-      const wire = makeWire(2, 1, WireDirection.HORIZONTAL);
-      session = new PastePlacementSession(project, dragLayer, [], [wire]);
-      expect(dragLayer.children).toContain(wire);
-    });
-
     it('adds both components and wires to dragLayer', () => {
       const comp = makeAnd(2, Direction.E, 0, 0);
       const wire = makeWire(5, 0, WireDirection.HORIZONTAL);

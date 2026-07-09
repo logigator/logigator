@@ -15,7 +15,6 @@ import { WorkMode } from '../../work-mode/work-mode.enum';
 import { makeAnd } from '../../../testing/factories';
 
 describe('ComponentSettingsComponent', () => {
-  let component: ComponentSettingsComponent;
   let fixture: ComponentFixture<ComponentSettingsComponent>;
   let workModeService: WorkModeService;
 
@@ -23,12 +22,7 @@ describe('ComponentSettingsComponent', () => {
     configureTestBed([], [ComponentSettingsComponent]);
     workModeService = TestBed.inject(WorkModeService);
     fixture = TestBed.createComponent(ComponentSettingsComponent);
-    component = fixture.componentInstance;
     fixture.detectChanges();
-  });
-
-  it('should create', () => {
-    expect(component).toBeTruthy();
   });
 
   it('renders no panel while nothing is being placed or selected', () => {

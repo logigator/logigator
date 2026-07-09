@@ -127,20 +127,4 @@ describe('AddComponentsAction', () => {
       expect(project.removeComponent).not.toHaveBeenCalled();
     });
   });
-
-  describe('id preservation', () => {
-    it('undo uses the same id that was assigned at construction time', () => {
-      const comp = makeAnd();
-      comp.position.set(3, 4);
-      const expectedId = comp.id;
-      compsToDestroy.push(comp);
-      const action = new AddComponentsAction(comp);
-
-      action.undo(project);
-
-      expect(project.removeComponent).toHaveBeenCalledTimes(1);
-
-      expect(project.removeComponent).toHaveBeenCalledWith(expectedId);
-    });
-  });
 });

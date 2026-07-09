@@ -34,11 +34,4 @@ describe('OutputComponent', () => {
     const component = create({ label: 'Q', index: 0 });
     expect(component.children.length).toBeGreaterThan(0);
   });
-
-  it('tolerates label option changes without error', () => {
-    const component = create({ label: 'Q', index: 0 });
-    expect(() => (component.options.label.value = 'R')).not.toThrow();
-    expect(component.options.label.value).toBe('R');
-    expect(component.children.length).toBeGreaterThan(0);
-  });
 });

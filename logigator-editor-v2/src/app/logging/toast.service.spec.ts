@@ -35,10 +35,6 @@ describe('ToastService', () => {
     vi.spyOn(logging, 'info').mockImplementation(() => {});
   });
 
-  it('should be created', () => {
-    expect(service).toBeTruthy();
-  });
-
   describe('error', () => {
     it('shows a danger toast with translated summary', () => {
       service.error('err-msg', 'MyContext');

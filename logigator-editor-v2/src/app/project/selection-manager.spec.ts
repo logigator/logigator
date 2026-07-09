@@ -147,16 +147,6 @@ describe('SelectionManager', () => {
     it('selectedWires is empty on construction', () => {
       expect(manager.selectedWires.size).toBe(0);
     });
-
-    it('selectionChange$ is an Observable', () => {
-      // Must be subscribable and not throw synchronously.
-      let subscribed = false;
-      manager.selectionChange$
-        .subscribe(() => (subscribed = true))
-        .unsubscribe();
-      // No emission expected on mere subscription.
-      expect(subscribed).toBe(false);
-    });
   });
 
   // ── commit — rect mode (SELECT) ────────────────────────────────────────────

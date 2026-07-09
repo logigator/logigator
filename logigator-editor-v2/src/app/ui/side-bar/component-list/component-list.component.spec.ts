@@ -17,10 +17,6 @@ describe('ComponentListComponent', () => {
     fixture.detectChanges();
   });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
-
   it('shows non-empty categories with all panels open by default', () => {
     const cats = component.categories();
     expect(cats.length).toBeGreaterThan(0);

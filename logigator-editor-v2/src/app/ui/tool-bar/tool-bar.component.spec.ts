@@ -7,7 +7,6 @@ import { configureTestBed } from '../../../testing/configure-test-bed';
 import { WorkModeService } from '../../work-mode/work-mode.service';
 
 describe('ToolBarComponent', () => {
-  let component: ToolBarComponent;
   let fixture: ComponentFixture<ToolBarComponent>;
 
   beforeEach(() => {
@@ -17,7 +16,6 @@ describe('ToolBarComponent', () => {
     );
 
     fixture = TestBed.createComponent(ToolBarComponent);
-    component = fixture.componentInstance;
     fixture.detectChanges();
   });
 
@@ -31,10 +29,6 @@ describe('ToolBarComponent', () => {
     });
     return el;
   }
-
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
 
   it('shows the editing tools (including start-simulation) outside simulation mode', async () => {
     const el = await waitForRender();

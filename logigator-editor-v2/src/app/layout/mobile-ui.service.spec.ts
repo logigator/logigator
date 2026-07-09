@@ -11,10 +11,6 @@ describe('MobileUiService', () => {
     service = TestBed.inject(MobileUiService);
   });
 
-  it('starts with no sheet open', () => {
-    expect(service.activeSheet()).toBeNull();
-  });
-
   it('opens a sheet and closes it', () => {
     service.open('palette');
     expect(service.activeSheet()).toBe('palette');

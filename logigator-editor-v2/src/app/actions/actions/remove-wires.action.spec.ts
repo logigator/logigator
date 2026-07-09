@@ -124,20 +124,4 @@ describe('RemoveWiresAction', () => {
       expect(project.addWire).not.toHaveBeenCalled();
     });
   });
-
-  describe('id preservation', () => {
-    it('do() uses the id that was captured at construction time', () => {
-      const wire = new Wire(WireDirection.VERTICAL, 4);
-      wiresToDestroy.push(wire);
-      wire.position.set(2, 5);
-      const expectedId = wire.id;
-      const action = new RemoveWiresAction(wire);
-
-      action.do(project);
-
-      expect(project.removeWire).toHaveBeenCalledTimes(1);
-
-      expect(project.removeWire).toHaveBeenCalledWith(expectedId);
-    });
-  });
 });

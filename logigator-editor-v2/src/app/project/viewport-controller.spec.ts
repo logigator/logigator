@@ -233,10 +233,6 @@ describe('ViewportController', () => {
   });
 
   describe('resizeViewport', () => {
-    it('does not throw when called', () => {
-      expect(() => viewport.resizeViewport(800, 600)).not.toThrow();
-    });
-
     it('zoom centres on viewport middle by default', () => {
       viewport.resizeViewport(800, 600);
       // center = (400, 300), old_pos = (0,0), old_scale = 1, new_scale = 1.2

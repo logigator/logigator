@@ -85,10 +85,6 @@ describe('ShortcutService', () => {
     service = TestBed.inject(ShortcutService);
   });
 
-  it('should be created', () => {
-    expect(service).toBeTruthy();
-  });
-
   it('should return default binding for each action', () => {
     for (const action of Object.values(ShortcutActionEnum)) {
       expect(service.binding(action)()).toEqual(DEFAULT_SHORTCUTS[action]);

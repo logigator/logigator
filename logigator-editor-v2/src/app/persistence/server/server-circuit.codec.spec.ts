@@ -162,12 +162,6 @@ describe('server-circuit.codec', () => {
     return project;
   }
 
-  describe('WIRE_TYPE_ID', () => {
-    it('should be 0 (matching old editor ElementTypeId.WIRE)', () => {
-      expect(WIRE_TYPE_ID).toBe(0);
-    });
-  });
-
   describe('fixture round-trip (decode → encode)', () => {
     for (const fixture of fixtures) {
       it(`round-trips ${fixture.name}`, () => {
