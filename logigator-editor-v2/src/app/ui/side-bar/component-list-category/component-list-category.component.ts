@@ -8,7 +8,6 @@ import { TranslocoService } from '@jsverse/transloco';
 import { WorkModeService } from '../../../work-mode/work-mode.service';
 import { WorkMode } from '../../../work-mode/work-mode.enum';
 import { MobileUiService } from '../../../layout/mobile-ui.service';
-import { CustomComponentService } from '../../../custom-component/custom-component.service';
 import { SourceIndicatorComponent } from '../../source-indicator/source-indicator.component';
 
 @Component({
@@ -20,7 +19,6 @@ export class ComponentListCategoryComponent {
   private readonly workModeService = inject(WorkModeService);
   private readonly translocoService = inject(TranslocoService);
   private readonly mobileUi = inject(MobileUiService);
-  private readonly customComponentService = inject(CustomComponentService);
 
   /** The palette tiles to render; already filtered by the parent's search. */
   public components = input<ComponentConfig[]>([]);
@@ -46,16 +44,10 @@ export class ComponentListCategoryComponent {
   });
 
   /** Arms the component for placement (sticky until another tool is chosen). */
-  public async selectComponent(component: ComponentConfig): Promise<void> {
-    // Cloud masters are preloaded summary-only; fetch the circuit before arming so
-    // the placement snapshot has real content. No-op for built-ins / loaded
-    // masters; bail (the service has already toasted) if the cloud fetch fails so
-    // we never arm placement against empty content.
-    if (
-      !(await this.customComponentService.ensureMasterCircuit(component.type))
-    ) {
-      return;
-    }
+  public selectComponent(component: ComponentConfig): void {
+    // Arm placement only. A cloud master's circuit is fetched lazily when the
+    // component is actually placed on the canvas (see WorkModeRouter), not while
+    // it is merely browsed/armed in the palette.
     this.workModeService.setMode(WorkMode.COMPONENT_PLACEMENT);
     this.workModeService.setSelectedComponentType(component.type);
     // On mobile the palette is a sheet; picking from it dismisses it so the

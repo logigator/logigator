@@ -24,6 +24,7 @@ import {
 } from '../../components/component-type.enum';
 import { TogglePortNegationAction } from '../../actions/actions/toggle-port-negation.action';
 import { LayoutService } from '../../layout/layout.service';
+import { CustomComponentService } from '../../custom-component/custom-component.service';
 import { PointerInput } from './pointer-input';
 import { PointerToolTarget } from './pointer-controller';
 
@@ -60,6 +61,12 @@ export class WorkModeRouter implements PointerToolTarget {
   private _pasteSub: Subscription | null = null;
   private readonly _cancelSub: Subscription;
   private readonly _layout = getStaticDI(LayoutService);
+  private readonly _customComponents = getStaticDI(CustomComponentService);
+
+  // Bumped on every gesture end / cancel / context switch so an in-flight
+  // placement circuit load (a first, uncached cloud master) can tell whether the
+  // gesture that started it is still live before opening the session.
+  private _placementLoadSeq = 0;
 
   constructor() {
     this._cancelSub = getStaticDI(ShortcutService)
@@ -121,6 +128,9 @@ export class WorkModeRouter implements PointerToolTarget {
    * switches.
    */
   public abortActiveDrag(): void {
+    // Cancel any not-yet-started placement load too — Escape / mode / project
+    // switches must invalidate a gesture whose session has not opened yet.
+    this._placementLoadSeq++;
     if (!this._activeDrag) return;
     this._activeDrag.onCancel();
     this._stopDrag();
@@ -151,13 +161,10 @@ export class WorkModeRouter implements PointerToolTarget {
       }
       case WorkMode.COMPONENT_PLACEMENT: {
         if (!this._componentToPlace) return;
-        this._startDrag(
-          new ComponentPlacementSession(
-            project,
-            project.floatingLayer.dragLayer,
-            roundToGrid(input.grid, true),
-            this._componentToPlace
-          )
+        void this._beginComponentPlacement(
+          project,
+          this._componentToPlace,
+          roundToGrid(input.grid, true)
         );
         break;
       }
@@ -250,6 +257,9 @@ export class WorkModeRouter implements PointerToolTarget {
   }
 
   public up(): void {
+    // The pointer is released: invalidate any placement load still in flight so
+    // its session never opens for a gesture that has already ended.
+    this._placementLoadSeq++;
     const session = this._activeDrag;
     if (!session) return;
     if (!session.canEnd()) return;
@@ -273,6 +283,42 @@ export class WorkModeRouter implements PointerToolTarget {
       project.floatingLayer.hideNegationGhost();
     }
     project.triggerTicker('single');
+  }
+
+  /**
+   * Opens a component-placement session, ensuring a cloud custom master's
+   * circuit is loaded first — the load is deferred to place-time, not
+   * palette-select. The ensure is a microtask no-op for built-ins, browser
+   * masters, and already-loaded masters, so the session opens before any
+   * pointer-up; only a first, uncached cloud master actually awaits a request.
+   * If the gesture ends or the context changes during that await, the
+   * `_placementLoadSeq` guard (bumped by {@link up}/{@link abortActiveDrag})
+   * keeps the stale load from opening a session with no pointer to drive it.
+   */
+  private async _beginComponentPlacement(
+    project: Project,
+    config: ComponentConfig,
+    startGrid: Point
+  ): Promise<void> {
+    const seq = ++this._placementLoadSeq;
+    const ready = await this._customComponents.ensureMasterCircuit(config.type);
+    if (
+      !ready ||
+      seq !== this._placementLoadSeq ||
+      this._activeDrag ||
+      this._project !== project ||
+      this._mode !== WorkMode.COMPONENT_PLACEMENT
+    ) {
+      return;
+    }
+    this._startDrag(
+      new ComponentPlacementSession(
+        project,
+        project.floatingLayer.dragLayer,
+        startGrid,
+        config
+      )
+    );
   }
 
   private _startPaste(components: Component[], wires: Wire[]): void {

@@ -651,6 +651,8 @@ export class PersistenceService {
         .map((h) => h.metadata.id)
     );
     this.registry.removeServerMasters(openEditorIds);
+    // Retired session type ids make any cached body stale; drop the whole cache.
+    this.server.clearMasterCircuitCache();
   }
 
   /**
@@ -1012,6 +1014,18 @@ export class PersistenceService {
     uuid: string
   ): Promise<{ project: Project; masterTypeId: number }> {
     return this.server.loadComponent(uuid);
+  }
+
+  /**
+   * Loads a server master **for editing**, reusing the session-wide circuit
+   * cache so a component fetched for placement (or a previous edit) is not
+   * re-fetched. Falls back to a full load for a master that is not yet
+   * registered. See {@link ServerPersistenceGateway.loadComponentForEdit}.
+   */
+  loadServerComponentForEdit(
+    uuid: string
+  ): Promise<{ project: Project; masterTypeId: number }> {
+    return this.server.loadComponentForEdit(uuid);
   }
 
   /**

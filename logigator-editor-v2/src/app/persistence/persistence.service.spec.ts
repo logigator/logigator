@@ -1462,6 +1462,38 @@ describe('PersistenceService', () => {
       };
     }
 
+    function componentDetailResponse(o: {
+      id: string;
+      hash?: string;
+      version?: number;
+    }) {
+      return {
+        status: 200,
+        data: {
+          id: o.id,
+          name: 'Comp',
+          description: '',
+          symbol: 'C',
+          numInputs: 0,
+          numOutputs: 0,
+          labels: [],
+          createdOn: '2024-01-01',
+          lastEdited: '2024-01-01',
+          elementsFile: {
+            hash: o.hash ?? 'h1',
+            mimeType: 'application/json',
+            publicUrl: ''
+          },
+          previewDark: null,
+          previewLight: null,
+          public: false,
+          version: o.version ?? 1,
+          elements: [],
+          dependencies: []
+        }
+      };
+    }
+
     function customInstanceOf(project: Project): CustomComponent {
       return [...project.components].find(
         (c): c is CustomComponent => c instanceof CustomComponent
@@ -1978,6 +2010,65 @@ describe('PersistenceService', () => {
       );
       await service.ensureServerMasterCircuit(masterTypeId);
       // verify() in afterEach asserts no HTTP request was made.
+    });
+
+    it('fetches a server master circuit once, shared by placement and edit-open', async () => {
+      const tick = () => new Promise((r) => setTimeout(r, 0));
+      const masterTypeId = registry.createMaster(
+        { id: 'srv-cache', symbol: 'C', name: 'C' },
+        'server'
+      );
+
+      // First use (place-time): one GET populates the cache.
+      const ensure = service.ensureServerMasterCircuit(masterTypeId);
+      await tick();
+      httpMock
+        .expectOne(COMPONENT_URL('srv-cache'))
+        .flush(componentDetailResponse({ id: 'srv-cache', hash: 'ch' }));
+      await ensure;
+
+      // Second use (edit-open) is served from the cache: no second GET (the
+      // afterEach verify() would fail on an outstanding request), and the editor
+      // adopts the cached hash so its save keeps a valid concurrency check.
+      const { project, masterTypeId: editType } =
+        await service.loadServerComponentForEdit('srv-cache');
+      expect(editType).toBe(masterTypeId);
+      expect(metadataStore.getMetadata(project)!.hash).toBe('ch');
+    });
+
+    it('invalidates the cached circuit on save so a reopen re-fetches', async () => {
+      const tick = () => new Promise((r) => setTimeout(r, 0));
+      const masterTypeId = registry.createMaster(
+        { id: 'srv-inv', symbol: 'C', name: 'C' },
+        'server'
+      );
+
+      const ensure = service.ensureServerMasterCircuit(masterTypeId);
+      await tick();
+      httpMock
+        .expectOne(COMPONENT_URL('srv-inv'))
+        .flush(componentDetailResponse({ id: 'srv-inv', hash: 'h1' }));
+      await ensure;
+
+      const { project } = await service.loadServerComponentForEdit('srv-inv');
+      metadataStore.markDirty(project);
+
+      const save = service.saveProject(project);
+      await tick();
+      const put = httpMock.expectOne(COMPONENT_URL('srv-inv'));
+      expect(put.request.method).toBe('PUT');
+      put.flush(componentSummaryResponse({ id: 'srv-inv', hash: 'h2' }));
+      await save;
+
+      // The save dropped the cache entry: the next edit-open goes back to the API
+      // rather than serving the pre-save circuit.
+      const reopen = service.loadServerComponentForEdit('srv-inv');
+      await tick();
+      const get = httpMock.expectOne(COMPONENT_URL('srv-inv'));
+      expect(get.request.method).toBe('GET');
+      get.flush(componentDetailResponse({ id: 'srv-inv', hash: 'h2' }));
+      const { project: reopened } = await reopen;
+      expect(metadataStore.getMetadata(reopened)!.hash).toBe('h2');
     });
 
     it('preloadServerMasters is a silent no-op when signed out (list 401s)', async () => {

@@ -1,5 +1,14 @@
 import 'pixi.js/math-extras';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+  type MockInstance
+} from 'vitest';
+import { TestBed } from '@angular/core/testing';
 import { Point } from 'pixi.js';
 import { configureTestBed } from '../../../testing/configure-test-bed';
 import {
@@ -9,6 +18,9 @@ import {
   makeRom
 } from '../../../testing/factories';
 import { Component } from '../../components/component';
+import { ComponentConfig } from '../../components/component-config.model';
+import { andComponentConfig } from '../../components/component-types/and/and.config';
+import { CustomComponentService } from '../../custom-component/custom-component.service';
 import { Project } from '../../project/project';
 import { WorkMode } from '../../work-mode/work-mode.enum';
 import { PointerInput } from './pointer-input';
@@ -230,5 +242,66 @@ describe('WorkModeRouter in PORT_NEGATION mode', () => {
       (child) => child !== project.floatingLayer.dragLayer
     );
     expect(ghost?.visible).toBe(false);
+  });
+});
+
+describe('WorkModeRouter component placement circuit load', () => {
+  let project: Project;
+  let router: WorkModeRouter;
+  let ensure: MockInstance<(masterTypeId: number) => Promise<boolean>>;
+
+  beforeEach(() => {
+    configureTestBed();
+    project = new Project();
+    router = new WorkModeRouter();
+    router.setProject(project);
+    ensure = vi.spyOn(
+      TestBed.inject(CustomComponentService),
+      'ensureMasterCircuit'
+    );
+    router.setMode(WorkMode.COMPONENT_PLACEMENT);
+    router.componentToPlace = andComponentConfig as unknown as ComponentConfig;
+  });
+
+  afterEach(() => {
+    router.destroy();
+    project.destroy({ children: true });
+  });
+
+  /** The drag ghost the placement session adds while it is open. */
+  const ghostCount = () => project.floatingLayer.dragLayer.children.length;
+
+  it('opens the placement session once the circuit load resolves', async () => {
+    ensure.mockResolvedValue(true);
+
+    router.down(makeInput(2, 2));
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(ghostCount()).toBe(1);
+  });
+
+  it('opens no session when the pointer is released before the load resolves', async () => {
+    let resolve!: (ready: boolean) => void;
+    ensure.mockReturnValue(new Promise<boolean>((r) => (resolve = r)));
+
+    router.down(makeInput(2, 2)); // arms the async circuit load
+    router.up(); // pointer released while the load is still in flight
+
+    resolve(true); // the load completes only now — the gesture is already over
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(ghostCount()).toBe(0);
+  });
+
+  it('opens no session when a failed load returns false', async () => {
+    ensure.mockResolvedValue(false);
+
+    router.down(makeInput(2, 2));
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(ghostCount()).toBe(0);
   });
 });

@@ -22,7 +22,7 @@ import type { CircuitFileV0 } from '../file/circuit-file.types';
 import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
 import { ComponentProviderService } from '../../components/component-provider.service';
 import { deriveSummary } from '../../custom-component/definition-derivation';
-import { buildProject } from '../circuit-builder';
+import { buildProject, instantiateBody } from '../circuit-builder';
 import type { SerializedCircuitBody } from '../serialized-circuit';
 import { AuthRequiredError, formatHttpError } from '../persistence-errors';
 import { BoardSnapshotService } from '../../rendering/board-snapshot.service';
@@ -60,6 +60,20 @@ export class ServerPersistenceGateway {
   private readonly transloco = inject(TranslocoService);
   private readonly snapshot = inject(BoardSnapshotService);
   private readonly userService = inject(UserService);
+
+  /**
+   * Per-session cache of a server master's last-fetched circuit body + hash,
+   * keyed by the master's server uuid. Populated by the first fetch (placement
+   * or edit-open) and read by both so a component is fetched from the API at
+   * most once, then invalidated on save so a reopen re-reads the saved state.
+   * Holds the clean persisted body — never the live editor working copy (that
+   * lives on the registry definition, kept current by `DefinitionBinding`), so
+   * discarded edits are never resurrected on reopen.
+   */
+  private readonly _masterCircuitCache = new Map<
+    string,
+    { body: SerializedCircuitBody; hash: string }
+  >();
 
   async loadProject(uuid: string): Promise<Project> {
     const detail = await firstValueFrom(this.projectApi.open(uuid));
@@ -488,13 +502,79 @@ export class ServerPersistenceGateway {
   /**
    * Fetches a server component's circuit body (GET `/api/component/:id`) for lazy
    * hydration of a summary-only master. Used the first time a preloaded cloud
-   * master is placed or updated.
+   * master is placed or updated. Served from {@link _masterCircuitCache} when the
+   * master was already fetched this session (placement or edit-open).
    */
   async loadComponentCircuit(uuid: string): Promise<SerializedCircuitBody> {
+    return (await this._fetchMasterCircuit(uuid)).body;
+  }
+
+  /**
+   * The single fetch-once primitive behind placement and edit-open: returns the
+   * master's circuit body + elements hash, fetching (and ingesting its embedded
+   * snapshots) exactly once per session and caching the result. A cache hit skips
+   * the GET and re-ingest — the snapshots are already registered.
+   */
+  private async _fetchMasterCircuit(
+    uuid: string
+  ): Promise<{ body: SerializedCircuitBody; hash: string }> {
+    const cached = this._masterCircuitCache.get(uuid);
+    if (cached) return cached;
     const detail = await firstValueFrom(this.componentApi.open(uuid));
-    return this.circuitFile.decodeToBodyFromData(
-      this._componentDetailToV0(detail)
-    );
+    const entry = {
+      body: this.circuitFile.decodeToBodyFromData(
+        this._componentDetailToV0(detail)
+      ),
+      hash: detail.elementsFile?.hash ?? ''
+    };
+    this._masterCircuitCache.set(uuid, entry);
+    return entry;
+  }
+
+  /**
+   * Loads an already-registered server master into a fresh editor Project from
+   * the shared circuit cache (a single GET across placement and every edit-open),
+   * mirroring {@link loadComponent} but without a redundant fetch. The master's
+   * summary is read from the registry (it is preloaded before it can be edited);
+   * the metadata hash comes from the cached fetch so saves keep their optimistic
+   * concurrency check. Falls back to {@link loadComponent} when the master is not
+   * registered (a direct deep link that outraced the preload).
+   */
+  async loadComponentForEdit(
+    uuid: string
+  ): Promise<{ project: Project; masterTypeId: number }> {
+    const masterTypeId = this.registry.masterTypeIdForId(uuid);
+    const def =
+      masterTypeId !== undefined
+        ? this.registry.getDefinition(masterTypeId)
+        : undefined;
+    if (masterTypeId === undefined || def?.kind !== 'master') {
+      return this.loadComponent(uuid);
+    }
+
+    const { body, hash } = await this._fetchMasterCircuit(uuid);
+    const { components, wires } = instantiateBody(this.provider, body);
+    const project = buildProject(components, wires);
+
+    this.metadataStore.register(project, {
+      id: uuid,
+      name: def.name,
+      type: 'comp',
+      source: 'server',
+      hash,
+      isPublic: def.isPublic ?? false
+    });
+
+    return { project, masterTypeId };
+  }
+
+  /**
+   * Drops the cached circuits, e.g. on logout when the server masters are removed
+   * from the registry and their session type ids retired — a stale cached body
+   * would hold ids the registry no longer knows.
+   */
+  clearMasterCircuitCache(): void {
+    this._masterCircuitCache.clear();
   }
 
   async saveProject(project: Project): Promise<void> {
@@ -555,6 +635,11 @@ export class ServerPersistenceGateway {
         project,
         metadata.hash
       );
+
+      // The persisted state changed: drop the cached body/hash so the next
+      // placement or edit-open re-fetches the saved circuit rather than serving
+      // the pre-save copy.
+      this._masterCircuitCache.delete(metadata.id);
 
       this.metadataStore.updateHash(project, response.elementsFile?.hash ?? '');
       // Adopt the server's save-time version stamp; without it (e.g. a backend

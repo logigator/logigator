@@ -124,7 +124,7 @@ export class CustomComponentService {
     try {
       const { project, masterTypeId } =
         this._sourceForMaster(id) === 'server'
-          ? await this.persistence.loadServerComponent(id)
+          ? await this.persistence.loadServerComponentForEdit(id)
           : await this.persistence.loadComponentForEdit(id);
       this._openEditor(project, masterTypeId);
     } catch {

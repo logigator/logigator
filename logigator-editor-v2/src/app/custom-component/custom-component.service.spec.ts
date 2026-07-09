@@ -207,7 +207,7 @@ describe('CustomComponentService', () => {
     registry.promoteMaster(masterTypeId, 'srv-new', 2);
 
     const load = vi
-      .spyOn(persistence, 'loadServerComponent')
+      .spyOn(persistence, 'loadServerComponentForEdit')
       .mockResolvedValue({ project: new Project(), masterTypeId });
 
     // Editing the still-placed instance passes the frozen (old) id; it must be

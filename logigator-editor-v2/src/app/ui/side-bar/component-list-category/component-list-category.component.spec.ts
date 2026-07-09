@@ -20,13 +20,13 @@ describe('ComponentListCategoryComponent', () => {
     fixture.detectChanges();
   });
 
-  it('arms placement and closes the open mobile sheet on selection', async () => {
+  it('arms placement and closes the open mobile sheet on selection', () => {
     const mobileUi = TestBed.inject(MobileUiService);
     const workMode = TestBed.inject(WorkModeService);
     mobileUi.open('palette');
 
-    // selectComponent awaits a (no-op for built-ins) circuit-ensure before arming.
-    await component.selectComponent(andComponentConfig);
+    // Selection only arms placement; the circuit is fetched later, at place-time.
+    component.selectComponent(andComponentConfig);
 
     expect(workMode.mode()).toBe(WorkMode.COMPONENT_PLACEMENT);
     expect(workMode.selectedComponentType()).toBe(andComponentConfig.type);
