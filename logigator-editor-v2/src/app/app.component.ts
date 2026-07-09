@@ -55,6 +55,7 @@ import { PortsPanelComponent } from './ui/ports-panel/ports-panel.component';
 import { UserSettingsComponent } from './ui/user-settings/user-settings.component';
 import { LoggingService } from './logging/logging.service';
 import { ToastService } from './logging/toast.service';
+import { SessionLifecycleService } from './user/session-lifecycle.service';
 
 @Component({
   selector: 'app-root',
@@ -94,6 +95,9 @@ export class AppComponent {
   private readonly persistenceService = inject(PersistenceService);
   protected readonly projectService = inject(ProjectService);
   private readonly unsavedChangesGuard = inject(UnsavedChangesGuard);
+  // Injected for its side effects: follows the signed-in user (cloud library
+  // load/clear, logout teardown) from the first cookie read on.
+  private readonly sessionLifecycleService = inject(SessionLifecycleService);
   private readonly location = inject(Location);
   private readonly workModeService = inject(WorkModeService);
   protected readonly layout = inject(LayoutService);
@@ -158,16 +162,14 @@ export class AppComponent {
     });
 
     // Load promotion aliases first: the browser preload skips records whose id
-    // was promoted to the cloud, and snapshots embedded before a promotion resolve
-    // through the alias — both need the alias map in place. Masters then load
-    // concurrently.
+    // was promoted to the cloud, and snapshots embedded before a promotion
+    // resolve through the alias — both need the alias map in place. Cloud
+    // masters are not loaded here: they follow the signed-in user, so the
+    // session lifecycle owns their preload (and teardown).
     void (async () => {
       try {
         await this.persistenceService.preloadComponentIdAliases();
-        await Promise.all([
-          this.persistenceService.preloadBrowserMasters(),
-          this.persistenceService.preloadServerMasters()
-        ]);
+        await this.persistenceService.preloadBrowserMasters();
         this.loggingService.info('Editor ready', 'AppComponent');
       } catch (err) {
         this.toastService.warn(

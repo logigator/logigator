@@ -427,6 +427,54 @@ export class CustomComponentRegistry {
     this._change$.next(def);
   }
 
+  /**
+   * Removes a **master** from the session: definition, masters id index,
+   * placement-snapshot cache, dependency edges, and its palette config
+   * (provider unregister — the USER category updates reactively). Snapshots are
+   * untouched, so placed instances keep rendering; they merely stop resolving
+   * to a master (the same state as any unloaded library entry). Promotion
+   * aliases pointing at the removed id are kept — they resolve to an id with no
+   * master, which reads as "unloaded" and heals when the master is re-created
+   * under that id (e.g. the cloud preload after a re-login). No-op for a
+   * snapshot or unknown type id.
+   */
+  public removeMaster(masterTypeId: number): void {
+    const def = this._definitions.get(masterTypeId);
+    if (!def || def.kind !== 'master') {
+      this._noopMaster('removeMaster', masterTypeId);
+      return;
+    }
+    this._definitions.delete(masterTypeId);
+    if (
+      def.id !== undefined &&
+      this._idToMasterTypeId.get(def.id) === masterTypeId
+    ) {
+      this._idToMasterTypeId.delete(def.id);
+    }
+    this._masterToSnapshotTypeId.delete(masterTypeId);
+    this._dependencies.delete(masterTypeId);
+    for (const deps of this._dependencies.values()) {
+      deps.delete(masterTypeId);
+    }
+    this._provider.unregister(masterTypeId);
+    this._revision.update((r) => r + 1);
+  }
+
+  /**
+   * Removes every **server** master except those whose persistent id is in
+   * `keepIds` — the library half of a logout: the signed-out user's cloud
+   * palette entries disappear, while masters that must stay live (an open
+   * editor's binding writes into them) are kept and deduped against the next
+   * login's preload by the usual known-id skip.
+   */
+  public removeServerMasters(keepIds: ReadonlySet<string>): void {
+    for (const [typeId, def] of [...this._definitions]) {
+      if (def.kind !== 'master' || def.source !== 'server') continue;
+      if (def.id !== undefined && keepIds.has(def.id)) continue;
+      this.removeMaster(typeId);
+    }
+  }
+
   /** A snapshot's `source.id` provenance, or a master's own id. */
   public idForTypeId(typeId: number): string | undefined {
     return this._definitions.get(typeId)?.id;

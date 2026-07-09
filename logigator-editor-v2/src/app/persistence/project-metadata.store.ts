@@ -67,6 +67,19 @@ export class ProjectMetadataStore {
     return this._entries.get(project)?.metadata;
   }
 
+  /**
+   * All registered projects with their metadata. Reactive: reading it inside a
+   * computed/effect tracks registrations and removals (the map is a SignalMap),
+   * so session-level consumers (owner stamping, logout teardown) observe
+   * documents appearing and disappearing.
+   */
+  public getAllHandles(): { project: Project; metadata: ProjectMetadata }[] {
+    return Array.from(this._entries, ([project, entry]) => ({
+      project,
+      metadata: entry.metadata
+    }));
+  }
+
   public getHandleById(
     id: string
   ): { project: Project; metadata: ProjectMetadata } | undefined {

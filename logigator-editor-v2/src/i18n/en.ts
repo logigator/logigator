@@ -550,6 +550,23 @@ const en = {
   library: {
     loadFailed: 'Some saved components could not be loaded.'
   },
+  logoutDialog: {
+    header: 'Unsaved changes',
+    message:
+      'These cloud documents have unsaved changes. Save them before logging out?',
+    promotionWarning:
+      'Saving will also publish {{count}} local component(s) to your cloud library.',
+    save: 'Save & Log Out',
+    discard: 'Log Out without Saving',
+    cancel: 'Cancel'
+  },
+  session: {
+    loggedOut: 'Logged out.',
+    logoutFailed: 'Logging out failed. Please try again.',
+    saveLoggedOut: 'You are signed out. Log in again to save to the cloud.',
+    saveForeign:
+      '“{{name}}” belongs to a different account and cannot be saved.'
+  },
   routing: {
     notFound: 'That link could not be opened.'
   },

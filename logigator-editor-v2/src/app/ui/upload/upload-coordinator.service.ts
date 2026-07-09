@@ -3,6 +3,7 @@ import { firstValueFrom } from 'rxjs';
 import { DialogService } from '@logigator/ui';
 import { TranslocoService } from '@jsverse/transloco';
 import {
+  isHandledSaveError,
   LocalUploadDependency,
   PersistenceService
 } from '../../persistence/persistence.service';
@@ -110,8 +111,10 @@ export class UploadCoordinatorService {
     } catch (err) {
       // `save-server` delegates to `saveProject`, which surfaces its own error;
       // toasting here too would stack a second error. Every other target's
-      // primitive is silent, so the coordinator reports the failure.
-      if (target.kind !== 'save-server') {
+      // primitive is silent, so the coordinator reports the failure — except a
+      // signed-out / foreign-account rejection, whose specific reason was
+      // already toasted at the guard.
+      if (target.kind !== 'save-server' && !isHandledSaveError(err)) {
         this.toast.error(
           this.transloco.translate('uploadDialog.uploadFailed', { name }),
           'UploadCoordinatorService',
@@ -196,13 +199,15 @@ export class UploadCoordinatorService {
       try {
         await this.persistence.promoteComponentToServer(masterTypeId, isPublic);
       } catch (err) {
-        this.toast.error(
-          this.transloco.translate('uploadDialog.dependencyFailed', {
-            name: depName
-          }),
-          'UploadCoordinatorService',
-          err
-        );
+        if (!isHandledSaveError(err)) {
+          this.toast.error(
+            this.transloco.translate('uploadDialog.dependencyFailed', {
+              name: depName
+            }),
+            'UploadCoordinatorService',
+            err
+          );
+        }
         return false;
       }
     }

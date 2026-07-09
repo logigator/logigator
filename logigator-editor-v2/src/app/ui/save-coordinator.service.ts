@@ -2,7 +2,10 @@ import { inject, Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { DialogService } from '@logigator/ui';
 import { TranslocoService } from '@jsverse/transloco';
-import { PersistenceService } from '../persistence/persistence.service';
+import {
+  isHandledSaveError,
+  PersistenceService
+} from '../persistence/persistence.service';
 import { ProjectMetadataStore } from '../persistence/project-metadata.store';
 import { ToastService } from '../logging/toast.service';
 import { Project } from '../project/project';
@@ -81,6 +84,9 @@ export class SaveCoordinatorService {
         await this.persistence.saveDraftAsLocal(project, result.name);
       }
     } catch (err) {
+      // Signed-out / foreign-account rejections already toasted their specific
+      // reason at the guard; a generic failure on top would only obscure it.
+      if (isHandledSaveError(err)) return;
       this.toast.error(
         this.translocoService.translate('persistence.saveFailedGeneric'),
         'SaveCoordinatorService',

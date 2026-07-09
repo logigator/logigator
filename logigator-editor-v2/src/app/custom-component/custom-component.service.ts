@@ -205,6 +205,16 @@ export class CustomComponentService {
   }
 
   /**
+   * Closes a component editor tab with no prompting, discarding any unsaved
+   * changes. For flows that have already resolved the dirty question themselves
+   * — the logout teardown closes server editors after its own save/discard
+   * dialog. Regular tab closing goes through {@link closeComponent}.
+   */
+  public forceCloseComponent(project: Project): void {
+    this._disposeEditor(project);
+  }
+
+  /**
    * Opens the close-confirmation dialog for a dirty editor, folding in the
    * cloud-promotion warning when saving would publish embedded local components
    * (a cloud document with resolvable local deps). Resolves the user's choice, or

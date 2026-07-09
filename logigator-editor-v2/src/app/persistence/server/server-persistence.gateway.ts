@@ -26,6 +26,7 @@ import { buildProject } from '../circuit-builder';
 import type { SerializedCircuitBody } from '../serialized-circuit';
 import { AuthRequiredError, formatHttpError } from '../persistence-errors';
 import { BoardSnapshotService } from '../../rendering/board-snapshot.service';
+import { UserService } from '../../user/user.service';
 
 /**
  * Server transport + codec + metadata + build, returning `Project`s. Owns every
@@ -47,6 +48,7 @@ export class ServerPersistenceGateway {
   private readonly logging = inject(LoggingService);
   private readonly transloco = inject(TranslocoService);
   private readonly snapshot = inject(BoardSnapshotService);
+  private readonly userService = inject(UserService);
 
   async loadProject(uuid: string): Promise<Project> {
     const detail = await firstValueFrom(this.projectApi.open(uuid));
@@ -501,21 +503,7 @@ export class ServerPersistenceGateway {
       );
       void this._uploadPreview(project, metadata.id);
     } catch (err) {
-      if (this._isVersionMismatch(err)) {
-        this.toast.error(
-          this.transloco.translate('persistence.versionMismatch'),
-          'ServerPersistenceGateway',
-          err
-        );
-      } else {
-        this.toast.error(
-          this.transloco.translate('persistence.saveFailed', {
-            detail: formatHttpError(err)
-          }),
-          'ServerPersistenceGateway',
-          err
-        );
-      }
+      this._reportSaveError(err);
       throw err;
     }
   }
@@ -556,22 +544,40 @@ export class ServerPersistenceGateway {
         'ServerPersistenceGateway'
       );
     } catch (err) {
-      if (this._isVersionMismatch(err)) {
-        this.toast.error(
-          this.transloco.translate('persistence.versionMismatch'),
-          'ServerPersistenceGateway',
-          err
-        );
-      } else {
-        this.toast.error(
-          this.transloco.translate('persistence.saveFailed', {
-            detail: formatHttpError(err)
-          }),
-          'ServerPersistenceGateway',
-          err
-        );
-      }
+      this._reportSaveError(err);
       throw err;
+    }
+  }
+
+  /**
+   * Toasts a failed project/component save with the most specific message
+   * available. A 401 means the server session expired underneath a still-true
+   * auth cookie — flip to signed-out (which also clears the auth cookie and,
+   * via the session lifecycle, the cloud library) and tell the user to log in
+   * again; the unsaved changes stay dirty in the editor.
+   */
+  private _reportSaveError(err: unknown): void {
+    if (err instanceof HttpErrorResponse && err.status === 401) {
+      this.userService.sessionExpired();
+      this.toast.error(
+        this.transloco.translate('session.saveLoggedOut'),
+        'ServerPersistenceGateway',
+        err
+      );
+    } else if (this._isVersionMismatch(err)) {
+      this.toast.error(
+        this.transloco.translate('persistence.versionMismatch'),
+        'ServerPersistenceGateway',
+        err
+      );
+    } else {
+      this.toast.error(
+        this.transloco.translate('persistence.saveFailed', {
+          detail: formatHttpError(err)
+        }),
+        'ServerPersistenceGateway',
+        err
+      );
     }
   }
 

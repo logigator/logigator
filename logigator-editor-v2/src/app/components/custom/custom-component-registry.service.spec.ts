@@ -653,4 +653,67 @@ describe('CustomComponentRegistry', () => {
       expect(registry.currentIdForId('a')).toBe('c');
     });
   });
+
+  describe('removeMaster / removeServerMasters', () => {
+    it('removes a master from every index and the provider', () => {
+      const typeId = registry.createMaster(
+        { id: 'gone', name: 'Gone' },
+        'server'
+      );
+      registry.setMasterCircuit(typeId, { components: [], wires: [] });
+
+      registry.removeMaster(typeId);
+
+      expect(registry.getDefinition(typeId)).toBeUndefined();
+      expect(registry.masterTypeIdForId('gone')).toBeUndefined();
+      expect(provider.getComponent(typeId)).toBeUndefined();
+      expect(registry.dependenciesOf(typeId).size).toBe(0);
+    });
+
+    it('leaves snapshots of a removed master resolvable as definitions', () => {
+      const typeId = registry.createMaster(
+        { id: 'gone', name: 'Gone' },
+        'server'
+      );
+      const snapshot = registry.snapshot(typeId);
+
+      registry.removeMaster(typeId);
+
+      expect(registry.getDefinition(snapshot.typeId)).toBeDefined();
+      expect(provider.getComponent(snapshot.typeId)).toBeDefined();
+      // The snapshot no longer resolves to a master — same as any unloaded one.
+      expect(registry.resolveMaster(snapshot.typeId)).toBeUndefined();
+    });
+
+    it('no-ops for snapshots and unknown type ids', () => {
+      const typeId = registry.createMaster({ id: 'm' }, 'browser');
+      const snapshot = registry.snapshot(typeId);
+      registry.removeMaster(snapshot.typeId);
+      registry.removeMaster(999999);
+      expect(registry.getDefinition(snapshot.typeId)).toBeDefined();
+      expect(registry.getDefinition(typeId)).toBeDefined();
+    });
+
+    it('drops dependency edges pointing at a removed master', () => {
+      const child = registry.createMaster({ id: 'child' }, 'server');
+      const parent = registry.createMaster({ id: 'parent' }, 'browser');
+      registry.setDependencies(parent, [child]);
+
+      registry.removeMaster(child);
+
+      expect(registry.dependenciesOf(parent).has(child)).toBe(false);
+    });
+
+    it('removeServerMasters removes server masters except keepIds, browser masters stay', () => {
+      const kept = registry.createMaster({ id: 'kept' }, 'server');
+      const dropped = registry.createMaster({ id: 'dropped' }, 'server');
+      const local = registry.createMaster({ id: 'local' }, 'browser');
+
+      registry.removeServerMasters(new Set(['kept']));
+
+      expect(registry.getDefinition(kept)).toBeDefined();
+      expect(registry.getDefinition(dropped)).toBeUndefined();
+      expect(registry.getDefinition(local)).toBeDefined();
+    });
+  });
 });

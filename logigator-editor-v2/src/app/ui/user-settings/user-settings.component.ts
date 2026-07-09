@@ -3,6 +3,7 @@ import { LgAvatar, LgDivider, LgMenu, LgRipple, MenuItem } from '@logigator/ui';
 import { ThemeSwitcherComponent } from '../../theming/theme-switcher/theme-switcher.component';
 import { LanguageSwitcherComponent } from '../../translation/language-switcher/language-switcher.component';
 import { UserService } from '../../user/user.service';
+import { SessionLifecycleService } from '../../user/session-lifecycle.service';
 import { SettingsComponent } from '../../settings/settings.component';
 
 @Component({
@@ -20,6 +21,7 @@ import { SettingsComponent } from '../../settings/settings.component';
 })
 export class UserSettingsComponent {
   protected readonly userService = inject(UserService);
+  private readonly sessionLifecycle = inject(SessionLifecycleService);
   protected readonly menuOpen = signal(false);
 
   protected readonly userImageUrl = computed(
@@ -41,7 +43,7 @@ export class UserSettingsComponent {
       items.push({
         label: 'Log Out',
         icon: 'ph ph-sign-out',
-        command: () => this.userService.logout()
+        command: () => void this.sessionLifecycle.requestLogout()
       });
     } else {
       items.push({

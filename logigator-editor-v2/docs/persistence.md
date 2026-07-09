@@ -395,6 +395,32 @@ encoding (decoded through the migration); the browser target and files use the n
 envelope — which is why a file import is simply "decode, then browser-save the re-encoded
 blob."
 
+### Session lifecycle & the cloud save guard
+
+Cloud persistence follows the signed-in user (`src/app/user/`):
+
+- **`CloudSessionService`** stamps every registered `source:'server'` document
+  with the user id it was loaded under and answers
+  `verdict(project): 'ok' | 'logged-out' | 'foreign'`. `saveProject` consults it
+  for server documents and the create/promote/upload entry points require a
+  signed-in session — a rejection toasts the specific reason once and throws
+  `AuthRequiredError` / `ForeignDocumentError`, which outer flows recognize via
+  `isHandledSaveError` and don't re-toast. An HTTP 401 on a save additionally
+  flips `UserService.sessionExpired()` (stale auth cookie cleaned up).
+- **`SessionLifecycleService`** (injected by `AppComponent` for its side
+  effects, like `InspectionService`) reacts to `UserService.user()` transitions:
+  login → `preloadComponentIdAliases` (memoized) + `preloadServerMasters`;
+  logout (any kind) → `clearServerMasters()`, which drops server masters from
+  the registry/palette except those backing an open server component editor
+  (their `DefinitionBinding` must stay live); placed snapshots keep rendering.
+  Its `requestLogout()` drives the Log Out menu action: dirty cloud documents
+  prompt Save / Discard / Cancel (save runs `promoteLocalDepsAndSave`; any
+  failure aborts the logout), then the session ends and the cloud workspace is
+  deliberately reset — server component tabs force-close, a server main is
+  replaced by a blank draft (exiting a running simulation first), local
+  documents stay. An **external** logout (expiry / another tab) touches nothing
+  but the library.
+
 ### Dependencies, promotion & orphan recovery
 
 How a document carries the custom components it uses, how a local component is

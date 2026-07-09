@@ -32,6 +32,14 @@ import {
   FakeComponentIdMapStore
 } from '../../testing/fake-browser-stores';
 import { configureTestBed } from '../../testing/configure-test-bed';
+import { signal } from '@angular/core';
+import type { UserData } from '../api/models/user';
+import { UserService } from '../user/user.service';
+import { ForeignDocumentError } from './persistence-errors';
+
+function makeUser(id: string): UserData {
+  return { id, memberSince: '2024-01-01', username: id, image: null };
+}
 
 const PROJECT_URL = (uuid: string) =>
   `${environment.apiUrl}/api/project/${uuid}`;
@@ -138,6 +146,10 @@ describe('PersistenceService', () => {
   let idMapStore: FakeComponentIdMapStore;
   let registry: CustomComponentRegistry;
   let provider: ComponentProviderService;
+  // Signed in by default: most tests exercise cloud saves, which the session
+  // guard would otherwise reject. Individual tests flip it to null / another
+  // user to exercise the guard itself.
+  let user: ReturnType<typeof signal<UserData | null>>;
 
   beforeEach(() => {
     // Console output from expected error-path tests is suppressed.
@@ -146,7 +158,9 @@ describe('PersistenceService', () => {
     browserStore = new FakeBrowserProjectStore();
     componentStore = new FakeBrowserComponentStore();
     idMapStore = new FakeComponentIdMapStore();
+    user = signal<UserData | null>(makeUser('user-1'));
     configureTestBed([
+      { provide: UserService, useValue: { user, sessionExpired: vi.fn() } },
       {
         provide: Location,
         useValue: {
@@ -365,6 +379,120 @@ describe('PersistenceService', () => {
       // fired while we were saving the previous snapshot.
       expect(metadataStore.getMetadata(project)!.hash).toBe('h1');
       expect(metadataStore.isDirty(project)).toBe(true);
+    });
+  });
+
+  describe('cloud session guard', () => {
+    function registerServerProject(): Project {
+      const project = new Project();
+      metadataStore.register(project, {
+        id: 'test-uuid',
+        name: 'Test',
+        type: 'project',
+        source: 'server',
+        hash: 'old-hash',
+        isPublic: false
+      });
+      metadataStore.markDirty(project);
+      return project;
+    }
+
+    it('rejects a cloud save while signed out and keeps the project dirty', async () => {
+      const project = registerServerProject();
+      user.set(null);
+
+      await expect(service.saveProject(project)).rejects.toBeInstanceOf(
+        AuthRequiredError
+      );
+      expect(metadataStore.isDirty(project)).toBe(true);
+      // httpMock.verify() in afterEach asserts no PUT went out.
+    });
+
+    it('rejects a cloud save of a document owned by a different account', async () => {
+      const project = registerServerProject();
+      TestBed.tick(); // stamp the document with user-1
+
+      user.set(makeUser('user-2'));
+      await expect(service.saveProject(project)).rejects.toBeInstanceOf(
+        ForeignDocumentError
+      );
+      expect(metadataStore.isDirty(project)).toBe(true);
+    });
+
+    it('allows saving again when the original owner signs back in', async () => {
+      const project = registerServerProject();
+      TestBed.tick();
+      user.set(null);
+      user.set(makeUser('user-1'));
+
+      const promise = service.saveProject(project);
+      const req = httpMock.expectOne(PROJECT_URL('test-uuid'));
+      req.flush({ status: 200, data: projectSummaryResponse().data });
+      await promise;
+      expect(metadataStore.isDirty(project)).toBe(false);
+    });
+
+    it('rejects creating new cloud records while signed out', async () => {
+      user.set(null);
+      await expect(
+        service.createServerComponent({
+          name: 'C',
+          symbol: 'C',
+          description: ''
+        })
+      ).rejects.toBeInstanceOf(AuthRequiredError);
+      await expect(
+        service.saveDraftAsServer(new Project(), 'Draft', false)
+      ).rejects.toBeInstanceOf(AuthRequiredError);
+    });
+  });
+
+  describe('clearServerMasters', () => {
+    it('removes cloud masters from the registry and palette, keeping snapshots', () => {
+      const masterTypeId = registry.createMaster(
+        { id: 'cloud-1', name: 'Cloud Gate' },
+        'server'
+      );
+      const snapshot = registry.snapshot(masterTypeId);
+
+      service.clearServerMasters();
+
+      expect(registry.getDefinition(masterTypeId)).toBeUndefined();
+      expect(registry.masterTypeIdForId('cloud-1')).toBeUndefined();
+      expect(provider.getComponent(masterTypeId)).toBeUndefined();
+      // Placed instances wrap snapshots, which must keep resolving.
+      expect(registry.getDefinition(snapshot.typeId)).toBeDefined();
+      expect(provider.getComponent(snapshot.typeId)).toBeDefined();
+    });
+
+    it('keeps a master whose editor tab is open, and leaves browser masters alone', () => {
+      const openTypeId = registry.createMaster(
+        { id: 'cloud-open', name: 'Open' },
+        'server'
+      );
+      const closedTypeId = registry.createMaster(
+        { id: 'cloud-closed', name: 'Closed' },
+        'server'
+      );
+      const browserTypeId = registry.createMaster(
+        { id: 'local-1', name: 'Local' },
+        'browser'
+      );
+      const editor = new Project();
+      metadataStore.register(editor, {
+        id: 'cloud-open',
+        name: 'Open',
+        type: 'comp',
+        source: 'server',
+        hash: '',
+        isPublic: false
+      });
+
+      service.clearServerMasters();
+
+      expect(registry.getDefinition(openTypeId)).toBeDefined();
+      expect(registry.getDefinition(closedTypeId)).toBeUndefined();
+      expect(registry.getDefinition(browserTypeId)).toBeDefined();
     });
   });
 

@@ -10,6 +10,18 @@ export class CookieService implements OnDestroy {
 
   private readonly _changeHandler = (e: CookieChangeEvent) =>
     this._handleChange(e);
+  // Without cookieStore there are no change events, so external cookie changes
+  // (login/logout in another tab, session expiry) would go unnoticed until a
+  // reload. Re-reading on window focus catches them at the moment that matters:
+  // the user coming back from the login tab.
+  private readonly _focusHandler = () => {
+    this._read().catch((e) => {
+      this.loggingService.error(
+        `Failed to re-read cookies: ${e}`,
+        'CookieService'
+      );
+    });
+  };
 
   constructor() {
     this._read().catch((e) => {
@@ -21,12 +33,16 @@ export class CookieService implements OnDestroy {
 
     if (this._hasCookieStore) {
       window.cookieStore.addEventListener('change', this._changeHandler);
+    } else {
+      window.addEventListener('focus', this._focusHandler);
     }
   }
 
   ngOnDestroy(): void {
     if (this._hasCookieStore) {
       window.cookieStore.removeEventListener('change', this._changeHandler);
+    } else {
+      window.removeEventListener('focus', this._focusHandler);
     }
   }
 
@@ -44,23 +60,44 @@ export class CookieService implements OnDestroy {
     );
   }
 
-  private async _read(): Promise<void> {
+  /**
+   * Deletes a cookie (client-side) and drops it from the reactive map
+   * immediately, so readers observe the change without waiting for a change
+   * event / re-read.
+   */
+  delete(name: string): void {
     if (this._hasCookieStore) {
-      const cookies = await window.cookieStore.getAll();
-      for (const { name, value } of cookies) {
-        if (!name || !value) continue;
-        this._cookies.set(name, value);
-      }
+      void window.cookieStore.delete(name);
+    } else {
+      document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
+    }
+    this._cookies.delete(name);
+  }
 
-      return;
+  private async _read(): Promise<void> {
+    const present: { name: string; value: string }[] = [];
+    if (this._hasCookieStore) {
+      for (const { name, value } of await window.cookieStore.getAll()) {
+        if (!name || !value) continue;
+        present.push({ name, value });
+      }
+    } else {
+      for (const cookie of document.cookie.split(';')) {
+        const [name, ...rest] = cookie.split('=');
+        const value = rest.join('=');
+        if (!name || !value) continue;
+        present.push({ name: name.trim(), value: value.trim() });
+      }
     }
 
-    const cookies = document.cookie.split(';');
-    for (const cookie of cookies) {
-      const [name, ...rest] = cookie.split('=');
-      const value = rest.join('=');
-      if (!name || !value) continue;
-      this._cookies.set(name.trim(), value.trim());
+    // Reconcile instead of only merging: a re-read (focus fallback) must also
+    // observe deletions, e.g. the auth cookie cleared by a logout elsewhere.
+    const names = new Set(present.map((c) => c.name));
+    for (const name of [...this._cookies.keys()]) {
+      if (!names.has(name)) this._cookies.delete(name);
+    }
+    for (const { name, value } of present) {
+      this._cookies.set(name, value);
     }
   }
 

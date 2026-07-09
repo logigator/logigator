@@ -25,13 +25,22 @@ import { DefinitionBinding } from '../custom-component/definition-binding';
 import { buildProject, instantiateBody } from './circuit-builder';
 import { CUSTOM_TYPE_ID_BASE } from '../components/component-type.enum';
 import type { SnapshotDefinition } from './serialized-circuit';
-import { formatHttpError } from './persistence-errors';
+import {
+  AuthRequiredError,
+  ForeignDocumentError,
+  formatHttpError
+} from './persistence-errors';
+import { CloudSessionService } from '../user/cloud-session.service';
 import { ServerPersistenceGateway } from './server/server-persistence.gateway';
 import { downloadBlob } from '../utils/download';
 import { ProjectDump, PROJECT_DUMP_VERSION } from './dump/project-dump.types';
 import { deserializeAction } from '../actions/action-codec';
 
-export { AuthRequiredError } from './persistence-errors';
+export {
+  AuthRequiredError,
+  ForeignDocumentError,
+  isHandledSaveError
+} from './persistence-errors';
 
 /**
  * One **local** custom component that a circuit about to be uploaded embeds
@@ -61,8 +70,10 @@ export class PersistenceService {
   private readonly transloco = inject(TranslocoService);
   private readonly location = inject(Location);
   private readonly server = inject(ServerPersistenceGateway);
+  private readonly cloudSession = inject(CloudSessionService);
 
   private _mainLoadToken = 0;
+  private _aliasesLoaded: Promise<void> | undefined;
   private _shareLoadToken = 0;
   private readonly _saveInFlight = new WeakMap<Project, Promise<void>>();
   // Bindings for component editors opened **as main** (the /component/:uuid
@@ -96,6 +107,10 @@ export class PersistenceService {
     const metadata = this.metadataStore.getMetadata(project);
     if (!metadata) return;
 
+    if (metadata.source === 'server') {
+      this._assertCloudSavable(project, metadata.name);
+    }
+
     let work: Promise<void> | undefined;
     if (metadata.type === 'comp') {
       if (metadata.source === 'server') {
@@ -124,6 +139,7 @@ export class PersistenceService {
     description?: string,
     isPublic?: boolean
   ): Promise<string> {
+    this._requireSignedIn();
     const { project, id } = await this.server.createProject(
       name,
       description,
@@ -225,6 +241,7 @@ export class PersistenceService {
     name: string,
     isPublic: boolean
   ): Promise<void> {
+    this._requireSignedIn();
     const id = await this.server.promoteToServer(project, name, isPublic);
     this.location.go(`/project/${id}`);
   }
@@ -250,6 +267,7 @@ export class PersistenceService {
     ) {
       throw new Error('Not a stored local project');
     }
+    this._requireSignedIn();
     const oldId = metadata.id;
 
     // The server round-trip is the only fail-able, irreversible step. Until it
@@ -274,6 +292,7 @@ export class PersistenceService {
     id: string,
     isPublic: boolean
   ): Promise<void> {
+    this._requireSignedIn();
     const main = this.projectService.mainProject();
     if (main && this.metadataStore.getMetadata(main)?.id === id) {
       await this.promoteProjectToServer(main, isPublic);
@@ -613,6 +632,27 @@ export class PersistenceService {
   }
 
   /**
+   * Removes the signed-out user's cloud masters from the registry and palette —
+   * the library half of any logout (initiated or external). Masters that back a
+   * currently open server component editor are kept: their `DefinitionBinding`
+   * writes into the master's type id, which must stay live while the editor
+   * exists (the next login's preload skips known ids, so a kept master dedupes
+   * instead of duplicating). Placed instances are frozen snapshots and keep
+   * rendering regardless. Idempotent.
+   */
+  clearServerMasters(): void {
+    const openEditorIds = new Set(
+      this.metadataStore
+        .getAllHandles()
+        .filter(
+          (h) => h.metadata.type === 'comp' && h.metadata.source === 'server'
+        )
+        .map((h) => h.metadata.id)
+    );
+    this.registry.removeServerMasters(openEditorIds);
+  }
+
+  /**
    * Lazily hydrates a preloaded server master's circuit (GET `/api/component/:id`)
    * the first time it is needed — placement or update-to-latest. No-op for a master
    * that is not server-sourced or whose circuit is already loaded. Safe to call
@@ -639,7 +679,14 @@ export class PersistenceService {
    * resolve it (its id changed on promotion). Call once at startup, alongside
    * {@link preloadBrowserMasters}. Best-effort: failures are logged, not thrown.
    */
-  async preloadComponentIdAliases(): Promise<void> {
+  preloadComponentIdAliases(): Promise<void> {
+    // Memoized: called once at startup and again by every login transition
+    // (the server preload must not race ahead of the aliases), so all callers
+    // share one load.
+    return (this._aliasesLoaded ??= this._loadComponentIdAliases());
+  }
+
+  private async _loadComponentIdAliases(): Promise<void> {
     try {
       const mappings = await this.componentIdMapStore.list();
       for (const { id, newId } of mappings) {
@@ -812,6 +859,7 @@ export class PersistenceService {
     if (!def || def.kind !== 'master' || def.source !== 'browser' || !def.id) {
       throw new Error('Not a local component');
     }
+    this._requireSignedIn();
     const oldId = def.id;
     const record = await this.browserComponentStore.get(oldId);
     if (!record) {
@@ -938,12 +986,13 @@ export class PersistenceService {
    * circuit to establish a hash. Returns the Project + master type id so the
    * caller (`CustomComponentService`) opens the tab and attaches a binding.
    */
-  createServerComponent(meta: {
+  async createServerComponent(meta: {
     name: string;
     symbol: string;
     description: string;
     isPublic?: boolean;
   }): Promise<{ project: Project; masterTypeId: number }> {
+    this._requireSignedIn();
     return this.server.createComponent(meta);
   }
 
@@ -1034,6 +1083,44 @@ export class PersistenceService {
   }
 
   // -- Private helpers -----------------------------------------------------
+
+  /**
+   * Rejects a cloud save that cannot land in the right account: signed out
+   * (external logout / expired session) or a document loaded under a different
+   * user than the one now signed in. Toasts the specific reason here — the
+   * single choke point — and throws a marker error the outer save flows
+   * recognize as already surfaced (see {@link isHandledSaveError}).
+   */
+  private _assertCloudSavable(project: Project, name: string): void {
+    const verdict = this.cloudSession.verdict(project);
+    if (verdict === 'ok') return;
+    if (verdict === 'logged-out') {
+      this.toast.error(
+        this.transloco.translate('session.saveLoggedOut'),
+        'PersistenceService'
+      );
+      throw new AuthRequiredError();
+    }
+    this.toast.error(
+      this.transloco.translate('session.saveForeign', { name }),
+      'PersistenceService'
+    );
+    throw new ForeignDocumentError();
+  }
+
+  /**
+   * Rejects creating a *new* cloud record (create / promote / upload) while
+   * signed out — the proactive counterpart to the 401 the API would return.
+   * Toasts once and throws the same marker error as {@link _assertCloudSavable}.
+   */
+  private _requireSignedIn(): void {
+    if (this.cloudSession.isSignedIn()) return;
+    this.toast.error(
+      this.transloco.translate('session.saveLoggedOut'),
+      'PersistenceService'
+    );
+    throw new AuthRequiredError();
+  }
 
   /**
    * Builds a throwaway project from stored circuit JSON, runs `fn` on it (a

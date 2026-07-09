@@ -1,11 +1,22 @@
 import { computed, effect, inject, Injectable, signal } from '@angular/core';
 import { tap } from 'rxjs/operators';
 import type { Observable } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
 import { UserApiService } from '../api/services/user-api.service';
 import type { Shortcut, UpdateUserRequest, UserData } from '../api/models/user';
 import { ToastService } from '../logging/toast.service';
 import { CookieService } from '../storage/cookie.service';
 
+const AUTH_COOKIE = 'isAuthenticated';
+
+/**
+ * The signed-in user's data, driven by the `isAuthenticated` cookie: the cookie
+ * flipping true loads the user, flipping false clears it — so `user()` reflects
+ * logins and logouts from anywhere (own tab, the login page, another tab,
+ * session expiry). Everything that must *react* to a session change (library
+ * reload, save guards, workspace teardown) keys off `user()`; the orchestration
+ * itself lives in `SessionLifecycleService` and `CloudSessionService`.
+ */
 @Injectable({ providedIn: 'root' })
 export class UserService {
   private readonly userApi = inject(UserApiService);
@@ -13,7 +24,7 @@ export class UserService {
   private readonly cookieService = inject(CookieService);
 
   private readonly _hasAuthenticatedFlag = computed(
-    () => this.cookieService.get('isAuthenticated') === 'true'
+    () => this.cookieService.get(AUTH_COOKIE) === 'true'
   );
 
   private readonly _user = signal<UserData | null>(null);
@@ -33,7 +44,15 @@ export class UserService {
   loadUser(): void {
     this.userApi.get().subscribe({
       next: (user) => this._user.set(user),
-      error: () => {
+      error: (err) => {
+        // A rejected auth cookie means the server session is gone — flip to
+        // signed-out cleanly (including the stale cookie, so a later login
+        // produces a fresh cookie transition). Anything else (offline, 5xx)
+        // leaves the cookie alone: the session may well still be valid.
+        if (err instanceof HttpErrorResponse && err.status === 401) {
+          this.sessionExpired();
+          return;
+        }
         this.toastService.error(
           'Failed to load user data. Please log in again.',
           'UserService'
@@ -48,19 +67,25 @@ export class UserService {
     window.open('/login', '_blank');
   }
 
-  /** Navigate to the logout endpoint, which clears the session and redirects to home. */
-  logout(): void {
-    this.userApi
-      .logout()
-      .then(() => {
-        this.toastService.success('Logged out successfully.', 'UserService');
-      })
-      .catch(() => {
-        this.toastService.error(
-          'Failed to log out. Please try again.',
-          'UserService'
-        );
-      });
+  /**
+   * Ends the server session (GET `/auth/logout`). Pure transport: throws on
+   * failure and emits no toast — `SessionLifecycleService.requestLogout()` owns
+   * the surrounding flow (unsaved-changes dialog, teardown, feedback). The
+   * server response flips the `isAuthenticated` cookie, which clears `user()`.
+   */
+  logout(): Promise<void> {
+    return this.userApi.logout();
+  }
+
+  /**
+   * Flips to signed-out after the server rejected the session (a 401 on any
+   * authenticated call) while the auth cookie still claimed otherwise. Clears
+   * the stale cookie so the cookie signal agrees — and so the next login sets
+   * it fresh and is observed as a real transition.
+   */
+  sessionExpired(): void {
+    this.cookieService.delete(AUTH_COOKIE);
+    this._user.set(null);
   }
 
   /** Open the account settings page in a new tab. */
