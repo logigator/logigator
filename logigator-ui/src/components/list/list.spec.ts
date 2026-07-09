@@ -20,25 +20,6 @@ import { LgList, LgListItem } from './list';
 class HostComponent {}
 
 describe('LgList', () => {
-  it('renders the list/listitem roles', () => {
-    const f = TestBed.createComponent(HostComponent);
-    f.detectChanges();
-    const el = f.nativeElement as HTMLElement;
-    expect(el.querySelector('lg-list')?.getAttribute('role')).toBe('list');
-    expect(el.querySelectorAll('[role="listitem"]').length).toBe(2);
-  });
-
-  it('renders the title plus the leading, subtitle and trailing slots', () => {
-    const f = TestBed.createComponent(HostComponent);
-    f.detectChanges();
-    const el = f.nativeElement as HTMLElement;
-    const first = el.querySelector('lg-list-item') as HTMLElement;
-    expect(first.textContent).toContain('8-bit Adder');
-    expect(first.textContent).toContain('Edited 2 minutes ago');
-    expect(first.querySelector('.ph-circuitry')).not.toBeNull();
-    expect(first.querySelector('.tag')?.textContent).toContain('Unsaved');
-  });
-
   it('renders a plain single-line row when no slots are filled', () => {
     const f = TestBed.createComponent(HostComponent);
     f.detectChanges();

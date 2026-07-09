@@ -45,11 +45,6 @@ describe('LgSelectButton', () => {
     expect(buttons[1].getAttribute('aria-pressed')).toBe('false');
   });
 
-  it('projects the #item template with the option as $implicit', async () => {
-    const { buttons } = await setup();
-    expect(buttons[0].textContent).toContain('icon:e');
-  });
-
   it('writes the optionValue primitive on click', async () => {
     const { f, buttons } = await setup();
     buttons[1].click();

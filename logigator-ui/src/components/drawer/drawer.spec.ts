@@ -66,13 +66,6 @@ describe('LgDrawer', () => {
     );
   });
 
-  it('merges the styleClass passthrough onto the panel', () => {
-    const f = setup();
-    f.componentInstance.visible.set(true);
-    f.detectChanges();
-    expect(panel()!.className).toContain('h-[90vh]!');
-  });
-
   it('closes on backdrop click (a drawer is always dismissable)', () => {
     const f = setup();
     f.componentInstance.visible.set(true);

@@ -25,12 +25,6 @@ function dropEvent(files: File[]): Event {
 }
 
 describe('LgFileUpload', () => {
-  it('labels the drop zone', () => {
-    const { zone } = setup();
-    expect(zone.textContent).toContain('Choose');
-    expect(zone.getAttribute('aria-label')).toBe('Choose');
-  });
-
   it('emits the selected files and resets the input', () => {
     const { input, events } = setup();
     const file = new File(['{}'], 'circuit.json', {

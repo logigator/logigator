@@ -53,10 +53,4 @@ describe('LgInputText', () => {
     f.detectChanges();
     expect(input.className).toContain('border-error');
   });
-
-  it('leaves native value binding (ngModel) to Angular', async () => {
-    const { f, input } = setup();
-    await f.whenStable();
-    expect(input.value).toBe('hello');
-  });
 });

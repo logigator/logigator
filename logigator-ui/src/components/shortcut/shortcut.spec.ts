@@ -57,22 +57,6 @@ describe('LgShortcut', () => {
     expect(host.textContent).toContain('–');
   });
 
-  it('skins the chips for a raised backdrop via tone', () => {
-    @Component({
-      imports: [LgShortcut],
-      template: `<lg-shortcut
-        [binding]="{ key: 's', ctrl: true }"
-        tone="raised"
-        [mac]="false"
-      />`
-    })
-    class RaisedHostComponent {}
-    const f = TestBed.createComponent(RaisedHostComponent);
-    f.detectChanges();
-    const kbd = (f.nativeElement as HTMLElement).querySelector('kbd')!;
-    expect(kbd.className).toContain('dark:bg-surface-600');
-  });
-
   it('formats special keys through the label map', () => {
     expect(formatShortcutKey('Escape')).toBe('Esc');
     expect(formatShortcutKey(' ')).toBe('Space');

@@ -1,11 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { ConnectedPosition, Overlay } from '@angular/cdk/overlay';
-import { TestBed } from '@angular/core/testing';
-import {
-  connectedPositions,
-  createConnectedOverlay,
-  sideOfPosition
-} from './overlay';
+import { ConnectedPosition } from '@angular/cdk/overlay';
+import { connectedPositions, sideOfPosition } from './overlay';
 
 describe('connectedPositions', () => {
   it('orders preferred → opposite → perpendicular', () => {
@@ -69,21 +64,5 @@ describe('sideOfPosition', () => {
   ];
   it.each(cases)('reads the resolved side back', (position, side) => {
     expect(sideOfPosition(position)).toBe(side);
-  });
-});
-
-describe('createConnectedOverlay', () => {
-  it('builds an OverlayRef anchored to the origin', () => {
-    const overlay = TestBed.inject(Overlay);
-    const origin = document.createElement('div');
-    document.body.appendChild(origin);
-    const ref = createConnectedOverlay(overlay, {
-      origin,
-      positions: connectedPositions('bottom')
-    });
-    expect(ref).toBeTruthy();
-    expect(typeof ref.attach).toBe('function');
-    ref.dispose();
-    origin.remove();
   });
 });

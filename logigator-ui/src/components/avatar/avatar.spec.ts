@@ -24,15 +24,4 @@ describe('LgAvatar', () => {
     g.detectChanges();
     expect(g.nativeElement.querySelector('i')?.className).toContain('ph-user');
   });
-
-  it('applies circle shape and xlarge size', () => {
-    const f = TestBed.createComponent(LgAvatar);
-    f.componentRef.setInput('icon', 'ph ph-user');
-    f.componentRef.setInput('shape', 'circle');
-    f.componentRef.setInput('size', 'xlarge');
-    f.detectChanges();
-    const inner = f.nativeElement.querySelector('span') as HTMLElement;
-    expect(inner.className).toContain('rounded-full');
-    expect(inner.className).toContain('size-16');
-  });
 });

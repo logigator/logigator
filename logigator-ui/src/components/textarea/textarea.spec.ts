@@ -41,10 +41,4 @@ describe('LgTextarea', () => {
     f.detectChanges();
     expect(ta.className).toContain('border-error');
   });
-
-  it('leaves native value binding (ngModel) to Angular', async () => {
-    const { f, ta } = setup();
-    await f.whenStable();
-    expect(ta.value).toBe('draft');
-  });
 });

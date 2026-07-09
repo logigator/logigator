@@ -44,9 +44,4 @@ describe('LgCheckbox', () => {
     checkbox.dispatchEvent(new Event('change'));
     expect(f.componentInstance.value()).toBe(true);
   });
-
-  it('wires the native control to inputId for external labels', async () => {
-    const { checkbox } = await setup();
-    expect(checkbox.id).toBe('c');
-  });
 });

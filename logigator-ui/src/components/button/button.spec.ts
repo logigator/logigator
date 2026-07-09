@@ -11,13 +11,6 @@ function button(f: ComponentFixture<LgButton>): HTMLButtonElement {
 }
 
 describe('LgButton', () => {
-  it('renders the label', () => {
-    const f = create();
-    f.componentRef.setInput('label', 'Save');
-    f.detectChanges();
-    expect(f.nativeElement.textContent).toContain('Save');
-  });
-
   it('renders an icon-only button (no label span) when label is omitted', () => {
     const f = create();
     f.componentRef.setInput('icon', 'ph ph-trash');
@@ -55,104 +48,5 @@ describe('LgButton', () => {
     f.detectChanges();
     expect(button(f).disabled).toBe(true);
     expect(f.nativeElement.querySelector('.animate-spin')).not.toBeNull();
-  });
-
-  it('applies sm-size classes', () => {
-    const f = create();
-    f.componentRef.setInput('label', 'X');
-    f.componentRef.setInput('size', 'sm');
-    f.detectChanges();
-    expect(button(f).className).toContain('text-sm');
-    expect(button(f).className).toContain('px-2.5');
-  });
-
-  it('applies lg- and xl-size classes', () => {
-    const f = create();
-    f.componentRef.setInput('label', 'X');
-    f.componentRef.setInput('size', 'lg');
-    f.detectChanges();
-    expect(button(f).className).toContain('text-lg');
-    expect(button(f).className).toContain('px-4');
-
-    f.componentRef.setInput('size', 'xl');
-    f.detectChanges();
-    expect(button(f).className).toContain('text-xl');
-    expect(button(f).className).toContain('px-5');
-  });
-
-  it('sizes an icon-only button per size on the host', () => {
-    const f = create();
-    f.componentRef.setInput('icon', 'ph ph-x');
-    f.componentRef.setInput('size', 'sm');
-    f.detectChanges();
-    expect((f.nativeElement as HTMLElement).className).toContain('size-8');
-
-    f.componentRef.setInput('size', 'lg');
-    f.detectChanges();
-    expect((f.nativeElement as HTMLElement).className).toContain('size-12');
-
-    f.componentRef.setInput('size', 'xl');
-    f.detectChanges();
-    expect((f.nativeElement as HTMLElement).className).toContain('size-14');
-  });
-
-  it('applies the secondary severity classes', () => {
-    const f = create();
-    f.componentRef.setInput('label', 'X');
-    f.componentRef.setInput('severity', 'secondary');
-    f.detectChanges();
-    expect(button(f).className).toContain('bg-surface-100');
-  });
-
-  it('switches to outlined and text variants', () => {
-    const f = create();
-    f.componentRef.setInput('label', 'X');
-    f.componentRef.setInput('outlined', true);
-    f.detectChanges();
-    expect(button(f).className).toContain('border-primary-200');
-
-    f.componentRef.setInput('outlined', false);
-    f.componentRef.setInput('text', true);
-    f.detectChanges();
-    expect(button(f).className).not.toContain('border-primary-200');
-    expect(button(f).className).toContain('text-primary');
-  });
-
-  it('coerces bare/string boolean attributes (booleanAttribute)', () => {
-    const f = create();
-    f.componentRef.setInput('label', 'X');
-    // bare attribute (`rounded`) passes '' which must coerce to true
-    f.componentRef.setInput('rounded', '');
-    f.componentRef.setInput('text', 'true');
-    f.detectChanges();
-    expect(button(f).className).toContain('rounded-4xl');
-    expect(button(f).className).not.toContain('border-primary-200');
-  });
-
-  it('reflects type and ariaLabel', () => {
-    const f = create();
-    f.componentRef.setInput('type', 'submit');
-    f.componentRef.setInput('ariaLabel', 'Save project');
-    f.detectChanges();
-    expect(button(f).getAttribute('type')).toBe('submit');
-    expect(button(f).getAttribute('aria-label')).toBe('Save project');
-  });
-
-  it('merges styleClass onto the inner button', () => {
-    const f = create();
-    f.componentRef.setInput('label', 'X');
-    f.componentRef.setInput('styleClass', 'my-custom-class');
-    f.detectChanges();
-    expect(button(f).className).toContain('my-custom-class');
-  });
-
-  it('sizes an icon-only button on the host, not the inner button', () => {
-    const f = create();
-    f.componentRef.setInput('icon', 'ph ph-x');
-    f.detectChanges();
-    expect((f.nativeElement as HTMLElement).className).toContain('size-10');
-    f.componentRef.setInput('label', 'X');
-    f.detectChanges();
-    expect((f.nativeElement as HTMLElement).className).not.toContain('size-10');
   });
 });

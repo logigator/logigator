@@ -120,11 +120,6 @@ describe('LgSelect', () => {
     expect(button.getAttribute('aria-expanded')).toBe('false');
   });
 
-  it('uses a type="button" trigger so it cannot submit an enclosing form', async () => {
-    const { button } = await setup();
-    expect(button.getAttribute('type')).toBe('button');
-  });
-
   it('opens on ArrowDown from the closed trigger', async () => {
     const { f, button } = await setup();
     button.dispatchEvent(

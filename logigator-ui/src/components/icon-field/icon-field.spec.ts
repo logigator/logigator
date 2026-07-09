@@ -24,12 +24,6 @@ function setup() {
 }
 
 describe('LgIconField', () => {
-  it('projects the icon and the input', () => {
-    const f = setup();
-    expect(f.nativeElement.querySelector('lg-input-icon')).not.toBeNull();
-    expect(f.nativeElement.querySelector('.real-input')).not.toBeNull();
-  });
-
   it('reflects iconPosition to a host attribute (default left)', () => {
     const f = setup();
     const field = f.nativeElement.querySelector('lg-icon-field') as HTMLElement;

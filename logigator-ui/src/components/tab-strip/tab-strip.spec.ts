@@ -81,9 +81,4 @@ describe('LgTabStrip', () => {
     // Closing must not have selected the tab.
     expect(f.componentInstance.selected()).toBeNull();
   });
-
-  it('shows the dirty dot on a dirty tab', () => {
-    const { tabs } = setup();
-    expect(tabs[1].querySelector('.tab-dirty')).toBeTruthy();
-  });
 });

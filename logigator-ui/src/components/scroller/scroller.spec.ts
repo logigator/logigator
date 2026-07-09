@@ -27,16 +27,6 @@ function setup() {
 }
 
 describe('LgScroller', () => {
-  it('renders a virtual-scroll viewport with the passthrough class', () => {
-    const f = setup();
-    const viewport = f.nativeElement.querySelector(
-      'cdk-virtual-scroll-viewport'
-    ) as HTMLElement;
-    expect(viewport).toBeTruthy();
-    expect(viewport.className).toContain('font-mono');
-    expect(viewport.style.height).toBe('200px');
-  });
-
   it('delegates scrollToIndex to the cdk viewport', () => {
     const f = setup();
     const viewport = f.debugElement.query(

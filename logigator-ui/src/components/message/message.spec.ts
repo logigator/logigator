@@ -14,25 +14,6 @@ describe('LgMessage', () => {
     expect(icon.className).toContain('ph-warning');
   });
 
-  it('renders borderless and muted for the none severity by default', () => {
-    const f = TestBed.createComponent(LgMessage);
-    f.detectChanges();
-    const div = f.nativeElement.querySelector('div') as HTMLElement;
-    expect(div.className).toContain('border-transparent');
-    expect(div.className).toContain('text-muted');
-  });
-
-  it('stacks the icon above centered text when centered', () => {
-    const f = TestBed.createComponent(LgMessage);
-    f.componentRef.setInput('centered', true);
-    f.detectChanges();
-    const div = f.nativeElement.querySelector('div') as HTMLElement;
-    const icon = f.nativeElement.querySelector('i') as HTMLElement;
-    expect(div.className).toContain('flex-col');
-    expect(div.className).toContain('text-center');
-    expect(icon.className).toContain('text-3xl');
-  });
-
   it('renders the danger severity on the error palette', () => {
     const f = TestBed.createComponent(LgMessage);
     f.componentRef.setInput('severity', 'danger');

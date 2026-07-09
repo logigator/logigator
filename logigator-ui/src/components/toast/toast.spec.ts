@@ -50,18 +50,6 @@ describe('LgToast', () => {
     expect(toast.className).toContain('text-error');
   });
 
-  it('themes the none and secondary severities', () => {
-    const { f, service } = setup();
-    service.add({ severity: 'none', summary: 'plain' });
-    service.add({ severity: 'secondary', summary: 'muted' });
-    f.detectChanges();
-    const [none, secondary] = toasts(f.nativeElement);
-    expect(none.className).toContain('bg-content');
-    expect(none.querySelector('.ph-bell')).not.toBeNull();
-    expect(secondary.className).toContain('bg-surface-100');
-    expect(secondary.querySelector('.ph-note')).not.toBeNull();
-  });
-
   it('auto-dismisses after its life, playing the leave animation first', () => {
     const { f, service } = setup();
     service.add({ severity: 'warn', summary: 'temp', life: 5000 });

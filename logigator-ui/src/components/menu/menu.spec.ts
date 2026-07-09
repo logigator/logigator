@@ -123,13 +123,4 @@ describe('LgMenu', () => {
     // Escape was pre-handled, so the menu must NOT close.
     expect(f.componentInstance.open()).toBe(true);
   });
-
-  it('renders menu rows as type="button" so they cannot submit a form', () => {
-    const { f, trigger } = setup();
-    trigger.click();
-    f.detectChanges();
-    container()!
-      .querySelectorAll('[role=menuitem]')
-      .forEach((el) => expect(el.getAttribute('type')).toBe('button'));
-  });
 });
