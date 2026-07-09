@@ -50,11 +50,11 @@ export class SaveProjectDialogComponent {
 
   protected readonly destinationOptions = [
     {
-      label: this.transloco.translate('saveProjectDialog.destinationServer'),
+      label: this.transloco.translate('saveProjectDialog.destinationCloud'),
       value: 'server' as const
     },
     {
-      label: this.transloco.translate('saveProjectDialog.destinationBrowser'),
+      label: this.transloco.translate('saveProjectDialog.destinationLocal'),
       value: 'local' as const
     }
   ];

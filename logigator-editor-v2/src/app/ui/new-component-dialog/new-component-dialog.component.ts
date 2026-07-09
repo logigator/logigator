@@ -41,11 +41,11 @@ export class NewComponentDialogComponent {
 
   protected readonly sourceOptions = [
     {
-      label: this.transloco.translate('newComponentDialog.storeServer'),
+      label: this.transloco.translate('newComponentDialog.storeCloud'),
       value: 'server' as const
     },
     {
-      label: this.transloco.translate('newComponentDialog.storeBrowser'),
+      label: this.transloco.translate('newComponentDialog.storeLocal'),
       value: 'browser' as const
     }
   ];

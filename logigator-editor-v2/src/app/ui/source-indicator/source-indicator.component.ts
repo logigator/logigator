@@ -86,7 +86,7 @@ export class SourceIndicatorComponent {
       icon: 'ph ph-pencil-simple-line',
       severity: 'warn',
       glyph: 'text-warn',
-      label: 'Unsaved'
+      label: 'Draft'
     },
     share: {
       icon: 'ph ph-share-network',

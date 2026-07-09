@@ -332,9 +332,9 @@ const en = {
   openProjectDialog: {
     title: 'Open Project',
     localProjects: 'Local Projects',
-    serverProjects: 'Server Projects',
+    cloudProjects: 'Cloud Projects',
     fromFile: 'From File',
-    notLoggedIn: 'Log in to see your server projects',
+    notLoggedIn: 'Log in to see your cloud projects',
     close: 'Close',
     loading: 'Loading...',
     uploadPrompt: 'Open a circuit file saved on your device.',
@@ -355,10 +355,10 @@ const en = {
       openLocal: 'Could not open the local project.',
       deleteLocal: 'Could not delete the local project.',
       renameLocal: 'Could not rename the local project.',
-      listServer: 'Could not load your server projects.',
-      openServer: 'Could not open the server project.',
-      deleteServer: 'Could not delete the server project.',
-      renameServer: 'Could not rename the server project.',
+      listCloud: 'Could not load your cloud projects.',
+      openCloud: 'Could not open the cloud project.',
+      deleteCloud: 'Could not delete the cloud project.',
+      renameCloud: 'Could not rename the cloud project.',
       importFailed: 'Could not import the file: {{detail}}',
       readFailed: 'Could not read the selected file.'
     }
@@ -366,28 +366,28 @@ const en = {
   saveProjectDialog: {
     name: 'Name',
     destination: 'Destination',
-    destinationServer: 'Server',
-    destinationBrowser: 'Browser',
-    notLoggedIn: 'You must be logged in to save projects to the server.',
+    destinationCloud: 'Cloud',
+    destinationLocal: 'Local',
+    notLoggedIn: 'You must be logged in to save projects to the cloud.',
     public: 'Public',
     publicInfo:
       'Public projects are published on your profile and accessible to everyone via a share link. Private projects are only visible to you.',
-    browserWarning:
-      'Browser projects are not persisted across devices and may be lost.'
+    localWarning:
+      'Local projects are not persisted across devices and may be lost.'
   },
   newComponentDialog: {
     name: 'Name',
     symbol: 'Symbol',
     description: 'Description',
     store: 'Store',
-    storeServer: 'Account',
-    storeBrowser: 'Browser',
-    notLoggedIn: 'You must be logged in to save components to your account.',
+    storeCloud: 'Cloud',
+    storeLocal: 'Local',
+    notLoggedIn: 'You must be logged in to save components to the cloud.',
     public: 'Public',
     publicInfo:
       'Public components are published on your profile and accessible to everyone via a share link. Private components are only visible to you.',
-    browserWarning:
-      'Browser components are not persisted across devices and may be lost.',
+    localWarning:
+      'Local components are not persisted across devices and may be lost.',
     create: 'Create'
   },
   uploadComponent: {
@@ -397,9 +397,9 @@ const en = {
   uploadDialog: {
     header: 'Upload to cloud',
     introProject:
-      '“{{name}}” is moved out of browser storage and stored on your account, so you can reach it from any device.',
+      '“{{name}}” is moved out of local storage and stored in your cloud library, so you can reach it from any device.',
     introComponent:
-      '“{{name}}” is moved out of your local library and stored on your account, so you can use it from any device.',
+      '“{{name}}” is moved out of your local library and stored in your cloud library, so you can use it from any device.',
     introDraft:
       '“{{name}}” embeds these local components. They will be uploaded to your cloud library alongside it.',
     depsTitle: 'These local components will also be published',
@@ -412,7 +412,7 @@ const en = {
       'Public projects are published on your profile and accessible to everyone via a share link. Private projects are only visible to you.',
     publicInfoComponent:
       'Public components are published on your profile and accessible to everyone via a share link. Private components are only visible to you.',
-    notLoggedIn: 'You must be logged in to upload to your account.',
+    notLoggedIn: 'You must be logged in to upload to the cloud.',
     cancel: 'Cancel',
     upload: 'Upload',
     analyzeFailed: 'Could not read the circuit to prepare the upload.',
@@ -430,9 +430,9 @@ const en = {
     cancel: 'Cancel'
   },
   sourceIndicator: {
-    cloudTitle: 'Saved in your cloud account',
+    cloudTitle: 'Saved in your cloud library',
     localTitle: 'Saved in this browser only',
-    draftTitle: 'Not saved yet — save it to the cloud or this browser',
+    draftTitle: 'Not saved yet — save it to the cloud or locally',
     shareTitle: 'Opened from a share link — read-only'
   },
   toolBar: {
@@ -494,17 +494,16 @@ const en = {
     legacyProjectWarning:
       'This project was made with the old editor. Saving here converts it to the new format — reopening it in the old editor afterwards may drop or misrender custom components.',
     projectSaved: 'Project saved.',
-    projectSavedBrowser: 'Project saved to browser storage.',
+    projectSavedLocal: 'Project saved to local storage.',
     componentSaved: 'Component saved.',
-    componentSavedBrowser: 'Component saved to browser storage.',
+    componentSavedLocal: 'Component saved to local storage.',
     componentUploaded: 'Component uploaded to your cloud library.',
-    projectUploaded: 'Project uploaded to your cloud account.',
+    projectUploaded: 'Project uploaded to your cloud library.',
     projectCreated: 'Project created.',
     projectExported: 'Project exported to file.',
     exportFailed: 'Could not export the project to a file.',
-    browserSaveFailed: 'Could not save the project to browser storage.',
-    browserComponentSaveFailed:
-      'Could not save the component to browser storage.',
+    localSaveFailed: 'Could not save the project to local storage.',
+    localComponentSaveFailed: 'Could not save the component to local storage.',
     saveFailed: 'Could not save: {{detail}}',
     saveFailedGeneric: 'Could not save the project.',
     createFailed: 'Could not create the project: {{detail}}',
@@ -513,7 +512,8 @@ const en = {
     loadFailed: 'Could not load the project.',
     componentLoadFailed: 'Could not load the component.',
     shareLoadFailed: 'Could not load the shared project.',
-    shareAuthRequired: 'Sign in to add this shared project to your account.',
+    shareAuthRequired:
+      'Sign in to add this shared project to your cloud library.',
     dumpElementCountChanged:
       'Project Dump element count changed on load — ids and action history were not restored.',
     skippedCustomOne:
@@ -540,8 +540,8 @@ const en = {
     edit: 'Edit component',
     restore: 'Restore & edit',
     restoreTooltip:
-      "This component's library master is gone, but its circuit is embedded. Restore it to your browser library to edit it.",
-    restored: 'Component restored to your browser library.',
+      "This component's library master is gone, but its circuit is embedded. Restore it to your local library to edit it.",
+    restored: 'Component restored to your local library.',
     restoreFailed: 'Could not restore this component.',
     signInToEdit: 'Sign in to edit',
     signInTooltip:

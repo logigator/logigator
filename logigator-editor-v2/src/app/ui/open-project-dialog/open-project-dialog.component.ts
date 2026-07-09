@@ -200,7 +200,7 @@ export class OpenProjectDialogComponent implements OnInit {
       this.serverLoaded.set(true);
     } catch (err) {
       this.toastService.error(
-        this.transloco.translate('openProjectDialog.errors.listServer'),
+        this.transloco.translate('openProjectDialog.errors.listCloud'),
         this.ctx,
         err
       );
@@ -220,7 +220,7 @@ export class OpenProjectDialogComponent implements OnInit {
   protected openServerProject(id: string): void {
     this.persistenceService.loadProjectAsMain(id).catch((err: unknown) => {
       this.toastService.error(
-        this.transloco.translate('openProjectDialog.errors.openServer'),
+        this.transloco.translate('openProjectDialog.errors.openCloud'),
         this.ctx,
         err
       );
@@ -233,7 +233,7 @@ export class OpenProjectDialogComponent implements OnInit {
       .then(() => this.loadServerProjects(this.serverPage()))
       .catch((err: unknown) => {
         this.toastService.error(
-          this.transloco.translate('openProjectDialog.errors.deleteServer'),
+          this.transloco.translate('openProjectDialog.errors.deleteCloud'),
           this.ctx,
           err
         );
@@ -247,7 +247,7 @@ export class OpenProjectDialogComponent implements OnInit {
       .then(() => this.loadServerProjects(this.serverPage()))
       .catch((err: unknown) => {
         this.toastService.error(
-          this.transloco.translate('openProjectDialog.errors.renameServer'),
+          this.transloco.translate('openProjectDialog.errors.renameCloud'),
           this.ctx,
           err
         );
