@@ -16,13 +16,14 @@ import { resolveMasterSignal } from './resolve-master.signal';
 @Component({
   selector: 'app-upload-component-action',
   imports: [LgButton, LgTooltip, TranslocoDirective],
+  host: { class: 'contents' },
   template: `<ng-container *transloco="let t">
     @if (visible()) {
       <lg-button
         size="sm"
         icon="ph ph-cloud-arrow-up"
         [label]="t('uploadComponent.button')"
-        class="float-right"
+        class="self-end"
         [disabled]="!authenticated()"
         [lgTooltip]="authenticated() ? '' : t('uploadComponent.signInTooltip')"
         tooltipPosition="top"

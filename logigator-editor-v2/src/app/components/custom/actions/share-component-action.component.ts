@@ -19,6 +19,7 @@ import { resolveMasterSignal } from './resolve-master.signal';
 @Component({
   selector: 'app-share-component-action',
   imports: [LgButton, TranslocoDirective],
+  host: { class: 'contents' },
   template: `<ng-container *transloco="let t">
     @if (visible()) {
       <lg-button
@@ -27,7 +28,7 @@ import { resolveMasterSignal } from './resolve-master.signal';
         [outlined]="true"
         icon="ph ph-share-network"
         [label]="t('shareComponent.button')"
-        class="float-right"
+        class="self-end"
         (onClick)="share()"
       />
     }
