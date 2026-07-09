@@ -33,9 +33,11 @@
           [loading]="loadingServer()"
           [page]="serverPage()"
           [totalItems]="serverTotal()"
+          [showShare]="true"
           (open)="openServerProject($event)"
           (delete)="deleteServerConfirmed($event)"
           (rename)="renameServer($event)"
+          (share)="shareServer($event)"
           (pageChange)="onServerPageChange($event)"
           (searchChange)="onServerSearch($event)"
         />

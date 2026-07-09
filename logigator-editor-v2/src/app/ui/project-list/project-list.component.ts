@@ -28,6 +28,10 @@ export interface ProjectListItem {
   id: string;
   name: string;
   lastEdited: string | number;
+  /** Cloud share token; present on server items, drives the share dialog. */
+  link?: string;
+  /** Cloud public visibility; present on server items. */
+  isPublic?: boolean;
 }
 
 const PAGE_SIZE = 20;
@@ -60,11 +64,14 @@ export class ProjectListComponent {
   readonly totalItems = input(0);
   /** Whether each row offers an upload-to-cloud button (local projects only). */
   readonly showUpload = input(false);
+  /** Whether each row offers a share button (cloud projects only). */
+  readonly showShare = input(false);
 
   readonly open = output<string>();
   readonly delete = output<ProjectListItem>();
   readonly rename = output<{ id: string; name: string }>();
   readonly upload = output<ProjectListItem>();
+  readonly share = output<ProjectListItem>();
   readonly pageChange = output<number>();
   readonly searchChange = output<string>();
 
@@ -127,6 +134,12 @@ export class ProjectListComponent {
     event.stopPropagation();
     event.preventDefault();
     this.upload.emit(item);
+  }
+
+  protected onShareClick(event: Event, item: ProjectListItem): void {
+    event.stopPropagation();
+    event.preventDefault();
+    this.share.emit(item);
   }
 
   protected onDeleteClick(event: Event, item: ProjectListItem): void {

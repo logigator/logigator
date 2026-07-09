@@ -345,6 +345,7 @@ const en = {
     deleteProject: 'Delete Project',
     renameProject: 'Rename Project',
     uploadProject: 'Upload to cloud',
+    shareProject: 'Share',
     cancelRename: 'Cancel',
     deleteConfirmMessage:
       'Are you sure you want to delete "{{name}}"? This cannot be undone.',

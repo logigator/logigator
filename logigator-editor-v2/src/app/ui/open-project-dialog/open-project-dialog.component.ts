@@ -1,6 +1,7 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import {
   DialogRef,
+  DialogService,
   LgFileUpload,
   type LgFileSelectEvent,
   LgMessage,
@@ -24,6 +25,10 @@ import {
   ProjectListComponent,
   type ProjectListItem
 } from '../project-list/project-list.component';
+import {
+  ShareDialogComponent,
+  type ShareDialogData
+} from '../share-dialog/share-dialog.component';
 import type { BrowserProjectSummary } from '../../persistence/browser/browser-project.types';
 
 const PAGE_SIZE = 20;
@@ -43,6 +48,7 @@ const PAGE_SIZE = 20;
 })
 export class OpenProjectDialogComponent implements OnInit {
   private readonly ref = inject(DialogRef);
+  private readonly dialogService = inject(DialogService);
   private readonly persistenceService = inject(PersistenceService);
   private readonly uploadCoordinator = inject(UploadCoordinatorService);
   private readonly toastService = inject(ToastService);
@@ -192,7 +198,9 @@ export class OpenProjectDialogComponent implements OnInit {
         result.entries.map((p) => ({
           id: p.id,
           name: p.name,
-          lastEdited: p.lastEdited
+          lastEdited: p.lastEdited,
+          link: p.link,
+          isPublic: p.public
         }))
       );
       this.serverTotal.set(result.total);
@@ -252,6 +260,27 @@ export class OpenProjectDialogComponent implements OnInit {
           err
         );
       });
+  }
+
+  protected shareServer(item: ProjectListItem): void {
+    const shareRef = this.dialogService.open(ShareDialogComponent, {
+      header: this.transloco.translate('shareDialog.header'),
+      width: '32rem',
+      modal: true,
+      closable: true,
+      data: {
+        kind: 'project',
+        projectId: item.id,
+        name: item.name,
+        link: item.link ?? '',
+        isPublic: item.isPublic ?? false
+      } satisfies ShareDialogData
+    });
+    // The share dialog PATCHes link/visibility; refresh the list so the row's
+    // stored values (which seed a later share) reflect any change.
+    void firstValueFrom(shareRef.onClose).then(() =>
+      this.loadServerProjects(this.serverPage())
+    );
   }
 
   // --- File import ---

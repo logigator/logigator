@@ -64,6 +64,16 @@
               <span class="text-sm text-muted">
                 {{ item.lastEdited | date: 'mediumDate' }}
               </span>
+              @if (showShare()) {
+                <lg-button
+                  icon="ph ph-share-network"
+                  [text]="true"
+                  [ariaLabel]="t('openProjectDialog.shareProject')"
+                  [lgTooltip]="t('openProjectDialog.shareProject')"
+                  tooltipPosition="bottom"
+                  (click)="onShareClick($event, item)"
+                />
+              }
               @if (showUpload()) {
                 <lg-button
                   icon="ph ph-cloud-arrow-up"

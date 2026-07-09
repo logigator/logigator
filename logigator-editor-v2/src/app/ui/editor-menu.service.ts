@@ -323,12 +323,20 @@ export class EditorMenuService {
   private shareProject(): void {
     const project = this.projectService.mainProject();
     if (!project) return;
+    const metadata = this.projectMetadataStore.getMetadata(project);
+    if (!metadata?.id) return;
     this.dialogService.open(ShareDialogComponent, {
       header: this.translocoService.translate('shareDialog.header'),
       width: '32rem',
       modal: true,
       closable: true,
-      data: { kind: 'project', project } satisfies ShareDialogData
+      data: {
+        kind: 'project',
+        projectId: metadata.id,
+        name: metadata.name,
+        link: metadata.link ?? '',
+        isPublic: metadata.isPublic ?? false
+      } satisfies ShareDialogData
     });
   }
 
