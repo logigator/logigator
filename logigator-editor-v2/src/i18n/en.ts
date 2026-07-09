@@ -272,6 +272,9 @@ const en = {
           uploadCloud: {
             label: 'Upload to cloud'
           },
+          share: {
+            label: 'Share'
+          },
           exportFile: {
             label: 'Export to file'
           },
@@ -393,6 +396,26 @@ const en = {
   uploadComponent: {
     button: 'Upload to cloud',
     signInTooltip: 'Sign in to upload to the cloud'
+  },
+  shareDialog: {
+    header: 'Share project',
+    intro:
+      'Anyone with this link can open “{{name}}” read-only and clone it into their own library.',
+    linkLabel: 'Share link',
+    copy: 'Copy link',
+    linkCopied: 'Share link copied to clipboard.',
+    copyFailed: 'Could not copy the link to the clipboard.',
+    regenerate: 'Regenerate link',
+    regenerateWarning:
+      'Regenerating creates a new link and permanently invalidates the current one — anyone using the old link will lose access.',
+    linkRegenerated: 'A new share link was generated.',
+    regenerateFailed: 'Could not regenerate the share link.',
+    public: 'Public',
+    publicInfo:
+      'Public projects are published on your profile and discoverable by everyone. Private projects are reachable only via the share link.',
+    visibilityUpdated: 'Visibility updated.',
+    visibilityFailed: 'Could not update the project visibility.',
+    close: 'Close'
   },
   uploadDialog: {
     header: 'Upload to cloud',

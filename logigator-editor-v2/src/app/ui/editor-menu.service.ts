@@ -17,6 +17,10 @@ import { OpenProjectDialogComponent } from './open-project-dialog/open-project-d
 import { NewComponentDialogComponent } from './new-component-dialog/new-component-dialog.component';
 import { ShortcutManagerComponent } from '../shortcuts/shortcut-manager/shortcut-manager.component';
 import { ExportImageDialogComponent } from './export-image-dialog/export-image-dialog.component';
+import {
+  ShareDialogComponent,
+  ShareDialogData
+} from './share-dialog/share-dialog.component';
 import { DebugMenuService } from './debug-menu.service';
 import { ToastService } from '../logging/toast.service';
 
@@ -98,6 +102,17 @@ export class EditorMenuService {
                   ),
                   icon: 'ph ph-cloud-arrow-up',
                   command: () => this.uploadProject()
+                }
+              ]
+            : []),
+          ...(this.canShareMainProject()
+            ? [
+                {
+                  label: this.translocoService.translate(
+                    'titleBar.menuBar.file.items.share.label'
+                  ),
+                  icon: 'ph ph-share-network',
+                  command: () => this.shareProject()
                 }
               ]
             : []),
@@ -290,6 +305,31 @@ export class EditorMenuService {
     if (project) {
       void this.uploadCoordinator.requestUpload({ kind: 'project', project });
     }
+  }
+
+  /**
+   * Whether the open project is a stored **cloud** project — the only case that
+   * has a share link to manage. Reads the metadata signal so the menu item
+   * toggles as the source flips (e.g. right after an upload to the cloud).
+   */
+  private canShareMainProject(): boolean {
+    const project = this.projectService.mainProject();
+    const metadata = project
+      ? this.projectMetadataStore.getMetadata(project)
+      : null;
+    return metadata?.type === 'project' && metadata.source === 'server';
+  }
+
+  private shareProject(): void {
+    const project = this.projectService.mainProject();
+    if (!project) return;
+    this.dialogService.open(ShareDialogComponent, {
+      header: this.translocoService.translate('shareDialog.header'),
+      width: '32rem',
+      modal: true,
+      closable: true,
+      data: { project } satisfies ShareDialogData
+    });
   }
 
   private exportFile(): void {

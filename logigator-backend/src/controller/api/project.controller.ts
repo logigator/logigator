@@ -159,7 +159,7 @@ export class ProjectController {
 			project.name = body.name;
 		if (body.description)
 			project.description = body.description;
-		if (body.public)
+		if (body.public !== undefined)
 			project.public = body.public;
 		if (body.updateLink)
 			project.link = uuid();
