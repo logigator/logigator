@@ -8,6 +8,7 @@ import { makeAnd } from '../../testing/factories';
 import { BoardSnapshotService } from './board-snapshot.service';
 import { RendererService } from './renderer.service';
 import { ThemingService } from '../theming/theming.service';
+import { SelectionManager } from '../project/selection-manager';
 
 interface RenderCall {
   transform: { a: number; d: number; tx: number; ty: number };
@@ -261,6 +262,30 @@ describe('BoardSnapshotService', () => {
 
     await expect(service.generatePreviews(project, 512)).rejects.toThrow();
     expect(theming.currentThemeType()).toBe(original);
+  });
+
+  it('neutralizes the selection tint during the content pass and restores it', () => {
+    const comp = makeAnd(2);
+    comp.position.set(0, 0);
+    project.addComponent(comp);
+    project.selectionManager.select([comp], []);
+    expect(comp.tint).toBe(SelectionManager.SELECTION_TINT);
+
+    let tintDuringRender: number | null = null;
+    (renderer.render as Mock).mockImplementation((opts: RenderCall) => {
+      renderCalls.push(opts);
+      tintDuringRender = comp.tint;
+    });
+
+    const texture = service.renderProjectToTexture(project, {
+      multiplier: 1,
+      background: 'transparent'
+    });
+
+    // White (no highlight) while rendering; back to the selection tint after.
+    expect(tintDuringRender).toBe(0xffffff);
+    expect(comp.tint).toBe(SelectionManager.SELECTION_TINT);
+    texture.destroy(true);
   });
 
   it('restores overlay visibility after rendering', () => {

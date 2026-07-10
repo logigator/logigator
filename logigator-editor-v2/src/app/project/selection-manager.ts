@@ -222,6 +222,32 @@ export class SelectionManager {
     }
   }
 
+  /**
+   * Neutralizes the selection tint on every selected element (and its tinted
+   * connection points) so an off-screen render — minimap, image export, server
+   * preview — doesn't bake the selection highlight into committed content. The
+   * `_tintedConnectionPoints` list is private, so this lives here rather than in
+   * the snapshot service. Captures each node's current `.tint` and returns a
+   * closure that restores it; destroyed nodes are skipped on both passes.
+   */
+  public suppressTintForRender(): () => void {
+    const captured: { tint: number; restore: (tint: number) => void }[] = [];
+    const suppress = (node: Component | Wire | ConnectionPoint): void => {
+      if (node.destroyed) return;
+      const tint = node.tint;
+      captured.push({ tint, restore: (t) => (node.tint = t) });
+      node.tint = 0xffffff;
+    };
+
+    for (const component of this._selectedComponents) suppress(component);
+    for (const wire of this._selectedWires) suppress(wire);
+    for (const cp of this._tintedConnectionPoints) suppress(cp);
+
+    return () => {
+      for (const { tint, restore } of captured) restore(tint);
+    };
+  }
+
   public clear(): void {
     // Roll back any tentative scissor cut first so cancelled selections leave
     // the project in its pre-cut state. The rollback mutates the project

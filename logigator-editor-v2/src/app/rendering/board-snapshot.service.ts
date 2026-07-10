@@ -320,6 +320,11 @@ export class BoardSnapshotService {
     const restoreText = options.hideText
       ? this._hideTextNodes(project.gridSpace)
       : this._tuneTextResolution(project.gridSpace, options.multiplier);
+    // Selection is a `.tint` on the real scene objects; without this a snapshot
+    // taken while a selection is live (e.g. the minimap re-rendering after a
+    // drag-move, which commits an action yet leaves the moved elements
+    // selected) bakes the gray highlight into committed content.
+    const restoreTint = project.selectionManager.suppressTintForRender();
     try {
       renderer.render({
         container: project.gridSpace,
@@ -330,6 +335,7 @@ export class BoardSnapshotService {
         clear: !withGrid
       });
     } finally {
+      restoreTint();
       this._applyContentScale(project, liveScale);
       restoreText();
       project.setOverlayVisible(true);
