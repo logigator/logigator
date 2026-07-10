@@ -197,8 +197,8 @@ describe('WorkModeRouter in PORT_NEGATION mode', () => {
     router.setMode(WorkMode.PORT_NEGATION);
     const cp = and.connectionPoints[0];
 
-    // 0.3gu away — within the quad-tree query box but past the 0.25gu hit test.
-    router.down(makeInput(cp.x + 0.3, cp.y));
+    // 0.51gu away — within the quad-tree query box but past the 0.5gu hit test.
+    router.down(makeInput(cp.x + 0.51, cp.y));
 
     expect(and.isPortNegated('in', 0)).toBe(false);
     expect(project.actionManager.undoAvailable).toBe(false);

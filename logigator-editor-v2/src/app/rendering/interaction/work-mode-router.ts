@@ -29,9 +29,7 @@ import { PointerInput } from './pointer-input';
 import { PointerToolTarget } from './pointer-controller';
 
 /** Click tolerance (grid units) for hitting a port in PORT_NEGATION mode. */
-const PORT_HIT_TOLERANCE = 0.25;
-/** Widened tolerance for fat-finger taps on touch devices. */
-const PORT_HIT_TOLERANCE_TOUCH = 0.5;
+const PORT_HIT_TOLERANCE = 0.5;
 
 interface PortHit {
   comp: Component;
@@ -386,14 +384,11 @@ export class WorkModeRouter implements PointerToolTarget {
    * custom instances — their external ports are not independently negatable.
    */
   private _findPortAt(project: Project, localPoint: Point): PortHit | null {
-    const tolerance = this._layout.isTouch()
-      ? PORT_HIT_TOLERANCE_TOUCH
-      : PORT_HIT_TOLERANCE;
     const queryRect = new Rectangle(
-      localPoint.x - tolerance,
-      localPoint.y - tolerance,
-      tolerance * 2,
-      tolerance * 2
+      localPoint.x - PORT_HIT_TOLERANCE,
+      localPoint.y - PORT_HIT_TOLERANCE,
+      PORT_HIT_TOLERANCE * 2,
+      PORT_HIT_TOLERANCE * 2
     );
     for (const comp of project.queryComponentsInRange(queryRect)) {
       if (comp.config.type >= CUSTOM_TYPE_ID_BASE) continue;
@@ -401,7 +396,7 @@ export class WorkModeRouter implements PointerToolTarget {
       for (let i = 0; i < points.length; i++) {
         const dx = points[i].x - localPoint.x;
         const dy = points[i].y - localPoint.y;
-        if (dx * dx + dy * dy <= tolerance * tolerance) {
+        if (dx * dx + dy * dy <= PORT_HIT_TOLERANCE * PORT_HIT_TOLERANCE) {
           const side: PortSide = i < comp.numInputs ? 'in' : 'out';
           return {
             comp,
