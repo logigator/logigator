@@ -318,13 +318,13 @@ __metadata:
   linkType: hard
 
 "@angular/animations@npm:^22.0.5":
-  version: 22.0.5
-  resolution: "@angular/animations@npm:22.0.5"
+  version: 22.0.6
+  resolution: "@angular/animations@npm:22.0.6"
   dependencies:
     tslib: "npm:^2.3.0"
   peerDependencies:
-    "@angular/core": 22.0.5
-  checksum: 10c0/85262581aac077bba9dc00c4bb2b5cc8d8439056139a1777449d2ffbd89bdf5e0a0b7f5449bdf46644b50dc3383bde30e035207c892b74fae2d2a5fcd1a8024c
+    "@angular/core": 22.0.6
+  checksum: 10c0/8b06ba01e611f257370a14cdfafa3442932d1fd8ce825dec1e515ec252974449ac120f0ab0e9f2a29d6c4c700d6e36dd4d9968e870f60e0b8518b10638210790
   languageName: node
   linkType: hard
 
@@ -530,20 +530,6 @@ __metadata:
     "@angular/platform-browser": 22.0.5
     rxjs: ^6.5.3 || ^7.4.0
   checksum: 10c0/4b305b4971ceb209e135d474ece194f40081aeee3d4f1ff0f554b6f03d906d2abb39b11dd1a2ddd8a094b07aa22c94d275a75198ca7255c9adba8f67c2af5761
-  languageName: node
-  linkType: hard
-
-"@angular/platform-browser-dynamic@npm:^22.0.5":
-  version: 22.0.5
-  resolution: "@angular/platform-browser-dynamic@npm:22.0.5"
-  dependencies:
-    tslib: "npm:^2.3.0"
-  peerDependencies:
-    "@angular/common": 22.0.5
-    "@angular/compiler": 22.0.5
-    "@angular/core": 22.0.5
-    "@angular/platform-browser": 22.0.5
-  checksum: 10c0/488a618f10ad831b1af4f04490809ca75d0fc7222f8bce471d955be577c048f3d53cf44ed1bd505ee1a2f619308f9102c2a018617c40042e082b813af9877460
   languageName: node
   linkType: hard
 
@@ -6497,7 +6483,6 @@ __metadata:
     "@angular/core": "npm:^22.0.5"
     "@angular/forms": "npm:^22.0.5"
     "@angular/platform-browser": "npm:^22.0.5"
-    "@angular/platform-browser-dynamic": "npm:^22.0.5"
     "@angular/router": "file:./packages/router-stub"
     "@jsverse/transloco": "npm:^8.4.0"
     "@jsverse/transloco-persist-lang": "npm:^8.4.0"
