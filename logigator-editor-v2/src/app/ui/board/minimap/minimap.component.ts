@@ -232,13 +232,6 @@ export class MinimapComponent implements OnDestroy {
     // Paused while collapsed — expansion renders once (see the effect above).
     if (this.collapsed()) return;
 
-    // A server-preview pass is holding the scene in a transient (possibly
-    // wrong-theme) state; retry once it has been restored.
-    if (this.snapshots.generatingPreviews()) {
-      this._scheduleRender();
-      return;
-    }
-
     const canvas = this.canvasRef()?.nativeElement;
     if (!canvas) {
       // Just expanded: the panel isn't in the DOM until the next change

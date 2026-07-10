@@ -21,14 +21,7 @@ describe('BoardSnapshotService', () => {
   let service: BoardSnapshotService;
   let renderCalls: RenderCall[];
   let renderer: Renderer;
-  let rendererService: {
-    renderer: Renderer | null;
-    available(): boolean;
-    suspendPaints(): () => void;
-  };
-  let paintsSuspended: number;
-  /** Suspension depth at the time of each render call. */
-  let suspendedDuringRender: number[];
+  let rendererService: { renderer: Renderer | null; available(): boolean };
 
   function collectBitmapTexts(
     node: Container,
@@ -43,13 +36,8 @@ describe('BoardSnapshotService', () => {
 
   beforeEach(() => {
     renderCalls = [];
-    paintsSuspended = 0;
-    suspendedDuringRender = [];
     renderer = {
-      render: vi.fn((opts: RenderCall) => {
-        renderCalls.push(opts);
-        suspendedDuringRender.push(paintsSuspended);
-      }),
+      render: vi.fn((opts: RenderCall) => renderCalls.push(opts)),
       extract: {
         canvas: () =>
           ({
@@ -59,17 +47,7 @@ describe('BoardSnapshotService', () => {
     } as unknown as Renderer;
     rendererService = {
       renderer,
-      available: () => rendererService.renderer !== null,
-      suspendPaints: vi.fn(() => {
-        paintsSuspended++;
-        let resumed = false;
-        return () => {
-          if (!resumed) {
-            resumed = true;
-            paintsSuspended--;
-          }
-        };
-      })
+      available: () => rendererService.renderer !== null
     };
     configureTestBed([{ provide: RendererService, useValue: rendererService }]);
     project = new Project();
@@ -285,64 +263,21 @@ describe('BoardSnapshotService', () => {
     expect(theming.currentThemeType()).toBe(original);
   });
 
-  it('generatePreviews suspends on-screen paints across both scene passes', async () => {
-    const comp = makeAnd(2);
-    comp.position.set(0, 0);
-    project.addComponent(comp);
-
-    await service.generatePreviews(project, 512);
-
-    // Both themed renders ran inside the suspension window, and the window
-    // is closed again by the time the previews resolve.
-    expect(suspendedDuringRender).toEqual([1, 1]);
-    expect(paintsSuspended).toBe(0);
-  });
-
-  it('generatePreviews resumes paints even if a scene pass throws', async () => {
-    const comp = makeAnd(2);
-    comp.position.set(0, 0);
-    project.addComponent(comp);
-    vi.spyOn(project, 'applyTheme').mockImplementationOnce(() => {
-      throw new Error('boom');
-    });
-
-    await expect(service.generatePreviews(project, 512)).rejects.toThrow();
-    expect(paintsSuspended).toBe(0);
-  });
-
-  it('generatePreviews reports generatingPreviews while a run is in flight', async () => {
-    const comp = makeAnd(2);
-    comp.position.set(0, 0);
-    project.addComponent(comp);
-
-    const run = service.generatePreviews(project, 512);
-    // The run starts on a microtask (behind the serialization chain).
-    await Promise.resolve();
-    expect(service.generatingPreviews()).toBe(true);
-
-    await run;
-    expect(service.generatingPreviews()).toBe(false);
-  });
-
-  it('generatePreviews serializes concurrent runs', async () => {
+  // The invariant that lets every other part of the app ignore preview
+  // generation entirely: both scene passes and the theme restore complete
+  // synchronously, so nothing async (effects, on-screen paints, the minimap)
+  // can ever observe the temporary theme.
+  it('generatePreviews restores the live theme before it first yields', () => {
     const comp = makeAnd(2);
     comp.position.set(0, 0);
     project.addComponent(comp);
     const theming = TestBed.inject(ThemingService);
-    const switches = vi.spyOn(theming, 'setActiveThemeType');
-
-    await Promise.all([
-      service.generatePreviews(project, 512),
-      service.generatePreviews(project, 512)
-    ]);
-
-    // Each run switches away and back within itself; interleaved runs would
-    // mix the pairs (the scene bake is global state).
-    const order = switches.mock.calls.map((c) => c[0]);
     const original = theming.currentThemeType();
-    const other = order[0];
-    expect(other).not.toBe(original);
-    expect(order).toEqual([other, original, other, original]);
+
+    const run = service.generatePreviews(project, 512);
+    expect(theming.currentThemeType()).toBe(original);
+    expect(renderCalls.length).toBe(2);
+    return run;
   });
 
   it('generatePreviews hides text when the content only fits at a tiny multiplier', async () => {
@@ -355,11 +290,9 @@ describe('BoardSnapshotService', () => {
     far.position.set(100, 0);
     project.addComponent(far);
 
-    // Text nodes are recreated by each theme redraw, so re-collect per render.
     const textStates: boolean[] = [];
     (renderer.render as Mock).mockImplementation((opts: RenderCall) => {
       renderCalls.push(opts);
-      suspendedDuringRender.push(paintsSuspended);
       const texts = collectBitmapTexts(project.gridSpace);
       textStates.push(texts.length > 0 && texts.every((t) => !t.renderable));
     });

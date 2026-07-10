@@ -55,9 +55,6 @@ export class RendererService {
   private readonly _renderer = signal<Renderer | null>(null);
   private _creating: Promise<Renderer> | null = null;
   private _leases = 0;
-  private _paintSuspensions = 0;
-  /** Blits requested while paints were suspended, replayed on resume. */
-  private readonly _missedPaints = new Map<HTMLCanvasElement, Container>();
 
   /** Whether a leased renderer is live; overlays gate their render on this. */
   public readonly available = computed(() => this._renderer() !== null);
@@ -85,38 +82,6 @@ export class RendererService {
         }
         released = true;
         this._release();
-      }
-    };
-  }
-
-  /**
-   * Suspends every leased on-screen blit until the returned resume function
-   * is called; offscreen (render-to-texture) consumers are unaffected. For
-   * work that temporarily holds a scene in a non-live state across frames
-   * (dual-theme preview passes) — no canvas may paint mid-pass. Blits
-   * requested while suspended are recorded per canvas and replayed on resume,
-   * so a one-off frame landing in the window (say, a drag commit) is deferred
-   * rather than lost. Refcounted across overlapping suspensions; the resume
-   * function is idempotent.
-   */
-  public suspendPaints(): () => void {
-    this._paintSuspensions++;
-    let resumed = false;
-    return () => {
-      if (resumed) {
-        return;
-      }
-      resumed = true;
-      this._paintSuspensions--;
-      if (this._paintSuspensions > 0) {
-        return;
-      }
-      const missed = [...this._missedPaints];
-      this._missedPaints.clear();
-      for (const [canvas, container] of missed) {
-        if (canvas.isConnected) {
-          this._render(container, canvas);
-        }
       }
     };
   }
@@ -158,15 +123,10 @@ export class RendererService {
     if (this._leases === 0 && renderer) {
       renderer.destroy();
       this._renderer.set(null);
-      this._missedPaints.clear();
     }
   }
 
   private _render(container: Container, canvas: HTMLCanvasElement): void {
-    if (this._paintSuspensions > 0) {
-      this._missedPaints.set(canvas, container);
-      return;
-    }
     const renderer = this._renderer();
     if (!renderer || container.destroyed) {
       return;

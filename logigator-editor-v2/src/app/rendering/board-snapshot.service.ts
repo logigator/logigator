@@ -1,4 +1,4 @@
-import { inject, Injectable, signal } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import {
   BitmapText,
   Container,
@@ -139,52 +139,24 @@ export class BoardSnapshotService {
   }
 
   /**
-   * `true` while a preview generation holds the scene in a transient state
-   * (mid-pass baked colors, pending textures). Other snapshot consumers (the
-   * minimap) must not render the project while this is set — they would
-   * capture the wrong theme — and should retry once it clears.
-   */
-  public readonly generatingPreviews = signal(false);
-
-  /** Serializes preview generations — the theme passes mutate global scene state. */
-  private _previewChain: Promise<unknown> = Promise.resolve();
-
-  /**
    * Renders dark- and light-themed PNG previews of the project for server-side
    * thumbnails: a square `sizePx × sizePx` image with a **transparent**
    * background and the content centered. Resolves `null` when no renderer is
-   * available (or the project is destroyed mid-flight) so the save flow can
-   * skip the upload silently.
+   * available so the save flow can skip the upload silently.
    *
-   * Theme colors are baked into cached graphics, so the non-live theme is
-   * produced by briefly switching the global theme and redrawing the project —
-   * the same path a live theme toggle uses. To soften the main-thread spike on
-   * large boards the work is spread over animation frames: the non-live theme
-   * bakes and renders on one frame, the live theme (whose redraw doubles as
-   * the scene restore) on the next, and the GPU readbacks on a third, after
-   * the queued render work has had a frame to drain.
-   *
-   * The theme *signal* is only ever switched and restored within a single
-   * synchronous block — effects flush between frames and must never observe
-   * the temporary theme. The scene's *baked colors* do stay wrong-themed
-   * across the first frame boundary; on-screen paints are suspended for that
-   * window (missed frames replay on resume) and snapshot consumers hold off
-   * via {@link generatingPreviews}.
+   * The non-live theme is produced by briefly switching the global theme and
+   * restyling the project in place ({@link Component.refreshTheme} — the
+   * live-toggle path; no rebuild, cheap even on large boards). All switching,
+   * restyling and offscreen rendering happens synchronously, and the live
+   * theme is restored in a `finally` *before* the first `await` — so no
+   * wrong-theme frame can ever paint, effects never observe the temporary
+   * theme, and no other consumer has to coordinate with this. Only the GPU
+   * readbacks wait one frame, letting the queued render work drain so they
+   * pay only their own transfer cost.
    */
-  public generatePreviews(
+  public async generatePreviews(
     project: Project,
     sizePx: number = PREVIEW_SIZE
-  ): Promise<{ dark: Blob; light: Blob } | null> {
-    const run = this._previewChain.then(() =>
-      this._generatePreviews(project, sizePx)
-    );
-    this._previewChain = run.catch(() => undefined);
-    return run;
-  }
-
-  private async _generatePreviews(
-    project: Project,
-    sizePx: number
   ): Promise<{ dark: Blob; light: Blob } | null> {
     if (!this.available || project.destroyed) return null;
 
@@ -196,11 +168,25 @@ export class BoardSnapshotService {
       hideText: multiplier < PREVIEW_HIDE_TEXT_BELOW
     };
 
-    this.generatingPreviews.set(true);
-    let textures: { dark: RenderTexture; light: RenderTexture } | null = null;
+    const original = this.themingService.currentThemeType();
+    const other =
+      original === ThemeType.DARK ? ThemeType.LIGHT : ThemeType.DARK;
+
+    let otherTexture: RenderTexture | null = null;
+    let liveTexture: RenderTexture | null = null;
     try {
-      textures = await this._renderPreviewTextures(project, region, options);
-      if (!textures) return null;
+      try {
+        this.themingService.setActiveThemeType(other);
+        project.applyTheme(false);
+        otherTexture = this.renderRegionToTexture(project, region, options);
+      } finally {
+        // Always restore the live theme, even if the pass throws — the caller
+        // swallows errors, so a leaked theme switch would be silent and
+        // baffling. Restyling is idempotent, so a half-restyled scene heals.
+        this.themingService.setActiveThemeType(original);
+        project.applyTheme(false);
+      }
+      liveTexture = this.renderRegionToTexture(project, region, options);
 
       // Both renders are queued on the GPU; reading back immediately would
       // block on that whole pipeline. Give it a frame to drain so the
@@ -209,11 +195,15 @@ export class BoardSnapshotService {
       const renderer = this.rendererService.renderer;
       if (!renderer) return null;
 
+      const [darkTexture, lightTexture] =
+        original === ThemeType.DARK
+          ? [liveTexture, otherTexture]
+          : [otherTexture, liveTexture];
       const darkCanvas = renderer.extract.canvas({
-        target: textures.dark
+        target: darkTexture
       }) as HTMLCanvasElement;
       const lightCanvas = renderer.extract.canvas({
-        target: textures.light
+        target: lightTexture
       }) as HTMLCanvasElement;
       const [dark, light] = await Promise.all([
         this._canvasToBlob(darkCanvas),
@@ -221,85 +211,8 @@ export class BoardSnapshotService {
       ]);
       return dark && light ? { dark, light } : null;
     } finally {
-      this.generatingPreviews.set(false);
-      textures?.dark.destroy(true);
-      textures?.light.destroy(true);
-    }
-  }
-
-  /**
-   * The scene-mutating half of a preview generation: bakes and renders the
-   * non-live theme, then — one animation frame later — the live theme, whose
-   * redraw is also the scene restore. On-screen paints are suspended for the
-   * whole window. Returns both textures (owned by the caller), or `null` when
-   * the project or renderer dies between the frames; on any exit path other
-   * than success the scene is rebaked in the live theme before paints resume.
-   */
-  private async _renderPreviewTextures(
-    project: Project,
-    region: Rectangle,
-    options: SnapshotOptions
-  ): Promise<{ dark: RenderTexture; light: RenderTexture } | null> {
-    const original = this.themingService.currentThemeType();
-    const other =
-      original === ThemeType.DARK ? ThemeType.LIGHT : ThemeType.DARK;
-
-    const resume = this.rendererService.suspendPaints();
-    let otherTexture: RenderTexture | null = null;
-    let liveTexture: RenderTexture | null = null;
-    // Whether the scene's baked colors match the live theme, so the error
-    // path knows to rebake before paints resume.
-    let sceneLive = true;
-    try {
-      try {
-        // The signal switch is confined to this synchronous block: effects
-        // flush between frames and must never observe the temporary theme.
-        // Only the scene's baked colors carry across the frame boundary,
-        // which the paint suspension covers.
-        sceneLive = false;
-        this.themingService.setActiveThemeType(other);
-        project.applyTheme(false);
-        otherTexture = this.renderRegionToTexture(project, region, options);
-      } finally {
-        this.themingService.setActiveThemeType(original);
-      }
-
-      // Splitting the second pass onto its own frame halves the per-frame
-      // main-thread cost: two rebuild+render frames instead of one double one.
-      await nextAnimationFrame();
-      if (project.destroyed || !this.available) {
-        otherTexture.destroy(true);
-        return null;
-      }
-
-      project.applyTheme(false);
-      sceneLive = true;
-      liveTexture = this.renderRegionToTexture(project, region, options);
-      // renderRegionToTexture leaves the scene un-culled; re-cull so a board
-      // frame replayed on resume renders the normal culled set.
-      project.cull();
-
-      return original === ThemeType.DARK
-        ? { dark: liveTexture, light: otherTexture }
-        : { dark: otherTexture, light: liveTexture };
-    } catch (err) {
       otherTexture?.destroy(true);
       liveTexture?.destroy(true);
-      throw err;
-    } finally {
-      if (!sceneLive && !project.destroyed) {
-        try {
-          project.applyTheme(false);
-        } catch {
-          // The redraw already threw once; don't let the retry mask the
-          // original error.
-          this.logging.warn(
-            'Failed to restore the live theme after a preview pass error',
-            'BoardSnapshotService'
-          );
-        }
-      }
-      resume();
     }
   }
 
