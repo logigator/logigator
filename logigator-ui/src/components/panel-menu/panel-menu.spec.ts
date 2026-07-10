@@ -45,7 +45,7 @@ describe('LgPanelMenu', () => {
       { separator: true },
       { label: 'Hidden', visible: false, command: () => undefined }
     ]);
-    expect(f.nativeElement.querySelector('.border-t')).toBeTruthy();
+    expect(f.nativeElement.querySelector('lg-divider')).toBeTruthy();
     expect(f.nativeElement.textContent).not.toContain('Hidden');
   });
 
