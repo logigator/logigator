@@ -290,9 +290,9 @@ export class OpenProjectDialogComponent implements OnInit {
 
     const reader = new FileReader();
     reader.onload = () => {
-      const content = reader.result as string;
+      const data = reader.result as ArrayBuffer;
       this.persistenceService
-        .importProjectFromJson(content)
+        .importProjectFromFile(data)
         .then(() => this.ref.close())
         .catch((err: unknown) => {
           const message = err instanceof Error ? err.message : String(err);
@@ -313,6 +313,6 @@ export class OpenProjectDialogComponent implements OnInit {
       this.toastService.error(message, this.ctx, reader.error);
       this.importError.set(message);
     };
-    reader.readAsText(file);
+    reader.readAsArrayBuffer(file);
   }
 }

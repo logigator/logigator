@@ -15,6 +15,7 @@ import { ProjectElement } from '../api/models/project-element';
 import { environment } from '../../environments/environment';
 import { LogLevel } from '../logging/log-level.enum';
 import { InvalidFileError } from './file/circuit-file.errors';
+import { encodeLgix } from './file/lgix-container';
 import { BrowserProjectStore } from './browser/browser-project.store';
 import { BrowserComponentStore } from './browser/browser-component.store';
 import { ComponentIdMapStore } from './browser/component-id-map.store';
@@ -1006,6 +1007,58 @@ describe('PersistenceService', () => {
         service.importProjectFromJson('{not json')
       ).rejects.toThrowError(InvalidFileError);
       expect(browserStore.records.size).toBe(0);
+    });
+
+    it('refuses to export a borrowed share to a file', async () => {
+      const project = new Project();
+      metadataStore.register(
+        project,
+        {
+          id: 'shared-uuid',
+          name: 'Borrowed',
+          type: 'project',
+          source: 'share',
+          hash: '',
+          isPublic: false
+        },
+        false
+      );
+
+      await expect(service.exportProjectToFile(project)).rejects.toThrow();
+    });
+
+    it('importProjectFromFile reads a gzipped .lgix container', async () => {
+      const json = JSON.stringify({
+        version: 1,
+        name: 'Zipped',
+        components: [{ type: 1, pos: [2, 3], options: {} }],
+        wires: [],
+        definitions: []
+      });
+      const bytes = await encodeLgix(json);
+
+      const project = await service.importProjectFromFile(bytes.buffer);
+      const metadata = metadataStore.getMetadata(project);
+
+      expect(metadata!.name).toBe('Zipped');
+      expect(metadata!.source).toBe('browser');
+      expect(Array.from(project.components).length).toBe(1);
+      expect(browserStore.records.has(metadata!.id)).toBe(true);
+    });
+
+    it('importProjectFromFile falls back to plain JSON without the magic bytes', async () => {
+      const json = JSON.stringify({
+        version: 1,
+        name: 'Plain',
+        components: [],
+        wires: [],
+        definitions: []
+      });
+      const data = new TextEncoder().encode(json).buffer;
+
+      const project = await service.importProjectFromFile(data);
+
+      expect(metadataStore.getMetadata(project)!.name).toBe('Plain');
     });
   });
 

@@ -79,7 +79,7 @@ export class EditorMenuService {
           this.openItem(),
           this.saveItem(),
           ...this.cloudItems(),
-          this.exportFileItem(),
+          ...this.exportFileItems(),
           {
             separator: true
           },
@@ -200,7 +200,7 @@ export class EditorMenuService {
         separator: true
       },
       ...this.cloudItems(),
-      this.exportFileItem(),
+      ...this.exportFileItems(),
       this.generateImageItem()
     ];
 
@@ -279,14 +279,31 @@ export class EditorMenuService {
     return items;
   }
 
-  private exportFileItem(): MenuItem {
-    return {
-      label: this.translocoService.translate(
-        'titleBar.menuBar.file.items.exportFile.label'
-      ),
-      icon: 'ph ph-download-simple',
-      command: () => this.exportFile()
-    };
+  /** Export-to-file, omitted for read-only shares. */
+  private exportFileItems(): MenuItem[] {
+    if (!this.canExportMainProject()) return [];
+    return [
+      {
+        label: this.translocoService.translate(
+          'titleBar.menuBar.file.items.exportFile.label'
+        ),
+        icon: 'ph ph-download-simple',
+        command: () => void this.exportFile()
+      }
+    ];
+  }
+
+  /**
+   * Whether the open project may be exported to a file. Every source except a
+   * borrowed `share` can: exporting a read-only share would let it be
+   * re-imported as the user's own.
+   */
+  private canExportMainProject(): boolean {
+    const project = this.projectService.mainProject();
+    const metadata = project
+      ? this.projectMetadataStore.getMetadata(project)
+      : null;
+    return !!metadata && metadata.source !== 'share';
   }
 
   private generateImageItem(): MenuItem {
@@ -401,11 +418,11 @@ export class EditorMenuService {
     });
   }
 
-  private exportFile(): void {
+  private async exportFile(): Promise<void> {
     const project = this.projectService.mainProject();
     if (!project) return;
     try {
-      this.persistenceService.exportProjectToFile(project);
+      await this.persistenceService.exportProjectToFile(project);
       this.toastService.success(
         this.translocoService.translate('persistence.projectExported'),
         'EditorMenuService'

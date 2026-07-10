@@ -30,9 +30,9 @@ per-project bookkeeping (name, source, dirty state) that a bare `Project` does n
 > which point it becomes a new file-format version plus one migration, and
 > `persistence/server/` is deleted. The versioned format is built for exactly that.
 
-## ⚠️ Two `version` axes — do not conflate
+## ⚠️ Three `version` axes — do not conflate
 
-Two unrelated version concepts live in this layer:
+Three unrelated version concepts live in this layer:
 
 1. **File-format version** — `CircuitFileV1.version`, `CURRENT_FILE_VERSION`, a
    migration's `from`/`to`, `detectVersion`. Legacy = `V0`, native current = `V1`
@@ -41,6 +41,10 @@ Two unrelated version concepts live in this layer:
    `SnapshotDefinition.source.version`, `CustomComponentDefinition.version`. A per-master
    **content revision counter**, bumped each time a library master is saved and copied
    into placed snapshots' provenance. **Unrelated to the file-format version.**
+3. **`.lgix` container version** — `LGIX_CONTAINER_VERSION`, the byte-framing of the
+   exported file (magic + version + flags around the gzipped JSON). Bumped only when the
+   framing itself changes; the JSON *inside* still carries its own file-format version.
+   Only the file export/import boundary sees it. See [`.lgix` container](#lgix-container).
 
 ## Directory Layout
 
@@ -63,6 +67,7 @@ src/app/persistence/
     ├── circuit-file.errors.ts    # InvalidFileError, UnsupportedVersionError
     ├── circuit-file-migrator.ts  # detectVersion + migrateToCurrent (chain runner)
     ├── circuit-file.service.ts   # toJson / decode / deserialize / fromJson (the file codec)
+    ├── lgix-container.ts         # .lgix export framing: gzip + magic-byte header (encode/decode)
     └── migrations/
         ├── migration.ts          # Migration<TIn,TOut> + MigrationContext
         ├── v0-to-v1.migration.ts # v0 (legacy) → v1 (registry-backed; reads legacyV0Slots)
@@ -280,6 +285,44 @@ active-project lifecycle.
 unrecognizable envelope) and `UnsupportedVersionError` (file version newer than this
 build supports). Both follow the `AuthRequiredError` convention (set `.name`).
 
+### `.lgix` container
+
+**File:** `persistence/file/lgix-container.ts`
+
+Exported files are **not** raw JSON. `CircuitFileService.toJson` output is wrapped in a
+gzip-compressed, magic-byte-framed binary container written to `<name>.lgix`:
+
+```
+offset 0   "LGIX"                4 bytes   magic
+offset 4   container version     1 byte    (= LGIX_CONTAINER_VERSION)
+offset 5   flags                 1 byte    bit0..: compression algorithm (0 = gzip)
+offset 6   gzip(utf8(json))      …         the CircuitFileService JSON string
+```
+
+- **Compression.** gzip via the platform `CompressionStream`/`DecompressionStream` — no
+  dependency, and (unlike `crypto.subtle`) **not** secure-context-gated, so it works on
+  plain-http LAN dev hosts too. A circuit's repeated option keys and embedded definitions
+  compress heavily.
+- **Integrity is corruption-detection only.** The magic + version + flags validate the
+  header; gzip's own CRC32 trailer makes `decodeLgix` reject a corrupted or truncated
+  payload (the decompression stream errors → `InvalidFileError`). There is **no keyed
+  check** — a client-only SPA ships its own verification logic and key, so nothing in the
+  format resists a determined forger. This is deliberate: the format is tamper-*evident*,
+  not tamper-*proof*.
+- **Share re-import defense lives in the UI, not the format.** Because the check can't be
+  cryptographically enforced client-side, the effective control is policy:
+  `EditorMenuService` hides **Export to File** for read-only `source:'share'` documents,
+  and `PersistenceService.exportProjectToFile` throws for them as defense-in-depth. A
+  borrowed share therefore never reaches the export path.
+- **Import accepts both `.lgix` and plain `.json`.** `importProjectFromFile` reads the
+  file as an `ArrayBuffer` and branches on the `LGIX` magic: a match is
+  `decodeLgix`-unwrapped, anything else is decoded as UTF-8 JSON — which keeps the
+  **permanent** legacy `logigator-editor` `.json` import working. Both paths converge on
+  `importProjectFromJson`.
+
+Only the file export/import boundary uses the container. The browser IndexedDB store still
+holds the plain `toJson` string, and the server v0 codec is untouched.
+
 ---
 
 ## Snapshot / custom-component codec
@@ -386,8 +429,8 @@ API load:     GET → ProjectElement[] → server.toCircuitFileV0 → v0ToV1 mig
 API save:     Project → server.serializeProject → ProjectElement[] → PUT (oldHash guard)
 Browser load: IndexedDB record → circuitFile.fromJson → Project → register(browser) → main (/local/:id)
 Browser save: Project → circuitFile.toJson → BrowserProjectStore.save (generate id on first save)
-File import:  string → circuitFile.fromJson → Project → adopt customs → Browser save → main (/local/:id)
-File export:  Project → circuitFile.toJson → JSON string (download)
+File import:  ArrayBuffer → (decodeLgix | utf8) → circuitFile.fromJson → Project → adopt customs → Browser save → main (/local/:id)
+File export:  Project → circuitFile.toJson → encodeLgix (gzip + header) → <name>.lgix (download)
 ```
 
 All funnel through the same `Component`/`Wire` instances. The API uses the legacy v0

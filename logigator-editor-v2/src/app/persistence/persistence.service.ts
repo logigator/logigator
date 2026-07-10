@@ -33,6 +33,7 @@ import {
 import { CloudSessionService } from '../user/cloud-session.service';
 import { ServerPersistenceGateway } from './server/server-persistence.gateway';
 import { downloadBlob } from '../utils/download';
+import { decodeLgix, encodeLgix, hasLgixMagic } from './file/lgix-container';
 import { ProjectDump, PROJECT_DUMP_VERSION } from './dump/project-dump.types';
 import { deserializeAction } from '../actions/action-codec';
 
@@ -345,14 +346,39 @@ export class PersistenceService {
 
   /**
    * Serializes a project to the current native file format and triggers a
-   * browser download of the `.json` file.
+   * browser download of a compressed `.lgix` file (gzipped JSON in a magic-byte
+   * container — see {@link encodeLgix}).
+   *
+   * Refuses a borrowed `source:'share'` document: a share is read-only, and
+   * exporting one to a file would let it be re-imported as the user's own. The
+   * menu hides the action for shares; this guard is the defense-in-depth behind
+   * it (the format carries no enforceable ownership).
    */
-  exportProjectToFile(project: Project): void {
-    const json = this.exportProjectToJson(project);
+  async exportProjectToFile(project: Project): Promise<void> {
     const metadata = this.metadataStore.getMetadata(project);
+    if (metadata?.source === 'share') {
+      throw new Error('Shares cannot be exported to a file');
+    }
+    const json = this.exportProjectToJson(project);
     const name = metadata?.name ?? 'Untitled';
-    const blob = new Blob([json], { type: 'application/json' });
-    downloadBlob(blob, `${name}.json`);
+    const bytes = await encodeLgix(json);
+    const blob = new Blob([bytes], { type: 'application/octet-stream' });
+    downloadBlob(blob, `${name}.lgix`);
+  }
+
+  /**
+   * Imports a circuit from a picked file's raw bytes, transparently handling
+   * both the compressed `.lgix` container and a plain-text `.json` document (the
+   * permanently-supported legacy `logigator-editor` export). Branches on the
+   * `.lgix` magic; anything else is decoded as UTF-8 JSON. Delegates to
+   * {@link importProjectFromJson} once unwrapped.
+   */
+  async importProjectFromFile(data: ArrayBuffer): Promise<Project> {
+    const bytes = new Uint8Array(data);
+    const json = hasLgixMagic(bytes)
+      ? await decodeLgix(bytes)
+      : new TextDecoder().decode(bytes);
+    return this.importProjectFromJson(json);
   }
 
   /**
