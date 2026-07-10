@@ -1,31 +1,47 @@
 import { StaticGraphicsContext } from './static-graphics-context';
 import { PX } from '../../utils/grid';
+import { clamp } from '../../utils/math';
 import { getStaticDI } from '../../utils/get-di';
 import { ThemingService } from '../../theming/theming.service';
 
-/** Bubble radius in grid units — scales with zoom like the component body. */
-export const NEGATION_BUBBLE_RADIUS = 0.2;
-/** Bubble outline width in grid units (2px at 100% zoom, matching the body). */
-export const NEGATION_BUBBLE_STROKE = 2 * PX;
+/** On-screen bubble diameter at 100% zoom; scales with the board around here. */
+export const DIAMETER = 5 * PX;
+/** Smallest on-screen bubble diameter; the floor when zoomed out. */
+export const MIN_DIAMETER = 3 * PX;
+/** Largest on-screen bubble diameter; the ceiling when zoomed in. */
+export const MAX_DIAMETER = 10 * PX;
+/** On-screen border thickness, held constant at every zoom. */
+export const BORDER = PX;
+
+// Grid-unit dot size, applied as the bubble Graphics' transform: DIAMETER
+// across (so it scales with the board), clamped to a fixed pixel floor/ceiling
+// on screen — the `/ scale` on the bounds counter-scales the zoom.
+export function scaleForScale(scale: number): number {
+  return clamp(DIAMETER, MIN_DIAMETER / scale, MAX_DIAMETER / scale);
+}
 
 /**
- * The IEC/ANSI inverter "bubble": a small circle drawn at the body-edge end of
- * a negated port's stub. Filled with the canvas background so it interrupts the
- * stub, stroked with the wire colour. `lit` fills it with the wire colour
- * instead, used during simulation to show the gate-side logic value
- * (link state XOR negated) — the inverse of the stub's link state.
+ * The IEC/ANSI inverter "bubble": a small white dot drawn at the body-edge end
+ * of a negated port's stub. Filled white so it interrupts the stub, stroked
+ * with the wire color (green in dark, black in light).
  *
- * Grid-sized (radius and stroke both in grid units) and cached per theme +
- * lit state, so all bubbles share one context and the context survives zoom
- * unchanged (mirroring the port stub).
+ * A unit-diameter circle transform-scaled by {@link scaleForScale}, so the dot
+ * follows that size curve. The border must stay a constant on-screen thickness,
+ * so it can't ride that transform: the baked width divides BORDER back out by
+ * the dot's transform (`scaleForScale · zoom`), so it renders `BORDER · gridSize`
+ * px (i.e. 1px) at every zoom. That makes the context zoom-dependent, re-fetched
+ * per `applyScale` (like the component body outline).
  */
 export class NegationBubbleGraphics extends StaticGraphicsContext {
-  constructor(lit = false) {
+  constructor(scale: number) {
     super();
 
     const theme = getStaticDI(ThemingService).currentTheme();
-    this.circle(0, 0, NEGATION_BUBBLE_RADIUS);
-    this.fill(lit ? theme.wire : theme.background);
-    this.stroke({ color: theme.wire, width: NEGATION_BUBBLE_STROKE });
+    this.circle(0, 0, 0.5);
+    this.fill(0xffffff);
+    this.stroke({
+      color: theme.wire,
+      width: BORDER / (scaleForScale(scale) * scale)
+    });
   }
 }

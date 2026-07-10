@@ -23,7 +23,7 @@ import {
 } from '../rendering/graphics/wire.graphics';
 import {
   NegationBubbleGraphics,
-  NEGATION_BUBBLE_RADIUS
+  scaleForScale
 } from '../rendering/graphics/negation-bubble.graphics';
 import { ComponentOption } from './component-option';
 import { SerializedComponent } from './serialized-component.model';
@@ -99,11 +99,9 @@ export abstract class Component<
   // Stub graphics in `connectionPoints` order, rebuilt by _drawConnections.
   private _portStubs: Graphics[] = [];
   // Inverter-bubble graphics keyed by `connectionPoints` index, only for
-  // negated ports; rebuilt by _drawConnections alongside the stubs. Each
-  // bubble is an unlit base plus a lit variant stacked on top whose alpha
-  // toggles with the gate-side value during simulation.
+  // negated ports; rebuilt by _drawConnections alongside the stubs. Always
+  // white — the bubble does not react to the port's power state.
   private _portBubbles = new Map<number, Graphics>();
-  private _litPortBubbles = new Map<number, Graphics>();
   // Scale-dependent visual updates registered during draw(). applyScale runs
   // these in place on zoom instead of rebuilding the whole visual tree (which
   // would re-rasterize every Text on every zoom step). Reset on each _draw().
@@ -365,17 +363,18 @@ export abstract class Component<
   }
 
   /**
-   * Grid-space centre of the inverter bubble for a port (0-based within its
-   * group) — where a bubble is, or would be, drawn. Mirrors the bubble
-   * placement in `_drawConnections` so the port-negation tool's hover preview
-   * lands exactly on the real bubble's spot.
+   * Grid-space body-edge point where the inverter bubble for a port (0-based
+   * within its group) is pinned — the bubble's tangent point, from which it
+   * grows outward along the stub. Mirrors the bubble placement in
+   * `_drawConnections` so the port-negation tool's hover preview lands exactly
+   * on the real bubble's spot.
    */
   public negationBubbleAnchor(side: PortSide, index: number): Point {
     const matrix = Matrix.IDENTITY.rotate(this.rotation);
     const local =
       side === 'in'
-        ? new Point(-NEGATION_BUBBLE_RADIUS, index + 0.5)
-        : new Point(this.bodyGridWidth + NEGATION_BUBBLE_RADIUS, index + 0.5);
+        ? new Point(0, index + 0.5)
+        : new Point(this.bodyGridWidth, index + 0.5);
     const rotated = matrix.apply(local);
     return new Point(this.position.x + rotated.x, this.position.y + rotated.y);
   }
@@ -399,11 +398,6 @@ export abstract class Component<
    */
   public get portBubbles(): ReadonlyMap<number, Graphics> {
     return this._portBubbles;
-  }
-
-  /** The lit bubble variants stacked on the {@link portBubbles} bases. */
-  public get litPortBubbles(): ReadonlyMap<number, Graphics> {
-    return this._litPortBubbles;
   }
 
   /** Negated input-port indices (0-based within the input group). Read-only. */
@@ -463,8 +457,8 @@ export abstract class Component<
   /**
    * Thickens one port stub while its link is powered during simulation.
    * `portIndex` follows `connectionPoints` order. This is the per-frame hot
-   * path, so state lands as transform (stub) and alpha (bubble) only — never
-   * a context swap or redraw (see WireGraphics).
+   * path, so state lands as a transform on the stub only — never a context
+   * swap or redraw (see WireGraphics).
    */
   public setPortPowered(portIndex: number, powered: boolean): void {
     if (powered) {
@@ -475,13 +469,6 @@ export abstract class Component<
     const stub = this._portStubs[portIndex];
     if (stub) {
       this._applyStubThickness(stub, portIndex, this._appliedScale);
-    }
-    // A negated port's bubble shows the gate-side value (link XOR negated):
-    // the bubble exists only where negated, so that is the inverse of the
-    // link's powered state.
-    const lit = this._litPortBubbles.get(portIndex);
-    if (lit) {
-      lit.alpha = powered ? 0 : 1;
     }
   }
 
@@ -494,14 +481,11 @@ export abstract class Component<
     return this._poweredPorts.has(portIndex);
   }
 
-  /** Resets all port stubs (and bubbles) to unpowered. */
+  /** Resets all port stubs to unpowered. */
   public clearPortPower(): void {
     this._poweredPorts.clear();
     for (const [portIndex, stub] of this._portStubs.entries()) {
       this._applyStubThickness(stub, portIndex, this._appliedScale);
-    }
-    for (const lit of this._litPortBubbles.values()) {
-      lit.alpha = 0;
     }
   }
 
@@ -524,8 +508,11 @@ export abstract class Component<
     stub.pivot.y = powered ? POWERED_WIRE_PIVOT : 0;
   }
 
-  private _bubbleContext(lit: boolean): GraphicsContext {
-    return this.geometryService.getGraphicsContext(NegationBubbleGraphics, lit);
+  private _bubbleContext(scale: number): GraphicsContext {
+    return this.geometryService.getGraphicsContext(
+      NegationBubbleGraphics,
+      scale
+    );
   }
 
   protected get bodyGridHeight(): number {
@@ -648,7 +635,6 @@ export abstract class Component<
     this._rotationCounterContainers = [];
     this._portStubs = [];
     this._portBubbles = new Map();
-    this._litPortBubbles = new Map();
     this._rescalers = [];
 
     this.draw();
@@ -774,27 +760,23 @@ export abstract class Component<
       container.addChild(wire);
 
       if (this.isPortNegated(type === 'inputs' ? 'in' : 'out', i)) {
-        // Sits on the stub at the body edge so its background fill interrupts
-        // the stub — the classic inverter look. Added after the stub so it
-        // draws on top. Grid-sized (no rescaler), so it scales with the body
-        // and its context survives zoom like the stub. Drawn unlit; the
-        // gate-side power state is applied later via setPortPowered, which
-        // fades the lit variant in over the base instead of swapping contexts
-        // (alpha is a color-path change PixiJS patches in place).
-        const bubble = new Graphics(this._bubbleContext(false));
-        const localX =
-          type === 'inputs'
-            ? 0.5 - NEGATION_BUBBLE_RADIUS
-            : NEGATION_BUBBLE_RADIUS;
-        bubble.position.set(localX, i + 0.5);
+        // Sits on the stub at the body edge so its white fill interrupts the
+        // stub — the classic inverter look. Added after the stub so it draws on
+        // top. A unit-diameter circle pinned by its tangent point (the extreme
+        // facing the body) to the body edge and grown outward along the stub.
+        // The transform sizes the white dot via negationBubbleScaleForScale; the
+        // context is re-fetched per zoom so the border stays a fixed 1px (see
+        // NegationBubbleGraphics). Always white — it does not react to power.
+        const bubble = new Graphics();
+        const bodyEdgeX = type === 'inputs' ? 0.5 : 0;
+        bubble.pivot.set(type === 'inputs' ? 0.5 : -0.5, 0);
+        bubble.position.set(bodyEdgeX, i + 0.5);
+        this.onApplyScale((scale) => {
+          bubble.context = this._bubbleContext(scale);
+          bubble.scale.set(scaleForScale(scale));
+        });
         this._portBubbles.set(portIndex, bubble);
         container.addChild(bubble);
-
-        const lit = new Graphics(this._bubbleContext(true));
-        lit.position.copyFrom(bubble.position);
-        lit.alpha = 0;
-        this._litPortBubbles.set(portIndex, lit);
-        container.addChild(lit);
       }
 
       if (labels.length > i) {

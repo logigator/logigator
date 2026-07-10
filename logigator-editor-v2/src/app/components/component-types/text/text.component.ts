@@ -2,7 +2,7 @@ import { Component } from '../../component';
 import { textComponentConfig, TextOptions } from './text.config';
 import { Direction } from '../../../utils/direction';
 import { ConnectionPointGraphics } from '../../../rendering/graphics/connection-point.graphics';
-import { ConnectionPoint } from '../../../connection-points/connection-point';
+import { scaleForScale } from '../../../connection-points/connection-point';
 import { BitmapText, DestroyOptions, Graphics, Rectangle } from 'pixi.js';
 import { Subject, takeUntil } from 'rxjs';
 import { PX } from '../../../utils/grid';
@@ -92,9 +92,9 @@ export class TextComponent extends Component<TextOptions> {
     dot.pivot.set(0.5, 0.5);
     dot.position.set(0.5, 0.5);
     // ConnectionPointGraphics is a 1×1 unit square; size it identically to a
-    // connection point (zoom-dependent screen px) expressed in grid units.
+    // connection point via the shared size curve.
     this.onApplyScale((scale) =>
-      dot.scale.set((ConnectionPoint.screenSizePxForScale(scale) * PX) / scale)
+      dot.scale.set(scaleForScale(scale))
     );
     this.addChild(dot);
 

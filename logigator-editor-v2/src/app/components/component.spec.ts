@@ -25,8 +25,10 @@ import {
 } from '../rendering/graphics/wire.graphics';
 import {
   NegationBubbleGraphics,
-  NEGATION_BUBBLE_RADIUS
+  scaleForScale,
+  BORDER
 } from '../rendering/graphics/negation-bubble.graphics';
+import { environment } from '../../environments/environment';
 
 describe('Component.deserialize (create() factory)', () => {
   beforeEach(() => {
@@ -646,8 +648,8 @@ describe('Component negation bubble rendering', () => {
     provider = TestBed.inject(GraphicsProviderService);
   });
 
-  function bubbleContext(lit = false) {
-    return provider.getGraphicsContext(NegationBubbleGraphics, lit);
+  function bubbleContext(scale: number) {
+    return provider.getGraphicsContext(NegationBubbleGraphics, scale);
   }
 
   it('draws no bubbles when nothing is negated', () => {
@@ -691,113 +693,89 @@ describe('Component negation bubble rendering', () => {
     comp.destroy({ children: true });
   });
 
-  it('places the bubble at the body-edge end of the stub, clear of the tip', () => {
+  it('pins the bubble by its tangent pivot to the body edge of the stub', () => {
     const comp = makeAnd(2);
 
     comp.setPortNegated('in', 0, true);
     comp.setPortNegated('out', 0, true);
 
-    // Stub container origins are x=-0.5 (inputs) / x=bodyGridWidth (outputs);
-    // the bubble sits one radius inside the body edge, so the connection-point
-    // dot at the stub tip (0.5 unit away) never overlaps it.
-    expect(comp.portBubbles.get(0)!.position.x).toBeCloseTo(
-      0.5 - NEGATION_BUBBLE_RADIUS,
-      5
-    );
-    expect(comp.portBubbles.get(2)!.position.x).toBeCloseTo(
-      NEGATION_BUBBLE_RADIUS,
-      5
-    );
+    // Stub container origins are x=-0.5 (inputs) / x=bodyGridWidth (outputs), so
+    // the body edge is at container-local x=0.5 (inputs) / x=0 (outputs). The
+    // bubble is pinned there by the tangent extreme of its unit circle (+0.5 for
+    // inputs, -0.5 for outputs), from which it grows outward along the stub.
+    const inputBubble = comp.portBubbles.get(0)!;
+    expect(inputBubble.position.x).toBeCloseTo(0.5, 5);
+    expect(inputBubble.pivot.x).toBeCloseTo(0.5, 5);
+
+    const outputBubble = comp.portBubbles.get(2)!;
+    expect(outputBubble.position.x).toBeCloseTo(0, 5);
+    expect(outputBubble.pivot.x).toBeCloseTo(-0.5, 5);
 
     comp.destroy({ children: true });
   });
 
-  it('anchors the bubble at the rendered bubble position (E facing)', () => {
+  it('anchors the bubble at its body-edge tangent point (E facing)', () => {
     const comp = makeAnd(2, Direction.E, 4, 7); // bodyGridWidth = 2
 
     const input0 = comp.negationBubbleAnchor('in', 0);
-    expect(input0.x).toBeCloseTo(4 - NEGATION_BUBBLE_RADIUS, 5);
+    expect(input0.x).toBeCloseTo(4, 5);
     expect(input0.y).toBeCloseTo(7.5, 5);
 
     const output0 = comp.negationBubbleAnchor('out', 0);
-    expect(output0.x).toBeCloseTo(4 + 2 + NEGATION_BUBBLE_RADIUS, 5);
+    expect(output0.x).toBeCloseTo(4 + 2, 5);
     expect(output0.y).toBeCloseTo(7.5, 5);
 
     comp.destroy({ children: true });
   });
 
-  it('keeps the bubble anchor one radius inside the tip across all rotations', () => {
-    // The anchor sits NEGATION_BUBBLE_RADIUS from the body edge, i.e.
-    // (0.5 - radius) from the connection-point tip. Rotation is rigid, so that
-    // offset is invariant — this pins the negationBubbleAnchor rotation math
-    // the hover ghost relies on.
-    const expected = 0.5 - NEGATION_BUBBLE_RADIUS;
+  it('keeps the bubble anchor at the body edge (half a unit from the tip) across all rotations', () => {
+    // The anchor sits on the body edge, i.e. half a grid unit from the
+    // connection-point tip. Rotation is rigid, so that offset is invariant —
+    // this pins the negationBubbleAnchor rotation math the hover ghost relies on.
     for (const dir of [Direction.E, Direction.S, Direction.W, Direction.N]) {
       const comp = makeAnd(2, dir, 5, 5);
       const anchor = comp.negationBubbleAnchor('in', 0);
       const tip = comp.connectionPoints[0];
       expect(Math.hypot(anchor.x - tip.x, anchor.y - tip.y)).toBeCloseTo(
-        expected,
+        0.5,
         5
       );
       comp.destroy({ children: true });
     }
   });
 
-  it('keeps the bubble and its context across applyScale (no rebuild)', () => {
+  it('keeps the same bubble Graphics across applyScale, resizing it and re-fetching its zoom-baked context', () => {
     const comp = makeAnd(2);
 
     comp.setPortNegated('in', 0, true);
     const bubbleBefore = comp.portBubbles.get(0);
-    const litBefore = comp.litPortBubbles.get(0);
     comp.applyScale(2);
 
+    // Same Graphics instance (no rebuild), sized by transform...
     expect(comp.portBubbles.get(0)).toBe(bubbleBefore);
-    expect(comp.portBubbles.get(0)!.context).toBe(bubbleContext(false));
-    expect(comp.litPortBubbles.get(0)).toBe(litBefore);
+    expect(comp.portBubbles.get(0)!.scale.x).toBeCloseTo(
+      scaleForScale(2),
+      5
+    );
+    // ...with the context re-fetched for this zoom (keeps the border 1px).
+    expect(comp.portBubbles.get(0)!.context).toBe(bubbleContext(2));
 
     comp.destroy({ children: true });
   });
 
-  it('stacks a hidden lit variant on the unlit base', () => {
-    const comp = makeAnd(2);
-
-    comp.setPortNegated('in', 0, true);
-
-    const base = comp.portBubbles.get(0)!;
-    const lit = comp.litPortBubbles.get(0)!;
-    expect(base.context).toBe(bubbleContext(false));
-    expect(lit.context).toBe(bubbleContext(true));
-    expect(lit.position.x).toBe(base.position.x);
-    expect(lit.position.y).toBe(base.position.y);
-    expect(lit.alpha).toBe(0);
-
-    comp.destroy({ children: true });
-  });
-
-  it('lights the bubble with the gate-side value during simulation', () => {
-    // The bubble shows link XOR negated. A bubble exists only on a negated
-    // port, so the lit bubble is the inverse of the link's powered state. The
-    // per-frame hot path toggles the lit variant's alpha only — a context
-    // swap would force a render-group instruction rebuild.
-    const comp = makeAnd(2);
-
-    comp.setPortNegated('in', 0, true);
-    const lit = comp.litPortBubbles.get(0)!;
-
-    // Unpowered link → the gate consumes 1 → bubble lit.
-    comp.setPortPowered(0, false);
-    expect(lit.alpha).toBe(1);
-
-    // Powered link → the gate consumes 0 → bubble unlit.
-    comp.setPortPowered(0, true);
-    expect(lit.alpha).toBe(0);
-
-    comp.setPortPowered(0, false);
-    comp.clearPortPower();
-    expect(lit.alpha).toBe(0);
-
-    comp.destroy({ children: true });
+  it('bakes the border to a screen-constant BORDER·gridSize (1px) across the whole zoom curve', () => {
+    // The white dot rides the uniform transform (scaleForScale), which would
+    // drag the border with it — so the baked width divides it back out.
+    // Rendered border px = baked width × world scale, world scale = transform ×
+    // gridSize × zoom. Spans the curve's floored, scale-with-board, and capped
+    // regimes; the border reads the same in all three because the transform
+    // cancels identically in the dot size and the stroke.
+    for (const scale of [0.2, 0.5, 1, 3]) {
+      const width = bubbleContext(scale).strokeStyle.width;
+      const renderedPx =
+        width * scaleForScale(scale) * environment.gridSize * scale;
+      expect(renderedPx).toBeCloseTo(BORDER * environment.gridSize, 5);
+    }
   });
 });
 

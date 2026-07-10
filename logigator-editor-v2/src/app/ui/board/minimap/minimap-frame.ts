@@ -1,4 +1,5 @@
 import { Rectangle } from 'pixi.js';
+import { clamp } from '../../../utils/math';
 
 /**
  * Maps a framed region (grid units) onto the fixed minimap panel (CSS px):
@@ -116,8 +117,4 @@ export function mapViewportRect(
   const y = clamp((top + bottom - height) / 2, 0, panelHeight - height);
 
   return { x, y, width, height };
-}
-
-function clamp(value: number, min: number, max: number): number {
-  return Math.min(Math.max(value, min), max);
 }

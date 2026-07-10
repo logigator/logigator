@@ -277,7 +277,9 @@ export class WorkModeRouter implements PointerToolTarget {
     const hit = this._findPortAt(project, input.grid);
     if (hit) {
       project.floatingLayer.showNegationGhost(
-        hit.comp.negationBubbleAnchor(hit.side, hit.index)
+        hit.comp.negationBubbleAnchor(hit.side, hit.index),
+        hit.side,
+        hit.comp.rotation
       );
     } else {
       project.floatingLayer.hideNegationGhost();

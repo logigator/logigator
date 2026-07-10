@@ -1,10 +1,13 @@
 import { Container, Graphics, Point } from 'pixi.js';
-import { Component } from '../components/component';
+import { Component, PortSide } from '../components/component';
 import { Wire } from '../wires/wire';
 import { ConnectionPoint } from '../connection-points/connection-point';
 import { getStaticDI } from '../utils/get-di';
 import { GraphicsProviderService } from './graphics-provider.service';
-import { NegationBubbleGraphics } from './graphics/negation-bubble.graphics';
+import {
+  NegationBubbleGraphics,
+  scaleForScale
+} from './graphics/negation-bubble.graphics';
 
 /**
  * The transient overlay above the committed circuit: hosts drag-session
@@ -22,6 +25,10 @@ export class FloatingLayer extends Container {
   // is in range.
   private _negationHoverGhost: Graphics | null = null;
 
+  // Latest zoom scale, so the negation ghost can size itself screen-constant on
+  // show (drag-session children get it fanned out in updateScale instead).
+  private _currentScale = 1;
+
   constructor() {
     super();
     this.addChild(this._dragLayer);
@@ -33,15 +40,30 @@ export class FloatingLayer extends Container {
   }
 
   public updateScale(scale: number) {
+    this._currentScale = scale;
     for (const child of this._dragLayer.children) {
       child.applyScale(scale);
     }
+    if (this._negationHoverGhost?.visible) {
+      this._sizeNegationGhost(this._negationHoverGhost, scale);
+    }
   }
 
-  /** Shows the negation preview bubble at a grid-space anchor. */
-  public showNegationGhost(anchor: Point): void {
+  /**
+   * Shows the negation preview bubble pinned to a grid-space body-edge anchor,
+   * matching the real bubble: tangent-pivoted, rotated with the component, and
+   * grown outward at the current zoom's size.
+   */
+  public showNegationGhost(
+    anchor: Point,
+    side: PortSide,
+    rotation: number
+  ): void {
     const ghost = this._ensureNegationHoverGhost();
     ghost.position.copyFrom(anchor);
+    ghost.pivot.set(side === 'in' ? 0.5 : -0.5, 0);
+    ghost.rotation = rotation;
+    this._sizeNegationGhost(ghost, this._currentScale);
     ghost.visible = true;
   }
 
@@ -51,14 +73,20 @@ export class FloatingLayer extends Container {
     }
   }
 
+  // Sizes the ghost like a real bubble: transform sets the dot size, the
+  // zoom-dependent context keeps the border a fixed 1px (see
+  // NegationBubbleGraphics).
+  private _sizeNegationGhost(ghost: Graphics, scale: number): void {
+    ghost.context = getStaticDI(GraphicsProviderService).getGraphicsContext(
+      NegationBubbleGraphics,
+      scale
+    );
+    ghost.scale.set(scaleForScale(scale));
+  }
+
   private _ensureNegationHoverGhost(): Graphics {
     if (!this._negationHoverGhost) {
-      const ghost = new Graphics(
-        getStaticDI(GraphicsProviderService).getGraphicsContext(
-          NegationBubbleGraphics,
-          false
-        )
-      );
+      const ghost = new Graphics();
       ghost.alpha = 0.5;
       // Above components/wires since the floating layer is the top child of
       // gridSpace; shares its grid-unit coordinate space.
