@@ -5,6 +5,9 @@
 @import '../../logigator-ui/styles/theme.css';
 @import '../../logigator-ui/styles/theme.tw.css';
 
+/* The z-index layering scale (--lg-z-* + z-* utilities). */
+@import '../../logigator-ui/styles/layers.css';
+
 /* Scan the library's templates so their Tailwind utilities are generated. */
 @source '../../logigator-ui/src';
 

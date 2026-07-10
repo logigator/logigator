@@ -25,7 +25,9 @@ function showBootstrapFailureBanner(): void {
     'text-align:center',
     'background:#1a1a1a',
     'color:#f5f5f5',
-    'z-index:2147483647'
+    // The `max` layer (see layers.css). Hardcoded, not var(--lg-z-max): this is
+    // the "editor failed to load" screen, so the stylesheet may not be in play.
+    'z-index:100'
   ].join(';');
   banner.innerHTML =
     '<div><h1 style="font-size:1.25rem;margin:0 0 .5rem">The editor failed to load</h1>' +

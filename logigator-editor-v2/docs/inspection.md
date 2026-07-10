@@ -91,23 +91,25 @@ chrome), `focus`, `close` (view teardown without touching the inspection).
 - **Desktop** — `WindowInspectionPresenter`: one `WindowService` window per
   inspection. The window system itself (`LgWindowOutlet`, `WindowService`,
   `WindowRef`) lives in `@logigator/ui`; the outlet sits in the board area's
-  `relative` container (`z-[1000]`, under the toast stack) and doubles as the
-  drag/resize bounds. Windows are non-modal — no backdrop, no focus trap —
+  `relative` container (the `window` band — see `logigator-ui/styles/layers.css`
+  — above the docked canvas overlays, below the cdk overlays and toasts) and
+  doubles as the drag/resize bounds. Windows are non-modal — no backdrop, no focus trap —
   stack without a count limit, raise on press, close on Escape, and report
   resizes through `WindowRef.resized` (the watch canvas observes its host size
   directly instead, which covers every presenter).
 - **Compact** — `SheetInspectionPresenter` (state) +
   `InspectionSheetComponent` (view): every inspection shares one bottom
   `lg-drawer` with `[modal]="false"` — no scrim and no focus trap, so the
-  running circuit above stays visible and interactive. One active view at a
+  running circuit above stays visible and interactive. Like every `lg-drawer` it
+  rides the cdk overlay container (the `overlay` band). One active view at a
   time, a tab row when several are open; closing the sheet dismisses all of
   them.
 - **Compact fullscreen** — the _same_ window presenter through a second,
   `fullscreen` `lg-window-outlet`: the app template swaps the outlets under
   `@if (layout.isCompact())` (exactly one is alive at a time — two live
   outlets would instantiate every window's content twice), the compact one
-  wrapped `fixed inset-0 z-1050` — above the sheet overlays (z 1000), below
-  the toast stack (z 1100). A fullscreen outlet renders each window as an
+  wrapped `fixed inset-0` in the `window` band — above the docked canvas
+  overlays, below the cdk overlays and toasts. A fullscreen outlet renders each window as an
   outlet-filling takeover: no drag/resize/positioning, back button instead of
   ✕. Opaque takeovers stack by z-index, so with several open only the topmost
   is visible and back reveals the one beneath — or the board.

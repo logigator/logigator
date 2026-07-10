@@ -1,0 +1,45 @@
+/*
+ * @logigator/ui — z-index layering scale.
+ *
+ * The single source of truth for global stacking order. Named layers step by
+ * 10 across 0–100; anything that needs a cross-component z-index picks a token
+ * here rather than a magic number. This is library-internal — not part of the
+ * colors-only theme contract in theme.css — and not meant to be overridden.
+ *
+ * Bottom → top:
+ *   canvas-overlay  floating controls docked over the board (minimap, HUDs,
+ *                   the component-settings card)
+ *   window          non-modal floating windows (inspection windows, the compact
+ *                   fullscreen watch takeover) — the outlet carries the band and
+ *                   stacks its own windows within that context
+ *   overlay         the shared cdk/overlay container — every anchored/modal
+ *                   overlay (dialog, drawer, menu, popover, tooltip, select,
+ *                   confirm, the compact inspection sheet); they order among
+ *                   themselves by open order
+ *   toast           toast notifications, above dialogs so they stay visible
+ *   max             in-app cover-everything band (50–90 left free for growth)
+ */
+
+:root {
+  --lg-z-canvas-overlay: 10;
+  --lg-z-window: 20;
+  --lg-z-overlay: 30;
+  --lg-z-toast: 40;
+  --lg-z-max: 100;
+}
+
+@utility z-canvas-overlay {
+  z-index: var(--lg-z-canvas-overlay);
+}
+@utility z-window {
+  z-index: var(--lg-z-window);
+}
+@utility z-overlay {
+  z-index: var(--lg-z-overlay);
+}
+@utility z-toast {
+  z-index: var(--lg-z-toast);
+}
+@utility z-max {
+  z-index: var(--lg-z-max);
+}

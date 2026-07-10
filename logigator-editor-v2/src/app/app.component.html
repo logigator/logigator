@@ -26,27 +26,30 @@
         (cursorPositionChange)="cursorPosition.set($event)"
       ></app-board>
       @if (!layout.isCompact()) {
-        <!-- Inspection windows float over the board, under the toast stack. -->
-        <lg-window-outlet class="z-[1000]" />
+        <!-- Inspection windows float over the board (window band), above the
+             docked canvas overlays and below the cdk overlays + toasts. -->
+        <lg-window-outlet class="z-window" />
 
-        <!-- Bottom-left overlay stack: toasts ride in normal flow above the
+        <!-- Bottom-left stack: toasts ride in normal flow above the
              component-settings card, so with no selection they settle into the
-             corner. The wrapper owns placement + z-index and lets pointer events
-             fall through; each child re-enables its own. -->
+             corner. The wrapper owns placement only (no z-index, so its children
+             keep their own bands) and lets pointer events fall through; each
+             child re-enables its own. The card sits in the canvas-overlay band
+             (under windows/dialogs), the toast in the toast band (on top). -->
         <div
-          class="pointer-events-none absolute left-3 bottom-3 z-[1100] flex max-w-96 flex-col items-start"
+          class="pointer-events-none absolute left-3 bottom-3 flex max-w-96 flex-col items-start"
         >
           <lg-toast [embedded]="true" position="bottom-left" />
           <app-component-settings
-            class="pointer-events-auto"
+            class="pointer-events-auto z-canvas-overlay"
             [floating]="false"
           ></app-component-settings>
         </div>
 
-        <!-- Bottom-right: the minimap keeps its own corner. -->
+        <!-- Bottom-right: the minimap keeps its own corner (canvas-overlay band). -->
         @if (rendererService.available()) {
           <app-minimap
-            class="absolute right-3 bottom-3 z-[1100]"
+            class="absolute right-3 bottom-3 z-canvas-overlay"
             [project]="projectService.activeProject()"
           />
         }
@@ -99,9 +102,10 @@
   <app-inspection-sheet />
   <!-- Watch inspections open as fullscreen windows on compact. The desktop
        outlet lives in the board area's desktop-only branch, so exactly one
-       outlet is alive at a time; this one covers the whole viewport, above
-       the sheet overlays (z 1000) and below the toasts (z 1100). -->
-  <div class="pointer-events-none fixed inset-0 z-1050">
+       outlet is alive at a time. This one covers the whole viewport in the
+       window band — above the docked canvas overlays, below the cdk overlays
+       (including the inspection sheet) and toasts. -->
+  <div class="pointer-events-none fixed inset-0 z-window">
     <lg-window-outlet fullscreen />
   </div>
 

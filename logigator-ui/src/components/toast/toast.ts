@@ -90,7 +90,7 @@ const DEFAULT_SEVERITY: LgSeverity = 'info';
   selector: 'lg-toast',
   imports: [LgButton],
   host: {
-    class: 'pointer-events-none z-[1100] flex flex-col gap-2',
+    class: 'pointer-events-none z-toast flex flex-col gap-2',
     '[class.fixed]': '!embedded()',
     '[class.p-4]': '!embedded()',
     '[class.top-0]': '!embedded() && atTop()',

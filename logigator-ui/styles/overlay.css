@@ -12,3 +12,10 @@
 .cdk-overlay-dark-backdrop {
   background: rgb(0 0 0 / 0.6);
 }
+
+/* Drop CDK's hardcoded z-index (1000) into the shared layering scale (layers.css)
+   so every anchored/modal overlay sits in the `overlay` band — above the floating
+   windows, below the toasts. Panes still stack among themselves by open order. */
+.cdk-overlay-container {
+  z-index: var(--lg-z-overlay);
+}
