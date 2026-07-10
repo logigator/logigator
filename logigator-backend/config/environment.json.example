@@ -5,5 +5,7 @@
 	"enableErrorReportsFile": false,
 	"sendErrorReportsAsEmail": false,
 	"reportErrorLogFile": "report-error-log.txt",
-	"adminEmailAddresses": []
+	"adminEmailAddresses": [],
+	"reportRateLimitWindowSeconds": 600,
+	"reportRateLimitMax": 5
 }
