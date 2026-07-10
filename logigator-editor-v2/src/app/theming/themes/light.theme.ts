@@ -6,7 +6,7 @@ export const LightTheme: Theme = {
   wire: 0x0,
   selectRect: 0,
   selectTint: 0xd0d0d0,
-  wireSelectColor: 0xb0b0b0,
+  wireSelectColor: 0x909090,
   fontTint: 0,
   ledOn: 0x27ae60,
   ledOff: 0x0
