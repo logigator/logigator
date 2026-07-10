@@ -55,14 +55,18 @@
 
   --color-info: var(--lg-info);
   --color-info-surface: var(--lg-info-surface);
+  --color-info-surface-strong: var(--lg-info-surface-strong);
   --color-info-border: var(--lg-info-border);
   --color-success: var(--lg-success);
   --color-success-surface: var(--lg-success-surface);
+  --color-success-surface-strong: var(--lg-success-surface-strong);
   --color-success-border: var(--lg-success-border);
   --color-warn: var(--lg-warn);
   --color-warn-surface: var(--lg-warn-surface);
+  --color-warn-surface-strong: var(--lg-warn-surface-strong);
   --color-warn-border: var(--lg-warn-border);
   --color-error: var(--lg-error);
   --color-error-surface: var(--lg-error-surface);
+  --color-error-surface-strong: var(--lg-error-surface-strong);
   --color-error-border: var(--lg-error-border);
 }

@@ -78,6 +78,32 @@
   --lg-error: #dc2626;
   --lg-error-surface: color-mix(in srgb, #fef2f2, transparent 5%);
   --lg-error-border: #fecaca;
+
+  /* Opaque counterparts to the state surfaces, for elements that float over
+     arbitrary content (e.g. toasts) where the translucent `-surface` tints wash
+     out and hurt legibility. Built from the accent over `--lg-content`, so — like
+     the primary scale — one declaration serves both schemes; the small
+     transparency keeps a faint frost under `backdrop-blur`. */
+  --lg-info-surface-strong: color-mix(
+    in srgb,
+    color-mix(in srgb, var(--lg-info) 18%, var(--lg-content)),
+    transparent 8%
+  );
+  --lg-success-surface-strong: color-mix(
+    in srgb,
+    color-mix(in srgb, var(--lg-success) 18%, var(--lg-content)),
+    transparent 8%
+  );
+  --lg-warn-surface-strong: color-mix(
+    in srgb,
+    color-mix(in srgb, var(--lg-warn) 18%, var(--lg-content)),
+    transparent 8%
+  );
+  --lg-error-surface-strong: color-mix(
+    in srgb,
+    color-mix(in srgb, var(--lg-error) 18%, var(--lg-content)),
+    transparent 8%
+  );
 }
 
 .dark-mode {

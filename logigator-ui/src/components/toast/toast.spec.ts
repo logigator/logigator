@@ -46,7 +46,7 @@ describe('LgToast', () => {
     service.add({ severity: 'danger', summary: 'boom' });
     f.detectChanges();
     const toast = toasts(f.nativeElement)[0];
-    expect(toast.className).toContain('bg-error-surface');
+    expect(toast.className).toContain('bg-error-surface-strong');
     expect(toast.className).toContain('text-error');
   });
 
