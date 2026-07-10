@@ -8,7 +8,7 @@ The project layer is the central owner of all circuit state. `Project` is the ro
 src/app/project/
 ├── project.ts              # Circuit root — PixiJS Container owning all circuit state
 ├── project.service.ts      # Angular service — holds and exposes active project signals
-└── selection-manager.ts    # Committed selection state (tint, sets, observables)
+└── selection-manager.ts    # Committed selection state (selected flags, sets, observables)
 ```
 
 ---
@@ -216,37 +216,37 @@ Plain TypeScript class. Constructed by `Project`; not an Angular service. Owns t
 
 ### State
 
-| Field                     | Type             | Purpose                                                                                        |
-| ------------------------- | ---------------- | ---------------------------------------------------------------------------------------------- |
-| `_selectedComponents`     | `Set<Component>` | Live references to currently selected components                                               |
-| `_selectedWires`          | `Set<Wire>`      | Live references to currently selected wires                                                    |
-| `_selectionChange$`       | `Subject<void>`  | Emits whenever the selection changes                                                           |
-| `SELECTION_TINT` (static) | `0x5577aa`       | Dark-blue tint applied to selected elements; distinct from the `0xbbbbbb` placement-ghost tint |
+| Field                       | Type                | Purpose                                                                     |
+| --------------------------- | ------------------- | --------------------------------------------------------------------------- |
+| `_selectedComponents`       | `Set<Component>`    | Live references to currently selected components                            |
+| `_selectedWires`            | `Set<Wire>`         | Live references to currently selected wires                                 |
+| `_selectionChange$`         | `Subject<void>`     | Emits whenever the selection changes                                        |
+| `_selectedConnectionPoints` | `ConnectionPoint[]` | CPs currently wearing the selection highlight (re-derived by `retintCps()`) |
 
 ### Public API
 
 | Member                      | Description                                                                                                                                                                                                                                                                                                                                                                    |
 | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `commit(rect, mode)`        | Dispatch: zero-area rect → single-click hit test; non-zero rect → rectangle selection. Clears the previous selection first.                                                                                                                                                                                                                                                    |
-| `clear()`                   | Resets tint to `0xffffff` on every selected element, empties both sets, emits `selectionChange$`.                                                                                                                                                                                                                                                                              |
-| `evict(element)`            | Called from `Project.removeComponent`/`removeWire` before `destroy()`. Drops the ref without touching tint (the element is about to be destroyed). Emits if present.                                                                                                                                                                                                           |
+| `clear()`                   | Sets `selected = false` on every selected element (restoring its normal tint), empties both sets, emits `selectionChange$`.                                                                                                                                                                                                                                                    |
+| `evict(element)`            | Called from `Project.removeComponent`/`removeWire` before `destroy()`. Drops the ref without touching the selection flag (the element is about to be destroyed). Emits if present.                                                                                                                                                                                             |
 | `containsPoint(gridPoint)`  | Returns `true` if any selected element's `gridBounds` contains the point. Used by `FloatingLayer` to decide whether a `pointerdown` in SELECT mode should start a drag-move of the existing selection or open a new rect drag.                                                                                                                                                 |
 | `boundingBox()`             | Union AABB of all selected elements' `gridBounds`. Returns `null` when empty. Used for computing the drag offset at drag start.                                                                                                                                                                                                                                                |
 | `isEmpty`                   | `true` when both sets are empty.                                                                                                                                                                                                                                                                                                                                               |
 | `selectionChange$`          | The subject exposed as `Observable<void>`.                                                                                                                                                                                                                                                                                                                                     |
 | `selectedComponents`        | `ReadonlySet<Component>` — live references.                                                                                                                                                                                                                                                                                                                                    |
 | `selectedWires`             | `ReadonlySet<Wire>` — live references.                                                                                                                                                                                                                                                                                                                                         |
-| `select(components, wires)` | Batch-select: clears the current selection, tints the given elements, and emits. Used by `PastePlacementSession.onEnd()` to select the freshly pasted elements. Skips destroyed elements silently.                                                                                                                                                                             |
+| `select(components, wires)` | Batch-select: clears the current selection, flags the given elements selected, and emits. Used by `PastePlacementSession.onEnd()` to select the freshly pasted elements. Skips destroyed elements silently.                                                                                                                                                                    |
 | `claimPendingCut()`         | Returns the `ActionContainer` recorded by a tentative scissor cut (SELECT*EXACT) and clears the pending state. Returns `null` if no cut is pending. Called by `SelectionMoveSession.onEnd()` (folds the cut into the move undo entry) and by `ClipboardService._applyDelete()` (folds the cut into the delete undo entry). See `wires.md` § \_Tentative cut + commit on move*. |
 
 ### `commit` behavior
 
 **Rectangle drag** (`rect.width > 0 || rect.height > 0`):
 
-1. Calls `clear()` to remove old tints.
-2. Queries `project.queryComponentsInRange(rect)` and tints every result with `SELECTION_TINT` — both modes use the same touching rule for components.
-3. **`SELECT` mode**: Queries `project.queryWiresInRange(rect)` and tints every result.
-4. **`SELECT_EXACT` mode** (scissor select): For each wire returned by `queryWiresInRange(rect)`, calls `cutWire(wire, rect)` (see `wires.md` § _Wire Scissor Cutting_). The result is one of `{kind: 'skip'}` (centerline outside rect — do not select), `{kind: 'keep'}` (no cut needed — select as-is), or `{kind: 'cut', pieces, insideIndex}`. For `cut` results, the cut is performed **tentatively**: the manager calls `project.removeWire` on the original and `project.addWire` on each new piece directly, then records the rollback data in `_pendingCut`. **Nothing is pushed to `ActionManager` at commit time.** The inside pieces are tinted and added to the selection set by ID. The tentative cut is finalized only on a real modification — `SelectionMoveSession.onEnd` with `hasMove === true` calls `selectionManager.claimPendingCut()` and folds the returned `ActionContainer(RemoveWiresAction, AddWiresAction)` into its own move container so cut + move are one Ctrl+Z. Any cancel path (`clear()`, mode change, Escape, Ctrl+Z while pending) calls `_rollbackPendingCutInternal` which removes the new pieces and re-adds the originals. See `wires.md` § _Tentative cut + commit on move_ for the full lifecycle.
+1. Calls `clear()` to drop the old selection.
+2. Queries `project.queryComponentsInRange(rect)` and flags every result `selected` (each element derives its own theme-keyed highlight tint from the flag) — both modes use the same touching rule for components.
+3. **`SELECT` mode**: Queries `project.queryWiresInRange(rect)` and flags every result selected.
+4. **`SELECT_EXACT` mode** (scissor select): For each wire returned by `queryWiresInRange(rect)`, calls `cutWire(wire, rect)` (see `wires.md` § _Wire Scissor Cutting_). The result is one of `{kind: 'skip'}` (centerline outside rect — do not select), `{kind: 'keep'}` (no cut needed — select as-is), or `{kind: 'cut', pieces, insideIndex}`. For `cut` results, the cut is performed **tentatively**: the manager calls `project.removeWire` on the original and `project.addWire` on each new piece directly, then records the rollback data in `_pendingCut`. **Nothing is pushed to `ActionManager` at commit time.** The inside pieces are flagged selected and added to the selection set by ID. The tentative cut is finalized only on a real modification — `SelectionMoveSession.onEnd` with `hasMove === true` calls `selectionManager.claimPendingCut()` and folds the returned `ActionContainer(RemoveWiresAction, AddWiresAction)` into its own move container so cut + move are one Ctrl+Z. Any cancel path (`clear()`, mode change, Escape, Ctrl+Z while pending) calls `_rollbackPendingCutInternal` which removes the new pieces and re-adds the originals. See `wires.md` § _Tentative cut + commit on move_ for the full lifecycle.
 5. Emits `selectionChange$` once at the end.
 
 **Single click** (`rect.width === 0 && rect.height === 0`):

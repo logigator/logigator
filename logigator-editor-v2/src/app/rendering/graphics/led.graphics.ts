@@ -24,6 +24,8 @@ const SCALE = environment.gridSize;
  * or context swap during simulation (see WireGraphics).
  */
 export class LedGraphics extends StaticGraphicsContext {
+  public static override readonly themeIndependent = true;
+
   constructor() {
     super();
 

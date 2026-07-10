@@ -1,13 +1,13 @@
 import { StaticGraphicsContext } from './static-graphics-context';
-import { getStaticDI } from '../../utils/get-di';
-import { ThemingService } from '../../theming/theming.service';
 
 export class ConnectionPointGraphics extends StaticGraphicsContext {
+  // White base like WireGraphics: the dot's color lives in the per-instance
+  // tint, keeping the context theme-independent.
+  public static override readonly themeIndependent = true;
+
   constructor() {
     super();
-
-    const themingService = getStaticDI(ThemingService);
     this.rect(0, 0, 1, 1);
-    this.fill(themingService.currentTheme().wire);
+    this.fill(0xffffff);
   }
 }

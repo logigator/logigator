@@ -753,10 +753,7 @@ describe('Component negation bubble rendering', () => {
 
     // Same Graphics instance (no rebuild), sized by transform...
     expect(comp.portBubbles.get(0)).toBe(bubbleBefore);
-    expect(comp.portBubbles.get(0)!.scale.x).toBeCloseTo(
-      scaleForScale(2),
-      5
-    );
+    expect(comp.portBubbles.get(0)!.scale.x).toBeCloseTo(scaleForScale(2), 5);
     // ...with the context re-fetched for this zoom (keeps the border 1px).
     expect(comp.portBubbles.get(0)!.context).toBe(bubbleContext(2));
 

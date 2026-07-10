@@ -117,6 +117,8 @@ export abstract class Component<
   private readonly _negatedInputs = new Set<number>();
   private readonly _negatedOutputs = new Set<number>();
 
+  private _selected = false;
+
   private _initialized = false;
 
   public static serialize(component: Component): SerializedComponent {
@@ -616,6 +618,29 @@ export abstract class Component<
     }
   }
 
+  /** Whether the component carries the selection tint (see {@link refreshTint}). */
+  public get selected(): boolean {
+    return this._selected;
+  }
+
+  public set selected(value: boolean) {
+    this._selected = value;
+    this.refreshTint();
+  }
+
+  /**
+   * Re-derives the container tint from the current theme and selection state.
+   * Selection is a multiplicative tint over the themed children (a component
+   * bakes several theme colors, so it cannot be white-based like a wire);
+   * `theme.selectTint` darkens toward gray in both themes. Also the way to
+   * restore the proper tint after a transient one (collision red).
+   */
+  public refreshTint(): void {
+    this.tint = this._selected
+      ? this.themingService.currentTheme().selectTint
+      : 0xffffff;
+  }
+
   public redraw(): void {
     this._draw();
   }
@@ -642,6 +667,10 @@ export abstract class Component<
 
     this._drawConnections(this._numInputs, 'inputs');
     this._drawConnections(this._numOutputs, 'outputs');
+
+    // The selection tint value is theme-keyed, so a theme-change redraw must
+    // re-derive it alongside the rebuilt children.
+    this.refreshTint();
 
     if (environment.debug.showConnectionPoints) {
       const connPoints = new Graphics();
@@ -743,6 +772,10 @@ export abstract class Component<
     for (let i = 0; i < n; i++) {
       const portIndex = type === 'inputs' ? i : this._numInputs + i;
       const wire = new Graphics(geometry);
+      // The shared stub context is a white base (see WireGraphics); the theme's
+      // wire color is applied as tint. The component-level selection tint
+      // multiplies over it, exactly as it does over the themed body stroke.
+      wire.tint = this.themingService.currentTheme().wire;
       wire.position.set(0, i + 0.5);
       wire.scale.x = 0.5;
       // Stub stays 1 screen pixel thick: scale.y compensates for zoom. The

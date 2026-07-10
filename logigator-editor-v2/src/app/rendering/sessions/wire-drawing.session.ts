@@ -106,8 +106,16 @@ export class WireDrawingSession implements DragSession {
       this._v.length > 0 &&
       this.project.hasWireBodyCollision(this._v.gridBounds);
 
-    if (this._h) this._h.tint = hCollision ? 0xff4444 : 0xffffff;
-    if (this._v) this._v.tint = vCollision ? 0xff4444 : 0xffffff;
+    // refreshTint restores the wire's theme color (the shared context is a
+    // white base, so a plain 0xffffff would render the wire white).
+    if (this._h) {
+      if (hCollision) this._h.tint = 0xff4444;
+      else this._h.refreshTint();
+    }
+    if (this._v) {
+      if (vCollision) this._v.tint = 0xff4444;
+      else this._v.refreshTint();
+    }
 
     this._hasBodyCollision = hCollision || vCollision;
   }

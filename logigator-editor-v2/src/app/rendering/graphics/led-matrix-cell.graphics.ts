@@ -6,6 +6,8 @@ import { StaticGraphicsContext } from './static-graphics-context';
  * tint write instead of a context swap.
  */
 export class LedMatrixCellGraphics extends StaticGraphicsContext {
+  public static override readonly themeIndependent = true;
+
   constructor() {
     super();
 

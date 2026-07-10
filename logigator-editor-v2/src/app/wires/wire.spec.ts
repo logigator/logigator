@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { configureTestBed } from '../../testing/configure-test-bed';
 import { makeWire } from '../../testing/factories';
@@ -10,6 +10,8 @@ import {
 } from '../rendering/graphics/wire.graphics';
 import { WireDirection } from './wire-direction.enum';
 import { environment } from '../../environments/environment';
+import { ThemingService } from '../theming/theming.service';
+import { ThemeType } from '../theming/theme-type.enum';
 
 describe('Wire.setPowered', () => {
   let provider: GraphicsProviderService;
@@ -61,6 +63,56 @@ describe('Wire.setPowered', () => {
 
     wire.setPowered(true);
     expect(wire.length).toBe(5);
+
+    wire.destroy();
+  });
+});
+
+describe('Wire tint', () => {
+  let theming: ThemingService;
+  let originalTheme: ThemeType;
+
+  beforeEach(() => {
+    configureTestBed();
+    theming = TestBed.inject(ThemingService);
+    originalTheme = theming.currentThemeType();
+  });
+
+  afterEach(() => {
+    theming.setActiveThemeType(originalTheme);
+  });
+
+  // The shared context is a white base, so the tint IS the wire's color. The
+  // selection color must be a distinct explicit color in EVERY theme — the
+  // former multiplicative dark tint was invisible on light mode's black wires
+  // (black × anything = black).
+  it('derives base and selection color from the theme, distinct in both themes', () => {
+    for (const type of [ThemeType.DARK, ThemeType.LIGHT]) {
+      theming.setActiveThemeType(type);
+      const theme = theming.currentTheme();
+      const wire = makeWire(0, 0, WireDirection.HORIZONTAL, 4);
+
+      expect(wire.tint).toBe(theme.wire);
+
+      wire.selected = true;
+      expect(wire.tint).toBe(theme.wireSelectColor);
+      expect(wire.tint).not.toBe(theme.wire);
+
+      wire.destroy();
+    }
+  });
+
+  it('refreshTint recolors a selected wire for the new theme without a context swap', () => {
+    theming.setActiveThemeType(ThemeType.DARK);
+    const wire = makeWire(0, 0, WireDirection.HORIZONTAL, 4);
+    const context = wire.context;
+    wire.selected = true;
+
+    theming.setActiveThemeType(ThemeType.LIGHT);
+    wire.refreshTint();
+
+    expect(wire.tint).toBe(theming.currentTheme().wireSelectColor);
+    expect(wire.context).toBe(context);
 
     wire.destroy();
   });

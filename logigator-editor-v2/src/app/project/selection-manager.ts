@@ -27,7 +27,6 @@ interface PendingCut {
 }
 
 export class SelectionManager {
-  static readonly SELECTION_TINT = 0x888888;
   /**
    * Margin (grid units) around the content bounds for grab rects that have no
    * user-drawn shape (programmatic {@link select}, e.g. a committed paste).
@@ -38,7 +37,7 @@ export class SelectionManager {
   private readonly _selectedWires = new Set<Wire>();
   private readonly _selectionChange$ = new Subject<void>();
   private _pendingCut: PendingCut | null = null;
-  private _tintedConnectionPoints: ConnectionPoint[] = [];
+  private _selectedConnectionPoints: ConnectionPoint[] = [];
   // The grab rect as set (the drawn marquee, or padded bounds for select())
   // plus the selection's bounding-box origin at that moment. grabRect()
   // translates the stored rect by however far the bounds have moved since, so
@@ -60,7 +59,7 @@ export class SelectionManager {
     this.clear();
 
     for (const component of this.project.queryComponentsInRange(rect)) {
-      component.tint = SelectionManager.SELECTION_TINT;
+      component.selected = true;
       this._selectedComponents.add(component);
     }
 
@@ -68,7 +67,7 @@ export class SelectionManager {
       this._scissorAndSelectWires(rect);
     } else {
       for (const wire of this.project.queryWiresInRange(rect)) {
-        wire.tint = SelectionManager.SELECTION_TINT;
+        wire.selected = true;
         this._selectedWires.add(wire);
       }
     }
@@ -140,7 +139,7 @@ export class SelectionManager {
 
     for (const wire of wiresToKeep) {
       if (wire.destroyed) continue;
-      wire.tint = SelectionManager.SELECTION_TINT;
+      wire.selected = true;
       this._selectedWires.add(wire);
     }
 
@@ -149,7 +148,7 @@ export class SelectionManager {
     if (insideIds.size > 0) {
       for (const piece of newPieces) {
         if (!piece.destroyed && insideIds.has(piece.id)) {
-          piece.tint = SelectionManager.SELECTION_TINT;
+          piece.selected = true;
           this._selectedWires.add(piece);
         }
       }
@@ -196,10 +195,10 @@ export class SelectionManager {
       bestComponent !== null &&
       (bestWire === null || bestComponentArea <= bestWireArea)
     ) {
-      bestComponent.tint = SelectionManager.SELECTION_TINT;
+      bestComponent.selected = true;
       this._selectedComponents.add(bestComponent);
     } else if (bestWire !== null) {
-      bestWire.tint = SelectionManager.SELECTION_TINT;
+      bestWire.selected = true;
       this._selectedWires.add(bestWire);
     }
 
@@ -210,11 +209,11 @@ export class SelectionManager {
     this._selectionChange$.next();
   }
 
-  // Re-evaluates which connection points should be tinted based on the current
+  // Re-evaluates which connection points count as selected based on the current
   // selection. Called after initial selection and after a drag-move recomputes CPs.
   public retintCps(): void {
-    for (const cp of this._tintedConnectionPoints) {
-      if (!cp.destroyed) cp.tint = 0xffffff;
+    for (const cp of this._selectedConnectionPoints) {
+      if (!cp.destroyed) cp.selected = false;
     }
 
     const points = [];
@@ -232,36 +231,40 @@ export class SelectionManager {
       }
     }
 
-    this._tintedConnectionPoints =
+    this._selectedConnectionPoints =
       this.project.connectionPoints.getCpsAtPoints(points);
-    for (const cp of this._tintedConnectionPoints) {
-      cp.tint = SelectionManager.SELECTION_TINT;
+    for (const cp of this._selectedConnectionPoints) {
+      cp.selected = true;
     }
   }
 
   /**
-   * Neutralizes the selection tint on every selected element (and its tinted
-   * connection points) so an off-screen render — minimap, image export, server
-   * preview — doesn't bake the selection highlight into committed content. The
-   * `_tintedConnectionPoints` list is private, so this lives here rather than in
-   * the snapshot service. Captures each node's current `.tint` and returns a
-   * closure that restores it; destroyed nodes are skipped on both passes.
+   * Neutralizes the selection highlight on every selected element (and its
+   * selected connection points) so an off-screen render — minimap, image
+   * export, server preview — doesn't bake it into committed content. The
+   * `_selectedConnectionPoints` list is private, so this lives here rather
+   * than in the snapshot service. Flips each node's `selected` flag off and
+   * returns a closure that flips it back; the flag re-derives the tint from
+   * whatever theme is active at that moment (the dual-theme preview flow
+   * switches themes between renders). Destroyed nodes are skipped on both
+   * passes.
    */
   public suppressTintForRender(): () => void {
-    const captured: { tint: number; restore: (tint: number) => void }[] = [];
+    const suppressed: (Component | Wire | ConnectionPoint)[] = [];
     const suppress = (node: Component | Wire | ConnectionPoint): void => {
       if (node.destroyed) return;
-      const tint = node.tint;
-      captured.push({ tint, restore: (t) => (node.tint = t) });
-      node.tint = 0xffffff;
+      suppressed.push(node);
+      node.selected = false;
     };
 
     for (const component of this._selectedComponents) suppress(component);
     for (const wire of this._selectedWires) suppress(wire);
-    for (const cp of this._tintedConnectionPoints) suppress(cp);
+    for (const cp of this._selectedConnectionPoints) suppress(cp);
 
     return () => {
-      for (const { tint, restore } of captured) restore(tint);
+      for (const node of suppressed) {
+        if (!node.destroyed) node.selected = true;
+      }
     };
   }
 
@@ -273,18 +276,18 @@ export class SelectionManager {
 
     for (const component of this._selectedComponents) {
       if (!component.destroyed) {
-        component.tint = 0xffffff;
+        component.selected = false;
       }
     }
     for (const wire of this._selectedWires) {
       if (!wire.destroyed) {
-        wire.tint = 0xffffff;
+        wire.selected = false;
       }
     }
-    for (const cp of this._tintedConnectionPoints) {
-      if (!cp.destroyed) cp.tint = 0xffffff;
+    for (const cp of this._selectedConnectionPoints) {
+      if (!cp.destroyed) cp.selected = false;
     }
-    this._tintedConnectionPoints = [];
+    this._selectedConnectionPoints = [];
     this._selectedComponents.clear();
     this._selectedWires.clear();
     this._setGrabRect(null);
@@ -446,13 +449,13 @@ export class SelectionManager {
     this.clear();
     for (const c of components) {
       if (!c.destroyed) {
-        c.tint = SelectionManager.SELECTION_TINT;
+        c.selected = true;
         this._selectedComponents.add(c);
       }
     }
     for (const w of wires) {
       if (!w.destroyed) {
-        w.tint = SelectionManager.SELECTION_TINT;
+        w.selected = true;
         this._selectedWires.add(w);
       }
     }

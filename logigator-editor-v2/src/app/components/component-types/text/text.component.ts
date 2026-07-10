@@ -38,7 +38,10 @@ export class TextComponent extends Component<TextOptions> {
   private _redrawAndRefile(): void {
     const ports = this.connectionPoints;
     this.redraw();
-    this.portsChange$.next({ oldPorts: ports, newPorts: this.connectionPoints });
+    this.portsChange$.next({
+      oldPorts: ports,
+      newPorts: this.connectionPoints
+    });
   }
 
   protected get inputLabels(): string[] {
@@ -67,7 +70,8 @@ export class TextComponent extends Component<TextOptions> {
   public override get cullBounds(): Rectangle {
     const fontSize = this.options.fontSize.value;
     const lines = this.options.text.value.split('\n');
-    const widthGrid = Math.max(...lines.map((l) => monoTextWidth(l, fontSize))) * PX;
+    const widthGrid =
+      Math.max(...lines.map((l) => monoTextWidth(l, fontSize))) * PX;
     const heightGrid = lines.length * fontSize * PX;
     // Local content box in the unrotated (E) frame: the dot cell [0, 1] plus the
     // label, which starts at x = 1 and is vertically centred on y = 0.5 (anchor
@@ -89,13 +93,14 @@ export class TextComponent extends Component<TextOptions> {
     dot.context = this.geometryService.getGraphicsContext(
       ConnectionPointGraphics
     );
+    // The shared dot context is a white base (see ConnectionPointGraphics);
+    // the theme's wire color is applied as tint, like a real connection point.
+    dot.tint = this.themingService.currentTheme().wire;
     dot.pivot.set(0.5, 0.5);
     dot.position.set(0.5, 0.5);
     // ConnectionPointGraphics is a 1×1 unit square; size it identically to a
     // connection point via the shared size curve.
-    this.onApplyScale((scale) =>
-      dot.scale.set(scaleForScale(scale))
-    );
+    this.onApplyScale((scale) => dot.scale.set(scaleForScale(scale)));
     this.addChild(dot);
 
     // fontSize is a user-set pixel value; scale.set(PX) converts the label

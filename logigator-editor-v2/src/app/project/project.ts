@@ -125,15 +125,16 @@ export class Project extends Container {
   }
 
   /**
-   * Re-fetches every theme-dependent GraphicsContext after a theme change. The
-   * cache is theme-keyed, so redrawing each element picks up the new colors.
-   * A no-op on a still-empty scene.
+   * Re-derives every theme-dependent color after a theme change. Components
+   * redraw (their contexts bake theme colors and the cache is theme-keyed);
+   * wires and connection points only re-derive their tint — their shared
+   * context is a theme-independent white base, so no context is swapped. A
+   * no-op on a still-empty scene.
    *
-   * Connection points only swap their theme-keyed context — a theme change
-   * never alters which dots exist, so this restyles them in place rather than
-   * re-deriving them from the quad tree. Their selection tint lives on the
-   * instance and survives the context swap, exactly as it does for components
-   * and wires.
+   * A theme change never alters which dots exist, so connection points are
+   * restyled in place rather than re-derived from the quad tree. Selection
+   * state lives on each instance and every path re-reads it, so a selected
+   * element keeps its highlight in the new theme's colors.
    *
    * @param triggerRender request an on-screen frame after redrawing. Pass
    * `false` when redrawing only to feed an offscreen snapshot (dual-theme
@@ -145,7 +146,7 @@ export class Project extends Container {
       component.redraw();
     }
     for (const wire of this._wires.items) {
-      wire.refreshTheme();
+      wire.refreshTint();
     }
     this._connectionPoints.refreshTheme();
     if (triggerRender) this._ticker$.next('single');

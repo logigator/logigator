@@ -152,7 +152,7 @@ Build one with `Wire.snapshot(wire)`.
 
 **File:** `src/app/rendering/graphics/wire.graphics.ts`
 
-A `GraphicsContext` subclass that draws a single 1×1 rectangle filled with the `wire` colour from `ThemingService`. All `Wire` instances (and every component port stub) share this one context — it is cached by `GraphicsProviderService` the first time `WireGraphics` is requested, so theme changes that happen after construction are not reflected automatically. Powered thickness is expressed by the owning `Graphics`' cross-axis scale (see _Constant-Width Stroke_ above), never by a second, thicker context. The module also exports `POWERED_WIRE_THICKNESS` and `POWERED_WIRE_PIVOT`, the transform constants that scale-up uses.
+A `GraphicsContext` subclass that draws a single **white** 1×1 rectangle. The wire's actual color lives entirely in the per-instance tint (`white × tint = the tint exactly`): `Wire.refreshTint()` sets it to the theme's `wire` color, or `wireSelectColor` while `wire.selected` is set. This makes the context theme-independent (`themeIndependent = true`, one `GraphicsProviderService` cache entry across themes) — a theme change retints instances instead of swapping contexts. All `Wire` instances (and every component port stub, which gets the same base tint at draw time) share this one context. Powered thickness is expressed by the owning `Graphics`' cross-axis scale (see _Constant-Width Stroke_ above), never by a second, thicker context. The module also exports `POWERED_WIRE_THICKNESS` and `POWERED_WIRE_PIVOT`, the transform constants that scale-up uses.
 
 ---
 

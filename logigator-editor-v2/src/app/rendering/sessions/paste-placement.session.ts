@@ -43,13 +43,15 @@ export class PastePlacementSession implements DragSession {
     private readonly _components: Component[],
     private readonly _wires: Wire[]
   ) {
+    // Ghosts wear the selection look — on commit, select() keeps them
+    // selected, so the appearance carries over seamlessly.
     for (const c of _components) {
-      c.tint = 0x888888;
+      c.selected = true;
       c.applyScale(_project.scale.x);
       _dragLayer.addChild(c);
     }
     for (const w of _wires) {
-      w.tint = 0x888888;
+      w.selected = true;
       w.applyScale(_project.scale.x);
       _dragLayer.addChild(w);
     }

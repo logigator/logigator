@@ -198,7 +198,7 @@ Each session lives in `rendering/sessions/` and implements `DragSession` (`onMov
 
 **`DragSession.canEnd()`** — called by `WorkModeRouter.up` before committing. Return `false` to keep the session alive (collision block or silent-discard). `WireDrawingSession` and `SelectRectSession` always return `true`. Collision sessions return `!_hasCollision`.
 
-**`ComponentPlacementSession`** — creates a ghost `Component` (tinted `0x888888`) in `_dragLayer`. `_dragLayer.position` tracks the grid-snapped pointer. On construction and on every `onMove`, calls `project.hasComponentCollision` with the ghost's world `gridBounds` (`dragLayer.position + component.gridBounds` offsets). Collision tints `_component` red (`0xff4444`); clearing restores `0x888888`. `canEnd()` returns `false` while colliding — `pointerup` is ignored and the ghost stays live. On `onEnd()`, the component's world position is set from `_dragLayer.position`, then `AddComponentsAction` is pushed (serializes the ghost) and the ghost is destroyed. `_dragLayer.position` is reset to zero.
+**`ComponentPlacementSession`** — creates a ghost `Component` (wearing the selection look: `selected = true`, i.e. the theme's `selectTint`) in `_dragLayer`. `_dragLayer.position` tracks the grid-snapped pointer. On construction and on every `onMove`, calls `project.hasComponentCollision` with the ghost's world `gridBounds` (`dragLayer.position + component.gridBounds` offsets). Collision tints `_component` red (`0xff4444`); clearing calls `refreshTint()` to restore the ghost tint. `canEnd()` returns `false` while colliding — `pointerup` is ignored and the ghost stays live. On `onEnd()`, the component's world position is set from `_dragLayer.position`, then `AddComponentsAction` is pushed (serializes the ghost) and the ghost is destroyed. `_dragLayer.position` is reset to zero.
 
 **`SelectionMoveSession`** — snapshots the selection, calls `project.detachForDrag`, and reparents elements into `_dragLayer`. `onMove` sets `_dragLayer.position` to the grid-snapped delta from the drag start and runs `project.hasComponentCollision` for each dragged component against the fixed quad tree. Collision tints `dragLayer` red (`0xff4444`); clearing restores `0xffffff`. `canEnd()` returns `false` while colliding. `onEnd` (which requires `canEnd() === true`) applies the delta to each element's own position, resets `_dragLayer.position` and `_dragLayer.tint`, calls `project.reattachFromDrag`, and if the delta was non-zero pushes `MoveComponentsAction`/`MoveWiresAction` wrapped in an `ActionContainer`. `onCancel` resets position and tint before reattaching — always safe regardless of collision state.
 
@@ -206,7 +206,7 @@ Each session lives in `rendering/sessions/` and implements `DragSession` (`onMov
 
 **`SelectRectSession`** — adds `_selectRect` to `FloatingLayer` at the click's grid position. `onMove` sets `_selectRect.scale` to the grid-unit delta from start (negative values handle reverse drags). `onEnd` normalizes the rect to a canonical `Rectangle` (always positive width/height), removes `_selectRect`, and calls `project.selectionManager.commit(rect, mode)`. A zero-area rect (no movement) reaches the selection manager unchanged and is handled as a single-click hit test.
 
-**`PastePlacementSession`** — created by `FloatingLayer.startPasteSession()` when the user invokes paste. Receives pre-deserialized `Component[]` and `Wire[]` (fresh instances with new IDs and positions already offset by `PASTE_OFFSET = 2` grid units). Elements are added to `_dragLayer` with tint `0x888888` (placement ghost colour). Two-phase interaction:
+**`PastePlacementSession`** — created by `FloatingLayer.startPasteSession()` when the user invokes paste. Receives pre-deserialized `Component[]` and `Wire[]` (fresh instances with new IDs and positions already offset by `PASTE_OFFSET = 2` grid units). Elements are added to `_dragLayer` with `selected = true` — the ghosts wear the selection look, which carries over seamlessly when `select()` keeps them selected on commit. Two-phase interaction:
 
 1. **Hover phase** (`isDragging = false`) — elements sit at their initial positions. `onMove` is a no-op. The user can click on a ghost to begin dragging, or click off the ghosts to commit immediately at the initial position.
 2. **Drag phase** (`isDragging = true`) — after `beginDrag(anchor)`, `onMove` sets `_dragLayer.position` to the grid-snapped cursor delta from the anchor. Collision is checked after every move via `DragCollisionState`.
@@ -229,11 +229,11 @@ Tints `_dragLayer` red (`0xff4444`) on collision, white (`0xffffff`) otherwise. 
 
 ### Collision tint convention
 
-| Value      | Meaning                                 |
-| ---------- | --------------------------------------- |
-| `0x888888` | Placement ghost default                 |
-| `0xff4444` | Collision — ghost or drag layer         |
-| `0xffffff` | Neutral (drag layer when not colliding) |
+| Value                       | Meaning                                                                      |
+| --------------------------- | ---------------------------------------------------------------------------- |
+| selection look (`selected`) | Placement/paste ghost default — the theme's `selectTint` / `wireSelectColor` |
+| `0xff4444`                  | Collision — ghost or drag layer                                              |
+| `0xffffff`                  | Neutral (drag layer when not colliding)                                      |
 
 ### `updateScale(scale)`
 
@@ -347,7 +347,7 @@ Parameters: `width` (grid units), `height` (grid units), `scale`.
 
 **File:** `graphics/wire.graphics.ts`
 
-A unit `1×1` rectangle filled with the current theme's wire color. `Wire` scales this up via `scale.x = length` (grid units) and compensates line thickness with `scale.y = 1 / (projectScale * gridSize)` so the wire is always exactly 1 screen pixel tall inside `_gridSpace`.
+A white unit `1×1` rectangle; the wire's color is the per-instance tint (theme `wire` color, or `wireSelectColor` while selected — see `wires.md`), which keeps the context theme-independent. `Wire` scales this up via `scale.x = length` (grid units) and compensates line thickness with `scale.y = 1 / (projectScale * gridSize)` so the wire is always exactly 1 screen pixel tall inside `_gridSpace`.
 
 No parameters.
 
@@ -355,7 +355,7 @@ No parameters.
 
 **File:** `graphics/connection-point.graphics.ts`
 
-A unit `1×1` rectangle filled with the current theme's wire color (CPs reuse the wire colour — no separate theme field). `ConnectionPoint` instances pivot-centre this context (`pivot.set(0.5, 0.5)`) and scale it via `scale.set(screenSizePxForScale(scale) / (scale * gridSize))` so the dot stays a fixed screen size regardless of zoom — 4 px when zoomed well out, 6 px otherwise.
+A white unit `1×1` rectangle; like `WireGraphics`, the color is the per-instance tint (CPs reuse the wire colour — no separate theme field). `ConnectionPoint` instances pivot-centre this context (`pivot.set(0.5, 0.5)`) and scale it via `scale.set(screenSizePxForScale(scale) / (scale * gridSize))` so the dot stays a fixed screen size regardless of zoom — 4 px when zoomed well out, 6 px otherwise.
 
 No parameters.
 

@@ -301,7 +301,7 @@ describe('Project connection-point integration', () => {
     expect(cpAt(project, new Point(2.5, 2.5))).toBe(true);
   });
 
-  it('applyTheme restyles existing CPs in place (same instance, tint kept)', () => {
+  it('applyTheme restyles existing CPs in place (same instance, selection kept)', () => {
     const h1 = makeWire(0, 2, WireDirection.HORIZONTAL, 2);
     const h2 = makeWire(2, 2, WireDirection.HORIZONTAL, 3);
     const v = makeWire(2, 0, WireDirection.VERTICAL, 2);
@@ -312,15 +312,17 @@ describe('Project connection-point integration', () => {
     const jn = new Point(2.5, 2.5);
     const cp = project.connectionPoints.getCpAt(jn);
     expect(cp).toBeDefined();
-    cp!.tint = 0xff0000;
+    cp!.selected = true;
+    const selectionTint = cp!.tint;
 
     project.applyTheme(false);
 
     // A theme change recolours in place: the dot is neither destroyed nor
-    // replaced, and its selection tint survives the context swap.
+    // replaced, and its selection state survives the retint.
     expect(project.connectionPoints.getCpAt(jn)).toBe(cp);
     expect(cp!.destroyed).toBe(false);
-    expect(cp!.tint).toBe(0xff0000);
+    expect(cp!.selected).toBe(true);
+    expect(cp!.tint).toBe(selectionTint);
   });
 
   // The drag lifecycle maintains termination counts out of band: detach drops

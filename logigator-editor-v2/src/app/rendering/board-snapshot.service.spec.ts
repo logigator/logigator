@@ -8,7 +8,6 @@ import { makeAnd } from '../../testing/factories';
 import { BoardSnapshotService } from './board-snapshot.service';
 import { RendererService } from './renderer.service';
 import { ThemingService } from '../theming/theming.service';
-import { SelectionManager } from '../project/selection-manager';
 
 interface RenderCall {
   transform: { a: number; d: number; tx: number; ty: number };
@@ -265,11 +264,12 @@ describe('BoardSnapshotService', () => {
   });
 
   it('neutralizes the selection tint during the content pass and restores it', () => {
+    const selectTint = TestBed.inject(ThemingService).currentTheme().selectTint;
     const comp = makeAnd(2);
     comp.position.set(0, 0);
     project.addComponent(comp);
     project.selectionManager.select([comp], []);
-    expect(comp.tint).toBe(SelectionManager.SELECTION_TINT);
+    expect(comp.tint).toBe(selectTint);
 
     let tintDuringRender: number | null = null;
     (renderer.render as Mock).mockImplementation((opts: RenderCall) => {
@@ -284,7 +284,7 @@ describe('BoardSnapshotService', () => {
 
     // White (no highlight) while rendering; back to the selection tint after.
     expect(tintDuringRender).toBe(0xffffff);
-    expect(comp.tint).toBe(SelectionManager.SELECTION_TINT);
+    expect(comp.tint).toBe(selectTint);
     texture.destroy(true);
   });
 

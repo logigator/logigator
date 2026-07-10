@@ -45,7 +45,8 @@ export class ComponentPlacementSession implements DragSession {
       Object.entries(config.options).map(([key, opt]) => [key, opt.clone()])
     );
     this._component = config.create(options);
-    this._component.tint = 0x888888;
+    // The placement ghost wears the selection look (theme-keyed tint).
+    this._component.selected = true;
     this._component.applyScale(project.scale.x);
     this._component.position.set(0, 0);
     dragLayer.addChild(this._component);
@@ -145,7 +146,11 @@ export class ComponentPlacementSession implements DragSession {
     this._hasCollision = collision;
     // Tint this._component directly (not dragLayer) to avoid multiplying
     // with the container's own tint, which would yield the wrong colour.
-    this._component.tint = collision ? 0xff4444 : 0x888888;
+    if (collision) {
+      this._component.tint = 0xff4444;
+    } else {
+      this._component.refreshTint();
+    }
   }
 
   /**

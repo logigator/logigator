@@ -22,6 +22,13 @@ const DROPPED_EVENTS: ReadonlySet<string | symbol> = new Set([
  * of a big board on every zoom step degrades quadratically.
  */
 export class StaticGraphicsContext extends GraphicsContext {
+  /**
+   * Contexts that bake no theme colors (white-base geometry colored via
+   * per-instance tint) share one cache entry across themes — the provider
+   * drops the theme from their cache key.
+   */
+  public static readonly themeIndependent: boolean = false;
+
   constructor() {
     super();
     // Opting out of the renderer's GC guarantees `unload` can never fire:

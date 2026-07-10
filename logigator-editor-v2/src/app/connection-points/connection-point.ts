@@ -2,6 +2,7 @@ import { Graphics, Point } from 'pixi.js';
 import { getStaticDI } from '../utils/get-di';
 import { GraphicsProviderService } from '../rendering/graphics-provider.service';
 import { ConnectionPointGraphics } from '../rendering/graphics/connection-point.graphics';
+import { ThemingService } from '../theming/theming.service';
 import { PX } from '../utils/grid';
 import { clamp } from '../utils/math';
 
@@ -23,12 +24,16 @@ export class ConnectionPoint extends Graphics {
   private readonly _graphicsProviderService = getStaticDI(
     GraphicsProviderService
   );
+  private readonly _themingService = getStaticDI(ThemingService);
+
+  private _selected = false;
 
   constructor(position: Point) {
     super();
     this.context = this._graphicsProviderService.getGraphicsContext(
       ConnectionPointGraphics
     );
+    this.refreshTint();
     this.position.copyFrom(position);
     // pivot at (0.5, 0.5) within the 1×1 unit square centres the dot on position
     this.pivot.set(0.5, 0.5);
@@ -38,14 +43,23 @@ export class ConnectionPoint extends Graphics {
     this.scale.set(scaleForScale(scale));
   }
 
+  /** Whether the dot carries the selection color (see {@link refreshTint}). */
+  public get selected(): boolean {
+    return this._selected;
+  }
+
+  public set selected(value: boolean) {
+    this._selected = value;
+    this.refreshTint();
+  }
+
   /**
-   * Re-fetches the dot's context after a theme change. The cache is
-   * theme-keyed, so this returns a freshly-colored context; the instance's
-   * selection tint and scale carry over untouched.
+   * Re-derives the tint from the current theme and selection state. The
+   * shared context is a white base (see ConnectionPointGraphics), so the tint
+   * IS the dot's color — this doubles as the theme-change hook.
    */
-  public refreshTheme(): void {
-    this.context = this._graphicsProviderService.getGraphicsContext(
-      ConnectionPointGraphics
-    );
+  public refreshTint(): void {
+    const theme = this._themingService.currentTheme();
+    this.tint = this._selected ? theme.wireSelectColor : theme.wire;
   }
 }

@@ -1,6 +1,4 @@
 import { StaticGraphicsContext } from './static-graphics-context';
-import { getStaticDI } from '../../utils/get-di';
-import { ThemingService } from '../../theming/theming.service';
 
 /** Thickness of a powered wire/stub during simulation (unpowered = 1). */
 export const POWERED_WIRE_THICKNESS = 3;
@@ -15,10 +13,15 @@ export const POWERED_WIRE_PIVOT =
   (POWERED_WIRE_THICKNESS - 1) / (2 * POWERED_WIRE_THICKNESS);
 
 export class WireGraphics extends StaticGraphicsContext {
+  // White base: the wire's color (theme wire color, or the selection color)
+  // lives entirely in the per-instance tint — white × tint = the tint exactly.
+  // Keeps the context theme-independent, so a theme change retints instances
+  // instead of swapping contexts.
+  public static override readonly themeIndependent = true;
+
   constructor() {
     super();
 
-    const themingService = getStaticDI(ThemingService);
     // A 1×1 rect hanging its thickness on the +y side of the centre-line.
     // Powered thickness is expressed by the owning Graphics' cross-axis scale
     // (with POWERED_WIRE_PIVOT keeping it centred), never by a context swap:
@@ -27,6 +30,6 @@ export class WireGraphics extends StaticGraphicsContext {
     // the render group for a full instruction rebuild, while transform
     // changes patch the batch in place.
     this.rect(0, 0, 1, 1);
-    this.fill(themingService.currentTheme().wire);
+    this.fill(0xffffff);
   }
 }

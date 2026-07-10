@@ -101,7 +101,7 @@ The manager owns the `ConnectionPointLayer`, the `Map<string, ConnectionPoint>` 
 
 **File:** `rendering/graphics/connection-point.graphics.ts`
 
-`GraphicsContext` subclass. Draws a unit `1×1` rectangle filled with the current theme's `wire` colour (no separate theme field). Cached by `GraphicsProviderService`, so theme changes mid-session do not repaint existing CPs — same limitation as `WireGraphics`.
+`GraphicsContext` subclass. Draws a **white** unit `1×1` rectangle; the dot's color lives in the per-instance tint (`ConnectionPoint.refreshTint()`: the theme's `wire` colour, or `wireSelectColor` while `selected`). The context is theme-independent (`themeIndependent = true`) and cached by `GraphicsProviderService`; a theme change retints existing CPs in place — same scheme as `WireGraphics`.
 
 ---
 

@@ -24,7 +24,7 @@ import { AndComponent } from '../components/component-types/and/and.component';
  */
 function makeComponent(x: number, y: number, w: number, h: number): any {
   return {
-    tint: 0xffffff,
+    selected: false,
     destroyed: false,
     connectionPoints: [] as Point[],
     get gridBounds() {
@@ -36,7 +36,7 @@ function makeComponent(x: number, y: number, w: number, h: number): any {
 /** Creates a minimal wire-like object. */
 function makeWire(x: number, y: number, w: number, h: number): any {
   return {
-    tint: 0xffffff,
+    selected: false,
     destroyed: false,
     connectionPoints: [new Point(x, y), new Point(x + w - 1, y)] as [
       Point,
@@ -71,7 +71,7 @@ function makeFullWire(
       ? new Point(posX + length, posY)
       : new Point(posX, posY + length);
   return {
-    tint: 0xffffff,
+    selected: false,
     destroyed: false,
     direction,
     position: pos,
@@ -161,13 +161,13 @@ describe('SelectionManager', () => {
       expect(manager.selectedComponents.has(comp)).toBe(true);
     });
 
-    it('sets SELECTION_TINT on selected components', () => {
+    it('flags selected components as selected', () => {
       const comp = makeComponent(0, 0, 2, 2);
       setComponents(project, comp);
 
       manager.commit(new Rectangle(0, 0, 5, 5), WorkMode.SELECT);
 
-      expect(comp.tint).toBe(SelectionManager.SELECTION_TINT);
+      expect(comp.selected).toBe(true);
     });
 
     it('adds wires returned by queryWiresInRange to selectedWires', () => {
@@ -179,13 +179,13 @@ describe('SelectionManager', () => {
       expect(manager.selectedWires.has(wire)).toBe(true);
     });
 
-    it('sets SELECTION_TINT on selected wires', () => {
+    it('flags selected wires as selected', () => {
       const wire = makeWire(0, 0, 3, 1);
       setWires(project, wire);
 
       manager.commit(new Rectangle(0, 0, 5, 5), WorkMode.SELECT);
 
-      expect(wire.tint).toBe(SelectionManager.SELECTION_TINT);
+      expect(wire.selected).toBe(true);
     });
 
     it('clears the previous selection on a second commit', () => {
@@ -201,8 +201,8 @@ describe('SelectionManager', () => {
 
       expect(manager.selectedComponents.has(compA)).toBe(false);
       expect(manager.selectedComponents.has(compB)).toBe(true);
-      // tint of previously selected component is restored.
-      expect(compA.tint).toBe(0xffffff);
+      // The previously selected component loses its highlight.
+      expect(compA.selected).toBe(false);
     });
 
     it('isEmpty becomes false after committing with results', () => {
@@ -340,10 +340,10 @@ describe('SelectionManager', () => {
         expect(manager.selectedWires.has(outsideLeft)).toBe(false);
         expect(manager.selectedWires.has(outsideRight)).toBe(false);
 
-        // Inside piece is tinted; outside pieces stay at default tint.
-        expect(insidePiece.tint).toBe(SelectionManager.SELECTION_TINT);
-        expect(outsideLeft.tint).toBe(0xffffff);
-        expect(outsideRight.tint).toBe(0xffffff);
+        // Inside piece is highlighted; outside pieces stay unselected.
+        expect(insidePiece.selected).toBe(true);
+        expect(outsideLeft.selected).toBe(false);
+        expect(outsideRight.selected).toBe(false);
       });
 
       it('clear() rolls back the pending cut: adds originals back, removes pieces', () => {
@@ -414,7 +414,7 @@ describe('SelectionManager', () => {
       manager.commit(new Rectangle(3, 3, 0, 0), WorkMode.SELECT);
 
       expect(manager.selectedComponents.has(comp)).toBe(true);
-      expect(comp.tint).toBe(SelectionManager.SELECTION_TINT);
+      expect(comp.selected).toBe(true);
     });
 
     it('selects a wire when no component is at the click point', () => {
@@ -425,7 +425,7 @@ describe('SelectionManager', () => {
       manager.commit(new Rectangle(2, 3, 0, 0), WorkMode.SELECT);
 
       expect(manager.selectedWires.has(wire)).toBe(true);
-      expect(wire.tint).toBe(SelectionManager.SELECTION_TINT);
+      expect(wire.selected).toBe(true);
     });
 
     it('prefers the component over a wire when the component has a smaller bounding area', () => {
@@ -511,28 +511,28 @@ describe('SelectionManager', () => {
       expect(manager.selectedWires.size).toBe(0);
     });
 
-    it('restores tint to 0xffffff on non-destroyed components', () => {
+    it('deselects non-destroyed components', () => {
       const comp = makeComponent(0, 0, 2, 2);
       setComponents(project, comp);
       manager.commit(new Rectangle(0, 0, 5, 5), WorkMode.SELECT);
-      expect(comp.tint).toBe(SelectionManager.SELECTION_TINT);
+      expect(comp.selected).toBe(true);
 
       manager.clear();
 
-      expect(comp.tint).toBe(0xffffff);
+      expect(comp.selected).toBe(false);
     });
 
-    it('restores tint to 0xffffff on non-destroyed wires', () => {
+    it('deselects non-destroyed wires', () => {
       const wire = makeWire(0, 0, 3, 1);
       setWires(project, wire);
       manager.commit(new Rectangle(0, 0, 5, 5), WorkMode.SELECT);
 
       manager.clear();
 
-      expect(wire.tint).toBe(0xffffff);
+      expect(wire.selected).toBe(false);
     });
 
-    it('skips tint restoration for destroyed components', () => {
+    it('skips deselection for destroyed components', () => {
       const comp = makeComponent(0, 0, 2, 2);
       setComponents(project, comp);
       manager.commit(new Rectangle(0, 0, 5, 5), WorkMode.SELECT);
@@ -542,11 +542,11 @@ describe('SelectionManager', () => {
 
       manager.clear();
 
-      // Tint must NOT have been reset — still SELECTION_TINT.
-      expect(comp.tint).toBe(SelectionManager.SELECTION_TINT);
+      // The flag must NOT have been touched on a destroyed node.
+      expect(comp.selected).toBe(true);
     });
 
-    it('skips tint restoration for destroyed wires', () => {
+    it('skips deselection for destroyed wires', () => {
       const wire = makeWire(0, 0, 3, 1);
       setWires(project, wire);
       manager.commit(new Rectangle(0, 0, 5, 5), WorkMode.SELECT);
@@ -555,7 +555,7 @@ describe('SelectionManager', () => {
 
       manager.clear();
 
-      expect(wire.tint).toBe(SelectionManager.SELECTION_TINT);
+      expect(wire.selected).toBe(true);
     });
 
     it('isEmpty is true after clear', () => {
@@ -669,7 +669,7 @@ describe('SelectionManager', () => {
       // Mutable bounds stand in for a committed move (and its undo).
       const pos = new Point(2, 3);
       const comp: any = {
-        tint: 0xffffff,
+        selected: false,
         destroyed: false,
         connectionPoints: [] as Point[],
         get gridBounds() {
