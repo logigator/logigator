@@ -9,7 +9,7 @@ import { SerializedCircuitBody } from '../../persistence/serialized-circuit';
  * - a **snapshot** — a **frozen** copy embedded in a host project at place time,
  *   carrying provenance ({@link id} + {@link version}) back to its master. A
  *   placed instance always wraps a snapshot, so editing a master never changes
- *   already-placed instances (see the custom-components plan, §G).
+ *   already-placed instances.
  *
  * The "one mutable object, mutated in place by `updateDefinition`" rule applies
  * **only to masters**. Snapshots are immutable — created frozen and never edited;

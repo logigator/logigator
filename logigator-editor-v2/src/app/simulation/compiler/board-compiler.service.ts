@@ -55,9 +55,9 @@ const UNIT_TYPES: ReadonlySet<number> = new Set([
 /**
  * The simulator's UserInput type id. The editor's BUTTON and SWITCH are both
  * UserInputs to the engine and must emit this exact type — the engine rejects
- * any other id (it previously accepted the whole 200–299 block). Button vs.
- * switch behaviour is a `Pulse`/`Cont` distinction made at `triggerInput` time
- * from the component instance, not from the descriptor type.
+ * any other id. Button vs. switch behaviour is a `Pulse`/`Cont` distinction
+ * made at `triggerInput` time from the component instance, not from the
+ * descriptor type.
  */
 const ENGINE_USER_INPUT_TYPE = 200;
 
@@ -327,8 +327,7 @@ export class BoardCompilerService {
    * Electrically joins the nets of all tunnels sharing a label by unioning
    * their nodes ("wireless wires"). Tunnels are scoped to their own circuit:
    * this runs once per compilation pass (board and each template), so a label
-   * never leaks across a custom-component boundary — matching the legacy
-   * editor's per-sheet tunnel ids.
+   * never leaks across a custom-component boundary.
    */
   private _unionTunnelNets(
     components: Component[],

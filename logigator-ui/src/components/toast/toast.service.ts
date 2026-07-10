@@ -13,10 +13,9 @@ export interface ToastMessage {
 }
 
 /**
- * Pushes toast notifications imperatively — the in-house replacement for
- * PrimeNG's `MessageService`. `add()` emits onto {@link messageObserver}, which
- * the `<lg-toast>` outlet renders. `root`-provided, so no provider wiring is
- * needed at call sites.
+ * Pushes toast notifications imperatively. `add()` emits onto
+ * {@link messageObserver}, which the `<lg-toast>` outlet renders. `root`-provided,
+ * so no provider wiring is needed at call sites.
  */
 @Injectable({ providedIn: 'root' })
 export class ToastService {

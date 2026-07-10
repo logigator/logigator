@@ -55,9 +55,9 @@ describe('LgList', () => {
     expect(items[1].querySelector('i.ph-file')).toBeNull();
   });
 
-  // Mirrors the logout dialog exactly: each row decides its subtitle with a
-  // per-item `@if`, so the template lives in a conditionally-created view. Rows
-  // that provide it must render it; rows that don't must stay single-line.
+  // Each row decides its subtitle with a per-item `@if`, so the template lives
+  // in a conditionally-created view. Rows that provide it must render it; rows
+  // that don't must stay single-line.
   it('resolves per-row subtitle slots wrapped in @if', () => {
     @Component({
       imports: [LgList, LgListItem],

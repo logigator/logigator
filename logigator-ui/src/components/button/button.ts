@@ -25,10 +25,8 @@ const BASE =
   'focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-current';
 
 // Severity → class table. primary/secondary track the themeable primary/surface
-// scales (an exact match for Aura); info/success/warn/danger use the semantic
-// state palette (a deliberate, themeable consolidation of Aura's button-specific
-// sky/green/orange/red — flagged for the Phase 8 visual pass); none is a muted,
-// chromeless neutral.
+// scales; info/success/warn/danger use the semantic state palette; none is a
+// muted, chromeless neutral.
 const SEVERITY: Record<LgButtonVariant, Record<SeverityKey, string>> = {
   solid: {
     primary:
@@ -80,11 +78,10 @@ const ICON_ONLY_TEXT: Record<LgSize, string> = {
 };
 
 /**
- * A native `<button>` skin. Mirrors the slice of PrimeNG's `p-button` API the
- * editor uses: `label` (omit for an icon-only button), `icon` (an icon-font
- * class string), `severity`, `size`, `text`/`outlined`/`rounded`, `disabled`,
- * `loading`, `type`, and `ariaLabel`. Emits `onClick` (kept on the `on` prefix
- * to match PrimeNG's event name). Layout classes go on the host (`<lg-button
+ * A native `<button>` skin. Exposes `label` (omit for an icon-only button),
+ * `icon` (an icon-font class string), `severity`, `size`,
+ * `text`/`outlined`/`rounded`, `disabled`, `loading`, `type`, and `ariaLabel`,
+ * and emits `onClick`. Layout classes go on the host (`<lg-button
  * class="w-full">`); the inner button fills it. `styleClass` is merged onto
  * the inner `<button>` alongside the variant/severity classes.
  */
@@ -133,7 +130,7 @@ export class LgButton {
   readonly ariaLabel = input<string>();
   readonly styleClass = input<string>('');
 
-  // Named `onClick` to match PrimeNG's event (see no-output-on-prefix off).
+  // On-prefixed output name; no-output-on-prefix is disabled for it.
   readonly onClick = output<MouseEvent>();
 
   protected readonly hasLabel = computed(() => {

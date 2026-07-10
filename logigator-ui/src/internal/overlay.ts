@@ -11,8 +11,7 @@ import { ConnectedPosition, Overlay, OverlayRef } from '@angular/cdk/overlay';
  * Drawing the caret/arrow and wiring dismissal stay with each consumer (they
  * differ — a tooltip dismisses on blur, a popover on outside-click), but
  * {@link sideOfPosition} lets a consumer read back which side actually won so it
- * can place its caret. The centered/edge-pinned *global* overlays (modals,
- * drawer) are added with their first consumer.
+ * can place its caret.
  */
 export type LgOverlaySide = 'top' | 'bottom' | 'left' | 'right';
 

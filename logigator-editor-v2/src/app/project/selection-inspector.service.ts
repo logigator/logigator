@@ -5,7 +5,7 @@ import { Component } from '../components/component';
 import { ProjectService } from './project.service';
 
 /**
- * Bridges canvas selection into the Angular settings panel (R11). It tracks the
+ * Bridges canvas selection into the Angular settings panel. It tracks the
  * **active project's** selection and exposes the single selected placed
  * component — the one whose options the inspector should edit.
  *

@@ -26,7 +26,7 @@ import { LgButton } from '../button/button';
 import { Confirmation } from './confirmation';
 import { LgConfirmOutlet } from './confirm-outlet';
 
-/** PrimeNG's confirm-popup gutter between the anchor and the panel. */
+/** Gutter between the anchor and the popup panel. */
 const POPUP_GAP = 10;
 
 /**

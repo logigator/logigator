@@ -210,7 +210,7 @@ export class SelectionManager {
   }
 
   // Re-evaluates which connection points count as selected based on the current
-  // selection. Called after initial selection and after a drag-move recomputes CPs.
+  // selection.
   public retintCps(): void {
     for (const cp of this._selectedConnectionPoints) {
       if (!cp.destroyed) cp.selected = false;
@@ -308,9 +308,8 @@ export class SelectionManager {
     );
   }
 
-  // Called by ActionManager.undo so Ctrl+Z while a tentative cut is active
-  // reverts the cut instead of consuming the real undo stack. Returns true
-  // when something was rolled back.
+  // Reverts a tentative cut so Ctrl+Z while one is active doesn't consume the
+  // real undo stack. Returns true when something was rolled back.
   //
   // TODO: this is not safe during an in-flight SelectionMoveSession — the
   // inside pieces are detached from the quad tree (held by dragLayer), so
@@ -345,8 +344,8 @@ export class SelectionManager {
     }
   }
 
-  // Called from Project.removeComponent/removeWire before destroy() to prevent
-  // the set from holding a dead Container reference.
+  // Drops an element from the selection sets before it is destroyed, so they
+  // never retain a dead Container reference.
   public evict(element: Component | Wire): void {
     let changed: boolean;
     if (element instanceof Component) {

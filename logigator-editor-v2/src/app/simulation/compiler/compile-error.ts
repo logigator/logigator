@@ -1,5 +1,5 @@
 export type CompileDiagnosticKind =
-  /** A component type the simulator has no implementation for (e.g. ROM). */
+  /** A component type the simulator has no implementation for. */
   | 'unsupported'
   /** A custom definition without an inlined snapshot circuit. */
   | 'missing-circuit'

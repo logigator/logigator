@@ -335,9 +335,7 @@ export class Project extends Container {
         // new port position (I2 violation) or unblock a previously-blocked
         // collinear merge at an old port. Run the integrator to restore
         // invariants. Note: this path bypasses ActionManager, so the implied
-        // wire splits/merges are NOT undoable. Rotation itself was already
-        // not undoable before this refactor; full undo support is tracked
-        // as a future task (see wire-connection-refactor.md Phase 4).
+        // wire splits/merges are NOT undoable.
         const { toAdd, toRemove } = this.computeIntegration({
           movedComponentPorts: [{ oldPorts, newPorts }]
         });

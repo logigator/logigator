@@ -232,7 +232,7 @@ describe('SelectionManager', () => {
     });
 
     it('includes a component that partially overlaps the rect boundary (touching rule)', () => {
-      // Old behavior excluded this; new behavior matches SELECT — touch is enough.
+      // Touch is enough — same intersect rule as SELECT.
       const comp = makeComponent(5, 2, 3, 2);
       setComponents(project, comp);
 

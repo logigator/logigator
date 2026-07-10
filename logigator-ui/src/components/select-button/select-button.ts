@@ -90,10 +90,10 @@ export class LgSelectButton implements ControlValueAccessor {
   private onChange: (value: unknown) => void = () => undefined;
   protected onTouched: () => void = () => undefined;
 
-  // The group is a muted "track" (no border) one step under the pill: Aura's
+  // The group is a muted "track" (no border) one step under the pill:
   // surface-100 in light, surface-950 in dark. The selected segment floats
-  // above it as a raised pill, the rest are flat muted text — Aura's
-  // segmented-toggle look, not a primary fill.
+  // above it as a raised pill, the rest are flat muted text — not a primary
+  // fill.
   protected readonly groupClasses = computed(() =>
     [
       'rounded-md p-1 bg-surface-100 dark:bg-surface-950',

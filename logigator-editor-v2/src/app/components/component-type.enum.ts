@@ -1,4 +1,4 @@
-// Values match the old editor's ElementTypeId for wire-format compatibility.
+// Values are fixed by the wire format.
 export const enum BuiltInComponentType {
   NOT = 1,
   AND = 2,
@@ -25,7 +25,7 @@ export const enum BuiltInComponentType {
   OUTPUT = 101,
   // User-input components driving a running simulation.
   BUTTON = 200,
-  // The old editor names id 201 LEVER; only the display name changed.
+  // Wire format names id 201 a lever; shown as a switch here.
   SWITCH = 201,
   LED = 202,
   SEGMENT_DISPLAY = 203,
@@ -46,6 +46,6 @@ export type ComponentType = BuiltInComponentType | CustomComponentType;
  * Type ids at or above this are runtime-allocated custom components; built-ins
  * occupy the fixed {@link BuiltInComponentType} range below it. A custom type id
  * is session-global and stable across every open project for the lifetime of the
- * page. Mirrors the legacy editor's reserved high range.
+ * page.
  */
 export const CUSTOM_TYPE_ID_BASE = 1000;

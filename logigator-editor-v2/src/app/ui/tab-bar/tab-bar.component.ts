@@ -82,7 +82,7 @@ export class TabBarComponent {
   }
 
   // Tab switching is disabled while simulating — the simulation binds to the
-  // active project (a read-only variant comes with nested inspection later).
+  // active project.
   protected activate(project: Project): void {
     if (this.isSimulation()) return;
     this.projectService.setActiveProject(project);

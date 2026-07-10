@@ -140,7 +140,7 @@ export class ComponentListComponent {
   /**
    * The palette's user (master) components, newest-edited first and cycle-filtered
    * while editing a component: placing the edited master itself or any master that
-   * (transitively) depends on it would close a cycle, so both are excluded ([§H]).
+   * (transitively) depends on it would close a cycle, so both are excluded.
    */
   public readonly userComponents = computed(() => {
     // A registry save/promotion re-stamps a master and bumps this revision; read

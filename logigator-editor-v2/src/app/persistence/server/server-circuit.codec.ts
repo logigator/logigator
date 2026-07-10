@@ -22,7 +22,7 @@
  * (`persistence/snapshots.ts`): every custom the project transitively places
  * becomes a `dependencies[]` entry carrying the legacy `{ id, model }` (for
  * old-client compat) **plus** the additive frozen `snapshot` (the embedded
- * circuit, named per R14). The document body and the snapshot bodies all use
+ * circuit). The document body and the snapshot bodies all use
  * file-local type ids (≥ {@link CUSTOM_TYPE_ID_BASE}) so the decode's
  * `ingestSnapshots` can remap them to session ids in one pass.
  */

@@ -130,7 +130,7 @@ export class AppComponent {
   // Opens the settings sheet on mobile when a component becomes selected (the
   // only door to it) and closes it again when the selection goes away so it
   // never lingers as a blank panel. Suppressed during placement (a modal sheet
-  // would block tap-to-place — see plan §6.2). Reacts only to selection
+  // would block tap-to-place). Reacts only to selection
   // *transitions* so opening another sheet while a component stays selected
   // doesn't yank the user back to settings.
   private _prevSelected: CircuitComponent | null = null;

@@ -43,7 +43,7 @@ function isoToEpoch(iso: string | undefined): number | undefined {
  * Server transport + codec + metadata + build, returning `Project`s. Owns every
  * method coupled to the legacy positional API; the facade keeps main-slot
  * orchestration, navigation and dirty-dispatch. Deleted wholesale when the
- * native-model API ships (see CLAUDE.md).
+ * native-model API ships.
  */
 @Injectable({ providedIn: 'root' })
 export class ServerPersistenceGateway {

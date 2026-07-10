@@ -73,8 +73,7 @@ describe('Cached decorator', () => {
     // NOTE: The Cached implementation stores the cache object on the *prototype*
     // (`target[cacheKey] = { key: null, val: null }`), not on each instance.
     // Therefore all instances of the same decorated class share one cache slot.
-    // The task brief asked us to assert isolation; the actual behaviour is the
-    // opposite — this test documents the real (shared-prototype) contract.
+    // This test documents the shared-prototype contract.
     it('instances share the same prototype-level cache slot (no keyGenerator)', () => {
       let counter = 0;
       const Fixture = makeSimpleClass(() => ++counter);

@@ -7,7 +7,7 @@ export const PROJECT_DUMP_VERSION = 1;
 /**
  * Debug-only "Project Dump": a circuit plus everything needed to reconstruct the
  * exact in-memory session it came from. Generated and re-imported from the debug
- * menu (see `DebugMenuService`); never produced by normal save/export.
+ * menu; never produced by normal save/export.
  *
  * `project` is a normal native circuit-file document — it loads just like a file
  * import. Because that format drops element ids on load, `componentIds`/`wireIds`

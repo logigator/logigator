@@ -28,7 +28,7 @@ export interface ImageExportOptions {
 
 /**
  * Largest texture side (px) rendered in a single pass. Beyond it the multiplier
- * is clamped and the user warned, rather than tiling (a documented follow-up).
+ * is clamped and the user warned, rather than tiling.
  * Conservative across GPUs (WebGPU `maxTextureDimension2D` defaults to 8192) and
  * browser 2D-canvas limits.
  */

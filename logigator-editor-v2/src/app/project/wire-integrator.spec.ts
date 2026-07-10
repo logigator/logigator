@@ -51,7 +51,7 @@ describe('WireIntegrator', () => {
     for (const c of components) if (!c.destroyed) c.destroy({ children: true });
   });
 
-  // --- Merge cases (existing behavior) ---
+  // --- Merge cases ---
 
   it('no existing wires — returns added wire unchanged', () => {
     const n = makeWire(0, 0, WireDirection.HORIZONTAL, 3);
@@ -223,7 +223,7 @@ describe('WireIntegrator', () => {
       SCALE
     );
     expect(toRemove).toContain(e);
-    // n1 and n2 were addedWires; under new semantics they don't appear in toRemove.
+    // n1 and n2 were addedWires, so they don't appear in toRemove.
     expect(toRemove).not.toContain(n1);
     expect(toRemove).not.toContain(n2);
     expect(toAdd.length).toBe(1);
@@ -252,7 +252,7 @@ describe('WireIntegrator', () => {
     n2.destroy();
   });
 
-  // --- Split cases (new behavior) ---
+  // --- Split cases ---
 
   it('new wire endpoint lands on existing wire interior → splits existing', () => {
     // Existing H wire (0.5,0.5)→(6.5,0.5); new V wire endpoint at (3.5, 0.5).
@@ -355,7 +355,7 @@ describe('WireIntegrator', () => {
     h.destroy();
   });
 
-  // --- Re-merge cases (new behavior) ---
+  // --- Re-merge cases ---
 
   it('wire removed leaves merge-able collinear neighbors → merge', () => {
     // A (0.5,2.5)→(3.5,2.5), B (3.5,2.5)→(6.5,2.5), V endpoint at (3.5, 2.5) blocking merge.
@@ -407,7 +407,7 @@ describe('WireIntegrator', () => {
     expect(toRemove).toEqual([lonely]);
   });
 
-  // --- Move cases (new behavior) ---
+  // --- Move cases ---
 
   it('moved wire endpoint lands on existing wire interior → splits existing', () => {
     // Existing horizontal wire (0.5, 0.5)→(6.5, 0.5).

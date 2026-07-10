@@ -41,7 +41,7 @@ const POSITION_HIDDEN: Record<DrawerPosition, string> = {
   bottom: 'translate-y-full'
 };
 
-// A border on the edge facing the content (the inner edge), matching Aura.
+// A border on the edge facing the content (the inner edge).
 const POSITION_BORDER: Record<DrawerPosition, string> = {
   left: 'border-e border-border',
   right: 'border-s border-border',

@@ -142,8 +142,8 @@ export class CustomComponentRegistry {
 
   /**
    * Registers one frozen snapshot definition and returns its fresh type id. The
-   * lower-level primitive behind {@link snapshot} (and, in a later phase, the
-   * embedded-snapshot load path). Not added to the masters id index.
+   * lower-level primitive behind {@link snapshot}. Not added to the masters id
+   * index.
    */
   public registerSnapshot(def: DefinitionInit): number {
     return this._register(def);

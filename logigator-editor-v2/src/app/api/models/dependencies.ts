@@ -1,12 +1,12 @@
 import type { ProjectElement } from './project-element';
 
 /**
- * Additive (R14): a frozen copy of a custom dependency's circuit, embedded in a
- * project/component save so the saved document is self-contained. Backward
- * compatible — old clients ignore this field and fetch the live library
- * component (rendering always-latest), new clients render straight from it and
- * never refetch. Its body is the legacy positional `ProjectElement[]` (the same
- * wire shape as the document body), folded in per-dependency.
+ * A frozen copy of a custom dependency's circuit, embedded in a project/component
+ * save so the saved document is self-contained. Optional and backward compatible:
+ * clients that don't understand it ignore it and fetch the live library component
+ * instead, while clients that do render straight from it and never refetch. Its
+ * body is the legacy positional `ProjectElement[]` (the same wire shape as the
+ * document body), folded in per-dependency.
  *
  * The summary fields (`numInputs`/`numOutputs`/`labels`/…) are the **frozen**
  * values as placed — deliberately duplicated out of the response `dependency`
@@ -32,7 +32,7 @@ export interface DependencyMapping {
   id: string;
   model: number;
   /**
-   * Additive (R14) — the frozen embedded circuit (see {@link DependencySnapshot}).
+   * The frozen embedded circuit (see {@link DependencySnapshot}).
    * Absent for non-custom dependencies and for old write clients.
    */
   snapshot?: DependencySnapshot;

@@ -7,9 +7,8 @@ import { Wire } from '../../wires/wire';
  * Shared collision detection for drag sessions that move components and wires
  * over a drag layer. Tints the drag layer red on collision, white otherwise.
  *
- * Used by PastePlacementSession and SelectionMoveSession.
- * ComponentPlacementSession has a single-component, direct-tint variant
- * that is different enough to keep inline.
+ * Single-component placement keeps its own direct-tint variant inline, since
+ * it differs enough not to share this.
  */
 export class DragCollisionState {
   private _hasCollision = false;

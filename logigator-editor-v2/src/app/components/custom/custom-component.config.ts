@@ -13,8 +13,7 @@ import { ShareComponentAction } from './actions/share-component.component-action
 /**
  * Option set for every custom component instance. Unlike built-ins, a custom
  * component's port counts come from its {@link CustomComponentDefinition}, never
- * from the element — so the only per-instance option is `direction` (Invariant A
- * in the custom-components plan).
+ * from the element — so the only per-instance option is `direction`.
  */
 export interface CustomComponentOptions {
   [key: string]: ComponentOption;

@@ -181,8 +181,8 @@ describe('SimulationWorkerService', () => {
 
   it('holds powered links across an empty delta instead of clearing them', async () => {
     // An empty delta (nothing changed since the last poll) must be a no-op:
-    // it once fell through to applyFull with an empty buffer, reading every
-    // link as 0 and clearing the board on every quiescent frame.
+    // falling through to applyFull with an empty buffer would read every link
+    // as 0 and clear the board on every quiescent frame.
     const wire = { setPowered: vi.fn() };
     const realApplier = new LinkStateApplier([
       { wires: [wire], ports: [] }

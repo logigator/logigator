@@ -55,7 +55,7 @@ const REFERENCE_STEP = 0;
 
 /**
  * Renders a project's content into an offscreen `RenderTexture`. The reusable
- * primitive behind image export, server previews and (later) a minimap: it
+ * primitive behind image export, server previews and the minimap: it
  * renders the *real* scene graph, so every component type — including ROM and
  * flattened custom components — is covered without any per-type code.
  *

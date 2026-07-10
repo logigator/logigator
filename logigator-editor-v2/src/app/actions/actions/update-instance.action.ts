@@ -5,7 +5,7 @@ import { Component } from '../../components/component';
 
 /**
  * Brings a placed custom instance up to date — the **only** path by which a
- * placed instance's shape changes ([§G]). A frozen snapshot is never mutated;
+ * placed instance's shape changes. A frozen snapshot is never mutated;
  * instead the selected instance is **replaced** by a fresh instance of a new
  * snapshot type (taken from the master's current state) at the same
  * position/direction. Modelled as remove-then-add so it is undoable and dirties

@@ -20,8 +20,8 @@ import { LgShortcut } from '../shortcut/shortcut';
 import { MENU_ITEM_CLASS, MenuItem } from './menu-item.model';
 
 /**
- * Submenu drop positions: flush below/left-aligned (the panel hugs the bar,
- * like PrimeNG's menubar), flipping up, then right-aligned.
+ * Submenu drop positions: flush below/left-aligned (the panel hugs the bar),
+ * flipping up, then right-aligned.
  */
 const SUBMENU_POSITIONS: ConnectedPosition[] = [
   {

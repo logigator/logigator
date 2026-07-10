@@ -37,7 +37,7 @@ export class ComponentSettingsComponent {
   public readonly floating = input(true);
 
   // The settings panel shows the placement ghost while placing, otherwise the
-  // single selected placed component (R11). Each branch supplies a `commit`
+  // single selected placed component. Each branch supplies a `commit`
   // callback that a renderer invokes on edit: the ghost writes its option
   // directly (the eventual AddComponentsAction captures the final values); a
   // placed component routes the write through ChangeOptionAction (undoable +

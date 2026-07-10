@@ -345,9 +345,8 @@ describe('CustomComponentRegistry', () => {
     });
 
     it('recomputes the master library dependencies from the new circuit', () => {
-      // The dependency graph is now derived here (not only by DefinitionBinding),
-      // so any path that sets a circuit — including lazy cloud hydration — keeps
-      // cycle detection correct.
+      // The dependency graph is derived here, so any path that sets a circuit —
+      // including lazy cloud hydration — keeps cycle detection correct.
       const b = registry.createMaster({ id: 'b-id', symbol: 'B' }, 'browser');
       const bSnap = registry.snapshot(b);
       const a = registry.createMaster({ symbol: 'A' }, 'browser');

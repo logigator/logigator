@@ -1,6 +1,5 @@
 /**
- * Triggers a browser download of a Blob via a transient object URL. Shared by
- * file export (native circuit format) and image export.
+ * Triggers a browser download of a Blob via a transient object URL.
  */
 export function downloadBlob(blob: Blob, fileName: string): void {
   const url = URL.createObjectURL(blob);

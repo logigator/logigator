@@ -31,8 +31,7 @@ export type DialogInputs<C> = {
 
 /**
  * Configuration for an imperatively-opened dialog ({@link DialogService.open}).
- * Mirrors the slice of PrimeNG's `DynamicDialogConfig` the editor uses; it is
- * provided in the child component's injector so the opened component can read
+ * Provided in the child component's injector so the opened component can read
  * `inject(DialogConfig).data`.
  *
  * `D` is the `data` payload type; `C` the opened component, which types
