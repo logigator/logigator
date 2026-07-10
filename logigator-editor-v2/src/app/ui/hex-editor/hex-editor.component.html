@@ -87,24 +87,27 @@
     </div>
   </div>
 
-  <!-- Grid: header + virtualized body share one horizontal-scroll context, so
-       they scroll together and overflow sideways when the row can't fit.
+  <!-- Grid: the body's virtual-scroll viewport is the single scroll context
+       for both axes. Its content wrapper is absolutely positioned, so rows
+       wider than the viewport overflow it without growing it — both scrollbars
+       stay on the visible edges instead of the far edge of the wide content.
+       The header row is translated to mirror the body's horizontal offset.
        The grow/min-h chain only bites when the host constrains the height
        (scrollHeight="100%"); in the default dialog layout it is inert. -->
-  <div
-    #gridScroll
-    class="flex min-h-24 grow flex-col overflow-x-auto rounded-md border border-border outline-none"
-    tabindex="0"
-  >
+  <div class="flex min-h-24 grow flex-col rounded-md border border-border">
+    <!-- Column header. Horizontally driven by the body's scroll offset — via a
+         transform, not scrollLeft: a scroll offset is clamped to this box's
+         own scroll range, whose end can sit a vertical-scrollbar's width off
+         the body's. Padded on the end by the body's scrollbar width, and the
+         same font size as the body, so its ch-based columns line up. -->
     <div
-      class="flex min-h-0 grow flex-col"
-      [style.min-width.ch]="rowMinWidthCh()"
+      class="shrink-0 overflow-x-hidden overflow-y-auto font-mono text-sm text-muted border-b border-border bg-content"
+      [style]="{ 'scrollbar-gutter': 'stable' }"
     >
-      <!-- Column header. Padded on the end by the body's scrollbar width, and
-           the same font size as the body, so its ch-based columns line up. -->
       <div
-        class="flex shrink-0 items-stretch font-mono text-sm text-muted border-b border-border bg-content overflow-y-auto"
-        [style]="{ 'scrollbar-gutter': 'stable' }"
+        #headerRow
+        class="flex items-stretch"
+        [style.min-width.ch]="rowMinWidthCh()"
       >
         <div
           class="shrink-0 pr-2 py-1 text-end border-e border-border"
@@ -123,69 +126,75 @@
           }
         </div>
       </div>
-
-      <!-- Virtualized body. `scrollbar-gutter: stable` always reserves the
-           scrollbar's width even when the content doesn't overflow, so the
-           body width — and thus the header's matching end padding — stays
-           constant whether or not the bar is showing. -->
-      <lg-scroller
-        class="min-h-0 grow"
-        [items]="rows()"
-        [itemSize]="rowHeight()"
-        [scrollHeight]="scrollHeight()"
-        [style]="{ 'scrollbar-gutter': 'stable' }"
-        styleClass="w-full font-mono text-sm"
-      >
-        <ng-template #item let-rowStart>
-          <div class="flex items-stretch" [style.height.px]="rowHeight()">
-            <div
-              class="shrink-0 flex items-center justify-end pr-2 text-muted bg-content border-e border-border select-none"
-              [style.width.ch]="gutterWidthCh()"
-            >
-              {{ addressLabel(rowStart) }}
-            </div>
-            <div class="flex flex-1">
-              @for (c of columnIndexes(); track c) {
-                @let idx = rowStart + c;
-                @if (readOnly()) {
-                  <!-- Focus (set by clicking too) drives the status box. -->
-                  <div
-                    class="flex flex-1 items-center justify-center uppercase border-e border-b border-border/50 outline-none focus:bg-primary-500/15"
-                    [class]="cellHighlight(idx)"
-                    [class.opacity-0]="isPadCell(idx)"
-                    [style.width.ch]="cellMinWidthCh()"
-                    [style.min-width.ch]="cellMinWidthCh()"
-                    [attr.tabindex]="isPadCell(idx) ? null : 0"
-                    (focus)="activeCell.set(idx)"
-                  >
-                    {{ cellValue(idx) }}
-                  </div>
-                } @else {
-                  <input
-                    #cell
-                    class="flex-1 text-center uppercase bg-transparent outline-none border-e border-b border-border/50 focus:bg-primary-500/15 focus:text-primary-700 dark:focus:text-primary-300 disabled:opacity-0"
-                    [class]="cellHighlight(idx)"
-                    type="text"
-                    spellcheck="false"
-                    autocomplete="off"
-                    [style.width.ch]="cellMinWidthCh()"
-                    [style.min-width.ch]="cellMinWidthCh()"
-                    [disabled]="isPadCell(idx)"
-                    [attr.maxlength]="cellDigits()"
-                    [value]="cellValue(idx)"
-                    (focus)="cell.select(); activeCell.set(idx)"
-                    (beforeinput)="onCellBeforeInput($event)"
-                    (paste)="onCellPaste(idx, $event)"
-                    (change)="onCellCommit(idx, cell)"
-                    (keyup.enter)="cell.blur()"
-                  />
-                }
-              }
-            </div>
-          </div>
-        </ng-template>
-      </lg-scroller>
     </div>
+
+    <!-- Virtualized body. `scrollbar-gutter: stable` always reserves the
+         scrollbar's width even when the content doesn't overflow, so the
+         body width — and thus the header's matching end padding — stays
+         constant whether or not the bar is showing. -->
+    <lg-scroller
+      class="min-h-0 grow"
+      tabindex="0"
+      [items]="rows()"
+      [itemSize]="rowHeight()"
+      [scrollHeight]="scrollHeight()"
+      [style]="{ 'scrollbar-gutter': 'stable' }"
+      styleClass="w-full font-mono text-sm outline-none"
+      (scrolled)="syncHeaderScroll()"
+    >
+      <ng-template #item let-rowStart>
+        <div
+          class="flex items-stretch"
+          [style.height.px]="rowHeight()"
+          [style.min-width.ch]="rowMinWidthCh()"
+        >
+          <div
+            class="shrink-0 flex items-center justify-end pr-2 text-muted bg-content border-e border-border select-none"
+            [style.width.ch]="gutterWidthCh()"
+          >
+            {{ addressLabel(rowStart) }}
+          </div>
+          <div class="flex flex-1">
+            @for (c of columnIndexes(); track c) {
+              @let idx = rowStart + c;
+              @if (readOnly()) {
+                <!-- Focus (set by clicking too) drives the status box. -->
+                <div
+                  class="flex flex-1 items-center justify-center uppercase border-e border-b border-border/50 outline-none focus:bg-primary-500/15"
+                  [class]="cellHighlight(idx)"
+                  [class.opacity-0]="isPadCell(idx)"
+                  [style.width.ch]="cellMinWidthCh()"
+                  [style.min-width.ch]="cellMinWidthCh()"
+                  [attr.tabindex]="isPadCell(idx) ? null : 0"
+                  (focus)="activeCell.set(idx)"
+                >
+                  {{ cellValue(idx) }}
+                </div>
+              } @else {
+                <input
+                  #cell
+                  class="flex-1 text-center uppercase bg-transparent outline-none border-e border-b border-border/50 focus:bg-primary-500/15 focus:text-primary-700 dark:focus:text-primary-300 disabled:opacity-0"
+                  [class]="cellHighlight(idx)"
+                  type="text"
+                  spellcheck="false"
+                  autocomplete="off"
+                  [style.width.ch]="cellMinWidthCh()"
+                  [style.min-width.ch]="cellMinWidthCh()"
+                  [disabled]="isPadCell(idx)"
+                  [attr.maxlength]="cellDigits()"
+                  [value]="cellValue(idx)"
+                  (focus)="cell.select(); activeCell.set(idx)"
+                  (beforeinput)="onCellBeforeInput($event)"
+                  (paste)="onCellPaste(idx, $event)"
+                  (change)="onCellCommit(idx, cell)"
+                  (keyup.enter)="cell.blur()"
+                />
+              }
+            }
+          </div>
+        </div>
+      </ng-template>
+    </lg-scroller>
   </div>
 
   <!-- Status box: the focused cell's address and value. -->

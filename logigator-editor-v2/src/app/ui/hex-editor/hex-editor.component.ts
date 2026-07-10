@@ -111,11 +111,11 @@ export class HexEditorComponent {
   protected readonly isTouch = this.layout.isTouch;
 
   private readonly scroller = viewChild(LgScroller);
-  /** The horizontal-scroll container and the header's column row, used to bring
-   * a searched cell's column into view sideways (the header is always rendered
-   * and column-aligned with the body, so it's a reliable measuring proxy). */
-  private readonly gridScroll =
-    viewChild<ElementRef<HTMLElement>>('gridScroll');
+  /** The header's content row (translated to mirror the body's horizontal
+   * offset, see {@link syncHeaderScroll}) and its column cells. The header
+   * doubles as the measuring proxy for bringing a searched cell's column into
+   * view sideways (it is always rendered and column-aligned with the body). */
+  private readonly headerRow = viewChild<ElementRef<HTMLElement>>('headerRow');
   private readonly headerCols =
     viewChild<ElementRef<HTMLElement>>('headerCols');
 
@@ -443,25 +443,38 @@ export class HexEditorComponent {
     this.scrollColumnIntoView(cell % cols);
   }
 
+  /** Mirrors the body's horizontal scroll offset onto the header row, keeping
+   * the columns aligned while the body owns both scrollbars. Translates the
+   * row instead of scrolling it: a transform is not clamped to the header's
+   * own scroll range, whose end can sit a vertical-scrollbar's width off the
+   * body's. */
+  protected syncHeaderScroll(): void {
+    const row = this.headerRow()?.nativeElement;
+    const viewport = this.scroller()?.viewportElement;
+    if (!row || !viewport) return;
+    row.style.transform = `translate3d(${-viewport.scrollLeft}px, 0, 0)`;
+  }
+
   /** Scrolls the grid horizontally so the given column is visible. Measures the
    * always-rendered, column-aligned header cell as a proxy for the body cell. */
   private scrollColumnIntoView(col: number): void {
-    const wrapper = this.gridScroll()?.nativeElement;
+    const viewport = this.scroller()?.viewportElement;
+    const row = this.headerRow()?.nativeElement;
     const colEl = this.headerCols()?.nativeElement.children[col] as
       | HTMLElement
       | undefined;
-    if (!wrapper || !colEl) return;
+    if (!viewport || !row || !colEl) return;
 
+    // The column's offset in content space — both rects carry the header
+    // row's translation, so it cancels out.
     const left =
-      colEl.getBoundingClientRect().left -
-      wrapper.getBoundingClientRect().left +
-      wrapper.scrollLeft;
+      colEl.getBoundingClientRect().left - row.getBoundingClientRect().left;
     const right = left + colEl.offsetWidth;
-    if (left < wrapper.scrollLeft) {
-      wrapper.scrollTo({ left, behavior: 'smooth' });
-    } else if (right > wrapper.scrollLeft + wrapper.clientWidth) {
-      wrapper.scrollTo({
-        left: right - wrapper.clientWidth,
+    if (left < viewport.scrollLeft) {
+      viewport.scrollTo({ left, behavior: 'smooth' });
+    } else if (right > viewport.scrollLeft + viewport.clientWidth) {
+      viewport.scrollTo({
+        left: right - viewport.clientWidth,
         behavior: 'smooth'
       });
     }

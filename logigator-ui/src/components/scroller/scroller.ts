@@ -8,6 +8,7 @@ import {
   Component,
   contentChild,
   input,
+  output,
   TemplateRef,
   viewChild
 } from '@angular/core';
@@ -18,6 +19,12 @@ import {
  * viewport, projecting the `#item` template per row (`$implicit` = the item).
  * Exposes {@link scrollToIndex} (obtained via `viewChild`). Vertical, fixed-size
  * only — no lazy mode or autosize.
+ *
+ * Only the vertical axis is virtualized, but the viewport is a regular
+ * two-axis scroll container: rows wider than it overflow horizontally without
+ * growing it (the CDK content wrapper is absolutely positioned). Hosts that
+ * drive or mirror that horizontal axis get the raw scroll events via
+ * {@link scrolled} and the container itself via {@link viewportElement}.
  */
 @Component({
   selector: 'lg-scroller',
@@ -34,6 +41,8 @@ import {
       [style.height]="scrollHeight()"
       [style]="style()"
       [class]="styleClass()"
+      [attr.tabindex]="tabindex()"
+      (scroll)="scrolled.emit($event)"
     >
       <div *cdkVirtualFor="let item of items()">
         <ng-container
@@ -52,9 +61,19 @@ export class LgScroller {
   readonly scrollHeight = input<string>();
   readonly style = input<Record<string, string> | null>(null);
   readonly styleClass = input<string>('');
+  /** `tabindex` of the viewport element — set to make it keyboard-scrollable. */
+  readonly tabindex = input<string | null>(null);
+
+  /** Native `scroll` events of the viewport element (both axes). */
+  readonly scrolled = output<Event>();
 
   protected readonly itemTemplate = contentChild<TemplateRef<unknown>>('item');
   private readonly viewport = viewChild.required(CdkVirtualScrollViewport);
+
+  /** The scroll container element, for reading or driving the horizontal axis. */
+  get viewportElement(): HTMLElement {
+    return this.viewport().elementRef.nativeElement;
+  }
 
   /** Scroll the row at `index` into view. */
   scrollToIndex(index: number, behavior?: ScrollBehavior): void {
