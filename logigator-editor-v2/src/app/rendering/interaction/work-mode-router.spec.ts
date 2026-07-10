@@ -147,6 +147,55 @@ describe('WorkModeRouter in SIMULATION mode', () => {
   });
 });
 
+describe('WorkModeRouter in SELECT mode', () => {
+  let project: Project;
+  let router: WorkModeRouter;
+
+  beforeEach(() => {
+    configureTestBed();
+    project = new Project();
+    router = new WorkModeRouter();
+    router.setProject(project);
+    router.setMode(WorkMode.SELECT);
+  });
+
+  afterEach(() => {
+    router.destroy();
+    project.destroy({ children: true });
+  });
+
+  it('dragging from the grab margin (off the element bounds) moves the selection', () => {
+    // AND at (3,3): gridBounds x ∈ [2.5, 5.5], y ∈ [3, 5].
+    const comp = makeAnd(2);
+    comp.position.set(3, 3);
+    project.addComponent(comp);
+    project.selectionManager.select([comp], []);
+
+    // (2, 5.5) is outside the component bounds but inside the padded grab
+    // rect — grabbable only through the margin.
+    router.down(makeInput(2, 5.5));
+    router.move(makeInput(6, 5.5));
+    router.up();
+
+    expect(comp.position.x).toBe(7);
+    expect(comp.position.y).toBe(3);
+  });
+
+  it('pressing outside the grab rect starts a new selection instead', () => {
+    const comp = makeAnd(2);
+    comp.position.set(3, 3);
+    project.addComponent(comp);
+    project.selectionManager.select([comp], []);
+
+    // (10, 10) is well outside the grab rect: a fresh (empty) click-select.
+    router.down(makeInput(10, 10));
+    router.up();
+
+    expect(comp.position.x).toBe(3);
+    expect(project.selectionManager.isEmpty).toBe(true);
+  });
+});
+
 describe('WorkModeRouter in PORT_NEGATION mode', () => {
   let project: Project;
   let router: WorkModeRouter;

@@ -5,7 +5,7 @@ import { Grid } from '../rendering/grid';
 import { ThemingService } from '../theming/theming.service';
 import { getStaticDI, getStaticInjector } from '../utils/get-di';
 import { Component } from '../components/component';
-import { Observable, Subject, Subscription } from 'rxjs';
+import { merge, Observable, Subject, Subscription } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { FloatingLayer } from '../rendering/floating-layer';
 import { TickerSignal } from '../rendering/ticker-scheduler';
@@ -63,6 +63,7 @@ export class Project extends Container {
     () => this.scale.x
   );
   private readonly _portsChangeSubs = new Map<number, Subscription>();
+  private readonly _selectionRectSub: Subscription;
 
   private readonly _themingService = getStaticDI(ThemingService);
   private readonly _logging = getStaticDI(LoggingService);
@@ -104,6 +105,23 @@ export class Project extends Container {
       },
       { injector: getStaticInjector() }
     );
+
+    // The persistent selection grab rect mirrors the selection's grabRect():
+    // selectionChange$ covers commits/clears/evictions, actionChange$ covers
+    // geometry changes that keep the selection alive — a committed move and
+    // its undo/redo. Hosted in the floating layer, so offscreen snapshots
+    // (minimap, exports) never capture it.
+    this._selectionRectSub = merge(
+      this.selectionManager.selectionChange$,
+      this.actionManager.actionChange$
+    ).subscribe(() => {
+      const rect = this.selectionManager.grabRect();
+      if (rect) {
+        this._floatingLayer.showSelectionRect(rect);
+      } else {
+        this._floatingLayer.hideSelectionRect();
+      }
+    });
   }
 
   /**
@@ -629,6 +647,7 @@ export class Project extends Container {
 
   public override destroy(options?: DestroyOptions): void {
     this._themeEffect?.destroy();
+    this._selectionRectSub.unsubscribe();
     this._ticker$.complete();
     this._pasteRequest$.complete();
     this._userInput$.complete();

@@ -177,10 +177,10 @@ export class WorkModeRouter implements PointerToolTarget {
       case WorkMode.SELECT:
       case WorkMode.SELECT_EXACT: {
         const localPoint = input.grid;
-        if (
-          !project.selectionManager.isEmpty &&
-          project.selectionManager.containsPoint(localPoint)
-        ) {
+        // The persistent grab rect (the marquee as drawn) is the drag target
+        // where one exists, so the gaps inside it are grabbable too; rect-less
+        // selections (single click) fall back to element bounds.
+        if (project.selectionManager.isGrabbedAt(localPoint)) {
           this._startDrag(
             new SelectionMoveSession(
               project,

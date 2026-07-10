@@ -641,55 +641,76 @@ describe('SelectionManager', () => {
     });
   });
 
-  // ── containsPoint ──────────────────────────────────────────────────────────
+  // ── grabRect / isGrabbedAt ─────────────────────────────────────────────────
 
-  describe('containsPoint', () => {
-    it('returns true when a selected component bounds contain the point', () => {
-      const comp = makeComponent(1, 1, 4, 4); // covers (1,1)–(5,5)
+  describe('grabRect / isGrabbedAt', () => {
+    it('returns null when selection is empty', () => {
+      expect(manager.grabRect()).toBeNull();
+      expect(manager.isGrabbedAt({ x: 0, y: 0 })).toBe(false);
+    });
+
+    it('freezes the marquee exactly as drawn instead of re-fitting to content', () => {
+      const comp = makeComponent(2, 3, 4, 5);
       setComponents(project, comp);
-      manager.commit(new Rectangle(0, 0, 10, 10), WorkMode.SELECT);
+      manager.commit(new Rectangle(0, 0, 20, 20), WorkMode.SELECT);
 
-      expect(manager.containsPoint({ x: 3, y: 3 })).toBe(true);
+      const rect = manager.grabRect()!;
+
+      expect(rect.x).toBe(0);
+      expect(rect.y).toBe(0);
+      expect(rect.width).toBe(20);
+      expect(rect.height).toBe(20);
+      // Empty space inside the drawn rect is a grab target.
+      expect(manager.isGrabbedAt({ x: 15, y: 15 })).toBe(true);
+      expect(manager.isGrabbedAt({ x: 25, y: 25 })).toBe(false);
     });
 
-    it('returns false when the point is outside all selected bounds', () => {
-      const comp = makeComponent(1, 1, 2, 2); // covers (1,1)–(3,3)
+    it('translates the frozen rect with the selection bounds without resizing', () => {
+      // Mutable bounds stand in for a committed move (and its undo).
+      const pos = new Point(2, 3);
+      const comp: any = {
+        tint: 0xffffff,
+        destroyed: false,
+        connectionPoints: [] as Point[],
+        get gridBounds() {
+          return new Rectangle(pos.x, pos.y, 4, 5);
+        }
+      };
       setComponents(project, comp);
-      manager.commit(new Rectangle(0, 0, 10, 10), WorkMode.SELECT);
+      manager.commit(new Rectangle(0, 0, 20, 20), WorkMode.SELECT);
 
-      expect(manager.containsPoint({ x: 10, y: 10 })).toBe(false);
+      pos.set(9, 3); // bounds moved +7 in x
+
+      const rect = manager.grabRect()!;
+      expect(rect.x).toBe(7);
+      expect(rect.y).toBe(0);
+      expect(rect.width).toBe(20);
+      expect(rect.height).toBe(20);
     });
 
-    it('returns true when a selected wire bounds contain the point', () => {
-      const wire = makeWire(0, 5, 10, 1); // covers y=5 to y=6
-      setWires(project, wire);
-      manager.commit(new Rectangle(0, 0, 15, 15), WorkMode.SELECT);
-
-      expect(manager.containsPoint({ x: 5, y: 5 })).toBe(true);
-    });
-
-    it('returns false when the selection is empty', () => {
-      expect(manager.containsPoint({ x: 0, y: 0 })).toBe(false);
-    });
-
-    it('returns false for a destroyed component even if its bounds would contain the point', () => {
-      const comp = makeComponent(0, 0, 5, 5);
+    it('gives a single-click selection no rect but element-bounds grabbing', () => {
+      const comp = makeComponent(2, 3, 4, 5); // bounds (2,3)–(6,8)
       setComponents(project, comp);
-      manager.commit(new Rectangle(0, 0, 10, 10), WorkMode.SELECT);
+      // Zero-size rect = the single-click commit path.
+      manager.commit(new Rectangle(4, 4, 0, 0), WorkMode.SELECT);
 
-      comp.destroyed = true;
-
-      expect(manager.containsPoint({ x: 2, y: 2 })).toBe(false);
+      expect(manager.selectedComponents.size).toBe(1);
+      expect(manager.grabRect()).toBeNull();
+      expect(manager.isGrabbedAt({ x: 3, y: 4 })).toBe(true); // on the element
+      expect(manager.isGrabbedAt({ x: 1, y: 1 })).toBe(false); // off the element
     });
 
-    it('returns false for a destroyed wire even if its bounds would contain the point', () => {
-      const wire = makeWire(0, 0, 5, 5);
-      setWires(project, wire);
-      manager.commit(new Rectangle(0, 0, 10, 10), WorkMode.SELECT);
+    it('rects a programmatic select() at padded content bounds', () => {
+      const comp = makeComponent(2, 3, 4, 5); // bounds (2,3)–(6,8)
+      manager.select([comp], []);
 
-      wire.destroyed = true;
+      const rect = manager.grabRect()!;
 
-      expect(manager.containsPoint({ x: 2, y: 2 })).toBe(false);
+      const m = SelectionManager.GRAB_MARGIN;
+      expect(rect.x).toBe(2 - m);
+      expect(rect.y).toBe(3 - m);
+      expect(rect.right).toBe(6 + m);
+      expect(rect.bottom).toBe(8 + m);
     });
   });
 

@@ -1,4 +1,4 @@
-import { Rectangle } from 'pixi.js';
+import { Point, Rectangle } from 'pixi.js';
 import { Observable, Subject } from 'rxjs';
 import { WorkMode } from '../work-mode/work-mode.enum';
 import { Component } from '../components/component';
@@ -28,12 +28,23 @@ interface PendingCut {
 
 export class SelectionManager {
   static readonly SELECTION_TINT = 0x888888;
+  /**
+   * Margin (grid units) around the content bounds for grab rects that have no
+   * user-drawn shape (programmatic {@link select}, e.g. a committed paste).
+   */
+  static readonly GRAB_MARGIN = 1;
 
   private readonly _selectedComponents = new Set<Component>();
   private readonly _selectedWires = new Set<Wire>();
   private readonly _selectionChange$ = new Subject<void>();
   private _pendingCut: PendingCut | null = null;
   private _tintedConnectionPoints: ConnectionPoint[] = [];
+  // The grab rect as set (the drawn marquee, or padded bounds for select())
+  // plus the selection's bounding-box origin at that moment. grabRect()
+  // translates the stored rect by however far the bounds have moved since, so
+  // the rect follows a committed move (and its undo/redo) without resizing.
+  private _grabRect: Rectangle | null = null;
+  private _grabAnchor: Point | null = null;
 
   constructor(private readonly project: Project) {}
 
@@ -62,6 +73,9 @@ export class SelectionManager {
       }
     }
 
+    // The marquee persists exactly as drawn — the user shaped it, so it never
+    // re-fits to the content it caught.
+    this._setGrabRect(rect.clone());
     this.retintCps();
     this._selectionChange$.next();
   }
@@ -189,6 +203,9 @@ export class SelectionManager {
       this._selectedWires.add(bestWire);
     }
 
+    // A click draws nothing, so a single-click selection gets no persistent
+    // rect; grabbing falls back to the element's own bounds (see isGrabbedAt).
+    this._setGrabRect(null);
     this.retintCps();
     this._selectionChange$.next();
   }
@@ -270,6 +287,7 @@ export class SelectionManager {
     this._tintedConnectionPoints = [];
     this._selectedComponents.clear();
     this._selectedWires.clear();
+    this._setGrabRect(null);
     this._selectionChange$.next();
   }
 
@@ -338,26 +356,6 @@ export class SelectionManager {
     }
   }
 
-  public containsPoint(gridPoint: { x: number; y: number }): boolean {
-    for (const component of this._selectedComponents) {
-      if (
-        !component.destroyed &&
-        component.gridBounds.contains(gridPoint.x, gridPoint.y)
-      ) {
-        return true;
-      }
-    }
-    for (const wire of this._selectedWires) {
-      if (
-        !wire.destroyed &&
-        wire.gridBounds.contains(gridPoint.x, gridPoint.y)
-      ) {
-        return true;
-      }
-    }
-    return false;
-  }
-
   public boundingBox(): Rectangle | null {
     if (this.isEmpty) return null;
 
@@ -388,6 +386,62 @@ export class SelectionManager {
     return new Rectangle(minX, minY, maxX - minX, maxY - minY);
   }
 
+  /**
+   * The selection's persistent rect: frozen at the shape it was set with
+   * (never re-fit to content), translated to track the selection's bounding
+   * box. Single source of truth for the rect visual and — when present — the
+   * router's move-vs-new-selection hit test, so the grab zone and what the
+   * user sees can never drift. Null for single-click selections (nothing was
+   * drawn) and while nothing is selected.
+   */
+  public grabRect(): Rectangle | null {
+    if (!this._grabRect || !this._grabAnchor) return null;
+    const box = this.boundingBox();
+    if (!box) return null;
+    return new Rectangle(
+      this._grabRect.x + (box.x - this._grabAnchor.x),
+      this._grabRect.y + (box.y - this._grabAnchor.y),
+      this._grabRect.width,
+      this._grabRect.height
+    );
+  }
+
+  /**
+   * Whether a press at a grid point grabs the selection (starts a move). The
+   * grab rect decides when one exists; a rect-less selection (single click)
+   * falls back to the selected elements' own bounds.
+   */
+  public isGrabbedAt(gridPoint: { x: number; y: number }): boolean {
+    const rect = this.grabRect();
+    if (rect) return rect.contains(gridPoint.x, gridPoint.y);
+
+    for (const component of this._selectedComponents) {
+      if (
+        !component.destroyed &&
+        component.gridBounds.contains(gridPoint.x, gridPoint.y)
+      ) {
+        return true;
+      }
+    }
+    for (const wire of this._selectedWires) {
+      if (
+        !wire.destroyed &&
+        wire.gridBounds.contains(gridPoint.x, gridPoint.y)
+      ) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // Freezes the given rect (with the current bounds origin as its translation
+  // anchor), or drops the rect entirely — also when the selection is empty.
+  private _setGrabRect(rect: Rectangle | null): void {
+    const box = rect ? this.boundingBox() : null;
+    this._grabRect = box ? rect : null;
+    this._grabAnchor = box ? new Point(box.x, box.y) : null;
+  }
+
   public select(components: Component[], wires: Wire[]): void {
     this.clear();
     for (const c of components) {
@@ -402,6 +456,11 @@ export class SelectionManager {
         this._selectedWires.add(w);
       }
     }
+    // No user-drawn shape to freeze — a programmatic selection (a committed
+    // paste) rects its content bounds plus a margin.
+    this._setGrabRect(
+      this.boundingBox()?.pad(SelectionManager.GRAB_MARGIN) ?? null
+    );
     this.retintCps();
     this._selectionChange$.next();
   }

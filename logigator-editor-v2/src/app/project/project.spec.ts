@@ -1,10 +1,12 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Container, Point, Rectangle } from 'pixi.js';
 import { configureTestBed } from '../../testing/configure-test-bed';
 import { Project } from './project';
+import { SelectionManager } from './selection-manager';
 import { Wire } from '../wires/wire';
 import { WireDirection } from '../wires/wire-direction.enum';
 import { Direction } from '../utils/direction';
+import { MoveComponentsAction } from '../actions/actions/move-components.action';
 import { makeAnd, makeWire } from '../../testing/factories';
 import { environment } from '../../environments/environment';
 
@@ -852,5 +854,69 @@ describe('Project.cull', () => {
     project.cull();
 
     expect(isCulled(comp)).toBe(false);
+  });
+});
+
+describe('Project selection grab rect', () => {
+  let project: Project;
+  let show: ReturnType<typeof vi.spyOn>;
+  let hide: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    configureTestBed();
+    project = new Project();
+    show = vi.spyOn(project.floatingLayer, 'showSelectionRect');
+    hide = vi.spyOn(project.floatingLayer, 'hideSelectionRect');
+  });
+
+  afterEach(() => {
+    project.destroy({ children: true });
+  });
+
+  it('shows the padded grab rect when a selection commits', () => {
+    const comp = makeAnd(2);
+    comp.position.set(3, 3);
+    project.addComponent(comp);
+
+    project.selectionManager.select([comp], []);
+
+    expect(show).toHaveBeenCalledWith(project.selectionManager.grabRect());
+    const rect = show.mock.calls.at(-1)![0] as Rectangle;
+    const m = SelectionManager.GRAB_MARGIN;
+    expect(rect.x).toBe(comp.gridBounds.x - m);
+    expect(rect.right).toBe(comp.gridBounds.right + m);
+  });
+
+  it('hides the grab rect when the selection clears', () => {
+    const comp = makeAnd(2);
+    comp.position.set(3, 3);
+    project.addComponent(comp);
+    project.selectionManager.select([comp], []);
+
+    project.selectionManager.clear();
+
+    expect(hide).toHaveBeenCalled();
+  });
+
+  it('re-fits the grab rect when a committed move and its undo change the bounds', () => {
+    const comp = makeAnd(2);
+    comp.position.set(3, 3);
+    project.addComponent(comp);
+    project.selectionManager.select([comp], []);
+    const before = show.mock.calls.at(-1)![0] as Rectangle;
+
+    project.actionManager.push(
+      new MoveComponentsAction({
+        id: comp.id,
+        oldPos: new Point(3, 3),
+        newPos: new Point(10, 3)
+      })
+    );
+    const moved = show.mock.calls.at(-1)![0] as Rectangle;
+    expect(moved.x).toBe(before.x + 7);
+
+    project.actionManager.undo();
+    const undone = show.mock.calls.at(-1)![0] as Rectangle;
+    expect(undone.x).toBe(before.x);
   });
 });

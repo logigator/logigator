@@ -60,6 +60,8 @@ export class SelectionMoveSession implements DragSession {
       gridPos.x - this._pointerStart.x,
       gridPos.y - this._pointerStart.y
     );
+    // The selection grab rect rides along with the dragged ghosts.
+    this.project.floatingLayer.setSelectionRectOffset(this.dragLayer.position);
     this._collision.update();
   }
 
@@ -99,6 +101,9 @@ export class SelectionMoveSession implements DragSession {
 
     this.dragLayer.position.set(0, 0);
     this.dragLayer.tint = 0xffffff;
+    // Back to base; the actionChange$ redraw below re-places it at the moved
+    // bounds (a zero-delta end left it at base the whole time).
+    this.project.floatingLayer.setSelectionRectOffset(this.dragLayer.position);
     this.project.reattachFromDrag(this._components, this._wires);
 
     if (!hasMove) {
@@ -236,6 +241,8 @@ export class SelectionMoveSession implements DragSession {
     );
     this.dragLayer.position.set(0, 0);
     this.dragLayer.tint = 0xffffff;
+    // Bounds are unchanged on cancel, so returning to base is enough.
+    this.project.floatingLayer.setSelectionRectOffset(this.dragLayer.position);
     this.project.reattachFromDrag(this._components, this._wires);
     this.project.connectionPoints.restoreDragCps(this._capturedCps);
   }
