@@ -126,6 +126,32 @@ describe('LoggingService', () => {
     });
   });
 
+  describe('recent-log buffer', () => {
+    it('keeps only the most recent entries', () => {
+      for (let i = 0; i < 150; i++) service.warn(`line ${i}`, 'ctx');
+      const lines = service.recentLogs().split('\n');
+      expect(lines.length).toBe(100);
+      expect(lines[0]).toContain('line 50');
+      expect(lines.at(-1)).toContain('line 149');
+    });
+
+    it('records regardless of console verbosity but excludes debug', () => {
+      environment.loggingVerbosity = LogLevel.Silent;
+      service.debug('a debug line', 'ctx');
+      service.error('an error line', 'ctx');
+      const logs = service.recentLogs();
+      // Silent suppresses the console, but the error is still buffered.
+      expect(logs).toContain('[ERROR][ctx] an error line');
+      // Debug entries are deliberately not retained.
+      expect(logs).not.toContain('a debug line');
+    });
+
+    it('serializes an Error to its stack', () => {
+      service.error(new Error('kaboom'), 'ctx');
+      expect(service.recentLogs()).toContain('kaboom');
+    });
+  });
+
   describe('time', () => {
     it('logs the elapsed time at debug level when stopped', () => {
       const stop = service.time('do work', 'ctx');
