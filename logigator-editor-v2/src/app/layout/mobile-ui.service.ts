@@ -1,7 +1,7 @@
 import { computed, Injectable, signal } from '@angular/core';
 
 /** The bottom/side sheets the compact chrome can show, one at a time. */
-export type MobileSheet = 'palette' | 'settings' | 'ports' | 'menu';
+export type MobileSheet = 'palette' | 'settings' | 'ports' | 'menu' | 'project';
 
 /**
  * Single source of truth for which mobile sheet (Drawer) is open. Several

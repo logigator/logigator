@@ -1,5 +1,5 @@
 import { Component, computed, inject } from '@angular/core';
-import { LgButton } from '@logigator/ui';
+import { LgButton, LgRipple } from '@logigator/ui';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { WorkModeService } from '../../work-mode/work-mode.service';
 import { WorkMode } from '../../work-mode/work-mode.enum';
@@ -8,30 +8,40 @@ import { ProjectMetadataStore } from '../../persistence/project-metadata.store';
 import { SaveCoordinatorService } from '../save-coordinator.service';
 import { SimulationService } from '../../simulation/simulation.service';
 import { MobileUiService } from '../../layout/mobile-ui.service';
+import { UserAvatarComponent } from '../user-settings/user-avatar.component';
 
 /**
- * Compact top bar (`isCompact`): hamburger → menu Drawer, truncated project
- * name, and the high-traffic actions (undo/redo/save/run). In SIMULATION the
- * run button becomes exit and the edit actions disable, mirroring the tool bar.
+ * Compact top bar (`isCompact`): avatar → account/settings sheet, the
+ * truncated project name → editor menu sheet, and the high-traffic actions
+ * (undo/redo/save/run). In SIMULATION the run button becomes exit and the
+ * edit actions disable, mirroring the tool bar.
  */
 @Component({
   selector: 'app-mobile-top-bar',
-  imports: [LgButton, TranslocoDirective],
+  imports: [LgButton, LgRipple, TranslocoDirective, UserAvatarComponent],
   template: `
     <div
       *transloco="let t"
       class="flex h-12 items-center gap-1 border-b border-border px-1"
     >
-      <lg-button
-        icon="ph ph-list"
-        severity="secondary"
-        text
-        [ariaLabel]="t('mobile.menu')"
-        (onClick)="openMenu()"
-      ></lg-button>
-      <span class="grow truncate px-1 text-center font-semibold">{{
-        projectName()
-      }}</span>
+      <button
+        type="button"
+        lgRipple
+        class="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full hover:bg-content-hover"
+        [attr.aria-label]="t('mobile.account')"
+        (click)="openMenu()"
+      >
+        <app-user-avatar />
+      </button>
+      <button
+        type="button"
+        lgRipple
+        class="flex min-w-0 grow cursor-pointer items-center justify-center gap-1 rounded px-1 py-2 hover:bg-content-hover"
+        (click)="openProjectMenu()"
+      >
+        <span class="truncate font-semibold">{{ projectName() }}</span>
+        <i class="ph ph-caret-down text-sm text-muted" aria-hidden="true"></i>
+      </button>
       @if (isSimulation()) {
         <lg-button
           icon="ph ph-sign-out"
@@ -92,6 +102,10 @@ export class MobileTopBarComponent {
 
   protected openMenu(): void {
     this.mobileUi.open('menu');
+  }
+
+  protected openProjectMenu(): void {
+    this.mobileUi.open('project');
   }
 
   protected undo(): void {

@@ -138,10 +138,19 @@
     <lg-drawer
       [visible]="mobileUi.activeSheet() === 'menu'"
       (visibleChange)="onSheetClosed($event)"
-      position="bottom"
-      [header]="t('mobile.menu')"
+      position="left"
+      [header]="t('mobile.account')"
     >
-      <app-mobile-menu></app-mobile-menu>
+      <app-user-settings-panel (action)="mobileUi.close()" />
+    </lg-drawer>
+
+    <lg-drawer
+      [visible]="mobileUi.activeSheet() === 'project'"
+      (visibleChange)="onSheetClosed($event)"
+      position="bottom"
+      [header]="projectName()"
+    >
+      <app-mobile-project-menu></app-mobile-project-menu>
     </lg-drawer>
   </ng-container>
 }

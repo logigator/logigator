@@ -503,7 +503,7 @@ const en = {
     ticks: '{{ticks}} ticks'
   },
   mobile: {
-    menu: 'Menu',
+    account: 'Account',
     palette: 'Components',
     settings: 'Settings',
     ports: 'Ports'

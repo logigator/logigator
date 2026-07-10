@@ -50,7 +50,8 @@ import { MobileStatusComponent } from './ui/mobile-status/mobile-status.componen
 import { SimulationControlsComponent } from './ui/simulation-controls/simulation-controls.component';
 import { ComponentListComponent } from './ui/side-bar/component-list/component-list.component';
 import { PortsPanelComponent } from './ui/ports-panel/ports-panel.component';
-import { MobileMenuComponent } from './ui/mobile-menu/mobile-menu.component';
+import { MobileProjectMenuComponent } from './ui/mobile-menu/mobile-project-menu.component';
+import { UserSettingsPanelComponent } from './ui/user-settings/user-settings-panel.component';
 import { LoggingService } from './logging/logging.service';
 import { ToastService } from './logging/toast.service';
 import { SessionLifecycleService } from './user/session-lifecycle.service';
@@ -81,7 +82,8 @@ import { SessionLifecycleService } from './user/session-lifecycle.service';
     SimulationControlsComponent,
     ComponentListComponent,
     PortsPanelComponent,
-    MobileMenuComponent
+    MobileProjectMenuComponent,
+    UserSettingsPanelComponent
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
@@ -115,6 +117,13 @@ export class AppComponent {
   public readonly isSimulation = computed(
     () => this.workModeService.mode() === WorkMode.SIMULATION
   );
+
+  /** Heads the compact project sheet, mirroring the top bar's title trigger. */
+  protected readonly projectName = computed(() => {
+    const project = this.projectService.mainProject();
+    if (!project) return '';
+    return this.metadataStore.getMetadata(project)?.name ?? '';
+  });
 
   /** True while the active tab is a custom-component editor — gates the Ports sheet. */
   protected readonly isEditingComponent = computed(() => {

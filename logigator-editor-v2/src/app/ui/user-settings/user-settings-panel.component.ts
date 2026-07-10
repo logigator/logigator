@@ -1,10 +1,11 @@
-import { Component, computed, inject, output } from '@angular/core';
-import { LgAvatar, LgDivider, LgRipple } from '@logigator/ui';
+import { Component, inject, output } from '@angular/core';
+import { LgDivider, LgRipple } from '@logigator/ui';
 import { ThemeSwitcherComponent } from '../../theming/theme-switcher/theme-switcher.component';
 import { LanguageSwitcherComponent } from '../../translation/language-switcher/language-switcher.component';
 import { UserService } from '../../user/user.service';
 import { SessionLifecycleService } from '../../user/session-lifecycle.service';
 import { SettingsComponent } from '../../settings/settings.component';
+import { UserAvatarComponent } from './user-avatar.component';
 
 /**
  * The account/settings panel: avatar header, theme/language/editor-settings
@@ -15,12 +16,12 @@ import { SettingsComponent } from '../../settings/settings.component';
 @Component({
   selector: 'app-user-settings-panel',
   imports: [
-    LgAvatar,
     LgDivider,
     LgRipple,
     ThemeSwitcherComponent,
     LanguageSwitcherComponent,
-    SettingsComponent
+    SettingsComponent,
+    UserAvatarComponent
   ],
   templateUrl: './user-settings-panel.component.html'
 })
@@ -29,13 +30,6 @@ export class UserSettingsPanelComponent {
   private readonly sessionLifecycle = inject(SessionLifecycleService);
 
   public readonly action = output<void>();
-
-  protected readonly userImageUrl = computed(
-    () => this.userService.user()?.image?.publicUrl ?? undefined
-  );
-  protected readonly userInitial = computed(
-    () => this.userService.user()?.username.slice(0, 1).toUpperCase() ?? ''
-  );
 
   protected openAccountSettings(): void {
     this.userService.openAccountSettings();

@@ -54,10 +54,13 @@ export class EditorMenuService {
   );
 
   /**
-   * Flat, curated model for the compact menu sheet. Only actions without a
-   * dedicated compact surface appear here: undo/redo/save/run live in the top
-   * bar, cut/copy/paste/delete in the selection action bar, zoom in the FAB
-   * and the pinch gesture, and keyboard shortcuts don't apply to touch.
+   * Flat, curated model for the compact editor sheet behind the top bar's
+   * project title — every editor action from the desktop menubar that has no
+   * dedicated compact surface (undo/redo/save/run live in the top bar,
+   * cut/copy/paste/delete in the selection action bar, zoom in the FAB and
+   * the pinch gesture, and keyboard shortcuts don't apply to touch). The
+   * burger sheet stays editor-agnostic: it holds only the account/settings
+   * panel.
    */
   public readonly compactItems: Signal<MenuItem[]> = computed(() =>
     this.generateCompactItems()

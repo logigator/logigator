@@ -5,17 +5,10 @@
   [class.bg-content-hover]="menuOpen()"
   [class.text-text]="menuOpen()"
 >
-  @if (userService.user(); as user) {
-    <lg-avatar
-      [image]="userImageUrl()"
-      [label]="userImageUrl() ? undefined : userInitial()"
-      shape="circle"
-    />
-    <span class="font-medium">{{ user.username }}</span>
-  } @else {
-    <lg-avatar icon="ph ph-user" shape="circle" />
-    <span class="font-medium">Not signed in</span>
-  }
+  <app-user-avatar />
+  <span class="font-medium">{{
+    userService.user()?.username ?? 'Not signed in'
+  }}</span>
   <i class="ph ph-caret-down"></i>
 </button>
 

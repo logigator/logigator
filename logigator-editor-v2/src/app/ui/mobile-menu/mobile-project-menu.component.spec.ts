@@ -3,11 +3,11 @@ import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { MenuItem } from '@logigator/ui';
 import { configureTestBed } from '../../../testing/configure-test-bed';
-import { MobileMenuComponent } from './mobile-menu.component';
+import { MobileProjectMenuComponent } from './mobile-project-menu.component';
 import { EditorMenuService } from '../editor-menu.service';
 import { MobileUiService } from '../../layout/mobile-ui.service';
 
-describe('MobileMenuComponent', () => {
+describe('MobileProjectMenuComponent', () => {
   const command = vi.fn();
   const nestedCommand = vi.fn();
 
@@ -29,15 +29,15 @@ describe('MobileMenuComponent', () => {
           }
         }
       ],
-      [MobileMenuComponent]
+      [MobileProjectMenuComponent]
     );
   });
 
   it('closes the sheet and still runs the command when an action is tapped', () => {
     const mobileUi = TestBed.inject(MobileUiService);
-    mobileUi.open('menu');
+    mobileUi.open('project');
 
-    const fixture = TestBed.createComponent(MobileMenuComponent);
+    const fixture = TestBed.createComponent(MobileProjectMenuComponent);
     fixture.detectChanges();
     const buttons = Array.from(
       (fixture.nativeElement as HTMLElement).querySelectorAll('button')
@@ -51,9 +51,9 @@ describe('MobileMenuComponent', () => {
 
   it('wraps nested items so submenu actions close the sheet too', () => {
     const mobileUi = TestBed.inject(MobileUiService);
-    mobileUi.open('menu');
+    mobileUi.open('project');
 
-    const fixture = TestBed.createComponent(MobileMenuComponent);
+    const fixture = TestBed.createComponent(MobileProjectMenuComponent);
     fixture.detectChanges();
     const el: HTMLElement = fixture.nativeElement;
     const buttons = () => Array.from(el.querySelectorAll('button'));
