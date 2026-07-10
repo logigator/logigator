@@ -27,6 +27,14 @@ import type { SerializedCircuitBody } from '../serialized-circuit';
 import { AuthRequiredError, formatHttpError } from '../persistence-errors';
 import { BoardSnapshotService } from '../../rendering/board-snapshot.service';
 import { UserService } from '../../user/user.service';
+import { whenIdle } from '../../utils/scheduling';
+
+/**
+ * Longest wait for an idle slice before a preview generation starts anyway.
+ * Under a free-running simulation the main thread may never report idle, and
+ * a preview of stale content is worse the longer it lags behind the save.
+ */
+const PREVIEW_IDLE_TIMEOUT_MS = 2000;
 
 /**
  * Parses an API ISO timestamp into epoch ms for the registry's numeric
@@ -755,6 +763,9 @@ export class ServerPersistenceGateway {
     projectId: string
   ): Promise<void> {
     try {
+      // A preview is cosmetic — wait for an idle slice so the generation
+      // cost never stacks onto the frames doing the save's own UI work.
+      await whenIdle(PREVIEW_IDLE_TIMEOUT_MS);
       const previews = await this.snapshot.generatePreviews(project);
       if (!previews) return;
       const formData = new FormData();

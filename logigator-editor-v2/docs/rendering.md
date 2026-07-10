@@ -125,6 +125,7 @@ Owns the app's **single** PixiJS renderer. Every canvas (board, watches) leases 
 - **Multi-canvas** — WebGPU and Canvas drive multiple target canvases natively; the WebGL branch is created with `multiView` (an off-DOM master canvas sized to the largest target, blitted to each target canvas per render — one extra copy per frame on that backend only).
 - **`lease.render`** sizes the target's backing store through its cached `CanvasSource` (CSS box × device pixel ratio — never via `canvas.width`, which would desync pixi's cached render target), then renders with the theme background as clear color. Render space stays in CSS pixels; the DPR only sharpens the backing store.
 - **Culling is the caller's concern** — the board culls its project against its viewport before rendering; watch canvases and offscreen snapshots instead force their subtree visible via the exported `uncullTree` helper, since no cull pass runs for them and stale `culled` bits from another view would hide content.
+- **`suspendPaints()`** — refcounted gate over every leased on-screen blit, for work that holds a scene in a non-live state across frames (the dual-theme server previews, which bake the wrong theme's colors into the scene for one frame). Blits requested while suspended are recorded per canvas and replayed on the last resume, so a one-off frame landing in the window is deferred rather than lost. Offscreen texture renders are unaffected; snapshot consumers coordinate through `BoardSnapshotService.generatingPreviews` instead (the minimap defers and retries).
 
 ---
 
