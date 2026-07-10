@@ -9,6 +9,7 @@ import { SimulationService } from '../simulation/simulation.service';
 import { RendererService } from '../rendering/renderer.service';
 import { PersistenceService } from '../persistence/persistence.service';
 import { ToastService } from '../logging/toast.service';
+import { ClientInfoService } from '../bug-report/client-info.service';
 import { pickTextFile } from '../utils/file-picker';
 
 /**
@@ -26,6 +27,7 @@ export class DebugMenuService {
   private readonly rendererService = inject(RendererService);
   private readonly persistence = inject(PersistenceService);
   private readonly toast = inject(ToastService);
+  private readonly clientInfo = inject(ClientInfoService);
 
   public readonly enabled = environment.debug.debugMenu;
 
@@ -44,10 +46,15 @@ export class DebugMenuService {
           command: () => this.printRendererMode()
         },
         {
+          label: 'Print client info',
+          command: () => this.printClientInfo()
+        },
+        {
           label: 'Print simulation snapshot stats',
           command: () => this.printSnapshotStats()
         },
         { label: 'Spawn test toasts', command: () => this.spawnTestToasts() },
+        { label: 'Throw test error', command: () => this.throwTestError() },
         { separator: true },
         { label: 'Generate dump', command: () => this.generateDump() },
         { label: 'Import dump', command: () => this.importDump() }
@@ -82,6 +89,21 @@ export class DebugMenuService {
     const mode = this.rendererMode(renderer);
     console.log('[debug] renderer mode:', mode, renderer);
     this.toast.info(`Renderer: ${mode}`, 'DebugMenuService');
+  }
+
+  /** Logs the client environment exactly as a bug report would attach it. */
+  private printClientInfo(): void {
+    const info = this.clientInfo.collect();
+    console.log('[debug] client info', info);
+    this.toast.info('Client info printed to console.', 'DebugMenuService');
+  }
+
+  /**
+   * Throws an uncaught error to exercise the global error handler and the
+   * bug-report dialog it opens.
+   */
+  private throwTestError(): void {
+    throw new Error('Test error thrown from the debug menu.');
   }
 
   /**
