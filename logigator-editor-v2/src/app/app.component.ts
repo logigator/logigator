@@ -29,7 +29,6 @@ import {
   LgConfirmDialog,
   LgConfirmPopup,
   LgDrawer,
-  LgPanelMenu,
   LgToast,
   LgWindowOutlet
 } from '@logigator/ui';
@@ -40,7 +39,6 @@ import { WorkMode } from './work-mode/work-mode.enum';
 import { WorkModeService } from './work-mode/work-mode.service';
 import { LayoutService } from './layout/layout.service';
 import { MobileUiService } from './layout/mobile-ui.service';
-import { EditorMenuService } from './ui/editor-menu.service';
 import { SelectionInspectorService } from './project/selection-inspector.service';
 import { ProjectMetadataStore } from './persistence/project-metadata.store';
 import { Component as CircuitComponent } from './components/component';
@@ -52,7 +50,7 @@ import { MobileStatusComponent } from './ui/mobile-status/mobile-status.componen
 import { SimulationControlsComponent } from './ui/simulation-controls/simulation-controls.component';
 import { ComponentListComponent } from './ui/side-bar/component-list/component-list.component';
 import { PortsPanelComponent } from './ui/ports-panel/ports-panel.component';
-import { UserSettingsComponent } from './ui/user-settings/user-settings.component';
+import { MobileMenuComponent } from './ui/mobile-menu/mobile-menu.component';
 import { LoggingService } from './logging/logging.service';
 import { ToastService } from './logging/toast.service';
 import { SessionLifecycleService } from './user/session-lifecycle.service';
@@ -72,7 +70,6 @@ import { SessionLifecycleService } from './user/session-lifecycle.service';
     LgConfirmDialog,
     LgToast,
     LgDrawer,
-    LgPanelMenu,
     LgWindowOutlet,
     InspectionSheetComponent,
     TranslocoDirective,
@@ -84,7 +81,7 @@ import { SessionLifecycleService } from './user/session-lifecycle.service';
     SimulationControlsComponent,
     ComponentListComponent,
     PortsPanelComponent,
-    UserSettingsComponent
+    MobileMenuComponent
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
@@ -114,8 +111,6 @@ export class AppComponent {
   private readonly translocoService = inject(TranslocoService);
 
   protected readonly cursorPosition = signal<Point>(new Point(0, 0));
-
-  protected readonly menuItems = inject(EditorMenuService).items;
 
   public readonly isSimulation = computed(
     () => this.workModeService.mode() === WorkMode.SIMULATION

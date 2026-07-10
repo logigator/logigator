@@ -19,55 +19,8 @@
   <i class="ph ph-caret-down"></i>
 </button>
 
-<lg-menu
-  #menu
-  [model]="menuItems()"
-  (onShow)="menuOpen.set(true)"
-  (onHide)="menuOpen.set(false)"
->
+<lg-menu #menu (onShow)="menuOpen.set(true)" (onHide)="menuOpen.set(false)">
   <ng-template #start>
-    <div class="flex flex-col items-center gap-2 px-4 pt-4">
-      @if (userService.user(); as user) {
-        <lg-avatar
-          [image]="userImageUrl()"
-          [label]="userImageUrl() ? undefined : userInitial()"
-          shape="circle"
-          size="xlarge"
-        />
-        <span class="font-semibold text-lg">{{ user.username }}</span>
-      } @else {
-        <lg-avatar icon="ph ph-user" shape="circle" size="xlarge" />
-        <span class="text-sm">Not signed in</span>
-      }
-    </div>
-    <lg-divider class="my-4" />
-    <div class="flex flex-col gap-4 px-4 pb-4">
-      <div class="flex flex-col gap-2">
-        <span class="text-xs font-semibold uppercase tracking-wider text-muted"
-          >Theme</span
-        >
-        <app-theme-switcher class="min-w-64" />
-      </div>
-      <div class="flex flex-col gap-2">
-        <span class="text-xs font-semibold uppercase tracking-wider text-muted"
-          >Language</span
-        >
-        <app-language-switcher />
-      </div>
-      <div class="flex flex-col gap-2">
-        <span class="text-xs font-semibold uppercase tracking-wider text-muted"
-          >Editor Settings</span
-        >
-        <app-settings />
-      </div>
-    </div>
-  </ng-template>
-  <ng-template #item let-item>
-    <a lgRipple class="flex cursor-pointer items-center gap-2 px-3 py-2">
-      @if (item.icon) {
-        <i [class]="item.icon"></i>
-      }
-      <span>{{ item.label }}</span>
-    </a>
+    <app-user-settings-panel (action)="menu.hide()" />
   </ng-template>
 </lg-menu>

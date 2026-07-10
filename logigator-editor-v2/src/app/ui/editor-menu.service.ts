@@ -22,9 +22,10 @@ import { DebugMenuService } from './debug-menu.service';
 import { ToastService } from '../logging/toast.service';
 
 /**
- * Builds the File/Edit/View/Help menu model and owns the commands behind it.
- * Shared by the desktop title bar (an `lg-menubar`) and the mobile top bar's
- * `lg-panel-menu`, so both surfaces always render the same items.
+ * Builds the menu models and owns the commands behind them: the desktop
+ * File/Edit/View/Help menubar tree (`items`) and the curated flat list for the
+ * compact menu sheet (`compactItems`). Both compose the same per-item builders,
+ * so every action is defined exactly once.
  */
 @Injectable({ providedIn: 'root' })
 export class EditorMenuService {
@@ -52,82 +53,34 @@ export class EditorMenuService {
     this.generateMenuItems()
   );
 
+  /**
+   * Flat, curated model for the compact menu sheet. Only actions without a
+   * dedicated compact surface appear here: undo/redo/save/run live in the top
+   * bar, cut/copy/paste/delete in the selection action bar, zoom in the FAB
+   * and the pinch gesture, and keyboard shortcuts don't apply to touch.
+   */
+  public readonly compactItems: Signal<MenuItem[]> = computed(() =>
+    this.generateCompactItems()
+  );
+
   private generateMenuItems(): MenuItem[] {
     const items: MenuItem[] = [
       {
         label: this.translocoService.translate('titleBar.menuBar.file.label'),
         items: [
-          {
-            label: this.translocoService.translate(
-              'titleBar.menuBar.file.items.newProject.label'
-            ),
-
-            icon: 'ph ph-trash',
-            command: () => this.newProject()
-          },
-          {
-            label: this.translocoService.translate(
-              'titleBar.menuBar.file.items.newComponent.label'
-            ),
-            shortcut: this.shortcutService.binding(
-              ShortcutActionEnum.NEW_COMPONENT
-            )(),
-            command: () => this.newComponent()
-          },
+          this.newProjectItem(),
+          this.newComponentItem(),
           {
             separator: true
           },
-          {
-            label: this.translocoService.translate(
-              'titleBar.menuBar.file.items.open.label'
-            ),
-            shortcut: this.shortcutService.binding(ShortcutActionEnum.OPEN)(),
-            command: () => this.openProject()
-          },
-          {
-            label: this.translocoService.translate(
-              'titleBar.menuBar.file.items.save.label'
-            ),
-            shortcut: this.shortcutService.binding(ShortcutActionEnum.SAVE)(),
-            command: () => this.saveProject()
-          },
-          ...(this.canUploadMainProject()
-            ? [
-                {
-                  label: this.translocoService.translate(
-                    'titleBar.menuBar.file.items.uploadCloud.label'
-                  ),
-                  icon: 'ph ph-cloud-arrow-up',
-                  command: () => this.uploadProject()
-                }
-              ]
-            : []),
-          ...(this.canShareMainProject()
-            ? [
-                {
-                  label: this.translocoService.translate(
-                    'titleBar.menuBar.file.items.share.label'
-                  ),
-                  icon: 'ph ph-share-network',
-                  command: () => this.shareProject()
-                }
-              ]
-            : []),
-          {
-            label: this.translocoService.translate(
-              'titleBar.menuBar.file.items.exportFile.label'
-            ),
-            command: () => this.exportFile()
-          },
+          this.openItem(),
+          this.saveItem(),
+          ...this.cloudItems(),
+          this.exportFileItem(),
           {
             separator: true
           },
-          {
-            label: this.translocoService.translate(
-              'titleBar.menuBar.file.items.generateImage.label'
-            ),
-            command: () => this.generateImage()
-          }
+          this.generateImageItem()
         ]
       },
       {
@@ -233,6 +186,114 @@ export class EditorMenuService {
     if (debugMenu) items.push(debugMenu);
 
     return items;
+  }
+
+  private generateCompactItems(): MenuItem[] {
+    const items: MenuItem[] = [
+      this.newProjectItem(),
+      this.newComponentItem(),
+      this.openItem(),
+      {
+        separator: true
+      },
+      ...this.cloudItems(),
+      this.exportFileItem(),
+      this.generateImageItem()
+    ];
+
+    const debugMenu = this.debugMenuService.buildMenuItem();
+    if (debugMenu) items.push({ separator: true }, debugMenu);
+
+    return items;
+  }
+
+  private newProjectItem(): MenuItem {
+    return {
+      label: this.translocoService.translate(
+        'titleBar.menuBar.file.items.newProject.label'
+      ),
+      icon: 'ph ph-file-plus',
+      command: () => this.newProject()
+    };
+  }
+
+  private newComponentItem(): MenuItem {
+    return {
+      label: this.translocoService.translate(
+        'titleBar.menuBar.file.items.newComponent.label'
+      ),
+      icon: 'ph ph-circuitry',
+      shortcut: this.shortcutService.binding(
+        ShortcutActionEnum.NEW_COMPONENT
+      )(),
+      command: () => this.newComponent()
+    };
+  }
+
+  private openItem(): MenuItem {
+    return {
+      label: this.translocoService.translate(
+        'titleBar.menuBar.file.items.open.label'
+      ),
+      icon: 'ph ph-folder-open',
+      shortcut: this.shortcutService.binding(ShortcutActionEnum.OPEN)(),
+      command: () => this.openProject()
+    };
+  }
+
+  private saveItem(): MenuItem {
+    return {
+      label: this.translocoService.translate(
+        'titleBar.menuBar.file.items.save.label'
+      ),
+      icon: 'ph ph-floppy-disk',
+      shortcut: this.shortcutService.binding(ShortcutActionEnum.SAVE)(),
+      command: () => this.saveProject()
+    };
+  }
+
+  /** Upload/share follow the open project's source; empty when neither applies. */
+  private cloudItems(): MenuItem[] {
+    const items: MenuItem[] = [];
+    if (this.canUploadMainProject()) {
+      items.push({
+        label: this.translocoService.translate(
+          'titleBar.menuBar.file.items.uploadCloud.label'
+        ),
+        icon: 'ph ph-cloud-arrow-up',
+        command: () => this.uploadProject()
+      });
+    }
+    if (this.canShareMainProject()) {
+      items.push({
+        label: this.translocoService.translate(
+          'titleBar.menuBar.file.items.share.label'
+        ),
+        icon: 'ph ph-share-network',
+        command: () => this.shareProject()
+      });
+    }
+    return items;
+  }
+
+  private exportFileItem(): MenuItem {
+    return {
+      label: this.translocoService.translate(
+        'titleBar.menuBar.file.items.exportFile.label'
+      ),
+      icon: 'ph ph-download-simple',
+      command: () => this.exportFile()
+    };
+  }
+
+  private generateImageItem(): MenuItem {
+    return {
+      label: this.translocoService.translate(
+        'titleBar.menuBar.file.items.generateImage.label'
+      ),
+      icon: 'ph ph-image',
+      command: () => this.generateImage()
+    };
   }
 
   private openShortcutManager(): void {

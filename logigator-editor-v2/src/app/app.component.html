@@ -138,15 +138,10 @@
     <lg-drawer
       [visible]="mobileUi.activeSheet() === 'menu'"
       (visibleChange)="onSheetClosed($event)"
-      position="left"
+      position="bottom"
       [header]="t('mobile.menu')"
     >
-      <div class="flex flex-col">
-        <div class="border-b border-border pb-1 mb-1">
-          <app-user-settings></app-user-settings>
-        </div>
-        <lg-panel-menu [model]="menuItems()"></lg-panel-menu>
-      </div>
+      <app-mobile-menu></app-mobile-menu>
     </lg-drawer>
   </ng-container>
 }
