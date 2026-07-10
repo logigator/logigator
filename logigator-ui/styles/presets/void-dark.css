@@ -1,0 +1,35 @@
+/*
+ * Void — true-black dark preset.
+ *
+ * Near-pure black neutrals for OLED screens (the board and content go to
+ * #000000, so unlit pixels stay off). High contrast; the green primary and blue
+ * cloud accents pop hard against the black. Applied as `html.void-dark`
+ * (see carbon-dark.css for the specificity rationale). Overrides only the neutral
+ * surface palette — primary, cloud and state colors inherit their dark roles
+ * from theme.css.
+ */
+
+html.void-dark {
+  color-scheme: dark;
+
+  --lg-surface-0: #ffffff;
+  --lg-surface-50: #f5f5f5;
+  --lg-surface-100: #e6e6e6;
+  --lg-surface-200: #cccccc;
+  --lg-surface-300: #a3a3a3;
+  --lg-surface-400: #737373;
+  --lg-surface-500: #525252;
+  --lg-surface-600: #3d3d3d;
+  --lg-surface-700: #2a2a2a;
+  --lg-surface-800: #171717;
+  --lg-surface-900: #0a0a0a;
+  --lg-surface-950: #000000;
+
+  --lg-content: #000000;
+  --lg-content-hover: #141414;
+  --lg-border: #262626;
+  --lg-text: #ededed;
+  --lg-text-hover: #ffffff;
+  --lg-muted: #8a8a8a;
+  --lg-muted-hover: #b0b0b0;
+}

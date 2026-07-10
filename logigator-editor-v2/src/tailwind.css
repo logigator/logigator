@@ -5,6 +5,16 @@
 @import '../../logigator-ui/styles/theme.css';
 @import '../../logigator-ui/styles/theme.tw.css';
 
+/* Selectable theme palettes, applied as html.${id}-${variant} by ThemingService.
+   The default "classic" theme has no file — it falls back to the base theme.css
+   values above. */
+@import '../../logigator-ui/styles/presets/carbon-dark.css';
+@import '../../logigator-ui/styles/presets/carbon-light.css';
+@import '../../logigator-ui/styles/presets/mocha-dark.css';
+@import '../../logigator-ui/styles/presets/mocha-light.css';
+@import '../../logigator-ui/styles/presets/void-dark.css';
+@import '../../logigator-ui/styles/presets/void-light.css';
+
 /* The z-index layering scale (--lg-z-* + z-* utilities). */
 @import '../../logigator-ui/styles/layers.css';
 

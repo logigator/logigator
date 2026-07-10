@@ -35,6 +35,9 @@ describe('BoardSnapshotService', () => {
   }
 
   beforeEach(() => {
+    // A theme selected mid-test persists to localStorage; clear it so the next
+    // test's freshly-constructed ThemingService loads the default.
+    localStorage.clear();
     renderCalls = [];
     renderer = {
       render: vi.fn((opts: RenderCall) => renderCalls.push(opts)),
@@ -261,6 +264,55 @@ describe('BoardSnapshotService', () => {
 
     await expect(service.generatePreviews(project, 512)).rejects.toThrow();
     expect(theming.currentThemeType()).toBe(original);
+  });
+
+  // renderProjectToTexture is the shared path for user image exports AND the
+  // minimap (the only difference is the `background` option); this guards both.
+  it('renders exports/minimap in the current theme (background + baked graphics)', () => {
+    const theming = TestBed.inject(ThemingService);
+    theming.setTheme('void'); // dark, board 0x000000, live key 'void-dark'
+    const comp = makeAnd(2);
+    comp.position.set(0, 0);
+    project.addComponent(comp);
+
+    const keys: string[] = [];
+    (renderer.render as Mock).mockImplementation((opts: RenderCall) => {
+      keys.push(theming.currentThemeKey());
+      renderCalls.push(opts);
+    });
+
+    service
+      .renderProjectToTexture(project, { multiplier: 1, background: 'solid' })
+      .destroy(true);
+
+    // The background follows the current theme...
+    expect(renderCalls.at(-1)!.clearColor).toBe(0x000000);
+    // ...and so do the baked component graphics — no default override.
+    expect(keys).toContain('void-dark');
+    expect(keys.some((k) => k.startsWith('canonical'))).toBe(false);
+  });
+
+  it('generatePreviews always renders in the default theme, ignoring the selection', async () => {
+    const theming = TestBed.inject(ThemingService);
+    theming.setTheme('void'); // a non-default theme is selected
+    const comp = makeAnd(2);
+    comp.position.set(0, 0);
+    project.addComponent(comp);
+
+    const keys: string[] = [];
+    (renderer.render as Mock).mockImplementation((opts: RenderCall) => {
+      keys.push(theming.currentThemeKey());
+      renderCalls.push(opts);
+    });
+
+    await service.generatePreviews(project, 128);
+
+    // Both variants render against the default (canonical) theme, never 'void-*'.
+    expect(keys).toContain('canonical-dark');
+    expect(keys).toContain('canonical-light');
+    expect(keys.some((k) => k.startsWith('void'))).toBe(false);
+    // The live selection is restored afterward.
+    expect(theming.currentThemeKey()).toBe('void-dark');
   });
 
   it('neutralizes the selection tint during the content pass and restores it', () => {

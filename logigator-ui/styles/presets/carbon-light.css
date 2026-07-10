@@ -1,0 +1,34 @@
+/*
+ * Carbon — light variant.
+ *
+ * A cool blue-grey "blueprint paper" light palette with a deep slate text, so
+ * the green primary and blue cloud accents both sit naturally. Applied as
+ * `html.carbon-light`; being light it carries no `.dark-mode` class, so primary,
+ * cloud and state colors inherit their light roles from theme.css. Overrides
+ * only the neutral surface palette.
+ */
+
+html.carbon-light {
+  color-scheme: light;
+
+  --lg-surface-0: #ffffff;
+  --lg-surface-50: #f3f7fc;
+  --lg-surface-100: #e7eef7;
+  --lg-surface-200: #d2dded;
+  --lg-surface-300: #b2c2da;
+  --lg-surface-400: #8395b4;
+  --lg-surface-500: #5e7291;
+  --lg-surface-600: #465873;
+  --lg-surface-700: #34435b;
+  --lg-surface-800: #222f42;
+  --lg-surface-900: #131d2c;
+  --lg-surface-950: #0a111c;
+
+  --lg-content: #ffffff;
+  --lg-content-hover: #eef3fa;
+  --lg-border: #d2dded;
+  --lg-text: #2a3a52;
+  --lg-text-hover: #131d2c;
+  --lg-muted: #5e7291;
+  --lg-muted-hover: #465873;
+}

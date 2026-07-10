@@ -1,0 +1,35 @@
+/*
+ * Mocha — warm dark preset.
+ *
+ * Coffee/taupe charcoal neutrals (Gruvbox / Catppuccin Mocha warmth). The warm
+ * temperature is the deliberate contrast to the cool Carbon and Classic darks;
+ * the cool green primary and blue cloud read crisply against the warm ground.
+ * Applied as `html.mocha-dark` (see carbon-dark.css for the specificity
+ * rationale). Overrides only the neutral surface palette — primary, cloud and
+ * state colors inherit their dark roles from theme.css.
+ */
+
+html.mocha-dark {
+  color-scheme: dark;
+
+  --lg-surface-0: #ffffff;
+  --lg-surface-50: #faf7f4;
+  --lg-surface-100: #f2ece5;
+  --lg-surface-200: #e2d7c9;
+  --lg-surface-300: #cbb9a4;
+  --lg-surface-400: #a08d76;
+  --lg-surface-500: #766555;
+  --lg-surface-600: #574a3e;
+  --lg-surface-700: #3f352c;
+  --lg-surface-800: #2b2420;
+  --lg-surface-900: #1c1815;
+  --lg-surface-950: #100d0b;
+
+  --lg-content: #1c1815;
+  --lg-content-hover: #26201b;
+  --lg-border: #392f27;
+  --lg-text: #ece2d6;
+  --lg-text-hover: #fff8f0;
+  --lg-muted: #a89685;
+  --lg-muted-hover: #c9b9a6;
+}

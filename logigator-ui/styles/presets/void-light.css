@@ -1,0 +1,33 @@
+/*
+ * Void — light counterpart.
+ *
+ * The high-contrast light pole: pure-white board/content with neutral zinc greys
+ * and near-black text. Being light it carries no `.dark-mode` class, so primary,
+ * cloud and state colors inherit their light roles from theme.css. Overrides
+ * only the neutral surface palette.
+ */
+
+html.void-light {
+  color-scheme: light;
+
+  --lg-surface-0: #ffffff;
+  --lg-surface-50: #fafafa;
+  --lg-surface-100: #f4f4f5;
+  --lg-surface-200: #e4e4e7;
+  --lg-surface-300: #d4d4d8;
+  --lg-surface-400: #a1a1aa;
+  --lg-surface-500: #71717a;
+  --lg-surface-600: #52525b;
+  --lg-surface-700: #3f3f46;
+  --lg-surface-800: #27272a;
+  --lg-surface-900: #18181b;
+  --lg-surface-950: #0a0a0a;
+
+  --lg-content: #ffffff;
+  --lg-content-hover: #f4f4f5;
+  --lg-border: #d4d4d8;
+  --lg-text: #18181b;
+  --lg-text-hover: #000000;
+  --lg-muted: #52525b;
+  --lg-muted-hover: #3f3f46;
+}

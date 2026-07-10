@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LgSelectButton } from '@logigator/ui';
 import { ThemingService } from '../theming.service';
@@ -12,14 +12,26 @@ import { ThemeType } from '../theme-type.enum';
 export class ThemeSwitcherComponent {
   private readonly themingService = inject(ThemingService);
 
-  protected readonly currentTheme = this.themingService.currentThemeType;
+  protected readonly activeThemeId = computed(
+    () => this.themingService.activeTheme().id
+  );
+  protected readonly currentVariant = this.themingService.currentThemeType;
 
-  protected readonly themeOptions = [
-    { label: 'Light', icon: 'ph ph-sun', value: ThemeType.LIGHT },
-    { label: 'Dark', icon: 'ph ph-moon', value: ThemeType.DARK }
+  protected readonly themeOptions = this.themingService.themes.map((theme) => ({
+    label: theme.label,
+    value: theme.id
+  }));
+
+  protected readonly variantOptions = [
+    { label: 'Dark', icon: 'ph ph-moon', value: ThemeType.DARK },
+    { label: 'Light', icon: 'ph ph-sun', value: ThemeType.LIGHT }
   ];
 
-  protected setTheme(theme: ThemeType): void {
-    this.themingService.setTheme(theme);
+  protected setTheme(id: string): void {
+    this.themingService.setTheme(id);
+  }
+
+  protected setVariant(variant: ThemeType): void {
+    this.themingService.setVariant(variant);
   }
 }

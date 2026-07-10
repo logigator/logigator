@@ -149,7 +149,6 @@ export class BoardSnapshotService {
   ): Promise<{ dark: Blob; light: Blob } | null> {
     if (!this.available) return null;
 
-    const original = this.themingService.currentThemeType();
     let darkCanvas!: HTMLCanvasElement;
     let lightCanvas!: HTMLCanvasElement;
     try {
@@ -158,7 +157,10 @@ export class BoardSnapshotService {
     } finally {
       // Always restore the live theme, even if a render throws — the caller
       // swallows errors, so a leaked theme switch would be silent and baffling.
-      this._applyThemeForRender(project, original);
+      // Restore the active preset's canvas, not just its mode (background is
+      // per-preset, so a mode-only restore would drop the preset's board color).
+      this.themingService.restoreActiveTheme();
+      project.applyTheme(false);
     }
 
     const dark = await this._canvasToBlob(darkCanvas);
