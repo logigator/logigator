@@ -29,7 +29,7 @@ export class CustomComponent extends Component<CustomComponentOptions> {
     def: CustomComponentDefinition,
     config: ComponentConfig<CustomComponentOptions>
   ) {
-    // Port counts come from the definition, never the element (Invariant A).
+    // Port counts come from the definition, never the element.
     super(def.numInputs, def.numOutputs, options.direction.value, options);
     this._def = def;
     this.config = config;
@@ -61,8 +61,7 @@ export class CustomComponent extends Component<CustomComponentOptions> {
     return this._def.labels.slice(this._def.numInputs);
   }
 
-  // Legacy custom components used a fixed body width of 3; could grow with the
-  // symbol width in a later phase.
+  // Fixed body width of 3 grid units, independent of symbol width.
   // eslint-disable-next-line @typescript-eslint/class-literal-property-style
   protected get bodyGridWidth(): number {
     return 3;

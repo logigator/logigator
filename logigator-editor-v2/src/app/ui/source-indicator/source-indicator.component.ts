@@ -22,18 +22,16 @@ interface StateStyle {
  * Provenance / persistence indicator for a custom component or project, in two
  * variants:
  *
- * - `chip` (default) — a solid {@link LgBadge} pill with an icon + label. Being a
- *   filled badge it stays legible on any surface, including the coloured title bar.
- * - `badge` — a small corner glyph, overlaid on a palette tile (the tile is the
- *   positioned ancestor; the host is `display: contents` so the absolute badge
- *   anchors to the tile exactly as the inline markup did). Too small for a full
- *   `LgBadge`, so it stays a bespoke dot.
+ * - `chip` (default) — a filled {@link LgBadge} pill (icon + label), legible on
+ *   any surface, including the coloured title bar.
+ * - `badge` — a small corner glyph on a palette tile (host is `display: contents`
+ *   so the absolute badge anchors to the tile); a bespoke dot, too small for
+ *   `LgBadge`.
  *
  * Five states: `server` (cloud), `browser` (saved locally), `draft` (never saved
- * yet), `share` (opened read-only from a share link) and `embedded` (a placed
- * custom whose library master is gone — its circuit survives only as the embedded
- * copy). Owns the icon, colour and label per state so every call site stays in
- * sync; tooltips are overridable (defaults suit a component) so hosts can
+ * yet), `share` (read-only from a share link), `embedded` (placed custom whose
+ * library master is gone — circuit survives only as the embedded copy). Owns the
+ * icon, colour and label per state; tooltips are overridable so hosts can
  * localize them.
  */
 @Component({

@@ -36,7 +36,7 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
       class="pointer-events-none absolute inset-0 rounded-full bg-surface-300 transition-colors duration-200 peer-hover:bg-surface-400 dark:bg-surface-700 dark:peer-hover:bg-surface-600 peer-checked:bg-primary peer-checked:peer-hover:bg-primary-emphasis peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-primary peer-disabled:opacity-60"
     ></span>
     <!-- 1rem handle, surface-0 in light; in dark it flips surface-400 →
-         surface-900 with the checked state, like Aura. -->
+         surface-900 with the checked state. -->
     <span
       aria-hidden="true"
       class="pointer-events-none absolute top-1 left-1 size-4 rounded-full bg-surface-0 transition-all duration-200 peer-checked:translate-x-4 dark:bg-surface-400 dark:peer-checked:bg-surface-900 peer-disabled:opacity-60"

@@ -54,7 +54,7 @@ describe('CustomComponent', () => {
       { symbol: 'CC', numInputs: 2, numOutputs: 1, labels: ['A', 'B', 'Q'] },
       'browser'
     );
-    // `i`/`o` on the element are intentionally ignored for customs (Invariant A).
+    // `i`/`o` on the element are intentionally ignored for customs.
     const instance = placeLatest(master);
 
     expect(instance.numInputs).toBe(2);

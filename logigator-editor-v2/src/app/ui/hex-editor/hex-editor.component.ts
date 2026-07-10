@@ -53,16 +53,15 @@ const RADICES: Record<Radix, RadixSpec> = {
 };
 
 /**
- * A hex editor for a packed memory buffer. It is a plain, self-contained
- * component (no dialog wrapper) — place it anywhere, or open it in a
- * `DynamicDialog` (see {@link MemoryDataOptionInputComponent}). Its contract is
- * deliberately generic — a `Uint8Array` plus a word width and word count — so
- * it knows nothing about any specific component, base64 transport, or
- * persistence policy; callers adapt their own storage to this interface. It
- * seeds a working copy from the inputs, lets the user edit it in a virtualized
- * grid (word- or byte-addressed), and emits the edited `Uint8Array` on save /
- * a bare event on cancel. The grid is virtualized so a large word count stays
- * responsive, and it adapts column count / sizing for compact and touch layouts.
+ * A hex editor for a packed memory buffer. A plain, self-contained component
+ * (no dialog wrapper) — place it anywhere, or open it in a `DynamicDialog` (see
+ * {@link MemoryDataOptionInputComponent}). Its contract is deliberately generic
+ * — a `Uint8Array` plus a word width and word count — so it knows nothing about
+ * any specific component, base64 transport, or persistence policy; callers adapt
+ * their own storage to this interface. It seeds a working copy from the inputs,
+ * lets the user edit it in a virtualized grid (word- or byte-addressed, staying
+ * responsive at large word counts, sizing columns for compact/touch layouts),
+ * and emits the edited `Uint8Array` on save / a bare event on cancel.
  *
  * With `readOnly`, it doubles as a live memory *viewer* (the ROM inspection):
  * cells render as plain text, the editing chrome (Clear, Save/Cancel) is

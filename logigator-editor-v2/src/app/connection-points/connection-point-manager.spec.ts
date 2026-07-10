@@ -62,7 +62,7 @@ describe('ConnectionPointManager', () => {
     const mgr = makeManager();
     mgr.onWireAdded(snap(h));
     mgr.onWireAdded(snap(v));
-    // Interior-on-interior is allowed and does not form a CP under the new rule.
+    // Interior-on-interior is allowed and does not form a CP.
     expect(mgr.hasCpAt(new Point(2.5, 2.5))).toBe(false);
   });
 

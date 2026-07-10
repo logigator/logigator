@@ -20,8 +20,8 @@ import { LgShortcut } from '../shortcut/shortcut';
 import { MENU_ITEM_CLASS, MenuItem } from './menu-item.model';
 
 /**
- * Submenu drop positions: flush below/left-aligned (the panel hugs the bar,
- * like PrimeNG's menubar), flipping up, then right-aligned.
+ * Submenu drop positions: flush below/left-aligned (the panel hugs the bar),
+ * flipping up, then right-aligned.
  */
 const SUBMENU_POSITIONS: ConnectedPosition[] = [
   {
@@ -49,13 +49,12 @@ const SUBMENU_POSITIONS: ConnectedPosition[] = [
  * top-level `MenuItem[]`; items with `items` open a submenu on click (and switch
  * on hover while a submenu is already open), leaf items run their `command`.
  *
- * Three optional content slots — `#start` / `#end` (free content pinned to the
- * bar's leading / trailing edge) and `#item` (each menu row, context
- * `{ $implicit: item, root }` where `root` distinguishes a top-level item from a
- * submenu item). The default rows render the label, the item's `shortcut` as
- * {@link LgShortcut} chips, and a caret on top-level parents — item icons are a
- * custom-`#item` concern. The bar imposes no colour of its own (radius/padding
- * are internal); tint it by passing utility classes on the host.
+ * Three optional content slots — `#start` / `#end` (edge-pinned content) and
+ * `#item` (each menu row, context `{ $implicit: item, root }` where `root`
+ * distinguishes a top-level item from a submenu item). The default rows render
+ * the label, the item's `shortcut` as {@link LgShortcut} chips, and a caret on
+ * top-level parents — item icons are a custom-`#item` concern. The bar imposes
+ * no colour of its own; tint it by passing utility classes on the host.
  *
  * The submenu overlay deliberately has **no backdrop** so the other top-level
  * items stay hoverable/clickable. While a submenu is open the bar is *armed*:

@@ -47,7 +47,7 @@ export interface CircuitFileV0 extends PersistedCircuitV0 {
   components?: LegacyComponentDefinition[];
   /**
    * Server-transport only: the response `dependencies`, each carrying the
-   * additive embedded `snapshot` (R14). Old-editor *files* never have this; the
+   * additive embedded `snapshot`. Old-editor *files* never have this; the
    * `v0ToV1` migration revives present snapshots into `definitions[]`.
    */
   dependencies?: EmbeddedDependency[];

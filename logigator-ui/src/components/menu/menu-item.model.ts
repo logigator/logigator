@@ -1,13 +1,6 @@
 import { LgShortcutBinding } from '../shortcut/shortcut';
 
-/**
- * The menu model shared by the menu surfaces. A structural subset of PrimeNG's
- * `MenuItem`, so a PrimeNG `MenuItem[]` is assignable to it.
- *
- * `command`'s parameter is required (not optional) on purpose: that makes a
- * PrimeNG `MenuItem` assignable to this one regardless of whether PrimeNG types
- * its own command parameter as required or optional.
- */
+/** The command event passed to a {@link MenuItem}'s `command` callback. */
 export interface MenuItemCommandEvent {
   originalEvent?: Event;
   item?: MenuItem;

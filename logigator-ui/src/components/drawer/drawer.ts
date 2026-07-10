@@ -22,9 +22,8 @@ let nextId = 0;
 type DrawerPosition = 'left' | 'right' | 'top' | 'bottom';
 
 // Default cross-axis size per edge. Side drawers fill the (dynamic) viewport
-// height at a fixed width; bottom/top sheets size to their content and only cap
-// at `calc(100dvh - 2.5rem)`, so a sheet whose content doesn't fill the screen
-// opens just as tall as it needs to. `styleClass` (with `!`) can still override.
+// height at a fixed width; bottom/top sheets size to their content, capped at
+// `calc(100dvh - 2.5rem)`. `styleClass` (with `!`) can still override.
 const SHEET_MAX = 'max-h-[calc(100dvh-2.5rem)]';
 const POSITION_SIZE: Record<DrawerPosition, string> = {
   left: 'h-dvh w-80',
@@ -41,7 +40,7 @@ const POSITION_HIDDEN: Record<DrawerPosition, string> = {
   bottom: 'translate-y-full'
 };
 
-// A border on the edge facing the content (the inner edge), matching Aura.
+// A border on the edge facing the content (the inner edge).
 const POSITION_BORDER: Record<DrawerPosition, string> = {
   left: 'border-e border-border',
   right: 'border-s border-border',

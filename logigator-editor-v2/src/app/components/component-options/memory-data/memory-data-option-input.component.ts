@@ -12,7 +12,7 @@ import {
 
 /**
  * Side-panel renderer for {@link MemoryDataComponentOption}. It opens the
- * generic {@link HexEditorComponent} in a PrimeNG `DynamicDialog` and adapts
+ * generic {@link HexEditorComponent} in a dialog and adapts
  * between the stored value (a base64 bit-packed blob) and the editor's
  * `Uint8Array` + dimensions contract: decoding the blob and snapshotting the
  * dimensions as the dialog's input values, then trimming and re-encoding the

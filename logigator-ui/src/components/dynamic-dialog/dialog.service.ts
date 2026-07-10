@@ -14,9 +14,9 @@ import {
 } from './dynamic-dialog-container';
 
 /**
- * Opens components in a modal dialog imperatively — the in-house replacement for
- * PrimeNG's `DialogService`. Centred over a `cdk/overlay` global overlay with a
- * backdrop, focus trap + restore, and Escape / (optional) backdrop dismissal.
+ * Opens components in a modal dialog imperatively. Centred over a `cdk/overlay`
+ * global overlay with a backdrop, focus trap + restore, and Escape / (optional)
+ * backdrop dismissal.
  * `root`-provided, so no provider wiring is needed at call sites.
  */
 @Injectable({ providedIn: 'root' })

@@ -30,7 +30,7 @@ interface PlugRow {
 }
 
 /**
- * The component-level Ports panel ([§E2]): two reorderable lists (inputs, then
+ * The component-level Ports panel: two reorderable lists (inputs, then
  * outputs) that configure a custom component's port order and labels. Shown only
  * while editing a component.
  *

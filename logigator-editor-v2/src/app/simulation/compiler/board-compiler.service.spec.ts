@@ -196,7 +196,7 @@ describe('BoardCompilerService', () => {
       .compile(project)
       .descriptor.components.find((c) => c.type === 2)!;
 
-    // The engine consumes within-group index arrays verbatim (plan §6).
+    // The engine consumes within-group index arrays verbatim.
     expect(unit.negInputs).toEqual([1]);
     expect(unit.negOutputs).toEqual([0]);
   });

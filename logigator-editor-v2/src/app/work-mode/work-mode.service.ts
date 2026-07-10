@@ -36,7 +36,7 @@ export class WorkModeService {
         `mode change to ${mode} rejected: editing is locked during simulation`,
         'WorkModeService'
       );
-      return; // editing is locked while a simulation runs
+      return;
     }
     if (mode !== WorkMode.COMPONENT_PLACEMENT) {
       this.setSelectedComponentType(null);

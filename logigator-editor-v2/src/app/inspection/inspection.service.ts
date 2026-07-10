@@ -157,7 +157,7 @@ export class InspectionService {
     }
   }
 
-  /** Idempotent removal — reached from close() and presenter dismissals. */
+  /** Idempotent removal — safe when the entry is already gone. */
   private _remove(entry: OpenInspection): void {
     if (!this._open().includes(entry)) {
       return;

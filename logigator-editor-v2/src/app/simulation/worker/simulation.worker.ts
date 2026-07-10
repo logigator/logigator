@@ -170,13 +170,12 @@ async function stopRun(): Promise<void> {
 /**
  * Target-Hz pacing: each iteration runs the ticks the wall clock says are due
  * since the run started. Batches are bounded by wall-clock time, not tick
- * count: at a high target rate a tick-count cap can block the worker for
+ * count: at a high target rate a tick-count cap would block the worker for
  * hundreds of ms in one synchronous `run`, starving the per-frame snapshot
- * pull so the canvas repaints only once per batch. The `ms` bound returns
- * control to the message pump after a few ms regardless of how many ticks ran,
- * so inputs and snapshot requests interleave. When a batch is cut short by the
- * budget the target is unreachable on this machine, so the next batch runs
- * back-to-back rather than idling an interval.
+ * pull — the `ms` bound returns control to the message pump after a few ms so
+ * inputs and snapshots interleave. When a batch is cut short by the budget the
+ * target is unreachable on this machine, so the next batch runs back-to-back
+ * rather than idling an interval.
  */
 function paceLoop(): void {
   if (runMode !== 'target' || !sim) {

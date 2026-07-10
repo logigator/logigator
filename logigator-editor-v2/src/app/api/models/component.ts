@@ -10,7 +10,7 @@ export interface ComponentSummary extends CircuitResource {
   numOutputs: number;
   labels: string[];
   stargazersCount?: number;
-  /** Additive (R14) — monotonic, bumped on each component save. */
+  /** Monotonic; bumped on each component save. */
   version?: number;
 }
 
@@ -19,7 +19,7 @@ export interface ComponentSummary extends CircuitResource {
 export interface ComponentDependency {
   dependency: ComponentSummary;
   model: number;
-  /** Additive (R14) — the frozen embedded circuit as placed. */
+  /** The frozen embedded circuit as placed. */
   snapshot?: DependencySnapshot;
 }
 

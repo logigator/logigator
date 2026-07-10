@@ -37,7 +37,6 @@ export interface NewComponentMeta {
  * Masters live in the browser id space: creating opens an empty editor, opening
  * loads a saved master's circuit from the browser `components` store (or re-focuses
  * an already-open editor), and closing saves a dirty editor before disposing it.
- * The server target lands in a later phase.
  */
 @Injectable({ providedIn: 'root' })
 export class CustomComponentService {
@@ -205,9 +204,8 @@ export class CustomComponentService {
 
   /**
    * Closes a component editor tab with no prompting, discarding any unsaved
-   * changes. For flows that have already resolved the dirty question themselves
-   * — the logout teardown closes server editors after its own save/discard
-   * dialog. Regular tab closing goes through {@link closeComponent}.
+   * changes. For flows that have already resolved the dirty question themselves.
+   * Regular tab closing goes through {@link closeComponent}.
    */
   public forceCloseComponent(project: Project): void {
     this._disposeEditor(project);

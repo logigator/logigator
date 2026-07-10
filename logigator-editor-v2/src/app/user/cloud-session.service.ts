@@ -17,8 +17,7 @@ export type CloudSaveVerdict = 'ok' | 'logged-out' | 'foreign';
  * Tracks which account each open cloud document belongs to and answers "may
  * this document be saved to the cloud right now?" — the state half of the
  * session lifecycle, deliberately free of persistence dependencies so
- * `PersistenceService` can consult it (the orchestration half,
- * `SessionLifecycleService`, sits above persistence).
+ * `PersistenceService` can consult it.
  *
  * Ownership is stamped reactively: whenever a user is signed in, every
  * registered `source:'server'` document that has no stamp yet is stamped with

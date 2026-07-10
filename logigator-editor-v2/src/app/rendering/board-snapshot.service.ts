@@ -55,7 +55,7 @@ const REFERENCE_STEP = 0;
 
 /**
  * Renders a project's content into an offscreen `RenderTexture`. The reusable
- * primitive behind image export, server previews and (later) a minimap: it
+ * primitive behind image export, server previews and the minimap: it
  * renders the *real* scene graph, so every component type — including ROM and
  * flattened custom components — is covered without any per-type code.
  *
@@ -307,14 +307,12 @@ export class BoardSnapshotService {
     project.setOverlayVisible(false);
 
     // Render the content at `lineScale`, independent of the live zoom, so the
-    // export matches the natural look: the matrix scales line weights up
-    // proportionally with the multiplier (higher resolution = the same picture
-    // with more pixels, not thinner lines) while the `lineScale` floor keeps
-    // them visible below 1×. Text is a pre-rasterized texture, so its glyph
-    // resolution is bumped to the multiplier separately to stay crisp — or
-    // hidden outright (`hideText`) for outputs too small to render glyphs.
-    // Everything is restored afterwards — no flicker, nothing renders on-screen
-    // between the calls.
+    // export keeps the natural look: the matrix scales line weights up
+    // proportionally with the multiplier, and the `lineScale` floor keeps them
+    // visible below 1×. Text is pre-rasterized, so its glyph resolution is
+    // bumped to the multiplier separately to stay crisp — or hidden (`hideText`)
+    // for outputs too small to render glyphs. Everything is restored afterwards;
+    // nothing renders on-screen between the calls.
     const liveScale = project.scale.x;
     this._applyContentScale(project, lineScale);
     const restoreText = options.hideText

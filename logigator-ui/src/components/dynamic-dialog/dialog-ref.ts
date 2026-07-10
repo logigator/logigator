@@ -1,8 +1,7 @@
 import { Observable, ReplaySubject, Subject } from 'rxjs';
 
 /**
- * Handle to an open dialog ({@link DialogService.open}). Mirrors the slice of
- * PrimeNG's `DynamicDialogRef` the editor uses:
+ * Handle to an open dialog ({@link DialogService.open}):
  *
  * - `close(result?)` — close the dialog, resolving `onClose` with `result`.
  * - `onClose` — emits the close result (or `undefined` when dismissed) **once**,

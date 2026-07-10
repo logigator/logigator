@@ -203,7 +203,7 @@ function decodeNegation(element: ProjectElement): {
 }
 
 /**
- * Revives the additive embedded snapshots (R14) carried by a server response's
+ * Revives the additive embedded snapshots carried by a server response's
  * `dependencies` into native {@link SnapshotDefinition}s. Each entry's `model`
  * is the file-local type id (kept verbatim so the body's custom `t`s match);
  * the summary travels frozen inside the `snapshot` (so a stale instance renders

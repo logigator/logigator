@@ -7,7 +7,7 @@ import { v0ToV1Migration } from './v0-to-v1.migration';
  * `CURRENT_FILE_VERSION`. Each entry advances to the next version, never
  * straight to newest.
  *
- * The v0→v1 entry is registry-backed (see its docs); future native
- * version→version migrations are pure data transforms appended here.
+ * The v0→v1 entry is registry-backed; native version→version migrations are
+ * pure data transforms.
  */
 export const MIGRATIONS: Migration[] = [v0ToV1Migration];

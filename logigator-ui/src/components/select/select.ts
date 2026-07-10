@@ -54,8 +54,8 @@ let nextId = 0;
  * A single-select dropdown. `ControlValueAccessor` whose value is the
  * **`optionValue` primitive** (string/number), or the whole option when
  * `optionValue` is unset. Options are matched by **strict `===` on that
- * resolved value — never a structural compare** (a call site binds a numeric
- * index specifically to dodge deep-equals on a PixiJS `Project`).
+ * resolved value — never a structural compare** (strict `===` dodges a
+ * deep-equals over a heavy object like a PixiJS `Project`).
  *
  * The trigger is a `role="combobox"` button skinned like the other form fields;
  * the panel is a `role="listbox"` `cdk/overlay`, with keyboard navigation
@@ -218,9 +218,9 @@ export class LgSelect implements ControlValueAccessor, OnDestroy {
 
   /**
    * Per-option classes. The selected row gets a primary-tinted highlight
-   * (Aura's `highlight`: primary-100/primary-800 in light, a translucent
-   * primary wash in dark); the keyboard/hover-active row that is *not* selected
-   * gets the neutral content-hover surface.
+   * (primary-100/primary-800 in light, a translucent primary wash in dark);
+   * the keyboard/hover-active row that is *not* selected gets the neutral
+   * content-hover surface.
    */
   protected optionClasses(index: number, selected: boolean): string {
     return [

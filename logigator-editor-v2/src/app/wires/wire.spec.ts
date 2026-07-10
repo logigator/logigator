@@ -83,8 +83,8 @@ describe('Wire tint', () => {
   });
 
   // The shared context is a white base, so the tint IS the wire's color. The
-  // selection color must be a distinct explicit color in EVERY theme — the
-  // former multiplicative dark tint was invisible on light mode's black wires
+  // selection color must be a distinct explicit color in EVERY theme — a
+  // multiplicative dark tint would be invisible on light mode's black wires
   // (black × anything = black).
   it('derives base and selection color from the theme, distinct in both themes', () => {
     for (const type of [ThemeType.DARK, ThemeType.LIGHT]) {

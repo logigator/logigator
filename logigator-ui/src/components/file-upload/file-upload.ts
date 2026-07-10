@@ -7,16 +7,14 @@ export interface LgFileSelectEvent {
 }
 
 /**
- * A file drop zone fronting a hidden native `<input type="file">`: files can
- * be dragged onto the dashed area, and clicking it (or Enter/Space) opens the
- * native picker. `chooseLabel` is the main prompt line, `chooseIcon` the large
- * glyph above it (a cloud-upload by default), and projected content renders as
- * a muted hint line below. Dropped files are filtered against `accept` and
- * capped at `fileLimit`.
+ * A file drop zone fronting a hidden native `<input type="file">`: drag files
+ * onto the dashed area, or click it (or Enter/Space) to open the native picker.
+ * `chooseLabel` is the prompt line, `chooseIcon` the glyph above it, projected
+ * content a muted hint line below. Dropped files are filtered against `accept`
+ * and capped at `fileLimit`.
  *
- * Selection-only (no HTTP/auto-upload, no file list); emits `onSelect` with
- * the chosen files and resets the input so re-picking the same file fires
- * again.
+ * Selection-only (no HTTP/auto-upload, no file list); emits `onSelect` and
+ * resets the input so re-picking the same file fires again.
  */
 @Component({
   selector: 'lg-file-upload',

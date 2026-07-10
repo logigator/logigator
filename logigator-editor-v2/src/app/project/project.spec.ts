@@ -245,7 +245,7 @@ describe('Project connection-point integration', () => {
     project.destroy({ children: true });
   });
 
-  // Under the new split-on-touch invariants, a wire endpoint never sits on
+  // Under the split-on-touch invariants, a wire endpoint never sits on
   // another wire's interior at rest. A 3-wire T-junction at (2.5, 2.5) is the
   // canonical 3-termination junction: H1 + H2 collinear, V perpendicular.
   // H1 wire: makeWire(0,2,H,2) → (0.5,2.5)→(2.5,2.5)
@@ -283,7 +283,7 @@ describe('Project connection-point integration', () => {
 
   it('pure 2-wire X crossing (no endpoint at crossing) — no CP', () => {
     // H and V cross at (2.5,2.5) but neither has an endpoint there.
-    // Interior-on-interior is allowed and produces no CP under the new rule.
+    // Interior-on-interior is allowed and produces no CP.
     const h = makeWire(0, 2, WireDirection.HORIZONTAL, 5);
     const v = makeWire(2, 0, WireDirection.VERTICAL, 5);
     project.addWire(h);

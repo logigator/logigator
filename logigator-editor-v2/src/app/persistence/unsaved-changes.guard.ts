@@ -14,11 +14,7 @@ export class UnsavedChangesGuard {
   private _attached = false;
   private _handler: ((e: BeforeUnloadEvent) => void) | null = null;
 
-  /**
-   * Registers the `beforeunload` listener.
-   *
-   * Idempotent — calling this when the listener is already attached is a no-op.
-   */
+  /** Registers the `beforeunload` listener. Idempotent. */
   public attach(): void {
     if (this._attached) return;
 
@@ -32,12 +28,7 @@ export class UnsavedChangesGuard {
     this._attached = true;
   }
 
-  /**
-   * Removes the `beforeunload` listener.
-   *
-   * Idempotent — safe to call even if the listener was never attached or was
-   * already detached.
-   */
+  /** Removes the `beforeunload` listener. Idempotent — no-op if never/already detached. */
   public detach(): void {
     if (!this._attached || !this._handler) return;
 

@@ -210,7 +210,7 @@ export class SelectionManager {
   }
 
   // Re-evaluates which connection points count as selected based on the current
-  // selection. Called after initial selection and after a drag-move recomputes CPs.
+  // selection.
   public retintCps(): void {
     for (const cp of this._selectedConnectionPoints) {
       if (!cp.destroyed) cp.selected = false;
@@ -241,13 +241,11 @@ export class SelectionManager {
   /**
    * Neutralizes the selection highlight on every selected element (and its
    * selected connection points) so an off-screen render — minimap, image
-   * export, server preview — doesn't bake it into committed content. The
-   * `_selectedConnectionPoints` list is private, so this lives here rather
-   * than in the snapshot service. Flips each node's `selected` flag off and
-   * returns a closure that flips it back; the flag re-derives the tint from
-   * whatever theme is active at that moment (the dual-theme preview flow
-   * switches themes between renders). Destroyed nodes are skipped on both
-   * passes.
+   * export, server preview — doesn't bake it into committed content. Lives
+   * here because `_selectedConnectionPoints` is private. Returns a closure
+   * that restores the flags; each re-derives the tint from whatever theme is
+   * active then (the dual-theme preview flow switches themes between renders).
+   * Destroyed nodes are skipped on both passes.
    */
   public suppressTintForRender(): () => void {
     const suppressed: (Component | Wire | ConnectionPoint)[] = [];
@@ -308,9 +306,8 @@ export class SelectionManager {
     );
   }
 
-  // Called by ActionManager.undo so Ctrl+Z while a tentative cut is active
-  // reverts the cut instead of consuming the real undo stack. Returns true
-  // when something was rolled back.
+  // Reverts a tentative cut so Ctrl+Z while one is active doesn't consume the
+  // real undo stack. Returns true when something was rolled back.
   //
   // TODO: this is not safe during an in-flight SelectionMoveSession — the
   // inside pieces are detached from the quad tree (held by dragLayer), so
@@ -345,8 +342,8 @@ export class SelectionManager {
     }
   }
 
-  // Called from Project.removeComponent/removeWire before destroy() to prevent
-  // the set from holding a dead Container reference.
+  // Drops an element from the selection sets before it is destroyed, so they
+  // never retain a dead Container reference.
   public evict(element: Component | Wire): void {
     let changed: boolean;
     if (element instanceof Component) {

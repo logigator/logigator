@@ -23,7 +23,7 @@ export interface GestureTarget {
  * The gesture activates the moment a second pointer lands, aborting any
  * single-pointer tool drag so a finger never both operates a tool and
  * navigates. Dropping below two pointers ends the gesture; the cancelled tool
- * drag is not resumed (the user committed to navigating — plan §3.2/§C).
+ * drag is not resumed (the user committed to navigating).
  *
  * Pointer-source filtering (touch vs. mouse) is the caller's concern; this
  * tracks whatever ids it is given.

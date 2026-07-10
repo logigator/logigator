@@ -10,7 +10,7 @@ import { Project } from '../../project/project';
 import { BoardCompilerService } from './board-compiler.service';
 
 // The compiler emits negation into the descriptor verbatim; the negation-capable
-// @logigator/sim engine consumes the index arrays (plan §6).
+// @logigator/sim engine consumes the index arrays.
 describe('BoardCompilerService negation emission', () => {
   let compiler: BoardCompilerService;
   let registry: CustomComponentRegistry;

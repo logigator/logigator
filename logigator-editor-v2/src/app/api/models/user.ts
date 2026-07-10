@@ -18,8 +18,7 @@ export type ProfilePicture = PersistedResource;
 
 export interface UserData {
   /**
-   * Only with privateUserData group — and only from backends that expose it
-   * (the entity gained the `@Expose` alongside the editor's session lifecycle).
+   * Only with privateUserData group, and only from backends that expose it.
    * Consumers needing a stable identity use {@link sessionUserId}, which falls
    * back to unique account fields.
    */

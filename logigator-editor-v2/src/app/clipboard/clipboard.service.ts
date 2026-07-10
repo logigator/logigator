@@ -95,7 +95,7 @@ export class ClipboardService {
       'ClipboardService'
     );
 
-    // A clipboard component whose type is no longer registered was skipped above
+    // A clipboard component whose type is no longer registered is skipped
     const skipped = components.length - freshComponents.length;
     if (skipped > 0) {
       this.toast.warn(

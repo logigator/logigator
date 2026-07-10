@@ -33,20 +33,18 @@ interface DocumentHandle {
  * session lifecycle ({@link CloudSessionService} is the state half).
  *
  * One effect follows `UserService.user()` and keeps a single invariant for
- * *every* kind of transition (initial page load, login tab, another browser
- * tab, session expiry): **the cloud component library mirrors the session** —
- * a session starting loads the signed-in user's masters, a session ending
- * removes them. Nothing else is touched reactively, so an *external* logout
- * leaves the open project, tabs and a running simulation exactly as they are;
- * later cloud saves are rejected by the save guard until the user signs in
- * again.
+ * *every* transition (initial load, login tab, another browser tab, session
+ * expiry): **the cloud component library mirrors the session** — a session
+ * starting loads the user's masters, ending removes them. Nothing else is
+ * touched reactively, so an *external* logout leaves the open project, tabs and
+ * a running simulation as they are; later cloud saves are rejected by the save
+ * guard until the user signs in again.
  *
  * A *user-initiated* logout runs {@link requestLogout}: dirty cloud documents
- * prompt Save / Discard / Cancel (a failed or cancelled save aborts — the
- * session is never ended with work in limbo), then the server session ends and
- * the cloud workspace is deliberately reset — server component tabs close, a
- * server main document is replaced by a blank draft (exiting a simulation that
- * renders it), local documents stay.
+ * prompt Save / Discard / Cancel (a failed or cancelled save aborts, so the
+ * session never ends with work in limbo), then the server session ends and the
+ * cloud workspace is reset — server component tabs close, a server main document
+ * becomes a blank draft (exiting a simulation that renders it), local docs stay.
  */
 @Injectable({ providedIn: 'root' })
 export class SessionLifecycleService {

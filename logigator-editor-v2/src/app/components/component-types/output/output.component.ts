@@ -24,7 +24,7 @@ export class OutputComponent extends Component<OutputOptions> {
   // A 1×1 plug is symbol-only: the centered "OUT" glyph fills the body, so the
   // per-stub label path (which draws labels *inside* the body) would overlap
   // it. The port name is surfaced via click-to-name and the Ports panel
-  // instead. Label-beside-stub rendering is left to a later phase.
+  // instead.
   protected get inputLabels(): string[] {
     return [];
   }

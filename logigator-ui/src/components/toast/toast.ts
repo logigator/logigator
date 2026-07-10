@@ -208,11 +208,7 @@ export class LgToast {
     ].join(' ');
   }
 
-  /**
-   * The transform/opacity for a toast's current lifecycle stage: it enters by
-   * fading and sliding in from the stack's vertical edge, rests fully visible,
-   * and leaves by fading, shrinking and sliding out toward its horizontal edge.
-   */
+  /** The transform/opacity for a toast's lifecycle stage (enter / rest / leave). */
   private motionClasses(toast: ActiveToast): string {
     if (toast.leaving) {
       return `scale-95 opacity-0 ${this.atRight() ? 'translate-x-6' : '-translate-x-6'}`;
