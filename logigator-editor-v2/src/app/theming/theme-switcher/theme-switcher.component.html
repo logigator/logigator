@@ -1,9 +1,19 @@
-<lg-select-button
-  [options]="themeOptions"
-  [ngModel]="currentTheme()"
-  (ngModelChange)="setTheme($event)"
-  optionLabel="label"
-  optionValue="value"
-  optionIcon="icon"
-  fluid
-/>
+<div class="flex flex-col gap-2">
+  <lg-select-button
+    [options]="themeOptions"
+    [ngModel]="activeThemeId()"
+    (ngModelChange)="setTheme($event)"
+    optionLabel="label"
+    optionValue="value"
+    fluid
+  />
+  <lg-select-button
+    [options]="variantOptions"
+    [ngModel]="currentVariant()"
+    (ngModelChange)="setVariant($event)"
+    optionLabel="label"
+    optionValue="value"
+    optionIcon="icon"
+    fluid
+  />
+</div>

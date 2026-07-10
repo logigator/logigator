@@ -27,11 +27,13 @@ export class GraphicsProviderService {
     const cachedGraphics = this._cache.get(graphics);
     // Theme is part of the key: most graphics classes bake theme colors into
     // the context at construction, so each theme needs its own cached instance.
+    // Keyed per preset (currentThemeKey), not just light/dark — same-mode
+    // presets differ in board background, which the component graphics bake in.
     // Theme-independent contexts (white base, colored via instance tint) share
     // one entry so every consumer batches on the same context across themes.
     const themeKey = graphics.themeIndependent
       ? 'static'
-      : this._themingService.currentThemeType();
+      : this._themingService.currentThemeKey();
     const paramsHash = `${themeKey}:${JSON.stringify(params)}`;
 
     if (!cachedGraphics) {

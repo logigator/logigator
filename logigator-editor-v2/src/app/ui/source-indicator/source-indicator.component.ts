@@ -71,7 +71,7 @@ export class SourceIndicatorComponent {
     server: {
       icon: 'ph ph-cloud',
       severity: 'info',
-      glyph: 'text-sky-400',
+      glyph: 'text-info',
       label: 'Cloud'
     },
     browser: {
@@ -89,7 +89,7 @@ export class SourceIndicatorComponent {
     share: {
       icon: 'ph ph-share-network',
       severity: 'success',
-      glyph: 'text-emerald-400',
+      glyph: 'text-primary',
       label: 'Shared'
     },
     embedded: {

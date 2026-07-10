@@ -1,0 +1,35 @@
+/*
+ * Carbon — dark graphite preset.
+ *
+ * A polished daily-driver dark theme: cool graphite neutrals with a faint blue
+ * cast, letting the green primary and blue cloud accents read cleanly. Applied
+ * as `html.carbon-dark`; the higher specificity (0,1,1) beats the base
+ * `.dark-mode` block (0,1,0) that rides along for `dark:` variants, regardless
+ * of import order. Overrides only the neutral surface palette — primary, cloud
+ * and state colors inherit their dark roles from theme.css.
+ */
+
+html.carbon-dark {
+  color-scheme: dark;
+
+  --lg-surface-0: #ffffff;
+  --lg-surface-50: #f6f7f9;
+  --lg-surface-100: #eceef2;
+  --lg-surface-200: #d3d8e0;
+  --lg-surface-300: #b0b8c4;
+  --lg-surface-400: #7e8898;
+  --lg-surface-500: #59626f;
+  --lg-surface-600: #414954;
+  --lg-surface-700: #2f353e;
+  --lg-surface-800: #20252c;
+  --lg-surface-900: #14181e;
+  --lg-surface-950: #0c0f13;
+
+  --lg-content: #14181e;
+  --lg-content-hover: #1c222a;
+  --lg-border: #2b313b;
+  --lg-text: #e6e9ef;
+  --lg-text-hover: #ffffff;
+  --lg-muted: #8a94a3;
+  --lg-muted-hover: #b0b8c4;
+}

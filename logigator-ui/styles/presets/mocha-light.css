@@ -1,0 +1,33 @@
+/*
+ * Mocha — light counterpart.
+ *
+ * The warm "latte" side: cream/parchment neutrals with a deep espresso text.
+ * Being light it carries no `.dark-mode` class, so primary, cloud and state
+ * colors inherit their light roles from theme.css. Overrides only the neutral
+ * surface palette.
+ */
+
+html.mocha-light {
+  color-scheme: light;
+
+  --lg-surface-0: #ffffff;
+  --lg-surface-50: #faf5ee;
+  --lg-surface-100: #f3ebe0;
+  --lg-surface-200: #e7d9c6;
+  --lg-surface-300: #d5c1a4;
+  --lg-surface-400: #b39c78;
+  --lg-surface-500: #8c7657;
+  --lg-surface-600: #6d5a42;
+  --lg-surface-700: #524331;
+  --lg-surface-800: #382d20;
+  --lg-surface-900: #241c13;
+  --lg-surface-950: #14100a;
+
+  --lg-content: #fffcf7;
+  --lg-content-hover: #f6efe4;
+  --lg-border: #e7d9c6;
+  --lg-text: #3a2f22;
+  --lg-text-hover: #241c13;
+  --lg-muted: #8c7657;
+  --lg-muted-hover: #6d5a42;
+}
