@@ -64,7 +64,7 @@ describe('v0ToV1Migration', () => {
     const text = result.components.find((c) => c.type === 7)!;
     expect(text.options).toEqual({
       direction: 0,
-      fontSize: 14,
+      fontSize: 28, // legacy n[0]=14 rendered at ×(16/8)=28 px
       text: 'Hello world'
     });
 

@@ -148,6 +148,15 @@ function decodeElements(
     );
 
     const options = decodeOptions(element, config);
+    if (
+      element.t === BuiltInComponentType.TEXT &&
+      typeof element.n?.[0] === 'number'
+    ) {
+      // v0 stored an abstract size the old editor rendered at
+      // gridPixelWidth * size / 8 = size * (16 / 8) px; v2's fontSize is
+      // already a pixel value, so scale by that same 16/8 = 2 factor.
+      options['fontSize'] = element.n[0] * 2;
+    }
     if (element.t === BuiltInComponentType.TUNNEL) {
       // Tunnel labels have no positional slot of their own: a v2 save carries
       // the label additively in `s`, a legacy save only its numeric id in

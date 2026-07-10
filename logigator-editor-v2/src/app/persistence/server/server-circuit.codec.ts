@@ -233,6 +233,12 @@ function serializeComponent(
     el.s = component.options[slots.s].value as string;
   }
 
+  // Inverse of the v0→v1 TEXT scale: v2's fontSize is a pixel value, v0's
+  // size the old editor multiplied by 16/8 = 2, so halve it back.
+  if (config.type === BuiltInComponentType.TEXT && el.n) {
+    el.n[0] = el.n[0] / 2;
+  }
+
   // Tunnel labels have no positional slot: legacy clients read the grouped
   // numeric id from n[0], our own decode prefers the label in `s`.
   if (config.type === BuiltInComponentType.TUNNEL) {
@@ -363,6 +369,11 @@ function encodeBodyComponent(
   if (slots.s) {
     const v = component.options[slots.s];
     if (v !== undefined) el.s = v as string;
+  }
+
+  // Inverse of the v0→v1 TEXT scale — same halving as the document body.
+  if (component.type === BuiltInComponentType.TEXT && el.n) {
+    el.n[0] = el.n[0] / 2;
   }
 
   // Tunnel labels have no positional slot — same mapping as the document body.

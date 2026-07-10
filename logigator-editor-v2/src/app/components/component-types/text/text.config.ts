@@ -24,8 +24,8 @@ export const textComponentConfig: ComponentConfig<TextOptions> = {
     direction: new DirectionComponentOption(),
     fontSize: new NumberComponentOption(
       'components.def.TEXT.options.fontSize',
-      6,
-      48,
+      2,
+      128,
       12
     ),
     text: new TextAreaComponentOption(
