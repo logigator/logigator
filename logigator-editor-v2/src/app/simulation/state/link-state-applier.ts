@@ -64,9 +64,9 @@ export class LinkStateApplier implements SnapshotApplier {
   }
 
   /**
-   * Cumulative count of visible link state flips since construction — a link
-   * with at least one wire or port stub, counted each time its powered state
-   * actually changes. A debug measure of how much of the board is switching.
+   * Debug count of visible link-state flips since construction — a link with
+   * at least one wire or port stub, counted each time its powered state
+   * actually changes.
    */
   public get switchedLinks(): number {
     return this._switchedLinks;

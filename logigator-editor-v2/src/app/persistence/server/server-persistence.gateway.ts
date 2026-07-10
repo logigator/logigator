@@ -578,10 +578,8 @@ export class ServerPersistenceGateway {
   }
 
   async saveProject(project: Project): Promise<void> {
-    // Capture metadata and a dirty version snapshot *before* serializing.
-    // If new edits land between snapshot and save completion, we must NOT
-    // clear the dirty flag — otherwise the user sees "Saved" with unsaved
-    // changes still in the editor.
+    // Snapshot the dirty version *before* serializing: an edit landing
+    // mid-save must stay dirty, else "Saved" lies about unsaved changes.
     const metadata = this.metadataStore.getMetadata(project)!;
     const versionAtSnapshot = this.metadataStore.dirtyVersion(project);
     const { elements, dependencies } = server.serializeProject(

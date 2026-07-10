@@ -4,18 +4,18 @@ import { TranslocoService } from '@jsverse/transloco';
 import { LoggingService } from './logging.service';
 
 /**
- * UI-facing service that shows translated toast notifications.
+ * UI-facing service for translated toast notifications.
  *
- * Every toast also mirrors to {@link LoggingService} so each message surfaced
- * to the user leaves a console trail. The mandatory `context` (the originating
- * class name) is what identifies the origin, since bundling obscures the
- * native call site. `error`/`warn` take an optional trailing `cause` — pass the
- * underlying error there for richer developer detail; it is logged in place of
- * the user-facing message. `error`/`warn` log at their level; `success`/`info`
- * log at info level (suppressed by a production `loggingVerbosity` of `Warn`).
+ * Every toast mirrors to {@link LoggingService}, so each user-facing message
+ * leaves a console trail; the mandatory `context` (originating class name)
+ * identifies the origin, since bundling obscures the native call site.
+ * `error`/`warn` take an optional trailing `cause` — the underlying error,
+ * logged in place of the user-facing message. `error`/`warn` log at their own
+ * level; `success`/`info` log at info (suppressed by a production
+ * `loggingVerbosity` of `Warn`).
  *
- * Inject this where the user needs to see feedback; inject
- * {@link LoggingService} directly where only console output is needed.
+ * Inject this where the user needs feedback; inject {@link LoggingService}
+ * directly for console-only output.
  */
 @Injectable({
   providedIn: 'root'

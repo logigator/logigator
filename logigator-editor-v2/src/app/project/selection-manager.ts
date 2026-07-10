@@ -241,13 +241,11 @@ export class SelectionManager {
   /**
    * Neutralizes the selection highlight on every selected element (and its
    * selected connection points) so an off-screen render — minimap, image
-   * export, server preview — doesn't bake it into committed content. The
-   * `_selectedConnectionPoints` list is private, so this lives here rather
-   * than in the snapshot service. Flips each node's `selected` flag off and
-   * returns a closure that flips it back; the flag re-derives the tint from
-   * whatever theme is active at that moment (the dual-theme preview flow
-   * switches themes between renders). Destroyed nodes are skipped on both
-   * passes.
+   * export, server preview — doesn't bake it into committed content. Lives
+   * here because `_selectedConnectionPoints` is private. Returns a closure
+   * that restores the flags; each re-derives the tint from whatever theme is
+   * active then (the dual-theme preview flow switches themes between renders).
+   * Destroyed nodes are skipped on both passes.
    */
   public suppressTintForRender(): () => void {
     const suppressed: (Component | Wire | ConnectionPoint)[] = [];

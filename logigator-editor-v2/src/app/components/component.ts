@@ -40,12 +40,10 @@ export interface PortsChange {
 /**
  * Port-label anchor per direction, keyed by the side the *input* edge faces
  * (outputs use the opposite direction's entry). Labels are counter-rotated to
- * stay horizontal, so they are axis-aligned on screen and the anchor picks the
- * texture point that faces the body edge: left-centre when the edge is left
- * (E), top-centre when it is on top (S), and so on. Anchoring to the edge —
- * instead of rotating the label around its centre — keeps every label on an
- * edge at the same fixed inset regardless of its text width (legacy-editor
- * behavior).
+ * stay horizontal, so the anchor picks the texture point that faces the body
+ * edge. Anchoring to the edge — rather than rotating the label around its
+ * centre — keeps every label at the same fixed inset regardless of its text
+ * width (legacy-editor behavior).
  */
 const LABEL_ANCHOR: Record<Direction, { x: number; y: number }> = {
   [Direction.E]: { x: 0, y: 0.5 },

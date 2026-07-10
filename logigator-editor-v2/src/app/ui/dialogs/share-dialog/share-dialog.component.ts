@@ -34,11 +34,10 @@ interface ShareDialogBase {
 export type ShareDialogData =
   /**
    * A cloud project addressed by its server id. Visibility/link changes sync back
-   * into the metadata store if that project is currently open (a no-op otherwise),
-   * so the source chip and any later save stay in sync. Callers pass the current
-   * name/link/visibility directly — the open File-menu path from the metadata
-   * store, the open-project dialog from the listed summary — so the dialog needs
-   * no fetch and no live `Project` reference.
+   * into the metadata store if that project is currently open (a no-op otherwise).
+   * Callers pass the current name/link/visibility directly — the open File-menu
+   * path from the metadata store, the open-project dialog from the listed summary —
+   * so the dialog needs no fetch and no live `Project` reference.
    */
   | ({ kind: 'project'; projectId: string } & ShareDialogBase)
   /**
@@ -58,9 +57,8 @@ export type ShareDialogData =
  * `/share/:link` URL with a copy button, regenerates the link (invalidating the
  * old one), and toggles public visibility. Both kinds carry a `@Generated('uuid')`
  * link, so the URL is never empty. Initial name/link/visibility are passed in by
- * the caller; changes write back to keep the session fresh without a re-fetch — a
- * project into the {@link ProjectMetadataStore} entry of the open project (if any),
- * a component onto its master definition through the registry.
+ * the caller; changes write back to keep the session fresh without a re-fetch
+ * (see `_persist`).
  */
 @Component({
   selector: 'app-share-dialog',

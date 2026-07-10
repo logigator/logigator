@@ -38,10 +38,8 @@ export class DefinitionBinding {
     const summary = deriveSummary(this.project);
     this.registry.updateDefinition(this.masterTypeId, summary);
 
-    // Materialise the master's circuit so a snapshot taken at place/update time
-    // carries the current contents. Snapshots deep-copy it, so this never
-    // touches already-placed frozen instances. `setMasterCircuit` also recomputes
-    // the master's library dependencies from the circuit (for cycle prevention).
+    // Materialise the master's circuit so snapshots capture the current
+    // contents; also recomputes the master's library dependencies.
     this.registry.setMasterCircuit(
       this.masterTypeId,
       serializeProjectBody(this.project)

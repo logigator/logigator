@@ -122,8 +122,8 @@ export class SimulationService {
 
   /**
    * Debug telemetry for the running session: how many full vs delta snapshots
-   * have been applied, and how many visible link flips they carried on average
-   * (a measure of board activity). Null when no session's applier exists.
+   * have been applied, and how many visible link flips they carried on average.
+   * Null when no session's applier exists.
    */
   public get snapshotStats(): {
     full: number;

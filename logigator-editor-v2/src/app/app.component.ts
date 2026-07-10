@@ -153,9 +153,8 @@ export class AppComponent {
         prev &&
         this.mobileUi.activeSheet() === 'settings'
       ) {
-        // The selection that opened the settings sheet is gone (e.g. opening
-        // the component editor switched tabs), so the sheet would only show a
-        // blank panel — close it. Guarded to the settings sheet so a different
+        // The selection that opened the sheet is gone (e.g. the component
+        // editor switched tabs). Guarded to the settings sheet so a different
         // open sheet is left alone.
         this.mobileUi.close();
       }

@@ -55,11 +55,11 @@ const CASCADE_WRAP = 8;
 
 /**
  * The chrome of one floating window: title bar (drag-to-move, close button),
- * eight resize zones along the edges and corners, and the dynamically-created
- * content component. Move and resize run on captured pointer events and clamp
- * to the outlet's bounds (an unmeasured 0×0 bounds — e.g. before the first
- * paint — leaves the window unclamped rather than collapsing it). Pressing
- * anywhere on the window raises it; Escape closes it when `closable`.
+ * eight edge/corner resize zones, and the dynamically-created content
+ * component. Move and resize run on captured pointer events, clamped to the
+ * outlet's bounds — an unmeasured 0×0 bounds (e.g. before first paint) leaves
+ * the window unclamped rather than collapsing it. Pressing the window raises
+ * it; Escape closes it when `closable`.
  *
  * In `fullscreen` mode (set per outlet) the window fills the outlet instead:
  * no positioning, dragging, resizing, or window chrome — the title bar shows

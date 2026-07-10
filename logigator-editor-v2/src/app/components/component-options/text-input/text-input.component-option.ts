@@ -13,12 +13,11 @@ export interface TextInputComponentOptionConfig {
 }
 
 /**
- * A short, single-line text option — the single-line counterpart to
- * {@link TextAreaComponentOption} (one is an `<input type="text">`, the other a
- * dialog `<textarea>`). Generic: any length/character constraints are supplied
- * by the consumer via {@link TextInputComponentOptionConfig} rather than baked
- * in. (Port labels, for example, configure `maxLength: 5` + `forbiddenChars: /,/g`
- * to satisfy the backend's comma-joined label column.)
+ * A short, single-line text option (`<input type="text">`), counterpart to the
+ * dialog `<textarea>` {@link TextAreaComponentOption}. Generic: length/character
+ * constraints come from the consumer via {@link TextInputComponentOptionConfig},
+ * not baked in. (Port labels configure `maxLength: 5` + `forbiddenChars: /,/g`
+ * for the backend's comma-joined label column.)
  */
 export class TextInputComponentOption extends ComponentOption<string> {
   public readonly renderer = TextInputOptionInputComponent;

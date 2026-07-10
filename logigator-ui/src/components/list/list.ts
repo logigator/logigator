@@ -21,20 +21,16 @@ import { IconSlot } from '../../internal/icon';
 export class LgList {}
 
 /**
- * One row of an {@link LgList}. Its projected default content is the row title;
- * three optional template slots enrich it toward the "rich" look without a
- * different component:
+ * One row of an {@link LgList}. Projected default content is the row title;
+ * three optional template slots enrich it:
  *
- * - `#leading` — a leading icon/graphic, muted by default (a tile or avatar can
- *   override the color on its own element). For the common case of a plain icon
- *   font glyph, the `leadingIcon` input is a shorthand: it renders the muted
- *   glyph without a template. A `#leading` template, when present, wins.
+ * - `#leading` — a leading icon/graphic, muted by default. `leadingIcon` is a
+ *   shorthand for a plain glyph without a template; a `#leading` template wins.
  * - `#subtitle` — a muted supporting line under the title (e.g. "last edited").
- * - `#trailing` — trailing content pinned to the row's end (a tag, badge, or
- *   action button).
+ * - `#trailing` — trailing content pinned to the row's end (tag, badge, button).
  *
- * With no slots filled it renders as a plain single-line row (the card look). A
- * bottom divider separates rows; the last row drops it (`last:border-b-0`).
+ * With no slots filled it's a plain single-line row. A bottom divider separates
+ * rows; the last row drops it (`last:border-b-0`).
  */
 @Component({
   selector: 'lg-list-item',

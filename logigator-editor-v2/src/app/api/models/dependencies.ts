@@ -3,17 +3,14 @@ import type { ProjectElement } from './project-element';
 /**
  * A frozen copy of a custom dependency's circuit, embedded in a project/component
  * save so the saved document is self-contained. Optional and backward compatible:
- * clients that don't understand it ignore it and fetch the live library component
- * instead, while clients that do render straight from it and never refetch. Its
- * body is the legacy positional `ProjectElement[]` (the same wire shape as the
- * document body), folded in per-dependency.
+ * old clients ignore it and fetch the live library component; new clients render
+ * from it and never refetch. Its body is the legacy positional `ProjectElement[]`.
  *
  * The summary fields (`numInputs`/`numOutputs`/`labels`/…) are the **frozen**
- * values as placed — deliberately duplicated out of the response `dependency`
- * summary (which carries the master's *current* state) so a stale instance
- * renders at its own port count regardless of later master edits
- * (custom-components Invariant A). Comparing this `version` to the live
- * `dependency.version` is how "a newer version exists" is detected.
+ * values as placed, duplicated out of the response `dependency` summary (the
+ * master's *current* state) so a stale instance renders at its own port count
+ * regardless of later master edits (custom-components Invariant A). This
+ * `version` vs the live `dependency.version` detects "a newer version exists".
  */
 export interface DependencySnapshot {
   /** The master version this copy was taken at. */

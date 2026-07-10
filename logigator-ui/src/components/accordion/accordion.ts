@@ -48,10 +48,9 @@ export class LgAccordion {
  * body in an animated height-collapsing region. A bottom divider separates
  * panels; the last panel drops it automatically (`last:border-b-0`).
  *
- * The body clips its overflow only while closed or mid-animation (so the
- * height collapse hides the content); once fully open it stops clipping, so
- * projected content is free to bleed past the panel bounds — focus rings,
- * corner badges — without the consumer padding it away from the edges.
+ * The body clips its overflow while closed or mid-animation (so the height
+ * collapse hides the content); once fully open it stops clipping, so projected
+ * content — focus rings, corner badges — can bleed past the panel bounds.
  * Horizontal overflow is never clipped (the collapse is purely vertical).
  */
 @Component({

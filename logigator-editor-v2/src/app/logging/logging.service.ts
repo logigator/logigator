@@ -4,11 +4,10 @@ import { environment } from '../../environments/environment';
 import { LogLevel } from './log-level.enum';
 
 /**
- * Format string for the log line. `%c` applies {@link PREFIX_STYLE} to the
- * bracketed context, `%s` substitutes the context safely (even if it contains
- * a `%`). The message is always passed as the trailing *bare* argument so the
- * console renders it natively — expandable object trees, and the interactive
- * DOM view with hover-highlight for `HTMLElement`s.
+ * Log-line format string. `%c` applies {@link PREFIX_STYLE} to the bracketed
+ * context; `%s` substitutes the context safely (even if it contains a `%`).
+ * The message is always the trailing *bare* argument so the console renders it
+ * natively (expandable object trees, interactive DOM view for `HTMLElement`s).
  */
 const PREFIX = '%c[%s]';
 const PREFIX_STYLE = 'color:#888';

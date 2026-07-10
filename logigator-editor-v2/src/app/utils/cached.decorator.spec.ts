@@ -70,10 +70,9 @@ describe('Cached decorator', () => {
       expect(f.callCount).toBe(1);
     });
 
-    // NOTE: The Cached implementation stores the cache object on the *prototype*
-    // (`target[cacheKey] = { key: null, val: null }`), not on each instance.
-    // Therefore all instances of the same decorated class share one cache slot.
-    // This test documents the shared-prototype contract.
+    // Cached stores the cache object on the *prototype*
+    // (`target[cacheKey] = { key: null, val: null }`), not per-instance, so all
+    // instances of a decorated class share one cache slot.
     it('instances share the same prototype-level cache slot (no keyGenerator)', () => {
       let counter = 0;
       const Fixture = makeSimpleClass(() => ++counter);

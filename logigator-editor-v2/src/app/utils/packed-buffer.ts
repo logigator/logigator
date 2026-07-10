@@ -3,9 +3,8 @@
  *
  * A buffer is a flat **LSB-first** bitstream: the `wordSize`-bit word at index
  * `i` occupies bits `[i * wordSize, i * wordSize + wordSize)`, where bit `b`
- * lives at byte `b >> 3`, bit `b & 7`. (This happens to match the
- * `@logigator/sim` memory `ops` layout — verified against the engine — but
- * nothing here depends on that; it is a plain packed-buffer format.)
+ * lives at byte `b >> 3`, bit `b & 7`. (Matches the `@logigator/sim` memory
+ * `ops` layout, but nothing here depends on that.)
  */
 
 /** Bytes needed to hold `wordCount` words of `wordSize` bits each. */

@@ -62,9 +62,8 @@ export function formatShortcutLabel(
 
 /**
  * The chips' backdrop: `content` sits on a `bg-content` surface (menus,
- * dialogs), `raised` on the elevated chrome (the tooltip bubble) — the content
- * surface in light, where the content caps apply as-is, and `surface-700` in
- * dark, where the caps go one step lighter instead.
+ * dialogs), `raised` on the elevated chrome (the tooltip bubble): the content
+ * surface in light, `surface-700` in dark.
  */
 export type LgShortcutTone = 'content' | 'raised';
 
