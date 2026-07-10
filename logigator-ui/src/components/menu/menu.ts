@@ -234,7 +234,21 @@ export class LgMenu implements OnDestroy {
     );
   }
 
+  /**
+   * Moves focus into the overlay so its keydown handler (Escape, roving) is
+   * reachable: the first item, or the panel itself when the menu is all
+   * `#start` content with no items.
+   */
   private focusFirstItem(): void {
-    queueMicrotask(() => this.menuItems()[0]?.focus());
+    queueMicrotask(() => {
+      const first = this.menuItems()[0];
+      if (first) {
+        first.focus();
+        return;
+      }
+      this.overlayRef?.overlayElement
+        .querySelector<HTMLElement>('[role=menu]')
+        ?.focus();
+    });
   }
 }
