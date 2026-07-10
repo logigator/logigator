@@ -95,7 +95,9 @@ export class TextComponent extends Component<TextOptions> {
     );
     // The shared dot context is a white base (see ConnectionPointGraphics);
     // the theme's wire color is applied as tint, like a real connection point.
-    dot.tint = this.themingService.currentTheme().wire;
+    this.onApplyTheme(
+      () => (dot.tint = this.themingService.currentTheme().wire)
+    );
     dot.pivot.set(0.5, 0.5);
     dot.position.set(0.5, 0.5);
     // ConnectionPointGraphics is a 1×1 unit square; size it identically to a
@@ -110,9 +112,13 @@ export class TextComponent extends Component<TextOptions> {
       style: {
         fontFamily: CANVAS_FONT_FAMILY,
         fontSize: this.options.fontSize.value,
-        fill: this.themingService.currentTheme().fontTint
+        // White base, themed via tint — see Component._drawSymbol.
+        fill: 0xffffff
       }
     });
+    this.onApplyTheme(
+      () => (label.tint = this.themingService.currentTheme().fontTint)
+    );
     label.scale.set(PX);
     // For W direction the component is rotated 180°, which would flip the glyphs upside-down.
     // Counter-rotating the label by π keeps glyphs upright; flipping the anchor mirrors

@@ -114,7 +114,6 @@ export class SegmentDisplayComponent extends Component<SegmentDisplayOptions> {
     this.addBody(this.bodyGridWidth, this.bodyGridHeight);
 
     const base = this.options.base.value;
-    const fontTint = this.themingService.currentTheme().fontTint;
 
     // Readout and base indicator share one container so the counter-rotation
     // keeps their arrangement intact across component rotations.
@@ -123,7 +122,8 @@ export class SegmentDisplayComponent extends Component<SegmentDisplayOptions> {
       style: {
         fontFamily: base === SegmentBase.HEX ? SEGMENT_FONT_14 : SEGMENT_FONT_7,
         fontSize: READOUT_FONT_SIZE,
-        fill: fontTint
+        // White base, themed via tint — see Component._drawSymbol.
+        fill: 0xffffff
       },
       anchor: { x: 0.5, y: 0.5 }
     });
@@ -136,11 +136,16 @@ export class SegmentDisplayComponent extends Component<SegmentDisplayOptions> {
       style: {
         fontFamily: SEGMENT_FONT_7,
         fontSize: BASE_FONT_SIZE,
-        fill: fontTint
+        fill: 0xffffff
       },
       anchor: { x: 0, y: 0.5 }
     });
     baseIndicator.scale.set(PX);
+    this.onApplyTheme(() => {
+      const fontTint = this.themingService.currentTheme().fontTint;
+      readout.tint = fontTint;
+      baseIndicator.tint = fontTint;
+    });
     baseIndicator.position.set(
       readout.width / 2 - (base !== SegmentBase.OCT ? 0.2 : 0),
       readout.height / 2

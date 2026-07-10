@@ -104,6 +104,10 @@ export abstract class Component<
   // these in place on zoom instead of rebuilding the whole visual tree (which
   // would re-rasterize every Text on every zoom step). Reset on each _draw().
   private _rescalers: ((scale: number) => void)[] = [];
+  // Theme-dependent color writes (tints, glyph colors) registered during
+  // draw(); refreshTheme runs these in place instead of rebuilding. Reset on
+  // each _draw().
+  private _themeRestylers: (() => void)[] = [];
   // Powered port indexes survive redraws (zoom applyScale, theme change) —
   // _drawConnections re-applies them to the rebuilt stubs.
   private readonly _poweredPorts = new Set<number>();
@@ -349,6 +353,37 @@ export abstract class Component<
         scale
       )
     );
+  }
+
+  /**
+   * Registers a theme-dependent color write (a tint or glyph color). The
+   * callback runs immediately (draw-time setup) and again on every
+   * {@link refreshTheme}. Zoom does NOT run these — colors don't depend on
+   * scale, and re-tinting every element per zoom step would dirty render
+   * groups for nothing. Call from draw() for anything that reads a theme
+   * color.
+   */
+  protected onApplyTheme(restyle: () => void): void {
+    this._themeRestylers.push(restyle);
+    restyle();
+  }
+
+  /**
+   * Restyles every theme-dependent visual in place after a theme change;
+   * never rebuilds children (structural changes go through redraw()).
+   * Re-running the rescalers re-fetches the shared scale-keyed contexts —
+   * their cache key includes the active theme — so context-baked colors
+   * (body, switch/button faces, negation bubbles) swap pointers without any
+   * object churn; the theme restylers rewrite instance tints and glyph
+   * colors; refreshTint re-derives the selection highlight, whose tint value
+   * is theme-keyed.
+   */
+  public refreshTheme(): void {
+    this.applyScale(this._appliedScale);
+    for (const restyle of this._themeRestylers) {
+      restyle();
+    }
+    this.refreshTint();
   }
 
   public override destroy(options?: DestroyOptions): void {
@@ -659,6 +694,7 @@ export abstract class Component<
     this._portStubs = [];
     this._portBubbles = new Map();
     this._rescalers = [];
+    this._themeRestylers = [];
 
     this.draw();
     this._drawSymbol();
@@ -752,10 +788,16 @@ export abstract class Component<
           SYMBOL_FONT_SIZE,
           MIN_FONT_SIZE
         ),
-        fill: this.themingService.currentTheme().fontTint
+        // White base over the white glyph atlas; the theme's font color is
+        // applied as tint so a theme restyle never re-runs the glyph layout
+        // (a style.fill write rebuilds the text's proxy context).
+        fill: 0xffffff
       },
       anchor: { x: 0.5, y: 0.5 }
     });
+    this.onApplyTheme(
+      () => (text.tint = this.themingService.currentTheme().fontTint)
+    );
     text.scale.set(PX);
     text.position.set(this.bodyGridWidth / 2, this.bodyGridHeight / 2);
     this.registerRotationCounterContainer(text);
@@ -773,7 +815,9 @@ export abstract class Component<
       // The shared stub context is a white base (see WireGraphics); the theme's
       // wire color is applied as tint. The component-level selection tint
       // multiplies over it, exactly as it does over the themed body stroke.
-      wire.tint = this.themingService.currentTheme().wire;
+      this.onApplyTheme(
+        () => (wire.tint = this.themingService.currentTheme().wire)
+      );
       wire.position.set(0, i + 0.5);
       wire.scale.x = 0.5;
       // Stub stays 1 screen pixel thick: scale.y compensates for zoom. The
@@ -832,10 +876,14 @@ export abstract class Component<
               LABEL_FONT_SIZE,
               MIN_FONT_SIZE
             ),
-            fill: this.themingService.currentTheme().fontTint
+            // White base, themed via tint — see _drawSymbol.
+            fill: 0xffffff
           },
           anchor: LABEL_ANCHOR[anchorDirection]
         });
+        this.onApplyTheme(
+          () => (text.tint = this.themingService.currentTheme().fontTint)
+        );
         text.scale.set(PX);
 
         // The anchor point sits a fixed 2-px inset inward from the body edge

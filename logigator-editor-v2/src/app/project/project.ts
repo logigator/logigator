@@ -125,25 +125,26 @@ export class Project extends Container {
   }
 
   /**
-   * Re-derives every theme-dependent color after a theme change. Components
-   * redraw (their contexts bake theme colors and the cache is theme-keyed);
+   * Re-derives every theme-dependent color after a theme change, entirely in
+   * place — nothing is rebuilt. Components swap their shared theme-keyed
+   * contexts and rewrite tints/glyph colors ({@link Component.refreshTheme});
    * wires and connection points only re-derive their tint — their shared
-   * context is a theme-independent white base, so no context is swapped. A
-   * no-op on a still-empty scene.
+   * context is a theme-independent white base; the grid swaps each chunk's
+   * context. A no-op on a still-empty scene.
    *
    * A theme change never alters which dots exist, so connection points are
    * restyled in place rather than re-derived from the quad tree. Selection
    * state lives on each instance and every path re-reads it, so a selected
    * element keeps its highlight in the new theme's colors.
    *
-   * @param triggerRender request an on-screen frame after redrawing. Pass
-   * `false` when redrawing only to feed an offscreen snapshot (dual-theme
+   * @param triggerRender request an on-screen frame after restyling. Pass
+   * `false` when restyling only to feed an offscreen snapshot (dual-theme
    * previews), so the live canvas isn't repainted in the temporary theme.
    */
   public applyTheme(triggerRender = true): void {
     this._grid.redraw();
     for (const component of this._components.items) {
-      component.redraw();
+      component.refreshTheme();
     }
     for (const wire of this._wires.items) {
       wire.refreshTint();

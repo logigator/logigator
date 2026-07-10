@@ -98,7 +98,6 @@ export class LedMatrixComponent extends Component<LedMatrixOptions> {
     // kept upright about the body centre — the square stays inside the body
     // across rotations, so row 0 always lights along the top of the screen
     // (legacy behavior).
-    const theme = this.themingService.currentTheme();
     const context = this.geometryService.getGraphicsContext(
       LedMatrixCellGraphics
     );
@@ -107,22 +106,29 @@ export class LedMatrixComponent extends Component<LedMatrixOptions> {
     const cellSize = pitch * 0.9;
 
     const grid = new Container();
-    this._cells = [];
+    const cells: Graphics[] = (this._cells = []);
     for (let row = 0; row < size; row++) {
       for (let col = 0; col < size; col++) {
         const cell = new Graphics(context);
         cell.scale.set(cellSize);
-        cell.tint = this.isPortPowered(this.numInputs + row * size + col)
-          ? theme.ledOn
-          : theme.ledOff;
         cell.position.set(
           col * pitch - span / 2 + (pitch - cellSize) / 2,
           row * pitch - span / 2 + (pitch - cellSize) / 2
         );
-        this._cells.push(cell);
+        cells.push(cell);
         grid.addChild(cell);
       }
     }
+    // Covers draw-time setup and theme restyles (lit state is re-derived per
+    // cell); the per-frame path writes tints directly in setPortPowered.
+    this.onApplyTheme(() => {
+      const theme = this.themingService.currentTheme();
+      cells.forEach((cell, i) => {
+        cell.tint = this.isPortPowered(this.numInputs + i)
+          ? theme.ledOn
+          : theme.ledOff;
+      });
+    });
     grid.position.set(bodyCells / 2, bodyCells / 2);
     this.registerRotationCounterContainer(grid);
     this.addChild(grid);

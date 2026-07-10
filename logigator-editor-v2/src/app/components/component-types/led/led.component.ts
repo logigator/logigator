@@ -67,8 +67,10 @@ export class LedComponent extends Component<LedOptions> {
     const disc = new Graphics(
       this.geometryService.getGraphicsContext(LedGraphics)
     );
-    disc.tint = this._discTint();
     this._disc = disc;
+    // Covers draw-time setup and theme restyles; the per-frame blink path
+    // writes the tint directly in setPortPowered.
+    this.onApplyTheme(() => (disc.tint = this._discTint()));
     this.addChild(disc);
   }
 
