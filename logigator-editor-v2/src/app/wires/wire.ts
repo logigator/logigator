@@ -212,4 +212,8 @@ export class Wire extends Graphics implements Connectable {
     }
     return new Rectangle(x, y, 1, this.length + 1);
   }
+
+  public get cullBounds(): Rectangle {
+    return this.gridBounds;
+  }
 }

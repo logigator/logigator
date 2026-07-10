@@ -101,7 +101,11 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
       this.remove(element);
     }
 
-    const elBounds = element.gridBounds;
+    // File by cullBounds (usually == gridBounds) so an oversized element lands
+    // in an entry large enough to wrap its full rendered extent, keeping it out
+    // of the cull as long as any part is on screen. queryRange still tests the
+    // tight gridBounds, so selection/collision are unaffected.
+    const elBounds = element.cullBounds;
 
     while (!this._tree.boundsArea.containsRect(elBounds)) {
       this.expand(elBounds);
@@ -341,7 +345,7 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
     };
 
     for (const element of [...entry.leafItems.children]) {
-      const elBounds = element.gridBounds;
+      const elBounds = element.cullBounds;
       const quadrant = this.getContainingQuadrant(entry.boundsArea, elBounds);
       if (!quadrant) {
         getStaticDI(LoggingService).error(

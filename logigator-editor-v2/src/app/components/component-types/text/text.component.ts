@@ -3,10 +3,10 @@ import { textComponentConfig, TextOptions } from './text.config';
 import { Direction } from '../../../utils/direction';
 import { ConnectionPointGraphics } from '../../../rendering/graphics/connection-point.graphics';
 import { ConnectionPoint } from '../../../connection-points/connection-point';
-import { BitmapText, DestroyOptions, Graphics } from 'pixi.js';
+import { BitmapText, DestroyOptions, Graphics, Rectangle } from 'pixi.js';
 import { Subject, takeUntil } from 'rxjs';
 import { PX } from '../../../utils/grid';
-import { CANVAS_FONT_FAMILY } from '../../../utils/text-fit';
+import { CANVAS_FONT_FAMILY, monoTextWidth } from '../../../utils/text-fit';
 
 export class TextComponent extends Component<TextOptions> {
   public readonly config = textComponentConfig;
@@ -25,10 +25,20 @@ export class TextComponent extends Component<TextOptions> {
       });
     this.options.text.onChange$
       .pipe(takeUntil(this._destroy$))
-      .subscribe(() => this.redraw());
+      .subscribe(() => this._redrawAndRefile());
     this.options.fontSize.onChange$
       .pipe(takeUntil(this._destroy$))
-      .subscribe(() => this.redraw());
+      .subscribe(() => this._redrawAndRefile());
+  }
+
+  // A text/fontSize edit resizes cullBounds, so the element must be re-bucketed
+  // in the quad tree — redraw() rebuilds only the visuals. portsChange$ is the
+  // established re-file signal; the text component has no ports, so it fires
+  // with empty port sets (wire integration and connection-point updates no-op).
+  private _redrawAndRefile(): void {
+    const ports = this.connectionPoints;
+    this.redraw();
+    this.portsChange$.next({ oldPorts: ports, newPorts: this.connectionPoints });
   }
 
   protected get inputLabels(): string[] {
@@ -46,6 +56,32 @@ export class TextComponent extends Component<TextOptions> {
 
   protected override get bodyGridHeight(): number {
     return 1;
+  }
+
+  // The rendered label overflows the 1×1 grid footprint far to the side, so
+  // report its full extent for culling — otherwise the label vanishes once the
+  // 1×1 anchor cell pans off screen while its glyphs are still visible.
+  // gridBounds stays 1×1, so selection and collision are unchanged. Width is
+  // arithmetic (Roboto Mono: 0.6 em/glyph), correct on the first insert and on
+  // file-load before the glyph atlas is baked.
+  public override get cullBounds(): Rectangle {
+    const fontSize = this.options.fontSize.value;
+    const lines = this.options.text.value.split('\n');
+    const widthGrid = Math.max(...lines.map((l) => monoTextWidth(l, fontSize))) * PX;
+    const heightGrid = lines.length * fontSize * PX;
+    // Local content box in the unrotated (E) frame: the dot cell [0, 1] plus the
+    // label, which starts at x = 1 and is vertically centred on y = 0.5 (anchor
+    // 0.55). Round outward to whole grid cells so the box always over-covers.
+    const x0 = 0;
+    const x1 = 1 + widthGrid;
+    const y0 = Math.min(0, 0.5 - 0.55 * heightGrid);
+    const y1 = Math.max(1, 0.5 + 0.45 * heightGrid);
+    return this._rotatedBox(
+      Math.floor(x0),
+      Math.floor(y0),
+      Math.ceil(x1),
+      Math.ceil(y1)
+    );
   }
 
   protected draw(): void {

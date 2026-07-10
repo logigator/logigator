@@ -547,21 +547,42 @@ export abstract class Component<
     return this._rotatedBounds(lx, w, this.bodyGridHeight);
   }
 
+  // Bounds the quad tree files and culls by. Defaults to the logical
+  // gridBounds; components whose rendered extent overflows their grid footprint
+  // widen this so panning past the footprint doesn't cull still-visible pixels.
+  public get cullBounds(): Rectangle {
+    return this.gridBounds;
+  }
+
   // AABB in parent (gridSpace) coordinates for a rectangle of size (w × h) with
   // an optional unrotated x-offset (lx), accounting for component rotation.
   private _rotatedBounds(lx: number, w: number, h: number): Rectangle {
+    return this._rotatedBox(lx, 0, lx + w, h);
+  }
+
+  // AABB in parent (gridSpace) coordinates of an unrotated local box
+  // [x0, x1] × [y0, y1], rotated to the component's current direction.
+  // Generalizes _rotatedBounds, which assumes the box is anchored at y = 0.
+  protected _rotatedBox(
+    x0: number,
+    y0: number,
+    x1: number,
+    y1: number
+  ): Rectangle {
     const x = this.position.x;
     const y = this.position.y;
+    const w = x1 - x0;
+    const h = y1 - y0;
 
     switch (this._direction) {
       case Direction.E:
-        return new Rectangle(x + lx, y, w, h);
+        return new Rectangle(x + x0, y + y0, w, h);
       case Direction.S:
-        return new Rectangle(x - h, y + lx, h, w);
+        return new Rectangle(x - y1, y + x0, h, w);
       case Direction.W:
-        return new Rectangle(x - lx - w, y - h, w, h);
+        return new Rectangle(x - x1, y - y1, w, h);
       case Direction.N:
-        return new Rectangle(x, y - lx - w, h, w);
+        return new Rectangle(x + y0, y - x1, h, w);
     }
   }
 

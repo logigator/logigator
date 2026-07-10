@@ -16,11 +16,14 @@ describe('QuadTreeContainer', () => {
   /** Creates a Container with a fixed grid-space rectangle (x, y, w, h). */
   function makeItem(x: number, y: number, w: number, h: number): TestItem {
     const c = new Container({ position: { x, y } }) as TestItem;
-    Object.defineProperty(c, 'gridBounds', {
-      get() {
+    const bounds = {
+      get(this: TestItem) {
         return new Rectangle(this.position.x, this.position.y, w, h);
       }
-    });
+    };
+    Object.defineProperty(c, 'gridBounds', bounds);
+    // Real elements default cullBounds to gridBounds; mirror that here.
+    Object.defineProperty(c, 'cullBounds', bounds);
     return c;
   }
 
