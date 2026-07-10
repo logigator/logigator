@@ -3,6 +3,8 @@ import type { ProjectElement } from './project-element';
 // ---- POST /api/report-error request ----
 
 export interface ReportErrorRequest {
+  /** Which client sent the report; the newer editor sends `editor-v2`. */
+  source?: string;
   line?: number;
   col?: number;
   file?: string;
@@ -10,7 +12,29 @@ export interface ReportErrorRequest {
   message?: string;
   stack?: string;
   userMessage?: string;
+  /** Structured client environment (browser, OS, renderer, app state). */
+  client?: ReportClientInfo;
+  /** Recent client-side log lines leading up to the report. */
+  logs?: string;
+  /** Serialized native project dump, sent as an opaque JSON string. */
+  projectDump?: string;
+  /** Legacy positional project payload; unused by the newer editor. */
   project?: ReportProject;
+}
+
+export interface ReportClientInfo {
+  browser?: string;
+  os?: string;
+  renderingContext?: string;
+  gpu?: string;
+  windowSize?: string;
+  screenSize?: string;
+  devicePixelRatio?: string;
+  locale?: string;
+  url?: string;
+  workMode?: string;
+  simulationRunning?: boolean;
+  touch?: boolean;
 }
 
 export interface ReportProject {

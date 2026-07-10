@@ -46,13 +46,17 @@
           ></app-component-settings>
         </div>
 
-        <!-- Bottom-right: the minimap keeps its own corner (canvas-overlay band). -->
-        @if (rendererService.available()) {
-          <app-minimap
-            class="absolute right-3 bottom-3 z-canvas-overlay"
-            [project]="projectService.activeProject()"
-          />
-        }
+        <!-- Bottom-right stack: the bug-report badge rides above the minimap.
+             The wrapper owns placement (canvas-overlay band) and lets pointer
+             events fall through; each child re-enables its own. -->
+        <div
+          class="pointer-events-none absolute right-3 bottom-3 z-canvas-overlay flex flex-col items-end gap-2"
+        >
+          <app-bug-report-badge class="pointer-events-auto" />
+          @if (rendererService.available()) {
+            <app-minimap [project]="projectService.activeProject()" />
+          }
+        </div>
       } @else {
         <lg-toast position="bottom-left" />
 
@@ -67,6 +71,13 @@
           <app-zoom-fab
             class="pointer-events-auto absolute bottom-24 right-3"
           ></app-zoom-fab>
+          <!-- Bug-report badge, right edge above the minimap. The offset clears
+               the minimap's collapsed pill (anchored at bottom-52). -->
+          <div
+            class="pointer-events-auto absolute right-3 bottom-[16.5rem] mr-[env(safe-area-inset-right)]"
+          >
+            <app-bug-report-badge />
+          </div>
           @if (rendererService.available()) {
             <app-minimap [project]="projectService.activeProject()" />
           }

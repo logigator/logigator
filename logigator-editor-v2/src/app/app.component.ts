@@ -18,6 +18,7 @@ import { TabBarComponent } from './ui/tab-bar/tab-bar.component';
 import { StatusBarComponent } from './ui/status-bar/status-bar.component';
 import { BoardComponent } from './ui/board/board.component';
 import { MinimapComponent } from './ui/board/minimap/minimap.component';
+import { BugReportBadgeComponent } from './bug-report/bug-report-badge.component';
 import { setStaticDIInjector } from './utils/get-di';
 import { ComponentSettingsComponent } from './ui/component-settings/component-settings.component';
 import { ProjectService } from './project/project.service';
@@ -66,6 +67,7 @@ import { SessionLifecycleService } from './user/session-lifecycle.service';
     StatusBarComponent,
     BoardComponent,
     MinimapComponent,
+    BugReportBadgeComponent,
     ComponentSettingsComponent,
     LgConfirmPopup,
     LgConfirmDialog,

@@ -1,10 +1,12 @@
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
+import type { Mock } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { TranslocoService } from '@jsverse/transloco';
 
 import { GlobalErrorHandler } from './global-error-handler';
 import { LoggingService } from './logging.service';
 import { ToastService } from './toast.service';
+import { BugReportService } from '../bug-report/bug-report.service';
 
 describe('GlobalErrorHandler', () => {
   let handler: GlobalErrorHandler;
@@ -25,7 +27,10 @@ describe('GlobalErrorHandler', () => {
         GlobalErrorHandler,
         { provide: LoggingService, useValue: loggingSpy },
         { provide: ToastService, useValue: toastSpy },
-        { provide: TranslocoService, useValue: translocoSpy }
+        { provide: TranslocoService, useValue: translocoSpy },
+        // Force the report service unavailable so these cover the early-boot
+        // fallback (toast) path; the delegation path is covered below.
+        { provide: BugReportService, useValue: null }
       ]
     });
     handler = TestBed.inject(GlobalErrorHandler);
@@ -64,5 +69,37 @@ describe('GlobalErrorHandler', () => {
     now += 6000;
     handler.handleError(new Error('b'));
     expect(toast.error).toHaveBeenCalledTimes(2);
+  });
+
+  describe('with the bug-report service available', () => {
+    let bugReport: { handleUncaughtError: Mock };
+    let handlerWithReport: GlobalErrorHandler;
+    let toastWithReport: { error: Mock };
+
+    beforeEach(() => {
+      TestBed.resetTestingModule();
+      bugReport = { handleUncaughtError: vi.fn() };
+      toastWithReport = { error: vi.fn() };
+      TestBed.configureTestingModule({
+        providers: [
+          GlobalErrorHandler,
+          { provide: LoggingService, useValue: { error: vi.fn() } },
+          { provide: ToastService, useValue: toastWithReport },
+          {
+            provide: TranslocoService,
+            useValue: { translate: (k: string) => k }
+          },
+          { provide: BugReportService, useValue: bugReport }
+        ]
+      });
+      handlerWithReport = TestBed.inject(GlobalErrorHandler);
+    });
+
+    it('opens the report dialog for the error instead of toasting', () => {
+      const err = new Error('boom');
+      handlerWithReport.handleError(err);
+      expect(bugReport.handleUncaughtError).toHaveBeenCalledWith(err);
+      expect(toastWithReport.error).not.toHaveBeenCalled();
+    });
   });
 });
