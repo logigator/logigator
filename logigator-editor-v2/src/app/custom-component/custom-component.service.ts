@@ -138,6 +138,10 @@ export class CustomComponentService {
    * type is not a restorable orphan.
    */
   public async restoreOrphanAndEdit(typeId: number): Promise<void> {
+    // The host project whose placed instance is being restored. Capture it now:
+    // `openComponentForEdit` below switches the active tab to the new master's
+    // editor, so reading it afterwards would mark the wrong project.
+    const host = this.projectService.activeProject();
     let masterId: string | null;
     try {
       masterId = await this.persistence.restoreOrphanToLibrary(typeId);
@@ -151,6 +155,12 @@ export class CustomComponentService {
       );
       return;
     }
+    // Restore relinked the placed snapshot's provenance in the registry, so the
+    // host's serialized content changed — but no Action ran, so it was never
+    // marked dirty. Flag it explicitly, else the follow-up save no-ops on the
+    // dirty guard (after the dependency was already promoted) and a reload shows
+    // the component embedded again.
+    if (host) this.metadataStore.markDirty(host);
     this.toast.success(
       this.transloco.translate('componentActions.restored'),
       'CustomComponentService'

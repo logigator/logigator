@@ -138,6 +138,33 @@ describe('snapshots codec', () => {
       });
     });
 
+    it('emits provenance for an id-carrying snapshot with no version (defaults to 1)', () => {
+      // A no-provenance orphan re-linked to a fresh master could carry an id but
+      // no version. Provenance must still be emitted — otherwise the server codec
+      // sends an empty mapping id and the instance re-orphans on reload.
+      const snap = registry.registerSnapshot({
+        kind: 'snapshot',
+        source: 'browser',
+        id: 'id-x',
+        version: undefined,
+        name: 'X',
+        symbol: 'X',
+        description: '',
+        numInputs: 0,
+        numOutputs: 0,
+        labels: [],
+        circuit: { components: [], wires: [] }
+      });
+
+      const { definitions } = collectSnapshots(fakeProject([snap]), registry);
+
+      expect(definitions[0].source).toEqual({
+        id: 'id-x',
+        version: 1,
+        origin: 'browser'
+      });
+    });
+
     it('dedups repeated placements of the same snapshot', () => {
       const master = registry.createMaster({ symbol: 'M' }, 'browser');
       const snap = registry.snapshot(master).typeId;

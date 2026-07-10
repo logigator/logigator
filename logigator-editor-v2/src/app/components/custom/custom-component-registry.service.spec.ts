@@ -622,10 +622,13 @@ describe('CustomComponentRegistry', () => {
         'browser'
       );
 
-      registry.relinkSnapshotProvenance(snapType, 'fresh');
+      registry.relinkSnapshotProvenance(snapType, 'fresh', 3);
 
       expect(registry.getDefinition(snapType)?.id).toBe('fresh');
       expect(registry.resolveMaster(snapType)?.masterTypeId).toBe(master);
+      // Version must be stamped too: a no-provenance orphan has none, and
+      // serialize drops the whole `source` unless both id and version are set.
+      expect(registry.getDefinition(snapType)?.version).toBe(3);
     });
   });
 

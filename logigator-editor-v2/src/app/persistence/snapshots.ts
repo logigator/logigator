@@ -121,15 +121,18 @@ export function collectSnapshots(
       // the written document must reference the master's *current* (server) id —
       // the alias table is device-local, so a stale id would be stranded
       // everywhere else. The frozen version is kept as-is (it identifies which
-      // state the snapshot froze, not where the master lives). `origin` records
-      // which library the master *currently* lives in (so a later orphan recovers
-      // correctly) — resolved live so a promoted master reads 'server', falling
-      // back to the snapshot's own frozen kind when the master is already gone.
+      // state the snapshot froze, not where the master lives), defaulting to 1
+      // when absent: an id with no version must still emit provenance, else the
+      // server codec sends an empty mapping id and the instance re-orphans on
+      // reload. `origin` records which library the master *currently* lives in
+      // (so a later orphan recovers correctly) — resolved live so a promoted
+      // master reads 'server', falling back to the snapshot's own frozen kind
+      // when the master is already gone.
       source:
-        def.id !== undefined && def.version !== undefined
+        def.id !== undefined
           ? {
               id: registry.currentIdForId(def.id),
-              version: def.version,
+              version: def.version ?? 1,
               origin:
                 registry.resolveMaster(sessionType)?.master.source ?? def.source
             }

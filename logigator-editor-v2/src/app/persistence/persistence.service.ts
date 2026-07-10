@@ -1292,14 +1292,17 @@ export class PersistenceService {
     if (this.registry.resolveMaster(typeId)) return null;
 
     const reuseId = def.source === 'browser' ? def.id || undefined : undefined;
+    const version = def.version ?? 1;
     const newId = await this._adoptSnapshotAsMaster(def, {
       id: reuseId,
-      version: def.version ?? 1
+      version
     });
     // A fresh id was minted (anonymous or cloud-origin snapshot): re-point it
-    // (and thus its instances) at the new master.
+    // (and thus its instances) at the new master. Stamp the master's version too:
+    // a no-provenance orphan has none, and serialize needs both id and version to
+    // emit resolvable provenance (else it re-orphans on reload).
     if (def.id !== newId) {
-      this.registry.relinkSnapshotProvenance(typeId, newId);
+      this.registry.relinkSnapshotProvenance(typeId, newId, version);
     }
     this.logging.info(
       `Restored orphan component ${def.name} -> ${newId}`,

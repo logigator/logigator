@@ -384,17 +384,25 @@ export class CustomComponentRegistry {
 
   /**
    * Re-points an orphaned **snapshot** at a freshly-restored master by stamping
-   * its provenance id (and marking it browser-sourced). Used only when the
-   * snapshot had no reusable id of its own (an anonymous local custom), so the
-   * placed instances resolve to the new master. Bumps the revision so signal
-   * readers (the settings panel chip / actions) re-resolve. No-op for a master
-   * or unknown type id.
+   * its full provenance — id, browser origin, and frozen `version`. Used when the
+   * snapshot had no reusable id of its own (an anonymous/no-provenance local
+   * custom), so the placed instances resolve to the new master. The `version` is
+   * required: `collectSnapshots` drops the whole `source` (⇒ empty server mapping
+   * id ⇒ re-orphaned on reload) unless both id and version are present, and a
+   * no-provenance orphan is ingested with `version` undefined. Bumps the revision
+   * so signal readers (the settings panel chip / actions) re-resolve. No-op for a
+   * master or unknown type id.
    */
-  public relinkSnapshotProvenance(snapshotTypeId: number, newId: string): void {
+  public relinkSnapshotProvenance(
+    snapshotTypeId: number,
+    newId: string,
+    version: number
+  ): void {
     const def = this._definitions.get(snapshotTypeId);
     if (!def || def.kind !== 'snapshot') return;
     def.id = newId;
     def.source = 'browser';
+    def.version = version;
     this._revision.update((r) => r + 1);
   }
 

@@ -22,6 +22,7 @@ import {
 } from '../../testing/fake-browser-stores';
 import { makeInput } from '../../testing/factories';
 import { InputComponent } from '../components/component-types/input/input.component';
+import { collectSnapshots } from '../persistence/snapshots';
 
 describe('CustomComponentService', () => {
   let service: CustomComponentService;
@@ -215,6 +216,73 @@ describe('CustomComponentService', () => {
     await service.openComponentForEdit(staleId!);
 
     expect(load).toHaveBeenCalledWith('srv-new');
+  });
+
+  // A no-provenance embedded orphan, as ingested from an `id:''` server
+  // dependency (or a legacy document): no id, no version, defaulted to browser
+  // origin. This is the "embedded component in a server project" case.
+  function placeEmbeddedOrphan(): number {
+    const orphanType = registry.registerSnapshot({
+      kind: 'snapshot',
+      source: 'browser',
+      id: undefined,
+      version: undefined,
+      name: 'Orphan',
+      symbol: 'O',
+      description: '',
+      numInputs: 0,
+      numOutputs: 0,
+      labels: [],
+      circuit: { components: [], wires: [] }
+    });
+    const config = provider.getComponent(orphanType)!;
+    const instance = config.create({
+      direction: config.options['direction'].clone()
+    }) as CustomComponent;
+    main.addComponent(instance);
+    return orphanType;
+  }
+
+  it('restoring an orphan marks the host project dirty', async () => {
+    const orphanType = placeEmbeddedOrphan();
+    expect(registry.resolveMaster(orphanType)).toBeUndefined();
+
+    // A pristine, freshly-loaded project; isolate from the editor-open side
+    // effect so the test asserts only the dirty flag.
+    metadataStore.clearDirty(main);
+    vi.spyOn(service, 'openComponentForEdit').mockResolvedValue();
+
+    await service.restoreOrphanAndEdit(orphanType);
+
+    // The relink changed the host's serialized content but ran no Action, so
+    // restore must mark it dirty itself — otherwise the follow-up save no-ops on
+    // the dirty guard and a reload shows the component embedded again.
+    expect(metadataStore.isDirty(main)).toBe(true);
+  });
+
+  it('a restored orphan serializes with resolvable provenance after promotion', async () => {
+    const orphanType = placeEmbeddedOrphan();
+    vi.spyOn(service, 'openComponentForEdit').mockResolvedValue();
+
+    await service.restoreOrphanAndEdit(orphanType);
+
+    // Restore rebuilt a browser master and relinked the placed snapshot to it.
+    const masterId = registry.idForTypeId(orphanType)!;
+    const masterTypeId = registry.masterTypeIdForId(masterId)!;
+
+    // Saving the server project promotes that browser master to the cloud.
+    registry.promoteMaster(masterTypeId, 'srv-2', 1);
+
+    // The re-serialized dependency must carry complete provenance (id AND
+    // version) so it maps to the owned server component — otherwise it is
+    // written with an empty id and reloads as an embedded orphan again.
+    const { definitions } = collectSnapshots(main, registry);
+    expect(definitions).toHaveLength(1);
+    expect(definitions[0].source).toEqual({
+      id: 'srv-2',
+      version: 1,
+      origin: 'server'
+    });
   });
 
   it('a ChangeOptionAction marks the project dirty and undo reverts the value', () => {
