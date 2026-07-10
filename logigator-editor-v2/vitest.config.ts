@@ -7,6 +7,9 @@ export default defineConfig({
   test: {
     setupFiles: [fileURLToPath(new URL('./vitest.setup.ts', import.meta.url))],
     maxConcurrency: 1,
-    fileParallelism: false
+    fileParallelism: false,
+    // Suppress intercepted console output for passing tests (the editor logs
+    // freely at Debug in the test build); failing tests still print their logs.
+    silent: 'passed-only'
   }
 });
