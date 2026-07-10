@@ -23,7 +23,6 @@ import {
   CUSTOM_TYPE_ID_BASE
 } from '../../components/component-type.enum';
 import { TogglePortNegationAction } from '../../actions/actions/toggle-port-negation.action';
-import { LayoutService } from '../../layout/layout.service';
 import { CustomComponentService } from '../../custom-component/custom-component.service';
 import { PointerInput } from './pointer-input';
 import { PointerToolTarget } from './pointer-controller';
@@ -58,7 +57,6 @@ export class WorkModeRouter implements PointerToolTarget {
 
   private _pasteSub: Subscription | null = null;
   private readonly _cancelSub: Subscription;
-  private readonly _layout = getStaticDI(LayoutService);
   private readonly _customComponents = getStaticDI(CustomComponentService);
 
   // Bumped on every gesture end / cancel / context switch so an in-flight
