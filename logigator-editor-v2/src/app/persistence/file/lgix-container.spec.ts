@@ -47,7 +47,9 @@ describe('lgix-container', () => {
 
   it('rejects a buffer without the magic bytes', async () => {
     const plainJson = new TextEncoder().encode('{"version":1}');
-    await expect(decodeLgix(plainJson)).rejects.toBeInstanceOf(InvalidFileError);
+    await expect(decodeLgix(plainJson)).rejects.toBeInstanceOf(
+      InvalidFileError
+    );
   });
 
   it('rejects an unknown compression flag', async () => {
@@ -61,7 +63,9 @@ describe('lgix-container', () => {
       JSON.stringify({ components: Array.from({ length: 100 }, () => 1) })
     );
     const truncated = bytes.subarray(0, bytes.length - 4);
-    await expect(decodeLgix(truncated)).rejects.toBeInstanceOf(InvalidFileError);
+    await expect(decodeLgix(truncated)).rejects.toBeInstanceOf(
+      InvalidFileError
+    );
   });
 
   it('rejects a mid-body bit flip (intact trailer, CRC mismatch)', async () => {

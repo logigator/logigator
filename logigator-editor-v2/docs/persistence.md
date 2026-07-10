@@ -43,7 +43,7 @@ Three unrelated version concepts live in this layer:
    into placed snapshots' provenance. **Unrelated to the file-format version.**
 3. **`.lgix` container version** — `LGIX_CONTAINER_VERSION`, the byte-framing of the
    exported file (magic + version + flags around the gzipped JSON). Bumped only when the
-   framing itself changes; the JSON *inside* still carries its own file-format version.
+   framing itself changes; the JSON _inside_ still carries its own file-format version.
    Only the file export/import boundary sees it. See [`.lgix` container](#lgix-container).
 
 ## Directory Layout
@@ -307,8 +307,8 @@ offset 6   gzip(utf8(json))      …         the CircuitFileService JSON string
   header; gzip's own CRC32 trailer makes `decodeLgix` reject a corrupted or truncated
   payload (the decompression stream errors → `InvalidFileError`). There is **no keyed
   check** — a client-only SPA ships its own verification logic and key, so nothing in the
-  format resists a determined forger. This is deliberate: the format is tamper-*evident*,
-  not tamper-*proof*.
+  format resists a determined forger. This is deliberate: the format is tamper-_evident_,
+  not tamper-_proof_.
 - **Share re-import defense lives in the UI, not the format.** Because the check can't be
   cryptographically enforced client-side, the effective control is policy:
   `EditorMenuService` hides **Export to File** for read-only `source:'share'` documents,

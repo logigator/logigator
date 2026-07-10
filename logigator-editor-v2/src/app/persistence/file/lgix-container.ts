@@ -1,4 +1,7 @@
-import { InvalidFileError, UnsupportedVersionError } from './circuit-file.errors';
+import {
+  InvalidFileError,
+  UnsupportedVersionError
+} from './circuit-file.errors';
 
 /**
  * The `.lgix` container: a small binary framing around the native circuit-file
@@ -100,7 +103,9 @@ export function hasLgixMagic(bytes: Uint8Array): boolean {
 }
 
 /** Frames a circuit-file JSON string into a gzip-compressed `.lgix` container. */
-export async function encodeLgix(json: string): Promise<Uint8Array<ArrayBuffer>> {
+export async function encodeLgix(
+  json: string
+): Promise<Uint8Array<ArrayBuffer>> {
   const payload = await gzip(new Uint8Array(encoder.encode(json)));
   const out = new Uint8Array(HEADER_LENGTH + payload.length);
   out.set(MAGIC, 0);

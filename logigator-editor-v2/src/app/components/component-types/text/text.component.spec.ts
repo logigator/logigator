@@ -1,5 +1,4 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { Rectangle } from 'pixi.js';
 import { configureTestBed } from '../../../../testing/configure-test-bed';
 import { Component } from '../../component';
 import { Project } from '../../../project/project';
