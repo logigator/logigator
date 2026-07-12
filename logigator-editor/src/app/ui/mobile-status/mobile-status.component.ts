@@ -19,7 +19,7 @@ import {
   imports: [TranslocoDirective],
   template: `
     <div
-      *translation="let t"
+      *transloco="let t"
       class="flex items-center gap-2 rounded-full bg-content/80 px-3 py-1 text-xs text-muted shadow backdrop-blur"
     >
       <span>{{

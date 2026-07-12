@@ -18,7 +18,7 @@ import { resolveMasterSignal } from './resolve-master.signal';
   selector: 'app-share-component-action',
   imports: [LgButton, TranslocoDirective],
   host: { class: 'contents' },
-  template: `<ng-container *translation="let t">
+  template: `<ng-container *transloco="let t">
     @if (visible()) {
       <lg-button
         size="sm"
