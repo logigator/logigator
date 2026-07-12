@@ -16,6 +16,7 @@ import { CURRENT_FILE_VERSION, CurrentCircuitFile } from './circuit-file.types';
 import {
   remapComponentTypes,
   SerializedCircuitBody,
+  SerializedComponentBody,
   SerializedWireBody,
   SnapshotDefinition
 } from '../serialized-circuit';
@@ -23,20 +24,18 @@ import { collectSnapshots, serializeProjectBody } from '../snapshots';
 import {
   decodeWireChain,
   encodeWireChain,
-  fromPersistedDefinition,
-  toPersistedDefinition,
   WireChainDecodeError
 } from '../wire-chain.codec';
+import {
+  decodeComponentPositions,
+  encodeComponentPositions,
+  PositionDeltaDecodeError
+} from '../position-delta.codec';
+import {
+  fromPersistedDefinition,
+  toPersistedDefinition
+} from '../persisted-definition.codec';
 import { PersistedSnapshotDefinitionV1 } from '../persisted-circuit.types';
-
-function isNumberPair(value: unknown): value is [number, number] {
-  return (
-    Array.isArray(value) &&
-    value.length >= 2 &&
-    typeof value[0] === 'number' &&
-    typeof value[1] === 'number'
-  );
-}
 
 /**
  * Negation indices from an untrusted file: keep only non-negative integers,
@@ -81,33 +80,43 @@ export class CircuitFileService {
   }
 
   /**
-   * Serializes a project to a current-version file document, alongside the wire
-   * emission order: `wireOrder[k]` is the index (in `project.wires` iteration
-   * order) of the wire the chain encoder emitted k-th. The chain walk reorders
-   * wires, so the document's wire order is the emission order — consumers that
-   * align per-wire data with the document (the project dump's `wireIds`) map
-   * through this instead of iterating the project.
+   * Serializes a project to a current-version file document, alongside the
+   * emission orders: `wireOrder[k]` / `componentOrder[k]` is the index (in
+   * `project.wires` / `project.components` iteration order) of the element
+   * emitted k-th. Both encoders reorder (the chain walk for wires, the
+   * position-delta sort for components), so the document's element order is
+   * the emission order — consumers that align per-element data with the
+   * document (the project dump's `wireIds`/`componentIds`) map through these
+   * instead of iterating the project.
    */
   toDocument(
     project: Project,
     name: string
-  ): { file: CurrentCircuitFile; wireOrder: number[] } {
+  ): {
+    file: CurrentCircuitFile;
+    wireOrder: number[];
+    componentOrder: number[];
+  } {
     const { definitions, sessionToLocal } = collectSnapshots(
       project,
       this.registry
     );
     const body = serializeProjectBody(project);
-    const { text, order } = encodeWireChain(body.wires);
+    const wires = encodeWireChain(body.wires);
+    const components = encodeComponentPositions(
+      remapComponentTypes(body.components, sessionToLocal)
+    );
 
     return {
       file: {
         version: CURRENT_FILE_VERSION,
         name,
-        components: remapComponentTypes(body.components, sessionToLocal),
-        wires: text,
+        components: components.components,
+        wires: wires.text,
         definitions: definitions.map(toPersistedDefinition)
       },
-      wireOrder: order
+      wireOrder: wires.order,
+      componentOrder: components.order
     };
   }
 
@@ -151,11 +160,9 @@ export class CircuitFileService {
 
     const components: Component[] = [];
     let skippedCustom = 0;
-    for (const c of this._asArray(file.components, 'components')) {
+    for (const c of this._decodeComponents(file.components)) {
       if (
-        !c ||
         typeof c.type !== 'number' ||
-        !isNumberPair(c.pos) ||
         typeof c.options !== 'object' ||
         c.options === null
       ) {
@@ -257,7 +264,7 @@ export class CircuitFileService {
     );
     return {
       components: remapComponentTypes(
-        this._asArray(file.components, 'components'),
+        this._decodeComponents(file.components),
         remap
       ),
       wires: this._decodeWires(file.wires)
@@ -290,6 +297,17 @@ export class CircuitFileService {
     return value;
   }
 
+  /** Maps a persisted-body decode failure to {@link InvalidFileError}. */
+  private _rethrowAsFileError(err: unknown): never {
+    if (
+      err instanceof WireChainDecodeError ||
+      err instanceof PositionDeltaDecodeError
+    ) {
+      throw new InvalidFileError(err.message);
+    }
+    throw err;
+  }
+
   /** Decodes the body's chain-encoded wires, mapping structural failures
    * (including a non-string field) to {@link InvalidFileError}. */
   private _decodeWires(value: unknown): SerializedWireBody[] {
@@ -297,15 +315,25 @@ export class CircuitFileService {
     try {
       return decodeWireChain(value as string);
     } catch (err) {
-      if (err instanceof WireChainDecodeError) {
-        throw new InvalidFileError(err.message);
-      }
-      throw err;
+      this._rethrowAsFileError(err);
     }
   }
 
-  /** Revives persisted definitions (chain-encoded wires) into in-memory
-   * {@link SnapshotDefinition}s, mapping decode failures to {@link InvalidFileError}. */
+  /** Restores absolute positions from the body's delta-encoded components,
+   * mapping structural failures to {@link InvalidFileError}. */
+  private _decodeComponents(
+    value: SerializedComponentBody[] | undefined
+  ): SerializedComponentBody[] {
+    try {
+      return decodeComponentPositions(this._asArray(value, 'components'));
+    } catch (err) {
+      this._rethrowAsFileError(err);
+    }
+  }
+
+  /** Revives persisted definitions (delta components, chain wires) into
+   * in-memory {@link SnapshotDefinition}s, mapping decode failures to
+   * {@link InvalidFileError}. */
   private _decodeDefinitions(
     value: PersistedSnapshotDefinitionV1[] | undefined
   ): SnapshotDefinition[] {
@@ -313,10 +341,7 @@ export class CircuitFileService {
       try {
         return fromPersistedDefinition(def);
       } catch (err) {
-        if (err instanceof WireChainDecodeError) {
-          throw new InvalidFileError(err.message);
-        }
-        throw err;
+        this._rethrowAsFileError(err);
       }
     });
   }

@@ -465,15 +465,20 @@ export class PersistenceService {
   buildProjectDump(project: Project): ProjectDump {
     const name = this.metadataStore.getMetadata(project)?.name ?? 'Untitled';
     const actionManager = project.actionManager;
-    // The chain encoder reorders wires, so the document's wire order is the
-    // emission order — `wireIds` must follow it, not `project.wires`.
+    // Both encoders reorder (chain walk, position-delta sort), so the
+    // document's element order is the emission order — the id lists must
+    // follow it, not the project's iteration order.
+    const components = [...project.components];
     const wires = [...project.wires];
-    const { file, wireOrder } = this.circuitFile.toDocument(project, name);
+    const { file, wireOrder, componentOrder } = this.circuitFile.toDocument(
+      project,
+      name
+    );
     return {
       dumpVersion: PROJECT_DUMP_VERSION,
       name,
       project: file,
-      componentIds: [...project.components].map((c) => c.id),
+      componentIds: componentOrder.map((i) => components[i].id),
       wireIds: wireOrder.map((i) => wires[i].id),
       actions: {
         history: actionManager.history.map((a) => a.serialize()),

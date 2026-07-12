@@ -55,6 +55,9 @@ src/app/persistence/
 ├── persisted-circuit.types.ts    # Version bases: PersistedComponentV0/V1, PersistedCircuitV0/V1
 ├── serialized-circuit.ts         # Native body types (SerializedComponentBody/WireBody) + SnapshotDefinition + helpers
 ├── snapshots.ts                  # Universal snapshot codec (collect/serialize the native body + definitions[])
+├── wire-chain.codec.ts           # Persisted wire encoding: chain string with relative heads
+├── position-delta.codec.ts       # Persisted component positions: (type,y,x) sort + deltas
+├── persisted-definition.codec.ts # SnapshotDefinition ↔ persisted form (delta components, chain wires)
 ├── server/                       # ⚠️ TEMPORARY — legacy server (v0-over-HTTP) transport
 │   └── server-circuit.codec.ts   # v0 ENCODER (Project → ProjectElement[]) + toCircuitFileV0 read adapter
 ├── browser/                      # Browser-local (IndexedDB) targets
@@ -91,26 +94,39 @@ PersistedCircuitV0    = { elements?: PersistedComponentV0[] }
   └── ServerCircuitV0 extends PersistedCircuitV0 → { elements, dependencies }        (old API transport — TEMPORARY)
 
 ── V1 (native current; named options, split components/wires) ──
-PersistedComponentV1           = SerializedComponentBody   // { type, pos, options }
+PersistedComponentV1           = SerializedComponentBody   // { type, pos, options } — pos delta-encoded
 PersistedWiresV1               = string                    // chain-encoded: "x,y:e5s3;x,y:n2"
-PersistedSnapshotDefinitionV1  = SnapshotDefinition with chain-encoded wires
+PersistedSnapshotDefinitionV1  = SnapshotDefinition with delta components + chain wires
 PersistedCircuitV1    = { components: PersistedComponentV1[]; wires: PersistedWiresV1; definitions: PersistedSnapshotDefinitionV1[] }
   └── CircuitFileV1   extends PersistedCircuitV1 → { version: 1, name }   (file + browser store this verbatim)
 ```
 
+**Why deltas everywhere:** repeated JSON structure is free after gzip; what gzip cannot
+remove is the entropy of absolute coordinates. Both persisted encodings therefore sort
+elements spatially and store positions relative to the previous element, turning
+coordinates into small, repeating deltas (measured on real circuits: ~3–4× smaller
+gzipped per section than absolute positions).
+
 **Wire chain encoding** (`wire-chain.codec.ts`) — wires persist as one SVG-path-style
-string: each `;`-separated chunk starts at an absolute point (`x,y:`), then every
+string: each `;`-separated chunk starts at a head point (`x,y:` — itself a delta
+against the previous chunk's head, the first relative to the origin), then every
 segment is one wire leaving the current point (`e`/`s`/`w`/`n` + length; segments abut
 with no separator — the next letter ends the number), whose far endpoint becomes the
-next segment's start. The encoder is a greedy walk over an
-adjacency map keyed `"x,y"` with every wire indexed under **both** endpoints; `w`/`n`
-mean the walk entered a wire from its far end — the in-memory model stays canonical
-(`WireDirection` H/V, positive length, `pos` at the west/north endpoint) and decoding
-normalizes back. The walk reorders wires, so the document's wire order is the **emission
-order**; `toDocument()` returns it (`wireOrder`) for consumers that align per-wire data
-with the document (`ProjectDump.wireIds`). Chosen for compressed size: ~5× smaller raw
-and ~1.6× smaller gzipped than the previous `{ pos, direction, length }[]` on real
-circuits.
+next segment's start. The encoder is a greedy walk over an adjacency map keyed `"x,y"`
+with every wire indexed under **both** endpoints, starting chunks in (y, x) order of
+the canonical start; `w`/`n` mean the walk entered a wire from its far end — the
+in-memory model stays canonical (`WireDirection` H/V, positive length, `pos` at the
+west/north endpoint) and decoding normalizes back.
+
+**Component position deltas** (`position-delta.codec.ts`) — persisted components are
+sorted by (type, y, x) and each `pos` is stored relative to the previous component's
+absolute position. Decoding restores absolutes in document order.
+
+Both encoders reorder elements, so the document's element order is the **emission
+order**; `toDocument()` returns it (`wireOrder`/`componentOrder`) for consumers that
+align per-element data with the document (`ProjectDump.wireIds`/`componentIds`).
+Embedded definitions get the same treatment via `persisted-definition.codec.ts` (their
+internal order has no consumers, so no order bookkeeping).
 
 `PersistedCircuitV1` is the named **transport payload** (body + `definitions[]`) shared
 by the file and browser targets — it makes "the browser store reuses the file format" an
@@ -354,7 +370,8 @@ component it (transitively) uses, so it can be loaded with no library present.
   - `SerializedComponentBody` `{ type, pos, options }`, `SerializedWireBody`
     `{ pos, direction, length }`, `SerializedCircuitBody` `{ components, wires }`.
     These are the **in-memory** shapes; on write, `wire-chain.codec.ts` folds the wire
-    objects into the persisted chain string (and unfolds them on read).
+    objects into the persisted chain string and `position-delta.codec.ts` delta-encodes
+    the component positions (both unfold on read).
   - `SnapshotDefinition extends SerializedCircuitBody` — a frozen custom: a **file-local**
     `type` id, `source?: { id, version, origin? }` provenance (id + the axis-2 master
     version + the master's library origin), and the display fields (`name`, `symbol`,

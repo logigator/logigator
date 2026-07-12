@@ -11,6 +11,7 @@ import { CircuitFileV0 } from '../circuit-file.types';
 import { BuiltInComponentType } from '../../../components/component-type.enum';
 import { LegacyV0Slots } from '../../../components/component-config.model';
 import { decodeWireChain } from '../../wire-chain.codec';
+import { decodeComponentPositions } from '../../position-delta.codec';
 
 describe('v0ToV1Migration', () => {
   let ctx: MigrationContext;
@@ -48,13 +49,15 @@ describe('v0ToV1Migration', () => {
     // No top-level `components` array here, so no sub-circuit definitions.
     expect(result.definitions).toEqual([]);
 
-    const and = result.components.find((c) => c.type === 2)!;
+    // Persisted positions are delta-encoded; restore absolutes to assert.
+    const components = decodeComponentPositions(result.components);
+    const and = components.find((c) => c.type === 2)!;
     // Rotated South (W=2, H=max(1,3)=3): legacy anchors by the body's fixed
     // top-left, v2 by the rotation pivot, so the pivot shifts by +H on x.
     expect(and.pos).toEqual([6, 4]);
     expect(and.options).toEqual({ direction: 1, numInputs: 3 });
 
-    const rom = result.components.find((c) => c.type === 12)!;
+    const rom = components.find((c) => c.type === 12)!;
     expect(rom.options).toEqual({
       direction: 0,
       wordSize: 8,
@@ -62,16 +65,18 @@ describe('v0ToV1Migration', () => {
       data: 'gQ==' // legacy `s` blob decodes verbatim into the data option
     });
 
-    const text = result.components.find((c) => c.type === 7)!;
+    const text = components.find((c) => c.type === 7)!;
     expect(text.options).toEqual({
       direction: 0,
       fontSize: 28, // legacy n[0]=14 rendered at ×(16/8)=28 px
       text: 'Hello world'
     });
 
+    // Decoded in emission order — the chain walk starts at the (y, x)-smallest
+    // canonical start, so the vertical wire at y=2 comes first.
     expect(decodeWireChain(result.wires)).toEqual([
-      { pos: [3, 5], direction: 0, length: 5 },
-      { pos: [5, 2], direction: 1, length: 5 }
+      { pos: [5, 2], direction: 1, length: 5 },
+      { pos: [3, 5], direction: 0, length: 5 }
     ]);
   });
 

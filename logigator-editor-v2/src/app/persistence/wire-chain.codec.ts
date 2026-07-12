@@ -1,13 +1,16 @@
-import { SerializedWireBody, SnapshotDefinition } from './serialized-circuit';
+import { SerializedWireBody } from './serialized-circuit';
 import { WireDirection } from '../wires/wire-direction.enum';
-import { PersistedSnapshotDefinitionV1 } from './persisted-circuit.types';
 
 /**
  * Chain codec for the persisted wire encoding: SVG-path-style walks over the
- * wire graph, `"x,y:e5s3;x,y:n2"` — each chunk starts at an absolute point and
- * every segment is one wire leaving the current point (`e`/`s`/`w`/`n` +
- * length, no separator needed: the next letter ends the number), whose far
- * endpoint becomes the next segment's start.
+ * wire graph, `"x,y:e5s3;x,y:n2"` — each chunk starts at a point and every
+ * segment is one wire leaving the current point (`e`/`s`/`w`/`n` + length, no
+ * separator needed: the next letter ends the number), whose far endpoint
+ * becomes the next segment's start. Chunk heads are themselves deltas against
+ * the previous chunk's head (the first is relative to the origin), and walks
+ * start in (y, x) order — nearby chunks then open with small, repeating head
+ * deltas instead of high-entropy absolute coordinates, which is where the
+ * compressed size win comes from.
  *
  * The four letters are a property of the *walk*, not the wire: the in-memory
  * model stays canonical (`WireDirection` horizontal/vertical, positive length,
@@ -53,23 +56,39 @@ const keyOf = (p: GridPoint): string => `${p[0]},${p[1]}`;
 
 /**
  * Encodes wires as chain text. Deterministic: chunks start at the first
- * not-yet-emitted wire in input order, each walk greedily continues with the
- * first unused wire incident to the current point (both endpoints of every
- * wire are indexed, so a wire is picked up from either end).
+ * not-yet-emitted wire in (y, x) order of the canonical (west/north) start
+ * point, each walk greedily continues with the first unused wire incident to
+ * the current point (both endpoints of every wire are indexed, so a wire is
+ * picked up from either end). Chunk heads are emitted relative to the
+ * previous chunk's head.
  */
 export function encodeWireChain(
   wires: readonly SerializedWireBody[]
 ): EncodedWireChain {
-  const adjacency = new Map<string, number[]>();
   const ends = wires.map(endpointsOf);
-  ends.forEach((pair, i) => {
-    for (const p of pair) {
+  // Canonical start: the west/north endpoint (equals `pos` except for
+  // legacy negative lengths, where the endpoints come out swapped).
+  const startOf = (i: number): GridPoint => {
+    const [a, b] = ends[i];
+    return b[1] < a[1] || (b[1] === a[1] && b[0] < a[0]) ? b : a;
+  };
+  const sorted = wires
+    .map((_, i) => i)
+    .sort((u, v) => {
+      const a = startOf(u);
+      const b = startOf(v);
+      return a[1] - b[1] || a[0] - b[0] || u - v;
+    });
+
+  const adjacency = new Map<string, number[]>();
+  for (const i of sorted) {
+    for (const p of ends[i]) {
       const key = keyOf(p);
       const list = adjacency.get(key);
       if (list) list.push(i);
       else adjacency.set(key, [i]);
     }
-  });
+  }
 
   const used = new Array<boolean>(wires.length).fill(false);
   const order: number[] = [];
@@ -84,13 +103,16 @@ export function encodeWireChain(
     return [letter + Math.abs(delta), other];
   };
 
-  for (let start = 0; start < wires.length; start++) {
+  let prevHead: GridPoint = [0, 0];
+  for (const start of sorted) {
     if (used[start]) continue;
     used[start] = true;
     order.push(start);
+    const origin = startOf(start);
+    const head = `${origin[0] - prevHead[0]},${origin[1] - prevHead[1]}`;
+    prevHead = origin;
     const segments: string[] = [];
-    const head = keyOf(ends[start][0]);
-    let [seg, cur] = segmentFrom(ends[start][0], start);
+    let [seg, cur] = segmentFrom(origin, start);
     segments.push(seg);
     for (;;) {
       const candidate = (adjacency.get(keyOf(cur)) ?? []).find((i) => !used[i]);
@@ -125,14 +147,19 @@ export function decodeWireChain(text: string): SerializedWireBody[] {
   const wires: SerializedWireBody[] = [];
   if (text === '') return wires;
 
+  // Chunk heads are deltas against the previous chunk's head.
+  let hx = 0;
+  let hy = 0;
   for (const chunk of text.split(';')) {
     const colon = chunk.indexOf(':');
     const head = colon === -1 ? null : HEAD_PATTERN.exec(chunk.slice(0, colon));
     if (!head) {
       throw new WireChainDecodeError(`Invalid wire chain chunk "${chunk}"`);
     }
-    let x = Number(head[1]);
-    let y = Number(head[2]);
+    hx += Number(head[1]);
+    hy += Number(head[2]);
+    let x = hx;
+    let y = hy;
     const body = chunk.slice(colon + 1);
     if (body === '') {
       throw new WireChainDecodeError(`Invalid wire chain chunk "${chunk}"`);
@@ -185,19 +212,4 @@ export function decodeWireChain(text: string): SerializedWireBody[] {
   }
 
   return wires;
-}
-
-/** Converts an in-memory definition to its persisted form (wires chain-encoded). */
-export function toPersistedDefinition(
-  def: SnapshotDefinition
-): PersistedSnapshotDefinitionV1 {
-  const { wires, ...rest } = def;
-  return { ...rest, wires: encodeWireChain(wires).text };
-}
-
-/** Revives a persisted definition into the in-memory form (wires decoded). */
-export function fromPersistedDefinition(
-  def: PersistedSnapshotDefinitionV1
-): SnapshotDefinition {
-  return { ...def, wires: decodeWireChain(def.wires) };
 }

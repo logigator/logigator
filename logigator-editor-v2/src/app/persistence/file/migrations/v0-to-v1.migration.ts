@@ -24,7 +24,9 @@ import {
   legacyBodyWidth,
   legacyCustomBodySize
 } from '../../legacy-anchor';
-import { encodeWireChain, toPersistedDefinition } from '../../wire-chain.codec';
+import { encodeWireChain } from '../../wire-chain.codec';
+import { encodeComponentPositions } from '../../position-delta.codec';
+import { toPersistedDefinition } from '../../persisted-definition.codec';
 
 /** Old editor's ElementTypeId.WIRE — the canonical type ID for wires in the v0 format. */
 const WIRE_TYPE_ID = 0;
@@ -363,7 +365,7 @@ export const v0ToV1Migration: Migration<CircuitFileV0, CircuitFileV1> = {
     return {
       version: 1,
       name: input.project.name ?? 'Untitled',
-      components,
+      components: encodeComponentPositions(components).components,
       wires: encodeWireChain(wires).text,
       definitions: [...dependencyDefinitions, ...legacyDefinitions].map(
         toPersistedDefinition

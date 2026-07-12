@@ -72,6 +72,19 @@ describe('wire-chain codec', () => {
     expect(canon(decodeWireChain(text))).toEqual(canon(input));
   });
 
+  it('emits chunk heads relative to the previous chunk head', () => {
+    const input = [wire(10, 10, H, 2), wire(4, 20, H, 2)];
+    const { text } = encodeWireChain(input);
+    expect(text).toBe('10,10:e2;-6,10:e2');
+    expect(canon(decodeWireChain(text))).toEqual(canon(input));
+  });
+
+  it('produces the same text regardless of input order (canonical start sort)', () => {
+    const a = [wire(10, 10, H, 2), wire(4, 20, H, 2), wire(0, 0, V, 3)];
+    const b = [a[2], a[0], a[1]];
+    expect(encodeWireChain(b).text).toBe(encodeWireChain(a).text);
+  });
+
   it('never reads a direction letter as part of a length (no exponent notation)', () => {
     expect(decodeWireChain('0,0:e1e3')).toEqual([
       { pos: [0, 0], direction: H, length: 1 },

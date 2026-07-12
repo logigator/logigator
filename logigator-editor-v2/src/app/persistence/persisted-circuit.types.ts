@@ -35,17 +35,25 @@ export interface PersistedCircuitV0 {
 
 // ---- V1: native current format. Named options, components and wires split. ----
 
-/** One placed component in the native body (type id, position, named options). */
+/**
+ * One placed component in the native body (type id, position, named options).
+ * Persisted `pos` is **delta-encoded**: components are stored sorted by
+ * (type, y, x) and each position is relative to the previous component's
+ * absolute position (`position-delta.codec.ts`); the decoded order is the
+ * body's component order.
+ */
 export type PersistedComponentV1 = SerializedComponentBody;
 
 /**
  * A circuit's wires as chain text (`"x,y:e5s3;x,y:n2"`): SVG-path-style walks
- * over the wire graph, one segment per wire. Encoded/decoded by
- * `wire-chain.codec.ts`; the decoded order is the body's wire order.
+ * over the wire graph, one segment per wire, chunk heads relative to the
+ * previous chunk's head. Encoded/decoded by `wire-chain.codec.ts`; the
+ * decoded order is the body's wire order.
  */
 export type PersistedWiresV1 = string;
 
-/** A {@link SnapshotDefinition} as persisted: its wires chain-encoded. */
+/** A {@link SnapshotDefinition} as persisted: components delta-encoded,
+ * wires chain-encoded (`persisted-definition.codec.ts`). */
 export type PersistedSnapshotDefinitionV1 = Omit<
   SnapshotDefinition,
   'wires'

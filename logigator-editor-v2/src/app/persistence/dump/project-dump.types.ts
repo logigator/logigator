@@ -12,9 +12,10 @@ export const PROJECT_DUMP_VERSION = 1;
  * `project` is a normal native circuit-file document — it loads just like a file
  * import. Because that format drops element ids on load, `componentIds`/`wireIds`
  * carry the original ids (parallel to the body's component/wire order) so they
- * can be re-stamped, which keeps the id-referencing `actions` valid. For wires
- * the body order is the chain encoder's emission order — the decoder yields
- * wires in that same order, so index-parallel re-stamping holds.
+ * can be re-stamped, which keeps the id-referencing `actions` valid. The body
+ * order is the encoders' emission order (the chain walk for wires, the
+ * position-delta sort for components) — the decoders yield elements in that
+ * same order, so index-parallel re-stamping holds.
  */
 export interface ProjectDump {
   dumpVersion: number;

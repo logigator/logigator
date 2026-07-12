@@ -35,6 +35,7 @@ import {
   FakeComponentIdMapStore
 } from '../../testing/fake-browser-stores';
 import { configureTestBed } from '../../testing/configure-test-bed';
+import { arrayWithExactContents } from '../../testing/vitest-helpers';
 import { signal } from '@angular/core';
 import type { UserData } from '../api/models/user';
 import { UserService } from '../user/user.service';
@@ -1093,12 +1094,14 @@ describe('PersistenceService', () => {
       const dumpJson = JSON.stringify(service.buildProjectDump(source));
       const restored = await service.importProjectDump(dumpJson);
 
-      // Ids re-stamped exactly (the native format drops them on load).
+      // Ids re-stamped exactly (the native format drops them on load); the
+      // encoders reorder elements, so compare as sets — the geometry-level
+      // mapping is covered by the dedicated reorder test below.
       expect(Array.from(restored.components).map((c) => c.id)).toEqual(
-        sourceComponentIds
+        arrayWithExactContents(sourceComponentIds)
       );
       expect(Array.from(restored.wires).map((w) => w.id)).toEqual(
-        sourceWireIds
+        arrayWithExactContents(sourceWireIds)
       );
 
       // History + pointer restored without re-applying.
@@ -1113,23 +1116,32 @@ describe('PersistenceService', () => {
       expect([moved.position.x, moved.position.y]).toEqual([2, 3]);
     });
 
-    it('re-stamps wire ids by geometry when the chain walk reorders wires', async () => {
-      // Insertion order [A, C, B]: re-encoding walks from A straight onto the
-      // touching B before the isolated C, so the dump body's wire order
-      // differs from the project's insertion order.
+    it('re-stamps element ids by geometry when the encoders reorder', async () => {
+      // Both fixtures decode to an insertion order that differs from the
+      // encoders' emission order: the wire at (10,10) precedes the touching
+      // run at (0,0) that the sorted walk emits first, and the component at
+      // (5,6) precedes the one at (2,3) that the (type, y, x) sort emits
+      // first.
       const source = await service.importProjectFromJson(
         JSON.stringify({
           version: 1,
           name: 'Dumpee',
-          components: [],
-          wires: '0,0:e4;20,20:s2;4,0:e4',
+          components: [
+            { type: 1, pos: [5, 6], options: {} },
+            { type: 1, pos: [-3, -3], options: {} }
+          ],
+          wires: '10,10:e4;-10,-10:e4s3',
           definitions: []
         })
       );
-      const geometry = (w: Wire) =>
+      const wireGeometry = (w: Wire) =>
         `${Math.floor(w.position.x)},${Math.floor(w.position.y)},${w.direction},${w.length}`;
-      const sourceIds = new Map(
-        Array.from(source.wires).map((w) => [geometry(w), w.id])
+      const compGeometry = (c: Component) => `${c.position.x},${c.position.y}`;
+      const sourceWireIds = new Map(
+        Array.from(source.wires).map((w) => [wireGeometry(w), w.id])
+      );
+      const sourceComponentIds = new Map(
+        Array.from(source.components).map((c) => [compGeometry(c), c.id])
       );
 
       const restored = await service.importProjectDump(
@@ -1137,14 +1149,22 @@ describe('PersistenceService', () => {
       );
 
       const restoredWires = Array.from(restored.wires);
+      const restoredComponents = Array.from(restored.components);
       expect(restoredWires).toHaveLength(3);
+      expect(restoredComponents).toHaveLength(2);
       // The dump did reorder relative to the source project…
       expect(restoredWires.map((w) => w.id)).not.toEqual(
         Array.from(source.wires).map((w) => w.id)
       );
-      // …but every wire still carries its original id.
+      expect(restoredComponents.map((c) => c.id)).not.toEqual(
+        Array.from(source.components).map((c) => c.id)
+      );
+      // …but every element still carries its original id.
       for (const w of restoredWires) {
-        expect(w.id).toBe(sourceIds.get(geometry(w)));
+        expect(w.id).toBe(sourceWireIds.get(wireGeometry(w)));
+      }
+      for (const c of restoredComponents) {
+        expect(c.id).toBe(sourceComponentIds.get(compGeometry(c)));
       }
     });
 
