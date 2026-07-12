@@ -3,7 +3,49 @@
     <a class="relative w-40 h-8" href="/" target="_blank">
       <img [ngSrc]="logoUrl" alt="Logo" fill priority />
     </a>
-    <h1 class="text-xl font-bold mx-2">{{ projectName() }}</h1>
+    @if (editing()) {
+      <span class="mx-2 flex items-center gap-1" *transloco="let t">
+        <input
+          #renameInput
+          lgInputText
+          class="text-xl font-bold"
+          type="text"
+          [maxlength]="nameMaxLength"
+          [ngModel]="editValue()"
+          (ngModelChange)="editValue.set($event)"
+          (click)="$event.stopPropagation()"
+          (keydown)="$event.stopPropagation()"
+          (keydown.enter)="commitRename()"
+          (keydown.escape)="cancelRename()"
+          (blur)="commitRename()"
+        />
+        <lg-button
+          icon="ph ph-x"
+          styleClass="text-surface-900!"
+          [text]="true"
+          [ariaLabel]="t('titleBar.rename.cancel')"
+          [lgTooltip]="t('titleBar.rename.cancel')"
+          tooltipPosition="bottom"
+          (mousedown)="$event.preventDefault()"
+          (click)="cancelRename()"
+        />
+      </span>
+    } @else {
+      <span class="mx-2 flex items-center gap-1" *transloco="let t">
+        <h1 class="text-xl font-bold">{{ projectName() }}</h1>
+        @if (canRename()) {
+          <lg-button
+            icon="ph ph-pencil-simple"
+            styleClass="text-surface-900!"
+            [text]="true"
+            [ariaLabel]="t('titleBar.rename.label')"
+            [lgTooltip]="t('titleBar.rename.label')"
+            tooltipPosition="bottom"
+            (click)="startRename()"
+          />
+        }
+      </span>
+    }
     @if (sourceChip(); as source) {
       <app-source-indicator
         *transloco="let t"

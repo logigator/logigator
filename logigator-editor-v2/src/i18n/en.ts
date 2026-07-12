@@ -330,6 +330,11 @@ const en = {
         'The current project has unsaved changes that will be lost. Create a new project anyway?',
       accept: 'Discard',
       reject: 'Cancel'
+    },
+    rename: {
+      label: 'Rename project',
+      cancel: 'Cancel',
+      error: 'Could not rename the project.'
     }
   },
   openProjectDialog: {

@@ -1270,6 +1270,103 @@ describe('PersistenceService', () => {
     });
   });
 
+  describe('renameOpenProject', () => {
+    it('PATCHes a server project', async () => {
+      const project = new Project();
+      metadataStore.register(project, {
+        id: 'srv-1',
+        name: 'Before',
+        type: 'project',
+        source: 'server',
+        hash: 'h',
+        isPublic: false
+      });
+
+      const promise = service.renameOpenProject(project, 'After');
+
+      const req = httpMock.expectOne(PROJECT_URL('srv-1'));
+      expect(req.request.method).toBe('PATCH');
+      expect(req.request.body).toEqual({ name: 'After' });
+      req.flush(projectSummaryResponse({ id: 'srv-1', name: 'After' }));
+
+      await promise;
+      expect(metadataStore.getMetadata(project)!.name).toBe('After');
+    });
+
+    it('rewrites the stored blob of a saved browser project', async () => {
+      const record = await browserStore.save({
+        name: 'Old',
+        content: JSON.stringify({
+          version: 1,
+          name: 'Old',
+          components: [],
+          wires: [],
+          definitions: []
+        })
+      });
+      const project = await service.loadLocalProject(record.id);
+
+      await service.renameOpenProject(project, 'New');
+
+      expect(
+        JSON.parse(browserStore.records.get(record.id)!.content).name
+      ).toBe('New');
+      expect(metadataStore.getMetadata(project)!.name).toBe('New');
+    });
+
+    it('updates only in-memory metadata for a never-saved draft', async () => {
+      const project = new Project();
+      metadataStore.register(project, {
+        id: '',
+        name: 'Untitled',
+        type: 'project',
+        source: 'browser',
+        hash: '',
+        isPublic: false
+      });
+
+      await service.renameOpenProject(project, 'Draft name');
+
+      expect(metadataStore.getMetadata(project)!.name).toBe('Draft name');
+      // Nothing was written to the browser store — a draft has no record yet.
+      expect(browserStore.records.size).toBe(0);
+    });
+
+    it('is a no-op for read-only shares', async () => {
+      const project = new Project();
+      metadataStore.register(project, {
+        id: 'shr-1',
+        name: 'Shared',
+        type: 'project',
+        source: 'share',
+        hash: 'h',
+        isPublic: false
+      });
+
+      await service.renameOpenProject(project, 'Nope');
+
+      expect(metadataStore.getMetadata(project)!.name).toBe('Shared');
+      httpMock.verify();
+    });
+
+    it('is a no-op for component editors', async () => {
+      const project = new Project();
+      metadataStore.register(project, {
+        id: 'cmp-1',
+        name: 'Gate',
+        type: 'comp',
+        source: 'server',
+        hash: 'h',
+        isPublic: false
+      });
+
+      await service.renameOpenProject(project, 'Nope');
+
+      expect(metadataStore.getMetadata(project)!.name).toBe('Gate');
+      httpMock.verify();
+    });
+  });
+
   describe('custom component persistence (browser)', () => {
     const plugCircuit: SerializedCircuitBody = {
       components: [

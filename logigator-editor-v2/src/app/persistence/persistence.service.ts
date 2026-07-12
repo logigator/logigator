@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { Location } from '@angular/common';
-import { Observable } from 'rxjs';
+import { firstValueFrom, Observable } from 'rxjs';
 import { TranslocoService } from '@jsverse/transloco';
 import { CircuitFileService } from './file/circuit-file.service';
 import { BrowserProjectStore } from './browser/browser-project.store';
@@ -204,6 +204,29 @@ export class PersistenceService {
   /** Renames a server project via the API (PATCH metadata). */
   renameProject(uuid: string, name: string): Observable<void> {
     return this.server.renameProject(uuid, name);
+  }
+
+  /**
+   * Renames the currently-open project (e.g. from the title bar's inline
+   * editor), dispatching by source so the name persists where it lives: server
+   * projects PATCH their metadata, browser projects rewrite their stored blob,
+   * and a never-saved draft (browser, no id) updates its in-memory metadata only
+   * — the name is picked up at its first save. All three sync the live metadata,
+   * so the title bar reflects the change reactively. Scoped to `type:'project'`;
+   * component editors are not renamable inline. Shares are read-only.
+   */
+  async renameOpenProject(project: Project, name: string): Promise<void> {
+    const metadata = this.metadataStore.getMetadata(project);
+    if (!metadata || metadata.type !== 'project' || metadata.source === 'share')
+      return;
+
+    if (metadata.source === 'server') {
+      await firstValueFrom(this.renameProject(metadata.id, name));
+    } else if (metadata.id !== '') {
+      await this.renameBrowserProject(metadata.id, name);
+    } else {
+      this.metadataStore.update(project, { name });
+    }
   }
 
   loadShare(
