@@ -6,7 +6,7 @@ import { ComponentProviderService } from '../../components/component-provider.se
 import { ComponentConfig } from '../../components/component-config.model';
 import { CUSTOM_TYPE_ID_BASE } from '../../components/component-type.enum';
 import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
-import { TranslocoService } from '@jsverse/transloco';
+import { TranslationService } from '../../translation/translation.service';
 import { LoggingService } from '../../logging/logging.service';
 import { ToastService } from '../../logging/toast.service';
 import { MigrationContext } from './migrations/migration';
@@ -65,7 +65,7 @@ export class CircuitFileService {
   private readonly registry = inject(CustomComponentRegistry);
   private readonly logging = inject(LoggingService);
   private readonly toast = inject(ToastService);
-  private readonly transloco = inject(TranslocoService);
+  private readonly translation = inject(TranslationService);
 
   private get migrationContext(): MigrationContext {
     return {
@@ -207,8 +207,8 @@ export class CircuitFileService {
     if (skippedCustom > 0) {
       this.toast.warn(
         skippedCustom === 1
-          ? this.transloco.translate('persistence.skippedCustomOne')
-          : this.transloco.translate('persistence.skippedCustomMany', {
+          ? this.translation.translate('persistence.skippedCustomOne')
+          : this.translation.translate('persistence.skippedCustomMany', {
               count: skippedCustom
             }),
         'CircuitFileService'

@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { DialogService } from '@logigator/ui';
-import { TranslocoService } from '@jsverse/transloco';
+import { TranslationService } from '../translation/translation.service';
 import { ReportErrorApiService } from '../api/services/report-error-api.service';
 import type { ReportErrorRequest } from '../api/models/report-error';
 import { PersistenceService } from '../persistence/persistence.service';
@@ -45,7 +45,7 @@ const ERROR_REPORT_COOLDOWN_MS = 15000;
 @Injectable({ providedIn: 'root' })
 export class BugReportService {
   private readonly dialogService = inject(DialogService);
-  private readonly transloco = inject(TranslocoService);
+  private readonly translation = inject(TranslationService);
   private readonly api = inject(ReportErrorApiService);
   private readonly persistence = inject(PersistenceService);
   private readonly projectService = inject(ProjectService);
@@ -87,7 +87,7 @@ export class BugReportService {
     this.active = true;
     try {
       const ref = this.dialogService.open(BugReportDialogComponent, {
-        header: this.transloco.translate('bugReport.title'),
+        header: this.translation.translate('bugReport.title'),
         width: '36rem',
         modal: true,
         closable: true,
@@ -108,10 +108,13 @@ export class BugReportService {
   private submit(payload: ReportErrorRequest): void {
     this.api.report(payload).subscribe({
       next: () =>
-        this.toast.success(this.transloco.translate('bugReport.sent'), CONTEXT),
+        this.toast.success(
+          this.translation.translate('bugReport.sent'),
+          CONTEXT
+        ),
       error: (err: unknown) =>
         this.toast.error(
-          this.transloco.translate('bugReport.failed'),
+          this.translation.translate('bugReport.failed'),
           CONTEXT,
           err
         )

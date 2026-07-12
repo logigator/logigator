@@ -1,6 +1,7 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { WorkModeService } from '../../work-mode/work-mode.service';
-import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
+import { TranslocoDirective } from '@jsverse/transloco';
+import { TranslationService } from '../../translation/translation.service';
 import { TranslationKey } from '../../translation/translation-key.model';
 import { Point } from 'pixi.js';
 import { ComponentProviderService } from '../../components/component-provider.service';
@@ -19,7 +20,7 @@ import { ProjectService } from '../../project/project.service';
 export class StatusBarComponent {
   private readonly workModeService = inject(WorkModeService);
   private readonly componentProviderService = inject(ComponentProviderService);
-  private readonly translocoService = inject(TranslocoService);
+  private readonly translation = inject(TranslationService);
   private readonly metadataStore = inject(ProjectMetadataStore);
   private readonly projectService = inject(ProjectService);
 
@@ -52,7 +53,7 @@ export class StatusBarComponent {
   /** Resolves display text: translates a key, returns a literal verbatim. */
   protected text(value: LocalizableText): string {
     return resolveLocalizableText(value, (key) =>
-      this.translocoService.translate(key)
+      this.translation.translate(key)
     );
   }
 }

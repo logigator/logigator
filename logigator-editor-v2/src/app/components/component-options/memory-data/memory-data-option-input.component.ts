@@ -1,5 +1,6 @@
 import { Component, inject, input } from '@angular/core';
-import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
+import { TranslocoDirective } from '@jsverse/transloco';
+import { TranslationService } from '../../../translation/translation.service';
 import { DialogService, LgButton } from '@logigator/ui';
 import { ComponentOptionInput } from '../../component-option';
 import type { MemoryDataComponentOption } from './memory-data.component-option';
@@ -25,7 +26,7 @@ import {
 })
 export class MemoryDataOptionInputComponent implements ComponentOptionInput<string> {
   private readonly dialogService = inject(DialogService);
-  private readonly transloco = inject(TranslocoService);
+  private readonly translation = inject(TranslationService);
 
   public readonly option = input.required<MemoryDataComponentOption>();
   public readonly commit = input.required<(value: string) => void>();
@@ -33,7 +34,7 @@ export class MemoryDataOptionInputComponent implements ComponentOptionInput<stri
   protected open(): void {
     const opt = this.option();
     const ref = this.dialogService.open(HexEditorComponent, {
-      header: this.transloco.translate(
+      header: this.translation.translate(
         'components.def.ROM.options.dataEditorTitle'
       ),
       modal: true,

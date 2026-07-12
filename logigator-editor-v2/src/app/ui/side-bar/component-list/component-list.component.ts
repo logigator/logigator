@@ -9,7 +9,8 @@ import {
   LgInputIcon,
   LgInputText
 } from '@logigator/ui';
-import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
+import { TranslocoDirective } from '@jsverse/transloco';
+import { TranslationService } from '../../../translation/translation.service';
 import { ComponentProviderService } from '../../../components/component-provider.service';
 import { ComponentListCategoryComponent } from '../component-list-category/component-list-category.component';
 import { ProjectService } from '../../../project/project.service';
@@ -51,7 +52,7 @@ export class ComponentListComponent {
   private readonly projectService = inject(ProjectService);
   private readonly metadataStore = inject(ProjectMetadataStore);
   private readonly registry = inject(CustomComponentRegistry);
-  private readonly translocoService = inject(TranslocoService);
+  private readonly translation = inject(TranslationService);
 
   public readonly searchText = signal('');
 
@@ -171,7 +172,7 @@ export class ComponentListComponent {
 
   private name(config: ComponentConfig): string {
     return resolveLocalizableText(config.name, (key) =>
-      this.translocoService.translate(key)
+      this.translation.translate(key)
     );
   }
 

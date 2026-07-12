@@ -1,5 +1,5 @@
 import { signal, Signal } from '@angular/core';
-import { TranslocoService } from '@jsverse/transloco';
+import { TranslationService } from '../../../translation/translation.service';
 import {
   base64ToBytes,
   packedByteLength,
@@ -49,7 +49,7 @@ export class RomInspection extends ComponentInspection {
     );
 
     this.title = signal(
-      getStaticDI(TranslocoService).translate('components.def.ROM.name')
+      getStaticDI(TranslationService).translate('components.def.ROM.name')
     );
     this.onFrame();
   }

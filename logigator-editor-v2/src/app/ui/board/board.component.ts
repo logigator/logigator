@@ -22,7 +22,7 @@ import { EditorSettingsService } from '../../settings/editor-settings.service';
 import { FpsCounterComponent } from './fps-counter/fps-counter.component';
 import { LoggingService } from '../../logging/logging.service';
 import { ToastService } from '../../logging/toast.service';
-import { TranslocoService } from '@jsverse/transloco';
+import { TranslationService } from '../../translation/translation.service';
 import { PointerController } from '../../rendering/interaction/pointer-controller';
 import { WorkModeRouter } from '../../rendering/interaction/work-mode-router';
 import {
@@ -44,7 +44,7 @@ export class BoardComponent implements OnInit, OnDestroy {
   private readonly rendererService = inject(RendererService);
   private readonly loggingService = inject(LoggingService);
   private readonly toastService = inject(ToastService);
-  private readonly translocoService = inject(TranslocoService);
+  private readonly translation = inject(TranslationService);
   protected readonly editorSettings = inject(EditorSettingsService);
 
   @ViewChild('canvas', { static: true })
@@ -193,7 +193,7 @@ export class BoardComponent implements OnInit, OnDestroy {
       // The canvas otherwise silently never appears; keep `loaded` false so the
       // board stays hidden rather than showing a dead surface.
       this.toastService.error(
-        this.translocoService.translate('editor.rendererInitFailed'),
+        this.translation.translate('editor.rendererInitFailed'),
         'BoardComponent',
         err
       );

@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { DialogService } from '@logigator/ui';
-import { TranslocoService } from '@jsverse/transloco';
+import { TranslationService } from '../translation/translation.service';
 import {
   isHandledSaveError,
   PersistenceService
@@ -29,7 +29,7 @@ export class SaveCoordinatorService {
   private readonly persistence = inject(PersistenceService);
   private readonly metadataStore = inject(ProjectMetadataStore);
   private readonly dialogService = inject(DialogService);
-  private readonly translocoService = inject(TranslocoService);
+  private readonly translation = inject(TranslationService);
   private readonly toast = inject(ToastService);
   private readonly uploadCoordinator = inject(UploadCoordinatorService);
 
@@ -88,7 +88,7 @@ export class SaveCoordinatorService {
       // reason at the guard; a generic failure on top would only obscure it.
       if (isHandledSaveError(err)) return;
       this.toast.error(
-        this.translocoService.translate('persistence.saveFailedGeneric'),
+        this.translation.translate('persistence.saveFailedGeneric'),
         'SaveCoordinatorService',
         err
       );
@@ -99,7 +99,7 @@ export class SaveCoordinatorService {
     currentName: string
   ): Promise<SaveProjectDialogResult | undefined> {
     const ref = this.dialogService.open(SaveProjectDialogComponent, {
-      header: this.translocoService.translate(
+      header: this.translation.translate(
         'titleBar.menuBar.file.items.save.label'
       ),
       width: '28rem',

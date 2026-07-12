@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { DialogService } from '@logigator/ui';
-import { TranslocoService } from '@jsverse/transloco';
+import { TranslationService } from '../../translation/translation.service';
 import {
   isHandledSaveError,
   LocalUploadDependency,
@@ -64,7 +64,7 @@ export class UploadCoordinatorService {
   private readonly metadataStore = inject(ProjectMetadataStore);
   private readonly registry = inject(CustomComponentRegistry);
   private readonly dialogService = inject(DialogService);
-  private readonly transloco = inject(TranslocoService);
+  private readonly translation = inject(TranslationService);
   private readonly toast = inject(ToastService);
 
   async requestUpload(target: UploadTarget): Promise<boolean> {
@@ -74,7 +74,7 @@ export class UploadCoordinatorService {
       ({ name, dependencies } = await this._analyze(target));
     } catch (err) {
       this.toast.error(
-        this.transloco.translate('uploadDialog.analyzeFailed'),
+        this.translation.translate('uploadDialog.analyzeFailed'),
         'UploadCoordinatorService',
         err
       );
@@ -116,7 +116,7 @@ export class UploadCoordinatorService {
       // already toasted at the guard.
       if (target.kind !== 'save-server' && !isHandledSaveError(err)) {
         this.toast.error(
-          this.transloco.translate('uploadDialog.uploadFailed', { name }),
+          this.translation.translate('uploadDialog.uploadFailed', { name }),
           'UploadCoordinatorService',
           err
         );
@@ -129,7 +129,7 @@ export class UploadCoordinatorService {
     const successKey = this._successKey(target);
     if (successKey) {
       this.toast.success(
-        this.transloco.translate(successKey),
+        this.translation.translate(successKey),
         'UploadCoordinatorService'
       );
     }
@@ -201,7 +201,7 @@ export class UploadCoordinatorService {
       } catch (err) {
         if (!isHandledSaveError(err)) {
           this.toast.error(
-            this.transloco.translate('uploadDialog.dependencyFailed', {
+            this.translation.translate('uploadDialog.dependencyFailed', {
               name: depName
             }),
             'UploadCoordinatorService',
@@ -306,7 +306,7 @@ export class UploadCoordinatorService {
     presetIsPublic: boolean | undefined
   ): Promise<UploadDialogResult | undefined> {
     const ref = this.dialogService.open(UploadDialogComponent, {
-      header: this.transloco.translate('uploadDialog.header'),
+      header: this.translation.translate('uploadDialog.header'),
       width: '28rem',
       modal: true,
       closable: true,

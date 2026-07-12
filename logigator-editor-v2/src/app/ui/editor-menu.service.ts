@@ -4,7 +4,7 @@ import {
   DialogService,
   type MenuItem
 } from '@logigator/ui';
-import { TranslocoService } from '@jsverse/transloco';
+import { TranslationService } from '../translation/translation.service';
 import { PersistenceService } from '../persistence/persistence.service';
 import { ProjectService } from '../project/project.service';
 import { ProjectMetadataStore } from '../persistence/project-metadata.store';
@@ -29,7 +29,7 @@ import { ToastService } from '../logging/toast.service';
  */
 @Injectable({ providedIn: 'root' })
 export class EditorMenuService {
-  private readonly translocoService = inject(TranslocoService);
+  private readonly translation = inject(TranslationService);
   private readonly persistenceService = inject(PersistenceService);
   private readonly projectService = inject(ProjectService);
   private readonly projectMetadataStore = inject(ProjectMetadataStore);
@@ -69,7 +69,7 @@ export class EditorMenuService {
   private generateMenuItems(): MenuItem[] {
     const items: MenuItem[] = [
       {
-        label: this.translocoService.translate('titleBar.menuBar.file.label'),
+        label: this.translation.translate('titleBar.menuBar.file.label'),
         items: [
           this.newProjectItem(),
           this.newComponentItem(),
@@ -87,10 +87,10 @@ export class EditorMenuService {
         ]
       },
       {
-        label: this.translocoService.translate('titleBar.menuBar.edit.label'),
+        label: this.translation.translate('titleBar.menuBar.edit.label'),
         items: [
           {
-            label: this.translocoService.translate(
+            label: this.translation.translate(
               'titleBar.menuBar.edit.items.undo.label'
             ),
             shortcut: this.shortcutService.binding(ShortcutActionEnum.UNDO)(),
@@ -98,7 +98,7 @@ export class EditorMenuService {
               this.projectService.mainProject()?.actionManager.undo()
           },
           {
-            label: this.translocoService.translate(
+            label: this.translation.translate(
               'titleBar.menuBar.edit.items.redo.label'
             ),
             shortcut: this.shortcutService.binding(ShortcutActionEnum.REDO)(),
@@ -109,21 +109,21 @@ export class EditorMenuService {
             separator: true
           },
           {
-            label: this.translocoService.translate(
+            label: this.translation.translate(
               'titleBar.menuBar.edit.items.cut.label'
             ),
             shortcut: this.shortcutService.binding(ShortcutActionEnum.CUT)(),
             command: () => this.cut()
           },
           {
-            label: this.translocoService.translate(
+            label: this.translation.translate(
               'titleBar.menuBar.edit.items.copy.label'
             ),
             shortcut: this.shortcutService.binding(ShortcutActionEnum.COPY)(),
             command: () => this.copy()
           },
           {
-            label: this.translocoService.translate(
+            label: this.translation.translate(
               'titleBar.menuBar.edit.items.paste.label'
             ),
             shortcut: this.shortcutService.binding(ShortcutActionEnum.PASTE)(),
@@ -133,7 +133,7 @@ export class EditorMenuService {
             separator: true
           },
           {
-            label: this.translocoService.translate(
+            label: this.translation.translate(
               'titleBar.menuBar.edit.items.delete.label'
             ),
             shortcut: this.shortcutService.binding(ShortcutActionEnum.DELETE)(),
@@ -143,16 +143,16 @@ export class EditorMenuService {
             separator: true
           },
           {
-            label: this.translocoService.translate('shortcuts.title'),
+            label: this.translation.translate('shortcuts.title'),
             command: () => this.openShortcutManager()
           }
         ]
       },
       {
-        label: this.translocoService.translate('titleBar.menuBar.view.label'),
+        label: this.translation.translate('titleBar.menuBar.view.label'),
         items: [
           {
-            label: this.translocoService.translate(
+            label: this.translation.translate(
               'titleBar.menuBar.view.items.zoomOut.label'
             ),
             shortcut: this.shortcutService.binding(
@@ -161,7 +161,7 @@ export class EditorMenuService {
             command: () => this.projectService.mainProject()?.zoomOut()
           },
           {
-            label: this.translocoService.translate(
+            label: this.translation.translate(
               'titleBar.menuBar.view.items.zoomIn.label'
             ),
             shortcut: this.shortcutService.binding(
@@ -170,7 +170,7 @@ export class EditorMenuService {
             command: () => this.projectService.mainProject()?.zoomIn()
           },
           {
-            label: this.translocoService.translate(
+            label: this.translation.translate(
               'titleBar.menuBar.view.items.zoom100.label'
             ),
             shortcut: this.shortcutService.binding(
@@ -181,7 +181,7 @@ export class EditorMenuService {
         ]
       },
       {
-        label: this.translocoService.translate('titleBar.menuBar.help.label')
+        label: this.translation.translate('titleBar.menuBar.help.label')
       }
     ];
 
@@ -212,7 +212,7 @@ export class EditorMenuService {
 
   private newProjectItem(): MenuItem {
     return {
-      label: this.translocoService.translate(
+      label: this.translation.translate(
         'titleBar.menuBar.file.items.newProject.label'
       ),
       icon: 'ph ph-file-plus',
@@ -222,7 +222,7 @@ export class EditorMenuService {
 
   private newComponentItem(): MenuItem {
     return {
-      label: this.translocoService.translate(
+      label: this.translation.translate(
         'titleBar.menuBar.file.items.newComponent.label'
       ),
       icon: 'ph ph-circuitry',
@@ -235,7 +235,7 @@ export class EditorMenuService {
 
   private openItem(): MenuItem {
     return {
-      label: this.translocoService.translate(
+      label: this.translation.translate(
         'titleBar.menuBar.file.items.open.label'
       ),
       icon: 'ph ph-folder-open',
@@ -246,7 +246,7 @@ export class EditorMenuService {
 
   private saveItem(): MenuItem {
     return {
-      label: this.translocoService.translate(
+      label: this.translation.translate(
         'titleBar.menuBar.file.items.save.label'
       ),
       icon: 'ph ph-floppy-disk',
@@ -260,7 +260,7 @@ export class EditorMenuService {
     const items: MenuItem[] = [];
     if (this.canUploadMainProject()) {
       items.push({
-        label: this.translocoService.translate(
+        label: this.translation.translate(
           'titleBar.menuBar.file.items.uploadCloud.label'
         ),
         icon: 'ph ph-cloud-arrow-up',
@@ -269,7 +269,7 @@ export class EditorMenuService {
     }
     if (this.canShareMainProject()) {
       items.push({
-        label: this.translocoService.translate(
+        label: this.translation.translate(
           'titleBar.menuBar.file.items.share.label'
         ),
         icon: 'ph ph-share-network',
@@ -284,7 +284,7 @@ export class EditorMenuService {
     if (!this.canExportMainProject()) return [];
     return [
       {
-        label: this.translocoService.translate(
+        label: this.translation.translate(
           'titleBar.menuBar.file.items.exportFile.label'
         ),
         icon: 'ph ph-download-simple',
@@ -308,7 +308,7 @@ export class EditorMenuService {
 
   private generateImageItem(): MenuItem {
     return {
-      label: this.translocoService.translate(
+      label: this.translation.translate(
         'titleBar.menuBar.file.items.generateImage.label'
       ),
       icon: 'ph ph-image',
@@ -318,7 +318,7 @@ export class EditorMenuService {
 
   private openShortcutManager(): void {
     this.dialogService.open(ShortcutManagerComponent, {
-      header: this.translocoService.translate('shortcuts.title'),
+      header: this.translation.translate('shortcuts.title'),
       width: '40rem',
       modal: true,
       closable: true
@@ -335,18 +335,14 @@ export class EditorMenuService {
     const project = this.projectService.mainProject();
     if (project && this.projectMetadataStore.isDirty(project)) {
       this.confirmationService.confirm({
-        header: this.translocoService.translate(
-          'titleBar.discardChanges.header'
-        ),
-        message: this.translocoService.translate(
-          'titleBar.discardChanges.message'
-        ),
+        header: this.translation.translate('titleBar.discardChanges.header'),
+        message: this.translation.translate('titleBar.discardChanges.message'),
         acceptButtonProps: { severity: 'danger' },
-        acceptLabel: this.translocoService.translate(
+        acceptLabel: this.translation.translate(
           'titleBar.discardChanges.accept'
         ),
         rejectButtonProps: { severity: 'secondary', outlined: true },
-        rejectLabel: this.translocoService.translate(
+        rejectLabel: this.translation.translate(
           'titleBar.discardChanges.reject'
         ),
         accept: () => this.persistenceService.createAndSetEmptyProject()
@@ -404,7 +400,7 @@ export class EditorMenuService {
     const metadata = this.projectMetadataStore.getMetadata(project);
     if (!metadata?.id) return;
     this.dialogService.open(ShareDialogComponent, {
-      header: this.translocoService.translate('shareDialog.header'),
+      header: this.translation.translate('shareDialog.header'),
       width: '32rem',
       modal: true,
       closable: true,
@@ -424,12 +420,12 @@ export class EditorMenuService {
     try {
       await this.persistenceService.exportProjectToFile(project);
       this.toastService.success(
-        this.translocoService.translate('persistence.projectExported'),
+        this.translation.translate('persistence.projectExported'),
         'EditorMenuService'
       );
     } catch (err) {
       this.toastService.error(
-        this.translocoService.translate('persistence.exportFailed'),
+        this.translation.translate('persistence.exportFailed'),
         'EditorMenuService',
         err
       );
@@ -438,7 +434,7 @@ export class EditorMenuService {
 
   private generateImage(): void {
     this.dialogService.open(ExportImageDialogComponent, {
-      header: this.translocoService.translate('imageExport.title'),
+      header: this.translation.translate('imageExport.title'),
       width: '28rem',
       modal: true,
       closable: true
@@ -447,7 +443,7 @@ export class EditorMenuService {
 
   private newComponent(): void {
     this.dialogService.open(NewComponentDialogComponent, {
-      header: this.translocoService.translate(
+      header: this.translation.translate(
         'titleBar.menuBar.file.items.newComponent.label'
       ),
       width: '28rem',
@@ -458,7 +454,7 @@ export class EditorMenuService {
 
   private openProject(): void {
     this.dialogService.open(OpenProjectDialogComponent, {
-      header: this.translocoService.translate('openProjectDialog.title'),
+      header: this.translation.translate('openProjectDialog.title'),
       width: '40rem',
       modal: true,
       closable: true

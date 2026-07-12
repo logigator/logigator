@@ -17,7 +17,7 @@ export type LocalizableText = TranslationKey | { readonly literal: string };
 /**
  * Resolves {@link LocalizableText} to a display string: a key is run through
  * `translate`, a literal is returned verbatim. `translate` is supplied by the
- * caller (e.g. `TranslocoService.translate`) so this stays free of an Angular
+ * caller (e.g. `TranslationService.translate`) so this stays free of an Angular
  * dependency.
  */
 export function resolveLocalizableText(

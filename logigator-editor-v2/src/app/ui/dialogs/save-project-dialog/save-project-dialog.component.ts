@@ -9,7 +9,8 @@ import {
   LgToggleSwitch,
   LgTooltip
 } from '@logigator/ui';
-import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
+import { TranslocoDirective } from '@jsverse/transloco';
+import { TranslationService } from '../../../translation/translation.service';
 import { UserService } from '../../../user/user.service';
 
 /** The pre-fill passed to the save dialog. */
@@ -50,16 +51,16 @@ export class SaveProjectDialogComponent extends LgDialogContent<
   SaveProjectDialogData,
   SaveProjectDialogResult
 > {
-  private readonly transloco = inject(TranslocoService);
+  private readonly translation = inject(TranslationService);
   protected readonly userService = inject(UserService);
 
   protected readonly destinationOptions = [
     {
-      label: this.transloco.translate('saveProjectDialog.destinationCloud'),
+      label: this.translation.translate('saveProjectDialog.destinationCloud'),
       value: 'server' as const
     },
     {
-      label: this.transloco.translate('saveProjectDialog.destinationLocal'),
+      label: this.translation.translate('saveProjectDialog.destinationLocal'),
       value: 'local' as const
     }
   ];

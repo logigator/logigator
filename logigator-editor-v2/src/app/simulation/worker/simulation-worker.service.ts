@@ -1,5 +1,5 @@
 import { inject, Injectable, InjectionToken, signal } from '@angular/core';
-import { TranslocoService } from '@jsverse/transloco';
+import { TranslationService } from '../../translation/translation.service';
 import { LoggingService } from '../../logging/logging.service';
 import { BoardDescriptor } from '../compiler/compiled-board.model';
 import { SnapshotApplier } from '../state/link-state-applier';
@@ -78,7 +78,7 @@ export class SimulationWorkerService {
   private readonly createWorker = inject(SIMULATION_WORKER_FACTORY);
   private readonly frameScheduler = inject(FRAME_SCHEDULER);
   private readonly logging = inject(LoggingService);
-  private readonly transloco = inject(TranslocoService);
+  private readonly translation = inject(TranslationService);
 
   private worker: Worker | null = null;
   private hooks: SimulationSessionHooks | null = null;
@@ -136,13 +136,13 @@ export class SimulationWorkerService {
       this._onMessage(event.data);
     worker.onerror = (event: ErrorEvent) =>
       this._fail(
-        event.message || this.transloco.translate('simulation.workerCrashed')
+        event.message || this.translation.translate('simulation.workerCrashed')
       );
     // A message that can't be deserialized never reaches onmessage — route it
     // into the same failure path as onerror.
     worker.onmessageerror = () =>
       this._fail(
-        this.transloco.translate('simulation.workerMessageUnreadable')
+        this.translation.translate('simulation.workerMessageUnreadable')
       );
     await ready;
     if (this.worker !== worker) {
@@ -378,7 +378,7 @@ export class SimulationWorkerService {
         // translatable, user-facing message under the code.
         const userMessage =
           msg.code === 'engineInitFailed'
-            ? this.transloco.translate('simulation.engineInitFailed')
+            ? this.translation.translate('simulation.engineInitFailed')
             : msg.message;
         const request =
           msg.reqId !== null ? this.pending.get(msg.reqId) : undefined;

@@ -1,7 +1,7 @@
 import { effect, inject, Injectable, untracked } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { DialogService } from '@logigator/ui';
-import { TranslocoService } from '@jsverse/transloco';
+import { TranslationService } from '../translation/translation.service';
 import { UserService } from './user.service';
 import { sessionUserId } from '../api/models/user';
 import { CloudSessionService } from './cloud-session.service';
@@ -57,7 +57,7 @@ export class SessionLifecycleService {
   private readonly uploadCoordinator = inject(UploadCoordinatorService);
   private readonly simulation = inject(SimulationService);
   private readonly dialogService = inject(DialogService);
-  private readonly transloco = inject(TranslocoService);
+  private readonly translation = inject(TranslationService);
   private readonly toast = inject(ToastService);
   private readonly logging = inject(LoggingService);
 
@@ -105,7 +105,7 @@ export class SessionLifecycleService {
       await this.userService.logout();
     } catch (err) {
       this.toast.error(
-        this.transloco.translate('session.logoutFailed'),
+        this.translation.translate('session.logoutFailed'),
         'SessionLifecycleService',
         err
       );
@@ -114,7 +114,7 @@ export class SessionLifecycleService {
 
     this._resetCloudWorkspace();
     this.toast.success(
-      this.transloco.translate('session.loggedOut'),
+      this.translation.translate('session.loggedOut'),
       'SessionLifecycleService'
     );
   }
@@ -132,7 +132,7 @@ export class SessionLifecycleService {
       this.logging.info('Cloud library loaded', 'SessionLifecycleService');
     } catch (err) {
       this.toast.warn(
-        this.transloco.translate('library.loadFailed'),
+        this.translation.translate('library.loadFailed'),
         'SessionLifecycleService',
         err
       );
@@ -205,7 +205,7 @@ export class SessionLifecycleService {
     }
 
     const ref = this.dialogService.open(LogoutDialogComponent, {
-      header: this.transloco.translate('logoutDialog.header'),
+      header: this.translation.translate('logoutDialog.header'),
       width: '40rem',
       modal: true,
       closable: true,
@@ -216,7 +216,7 @@ export class SessionLifecycleService {
         })),
         promotionWarning:
           promotable.size > 0
-            ? this.transloco.translate('logoutDialog.promotionWarning', {
+            ? this.translation.translate('logoutDialog.promotionWarning', {
                 count: promotable.size
               })
             : undefined

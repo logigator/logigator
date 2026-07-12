@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { ToastService } from '@logigator/ui';
-import { TranslocoService } from '@jsverse/transloco';
+import { TranslationService } from '../../translation/translation.service';
 import { configureTestBed } from '../../../testing/configure-test-bed';
 import { CircuitFileService } from './circuit-file.service';
 import { toCircuitFileV0 } from '../server/server-circuit.codec';
@@ -89,7 +89,7 @@ describe('CircuitFileService', () => {
       load: () => of({})
     };
     translocoSpy.translate.mockImplementation((key: string) => key);
-    configureTestBed([{ provide: TranslocoService, useValue: translocoSpy }]);
+    configureTestBed([{ provide: TranslationService, useValue: translocoSpy }]);
     service = TestBed.inject(CircuitFileService);
     provider = TestBed.inject(ComponentProviderService);
     registry = TestBed.inject(CustomComponentRegistry);

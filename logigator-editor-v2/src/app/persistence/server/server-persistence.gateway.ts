@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { TranslocoService } from '@jsverse/transloco';
+import { TranslationService } from '../../translation/translation.service';
 import { firstValueFrom, map, Observable, tap } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ProjectApiService } from '../../api/services/project-api.service';
@@ -65,7 +65,7 @@ export class ServerPersistenceGateway {
   private readonly metadataStore = inject(ProjectMetadataStore);
   private readonly toast = inject(ToastService);
   private readonly logging = inject(LoggingService);
-  private readonly transloco = inject(TranslocoService);
+  private readonly translation = inject(TranslationService);
   private readonly snapshot = inject(BoardSnapshotService);
   private readonly userService = inject(UserService);
 
@@ -102,7 +102,7 @@ export class ServerPersistenceGateway {
 
     if (!detail.newFormat) {
       this.toast.warn(
-        this.transloco.translate('persistence.legacyProjectWarning'),
+        this.translation.translate('persistence.legacyProjectWarning'),
         'ServerPersistenceGateway'
       );
     }
@@ -281,7 +281,7 @@ export class ServerPersistenceGateway {
       await firstValueFrom(this.userApi.get());
     } catch {
       this.toast.error(
-        this.transloco.translate('persistence.shareAuthRequired'),
+        this.translation.translate('persistence.shareAuthRequired'),
         'ServerPersistenceGateway',
         `Cannot clone share ${linkId}: user not authenticated`
       );
@@ -611,7 +611,7 @@ export class ServerPersistenceGateway {
         this.metadataStore.clearDirty(project);
       }
       this.toast.success(
-        this.transloco.translate('persistence.projectSaved'),
+        this.translation.translate('persistence.projectSaved'),
         'ServerPersistenceGateway'
       );
       void this._uploadPreview(project, metadata.id);
@@ -666,7 +666,7 @@ export class ServerPersistenceGateway {
         this.metadataStore.clearDirty(project);
       }
       this.toast.success(
-        this.transloco.translate('persistence.componentSaved'),
+        this.translation.translate('persistence.componentSaved'),
         'ServerPersistenceGateway'
       );
     } catch (err) {
@@ -686,19 +686,19 @@ export class ServerPersistenceGateway {
     if (err instanceof HttpErrorResponse && err.status === 401) {
       this.userService.sessionExpired();
       this.toast.error(
-        this.transloco.translate('session.saveLoggedOut'),
+        this.translation.translate('session.saveLoggedOut'),
         'ServerPersistenceGateway',
         err
       );
     } else if (this._isVersionMismatch(err)) {
       this.toast.error(
-        this.transloco.translate('persistence.versionMismatch'),
+        this.translation.translate('persistence.versionMismatch'),
         'ServerPersistenceGateway',
         err
       );
     } else {
       this.toast.error(
-        this.transloco.translate('persistence.saveFailed', {
+        this.translation.translate('persistence.saveFailed', {
           detail: formatHttpError(err)
         }),
         'ServerPersistenceGateway',

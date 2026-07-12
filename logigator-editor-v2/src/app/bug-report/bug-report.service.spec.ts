@@ -3,7 +3,7 @@ import type { Mock } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { of, Subject } from 'rxjs';
 import { DialogService } from '@logigator/ui';
-import { TranslocoService } from '@jsverse/transloco';
+import { TranslationService } from '../translation/translation.service';
 import { BugReportService } from './bug-report.service';
 import { ClientInfoService } from './client-info.service';
 import { ReportErrorApiService } from '../api/services/report-error-api.service';
@@ -37,7 +37,7 @@ describe('BugReportService', () => {
         BugReportService,
         { provide: DialogService, useValue: { open } },
         {
-          provide: TranslocoService,
+          provide: TranslationService,
           useValue: { translate: (key: string) => key }
         },
         { provide: ReportErrorApiService, useValue: { report } },

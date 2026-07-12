@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { Rectangle } from 'pixi.js';
-import { TranslocoService } from '@jsverse/transloco';
+import { TranslationService } from '../translation/translation.service';
 import { Project } from '../project/project';
 import { ProjectMetadataStore } from '../persistence/project-metadata.store';
 import { ToastService } from '../logging/toast.service';
@@ -59,7 +59,7 @@ export class ImageExportService {
   private readonly snapshot = inject(BoardSnapshotService);
   private readonly metadataStore = inject(ProjectMetadataStore);
   private readonly toast = inject(ToastService);
-  private readonly transloco = inject(TranslocoService);
+  private readonly translation = inject(TranslationService);
 
   /**
    * Largest multiplier whose output fits {@link MAX_EXPORT_DIMENSION} on both
@@ -89,7 +89,7 @@ export class ImageExportService {
   public async exportImage(options: ImageExportOptions): Promise<void> {
     if (!this.snapshot.available) {
       this.toast.error(
-        this.transloco.translate('imageExport.error.unavailable'),
+        this.translation.translate('imageExport.error.unavailable'),
         'ImageExportService'
       );
       return;
@@ -108,7 +108,7 @@ export class ImageExportService {
       });
     } catch {
       this.toast.error(
-        this.transloco.translate('imageExport.error.failed'),
+        this.translation.translate('imageExport.error.failed'),
         'ImageExportService'
       );
       return;
@@ -117,7 +117,7 @@ export class ImageExportService {
     const blob = await this._toBlob(canvas, options);
     if (!blob) {
       this.toast.error(
-        this.transloco.translate('imageExport.error.failed'),
+        this.translation.translate('imageExport.error.failed'),
         'ImageExportService'
       );
       return;
@@ -134,12 +134,15 @@ export class ImageExportService {
     if (clamped) {
       const { width, height } = this.snapshot.outputSize(region, effective);
       this.toast.warn(
-        this.transloco.translate('imageExport.warn.clamped', { width, height }),
+        this.translation.translate('imageExport.warn.clamped', {
+          width,
+          height
+        }),
         'ImageExportService'
       );
     } else {
       this.toast.success(
-        this.transloco.translate('imageExport.success'),
+        this.translation.translate('imageExport.success'),
         'ImageExportService'
       );
     }

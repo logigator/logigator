@@ -1,7 +1,7 @@
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import type { Mock } from 'vitest';
 import { TestBed } from '@angular/core/testing';
-import { TranslocoService } from '@jsverse/transloco';
+import { TranslationService } from '../translation/translation.service';
 
 import { GlobalErrorHandler } from './global-error-handler';
 import { LoggingService } from './logging.service';
@@ -27,7 +27,7 @@ describe('GlobalErrorHandler', () => {
         GlobalErrorHandler,
         { provide: LoggingService, useValue: loggingSpy },
         { provide: ToastService, useValue: toastSpy },
-        { provide: TranslocoService, useValue: translocoSpy },
+        { provide: TranslationService, useValue: translocoSpy },
         // Force the report service unavailable so these cover the early-boot
         // fallback (toast) path; the delegation path is covered below.
         { provide: BugReportService, useValue: null }
@@ -86,7 +86,7 @@ describe('GlobalErrorHandler', () => {
           { provide: LoggingService, useValue: { error: vi.fn() } },
           { provide: ToastService, useValue: toastWithReport },
           {
-            provide: TranslocoService,
+            provide: TranslationService,
             useValue: { translate: (k: string) => k }
           },
           { provide: BugReportService, useValue: bugReport }

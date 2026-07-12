@@ -1,6 +1,7 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { DialogService, LgButton } from '@logigator/ui';
-import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
+import { TranslocoDirective } from '@jsverse/transloco';
+import { TranslationService } from '../../../translation/translation.service';
 import { ComponentActionContext } from '../../component-action';
 import { CustomComponentRegistry } from '../custom-component-registry.service';
 import { ShareDialogComponent } from '../../../ui/dialogs/share-dialog/share-dialog.component';
@@ -17,7 +18,7 @@ import { resolveMasterSignal } from './resolve-master.signal';
   selector: 'app-share-component-action',
   imports: [LgButton, TranslocoDirective],
   host: { class: 'contents' },
-  template: `<ng-container *transloco="let t">
+  template: `<ng-container *translation="let t">
     @if (visible()) {
       <lg-button
         size="sm"
@@ -36,7 +37,7 @@ export class ShareComponentActionComponent {
 
   private readonly registry = inject(CustomComponentRegistry);
   private readonly dialogService = inject(DialogService);
-  private readonly transloco = inject(TranslocoService);
+  private readonly translation = inject(TranslationService);
 
   private readonly resolved = resolveMasterSignal(
     this.registry,
@@ -53,7 +54,7 @@ export class ShareComponentActionComponent {
     const master = resolved.master;
     if (!master.id) return;
     this.dialogService.open(ShareDialogComponent, {
-      header: this.transloco.translate('shareDialog.headerComponent'),
+      header: this.translation.translate('shareDialog.headerComponent'),
       width: '32rem',
       modal: true,
       closable: true,

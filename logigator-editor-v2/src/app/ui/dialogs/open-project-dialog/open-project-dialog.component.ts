@@ -9,7 +9,8 @@ import {
   LgTabPanel,
   LgTabs
 } from '@logigator/ui';
-import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
+import { TranslocoDirective } from '@jsverse/transloco';
+import { TranslationService } from '../../../translation/translation.service';
 import {
   debounceTime,
   distinctUntilChanged,
@@ -49,7 +50,7 @@ export class OpenProjectDialogComponent implements OnInit {
   private readonly persistenceService = inject(PersistenceService);
   private readonly uploadCoordinator = inject(UploadCoordinatorService);
   private readonly toastService = inject(ToastService);
-  private readonly transloco = inject(TranslocoService);
+  private readonly translation = inject(TranslationService);
   protected readonly userService = inject(UserService);
 
   private readonly ctx = 'OpenProjectDialogComponent';
@@ -120,7 +121,7 @@ export class OpenProjectDialogComponent implements OnInit {
       })
       .catch((err: unknown) => {
         this.toastService.error(
-          this.transloco.translate('openProjectDialog.errors.listLocal'),
+          this.translation.translate('openProjectDialog.errors.listLocal'),
           this.ctx,
           err
         );
@@ -136,7 +137,7 @@ export class OpenProjectDialogComponent implements OnInit {
   protected openLocalProject(id: string): void {
     this.persistenceService.loadLocalProjectAsMain(id).catch((err: unknown) => {
       this.toastService.error(
-        this.transloco.translate('openProjectDialog.errors.openLocal'),
+        this.translation.translate('openProjectDialog.errors.openLocal'),
         this.ctx,
         err
       );
@@ -150,7 +151,7 @@ export class OpenProjectDialogComponent implements OnInit {
       .then(() => this.loadLocalProjects())
       .catch((err: unknown) => {
         this.toastService.error(
-          this.transloco.translate('openProjectDialog.errors.deleteLocal'),
+          this.translation.translate('openProjectDialog.errors.deleteLocal'),
           this.ctx,
           err
         );
@@ -176,7 +177,7 @@ export class OpenProjectDialogComponent implements OnInit {
       .then(() => this.loadLocalProjects())
       .catch((err: unknown) => {
         this.toastService.error(
-          this.transloco.translate('openProjectDialog.errors.renameLocal'),
+          this.translation.translate('openProjectDialog.errors.renameLocal'),
           this.ctx,
           err
         );
@@ -205,7 +206,7 @@ export class OpenProjectDialogComponent implements OnInit {
       this.serverLoaded.set(true);
     } catch (err) {
       this.toastService.error(
-        this.transloco.translate('openProjectDialog.errors.listCloud'),
+        this.translation.translate('openProjectDialog.errors.listCloud'),
         this.ctx,
         err
       );
@@ -225,7 +226,7 @@ export class OpenProjectDialogComponent implements OnInit {
   protected openServerProject(id: string): void {
     this.persistenceService.loadProjectAsMain(id).catch((err: unknown) => {
       this.toastService.error(
-        this.transloco.translate('openProjectDialog.errors.openCloud'),
+        this.translation.translate('openProjectDialog.errors.openCloud'),
         this.ctx,
         err
       );
@@ -238,7 +239,7 @@ export class OpenProjectDialogComponent implements OnInit {
       .then(() => this.loadServerProjects(this.serverPage()))
       .catch((err: unknown) => {
         this.toastService.error(
-          this.transloco.translate('openProjectDialog.errors.deleteCloud'),
+          this.translation.translate('openProjectDialog.errors.deleteCloud'),
           this.ctx,
           err
         );
@@ -252,7 +253,7 @@ export class OpenProjectDialogComponent implements OnInit {
       .then(() => this.loadServerProjects(this.serverPage()))
       .catch((err: unknown) => {
         this.toastService.error(
-          this.transloco.translate('openProjectDialog.errors.renameCloud'),
+          this.translation.translate('openProjectDialog.errors.renameCloud'),
           this.ctx,
           err
         );
@@ -261,7 +262,7 @@ export class OpenProjectDialogComponent implements OnInit {
 
   protected shareServer(item: ProjectListItem): void {
     const shareRef = this.dialogService.open(ShareDialogComponent, {
-      header: this.transloco.translate('shareDialog.header'),
+      header: this.translation.translate('shareDialog.header'),
       width: '32rem',
       modal: true,
       closable: true,
@@ -297,9 +298,12 @@ export class OpenProjectDialogComponent implements OnInit {
         .catch((err: unknown) => {
           const message = err instanceof Error ? err.message : String(err);
           this.toastService.error(
-            this.transloco.translate('openProjectDialog.errors.importFailed', {
-              detail: message
-            }),
+            this.translation.translate(
+              'openProjectDialog.errors.importFailed',
+              {
+                detail: message
+              }
+            ),
             this.ctx,
             err
           );
@@ -307,7 +311,7 @@ export class OpenProjectDialogComponent implements OnInit {
         });
     };
     reader.onerror = () => {
-      const message = this.transloco.translate(
+      const message = this.translation.translate(
         'openProjectDialog.errors.readFailed'
       );
       this.toastService.error(message, this.ctx, reader.error);

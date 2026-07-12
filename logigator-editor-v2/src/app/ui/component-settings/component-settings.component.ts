@@ -9,7 +9,7 @@ import {
   LocalizableText,
   resolveLocalizableText
 } from '../../components/component-config.model';
-import { TranslocoService } from '@jsverse/transloco';
+import { TranslationService } from '../../translation/translation.service';
 import { ChangeOptionAction } from '../../actions/actions/change-option.action';
 import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
 import { CUSTOM_TYPE_ID_BASE } from '../../components/component-type.enum';
@@ -31,7 +31,7 @@ export class ComponentSettingsComponent {
   private readonly workModeService = inject(WorkModeService);
   private readonly inspector = inject(SelectionInspectorService);
   private readonly projectService = inject(ProjectService);
-  private readonly translocoService = inject(TranslocoService);
+  private readonly translation = inject(TranslationService);
   private readonly registry = inject(CustomComponentRegistry);
 
   /**
@@ -127,7 +127,7 @@ export class ComponentSettingsComponent {
   /** Resolves display text: translates a key, returns a literal verbatim. */
   protected text(value: LocalizableText): string {
     return resolveLocalizableText(value, (key) =>
-      this.translocoService.translate(key)
+      this.translation.translate(key)
     );
   }
 }

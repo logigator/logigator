@@ -12,7 +12,8 @@ import {
   viewChild
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
+import { TranslocoDirective } from '@jsverse/transloco';
+import { TranslationService } from '../../translation/translation.service';
 import {
   ConfirmationService,
   LgButton,
@@ -86,7 +87,7 @@ const RADICES: Record<Radix, RadixSpec> = {
 export class HexEditorComponent {
   private readonly layout = inject(LayoutService);
   private readonly confirmationService = inject(ConfirmationService);
-  private readonly transloco = inject(TranslocoService);
+  private readonly translation = inject(TranslationService);
   private readonly toastService = inject(ToastService);
 
   /** Initial contents as a packed buffer; padded/truncated to the table size. */
@@ -136,7 +137,7 @@ export class HexEditorComponent {
   protected readonly follow = signal(true);
 
   protected readonly addressText =
-    this.transloco.translate('hexEditor.address');
+    this.translation.translate('hexEditor.address');
 
   protected readonly viewOptions = [
     { label: 'hexEditor.wordView', value: 'word' as HexView },
@@ -415,14 +416,14 @@ export class HexEditorComponent {
     const copied = navigator.clipboard?.writeText(this.dump());
     if (!copied) {
       this.toastService.warn(
-        this.transloco.translate('hexEditor.copyFailed'),
+        this.translation.translate('hexEditor.copyFailed'),
         'HexEditorComponent'
       );
       return;
     }
     void copied.catch((err: unknown) =>
       this.toastService.warn(
-        this.transloco.translate('hexEditor.copyFailed'),
+        this.translation.translate('hexEditor.copyFailed'),
         'HexEditorComponent',
         err
       )
@@ -485,11 +486,11 @@ export class HexEditorComponent {
     this.confirmationService.confirm({
       key: 'inline',
       target: event.currentTarget as HTMLElement,
-      message: this.transloco.translate('hexEditor.clearConfirm'),
+      message: this.translation.translate('hexEditor.clearConfirm'),
       acceptButtonProps: { severity: 'danger' },
-      acceptLabel: this.transloco.translate('hexEditor.clear'),
+      acceptLabel: this.translation.translate('hexEditor.clear'),
       rejectButtonProps: { severity: 'secondary', outlined: true },
-      rejectLabel: this.transloco.translate('common.cancel'),
+      rejectLabel: this.translation.translate('common.cancel'),
       accept: () => this.clear()
     });
   }

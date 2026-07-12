@@ -17,7 +17,7 @@ import { ComponentProviderService } from '../../components/component-provider.se
 import { ProjectMetadataStore } from '../../persistence/project-metadata.store';
 import { ToastService } from '../../logging/toast.service';
 import { LoggingService } from '../../logging/logging.service';
-import { TranslocoService } from '@jsverse/transloco';
+import { TranslationService } from '../../translation/translation.service';
 
 export class ComponentPlacementSession implements DragSession {
   private readonly _component: Component;
@@ -67,7 +67,7 @@ export class ComponentPlacementSession implements DragSession {
   onEnd(): void {
     if (this._wouldCycle) {
       getStaticDI(ToastService).warn(
-        getStaticDI(TranslocoService).translate('editor.circularDependency'),
+        getStaticDI(TranslationService).translate('editor.circularDependency'),
         'ComponentPlacementSession'
       );
       this._component.destroy({ children: true });

@@ -6,7 +6,7 @@ import { firstValueFrom, of } from 'rxjs';
 import { Location } from '@angular/common';
 import { TestBed } from '@angular/core/testing';
 import { HttpTestingController } from '@angular/common/http/testing';
-import { TranslocoService } from '@jsverse/transloco';
+import { TranslationService } from '../translation/translation.service';
 import { AuthRequiredError, PersistenceService } from './persistence.service';
 import { ProjectMetadataStore } from './project-metadata.store';
 import { ProjectService } from '../project/project.service';
@@ -178,7 +178,7 @@ describe('PersistenceService', () => {
       { provide: BrowserComponentStore, useValue: componentStore },
       { provide: ComponentIdMapStore, useValue: idMapStore },
       {
-        provide: TranslocoService,
+        provide: TranslationService,
         useValue: {
           translate: vi.fn().mockName('TranslocoService.translate'),
           getActiveLang: () => 'en',

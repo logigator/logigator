@@ -22,7 +22,8 @@ import {
   type LgPaginatorState,
   LgTooltip
 } from '@logigator/ui';
-import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
+import { TranslocoDirective } from '@jsverse/transloco';
+import { TranslationService } from '../../translation/translation.service';
 
 export interface ProjectListItem {
   id: string;
@@ -55,7 +56,7 @@ const NAME_MAX_LENGTH = 20;
 })
 export class ProjectListComponent {
   private readonly confirmationService = inject(ConfirmationService);
-  private readonly translocoService = inject(TranslocoService);
+  private readonly translation = inject(TranslationService);
   private readonly injector = inject(Injector);
 
   readonly items = input<ProjectListItem[]>([]);
@@ -149,18 +150,14 @@ export class ProjectListComponent {
     this.confirmationService.confirm({
       key: 'inline',
       target: event.currentTarget as HTMLElement,
-      message: this.translocoService.translate(
+      message: this.translation.translate(
         'openProjectDialog.deleteConfirmMessage',
         { name: item.name }
       ),
       acceptButtonProps: { severity: 'danger' },
-      acceptLabel: this.translocoService.translate(
-        'openProjectDialog.deleteAccept'
-      ),
+      acceptLabel: this.translation.translate('openProjectDialog.deleteAccept'),
       rejectButtonProps: { severity: 'secondary', outlined: true },
-      rejectLabel: this.translocoService.translate(
-        'openProjectDialog.deleteReject'
-      ),
+      rejectLabel: this.translation.translate('openProjectDialog.deleteReject'),
       accept: () => this.delete.emit(item)
     });
   }

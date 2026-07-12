@@ -8,7 +8,8 @@ import {
   LgSlider,
   LgToggleSwitch
 } from '@logigator/ui';
-import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
+import { TranslocoDirective } from '@jsverse/transloco';
+import { TranslationService } from '../../../translation/translation.service';
 import { ProjectService } from '../../../project/project.service';
 import { ProjectMetadataStore } from '../../../persistence/project-metadata.store';
 import {
@@ -43,7 +44,7 @@ export class ExportImageDialogComponent {
   private readonly projectService = inject(ProjectService);
   private readonly metadataStore = inject(ProjectMetadataStore);
   private readonly imageExport = inject(ImageExportService);
-  private readonly transloco = inject(TranslocoService);
+  private readonly translation = inject(TranslationService);
 
   protected readonly formatOptions = [
     { label: 'PNG', value: 'png' as const },
@@ -127,7 +128,7 @@ export class ExportImageDialogComponent {
   private _projectName(project: Project): string {
     return (
       this.metadataStore.getMetadata(project)?.name ??
-      this.transloco.translate('common.untitled')
+      this.translation.translate('common.untitled')
     );
   }
 }

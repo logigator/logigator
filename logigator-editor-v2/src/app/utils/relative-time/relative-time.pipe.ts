@@ -1,6 +1,6 @@
 import { inject, Pipe, PipeTransform } from '@angular/core';
-import { TranslocoService } from '@jsverse/transloco';
 import { formatRelativeTime } from './relative-time';
+import { TranslationService } from '../../translation/translation.service';
 
 /**
  * Formats an epoch-ms timestamp (or `Date`) as localized relative time in the
@@ -13,11 +13,11 @@ import { formatRelativeTime } from './relative-time';
   name: 'relativeTime'
 })
 export class RelativeTimePipe implements PipeTransform {
-  private readonly transloco = inject(TranslocoService);
+  private readonly translation = inject(TranslationService);
 
   public transform(value: number | Date | null | undefined): string {
     if (value === null || value === undefined) return '';
     const epochMs = value instanceof Date ? value.getTime() : value;
-    return formatRelativeTime(epochMs, this.transloco.getActiveLang());
+    return formatRelativeTime(epochMs, this.translation.getActiveLang());
   }
 }

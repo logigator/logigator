@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { TranslocoService } from '@jsverse/transloco';
 import { LgSelect } from '@logigator/ui';
+import { TranslationService } from '../translation.service';
 
 @Component({
   selector: 'app-language-switcher',
@@ -9,13 +9,13 @@ import { LgSelect } from '@logigator/ui';
   templateUrl: './language-switcher.component.html'
 })
 export class LanguageSwitcherComponent {
-  private readonly translocoService = inject(TranslocoService);
+  private readonly translation = inject(TranslationService);
 
-  protected readonly currentLang = this.translocoService.activeLang;
+  protected readonly currentLang = this.translation.activeLang;
 
-  protected readonly langOptions = this.translocoService.getAvailableLangs();
+  protected readonly langOptions = this.translation.getAvailableLangs();
 
   protected setLang(lang: string): void {
-    this.translocoService.setActiveLang(lang);
+    this.translation.setActiveLang(lang);
   }
 }

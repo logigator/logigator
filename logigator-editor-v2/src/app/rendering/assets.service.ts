@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { Assets, BitmapFont, Cache, TextStyleOptions } from 'pixi.js';
-import { TranslocoService } from '@jsverse/transloco';
+import { TranslationService } from '../translation/translation.service';
 import robotoMonoUrl from '@assets/roboto-mono-regular-subset.woff2';
 import dseg7Url from '@assets/DSEG7Modern-BoldItalic.woff2';
 import dseg14Url from '@assets/DSEG14Modern-BoldItalic.woff2';
@@ -31,7 +31,7 @@ const BAKE_SEGMENT_14_FAMILY = 'DSEG14 Canvas';
 })
 export class AssetsService {
   private readonly toast = inject(ToastService);
-  private readonly transloco = inject(TranslocoService);
+  private readonly translation = inject(TranslationService);
 
   constructor() {
     for (const [alias, src] of [
@@ -56,7 +56,7 @@ export class AssetsService {
       ]);
     } catch (err) {
       this.toast.error(
-        this.transloco.translate('editor.fontLoadFailed'),
+        this.translation.translate('editor.fontLoadFailed'),
         'AssetsService',
         err
       );

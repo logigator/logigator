@@ -13,7 +13,7 @@ import { getStaticDI } from '../../utils/get-di';
 import { ComponentProviderService } from '../../components/component-provider.service';
 import { LoggingService } from '../../logging/logging.service';
 import { ToastService } from '../../logging/toast.service';
-import { TranslocoService } from '@jsverse/transloco';
+import { TranslationService } from '../../translation/translation.service';
 
 export class EraseSession implements DragSession {
   private readonly _deletedComponentIds = new Set<number>();
@@ -76,7 +76,7 @@ export class EraseSession implements DragSession {
     }
     if (dropped > 0) {
       getStaticDI(ToastService).warn(
-        getStaticDI(TranslocoService).translate('editor.eraseRestoreFailed'),
+        getStaticDI(TranslationService).translate('editor.eraseRestoreFailed'),
         'EraseSession'
       );
     }

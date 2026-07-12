@@ -9,7 +9,7 @@ import {
 } from 'rxjs';
 import { SignalMap } from 'ngxtension/collections';
 import { DialogService } from '@logigator/ui';
-import { TranslocoService } from '@jsverse/transloco';
+import { TranslationService } from '../translation/translation.service';
 import {
   ShortcutActionEnum,
   ALL_SHORTCUT_ACTIONS
@@ -32,7 +32,7 @@ import { LoggingService } from '../logging/logging.service';
 export class ShortcutService implements OnDestroy {
   private readonly toastService = inject(ToastService);
   private readonly loggingService = inject(LoggingService);
-  private readonly translocoService = inject(TranslocoService);
+  private readonly translation = inject(TranslationService);
   private readonly projectService = inject(ProjectService);
   private readonly saveCoordinator = inject(SaveCoordinatorService);
   private readonly clipboardService = inject(ClipboardService);
@@ -139,11 +139,11 @@ export class ShortcutService implements OnDestroy {
           this._bindingsEqual(existingBinding, binding)
         ) {
           this._bindings.set(existingAction, null);
-          const oldName = this.translocoService.translate(
+          const oldName = this.translation.translate(
             `shortcuts.actions.${existingAction}`
           );
           this.toastService.info(
-            this.translocoService.translate('shortcuts.toast.reassignedFrom', {
+            this.translation.translate('shortcuts.toast.reassignedFrom', {
               action: oldName
             }),
             'ShortcutService'
@@ -185,7 +185,7 @@ export class ShortcutService implements OnDestroy {
 
     this.on(ShortcutActionEnum.OPEN).subscribe(() => {
       this.dialogService.open(OpenProjectDialogComponent, {
-        header: this.translocoService.translate('openProjectDialog.title'),
+        header: this.translation.translate('openProjectDialog.title'),
         width: '40rem',
         modal: true,
         closable: true
@@ -194,7 +194,7 @@ export class ShortcutService implements OnDestroy {
 
     this.on(ShortcutActionEnum.NEW_COMPONENT).subscribe(() => {
       this.dialogService.open(NewComponentDialogComponent, {
-        header: this.translocoService.translate(
+        header: this.translation.translate(
           'titleBar.menuBar.file.items.newComponent.label'
         ),
         width: '28rem',
@@ -337,7 +337,7 @@ export class ShortcutService implements OnDestroy {
     } catch (err) {
       /* corrupted data — keep defaults */
       this.toastService.error(
-        this.translocoService.translate('shortcuts.toast.loadFailed'),
+        this.translation.translate('shortcuts.toast.loadFailed'),
         'ShortcutService',
         err
       );

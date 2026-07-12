@@ -9,7 +9,7 @@ import { CustomComponent } from '../components/custom/custom-component';
 import { Action } from '../actions/action';
 import { UpdateInstanceAction } from '../actions/actions/update-instance.action';
 import { ToastService } from '../logging/toast.service';
-import { TranslocoService } from '@jsverse/transloco';
+import { TranslationService } from '../translation/translation.service';
 import { firstValueFrom } from 'rxjs';
 import { DialogService } from '@logigator/ui';
 import { DefinitionBinding } from './definition-binding';
@@ -48,7 +48,7 @@ export class CustomComponentService {
   private readonly uploadCoordinator = inject(UploadCoordinatorService);
   private readonly dialogService = inject(DialogService);
   private readonly toast = inject(ToastService);
-  private readonly transloco = inject(TranslocoService);
+  private readonly translation = inject(TranslationService);
 
   private readonly _bindings = new Map<Project, DefinitionBinding>();
 
@@ -66,7 +66,7 @@ export class CustomComponentService {
         return project;
       } catch (e) {
         this.toast.error(
-          this.transloco.translate('componentActions.createFailed'),
+          this.translation.translate('componentActions.createFailed'),
           'CustomComponentService'
         );
         throw e;
@@ -127,7 +127,7 @@ export class CustomComponentService {
       this._openEditor(project, masterTypeId);
     } catch {
       this.toast.error(
-        this.transloco.translate('componentActions.openFailed'),
+        this.translation.translate('componentActions.openFailed'),
         'CustomComponentService'
       );
     }
@@ -153,7 +153,7 @@ export class CustomComponentService {
     }
     if (!masterId) {
       this.toast.error(
-        this.transloco.translate('componentActions.restoreFailed'),
+        this.translation.translate('componentActions.restoreFailed'),
         'CustomComponentService'
       );
       return;
@@ -165,7 +165,7 @@ export class CustomComponentService {
     // the component embedded again.
     if (host) this.metadataStore.markDirty(host);
     this.toast.success(
-      this.transloco.translate('componentActions.restored'),
+      this.translation.translate('componentActions.restored'),
       'CustomComponentService'
     );
     await this.openComponentForEdit(masterId);
@@ -240,15 +240,15 @@ export class CustomComponentService {
         : 0;
 
     const ref = this.dialogService.open(CloseTabDialogComponent, {
-      header: this.transloco.translate('closeTab.header'),
+      header: this.translation.translate('closeTab.header'),
       width: '28rem',
       modal: true,
       closable: true,
       data: {
-        name: metadata?.name ?? this.transloco.translate('common.untitled'),
+        name: metadata?.name ?? this.translation.translate('common.untitled'),
         promotionWarning:
           localDepCount > 0
-            ? this.transloco.translate('closeTab.promotionWarning', {
+            ? this.translation.translate('closeTab.promotionWarning', {
                 count: localDepCount
               })
             : undefined
@@ -312,7 +312,7 @@ export class CustomComponentService {
       return true;
     } catch {
       this.toast.error(
-        this.transloco.translate('componentActions.cloudLoadFailed'),
+        this.translation.translate('componentActions.cloudLoadFailed'),
         'CustomComponentService'
       );
       return false;

@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { Location } from '@angular/common';
 import { firstValueFrom, Observable } from 'rxjs';
-import { TranslocoService } from '@jsverse/transloco';
+import { TranslationService } from '../translation/translation.service';
 import { CircuitFileService } from './file/circuit-file.service';
 import { BrowserProjectStore } from './browser/browser-project.store';
 import { BrowserComponentStore } from './browser/browser-component.store';
@@ -68,7 +68,7 @@ export class PersistenceService {
   private readonly projectService = inject(ProjectService);
   private readonly toast = inject(ToastService);
   private readonly logging = inject(LoggingService);
-  private readonly transloco = inject(TranslocoService);
+  private readonly translation = inject(TranslationService);
   private readonly location = inject(Location);
   private readonly server = inject(ServerPersistenceGateway);
   private readonly cloudSession = inject(CloudSessionService);
@@ -149,7 +149,7 @@ export class PersistenceService {
     this._replaceMainProject(project);
     this.location.go(`/project/${id}`);
     this.toast.success(
-      this.transloco.translate('persistence.projectCreated'),
+      this.translation.translate('persistence.projectCreated'),
       'PersistenceService'
     );
     return id;
@@ -534,7 +534,7 @@ export class PersistenceService {
       wires.forEach((w, i) => (w.id = dump.wireIds[i]));
     } else {
       this.toast.warn(
-        this.transloco.translate('persistence.dumpElementCountChanged'),
+        this.translation.translate('persistence.dumpElementCountChanged'),
         'PersistenceService'
       );
     }
@@ -573,7 +573,7 @@ export class PersistenceService {
     } catch (e) {
       if (token === this._mainLoadToken) {
         this.toast.error(
-          this.transloco.translate('persistence.loadFailed'),
+          this.translation.translate('persistence.loadFailed'),
           'PersistenceService',
           `Failed to load project ${uuid}: ${formatHttpError(e)}`
         );
@@ -604,7 +604,7 @@ export class PersistenceService {
     } catch (e) {
       if (token === this._shareLoadToken) {
         this.toast.error(
-          this.transloco.translate('persistence.shareLoadFailed'),
+          this.translation.translate('persistence.shareLoadFailed'),
           'PersistenceService',
           `Failed to load share ${linkId}: ${formatHttpError(e)}`
         );
@@ -1131,7 +1131,7 @@ export class PersistenceService {
     } catch (e) {
       if (token === this._mainLoadToken) {
         this.toast.error(
-          this.transloco.translate('persistence.componentLoadFailed'),
+          this.translation.translate('persistence.componentLoadFailed'),
           'PersistenceService',
           `Failed to load component ${uuid}: ${formatHttpError(e)}`
         );
@@ -1163,7 +1163,7 @@ export class PersistenceService {
     } catch (e) {
       if (token === this._mainLoadToken) {
         this.toast.error(
-          this.transloco.translate('persistence.loadFailed'),
+          this.translation.translate('persistence.loadFailed'),
           'PersistenceService',
           `Failed to load browser project ${id}: ${formatHttpError(e)}`
         );
@@ -1188,13 +1188,13 @@ export class PersistenceService {
     if (verdict === 'ok') return;
     if (verdict === 'logged-out') {
       this.toast.error(
-        this.transloco.translate('session.saveLoggedOut'),
+        this.translation.translate('session.saveLoggedOut'),
         'PersistenceService'
       );
       throw new AuthRequiredError();
     }
     this.toast.error(
-      this.transloco.translate('session.saveForeign', { name }),
+      this.translation.translate('session.saveForeign', { name }),
       'PersistenceService'
     );
     throw new ForeignDocumentError();
@@ -1208,7 +1208,7 @@ export class PersistenceService {
   private _requireSignedIn(): void {
     if (this.cloudSession.isSignedIn()) return;
     this.toast.error(
-      this.transloco.translate('session.saveLoggedOut'),
+      this.translation.translate('session.saveLoggedOut'),
       'PersistenceService'
     );
     throw new AuthRequiredError();
@@ -1398,7 +1398,7 @@ export class PersistenceService {
       this.metadataStore.clearDirty(project);
     }
     this.toast.success(
-      this.transloco.translate('persistence.projectSavedLocal'),
+      this.translation.translate('persistence.projectSavedLocal'),
       'PersistenceService'
     );
   }
@@ -1450,7 +1450,7 @@ export class PersistenceService {
       this.metadataStore.clearDirty(project);
     }
     this.toast.success(
-      this.transloco.translate('persistence.componentSavedLocal'),
+      this.translation.translate('persistence.componentSavedLocal'),
       'PersistenceService'
     );
   }

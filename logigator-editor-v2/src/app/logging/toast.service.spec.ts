@@ -3,7 +3,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { ToastService as UiToastService } from '@logigator/ui';
-import { TranslocoService } from '@jsverse/transloco';
+import { TranslationService } from '../translation/translation.service';
 
 import { ToastService } from './toast.service';
 import { LoggingService } from './logging.service';
@@ -22,7 +22,7 @@ describe('ToastService', () => {
     TestBed.configureTestingModule({
       providers: [
         UiToastService,
-        { provide: TranslocoService, useValue: translocoSpy }
+        { provide: TranslationService, useValue: translocoSpy }
       ]
     });
     service = TestBed.inject(ToastService);

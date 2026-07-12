@@ -1,6 +1,7 @@
 import { Component, computed, inject } from '@angular/core';
 import { DialogService, LgButton, LgDivider, LgTooltip } from '@logigator/ui';
-import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
+import { TranslocoDirective } from '@jsverse/transloco';
+import { TranslationService } from '../../translation/translation.service';
 import { WorkModeService } from '../../work-mode/work-mode.service';
 import { WorkMode } from '../../work-mode/work-mode.enum';
 import {
@@ -33,7 +34,7 @@ export class ToolBarComponent {
   private readonly projectService = inject(ProjectService);
   private readonly saveCoordinator = inject(SaveCoordinatorService);
   private readonly dialogService = inject(DialogService);
-  private readonly translocoService = inject(TranslocoService);
+  private readonly translation = inject(TranslationService);
   private readonly clipboardService = inject(ClipboardService);
   private readonly shortcutService = inject(ShortcutService);
   private readonly simulationService = inject(SimulationService);
@@ -93,7 +94,7 @@ export class ToolBarComponent {
 
   protected open(): void {
     this.dialogService.open(OpenProjectDialogComponent, {
-      header: this.translocoService.translate('openProjectDialog.title'),
+      header: this.translation.translate('openProjectDialog.title'),
       width: '40rem',
       modal: true,
       closable: true

@@ -7,7 +7,7 @@ import { Route } from './route.model';
 import { Location } from '@angular/common';
 import { parse } from 'regexparam';
 import { RouteKeys } from './route-keys.model';
-import { TranslocoService } from '@jsverse/transloco';
+import { TranslationService } from '../translation/translation.service';
 import { ToastService } from '../logging/toast.service';
 import { LoggingService } from '../logging/logging.service';
 
@@ -24,7 +24,7 @@ const ROUTES: Type<Route>[] = [
 export class RouterService {
   private readonly toast = inject(ToastService);
   private readonly logging = inject(LoggingService);
-  private readonly transloco = inject(TranslocoService);
+  private readonly translation = inject(TranslationService);
   private readonly location = inject(Location);
 
   private _routes: {
@@ -47,7 +47,7 @@ export class RouterService {
     const path = this.location.path();
     if (!(await this.processPath(path))) {
       this.toast.error(
-        this.transloco.translate('routing.notFound'),
+        this.translation.translate('routing.notFound'),
         'RouterService',
         `No route found for path: ${path}`
       );

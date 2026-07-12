@@ -36,7 +36,8 @@ import {
 } from '@logigator/ui';
 import { InspectionService } from './inspection/inspection.service';
 import { InspectionSheetComponent } from './inspection/inspection-sheet.component';
-import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
+import { TranslocoDirective } from '@jsverse/transloco';
+import { TranslationService } from './translation/translation.service';
 import { WorkMode } from './work-mode/work-mode.enum';
 import { WorkModeService } from './work-mode/work-mode.service';
 import { LayoutService } from './layout/layout.service';
@@ -113,7 +114,7 @@ export class AppComponent {
   private readonly inspectionService = inject(InspectionService);
   private readonly loggingService = inject(LoggingService);
   private readonly toastService = inject(ToastService);
-  private readonly translocoService = inject(TranslocoService);
+  private readonly translation = inject(TranslationService);
   private readonly title = inject(Title);
 
   protected readonly cursorPosition = signal<Point>(new Point(0, 0));
@@ -188,7 +189,7 @@ export class AppComponent {
         this.loggingService.info('Editor ready', 'AppComponent');
       } catch (err) {
         this.toastService.warn(
-          this.translocoService.translate('library.loadFailed'),
+          this.translation.translate('library.loadFailed'),
           'AppComponent',
           err
         );

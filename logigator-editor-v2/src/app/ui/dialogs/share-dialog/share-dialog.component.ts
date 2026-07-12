@@ -11,7 +11,8 @@ import {
   LgToggleSwitch,
   LgTooltip
 } from '@logigator/ui';
-import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
+import { TranslocoDirective } from '@jsverse/transloco';
+import { TranslationService } from '../../../translation/translation.service';
 import { ProjectApiService } from '../../../api/services/project-api.service';
 import { ComponentApiService } from '../../../api/services/component-api.service';
 import { ProjectMetadataStore } from '../../../persistence/project-metadata.store';
@@ -81,7 +82,7 @@ export class ShareDialogComponent extends LgDialogContent<ShareDialogData> {
   private readonly metadataStore = inject(ProjectMetadataStore);
   private readonly registry = inject(CustomComponentRegistry);
   private readonly toast = inject(ToastService);
-  private readonly transloco = inject(TranslocoService);
+  private readonly translation = inject(TranslationService);
 
   private readonly data = this.dialogData!;
 
@@ -100,12 +101,12 @@ export class ShareDialogComponent extends LgDialogContent<ShareDialogData> {
     try {
       await navigator.clipboard.writeText(this.shareUrl());
       this.toast.success(
-        this.transloco.translate('shareDialog.linkCopied'),
+        this.translation.translate('shareDialog.linkCopied'),
         'ShareDialogComponent'
       );
     } catch (err) {
       this.toast.error(
-        this.transloco.translate('shareDialog.copyFailed'),
+        this.translation.translate('shareDialog.copyFailed'),
         'ShareDialogComponent',
         err
       );
@@ -121,12 +122,12 @@ export class ShareDialogComponent extends LgDialogContent<ShareDialogData> {
       this.link.set(newLink);
       this._persist({ link: newLink });
       this.toast.success(
-        this.transloco.translate('shareDialog.linkRegenerated'),
+        this.translation.translate('shareDialog.linkRegenerated'),
         'ShareDialogComponent'
       );
     } catch (err) {
       this.toast.error(
-        this.transloco.translate('shareDialog.regenerateFailed'),
+        this.translation.translate('shareDialog.regenerateFailed'),
         'ShareDialogComponent',
         err
       );
@@ -144,13 +145,13 @@ export class ShareDialogComponent extends LgDialogContent<ShareDialogData> {
       this.isPublic.set(summary.public);
       this._persist({ isPublic: summary.public });
       this.toast.success(
-        this.transloco.translate('shareDialog.visibilityUpdated'),
+        this.translation.translate('shareDialog.visibilityUpdated'),
         'ShareDialogComponent'
       );
     } catch (err) {
       this.isPublic.set(previous);
       this.toast.error(
-        this.transloco.translate('shareDialog.visibilityFailed'),
+        this.translation.translate('shareDialog.visibilityFailed'),
         'ShareDialogComponent',
         err
       );

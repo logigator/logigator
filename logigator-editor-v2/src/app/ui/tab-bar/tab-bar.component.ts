@@ -1,6 +1,5 @@
 import { Component, computed, inject } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
+import { TranslocoDirective } from '@jsverse/transloco';
 import { LgTabReorder, LgTabStrip, LgTabStripItem } from '@logigator/ui';
 import { ProjectService } from '../../project/project.service';
 import { ProjectMetadataStore } from '../../persistence/project-metadata.store';
@@ -8,6 +7,7 @@ import { CustomComponentService } from '../../custom-component/custom-component.
 import { WorkMode } from '../../work-mode/work-mode.enum';
 import { WorkModeService } from '../../work-mode/work-mode.service';
 import { Project } from '../../project/project';
+import { TranslationService } from '../../translation/translation.service';
 
 /**
  * The tab strip above the board: the pinned main project plus one tab per open
@@ -32,10 +32,7 @@ export class TabBarComponent {
   private readonly metadataStore = inject(ProjectMetadataStore);
   private readonly customComponentService = inject(CustomComponentService);
   private readonly workModeService = inject(WorkModeService);
-  private readonly transloco = inject(TranslocoService);
-
-  // Re-derive tab labels when the active language changes.
-  private readonly lang = toSignal(this.transloco.langChanges$);
+  private readonly translation = inject(TranslationService);
 
   private readonly mainProject = this.projectService.mainProject;
   private readonly openComponents = this.projectService.openComponents;
@@ -46,7 +43,8 @@ export class TabBarComponent {
   );
 
   protected readonly tabs = computed<LgTabStripItem<Project>[]>(() => {
-    this.lang();
+    // Labels re-translate on language change through `translation.translate()`,
+    // which reads the service's post-load signal inside this computed.
     const active = this.activeProject();
     const tabs: LgTabStripItem<Project>[] = [];
 
@@ -59,7 +57,7 @@ export class TabBarComponent {
         active: main === active,
         dirty: this.metadataStore.isDirty(main),
         fixed: true,
-        ariaLabel: `${this.transloco.translate('tabBar.mainProject')}: ${this.name(main)}`
+        ariaLabel: `${this.translation.translate('tabBar.mainProject')}: ${this.name(main)}`
       });
     }
 
@@ -80,7 +78,7 @@ export class TabBarComponent {
   private name(project: Project): string {
     return (
       this.metadataStore.getMetadata(project)?.name ??
-      this.transloco.translate('common.untitled')
+      this.translation.translate('common.untitled')
     );
   }
 

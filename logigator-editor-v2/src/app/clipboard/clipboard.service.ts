@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { TranslocoService } from '@jsverse/transloco';
+import { TranslationService } from '../translation/translation.service';
 import { SerializedComponent } from '../components/serialized-component.model';
 import { SerializedWire } from '../wires/serialized-wire.model';
 import { Project } from '../project/project';
@@ -24,7 +24,7 @@ interface ClipboardData {
 export class ClipboardService {
   private readonly logging = inject(LoggingService);
   private readonly toast = inject(ToastService);
-  private readonly transloco = inject(TranslocoService);
+  private readonly translation = inject(TranslationService);
 
   private _clipboard: ClipboardData | null = null;
 
@@ -99,7 +99,7 @@ export class ClipboardService {
     const skipped = components.length - freshComponents.length;
     if (skipped > 0) {
       this.toast.warn(
-        this.transloco.translate('clipboard.pastePartial'),
+        this.translation.translate('clipboard.pastePartial'),
         'ClipboardService'
       );
     }

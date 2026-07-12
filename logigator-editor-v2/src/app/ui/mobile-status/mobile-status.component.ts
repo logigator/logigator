@@ -1,6 +1,7 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { Point } from 'pixi.js';
-import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
+import { TranslocoDirective } from '@jsverse/transloco';
+import { TranslationService } from '../../translation/translation.service';
 import { WorkModeService } from '../../work-mode/work-mode.service';
 import { ComponentProviderService } from '../../components/component-provider.service';
 import { TranslationKey } from '../../translation/translation-key.model';
@@ -18,7 +19,7 @@ import {
   imports: [TranslocoDirective],
   template: `
     <div
-      *transloco="let t"
+      *translation="let t"
       class="flex items-center gap-2 rounded-full bg-content/80 px-3 py-1 text-xs text-muted shadow backdrop-blur"
     >
       <span>{{
@@ -32,7 +33,7 @@ import {
 export class MobileStatusComponent {
   private readonly workModeService = inject(WorkModeService);
   private readonly componentProviderService = inject(ComponentProviderService);
-  private readonly translocoService = inject(TranslocoService);
+  private readonly translation = inject(TranslationService);
 
   public readonly cursorPosition = input<Point>(new Point(0, 0));
 
@@ -58,7 +59,7 @@ export class MobileStatusComponent {
   /** Resolves display text: translates a key, returns a literal verbatim. */
   protected text(value: LocalizableText): string {
     return resolveLocalizableText(value, (key) =>
-      this.translocoService.translate(key)
+      this.translation.translate(key)
     );
   }
 }

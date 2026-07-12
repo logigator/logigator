@@ -10,7 +10,7 @@ import {
   untracked,
   ViewChild
 } from '@angular/core';
-import { TranslocoService } from '@jsverse/transloco';
+import { TranslationService } from '../../translation/translation.service';
 import { Point, Rectangle } from 'pixi.js';
 import { Subscription } from 'rxjs';
 import { environment } from '../../../environments/environment';
@@ -52,7 +52,7 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
   private readonly rendererService = inject(RendererService);
   private readonly injector = inject(Injector);
   private readonly toast = inject(ToastService);
-  private readonly transloco = inject(TranslocoService);
+  private readonly translation = inject(TranslationService);
 
   @ViewChild('canvas', { static: true })
   private readonly canvas!: ElementRef<HTMLCanvasElement>;
@@ -130,7 +130,7 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
       })
       .catch((err) => {
         this.toast.error(
-          this.transloco.translate('watch.rendererFailed'),
+          this.translation.translate('watch.rendererFailed'),
           'SubCircuitWatchComponent',
           err
         );

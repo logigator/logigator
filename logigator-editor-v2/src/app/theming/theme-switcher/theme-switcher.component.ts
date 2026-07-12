@@ -1,9 +1,9 @@
 import { Component, computed, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { TranslocoService } from '@jsverse/transloco';
 import { LgSelectButton } from '@logigator/ui';
 import { ThemingService } from '../theming.service';
 import { ThemeType } from '../theme-type.enum';
+import { TranslationService } from '../../translation/translation.service';
 
 @Component({
   selector: 'app-theme-switcher',
@@ -12,26 +12,24 @@ import { ThemeType } from '../theme-type.enum';
 })
 export class ThemeSwitcherComponent {
   private readonly themingService = inject(ThemingService);
-  private readonly transloco = inject(TranslocoService);
+  private readonly translation = inject(TranslationService);
 
   protected readonly currentTheme = this.themingService.currentThemeType;
 
-  protected readonly themeOptions = computed(() => {
-    // Re-translate the labels when the active language changes.
-    this.transloco.activeLang();
-    return [
-      {
-        label: this.transloco.translate('theming.light'),
-        icon: 'ph ph-sun',
-        value: ThemeType.LIGHT
-      },
-      {
-        label: this.transloco.translate('theming.dark'),
-        icon: 'ph ph-moon',
-        value: ThemeType.DARK
-      }
-    ];
-  });
+  // The labels re-translate on language change because `translate()` reads the
+  // service's post-load signal, making this computed depend on it.
+  protected readonly themeOptions = computed(() => [
+    {
+      label: this.translation.translate('theming.light'),
+      icon: 'ph ph-sun',
+      value: ThemeType.LIGHT
+    },
+    {
+      label: this.translation.translate('theming.dark'),
+      icon: 'ph ph-moon',
+      value: ThemeType.DARK
+    }
+  ]);
 
   protected setTheme(theme: ThemeType): void {
     this.themingService.setTheme(theme);

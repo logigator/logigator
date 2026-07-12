@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { TranslocoService } from '@jsverse/transloco';
+import { TranslationService } from '../../translation/translation.service';
 import { LoggingService } from '../../logging/logging.service';
 import { Component } from '../../components/component';
 import { ComponentProviderService } from '../../components/component-provider.service';
@@ -173,7 +173,7 @@ export class BoardCompilerService {
   private readonly provider = inject(ComponentProviderService);
   private readonly registry = inject(CustomComponentRegistry);
   private readonly logging = inject(LoggingService);
-  private readonly transloco = inject(TranslocoService);
+  private readonly translation = inject(TranslationService);
 
   // Keyed by snapshot type id; snapshots are frozen, so entries never
   // invalidate for the lifetime of the session.
@@ -446,7 +446,7 @@ export class BoardCompilerService {
       instancePath: path,
       componentType: type,
       componentId: component.id,
-      message: this.transloco.translate('simulation.unsupportedComponent', {
+      message: this.translation.translate('simulation.unsupportedComponent', {
         symbol: component.config.symbol
       })
     });
@@ -514,7 +514,7 @@ export class BoardCompilerService {
         instancePath: path,
         componentType: snapshotTypeId,
         componentId: instanceId,
-        message: this.transloco.translate('simulation.recursiveComponent', {
+        message: this.translation.translate('simulation.recursiveComponent', {
           name: def?.name ?? snapshotTypeId
         })
       });
@@ -526,7 +526,7 @@ export class BoardCompilerService {
         instancePath: path,
         componentType: snapshotTypeId,
         componentId: instanceId,
-        message: this.transloco.translate('simulation.componentNoCircuit', {
+        message: this.translation.translate('simulation.componentNoCircuit', {
           name: def?.name ?? snapshotTypeId
         })
       });
@@ -607,7 +607,7 @@ export class BoardCompilerService {
           kind: 'plug-mismatch',
           instancePath: '',
           componentType: def.typeId,
-          message: this.transloco.translate('simulation.plugMismatch', {
+          message: this.translation.translate('simulation.plugMismatch', {
             name: def.name,
             declaredInputs: def.numInputs,
             declaredOutputs: def.numOutputs,

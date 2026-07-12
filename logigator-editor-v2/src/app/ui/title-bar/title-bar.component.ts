@@ -13,7 +13,8 @@ import { FormsModule } from '@angular/forms';
 import logoUrl from '@assets/logo.svg';
 import { ProjectService } from '../../project/project.service';
 import { LgButton, LgInputText, LgMenubar, LgTooltip } from '@logigator/ui';
-import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
+import { TranslocoDirective } from '@jsverse/transloco';
+import { TranslationService } from '../../translation/translation.service';
 import { UserSettingsComponent } from '../user-settings/user-settings.component';
 import { ProjectMetadataStore } from '../../persistence/project-metadata.store';
 import { PersistenceService } from '../../persistence/persistence.service';
@@ -47,7 +48,7 @@ export class TitleBarComponent {
   private readonly projectMetadataStore = inject(ProjectMetadataStore);
   private readonly persistence = inject(PersistenceService);
   private readonly toast = inject(ToastService);
-  private readonly transloco = inject(TranslocoService);
+  private readonly translation = inject(TranslationService);
   private readonly injector = inject(Injector);
 
   protected readonly logoUrl = logoUrl;
@@ -117,7 +118,7 @@ export class TitleBarComponent {
     if (!project || !name || name === this.projectName()) return;
     this.persistence.renameOpenProject(project, name).catch((err: unknown) => {
       this.toast.error(
-        this.transloco.translate('titleBar.rename.error'),
+        this.translation.translate('titleBar.rename.error'),
         'TitleBarComponent',
         err
       );

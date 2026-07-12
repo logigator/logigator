@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { ToastService as UiToastService } from '@logigator/ui';
-import { TranslocoService } from '@jsverse/transloco';
+import { TranslationService } from '../translation/translation.service';
 import { LoggingService } from './logging.service';
 
 /**
@@ -22,14 +22,14 @@ import { LoggingService } from './logging.service';
 })
 export class ToastService {
   private readonly messageService = inject(UiToastService);
-  private readonly translocoService = inject(TranslocoService);
+  private readonly translation = inject(TranslationService);
   private readonly logging = inject(LoggingService);
 
   public error(message: string, context: string, cause?: unknown): void {
     this.logging.error(cause ?? message, context);
     this.messageService.add({
       severity: 'danger',
-      summary: this.translocoService.translate('logging.error'),
+      summary: this.translation.translate('logging.error'),
       detail: message,
       life: 8000
     });
@@ -39,7 +39,7 @@ export class ToastService {
     this.logging.warn(cause ?? message, context);
     this.messageService.add({
       severity: 'warn',
-      summary: this.translocoService.translate('logging.warn'),
+      summary: this.translation.translate('logging.warn'),
       detail: message,
       life: 5000
     });
@@ -49,7 +49,7 @@ export class ToastService {
     this.logging.info(message, context);
     this.messageService.add({
       severity: 'success',
-      summary: this.translocoService.translate('logging.success'),
+      summary: this.translation.translate('logging.success'),
       detail: message,
       life: 5000
     });
@@ -59,7 +59,7 @@ export class ToastService {
     this.logging.info(message, context);
     this.messageService.add({
       severity: 'info',
-      summary: this.translocoService.translate('logging.info'),
+      summary: this.translation.translate('logging.info'),
       detail: message,
       life: 5000
     });

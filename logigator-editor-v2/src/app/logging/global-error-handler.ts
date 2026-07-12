@@ -1,5 +1,5 @@
 import { ErrorHandler, Injectable, Injector, inject } from '@angular/core';
-import { TranslocoService } from '@jsverse/transloco';
+import { TranslationService } from '../translation/translation.service';
 import { LoggingService } from './logging.service';
 import { ToastService } from './toast.service';
 import { BugReportService } from '../bug-report/bug-report.service';
@@ -55,9 +55,9 @@ export class GlobalErrorHandler implements ErrorHandler {
     this.lastToastAt = now;
 
     const toast = this.injector.get(ToastService, null);
-    const transloco = this.injector.get(TranslocoService, null);
+    const translation = this.injector.get(TranslationService, null);
     const message =
-      transloco?.translate('logging.unexpectedError') ??
+      translation?.translate('logging.unexpectedError') ??
       'Something went wrong.';
     toast?.error(message, 'GlobalErrorHandler');
   }

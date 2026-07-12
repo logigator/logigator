@@ -9,7 +9,8 @@ import {
   LgToggleSwitch,
   LgTooltip
 } from '@logigator/ui';
-import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
+import { TranslocoDirective } from '@jsverse/transloco';
+import { TranslationService } from '../../../translation/translation.service';
 import { CustomComponentService } from '../../../custom-component/custom-component.service';
 import { UserService } from '../../../user/user.service';
 
@@ -36,16 +37,16 @@ import { UserService } from '../../../user/user.service';
 export class NewComponentDialogComponent {
   private readonly ref = inject(DialogRef);
   private readonly customComponentService = inject(CustomComponentService);
-  private readonly transloco = inject(TranslocoService);
+  private readonly translation = inject(TranslationService);
   protected readonly userService = inject(UserService);
 
   protected readonly sourceOptions = [
     {
-      label: this.transloco.translate('newComponentDialog.storeCloud'),
+      label: this.translation.translate('newComponentDialog.storeCloud'),
       value: 'server' as const
     },
     {
-      label: this.transloco.translate('newComponentDialog.storeLocal'),
+      label: this.translation.translate('newComponentDialog.storeLocal'),
       value: 'browser' as const
     }
   ];
