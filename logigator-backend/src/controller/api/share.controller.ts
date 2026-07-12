@@ -48,7 +48,8 @@ export class ShareController {
 		});
 		const contentBuffer = await project.elementsFile?.getFileContent();
 		const {elements, snapshots} = parseStoredCircuit(contentBuffer);
-		const enriched = await synthesizeMissingSnapshots(dependencies, snapshots);
+		const enriched = await synthesizeMissingSnapshots(dependencies, snapshots,
+			master => this.componentDepRepo.find({where: {dependent: master as Component}}));
 
 		return {
 			type: project instanceof Project ? 'project' : 'comp',

@@ -25,6 +25,7 @@ import {CreateComponent} from '../../models/request/shared/create-component';
 import {buildDependencyResponse, parseStoredCircuit, serializeStoredCircuit, synthesizeMissingSnapshots} from '../../functions/circuit-content';
 import {classToPlain} from 'class-transformer';
 import {ComponentDependencyRepository} from '../../database/repositories/component-dependency.repository';
+import {Component} from '../../database/entities/component.entity';
 import {ComponentFile} from '../../database/entities/component-file.entity';
 import {SaveComponent} from '../../models/request/api/component/save-component';
 import {UpdateComponent} from '../../models/request/api/component/update-component';
@@ -77,7 +78,8 @@ export class ComponentController {
 
 		const contentBuffer = await component.elementsFile?.getFileContent();
 		const {elements, snapshots} = parseStoredCircuit(contentBuffer);
-		const enriched = await synthesizeMissingSnapshots(dependencies, snapshots);
+		const enriched = await synthesizeMissingSnapshots(dependencies, snapshots,
+			master => this.componentDepRepo.find({where: {dependent: master as Component}}));
 
 		return {
 			...classToPlain(component, {groups: ['showShareLinks']}),

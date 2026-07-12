@@ -26,8 +26,10 @@ import {ProjectFile} from '../../database/entities/project-file.entity';
 import {SaveProject} from '../../models/request/api/project/save-project';
 import {UpdateProject} from '../../models/request/api/project/update-project';
 import {ProjectDependencyRepository} from '../../database/repositories/project-dependency.repository';
+import {ComponentDependencyRepository} from '../../database/repositories/component-dependency.repository';
 import {classToPlain} from 'class-transformer';
 import {ComponentRepository} from '../../database/repositories/component.repository';
+import {Component} from '../../database/entities/component.entity';
 import {buildDependencyResponse, parseStoredCircuit, serializeStoredCircuit, synthesizeMissingSnapshots} from '../../functions/circuit-content';
 import {v4 as uuid} from 'uuid';
 import {getUploadedFileOptions} from '../../functions/get-uploaded-file-options';
@@ -43,6 +45,7 @@ export class ProjectController {
 		@InjectRepository() private projectRepo: ProjectRepository,
 		@InjectRepository() private componentRepo: ComponentRepository,
 		@InjectRepository() private projectDepRepo: ProjectDependencyRepository,
+		@InjectRepository() private componentDepRepo: ComponentDependencyRepository,
 		private shareCloningService: ShareCloningService
 	) {}
 
@@ -73,7 +76,8 @@ export class ProjectController {
 
 		const contentBuffer = await project.elementsFile?.getFileContent();
 		const {elements, snapshots} = parseStoredCircuit(contentBuffer);
-		const enriched = await synthesizeMissingSnapshots(dependencies, snapshots);
+		const enriched = await synthesizeMissingSnapshots(dependencies, snapshots,
+			master => this.componentDepRepo.find({where: {dependent: master as Component}}));
 
 		return {
 			...classToPlain(project, {groups: ['showShareLinks']}),

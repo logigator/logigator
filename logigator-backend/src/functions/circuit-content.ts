@@ -38,6 +38,16 @@ interface DependencyRowLike {
 }
 
 /**
+ * Loads the dependency rows of a master component (the rows whose `dependent` is
+ * that master), so {@link synthesizeMissingSnapshots} can resolve the nested
+ * references of a hierarchical master. Injected by the controllers as a thin
+ * repository lookup, keeping this module free of entity imports.
+ */
+export type DependencyRowLoader = (
+	master: DependencyRowLike['dependency']
+) => Promise<DependencyRowLike[]>;
+
+/**
  * The elements file historically stored a bare `ProjectElement[]`. New clients
  * additionally embed per-dependency snapshots, so the blob becomes a
  * {@link WrappedCircuit}. This reader accepts both shapes and always returns the
@@ -93,39 +103,92 @@ export function serializeStoredCircuit(elements: ProjectElement[], mappings: Pro
  * render the custom instead of dropping it. Rendered at the master's *current*
  * state (as-placed state was never stored).
  *
- * Only **leaf** masters (whose own elements place no further custom, i.e. no
- * `t >= CUSTOM_TYPE_ID_BASE`) are synthesized: a hierarchical master's nested
- * references live in its own file-local id namespace, which would collide with
- * this document's ids and resolve to the wrong component. Those are left
- * reference-only (dropped on load), unchanged from before.
+ * A **hierarchical** master (whose own elements place further customs, i.e.
+ * `t >= CUSTOM_TYPE_ID_BASE`) references its nested masters in its own file-local
+ * id namespace. Its copy is renumbered into the document namespace: each nested
+ * master resolves by uuid through `loadDependencyRows` to a document-level id —
+ * the document's own id when it already depends on the same master, a fresh id
+ * above every one in use otherwise — the nested masters are synthesized first
+ * (depth-first, so the whole closure is embedded), then the copy's custom type
+ * ids are rewritten. A master whose closure cannot be resolved (a dangling
+ * nested reference, or a dependency cycle) is left reference-only, matching the
+ * previous behavior for all hierarchical masters.
  */
-export async function synthesizeMissingSnapshots(depRows: DependencyRowLike[], snapshots: StoredDependencySnapshot[]): Promise<StoredDependencySnapshot[]> {
+export async function synthesizeMissingSnapshots(
+	depRows: DependencyRowLike[],
+	snapshots: StoredDependencySnapshot[],
+	loadDependencyRows: DependencyRowLoader
+): Promise<StoredDependencySnapshot[]> {
 	const covered = new Set(snapshots.map(stored => stored.model));
 	const result = [...snapshots];
+
+	// Master uuid -> the document-level file-local id its references resolve to,
+	// seeded with the document's own rows. Nested masters the document does not
+	// depend on directly get fresh ids above every id already in use.
+	const assigned = new Map(depRows.map(row => [row.dependency.id, row.model_id]));
+	let nextId = CUSTOM_TYPE_ID_BASE;
+	for (const id of [...assigned.values(), ...covered])
+		nextId = Math.max(nextId, id + 1);
+
+	// Masters currently on the synthesis stack, by uuid — re-entering one means
+	// the stored data contains a dependency cycle; bail on that branch.
+	const inProgress = new Set<string>();
+
+	const synthesize = async (master: DependencyRowLike['dependency'], model: number): Promise<boolean> => {
+		if (inProgress.has(master.id))
+			return false;
+		inProgress.add(master.id);
+		try {
+			const {elements} = parseStoredCircuit(await master.elementsFile?.getFileContent());
+
+			if (elements.some(element => element.t >= CUSTOM_TYPE_ID_BASE)) {
+				const nestedRows = await loadDependencyRows(master);
+				const localToDocument = new Map<number, number>();
+				for (const nested of nestedRows) {
+					let documentId = assigned.get(nested.dependency.id);
+					if (documentId === undefined) {
+						documentId = nextId++;
+						assigned.set(nested.dependency.id, documentId);
+					}
+					localToDocument.set(nested.model_id, documentId);
+					if (!covered.has(documentId) && !(await synthesize(nested.dependency, documentId)))
+						return false;
+				}
+				for (const element of elements) {
+					if (element.t < CUSTOM_TYPE_ID_BASE)
+						continue;
+					const documentId = localToDocument.get(element.t);
+					if (documentId === undefined)
+						return false;
+					element.t = documentId;
+				}
+			}
+
+			result.push({
+				id: master.id,
+				model,
+				snapshot: {
+					version: 1,
+					name: master.name,
+					symbol: master.symbol,
+					description: master.description,
+					numInputs: master.numInputs,
+					numOutputs: master.numOutputs,
+					labels: master.labels ?? [],
+					elements
+				}
+			});
+			covered.add(model);
+			return true;
+		} finally {
+			inProgress.delete(master.id);
+		}
+	};
 
 	for (const row of depRows) {
 		if (covered.has(row.model_id))
 			continue;
-
-		const master = row.dependency;
-		const {elements} = parseStoredCircuit(await master.elementsFile?.getFileContent());
-		if (elements.some(element => element.t >= CUSTOM_TYPE_ID_BASE))
-			continue;
-
-		result.push({
-			id: master.id,
-			model: row.model_id,
-			snapshot: {
-				version: 1,
-				name: master.name,
-				symbol: master.symbol,
-				description: master.description,
-				numInputs: master.numInputs,
-				numOutputs: master.numOutputs,
-				labels: master.labels ?? [],
-				elements
-			}
-		});
+		await synthesize(row.dependency, row.model_id);
 	}
 
 	return result;
