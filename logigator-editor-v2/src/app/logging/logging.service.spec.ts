@@ -150,6 +150,23 @@ describe('LoggingService', () => {
       service.error(new Error('kaboom'), 'ctx');
       expect(service.recentLogs()).toContain('kaboom');
     });
+
+    it('prefixes each entry with a UTC time-of-day timestamp', () => {
+      service.error('an error line', 'ctx');
+      const line = service.recentLogs().split('\n').at(-1);
+      expect(line).toMatch(
+        /^\d{2}:\d{2}:\d{2}\.\d{3} \[ERROR]\[ctx] an error line$/
+      );
+    });
+
+    it('collapses consecutive duplicates despite differing timestamps', () => {
+      for (let i = 0; i < 3; i++) service.warn('same line', 'ctx');
+      const lines = service
+        .recentLogs()
+        .split('\n')
+        .filter((l) => l.includes('same line'));
+      expect(lines.length).toBe(1);
+    });
   });
 
   describe('time', () => {

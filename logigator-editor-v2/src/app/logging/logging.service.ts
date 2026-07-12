@@ -37,6 +37,13 @@ export class LoggingService {
    */
   private readonly buffer: string[] = [];
 
+  /**
+   * The last buffered entry's message content (without its timestamp), so
+   * consecutive duplicates collapse on the message rather than on the
+   * timestamped line — which would always differ and defeat the dedupe.
+   */
+  private lastContent: string | undefined;
+
   private enabled(level: LogLevel): boolean {
     return level >= environment.loggingVerbosity;
   }
@@ -77,14 +84,18 @@ export class LoggingService {
 
   private record(level: LogLevel, message: unknown, context: string): void {
     const raw = `[${LEVEL_LABEL[level]}][${context}] ${this.stringify(message)}`;
-    const line =
+    const content =
       raw.length > LOG_ENTRY_MAX_LENGTH
         ? `${raw.slice(0, LOG_ENTRY_MAX_LENGTH)}…`
         : raw;
     // Collapse consecutive duplicates so an error storm can't evict the run-up
     // history this buffer exists to preserve.
-    if (this.buffer.at(-1) === line) return;
-    this.buffer.push(line);
+    if (this.lastContent === content) return;
+    this.lastContent = content;
+    // Prefix a UTC time-of-day so a bug report shows when each line occurred
+    // relative to the crash. Matches the UTC `Date:` header of the report.
+    const timestamp = new Date().toISOString().slice(11, 23);
+    this.buffer.push(`${timestamp} ${content}`);
     if (this.buffer.length > LOG_BUFFER_SIZE) this.buffer.shift();
   }
 
