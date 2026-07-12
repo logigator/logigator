@@ -1,4 +1,4 @@
-FROM node:20 AS backend
+FROM node:24 AS backend
 WORKDIR /app
 
 COPY ["./logigator-backend/package.json", "./logigator-backend/yarn.lock", "./logigator-backend/.yarnrc.yml", "./"]
@@ -10,7 +10,7 @@ RUN yarn migration:build
 
 # ======================================================================================= #
 
-FROM node:20 AS editor
+FROM node:24 AS editor
 WORKDIR /app
 RUN corepack enable
 
@@ -52,7 +52,7 @@ RUN yarn build
 
 # ======================================================================================= #
 
-FROM node:20-alpine
+FROM node:24-alpine
 LABEL org.opencontainers.image.authors="andreas.sch4@gmail.com"
 LABEL org.opencontainers.image.description="Logigator"
 WORKDIR /app
