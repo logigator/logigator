@@ -56,6 +56,7 @@ export class DebugMenuService {
         { label: 'Spawn test toasts', command: () => this.spawnTestToasts() },
         { label: 'Throw test error', command: () => this.throwTestError() },
         { separator: true },
+        { label: 'Download project JSON', command: () => this.downloadJson() },
         { label: 'Generate dump', command: () => this.generateDump() },
         { label: 'Import dump', command: () => this.importDump() }
       ]
@@ -144,6 +145,15 @@ export class DebugMenuService {
     this.toast.info('An info toast.', 'DebugMenuService');
     this.toast.warn('A warning toast.', 'DebugMenuService');
     this.toast.error('An error toast.', 'DebugMenuService');
+  }
+
+  private downloadJson(): void {
+    const project = this.projectService.activeProject();
+    if (!project) {
+      this.toast.warn('No active project to download.', 'DebugMenuService');
+      return;
+    }
+    this.persistence.exportProjectToJsonFile(project);
   }
 
   private generateDump(): void {

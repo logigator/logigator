@@ -390,6 +390,20 @@ export class PersistenceService {
   }
 
   /**
+   * Serializes a project to the current native file format and triggers a
+   * browser download of the **uncompressed** JSON document — the same content
+   * {@link exportProjectToFile} gzips into a `.lgix`, saved as a plain `.json`
+   * for inspection. A debug-only convenience; the shipped export path is
+   * `.lgix`.
+   */
+  exportProjectToJsonFile(project: Project): void {
+    const name = this.metadataStore.getMetadata(project)?.name ?? 'Untitled';
+    const json = this.exportProjectToJson(project);
+    const blob = new Blob([json], { type: 'application/json' });
+    downloadBlob(blob, `${name}.json`);
+  }
+
+  /**
    * Imports a circuit from a picked file's raw bytes, transparently handling
    * both the compressed `.lgix` container and a plain-text `.json` document (the
    * permanently-supported legacy `logigator-editor` export). Branches on the
