@@ -29,8 +29,8 @@ The repo root is a **Yarn 4 + Angular CLI workspace** (managed via Corepack). Tw
 
 | Package | Workspace member | Description | Stack |
 |---|---|---|---|
-| `logigator-editor-v2/` | ✅ | Active canvas editor (**current focus**) | Angular 21, PixiJS 8, Tailwind 4, `@logigator/ui` |
-| `logigator-ui/` | ✅ | `@logigator/ui` — in-house component library (replaces PrimeNG) | Angular 21, Angular CDK |
+| `logigator-editor-v2/` | ✅ | Active canvas editor (**current focus**) | Angular 22, PixiJS 8, Tailwind 4, `@logigator/ui` |
+| `logigator-ui/` | ✅ | `@logigator/ui` — in-house component library (replaces PrimeNG) | Angular 22, Angular CDK |
 | `logigator-backend/` | — | REST API + server-rendered pages | Node.js, Express, TypeORM, Handlebars |
 | `logigator-editor/` | — | Legacy editor (being replaced) | Angular 17, PixiJS 7 |
 
@@ -239,7 +239,7 @@ docker compose exec editor yarn test --watch=false
 
 ### Editor (`logigator-editor-v2`)
 
-The editor is an **Angular 21 SPA** where the circuit canvas is a **PixiJS 8** scene. Angular manages the UI shell (toolbar, panels, dialogs); PixiJS owns all circuit rendering.
+The editor is an **Angular 22 SPA** where the circuit canvas is a **PixiJS 8** scene. Angular manages the UI shell (toolbar, panels, dialogs); PixiJS owns all circuit rendering.
 
 Key layers in `src/app/`:
 
@@ -261,7 +261,7 @@ Detailed technical docs for each subsystem are in `logigator-editor-v2/docs/`:
 
 ### UI library (`logigator-ui`)
 
-`@logigator/ui` is an in-house **Angular 21 + Angular CDK** component library that replaced PrimeNG in the editor. Each component lives in its own folder under `logigator-ui/src/` (`button/`, `dialog/`, `select/`, `menu/`, …) and is re-exported from `public-api.ts`. Imperative services — `DialogService` (dynamic dialogs), `ConfirmationService`, and `MessageService` (toasts) — sit alongside the declarative components, with shared overlay/focus plumbing in `internal/` and design tokens in `tokens/`.
+`@logigator/ui` is an in-house **Angular 22 + Angular CDK** component library that replaced PrimeNG in the editor. Each component lives in its own folder under `logigator-ui/src/` (`button/`, `dialog/`, `select/`, `menu/`, …) and is re-exported from `public-api.ts`. Imperative services — `DialogService` (dynamic dialogs), `ConfirmationService`, and `MessageService` (toasts) — sit alongside the declarative components, with shared overlay/focus plumbing in `internal/` and design tokens in `tokens/`.
 
 Theming is **colors-only** via `--lg-*` CSS variables: `styles/theme.css` defines them and `styles/theme.tw.css` maps them into Tailwind's `@theme`. The editor imports the library straight from TypeScript source through workspace path mapping (`@logigator/ui` → `logigator-ui/src/public-api.ts`), so it is *not* a `package.json` dependency of the editor and changes are picked up with no build step.
 

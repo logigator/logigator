@@ -612,7 +612,7 @@ The Handlebars layout includes both via `<script>` tags — browsers load the ap
              │
              ▼
 ┌─────────────────────────────────────────────────────┐
-│         logigator-editor-v2 (Angular 21 SPA)         │
+│         logigator-editor-v2 (Angular 22 SPA)         │
 │                                                     │
 │  - Built to resources/editor/ in the backend dir    │
 │  - Reads/writes circuit data via /api/* endpoints   │

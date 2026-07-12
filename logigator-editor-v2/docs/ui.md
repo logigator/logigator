@@ -65,7 +65,7 @@ The root host uses `display: flex; flex-direction: column; width: 100vw; height:
 
 All UI components share these conventions:
 
-- **Standalone + OnPush** — every component declares `standalone: true` (implicit in Angular 21) and uses `ChangeDetectionStrategy.OnPush`. Reactivity flows entirely through Angular signals.
+- **Standalone + OnPush** — every component declares `standalone: true` (implicit in Angular 22) and uses `ChangeDetectionStrategy.OnPush`. Reactivity flows entirely through Angular signals.
 - **Signal API** — inputs use `input<T>()`, outputs use `output<T>()`, derived values use `computed()`, local mutable state uses `signal()`.
 - **PrimeNG** — all interactive widgets come from PrimeNG v19 (`p-button`, `p-menubar`, `p-card`, `p-select`, `p-inputNumber`, `p-selectButton`, `p-tooltip`, `p-divider`, `p-iconfield`, `p-inputicon`, `p-inputText`).
 - **Tailwind** — layout, spacing, borders, and opacity utilities via Tailwind 4. Prefer Tailwind utility classes over custom CSS at all times. Write custom CSS only when a style genuinely cannot be expressed as a utility class (e.g., complex pseudo-element rules or `:host` block-display overrides).

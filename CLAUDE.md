@@ -4,7 +4,7 @@
 
 The repo root is a **shared Angular CLI workspace** + **Yarn 4 workspace** (corepack). Two members:
 
-- `logigator-editor-v2/` — Angular 21 editor (PixiJS 8, Tailwind 4), current focus
+- `logigator-editor-v2/` — Angular 22 editor (PixiJS 8, Tailwind 4), current focus
 - `logigator-ui/` — `@logigator/ui`, in-house Angular component library replacing PrimeNG;
   path-mapped to its TypeScript source in dev (no build step). See `plans/logigator-ui.md`.
 
@@ -45,7 +45,7 @@ yarn migration:generate -- -n Name  # generate migration
 
 ### Frontend (logigator-editor-v2)
 
-Angular 21 standalone components + PixiJS 8 canvas.
+Angular 22 standalone components + PixiJS 8 canvas.
 
 **`src/app/` layers** (each has a doc at `logigator-editor-v2/docs/<name>.md`):
 
@@ -74,7 +74,7 @@ Angular 21 standalone components + PixiJS 8 canvas.
 
 ### UI Library (logigator-ui)
 
-`@logigator/ui` — in-house Angular 21 component library that replaced PrimeNG in editor-v2. Built on Angular CDK; theming is **colors-only** via `--lg-*` CSS variables. Path-mapped to source in dev (root `tsconfig.json` maps `@logigator/ui` → `logigator-ui/src/public-api.ts`), so the editor compiles it from TypeScript with no build step — it is *not* a `package.json` dependency of editor-v2. Detailed plan: `plans/logigator-ui.md`.
+`@logigator/ui` — in-house Angular 22 component library that replaced PrimeNG in editor-v2. Built on Angular CDK; theming is **colors-only** via `--lg-*` CSS variables. Path-mapped to source in dev (root `tsconfig.json` maps `@logigator/ui` → `logigator-ui/src/public-api.ts`), so the editor compiles it from TypeScript with no build step — it is *not* a `package.json` dependency of editor-v2. Detailed plan: `plans/logigator-ui.md`.
 
 **`logigator-ui/src/` layout** — one folder per component under `components/`, all re-exported from `public-api.ts`; shared helpers (`internal/`, `tokens/`) stay at `src/`:
 
