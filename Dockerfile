@@ -29,7 +29,15 @@ RUN yarn install --immutable --inline-builds
 COPY ["./angular.json", "./tsconfig.json", "./"]
 COPY ["./logigator-ui", "./logigator-ui/"]
 COPY ["./logigator-editor", "./logigator-editor/"]
-RUN yarn ng build logigator-editor
+
+# Version stamping for the About dialog. Empty args fall back to the angular.json
+# defaults (empty strings), so the build works without them. Declared here so a
+# version bump doesn't invalidate the cached install layer above.
+ARG GIT_COMMIT=""
+ARG BUILD_DATE=""
+RUN yarn ng build logigator-editor \
+	--define "GIT_COMMIT='${GIT_COMMIT}'" \
+	--define "BUILD_DATE='${BUILD_DATE}'"
 
 # ======================================================================================= #
 
