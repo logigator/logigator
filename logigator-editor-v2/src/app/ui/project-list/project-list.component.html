@@ -1,6 +1,6 @@
 <div *transloco="let t">
   <!-- Search -->
-  <div class="p-3 border-b border-border">
+  <div class="p-3">
     <lg-icon-field class="w-full">
       <lg-input-icon class="ph ph-magnifying-glass" />
       <input
@@ -112,6 +112,7 @@
   <!-- Pagination -->
   @if (totalItems() > pageSize) {
     <lg-paginator
+      class="mt-2"
       [first]="paginatorFirst()"
       [rows]="pageSize"
       [totalRecords]="totalItems()"
