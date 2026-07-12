@@ -29,20 +29,20 @@ services:
     image: node:24
     networks:
       - net
-    # The editor-v2 dev server compiles @logigator/ui from source via tsconfig
+    # The editor dev server compiles @logigator/ui from source via tsconfig
     # path mapping, so the whole Yarn/Angular workspace root is mounted (not just
-    # logigator-editor-v2/). Install + serve run from the workspace root.
+    # logigator-editor/). Install + serve run from the workspace root.
     volumes:
       - ./:/app
     working_dir: /app
     command: "sh -c 'corepack enable && yarn && exec yarn start'"
 
-  editor-old:
+  editor-legacy:
     image: node:20
     networks:
       - net
     volumes:
-      - ./logigator-editor/:/app
+      - ./logigator-editor-legacy/:/app
     working_dir: /app
     command: "sh -c 'corepack enable && yarn && exec yarn start'"
 

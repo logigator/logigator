@@ -3,31 +3,31 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "logigator-editor-v2": {
+    "logigator-editor": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
           "style": "scss"
         }
       },
-      "root": "logigator-editor-v2",
-      "sourceRoot": "logigator-editor-v2/src",
+      "root": "logigator-editor",
+      "sourceRoot": "logigator-editor/src",
       "prefix": "app",
       "architect": {
         "build": {
           "builder": "@angular/build:application",
           "options": {
-            "outputPath": "dist/logigator-editor-v2",
+            "outputPath": "dist/logigator-editor",
             "baseHref": "/editor/",
-            "index": "logigator-editor-v2/src/index.html",
-            "browser": "logigator-editor-v2/src/main.ts",
+            "index": "logigator-editor/src/index.html",
+            "browser": "logigator-editor/src/main.ts",
             "polyfills": [],
-            "tsConfig": "logigator-editor-v2/tsconfig.app.json",
+            "tsConfig": "logigator-editor/tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "assets": [
               {
                 "glob": "**/*",
-                "input": "logigator-editor-v2/public"
+                "input": "logigator-editor/public"
               }
             ],
             "loader": {
@@ -39,7 +39,7 @@
               "GIT_COMMIT": "''",
               "BUILD_DATE": "''"
             },
-            "styles": ["logigator-editor-v2/src/styles.scss"],
+            "styles": ["logigator-editor/src/styles.scss"],
             "scripts": [],
             "allowedCommonJsDependencies": [
               "earcut",
@@ -69,8 +69,8 @@
               "sourceMap": true,
               "fileReplacements": [
                 {
-                  "replace": "logigator-editor-v2/src/environments/environment.ts",
-                  "with": "logigator-editor-v2/src/environments/environment.development.ts"
+                  "replace": "logigator-editor/src/environments/environment.ts",
+                  "with": "logigator-editor/src/environments/environment.development.ts"
                 }
               ]
             }
@@ -81,10 +81,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "logigator-editor-v2:build:production"
+              "buildTarget": "logigator-editor:build:production"
             },
             "development": {
-              "buildTarget": "logigator-editor-v2:build:development"
+              "buildTarget": "logigator-editor:build:development"
             }
           },
           "defaultConfiguration": "development",
@@ -102,16 +102,16 @@
         "test": {
           "builder": "@angular/build:unit-test",
           "options": {
-            "runnerConfig": "logigator-editor-v2/vitest.config.ts"
+            "runnerConfig": "logigator-editor/vitest.config.ts"
           }
         },
         "lint": {
           "builder": "@angular-eslint/builder:lint",
           "options": {
-            "eslintConfig": "logigator-editor-v2/eslint.config.js",
+            "eslintConfig": "logigator-editor/eslint.config.js",
             "lintFilePatterns": [
-              "logigator-editor-v2/src/**/*.ts",
-              "logigator-editor-v2/src/**/*.html"
+              "logigator-editor/src/**/*.ts",
+              "logigator-editor/src/**/*.html"
             ]
           }
         }

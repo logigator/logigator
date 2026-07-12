@@ -17,7 +17,7 @@
 				"build": {
 					"builder": "@angular-devkit/build-angular:application",
 					"options": {
-						"baseHref": "/editor-old/",
+						"baseHref": "/legacy-editor/",
 						"outputPath": "dist/logigator-editor",
 						"index": "src/index.html",
 						"browser": "src/main.ts",

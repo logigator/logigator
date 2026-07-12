@@ -12,11 +12,34 @@ RUN yarn migration:build
 
 FROM node:20 AS editor
 WORKDIR /app
+RUN corepack enable
 
-COPY ["./logigator-editor/package.json", "./logigator-editor/yarn.lock", "./logigator-editor/.yarnrc.yml", "./"]
+# The new editor is a Yarn/Angular workspace member: it compiles @logigator/ui
+# from source via tsconfig path mapping, so the whole workspace is built here,
+# not just logigator-editor/. Manifests are copied first for a cached install.
+COPY ["./package.json", "./yarn.lock", "./.yarnrc.yml", "./"]
+COPY ["./logigator-ui/package.json", "./logigator-ui/"]
+COPY ["./logigator-editor/package.json", "./logigator-editor/"]
+# @angular/router is a file: dependency whose lockfile hash covers the whole
+# stub dir, so it must be copied in full (not package.json-only) for the
+# immutable install to reproduce the pinned hash.
+COPY ["./logigator-editor/packages/router-stub", "./logigator-editor/packages/router-stub/"]
+RUN yarn install --immutable --inline-builds
+
+COPY ["./angular.json", "./tsconfig.json", "./"]
+COPY ["./logigator-ui", "./logigator-ui/"]
+COPY ["./logigator-editor", "./logigator-editor/"]
+RUN yarn ng build logigator-editor
+
+# ======================================================================================= #
+
+FROM node:20 AS editor-legacy
+WORKDIR /app
+
+COPY ["./logigator-editor-legacy/package.json", "./logigator-editor-legacy/yarn.lock", "./logigator-editor-legacy/.yarnrc.yml", "./"]
 RUN corepack enable && yarn install --immutable --inline-builds
 
-COPY ["./logigator-editor", "./"]
+COPY ["./logigator-editor-legacy", "./"]
 RUN yarn build
 
 # ======================================================================================= #
@@ -45,3 +68,4 @@ COPY --from=backend ["/app/resources", "./resources"]
 COPY --from=backend ["/app/tools", "./tools"]
 COPY --from=backend ["/app/migration", "./migration"]
 COPY --from=editor ["/app/dist/logigator-editor/browser", "./resources/editor"]
+COPY --from=editor-legacy ["/app/dist/logigator-editor/browser", "./resources/legacy-editor"]

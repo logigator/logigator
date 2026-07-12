@@ -68,7 +68,7 @@ Used by both API and frontend controllers. These tend to be create-oriented mode
 
 ### `api/` — Editor/API submissions
 
-Models for the JSON API endpoints called by the editor application (`logigator-editor-v2`). These endpoints are **not** server-rendered and do **not** participate in the session-flash validation flow. When validation fails on an API endpoint, the controller auto-returns a 400 JSON response (routing-controllers default behaviour), not a redirect with formErrors in the session.
+Models for the JSON API endpoints called by the editor application (`logigator-editor`). These endpoints are **not** server-rendered and do **not** participate in the session-flash validation flow. When validation fails on an API endpoint, the controller auto-returns a 400 JSON response (routing-controllers default behaviour), not a redirect with formErrors in the session.
 
 - `SaveProject` — circuit save: `oldHash`, `dependencies` (nested `ProjectMapping[]`), `elements` (nested `ProjectElement[]`).
 - `SaveComponent` — component save: same structure plus `numInputs`, `numOutputs`, `labels`.

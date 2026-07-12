@@ -39,14 +39,14 @@ export class LocationService {
 	}
 
 	public set(type: 'project' | 'component' | 'share', uuid: string) {
-		window.history.pushState(null, null, `/editor-old/${type}/${uuid}`);
+		window.history.pushState(null, null, `/legacy-editor/${type}/${uuid}`);
 	}
 
 	public reset() {
-		window.history.pushState(null, null, `/editor-old/`);
+		window.history.pushState(null, null, `/legacy-editor/`);
 	}
 
 	private get pathname(): string {
-		return location.pathname.substring(11);
+		return location.pathname.substring(14);
 	}
 }

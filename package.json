@@ -1,7 +1,7 @@
 {
   "name": "logigator-workspace",
   "version": "0.0.0",
-  "description": "Logigator monorepo workspace (editor-v2 + @logigator/ui)",
+  "description": "Logigator monorepo workspace (editor + @logigator/ui)",
   "license": "AGPL-3.0-only",
   "repository": {
     "type": "git",
@@ -11,19 +11,19 @@
   "packageManager": "yarn@4.14.1",
   "workspaces": [
     "logigator-ui",
-    "logigator-editor-v2"
+    "logigator-editor"
   ],
   "scripts": {
     "ng": "ng",
-    "start": "ng serve logigator-editor-v2",
-    "build": "ng build logigator-editor-v2 --define \"GIT_COMMIT='$(git rev-parse --short HEAD)'\" --define \"BUILD_DATE='$(date -u +%Y-%m-%dT%H:%M:%SZ)'\"",
+    "start": "ng serve logigator-editor",
+    "build": "ng build logigator-editor --define \"GIT_COMMIT='$(git rev-parse --short HEAD)'\" --define \"BUILD_DATE='$(date -u +%Y-%m-%dT%H:%M:%SZ)'\"",
     "build:ui": "ng build logigator-ui",
-    "watch": "ng build logigator-editor-v2 --watch --configuration development",
-    "test": "ng test logigator-editor-v2",
+    "watch": "ng build logigator-editor --watch --configuration development",
+    "test": "ng test logigator-editor",
     "test:ui": "ng test logigator-ui",
     "lint": "ng lint",
-    "format": "prettier logigator-editor-v2 logigator-ui -c",
-    "format:fix": "prettier logigator-editor-v2 logigator-ui -lw"
+    "format": "prettier logigator-editor logigator-ui -c",
+    "format:fix": "prettier logigator-editor logigator-ui -lw"
   },
   "devDependencies": {
     "@angular-eslint/builder": "^22.0.0",

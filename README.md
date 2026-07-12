@@ -29,10 +29,10 @@ The repo root is a **Yarn 4 + Angular CLI workspace** (managed via Corepack). Tw
 
 | Package | Workspace member | Description | Stack |
 |---|---|---|---|
-| `logigator-editor-v2/` | ✅ | Active canvas editor (**current focus**) | Angular 22, PixiJS 8, Tailwind 4, `@logigator/ui` |
+| `logigator-editor/` | ✅ | Active canvas editor (**current focus**) | Angular 22, PixiJS 8, Tailwind 4, `@logigator/ui` |
 | `logigator-ui/` | ✅ | `@logigator/ui` — in-house component library (replaces PrimeNG) | Angular 22, Angular CDK |
 | `logigator-backend/` | — | REST API + server-rendered pages | Node.js, Express, TypeORM, Handlebars |
-| `logigator-editor/` | — | Legacy editor (being replaced) | Angular 17, PixiJS 7 |
+| `logigator-editor-legacy/` | — | Legacy editor (being replaced) | Angular 17, PixiJS 7 |
 
 In development the editor consumes `@logigator/ui` directly from its TypeScript source via workspace path mapping — there is no separate build step. Commands run inside Docker containers — do not run `yarn` directly on the host.
 
@@ -87,8 +87,8 @@ The stack starts a Caddy reverse proxy on ports 80/443 with automatic self-signe
 |---|---|---|
 | `proxy` | Caddy HTTPS reverse proxy | 80, 443 |
 | `backend` | Node.js API + dev server | — (proxied) |
-| `editor` | Angular dev server (HMR, v2) | — (proxied) |
-| `editor-old` | Legacy Angular dev server (v1) | — (proxied) |
+| `editor` | Angular dev server (HMR) | — (proxied) |
+| `editor-legacy` | Legacy Angular dev server | — (proxied) |
 | `mysql` | MySQL 8 database | 3306 (localhost only) |
 | `redis` | Session / cache store | — (internal) |
 | `redis_ui` | Rebrow Redis browser UI | 5001 |
@@ -181,13 +181,13 @@ docker compose exec editor yarn <command>
 docker compose exec backend yarn <command>
 ```
 
-### Workspace (`logigator-editor-v2` + `logigator-ui`)
+### Workspace (`logigator-editor` + `logigator-ui`)
 
 The `editor` container mounts the whole workspace root, so these root Yarn scripts run inside it:
 
 | Command | What it does |
 |---|---|
-| `yarn start` | Angular dev server with HMR (editor-v2) |
+| `yarn start` | Angular dev server with HMR (editor) |
 | `yarn build` | Editor production build (`ng build`) |
 | `yarn test --watch=false` | Full editor Vitest suite (single run) |
 | `yarn build:ui` | Build `@logigator/ui` with ng-packagr (publishing deferred) |
@@ -221,7 +221,7 @@ Tests use **Vitest** via Angular's `@angular/build:unit-test` builder. Spec file
 - Angular component specs use `TestBed`.
 - Pure-logic specs (rendering math, grid utilities, action system) do not.
 
-Shared test helpers in `logigator-editor-v2/src/testing/`:
+Shared test helpers in `logigator-editor/src/testing/`:
 - `fake-browser-stores.ts` — in-memory IndexedDB stand-ins
 - `factories.ts` — circuit-element and pointer-event stubs
 - `action-mocks.ts` — mocked `Action` with named `do`/`undo` spies
@@ -237,7 +237,7 @@ docker compose exec editor yarn test --watch=false
 
 ## Architecture overview
 
-### Editor (`logigator-editor-v2`)
+### Editor (`logigator-editor`)
 
 The editor is an **Angular 22 SPA** where the circuit canvas is a **PixiJS 8** scene. Angular manages the UI shell (toolbar, panels, dialogs); PixiJS owns all circuit rendering.
 
@@ -256,7 +256,7 @@ Key layers in `src/app/`:
 
 **Simulation** runs the external `@logigator/sim` WASM engine inside a Web Worker. The active circuit is compiled into a board (nets, units, link ids), the engine free-runs in the worker, and the main thread pulls per-frame state snapshots to repaint powered wires/ports. See `simulation.md`.
 
-Detailed technical docs for each subsystem are in `logigator-editor-v2/docs/`:
+Detailed technical docs for each subsystem are in `logigator-editor/docs/`:
 `actions-system.md`, `component-system.md`, `project.md`, `rendering.md`, `simulation.md`, `ui.md`, `wires.md`, `work-mode.md`.
 
 ### UI library (`logigator-ui`)
@@ -274,7 +274,7 @@ Express server using **routing-controllers** (decorator routing), **TypeDI** (DI
 - `src/database/entities/` — TypeORM entities. Circuit data is stored as JSON blobs in `ProjectFile`/`ComponentFile` — not decomposed into relational columns.
 - `src/services/` — Business logic, email sending, Redis session caching.
 
-The backend serves `logigator-editor-v2` as a static SPA at the editor subdomain. The SPA calls `/api/projects`, `/api/components`, etc. to load and save circuits.
+The backend serves `logigator-editor` as a static SPA at the editor subdomain. The SPA calls `/api/projects`, `/api/components`, etc. to load and save circuits.
 
 ---
 

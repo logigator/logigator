@@ -549,9 +549,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@angular/router@file:./packages/router-stub::locator=logigator-editor-v2%40workspace%3Alogigator-editor-v2":
+"@angular/router@file:./packages/router-stub::locator=logigator-editor%40workspace%3Alogigator-editor":
   version: 21.0.0
-  resolution: "@angular/router@file:./packages/router-stub#./packages/router-stub::hash=0cc055&locator=logigator-editor-v2%40workspace%3Alogigator-editor-v2"
+  resolution: "@angular/router@file:./packages/router-stub#./packages/router-stub::hash=0cc055&locator=logigator-editor%40workspace%3Alogigator-editor"
   checksum: 10c0/7af4020ed6b9f6d49c5ada4bccb997017859c6494c7cc978b0a67a1f031db99922abbaa48ba2be5a19c8ee6d0fa3115aa4915012da906d21134ea77d0429458b
   languageName: node
   linkType: hard
@@ -6467,9 +6467,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"logigator-editor-v2@workspace:logigator-editor-v2":
+"logigator-editor@workspace:logigator-editor":
   version: 0.0.0-use.local
-  resolution: "logigator-editor-v2@workspace:logigator-editor-v2"
+  resolution: "logigator-editor@workspace:logigator-editor"
   dependencies:
     "@angular-devkit/core": "npm:^22.0.5"
     "@angular-devkit/schematics": "npm:^22.0.5"

@@ -22,7 +22,7 @@
     "paths": {
       "@logigator/ui": ["logigator-ui/src/public-api.ts"],
       "@logigator/ui/*": ["logigator-ui/src/*"],
-      "@assets/*": ["logigator-editor-v2/src/assets/*"]
+      "@assets/*": ["logigator-editor/src/assets/*"]
     },
     "target": "ES2022",
     "module": "ES2022"

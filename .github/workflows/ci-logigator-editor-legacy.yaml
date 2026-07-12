@@ -1,4 +1,4 @@
-name: 'CI logigator-editor-v2'
+name: 'CI logigator-editor-legacy'
 on:
   pull_request:
   push:
@@ -19,13 +19,16 @@ jobs:
           cancel_others: 'true'
           skip_after_successful_duplicate: 'true'
           github_token: ${{ github.token }}
-          paths: '["logigator-editor-v2/**", "logigator-ui/**", "package.json", "yarn.lock", ".yarnrc.yml", "angular.json", "tsconfig.json", "eslint.config.js", ".prettierrc", ".prettierignore"]'
+          paths: '["logigator-editor-legacy/**"]'
 
   ci:
-    name: 'CI logigator-editor-v2'
+    name: 'CI logigator-editor-legacy'
     needs: pre_job
     if: ${{ needs.pre_job.outputs.should_skip != 'true' }}
     runs-on: 'ubuntu-latest'
+    defaults:
+      run:
+        working-directory: ./logigator-editor-legacy
     steps:
       - name: 'Checkout'
         uses: actions/checkout@v5
@@ -33,13 +36,14 @@ jobs:
       - name: 'Setup Node'
         uses: actions/setup-node@v5
         with:
-          node-version: '24.x'
+          node-version: '20.x'
           package-manager-cache: false
 
       - name: Install Dependencies
         uses: ./.github/actions/yarn-install
         with:
-          cache-prefix: workspace
+          cwd: ./logigator-editor-legacy
+          cache-prefix: logigator-editor-legacy
 
       - name: 'Lint'
         shell: bash
@@ -47,14 +51,6 @@ jobs:
           yarn run format
           yarn run lint
 
-      - name: 'Test'
-        shell: bash
-        run: |
-          yarn run test --watch=false
-          yarn run test:ui --watch=false
-
       - name: 'Build'
         shell: bash
-        run: |
-          yarn run build
-          yarn run build:ui
+        run: yarn run build

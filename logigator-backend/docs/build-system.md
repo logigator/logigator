@@ -476,7 +476,7 @@ docker compose exec backend yarn start     # tsc -w + nodemon (in another termin
 docker compose exec backend yarn gulp watch  # SCSS/JS watch (in another terminal)
 ```
 
-The backend serves the compiled `resources/public/` directory via `expressStatic` at the application's root path, and also serves the editor-v2 SPA at the editor subdomain from a separate directory.
+The backend serves the compiled `resources/public/` directory via `expressStatic` at the application's root path, and also serves the editor SPA at the editor subdomain from a separate directory.
 
 ---
 

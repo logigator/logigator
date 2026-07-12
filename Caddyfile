@@ -6,9 +6,9 @@ logigator.test {
 		reverse_proxy editor:4200
 	}
 
-	@editorOld path /editor-old /editor-old/*
-	handle @editorOld {
-		reverse_proxy editor-old:8202
+	@editorLegacy path /legacy-editor /legacy-editor/*
+	handle @editorLegacy {
+		reverse_proxy editor-legacy:8202
 	}
 
 	handle {

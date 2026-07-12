@@ -4,14 +4,14 @@
 
 The repo root is a **shared Angular CLI workspace** + **Yarn 4 workspace** (corepack). Two members:
 
-- `logigator-editor-v2/` — Angular 22 editor (PixiJS 8, Tailwind 4), current focus
+- `logigator-editor/` — Angular 22 editor (PixiJS 8, Tailwind 4), current focus
 - `logigator-ui/` — `@logigator/ui`, in-house Angular component library replacing PrimeNG;
   path-mapped to its TypeScript source in dev (no build step). See `plans/logigator-ui.md`.
 
 Two packages stay **independent** (own `yarn.lock`/`.yarnrc.yml`, *not* workspace members):
 
 - `logigator-backend/` — Node.js/Express (TypeScript, TypeORM, Handlebars)
-- `logigator-editor/` — Legacy Angular 17 editor (PixiJS 7), being replaced
+- `logigator-editor-legacy/` — Legacy Angular 17 editor (PixiJS 7), being replaced
 
 ## Dev Environment
 
@@ -22,9 +22,9 @@ Backend config files must be created from `.example` files in `logigator-backend
 Editor + library: run **from the repo root** (Angular CLI targets / root Yarn scripts). The backend
 is independent: run its commands from `logigator-backend/`.
 
-### Workspace (editor-v2 + logigator-ui), from repo root
+### Workspace (editor + logigator-ui), from repo root
 ```bash
-yarn build                          # ng build logigator-editor-v2 (production)
+yarn build                          # ng build logigator-editor (production)
 yarn test --watch=false             # Vitest (full editor suite, single run)
 yarn test --watch=false --include='**/some.spec.ts'  # single test
 yarn lint                           # ng lint (both projects)
@@ -43,11 +43,11 @@ yarn migration:generate -- -n Name  # generate migration
 
 ## Architecture
 
-### Frontend (logigator-editor-v2)
+### Frontend (logigator-editor)
 
 Angular 22 standalone components + PixiJS 8 canvas.
 
-**`src/app/` layers** (each has a doc at `logigator-editor-v2/docs/<name>.md`):
+**`src/app/` layers** (each has a doc at `logigator-editor/docs/<name>.md`):
 
 - `components/` — Circuit element model. Each extends `Component` (PixiJS `Container`) with `connectionPoints`, `portStubs`, `portsChange$` Subject. `ComponentProviderService` is the registry/factory. Gate implementations in `component-types/`. Doc: `component-system.md`.
 - `components/component-options/` — `ComponentOption` subclasses each paired with an Angular renderer; side-panel form is `*ngComponentOutlet` driven by `option.renderer`. Doc: `component-options.md`.
@@ -74,7 +74,7 @@ Angular 22 standalone components + PixiJS 8 canvas.
 
 ### UI Library (logigator-ui)
 
-`@logigator/ui` — in-house Angular 22 component library that replaced PrimeNG in editor-v2. Built on Angular CDK; theming is **colors-only** via `--lg-*` CSS variables. Path-mapped to source in dev (root `tsconfig.json` maps `@logigator/ui` → `logigator-ui/src/public-api.ts`), so the editor compiles it from TypeScript with no build step — it is *not* a `package.json` dependency of editor-v2. Detailed plan: `plans/logigator-ui.md`.
+`@logigator/ui` — in-house Angular 22 component library that replaced PrimeNG in editor. Built on Angular CDK; theming is **colors-only** via `--lg-*` CSS variables. Path-mapped to source in dev (root `tsconfig.json` maps `@logigator/ui` → `logigator-ui/src/public-api.ts`), so the editor compiles it from TypeScript with no build step — it is *not* a `package.json` dependency of editor. Detailed plan: `plans/logigator-ui.md`.
 
 **`logigator-ui/src/` layout** — one folder per component under `components/`, all re-exported from `public-api.ts`; shared helpers (`internal/`, `tokens/`) stay at `src/`:
 
@@ -83,7 +83,7 @@ Angular 22 standalone components + PixiJS 8 canvas.
   - Imperative services + their outlet components: `dynamic-dialog/` (`DialogService` → `DialogRef`/`DialogConfig`), `confirm/` (`ConfirmationService` + `LgConfirmDialog`/`LgConfirmPopup`), `toast/` (`ToastService` + `LgToast`; `danger` severity maps to `error`).
 - `internal/` — shared, non-exported plumbing: CDK-based `overlay`/`modal-overlay` foundation, `focus-trap`, `key-manager`, `after-paint`, `caret`, `icon`.
 - `tokens/` — shared types (`LgSeverity`, `LgSize`, form-field tokens).
-- `styles/theme.css` defines the `--lg-*` vars; `styles/theme.tw.css` maps them into Tailwind's `@theme` for editor-v2.
+- `styles/theme.css` defines the `--lg-*` vars; `styles/theme.tw.css` maps them into Tailwind's `@theme` for editor.
 
 Specs sit next to source (Vitest, `yarn test:ui`). Build is `ng build logigator-ui` (ng-packagr; publishing deferred).
 
@@ -121,7 +121,7 @@ Express with **routing-controllers** (decorators), **TypeDI** (DI), **TypeORM** 
 
 ### Backend ↔ Frontend
 
-Backend serves `logigator-editor-v2` as a static SPA. SPA calls `/api/projects`, `/api/components`; circuit data crosses the wire as the legacy `ProjectElement[]` format and is stored server-side as serialized JSON via `ProjectFile`/`ComponentFile` entities. Independently, the editor can save/load circuits to/from **local files** in its own native versioned format (see `persistence.md`); these never touch the backend.
+Backend serves `logigator-editor` as a static SPA. SPA calls `/api/projects`, `/api/components`; circuit data crosses the wire as the legacy `ProjectElement[]` format and is stored server-side as serialized JSON via `ProjectFile`/`ComponentFile` entities. Independently, the editor can save/load circuits to/from **local files** in its own native versioned format (see `persistence.md`); these never touch the backend.
 
 ## Testing
 

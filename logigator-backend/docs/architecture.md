@@ -2,7 +2,7 @@
 
 ## Overview
 
-Logigator's backend is a Node.js Express server that serves two distinct audiences: a **JSON REST API** consumed by the SPA editor (`logigator-editor-v2`), and **server-rendered HTML pages** (Handlebars) for the public-facing website (home, community, auth, account management, etc.).
+Logigator's backend is a Node.js Express server that serves two distinct audiences: a **JSON REST API** consumed by the SPA editor (`logigator-editor`), and **server-rendered HTML pages** (Handlebars) for the public-facing website (home, community, auth, account management, etc.).
 
 The stack is assembled from decorator-driven libraries that eliminate boilerplate:
 
@@ -337,7 +337,7 @@ app.use(compression());
 // Serve static files from the editor build directory
 // Fallback: serve index.html for any unmatched route under /editor/ (SPA catch-all)
 ```
-This is how the backend hosts the `logigator-editor-v2` Angular SPA. See "How the Three Packages Relate" below for details.
+This is how the backend hosts the `logigator-editor` Angular SPA. See "How the Three Packages Relate" below for details.
 
 ### 7. Root-level static files
 ```typescript
@@ -612,7 +612,7 @@ The Handlebars layout includes both via `<script>` tags — browsers load the ap
              │
              ▼
 ┌─────────────────────────────────────────────────────┐
-│         logigator-editor-v2 (Angular 22 SPA)         │
+│         logigator-editor (Angular 22 SPA)         │
 │                                                     │
 │  - Built to resources/editor/ in the backend dir    │
 │  - Reads/writes circuit data via /api/* endpoints   │
@@ -620,7 +620,7 @@ The Handlebars layout includes both via `<script>` tags — browsers load the ap
 └─────────────────────────────────────────────────────┘
 ```
 
-The backend serves the `logigator-editor-v2` SPA as a static mount point:
+The backend serves the `logigator-editor` SPA as a static mount point:
 
 ```typescript
 // Mount static files
@@ -647,7 +647,7 @@ The editor's `index.html` URL is explicitly redirected (`/editor/index.html` →
 
 ### Build-time integration
 
-During production builds, `logigator-editor-v2` compiles its Angular application into a static directory under the backend's `resources/` folder. The `environment.json` config specifies `editor: "resources/editor"` as the relative path. In `docker compose up` development mode, the editor dev server runs on a separate port and is proxied by Apache — the backend only gets involved when the editor needs to persist or load circuit data through the API.
+During production builds, `logigator-editor` compiles its Angular application into a static directory under the backend's `resources/` folder. The `environment.json` config specifies `editor: "resources/editor"` as the relative path. In `docker compose up` development mode, the editor dev server runs on a separate port and is proxied by Apache — the backend only gets involved when the editor needs to persist or load circuit data through the API.
 
 ### Non-obvious: the backend owns the editor's build output
 
