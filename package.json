@@ -2,7 +2,7 @@
   "name": "logigator-workspace",
   "version": "0.0.0",
   "description": "Logigator monorepo workspace (editor-v2 + @logigator/ui)",
-  "license": "MIT",
+  "license": "AGPL-3.0-only",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/logigator/logigator.git"
@@ -16,7 +16,7 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve logigator-editor-v2",
-    "build": "ng build logigator-editor-v2",
+    "build": "ng build logigator-editor-v2 --define \"GIT_COMMIT='$(git rev-parse --short HEAD)'\" --define \"BUILD_DATE='$(date -u +%Y-%m-%dT%H:%M:%SZ)'\"",
     "build:ui": "ng build logigator-ui",
     "watch": "ng build logigator-editor-v2 --watch --configuration development",
     "test": "ng test logigator-editor-v2",

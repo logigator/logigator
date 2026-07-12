@@ -1,0 +1,66 @@
+<div *transloco="let t" class="flex flex-col gap-4">
+  <div class="flex flex-col gap-0.5">
+    <span class="text-lg font-semibold">Logigator</span>
+    <span class="text-muted text-sm">{{ t('aboutDialog.tagline') }}</span>
+  </div>
+
+  <dl class="grid grid-cols-[auto_1fr] items-baseline gap-x-4 gap-y-1 text-sm">
+    <dt class="text-muted">{{ t('aboutDialog.version') }}</dt>
+    <dd>{{ version }}</dd>
+
+    @if (commit) {
+      <dt class="text-muted">{{ t('aboutDialog.commit') }}</dt>
+      <dd>
+        <code class="font-mono">{{ commit }}</code>
+      </dd>
+    }
+
+    @if (buildDate) {
+      <dt class="text-muted">{{ t('aboutDialog.buildDate') }}</dt>
+      <dd>{{ buildDate.toLocaleDateString() }}</dd>
+    }
+
+    <dt class="text-muted">{{ t('aboutDialog.license') }}</dt>
+    <dd>
+      <a
+        class="text-primary hover:underline"
+        [href]="links.license"
+        target="_blank"
+        rel="noopener"
+        >{{ t('aboutDialog.licenseName') }}</a
+      >
+    </dd>
+  </dl>
+
+  <p class="text-muted text-sm">
+    {{ t('aboutDialog.copyright', { year }) }}
+  </p>
+
+  <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+    <a
+      class="text-primary hover:underline"
+      [href]="links.repository"
+      target="_blank"
+      rel="noopener"
+      >{{ t('aboutDialog.repository') }}</a
+    >
+    <a
+      class="text-primary hover:underline"
+      [href]="links.privacyPolicy"
+      target="_blank"
+      rel="noopener"
+      >{{ t('aboutDialog.privacyPolicy') }}</a
+    >
+    <a
+      class="text-primary hover:underline"
+      [href]="links.imprint"
+      target="_blank"
+      rel="noopener"
+      >{{ t('aboutDialog.imprint') }}</a
+    >
+  </div>
+
+  <div class="flex justify-end">
+    <lg-button [label]="t('aboutDialog.close')" (onClick)="close()" />
+  </div>
+</div>

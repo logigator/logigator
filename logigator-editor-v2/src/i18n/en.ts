@@ -339,7 +339,12 @@ const en = {
         }
       },
       help: {
-        label: 'Help'
+        label: 'Help',
+        items: {
+          about: {
+            label: 'About'
+          }
+        }
       }
     },
     discardChanges: {
@@ -354,6 +359,20 @@ const en = {
       cancel: 'Cancel',
       error: 'Could not rename the project.'
     }
+  },
+  aboutDialog: {
+    header: 'About Logigator',
+    tagline: 'An open-source digital logic circuit editor and simulator.',
+    version: 'Version',
+    commit: 'Commit',
+    buildDate: 'Build date',
+    license: 'License',
+    licenseName: 'GNU AGPL v3',
+    copyright: '© 2019–{{year}} Logigator',
+    repository: 'Repository',
+    privacyPolicy: 'Privacy Policy',
+    imprint: 'Imprint',
+    close: 'Close'
   },
   openProjectDialog: {
     title: 'Open Project',

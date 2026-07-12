@@ -35,6 +35,10 @@
               ".svg": "file",
               ".woff2": "file"
             },
+            "define": {
+              "GIT_COMMIT": "''",
+              "BUILD_DATE": "''"
+            },
             "styles": ["logigator-editor-v2/src/styles.scss"],
             "scripts": [],
             "allowedCommonJsDependencies": [

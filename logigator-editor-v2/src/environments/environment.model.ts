@@ -1,6 +1,12 @@
 import { LogLevel } from '../app/logging/log-level.enum';
 
 export interface Environment {
+  /** App version from package.json. */
+  version: string;
+  /** Git short SHA the bundle was built from; empty when not stamped (dev). */
+  buildCommit: string;
+  /** Timestamp the bundle was built at; null when not stamped (dev). */
+  buildDate: Date | null;
   apiUrl: string;
   gridSize: number;
   /** Minimum severity printed to the console; messages below it are dropped. */

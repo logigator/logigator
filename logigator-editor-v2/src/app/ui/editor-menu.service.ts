@@ -18,6 +18,7 @@ import { NewComponentDialogComponent } from './dialogs/new-component-dialog/new-
 import { ShortcutManagerComponent } from '../shortcuts/shortcut-manager/shortcut-manager.component';
 import { ExportImageDialogComponent } from './dialogs/export-image-dialog/export-image-dialog.component';
 import { ShareDialogComponent } from './dialogs/share-dialog/share-dialog.component';
+import { AboutDialogComponent } from './dialogs/about-dialog/about-dialog.component';
 import { DebugMenuService } from './debug-menu.service';
 import { ToastService } from '../logging/toast.service';
 
@@ -181,7 +182,8 @@ export class EditorMenuService {
         ]
       },
       {
-        label: this.translation.translate('titleBar.menuBar.help.label')
+        label: this.translation.translate('titleBar.menuBar.help.label'),
+        items: [this.aboutItem()]
       }
     ];
 
@@ -201,7 +203,9 @@ export class EditorMenuService {
       },
       ...this.cloudItems(),
       ...this.exportFileItems(),
-      this.generateImageItem()
+      this.generateImageItem(),
+      { separator: true },
+      this.aboutItem()
     ];
 
     const debugMenu = this.debugMenuService.buildMenuItem();
@@ -320,6 +324,25 @@ export class EditorMenuService {
     this.dialogService.open(ShortcutManagerComponent, {
       header: this.translation.translate('shortcuts.title'),
       width: '40rem',
+      modal: true,
+      closable: true
+    });
+  }
+
+  private aboutItem(): MenuItem {
+    return {
+      label: this.translation.translate(
+        'titleBar.menuBar.help.items.about.label'
+      ),
+      icon: 'ph ph-info',
+      command: () => this.openAbout()
+    };
+  }
+
+  private openAbout(): void {
+    this.dialogService.open(AboutDialogComponent, {
+      header: this.translation.translate('aboutDialog.header'),
+      width: '28rem',
       modal: true,
       closable: true
     });
