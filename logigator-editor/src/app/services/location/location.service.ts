@@ -47,6 +47,6 @@ export class LocationService {
 	}
 
 	private get pathname(): string {
-		return location.pathname.substring(7);
+		return location.pathname.substring(11);
 	}
 }
