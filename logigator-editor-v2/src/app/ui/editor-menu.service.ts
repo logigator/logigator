@@ -149,7 +149,7 @@ export class EditorMenuService {
         ]
       },
       {
-        label: 'View',
+        label: this.translocoService.translate('titleBar.menuBar.view.label'),
         items: [
           {
             label: this.translocoService.translate(
@@ -181,7 +181,7 @@ export class EditorMenuService {
         ]
       },
       {
-        label: 'Help'
+        label: this.translocoService.translate('titleBar.menuBar.help.label')
       }
     ];
 

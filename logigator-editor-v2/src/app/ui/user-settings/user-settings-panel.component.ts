@@ -1,4 +1,5 @@
 import { Component, inject, output } from '@angular/core';
+import { TranslocoDirective } from '@jsverse/transloco';
 import { LgDivider, LgRipple } from '@logigator/ui';
 import { ThemeSwitcherComponent } from '../../theming/theme-switcher/theme-switcher.component';
 import { LanguageSwitcherComponent } from '../../translation/language-switcher/language-switcher.component';
@@ -16,6 +17,7 @@ import { UserAvatarComponent } from './user-avatar.component';
 @Component({
   selector: 'app-user-settings-panel',
   imports: [
+    TranslocoDirective,
     LgDivider,
     LgRipple,
     ThemeSwitcherComponent,

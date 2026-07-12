@@ -1,4 +1,5 @@
 import { Component, computed, input } from '@angular/core';
+import { TranslocoDirective } from '@jsverse/transloco';
 import { LgBadge, LgSeverity } from '@logigator/ui';
 
 /** Where the shown circuit lives / its persistence state. */
@@ -15,7 +16,6 @@ interface StateStyle {
   severity: LgSeverity;
   /** Icon colour class for the compact corner glyph (badge variant). */
   glyph: string;
-  label: string;
 }
 
 /**
@@ -31,26 +31,32 @@ interface StateStyle {
  * Five states: `server` (cloud), `browser` (saved locally), `draft` (never saved
  * yet), `share` (read-only from a share link), `embedded` (placed custom whose
  * library master is gone — circuit survives only as the embedded copy). Owns the
- * icon, colour and label per state; tooltips are overridable so hosts can
- * localize them.
+ * icon and colour per state; labels are translated per state, and each tooltip
+ * defaults to a translated component-context string that hosts can override.
  */
 @Component({
   selector: 'app-source-indicator',
   host: { class: 'contents' },
-  imports: [LgBadge],
-  template: `@if (variant() === 'badge') {
+  imports: [LgBadge, TranslocoDirective],
+  template: `<ng-container *transloco="let t">
+    @if (variant() === 'badge') {
       <span
         class="absolute -top-1.5 -left-1.5 flex items-center justify-center w-4 h-4 rounded-full bg-content border border-border"
-        [title]="title()"
+        [title]="titleOverride() || t('sourceIndicator.title.' + source())"
       >
         <i [class]="style().icon + ' ' + style().glyph + ' text-[0.6rem]'"></i>
       </span>
     } @else {
-      <lg-badge rounded [severity]="style().severity" [title]="title()">
+      <lg-badge
+        rounded
+        [severity]="style().severity"
+        [title]="titleOverride() || t('sourceIndicator.title.' + source())"
+      >
         <i [class]="style().icon"></i>
-        {{ style().label }}
+        {{ t('sourceIndicator.label.' + source()) }}
       </lg-badge>
-    }`
+    }
+  </ng-container>`
 })
 export class SourceIndicatorComponent {
   /** Which library the component/project lives in, or its unsaved/shared state. */
@@ -58,45 +64,42 @@ export class SourceIndicatorComponent {
   /** Visual form: a labelled `LgBadge` pill (`chip`) or a tile corner glyph (`badge`). */
   public readonly variant = input<'chip' | 'badge'>('chip');
 
-  /** Per-state tooltip overrides (defaults suit a component). */
-  public readonly serverTitle = input<string>('Saved in your cloud library');
-  public readonly browserTitle = input<string>('Saved in this browser only');
-  public readonly draftTitle = input<string>('Not saved yet');
-  public readonly shareTitle = input<string>('Opened from a share link');
-  public readonly embeddedTitle = input<string>(
-    'Embedded copy — its library component is no longer available'
-  );
+  /**
+   * Per-state tooltip overrides. Empty falls back to the translated
+   * component-context default (`sourceIndicator.title.<state>`); hosts pass a
+   * context-specific string (e.g. project wording in the title bar).
+   */
+  public readonly serverTitle = input<string>('');
+  public readonly browserTitle = input<string>('');
+  public readonly draftTitle = input<string>('');
+  public readonly shareTitle = input<string>('');
+  public readonly embeddedTitle = input<string>('');
 
   private static readonly STYLES: Record<SourceIndicatorState, StateStyle> = {
     server: {
       icon: 'ph ph-cloud',
       severity: 'info',
-      glyph: 'text-sky-400',
-      label: 'Cloud'
+      glyph: 'text-sky-400'
     },
     browser: {
       icon: 'ph ph-browser',
       severity: 'secondary',
-      glyph: 'text-muted',
-      label: 'Local'
+      glyph: 'text-muted'
     },
     draft: {
       icon: 'ph ph-pencil-simple-line',
       severity: 'warn',
-      glyph: 'text-warn',
-      label: 'Draft'
+      glyph: 'text-warn'
     },
     share: {
       icon: 'ph ph-share-network',
       severity: 'success',
-      glyph: 'text-emerald-400',
-      label: 'Shared'
+      glyph: 'text-emerald-400'
     },
     embedded: {
       icon: 'ph ph-package',
       severity: 'warn',
-      glyph: 'text-warn',
-      label: 'Embedded'
+      glyph: 'text-warn'
     }
   };
 
@@ -104,7 +107,8 @@ export class SourceIndicatorComponent {
     () => SourceIndicatorComponent.STYLES[this.source()]
   );
 
-  protected readonly title = computed(() => {
+  /** The host-supplied tooltip for the current state, or `''` for the default. */
+  protected readonly titleOverride = computed(() => {
     switch (this.source()) {
       case 'server':
         return this.serverTitle();

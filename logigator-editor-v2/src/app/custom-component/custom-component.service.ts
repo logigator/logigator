@@ -66,7 +66,7 @@ export class CustomComponentService {
         return project;
       } catch (e) {
         this.toast.error(
-          'Failed to create component',
+          this.transloco.translate('componentActions.createFailed'),
           'CustomComponentService'
         );
         throw e;
@@ -126,7 +126,10 @@ export class CustomComponentService {
           : await this.persistence.loadComponentForEdit(id);
       this._openEditor(project, masterTypeId);
     } catch {
-      this.toast.error('Failed to open component', 'CustomComponentService');
+      this.toast.error(
+        this.transloco.translate('componentActions.openFailed'),
+        'CustomComponentService'
+      );
     }
   }
 
@@ -242,7 +245,7 @@ export class CustomComponentService {
       modal: true,
       closable: true,
       data: {
-        name: metadata?.name ?? 'Untitled',
+        name: metadata?.name ?? this.transloco.translate('common.untitled'),
         promotionWarning:
           localDepCount > 0
             ? this.transloco.translate('closeTab.promotionWarning', {
@@ -309,7 +312,7 @@ export class CustomComponentService {
       return true;
     } catch {
       this.toast.error(
-        'Failed to load component from the cloud',
+        this.transloco.translate('componentActions.cloudLoadFailed'),
         'CustomComponentService'
       );
       return false;

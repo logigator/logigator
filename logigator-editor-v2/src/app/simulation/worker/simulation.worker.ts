@@ -56,6 +56,7 @@ void init({
     postMessage({
       kind: 'error',
       reqId: null,
+      code: 'engineInitFailed',
       message: `Failed to initialize the simulation engine: ${String(err)}`
     });
   });

@@ -16,6 +16,7 @@ import {
 import { SerializedCircuitBody } from '../../persistence/serialized-circuit';
 import { Project } from '../../project/project';
 import { getStaticDI } from '../../utils/get-di';
+import { TranslocoService } from '@jsverse/transloco';
 import { Wire } from '../../wires/wire';
 
 /**
@@ -64,8 +65,7 @@ export class WatchSession {
       for (const component of components) component.destroy({ children: true });
       for (const wire of wires) wire.destroy();
       throw new Error(
-        'The inner circuit does not match the compiled simulation — ' +
-          'restart the simulation to inspect it'
+        getStaticDI(TranslocoService).translate('watch.circuitMismatch')
       );
     }
     this.components = components;

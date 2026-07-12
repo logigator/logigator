@@ -78,7 +78,10 @@ export class TabBarComponent {
   });
 
   private name(project: Project): string {
-    return this.metadataStore.getMetadata(project)?.name ?? 'Untitled';
+    return (
+      this.metadataStore.getMetadata(project)?.name ??
+      this.transloco.translate('common.untitled')
+    );
   }
 
   // Tab switching is disabled while simulating — the simulation binds to the

@@ -1,4 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
+import { TranslocoDirective } from '@jsverse/transloco';
 import { LgMenu, LgRipple } from '@logigator/ui';
 import { UserService } from '../../user/user.service';
 import { UserSettingsPanelComponent } from './user-settings-panel.component';
@@ -10,7 +11,13 @@ import { UserAvatarComponent } from './user-avatar.component';
  */
 @Component({
   selector: 'app-user-settings',
-  imports: [LgMenu, LgRipple, UserSettingsPanelComponent, UserAvatarComponent],
+  imports: [
+    TranslocoDirective,
+    LgMenu,
+    LgRipple,
+    UserSettingsPanelComponent,
+    UserAvatarComponent
+  ],
   templateUrl: './user-settings.component.html'
 })
 export class UserSettingsComponent {

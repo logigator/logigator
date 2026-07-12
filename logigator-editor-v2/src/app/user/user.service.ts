@@ -2,6 +2,7 @@ import { computed, effect, inject, Injectable, signal } from '@angular/core';
 import { tap } from 'rxjs/operators';
 import type { Observable } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
+import { TranslocoService } from '@jsverse/transloco';
 import { UserApiService } from '../api/services/user-api.service';
 import type { Shortcut, UpdateUserRequest, UserData } from '../api/models/user';
 import { ToastService } from '../logging/toast.service';
@@ -22,6 +23,7 @@ export class UserService {
   private readonly userApi = inject(UserApiService);
   private readonly toastService = inject(ToastService);
   private readonly cookieService = inject(CookieService);
+  private readonly transloco = inject(TranslocoService);
 
   private readonly _hasAuthenticatedFlag = computed(
     () => this.cookieService.get(AUTH_COOKIE) === 'true'
@@ -54,7 +56,7 @@ export class UserService {
           return;
         }
         this.toastService.error(
-          'Failed to load user data. Please log in again.',
+          this.transloco.translate('user.loadFailed'),
           'UserService'
         );
         this._user.set(null);

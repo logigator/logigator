@@ -17,6 +17,7 @@ import { ComponentProviderService } from '../../components/component-provider.se
 import { ProjectMetadataStore } from '../../persistence/project-metadata.store';
 import { ToastService } from '../../logging/toast.service';
 import { LoggingService } from '../../logging/logging.service';
+import { TranslocoService } from '@jsverse/transloco';
 
 export class ComponentPlacementSession implements DragSession {
   private readonly _component: Component;
@@ -66,7 +67,7 @@ export class ComponentPlacementSession implements DragSession {
   onEnd(): void {
     if (this._wouldCycle) {
       getStaticDI(ToastService).warn(
-        'Cannot place this component here — it would create a circular dependency.',
+        getStaticDI(TranslocoService).translate('editor.circularDependency'),
         'ComponentPlacementSession'
       );
       this._component.destroy({ children: true });

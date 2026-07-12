@@ -1,4 +1,5 @@
 import { Component, computed, inject, input } from '@angular/core';
+import { TranslocoDirective } from '@jsverse/transloco';
 import { LgButton } from '@logigator/ui';
 import { ComponentActionContext } from '../../component-action';
 import { CustomComponent } from '../custom-component';
@@ -13,19 +14,21 @@ import { CustomComponentService } from '../../../custom-component/custom-compone
  */
 @Component({
   selector: 'app-update-instance-action',
-  imports: [LgButton],
+  imports: [LgButton, TranslocoDirective],
   // `display: contents` so this action's host adds no flex-gap slot to the
   // settings form when hidden; the button aligns itself as a direct flex item.
   host: { class: 'contents' },
-  template: `@if (updatable()) {
-    <lg-button
-      size="sm"
-      severity="warn"
-      label="Update to latest"
-      class="self-end"
-      (onClick)="update()"
-    />
-  }`
+  template: `<ng-container *transloco="let t">
+    @if (updatable()) {
+      <lg-button
+        size="sm"
+        severity="warn"
+        [label]="t('componentActions.update')"
+        class="self-end"
+        (onClick)="update()"
+      />
+    }
+  </ng-container>`
 })
 export class UpdateInstanceActionComponent {
   public readonly context = input.required<ComponentActionContext>();

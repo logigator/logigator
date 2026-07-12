@@ -1,5 +1,5 @@
 <lg-select-button
-  [options]="themeOptions"
+  [options]="themeOptions()"
   [ngModel]="currentTheme()"
   (ngModelChange)="setTheme($event)"
   optionLabel="label"

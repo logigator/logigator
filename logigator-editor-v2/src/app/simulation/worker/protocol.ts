@@ -57,7 +57,16 @@ export type WorkerToMainMessage =
   /** WASM module initialized; the worker accepts requests now. */
   | { kind: 'ready' }
   | { kind: 'ok'; reqId: number }
-  | { kind: 'error'; reqId: number | null; message: string }
+  | {
+      kind: 'error';
+      reqId: number | null;
+      message: string;
+      /**
+       * Set when the failure has a translatable main-thread message; `message`
+       * then carries the raw detail for logging. The worker cannot translate.
+       */
+      code?: 'engineInitFailed';
+    }
   | SnapshotMessage
   | {
       kind: 'status';

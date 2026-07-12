@@ -1,4 +1,5 @@
 import { inject, Injectable } from '@angular/core';
+import { TranslocoService } from '@jsverse/transloco';
 import { LoggingService } from '../../logging/logging.service';
 import { Component } from '../../components/component';
 import { ComponentProviderService } from '../../components/component-provider.service';
@@ -172,6 +173,7 @@ export class BoardCompilerService {
   private readonly provider = inject(ComponentProviderService);
   private readonly registry = inject(CustomComponentRegistry);
   private readonly logging = inject(LoggingService);
+  private readonly transloco = inject(TranslocoService);
 
   // Keyed by snapshot type id; snapshots are frozen, so entries never
   // invalidate for the lifetime of the session.
@@ -444,7 +446,9 @@ export class BoardCompilerService {
       instancePath: path,
       componentType: type,
       componentId: component.id,
-      message: `Component "${component.config.symbol}" is not supported by the simulator`
+      message: this.transloco.translate('simulation.unsupportedComponent', {
+        symbol: component.config.symbol
+      })
     });
   }
 
@@ -510,7 +514,9 @@ export class BoardCompilerService {
         instancePath: path,
         componentType: snapshotTypeId,
         componentId: instanceId,
-        message: `Custom component "${def?.name ?? snapshotTypeId}" recursively places itself`
+        message: this.transloco.translate('simulation.recursiveComponent', {
+          name: def?.name ?? snapshotTypeId
+        })
       });
       return null;
     }
@@ -520,7 +526,9 @@ export class BoardCompilerService {
         instancePath: path,
         componentType: snapshotTypeId,
         componentId: instanceId,
-        message: `Custom component "${def?.name ?? snapshotTypeId}" has no circuit to simulate`
+        message: this.transloco.translate('simulation.componentNoCircuit', {
+          name: def?.name ?? snapshotTypeId
+        })
       });
       return null;
     }
@@ -599,10 +607,13 @@ export class BoardCompilerService {
           kind: 'plug-mismatch',
           instancePath: '',
           componentType: def.typeId,
-          message:
-            `Custom component "${def.name}" declares ` +
-            `${def.numInputs}/${def.numOutputs} ports but its circuit has ` +
-            `${inputPlugs.length}/${outputPlugs.length} plugs`
+          message: this.transloco.translate('simulation.plugMismatch', {
+            name: def.name,
+            declaredInputs: def.numInputs,
+            declaredOutputs: def.numOutputs,
+            actualInputs: inputPlugs.length,
+            actualOutputs: outputPlugs.length
+          })
         });
       }
 

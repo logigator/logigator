@@ -5,7 +5,24 @@ import type { ComponentCategory } from '../app/components/component-category.enu
 const en = {
   common: {
     save: 'Save',
-    cancel: 'Cancel'
+    cancel: 'Cancel',
+    untitled: 'Untitled'
+  },
+  user: {
+    loadFailed: 'Failed to load user data. Please log in again.'
+  },
+  userSettings: {
+    notSignedIn: 'Not signed in',
+    theme: 'Theme',
+    language: 'Language',
+    editorSettings: 'Editor Settings',
+    account: 'Account',
+    logOut: 'Log Out',
+    logIn: 'Log In'
+  },
+  theming: {
+    light: 'Light',
+    dark: 'Dark'
   },
   hexEditor: {
     wordView: 'Words',
@@ -222,6 +239,7 @@ const en = {
     }
   },
   sideBar: {
+    title: 'Components',
     search: 'Search..'
   },
   tabBar: {
@@ -469,7 +487,21 @@ const en = {
     cloudTitle: 'Saved in your cloud library',
     localTitle: 'Saved in this browser only',
     draftTitle: 'Not saved yet — save it to the cloud or locally',
-    shareTitle: 'Opened from a share link — read-only'
+    shareTitle: 'Opened from a share link — read-only',
+    label: {
+      server: 'Cloud',
+      browser: 'Local',
+      draft: 'Draft',
+      share: 'Shared',
+      embedded: 'Embedded'
+    },
+    title: {
+      server: 'Saved in your cloud library',
+      browser: 'Saved in this browser only',
+      draft: 'Not saved yet',
+      share: 'Opened from a share link',
+      embedded: 'Embedded copy — its library component is no longer available'
+    }
   },
   toolBar: {
     save: 'Save',
@@ -577,19 +609,38 @@ const en = {
     rendererInitFailed:
       'Could not start the graphics renderer. Your browser or GPU may be unsupported.',
     fontLoadFailed: 'Editor fonts failed to load — some labels may look wrong.',
-    eraseRestoreFailed: 'Some erased components could not be restored.'
+    eraseRestoreFailed: 'Some erased components could not be restored.',
+    circularDependency:
+      'Cannot place this component here — it would create a circular dependency.'
   },
   simulation: {
     workerMessageUnreadable:
-      'The simulation worker sent an unreadable message. Simulation stopped.'
+      'The simulation worker sent an unreadable message. Simulation stopped.',
+    engineInitFailed:
+      'Could not start the simulation engine. Your browser may not support WebAssembly.',
+    workerCrashed: 'The simulation stopped unexpectedly.',
+    unsupportedComponent:
+      'Component "{{symbol}}" is not supported by the simulator.',
+    recursiveComponent:
+      'Custom component "{{name}}" recursively places itself.',
+    componentNoCircuit:
+      'Custom component "{{name}}" has no circuit to simulate.',
+    plugMismatch:
+      'Custom component "{{name}}" declares {{declaredInputs}}/{{declaredOutputs}} ports but its circuit has {{actualInputs}}/{{actualOutputs}} plugs.'
   },
   watch: {
     rendererFailed:
       'Could not open the watch view — the renderer failed to start.',
-    noInnerCircuit: 'This component has no inner circuit to inspect.'
+    noInnerCircuit: 'This component has no inner circuit to inspect.',
+    circuitMismatch:
+      'The inner circuit does not match the compiled simulation — restart the simulation to inspect it.'
   },
   componentActions: {
     edit: 'Edit component',
+    update: 'Update to latest',
+    createFailed: 'Could not create the component.',
+    openFailed: 'Could not open the component.',
+    cloudLoadFailed: 'Could not load the component from the cloud.',
     restore: 'Restore & edit',
     restoreTooltip:
       "This component's library master is gone, but its circuit is embedded. Restore it to your local library to edit it.",

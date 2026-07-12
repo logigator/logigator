@@ -135,7 +135,9 @@ export class SimulationWorkerService {
     worker.onmessage = (event: MessageEvent<WorkerToMainMessage>) =>
       this._onMessage(event.data);
     worker.onerror = (event: ErrorEvent) =>
-      this._fail(event.message || 'Simulation worker crashed');
+      this._fail(
+        event.message || this.transloco.translate('simulation.workerCrashed')
+      );
     // A message that can't be deserialized never reaches onmessage — route it
     // into the same failure path as onerror.
     worker.onmessageerror = () =>
@@ -372,13 +374,22 @@ export class SimulationWorkerService {
         this.pending.delete(msg.reqId);
         break;
       case 'error': {
+        // A coded failure carries a raw detail in `message` for the log and a
+        // translatable, user-facing message under the code.
+        const userMessage =
+          msg.code === 'engineInitFailed'
+            ? this.transloco.translate('simulation.engineInitFailed')
+            : msg.message;
         const request =
           msg.reqId !== null ? this.pending.get(msg.reqId) : undefined;
         if (request) {
           this.pending.delete(msg.reqId!);
-          request.reject(new Error(msg.message));
+          request.reject(new Error(userMessage));
         } else {
-          this._fail(msg.message);
+          if (msg.code) {
+            this.logging.error(msg.message, 'SimulationWorker');
+          }
+          this._fail(userMessage);
         }
         break;
       }
