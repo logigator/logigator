@@ -13,7 +13,7 @@ export interface SwitchOptions {
 export const switchComponentConfig: ComponentConfig<SwitchOptions> = {
   type: BuiltInComponentType.SWITCH,
   category: ComponentCategory.IO,
-  symbol: 'sw',
+  symbol: 'SW',
   name: 'components.def.SWITCH.name',
   description: 'components.def.SWITCH.description',
   options: {
