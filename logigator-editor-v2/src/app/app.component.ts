@@ -9,6 +9,7 @@ import {
   signal
 } from '@angular/core';
 import { Location } from '@angular/common';
+import { Title } from '@angular/platform-browser';
 import { Point } from 'pixi.js';
 import { RouterService } from './routing/router.service';
 import { TitleBarComponent } from './ui/title-bar/title-bar.component';
@@ -113,6 +114,7 @@ export class AppComponent {
   private readonly loggingService = inject(LoggingService);
   private readonly toastService = inject(ToastService);
   private readonly translocoService = inject(TranslocoService);
+  private readonly title = inject(Title);
 
   protected readonly cursorPosition = signal<Point>(new Point(0, 0));
 
@@ -143,6 +145,14 @@ export class AppComponent {
 
   constructor() {
     setStaticDIInjector(this.injector);
+
+    // Keep the browser title in sync with the open project's name.
+    effect(() => {
+      const name = this.projectName();
+      this.title.setTitle(
+        name ? `${name} - Logigator: Editor` : 'Logigator: Editor'
+      );
+    });
 
     effect(() => {
       const selected = this.selectionInspector.selectedComponent();
