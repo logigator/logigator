@@ -5,8 +5,11 @@ import {
   CdkVirtualScrollViewport
 } from '@angular/cdk/scrolling';
 import {
+  afterNextRender,
   Component,
   contentChild,
+  DestroyRef,
+  inject,
   input,
   output,
   TemplateRef,
@@ -69,6 +72,25 @@ export class LgScroller {
 
   protected readonly itemTemplate = contentChild<TemplateRef<unknown>>('item');
   private readonly viewport = viewChild.required(CdkVirtualScrollViewport);
+
+  constructor() {
+    // The CDK viewport re-measures its size only on window resize (via its
+    // `ViewportRuler`), not when its own container is resized — e.g. a flexed
+    // or percent-height viewport growing because the host `LgWindow` was dragged
+    // taller. Without a re-measure it keeps rendering only the rows that filled
+    // the first-render height, leaving the grown space empty. Observe the
+    // container and re-check on every size change.
+    const destroyRef = inject(DestroyRef);
+    afterNextRender(() => {
+      // Guarded for test environments without ResizeObserver.
+      if (typeof ResizeObserver === 'undefined') return;
+      const observer = new ResizeObserver(() =>
+        this.viewport().checkViewportSize()
+      );
+      observer.observe(this.viewportElement);
+      destroyRef.onDestroy(() => observer.disconnect());
+    });
+  }
 
   /** The scroll container element, for reading or driving the horizontal axis. */
   get viewportElement(): HTMLElement {
