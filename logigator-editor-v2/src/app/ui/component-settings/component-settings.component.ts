@@ -21,7 +21,11 @@ import {
 @Component({
   selector: 'app-component-settings',
   imports: [NgComponentOutlet, LgCard, SourceIndicatorComponent],
-  templateUrl: './component-settings.component.html'
+  templateUrl: './component-settings.component.html',
+  // Clamp to the host container so a long, unbreakable description word can't
+  // inflate the card's min-content and push it past the layout's width cap
+  // (the desktop corner's max-width wrapper or the mobile settings drawer).
+  host: { class: 'block max-w-full' }
 })
 export class ComponentSettingsComponent {
   private readonly workModeService = inject(WorkModeService);
