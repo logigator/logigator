@@ -8,8 +8,9 @@
  * {@link CurrentCircuitFile} — older `CircuitFileV<N>` types stay untouched so
  * shipped files keep their meaning.
  *
- * The current format mirrors the editor's in-memory model (named options, wires
- * as start/direction/length) and is self-contained: it embeds a frozen snapshot
+ * The current format mirrors the editor's in-memory model (named options; wires
+ * chain-encoded as `"x,y:e5s3;…"`, see `wire-chain.codec.ts`) and is
+ * self-contained: it embeds a frozen snapshot
  * of every custom component it transitively uses in {@link PersistedCircuitV1.definitions}
  * via the universal codec (`persistence/snapshots.ts`).
  *

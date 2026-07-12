@@ -10,6 +10,7 @@ import { InvalidFileError } from '../circuit-file.errors';
 import { CircuitFileV0 } from '../circuit-file.types';
 import { BuiltInComponentType } from '../../../components/component-type.enum';
 import { LegacyV0Slots } from '../../../components/component-config.model';
+import { decodeWireChain } from '../../wire-chain.codec';
 
 describe('v0ToV1Migration', () => {
   let ctx: MigrationContext;
@@ -68,7 +69,7 @@ describe('v0ToV1Migration', () => {
       text: 'Hello world'
     });
 
-    expect(result.wires).toEqual([
+    expect(decodeWireChain(result.wires)).toEqual([
       { pos: [3, 5], direction: 0, length: 5 },
       { pos: [5, 2], direction: 1, length: 5 }
     ]);

@@ -16,9 +16,18 @@ import { CURRENT_FILE_VERSION, CurrentCircuitFile } from './circuit-file.types';
 import {
   remapComponentTypes,
   SerializedCircuitBody,
+  SerializedWireBody,
   SnapshotDefinition
 } from '../serialized-circuit';
 import { collectSnapshots, serializeProjectBody } from '../snapshots';
+import {
+  decodeWireChain,
+  encodeWireChain,
+  fromPersistedDefinition,
+  toPersistedDefinition,
+  WireChainDecodeError
+} from '../wire-chain.codec';
+import { PersistedSnapshotDefinitionV1 } from '../persisted-circuit.types';
 
 function isNumberPair(value: unknown): value is [number, number] {
   return (
@@ -68,20 +77,38 @@ export class CircuitFileService {
 
   /** Serializes a project to a current-version file JSON string. */
   toJson(project: Project, name: string): string {
+    return JSON.stringify(this.toDocument(project, name).file);
+  }
+
+  /**
+   * Serializes a project to a current-version file document, alongside the wire
+   * emission order: `wireOrder[k]` is the index (in `project.wires` iteration
+   * order) of the wire the chain encoder emitted k-th. The chain walk reorders
+   * wires, so the document's wire order is the emission order — consumers that
+   * align per-wire data with the document (the project dump's `wireIds`) map
+   * through this instead of iterating the project.
+   */
+  toDocument(
+    project: Project,
+    name: string
+  ): { file: CurrentCircuitFile; wireOrder: number[] } {
     const { definitions, sessionToLocal } = collectSnapshots(
       project,
       this.registry
     );
     const body = serializeProjectBody(project);
+    const { text, order } = encodeWireChain(body.wires);
 
-    const file: CurrentCircuitFile = {
-      version: CURRENT_FILE_VERSION,
-      name,
-      components: remapComponentTypes(body.components, sessionToLocal),
-      wires: body.wires,
-      definitions
+    return {
+      file: {
+        version: CURRENT_FILE_VERSION,
+        name,
+        components: remapComponentTypes(body.components, sessionToLocal),
+        wires: text,
+        definitions: definitions.map(toPersistedDefinition)
+      },
+      wireOrder: order
     };
-    return JSON.stringify(file);
   }
 
   /**
@@ -119,7 +146,7 @@ export class CircuitFileService {
     wires: Wire[];
   } {
     const remap = this.registry.ingestSnapshots(
-      this._asArray(file.definitions, 'definitions')
+      this._decodeDefinitions(file.definitions)
     );
 
     const components: Component[] = [];
@@ -181,24 +208,7 @@ export class CircuitFileService {
       );
     }
 
-    const wires: Wire[] = [];
-    for (const w of this._asArray(file.wires, 'wires')) {
-      if (
-        !w ||
-        !isNumberPair(w.pos) ||
-        (w.direction !== 0 && w.direction !== 1) ||
-        typeof w.length !== 'number'
-      ) {
-        throw new InvalidFileError('Invalid wire in file');
-      }
-      wires.push(
-        Wire.deserialize({
-          pos: w.pos,
-          direction: w.direction,
-          length: w.length
-        })
-      );
-    }
+    const wires = this._decodeWires(file.wires).map((w) => Wire.deserialize(w));
 
     return { components, wires };
   }
@@ -243,14 +253,14 @@ export class CircuitFileService {
   decodeToBodyFromData(data: unknown): SerializedCircuitBody {
     const file = migrateToCurrent(data, this.migrationContext);
     const remap = this.registry.ingestSnapshots(
-      this._asArray(file.definitions, 'definitions')
+      this._decodeDefinitions(file.definitions)
     );
     return {
       components: remapComponentTypes(
         this._asArray(file.components, 'components'),
         remap
       ),
-      wires: this._asArray(file.wires, 'wires')
+      wires: this._decodeWires(file.wires)
     };
   }
 
@@ -269,7 +279,7 @@ export class CircuitFileService {
       throw new InvalidFileError('Malformed JSON');
     }
     const file = migrateToCurrent(parsed, this.migrationContext);
-    return this._asArray(file.definitions, 'definitions');
+    return this._decodeDefinitions(file.definitions);
   }
 
   private _asArray<T>(value: T[] | undefined, field: string): T[] {
@@ -278,5 +288,36 @@ export class CircuitFileService {
       throw new InvalidFileError(`File "${field}" must be an array`);
     }
     return value;
+  }
+
+  /** Decodes the body's chain-encoded wires, mapping structural failures
+   * (including a non-string field) to {@link InvalidFileError}. */
+  private _decodeWires(value: unknown): SerializedWireBody[] {
+    if (value === undefined) return [];
+    try {
+      return decodeWireChain(value as string);
+    } catch (err) {
+      if (err instanceof WireChainDecodeError) {
+        throw new InvalidFileError(err.message);
+      }
+      throw err;
+    }
+  }
+
+  /** Revives persisted definitions (chain-encoded wires) into in-memory
+   * {@link SnapshotDefinition}s, mapping decode failures to {@link InvalidFileError}. */
+  private _decodeDefinitions(
+    value: PersistedSnapshotDefinitionV1[] | undefined
+  ): SnapshotDefinition[] {
+    return this._asArray(value, 'definitions').map((def) => {
+      try {
+        return fromPersistedDefinition(def);
+      } catch (err) {
+        if (err instanceof WireChainDecodeError) {
+          throw new InvalidFileError(err.message);
+        }
+        throw err;
+      }
+    });
   }
 }

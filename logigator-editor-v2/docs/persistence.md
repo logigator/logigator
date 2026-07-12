@@ -13,8 +13,8 @@ durability:
   via the `/local/:id` route. The stored blob **is the native file format**, so this
   target reuses the file codec wholesale.
 - **Local files** — save-to-file / load-from-file use a **native, versioned** file
-  format that mirrors the editor's own model (named options; wires as
-  start/direction/length; embedded custom-component snapshots). A migration chain
+  format that mirrors the editor's own model (named options; wires chain-encoded as
+  `"x,y:e5s3;…"`; embedded custom-component snapshots). A migration chain
   upgrades older files — including the legacy `logigator-editor` export — to the current
   version on load.
 
@@ -91,11 +91,26 @@ PersistedCircuitV0    = { elements?: PersistedComponentV0[] }
   └── ServerCircuitV0 extends PersistedCircuitV0 → { elements, dependencies }        (old API transport — TEMPORARY)
 
 ── V1 (native current; named options, split components/wires) ──
-PersistedComponentV1  = SerializedComponentBody    // { type, pos, options }
-PersistedWireV1       = SerializedWireBody          // { pos, direction, length }
-PersistedCircuitV1    = { components: PersistedComponentV1[]; wires: PersistedWireV1[]; definitions: SnapshotDefinition[] }
+PersistedComponentV1           = SerializedComponentBody   // { type, pos, options }
+PersistedWiresV1               = string                    // chain-encoded: "x,y:e5s3;x,y:n2"
+PersistedSnapshotDefinitionV1  = SnapshotDefinition with chain-encoded wires
+PersistedCircuitV1    = { components: PersistedComponentV1[]; wires: PersistedWiresV1; definitions: PersistedSnapshotDefinitionV1[] }
   └── CircuitFileV1   extends PersistedCircuitV1 → { version: 1, name }   (file + browser store this verbatim)
 ```
+
+**Wire chain encoding** (`wire-chain.codec.ts`) — wires persist as one SVG-path-style
+string: each `;`-separated chunk starts at an absolute point (`x,y:`), then every
+segment is one wire leaving the current point (`e`/`s`/`w`/`n` + length; segments abut
+with no separator — the next letter ends the number), whose far endpoint becomes the
+next segment's start. The encoder is a greedy walk over an
+adjacency map keyed `"x,y"` with every wire indexed under **both** endpoints; `w`/`n`
+mean the walk entered a wire from its far end — the in-memory model stays canonical
+(`WireDirection` H/V, positive length, `pos` at the west/north endpoint) and decoding
+normalizes back. The walk reorders wires, so the document's wire order is the **emission
+order**; `toDocument()` returns it (`wireOrder`) for consumers that align per-wire data
+with the document (`ProjectDump.wireIds`). Chosen for compressed size: ~5× smaller raw
+and ~1.6× smaller gzipped than the previous `{ pos, direction, length }[]` on real
+circuits.
 
 `PersistedCircuitV1` is the named **transport payload** (body + `definitions[]`) shared
 by the file and browser targets — it makes "the browser store reuses the file format" an
@@ -112,7 +127,7 @@ browser target reuses the native format, so it shares `CircuitFileService` end t
 | --------- | -------------------------------------------------------------- | ------------------------------------------------------- |
 | Used by   | Server API (temporary)                                         | Browser storage **and** save/load-to-file               |
 | Component | `{ t, p, i?, o?, r?, n?[], s? }` — options packed positionally | `{ type, pos, options }` — options keyed by config name |
-| Wire      | `{ t: 0, p, q }` — endpoints                                   | `{ pos, direction, length }`                            |
+| Wire      | `{ t: 0, p, q }` — endpoints                                   | chain string (`"x,y:e5s3;…"`)                           |
 | Customs   | dropped (v0 has none)                                          | embedded as `definitions[]` snapshots                   |
 | Decode    | `v0ToV1` migration                                             | `CircuitFileService`                                    |
 | Encode    | `server/server-circuit.codec` (temporary)                      | `CircuitFileService` + `snapshots.ts`                   |
@@ -255,8 +270,9 @@ context. Native version→version migrations are pure data transforms and ignore
 The permanent v0→v1 decode — used by both legacy file import **and** server reads:
 
 - Validates the envelope (`project.elements` is an array) → else `InvalidFileError`.
-- Splits `elements`: `t === WIRE_TYPE_ID (0)` → `{ pos, direction, length }`; everything
-  else → a named-option component body via the config's `legacyV0Slots` descriptor.
+- Splits `elements`: `t === WIRE_TYPE_ID (0)` → wire bodies, chain-encoded into the v1
+  `wires` string; everything else → a named-option component body via the config's
+  `legacyV0Slots` descriptor.
 - Drops any element whose type is **unknown or has no `legacyV0Slots`** descriptor (with a
   warning), consistent with the editor's silent-drop behavior.
 - Emits `definitions: []` — legacy sub-circuit definitions (the old `components` array)
@@ -337,6 +353,8 @@ component it (transitively) uses, so it can be loaded with no library present.
   layer can use them without an import cycle:
   - `SerializedComponentBody` `{ type, pos, options }`, `SerializedWireBody`
     `{ pos, direction, length }`, `SerializedCircuitBody` `{ components, wires }`.
+    These are the **in-memory** shapes; on write, `wire-chain.codec.ts` folds the wire
+    objects into the persisted chain string (and unfolds them on read).
   - `SnapshotDefinition extends SerializedCircuitBody` — a frozen custom: a **file-local**
     `type` id, `source?: { id, version, origin? }` provenance (id + the axis-2 master
     version + the master's library origin), and the display fields (`name`, `symbol`,

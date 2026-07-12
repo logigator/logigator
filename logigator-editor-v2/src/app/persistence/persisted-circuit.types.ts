@@ -13,7 +13,6 @@
 import { ProjectElement } from '../api/models/project-element';
 import {
   SerializedComponentBody,
-  SerializedWireBody,
   SnapshotDefinition
 } from './serialized-circuit';
 
@@ -39,8 +38,20 @@ export interface PersistedCircuitV0 {
 /** One placed component in the native body (type id, position, named options). */
 export type PersistedComponentV1 = SerializedComponentBody;
 
-/** One wire in the native body (start position, direction, length). */
-export type PersistedWireV1 = SerializedWireBody;
+/**
+ * A circuit's wires as chain text (`"x,y:e5s3;x,y:n2"`): SVG-path-style walks
+ * over the wire graph, one segment per wire. Encoded/decoded by
+ * `wire-chain.codec.ts`; the decoded order is the body's wire order.
+ */
+export type PersistedWiresV1 = string;
+
+/** A {@link SnapshotDefinition} as persisted: its wires chain-encoded. */
+export type PersistedSnapshotDefinitionV1 = Omit<
+  SnapshotDefinition,
+  'wires'
+> & {
+  wires: PersistedWiresV1;
+};
 
 /**
  * The v1 transport payload: the native circuit body plus the frozen snapshots
@@ -50,6 +61,6 @@ export type PersistedWireV1 = SerializedWireBody;
  */
 export interface PersistedCircuitV1 {
   components: PersistedComponentV1[];
-  wires: PersistedWireV1[];
-  definitions: SnapshotDefinition[];
+  wires: PersistedWiresV1;
+  definitions: PersistedSnapshotDefinitionV1[];
 }

@@ -24,6 +24,7 @@ import { CustomComponentRegistry } from '../components/custom/custom-component-r
 import { ComponentProviderService } from '../components/component-provider.service';
 import { CustomComponent } from '../components/custom/custom-component';
 import { Component } from '../components/component';
+import { Wire } from '../wires/wire';
 import { Point } from 'pixi.js';
 import { MoveComponentsAction } from '../actions/actions/move-components.action';
 import { SerializedCircuitBody } from './serialized-circuit';
@@ -974,7 +975,7 @@ describe('PersistenceService', () => {
       expect(parsed.version).toBe(1);
       expect(parsed.name).toBe('My Circuit');
       expect(parsed.components).toEqual([]);
-      expect(parsed.wires).toEqual([]);
+      expect(parsed.wires).toBe('');
       expect(parsed.definitions).toEqual([]);
     });
 
@@ -983,7 +984,7 @@ describe('PersistenceService', () => {
         version: 1,
         name: 'Imported',
         components: [{ type: 1, pos: [2, 3], options: {} }],
-        wires: [],
+        wires: '',
         definitions: []
       });
 
@@ -1032,7 +1033,7 @@ describe('PersistenceService', () => {
         version: 1,
         name: 'Zipped',
         components: [{ type: 1, pos: [2, 3], options: {} }],
-        wires: [],
+        wires: '',
         definitions: []
       });
       const bytes = await encodeLgix(json);
@@ -1051,7 +1052,7 @@ describe('PersistenceService', () => {
         version: 1,
         name: 'Plain',
         components: [],
-        wires: [],
+        wires: '',
         definitions: []
       });
       const data = new TextEncoder().encode(json).buffer;
@@ -1072,7 +1073,7 @@ describe('PersistenceService', () => {
             { type: 1, pos: [2, 3], options: {} },
             { type: 1, pos: [5, 6], options: {} }
           ],
-          wires: [{ pos: [0, 0], direction: 0, length: 4 }],
+          wires: '0,0:e4',
           definitions: []
         })
       );
@@ -1112,13 +1113,48 @@ describe('PersistenceService', () => {
       expect([moved.position.x, moved.position.y]).toEqual([2, 3]);
     });
 
+    it('re-stamps wire ids by geometry when the chain walk reorders wires', async () => {
+      // Insertion order [A, C, B]: re-encoding walks from A straight onto the
+      // touching B before the isolated C, so the dump body's wire order
+      // differs from the project's insertion order.
+      const source = await service.importProjectFromJson(
+        JSON.stringify({
+          version: 1,
+          name: 'Dumpee',
+          components: [],
+          wires: '0,0:e4;20,20:s2;4,0:e4',
+          definitions: []
+        })
+      );
+      const geometry = (w: Wire) =>
+        `${Math.floor(w.position.x)},${Math.floor(w.position.y)},${w.direction},${w.length}`;
+      const sourceIds = new Map(
+        Array.from(source.wires).map((w) => [geometry(w), w.id])
+      );
+
+      const restored = await service.importProjectDump(
+        JSON.stringify(service.buildProjectDump(source))
+      );
+
+      const restoredWires = Array.from(restored.wires);
+      expect(restoredWires).toHaveLength(3);
+      // The dump did reorder relative to the source project…
+      expect(restoredWires.map((w) => w.id)).not.toEqual(
+        Array.from(source.wires).map((w) => w.id)
+      );
+      // …but every wire still carries its original id.
+      for (const w of restoredWires) {
+        expect(w.id).toBe(sourceIds.get(geometry(w)));
+      }
+    });
+
     it('skips id/history restore when the element count changed', async () => {
       const source = await service.importProjectFromJson(
         JSON.stringify({
           version: 1,
           name: 'Dumpee',
           components: [{ type: 1, pos: [2, 3], options: {} }],
-          wires: [],
+          wires: '',
           definitions: []
         })
       );
@@ -1148,7 +1184,7 @@ describe('PersistenceService', () => {
           version: 1,
           name: 'Seed',
           components: [{ type: 1, pos: [4, 4], options: {} }],
-          wires: [],
+          wires: '',
           definitions: []
         })
       );
@@ -1174,7 +1210,7 @@ describe('PersistenceService', () => {
           version: 1,
           name: 'Stored',
           components: [],
-          wires: [],
+          wires: '',
           definitions: []
         })
       });
@@ -1202,7 +1238,7 @@ describe('PersistenceService', () => {
           version: 1,
           name: 'Old',
           components: [],
-          wires: [],
+          wires: '',
           definitions: []
         })
       });
@@ -1228,7 +1264,7 @@ describe('PersistenceService', () => {
           version: 1,
           name: 'Open',
           components: [],
-          wires: [],
+          wires: '',
           definitions: []
         })
       });
@@ -1300,7 +1336,7 @@ describe('PersistenceService', () => {
           version: 1,
           name: 'Old',
           components: [],
-          wires: [],
+          wires: '',
           definitions: []
         })
       });
@@ -1538,7 +1574,7 @@ describe('PersistenceService', () => {
         version: 1,
         name: 'Imported',
         components: [{ type: 1000, pos: [3, 3], options: { direction: 0 } }],
-        wires: [],
+        wires: '',
         definitions: [
           {
             type: 1000,
@@ -1550,7 +1586,7 @@ describe('PersistenceService', () => {
             numOutputs: 1,
             labels: ['in', 'out'],
             components: plugCircuit.components,
-            wires: []
+            wires: ''
           }
         ]
       });

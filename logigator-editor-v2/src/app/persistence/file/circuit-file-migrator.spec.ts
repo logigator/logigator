@@ -61,7 +61,7 @@ describe('circuit-file-migrator', () => {
         version: 1,
         name: 'X',
         components: [],
-        wires: [],
+        wires: '',
         definitions: []
       };
       expect(migrateToCurrent(doc, ctx)).toBe(doc);

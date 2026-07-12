@@ -19,6 +19,7 @@ import { Component } from '../../components/component';
 import { Project } from '../../project/project';
 import { ProjectElement } from '../../api/models/project-element';
 import { SerializedCircuitBody } from '../serialized-circuit';
+import { decodeWireChain } from '../wire-chain.codec';
 import { InvalidFileError } from './circuit-file.errors';
 
 interface BodyComponent {
@@ -52,20 +53,21 @@ function sortWires(wires: BodyWire[]): BodyWire[] {
 
 // Sort components/wires (and recursively, embedded definitions) into a stable
 // order so structurally-equal documents with different element ordering compare
-// equal (mirrors server-circuit.codec.spec).
+// equal (mirrors server-circuit.codec.spec). Chain-encoded wires are decoded
+// first: two encodings are equal iff they decode to the same wire set.
 function normalize(json: string): string {
   const parsed = JSON.parse(json);
   return JSON.stringify({
     version: parsed.version,
     name: parsed.name,
     components: sortComponents(parsed.components ?? []),
-    wires: sortWires(parsed.wires ?? []),
+    wires: sortWires(decodeWireChain(parsed.wires ?? '')),
     definitions: [...(parsed.definitions ?? [])]
       .sort((a, b) => a.type - b.type)
       .map((d) => ({
         ...d,
         components: sortComponents(d.components),
-        wires: sortWires(d.wires)
+        wires: sortWires(decodeWireChain(d.wires))
       }))
   });
 }
@@ -147,7 +149,7 @@ describe('CircuitFileService', () => {
 
       expect(json.version).toBe(1);
       expect(json.name).toBe('My Circuit');
-      expect(json.wires).toEqual([]);
+      expect(json.wires).toBe('');
       expect(json.definitions).toEqual([]);
       expect(json.components.length).toBe(1);
       expect(json.components[0]).toEqual({
@@ -405,18 +407,29 @@ describe('CircuitFileService', () => {
         version: 1,
         name: 'x',
         components: [{ type: 1, pos: 'nope', options: {} }],
-        wires: [],
+        wires: '',
         definitions: []
       });
       expect(() => service.fromJson(file)).toThrowError(InvalidFileError);
     });
 
-    it('throws InvalidFileError on a structurally invalid wire', () => {
+    it('throws InvalidFileError on a structurally invalid wire chain', () => {
       const file = JSON.stringify({
         version: 1,
         name: 'x',
         components: [],
-        wires: [{ pos: [0, 0], direction: 5, length: 3 }],
+        wires: '0,0:x3',
+        definitions: []
+      });
+      expect(() => service.fromJson(file)).toThrowError(InvalidFileError);
+    });
+
+    it('throws InvalidFileError when wires is not a chain string', () => {
+      const file = JSON.stringify({
+        version: 1,
+        name: 'x',
+        components: [],
+        wires: [{ pos: [0, 0], direction: 0, length: 3 }],
         definitions: []
       });
       expect(() => service.fromJson(file)).toThrowError(InvalidFileError);
@@ -431,7 +444,7 @@ describe('CircuitFileService', () => {
           { type: 99, pos: [0, 0], options: {} },
           { type: 1, pos: [1, 1], options: {} }
         ],
-        wires: [],
+        wires: '',
         definitions: []
       });
 
@@ -456,7 +469,7 @@ describe('CircuitFileService', () => {
           { type: CUSTOM_TYPE_ID_BASE, pos: [0, 0], options: { direction: 0 } },
           { type: BuiltInComponentType.AND, pos: [1, 1], options: {} }
         ],
-        wires: [],
+        wires: '',
         definitions: []
       });
 
@@ -491,7 +504,7 @@ describe('CircuitFileService', () => {
         components: [
           { type: CUSTOM_TYPE_ID_BASE, pos: [0, 0], options: { direction: 0 } }
         ],
-        wires: [],
+        wires: '',
         definitions: []
       });
 
@@ -513,7 +526,7 @@ describe('CircuitFileService', () => {
             negOutputs: [0, -1, 1.5] // sanitized to [0]
           }
         ],
-        wires: [],
+        wires: '',
         definitions: []
       });
 
