@@ -55,11 +55,11 @@ export class ReportErrorController {
 				toAppend += `\nRendering: ${client.renderingContext}`;
 			if (client.gpu)
 				toAppend += `\nGPU: ${client.gpu}`;
-			if (client.windowSize)
-				toAppend += `\nWindow: ${client.windowSize}`;
-			if (client.screenSize)
-				toAppend += `\nScreen: ${client.screenSize}`;
-			if (client.devicePixelRatio)
+			if (client.windowWidth !== undefined && client.windowHeight !== undefined)
+				toAppend += `\nWindow: ${client.windowWidth}×${client.windowHeight}`;
+			if (client.screenWidth !== undefined && client.screenHeight !== undefined)
+				toAppend += `\nScreen: ${client.screenWidth}×${client.screenHeight}`;
+			if (client.devicePixelRatio !== undefined)
 				toAppend += `\nDevice Pixel Ratio: ${client.devicePixelRatio}`;
 			if (client.locale)
 				toAppend += `\nLocale: ${client.locale}`;

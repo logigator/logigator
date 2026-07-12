@@ -27,9 +27,11 @@ export interface ReportClientInfo {
   os?: string;
   renderingContext?: string;
   gpu?: string;
-  windowSize?: string;
-  screenSize?: string;
-  devicePixelRatio?: string;
+  windowWidth?: number;
+  windowHeight?: number;
+  screenWidth?: number;
+  screenHeight?: number;
+  devicePixelRatio?: number;
   locale?: string;
   url?: string;
   workMode?: string;

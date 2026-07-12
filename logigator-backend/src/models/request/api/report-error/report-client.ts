@@ -1,4 +1,4 @@
-import {IsBoolean, IsOptional, IsString, MaxLength} from 'class-validator';
+import {IsBoolean, IsNumber, IsOptional, IsString, MaxLength} from 'class-validator';
 
 /**
  * Structured client environment attached to a report by the newer editor.
@@ -28,19 +28,24 @@ export class ReportClient {
 	gpu: string;
 
 	@IsOptional()
-	@IsString()
-	@MaxLength(32)
-	windowSize: string;
+	@IsNumber()
+	windowWidth: number;
 
 	@IsOptional()
-	@IsString()
-	@MaxLength(32)
-	screenSize: string;
+	@IsNumber()
+	windowHeight: number;
 
 	@IsOptional()
-	@IsString()
-	@MaxLength(16)
-	devicePixelRatio: string;
+	@IsNumber()
+	screenWidth: number;
+
+	@IsOptional()
+	@IsNumber()
+	screenHeight: number;
+
+	@IsOptional()
+	@IsNumber()
+	devicePixelRatio: number;
 
 	@IsOptional()
 	@IsString()
