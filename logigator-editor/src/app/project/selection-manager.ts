@@ -209,24 +209,35 @@ export class SelectionManager {
     this._selectionChange$.next();
   }
 
-  // Re-evaluates which connection points count as selected based on the current
-  // selection.
+  // Re-evaluates which connection points count as selected. A CP is highlighted
+  // only when the selection rectangle touches the grid-unit cell the CP sits in
+  // — selecting a wire does not drag its endpoint junctions (which may connect
+  // to unselected wires) into the highlight. Enumerating candidates from the
+  // selected elements' termination points is equivalent to a pure "CP cell in
+  // rect" test (any CP whose cell the rect touches has its terminating elements
+  // selected) and avoids needing a CP spatial index. A rect-less selection
+  // (single click) highlights no CPs.
   public retintCps(): void {
     for (const cp of this._selectedConnectionPoints) {
       if (!cp.destroyed) cp.selected = false;
     }
+    this._selectedConnectionPoints = [];
+
+    const rect = this.grabRect();
+    if (!rect) return;
 
     const points = [];
     for (const wire of this._selectedWires) {
       if (!wire.destroyed) {
         const [start, end] = wire.connectionPoints;
-        points.push(start, end);
+        if (this._rectTouchesCell(rect, start)) points.push(start);
+        if (this._rectTouchesCell(rect, end)) points.push(end);
       }
     }
     for (const comp of this._selectedComponents) {
       if (!comp.destroyed) {
         for (const port of comp.connectionPoints) {
-          points.push(port);
+          if (this._rectTouchesCell(rect, port)) points.push(port);
         }
       }
     }
@@ -236,6 +247,21 @@ export class SelectionManager {
     for (const cp of this._selectedConnectionPoints) {
       cp.selected = true;
     }
+  }
+
+  // Whether the selection rect overlaps the 1×1 grid cell a connection point
+  // sits in. CPs sit at half-grid centres, so the cell is the integer square
+  // floor(p)..floor(p)+1. Inclusive on every edge so a rect merely grazing the
+  // cell still counts as touching it.
+  private _rectTouchesCell(rect: Rectangle, p: Point): boolean {
+    const cx = Math.floor(p.x);
+    const cy = Math.floor(p.y);
+    return (
+      rect.x <= cx + 1 &&
+      rect.right >= cx &&
+      rect.y <= cy + 1 &&
+      rect.bottom >= cy
+    );
   }
 
   /**

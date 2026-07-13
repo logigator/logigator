@@ -714,6 +714,57 @@ describe('SelectionManager', () => {
     });
   });
 
+  // ── retintCps — connection-point highlighting ──────────────────────────────
+  //
+  // A junction dot is highlighted only when the selection rect touches the
+  // grid-unit cell the CP sits in, so selecting a wire never drags its endpoint
+  // junctions (which may connect to unselected wires) into the highlight.
+
+  describe('retintCps', () => {
+    it('looks up only the endpoints whose grid cell the rect touches', () => {
+      // Endpoints at (0,0) and (10,0); the rect reaches only the first cell.
+      const wire = makeWire(0, 0, 11, 1);
+      setWires(project, wire);
+
+      manager.commit(new Rectangle(0, 0, 5, 5), WorkMode.SELECT);
+
+      expect(project.connectionPoints.getCpsAtPoints).toHaveBeenCalledWith([
+        new Point(0, 0)
+      ]);
+    });
+
+    it('selects a junction when the rect grazes its cell but stops short of its centre', () => {
+      // Half-grid endpoint centre at (5.5, 0.5) → cell (5,0)–(6,1); the second
+      // endpoint's cell (5,6)–(6,7) is out of reach.
+      const wire: any = {
+        selected: false,
+        destroyed: false,
+        connectionPoints: [new Point(5.5, 0.5), new Point(5.5, 6.5)],
+        get gridBounds() {
+          return new Rectangle(5, 0, 1, 7);
+        }
+      };
+      setWires(project, wire);
+
+      // Right edge at 5.5 clips into the first cell without covering (5.5, 0.5).
+      manager.commit(new Rectangle(0, 0, 5.5, 5), WorkMode.SELECT);
+
+      expect(project.connectionPoints.getCpsAtPoints).toHaveBeenCalledWith([
+        new Point(5.5, 0.5)
+      ]);
+    });
+
+    it('never highlights junctions for a rect-less single-click selection', () => {
+      const wire = makeWire(0, 0, 3, 1);
+      setWires(project, wire);
+
+      manager.commit(new Rectangle(2, 0, 0, 0), WorkMode.SELECT);
+
+      const calls = (project.connectionPoints.getCpsAtPoints as any).mock.calls;
+      expect(calls.every((c: any[]) => c[0].length === 0)).toBe(true);
+    });
+  });
+
   // ── boundingBox ────────────────────────────────────────────────────────────
 
   describe('boundingBox', () => {
