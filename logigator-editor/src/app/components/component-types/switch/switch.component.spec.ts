@@ -53,7 +53,8 @@ describe('SwitchComponent', () => {
       // The body graphics is the first child drawn; its counter-rotation must
       // cancel the container rotation so the square (and its on/off bar) renders
       // upright on screen in every direction.
-      const worldRotation = switchComp.children[0].rotation + switchComp.rotation;
+      const worldRotation =
+        switchComp.children[0].rotation + switchComp.rotation;
       expect(Math.sin(worldRotation)).toBeCloseTo(0);
       expect(Math.cos(worldRotation)).toBeCloseTo(1);
 
