@@ -424,6 +424,37 @@ describe('Project connection-point integration', () => {
     dragLayer.destroy({ children: true });
   });
 
+  it('captureDragCps skips a termination-point CP absent from the given set', () => {
+    // Same junction as above, but the CP is not in the selected set — so even
+    // though the dragged wire terminates there, the junction is left in place.
+    // This keeps what a drag carries matched to what looks selected.
+    const h1 = makeWire(0, 2, WireDirection.HORIZONTAL, 2);
+    const h2 = makeWire(2, 2, WireDirection.HORIZONTAL, 3);
+    const v = makeWire(2, 0, WireDirection.VERTICAL, 2);
+    project.addWire(h1);
+    project.addWire(h2);
+    project.addWire(v);
+
+    const jn = new Point(2.5, 2.5);
+    expect(cpAt(project, jn)).toBe(true);
+
+    project.detachForDrag([], [v]);
+    const dragLayer = new Container();
+    const captured = project.connectionPoints.captureDragCps(
+      [],
+      [v],
+      dragLayer,
+      new Set()
+    );
+
+    expect(captured.length).toBe(0);
+    expect(cpAt(project, jn)).toBe(true);
+    expect(dragLayer.children.length).toBe(0);
+
+    project.reattachFromDrag([], [v]);
+    dragLayer.destroy();
+  });
+
   it('captureDragCps does not capture CPs that sit at the interior of the dragged wire', () => {
     // CP at (2.5, 0.5) formed by 2 collinear H halves + 1 V wire. Dragging a
     // long H wire whose interior passes through that CP must NOT capture it,

@@ -508,4 +508,10 @@ export class SelectionManager {
   public get selectedWires(): ReadonlySet<Wire> {
     return this._selectedWires;
   }
+
+  // The junction dots currently highlighted — the ones a drag should carry so
+  // that what moves matches what looks selected. See retintCps for the rule.
+  public get selectedConnectionPoints(): readonly ConnectionPoint[] {
+    return this._selectedConnectionPoints;
+  }
 }

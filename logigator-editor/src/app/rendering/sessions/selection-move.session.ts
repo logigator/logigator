@@ -47,10 +47,14 @@ export class SelectionMoveSession implements DragSession {
       this._components,
       this._wires
     );
+    // Carry only the highlighted junctions, so what moves matches what looks
+    // selected. A junction connecting the selection to unselected wires is not
+    // highlighted and stays put; the post-move recompute rebuilds it.
     this._capturedCps = project.connectionPoints.captureDragCps(
       this._components,
       this._wires,
-      dragLayer
+      dragLayer,
+      new Set(project.selectionManager.selectedConnectionPoints)
     );
   }
 

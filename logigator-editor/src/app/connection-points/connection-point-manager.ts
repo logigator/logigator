@@ -183,13 +183,16 @@ export class ConnectionPointManager {
   public captureDragCps(
     components: readonly Component[],
     wires: readonly Wire[],
-    dragLayer: Container
+    dragLayer: Container,
+    only?: ReadonlySet<ConnectionPoint>
   ): ConnectionPoint[] {
     const points = this._terminationPointsOf(components, wires);
     const captured: ConnectionPoint[] = [];
     for (const p of points) {
       const cp = this.getCpAt(p);
-      if (cp) {
+      // With `only` given, carry just those dots — the drag follows what looks
+      // selected, not every junction the dragged elements happen to touch.
+      if (cp && (!only || only.has(cp))) {
         this.detachCp(cp);
         dragLayer.addChild(cp);
         captured.push(cp);
