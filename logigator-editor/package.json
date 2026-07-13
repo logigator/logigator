@@ -30,6 +30,8 @@
     "@jsverse/transloco-persist-lang": "^8.4.0",
     "@jsverse/utils": "1.0.0-beta.5",
     "@logigator/sim": "^0.4.0",
+    "marked": "^18.0.6",
+    "ngx-markdown": "^22.0.0",
     "ngxtension": "^7.2.0",
     "pixi.js": "^8.19.0",
     "regexparam": "^3.0.0",

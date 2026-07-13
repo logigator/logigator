@@ -2199,6 +2199,8 @@ __metadata:
     "@angular/common": ^22.0.0
     "@angular/core": ^22.0.0
     "@angular/forms": ^22.0.0
+    marked: ^18.0.0
+    ngx-markdown: ^22.0.0
     rxjs: ^6.5.3 || ^7.4.0
   languageName: unknown
   linkType: soft
@@ -6491,6 +6493,8 @@ __metadata:
     "@phosphor-icons/web": "npm:^2.1.2"
     "@tailwindcss/postcss": "npm:^4.3.2"
     jsdom: "npm:^29.1.1"
+    marked: "npm:^18.0.6"
+    ngx-markdown: "npm:^22.0.0"
     ngxtension: "npm:^7.2.0"
     pixi.js: "npm:^8.19.0"
     postcss: "npm:^8.5.16"
@@ -6602,6 +6606,15 @@ __metadata:
     proc-log: "npm:^6.0.0"
     ssri: "npm:^13.0.0"
   checksum: 10c0/527580eb5e5476e6ad07a4e3bd017d13e935f4be815674b442081ae5a721c13d3af5715006619e6be79a85723067e047f83a0c9e699f41d8cec43609a8de4f7b
+  languageName: node
+  linkType: hard
+
+"marked@npm:^18.0.6":
+  version: 18.0.6
+  resolution: "marked@npm:18.0.6"
+  bin:
+    marked: bin/marked.js
+  checksum: 10c0/85827aa9d7293b0eb5470c40bb0f60bdbd4a1d6647cfce3602afaa3b8e42ed229c74d1d61d3c41d4e7822d56df179862da970f2e11012e94c1a788387e69d36d
   languageName: node
   linkType: hard
 
@@ -6986,6 +6999,41 @@ __metadata:
   bin:
     ng-packagr: src/cli/main.js
   checksum: 10c0/af181aa71bd36da866fd148d51afb252648bbdb80a2b4739da370cd92f2bdb8f761ea3321af1c5729884da6fa11cf6531b1b5657090aa1f76555acfa4e283d76
+  languageName: node
+  linkType: hard
+
+"ngx-markdown@npm:^22.0.0":
+  version: 22.0.0
+  resolution: "ngx-markdown@npm:22.0.0"
+  dependencies:
+    tslib: "npm:^2.3.0"
+  peerDependencies:
+    "@angular/common": ^22.0.0
+    "@angular/core": ^22.0.0
+    "@angular/platform-browser": ^22.0.0
+    clipboard: ^2.0.11
+    emoji-toolkit: ">= 8.0.0 < 11.0.0"
+    katex: ^0.16.0
+    marked: ^17.0.0 || ^18.0.0
+    marked-katex-extension: ^5.0.0
+    mermaid: ">= 10.6.0 < 12.0.0"
+    prismjs: ^1.30.0
+    rxjs: ^6.5.3 || ^7.4.0
+    zone.js: ~0.15.0 || ~0.16.0
+  peerDependenciesMeta:
+    clipboard:
+      optional: true
+    emoji-toolkit:
+      optional: true
+    katex:
+      optional: true
+    marked-katex-extension:
+      optional: true
+    mermaid:
+      optional: true
+    prismjs:
+      optional: true
+  checksum: 10c0/7ac1253b19040515c090a310901b2e5578963d2eecab469a08ae9bd4f1cba32c42b2a0bdde7e7b70d1b03f0d9df8ae139d8d6302e957e36b51606bdf611891f2
   languageName: node
   linkType: hard
 

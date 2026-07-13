@@ -58,6 +58,7 @@ import { UserSettingsPanelComponent } from './ui/user-settings/user-settings-pan
 import { LoggingService } from './logging/logging.service';
 import { ToastService } from './logging/toast.service';
 import { SessionLifecycleService } from './user/session-lifecycle.service';
+import { ChangelogService } from './changelog/changelog.service';
 
 @Component({
   selector: 'app-root',
@@ -115,6 +116,7 @@ export class AppComponent {
   private readonly loggingService = inject(LoggingService);
   private readonly toastService = inject(ToastService);
   private readonly translation = inject(TranslationService);
+  private readonly changelogService = inject(ChangelogService);
   private readonly title = inject(Title);
 
   protected readonly cursorPosition = signal<Point>(new Point(0, 0));
@@ -203,6 +205,11 @@ export class AppComponent {
     void this.routerService.processCurrentRoute();
 
     this.unsavedChangesGuard.attach();
+
+    // Greet a returning user with the changelog the first time they load a
+    // release newer than the one they last saw. A first-ever launch is
+    // acknowledged silently inside the service.
+    this.changelogService.maybeAutoOpen();
   }
 
   /** A Drawer reporting itself hidden (mask click / Esc) clears the active sheet. */

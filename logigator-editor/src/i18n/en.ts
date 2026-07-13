@@ -341,6 +341,9 @@ const en = {
       help: {
         label: 'Help',
         items: {
+          changelog: {
+            label: "What's New"
+          },
           about: {
             label: 'About'
           }
@@ -359,6 +362,12 @@ const en = {
       cancel: 'Cancel',
       error: 'Could not rename the project.'
     }
+  },
+  changelogDialog: {
+    header: "What's New",
+    loading: 'Loading changelog…',
+    loadError: 'The changelog could not be loaded.',
+    close: 'Close'
   },
   aboutDialog: {
     header: 'About Logigator',

@@ -1,0 +1,15 @@
+<div *transloco="let t" class="flex flex-col gap-4">
+  @if (markdown(); as md) {
+    <div class="max-h-[60vh] overflow-y-auto pr-1">
+      <lg-markdown [data]="md" />
+    </div>
+  } @else if (failed()) {
+    <p class="text-muted text-sm">{{ t('changelogDialog.loadError') }}</p>
+  } @else {
+    <p class="text-muted text-sm">{{ t('changelogDialog.loading') }}</p>
+  }
+
+  <div class="flex justify-end">
+    <lg-button [label]="t('changelogDialog.close')" (onClick)="close()" />
+  </div>
+</div>

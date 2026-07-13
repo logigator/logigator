@@ -33,7 +33,8 @@
             "loader": {
               ".wasm": "file",
               ".svg": "file",
-              ".woff2": "file"
+              ".woff2": "file",
+              ".md": "file"
             },
             "define": {
               "GIT_COMMIT": "''",

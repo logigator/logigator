@@ -19,6 +19,7 @@ import { ShortcutManagerComponent } from '../shortcuts/shortcut-manager/shortcut
 import { ExportImageDialogComponent } from './dialogs/export-image-dialog/export-image-dialog.component';
 import { ShareDialogComponent } from './dialogs/share-dialog/share-dialog.component';
 import { AboutDialogComponent } from './dialogs/about-dialog/about-dialog.component';
+import { ChangelogService } from '../changelog/changelog.service';
 import { DebugMenuService } from './debug-menu.service';
 import { ToastService } from '../logging/toast.service';
 
@@ -35,6 +36,7 @@ export class EditorMenuService {
   private readonly projectService = inject(ProjectService);
   private readonly projectMetadataStore = inject(ProjectMetadataStore);
   private readonly dialogService = inject(DialogService);
+  private readonly changelogService = inject(ChangelogService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly clipboardService = inject(ClipboardService);
   private readonly shortcutService = inject(ShortcutService);
@@ -183,7 +185,7 @@ export class EditorMenuService {
       },
       {
         label: this.translation.translate('titleBar.menuBar.help.label'),
-        items: [this.aboutItem()]
+        items: [this.changelogItem(), this.aboutItem()]
       }
     ];
 
@@ -205,6 +207,7 @@ export class EditorMenuService {
       ...this.exportFileItems(),
       this.generateImageItem(),
       { separator: true },
+      this.changelogItem(),
       this.aboutItem()
     ];
 
@@ -346,6 +349,20 @@ export class EditorMenuService {
       modal: true,
       closable: true
     });
+  }
+
+  private changelogItem(): MenuItem {
+    return {
+      label: this.translation.translate(
+        'titleBar.menuBar.help.items.changelog.label'
+      ),
+      icon: 'ph ph-megaphone',
+      command: () => this.openChangelog()
+    };
+  }
+
+  private openChangelog(): void {
+    this.changelogService.open();
   }
 
   /**

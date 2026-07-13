@@ -13,6 +13,8 @@
     "@angular/common": "^22.0.0",
     "@angular/core": "^22.0.0",
     "@angular/forms": "^22.0.0",
+    "marked": "^18.0.0",
+    "ngx-markdown": "^22.0.0",
     "rxjs": "^6.5.3 || ^7.4.0"
   },
   "dependencies": {

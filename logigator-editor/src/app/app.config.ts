@@ -10,8 +10,9 @@ import { GlobalErrorHandler } from './logging/global-error-handler';
 import { firstValueFrom } from 'rxjs';
 import { provideTransloco, TranslocoService } from '@jsverse/transloco';
 import { TranslationLoaderService } from './translation/translation-loader.service';
-import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClient, HttpClient } from '@angular/common/http';
 import { provideTranslocoPersistLang } from '@jsverse/transloco-persist-lang';
+import { provideMarkdown } from 'ngx-markdown';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -58,6 +59,7 @@ export const appConfig: ApplicationConfig = {
         defaultValue: undefined
       });
     }),
-    provideHttpClient()
+    provideHttpClient(),
+    provideMarkdown({ loader: HttpClient })
   ]
 };

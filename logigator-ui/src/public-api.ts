@@ -27,6 +27,7 @@ export { LgDivider } from './components/divider/divider';
 export { LgTag } from './components/tag/tag';
 export { LgBadge } from './components/badge/badge';
 export { LgMessage } from './components/message/message';
+export { LgMarkdown } from './components/markdown/markdown';
 export { LgAvatar } from './components/avatar/avatar';
 export { LgCard } from './components/card/card';
 export { LgList, LgListItem } from './components/list/list';
