@@ -245,11 +245,11 @@ Action `do`/`undo` implementations go through `Project.addWire` / `removeWire` /
 
 ---
 
-## Click-to-Toggle
+## Tap-to-Toggle
 
-Users can click on a wire crossing to place or remove a CP junction:
+Tapping the wire tool (`WorkMode.WIRE_TOOL` — a press that never moved a grid step, with no port in negation reach) on a wire crossing places or removes a CP junction:
 
-- **Pure 2-wire X crossing (no endpoints at the click point)**: `WorkMode.WIRE_CONNECTION` handles a pointer-down + up. The `WorkModeRouter` snaps the click position to the nearest half-grid point via `roundToHalfGrid`, then delegates to `WireConnectionSession`. On `onEnd`, it calls `Project.toggleConnectionAt(p)`. Because `hasCpAt(p)` is false, `_splitAt(p)` runs: both wires are split into two pieces each, the four new halves are run through `computeIntegration`, and an `ActionContainer(RemoveWiresAction, AddWiresAction)` is pushed to `ActionManager`. The CP rule then sees 4 terminations at `p` → CP appears.
+- **Pure 2-wire X crossing (no endpoints at the tap point)**: the `WorkModeRouter`'s tap handler (`_wireTap`) snaps the tap position to the nearest half-grid point via `roundToHalfGrid` and calls `Project.toggleConnectionAt(p)`. Because `hasCpAt(p)` is false, `_splitAt(p)` runs: both wires are split into two pieces each, the four new halves are run through `computeIntegration`, and an `ActionContainer(RemoveWiresAction, AddWiresAction)` is pushed to `ActionManager`. The CP rule then sees 4 terminations at `p` → CP appears.
 
 - **4-endpoint X junction (CP present at click point)**: `hasCpAt(p)` is true → `_joinAt(p)` runs. It finds the two H wire endpoints and the two V wire endpoints at `p`, builds a merged wire for each pair, runs integration, and checks if any output wire has an endpoint at `p` (which would indicate the integrator re-split because a third terminator blocked the merge). If not blocked, the action is pushed and the CP disappears.
 
@@ -257,14 +257,13 @@ Users can click on a wire crossing to place or remove a CP junction:
 
 ### Entry points
 
-| Layer                           | Detail                                                                        |
-| ------------------------------- | ----------------------------------------------------------------------------- |
-| `WorkMode.WIRE_CONNECTION`      | Enum value `'connWire'`, already in `work-mode.enum.ts`                       |
-| `WorkModeRouter.down`           | `case WorkMode.WIRE_CONNECTION` → `roundToHalfGrid` + `WireConnectionSession` |
-| `WireConnectionSession`         | Minimal `DragSession`; `onEnd` calls `project.toggleConnectionAt(startPos)`   |
-| `Project.toggleConnectionAt(p)` | Dispatches to `_joinAt` or `_splitAt` based on `hasCpAt(p)`                   |
-| `Project._splitAt(p)`           | Splits both crossing wires at `p`, pushes action via `actionManager.push`     |
-| `Project._joinAt(p)`            | Merges collinear pairs at `p`; no-ops silently if integrator re-splits        |
+| Layer                           | Detail                                                                    |
+| ------------------------------- | ------------------------------------------------------------------------- |
+| `WireToolSession`               | Reports a no-move press to the router via its `onTap` callback            |
+| `WorkModeRouter._wireTap`       | No port in reach → `roundToHalfGrid` + `project.toggleConnectionAt(p)`    |
+| `Project.toggleConnectionAt(p)` | Dispatches to `_joinAt` or `_splitAt` based on `hasCpAt(p)`               |
+| `Project._splitAt(p)`           | Splits both crossing wires at `p`, pushes action via `actionManager.push` |
+| `Project._joinAt(p)`            | Merges collinear pairs at `p`; no-ops silently if integrator re-splits    |
 
 ### Undo / redo
 

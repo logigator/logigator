@@ -15,14 +15,14 @@ export enum ShortcutActionEnum {
   ZOOM_100 = 'zoom100',
 
   TOOL_PAN = 'toolPan',
-  TOOL_WIRE_DRAWING = 'toolWireDrawing',
-  TOOL_WIRE_CONNECTION = 'toolWireConnection',
+  TOOL_WIRE = 'toolWire',
   TOOL_SELECT = 'toolSelect',
-  TOOL_SELECT_EXACT = 'toolSelectExact',
+  // Hold-style binding: scissors wires at the marquee edge while a select
+  // drag is in progress (checked via ShortcutService.isHeld, not on()).
+  SELECT_SCISSOR = 'selectScissor',
   TOOL_ERASE = 'toolErase',
   TOOL_COMPONENT_PLACEMENT = 'toolComponentPlacement',
   TOOL_PLACE_TEXT = 'toolPlaceText',
-  TOOL_PORT_NEGATION = 'toolPortNegation',
 
   TOGGLE_SIMULATION = 'toggleSimulation',
   CANCEL = 'cancel'

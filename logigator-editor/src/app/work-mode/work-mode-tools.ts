@@ -4,15 +4,7 @@ import { BuiltInComponentType } from '../components/component-type.enum';
 import { ShortcutActionEnum } from '../shortcuts/shortcut-action.enum';
 
 /** Stable identifier for a work-mode tool, independent of its WorkMode. */
-export type WorkModeToolId =
-  | 'pan'
-  | 'wire'
-  | 'connect'
-  | 'select'
-  | 'scissor'
-  | 'erase'
-  | 'text'
-  | 'negate';
+export type WorkModeToolId = 'pan' | 'wire' | 'select' | 'erase' | 'text';
 
 export interface WorkModeToolDescriptor {
   /** Stable id so surfaces can group/select tools (e.g. HUD primary row). */
@@ -52,34 +44,21 @@ export function createWorkModeTools(
     {
       id: 'wire',
       icon: 'ph ph-line-segment',
-      labelKey: 'toolBar.placeWires',
-      shortcut: ShortcutActionEnum.TOOL_WIRE_DRAWING,
-      isActive: () => mode() === WorkMode.WIRE_DRAWING,
-      activate: () => workMode.setMode(WorkMode.WIRE_DRAWING)
+      labelKey: 'toolBar.wireTool',
+      shortcut: ShortcutActionEnum.TOOL_WIRE,
+      isActive: () => mode() === WorkMode.WIRE_TOOL,
+      activate: () => workMode.setMode(WorkMode.WIRE_TOOL)
     },
     {
-      id: 'connect',
-      icon: 'ph ph-prohibit',
-      labelKey: 'toolBar.connWires',
-      shortcut: ShortcutActionEnum.TOOL_WIRE_CONNECTION,
-      isActive: () => mode() === WorkMode.WIRE_CONNECTION,
-      activate: () => workMode.setMode(WorkMode.WIRE_CONNECTION)
-    },
-    {
+      // The select tool covers both marquee flavors; the scissor variant is a
+      // sub-state driven by the toggle below or the held SELECT_SCISSOR key.
       id: 'select',
       icon: 'ph ph-selection',
       labelKey: 'toolBar.select',
       shortcut: ShortcutActionEnum.TOOL_SELECT,
-      isActive: () => mode() === WorkMode.SELECT,
+      isActive: () =>
+        mode() === WorkMode.SELECT || mode() === WorkMode.SELECT_EXACT,
       activate: () => workMode.setMode(WorkMode.SELECT)
-    },
-    {
-      id: 'scissor',
-      icon: 'ph ph-selection-slash',
-      labelKey: 'toolBar.selExact',
-      shortcut: ShortcutActionEnum.TOOL_SELECT_EXACT,
-      isActive: () => mode() === WorkMode.SELECT_EXACT,
-      activate: () => workMode.setMode(WorkMode.SELECT_EXACT)
     },
     {
       id: 'erase',
@@ -101,14 +80,48 @@ export function createWorkModeTools(
         workMode.setMode(WorkMode.COMPONENT_PLACEMENT);
         workMode.setSelectedComponentType(BuiltInComponentType.TEXT);
       }
-    },
-    {
-      id: 'negate',
-      icon: 'ph ph-circle-half-tilt',
-      labelKey: 'toolBar.negate',
-      shortcut: ShortcutActionEnum.TOOL_PORT_NEGATION,
-      isActive: () => mode() === WorkMode.PORT_NEGATION,
-      activate: () => workMode.setMode(WorkMode.PORT_NEGATION)
     }
   ];
+}
+
+/**
+ * The scissor sub-toggle of the select tool: switches the marquee between
+ * plain SELECT and SELECT_EXACT (cut wires at the marquee edge). Rendered by
+ * `ScissorToggleComponent` as a floating pill over the canvas while the select
+ * tool is active — on touch it is the only way to scissor; on desktop it
+ * doubles as a discoverable hint for the hold-to-scissor key (SELECT_SCISSOR,
+ * Alt by default).
+ */
+export interface ScissorToggleDescriptor {
+  icon: string;
+  /** Full description — tooltip / aria label. */
+  labelKey: string;
+  /** Short label shown inside the floating pill. */
+  shortLabelKey: string;
+  shortcut: ShortcutActionEnum;
+  /** Visible only while the select tool is active. */
+  isVisible: () => boolean;
+  isActive: () => boolean;
+  toggle: () => void;
+}
+
+export function createScissorToggle(
+  workMode: WorkModeService
+): ScissorToggleDescriptor {
+  const mode = workMode.mode;
+  return {
+    icon: 'ph ph-selection-slash',
+    labelKey: 'toolBar.selExact',
+    shortLabelKey: 'toolBar.selExactShort',
+    shortcut: ShortcutActionEnum.SELECT_SCISSOR,
+    isVisible: () =>
+      mode() === WorkMode.SELECT || mode() === WorkMode.SELECT_EXACT,
+    isActive: () => mode() === WorkMode.SELECT_EXACT,
+    toggle: () =>
+      workMode.setMode(
+        mode() === WorkMode.SELECT_EXACT
+          ? WorkMode.SELECT
+          : WorkMode.SELECT_EXACT
+      )
+  };
 }

@@ -1,13 +1,17 @@
 import { Container, Graphics, Point, PointData, Rectangle } from 'pixi.js';
 import { Component, PortSide } from '../components/component';
 import { Wire } from '../wires/wire';
-import { ConnectionPoint } from '../connection-points/connection-point';
+import {
+  ConnectionPoint,
+  scaleForScale as cpScaleForScale
+} from '../connection-points/connection-point';
 import { getStaticDI } from '../utils/get-di';
 import { GraphicsProviderService } from './graphics-provider.service';
 import {
   NegationBubbleGraphics,
   scaleForScale
 } from './graphics/negation-bubble.graphics';
+import { ThemingService } from '../theming/theming.service';
 
 /**
  * The transient overlay above the committed circuit: hosts drag-session
@@ -20,10 +24,16 @@ export class FloatingLayer extends Container {
     Component | Wire | ConnectionPoint
   >();
 
-  // Ghost bubble shown under the cursor while in PORT_NEGATION mode, previewing
-  // the port the next click would toggle. Lazily created, hidden when no port
-  // is in range.
+  // Ghost bubble shown under the cursor while the wire tool hovers a port,
+  // previewing the negation the next tap would toggle. Lazily created, hidden
+  // when no port is in range.
   private _negationHoverGhost: Graphics | null = null;
+
+  // Ghost shown while the wire tool hovers a toggleable wire connection:
+  // 'split' previews the CP dot a tap would create, 'join' tints the existing
+  // dot red for removal. Lazily created, redrawn per kind/zoom.
+  private _connectionGhost: Graphics | null = null;
+  private _connectionGhostKind: 'join' | 'split' | null = null;
 
   // Persistent grab rect over the committed selection (the drag target after
   // the marquee is released). Lazily created; styled like the live marquee so
@@ -55,6 +65,13 @@ export class FloatingLayer extends Container {
     if (this._negationHoverGhost?.visible) {
       this._sizeNegationGhost(this._negationHoverGhost, scale);
     }
+    if (this._connectionGhost?.visible && this._connectionGhostKind) {
+      this._drawConnectionGhost(
+        this._connectionGhost,
+        this._connectionGhostKind,
+        scale
+      );
+    }
   }
 
   /**
@@ -79,6 +96,41 @@ export class FloatingLayer extends Container {
     if (this._negationHoverGhost) {
       this._negationHoverGhost.visible = false;
     }
+  }
+
+  /**
+   * Shows the connection-toggle preview at a half-grid point: 'split' is the
+   * translucent CP dot a tap would create, 'join' tints the existing dot red
+   * for the removal a tap would perform.
+   */
+  public showConnectionGhost(p: PointData, kind: 'join' | 'split'): void {
+    const ghost = this._ensureConnectionGhost();
+    ghost.position.copyFrom(p);
+    if (this._connectionGhostKind !== kind) {
+      this._connectionGhostKind = kind;
+      this._drawConnectionGhost(ghost, kind, this._currentScale);
+    }
+    ghost.visible = true;
+  }
+
+  public hideConnectionGhost(): void {
+    if (this._connectionGhost) {
+      this._connectionGhost.visible = false;
+    }
+  }
+
+  /** Hides both wire-tool hover previews (negation bubble, connection dot). */
+  public hideWireToolGhosts(): void {
+    this.hideNegationGhost();
+    this.hideConnectionGhost();
+  }
+
+  public get negationGhostVisible(): boolean {
+    return this._negationHoverGhost?.visible ?? false;
+  }
+
+  public get connectionGhostVisible(): boolean {
+    return this._connectionGhost?.visible ?? false;
   }
 
   /** Shows the selection grab rect over the given grid-space bounds. */
@@ -143,5 +195,33 @@ export class FloatingLayer extends Container {
       this._negationHoverGhost = ghost;
     }
     return this._negationHoverGhost;
+  }
+
+  private _ensureConnectionGhost(): Graphics {
+    if (!this._connectionGhost) {
+      const ghost = new Graphics();
+      this.addChild(ghost);
+      this._connectionGhost = ghost;
+    }
+    return this._connectionGhost;
+  }
+
+  // Drawn per kind/zoom rather than via a shared context: both variants need
+  // CP-curve sizing at the current zoom (see connection-point.ts
+  // scaleForScale). Same square as a real CP dot — 'split' previews the dot a
+  // tap would create (translucent), 'join' covers the existing dot in the
+  // scissor red (reads as the dot tinted for removal).
+  private _drawConnectionGhost(
+    ghost: Graphics,
+    kind: 'join' | 'split',
+    scale: number
+  ): void {
+    const theme = getStaticDI(ThemingService).currentTheme();
+    const size = cpScaleForScale(scale);
+    const half = size / 2;
+    ghost.clear();
+    ghost.rect(-half, -half, size, size);
+    ghost.fill(kind === 'split' ? theme.wire : theme.scissorRect);
+    ghost.alpha = kind === 'split' ? 0.5 : 1;
   }
 }

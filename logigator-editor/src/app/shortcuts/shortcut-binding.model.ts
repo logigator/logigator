@@ -8,6 +8,21 @@ export interface ShortcutBinding {
   alt: boolean;
 }
 
+/**
+ * The binding flag a modifier key sets about itself. A bare-modifier binding
+ * (hold-style, e.g. plain Alt) keeps its own flag `false` — the key field
+ * already names it, and a `true` flag would render as "Alt + Alt" — so
+ * binding matchers skip that flag's comparison for the binding's own key.
+ */
+export const MODIFIER_FLAG_BY_KEY: Readonly<
+  Record<string, 'ctrl' | 'shift' | 'alt'>
+> = {
+  Control: 'ctrl',
+  Meta: 'ctrl',
+  Shift: 'shift',
+  Alt: 'alt'
+};
+
 export const DEFAULT_SHORTCUTS: Record<ShortcutActionEnum, ShortcutBinding> = {
   [ShortcutActionEnum.SAVE]: { key: 's', ctrl: true, shift: false, alt: false },
   [ShortcutActionEnum.OPEN]: { key: 'o', ctrl: true, shift: false, alt: false },
@@ -57,14 +72,8 @@ export const DEFAULT_SHORTCUTS: Record<ShortcutActionEnum, ShortcutBinding> = {
     shift: false,
     alt: false
   },
-  [ShortcutActionEnum.TOOL_WIRE_DRAWING]: {
+  [ShortcutActionEnum.TOOL_WIRE]: {
     key: 'd',
-    ctrl: false,
-    shift: false,
-    alt: false
-  },
-  [ShortcutActionEnum.TOOL_WIRE_CONNECTION]: {
-    key: 'c',
     ctrl: false,
     shift: false,
     alt: false
@@ -75,8 +84,8 @@ export const DEFAULT_SHORTCUTS: Record<ShortcutActionEnum, ShortcutBinding> = {
     shift: false,
     alt: false
   },
-  [ShortcutActionEnum.TOOL_SELECT_EXACT]: {
-    key: 'x',
+  [ShortcutActionEnum.SELECT_SCISSOR]: {
+    key: 'Alt',
     ctrl: false,
     shift: false,
     alt: false
@@ -95,12 +104,6 @@ export const DEFAULT_SHORTCUTS: Record<ShortcutActionEnum, ShortcutBinding> = {
   },
   [ShortcutActionEnum.TOOL_PLACE_TEXT]: {
     key: 't',
-    ctrl: false,
-    shift: false,
-    alt: false
-  },
-  [ShortcutActionEnum.TOOL_PORT_NEGATION]: {
-    key: 'n',
     ctrl: false,
     shift: false,
     alt: false

@@ -10,22 +10,36 @@ import { AddWiresAction } from '../../actions/actions/add-wires.action';
 import { RemoveWiresAction } from '../../actions/actions/remove-wires.action';
 import { ActionContainer } from '../../actions/action-container';
 
-export class WireDrawingSession implements DragSession {
+export class WireToolSession implements DragSession {
   private _direction: WireDirection | null = null;
   private _h: Wire | null = null;
   private _v: Wire | null = null;
   private _hasBodyCollision = false;
+  // Whether the pointer ever left the starting grid step — a press that never
+  // did is a tap, not a (possibly zero-length-again) wire drag.
+  private _moved = false;
 
+  /**
+   * @param onTap Invoked instead of a wire commit when the gesture stayed a
+   *   tap. The wire tool's port-negation / connection-toggle actions.
+   */
   constructor(
     private readonly project: Project,
     private readonly dragLayer: Container<Component | Wire | ConnectionPoint>,
-    private readonly startPos: Point
+    private readonly startPos: Point,
+    private readonly onTap?: () => void
   ) {}
 
   onMove(input: PointerInput): void {
     const local = input.grid;
     const dx = Math.round(local.x - this.startPos.x);
     const dy = Math.round(local.y - this.startPos.y);
+    if (!this._moved && (dx !== 0 || dy !== 0)) {
+      this._moved = true;
+      // The gesture became a wire drag — only now do the tap-preview ghosts
+      // stop applying (a still-standing press keeps them visible).
+      this.project.floatingLayer.hideWireToolGhosts();
+    }
 
     if (dx === 0 && dy === 0) {
       this._direction = null;
@@ -69,6 +83,12 @@ export class WireDrawingSession implements DragSession {
   }
 
   onEnd(): void {
+    if (!this._moved) {
+      this._cleanup();
+      this.onTap?.();
+      return;
+    }
+
     const newWires = ([this._h, this._v] as const).filter(
       (w): w is Wire => w !== null && w.length > 0
     );

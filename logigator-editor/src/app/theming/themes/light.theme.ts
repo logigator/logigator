@@ -5,6 +5,7 @@ export const LightTheme: Theme = {
   grid: 0x0,
   wire: 0x0,
   selectRect: 0,
+  scissorRect: 0xd32f2f,
   selectTint: 0xd0d0d0,
   wireSelectColor: 0x909090,
   fontTint: 0,

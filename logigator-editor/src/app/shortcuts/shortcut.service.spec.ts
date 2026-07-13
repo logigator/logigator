@@ -65,7 +65,7 @@ describe('ShortcutService', () => {
         {
           provide: WorkModeService,
           useValue: {
-            mode: vi.fn().mockReturnValue(WorkMode.WIRE_DRAWING),
+            mode: vi.fn().mockReturnValue(WorkMode.WIRE_TOOL),
             setMode: vi.fn(),
             setSelectedComponentType: vi.fn()
           }
@@ -177,6 +177,66 @@ describe('ShortcutService', () => {
       makeKeyEvent(undoDefault.key, { ctrlKey: undoDefault.ctrl })
     );
     expect(undo).toHaveBeenCalledOnce();
+  });
+
+  it('isHeld follows the default bare-Alt scissor binding through keydown/keyup', () => {
+    expect(service.isHeld(ShortcutActionEnum.SELECT_SCISSOR)).toBe(false);
+
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Alt', altKey: true })
+    );
+    expect(service.isHeld(ShortcutActionEnum.SELECT_SCISSOR)).toBe(true);
+
+    window.dispatchEvent(new KeyboardEvent('keyup', { key: 'Alt' }));
+    expect(service.isHeld(ShortcutActionEnum.SELECT_SCISSOR)).toBe(false);
+  });
+
+  it('isHeld releases everything when the window loses focus', () => {
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Alt', altKey: true })
+    );
+    expect(service.isHeld(ShortcutActionEnum.SELECT_SCISSOR)).toBe(true);
+
+    // The matching keyup goes to another window (alt-tab) — blur must not
+    // leave the key stuck held.
+    window.dispatchEvent(new Event('blur'));
+    expect(service.isHeld(ShortcutActionEnum.SELECT_SCISSOR)).toBe(false);
+  });
+
+  it('isHeld follows a rebinding to a plain letter key', () => {
+    service.setBinding(ShortcutActionEnum.SELECT_SCISSOR, {
+      key: 'x',
+      ctrl: false,
+      shift: false,
+      alt: false
+    });
+
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'x' }));
+    expect(service.isHeld(ShortcutActionEnum.SELECT_SCISSOR)).toBe(true);
+
+    // Holding an extra modifier no longer matches the exact binding.
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Shift', shiftKey: true })
+    );
+    expect(service.isHeld(ShortcutActionEnum.SELECT_SCISSOR)).toBe(false);
+
+    window.dispatchEvent(new KeyboardEvent('keyup', { key: 'x' }));
+    window.dispatchEvent(new KeyboardEvent('keyup', { key: 'Shift' }));
+    expect(service.isHeld(ShortcutActionEnum.SELECT_SCISSOR)).toBe(false);
+  });
+
+  it('heldChange$ fires on every held-state change', () => {
+    let emissions = 0;
+    const sub = service.heldChange$.subscribe(() => emissions++);
+
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Alt', altKey: true })
+    );
+    window.dispatchEvent(new KeyboardEvent('keyup', { key: 'Alt' }));
+    window.dispatchEvent(new Event('blur'));
+
+    expect(emissions).toBe(3);
+    sub.unsubscribe();
   });
 
   it('should persist bindings to localStorage', () => {

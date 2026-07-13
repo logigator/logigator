@@ -12,7 +12,7 @@ src/app/rendering/
 ├── ticker-scheduler.ts             # Translates project ticker signals into board frames
 ├── drag-collision.ts               # Shared collision detection for drag sessions
 ├── drag-session.ts                 # DragSession interface implemented by all session classes
-├── floating-layer.ts               # Visual host: drag-session ghosts + negation hover preview
+├── floating-layer.ts               # Visual host: drag-session ghosts + wire-tool hover previews
 ├── graphics-provider.service.ts    # Shared GraphicsContext cache
 ├── grid.ts                         # Infinite-seeming background grid
 ├── quad-tree-container.ts          # Spatial index for efficient range queries
@@ -30,7 +30,7 @@ src/app/rendering/
     ├── paste-placement.session.ts      # Paste preview drag → AddComponentsAction/AddWiresAction
     ├── select-rect.session.ts          # Rubber-band rect → selectionManager.commit()
     ├── selection-move.session.ts       # Drag selected elements → MoveComponentsAction/MoveWiresAction
-    └── wire-drawing.session.ts         # L-shaped wire preview → AddWiresAction
+    └── wire-tool.session.ts         # L-shaped wire preview → AddWiresAction
 ```
 
 ---
@@ -84,11 +84,11 @@ The `PointerNavTarget` is supplied by the host: the board maps it straight onto 
 
 The board's `PointerToolTarget`. Owns the interaction state that used to live on `FloatingLayer`: the current `WorkMode`, the `componentToPlace` config, and the single `_activeDrag: DragSession | null`.
 
-- `down(input)` switches on the mode and starts the matching session (`PanSession`, `ComponentPlacementSession`, `WireDrawingSession`, `SelectRectSession`/`SelectionMoveSession`, `EraseSession`, `WireConnectionSession`), or performs the click actions that never become sessions (PORT_NEGATION toggling through the undo stack; SIMULATION taps route through a `PanSession` whose tap action activates a button/switch or requests inspection).
-- `move(input)` delegates to `_activeDrag.onMove`; with no session it falls through to `hover` (the negation-mode port preview keeps tracking during a press).
+- `down(input)` switches on the mode and starts the matching session (`PanSession`, `ComponentPlacementSession`, `WireToolSession`, `SelectRectSession`/`SelectionMoveSession`, `EraseSession`). Tap actions ride on session tap callbacks: a `WireToolSession` press that never moved a grid step fires the router's `_wireTap` (port negation through the undo stack, else `Project.toggleConnectionAt`); SIMULATION taps route through a `PanSession` whose tap action activates a button/switch or requests inspection.
+- `move(input)` delegates to `_activeDrag.onMove`; with no session it falls through to `hover` (the wire tool’s tap previews: the negation bubble over a port, the connection ghost over a toggleable junction — `Project.connectionToggleKindAt` dry-runs the join plan so non-toggleable T-junctions show nothing). The previews survive a press and hide only when the gesture becomes a drag (`WireToolSession` hides them on its first real move).
 - `up()` asks `session.canEnd()` first — `false` (collision) keeps the session alive; `true` commits via `onEnd()` and stops the drag ticker.
 - `cancel()` / Escape (a `ShortcutService` subscription) abort the session via `onCancel()`.
-- `setProject(project)` re-homes the router on tab switches: cancels any in-flight session on the old project, hides the negation ghost, resubscribes to the new project's `pasteRequest$`, and clears the new selection.
+- `setProject(project)` re-homes the router on tab switches: cancels any in-flight session on the old project, hides the wire-tool ghosts, resubscribes to the new project's `pasteRequest$`, and clears the new selection.
 - Paste: `ClipboardService` calls `Project.startPasteSession`, which emits on `pasteRequest$`; the router opens the `PastePlacementSession` in the project's floating layer.
 
 Sessions receive `project.floatingLayer.dragLayer` (or the floating layer itself for the select rect) to parent their ghosts; drag starts/stops emit `'on'`/`'off'` on the project ticker.
@@ -196,13 +196,13 @@ Sessions receive grid-space positions precomputed on the `PointerInput` (`input.
 
 Each session lives in `rendering/sessions/` and implements `DragSession` (`onMove(input: PointerInput)`, `onEnd`, `onCancel`, `canEnd`).
 
-**`DragSession.canEnd()`** — called by `WorkModeRouter.up` before committing. Return `false` to keep the session alive (collision block or silent-discard). `WireDrawingSession` and `SelectRectSession` always return `true`. Collision sessions return `!_hasCollision`.
+**`DragSession.canEnd()`** — called by `WorkModeRouter.up` before committing. Return `false` to keep the session alive (collision block or silent-discard). `WireToolSession` and `SelectRectSession` always return `true`. Collision sessions return `!_hasCollision`.
 
 **`ComponentPlacementSession`** — creates a ghost `Component` (wearing the selection look: `selected = true`, i.e. the theme's `selectTint`) in `_dragLayer`. `_dragLayer.position` tracks the grid-snapped pointer. On construction and on every `onMove`, calls `project.hasComponentCollision` with the ghost's world `gridBounds` (`dragLayer.position + component.gridBounds` offsets). Collision tints `_component` red (`0xff4444`); clearing calls `refreshTint()` to restore the ghost tint. `canEnd()` returns `false` while colliding — `pointerup` is ignored and the ghost stays live. On `onEnd()`, the component's world position is set from `_dragLayer.position`, then `AddComponentsAction` is pushed (serializes the ghost) and the ghost is destroyed. `_dragLayer.position` is reset to zero.
 
 **`SelectionMoveSession`** — snapshots the selection, calls `project.detachForDrag`, and reparents elements into `_dragLayer`. `onMove` sets `_dragLayer.position` to the grid-snapped delta from the drag start and runs `project.hasComponentCollision` for each dragged component against the fixed quad tree. Collision tints `dragLayer` red (`0xff4444`); clearing restores `0xffffff`. `canEnd()` returns `false` while colliding. `onEnd` (which requires `canEnd() === true`) applies the delta to each element's own position, resets `_dragLayer.position` and `_dragLayer.tint`, calls `project.reattachFromDrag`, and if the delta was non-zero pushes `MoveComponentsAction`/`MoveWiresAction` wrapped in an `ActionContainer`. `onCancel` resets position and tint before reattaching — always safe regardless of collision state.
 
-**`WireDrawingSession`** — `_wirePreview.position` is the half-grid-snapped start point. Two `Wire` objects (horizontal + vertical) are created lazily on first movement and sized to form an L-shape. The drag direction is locked to whichever axis moved first. `getLocalPosition(_wirePreview)` gives the delta from the start in grid units, which drives wire lengths/positions. On `onEnd()`, non-zero wires have the start position added to their local positions (converting to world grid coords), then `AddWiresAction` is pushed and preview wires are destroyed.
+**`WireToolSession`** — `_wirePreview.position` is the half-grid-snapped start point. Two `Wire` objects (horizontal + vertical) are created lazily on first movement and sized to form an L-shape. The drag direction is locked to whichever axis moved first. `getLocalPosition(_wirePreview)` gives the delta from the start in grid units, which drives wire lengths/positions. On `onEnd()`, non-zero wires have the start position added to their local positions (converting to world grid coords), then `AddWiresAction` is pushed and preview wires are destroyed.
 
 **`SelectRectSession`** — adds `_selectRect` to `FloatingLayer` at the click's grid position. `onMove` sets `_selectRect.scale` to the grid-unit delta from start (negative values handle reverse drags). `onEnd` normalizes the rect to a canonical `Rectangle` (always positive width/height), removes `_selectRect`, and calls `project.selectionManager.commit(rect, mode)`. A zero-area rect (no movement) reaches the selection manager unchanged and is handled as a single-click hit test.
 
@@ -390,7 +390,7 @@ The FontFace is registered under a bake-only family name (`Roboto Mono Canvas`) 
 | `RendererService`         | `BoardComponent`, `SubCircuitWatchComponent` (leases); `BoardSnapshotService`, `DebugMenuService` (direct) | The one shared renderer; leased per canvas, read directly for offscreen renders  |
 | `TickerScheduler`         | `BoardComponent`                                                                                           | One per project; turns `project.ticker$` signals into board ticker frames        |
 | `Grid`                    | `Project`                                                                                                  | Instantiated privately; forwarded position/scale changes                         |
-| `FloatingLayer`           | `Project`, sessions (via `WorkModeRouter`)                                                                 | Visual host for session ghosts and the negation hover preview                    |
+| `FloatingLayer`           | `Project`, sessions (via `WorkModeRouter`)                                                                 | Visual host for session ghosts and the wire-tool hover previews                  |
 | `DragCollisionState`      | `PastePlacementSession`, `SelectionMoveSession`                                                            | Shared component+wire collision detection against the project's quad trees       |
 | `QuadTreeContainer`       | `Project`                                                                                                  | Used as `_wires` and `_components` inside `_gridSpace`                           |
 | `GraphicsProviderService` | `Wire`, `Grid` (via `getStaticDI`), any component subclass                                                 | Shared `GraphicsContext` deduplication                                           |
@@ -433,7 +433,7 @@ PixiJS caches one instruction set per render group and rebuilds a group's set **
 
 ### Work-mode integration
 
-`WorkModeService.mode()` and `selectedComponentConfig()` (Angular signals) are mirrored onto the `WorkModeRouter` via an Angular `effect` in `BoardComponent` (`setMode` cancels any active session and clears the selection). A second effect sets the canvas CSS cursor to `pointer` while in PORT_NEGATION mode.
+`WorkModeService.mode()` and `selectedComponentConfig()` (Angular signals) are mirrored onto the `WorkModeRouter` via an Angular `effect` in `BoardComponent` (`setMode` cancels any active session and clears the selection).
 
 ---
 

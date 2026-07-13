@@ -5,17 +5,17 @@ import { Project } from '../../project/project';
 import { Component } from '../../components/component';
 import { Wire } from '../../wires/wire';
 import { ConnectionPoint } from '../../connection-points/connection-point';
-import { WireDrawingSession } from './wire-drawing.session';
+import { WireToolSession } from './wire-tool.session';
 import { textComponentConfig } from '../../components/component-types/text/text.config';
 import { TextComponent } from '../../components/component-types/text/text.component';
 import { andComponentConfig } from '../../components/component-types/and/and.config';
 import { AndComponent } from '../../components/component-types/and/and.component';
 import { makeMoveInput } from '../../../testing/factories';
 
-describe('WireDrawingSession + TextComponent (ignoresWireCollision)', () => {
+describe('WireToolSession + TextComponent (ignoresWireCollision)', () => {
   let project: Project;
   let dragLayer: Container<Component | Wire | ConnectionPoint>;
-  let session: WireDrawingSession;
+  let session: WireToolSession;
 
   beforeEach(() => {
     configureTestBed();
@@ -39,7 +39,7 @@ describe('WireDrawingSession + TextComponent (ignoresWireCollision)', () => {
     project.addComponent(text);
 
     // Start at (0,0), move right to (6,0) — passes through TEXT body at (3,0).
-    session = new WireDrawingSession(project, dragLayer, new Point(0, 0));
+    session = new WireToolSession(project, dragLayer, new Point(0, 0));
     session.onMove(makeMoveInput(6, 0));
 
     expect(session.canEnd()).toBe(true);
@@ -54,7 +54,7 @@ describe('WireDrawingSession + TextComponent (ignoresWireCollision)', () => {
     project.addComponent(and);
 
     // AND body occupies (3,0)–(5,2); wire from (0,0)→(6,0) intersects it.
-    session = new WireDrawingSession(project, dragLayer, new Point(0, 0));
+    session = new WireToolSession(project, dragLayer, new Point(0, 0));
     session.onMove(makeMoveInput(6, 0));
 
     expect(session.canEnd()).toBe(false);

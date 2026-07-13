@@ -187,7 +187,7 @@ These actions are pushed by `FloatingLayer._commitDrag()` after a successful sel
 | `ClipboardService._applyDelete()` | `ActionContainer(RemoveComponentsAction, RemoveWiresAction)` (delete / cut; folds in pending scissor cut)   |
 | `SelectionMoveSession.onEnd()`    | `ActionContainer(MoveComponentsAction, MoveWiresAction, …)` (also folds in pending scissor cut if present)  |
 | `EraseSession.onEnd()`            | `ActionContainer(RemoveComponentsAction, RemoveWiresAction)`                                                |
-| `WireDrawingSession.onEnd()`      | `AddWiresAction` (also `RemoveWiresAction` / `AddWiresAction` when wire integration triggers splits/merges) |
+| `WireToolSession.onEnd()`         | `AddWiresAction` (also `RemoveWiresAction` / `AddWiresAction` when wire integration triggers splits/merges) |
 
 Undo/redo keyboard shortcuts are wired through Angular UI components that call `project.actionManager.undo()` / `.redo()` directly.
 

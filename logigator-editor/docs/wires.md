@@ -174,11 +174,11 @@ Project (stage root)
 
 ---
 
-## Wire Drawing Interaction (WireDrawingSession)
+## Wire Drawing Interaction (WireToolSession)
 
-When `WorkMode.WIRE_DRAWING` is active, the `WorkModeRouter` runs the drag through a `WireDrawingSession`:
+When `WorkMode.WIRE_TOOL` is active, the `WorkModeRouter` runs the drag through a `WireToolSession`:
 
-1. **`pointerdown`** — the `WorkModeRouter` snaps the input's grid position to the half-grid with `roundToHalfGrid` and starts a `WireDrawingSession` at this snapped point.
+1. **`pointerdown`** — the `WorkModeRouter` snaps the input's grid position to the half-grid with `roundToHalfGrid` and starts a `WireToolSession` at this snapped point.
 
 2. **`pointermove` → `handleMouseMoveWhilePlacingWire`** — on first non-zero mouse movement, the dominant axis is determined:
    - Movement on X first → `WireDirection.HORIZONTAL` locked.
@@ -273,7 +273,7 @@ Callers wrap the result in `ActionContainer(RemoveWiresAction, AddWiresAction)` 
 
 | Mutation site                                   | Inputs passed                                                                                                                                    |
 | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `WireDrawingSession.onEnd`                      | `addedWires`                                                                                                                                     |
+| `WireToolSession.onEnd`                         | `addedWires`                                                                                                                                     |
 | `SelectionMoveSession.onEnd`                    | `movedWires`, `movedComponentPorts`                                                                                                              |
 | `ComponentPlacementSession.onEnd`               | `addedComponentPorts`                                                                                                                            |
 | `Component.portsChange$` (rotation, port-count) | `movedComponentPorts` — applied directly without action wrapping (no undo yet; see [`connection-points.md`](connection-points.md) § Future work) |
@@ -295,7 +295,7 @@ The loop is bounded at 8 iterations (in practice converges in 1–2); exceeding 
 
 ### Body collision during wire drawing
 
-`Project.hasWireBodyCollision(wireBounds)` checks whether a wire's AABB intersects any component's body (excluding stub padding). `WireDrawingSession` calls this on every `pointermove` and tints colliding preview segments red. `canEnd()` returns `false` while any collision is active, blocking the commit.
+`Project.hasWireBodyCollision(wireBounds)` checks whether a wire's AABB intersects any component's body (excluding stub padding). `WireToolSession` calls this on every `pointermove` and tints colliding preview segments red. `canEnd()` returns `false` while any collision is active, blocking the commit.
 
 A wire endpoint touching a port stub tip is not a collision — the strict `Rectangle.intersects` semantics and body-only bounds ensure this case is handled correctly without special-casing.
 

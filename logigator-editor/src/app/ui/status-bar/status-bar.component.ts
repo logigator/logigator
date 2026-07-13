@@ -1,4 +1,5 @@
 import { Component, computed, inject, input } from '@angular/core';
+import { formatShortcutLabel } from '@logigator/ui';
 import { WorkModeService } from '../../work-mode/work-mode.service';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { TranslationService } from '../../translation/translation.service';
@@ -11,6 +12,8 @@ import {
 } from '../../components/component-config.model';
 import { ProjectMetadataStore } from '../../persistence/project-metadata.store';
 import { ProjectService } from '../../project/project.service';
+import { ShortcutService } from '../../shortcuts/shortcut.service';
+import { ShortcutActionEnum } from '../../shortcuts/shortcut-action.enum';
 
 @Component({
   selector: 'app-status-bar',
@@ -23,6 +26,7 @@ export class StatusBarComponent {
   private readonly translation = inject(TranslationService);
   private readonly metadataStore = inject(ProjectMetadataStore);
   private readonly projectService = inject(ProjectService);
+  private readonly shortcutService = inject(ShortcutService);
 
   public readonly cursorPosition = input<Point>(new Point(0, 0));
 
@@ -39,6 +43,14 @@ export class StatusBarComponent {
   protected readonly workMode = computed(
     () => `statusBar.modes.${this.workModeService.mode()}` as TranslationKey
   );
+
+  /** The select-mode hint's hold-to-scissor key, tracking rebinds live. */
+  protected readonly scissorKeyLabel = computed(() => {
+    const binding = this.shortcutService.binding(
+      ShortcutActionEnum.SELECT_SCISSOR
+    )();
+    return binding ? formatShortcutLabel(binding) : '–';
+  });
 
   protected readonly selectedComponentName = computed((): LocalizableText => {
     const comp = this.workModeService.selectedComponentType();

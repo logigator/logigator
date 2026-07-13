@@ -155,7 +155,7 @@ Button groups (separated by `p-divider`):
 2. **Clipboard** — Copy, Cut, Paste, Delete (wired to `ClipboardService`)
 3. **History** — Undo, Redo (wired to `ActionManager`)
 4. **Zoom** — Zoom Out, Zoom In (stubs)
-5. **Drawing tools** — Place Wires, Connect Wires, Select, Select Exact, Erase, Place Text
+5. **Drawing tools** — Pan, Wire Tool, Select, Erase, Place Text (shared descriptors from `work-mode-tools.ts`)
 
 Each drawing-tool button has a `[styleClass]` bound to a `computed()` that returns `'bg-bluegray-300'` when its corresponding `WorkMode` is active, providing a visual active state.
 

@@ -15,8 +15,10 @@ import {
   makeAnd,
   makeButton,
   makeSwitch,
-  makeRom
+  makeRom,
+  makeWire
 } from '../../../testing/factories';
+import { WireDirection } from '../../wires/wire-direction.enum';
 import { Component } from '../../components/component';
 import { ComponentConfig } from '../../components/component-config.model';
 import { andComponentConfig } from '../../components/component-types/and/and.config';
@@ -123,7 +125,7 @@ describe('WorkModeRouter in SIMULATION mode', () => {
   });
 
   it('entering simulation mode cancels an active drag', () => {
-    router.setMode(WorkMode.WIRE_DRAWING);
+    router.setMode(WorkMode.WIRE_TOOL);
     router.down(makeInput(5, 5));
     expect(tickerValues).toContain('on');
     tickerValues.length = 0;
@@ -134,7 +136,7 @@ describe('WorkModeRouter in SIMULATION mode', () => {
   });
 
   it('switching projects cancels an active drag on the old one', () => {
-    router.setMode(WorkMode.WIRE_DRAWING);
+    router.setMode(WorkMode.WIRE_TOOL);
     router.down(makeInput(5, 5));
     tickerValues.length = 0;
 
@@ -194,9 +196,59 @@ describe('WorkModeRouter in SELECT mode', () => {
     expect(comp.position.x).toBe(3);
     expect(project.selectionManager.isEmpty).toBe(true);
   });
+
+  it('a plain marquee selects a crossing wire whole', () => {
+    // x ∈ [0.5, 4.5] at y 2.5 — extends past the marquee's right edge.
+    const wire = makeWire(0, 2, WireDirection.HORIZONTAL, 4);
+    project.addWire(wire);
+
+    router.down(makeInput(0, 0));
+    router.move(makeInput(2.5, 3));
+    router.up();
+
+    expect(Array.from(project.wires)).toHaveLength(1);
+    expect(project.selectionManager.selectedWires.has(wire)).toBe(true);
+  });
+
+  it('holding the scissor key scissors wires at the marquee edge', () => {
+    const wire = makeWire(0, 2, WireDirection.HORIZONTAL, 4);
+    project.addWire(wire);
+
+    // Default SELECT_SCISSOR binding: a bare Alt.
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Alt', altKey: true })
+    );
+    try {
+      router.down(makeInput(0, 0));
+      router.move(makeInput(2.5, 3));
+      router.up();
+    } finally {
+      window.dispatchEvent(new KeyboardEvent('keyup', { key: 'Alt' }));
+    }
+
+    // Cut at x = 3.5 (the first half-grid position outside the rect): the
+    // inside piece is selected, the outside remnant is not.
+    const wires = Array.from(project.wires);
+    expect(wires).toHaveLength(2);
+    const selected = Array.from(project.selectionManager.selectedWires);
+    expect(selected).toHaveLength(1);
+    expect(selected[0].length).toBe(3);
+  });
+
+  it('the scissor mode set by the toggle scissors without any key held', () => {
+    const wire = makeWire(0, 2, WireDirection.HORIZONTAL, 4);
+    project.addWire(wire);
+    router.setMode(WorkMode.SELECT_EXACT);
+
+    router.down(makeInput(0, 0));
+    router.move(makeInput(2.5, 3));
+    router.up();
+
+    expect(Array.from(project.wires)).toHaveLength(2);
+  });
 });
 
-describe('WorkModeRouter in PORT_NEGATION mode', () => {
+describe('WorkModeRouter wire-tool taps (WIRE_TOOL mode)', () => {
   let project: Project;
   let router: WorkModeRouter;
 
@@ -205,6 +257,7 @@ describe('WorkModeRouter in PORT_NEGATION mode', () => {
     project = new Project();
     router = new WorkModeRouter();
     router.setProject(project);
+    router.setMode(WorkMode.WIRE_TOOL);
   });
 
   afterEach(() => {
@@ -212,13 +265,18 @@ describe('WorkModeRouter in PORT_NEGATION mode', () => {
     project.destroy({ children: true });
   });
 
-  it('toggles negation on the clicked input port, undoably', () => {
+  /** A press-and-release without movement. */
+  function tap(x: number, y: number): void {
+    router.down(makeInput(x, y));
+    router.up();
+  }
+
+  it('toggles negation on the tapped input port, undoably', () => {
     const and = makeAnd(2, undefined, 2, 2);
     project.addComponent(and);
-    router.setMode(WorkMode.PORT_NEGATION);
     const cp = and.connectionPoints; // 0,1 inputs; 2 output
 
-    router.down(makeInput(cp[0].x, cp[0].y));
+    tap(cp[0].x, cp[0].y);
 
     expect(and.isPortNegated('in', 0)).toBe(true);
     expect(project.actionManager.undoAvailable).toBe(true);
@@ -227,70 +285,150 @@ describe('WorkModeRouter in PORT_NEGATION mode', () => {
     expect(and.isPortNegated('in', 0)).toBe(false);
   });
 
-  it('toggles the output port back off on a second click', () => {
+  it('toggles the output port back off on a second tap', () => {
     const and = makeAnd(2, undefined, 2, 2);
     project.addComponent(and);
-    router.setMode(WorkMode.PORT_NEGATION);
     const out = and.connectionPoints[2];
 
-    router.down(makeInput(out.x, out.y));
+    tap(out.x, out.y);
     expect(and.isPortNegated('out', 0)).toBe(true);
 
-    router.down(makeInput(out.x, out.y));
+    tap(out.x, out.y);
     expect(and.isPortNegated('out', 0)).toBe(false);
   });
 
-  it('does nothing when the click is outside port tolerance', () => {
+  it('splits crossing wires on a tap and rejoins them on a second tap', () => {
+    // Horizontal x ∈ [0.5, 4.5] at y 2.5; vertical y ∈ [0.5, 4.5] at x 2.5 —
+    // they cross at (2.5, 2.5) without either ending there.
+    project.addWire(makeWire(0, 2, WireDirection.HORIZONTAL, 4));
+    project.addWire(makeWire(2, 0, WireDirection.VERTICAL, 4));
+
+    tap(2.5, 2.5);
+    expect(Array.from(project.wires)).toHaveLength(4);
+
+    tap(2.5, 2.5);
+    expect(Array.from(project.wires)).toHaveLength(2);
+  });
+
+  it('negates the port rather than toggling a connection when both are in reach', () => {
     const and = makeAnd(2, undefined, 2, 2);
     project.addComponent(and);
-    router.setMode(WorkMode.PORT_NEGATION);
+    const cp = and.connectionPoints[0];
+    const toggleSpy = vi.spyOn(project, 'toggleConnectionAt');
+
+    tap(cp.x, cp.y);
+
+    expect(and.isPortNegated('in', 0)).toBe(true);
+    expect(toggleSpy).not.toHaveBeenCalled();
+  });
+
+  it('does nothing when the tap is outside port tolerance on empty canvas', () => {
+    const and = makeAnd(2, undefined, 2, 2);
+    project.addComponent(and);
     const cp = and.connectionPoints[0];
 
     // 0.51gu away — within the quad-tree query box but past the 0.5gu hit test.
-    router.down(makeInput(cp.x + 0.51, cp.y));
+    tap(cp.x + 0.51, cp.y);
 
     expect(and.isPortNegated('in', 0)).toBe(false);
     expect(project.actionManager.undoAvailable).toBe(false);
   });
 
-  it('does nothing when clicking empty canvas', () => {
-    project.addComponent(makeAnd(2, undefined, 2, 2));
-    router.setMode(WorkMode.PORT_NEGATION);
+  it('a drag draws a wire and triggers no tap action', () => {
+    project.addWire(makeWire(0, 2, WireDirection.HORIZONTAL, 4));
+    project.addWire(makeWire(2, 0, WireDirection.VERTICAL, 4));
 
-    router.down(makeInput(20, 20));
+    router.down(makeInput(2.5, 2.5)); // starts on the crossing
+    router.move(makeInput(2.5, 8.5));
+    router.up();
 
+    // The new piece merges into the collinear vertical wire (now spanning
+    // y 0.5–8.5), and the crossing was not split by the press.
+    const lengths = Array.from(project.wires, (w) => w.length).sort();
+    expect(lengths).toEqual([4, 8]);
+  });
+
+  it('a drag that returns to its origin neither draws nor taps', () => {
+    project.addWire(makeWire(0, 2, WireDirection.HORIZONTAL, 4));
+    project.addWire(makeWire(2, 0, WireDirection.VERTICAL, 4));
+
+    router.down(makeInput(2.5, 2.5));
+    router.move(makeInput(2.5, 8.5));
+    router.move(makeInput(2.5, 2.5)); // back to a zero-length preview
+    router.up();
+
+    expect(Array.from(project.wires)).toHaveLength(2);
     expect(project.actionManager.undoAvailable).toBe(false);
   });
 
-  it('shows the hover ghost over a port and hides it off-port', () => {
+  it('shows the negation ghost over a port and hides it off-port', () => {
     const and = makeAnd(2, undefined, 2, 2);
     project.addComponent(and);
-    router.setMode(WorkMode.PORT_NEGATION);
     const cp = and.connectionPoints[0];
 
     router.hover(makeInput(cp.x, cp.y));
-    const ghost = project.floatingLayer.children.find(
-      (child) => child !== project.floatingLayer.dragLayer
-    );
-    expect(ghost?.visible).toBe(true);
+    expect(project.floatingLayer.negationGhostVisible).toBe(true);
 
     router.hover(makeInput(20, 20));
-    expect(ghost?.visible).toBe(false);
+    expect(project.floatingLayer.negationGhostVisible).toBe(false);
   });
 
-  it('hides the hover ghost when leaving the mode', () => {
+  it('hides the hover ghosts when leaving the mode', () => {
     const and = makeAnd(2, undefined, 2, 2);
     project.addComponent(and);
-    router.setMode(WorkMode.PORT_NEGATION);
     const cp = and.connectionPoints[0];
     router.hover(makeInput(cp.x, cp.y));
 
     router.setMode(WorkMode.SELECT);
 
-    const ghost = project.floatingLayer.children.find(
-      (child) => child !== project.floatingLayer.dragLayer
-    );
-    expect(ghost?.visible).toBe(false);
+    expect(project.floatingLayer.negationGhostVisible).toBe(false);
+  });
+
+  it('keeps the negation ghost visible while pressed, hides it once the drag starts', () => {
+    const and = makeAnd(2, undefined, 2, 2);
+    project.addComponent(and);
+    const cp = and.connectionPoints[0];
+    router.hover(makeInput(cp.x, cp.y));
+    expect(project.floatingLayer.negationGhostVisible).toBe(true);
+
+    router.down(makeInput(cp.x, cp.y));
+    expect(project.floatingLayer.negationGhostVisible).toBe(true);
+
+    router.move(makeInput(cp.x - 3, cp.y)); // away from the body: a real drag
+    expect(project.floatingLayer.negationGhostVisible).toBe(false);
+    router.up();
+  });
+
+  it('shows the connection ghost over a toggleable crossing and hides it off-wire', () => {
+    project.addWire(makeWire(0, 2, WireDirection.HORIZONTAL, 4));
+    project.addWire(makeWire(2, 0, WireDirection.VERTICAL, 4));
+
+    router.hover(makeInput(2.5, 2.5)); // pure crossing → split preview
+    expect(project.floatingLayer.connectionGhostVisible).toBe(true);
+
+    router.hover(makeInput(20, 20));
+    expect(project.floatingLayer.connectionGhostVisible).toBe(false);
+  });
+
+  it('shows no connection ghost over a T-junction — a tap there is a no-op', () => {
+    project.addWire(makeWire(0, 2, WireDirection.HORIZONTAL, 2));
+    project.addWire(makeWire(2, 2, WireDirection.HORIZONTAL, 3));
+    project.addWire(makeWire(2, 0, WireDirection.VERTICAL, 2));
+
+    router.hover(makeInput(2.5, 2.5));
+
+    expect(project.floatingLayer.connectionGhostVisible).toBe(false);
+  });
+
+  it('refreshes the connection ghost in place after a tap toggles the junction', () => {
+    project.addWire(makeWire(0, 2, WireDirection.HORIZONTAL, 4));
+    project.addWire(makeWire(2, 0, WireDirection.VERTICAL, 4));
+    router.hover(makeInput(2.5, 2.5));
+
+    tap(2.5, 2.5); // splits — the point is now a joinable CP
+
+    expect(project.floatingLayer.connectionGhostVisible).toBe(true);
+    expect(project.connectionToggleKindAt(new Point(2.5, 2.5))).toBe('join');
   });
 });
 

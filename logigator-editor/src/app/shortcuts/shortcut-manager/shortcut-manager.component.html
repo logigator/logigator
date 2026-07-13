@@ -11,6 +11,7 @@
             <div class="flex items-center gap-1">
               <app-shortcut-edit
                 [binding]="shortcutService.binding(action)()"
+                [allowModifierOnly]="allowsModifierOnly(action)"
                 (bindingChange)="onBindingChange(action, $event)"
               />
               <lg-button

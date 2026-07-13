@@ -59,10 +59,9 @@ export class ShortcutManagerComponent {
       labelKey: 'shortcuts.groups.tools',
       actions: [
         ShortcutActionEnum.TOOL_PAN,
-        ShortcutActionEnum.TOOL_WIRE_DRAWING,
-        ShortcutActionEnum.TOOL_WIRE_CONNECTION,
+        ShortcutActionEnum.TOOL_WIRE,
         ShortcutActionEnum.TOOL_SELECT,
-        ShortcutActionEnum.TOOL_SELECT_EXACT,
+        ShortcutActionEnum.SELECT_SCISSOR,
         ShortcutActionEnum.TOOL_ERASE,
         ShortcutActionEnum.TOOL_COMPONENT_PLACEMENT,
         ShortcutActionEnum.TOOL_PLACE_TEXT
@@ -73,6 +72,11 @@ export class ShortcutManagerComponent {
       actions: [ShortcutActionEnum.TOGGLE_SIMULATION, ShortcutActionEnum.CANCEL]
     }
   ];
+
+  /** The hold-style scissor modifier may be bound to a bare modifier key. */
+  protected allowsModifierOnly(action: ShortcutActionEnum): boolean {
+    return action === ShortcutActionEnum.SELECT_SCISSOR;
+  }
 
   protected isDefault(action: ShortcutActionEnum): boolean {
     const current = this.shortcutService.binding(action)();

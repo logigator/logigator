@@ -14,7 +14,11 @@ import {
   ShortcutActionEnum,
   ALL_SHORTCUT_ACTIONS
 } from './shortcut-action.enum';
-import { DEFAULT_SHORTCUTS, ShortcutBinding } from './shortcut-binding.model';
+import {
+  DEFAULT_SHORTCUTS,
+  MODIFIER_FLAG_BY_KEY,
+  ShortcutBinding
+} from './shortcut-binding.model';
 import { ProjectService } from '../project/project.service';
 import { SaveCoordinatorService } from '../ui/save-coordinator.service';
 import { ClipboardService } from '../clipboard/clipboard.service';
@@ -63,7 +67,26 @@ export class ShortcutService implements OnDestroy {
   }>();
 
   private readonly _keydownSub: Subscription;
+  private readonly _holdSubs: Subscription[];
   private readonly STORAGE_KEY = 'logigator.shortcuts';
+
+  // Live keyboard state for hold-style bindings (see isHeld). Tracks every
+  // key by KeyboardEvent.key plus the current modifier flags, so a binding
+  // rebound to a plain letter works the same as the default bare 'Alt'.
+  private readonly _heldKeys = new Set<string>();
+  private _heldCtrl = false;
+  private _heldShift = false;
+  private _heldAlt = false;
+  private readonly _heldChange$ = new Subject<void>();
+
+  /**
+   * Fires after every held-key state change (keydown, keyup, window blur).
+   * Lets an in-flight gesture re-poll {@link isHeld} without waiting for the
+   * next pointer event — e.g. the select marquee restyling the moment the
+   * scissor key goes down under a motionless pointer.
+   */
+  public readonly heldChange$: Observable<void> =
+    this._heldChange$.asObservable();
 
   constructor() {
     this._bindingSignals = Object.fromEntries(
@@ -100,7 +123,54 @@ export class ShortcutService implements OnDestroy {
         }
       });
 
+    this._holdSubs = [
+      fromEvent<KeyboardEvent>(window, 'keydown').subscribe((e) => {
+        this._heldKeys.add(e.key);
+        this._trackModifiers(e);
+        this._heldChange$.next();
+      }),
+      fromEvent<KeyboardEvent>(window, 'keyup').subscribe((e) => {
+        this._heldKeys.delete(e.key);
+        this._trackModifiers(e);
+        this._heldChange$.next();
+      }),
+      // Keyups delivered to another window (tab switch, alt-tab) would leave
+      // keys stuck held — a focus loss releases everything.
+      fromEvent(window, 'blur').subscribe(() => {
+        this._heldKeys.clear();
+        this._heldCtrl = false;
+        this._heldShift = false;
+        this._heldAlt = false;
+        this._heldChange$.next();
+      })
+    ];
+
     this._setupActionHandlers();
+  }
+
+  /**
+   * Whether the action's binding is physically held right now. For hold-style
+   * bindings (SELECT_SCISSOR): `on()` fires once at keydown, this reports the
+   * live state for the duration of a pointer gesture.
+   */
+  public isHeld(action: ShortcutActionEnum): boolean {
+    const binding = this._bindingSignals[action]();
+    if (!binding) return false;
+    // A bare-modifier binding keeps its own flag false (it would display as
+    // "Alt + Alt") — skip that flag, the held key itself already proves it.
+    const own = MODIFIER_FLAG_BY_KEY[binding.key];
+    return (
+      this._heldKeys.has(binding.key) &&
+      (own === 'ctrl' || this._heldCtrl === binding.ctrl) &&
+      (own === 'shift' || this._heldShift === binding.shift) &&
+      (own === 'alt' || this._heldAlt === binding.alt)
+    );
+  }
+
+  private _trackModifiers(e: KeyboardEvent): void {
+    this._heldCtrl = this.isMac ? e.ctrlKey || e.metaKey : e.ctrlKey;
+    this._heldShift = e.shiftKey;
+    this._heldAlt = e.altKey;
   }
 
   /** Pre-built signal for one action's current binding. Pure lookup — never allocates. */
@@ -262,21 +332,17 @@ export class ShortcutService implements OnDestroy {
       this.workModeService.setMode(WorkMode.PAN);
     });
 
-    this.on(ShortcutActionEnum.TOOL_WIRE_DRAWING).subscribe(() => {
-      this.workModeService.setMode(WorkMode.WIRE_DRAWING);
-    });
-
-    this.on(ShortcutActionEnum.TOOL_WIRE_CONNECTION).subscribe(() => {
-      this.workModeService.setMode(WorkMode.WIRE_CONNECTION);
+    this.on(ShortcutActionEnum.TOOL_WIRE).subscribe(() => {
+      this.workModeService.setMode(WorkMode.WIRE_TOOL);
     });
 
     this.on(ShortcutActionEnum.TOOL_SELECT).subscribe(() => {
       this.workModeService.setMode(WorkMode.SELECT);
     });
 
-    this.on(ShortcutActionEnum.TOOL_SELECT_EXACT).subscribe(() => {
-      this.workModeService.setMode(WorkMode.SELECT_EXACT);
-    });
+    // SELECT_SCISSOR has no trigger handler — it is a hold-style binding
+    // queried via isHeld() during a select drag. The keydown match still
+    // preventDefaults, which keeps a bare Alt from focusing the browser menu.
 
     this.on(ShortcutActionEnum.TOOL_ERASE).subscribe(() => {
       this.workModeService.setMode(WorkMode.ERASE);
@@ -290,19 +356,19 @@ export class ShortcutService implements OnDestroy {
       this.workModeService.setMode(WorkMode.COMPONENT_PLACEMENT);
       this.workModeService.setSelectedComponentType(BuiltInComponentType.TEXT);
     });
-
-    this.on(ShortcutActionEnum.TOOL_PORT_NEGATION).subscribe(() => {
-      this.workModeService.setMode(WorkMode.PORT_NEGATION);
-    });
   }
 
   private _matchesBinding(binding: ShortcutBinding, e: KeyboardEvent): boolean {
     const ctrl = this.isMac ? e.ctrlKey || e.metaKey : e.ctrlKey;
+    // Skip the flag a bare-modifier binding's own key sets (see
+    // MODIFIER_FLAG_BY_KEY) — pressing Alt reports altKey=true, but the
+    // binding stores alt=false so it displays as just "Alt".
+    const own = MODIFIER_FLAG_BY_KEY[binding.key];
     return (
       e.key === binding.key &&
-      ctrl === binding.ctrl &&
-      e.shiftKey === binding.shift &&
-      e.altKey === binding.alt
+      (own === 'ctrl' || ctrl === binding.ctrl) &&
+      (own === 'shift' || e.shiftKey === binding.shift) &&
+      (own === 'alt' || e.altKey === binding.alt)
     );
   }
 
@@ -354,6 +420,7 @@ export class ShortcutService implements OnDestroy {
 
   ngOnDestroy(): void {
     this._keydownSub.unsubscribe();
+    for (const sub of this._holdSubs) sub.unsubscribe();
     this._triggered$.complete();
   }
 }

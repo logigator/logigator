@@ -9,11 +9,10 @@ import { roundToGrid, roundToHalfGrid } from '../../utils/grid';
 import { DragSession } from '../drag-session';
 import { ComponentPlacementSession } from '../sessions/component-placement.session';
 import { PastePlacementSession } from '../sessions/paste-placement.session';
-import { WireDrawingSession } from '../sessions/wire-drawing.session';
+import { WireToolSession } from '../sessions/wire-tool.session';
 import { SelectRectSession } from '../sessions/select-rect.session';
 import { SelectionMoveSession } from '../sessions/selection-move.session';
 import { EraseSession } from '../sessions/erase.session';
-import { WireConnectionSession } from '../sessions/wire-connection.session';
 import { PanSession } from '../sessions/pan.session';
 import { ShortcutService } from '../../shortcuts/shortcut.service';
 import { ShortcutActionEnum } from '../../shortcuts/shortcut-action.enum';
@@ -26,8 +25,9 @@ import { TogglePortNegationAction } from '../../actions/actions/toggle-port-nega
 import { CustomComponentService } from '../../custom-component/custom-component.service';
 import { PointerInput } from './pointer-input';
 import { PointerToolTarget } from './pointer-controller';
+import { ScissorKeyState } from './scissor-key-state';
 
-/** Click tolerance (grid units) for hitting a port in PORT_NEGATION mode. */
+/** Tap tolerance (grid units) for hitting a port with the wire tool. */
 const PORT_HIT_TOLERANCE = 0.5;
 
 interface PortHit {
@@ -40,8 +40,8 @@ interface PortHit {
  * The board's tool target: routes the primary-pointer stream from the
  * {@link PointerController} into per-mode {@link DragSession}s and owns the
  * active session's lifecycle (start/commit/cancel, Escape-cancel, the render
- * ticker around a drag). Also hosts the click-actions that never become
- * sessions (port-negation toggling) and the paste flow (a `Project` emits a
+ * ticker around a drag). Also hosts the wire tool's tap actions (port
+ * negation, connection toggling) and the paste flow (a `Project` emits a
  * paste request; the router opens the placement session on it).
  *
  * The router targets one project at a time — `setProject` re-homes it when
@@ -58,6 +58,11 @@ export class WorkModeRouter implements PointerToolTarget {
   private _pasteSub: Subscription | null = null;
   private readonly _cancelSub: Subscription;
   private readonly _customComponents = getStaticDI(CustomComponentService);
+  private readonly _shortcuts = getStaticDI(ShortcutService);
+  private readonly _scissorKey: ScissorKeyState = {
+    isHeld: () => this._shortcuts.isHeld(ShortcutActionEnum.SELECT_SCISSOR),
+    change$: this._shortcuts.heldChange$
+  };
 
   // Bumped on every gesture end / cancel / context switch so an in-flight
   // placement circuit load (a first, uncached cloud master) can tell whether the
@@ -65,7 +70,7 @@ export class WorkModeRouter implements PointerToolTarget {
   private _placementLoadSeq = 0;
 
   constructor() {
-    this._cancelSub = getStaticDI(ShortcutService)
+    this._cancelSub = this._shortcuts
       .on(ShortcutActionEnum.CANCEL)
       .subscribe(() => this.abortActiveDrag());
   }
@@ -84,8 +89,8 @@ export class WorkModeRouter implements PointerToolTarget {
    *  then applies the current mode's side effects to the new one. */
   public setProject(project: Project | null): void {
     this.abortActiveDrag();
-    if (this._mode === WorkMode.PORT_NEGATION) {
-      this._project?.floatingLayer.hideNegationGhost();
+    if (this._mode === WorkMode.WIRE_TOOL) {
+      this._project?.floatingLayer.hideWireToolGhosts();
     }
     this._pasteSub?.unsubscribe();
     this._pasteSub = null;
@@ -106,8 +111,8 @@ export class WorkModeRouter implements PointerToolTarget {
   public setMode(value: WorkMode): void {
     this.abortActiveDrag();
     this._project?.selectionManager.clear();
-    if (this._mode === WorkMode.PORT_NEGATION) {
-      this._project?.floatingLayer.hideNegationGhost();
+    if (this._mode === WorkMode.WIRE_TOOL) {
+      this._project?.floatingLayer.hideWireToolGhosts();
     }
     this._mode = value;
     this._project?.triggerTicker('single');
@@ -164,12 +169,16 @@ export class WorkModeRouter implements PointerToolTarget {
         );
         break;
       }
-      case WorkMode.WIRE_DRAWING: {
+      case WorkMode.WIRE_TOOL: {
+        // Cloned before the inline rounding below: the tap fallback needs the
+        // unsnapped position for the port hit test.
+        const tapPoint = input.grid.clone();
         this._startDrag(
-          new WireDrawingSession(
+          new WireToolSession(
             project,
             project.floatingLayer.dragLayer,
-            roundToHalfGrid(input.grid, true)
+            roundToHalfGrid(input.grid, true),
+            () => this._wireTap(project, tapPoint)
           )
         );
         break;
@@ -196,7 +205,8 @@ export class WorkModeRouter implements PointerToolTarget {
               project,
               project.floatingLayer,
               localPoint,
-              this._mode
+              this._mode,
+              this._scissorKey
             )
           );
         }
@@ -204,28 +214,6 @@ export class WorkModeRouter implements PointerToolTarget {
       }
       case WorkMode.ERASE: {
         this._startDrag(new EraseSession(project, input.grid));
-        break;
-      }
-      case WorkMode.WIRE_CONNECTION: {
-        this._startDrag(
-          new WireConnectionSession(project, roundToHalfGrid(input.grid))
-        );
-        break;
-      }
-      case WorkMode.PORT_NEGATION: {
-        // A click action, not a drag session: toggle the negation of the port
-        // under the cursor through the undo stack.
-        const hit = this._findPortAt(project, input.grid);
-        if (hit) {
-          project.actionManager.push(
-            new TogglePortNegationAction(
-              hit.comp.id,
-              hit.side,
-              hit.index,
-              !hit.comp.isPortNegated(hit.side, hit.index)
-            )
-          );
-        }
         break;
       }
       case WorkMode.SIMULATION: {
@@ -247,8 +235,7 @@ export class WorkModeRouter implements PointerToolTarget {
       this._activeDrag.onMove(input);
       return;
     }
-    // A press that opened no session (negation mode) still previews like a
-    // plain hover.
+    // A press that opened no session still previews like a plain hover.
     this.hover(input);
   }
 
@@ -269,18 +256,35 @@ export class WorkModeRouter implements PointerToolTarget {
 
   public hover(input: PointerInput): void {
     const project = this._project;
-    if (!project || this._mode !== WorkMode.PORT_NEGATION) return;
-    const hit = this._findPortAt(project, input.grid);
+    if (!project || this._mode !== WorkMode.WIRE_TOOL) return;
+    this._updateWireToolGhosts(project, input.grid);
+    project.triggerTicker('single');
+  }
+
+  /**
+   * Previews what a wire-tool tap at the point would do: the negation bubble
+   * for a port in reach (which wins over a junction — same precedence as
+   * {@link _wireTap}), else the connection-toggle ghost, else nothing.
+   */
+  private _updateWireToolGhosts(project: Project, gridPoint: Point): void {
+    const hit = this._findPortAt(project, gridPoint);
     if (hit) {
+      project.floatingLayer.hideConnectionGhost();
       project.floatingLayer.showNegationGhost(
         hit.comp.negationBubbleAnchor(hit.side, hit.index),
         hit.side,
         hit.comp.rotation
       );
-    } else {
-      project.floatingLayer.hideNegationGhost();
+      return;
     }
-    project.triggerTicker('single');
+    project.floatingLayer.hideNegationGhost();
+    const p = roundToHalfGrid(gridPoint);
+    const kind = project.connectionToggleKindAt(p);
+    if (kind) {
+      project.floatingLayer.showConnectionGhost(p, kind);
+    } else {
+      project.floatingLayer.hideConnectionGhost();
+    }
   }
 
   /**
@@ -374,6 +378,32 @@ export class WorkModeRouter implements PointerToolTarget {
         break;
       }
     }
+  }
+
+  /**
+   * The wire tool's tap action (a press that never moved a whole grid step,
+   * so no wire was drawn): a port within tolerance toggles its negation
+   * bubble — matching what the hover ghost previews — otherwise the nearest
+   * half-grid point toggles the wire connection there (join/split; a no-op
+   * when neither applies).
+   */
+  private _wireTap(project: Project, gridPoint: Point): void {
+    const hit = this._findPortAt(project, gridPoint);
+    if (hit) {
+      project.actionManager.push(
+        new TogglePortNegationAction(
+          hit.comp.id,
+          hit.side,
+          hit.index,
+          !hit.comp.isPortNegated(hit.side, hit.index)
+        )
+      );
+    } else {
+      project.toggleConnectionAt(roundToHalfGrid(gridPoint));
+    }
+    // The toggle changed what the next tap here would do (split ⇄ join) —
+    // re-derive the preview in place instead of leaving the stale ghost.
+    this._updateWireToolGhosts(project, gridPoint);
   }
 
   /**

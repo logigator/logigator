@@ -1,9 +1,19 @@
-import { Component, DestroyRef, inject, model, signal } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  inject,
+  input,
+  model,
+  signal
+} from '@angular/core';
 import { fromEvent, Subscription } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { LgButton, LgShortcut, LgTooltip } from '@logigator/ui';
 import { TranslocoDirective } from '@jsverse/transloco';
-import { ShortcutBinding } from '../shortcut-binding.model';
+import {
+  MODIFIER_FLAG_BY_KEY,
+  ShortcutBinding
+} from '../shortcut-binding.model';
 import { ShortcutService } from '../shortcut.service';
 
 @Component({
@@ -16,6 +26,13 @@ export class ShortcutEditComponent {
   private readonly shortcutService = inject(ShortcutService);
 
   public readonly binding = model.required<ShortcutBinding | null>();
+
+  /**
+   * Accept a bare modifier (e.g. just Alt) as the binding. Only hold-style
+   * actions want this — a trigger action bound to a bare modifier would fire
+   * on every modified shortcut.
+   */
+  public readonly allowModifierOnly = input(false);
 
   protected readonly isRecording = signal(false);
 
@@ -47,7 +64,22 @@ export class ShortcutEditComponent {
   private _handleRecordKey(e: KeyboardEvent): void {
     e.preventDefault();
     e.stopPropagation();
-    if (ShortcutEditComponent.MODIFIER_KEYS.has(e.key)) return;
+    if (ShortcutEditComponent.MODIFIER_KEYS.has(e.key)) {
+      if (!this.allowModifierOnly()) return;
+      // The recorded key's own flag stays false so the binding displays as
+      // "Alt", not "Alt + Alt"; matchers skip that flag (MODIFIER_FLAG_BY_KEY).
+      const binding: ShortcutBinding = {
+        key: e.key,
+        ctrl: e.ctrlKey || e.metaKey,
+        shift: e.shiftKey,
+        alt: e.altKey
+      };
+      const own = MODIFIER_FLAG_BY_KEY[e.key];
+      if (own) binding[own] = false;
+      this.binding.set(binding);
+      this.stopRecording();
+      return;
+    }
     if (e.key === 'Escape') {
       this.stopRecording();
       return;

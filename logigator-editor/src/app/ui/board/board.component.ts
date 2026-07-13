@@ -16,7 +16,6 @@ import { Project } from '../../project/project';
 import { AssetsService } from '../../rendering/assets.service';
 import { Subject, takeUntil, throttleTime } from 'rxjs';
 import { WorkModeService } from '../../work-mode/work-mode.service';
-import { WorkMode } from '../../work-mode/work-mode.enum';
 import { TickerScheduler } from '../../rendering/ticker-scheduler';
 import { EditorSettingsService } from '../../settings/editor-settings.service';
 import { FpsCounterComponent } from './fps-counter/fps-counter.component';
@@ -122,13 +121,6 @@ export class BoardComponent implements OnInit, OnDestroy {
       this._router.setMode(this.workModeService.mode());
       this._router.componentToPlace =
         this.workModeService.selectedComponentConfig();
-    });
-
-    // The negation-mode port preview reads as clickable; every other mode
-    // keeps the default canvas cursor.
-    effect(() => {
-      this.canvas.nativeElement.style.cursor =
-        this.workModeService.mode() === WorkMode.PORT_NEGATION ? 'pointer' : '';
     });
 
     effect(() => {

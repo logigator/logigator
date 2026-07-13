@@ -48,6 +48,7 @@ import { Component as CircuitComponent } from './components/component';
 import { MobileTopBarComponent } from './ui/mobile-top-bar/mobile-top-bar.component';
 import { ToolHudComponent } from './ui/tool-hud/tool-hud.component';
 import { SelectionActionBarComponent } from './ui/selection-action-bar/selection-action-bar.component';
+import { ScissorToggleComponent } from './ui/scissor-toggle/scissor-toggle.component';
 import { ZoomFabComponent } from './ui/zoom-fab/zoom-fab.component';
 import { MobileStatusComponent } from './ui/mobile-status/mobile-status.component';
 import { SimulationControlsComponent } from './ui/simulation-controls/simulation-controls.component';
@@ -82,6 +83,7 @@ import { ChangelogService } from './changelog/changelog.service';
     MobileTopBarComponent,
     ToolHudComponent,
     SelectionActionBarComponent,
+    ScissorToggleComponent,
     ZoomFabComponent,
     MobileStatusComponent,
     SimulationControlsComponent,

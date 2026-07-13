@@ -733,6 +733,59 @@ describe('Project.toggleConnectionAt', () => {
   });
 });
 
+describe('Project.connectionToggleKindAt', () => {
+  let project: Project;
+
+  beforeEach(() => {
+    configureTestBed();
+    project = new Project();
+  });
+
+  afterEach(() => {
+    project.destroy({ children: true });
+  });
+
+  function wireCount(): number {
+    return [...project.queryWiresInRange(new Rectangle(-100, -100, 200, 200))]
+      .length;
+  }
+
+  it("reports 'split' on a pure crossing without mutating the project", () => {
+    project.addWire(makeWire(0, 2, WireDirection.HORIZONTAL, 5));
+    project.addWire(makeWire(2, 0, WireDirection.VERTICAL, 5));
+
+    expect(project.connectionToggleKindAt(new Point(2.5, 2.5))).toBe('split');
+    expect(wireCount()).toBe(2);
+    expect(project.actionManager.undoAvailable).toBe(false);
+  });
+
+  it("reports 'join' on a 4-endpoint X junction without mutating the project", () => {
+    project.addWire(makeWire(0, 2, WireDirection.HORIZONTAL, 2));
+    project.addWire(makeWire(2, 2, WireDirection.HORIZONTAL, 3));
+    project.addWire(makeWire(2, 0, WireDirection.VERTICAL, 2));
+    project.addWire(makeWire(2, 2, WireDirection.VERTICAL, 3));
+
+    expect(project.connectionToggleKindAt(new Point(2.5, 2.5))).toBe('join');
+    expect(wireCount()).toBe(4);
+    expect(project.actionManager.undoAvailable).toBe(false);
+  });
+
+  it('reports null on a T-junction — a tap there would be a no-op', () => {
+    project.addWire(makeWire(0, 2, WireDirection.HORIZONTAL, 2));
+    project.addWire(makeWire(2, 2, WireDirection.HORIZONTAL, 3));
+    project.addWire(makeWire(2, 0, WireDirection.VERTICAL, 2));
+
+    expect(project.connectionToggleKindAt(new Point(2.5, 2.5))).toBe(null);
+  });
+
+  it('reports null on a single wire and on empty canvas', () => {
+    project.addWire(makeWire(0, 2, WireDirection.HORIZONTAL, 5));
+
+    expect(project.connectionToggleKindAt(new Point(2.5, 2.5))).toBe(null);
+    expect(project.connectionToggleKindAt(new Point(20.5, 20.5))).toBe(null);
+  });
+});
+
 describe('Project.getContentBounds', () => {
   let project: Project;
 

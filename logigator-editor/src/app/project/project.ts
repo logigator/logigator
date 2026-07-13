@@ -540,7 +540,53 @@ export class Project extends Container {
     }
   }
 
+  /**
+   * What {@link toggleConnectionAt} would do at a half-grid point: 'join'
+   * merges the wires ending at an existing CP, 'split' cuts a pure crossing,
+   * `null` means the tap would be a no-op. Non-mutating — the join case
+   * dry-runs the full plan (including the blocked re-split check, so a
+   * T-junction reports `null`) and discards it. Drives the wire tool's
+   * hover ghost.
+   */
+  public connectionToggleKindAt(p: Point): 'join' | 'split' | null {
+    if (this._connectionPoints.hasCpAt(p)) {
+      const plan = this._planJoinAt(p);
+      if (!plan) return null;
+      plan.discard();
+      return 'join';
+    }
+    return this._findCrossingAt(p) ? 'split' : null;
+  }
+
   private _joinAt(p: Point): void {
+    const plan = this._planJoinAt(p);
+    if (!plan) {
+      this._logging.debug(
+        `join at (${p.x}, ${p.y}) is a no-op: no collinear pair to merge, or the merge would re-split at the same point`,
+        'Project'
+      );
+      return;
+    }
+
+    const action = new ActionContainer();
+    if (plan.toRemove.length > 0)
+      action.add(new RemoveWiresAction(...plan.toRemove));
+    if (plan.toAdd.length > 0) action.add(new AddWiresAction(...plan.toAdd));
+    plan.discard();
+    this.actionManager.push(action);
+  }
+
+  /**
+   * Builds the join plan for a CP point without mutating the project: merges
+   * each collinear pair ending at `p` and integrates the result. Returns
+   * `null` when there is nothing to merge or the integrator would re-split at
+   * `p` (a third terminator blocks the merge — the T-junction case). The
+   * caller must `discard()` the plan after using it (the actions snapshot the
+   * wires in their constructors) — it destroys the temporary instances.
+   */
+  private _planJoinAt(
+    p: Point
+  ): { toAdd: Wire[]; toRemove: Wire[]; discard(): void } | null {
     const queryRect = new Rectangle(p.x - 1, p.y - 1, 2, 2);
     const hWires: Wire[] = [];
     const vWires: Wire[] = [];
@@ -566,46 +612,33 @@ export class Project extends Container {
       addedWires.push(Wire.merge(vWires[0], vWires[1]));
     }
 
-    if (addedWires.length === 0) {
-      this._logging.debug(
-        `join at (${p.x}, ${p.y}) is a no-op: no collinear wire pair to merge`,
-        'Project'
-      );
-      return;
-    }
+    if (addedWires.length === 0) return null;
 
     const { toAdd, toRemove } = this.computeIntegration({
       addedWires,
       removedWires
     });
 
+    const discard = () => {
+      for (const w of addedWires) if (!w.destroyed) w.destroy();
+      for (const w of toAdd) if (!w.destroyed) w.destroy();
+    };
+
     const blocked = toAdd.some((w) => {
       const [s, e] = w.connectionPoints;
       return (s.x === p.x && s.y === p.y) || (e.x === p.x && e.y === p.y);
     });
 
-    const cleanup = () => {
-      for (const w of addedWires) if (!w.destroyed) w.destroy();
-      for (const w of toAdd) if (!w.destroyed) w.destroy();
-    };
-
     if (blocked) {
-      this._logging.debug(
-        `join at (${p.x}, ${p.y}) rejected: the merge would re-split at the same point`,
-        'Project'
-      );
-      cleanup();
-      return;
+      discard();
+      return null;
     }
 
-    const action = new ActionContainer();
-    if (toRemove.length > 0) action.add(new RemoveWiresAction(...toRemove));
-    if (toAdd.length > 0) action.add(new AddWiresAction(...toAdd));
-    cleanup();
-    this.actionManager.push(action);
+    return { toAdd, toRemove, discard };
   }
 
-  private _splitAt(p: Point): void {
+  /** The pure 2-wire X crossing at `p` (neither wire ending there), if any. */
+  private _findCrossingAt(p: Point): { hWire: Wire; vWire: Wire } | null {
     const queryRect = new Rectangle(p.x - 1, p.y - 1, 2, 2);
     let hWire: Wire | null = null;
     let vWire: Wire | null = null;
@@ -619,7 +652,12 @@ export class Project extends Container {
       else vWire = w;
     }
 
-    if (!hWire || !vWire) {
+    return hWire && vWire ? { hWire, vWire } : null;
+  }
+
+  private _splitAt(p: Point): void {
+    const crossing = this._findCrossingAt(p);
+    if (!crossing) {
       this._logging.debug(
         `split at (${p.x}, ${p.y}) is a no-op: needs both a horizontal and a vertical wire crossing the point`,
         'Project'
@@ -627,11 +665,11 @@ export class Project extends Container {
       return;
     }
 
-    const [hLeft, hRight] = Wire.split(hWire, p);
-    const [vTop, vBottom] = Wire.split(vWire, p);
+    const [hLeft, hRight] = Wire.split(crossing.hWire, p);
+    const [vTop, vBottom] = Wire.split(crossing.vWire, p);
 
     const addedWires = [hLeft, hRight, vTop, vBottom];
-    const removedWires = [hWire, vWire];
+    const removedWires = [crossing.hWire, crossing.vWire];
 
     const { toAdd, toRemove } = this.computeIntegration({
       addedWires,
