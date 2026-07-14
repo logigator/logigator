@@ -20,7 +20,7 @@ import {
   IntegrationOutput,
   WireIntegrator
 } from './wire-integrator';
-import { ViewportController, ViewportState } from './viewport-controller';
+import { ViewportController } from './viewport-controller';
 import { ConnectionPointManager } from '../connection-points/connection-point-manager';
 import { AddWiresAction } from '../actions/actions/add-wires.action';
 import { RemoveWiresAction } from '../actions/actions/remove-wires.action';
@@ -90,16 +90,21 @@ export class Project extends Container {
     this._gridSpace.addChild(this._connectionPoints.layer);
     this._gridSpace.addChild(this._floatingLayer);
 
-    this._viewport = new ViewportController(this, this._grid, (scale) => {
-      this._floatingLayer.updateScale(scale);
-      this._connectionPoints.layer.applyScale(scale);
-      for (const child of this._components.items) {
-        child.applyScale(scale);
-      }
-      for (const child of this._wires.items) {
-        child.applyScale(scale);
-      }
-    });
+    this._viewport = new ViewportController(
+      this,
+      this._grid,
+      (scale) => {
+        this._floatingLayer.updateScale(scale);
+        this._connectionPoints.layer.applyScale(scale);
+        for (const child of this._components.items) {
+          child.applyScale(scale);
+        }
+        for (const child of this._wires.items) {
+          child.applyScale(scale);
+        }
+      },
+      () => this._ticker$.next('single')
+    );
 
     this._themeEffect = effect(
       () => {
@@ -183,8 +188,9 @@ export class Project extends Container {
     this.triggerTicker('single');
   }
 
-  public resizeViewport(width: number, height: number): void {
-    this._viewport.resizeViewport(width, height);
+  /** Camera control (pan/zoom/state); zooms request their own render frame. */
+  public get viewport(): ViewportController {
+    return this._viewport;
   }
 
   /**
@@ -198,50 +204,6 @@ export class Project extends Container {
     const view = this._viewport.gridView(this._cullView);
     this._wires.cull(view);
     this._components.cull(view);
-  }
-
-  public pan(point: Point): void {
-    this._viewport.pan(point);
-  }
-
-  public setPosition(point: Point): void {
-    this._viewport.setPosition(point);
-  }
-
-  public zoomIn(center?: Point): void {
-    this._viewport.zoomIn(center);
-    this.triggerTicker('single');
-  }
-
-  public zoomOut(center?: Point): void {
-    this._viewport.zoomOut(center);
-    this.triggerTicker('single');
-  }
-
-  public get zoomInPossible(): boolean {
-    return this._viewport.zoomInPossible;
-  }
-
-  public get zoomOutPossible(): boolean {
-    return this._viewport.zoomOutPossible;
-  }
-
-  public zoom100(center?: Point): void {
-    this._viewport.zoom100(center);
-    this.triggerTicker('single');
-  }
-
-  public zoomBy(factor: number, center?: Point): void {
-    this._viewport.zoomBy(factor, center);
-    this.triggerTicker('single');
-  }
-
-  public get viewportChange$(): Observable<ViewportState> {
-    return this._viewport.viewportChange$;
-  }
-
-  public get viewportState(): ViewportState {
-    return this._viewport.viewportState;
   }
 
   public get components(): Iterable<Component> {
@@ -299,10 +261,6 @@ export class Project extends Container {
 
   public emitInspectRequest(component: Component): void {
     this._inspectRequest$.next(component);
-  }
-
-  public get gridPosition(): Point {
-    return this._viewport.gridPosition;
   }
 
   public get pasteRequest$(): Observable<{

@@ -12,9 +12,10 @@ function makePanEvent(x: number, y: number): PointerInput {
 
 function makeProject() {
   return {
-    pan: vi.fn(),
+    viewport: { pan: vi.fn() },
     selectionManager: { commit: vi.fn() }
   } as unknown as Project & {
+    viewport: { pan: ReturnType<typeof vi.fn> };
     selectionManager: { commit: ReturnType<typeof vi.fn> };
   };
 }
@@ -29,10 +30,10 @@ describe('PanSession', () => {
     );
 
     session.onMove(makePanEvent(110, 95));
-    expect(project.pan).toHaveBeenCalledTimes(1);
+    expect(project.viewport.pan).toHaveBeenCalledTimes(1);
     // First pan delta is measured from the press point (the dead zone catches up).
     expect(
-      (project.pan as ReturnType<typeof vi.fn>).mock.calls[0][0]
+      (project.viewport.pan as ReturnType<typeof vi.fn>).mock.calls[0][0]
     ).toMatchObject({
       x: 10,
       y: -5
@@ -40,7 +41,7 @@ describe('PanSession', () => {
 
     session.onMove(makePanEvent(130, 90));
     expect(
-      (project.pan as ReturnType<typeof vi.fn>).mock.calls[1][0]
+      (project.viewport.pan as ReturnType<typeof vi.fn>).mock.calls[1][0]
     ).toMatchObject({
       x: 20,
       y: -5
@@ -53,7 +54,7 @@ describe('PanSession', () => {
     const session = new PanSession(project, start, new Point(0, 0));
 
     session.onMove(makePanEvent(52, 51)); // ~2px — under threshold
-    expect(project.pan).not.toHaveBeenCalled();
+    expect(project.viewport.pan).not.toHaveBeenCalled();
     expect(start).toMatchObject({ x: 50, y: 50 });
   });
 

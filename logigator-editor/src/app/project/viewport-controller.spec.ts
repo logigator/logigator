@@ -20,7 +20,7 @@ describe('ViewportController', () => {
     container = new Container();
     grid = new Grid();
     applyScaleSpy = vi.fn();
-    viewport = new ViewportController(container, grid, applyScaleSpy);
+    viewport = new ViewportController(container, grid, applyScaleSpy, vi.fn());
   });
 
   afterEach(() => {

@@ -887,7 +887,7 @@ describe('Project.cull', () => {
     configureTestBed();
     project = new Project();
     // A 10×10 grid-unit viewport at scale 1.
-    project.resizeViewport(gridSize * 10, gridSize * 10);
+    project.viewport.resizeViewport(gridSize * 10, gridSize * 10);
   });
 
   afterEach(() => {
@@ -922,7 +922,7 @@ describe('Project.cull', () => {
     const wire = makeWire(5, 5, WireDirection.HORIZONTAL, 3);
     project.addWire(wire);
 
-    project.setPosition(new Point(-gridSize * 1000, -gridSize * 1000));
+    project.viewport.setPosition(new Point(-gridSize * 1000, -gridSize * 1000));
     project.cull();
 
     expect(isCulled(comp)).toBe(true);
@@ -934,9 +934,9 @@ describe('Project.cull', () => {
     comp.position.set(2, 2);
     project.addComponent(comp);
 
-    project.setPosition(new Point(-gridSize * 1000, -gridSize * 1000));
+    project.viewport.setPosition(new Point(-gridSize * 1000, -gridSize * 1000));
     project.cull();
-    project.setPosition(new Point(0, 0));
+    project.viewport.setPosition(new Point(0, 0));
     project.cull();
 
     expect(isCulled(comp)).toBe(false);

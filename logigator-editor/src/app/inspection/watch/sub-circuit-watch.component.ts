@@ -86,9 +86,9 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
       // subscription below), `Project.pan` emits nothing — render explicitly.
       nav: {
         pan: (delta) => this.pan(delta),
-        zoomIn: (center) => this.project.zoomIn(center),
-        zoomOut: (center) => this.project.zoomOut(center),
-        zoomBy: (factor, center) => this.project.zoomBy(factor, center),
+        zoomIn: (center) => this.project.viewport.zoomIn(center),
+        zoomOut: (center) => this.project.viewport.zoomOut(center),
+        zoomBy: (factor, center) => this.project.viewport.zoomBy(factor, center),
         setActive: () => undefined
       },
       tool: {
@@ -186,7 +186,7 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
    * ticker event (the board pans with its ticker already running).
    */
   private pan(delta: Point): void {
-    this.project.pan(delta);
+    this.project.viewport.pan(delta);
     this.render();
   }
 
@@ -207,7 +207,7 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
    */
   private syncViewportSize(): void {
     const rect = this.canvas.nativeElement.getBoundingClientRect();
-    this.project.resizeViewport(
+    this.project.viewport.resizeViewport(
       Math.max(1, Math.round(rect.width)),
       Math.max(1, Math.round(rect.height))
     );
@@ -229,9 +229,9 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
       (height - 2 * marginPx) / (bounds.height * gs)
     );
     // zoomBy clamps onto the zoom ladder and re-tunes line weights.
-    project.zoomBy(target / project.scale.x);
+    project.viewport.zoomBy(target / project.scale.x);
     const scale = project.scale.x;
-    project.setPosition(
+    project.viewport.setPosition(
       new Point(
         width / 2 - (bounds.x + bounds.width / 2) * gs * scale,
         height / 2 - (bounds.y + bounds.height / 2) * gs * scale

@@ -161,7 +161,7 @@ export class EditorMenuService {
             shortcut: this.shortcutService.binding(
               ShortcutActionEnum.ZOOM_OUT
             )(),
-            command: () => this.projectService.mainProject()?.zoomOut()
+            command: () => this.projectService.mainProject()?.viewport.zoomOut()
           },
           {
             label: this.translation.translate(
@@ -170,7 +170,7 @@ export class EditorMenuService {
             shortcut: this.shortcutService.binding(
               ShortcutActionEnum.ZOOM_IN
             )(),
-            command: () => this.projectService.mainProject()?.zoomIn()
+            command: () => this.projectService.mainProject()?.viewport.zoomIn()
           },
           {
             label: this.translation.translate(
@@ -179,7 +179,7 @@ export class EditorMenuService {
             shortcut: this.shortcutService.binding(
               ShortcutActionEnum.ZOOM_100
             )(),
-            command: () => this.projectService.mainProject()?.zoom100()
+            command: () => this.projectService.mainProject()?.viewport.zoom100()
           }
         ]
       },

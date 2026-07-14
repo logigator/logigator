@@ -310,21 +310,21 @@ export class ShortcutService implements OnDestroy {
     this.on(ShortcutActionEnum.ZOOM_IN).subscribe(() => {
       const project = this.projectService.activeProject();
       if (project) {
-        project.zoomIn();
+        project.viewport.zoomIn();
       }
     });
 
     this.on(ShortcutActionEnum.ZOOM_OUT).subscribe(() => {
       const project = this.projectService.activeProject();
       if (project) {
-        project.zoomOut();
+        project.viewport.zoomOut();
       }
     });
 
     this.on(ShortcutActionEnum.ZOOM_100).subscribe(() => {
       const project = this.projectService.activeProject();
       if (project) {
-        project.zoom100();
+        project.viewport.zoom100();
       }
     });
 

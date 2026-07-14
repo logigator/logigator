@@ -115,7 +115,7 @@ describe('WorkModeRouter in SIMULATION mode', () => {
   it('pans on a one-finger drag instead of activating a component', () => {
     const button = makeButton(2, 2);
     project.addComponent(button);
-    const panSpy = vi.spyOn(project, 'pan');
+    const panSpy = vi.spyOn(project.viewport, 'pan');
     router.setMode(WorkMode.SIMULATION);
 
     router.down(makeInput(2.4, 2.6));

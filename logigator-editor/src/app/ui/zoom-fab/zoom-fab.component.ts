@@ -33,10 +33,10 @@ export class ZoomFabComponent {
   private readonly projectService = inject(ProjectService);
 
   protected zoomIn(): void {
-    this.projectService.activeProject()?.zoomIn();
+    this.projectService.activeProject()?.viewport.zoomIn();
   }
 
   protected zoomOut(): void {
-    this.projectService.activeProject()?.zoomOut();
+    this.projectService.activeProject()?.viewport.zoomOut();
   }
 }

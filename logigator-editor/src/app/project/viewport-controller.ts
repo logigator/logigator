@@ -35,7 +35,10 @@ export class ViewportController {
   constructor(
     private readonly _container: Container,
     private readonly _grid: Grid,
-    private readonly _onApplyScale: (scale: number) => void
+    private readonly _onApplyScale: (scale: number) => void,
+    // Requests one on-screen frame after a zoom. Pans don't request one —
+    // they only happen inside gestures that already hold the ticker on.
+    private readonly _requestRender: () => void
   ) {}
 
   public resizeViewport(width: number, height: number): void {
@@ -69,24 +72,29 @@ export class ViewportController {
   }
 
   public zoomIn(center?: Point): void {
-    if (!this.zoomInPossible) return;
-    this._updateScale(
-      Math.pow(this._scaleStepAmount, ++this._scaleStep),
-      center
-    );
+    if (this.zoomInPossible) {
+      this._updateScale(
+        Math.pow(this._scaleStepAmount, ++this._scaleStep),
+        center
+      );
+    }
+    this._requestRender();
   }
 
   public zoomOut(center?: Point): void {
-    if (!this.zoomOutPossible) return;
-    this._updateScale(
-      Math.pow(this._scaleStepAmount, --this._scaleStep),
-      center
-    );
+    if (this.zoomOutPossible) {
+      this._updateScale(
+        Math.pow(this._scaleStepAmount, --this._scaleStep),
+        center
+      );
+    }
+    this._requestRender();
   }
 
   public zoom100(center?: Point): void {
     this._scaleStep = 0;
     this._updateScale(1, center);
+    this._requestRender();
   }
 
   /**
@@ -106,6 +114,7 @@ export class ViewportController {
     this._scaleStep = Math.round(
       Math.log(target) / Math.log(this._scaleStepAmount)
     );
+    this._requestRender();
   }
 
   public get viewportChange$(): Observable<ViewportState> {

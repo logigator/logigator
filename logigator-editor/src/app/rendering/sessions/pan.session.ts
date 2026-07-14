@@ -50,7 +50,7 @@ export class PanSession implements DragSession {
       }
       this._moved = true;
     }
-    this.project.pan(
+    this.project.viewport.pan(
       new Point(g.x - this._lastGlobal.x, g.y - this._lastGlobal.y)
     );
     this._lastGlobal.copyFrom(g);

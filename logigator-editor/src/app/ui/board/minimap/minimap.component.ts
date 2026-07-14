@@ -140,7 +140,7 @@ export class MinimapComponent implements OnDestroy {
       project.actionManager.actionChange$
         .pipe(takeUntil(until), debounceTime(CONTENT_DEBOUNCE_MS))
         .subscribe(() => this._renderContent());
-      project.viewportChange$
+      project.viewport.viewportChange$
         .pipe(takeUntil(until))
         .subscribe(() => this._scheduleRectUpdate());
 
@@ -274,7 +274,7 @@ export class MinimapComponent implements OnDestroy {
     const rectEl = this.rectRef()?.nativeElement;
     if (!project || !rectEl || !this._frame || !this._fit) return;
 
-    const state = project.viewportState;
+    const state = project.viewport.viewportState;
     const pxPerUnit = state.scale * environment.gridSize;
     const { width, height } = this.panelSize();
     const rect = mapViewportRect(
@@ -317,7 +317,7 @@ export class MinimapComponent implements OnDestroy {
       this._centerViewportOn(project, point);
     }
 
-    const origin = project.viewportState.gridOrigin;
+    const origin = project.viewport.viewportState.gridOrigin;
     this._activePointerId = event.pointerId;
     this._scrubStart = {
       pointerX: point.x,
@@ -400,7 +400,7 @@ export class MinimapComponent implements OnDestroy {
       this._frame.x + (point.x - this._fit.offsetX) / this._fit.scale;
     const gridY =
       this._frame.y + (point.y - this._fit.offsetY) / this._fit.scale;
-    const state = project.viewportState;
+    const state = project.viewport.viewportState;
     const pxPerUnit = state.scale * environment.gridSize;
     this._moveViewportTo(
       project,
@@ -415,8 +415,8 @@ export class MinimapComponent implements OnDestroy {
     gridOriginX: number,
     gridOriginY: number
   ): void {
-    const pxPerUnit = project.viewportState.scale * environment.gridSize;
-    project.setPosition(
+    const pxPerUnit = project.viewport.viewportState.scale * environment.gridSize;
+    project.viewport.setPosition(
       new Point(-gridOriginX * pxPerUnit, -gridOriginY * pxPerUnit)
     );
     // setPosition alone doesn't tick the ticker; repaint while scrubbing.

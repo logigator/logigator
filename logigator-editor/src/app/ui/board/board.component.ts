@@ -91,7 +91,7 @@ export class BoardComponent implements OnInit, OnDestroy {
         return;
       }
 
-      project.resizeViewport(this._view.width, this._view.height);
+      project.viewport.resizeViewport(this._view.width, this._view.height);
       this._ticker.update();
 
       // One scheduler per project; drop the previous so its run-count and any
@@ -161,11 +161,11 @@ export class BoardComponent implements OnInit, OnDestroy {
         canvas: this.canvas.nativeElement,
         project: () => this._router.project,
         nav: {
-          pan: (delta) => this._router.project?.pan(delta),
-          zoomIn: (center) => this._router.project?.zoomIn(center),
-          zoomOut: (center) => this._router.project?.zoomOut(center),
+          pan: (delta) => this._router.project?.viewport.pan(delta),
+          zoomIn: (center) => this._router.project?.viewport.zoomIn(center),
+          zoomOut: (center) => this._router.project?.viewport.zoomOut(center),
           zoomBy: (factor, center) =>
-            this._router.project?.zoomBy(factor, center),
+            this._router.project?.viewport.zoomBy(factor, center),
           setActive: (active) =>
             this._router.project?.triggerTicker(active ? 'on' : 'off')
         },
@@ -231,7 +231,7 @@ export class BoardComponent implements OnInit, OnDestroy {
     if (!project) {
       return;
     }
-    project.resizeViewport(this._view.width, this._view.height);
+    project.viewport.resizeViewport(this._view.width, this._view.height);
     project.triggerTicker('single');
   }
 }
