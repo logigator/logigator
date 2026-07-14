@@ -242,8 +242,11 @@ export class SelectionManager {
       }
     }
 
-    this._selectedConnectionPoints =
-      this.project.connectionPoints.getCpsAtPoints(points);
+    // Several selected elements can terminate at the same junction, so the
+    // point list carries duplicates — collapse to one entry per dot.
+    this._selectedConnectionPoints = [
+      ...new Set(this.project.connectionPoints.getCpsAtPoints(points))
+    ];
     for (const cp of this._selectedConnectionPoints) {
       cp.selected = true;
     }

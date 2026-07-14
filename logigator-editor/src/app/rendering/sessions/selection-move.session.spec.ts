@@ -166,6 +166,59 @@ describe('SelectionMoveSession collision', () => {
     });
   });
 
+  // Regression: the CP selection must survive the commit. push() re-runs the
+  // move do()s, whose remove-then-add termination cycle replaces the dot
+  // instance at an exactly-3-termination junction; re-deriving the selection
+  // before that leaves dead instances in the selection manager, so the dots
+  // lose their highlight and stop being captured by subsequent drags.
+  describe('connection points across moves', () => {
+    it('keeps the junction dot selected after a move and carries it in the next drag', () => {
+      // Three wires terminating at (5.5, 0.5) — exactly 3, so a CP exists.
+      const w1 = makeWire(0, 0, WireDirection.HORIZONTAL, 5);
+      const w2 = makeWire(5, 0, WireDirection.HORIZONTAL, 5);
+      const w3 = makeWire(5, 0, WireDirection.VERTICAL, 5);
+      project.addWire(w1);
+      project.addWire(w2);
+      project.addWire(w3);
+
+      project.selectionManager.commit(
+        new Rectangle(0, 0, 11, 6),
+        WorkMode.SELECT
+      );
+      expect(project.selectionManager.selectedConnectionPoints.length).toBe(1);
+
+      session = new SelectionMoveSession(
+        project,
+        dragLayer,
+        new Set(),
+        new Set([w1, w2, w3]),
+        new Point(0, 0)
+      );
+      session.onMove(makeMoveInput(0, 10));
+      expect(session.canEnd()).toBe(true);
+      session.onEnd();
+
+      // The dot at the moved junction is the one the selection manager holds,
+      // alive and highlighted.
+      const cp = project.connectionPoints.getCpAt(new Point(5.5, 10.5));
+      expect(cp).toBeDefined();
+      expect(cp!.destroyed).toBe(false);
+      expect(cp!.selected).toBe(true);
+      expect(project.selectionManager.selectedConnectionPoints).toContain(cp);
+
+      // A second drag captures that dot into the drag layer, so it rides
+      // along with the selection instead of staying behind.
+      session = new SelectionMoveSession(
+        project,
+        dragLayer,
+        new Set(),
+        new Set([w1, w2, w3]),
+        new Point(0, 10)
+      );
+      expect(dragLayer.children).toContain(cp);
+    });
+  });
+
   // Regression: SELECT_EXACT cut + move must not duplicate wires in the quad
   // tree. The cut materializes new pieces in-memory; folding that cut into
   // the move's ActionContainer and pushing it would cause ActionManager.push

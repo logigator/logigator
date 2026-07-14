@@ -141,7 +141,6 @@ export class SelectionMoveSession implements DragSession {
       this._components,
       this._wires
     );
-    this.project.selectionManager.retintCps();
 
     const action = new ActionContainer();
 
@@ -236,6 +235,13 @@ export class SelectionMoveSession implements DragSession {
         this.project.actionManager.push(action);
       }
     }
+
+    // Re-derive the highlighted junctions only after the commit: push() runs
+    // the move do()s, whose remove-then-add termination cycle destroys and
+    // recreates the dot at any exactly-3-termination junction, so a CP
+    // selected earlier would be a dead instance by now — leaving the dots
+    // unhighlighted and dropping them from the next drag's capture set.
+    this.project.selectionManager.retintCps();
   }
 
   onCancel(): void {
