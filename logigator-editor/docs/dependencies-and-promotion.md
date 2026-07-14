@@ -13,8 +13,8 @@ the pieces it builds on and only cross-reference here:
   model, the registry, the rendering class, the editor-tab lifecycle, cycle
   prevention, and per-instance update.
 - [`persistence.md`](persistence.md) — the file format, migration chain, browser
-  stores, the legacy v0-over-HTTP server transport, and the `PersistenceService`
-  method surface.
+  stores, the legacy v0-over-HTTP server transport, and the `PersistenceService` /
+  `PromotionService` / `ComponentLibraryService` method surfaces.
 - [`ui.md`](ui.md) — the `SaveCoordinatorService` / `UploadCoordinatorService`
   dialogs and the settings-panel affordances.
 
@@ -314,7 +314,8 @@ not duplicated as both a local and a cloud master).
 
 Promotion **moves** a component or project from the browser to the cloud. It is one
 pipeline for every entry shape, orchestrated by `UploadCoordinatorService`
-(`ui/upload/`), with `PersistenceService` primitives underneath.
+(`ui/upload/`), with `PromotionService` primitives underneath
+(`persistence/promotion.service.ts`).
 
 ### 7.1 The five entry shapes (`UploadTarget`)
 
@@ -581,7 +582,7 @@ Cross-cutting guarantees:
   of its id: `masterTypeIdForId` gives direct precedence over the alias, but the
   startup preload order decides which registers under the shared id. Rare
   (undelete), documented, self-recoverable (delete the local copy).
-- **Import auto-adopts** (`_adoptSnapshots`) — opening a file registers its
+- **Import auto-adopts** (`ComponentLibraryService.adoptSnapshots`) — opening a file registers its
   master-less customs into the browser library, so files rarely produce orphans.
 - **Toasts: coordinator owns, primitives are silent** (except `saveProject`, which
   self-toasts, so `save-server` suppresses the coordinator toast).
