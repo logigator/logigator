@@ -18,6 +18,7 @@ import { ProjectMetadataStore } from '../../persistence/project-metadata.store';
 import { ToastService } from '../../logging/toast.service';
 import { LoggingService } from '../../logging/logging.service';
 import { TranslationService } from '../../translation/translation.service';
+import { ThemingService } from '../../theming/theming.service';
 
 export class ComponentPlacementSession implements DragSession {
   private readonly _component: Component;
@@ -148,7 +149,7 @@ export class ComponentPlacementSession implements DragSession {
     // Tint this._component directly (not dragLayer) to avoid multiplying
     // with the container's own tint, which would yield the wrong colour.
     if (collision) {
-      this._component.tint = 0xff4444;
+      this._component.tint = getStaticDI(ThemingService).currentTheme().invalid;
     } else {
       this._component.refreshTint();
     }

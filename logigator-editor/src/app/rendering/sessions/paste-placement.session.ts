@@ -88,7 +88,7 @@ export class PastePlacementSession implements DragSession {
       w.position.set(w.position.x + delta.x, w.position.y + delta.y);
     }
     this._dragLayer.position.set(0, 0);
-    this._dragLayer.tint = 0xffffff;
+    this._collision.reset();
 
     // Build action before handing elements to the project (serializes final positions)
     const action = new ActionContainer();
@@ -119,7 +119,7 @@ export class PastePlacementSession implements DragSession {
       'PastePlacementSession'
     );
     this._dragLayer.position.set(0, 0);
-    this._dragLayer.tint = 0xffffff;
+    this._collision.reset();
     for (const c of this._components) c.destroy({ children: true });
     for (const w of this._wires) w.destroy();
   }

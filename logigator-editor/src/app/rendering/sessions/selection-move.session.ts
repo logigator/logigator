@@ -104,7 +104,7 @@ export class SelectionMoveSession implements DragSession {
     }
 
     this.dragLayer.position.set(0, 0);
-    this.dragLayer.tint = 0xffffff;
+    this._collision.reset();
     // Back to base; the actionChange$ redraw below re-places it at the moved
     // bounds (a zero-delta end left it at base the whole time).
     this.project.floatingLayer.setSelectionRectOffset(this.dragLayer.position);
@@ -244,7 +244,7 @@ export class SelectionMoveSession implements DragSession {
       'SelectionMoveSession'
     );
     this.dragLayer.position.set(0, 0);
-    this.dragLayer.tint = 0xffffff;
+    this._collision.reset();
     // Bounds are unchanged on cancel, so returning to base is enough.
     this.project.floatingLayer.setSelectionRectOffset(this.dragLayer.position);
     this.project.reattachFromDrag(this._components, this._wires);

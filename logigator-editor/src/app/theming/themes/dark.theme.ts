@@ -8,6 +8,7 @@ export const DarkTheme: Theme = {
   scissorRect: 0xff4444,
   selectTint: 0x8a8a8a,
   wireSelectColor: 0x0f5e36,
+  invalid: 0xbb2222,
   fontTint: 0xffffff,
   ledOn: 0x27ae60,
   ledOff: 0x18592d

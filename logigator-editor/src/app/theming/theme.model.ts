@@ -7,6 +7,8 @@ export interface Theme {
   scissorRect: number;
   selectTint: number;
   wireSelectColor: number;
+  /** Tint for elements in an invalid state (e.g. colliding drag ghosts). */
+  invalid: number;
   fontTint: number;
   ledOn: number;
   ledOff: number;

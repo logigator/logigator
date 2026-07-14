@@ -9,6 +9,8 @@ import { WireDirection } from '../../wires/wire-direction.enum';
 import { AddWiresAction } from '../../actions/actions/add-wires.action';
 import { RemoveWiresAction } from '../../actions/actions/remove-wires.action';
 import { ActionContainer } from '../../actions/action-container';
+import { getStaticDI } from '../../utils/get-di';
+import { ThemingService } from '../../theming/theming.service';
 
 export class WireToolSession implements DragSession {
   private _direction: WireDirection | null = null;
@@ -128,12 +130,13 @@ export class WireToolSession implements DragSession {
 
     // refreshTint restores the wire's theme color (the shared context is a
     // white base, so a plain 0xffffff would render the wire white).
+    const invalid = getStaticDI(ThemingService).currentTheme().invalid;
     if (this._h) {
-      if (hCollision) this._h.tint = 0xff4444;
+      if (hCollision) this._h.tint = invalid;
       else this._h.refreshTint();
     }
     if (this._v) {
-      if (vCollision) this._v.tint = 0xff4444;
+      if (vCollision) this._v.tint = invalid;
       else this._v.refreshTint();
     }
 
