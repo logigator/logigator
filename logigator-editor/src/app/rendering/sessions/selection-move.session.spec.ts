@@ -7,6 +7,7 @@ import { WireDirection } from '../../wires/wire-direction.enum';
 import { Component } from '../../components/component';
 import { SelectionMoveSession } from './selection-move.session';
 import { WorkMode } from '../../work-mode/work-mode.enum';
+import { AddWiresAction } from '../../actions/actions/add-wires.action';
 import { makeAnd, makeMoveInput, makeWire } from '../../../testing/factories';
 
 describe('SelectionMoveSession collision', () => {
@@ -269,11 +270,10 @@ describe('SelectionMoveSession collision', () => {
   });
 
   // Regression: SELECT_EXACT cut + move must not duplicate wires in the quad
-  // tree. The cut materializes new pieces in-memory; folding that cut into
-  // the move's ActionContainer and pushing it would cause ActionManager.push
-  // to re-run cutContainer.do(), which re-deserializes pieces with IDs already
-  // present. SelectionMoveSession uses ActionManager.register (record-without-
-  // do) so cut state is recorded once. This test catches a regression of that.
+  // tree. The cut materializes new pieces in-memory and registers as its own
+  // history entry; the move commit coalesces that entry with the move's
+  // container (record-without-do), so cut state is recorded exactly once and
+  // cut + move undo as one step. This test catches a regression of that.
   describe('SELECT_EXACT cut + move (full flow)', () => {
     function allWires(): Wire[] {
       const huge = new Rectangle(-1000, -1000, 2000, 2000);
@@ -291,7 +291,7 @@ describe('SelectionMoveSession collision', () => {
         WorkMode.SELECT_EXACT
       );
 
-      expect(project.selectionManager.hasPendingCut).toBe(true);
+      expect(project.selectionManager.hasLiveCut).toBe(true);
       expect(allWires().length).toBe(3);
 
       // Find the inside piece (the one selected).
@@ -322,8 +322,9 @@ describe('SelectionMoveSession collision', () => {
       const ids = after.map((w) => w.id);
       expect(new Set(ids).size).toBe(ids.length);
 
-      // Pending cut was claimed.
-      expect(project.selectionManager.hasPendingCut).toBe(false);
+      // The cut was consumed and coalesced into the move's undo step.
+      expect(project.selectionManager.hasLiveCut).toBe(false);
+      expect(project.actionManager.history.length).toBe(1);
 
       // Undo restores the pre-cut state (the original wire).
       project.actionManager.undo();
@@ -398,21 +399,70 @@ describe('SelectionMoveSession collision', () => {
       session.onEnd();
       session = undefined;
 
-      // hasMove was false, so the session returned early without claiming.
-      // The pending cut survives.
-      expect(project.selectionManager.hasPendingCut).toBe(true);
+      // hasMove was false, so the session returned early without consuming.
+      // The cut stays live (and stays the newest history entry).
+      expect(project.selectionManager.hasLiveCut).toBe(true);
       expect(allWires().length).toBe(3);
 
-      // A subsequent clear (e.g., the user clicks empty space) rolls back.
+      // A subsequent clear (e.g., the user clicks empty space) retracts it.
       project.selectionManager.clear();
-      expect(project.selectionManager.hasPendingCut).toBe(false);
+      expect(project.selectionManager.hasLiveCut).toBe(false);
       const after = allWires();
       expect(after.length).toBe(1);
       expect(after[0].position.x).toBe(0.5);
       expect(after[0].length).toBe(10);
 
-      // And the undo history is empty — nothing should have been pushed.
+      // And the undo history is empty again — the retract removed the entry.
       expect(project.actionManager.undoAvailable).toBe(false);
+    });
+
+    it('undoes a live cut as one normal history step, redo re-applies it', () => {
+      const wire = makeWire(0, 0, WireDirection.HORIZONTAL, 10);
+      project.addWire(wire);
+
+      project.selectionManager.commit(
+        new Rectangle(5, 0, 2, 1),
+        WorkMode.SELECT_EXACT
+      );
+      expect(allWires().length).toBe(3);
+      expect(project.actionManager.undoAvailable).toBe(true);
+
+      // One Ctrl+Z reverts the whole cut; it stays redoable.
+      project.actionManager.undo();
+      const undone = allWires();
+      expect(undone.length).toBe(1);
+      expect(undone[0].length).toBe(10);
+      expect(project.selectionManager.hasLiveCut).toBe(false);
+      expect(project.actionManager.redoAvailable).toBe(true);
+
+      project.actionManager.redo();
+      expect(allWires().length).toBe(3);
+    });
+
+    it('dissolves a live cut when an unrelated action is recorded', () => {
+      const wire = makeWire(0, 0, WireDirection.HORIZONTAL, 10);
+      project.addWire(wire);
+
+      project.selectionManager.commit(
+        new Rectangle(5, 0, 2, 1),
+        WorkMode.SELECT_EXACT
+      );
+      expect(project.selectionManager.hasLiveCut).toBe(true);
+      expect(allWires().length).toBe(3);
+
+      // An unrelated operation (e.g. an option change from a side panel)
+      // lands in the history: the selection clears and the cut retracts
+      // first, so no orphaned split ever stays behind it.
+      project.actionManager.push(
+        new AddWiresAction(makeWire(0, 20, WireDirection.HORIZONTAL, 2))
+      );
+
+      expect(project.selectionManager.hasLiveCut).toBe(false);
+      expect(project.selectionManager.isEmpty).toBe(true);
+      // The original wire is whole again; only the unrelated wire was added.
+      const wires = allWires();
+      expect(wires.length).toBe(2);
+      expect(wires.some((w) => w.length === 10)).toBe(true);
     });
   });
 });

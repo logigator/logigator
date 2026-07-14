@@ -114,8 +114,11 @@ export class ClipboardService {
     const components = [...sm.selectedComponents];
     const wires = [...sm.selectedWires];
 
-    // Fold any pending scissor cut into the same undo step
-    const container = sm.claimPendingCut() ?? new ActionContainer();
+    // Deleting a scissor selection commits its cut: consume it before the
+    // removals and coalesce below, so cut+delete stays one undo step.
+    const cut = sm.consumeLiveCut();
+
+    const container = new ActionContainer();
 
     // Serialize before removal — constructors capture positions eagerly
     if (components.length > 0)
@@ -125,6 +128,10 @@ export class ClipboardService {
     for (const c of components) project.removeComponent(c.id);
     for (const w of wires) project.removeWire(w.id);
 
-    project.actionManager.register(container);
+    if (cut) {
+      project.actionManager.coalesceTop(cut, container);
+    } else {
+      project.actionManager.register(container);
+    }
   }
 }

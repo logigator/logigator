@@ -32,10 +32,11 @@ function makeProject(
       },
       selectedComponents: new Set(comps),
       selectedWires: new Set(wires),
-      claimPendingCut: vi.fn().mockReturnValue(null)
+      consumeLiveCut: vi.fn().mockReturnValue(null)
     },
     actionManager: {
-      register: vi.fn()
+      register: vi.fn(),
+      coalesceTop: vi.fn()
     },
     removeComponent: vi.fn(),
     removeWire: vi.fn(),
@@ -89,13 +90,13 @@ describe('ClipboardService', () => {
       expect(service.hasClipboard).toBe(true);
     });
 
-    it('does not claim the pending cut', () => {
+    it('does not consume a live scissor cut', () => {
       const comp = makeAnd();
       compsToDestroy.push(comp);
       const project = makeProject([comp]);
       service.copy(project);
       expect(
-        project.selectionManager.claimPendingCut as ReturnType<typeof vi.fn>
+        project.selectionManager.consumeLiveCut as ReturnType<typeof vi.fn>
       ).not.toHaveBeenCalled();
     });
 
@@ -147,22 +148,28 @@ describe('ClipboardService', () => {
       expect(project.actionManager.register).toHaveBeenCalledTimes(1);
     });
 
-    it('folds a pending cut into the container when one is present', () => {
+    it('coalesces a live cut with the delete into one undo step', () => {
       const comp = makeAnd();
       compsToDestroy.push(comp);
-      const pendingCut = new ActionContainer();
+      const cut = new ActionContainer();
       const project = makeProject([comp]);
       (
-        project.selectionManager.claimPendingCut as ReturnType<typeof vi.fn>
-      ).mockReturnValue(pendingCut);
+        project.selectionManager.consumeLiveCut as ReturnType<typeof vi.fn>
+      ).mockReturnValue(cut);
 
       service.delete(project);
 
-      // The container passed to register should be the same object claimPendingCut returned
-      expect(project.actionManager.register).toHaveBeenCalledWith(pendingCut);
+      // The cut's history entry absorbs the delete container.
+      expect(project.actionManager.coalesceTop).toHaveBeenCalledTimes(1);
+      const [top, next] = (
+        project.actionManager.coalesceTop as ReturnType<typeof vi.fn>
+      ).mock.calls[0];
+      expect(top).toBe(cut);
+      expect(next).toBeInstanceOf(ActionContainer);
+      expect(project.actionManager.register).not.toHaveBeenCalled();
     });
 
-    it('creates a fresh container when there is no pending cut', () => {
+    it('creates a fresh container when no cut is live', () => {
       const comp = makeAnd();
       compsToDestroy.push(comp);
       const project = makeProject([comp]);

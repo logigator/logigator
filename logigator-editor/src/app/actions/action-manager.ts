@@ -1,5 +1,6 @@
 import { Observable, Subject } from 'rxjs';
 import { Action } from './action';
+import { ActionContainer } from './action-container';
 import { Project } from '../project/project';
 import { LoggingService } from '../logging/logging.service';
 import { getStaticDI } from '../utils/get-di';
@@ -33,9 +34,19 @@ export class ActionManager {
   // action before the router unlocks.
   public locked = false;
 
+  // Reentrancy guard for the live-cut dissolve below: clearing the selection
+  // retracts the cut, and nothing that runs inside that may dissolve again.
+  private _dissolving = false;
+
   constructor(private readonly project: Project) {}
 
+  /** The newest done action — the entry the next undo would revert. */
+  public get topDone(): Action | null {
+    return this._pointer > 0 ? this._history[this._pointer - 1] : null;
+  }
+
   public push(action: Action): void {
+    this._dissolveLiveCut();
     this._history.splice(this._pointer, Infinity, action);
     this._pointer = this._history.length;
     action.do(this.project);
@@ -47,6 +58,7 @@ export class ActionManager {
   }
 
   public register(action: Action): void {
+    this._dissolveLiveCut();
     this._history.splice(this._pointer, Infinity, action);
     this._pointer = this._history.length;
     this.logging.debug(
@@ -56,23 +68,80 @@ export class ActionManager {
     this._actionChange$.next();
   }
 
+  /**
+   * Reverts and removes an action, provided it is still the newest done entry
+   * — how a cancelled scissor selection takes its cut back out of history so
+   * it leaves no trace. Returns false (touching nothing) otherwise.
+   */
+  public retract(action: Action): boolean {
+    if (this.topDone !== action) return false;
+    action.undo(this.project);
+    this._history.splice(this._pointer - 1, Infinity);
+    this._pointer = this._history.length;
+    this.logging.debug(
+      `retract ${action.constructor.name} → pointer ${this._pointer}`,
+      'ActionManager'
+    );
+    this._actionChange$.next();
+    return true;
+  }
+
+  /**
+   * Replaces the newest done entry with a container grouping it and `next`,
+   * WITHOUT executing anything — `next`'s state must already be materialized
+   * (the register convention). This is how a scissor cut and the move/delete
+   * that commits it collapse into one undo step. Falls back to a plain
+   * register when `expectedTop` is no longer on top (it then stays its own
+   * undo step).
+   */
+  public coalesceTop(expectedTop: Action, next: Action): void {
+    if (this.topDone !== expectedTop) {
+      this.logging.warn(
+        `coalesceTop: expected top is not the newest entry; registering ${next.constructor.name} separately`,
+        'ActionManager'
+      );
+      this.register(next);
+      return;
+    }
+    this._history.splice(
+      this._pointer - 1,
+      Infinity,
+      new ActionContainer(expectedTop, next)
+    );
+    this._pointer = this._history.length;
+    this.logging.debug(
+      `coalesceTop ${expectedTop.constructor.name} + ${next.constructor.name} → pointer ${this._pointer}`,
+      'ActionManager'
+    );
+    this._actionChange$.next();
+  }
+
+  /**
+   * A live scissor cut only stays in history as long as a move or delete can
+   * still commit it. Any unrelated action landing on top would orphan it as
+   * an invisible wire split, so dissolve first: clearing the selection
+   * retracts the cut. Lazy `selectionManager` access matters — Project
+   * constructs actionManager (this) before selectionManager.
+   */
+  private _dissolveLiveCut(): void {
+    if (this._dissolving) return;
+    const selectionManager = this.project.selectionManager;
+    if (!selectionManager?.hasLiveCut) return;
+    this._dissolving = true;
+    try {
+      this.logging.debug(
+        'dissolving live scissor cut before recording an unrelated action',
+        'ActionManager'
+      );
+      selectionManager.clear();
+    } finally {
+      this._dissolving = false;
+    }
+  }
+
   public undo(): void {
     if (this.locked) {
       this.logging.debug('undo ignored: a drag session is live', 'ActionManager');
-      return;
-    }
-
-    // A pending scissor-select cut is project state that lives outside the
-    // undo history. Reverting it counts as the user's "undo this last
-    // visible change" intent, so consume the keystroke here before the
-    // real history pointer moves. Lazy `this.project.selectionManager`
-    // access matters — Project constructs actionManager (this) before
-    // selectionManager, so reading it at construction time would NPE.
-    if (this.project.selectionManager.rollbackPendingCut()) {
-      this.logging.debug(
-        'undo consumed by pending scissor-cut rollback; pointer unchanged',
-        'ActionManager'
-      );
       return;
     }
 

@@ -144,15 +144,6 @@ export class SelectionMoveSession implements DragSession {
 
     const action = new ActionContainer();
 
-    // If this drag started from a SELECT_EXACT selection with a tentative
-    // scissor cut, fold that cut into the action so cut+move undo as one step.
-    // On hasMove === false we returned above without claiming, leaving the
-    // pending cut for the next selection-clear to roll back.
-    const pendingCut = this.project.selectionManager.claimPendingCut();
-    if (pendingCut) {
-      action.add(pendingCut);
-    }
-
     if (this._components.length > 0) {
       const componentEntries: MoveEntry[] = this._components.map((c) => ({
         id: c.id,
@@ -222,7 +213,16 @@ export class SelectionMoveSession implements DragSession {
     );
 
     if (action.length > 0) {
-      this.project.actionManager.register(action);
+      // A drag that started from a SELECT_EXACT scissor selection commits the
+      // cut: coalescing folds the cut's history entry and this move into one
+      // undo step. On hasMove === false we returned above without consuming,
+      // leaving the cut live for the next selection-clear to retract.
+      const cut = this.project.selectionManager.consumeLiveCut();
+      if (cut) {
+        this.project.actionManager.coalesceTop(cut, action);
+      } else {
+        this.project.actionManager.register(action);
+      }
     }
 
     // Re-derive the highlighted junctions only after the commit: the wire

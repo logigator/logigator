@@ -11,7 +11,8 @@ function makeProject(): MockedObject<Project> {
   const project = {
     addComponent: vi.fn().mockName('Project.addComponent'),
     selectionManager: {
-      rollbackPendingCut: () => false,
+      hasLiveCut: false,
+      clear: vi.fn().mockName('SelectionManager.clear'),
       retintCps: () => undefined
     }
   };
@@ -140,33 +141,102 @@ describe('ActionManager', () => {
 
   // ── undo intercepts pending scissor cut ──────────────────────────────────
 
-  describe('undo with pending scissor cut', () => {
-    it('rolls back the pending cut and does not consume the history', () => {
+  describe('retract', () => {
+    it('reverts and removes the newest done entry', () => {
       const action = makeAction();
-      manager.push(action);
+      manager.register(action);
 
-      // Pretend a SELECT_EXACT cut is pending.
-      (
-        project as never as {
-          selectionManager: {
-            rollbackPendingCut: () => boolean;
-          };
-        }
-      ).selectionManager.rollbackPendingCut = () => true;
+      expect(manager.retract(action)).toBe(true);
 
-      manager.undo();
-
-      expect(action.undo).not.toHaveBeenCalled();
-      expect(manager.undoAvailable).toBe(true);
-    });
-
-    it('falls through to history undo when no cut is pending', () => {
-      const action = makeAction();
-      manager.push(action);
-      // Default rollbackPendingCut returns false (from makeProject).
-      manager.undo();
       expect(action.undo).toHaveBeenCalledTimes(1);
       expect(action.undo).toHaveBeenCalledWith(project);
+      expect(manager.undoAvailable).toBe(false);
+      expect(manager.redoAvailable).toBe(false);
+    });
+
+    it('refuses to touch an action that is not the newest done entry', () => {
+      const older = makeAction();
+      const newer = makeAction();
+      manager.register(older);
+      manager.register(newer);
+
+      expect(manager.retract(older)).toBe(false);
+
+      expect(older.undo).not.toHaveBeenCalled();
+      expect(manager.topDone).toBe(newer);
+    });
+
+    it('refuses an entry the user has already undone', () => {
+      const action = makeAction();
+      manager.register(action);
+      manager.undo();
+
+      expect(manager.retract(action)).toBe(false);
+      // Its single undo came from the history operation, not the retract.
+      expect(action.undo).toHaveBeenCalledTimes(1);
+      expect(manager.redoAvailable).toBe(true);
+    });
+  });
+
+  describe('coalesceTop', () => {
+    it('merges the newest entry and the next action into one undo step without executing', () => {
+      const cut = makeAction();
+      const move = makeAction();
+      manager.register(cut);
+      manager.coalesceTop(cut, move);
+
+      expect(cut.do).not.toHaveBeenCalled();
+      expect(move.do).not.toHaveBeenCalled();
+
+      // One undo reverts both, in reverse order.
+      manager.undo();
+      expect(move.undo).toHaveBeenCalledTimes(1);
+      expect(cut.undo).toHaveBeenCalledTimes(1);
+      expect(manager.undoAvailable).toBe(false);
+
+      // One redo re-applies both.
+      manager.redo();
+      expect(cut.do).toHaveBeenCalledTimes(1);
+      expect(move.do).toHaveBeenCalledTimes(1);
+    });
+
+    it('registers the next action separately when the expected top no longer is', () => {
+      const cut = makeAction();
+      const other = makeAction();
+      const move = makeAction();
+      manager.register(cut);
+      manager.register(other);
+
+      manager.coalesceTop(cut, move);
+
+      // move became its own entry; one undo reverts only it.
+      manager.undo();
+      expect(move.undo).toHaveBeenCalledTimes(1);
+      expect(other.undo).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('live-cut dissolve on unrelated actions', () => {
+    it('clears the selection (retracting its cut) before recording', () => {
+      const selectionManager = (
+        project as never as {
+          selectionManager: { hasLiveCut: boolean; clear: () => void };
+        }
+      ).selectionManager;
+      selectionManager.hasLiveCut = true;
+
+      manager.push(makeAction());
+
+      expect(selectionManager.clear).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not dissolve when no cut is live', () => {
+      manager.register(makeAction());
+
+      expect(
+        (project as never as { selectionManager: { clear: () => void } })
+          .selectionManager.clear
+      ).not.toHaveBeenCalled();
     });
   });
 
@@ -429,21 +499,26 @@ describe('ActionManager', () => {
       expect(count).toBe(0);
     });
 
-    it('does not emit when undo is intercepted by a pending scissor cut', () => {
-      manager.push(makeAction());
-
-      (
-        project as never as {
-          selectionManager: {
-            rollbackPendingCut: () => boolean;
-          };
-        }
-      ).selectionManager.rollbackPendingCut = () => true;
+    it('emits when an entry is retracted', () => {
+      const action = makeAction();
+      manager.register(action);
 
       let count = 0;
       manager.actionChange$.subscribe(() => count++);
 
-      manager.undo();
+      manager.retract(action);
+      expect(count).toBe(1);
+    });
+
+    it('does not emit when a retract refuses a non-top entry', () => {
+      const older = makeAction();
+      manager.register(older);
+      manager.register(makeAction());
+
+      let count = 0;
+      manager.actionChange$.subscribe(() => count++);
+
+      manager.retract(older);
       expect(count).toBe(0);
     });
 

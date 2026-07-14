@@ -106,10 +106,25 @@ function makeProject(): MockedObject<Project> {
     addWire: vi.fn().mockName('Project.addWire'),
     removeWire: vi.fn().mockName('Project.removeWire')
   };
-  // SelectionManager.SELECT_EXACT path may push to actionManager; install a spy.
-  (project as any).actionManager = {
-    push: vi.fn().mockName('ActionManager.push')
+  // The SELECT_EXACT path registers/retracts the cut against the history;
+  // emulate just enough of the contract (topDone tracking, retract running
+  // the action's undo) for hasLiveCut and clear() to behave.
+  const actionManager = {
+    topDone: null as unknown,
+    push: vi.fn().mockName('ActionManager.push'),
+    register: vi.fn().mockName('ActionManager.register'),
+    retract: vi.fn().mockName('ActionManager.retract')
   };
+  actionManager.register.mockImplementation((action: unknown) => {
+    actionManager.topDone = action;
+  });
+  actionManager.retract.mockImplementation((action: any) => {
+    if (actionManager.topDone !== action) return false;
+    action.undo(project);
+    actionManager.topDone = null;
+    return true;
+  });
+  (project as any).actionManager = actionManager;
   // retintCps() reads project.connectionPoints.getCpsAtPoints — provide a no-op stub.
   (project as any).connectionPoints = {
     getCpsAtPoints: vi.fn().mockReturnValue([])
@@ -276,17 +291,18 @@ describe('SelectionManager', () => {
         setStaticDIInjector(TestBed.inject(Injector));
       });
 
-      it('does NOT push to ActionManager when a wire crosses the rect boundary (deferred cut)', () => {
-        // The cut is tentative until SelectionMoveSession claims it. This is
-        // the regression guard for: a SELECT_EXACT drag that scissors a wire
-        // must not pollute the undo history if no move follows.
+      it('registers the cut as a live history entry when a wire crosses the rect boundary', () => {
         const wire = makeFullWire(WireDirection.HORIZONTAL, 3.5, 4.5, 5);
         setWires(project, wire);
 
         manager.commit(new Rectangle(5, 4, 2, 1), WorkMode.SELECT_EXACT);
 
+        // Registered (state already materialized), never pushed.
         expect((project as any).actionManager.push).not.toHaveBeenCalled();
-        expect(manager.hasPendingCut).toBe(true);
+        expect((project as any).actionManager.register).toHaveBeenCalledTimes(
+          1
+        );
+        expect(manager.hasLiveCut).toBe(true);
       });
 
       it('mutates the project directly with addWire/removeWire when cutting', () => {
@@ -346,59 +362,79 @@ describe('SelectionManager', () => {
         expect(outsideRight.selected).toBe(false);
       });
 
-      it('clear() rolls back the pending cut: adds originals back, removes pieces', () => {
+      it('clear() retracts the live cut: adds originals back, removes pieces', () => {
         const wire = makeFullWire(WireDirection.HORIZONTAL, 3.5, 4.5, 5);
         setWires(project, wire);
 
         manager.commit(new Rectangle(5, 4, 2, 1), WorkMode.SELECT_EXACT);
-        expect(manager.hasPendingCut).toBe(true);
+        expect(manager.hasLiveCut).toBe(true);
 
         project.addWire.mockClear();
         project.removeWire.mockClear();
 
         manager.clear();
 
-        expect(manager.hasPendingCut).toBe(false);
-        // Rollback removes the 3 new pieces and re-adds the 1 original.
+        expect(manager.hasLiveCut).toBe(false);
+        // The retract runs the cut's undo: removes the 3 new pieces and
+        // re-adds the 1 original.
+        expect((project as any).actionManager.retract).toHaveBeenCalledTimes(
+          1
+        );
         expect(project.removeWire).toHaveBeenCalledTimes(3);
         expect(project.addWire).toHaveBeenCalledTimes(1);
       });
 
-      it('claimPendingCut returns an ActionContainer and clears the pending state', () => {
+      it('consumeLiveCut hands over the registered container and clears the live state', () => {
         const wire = makeFullWire(WireDirection.HORIZONTAL, 3.5, 4.5, 5);
         setWires(project, wire);
 
         manager.commit(new Rectangle(5, 4, 2, 1), WorkMode.SELECT_EXACT);
-        expect(manager.hasPendingCut).toBe(true);
+        expect(manager.hasLiveCut).toBe(true);
 
         project.addWire.mockClear();
         project.removeWire.mockClear();
 
-        const claimed = manager.claimPendingCut();
+        const consumed = manager.consumeLiveCut();
 
-        expect(claimed).toBeInstanceOf(ActionContainer);
-        expect(manager.hasPendingCut).toBe(false);
-        // Claim does NOT mutate the project — it just hands the rollback data
-        // to the caller (the move session) to fold into its ActionContainer.
+        expect(consumed).toBeInstanceOf(ActionContainer);
+        // The consumed action is exactly the history entry the cut registered.
+        expect(consumed).toBe(
+          (project as any).actionManager.register.mock.calls[0][0]
+        );
+        expect(manager.hasLiveCut).toBe(false);
+        // Consume does NOT mutate the project — the caller coalesces the
+        // entry with its own committed action.
         expect(project.removeWire).not.toHaveBeenCalled();
         expect(project.addWire).not.toHaveBeenCalled();
+        // A later clear() must not retract the handed-over cut.
+        manager.clear();
+        expect((project as any).actionManager.retract).not.toHaveBeenCalled();
       });
 
-      it('claimPendingCut returns null when nothing is pending', () => {
-        expect(manager.claimPendingCut()).toBeNull();
+      it('consumeLiveCut returns null when no cut is live', () => {
+        expect(manager.consumeLiveCut()).toBeNull();
       });
 
-      it('rollbackPendingCut returns true after a cut and false when nothing is pending', () => {
+      it('a cut stops being live once another entry lands on top of it', () => {
         const wire = makeFullWire(WireDirection.HORIZONTAL, 3.5, 4.5, 5);
         setWires(project, wire);
 
-        expect(manager.rollbackPendingCut()).toBe(false);
-
         manager.commit(new Rectangle(5, 4, 2, 1), WorkMode.SELECT_EXACT);
+        expect(manager.hasLiveCut).toBe(true);
 
-        expect(manager.rollbackPendingCut()).toBe(true);
-        expect(manager.hasPendingCut).toBe(false);
-        expect(manager.rollbackPendingCut()).toBe(false);
+        // Something else becomes the newest history entry.
+        (project as any).actionManager.topDone = {};
+
+        expect(manager.hasLiveCut).toBe(false);
+        expect(manager.consumeLiveCut()).toBeNull();
+
+        // clear() attempts the retract, which reports non-top and reverts
+        // nothing — the cut stays wherever the history has it.
+        project.addWire.mockClear();
+        project.removeWire.mockClear();
+        manager.clear();
+        expect(project.removeWire).not.toHaveBeenCalled();
+        expect(project.addWire).not.toHaveBeenCalled();
       });
     });
   });
