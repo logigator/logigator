@@ -36,6 +36,10 @@ export class Project extends Container {
   // when environment.debug.showQuadTrees is on (cyan = wires, orange = components).
   private readonly _wires = new QuadTreeContainer<Wire>(0x00e5ff);
   private readonly _components = new QuadTreeContainer<Component>(0xff9100);
+  // Id → element indexes mirroring quad-tree membership exactly (detached
+  // drag elements leave both), so id lookups are O(1) instead of tree scans.
+  private readonly _componentsById = new Map<number, Component>();
+  private readonly _wiresById = new Map<number, Wire>();
   private readonly _floatingLayer = new FloatingLayer();
 
   private readonly _wireIntegrator = new WireIntegrator();
@@ -321,6 +325,7 @@ export class Project extends Container {
   public addComponent(component: Component, deferConnectionPoints = false) {
     component.applyScale(this.scale.x);
     this._components.insert(component);
+    this._componentsById.set(component.id, component);
     if (!deferConnectionPoints) {
       this._connectionPoints.onComponentAdded(component.connectionPoints);
     }
@@ -359,10 +364,12 @@ export class Project extends Container {
 
   /** Looks up a tracked component by its instance id; `undefined` if none. */
   public getComponentById(componentId: number): Component | undefined {
-    for (const component of this._components.items) {
-      if (component.id === componentId) return component;
-    }
-    return undefined;
+    return this._componentsById.get(componentId);
+  }
+
+  /** Looks up a tracked wire by its instance id; `undefined` if none. */
+  public getWireById(wireId: number): Wire | undefined {
+    return this._wiresById.get(wireId);
   }
 
   public removeComponent(componentId: number) {
@@ -371,6 +378,7 @@ export class Project extends Container {
     this.selectionManager.evict(component);
     const ports = component.connectionPoints;
     this._components.remove(component);
+    this._componentsById.delete(componentId);
     this._connectionPoints.onComponentRemoved(ports);
     this._portsChangeSubs.get(componentId)?.unsubscribe();
     this._portsChangeSubs.delete(componentId);
@@ -385,6 +393,7 @@ export class Project extends Container {
   public addWire(wire: Wire, deferConnectionPoints = false) {
     wire.applyScale(this.scale.x);
     this._wires.insert(wire);
+    this._wiresById.set(wire.id, wire);
     if (!deferConnectionPoints) {
       this._connectionPoints.onWireAdded(Wire.snapshot(wire));
     }
@@ -405,11 +414,12 @@ export class Project extends Container {
   }
 
   public removeWire(wireId: number) {
-    const wire = Array.from(this._wires.items).find((w) => w.id === wireId);
+    const wire = this.getWireById(wireId);
     if (!wire) return;
     this.selectionManager.evict(wire);
     const snapshot = Wire.snapshot(wire);
     this._wires.remove(wire);
+    this._wiresById.delete(wireId);
     this._connectionPoints.onWireRemoved(snapshot);
     wire.destroy();
     this._ticker$.next('single');
@@ -482,9 +492,11 @@ export class Project extends Container {
   ): void {
     for (const c of components) {
       this._components.remove(c);
+      this._componentsById.delete(c.id);
     }
     for (const w of wires) {
       this._wires.remove(w);
+      this._wiresById.delete(w.id);
     }
     // Drop the pre-drag termination counts (the elements are still at their old
     // positions here); reattachFromDrag re-adds them at the new ones. Existing
@@ -499,10 +511,16 @@ export class Project extends Container {
     wires: readonly Wire[]
   ): void {
     for (const c of components) {
-      if (!c.destroyed) this._components.insert(c);
+      if (!c.destroyed) {
+        this._components.insert(c);
+        this._componentsById.set(c.id, c);
+      }
     }
     for (const w of wires) {
-      if (!w.destroyed) this._wires.insert(w);
+      if (!w.destroyed) {
+        this._wires.insert(w);
+        this._wiresById.set(w.id, w);
+      }
     }
     // Re-add termination counts at the post-drag positions (destroyed elements
     // are skipped in both places, so their counts stay dropped).
@@ -522,7 +540,7 @@ export class Project extends Container {
   }
 
   public moveWire(id: number, pos: Point): void {
-    const wire = Array.from(this._wires.items).find((w) => w.id === id);
+    const wire = this.getWireById(id);
     if (!wire) return;
     const oldSnap = Wire.snapshot(wire);
     wire.position.copyFrom(pos);
