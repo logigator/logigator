@@ -139,8 +139,8 @@ export class ServerPersistenceGateway {
    * PUTs its current content, then flips the project's metadata to
    * `source:'server'` — but only once that round-trip commits, so a failed
    * create/PUT leaves the live project an untouched local draft (retryable)
-   * rather than a half-promoted record. Returns the new server id. The
-   * dirty-version snapshot guard matches {@link saveProject}: an edit landing
+   * rather than a half-promoted record. Returns the new server id. Runs under
+   * the same mid-save edit guard as {@link saveProject}: an edit landing
    * mid-promote keeps the project dirty.
    */
   async promoteToServer(
@@ -148,23 +148,22 @@ export class ServerPersistenceGateway {
     name: string,
     isPublic: boolean
   ): Promise<string> {
-    const versionAtSnapshot = this.metadataStore.dirtyVersion(project);
-    const { id, hash } = await this._createAndSaveServerProject(
-      project,
-      name,
-      isPublic
-    );
+    const id = await this.metadataStore.withDirtyGuard(project, async () => {
+      const { id, hash } = await this._createAndSaveServerProject(
+        project,
+        name,
+        isPublic
+      );
 
-    this.metadataStore.update(project, {
-      source: 'server',
-      id,
-      name,
-      isPublic,
-      hash
+      this.metadataStore.update(project, {
+        source: 'server',
+        id,
+        name,
+        isPublic,
+        hash
+      });
+      return id;
     });
-    if (this.metadataStore.dirtyVersion(project) === versionAtSnapshot) {
-      this.metadataStore.clearDirty(project);
-    }
     void this._uploadPreview(project, id);
     return id;
   }
@@ -586,39 +585,37 @@ export class ServerPersistenceGateway {
   }
 
   async saveProject(project: Project): Promise<void> {
-    // Snapshot the dirty version *before* serializing: an edit landing
-    // mid-save must stay dirty, else "Saved" lies about unsaved changes.
     const metadata = this.metadataStore.getMetadata(project)!;
-    const versionAtSnapshot = this.metadataStore.dirtyVersion(project);
-    const { elements, dependencies } = server.serializeProject(
-      project,
-      this.registry,
-      this.provider
-    );
-
-    try {
-      const response = await firstValueFrom(
-        this.projectApi.save(metadata.id, {
-          oldHash: metadata.hash,
-          dependencies,
-          elements,
-          newFormat: true
-        })
+    await this.metadataStore.withDirtyGuard(project, async () => {
+      const { elements, dependencies } = server.serializeProject(
+        project,
+        this.registry,
+        this.provider
       );
 
-      this.metadataStore.updateHash(project, response.elementsFile?.hash ?? '');
-      if (this.metadataStore.dirtyVersion(project) === versionAtSnapshot) {
-        this.metadataStore.clearDirty(project);
+      try {
+        const response = await firstValueFrom(
+          this.projectApi.save(metadata.id, {
+            oldHash: metadata.hash,
+            dependencies,
+            elements,
+            newFormat: true
+          })
+        );
+        this.metadataStore.updateHash(
+          project,
+          response.elementsFile?.hash ?? ''
+        );
+      } catch (err) {
+        this._reportSaveError(err);
+        throw err;
       }
-      this.toast.success(
-        this.translation.translate('persistence.projectSaved'),
-        'ServerPersistenceGateway'
-      );
-      void this._uploadPreview(project, metadata.id);
-    } catch (err) {
-      this._reportSaveError(err);
-      throw err;
-    }
+    });
+    this.toast.success(
+      this.translation.translate('persistence.projectSaved'),
+      'ServerPersistenceGateway'
+    );
+    void this._uploadPreview(project, metadata.id);
   }
 
   /**
@@ -633,46 +630,47 @@ export class ServerPersistenceGateway {
   async saveComponent(project: Project): Promise<void> {
     const metadata = this.metadataStore.getMetadata(project)!;
     const masterTypeId = this.registry.masterTypeIdForId(metadata.id);
-    const versionAtSnapshot = this.metadataStore.dirtyVersion(project);
 
-    try {
-      const response = await this._saveComponentCircuit(
-        metadata.id,
-        project,
-        metadata.hash
-      );
-
-      // The persisted state changed: drop the cached body/hash so the next
-      // placement or edit-open re-fetches the saved circuit rather than serving
-      // the pre-save copy.
-      this._masterCircuitCache.delete(metadata.id);
-
-      this.metadataStore.updateHash(project, response.elementsFile?.hash ?? '');
-      // Adopt the server's save-time version stamp; without it (e.g. a backend
-      // that does not yet implement the additive change) the master version is
-      // left unchanged, so placed instances are not spuriously flagged stale.
-      if (masterTypeId !== undefined) {
-        if (response.version !== undefined) {
-          this.registry.setMasterVersion(masterTypeId, response.version);
-        }
-        // Re-stamp the save time (server value when present, else now) so the
-        // palette re-sorts the just-edited master to the top.
-        this.registry.setMasterLastEdited(
-          masterTypeId,
-          isoToEpoch(response.lastEdited)
+    await this.metadataStore.withDirtyGuard(project, async () => {
+      try {
+        const response = await this._saveComponentCircuit(
+          metadata.id,
+          project,
+          metadata.hash
         );
+
+        // The persisted state changed: drop the cached body/hash so the next
+        // placement or edit-open re-fetches the saved circuit rather than serving
+        // the pre-save copy.
+        this._masterCircuitCache.delete(metadata.id);
+
+        this.metadataStore.updateHash(
+          project,
+          response.elementsFile?.hash ?? ''
+        );
+        // Adopt the server's save-time version stamp; without it (e.g. a backend
+        // that does not yet implement the additive change) the master version is
+        // left unchanged, so placed instances are not spuriously flagged stale.
+        if (masterTypeId !== undefined) {
+          if (response.version !== undefined) {
+            this.registry.setMasterVersion(masterTypeId, response.version);
+          }
+          // Re-stamp the save time (server value when present, else now) so the
+          // palette re-sorts the just-edited master to the top.
+          this.registry.setMasterLastEdited(
+            masterTypeId,
+            isoToEpoch(response.lastEdited)
+          );
+        }
+      } catch (err) {
+        this._reportSaveError(err);
+        throw err;
       }
-      if (this.metadataStore.dirtyVersion(project) === versionAtSnapshot) {
-        this.metadataStore.clearDirty(project);
-      }
-      this.toast.success(
-        this.translation.translate('persistence.componentSaved'),
-        'ServerPersistenceGateway'
-      );
-    } catch (err) {
-      this._reportSaveError(err);
-      throw err;
-    }
+    });
+    this.toast.success(
+      this.translation.translate('persistence.componentSaved'),
+      'ServerPersistenceGateway'
+    );
   }
 
   /**

@@ -3,10 +3,10 @@ import { firstValueFrom } from 'rxjs';
 import { DialogService } from '@logigator/ui';
 import { TranslationService } from '../../translation/translation.service';
 import {
-  isHandledSaveError,
   LocalUploadDependency,
   PersistenceService
 } from '../../persistence/persistence.service';
+import { isHandledSaveError } from '../../persistence/persistence-errors';
 import { ProjectMetadataStore } from '../../persistence/project-metadata.store';
 import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
 import { ToastService } from '../../logging/toast.service';

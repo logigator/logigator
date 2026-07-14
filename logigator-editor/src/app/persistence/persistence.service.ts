@@ -2,6 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { Location } from '@angular/common';
 import { firstValueFrom, Observable } from 'rxjs';
 import { TranslationService } from '../translation/translation.service';
+import { TranslationKey } from '../translation/translation-key.model';
 import { CircuitFileService } from './file/circuit-file.service';
 import { BrowserProjectStore } from './browser/browser-project.store';
 import { BrowserComponentStore } from './browser/browser-component.store';
@@ -36,12 +37,6 @@ import { downloadBlob } from '../utils/download';
 import { decodeLgix, encodeLgix, hasLgixMagic } from './file/lgix-container';
 import { ProjectDump, PROJECT_DUMP_VERSION } from './dump/project-dump.types';
 import { deserializeAction } from '../actions/action-codec';
-
-export {
-  AuthRequiredError,
-  ForeignDocumentError,
-  isHandledSaveError
-} from './persistence-errors';
 
 /**
  * One **local** custom component that a circuit about to be uploaded embeds
@@ -551,31 +546,45 @@ export class PersistenceService {
     return project;
   }
 
-  async loadProjectAsMain(
-    uuid: string,
-    opts?: { skipUrlUpdate?: boolean }
-  ): Promise<void> {
-    const token = ++this._mainLoadToken;
+  /**
+   * Shared skeleton of the load-as-main entry points: allocates a race token,
+   * runs `load`, and — only when this load is still the current one — hands the
+   * result to `onLoaded` (which places the project, logs, and updates the URL).
+   * A stale result is disposed; a failure toasts `failureMessageKey` and falls
+   * back to a blank draft when no main project exists at all.
+   */
+  private async _loadAsMain<T>(opts: {
+    /**
+     * Which race token guards this load. Server projects, browser projects
+     * and server components all fill the single main slot, so they share one
+     * token ('main') — starting any of them discards a still-pending load of
+     * the others. Shares have their own slot ('share').
+     */
+    token: 'main' | 'share';
+    load: () => Promise<T>;
+    projectOf: (result: T) => Project;
+    onLoaded: (result: T) => void;
+    failureMessageKey: TranslationKey;
+    failureDetail: string;
+  }): Promise<void> {
+    const token =
+      opts.token === 'main' ? ++this._mainLoadToken : ++this._shareLoadToken;
+    const isCurrent = (): boolean =>
+      token ===
+      (opts.token === 'main' ? this._mainLoadToken : this._shareLoadToken);
     try {
-      const project = await this.loadProject(uuid);
-      if (token !== this._mainLoadToken) {
-        this._disposeProject(project);
+      const result = await opts.load();
+      if (!isCurrent()) {
+        this._disposeProject(opts.projectOf(result));
         return;
       }
-      this._replaceMainProject(project);
-      this.logging.info(
-        `Loaded project ${uuid} (server)`,
-        'PersistenceService'
-      );
-      if (!opts?.skipUrlUpdate) {
-        this.location.go(`/project/${uuid}`);
-      }
+      opts.onLoaded(result);
     } catch (e) {
-      if (token === this._mainLoadToken) {
+      if (isCurrent()) {
         this.toast.error(
-          this.translation.translate('persistence.loadFailed'),
+          this.translation.translate(opts.failureMessageKey),
           'PersistenceService',
-          `Failed to load project ${uuid}: ${formatHttpError(e)}`
+          `${opts.failureDetail}: ${formatHttpError(e)}`
         );
         if (!this.projectService.mainProject()) {
           this.createAndSetEmptyProject();
@@ -584,35 +593,48 @@ export class PersistenceService {
     }
   }
 
-  async loadShareAsMain(linkId: string): Promise<void> {
-    const token = ++this._shareLoadToken;
-    try {
-      const { project, type } = await this.loadShare(linkId);
-      if (token !== this._shareLoadToken) {
-        this._disposeProject(project);
-        return;
-      }
-      if (type === 'comp') {
-        this.projectService.addOpenComponent(project);
-      } else {
+  async loadProjectAsMain(
+    uuid: string,
+    opts?: { skipUrlUpdate?: boolean }
+  ): Promise<void> {
+    await this._loadAsMain({
+      token: 'main',
+      load: () => this.loadProject(uuid),
+      projectOf: (project) => project,
+      onLoaded: (project) => {
         this._replaceMainProject(project);
-      }
-      this.logging.info(
-        `Loaded share ${linkId} (${type})`,
-        'PersistenceService'
-      );
-    } catch (e) {
-      if (token === this._shareLoadToken) {
-        this.toast.error(
-          this.translation.translate('persistence.shareLoadFailed'),
-          'PersistenceService',
-          `Failed to load share ${linkId}: ${formatHttpError(e)}`
+        this.logging.info(
+          `Loaded project ${uuid} (server)`,
+          'PersistenceService'
         );
-        if (!this.projectService.mainProject()) {
-          this.createAndSetEmptyProject();
+        if (!opts?.skipUrlUpdate) {
+          this.location.go(`/project/${uuid}`);
         }
-      }
-    }
+      },
+      failureMessageKey: 'persistence.loadFailed',
+      failureDetail: `Failed to load project ${uuid}`
+    });
+  }
+
+  async loadShareAsMain(linkId: string): Promise<void> {
+    await this._loadAsMain({
+      token: 'share',
+      load: () => this.loadShare(linkId),
+      projectOf: ({ project }) => project,
+      onLoaded: ({ project, type }) => {
+        if (type === 'comp') {
+          this.projectService.addOpenComponent(project);
+        } else {
+          this._replaceMainProject(project);
+        }
+        this.logging.info(
+          `Loaded share ${linkId} (${type})`,
+          'PersistenceService'
+        );
+      },
+      failureMessageKey: 'persistence.shareLoadFailed',
+      failureDetail: `Failed to load share ${linkId}`
+    });
   }
 
   /**
@@ -1109,69 +1131,50 @@ export class PersistenceService {
     uuid: string,
     opts?: { skipUrlUpdate?: boolean }
   ): Promise<void> {
-    const token = ++this._mainLoadToken;
-    try {
-      const { project, masterTypeId } = await this.loadServerComponent(uuid);
-      if (token !== this._mainLoadToken) {
-        this._disposeProject(project);
-        return;
-      }
-      this._replaceMainProject(project);
-      this._componentBindings.set(
-        project,
-        new DefinitionBinding(project, masterTypeId, this.registry)
-      );
-      this.logging.info(
-        `Loaded component ${uuid} (server)`,
-        'PersistenceService'
-      );
-      if (!opts?.skipUrlUpdate) {
-        this.location.go(`/component/${uuid}`);
-      }
-    } catch (e) {
-      if (token === this._mainLoadToken) {
-        this.toast.error(
-          this.translation.translate('persistence.componentLoadFailed'),
-          'PersistenceService',
-          `Failed to load component ${uuid}: ${formatHttpError(e)}`
+    await this._loadAsMain({
+      token: 'main',
+      load: () => this.loadServerComponent(uuid),
+      projectOf: ({ project }) => project,
+      onLoaded: ({ project, masterTypeId }) => {
+        this._replaceMainProject(project);
+        this._componentBindings.set(
+          project,
+          new DefinitionBinding(project, masterTypeId, this.registry)
         );
-        if (!this.projectService.mainProject()) {
-          this.createAndSetEmptyProject();
+        this.logging.info(
+          `Loaded component ${uuid} (server)`,
+          'PersistenceService'
+        );
+        if (!opts?.skipUrlUpdate) {
+          this.location.go(`/component/${uuid}`);
         }
-      }
-    }
+      },
+      failureMessageKey: 'persistence.componentLoadFailed',
+      failureDetail: `Failed to load component ${uuid}`
+    });
   }
 
   async loadLocalProjectAsMain(
     id: string,
     opts?: { skipUrlUpdate?: boolean }
   ): Promise<void> {
-    // Server and browser projects share the single main slot, so they share the
-    // load token: starting either load discards a still-pending one of the other.
-    const token = ++this._mainLoadToken;
-    try {
-      const project = await this.loadLocalProject(id);
-      if (token !== this._mainLoadToken) {
-        this._disposeProject(project);
-        return;
-      }
-      this._replaceMainProject(project);
-      this.logging.info(`Loaded project ${id} (browser)`, 'PersistenceService');
-      if (!opts?.skipUrlUpdate) {
-        this.location.go(`/local/${id}`);
-      }
-    } catch (e) {
-      if (token === this._mainLoadToken) {
-        this.toast.error(
-          this.translation.translate('persistence.loadFailed'),
-          'PersistenceService',
-          `Failed to load browser project ${id}: ${formatHttpError(e)}`
+    await this._loadAsMain({
+      token: 'main',
+      load: () => this.loadLocalProject(id),
+      projectOf: (project) => project,
+      onLoaded: (project) => {
+        this._replaceMainProject(project);
+        this.logging.info(
+          `Loaded project ${id} (browser)`,
+          'PersistenceService'
         );
-        if (!this.projectService.mainProject()) {
-          this.createAndSetEmptyProject();
+        if (!opts?.skipUrlUpdate) {
+          this.location.go(`/local/${id}`);
         }
-      }
-    }
+      },
+      failureMessageKey: 'persistence.loadFailed',
+      failureDetail: `Failed to load browser project ${id}`
+    });
   }
 
   // -- Private helpers -----------------------------------------------------
@@ -1375,28 +1378,23 @@ export class PersistenceService {
   }
 
   private async _doBrowserSave(project: Project): Promise<void> {
-    // Same dirty-version snapshot guard as the server save: the IndexedDB write
-    // awaits, so an edit can land mid-save and must keep the project dirty.
     const metadata = this.metadataStore.getMetadata(project)!;
-    const versionAtSnapshot = this.metadataStore.dirtyVersion(project);
-    const content = this.circuitFile.toJson(project, metadata.name);
+    await this.metadataStore.withDirtyGuard(project, async () => {
+      const content = this.circuitFile.toJson(project, metadata.name);
 
-    const record = await this.browserStore.save({
-      id: metadata.id || undefined,
-      name: metadata.name,
-      content
+      const record = await this.browserStore.save({
+        id: metadata.id || undefined,
+        name: metadata.name,
+        content
+      });
+
+      // First save of a fresh draft: record the generated id and reflect it in
+      // the URL so a reload restores this project via the /local/:id route.
+      if (metadata.id !== record.id) {
+        this.metadataStore.updateId(project, record.id);
+        this.location.go(`/local/${record.id}`);
+      }
     });
-
-    // First save of a fresh draft: record the generated id and reflect it in
-    // the URL so a reload restores this project via the /local/:id route.
-    if (metadata.id !== record.id) {
-      this.metadataStore.updateId(project, record.id);
-      this.location.go(`/local/${record.id}`);
-    }
-
-    if (this.metadataStore.dirtyVersion(project) === versionAtSnapshot) {
-      this.metadataStore.clearDirty(project);
-    }
     this.toast.success(
       this.translation.translate('persistence.projectSavedLocal'),
       'PersistenceService'
@@ -1417,38 +1415,35 @@ export class PersistenceService {
       masterTypeId !== undefined
         ? this.registry.getDefinition(masterTypeId)
         : undefined;
-    const versionAtSnapshot = this.metadataStore.dirtyVersion(project);
-    const summary = deriveSummary(project);
-    const content = this.circuitFile.toJson(project, metadata.name);
+    await this.metadataStore.withDirtyGuard(project, async () => {
+      const summary = deriveSummary(project);
+      const content = this.circuitFile.toJson(project, metadata.name);
 
-    // Auto-increment the monotonic version so that placed instances frozen at an
-    // older version can detect "a newer master exists" and offer the update button.
-    const newVersion = (master?.version ?? 0) + 1;
+      // Auto-increment the monotonic version so that placed instances frozen at an
+      // older version can detect "a newer master exists" and offer the update button.
+      const newVersion = (master?.version ?? 0) + 1;
 
-    const record = await this.browserComponentStore.save({
-      id: metadata.id || undefined,
-      version: newVersion,
-      name: metadata.name,
-      symbol: master?.symbol ?? '',
-      description: master?.description ?? '',
-      numInputs: summary.numInputs,
-      numOutputs: summary.numOutputs,
-      labels: summary.labels,
-      content
+      const record = await this.browserComponentStore.save({
+        id: metadata.id || undefined,
+        version: newVersion,
+        name: metadata.name,
+        symbol: master?.symbol ?? '',
+        description: master?.description ?? '',
+        numInputs: summary.numInputs,
+        numOutputs: summary.numOutputs,
+        labels: summary.labels,
+        content
+      });
+
+      // Adopt the bumped version so the in-memory master reflects it, invalidates
+      // the placement snapshot cache, and placed instances behind this version can
+      // detect "a newer master exists". Re-stamp the save time so the palette
+      // re-sorts the just-edited master to the top.
+      if (masterTypeId !== undefined) {
+        this.registry.setMasterVersion(masterTypeId, newVersion);
+        this.registry.setMasterLastEdited(masterTypeId, record.lastEdited);
+      }
     });
-
-    // Adopt the bumped version so the in-memory master reflects it, invalidates
-    // the placement snapshot cache, and placed instances behind this version can
-    // detect "a newer master exists". Re-stamp the save time so the palette
-    // re-sorts the just-edited master to the top.
-    if (masterTypeId !== undefined) {
-      this.registry.setMasterVersion(masterTypeId, newVersion);
-      this.registry.setMasterLastEdited(masterTypeId, record.lastEdited);
-    }
-
-    if (this.metadataStore.dirtyVersion(project) === versionAtSnapshot) {
-      this.metadataStore.clearDirty(project);
-    }
     this.toast.success(
       this.translation.translate('persistence.componentSavedLocal'),
       'PersistenceService'

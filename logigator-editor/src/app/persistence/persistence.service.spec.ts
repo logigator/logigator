@@ -7,7 +7,8 @@ import { Location } from '@angular/common';
 import { TestBed } from '@angular/core/testing';
 import { HttpTestingController } from '@angular/common/http/testing';
 import { TranslationService } from '../translation/translation.service';
-import { AuthRequiredError, PersistenceService } from './persistence.service';
+import { PersistenceService } from './persistence.service';
+import { AuthRequiredError, ForeignDocumentError } from './persistence-errors';
 import { ProjectMetadataStore } from './project-metadata.store';
 import { ProjectService } from '../project/project.service';
 import { Project } from '../project/project';
@@ -39,7 +40,6 @@ import { arrayWithExactContents } from '../../testing/vitest-helpers';
 import { signal } from '@angular/core';
 import type { UserData } from '../api/models/user';
 import { UserService } from '../user/user.service';
-import { ForeignDocumentError } from './persistence-errors';
 
 function makeUser(id: string): UserData {
   return { id, memberSince: '2024-01-01', username: id, image: null };

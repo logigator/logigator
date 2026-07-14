@@ -136,11 +136,28 @@ export class ProjectMetadataStore {
     return this._entries.get(project)?.dirtyVersion ?? 0;
   }
 
-  public updateHash(project: Project, hash: string): void {
-    const entry = this._entries.get(project);
-    if (entry) {
-      entry.metadata.hash = hash;
+  /**
+   * Runs an async save step under the mid-save edit guard: snapshots
+   * {@link dirtyVersion} before `fn` runs (so `fn` must include the
+   * serialization, not just the write), and clears the dirty flag afterwards
+   * only when no edit landed while `fn` was in flight — a save must not mark
+   * newer, unsaved edits as saved. An error from `fn` propagates with the
+   * flag untouched.
+   */
+  public async withDirtyGuard<T>(
+    project: Project,
+    fn: () => Promise<T>
+  ): Promise<T> {
+    const versionAtSnapshot = this.dirtyVersion(project);
+    const result = await fn();
+    if (this.dirtyVersion(project) === versionAtSnapshot) {
+      this.clearDirty(project);
     }
+    return result;
+  }
+
+  public updateHash(project: Project, hash: string): void {
+    this.update(project, { hash });
   }
 
   /**
@@ -151,19 +168,13 @@ export class ProjectMetadataStore {
    * gaining its store id.
    */
   public updateId(project: Project, id: string): void {
-    const entry = this._entries.get(project);
-    if (!entry) return;
-    this._entries.set(project, {
-      ...entry,
-      metadata: { ...entry.metadata, id }
-    });
+    this.update(project, { id });
   }
 
   /**
    * Merges `patch` into a project's metadata by re-`set`ting the map entry, so
    * reactive readers observe the change (e.g. flipping `source`/`id`/`isPublic`
    * when a draft is promoted to the server, or applying a chosen name).
-   * {@link updateHash} mutates in place instead — nothing reactive reads the hash.
    */
   public update(project: Project, patch: Partial<ProjectMetadata>): void {
     const entry = this._entries.get(project);

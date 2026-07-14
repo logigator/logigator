@@ -2,10 +2,8 @@ import { inject, Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { DialogService } from '@logigator/ui';
 import { TranslationService } from '../translation/translation.service';
-import {
-  isHandledSaveError,
-  PersistenceService
-} from '../persistence/persistence.service';
+import { PersistenceService } from '../persistence/persistence.service';
+import { isHandledSaveError } from '../persistence/persistence-errors';
 import { ProjectMetadataStore } from '../persistence/project-metadata.store';
 import { ToastService } from '../logging/toast.service';
 import { Project } from '../project/project';
