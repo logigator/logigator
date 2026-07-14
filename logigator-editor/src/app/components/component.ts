@@ -4,7 +4,6 @@ import {
   DestroyOptions,
   Graphics,
   GraphicsContext,
-  Matrix,
   Point,
   Rectangle
 } from 'pixi.js';
@@ -27,6 +26,15 @@ import {
 } from '../rendering/graphics/negation-bubble.graphics';
 import { ComponentOption } from './component-option';
 import { SerializedComponent } from './serialized-component.model';
+import {
+  bodyGridBounds,
+  ComponentShape,
+  connectionPoints,
+  gridBounds,
+  localConnectionPoints,
+  negationBubbleAnchor,
+  rotatedBox
+} from './component-geometry';
 import { Connectable } from '../rendering/grid-element';
 import { IdAllocator } from '../utils/id-allocator';
 import { Direction } from '../utils/direction';
@@ -391,27 +399,28 @@ export abstract class Component<
     super.destroy(options);
   }
 
-  public get connectionPoints(): Point[] {
-    return this._localConnectionPoints.map(
-      (p) => new Point(this.position.x + p.x, this.position.y + p.y)
-    );
+  /**
+   * The plain shape descriptor the pure geometry functions work on — see
+   * `component-geometry.ts` for the lattice-exactness invariants they keep.
+   */
+  private get _shape(): ComponentShape {
+    return {
+      direction: this._direction,
+      numInputs: this._numInputs,
+      numOutputs: this._numOutputs,
+      bodyGridWidth: this.bodyGridWidth,
+      bodyGridHeight: this.bodyGridHeight,
+      position: this.position
+    };
   }
 
-  /**
-   * Grid-space body-edge point where the inverter bubble for a port (0-based
-   * within its group) is pinned — the bubble's tangent point, from which it
-   * grows outward along the stub. Mirrors the bubble placement in
-   * `_drawConnections` so the port-negation tool's hover preview lands exactly
-   * on the real bubble's spot.
-   */
+  public get connectionPoints(): Point[] {
+    return connectionPoints(this._shape);
+  }
+
+  /** See {@link negationBubbleAnchor} in `component-geometry.ts`. */
   public negationBubbleAnchor(side: PortSide, index: number): Point {
-    const matrix = Matrix.IDENTITY.rotate(this.rotation);
-    const local =
-      side === 'in'
-        ? new Point(0, index + 0.5)
-        : new Point(this.bodyGridWidth, index + 0.5);
-    const rotated = matrix.apply(local);
-    return new Point(this.position.x + rotated.x, this.position.y + rotated.y);
+    return negationBubbleAnchor(this._shape, side, index);
   }
 
   /**
@@ -555,18 +564,11 @@ export abstract class Component<
   }
 
   public get bodyGridBounds(): Rectangle {
-    return this._rotatedBounds(0, this.bodyGridWidth, this.bodyGridHeight);
+    return bodyGridBounds(this._shape);
   }
 
   public get gridBounds(): Rectangle {
-    // Stub offsets in the component's unrotated local frame.
-    // ly is always 0 — stubs are horizontal and don't extend the y extent.
-    const lx = this.numInputs > 0 ? -0.5 : 0;
-    const w =
-      this.bodyGridWidth +
-      (this.numInputs > 0 ? 0.5 : 0) +
-      (this.numOutputs > 0 ? 0.5 : 0);
-    return this._rotatedBounds(lx, w, this.bodyGridHeight);
+    return gridBounds(this._shape);
   }
 
   // Bounds the quad tree files and culls by. Defaults to the logical
@@ -576,79 +578,21 @@ export abstract class Component<
     return this.gridBounds;
   }
 
-  // AABB in parent (gridSpace) coordinates for a rectangle of size (w × h) with
-  // an optional unrotated x-offset (lx), accounting for component rotation.
-  private _rotatedBounds(lx: number, w: number, h: number): Rectangle {
-    return this._rotatedBox(lx, 0, lx + w, h);
-  }
-
   // AABB in parent (gridSpace) coordinates of an unrotated local box
   // [x0, x1] × [y0, y1], rotated to the component's current direction.
-  // Generalizes _rotatedBounds, which assumes the box is anchored at y = 0.
   protected _rotatedBox(
     x0: number,
     y0: number,
     x1: number,
     y1: number
   ): Rectangle {
-    const x = this.position.x;
-    const y = this.position.y;
-    const w = x1 - x0;
-    const h = y1 - y0;
-
-    switch (this._direction) {
-      case Direction.E:
-        return new Rectangle(x + x0, y + y0, w, h);
-      case Direction.S:
-        return new Rectangle(x - y1, y + x0, h, w);
-      case Direction.W:
-        return new Rectangle(x - x1, y - y1, w, h);
-      case Direction.N:
-        return new Rectangle(x + y0, y - x1, h, w);
-    }
+    return rotatedBox(this._direction, this.position, x0, y0, x1, y1);
   }
 
   protected registerRotationCounterContainer(container: Container): Container {
     container.rotation = -this.rotation;
     this._rotationCounterContainers.push(container);
     return container;
-  }
-
-  // Connection points must land exactly on the half-grid lattice: wires, the
-  // net extractor, and the connection-point manager all match termination
-  // points by exact coordinates, so any drift disconnects the port logically
-  // while it still looks attached. Two consequences here:
-  //   - Ports sit at the nominal stub tips, never at getLocalBounds(): the
-  //     body stroke is screen-constant, so its grid-space extent grows as the
-  //     zoom shrinks and below ~18% zoom it pokes past the stub tip.
-  //   - Rotation is exact per-direction arithmetic (like _rotatedBounds), not
-  //     a trig Matrix: cos/sin of the quarter-turns carry ~1e-16 noise that
-  //     survives the final addition for components near the origin.
-  private get _localConnectionPoints(): Point[] {
-    const points: Point[] = [];
-
-    for (let i = 0; i < this.numInputs; i++) {
-      points.push(this._rotatedLocalPoint(-0.5, i + 0.5));
-    }
-    for (let i = 0; i < this.numOutputs; i++) {
-      points.push(this._rotatedLocalPoint(this.bodyGridWidth + 0.5, i + 0.5));
-    }
-
-    return points;
-  }
-
-  /** Rotates an unrotated-frame local point by the component's direction. */
-  private _rotatedLocalPoint(lx: number, ly: number): Point {
-    switch (this._direction) {
-      case Direction.E:
-        return new Point(lx, ly);
-      case Direction.S:
-        return new Point(-ly, lx);
-      case Direction.W:
-        return new Point(-lx, -ly);
-      case Direction.N:
-        return new Point(ly, -lx);
-    }
   }
 
   /** Whether the component carries the selection tint (see {@link refreshTint}). */
@@ -709,7 +653,7 @@ export abstract class Component<
     if (environment.debug.showConnectionPoints) {
       const connPoints = new Graphics();
 
-      for (const point of this._localConnectionPoints) {
+      for (const point of localConnectionPoints(this._shape)) {
         connPoints.rect(point.x - PX, point.y - PX, 2 * PX, 2 * PX);
       }
       connPoints.fill(0xffff00);
