@@ -192,21 +192,13 @@ export class SelectionMoveSession implements DragSession {
         Wire.serialize(w)
       );
 
-      const mergeRemove = new RemoveWiresAction(
-        ...movedAndChangedSnapshots,
-        ...externalAbsorbedSnapshots
+      action.add(
+        new RemoveWiresAction(
+          ...movedAndChangedSnapshots,
+          ...externalAbsorbedSnapshots
+        )
       );
-      const mergeAdd = new AddWiresAction(...toAdd);
-      action.add(mergeRemove);
-      action.add(mergeAdd);
-
-      if (pendingCut) {
-        // register() below records the action without re-running its do(); apply
-        // the integrator's mutations directly so the project ends up in the same
-        // state push() would have produced.
-        mergeRemove.do(this.project);
-        mergeAdd.do(this.project);
-      }
+      action.add(new AddWiresAction(...toAdd));
     } else if (this._wires.length > 0) {
       // No integrator changes — straight move.
       const wireEntries: MoveEntry[] = wireSnapshots.map((snap, i) => ({
@@ -217,6 +209,12 @@ export class SelectionMoveSession implements DragSession {
       action.add(new MoveWiresAction(...wireEntries));
     }
 
+    // Materialize the integrator's changes with the live instances (positions
+    // were already applied in the move loop above), then register — the
+    // recorded action never re-runs against this state.
+    for (const w of toRemove) this.project.removeWire(w.id);
+    for (const w of toAdd) this.project.addWire(w);
+
     getStaticDI(LoggingService).debug(
       `committed move: ${this._components.length} component(s) and ${this._wires.length} wire(s) moved; ` +
         `integration added ${toAdd.length} and removed ${toRemove.length} wire(s)`,
@@ -224,21 +222,12 @@ export class SelectionMoveSession implements DragSession {
     );
 
     if (action.length > 0) {
-      if (pendingCut) {
-        // Cut + move state is already fully materialized in the project
-        // (cut at scissor time, positions in the move loop above, merges
-        // just now). register() records the action without re-running its
-        // do() — which would otherwise re-deserialize cut pieces with
-        // IDs already in the quad tree.
-        this.project.actionManager.register(action);
-      } else {
-        this.project.actionManager.push(action);
-      }
+      this.project.actionManager.register(action);
     }
 
-    // Re-derive the highlighted junctions only after the commit: push() runs
-    // the move do()s, whose remove-then-add termination cycle destroys and
-    // recreates the dot at any exactly-3-termination junction, so a CP
+    // Re-derive the highlighted junctions only after the commit: the wire
+    // removals above cycle terminations at the affected junctions, destroying
+    // and recreating the dot at any exactly-3-termination point, so a CP
     // selected earlier would be a dead instance by now — leaving the dots
     // unhighlighted and dropping them from the next drag's capture set.
     this.project.selectionManager.retintCps();

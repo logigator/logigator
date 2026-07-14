@@ -98,12 +98,24 @@ export class WireToolSession implements DragSession {
       const { toAdd, toRemove } = this.project.topology.integrate({
         addedWires: newWires
       });
+      // Actions snapshot in their constructors; the drawn instances (or their
+      // integrated variants) go into the project directly, then the action is
+      // registered against the already-materialized state.
       const action = new ActionContainer();
       if (toRemove.length > 0) {
         action.add(new RemoveWiresAction(...toRemove));
       }
       action.add(new AddWiresAction(...toAdd));
-      this.project.actionManager.push(action);
+
+      for (const w of toRemove) this.project.removeWire(w.id);
+      // A drawn wire that survived integration is in toAdd — addWire
+      // re-parents it out of the drag layer, so cleanup must not destroy it.
+      const committed = new Set(toAdd);
+      for (const w of toAdd) this.project.addWire(w);
+
+      this.project.actionManager.register(action);
+      this._cleanup(committed);
+      return;
     }
 
     this._cleanup();
@@ -133,9 +145,10 @@ export class WireToolSession implements DragSession {
     this._hasBodyCollision = hCollision || vCollision;
   }
 
-  private _cleanup(): void {
-    this._h?.destroy({ children: true });
-    this._v?.destroy({ children: true });
+  private _cleanup(keep?: ReadonlySet<Wire>): void {
+    for (const w of [this._h, this._v]) {
+      if (w && !keep?.has(w) && !w.destroyed) w.destroy({ children: true });
+    }
     this._h = null;
     this._v = null;
     this._hasBodyCollision = false;

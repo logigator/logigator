@@ -605,3 +605,51 @@ describe('WorkModeRouter component placement circuit load', () => {
     expect(ghostCount()).toBe(0);
   });
 });
+
+describe('WorkModeRouter history lock around drag sessions', () => {
+  let project: Project;
+  let router: WorkModeRouter;
+
+  beforeEach(() => {
+    configureTestBed();
+    project = new Project();
+    router = new WorkModeRouter();
+    router.setProject(project);
+  });
+
+  afterEach(() => {
+    router.destroy();
+    project.destroy({ children: true });
+  });
+
+  it('locks undo/redo while a session is live and unlocks on commit', () => {
+    router.setMode(WorkMode.PAN);
+
+    router.down(makeInput(2, 2));
+    expect(project.actionManager.locked).toBe(true);
+
+    router.up();
+    expect(project.actionManager.locked).toBe(false);
+  });
+
+  it('unlocks when a session is cancelled', () => {
+    router.setMode(WorkMode.PAN);
+
+    router.down(makeInput(2, 2));
+    router.cancel();
+
+    expect(project.actionManager.locked).toBe(false);
+  });
+
+  it('unlocks the old project when the router is re-homed mid-drag', () => {
+    router.setMode(WorkMode.PAN);
+    router.down(makeInput(2, 2));
+
+    const other = new Project();
+    router.setProject(other);
+
+    expect(project.actionManager.locked).toBe(false);
+    expect(other.actionManager.locked).toBe(false);
+    other.destroy({ children: true });
+  });
+});

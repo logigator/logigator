@@ -410,12 +410,21 @@ export class WorkModeRouter implements PointerToolTarget {
     // a visually identical ghost at the same spot — a seamless handoff).
     this._destroyHoverGhost();
     this._activeDrag = session;
-    this._project?.triggerTicker('on');
+    if (this._project) {
+      // Sessions detach elements into the drag layer; a history operation
+      // touching them would corrupt the quad tree, so undo/redo are inert
+      // until the session ends (its commit registers before the unlock).
+      this._project.actionManager.locked = true;
+      this._project.triggerTicker('on');
+    }
   }
 
   private _stopDrag(): void {
     this._activeDrag = null;
-    this._project?.triggerTicker('off');
+    if (this._project) {
+      this._project.actionManager.locked = false;
+      this._project.triggerTicker('off');
+    }
   }
 
   /**

@@ -170,6 +170,41 @@ describe('ActionManager', () => {
     });
   });
 
+  // ── locked (a drag session is live) ────────────────────────────────────────
+
+  describe('locked', () => {
+    it('ignores undo while locked, then undoes after unlocking', () => {
+      const action = makeAction();
+      manager.push(action);
+
+      manager.locked = true;
+      manager.undo();
+      expect(action.undo).not.toHaveBeenCalled();
+      expect(manager.undoAvailable).toBe(true);
+
+      manager.locked = false;
+      manager.undo();
+      expect(action.undo).toHaveBeenCalledTimes(1);
+    });
+
+    it('ignores redo while locked', () => {
+      const action = makeAction();
+      manager.push(action);
+      manager.undo();
+
+      manager.locked = true;
+      manager.redo();
+      expect(action.do).toHaveBeenCalledTimes(1); // only the original push
+      expect(manager.redoAvailable).toBe(true);
+    });
+
+    it('still records commits while locked (sessions register before unlock)', () => {
+      manager.locked = true;
+      manager.register(makeAction());
+      expect(manager.undoAvailable).toBe(true);
+    });
+  });
+
   // ── push after undo truncates future ──────────────────────────────────────
 
   describe('push after undo', () => {

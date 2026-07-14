@@ -43,6 +43,17 @@ export class PlacementGhost {
     return this._component;
   }
 
+  /**
+   * Ends preview duty and hands the component over for committing: drops the
+   * ghost's selection look so the instance is board-ready. The caller adds it
+   * to the project (re-parenting it out of the drag layer) and must not call
+   * {@link destroy} afterwards.
+   */
+  public release(): Component {
+    this._component.selected = false;
+    return this._component;
+  }
+
   public get hasCollision(): boolean {
     return this._hasCollision;
   }

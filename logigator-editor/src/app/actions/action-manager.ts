@@ -4,6 +4,18 @@ import { Project } from '../project/project';
 import { LoggingService } from '../logging/logging.service';
 import { getStaticDI } from '../utils/get-di';
 
+/**
+ * Undo/redo history. Two commit styles, one convention:
+ *
+ * - {@link push} records the action AND runs its `do()` — for instantaneous,
+ *   non-gesture operations (wire-tap toggles, option panels) that build fresh
+ *   actions against the current state.
+ * - {@link register} records the action WITHOUT running `do()` — for drag
+ *   sessions, which always materialize their final state in the live project
+ *   during the gesture and then record it. Re-running `do()` would
+ *   double-apply (and re-deserialize instances whose ids are already in the
+ *   tree).
+ */
 export class ActionManager {
   private _history: Action[] = [];
   private _pointer = 0;
@@ -13,6 +25,13 @@ export class ActionManager {
   private readonly _actionChange$ = new Subject<void>();
   public readonly actionChange$: Observable<void> =
     this._actionChange$.asObservable();
+
+  // While a drag session is live (set by the WorkModeRouter), undo/redo are
+  // inert: the session may hold elements detached from the quad tree, and a
+  // history operation touching them would corrupt the tree (duplicate ids,
+  // dangling instances). Commits are unaffected — a session registers its
+  // action before the router unlocks.
+  public locked = false;
 
   constructor(private readonly project: Project) {}
 
@@ -27,12 +46,6 @@ export class ActionManager {
     this._actionChange$.next();
   }
 
-  // Records an action without calling action.do() — for cases where the
-  // project has already been mutated to the action's post-state and rerunning
-  // do() would double-apply (e.g., a SELECT_EXACT scissor cut is already
-  // materialized in the quad-tree; SelectionMoveSession folds it into its
-  // move container at commit time, and the move mutations are also already
-  // applied). The action stays in the history so undo / redo work normally.
   public register(action: Action): void {
     this._history.splice(this._pointer, Infinity, action);
     this._pointer = this._history.length;
@@ -44,6 +57,11 @@ export class ActionManager {
   }
 
   public undo(): void {
+    if (this.locked) {
+      this.logging.debug('undo ignored: a drag session is live', 'ActionManager');
+      return;
+    }
+
     // A pending scissor-select cut is project state that lives outside the
     // undo history. Reverting it counts as the user's "undo this last
     // visible change" intent, so consume the keystroke here before the
@@ -76,6 +94,10 @@ export class ActionManager {
   }
 
   public redo(): void {
+    if (this.locked) {
+      this.logging.debug('redo ignored: a drag session is live', 'ActionManager');
+      return;
+    }
     if (!this.redoAvailable) return;
 
     const action = this._history[this._pointer++];

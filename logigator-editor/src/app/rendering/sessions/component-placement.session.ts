@@ -68,6 +68,9 @@ export class ComponentPlacementSession implements DragSession {
       addedComponentPorts: this._ghost.component.connectionPoints
     });
 
+    // The actions snapshot in their constructors, so build them before the
+    // mutations, then materialize the final state directly and register —
+    // the ghost instance itself becomes the placed component.
     const action = new ActionContainer();
     if (toRemove.length > 0) {
       action.add(new RemoveWiresAction(...toRemove));
@@ -76,13 +79,16 @@ export class ComponentPlacementSession implements DragSession {
     if (toAdd.length > 0) {
       action.add(new AddWiresAction(...toAdd));
     }
-    this.project.actionManager.push(action);
+
+    for (const w of toRemove) this.project.removeWire(w.id);
+    this.project.addComponent(this._ghost.release());
+    for (const w of toAdd) this.project.addWire(w);
+
+    this.project.actionManager.register(action);
     getStaticDI(LoggingService).debug(
       `committed placement: 1 component added, ${toAdd.length} wire(s) added, ${toRemove.length} wire(s) removed`,
       'ComponentPlacementSession'
     );
-
-    this._ghost.destroy();
   }
 
   onCancel(): void {
