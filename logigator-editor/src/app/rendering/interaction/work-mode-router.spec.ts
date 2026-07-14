@@ -316,7 +316,7 @@ describe('WorkModeRouter wire-tool taps (WIRE_TOOL mode)', () => {
     const and = makeAnd(2, undefined, 2, 2);
     project.addComponent(and);
     const cp = and.connectionPoints[0];
-    const toggleSpy = vi.spyOn(project, 'toggleConnectionAt');
+    const toggleSpy = vi.spyOn(project.topology, 'toggleConnectionAt');
 
     tap(cp.x, cp.y);
 
@@ -447,7 +447,7 @@ describe('WorkModeRouter wire-tool taps (WIRE_TOOL mode)', () => {
     tap(2.5, 2.5); // splits — the point is now a joinable CP
 
     expect(project.floatingLayer.connectionGhostVisible).toBe(true);
-    expect(project.connectionToggleKindAt(new Point(2.5, 2.5))).toBe('join');
+    expect(project.topology.connectionToggleKindAt(new Point(2.5, 2.5))).toBe('join');
   });
 });
 

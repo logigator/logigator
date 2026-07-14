@@ -64,7 +64,7 @@ export class ComponentPlacementSession implements DragSession {
     }
 
     // Splits any wire whose interior passes under one of the placed component's ports.
-    const { toAdd, toRemove } = this.project.computeIntegration({
+    const { toAdd, toRemove } = this.project.topology.integrate({
       addedComponentPorts: this._ghost.component.connectionPoints
     });
 

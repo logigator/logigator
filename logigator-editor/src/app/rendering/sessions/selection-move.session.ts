@@ -124,7 +124,7 @@ export class SelectionMoveSession implements DragSession {
     // Run integration over the post-move scene. The integrator may split wires
     // whose interiors are now crossed by a moved port/endpoint, and merge wires
     // at old positions where a port/endpoint no longer blocks.
-    const { toAdd, toRemove } = this.project.computeIntegration({
+    const { toAdd, toRemove } = this.project.topology.integrate({
       movedWires: this._wires.map((w) => ({
         wire: w,
         oldSnapshot: oldWireSnapshotsById.get(w.id)!

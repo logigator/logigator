@@ -308,7 +308,7 @@ export class WorkModeRouter implements PointerToolTarget {
     }
     project.floatingLayer.hideNegationGhost();
     const p = roundToHalfGrid(gridPoint);
-    const kind = project.connectionToggleKindAt(p);
+    const kind = project.topology.connectionToggleKindAt(p);
     if (kind) {
       project.floatingLayer.showConnectionGhost(p, kind);
     } else {
@@ -469,7 +469,7 @@ export class WorkModeRouter implements PointerToolTarget {
         )
       );
     } else {
-      project.toggleConnectionAt(roundToHalfGrid(gridPoint));
+      project.topology.toggleConnectionAt(roundToHalfGrid(gridPoint));
     }
     // The toggle changed what the next tap here would do (split ⇄ join) —
     // re-derive the preview in place instead of leaving the stale ghost.

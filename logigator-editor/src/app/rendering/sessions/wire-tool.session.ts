@@ -95,7 +95,7 @@ export class WireToolSession implements DragSession {
     );
 
     if (newWires.length > 0) {
-      const { toAdd, toRemove } = this.project.computeIntegration({
+      const { toAdd, toRemove } = this.project.topology.integrate({
         addedWires: newWires
       });
       const action = new ActionContainer();

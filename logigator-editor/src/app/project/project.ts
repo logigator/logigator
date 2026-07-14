@@ -10,25 +10,19 @@ import { environment } from '../../environments/environment';
 import { FloatingLayer } from '../rendering/floating-layer';
 import { TickerSignal } from '../rendering/ticker-scheduler';
 import { ActionManager } from '../actions/action-manager';
-import { ActionContainer } from '../actions/action-container';
 import { SelectionManager } from './selection-manager';
 import { Wire } from '../wires/wire';
-import { WireDirection } from '../wires/wire-direction.enum';
 import { QuadTreeContainer } from '../rendering/quad-tree-container';
-import {
-  IntegrationInput,
-  IntegrationOutput,
-  WireIntegrator
-} from './wire-integrator';
+import { WireTopology } from './wire-topology';
 import { ViewportController } from './viewport-controller';
 import { ConnectionPointManager } from '../connection-points/connection-point-manager';
-import { AddWiresAction } from '../actions/actions/add-wires.action';
-import { RemoveWiresAction } from '../actions/actions/remove-wires.action';
 import { LoggingService } from '../logging/logging.service';
 
 export class Project extends Container {
   public readonly actionManager = new ActionManager(this);
   public readonly selectionManager = new SelectionManager(this);
+  /** Wire-invariant integration and the wire tool's connection toggling. */
+  public readonly topology = new WireTopology(this);
 
   private readonly _grid: Grid = new Grid();
   private readonly _gridSpace = new Container();
@@ -42,7 +36,6 @@ export class Project extends Container {
   private readonly _wiresById = new Map<number, Wire>();
   private readonly _floatingLayer = new FloatingLayer();
 
-  private readonly _wireIntegrator = new WireIntegrator();
   private readonly _viewport: ViewportController;
   // Reused by the per-frame cull pass (see cull()).
   private readonly _cullView = new Rectangle();
@@ -300,7 +293,7 @@ export class Project extends Container {
         // collinear merge at an old port. Run the integrator to restore
         // invariants. This path bypasses ActionManager, so the implied
         // wire splits/merges are NOT undoable.
-        const { toAdd, toRemove } = this.computeIntegration({
+        const { toAdd, toRemove } = this.topology.integrate({
           movedComponentPorts: [{ oldPorts, newPorts }]
         });
         if (toAdd.length > 0 || toRemove.length > 0) {
@@ -435,15 +428,6 @@ export class Project extends Container {
     return false;
   }
 
-  public computeIntegration(input: IntegrationInput): IntegrationOutput {
-    return this._wireIntegrator.integrate(
-      input,
-      (rect) => this.queryWiresInRange(rect),
-      (rect) => this.queryComponentsInRange(rect),
-      this.scale.x
-    );
-  }
-
   public detachForDrag(
     components: readonly Component[],
     wires: readonly Wire[]
@@ -506,157 +490,6 @@ export class Project extends Container {
     this._connectionPoints.onWireRemoved(oldSnap);
     this._connectionPoints.onWireAdded(Wire.snapshot(wire));
     this._ticker$.next('single');
-  }
-
-  public toggleConnectionAt(p: Point): void {
-    if (this._connectionPoints.hasCpAt(p)) {
-      this._joinAt(p);
-    } else {
-      this._splitAt(p);
-    }
-  }
-
-  /**
-   * What {@link toggleConnectionAt} would do at a half-grid point: 'join'
-   * merges the wires ending at an existing CP, 'split' cuts a pure crossing,
-   * `null` means the tap would be a no-op. Non-mutating — the join case
-   * dry-runs the full plan (including the blocked re-split check, so a
-   * T-junction reports `null`) and discards it. Drives the wire tool's
-   * hover ghost.
-   */
-  public connectionToggleKindAt(p: Point): 'join' | 'split' | null {
-    if (this._connectionPoints.hasCpAt(p)) {
-      const plan = this._planJoinAt(p);
-      if (!plan) return null;
-      plan.discard();
-      return 'join';
-    }
-    return this._findCrossingAt(p) ? 'split' : null;
-  }
-
-  private _joinAt(p: Point): void {
-    const plan = this._planJoinAt(p);
-    if (!plan) {
-      this._logging.debug(
-        `join at (${p.x}, ${p.y}) is a no-op: no collinear pair to merge, or the merge would re-split at the same point`,
-        'Project'
-      );
-      return;
-    }
-
-    const action = new ActionContainer();
-    if (plan.toRemove.length > 0)
-      action.add(new RemoveWiresAction(...plan.toRemove));
-    if (plan.toAdd.length > 0) action.add(new AddWiresAction(...plan.toAdd));
-    plan.discard();
-    this.actionManager.push(action);
-  }
-
-  /**
-   * Builds the join plan for a CP point without mutating the project: merges
-   * each collinear pair ending at `p` and integrates the result. Returns
-   * `null` when there is nothing to merge or the integrator would re-split at
-   * `p` (a third terminator blocks the merge — the T-junction case). The
-   * caller must `discard()` the plan after using it (the actions snapshot the
-   * wires in their constructors) — it destroys the temporary instances.
-   */
-  private _planJoinAt(
-    p: Point
-  ): { toAdd: Wire[]; toRemove: Wire[]; discard(): void } | null {
-    const queryRect = new Rectangle(p.x - 1, p.y - 1, 2, 2);
-    const hWires: Wire[] = [];
-    const vWires: Wire[] = [];
-
-    for (const w of this.queryWiresInRange(queryRect)) {
-      const [s, e] = w.connectionPoints;
-      if ((s.x === p.x && s.y === p.y) || (e.x === p.x && e.y === p.y)) {
-        if (w.direction === WireDirection.HORIZONTAL) hWires.push(w);
-        else vWires.push(w);
-      }
-    }
-
-    const addedWires: Wire[] = [];
-    const removedWires: Wire[] = [];
-
-    if (hWires.length === 2) {
-      removedWires.push(...hWires);
-      addedWires.push(Wire.merge(hWires[0], hWires[1]));
-    }
-
-    if (vWires.length === 2) {
-      removedWires.push(...vWires);
-      addedWires.push(Wire.merge(vWires[0], vWires[1]));
-    }
-
-    if (addedWires.length === 0) return null;
-
-    const { toAdd, toRemove } = this.computeIntegration({
-      addedWires,
-      removedWires
-    });
-
-    const discard = () => {
-      for (const w of addedWires) if (!w.destroyed) w.destroy();
-      for (const w of toAdd) if (!w.destroyed) w.destroy();
-    };
-
-    const blocked = toAdd.some((w) => {
-      const [s, e] = w.connectionPoints;
-      return (s.x === p.x && s.y === p.y) || (e.x === p.x && e.y === p.y);
-    });
-
-    if (blocked) {
-      discard();
-      return null;
-    }
-
-    return { toAdd, toRemove, discard };
-  }
-
-  /** The pure 2-wire X crossing at `p` (neither wire ending there), if any. */
-  private _findCrossingAt(p: Point): { hWire: Wire; vWire: Wire } | null {
-    const queryRect = new Rectangle(p.x - 1, p.y - 1, 2, 2);
-    let hWire: Wire | null = null;
-    let vWire: Wire | null = null;
-
-    for (const w of this.queryWiresInRange(queryRect)) {
-      if (!w.contains(p)) continue;
-      const [s, e] = w.connectionPoints;
-      if ((s.x === p.x && s.y === p.y) || (e.x === p.x && e.y === p.y))
-        continue;
-      if (w.direction === WireDirection.HORIZONTAL) hWire = w;
-      else vWire = w;
-    }
-
-    return hWire && vWire ? { hWire, vWire } : null;
-  }
-
-  private _splitAt(p: Point): void {
-    const crossing = this._findCrossingAt(p);
-    if (!crossing) {
-      this._logging.debug(
-        `split at (${p.x}, ${p.y}) is a no-op: needs both a horizontal and a vertical wire crossing the point`,
-        'Project'
-      );
-      return;
-    }
-
-    const [hLeft, hRight] = Wire.split(crossing.hWire, p);
-    const [vTop, vBottom] = Wire.split(crossing.vWire, p);
-
-    const addedWires = [hLeft, hRight, vTop, vBottom];
-    const removedWires = [crossing.hWire, crossing.vWire];
-
-    const { toAdd, toRemove } = this.computeIntegration({
-      addedWires,
-      removedWires
-    });
-
-    const action = new ActionContainer();
-    if (toRemove.length > 0) action.add(new RemoveWiresAction(...toRemove));
-    if (toAdd.length > 0) action.add(new AddWiresAction(...toAdd));
-    for (const w of addedWires) if (!w.destroyed) w.destroy();
-    this.actionManager.push(action);
   }
 
   public override destroy(options?: DestroyOptions): void {
