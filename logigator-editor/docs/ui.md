@@ -94,7 +94,7 @@ The PixiJS bridge. Hosts a single `<canvas>` element and blits the active projec
 
 1. Calls `AssetsService.init()` to load the Roboto Mono subset font and install the canvas bitmap-font atlas.
 2. Acquires a `RendererService` lease (held until teardown) — this is what boots the shared renderer on app start.
-3. Measures the host and observes it with a `ResizeObserver`; resizes feed `project.resizeViewport()` and repaint one frame. The canvas fills the host via CSS, its backing store is sized per render.
+3. Measures the host and observes it with a `ResizeObserver`; resizes feed `project.viewport.resizeViewport()` and repaint one frame. The canvas fills the host via CSS, its backing store is sized per render.
 4. Creates the `PointerController` on the canvas (see `rendering.md`).
 5. Sets `loaded` signal to `true`, making the canvas visible (it starts at `opacity-0` to avoid a flash before PixiJS is ready).
 
@@ -107,7 +107,7 @@ The component runs its own never-auto-started PixiJS `Ticker`. Each frame culls 
 An Angular `effect` watches the `project` input and pushes changes into a `projectChange$` subject. On each new non-null project:
 
 - Re-homes the `WorkModeRouter` via `setProject`.
-- Calls `project.resizeViewport()` with the measured host box.
+- Calls `project.viewport.resizeViewport()` with the measured host box.
 - Calls `ticker.update()` to force a single frame.
 - Creates a `TickerScheduler` over `project.ticker$` to control the render loop:
   - `'single'` — run one frame with `ticker.update()`

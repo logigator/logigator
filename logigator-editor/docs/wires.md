@@ -189,7 +189,7 @@ When `WorkMode.WIRE_TOOL` is active, the `WorkModeRouter` runs the drag through 
    - The vertical wire's `position.y` tracks the topmost extent (`Math.min(0, mouseY)`).
    - The elbow of the L is placed at the cursor's axis-locked coordinate.
 
-3. **`pointerup` → `onEnd`** — wires with `length > 0` are collected, run through `computeIntegration`, and an `AddWiresAction` is pushed to the `ActionManager`. Zero-length wires are silently discarded.
+3. **`pointerup` → `onEnd`** — wires with `length > 0` are collected and run through `project.topology.integrate`; the surviving live instances go into the project directly and an `ActionContainer(RemoveWires?, AddWires)` is registered against that state. Zero-length wires are silently discarded.
 
 4. **Mode change or abort** — `abortSelection` destroys the preview wires without committing.
 
@@ -244,9 +244,9 @@ After every gesture commit (drawing, moving, placing, removing), the project tre
 
 I1 + I2 are **split-forcing** invariants — when a mutation would land an endpoint/port inside another wire's interior, the interior wire is auto-split at that point. I3 is the **merge-forcing** invariant — when nothing else terminates at a shared endpoint, two collinear wires merge into one.
 
-**Scissor cut exception (tentative).** `SelectionManager._pendingCut` deliberately violates I3 _while the cut is unclaimed_. The integrator never runs against the tentative state; the next gesture commit either claims the cut into a real action (move) or rolls it back. The CP rule renders the violation invisible (only 2 terminations at the cut point → no CP), so users don't notice the temporary state.
+**Scissor cut exception (live cut).** An uncommitted scissor cut deliberately violates I3 _while it is live_ (the newest history entry, awaiting a move/delete to commit it). The integrator never runs against that state; the next gesture either coalesces the cut into its own action or the selection-clear retracts it — and any unrelated action dissolves it first. The CP rule renders the violation invisible (only 2 terminations at the cut point → no CP), so users don't notice the temporary state.
 
-### `Project.computeIntegration(input)`
+### `project.topology.integrate(input)`
 
 The integrator entry point. Pure query — does not mutate project state. Returns `{ toAdd: Wire[], toRemove: Wire[] }`.
 
@@ -346,15 +346,17 @@ pieces:
 
 `Project.addWire` does NOT invoke `WireIntegrator`, so the cut pieces — which share endpoints at the cut points — stay as separate wires. This is intentional: the whole point of scissoring is to detach the inside from the outside. The CP rule needs ≥3 terminations to draw a dot, so 2 collinear cut-piece endpoints meeting at the cut boundary produce no visible marker. The scissor cut is the one documented exception to invariant I3 — see [Wire Integration Invariants](#wire-integration-invariants) above.
 
-### Tentative cut + commit on move
+### Cut lifecycle
 
-A scissor cut is **tentative** until the user actually modifies the selection. `SelectionManager._scissorAndSelectWires` mutates the project directly via `Project.addWire` / `Project.removeWire` (so the inside piece is a real, selectable `Wire`) but does **not** push anything to `ActionManager`. The rollback data is held in `SelectionManager._pendingCut`.
+A scissor cut is a **real history entry from the start** — but it stays *live* (committable/retractable) only while it is the newest entry. `SelectionManager._scissorAndSelectWires` mutates the project directly via `Project.addWire` / `Project.removeWire` (so the inside piece is a real, selectable `Wire`), registers `ActionContainer(RemoveWiresAction, AddWiresAction)` via `ActionManager.register`, and keeps the reference in `_cutAction`.
 
 Three outcomes:
 
-- **Move (`SelectionMoveSession.onEnd` with `hasMove === true`)** — the move session calls `selectionManager.claimPendingCut()`, which returns an `ActionContainer(RemoveWiresAction, AddWiresAction)` representing the cut. The session prepends this to its own action container so cut + move are recorded as a single `ActionContainer` and revert with one `Ctrl+Z`. The `RemoveWiresAction` captures the originals at their pre-cut positions; the `AddWiresAction` captures the new pieces at their **post-cut** positions, so the subsequent move action inside the same container correctly transitions them from post-cut to post-move.
-- **Cancel (`SelectionManager.clear()`, mode change, Escape, Ctrl+Z)** — `_rollbackPendingCutInternal` removes the new pieces and re-adds the originals, restoring the pre-cut state. Nothing is pushed to `ActionManager`. `ActionManager.undo()` consults `selectionManager.rollbackPendingCut()` first so a Ctrl+Z while a tentative cut is active rolls it back instead of consuming the real undo stack.
-- **No-move drag (`SelectionMoveSession.onEnd` with `hasMove === false`)** — the session returns early without claiming, leaving `_pendingCut` intact. The next clear (single-click in empty space, new rect drag, mode change) rolls it back.
+- **Move (`SelectionMoveSession.onEnd` with `hasMove === true`)** — the move session calls `selectionManager.consumeLiveCut()` and coalesces the cut's history entry with its own action container (`ActionManager.coalesceTop`), so cut + move are recorded as a single `ActionContainer` and revert with one `Ctrl+Z`. The cut's `RemoveWiresAction` captured the originals at their pre-cut positions; its `AddWiresAction` captured the new pieces at their **post-cut** positions, so the move action inside the same container correctly transitions them from post-cut to post-move on redo. `ClipboardService._applyDelete` commits a live cut the same way.
+- **Cancel (`SelectionManager.clear()`, mode change, click on empty space)** — the manager retracts the entry (`ActionManager.retract`): the cut's `undo()` removes the new pieces and re-adds the originals, and the history shows no trace.
+- **Ctrl+Z while the cut is live** — a plain history undo of the newest entry; the cut stays redoable.
+- **An unrelated action while the cut is live** — `ActionManager.push`/`register` dissolve first: the selection clears (retracting the cut) before the new action is recorded, so an uncommitted split can never be orphaned behind newer history.
+- **No-move drag (`SelectionMoveSession.onEnd` with `hasMove === false`)** — the session returns early without consuming, leaving the cut live. The next clear retracts it.
 
 This guarantees the wire invariant — collinear wires that touch at one endpoint with no third wire at the junction must merge — is never observably violated. The split state only persists when a move has already separated the pieces.
 

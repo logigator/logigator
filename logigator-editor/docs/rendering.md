@@ -10,27 +10,32 @@ src/app/rendering/
 ├── board-snapshot.service.ts       # Offscreen render-to-texture (image export, previews, minimap)
 ├── renderer.service.ts             # The single lease-counted renderer shared by every canvas
 ├── ticker-scheduler.ts             # Translates project ticker signals into board frames
-├── drag-collision.ts               # Shared collision detection for drag sessions
 ├── drag-session.ts                 # DragSession interface implemented by all session classes
 ├── floating-layer.ts               # Visual host: drag-session ghosts + wire-tool hover previews
 ├── graphics-provider.service.ts    # Shared GraphicsContext cache
 ├── grid.ts                         # Infinite-seeming background grid
+├── invalid-tint.ts                 # applyInvalidTint: collision tint / own-tint restore
+├── placement-ghost.ts              # Single-component preview (hover + placement session)
 ├── quad-tree-container.ts          # Spatial index for efficient range queries
 ├── interaction/
 │   ├── pointer-input.ts            # PointerInput sample + canvasToGrid viewport mapping
 │   ├── pointer-controller.ts       # Per-canvas DOM listener: capture, buttons, wheel, gestures
-│   └── work-mode-router.ts         # Mode → DragSession dispatch + session lifecycle
+│   ├── work-mode-router.ts         # Tool dispatch + session lifecycle (undo lock, ticker, paste)
+│   └── tools/                      # One BoardTool per work mode (contract in board-tool.ts)
 ├── graphics/
 │   ├── component.graphics.ts       # GraphicsContext for component body outline
 │   ├── connection-point.graphics.ts # GraphicsContext for a CP dot
 │   ├── grid.graphics.ts            # GraphicsContext for a grid chunk tile
 │   └── wire.graphics.ts            # GraphicsContext for a wire segment
 └── sessions/
-    ├── component-placement.session.ts  # Ghost component drag → AddComponentsAction
-    ├── paste-placement.session.ts      # Paste preview drag → AddComponentsAction/AddWiresAction
+    ├── component-placement.session.ts  # Ghost component drag → commit + register
+    ├── drag-collision.ts               # Shared collision detection for drag sessions
+    ├── erase.session.ts                # Sweep-erase drag → register
+    ├── pan.session.ts                  # One-pointer pan with tap fallback
+    ├── paste-placement.session.ts      # Paste preview drag → commit + register
     ├── select-rect.session.ts          # Rubber-band rect → selectionManager.commit()
-    ├── selection-move.session.ts       # Drag selected elements → MoveComponentsAction/MoveWiresAction
-    └── wire-tool.session.ts         # L-shaped wire preview → AddWiresAction
+    ├── selection-move.session.ts       # Drag selected elements → commit + register
+    └── wire-tool.session.ts            # L-shaped wire preview → commit + register
 ```
 
 ---
@@ -69,7 +74,7 @@ Canvas input is plain DOM: no scene node is interactive, and all element hit tes
 
 **File:** `interaction/pointer-controller.ts`
 
-Per-canvas listener bundle (pointerdown/move/up/cancel, wheel, contextmenu — detached via one `AbortController` in `destroy()`). It normalizes every event into a `PointerInput` — `{ pointerId, pointerType, global, grid }`, where `global` is canvas-local CSS pixels (the space `Project.pan`/`zoomBy` expect) and `grid` is the same point mapped through `canvasToGrid` (reads `project.position`/`scale` directly; fresh even before the next render, and valid because `Project` sits at the stage root). Routing:
+Per-canvas listener bundle (pointerdown/move/up/cancel, wheel, contextmenu — detached via one `AbortController` in `destroy()`). It normalizes every event into a `PointerInput` — `{ pointerId, pointerType, global, grid }`, where `global` is canvas-local CSS pixels (the space `project.viewport.pan`/`zoomBy` expect) and `grid` is the same point mapped through `canvasToGrid` (reads `project.position`/`scale` directly; fresh even before the next render, and valid because `Project` sits at the stage root). Routing:
 
 - **Primary button** — captured via `setPointerCapture` (moves keep flowing when a drag leaves the canvas) and streamed to the `PointerToolTarget` (`down`/`move`/`up`/`cancel`); moves with no pressed pointer go to `hover`, and `pointerleave` goes to `leave` (hover previews stop applying off-canvas; capture suppresses the boundary event mid-drag, so an in-flight drag is unaffected). Click-vs-drag semantics live in the sessions (`PanSession`'s 5 px threshold), not the controller.
 - **Right button** — pan-only drag by successive position deltas, bracketed by `nav.setActive(true/false)` (ticker on/off on the board). The canvas context menu is suppressed outright.
@@ -82,16 +87,31 @@ The `PointerNavTarget` is supplied by the host: the board maps it straight onto 
 
 **File:** `interaction/work-mode-router.ts`
 
-The board's `PointerToolTarget`. Owns the interaction state that used to live on `FloatingLayer`: the current `WorkMode`, the `componentToPlace` config, and the single `_activeDrag: DragSession | null`.
+The board's `PointerToolTarget`, reduced to dispatch plus session lifecycle: it holds the current `WorkMode`, a `Map<WorkMode, BoardTool>` (the tool table), and the single `_activeDrag: DragSession | null`. Mode behavior lives in the tools (below); the router owns everything that must be consistent across them.
 
-- `down(input)` switches on the mode and starts the matching session (`PanSession`, `ComponentPlacementSession`, `WireToolSession`, `SelectRectSession`/`SelectionMoveSession`, `EraseSession`). Tap actions ride on session tap callbacks: a `WireToolSession` press that never moved a grid step fires the router's `_wireTap` (port negation through the undo stack, else `Project.toggleConnectionAt`); SIMULATION taps route through a `PanSession` whose tap action activates a button/switch or requests inspection.
-- `move(input)` delegates to `_activeDrag.onMove`; with no session it falls through to `hover`. In WIRE_TOOL, hover shows the tap previews: the negation bubble over a port (translucent for the bubble a tap would add; opaque in the theme's `invalid` color over a bubble a tap would remove), or the connection ghost over a toggleable junction (`Project.connectionToggleKindAt` dry-runs the join plan so non-toggleable T-junctions show nothing; 'join' covers the existing dot in `invalid`). The previews survive a press and hide only when the gesture becomes a drag (`WireToolSession` hides them on its first real move). In COMPONENT_PLACEMENT, hover follows the cursor with a `PlacementGhost` of `componentToPlace` — the same grid-snapped, collision-tinted ghost the placement session shows, so pressing hands off seamlessly (`_startDrag` destroys the hover ghost as the session's replaces it). The hover ghost is torn down on mode/project/palette-selection changes and on `leave`.
+- `down(input)` dispatches to the active mode's tool, which opens a session through the `ToolHost` contract (`startSession`). A session that outlives its opening gesture (paste placement) instead receives the press via the optional `DragSession.onDown` — returning `false` asks the router to cancel it.
+- `move(input)` delegates to `_activeDrag.onMove`; with no session it falls through to `hover`, which dispatches to the tool's `hover`.
 - `up()` asks `session.canEnd()` first — `false` (collision) keeps the session alive; `true` commits via `onEnd()` and stops the drag ticker.
 - `cancel()` / Escape (a `ShortcutService` subscription) abort the session via `onCancel()`.
-- `setProject(project)` re-homes the router on tab switches: cancels any in-flight session on the old project, hides the wire-tool ghosts, resubscribes to the new project's `pasteRequest$`, and clears the new selection.
-- Paste: `ClipboardService` calls `Project.startPasteSession`, which emits on `pasteRequest$`; the router opens the `PastePlacementSession` in the project's floating layer.
+- `setProject(project)` re-homes the router on tab switches: cancels any in-flight session on the old project, deactivates the current tool on it (tearing down hover previews), resubscribes to the new project's `pasteRequest$`, and clears the new selection. `setMode` does the same teardown on the old mode's tool.
+- **Undo lock** — while a session is live, the project's `ActionManager.locked` is set: sessions detach elements into the drag layer, and a history operation touching them would corrupt the quad tree. Undo/redo are inert until the session ends (its commit registers before the unlock).
+- **Gesture stamp** — `gestureSeq` is bumped on pointer-up, cancel and context switches; an async tool (the placement circuit load) re-validates it before opening a session, so a stale load never opens one with no pointer left to drive it.
+- Paste stays router-level (event-initiated, not mode-initiated): `ClipboardService` calls `Project.startPasteSession`, which emits on `pasteRequest$`; the router opens the `PastePlacementSession` in the project's floating layer.
 
 Sessions receive `project.floatingLayer.dragLayer` (or the floating layer itself for the select rect) to parent their ghosts; drag starts/stops emit `'on'`/`'off'` on the project ticker.
+
+### `tools/` — per-mode board tools
+
+**Files:** `interaction/tools/*.tool.ts`, contract in `interaction/tools/board-tool.ts`
+
+One `BoardTool` per work mode: `down` opens the session a press means in that mode, optional `hover` drives the mode's previews, optional `deactivate` tears them down when the tool's context ends (mode/project switch, pointer leaving the canvas), and optional `onSessionStart` yields the preview to a starting session's ghosts.
+
+- **`PanTool`** — opens a `PanSession`; a tap single-selects (the session's default tap action).
+- **`SimulationTool`** — a `PanSession` whose tap action activates the component under the cursor: a button/switch emits `Project.userInput$`, an inspectable component emits `inspectRequest$`. The only canvas interaction while editing is locked.
+- **`WireTool`** — opens a `WireToolSession`; owns the tap action (port negation through the undo stack, else `project.topology.toggleConnectionAt`) and the hover previews: the negation bubble over a port (translucent for the bubble a tap would add; opaque in the theme's `invalid` color over a bubble a tap would remove), or the connection ghost over a toggleable junction (`project.topology.connectionToggleKindAt` dry-runs the join plan so non-toggleable T-junctions show nothing). The previews survive a press and hide only when the gesture becomes a drag (`WireToolSession` hides them on its first real move); after a tap they re-derive in place.
+- **`SelectTool`** — one instance per marquee flavor (SELECT, SELECT_EXACT): a press inside the committed selection's grab zone opens a `SelectionMoveSession`, anywhere else a `SelectRectSession` with the flavor and the live hold-to-scissor key state.
+- **`PlacementTool`** — holds the palette selection (`setConfig`, fed through the router's `componentToPlace` setter) and follows the cursor with a `PlacementGhost` — the same grid-snapped, collision-tinted ghost the placement session shows, so pressing hands off seamlessly (`onSessionStart` destroys the hover ghost as the session's replaces it). `down` ensures a cloud custom master's circuit is loaded before opening the `ComponentPlacementSession`, guarded by the host's gesture stamp.
+- **`EraseTool`** — opens an `EraseSession`.
 
 ---
 
@@ -136,12 +156,11 @@ Owns all circuit state and sub-layers. Not strictly part of `rendering/` but is 
 
 Key behaviours relevant to rendering:
 
-| Method                   | Effect                                                                                                                                                                                      |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `resizeViewport(w, h)`   | Forwards to `Grid.resizeViewport`                                                                                                                                                           |
-| `setPosition(p)`         | Moves self, forwards to `Grid.updatePosition`, emits `positionChange$`                                                                                                                      |
-| `zoomIn/zoomOut`         | Applies `1.2^step` scale, repositions around center, calls `Grid.updateScale`, `FloatingLayer.updateScale`, `ConnectionPointLayer.applyScale`, and `applyScale` on every component and wire |
-| `addComponent / addWire` | Appends to `_components` / `_wires`, calls `applyScale`, fires the matching `ConnectionPointManager` hook, emits `'single'`                                                                 |
+| Member                            | Effect                                                                                                                                                                                        |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `viewport` (`ViewportController`) | All camera control: `pan`/`setPosition` (forwarding to `Grid.updatePosition`), `zoomIn/zoomOut/zoom100/zoomBy` (scale + reposition around center, `Grid.updateScale`, `FloatingLayer.updateScale`, `ConnectionPointLayer.applyScale`, `applyScale` on every component and wire, then one `'single'` render request), `resizeViewport`, `viewportChange$`/`viewportState` |
+| `topology` (`WireTopology`)       | Wire-invariant integration (`integrate`) and the wire tool's connection toggling — see `wires.md`                                                                                              |
+| `addComponent / addWire`          | Appends to `_components` / `_wires` (and the id → element maps behind `getComponentById`/`getWireById`), calls `applyScale`, fires the matching `ConnectionPointManager` hook, emits `'single'` |
 
 Zoom is clamped to ±12 steps (scale range roughly `1.2^-12` to `1.2^5`). Pivot-correct zoom uses a matrix chain to keep the pixel under the mouse stationary.
 
@@ -191,23 +210,25 @@ A full-screen PixiJS `Container` that lives inside `_gridSpace` and sits above t
 
 Sessions receive grid-space positions precomputed on the `PointerInput` (`input.grid`, mapped by `canvasToGrid`), snapped with `roundToGrid` (full-grid) or `roundToHalfGrid` (half-grid) from `utils/grid.ts`.
 
-**Paste placement** bypasses the work-mode switch: the router opens a `PastePlacementSession` in hover mode (`isDragging = false`) on a project's `pasteRequest$`. In hover mode, the ghosts do not follow the cursor — the pasted elements sit where they were placed (original clipboard position + `PASTE_OFFSET`). The router's `down` detects an active-but-non-dragging `PastePlacementSession`: if the click hits a ghost element's bounds, `beginDrag()` is called and subsequent moves drag the group on a grid-snapped cursor. If the click falls outside the ghost group, the session is cancelled (the fresh instances are destroyed).
+**Paste placement** bypasses the work-mode switch: the router opens a `PastePlacementSession` in hover mode (`isDragging = false`) on a project's `pasteRequest$`. In hover mode, the ghosts do not follow the cursor — the pasted elements sit where they were placed (original clipboard position + `PASTE_OFFSET`). The session receives the next press through `DragSession.onDown`: a click on a ghost element's bounds calls `beginDrag()` and subsequent moves drag the group on a grid-snapped cursor; a click outside the ghost group returns `false`, asking the router to cancel the session (the fresh instances are destroyed).
 
 ### Session classes
 
-Each session lives in `rendering/sessions/` and implements `DragSession` (`onMove(input: PointerInput)`, `onEnd`, `onCancel`, `canEnd`).
+Each session lives in `rendering/sessions/` and implements `DragSession` (`onMove(input: PointerInput)`, `onEnd`, `onCancel`, `canEnd`, and — for sessions that outlive their opening gesture — the optional `onDown`).
 
 **`DragSession.canEnd()`** — called by `WorkModeRouter.up` before committing. Return `false` to keep the session alive (collision block or silent-discard). `WireToolSession` and `SelectRectSession` always return `true`. Collision sessions return `!_hasCollision`.
 
-**`ComponentPlacementSession`** — a thin wrapper around `PlacementGhost` (`rendering/placement-ghost.ts`): a fresh `Component` built from the config (wearing the selection look: `selected = true`) parented into `_dragLayer` and positioned directly at the grid-snapped pointer. `PlacementGhost.moveTo` re-derives collision on every move via `project.hasComponentCollision` / `hasComponentBodyWireCollision` on the ghost's own `gridBounds`; collision tints the component with the theme's `invalid` color, clearing calls `refreshTint()`. `canEnd()` returns `false` while colliding — `pointerup` is ignored and the ghost stays live. On `onEnd()`, `AddComponentsAction` is pushed (serializes the ghost at its current position) and the ghost is destroyed. The same `PlacementGhost` class backs the router's pre-press hover preview in COMPONENT_PLACEMENT mode.
+**Commit convention** — every mutating session **materializes its final state in the live project** during/at the end of the gesture, then records its action via `ActionManager.register` (record-without-`do()`). `push` — which records *and* runs `do()` — is reserved for instantaneous, non-gesture operations (wire-tap toggles, option panels). See `actions-system.md` § _push vs register_.
 
-**`SelectionMoveSession`** — snapshots the selection, calls `project.detachForDrag`, and reparents elements into `_dragLayer`. `onMove` sets `_dragLayer.position` to the grid-snapped delta from the drag start and runs `project.hasComponentCollision` for each dragged component against the fixed quad tree. Collision tints each dragged element with the theme's `invalid` color; clearing calls `refreshTint()` on each (see `DragCollisionState`). `canEnd()` returns `false` while colliding. `onEnd` (which requires `canEnd() === true`) applies the delta to each element's own position, resets `_dragLayer.position` and the collision tint, calls `project.reattachFromDrag`, and if the delta was non-zero pushes `MoveComponentsAction`/`MoveWiresAction` wrapped in an `ActionContainer`. `onCancel` resets position and tint before reattaching — always safe regardless of collision state.
+**`ComponentPlacementSession`** — a thin wrapper around `PlacementGhost` (`rendering/placement-ghost.ts`): a fresh `Component` built from the config (wearing the selection look: `selected = true`) parented into `_dragLayer` and positioned directly at the grid-snapped pointer. `PlacementGhost.moveTo` re-derives collision on every move via `project.hasComponentCollision` / `hasComponentBodyWireCollision` on the ghost's own `gridBounds`; collision tints the component with the theme's `invalid` color, clearing calls `refreshTint()`. `canEnd()` returns `false` while colliding — `pointerup` is ignored and the ghost stays live. On `onEnd()`, the session integrates the ghost's ports against the wire net (splitting any wire an arriving port lands on), builds `ActionContainer(RemoveWires?, AddComponents, AddWires?)`, materializes exactly that state — the ghost instance itself is released (`PlacementGhost.release()` drops the selection look) and added to the project — and registers the action. The same `PlacementGhost` class backs the `PlacementTool`'s pre-press hover preview.
 
-**`WireToolSession`** — `_wirePreview.position` is the half-grid-snapped start point. Two `Wire` objects (horizontal + vertical) are created lazily on first movement and sized to form an L-shape. The drag direction is locked to whichever axis moved first. `getLocalPosition(_wirePreview)` gives the delta from the start in grid units, which drives wire lengths/positions. On `onEnd()`, non-zero wires have the start position added to their local positions (converting to world grid coords), then `AddWiresAction` is pushed and preview wires are destroyed.
+**`SelectionMoveSession`** — snapshots the selection, calls `project.detachForDrag`, and reparents elements into `_dragLayer`. `onMove` sets `_dragLayer.position` to the grid-snapped delta from the drag start and runs `project.hasComponentCollision` for each dragged component against the fixed quad tree. Collision tints each dragged element with the theme's `invalid` color; clearing calls `refreshTint()` on each (see `DragCollisionState`). `canEnd()` returns `false` while colliding. `onEnd` (which requires `canEnd() === true`) applies the delta to each element's own position, resets `_dragLayer.position` and the collision tint, calls `project.reattachFromDrag`, runs the wire integration over the post-move scene (splits/merges applied with the live instances), and if the delta was non-zero registers `ActionContainer(MoveComponents?, MoveWires?, RemoveWires?, AddWires?)` — or, when the drag committed a live scissor cut, coalesces the cut's history entry with that container into one undo step (`SelectionManager.consumeLiveCut` + `ActionManager.coalesceTop`). `onCancel` resets position and tint before reattaching — always safe regardless of collision state.
+
+**`WireToolSession`** — `_wirePreview.position` is the half-grid-snapped start point. Two `Wire` objects (horizontal + vertical) are created lazily on first movement and sized to form an L-shape. The drag direction is locked to whichever axis moved first. `getLocalPosition(_wirePreview)` gives the delta from the start in grid units, which drives wire lengths/positions. On `onEnd()`, the drawn wires are integrated against the net (splits/merges), the surviving live instances are added to the project (a drawn wire the integrator passed through is re-parented, not copied), the action is registered, and only the instances that did **not** make it into the project are destroyed.
 
 **`SelectRectSession`** — adds `_selectRect` to `FloatingLayer` at the click's grid position. `onMove` sets `_selectRect.scale` to the grid-unit delta from start (negative values handle reverse drags). `onEnd` normalizes the rect to a canonical `Rectangle` (always positive width/height), removes `_selectRect`, and calls `project.selectionManager.commit(rect, mode)`. A zero-area rect (no movement) reaches the selection manager unchanged and is handled as a single-click hit test.
 
-**`PastePlacementSession`** — created by `FloatingLayer.startPasteSession()` when the user invokes paste. Receives pre-deserialized `Component[]` and `Wire[]` (fresh instances with new IDs and positions already offset by `PASTE_OFFSET = 2` grid units). Elements are added to `_dragLayer` with `selected = true` — the ghosts wear the selection look, which carries over seamlessly when `select()` keeps them selected on commit. Two-phase interaction:
+**`PastePlacementSession`** — opened by the router on a project's `pasteRequest$` when the user invokes paste. Receives pre-deserialized `Component[]` and `Wire[]` (fresh instances with new IDs and positions already offset by `PASTE_OFFSET = 2` grid units). Elements are added to `_dragLayer` with `selected = true` — the ghosts wear the selection look, which carries over seamlessly when `select()` keeps them selected on commit. Two-phase interaction:
 
 1. **Hover phase** (`isDragging = false`) — elements sit at their initial positions. `onMove` is a no-op. The user can click on a ghost to begin dragging, or click off the ghosts to commit immediately at the initial position.
 2. **Drag phase** (`isDragging = true`) — after `beginDrag(anchor)`, `onMove` sets `_dragLayer.position` to the grid-snapped cursor delta from the anchor. Collision is checked after every move via `DragCollisionState`.
@@ -216,7 +237,7 @@ Each session lives in `rendering/sessions/` and implements `DragSession` (`onMov
 
 ### `DragCollisionState`
 
-**File:** `drag-collision.ts`
+**File:** `sessions/drag-collision.ts`
 
 Shared collision detection extracted from `SelectionMoveSession` and reused by `PastePlacementSession`. Constructed with the project, drag layer, and the moving components/wires arrays. On each `update()`, computes world-space bounds (`gridBounds + dragLayer.position`) for each element and checks:
 
@@ -224,9 +245,9 @@ Shared collision detection extracted from `SelectionMoveSession` and reused by `
 - Component–wire body collision via `project.hasComponentBodyWireCollision(bodyBounds, …)`.
 - Wire–component body collision via `project.hasWireBodyCollision(bounds)`.
 
-Tints every element in `_dragLayer` (including captured junction dots) with the theme's `invalid` color on collision, and restores their own tints via `refreshTint()` otherwise. The elements are tinted directly rather than through the drag layer: a container tint multiplies with the children's own tints (wires carry their color AS tint over a white base), which would darken the invalid red toward black. Only emits tint changes when the collision state actually flips, avoiding redundant GPU updates. `reset()` restores the elements' own tints; sessions call it before reattaching or committing so a cancel mid-collision does not leak the invalid tint back onto the board.
+Tints every element in `_dragLayer` (including captured junction dots) with the theme's `invalid` color on collision, and restores their own tints otherwise — both through the shared `applyInvalidTint` helper (`rendering/invalid-tint.ts`), which tints elements directly rather than through the drag layer: a container tint multiplies with the children's own tints (wires carry their color AS tint over a white base), which would darken the invalid red toward black. Only emits tint changes when the collision state actually flips, avoiding redundant GPU updates. `reset()` restores the elements' own tints; sessions call it before reattaching or committing so a cancel mid-collision does not leak the invalid tint back onto the board.
 
-`PlacementGhost` keeps its own inline collision check because it manages a single component with direct tint control on the ghost rather than on a shared drag layer.
+`PlacementGhost` and `WireToolSession` run their own collision queries (single component / two preview wires) but share the same `applyInvalidTint` for the tinting.
 
 ### Collision tint convention
 

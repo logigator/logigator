@@ -220,7 +220,7 @@ Project
 
 `Component` fires `portsChange$: Subject<{ oldPorts, newPorts }>` whenever its `direction`, `numInputs`, or `numOutputs` setter runs (guarded by `_initialized`). `Project.addComponent` subscribes; the handler:
 
-1. Calls `computeIntegration({ movedComponentPorts: [{ oldPorts, newPorts }] })` to compute any wire splits (a new port landing on a wire interior) or merges (an old port no longer blocks).
+1. Calls `topology.integrate({ movedComponentPorts: [{ oldPorts, newPorts }] })` to compute any wire splits (a new port landing on a wire interior) or merges (an old port no longer blocks).
 2. Applies the resulting `{ toAdd, toRemove }` directly to the project tree.
 3. Recomputes CPs for old and new port positions.
 
@@ -249,7 +249,7 @@ Action `do`/`undo` implementations go through `Project.addWire` / `removeWire` /
 
 Tapping the wire tool (`WorkMode.WIRE_TOOL` — a press that never moved a grid step, with no port in negation reach) on a wire crossing places or removes a CP junction:
 
-- **Pure 2-wire X crossing (no endpoints at the tap point)**: the `WorkModeRouter`'s tap handler (`_wireTap`) snaps the tap position to the nearest half-grid point via `roundToHalfGrid` and calls `Project.toggleConnectionAt(p)`. Because `hasCpAt(p)` is false, `_splitAt(p)` runs: both wires are split into two pieces each, the four new halves are run through `computeIntegration`, and an `ActionContainer(RemoveWiresAction, AddWiresAction)` is pushed to `ActionManager`. The CP rule then sees 4 terminations at `p` → CP appears.
+- **Pure 2-wire X crossing (no endpoints at the tap point)**: the `WireTool`'s tap handler snaps the tap position to the nearest half-grid point via `roundToHalfGrid` and calls `project.topology.toggleConnectionAt(p)`. Because `hasCpAt(p)` is false, `_splitAt(p)` runs: both wires are split into two pieces each, the four new halves are run through the integrator, and an `ActionContainer(RemoveWiresAction, AddWiresAction)` is pushed to `ActionManager`. The CP rule then sees 4 terminations at `p` → CP appears.
 
 - **4-endpoint X junction (CP present at click point)**: `hasCpAt(p)` is true → `_joinAt(p)` runs. It finds the two H wire endpoints and the two V wire endpoints at `p`, builds a merged wire for each pair, runs integration, and checks if any output wire has an endpoint at `p` (which would indicate the integrator re-split because a third terminator blocked the merge). If not blocked, the action is pushed and the CP disappears.
 
@@ -260,8 +260,8 @@ Tapping the wire tool (`WorkMode.WIRE_TOOL` — a press that never moved a grid 
 | Layer                           | Detail                                                                    |
 | ------------------------------- | ------------------------------------------------------------------------- |
 | `WireToolSession`               | Reports a no-move press to the router via its `onTap` callback            |
-| `WorkModeRouter._wireTap`       | No port in reach → `roundToHalfGrid` + `project.toggleConnectionAt(p)`    |
-| `Project.toggleConnectionAt(p)` | Dispatches to `_joinAt` or `_splitAt` based on `hasCpAt(p)`               |
+| `WireTool._tap`                 | No port in reach → `roundToHalfGrid` + `project.topology.toggleConnectionAt(p)` |
+| `WireTopology.toggleConnectionAt(p)` | Dispatches to `_joinAt` or `_splitAt` based on `hasCpAt(p)`          |
 | `Project._splitAt(p)`           | Splits both crossing wires at `p`, pushes action via `actionManager.push` |
 | `Project._joinAt(p)`            | Merges collinear pairs at `p`; no-ops silently if integrator re-splits    |
 
@@ -279,7 +279,7 @@ The current `portsChange$` subscription in `Project.addComponent` applies integr
 
 ### Bulk loaders
 
-Any code that bulk-inserts elements directly into `_components` / `_wires` quad trees without going through `addComponent` / `addWire` (e.g., a paste or load fast-path that bypasses the action system) **must** post-process its input so I1/I2/I3 already hold (no wire interior contains another wire's endpoint or port tip, no two collinear wires share an endpoint without a third terminator), then call `connectionPoints.recomputeAll(allWires, allComponents)` to seed the CP set. Alternatively, run the loaded set through `computeIntegration` to normalize.
+Any code that bulk-inserts elements directly into `_components` / `_wires` quad trees without going through `addComponent` / `addWire` (e.g., a paste or load fast-path that bypasses the action system) **must** post-process its input so I1/I2/I3 already hold (no wire interior contains another wire's endpoint or port tip, no two collinear wires share an endpoint without a third terminator), then call `connectionPoints.recomputeAll(allWires, allComponents)` to seed the CP set. Alternatively, run the loaded set through `project.topology.integrate` to normalize.
 
 ---
 

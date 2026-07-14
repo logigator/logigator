@@ -76,7 +76,19 @@ action.do(this.project);
 
 - `undo()` decrements the pointer and calls `action.undo(project)` on the action that was just active.
 - `redo()` calls `action.do(project)` on the action at the current pointer, then increments.
-- Both are no-ops if `undoAvailable` / `redoAvailable` is false.
+- Both are no-ops if `undoAvailable` / `redoAvailable` is false — and while `locked` is set (see below).
+
+### `locked`
+
+Set by the `WorkModeRouter` around every live drag session. Sessions detach elements into the drag layer, and a history operation touching them would corrupt the quad tree (duplicate ids, dangling instances), so undo/redo are inert while a session is live. Commits are unaffected — a session registers its action before the router unlocks.
+
+### `topDone` / `retract(action)` / `coalesceTop(expectedTop, next)`
+
+The history surface behind the scissor cut (see § _The scissor cut lives in history_):
+
+- `topDone` — the newest done entry (what the next undo would revert).
+- `retract(action)` — if `action === topDone`: runs its `undo()`, removes it from history, returns `true`. Otherwise touches nothing. How a cancelled scissor selection takes its cut back out of history.
+- `coalesceTop(expectedTop, next)` — replaces the newest done entry with `ActionContainer(expectedTop, next)` **without executing anything** (`next`'s state must already be materialized). How cut + move / cut + delete collapse into one undo step. Falls back to a plain `register(next)` when `expectedTop` is no longer on top.
 
 ### `clear()`
 
@@ -166,7 +178,7 @@ interface MoveEntry {
 
 `do` applies `newPos`; `undo` applies `oldPos`. Both call `project.moveComponent` / `project.moveWire` which look up the element by ID, update its position, and rebucket it in the quad tree.
 
-These actions are pushed by `FloatingLayer._commitDrag()` after a successful selection drag-move, wrapped in an `ActionContainer` alongside any companion wire or component entries. Selection tint is not cleared on commit — elements remain selected after moving.
+These actions are recorded by `SelectionMoveSession.onEnd()` after a successful selection drag-move, wrapped in an `ActionContainer` alongside any companion wire entries. Selection tint is not cleared on commit — elements remain selected after moving.
 
 |                        | `do`                                               | `undo`                                             |
 | ---------------------- | -------------------------------------------------- | -------------------------------------------------- |
@@ -179,24 +191,36 @@ These actions are pushed by `FloatingLayer._commitDrag()` after a successful sel
 
 `Project` creates and exposes `actionManager` as a public field. Call sites:
 
-| Call site                         | Action(s) pushed                                                                                            |
-| --------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `FloatingLayer.commitSelection()` | `AddComponentsAction`, `AddWiresAction` (placement commit)                                                  |
-| `FloatingLayer._commitDrag()`     | `MoveComponentsAction`, `MoveWiresAction` (selection drag-move)                                             |
-| `PastePlacementSession.onEnd()`   | `AddComponentsAction`, `AddWiresAction` (paste commit)                                                      |
-| `ClipboardService._applyDelete()` | `ActionContainer(RemoveComponentsAction, RemoveWiresAction)` (delete / cut; folds in pending scissor cut)   |
-| `SelectionMoveSession.onEnd()`    | `ActionContainer(MoveComponentsAction, MoveWiresAction, …)` (also folds in pending scissor cut if present)  |
-| `EraseSession.onEnd()`            | `ActionContainer(RemoveComponentsAction, RemoveWiresAction)`                                                |
-| `WireToolSession.onEnd()`         | `AddWiresAction` (also `RemoveWiresAction` / `AddWiresAction` when wire integration triggers splits/merges) |
+| Call site                         | Committed via | Action(s) recorded                                                                                          |
+| --------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------ |
+| `ComponentPlacementSession.onEnd()` | `register`  | `ActionContainer(RemoveWires?, AddComponents, AddWires?)` (placement commit, integrated against the net)     |
+| `WireToolSession.onEnd()`         | `register`    | `ActionContainer(RemoveWires?, AddWires)` (drawn wires, integrated against the net)                          |
+| `SelectionMoveSession.onEnd()`    | `register` / `coalesceTop` | `ActionContainer(MoveComponents?, MoveWires?, RemoveWires?, AddWires?)`; coalesces with a live scissor cut |
+| `PastePlacementSession.onEnd()`   | `register`    | `ActionContainer(AddComponentsAction, AddWiresAction)` (paste commit)                                        |
+| `EraseSession.onEnd()`            | `register`    | `ActionContainer(RemoveComponentsAction, RemoveWiresAction)`                                                 |
+| `ClipboardService._applyDelete()` | `register` / `coalesceTop` | `ActionContainer(RemoveComponentsAction, RemoveWiresAction)`; coalesces with a live scissor cut  |
+| `SelectionManager._scissorAndSelectWires()` | `register` | `ActionContainer(RemoveWiresAction, AddWiresAction)` — the scissor cut itself                       |
+| `WireTool` tap                    | `push`        | `TogglePortNegationAction`, or the join/split containers built by `WireTopology`                             |
+| Option / ports / settings panels  | `push`        | `ChangeOptionAction`, `ReorderPlugsAction`, …                                                                |
 
 Undo/redo keyboard shortcuts are wired through Angular UI components that call `project.actionManager.undo()` / `.redo()` directly.
 
-### `register` vs `push`
+### `push` vs `register`
 
-`ActionManager` has two registration methods:
+`ActionManager` has two commit styles, with one convention:
 
-- **`push(action)`** — calls `action.do(project)` immediately, then splices the history at the current pointer. Used when the action's effects have not yet been applied to the project (e.g., `ComponentPlacementSession` — the ghost is a temporary preview, and the real components do not exist until `AddComponentsAction.do()` runs).
-- **`register(action)`** — records the action without calling `do()`. Used when the caller has already applied the state changes to the project (e.g., paste, delete, erase, selection moves). The action is pushed straight into undo history as a done deed. This is the preferred pattern for operations that mutate live project state directly before recording.
+- **`push(action)`** — records the action AND calls `action.do(project)`. For **instantaneous, non-gesture operations** (wire-tap toggles, option panels) that build fresh actions against the current state.
+- **`register(action)`** — records the action WITHOUT calling `do()`. **Drag sessions always use this**: they materialize their final state in the live project during the gesture (their ghosts/instances become the committed elements), so re-running `do()` would double-apply — and re-deserialize instances whose ids are already in the quad tree.
+
+### The scissor cut lives in history
+
+A `SELECT_EXACT` marquee that scissors wires registers the cut (`ActionContainer(RemoveWires, AddWires)`) as its own history entry immediately; `SelectionManager` keeps the reference and considers it **live** while it is still `topDone`. Three exits:
+
+- **Commit** — a selection move or delete consumes the cut (`consumeLiveCut`) and coalesces it with its own container (`coalesceTop`), so cut + move / cut + delete revert with one Ctrl+Z.
+- **Cancel** — clearing the selection retracts the entry (`retract`): the originals come back and the history shows no trace.
+- **Dissolve** — any unrelated `push`/`register` while a cut is live first clears the selection (retracting the cut), so an uncommitted split can never be orphaned behind newer history entries.
+
+A plain Ctrl+Z while the cut is live simply undoes it as the newest entry (and it stays redoable).
 
 ---
 
@@ -205,7 +229,7 @@ Undo/redo keyboard shortcuts are wired through Angular UI components that call `
 1. Create `actions/<verb>-<noun>.action.ts` extending `Action`.
 2. In the constructor, serialize any live objects you will need to replay.
 3. Implement `do` (apply the change) and `undo` (reverse it), both operating only on `project` and your serialized state.
-4. Push the action via `project.actionManager.push(action)` at the call site.
+4. Commit at the call site following the convention above: `push` for an instantaneous operation, materialize-then-`register` inside a drag session.
 
 If the operation involves multiple independent sub-changes, wrap them in an `ActionContainer` so they undo atomically.
 

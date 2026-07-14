@@ -8,7 +8,11 @@ The project layer is the central owner of all circuit state. `Project` is the ro
 src/app/project/
 ├── project.ts              # Circuit root — PixiJS Container owning all circuit state
 ├── project.service.ts      # Angular service — holds and exposes active project signals
-└── selection-manager.ts    # Committed selection state (selected flags, sets, observables)
+├── selection-manager.ts    # Committed selection state (selected flags, sets, observables)
+├── selection-inspector.service.ts # Reactive selection summary for UI panels
+├── viewport-controller.ts  # Camera: pan/zoom/viewport state (exposed as project.viewport)
+├── wire-topology.ts        # Wire-invariant integration + join/split toggling (project.topology)
+└── wire-integrator.ts      # The split/merge fixed-point solver WireTopology owns
 ```
 
 ---
@@ -19,7 +23,7 @@ src/app/project/
 
 `Project` extends PixiJS `Container`. An instance is created in `AppComponent` and rendered as the root container by `BoardComponent` (`renderer.render({ container: project, target: canvas })` through the shared renderer). Everything rendered on the canvas is a descendant of `Project`.
 
-Canvas navigation (`pan`, `zoomIn`, `zoomOut`, `zoomBy`) is implemented through the `ViewportController`; the DOM `PointerController` (see `rendering.md`) calls these on right-drag, wheel, and touch gestures. `Project` itself listens to no pointer events.
+Canvas navigation (`pan`, `zoomIn`, `zoomOut`, `zoomBy`) is implemented by the `ViewportController`, exposed directly as `project.viewport`; the DOM `PointerController` (see `rendering.md`) calls it on right-drag, wheel, and touch gestures. `Project` itself listens to no pointer events.
 
 ### Scene graph layers
 
@@ -69,33 +73,27 @@ CPs are not persisted, not selectable, and have no model presence — they are d
 
 The constructor sets `boundsArea` and `hitArea` to the full coordinate range (so the container always receives pointer events regardless of viewport position), then builds the two-level scene hierarchy: `_grid` added directly, `_gridSpace` (with `scale.set(environment.gridSize)`) added second, and the three circuit sub-layers (`_wires`, `_components`, `_floatingLayer`) added inside `_gridSpace`.
 
-### Viewport
+### Viewport — `project.viewport` (`ViewportController`)
 
-| Method                 | Description                                                                                                         |
+All camera control lives on the exposed `ViewportController`; `Project` keeps no delegates.
+
+| Member                 | Description                                                                                                         |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------- |
 | `resizeViewport(w, h)` | Stores the new viewport size and forwards it to `Grid.resizeViewport`                                               |
-| `pan(delta)`           | Translates by `delta`, calls `setPosition`                                                                          |
-| `setPosition(p)`       | Moves `this.position`, calls `Grid.updatePosition`, emits on `positionChange$`                                      |
-| `gridPosition`         | Computed read-only: the current top-left corner in grid units — `position.multiplyScalar(1 / (scale.x * gridSize))` |
-| `gridSpace`            | Public getter for `_gridSpace`; needed by `FloatingLayer` for coordinate conversion                                 |
+| `pan(delta)`           | Translates by `delta` (canvas-local CSS pixels), calls `setPosition`                                                |
+| `setPosition(p)`       | Moves the project, calls `Grid.updatePosition`, emits on `viewportChange$`                                          |
+| `viewportChange$` / `viewportState` | Full camera state (`gridOrigin`, `scale`, `viewportSize`) for overlays like the minimap                |
+| `gridPosition`         | Computed read-only: the current top-left corner in grid units                                                       |
+| `zoomIn/zoomOut(center?)` | Steps the scale by `1.2^±1` around `center` (defaults to viewport center)                                        |
+| `zoom100(center?)` / `zoomBy(factor, center?)` | Reset to scale 1 / continuous pinch zoom (clamped, resyncs the step)                        |
 
-### Zoom
-
-Zoom is implemented as discrete steps. Each step multiplies/divides the scale by `1.2`. The step counter is clamped to `[-12, +5]`, giving a scale range of approximately `1.2^-12 ≈ 0.112` to `1.2^5 ≈ 2.49`.
-
-| Method             | Description                                                                     |
-| ------------------ | ------------------------------------------------------------------------------- |
-| `zoomIn(center?)`  | Increments step, recomputes scale around `center` (defaults to viewport center) |
-| `zoomOut(center?)` | Decrements step, same                                                           |
-| `zoom100(center?)` | Resets step to 0 (scale = 1)                                                    |
-
-Pivot-correct zoom is achieved by a matrix chain:
+Zoom is implemented as discrete steps clamped to `[-12, +5]`, giving a scale range of approximately `1.2^-12 ≈ 0.112` to `1.2^5 ≈ 2.49`. Pivot-correct zoom is achieved by a matrix chain:
 
 ```
-translate(-center) → unscale(old) → scale(new) → translate(+center) → apply(this.position)
+translate(-center) → unscale(old) → scale(new) → translate(+center) → apply(position)
 ```
 
-This ensures the point under the mouse stays stationary. After repositioning, `Grid.updateScale` and `FloatingLayer.updateScale` are called, then `applyScale(scale)` is forwarded to every component and wire child.
+This ensures the point under the mouse stays stationary. After repositioning, `Grid.updateScale` and `FloatingLayer.updateScale` are called, then `applyScale(scale)` is forwarded to every component and wire child. Each zoom method ends by requesting one `'single'` render frame through the callback `Project` hands the controller (pans don't — they only happen inside gestures that already hold the ticker on).
 
 ### Circuit mutation
 
@@ -111,9 +109,10 @@ This ensures the point under the mouse stays stationary. After repositioning, `G
 | `queryWiresInRange(rect)`                       | Generator that yields all wires intersecting `rect` (delegates to `_wires.queryRange`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `hasComponentCollision(bounds, excludeIds?)`    | Returns `true` if any component in the quad tree intersects `bounds`, excluding any whose `id` is in `excludeIds`. Uses `queryComponentsInRange` — no extra check needed because `queryRange` already uses `gridBounds.intersects`. `excludeIds` defaults to an empty set; used by future callers (paste, undo-of-move) where the component being tested is already in the tree. Called by `ComponentPlacementSession` and `SelectionMoveSession` on every `pointermove`.                                                                                                                                                                                                                                                                                                                                           |
 | `hasWireBodyCollision(wireBounds, excludeIds?)` | Returns `true` if `wireBounds` intersects the **body** (stub-free AABB) of any component. Does a coarse `queryComponentsInRange` first, then a precise `intersects(comp.bodyGridBounds)` check. A wire endpoint touching a port stub tip correctly returns `false` because the stub-free body starts at the integer grid boundary, and the wire AABB ends exactly at that boundary (strict `>` comparison). Called by `WireToolSession` to show red tint and block commit when a preview wire clips through a component body.                                                                                                                                                                                                                                                                                       |
-| `computeIntegration(input)`                     | Pure read — never mutates project state. Takes an `IntegrationInput` describing wires/components being added, removed, or moved, and returns `{ toAdd: Wire[], toRemove: Wire[] }`. `toAdd` contains the fresh wires the caller should insert (splits, merges, surviving addedWires); `toRemove` contains the live tree wires that should leave (absorbed by merges or replaced by splits). Callers wrap the result in `ActionContainer(RemoveWiresAction, AddWiresAction)` alongside their primary action so the whole gesture — including any splits/merges — undoes atomically. Runs from `WireToolSession.onEnd`, `SelectionMoveSession.onEnd`, `ComponentPlacementSession.onEnd`, and the `portsChange$` subscription (for rotation). See [Wire Integration Invariants](wires.md#wire-integration-invariants). |
+| `topology` (`WireTopology`)                     | Owns the `WireIntegrator` and the wire tool's connection toggling. `topology.integrate(input)` is a pure read — never mutates project state: takes an `IntegrationInput` describing wires/components being added, removed, or moved, and returns `{ toAdd: Wire[], toRemove: Wire[] }`. Callers materialize the result and record `ActionContainer(RemoveWiresAction, AddWiresAction)` alongside their primary action so the whole gesture — including any splits/merges — undoes atomically. Runs from `WireToolSession.onEnd`, `SelectionMoveSession.onEnd`, `ComponentPlacementSession.onEnd`, and the `portsChange$` subscription (for rotation). `topology.toggleConnectionAt(p)` / `connectionToggleKindAt(p)` implement the wire tool's join/split tap and its hover preview. See [Wire Integration Invariants](wires.md#wire-integration-invariants). |
+| `getComponentById(id)` / `getWireById(id)`      | O(1) lookups through id → element maps kept in lock-step with quad-tree membership (drag-detached elements are absent from both). Every action `do`/`undo` resolves elements through these. |
 | `connectionPoints`                              | Getter — returns the `ConnectionPointManager`. Used by `SelectionMoveSession` (drag-follow CP capture/discard/restore) and by tests. See [`connection-points.md`](connection-points.md).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| `startPasteSession(components, wires)`          | Delegates to `FloatingLayer.startPasteSession()`. Called by `ClipboardService.paste()` after deserializing fresh `Component`/`Wire` instances from the clipboard snapshot. The session handles placement, collision checking, and commit.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `startPasteSession(components, wires)`          | Emits on `pasteRequest$`; the `WorkModeRouter` opens a `PastePlacementSession`. Called by `ClipboardService.paste()` after deserializing fresh `Component`/`Wire` instances from the clipboard snapshot. The session handles placement, collision checking, and commit.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 
 `applyScale` is called on add because the project may already be at a non-1 zoom level when an element is inserted (e.g., on undo/redo while zoomed in).
 
@@ -123,25 +122,23 @@ This ensures the point under the mouse stays stationary. After repositioning, `G
 
 ### Drag operations
 
-These methods are used exclusively by `FloatingLayer` during selection drag-move. They operate directly on the quad trees without going through the action system — the caller is responsible for pushing undo actions separately.
+These methods are used exclusively by `SelectionMoveSession` during selection drag-move. They operate directly on the quad trees (and the id → element maps) without going through the action system — the caller is responsible for recording undo actions separately.
 
 | Method                                | Description                                                                                                                                                                                                                                                                                                                               |
 | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `detachForDrag(components, wires)`    | Removes elements from their quad trees. Elements keep their position and visual state; the caller reparents them into `FloatingLayer._dragLayer`. **Does not fire CP hooks** — CPs are intentionally frozen during the drag; `SelectionMoveSession` uses `connectionPoints.captureDragCps` to make termination-point CPs follow the drag. |
+| `detachForDrag(components, wires)`    | Removes elements from their quad trees (and id maps). Elements keep their position and visual state; the caller reparents them into `FloatingLayer.dragLayer`. **Does not fire CP hooks** — CPs are intentionally frozen during the drag; `SelectionMoveSession` uses `connectionPoints.captureDragCps` to make termination-point CPs follow the drag. |
 | `reattachFromDrag(components, wires)` | Re-inserts elements back into their quad trees at their current positions. Skips `destroyed` elements (defensive guard). **Does not fire CP hooks** — the session calls `connectionPoints.recomputeCpsForMovedSelection` once after reattach.                                                                                             |
 
 `QuadTreeContainer.insert()` already handles the case where an element is already tracked — it removes then re-inserts. `moveComponent`/`moveWire` (listed in the Circuit mutation table above) take advantage of this: they set the position then call `insert()` unconditionally.
-
-### Work mode
-
-`Project` exposes `mode` and `componentToPlace` as getters/setters that delegate to `FloatingLayer`. This lets `BoardComponent` configure the interaction mode without holding a direct reference to the internal `FloatingLayer`.
 
 ### Reactive outputs
 
 | Observable / Signal   | Type                                    | Description                                                                                                                        |
 | --------------------- | --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `positionChange$`     | `Observable<Point>`                     | Emits the new `gridPosition` on every pan or zoom; throttled to ~30 fps by `BoardComponent` before being relayed to the status bar |
-| `ticker$` (inherited) | `Observable<'single' \| 'on' \| 'off'>` | Ticker control stream consumed by `BoardComponent` to drive `app.ticker`                                                           |
+| `viewport.viewportChange$` | `Observable<ViewportState>`        | Emits the full camera state on every pan, zoom or resize; consumed by the minimap and the status bar                               |
+| `ticker$`             | `Observable<'single' \| 'on' \| 'off'>` | Ticker control stream consumed by `BoardComponent` to drive the render ticker                                                      |
+| `pasteRequest$`       | `Observable<{components, wires}>`       | Paste flow hand-off to the `WorkModeRouter`                                                                                        |
+| `userInput$` / `inspectRequest$` | `Observable<Component>`      | Simulation-mode taps (button/switch activation, inspection requests)                                                               |
 
 ---
 
@@ -175,8 +172,8 @@ Angular root-provided singleton. Tracks up to three states using Angular `signal
 | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `AppComponent`     | Creates the initial `Project` in its constructor (`new Project()`), calls `projectService.setMainProject`. Reads `activeProject()` to feed `BoardComponent`.                                                                                                                                                                  |
 | `BoardComponent`   | Receives `Project` as an `input()`. Renders it as the root container each frame. Subscribes to `ticker$` and `positionChange$`. Forwards work-mode signals via `effect`.                                                                                                                                                      |
-| `FloatingLayer`    | Holds a direct reference to its parent `Project`. Reads `project.mode`, `project.componentToPlace`, `project.scale`, `project.gridSpace`. Calls `project.actionManager.push(...)` on commit, `project.selectionManager.commit/clear/containsPoint` for selection, and `project.detachForDrag/reattachFromDrag` for drag-move. |
-| `ClipboardService` | Reads `project.selectionManager.selectedComponents`/`selectedWires` to serialize, calls `project.removeComponent`/`removeWire` for delete, calls `project.startPasteSession()` for paste, calls `project.actionManager.register()` and `project.selectionManager.claimPendingCut()`.                                          |
+| `WorkModeRouter` + sessions | The router dispatches presses to per-mode tools which open sessions (see `rendering.md`); sessions mutate through `add/remove/move*`, `detachForDrag`/`reattachFromDrag`, `topology.integrate`, and record through `project.actionManager`. |
+| `ClipboardService` | Reads `project.selectionManager.selectedComponents`/`selectedWires` to serialize, calls `project.removeComponent`/`removeWire` for delete, calls `project.startPasteSession()` for paste, records via `project.actionManager.register()`/`coalesceTop()` after `project.selectionManager.consumeLiveCut()`.                    |
 | `ActionManager`    | Owned by `Project` as `project.actionManager`. All action `do`/`undo` implementations receive the `Project` and call `addComponent`, `removeComponent`, `addWire`, `removeWire`, `moveComponent`, or `moveWire`.                                                                                                              |
 | `SelectionManager` | Owned by `Project` as `project.selectionManager`. `FloatingLayer` calls `commit`, `clear`, `containsPoint`, and reads `selectedComponents`/`selectedWires`. `Project.removeComponent`/`removeWire` call `evict` before destroying elements.                                                                                   |
 | `Grid`             | Owned by `Project`. Receives `updatePosition`, `resizeViewport`, and `updateScale` calls.                                                                                                                                                                                                                                     |
@@ -196,14 +193,14 @@ BoardComponent ngOnInit
   └── rendererService.acquire()          // leases the shared renderer (WebGPU preferred)
 
 BoardComponent effect (project input changes)
-  └── project.resizeViewport(w, h)
+  └── project.viewport.resizeViewport(w, h)
   └── ticker.update()                    // renders the project to the board canvas
   └── subscribe project.ticker$
-  └── subscribe project.positionChange$
+  └── subscribe project.viewport.viewportChange$
 
 BoardComponent effect (WorkModeService signals change)
-  └── project.mode = workModeService.mode()
-  └── project.componentToPlace = workModeService.selectedComponentConfig()
+  └── router.setMode(workModeService.mode())
+  └── router.componentToPlace = workModeService.selectedComponentConfig()
 ```
 
 ---
@@ -212,7 +209,7 @@ BoardComponent effect (WorkModeService signals change)
 
 **File:** `project/selection-manager.ts`
 
-Plain TypeScript class. Constructed by `Project`; not an Angular service. Owns the committed selection state that persists across pointer interactions until the user explicitly clears it (mode change, Escape, click on empty space, or undo).
+Plain TypeScript class. Constructed by `Project`; not an Angular service. Owns the committed selection state that persists across pointer interactions until the user explicitly clears it (mode change, click on empty space), plus the live scissor cut's history reference.
 
 ### State
 
@@ -222,6 +219,7 @@ Plain TypeScript class. Constructed by `Project`; not an Angular service. Owns t
 | `_selectedWires`            | `Set<Wire>`         | Live references to currently selected wires                                 |
 | `_selectionChange$`         | `Subject<void>`     | Emits whenever the selection changes                                        |
 | `_selectedConnectionPoints` | `ConnectionPoint[]` | CPs currently wearing the selection highlight (re-derived by `retintCps()`) |
+| `_cutAction`                | `Action \| null`    | The scissor cut this selection registered in the history (live only while it is still `topDone`) |
 
 ### Public API
 
@@ -237,7 +235,8 @@ Plain TypeScript class. Constructed by `Project`; not an Angular service. Owns t
 | `selectedComponents`        | `ReadonlySet<Component>` — live references.                                                                                                                                                                                                                                                                                                                                    |
 | `selectedWires`             | `ReadonlySet<Wire>` — live references.                                                                                                                                                                                                                                                                                                                                         |
 | `select(components, wires)` | Batch-select: clears the current selection, flags the given elements selected, and emits. Used by `PastePlacementSession.onEnd()` to select the freshly pasted elements. Skips destroyed elements silently.                                                                                                                                                                    |
-| `claimPendingCut()`         | Returns the `ActionContainer` recorded by a tentative scissor cut (SELECT*EXACT) and clears the pending state. Returns `null` if no cut is pending. Called by `SelectionMoveSession.onEnd()` (folds the cut into the move undo entry) and by `ClipboardService._applyDelete()` (folds the cut into the delete undo entry). See `wires.md` § \_Tentative cut + commit on move*. |
+| `hasLiveCut`                | Whether this selection's scissor cut is still committable: it exists and is the newest history entry (`ActionManager.topDone`). Lazily validated — an undo that popped the cut silently ends its live phase.                                                                                                                                                                     |
+| `consumeLiveCut()`          | Hands the live cut's history entry over to the move/delete that commits it — the caller coalesces it with its own action (`ActionManager.coalesceTop`) into one undo step. Returns `null` when no cut is live. Called by `SelectionMoveSession.onEnd()` and `ClipboardService._applyDelete()`. See `wires.md` § _Cut lifecycle_.                                                 |
 
 ### `commit` behavior
 
@@ -246,7 +245,7 @@ Plain TypeScript class. Constructed by `Project`; not an Angular service. Owns t
 1. Calls `clear()` to drop the old selection.
 2. Queries `project.queryComponentsInRange(rect)` and flags every result `selected` (each element derives its own theme-keyed highlight tint from the flag) — both modes use the same touching rule for components.
 3. **`SELECT` mode**: Queries `project.queryWiresInRange(rect)` and flags every result selected.
-4. **`SELECT_EXACT` mode** (scissor select): For each wire returned by `queryWiresInRange(rect)`, calls `cutWire(wire, rect)` (see `wires.md` § _Wire Scissor Cutting_). The result is one of `{kind: 'skip'}` (centerline outside rect — do not select), `{kind: 'keep'}` (no cut needed — select as-is), or `{kind: 'cut', pieces, insideIndex}`. For `cut` results, the cut is performed **tentatively**: the manager calls `project.removeWire` on the original and `project.addWire` on each new piece directly, then records the rollback data in `_pendingCut`. **Nothing is pushed to `ActionManager` at commit time.** The inside pieces are flagged selected and added to the selection set by ID. The tentative cut is finalized only on a real modification — `SelectionMoveSession.onEnd` with `hasMove === true` calls `selectionManager.claimPendingCut()` and folds the returned `ActionContainer(RemoveWiresAction, AddWiresAction)` into its own move container so cut + move are one Ctrl+Z. Any cancel path (`clear()`, mode change, Escape, Ctrl+Z while pending) calls `_rollbackPendingCutInternal` which removes the new pieces and re-adds the originals. See `wires.md` § _Tentative cut + commit on move_ for the full lifecycle.
+4. **`SELECT_EXACT` mode** (scissor select): For each wire returned by `queryWiresInRange(rect)`, calls `cutWire(wire, rect)` (see `wires.md` § _Wire Scissor Cutting_). The result is one of `{kind: 'skip'}` (centerline outside rect — do not select), `{kind: 'keep'}` (no cut needed — select as-is), or `{kind: 'cut', pieces, insideIndex}`. For `cut` results, the manager calls `project.removeWire` on the originals and `project.addWire` on each new piece directly, then **registers** the cut (`ActionContainer(RemoveWiresAction, AddWiresAction)`) as its own history entry and remembers it in `_cutAction`. The inside pieces are flagged selected and added to the selection set by ID. A move or delete that follows consumes the cut and coalesces it with its own action (one Ctrl+Z for cut + move); cancelling the selection retracts the entry (originals restored, no history trace); any unrelated action dissolves the selection first. See `wires.md` § _Cut lifecycle_.
 5. Emits `selectionChange$` once at the end.
 
 **Single click** (`rect.width === 0 && rect.height === 0`):
