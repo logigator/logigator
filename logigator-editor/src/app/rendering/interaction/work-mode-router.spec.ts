@@ -22,7 +22,9 @@ import { WireDirection } from '../../wires/wire-direction.enum';
 import { Component } from '../../components/component';
 import { ComponentConfig } from '../../components/component-config.model';
 import { andComponentConfig } from '../../components/component-types/and/and.config';
+import { notComponentConfig } from '../../components/component-types/not/not.config';
 import { CustomComponentService } from '../../custom-component/custom-component.service';
+import { ThemingService } from '../../theming/theming.service';
 import { Project } from '../../project/project';
 import { WorkMode } from '../../work-mode/work-mode.enum';
 import { PointerInput } from './pointer-input';
@@ -361,6 +363,23 @@ describe('WorkModeRouter wire-tool taps (WIRE_TOOL mode)', () => {
     expect(project.actionManager.undoAvailable).toBe(false);
   });
 
+  it('previews removal for an already-negated port', () => {
+    const and = makeAnd(2, undefined, 2, 2);
+    and.setPortNegated('in', 0, true);
+    project.addComponent(and);
+    const show = vi.spyOn(project.floatingLayer, 'showNegationGhost');
+    const cp = and.connectionPoints[0];
+
+    router.hover(makeInput(cp.x, cp.y));
+
+    expect(show).toHaveBeenCalledWith(
+      expect.anything(),
+      'in',
+      expect.anything(),
+      true // willRemove — the tap would take the bubble away
+    );
+  });
+
   it('shows the negation ghost over a port and hides it off-port', () => {
     const and = makeAnd(2, undefined, 2, 2);
     project.addComponent(and);
@@ -429,6 +448,100 @@ describe('WorkModeRouter wire-tool taps (WIRE_TOOL mode)', () => {
 
     expect(project.floatingLayer.connectionGhostVisible).toBe(true);
     expect(project.connectionToggleKindAt(new Point(2.5, 2.5))).toBe('join');
+  });
+});
+
+describe('WorkModeRouter placement hover ghost (COMPONENT_PLACEMENT mode)', () => {
+  let project: Project;
+  let router: WorkModeRouter;
+  let ensure: MockInstance<(masterTypeId: number) => Promise<boolean>>;
+
+  beforeEach(() => {
+    configureTestBed();
+    project = new Project();
+    router = new WorkModeRouter();
+    router.setProject(project);
+    ensure = vi.spyOn(
+      TestBed.inject(CustomComponentService),
+      'ensureMasterCircuit'
+    );
+    router.setMode(WorkMode.COMPONENT_PLACEMENT);
+    router.componentToPlace = andComponentConfig as unknown as ComponentConfig;
+  });
+
+  afterEach(() => {
+    router.destroy();
+    project.destroy({ children: true });
+  });
+
+  const ghosts = () => project.floatingLayer.dragLayer.children;
+
+  it('hovering shows a grid-snapped ghost of the component to place', () => {
+    router.hover(makeInput(2.3, 3.4));
+
+    expect(ghosts()).toHaveLength(1);
+    expect(ghosts()[0].position).toMatchObject({ x: 2, y: 3 });
+  });
+
+  it('the ghost follows later hovers without stacking new instances', () => {
+    router.hover(makeInput(2, 2));
+    const ghost = ghosts()[0];
+
+    router.hover(makeInput(5.6, 1.2));
+
+    expect(ghosts()).toEqual([ghost]);
+    expect(ghost.position).toMatchObject({ x: 6, y: 1 });
+  });
+
+  it('tints the ghost invalid over a collision and restores it off one', () => {
+    project.addComponent(makeAnd(2, undefined, 2, 2));
+    const invalid = TestBed.inject(ThemingService).currentTheme().invalid;
+
+    router.hover(makeInput(2, 2));
+    expect(ghosts()[0].tint).toBe(invalid);
+
+    router.hover(makeInput(20, 20));
+    expect(ghosts()[0].tint).not.toBe(invalid);
+  });
+
+  it('changing the palette selection rebuilds the ghost from the new config', () => {
+    router.hover(makeInput(2, 2));
+
+    router.componentToPlace = notComponentConfig as unknown as ComponentConfig;
+    expect(ghosts()).toHaveLength(0);
+
+    router.hover(makeInput(2, 2));
+    expect((ghosts()[0] as Component).config.type).toBe(
+      notComponentConfig.type
+    );
+  });
+
+  it('a press hands off to the placement session without stacking ghosts', async () => {
+    ensure.mockResolvedValue(true);
+    router.hover(makeInput(2, 2));
+
+    router.down(makeInput(2.4, 2.4));
+    await Promise.resolve();
+    await Promise.resolve();
+
+    expect(ghosts()).toHaveLength(1); // the session's ghost, not the hover one
+    expect(ghosts()[0].position).toMatchObject({ x: 2, y: 2 });
+  });
+
+  it('removes the ghost when the pointer leaves the canvas', () => {
+    router.hover(makeInput(2, 2));
+
+    router.leave();
+
+    expect(ghosts()).toHaveLength(0);
+  });
+
+  it('removes the ghost when switching modes', () => {
+    router.hover(makeInput(2, 2));
+
+    router.setMode(WorkMode.SELECT);
+
+    expect(ghosts()).toHaveLength(0);
   });
 });
 

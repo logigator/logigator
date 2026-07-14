@@ -7,6 +7,7 @@ import { ComponentConfig } from '../../components/component-config.model';
 import { Wire } from '../../wires/wire';
 import { roundToGrid, roundToHalfGrid } from '../../utils/grid';
 import { DragSession } from '../drag-session';
+import { PlacementGhost } from '../placement-ghost';
 import { ComponentPlacementSession } from '../sessions/component-placement.session';
 import { PastePlacementSession } from '../sessions/paste-placement.session';
 import { WireToolSession } from '../sessions/wire-tool.session';
@@ -55,6 +56,12 @@ export class WorkModeRouter implements PointerToolTarget {
   private _componentToPlace: ComponentConfig | null = null;
   private _activeDrag: DragSession | null = null;
 
+  // Hover preview in placement mode: the component the next press would place,
+  // following the cursor before any press. Torn down whenever its context
+  // changes (mode/project/palette selection) or a session takes over.
+  private _hoverGhost: PlacementGhost | null = null;
+  private _hoverGhostConfig: ComponentConfig | null = null;
+
   private _pasteSub: Subscription | null = null;
   private readonly _cancelSub: Subscription;
   private readonly _customComponents = getStaticDI(CustomComponentService);
@@ -77,6 +84,7 @@ export class WorkModeRouter implements PointerToolTarget {
 
   public destroy(): void {
     this.abortActiveDrag();
+    this._destroyHoverGhost();
     this._pasteSub?.unsubscribe();
     this._cancelSub.unsubscribe();
   }
@@ -89,6 +97,7 @@ export class WorkModeRouter implements PointerToolTarget {
    *  then applies the current mode's side effects to the new one. */
   public setProject(project: Project | null): void {
     this.abortActiveDrag();
+    this._destroyHoverGhost();
     if (this._mode === WorkMode.WIRE_TOOL) {
       this._project?.floatingLayer.hideWireToolGhosts();
     }
@@ -110,6 +119,7 @@ export class WorkModeRouter implements PointerToolTarget {
 
   public setMode(value: WorkMode): void {
     this.abortActiveDrag();
+    this._destroyHoverGhost();
     this._project?.selectionManager.clear();
     if (this._mode === WorkMode.WIRE_TOOL) {
       this._project?.floatingLayer.hideWireToolGhosts();
@@ -119,6 +129,11 @@ export class WorkModeRouter implements PointerToolTarget {
   }
 
   public set componentToPlace(value: ComponentConfig | null) {
+    if (value !== this._hoverGhostConfig) {
+      // The palette selection changed under the preview — the next hover
+      // rebuilds the ghost from the new config.
+      this._destroyHoverGhost();
+    }
     this._componentToPlace = value;
   }
 
@@ -256,9 +271,22 @@ export class WorkModeRouter implements PointerToolTarget {
 
   public hover(input: PointerInput): void {
     const project = this._project;
-    if (!project || this._mode !== WorkMode.WIRE_TOOL) return;
-    this._updateWireToolGhosts(project, input.grid);
-    project.triggerTicker('single');
+    if (!project) return;
+    if (this._mode === WorkMode.WIRE_TOOL) {
+      this._updateWireToolGhosts(project, input.grid);
+      project.triggerTicker('single');
+    } else if (this._mode === WorkMode.COMPONENT_PLACEMENT) {
+      this._updatePlacementHoverGhost(project, input.grid);
+    }
+  }
+
+  /** The pointer left the canvas: hover previews stop applying. */
+  public leave(): void {
+    this._destroyHoverGhost();
+    if (this._mode === WorkMode.WIRE_TOOL) {
+      this._project?.floatingLayer.hideWireToolGhosts();
+      this._project?.triggerTicker('single');
+    }
   }
 
   /**
@@ -273,7 +301,8 @@ export class WorkModeRouter implements PointerToolTarget {
       project.floatingLayer.showNegationGhost(
         hit.comp.negationBubbleAnchor(hit.side, hit.index),
         hit.side,
-        hit.comp.rotation
+        hit.comp.rotation,
+        hit.comp.isPortNegated(hit.side, hit.index)
       );
       return;
     }
@@ -338,7 +367,48 @@ export class WorkModeRouter implements PointerToolTarget {
     );
   }
 
+  /**
+   * Follows the cursor with the component the next press would place —
+   * the same ghost (selection look, invalid tint on collision) the placement
+   * session shows once the press lands, so the handoff is seamless. Rebuilt
+   * when the palette selection changes; skipped while any session is active
+   * (its own ghosts own the preview then).
+   */
+  private _updatePlacementHoverGhost(project: Project, gridPoint: Point): void {
+    const config = this._componentToPlace;
+    if (this._activeDrag || !config) {
+      this._destroyHoverGhost();
+      return;
+    }
+    const snapped = roundToGrid(gridPoint, true);
+    if (this._hoverGhost) {
+      this._hoverGhost.moveTo(snapped);
+    } else {
+      // A master previews from its own config — snapshotting stays a
+      // commit-time effect of the placement session.
+      this._hoverGhost = new PlacementGhost(
+        project,
+        project.floatingLayer.dragLayer,
+        config,
+        snapped
+      );
+      this._hoverGhostConfig = config;
+    }
+    project.triggerTicker('single');
+  }
+
+  private _destroyHoverGhost(): void {
+    if (!this._hoverGhost) return;
+    this._hoverGhost.destroy();
+    this._hoverGhost = null;
+    this._hoverGhostConfig = null;
+    this._project?.triggerTicker('single');
+  }
+
   private _startDrag(session: DragSession): void {
+    // The session's own ghosts take over the preview (for a placement session,
+    // a visually identical ghost at the same spot — a seamless handoff).
+    this._destroyHoverGhost();
     this._activeDrag = session;
     this._project?.triggerTicker('on');
   }

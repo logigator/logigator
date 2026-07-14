@@ -1,4 +1,4 @@
-import { Container, Point, Rectangle } from 'pixi.js';
+import { Container, Point } from 'pixi.js';
 import { DragSession } from '../drag-session';
 import { PointerInput } from '../interaction/pointer-input';
 import { Project } from '../../project/project';
@@ -6,6 +6,7 @@ import { Component } from '../../components/component';
 import { ComponentConfig } from '../../components/component-config.model';
 import { Wire } from '../../wires/wire';
 import { ConnectionPoint } from '../../connection-points/connection-point';
+import { PlacementGhost } from '../placement-ghost';
 import { roundToGrid } from '../../utils/grid';
 import { AddComponentsAction } from '../../actions/actions/add-components.action';
 import { ActionContainer } from '../../actions/action-container';
@@ -18,11 +19,9 @@ import { ProjectMetadataStore } from '../../persistence/project-metadata.store';
 import { ToastService } from '../../logging/toast.service';
 import { LoggingService } from '../../logging/logging.service';
 import { TranslationService } from '../../translation/translation.service';
-import { ThemingService } from '../../theming/theming.service';
 
 export class ComponentPlacementSession implements DragSession {
-  private readonly _component: Component;
-  private _hasCollision = false;
+  private readonly _ghost: PlacementGhost;
   // Defense in depth: the palette already hides masters that would cycle while
   // editing one, but a master may still reach here (stale `componentToPlace`,
   // future paste). Decided up front so onEnd can refuse to commit.
@@ -30,7 +29,7 @@ export class ComponentPlacementSession implements DragSession {
 
   constructor(
     private readonly project: Project,
-    private readonly dragLayer: Container<Component | Wire | ConnectionPoint>,
+    dragLayer: Container<Component | Wire | ConnectionPoint>,
     startPos: Point,
     placeConfig: ComponentConfig
   ) {
@@ -43,26 +42,15 @@ export class ComponentPlacementSession implements DragSession {
     const config = this._wouldCycle
       ? placeConfig
       : ComponentPlacementSession._resolvePlacementConfig(placeConfig);
-    const options = Object.fromEntries(
-      Object.entries(config.options).map(([key, opt]) => [key, opt.clone()])
-    );
-    this._component = config.create(options);
-    // The placement ghost wears the selection look (theme-keyed tint).
-    this._component.selected = true;
-    this._component.applyScale(project.scale.x);
-    this._component.position.set(0, 0);
-    dragLayer.addChild(this._component);
-    dragLayer.position.copyFrom(startPos);
-    this._updateCollision();
+    this._ghost = new PlacementGhost(project, dragLayer, config, startPos);
   }
 
   onMove(input: PointerInput): void {
-    this.dragLayer.position.copyFrom(roundToGrid(input.grid, true));
-    this._updateCollision();
+    this._ghost.moveTo(roundToGrid(input.grid, true));
   }
 
   canEnd(): boolean {
-    return !this._hasCollision;
+    return !this._ghost.hasCollision;
   }
 
   onEnd(): void {
@@ -71,27 +59,20 @@ export class ComponentPlacementSession implements DragSession {
         getStaticDI(TranslationService).translate('editor.circularDependency'),
         'ComponentPlacementSession'
       );
-      this._component.destroy({ children: true });
-      this.dragLayer.position.set(0, 0);
+      this._ghost.destroy();
       return;
     }
 
-    this._component.position.set(
-      this.dragLayer.position.x,
-      this.dragLayer.position.y
-    );
-    this.dragLayer.position.set(0, 0);
-
     // Splits any wire whose interior passes under one of the placed component's ports.
     const { toAdd, toRemove } = this.project.computeIntegration({
-      addedComponentPorts: this._component.connectionPoints
+      addedComponentPorts: this._ghost.component.connectionPoints
     });
 
     const action = new ActionContainer();
     if (toRemove.length > 0) {
       action.add(new RemoveWiresAction(...toRemove));
     }
-    action.add(new AddComponentsAction(this._component));
+    action.add(new AddComponentsAction(this._ghost.component));
     if (toAdd.length > 0) {
       action.add(new AddWiresAction(...toAdd));
     }
@@ -101,7 +82,7 @@ export class ComponentPlacementSession implements DragSession {
       'ComponentPlacementSession'
     );
 
-    this._component.destroy({ children: true });
+    this._ghost.destroy();
   }
 
   onCancel(): void {
@@ -109,50 +90,7 @@ export class ComponentPlacementSession implements DragSession {
       'cancelled placement: nothing committed',
       'ComponentPlacementSession'
     );
-    this._component.destroy({ children: true });
-    this.dragLayer.position.set(0, 0);
-  }
-
-  private _boundsWorld(): Rectangle {
-    const b = this._component.gridBounds;
-    return new Rectangle(
-      this.dragLayer.position.x + b.x,
-      this.dragLayer.position.y + b.y,
-      b.width,
-      b.height
-    );
-  }
-
-  private _bodyBoundsWorld(): Rectangle {
-    const b = this._component.bodyGridBounds;
-    return new Rectangle(
-      this.dragLayer.position.x + b.x,
-      this.dragLayer.position.y + b.y,
-      b.width,
-      b.height
-    );
-  }
-
-  private _updateCollision(): void {
-    const collision =
-      this.project.hasComponentCollision(
-        this._boundsWorld(),
-        this._bodyBoundsWorld()
-      ) ||
-      this.project.hasComponentBodyWireCollision(
-        this._bodyBoundsWorld(),
-        new Set(),
-        this._component.ignoresWireCollision
-      );
-    if (collision === this._hasCollision) return;
-    this._hasCollision = collision;
-    // Tint this._component directly (not dragLayer) to avoid multiplying
-    // with the container's own tint, which would yield the wrong colour.
-    if (collision) {
-      this._component.tint = getStaticDI(ThemingService).currentTheme().invalid;
-    } else {
-      this._component.refreshTint();
-    }
+    this._ghost.destroy();
   }
 
   /**

@@ -67,7 +67,8 @@ describe('PointerController', () => {
       move: vi.fn(),
       up: vi.fn(),
       cancel: vi.fn(),
-      hover: vi.fn()
+      hover: vi.fn(),
+      leave: vi.fn()
     };
     controller = new PointerController({
       canvas,

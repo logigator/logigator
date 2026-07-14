@@ -25,15 +25,18 @@ export class FloatingLayer extends Container {
   >();
 
   // Ghost bubble shown under the cursor while the wire tool hovers a port,
-  // previewing the negation the next tap would toggle. Lazily created, hidden
-  // when no port is in range.
+  // previewing the negation the next tap would toggle: translucent for the
+  // bubble a tap would add, opaque invalid-tinted over the existing bubble a
+  // tap would remove. Lazily created, hidden when no port is in range.
   private _negationHoverGhost: Graphics | null = null;
 
   // Ghost shown while the wire tool hovers a toggleable wire connection:
   // 'split' previews the CP dot a tap would create, 'join' tints the existing
-  // dot red for removal. Lazily created, redrawn per kind/zoom.
+  // dot the invalid color for removal. Lazily created, redrawn per kind/zoom
+  // (the drawn zoom is tracked so a show after zooming while hidden redraws).
   private _connectionGhost: Graphics | null = null;
   private _connectionGhostKind: 'join' | 'split' | null = null;
+  private _connectionGhostScale: number | null = null;
 
   // Persistent grab rect over the committed selection (the drag target after
   // the marquee is released). Lazily created; styled like the live marquee so
@@ -77,18 +80,26 @@ export class FloatingLayer extends Container {
   /**
    * Shows the negation preview bubble pinned to a grid-space body-edge anchor,
    * matching the real bubble: tangent-pivoted, rotated with the component, and
-   * grown outward at the current zoom's size.
+   * grown outward at the current zoom's size. `willRemove` marks a port whose
+   * bubble the next tap would remove: the ghost then covers the existing
+   * bubble opaquely in the invalid color instead of previewing a new one.
    */
   public showNegationGhost(
     anchor: Point,
     side: PortSide,
-    rotation: number
+    rotation: number,
+    willRemove: boolean
   ): void {
     const ghost = this._ensureNegationHoverGhost();
     ghost.position.copyFrom(anchor);
     ghost.pivot.set(side === 'in' ? 0.5 : -0.5, 0);
     ghost.rotation = rotation;
     this._sizeNegationGhost(ghost, this._currentScale);
+    // The context's fill is white, so the tint IS the ghost's color.
+    ghost.tint = willRemove
+      ? getStaticDI(ThemingService).currentTheme().invalid
+      : 0xffffff;
+    ghost.alpha = willRemove ? 1 : 0.5;
     ghost.visible = true;
   }
 
@@ -100,13 +111,18 @@ export class FloatingLayer extends Container {
 
   /**
    * Shows the connection-toggle preview at a half-grid point: 'split' is the
-   * translucent CP dot a tap would create, 'join' tints the existing dot red
-   * for the removal a tap would perform.
+   * translucent CP dot a tap would create, 'join' tints the existing dot the
+   * invalid color for the removal a tap would perform.
    */
   public showConnectionGhost(p: PointData, kind: 'join' | 'split'): void {
     const ghost = this._ensureConnectionGhost();
     ghost.position.copyFrom(p);
-    if (this._connectionGhostKind !== kind) {
+    // The zoom may have changed while the ghost was hidden (updateScale only
+    // redraws a visible ghost), so a stale drawn scale forces a redraw too.
+    if (
+      this._connectionGhostKind !== kind ||
+      this._connectionGhostScale !== this._currentScale
+    ) {
       this._connectionGhostKind = kind;
       this._drawConnectionGhost(ghost, kind, this._currentScale);
     }
@@ -188,7 +204,7 @@ export class FloatingLayer extends Container {
   private _ensureNegationHoverGhost(): Graphics {
     if (!this._negationHoverGhost) {
       const ghost = new Graphics();
-      ghost.alpha = 0.5;
+      // Tint/alpha are per-show (add vs remove preview).
       // Above components/wires since the floating layer is the top child of
       // gridSpace; shares its grid-unit coordinate space.
       this.addChild(ghost);
@@ -210,7 +226,7 @@ export class FloatingLayer extends Container {
   // CP-curve sizing at the current zoom (see connection-point.ts
   // scaleForScale). Same square as a real CP dot — 'split' previews the dot a
   // tap would create (translucent), 'join' covers the existing dot in the
-  // scissor red (reads as the dot tinted for removal).
+  // invalid color (reads as the dot tinted for removal).
   private _drawConnectionGhost(
     ghost: Graphics,
     kind: 'join' | 'split',
@@ -221,7 +237,8 @@ export class FloatingLayer extends Container {
     const half = size / 2;
     ghost.clear();
     ghost.rect(-half, -half, size, size);
-    ghost.fill(kind === 'split' ? theme.wire : theme.scissorRect);
+    ghost.fill(kind === 'split' ? theme.wire : theme.invalid);
     ghost.alpha = kind === 'split' ? 0.5 : 1;
+    this._connectionGhostScale = scale;
   }
 }

@@ -42,6 +42,8 @@ export interface PointerToolTarget {
   cancel(): void;
   /** Moves while no pointer is pressed (e.g. the negation-mode port preview). */
   hover?(input: PointerInput): void;
+  /** The pointer left the canvas — hover previews stop applying. */
+  leave?(): void;
 }
 
 export interface PointerControllerOptions {
@@ -103,6 +105,9 @@ export class PointerController {
       signal
     });
     canvas.addEventListener('pointercancel', (e) => this.onPointerCancel(e), {
+      signal
+    });
+    canvas.addEventListener('pointerleave', () => this.onPointerLeave(), {
       signal
     });
     // Non-passive: preventDefault must stop the page from scrolling/zooming.
@@ -177,6 +182,15 @@ export class PointerController {
   public onPointerCancel(e: PointerEventLike): void {
     if (this._endPointer(e) !== 'tool') return;
     this.opts.tool.cancel();
+  }
+
+  /**
+   * The pointer left the canvas. While a pointer is captured this doesn't
+   * fire for the geometric boundary, so it only ends hover previews — an
+   * in-flight drag keeps streaming through move/up.
+   */
+  public onPointerLeave(): void {
+    this.opts.tool.leave?.();
   }
 
   /**
