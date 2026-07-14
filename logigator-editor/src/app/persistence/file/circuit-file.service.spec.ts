@@ -3,7 +3,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
-import { ToastService } from '@logigator/ui';
 import { TranslationService } from '../../translation/translation.service';
 import { configureTestBed } from '../../../testing/configure-test-bed';
 import { CircuitFileService } from './circuit-file.service';
@@ -77,7 +76,6 @@ describe('CircuitFileService', () => {
   let provider: ComponentProviderService;
   let registry: CustomComponentRegistry;
   let logging: LoggingService;
-  let messageService: ToastService;
 
   beforeEach(() => {
     // Suppress console output from expected warning/error paths exercised by the tests.
@@ -94,7 +92,6 @@ describe('CircuitFileService', () => {
     provider = TestBed.inject(ComponentProviderService);
     registry = TestBed.inject(CustomComponentRegistry);
     logging = TestBed.inject(LoggingService);
-    messageService = TestBed.inject(ToastService);
   });
 
   // Build a Project from legacy positional elements via the server-read decode
@@ -351,7 +348,6 @@ describe('CircuitFileService', () => {
 
     it('loads a legacy file custom component from its inline definition', () => {
       const warnSpy = vi.spyOn(logging, 'warn');
-      const toastSpy = vi.spyOn(messageService, 'add');
       // The exact old-editor local-file shape: the sub-circuit definition lives
       // in the top-level `components` array, and the body references it by id.
       const legacy = JSON.stringify({
@@ -382,11 +378,11 @@ describe('CircuitFileService', () => {
         ]
       });
 
-      const { components } = service.fromJson(legacy);
+      const { components, skippedCustom } = service.fromJson(legacy);
 
       // Both the AND and the custom instance load — nothing skipped.
       expect(components.length).toBe(2);
-      expect(toastSpy).not.toHaveBeenCalled();
+      expect(skippedCustom).toBe(0);
       expect(warnSpy).not.toHaveBeenCalled();
       const custom = components.find(
         (c) => c.config.type >= CUSTOM_TYPE_ID_BASE
@@ -480,9 +476,8 @@ describe('CircuitFileService', () => {
       );
     });
 
-    it('drops a custom whose snapshot is missing and warns the user', () => {
+    it('drops a custom whose snapshot is missing and counts the skip', () => {
       const warnSpy = vi.spyOn(logging, 'warn');
-      const toastSpy = vi.spyOn(messageService, 'add');
       // A custom-range body element with no matching definition — an old
       // reference-only / client-stripped document.
       const file = JSON.stringify({
@@ -496,7 +491,7 @@ describe('CircuitFileService', () => {
         definitions: []
       });
 
-      const { components } = service.fromJson(file);
+      const { components, skippedCustom } = service.fromJson(file);
 
       expect(components.length).toBe(1);
       expect(warnSpy).toHaveBeenCalledWith(
@@ -505,11 +500,9 @@ describe('CircuitFileService', () => {
         ),
         'CircuitFileService'
       );
-      // Unlike unknown built-ins, a missing custom is surfaced to the user.
-      expect(toastSpy).toHaveBeenCalledTimes(1);
-      expect(toastSpy).toHaveBeenCalledWith(
-        expect.objectContaining({ severity: 'warn' })
-      );
+      // Unlike unknown built-ins, a missing custom is counted so the load
+      // entry points can surface it to the user.
+      expect(skippedCustom).toBe(1);
     });
 
     it('does not alias a missing custom snapshot to an unrelated session type', () => {
@@ -519,7 +512,6 @@ describe('CircuitFileService', () => {
       const occupant = registry.createMaster({ symbol: 'Z' }, 'browser');
       expect(occupant).toBe(CUSTOM_TYPE_ID_BASE);
       vi.spyOn(logging, 'warn');
-      vi.spyOn(messageService, 'add');
 
       const file = JSON.stringify({
         version: 1,

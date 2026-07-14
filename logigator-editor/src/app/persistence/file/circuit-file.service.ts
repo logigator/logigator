@@ -6,9 +6,7 @@ import { ComponentProviderService } from '../../components/component-provider.se
 import { CUSTOM_TYPE_ID_BASE } from '../../components/component-type.enum';
 import { instantiateBody } from '../circuit-builder';
 import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
-import { TranslationService } from '../../translation/translation.service';
 import { LoggingService } from '../../logging/logging.service';
-import { ToastService } from '../../logging/toast.service';
 import { MigrationContext } from './migrations/migration';
 import { migrateToCurrent } from './circuit-file-migrator';
 import { InvalidFileError } from './circuit-file.errors';
@@ -53,8 +51,6 @@ export class CircuitFileService {
   private readonly componentProvider = inject(ComponentProviderService);
   private readonly registry = inject(CustomComponentRegistry);
   private readonly logging = inject(LoggingService);
-  private readonly toast = inject(ToastService);
-  private readonly translation = inject(TranslationService);
 
   private get migrationContext(): MigrationContext {
     return {
@@ -121,6 +117,7 @@ export class CircuitFileService {
     name: string;
     components: Component[];
     wires: Wire[];
+    skippedCustom: number;
   } {
     const file = migrateToCurrent(data, this.migrationContext);
     const name = typeof file.name === 'string' ? file.name : 'Untitled';
@@ -132,28 +129,17 @@ export class CircuitFileService {
    * shared file→session-body path ({@link _toSessionBody}) followed by the
    * shared instance builder (`instantiateBody`). A custom whose snapshot is
    * missing (an old reference-only or client-stripped server document) is
-   * dropped and counted, then surfaced as one aggregated toast — the user sees
-   * that data was skipped, but the rest loads. Elements carry no id, so fresh
-   * ids are allocated on construction.
+   * dropped and reported via `skippedCustom` — the codec owns no UI, so the
+   * load entry points surface the count to the user (`warnSkippedCustoms`).
+   * Elements carry no id, so fresh ids are allocated on construction.
    */
   deserialize(file: CurrentCircuitFile): {
     components: Component[];
     wires: Wire[];
+    skippedCustom: number;
   } {
     const { body, skippedCustom } = this._toSessionBody(file);
-
-    if (skippedCustom > 0) {
-      this.toast.warn(
-        skippedCustom === 1
-          ? this.translation.translate('persistence.skippedCustomOne')
-          : this.translation.translate('persistence.skippedCustomMany', {
-              count: skippedCustom
-            }),
-        'CircuitFileService'
-      );
-    }
-
-    return instantiateBody(this.componentProvider, body);
+    return { ...instantiateBody(this.componentProvider, body), skippedCustom };
   }
 
   /** Convenience: parse JSON + migrate + deserialize into editor instances. */
@@ -161,6 +147,7 @@ export class CircuitFileService {
     name: string;
     components: Component[];
     wires: Wire[];
+    skippedCustom: number;
   } {
     let parsed: unknown;
     try {

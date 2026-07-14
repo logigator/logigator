@@ -23,6 +23,7 @@ import { CustomComponentRegistry } from '../../components/custom/custom-componen
 import { ComponentProviderService } from '../../components/component-provider.service';
 import { deriveSummary } from '../../custom-component/definition-derivation';
 import { buildProject, instantiateBody } from '../circuit-builder';
+import { warnSkippedCustoms } from '../load-warnings';
 import type { SerializedCircuitBody } from '../serialized-circuit';
 import { AuthRequiredError, formatHttpError } from '../persistence-errors';
 import { BoardSnapshotService } from '../../rendering/board-snapshot.service';
@@ -85,8 +86,14 @@ export class ServerPersistenceGateway {
 
   async loadProject(uuid: string): Promise<Project> {
     const detail = await firstValueFrom(this.projectApi.open(uuid));
-    const { components, wires } = this.circuitFile.decode(
+    const { components, wires, skippedCustom } = this.circuitFile.decode(
       server.toCircuitFileV0(detail)
+    );
+    warnSkippedCustoms(
+      this.toast,
+      this.translation,
+      skippedCustom,
+      'ServerPersistenceGateway'
     );
     const project = buildProject(components, wires);
 
@@ -252,8 +259,14 @@ export class ServerPersistenceGateway {
     linkId: string
   ): Promise<{ project: Project; type: 'project' | 'comp' }> {
     const detail = await firstValueFrom(this.shareApi.get(linkId));
-    const { components, wires } = this.circuitFile.decode(
+    const { components, wires, skippedCustom } = this.circuitFile.decode(
       server.toCircuitFileV0(detail)
+    );
+    warnSkippedCustoms(
+      this.toast,
+      this.translation,
+      skippedCustom,
+      'ServerPersistenceGateway'
     );
     const project = buildProject(components, wires);
 
@@ -421,8 +434,14 @@ export class ServerPersistenceGateway {
     uuid: string
   ): Promise<{ project: Project; masterTypeId: number }> {
     const detail = await firstValueFrom(this.componentApi.open(uuid));
-    const { components, wires } = this.circuitFile.decode(
+    const { components, wires, skippedCustom } = this.circuitFile.decode(
       this._componentDetailToV0(detail)
+    );
+    warnSkippedCustoms(
+      this.toast,
+      this.translation,
+      skippedCustom,
+      'ServerPersistenceGateway'
     );
     const project = buildProject(components, wires);
 

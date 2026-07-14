@@ -15,6 +15,7 @@ import { Project } from '../project/project';
 import { ProjectElement } from '../api/models/project-element';
 import { environment } from '../../environments/environment';
 import { LogLevel } from '../logging/log-level.enum';
+import { ToastService } from '../logging/toast.service';
 import { InvalidFileError } from './file/circuit-file.errors';
 import { encodeLgix } from './file/lgix-container';
 import { BrowserProjectStore } from './browser/browser-project.store';
@@ -1009,6 +1010,28 @@ describe('PersistenceService', () => {
         service.importProjectFromJson('{not json')
       ).rejects.toThrowError(InvalidFileError);
       expect(browserStore.records.size).toBe(0);
+    });
+
+    it('importProjectFromJson warns the user once when customs are skipped', async () => {
+      const toast = TestBed.inject(ToastService);
+      const warnSpy = vi.spyOn(toast, 'warn').mockImplementation(() => {});
+      // A custom-range element with no embedded definition — its snapshot is
+      // missing, so the element drops and the skip must surface as one toast.
+      const content = JSON.stringify({
+        version: 1,
+        name: 'Partial',
+        components: [
+          { type: CUSTOM_TYPE_ID_BASE, pos: [0, 0], options: { direction: 0 } },
+          { type: 1, pos: [2, 3], options: {} }
+        ],
+        wires: '',
+        definitions: []
+      });
+
+      const project = await service.importProjectFromJson(content);
+
+      expect(Array.from(project.components).length).toBe(1);
+      expect(warnSpy).toHaveBeenCalledTimes(1);
     });
 
     it('refuses to export a borrowed share to a file', async () => {

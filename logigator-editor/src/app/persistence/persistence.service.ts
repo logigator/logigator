@@ -34,6 +34,7 @@ import {
 import { CloudSessionService } from '../user/cloud-session.service';
 import { ServerPersistenceGateway } from './server/server-persistence.gateway';
 import { downloadBlob } from '../utils/download';
+import { warnSkippedCustoms } from './load-warnings';
 import { decodeLgix, encodeLgix, hasLgixMagic } from './file/lgix-container';
 import { ProjectDump, PROJECT_DUMP_VERSION } from './dump/project-dump.types';
 import { deserializeAction } from '../actions/action-codec';
@@ -423,7 +424,14 @@ export class PersistenceService {
    * component types are dropped silently (warning only).
    */
   async importProjectFromJson(content: string): Promise<Project> {
-    const { name, components, wires } = this.circuitFile.fromJson(content);
+    const { name, components, wires, skippedCustom } =
+      this.circuitFile.fromJson(content);
+    warnSkippedCustoms(
+      this.toast,
+      this.translation,
+      skippedCustom,
+      'PersistenceService'
+    );
     const project = buildProject(components, wires);
     await this._persistImportedProject(project, name);
     return project;
@@ -519,7 +527,15 @@ export class PersistenceService {
       throw new Error('Not a Project Dump file');
     }
 
-    const { name, components, wires } = this.circuitFile.decode(dump.project);
+    const { name, components, wires, skippedCustom } = this.circuitFile.decode(
+      dump.project
+    );
+    warnSkippedCustoms(
+      this.toast,
+      this.translation,
+      skippedCustom,
+      'PersistenceService'
+    );
 
     const idsMatch =
       components.length === dump.componentIds?.length &&
@@ -647,8 +663,13 @@ export class PersistenceService {
     if (!record) {
       throw new Error(`No browser project with id ${id}`);
     }
-    const { name, components, wires } = this.circuitFile.fromJson(
-      record.content
+    const { name, components, wires, skippedCustom } =
+      this.circuitFile.fromJson(record.content);
+    warnSkippedCustoms(
+      this.toast,
+      this.translation,
+      skippedCustom,
+      'PersistenceService'
     );
     const project = buildProject(components, wires);
 
@@ -1050,7 +1071,15 @@ export class PersistenceService {
     if (!record) {
       throw new Error(`No browser component with id ${id}`);
     }
-    const { components, wires } = this.circuitFile.fromJson(record.content);
+    const { components, wires, skippedCustom } = this.circuitFile.fromJson(
+      record.content
+    );
+    warnSkippedCustoms(
+      this.toast,
+      this.translation,
+      skippedCustom,
+      'PersistenceService'
+    );
     const project = buildProject(components, wires);
 
     const masterTypeId =
@@ -1226,7 +1255,14 @@ export class PersistenceService {
     content: string,
     fn: (project: Project) => Promise<T>
   ): Promise<T> {
-    const { components, wires } = this.circuitFile.fromJson(content);
+    const { components, wires, skippedCustom } =
+      this.circuitFile.fromJson(content);
+    warnSkippedCustoms(
+      this.toast,
+      this.translation,
+      skippedCustom,
+      'PersistenceService'
+    );
     const temp = buildProject(components, wires);
     try {
       return await fn(temp);
