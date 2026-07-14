@@ -8,6 +8,7 @@ import { BoardCompilerService } from '../simulation/compiler/board-compiler.serv
 import { SimulationService } from '../simulation/simulation.service';
 import { RendererService } from '../rendering/renderer.service';
 import { PersistenceService } from '../persistence/persistence.service';
+import { ProjectDumpService } from '../persistence/dump/project-dump.service';
 import { ToastService } from '../logging/toast.service';
 import { ClientInfoService } from '../bug-report/client-info.service';
 import { pickTextFile } from '../utils/file-picker';
@@ -26,6 +27,7 @@ export class DebugMenuService {
   private readonly simulation = inject(SimulationService);
   private readonly rendererService = inject(RendererService);
   private readonly persistence = inject(PersistenceService);
+  private readonly projectDump = inject(ProjectDumpService);
   private readonly toast = inject(ToastService);
   private readonly clientInfo = inject(ClientInfoService);
 
@@ -162,14 +164,14 @@ export class DebugMenuService {
       this.toast.warn('No active project to dump.', 'DebugMenuService');
       return;
     }
-    this.persistence.exportProjectDumpToFile(project);
+    this.projectDump.exportDumpToFile(project);
   }
 
   private importDump(): void {
     void pickTextFile('.json,application/json').then((content) => {
       if (content === null) return;
-      this.persistence
-        .importProjectDump(content)
+      this.projectDump
+        .importDump(content)
         .then(() =>
           this.toast.success('Project dump imported.', 'DebugMenuService')
         )

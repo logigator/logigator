@@ -8,6 +8,7 @@ import { BugReportService } from './bug-report.service';
 import { ClientInfoService } from './client-info.service';
 import { ReportErrorApiService } from '../api/services/report-error-api.service';
 import { PersistenceService } from '../persistence/persistence.service';
+import { ProjectDumpService } from '../persistence/dump/project-dump.service';
 import { ProjectService } from '../project/project.service';
 import { LoggingService } from '../logging/logging.service';
 import { ToastService } from '../logging/toast.service';
@@ -43,7 +44,11 @@ describe('BugReportService', () => {
         { provide: ReportErrorApiService, useValue: { report } },
         {
           provide: PersistenceService,
-          useValue: { buildProjectDump: () => ({ dumpVersion: 1 }) }
+          useValue: { exportProjectToJson: () => '{}' }
+        },
+        {
+          provide: ProjectDumpService,
+          useValue: { buildDump: () => ({ dumpVersion: 1 }) }
         },
         { provide: ProjectService, useValue: { activeProject: () => ({}) } },
         {

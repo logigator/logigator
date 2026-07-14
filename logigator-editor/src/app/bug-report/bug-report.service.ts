@@ -5,6 +5,7 @@ import { TranslationService } from '../translation/translation.service';
 import { ReportErrorApiService } from '../api/services/report-error-api.service';
 import type { ReportErrorRequest } from '../api/models/report-error';
 import { PersistenceService } from '../persistence/persistence.service';
+import { ProjectDumpService } from '../persistence/dump/project-dump.service';
 import { ProjectService } from '../project/project.service';
 import { LoggingService } from '../logging/logging.service';
 import { ToastService } from '../logging/toast.service';
@@ -48,6 +49,7 @@ export class BugReportService {
   private readonly translation = inject(TranslationService);
   private readonly api = inject(ReportErrorApiService);
   private readonly persistence = inject(PersistenceService);
+  private readonly projectDump = inject(ProjectDumpService);
   private readonly projectService = inject(ProjectService);
   private readonly clientInfo = inject(ClientInfoService);
   private readonly logging = inject(LoggingService);
@@ -162,7 +164,7 @@ export class BugReportService {
     if (!project) return undefined;
 
     try {
-      const dump = JSON.stringify(this.persistence.buildProjectDump(project));
+      const dump = JSON.stringify(this.projectDump.buildDump(project));
       if (dump.length <= DUMP_MAX) return dump;
       this.logging.warn(
         `Project dump too large (${dump.length} bytes); attaching the circuit only.`,

@@ -16,6 +16,7 @@ import { ProjectElement } from '../api/models/project-element';
 import { environment } from '../../environments/environment';
 import { LogLevel } from '../logging/log-level.enum';
 import { ToastService } from '../logging/toast.service';
+import { ProjectDumpService } from './dump/project-dump.service';
 import { InvalidFileError } from './file/circuit-file.errors';
 import { encodeLgix } from './file/lgix-container';
 import { BrowserProjectStore } from './browser/browser-project.store';
@@ -1088,6 +1089,12 @@ describe('PersistenceService', () => {
   });
 
   describe('Project Dump', () => {
+    let dumpService: ProjectDumpService;
+
+    beforeEach(() => {
+      dumpService = TestBed.inject(ProjectDumpService);
+    });
+
     it('round-trips element ids and the undo history', async () => {
       const source = await service.importProjectFromJson(
         JSON.stringify({
@@ -1114,8 +1121,8 @@ describe('PersistenceService', () => {
       const sourceComponentIds = Array.from(source.components).map((c) => c.id);
       const sourceWireIds = Array.from(source.wires).map((w) => w.id);
 
-      const dumpJson = JSON.stringify(service.buildProjectDump(source));
-      const restored = await service.importProjectDump(dumpJson);
+      const dumpJson = JSON.stringify(dumpService.buildDump(source));
+      const restored = await dumpService.importDump(dumpJson);
 
       // Ids re-stamped exactly (the native format drops them on load); the
       // encoders reorder elements, so compare as sets — the geometry-level
@@ -1167,8 +1174,8 @@ describe('PersistenceService', () => {
         Array.from(source.components).map((c) => [compGeometry(c), c.id])
       );
 
-      const restored = await service.importProjectDump(
-        JSON.stringify(service.buildProjectDump(source))
+      const restored = await dumpService.importDump(
+        JSON.stringify(dumpService.buildDump(source))
       );
 
       const restoredWires = Array.from(restored.wires);
@@ -1210,9 +1217,9 @@ describe('PersistenceService', () => {
       );
 
       // Tamper with the saved id list so it no longer lines up with the body.
-      const dump = service.buildProjectDump(source);
+      const dump = dumpService.buildDump(source);
       dump.componentIds = [...dump.componentIds, 999];
-      const restored = await service.importProjectDump(JSON.stringify(dump));
+      const restored = await dumpService.importDump(JSON.stringify(dump));
 
       expect(Array.from(restored.components).length).toBe(1);
       expect(restored.actionManager.history.length).toBe(0);
