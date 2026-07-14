@@ -4,6 +4,7 @@ import { Location } from '@angular/common';
 import { Rectangle } from 'pixi.js';
 import { AppComponent } from './app.component';
 import { PersistenceService } from './persistence/persistence.service';
+import { ComponentLibraryService } from './custom-component/component-library.service';
 import { configureTestBed } from '../testing/configure-test-bed';
 import { ProjectService } from './project/project.service';
 import { ProjectMetadataStore } from './persistence/project-metadata.store';
@@ -42,11 +43,16 @@ describe('AppComponent', () => {
         {
           provide: PersistenceService,
           useValue: {
-            preloadBrowserMasters: vi.fn().mockResolvedValue(undefined),
-            preloadComponentIdAliases: vi.fn().mockResolvedValue(undefined),
-            preloadServerMasters: vi.fn().mockResolvedValue(undefined),
             createAndSetEmptyProject: vi.fn(),
             registerOpenProject: vi.fn()
+          }
+        },
+        {
+          provide: ComponentLibraryService,
+          useValue: {
+            preloadBrowserMasters: vi.fn().mockResolvedValue(undefined),
+            preloadComponentIdAliases: vi.fn().mockResolvedValue(undefined),
+            preloadServerMasters: vi.fn().mockResolvedValue(undefined)
           }
         }
       ],

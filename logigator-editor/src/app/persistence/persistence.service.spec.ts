@@ -17,6 +17,7 @@ import { environment } from '../../environments/environment';
 import { LogLevel } from '../logging/log-level.enum';
 import { ToastService } from '../logging/toast.service';
 import { ProjectDumpService } from './dump/project-dump.service';
+import { ComponentLibraryService } from '../custom-component/component-library.service';
 import { InvalidFileError } from './file/circuit-file.errors';
 import { encodeLgix } from './file/lgix-container';
 import { BrowserProjectStore } from './browser/browser-project.store';
@@ -143,6 +144,7 @@ function shareDetailResponse(
 
 describe('PersistenceService', () => {
   let service: PersistenceService;
+  let library: ComponentLibraryService;
   let metadataStore: ProjectMetadataStore;
   let projectService: ProjectService;
   let httpMock: HttpTestingController;
@@ -189,6 +191,7 @@ describe('PersistenceService', () => {
       }
     ]);
     service = TestBed.inject(PersistenceService);
+    library = TestBed.inject(ComponentLibraryService);
     metadataStore = TestBed.inject(ProjectMetadataStore);
     projectService = TestBed.inject(ProjectService);
     registry = TestBed.inject(CustomComponentRegistry);
@@ -461,7 +464,7 @@ describe('PersistenceService', () => {
       );
       const snapshot = registry.snapshot(masterTypeId);
 
-      service.clearServerMasters();
+      library.clearServerMasters();
 
       expect(registry.getDefinition(masterTypeId)).toBeUndefined();
       expect(registry.masterTypeIdForId('cloud-1')).toBeUndefined();
@@ -494,7 +497,7 @@ describe('PersistenceService', () => {
         isPublic: false
       });
 
-      service.clearServerMasters();
+      library.clearServerMasters();
 
       expect(registry.getDefinition(openTypeId)).toBeDefined();
       expect(registry.getDefinition(closedTypeId)).toBeUndefined();
@@ -1926,7 +1929,7 @@ describe('PersistenceService', () => {
         content: circuitFile.toJson(new Project(), 'Comp')
       });
 
-      await service.preloadBrowserMasters();
+      await library.preloadBrowserMasters();
 
       // No browser duplicate: the old id still resolves through the alias to the
       // single (server) master, instead of a freshly-registered browser dupe.
@@ -2133,7 +2136,7 @@ describe('PersistenceService', () => {
       });
       expect(registry.resolveMaster(snapType)).toBeUndefined();
 
-      const masterId = await service.restoreOrphanToLibrary(snapType);
+      const masterId = await library.restoreOrphanToLibrary(snapType);
 
       expect(masterId).toBe('lost-local');
       // Re-linked: the placed snapshot now resolves to the restored master.
@@ -2147,7 +2150,7 @@ describe('PersistenceService', () => {
       const snapType = ingestOrphan(undefined);
       expect(registry.resolveMaster(snapType)).toBeUndefined();
 
-      const masterId = await service.restoreOrphanToLibrary(snapType);
+      const masterId = await library.restoreOrphanToLibrary(snapType);
 
       expect(masterId).toBeTruthy();
       // The snapshot was re-pointed at the fresh master, so it resolves now.
@@ -2160,12 +2163,12 @@ describe('PersistenceService', () => {
         'browser'
       );
       const snapType = registry.snapshot(master).typeId;
-      expect(await service.restoreOrphanToLibrary(snapType)).toBeNull();
+      expect(await library.restoreOrphanToLibrary(snapType)).toBeNull();
     });
 
     it('preloadServerMasters registers cloud masters from the list alone (no per-component fetch)', async () => {
       const tick = () => new Promise((r) => setTimeout(r, 0));
-      const promise = service.preloadServerMasters();
+      const promise = library.preloadServerMasters();
 
       await tick();
       const list = httpMock.expectOne(COMPONENTS_URL);
@@ -2214,7 +2217,7 @@ describe('PersistenceService', () => {
       );
       expect(registry.getDefinition(masterTypeId)?.circuit).toBeUndefined();
 
-      const promise = service.ensureServerMasterCircuit(masterTypeId);
+      const promise = library.ensureServerMasterCircuit(masterTypeId);
       await tick();
       const open = httpMock.expectOne(COMPONENT_URL('srv-2'));
       expect(open.request.method).toBe('GET');
@@ -2253,7 +2256,7 @@ describe('PersistenceService', () => {
         { id: 'local-x', symbol: 'X' },
         'browser'
       );
-      await service.ensureServerMasterCircuit(masterTypeId);
+      await library.ensureServerMasterCircuit(masterTypeId);
       // verify() in afterEach asserts no HTTP request was made.
     });
 
@@ -2265,7 +2268,7 @@ describe('PersistenceService', () => {
       );
 
       // First use (place-time): one GET populates the cache.
-      const ensure = service.ensureServerMasterCircuit(masterTypeId);
+      const ensure = library.ensureServerMasterCircuit(masterTypeId);
       await tick();
       httpMock
         .expectOne(COMPONENT_URL('srv-cache'))
@@ -2288,7 +2291,7 @@ describe('PersistenceService', () => {
         'server'
       );
 
-      const ensure = service.ensureServerMasterCircuit(masterTypeId);
+      const ensure = library.ensureServerMasterCircuit(masterTypeId);
       await tick();
       httpMock
         .expectOne(COMPONENT_URL('srv-inv'))
@@ -2318,7 +2321,7 @@ describe('PersistenceService', () => {
 
     it('preloadServerMasters is a silent no-op when signed out (list 401s)', async () => {
       const tick = () => new Promise((r) => setTimeout(r, 0));
-      const promise = service.preloadServerMasters();
+      const promise = library.preloadServerMasters();
 
       await tick();
       const list = httpMock.expectOne(COMPONENTS_URL);

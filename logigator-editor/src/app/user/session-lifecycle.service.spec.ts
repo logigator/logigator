@@ -7,6 +7,7 @@ import { DialogService } from '@logigator/ui';
 import { SessionLifecycleService } from './session-lifecycle.service';
 import { UserService } from './user.service';
 import { PersistenceService } from '../persistence/persistence.service';
+import { ComponentLibraryService } from '../custom-component/component-library.service';
 import { ProjectMetadataStore } from '../persistence/project-metadata.store';
 import { ProjectService } from '../project/project.service';
 import { CustomComponentService } from '../custom-component/custom-component.service';
@@ -31,11 +32,13 @@ describe('SessionLifecycleService', () => {
   let user: ReturnType<typeof signal<UserData | null>>;
   let logout: Mock;
   let persistence: {
+    createAndSetEmptyProject: Mock;
+    localDependenciesOfProject: Mock;
+  };
+  let componentLibrary: {
     preloadComponentIdAliases: Mock;
     preloadServerMasters: Mock;
     clearServerMasters: Mock;
-    createAndSetEmptyProject: Mock;
-    localDependenciesOfProject: Mock;
   };
   let uploadCoordinator: { promoteLocalDepsAndSave: Mock };
   let customComponents: { forceCloseComponent: Mock };
@@ -49,11 +52,13 @@ describe('SessionLifecycleService', () => {
     user = signal<UserData | null>(null);
     logout = vi.fn().mockResolvedValue(undefined);
     persistence = {
-      preloadComponentIdAliases: vi.fn().mockResolvedValue(undefined),
-      preloadServerMasters: vi.fn().mockResolvedValue(undefined),
-      clearServerMasters: vi.fn(),
       createAndSetEmptyProject: vi.fn(),
       localDependenciesOfProject: vi.fn().mockReturnValue([])
+    };
+    componentLibrary = {
+      preloadComponentIdAliases: vi.fn().mockResolvedValue(undefined),
+      preloadServerMasters: vi.fn().mockResolvedValue(undefined),
+      clearServerMasters: vi.fn()
     };
     uploadCoordinator = {
       promoteLocalDepsAndSave: vi.fn().mockResolvedValue(true)
@@ -69,6 +74,7 @@ describe('SessionLifecycleService', () => {
         useValue: { user, logout, sessionExpired: vi.fn() }
       },
       { provide: PersistenceService, useValue: persistence },
+      { provide: ComponentLibraryService, useValue: componentLibrary },
       { provide: UploadCoordinatorService, useValue: uploadCoordinator },
       { provide: CustomComponentService, useValue: customComponents },
       { provide: SimulationService, useValue: simulation },
@@ -103,33 +109,33 @@ describe('SessionLifecycleService', () => {
   describe('session transitions', () => {
     it('loads the cloud library when a user signs in (aliases first)', async () => {
       start();
-      expect(persistence.preloadServerMasters).not.toHaveBeenCalled();
+      expect(componentLibrary.preloadServerMasters).not.toHaveBeenCalled();
 
       user.set(makeUser('user-1'));
       TestBed.tick();
       await flush();
 
-      expect(persistence.preloadComponentIdAliases).toHaveBeenCalled();
-      expect(persistence.preloadServerMasters).toHaveBeenCalled();
+      expect(componentLibrary.preloadComponentIdAliases).toHaveBeenCalled();
+      expect(componentLibrary.preloadServerMasters).toHaveBeenCalled();
     });
 
     it('loads the cloud library for a session that already exists at startup', async () => {
       user.set(makeUser('user-1'));
       start();
       await flush();
-      expect(persistence.preloadServerMasters).toHaveBeenCalled();
+      expect(componentLibrary.preloadServerMasters).toHaveBeenCalled();
     });
 
     it('does not reload on a user-data refresh (same id)', async () => {
       user.set(makeUser('user-1'));
       start();
       await flush();
-      persistence.preloadServerMasters.mockClear();
+      componentLibrary.preloadServerMasters.mockClear();
 
       user.set({ ...makeUser('user-1'), username: 'renamed' });
       TestBed.tick();
       await flush();
-      expect(persistence.preloadServerMasters).not.toHaveBeenCalled();
+      expect(componentLibrary.preloadServerMasters).not.toHaveBeenCalled();
     });
 
     it('clears only the library on an external logout — the workspace is untouched', () => {
@@ -139,7 +145,7 @@ describe('SessionLifecycleService', () => {
       user.set(null);
       TestBed.tick();
 
-      expect(persistence.clearServerMasters).toHaveBeenCalled();
+      expect(componentLibrary.clearServerMasters).toHaveBeenCalled();
       expect(customComponents.forceCloseComponent).not.toHaveBeenCalled();
       expect(persistence.createAndSetEmptyProject).not.toHaveBeenCalled();
       expect(simulation.exit).not.toHaveBeenCalled();
@@ -149,7 +155,7 @@ describe('SessionLifecycleService', () => {
       user.set(makeUser('user-1'));
       start();
       await flush();
-      persistence.preloadServerMasters.mockClear();
+      componentLibrary.preloadServerMasters.mockClear();
 
       user.set(null);
       TestBed.tick();
@@ -157,8 +163,8 @@ describe('SessionLifecycleService', () => {
       TestBed.tick();
       await flush();
 
-      expect(persistence.clearServerMasters).toHaveBeenCalled();
-      expect(persistence.preloadServerMasters).toHaveBeenCalled();
+      expect(componentLibrary.clearServerMasters).toHaveBeenCalled();
+      expect(componentLibrary.preloadServerMasters).toHaveBeenCalled();
     });
   });
 
@@ -189,7 +195,7 @@ describe('SessionLifecycleService', () => {
       );
       expect(simulation.exit).toHaveBeenCalled();
       expect(persistence.createAndSetEmptyProject).toHaveBeenCalled();
-      expect(persistence.clearServerMasters).toHaveBeenCalled();
+      expect(componentLibrary.clearServerMasters).toHaveBeenCalled();
       expect(toast.success).toHaveBeenCalled();
     });
 
@@ -224,7 +230,7 @@ describe('SessionLifecycleService', () => {
         'Dirty Cloud'
       ]);
       expect(logout).not.toHaveBeenCalled();
-      expect(persistence.clearServerMasters).not.toHaveBeenCalled();
+      expect(componentLibrary.clearServerMasters).not.toHaveBeenCalled();
     });
 
     it('Discard logs out without saving', async () => {
@@ -280,7 +286,7 @@ describe('SessionLifecycleService', () => {
       await service.requestLogout();
 
       expect(logout).not.toHaveBeenCalled();
-      expect(persistence.clearServerMasters).not.toHaveBeenCalled();
+      expect(componentLibrary.clearServerMasters).not.toHaveBeenCalled();
       expect(metadataStore.isDirty(main)).toBe(true);
     });
 
@@ -292,7 +298,7 @@ describe('SessionLifecycleService', () => {
       await service.requestLogout();
 
       expect(toast.error).toHaveBeenCalled();
-      expect(persistence.clearServerMasters).not.toHaveBeenCalled();
+      expect(componentLibrary.clearServerMasters).not.toHaveBeenCalled();
       expect(persistence.createAndSetEmptyProject).not.toHaveBeenCalled();
     });
 

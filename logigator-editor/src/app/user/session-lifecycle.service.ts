@@ -6,6 +6,7 @@ import { UserService } from './user.service';
 import { sessionUserId } from '../api/models/user';
 import { CloudSessionService } from './cloud-session.service';
 import { PersistenceService } from '../persistence/persistence.service';
+import { ComponentLibraryService } from '../custom-component/component-library.service';
 import {
   ProjectMetadata,
   ProjectMetadataStore
@@ -51,6 +52,7 @@ export class SessionLifecycleService {
   private readonly userService = inject(UserService);
   private readonly cloudSession = inject(CloudSessionService);
   private readonly persistence = inject(PersistenceService);
+  private readonly componentLibrary = inject(ComponentLibraryService);
   private readonly metadataStore = inject(ProjectMetadataStore);
   private readonly projectService = inject(ProjectService);
   private readonly customComponents = inject(CustomComponentService);
@@ -127,8 +129,8 @@ export class SessionLifecycleService {
    */
   private async _onSessionStarted(): Promise<void> {
     try {
-      await this.persistence.preloadComponentIdAliases();
-      await this.persistence.preloadServerMasters();
+      await this.componentLibrary.preloadComponentIdAliases();
+      await this.componentLibrary.preloadServerMasters();
       this.logging.info('Cloud library loaded', 'SessionLifecycleService');
     } catch (err) {
       this.toast.warn(
@@ -145,7 +147,7 @@ export class SessionLifecycleService {
    * workspace untouched; the initiated flow layers its reset on top.
    */
   private _onSessionEnded(): void {
-    this.persistence.clearServerMasters();
+    this.componentLibrary.clearServerMasters();
   }
 
   /**
@@ -170,7 +172,7 @@ export class SessionLifecycleService {
       this.persistence.createAndSetEmptyProject();
     }
 
-    this.persistence.clearServerMasters();
+    this.componentLibrary.clearServerMasters();
   }
 
   /**

@@ -19,10 +19,9 @@ import { Project } from '../project/project';
 import { ProjectSummary } from '../api/models/project';
 import { Page } from '../api/models/shared';
 import { CustomComponentRegistry } from '../components/custom/custom-component-registry.service';
-import { CustomComponentDefinition } from '../components/custom/custom-component-definition.model';
 import { ComponentProviderService } from '../components/component-provider.service';
 import { DefinitionBinding } from '../custom-component/definition-binding';
-import { buildProject, instantiateBody } from './circuit-builder';
+import { buildProject } from './circuit-builder';
 import { CUSTOM_TYPE_ID_BASE } from '../components/component-type.enum';
 import type { SnapshotDefinition } from './serialized-circuit';
 import {
@@ -33,6 +32,7 @@ import {
 import { CloudSessionService } from '../user/cloud-session.service';
 import { ServerPersistenceGateway } from './server/server-persistence.gateway';
 import { BrowserPersistenceGateway } from './browser/browser-persistence.gateway';
+import { ComponentLibraryService } from '../custom-component/component-library.service';
 import { downloadBlob } from '../utils/download';
 import { warnSkippedCustoms } from './load-warnings';
 import { decodeLgix, encodeLgix, hasLgixMagic } from './file/lgix-container';
@@ -66,10 +66,10 @@ export class PersistenceService {
   private readonly location = inject(Location);
   private readonly server = inject(ServerPersistenceGateway);
   private readonly browser = inject(BrowserPersistenceGateway);
+  private readonly library = inject(ComponentLibraryService);
   private readonly cloudSession = inject(CloudSessionService);
 
   private _mainLoadToken = 0;
-  private _aliasesLoaded: Promise<void> | undefined;
   private _shareLoadToken = 0;
   private readonly _saveInFlight = new WeakMap<Project, Promise<void>>();
   // Bindings for component editors opened **as main** (the /component/:uuid
@@ -431,7 +431,7 @@ export class PersistenceService {
     // Adopt any imported custom that has no local master into the browser
     // components library, so the user can re-place it. (No stable cross-file
     // identity ⇒ re-importing the same file creates duplicate library rows.)
-    await this._adoptSnapshots(project);
+    await this.library.adoptSnapshots(project);
 
     // addComponent/addWire don't push to the ActionManager, so the project
     // starts non-dirty even though it was just populated.
@@ -559,133 +559,6 @@ export class PersistenceService {
   /** Lists library masters stored in the browser (IndexedDB), newest first. */
   listBrowserComponents(): Promise<BrowserComponentSummary[]> {
     return this.browser.listComponents();
-  }
-
-  /**
-   * Registers all browser-stored custom component masters into the registry so
-   * the palette shows them at startup. Masters already in the registry (loaded
-   * by a prior project open) are skipped. Errors are caught per-component so
-   * one bad record does not prevent the rest from loading.
-   */
-  async preloadBrowserMasters(): Promise<void> {
-    const summaries = await this.browserComponentStore.list();
-    await Promise.all(
-      summaries.map(async ({ id }) => {
-        if (this.registry.masterTypeIdForId(id) !== undefined) return;
-        // A record whose id was promoted to the cloud is stale — its component
-        // moved to the server library. This guards the case where a previous
-        // promotion uploaded + aliased the component but failed to delete the
-        // local record; ignoring it here keeps a single (server) master. Relies
-        // on the alias map being hydrated first (see app startup ordering).
-        if (this.registry.isPromotedId(id)) return;
-        try {
-          const record = await this.browserComponentStore.get(id);
-          if (!record) return;
-          const circuit = this.circuitFile.decodeToBody(record.content);
-          this.registry.createMaster(
-            {
-              id: record.id,
-              version: record.version,
-              name: record.name,
-              symbol: record.symbol,
-              description: record.description,
-              numInputs: record.numInputs,
-              numOutputs: record.numOutputs,
-              labels: record.labels,
-              lastEdited: record.lastEdited,
-              circuit
-            },
-            'browser'
-          );
-        } catch {
-          this.logging.warn(
-            `Failed to preload browser component ${id}`,
-            'PersistenceService'
-          );
-        }
-      })
-    );
-  }
-
-  /**
-   * Registers all of the signed-in user's cloud library masters into the registry
-   * at startup (so they appear in the palette and resolve through the promotion
-   * alias after a reload). Delegates to the server gateway; a no-op when signed
-   * out. Call once at startup, after {@link preloadComponentIdAliases}.
-   */
-  preloadServerMasters(): Promise<void> {
-    return this.server.preloadServerMasters();
-  }
-
-  /**
-   * Removes the signed-out user's cloud masters from the registry and palette —
-   * the library half of any logout (initiated or external). Masters that back a
-   * currently open server component editor are kept: their `DefinitionBinding`
-   * writes into the master's type id, which must stay live while the editor
-   * exists (the next login's preload skips known ids, so a kept master dedupes
-   * instead of duplicating). Placed instances are frozen snapshots and keep
-   * rendering regardless. Idempotent.
-   */
-  clearServerMasters(): void {
-    const openEditorIds = new Set(
-      this.metadataStore
-        .getAllHandles()
-        .filter(
-          (h) => h.metadata.type === 'comp' && h.metadata.source === 'server'
-        )
-        .map((h) => h.metadata.id)
-    );
-    this.registry.removeServerMasters(openEditorIds);
-    // Retired session type ids make any cached body stale; drop the whole cache.
-    this.server.clearMasterCircuitCache();
-  }
-
-  /**
-   * Lazily hydrates a preloaded server master's circuit (GET `/api/component/:id`)
-   * the first time it is needed — placement or update-to-latest. No-op for a master
-   * that is not server-sourced or whose circuit is already loaded. Safe to call
-   * repeatedly; only the first call for a given master fetches.
-   */
-  async ensureServerMasterCircuit(masterTypeId: number): Promise<void> {
-    const def = this.registry.getDefinition(masterTypeId);
-    if (
-      !def ||
-      def.kind !== 'master' ||
-      def.source !== 'server' ||
-      !def.id ||
-      def.circuit
-    ) {
-      return;
-    }
-    const circuit = await this.server.loadComponentCircuit(def.id);
-    this.registry.setMasterCircuit(masterTypeId, circuit);
-  }
-
-  /**
-   * Hydrates the registry's promotion alias map from the persistent id-map so
-   * components that embedded a master before it was uploaded to the cloud still
-   * resolve it (its id changed on promotion). Call once at startup, alongside
-   * {@link preloadBrowserMasters}. Best-effort: failures are logged, not thrown.
-   */
-  preloadComponentIdAliases(): Promise<void> {
-    // Memoized: called once at startup and again by every login transition
-    // (the server preload must not race ahead of the aliases), so all callers
-    // share one load.
-    return (this._aliasesLoaded ??= this._loadComponentIdAliases());
-  }
-
-  private async _loadComponentIdAliases(): Promise<void> {
-    try {
-      const mappings = await this.componentIdMapStore.list();
-      for (const { id, newId } of mappings) {
-        this.registry.registerIdAlias(id, newId);
-      }
-    } catch {
-      this.logging.warn(
-        'Failed to load component id aliases',
-        'PersistenceService'
-      );
-    }
   }
 
   /**
@@ -878,7 +751,8 @@ export class PersistenceService {
     // writes must not fail the operation: the upload already succeeded, so
     // surfacing an error would be a lie (and would hide the now-disabled retry).
     // A failure here self-heals on reload — the browser preload ignores a record
-    // whose id has been promoted (see preloadBrowserMasters / isPromotedId).
+    // whose id has been promoted (see ComponentLibraryService.preloadBrowserMasters
+    // / isPromotedId).
     try {
       await this.componentIdMapStore.put(oldId, newId);
       await this.browserComponentStore.delete(oldId);
@@ -1112,115 +986,6 @@ export class PersistenceService {
         'PersistenceService'
       );
     }
-  }
-
-  /**
-   * Creates a browser library master for every custom directly placed in an
-   * imported project that has no local master yet, so it appears in the palette
-   * and survives a reload. Already-known masters (matched by provenance id) are
-   * left alone. Nested-only customs are not adopted — they live inside their
-   * parent's snapshot and aren't independently placeable here.
-   */
-  private async _adoptSnapshots(project: Project): Promise<void> {
-    const seen = new Set<number>();
-    for (const component of project.components) {
-      const typeId = component.config.type;
-      if (seen.has(typeId)) continue;
-      seen.add(typeId);
-      const def = this.registry.getDefinition(typeId);
-      if (!def || def.kind !== 'snapshot') continue;
-      if (
-        def.id !== undefined &&
-        this.registry.masterTypeIdForId(def.id) !== undefined
-      ) {
-        continue;
-      }
-      await this._adoptSnapshotAsMaster(def);
-    }
-  }
-
-  /**
-   * Builds a browser-library master from a snapshot definition's frozen circuit
-   * (its own nested snapshots re-emitted as self-contained content) and registers
-   * it, returning the new master's id. By default the store mints a fresh id at
-   * version 1; `options` can reuse a specific id (so placed instances re-link
-   * with no extra work) and adopt the snapshot's frozen version.
-   */
-  private async _adoptSnapshotAsMaster(
-    def: CustomComponentDefinition,
-    options?: { id?: string; version?: number }
-  ): Promise<string> {
-    const circuit = def.circuit ?? { components: [], wires: [] };
-    const { components, wires } = instantiateBody(this.provider, circuit);
-    const tmp = buildProject(components, wires);
-    let content: string;
-    try {
-      content = this.circuitFile.toJson(tmp, def.name);
-    } finally {
-      tmp.destroy();
-    }
-
-    const summary = {
-      version: options?.version ?? 1,
-      name: def.name,
-      symbol: def.symbol,
-      description: def.description,
-      numInputs: def.numInputs,
-      numOutputs: def.numOutputs,
-      labels: def.labels
-    };
-    const record = await this.browserComponentStore.save({
-      id: options?.id,
-      ...summary,
-      content
-    });
-    this.registry.createMaster(
-      { id: record.id, ...summary, lastEdited: record.lastEdited, circuit },
-      'browser'
-    );
-    return record.id;
-  }
-
-  /**
-   * Restores an **orphaned** custom instance — one whose master can no longer be
-   * resolved in any library, though its circuit is still embedded — into the
-   * browser library, so the user can edit it again. Builds a browser master from
-   * the frozen snapshot's circuit (at its frozen version) and returns the new
-   * master's id, or `null` when the type is not a restorable orphan.
-   *
-   * Re-linking: the new master reuses the snapshot's own provenance id only when
-   * it is a **browser**-origin id, so every placed instance that references it
-   * resolves to the new master with no further change. An anonymous snapshot (no
-   * id) or a **cloud**-origin one mints a fresh id and the snapshot is re-pointed
-   * at it — reusing a cloud uuid in the browser store would collide with the real
-   * cloud entry once it reloads. Always restores to the **browser** library — no
-   * login required. The caller decides *whether* to offer this (a lost cloud
-   * master while signed out is likely just unloaded, not deleted).
-   */
-  async restoreOrphanToLibrary(typeId: number): Promise<string | null> {
-    const def = this.registry.getDefinition(typeId);
-    if (!def || def.kind !== 'snapshot') return null;
-    // Already resolvable ⇒ not an orphan; nothing to restore.
-    if (this.registry.resolveMaster(typeId)) return null;
-
-    const reuseId = def.source === 'browser' ? def.id || undefined : undefined;
-    const version = def.version ?? 1;
-    const newId = await this._adoptSnapshotAsMaster(def, {
-      id: reuseId,
-      version
-    });
-    // A fresh id was minted (anonymous or cloud-origin snapshot): re-point it
-    // (and thus its instances) at the new master. Stamp the master's version too:
-    // a no-provenance orphan has none, and serialize needs both id and version to
-    // emit resolvable provenance (else it re-orphans on reload).
-    if (def.id !== newId) {
-      this.registry.relinkSnapshotProvenance(typeId, newId, version);
-    }
-    this.logging.info(
-      `Restored orphan component ${def.name} -> ${newId}`,
-      'PersistenceService'
-    );
-    return newId;
   }
 
   private _replaceMainProject(newProject: Project): void {

@@ -24,6 +24,7 @@ import { setStaticDIInjector } from './utils/get-di';
 import { ComponentSettingsComponent } from './ui/component-settings/component-settings.component';
 import { ProjectService } from './project/project.service';
 import { PersistenceService } from './persistence/persistence.service';
+import { ComponentLibraryService } from './custom-component/component-library.service';
 import { EditorSettingsService } from './settings/editor-settings.service';
 import { RendererService } from './rendering/renderer.service';
 import { UnsavedChangesGuard } from './persistence/unsaved-changes.guard';
@@ -99,6 +100,7 @@ export class AppComponent {
   private readonly injector = inject(Injector);
   private readonly routerService = inject(RouterService);
   private readonly persistenceService = inject(PersistenceService);
+  private readonly componentLibrary = inject(ComponentLibraryService);
   protected readonly projectService = inject(ProjectService);
   private readonly unsavedChangesGuard = inject(UnsavedChangesGuard);
   // Injected for its side effects: follows the signed-in user (cloud library
@@ -188,8 +190,8 @@ export class AppComponent {
     // session lifecycle owns their preload (and teardown).
     void (async () => {
       try {
-        await this.persistenceService.preloadComponentIdAliases();
-        await this.persistenceService.preloadBrowserMasters();
+        await this.componentLibrary.preloadComponentIdAliases();
+        await this.componentLibrary.preloadBrowserMasters();
         this.loggingService.info('Editor ready', 'AppComponent');
       } catch (err) {
         this.toastService.warn(

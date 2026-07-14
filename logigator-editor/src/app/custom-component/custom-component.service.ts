@@ -3,6 +3,7 @@ import { Project } from '../project/project';
 import { ProjectService } from '../project/project.service';
 import { ProjectMetadataStore } from '../persistence/project-metadata.store';
 import { PersistenceService } from '../persistence/persistence.service';
+import { ComponentLibraryService } from './component-library.service';
 import { CustomComponentRegistry } from '../components/custom/custom-component-registry.service';
 import { ComponentProviderService } from '../components/component-provider.service';
 import { CustomComponent } from '../components/custom/custom-component';
@@ -45,6 +46,7 @@ export class CustomComponentService {
   private readonly projectService = inject(ProjectService);
   private readonly metadataStore = inject(ProjectMetadataStore);
   private readonly persistence = inject(PersistenceService);
+  private readonly componentLibrary = inject(ComponentLibraryService);
   private readonly uploadCoordinator = inject(UploadCoordinatorService);
   private readonly dialogService = inject(DialogService);
   private readonly toast = inject(ToastService);
@@ -147,7 +149,7 @@ export class CustomComponentService {
     const host = this.projectService.activeProject();
     let masterId: string | null;
     try {
-      masterId = await this.persistence.restoreOrphanToLibrary(typeId);
+      masterId = await this.componentLibrary.restoreOrphanToLibrary(typeId);
     } catch {
       masterId = null;
     }
@@ -308,7 +310,7 @@ export class CustomComponentService {
    */
   public async ensureMasterCircuit(masterTypeId: number): Promise<boolean> {
     try {
-      await this.persistence.ensureServerMasterCircuit(masterTypeId);
+      await this.componentLibrary.ensureServerMasterCircuit(masterTypeId);
       return true;
     } catch {
       this.toast.error(

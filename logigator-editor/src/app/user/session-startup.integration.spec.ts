@@ -8,6 +8,7 @@ import { SessionLifecycleService } from './session-lifecycle.service';
 import { UserService } from './user.service';
 import { CookieService } from '../storage/cookie.service';
 import { PersistenceService } from '../persistence/persistence.service';
+import { ComponentLibraryService } from '../custom-component/component-library.service';
 import { CustomComponentService } from '../custom-component/custom-component.service';
 import { UploadCoordinatorService } from '../ui/upload/upload-coordinator.service';
 import { SimulationService } from '../simulation/simulation.service';
@@ -24,21 +25,25 @@ describe('session startup (integration)', () => {
   let authCookie: ReturnType<typeof signal<string | null>>;
   let httpMock: HttpTestingController;
   let persistence: {
+    createAndSetEmptyProject: Mock;
+    localDependenciesOfProject: Mock;
+  };
+  let componentLibrary: {
     preloadComponentIdAliases: Mock;
     preloadServerMasters: Mock;
     clearServerMasters: Mock;
-    createAndSetEmptyProject: Mock;
-    localDependenciesOfProject: Mock;
   };
 
   beforeEach(() => {
     authCookie = signal<string | null>(null);
     persistence = {
-      preloadComponentIdAliases: vi.fn().mockResolvedValue(undefined),
-      preloadServerMasters: vi.fn().mockResolvedValue(undefined),
-      clearServerMasters: vi.fn(),
       createAndSetEmptyProject: vi.fn(),
       localDependenciesOfProject: vi.fn().mockReturnValue([])
+    };
+    componentLibrary = {
+      preloadComponentIdAliases: vi.fn().mockResolvedValue(undefined),
+      preloadServerMasters: vi.fn().mockResolvedValue(undefined),
+      clearServerMasters: vi.fn()
     };
     configureTestBed([
       {
@@ -50,6 +55,7 @@ describe('session startup (integration)', () => {
         }
       },
       { provide: PersistenceService, useValue: persistence },
+      { provide: ComponentLibraryService, useValue: componentLibrary },
       {
         provide: CustomComponentService,
         useValue: { forceCloseComponent: vi.fn() }
@@ -87,8 +93,8 @@ describe('session startup (integration)', () => {
     TestBed.tick();
     await new Promise((resolve) => setTimeout(resolve));
 
-    expect(persistence.preloadServerMasters).toHaveBeenCalledTimes(1);
-    expect(persistence.clearServerMasters).not.toHaveBeenCalled();
+    expect(componentLibrary.preloadServerMasters).toHaveBeenCalledTimes(1);
+    expect(componentLibrary.clearServerMasters).not.toHaveBeenCalled();
   });
 
   it('still loads the library when the backend omits the user id (pre-@Expose responses)', async () => {
@@ -113,7 +119,7 @@ describe('session startup (integration)', () => {
     TestBed.tick();
     await new Promise((resolve) => setTimeout(resolve));
 
-    expect(persistence.preloadServerMasters).toHaveBeenCalledTimes(1);
+    expect(componentLibrary.preloadServerMasters).toHaveBeenCalledTimes(1);
   });
 
   it('logging in later (cookie flip) loads the cloud library', async () => {
@@ -136,6 +142,6 @@ describe('session startup (integration)', () => {
     TestBed.tick();
     await new Promise((resolve) => setTimeout(resolve));
 
-    expect(persistence.preloadServerMasters).toHaveBeenCalledTimes(1);
+    expect(componentLibrary.preloadServerMasters).toHaveBeenCalledTimes(1);
   });
 });
