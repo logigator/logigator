@@ -11,7 +11,8 @@ function makeProject(): MockedObject<Project> {
   const project = {
     addComponent: vi.fn().mockName('Project.addComponent'),
     selectionManager: {
-      rollbackPendingCut: () => false
+      rollbackPendingCut: () => false,
+      retintCps: () => undefined
     }
   };
 

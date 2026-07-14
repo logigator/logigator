@@ -62,6 +62,12 @@ export class ActionManager {
 
     const action = this._history[--this._pointer];
     action.undo(this.project);
+    // The selection persists across undo/redo, but the action's project
+    // mutations replace connection-point instances (a wire/component move
+    // cycles the terminations at its junctions, destroying and recreating
+    // the dot at an exactly-3-termination point) — re-derive which dots are
+    // highlighted so the selection keeps holding live instances.
+    this.project.selectionManager.retintCps();
     this.logging.debug(
       `undo ${action.constructor.name} → pointer ${this._pointer}`,
       'ActionManager'
@@ -74,6 +80,8 @@ export class ActionManager {
 
     const action = this._history[this._pointer++];
     action.do(this.project);
+    // Same as undo: keep the highlighted dots pointing at live instances.
+    this.project.selectionManager.retintCps();
     this.logging.debug(
       `redo ${action.constructor.name} → pointer ${this._pointer}`,
       'ActionManager'

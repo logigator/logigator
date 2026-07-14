@@ -12,12 +12,16 @@ import { makeAnd, makeMoveInput, makeWire } from '../../../testing/factories';
 describe('SelectionMoveSession collision', () => {
   let project: Project;
   let dragLayer: Container<Component | Wire>;
-  let session: SelectionMoveSession;
+  // onEnd and onCancel are alternative terminal calls — a test that ends its
+  // session must null this out so afterEach doesn't cancel a finished session
+  // (restoring drag CPs the end already discarded).
+  let session: SelectionMoveSession | undefined;
 
   beforeEach(() => {
     configureTestBed();
     project = new Project();
     dragLayer = new Container<Component | Wire>();
+    session = undefined;
   });
 
   afterEach(() => {
@@ -197,6 +201,7 @@ describe('SelectionMoveSession collision', () => {
       session.onMove(makeMoveInput(0, 10));
       expect(session.canEnd()).toBe(true);
       session.onEnd();
+      session = undefined;
 
       // The dot at the moved junction is the one the selection manager holds,
       // alive and highlighted.
@@ -216,6 +221,50 @@ describe('SelectionMoveSession collision', () => {
         new Point(0, 10)
       );
       expect(dragLayer.children).toContain(cp);
+    });
+
+    it('keeps the junction dot selected through undo and redo of the move', () => {
+      const w1 = makeWire(0, 0, WireDirection.HORIZONTAL, 5);
+      const w2 = makeWire(5, 0, WireDirection.HORIZONTAL, 5);
+      const w3 = makeWire(5, 0, WireDirection.VERTICAL, 5);
+      project.addWire(w1);
+      project.addWire(w2);
+      project.addWire(w3);
+
+      project.selectionManager.commit(
+        new Rectangle(0, 0, 11, 6),
+        WorkMode.SELECT
+      );
+
+      session = new SelectionMoveSession(
+        project,
+        dragLayer,
+        new Set(),
+        new Set([w1, w2, w3]),
+        new Point(0, 0)
+      );
+      session.onMove(makeMoveInput(0, 10));
+      session.onEnd();
+      session = undefined;
+
+      // Undo moves the selection back; the dot at the original junction must
+      // be the live, highlighted one the selection manager holds.
+      project.actionManager.undo();
+      const cpBack = project.connectionPoints.getCpAt(new Point(5.5, 0.5));
+      expect(cpBack).toBeDefined();
+      expect(cpBack!.selected).toBe(true);
+      expect(project.selectionManager.selectedConnectionPoints).toContain(
+        cpBack
+      );
+
+      // Redo moves it forward again.
+      project.actionManager.redo();
+      const cpFwd = project.connectionPoints.getCpAt(new Point(5.5, 10.5));
+      expect(cpFwd).toBeDefined();
+      expect(cpFwd!.selected).toBe(true);
+      expect(project.selectionManager.selectedConnectionPoints).toContain(
+        cpFwd
+      );
     });
   });
 
@@ -263,6 +312,7 @@ describe('SelectionMoveSession collision', () => {
       session.onMove(makeMoveInput(5, 5));
       expect(session.canEnd()).toBe(true);
       session.onEnd();
+      session = undefined;
 
       // Cut+move materialized exactly three wires: two outside + one inside.
       const after = allWires();
@@ -310,6 +360,7 @@ describe('SelectionMoveSession collision', () => {
       session.onMove(makeMoveInput(4, 0));
       expect(session.canEnd()).toBe(true);
       session.onEnd();
+      session = undefined;
 
       const huge = new Rectangle(-100, -100, 200, 200);
       const wires = Array.from(project.queryWiresInRange(huge));
@@ -345,6 +396,7 @@ describe('SelectionMoveSession collision', () => {
       );
       // No onMove — delta stays at (0, 0).
       session.onEnd();
+      session = undefined;
 
       // hasMove was false, so the session returned early without claiming.
       // The pending cut survives.
