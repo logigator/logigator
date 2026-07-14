@@ -10,8 +10,11 @@
 
 <div class="flex grow min-h-0">
   @if (!layout.isCompact() && !isSimulation()) {
+    <!-- shrink-0 keeps the side-bar at its full width; overflowing content in
+         the board column (e.g. a long status-bar hint) truncates there instead
+         of squeezing the side-bar. -->
     <app-side-bar
-      class="w-80 border-r border-border overflow-y-auto"
+      class="w-80 shrink-0 border-r border-border overflow-y-auto"
     ></app-side-bar>
   }
   <div class="grow flex flex-col min-w-0">
