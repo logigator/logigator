@@ -5,6 +5,7 @@ import { WireSnapshot } from '../wires/wire-snapshot.model';
 import type { Component } from '../components/component';
 import { getStaticDI } from '../utils/get-di';
 import { LoggingService } from '../logging/logging.service';
+import { pointKey } from '../utils/point-key';
 
 export interface MovedWireEntry {
   wire: Wire;
@@ -45,10 +46,6 @@ export interface IntegrationOutput {
 // Bounds the fixed-point loop. In practice integration converges in 1–2 passes;
 // hitting the cap implies a bug, so we throw rather than silently doing the wrong thing.
 const MAX_ITERATIONS = 8;
-
-function pointKey(p: { x: number; y: number }): string {
-  return `${p.x},${p.y}`;
-}
 
 export class WireIntegrator {
   integrate(

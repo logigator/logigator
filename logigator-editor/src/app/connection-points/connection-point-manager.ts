@@ -4,22 +4,7 @@ import { WireSnapshot } from '../wires/wire-snapshot.model';
 import { Component } from '../components/component';
 import { ConnectionPoint } from './connection-point';
 import { ConnectionPointLayer } from './connection-point-layer';
-
-/** De-duplicating set of Points keyed by "x,y". */
-class PointSet implements Iterable<Point> {
-  private readonly _map = new Map<string, Point>();
-
-  public add(p: Point): void {
-    const key = `${p.x},${p.y}`;
-    if (!this._map.has(key)) {
-      this._map.set(key, p);
-    }
-  }
-
-  public [Symbol.iterator](): Iterator<Point> {
-    return this._map.values();
-  }
-}
+import { pointKey, PointSet } from '../utils/point-key';
 
 export class ConnectionPointManager {
   public readonly layer = new ConnectionPointLayer();
@@ -128,7 +113,7 @@ export class ConnectionPointManager {
 
   public recomputeAt(p: Point): void {
     const shouldExist = this._evaluateAt(p);
-    const key = this._key(p);
+    const key = pointKey(p);
     const existing = this._cps.get(key);
 
     if (shouldExist && !existing) {
@@ -152,32 +137,32 @@ export class ConnectionPointManager {
   }
 
   public getCpAt(p: Point): ConnectionPoint | undefined {
-    return this._cps.get(this._key(p));
+    return this._cps.get(pointKey(p));
   }
 
   public getCpsAtPoints(points: Iterable<Point>): ConnectionPoint[] {
     const result: ConnectionPoint[] = [];
     for (const p of points) {
-      const cp = this._cps.get(this._key(p));
+      const cp = this._cps.get(pointKey(p));
       if (cp) result.push(cp);
     }
     return result;
   }
 
   public detachCp(cp: ConnectionPoint): void {
-    const key = this._key(cp.position);
+    const key = pointKey(cp.position);
     this._cps.delete(key);
     this.layer.removeChild(cp);
   }
 
   public reattachCp(cp: ConnectionPoint): void {
-    const key = this._key(cp.position);
+    const key = pointKey(cp.position);
     this._cps.set(key, cp);
     this.layer.addChild(cp);
   }
 
   public hasCpAt(p: Point): boolean {
-    return this._cps.has(this._key(p));
+    return this._cps.has(pointKey(p));
   }
 
   public captureDragCps(
@@ -268,16 +253,12 @@ export class ConnectionPointManager {
     return points;
   }
 
-  private _key(p: Point): string {
-    return `${p.x},${p.y}`;
-  }
-
   private _evaluateAt(p: Point): boolean {
     // Under the split-on-touch invariants, wire interiors never contain a wire
     // endpoint or component port, so termination counting collapses to exact
     // endpoint-equality — which the maintained count map already holds. A CP
     // exists iff at least 3 things terminate at P.
-    return (this._terminationCounts.get(this._key(p)) ?? 0) >= 3;
+    return (this._terminationCounts.get(pointKey(p)) ?? 0) >= 3;
   }
 
   private _changeWireTerminations(snap: WireSnapshot, delta: number): void {
@@ -305,7 +286,7 @@ export class ConnectionPointManager {
   }
 
   private _changeTermination(p: Point, delta: number): void {
-    const key = this._key(p);
+    const key = pointKey(p);
     const next = (this._terminationCounts.get(key) ?? 0) + delta;
     if (next <= 0) {
       this._terminationCounts.delete(key);
