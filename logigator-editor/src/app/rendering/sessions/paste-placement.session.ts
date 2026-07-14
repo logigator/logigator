@@ -1,11 +1,11 @@
-import { Container, Point, Rectangle } from 'pixi.js';
+import { Container, Point } from 'pixi.js';
 import { DragSession } from '../drag-session';
 import { PointerInput } from '../interaction/pointer-input';
 import { Project } from '../../project/project';
 import { Component } from '../../components/component';
 import { Wire } from '../../wires/wire';
 import { ConnectionPoint } from '../../connection-points/connection-point';
-import { roundToGrid } from '../../utils/grid';
+import { offsetRect, roundToGrid } from '../../utils/grid';
 import { ActionContainer } from '../../actions/action-container';
 import { AddComponentsAction } from '../../actions/actions/add-components.action';
 import { AddWiresAction } from '../../actions/actions/add-wires.action';
@@ -28,11 +28,12 @@ export class PastePlacementSession implements DragSession {
   }
 
   public containsPoint(p: Point): boolean {
+    const offset = this._dragLayer.position;
     for (const c of this._components) {
-      if (this._boundsWorld(c).contains(p.x, p.y)) return true;
+      if (offsetRect(c.gridBounds, offset).contains(p.x, p.y)) return true;
     }
     for (const w of this._wires) {
-      if (this._wireBoundsWorld(w).contains(p.x, p.y)) return true;
+      if (offsetRect(w.gridBounds, offset).contains(p.x, p.y)) return true;
     }
     return false;
   }
@@ -122,25 +123,5 @@ export class PastePlacementSession implements DragSession {
     this._collision.reset();
     for (const c of this._components) c.destroy({ children: true });
     for (const w of this._wires) w.destroy();
-  }
-
-  private _boundsWorld(comp: Component): Rectangle {
-    const b = comp.gridBounds;
-    return new Rectangle(
-      b.x + this._dragLayer.position.x,
-      b.y + this._dragLayer.position.y,
-      b.width,
-      b.height
-    );
-  }
-
-  private _wireBoundsWorld(wire: Wire): Rectangle {
-    const b = wire.gridBounds;
-    return new Rectangle(
-      b.x + this._dragLayer.position.x,
-      b.y + this._dragLayer.position.y,
-      b.width,
-      b.height
-    );
   }
 }

@@ -4,8 +4,7 @@ import { Component } from '../components/component';
 import { ComponentConfig } from '../components/component-config.model';
 import { Wire } from '../wires/wire';
 import { ConnectionPoint } from '../connection-points/connection-point';
-import { getStaticDI } from '../utils/get-di';
-import { ThemingService } from '../theming/theming.service';
+import { applyInvalidTint } from './invalid-tint';
 
 /**
  * A single-component placement preview living in the floating layer's drag
@@ -71,10 +70,6 @@ export class PlacementGhost {
       );
     if (collision === this._hasCollision) return;
     this._hasCollision = collision;
-    if (collision) {
-      this._component.tint = getStaticDI(ThemingService).currentTheme().invalid;
-    } else {
-      this._component.refreshTint();
-    }
+    applyInvalidTint(this._component, collision);
   }
 }
