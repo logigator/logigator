@@ -19,7 +19,7 @@ export interface StoredComponentIdMapping {
 
 /**
  * Durable old-local-id → server-id alias map, written when a browser master is
- * promoted to the cloud ({@link PersistenceService.promoteComponentToServer}).
+ * promoted to the cloud ({@link PromotionService.promoteComponentToServer}).
  * Loaded into the registry at startup so snapshots embedded before the promotion
  * still resolve to the now-server master (their captured id is the old local id).
  */

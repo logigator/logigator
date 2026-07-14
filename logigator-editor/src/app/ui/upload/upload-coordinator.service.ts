@@ -2,10 +2,11 @@ import { inject, Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { DialogService } from '@logigator/ui';
 import { TranslationService } from '../../translation/translation.service';
+import { PersistenceService } from '../../persistence/persistence.service';
 import {
   LocalUploadDependency,
-  PersistenceService
-} from '../../persistence/persistence.service';
+  PromotionService
+} from '../../persistence/promotion.service';
 import { isHandledSaveError } from '../../persistence/persistence-errors';
 import { ProjectMetadataStore } from '../../persistence/project-metadata.store';
 import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
@@ -61,6 +62,7 @@ export type UploadTarget =
 @Injectable({ providedIn: 'root' })
 export class UploadCoordinatorService {
   private readonly persistence = inject(PersistenceService);
+  private readonly promotion = inject(PromotionService);
   private readonly metadataStore = inject(ProjectMetadataStore);
   private readonly registry = inject(CustomComponentRegistry);
   private readonly dialogService = inject(DialogService);
@@ -148,7 +150,7 @@ export class UploadCoordinatorService {
     const metadata = this.metadataStore.getMetadata(project);
     if (metadata?.source === 'server') {
       const deps = this._resolvable(
-        this.persistence.localDependenciesOfProject(project)
+        this.promotion.localDependenciesOfProject(project)
       );
       if (!(await this._uploadDependencies(deps, metadata.isPublic))) {
         return false;
@@ -197,7 +199,7 @@ export class UploadCoordinatorService {
     for (const masterTypeId of masterTypeIds) {
       const depName = this.registry.getDefinition(masterTypeId)?.name ?? '';
       try {
-        await this.persistence.promoteComponentToServer(masterTypeId, isPublic);
+        await this.promotion.promoteComponentToServer(masterTypeId, isPublic);
       } catch (err) {
         if (!isHandledSaveError(err)) {
           this.toast.error(
@@ -231,21 +233,21 @@ export class UploadCoordinatorService {
       case 'project':
         return {
           name: this.metadataStore.getMetadata(target.project)?.name ?? '',
-          dependencies: this.persistence.localDependenciesOfProject(
+          dependencies: this.promotion.localDependenciesOfProject(
             target.project
           )
         };
       case 'stored-project':
         return {
           name: target.name,
-          dependencies: await this.persistence.localDependenciesOfStoredProject(
+          dependencies: await this.promotion.localDependenciesOfStoredProject(
             target.id
           )
         };
       case 'component':
         return {
           name: this.registry.getDefinition(target.masterTypeId)?.name ?? '',
-          dependencies: await this.persistence.localDependencies(
+          dependencies: await this.promotion.localDependencies(
             target.masterTypeId
           )
         };
@@ -254,14 +256,14 @@ export class UploadCoordinatorService {
         // the chosen one, so take it from the target.
         return {
           name: target.name,
-          dependencies: this.persistence.localDependenciesOfProject(
+          dependencies: this.promotion.localDependenciesOfProject(
             target.project
           )
         };
       case 'save-server':
         return {
           name: this.metadataStore.getMetadata(target.project)?.name ?? '',
-          dependencies: this.persistence.localDependenciesOfProject(
+          dependencies: this.promotion.localDependenciesOfProject(
             target.project
           )
         };
@@ -274,22 +276,16 @@ export class UploadCoordinatorService {
   ): Promise<void> {
     switch (target.kind) {
       case 'project':
-        return this.persistence.promoteProjectToServer(
-          target.project,
-          isPublic
-        );
+        return this.promotion.promoteProjectToServer(target.project, isPublic);
       case 'stored-project':
-        return this.persistence.uploadStoredProjectToServer(
-          target.id,
-          isPublic
-        );
+        return this.promotion.uploadStoredProjectToServer(target.id, isPublic);
       case 'component':
-        return this.persistence.promoteComponentToServer(
+        return this.promotion.promoteComponentToServer(
           target.masterTypeId,
           isPublic
         );
       case 'draft-to-server':
-        return this.persistence.saveDraftAsServer(
+        return this.promotion.saveDraftAsServer(
           target.project,
           target.name,
           isPublic

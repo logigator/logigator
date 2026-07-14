@@ -8,6 +8,7 @@ import { SessionLifecycleService } from './session-lifecycle.service';
 import { UserService } from './user.service';
 import { PersistenceService } from '../persistence/persistence.service';
 import { ComponentLibraryService } from '../custom-component/component-library.service';
+import { PromotionService } from '../persistence/promotion.service';
 import { ProjectMetadataStore } from '../persistence/project-metadata.store';
 import { ProjectService } from '../project/project.service';
 import { CustomComponentService } from '../custom-component/custom-component.service';
@@ -33,6 +34,8 @@ describe('SessionLifecycleService', () => {
   let logout: Mock;
   let persistence: {
     createAndSetEmptyProject: Mock;
+  };
+  let promotion: {
     localDependenciesOfProject: Mock;
   };
   let componentLibrary: {
@@ -52,7 +55,9 @@ describe('SessionLifecycleService', () => {
     user = signal<UserData | null>(null);
     logout = vi.fn().mockResolvedValue(undefined);
     persistence = {
-      createAndSetEmptyProject: vi.fn(),
+      createAndSetEmptyProject: vi.fn()
+    };
+    promotion = {
       localDependenciesOfProject: vi.fn().mockReturnValue([])
     };
     componentLibrary = {
@@ -74,6 +79,7 @@ describe('SessionLifecycleService', () => {
         useValue: { user, logout, sessionExpired: vi.fn() }
       },
       { provide: PersistenceService, useValue: persistence },
+      { provide: PromotionService, useValue: promotion },
       { provide: ComponentLibraryService, useValue: componentLibrary },
       { provide: UploadCoordinatorService, useValue: uploadCoordinator },
       { provide: CustomComponentService, useValue: customComponents },
@@ -329,7 +335,7 @@ describe('SessionLifecycleService', () => {
       register(main);
       projectService.setMainProject(main);
       metadataStore.markDirty(main);
-      persistence.localDependenciesOfProject.mockReturnValue([
+      promotion.localDependenciesOfProject.mockReturnValue([
         { name: 'Local Dep', masterTypeId: 4000 }
       ]);
       dialogService.open.mockReturnValue({ onClose: of(undefined) });

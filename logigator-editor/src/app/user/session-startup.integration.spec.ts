@@ -9,6 +9,7 @@ import { UserService } from './user.service';
 import { CookieService } from '../storage/cookie.service';
 import { PersistenceService } from '../persistence/persistence.service';
 import { ComponentLibraryService } from '../custom-component/component-library.service';
+import { PromotionService } from '../persistence/promotion.service';
 import { CustomComponentService } from '../custom-component/custom-component.service';
 import { UploadCoordinatorService } from '../ui/upload/upload-coordinator.service';
 import { SimulationService } from '../simulation/simulation.service';
@@ -26,6 +27,8 @@ describe('session startup (integration)', () => {
   let httpMock: HttpTestingController;
   let persistence: {
     createAndSetEmptyProject: Mock;
+  };
+  let promotion: {
     localDependenciesOfProject: Mock;
   };
   let componentLibrary: {
@@ -37,7 +40,9 @@ describe('session startup (integration)', () => {
   beforeEach(() => {
     authCookie = signal<string | null>(null);
     persistence = {
-      createAndSetEmptyProject: vi.fn(),
+      createAndSetEmptyProject: vi.fn()
+    };
+    promotion = {
       localDependenciesOfProject: vi.fn().mockReturnValue([])
     };
     componentLibrary = {
@@ -55,6 +60,7 @@ describe('session startup (integration)', () => {
         }
       },
       { provide: PersistenceService, useValue: persistence },
+      { provide: PromotionService, useValue: promotion },
       { provide: ComponentLibraryService, useValue: componentLibrary },
       {
         provide: CustomComponentService,

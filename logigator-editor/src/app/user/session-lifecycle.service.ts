@@ -7,6 +7,7 @@ import { sessionUserId } from '../api/models/user';
 import { CloudSessionService } from './cloud-session.service';
 import { PersistenceService } from '../persistence/persistence.service';
 import { ComponentLibraryService } from '../custom-component/component-library.service';
+import { PromotionService } from '../persistence/promotion.service';
 import {
   ProjectMetadata,
   ProjectMetadataStore
@@ -53,6 +54,7 @@ export class SessionLifecycleService {
   private readonly cloudSession = inject(CloudSessionService);
   private readonly persistence = inject(PersistenceService);
   private readonly componentLibrary = inject(ComponentLibraryService);
+  private readonly promotion = inject(PromotionService);
   private readonly metadataStore = inject(ProjectMetadataStore);
   private readonly projectService = inject(ProjectService);
   private readonly customComponents = inject(CustomComponentService);
@@ -201,7 +203,7 @@ export class SessionLifecycleService {
   ): Promise<LogoutChoice | undefined> {
     const promotable = new Set<number>();
     for (const { project } of dirty) {
-      for (const dep of this.persistence.localDependenciesOfProject(project)) {
+      for (const dep of this.promotion.localDependenciesOfProject(project)) {
         if (dep.masterTypeId !== null) promotable.add(dep.masterTypeId);
       }
     }

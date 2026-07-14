@@ -11,7 +11,7 @@ import {
 } from '@logigator/ui';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { UserService } from '../../../user/user.service';
-import { LocalUploadDependency } from '../../../persistence/persistence.service';
+import { LocalUploadDependency } from '../../../persistence/promotion.service';
 
 export interface UploadDialogData {
   /** Wording variant; a stored project opens as `'project'`. */

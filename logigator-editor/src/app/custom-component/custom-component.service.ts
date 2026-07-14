@@ -4,6 +4,7 @@ import { ProjectService } from '../project/project.service';
 import { ProjectMetadataStore } from '../persistence/project-metadata.store';
 import { PersistenceService } from '../persistence/persistence.service';
 import { ComponentLibraryService } from './component-library.service';
+import { PromotionService } from '../persistence/promotion.service';
 import { CustomComponentRegistry } from '../components/custom/custom-component-registry.service';
 import { ComponentProviderService } from '../components/component-provider.service';
 import { CustomComponent } from '../components/custom/custom-component';
@@ -47,6 +48,7 @@ export class CustomComponentService {
   private readonly metadataStore = inject(ProjectMetadataStore);
   private readonly persistence = inject(PersistenceService);
   private readonly componentLibrary = inject(ComponentLibraryService);
+  private readonly promotion = inject(PromotionService);
   private readonly uploadCoordinator = inject(UploadCoordinatorService);
   private readonly dialogService = inject(DialogService);
   private readonly toast = inject(ToastService);
@@ -236,7 +238,7 @@ export class CustomComponentService {
     const metadata = this.metadataStore.getMetadata(project);
     const localDepCount =
       metadata?.source === 'server'
-        ? this.persistence
+        ? this.promotion
             .localDependenciesOfProject(project)
             .filter((d) => d.masterTypeId !== null).length
         : 0;

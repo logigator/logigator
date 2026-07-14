@@ -4,6 +4,7 @@ import { of } from 'rxjs';
 import { DialogService } from '@logigator/ui';
 import { SaveCoordinatorService } from './save-coordinator.service';
 import { PersistenceService } from '../persistence/persistence.service';
+import { PromotionService } from '../persistence/promotion.service';
 import {
   ProjectMetadata,
   ProjectMetadataStore
@@ -29,8 +30,10 @@ describe('SaveCoordinatorService', () => {
   let persistence: {
     saveProject: ReturnType<typeof vi.fn>;
     saveDraftAsLocal: ReturnType<typeof vi.fn>;
-    saveDraftAsServer: ReturnType<typeof vi.fn>;
+  };
+  let promotion: {
     localDependenciesOfProject: ReturnType<typeof vi.fn>;
+    saveDraftAsServer: ReturnType<typeof vi.fn>;
   };
   let uploadCoordinator: { requestUpload: ReturnType<typeof vi.fn> };
   let getMetadata: ReturnType<typeof vi.fn>;
@@ -40,9 +43,11 @@ describe('SaveCoordinatorService', () => {
   function setup(dialogResult?: unknown): void {
     persistence = {
       saveProject: vi.fn().mockResolvedValue(undefined),
-      saveDraftAsLocal: vi.fn().mockResolvedValue(undefined),
-      saveDraftAsServer: vi.fn().mockResolvedValue(undefined),
-      localDependenciesOfProject: vi.fn().mockReturnValue([])
+      saveDraftAsLocal: vi.fn().mockResolvedValue(undefined)
+    };
+    promotion = {
+      localDependenciesOfProject: vi.fn().mockReturnValue([]),
+      saveDraftAsServer: vi.fn().mockResolvedValue(undefined)
     };
     uploadCoordinator = { requestUpload: vi.fn().mockResolvedValue(true) };
     getMetadata = vi.fn();
@@ -50,6 +55,7 @@ describe('SaveCoordinatorService', () => {
 
     configureTestBed([
       { provide: PersistenceService, useValue: persistence },
+      { provide: PromotionService, useValue: promotion },
       {
         provide: UploadCoordinatorService,
         useValue: uploadCoordinator
@@ -83,7 +89,7 @@ describe('SaveCoordinatorService', () => {
   it('routes a server project with local components through the upload flow', async () => {
     setup();
     getMetadata.mockReturnValue(meta({ id: 'abc', source: 'server' }));
-    persistence.localDependenciesOfProject.mockReturnValue([
+    promotion.localDependenciesOfProject.mockReturnValue([
       { name: 'Local', masterTypeId: 7 }
     ]);
 
@@ -136,7 +142,7 @@ describe('SaveCoordinatorService', () => {
       name: 'Server Circuit',
       isPublic: true
     });
-    expect(persistence.saveDraftAsServer).not.toHaveBeenCalled();
+    expect(promotion.saveDraftAsServer).not.toHaveBeenCalled();
     expect(persistence.saveDraftAsLocal).not.toHaveBeenCalled();
   });
 
@@ -148,7 +154,7 @@ describe('SaveCoordinatorService', () => {
 
     expect(dialogOpen).toHaveBeenCalled();
     expect(persistence.saveDraftAsLocal).not.toHaveBeenCalled();
-    expect(persistence.saveDraftAsServer).not.toHaveBeenCalled();
+    expect(promotion.saveDraftAsServer).not.toHaveBeenCalled();
     expect(persistence.saveProject).not.toHaveBeenCalled();
   });
 

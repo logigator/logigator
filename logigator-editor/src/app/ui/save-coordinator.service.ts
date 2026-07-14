@@ -3,6 +3,7 @@ import { firstValueFrom } from 'rxjs';
 import { DialogService } from '@logigator/ui';
 import { TranslationService } from '../translation/translation.service';
 import { PersistenceService } from '../persistence/persistence.service';
+import { PromotionService } from '../persistence/promotion.service';
 import { isHandledSaveError } from '../persistence/persistence-errors';
 import { ProjectMetadataStore } from '../persistence/project-metadata.store';
 import { ToastService } from '../logging/toast.service';
@@ -25,6 +26,7 @@ import {
 @Injectable({ providedIn: 'root' })
 export class SaveCoordinatorService {
   private readonly persistence = inject(PersistenceService);
+  private readonly promotion = inject(PromotionService);
   private readonly metadataStore = inject(ProjectMetadataStore);
   private readonly dialogService = inject(DialogService);
   private readonly translation = inject(TranslationService);
@@ -50,7 +52,7 @@ export class SaveCoordinatorService {
         // copy, so it does not force the dialog — the save proceeds directly.
         if (
           metadata.source === 'server' &&
-          this.persistence
+          this.promotion
             .localDependenciesOfProject(project)
             .some((dep) => dep.masterTypeId !== null)
         ) {

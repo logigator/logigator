@@ -4,6 +4,7 @@ import { of } from 'rxjs';
 import { DialogService } from '@logigator/ui';
 import { UploadCoordinatorService } from './upload-coordinator.service';
 import { PersistenceService } from '../../persistence/persistence.service';
+import { PromotionService } from '../../persistence/promotion.service';
 import { ProjectMetadataStore } from '../../persistence/project-metadata.store';
 import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
 import { ToastService } from '../../logging/toast.service';
@@ -14,6 +15,9 @@ import { UploadDialogResult } from '../dialogs/upload-dialog/upload-dialog.compo
 describe('UploadCoordinatorService', () => {
   let service: UploadCoordinatorService;
   let persistence: {
+    saveProject: ReturnType<typeof vi.fn>;
+  };
+  let promotion: {
     localDependenciesOfProject: ReturnType<typeof vi.fn>;
     localDependenciesOfStoredProject: ReturnType<typeof vi.fn>;
     localDependencies: ReturnType<typeof vi.fn>;
@@ -21,7 +25,6 @@ describe('UploadCoordinatorService', () => {
     uploadStoredProjectToServer: ReturnType<typeof vi.fn>;
     promoteComponentToServer: ReturnType<typeof vi.fn>;
     saveDraftAsServer: ReturnType<typeof vi.fn>;
-    saveProject: ReturnType<typeof vi.fn>;
   };
   let toast: {
     success: ReturnType<typeof vi.fn>;
@@ -32,20 +35,23 @@ describe('UploadCoordinatorService', () => {
 
   function setup(dialogResult?: UploadDialogResult): void {
     persistence = {
+      saveProject: vi.fn().mockResolvedValue(undefined)
+    };
+    promotion = {
       localDependenciesOfProject: vi.fn().mockReturnValue([]),
       localDependenciesOfStoredProject: vi.fn().mockResolvedValue([]),
       localDependencies: vi.fn().mockResolvedValue([]),
       promoteProjectToServer: vi.fn().mockResolvedValue(undefined),
       uploadStoredProjectToServer: vi.fn().mockResolvedValue(undefined),
       promoteComponentToServer: vi.fn().mockResolvedValue(undefined),
-      saveDraftAsServer: vi.fn().mockResolvedValue(undefined),
-      saveProject: vi.fn().mockResolvedValue(undefined)
+      saveDraftAsServer: vi.fn().mockResolvedValue(undefined)
     };
     toast = { success: vi.fn(), error: vi.fn(), warn: vi.fn() };
     dialogOpen = vi.fn().mockReturnValue({ onClose: of(dialogResult) });
 
     configureTestBed([
       { provide: PersistenceService, useValue: persistence },
+      { provide: PromotionService, useValue: promotion },
       {
         provide: ProjectMetadataStore,
         useValue: { getMetadata: vi.fn().mockReturnValue({ name: 'P' }) }
@@ -68,14 +74,14 @@ describe('UploadCoordinatorService', () => {
     setup(undefined);
     const result = await service.requestUpload({ kind: 'project', project });
     expect(result).toBe(false);
-    expect(persistence.promoteProjectToServer).not.toHaveBeenCalled();
+    expect(promotion.promoteProjectToServer).not.toHaveBeenCalled();
   });
 
   it('uploads the project and toasts success when there are no dependencies', async () => {
     setup({ isPublic: true });
     const result = await service.requestUpload({ kind: 'project', project });
     expect(result).toBe(true);
-    expect(persistence.promoteProjectToServer).toHaveBeenCalledWith(
+    expect(promotion.promoteProjectToServer).toHaveBeenCalledWith(
       project,
       true
     );
@@ -85,16 +91,16 @@ describe('UploadCoordinatorService', () => {
   it('promotes every resolvable dependency before the target, children-first', async () => {
     setup({ isPublic: false });
     // The analysis (not the dialog) determines what is promoted — all resolvable.
-    persistence.localDependenciesOfProject.mockReturnValue([
+    promotion.localDependenciesOfProject.mockReturnValue([
       { name: 'a', masterTypeId: 11 },
       { name: 'b', masterTypeId: 22 }
     ]);
     const order: string[] = [];
-    persistence.promoteComponentToServer.mockImplementation((id: number) => {
+    promotion.promoteComponentToServer.mockImplementation((id: number) => {
       order.push(`dep-${id}`);
       return Promise.resolve();
     });
-    persistence.promoteProjectToServer.mockImplementation(() => {
+    promotion.promoteProjectToServer.mockImplementation(() => {
       order.push('target');
       return Promise.resolve();
     });
@@ -106,19 +112,19 @@ describe('UploadCoordinatorService', () => {
 
   it('stops and does not upload the target when a dependency fails', async () => {
     setup({ isPublic: false });
-    persistence.localDependenciesOfProject.mockReturnValue([
+    promotion.localDependenciesOfProject.mockReturnValue([
       { name: 'a', masterTypeId: 11 },
       { name: 'b', masterTypeId: 22 }
     ]);
-    persistence.promoteComponentToServer.mockImplementation((id: number) =>
+    promotion.promoteComponentToServer.mockImplementation((id: number) =>
       id === 11 ? Promise.resolve() : Promise.reject(new Error('boom'))
     );
 
     const result = await service.requestUpload({ kind: 'project', project });
 
     expect(result).toBe(false);
-    expect(persistence.promoteComponentToServer).toHaveBeenCalledTimes(2);
-    expect(persistence.promoteProjectToServer).not.toHaveBeenCalled();
+    expect(promotion.promoteComponentToServer).toHaveBeenCalledTimes(2);
+    expect(promotion.promoteProjectToServer).not.toHaveBeenCalled();
     expect(toast.error).toHaveBeenCalledOnce();
     expect(toast.success).not.toHaveBeenCalled();
   });
@@ -130,7 +136,7 @@ describe('UploadCoordinatorService', () => {
       masterTypeId: 42
     });
     expect(result).toBe(true);
-    expect(persistence.promoteComponentToServer).toHaveBeenCalledWith(42, true);
+    expect(promotion.promoteComponentToServer).toHaveBeenCalledWith(42, true);
   });
 
   it('routes a stored-project target to uploadStoredProjectToServer', async () => {
@@ -140,7 +146,7 @@ describe('UploadCoordinatorService', () => {
       id: 'abc',
       name: 'Stored'
     });
-    expect(persistence.uploadStoredProjectToServer).toHaveBeenCalledWith(
+    expect(promotion.uploadStoredProjectToServer).toHaveBeenCalledWith(
       'abc',
       false
     );
@@ -148,7 +154,7 @@ describe('UploadCoordinatorService', () => {
 
   it('toasts and returns false when analysis throws, without prompting', async () => {
     setup({ isPublic: false });
-    persistence.localDependenciesOfStoredProject.mockRejectedValue(
+    promotion.localDependenciesOfStoredProject.mockRejectedValue(
       new Error('no record')
     );
 
@@ -166,7 +172,7 @@ describe('UploadCoordinatorService', () => {
   describe('draft-to-server', () => {
     it('saves without a dialog when the draft has no local components', async () => {
       setup();
-      persistence.localDependenciesOfProject.mockReturnValue([]);
+      promotion.localDependenciesOfProject.mockReturnValue([]);
 
       const result = await service.requestUpload({
         kind: 'draft-to-server',
@@ -177,7 +183,7 @@ describe('UploadCoordinatorService', () => {
 
       expect(result).toBe(true);
       expect(dialogOpen).not.toHaveBeenCalled();
-      expect(persistence.saveDraftAsServer).toHaveBeenCalledWith(
+      expect(promotion.saveDraftAsServer).toHaveBeenCalledWith(
         project,
         'Fresh',
         true
@@ -188,16 +194,16 @@ describe('UploadCoordinatorService', () => {
     it('prompts, uploads dependencies first, then saves the draft', async () => {
       setup({ isPublic: false });
       // The dialog is shown because the draft embeds local components.
-      persistence.localDependenciesOfProject.mockReturnValue([
+      promotion.localDependenciesOfProject.mockReturnValue([
         { name: 'a', masterTypeId: 11 },
         { name: 'b', masterTypeId: 22 }
       ]);
       const order: string[] = [];
-      persistence.promoteComponentToServer.mockImplementation((id: number) => {
+      promotion.promoteComponentToServer.mockImplementation((id: number) => {
         order.push(`dep-${id}`);
         return Promise.resolve();
       });
-      persistence.saveDraftAsServer.mockImplementation(() => {
+      promotion.saveDraftAsServer.mockImplementation(() => {
         order.push('save');
         return Promise.resolve();
       });
@@ -218,10 +224,10 @@ describe('UploadCoordinatorService', () => {
 
     it('does not save the draft when a dependency upload fails', async () => {
       setup({ isPublic: true });
-      persistence.localDependenciesOfProject.mockReturnValue([
+      promotion.localDependenciesOfProject.mockReturnValue([
         { name: 'a', masterTypeId: 11 }
       ]);
-      persistence.promoteComponentToServer.mockRejectedValue(new Error('boom'));
+      promotion.promoteComponentToServer.mockRejectedValue(new Error('boom'));
 
       const result = await service.requestUpload({
         kind: 'draft-to-server',
@@ -231,7 +237,7 @@ describe('UploadCoordinatorService', () => {
       });
 
       expect(result).toBe(false);
-      expect(persistence.saveDraftAsServer).not.toHaveBeenCalled();
+      expect(promotion.saveDraftAsServer).not.toHaveBeenCalled();
       expect(toast.error).toHaveBeenCalledOnce();
     });
   });
@@ -248,11 +254,11 @@ describe('UploadCoordinatorService', () => {
 
     it('prompts, promotes the chosen components, then re-saves the project', async () => {
       setupWithMeta({ isPublic: false });
-      persistence.localDependenciesOfProject.mockReturnValue([
+      promotion.localDependenciesOfProject.mockReturnValue([
         { name: 'a', masterTypeId: 11 }
       ]);
       const order: string[] = [];
-      persistence.promoteComponentToServer.mockImplementation((id: number) => {
+      promotion.promoteComponentToServer.mockImplementation((id: number) => {
         order.push(`dep-${id}`);
         return Promise.resolve();
       });
@@ -274,7 +280,7 @@ describe('UploadCoordinatorService', () => {
 
     it('aborts the save when the dialog is cancelled', async () => {
       setupWithMeta(undefined);
-      persistence.localDependenciesOfProject.mockReturnValue([
+      promotion.localDependenciesOfProject.mockReturnValue([
         { name: 'a', masterTypeId: 11 }
       ]);
 
@@ -284,7 +290,7 @@ describe('UploadCoordinatorService', () => {
       });
 
       expect(result).toBe(false);
-      expect(persistence.promoteComponentToServer).not.toHaveBeenCalled();
+      expect(promotion.promoteComponentToServer).not.toHaveBeenCalled();
       expect(persistence.saveProject).not.toHaveBeenCalled();
     });
   });

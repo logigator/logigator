@@ -18,6 +18,7 @@ import { LogLevel } from '../logging/log-level.enum';
 import { ToastService } from '../logging/toast.service';
 import { ProjectDumpService } from './dump/project-dump.service';
 import { ComponentLibraryService } from '../custom-component/component-library.service';
+import { PromotionService } from './promotion.service';
 import { InvalidFileError } from './file/circuit-file.errors';
 import { encodeLgix } from './file/lgix-container';
 import { BrowserProjectStore } from './browser/browser-project.store';
@@ -145,6 +146,7 @@ function shareDetailResponse(
 describe('PersistenceService', () => {
   let service: PersistenceService;
   let library: ComponentLibraryService;
+  let promotion: PromotionService;
   let metadataStore: ProjectMetadataStore;
   let projectService: ProjectService;
   let httpMock: HttpTestingController;
@@ -192,6 +194,7 @@ describe('PersistenceService', () => {
     ]);
     service = TestBed.inject(PersistenceService);
     library = TestBed.inject(ComponentLibraryService);
+    promotion = TestBed.inject(PromotionService);
     metadataStore = TestBed.inject(ProjectMetadataStore);
     projectService = TestBed.inject(ProjectService);
     registry = TestBed.inject(CustomComponentRegistry);
@@ -451,7 +454,7 @@ describe('PersistenceService', () => {
         })
       ).rejects.toBeInstanceOf(AuthRequiredError);
       await expect(
-        service.saveDraftAsServer(new Project(), 'Draft', false)
+        promotion.saveDraftAsServer(new Project(), 'Draft', false)
       ).rejects.toBeInstanceOf(AuthRequiredError);
     });
   });
@@ -676,7 +679,7 @@ describe('PersistenceService', () => {
     it('creates the server project, PUTs current content, flips metadata in place and navigates', async () => {
       const project = service.createAndSetEmptyProject();
 
-      const promise = service.saveDraftAsServer(
+      const promise = promotion.saveDraftAsServer(
         project,
         'My Server Circuit',
         true
@@ -730,7 +733,7 @@ describe('PersistenceService', () => {
       await service.saveProject(project);
       expect(browserStore.records.has('browser-1')).toBe(true);
 
-      const promise = service.promoteProjectToServer(project, true);
+      const promise = promotion.promoteProjectToServer(project, true);
 
       const postReq = httpMock.expectOne(PROJECTS_LIST_URL);
       expect(postReq.request.method).toBe('POST');
@@ -757,7 +760,7 @@ describe('PersistenceService', () => {
     it('rejects a fresh draft (no stored id) without any HTTP call', async () => {
       const project = service.createAndSetEmptyProject();
       await expect(
-        service.promoteProjectToServer(project, false)
+        promotion.promoteProjectToServer(project, false)
       ).rejects.toThrow();
     });
   });
@@ -777,7 +780,7 @@ describe('PersistenceService', () => {
       await service.saveProject(project);
       projectService.setMainProject(project);
 
-      const promise = service.uploadStoredProjectToServer('browser-1', false);
+      const promise = promotion.uploadStoredProjectToServer('browser-1', false);
 
       const postReq = httpMock.expectOne(PROJECTS_LIST_URL);
       expect(postReq.request.body).toEqual({ name: 'Local', public: 'false' });
@@ -811,7 +814,7 @@ describe('PersistenceService', () => {
       // The open project is a different, fresh draft.
       const main = service.createAndSetEmptyProject();
 
-      const promise = service.uploadStoredProjectToServer('stored-1', true);
+      const promise = promotion.uploadStoredProjectToServer('stored-1', true);
 
       // The temp path reads the stored record (an await) before issuing the POST,
       // so let that microtask settle before asserting the request.
@@ -1781,7 +1784,7 @@ describe('PersistenceService', () => {
       // flush pending microtasks (a macrotask tick) before each HTTP expectation.
       const tick = () => new Promise((r) => setTimeout(r, 0));
 
-      const promise = service.promoteComponentToServer(masterTypeId);
+      const promise = promotion.promoteComponentToServer(masterTypeId);
 
       await tick();
       const post = httpMock.expectOne(COMPONENTS_URL);
@@ -1812,7 +1815,7 @@ describe('PersistenceService', () => {
         'server'
       );
       await expect(
-        service.promoteComponentToServer(masterTypeId)
+        promotion.promoteComponentToServer(masterTypeId)
       ).rejects.toThrow();
     });
 
@@ -1839,7 +1842,7 @@ describe('PersistenceService', () => {
       vi.spyOn(componentStore, 'delete').mockRejectedValue(new Error('boom'));
       const tick = () => new Promise((r) => setTimeout(r, 0));
 
-      const promise = service.promoteComponentToServer(masterTypeId);
+      const promise = promotion.promoteComponentToServer(masterTypeId);
       await tick();
       httpMock
         .expectOne(COMPONENTS_URL)
@@ -1886,7 +1889,7 @@ describe('PersistenceService', () => {
       });
       const tick = () => new Promise((r) => setTimeout(r, 0));
 
-      const promise = service.promoteComponentToServer(masterTypeId);
+      const promise = promotion.promoteComponentToServer(masterTypeId);
       await tick();
       httpMock
         .expectOne(COMPONENTS_URL)
@@ -1954,7 +1957,7 @@ describe('PersistenceService', () => {
         { id: 'local-2', symbol: 'P' },
         'browser'
       );
-      expect(await service.localDependencies(masterTypeId)).toEqual([]);
+      expect(await promotion.localDependencies(masterTypeId)).toEqual([]);
     });
 
     it('localDependencies lists the local customs a master embeds, with resolvable master type ids', async () => {
@@ -1985,7 +1988,7 @@ describe('PersistenceService', () => {
         'browser'
       );
 
-      expect(await service.localDependencies(aType)).toEqual([
+      expect(await promotion.localDependencies(aType)).toEqual([
         { name: 'Dep B', masterTypeId: bType }
       ]);
     });
@@ -2021,7 +2024,7 @@ describe('PersistenceService', () => {
       // so the stored snapshot's old id resolves to a server master.
       registry.promoteMaster(bType, 'srv-b', 2);
 
-      expect(await service.localDependencies(aType)).toEqual([]);
+      expect(await promotion.localDependencies(aType)).toEqual([]);
     });
 
     it('localDependenciesOfProject walks a live project, children before parents', () => {
@@ -2047,7 +2050,7 @@ describe('PersistenceService', () => {
 
       const project = new Project();
       placeSnapshot(project, bType);
-      const deps = service.localDependenciesOfProject(project);
+      const deps = promotion.localDependenciesOfProject(project);
       project.destroy();
 
       // Children before parents: C precedes B (upload order).
@@ -2092,7 +2095,7 @@ describe('PersistenceService', () => {
 
       const project = new Project();
       placeSnapshot(project, aType);
-      const order = service
+      const order = promotion
         .localDependenciesOfProject(project)
         .map((d) => d.name);
       project.destroy();
