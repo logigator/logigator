@@ -1,6 +1,7 @@
 import { MIGRATIONS } from './migrations/migrations';
 import { MigrationContext } from './migrations/migration';
 import { CURRENT_FILE_VERSION, CurrentCircuitFile } from './circuit-file.types';
+import { validateCurrentCircuitFile } from './circuit-file-validator';
 import {
   InvalidFileError,
   UnsupportedVersionError
@@ -23,9 +24,11 @@ export function detectVersion(data: unknown): number {
 
 /**
  * Runs the migration chain to bring any supported document up to
- * `CURRENT_FILE_VERSION`. A version newer than we support throws
- * `UnsupportedVersionError`; a gap with no matching migration throws
- * `InvalidFileError`. An already-current document is returned unchanged.
+ * `CURRENT_FILE_VERSION`, then structurally validates the result — the
+ * returned document is safe to index into without further shape checks. A
+ * version newer than we support throws `UnsupportedVersionError`; a gap with
+ * no matching migration or a structurally broken document throws
+ * `InvalidFileError`.
  */
 export function migrateToCurrent(
   data: unknown,
@@ -50,5 +53,5 @@ export function migrateToCurrent(
     version = migration.to;
   }
 
-  return current as CurrentCircuitFile;
+  return validateCurrentCircuitFile(current);
 }

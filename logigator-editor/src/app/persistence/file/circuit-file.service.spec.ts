@@ -435,6 +435,29 @@ describe('CircuitFileService', () => {
       expect(() => service.fromJson(file)).toThrowError(InvalidFileError);
     });
 
+    it('throws InvalidFileError (not a TypeError) on a definition with a broken body', () => {
+      const file = JSON.stringify({
+        version: 1,
+        name: 'x',
+        components: [],
+        wires: '',
+        definitions: [
+          {
+            type: CUSTOM_TYPE_ID_BASE,
+            name: 'Broken',
+            symbol: 'B',
+            description: '',
+            numInputs: 1,
+            numOutputs: 1,
+            labels: [],
+            components: 'junk',
+            wires: ''
+          }
+        ]
+      });
+      expect(() => service.fromJson(file)).toThrowError(InvalidFileError);
+    });
+
     it('drops unknown component types with a warning', () => {
       const warnSpy = vi.spyOn(logging, 'warn');
       const file = JSON.stringify({
