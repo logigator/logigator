@@ -475,8 +475,8 @@ describe('CircuitFileService', () => {
 
       expect(components.length).toBe(1);
       expect(warnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Unknown component type ID: 99'),
-        'CircuitFileService'
+        expect.stringContaining('unresolved type 99'),
+        'circuit-builder'
       );
     });
 

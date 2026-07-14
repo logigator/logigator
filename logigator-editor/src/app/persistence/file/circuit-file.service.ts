@@ -3,8 +3,8 @@ import { Project } from '../../project/project';
 import { Component } from '../../components/component';
 import { Wire } from '../../wires/wire';
 import { ComponentProviderService } from '../../components/component-provider.service';
-import { ComponentConfig } from '../../components/component-config.model';
 import { CUSTOM_TYPE_ID_BASE } from '../../components/component-type.enum';
+import { instantiateBody } from '../circuit-builder';
 import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
 import { TranslationService } from '../../translation/translation.service';
 import { LoggingService } from '../../logging/logging.service';
@@ -36,17 +36,6 @@ import {
   toPersistedDefinition
 } from '../persisted-definition.codec';
 import { PersistedSnapshotDefinitionV1 } from '../persisted-circuit.types';
-
-/**
- * Negation indices from an untrusted file: keep only non-negative integers,
- * `undefined` when absent or not an array. Tolerant rather than throwing —
- * a stray index is harmless (rendering/compile ignore out-of-range), but a
- * non-array would otherwise crash the `for…of` in `Component.deserialize`.
- */
-function sanitizeNegArray(value: unknown): number[] | undefined {
-  if (!Array.isArray(value)) return undefined;
-  return value.filter((i) => Number.isInteger(i) && i >= 0);
-}
 
 /**
  * Reads/writes the native circuit file format. Encoding always emits the current
@@ -139,70 +128,19 @@ export class CircuitFileService {
   }
 
   /**
-   * Decodes a current-version document into editor instances. First ingests the
-   * embedded snapshots into the registry (so custom `type`s resolve) and remaps
-   * the body's file-local ids to session ids, then builds instances. Sole
-   * structural validator for native files (the migrator passes an already-current
-   * document through untouched): structurally broken elements throw
-   * `InvalidFileError`, while unresolvable component types are dropped with a
-   * warning. A custom whose snapshot is missing (an old reference-only or
-   * client-stripped server document) is dropped and counted, then surfaced as one
-   * aggregated toast — the user sees that data was skipped, but the rest loads.
-   * Elements carry no id, so fresh ids are allocated on construction.
+   * Decodes a current-version, validated document into editor instances: the
+   * shared file→session-body path ({@link _toSessionBody}) followed by the
+   * shared instance builder (`instantiateBody`). A custom whose snapshot is
+   * missing (an old reference-only or client-stripped server document) is
+   * dropped and counted, then surfaced as one aggregated toast — the user sees
+   * that data was skipped, but the rest loads. Elements carry no id, so fresh
+   * ids are allocated on construction.
    */
   deserialize(file: CurrentCircuitFile): {
     components: Component[];
     wires: Wire[];
   } {
-    const remap = this.registry.ingestSnapshots(
-      this._decodeDefinitions(file.definitions)
-    );
-
-    const components: Component[] = [];
-    let skippedCustom = 0;
-    for (const c of this._decodeComponents(file.components)) {
-      if (
-        typeof c.type !== 'number' ||
-        typeof c.options !== 'object' ||
-        c.options === null
-      ) {
-        throw new InvalidFileError('Invalid component in file');
-      }
-      const isCustom = c.type >= CUSTOM_TYPE_ID_BASE;
-      // A custom-range id resolves ONLY through the snapshot remap; a built-in
-      // resolves directly. Never fall a custom id through to its own value:
-      // file-local and session custom ids both count up from CUSTOM_TYPE_ID_BASE,
-      // so a missing snapshot would otherwise alias an unrelated session type.
-      let config: ComponentConfig | undefined;
-      if (isCustom) {
-        const sessionType = remap.get(c.type);
-        config =
-          sessionType === undefined
-            ? undefined
-            : this.componentProvider.getComponent(sessionType);
-      } else {
-        config = this.componentProvider.getComponent(c.type);
-      }
-      if (!config) {
-        this.logging.warn(
-          `Unknown component type ID: ${c.type} — skipping element at [${c.pos[0]}, ${c.pos[1]}]`,
-          'CircuitFileService'
-        );
-        if (isCustom) skippedCustom++;
-        continue;
-      }
-      components.push(
-        Component.deserialize(
-          {
-            pos: c.pos,
-            options: c.options,
-            negInputs: sanitizeNegArray(c.negInputs),
-            negOutputs: sanitizeNegArray(c.negOutputs)
-          },
-          config
-        )
-      );
-    }
+    const { body, skippedCustom } = this._toSessionBody(file);
 
     if (skippedCustom > 0) {
       this.toast.warn(
@@ -215,9 +153,7 @@ export class CircuitFileService {
       );
     }
 
-    const wires = this._decodeWires(file.wires).map((w) => Wire.deserialize(w));
-
-    return { components, wires };
+    return instantiateBody(this.componentProvider, body);
   }
 
   /** Convenience: parse JSON + migrate + deserialize into editor instances. */
@@ -259,15 +195,49 @@ export class CircuitFileService {
    */
   decodeToBodyFromData(data: unknown): SerializedCircuitBody {
     const file = migrateToCurrent(data, this.migrationContext);
+    return this._toSessionBody(file).body;
+  }
+
+  /**
+   * The shared file→session decode: ingests the document's embedded snapshots
+   * into the registry and remaps the body's file-local custom ids to session
+   * ids. A custom-range id resolves ONLY through the snapshot remap; a
+   * built-in passes through. Never fall a custom id through to its own value:
+   * file-local and session custom ids both count up from CUSTOM_TYPE_ID_BASE,
+   * so a missing snapshot would otherwise alias an unrelated session type —
+   * such elements are dropped with a warning and counted for the caller to
+   * surface.
+   */
+  private _toSessionBody(file: CurrentCircuitFile): {
+    body: SerializedCircuitBody;
+    skippedCustom: number;
+  } {
     const remap = this.registry.ingestSnapshots(
       this._decodeDefinitions(file.definitions)
     );
+
+    const components: SerializedComponentBody[] = [];
+    let skippedCustom = 0;
+    for (const c of this._decodeComponents(file.components)) {
+      if (c.type >= CUSTOM_TYPE_ID_BASE) {
+        const sessionType = remap.get(c.type);
+        if (sessionType === undefined) {
+          this.logging.warn(
+            `Unknown component type ID: ${c.type} — skipping element at [${c.pos[0]}, ${c.pos[1]}]`,
+            'CircuitFileService'
+          );
+          skippedCustom++;
+          continue;
+        }
+        components.push({ ...c, type: sessionType });
+      } else {
+        components.push(c);
+      }
+    }
+
     return {
-      components: remapComponentTypes(
-        this._decodeComponents(file.components),
-        remap
-      ),
-      wires: this._decodeWires(file.wires)
+      body: { components, wires: this._decodeWires(file.wires) },
+      skippedCustom
     };
   }
 

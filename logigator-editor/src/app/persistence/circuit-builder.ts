@@ -17,7 +17,20 @@ export function buildProject(components: Component[], wires: Wire[]): Project {
   return project;
 }
 
-/** Instantiates a native body (session type ids) into editor objects. */
+/**
+ * Negation indices from an untrusted body: keep only non-negative integers,
+ * `undefined` when absent or not an array. Tolerant rather than throwing —
+ * a stray index is harmless (rendering/compile ignore out-of-range), but a
+ * non-array would otherwise crash the `for…of` in `Component.deserialize`.
+ */
+function sanitizeNegArray(value: unknown): number[] | undefined {
+  if (!Array.isArray(value)) return undefined;
+  return value.filter((i) => Number.isInteger(i) && i >= 0);
+}
+
+/** Instantiates a native body (session type ids) into editor objects.
+ * Elements whose type does not resolve to a config are dropped with a
+ * warning. */
 export function instantiateBody(
   provider: ComponentProviderService,
   body: SerializedCircuitBody
@@ -34,8 +47,8 @@ export function instantiateBody(
           {
             pos: c.pos,
             options: c.options,
-            negInputs: c.negInputs,
-            negOutputs: c.negOutputs
+            negInputs: sanitizeNegArray(c.negInputs),
+            negOutputs: sanitizeNegArray(c.negOutputs)
           },
           config
         )
