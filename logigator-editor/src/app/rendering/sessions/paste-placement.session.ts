@@ -22,6 +22,19 @@ export class PastePlacementSession implements DragSession {
     return this._isDragging;
   }
 
+  /**
+   * The paste session outlives its opening gesture: the ghosts wait in place
+   * until the user presses again. A press on a ghost locks in the drag anchor;
+   * a press off the ghost group asks the router to cancel (discarding the
+   * paste). Extra presses while already dragging are consumed and ignored.
+   */
+  public onDown(input: PointerInput): boolean {
+    if (this._isDragging) return true;
+    if (!this.containsPoint(input.grid)) return false;
+    this.beginDrag(roundToGrid(input.grid, true));
+    return true;
+  }
+
   public beginDrag(anchor: Point): void {
     this._isDragging = true;
     this._anchor = anchor;
