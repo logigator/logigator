@@ -170,7 +170,12 @@ export class WorkModeRouter implements PointerToolTarget, ToolHost {
     this._gestureSeq++;
     const session = this._activeDrag;
     if (!session) return;
-    if (!session.canEnd()) return;
+    if (!session.canEnd()) {
+      // An invalid release either discards the session (placement) or leaves
+      // it frozen in place (move / paste) for the user to reposition.
+      if (session.discardOnInvalidRelease) this.abortActiveDrag();
+      return;
+    }
     session.onEnd();
     this._stopDrag();
   }

@@ -21,6 +21,9 @@ import { LoggingService } from '../../logging/logging.service';
 import { TranslationService } from '../../translation/translation.service';
 
 export class ComponentPlacementSession implements DragSession {
+  // A drop onto a colliding area clears the ghost rather than freezing it.
+  readonly discardOnInvalidRelease = true;
+
   private readonly _ghost: PlacementGhost;
   // Defense in depth: the palette already hides masters that would cycle while
   // editing one, but a master may still reach here (stale `componentToPlace`,

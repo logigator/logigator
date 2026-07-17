@@ -12,6 +12,9 @@ import { ActionContainer } from '../../actions/action-container';
 import { applyInvalidTint } from '../invalid-tint';
 
 export class WireToolSession implements DragSession {
+  // A wire released over a colliding body is discarded rather than frozen.
+  readonly discardOnInvalidRelease = true;
+
   private _direction: WireDirection | null = null;
   private _h: Wire | null = null;
   private _v: Wire | null = null;

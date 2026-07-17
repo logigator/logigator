@@ -7,6 +7,13 @@ export interface DragSession {
   // Return false to keep the session alive (collision block / silent discard).
   canEnd(): boolean;
   /**
+   * Optional: when a release lands while `canEnd()` is false, discard the
+   * session (as if cancelled) instead of freezing it in place. Placement
+   * sessions set this so an invalid drop just clears the ghost, ready for the
+   * next placement; move/paste sessions leave it unset so they stay put.
+   */
+  readonly discardOnInvalidRelease?: boolean;
+  /**
    * Optional: a new primary press while this session is already active (only
    * possible for sessions that outlive a gesture, e.g. paste placement).
    * Return true when the press was consumed; false asks the router to cancel

@@ -185,6 +185,28 @@ describe('WorkModeRouter in SELECT mode', () => {
     expect(comp.position.y).toBe(3);
   });
 
+  it('freezes a selection move on an invalid release instead of discarding it', () => {
+    // AND at (3,3), a second AND at (8,3) to collide with.
+    const comp = makeAnd(2);
+    comp.position.set(3, 3);
+    project.addComponent(comp);
+    project.addComponent(makeAnd(2, undefined, 8, 3));
+    project.selectionManager.select([comp], []);
+
+    // Grab through the margin, drag onto the second component.
+    router.down(makeInput(2, 5.5));
+    router.move(makeInput(7, 5.5)); // overlaps the second AND
+    router.up(); // released over a collision
+
+    expect(router.hasActiveSession).toBe(true); // still frozen, awaiting a valid drop
+
+    // Moving back to clear space then releasing commits the move.
+    router.move(makeInput(2, 5.5));
+    router.up();
+    expect(router.hasActiveSession).toBe(false);
+    expect(comp.position.x).toBe(3);
+  });
+
   it('pressing outside the grab rect starts a new selection instead', () => {
     const comp = makeAnd(2);
     comp.position.set(3, 3);
@@ -348,6 +370,19 @@ describe('WorkModeRouter wire-tool taps (WIRE_TOOL mode)', () => {
     // y 0.5–8.5), and the crossing was not split by the press.
     const lengths = Array.from(project.wires, (w) => w.length).sort();
     expect(lengths).toEqual([4, 8]);
+  });
+
+  it('discards a wire dragged over a component body on release', () => {
+    const and = makeAnd(2, undefined, 2, 2); // body around (2..4, 2..4)
+    project.addComponent(and);
+
+    router.down(makeInput(3, 8)); // clear of the body
+    router.move(makeInput(3, 3)); // wire runs up into the body
+    router.up(); // released while colliding
+
+    expect(router.hasActiveSession).toBe(false); // discarded, not frozen
+    expect(Array.from(project.wires)).toHaveLength(0);
+    expect(project.actionManager.undoAvailable).toBe(false);
   });
 
   it('a drag that returns to its origin neither draws nor taps', () => {
@@ -603,6 +638,23 @@ describe('WorkModeRouter component placement circuit load', () => {
     await Promise.resolve();
 
     expect(ghostCount()).toBe(0);
+  });
+
+  it('discards the placement on an invalid release instead of freezing it', async () => {
+    ensure.mockResolvedValue(true);
+    project.addComponent(makeAnd(2, undefined, 2, 2)); // occupies (2..,2..)
+
+    router.down(makeInput(20, 20));
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(ghostCount()).toBe(1);
+
+    router.move(makeInput(2, 2)); // ghost body lands on the existing AND
+    router.up(); // released over a collision
+
+    expect(router.hasActiveSession).toBe(false); // session gone, not frozen
+    expect(ghostCount()).toBe(0); // the ghost disappeared
+    expect(project.actionManager.undoAvailable).toBe(false); // nothing committed
   });
 });
 
