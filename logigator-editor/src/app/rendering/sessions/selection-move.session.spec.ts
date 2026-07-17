@@ -678,4 +678,74 @@ describe('SelectionMoveSession collision', () => {
       expect(project.actionManager.undoAvailable).toBe(false);
     });
   });
+
+  describe('moveBy', () => {
+    it('commits at the accumulated offset', () => {
+      const selected = makeAnd();
+      project.addComponent(selected);
+      project.selectionManager.select([selected], []);
+
+      session = new SelectionMoveSession(
+        project,
+        dragLayer,
+        new Set([selected]),
+        new Set(),
+        null
+      );
+      session.moveBy(0, 1);
+      session.moveBy(1, 0);
+      expect(session.canEnd()).toBe(true);
+      session.onEnd();
+      session = undefined;
+
+      expect(selected.position.x).toBe(1);
+      expect(selected.position.y).toBe(1);
+      expect(project.actionManager.undoAvailable).toBe(true);
+    });
+
+    it('a moveBy mid-drag survives the next pointer move', () => {
+      const selected = makeAnd();
+      project.addComponent(selected);
+
+      session = new SelectionMoveSession(
+        project,
+        dragLayer,
+        new Set([selected]),
+        new Set(),
+        new Point(0, 0)
+      );
+      session.moveBy(0, 1);
+      session.onMove(makeMoveInput(0, 0)); // the cursor has not moved
+
+      session.onEnd();
+      session = undefined;
+
+      expect(selected.position.x).toBe(0);
+      expect(selected.position.y).toBe(1);
+    });
+
+    it('canEnd() is false when a moveBy lands on another component, true after moving back', () => {
+      // Stationary body Rectangle(0,2,2,2); selected body Rectangle(0,0,2,2)
+      // touches it edge-on — one step down makes them overlap.
+      const stationary = makeAnd();
+      stationary.position.set(0, 2);
+      project.addComponent(stationary);
+
+      const selected = makeAnd();
+      project.addComponent(selected);
+
+      session = new SelectionMoveSession(
+        project,
+        dragLayer,
+        new Set([selected]),
+        new Set(),
+        null
+      );
+      session.moveBy(0, 1);
+      expect(session.canEnd()).toBe(false);
+
+      session.moveBy(0, -1);
+      expect(session.canEnd()).toBe(true);
+    });
+  });
 });

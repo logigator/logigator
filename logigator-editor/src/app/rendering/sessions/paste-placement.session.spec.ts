@@ -137,6 +137,33 @@ describe('PastePlacementSession', () => {
     });
   });
 
+  // ── moveBy ──────────────────────────────────────────────────────────────────
+
+  describe('moveBy()', () => {
+    it('shifts the waiting ghosts without a drag anchor', () => {
+      const comp = makeAnd(2, Direction.E, 0, 0);
+      session = new PastePlacementSession(project, dragLayer, [comp], []);
+
+      session.moveBy(1, 0);
+      session.moveBy(0, -1);
+
+      expect(dragLayer.position.x).toBe(1);
+      expect(dragLayer.position.y).toBe(-1);
+    });
+
+    it('a moveBy mid-drag survives the next pointer move', () => {
+      const comp = makeAnd(2, Direction.E, 0, 0);
+      session = new PastePlacementSession(project, dragLayer, [comp], []);
+
+      session.beginDrag(new Point(2, 0));
+      session.moveBy(0, 1);
+      session.onMove(makeMoveInput(2, 0)); // the cursor has not moved
+
+      expect(dragLayer.position.x).toBe(0);
+      expect(dragLayer.position.y).toBe(1);
+    });
+  });
+
   // ── onEnd ───────────────────────────────────────────────────────────────────
 
   describe('onEnd()', () => {

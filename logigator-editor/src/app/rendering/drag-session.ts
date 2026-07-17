@@ -27,4 +27,10 @@ export interface DragSession {
    * the router drops the request then.
    */
   rotate?(steps: number): void;
+  /**
+   * Optional: shift the session's floating elements by (dx, dy) grid units
+   * (a move-selection shortcut fired mid-session). Same omission convention
+   * as {@link rotate}.
+   */
+  moveBy?(dx: number, dy: number): void;
 }

@@ -60,6 +60,30 @@ export const DEFAULT_SHORTCUTS: Record<ShortcutActionEnum, ShortcutBinding> = {
     shift: true,
     alt: false
   },
+  [ShortcutActionEnum.MOVE_SELECTION_UP]: {
+    key: 'ArrowUp',
+    ctrl: false,
+    shift: false,
+    alt: false
+  },
+  [ShortcutActionEnum.MOVE_SELECTION_DOWN]: {
+    key: 'ArrowDown',
+    ctrl: false,
+    shift: false,
+    alt: false
+  },
+  [ShortcutActionEnum.MOVE_SELECTION_LEFT]: {
+    key: 'ArrowLeft',
+    ctrl: false,
+    shift: false,
+    alt: false
+  },
+  [ShortcutActionEnum.MOVE_SELECTION_RIGHT]: {
+    key: 'ArrowRight',
+    ctrl: false,
+    shift: false,
+    alt: false
+  },
   [ShortcutActionEnum.ZOOM_IN]: {
     key: '+',
     ctrl: true,

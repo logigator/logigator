@@ -351,6 +351,117 @@ describe('WorkModeRouter cancel shortcut (Escape)', () => {
   });
 });
 
+describe('WorkModeRouter move-selection shortcuts (arrow keys)', () => {
+  let project: Project;
+  let router: WorkModeRouter;
+
+  beforeEach(() => {
+    configureTestBed();
+    project = new Project();
+    router = new WorkModeRouter();
+    router.setProject(project);
+    router.setMode(WorkMode.SELECT);
+  });
+
+  afterEach(() => {
+    router.destroy();
+    project.destroy({ children: true });
+  });
+
+  function press(key: string): void {
+    window.dispatchEvent(new KeyboardEvent('keydown', { key }));
+  }
+
+  it('moves the committed selection one grid unit and records one undo step', () => {
+    const comp = makeAnd(2, undefined, 3, 3);
+    project.addComponent(comp);
+    project.selectionManager.select([comp], []);
+
+    press('ArrowDown');
+
+    expect(comp.position.x).toBe(3);
+    expect(comp.position.y).toBe(4);
+    expect(router.hasActiveSession).toBe(false); // committed synchronously
+    expect(project.selectionManager.selectedComponents.has(comp)).toBe(true);
+
+    project.actionManager.undo();
+    expect(comp.position.y).toBe(3);
+    expect(project.actionManager.undoAvailable).toBe(false); // one entry per press
+  });
+
+  it('maps each arrow key to its axis', () => {
+    const comp = makeAnd(2, undefined, 5, 5);
+    project.addComponent(comp);
+    project.selectionManager.select([comp], []);
+
+    press('ArrowUp');
+    press('ArrowUp');
+    press('ArrowLeft');
+    press('ArrowRight');
+
+    expect(comp.position.x).toBe(5);
+    expect(comp.position.y).toBe(3);
+  });
+
+  it('keeps the session floating on a colliding move; Escape reverts it', () => {
+    // Bodies touch edge-on: selected Rectangle(3,3,2,2) above stationary
+    // Rectangle(3,5,2,2) — one step down makes them overlap.
+    const stationary = makeAnd(2, undefined, 3, 5);
+    project.addComponent(stationary);
+    const comp = makeAnd(2, undefined, 3, 3);
+    project.addComponent(comp);
+    project.selectionManager.select([comp], []);
+
+    press('ArrowDown');
+
+    expect(router.hasActiveSession).toBe(true); // floats instead of committing
+    expect(project.actionManager.undoAvailable).toBe(false);
+
+    press('Escape');
+
+    expect(router.hasActiveSession).toBe(false);
+    expect(comp.position.x).toBe(3);
+    expect(comp.position.y).toBe(3); // move reverted
+  });
+
+  it('shifts a floating session further and commits it via grab-and-release', () => {
+    const stationary = makeAnd(2, undefined, 3, 5);
+    project.addComponent(stationary);
+    const comp = makeAnd(2, undefined, 3, 3);
+    project.addComponent(comp);
+    project.selectionManager.select([comp], []);
+
+    press('ArrowDown'); // collides → session stays open
+    press('ArrowLeft'); // still overlapping stationary's body
+    press('ArrowLeft'); // still overlapping stationary's input stubs
+    press('ArrowLeft'); // clear of it now, but a float never self-commits
+    expect(router.hasActiveSession).toBe(true);
+
+    // Grab the floating group where it currently hangs and release in place.
+    router.down(makeInput(1, 5));
+    router.up();
+
+    expect(router.hasActiveSession).toBe(false);
+    expect(comp.position.x).toBe(0);
+    expect(comp.position.y).toBe(4);
+    expect(project.actionManager.undoAvailable).toBe(true);
+  });
+
+  it('is inert with an empty selection and in simulation mode', () => {
+    const comp = makeAnd(2, undefined, 3, 3);
+    project.addComponent(comp);
+
+    press('ArrowDown'); // nothing selected
+    expect(comp.position.y).toBe(3);
+
+    project.selectionManager.select([comp], []);
+    router.setMode(WorkMode.SIMULATION);
+
+    press('ArrowDown'); // editing locked
+    expect(comp.position.y).toBe(3);
+  });
+});
+
 describe('WorkModeRouter wire-tool taps (WIRE_TOOL mode)', () => {
   let project: Project;
   let router: WorkModeRouter;

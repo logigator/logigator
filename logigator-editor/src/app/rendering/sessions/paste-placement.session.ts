@@ -107,6 +107,20 @@ export class PastePlacementSession implements DragSession {
     this._collision.update();
   }
 
+  /**
+   * Shifts the ghosts by (dx, dy) grid units. With a drag anchor locked, the
+   * anchor shifts opposite so the next pointer move preserves the offset
+   * instead of snapping the ghosts back under the cursor.
+   */
+  moveBy(dx: number, dy: number): void {
+    this._dragLayer.position.set(
+      this._dragLayer.position.x + dx,
+      this._dragLayer.position.y + dy
+    );
+    this._anchor?.set(this._anchor.x - dx, this._anchor.y - dy);
+    this._collision.update();
+  }
+
   canEnd(): boolean {
     return !this._collision.hasCollision;
   }

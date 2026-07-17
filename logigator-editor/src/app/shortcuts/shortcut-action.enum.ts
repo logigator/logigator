@@ -13,6 +13,13 @@ export enum ShortcutActionEnum {
   // content turns in place, otherwise the committed selection rotates.
   ROTATE_SELECTION = 'rotateSelection',
   ROTATE_SELECTION_CCW = 'rotateSelectionCcw',
+  // Handled by the WorkModeRouter: an active session's floating content
+  // shifts one grid unit, otherwise the committed selection moves —
+  // committing immediately when the target spot is free.
+  MOVE_SELECTION_UP = 'moveSelectionUp',
+  MOVE_SELECTION_DOWN = 'moveSelectionDown',
+  MOVE_SELECTION_LEFT = 'moveSelectionLeft',
+  MOVE_SELECTION_RIGHT = 'moveSelectionRight',
 
   ZOOM_IN = 'zoomIn',
   ZOOM_OUT = 'zoomOut',

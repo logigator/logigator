@@ -172,6 +172,24 @@ export class SelectionMoveSession implements DragSession {
   }
 
   /**
+   * Shifts the floating group by (dx, dy) grid units. With a drag anchor
+   * locked, the anchor shifts opposite so the next pointer move preserves the
+   * offset instead of snapping the group back under the cursor.
+   */
+  moveBy(dx: number, dy: number): void {
+    this.dragLayer.position.set(
+      this.dragLayer.position.x + dx,
+      this.dragLayer.position.y + dy
+    );
+    this._pointerStart?.set(
+      this._pointerStart.x - dx,
+      this._pointerStart.y - dy
+    );
+    this.project.floatingLayer.setSelectionRectOffset(this.dragLayer.position);
+    this._collision.update();
+  }
+
+  /**
    * Turns the floating group clockwise by `steps` quarter-turns around its
    * snapped centre, in element space — the drag offset translates the result,
    * so visually the group spins around its own middle wherever it hangs. The

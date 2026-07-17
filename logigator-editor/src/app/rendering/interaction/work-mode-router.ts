@@ -43,7 +43,7 @@ export class WorkModeRouter implements PointerToolTarget, ToolHost {
   private _pasteSub: Subscription | null = null;
   private _rotateSub: Subscription | null = null;
   private readonly _cancelSub: Subscription;
-  private readonly _rotateShortcutSubs: Subscription[];
+  private readonly _selectionShortcutSubs: Subscription[];
   private readonly _shortcuts = getStaticDI(ShortcutService);
 
   private readonly _placementTool = new PlacementTool();
@@ -66,13 +66,25 @@ export class WorkModeRouter implements PointerToolTarget, ToolHost {
     this._cancelSub = this._shortcuts
       .on(ShortcutActionEnum.CANCEL)
       .subscribe(() => this._onCancel());
-    this._rotateShortcutSubs = [
+    this._selectionShortcutSubs = [
       this._shortcuts
         .on(ShortcutActionEnum.ROTATE_SELECTION)
         .subscribe(() => this._onRotate(1)),
       this._shortcuts
         .on(ShortcutActionEnum.ROTATE_SELECTION_CCW)
-        .subscribe(() => this._onRotate(3))
+        .subscribe(() => this._onRotate(3)),
+      this._shortcuts
+        .on(ShortcutActionEnum.MOVE_SELECTION_UP)
+        .subscribe(() => this._onMoveSelection(0, -1)),
+      this._shortcuts
+        .on(ShortcutActionEnum.MOVE_SELECTION_DOWN)
+        .subscribe(() => this._onMoveSelection(0, 1)),
+      this._shortcuts
+        .on(ShortcutActionEnum.MOVE_SELECTION_LEFT)
+        .subscribe(() => this._onMoveSelection(-1, 0)),
+      this._shortcuts
+        .on(ShortcutActionEnum.MOVE_SELECTION_RIGHT)
+        .subscribe(() => this._onMoveSelection(1, 0))
     ];
   }
 
@@ -82,7 +94,7 @@ export class WorkModeRouter implements PointerToolTarget, ToolHost {
     this._pasteSub?.unsubscribe();
     this._rotateSub?.unsubscribe();
     this._cancelSub.unsubscribe();
-    for (const sub of this._rotateShortcutSubs) sub.unsubscribe();
+    for (const sub of this._selectionShortcutSubs) sub.unsubscribe();
   }
 
   public get project(): Project | null {
@@ -284,6 +296,51 @@ export class WorkModeRouter implements PointerToolTarget, ToolHost {
       null
     );
     session.rotate(steps);
+    if (session.canEnd()) {
+      session.onEnd();
+      return;
+    }
+    this._startDrag(session);
+  }
+
+  /**
+   * Routes a move request (arrow keys): an active session's floating content
+   * shifts one grid unit in place; otherwise the committed selection moves
+   * (see _startSelectionMove). Inert in simulation mode — the editing lock
+   * applies.
+   */
+  private _onMoveSelection(dx: number, dy: number): void {
+    if (!this._project || this._mode === WorkMode.SIMULATION) return;
+    if (this._activeDrag) {
+      this._activeDrag.moveBy?.(dx, dy);
+      return;
+    }
+    this._startSelectionMove(dx, dy);
+  }
+
+  /**
+   * Moves the committed selection one grid step through the selection-move
+   * session machinery: detach, shift, integrate, one undoable container
+   * (coalescing a live scissor cut). A collision-free result commits
+   * synchronously — the user sees an in-place move. A colliding one keeps the
+   * session open exactly like a colliding rotate: the red-tinted group floats
+   * (still selected) until further arrow presses or a drag land it somewhere
+   * valid; Escape or a press off the selection reverts the move.
+   */
+  private _startSelectionMove(dx: number, dy: number): void {
+    const project = this._project;
+    if (!project) return;
+    const selection = project.selectionManager;
+    if (selection.isEmpty) return;
+
+    const session = new SelectionMoveSession(
+      project,
+      project.floatingLayer.dragLayer,
+      selection.selectedComponents,
+      selection.selectedWires,
+      null
+    );
+    session.moveBy(dx, dy);
     if (session.canEnd()) {
       session.onEnd();
       return;
