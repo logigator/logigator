@@ -17,7 +17,7 @@ import { LgShortcut, LgShortcutBinding } from '../shortcut/shortcut';
   template: `
     <div
       lgFadeIn
-      class="relative flex max-w-50 items-center gap-2 rounded-md border border-border bg-content px-3 py-2 text-text shadow-md dark:border-transparent dark:bg-surface-700 dark:text-surface-0"
+      class="relative flex max-w-60 items-center gap-2 rounded-md border border-border bg-content px-3 py-2 text-text shadow-md dark:border-transparent dark:bg-surface-700 dark:text-surface-0"
     >
       {{ text() }}
       @if (shortcut(); as sc) {
