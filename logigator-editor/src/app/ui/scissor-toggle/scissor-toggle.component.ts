@@ -40,5 +40,8 @@ export class ScissorToggleComponent {
   private readonly workModeService = inject(WorkModeService);
   protected readonly shortcutService = inject(ShortcutService);
 
-  protected readonly toggle = createScissorToggle(this.workModeService);
+  protected readonly toggle = createScissorToggle(
+    this.workModeService,
+    this.shortcutService
+  );
 }

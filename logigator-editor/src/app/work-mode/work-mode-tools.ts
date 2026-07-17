@@ -2,6 +2,7 @@ import { WorkMode } from './work-mode.enum';
 import { WorkModeService } from './work-mode.service';
 import { BuiltInComponentType } from '../components/component-type.enum';
 import { ShortcutActionEnum } from '../shortcuts/shortcut-action.enum';
+import { ShortcutService } from '../shortcuts/shortcut.service';
 
 /** Stable identifier for a work-mode tool, independent of its WorkMode. */
 export type WorkModeToolId = 'pan' | 'wire' | 'select' | 'erase' | 'text';
@@ -90,7 +91,8 @@ export function createWorkModeTools(
  * `ScissorToggleComponent` as a floating pill over the canvas while the select
  * tool is active — on touch it is the only way to scissor; on desktop it
  * doubles as a discoverable hint for the hold-to-scissor key (SELECT_SCISSOR,
- * Alt by default).
+ * Alt by default). Holding that key in plain SELECT lights the pill as active,
+ * mirroring the marquee, so the engaged cut-wires mode is visible.
  */
 export interface ScissorToggleDescriptor {
   icon: string;
@@ -106,7 +108,8 @@ export interface ScissorToggleDescriptor {
 }
 
 export function createScissorToggle(
-  workMode: WorkModeService
+  workMode: WorkModeService,
+  shortcuts: ShortcutService
 ): ScissorToggleDescriptor {
   const mode = workMode.mode;
   return {
@@ -116,7 +119,12 @@ export function createScissorToggle(
     shortcut: ShortcutActionEnum.SELECT_SCISSOR,
     isVisible: () =>
       mode() === WorkMode.SELECT || mode() === WorkMode.SELECT_EXACT,
-    isActive: () => mode() === WorkMode.SELECT_EXACT,
+    // Mirror the marquee's `_isScissor`: SELECT_EXACT scissors unconditionally,
+    // plain SELECT scissors while the hold-to-scissor key is down.
+    isActive: () =>
+      mode() === WorkMode.SELECT_EXACT ||
+      (mode() === WorkMode.SELECT &&
+        shortcuts.isHeld(ShortcutActionEnum.SELECT_SCISSOR)),
     toggle: () =>
       workMode.setMode(
         mode() === WorkMode.SELECT_EXACT

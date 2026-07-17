@@ -1,4 +1,11 @@
-import { computed, inject, Injectable, OnDestroy, Signal } from '@angular/core';
+import {
+  computed,
+  inject,
+  Injectable,
+  OnDestroy,
+  Signal,
+  signal
+} from '@angular/core';
 import {
   fromEvent,
   filter,
@@ -78,6 +85,10 @@ export class ShortcutService implements OnDestroy {
   private _heldShift = false;
   private _heldAlt = false;
   private readonly _heldChange$ = new Subject<void>();
+  // Reactive mirror of the held-key state: bumped on every change so that
+  // {@link isHeld}, read inside a template or computed, re-evaluates under
+  // zoneless change detection (e.g. the scissor pill lighting up on Alt).
+  private readonly _heldVersion = signal(0);
 
   /**
    * Fires after every held-key state change (keydown, keyup, window blur).
@@ -127,12 +138,12 @@ export class ShortcutService implements OnDestroy {
       fromEvent<KeyboardEvent>(window, 'keydown').subscribe((e) => {
         this._heldKeys.add(e.key);
         this._trackModifiers(e);
-        this._heldChange$.next();
+        this._notifyHeldChange();
       }),
       fromEvent<KeyboardEvent>(window, 'keyup').subscribe((e) => {
         this._heldKeys.delete(e.key);
         this._trackModifiers(e);
-        this._heldChange$.next();
+        this._notifyHeldChange();
       }),
       // Keyups delivered to another window (tab switch, alt-tab) would leave
       // keys stuck held — a focus loss releases everything.
@@ -141,7 +152,7 @@ export class ShortcutService implements OnDestroy {
         this._heldCtrl = false;
         this._heldShift = false;
         this._heldAlt = false;
-        this._heldChange$.next();
+        this._notifyHeldChange();
       })
     ];
 
@@ -154,6 +165,9 @@ export class ShortcutService implements OnDestroy {
    * live state for the duration of a pointer gesture.
    */
   public isHeld(action: ShortcutActionEnum): boolean {
+    // Track the reactive mirror so a template/computed read re-evaluates on
+    // key changes; a poll from a non-reactive gesture context ignores it.
+    this._heldVersion();
     const binding = this._bindingSignals[action]();
     if (!binding) return false;
     // A bare-modifier binding keeps its own flag false (it would display as
@@ -165,6 +179,11 @@ export class ShortcutService implements OnDestroy {
       (own === 'shift' || this._heldShift === binding.shift) &&
       (own === 'alt' || this._heldAlt === binding.alt)
     );
+  }
+
+  private _notifyHeldChange(): void {
+    this._heldVersion.update((v) => v + 1);
+    this._heldChange$.next();
   }
 
   private _trackModifiers(e: KeyboardEvent): void {
