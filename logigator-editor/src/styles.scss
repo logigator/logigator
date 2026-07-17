@@ -9,3 +9,37 @@ body {
   @apply m-0 p-0;
   @apply overflow-hidden;
 }
+
+// The Phosphor arrow-(counter-)clockwise font glyphs hint to a flat, clipped
+// top on the circular arc at some device-pixel ratios (browser zoom shifts the
+// raster grid and it disappears). Render these two as their own vector outlines
+// via a CSS mask instead of the font glyph, so the curve is resolution
+// independent. The paths are the exact glyph outlines from Phosphor.svg
+// (1024-unit em, 960 ascent), flipped from font (y-up) to SVG (y-down) space.
+$ph-arrow-clockwise: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1024 1024'%3E%3Cpath transform='translate(0 960) scale(1 -1)' d='M960%20736v-192c0-17.673-14.327-32-32-32v0h-192c-17.673%200-32%2014.327-32%2032s14.327%2032%2032%2032v0h109.6l-107.36%2098.4c-57.905%2057.883-137.887%2093.683-226.231%2093.683-176.731%200-320-143.269-320-320s143.269-320%20320-320c85.071%200%20162.388%2033.196%20219.705%2087.341l-0.154-0.144c5.723%205.422%2013.472%208.756%2022%208.756%2017.682%200%2032.016-14.334%2032.016-32.016%200-9.154-3.842-17.411-10.002-23.246l-0.015-0.014c-68.29-64.864-160.837-104.761-262.702-104.761-0.302%200-0.603%200-0.905%200.001h-5.233c-209.803%202.965-378.741%20173.736-378.741%20383.964%200%20212.077%20171.923%20384%20384%20384%20105.786%200%20201.582-42.776%20271.032-111.975l-0.011%200.011%20113-103.2v119.2c0%2017.673%2014.327%2032%2032%2032s32-14.327%2032-32v0z'/%3E%3C/svg%3E";
+$ph-arrow-counter-clockwise: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1024 1024'%3E%3Cpath transform='translate(0 960) scale(1 -1)' d='M896%20448c0-0.010%200-0.022%200-0.035%200-210.263-168.993-381.055-378.566-383.962l-0.274-0.003h-5.16c-0.283-0.001-0.617-0.001-0.952-0.001-101.855%200-194.388%2039.914-262.811%20104.954l0.162-0.153c-6.174%205.849-10.016%2014.106-10.016%2023.26%200%2017.682%2014.334%2032.016%2032.016%2032.016%208.528%200%2016.277-3.334%2022.015-8.77l-0.015%200.014c57.164-54.001%20134.481-87.197%20219.551-87.197%20176.731%200%20320%20143.269%20320%20320s-143.269%20320-320%20320c-88.344%200-168.327-35.8-226.232-93.684l0.001%200.001c-0.327-0.353-0.666-0.68-1.024-0.986l-0.016-0.014-106.32-97.44h109.64c17.673%200%2032-14.327%2032-32s-14.327-32-32-32v0h-192c-17.673%200-32%2014.327-32%2032v0%20192c0%2017.673%2014.327%2032%2032%2032s32-14.327%2032-32v0-119.2l113%20103.2c69.437%2069.175%20165.224%20111.943%20271%20111.943%20212.057%200%20383.968-171.89%20384-383.94v-0.003z'/%3E%3C/svg%3E";
+
+.ph.ph-arrow-clockwise::before,
+.ph.ph-arrow-counter-clockwise::before {
+  content: "";
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  background-color: currentColor;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  -webkit-mask-size: contain;
+}
+
+.ph.ph-arrow-clockwise::before {
+  mask-image: url("#{$ph-arrow-clockwise}");
+  -webkit-mask-image: url("#{$ph-arrow-clockwise}");
+}
+
+.ph.ph-arrow-counter-clockwise::before {
+  mask-image: url("#{$ph-arrow-counter-clockwise}");
+  -webkit-mask-image: url("#{$ph-arrow-counter-clockwise}");
+}
