@@ -45,9 +45,16 @@ export class DragCollisionState {
         this._project.hasWireBodyCollision(offsetRect(w.gridBounds, offset))
       );
 
-    if (collision === this._hasCollision) return;
+    const changed = collision !== this._hasCollision;
     this._hasCollision = collision;
-    this._applyTint();
+    // While colliding, the tint is re-applied on every update — not only on
+    // transitions: a mid-session rotate rebuilds each component's children,
+    // and the rebuild's refreshTint restores the selection tint over the
+    // invalid one. Tint writes are a per-frame-safe fast path, so the
+    // redundant re-apply during a colliding move costs nothing.
+    if (collision || changed) {
+      this._applyTint();
+    }
   }
 
   /**

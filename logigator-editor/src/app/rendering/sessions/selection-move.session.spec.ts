@@ -10,6 +10,8 @@ import { WorkMode } from '../../work-mode/work-mode.enum';
 import { AddWiresAction } from '../../actions/actions/add-wires.action';
 import { Direction } from '../../utils/direction';
 import { makeAnd, makeMoveInput, makeWire } from '../../../testing/factories';
+import { ThemingService } from '../../theming/theming.service';
+import { getStaticDI } from '../../utils/get-di';
 
 describe('SelectionMoveSession collision', () => {
   let project: Project;
@@ -623,6 +625,35 @@ describe('SelectionMoveSession collision', () => {
       expect(selected.position.y).toBe(0);
       expect(project.getComponentById(selected.id)).toBe(selected);
       expect(project.actionManager.undoAvailable).toBe(false);
+    });
+
+    it('keeps the invalid tint across a turn from colliding to still colliding', () => {
+      // A stationary AND on the same footprint collides with the selected one
+      // in every pose, so consecutive turns stay colliding throughout. Each
+      // turn redraws the component (the direction setter rebuilds its
+      // children, restoring the selection tint), so the collision state must
+      // re-apply the invalid tint rather than only reacting to transitions.
+      const stationary = makeAnd(2, Direction.E, 0, 0);
+      project.addComponent(stationary);
+      const selected = makeAnd(2, Direction.E, 0, 0);
+      project.addComponent(selected);
+      project.selectionManager.select([selected], []);
+      const invalid = getStaticDI(ThemingService).currentTheme().invalid;
+
+      session = new SelectionMoveSession(
+        project,
+        dragLayer,
+        new Set([selected]),
+        new Set(),
+        null
+      );
+      session.rotate(1);
+      expect(session.canEnd()).toBe(false);
+      expect(selected.tint).toBe(invalid);
+
+      session.rotate(1);
+      expect(session.canEnd()).toBe(false);
+      expect(selected.tint).toBe(invalid);
     });
 
     it('four quarter-turns net to zero and commit nothing', () => {
