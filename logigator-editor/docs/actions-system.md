@@ -80,15 +80,19 @@ action.do(this.project);
 
 ### `locked`
 
-Set by the `WorkModeRouter` around every live drag session. Sessions detach elements into the drag layer, and a history operation touching them would corrupt the quad tree (duplicate ids, dangling instances), so undo/redo are inert while a session is live. Commits are unaffected — a session registers its action before the router unlocks.
+While `locked` is set, undo/redo are inert; recording stays allowed. The `WorkModeRouter` locks around every live drag session: sessions detach elements into the drag layer, and a history operation touching them would corrupt the quad tree (duplicate ids, dangling instances). A session registers its action before the router unlocks.
+
+### `onBeforeRecord(hook)`
+
+Generic pre-record extension point: registered hooks run synchronously before `push`/`register` records a new action (never on `retract`, `coalesceTop`, `undo` or `redo`). A hook may itself mutate the history — e.g. retract a provisional entry it owns — before the new action lands; history operations a hook performs never re-enter the hook pass. Returns an unsubscribe function. `ActionManager` itself knows nothing about what hooks do — the scissor cut's dissolve rule (below) is `SelectionManager` policy installed through this.
 
 ### `topDone` / `retract(action)` / `coalesceTop(expectedTop, next)`
 
-The history surface behind the scissor cut (see § _The scissor cut lives in history_):
+Generic history surface for **provisional entries** — entries whose owner may still take them back or fold them into a follow-up (the scissor cut is the one current user, see § _The scissor cut lives in history_):
 
 - `topDone` — the newest done entry (what the next undo would revert).
-- `retract(action)` — if `action === topDone`: runs its `undo()`, removes it from history, returns `true`. Otherwise touches nothing. How a cancelled scissor selection takes its cut back out of history.
-- `coalesceTop(expectedTop, next)` — replaces the newest done entry with `ActionContainer(expectedTop, next)` **without executing anything** (`next`'s state must already be materialized). How cut + move / cut + delete collapse into one undo step. Falls back to a plain `register(next)` when `expectedTop` is no longer on top.
+- `retract(action)` — if `action === topDone`: runs its `undo()`, removes it from history, returns `true`. Otherwise touches nothing.
+- `coalesceTop(expectedTop, next)` — replaces the newest done entry with `ActionContainer(expectedTop, next)` **without executing anything** (`next`'s state must already be materialized). Falls back to a plain `register(next)` when `expectedTop` is no longer on top.
 
 ### `clear()`
 
@@ -218,7 +222,7 @@ A `SELECT_EXACT` marquee that scissors wires registers the cut (`ActionContainer
 
 - **Commit** — a selection move or delete consumes the cut (`consumeLiveCut`) and coalesces it with its own container (`coalesceTop`), so cut + move / cut + delete revert with one Ctrl+Z.
 - **Cancel** — clearing the selection retracts the entry (`retract`): the originals come back and the history shows no trace.
-- **Dissolve** — any unrelated `push`/`register` while a cut is live first clears the selection (retracting the cut), so an uncommitted split can never be orphaned behind newer history entries.
+- **Dissolve** — any unrelated `push`/`register` while a cut is live first clears the selection (retracting the cut), so an uncommitted split can never be orphaned behind newer history entries. This is `SelectionManager` policy: it installs the rule via `ActionManager.onBeforeRecord` in its constructor; the manager itself carries no cut knowledge.
 
 A plain Ctrl+Z while the cut is live simply undoes it as the newest entry (and it stays redoable).
 

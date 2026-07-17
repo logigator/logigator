@@ -27,18 +27,45 @@ export class ActionManager {
   public readonly actionChange$: Observable<void> =
     this._actionChange$.asObservable();
 
-  // While a drag session is live (set by the WorkModeRouter), undo/redo are
-  // inert: the session may hold elements detached from the quad tree, and a
-  // history operation touching them would corrupt the tree (duplicate ids,
-  // dangling instances). Commits are unaffected — a session registers its
-  // action before the router unlocks.
+  // While locked, undo/redo are inert; recording stays allowed. The host
+  // locks around interactions that hold project state mid-mutation, where a
+  // history operation would run against an inconsistent tree.
   public locked = false;
 
-  // Reentrancy guard for the live-cut dissolve below: clearing the selection
-  // retracts the cut, and nothing that runs inside that may dissolve again.
-  private _dissolving = false;
+  // Hooks that run synchronously before push/register records a new action
+  // (see onBeforeRecord). Guarded against re-entry: a hook that records an
+  // action itself must not re-trigger the hook pass.
+  private readonly _beforeRecordHooks: ((action: Action) => void)[] = [];
+  private _notifyingHooks = false;
 
   constructor(private readonly project: Project) {}
+
+  /**
+   * Registers a hook that runs synchronously before {@link push} or
+   * {@link register} records a new action. A hook may itself mutate the
+   * history — e.g. {@link retract} a provisional entry it owns — before the
+   * new action lands; the history operations a hook performs never re-enter
+   * the hook pass. Returns an unsubscribe function.
+   */
+  public onBeforeRecord(hook: (action: Action) => void): () => void {
+    this._beforeRecordHooks.push(hook);
+    return () => {
+      const index = this._beforeRecordHooks.indexOf(hook);
+      if (index !== -1) this._beforeRecordHooks.splice(index, 1);
+    };
+  }
+
+  private _notifyBeforeRecord(action: Action): void {
+    if (this._notifyingHooks) return;
+    this._notifyingHooks = true;
+    try {
+      for (const hook of [...this._beforeRecordHooks]) {
+        hook(action);
+      }
+    } finally {
+      this._notifyingHooks = false;
+    }
+  }
 
   /** The newest done action — the entry the next undo would revert. */
   public get topDone(): Action | null {
@@ -46,7 +73,7 @@ export class ActionManager {
   }
 
   public push(action: Action): void {
-    this._dissolveLiveCut();
+    this._notifyBeforeRecord(action);
     this._history.splice(this._pointer, Infinity, action);
     this._pointer = this._history.length;
     action.do(this.project);
@@ -58,7 +85,7 @@ export class ActionManager {
   }
 
   public register(action: Action): void {
-    this._dissolveLiveCut();
+    this._notifyBeforeRecord(action);
     this._history.splice(this._pointer, Infinity, action);
     this._pointer = this._history.length;
     this.logging.debug(
@@ -70,8 +97,8 @@ export class ActionManager {
 
   /**
    * Reverts and removes an action, provided it is still the newest done entry
-   * — how a cancelled scissor selection takes its cut back out of history so
-   * it leaves no trace. Returns false (touching nothing) otherwise.
+   * — how the owner of a provisional entry takes it back out of history so it
+   * leaves no trace. Returns false (touching nothing) otherwise.
    */
   public retract(action: Action): boolean {
     if (this.topDone !== action) return false;
@@ -89,10 +116,10 @@ export class ActionManager {
   /**
    * Replaces the newest done entry with a container grouping it and `next`,
    * WITHOUT executing anything — `next`'s state must already be materialized
-   * (the register convention). This is how a scissor cut and the move/delete
-   * that commits it collapse into one undo step. Falls back to a plain
-   * register when `expectedTop` is no longer on top (it then stays its own
-   * undo step).
+   * (the register convention). This is how a provisional entry and the
+   * operation that finalizes it collapse into one undo step. Falls back to a
+   * plain register when `expectedTop` is no longer on top (it then stays its
+   * own undo step).
    */
   public coalesceTop(expectedTop: Action, next: Action): void {
     if (this.topDone !== expectedTop) {
@@ -116,32 +143,9 @@ export class ActionManager {
     this._actionChange$.next();
   }
 
-  /**
-   * A live scissor cut only stays in history as long as a move or delete can
-   * still commit it. Any unrelated action landing on top would orphan it as
-   * an invisible wire split, so dissolve first: clearing the selection
-   * retracts the cut. Lazy `selectionManager` access matters — Project
-   * constructs actionManager (this) before selectionManager.
-   */
-  private _dissolveLiveCut(): void {
-    if (this._dissolving) return;
-    const selectionManager = this.project.selectionManager;
-    if (!selectionManager?.hasLiveCut) return;
-    this._dissolving = true;
-    try {
-      this.logging.debug(
-        'dissolving live scissor cut before recording an unrelated action',
-        'ActionManager'
-      );
-      selectionManager.clear();
-    } finally {
-      this._dissolving = false;
-    }
-  }
-
   public undo(): void {
     if (this.locked) {
-      this.logging.debug('undo ignored: a drag session is live', 'ActionManager');
+      this.logging.debug('undo ignored while locked', 'ActionManager');
       return;
     }
 
@@ -164,7 +168,7 @@ export class ActionManager {
 
   public redo(): void {
     if (this.locked) {
-      this.logging.debug('redo ignored: a drag session is live', 'ActionManager');
+      this.logging.debug('redo ignored while locked', 'ActionManager');
       return;
     }
     if (!this.redoAvailable) return;
@@ -227,5 +231,6 @@ export class ActionManager {
    */
   public destroy(): void {
     this._actionChange$.complete();
+    this._beforeRecordHooks.length = 0;
   }
 }

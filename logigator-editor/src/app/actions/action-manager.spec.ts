@@ -11,8 +11,6 @@ function makeProject(): MockedObject<Project> {
   const project = {
     addComponent: vi.fn().mockName('Project.addComponent'),
     selectionManager: {
-      hasLiveCut: false,
-      clear: vi.fn().mockName('SelectionManager.clear'),
       retintCps: () => undefined
     }
   };
@@ -216,27 +214,64 @@ describe('ActionManager', () => {
     });
   });
 
-  describe('live-cut dissolve on unrelated actions', () => {
-    it('clears the selection (retracting its cut) before recording', () => {
-      const selectionManager = (
-        project as never as {
-          selectionManager: { hasLiveCut: boolean; clear: () => void };
-        }
-      ).selectionManager;
-      selectionManager.hasLiveCut = true;
+  describe('onBeforeRecord hooks', () => {
+    it('runs hooks with the action before push and register record it', () => {
+      const hook = vi.fn();
+      manager.onBeforeRecord(hook);
+
+      const pushed = makeAction();
+      manager.push(pushed);
+      expect(hook).toHaveBeenNthCalledWith(1, pushed);
+
+      const registered = makeAction();
+      manager.register(registered);
+      expect(hook).toHaveBeenNthCalledWith(2, registered);
+    });
+
+    it('does not run hooks on undo, redo or retract', () => {
+      const action = makeAction();
+      manager.register(action);
+
+      const hook = vi.fn();
+      manager.onBeforeRecord(hook);
+
+      manager.undo();
+      manager.redo();
+      manager.retract(action);
+
+      expect(hook).not.toHaveBeenCalled();
+    });
+
+    it('lets a hook retract a provisional entry before the new action lands', () => {
+      const provisional = makeAction();
+      manager.register(provisional);
+      manager.onBeforeRecord(() => manager.retract(provisional));
+
+      const next = makeAction();
+      manager.push(next);
+
+      expect(provisional.undo).toHaveBeenCalledTimes(1);
+      expect(manager.history).toEqual([next]);
+      expect(manager.topDone).toBe(next);
+    });
+
+    it('does not re-enter hooks when a hook records an action', () => {
+      const hook = vi.fn(() => manager.register(makeAction()));
+      manager.onBeforeRecord(hook);
 
       manager.push(makeAction());
 
-      expect(selectionManager.clear).toHaveBeenCalledTimes(1);
+      expect(hook).toHaveBeenCalledTimes(1);
     });
 
-    it('does not dissolve when no cut is live', () => {
-      manager.register(makeAction());
+    it('stops delivering after unsubscribe', () => {
+      const hook = vi.fn();
+      const unsubscribe = manager.onBeforeRecord(hook);
 
-      expect(
-        (project as never as { selectionManager: { clear: () => void } })
-          .selectionManager.clear
-      ).not.toHaveBeenCalled();
+      unsubscribe();
+      manager.push(makeAction());
+
+      expect(hook).not.toHaveBeenCalled();
     });
   });
 

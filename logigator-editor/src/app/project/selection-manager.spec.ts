@@ -113,8 +113,11 @@ function makeProject(): MockedObject<Project> {
     topDone: null as unknown,
     push: vi.fn().mockName('ActionManager.push'),
     register: vi.fn().mockName('ActionManager.register'),
-    retract: vi.fn().mockName('ActionManager.retract')
+    retract: vi.fn().mockName('ActionManager.retract'),
+    // Captures the dissolve hook the manager installs so tests can fire it.
+    onBeforeRecord: vi.fn().mockName('ActionManager.onBeforeRecord')
   };
+  actionManager.onBeforeRecord.mockReturnValue(() => undefined);
   actionManager.register.mockImplementation((action: unknown) => {
     actionManager.topDone = action;
   });
@@ -435,6 +438,29 @@ describe('SelectionManager', () => {
         manager.clear();
         expect(project.removeWire).not.toHaveBeenCalled();
         expect(project.addWire).not.toHaveBeenCalled();
+      });
+
+      it('the installed pre-record hook dissolves a live cut and no-ops otherwise', () => {
+        // The manager registers its dissolve policy on construction.
+        const hook = (project as any).actionManager.onBeforeRecord.mock
+          .calls[0][0] as () => void;
+
+        // No live cut: the hook must not touch the selection or the history.
+        hook();
+        expect((project as any).actionManager.retract).not.toHaveBeenCalled();
+
+        const wire = makeFullWire(WireDirection.HORIZONTAL, 3.5, 4.5, 5);
+        setWires(project, wire);
+        manager.commit(new Rectangle(5, 4, 2, 1), WorkMode.SELECT_EXACT);
+        expect(manager.hasLiveCut).toBe(true);
+
+        // Live cut: the hook clears the selection, retracting the cut.
+        hook();
+        expect(manager.hasLiveCut).toBe(false);
+        expect(manager.isEmpty).toBe(true);
+        expect((project as any).actionManager.retract).toHaveBeenCalledTimes(
+          1
+        );
       });
     });
   });

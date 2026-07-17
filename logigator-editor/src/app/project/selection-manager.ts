@@ -35,7 +35,18 @@ export class SelectionManager {
   private _grabRect: Rectangle | null = null;
   private _grabAnchor: Point | null = null;
 
-  constructor(private readonly project: Project) {}
+  constructor(private readonly project: Project) {
+    // Dissolve-on-external-action: a live cut only stays in history as long
+    // as a move or delete can still commit it. Any unrelated action recorded
+    // on top would orphan it as an invisible wire split, so clear the
+    // selection (retracting the cut) before that action lands. The cut's own
+    // register can't self-dissolve — `_cutAction` is only set afterwards.
+    // Same lifetime as the manager (both die with the project), so the
+    // disposer is never needed.
+    project.actionManager.onBeforeRecord(() => {
+      if (this.hasLiveCut) this.clear();
+    });
+  }
 
   public commit(rect: Rectangle, mode: WorkMode): void {
     if (rect.width === 0 && rect.height === 0) {
