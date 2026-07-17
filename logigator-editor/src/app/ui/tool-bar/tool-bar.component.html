@@ -35,7 +35,9 @@
       ></lg-button>
       <lg-button
         [lgTooltip]="t('toolBar.newComp')"
+        [tooltipShortcut]="shortcutBinding(actions.NEW_COMPONENT)"
         [ariaLabel]="t('toolBar.newComp')"
+        (onClick)="newComponent()"
         tooltipPosition="bottom"
         icon="ph ph-cpu"
         severity="secondary"

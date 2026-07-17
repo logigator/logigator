@@ -28,9 +28,9 @@ export const DEFAULT_SHORTCUTS: Record<ShortcutActionEnum, ShortcutBinding> = {
   [ShortcutActionEnum.OPEN]: { key: 'o', ctrl: true, shift: false, alt: false },
   [ShortcutActionEnum.NEW_COMPONENT]: {
     key: 'n',
-    ctrl: true,
+    ctrl: false,
     shift: false,
-    alt: false
+    alt: true
   },
   [ShortcutActionEnum.UNDO]: { key: 'z', ctrl: true, shift: false, alt: false },
   [ShortcutActionEnum.REDO]: { key: 'z', ctrl: true, shift: true, alt: false },

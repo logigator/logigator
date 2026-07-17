@@ -13,6 +13,7 @@ import { ProjectService } from '../../project/project.service';
 import { EditorCommandStateService } from '../../project/editor-command-state.service';
 import { SaveCoordinatorService } from '../save-coordinator.service';
 import { OpenProjectDialogComponent } from '../dialogs/open-project-dialog/open-project-dialog.component';
+import { NewComponentDialogComponent } from '../dialogs/new-component-dialog/new-component-dialog.component';
 import { ShortcutService } from '../../shortcuts/shortcut.service';
 import { ShortcutActionEnum } from '../../shortcuts/shortcut-action.enum';
 import { ShortcutBinding } from '../../shortcuts/shortcut-binding.model';
@@ -104,6 +105,17 @@ export class ToolBarComponent {
     this.dialogService.open(OpenProjectDialogComponent, {
       header: this.translation.translate('openProjectDialog.title'),
       width: '40rem',
+      modal: true,
+      closable: true
+    });
+  }
+
+  protected newComponent(): void {
+    this.dialogService.open(NewComponentDialogComponent, {
+      header: this.translation.translate(
+        'titleBar.menuBar.file.items.newComponent.label'
+      ),
+      width: '28rem',
       modal: true,
       closable: true
     });
