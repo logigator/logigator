@@ -350,10 +350,14 @@ export class SelectionMoveSession implements DragSession {
       addSurvivedWireActions(this._wires);
     }
 
-    // The moved wires' final geometry, captured before the removals below
-    // destroy the instances the integrator replaced — the basis for deciding
-    // which replacement wires the selection adopts.
+    // Captured before the removals below: the moved wires' final geometry
+    // (the removals destroy the instances the integrator replaced — the basis
+    // for deciding which replacement wires the selection adopts) and the
+    // frozen grab rect (the removals evict the replaced originals, which can
+    // empty or shrink the bounding box the rect's translation anchors to —
+    // read afterwards it would come back displaced or null).
     const movedFinalSnapshots = this._wires.map((w) => Wire.snapshot(w));
+    const grabRectBeforeIntegration = this.project.selectionManager.grabRect();
 
     // Materialize the integrator's changes with the live instances (positions
     // were already applied in the move loop above), then register — the
@@ -361,13 +365,20 @@ export class SelectionMoveSession implements DragSession {
     for (const w of toRemove) this.project.removeWire(w.id);
     for (const w of toAdd) this.project.addWire(w);
 
-    // Keep the selection covering what the user moved: a replacement wire
-    // that shares a span with a moved wire is its merge/split successor and
-    // joins the selection (the evicted original is gone); an external wire's
-    // split pieces only ever touch the selection at an endpoint and stay out.
-    this.project.selectionManager.adoptWires(
-      toAdd.filter((w) => movedFinalSnapshots.some((s) => wiresShareSpan(s, w)))
-    );
+    if (toRemove.length > 0 || toAdd.length > 0) {
+      // Keep the selection covering what the user moved: a replacement wire
+      // that shares a span with a moved wire is its merge/split successor and
+      // joins the selection (the evicted original is gone); an external
+      // wire's split pieces only ever touch the selection at an endpoint and
+      // stay out. Then re-freeze the rect captured above over the re-derived
+      // membership.
+      this.project.selectionManager.adoptWires(
+        toAdd.filter((w) =>
+          movedFinalSnapshots.some((s) => wiresShareSpan(s, w))
+        )
+      );
+      this.project.selectionManager.freezeGrabRect(grabRectBeforeIntegration);
+    }
 
     getStaticDI(LoggingService).debug(
       `committed move: ${this._components.length} component(s) and ${this._wires.length} wire(s) moved (${this._netSteps} quarter-turn(s)); ` +

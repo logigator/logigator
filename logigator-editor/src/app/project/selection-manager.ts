@@ -454,12 +454,12 @@ export class SelectionManager {
    * Adds a committed move/rotate's integration replacement wires to the live
    * selection: the selected originals were evicted by their removal, so
    * without this a merge or split would silently drop them from the
-   * selection. The frozen grab rect is re-frozen in place first — adopting a
-   * merged wire can grow the bounding box, and letting the translation anchor
-   * drift with it would shift the rect on screen.
+   * selection. The caller re-freezes the grab rect afterwards (see
+   * {@link freezeGrabRect}) with a rect captured *before* the removals — the
+   * evictions can empty or shrink the bounding box the rect anchors to, so it
+   * cannot be re-derived here.
    */
   public adoptWires(wires: Iterable<Wire>): void {
-    const rect = this.grabRect();
     let changed = false;
     for (const wire of wires) {
       if (wire.destroyed || this._selectedWires.has(wire)) continue;
@@ -467,9 +467,9 @@ export class SelectionManager {
       this._selectedWires.add(wire);
       changed = true;
     }
-    if (!changed) return;
-    this._setGrabRect(rect);
-    this._selectionChange$.next();
+    if (changed) {
+      this._selectionChange$.next();
+    }
   }
 
   /**

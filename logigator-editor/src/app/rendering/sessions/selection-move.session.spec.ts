@@ -497,6 +497,13 @@ describe('SelectionMoveSession collision', () => {
       expect(merged.length).toBe(10);
       expect(merged.selected).toBe(true);
       expect([...project.selectionManager.selectedWires]).toEqual([merged]);
+
+      // The frozen grab rect survives the transient eviction of the merged
+      // original: still the select()-derived rect, translated by the move —
+      // not re-fit to the longer merged wire and not dropped.
+      expect(project.selectionManager.grabRect()).toEqual(
+        new Rectangle(-1, 9, 8, 3)
+      );
     });
 
     it('does not adopt the pieces of an external wire split by the arriving selection', () => {
@@ -531,6 +538,7 @@ describe('SelectionMoveSession collision', () => {
       for (const piece of horizontals) {
         expect(piece.selected).toBe(false);
       }
+      expect(project.selectionManager.grabRect()).not.toBeNull();
     });
   });
 
