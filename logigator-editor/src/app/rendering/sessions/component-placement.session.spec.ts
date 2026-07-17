@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { TestBed } from '@angular/core/testing';
 import { Container, Point, Rectangle } from 'pixi.js';
 import { configureTestBed } from '../../../testing/configure-test-bed';
+import { WorkModeService } from '../../work-mode/work-mode.service';
 import { Project } from '../../project/project';
 import { Wire } from '../../wires/wire';
 import { WireDirection } from '../../wires/wire-direction.enum';
@@ -163,12 +165,14 @@ describe('ComponentPlacementSession collision', () => {
     existing.position.set(0, 0);
     project.addComponent(existing);
 
-    placeConfig = {
-      ...notComponentConfig,
-      options: {
-        direction: notComponentConfig.options.direction.clone(Direction.N)
-      }
-    } as unknown as ComponentConfig<Record<string, ComponentOption>>;
+    // The session's ghost starts facing the type's sticky placement direction.
+    TestBed.inject(WorkModeService).setPlacementDirection(
+      notComponentConfig.type,
+      Direction.N
+    );
+    placeConfig = notComponentConfig as unknown as ComponentConfig<
+      Record<string, ComponentOption>
+    >;
     session = new ComponentPlacementSession(
       project,
       dragLayer,
@@ -185,12 +189,13 @@ describe('ComponentPlacementSession collision', () => {
     existing.position.set(0, 0);
     project.addComponent(existing);
 
-    placeConfig = {
-      ...notComponentConfig,
-      options: {
-        direction: notComponentConfig.options.direction.clone(Direction.N)
-      }
-    } as unknown as ComponentConfig<Record<string, ComponentOption>>;
+    TestBed.inject(WorkModeService).setPlacementDirection(
+      notComponentConfig.type,
+      Direction.N
+    );
+    placeConfig = notComponentConfig as unknown as ComponentConfig<
+      Record<string, ComponentOption>
+    >;
     session = new ComponentPlacementSession(
       project,
       dragLayer,

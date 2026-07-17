@@ -530,7 +530,7 @@ export class Project extends Container {
     if (!component) return;
     const oldPorts = component.connectionPoints;
     this._componentsById.delete(id);
-    component.applyDirection(direction);
+    component.direction = direction;
     this._componentsById.set(id, component);
     component.position.copyFrom(pos);
     this._components.insert(component);

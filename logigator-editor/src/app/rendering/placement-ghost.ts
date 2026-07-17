@@ -5,6 +5,9 @@ import { ComponentConfig } from '../components/component-config.model';
 import { Wire } from '../wires/wire';
 import { ConnectionPoint } from '../connection-points/connection-point';
 import { applyInvalidTint } from './invalid-tint';
+import { WorkModeService } from '../work-mode/work-mode.service';
+import { getStaticDI } from '../utils/get-di';
+import { Direction } from '../utils/direction';
 
 /**
  * A single-component placement preview living in the floating layer's drag
@@ -31,6 +34,14 @@ export class PlacementGhost {
       Object.entries(config.options).map(([key, opt]) => [key, opt.clone()])
     );
     this._component = config.create(options);
+    // The ghost starts facing the type's sticky placement direction (set by
+    // the settings panel while placing; East until then).
+    const direction = getStaticDI(WorkModeService).placementDirectionFor(
+      config.type
+    );
+    if (direction !== Direction.E) {
+      this._component.direction = direction;
+    }
     // The ghost wears the selection look (theme-keyed tint).
     this._component.selected = true;
     this._component.applyScale(project.scale.x);

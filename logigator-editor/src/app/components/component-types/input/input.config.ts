@@ -2,14 +2,12 @@ import { ComponentConfig } from '../../component-config.model';
 import { BuiltInComponentType } from '../../component-type.enum';
 import { ComponentCategory } from '../../component-category.enum';
 import { ComponentOption } from '../../component-option';
-import { DirectionComponentOption } from '../../component-options/direction/direction.component-option';
 import { TextInputComponentOption } from '../../component-options/text-input/text-input.component-option';
 import { NumberComponentOption } from '../../component-options/number/number.component-option';
 import { InputComponent } from './input.component';
 
 export interface InputOptions {
   [key: string]: ComponentOption;
-  direction: DirectionComponentOption;
   // User-facing port name; round-trips through the `s` wire slot. Constrained
   // to the backend's label column limits (max 5 chars, no commas).
   label: TextInputComponentOption;
@@ -25,7 +23,6 @@ export const inputComponentConfig: ComponentConfig<InputOptions> = {
   name: 'components.def.INPUT.name',
   description: 'components.def.INPUT.description',
   options: {
-    direction: new DirectionComponentOption(),
     label: new TextInputComponentOption('components.options.label', '', {
       maxLength: 5,
       forbiddenChars: /,/g
@@ -37,6 +34,6 @@ export const inputComponentConfig: ComponentConfig<InputOptions> = {
       0
     ).hideFromInspector()
   },
-  legacyV0Slots: { r: 'direction', s: 'label', n: ['index'] },
+  legacyV0Slots: { s: 'label', n: ['index'] },
   create: (options) => new InputComponent(options)
 };

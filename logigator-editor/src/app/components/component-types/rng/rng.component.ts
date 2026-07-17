@@ -9,13 +9,7 @@ export class RngComponent extends Component<RngOptions> {
   private readonly destroy$ = new Subject<void>();
 
   constructor(options: RngOptions) {
-    super(1, options.numOutputs.value, options.direction.value, options);
-
-    this.options.direction.onChange$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.direction = this.options.direction.value;
-      });
+    super(1, options.numOutputs.value, options);
 
     this.options.numOutputs.onChange$
       .pipe(takeUntil(this.destroy$))

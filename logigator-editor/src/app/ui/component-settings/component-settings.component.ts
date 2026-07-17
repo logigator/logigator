@@ -1,5 +1,7 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { NgComponentOutlet } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { LgSelectButton } from '@logigator/ui';
 import { WorkModeService } from '../../work-mode/work-mode.service';
 import { WorkMode } from '../../work-mode/work-mode.enum';
 import { SelectionInspectorService } from '../../project/selection-inspector.service';
@@ -11,6 +13,8 @@ import {
 } from '../../components/component-config.model';
 import { TranslationService } from '../../translation/translation.service';
 import { ChangeOptionAction } from '../../actions/actions/change-option.action';
+import { Direction } from '../../utils/direction';
+import { normalizeRotationSteps } from '../../utils/rotation';
 import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
 import { CUSTOM_TYPE_ID_BASE } from '../../components/component-type.enum';
 import {
@@ -18,9 +22,26 @@ import {
   SourceIndicatorState
 } from '../source-indicator/source-indicator.component';
 
+// Choices for the universal direction row, in the clockwise-from-East order
+// the Direction enum encodes.
+const DIRECTION_CHOICES: { value: Direction; icon: string }[] = [
+  { value: Direction.E, icon: 'ph ph-arrow-fat-right' },
+  { value: Direction.S, icon: 'ph ph-arrow-fat-down' },
+  { value: Direction.W, icon: 'ph ph-arrow-fat-left' },
+  { value: Direction.N, icon: 'ph ph-arrow-fat-up' }
+];
+
+let nextDirectionInputId = 0;
+
 @Component({
   selector: 'app-component-settings',
-  imports: [NgComponentOutlet, LgCard, SourceIndicatorComponent],
+  imports: [
+    NgComponentOutlet,
+    FormsModule,
+    LgCard,
+    LgSelectButton,
+    SourceIndicatorComponent
+  ],
   templateUrl: './component-settings.component.html',
   // Clamp to the host container so a long, unbreakable description word can't
   // inflate the card's min-content and push it past the layout's width cap
@@ -45,10 +66,12 @@ export class ComponentSettingsComponent {
   // callback that a renderer invokes on edit: the ghost writes its option
   // directly (the eventual AddComponentsAction captures the final values); a
   // placed component routes the write through ChangeOptionAction (undoable +
-  // dirty-tracked). Both branches carry the config's inspector actions and a
-  // context to act on; the ghost has no instance, so its context omits
-  // component/project and instance-scoped actions (e.g. update-to-latest) hide
-  // themselves on the null component.
+  // dirty-tracked). Direction is not an option but universal first-class
+  // component state, so each branch also supplies the fixed direction row's
+  // value and its own `commitDirection`. Both branches carry the config's
+  // inspector actions and a context to act on; the ghost has no instance, so
+  // its context omits component/project and instance-scoped actions (e.g.
+  // update-to-latest) hide themselves on the null component.
   protected readonly componentSettings = computed(() => {
     // Hidden during simulation: editing is locked, and the mode switch has
     // already cleared selection and placement state anyway.
@@ -65,6 +88,12 @@ export class ComponentSettingsComponent {
         commit: (key: string, value: unknown) => {
           ghost.options[key].value = value;
         },
+        // The ghost's direction is the sticky per-type placement direction:
+        // the live hover ghost is rebuilt from it whenever the pointer
+        // re-enters the board, so the panel write lands on the next ghost.
+        direction: this.workModeService.placementDirectionFor(ghost.type),
+        commitDirection: (value: Direction) =>
+          this.workModeService.setPlacementDirection(ghost.type, value),
         actions: ghost.actions ?? [],
         context: { config: ghost, component: null, project: null },
         source: this._customSource(ghost.type)
@@ -84,6 +113,19 @@ export class ComponentSettingsComponent {
           project.actionManager.push(
             new ChangeOptionAction(selected.id, key, option.value, value)
           );
+        },
+        direction: selected.direction,
+        // A direction change rotates about the component's midpoint, matching
+        // the rotate buttons/shortcuts, rather than pinning the body's
+        // top-left corner (the `direction` setter's own anchor). Routing
+        // through the shared selection-rotate command reuses the buttons'
+        // pivot, collision handling, and undo entry — the single selected
+        // component this panel edits is exactly the selection that command
+        // turns.
+        commitDirection: (value: Direction) => {
+          const steps = normalizeRotationSteps(value - selected.direction);
+          if (steps === 0) return;
+          project.requestSelectionRotation(steps);
         },
         actions: selected.config.actions ?? [],
         context: { config: selected.config, component: selected, project },
@@ -110,6 +152,9 @@ export class ComponentSettingsComponent {
         commit: (value: unknown) => settings.commit(key, value)
       }));
   });
+
+  protected readonly directionChoices = DIRECTION_CHOICES;
+  protected readonly directionInputId = `component-settings-direction-${++nextDirectionInputId}`;
 
   /**
    * The library/state chip for a custom component (master or placed snapshot):

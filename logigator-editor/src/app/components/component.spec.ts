@@ -37,7 +37,7 @@ describe('Component.deserialize (create() factory)', () => {
 
   it('builds an instance of the config implementation via create()', () => {
     const comp = Component.deserialize(
-      { pos: [4, 7], options: { direction: Direction.E, numInputs: 3 } },
+      { pos: [4, 7], options: { numInputs: 3 } },
       andComponentConfig
     );
 
@@ -54,7 +54,7 @@ describe('Component.deserialize (create() factory)', () => {
       {
         id: 42,
         pos: [0, 0],
-        options: { direction: Direction.E, numInputs: 2 }
+        options: { numInputs: 2 }
       },
       andComponentConfig
     );
@@ -312,7 +312,11 @@ describe('Component port-label anchoring', () => {
 
   function makeRom(direction: Direction): Component {
     return Component.deserialize(
-      { pos: [0, 0], options: { direction } },
+      {
+        pos: [0, 0],
+        ...(direction ? { direction } : {}),
+        options: {}
+      },
       romComponentConfig as unknown as ComponentConfig
     );
   }
@@ -821,7 +825,7 @@ describe('Component negation serialization', () => {
     const comp = Component.deserialize(
       {
         pos: [0, 0],
-        options: { direction: Direction.E, numInputs: 3 },
+        options: { numInputs: 3 },
         negInputs: [1],
         negOutputs: [0]
       },
@@ -855,7 +859,7 @@ describe('Component negation serialization', () => {
 
   it('treats a serialized form without negation fields as no negation', () => {
     const comp = Component.deserialize(
-      { pos: [0, 0], options: { direction: Direction.E, numInputs: 2 } },
+      { pos: [0, 0], options: { numInputs: 2 } },
       andComponentConfig
     );
 

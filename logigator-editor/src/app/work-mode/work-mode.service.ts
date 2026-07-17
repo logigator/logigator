@@ -3,6 +3,7 @@ import { WorkMode } from './work-mode.enum';
 import { ComponentType } from '../components/component-type.enum';
 import { ComponentProviderService } from '../components/component-provider.service';
 import { LoggingService } from '../logging/logging.service';
+import { Direction } from '../utils/direction';
 
 @Injectable({
   providedIn: 'root'
@@ -24,6 +25,25 @@ export class WorkModeService {
       ? (this.componentProviderService.getComponent(componentType) ?? null)
       : null;
   });
+
+  // Sticky per-type placement direction: the settings panel writes it while a
+  // placement is armed, and every fresh placement ghost of that type picks it
+  // up — so consecutive placements keep facing the way the user chose.
+  // Session-lifetime, defaulting to East for types never adjusted.
+  private readonly _placementDirections = signal<
+    ReadonlyMap<ComponentType, Direction>
+  >(new Map());
+
+  /** The direction a new placement ghost of `type` starts with. */
+  public placementDirectionFor(type: ComponentType): Direction {
+    return this._placementDirections().get(type) ?? Direction.E;
+  }
+
+  public setPlacementDirection(type: ComponentType, value: Direction): void {
+    const next = new Map(this._placementDirections());
+    next.set(type, value);
+    this._placementDirections.set(next);
+  }
 
   public setMode(mode: WorkMode): void {
     if (mode === WorkMode.SIMULATION) {

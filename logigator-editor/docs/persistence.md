@@ -111,7 +111,7 @@ PersistedCircuitV0    = { elements?: PersistedComponentV0[] }
   └── ServerCircuitV0 extends PersistedCircuitV0 → { elements, dependencies }        (old API transport — TEMPORARY)
 
 ── V1 (native current; named options, split components/wires) ──
-PersistedComponentV1           = SerializedComponentBody   // { type, pos, options } — pos delta-encoded
+PersistedComponentV1           = SerializedComponentBody   // { type, pos, direction?, options } — pos delta-encoded, direction omitted when East
 PersistedWiresV1               = string                    // chain-encoded: "x,y:e5s3;x,y:n2"
 PersistedSnapshotDefinitionV1  = SnapshotDefinition with delta components + chain wires
 PersistedCircuitV1    = { components: PersistedComponentV1[]; wires: PersistedWiresV1; definitions: PersistedSnapshotDefinitionV1[] }
@@ -156,14 +156,14 @@ All targets ultimately produce/consume `Component` and `Wire` instances, but the
 only **two** serialized shapes — the legacy v0 wire format and the native v1 format. The
 browser target reuses the native format, so it shares `CircuitFileService` end to end:
 
-|           | Legacy v0 (`ProjectElement`)                                   | Native v1 (`CircuitFileV1`)                             |
-| --------- | -------------------------------------------------------------- | ------------------------------------------------------- |
-| Used by   | Server API (temporary)                                         | Browser storage **and** save/load-to-file               |
-| Component | `{ t, p, i?, o?, r?, n?[], s? }` — options packed positionally | `{ type, pos, options }` — options keyed by config name |
-| Wire      | `{ t: 0, p, q }` — endpoints                                   | chain string (`"x,y:e5s3;…"`)                           |
-| Customs   | dropped (v0 has none)                                          | embedded as `definitions[]` snapshots                   |
-| Decode    | `v0ToV1` migration                                             | `CircuitFileService`                                    |
-| Encode    | `server/server-circuit.codec` (temporary)                      | `CircuitFileService` + `snapshots.ts`                   |
+|           | Legacy v0 (`ProjectElement`)                                   | Native v1 (`CircuitFileV1`)                                         |
+| --------- | -------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Used by   | Server API (temporary)                                         | Browser storage **and** save/load-to-file                           |
+| Component | `{ t, p, i?, o?, r?, n?[], s? }` — options packed positionally | `{ type, pos, direction?, options }` — options keyed by config name |
+| Wire      | `{ t: 0, p, q }` — endpoints                                   | chain string (`"x,y:e5s3;…"`)                                       |
+| Customs   | dropped (v0 has none)                                          | embedded as `definitions[]` snapshots                               |
+| Decode    | `v0ToV1` migration                                             | `CircuitFileService`                                                |
+| Encode    | `server/server-circuit.codec` (temporary)                      | `CircuitFileService` + `snapshots.ts`                               |
 
 ### Name lives in metadata, not on `Project`
 
@@ -214,13 +214,17 @@ permanent decode and the temporary encode:
 
 ```ts
 // rom.config.ts — `s` carries the ROM contents (base64 bit-packed blob)
-legacyV0Slots: { r: 'direction', s: 'data', n: ['wordSize', 'addressSize'] }
+legacyV0Slots: { s: 'data', n: ['wordSize', 'addressSize'] }
 // input.config.ts
-legacyV0Slots: { r: 'direction', s: 'label', n: ['index'] }
+legacyV0Slots: { s: 'label', n: ['index'] }
 ```
 
-- `r` / `i` / `o` — option populated from `element.r` / `i` / `o` (decode only; encode
-  emits these from the component's first-class fields).
+- `i` / `o` — option populated from `element.i` / `o` (decode only; encode emits
+  these from the component's first-class fields). `r` never needs an entry: it
+  always carries the first-class `direction`, decoded into the body's own
+  `direction` field and encoded back from it generically. An empty descriptor
+  (`legacyV0Slots: {}`) still matters — its presence marks the type as existing
+  in the v0 format.
 - `n: [...]` — options consuming `element.n[0]`, `n[1]`, … in **declaration order** (the
   one place an `n[]` transposition would corrupt data — pinned by a per-config test).
 - `s` — the single option consuming `element.s`.
@@ -386,7 +390,7 @@ component it (transitively) uses, so it can be loaded with no library present.
 - **`serialized-circuit.ts`** — the native body types and pure helpers, with **no
   imports** so both the component layer (a definition's `circuit`) and the persistence
   layer can use them without an import cycle:
-  - `SerializedComponentBody` `{ type, pos, options }`, `SerializedWireBody`
+  - `SerializedComponentBody` `{ type, pos, direction?, options }`, `SerializedWireBody`
     `{ pos, direction, length }`, `SerializedCircuitBody` `{ components, wires }`.
     These are the **in-memory** shapes; on write, `wire-chain.codec.ts` folds the wire
     objects into the persisted chain string and `position-delta.codec.ts` delta-encodes

@@ -1,6 +1,4 @@
 import { Component } from '../../component';
-import { DestroyOptions } from 'pixi.js';
-import { Subject, takeUntil } from 'rxjs';
 import {
   fullAdderComponentConfig,
   FullAdderOptions
@@ -9,16 +7,8 @@ import {
 export class FullAdderComponent extends Component<FullAdderOptions> {
   public readonly config = fullAdderComponentConfig;
 
-  private readonly destroy$ = new Subject<void>();
-
   constructor(options: FullAdderOptions) {
-    super(3, 2, options.direction.value, options);
-
-    this.options.direction.onChange$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.direction = this.options.direction.value;
-      });
+    super(3, 2, options);
   }
 
   protected override get symbol(): string {
@@ -41,10 +31,5 @@ export class FullAdderComponent extends Component<FullAdderOptions> {
 
   protected draw(): void {
     this.addBody(this.bodyGridWidth, this.bodyGridHeight);
-  }
-
-  public override destroy(options?: DestroyOptions): void {
-    this.destroy$.next();
-    super.destroy(options);
   }
 }

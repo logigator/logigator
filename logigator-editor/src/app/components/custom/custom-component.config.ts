@@ -1,7 +1,6 @@
 import { ComponentConfig, LocalizableText } from '../component-config.model';
 import { ComponentCategory } from '../component-category.enum';
 import { ComponentOption } from '../component-option';
-import { DirectionComponentOption } from '../component-options/direction/direction.component-option';
 import { CustomComponentDefinition } from './custom-component-definition.model';
 import { CustomComponent } from './custom-component';
 import { SubCircuitWatch } from './sub-circuit-watch';
@@ -13,12 +12,10 @@ import { ShareComponentAction } from './actions/share-component.component-action
 /**
  * Option set for every custom component instance. Unlike built-ins, a custom
  * component's port counts come from its {@link CustomComponentDefinition}, never
- * from the element — so the only per-instance option is `direction`.
+ * from the element — so an instance carries no options at all (its direction,
+ * like every component's, is first-class state).
  */
-export interface CustomComponentOptions {
-  [key: string]: ComponentOption;
-  direction: DirectionComponentOption;
-}
+export type CustomComponentOptions = Record<string, ComponentOption>;
 
 /**
  * Builds the single {@link ComponentConfig} that backs a custom component type —
@@ -58,9 +55,7 @@ export function buildCustomComponentConfig(
     get description(): LocalizableText {
       return { literal: def.description };
     },
-    options: {
-      direction: new DirectionComponentOption()
-    },
+    options: {},
     // Inspector actions rendered generically by the settings panel, each gating
     // its own visibility. Edit and upload are config-scoped, so they surface on
     // both a selected placed instance and a palette/ghost selection;

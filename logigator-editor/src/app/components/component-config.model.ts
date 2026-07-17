@@ -29,8 +29,10 @@ export function resolveLocalizableText(
 
 /**
  * Declarative map from a built-in's named options to the legacy positional `v0`
- * wire slots (`r`/`i`/`o`/`n`/`s`). Single source of truth for the permanent
+ * wire slots (`i`/`o`/`n`/`s`). Single source of truth for the permanent
  * `v0ToV1` file migration (decode) and the temporary server encoder (encode).
+ * The `r` slot needs no entry — it always carries the component's first-class
+ * `direction`, handled generically by both sides.
  *
  * FROZEN: it describes the *immutable* legacy `ProjectElement` format and names
  * **v1-era option keys**. If a live option is later renamed, do NOT edit this to
@@ -38,8 +40,6 @@ export function resolveLocalizableText(
  * a config needing computed legacy decode would handle it separately.
  */
 export interface LegacyV0Slots {
-  /** Option populated from `element.r` (rotation/direction). */
-  r?: string;
   /** Option populated from `element.i` (input count). */
   i?: string;
   /** Option populated from `element.o` (output count). */

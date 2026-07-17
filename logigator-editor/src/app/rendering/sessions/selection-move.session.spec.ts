@@ -583,7 +583,6 @@ describe('SelectionMoveSession collision', () => {
       expect(comp.direction).toBe(Direction.E);
       expect(comp.position.x).toBe(0);
       expect(comp.position.y).toBe(0);
-      expect(comp.options.direction.value).toBe(Direction.E);
       expect(wire.direction).toBe(WireDirection.HORIZONTAL);
       expect(wire.position.x).toBe(-3.5);
       expect(wire.position.y).toBe(0.5);

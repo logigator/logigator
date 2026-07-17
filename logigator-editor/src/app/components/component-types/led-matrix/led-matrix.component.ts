@@ -28,18 +28,7 @@ export class LedMatrixComponent extends Component<LedMatrixOptions> {
   private _cells?: Graphics[];
 
   constructor(options: LedMatrixOptions) {
-    super(
-      ledMatrixShape(options.size.value).numInputs,
-      0,
-      options.direction.value,
-      options
-    );
-
-    this.options.direction.onChange$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.direction = this.options.direction.value;
-      });
+    super(ledMatrixShape(options.size.value).numInputs, 0, options);
 
     this.options.size.onChange$.pipe(takeUntil(this.destroy$)).subscribe(() => {
       this.numInputs = ledMatrixShape(this.options.size.value).numInputs;

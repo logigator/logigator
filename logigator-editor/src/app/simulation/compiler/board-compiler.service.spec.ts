@@ -57,6 +57,7 @@ function liveToBody(
       return {
         type: serialized.type,
         pos: serialized.pos,
+        ...(serialized.direction ? { direction: serialized.direction } : {}),
         options: serialized.options
       };
     }),
@@ -105,18 +106,13 @@ describe('BoardCompilerService', () => {
 
   function placeTunnel(label: string, pos: [number, number]): Component {
     return place(
-      Component.deserialize(
-        { pos, options: { direction: 0, label } },
-        tunnelComponentConfig
-      )
+      Component.deserialize({ pos, options: { label } }, tunnelComponentConfig)
     );
   }
 
   function placeByType(typeId: number, pos: [number, number]): Component {
     const config = provider.getComponent(typeId)!;
-    return place(
-      Component.deserialize({ pos, options: { direction: 0 } }, config)
-    );
+    return place(Component.deserialize({ pos, options: {} }, config));
   }
 
   /** Registers a snapshot wrapping a single NOT behind one in and one out plug. */
@@ -286,7 +282,7 @@ describe('BoardCompilerService', () => {
       Component.deserialize(
         {
           pos: [0, 0],
-          options: { direction: 0, addressSize: 1, wordSize: 4, data }
+          options: { addressSize: 1, wordSize: 4, data }
         },
         romComponentConfig
       )
@@ -306,7 +302,7 @@ describe('BoardCompilerService', () => {
   it('emits a clock unit with its period in ops', () => {
     place(
       Component.deserialize(
-        { pos: [0, 0], options: { direction: 0, speed: 7 } },
+        { pos: [0, 0], options: { speed: 7 } },
         clockComponentConfig
       )
     );
@@ -323,7 +319,7 @@ describe('BoardCompilerService', () => {
   it('emits an LED matrix with engine-only cell outputs mapped as pseudo-ports', () => {
     const matrix = place(
       Component.deserialize(
-        { pos: [0, 0], options: { direction: 0, size: 4 } },
+        { pos: [0, 0], options: { size: 4 } },
         ledMatrixComponentConfig
       )
     );
@@ -389,7 +385,7 @@ describe('BoardCompilerService', () => {
     // A second snapshot whose circuit places a WrapNot instance between plugs.
     const inPlug = makePlug('input', 0, [0, 0]);
     const inner = Component.deserialize(
-      { pos: [4, 0], options: { direction: 0 } },
+      { pos: [4, 0], options: {} },
       provider.getComponent(wrapNot)!
     );
     const outPlug = makePlug('output', 0, [10, 0]);
@@ -488,7 +484,7 @@ describe('BoardCompilerService', () => {
     const rom = Component.deserialize(
       {
         pos: [0, 0],
-        options: { direction: 0, addressSize: 1, wordSize: 4, data }
+        options: { addressSize: 1, wordSize: 4, data }
       },
       romComponentConfig
     );

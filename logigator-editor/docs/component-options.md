@@ -22,12 +22,10 @@ src/app/components/component-options/
 │   ├── text-area.component-option.ts          # multi-line text (dialog editor)
 │   ├── text-area-option-input.component.ts
 │   └── text-area-option-input.component.html
-├── text-input/
-│   ├── text-input.component-option.ts         # short single-line text
-│   ├── text-input-option-input.component.ts
-│   └── text-input-option-input.component.html
-└── direction/
-    └── direction.component-option.ts         # preset, reuses select-button renderer
+└── text-input/
+    ├── text-input.component-option.ts         # short single-line text
+    ├── text-input-option-input.component.ts
+    └── text-input-option-input.component.html
 ```
 
 One folder per option kind. The option model class and its renderer sit side by side.
@@ -40,14 +38,13 @@ One folder per option kind. The option model class and its renderer sit side by 
 ComponentOption<T> (abstract)
 ├── NumberComponentOption
 ├── SelectButtonComponentOption<T>
-│   └── DirectionComponentOption
 ├── SelectDropdownComponentOption<T>
 ├── TextAreaComponentOption
 ├── TextInputComponentOption
 └── MemoryDataComponentOption
 ```
 
-`DirectionComponentOption` is a preset `SelectButtonComponentOption<Direction>` with the four cardinal directions baked in. It inherits the renderer from `SelectButtonComponentOption` — no override.
+A component's rotation is **not** an option: `direction` is first-class `Component` state (serialized as its own field), and the settings panel renders a fixed direction row above the option rows for every component (see `ui.md`).
 
 `MemoryDataComponentOption` holds a word-addressed memory's contents as an immutable base64 bit-packed blob (string value, so clone/paste/undo never alias a buffer). It is **generic** — it knows nothing about ROM. Its renderer is the adapter between that storage and the generic `HexEditorComponent` (`ui/hex-editor/`), which takes a plain `Uint8Array` + word width + word count. `HexEditorComponent` is a **plain, self-contained component (no dialog wrapper)** — `inputs: data/wordSize/wordCount`, `outputs: saved (Uint8Array) / dismissed`; the renderer opens it in a PrimeNG `DynamicDialog` via `DialogService.open(HexEditorComponent, { inputValues, … })`, wiring its outputs through `ref.onChildComponentLoaded` (commit + trim on `saved`, close on either). The editing dimensions arrive as **resolver closures** the owning component attaches via `attachDimensions(() => wordSize, () => wordCount)`; this is where any component-specific derivation lives (e.g. `RomComponent` passes `() => 1 << addressSize` from its constructor, so the link survives every clone path, all of which run the component factory). On open the renderer decodes the blob and passes the dimensions as input values; on save it trims trailing zeros and re-encodes. For ROM the same blob is the legacy v0 `s`-slot value and (via `rom-data.codec.ts`'s `encodeRomOps`) the engine ROM `ops` table. The generic buffer/bit math lives in `utils/packed-buffer.ts`; `rom-data.codec.ts` only adds ROM semantics on top.
 

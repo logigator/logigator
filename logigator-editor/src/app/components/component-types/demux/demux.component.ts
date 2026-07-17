@@ -12,15 +12,8 @@ export class DemuxComponent extends Component<DemuxOptions> {
     super(
       options.selectLines.value + 1,
       1 << options.selectLines.value,
-      options.direction.value,
       options
     );
-
-    this.options.direction.onChange$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.direction = this.options.direction.value;
-      });
 
     this.options.selectLines.onChange$
       .pipe(takeUntil(this.destroy$))

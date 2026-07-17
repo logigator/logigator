@@ -1,5 +1,4 @@
-import { DestroyOptions, Graphics } from 'pixi.js';
-import { Subject, takeUntil } from 'rxjs';
+import { Graphics } from 'pixi.js';
 import { Component } from '../../component';
 import { LedGraphics } from '../../../rendering/graphics/led.graphics';
 import { ledComponentConfig, LedOptions } from './led.config';
@@ -12,21 +11,13 @@ import { ledComponentConfig, LedOptions } from './led.config';
 export class LedComponent extends Component<LedOptions> {
   public readonly config = ledComponentConfig;
 
-  private readonly destroy$ = new Subject<void>();
-
   // Assigned in draw(); the class-field define runs after the base
   // constructor's first draw and resets it to undefined, so a state change
   // arriving before the next rebuild falls back to a full redraw.
   private _disc?: Graphics;
 
   constructor(options: LedOptions) {
-    super(1, 0, options.direction.value, options);
-
-    this.options.direction.onChange$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.direction = this.options.direction.value;
-      });
+    super(1, 0, options);
   }
 
   // The lit state lives in the base's powered-port set (survives redraws) and
@@ -72,10 +63,5 @@ export class LedComponent extends Component<LedOptions> {
     // writes the tint directly in setPortPowered.
     this.onApplyTheme(() => (disc.tint = this._discTint()));
     this.addChild(disc);
-  }
-
-  public override destroy(options?: DestroyOptions): void {
-    this.destroy$.next();
-    super.destroy(options);
   }
 }

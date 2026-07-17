@@ -2,7 +2,6 @@ import { ComponentConfig } from '../../component-config.model';
 import { BuiltInComponentType } from '../../component-type.enum';
 import { ComponentCategory } from '../../component-category.enum';
 import { ComponentOption } from '../../component-option';
-import { DirectionComponentOption } from '../../component-options/direction/direction.component-option';
 import { SelectButtonComponentOption } from '../../component-options/select-button/select-button.component-option';
 import { LedMatrixComponent } from './led-matrix.component';
 
@@ -37,7 +36,6 @@ export function ledMatrixShape(size: number): {
 
 export interface LedMatrixOptions {
   [key: string]: ComponentOption;
-  direction: DirectionComponentOption;
   size: SelectButtonComponentOption<number>;
 }
 
@@ -48,7 +46,6 @@ export const ledMatrixComponentConfig: ComponentConfig<LedMatrixOptions> = {
   name: 'components.def.LED_MATRIX.name',
   description: 'components.def.LED_MATRIX.description',
   options: {
-    direction: new DirectionComponentOption(),
     size: new SelectButtonComponentOption<number>(
       'components.def.LED_MATRIX.options.size',
       [
@@ -59,6 +56,6 @@ export const ledMatrixComponentConfig: ComponentConfig<LedMatrixOptions> = {
       4
     )
   },
-  legacyV0Slots: { r: 'direction', n: ['size'] },
+  legacyV0Slots: { n: ['size'] },
   create: (options) => new LedMatrixComponent(options)
 };

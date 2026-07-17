@@ -81,7 +81,12 @@ describe('WatchSession', () => {
     );
     const serialize = (c: Component) => {
       const s = Component.serialize(c);
-      return { type: s.type, pos: s.pos, options: s.options };
+      return {
+        type: s.type,
+        pos: s.pos,
+        ...(s.direction ? { direction: s.direction } : {}),
+        options: s.options
+      };
     };
     const w = Wire.serialize(wire);
     const circuit = {
@@ -108,7 +113,7 @@ describe('WatchSession', () => {
     const switchBox = registerSwitchBox();
     const config = provider.getComponent(switchBox)!;
     const instance = Component.deserialize(
-      { pos: [0, 0], options: { direction: 0 } },
+      { pos: [0, 0], options: {} },
       config
     );
     project.addComponent(instance);

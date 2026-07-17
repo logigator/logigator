@@ -1,21 +1,11 @@
 import { Component } from '../../component';
-import { DestroyOptions } from 'pixi.js';
-import { Subject, takeUntil } from 'rxjs';
 import { clockComponentConfig, ClockOptions } from './clock.config';
 
 export class ClockComponent extends Component<ClockOptions> {
   public readonly config = clockComponentConfig;
 
-  private readonly destroy$ = new Subject<void>();
-
   constructor(options: ClockOptions) {
-    super(1, 1, options.direction.value, options);
-
-    this.options.direction.onChange$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.direction = this.options.direction.value;
-      });
+    super(1, 1, options);
   }
 
   protected override get symbol(): string {
@@ -45,10 +35,5 @@ export class ClockComponent extends Component<ClockOptions> {
 
   protected draw(): void {
     this.addBody(this.bodyGridWidth, this.bodyGridHeight);
-  }
-
-  public override destroy(options?: DestroyOptions): void {
-    this.destroy$.next();
-    super.destroy(options);
   }
 }

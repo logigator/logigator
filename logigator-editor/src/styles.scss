@@ -21,7 +21,7 @@ $ph-arrow-counter-clockwise: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org
 
 .ph.ph-arrow-clockwise::before,
 .ph.ph-arrow-counter-clockwise::before {
-  content: "";
+  content: '';
   display: inline-block;
   width: 1em;
   height: 1em;
@@ -35,11 +35,11 @@ $ph-arrow-counter-clockwise: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org
 }
 
 .ph.ph-arrow-clockwise::before {
-  mask-image: url("#{$ph-arrow-clockwise}");
-  -webkit-mask-image: url("#{$ph-arrow-clockwise}");
+  mask-image: url('#{$ph-arrow-clockwise}');
+  -webkit-mask-image: url('#{$ph-arrow-clockwise}');
 }
 
 .ph.ph-arrow-counter-clockwise::before {
-  mask-image: url("#{$ph-arrow-counter-clockwise}");
-  -webkit-mask-image: url("#{$ph-arrow-counter-clockwise}");
+  mask-image: url('#{$ph-arrow-counter-clockwise}');
+  -webkit-mask-image: url('#{$ph-arrow-counter-clockwise}');
 }

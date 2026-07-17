@@ -137,8 +137,6 @@ export class ChangelogService {
    * is shown the changelog on their first load of the rebuilt editor.
    */
   private isReturningLegacyUser(): boolean {
-    return LEGACY_COOKIES.some(
-      (name) => this.cookieService.get(name) !== null
-    );
+    return LEGACY_COOKIES.some((name) => this.cookieService.get(name) !== null);
   }
 }

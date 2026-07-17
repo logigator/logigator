@@ -47,13 +47,7 @@ export class SegmentDisplayComponent extends Component<SegmentDisplayOptions> {
   private _readout?: BitmapText;
 
   constructor(options: SegmentDisplayOptions) {
-    super(options.numInputs.value, 0, options.direction.value, options);
-
-    this.options.direction.onChange$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.direction = this.options.direction.value;
-      });
+    super(options.numInputs.value, 0, options);
 
     this.options.numInputs.onChange$
       .pipe(takeUntil(this.destroy$))

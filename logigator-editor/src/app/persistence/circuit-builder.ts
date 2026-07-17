@@ -5,6 +5,7 @@ import { ComponentProviderService } from '../components/component-provider.servi
 import { SerializedCircuitBody } from './serialized-circuit';
 import { getStaticDI } from '../utils/get-di';
 import { LoggingService } from '../logging/logging.service';
+import { Direction } from '../utils/direction';
 
 export function buildProject(components: Component[], wires: Wire[]): Project {
   const project = new Project();
@@ -28,6 +29,19 @@ function sanitizeNegArray(value: unknown): number[] | undefined {
   return value.filter((i) => Number.isInteger(i) && i >= 0);
 }
 
+/**
+ * Direction from an untrusted body: an integer quarter-turn 0–3, `undefined`
+ * otherwise — a bogus value falls back to the constructed default (East)
+ * instead of producing a nonsense rotation.
+ */
+function sanitizeDirection(value: unknown): Direction | undefined {
+  return Number.isInteger(value) &&
+    (value as number) >= 0 &&
+    (value as number) <= 3
+    ? (value as Direction)
+    : undefined;
+}
+
 /** Instantiates a native body (session type ids) into editor objects.
  * Elements whose type does not resolve to a config are dropped with a
  * warning. */
@@ -46,6 +60,7 @@ export function instantiateBody(
         Component.deserialize(
           {
             pos: c.pos,
+            direction: sanitizeDirection(c.direction),
             options: c.options,
             negInputs: sanitizeNegArray(c.negInputs),
             negOutputs: sanitizeNegArray(c.negOutputs)

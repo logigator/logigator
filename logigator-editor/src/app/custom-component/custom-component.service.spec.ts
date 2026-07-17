@@ -76,9 +76,7 @@ describe('CustomComponentService', () => {
   ): CustomComponent {
     const def = registry.snapshot(masterTypeId);
     const config = provider.getComponent(def.typeId)!;
-    const instance = config.create({
-      direction: config.options['direction'].clone()
-    }) as CustomComponent;
+    const instance = config.create({}) as CustomComponent;
     target.addComponent(instance);
     return instance;
   }
@@ -236,9 +234,7 @@ describe('CustomComponentService', () => {
       circuit: { components: [], wires: [] }
     });
     const config = provider.getComponent(orphanType)!;
-    const instance = config.create({
-      direction: config.options['direction'].clone()
-    }) as CustomComponent;
+    const instance = config.create({}) as CustomComponent;
     main.addComponent(instance);
     return orphanType;
   }

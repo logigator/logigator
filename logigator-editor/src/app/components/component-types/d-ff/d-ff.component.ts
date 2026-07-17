@@ -1,21 +1,11 @@
 import { Component } from '../../component';
-import { DestroyOptions } from 'pixi.js';
-import { Subject, takeUntil } from 'rxjs';
 import { dFfComponentConfig, DFfOptions } from './d-ff.config';
 
 export class DFfComponent extends Component<DFfOptions> {
   public readonly config = dFfComponentConfig;
 
-  private readonly destroy$ = new Subject<void>();
-
   constructor(options: DFfOptions) {
-    super(2, 2, options.direction.value, options);
-
-    this.options.direction.onChange$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.direction = this.options.direction.value;
-      });
+    super(2, 2, options);
   }
 
   protected override get symbol(): string {
@@ -38,10 +28,5 @@ export class DFfComponent extends Component<DFfOptions> {
 
   protected draw(): void {
     this.addBody(this.bodyGridWidth, this.bodyGridHeight);
-  }
-
-  public override destroy(options?: DestroyOptions): void {
-    this.destroy$.next();
-    super.destroy(options);
   }
 }

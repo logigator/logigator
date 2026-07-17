@@ -4,6 +4,7 @@ import { configureTestBed } from '../../../testing/configure-test-bed';
 import { Direction } from '../../utils/direction';
 import { rotatePointAroundPivot, rotationPivotFor } from '../../utils/rotation';
 import { WireDirection } from '../../wires/wire-direction.enum';
+import { Component } from '../../components/component';
 import { makeAnd, makeWire } from '../../../testing/factories';
 import { groupGridBounds, rotateElements } from './rotate-elements';
 
@@ -38,11 +39,11 @@ describe('rotateElements', () => {
     }
   });
 
-  it('keeps the direction option in sync so serialization reflects the turn', () => {
+  it('lands the turn in the serialized direction', () => {
     const comp = makeAnd(2, Direction.E, 0, 0);
     rotateElements([comp], [], new Point(0, 0), 1);
     expect(comp.direction).toBe(Direction.S);
-    expect(comp.options.direction.value).toBe(Direction.S);
+    expect(Component.serialize(comp).direction).toBe(Direction.S);
     comp.destroy({ children: true });
   });
 

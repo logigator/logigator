@@ -41,10 +41,8 @@ export function groupGridBounds(
  * Components anchor by their rotation pivot, so orbiting `position` while
  * stepping `direction` turns every port exactly: the new port set is the old
  * one rotated around the pivot, preserving all relative geometry. The
- * direction lands through {@link Component.applyDirection} (keeping the
- * direction option in sync for serialization and the settings panel); the
- * setter's own fixed-body-anchor shift is irrelevant here because the orbit
- * target overwrites the position afterwards.
+ * direction setter's own fixed-body-anchor shift is irrelevant here because
+ * the orbit target overwrites the position afterwards.
  *
  * A wire turns by orbiting both endpoints and swapping its axis on odd steps;
  * its length is rotation-invariant.
@@ -60,7 +58,7 @@ export function rotateElements(
 
   for (const c of components) {
     const target = rotatePointAroundPivot(pivot, c.position, s);
-    c.applyDirection(rotateDirection(c.direction, s));
+    c.direction = rotateDirection(c.direction, s);
     c.position.copyFrom(target);
   }
 

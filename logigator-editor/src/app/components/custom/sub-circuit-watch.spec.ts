@@ -40,7 +40,12 @@ function serializeBody(components: Component[], wires: Wire[]) {
   const body = {
     components: components.map((c) => {
       const s = Component.serialize(c);
-      return { type: s.type, pos: s.pos, options: s.options };
+      return {
+        type: s.type,
+        pos: s.pos,
+        ...(s.direction ? { direction: s.direction } : {}),
+        options: s.options
+      };
     }),
     wires: wires.map((w) => {
       const s = Wire.serialize(w);
@@ -107,7 +112,7 @@ describe('SubCircuitWatch', () => {
     });
 
     const inner = Component.deserialize(
-      { pos: [0, 0], options: { direction: 0 } },
+      { pos: [0, 0], options: {} },
       provider.getComponent(switchBox)!
     );
     const outerPlug = Component.deserialize(
@@ -130,7 +135,7 @@ describe('SubCircuitWatch', () => {
     });
 
     const instance = Component.deserialize(
-      { pos: [0, 0], options: { direction: 0 } },
+      { pos: [0, 0], options: {} },
       provider.getComponent(outer)!
     ) as CustomComponent;
     project.addComponent(instance);

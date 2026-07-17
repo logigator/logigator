@@ -9,18 +9,7 @@ export class EncoderComponent extends Component<EncoderOptions> {
   private readonly destroy$ = new Subject<void>();
 
   constructor(options: EncoderOptions) {
-    super(
-      1 << options.numOutputs.value,
-      options.numOutputs.value,
-      options.direction.value,
-      options
-    );
-
-    this.options.direction.onChange$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.direction = this.options.direction.value;
-      });
+    super(1 << options.numOutputs.value, options.numOutputs.value, options);
 
     this.options.numOutputs.onChange$
       .pipe(takeUntil(this.destroy$))

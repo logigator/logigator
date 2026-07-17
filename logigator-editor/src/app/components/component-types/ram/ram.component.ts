@@ -9,18 +9,7 @@ export class RamComponent extends Component<RamOptions> {
   private readonly destroy$ = new Subject<void>();
 
   constructor(options: RamOptions) {
-    super(
-      RamComponent._numInputs(options),
-      options.wordSize.value,
-      options.direction.value,
-      options
-    );
-
-    this.options.direction.onChange$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.direction = this.options.direction.value;
-      });
+    super(RamComponent._numInputs(options), options.wordSize.value, options);
 
     this.options.wordSize.onChange$
       .pipe(takeUntil(this.destroy$))

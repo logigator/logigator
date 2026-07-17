@@ -2,7 +2,6 @@ import { ComponentConfig } from '../../component-config.model';
 import { BuiltInComponentType } from '../../component-type.enum';
 import { ComponentCategory } from '../../component-category.enum';
 import { ComponentOption } from '../../component-option';
-import { DirectionComponentOption } from '../../component-options/direction/direction.component-option';
 import { NumberComponentOption } from '../../component-options/number/number.component-option';
 import { MemoryDataComponentOption } from '../../component-options/memory-data/memory-data.component-option';
 import { RomComponent } from './rom.component';
@@ -10,7 +9,6 @@ import { RomInspection } from './rom-inspection';
 
 export interface RomOptions {
   [key: string]: ComponentOption;
-  direction: DirectionComponentOption;
   wordSize: NumberComponentOption;
   addressSize: NumberComponentOption;
   data: MemoryDataComponentOption;
@@ -23,7 +21,6 @@ export const romComponentConfig: ComponentConfig<RomOptions> = {
   name: 'components.def.ROM.name',
   description: 'components.def.ROM.description',
   options: {
-    direction: new DirectionComponentOption(),
     wordSize: new NumberComponentOption(
       'components.def.ROM.options.wordSize',
       1,
@@ -42,7 +39,7 @@ export const romComponentConfig: ComponentConfig<RomOptions> = {
     ),
     data: new MemoryDataComponentOption('components.def.ROM.options.data')
   },
-  legacyV0Slots: { r: 'direction', s: 'data', n: ['wordSize', 'addressSize'] },
+  legacyV0Slots: { s: 'data', n: ['wordSize', 'addressSize'] },
   inspection: (component) => new RomInspection(component as RomComponent),
   create: (options) => new RomComponent(options)
 };

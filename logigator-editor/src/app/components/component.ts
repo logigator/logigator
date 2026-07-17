@@ -68,13 +68,10 @@ const MIN_FONT_SIZE = 0.25 / PX;
 export type PortSide = 'in' | 'out';
 
 export abstract class Component<
-  TOptions extends Record<string, ComponentOption> & {
-    // `direction` is a reserved option key: when present it holds the
-    // component's direction, and applyDirection routes through it so the
-    // option stays the single source of truth for serialization and the
-    // settings panel.
-    direction?: ComponentOption<Direction>;
-  } = Record<string, ComponentOption>
+  TOptions extends Record<string, ComponentOption> = Record<
+    string,
+    ComponentOption
+  >
 >
   extends Container
   implements Connectable
@@ -139,6 +136,9 @@ export abstract class Component<
       id: component.id,
       type: component.config.type,
       pos: [component.position.x, component.position.y],
+      ...(component.direction !== Direction.E
+        ? { direction: component.direction }
+        : {}),
       options: Object.fromEntries(
         Object.entries(component.options).map(([key, opt]) => [key, opt.value])
       ),
@@ -183,6 +183,12 @@ export abstract class Component<
     if (serialized.id !== undefined) {
       component.id = serialized.id;
     }
+    if (serialized.direction) {
+      // Ordered before `pos`: the direction setter's fixed-body-anchor shift
+      // moves `position`, which the absolute write below overrides. Skipped
+      // for East (the constructed default) so the common case pays no redraw.
+      component.direction = serialized.direction;
+    }
     component.position.set(serialized.pos[0], serialized.pos[1]);
 
     if (serialized.negInputs?.length || serialized.negOutputs?.length) {
@@ -198,7 +204,6 @@ export abstract class Component<
   protected constructor(
     numInputs: number,
     numOutputs: number,
-    direction: Direction,
     options: Record<string, ComponentOption>
   ) {
     super();
@@ -207,7 +212,6 @@ export abstract class Component<
 
     this.numInputs = numInputs;
     this.numOutputs = numOutputs;
-    this.direction = direction;
     this.options = options as TOptions;
 
     this._initialized = true;
@@ -266,22 +270,6 @@ export abstract class Component<
 
     if (oldPorts) {
       this.portsChange$.next({ oldPorts, newPorts: this.connectionPoints });
-    }
-  }
-
-  /**
-   * Sets the direction through the component's `direction` option when it has
-   * one, so the option value — what serialization and the settings panel read
-   * — stays in sync; the subclass's option subscription funnels the change
-   * into the {@link direction} setter. Components without the option get the
-   * setter directly.
-   */
-  public applyDirection(value: Direction): void {
-    const option = this.options.direction;
-    if (option) {
-      option.value = value;
-    } else {
-      this.direction = value;
     }
   }
 

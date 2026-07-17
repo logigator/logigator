@@ -7,7 +7,6 @@ import { ComponentConfig } from './component-config.model';
 import { ComponentCategory } from './component-category.enum';
 import { BuiltInComponentType } from './component-type.enum';
 import { Component } from './component';
-import { DirectionComponentOption } from './component-options/direction/direction.component-option';
 
 const CUSTOM_TYPE = 1234;
 
@@ -21,7 +20,7 @@ function makeStubConfig(): ComponentConfig {
     symbol: 'X',
     name: 'components.def.AND.name',
     description: 'components.def.AND.description',
-    options: { direction: new DirectionComponentOption() },
+    options: {},
     create: () => ({}) as unknown as Component
   };
 }

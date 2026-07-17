@@ -13,7 +13,11 @@ function makeText(
   pos: [number, number] = [0, 0]
 ): Component {
   return Component.deserialize(
-    { pos, options: { direction, fontSize, text } },
+    {
+      pos,
+      ...(direction !== Direction.E ? { direction } : {}),
+      options: { fontSize, text }
+    },
     textComponentConfig
   );
 }

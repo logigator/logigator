@@ -12,6 +12,22 @@
     </ng-template>
     <ng-template #subtitle>{{ text(settings.description) }}</ng-template>
     <form class="flex flex-col gap-2">
+      <div class="flex gap-4 items-center justify-between">
+        <label [for]="directionInputId">{{
+          text('components.options.direction')
+        }}</label>
+        <lg-select-button
+          [id]="directionInputId"
+          optionLabel="label"
+          optionValue="value"
+          optionIcon="icon"
+          [allowEmpty]="false"
+          [options]="directionChoices"
+          [ngModel]="settings.direction"
+          [ngModelOptions]="{ standalone: true }"
+          (ngModelChange)="settings.commitDirection($event)"
+        />
+      </div>
       @for (o of options(); track o.key) {
         <ng-container
           *ngComponentOutlet="

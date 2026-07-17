@@ -15,6 +15,8 @@ export interface SerializedComponentBody {
    * type id; in an on-disk {@link SnapshotDefinition} it is a file-local id. */
   type: number;
   pos: [number, number];
+  /** Facing direction (quarter-turns clockwise from East, 0–3). Omitted when East. */
+  direction?: number;
   options: Record<string, unknown>;
   /** Negated input-port indices (sorted, within-group). Omitted when empty. */
   negInputs?: number[];
@@ -69,6 +71,7 @@ export function cloneComponentBody(
   return {
     type: component.type,
     pos: [component.pos[0], component.pos[1]],
+    ...(component.direction ? { direction: component.direction } : {}),
     options: { ...component.options },
     ...(component.negInputs ? { negInputs: [...component.negInputs] } : {}),
     ...(component.negOutputs ? { negOutputs: [...component.negOutputs] } : {})
@@ -101,6 +104,7 @@ export function remapComponentTypes(
   return components.map((c) => ({
     type: map.get(c.type) ?? c.type,
     pos: [c.pos[0], c.pos[1]],
+    ...(c.direction ? { direction: c.direction } : {}),
     options: { ...c.options },
     ...(c.negInputs ? { negInputs: [...c.negInputs] } : {}),
     ...(c.negOutputs ? { negOutputs: [...c.negOutputs] } : {})

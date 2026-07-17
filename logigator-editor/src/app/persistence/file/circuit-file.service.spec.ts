@@ -116,9 +116,7 @@ describe('CircuitFileService', () => {
 
   function place(project: Project, snapTypeId: number, pos: [number, number]) {
     const config = provider.getComponent(snapTypeId)!;
-    project.addComponent(
-      Component.deserialize({ pos, options: { direction: 0 } }, config)
-    );
+    project.addComponent(Component.deserialize({ pos, options: {} }, config));
   }
 
   // A single INPUT + OUTPUT plug pair — the contents shared by the nested-custom
@@ -128,12 +126,12 @@ describe('CircuitFileService', () => {
       {
         type: BuiltInComponentType.INPUT,
         pos: [0, 0],
-        options: { direction: 0, label: 'in', index: 0 }
+        options: { label: 'in', index: 0 }
       },
       {
         type: BuiltInComponentType.OUTPUT,
         pos: [5, 0],
-        options: { direction: 0, label: 'out', index: 0 }
+        options: { label: 'out', index: 0 }
       }
     ],
     wires: []
@@ -152,7 +150,7 @@ describe('CircuitFileService', () => {
       expect(json.components[0]).toEqual({
         type: 2,
         pos: [15, 3],
-        options: { direction: 0, numInputs: 2 }
+        options: { numInputs: 2 }
       });
     });
 
@@ -166,7 +164,7 @@ describe('CircuitFileService', () => {
       expect(json.components[0]).toEqual({
         type: 100,
         pos: [4, 4],
-        options: { direction: 0, label: 'CLK', index: 3 }
+        options: { label: 'CLK', index: 3 }
       });
     });
   });
@@ -249,7 +247,7 @@ describe('CircuitFileService', () => {
               {
                 type: BuiltInComponentType.AND,
                 pos: [2, 2],
-                options: { direction: 0, numInputs: 2 },
+                options: { numInputs: 2 },
                 negInputs: [1]
               }
             ],
@@ -293,9 +291,7 @@ describe('CircuitFileService', () => {
           id: 'id-a',
           symbol: 'A',
           circuit: {
-            components: [
-              { type: snapB, pos: [2, 2], options: { direction: 0 } }
-            ],
+            components: [{ type: snapB, pos: [2, 2], options: {} }],
             wires: []
           }
         },
@@ -484,7 +480,7 @@ describe('CircuitFileService', () => {
         version: 1,
         name: 'x',
         components: [
-          { type: CUSTOM_TYPE_ID_BASE, pos: [0, 0], options: { direction: 0 } },
+          { type: CUSTOM_TYPE_ID_BASE, pos: [0, 0], options: {} },
           { type: BuiltInComponentType.AND, pos: [1, 1], options: {} }
         ],
         wires: '',
@@ -516,9 +512,7 @@ describe('CircuitFileService', () => {
       const file = JSON.stringify({
         version: 1,
         name: 'x',
-        components: [
-          { type: CUSTOM_TYPE_ID_BASE, pos: [0, 0], options: { direction: 0 } }
-        ],
+        components: [{ type: CUSTOM_TYPE_ID_BASE, pos: [0, 0], options: {} }],
         wires: '',
         definitions: []
       });
@@ -536,7 +530,7 @@ describe('CircuitFileService', () => {
           {
             type: BuiltInComponentType.AND,
             pos: [0, 0],
-            options: { direction: 0, numInputs: 2 },
+            options: { numInputs: 2 },
             negInputs: 'garbage', // not an array → ignored
             negOutputs: [0, -1, 1.5] // sanitized to [0]
           }

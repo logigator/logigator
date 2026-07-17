@@ -2,13 +2,11 @@ import { ComponentConfig } from '../../component-config.model';
 import { BuiltInComponentType } from '../../component-type.enum';
 import { ComponentCategory } from '../../component-category.enum';
 import { ComponentOption } from '../../component-option';
-import { DirectionComponentOption } from '../../component-options/direction/direction.component-option';
 import { TextInputComponentOption } from '../../component-options/text-input/text-input.component-option';
 import { TunnelComponent } from './tunnel.component';
 
 export interface TunnelOptions {
   [key: string]: ComponentOption;
-  direction: DirectionComponentOption;
   // Net name: all tunnels carrying the same label are electrically joined at
   // compile time. The legacy editor used numeric ids; the v0 codec maps digit
   // labels to their number and other labels to generated group ids (see
@@ -24,11 +22,10 @@ export const tunnelComponentConfig: ComponentConfig<TunnelOptions> = {
   name: 'components.def.TUNNEL.name',
   description: 'components.def.TUNNEL.description',
   options: {
-    direction: new DirectionComponentOption(),
     label: new TextInputComponentOption('components.options.label', '0', {
       maxLength: 10
     })
   },
-  legacyV0Slots: { r: 'direction' },
+  legacyV0Slots: {},
   create: (options) => new TunnelComponent(options)
 };

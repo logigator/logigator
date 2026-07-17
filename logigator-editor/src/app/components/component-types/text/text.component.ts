@@ -15,14 +15,8 @@ export class TextComponent extends Component<TextOptions> {
   private readonly _destroy$ = new Subject<void>();
 
   constructor(options: TextOptions) {
-    super(0, 0, options.direction.value, options);
+    super(0, 0, options);
 
-    this.options.direction.onChange$
-      .pipe(takeUntil(this._destroy$))
-      .subscribe(() => {
-        this.direction = this.options.direction.value;
-        this.redraw();
-      });
     this.options.text.onChange$
       .pipe(takeUntil(this._destroy$))
       .subscribe(() => this._redrawAndRefile());

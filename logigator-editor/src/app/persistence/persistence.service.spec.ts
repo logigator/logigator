@@ -1028,7 +1028,7 @@ describe('PersistenceService', () => {
         version: 1,
         name: 'Partial',
         components: [
-          { type: CUSTOM_TYPE_ID_BASE, pos: [0, 0], options: { direction: 0 } },
+          { type: CUSTOM_TYPE_ID_BASE, pos: [0, 0], options: {} },
           { type: 1, pos: [2, 3], options: {} }
         ],
         wires: '',
@@ -1465,12 +1465,12 @@ describe('PersistenceService', () => {
         {
           type: 100,
           pos: [0, 0],
-          options: { direction: 0, label: 'in', index: 0 }
+          options: { label: 'in', index: 0 }
         },
         {
           type: 101,
           pos: [5, 0],
-          options: { direction: 0, label: 'out', index: 0 }
+          options: { label: 'out', index: 0 }
         }
       ],
       wires: []
@@ -1496,9 +1496,7 @@ describe('PersistenceService', () => {
     ): CustomComponent {
       const def = registry.snapshot(masterTypeId);
       const config = provider.getComponent(def.typeId)!;
-      const instance = config.create({
-        direction: config.options['direction'].clone()
-      }) as CustomComponent;
+      const instance = config.create({}) as CustomComponent;
       project.addComponent(instance);
       return instance;
     }
@@ -1548,7 +1546,7 @@ describe('PersistenceService', () => {
               {
                 type: 100,
                 pos: [0, 0],
-                options: { direction: 0, label: 'in', index: 0 }
+                options: { label: 'in', index: 0 }
               }
             ],
             wires: []
@@ -1585,13 +1583,13 @@ describe('PersistenceService', () => {
       const editor = new Project();
       editor.addComponent(
         Component.deserialize(
-          { pos: [0, 0], options: { direction: 0, label: 'in', index: 0 } },
+          { pos: [0, 0], options: { label: 'in', index: 0 } },
           provider.getComponent(100)!
         )
       );
       editor.addComponent(
         Component.deserialize(
-          { pos: [5, 0], options: { direction: 0, label: 'out', index: 0 } },
+          { pos: [5, 0], options: { label: 'out', index: 0 } },
           provider.getComponent(101)!
         )
       );
@@ -1629,7 +1627,7 @@ describe('PersistenceService', () => {
       const content = JSON.stringify({
         version: 1,
         name: 'Imported',
-        components: [{ type: 1000, pos: [3, 3], options: { direction: 0 } }],
+        components: [{ type: 1000, pos: [3, 3], options: {} }],
         wires: '',
         definitions: [
           {
@@ -1670,12 +1668,12 @@ describe('PersistenceService', () => {
         {
           type: 100,
           pos: [0, 0],
-          options: { direction: 0, label: 'in', index: 0 }
+          options: { label: 'in', index: 0 }
         },
         {
           type: 101,
           pos: [5, 0],
-          options: { direction: 0, label: 'out', index: 0 }
+          options: { label: 'out', index: 0 }
         }
       ],
       wires: []
@@ -1755,9 +1753,7 @@ describe('PersistenceService', () => {
     function placeSnapshot(project: Project, masterTypeId: number): void {
       const def = registry.snapshot(masterTypeId);
       const config = provider.getComponent(def.typeId)!;
-      project.addComponent(
-        config.create({ direction: config.options['direction'].clone() })
-      );
+      project.addComponent(config.create({}));
     }
 
     it('promoteComponentToServer uploads a local master, flips it to server, and removes the local record', async () => {
@@ -2480,7 +2476,7 @@ describe('PersistenceService', () => {
       });
       editor.addComponent(
         Component.deserialize(
-          { pos: [0, 0], options: { direction: 0, label: 'in', index: 0 } },
+          { pos: [0, 0], options: { label: 'in', index: 0 } },
           provider.getComponent(100)!
         )
       );

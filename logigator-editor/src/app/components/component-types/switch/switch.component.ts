@@ -1,5 +1,3 @@
-import { DestroyOptions } from 'pixi.js';
-import { Subject, takeUntil } from 'rxjs';
 import { Component } from '../../component';
 import { SwitchGraphics } from '../../../rendering/graphics/switch.graphics';
 import { switchComponentConfig, SwitchOptions } from './switch.config';
@@ -12,18 +10,10 @@ import { switchComponentConfig, SwitchOptions } from './switch.config';
 export class SwitchComponent extends Component<SwitchOptions> {
   public readonly config = switchComponentConfig;
 
-  private readonly destroy$ = new Subject<void>();
-
   private _on = false;
 
   constructor(options: SwitchOptions) {
-    super(0, 1, options.direction.value, options);
-
-    this.options.direction.onChange$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.direction = this.options.direction.value;
-      });
+    super(0, 1, options);
   }
 
   public get isOn(): boolean {
@@ -74,10 +64,5 @@ export class SwitchComponent extends Component<SwitchOptions> {
     body.pivot.set(0.5, 0.5);
     body.position.set(0.5, 0.5);
     this.registerRotationCounterContainer(body);
-  }
-
-  public override destroy(options?: DestroyOptions): void {
-    this.destroy$.next();
-    super.destroy(options);
   }
 }

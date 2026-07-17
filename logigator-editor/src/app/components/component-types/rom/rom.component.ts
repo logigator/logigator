@@ -9,12 +9,7 @@ export class RomComponent extends Component<RomOptions> {
   private readonly destroy$ = new Subject<void>();
 
   constructor(options: RomOptions) {
-    super(
-      options.addressSize.value,
-      options.wordSize.value,
-      options.direction.value,
-      options
-    );
+    super(options.addressSize.value, options.wordSize.value, options);
 
     // Supply the contents option with the editing dimensions so the hex editor
     // knows the table shape. The ROM-specific `2^addressSize` mapping lives here
@@ -25,12 +20,6 @@ export class RomComponent extends Component<RomOptions> {
       () => this.options.wordSize.value,
       () => 1 << this.options.addressSize.value
     );
-
-    this.options.direction.onChange$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.direction = this.options.direction.value;
-      });
 
     this.options.addressSize.onChange$
       .pipe(takeUntil(this.destroy$))

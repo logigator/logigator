@@ -31,7 +31,7 @@ describe('lgix-container', () => {
       components: Array.from({ length: 500 }, (_, i) => ({
         type: 1,
         pos: [i, 0],
-        options: { direction: 0 }
+        options: {}
       }))
     });
     const bytes = await encodeLgix(raw);

@@ -42,6 +42,7 @@ function liveToBody(
       return {
         type: serialized.type,
         pos: serialized.pos,
+        ...(serialized.direction ? { direction: serialized.direction } : {}),
         options: serialized.options
       };
     }),
@@ -79,10 +80,7 @@ describe('BoardCompilerService watch index', () => {
 
   function placeByType(typeId: number, pos: [number, number]): Component {
     const config = provider.getComponent(typeId)!;
-    const instance = Component.deserialize(
-      { pos, options: { direction: 0 } },
-      config
-    );
+    const instance = Component.deserialize({ pos, options: {} }, config);
     project.addComponent(instance);
     return instance;
   }
@@ -121,7 +119,7 @@ describe('BoardCompilerService watch index', () => {
   function registerOuter(switchBox: number): number {
     const switchComp = makeSwitch(0, 0);
     const nested = Component.deserialize(
-      { pos: [0, 6], options: { direction: 0 } },
+      { pos: [0, 6], options: {} },
       provider.getComponent(switchBox)!
     );
     const plug0 = makeOutPlug(0, [10, 0]);

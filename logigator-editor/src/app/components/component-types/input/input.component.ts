@@ -1,24 +1,14 @@
 import { Component } from '../../component';
-import { DestroyOptions } from 'pixi.js';
-import { Subject, takeUntil } from 'rxjs';
 import { inputComponentConfig, InputOptions } from './input.config';
 
 export class InputComponent extends Component<InputOptions> {
   public readonly config = inputComponentConfig;
 
-  private readonly destroy$ = new Subject<void>();
-
   constructor(options: InputOptions) {
     // A plug's port counts are fixed: an INPUT exposes exactly one output
     // (the signal it feeds into the circuit). The `i`/`o` wire fields are
     // ignored on load — counts come from here, not from the element.
-    super(0, 1, options.direction.value, options);
-
-    this.options.direction.onChange$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.direction = this.options.direction.value;
-      });
+    super(0, 1, options);
   }
 
   // A 1×1 plug is symbol-only: the centered "IN" glyph fills the body, so the
@@ -44,10 +34,5 @@ export class InputComponent extends Component<InputOptions> {
 
   protected draw(): void {
     this.addBody(1, 1);
-  }
-
-  public override destroy(options?: DestroyOptions): void {
-    this.destroy$.next();
-    super.destroy(options);
   }
 }

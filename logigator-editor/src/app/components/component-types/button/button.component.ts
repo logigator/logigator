@@ -1,5 +1,3 @@
-import { DestroyOptions } from 'pixi.js';
-import { Subject, takeUntil } from 'rxjs';
 import { Component } from '../../component';
 import { ButtonGraphics } from '../../../rendering/graphics/button.graphics';
 import { buttonComponentConfig, ButtonOptions } from './button.config';
@@ -12,18 +10,10 @@ import { buttonComponentConfig, ButtonOptions } from './button.config';
 export class ButtonComponent extends Component<ButtonOptions> {
   public readonly config = buttonComponentConfig;
 
-  private readonly destroy$ = new Subject<void>();
-
   private _pressed = false;
 
   constructor(options: ButtonOptions) {
-    super(0, 1, options.direction.value, options);
-
-    this.options.direction.onChange$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.direction = this.options.direction.value;
-      });
+    super(0, 1, options);
   }
 
   public get pressed(): boolean {
@@ -66,10 +56,5 @@ export class ButtonComponent extends Component<ButtonOptions> {
         this.pressed
       )
     );
-  }
-
-  public override destroy(options?: DestroyOptions): void {
-    this.destroy$.next();
-    super.destroy(options);
   }
 }

@@ -9,13 +9,7 @@ export class XorComponent extends Component<XorOptions> {
   private readonly destroy$ = new Subject<void>();
 
   constructor(options: XorOptions) {
-    super(options.numInputs.value, 1, options.direction.value, options);
-
-    this.options.direction.onChange$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.direction = this.options.direction.value;
-      });
+    super(options.numInputs.value, 1, options);
 
     this.options.numInputs.onChange$
       .pipe(takeUntil(this.destroy$))

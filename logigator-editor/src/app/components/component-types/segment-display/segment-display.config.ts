@@ -2,7 +2,6 @@ import { ComponentConfig } from '../../component-config.model';
 import { BuiltInComponentType } from '../../component-type.enum';
 import { ComponentCategory } from '../../component-category.enum';
 import { ComponentOption } from '../../component-option';
-import { DirectionComponentOption } from '../../component-options/direction/direction.component-option';
 import { NumberComponentOption } from '../../component-options/number/number.component-option';
 import { SelectButtonComponentOption } from '../../component-options/select-button/select-button.component-option';
 import { SegmentDisplayComponent } from './segment-display.component';
@@ -16,7 +15,6 @@ export const enum SegmentBase {
 
 export interface SegmentDisplayOptions {
   [key: string]: ComponentOption;
-  direction: DirectionComponentOption;
   numInputs: NumberComponentOption;
   base: SelectButtonComponentOption<SegmentBase>;
 }
@@ -29,7 +27,6 @@ export const segmentDisplayComponentConfig: ComponentConfig<SegmentDisplayOption
     name: 'components.def.SEGMENT_DISPLAY.name',
     description: 'components.def.SEGMENT_DISPLAY.description',
     options: {
-      direction: new DirectionComponentOption(),
       numInputs: new NumberComponentOption(
         'components.options.inputs',
         1,
@@ -46,6 +43,6 @@ export const segmentDisplayComponentConfig: ComponentConfig<SegmentDisplayOption
         SegmentBase.DEC
       )
     },
-    legacyV0Slots: { r: 'direction', i: 'numInputs', n: ['base'] },
+    legacyV0Slots: { i: 'numInputs', n: ['base'] },
     create: (options) => new SegmentDisplayComponent(options)
   };

@@ -54,8 +54,8 @@ definition` is a clean function: one type id denotes exactly one immutable
 
 - **A — Port count comes from the definition, never the element.** A custom
   instance's `numInputs`/`numOutputs`/`labels` come from its (snapshot) definition;
-  the element's `i`/`o` are ignored on load. The only per-instance option is
-  `direction`.
+  the element's `i`/`o` are ignored on load. An instance carries no options at
+  all — the only other per-instance state is the first-class `direction`.
 - **B — One session-global allocator; frozen snapshots don't share.** A type id
   denotes one immutable shape (a master being edited, or a frozen snapshot).
   Snapshots are never mutated, so there is no cross-Project propagation; two
@@ -151,13 +151,13 @@ off, and the restore itself are documented in
 
 ## `CustomComponent` (rendering)
 
-A single `Component<{ direction }>` subclass backs **every** custom type — the
+A single optionless `Component` subclass backs **every** custom type — the
 `create` factory injects the matching definition. A placed instance always wraps a
 **frozen snapshot**, so it renders from fixed values and does **not** subscribe to
 `definitionChange$` (there is no propagation to react to).
 
-- Constructor: `super(def.numInputs, def.numOutputs, direction, options)` (Inv. A),
-  subscribes to `direction` changes, then redraws once.
+- Constructor: `super(def.numInputs, def.numOutputs, options)` (Inv. A), then
+  redraws once.
 - `draw()`: a chamfered `ComponentGraphics` box (fixed `bodyGridWidth = 3`) plus the
   centered `symbol` `Text`, registered as a rotation-counter container so it stays
   upright.

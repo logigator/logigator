@@ -55,19 +55,20 @@ describe('v0ToV1Migration', () => {
     // Rotated South (W=2, H=max(1,3)=3): legacy anchors by the body's fixed
     // top-left, v2 by the rotation pivot, so the pivot shifts by +H on x.
     expect(and.pos).toEqual([6, 4]);
-    expect(and.options).toEqual({ direction: 1, numInputs: 3 });
+    expect(and.direction).toBe(1);
+    expect(and.options).toEqual({ numInputs: 3 });
 
     const rom = components.find((c) => c.type === 12)!;
+    expect(rom.direction).toBeUndefined();
     expect(rom.options).toEqual({
-      direction: 0,
       wordSize: 8,
       addressSize: 3,
       data: 'gQ==' // legacy `s` blob decodes verbatim into the data option
     });
 
     const text = components.find((c) => c.type === 7)!;
+    expect(text.direction).toBeUndefined();
     expect(text.options).toEqual({
-      direction: 0,
       fontSize: 28, // legacy n[0]=14 rendered at ×(16/8)=28 px
       text: 'Hello world'
     });
@@ -244,25 +245,21 @@ describe('v0ToV1Migration', () => {
   // same descriptor in reverse (server-circuit.codec.spec round-trips).
   describe('legacyV0Slots descriptors', () => {
     const expected: Record<number, LegacyV0Slots> = {
-      [BuiltInComponentType.NOT]: { r: 'direction' },
-      [BuiltInComponentType.AND]: { r: 'direction', i: 'numInputs' },
+      [BuiltInComponentType.NOT]: {},
+      [BuiltInComponentType.AND]: { i: 'numInputs' },
       [BuiltInComponentType.TEXT]: {
-        r: 'direction',
         n: ['fontSize'],
         s: 'text'
       },
       [BuiltInComponentType.ROM]: {
-        r: 'direction',
         s: 'data',
         n: ['wordSize', 'addressSize']
       },
       [BuiltInComponentType.INPUT]: {
-        r: 'direction',
         s: 'label',
         n: ['index']
       },
       [BuiltInComponentType.OUTPUT]: {
-        r: 'direction',
         s: 'label',
         n: ['index']
       }

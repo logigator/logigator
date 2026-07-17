@@ -1,21 +1,11 @@
 import { Component } from '../../component';
-import { DestroyOptions } from 'pixi.js';
-import { Subject, takeUntil } from 'rxjs';
 import { jkFfComponentConfig, JkFfOptions } from './jk-ff.config';
 
 export class JkFfComponent extends Component<JkFfOptions> {
   public readonly config = jkFfComponentConfig;
 
-  private readonly destroy$ = new Subject<void>();
-
   constructor(options: JkFfOptions) {
-    super(3, 2, options.direction.value, options);
-
-    this.options.direction.onChange$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.direction = this.options.direction.value;
-      });
+    super(3, 2, options);
   }
 
   protected override get symbol(): string {
@@ -38,10 +28,5 @@ export class JkFfComponent extends Component<JkFfOptions> {
 
   protected draw(): void {
     this.addBody(this.bodyGridWidth, this.bodyGridHeight);
-  }
-
-  public override destroy(options?: DestroyOptions): void {
-    this.destroy$.next();
-    super.destroy(options);
   }
 }

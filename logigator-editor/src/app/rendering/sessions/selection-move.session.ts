@@ -416,7 +416,7 @@ export class SelectionMoveSession implements DragSession {
       // Undo the in-place rotation before reattaching, so termination counts
       // and the frozen rect land back on the original geometry.
       for (const c of this._components) {
-        c.applyDirection(this._componentOldDirection.get(c.id)!);
+        c.direction = this._componentOldDirection.get(c.id)!;
         c.position.copyFrom(this._componentOldPos.get(c.id)!);
       }
       for (const w of this._wires) {

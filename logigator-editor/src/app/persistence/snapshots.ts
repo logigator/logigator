@@ -32,6 +32,7 @@ export function serializeComponentBody(
   return {
     type: component.config.type,
     pos: [component.position.x, component.position.y],
+    ...(component.direction ? { direction: component.direction } : {}),
     options: Object.fromEntries(
       Object.entries(component.options).map(([key, opt]) => [key, opt.value])
     ),
@@ -146,6 +147,7 @@ export function collectSnapshots(
       components: circuit.components.map((c) => ({
         type: sessionToLocal.get(c.type) ?? c.type,
         pos: [c.pos[0], c.pos[1]],
+        ...(c.direction ? { direction: c.direction } : {}),
         options: { ...c.options },
         ...(c.negInputs ? { negInputs: [...c.negInputs] } : {}),
         ...(c.negOutputs ? { negOutputs: [...c.negOutputs] } : {})

@@ -87,7 +87,7 @@ describe('BoardCompilerService negation emission', () => {
             {
               type: BuiltInComponentType.AND,
               pos: [0, 0],
-              options: { direction: 0, numInputs: 2 },
+              options: { numInputs: 2 },
               negInputs: [1]
             }
           ],
@@ -99,7 +99,7 @@ describe('BoardCompilerService negation emission', () => {
     const typeId = registry.snapshot(master).typeId;
     project.addComponent(
       Component.deserialize(
-        { pos: [0, 0], options: { direction: 0 } },
+        { pos: [0, 0], options: {} },
         provider.getComponent(typeId)!
       )
     );

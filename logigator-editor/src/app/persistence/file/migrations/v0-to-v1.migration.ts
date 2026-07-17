@@ -57,8 +57,9 @@ function legacyWireToBody(el: ProjectElement): SerializedWireBody {
  * Decodes a v0 element's positional option slots into **named** option values,
  * driven by the config's {@link ComponentConfig.legacyV0Slots} descriptor. Every
  * option starts at its default; the descriptor then overrides those it maps to a
- * present `r`/`i`/`o`/`n`/`s` field. Pure: reads only config metadata, builds no
- * render objects.
+ * present `i`/`o`/`n`/`s` field (`r` is decoded generically into the body's
+ * first-class `direction`, not an option). Pure: reads only config metadata,
+ * builds no render objects.
  */
 function decodeOptions(
   element: ProjectElement,
@@ -70,7 +71,6 @@ function decodeOptions(
     values[key] = proto.value;
   }
 
-  if (slots.r && element.r !== undefined) values[slots.r] = element.r;
   if (slots.i && element.i !== undefined) values[slots.i] = element.i;
   if (slots.o && element.o !== undefined) values[slots.o] = element.o;
   if (slots.n && element.n) {
@@ -122,7 +122,8 @@ function decodeElements(
       components.push({
         type: element.t,
         pos: legacyAnchorToPivot(element.p[0], element.p[1], direction, w, h),
-        options: { direction }
+        ...(direction ? { direction } : {}),
+        options: {}
       });
       continue;
     }
@@ -177,6 +178,7 @@ function decodeElements(
         width,
         height
       ),
+      ...(direction ? { direction } : {}),
       options,
       ...decodeNegation(element)
     });

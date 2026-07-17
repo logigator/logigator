@@ -9,18 +9,7 @@ export class DecoderComponent extends Component<DecoderOptions> {
   private readonly destroy$ = new Subject<void>();
 
   constructor(options: DecoderOptions) {
-    super(
-      options.numInputs.value,
-      1 << options.numInputs.value,
-      options.direction.value,
-      options
-    );
-
-    this.options.direction.onChange$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.direction = this.options.direction.value;
-      });
+    super(options.numInputs.value, 1 << options.numInputs.value, options);
 
     this.options.numInputs.onChange$
       .pipe(takeUntil(this.destroy$))

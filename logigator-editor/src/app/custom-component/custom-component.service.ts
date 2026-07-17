@@ -288,11 +288,8 @@ export class CustomComponentService {
     const config = this.provider.getComponent(newDef.typeId);
     if (!config) return null;
 
-    const replacement = config.create({
-      direction: instance.options.direction.clone(
-        instance.options.direction.value
-      )
-    });
+    const replacement = config.create({});
+    replacement.direction = instance.direction;
     replacement.position.copyFrom(instance.position);
 
     const action = new UpdateInstanceAction(instance, replacement);

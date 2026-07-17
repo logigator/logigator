@@ -9,13 +9,7 @@ export class TunnelComponent extends Component<TunnelOptions> {
   private readonly destroy$ = new Subject<void>();
 
   constructor(options: TunnelOptions) {
-    super(1, 0, options.direction.value, options);
-
-    this.options.direction.onChange$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.direction = this.options.direction.value;
-      });
+    super(1, 0, options);
 
     // The label renders beside the port stub, so a rename needs a rebuild of
     // the visual tree (ports themselves are unaffected).

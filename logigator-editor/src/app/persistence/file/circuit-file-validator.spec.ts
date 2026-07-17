@@ -6,7 +6,7 @@ function validDocument(): Record<string, unknown> {
   return {
     version: 1,
     name: 'x',
-    components: [{ type: 1, pos: [2, 3], options: { direction: 0 } }],
+    components: [{ type: 1, pos: [2, 3], options: {} }],
     wires: '0,0:e3',
     definitions: [
       {

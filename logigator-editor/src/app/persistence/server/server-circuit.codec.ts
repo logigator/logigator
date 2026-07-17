@@ -14,9 +14,9 @@
  *
  * Encode reads each config's {@link ComponentConfig.legacyV0Slots} descriptor in
  * reverse (the same descriptor the `v0ToV1` migration uses to decode); the
- * `i`/`o`/`r` slots come straight from the component's first-class
- * `numInputs`/`numOutputs`/`direction` fields, so fixed-arity types still emit
- * them without a descriptor entry.
+ * `i`/`o`/`r` slots come straight from the first-class
+ * `numInputs`/`numOutputs`/`direction` fields (live component or serialized
+ * body), so they never need a descriptor entry.
  *
  * Custom components are folded in via the universal snapshot codec
  * (`persistence/snapshots.ts`): every custom the project transitively places
@@ -324,12 +324,13 @@ function encodeBodyComponent(
     t: component.type,
     p: [component.pos[0], component.pos[1]]
   };
+  if (component.direction) {
+    el.r = component.direction;
+  }
 
   if (component.type >= CUSTOM_TYPE_ID_BASE) {
     // Nested custom: no legacy slots — only the direction round-trips; the
     // instance's counts/labels come from its own definition on load (Inv. A).
-    const dir = component.options['direction'];
-    if (typeof dir === 'number' && dir !== 0) el.r = dir;
     // Re-anchor pivot -> legacy top-left about the definition's body extent,
     // the inverse of the migration's custom re-anchor.
     const dim = customDims.get(component.type);
@@ -351,10 +352,6 @@ function encodeBodyComponent(
   const slots = (config as ComponentConfig | undefined)?.legacyV0Slots;
   if (!slots) return el;
 
-  if (slots.r) {
-    const v = component.options[slots.r];
-    if (typeof v === 'number' && v !== 0) el.r = v;
-  }
   if (slots.i) {
     const v = component.options[slots.i];
     if (typeof v === 'number') el.i = v;

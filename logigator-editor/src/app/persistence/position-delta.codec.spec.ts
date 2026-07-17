@@ -29,7 +29,7 @@ describe('position-delta codec', () => {
 
   it('round-trips absolute positions through encode → decode', () => {
     const input = [
-      comp(5, -3, 7, { direction: 1 }),
+      { ...comp(5, -3, 7), direction: 1 },
       comp(1, 100, 200),
       comp(5, -3, 2),
       comp(1, 0, 0)

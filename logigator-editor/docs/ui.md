@@ -253,7 +253,9 @@ A thin bar at the bottom of the board column. Displays four segments separated b
 
 **File:** `component-settings/component-settings.component.ts`
 
-A thin loop rendered inside the floating `p-card` in `AppComponent` when a component type is selected for placement. It receives a flat array of `ComponentOption` instances and instantiates one renderer per option via `*ngComponentOutlet="option.renderer; inputs: { option }"` — each `ComponentOption` subclass declares its own renderer component, so this component owns no per-option chrome. See [`component-options.md`](component-options.md) for the option/renderer contract.
+A thin loop rendered inside the floating `p-card` in `AppComponent` when a component type is selected for placement. It renders a fixed **direction row** (an `lg-select-button` bound to the component's first-class `direction` — not an option) followed by one renderer per option via `*ngComponentOutlet="option.renderer; inputs: { option }"` — each `ComponentOption` subclass declares its own renderer component, so this component owns no per-option chrome. See [`component-options.md`](component-options.md) for the option/renderer contract.
+
+Direction commits diverge by branch: a **placed** component routes through `project.requestSelectionRotation(steps)` (midpoint pivot, collision handling, shared undo entry with the rotate buttons); a **placement ghost** writes the sticky per-type direction on `WorkModeService` (`setPlacementDirection`), which every fresh ghost of that type starts from.
 
 **Input**
 

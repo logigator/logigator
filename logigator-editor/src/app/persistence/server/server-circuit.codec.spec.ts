@@ -263,12 +263,12 @@ describe('server-circuit.codec', () => {
           {
             type: BuiltInComponentType.INPUT,
             pos: [0, 0],
-            options: { direction: 0, label: 'A', index: 0 }
+            options: { label: 'A', index: 0 }
           },
           {
             type: BuiltInComponentType.OUTPUT,
             pos: [5, 0],
-            options: { direction: 0, label: 'Q', index: 0 }
+            options: { label: 'Q', index: 0 }
           }
         ],
         wires: [{ pos: [1, 0], direction: 0, length: 4 }]
@@ -289,9 +289,8 @@ describe('server-circuit.codec', () => {
       );
       const snapType = registry.snapshot(master).typeId;
       const config = provider.getComponent(snapType)!;
-      const instance = config.create({
-        direction: config.options['direction'].clone(direction)
-      });
+      const instance = config.create({});
+      instance.direction = direction;
       instance.position.set(7, 2);
 
       const project = new Project();
@@ -349,9 +348,7 @@ describe('server-circuit.codec', () => {
       const snapType = registry.snapshot(master).typeId;
       const config = provider.getComponent(snapType)!;
       const project = new Project();
-      project.addComponent(
-        config.create({ direction: config.options['direction'].clone() })
-      );
+      project.addComponent(config.create({}));
       return project;
     }
 
@@ -388,12 +385,13 @@ describe('server-circuit.codec', () => {
           {
             type: BuiltInComponentType.INPUT,
             pos: [0, 0],
-            options: { direction: 0, label: 'A', index: 0 }
+            options: { label: 'A', index: 0 }
           },
           {
             type: BuiltInComponentType.OUTPUT,
             pos: [7, 3],
-            options: { direction: 1, label: 'Q', index: 0 }
+            direction: 1,
+            options: { label: 'Q', index: 0 }
           }
         ],
         wires: []
@@ -414,9 +412,7 @@ describe('server-circuit.codec', () => {
       );
       const snapType = registry.snapshot(master).typeId;
       const config = provider.getComponent(snapType)!;
-      const instance = config.create({
-        direction: config.options['direction'].clone(0)
-      });
+      const instance = config.create({});
       const project = new Project();
       project.addComponent(instance);
 
@@ -456,7 +452,7 @@ describe('server-circuit.codec', () => {
           labels: [],
           circuit: {
             components: [
-              { type: innerB, pos: [5, 3], options: { direction: 2 } }
+              { type: innerB, pos: [5, 3], direction: 2, options: {} }
             ],
             wires: []
           }
@@ -465,9 +461,7 @@ describe('server-circuit.codec', () => {
       );
       const config = provider.getComponent(registry.snapshot(outerA).typeId)!;
       const project = new Project();
-      project.addComponent(
-        config.create({ direction: config.options['direction'].clone(0) })
-      );
+      project.addComponent(config.create({}));
 
       // Encode: A's snapshot body carries B re-anchored to its legacy top-left.
       const { elements, dependencies } = encode(project);
@@ -488,7 +482,7 @@ describe('server-circuit.codec', () => {
         (c) => c.type >= CUSTOM_TYPE_ID_BASE
       )!;
       expect(bInCircuit.pos).toEqual([5, 3]);
-      expect(bInCircuit.options['direction']).toBe(2);
+      expect(bInCircuit.direction).toBe(2);
     });
 
     it('loads from the embedded snapshot — ports come from it (Inv. A)', () => {

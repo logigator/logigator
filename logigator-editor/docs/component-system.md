@@ -41,9 +41,11 @@ Visual children (component body graphics, port wire stubs, text labels) are pixe
 
 ### Options System
 
-Each component type exposes a named record of `ComponentOption` instances — observable values that drive component state. When a setting changes (e.g., number of inputs, rotation), the option emits on `onChange$` and the component reacts, updating its properties and triggering a redraw.
+Each component type exposes a named record of `ComponentOption` instances — observable values that drive component state. When a setting changes (e.g., number of inputs), the option emits on `onChange$` and the component reacts, updating its properties and triggering a redraw.
 
-Options defined in `ComponentConfig` serve as **templates**. On instantiation, each option is `.clone()`'d so the live component owns independent copies. Options are accessed by name (e.g., `options.direction`, `options.numInputs`) rather than by array index.
+Options defined in `ComponentConfig` serve as **templates**. On instantiation, each option is `.clone()`'d so the live component owns independent copies. Options are accessed by name (e.g., `options.numInputs`) rather than by array index.
+
+Rotation is deliberately **not** an option: every component rotates, so `direction` is first-class `Component` state (like `position` and the negation sets) with its own serialized field, set through the `direction` setter. The settings panel renders a fixed direction row for every component instead of an option renderer.
 
 ### Serialization
 
@@ -54,7 +56,7 @@ Component  →  Component.serialize(c)         →  SerializedComponent   (save)
 SerializedComponent  →  Component.deserialize(s, config)  →  Component  (load)
 ```
 
-The serialized form stores the type, grid-unit position (`component.position.x / y`), and a record of raw option values keyed by option name. Because `position` is already in grid units there is no conversion step during serialization or deserialization.
+The serialized form stores the type, grid-unit position (`component.position.x / y`), the direction (own field, omitted when East), and a record of raw option values keyed by option name. Because `position` is already in grid units there is no conversion step during serialization or deserialization.
 
 ---
 
@@ -64,7 +66,7 @@ The serialized form stores the type, grid-unit position (`component.position.x /
 
 **`Direction`** (in `utils/direction.ts`) — four cardinal directions clockwise from East: `E = 0`, `S = 1`, `W = 2`, `N = 3`. The numeric layout is load-bearing: `rotation = value * π/2` (Component direction → PixiJS rotation) and `oppositeDir = (value + 2) % 4` (input stub ↔ output stub flip). The `Component.direction` setter applies the PixiJS rotation automatically. Shared with the connection-points layer.
 
-**Body re-anchoring** — the body is drawn from, and rotated around, the local origin, so the `direction`, `numInputs`, and `numOutputs` setters all run their mutation through `_withFixedBodyAnchor`, which holds the body's top-left corner fixed by shifting `position` by the change in `bodyGridBounds` (matching the legacy editor): rotation never moves the component (E↔W / N↔S flips stay put), and added ports grow the body toward the bottom (E/W) or the right (S/N) instead of jumping. The rotation shift is a reversible function of direction + body size, so undo via `ChangeOptionAction` round-trips without storing position.
+**Body re-anchoring** — the body is drawn from, and rotated around, the local origin, so the `direction`, `numInputs`, and `numOutputs` setters all run their mutation through `_withFixedBodyAnchor`, which holds the body's top-left corner fixed by shifting `position` by the change in `bodyGridBounds` (matching the legacy editor): rotation never moves the component (E↔W / N↔S flips stay put), and added ports grow the body toward the bottom (E/W) or the right (S/N) instead of jumping. (Group/selection rotation instead pivots about the selection midpoint — `RotateComponentsAction` stores the direction _and_ the orbited position per entry.)
 
 **`ComponentCategory`** — groups components for the UI palette. Values: `HIDDEN`, `BASIC`, `ADVANCED`, `IO`, `PORT`, `USER`. The sidebar queries the matching reactive list in `ComponentProviderService` (`basicComponents` / `advancedComponents` / `ioComponents` / `userComponents`), so `HIDDEN` components never appear in the palette. `TextComponent` uses `HIDDEN`. `USER` is for custom (user-defined) components; `IO` is the input/output hardware (button, switch, LED, segment display, LED matrix); `PORT` is the INPUT/OUTPUT plug components, shown only while editing a custom component. The INPUT/OUTPUT plugs are built-ins whose port counts are fixed (`super(0, 1)` / `super(1, 0)`) and whose `label`/`index` options round-trip through the `s`/`n[0]` wire slots.
 
@@ -87,7 +89,7 @@ Key public members:
 
 - `id`, `direction`, `numInputs`, `numOutputs` — core state; setters on `numInputs`/`numOutputs` and `direction` trigger a redraw and emit on `portsChange$`
 - `position` (inherited from PixiJS Container) — the component's grid-unit position; this IS the canonical circuit coordinate
-- `options: TOptions` — live option instances owned by this component, accessed by name (e.g., `this.options.direction.value`)
+- `options: TOptions` — live option instances owned by this component, accessed by name (e.g., `this.options.numInputs.value`)
 - `ignoresWireCollision: boolean` (default `false`) — when `true`, the component is skipped by `Project.hasWireBodyCollision` (wires may pass through its body) and `hasComponentBodyWireCollision` returns `false` for it. Currently only `TextComponent` sets this to `true`.
 - `connectionPoints: Point[]` — port positions in grid-unit space (parent `_gridSpace` coordinates; inputs first, then outputs). This and the bounds below delegate to the pure functions in `component-geometry.ts`, which work on a plain shape descriptor (`direction`, port counts, body extent, position) — no PixiJS involved, so the lattice invariants (ports exactly on the half-grid, exact quarter-turn arithmetic instead of trig) are pinned by `component-geometry.spec.ts`
 - `portsChange$: Subject<{ oldPorts, newPorts }>` — fires whenever the `direction`, `numInputs`, or `numOutputs` setter runs after construction. `Project.addComponent` subscribes on insert and unsubscribes in `removeComponent`. The handler runs `topology.integrate({ movedComponentPorts })` to enforce the split-on-touch invariants (a new port landing on a wire's interior auto-splits that wire), then updates CP markers. The integrator pass is applied directly without `ActionManager` wrapping, so the implied splits/merges aren't undoable — rotation never had undo support anyway. See [Wire Integration Invariants](wires.md#wire-integration-invariants).

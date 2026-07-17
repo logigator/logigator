@@ -2,13 +2,9 @@ import { ComponentConfig } from '../../component-config.model';
 import { BuiltInComponentType } from '../../component-type.enum';
 import { ComponentCategory } from '../../component-category.enum';
 import { ComponentOption } from '../../component-option';
-import { DirectionComponentOption } from '../../component-options/direction/direction.component-option';
 import { LedComponent } from './led.component';
 
-export interface LedOptions {
-  [key: string]: ComponentOption;
-  direction: DirectionComponentOption;
-}
+export type LedOptions = Record<string, ComponentOption>;
 
 export const ledComponentConfig: ComponentConfig<LedOptions> = {
   type: BuiltInComponentType.LED,
@@ -16,9 +12,7 @@ export const ledComponentConfig: ComponentConfig<LedOptions> = {
   symbol: 'LED',
   name: 'components.def.LED.name',
   description: 'components.def.LED.description',
-  options: {
-    direction: new DirectionComponentOption()
-  },
-  legacyV0Slots: { r: 'direction' },
+  options: {},
+  legacyV0Slots: {},
   create: (options) => new LedComponent(options)
 };

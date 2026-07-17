@@ -1,6 +1,4 @@
 import { Component } from '../../component';
-import { DestroyOptions } from 'pixi.js';
-import { Subject, takeUntil } from 'rxjs';
 import {
   halfAdderComponentConfig,
   HalfAdderOptions
@@ -9,16 +7,8 @@ import {
 export class HalfAdderComponent extends Component<HalfAdderOptions> {
   public readonly config = halfAdderComponentConfig;
 
-  private readonly destroy$ = new Subject<void>();
-
   constructor(options: HalfAdderOptions) {
-    super(2, 2, options.direction.value, options);
-
-    this.options.direction.onChange$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.direction = this.options.direction.value;
-      });
+    super(2, 2, options);
   }
 
   protected override get symbol(): string {
@@ -41,10 +31,5 @@ export class HalfAdderComponent extends Component<HalfAdderOptions> {
 
   protected draw(): void {
     this.addBody(this.bodyGridWidth, this.bodyGridHeight);
-  }
-
-  public override destroy(options?: DestroyOptions): void {
-    this.destroy$.next();
-    super.destroy(options);
   }
 }

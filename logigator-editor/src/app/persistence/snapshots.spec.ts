@@ -37,12 +37,12 @@ describe('snapshots codec', () => {
         {
           type: BuiltInComponentType.INPUT,
           pos: [0, 0],
-          options: { direction: 0, label: 'in', index: 0 }
+          options: { label: 'in', index: 0 }
         },
         {
           type: BuiltInComponentType.OUTPUT,
           pos: [5, 0],
-          options: { direction: 0, label: 'out', index: 0 }
+          options: { label: 'out', index: 0 }
         }
       ],
       wires: []
@@ -65,7 +65,7 @@ describe('snapshots codec', () => {
         id: 'id-a',
         symbol: 'A',
         circuit: {
-          components: [{ type: snapB, pos: [2, 2], options: { direction: 0 } }],
+          components: [{ type: snapB, pos: [2, 2], options: {} }],
           wires: []
         }
       },

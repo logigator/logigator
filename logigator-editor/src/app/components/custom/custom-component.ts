@@ -1,5 +1,3 @@
-import { DestroyOptions } from 'pixi.js';
-import { Subject, takeUntil } from 'rxjs';
 import { Component } from '../component';
 import { ComponentConfig } from '../component-config.model';
 import { CustomComponentOptions } from './custom-component.config';
@@ -19,7 +17,6 @@ import { CustomComponentDefinition } from './custom-component-definition.model';
 export class CustomComponent extends Component<CustomComponentOptions> {
   public readonly config: ComponentConfig<CustomComponentOptions>;
 
-  private readonly destroy$ = new Subject<void>();
   // Set after super(), so it is undefined during the base constructor's initial
   // draw. Every read guards for that.
   private readonly _def: CustomComponentDefinition | undefined;
@@ -30,15 +27,9 @@ export class CustomComponent extends Component<CustomComponentOptions> {
     config: ComponentConfig<CustomComponentOptions>
   ) {
     // Port counts come from the definition, never the element.
-    super(def.numInputs, def.numOutputs, options.direction.value, options);
+    super(def.numInputs, def.numOutputs, options);
     this._def = def;
     this.config = config;
-
-    this.options.direction.onChange$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.direction = this.options.direction.value;
-      });
 
     // The base constructor's initial draw runs without `_def`, so it omits the
     // symbol and labels. Redraw now that `_def` is set to add them. The snapshot
@@ -75,10 +66,5 @@ export class CustomComponent extends Component<CustomComponentOptions> {
 
   protected draw(): void {
     this.addBody(this.bodyGridWidth, this.bodyGridHeight);
-  }
-
-  public override destroy(options?: DestroyOptions): void {
-    this.destroy$.next();
-    super.destroy(options);
   }
 }

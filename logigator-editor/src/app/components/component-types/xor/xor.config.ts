@@ -2,13 +2,11 @@ import { ComponentConfig } from '../../component-config.model';
 import { BuiltInComponentType } from '../../component-type.enum';
 import { ComponentCategory } from '../../component-category.enum';
 import { ComponentOption } from '../../component-option';
-import { DirectionComponentOption } from '../../component-options/direction/direction.component-option';
 import { NumberComponentOption } from '../../component-options/number/number.component-option';
 import { XorComponent } from './xor.component';
 
 export interface XorOptions {
   [key: string]: ComponentOption;
-  direction: DirectionComponentOption;
   numInputs: NumberComponentOption;
 }
 
@@ -19,9 +17,8 @@ export const xorComponentConfig: ComponentConfig<XorOptions> = {
   name: 'components.def.XOR.name',
   description: 'components.def.XOR.description',
   options: {
-    direction: new DirectionComponentOption(),
     numInputs: new NumberComponentOption('components.options.inputs', 2, 64, 2)
   },
-  legacyV0Slots: { r: 'direction', i: 'numInputs' },
+  legacyV0Slots: { i: 'numInputs' },
   create: (options) => new XorComponent(options)
 };
