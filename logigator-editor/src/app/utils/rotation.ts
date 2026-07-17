@@ -73,16 +73,51 @@ export function rotateRectAroundPivot(
 
 /**
  * The pivot a group rotates around: its bounding box's centre snapped to the
- * integer grid. An integer pivot maps integer component positions back onto
- * integers and half-grid wire endpoints back onto the half-grid (the rotated
- * coordinates are pivot-sums of the source offsets); a pivot with a
- * fractional part on only one axis would shear the two lattices into each
- * other. The choice only affects where the group lands, never its internal
- * geometry.
+ * nearest rotation-safe lattice point. Safe points have both coordinates
+ * integer or both half-odd — either kind maps integer component positions
+ * back onto integers and half-grid wire endpoints back onto the half-grid
+ * (the rotated coordinates are pivot-sums of the source offsets); a point
+ * with a fractional part on only one axis would shear the two lattices into
+ * each other.
+ *
+ * The snap is a fixed point of the rotation step: recomputing the pivot from
+ * the rotated bounds yields the same point, so repeated quarter-turns — each
+ * an independent rotate committing in place — share one exact pivot, and any
+ * sequence netting out to full turns lands the group exactly where it
+ * started. That property hinges on two deterministic tie-breaks (a
+ * direction-biased tie like `Math.round`'s half-up translates the group a
+ * little each step, and the bias never cancels across a cycle):
+ *
+ * - Integer vs half-odd at equal distance (centre fractions of ±1/4 on both
+ *   axes): the integer point wins.
+ * - Centre halfway between two integer points (fraction 1/2 on exactly one
+ *   axis): the point with even x + y wins. Such centres are edge midpoints
+ *   of the integer grid; every position the group orbits through resolves
+ *   to the same even-sum endpoint.
+ *
+ * Bounds live on the half-grid, so centre coordinates are multiples of 1/4 —
+ * dyadic and exact, like all lattice arithmetic in this file.
  */
 export function rotationPivotFor(bounds: Rectangle): Point {
-  return new Point(
-    Math.round(bounds.x + bounds.width / 2),
-    Math.round(bounds.y + bounds.height / 2)
-  );
+  const cx = bounds.x + bounds.width / 2;
+  const cy = bounds.y + bounds.height / 2;
+
+  // Integer candidate. On a half tie the two nearest integers are the
+  // half-up rounding and its lower neighbour; parity picks between them.
+  // `+ 0` folds Math.round's negative zero into plain zero.
+  let ix = Math.round(cx) + 0;
+  let iy = Math.round(cy) + 0;
+  if ((ix + iy) % 2 !== 0) {
+    if (cx - Math.floor(cx) === 0.5) ix--;
+    else if (cy - Math.floor(cy) === 0.5) iy--;
+  }
+
+  // Half-odd candidate. Whenever it is strictly nearer than the integer one
+  // it is also unique, so its own rounding ties never surface.
+  const hx = Math.round(cx - 0.5) + 0.5;
+  const hy = Math.round(cy - 0.5) + 0.5;
+
+  const intDist = (cx - ix) ** 2 + (cy - iy) ** 2;
+  const halfDist = (cx - hx) ** 2 + (cy - hy) ** 2;
+  return halfDist < intDist ? new Point(hx, hy) : new Point(ix, iy);
 }

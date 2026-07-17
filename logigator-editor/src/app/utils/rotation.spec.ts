@@ -72,9 +72,44 @@ describe('rotation helpers', () => {
     expect(rotateRectAroundPivot(pivot, turned, 3)).toEqual(rect);
   });
 
-  it('snaps the pivot to the integer grid', () => {
-    // Centre (3.75, 2.5) → rounded to (4, 3).
-    const pivot = rotationPivotFor(new Rectangle(1, 0, 5.5, 5));
-    expect(pivot).toEqual(new Point(4, 3));
+  describe('rotationPivotFor', () => {
+    // Every half-grid bounds shape and offset up to 4x4 — covers all centre
+    // fraction classes (0, 1/4, 1/2, 3/4 per axis), negatives included.
+    function* halfGridBounds(): Generator<Rectangle> {
+      for (let x2 = -5; x2 <= 5; x2++)
+        for (let y2 = -5; y2 <= 5; y2++)
+          for (let w2 = 1; w2 <= 8; w2++)
+            for (let h2 = 1; h2 <= 8; h2++)
+              yield new Rectangle(x2 / 2, y2 / 2, w2 / 2, h2 / 2);
+    }
+
+    it('stays on the rotation-safe lattice, within half a unit of the centre', () => {
+      for (const bounds of halfGridBounds()) {
+        const pivot = rotationPivotFor(bounds);
+        const bothInt = Number.isInteger(pivot.x) && Number.isInteger(pivot.y);
+        const bothHalf =
+          Number.isInteger(pivot.x - 0.5) && Number.isInteger(pivot.y - 0.5);
+        expect(bothInt || bothHalf).toBe(true);
+        expect(
+          Math.abs(pivot.x - (bounds.x + bounds.width / 2))
+        ).toBeLessThanOrEqual(0.5);
+        expect(
+          Math.abs(pivot.y - (bounds.y + bounds.height / 2))
+        ).toBeLessThanOrEqual(0.5);
+      }
+    });
+
+    it('is a fixed point of the rotation step, so re-derived pivots never drift', () => {
+      // Recomputing the pivot from the turned bounds must yield the same
+      // point in both directions — this is what makes independent
+      // quarter-turn presses compose into an exact full turn.
+      for (const bounds of halfGridBounds()) {
+        const pivot = rotationPivotFor(bounds);
+        for (const steps of [1, 3]) {
+          const turned = rotateRectAroundPivot(pivot, bounds, steps);
+          expect(rotationPivotFor(turned)).toEqual(pivot);
+        }
+      }
+    });
   });
 });
