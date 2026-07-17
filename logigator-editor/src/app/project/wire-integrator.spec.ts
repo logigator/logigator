@@ -465,6 +465,112 @@ describe('WireIntegrator', () => {
     expect(merged).toBeTruthy();
   });
 
+  it('moved collinear pair whose seam lands on a wire interior → pair merges, no split', () => {
+    // H1 (0.5,2.5)→(3.5,2.5) and H2 (3.5,2.5)→(6.5,2.5) are split pieces of a
+    // former T-junction at (3.5,0.5), moved down together so their shared
+    // endpoint sits on the interior of V (3.5,0.5)→(3.5,4.5). With no genuine
+    // third terminator at the seam, the pair merges back into one wire and V
+    // stays whole — a plain crossing, as if one unsplit wire had been moved.
+    const v = makeWire(3, 0, WireDirection.VERTICAL, 4);
+    const h1 = makeWire(0, 2, WireDirection.HORIZONTAL, 3);
+    const h2 = makeWire(3, 2, WireDirection.HORIZONTAL, 3);
+    existing.push(v, h1, h2);
+    const { toAdd, toRemove } = integrator.integrate(
+      {
+        movedWires: [
+          {
+            wire: h1,
+            oldSnapshot: {
+              start: new Point(0.5, 0.5),
+              end: new Point(3.5, 0.5),
+              direction: WireDirection.HORIZONTAL,
+              gridBounds: new Rectangle(0, 0, 4, 1)
+            }
+          },
+          {
+            wire: h2,
+            oldSnapshot: {
+              start: new Point(3.5, 0.5),
+              end: new Point(6.5, 0.5),
+              direction: WireDirection.HORIZONTAL,
+              gridBounds: new Rectangle(3, 0, 4, 1)
+            }
+          }
+        ]
+      },
+      makeWireQuery(existing),
+      noComponentsQuery,
+      SCALE
+    );
+    expect(toRemove).toContain(h1);
+    expect(toRemove).toContain(h2);
+    expect(toRemove).not.toContain(v);
+    expect(toAdd.length).toBe(1);
+    expect(toAdd[0].direction).toBe(WireDirection.HORIZONTAL);
+    expect(toAdd[0].length).toBe(6);
+  });
+
+  it('moved T-junction (pair + port) lands on a wire interior → splits it', () => {
+    // Counter-case to the seam merge: the pair's shared endpoint arrives
+    // together with a component port terminating there — a genuine T-junction
+    // moved as a selection. The port blocks the pair's merge, so the crossed
+    // wire splits and the junction taps it.
+    // Port at (3.5, 0.5): AND at (4,0) facing East → input port at (3.5, 0.5).
+    const comp = makeAnd(2, Direction.E, 4, 0);
+    components.push(comp);
+    // V (3.5,-0.5)→(3.5,1.5) — its interior contains the seam (3.5,0.5).
+    const v = new Wire(WireDirection.VERTICAL, 2);
+    v.position.set(3.5, -0.5);
+    // Pair H1 (0.5,0.5)→(3.5,0.5), H2 (3.5,0.5)→(6.5,0.5).
+    const h1 = makeWire(0, 0, WireDirection.HORIZONTAL, 3);
+    const h2 = makeWire(3, 0, WireDirection.HORIZONTAL, 3);
+    existing.push(v, h1, h2);
+    const { toAdd, toRemove } = integrator.integrate(
+      {
+        movedWires: [
+          {
+            wire: h1,
+            oldSnapshot: {
+              start: new Point(0.5, 10.5),
+              end: new Point(3.5, 10.5),
+              direction: WireDirection.HORIZONTAL,
+              gridBounds: new Rectangle(0, 10, 4, 1)
+            }
+          },
+          {
+            wire: h2,
+            oldSnapshot: {
+              start: new Point(3.5, 10.5),
+              end: new Point(6.5, 10.5),
+              direction: WireDirection.HORIZONTAL,
+              gridBounds: new Rectangle(3, 10, 4, 1)
+            }
+          }
+        ],
+        movedComponentPorts: [
+          {
+            oldPorts: [new Point(3.5, 10.5)],
+            newPorts: comp.connectionPoints
+          }
+        ]
+      },
+      makeWireQuery(existing),
+      makeComponentQuery(components),
+      SCALE
+    );
+    expect(toRemove).toContain(v);
+    expect(toRemove).not.toContain(h1);
+    expect(toRemove).not.toContain(h2);
+    const verticals = toAdd.filter(
+      (w) => w.direction === WireDirection.VERTICAL
+    );
+    expect(verticals.length).toBe(2);
+    const horizontals = toAdd.filter(
+      (w) => w.direction === WireDirection.HORIZONTAL
+    );
+    expect(horizontals.length).toBe(0);
+  });
+
   // --- Cascading cases ---
 
   it('cascading split — added wire crosses two endpoints', () => {

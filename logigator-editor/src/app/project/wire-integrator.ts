@@ -292,35 +292,17 @@ export class WireIntegrator {
       iteration++;
       changed = false;
 
-      // --- Split pass ---
-      // For each candidate point P, split any wire whose interior contains P,
-      // but only if some OTHER termination (endpoint or port) sits at P — i.e.,
-      // the I1/I2 invariant is actually violated. Pure candidates left over
-      // from a removal/move with no current terminator must not cause a split.
-      const splitSnapshot = [...candidates.values()];
-      for (const p of splitSnapshot) {
-        for (const w of collectWorkingWiresAt(p)) {
-          if (!this._interiorContains(w, p)) continue;
-          if (!isTermination(p, w)) continue;
-          const [w1, w2] = this._splitWire(w, p, scale);
-          internalWires.add(w1);
-          internalWires.add(w2);
-          consumeWire(w);
-          freshLive.add(w1);
-          freshLive.add(w2);
-          const [s1, e1] = w1.connectionPoints;
-          const [s2, e2] = w2.connectionPoints;
-          addCandidate(s1);
-          addCandidate(e1);
-          addCandidate(s2);
-          addCandidate(e2);
-          changed = true;
-        }
-      }
-
       // --- Merge pass ---
       // For each candidate point P, find pairs of collinear wires (same axis,
       // each ending at P) and merge them iff nothing else terminates at P.
+      // Runs before the split pass: at a point where a collinear pair's shared
+      // endpoint sits on a third wire's interior, merge and split are each
+      // self-justifying — the pair's endpoints are the only terminations that
+      // would justify splitting the third wire, and the split pieces would be
+      // the only terminators blocking the merge. Merging first resolves the
+      // ambiguity toward a plain crossing, so moving both halves of a
+      // previously split wire across another wire behaves like moving one
+      // unsplit wire.
       const mergeSnapshot = [...candidates.values()];
       for (const p of mergeSnapshot) {
         for (const direction of [
@@ -350,6 +332,32 @@ export class WireIntegrator {
           freshLive.add(merged);
           addCandidate(merged.connectionPoints[0]);
           addCandidate(merged.connectionPoints[1]);
+          changed = true;
+        }
+      }
+
+      // --- Split pass ---
+      // For each candidate point P, split any wire whose interior contains P,
+      // but only if some OTHER termination (endpoint or port) sits at P — i.e.,
+      // the I1/I2 invariant is actually violated. Pure candidates left over
+      // from a removal/move with no current terminator must not cause a split.
+      const splitSnapshot = [...candidates.values()];
+      for (const p of splitSnapshot) {
+        for (const w of collectWorkingWiresAt(p)) {
+          if (!this._interiorContains(w, p)) continue;
+          if (!isTermination(p, w)) continue;
+          const [w1, w2] = this._splitWire(w, p, scale);
+          internalWires.add(w1);
+          internalWires.add(w2);
+          consumeWire(w);
+          freshLive.add(w1);
+          freshLive.add(w2);
+          const [s1, e1] = w1.connectionPoints;
+          const [s2, e2] = w2.connectionPoints;
+          addCandidate(s1);
+          addCandidate(e1);
+          addCandidate(s2);
+          addCandidate(e2);
           changed = true;
         }
       }
