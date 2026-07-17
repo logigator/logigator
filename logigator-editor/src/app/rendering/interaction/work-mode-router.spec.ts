@@ -561,7 +561,9 @@ describe('WorkModeRouter wire-tool taps (WIRE_TOOL mode)', () => {
     tap(2.5, 2.5); // splits — the point is now a joinable CP
 
     expect(project.floatingLayer.connectionGhostVisible).toBe(true);
-    expect(project.topology.connectionToggleKindAt(new Point(2.5, 2.5))).toBe('join');
+    expect(project.topology.connectionToggleKindAt(new Point(2.5, 2.5))).toBe(
+      'join'
+    );
   });
 });
 

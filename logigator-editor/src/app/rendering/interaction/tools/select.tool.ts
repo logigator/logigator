@@ -23,9 +23,7 @@ export class SelectTool implements BoardTool {
     change$: this._shortcuts.heldChange$
   };
 
-  constructor(
-    private readonly mode: WorkMode.SELECT | WorkMode.SELECT_EXACT
-  ) {}
+  constructor(private readonly mode: WorkMode.SELECT | WorkMode.SELECT_EXACT) {}
 
   public down(project: Project, input: PointerInput, host: ToolHost): void {
     const localPoint = input.grid;

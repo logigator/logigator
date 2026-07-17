@@ -415,7 +415,8 @@ export class MinimapComponent implements OnDestroy {
     gridOriginX: number,
     gridOriginY: number
   ): void {
-    const pxPerUnit = project.viewport.viewportState.scale * environment.gridSize;
+    const pxPerUnit =
+      project.viewport.viewportState.scale * environment.gridSize;
     project.viewport.setPosition(
       new Point(-gridOriginX * pxPerUnit, -gridOriginY * pxPerUnit)
     );

@@ -348,7 +348,7 @@ pieces:
 
 ### Cut lifecycle
 
-A scissor cut is a **real history entry from the start** — but it stays *live* (committable/retractable) only while it is the newest entry. `SelectionManager._scissorAndSelectWires` mutates the project directly via `Project.addWire` / `Project.removeWire` (so the inside piece is a real, selectable `Wire`), registers `ActionContainer(RemoveWiresAction, AddWiresAction)` via `ActionManager.register`, and keeps the reference in `_cutAction`.
+A scissor cut is a **real history entry from the start** — but it stays _live_ (committable/retractable) only while it is the newest entry. `SelectionManager._scissorAndSelectWires` mutates the project directly via `Project.addWire` / `Project.removeWire` (so the inside piece is a real, selectable `Wire`), registers `ActionContainer(RemoveWiresAction, AddWiresAction)` via `ActionManager.register`, and keeps the reference in `_cutAction`.
 
 Three outcomes:
 

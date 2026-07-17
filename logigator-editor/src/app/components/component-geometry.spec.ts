@@ -96,7 +96,12 @@ describe('connectionPoints', () => {
 describe('bounds', () => {
   it('gridBounds extends bodyGridBounds by the stub sides that have ports', () => {
     const s = shape();
-    expect(bodyGridBounds(s)).toMatchObject({ x: 10, y: 20, width: 2, height: 2 });
+    expect(bodyGridBounds(s)).toMatchObject({
+      x: 10,
+      y: 20,
+      width: 2,
+      height: 2
+    });
     expect(gridBounds(s)).toMatchObject({ x: 9.5, y: 20, width: 3, height: 2 });
   });
 

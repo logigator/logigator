@@ -257,13 +257,13 @@ Tapping the wire tool (`WorkMode.WIRE_TOOL` — a press that never moved a grid 
 
 ### Entry points
 
-| Layer                           | Detail                                                                    |
-| ------------------------------- | ------------------------------------------------------------------------- |
-| `WireToolSession`               | Reports a no-move press to the router via its `onTap` callback            |
-| `WireTool._tap`                 | No port in reach → `roundToHalfGrid` + `project.topology.toggleConnectionAt(p)` |
-| `WireTopology.toggleConnectionAt(p)` | Dispatches to `_joinAt` or `_splitAt` based on `hasCpAt(p)`          |
-| `Project._splitAt(p)`           | Splits both crossing wires at `p`, pushes action via `actionManager.push` |
-| `Project._joinAt(p)`            | Merges collinear pairs at `p`; no-ops silently if integrator re-splits    |
+| Layer                                | Detail                                                                          |
+| ------------------------------------ | ------------------------------------------------------------------------------- |
+| `WireToolSession`                    | Reports a no-move press to the router via its `onTap` callback                  |
+| `WireTool._tap`                      | No port in reach → `roundToHalfGrid` + `project.topology.toggleConnectionAt(p)` |
+| `WireTopology.toggleConnectionAt(p)` | Dispatches to `_joinAt` or `_splitAt` based on `hasCpAt(p)`                     |
+| `Project._splitAt(p)`                | Splits both crossing wires at `p`, pushes action via `actionManager.push`       |
+| `Project._joinAt(p)`                 | Merges collinear pairs at `p`; no-ops silently if integrator re-splits          |
 
 ### Undo / redo
 

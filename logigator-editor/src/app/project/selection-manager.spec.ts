@@ -380,9 +380,7 @@ describe('SelectionManager', () => {
         expect(manager.hasLiveCut).toBe(false);
         // The retract runs the cut's undo: removes the 3 new pieces and
         // re-adds the 1 original.
-        expect((project as any).actionManager.retract).toHaveBeenCalledTimes(
-          1
-        );
+        expect((project as any).actionManager.retract).toHaveBeenCalledTimes(1);
         expect(project.removeWire).toHaveBeenCalledTimes(3);
         expect(project.addWire).toHaveBeenCalledTimes(1);
       });
@@ -458,9 +456,7 @@ describe('SelectionManager', () => {
         hook();
         expect(manager.hasLiveCut).toBe(false);
         expect(manager.isEmpty).toBe(true);
-        expect((project as any).actionManager.retract).toHaveBeenCalledTimes(
-          1
-        );
+        expect((project as any).actionManager.retract).toHaveBeenCalledTimes(1);
       });
     });
   });
