@@ -4,19 +4,19 @@ import { WireSnapshot } from '../wires/wire-snapshot.model';
 import { Component } from '../components/component';
 import { ConnectionPoint } from './connection-point';
 import { ConnectionPointLayer } from './connection-point-layer';
-import { pointKey, PointSet } from '../utils/point-key';
+import { PointMap, PointSet } from '../utils/point-key';
 
 export class ConnectionPointManager {
   public readonly layer = new ConnectionPointLayer();
 
-  private readonly _cps = new Map<string, ConnectionPoint>();
+  private readonly _cps = new PointMap<ConnectionPoint>();
 
   // How many wire endpoints / component ports terminate at each "x,y". A dot
   // exists iff this reaches 3 (see _evaluateAt), so maintaining it incrementally
   // turns CP evaluation into a map lookup instead of a quad-tree range query.
   // Kept in lock-step with the project's wire/component membership: every
   // add/remove/move/detach path adjusts it at the affected points.
-  private readonly _terminationCounts = new Map<string, number>();
+  private readonly _terminationCounts = new PointMap<number>();
 
   constructor(private readonly getScale: () => number) {}
 
@@ -67,7 +67,7 @@ export class ConnectionPointManager {
     allComponents: Iterable<Component>
   ): void {
     // cp.destroy() detaches from the parent layer as well as freeing GPU resources.
-    for (const cp of this._cps.values()) {
+    for (const cp of this._cps) {
       cp.destroy();
     }
     this._cps.clear();
@@ -81,7 +81,7 @@ export class ConnectionPointManager {
     this._terminationCounts.clear();
     this._changeTerminationsOf(components, wires, +1);
 
-    const candidates = new PointSet();
+    const candidates = new PointSet<Point>();
     for (const wire of wires) {
       const [start, end] = wire.connectionPoints;
       candidates.add(start);
@@ -106,24 +106,23 @@ export class ConnectionPointManager {
    * {@link recomputeAll}, which re-queries the quad tree.
    */
   public refreshTheme(): void {
-    for (const cp of this._cps.values()) {
+    for (const cp of this._cps) {
       cp.refreshTint();
     }
   }
 
   public recomputeAt(p: Point): void {
     const shouldExist = this._evaluateAt(p);
-    const key = pointKey(p);
-    const existing = this._cps.get(key);
+    const existing = this._cps.get(p);
 
     if (shouldExist && !existing) {
       const cp = new ConnectionPoint(p);
       cp.applyScale(this.getScale());
       this.layer.addChild(cp);
-      this._cps.set(key, cp);
+      this._cps.set(p, cp);
     } else if (!shouldExist && existing) {
       existing.destroy();
-      this._cps.delete(key);
+      this._cps.delete(p);
     }
   }
 
@@ -137,32 +136,30 @@ export class ConnectionPointManager {
   }
 
   public getCpAt(p: Point): ConnectionPoint | undefined {
-    return this._cps.get(pointKey(p));
+    return this._cps.get(p);
   }
 
   public getCpsAtPoints(points: Iterable<Point>): ConnectionPoint[] {
     const result: ConnectionPoint[] = [];
     for (const p of points) {
-      const cp = this._cps.get(pointKey(p));
+      const cp = this._cps.get(p);
       if (cp) result.push(cp);
     }
     return result;
   }
 
   public detachCp(cp: ConnectionPoint): void {
-    const key = pointKey(cp.position);
-    this._cps.delete(key);
+    this._cps.delete(cp.position);
     this.layer.removeChild(cp);
   }
 
   public reattachCp(cp: ConnectionPoint): void {
-    const key = pointKey(cp.position);
-    this._cps.set(key, cp);
+    this._cps.set(cp.position, cp);
     this.layer.addChild(cp);
   }
 
   public hasCpAt(p: Point): boolean {
-    return this._cps.has(pointKey(p));
+    return this._cps.has(p);
   }
 
   public captureDragCps(
@@ -240,8 +237,8 @@ export class ConnectionPointManager {
   private _terminationPointsOf(
     components: readonly Component[],
     wires: readonly Wire[]
-  ): PointSet {
-    const points = new PointSet();
+  ): PointSet<Point> {
+    const points = new PointSet<Point>();
     for (const c of components) {
       for (const p of c.connectionPoints) points.add(p);
     }
@@ -258,7 +255,7 @@ export class ConnectionPointManager {
     // endpoint or component port, so termination counting collapses to exact
     // endpoint-equality — which the maintained count map already holds. A CP
     // exists iff at least 3 things terminate at P.
-    return (this._terminationCounts.get(pointKey(p)) ?? 0) >= 3;
+    return (this._terminationCounts.get(p) ?? 0) >= 3;
   }
 
   private _changeWireTerminations(snap: WireSnapshot, delta: number): void {
@@ -286,12 +283,11 @@ export class ConnectionPointManager {
   }
 
   private _changeTermination(p: Point, delta: number): void {
-    const key = pointKey(p);
-    const next = (this._terminationCounts.get(key) ?? 0) + delta;
+    const next = (this._terminationCounts.get(p) ?? 0) + delta;
     if (next <= 0) {
-      this._terminationCounts.delete(key);
+      this._terminationCounts.delete(p);
     } else {
-      this._terminationCounts.set(key, next);
+      this._terminationCounts.set(p, next);
     }
   }
 }
