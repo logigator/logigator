@@ -47,25 +47,33 @@ export class EditorCommandStateService {
   /** True when there is an action to undo. */
   public readonly canUndo = computed<boolean>(() => {
     this.historyTick();
-    return this.projectService.activeProject()?.actionManager.undoAvailable ?? false;
+    return (
+      this.projectService.activeProject()?.actionManager.undoAvailable ?? false
+    );
   });
 
   /** True when there is an undone action to redo. */
   public readonly canRedo = computed<boolean>(() => {
     this.historyTick();
-    return this.projectService.activeProject()?.actionManager.redoAvailable ?? false;
+    return (
+      this.projectService.activeProject()?.actionManager.redoAvailable ?? false
+    );
   });
 
   /** True until the viewport is at its closest zoom step. */
   public readonly canZoomIn = computed<boolean>(() => {
     this.viewportTick();
-    return this.projectService.activeProject()?.viewport.zoomInPossible ?? false;
+    return (
+      this.projectService.activeProject()?.viewport.zoomInPossible ?? false
+    );
   });
 
   /** True until the viewport is at its farthest zoom step. */
   public readonly canZoomOut = computed<boolean>(() => {
     this.viewportTick();
-    return this.projectService.activeProject()?.viewport.zoomOutPossible ?? false;
+    return (
+      this.projectService.activeProject()?.viewport.zoomOutPossible ?? false
+    );
   });
 
   /** True when anything is selected — gates copy/cut/delete/rotate. */
