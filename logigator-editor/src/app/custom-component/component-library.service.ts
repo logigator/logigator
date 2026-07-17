@@ -1,6 +1,5 @@
 import { inject, Injectable } from '@angular/core';
 import { LoggingService } from '../logging/logging.service';
-import { Project } from '../project/project';
 import { CircuitFileService } from '../persistence/file/circuit-file.service';
 import { BrowserComponentStore } from '../persistence/browser/browser-component.store';
 import { ComponentIdMapStore } from '../persistence/browser/component-id-map.store';
@@ -15,8 +14,8 @@ import { ComponentProviderService } from '../components/component-provider.servi
  * Lifecycle of the custom-component **library**: hydrating the registry from
  * the browser and cloud stores at startup, the promotion alias map, lazy
  * circuit hydration for cloud masters, the logout teardown, and recovering
- * masters from embedded snapshots (import adoption, orphan restore). Document
- * load/save stays with `PersistenceService` and its gateways.
+ * masters from embedded snapshots (orphan restore). Document load/save stays
+ * with `PersistenceService` and its gateways.
  */
 @Injectable({ providedIn: 'root' })
 export class ComponentLibraryService {
@@ -159,38 +158,13 @@ export class ComponentLibraryService {
   }
 
   /**
-   * Creates a browser library master for every custom directly placed in an
-   * imported project that has no local master yet, so it appears in the palette
-   * and survives a reload. Already-known masters (matched by provenance id) are
-   * left alone. Nested-only customs are not adopted — they live inside their
-   * parent's snapshot and aren't independently placeable here.
-   */
-  async adoptSnapshots(project: Project): Promise<void> {
-    const seen = new Set<number>();
-    for (const component of project.components) {
-      const typeId = component.config.type;
-      if (seen.has(typeId)) continue;
-      seen.add(typeId);
-      const def = this.registry.getDefinition(typeId);
-      if (!def || def.kind !== 'snapshot') continue;
-      if (
-        def.id !== undefined &&
-        this.registry.masterTypeIdForId(def.id) !== undefined
-      ) {
-        continue;
-      }
-      await this._adoptSnapshotAsMaster(def);
-    }
-  }
-
-  /**
    * Builds a browser-library master from a snapshot definition's frozen circuit
    * (its own nested snapshots re-emitted as self-contained content) and registers
    * it, returning the new master's id. By default the store mints a fresh id at
    * version 1; `options` can reuse a specific id (so placed instances re-link
    * with no extra work) and adopt the snapshot's frozen version.
    */
-  private async _adoptSnapshotAsMaster(
+  private async _createMasterFromSnapshot(
     def: CustomComponentDefinition,
     options?: { id?: string; version?: number }
   ): Promise<string> {
@@ -249,7 +223,7 @@ export class ComponentLibraryService {
 
     const reuseId = def.source === 'browser' ? def.id || undefined : undefined;
     const version = def.version ?? 1;
-    const newId = await this._adoptSnapshotAsMaster(def, {
+    const newId = await this._createMasterFromSnapshot(def, {
       id: reuseId,
       version
     });

@@ -441,14 +441,14 @@ marks it with the `embedded` source-indicator state.
 
 How orphans arise:
 
-| Scenario                                                                                                                      | Origin recorded                    |
-| ----------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
-| You deleted the cloud component your project depends on                                                                       | `server`                           |
-| You opened someone else's shared cloud project referencing _their_ cloud component                                            | `server`                           |
-| You are **signed out**, so no cloud masters are loaded — every cloud dep looks lost                                           | `server`                           |
-| A local project's local dependency isn't in this browser's library (a hand-carried native file whose customs weren't adopted) | `browser`                          |
-| A local dependency reached a cloud save via a bypass (no promotion) — degraded, `id:''`                                       | `undefined` → treated as `browser` |
-| A file/document authored before `origin` existed                                                                              | `undefined` → treated as `browser` |
+| Scenario                                                                                                                   | Origin recorded                    |
+| -------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
+| You deleted the cloud component your project depends on                                                                    | `server`                           |
+| You opened someone else's shared cloud project referencing _their_ cloud component                                         | `server`                           |
+| You are **signed out**, so no cloud masters are loaded — every cloud dep looks lost                                        | `server`                           |
+| A local project's local dependency isn't in this browser's library (e.g. a hand-carried native file — import never adopts) | `browser`                          |
+| A local dependency reached a cloud save via a bypass (no promotion) — degraded, `id:''`                                    | `undefined` → treated as `browser` |
+| A file/document authored before `origin` existed                                                                           | `undefined` → treated as `browser` |
 
 ### Restore (`restoreOrphanToLibrary`)
 
@@ -582,8 +582,10 @@ Cross-cutting guarantees:
   of its id: `masterTypeIdForId` gives direct precedence over the alias, but the
   startup preload order decides which registers under the shared id. Rare
   (undelete), documented, self-recoverable (delete the local copy).
-- **Import auto-adopts** (`ComponentLibraryService.adoptSnapshots`) — opening a file registers its
-  master-less customs into the browser library, so files rarely produce orphans.
+- **Import never adopts.** Opening a file registers nothing into the library: each
+  embedded custom re-links through its provenance id to a **local** or **cloud**
+  master when one exists and otherwise stays an **embedded** (orphan) snapshot,
+  recoverable via restore.
 - **Toasts: coordinator owns, primitives are silent** (except `saveProject`, which
   self-toasts, so `save-server` suppresses the coordinator toast).
 - **The `SerializedComponent`/`SerializedWire` undo/redo snapshot is a _third_,

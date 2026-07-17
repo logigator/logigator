@@ -1622,9 +1622,9 @@ describe('PersistenceService', () => {
       await expect(service.loadComponentForEdit('missing')).rejects.toThrow();
     });
 
-    it('importProjectFromJson adopts a master-less custom into the library', async () => {
-      // A file embedding one custom whose provenance master is not registered.
-      const content = JSON.stringify({
+    function importedCustomContent(): string {
+      // A file embedding one custom, provenance id 'external-id'.
+      return JSON.stringify({
         version: 1,
         name: 'Imported',
         components: [{ type: 1000, pos: [3, 3], options: {} }],
@@ -1644,17 +1644,48 @@ describe('PersistenceService', () => {
           }
         ]
       });
+    }
 
-      const project = await service.importProjectFromJson(content);
-      expect(customInstanceOf(project).numInputs).toBe(1);
+    it('importProjectFromJson keeps a master-less custom embedded, not adopted', async () => {
+      const project = await service.importProjectFromJson(
+        importedCustomContent()
+      );
 
-      // The custom now exists as a browser library master (palette + store).
-      const records = [...componentStore.records.values()];
-      expect(records.length).toBe(1);
-      expect(records[0].name).toBe('Ext');
-      expect(records[0].numInputs).toBe(1);
-      expect(records[0].labels).toEqual(['in', 'out']);
-      expect(registry.masterTypeIdForId(records[0].id)).toBeDefined();
+      // The instance renders from its embedded snapshot…
+      const instance = customInstanceOf(project);
+      expect(instance.numInputs).toBe(1);
+      // …but no browser master was created: the custom stays an embedded
+      // (restorable) snapshot instead of silently entering the library.
+      expect(componentStore.records.size).toBe(0);
+      expect(registry.masterTypeIdForId('external-id')).toBeUndefined();
+      expect(registry.resolveMaster(instance.config.type)).toBeUndefined();
+    });
+
+    it('importProjectFromJson re-links a custom whose master is already local', async () => {
+      const masterTypeId = registry.createMaster(
+        {
+          id: 'external-id',
+          version: 2,
+          name: 'Ext',
+          symbol: 'E',
+          numInputs: 1,
+          numOutputs: 1,
+          labels: ['in', 'out'],
+          circuit: plugCircuit
+        },
+        'browser'
+      );
+
+      const project = await service.importProjectFromJson(
+        importedCustomContent()
+      );
+
+      // The instance resolves to the existing master; no duplicate is created.
+      const instance = customInstanceOf(project);
+      expect(registry.resolveMaster(instance.config.type)?.masterTypeId).toBe(
+        masterTypeId
+      );
+      expect(componentStore.records.size).toBe(0);
     });
   });
 

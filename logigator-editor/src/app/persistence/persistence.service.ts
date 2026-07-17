@@ -27,7 +27,6 @@ import {
 import { CloudSessionService } from '../user/cloud-session.service';
 import { ServerPersistenceGateway } from './server/server-persistence.gateway';
 import { BrowserPersistenceGateway } from './browser/browser-persistence.gateway';
-import { ComponentLibraryService } from '../custom-component/component-library.service';
 import { downloadBlob } from '../utils/download';
 import { warnSkippedCustoms } from './load-warnings';
 import { decodeLgix, encodeLgix, hasLgixMagic } from './file/lgix-container';
@@ -45,7 +44,6 @@ export class PersistenceService {
   private readonly location = inject(Location);
   private readonly server = inject(ServerPersistenceGateway);
   private readonly browser = inject(BrowserPersistenceGateway);
-  private readonly library = inject(ComponentLibraryService);
   private readonly cloudSession = inject(CloudSessionService);
 
   private _mainLoadToken = 0;
@@ -318,16 +316,15 @@ export class PersistenceService {
 
   /**
    * Common tail of the import paths (file import here, dump import in
-   * `ProjectDumpService`): adopts orphan custom snapshots, registers metadata,
-   * writes a fresh browser draft (so a reload restores it), then sets the
-   * project as main and navigates to `/local/:id`.
+   * `ProjectDumpService`): registers metadata, writes a fresh browser draft
+   * (so a reload restores it), then sets the project as main and navigates to
+   * `/local/:id`.
+   *
+   * Imported customs are never adopted into the library: each resolves through
+   * its provenance id to a local or cloud master when one exists, and stays an
+   * embedded (restorable) snapshot otherwise.
    */
   async persistImportedProject(project: Project, name: string): Promise<void> {
-    // Adopt any imported custom that has no local master into the browser
-    // components library, so the user can re-place it. (No stable cross-file
-    // identity ⇒ re-importing the same file creates duplicate library rows.)
-    await this.library.adoptSnapshots(project);
-
     // addComponent/addWire don't push to the ActionManager, so the project
     // starts non-dirty even though it was just populated.
     this.metadataStore.register(project, {
