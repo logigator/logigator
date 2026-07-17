@@ -194,8 +194,9 @@ export class FloatingLayer extends Container {
       rect.rect(0, 0, 1, 1);
       rect.alpha = 0.3;
       rect.fill(0x0);
-      // Below the drag layer so move ghosts render above the rect.
-      this.addChildAt(rect, 0);
+      // Above the drag layer so the rect stays in front of the moved ghosts
+      // mid-drag, matching how it overlays the committed selection at rest.
+      this.addChild(rect);
       this._selectionRect = rect;
     }
     return this._selectionRect;
