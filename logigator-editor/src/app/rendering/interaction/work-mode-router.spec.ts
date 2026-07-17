@@ -24,6 +24,7 @@ import { ComponentConfig } from '../../components/component-config.model';
 import { andComponentConfig } from '../../components/component-types/and/and.config';
 import { notComponentConfig } from '../../components/component-types/not/not.config';
 import { CustomComponentService } from '../../custom-component/custom-component.service';
+import { WorkModeService } from '../../work-mode/work-mode.service';
 import { ThemingService } from '../../theming/theming.service';
 import { Project } from '../../project/project';
 import { WorkMode } from '../../work-mode/work-mode.enum';
@@ -269,6 +270,84 @@ describe('WorkModeRouter in SELECT mode', () => {
     router.up();
 
     expect(Array.from(project.wires)).toHaveLength(2);
+  });
+});
+
+describe('WorkModeRouter cancel shortcut (Escape)', () => {
+  let project: Project;
+  let router: WorkModeRouter;
+  let setMode: MockInstance<(mode: WorkMode) => void>;
+
+  beforeEach(() => {
+    configureTestBed();
+    project = new Project();
+    router = new WorkModeRouter();
+    router.setProject(project);
+    setMode = vi.spyOn(TestBed.inject(WorkModeService), 'setMode');
+  });
+
+  afterEach(() => {
+    router.destroy();
+    project.destroy({ children: true });
+  });
+
+  /** The default CANCEL binding is a bare Escape. */
+  function pressEscape(): void {
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+  }
+
+  it('clears a live selection before touching the tool', () => {
+    router.setMode(WorkMode.SELECT);
+    const comp = makeAnd(2, undefined, 3, 3);
+    project.addComponent(comp);
+    project.selectionManager.select([comp], []);
+
+    pressEscape();
+
+    expect(project.selectionManager.isEmpty).toBe(true);
+    expect(setMode).not.toHaveBeenCalled(); // stays in SELECT
+  });
+
+  it('falls back to the pan tool once the selection is empty', () => {
+    router.setMode(WorkMode.SELECT);
+    const comp = makeAnd(2, undefined, 3, 3);
+    project.addComponent(comp);
+    project.selectionManager.select([comp], []);
+
+    pressEscape(); // first: clears the selection
+    expect(project.selectionManager.isEmpty).toBe(true);
+    expect(setMode).not.toHaveBeenCalled();
+
+    pressEscape(); // second: nothing left to clear → back to pan
+    expect(setMode).toHaveBeenCalledWith(WorkMode.PAN);
+  });
+
+  it('returns to the pan tool from any non-pan tool with nothing selected', () => {
+    router.setMode(WorkMode.WIRE_TOOL);
+
+    pressEscape();
+
+    expect(setMode).toHaveBeenCalledWith(WorkMode.PAN);
+  });
+
+  it('does nothing extra when already in the pan tool with no selection', () => {
+    router.setMode(WorkMode.PAN);
+
+    pressEscape();
+
+    expect(setMode).not.toHaveBeenCalled();
+  });
+
+  it('aborts an active drag first and does not also escalate on that press', () => {
+    router.setMode(WorkMode.SELECT);
+    router.down(makeInput(0, 0));
+    router.move(makeInput(3, 3)); // a marquee drag is now live
+    expect(router.hasActiveSession).toBe(true);
+
+    pressEscape();
+
+    expect(router.hasActiveSession).toBe(false); // drag aborted
+    expect(setMode).not.toHaveBeenCalled(); // no escalation on the same press
   });
 });
 

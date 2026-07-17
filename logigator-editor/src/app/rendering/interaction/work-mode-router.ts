@@ -8,6 +8,7 @@ import { DragSession } from '../drag-session';
 import { PastePlacementSession } from '../sessions/paste-placement.session';
 import { ShortcutService } from '../../shortcuts/shortcut.service';
 import { ShortcutActionEnum } from '../../shortcuts/shortcut-action.enum';
+import { WorkModeService } from '../../work-mode/work-mode.service';
 import { getStaticDI } from '../../utils/get-di';
 import { PointerInput } from './pointer-input';
 import { PointerToolTarget } from './pointer-controller';
@@ -61,7 +62,7 @@ export class WorkModeRouter implements PointerToolTarget, ToolHost {
   constructor() {
     this._cancelSub = this._shortcuts
       .on(ShortcutActionEnum.CANCEL)
-      .subscribe(() => this.abortActiveDrag());
+      .subscribe(() => this._onCancel());
   }
 
   public destroy(): void {
@@ -122,6 +123,32 @@ export class WorkModeRouter implements PointerToolTarget, ToolHost {
 
   public set componentToPlace(value: ComponentConfig | null) {
     this._placementTool.setConfig(value);
+  }
+
+  /**
+   * The cancel shortcut (Escape) unwinds one layer of interaction state per
+   * press: an in-progress drag first, then a live selection, then the current
+   * tool — so a repeated Escape always ends up back at the pan tool from any
+   * mode. The pan escalation routes through `WorkModeService` so the toolbar
+   * highlight follows; simulation stays put (its editing lock forbids the swap).
+   */
+  private _onCancel(): void {
+    // Always abort first: cancels any live session and invalidates a pending
+    // placement load (the gestureSeq bump), even with no session open yet.
+    const hadDrag = this._activeDrag !== null;
+    this.abortActiveDrag();
+    if (hadDrag) return;
+
+    const selection = this._project?.selectionManager;
+    if (selection && !selection.isEmpty) {
+      selection.clear();
+      this._project?.triggerTicker('single');
+      return;
+    }
+
+    if (this._mode !== WorkMode.PAN && this._mode !== WorkMode.SIMULATION) {
+      getStaticDI(WorkModeService).setMode(WorkMode.PAN);
+    }
   }
 
   /**
