@@ -5,9 +5,23 @@ import { DialogService } from '@logigator/ui';
 import { TranslationService } from '../translation/translation.service';
 import { ChangelogDialogComponent } from '../ui/dialogs/changelog-dialog/changelog-dialog.component';
 import { environment } from '../../environments/environment';
+import { CookieService } from '../storage/cookie.service';
 import changelogEn from '@assets/changelog/changelog.en.md';
 
 const LAST_SEEN_KEY = 'logigator.changelog.lastSeenVersion';
+
+/**
+ * Cookies the old editor writes that mark a browser as having used it. The
+ * legacy editor persists everything through cookies (its `StorageService` is
+ * bound to a cookie-backed store) on the shared origin: `tutorials` on
+ * finishing/skipping the auto-started getting-started tour, `autoStartSim` on
+ * toggling simulation auto-start, `sneaks` on discovering an easter egg. None is
+ * written by the rebuilt editor or the marketing site, so their presence
+ * identifies a returning legacy user — unlike `cc_cookie` (the cookie-consent
+ * bar runs site-wide) or `preferences` (the backend sets it for language), both
+ * of which any first-time visitor also has.
+ */
+const LEGACY_COOKIES = ['tutorials', 'autoStartSim', 'sneaks'] as const;
 
 /**
  * Build-time hashed URLs of the changelog markdown, keyed by language (the `.md`
@@ -38,6 +52,7 @@ export class ChangelogService {
   private readonly http = inject(HttpClient);
   private readonly translation = inject(TranslationService);
   private readonly dialogService = inject(DialogService);
+  private readonly cookieService = inject(CookieService);
 
   /** Changelog markdown for the active language, English as fallback. */
   public load(): Observable<string> {
@@ -117,16 +132,13 @@ export class ChangelogService {
   }
 
   /**
-   * Whether this browser has used the old editor. The legacy editor auto-starts
-   * a getting-started tutorial and writes finished/skipped tutorials to the
-   * `tutorials` localStorage key (shared across the origin), so its presence is
-   * a reliable proxy for a returning user seeing the rebuilt editor first time.
+   * Whether this browser has used the old editor, decided from the cookies the
+   * legacy editor leaves behind (see {@link LEGACY_COOKIES}). A returning user
+   * is shown the changelog on their first load of the rebuilt editor.
    */
   private isReturningLegacyUser(): boolean {
-    try {
-      return localStorage.getItem('tutorials') !== null;
-    } catch {
-      return false;
-    }
+    return LEGACY_COOKIES.some(
+      (name) => this.cookieService.get(name) !== null
+    );
   }
 }

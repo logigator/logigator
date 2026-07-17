@@ -24,6 +24,11 @@ export class CookieService implements OnDestroy {
   };
 
   constructor() {
+    // `cookieStore.getAll()` is async, so on browsers that have it the map
+    // would stay empty until a microtask resolves — a synchronous `get()` at
+    // startup would miss every cookie. Seed synchronously from `document.cookie`
+    // first; the async read below then reconciles to the same values.
+    this._reconcile(this._parseDocumentCookie());
     this._read().catch((e) => {
       this.loggingService.error(
         `Failed to read cookies: ${e}`,
@@ -75,21 +80,31 @@ export class CookieService implements OnDestroy {
   }
 
   private async _read(): Promise<void> {
-    const present: { name: string; value: string }[] = [];
-    if (this._hasCookieStore) {
-      for (const { name, value } of await window.cookieStore.getAll()) {
-        if (!name || !value) continue;
-        present.push({ name, value });
-      }
-    } else {
-      for (const cookie of document.cookie.split(';')) {
-        const [name, ...rest] = cookie.split('=');
-        const value = rest.join('=');
-        if (!name || !value) continue;
-        present.push({ name: name.trim(), value: value.trim() });
-      }
+    if (!this._hasCookieStore) {
+      this._reconcile(this._parseDocumentCookie());
+      return;
     }
+    const present: { name: string; value: string }[] = [];
+    for (const { name, value } of await window.cookieStore.getAll()) {
+      if (!name || !value) continue;
+      present.push({ name, value });
+    }
+    this._reconcile(present);
+  }
 
+  /** Synchronously parses the document's non-httpOnly cookies. */
+  private _parseDocumentCookie(): { name: string; value: string }[] {
+    const present: { name: string; value: string }[] = [];
+    for (const cookie of document.cookie.split(';')) {
+      const [name, ...rest] = cookie.split('=');
+      const value = rest.join('=');
+      if (!name || !value) continue;
+      present.push({ name: name.trim(), value: value.trim() });
+    }
+    return present;
+  }
+
+  private _reconcile(present: { name: string; value: string }[]): void {
     // Reconcile instead of only merging: a re-read (focus fallback) must also
     // observe deletions, e.g. the auth cookie cleared by a logout elsewhere.
     const names = new Set(present.map((c) => c.name));

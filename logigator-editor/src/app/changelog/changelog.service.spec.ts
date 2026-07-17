@@ -4,6 +4,7 @@ import { HttpTestingController } from '@angular/common/http/testing';
 import { DialogService } from '@logigator/ui';
 import { configureTestBed } from '../../testing/configure-test-bed';
 import { environment } from '../../environments/environment';
+import { CookieService } from '../storage/cookie.service';
 import { ChangelogService } from './changelog.service';
 
 const LAST_SEEN_KEY = 'logigator.changelog.lastSeenVersion';
@@ -12,12 +13,19 @@ describe('ChangelogService', () => {
   let service: ChangelogService;
   let http: HttpTestingController;
   let open: ReturnType<typeof vi.fn>;
+  let cookies: Record<string, string>;
 
   beforeEach(() => {
     localStorage.removeItem(LAST_SEEN_KEY);
-    localStorage.removeItem('tutorials');
+    cookies = {};
     open = vi.fn();
-    configureTestBed([{ provide: DialogService, useValue: { open } }]);
+    configureTestBed([
+      { provide: DialogService, useValue: { open } },
+      {
+        provide: CookieService,
+        useValue: { get: (name: string) => cookies[name] ?? null }
+      }
+    ]);
     service = TestBed.inject(ChangelogService);
     http = TestBed.inject(HttpTestingController);
   });
@@ -26,7 +34,6 @@ describe('ChangelogService', () => {
     // Also asserts maybeAutoOpen never fetched the markdown just to check.
     http.verify();
     localStorage.removeItem(LAST_SEEN_KEY);
-    localStorage.removeItem('tutorials');
   });
 
   describe('isNewer', () => {
@@ -48,7 +55,7 @@ describe('ChangelogService', () => {
     });
 
     it('shows the changelog on first run for a returning old-editor user', () => {
-      localStorage.setItem('tutorials', '["gettingStarted"]');
+      cookies['tutorials'] = 'j:["gettingStarted"]';
 
       service.maybeAutoOpen();
 
