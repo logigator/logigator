@@ -467,6 +467,73 @@ describe('SelectionMoveSession collision', () => {
     });
   });
 
+  describe('selection across integration', () => {
+    it('keeps a moved wire selected when the commit merges it with an external wire', () => {
+      // Selected wire (0.5,0.5)→(5.5,0.5); external wire (5.5,10.5)→(10.5,10.5).
+      // Moving the selection down by 10 lands its end on the external start,
+      // merging both into one wire — the selection must adopt the successor.
+      const selected = makeWire(0, 0, WireDirection.HORIZONTAL, 5);
+      project.addWire(selected);
+      const external = makeWire(5, 10, WireDirection.HORIZONTAL, 5);
+      project.addWire(external);
+      project.selectionManager.select([], [selected]);
+
+      session = new SelectionMoveSession(
+        project,
+        dragLayer,
+        new Set(),
+        new Set([selected]),
+        new Point(0, 0)
+      );
+      session.onMove(makeMoveInput(0, 10));
+      session.onEnd();
+      session = undefined;
+
+      const wires = Array.from(
+        project.queryWiresInRange(new Rectangle(-100, -100, 200, 200))
+      );
+      expect(wires.length).toBe(1);
+      const merged = wires[0];
+      expect(merged.length).toBe(10);
+      expect(merged.selected).toBe(true);
+      expect([...project.selectionManager.selectedWires]).toEqual([merged]);
+    });
+
+    it('does not adopt the pieces of an external wire split by the arriving selection', () => {
+      // Long horizontal wire (1.5, 0.5)→(11.5, 0.5); selected vertical wire
+      // whose endpoint lands on its interior after the move, splitting it.
+      const long = makeWire(1, 0, WireDirection.HORIZONTAL, 10);
+      project.addWire(long);
+      const v = new Wire(WireDirection.VERTICAL, 5);
+      v.position.set(0.5, -5.5);
+      project.addWire(v);
+      project.selectionManager.select([], [v]);
+
+      session = new SelectionMoveSession(
+        project,
+        dragLayer,
+        new Set(),
+        new Set([v]),
+        new Point(0, -1)
+      );
+      session.onMove(makeMoveInput(4, 0));
+      session.onEnd();
+      session = undefined;
+
+      // The moved wire survived and stays the whole selection; the split
+      // pieces of the external wire only touch it at an endpoint.
+      expect(v.selected).toBe(true);
+      expect([...project.selectionManager.selectedWires]).toEqual([v]);
+      const horizontals = Array.from(
+        project.queryWiresInRange(new Rectangle(-100, -100, 200, 200))
+      ).filter((w) => w.direction === WireDirection.HORIZONTAL);
+      expect(horizontals.length).toBe(2);
+      for (const piece of horizontals) {
+        expect(piece.selected).toBe(false);
+      }
+    });
+  });
+
   describe('rotation', () => {
     it('turns a component+wire group rigidly, one undo step round-trips exactly', () => {
       // AND at (0,0) with a wire feeding its first input at (-0.5, 0.5).

@@ -1,4 +1,5 @@
 import { Container, Point, Rectangle } from 'pixi.js';
+import { WireDirection } from '../../wires/wire-direction.enum';
 import { DragSession } from '../drag-session';
 import { PointerInput } from '../interaction/pointer-input';
 import { Project } from '../../project/project';
@@ -27,6 +28,27 @@ import { WireSnapshot } from '../../wires/wire-snapshot.model';
 import { DragCollisionState } from './drag-collision';
 import { getStaticDI } from '../../utils/get-di';
 import { LoggingService } from '../../logging/logging.service';
+
+/**
+ * Whether a wire covers part of a snapshot's span — collinear with a
+ * positive-length overlap, so a mere endpoint touch does not count. This is
+ * what identifies an integration replacement as a moved wire's successor: a
+ * merge result contains the moved span, a split piece lies within it.
+ */
+function wiresShareSpan(snapshot: WireSnapshot, wire: Wire): boolean {
+  if (snapshot.direction !== wire.direction) return false;
+  const [start, end] = wire.connectionPoints;
+  if (snapshot.direction === WireDirection.HORIZONTAL) {
+    return (
+      snapshot.start.y === start.y &&
+      Math.min(snapshot.end.x, end.x) > Math.max(snapshot.start.x, start.x)
+    );
+  }
+  return (
+    snapshot.start.x === start.x &&
+    Math.min(snapshot.end.y, end.y) > Math.max(snapshot.start.y, start.y)
+  );
+}
 
 /**
  * Drags — and turns — the committed selection. Opened two ways:
@@ -328,11 +350,24 @@ export class SelectionMoveSession implements DragSession {
       addSurvivedWireActions(this._wires);
     }
 
+    // The moved wires' final geometry, captured before the removals below
+    // destroy the instances the integrator replaced — the basis for deciding
+    // which replacement wires the selection adopts.
+    const movedFinalSnapshots = this._wires.map((w) => Wire.snapshot(w));
+
     // Materialize the integrator's changes with the live instances (positions
     // were already applied in the move loop above), then register — the
     // recorded action never re-runs against this state.
     for (const w of toRemove) this.project.removeWire(w.id);
     for (const w of toAdd) this.project.addWire(w);
+
+    // Keep the selection covering what the user moved: a replacement wire
+    // that shares a span with a moved wire is its merge/split successor and
+    // joins the selection (the evicted original is gone); an external wire's
+    // split pieces only ever touch the selection at an endpoint and stay out.
+    this.project.selectionManager.adoptWires(
+      toAdd.filter((w) => movedFinalSnapshots.some((s) => wiresShareSpan(s, w)))
+    );
 
     getStaticDI(LoggingService).debug(
       `committed move: ${this._components.length} component(s) and ${this._wires.length} wire(s) moved (${this._netSteps} quarter-turn(s)); ` +
