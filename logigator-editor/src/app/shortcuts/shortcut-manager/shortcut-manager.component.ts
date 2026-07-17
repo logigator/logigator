@@ -44,7 +44,9 @@ export class ShortcutManagerComponent {
         ShortcutActionEnum.COPY,
         ShortcutActionEnum.CUT,
         ShortcutActionEnum.PASTE,
-        ShortcutActionEnum.DELETE
+        ShortcutActionEnum.DELETE,
+        ShortcutActionEnum.ROTATE_SELECTION,
+        ShortcutActionEnum.ROTATE_SELECTION_CCW
       ]
     },
     {

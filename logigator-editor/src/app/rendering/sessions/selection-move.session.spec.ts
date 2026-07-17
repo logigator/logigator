@@ -8,6 +8,7 @@ import { Component } from '../../components/component';
 import { SelectionMoveSession } from './selection-move.session';
 import { WorkMode } from '../../work-mode/work-mode.enum';
 import { AddWiresAction } from '../../actions/actions/add-wires.action';
+import { Direction } from '../../utils/direction';
 import { makeAnd, makeMoveInput, makeWire } from '../../../testing/factories';
 
 describe('SelectionMoveSession collision', () => {
@@ -463,6 +464,113 @@ describe('SelectionMoveSession collision', () => {
       const wires = allWires();
       expect(wires.length).toBe(2);
       expect(wires.some((w) => w.length === 10)).toBe(true);
+    });
+  });
+
+  describe('rotation', () => {
+    it('turns a component+wire group rigidly, one undo step round-trips exactly', () => {
+      // AND at (0,0) with a wire feeding its first input at (-0.5, 0.5).
+      const comp = makeAnd(2, Direction.E, 0, 0);
+      project.addComponent(comp);
+      const wire = makeWire(-4, 0, WireDirection.HORIZONTAL, 3);
+      project.addWire(wire);
+      project.selectionManager.select([comp], [wire]);
+
+      // The rotate flow: session without a drag anchor, one CW turn, commit.
+      session = new SelectionMoveSession(
+        project,
+        dragLayer,
+        new Set([comp]),
+        new Set([wire]),
+        null
+      );
+      session.rotate(1);
+      expect(session.canEnd()).toBe(true);
+      session.onEnd();
+      session = undefined;
+
+      // Rigid-body: the component turned E→S and the wire still terminates on
+      // the same input port (group bounds (-4,0)+(6.5,2) → pivot (-1,1)).
+      expect(comp.direction).toBe(Direction.S);
+      expect(comp.position.x).toBe(0);
+      expect(comp.position.y).toBe(2);
+      expect(wire.direction).toBe(WireDirection.VERTICAL);
+      expect(wire.position.x).toBe(-0.5);
+      expect(wire.position.y).toBe(-1.5);
+      expect(wire.length).toBe(3);
+      const port = comp.connectionPoints[0];
+      expect(port.x).toBe(-0.5);
+      expect(port.y).toBe(1.5);
+
+      // One history entry; undo restores the exact original geometry.
+      expect(project.actionManager.history.length).toBe(1);
+      project.actionManager.undo();
+      expect(comp.direction).toBe(Direction.E);
+      expect(comp.position.x).toBe(0);
+      expect(comp.position.y).toBe(0);
+      expect(comp.options.direction.value).toBe(Direction.E);
+      expect(wire.direction).toBe(WireDirection.HORIZONTAL);
+      expect(wire.position.x).toBe(-3.5);
+      expect(wire.position.y).toBe(0.5);
+
+      // Redo re-applies the turn.
+      project.actionManager.redo();
+      expect(comp.direction).toBe(Direction.S);
+      expect(wire.direction).toBe(WireDirection.VERTICAL);
+      expect(wire.position.y).toBe(-1.5);
+    });
+
+    it('a colliding turn blocks the commit and cancel restores everything', () => {
+      // Stationary AND with body (0,-2)..(2,0): clear of the selected AND's
+      // E-direction extent, but overlapping its S-direction extent
+      // (stubs swing from the left edge to the top edge).
+      const stationary = makeAnd(2, Direction.E, 0, -2);
+      project.addComponent(stationary);
+      const selected = makeAnd(2, Direction.E, 0, 0);
+      project.addComponent(selected);
+      project.selectionManager.select([selected], []);
+
+      session = new SelectionMoveSession(
+        project,
+        dragLayer,
+        new Set([selected]),
+        new Set(),
+        null
+      );
+      session.rotate(1);
+      expect(session.canEnd()).toBe(false);
+
+      session.onCancel();
+      session = undefined;
+
+      // Original pose restored, reattached, and no trace in the history.
+      expect(selected.direction).toBe(Direction.E);
+      expect(selected.position.x).toBe(0);
+      expect(selected.position.y).toBe(0);
+      expect(project.getComponentById(selected.id)).toBe(selected);
+      expect(project.actionManager.undoAvailable).toBe(false);
+    });
+
+    it('four quarter-turns net to zero and commit nothing', () => {
+      const comp = makeAnd(2, Direction.E, 0, 0);
+      project.addComponent(comp);
+      project.selectionManager.select([comp], []);
+
+      session = new SelectionMoveSession(
+        project,
+        dragLayer,
+        new Set([comp]),
+        new Set(),
+        null
+      );
+      for (let i = 0; i < 4; i++) session.rotate(1);
+      session.onEnd();
+      session = undefined;
+
+      expect(comp.direction).toBe(Direction.E);
+      expect(comp.position.x).toBe(0);
+      expect(comp.position.y).toBe(0);
+      expect(project.actionManager.undoAvailable).toBe(false);
     });
   });
 });

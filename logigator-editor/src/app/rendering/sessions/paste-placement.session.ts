@@ -6,6 +6,8 @@ import { Component } from '../../components/component';
 import { Wire } from '../../wires/wire';
 import { ConnectionPoint } from '../../connection-points/connection-point';
 import { offsetRect, roundToGrid } from '../../utils/grid';
+import { rotationPivotFor } from '../../utils/rotation';
+import { groupGridBounds, rotateElements } from './rotate-elements';
 import { ActionContainer } from '../../actions/action-container';
 import { AddComponentsAction } from '../../actions/actions/add-components.action';
 import { AddWiresAction } from '../../actions/actions/add-wires.action';
@@ -84,6 +86,23 @@ export class PastePlacementSession implements DragSession {
     this._dragLayer.position.set(
       cursor.x - this._anchor!.x,
       cursor.y - this._anchor!.y
+    );
+    this._collision.update();
+  }
+
+  /**
+   * Turns the pasted ghosts clockwise around their snapped centre. Nothing
+   * else to track: the ghosts are fresh instances the commit serializes at
+   * their final geometry, and a cancel destroys them outright.
+   */
+  rotate(steps: number): void {
+    const bounds = groupGridBounds(this._components, this._wires);
+    if (!bounds) return;
+    rotateElements(
+      this._components,
+      this._wires,
+      rotationPivotFor(bounds),
+      steps
     );
     this._collision.update();
   }

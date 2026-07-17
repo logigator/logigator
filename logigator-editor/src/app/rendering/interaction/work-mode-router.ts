@@ -6,6 +6,7 @@ import { ComponentConfig } from '../../components/component-config.model';
 import { Wire } from '../../wires/wire';
 import { DragSession } from '../drag-session';
 import { PastePlacementSession } from '../sessions/paste-placement.session';
+import { SelectionMoveSession } from '../sessions/selection-move.session';
 import { ShortcutService } from '../../shortcuts/shortcut.service';
 import { ShortcutActionEnum } from '../../shortcuts/shortcut-action.enum';
 import { WorkModeService } from '../../work-mode/work-mode.service';
@@ -40,7 +41,9 @@ export class WorkModeRouter implements PointerToolTarget, ToolHost {
   private _activeDrag: DragSession | null = null;
 
   private _pasteSub: Subscription | null = null;
+  private _rotateSub: Subscription | null = null;
   private readonly _cancelSub: Subscription;
+  private readonly _rotateShortcutSubs: Subscription[];
   private readonly _shortcuts = getStaticDI(ShortcutService);
 
   private readonly _placementTool = new PlacementTool();
@@ -63,13 +66,23 @@ export class WorkModeRouter implements PointerToolTarget, ToolHost {
     this._cancelSub = this._shortcuts
       .on(ShortcutActionEnum.CANCEL)
       .subscribe(() => this._onCancel());
+    this._rotateShortcutSubs = [
+      this._shortcuts
+        .on(ShortcutActionEnum.ROTATE_SELECTION)
+        .subscribe(() => this._onRotate(1)),
+      this._shortcuts
+        .on(ShortcutActionEnum.ROTATE_SELECTION_CCW)
+        .subscribe(() => this._onRotate(3))
+    ];
   }
 
   public destroy(): void {
     this.abortActiveDrag();
     if (this._project) this._activeTool?.deactivate?.(this._project);
     this._pasteSub?.unsubscribe();
+    this._rotateSub?.unsubscribe();
     this._cancelSub.unsubscribe();
+    for (const sub of this._rotateShortcutSubs) sub.unsubscribe();
   }
 
   public get project(): Project | null {
@@ -103,11 +116,16 @@ export class WorkModeRouter implements PointerToolTarget, ToolHost {
     if (this._project) this._activeTool?.deactivate?.(this._project);
     this._pasteSub?.unsubscribe();
     this._pasteSub = null;
+    this._rotateSub?.unsubscribe();
+    this._rotateSub = null;
 
     this._project = project;
     if (!project) return;
     this._pasteSub = project.pasteRequest$.subscribe(({ components, wires }) =>
       this._startPaste(components, wires)
+    );
+    this._rotateSub = project.rotateRequest$.subscribe((steps) =>
+      this._onRotate(steps)
     );
     project.selectionManager.clear();
     project.triggerTicker('single');
@@ -225,6 +243,51 @@ export class WorkModeRouter implements PointerToolTarget, ToolHost {
 
   /** Opens a session for the active gesture (ToolHost contract). */
   public startSession(session: DragSession): void {
+    this._startDrag(session);
+  }
+
+  /**
+   * Routes a rotate request (shortcut or toolbar/selection-bar button): an
+   * active session with turnable content spins in place; otherwise the
+   * committed selection rotates (see _startSelectionRotate). Inert in
+   * simulation mode — the editing lock applies.
+   */
+  private _onRotate(steps: number): void {
+    if (!this._project || this._mode === WorkMode.SIMULATION) return;
+    if (this._activeDrag) {
+      this._activeDrag.rotate?.(steps);
+      return;
+    }
+    this._startSelectionRotate(steps);
+  }
+
+  /**
+   * Rotates the committed selection around its snapped centre through the
+   * selection-move session machinery: detach, turn, integrate, one undoable
+   * container (coalescing a live scissor cut). A collision-free result
+   * commits synchronously — the user sees an in-place rotate. A colliding one
+   * keeps the session open: the red-tinted group floats (still selected)
+   * until it is dragged or turned somewhere valid; Escape or a press off the
+   * selection reverts the rotation.
+   */
+  private _startSelectionRotate(steps: number): void {
+    const project = this._project;
+    if (!project) return;
+    const selection = project.selectionManager;
+    if (selection.isEmpty) return;
+
+    const session = new SelectionMoveSession(
+      project,
+      project.floatingLayer.dragLayer,
+      selection.selectedComponents,
+      selection.selectedWires,
+      null
+    );
+    session.rotate(steps);
+    if (session.canEnd()) {
+      session.onEnd();
+      return;
+    }
     this._startDrag(session);
   }
 

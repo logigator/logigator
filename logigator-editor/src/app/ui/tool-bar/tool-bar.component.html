@@ -79,6 +79,24 @@
         icon="ph ph-trash"
         severity="secondary"
       ></lg-button>
+      <lg-button
+        [lgTooltip]="t('toolBar.rotateCw')"
+        [tooltipShortcut]="shortcutBinding(actions.ROTATE_SELECTION)"
+        [ariaLabel]="t('toolBar.rotateCw')"
+        (onClick)="rotate(1)"
+        tooltipPosition="bottom"
+        icon="ph ph-arrow-clockwise"
+        severity="secondary"
+      ></lg-button>
+      <lg-button
+        [lgTooltip]="t('toolBar.rotateCcw')"
+        [tooltipShortcut]="shortcutBinding(actions.ROTATE_SELECTION_CCW)"
+        [ariaLabel]="t('toolBar.rotateCcw')"
+        (onClick)="rotate(3)"
+        tooltipPosition="bottom"
+        icon="ph ph-arrow-counter-clockwise"
+        severity="secondary"
+      ></lg-button>
     </div>
     <lg-divider layout="vertical" class="mx-1"></lg-divider>
     <div class="flex flex-wrap gap-1">

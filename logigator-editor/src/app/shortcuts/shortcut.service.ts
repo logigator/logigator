@@ -380,16 +380,29 @@ export class ShortcutService implements OnDestroy {
     // binding stores alt=false so it displays as just "Alt".
     const own = MODIFIER_FLAG_BY_KEY[binding.key];
     return (
-      e.key === binding.key &&
+      this._keysEqual(e.key, binding.key) &&
       (own === 'ctrl' || ctrl === binding.ctrl) &&
       (own === 'shift' || e.shiftKey === binding.shift) &&
       (own === 'alt' || e.altKey === binding.alt)
     );
   }
 
+  /**
+   * Character keys compare case-insensitively: a held Shift reports the
+   * shifted character (Shift+r → 'R'), so a shifted binding stored as a
+   * lowercase letter would otherwise never match. The shift flag itself keeps
+   * the shifted and unshifted bindings distinct.
+   */
+  private _keysEqual(a: string, b: string): boolean {
+    if (a.length === 1 && b.length === 1) {
+      return a.toLowerCase() === b.toLowerCase();
+    }
+    return a === b;
+  }
+
   private _bindingsEqual(a: ShortcutBinding, b: ShortcutBinding): boolean {
     return (
-      a.key === b.key &&
+      this._keysEqual(a.key, b.key) &&
       a.ctrl === b.ctrl &&
       a.shift === b.shift &&
       a.alt === b.alt

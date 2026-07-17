@@ -7,6 +7,14 @@ import { AddWiresAction } from './actions/add-wires.action';
 import { RemoveWiresAction } from './actions/remove-wires.action';
 import { MoveComponentsAction } from './actions/move-components.action';
 import { MoveWiresAction } from './actions/move-wires.action';
+import {
+  deserializeRotateComponentEntries,
+  RotateComponentsAction
+} from './actions/rotate-components.action';
+import {
+  deserializeRotateWireEntries,
+  RotateWiresAction
+} from './actions/rotate-wires.action';
 import { ChangeOptionAction } from './actions/change-option.action';
 import { TogglePortNegationAction } from './actions/toggle-port-negation.action';
 import { deserializeMoveEntries } from './actions/move-entry.model';
@@ -33,6 +41,14 @@ export function deserializeAction(dto: SerializedAction): Action {
       return new MoveComponentsAction(...deserializeMoveEntries(dto.entries));
     case 'moveWires':
       return new MoveWiresAction(...deserializeMoveEntries(dto.entries));
+    case 'rotateComponents':
+      return new RotateComponentsAction(
+        ...deserializeRotateComponentEntries(dto.entries)
+      );
+    case 'rotateWires':
+      return new RotateWiresAction(
+        ...deserializeRotateWireEntries(dto.entries)
+      );
     case 'changeOption':
       return new ChangeOptionAction(
         dto.componentId,

@@ -9,6 +9,10 @@ export enum ShortcutActionEnum {
   CUT = 'cut',
   PASTE = 'paste',
   DELETE = 'delete',
+  // Handled by the WorkModeRouter (like CANCEL): an active session's floating
+  // content turns in place, otherwise the committed selection rotates.
+  ROTATE_SELECTION = 'rotateSelection',
+  ROTATE_SELECTION_CCW = 'rotateSelectionCcw',
 
   ZOOM_IN = 'zoomIn',
   ZOOM_OUT = 'zoomOut',

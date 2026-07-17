@@ -48,7 +48,7 @@ export class ClipboardService {
   }
 
   public cut(project: Project): void {
-    if (project.selectionManager.isEmpty) {
+    if (project.selectionManager.isEmpty || project.actionManager.locked) {
       return;
     }
     this.copy(project);
@@ -56,7 +56,9 @@ export class ClipboardService {
   }
 
   public delete(project: Project): void {
-    if (project.selectionManager.isEmpty) return;
+    if (project.selectionManager.isEmpty || project.actionManager.locked) {
+      return;
+    }
     this._applyDelete(project);
   }
 
@@ -107,6 +109,10 @@ export class ClipboardService {
     project.startPasteSession(freshComponents, freshWires);
   }
 
+  // Callers gate on actionManager.locked first: while a drag session holds
+  // the selection detached, the removals below would silently no-op (the
+  // elements are unindexed) while the recorded action claims they happened —
+  // undo would then materialize duplicates.
   private _applyDelete(project: Project): void {
     const sm = project.selectionManager;
 

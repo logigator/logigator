@@ -189,23 +189,30 @@ These actions are recorded by `SelectionMoveSession.onEnd()` after a successful 
 | `MoveComponentsAction` | `project.moveComponent(id, newPos)` for each entry | `project.moveComponent(id, oldPos)` for each entry |
 | `MoveWiresAction`      | `project.moveWire(id, newPos)` for each entry      | `project.moveWire(id, oldPos)` for each entry      |
 
+### `RotateComponentsAction` / `RotateWiresAction`
+
+The rotate analogs of the move actions, recorded by `SelectionMoveSession.onEnd()` when the session carries a net rotation. Their entries extend the move shape with a direction pair, because neither existing action round-trips a rotation on its own: a component's direction setter re-anchors the position (`_withFixedBodyAnchor`), and a quarter-turned wire changes its axis, not just its position.
+
+- `RotateComponentsAction` — entries `{ id, oldPos, newPos, oldDirection, newDirection }`, applied via `project.rotateComponent(id, direction, pos)`. That method temporarily unindexes the component around the direction write so the `portsChange$` handler's automatic (non-undoable) wire integration stays out — the containing `ActionContainer` replays the wire changes explicitly.
+- `RotateWiresAction` — entries `{ id, oldPos, newPos, oldDirection, newDirection }`, applied via `project.setWireGeometry(id, pos, direction)`. The length is rotation-invariant and untouched.
+
 ---
 
 ## Integration with the rest of the app
 
 `Project` creates and exposes `actionManager` as a public field. Call sites:
 
-| Call site                         | Committed via | Action(s) recorded                                                                                          |
-| --------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------ |
-| `ComponentPlacementSession.onEnd()` | `register`  | `ActionContainer(RemoveWires?, AddComponents, AddWires?)` (placement commit, integrated against the net)     |
-| `WireToolSession.onEnd()`         | `register`    | `ActionContainer(RemoveWires?, AddWires)` (drawn wires, integrated against the net)                          |
-| `SelectionMoveSession.onEnd()`    | `register` / `coalesceTop` | `ActionContainer(MoveComponents?, MoveWires?, RemoveWires?, AddWires?)`; coalesces with a live scissor cut |
-| `PastePlacementSession.onEnd()`   | `register`    | `ActionContainer(AddComponentsAction, AddWiresAction)` (paste commit)                                        |
-| `EraseSession.onEnd()`            | `register`    | `ActionContainer(RemoveComponentsAction, RemoveWiresAction)`                                                 |
-| `ClipboardService._applyDelete()` | `register` / `coalesceTop` | `ActionContainer(RemoveComponentsAction, RemoveWiresAction)`; coalesces with a live scissor cut  |
-| `SelectionManager._scissorAndSelectWires()` | `register` | `ActionContainer(RemoveWiresAction, AddWiresAction)` — the scissor cut itself                       |
-| `WireTool` tap                    | `push`        | `TogglePortNegationAction`, or the join/split containers built by `WireTopology`                             |
-| Option / ports / settings panels  | `push`        | `ChangeOptionAction`, `ReorderPlugsAction`, …                                                                |
+| Call site                                   | Committed via              | Action(s) recorded                                                                                                       |
+| ------------------------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `ComponentPlacementSession.onEnd()`         | `register`                 | `ActionContainer(RemoveWires?, AddComponents, AddWires?)` (placement commit, integrated against the net)                 |
+| `WireToolSession.onEnd()`                   | `register`                 | `ActionContainer(RemoveWires?, AddWires)` (drawn wires, integrated against the net)                                      |
+| `SelectionMoveSession.onEnd()`              | `register` / `coalesceTop` | `ActionContainer(Move/RotateComponents?, Move/RotateWires?, RemoveWires?, AddWires?)`; coalesces with a live scissor cut |
+| `PastePlacementSession.onEnd()`             | `register`                 | `ActionContainer(AddComponentsAction, AddWiresAction)` (paste commit)                                                    |
+| `EraseSession.onEnd()`                      | `register`                 | `ActionContainer(RemoveComponentsAction, RemoveWiresAction)`                                                             |
+| `ClipboardService._applyDelete()`           | `register` / `coalesceTop` | `ActionContainer(RemoveComponentsAction, RemoveWiresAction)`; coalesces with a live scissor cut                          |
+| `SelectionManager._scissorAndSelectWires()` | `register`                 | `ActionContainer(RemoveWiresAction, AddWiresAction)` — the scissor cut itself                                            |
+| `WireTool` tap                              | `push`                     | `TogglePortNegationAction`, or the join/split containers built by `WireTopology`                                         |
+| Option / ports / settings panels            | `push`                     | `ChangeOptionAction`, `ReorderPlugsAction`, …                                                                            |
 
 Undo/redo keyboard shortcuts are wired through Angular UI components that call `project.actionManager.undo()` / `.redo()` directly.
 

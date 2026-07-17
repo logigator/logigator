@@ -266,6 +266,24 @@ export abstract class Component<
     }
   }
 
+  /**
+   * Sets the direction through the component's `direction` option when it has
+   * one, so the option value — what serialization and the settings panel read
+   * — stays in sync; the subclass's option subscription funnels the change
+   * into the {@link direction} setter. Components without the option get the
+   * setter directly.
+   */
+  public applyDirection(value: Direction): void {
+    const option = (this.options as Record<string, ComponentOption>)[
+      'direction'
+    ];
+    if (option) {
+      option.value = value;
+    } else {
+      this.direction = value;
+    }
+  }
+
   public get numInputs(): number {
     return this._numInputs;
   }

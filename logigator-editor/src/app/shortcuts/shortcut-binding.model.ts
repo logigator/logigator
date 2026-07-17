@@ -48,6 +48,18 @@ export const DEFAULT_SHORTCUTS: Record<ShortcutActionEnum, ShortcutBinding> = {
     shift: false,
     alt: false
   },
+  [ShortcutActionEnum.ROTATE_SELECTION]: {
+    key: 'r',
+    ctrl: false,
+    shift: false,
+    alt: false
+  },
+  [ShortcutActionEnum.ROTATE_SELECTION_CCW]: {
+    key: 'r',
+    ctrl: false,
+    shift: true,
+    alt: false
+  },
   [ShortcutActionEnum.ZOOM_IN]: {
     key: '+',
     ctrl: true,

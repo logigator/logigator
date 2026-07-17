@@ -12,6 +12,8 @@ import { TickerSignal } from '../rendering/ticker-scheduler';
 import { ActionManager } from '../actions/action-manager';
 import { SelectionManager } from './selection-manager';
 import { Wire } from '../wires/wire';
+import { WireDirection } from '../wires/wire-direction.enum';
+import { Direction } from '../utils/direction';
 import { QuadTreeContainer } from '../rendering/quad-tree-container';
 import { WireTopology } from './wire-topology';
 import { ViewportController } from './viewport-controller';
@@ -48,6 +50,10 @@ export class Project extends Container {
     components: Component[];
     wires: Wire[];
   }>();
+  // Selection-rotation requests (toolbar / selection-bar buttons → the
+  // WorkModeRouter, which turns the active session's floating content or the
+  // committed selection). Payload: clockwise quarter-turns.
+  private readonly _rotateRequest$ = new Subject<number>();
   // User-input components (button/switch) clicked while in simulation mode.
   // The model layer stays service-free: SimulationService subscribes while a
   // simulation is active.
@@ -267,6 +273,19 @@ export class Project extends Container {
     this._pasteRequest$.next({ components, wires });
   }
 
+  public get rotateRequest$(): Observable<number> {
+    return this._rotateRequest$.asObservable();
+  }
+
+  /**
+   * Asks the interaction layer to rotate the current selection (or the active
+   * session's floating content) by `steps` clockwise quarter-turns — the
+   * paste-request pattern: UI surfaces emit, the WorkModeRouter executes.
+   */
+  public requestSelectionRotation(steps: number): void {
+    this._rotateRequest$.next(steps);
+  }
+
   /**
    * @param deferConnectionPoints skip the incremental connection-point
    * recompute for this add. Bulk loaders pass `true` and follow the batch with
@@ -283,6 +302,12 @@ export class Project extends Container {
     this._portsChangeSubs.set(
       component.id,
       component.portsChange$.subscribe(({ oldPorts, newPorts }) => {
+        // Ports changed while the component is not indexed — it is detached
+        // into a drag session or mid-rotateComponent. The owner re-buckets
+        // and integrates (undoably) itself, so the automatic pass below must
+        // stay out: its insert would corrupt the detach and its integration
+        // would double-apply.
+        if (this._componentsById.get(component.id) !== component) return;
         // A port-count (or rotation) change resizes the component's
         // gridBounds, so it must be re-bucketed in the quad tree before any
         // spatial query below sees stale bounds. insert() does a
@@ -492,11 +517,55 @@ export class Project extends Container {
     this._ticker$.next('single');
   }
 
+  /**
+   * Applies a rotate entry to a tracked component — direction plus the
+   * pivot-orbited position — with re-bucketing and connection-point refresh;
+   * the rotate analog of {@link moveComponent}. The component is unindexed
+   * around the direction write so its portsChange$ handler skips the
+   * automatic (non-undoable) wire integration: the rotate action's container
+   * replays those wire changes itself.
+   */
+  public rotateComponent(id: number, direction: Direction, pos: Point): void {
+    const component = this.getComponentById(id);
+    if (!component) return;
+    const oldPorts = component.connectionPoints;
+    this._componentsById.delete(id);
+    component.applyDirection(direction);
+    this._componentsById.set(id, component);
+    component.position.copyFrom(pos);
+    this._components.insert(component);
+    this._connectionPoints.onComponentRemoved(oldPorts);
+    this._connectionPoints.onComponentAdded(component.connectionPoints);
+    this._ticker$.next('single');
+  }
+
+  /**
+   * Moves a tracked wire and sets its axis in one step — how a rotate entry
+   * lands (a quarter-turn swaps HORIZONTAL/VERTICAL). The length is
+   * rotation-invariant, so it stays untouched.
+   */
+  public setWireGeometry(
+    id: number,
+    pos: Point,
+    direction: WireDirection
+  ): void {
+    const wire = this.getWireById(id);
+    if (!wire) return;
+    const oldSnap = Wire.snapshot(wire);
+    wire.direction = direction;
+    wire.position.copyFrom(pos);
+    this._wires.insert(wire);
+    this._connectionPoints.onWireRemoved(oldSnap);
+    this._connectionPoints.onWireAdded(Wire.snapshot(wire));
+    this._ticker$.next('single');
+  }
+
   public override destroy(options?: DestroyOptions): void {
     this._themeEffect?.destroy();
     this._selectionRectSub.unsubscribe();
     this._ticker$.complete();
     this._pasteRequest$.complete();
+    this._rotateRequest$.complete();
     this._userInput$.complete();
     this._inspectRequest$.complete();
     this.actionManager.destroy();

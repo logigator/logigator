@@ -1,4 +1,4 @@
-import { Container, Point } from 'pixi.js';
+import { Container, Point, Rectangle } from 'pixi.js';
 import { DragSession } from '../drag-session';
 import { PointerInput } from '../interaction/pointer-input';
 import { Project } from '../../project/project';
@@ -6,9 +6,19 @@ import { Component } from '../../components/component';
 import { Wire } from '../../wires/wire';
 import { ConnectionPoint } from '../../connection-points/connection-point';
 import { roundToGrid } from '../../utils/grid';
+import { Direction } from '../../utils/direction';
+import {
+  normalizeRotationSteps,
+  rotatePointAroundPivot,
+  rotateRectAroundPivot,
+  rotationPivotFor
+} from '../../utils/rotation';
+import { groupGridBounds, rotateElements } from './rotate-elements';
 import { ActionContainer } from '../../actions/action-container';
 import { MoveComponentsAction } from '../../actions/actions/move-components.action';
 import { MoveWiresAction } from '../../actions/actions/move-wires.action';
+import { RotateComponentsAction } from '../../actions/actions/rotate-components.action';
+import { RotateWiresAction } from '../../actions/actions/rotate-wires.action';
 import { RemoveWiresAction } from '../../actions/actions/remove-wires.action';
 import { AddWiresAction } from '../../actions/actions/add-wires.action';
 import { MoveEntry } from '../../actions/actions/move-entry.model';
@@ -18,19 +28,48 @@ import { DragCollisionState } from './drag-collision';
 import { getStaticDI } from '../../utils/get-di';
 import { LoggingService } from '../../logging/logging.service';
 
+/**
+ * Drags — and turns — the committed selection. Opened two ways:
+ *
+ * - By the select tool with a locked-in `pointerStart`: the classic grab-and-
+ *   move gesture.
+ * - By the rotate flow with `pointerStart: null`: the session outlives its
+ *   (non-existent) opening gesture like paste placement does — the rotated
+ *   group floats in place until a press on it locks in the drag anchor, so a
+ *   rotation that collides can be repositioned before it commits.
+ *
+ * Rotation ({@link rotate}) turns the floating group around its snapped
+ * centre; the commit then records rotate actions instead of moves. Original
+ * geometry is captured at construction, so cancel restores it exactly.
+ */
 export class SelectionMoveSession implements DragSession {
   private readonly _components: Component[];
   private readonly _wires: Wire[];
-  private readonly _pointerStart: Point;
+  private _pointerStart: Point | null;
   private readonly _collision: DragCollisionState;
   private _capturedCps: ConnectionPoint[] = [];
+
+  // Pre-session originals. Captured at construction — rotate() mutates the
+  // detached elements in place, so onEnd/onCancel cannot re-derive them later.
+  private readonly _wireSnapshots: SerializedWire[];
+  private readonly _oldWireSnapshotsList: WireSnapshot[];
+  private readonly _oldWireSnapshotsById: Map<number, WireSnapshot>;
+  private readonly _componentOldPorts: Map<number, readonly Point[]>;
+  private readonly _componentOldPos: Map<number, Point>;
+  private readonly _componentOldDirection: Map<number, Direction>;
+  private readonly _capturedCpOldPos: Map<ConnectionPoint, Point>;
+  private readonly _originalGrabRect: Rectangle | null;
+
+  // Net clockwise quarter-turns applied since construction (mod 4). Zero
+  // means the commit/cancel paths can treat the session as a pure move.
+  private _netSteps = 0;
 
   constructor(
     private readonly project: Project,
     private readonly dragLayer: Container<Component | Wire | ConnectionPoint>,
     components: ReadonlySet<Component>,
     wires: ReadonlySet<Wire>,
-    pointerStart: Point
+    pointerStart: Point | null
   ) {
     this._components = [...components];
     this._wires = [...wires];
@@ -40,7 +79,8 @@ export class SelectionMoveSession implements DragSession {
     for (const c of this._components) dragLayer.addChild(c);
     for (const w of this._wires) dragLayer.addChild(w);
     // dragLayer starts at (0,0) offset; selection was non-overlapping before
-    // detach, so no initial collision check is needed.
+    // detach, so no initial collision check is needed. (The rotate flow calls
+    // rotate() right after construction, which runs its own check.)
     this._collision = new DragCollisionState(
       project,
       dragLayer,
@@ -56,9 +96,49 @@ export class SelectionMoveSession implements DragSession {
       dragLayer,
       new Set(project.selectionManager.selectedConnectionPoints)
     );
+
+    this._wireSnapshots = this._wires.map((w) => Wire.serialize(w));
+    this._oldWireSnapshotsList = this._wires.map((w) => Wire.snapshot(w));
+    this._oldWireSnapshotsById = new Map<number, WireSnapshot>(
+      this._wires.map((w, i) => [w.id, this._oldWireSnapshotsList[i]])
+    );
+    this._componentOldPorts = new Map(
+      this._components.map((c) => [c.id, c.connectionPoints])
+    );
+    this._componentOldPos = new Map(
+      this._components.map((c) => [c.id, c.position.clone()])
+    );
+    this._componentOldDirection = new Map(
+      this._components.map((c) => [c.id, c.direction])
+    );
+    this._capturedCpOldPos = new Map(
+      this._capturedCps.map((cp) => [cp, cp.position.clone()])
+    );
+    this._originalGrabRect = project.selectionManager.grabRect();
+  }
+
+  /**
+   * A press while the session floats without a drag anchor (the rotate flow):
+   * on the selection it locks in the anchor, off it asks the router to cancel
+   * — reverting the rotation. Presses with an anchor already locked are
+   * consumed and ignored (paste-placement convention).
+   */
+  onDown(input: PointerInput): boolean {
+    if (this._pointerStart) return true;
+    const offset = this.dragLayer.position;
+    // Hit-test and anchor in element space: the layer offset translates the
+    // whole group, so subtracting it maps the cursor onto the stored element
+    // positions (and makes onMove's `gridPos - pointerStart` yield the
+    // absolute offset again).
+    const local = new Point(input.grid.x - offset.x, input.grid.y - offset.y);
+    if (!this.project.selectionManager.isGrabbedAt(local)) return false;
+    const gridPos = roundToGrid(input.grid);
+    this._pointerStart = new Point(gridPos.x - offset.x, gridPos.y - offset.y);
+    return true;
   }
 
   onMove(input: PointerInput): void {
+    if (!this._pointerStart) return;
     const gridPos = roundToGrid(input.grid, true);
     this.dragLayer.position.set(
       gridPos.x - this._pointerStart.x,
@@ -69,6 +149,42 @@ export class SelectionMoveSession implements DragSession {
     this._collision.update();
   }
 
+  /**
+   * Turns the floating group clockwise by `steps` quarter-turns around its
+   * snapped centre, in element space — the drag offset translates the result,
+   * so visually the group spins around its own middle wherever it hangs. The
+   * carried junction dots and the frozen grab rect turn with it.
+   */
+  rotate(steps: number): void {
+    const s = normalizeRotationSteps(steps);
+    if (s === 0) return;
+    const bounds = groupGridBounds(this._components, this._wires);
+    if (!bounds) return;
+    const pivot = rotationPivotFor(bounds);
+
+    // Read the rect before the elements move — grabRect() translates the
+    // frozen rect by how far the bounding box has drifted since it was set.
+    const rect = this.project.selectionManager.grabRect();
+
+    rotateElements(this._components, this._wires, pivot, s);
+    for (const cp of this._capturedCps) {
+      cp.position.copyFrom(rotatePointAroundPivot(pivot, cp.position, s));
+    }
+    this._netSteps = (this._netSteps + s) % 4;
+
+    if (rect) {
+      this.project.selectionManager.freezeGrabRect(
+        rotateRectAroundPivot(pivot, rect, s)
+      );
+      // The freeze redraws the rect at its base position; re-apply the drag
+      // offset so it keeps riding with the ghosts.
+      this.project.floatingLayer.setSelectionRectOffset(
+        this.dragLayer.position
+      );
+    }
+    this._collision.update();
+  }
+
   canEnd(): boolean {
     return !this._collision.hasCollision;
   }
@@ -76,24 +192,7 @@ export class SelectionMoveSession implements DragSession {
   onEnd(): void {
     const delta = this.dragLayer.position.clone();
     const hasMove = delta.x !== 0 || delta.y !== 0;
-
-    // All captures here happen BEFORE the delta is applied — wires and components
-    // are still at their pre-drag positions.
-    const wireSnapshots: SerializedWire[] = this._wires.map((w) =>
-      Wire.serialize(w)
-    );
-    const oldWireSnapshotsList: WireSnapshot[] = this._wires.map((w) =>
-      Wire.snapshot(w)
-    );
-    const oldWireSnapshotsById = new Map<number, WireSnapshot>(
-      this._wires.map((w, i) => [w.id, oldWireSnapshotsList[i]])
-    );
-    const componentOldPorts = new Map<number, readonly Point[]>(
-      this._components.map((c) => [c.id, c.connectionPoints])
-    );
-    const componentOldPos = new Map(
-      this._components.map((c) => [c.id, c.position.clone()])
-    );
+    const hasRotation = this._netSteps !== 0;
 
     for (const child of this.dragLayer.children) {
       if (child instanceof ConnectionPoint) continue;
@@ -110,7 +209,7 @@ export class SelectionMoveSession implements DragSession {
     this.project.floatingLayer.setSelectionRectOffset(this.dragLayer.position);
     this.project.reattachFromDrag(this._components, this._wires);
 
-    if (!hasMove) {
+    if (!hasMove && !hasRotation) {
       getStaticDI(LoggingService).debug(
         'ended move with zero delta: nothing committed',
         'SelectionMoveSession'
@@ -127,17 +226,17 @@ export class SelectionMoveSession implements DragSession {
     const { toAdd, toRemove } = this.project.topology.integrate({
       movedWires: this._wires.map((w) => ({
         wire: w,
-        oldSnapshot: oldWireSnapshotsById.get(w.id)!
+        oldSnapshot: this._oldWireSnapshotsById.get(w.id)!
       })),
       movedComponentPorts: this._components.map((c) => ({
-        oldPorts: componentOldPorts.get(c.id)!,
+        oldPorts: this._componentOldPorts.get(c.id)!,
         newPorts: c.connectionPoints
       }))
     });
 
     this.project.connectionPoints.recomputeCpsForMovedSelection(
-      componentOldPorts,
-      oldWireSnapshotsList,
+      this._componentOldPorts,
+      this._oldWireSnapshotsList,
       this._components,
       this._wires
     );
@@ -145,23 +244,51 @@ export class SelectionMoveSession implements DragSession {
     const action = new ActionContainer();
 
     if (this._components.length > 0) {
-      const componentEntries: MoveEntry[] = this._components.map((c) => ({
-        id: c.id,
-        oldPos: componentOldPos.get(c.id)!,
-        newPos: c.position.clone()
-      }));
-      action.add(new MoveComponentsAction(...componentEntries));
+      if (hasRotation) {
+        action.add(
+          new RotateComponentsAction(
+            ...this._components.map((c) => ({
+              id: c.id,
+              oldPos: this._componentOldPos.get(c.id)!,
+              newPos: c.position.clone(),
+              oldDirection: this._componentOldDirection.get(c.id)!,
+              newDirection: c.direction
+            }))
+          )
+        );
+      } else {
+        const componentEntries: MoveEntry[] = this._components.map((c) => ({
+          id: c.id,
+          oldPos: this._componentOldPos.get(c.id)!,
+          newPos: c.position.clone()
+        }));
+        action.add(new MoveComponentsAction(...componentEntries));
+      }
     }
 
-    if (toRemove.length > 0) {
-      const removedIds = new Set(toRemove.map((w) => w.id));
-      const movedIds = new Set(this._wires.map((w) => w.id));
-
-      // Moved wires that survived integration — record positional moves.
-      const survived = this._wires.filter((w) => !removedIds.has(w.id));
-      if (survived.length > 0) {
+    // A moved (or turned) wire that survived integration records its own
+    // geometry change; rotation swaps the axis on odd steps, so those record
+    // as rotate entries instead of positional moves.
+    const addSurvivedWireActions = (survived: Wire[]): void => {
+      if (survived.length === 0) return;
+      if (hasRotation) {
+        action.add(
+          new RotateWiresAction(
+            ...survived.map((w) => {
+              const snap = this._wireSnapshots.find((s) => s.id === w.id)!;
+              return {
+                id: w.id,
+                oldPos: new Point(snap.pos[0] + 0.5, snap.pos[1] + 0.5),
+                newPos: w.position.clone(),
+                oldDirection: snap.direction,
+                newDirection: w.direction
+              };
+            })
+          )
+        );
+      } else {
         const entries: MoveEntry[] = survived.map((w) => {
-          const snap = wireSnapshots.find((s) => s.id === w.id)!;
+          const snap = this._wireSnapshots.find((s) => s.id === w.id)!;
           return {
             id: w.id,
             oldPos: new Point(snap.pos[0] + 0.5, snap.pos[1] + 0.5),
@@ -170,10 +297,17 @@ export class SelectionMoveSession implements DragSession {
         });
         action.add(new MoveWiresAction(...entries));
       }
+    };
 
-      // Moved wires that the integrator changed: serialize at OLD positions so
+    if (toRemove.length > 0) {
+      const removedIds = new Set(toRemove.map((w) => w.id));
+      const movedIds = new Set(this._wires.map((w) => w.id));
+
+      addSurvivedWireActions(this._wires.filter((w) => !removedIds.has(w.id)));
+
+      // Moved wires that the integrator changed: serialize at OLD geometry so
       // the corresponding undo path restores them where they came from.
-      const movedAndChangedSnapshots = wireSnapshots.filter((s) =>
+      const movedAndChangedSnapshots = this._wireSnapshots.filter((s) =>
         removedIds.has(s.id)
       );
       // External wires absorbed by merges or split by an arriving port — capture
@@ -190,14 +324,8 @@ export class SelectionMoveSession implements DragSession {
         )
       );
       action.add(new AddWiresAction(...toAdd));
-    } else if (this._wires.length > 0) {
-      // No integrator changes — straight move.
-      const wireEntries: MoveEntry[] = wireSnapshots.map((snap, i) => ({
-        id: snap.id,
-        oldPos: new Point(snap.pos[0] + 0.5, snap.pos[1] + 0.5),
-        newPos: this._wires[i].position.clone()
-      }));
-      action.add(new MoveWiresAction(...wireEntries));
+    } else {
+      addSurvivedWireActions(this._wires);
     }
 
     // Materialize the integrator's changes with the live instances (positions
@@ -207,7 +335,7 @@ export class SelectionMoveSession implements DragSession {
     for (const w of toAdd) this.project.addWire(w);
 
     getStaticDI(LoggingService).debug(
-      `committed move: ${this._components.length} component(s) and ${this._wires.length} wire(s) moved; ` +
+      `committed move: ${this._components.length} component(s) and ${this._wires.length} wire(s) moved (${this._netSteps} quarter-turn(s)); ` +
         `integration added ${toAdd.length} and removed ${toRemove.length} wire(s)`,
       'SelectionMoveSession'
     );
@@ -215,7 +343,7 @@ export class SelectionMoveSession implements DragSession {
     if (action.length > 0) {
       // A drag that started from a SELECT_EXACT scissor selection commits the
       // cut: coalescing folds the cut's history entry and this move into one
-      // undo step. On hasMove === false we returned above without consuming,
+      // undo step. On a zero-change end we returned above without consuming,
       // leaving the cut live for the next selection-clear to retract.
       const cut = this.project.selectionManager.consumeLiveCut();
       if (cut) {
@@ -238,6 +366,23 @@ export class SelectionMoveSession implements DragSession {
       `cancelled move: ${this._components.length} component(s) and ${this._wires.length} wire(s) reattached at their original positions`,
       'SelectionMoveSession'
     );
+    if (this._netSteps !== 0) {
+      // Undo the in-place rotation before reattaching, so termination counts
+      // and the frozen rect land back on the original geometry.
+      for (const c of this._components) {
+        c.applyDirection(this._componentOldDirection.get(c.id)!);
+        c.position.copyFrom(this._componentOldPos.get(c.id)!);
+      }
+      for (const w of this._wires) {
+        const snap = this._oldWireSnapshotsById.get(w.id)!;
+        w.direction = snap.direction;
+        w.position.set(snap.start.x, snap.start.y);
+      }
+      for (const cp of this._capturedCps) {
+        cp.position.copyFrom(this._capturedCpOldPos.get(cp)!);
+      }
+      this.project.selectionManager.freezeGrabRect(this._originalGrabRect);
+    }
     this.dragLayer.position.set(0, 0);
     this._collision.reset();
     // Bounds are unchanged on cancel, so returning to base is enough.

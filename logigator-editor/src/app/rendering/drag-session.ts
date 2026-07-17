@@ -20,4 +20,11 @@ export interface DragSession {
    * the session — the press is spent either way.
    */
   onDown?(input: PointerInput): boolean;
+  /**
+   * Optional: turn the session's floating elements by `steps` clockwise
+   * quarter-turns around their own snapped centre (the rotate-selection
+   * shortcut fired mid-session). Sessions without turnable content omit it;
+   * the router drops the request then.
+   */
+  rotate?(steps: number): void;
 }

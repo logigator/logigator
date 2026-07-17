@@ -79,6 +79,10 @@ export class ToolBarComponent {
     if (project) this.clipboardService.delete(project);
   }
 
+  protected rotate(steps: number): void {
+    this.projectService.activeProject()?.requestSelectionRotation(steps);
+  }
+
   protected undo(): void {
     this.projectService.activeProject()?.actionManager.undo();
   }

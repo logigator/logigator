@@ -54,6 +54,22 @@ import { ProjectService } from '../../project/project.service';
           [ariaLabel]="t('toolBar.delete')"
           (onClick)="delete()"
         ></lg-button>
+        <lg-button
+          icon="ph ph-arrow-clockwise"
+          severity="secondary"
+          rounded
+          text
+          [ariaLabel]="t('toolBar.rotateCw')"
+          (onClick)="rotate(1)"
+        ></lg-button>
+        <lg-button
+          icon="ph ph-arrow-counter-clockwise"
+          severity="secondary"
+          rounded
+          text
+          [ariaLabel]="t('toolBar.rotateCcw')"
+          (onClick)="rotate(3)"
+        ></lg-button>
       </div>
     }
   `
@@ -81,5 +97,9 @@ export class SelectionActionBarComponent {
   protected delete(): void {
     const project = this.projectService.activeProject();
     if (project) this.clipboardService.delete(project);
+  }
+
+  protected rotate(steps: number): void {
+    this.projectService.activeProject()?.requestSelectionRotation(steps);
   }
 }

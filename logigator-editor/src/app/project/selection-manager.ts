@@ -450,6 +450,18 @@ export class SelectionManager {
     return false;
   }
 
+  /**
+   * Replaces the frozen rect wholesale (re-anchored to the current bounding
+   * box), or drops it with `null`. Rotate flows use this to turn the frozen
+   * rect together with the selection's geometry — the rect stays the shape it
+   * was drawn as, just rotated, never re-fit to content — and to restore it
+   * when a rotation is cancelled.
+   */
+  public freezeGrabRect(rect: Rectangle | null): void {
+    this._setGrabRect(rect);
+    this._selectionChange$.next();
+  }
+
   // Freezes the given rect (with the current bounds origin as its translation
   // anchor), or drops the rect entirely — also when the selection is empty.
   private _setGrabRect(rect: Rectangle | null): void {
