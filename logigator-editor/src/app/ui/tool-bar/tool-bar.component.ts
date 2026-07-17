@@ -10,6 +10,7 @@ import {
 } from '../../work-mode/work-mode-tools';
 import { ClipboardService } from '../../clipboard/clipboard.service';
 import { ProjectService } from '../../project/project.service';
+import { EditorCommandStateService } from '../../project/editor-command-state.service';
 import { SaveCoordinatorService } from '../save-coordinator.service';
 import { OpenProjectDialogComponent } from '../dialogs/open-project-dialog/open-project-dialog.component';
 import { ShortcutService } from '../../shortcuts/shortcut.service';
@@ -38,6 +39,9 @@ export class ToolBarComponent {
   private readonly clipboardService = inject(ClipboardService);
   private readonly shortcutService = inject(ShortcutService);
   private readonly simulationService = inject(SimulationService);
+
+  /** Drives the disabled state of the no-op-able action buttons. */
+  protected readonly commandState = inject(EditorCommandStateService);
 
   protected readonly actions = ShortcutActionEnum;
 

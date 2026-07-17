@@ -66,13 +66,13 @@ describe('ClipboardService', () => {
 
   describe('copy()', () => {
     it('hasClipboard is false before any copy', () => {
-      expect(service.hasClipboard).toBe(false);
+      expect(service.hasClipboard()).toBe(false);
     });
 
     it('does nothing when selection is empty', () => {
       const project = makeProject();
       service.copy(project);
-      expect(service.hasClipboard).toBe(false);
+      expect(service.hasClipboard()).toBe(false);
     });
 
     it('populates clipboard when components are selected', () => {
@@ -80,14 +80,14 @@ describe('ClipboardService', () => {
       compsToDestroy.push(comp);
       const project = makeProject([comp]);
       service.copy(project);
-      expect(service.hasClipboard).toBe(true);
+      expect(service.hasClipboard()).toBe(true);
     });
 
     it('populates clipboard when wires are selected', () => {
       const wire = makeWire();
       const project = makeProject([], [wire]);
       service.copy(project);
-      expect(service.hasClipboard).toBe(true);
+      expect(service.hasClipboard()).toBe(true);
     });
 
     it('does not consume a live scissor cut', () => {
@@ -187,7 +187,7 @@ describe('ClipboardService', () => {
     it('does nothing when selection is empty', () => {
       const project = makeProject();
       service.cut(project);
-      expect(service.hasClipboard).toBe(false);
+      expect(service.hasClipboard()).toBe(false);
       expect(project.removeComponent).not.toHaveBeenCalled();
     });
 
@@ -196,7 +196,7 @@ describe('ClipboardService', () => {
       compsToDestroy.push(comp);
       const project = makeProject([comp]);
       service.cut(project);
-      expect(service.hasClipboard).toBe(true);
+      expect(service.hasClipboard()).toBe(true);
     });
 
     it('removes elements from project (delete part)', () => {
@@ -315,8 +315,10 @@ describe('ClipboardService', () => {
 
       // Corrupt the type to an unknown value
       (
-        service as unknown as { _clipboard: { components: { type: string }[] } }
-      )._clipboard!.components[0].type = 'nonexistent_type' as never;
+        service as unknown as {
+          _clipboard: () => { components: { type: string }[] };
+        }
+      )._clipboard().components[0].type = 'nonexistent_type' as never;
 
       const dest = makeProject();
       expect(() => service.paste(dest)).not.toThrow();

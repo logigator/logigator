@@ -1,4 +1,4 @@
-import { inject, Injectable } from '@angular/core';
+import { computed, inject, Injectable, signal } from '@angular/core';
 import { TranslationService } from '../translation/translation.service';
 import { SerializedComponent } from '../components/serialized-component.model';
 import { SerializedWire } from '../wires/serialized-wire.model';
@@ -26,23 +26,23 @@ export class ClipboardService {
   private readonly toast = inject(ToastService);
   private readonly translation = inject(TranslationService);
 
-  private _clipboard: ClipboardData | null = null;
+  private readonly _clipboard = signal<ClipboardData | null>(null);
 
-  public get hasClipboard(): boolean {
-    return this._clipboard !== null;
-  }
+  /** True once something has been copied — drives paste-button availability. */
+  public readonly hasClipboard = computed(() => this._clipboard() !== null);
 
   public copy(project: Project): void {
     const sm = project.selectionManager;
     if (sm.isEmpty) {
       return;
     }
-    this._clipboard = {
+    const data: ClipboardData = {
       components: [...sm.selectedComponents].map((c) => Component.serialize(c)),
       wires: [...sm.selectedWires].map((w) => Wire.serialize(w))
     };
+    this._clipboard.set(data);
     this.logging.debug(
-      `copy serialized ${this._clipboard.components.length} component(s), ${this._clipboard.wires.length} wire(s)`,
+      `copy serialized ${data.components.length} component(s), ${data.wires.length} wire(s)`,
       'ClipboardService'
     );
   }
@@ -63,10 +63,11 @@ export class ClipboardService {
   }
 
   public paste(project: Project): void {
-    if (!this._clipboard) {
+    const data = this._clipboard();
+    if (!data) {
       return;
     }
-    const { components, wires } = this._clipboard;
+    const { components, wires } = data;
     const provider = getStaticDI(ComponentProviderService);
 
     const freshComponents: Component[] = [];
