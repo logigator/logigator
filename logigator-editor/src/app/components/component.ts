@@ -68,10 +68,13 @@ const MIN_FONT_SIZE = 0.25 / PX;
 export type PortSide = 'in' | 'out';
 
 export abstract class Component<
-  TOptions extends Record<string, ComponentOption> = Record<
-    string,
-    ComponentOption
-  >
+  TOptions extends Record<string, ComponentOption> & {
+    // `direction` is a reserved option key: when present it holds the
+    // component's direction, and applyDirection routes through it so the
+    // option stays the single source of truth for serialization and the
+    // settings panel.
+    direction?: ComponentOption<Direction>;
+  } = Record<string, ComponentOption>
 >
   extends Container
   implements Connectable
@@ -274,9 +277,7 @@ export abstract class Component<
    * setter directly.
    */
   public applyDirection(value: Direction): void {
-    const option = (this.options as Record<string, ComponentOption>)[
-      'direction'
-    ];
+    const option = this.options.direction;
     if (option) {
       option.value = value;
     } else {
