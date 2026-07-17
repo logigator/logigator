@@ -63,7 +63,6 @@ export class ShortcutManagerComponent {
         ShortcutActionEnum.TOOL_SELECT,
         ShortcutActionEnum.SELECT_SCISSOR,
         ShortcutActionEnum.TOOL_ERASE,
-        ShortcutActionEnum.TOOL_COMPONENT_PLACEMENT,
         ShortcutActionEnum.TOOL_PLACE_TEXT
       ]
     },

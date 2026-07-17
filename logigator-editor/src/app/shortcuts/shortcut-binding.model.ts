@@ -67,13 +67,13 @@ export const DEFAULT_SHORTCUTS: Record<ShortcutActionEnum, ShortcutBinding> = {
     alt: false
   },
   [ShortcutActionEnum.TOOL_PAN]: {
-    key: 'h',
+    key: 'p',
     ctrl: false,
     shift: false,
     alt: false
   },
   [ShortcutActionEnum.TOOL_WIRE]: {
-    key: 'd',
+    key: 'w',
     ctrl: false,
     shift: false,
     alt: false
@@ -92,12 +92,6 @@ export const DEFAULT_SHORTCUTS: Record<ShortcutActionEnum, ShortcutBinding> = {
   },
   [ShortcutActionEnum.TOOL_ERASE]: {
     key: 'e',
-    ctrl: false,
-    shift: false,
-    alt: false
-  },
-  [ShortcutActionEnum.TOOL_COMPONENT_PLACEMENT]: {
-    key: 'p',
     ctrl: false,
     shift: false,
     alt: false

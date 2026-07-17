@@ -743,7 +743,6 @@ const en = {
       toolSelect: 'Select',
       selectScissor: 'Cut Wires at Selection Edge (hold)',
       toolErase: 'Erase',
-      toolComponentPlacement: 'Place Component',
       toolPlaceText: 'Place Text',
       toggleSimulation: 'Start/Stop Simulation',
       cancel: 'Cancel'

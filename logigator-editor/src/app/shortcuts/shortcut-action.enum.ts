@@ -21,7 +21,6 @@ export enum ShortcutActionEnum {
   // drag is in progress (checked via ShortcutService.isHeld, not on()).
   SELECT_SCISSOR = 'selectScissor',
   TOOL_ERASE = 'toolErase',
-  TOOL_COMPONENT_PLACEMENT = 'toolComponentPlacement',
   TOOL_PLACE_TEXT = 'toolPlaceText',
 
   TOGGLE_SIMULATION = 'toggleSimulation',

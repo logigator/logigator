@@ -367,10 +367,6 @@ export class ShortcutService implements OnDestroy {
       this.workModeService.setMode(WorkMode.ERASE);
     });
 
-    this.on(ShortcutActionEnum.TOOL_COMPONENT_PLACEMENT).subscribe(() => {
-      this.workModeService.setMode(WorkMode.COMPONENT_PLACEMENT);
-    });
-
     this.on(ShortcutActionEnum.TOOL_PLACE_TEXT).subscribe(() => {
       this.workModeService.setMode(WorkMode.COMPONENT_PLACEMENT);
       this.workModeService.setSelectedComponentType(BuiltInComponentType.TEXT);
