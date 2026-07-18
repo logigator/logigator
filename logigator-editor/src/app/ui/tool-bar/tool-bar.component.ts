@@ -19,6 +19,7 @@ import { ShortcutActionEnum } from '../../shortcuts/shortcut-action.enum';
 import { ShortcutBinding } from '../../shortcuts/shortcut-binding.model';
 import { SimulationService } from '../../simulation/simulation.service';
 import { SimulationControlsComponent } from '../simulation-controls/simulation-controls.component';
+import { OnboardTargetDirective } from '../../onboarding/onboard-target.directive';
 
 @Component({
   selector: 'app-tool-bar',
@@ -27,7 +28,8 @@ import { SimulationControlsComponent } from '../simulation-controls/simulation-c
     LgDivider,
     LgTooltip,
     TranslocoDirective,
-    SimulationControlsComponent
+    SimulationControlsComponent,
+    OnboardTargetDirective
   ],
   templateUrl: './tool-bar.component.html'
 })

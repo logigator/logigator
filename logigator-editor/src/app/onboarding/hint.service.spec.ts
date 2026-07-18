@@ -10,6 +10,7 @@ import { WorkModeService } from '../work-mode/work-mode.service';
 import { WorkMode } from '../work-mode/work-mode.enum';
 import { OnboardingService } from './onboarding.service';
 import { HintService } from './hint.service';
+import { OnboardingTargetRegistry } from './onboarding-target-registry.service';
 
 function popover(): Element | null {
   return document.querySelector('.cdk-overlay-container app-hint-popover');
@@ -87,13 +88,12 @@ describe('HintService', () => {
   });
 
   // A hint's target can enter the DOM only after its trigger fires (e.g. the
-  // sim controls on entering simulation). The resolve is deferred one render so
-  // it anchors instead of floating; exercised here via the wire hint, which
-  // takes the same path.
-  it('anchors a hint to its target element when the target is present', () => {
+  // sim controls on entering simulation). Resolution reads the reactive target
+  // registry, so it anchors once the element is registered instead of floating.
+  it('anchors a hint to its target element when the target is registered', () => {
     const wire = document.createElement('div');
-    wire.setAttribute('data-onboard', 'tool-wire');
     document.body.appendChild(wire);
+    TestBed.inject(OnboardingTargetRegistry).register('tool-wire', wire);
 
     enterWireTool();
 
@@ -103,8 +103,8 @@ describe('HintService', () => {
     wire.remove();
   });
 
-  it('floats a hint bottom-centre when its target never appears', () => {
-    enterWireTool(); // no tool-wire element in the test DOM
+  it('floats a hint bottom-centre when its target is not registered', () => {
+    enterWireTool(); // no tool-wire registered
 
     expect(popover()).not.toBeNull();
     expect(isFloating()).toBe(true);

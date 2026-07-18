@@ -1,10 +1,11 @@
 import { WorkMode } from '../../work-mode/work-mode.enum';
 import { Hint } from '../hint.model';
 
-const wireTool = '[data-onboard="tool-wire"]';
-const scissorToggle = '[data-onboard="scissor-toggle"]';
-const eraseTool = '[data-onboard="tool-erase"]';
-const simControls = '[data-onboard="sim-controls"]';
+// Onboarding target ids (see OnboardingTargetRegistry / OnboardTargetDirective).
+const wireTool = 'tool-wire';
+const scissorToggle = 'scissor-toggle';
+const eraseTool = 'tool-erase';
+const simControls = 'sim-controls';
 
 /**
  * The Tier-1 just-in-time hints — the non-obvious behaviours the flagship

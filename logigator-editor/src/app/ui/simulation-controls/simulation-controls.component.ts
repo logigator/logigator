@@ -13,6 +13,7 @@ import {
   TargetSpeedUnit
 } from '../../simulation/simulation.service';
 import { SiPipe } from '../../utils/si/si.pipe';
+import { OnboardTargetDirective } from '../../onboarding/onboard-target.directive';
 
 /**
  * The run controls shared by the desktop tool bar and the mobile sim bar:
@@ -30,7 +31,8 @@ import { SiPipe } from '../../utils/si/si.pipe';
     LgSelect,
     LgTooltip,
     SiPipe,
-    TranslocoDirective
+    TranslocoDirective,
+    OnboardTargetDirective
   ],
   templateUrl: './simulation-controls.component.html'
 })

@@ -9,6 +9,7 @@ import { SaveCoordinatorService } from '../save-coordinator.service';
 import { SimulationService } from '../../simulation/simulation.service';
 import { MobileUiService } from '../../layout/mobile-ui.service';
 import { UserAvatarComponent } from '../user-settings/user-avatar.component';
+import { OnboardTargetDirective } from '../../onboarding/onboard-target.directive';
 
 /**
  * Compact top bar (`isCompact`): avatar → account/settings sheet, the
@@ -18,7 +19,13 @@ import { UserAvatarComponent } from '../user-settings/user-avatar.component';
  */
 @Component({
   selector: 'app-mobile-top-bar',
-  imports: [LgButton, LgRipple, TranslocoDirective, UserAvatarComponent],
+  imports: [
+    LgButton,
+    LgRipple,
+    TranslocoDirective,
+    UserAvatarComponent,
+    OnboardTargetDirective
+  ],
   template: `
     <div
       *transloco="let t"
@@ -73,7 +80,7 @@ import { UserAvatarComponent } from '../user-settings/user-avatar.component';
           (onClick)="save()"
         ></lg-button>
         <lg-button
-          data-onboard="sim-start"
+          appOnboardTarget="sim-start"
           icon="ph ph-play"
           severity="secondary"
           [ariaLabel]="t('toolBar.startSim')"

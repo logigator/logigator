@@ -32,6 +32,7 @@ import { StepText } from './tutorial.model';
 import { Hint } from './hint.model';
 import { HintPopoverComponent } from './hint/hint-popover.component';
 import { HINTS } from './hints/registry';
+import { OnboardingTargetRegistry } from './onboarding-target-registry.service';
 
 /**
  * Fires the just-in-time hints. Subscribes to the triggers (work-mode signal,
@@ -51,6 +52,7 @@ export class HintService {
   private readonly inspection = inject(InspectionService);
   private readonly translation = inject(TranslationService);
   private readonly logging = inject(LoggingService);
+  private readonly registry = inject(OnboardingTargetRegistry);
 
   private readonly mode$ = toObservable(this.workMode.mode);
 
@@ -214,9 +216,7 @@ export class HintService {
     hint: Hint,
     platform: OnboardingPlatform
   ): HTMLElement | null {
-    const selector = hint.target?.[platform];
-    if (!selector) return null;
-    return document.querySelector<HTMLElement>(selector);
+    return this.registry.get(hint.target?.[platform]);
   }
 
   private resolveText(

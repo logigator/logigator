@@ -9,10 +9,11 @@ import { WorkModeService } from '../../../work-mode/work-mode.service';
 import { WorkMode } from '../../../work-mode/work-mode.enum';
 import { MobileUiService } from '../../../layout/mobile-ui.service';
 import { SourceIndicatorComponent } from '../../source-indicator/source-indicator.component';
+import { OnboardTargetDirective } from '../../../onboarding/onboard-target.directive';
 
 @Component({
   selector: 'app-component-list-category',
-  imports: [SourceIndicatorComponent],
+  imports: [SourceIndicatorComponent, OnboardTargetDirective],
   templateUrl: './component-list-category.component.html'
 })
 export class ComponentListCategoryComponent {

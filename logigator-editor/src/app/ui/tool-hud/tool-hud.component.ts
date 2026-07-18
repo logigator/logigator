@@ -8,6 +8,7 @@ import { createWorkModeTools } from '../../work-mode/work-mode-tools';
 import { MobileUiService } from '../../layout/mobile-ui.service';
 import { ProjectService } from '../../project/project.service';
 import { ProjectMetadataStore } from '../../persistence/project-metadata.store';
+import { OnboardTargetDirective } from '../../onboarding/onboard-target.directive';
 
 /**
  * Floating mode HUD for `isCompact`: one always-visible row with every tool
@@ -18,7 +19,7 @@ import { ProjectMetadataStore } from '../../persistence/project-metadata.store';
  */
 @Component({
   selector: 'app-tool-hud',
-  imports: [LgButton, TranslocoDirective],
+  imports: [LgButton, TranslocoDirective, OnboardTargetDirective],
   templateUrl: './tool-hud.component.html'
 })
 export class ToolHudComponent {

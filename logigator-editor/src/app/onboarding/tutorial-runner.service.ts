@@ -14,6 +14,7 @@ import { TranslationKey } from '../translation/translation-key.model';
 import { CoachMarkHandlers, CoachMarkView } from './coach-mark.model';
 import { OnboardingPlatform, OnboardingService } from './onboarding.service';
 import { OnboardingOverlayService } from './onboarding-overlay.service';
+import { OnboardingTargetRegistry } from './onboarding-target-registry.service';
 import {
   StepText,
   TutorialContext,
@@ -46,6 +47,7 @@ export class TutorialRunnerService {
   private readonly persistence = inject(PersistenceService);
   private readonly metadataStore = inject(ProjectMetadataStore);
   private readonly confirmationService = inject(ConfirmationService);
+  private readonly registry = inject(OnboardingTargetRegistry);
 
   private readonly mode$ = toObservable(this.workMode.mode);
 
@@ -302,9 +304,7 @@ export class TutorialRunnerService {
     step: TutorialStep,
     platform: OnboardingPlatform
   ): HTMLElement | null {
-    const selector = step.target?.[platform];
-    if (!selector) return null;
-    return document.querySelector<HTMLElement>(selector);
+    return this.registry.get(step.target?.[platform]);
   }
 
   private resolveText(

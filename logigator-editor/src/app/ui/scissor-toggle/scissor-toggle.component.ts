@@ -4,6 +4,7 @@ import { TranslocoDirective } from '@jsverse/transloco';
 import { WorkModeService } from '../../work-mode/work-mode.service';
 import { createScissorToggle } from '../../work-mode/work-mode-tools';
 import { ShortcutService } from '../../shortcuts/shortcut.service';
+import { OnboardTargetDirective } from '../../onboarding/onboard-target.directive';
 
 /**
  * Floating pill over the canvas hosting the select tool's scissor sub-toggle
@@ -13,7 +14,7 @@ import { ShortcutService } from '../../shortcuts/shortcut.service';
  */
 @Component({
   selector: 'app-scissor-toggle',
-  imports: [LgButton, LgTooltip, TranslocoDirective],
+  imports: [LgButton, LgTooltip, TranslocoDirective, OnboardTargetDirective],
   template: `
     @if (toggle.isVisible()) {
       <div
@@ -21,7 +22,7 @@ import { ShortcutService } from '../../shortcuts/shortcut.service';
         class="flex items-center rounded-full bg-content/95 px-1.5 py-1 shadow-lg backdrop-blur"
       >
         <lg-button
-          data-onboard="scissor-toggle"
+          appOnboardTarget="scissor-toggle"
           [icon]="toggle.icon"
           severity="secondary"
           rounded

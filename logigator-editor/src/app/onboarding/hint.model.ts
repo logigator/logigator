@@ -21,6 +21,7 @@ export interface Hint {
   readonly id: string;
   readonly trigger: HintTrigger;
   readonly text: StepText;
+  /** Onboarding target id of the anchor per platform; omit to float it. */
   readonly target?: Partial<Record<OnboardingPlatform, string>>;
   readonly platforms?: readonly OnboardingPlatform[];
   /** Suppress if this tutorial was already completed (it taught the same thing). */

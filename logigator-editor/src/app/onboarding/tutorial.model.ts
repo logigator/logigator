@@ -47,7 +47,7 @@ export interface TutorialStep {
   readonly text: StepText;
   /** Platforms this step applies to; omit for all. */
   readonly platforms?: readonly OnboardingPlatform[];
-  /** CSS selector of the anchor per platform; omit a platform to center there. */
+  /** Onboarding target id of the anchor per platform; omit a platform to center there. */
   readonly target?: Partial<Record<OnboardingPlatform, string>>;
   readonly placement?: CoachMarkPlacement;
   readonly advanceOn: AdvanceOn;

@@ -12,11 +12,11 @@ const SW = BuiltInComponentType.SWITCH;
 const AND = BuiltInComponentType.AND;
 const LED = BuiltInComponentType.LED;
 
-const paletteItem = (type: number): string =>
-  `[data-onboard="palette-item-${type}"]`;
-const TOOL_WIRE = '[data-onboard="tool-wire"]';
-const SIM_START = '[data-onboard="sim-start"]';
-const MOBILE_COMPONENTS = '[data-onboard="mobile-components"]';
+// Onboarding target ids (see OnboardingTargetRegistry / OnboardTargetDirective).
+const paletteItem = (type: number): string => `palette-item-${type}`;
+const TOOL_WIRE = 'tool-wire';
+const SIM_START = 'sim-start';
+const MOBILE_COMPONENTS = 'mobile-components';
 
 /**
  * The flagship first-run tutorial: build two Switches → AND → LED, run it, and
