@@ -19,10 +19,23 @@ const SIM_START = 'sim-start';
 const MOBILE_COMPONENTS = 'mobile-components';
 
 /**
+ * Compact palette targets: anchor the palette item while its sheet is open,
+ * else the Parts (+) button that opens the sheet — the sheet is detached from
+ * the DOM when closed, so the item id resolves to nothing and the fallback
+ * wins. On compact both live at the bottom of the screen, so these steps
+ * place their bubble on top.
+ */
+const compactPaletteTarget = (type: number): readonly string[] => [
+  paletteItem(type),
+  MOBILE_COMPONENTS
+];
+
+/**
  * The flagship first-run tutorial: build two Switches → AND → LED, run it, and
  * flip the switches to see the LED light. Authored for desktop and compact;
- * step ordering and detection follow `plans/onboarding.md`. Step 3 is
- * compact-only (desktop keeps the component list always visible).
+ * step ordering and detection follow `plans/onboarding.md`. The palette steps
+ * anchor to the component list on desktop and, on compact, to the palette item
+ * or the Parts (+) button that opens its sheet — whichever is on screen.
  */
 export const gettingStartedTutorial: TutorialDefinition = {
   id: 'getting-started',
@@ -47,15 +60,6 @@ export const gettingStartedTutorial: TutorialDefinition = {
       advanceOn: { kind: 'manual' }
     },
     {
-      id: 'openComponents',
-      title: 'onboarding.tutorials.gettingStarted.steps.openComponents.title',
-      text: 'onboarding.tutorials.gettingStarted.steps.openComponents.text',
-      platforms: ['compact'],
-      target: { compact: MOBILE_COMPONENTS },
-      placement: 'top',
-      advanceOn: { kind: 'manual' }
-    },
-    {
       id: 'placeAnd',
       title: 'onboarding.tutorials.gettingStarted.steps.placeAnd.title',
       text: {
@@ -64,7 +68,8 @@ export const gettingStartedTutorial: TutorialDefinition = {
         compact:
           'onboarding.tutorials.gettingStarted.steps.placeAnd.textCompact'
       },
-      target: { desktop: paletteItem(AND), compact: paletteItem(AND) },
+      target: { desktop: paletteItem(AND), compact: compactPaletteTarget(AND) },
+      placement: { compact: 'top' },
       advanceOn: {
         kind: 'action',
         predicate: (ctx) => placedSince(ctx, AND) >= 1
@@ -77,8 +82,14 @@ export const gettingStartedTutorial: TutorialDefinition = {
     {
       id: 'addSwitches',
       title: 'onboarding.tutorials.gettingStarted.steps.addSwitches.title',
-      text: 'onboarding.tutorials.gettingStarted.steps.addSwitches.text',
-      target: { desktop: paletteItem(SW), compact: paletteItem(SW) },
+      text: {
+        desktop:
+          'onboarding.tutorials.gettingStarted.steps.addSwitches.textDesktop',
+        compact:
+          'onboarding.tutorials.gettingStarted.steps.addSwitches.textCompact'
+      },
+      target: { desktop: paletteItem(SW), compact: compactPaletteTarget(SW) },
+      placement: { compact: 'top' },
       advanceOn: {
         kind: 'action',
         predicate: (ctx) => placedSince(ctx, SW) >= 2
@@ -88,8 +99,12 @@ export const gettingStartedTutorial: TutorialDefinition = {
     {
       id: 'addLed',
       title: 'onboarding.tutorials.gettingStarted.steps.addLed.title',
-      text: 'onboarding.tutorials.gettingStarted.steps.addLed.text',
-      target: { desktop: paletteItem(LED), compact: paletteItem(LED) },
+      text: {
+        desktop: 'onboarding.tutorials.gettingStarted.steps.addLed.textDesktop',
+        compact: 'onboarding.tutorials.gettingStarted.steps.addLed.textCompact'
+      },
+      target: { desktop: paletteItem(LED), compact: compactPaletteTarget(LED) },
+      placement: { compact: 'top' },
       advanceOn: {
         kind: 'action',
         predicate: (ctx) => placedSince(ctx, LED) >= 1
@@ -100,6 +115,7 @@ export const gettingStartedTutorial: TutorialDefinition = {
       title: 'onboarding.tutorials.gettingStarted.steps.wireUp.title',
       text: 'onboarding.tutorials.gettingStarted.steps.wireUp.text',
       target: { desktop: TOOL_WIRE, compact: TOOL_WIRE },
+      placement: { compact: 'top' },
       advanceOn: {
         kind: 'action',
         predicate: (ctx) => netComplete(ctx.project)

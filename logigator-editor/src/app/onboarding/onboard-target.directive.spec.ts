@@ -8,7 +8,7 @@ import { OnboardingTargetRegistry } from './onboarding-target-registry.service';
 @Component({
   imports: [OnboardTargetDirective],
   template: `@if (show()) {
-    <button [appOnboardTarget]="id()"></button>
+    <button [appOnboardTarget]="id()">Wire</button>
   }`
 })
 class HostComponent {

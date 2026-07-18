@@ -47,9 +47,21 @@ export interface TutorialStep {
   readonly text: StepText;
   /** Platforms this step applies to; omit for all. */
   readonly platforms?: readonly OnboardingPlatform[];
-  /** Onboarding target id of the anchor per platform; omit a platform to center there. */
-  readonly target?: Partial<Record<OnboardingPlatform, string>>;
-  readonly placement?: CoachMarkPlacement;
+  /**
+   * Onboarding target id of the anchor per platform; omit a platform to center
+   * there. A platform may list several candidate ids in priority order — the
+   * first one currently registered wins, so a step can follow an element that
+   * moves between hosts (e.g. compact: anchor the palette item while its sheet
+   * is open, else fall back to the button that opens the sheet).
+   */
+  readonly target?: Partial<
+    Record<OnboardingPlatform, string | readonly string[]>
+  >;
+  /** Bubble placement; a single side, or per-platform (the anchor can sit at
+   *  opposite screen edges across breakpoints). Omit to auto-pick per target. */
+  readonly placement?:
+    | CoachMarkPlacement
+    | Partial<Record<OnboardingPlatform, CoachMarkPlacement>>;
   readonly advanceOn: AdvanceOn;
   /** Interpolation params for `text` (e.g. a "1 of 2 placed" sub-count). */
   readonly params?: (ctx: TutorialContext) => Record<string, unknown>;

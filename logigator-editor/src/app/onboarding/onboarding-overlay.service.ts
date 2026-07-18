@@ -16,6 +16,9 @@ import { CoachMarkHandlers, CoachMarkView } from './coach-mark.model';
 import { CoachMarkComponent } from './coach-mark/coach-mark.component';
 import { CoachMarkBackdropComponent } from './coach-mark/coach-mark-backdrop.component';
 
+/** Upper bound on waiting for an anchor to stop moving before mounting. */
+const SETTLE_CAP_MS = 1000;
+
 /**
  * Imperatively shows the tutorial coach-mark: the dim/highlight backdrop plus
  * the step bubble, built on {@link LgOverlayService}. The bubble anchors to a
@@ -39,6 +42,8 @@ export class OnboardingOverlayService {
   private bubbleCmp: ComponentRef<CoachMarkComponent> | null = null;
 
   private target: HTMLElement | null = null;
+  /** The pending step view; the bubble is mounted from it once the anchor settles. */
+  private view: CoachMarkView | null = null;
   private handlers: CoachMarkHandlers | null = null;
   private subscriptions = new Subscription();
   private readonly trackRect = () => this.refreshRect();
@@ -48,6 +53,10 @@ export class OnboardingOverlayService {
    * grows the canvas. Keeps the punched-out hole aligned to the new rect.
    */
   private resizeObserver: ResizeObserver | null = null;
+  /** Handle for the "track until the target settles" rAF loop. */
+  private settleRaf: number | null = null;
+  /** One scroll-into-view attempt per shown target (guards a nudge loop). */
+  private scrolledIntoView = false;
 
   /**
    * Shows (or, if a coach-mark is already open on the same target and side,
@@ -63,8 +72,9 @@ export class OnboardingOverlayService {
       // Same anchor: refresh content without rebuilding the overlays, so a
       // mid-step text change ("1 of 2 placed") doesn't flicker.
       this.handlers = handlers;
+      this.view = view;
       this.bubbleCmp.setInput('view', view);
-      this.refreshRect();
+      this.trackUntilSettled();
       return;
     }
 
@@ -72,19 +82,92 @@ export class OnboardingOverlayService {
     this.hide();
     this.handlers = handlers;
     this.target = target;
+    this.view = view;
     this.mountBackdrop();
-    this.mountBubble(target, view);
-    this.refreshRect();
+    // The bubble is NOT mounted here — trackUntilSettled mounts it once the
+    // anchor's rect holds still. The CDK connected overlay must never position
+    // against a mid-animation origin (a palette item riding the Drawer's slide):
+    // an apply against a moving/off-screen origin can drop the pane into the
+    // flexible-dimensions fallback (`position: static`), a state later
+    // updatePosition() calls never recover from.
+    this.trackUntilSettled();
 
     window.addEventListener('scroll', this.trackRect, true);
     window.addEventListener('resize', this.trackRect);
+    // A later layout shift (a Drawer accordion expanding, moving the anchor)
+    // ends in a transition; re-measure so the coach-mark follows.
+    window.addEventListener('transitionend', this.trackRect, true);
     this.observeBoard();
+  }
+
+  /**
+   * Track the target each animation frame (the backdrop ring follows live via
+   * {@link refreshRect}) until its rect holds steady for a couple of frames or
+   * a safety cap expires, then mount the bubble on the settled anchor. A target
+   * that settles outside the viewport — a palette item below its sheet's fold —
+   * is scrolled into view first (once) so the bubble has a real on-screen
+   * anchor. A static target settles within a few frames, so the deferred mount
+   * is imperceptible.
+   */
+  private trackUntilSettled(): void {
+    if (this.settleRaf !== null) cancelAnimationFrame(this.settleRaf);
+    let lastKey = '';
+    let stableFrames = 0;
+    const start = performance.now();
+    const step = (): void => {
+      this.refreshRect();
+      const rect = this.target?.getBoundingClientRect() ?? null;
+      const key = rect
+        ? `${rect.top},${rect.left},${rect.width},${rect.height}`
+        : '';
+      if (key === lastKey) stableFrames++;
+      else {
+        stableFrames = 0;
+        lastKey = key;
+      }
+      const settled =
+        stableFrames >= 2 || performance.now() - start > SETTLE_CAP_MS;
+      if (!settled) {
+        this.settleRaf = requestAnimationFrame(step);
+        return;
+      }
+      if (rect && rect.width > 0 && !this.scrolledIntoView) {
+        const clipped =
+          rect.top < 0 ||
+          rect.left < 0 ||
+          rect.bottom > window.innerHeight ||
+          rect.right > window.innerWidth;
+        if (clipped) {
+          this.scrolledIntoView = true;
+          this.target?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+          lastKey = '';
+          stableFrames = 0;
+          this.settleRaf = requestAnimationFrame(step);
+          return;
+        }
+      }
+      this.settleRaf = null;
+      this.mountPendingBubble();
+    };
+    step();
+  }
+
+  /** Mount the bubble for the pending view, if not already up. */
+  private mountPendingBubble(): void {
+    if (this.bubbleCmp || !this.view) return;
+    this.mountBubble(this.target, this.view);
+    this.refreshRect();
   }
 
   /** Tears down the coach-mark entirely. */
   public hide(): void {
     window.removeEventListener('scroll', this.trackRect, true);
     window.removeEventListener('resize', this.trackRect);
+    window.removeEventListener('transitionend', this.trackRect, true);
+    if (this.settleRaf !== null) {
+      cancelAnimationFrame(this.settleRaf);
+      this.settleRaf = null;
+    }
     this.resizeObserver?.disconnect();
     this.resizeObserver = null;
     this.subscriptions.unsubscribe();
@@ -97,7 +180,9 @@ export class OnboardingOverlayService {
     this.backdropRef = null;
     this.backdropCmp = null;
     this.target = null;
+    this.view = null;
     this.handlers = null;
+    this.scrolledIntoView = false;
   }
 
   private mountBackdrop(): void {

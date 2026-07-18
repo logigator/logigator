@@ -834,26 +834,28 @@ const en = {
             textDesktop: 'Scroll to zoom, right-drag to pan.',
             textCompact: 'Pinch to zoom, drag with two fingers to pan.'
           },
-          openComponents: {
-            title: 'Open the components',
-            text: 'Tap here to open your building blocks.'
-          },
           placeAnd: {
             title: 'Place an AND gate',
             textDesktop:
               'Find <strong>AND</strong> in the component list on the left, then click the canvas to drop it.',
             textCompact:
-              'Pick <strong>AND</strong> from the sheet, then tap the canvas to drop it.',
+              'Tap <strong>+</strong> to open your building blocks, pick <strong>AND</strong>, then tap the canvas to drop it.',
             nudge:
               'That is not an AND gate — pick <strong>AND</strong> for this one (you can remove parts with the eraser).'
           },
           addSwitches: {
             title: 'Add two switches',
-            text: 'Now place two <strong>switch</strong> inputs to the left of the gate. ({{placed}} of {{total}} placed)'
+            textDesktop:
+              'Now place two <strong>switch</strong> inputs to the left of the gate. ({{placed}} of {{total}} placed)',
+            textCompact:
+              'Tap <strong>+</strong>, pick a <strong>switch</strong>, then tap the canvas — place two to the left of the gate. ({{placed}} of {{total}} placed)'
           },
           addLed: {
             title: 'Add an LED',
-            text: "Place one <strong>LED</strong> to the right — that's your output."
+            textDesktop:
+              "Place one <strong>LED</strong> to the right — that's your output.",
+            textCompact:
+              "Tap <strong>+</strong>, pick the <strong>LED</strong>, then tap to the right of the gate — that's your output."
           },
           wireUp: {
             title: 'Wire it up',

@@ -1,4 +1,12 @@
-import { effect, inject, Injectable, signal, untracked } from '@angular/core';
+import {
+  afterNextRender,
+  effect,
+  inject,
+  Injectable,
+  Injector,
+  signal,
+  untracked
+} from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { Subscription } from 'rxjs';
 import { ConfirmationService } from '@logigator/ui';
@@ -12,6 +20,7 @@ import { TranslationService } from '../translation/translation.service';
 import { LoggingService } from '../logging/logging.service';
 import { TranslationKey } from '../translation/translation-key.model';
 import { CoachMarkHandlers, CoachMarkView } from './coach-mark.model';
+import { MobileUiService } from '../layout/mobile-ui.service';
 import { OnboardingPlatform, OnboardingService } from './onboarding.service';
 import { OnboardingOverlayService } from './onboarding-overlay.service';
 import { OnboardingTargetRegistry } from './onboarding-target-registry.service';
@@ -48,6 +57,8 @@ export class TutorialRunnerService {
   private readonly metadataStore = inject(ProjectMetadataStore);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly registry = inject(OnboardingTargetRegistry);
+  private readonly mobileUi = inject(MobileUiService);
+  private readonly injector = inject(Injector);
 
   private readonly mode$ = toObservable(this.workMode.mode);
 
@@ -76,10 +87,20 @@ export class TutorialRunnerService {
     // flip (no sub-count reset), since only the presentation changes here.
     effect(() => {
       const step = this.currentStep();
-      const platform = this.onboarding.platform();
       if (!step) return;
-      this.registry.get(step.target?.[platform]); // track the target element
-      untracked(() => this.showStep(step));
+      const platform = this.onboarding.platform();
+      // A compact palette target lives inside a Drawer that only attaches its
+      // content while open, so the element flips between attached and detached
+      // without the registry map (keyed on element identity) changing. Track the
+      // open sheet so a toggle re-runs this effect; see resolveTarget's
+      // connected-element filter.
+      this.mobileUi.activeSheet();
+      this.resolveTarget(step, platform); // track the target element(s)
+      // Anchor after the render settles, not inline: opening the sheet attaches
+      // the palette item only when the Drawer stamps its template — later in the
+      // same cycle than this effect — so an inline measure would resolve to the
+      // sheet opener and never re-anchor once the item connects.
+      afterNextRender(() => this.showStep(step), { injector: this.injector });
     });
   }
 
@@ -294,8 +315,21 @@ export class TutorialRunnerService {
       totalSteps: this.steps.length,
       showNext: step.advanceOn.kind === 'manual',
       isFinal: this.index === this.steps.length - 1,
-      placement: step.placement ?? (target ? 'bottom' : 'center')
+      placement: this.resolvePlacement(step, platform, target)
     };
+  }
+
+  /** The step's placement for `platform`, defaulting per whether it anchors. */
+  private resolvePlacement(
+    step: TutorialStep,
+    platform: OnboardingPlatform,
+    target: HTMLElement | null
+  ): CoachMarkView['placement'] {
+    const placement =
+      typeof step.placement === 'string'
+        ? step.placement
+        : step.placement?.[platform];
+    return placement ?? (target ? 'bottom' : 'center');
   }
 
   private handlers(): CoachMarkHandlers {
@@ -305,11 +339,25 @@ export class TutorialRunnerService {
     };
   }
 
+  /**
+   * First live element among the platform's target candidates. Reads the
+   * registry for every candidate (a reactive read, so the anchoring effect
+   * re-runs when any of them registers or unregisters) and returns the
+   * highest-priority one that is currently attached to the document. A
+   * registered element can be detached without unregistering — e.g. a palette
+   * item whose Drawer is closed keeps its projected-content registration but is
+   * not in the DOM — so `isConnected` skips those and lets a lower-priority
+   * candidate (the button that opens the sheet) win.
+   */
   private resolveTarget(
     step: TutorialStep,
     platform: OnboardingPlatform
   ): HTMLElement | null {
-    return this.registry.get(step.target?.[platform]);
+    const candidates = step.target?.[platform];
+    const ids =
+      typeof candidates === 'string' ? [candidates] : (candidates ?? []);
+    const elements = ids.map((id) => this.registry.get(id));
+    return elements.find((element) => element?.isConnected) ?? null;
   }
 
   private resolveText(

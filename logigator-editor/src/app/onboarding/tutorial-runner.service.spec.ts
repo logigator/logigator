@@ -11,6 +11,7 @@ import { ProjectService } from '../project/project.service';
 import { PersistenceService } from '../persistence/persistence.service';
 import { ProjectMetadataStore } from '../persistence/project-metadata.store';
 import { SimulationService } from '../simulation/simulation.service';
+import { MobileUiService } from '../layout/mobile-ui.service';
 import { OnboardingService } from './onboarding.service';
 import { OnboardingOverlayService } from './onboarding-overlay.service';
 import { OnboardingTargetRegistry } from './onboarding-target-registry.service';
@@ -36,7 +37,7 @@ const TEST_TUTORIAL: TutorialDefinition = {
     {
       id: 'b',
       title: 'onboarding.tutorials.gettingStarted.steps.addSwitches.title',
-      text: 'onboarding.tutorials.gettingStarted.steps.addLed.text',
+      text: 'onboarding.tutorials.gettingStarted.steps.addLed.textDesktop',
       advanceOn: {
         kind: 'action',
         predicate: (ctx) => placedSince(ctx, SW) >= 1
@@ -194,14 +195,63 @@ describe('TutorialRunnerService', () => {
     // Target not registered yet → shown without an anchor.
     expect(show.mock.calls.at(-1)![0]).toBeNull();
 
+    // Attached to the document: only a connected element resolves as an anchor.
     const el = document.createElement('div');
+    document.body.appendChild(el);
     TestBed.inject(OnboardingTargetRegistry).register('anchor-x', el);
     tick();
     // The effect re-runs on the registry change and re-anchors.
     expect(show.mock.calls.at(-1)![0]).toBe(el);
 
     onboarding.skipCurrent();
+    el.remove();
     delete (TUTORIALS as Record<string, TutorialDefinition>)['targeted'];
+  });
+
+  it('anchors to the first connected candidate, skipping a detached one', () => {
+    const candidates: TutorialDefinition = {
+      id: 'candidates',
+      steps: [
+        {
+          id: 'c',
+          title: 'onboarding.tutorials.gettingStarted.steps.welcome.title',
+          text: 'onboarding.tutorials.gettingStarted.steps.welcome.text',
+          target: {
+            desktop: ['primary', 'fallback'],
+            compact: ['primary', 'fallback']
+          },
+          advanceOn: { kind: 'manual' }
+        }
+      ]
+    };
+    (TUTORIALS as Record<string, TutorialDefinition>)['candidates'] =
+      candidates;
+
+    // A registered-but-detached top candidate (a closed sheet's palette item)
+    // and a connected fallback (the button that opens it).
+    const detached = document.createElement('div');
+    const fallback = document.createElement('div');
+    document.body.appendChild(fallback);
+    const reg = TestBed.inject(OnboardingTargetRegistry);
+    reg.register('primary', detached);
+    reg.register('fallback', fallback);
+
+    onboarding.startTutorial('candidates');
+    tick();
+    // The detached primary is skipped; the connected fallback wins.
+    expect(show.mock.calls.at(-1)![0]).toBe(fallback);
+
+    // The primary attaches without re-registering (a sheet opening its
+    // already-registered, projected content); a sheet toggle re-anchors it.
+    document.body.appendChild(detached);
+    TestBed.inject(MobileUiService).open('palette');
+    tick();
+    expect(show.mock.calls.at(-1)![0]).toBe(detached);
+
+    onboarding.skipCurrent();
+    detached.remove();
+    fallback.remove();
+    delete (TUTORIALS as Record<string, TutorialDefinition>)['candidates'];
   });
 
   describe('launch', () => {

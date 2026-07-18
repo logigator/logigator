@@ -25,6 +25,15 @@ function tick(): void {
   TestBed.inject(ApplicationRef).tick();
 }
 
+/** Wait out the settle frames after which show() mounts the bubble. */
+function settled(): Promise<void> {
+  return new Promise((resolve) =>
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+    )
+  );
+}
+
 describe('OnboardingOverlayService', () => {
   let service: OnboardingOverlayService;
   let handlers: CoachMarkHandlers;
@@ -48,20 +57,24 @@ describe('OnboardingOverlayService', () => {
     target.remove();
   });
 
-  it('renders the bubble and dim, and tears both down on hide', () => {
+  it('renders the bubble and dim, and tears both down on hide', async () => {
     service.show(target, VIEW, handlers);
     tick();
-    expect(container()?.textContent).toContain('Place an AND gate');
+    // The dim is up immediately; the bubble mounts once the anchor settles.
     expect(
       container()?.querySelector('app-coach-mark-backdrop')
     ).not.toBeNull();
+    await settled();
+    tick();
+    expect(container()?.textContent).toContain('Place an AND gate');
 
     service.hide();
     expect(container()?.textContent ?? '').not.toContain('Place an AND gate');
   });
 
-  it('leaves Escape to the board and does not skip on it', () => {
+  it('leaves Escape to the board and does not skip on it', async () => {
     service.show(target, VIEW, handlers);
+    await settled();
     tick();
     document.body.dispatchEvent(
       new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })
@@ -69,8 +82,9 @@ describe('OnboardingOverlayService', () => {
     expect(handlers.skip).not.toHaveBeenCalled();
   });
 
-  it('refreshes content in place when the target is unchanged', () => {
+  it('refreshes content in place when the target is unchanged', async () => {
     service.show(target, VIEW, handlers);
+    await settled();
     tick();
     service.show(target, { ...VIEW, title: 'Add two Switches' }, handlers);
     tick();
