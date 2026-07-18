@@ -28,6 +28,12 @@
         [project]="projectService.activeProject()"
         (cursorPositionChange)="cursorPosition.set($event)"
       ></app-board>
+      @if (!isSimulation()) {
+        <!-- Soft discovery nudge, centered near the top of the empty canvas. -->
+        <app-onboarding-nudge
+          class="absolute top-6 left-1/2 -translate-x-1/2 z-canvas-overlay"
+        />
+      }
       @if (!layout.isCompact()) {
         <!-- Inspection windows float over the board (window band), above the
              docked canvas overlays and below the cdk overlays + toasts. -->

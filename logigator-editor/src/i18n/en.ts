@@ -794,6 +794,11 @@ const en = {
       startTutorial: 'Start tutorial',
       showTipsAgain: 'Show tips again'
     },
+    nudge: {
+      text: 'New here? Build your first circuit in a quick tutorial.',
+      start: 'Start tutorial',
+      dismiss: 'Dismiss'
+    },
     toast: {
       tipsReset: 'Onboarding tips are back on.'
     },

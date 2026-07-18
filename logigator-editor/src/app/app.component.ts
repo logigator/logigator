@@ -63,6 +63,7 @@ import { ChangelogService } from './changelog/changelog.service';
 import { OnboardingService } from './onboarding/onboarding.service';
 import { TutorialRunnerService } from './onboarding/tutorial-runner.service';
 import { HintService } from './onboarding/hint.service';
+import { OnboardingNudgeComponent } from './onboarding/onboarding-nudge.component';
 
 @Component({
   selector: 'app-root',
@@ -93,7 +94,8 @@ import { HintService } from './onboarding/hint.service';
     ComponentListComponent,
     PortsPanelComponent,
     MobileProjectMenuComponent,
-    UserSettingsPanelComponent
+    UserSettingsPanelComponent,
+    OnboardingNudgeComponent
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
