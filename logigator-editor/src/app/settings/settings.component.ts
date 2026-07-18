@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { LgToggleSwitch } from '@logigator/ui';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { EditorSettingsService } from './editor-settings.service';
+import { OnboardingService } from '../onboarding/onboarding.service';
 
 /** Renders an on/off toggle for every setting in `EditorSettingsService`. */
 @Component({
@@ -12,4 +13,5 @@ import { EditorSettingsService } from './editor-settings.service';
 })
 export class SettingsComponent {
   protected readonly editorSettings = inject(EditorSettingsService);
+  protected readonly onboarding = inject(OnboardingService);
 }

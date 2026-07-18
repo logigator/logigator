@@ -20,6 +20,7 @@ import { ExportImageDialogComponent } from './dialogs/export-image-dialog/export
 import { ShareDialogComponent } from './dialogs/share-dialog/share-dialog.component';
 import { AboutDialogComponent } from './dialogs/about-dialog/about-dialog.component';
 import { ChangelogService } from '../changelog/changelog.service';
+import { OnboardingService } from '../onboarding/onboarding.service';
 import { DebugMenuService } from './debug-menu.service';
 import { ToastService } from '../logging/toast.service';
 
@@ -37,6 +38,7 @@ export class EditorMenuService {
   private readonly projectMetadataStore = inject(ProjectMetadataStore);
   private readonly dialogService = inject(DialogService);
   private readonly changelogService = inject(ChangelogService);
+  private readonly onboardingService = inject(OnboardingService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly clipboardService = inject(ClipboardService);
   private readonly shortcutService = inject(ShortcutService);
@@ -185,7 +187,11 @@ export class EditorMenuService {
       },
       {
         label: this.translation.translate('titleBar.menuBar.help.label'),
-        items: [this.changelogItem(), this.aboutItem()]
+        items: [
+          this.changelogItem(),
+          this.showTipsAgainItem(),
+          this.aboutItem()
+        ]
       }
     ];
 
@@ -208,6 +214,7 @@ export class EditorMenuService {
       this.generateImageItem(),
       { separator: true },
       this.changelogItem(),
+      this.showTipsAgainItem(),
       this.aboutItem()
     ];
 
@@ -363,6 +370,22 @@ export class EditorMenuService {
 
   private openChangelog(): void {
     this.changelogService.open();
+  }
+
+  private showTipsAgainItem(): MenuItem {
+    return {
+      label: this.translation.translate('onboarding.menu.showTipsAgain'),
+      icon: 'ph ph-lightbulb',
+      command: () => this.showTipsAgain()
+    };
+  }
+
+  private showTipsAgain(): void {
+    this.onboardingService.showTipsAgain();
+    this.toastService.info(
+      this.translation.translate('onboarding.toast.tipsReset'),
+      'EditorMenuService'
+    );
   }
 
   /**

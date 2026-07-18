@@ -785,6 +785,18 @@ const en = {
       loadFailed:
         'Could not load configured shortcuts, falling back to defaults.'
     }
+  },
+  onboarding: {
+    settings: {
+      showTips: 'Show onboarding tips'
+    },
+    menu: {
+      startTutorial: 'Start tutorial',
+      showTipsAgain: 'Show tips again'
+    },
+    toast: {
+      tipsReset: 'Onboarding tips are back on.'
+    }
   }
 };
 

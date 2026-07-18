@@ -12,4 +12,16 @@
       />
     </div>
   }
+
+  <div class="flex items-center justify-between gap-4">
+    <label for="setting-onboarding-tips" class="text-sm">{{
+      t('onboarding.settings.showTips')
+    }}</label>
+    <lg-toggle-switch
+      inputId="setting-onboarding-tips"
+      [ngModel]="onboarding.tipsEnabled()"
+      (ngModelChange)="onboarding.setTipsEnabled($event)"
+      [ngModelOptions]="{ standalone: true }"
+    />
+  </div>
 </div>
