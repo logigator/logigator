@@ -62,6 +62,7 @@ import { SessionLifecycleService } from './user/session-lifecycle.service';
 import { ChangelogService } from './changelog/changelog.service';
 import { OnboardingService } from './onboarding/onboarding.service';
 import { TutorialRunnerService } from './onboarding/tutorial-runner.service';
+import { HintService } from './onboarding/hint.service';
 
 @Component({
   selector: 'app-root',
@@ -126,6 +127,8 @@ export class AppComponent {
   // Injected for its side effects: the runtime driver reacts to the active
   // tutorial signal, so it must live from startup to catch first-run auto-start.
   private readonly tutorialRunner = inject(TutorialRunnerService);
+  // Injected for its side effects: subscribes to hint triggers from startup.
+  private readonly hintService = inject(HintService);
   private readonly title = inject(Title);
 
   protected readonly cursorPosition = signal<Point>(new Point(0, 0));

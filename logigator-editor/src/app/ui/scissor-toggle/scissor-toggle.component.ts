@@ -21,6 +21,7 @@ import { ShortcutService } from '../../shortcuts/shortcut.service';
         class="flex items-center rounded-full bg-content/95 px-1.5 py-1 shadow-lg backdrop-blur"
       >
         <lg-button
+          data-onboard="scissor-toggle"
           [icon]="toggle.icon"
           severity="secondary"
           rounded

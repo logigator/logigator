@@ -802,6 +802,20 @@ const en = {
       skip: 'Skip tutorial',
       turnOff: 'Turn off all tips'
     },
+    hints: {
+      dismiss: 'Dismiss',
+      wireTapActions:
+        'Drag to draw wires. <strong>Tap a port</strong> to add or remove a negation bubble, or tap a crossing to connect or split wires.',
+      scissorSelectDesktop:
+        'Scissor select cuts wires at the box edge. Hold <strong>Alt</strong> to toggle it while box-selecting.',
+      scissorSelectCompact: 'Scissor select cuts wires at the box edge.',
+      eraser: 'Drag across anything to delete it.',
+      simControls:
+        'Editing is locked while running. Use these to pause, step, and set the speed — buttons and switches stay clickable.',
+      inspect:
+        'You can inspect this while it runs — open it to watch its internals live.',
+      panZoomCompact: 'Drag with one finger to pan, pinch to zoom.'
+    },
     tutorials: {
       gettingStarted: {
         complete:
