@@ -85,26 +85,20 @@ export class ChangelogService {
    * acknowledged silently so the dialog never greets a genuinely new user — with
    * one exception: a user arriving from the old editor is shown the changelog so
    * they learn what changed in the rebuild.
-   *
-   * Returns whether the dialog was opened, so callers that greet the user on
-   * init (onboarding auto-start) can sequence behind it and avoid double-modal.
    */
-  public maybeAutoOpen(): boolean {
+  public maybeAutoOpen(): void {
     const seen = this.lastSeenVersion();
     if (seen === null) {
-      const returning = this.isReturningLegacyUser();
-      if (returning) {
+      if (this.isReturningLegacyUser()) {
         this.open();
       }
       this.acknowledge();
-      return returning;
+      return;
     }
     if (this.isNewer(environment.version, seen)) {
       this.open();
       this.acknowledge();
-      return true;
     }
-    return false;
   }
 
   /** Whether `a` is a strictly newer semver than `b`. */
@@ -142,7 +136,7 @@ export class ChangelogService {
    * legacy editor leaves behind (see {@link LEGACY_COOKIES}). A returning user
    * is shown the changelog on their first load of the rebuilt editor.
    */
-  public isReturningLegacyUser(): boolean {
+  private isReturningLegacyUser(): boolean {
     return LEGACY_COOKIES.some((name) => this.cookieService.get(name) !== null);
   }
 }

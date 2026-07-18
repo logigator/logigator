@@ -1,5 +1,4 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { ChangelogService } from '../changelog/changelog.service';
 import { LayoutService } from '../layout/layout.service';
 import { LoggingService } from '../logging/logging.service';
 
@@ -16,6 +15,7 @@ export const GETTING_STARTED_TUTORIAL = 'getting-started';
 const TIPS_ENABLED_KEY = 'onboarding.tips-enabled';
 const COMPLETED_TUTORIALS_KEY = 'onboarding.completed-tutorials';
 const SEEN_HINTS_KEY = 'onboarding.seen-hints';
+const NUDGE_DISMISSED_KEY = 'onboarding.nudge-dismissed';
 
 /**
  * Single orchestrator and persistence gate for the whole onboarding surface —
@@ -30,12 +30,21 @@ const SEEN_HINTS_KEY = 'onboarding.seen-hints';
 @Injectable({ providedIn: 'root' })
 export class OnboardingService {
   private readonly layout = inject(LayoutService);
-  private readonly changelog = inject(ChangelogService);
   private readonly logging = inject(LoggingService);
 
   private readonly _tipsEnabled = signal(this.loadBool(TIPS_ENABLED_KEY, true));
   /** Master switch: false silences every tutorial and hint. */
   public readonly tipsEnabled = computed(this._tipsEnabled);
+
+  private readonly _nudgeDismissed = signal(
+    this.loadBool(NUDGE_DISMISSED_KEY, false)
+  );
+  /**
+   * Whether the first-run "take the tutorial" nudge has been dismissed. The
+   * nudge is the only launch path (there is no auto-start): it shows once for a
+   * new user and, once dismissed or once the tutorial starts, never returns.
+   */
+  public readonly nudgeDismissed = computed(this._nudgeDismissed);
 
   private readonly _activeTutorial = signal<string | null>(null);
   /** Id of the tutorial currently running, or null. The runner reacts to this. */
@@ -74,13 +83,15 @@ export class OnboardingService {
   }
 
   /**
-   * Re-enables tips and forgets which hints have been seen, so the JIT hints
-   * surface again on their next trigger. Completed tutorials are left intact —
-   * those are re-run explicitly from the Help menu.
+   * Re-enables tips, forgets which hints have been seen (so the JIT hints
+   * surface again on their next trigger), and restores the first-run tutorial
+   * nudge. Completed tutorials are left intact.
    */
   public showTipsAgain(): void {
     this._seenHints.clear();
     this.saveSet(SEEN_HINTS_KEY, this._seenHints);
+    this._nudgeDismissed.set(false);
+    this.saveBool(NUDGE_DISMISSED_KEY, false);
     this.setTipsEnabled(true);
   }
 
@@ -98,11 +109,22 @@ export class OnboardingService {
     this.saveSet(SEEN_HINTS_KEY, this._seenHints);
   }
 
-  /** Starts a tutorial regardless of completed state (manual Help-menu re-run). */
+  /** Starts a tutorial regardless of completed state. */
   public startTutorial(id: string): void {
     this._activeTutorial.set(id);
     this._currentStepIndex.set(0);
     this.logging.debug(`start tutorial ${id}`, 'OnboardingService');
+  }
+
+  public isNudgeDismissed(): boolean {
+    return this._nudgeDismissed();
+  }
+
+  /** Permanently hides the first-run nudge (dismissed, or the tutorial started). */
+  public dismissNudge(): void {
+    if (this._nudgeDismissed()) return;
+    this._nudgeDismissed.set(true);
+    this.saveBool(NUDGE_DISMISSED_KEY, true);
   }
 
   public setCurrentStepIndex(index: number): void {
@@ -131,24 +153,6 @@ export class OnboardingService {
       `end tutorial ${id} (completed=${completed})`,
       'OnboardingService'
     );
-  }
-
-  /**
-   * Starts the getting-started tutorial only for a genuinely new user: tips on,
-   * not already completed, not a returning legacy user, an empty board to build
-   * in, and the changelog dialog not opened this load (so the two never greet at
-   * once). Any failed gate is a silent no-op.
-   */
-  public maybeAutoStart(opts: {
-    changelogOpened: boolean;
-    projectEmpty: boolean;
-  }): void {
-    if (!this._tipsEnabled()) return;
-    if (opts.changelogOpened) return;
-    if (!opts.projectEmpty) return;
-    if (this.hasCompletedTutorial(GETTING_STARTED_TUTORIAL)) return;
-    if (this.changelog.isReturningLegacyUser()) return;
-    this.startTutorial(GETTING_STARTED_TUTORIAL);
   }
 
   private loadBool(key: string, fallback: boolean): boolean {

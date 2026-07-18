@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { configureTestBed } from '../../testing/configure-test-bed';
-import { ChangelogService } from '../changelog/changelog.service';
 import {
   GETTING_STARTED_TUTORIAL,
   OnboardingService
@@ -10,24 +9,17 @@ import {
 const KEYS = [
   'onboarding.tips-enabled',
   'onboarding.completed-tutorials',
-  'onboarding.seen-hints'
+  'onboarding.seen-hints',
+  'onboarding.nudge-dismissed'
 ];
 
 describe('OnboardingService', () => {
-  let returning: boolean;
-
   function makeService(): OnboardingService {
-    configureTestBed([
-      {
-        provide: ChangelogService,
-        useValue: { isReturningLegacyUser: () => returning }
-      }
-    ]);
+    configureTestBed();
     return TestBed.inject(OnboardingService);
   }
 
   beforeEach(() => {
-    returning = false;
     for (const key of KEYS) localStorage.removeItem(key);
   });
 
@@ -88,47 +80,21 @@ describe('OnboardingService', () => {
     expect(service.hasCompletedTutorial(GETTING_STARTED_TUTORIAL)).toBe(true);
   });
 
-  describe('maybeAutoStart', () => {
-    const ok = { changelogOpened: false, projectEmpty: true };
-
-    it('starts the getting-started tutorial for a genuinely new user', () => {
+  describe('nudge dismissal', () => {
+    it('defaults to shown and persists dismissal across instances', () => {
       const service = makeService();
-      service.maybeAutoStart(ok);
-      expect(service.activeTutorial()).toBe(GETTING_STARTED_TUTORIAL);
+      expect(service.isNudgeDismissed()).toBe(false);
+
+      service.dismissNudge();
+      TestBed.resetTestingModule();
+      expect(makeService().isNudgeDismissed()).toBe(true);
     });
 
-    it('does not start when the changelog dialog opened this load', () => {
+    it('is restored by showTipsAgain', () => {
       const service = makeService();
-      service.maybeAutoStart({ ...ok, changelogOpened: true });
-      expect(service.activeTutorial()).toBeNull();
-    });
-
-    it('does not start when there is a non-empty project to preserve', () => {
-      const service = makeService();
-      service.maybeAutoStart({ ...ok, projectEmpty: false });
-      expect(service.activeTutorial()).toBeNull();
-    });
-
-    it('does not start for a returning legacy user', () => {
-      returning = true;
-      const service = makeService();
-      service.maybeAutoStart(ok);
-      expect(service.activeTutorial()).toBeNull();
-    });
-
-    it('does not start once the tutorial has been completed', () => {
-      const service = makeService();
-      service.startTutorial(GETTING_STARTED_TUTORIAL);
-      service.endTutorial(true);
-      service.maybeAutoStart(ok);
-      expect(service.activeTutorial()).toBeNull();
-    });
-
-    it('does not start when tips are disabled', () => {
-      const service = makeService();
-      service.setTipsEnabled(false);
-      service.maybeAutoStart(ok);
-      expect(service.activeTutorial()).toBeNull();
+      service.dismissNudge();
+      service.showTipsAgain();
+      expect(service.isNudgeDismissed()).toBe(false);
     });
   });
 });
