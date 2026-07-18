@@ -12,6 +12,7 @@ import {
 } from '../../components/component-config.model';
 import { ProjectMetadataStore } from '../../persistence/project-metadata.store';
 import { ProjectService } from '../../project/project.service';
+import { SelectionInspectorService } from '../../project/selection-inspector.service';
 import { ShortcutService } from '../../shortcuts/shortcut.service';
 import { ShortcutActionEnum } from '../../shortcuts/shortcut-action.enum';
 
@@ -26,7 +27,10 @@ export class StatusBarComponent {
   private readonly translation = inject(TranslationService);
   private readonly metadataStore = inject(ProjectMetadataStore);
   private readonly projectService = inject(ProjectService);
+  private readonly selectionInspector = inject(SelectionInspectorService);
   private readonly shortcutService = inject(ShortcutService);
+
+  protected readonly selectionCount = this.selectionInspector.selectionCount;
 
   public readonly cursorPosition = input<Point>(new Point(0, 0));
 
