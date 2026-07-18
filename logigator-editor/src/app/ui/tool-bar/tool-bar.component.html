@@ -156,6 +156,7 @@
     <div class="flex flex-wrap gap-1">
       @for (tool of tools; track tool.id) {
         <lg-button
+          [attr.data-onboard]="'tool-' + tool.id"
           [lgTooltip]="t(tool.labelKey)"
           [tooltipShortcut]="shortcutBinding(tool.shortcut)"
           [ariaLabel]="t(tool.labelKey)"
@@ -169,6 +170,7 @@
     </div>
     <div class="ml-auto flex flex-wrap gap-1">
       <lg-button
+        data-onboard="sim-start"
         [lgTooltip]="t('toolBar.startSim')"
         [tooltipShortcut]="shortcutBinding(actions.TOGGLE_SIMULATION)"
         [ariaLabel]="t('toolBar.startSim')"

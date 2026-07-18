@@ -801,6 +801,59 @@ const en = {
       next: 'Next',
       skip: 'Skip tutorial',
       turnOff: 'Turn off all tips'
+    },
+    tutorials: {
+      gettingStarted: {
+        complete:
+          'Nice — both switches on lights the LED. That is your AND gate working!',
+        steps: {
+          welcome: {
+            title: 'Welcome to Logigator',
+            text: "Let's build a working circuit in about a minute. You can skip anytime."
+          },
+          moveAround: {
+            title: 'Move around',
+            textDesktop: 'Scroll to zoom, right-drag to pan.',
+            textCompact: 'Pinch to zoom, drag with one finger to pan.'
+          },
+          openComponents: {
+            title: 'Open the components',
+            text: 'Tap here to open your building blocks.'
+          },
+          placeAnd: {
+            title: 'Place an AND gate',
+            textDesktop:
+              'Find <strong>AND</strong> in the component list on the left, then click the canvas to drop it.',
+            textCompact:
+              'Pick <strong>AND</strong> from the sheet, then tap the canvas to drop it.',
+            nudge:
+              'That is not an AND gate — pick <strong>AND</strong> for this one (you can remove parts with the eraser).'
+          },
+          addSwitches: {
+            title: 'Add two switches',
+            text: 'Now place two <strong>switch</strong> inputs to the left of the gate. ({{placed}} of {{total}} placed)'
+          },
+          addLed: {
+            title: 'Add an LED',
+            text: "Place one <strong>LED</strong> to the right — that's your output."
+          },
+          wireUp: {
+            title: 'Wire it up',
+            text: "Switch to the <strong>wire tool</strong> and drag from each switch to the gate's inputs, then from the gate's output to the LED."
+          },
+          startSim: {
+            title: 'Start the simulation',
+            text: 'Hit <strong>Start</strong> to power your circuit. Editing locks while it runs.'
+          },
+          flipSwitch: {
+            title: 'Flip a switch',
+            textDesktop:
+              'Click a switch to toggle it. Turn <strong>both</strong> on and watch the LED light up.',
+            textCompact:
+              'Tap a switch to toggle it. Turn <strong>both</strong> on and watch the LED light up.'
+          }
+        }
+      }
     }
   }
 };

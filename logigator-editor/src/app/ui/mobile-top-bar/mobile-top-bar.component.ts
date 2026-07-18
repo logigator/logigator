@@ -73,6 +73,7 @@ import { UserAvatarComponent } from '../user-settings/user-avatar.component';
           (onClick)="save()"
         ></lg-button>
         <lg-button
+          data-onboard="sim-start"
           icon="ph ph-play"
           severity="secondary"
           [ariaLabel]="t('toolBar.startSim')"

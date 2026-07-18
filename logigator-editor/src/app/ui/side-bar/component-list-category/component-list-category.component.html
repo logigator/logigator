@@ -3,6 +3,7 @@
     @let selected = selectedComponent() === comp.type;
     <button
       type="button"
+      [attr.data-onboard]="'palette-item-' + comp.type"
       class="relative w-full group flex flex-col items-center gap-1 rounded-md cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary"
       (click)="selectComponent(comp)"
     >

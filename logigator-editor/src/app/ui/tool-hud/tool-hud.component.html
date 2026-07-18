@@ -11,6 +11,7 @@
   >
     @for (tool of tools; track tool.id) {
       <lg-button
+        [attr.data-onboard]="'tool-' + tool.id"
         [icon]="tool.icon"
         severity="secondary"
         rounded
@@ -20,6 +21,7 @@
       ></lg-button>
     }
     <lg-button
+      data-onboard="mobile-components"
       icon="ph ph-plus"
       severity="secondary"
       rounded
