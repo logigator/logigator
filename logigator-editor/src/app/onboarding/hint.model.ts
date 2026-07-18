@@ -10,7 +10,9 @@ import { OnboardingPlatform } from './onboarding.service';
 export type HintTrigger =
   | { readonly kind: 'workMode'; readonly mode: WorkMode }
   | { readonly kind: 'inspect' }
-  | { readonly kind: 'compactEmpty' };
+  | { readonly kind: 'compactEmpty' }
+  | { readonly kind: 'select' }
+  | { readonly kind: 'paste' };
 
 /**
  * A just-in-time hint: shown once, the first time its trigger fires, as a small

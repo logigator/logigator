@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { ApplicationRef, signal } from '@angular/core';
+import { ApplicationRef, signal, WritableSignal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, Subject } from 'rxjs';
 import { TranslocoService } from '@jsverse/transloco';
 import { configureTestBed } from '../../testing/configure-test-bed';
 import { ProjectService } from '../project/project.service';
@@ -22,9 +22,23 @@ function isFloating(): boolean {
   return !!popover()?.closest('.cdk-global-overlay-wrapper');
 }
 
+/** A stand-in for the active project, exposing just the streams HintService taps. */
+function makeFakeProject() {
+  return {
+    componentCount: 0,
+    pasteRequest$: new Subject<unknown>(),
+    selectionManager: {
+      selectionChange$: new Subject<void>(),
+      selectedComponents: new Set<unknown>(),
+      selectedWires: new Set<unknown>()
+    }
+  };
+}
+
 describe('HintService', () => {
   let workMode: WorkModeService;
   let onboarding: OnboardingService;
+  let activeProject: WritableSignal<ReturnType<typeof makeFakeProject> | null>;
 
   const tick = () => TestBed.inject(ApplicationRef).tick();
   const enterWireTool = () => {
@@ -34,10 +48,11 @@ describe('HintService', () => {
 
   beforeEach(async () => {
     localStorage.clear();
+    activeProject = signal<ReturnType<typeof makeFakeProject> | null>(null);
     configureTestBed([
       {
         provide: ProjectService,
-        useValue: { mainProject: () => ({ componentCount: 0 }) }
+        useValue: { mainProject: () => ({ componentCount: 0 }), activeProject }
       },
       { provide: InspectionService, useValue: { open: signal(null) } }
     ]);
@@ -122,6 +137,36 @@ describe('HintService', () => {
 
     expect(isFloating()).toBe(false); // now anchored to the element
     wire.remove();
+  });
+
+  it('shows the selection hint only once two or more elements are selected', () => {
+    const project = makeFakeProject();
+    activeProject.set(project);
+    tick();
+
+    // A single-element selection is below the threshold — no hint yet.
+    project.selectionManager.selectedComponents.add({});
+    project.selectionManager.selectionChange$.next();
+    tick();
+    expect(popover()).toBeNull();
+
+    // A second element crosses the threshold.
+    project.selectionManager.selectedWires.add({});
+    project.selectionManager.selectionChange$.next();
+    tick();
+    expect(popover()).not.toBeNull();
+    expect(onboarding.hasSeenHint('selection-actions')).toBe(true);
+  });
+
+  it('shows the paste hint on the first paste', () => {
+    const project = makeFakeProject();
+    activeProject.set(project);
+    tick();
+
+    project.pasteRequest$.next({});
+    tick();
+    expect(popover()).not.toBeNull();
+    expect(onboarding.hasSeenHint('paste-placement')).toBe(true);
   });
 
   it('dismisses on Escape', () => {

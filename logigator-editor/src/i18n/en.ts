@@ -819,6 +819,12 @@ const en = {
         'Editing is locked while running. Use these to pause, step, and set the speed — buttons and switches stay clickable.',
       inspect:
         'You can inspect this while it runs — open it to watch its internals live.',
+      selectionActions:
+        'Rotate the selection with these buttons — or press <strong>R</strong> / <strong>Shift+R</strong>. Move it with the <strong>arrow keys</strong>.',
+      pastePlacementDesktop:
+        'The pasted items land as a ghost — drag them to a free spot and release to drop them, or press Esc to cancel.',
+      pastePlacementCompact:
+        'The pasted items land as a ghost — drag them to a free spot and lift to drop them, or tap away to cancel.',
       panZoomCompact:
         'Drag with two fingers to pan, pinch to zoom. One finger pans only in pan mode.'
     },

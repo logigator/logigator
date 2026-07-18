@@ -10,7 +10,7 @@ import {
 import { toObservable } from '@angular/core/rxjs-interop';
 import { ComponentPortal } from '@angular/cdk/portal';
 import { OverlayRef } from '@angular/cdk/overlay';
-import { Subscription } from 'rxjs';
+import { EMPTY, Subscription, switchMap } from 'rxjs';
 import {
   caretSideChanges,
   connectedPositions,
@@ -67,6 +67,9 @@ export class HintService {
   private readonly registry = inject(OnboardingTargetRegistry);
 
   private readonly mode$ = toObservable(this.workMode.mode);
+  private readonly activeProject$ = toObservable(
+    this.projectService.activeProject
+  );
 
   /** The showing hint, or null (at most one at a time). */
   private session: HintSession | null = null;
@@ -97,6 +100,24 @@ export class HintService {
         }
       });
     });
+
+    // First deliberate multi-element selection — teaches the rotate/move keys.
+    this.activeProject$
+      .pipe(
+        switchMap(
+          (project) => project?.selectionManager.selectionChange$ ?? EMPTY
+        )
+      )
+      .subscribe(() => {
+        if (this.selectionSize() >= 2) {
+          this.fire(hintForTrigger({ kind: 'select' }));
+        }
+      });
+
+    // First paste — the ghosts follow the cursor rather than dropping in place.
+    this.activeProject$
+      .pipe(switchMap((project) => project?.pasteRequest$ ?? EMPTY))
+      .subscribe(() => this.fire(hintForTrigger({ kind: 'paste' })));
   }
 
   private onMode(mode: WorkMode): void {
@@ -236,6 +257,12 @@ export class HintService {
   private isEmpty(): boolean {
     const project = this.projectService.mainProject();
     return !project || project.componentCount === 0;
+  }
+
+  private selectionSize(): number {
+    const selection = this.projectService.activeProject()?.selectionManager;
+    if (!selection) return 0;
+    return selection.selectedComponents.size + selection.selectedWires.size;
   }
 
   private resolveTarget(

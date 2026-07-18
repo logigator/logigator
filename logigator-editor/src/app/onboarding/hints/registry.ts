@@ -6,6 +6,7 @@ const wireTool = 'tool-wire';
 const scissorToggle = 'scissor-toggle';
 const eraseTool = 'tool-erase';
 const simControls = 'sim-controls';
+const selectionRotate = 'selection-rotate';
 
 /**
  * The Tier-1 just-in-time hints — the non-obvious behaviours the flagship
@@ -44,6 +45,23 @@ export const HINTS: readonly Hint[] = [
     id: 'inspect-component',
     trigger: { kind: 'inspect' },
     text: 'onboarding.hints.inspect'
+  },
+  {
+    id: 'selection-actions',
+    trigger: { kind: 'select' },
+    // The keyboard shortcuts are the payload; the buttons exist only on desktop
+    // and arrow-key move has no button at all, so this is desktop-only.
+    platforms: ['desktop'],
+    target: { desktop: selectionRotate },
+    text: 'onboarding.hints.selectionActions'
+  },
+  {
+    id: 'paste-placement',
+    trigger: { kind: 'paste' },
+    text: {
+      desktop: 'onboarding.hints.pastePlacementDesktop',
+      compact: 'onboarding.hints.pastePlacementCompact'
+    }
   },
   {
     id: 'pan-zoom-compact',
