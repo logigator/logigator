@@ -14,24 +14,34 @@ export class OnboardingTargetRegistry {
     new Map()
   );
 
-  /** Register (or replace) the element for `id`. Last registration wins. */
+  /**
+   * Register (or replace) the element for `id`. Last registration wins. Uses
+   * `update()` (a write, which never establishes a reactive dependency) so a
+   * caller inside an `effect` — e.g. {@link OnboardTargetDirective} — does not
+   * end up depending on the very signal it writes and looping forever.
+   */
   public register(id: string, element: HTMLElement): void {
-    const next = new Map(this._targets());
-    next.set(id, element);
-    this._targets.set(next);
+    this._targets.update((current) => {
+      const next = new Map(current);
+      next.set(id, element);
+      return next;
+    });
   }
 
   /**
    * Remove `id`'s entry, but only if it still points at `element`. During a
    * breakpoint flip the same id can briefly have two elements (e.g. the desktop
    * tool-bar and compact tool-hud copies of a tool button); the outgoing one
-   * must not clobber the incoming registration.
+   * must not clobber the incoming registration. Returning the same map when
+   * nothing matches is a no-op write (Object.is equal → no notification).
    */
   public unregister(id: string, element: HTMLElement): void {
-    if (this._targets().get(id) !== element) return;
-    const next = new Map(this._targets());
-    next.delete(id);
-    this._targets.set(next);
+    this._targets.update((current) => {
+      if (current.get(id) !== element) return current;
+      const next = new Map(current);
+      next.delete(id);
+      return next;
+    });
   }
 
   /**

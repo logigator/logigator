@@ -1,4 +1,11 @@
-import { Directive, ElementRef, effect, inject, input } from '@angular/core';
+import {
+  Directive,
+  ElementRef,
+  effect,
+  inject,
+  input,
+  untracked
+} from '@angular/core';
 import { OnboardingTargetRegistry } from './onboarding-target-registry.service';
 
 /**
@@ -21,7 +28,9 @@ export class OnboardTargetDirective {
     effect((onCleanup) => {
       const id = this.id();
       const element = this.host.nativeElement;
-      this.registry.register(id, element);
+      // Registry writes are side effects, not dependencies — keep them out of
+      // the effect's tracking so a write can never re-trigger this effect.
+      untracked(() => this.registry.register(id, element));
       onCleanup(() => this.registry.unregister(id, element));
     });
   }
