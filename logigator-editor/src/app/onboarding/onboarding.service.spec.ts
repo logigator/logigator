@@ -66,7 +66,7 @@ describe('OnboardingService', () => {
     expect(service.hasCompletedTutorial(GETTING_STARTED_TUTORIAL)).toBe(false);
   });
 
-  it('showTipsAgain re-enables tips and clears seen hints but not completions', () => {
+  it('showTipsAgain re-enables tips and clears seen hints and completions', () => {
     const service = makeService();
     service.startTutorial(GETTING_STARTED_TUTORIAL);
     service.endTutorial(true);
@@ -77,7 +77,7 @@ describe('OnboardingService', () => {
 
     expect(service.isTipsEnabled()).toBe(true);
     expect(service.hasSeenHint('eraser')).toBe(false);
-    expect(service.hasCompletedTutorial(GETTING_STARTED_TUTORIAL)).toBe(true);
+    expect(service.hasCompletedTutorial(GETTING_STARTED_TUTORIAL)).toBe(false);
   });
 
   describe('nudge dismissal', () => {

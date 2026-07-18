@@ -84,12 +84,15 @@ export class OnboardingService {
 
   /**
    * Re-enables tips, forgets which hints have been seen (so the JIT hints
-   * surface again on their next trigger), and restores the first-run tutorial
-   * nudge. Completed tutorials are left intact.
+   * surface again on their next trigger), clears completed tutorials (so they
+   * can be started again from the nudge), and restores the first-run tutorial
+   * nudge.
    */
   public showTipsAgain(): void {
     this._seenHints.clear();
     this.saveSet(SEEN_HINTS_KEY, this._seenHints);
+    this._completedTutorials.clear();
+    this.saveSet(COMPLETED_TUTORIALS_KEY, this._completedTutorials);
     this._nudgeDismissed.set(false);
     this.saveBool(NUDGE_DISMISSED_KEY, false);
     this.setTipsEnabled(true);
