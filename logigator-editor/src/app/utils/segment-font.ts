@@ -15,3 +15,22 @@ export const SEGMENT_FONT_CHARS: string[][] = [
   ['0', '9'],
   ['a', 'f']
 ];
+
+export interface SegmentFontMetrics {
+  /** Glyph advance in em — every baked glyph shares it (the faces are monospaced). */
+  advance: number;
+  /** Single-line readout height in em, tuned for subscript placement. */
+  lineHeight: number;
+}
+
+/**
+ * Arithmetic metrics for the segment faces (text-fit.ts pattern). Draw-time
+ * code must size readouts from these instead of measuring a BitmapText:
+ * components can draw before `AssetsService.init()` installs the atlases, and
+ * PixiJS measures an unknown bitmap-font family through a silently created
+ * fallback `DynamicBitmapFont` with entirely different metrics.
+ */
+export const SEGMENT_FONT_METRICS: Record<string, SegmentFontMetrics> = {
+  [SEGMENT_FONT_7]: { advance: 0.816, lineHeight: 1 },
+  [SEGMENT_FONT_14]: { advance: 0.816, lineHeight: 1 }
+};

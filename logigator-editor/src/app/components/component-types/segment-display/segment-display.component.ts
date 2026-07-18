@@ -2,7 +2,11 @@ import { BitmapText, Container, DestroyOptions } from 'pixi.js';
 import { Subject, takeUntil } from 'rxjs';
 import { Component } from '../../component';
 import { PX } from '../../../utils/grid';
-import { SEGMENT_FONT_7, SEGMENT_FONT_14 } from '../../../utils/segment-font';
+import {
+  SEGMENT_FONT_7,
+  SEGMENT_FONT_14,
+  SEGMENT_FONT_METRICS
+} from '../../../utils/segment-font';
 import {
   SegmentBase,
   segmentDisplayComponentConfig,
@@ -108,13 +112,15 @@ export class SegmentDisplayComponent extends Component<SegmentDisplayOptions> {
     this.addBody(this.bodyGridWidth, this.bodyGridHeight);
 
     const base = this.options.base.value;
+    const font = base === SegmentBase.HEX ? SEGMENT_FONT_14 : SEGMENT_FONT_7;
+    const text = this._formatValue();
 
     // Readout and base indicator share one container so the counter-rotation
     // keeps their arrangement intact across component rotations.
     const readout = new BitmapText({
-      text: this._formatValue(),
+      text,
       style: {
-        fontFamily: base === SegmentBase.HEX ? SEGMENT_FONT_14 : SEGMENT_FONT_7,
+        fontFamily: font,
         fontSize: READOUT_FONT_SIZE,
         // White base, themed via tint — see Component._drawSymbol.
         fill: 0xffffff
@@ -140,9 +146,15 @@ export class SegmentDisplayComponent extends Component<SegmentDisplayOptions> {
       readout.tint = fontTint;
       baseIndicator.tint = fontTint;
     });
+    // The readout extents are computed arithmetically (see
+    // SEGMENT_FONT_METRICS) — measuring the BitmapText here resolves through
+    // a fallback font when the component draws before the atlases install.
+    const metrics = SEGMENT_FONT_METRICS[font];
+    const readoutEm = READOUT_FONT_SIZE * PX;
     baseIndicator.position.set(
-      readout.width / 2 - (base !== SegmentBase.OCT ? 0.2 : 0),
-      readout.height / 2
+      (text.length * metrics.advance * readoutEm) / 2 -
+        (base !== SegmentBase.OCT ? 0.2 : 0),
+      (metrics.lineHeight * readoutEm) / 2
     );
 
     const display = new Container();
