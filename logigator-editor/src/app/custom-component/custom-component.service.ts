@@ -1,6 +1,8 @@
 import { inject, Injectable } from '@angular/core';
 import { Project } from '../project/project';
 import { ProjectService } from '../project/project.service';
+import { WorkModeService } from '../work-mode/work-mode.service';
+import { WorkMode } from '../work-mode/work-mode.enum';
 import { ProjectMetadataStore } from '../persistence/project-metadata.store';
 import { PersistenceService } from '../persistence/persistence.service';
 import { ComponentLibraryService } from './component-library.service';
@@ -45,6 +47,7 @@ export class CustomComponentService {
   private readonly registry = inject(CustomComponentRegistry);
   private readonly provider = inject(ComponentProviderService);
   private readonly projectService = inject(ProjectService);
+  private readonly workModeService = inject(WorkModeService);
   private readonly metadataStore = inject(ProjectMetadataStore);
   private readonly persistence = inject(PersistenceService);
   private readonly componentLibrary = inject(ComponentLibraryService);
@@ -173,6 +176,50 @@ export class CustomComponentService {
       'CustomComponentService'
     );
     await this.openComponentForEdit(masterId);
+  }
+
+  /**
+   * Deletes a custom component from the library. The persistent record is removed
+   * first (browser store, or the API for a cloud master — unpublishing it): if that
+   * fails the delete aborts with nothing changed, so it stays retryable. On success
+   * any open editor tab for the master is force-closed (its unsaved edits are moot —
+   * the component is going away), a placement armed for it is disarmed, and the
+   * master is dropped from the registry. Placed instances are frozen snapshots, so
+   * they keep rendering; they simply stop resolving to a master and read as embedded
+   * copies — across every open project, since the registry is session-wide. Their
+   * embedded provenance is unchanged, so no open project is marked dirty. No-op for
+   * a type id that is not a library master.
+   */
+  public async deleteComponent(masterTypeId: number): Promise<void> {
+    const def = this.registry.getDefinition(masterTypeId);
+    if (!def || def.kind !== 'master') return;
+
+    try {
+      await this.componentLibrary.deletePersistentMaster(def);
+    } catch {
+      this.toast.error(
+        this.translation.translate('deleteComponent.deleteFailed'),
+        'CustomComponentService'
+      );
+      return;
+    }
+
+    // Close the editor tab before dropping the def its binding writes into.
+    if (def.id !== undefined) {
+      const open = this._findOpenEditor(this.registry.currentIdForId(def.id));
+      if (open) this.forceCloseComponent(open);
+    }
+    // Disarm a placement still pointed at the master whose palette tile just
+    // vanished (the settings-panel delete acts on the placement ghost).
+    if (this.workModeService.selectedComponentType() === masterTypeId) {
+      this.workModeService.setMode(WorkMode.PAN);
+    }
+    this.registry.removeMaster(masterTypeId);
+
+    this.toast.success(
+      this.translation.translate('deleteComponent.deleted', { name: def.name }),
+      'CustomComponentService'
+    );
   }
 
   /** Adds the editor as a tab, focuses it, and attaches its definition binding. */

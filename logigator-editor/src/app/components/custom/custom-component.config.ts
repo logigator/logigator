@@ -8,6 +8,7 @@ import { EditComponentAction } from './actions/edit-component.component-action';
 import { UpdateInstanceComponentAction } from './actions/update-instance.component-action';
 import { UploadComponentAction } from './actions/upload-component.component-action';
 import { ShareComponentAction } from './actions/share-component.component-action';
+import { DeleteComponentAction } from './actions/delete-component.component-action';
 
 /**
  * Option set for every custom component instance. Unlike built-ins, a custom
@@ -57,15 +58,17 @@ export function buildCustomComponentConfig(
     },
     options: {},
     // Inspector actions rendered generically by the settings panel, each gating
-    // its own visibility. Edit and upload are config-scoped, so they surface on
-    // both a selected placed instance and a palette/ghost selection;
-    // update-to-latest hides itself unless a selected snapshot instance is behind
-    // its master.
+    // its own visibility. Edit, upload, share and delete are config-scoped, so
+    // they surface on both a selected placed instance and a palette/ghost
+    // selection (delete stays visible only while the master resolves — an
+    // orphaned instance has no library entry to remove); update-to-latest hides
+    // itself unless a selected snapshot instance is behind its master.
     actions: [
       new EditComponentAction(),
       new UpdateInstanceComponentAction(),
       new UploadComponentAction(),
-      new ShareComponentAction()
+      new ShareComponentAction(),
+      new DeleteComponentAction()
     ],
     // Tapping a placed instance during simulation opens a live watch of its
     // inner circuit.

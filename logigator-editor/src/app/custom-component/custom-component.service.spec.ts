@@ -1,9 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { DialogService } from '@logigator/ui';
 import { configureTestBed } from '../../testing/configure-test-bed';
 import { CustomComponentService } from './custom-component.service';
+import { WorkModeService } from '../work-mode/work-mode.service';
+import { WorkMode } from '../work-mode/work-mode.enum';
+import { ServerPersistenceGateway } from '../persistence/server/server-persistence.gateway';
 import { UploadCoordinatorService } from '../ui/upload/upload-coordinator.service';
 import { ProjectService } from '../project/project.service';
 import { ProjectMetadataStore } from '../persistence/project-metadata.store';
@@ -357,5 +360,90 @@ describe('CustomComponentService', () => {
       (c): c is CustomComponent => c instanceof CustomComponent
     )!;
     expect(restored.numInputs).toBe(1);
+  });
+
+  it('deleteComponent removes a browser master and its placed instance becomes an embedded orphan', async () => {
+    const masterTypeId = registry.createMaster(
+      { id: 'browser-x', name: 'X', symbol: 'X' },
+      'browser'
+    );
+    const instance = placeInstance(masterTypeId, main);
+    expect(registry.resolveMaster(instance.config.type)).toBeDefined();
+    const del = vi.spyOn(TestBed.inject(BrowserComponentStore), 'delete');
+
+    await service.deleteComponent(masterTypeId);
+
+    // Persistent record deleted, master gone from the registry + palette.
+    expect(del).toHaveBeenCalledWith('browser-x');
+    expect(registry.getDefinition(masterTypeId)).toBeUndefined();
+    expect(provider.getComponent(masterTypeId)).toBeUndefined();
+    // The placed instance survives, now an embedded orphan (no resolvable master).
+    expect(main.components).toContain(instance);
+    expect(registry.resolveMaster(instance.config.type)).toBeUndefined();
+  });
+
+  it('deleteComponent unpublishes a cloud master via the API', async () => {
+    const masterTypeId = registry.createMaster(
+      { id: 'srv-x', name: 'X', symbol: 'X' },
+      'server'
+    );
+    const del = vi
+      .spyOn(TestBed.inject(ServerPersistenceGateway), 'deleteComponent')
+      .mockReturnValue(of(undefined));
+
+    await service.deleteComponent(masterTypeId);
+
+    expect(del).toHaveBeenCalledWith('srv-x');
+    expect(registry.getDefinition(masterTypeId)).toBeUndefined();
+  });
+
+  it('deleteComponent closes the master editor tab', async () => {
+    const editor = await service.createComponent({
+      name: 'X',
+      symbol: 'X',
+      description: '',
+      source: 'browser'
+    });
+    const masterTypeId = masterTypeIdOf(editor);
+    expect(projectService.openComponents()).toContain(editor);
+
+    await service.deleteComponent(masterTypeId);
+
+    expect(projectService.openComponents()).not.toContain(editor);
+    expect(projectService.activeProject()).toBe(main);
+    expect(registry.getDefinition(masterTypeId)).toBeUndefined();
+  });
+
+  it('deleteComponent disarms a placement armed for the deleted master', async () => {
+    const masterTypeId = registry.createMaster(
+      { id: 'browser-x', name: 'X', symbol: 'X' },
+      'browser'
+    );
+    const workMode = TestBed.inject(WorkModeService);
+    workMode.setMode(WorkMode.COMPONENT_PLACEMENT);
+    workMode.setSelectedComponentType(masterTypeId);
+
+    await service.deleteComponent(masterTypeId);
+
+    expect(workMode.mode()).toBe(WorkMode.PAN);
+    expect(workMode.selectedComponentType()).toBeNull();
+  });
+
+  it('deleteComponent keeps everything intact when the persistent delete fails', async () => {
+    const masterTypeId = registry.createMaster(
+      { id: 'srv-x', name: 'X', symbol: 'X' },
+      'server'
+    );
+    const instance = placeInstance(masterTypeId, main);
+    vi.spyOn(
+      TestBed.inject(ServerPersistenceGateway),
+      'deleteComponent'
+    ).mockReturnValue(throwError(() => new Error('network')));
+
+    await service.deleteComponent(masterTypeId);
+
+    // Nothing removed: master still resolves, instance still linked (retryable).
+    expect(registry.getDefinition(masterTypeId)).toBeDefined();
+    expect(registry.resolveMaster(instance.config.type)).toBeDefined();
   });
 });

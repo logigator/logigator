@@ -235,6 +235,11 @@ export class ServerPersistenceGateway {
     return this.projectApi.delete(uuid).pipe(map(() => undefined));
   }
 
+  /** Deletes (unpublishes) a server library component via the API. */
+  deleteComponent(uuid: string): Observable<void> {
+    return this.componentApi.delete(uuid).pipe(map(() => undefined));
+  }
+
   /**
    * Renames a server project via `PATCH /api/project/:id`. If the project is
    * currently open, its in-memory metadata — and thus the title bar — is synced

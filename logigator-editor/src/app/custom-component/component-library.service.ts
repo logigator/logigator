@@ -1,4 +1,5 @@
 import { inject, Injectable } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
 import { LoggingService } from '../logging/logging.service';
 import { CircuitFileService } from '../persistence/file/circuit-file.service';
 import { BrowserComponentStore } from '../persistence/browser/browser-component.store';
@@ -197,6 +198,25 @@ export class ComponentLibraryService {
       'browser'
     );
     return record.id;
+  }
+
+  /**
+   * Deletes a library master's **persistent** record — the browser store entry, or
+   * for a cloud master the API (unpublishing it and invalidating its share link).
+   * A no-op for a master without a persistent id. Touches neither the session
+   * registry nor any open editor: the caller ({@link CustomComponentService}) runs
+   * {@link CustomComponentRegistry.removeMaster} and closes the tab only after this
+   * resolves, so a failed delete leaves everything intact for a retry. Placed
+   * instances are frozen snapshots and keep rendering as embedded copies once the
+   * master is gone.
+   */
+  async deletePersistentMaster(def: CustomComponentDefinition): Promise<void> {
+    if (!def.id) return;
+    if (def.source === 'server') {
+      await firstValueFrom(this.server.deleteComponent(def.id));
+    } else {
+      await this.browserComponentStore.delete(def.id);
+    }
   }
 
   /**

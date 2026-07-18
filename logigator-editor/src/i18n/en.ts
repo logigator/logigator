@@ -476,6 +476,17 @@ const en = {
   shareComponent: {
     button: 'Share'
   },
+  deleteComponent: {
+    button: 'Delete',
+    confirmMessageLocal:
+      'Delete “{{name}}” from your library? This is permanent. Any placed instances stay as embedded copies you can restore later.',
+    confirmMessageCloud:
+      'Delete “{{name}}” from your cloud library? This is permanent and its share link stops working. Any placed instances stay as embedded copies you can restore later.',
+    confirmAccept: 'Delete',
+    confirmReject: 'Cancel',
+    deleted: '“{{name}}” was deleted from your library.',
+    deleteFailed: 'Could not delete the component.'
+  },
   uploadDialog: {
     header: 'Upload to cloud',
     introProject:
