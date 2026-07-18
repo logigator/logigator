@@ -1,9 +1,5 @@
 import { AriaDescriber } from '@angular/cdk/a11y';
-import {
-  FlexibleConnectedPositionStrategy,
-  Overlay,
-  OverlayRef
-} from '@angular/cdk/overlay';
+import { Overlay, OverlayRef } from '@angular/cdk/overlay';
 import { ComponentPortal } from '@angular/cdk/portal';
 import {
   ComponentRef,
@@ -17,10 +13,10 @@ import {
 } from '@angular/core';
 import { Subscription } from 'rxjs';
 import {
+  caretSideChanges,
   connectedPositions,
   createConnectedOverlay,
-  LgOverlaySide,
-  sideOfPosition
+  LgOverlaySide
 } from '../../internal/overlay';
 import { formatShortcutLabel, LgShortcutBinding } from '../shortcut/shortcut';
 import { LgTooltipPanel } from './tooltip-panel';
@@ -112,11 +108,9 @@ export class LgTooltip implements OnDestroy {
     this.panelRef.setInput('shortcut', this.tooltipShortcut());
     this.panelRef.setInput('side', side);
 
-    const strategy = this.overlayRef.getConfig()
-      .positionStrategy as FlexibleConnectedPositionStrategy;
-    this.positionsSub = strategy.positionChanges.subscribe((change) => {
-      this.panelRef?.setInput('side', sideOfPosition(change.connectionPair));
-    });
+    this.positionsSub = caretSideChanges(this.overlayRef).subscribe(
+      (resolvedSide) => this.panelRef?.setInput('side', resolvedSide)
+    );
   }
 
   protected hide(): void {

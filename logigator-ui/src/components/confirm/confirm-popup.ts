@@ -1,8 +1,4 @@
-import {
-  FlexibleConnectedPositionStrategy,
-  Overlay,
-  OverlayRef
-} from '@angular/cdk/overlay';
+import { Overlay, OverlayRef } from '@angular/cdk/overlay';
 import { TemplatePortal } from '@angular/cdk/portal';
 import {
   Component,
@@ -17,10 +13,10 @@ import { Subscription } from 'rxjs';
 import { LgCaret } from '../../internal/caret';
 import { LgFadeIn } from '../../internal/fade-in';
 import {
+  caretSideChanges,
   connectedPositions,
   createConnectedOverlay,
-  LgOverlaySide,
-  sideOfPosition
+  LgOverlaySide
 } from '../../internal/overlay';
 import { LgButton } from '../button/button';
 import { Confirmation } from './confirmation';
@@ -94,12 +90,10 @@ export class LgConfirmPopup extends LgConfirmOutlet implements OnDestroy {
       new TemplatePortal(this.panel(), this.viewContainerRef)
     );
 
-    const strategy = this.overlayRef.getConfig()
-      .positionStrategy as FlexibleConnectedPositionStrategy;
     this.subscriptions = new Subscription();
     this.subscriptions.add(
-      strategy.positionChanges.subscribe((change) =>
-        this.side.set(sideOfPosition(change.connectionPair))
+      caretSideChanges(this.overlayRef).subscribe((side) =>
+        this.side.set(side)
       )
     );
     this.subscriptions.add(

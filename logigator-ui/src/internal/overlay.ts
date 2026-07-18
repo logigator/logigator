@@ -1,5 +1,11 @@
 import { ElementRef } from '@angular/core';
-import { ConnectedPosition, Overlay, OverlayRef } from '@angular/cdk/overlay';
+import {
+  ConnectedPosition,
+  FlexibleConnectedPositionStrategy,
+  Overlay,
+  OverlayRef
+} from '@angular/cdk/overlay';
+import { map, Observable } from 'rxjs';
 
 /**
  * Shared `cdk/overlay` plumbing for the connected (anchored) overlays — the
@@ -10,8 +16,8 @@ import { ConnectedPosition, Overlay, OverlayRef } from '@angular/cdk/overlay';
  *
  * Drawing the caret/arrow and wiring dismissal stay with each consumer (they
  * differ — a tooltip dismisses on blur, a popover on outside-click), but
- * {@link sideOfPosition} lets a consumer read back which side actually won so it
- * can place its caret.
+ * {@link caretSideChanges} lets a consumer read back which side actually won so
+ * it can place its caret.
  */
 export type LgOverlaySide = 'top' | 'bottom' | 'left' | 'right';
 
@@ -105,6 +111,19 @@ const CARET_TONE: Record<LgCaretTone, string> = {
 /** Tailwind classes for a caret pointing at the anchor from the given side. */
 export function caretClasses(side: LgOverlaySide, tone: LgCaretTone): string {
   return `rotate-45 ${CARET_POSITION[side]} ${CARET_TONE[tone]}`;
+}
+
+/**
+ * The side a connected overlay actually lands on, per resolved position of its
+ * flexible strategy — feed it to the caret's `side` input so the caret keeps
+ * pointing at the anchor across flip fallbacks.
+ */
+export function caretSideChanges(ref: OverlayRef): Observable<LgOverlaySide> {
+  const strategy = ref.getConfig()
+    .positionStrategy as FlexibleConnectedPositionStrategy;
+  return strategy.positionChanges.pipe(
+    map((change) => sideOfPosition(change.connectionPair))
+  );
 }
 
 /** Which side a resolved {@link ConnectedPosition} placed the overlay on. */

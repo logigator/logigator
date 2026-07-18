@@ -8,9 +8,8 @@ import { caretClasses, LgCaretTone, LgOverlaySide } from './overlay';
  * `relative` container; it positions itself from `side` (the side the panel
  * sits on relative to the anchor) and takes its surface from `tone` —
  * `content` for `bg-content` panels, `raised` for the elevated chrome (the
- * tooltip bubble).
- *
- * Internal — not part of the public API.
+ * tooltip bubble). Exported for consumers that build their own anchored
+ * overlays on {@link LgOverlayService} (pair with `caretSideChanges`).
  */
 @Component({
   selector: 'lg-caret',

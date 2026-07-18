@@ -106,10 +106,12 @@ export { LgToast } from './components/toast/toast';
 export type { ToastMessage } from './components/toast/toast.service';
 
 export { LgOverlayService } from './components/overlay/overlay.service';
+export { LgCaret } from './internal/caret';
 export {
   OVERLAY_GAP,
   connectedPositions,
   caretClasses,
+  caretSideChanges,
   sideOfPosition
 } from './internal/overlay';
 export type {
