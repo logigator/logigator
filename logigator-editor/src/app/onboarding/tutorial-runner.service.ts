@@ -60,7 +60,10 @@ export class TutorialRunnerService {
     });
 
     // Re-render the current step when the breakpoint flips mid-run so its target
-    // and gesture wording follow the platform.
+    // and gesture wording follow the platform. Accepted edge: this re-enters
+    // renderCurrent, which re-captures the step baseline — resizing across the
+    // breakpoint mid-step resets a sub-count (e.g. "1 of 2" → "0 of 2"). Rare
+    // and self-correcting on the next placement.
     effect(() => {
       this.onboarding.platform();
       untracked(() => {

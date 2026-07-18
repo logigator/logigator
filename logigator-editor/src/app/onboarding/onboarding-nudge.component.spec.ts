@@ -24,7 +24,12 @@ describe('OnboardingNudgeComponent', () => {
     const project = { components, actionManager: { actionChange$ } };
 
     configureTestBed(
-      [{ provide: ProjectService, useValue: { mainProject: () => project } }],
+      [
+        {
+          provide: ProjectService,
+          useValue: { mainProject: () => project, activeProject: () => project }
+        }
+      ],
       [OnboardingNudgeComponent]
     );
     const transloco = TestBed.inject(TranslocoService);

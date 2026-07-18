@@ -75,6 +75,10 @@ export class OnboardingNudgeComponent {
       this.onboarding.tipsEnabled() &&
       this.onboarding.activeTutorial() === null &&
       this.workMode.mode() !== WorkMode.SIMULATION &&
+      // Only over the main board — the nudge (and the tutorial) target the main
+      // project, not a custom-component edit tab that happens to be active.
+      this.projectService.activeProject() ===
+        this.projectService.mainProject() &&
       this.isEmpty()
   );
 
