@@ -159,9 +159,17 @@ export function createConnectedOverlay(
 
 /**
  * Where a global (viewport-positioned, non-anchored) overlay sits: centred for
- * modal dialogs, or pinned to an edge for drawers.
+ * modal dialogs, pinned to an edge for drawers, or floated bottom-centre (a
+ * horizontally centred toast/hint pinned to the bottom edge — the panel supplies
+ * its own bottom offset via `panelClass`).
  */
-export type LgOverlayPlacement = 'center' | 'left' | 'right' | 'top' | 'bottom';
+export type LgOverlayPlacement =
+  | 'center'
+  | 'left'
+  | 'right'
+  | 'top'
+  | 'bottom'
+  | 'bottom-center';
 
 export interface GlobalOverlayOptions {
   placement: LgOverlayPlacement;
@@ -201,6 +209,12 @@ export function createGlobalOverlay(
       break;
     case 'bottom':
       strategy.bottom('0').left('0');
+      break;
+    case 'bottom-center':
+      // Centre horizontally, pin to the bottom edge with no baked-in offset —
+      // `bottom()` leaves margin-bottom unset so the panel's own `panelClass`
+      // margin controls how far it floats up.
+      strategy.centerHorizontally().bottom();
       break;
   }
 

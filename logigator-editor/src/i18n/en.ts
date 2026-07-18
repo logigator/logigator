@@ -819,7 +819,8 @@ const en = {
         'Editing is locked while running. Use these to pause, step, and set the speed — buttons and switches stay clickable.',
       inspect:
         'You can inspect this while it runs — open it to watch its internals live.',
-      panZoomCompact: 'Drag with one finger to pan, pinch to zoom.'
+      panZoomCompact:
+        'Drag with two fingers to pan, pinch to zoom. One finger pans only in pan mode.'
     },
     tutorials: {
       gettingStarted: {
@@ -831,7 +832,7 @@ const en = {
           moveAround: {
             title: 'Move around',
             textDesktop: 'Scroll to zoom, right-drag to pan.',
-            textCompact: 'Pinch to zoom, drag with one finger to pan.'
+            textCompact: 'Pinch to zoom, drag with two fingers to pan.'
           },
           openComponents: {
             title: 'Open the components',

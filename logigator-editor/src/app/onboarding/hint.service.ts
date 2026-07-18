@@ -1,4 +1,5 @@
 import {
+  afterNextRender,
   ComponentRef,
   effect,
   inject,
@@ -123,9 +124,21 @@ export class HintService {
     return true;
   }
 
-  private show(hint: Hint): void {
+  private show(hint: Hint, allowDeferredTarget = true): void {
     const platform = this.onboarding.platform();
     const target = this.resolveTarget(hint, platform);
+
+    // A hint's target can enter the DOM only as a result of its trigger — the
+    // sim controls appear (in the tool-bar on desktop, the bottom bar on
+    // compact) on entering simulation, after this fires. If the target is
+    // declared but not present yet, wait one render and retry once before
+    // giving up and floating it bottom-centre.
+    if (!target && hint.target?.[platform] && allowDeferredTarget) {
+      afterNextRender(() => this.show(hint, false), {
+        injector: this.injector
+      });
+      return;
+    }
 
     if (target) {
       this.overlayRef = this.overlayService.connected({
@@ -133,9 +146,13 @@ export class HintService {
         positions: connectedPositions('bottom')
       });
     } else {
+      // No anchor (targetless hint, or its target never showed up): float it
+      // bottom-centre, well clear of the bottom chrome — lifted higher on
+      // compact where the tool/sim bars occupy the bottom edge.
       this.overlayRef = this.overlayService.global({
-        placement: 'bottom',
-        hasBackdrop: false
+        placement: 'bottom-center',
+        hasBackdrop: false,
+        panelClass: ['mb-24', 'lg:mb-16']
       });
     }
 

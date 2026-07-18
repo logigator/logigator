@@ -15,6 +15,12 @@ function popover(): Element | null {
   return document.querySelector('.cdk-overlay-container app-hint-popover');
 }
 
+/** A global (bottom-centre float) overlay sits in a global wrapper; an anchored
+ *  (connected) one does not — this distinguishes the two placements. */
+function isFloating(): boolean {
+  return !!popover()?.closest('.cdk-global-overlay-wrapper');
+}
+
 describe('HintService', () => {
   let workMode: WorkModeService;
   let onboarding: OnboardingService;
@@ -78,6 +84,30 @@ describe('HintService', () => {
     enterWireTool();
     expect(popover()).toBeNull();
     expect(onboarding.hasSeenHint('wire-tap-actions')).toBe(false);
+  });
+
+  // A hint's target can enter the DOM only after its trigger fires (e.g. the
+  // sim controls on entering simulation). The resolve is deferred one render so
+  // it anchors instead of floating; exercised here via the wire hint, which
+  // takes the same path.
+  it('anchors a hint to its target element when the target is present', () => {
+    const wire = document.createElement('div');
+    wire.setAttribute('data-onboard', 'tool-wire');
+    document.body.appendChild(wire);
+
+    enterWireTool();
+
+    expect(popover()).not.toBeNull();
+    expect(isFloating()).toBe(false); // anchored to the target, not floated
+
+    wire.remove();
+  });
+
+  it('floats a hint bottom-centre when its target never appears', () => {
+    enterWireTool(); // no tool-wire element in the test DOM
+
+    expect(popover()).not.toBeNull();
+    expect(isFloating()).toBe(true);
   });
 
   it('dismisses on Escape', () => {

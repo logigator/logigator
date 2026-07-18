@@ -31,7 +31,7 @@ import { TutorialRunnerService } from './tutorial-runner.service';
     @if (visible()) {
       <div
         *transloco="let t"
-        class="pointer-events-auto flex items-center gap-3 rounded-lg border border-border bg-content/95 px-4 py-3 shadow-lg backdrop-blur"
+        class="pointer-events-auto mx-auto flex w-fit max-w-xl items-center gap-3 rounded-lg border border-border bg-content/95 px-4 py-3 shadow-lg backdrop-blur"
       >
         <span class="text-sm text-muted">{{ t('onboarding.nudge.text') }}</span>
         <lg-button
