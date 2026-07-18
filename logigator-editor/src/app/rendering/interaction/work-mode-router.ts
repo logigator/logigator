@@ -268,9 +268,25 @@ export class WorkModeRouter implements PointerToolTarget, ToolHost {
     if (!this._project || this._mode === WorkMode.SIMULATION) return;
     if (this._activeDrag) {
       this._activeDrag.rotate?.(steps);
+      this._commitIfFloatingAndValid();
       return;
     }
     this._startSelectionRotate(steps);
+  }
+
+  /**
+   * After a discrete rotate/move on an already-open session: commit the moment
+   * a floating (not-yet-grabbed) selection edit becomes collision-free, so a
+   * recovery turn/step lands like the first op does instead of leaving a valid
+   * group floating until it is reverted by a click-off. `_stopDrag` (not a bare
+   * `onEnd`) is required here — unlike the first-op path, `_startDrag` already
+   * set `_activeDrag` and locked the action manager.
+   */
+  private _commitIfFloatingAndValid(): void {
+    const session = this._activeDrag;
+    if (!session?.isAwaitingGrab?.() || !session.canEnd()) return;
+    session.onEnd();
+    this._stopDrag();
   }
 
   /**
@@ -313,6 +329,7 @@ export class WorkModeRouter implements PointerToolTarget, ToolHost {
     if (!this._project || this._mode === WorkMode.SIMULATION) return;
     if (this._activeDrag) {
       this._activeDrag.moveBy?.(dx, dy);
+      this._commitIfFloatingAndValid();
       return;
     }
     this._startSelectionMove(dx, dy);

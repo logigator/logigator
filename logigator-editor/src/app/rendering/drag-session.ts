@@ -21,6 +21,16 @@ export interface DragSession {
    */
   onDown?(input: PointerInput): boolean;
   /**
+   * Optional: true while the session floats without a locked drag anchor —
+   * opened by a discrete rotate/move command and not yet grabbed. The router
+   * auto-commits such a session the instant a rotate/moveBy leaves it
+   * collision-free, mirroring the first-op commit in _startSelectionRotate.
+   * Sessions that must always be placed by hand (paste) omit it so they never
+   * self-commit; a session grabbed by the pointer reports false so a mid-drag
+   * turn does not commit under the cursor.
+   */
+  isAwaitingGrab?(): boolean;
+  /**
    * Optional: turn the session's floating elements by `steps` clockwise
    * quarter-turns around their own snapped centre (the rotate-selection
    * shortcut fired mid-session). Sessions without turnable content omit it;

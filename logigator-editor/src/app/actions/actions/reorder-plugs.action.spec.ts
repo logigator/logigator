@@ -31,7 +31,8 @@ describe('ReorderPlugsAction', () => {
       [3, new IndexOption(2)]
     ]);
     project = {
-      getComponentById: vi.fn().mockName('Project.getComponentById')
+      getComponentById: vi.fn().mockName('Project.getComponentById'),
+      triggerTicker: vi.fn().mockName('Project.triggerTicker')
     } as unknown as MockedObject<Project>;
     project.getComponentById.mockImplementation(
       (id: number) =>

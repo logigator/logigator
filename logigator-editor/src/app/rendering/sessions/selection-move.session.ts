@@ -225,6 +225,16 @@ export class SelectionMoveSession implements DragSession {
     this._collision.update();
   }
 
+  /**
+   * Floating without a drag anchor: opened by the rotate/move flow and not yet
+   * grabbed. The router auto-commits such a session once a discrete rotate/move
+   * clears the collision. Once grabbed (onDown locks `_pointerStart`) this turns
+   * false, so a rotate mid-drag does not commit under the cursor.
+   */
+  isAwaitingGrab(): boolean {
+    return this._pointerStart === null;
+  }
+
   canEnd(): boolean {
     return !this._collision.hasCollision;
   }

@@ -19,6 +19,7 @@ import {
   makeWire
 } from '../../../testing/factories';
 import { WireDirection } from '../../wires/wire-direction.enum';
+import { Direction } from '../../utils/direction';
 import { Component } from '../../components/component';
 import { ComponentConfig } from '../../components/component-config.model';
 import { andComponentConfig } from '../../components/component-types/and/and.config';
@@ -424,7 +425,7 @@ describe('WorkModeRouter move-selection shortcuts (arrow keys)', () => {
     expect(comp.position.y).toBe(3); // move reverted
   });
 
-  it('shifts a floating session further and commits it via grab-and-release', () => {
+  it('commits a floating session the moment a further move clears the collision', () => {
     const stationary = makeAnd(2, undefined, 3, 5);
     project.addComponent(stationary);
     const comp = makeAnd(2, undefined, 3, 3);
@@ -434,17 +435,20 @@ describe('WorkModeRouter move-selection shortcuts (arrow keys)', () => {
     press('ArrowDown'); // collides → session stays open
     press('ArrowLeft'); // still overlapping stationary's body
     press('ArrowLeft'); // still overlapping stationary's input stubs
-    press('ArrowLeft'); // clear of it now, but a float never self-commits
     expect(router.hasActiveSession).toBe(true);
 
-    // Grab the floating group where it currently hangs and release in place.
-    router.down(makeInput(1, 5));
-    router.up();
+    press('ArrowLeft'); // clear of it now → the float commits in place
 
     expect(router.hasActiveSession).toBe(false);
     expect(comp.position.x).toBe(0);
     expect(comp.position.y).toBe(4);
-    expect(project.actionManager.undoAvailable).toBe(true);
+    expect(project.selectionManager.selectedComponents.has(comp)).toBe(true);
+
+    // The whole float-then-recover run is one undo step.
+    project.actionManager.undo();
+    expect(comp.position.x).toBe(3);
+    expect(comp.position.y).toBe(3);
+    expect(project.actionManager.undoAvailable).toBe(false);
   });
 
   it('is inert with an empty selection and in simulation mode', () => {
@@ -459,6 +463,99 @@ describe('WorkModeRouter move-selection shortcuts (arrow keys)', () => {
 
     press('ArrowDown'); // editing locked
     expect(comp.position.y).toBe(3);
+  });
+});
+
+describe('WorkModeRouter rotate-selection requests', () => {
+  let project: Project;
+  let router: WorkModeRouter;
+
+  beforeEach(() => {
+    configureTestBed();
+    project = new Project();
+    router = new WorkModeRouter();
+    router.setProject(project);
+    router.setMode(WorkMode.SELECT);
+  });
+
+  afterEach(() => {
+    router.destroy();
+    project.destroy({ children: true });
+  });
+
+  it('rotates the committed selection and commits synchronously when clear', () => {
+    const comp = makeAnd(3, Direction.E, 5, 5);
+    project.addComponent(comp);
+    project.selectionManager.select([comp], []);
+    const before = comp.direction;
+
+    project.requestSelectionRotation(1);
+
+    expect(router.hasActiveSession).toBe(false); // committed in place
+    expect(comp.direction).not.toBe(before);
+    expect(project.actionManager.undoAvailable).toBe(true);
+  });
+
+  it('commits a colliding rotation once a second turn clears it — no revert on click-off', () => {
+    // The obstacle sits only in the selection's one-quarter-turn footprint:
+    // rotating once drives the AND onto it (floats), rotating again clears it.
+    const obstacle = makeAnd(2, Direction.E, 2, 6);
+    project.addComponent(obstacle);
+    const comp = makeAnd(3, Direction.E, 5, 5);
+    project.addComponent(comp);
+    project.selectionManager.select([comp], []);
+
+    project.requestSelectionRotation(1); // collides → session floats
+    expect(router.hasActiveSession).toBe(true);
+    expect(project.actionManager.undoAvailable).toBe(false);
+
+    project.requestSelectionRotation(1); // clear now → the float commits
+
+    expect(router.hasActiveSession).toBe(false);
+    expect(comp.direction).toBe(Direction.W);
+    expect(project.selectionManager.selectedComponents.has(comp)).toBe(true);
+    expect(project.actionManager.undoAvailable).toBe(true);
+
+    project.actionManager.undo();
+    expect(comp.direction).toBe(Direction.E); // the whole recovery is one step
+  });
+
+  it('does not revert a committed rotation on a later press off the selection', () => {
+    const obstacle = makeAnd(2, Direction.E, 2, 6);
+    project.addComponent(obstacle);
+    const comp = makeAnd(3, Direction.E, 5, 5);
+    project.addComponent(comp);
+    project.selectionManager.select([comp], []);
+
+    project.requestSelectionRotation(1); // floats
+    project.requestSelectionRotation(1); // clears → commits
+    expect(router.hasActiveSession).toBe(false);
+
+    // The bug: a press elsewhere used to cancel the (now committed) float and
+    // snap the rotation back. The commit already landed, so it must stick.
+    router.down(makeInput(20, 20));
+    expect(comp.direction).toBe(Direction.W);
+  });
+
+  it('does not auto-commit a rotate mid pointer-drag even when momentarily valid', () => {
+    const comp = makeAnd(3, Direction.E, 5, 5);
+    project.addComponent(comp);
+    project.selectionManager.select([comp], []);
+
+    // Grab the selection with the pointer: a live drag whose anchor is locked,
+    // so isAwaitingGrab() is false and the auto-commit guard must not fire.
+    router.down(makeInput(6, 6));
+    router.move(makeInput(8, 8));
+    expect(router.hasActiveSession).toBe(true);
+
+    project.requestSelectionRotation(1); // collision-free, but held under cursor
+
+    expect(router.hasActiveSession).toBe(true); // stays live — no commit
+    expect(project.actionManager.undoAvailable).toBe(false);
+
+    router.up(); // release is what commits
+    expect(router.hasActiveSession).toBe(false);
+    expect(project.actionManager.undoAvailable).toBe(true);
   });
 });
 
