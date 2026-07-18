@@ -29,7 +29,8 @@ describe('ChangeOptionAction', () => {
     option = new FakeOption(1);
     component = { options: { count: option } } as unknown as Component;
     project = {
-      getComponentById: vi.fn().mockName('Project.getComponentById')
+      getComponentById: vi.fn().mockName('Project.getComponentById'),
+      triggerTicker: vi.fn().mockName('Project.triggerTicker')
     } as unknown as MockedObject<Project>;
     project.getComponentById.mockReturnValue(component);
   });
@@ -41,6 +42,14 @@ describe('ChangeOptionAction', () => {
 
     expect(project.getComponentById).toHaveBeenCalledWith(7);
     expect(option.value).toBe(42);
+  });
+
+  it('requests a render so a visual-only edit shows immediately', () => {
+    const action = new ChangeOptionAction(7, 'count', 1, 42);
+
+    action.do(project);
+
+    expect(project.triggerTicker).toHaveBeenCalledWith('single');
   });
 
   it('undo() restores the old value', () => {
