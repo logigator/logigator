@@ -796,6 +796,11 @@ const en = {
     },
     toast: {
       tipsReset: 'Onboarding tips are back on.'
+    },
+    bubble: {
+      next: 'Next',
+      skip: 'Skip tutorial',
+      turnOff: 'Turn off all tips'
     }
   }
 };
