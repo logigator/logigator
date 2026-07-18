@@ -1,4 +1,4 @@
-import { effect, inject, Injectable, untracked } from '@angular/core';
+import { effect, inject, Injectable, signal, untracked } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { Subscription } from 'rxjs';
 import { ConfirmationService } from '@logigator/ui';
@@ -56,6 +56,8 @@ export class TutorialRunnerService {
   private index = 0;
   private baseline: ReadonlyMap<number, number> = new Map();
   private userInteracted = false;
+  /** The step currently on screen, or null. Drives the reactive show effect. */
+  private readonly currentStep = signal<TutorialStep | null>(null);
   /** One subscription per step; torn down on every advance. */
   private stepSub = new Subscription();
 
@@ -67,16 +69,17 @@ export class TutorialRunnerService {
       untracked(() => this.onActiveChange(active));
     });
 
-    // Re-render the current step when the breakpoint flips mid-run so its target
-    // and gesture wording follow the platform. Accepted edge: this re-enters
-    // renderCurrent, which re-captures the step baseline — resizing across the
-    // breakpoint mid-step resets a sub-count (e.g. "1 of 2" → "0 of 2"). Rare
-    // and self-correcting on the next placement.
+    // Keep the coach-mark anchored to the current step's target as it registers,
+    // moves, or is re-created, and re-render its text/target when the breakpoint
+    // flips the platform — all reactively, so there is no querySelector timing
+    // race. The advance subscriptions and baseline stay put across a platform
+    // flip (no sub-count reset), since only the presentation changes here.
     effect(() => {
-      this.onboarding.platform();
-      untracked(() => {
-        if (this.steps.length > 0) this.renderCurrent();
-      });
+      const step = this.currentStep();
+      const platform = this.onboarding.platform();
+      if (!step) return;
+      this.registry.get(step.target?.[platform]); // track the target element
+      untracked(() => this.showStep(step));
     });
   }
 
@@ -143,6 +146,7 @@ export class TutorialRunnerService {
     this.stepSub = new Subscription();
     this.steps = [];
     this.index = 0;
+    this.currentStep.set(null);
     this.overlay.hide();
   }
 
@@ -189,7 +193,8 @@ export class TutorialRunnerService {
       })
     );
     this.subscribeAdvance(step);
-    this.showStep(step);
+    // Publish the step; the show effect renders and keeps it anchored.
+    this.currentStep.set(step);
   }
 
   private subscribeAdvance(step: TutorialStep): void {

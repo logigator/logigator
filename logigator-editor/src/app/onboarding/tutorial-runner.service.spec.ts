@@ -13,6 +13,7 @@ import { ProjectMetadataStore } from '../persistence/project-metadata.store';
 import { SimulationService } from '../simulation/simulation.service';
 import { OnboardingService } from './onboarding.service';
 import { OnboardingOverlayService } from './onboarding-overlay.service';
+import { OnboardingTargetRegistry } from './onboarding-target-registry.service';
 import { CoachMarkHandlers, CoachMarkView } from './coach-mark.model';
 import { TutorialRunnerService } from './tutorial-runner.service';
 import { TutorialDefinition } from './tutorial.model';
@@ -171,6 +172,36 @@ describe('TutorialRunnerService', () => {
     expect(onboarding.activeTutorial()).toBeNull();
     expect(onboarding.hasCompletedTutorial('test')).toBe(false);
     expect(hide).toHaveBeenCalled();
+  });
+
+  it('re-anchors the current step when its target registers', () => {
+    const targeted: TutorialDefinition = {
+      id: 'targeted',
+      steps: [
+        {
+          id: 't',
+          title: 'onboarding.tutorials.gettingStarted.steps.welcome.title',
+          text: 'onboarding.tutorials.gettingStarted.steps.welcome.text',
+          target: { desktop: 'anchor-x', compact: 'anchor-x' },
+          advanceOn: { kind: 'manual' }
+        }
+      ]
+    };
+    (TUTORIALS as Record<string, TutorialDefinition>)['targeted'] = targeted;
+
+    onboarding.startTutorial('targeted');
+    tick();
+    // Target not registered yet → shown without an anchor.
+    expect(show.mock.calls.at(-1)![0]).toBeNull();
+
+    const el = document.createElement('div');
+    TestBed.inject(OnboardingTargetRegistry).register('anchor-x', el);
+    tick();
+    // The effect re-runs on the registry change and re-anchors.
+    expect(show.mock.calls.at(-1)![0]).toBe(el);
+
+    onboarding.skipCurrent();
+    delete (TUTORIALS as Record<string, TutorialDefinition>)['targeted'];
   });
 
   describe('launch', () => {
