@@ -4,6 +4,7 @@ import { TranslocoDirective } from '@jsverse/transloco';
 import { SelectionInspectorService } from '../../project/selection-inspector.service';
 import { ClipboardService } from '../../clipboard/clipboard.service';
 import { ProjectService } from '../../project/project.service';
+import { MobileUiService } from '../../layout/mobile-ui.service';
 
 /**
  * Copy/cut/paste/delete for the current selection, surfaced just above the tool
@@ -22,6 +23,16 @@ import { ProjectService } from '../../project/project.service';
         <span class="px-1 text-sm text-muted tabular-nums">{{
           inspector.selectionCount()
         }}</span>
+        @if (inspector.selectedComponent()) {
+          <lg-button
+            icon="ph ph-sliders-horizontal"
+            severity="secondary"
+            rounded
+            text
+            [ariaLabel]="t('mobile.settings')"
+            (onClick)="mobileUi.toggle('settings')"
+          ></lg-button>
+        }
         <lg-button
           icon="ph ph-copy"
           severity="secondary"
@@ -76,6 +87,7 @@ import { ProjectService } from '../../project/project.service';
 })
 export class SelectionActionBarComponent {
   protected readonly inspector = inject(SelectionInspectorService);
+  protected readonly mobileUi = inject(MobileUiService);
   private readonly clipboardService = inject(ClipboardService);
   private readonly projectService = inject(ProjectService);
 

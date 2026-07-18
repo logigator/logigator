@@ -45,7 +45,6 @@ import { LayoutService } from './layout/layout.service';
 import { MobileUiService } from './layout/mobile-ui.service';
 import { SelectionInspectorService } from './project/selection-inspector.service';
 import { ProjectMetadataStore } from './persistence/project-metadata.store';
-import { Component as CircuitComponent } from './components/component';
 import { MobileTopBarComponent } from './ui/mobile-top-bar/mobile-top-bar.component';
 import { ToolHudComponent } from './ui/tool-hud/tool-hud.component';
 import { SelectionActionBarComponent } from './ui/selection-action-bar/selection-action-bar.component';
@@ -142,14 +141,6 @@ export class AppComponent {
     return !!active && this.metadataStore.getMetadata(active)?.type === 'comp';
   });
 
-  // Opens the settings sheet on mobile when a component becomes selected (the
-  // only door to it) and closes it again when the selection goes away so it
-  // never lingers as a blank panel. Suppressed during placement (a modal sheet
-  // would block tap-to-place). Reacts only to selection
-  // *transitions* so opening another sheet while a component stays selected
-  // doesn't yank the user back to settings.
-  private _prevSelected: CircuitComponent | null = null;
-
   constructor() {
     setStaticDIInjector(this.injector);
 
@@ -161,24 +152,17 @@ export class AppComponent {
       );
     });
 
+    // The mobile settings sheet is opened on demand from the selection action
+    // bar, never automatically. Close it once its component is deselected so it
+    // never lingers as a blank panel. Guarded to the settings sheet so another
+    // open sheet is left alone.
     effect(() => {
       const selected = this.selectionInspector.selectedComponent();
-      const compact = this.layout.isCompact();
-      const placing =
-        this.workModeService.mode() === WorkMode.COMPONENT_PLACEMENT;
-      const prev = this._prevSelected;
-      this._prevSelected = selected;
-      if (!compact) return;
-      if (selected && selected !== prev && !placing) {
-        this.mobileUi.open('settings');
-      } else if (
+      if (
         !selected &&
-        prev &&
+        this.layout.isCompact() &&
         this.mobileUi.activeSheet() === 'settings'
       ) {
-        // The selection that opened the sheet is gone (e.g. the component
-        // editor switched tabs). Guarded to the settings sheet so a different
-        // open sheet is left alone.
         this.mobileUi.close();
       }
     });

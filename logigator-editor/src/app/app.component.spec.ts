@@ -86,7 +86,7 @@ describe('AppComponent', () => {
     expect(el.querySelectorAll('app-board').length).toBe(1);
   });
 
-  it('auto-opens the settings sheet on selection and closes it when selection clears', () => {
+  it('never auto-opens the settings sheet on selection, but closes it when selection clears', () => {
     stubCompactMatchMedia();
 
     // Creating the fixture sets the static DI injector (constructor), so a
@@ -113,13 +113,15 @@ describe('AppComponent', () => {
     projectService.setMainProject(project);
     fixture.detectChanges();
 
-    // Selecting a single component opens the settings sheet.
+    // Selecting a single component does not open the settings sheet: it is
+    // opened on demand from the selection action bar's settings button.
     project.selectionManager.commit(new Rectangle(0, 0, 3, 3), WorkMode.SELECT);
     fixture.detectChanges();
-    expect(mobileUi.activeSheet()).toBe('settings');
+    expect(mobileUi.activeSheet()).toBeNull();
 
-    // Clearing the selection (e.g. opening the component editor switched tabs)
-    // closes it rather than leaving a blank panel.
+    // Once opened, clearing the selection (e.g. the component editor switched
+    // tabs) closes it rather than leaving a blank panel.
+    mobileUi.open('settings');
     project.selectionManager.clear();
     fixture.detectChanges();
     expect(mobileUi.activeSheet()).toBeNull();
