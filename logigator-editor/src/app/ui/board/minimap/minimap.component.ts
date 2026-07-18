@@ -87,7 +87,7 @@ export class MinimapComponent implements OnDestroy {
    */
   protected readonly hostClasses = computed(() =>
     this.layout.isCompact()
-      ? 'pointer-events-auto absolute right-3 bottom-52 mr-[env(safe-area-inset-right)]'
+      ? 'pointer-events-auto absolute right-3 bottom-64 mr-[env(safe-area-inset-right)]'
       : 'pointer-events-auto'
   );
 
