@@ -124,6 +124,7 @@ export class CustomComponentService {
     const open = this._findOpenEditor(id);
     if (open) {
       this.projectService.setActiveProject(open);
+      this._disarmPlacementFor(id);
       return;
     }
     try {
@@ -132,6 +133,7 @@ export class CustomComponentService {
           ? await this.persistence.loadServerComponentForEdit(id)
           : await this.persistence.loadComponentForEdit(id);
       this._openEditor(project, masterTypeId);
+      this._disarmPlacementFor(id);
     } catch {
       this.toast.error(
         this.translation.translate('componentActions.openFailed'),
@@ -220,6 +222,23 @@ export class CustomComponentService {
       this.translation.translate('deleteComponent.deleted', { name: def.name }),
       'CustomComponentService'
     );
+  }
+
+  /**
+   * Drops back to the pan tool when a placement is still armed for the master
+   * just opened for editing — opening a library tile's editor from its palette
+   * ghost should leave the ghost deselected. No-op when a different (or no)
+   * placement is armed, e.g. editing an already-placed instance. Mirrors the
+   * delete flow's disarm.
+   */
+  private _disarmPlacementFor(masterId: string): void {
+    const typeId = this.registry.masterTypeIdForId(masterId);
+    if (
+      typeId !== undefined &&
+      this.workModeService.selectedComponentType() === typeId
+    ) {
+      this.workModeService.setMode(WorkMode.PAN);
+    }
   }
 
   /** Adds the editor as a tab, focuses it, and attaches its definition binding. */

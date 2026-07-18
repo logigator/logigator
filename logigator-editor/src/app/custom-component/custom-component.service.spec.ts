@@ -219,6 +219,28 @@ describe('CustomComponentService', () => {
     expect(load).toHaveBeenCalledWith('srv-new');
   });
 
+  it('opening a master for edit disarms a placement armed for it', async () => {
+    const masterTypeId = registry.createMaster(
+      { id: 'browser-x', name: 'X', symbol: 'X' },
+      'browser'
+    );
+    vi.spyOn(persistence, 'loadComponentForEdit').mockResolvedValue({
+      project: new Project(),
+      masterTypeId
+    });
+
+    // Arm the palette tile's placement, as clicking the library tile does.
+    const workMode = TestBed.inject(WorkModeService);
+    workMode.setMode(WorkMode.COMPONENT_PLACEMENT);
+    workMode.setSelectedComponentType(masterTypeId);
+
+    await service.openComponentForEdit('browser-x');
+
+    // Opening its editor leaves the pan tool active, not the palette ghost.
+    expect(workMode.mode()).toBe(WorkMode.PAN);
+    expect(workMode.selectedComponentType()).toBeNull();
+  });
+
   // A no-provenance embedded orphan, as ingested from an `id:''` server
   // dependency (or a legacy document): no id, no version, defaulted to browser
   // origin. This is the "embedded component in a server project" case.
