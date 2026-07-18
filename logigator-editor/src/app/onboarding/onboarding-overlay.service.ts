@@ -140,9 +140,6 @@ export class OnboardingOverlayService {
     this.subscriptions.add(
       cmp.instance.skip.subscribe(() => this.handlers?.skip())
     );
-    this.subscriptions.add(
-      cmp.instance.disableTips.subscribe(() => this.handlers?.disableTips())
-    );
   }
 
   /** Point the caret at the anchor from whichever side CDK actually placed it. */

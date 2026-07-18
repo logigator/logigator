@@ -23,5 +23,4 @@ export interface CoachMarkView {
 export interface CoachMarkHandlers {
   readonly next?: () => void;
   readonly skip: () => void;
-  readonly disableTips: () => void;
 }

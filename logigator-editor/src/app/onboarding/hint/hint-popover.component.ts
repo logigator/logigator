@@ -21,22 +21,31 @@ import { computed } from '@angular/core';
   template: `
     <div
       *transloco="let t"
-      class="pointer-events-auto relative flex w-64 max-w-[calc(100vw-2rem)] items-start gap-2 rounded-lg border border-border bg-content p-3 shadow-lg"
+      class="pointer-events-auto relative flex w-64 max-w-[calc(100vw-2rem)] flex-col gap-2 rounded-lg border border-border bg-content p-3 shadow-lg"
       role="status"
     >
       @if (caret(); as caretClass) {
         <span aria-hidden="true" [class]="caretClass"></span>
       }
       <!-- Our own translated markup; trusted content. -->
-      <p class="flex-1 text-sm text-muted" [innerHTML]="text()"></p>
-      <lg-button
-        size="sm"
-        severity="secondary"
-        text
-        icon="ph ph-x"
-        [ariaLabel]="t('onboarding.hints.dismiss')"
-        (onClick)="dismiss.emit()"
-      ></lg-button>
+      <p class="text-sm text-muted" [innerHTML]="text()"></p>
+      <div class="flex items-center justify-end gap-1">
+        <lg-button
+          size="sm"
+          severity="secondary"
+          text
+          [label]="t('onboarding.bubble.turnOff')"
+          (onClick)="disableTips.emit()"
+        ></lg-button>
+        <lg-button
+          size="sm"
+          severity="secondary"
+          text
+          icon="ph ph-x"
+          [ariaLabel]="t('onboarding.hints.dismiss')"
+          (onClick)="dismiss.emit()"
+        ></lg-button>
+      </div>
     </div>
   `
 })
@@ -45,6 +54,7 @@ export class HintPopoverComponent {
   public readonly side = input<LgOverlaySide | null>(null);
 
   public readonly dismiss = output<void>();
+  public readonly disableTips = output<void>();
 
   protected readonly caret = computed(() => {
     const side = this.side();

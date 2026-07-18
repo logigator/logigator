@@ -88,4 +88,14 @@ describe('HintService', () => {
     );
     expect(popover()).toBeNull();
   });
+
+  it('turns off all tips from the hint and closes it', () => {
+    enterWireTool();
+    const turnOff = document.querySelector<HTMLButtonElement>(
+      '.cdk-overlay-container app-hint-popover button'
+    );
+    turnOff?.click();
+    expect(onboarding.isTipsEnabled()).toBe(false);
+    expect(popover()).toBeNull();
+  });
 });

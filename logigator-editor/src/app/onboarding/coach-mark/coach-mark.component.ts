@@ -28,7 +28,6 @@ export class CoachMarkComponent {
 
   public readonly next = output<void>();
   public readonly skip = output<void>();
-  public readonly disableTips = output<void>();
 
   protected readonly caret = computed(() => {
     const side = this.side();

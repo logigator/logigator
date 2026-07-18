@@ -36,7 +36,7 @@ describe('OnboardingOverlayService', () => {
     await firstValueFrom(transloco.load('en'));
     transloco.setActiveLang('en');
     service = TestBed.inject(OnboardingOverlayService);
-    handlers = { skip: vi.fn(), disableTips: vi.fn(), next: vi.fn() };
+    handlers = { skip: vi.fn(), next: vi.fn() };
     target = document.createElement('button');
     document.body.appendChild(target);
   });

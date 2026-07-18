@@ -242,8 +242,7 @@ export class TutorialRunnerService {
   private handlers(): CoachMarkHandlers {
     return {
       next: () => this.advance(),
-      skip: () => this.onboarding.skipCurrent(),
-      disableTips: () => this.onboarding.disableAllTips()
+      skip: () => this.onboarding.skipCurrent()
     };
   }
 

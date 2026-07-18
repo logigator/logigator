@@ -144,6 +144,12 @@ export class HintService {
     this.subscriptions.add(
       cmp.instance.dismiss.subscribe(() => this.dismiss())
     );
+    this.subscriptions.add(
+      cmp.instance.disableTips.subscribe(() => {
+        this.dismiss();
+        this.onboarding.disableAllTips();
+      })
+    );
     if (target) this.trackCaretSide(this.overlayRef, cmp);
     document.addEventListener('keydown', this.onKeydown, true);
   }

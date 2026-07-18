@@ -19,22 +19,13 @@
   <p class="text-sm text-muted" [innerHTML]="view().text"></p>
 
   <div class="flex items-center justify-between gap-2 pt-1">
-    <div class="flex flex-wrap gap-1">
-      <lg-button
-        size="sm"
-        severity="secondary"
-        text
-        [label]="t('onboarding.bubble.skip')"
-        (onClick)="skip.emit()"
-      ></lg-button>
-      <lg-button
-        size="sm"
-        severity="secondary"
-        text
-        [label]="t('onboarding.bubble.turnOff')"
-        (onClick)="disableTips.emit()"
-      ></lg-button>
-    </div>
+    <lg-button
+      size="sm"
+      severity="secondary"
+      text
+      [label]="t('onboarding.bubble.skip')"
+      (onClick)="skip.emit()"
+    ></lg-button>
     @if (view().showNext) {
       <lg-button
         size="sm"

@@ -15,8 +15,8 @@ const BASE: CoachMarkView = {
   placement: 'center'
 };
 
-// Buttons render in a fixed order: [skip, turn-off, (next)] — matching by order
-// keeps the assertions independent of the resolved translation text.
+// Buttons render in a fixed order: [skip, (next)] — matching by order keeps the
+// assertions independent of the resolved translation text.
 function buttons(
   fixture: ComponentFixture<CoachMarkComponent>
 ): HTMLButtonElement[] {
@@ -47,26 +47,22 @@ describe('CoachMarkComponent', () => {
   });
 
   it('shows Next only for steps that opt in', () => {
-    expect(buttons(render(BASE))).toHaveLength(2);
-    expect(buttons(render({ ...BASE, showNext: true }))).toHaveLength(3);
+    expect(buttons(render(BASE))).toHaveLength(1); // skip only
+    expect(buttons(render({ ...BASE, showNext: true }))).toHaveLength(2);
   });
 
-  it('emits from the persistent controls', () => {
+  it('emits from the Skip and Next controls', () => {
     const fixture = render({ ...BASE, showNext: true });
     const skip = vi.fn();
-    const disableTips = vi.fn();
     const next = vi.fn();
     fixture.componentInstance.skip.subscribe(skip);
-    fixture.componentInstance.disableTips.subscribe(disableTips);
     fixture.componentInstance.next.subscribe(next);
 
-    const [skipBtn, turnOffBtn, nextBtn] = buttons(fixture);
+    const [skipBtn, nextBtn] = buttons(fixture);
     skipBtn.click();
-    turnOffBtn.click();
     nextBtn.click();
 
     expect(skip).toHaveBeenCalledOnce();
-    expect(disableTips).toHaveBeenCalledOnce();
     expect(next).toHaveBeenCalledOnce();
   });
 });
