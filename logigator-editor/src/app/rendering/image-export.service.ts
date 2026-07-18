@@ -106,10 +106,11 @@ export class ImageExportService {
         multiplier: effective,
         background: this._backgroundMode(options)
       });
-    } catch {
+    } catch (err) {
       this.toast.error(
         this.translation.translate('imageExport.error.failed'),
-        'ImageExportService'
+        'ImageExportService',
+        err
       );
       return;
     }

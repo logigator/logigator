@@ -86,7 +86,8 @@ export class InspectionService {
       // matches the compiled board) — surface it instead of crashing the tap.
       this.toastService.error(
         err instanceof Error ? err.message : String(err),
-        'InspectionService'
+        'InspectionService',
+        err
       );
       return;
     }

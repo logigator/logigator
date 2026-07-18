@@ -57,7 +57,8 @@ export class UserService {
         }
         this.toastService.error(
           this.translation.translate('user.loadFailed'),
-          'UserService'
+          'UserService',
+          err
         );
         this._user.set(null);
       }

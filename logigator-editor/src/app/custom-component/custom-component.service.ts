@@ -74,7 +74,8 @@ export class CustomComponentService {
       } catch (e) {
         this.toast.error(
           this.translation.translate('componentActions.createFailed'),
-          'CustomComponentService'
+          'CustomComponentService',
+          e
         );
         throw e;
       }
@@ -134,10 +135,11 @@ export class CustomComponentService {
           : await this.persistence.loadComponentForEdit(id);
       this._openEditor(project, masterTypeId);
       this._disarmPlacementFor(id);
-    } catch {
+    } catch (err) {
       this.toast.error(
         this.translation.translate('componentActions.openFailed'),
-        'CustomComponentService'
+        'CustomComponentService',
+        err
       );
     }
   }
@@ -155,15 +157,20 @@ export class CustomComponentService {
     // editor, so reading it afterwards would mark the wrong project.
     const host = this.projectService.activeProject();
     let masterId: string | null;
+    // Captured so the failure toast below can carry a stack; stays undefined
+    // when the restore returned null (not a restorable orphan) rather than threw.
+    let restoreError: unknown;
     try {
       masterId = await this.componentLibrary.restoreOrphanToLibrary(typeId);
-    } catch {
+    } catch (err) {
       masterId = null;
+      restoreError = err;
     }
     if (!masterId) {
       this.toast.error(
         this.translation.translate('componentActions.restoreFailed'),
-        'CustomComponentService'
+        'CustomComponentService',
+        restoreError
       );
       return;
     }
@@ -198,10 +205,11 @@ export class CustomComponentService {
 
     try {
       await this.componentLibrary.deletePersistentMaster(def);
-    } catch {
+    } catch (err) {
       this.toast.error(
         this.translation.translate('deleteComponent.deleteFailed'),
-        'CustomComponentService'
+        'CustomComponentService',
+        err
       );
       return;
     }
@@ -377,10 +385,11 @@ export class CustomComponentService {
     try {
       await this.componentLibrary.ensureServerMasterCircuit(masterTypeId);
       return true;
-    } catch {
+    } catch (err) {
       this.toast.error(
         this.translation.translate('componentActions.cloudLoadFailed'),
-        'CustomComponentService'
+        'CustomComponentService',
+        err
       );
       return false;
     }
