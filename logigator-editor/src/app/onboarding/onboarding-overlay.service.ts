@@ -21,7 +21,9 @@ import { CoachMarkBackdropComponent } from './coach-mark/coach-mark-backdrop.com
  * the step bubble, built on {@link LgOverlayService}. The bubble anchors to a
  * target element (connected overlay, caret tracking the resolved side) or
  * centers when there is none; the backdrop tracks the target's rect on
- * scroll/resize so the highlight ring stays put. Escape maps to skip.
+ * scroll/resize so the highlight ring stays put. The coach-mark claims no
+ * keyboard input — Escape stays free for the board's own cancel handling, so
+ * the tutorial only ends through its own Skip control.
  *
  * Presentation only — the {@link TutorialRunner} decides which step to show and
  * supplies the handlers. One coach-mark is visible at a time.
@@ -40,15 +42,6 @@ export class OnboardingOverlayService {
   private handlers: CoachMarkHandlers | null = null;
   private subscriptions = new Subscription();
   private readonly trackRect = () => this.refreshRect();
-  // Global (capture-phase) Escape → skip: the backdrop is click-through and
-  // focus stays on the board/toolbar, so Escape must be caught anywhere rather
-  // than routed to a focused overlay.
-  private readonly onKeydown = (event: KeyboardEvent) => {
-    if (event.key === 'Escape') {
-      event.preventDefault();
-      this.handlers?.skip();
-    }
-  };
 
   /**
    * Shows (or, if a coach-mark is already open on the same target and side,
@@ -79,14 +72,12 @@ export class OnboardingOverlayService {
 
     window.addEventListener('scroll', this.trackRect, true);
     window.addEventListener('resize', this.trackRect);
-    document.addEventListener('keydown', this.onKeydown, true);
   }
 
   /** Tears down the coach-mark entirely. */
   public hide(): void {
     window.removeEventListener('scroll', this.trackRect, true);
     window.removeEventListener('resize', this.trackRect);
-    document.removeEventListener('keydown', this.onKeydown, true);
     this.subscriptions.unsubscribe();
     // A Subscription is single-use once unsubscribed; swap in a fresh one.
     this.subscriptions = new Subscription();

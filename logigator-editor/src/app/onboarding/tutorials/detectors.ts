@@ -43,11 +43,15 @@ function firstOfType(project: Project, type: number): Component | null {
 
 /**
  * Whether the canonical two-Switch → AND → LED circuit is wired: the AND's
- * output shares a net with an LED input, and its two inputs reach two distinct
- * Switch outputs. Uses the compiler's own net extraction (union-find over
- * termination points), so any wiring path that forms the nets counts — a port
- * is an output when its index is `>= component.numInputs` (a Switch has no
+ * output shares a net with an LED input, and each of its two inputs is driven by
+ * a distinct Switch output. Uses the compiler's own net extraction (union-find
+ * over termination points), so any wiring path that forms the nets counts — a
+ * port is an output when its index is `>= component.numInputs` (a Switch has no
  * inputs, so all its ports are outputs).
+ *
+ * The per-input matching matters: both switches wired to a single AND input
+ * (the other left floating) would keep the AND output low forever, so it must
+ * not count as complete.
  */
 export function netComplete(project: Project): boolean {
   const and = firstOfType(project, AND);
@@ -81,20 +85,52 @@ export function netComplete(project: Project): boolean {
   });
   if (!outputReachesLed) return false;
 
-  const switches = new Set<Component>();
+  // The switch(es) reachable from each AND input, kept separate per input so a
+  // matching can assign a distinct switch to distinct inputs.
+  const switchesPerInput: Component[][] = [];
   for (let portIndex = 0; portIndex < and.numInputs; portIndex++) {
     const net = netOfPort(and, portIndex);
-    if (!net) continue;
-    for (const port of net.ports) {
-      if (
-        port.component.config.type === SWITCH &&
-        port.portIndex >= port.component.numInputs
-      ) {
-        switches.add(port.component);
+    switchesPerInput.push(
+      net
+        ? net.ports
+            .filter(
+              (port) =>
+                port.component.config.type === SWITCH &&
+                port.portIndex >= port.component.numInputs
+            )
+            .map((port) => port.component)
+        : []
+    );
+  }
+  return distinctMatchCount(switchesPerInput) >= 2;
+}
+
+/**
+ * Maximum number of AND inputs that can each be paired with a *different* switch
+ * (bipartite matching, Kuhn's algorithm). Two switches sharing one input net
+ * therefore only satisfy one input, not both.
+ */
+function distinctMatchCount(
+  switchesPerInput: readonly (readonly Component[])[]
+): number {
+  const switchToInput = new Map<Component, number>();
+  const assign = (input: number, seen: Set<Component>): boolean => {
+    for (const sw of switchesPerInput[input]) {
+      if (seen.has(sw)) continue;
+      seen.add(sw);
+      const holder = switchToInput.get(sw);
+      if (holder === undefined || assign(holder, seen)) {
+        switchToInput.set(sw, input);
+        return true;
       }
     }
+    return false;
+  };
+  let matched = 0;
+  for (let input = 0; input < switchesPerInput.length; input++) {
+    if (assign(input, new Set())) matched++;
   }
-  return switches.size >= 2;
+  return matched;
 }
 
 function anyPort(

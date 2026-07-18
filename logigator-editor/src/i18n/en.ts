@@ -791,7 +791,6 @@ const en = {
       showTips: 'Show onboarding tips'
     },
     menu: {
-      startTutorial: 'Start tutorial',
       showTipsAgain: 'Show tips again'
     },
     nudge: {

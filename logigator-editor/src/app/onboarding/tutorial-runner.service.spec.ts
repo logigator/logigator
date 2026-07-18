@@ -53,6 +53,7 @@ describe('TutorialRunnerService', () => {
   let hide: ReturnType<typeof vi.fn>;
   let components: Component[];
   let actionChange$: Subject<void>;
+  let userInput$: Subject<Component>;
 
   const tick = () => TestBed.inject(ApplicationRef).tick();
   const lastView = (): CoachMarkView => show.mock.calls.at(-1)![1];
@@ -70,9 +71,10 @@ describe('TutorialRunnerService', () => {
     hide = vi.fn();
     components = [];
     actionChange$ = new Subject<void>();
+    userInput$ = new Subject<Component>();
     const project = {
       components,
-      userInput$: new Subject(),
+      userInput$,
       actionManager: { actionChange$ }
     };
 
@@ -103,6 +105,17 @@ describe('TutorialRunnerService', () => {
     expect(view.stepNumber).toBe(1);
     expect(view.totalSteps).toBe(3);
     expect(view.showNext).toBe(true);
+  });
+
+  it('does not advance a manual step when a lever/button is driven', () => {
+    onboarding.startTutorial('test');
+    tick();
+    expect(lastView().stepNumber).toBe(1); // manual step
+
+    userInput$.next({} as Component); // drive an input mid-step
+    tick();
+
+    expect(lastView().stepNumber).toBe(1); // still waiting on Next
   });
 
   it('advances manual steps on Next and auto-steps on the action predicate', () => {

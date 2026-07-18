@@ -132,11 +132,14 @@ export class TutorialRunnerService {
     this.userInteracted = false;
     this.onboarding.setCurrentStepIndex(this.index);
 
-    // Track lever/button drives for the whole step, whatever its advanceOn is.
+    // Record lever/button drives for the whole step so predicates can read
+    // `userInteracted` (e.g. the flip-a-switch step). Only a `userInput` step
+    // treats a drive as its advance trigger — other kinds advance off their own
+    // stream (mode/action/frame), so a drive here must not skip them.
     this.stepSub.add(
       project.userInput$.subscribe(() => {
         this.userInteracted = true;
-        this.tryAdvance(step);
+        if (step.advanceOn.kind === 'userInput') this.tryAdvance(step);
       })
     );
     this.subscribeAdvance(step);

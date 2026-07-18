@@ -57,13 +57,13 @@ describe('OnboardingOverlayService', () => {
     expect(container()?.textContent ?? '').not.toContain('Place an AND gate');
   });
 
-  it('maps Escape to skip', () => {
+  it('leaves Escape to the board and does not skip on it', () => {
     service.show(target, VIEW, handlers);
     tick();
     document.body.dispatchEvent(
       new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })
     );
-    expect(handlers.skip).toHaveBeenCalledOnce();
+    expect(handlers.skip).not.toHaveBeenCalled();
   });
 
   it('refreshes content in place when the target is unchanged', () => {

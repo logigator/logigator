@@ -9,7 +9,7 @@ import { LoggingService } from '../logging/logging.service';
  */
 export type OnboardingPlatform = 'desktop' | 'compact';
 
-/** The flagship first-run tutorial, auto-started once for genuinely new users. */
+/** The flagship first-run tutorial, launched only from the first-run nudge. */
 export const GETTING_STARTED_TUTORIAL = 'getting-started';
 
 const TIPS_ENABLED_KEY = 'onboarding.tips-enabled';
@@ -137,8 +137,8 @@ export class OnboardingService {
   }
 
   /**
-   * Clears the active tutorial. When `completed`, its id is recorded so it never
-   * auto-starts again.
+   * Clears the active tutorial. When `completed`, its id is recorded so the
+   * first-run nudge stops offering it.
    */
   public endTutorial(completed: boolean): void {
     const id = this._activeTutorial();

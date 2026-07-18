@@ -114,6 +114,18 @@ describe('tutorial detectors', () => {
         false
       );
     });
+
+    it('is false when both switches share one AND input (other floating)', () => {
+      const c = wiredCircuit();
+      const wires = [
+        c.wires[0], // sw1 → AND input 0
+        fakeWire({ x: 0, y: 2 }, { x: 5, y: 0 }), // sw2 → AND input 0 too
+        c.wires[2] // AND output → LED
+      ];
+      expect(netComplete(projectOf([c.sw1, c.sw2, c.and, c.led], wires))).toBe(
+        false
+      );
+    });
   });
 
   describe('ledPowered', () => {
