@@ -12,6 +12,7 @@ import { ActionContainer } from '../../actions/action-container';
 import { AddComponentsAction } from '../../actions/actions/add-components.action';
 import { AddWiresAction } from '../../actions/actions/add-wires.action';
 import { DragCollisionState } from './drag-collision';
+import { SelectionManager } from '../../project/selection-manager';
 import { getStaticDI } from '../../utils/get-di';
 import { LoggingService } from '../../logging/logging.service';
 
@@ -78,6 +79,22 @@ export class PastePlacementSession implements DragSession {
       _wires
     );
     this._collision.update();
+    // The pasted group wears its selection rect from the moment it appears —
+    // the same padded rect a committed paste keeps — so it reads as selected
+    // while it floats, not only once it is put down.
+    this._refreshSelectionRect();
+  }
+
+  // Shows the selection rect around the ghosts' padded bounds, translated by
+  // the current drag offset so it rides along with them. Called on any change
+  // to the group's own geometry (construction, rotation); a plain move only
+  // shifts the offset.
+  private _refreshSelectionRect(): void {
+    const bounds = groupGridBounds(this._components, this._wires);
+    if (!bounds) return;
+    bounds.pad(SelectionManager.GRAB_MARGIN);
+    this._project.floatingLayer.showSelectionRect(bounds);
+    this._project.floatingLayer.setSelectionRectOffset(this._dragLayer.position);
   }
 
   onMove(input: PointerInput): void {
@@ -87,6 +104,7 @@ export class PastePlacementSession implements DragSession {
       cursor.x - this._anchor!.x,
       cursor.y - this._anchor!.y
     );
+    this._project.floatingLayer.setSelectionRectOffset(this._dragLayer.position);
     this._collision.update();
   }
 
@@ -104,6 +122,8 @@ export class PastePlacementSession implements DragSession {
       rotationPivotFor(bounds),
       steps
     );
+    // The group's bounds turned with it — re-fit the rect to them.
+    this._refreshSelectionRect();
     this._collision.update();
   }
 
@@ -118,6 +138,7 @@ export class PastePlacementSession implements DragSession {
       this._dragLayer.position.y + dy
     );
     this._anchor?.set(this._anchor.x - dx, this._anchor.y - dy);
+    this._project.floatingLayer.setSelectionRectOffset(this._dragLayer.position);
     this._collision.update();
   }
 
@@ -167,6 +188,9 @@ export class PastePlacementSession implements DragSession {
     );
     this._dragLayer.position.set(0, 0);
     this._collision.reset();
+    // The cancel path clears no selection, so nothing else drops the rect we
+    // showed for the discarded ghosts — hide it explicitly.
+    this._project.floatingLayer.hideSelectionRect();
     for (const c of this._components) c.destroy({ children: true });
     for (const w of this._wires) w.destroy();
   }

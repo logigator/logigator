@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Container, Point } from 'pixi.js';
 import { configureTestBed } from '../../../testing/configure-test-bed';
 import { Project } from '../../project/project';
@@ -55,6 +55,70 @@ describe('PastePlacementSession', () => {
       const comp = makeAnd(2, Direction.E, 3, 0);
       session = new PastePlacementSession(project, dragLayer, [comp], []);
       expect([...project.components]).toHaveLength(0);
+    });
+  });
+
+  // ── selection rect ────────────────────────────────────────────────────────────
+
+  describe('selection rect', () => {
+    it('shows a rect around the padded group bounds while the ghosts float', () => {
+      const show = vi.spyOn(project.floatingLayer, 'showSelectionRect');
+      const comp = makeAnd(2, Direction.E, 0, 0);
+      session = new PastePlacementSession(project, dragLayer, [comp], []);
+
+      expect(show).toHaveBeenCalledTimes(1);
+      const rect = show.mock.calls[0][0];
+      const bounds = comp.gridBounds;
+      // Padded outward by GRAB_MARGIN on every side.
+      expect(rect.x).toBe(bounds.x - 1);
+      expect(rect.y).toBe(bounds.y - 1);
+      expect(rect.width).toBe(bounds.width + 2);
+      expect(rect.height).toBe(bounds.height + 2);
+    });
+
+    it('rides the rect along with the ghosts on move', () => {
+      const comp = makeAnd(2, Direction.E, 0, 0);
+      session = new PastePlacementSession(project, dragLayer, [comp], []);
+      const offset = vi.spyOn(project.floatingLayer, 'setSelectionRectOffset');
+
+      session.beginDrag(new Point(0, 0));
+      session.onMove(makeMoveInput(4, 3));
+
+      expect(offset).toHaveBeenLastCalledWith(dragLayer.position);
+      expect(dragLayer.position.x).toBe(4);
+      expect(dragLayer.position.y).toBe(3);
+    });
+
+    it('re-fits the rect to the rotated bounds while keeping the drag offset', () => {
+      // A tall 1×2 wire so a quarter turn changes the group's AABB.
+      const wire = makeWire(0, 0, WireDirection.VERTICAL);
+      session = new PastePlacementSession(project, dragLayer, [], [wire]);
+
+      session.beginDrag(new Point(0, 0));
+      session.onMove(makeMoveInput(4, 0)); // offset = (4, 0)
+
+      const show = vi.spyOn(project.floatingLayer, 'showSelectionRect');
+      const offset = vi.spyOn(project.floatingLayer, 'setSelectionRectOffset');
+      session.rotate(1);
+
+      const rect = show.mock.calls[0][0];
+      const bounds = wire.gridBounds; // now the rotated (horizontal) bounds
+      expect(rect.x).toBe(bounds.x - 1);
+      expect(rect.y).toBe(bounds.y - 1);
+      expect(rect.width).toBe(bounds.width + 2);
+      expect(rect.height).toBe(bounds.height + 2);
+      expect(offset).toHaveBeenLastCalledWith(dragLayer.position);
+      expect(dragLayer.position.x).toBe(4);
+    });
+
+    it('hides the rect when the paste is cancelled', () => {
+      const hide = vi.spyOn(project.floatingLayer, 'hideSelectionRect');
+      const comp = makeAnd(2, Direction.E, 0, 0);
+      session = new PastePlacementSession(project, dragLayer, [comp], []);
+      session.onCancel();
+      session = undefined;
+
+      expect(hide).toHaveBeenCalled();
     });
   });
 
