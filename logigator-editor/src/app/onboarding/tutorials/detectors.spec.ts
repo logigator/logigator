@@ -12,7 +12,10 @@ import {
   placedTotalSince
 } from './detectors';
 
-type Pt = { x: number; y: number };
+interface Pt {
+  x: number;
+  y: number;
+}
 
 /** Minimal component honoring the fields extractNets/detectors read. */
 function fakeComponent(
