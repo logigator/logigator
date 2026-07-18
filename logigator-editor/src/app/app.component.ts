@@ -60,6 +60,8 @@ import { LoggingService } from './logging/logging.service';
 import { ToastService } from './logging/toast.service';
 import { SessionLifecycleService } from './user/session-lifecycle.service';
 import { ChangelogService } from './changelog/changelog.service';
+import { OnboardingService } from './onboarding/onboarding.service';
+import { TutorialRunnerService } from './onboarding/tutorial-runner.service';
 
 @Component({
   selector: 'app-root',
@@ -120,6 +122,10 @@ export class AppComponent {
   private readonly toastService = inject(ToastService);
   private readonly translation = inject(TranslationService);
   private readonly changelogService = inject(ChangelogService);
+  private readonly onboardingService = inject(OnboardingService);
+  // Injected for its side effects: the runtime driver reacts to the active
+  // tutorial signal, so it must live from startup to catch first-run auto-start.
+  private readonly tutorialRunner = inject(TutorialRunnerService);
   private readonly title = inject(Title);
 
   protected readonly cursorPosition = signal<Point>(new Point(0, 0));
@@ -186,18 +192,26 @@ export class AppComponent {
       }
     })();
 
+    // Greet a returning user with the changelog the first time they load a
+    // release newer than the one they last saw. A first-ever launch is
+    // acknowledged silently inside the service.
+    const changelogOpened = this.changelogService.maybeAutoOpen();
+
     if (!this.routerService.matches(this.location.path())) {
+      // No route to restore: this branch creates the empty board synchronously,
+      // so it is the only place we know the main project is genuinely empty.
+      // When a route DOES match, `processCurrentRoute` restores a real save
+      // asynchronously below — never auto-start on top of that.
       this.persistenceService.createAndSetEmptyProject();
+      this.onboardingService.maybeAutoStart({
+        changelogOpened,
+        projectEmpty: true
+      });
     }
 
     void this.routerService.processCurrentRoute();
 
     this.unsavedChangesGuard.attach();
-
-    // Greet a returning user with the changelog the first time they load a
-    // release newer than the one they last saw. A first-ever launch is
-    // acknowledged silently inside the service.
-    this.changelogService.maybeAutoOpen();
   }
 
   /** A Drawer reporting itself hidden (mask click / Esc) clears the active sheet. */
