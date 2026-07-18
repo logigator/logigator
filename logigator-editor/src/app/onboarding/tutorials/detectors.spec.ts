@@ -35,7 +35,11 @@ function fakeWire(a: Pt, b: Pt) {
 }
 
 function projectOf(components: Component[], wires: unknown[] = []): Project {
-  return { components, wires } as unknown as Project;
+  return {
+    components,
+    componentCount: components.length,
+    wires
+  } as unknown as Project;
 }
 
 function contextOf(

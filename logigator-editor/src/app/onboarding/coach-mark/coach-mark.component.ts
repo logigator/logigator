@@ -1,12 +1,11 @@
 import {
   ChangeDetectionStrategy,
   Component,
-  computed,
   input,
   output
 } from '@angular/core';
 import { TranslocoDirective } from '@jsverse/transloco';
-import { caretClasses, LgButton, type LgOverlaySide } from '@logigator/ui';
+import { LgButton, LgCaret, type LgOverlaySide } from '@logigator/ui';
 import { CoachMarkView } from '../coach-mark.model';
 
 /**
@@ -19,7 +18,7 @@ import { CoachMarkView } from '../coach-mark.model';
 @Component({
   selector: 'app-coach-mark',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslocoDirective, LgButton],
+  imports: [TranslocoDirective, LgButton, LgCaret],
   templateUrl: './coach-mark.component.html'
 })
 export class CoachMarkComponent {
@@ -28,9 +27,4 @@ export class CoachMarkComponent {
 
   public readonly next = output<void>();
   public readonly skip = output<void>();
-
-  protected readonly caret = computed(() => {
-    const side = this.side();
-    return side ? `absolute size-2.5 ${caretClasses(side, 'content')}` : null;
-  });
 }

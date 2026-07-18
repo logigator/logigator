@@ -37,7 +37,7 @@ describe('HintService', () => {
     configureTestBed([
       {
         provide: ProjectService,
-        useValue: { mainProject: () => ({ components: [] }) }
+        useValue: { mainProject: () => ({ componentCount: 0 }) }
       },
       { provide: InspectionService, useValue: { open: signal(null) } }
     ]);
@@ -139,7 +139,7 @@ describe('HintService', () => {
       '.cdk-overlay-container app-hint-popover button'
     );
     turnOff?.click();
-    expect(onboarding.isTipsEnabled()).toBe(false);
+    expect(onboarding.tipsEnabled()).toBe(false);
     expect(popover()).toBeNull();
   });
 });

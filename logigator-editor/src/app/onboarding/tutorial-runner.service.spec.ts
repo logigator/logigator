@@ -141,7 +141,7 @@ describe('TutorialRunnerService', () => {
     onboarding.startTutorial('test');
     tick();
 
-    lastHandlers().next?.(); // step 1 → 2 (action step)
+    lastHandlers().next(); // step 1 → 2 (action step)
     tick();
     expect(lastView().stepNumber).toBe(2);
     expect(lastView().showNext).toBe(false);
@@ -153,10 +153,10 @@ describe('TutorialRunnerService', () => {
   it('marks the tutorial completed after the last step', () => {
     onboarding.startTutorial('test');
     tick();
-    lastHandlers().next?.(); // → 2
+    lastHandlers().next(); // → 2
     tick();
     placeSwitch(); // → 3
-    lastHandlers().next?.(); // → past the end
+    lastHandlers().next(); // → past the end
     tick();
 
     expect(onboarding.activeTutorial()).toBeNull();
@@ -262,7 +262,7 @@ describe('TutorialRunnerService', () => {
       expect(confirm).not.toHaveBeenCalled();
       expect(createAndSetEmptyProject).toHaveBeenCalledOnce();
       expect(onboarding.activeTutorial()).toBe('test');
-      expect(onboarding.isNudgeDismissed()).toBe(true);
+      expect(onboarding.nudgeDismissed()).toBe(true);
     });
 
     it('on a dirty board, asks first and only launches after accept', () => {
@@ -285,7 +285,7 @@ describe('TutorialRunnerService', () => {
 
       expect(createAndSetEmptyProject).not.toHaveBeenCalled();
       expect(onboarding.activeTutorial()).toBeNull();
-      expect(onboarding.isNudgeDismissed()).toBe(false);
+      expect(onboarding.nudgeDismissed()).toBe(false);
     });
   });
 });

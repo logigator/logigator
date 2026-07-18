@@ -41,6 +41,15 @@ export type StepText =
   | TranslationKey
   | Partial<Record<OnboardingPlatform, TranslationKey>>;
 
+/** The key `text` resolves to on `platform`, falling back desktop → compact. */
+export function resolveStepText(
+  text: StepText,
+  platform: OnboardingPlatform
+): TranslationKey {
+  if (typeof text === 'string') return text;
+  return (text[platform] ?? text.desktop ?? text.compact) as TranslationKey;
+}
+
 export interface TutorialStep {
   readonly id: string;
   readonly title: TranslationKey;

@@ -34,7 +34,7 @@ export class OnboardingService {
 
   private readonly _tipsEnabled = signal(this.loadBool(TIPS_ENABLED_KEY, true));
   /** Master switch: false silences every tutorial and hint. */
-  public readonly tipsEnabled = computed(this._tipsEnabled);
+  public readonly tipsEnabled = this._tipsEnabled.asReadonly();
 
   private readonly _nudgeDismissed = signal(
     this.loadBool(NUDGE_DISMISSED_KEY, false)
@@ -44,14 +44,11 @@ export class OnboardingService {
    * nudge is the only launch path (there is no auto-start): it shows once for a
    * new user and, once dismissed or once the tutorial starts, never returns.
    */
-  public readonly nudgeDismissed = computed(this._nudgeDismissed);
+  public readonly nudgeDismissed = this._nudgeDismissed.asReadonly();
 
   private readonly _activeTutorial = signal<string | null>(null);
   /** Id of the tutorial currently running, or null. The runner reacts to this. */
-  public readonly activeTutorial = computed(this._activeTutorial);
-
-  private readonly _currentStepIndex = signal(0);
-  public readonly currentStepIndex = computed(this._currentStepIndex);
+  public readonly activeTutorial = this._activeTutorial.asReadonly();
 
   private readonly _completedTutorials = this.loadSet(COMPLETED_TUTORIALS_KEY);
   private readonly _seenHints = this.loadSet(SEEN_HINTS_KEY);
@@ -60,10 +57,6 @@ export class OnboardingService {
   public readonly platform = computed<OnboardingPlatform>(() =>
     this.layout.isCompact() ? 'compact' : 'desktop'
   );
-
-  public isTipsEnabled(): boolean {
-    return this._tipsEnabled();
-  }
 
   /**
    * Flips the master switch and persists it. Turning tips off also ends any
@@ -121,12 +114,7 @@ export class OnboardingService {
   /** Starts a tutorial regardless of completed state. */
   public startTutorial(id: string): void {
     this._activeTutorial.set(id);
-    this._currentStepIndex.set(0);
     this.logging.debug(`start tutorial ${id}`, 'OnboardingService');
-  }
-
-  public isNudgeDismissed(): boolean {
-    return this._nudgeDismissed();
   }
 
   /** Permanently hides the first-run nudge (dismissed, or the tutorial started). */
@@ -135,10 +123,6 @@ export class OnboardingService {
     this._nudgeDismissed.set(true);
     this.saveBool(NUDGE_DISMISSED_KEY, true);
     this.logging.debug('nudge dismissed', 'OnboardingService');
-  }
-
-  public setCurrentStepIndex(index: number): void {
-    this._currentStepIndex.set(index);
   }
 
   /** Ends the active tutorial as skipped (not completed) — Skip button / Esc. */
@@ -158,7 +142,6 @@ export class OnboardingService {
       this.saveSet(COMPLETED_TUTORIALS_KEY, this._completedTutorials);
     }
     this._activeTutorial.set(null);
-    this._currentStepIndex.set(0);
     this.logging.debug(
       `end tutorial ${id} (completed=${completed})`,
       'OnboardingService'

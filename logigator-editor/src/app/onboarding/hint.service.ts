@@ -9,16 +9,12 @@ import {
 } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { ComponentPortal } from '@angular/cdk/portal';
-import {
-  ConnectedOverlayPositionChange,
-  FlexibleConnectedPositionStrategy,
-  OverlayRef
-} from '@angular/cdk/overlay';
+import { OverlayRef } from '@angular/cdk/overlay';
 import { Subscription } from 'rxjs';
 import {
+  caretSideChanges,
   connectedPositions,
-  LgOverlayService,
-  sideOfPosition
+  LgOverlayService
 } from '@logigator/ui';
 import { WorkMode } from '../work-mode/work-mode.enum';
 import { WorkModeService } from '../work-mode/work-mode.service';
@@ -26,13 +22,24 @@ import { ProjectService } from '../project/project.service';
 import { InspectionService } from '../inspection/inspection.service';
 import { LoggingService } from '../logging/logging.service';
 import { TranslationService } from '../translation/translation.service';
-import { TranslationKey } from '../translation/translation-key.model';
 import { OnboardingPlatform, OnboardingService } from './onboarding.service';
-import { StepText } from './tutorial.model';
+import { resolveStepText } from './tutorial.model';
 import { Hint } from './hint.model';
 import { HintPopoverComponent } from './hint/hint-popover.component';
-import { HINTS } from './hints/registry';
+import { hintForTrigger } from './hints/registry';
 import { OnboardingTargetRegistry } from './onboarding-target-registry.service';
+
+/** Everything one showing hint owns; {@link dismiss} disposes it as a unit. */
+interface HintSession {
+  readonly hint: Hint;
+  /** Per-hint effect that tracks the target element and re-anchors reactively. */
+  effectRef: EffectRef | null;
+  overlayRef: OverlayRef | null;
+  /** The element the live overlay is anchored to (null = floated). */
+  target: HTMLElement | null;
+  /** Replaced on every remount; the effect outlives individual overlays. */
+  subscriptions: Subscription;
+}
 
 /**
  * Fires the just-in-time hints. Subscribes to the triggers (work-mode signal,
@@ -61,13 +68,8 @@ export class HintService {
 
   private readonly mode$ = toObservable(this.workMode.mode);
 
-  private overlayRef: OverlayRef | null = null;
-  private currentId: string | null = null;
-  /** The element the live overlay is anchored to (null = floated). */
-  private currentTarget: HTMLElement | null = null;
-  /** Per-hint effect that tracks the target element and re-anchors reactively. */
-  private targetEffect: EffectRef | null = null;
-  private subscriptions = new Subscription();
+  /** The showing hint, or null (at most one at a time). */
+  private session: HintSession | null = null;
   private readonly onKeydown = (event: KeyboardEvent) => {
     if (event.key === 'Escape') this.dismiss();
   };
@@ -80,7 +82,7 @@ export class HintService {
       const open = this.inspection.open();
       untracked(() => {
         if (open && this.workMode.mode() === WorkMode.SIMULATION) {
-          this.fire('inspect-component');
+          this.fire(hintForTrigger({ kind: 'inspect' }));
         }
       });
     });
@@ -91,7 +93,7 @@ export class HintService {
       const project = this.projectService.mainProject();
       untracked(() => {
         if (compact && project && this.isEmpty()) {
-          this.fire('pan-zoom-compact');
+          this.fire(hintForTrigger({ kind: 'compactEmpty' }));
         }
       });
     });
@@ -99,29 +101,24 @@ export class HintService {
 
   private onMode(mode: WorkMode): void {
     // A tool switch also clears a showing hint — the user has moved on.
-    if (this.currentId !== null) this.dismiss();
-    const hint = HINTS.find(
-      (candidate) =>
-        candidate.trigger.kind === 'workMode' && candidate.trigger.mode === mode
-    );
-    if (hint) this.fire(hint.id);
+    if (this.session) this.dismiss();
+    this.fire(hintForTrigger({ kind: 'workMode', mode }));
   }
 
-  private fire(id: string): void {
-    if (this.currentId !== null) return; // one at a time; drop the newer
-    const hint = HINTS.find((candidate) => candidate.id === id);
+  private fire(hint: Hint | undefined): void {
     if (!hint) return;
+    if (this.session) return; // one at a time; drop the newer
     if (!this.canShow(hint)) {
-      this.logging.debug(`hint ${id} suppressed`, 'HintService');
+      this.logging.debug(`hint ${hint.id} suppressed`, 'HintService');
       return;
     }
-    this.onboarding.markHintSeen(id);
-    this.logging.debug(`serve hint ${id}`, 'HintService');
+    this.onboarding.markHintSeen(hint.id);
+    this.logging.debug(`serve hint ${hint.id}`, 'HintService');
     this.open(hint);
   }
 
   private canShow(hint: Hint): boolean {
-    if (!this.onboarding.isTipsEnabled()) return false;
+    if (!this.onboarding.tipsEnabled()) return false;
     if (this.onboarding.activeTutorial() !== null) return false;
     if (this.onboarding.hasSeenHint(hint.id)) return false;
     const platform = this.onboarding.platform();
@@ -142,12 +139,19 @@ export class HintService {
    * race, no manual deferral. Torn down as one unit by {@link dismiss}.
    */
   private open(hint: Hint): void {
-    this.currentId = hint.id;
-    this.targetEffect = effect(
+    const session: HintSession = {
+      hint,
+      effectRef: null,
+      overlayRef: null,
+      target: null,
+      subscriptions: new Subscription()
+    };
+    this.session = session;
+    session.effectRef = effect(
       () => {
         const platform = this.onboarding.platform();
         const target = this.resolveTarget(hint, platform); // tracks the registry
-        untracked(() => this.mount(hint, target, platform));
+        untracked(() => this.mount(session, target, platform));
       },
       { injector: this.injector }
     );
@@ -159,16 +163,16 @@ export class HintService {
    * and a floated (bottom-centre) placement as the target comes and goes.
    */
   private mount(
-    hint: Hint,
+    session: HintSession,
     target: HTMLElement | null,
     platform: OnboardingPlatform
   ): void {
-    if (this.overlayRef && target === this.currentTarget) return;
-    this.currentTarget = target;
-    this.teardownOverlay();
+    if (session.overlayRef && target === session.target) return;
+    session.target = target;
+    this.teardownOverlay(session);
 
     if (target) {
-      this.overlayRef = this.overlayService.connected({
+      session.overlayRef = this.overlayService.connected({
         origin: target,
         positions: connectedPositions('bottom')
       });
@@ -176,72 +180,62 @@ export class HintService {
       // No anchor (targetless hint, or its target isn't registered): float it
       // bottom-centre, well clear of the bottom chrome — lifted higher on
       // compact where the tool/sim bars occupy the bottom edge.
-      this.overlayRef = this.overlayService.global({
+      session.overlayRef = this.overlayService.global({
         placement: 'bottom-center',
         hasBackdrop: false,
         panelClass: ['mb-24', 'lg:mb-16']
       });
     }
 
-    const cmp: ComponentRef<HintPopoverComponent> = this.overlayRef.attach(
+    const cmp: ComponentRef<HintPopoverComponent> = session.overlayRef.attach(
       new ComponentPortal(HintPopoverComponent, null, this.injector)
     );
     cmp.setInput(
       'text',
-      this.translation.translate(this.resolveText(hint.text, platform))
+      this.translation.translate(resolveStepText(session.hint.text, platform))
     );
 
-    this.subscriptions.add(
+    session.subscriptions.add(
       cmp.instance.dismiss.subscribe(() => this.dismiss())
     );
-    this.subscriptions.add(
+    session.subscriptions.add(
       cmp.instance.disableTips.subscribe(() => {
         this.dismiss();
         this.onboarding.disableAllTips();
       })
     );
-    if (target) this.trackCaretSide(this.overlayRef, cmp);
+    if (target) {
+      // Point the caret at the anchor from whichever side CDK actually placed it.
+      session.subscriptions.add(
+        caretSideChanges(session.overlayRef).subscribe((side) =>
+          cmp.setInput('side', side)
+        )
+      );
+    }
     document.addEventListener('keydown', this.onKeydown, true);
   }
 
-  /** Disposes the current overlay instance and its listeners (keeps the effect). */
-  private teardownOverlay(): void {
+  /** Disposes the session's overlay instance and its listeners (keeps the effect). */
+  private teardownOverlay(session: HintSession): void {
     document.removeEventListener('keydown', this.onKeydown, true);
-    this.subscriptions.unsubscribe();
-    this.subscriptions = new Subscription();
-    this.overlayRef?.dispose();
-    this.overlayRef = null;
+    session.subscriptions.unsubscribe();
+    session.subscriptions = new Subscription();
+    session.overlayRef?.dispose();
+    session.overlayRef = null;
   }
 
   private dismiss(): void {
-    if (this.currentId !== null) {
-      this.logging.debug(`dismiss hint ${this.currentId}`, 'HintService');
-    }
-    this.targetEffect?.destroy();
-    this.targetEffect = null;
-    this.teardownOverlay();
-    this.currentId = null;
-    this.currentTarget = null;
-  }
-
-  private trackCaretSide(
-    ref: OverlayRef,
-    cmp: ComponentRef<HintPopoverComponent>
-  ): void {
-    const strategy = ref.getConfig()
-      .positionStrategy as FlexibleConnectedPositionStrategy;
-    this.subscriptions.add(
-      strategy.positionChanges.subscribe(
-        (change: ConnectedOverlayPositionChange) => {
-          cmp.setInput('side', sideOfPosition(change.connectionPair));
-        }
-      )
-    );
+    const session = this.session;
+    if (!session) return;
+    this.logging.debug(`dismiss hint ${session.hint.id}`, 'HintService');
+    this.session = null;
+    session.effectRef?.destroy();
+    this.teardownOverlay(session);
   }
 
   private isEmpty(): boolean {
     const project = this.projectService.mainProject();
-    return !project || [...project.components].length === 0;
+    return !project || project.componentCount === 0;
   }
 
   private resolveTarget(
@@ -249,13 +243,5 @@ export class HintService {
     platform: OnboardingPlatform
   ): HTMLElement | null {
     return this.registry.get(hint.target?.[platform]);
-  }
-
-  private resolveText(
-    text: StepText,
-    platform: OnboardingPlatform
-  ): TranslationKey {
-    if (typeof text === 'string') return text;
-    return (text[platform] ?? text.desktop ?? text.compact) as TranslationKey;
   }
 }

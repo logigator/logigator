@@ -21,8 +21,8 @@ export interface CoachMarkView {
   readonly placement: CoachMarkPlacement;
 }
 
-/** Callbacks the bubble invokes; `next` is absent for auto-advancing steps. */
+/** Callbacks the bubble invokes; Next only renders on manual steps. */
 export interface CoachMarkHandlers {
-  readonly next?: () => void;
+  readonly next: () => void;
   readonly skip: () => void;
 }

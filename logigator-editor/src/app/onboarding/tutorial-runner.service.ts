@@ -18,14 +18,13 @@ import { ProjectMetadataStore } from '../persistence/project-metadata.store';
 import { SimulationService } from '../simulation/simulation.service';
 import { TranslationService } from '../translation/translation.service';
 import { LoggingService } from '../logging/logging.service';
-import { TranslationKey } from '../translation/translation-key.model';
 import { CoachMarkHandlers, CoachMarkView } from './coach-mark.model';
 import { MobileUiService } from '../layout/mobile-ui.service';
 import { OnboardingPlatform, OnboardingService } from './onboarding.service';
 import { OnboardingOverlayService } from './onboarding-overlay.service';
 import { OnboardingTargetRegistry } from './onboarding-target-registry.service';
 import {
-  StepText,
+  resolveStepText,
   TutorialContext,
   TutorialDefinition,
   TutorialStep
@@ -197,7 +196,6 @@ export class TutorialRunnerService {
     const step = this.steps[this.index];
     this.baseline = this.countByType(project);
     this.userInteracted = false;
-    this.onboarding.setCurrentStepIndex(this.index);
     this.logging.debug(
       `enter step ${step.id} (${this.index + 1}/${this.steps.length})`,
       'TutorialRunnerService'
@@ -307,7 +305,7 @@ export class TutorialRunnerService {
     const ctx = this.context();
     const params = ctx && step.params ? step.params(ctx) : undefined;
     const nudgeKey = ctx && step.nudge ? step.nudge(ctx) : null;
-    const bodyKey = nudgeKey ?? this.resolveText(step.text, platform);
+    const bodyKey = nudgeKey ?? resolveStepText(step.text, platform);
     return {
       title: this.translation.translate(step.title),
       text: this.translation.translate(bodyKey, params),
@@ -358,14 +356,6 @@ export class TutorialRunnerService {
       typeof candidates === 'string' ? [candidates] : (candidates ?? []);
     const elements = ids.map((id) => this.registry.get(id));
     return elements.find((element) => element?.isConnected) ?? null;
-  }
-
-  private resolveText(
-    text: StepText,
-    platform: OnboardingPlatform
-  ): TranslationKey {
-    if (typeof text === 'string') return text;
-    return (text[platform] ?? text.desktop ?? text.compact) as TranslationKey;
   }
 
   private context(): TutorialContext | null {

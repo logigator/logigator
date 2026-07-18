@@ -29,11 +29,11 @@ describe('OnboardingService', () => {
 
   it('defaults tips to enabled and persists the flag across instances', () => {
     const service = makeService();
-    expect(service.isTipsEnabled()).toBe(true);
+    expect(service.tipsEnabled()).toBe(true);
 
     service.setTipsEnabled(false);
     TestBed.resetTestingModule();
-    expect(makeService().isTipsEnabled()).toBe(false);
+    expect(makeService().tipsEnabled()).toBe(false);
   });
 
   it('remembers completed tutorials and seen hints across instances', () => {
@@ -75,7 +75,7 @@ describe('OnboardingService', () => {
 
     service.showTipsAgain();
 
-    expect(service.isTipsEnabled()).toBe(true);
+    expect(service.tipsEnabled()).toBe(true);
     expect(service.hasSeenHint('eraser')).toBe(false);
     expect(service.hasCompletedTutorial(GETTING_STARTED_TUTORIAL)).toBe(false);
   });
@@ -83,18 +83,18 @@ describe('OnboardingService', () => {
   describe('nudge dismissal', () => {
     it('defaults to shown and persists dismissal across instances', () => {
       const service = makeService();
-      expect(service.isNudgeDismissed()).toBe(false);
+      expect(service.nudgeDismissed()).toBe(false);
 
       service.dismissNudge();
       TestBed.resetTestingModule();
-      expect(makeService().isNudgeDismissed()).toBe(true);
+      expect(makeService().nudgeDismissed()).toBe(true);
     });
 
     it('is restored by showTipsAgain', () => {
       const service = makeService();
       service.dismissNudge();
       service.showTipsAgain();
-      expect(service.isNudgeDismissed()).toBe(false);
+      expect(service.nudgeDismissed()).toBe(false);
     });
   });
 });

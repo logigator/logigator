@@ -209,6 +209,11 @@ export class Project extends Container {
     return this._components.items;
   }
 
+  /** Number of components on the board — O(1), unlike counting {@link components}. */
+  public get componentCount(): number {
+    return this._componentsById.size;
+  }
+
   public get wires(): Iterable<Wire> {
     return this._wires.items;
   }

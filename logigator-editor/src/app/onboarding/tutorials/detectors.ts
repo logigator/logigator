@@ -22,8 +22,7 @@ export function placedSince(ctx: TutorialContext, type: number): number {
 export function placedTotalSince(ctx: TutorialContext): number {
   let baselineTotal = 0;
   for (const count of ctx.baseline.values()) baselineTotal += count;
-  const current = [...ctx.project.components].length;
-  return Math.max(0, current - baselineTotal);
+  return Math.max(0, ctx.project.componentCount - baselineTotal);
 }
 
 function currentCount(project: Project, type: number): number {

@@ -1,5 +1,5 @@
 import { WorkMode } from '../../work-mode/work-mode.enum';
-import { Hint } from '../hint.model';
+import { Hint, HintTrigger } from '../hint.model';
 
 // Onboarding target ids (see OnboardingTargetRegistry / OnboardTargetDirective).
 const wireTool = 'tool-wire';
@@ -53,3 +53,12 @@ export const HINTS: readonly Hint[] = [
     suppressIfCompleted: 'getting-started'
   }
 ];
+
+/** The hint wired to `trigger`, if any — trigger→hint wiring lives only here. */
+export function hintForTrigger(trigger: HintTrigger): Hint | undefined {
+  return HINTS.find((candidate) =>
+    candidate.trigger.kind === 'workMode' && trigger.kind === 'workMode'
+      ? candidate.trigger.mode === trigger.mode
+      : candidate.trigger.kind === trigger.kind
+  );
+}

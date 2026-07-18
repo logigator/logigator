@@ -25,6 +25,7 @@
       <!-- One canvas for every device; only the chrome around it swaps. -->
       <app-board
         class="block w-full h-full"
+        appOnboardTarget="board"
         [project]="projectService.activeProject()"
         (cursorPositionChange)="cursorPosition.set($event)"
       ></app-board>
