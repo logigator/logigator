@@ -42,6 +42,12 @@ export class OnboardingOverlayService {
   private handlers: CoachMarkHandlers | null = null;
   private subscriptions = new Subscription();
   private readonly trackRect = () => this.refreshRect();
+  /**
+   * Re-measures when the board resizes without a window resize — chiefly
+   * entering/leaving simulation, which drops the side-bar and tab-bar and so
+   * grows the canvas. Keeps the punched-out hole aligned to the new rect.
+   */
+  private resizeObserver: ResizeObserver | null = null;
 
   /**
    * Shows (or, if a coach-mark is already open on the same target and side,
@@ -72,12 +78,15 @@ export class OnboardingOverlayService {
 
     window.addEventListener('scroll', this.trackRect, true);
     window.addEventListener('resize', this.trackRect);
+    this.observeBoard();
   }
 
   /** Tears down the coach-mark entirely. */
   public hide(): void {
     window.removeEventListener('scroll', this.trackRect, true);
     window.removeEventListener('resize', this.trackRect);
+    this.resizeObserver?.disconnect();
+    this.resizeObserver = null;
     this.subscriptions.unsubscribe();
     // A Subscription is single-use once unsubscribed; swap in a fresh one.
     this.subscriptions = new Subscription();
@@ -149,10 +158,25 @@ export class OnboardingOverlayService {
     );
   }
 
+  /** Watches the board for size changes that no window resize announces. */
+  private observeBoard(): void {
+    const board = document.querySelector('app-board');
+    if (!board) return;
+    this.resizeObserver = new ResizeObserver(() => this.refreshRect());
+    this.resizeObserver.observe(board);
+  }
+
   private refreshRect(): void {
     if (!this.backdropCmp) return;
     const rect = this.target?.getBoundingClientRect() ?? null;
     this.backdropCmp.setInput('targetRect', rect);
+    // The board canvas is always interactive, so it is always cut out of the
+    // dim; steps that only touch it (e.g. "Move around") have no other target.
+    const board = document.querySelector('app-board');
+    this.backdropCmp.setInput(
+      'canvasRect',
+      board?.getBoundingClientRect() ?? null
+    );
     this.bubbleRef?.updatePosition();
   }
 }

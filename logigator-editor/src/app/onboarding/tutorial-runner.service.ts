@@ -1,13 +1,15 @@
 import { effect, inject, Injectable, untracked } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { Subscription } from 'rxjs';
+import { ConfirmationService } from '@logigator/ui';
 import { WorkModeService } from '../work-mode/work-mode.service';
 import { ProjectService } from '../project/project.service';
 import { Project } from '../project/project';
+import { PersistenceService } from '../persistence/persistence.service';
+import { ProjectMetadataStore } from '../persistence/project-metadata.store';
 import { SimulationService } from '../simulation/simulation.service';
 import { TranslationService } from '../translation/translation.service';
 import { LoggingService } from '../logging/logging.service';
-import { ToastService } from '../logging/toast.service';
 import { TranslationKey } from '../translation/translation-key.model';
 import { CoachMarkHandlers, CoachMarkView } from './coach-mark.model';
 import { OnboardingPlatform, OnboardingService } from './onboarding.service';
@@ -24,11 +26,13 @@ import { TUTORIALS } from './tutorials/registry';
  * Drives a running tutorial: reacts to {@link OnboardingService.activeTutorial},
  * filters the script to the current platform, and for each step subscribes to
  * the matching editor stream, evaluates the completion predicate, and renders
- * the coach-mark via {@link OnboardingOverlayService}. Purely the runtime
- * driver — persistence and the enable gate stay in {@link OnboardingService}.
+ * the coach-mark via {@link OnboardingOverlayService}. The onboarding-state
+ * enable/seen/completed gate stays in {@link OnboardingService}.
  *
- * Instantiated by the app shell (which hosts the coach-mark); the effect below
- * is the whole entry point.
+ * {@link launch} is the entry point that starts a tutorial: it swaps in a fresh
+ * empty board first (a tutorial builds a real sample circuit and must not
+ * pollute the user's work) before setting the active tutorial the effect reacts
+ * to. Instantiated by the app shell (which hosts the coach-mark).
  */
 @Injectable({ providedIn: 'root' })
 export class TutorialRunnerService {
@@ -39,7 +43,9 @@ export class TutorialRunnerService {
   private readonly sim = inject(SimulationService);
   private readonly translation = inject(TranslationService);
   private readonly logging = inject(LoggingService);
-  private readonly toast = inject(ToastService);
+  private readonly persistence = inject(PersistenceService);
+  private readonly metadataStore = inject(ProjectMetadataStore);
+  private readonly confirmationService = inject(ConfirmationService);
 
   private readonly mode$ = toObservable(this.workMode.mode);
 
@@ -72,6 +78,39 @@ export class TutorialRunnerService {
     });
   }
 
+  /**
+   * Retires the first-run nudge and starts `tutorialId` on a fresh, empty
+   * board. If the current board has unsaved changes, asks to discard them
+   * first (the File → New Project confirm); on cancel nothing happens and the
+   * nudge stays put.
+   */
+  public launch(tutorialId: string): void {
+    const project = this.projectService.mainProject();
+    if (project && this.metadataStore.isDirty(project)) {
+      this.confirmationService.confirm({
+        header: this.translation.translate('titleBar.discardChanges.header'),
+        message: this.translation.translate('titleBar.discardChanges.message'),
+        acceptButtonProps: { severity: 'danger' },
+        acceptLabel: this.translation.translate(
+          'titleBar.discardChanges.accept'
+        ),
+        rejectButtonProps: { severity: 'secondary', outlined: true },
+        rejectLabel: this.translation.translate(
+          'titleBar.discardChanges.reject'
+        ),
+        accept: () => this.launchFresh(tutorialId)
+      });
+      return;
+    }
+    this.launchFresh(tutorialId);
+  }
+
+  private launchFresh(tutorialId: string): void {
+    this.persistence.createAndSetEmptyProject();
+    this.onboarding.dismissNudge();
+    this.onboarding.startTutorial(tutorialId);
+  }
+
   private onActiveChange(id: string | null): void {
     if (id === null) {
       this.teardown();
@@ -90,6 +129,10 @@ export class TutorialRunnerService {
     const platform = this.onboarding.platform();
     this.steps = def.steps.filter((step) => this.applies(step, platform));
     this.index = 0;
+    this.logging.debug(
+      `begin ${def.id} (${this.steps.length} steps, ${platform})`,
+      'TutorialRunnerService'
+    );
     this.renderCurrent();
   }
 
@@ -111,12 +154,9 @@ export class TutorialRunnerService {
     this.stepSub = new Subscription();
 
     if (this.index >= this.steps.length) {
-      this.toast.success(
-        this.translation.translate(
-          'onboarding.tutorials.gettingStarted.complete'
-        ),
-        'TutorialRunnerService'
-      );
+      // The final step's own coach-mark is the completion acknowledgment, so
+      // there is nothing more to show here — just record the completion.
+      this.logging.debug('all steps complete', 'TutorialRunnerService');
       this.onboarding.endTutorial(true);
       return;
     }
@@ -131,6 +171,10 @@ export class TutorialRunnerService {
     this.baseline = this.countByType(project);
     this.userInteracted = false;
     this.onboarding.setCurrentStepIndex(this.index);
+    this.logging.debug(
+      `enter step ${step.id} (${this.index + 1}/${this.steps.length})`,
+      'TutorialRunnerService'
+    );
 
     // Record lever/button drives for the whole step so predicates can read
     // `userInteracted` (e.g. the flip-a-switch step). Only a `userInput` step
@@ -209,6 +253,10 @@ export class TutorialRunnerService {
   }
 
   private advance(): void {
+    const step = this.steps[this.index];
+    if (step) {
+      this.logging.debug(`step ${step.id} completed`, 'TutorialRunnerService');
+    }
     this.index++;
     this.renderCurrent();
   }
@@ -238,6 +286,7 @@ export class TutorialRunnerService {
       stepNumber: this.index + 1,
       totalSteps: this.steps.length,
       showNext: step.advanceOn.kind === 'manual',
+      isFinal: this.index === this.steps.length - 1,
       placement: step.placement ?? (target ? 'bottom' : 'center')
     };
   }

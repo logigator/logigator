@@ -23,6 +23,7 @@ import { WorkMode } from '../work-mode/work-mode.enum';
 import { WorkModeService } from '../work-mode/work-mode.service';
 import { ProjectService } from '../project/project.service';
 import { InspectionService } from '../inspection/inspection.service';
+import { LoggingService } from '../logging/logging.service';
 import { TranslationService } from '../translation/translation.service';
 import { TranslationKey } from '../translation/translation-key.model';
 import { OnboardingPlatform, OnboardingService } from './onboarding.service';
@@ -48,6 +49,7 @@ export class HintService {
   private readonly projectService = inject(ProjectService);
   private readonly inspection = inject(InspectionService);
   private readonly translation = inject(TranslationService);
+  private readonly logging = inject(LoggingService);
 
   private readonly mode$ = toObservable(this.workMode.mode);
 
@@ -96,8 +98,13 @@ export class HintService {
   private fire(id: string): void {
     if (this.currentId !== null) return; // one at a time; drop the newer
     const hint = HINTS.find((candidate) => candidate.id === id);
-    if (!hint || !this.canShow(hint)) return;
+    if (!hint) return;
+    if (!this.canShow(hint)) {
+      this.logging.debug(`hint ${id} suppressed`, 'HintService');
+      return;
+    }
     this.onboarding.markHintSeen(id);
+    this.logging.debug(`serve hint ${id}`, 'HintService');
     this.show(hint);
   }
 
@@ -155,6 +162,9 @@ export class HintService {
   }
 
   private dismiss(): void {
+    if (this.currentId !== null) {
+      this.logging.debug(`dismiss hint ${this.currentId}`, 'HintService');
+    }
     document.removeEventListener('keydown', this.onKeydown, true);
     this.subscriptions.unsubscribe();
     this.subscriptions = new Subscription();

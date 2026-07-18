@@ -12,6 +12,7 @@ const BASE: CoachMarkView = {
   stepNumber: 3,
   totalSteps: 9,
   showNext: false,
+  isFinal: false,
   placement: 'center'
 };
 
@@ -49,6 +50,13 @@ describe('CoachMarkComponent', () => {
   it('shows Next only for steps that opt in', () => {
     expect(buttons(render(BASE))).toHaveLength(1); // skip only
     expect(buttons(render({ ...BASE, showNext: true }))).toHaveLength(2);
+  });
+
+  it('on the final step, hides Skip and shows Finish instead of Next', () => {
+    const labels = buttons(
+      render({ ...BASE, showNext: true, isFinal: true })
+    ).map((b) => b.textContent?.trim());
+    expect(labels).toEqual(['Finish']);
   });
 
   it('emits from the Skip and Next controls', () => {

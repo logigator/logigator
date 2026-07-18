@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { firstValueFrom } from 'rxjs';
 import { TranslocoService } from '@jsverse/transloco';
@@ -6,12 +6,14 @@ import { configureTestBed } from '../../testing/configure-test-bed';
 import { ProjectService } from '../project/project.service';
 import { OnboardingService } from './onboarding.service';
 import { OnboardingNudgeComponent } from './onboarding-nudge.component';
+import { TutorialRunnerService } from './tutorial-runner.service';
 
 const NUDGE_DISMISSED_KEY = 'onboarding.nudge-dismissed';
 
 describe('OnboardingNudgeComponent', () => {
   let fixture: ComponentFixture<OnboardingNudgeComponent>;
   let onboarding: OnboardingService;
+  let launch: ReturnType<typeof vi.fn>;
 
   const buttons = (): HTMLButtonElement[] =>
     Array.from(fixture.nativeElement.querySelectorAll('button'));
@@ -20,13 +22,15 @@ describe('OnboardingNudgeComponent', () => {
     localStorage.clear();
     // A non-empty project proves the nudge no longer gates on canvas contents.
     const project = { components: [{}] };
+    launch = vi.fn();
 
     configureTestBed(
       [
         {
           provide: ProjectService,
           useValue: { mainProject: () => project, activeProject: () => project }
-        }
+        },
+        { provide: TutorialRunnerService, useValue: { launch } }
       ],
       [OnboardingNudgeComponent]
     );
@@ -52,11 +56,10 @@ describe('OnboardingNudgeComponent', () => {
     expect(localStorage.getItem(NUDGE_DISMISSED_KEY)).toBe('true');
   });
 
-  it('starts the tutorial and retires itself from the Start button', () => {
+  it('launches the tutorial through the launcher from the Start button', () => {
     buttons()[0].click();
     fixture.detectChanges();
-    expect(onboarding.activeTutorial()).toBe('getting-started');
-    expect(onboarding.isNudgeDismissed()).toBe(true);
+    expect(launch).toHaveBeenCalledWith('getting-started');
   });
 
   it('is hidden while a tutorial is running', () => {

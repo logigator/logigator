@@ -16,6 +16,8 @@ export interface CoachMarkView {
   readonly totalSteps: number;
   /** Show the Next button (manual/orientation steps that don't auto-advance). */
   readonly showNext: boolean;
+  /** The last step: the Next button becomes "Finish" and Skip is hidden. */
+  readonly isFinal: boolean;
   readonly placement: CoachMarkPlacement;
 }
 

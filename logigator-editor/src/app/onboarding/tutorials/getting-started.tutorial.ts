@@ -109,6 +109,7 @@ export const gettingStartedTutorial: TutorialDefinition = {
       id: 'startSim',
       title: 'onboarding.tutorials.gettingStarted.steps.startSim.title',
       text: 'onboarding.tutorials.gettingStarted.steps.startSim.text',
+      placement: 'left',
       target: { desktop: SIM_START, compact: SIM_START },
       advanceOn: { kind: 'workMode', mode: WorkMode.SIMULATION }
     },
@@ -126,6 +127,18 @@ export const gettingStartedTutorial: TutorialDefinition = {
         kind: 'simFrame',
         predicate: (ctx) => ctx.userInteracted && ledPowered(ctx.sim)
       }
+    },
+    {
+      id: 'complete',
+      title: 'onboarding.tutorials.gettingStarted.steps.complete.title',
+      text: {
+        desktop:
+          'onboarding.tutorials.gettingStarted.steps.complete.textDesktop',
+        compact:
+          'onboarding.tutorials.gettingStarted.steps.complete.textCompact'
+      },
+      placement: 'center',
+      advanceOn: { kind: 'manual' }
     }
   ]
 };

@@ -19,17 +19,26 @@
   <p class="text-sm text-muted" [innerHTML]="view().text"></p>
 
   <div class="flex items-center justify-between gap-2 pt-1">
-    <lg-button
-      size="sm"
-      severity="secondary"
-      text
-      [label]="t('onboarding.bubble.skip')"
-      (onClick)="skip.emit()"
-    ></lg-button>
+    @if (!view().isFinal) {
+      <lg-button
+        size="sm"
+        severity="secondary"
+        text
+        [label]="t('onboarding.bubble.skip')"
+        (onClick)="skip.emit()"
+      ></lg-button>
+    }
     @if (view().showNext) {
       <lg-button
         size="sm"
-        [label]="t('onboarding.bubble.next')"
+        class="ml-auto"
+        [label]="
+          t(
+            view().isFinal
+              ? 'onboarding.bubble.finish'
+              : 'onboarding.bubble.next'
+          )
+        "
         (onClick)="next.emit()"
       ></lg-button>
     }

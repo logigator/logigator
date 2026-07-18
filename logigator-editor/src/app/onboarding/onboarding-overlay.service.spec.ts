@@ -13,6 +13,7 @@ const VIEW: CoachMarkView = {
   stepNumber: 4,
   totalSteps: 9,
   showNext: false,
+  isFinal: false,
   placement: 'bottom'
 };
 
@@ -51,7 +52,9 @@ describe('OnboardingOverlayService', () => {
     service.show(target, VIEW, handlers);
     tick();
     expect(container()?.textContent).toContain('Place an AND gate');
-    expect(container()?.querySelector('.bg-black\\/30')).not.toBeNull();
+    expect(
+      container()?.querySelector('app-coach-mark-backdrop')
+    ).not.toBeNull();
 
     service.hide();
     expect(container()?.textContent ?? '').not.toContain('Place an AND gate');

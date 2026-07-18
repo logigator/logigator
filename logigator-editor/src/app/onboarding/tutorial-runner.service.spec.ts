@@ -6,7 +6,10 @@ import { TranslocoService } from '@jsverse/transloco';
 import { configureTestBed } from '../../testing/configure-test-bed';
 import { Component } from '../components/component';
 import { BuiltInComponentType } from '../components/component-type.enum';
+import { ConfirmationService } from '@logigator/ui';
 import { ProjectService } from '../project/project.service';
+import { PersistenceService } from '../persistence/persistence.service';
+import { ProjectMetadataStore } from '../persistence/project-metadata.store';
 import { SimulationService } from '../simulation/simulation.service';
 import { OnboardingService } from './onboarding.service';
 import { OnboardingOverlayService } from './onboarding-overlay.service';
@@ -47,13 +50,21 @@ const TEST_TUTORIAL: TutorialDefinition = {
   ]
 };
 
+interface ConfirmConfig {
+  readonly accept: () => void;
+}
+
 describe('TutorialRunnerService', () => {
+  let runner: TutorialRunnerService;
   let onboarding: OnboardingService;
   let show: ReturnType<typeof vi.fn>;
   let hide: ReturnType<typeof vi.fn>;
   let components: Component[];
   let actionChange$: Subject<void>;
   let userInput$: Subject<Component>;
+  let createAndSetEmptyProject: ReturnType<typeof vi.fn>;
+  let confirm: ReturnType<typeof vi.fn<(config: ConfirmConfig) => void>>;
+  let dirty: boolean;
 
   const tick = () => TestBed.inject(ApplicationRef).tick();
   const lastView = (): CoachMarkView => show.mock.calls.at(-1)![1];
@@ -72,6 +83,9 @@ describe('TutorialRunnerService', () => {
     components = [];
     actionChange$ = new Subject<void>();
     userInput$ = new Subject<Component>();
+    createAndSetEmptyProject = vi.fn();
+    confirm = vi.fn<(config: ConfirmConfig) => void>();
+    dirty = false;
     const project = {
       components,
       userInput$,
@@ -81,13 +95,16 @@ describe('TutorialRunnerService', () => {
     configureTestBed([
       { provide: ProjectService, useValue: { mainProject: () => project } },
       { provide: OnboardingOverlayService, useValue: { show, hide } },
-      { provide: SimulationService, useValue: { frame$: new Subject() } }
+      { provide: SimulationService, useValue: { frame$: new Subject() } },
+      { provide: PersistenceService, useValue: { createAndSetEmptyProject } },
+      { provide: ProjectMetadataStore, useValue: { isDirty: () => dirty } },
+      { provide: ConfirmationService, useValue: { confirm } }
     ]);
     const transloco = TestBed.inject(TranslocoService);
     await firstValueFrom(transloco.load('en'));
     transloco.setActiveLang('en');
 
-    TestBed.inject(TutorialRunnerService); // registers the driving effects
+    runner = TestBed.inject(TutorialRunnerService); // registers the driving effects
     onboarding = TestBed.inject(OnboardingService);
     (TUTORIALS as Record<string, TutorialDefinition>)['test'] = TEST_TUTORIAL;
     tick();
@@ -154,5 +171,40 @@ describe('TutorialRunnerService', () => {
     expect(onboarding.activeTutorial()).toBeNull();
     expect(onboarding.hasCompletedTutorial('test')).toBe(false);
     expect(hide).toHaveBeenCalled();
+  });
+
+  describe('launch', () => {
+    it('on a clean board, swaps in a fresh project and starts without asking', () => {
+      runner.launch('test');
+      tick();
+
+      expect(confirm).not.toHaveBeenCalled();
+      expect(createAndSetEmptyProject).toHaveBeenCalledOnce();
+      expect(onboarding.activeTutorial()).toBe('test');
+      expect(onboarding.isNudgeDismissed()).toBe(true);
+    });
+
+    it('on a dirty board, asks first and only launches after accept', () => {
+      dirty = true;
+      runner.launch('test');
+
+      expect(createAndSetEmptyProject).not.toHaveBeenCalled();
+      expect(onboarding.activeTutorial()).toBeNull();
+
+      confirm.mock.calls[0][0].accept();
+      tick();
+
+      expect(createAndSetEmptyProject).toHaveBeenCalledOnce();
+      expect(onboarding.activeTutorial()).toBe('test');
+    });
+
+    it('on a dirty board, launches nothing when the user cancels', () => {
+      dirty = true;
+      runner.launch('test');
+
+      expect(createAndSetEmptyProject).not.toHaveBeenCalled();
+      expect(onboarding.activeTutorial()).toBeNull();
+      expect(onboarding.isNudgeDismissed()).toBe(false);
+    });
   });
 });

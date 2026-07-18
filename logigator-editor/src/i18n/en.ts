@@ -803,6 +803,7 @@ const en = {
     },
     bubble: {
       next: 'Next',
+      finish: 'Finish',
       skip: 'Skip tutorial',
       turnOff: 'Turn off all tips'
     },
@@ -822,8 +823,6 @@ const en = {
     },
     tutorials: {
       gettingStarted: {
-        complete:
-          'Nice — both switches on lights the LED. That is your AND gate working!',
         steps: {
           welcome: {
             title: 'Welcome to Logigator',
@@ -869,6 +868,13 @@ const en = {
               'Click a switch to toggle it. Turn <strong>both</strong> on and watch the LED light up.',
             textCompact:
               'Tap a switch to toggle it. Turn <strong>both</strong> on and watch the LED light up.'
+          },
+          complete: {
+            title: "You're all set!",
+            textDesktop:
+              "You built a working AND gate and lit the LED — nicely done!<br>From here, make it your own: add more components, wire up bigger circuits, and save your work when you like it.<br><br>Need a hand later? The <strong>Help</strong> menu has this tutorial again, What's New, and more. Have fun building!",
+            textCompact:
+              "You built a working AND gate and lit the LED — nicely done!<br>From here, make it your own: add more components, wire up bigger circuits, and save your work when you like it.<br><br>Need a hand later? Open the <strong>menu</strong> for this tutorial again, What's New, and more. Have fun building!"
           }
         }
       }

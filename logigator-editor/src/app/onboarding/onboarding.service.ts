@@ -72,6 +72,10 @@ export class OnboardingService {
   public setTipsEnabled(enabled: boolean): void {
     this._tipsEnabled.set(enabled);
     this.saveBool(TIPS_ENABLED_KEY, enabled);
+    this.logging.debug(
+      `tips ${enabled ? 'enabled' : 'disabled'}`,
+      'OnboardingService'
+    );
     if (!enabled && this._activeTutorial() !== null) {
       this.endTutorial(false);
     }
@@ -89,6 +93,7 @@ export class OnboardingService {
    * nudge.
    */
   public showTipsAgain(): void {
+    this.logging.debug('show tips again (reset)', 'OnboardingService');
     this._seenHints.clear();
     this.saveSet(SEEN_HINTS_KEY, this._seenHints);
     this._completedTutorials.clear();
@@ -110,6 +115,7 @@ export class OnboardingService {
     if (this._seenHints.has(id)) return;
     this._seenHints.add(id);
     this.saveSet(SEEN_HINTS_KEY, this._seenHints);
+    this.logging.debug(`mark hint seen ${id}`, 'OnboardingService');
   }
 
   /** Starts a tutorial regardless of completed state. */
@@ -128,6 +134,7 @@ export class OnboardingService {
     if (this._nudgeDismissed()) return;
     this._nudgeDismissed.set(true);
     this.saveBool(NUDGE_DISMISSED_KEY, true);
+    this.logging.debug('nudge dismissed', 'OnboardingService');
   }
 
   public setCurrentStepIndex(index: number): void {

@@ -13,12 +13,15 @@ import {
   GETTING_STARTED_TUTORIAL,
   OnboardingService
 } from './onboarding.service';
+import { TutorialRunnerService } from './tutorial-runner.service';
 
 /**
  * The single launch path for the getting-started tutorial — there is no
  * auto-start. A soft, dismissible prompt shown once to a first-time user (until
  * dismissed or the tutorial started), regardless of what's on the canvas.
- * Clicking Start runs the tutorial in the main project and retires the nudge.
+ * Clicking Start hands off to {@link TutorialRunnerService.launch}, which swaps
+ * in a fresh empty board (behind a discard-changes confirm) before running the
+ * tutorial, and retires the nudge.
  */
 @Component({
   selector: 'app-onboarding-nudge',
@@ -50,6 +53,7 @@ import {
 })
 export class OnboardingNudgeComponent {
   private readonly onboarding = inject(OnboardingService);
+  private readonly runner = inject(TutorialRunnerService);
   private readonly projectService = inject(ProjectService);
   private readonly workMode = inject(WorkModeService);
 
@@ -66,8 +70,7 @@ export class OnboardingNudgeComponent {
   );
 
   protected start(): void {
-    this.onboarding.dismissNudge();
-    this.onboarding.startTutorial(GETTING_STARTED_TUTORIAL);
+    this.runner.launch(GETTING_STARTED_TUTORIAL);
   }
 
   protected dismiss(): void {
