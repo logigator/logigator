@@ -94,7 +94,9 @@ export class PastePlacementSession implements DragSession {
     if (!bounds) return;
     bounds.pad(SelectionManager.GRAB_MARGIN);
     this._project.floatingLayer.showSelectionRect(bounds);
-    this._project.floatingLayer.setSelectionRectOffset(this._dragLayer.position);
+    this._project.floatingLayer.setSelectionRectOffset(
+      this._dragLayer.position
+    );
   }
 
   onMove(input: PointerInput): void {
@@ -104,7 +106,9 @@ export class PastePlacementSession implements DragSession {
       cursor.x - this._anchor!.x,
       cursor.y - this._anchor!.y
     );
-    this._project.floatingLayer.setSelectionRectOffset(this._dragLayer.position);
+    this._project.floatingLayer.setSelectionRectOffset(
+      this._dragLayer.position
+    );
     this._collision.update();
   }
 
@@ -138,7 +142,9 @@ export class PastePlacementSession implements DragSession {
       this._dragLayer.position.y + dy
     );
     this._anchor?.set(this._anchor.x - dx, this._anchor.y - dy);
-    this._project.floatingLayer.setSelectionRectOffset(this._dragLayer.position);
+    this._project.floatingLayer.setSelectionRectOffset(
+      this._dragLayer.position
+    );
     this._collision.update();
   }
 
