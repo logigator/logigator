@@ -1,7 +1,7 @@
 import {
-  afterNextRender,
   ComponentRef,
   effect,
+  EffectRef,
   inject,
   Injectable,
   Injector,
@@ -41,6 +41,11 @@ import { OnboardingTargetRegistry } from './onboarding-target-registry.service';
  * running, the hint was already seen, or its platform/completion gate excludes
  * it. At most one hint shows at a time; a trigger that fires while one is up is
  * dropped. Instantiated by the app shell for its side effects.
+ *
+ * Once open, a hint stays anchored reactively: a per-hint effect re-resolves its
+ * target from {@link OnboardingTargetRegistry}, so the popover follows the
+ * element as it enters, leaves, or is re-created (floating bottom-centre while
+ * there is no target) with no querySelector timing race.
  */
 @Injectable({ providedIn: 'root' })
 export class HintService {
@@ -58,6 +63,10 @@ export class HintService {
 
   private overlayRef: OverlayRef | null = null;
   private currentId: string | null = null;
+  /** The element the live overlay is anchored to (null = floated). */
+  private currentTarget: HTMLElement | null = null;
+  /** Per-hint effect that tracks the target element and re-anchors reactively. */
+  private targetEffect: EffectRef | null = null;
   private subscriptions = new Subscription();
   private readonly onKeydown = (event: KeyboardEvent) => {
     if (event.key === 'Escape') this.dismiss();
@@ -108,7 +117,7 @@ export class HintService {
     }
     this.onboarding.markHintSeen(id);
     this.logging.debug(`serve hint ${id}`, 'HintService');
-    this.show(hint);
+    this.open(hint);
   }
 
   private canShow(hint: Hint): boolean {
@@ -126,21 +135,37 @@ export class HintService {
     return true;
   }
 
-  private show(hint: Hint, allowDeferredTarget = true): void {
-    const platform = this.onboarding.platform();
-    const target = this.resolveTarget(hint, platform);
+  /**
+   * Opens a hint and keeps it anchored reactively: the effect re-resolves the
+   * target from the registry (and the platform), so the popover follows its
+   * element as it enters, leaves, or is re-created in the DOM — no querySelector
+   * race, no manual deferral. Torn down as one unit by {@link dismiss}.
+   */
+  private open(hint: Hint): void {
+    this.currentId = hint.id;
+    this.targetEffect = effect(
+      () => {
+        const platform = this.onboarding.platform();
+        const target = this.resolveTarget(hint, platform); // tracks the registry
+        untracked(() => this.mount(hint, target, platform));
+      },
+      { injector: this.injector }
+    );
+  }
 
-    // A hint's target can enter the DOM only as a result of its trigger — the
-    // sim controls appear (in the tool-bar on desktop, the bottom bar on
-    // compact) on entering simulation, after this fires. If the target is
-    // declared but not present yet, wait one render and retry once before
-    // giving up and floating it bottom-centre.
-    if (!target && hint.target?.[platform] && allowDeferredTarget) {
-      afterNextRender(() => this.show(hint, false), {
-        injector: this.injector
-      });
-      return;
-    }
+  /**
+   * (Re)builds the overlay for the open hint. A no-op when the anchor is
+   * unchanged; otherwise it swaps between an anchored (connected, with caret)
+   * and a floated (bottom-centre) placement as the target comes and goes.
+   */
+  private mount(
+    hint: Hint,
+    target: HTMLElement | null,
+    platform: OnboardingPlatform
+  ): void {
+    if (this.overlayRef && target === this.currentTarget) return;
+    this.currentTarget = target;
+    this.teardownOverlay();
 
     if (target) {
       this.overlayRef = this.overlayService.connected({
@@ -148,7 +173,7 @@ export class HintService {
         positions: connectedPositions('bottom')
       });
     } else {
-      // No anchor (targetless hint, or its target never showed up): float it
+      // No anchor (targetless hint, or its target isn't registered): float it
       // bottom-centre, well clear of the bottom chrome — lifted higher on
       // compact where the tool/sim bars occupy the bottom edge.
       this.overlayRef = this.overlayService.global({
@@ -165,7 +190,6 @@ export class HintService {
       'text',
       this.translation.translate(this.resolveText(hint.text, platform))
     );
-    this.currentId = hint.id;
 
     this.subscriptions.add(
       cmp.instance.dismiss.subscribe(() => this.dismiss())
@@ -180,16 +204,24 @@ export class HintService {
     document.addEventListener('keydown', this.onKeydown, true);
   }
 
-  private dismiss(): void {
-    if (this.currentId !== null) {
-      this.logging.debug(`dismiss hint ${this.currentId}`, 'HintService');
-    }
+  /** Disposes the current overlay instance and its listeners (keeps the effect). */
+  private teardownOverlay(): void {
     document.removeEventListener('keydown', this.onKeydown, true);
     this.subscriptions.unsubscribe();
     this.subscriptions = new Subscription();
     this.overlayRef?.dispose();
     this.overlayRef = null;
+  }
+
+  private dismiss(): void {
+    if (this.currentId !== null) {
+      this.logging.debug(`dismiss hint ${this.currentId}`, 'HintService');
+    }
+    this.targetEffect?.destroy();
+    this.targetEffect = null;
+    this.teardownOverlay();
     this.currentId = null;
+    this.currentTarget = null;
   }
 
   private trackCaretSide(

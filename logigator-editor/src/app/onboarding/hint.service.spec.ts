@@ -110,6 +110,20 @@ describe('HintService', () => {
     expect(isFloating()).toBe(true);
   });
 
+  it('re-anchors a floating hint once its target registers later', () => {
+    enterWireTool(); // target not registered yet → floats
+    expect(isFloating()).toBe(true);
+
+    // The target appears later (e.g. the sim controls on entering simulation).
+    const wire = document.createElement('div');
+    document.body.appendChild(wire);
+    TestBed.inject(OnboardingTargetRegistry).register('tool-wire', wire);
+    tick(); // the per-hint effect re-runs on the registry change
+
+    expect(isFloating()).toBe(false); // now anchored to the element
+    wire.remove();
+  });
+
   it('dismisses on Escape', () => {
     enterWireTool();
     expect(popover()).not.toBeNull();
