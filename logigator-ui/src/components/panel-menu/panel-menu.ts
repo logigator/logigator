@@ -1,4 +1,5 @@
 import { Component, input, signal } from '@angular/core';
+import { LgCollapse } from '../../internal/collapse';
 import { MenuItem } from '../menu/menu-item.model';
 import { LgDivider } from '../divider/divider';
 
@@ -15,7 +16,7 @@ const ROW =
 @Component({
   selector: 'lg-panel-menu',
   host: { class: 'block' },
-  imports: [LgDivider],
+  imports: [LgCollapse, LgDivider],
   template: `
     @for (item of model(); track $index; let i = $index) {
       @if (item.visible !== false) {
@@ -38,32 +39,27 @@ const ROW =
               aria-hidden="true"
             ></i>
           </button>
-          <div
-            class="grid transition-[grid-template-rows] duration-200"
-            [style.grid-template-rows]="isExpanded(i) ? '1fr' : '0fr'"
-          >
-            <div class="min-h-0 overflow-hidden">
-              @for (sub of item.items; track $index) {
-                @if (sub.visible !== false) {
-                  @if (sub.separator) {
-                    <lg-divider class="my-1"></lg-divider>
-                  } @else {
-                    <button
-                      type="button"
-                      [class]="rowClass + ' pl-9'"
-                      [disabled]="sub.disabled"
-                      (click)="run(sub)"
-                    >
-                      @if (sub.icon) {
-                        <i [class]="sub.icon" aria-hidden="true"></i>
-                      }
-                      <span>{{ sub.label }}</span>
-                    </button>
-                  }
+          <lg-collapse [open]="isExpanded(i)">
+            @for (sub of item.items; track $index) {
+              @if (sub.visible !== false) {
+                @if (sub.separator) {
+                  <lg-divider class="my-1"></lg-divider>
+                } @else {
+                  <button
+                    type="button"
+                    [class]="rowClass + ' pl-9'"
+                    [disabled]="sub.disabled"
+                    (click)="run(sub)"
+                  >
+                    @if (sub.icon) {
+                      <i [class]="sub.icon" aria-hidden="true"></i>
+                    }
+                    <span>{{ sub.label }}</span>
+                  </button>
                 }
               }
-            </div>
-          </div>
+            }
+          </lg-collapse>
         } @else {
           <button
             type="button"

@@ -1,4 +1,5 @@
 import { Component, effect, input, model, signal } from '@angular/core';
+import { LgCollapse } from '../../internal/collapse';
 import { NavigationItem } from './navigation-item.model';
 
 const ROW =
@@ -19,6 +20,7 @@ const ROW =
 @Component({
   selector: 'lg-navigation',
   host: { class: 'block' },
+  imports: [LgCollapse],
   template: `
     @for (item of items(); track item.id) {
       @if (item.items?.length) {
@@ -39,26 +41,21 @@ const ROW =
             aria-hidden="true"
           ></i>
         </button>
-        <div
-          class="grid transition-[grid-template-rows] duration-200"
-          [style.grid-template-rows]="isExpanded(item.id) ? '1fr' : '0fr'"
-        >
-          <div class="min-h-0 overflow-hidden">
-            @for (leaf of item.items; track leaf.id) {
-              <button
-                type="button"
-                [class]="rowClass + ' pl-9 ' + leafClass(leaf.id)"
-                [attr.aria-current]="selected() === leaf.id ? 'page' : null"
-                (click)="select(leaf.id)"
-              >
-                @if (leaf.icon) {
-                  <i [class]="leaf.icon" aria-hidden="true"></i>
-                }
-                <span>{{ leaf.label }}</span>
-              </button>
-            }
-          </div>
-        </div>
+        <lg-collapse [open]="isExpanded(item.id)">
+          @for (leaf of item.items; track leaf.id) {
+            <button
+              type="button"
+              [class]="rowClass + ' pl-9 ' + leafClass(leaf.id)"
+              [attr.aria-current]="selected() === leaf.id ? 'page' : null"
+              (click)="select(leaf.id)"
+            >
+              @if (leaf.icon) {
+                <i [class]="leaf.icon" aria-hidden="true"></i>
+              }
+              <span>{{ leaf.label }}</span>
+            </button>
+          }
+        </lg-collapse>
       } @else {
         <button
           type="button"
