@@ -347,6 +347,9 @@ const en = {
           changelog: {
             label: "What's New"
           },
+          cookieSettings: {
+            label: 'Cookie Settings'
+          },
           about: {
             label: 'About'
           }

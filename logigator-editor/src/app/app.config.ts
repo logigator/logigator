@@ -13,6 +13,7 @@ import { TranslationLoaderService } from './translation/translation-loader.servi
 import { provideHttpClient, HttpClient } from '@angular/common/http';
 import { provideTranslocoPersistLang } from '@jsverse/transloco-persist-lang';
 import { provideMarkdown } from 'ngx-markdown';
+import { ConsentService } from './consent/consent.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -58,6 +59,9 @@ export const appConfig: ApplicationConfig = {
       return firstValueFrom(transloco.load(transloco.getActiveLang()), {
         defaultValue: undefined
       });
+    }),
+    provideAppInitializer(() => {
+      inject(ConsentService).load();
     }),
     provideHttpClient(),
     provideMarkdown({ loader: HttpClient })

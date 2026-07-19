@@ -23,6 +23,7 @@ import { ChangelogService } from '../changelog/changelog.service';
 import { DocumentationService } from '../documentation/documentation.service';
 import { OnboardingService } from '../onboarding/onboarding.service';
 import { DebugMenuService } from './debug-menu.service';
+import { ConsentService } from '../consent/consent.service';
 import { ToastService } from '../logging/toast.service';
 
 /**
@@ -48,6 +49,7 @@ export class EditorMenuService {
   private readonly uploadCoordinator = inject(UploadCoordinatorService);
   private readonly debugMenuService = inject(DebugMenuService);
   private readonly toastService = inject(ToastService);
+  private readonly consentService = inject(ConsentService);
 
   /**
    * Rebuilt whenever the active language changes so labels stay translated.
@@ -193,6 +195,7 @@ export class EditorMenuService {
           this.documentationItem(),
           this.changelogItem(),
           this.showTipsAgainItem(),
+          ...this.cookieSettingsItems(),
           this.aboutItem()
         ]
       }
@@ -219,6 +222,7 @@ export class EditorMenuService {
       this.documentationItem(),
       this.changelogItem(),
       this.showTipsAgainItem(),
+      ...this.cookieSettingsItems(),
       this.aboutItem()
     ];
 
@@ -341,6 +345,23 @@ export class EditorMenuService {
       modal: true,
       closable: true
     });
+  }
+
+  private cookieSettingsItems(): MenuItem[] {
+    // The consent banner comes from the backend-served bundle; without it
+    // (bare ng serve) there are no preferences to manage. The bundle loads
+    // asynchronously, so the signal read makes the menus recompute once it
+    // arrives.
+    if (!this.consentService.available()) return [];
+    return [
+      {
+        label: this.translation.translate(
+          'titleBar.menuBar.help.items.cookieSettings.label'
+        ),
+        icon: 'ph ph-cookie',
+        command: () => this.consentService.showPreferences()
+      }
+    ];
   }
 
   private aboutItem(): MenuItem {
