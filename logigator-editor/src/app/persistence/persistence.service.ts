@@ -30,6 +30,8 @@ import { BrowserPersistenceGateway } from './browser/browser-persistence.gateway
 import { downloadBlob } from '../utils/download';
 import { warnSkippedCustoms } from './load-warnings';
 import { decodeLgix, encodeLgix, hasLgixMagic } from './file/lgix-container';
+import { AnalyticsService } from '../analytics/analytics.service';
+import { AnalyticsEvent } from '../analytics/analytics.mapping';
 
 @Injectable({ providedIn: 'root' })
 export class PersistenceService {
@@ -43,6 +45,7 @@ export class PersistenceService {
   private readonly translation = inject(TranslationService);
   private readonly location = inject(Location);
   private readonly server = inject(ServerPersistenceGateway);
+  private readonly analytics = inject(AnalyticsService);
   private readonly browser = inject(BrowserPersistenceGateway);
   private readonly cloudSession = inject(CloudSessionService);
 
@@ -100,9 +103,16 @@ export class PersistenceService {
     // Shares (and any unknown source) are read-only: nothing to save.
     if (!work) return;
 
-    const promise = work.finally(() => {
-      this._saveInFlight.delete(project);
-    });
+    const promise = work
+      .then(() => {
+        this.analytics.capture(AnalyticsEvent.ProjectSaved, {
+          source: metadata.source,
+          type: metadata.type
+        });
+      })
+      .finally(() => {
+        this._saveInFlight.delete(project);
+      });
     this._saveInFlight.set(project, promise);
     return promise;
   }
@@ -207,6 +217,11 @@ export class PersistenceService {
   async saveDraftAsLocal(project: Project, name: string): Promise<void> {
     this.metadataStore.update(project, { name });
     await this.browser.saveProject(project);
+    // First local save routes through the gateway directly, not saveProject.
+    this.analytics.capture(AnalyticsEvent.ProjectSaved, {
+      source: 'browser',
+      type: this.metadataStore.getMetadata(project)?.type ?? 'project'
+    });
   }
 
   /**
@@ -260,6 +275,7 @@ export class PersistenceService {
     const bytes = await encodeLgix(json);
     const blob = new Blob([bytes], { type: 'application/octet-stream' });
     downloadBlob(blob, `${name}.lgix`);
+    this.analytics.capture(AnalyticsEvent.ProjectExported, { format: 'lgix' });
   }
 
   /**
@@ -285,10 +301,15 @@ export class PersistenceService {
    */
   async importProjectFromFile(data: ArrayBuffer): Promise<Project> {
     const bytes = new Uint8Array(data);
-    const json = hasLgixMagic(bytes)
+    const isLgix = hasLgixMagic(bytes);
+    const json = isLgix
       ? await decodeLgix(bytes)
       : new TextDecoder().decode(bytes);
-    return this.importProjectFromJson(json);
+    const project = await this.importProjectFromJson(json);
+    this.analytics.capture(AnalyticsEvent.ProjectImported, {
+      format: isLgix ? 'lgix' : 'json'
+    });
+    return project;
   }
 
   /**
@@ -363,6 +384,8 @@ export class PersistenceService {
      * the others. Shares have their own slot ('share').
      */
     token: 'main' | 'share';
+    /** Where the loaded document came from, for analytics. */
+    source: 'server' | 'browser' | 'component' | 'share';
     load: () => Promise<T>;
     projectOf: (result: T) => Project;
     onLoaded: (result: T) => void;
@@ -381,6 +404,9 @@ export class PersistenceService {
         return;
       }
       opts.onLoaded(result);
+      this.analytics.capture(AnalyticsEvent.ProjectLoaded, {
+        source: opts.source
+      });
     } catch (e) {
       if (isCurrent()) {
         this.toast.error(
@@ -401,6 +427,7 @@ export class PersistenceService {
   ): Promise<void> {
     await this._loadAsMain({
       token: 'main',
+      source: 'server',
       load: () => this.loadProject(uuid),
       projectOf: (project) => project,
       onLoaded: (project) => {
@@ -421,6 +448,7 @@ export class PersistenceService {
   async loadShareAsMain(linkId: string): Promise<void> {
     await this._loadAsMain({
       token: 'share',
+      source: 'share',
       load: () => this.loadShare(linkId),
       projectOf: ({ project }) => project,
       onLoaded: ({ project, type }) => {
@@ -515,6 +543,7 @@ export class PersistenceService {
   ): Promise<void> {
     await this._loadAsMain({
       token: 'main',
+      source: 'component',
       load: () => this.loadServerComponent(uuid),
       projectOf: ({ project }) => project,
       onLoaded: ({ project, masterTypeId }) => {
@@ -542,6 +571,7 @@ export class PersistenceService {
   ): Promise<void> {
     await this._loadAsMain({
       token: 'main',
+      source: 'browser',
       load: () => this.loadLocalProject(id),
       projectOf: (project) => project,
       onLoaded: (project) => {

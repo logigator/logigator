@@ -9,6 +9,10 @@ export const environment: Environment = {
   apiUrl: '',
   gridSize: 16,
   loggingVerbosity: LogLevel.Debug,
+  analytics: {
+    posthogKey: '',
+    posthogHost: 'https://eu.i.posthog.com'
+  },
   debug: {
     showGridBorders: true,
     showHitboxes: false,

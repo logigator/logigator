@@ -38,7 +38,10 @@ describe('ConsentService', () => {
   });
 
   it('skips injection when the bundle is already present', () => {
-    window.CookieConsent = { showPreferences: () => undefined };
+    window.CookieConsent = {
+      showPreferences: () => undefined,
+      acceptedCategory: () => false
+    };
     const service = new ConsentService();
     const script = loadWithInjectedScript(service);
 

@@ -3,6 +3,7 @@ import { TranslationService } from '../translation/translation.service';
 import { LoggingService } from './logging.service';
 import { ToastService } from './toast.service';
 import { BugReportService } from '../bug-report/bug-report.service';
+import { AnalyticsService } from '../analytics/analytics.service';
 
 /**
  * Catches every otherwise-uncaught exception and unhandled promise rejection.
@@ -29,6 +30,12 @@ export class GlobalErrorHandler implements ErrorHandler {
     } else {
       // eslint-disable-next-line no-console
       console.error('[GlobalErrorHandler]', error);
+    }
+
+    try {
+      this.injector.get(AnalyticsService, null)?.captureError(error);
+    } catch {
+      // Analytics must never re-enter the error handler.
     }
 
     try {

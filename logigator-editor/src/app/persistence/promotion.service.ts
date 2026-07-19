@@ -18,6 +18,8 @@ import type { SnapshotDefinition } from './serialized-circuit';
 import { AuthRequiredError } from './persistence-errors';
 import { buildProject } from './circuit-builder';
 import { warnSkippedCustoms } from './load-warnings';
+import { AnalyticsService } from '../analytics/analytics.service';
+import { AnalyticsEvent } from '../analytics/analytics.mapping';
 
 /**
  * One **local** custom component that a circuit about to be uploaded embeds
@@ -55,6 +57,7 @@ export class PromotionService {
   private readonly translation = inject(TranslationService);
   private readonly location = inject(Location);
   private readonly logging = inject(LoggingService);
+  private readonly analytics = inject(AnalyticsService);
 
   /**
    * First save of a fresh draft to the **server**: creates the project record
@@ -70,6 +73,10 @@ export class PromotionService {
     this._requireSignedIn();
     const id = await this.server.promoteToServer(project, name, isPublic);
     this.location.go(`/project/${id}`);
+    this.analytics.capture(AnalyticsEvent.ProjectUploaded, {
+      kind: 'project',
+      isPublic
+    });
   }
 
   /**
@@ -104,6 +111,10 @@ export class PromotionService {
     // Now cloud-backed — drop the orphaned browser record so the project moves
     // to the cloud rather than being copied.
     await this._dropBrowserProjectRecord(oldId);
+    this.analytics.capture(AnalyticsEvent.ProjectUploaded, {
+      kind: 'project',
+      isPublic
+    });
   }
 
   /**
@@ -136,6 +147,12 @@ export class PromotionService {
 
     // Uploaded — drop the local record so the project moves to the cloud.
     await this._dropBrowserProjectRecord(id);
+    // The delegating main-project branch above returns early, captured by
+    // promoteProjectToServer; only this stored-record path reaches here.
+    this.analytics.capture(AnalyticsEvent.ProjectUploaded, {
+      kind: 'project',
+      isPublic
+    });
   }
 
   /**
@@ -201,6 +218,10 @@ export class PromotionService {
     this.registry.promoteMaster(masterTypeId, newId, version, {
       link: newLink,
       isPublic: newIsPublic
+    });
+    this.analytics.capture(AnalyticsEvent.ProjectUploaded, {
+      kind: 'component',
+      isPublic
     });
     this.logging.info(
       `Promoted component ${oldId} -> ${newId} (v${version})`,

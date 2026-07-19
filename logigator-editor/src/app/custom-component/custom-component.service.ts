@@ -18,6 +18,8 @@ import { firstValueFrom } from 'rxjs';
 import { DialogService } from '@logigator/ui';
 import { DefinitionBinding } from './definition-binding';
 import { UploadCoordinatorService } from '../ui/upload/upload-coordinator.service';
+import { AnalyticsService } from '../analytics/analytics.service';
+import { AnalyticsEvent } from '../analytics/analytics.mapping';
 import {
   CloseTabChoice,
   CloseTabDialogComponent
@@ -54,6 +56,7 @@ export class CustomComponentService {
   private readonly promotion = inject(PromotionService);
   private readonly uploadCoordinator = inject(UploadCoordinatorService);
   private readonly dialogService = inject(DialogService);
+  private readonly analytics = inject(AnalyticsService);
   private readonly toast = inject(ToastService);
   private readonly translation = inject(TranslationService);
 
@@ -70,6 +73,9 @@ export class CustomComponentService {
         const { project, masterTypeId } =
           await this.persistence.createServerComponent(meta);
         this._openEditor(project, masterTypeId);
+        this.analytics.capture(AnalyticsEvent.CustomComponentCreated, {
+          source: meta.source
+        });
         return project;
       } catch (e) {
         this.toast.error(
@@ -105,6 +111,9 @@ export class CustomComponentService {
     await this.persistence.saveProject(project);
 
     this._openEditor(project, masterTypeId);
+    this.analytics.capture(AnalyticsEvent.CustomComponentCreated, {
+      source: meta.source
+    });
     return project;
   }
 

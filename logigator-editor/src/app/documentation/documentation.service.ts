@@ -4,6 +4,8 @@ import { LayoutService } from '../layout/layout.service';
 import { TranslationService } from '../translation/translation.service';
 import { DocumentationDialogComponent } from '../ui/dialogs/documentation-dialog/documentation-dialog.component';
 import { docPage, DocPageId } from './docs-pages';
+import { AnalyticsService } from '../analytics/analytics.service';
+import { AnalyticsEvent } from '../analytics/analytics.mapping';
 
 /**
  * Opens the in-editor documentation and tracks which page it shows. Anything
@@ -21,6 +23,7 @@ export class DocumentationService {
   private readonly dialogService = inject(DialogService);
   private readonly translation = inject(TranslationService);
   private readonly layout = inject(LayoutService);
+  private readonly analytics = inject(AnalyticsService);
 
   private readonly _page = signal<DocPageId | null>(null);
   private readonly _anchor = signal<string | null>(null);
@@ -41,6 +44,11 @@ export class DocumentationService {
     if (page) {
       this._page.set(page);
       this._anchor.set(anchor ?? null);
+    }
+    if (page || !this.dialogRef) {
+      this.analytics.capture(AnalyticsEvent.DocPageOpened, {
+        page: page ?? 'index'
+      });
     }
     if (this.dialogRef) {
       return;

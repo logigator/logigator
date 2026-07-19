@@ -18,6 +18,8 @@ import { ComponentApiService } from '../../../api/services/component-api.service
 import { ProjectMetadataStore } from '../../../persistence/project-metadata.store';
 import { CustomComponentRegistry } from '../../../components/custom/custom-component-registry.service';
 import { ToastService } from '../../../logging/toast.service';
+import { AnalyticsService } from '../../../analytics/analytics.service';
+import { AnalyticsEvent } from '../../../analytics/analytics.mapping';
 
 /** The share-mutating subset both the project and component PATCH accept. */
 interface ShareLinkPatch {
@@ -83,6 +85,7 @@ export class ShareDialogComponent extends LgDialogContent<ShareDialogData> {
   private readonly registry = inject(CustomComponentRegistry);
   private readonly toast = inject(ToastService);
   private readonly translation = inject(TranslationService);
+  private readonly analytics = inject(AnalyticsService);
 
   private readonly data = this.dialogData!;
 
@@ -121,6 +124,9 @@ export class ShareDialogComponent extends LgDialogContent<ShareDialogData> {
       const newLink = summary.link ?? this.link();
       this.link.set(newLink);
       this._persist({ link: newLink });
+      this.analytics.capture(AnalyticsEvent.ShareLinkGenerated, {
+        kind: this.kind
+      });
       this.toast.success(
         this.translation.translate('shareDialog.linkRegenerated'),
         'ShareDialogComponent'

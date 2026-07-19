@@ -8,6 +8,25 @@ import {
 import { appConfig } from '../app/app.config';
 import { setStaticDIInjector } from '../app/utils/get-di';
 import { TranslocoPersistLangService } from '@jsverse/transloco-persist-lang';
+import { AnalyticsService } from '../app/analytics/analytics.service';
+
+// The app initializer (appConfig) calls AnalyticsService.init(), which eagerly
+// resolves LayoutService/OnboardingService/etc. and wires effects. Under test
+// that construction runs at every bootstrap and breaks specs that build those
+// services lazily under per-test mocks (matchMedia, cookies). This no-op stub
+// keeps init()/capture() inert; the real capture logic is unit-tested directly
+// in analytics.mapping.spec.ts.
+class NoopAnalyticsService {
+  init(): void {
+    /* empty */
+  }
+  capture(): void {
+    /* empty */
+  }
+  captureError(): void {
+    /* empty */
+  }
+}
 
 // Returns the key, like the default handler, but without the console warning.
 // The real TranslocoService loads its language bundle via a lazy dynamic
@@ -59,6 +78,7 @@ export function configureTestBed(
         provide: TranslocoPersistLangService,
         useValue: TRANSLOCO_PERSIST_STUB
       },
+      { provide: AnalyticsService, useClass: NoopAnalyticsService },
       ...overrides
     ]
   });

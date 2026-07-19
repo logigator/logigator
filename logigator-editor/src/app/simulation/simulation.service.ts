@@ -12,6 +12,8 @@ import { ShortcutService } from '../shortcuts/shortcut.service';
 import { EditorSettingsService } from '../settings/editor-settings.service';
 import { WorkMode } from '../work-mode/work-mode.enum';
 import { WorkModeService } from '../work-mode/work-mode.service';
+import { AnalyticsService } from '../analytics/analytics.service';
+import { AnalyticsEvent } from '../analytics/analytics.mapping';
 import { BoardCompilerService } from './compiler/board-compiler.service';
 import { CompiledBoard, TOP_LEVEL_PATH } from './compiler/compiled-board.model';
 import { LinkStateApplier, SnapshotApplier } from './state/link-state-applier';
@@ -55,6 +57,7 @@ export class SimulationService {
   private readonly toastService = inject(ToastService);
   private readonly workerService = inject(SimulationWorkerService);
   private readonly settings = inject(EditorSettingsService);
+  private readonly analytics = inject(AnalyticsService);
 
   private readonly _state = signal<SimulationState>('inactive');
   public readonly state = computed(this._state);
@@ -204,6 +207,9 @@ export class SimulationService {
         board.diagnostics.map((d) => d.message).join('\n'),
         'SimulationService'
       );
+      this.analytics.capture(AnalyticsEvent.SimulationCompileBlocked, {
+        kinds: board.diagnostics.map((d) => d.kind)
+      });
       return;
     }
 

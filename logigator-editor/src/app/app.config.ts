@@ -14,6 +14,7 @@ import { provideHttpClient, HttpClient } from '@angular/common/http';
 import { provideTranslocoPersistLang } from '@jsverse/transloco-persist-lang';
 import { provideMarkdown } from 'ngx-markdown';
 import { ConsentService } from './consent/consent.service';
+import { AnalyticsService } from './analytics/analytics.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -62,6 +63,9 @@ export const appConfig: ApplicationConfig = {
     }),
     provideAppInitializer(() => {
       inject(ConsentService).load();
+    }),
+    provideAppInitializer(() => {
+      inject(AnalyticsService).init();
     }),
     provideHttpClient(),
     provideMarkdown({ loader: HttpClient })

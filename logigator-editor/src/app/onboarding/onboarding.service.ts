@@ -1,6 +1,8 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { LayoutService } from '../layout/layout.service';
 import { LoggingService } from '../logging/logging.service';
+import { AnalyticsService } from '../analytics/analytics.service';
+import { AnalyticsEvent } from '../analytics/analytics.mapping';
 
 /**
  * The two device axes onboarding content is authored for. Derived from the
@@ -31,6 +33,7 @@ const NUDGE_DISMISSED_KEY = 'onboarding.nudge-dismissed';
 export class OnboardingService {
   private readonly layout = inject(LayoutService);
   private readonly logging = inject(LoggingService);
+  private readonly analytics = inject(AnalyticsService);
 
   private readonly _tipsEnabled = signal(this.loadBool(TIPS_ENABLED_KEY, true));
   /** Master switch: false silences every tutorial and hint. */
@@ -142,6 +145,12 @@ export class OnboardingService {
       this.saveSet(COMPLETED_TUTORIALS_KEY, this._completedTutorials);
     }
     this._activeTutorial.set(null);
+    this.analytics.capture(
+      completed
+        ? AnalyticsEvent.TutorialCompleted
+        : AnalyticsEvent.TutorialAbandoned,
+      { tutorial: id }
+    );
     this.logging.debug(
       `end tutorial ${id} (completed=${completed})`,
       'OnboardingService'

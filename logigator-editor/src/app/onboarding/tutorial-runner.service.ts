@@ -30,6 +30,8 @@ import {
   TutorialStep
 } from './tutorial.model';
 import { TUTORIALS } from './tutorials/registry';
+import { AnalyticsService } from '../analytics/analytics.service';
+import { AnalyticsEvent } from '../analytics/analytics.mapping';
 
 /**
  * Drives a running tutorial: reacts to {@link OnboardingService.activeTutorial},
@@ -55,6 +57,7 @@ export class TutorialRunnerService {
   private readonly persistence = inject(PersistenceService);
   private readonly metadataStore = inject(ProjectMetadataStore);
   private readonly confirmationService = inject(ConfirmationService);
+  private readonly analytics = inject(AnalyticsService);
   private readonly registry = inject(OnboardingTargetRegistry);
   private readonly mobileUi = inject(MobileUiService);
   private readonly injector = inject(Injector);
@@ -282,6 +285,11 @@ export class TutorialRunnerService {
     const step = this.steps[this.index];
     if (step) {
       this.logging.debug(`step ${step.id} completed`, 'TutorialRunnerService');
+      this.analytics.capture(AnalyticsEvent.TutorialStepCompleted, {
+        tutorial: this.onboarding.activeTutorial() ?? '',
+        step: step.id,
+        index: this.index
+      });
     }
     this.index++;
     this.renderCurrent();

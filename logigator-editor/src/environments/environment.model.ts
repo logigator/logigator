@@ -11,6 +11,12 @@ export interface Environment {
   gridSize: number;
   /** Minimum severity printed to the console; messages below it are dropped. */
   loggingVerbosity: LogLevel;
+  analytics: {
+    /** PostHog project API key (public, write-only). Empty disables PostHog. */
+    posthogKey: string;
+    /** PostHog ingestion host, e.g. the EU region endpoint. */
+    posthogHost: string;
+  };
   debug: {
     showGridBorders: boolean;
     showHitboxes: boolean;
