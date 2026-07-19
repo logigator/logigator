@@ -14,11 +14,11 @@ import {
 
 /**
  * Family the subset woff2 is registered under for atlas baking. Deliberately
- * NOT 'Roboto Mono': the Google Fonts stylesheet registers lazy same-named
- * faces, and if the browser resolves the bake's fontFamily to one that is
- * still unloaded, canvas rasterization silently falls back to a default font
- * and the fallback gets baked into the atlas. A unique family only ever
- * resolves to the FontFace that Assets.load has already awaited.
+ * a unique name: the app stylesheet registers lazy faces for the UI families,
+ * and if the browser resolves the bake's fontFamily to one that is still
+ * unloaded, canvas rasterization silently falls back to a default font and
+ * the fallback gets baked into the atlas. A unique family only ever resolves
+ * to the FontFace that Assets.load has already awaited.
  */
 const BAKE_FONT_FAMILY = 'Roboto Mono Canvas';
 

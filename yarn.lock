@@ -1588,6 +1588,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@fontsource-variable/roboto-mono@npm:^5.3.0":
+  version: 5.3.0
+  resolution: "@fontsource-variable/roboto-mono@npm:5.3.0"
+  checksum: 10c0/dbb0234b3b637e2f145e693cad525c81371af26251fcf3cc9683931bda6b53e3c9c2680f89cf0c87c2a52723d01e873cf893982178b63a7afdd4c0a4ca929d61
+  languageName: node
+  linkType: hard
+
+"@fontsource-variable/roboto@npm:^5.3.0":
+  version: 5.3.0
+  resolution: "@fontsource-variable/roboto@npm:5.3.0"
+  checksum: 10c0/22c7b705afc0acd44c4d80ceac3151d2005b90a7c61709ad61cf07446bdcb7fd2b1ce91b634c4bbfca590eea68e2b33ad931bd51007d175e2fe38bb3ce8ab101
+  languageName: node
+  linkType: hard
+
 "@gar/promise-retry@npm:^1.0.0, @gar/promise-retry@npm:^1.0.2":
   version: 1.0.3
   resolution: "@gar/promise-retry@npm:1.0.3"
@@ -6486,6 +6500,8 @@ __metadata:
     "@angular/forms": "npm:^22.0.5"
     "@angular/platform-browser": "npm:^22.0.5"
     "@angular/router": "file:./packages/router-stub"
+    "@fontsource-variable/roboto": "npm:^5.3.0"
+    "@fontsource-variable/roboto-mono": "npm:^5.3.0"
     "@jsverse/transloco": "npm:^8.4.0"
     "@jsverse/transloco-persist-lang": "npm:^8.4.0"
     "@jsverse/utils": "npm:1.0.0-beta.5"

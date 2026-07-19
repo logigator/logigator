@@ -14,6 +14,6 @@
 @custom-variant dark (&:where(.dark-mode, .dark-mode *));
 
 @theme {
-  --font-sans: 'Roboto', sans-serif;
-  --font-mono: 'Roboto Mono', monospace;
+  --font-sans: 'Roboto Variable', sans-serif;
+  --font-mono: 'Roboto Mono Variable', monospace;
 }
