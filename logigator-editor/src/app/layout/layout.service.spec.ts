@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { configureTestBed } from '../../testing/configure-test-bed';
 import { LayoutService } from './layout.service';
@@ -47,8 +47,19 @@ describe('LayoutService', () => {
     entry.listeners.forEach((cb) => cb({ matches }));
   }
 
+  const originalMatchMedia = window.matchMedia;
+
   beforeEach(() => {
     configureTestBed();
+  });
+
+  afterEach(() => {
+    // The fake would otherwise leak a coarse-pointer/compact environment into
+    // every later spec file (they share this window).
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      value: originalMatchMedia
+    });
   });
 
   it('reads initial isCompact / isTouch from matchMedia', () => {
