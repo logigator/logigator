@@ -182,7 +182,10 @@ export class OnboardingOverlayService {
           rect.right > window.innerWidth;
         if (clipped) {
           session.scrolledIntoView = true;
-          session.target?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+          session.target?.scrollIntoView({
+            block: 'nearest',
+            inline: 'nearest'
+          });
           lastKey = '';
           stableFrames = 0;
           session.settleRaf = requestAnimationFrame(step);

@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApplicationRef, signal, WritableSignal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom, Subject } from 'rxjs';
@@ -6,6 +6,7 @@ import { TranslocoService } from '@jsverse/transloco';
 import { configureTestBed } from '../../testing/configure-test-bed';
 import { ProjectService } from '../project/project.service';
 import { InspectionService } from '../inspection/inspection.service';
+import { DocumentationService } from '../documentation/documentation.service';
 import { WorkModeService } from '../work-mode/work-mode.service';
 import { WorkMode } from '../work-mode/work-mode.enum';
 import { OnboardingService } from './onboarding.service';
@@ -39,6 +40,7 @@ describe('HintService', () => {
   let workMode: WorkModeService;
   let onboarding: OnboardingService;
   let activeProject: WritableSignal<ReturnType<typeof makeFakeProject> | null>;
+  let docsOpen: ReturnType<typeof vi.fn>;
 
   const tick = () => TestBed.inject(ApplicationRef).tick();
   const enterWireTool = () => {
@@ -54,7 +56,11 @@ describe('HintService', () => {
         provide: ProjectService,
         useValue: { mainProject: () => ({ componentCount: 0 }), activeProject }
       },
-      { provide: InspectionService, useValue: { open: signal(null) } }
+      { provide: InspectionService, useValue: { open: signal(null) } },
+      {
+        provide: DocumentationService,
+        useValue: { open: (docsOpen = vi.fn()) }
+      }
     ]);
     const transloco = TestBed.inject(TranslocoService);
     await firstValueFrom(transloco.load('en'));
@@ -169,6 +175,21 @@ describe('HintService', () => {
     expect(onboarding.hasSeenHint('paste-placement')).toBe(true);
   });
 
+  it('opens the linked documentation page from the learn-more action', () => {
+    enterWireTool();
+    const learnMore = Array.from(
+      document.querySelectorAll<HTMLButtonElement>(
+        '.cdk-overlay-container app-hint-popover button'
+      )
+    ).find((button) => button.textContent?.includes('Learn more'));
+    expect(learnMore).toBeDefined();
+
+    learnMore!.click();
+    tick();
+    expect(docsOpen).toHaveBeenCalledWith('wires-and-connections');
+    expect(popover()).toBeNull();
+  });
+
   it('dismisses on Escape', () => {
     enterWireTool();
     expect(popover()).not.toBeNull();
@@ -180,9 +201,11 @@ describe('HintService', () => {
 
   it('turns off all tips from the hint and closes it', () => {
     enterWireTool();
-    const turnOff = document.querySelector<HTMLButtonElement>(
-      '.cdk-overlay-container app-hint-popover button'
-    );
+    const turnOff = Array.from(
+      document.querySelectorAll<HTMLButtonElement>(
+        '.cdk-overlay-container app-hint-popover button'
+      )
+    ).find((button) => button.textContent?.includes('Turn off all tips'));
     turnOff?.click();
     expect(onboarding.tipsEnabled()).toBe(false);
     expect(popover()).toBeNull();

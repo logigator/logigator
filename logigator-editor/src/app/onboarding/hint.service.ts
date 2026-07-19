@@ -16,6 +16,7 @@ import {
   connectedPositions,
   LgOverlayService
 } from '@logigator/ui';
+import { DocumentationService } from '../documentation/documentation.service';
 import { WorkMode } from '../work-mode/work-mode.enum';
 import { WorkModeService } from '../work-mode/work-mode.service';
 import { ProjectService } from '../project/project.service';
@@ -65,6 +66,7 @@ export class HintService {
   private readonly translation = inject(TranslationService);
   private readonly logging = inject(LoggingService);
   private readonly registry = inject(OnboardingTargetRegistry);
+  private readonly documentation = inject(DocumentationService);
 
   private readonly mode$ = toObservable(this.workMode.mode);
   private readonly activeProject$ = toObservable(
@@ -225,6 +227,16 @@ export class HintService {
         this.onboarding.disableAllTips();
       })
     );
+    const docsPage = session.hint.docsPage;
+    if (docsPage) {
+      cmp.setInput('hasDocsLink', true);
+      session.subscriptions.add(
+        cmp.instance.learnMore.subscribe(() => {
+          this.dismiss();
+          this.documentation.open(docsPage);
+        })
+      );
+    }
     if (target) {
       // Point the caret at the anchor from whichever side CDK actually placed it.
       session.subscriptions.add(

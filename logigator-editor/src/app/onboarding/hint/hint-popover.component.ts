@@ -29,6 +29,16 @@ import { LgButton, LgCaret, type LgOverlaySide } from '@logigator/ui';
       <!-- Our own translated markup; trusted content. -->
       <p class="text-sm text-muted" [innerHTML]="text()"></p>
       <div class="flex items-center justify-end gap-1">
+        @if (hasDocsLink()) {
+          <lg-button
+            class="mr-auto"
+            size="sm"
+            severity="secondary"
+            text
+            [label]="t('documentation.learnMore')"
+            (onClick)="learnMore.emit()"
+          ></lg-button>
+        }
         <lg-button
           size="sm"
           severity="secondary"
@@ -51,7 +61,10 @@ import { LgButton, LgCaret, type LgOverlaySide } from '@logigator/ui';
 export class HintPopoverComponent {
   public readonly text = input.required<string>();
   public readonly side = input<LgOverlaySide | null>(null);
+  /** Whether the hint links to a documentation page. */
+  public readonly hasDocsLink = input(false);
 
   public readonly dismiss = output<void>();
   public readonly disableTips = output<void>();
+  public readonly learnMore = output<void>();
 }

@@ -1,4 +1,5 @@
 import { WorkMode } from '../work-mode/work-mode.enum';
+import { DocPageId } from '../documentation/docs-pages';
 import { StepText } from './tutorial.model';
 import { OnboardingPlatform } from './onboarding.service';
 
@@ -25,6 +26,8 @@ export interface Hint {
   readonly text: StepText;
   /** Onboarding target id of the anchor per platform; omit to float it. */
   readonly target?: Partial<Record<OnboardingPlatform, string>>;
+  /** Documentation page behind the hint's "learn more" link; omit for none. */
+  readonly docsPage?: DocPageId;
   readonly platforms?: readonly OnboardingPlatform[];
   /** Suppress if this tutorial was already completed (it taught the same thing). */
   readonly suppressIfCompleted?: string;

@@ -18,7 +18,8 @@ export const HINTS: readonly Hint[] = [
     id: 'wire-tap-actions',
     trigger: { kind: 'workMode', mode: WorkMode.WIRE_TOOL },
     target: { desktop: wireTool, compact: wireTool },
-    text: 'onboarding.hints.wireTapActions'
+    text: 'onboarding.hints.wireTapActions',
+    docsPage: 'wires-and-connections'
   },
   {
     id: 'scissor-select',
@@ -39,7 +40,8 @@ export const HINTS: readonly Hint[] = [
     id: 'sim-controls',
     trigger: { kind: 'workMode', mode: WorkMode.SIMULATION },
     target: { desktop: simControls, compact: simControls },
-    text: 'onboarding.hints.simControls'
+    text: 'onboarding.hints.simControls',
+    docsPage: 'simulation'
   },
   {
     id: 'inspect-component',
@@ -61,7 +63,8 @@ export const HINTS: readonly Hint[] = [
     text: {
       desktop: 'onboarding.hints.pastePlacementDesktop',
       compact: 'onboarding.hints.pastePlacementCompact'
-    }
+    },
+    docsPage: 'board-and-tools'
   },
   {
     id: 'pan-zoom-compact',
