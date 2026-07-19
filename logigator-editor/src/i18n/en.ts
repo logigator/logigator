@@ -341,6 +341,9 @@ const en = {
       help: {
         label: 'Help',
         items: {
+          documentation: {
+            label: 'Documentation'
+          },
           changelog: {
             label: "What's New"
           },
@@ -368,6 +371,31 @@ const en = {
     loading: 'Loading changelog…',
     loadError: 'The changelog could not be loaded.',
     close: 'Close'
+  },
+  documentation: {
+    header: 'Documentation',
+    loading: 'Loading page…',
+    loadError: 'This page could not be loaded.',
+    back: 'All topics',
+    learnMore: 'Learn more',
+    sections: {
+      basics: 'Basics',
+      building: 'Building Circuits',
+      simulation: 'Simulation',
+      projects: 'Projects & Cloud'
+    },
+    pages: {
+      gettingStarted: 'Getting Started',
+      boardAndTools: 'Board & Tools',
+      shortcuts: 'Keyboard Shortcuts',
+      componentsAndOptions: 'Components & Options',
+      wiresAndConnections: 'Wires & Connections',
+      customComponents: 'Custom Components',
+      simulation: 'Simulation',
+      inspection: 'Inspection & Watches',
+      savingAndFiles: 'Saving & Files',
+      cloud: 'Cloud & Sharing'
+    }
   },
   aboutDialog: {
     header: 'About Logigator',
