@@ -1,4 +1,4 @@
-import { InputSignalWithTransform } from '@angular/core';
+import { InputSignalWithTransform, Signal } from '@angular/core';
 
 /**
  * The value an `input()` signal field `F` accepts (its write / transform-input
@@ -47,4 +47,17 @@ export class DialogConfig<D = unknown, C = unknown> {
   inputValues?: DialogInputs<C>;
   dismissableMask?: boolean;
   style?: Record<string, string>;
+  /**
+   * Renders the dialog as a viewport-filling takeover instead of a centred
+   * card; `width`/`style` sizing is ignored while active. A `Signal` keeps the
+   * presentation live, so an open dialog switches between card and takeover
+   * when the signal flips (e.g. a layout-breakpoint signal on device rotation).
+   */
+  fullscreen?: boolean | Signal<boolean>;
+  /**
+   * Replaces the body region's default scroll + padding classes
+   * (`overflow-auto` + padding), for content that manages its own scrolling
+   * and insets. The body always keeps its flex sizing (`min-h-0 grow`).
+   */
+  bodyClass?: string;
 }

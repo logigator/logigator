@@ -4,7 +4,8 @@ import {
   Component,
   inject,
   input,
-  output
+  output,
+  signal
 } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { firstValueFrom } from 'rxjs';
@@ -191,6 +192,33 @@ describe('DialogService', () => {
     ).click();
     expect(results).toEqual([undefined]);
     expect(panel()).toBeNull();
+  });
+
+  it('ignores width sizing while fullscreen', () => {
+    open({ width: '40rem', fullscreen: true, inputValues: { wordSize: 1 } });
+    expect(panel()!.style.width).toBe('');
+  });
+
+  it('switches an open dialog between card and takeover when a fullscreen signal flips', () => {
+    const fullscreen = signal(false);
+    open({ width: '40rem', fullscreen, inputValues: { wordSize: 1 } });
+    expect(panel()!.style.width).toBe('40rem');
+
+    fullscreen.set(true);
+    TestBed.inject(ApplicationRef).tick();
+    expect(panel()!.style.width).toBe('');
+
+    fullscreen.set(false);
+    TestBed.inject(ApplicationRef).tick();
+    expect(panel()!.style.width).toBe('40rem');
+  });
+
+  it('bodyClass replaces the default body scroll and padding classes', () => {
+    open({ bodyClass: 'overflow-hidden', inputValues: { wordSize: 1 } });
+    const body = container()?.querySelector('.child')?.closest('div');
+    expect(body?.classList.contains('overflow-hidden')).toBe(true);
+    expect(body?.classList.contains('overflow-auto')).toBe(false);
+    expect(body?.classList.contains('px-5')).toBe(false);
   });
 
   it('closes on Escape', () => {
