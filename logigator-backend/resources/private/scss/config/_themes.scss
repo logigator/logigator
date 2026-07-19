@@ -60,3 +60,11 @@ $themes: (
 @function isTheme($theme) {
 	@return $themeForTestFunction == $theme;
 }
+
+@function secondaryButtonBgColor() {
+	@if (isTheme('dark')) {
+		@return lighten(themed('accent2'), 35%);
+	} @else {
+		@return darken(themed('accent2'), 35%)
+	}
+}

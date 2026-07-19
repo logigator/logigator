@@ -307,6 +307,14 @@ The global JS bundle concatenates these files in order:
 2. `resources/private/js/bem.js`
 3. `resources/private/js/global-functions.js`
 4. `resources/private/js/global.js`
+5. `resources/private/js/cookieconsent-init.js`
+
+A separate **standalone consent bundle** (`js:cookieconsent` → `public/js/cookieconsent.js`)
+concatenates the library UMD with `cookieconsent-css.js` (injects the standalone stylesheet)
+and the same `cookieconsent-init.js`. The editor SPA loads it directly, so both it and the
+server-rendered pages share one consent config, stylesheet and consent cookie. Its styles
+come from `scss:cookieconsent` → `public/css/cookieconsent.css` (the same partial the layout
+css already includes).
 
 View-specific JS files (5 total) are compiled individually from `resources/private/js/views/`:
 
@@ -411,7 +419,10 @@ Initializes on DOM load by querying for known partial elements:
 - **`popupPartial`** -- Opens/closes popups based on `data-triggers` attribute. Dispatches `popup-opened` / `popup-closed` custom events for downstream listeners (e.g., image cropper initialization)
 - **YouTube overlay** -- Lazy-loads YouTube iframes on first click (once, passive)
 - **Form validation** -- Initializes `startFormValidation` for every `<form>` with a submit button
-- **CookieConsent** -- Initializes `vanilla-cookieconsent` with 4 languages (en/de/es/fr), two categories (necessary + analytics), bar layout, 365-day expiry
+
+### `cookieconsent-init.js` -- Shared Consent Bootstrap
+
+Initializes `vanilla-cookieconsent` with 4 languages (en/de/es/fr), two categories (necessary + analytics), bar layout, 365-day expiry. Shared between the global bundle and the standalone editor bundle. Detects the page type via the server-rendered `theme-*` body class: on the editor SPA it resolves the language itself (persisted editor choice → preferences cookie → browser) and mirrors the editor's `dark-mode` html class onto the body theme classes the banner styles key off.
 
 ### View-Specific JS (5 files)
 
