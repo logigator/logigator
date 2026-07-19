@@ -65,6 +65,8 @@ export type {
   LgTabReorder
 } from './components/tab-strip/tab-strip';
 export { LgPanelMenu } from './components/panel-menu/panel-menu';
+export { LgNavigation } from './components/navigation/navigation';
+export type { NavigationItem } from './components/navigation/navigation-item.model';
 export { LgMenu } from './components/menu/menu';
 export { LgMenubar } from './components/menu/menubar';
 export { LgPaginator } from './components/paginator/paginator';
