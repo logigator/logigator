@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { Location } from '@angular/common';
 import { Rectangle } from 'pixi.js';
@@ -28,6 +28,17 @@ function stubCompactMatchMedia(): void {
 }
 
 describe('AppComponent', () => {
+  const originalMatchMedia = window.matchMedia;
+
+  afterEach(() => {
+    // The compact stub would otherwise leak a compact/touch environment into
+    // every later spec file (they share this window).
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      value: originalMatchMedia
+    });
+  });
+
   beforeEach(() => {
     configureTestBed(
       [
