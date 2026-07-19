@@ -265,6 +265,16 @@ Direction commits diverge by branch: a **placed** component routes through `proj
 
 ---
 
+### `DocumentationDialogComponent`
+
+**File:** `dialogs/documentation-dialog/documentation-dialog.component.ts`
+
+The in-editor documentation viewer, opened only through `DocumentationService.open(pageId?, anchor?)` (`app/documentation/`) — the Help menus, hint "learn more" links (`Hint.docsPage`), and the About dialog all deep-link through that one entry point. Content comes from the page registry `app/documentation/docs-pages.ts` (`DOC_SECTIONS`, per-locale markdown under `assets/docs/<lang>/` with English fallback, hashed-import loading like the changelog).
+
+Two presentations from one dialog: on desktop a wide centred card with an `lg-navigation` topic tree beside an `lg-markdown` page pane; on the compact breakpoint the dialog goes fullscreen (`DialogConfig.fullscreen` bound to `LayoutService.isCompact`, live across flips) and drills down — topic index first, page with a back row after. A host-level click listener delegates for anchors inside the rendered markdown: `docs:<page-id>[#anchor]` hrefs switch pages (classified by `app/documentation/doc-link.ts`; the HTML sanitizer's `unsafe:` prefix is stripped), `#anchor` hrefs scroll to the matching heading (slug of the heading text — marked emits no heading ids), external links open a new tab.
+
+---
+
 ## Service Dependencies
 
 | Service                    | Consumers                                                                                            | Role                                                                                      |
