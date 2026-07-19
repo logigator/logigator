@@ -20,6 +20,7 @@ import { ExportImageDialogComponent } from './dialogs/export-image-dialog/export
 import { ShareDialogComponent } from './dialogs/share-dialog/share-dialog.component';
 import { AboutDialogComponent } from './dialogs/about-dialog/about-dialog.component';
 import { ChangelogService } from '../changelog/changelog.service';
+import { DocumentationService } from '../documentation/documentation.service';
 import { OnboardingService } from '../onboarding/onboarding.service';
 import { DebugMenuService } from './debug-menu.service';
 import { ToastService } from '../logging/toast.service';
@@ -38,6 +39,7 @@ export class EditorMenuService {
   private readonly projectMetadataStore = inject(ProjectMetadataStore);
   private readonly dialogService = inject(DialogService);
   private readonly changelogService = inject(ChangelogService);
+  private readonly documentationService = inject(DocumentationService);
   private readonly onboardingService = inject(OnboardingService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly clipboardService = inject(ClipboardService);
@@ -188,6 +190,7 @@ export class EditorMenuService {
       {
         label: this.translation.translate('titleBar.menuBar.help.label'),
         items: [
+          this.documentationItem(),
           this.changelogItem(),
           this.showTipsAgainItem(),
           this.aboutItem()
@@ -213,6 +216,7 @@ export class EditorMenuService {
       ...this.exportFileItems(),
       this.generateImageItem(),
       { separator: true },
+      this.documentationItem(),
       this.changelogItem(),
       this.showTipsAgainItem(),
       this.aboutItem()
@@ -356,6 +360,16 @@ export class EditorMenuService {
       modal: true,
       closable: true
     });
+  }
+
+  private documentationItem(): MenuItem {
+    return {
+      label: this.translation.translate(
+        'titleBar.menuBar.help.items.documentation.label'
+      ),
+      icon: 'ph ph-book-open',
+      command: () => this.documentationService.open()
+    };
   }
 
   private changelogItem(): MenuItem {
