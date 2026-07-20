@@ -558,13 +558,13 @@ export const de: ILanguage = {
 		'<p>\n' +
 		'<img role="img" src="https://www.adsimple.at/wp-content/uploads/2018/03/http-cookie-interaction.svg" alt="HTTP Cookie Interaktion zwischen Browser und Webserver" width="100%" />\n' +
 		'</p>\n' +
-		'<p>Es gibt sowohl Erstanbieter Cookies als auch Drittanbieter-Cookies. Erstanbieter-Cookies werden direkt von unserer Seite erstellt, Drittanbieter-Cookies werden von Partner-Websites (z.B. Google Analytics) erstellt. Jedes Cookie ist individuell zu bewerten, da jedes Cookie andere Daten speichert. Auch die Ablaufzeit eines Cookies variiert von ein paar Minuten bis hin zu ein paar Jahren. Cookies sind keine Software-Programme und enthalten keine Viren, Trojaner oder andere „Schädlinge“. Cookies können auch nicht auf Informationen Ihres PCs zugreifen.</p>\n' +
+		'<p>Es gibt sowohl Erstanbieter Cookies als auch Drittanbieter-Cookies. Erstanbieter-Cookies werden direkt von unserer Seite erstellt, Drittanbieter-Cookies werden von Partner-Websites (z.B. PostHog) erstellt. Jedes Cookie ist individuell zu bewerten, da jedes Cookie andere Daten speichert. Auch die Ablaufzeit eines Cookies variiert von ein paar Minuten bis hin zu ein paar Jahren. Cookies sind keine Software-Programme und enthalten keine Viren, Trojaner oder andere „Schädlinge“. Cookies können auch nicht auf Informationen Ihres PCs zugreifen.</p>\n' +
 		'<p>So können zum Beispiel Cookie-Daten aussehen:</p>\n' +
 		'<p>\n' +
-		'<strong>Name:</strong> _ga<br />\n' +
-		'<strong>Wert:</strong> GA1.2.1326744211.152112741413-9<br />\n' +
+		'<strong>Name:</strong> ph_&lt;project-id&gt;_posthog<br />\n' +
+		'<strong>Wert:</strong> {"distinct_id":"0190f3c2-4e5a-7b1c-9d8e-2a1b3c4d5e6f"}<br />\n' +
 		'<strong>Verwendungszweck:</strong> Unterscheidung der Websitebesucher<br />\n' +
-		'<strong>Ablaufdatum:</strong> nach 2 Jahren</p>\n' +
+		'<strong>Ablaufdatum:</strong> nach 1 Jahr</p>\n' +
 		'<p>Diese Mindestgrößen sollte ein Browser unterstützen können:</p>\n' +
 		'<ul>\n' +
 		'<li>Mindestens 4096 Bytes pro Cookie</li>\n' +
@@ -641,10 +641,6 @@ export const de: ILanguage = {
 		'<h3>Welche Daten werden verarbeitet?</h3>\n' +
 		'<p>Welche Daten genau gespeichert werden, hängt natürlich von den verwendeten Analyse-Tools ab. Doch in der Regel wird zum Beispiel gespeichert, welche Inhalte Sie auf unserer Website ansehen, auf welche Buttons oder Links Sie klicken, wann Sie eine Seite aufrufen, welchen Browser sie verwenden, mit welchem Gerät (PC, Tablet, Smartphone usw.) Sie die Website besuchen oder welches Computersystem Sie verwenden. Wenn Sie damit einverstanden waren, dass auch Standortdaten erhoben werden dürfen, können auch diese durch den Webanalyse-Tool-Anbieter verarbeitet werden.</p>\n' +
 		'<p>Zudem wird auch Ihre IP-Adresse gespeichert. Gemäß der Datenschutz-Grundverordnung (DSGVO) sind IP-Adressen personenbezogene Daten. Ihre IP-Adresse wird allerdings in der Regel pseudonymisiert (also in unkenntlicher und gekürzter Form) gespeichert. Für den Zweck der Tests, der Webanalyse und der Weboptimierung werden grundsätzlich keine direkten Daten, wie etwa Ihr Name, Ihr Alter, Ihre Adresse oder Ihre E-Mail-Adresse gespeichert. All diese Daten werden, sofern sie erhoben werden, pseudonymisiert gespeichert. So können Sie als Person nicht identifiziert werden.</p>\n' +
-		'<p>Das folgende Beispiel zeigt schematisch die Funktionsweise von Google Analytics als Beispiel für client-basiertes Webtracking mit Java-Script-Code.</p>\n' +
-		'<p>\n' +
-		'<img role="img" src="https://www.adsimple.at/wp-content/uploads/2021/04/google-analytics-dataflow.svg" alt="Schematischer Datenfluss bei Google Analytics" width="100%" />\n' +
-		'</p>\n' +
 		'<p>Wie lange die jeweiligen Daten gespeichert werden, hängt immer vom Anbieter ab. Manche Cookies speichern Daten nur für ein paar Minuten bzw. bis Sie die Website wieder verlassen, andere Cookies können Daten über mehrere Jahre speichern.</p>\n' +
 		'<h3>\n' +
 		'<span data-sheets-value="{&quot;1&quot;:2,&quot;2&quot;:&quot;Wo und wie lange werden Daten gespeichert?&quot;}" data-sheets-userformat="{&quot;2&quot;:769,&quot;3&quot;:{&quot;1&quot;:0},&quot;11&quot;:4,&quot;12&quot;:0}">Dauer der Datenverarbeitung</span>\n' +
@@ -657,115 +653,43 @@ export const de: ILanguage = {
 		'<p>Zusätzlich zur Einwilligung besteht von unserer Seite ein berechtigtes Interesse daran, das Verhalten der Websitebesucher zu analysieren und so unser Angebot technisch und wirtschaftlich zu verbessern. Mit Hilfe von Web-Analytics erkennen wir Fehler der Website, können Attacken identifizieren und die Wirtschaftlichkeit verbessern. Die Rechtsgrundlage dafür ist <strong>Art. 6 Abs. 1 lit. f DSGVO (Berechtigte Interessen)</strong>. Wir setzen die Tools gleichwohl nur ein, soweit sie eine Einwilligung erteilt haben.</p>\n' +
 		'<p>Da bei Web-Analytics-Tools Cookies zum Einsatz kommen, empfehlen wir Ihnen auch das Lesen unserer allgemeinen Datenschutzerklärung zu Cookies. Um zu erfahren, welche Daten von Ihnen genau gespeichert und verarbeitet werden, sollten Sie die Datenschutzerklärungen der jeweiligen Tools durchlesen.</p>\n' +
 		'<p>Informationen zu speziellen Web-Analytics-Tools, erhalten Sie &#8211; sofern vorhanden &#8211; in den folgenden Abschnitten.</p>\n' +
-		'<h2 id="google-analytics-datenschutzerklaerung">Google Analytics Datenschutzerklärung</h2>\n' +
+		'<h2 id="posthog-datenschutzerklaerung">PostHog Datenschutzerklärung</h2>\n' +
 		'<table border="1" cellpadding="15">\n' +
 		'<tbody>\n' +
 		'<tr>\n' +
 		'<td>\n' +
-		'<strong>Google Analytics Datenschutzerklärung Zusammenfassung</strong>\n' +
-		'<br />\n' +
-		'&#x1f465; Betroffene: Besucher der Website<br />\n' +
-		'&#x1f91d; Zweck: Auswertung der Besucherinformationen zur Optimierung des Webangebots.<br />\n' +
-		'&#x1f4d3; Verarbeitete Daten: Zugriffsstatistiken, die Daten wie Standorte der Zugriffe, Gerätedaten, Zugriffsdauer und Zeitpunkt, Navigationsverhalten und Klickverhalten enthalten. Mehr Details dazu finden Sie weiter unten in dieser Datenschutzerklärung.<br />\n' +
-		'&#x1f4c5; Speicherdauer: individuell einstellbar, standardmäßig speichert Google Analytics 4 Daten für 14 Monate<br />\n' +
-		'&#x2696;&#xfe0f; Rechtsgrundlagen: Art. 6 Abs. 1 lit. a DSGVO (Einwilligung), Art. 6 Abs. 1 lit. f DSGVO (Berechtigte Interessen)</td>\n' +
+		'<strong>PostHog Datenschutzerklärung Zusammenfassung</strong>\n' +
+		'<br>\n' +
+		'👥 Betroffene: Besucher der Website <br>\n' +
+		'🤝 Zweck: Auswertung von Besucherinformationen zur Optimierung des Webangebots. <br>\n' +
+		'📓 Verarbeitete Daten: Zugriffsstatistiken wie aufgerufene Seiten, Klicks, Geräte- und Browserdaten, ungefährer Standort und IP-Adresse. Mehr Details dazu finden Sie weiter unten in dieser Datenschutzerklärung. <br>\n' +
+		'📅 Speicherdauer: das Cookie mit der Gerätekennung läuft nach 1 Jahr ab; Ereignisdaten werden entsprechend der von uns konfigurierten Aufbewahrungsdauer gespeichert <br>\n' +
+		'⚖️ Rechtsgrundlagen: Art. 6 Abs. 1 lit. a DSGVO (Einwilligung), Art. 6 Abs. 1 lit. f DSGVO (berechtigte Interessen)</td>\n' +
 		'</tr>\n' +
 		'</tbody>\n' +
 		'</table>\n' +
-		'<h3>Was ist Google Analytics?</h3>\n' +
-		'<p>Wir verwenden auf unserer Website das Analyse-Tracking Tool Google Analytics in der Version Google Analytics 4 (GA4) des amerikanischen Unternehmens Google Inc. Für den europäischen Raum ist das Unternehmen Google Ireland Limited (Gordon House, Barrow Street Dublin 4, Irland) für alle Google-Dienste verantwortlich. Google Analytics sammelt Daten über Ihre Handlungen auf unserer Website. Durch die Kombination aus verschiedenen Technologien wie Cookies, Geräte-IDs und Anmeldeinformationen, können Sie als User aber über verschiedene Geräte hinweg identifiziert werden. Dadurch können Ihre Handlungen auch plattformübergreifend analysiert werden.</p>\n' +
-		'<p>Wenn Sie beispielsweise einen Link anklicken, wird dieses Ereignis in einem Cookie gespeichert und an Google Analytics versandt. Mithilfe der Berichte, die wir von Google Analytics erhalten, können wir unsere Website und unseren Service besser an Ihre Wünsche anpassen. Im Folgenden gehen wir näher auf das Tracking-Tool ein und informieren Sie vor allem darüber, welche Daten verarbeitet werden und wie Sie das verhindern können.</p>\n' +
-		'<p>Google Analytics ist ein Trackingtool, das der Datenverkehrsanalyse unserer Website dient. Basis dieser Messungen und Analysen ist eine pseudonyme Nutzeridentifikationsnummer. Diese Nummer beinhaltet keine personenbezogenen Daten wie Name oder Adresse, sondern dient dazu, Ereignisse einem Endgerät zuzuordnen. GA4 nutzt ein ereignisbasiertes Modell, das detaillierte Informationen zu Userinteraktionen wie etwa Seitenaufrufe, Klicks, Scrollen, Conversion-Ereignisse erfasst. Zudem wurden in GA4 auch verschiedene maschinelle Lernfunktionen eingebaut, um das Nutzerverhalten und gewissen Trends besser zu verstehen. GA4 setzt mit Hilfe maschineller Lernfunktionen auf Modellierungen. Das heißt auf Grundlage der erhobenen Daten können auch fehlende Daten hochgerechnet werden, um damit die Analyse zu optimieren und auch um Prognosen geben zu können.</p>\n' +
-		'<p>Damit Google Analytics grundsätzlich funktioniert, wird ein Tracking-Code in den Code unserer Website eingebaut. Wenn Sie unsere Website besuchen, zeichnet dieser Code verschiedene Ereignisse auf, die Sie auf unserer Website ausführen. Mit dem ereignisbasierten Datenmodell von GA4 können wir als Websitebetreiber spezifische Ereignisse definieren und verfolgen, um Analysen von Userinteraktionen zu erhalten. Somit können neben allgemeinen Informationen wie Klicks oder Seitenaufrufe auch spezielle Ereignisse, die für unser Geschäft wichtig sind, verfolgt werden. Solche speziellen Ereignisse können zum Beispiel das Absenden eines Kontaktformulars oder der Kauf eines Produkts sein.</p>\n' +
-		'<p>Sobald Sie unsere Website verlassen, werden diese Daten an die Google-Analytics-Server gesendet und dort gespeichert.</p>\n' +
-		'<p>Google verarbeitet die Daten und wir bekommen Berichte über Ihr Userverhalten. Dabei kann es sich unter anderem um folgende Berichte handeln:</p>\n' +
-		'<ul>\n' +
-		'<li>Zielgruppenberichte: Über Zielgruppenberichte lernen wir unsere User besser kennen und wissen genauer, wer sich für unser Service interessiert.</li>\n' +
-		'<li>Anzeigeberichte: Durch Anzeigeberichte können wir unsere Onlinewerbung leichter analysieren und verbessern.</li>\n' +
-		'<li>Akquisitionsberichte: Akquisitionsberichte geben uns hilfreiche Informationen darüber, wie wir mehr Menschen für unseren Service begeistern können.</li>\n' +
-		'<li>Verhaltensberichte: Hier erfahren wir, wie Sie mit unserer Website interagieren. Wir können nachvollziehen welchen Weg Sie auf unserer Seite zurücklegen und welche Links Sie anklicken.</li>\n' +
-		'<li>Conversionsberichte: Conversion nennt man einen Vorgang, bei dem Sie aufgrund einer Marketing-Botschaft eine gewünschte Handlung ausführen. Zum Beispiel, wenn Sie von einem reinen Websitebesucher zu einem Käufer oder Newsletter-Abonnent werden. Mithilfe dieser Berichte erfahren wir mehr darüber, wie unsere Marketing-Maßnahmen bei Ihnen ankommen. So wollen wir unsere Conversionrate steigern.</li>\n' +
-		'<li>Echtzeitberichte: Hier erfahren wir immer sofort, was gerade auf unserer Website passiert. Zum Beispiel sehen wir wie viele User gerade diesen Text lesen.</li>\n' +
-		'</ul>\n' +
-		'<p>Neben den oben genannten Analyseberichten bietet Google Analytics 4 unter anderem auch folgende Funktionen an:</p>\n' +
-		'<ul>\n' +
-		'<li>Ereignisbasiertes Datenmodell: Dieses Modell erfasst ganz spezifische Ereignisse, die auf unserer Website stattfinden können. Zum Beispiel das Abspielen eines Videos, der Kauf eines Produkts oder das Anmelden zu unserem Newsletter.</li>\n' +
-		'<li>Erweiterte Analysefunktionen: Mit diesen Funktionen können wir Ihr Verhalten auf unserer Website oder gewisse allgemeine Trends noch besser verstehen. So können wir etwa Usergruppen segmentieren, Vergleichsanalysen von Zielgruppen machen oder Ihren Weg bzw. Pfad auf unserer Website nachvollziehen.</li>\n' +
-		'<li>Vorhersagemodellierung: Auf Grundlage erhobener Daten können durch maschinelles Lernen fehlende Daten hochgerechnet werden, die zukünftige Ereignisse und Trends vorhersagen. Das kann uns helfen, bessere Marketingstrategien zu entwickeln.</li>\n' +
-		'<li>Cross-Plattform-Analyse: Die Erfassung und Analyse von Daten sind sowohl von Websites als auch von Apps möglich. Das bietet uns die Möglichkeit, das Userverhalten plattformübergreifend zu analysieren, sofern Sie natürlich der Datenverarbeitung eingewilligt haben.</li>\n' +
-		'</ul>\n' +
-		'<h3>Warum verwenden wir Google Analytics auf unserer Website?</h3>\n' +
-		'<p>Unser Ziel mit dieser Website ist klar: Wir wollen Ihnen den bestmöglichen Service bieten. Die Statistiken und Daten von Google Analytics helfen uns dieses Ziel zu erreichen.</p>\n' +
-		'<p>Die statistisch ausgewerteten Daten zeigen uns ein klares Bild von den Stärken und Schwächen unserer Website. Einerseits können wir unsere Seite so optimieren, dass sie von interessierten Menschen auf Google leichter gefunden wird. Andererseits helfen uns die Daten, Sie als Besucher besser zu verstehen. Wir wissen somit sehr genau, was wir an unserer Website verbessern müssen, um Ihnen das bestmögliche Service zu bieten. Die Daten dienen uns auch, unsere Werbe- und Marketing-Maßnahmen individueller und kostengünstiger durchzuführen. Schließlich macht es nur Sinn, unsere Produkte und Dienstleistungen Menschen zu zeigen, die sich dafür interessieren.</p>\n' +
-		'<h3>Welche Daten werden von Google Analytics gespeichert?</h3>\n' +
-		'<p>Google Analytics erstellt mithilfe eines Tracking-Codes eine zufällige, eindeutige ID, die mit Ihrem Browser-Cookie verbunden ist. So erkennt Sie Google Analytics als neuen User und Ihnen wird eine User-ID zugeordnet. Wenn Sie das nächste Mal unsere Seite besuchen, werden Sie als „wiederkehrender“ User erkannt. Alle gesammelten Daten werden gemeinsam mit dieser User-ID gespeichert. So ist es erst möglich pseudonyme Userprofile auszuwerten.</p>\n' +
-		'<p>Um mit Google Analytics unsere Website analysieren zu können, muss eine Property-ID in den Tracking-Code eingefügt werden. Die Daten werden dann in der entsprechenden Property gespeichert. Für jede neu angelegte Property ist die Google Analytics 4-Property standardmäßig. Je nach verwendeter Property werden Daten unterschiedlich lange gespeichert.</p>\n' +
-		'<p>Durch Kennzeichnungen wie Cookies, App-Instanz-IDs, User-IDs oder etwa benutzerdefinierte Ereignisparameter werden Ihre Interaktionen, sofern Sie eingewilligt haben, plattformübergreifend gemessen. Interaktionen sind alle Arten von Handlungen, die Sie auf unserer Website ausführen. Wenn Sie auch andere Google-Systeme (wie z.B. ein Google-Konto) nützen, können über Google Analytics generierte Daten mit Drittanbieter-Cookies verknüpft werden. Google gibt keine Google Analytics-Daten weiter, außer wir als Websitebetreiber genehmigen das. Zu Ausnahmen kann es kommen, wenn es gesetzlich erforderlich ist.</p>\n' +
-		'<p>Laut Google werden in Google Analytics 4 keine IP-Adressen protokolliert oder gespeichert. Google nutzt die IP-Adressdaten allerdings für die Ableitung von Standortdaten und löscht sie unmittelbar danach. Alle IP-Adressen, die von Usern in der EU erhoben werden, werden also gelöscht, bevor die Daten in einem Rechenzentrum oder auf einem Server gespeichert werden.</p>\n' +
-		'<p>Da bei Google Analytics 4 der Fokus auf ereignisbasierten Daten liegt, verwendet das Tool im Vergleich zu früheren Versionen (wie Google Universal Analytics) deutlich weniger Cookies. Dennoch gibt es einige spezifische Cookies, die von GA4 verwendet werden. Dazu zählen zum Beispiel:</p>\n' +
+		'<h3>Was ist PostHog?</h3>\n' +
+		'<p>Auf unserer Website verwenden wir PostHog, ein Produktanalyse-Tool der PostHog Inc., eines Unternehmens mit Sitz in den USA. Wir nutzen die europäische Hosting-Option PostHog Cloud EU, sodass die über Ihre Nutzung unserer Website erhobenen Daten auf Servern in Frankfurt, Deutschland, innerhalb der Europäischen Union verarbeitet und gespeichert werden. PostHog erhebt Daten darüber, wie Besucher mit unserer Website interagieren, damit wir verstehen können, welche Inhalte nützlich sind, und die Website verbessern können.</p>\n' +
+		'<p>Wenn Sie unsere Website besuchen und Ihre Einwilligung erteilt haben, zeichnet PostHog Ereignisse wie Seitenaufrufe und Interaktionen auf (zum Beispiel, welche Links oder Schaltflächen Sie anklicken). Diese Ereignisse werden mit einer pseudonymen Kennung verknüpft, damit wir Besucher unterscheiden und wiederkehrende Besucher erkennen können, ohne zu wissen, wer Sie als Person sind.</p>\n' +
+		'<h3>Warum verwenden wir PostHog auf unserer Website?</h3>\n' +
+		'<p>Unser Ziel mit dieser Website ist es, Ihnen den bestmöglichen Service zu bieten. Die Statistiken von PostHog helfen uns zu verstehen, wie unsere Website genutzt wird, welche Seiten beliebt sind und wo Besucher auf Probleme stoßen. So können wir die Website verbessern und an die Bedürfnisse unserer Besucher anpassen. Wir haben uns bewusst für das europäische Hosting von PostHog entschieden, damit Ihre Daten nicht in ein Drittland übertragen werden müssen.</p>\n' +
+		'<h3>Welche Daten speichert PostHog?</h3>\n' +
+		'<p>PostHog weist Ihrem Browser eine pseudonyme Kennung (eine „distinct id“) zu, um Sie als wiederkehrenden Besucher zu erkennen. Die erhobenen Ereignisse werden zusammen mit dieser Kennung gespeichert. Dazu gehören in der Regel, welche Seiten Sie ansehen, welche Elemente Sie anklicken, der Zeitpunkt des Zugriffs, Ihr Browser- und Gerätetyp, die Bildschirmgröße und ein aus Ihrer IP-Adresse abgeleiteter ungefährer Standort.</p>\n' +
+		'<p>Ihre IP-Adresse gilt nach der DSGVO als personenbezogenes Datum. PostHog verwendet sie, um einen ungefähren Standort (auf Länder- oder Regionsebene) abzuleiten; wir verwenden sie nicht, um Sie persönlich zu identifizieren. Direkt identifizierende Daten wie Ihr Name, Ihre Adresse oder Ihre E-Mail-Adresse werden von PostHog auf unserer öffentlichen Website nicht erhoben, es sei denn, Sie geben sie aktiv an, zum Beispiel indem Sie sich anmelden.</p>\n' +
+		'<p>PostHog speichert eine kleine Menge an Informationen in Ihrem Browser, damit diese Analyse über Seitenaufrufe hinweg funktioniert:</p>\n' +
 		'<p>\n' +
-		'<strong>Name:</strong> _ga<br />\n' +
-		'<strong>Wert: </strong>2.1326744211.152112741413-5<br />\n' +
-		'<strong>Verwendungszweck:</strong> Standardmäßig verwendet analytics.js das Cookie _ga, um die User-ID zu speichern. Grundsätzlich dient es zur Unterscheidung der Webseitenbesucher.<br />\n' +
-		'<strong>Ablaufdatum:</strong> nach 2 Jahren</p>\n' +
-		'<p>\n' +
-		'<strong>Name:</strong> _gid<br />\n' +
-		'<strong>Wert: </strong>2.1687193234.152112741413-1<br />\n' +
-		'<strong>Verwendungszweck:</strong> Das Cookie dient auch zur Unterscheidung der Webseitenbesucher<br />\n' +
-		'<strong>Ablaufdatum:</strong> nach 24 Stunden</p>\n' +
-		'<p>\n' +
-		'<strong>Name:</strong> _gat_gtag_UA_&lt;property-id&gt;<br />\n' +
-		'<strong>Wert:</strong> 1<br />\n' +
-		'<strong>Verwendungszweck:</strong> Wird zum Senken der Anforderungsrate verwendet. Wenn Google Analytics über den Google Tag Manager bereitgestellt wird, erhält dieser Cookie den Namen _dc_gtm_ &lt;property-id&gt;.<br />\n' +
-		'<strong>Ablaufdatum: </strong>nach 1 Minute</p>\n' +
-		'<p>\n' +
-		'<strong>Anmerkung:</strong> Diese Aufzählung kann keinen Anspruch auf Vollständigkeit erheben, da Google die Wahl ihrer Cookies immer wieder auch verändert. Ziel von GA4 ist es auch, den Datenschutz zu verbessern. Daher bietet das Tool einige Möglichkeiten zur Kontrolle der Datenerfassung. So können wir beispielsweise die Speicherdauer selbst festlegen und auch die Datenerfassung steuern.</p>\n' +
-		'<p>Hier zeigen wir Ihnen einen Überblick über die wichtigsten Arten von Daten, die mit Google Analytics erhoben werden:</p>\n' +
-		'<p>\n' +
-		'<strong>Heatmaps:</strong> Google legt sogenannte Heatmaps an. Über Heatmaps sieht man genau jene Bereiche, die Sie anklicken. So bekommen wir Informationen, wo Sie auf unserer Seite „unterwegs“ sind.</p>\n' +
-		'<p>\n' +
-		'<strong>Sitzungsdauer:</strong> Als Sitzungsdauer bezeichnet Google die Zeit, die Sie auf unserer Seite verbringen, ohne die Seite zu verlassen. Wenn Sie 20 Minuten inaktiv waren, endet die Sitzung automatisch.</p>\n' +
-		'<p>\n' +
-		'<strong>Absprungrate</strong> (engl. Bouncerate): Von einem Absprung ist die Rede, wenn Sie auf unserer Website nur eine Seite ansehen und dann unsere Website wieder verlassen.</p>\n' +
-		'<p>\n' +
-		'<strong>Kontoerstellung:</strong> Wenn Sie auf unserer Website ein Konto erstellen bzw. eine Bestellung machen, erhebt Google Analytics diese Daten.</p>\n' +
-		'<p>\n' +
-		'<strong>Standort:</strong> IP-Adressen werden in Google Analytics nicht protokolliert oder gespeichert. Allerdings werden kurz vor der Löschung der IP-Adresse Ableitungen für Standortdaten genutzt.</p>\n' +
-		'<p>\n' +
-		'<strong>Technische Informationen:</strong> Zu den technischen Informationen zählen unter anderem Ihr Browsertyp, Ihr Internetanbieter oder Ihre Bildschirmauflösung.</p>\n' +
-		'<p>\n' +
-		'<strong>Herkunftsquelle:</strong> Google Analytics beziehungsweise uns interessiert natürlich auch über welche Website oder welche Werbung Sie auf unsere Seite gekommen sind.</p>\n' +
-		'<p>Weitere Daten sind Kontaktdaten, etwaige Bewertungen, das Abspielen von Medien (z. B., wenn Sie ein Video über unsere Seite abspielen), das Teilen von Inhalten über Social Media oder das Hinzufügen zu Ihren Favoriten. Die Aufzählung hat keinen Vollständigkeitsanspruch und dient nur zu einer allgemeinen Orientierung der Datenspeicherung durch Google Analytics.</p>\n' +
+		'<strong>Name:</strong> ph_&lt;project-id&gt;_posthog <br>\n' +
+		'<strong>Zweck:</strong> Speichert die pseudonyme Gerätekennung und die aktuelle Sitzungs-ID, damit wiederkehrende Besuche und Sitzungen erkannt werden können. <br>\n' +
+		'<strong>Ablaufdatum:</strong> nach 1 Jahr</p>\n' +
+		'<p><strong>Hinweis:</strong> Je nach Konfiguration speichert PostHog auch zusätzliche Informationen im lokalen Speicher (Local Storage) Ihres Browsers. Diese Liste erhebt keinen Anspruch auf Vollständigkeit.</p>\n' +
 		'<h3>Wie lange und wo werden die Daten gespeichert?</h3>\n' +
-		'<p>Google hat ihre Server auf der ganzen Welt verteilt. Hier können Sie genau nachlesen, wo sich die Google-Rechenzentren befinden: <a href="https://www.google.com/about/datacenters/locations/?hl=de">https://www.google.com/about/datacenters/locations/?hl=de</a>\n' +
-		'</p>\n' +
-		'<p>Ihre Daten werden auf verschiedenen physischen Datenträgern verteilt. Das hat den Vorteil, dass die Daten schneller abrufbar sind und vor Manipulation besser geschützt sind. In jedem Google-Rechenzentrum gibt es entsprechende Notfallprogramme für Ihre Daten. Wenn beispielsweise die Hardware bei Google ausfällt oder Naturkatastrophen Server lahmlegen, bleibt das Risiko einer Dienstunterbrechung bei Google dennoch gering.</p>\n' +
-		'<p>Die Aufbewahrungsdauer der Daten hängt von den verwendeten Properties ab. Die Speicherdauer wird stets für jede einzelne Property eigens festgelegt. Google Analytics bietet uns zur Kontrolle der Speicherdauer vier Optionen an:</p>\n' +
-		'<ul>\n' +
-		'<li>2 Monate: das ist die kürzeste Speicherdauer.</li>\n' +
-		'<li>14 Monate: standardmäßig bleiben die Daten bei GA4 für 14 Monate gespeichert.</li>\n' +
-		'<li>26 Monate: man kann die Daten auch 26 Monate lang speichern.</li>\n' +
-		'<li>Daten werden erst gelöscht, wenn wir sie manuell löschen</li>\n' +
-		'</ul>\n' +
-		'<p>Zusätzlich gibt es auch die Option, dass Daten erst dann gelöscht werden, wenn Sie innerhalb des von uns gewählten Zeitraums nicht mehr unsere Website besuchen. In diesem Fall wird die Aufbewahrungsdauer jedes Mal zurückgesetzt, wenn Sie unsere Website innerhalb des festgelegten Zeitraums wieder besuchen.</p>\n' +
-		'<p>Wenn der festgelegte Zeitraum abgelaufen ist, werden einmal im Monat die Daten gelöscht. Diese Aufbewahrungsdauer gilt für Ihre Daten, die mit Cookies, Usererkennung und Werbe-IDs (z.B. Cookies der DoubleClick-Domain) verknüpft sind. Berichtergebnisse basieren auf aggregierten Daten und werden unabhängig von Nutzerdaten gespeichert. Aggregierte Daten sind eine Zusammenschmelzung von Einzeldaten zu einer größeren Einheit.</p>\n' +
-		'<h3>Wie kann ich meine Daten löschen bzw. die Datenspeicherung verhindern?</h3>\n' +
-		'<p>Nach dem Datenschutzrecht der Europäischen Union haben Sie das Recht, Auskunft über Ihre Daten zu erhalten, sie zu aktualisieren, zu löschen oder einzuschränken. Mithilfe des Browser-Add-ons zur Deaktivierung von Google Analytics-JavaScript (analytics.js, gtag.js) verhindern Sie, dass Google Analytics 4 Ihre Daten verwendet. Das Browser-Add-on können Sie unter <a href="https://tools.google.com/dlpage/gaoptout?hl=de">https://tools.google.com/dlpage/gaoptout?hl=de</a> runterladen und installieren. Beachten Sie bitte, dass durch dieses Add-on nur die Datenerhebung durch Google Analytics deaktiviert wird.</p>\n' +
-		'<p>Falls Sie grundsätzlich Cookies deaktivieren, löschen oder verwalten wollen, finden Sie unter dem Abschnitt „Cookies“ die entsprechenden Links zu den jeweiligen Anleitungen der bekanntesten Browser.</p>\n' +
+		'<p>Alle über PostHog auf unserer Website erhobenen Daten werden auf der europäischen Infrastruktur von PostHog gespeichert, die in Frankfurt, Deutschland, gehostet wird. Das oben beschriebene Cookie mit der Gerätekennung läuft nach einem Jahr ab. Ereignisdaten werden für die von uns in PostHog konfigurierte Aufbewahrungsdauer gespeichert und anschließend gelöscht.</p>\n' +
+		'<h3>Wie kann ich meine Daten löschen bzw. die Speicherung verhindern?</h3>\n' +
+		'<p>PostHog wird erst geladen, nachdem Sie über unser Cookie-Banner Ihre Einwilligung erteilt haben. Sie können Ihre Einwilligung jederzeit über unser Cookie-Verwaltungstool widerrufen, wodurch jede weitere Datenerhebung verhindert wird. Sie können Cookies außerdem jederzeit in Ihrem Browser löschen oder blockieren; die entsprechenden Anleitungen für die gängigsten Browser finden Sie im Abschnitt „Cookies“.</p>\n' +
 		'<h3>Rechtsgrundlage</h3>\n' +
-		'<p>Der Einsatz von Google Analytics setzt Ihre Einwilligung voraus, welche wir mit unserem Cookie Popup eingeholt haben. Diese Einwilligung stellt laut<strong> Art. 6 Abs. 1 lit. a DSGVO (Einwilligung)</strong> die Rechtsgrundlage für die Verarbeitung personenbezogener Daten, wie sie bei der Erfassung durch Web-Analytics Tools vorkommen kann, dar.</p>\n' +
-		'<p>Zusätzlich zur Einwilligung besteht von unserer Seite ein berechtigtes Interesse daran, das Verhalten der Websitebesucher zu analysieren und so unser Angebot technisch und wirtschaftlich zu verbessern. Mit Hilfe von Google Analytics erkennen wir Fehler der Website, können Attacken identifizieren und die Wirtschaftlichkeit verbessern. Die Rechtsgrundlage dafür ist <strong>Art. 6 Abs. 1 lit. f DSGVO (Berechtigte Interessen)</strong>. Wir setzen Google Analytics gleichwohl nur ein, soweit Sie eine Einwilligung erteilt haben.</p>\n' +
-		'<p>Google verarbeitet Daten von Ihnen u.a. auch in den USA. Google ist aktiver Teilnehmer des EU-US Data Privacy Frameworks, wodurch der korrekte und sichere Datentransfer personenbezogener Daten von EU-Bürgern in die USA geregelt wird. Mehr Informationen dazu finden Sie auf <a href="https://commission.europa.eu/document/fa09cbad-dd7d-4684-ae60-be03fcb0fddf_en" target="_blank" rel="follow noopener"> https://commission.europa.eu/document/fa09cbad-dd7d-4684-ae60-be03fcb0fddf_en</a>.</p>\n' +
-		'<p>Zudem verwendet Google sogenannte Standardvertragsklauseln (= Art. 46. Abs. 2 und 3 DSGVO). Standardvertragsklauseln (Standard Contractual Clauses – SCC) sind von der EU-Kommission bereitgestellte Mustervorlagen und sollen sicherstellen, dass Ihre Daten auch dann den europäischen Datenschutzstandards entsprechen, wenn diese in Drittländer (wie beispielsweise in die USA) überliefert und dort gespeichert werden. Durch das EU-US Data Privacy Framework und durch die Standardvertragsklauseln verpflichtet sich Google, bei der Verarbeitung Ihrer relevanten Daten, das europäische Datenschutzniveau einzuhalten, selbst wenn die Daten in den USA gespeichert, verarbeitet und verwaltet werden. Diese Klauseln basieren auf einem Durchführungsbeschluss der EU-Kommission. Sie finden den Beschluss und die entsprechenden Standardvertragsklauseln u.a. hier: <a href="https://eur-lex.europa.eu/eli/dec_impl/2021/914/oj?locale=de" target="_blank" rel="follow noopener">https://eur-lex.europa.eu/eli/dec_impl/2021/914/oj?locale=de</a>\n' +
-		'</p>\n' +
-		'<p>Die Google Ads Datenverarbeitungsbedingungen (Google Ads Data Processing Terms), welche auf die Standardvertragsklauseln verweisen, finden Sie unter <a href="https://business.safety.google/intl/de/adsprocessorterms/" target="_blank" rel="follow noopener">https://business.safety.google/intl/de/adsprocessorterms/</a>.</p>\n' +
-		'<p>Wir hoffen, wir konnten Ihnen die wichtigsten Informationen rund um die Datenverarbeitung von Google Analytics näherbringen. Wenn Sie mehr über den Tracking-Dienst erfahren wollen, empfehlen wir diese beiden Links: <a href="https://marketingplatform.google.com/about/analytics/terms/de/" target="_blank" rel="follow noopener">https://marketingplatform.google.com/about/analytics/terms/de/</a> und <a href="https://support.google.com/analytics/answer/6004245?hl=de" target="_blank" rel="follow noopener">https://support.google.com/analytics/answer/6004245?hl=de</a>.</p>\n' +
-		'<p>Wenn Sie mehr über die Datenverarbeitung erfahren wollen, nutzen Sie die Google-Datenschutzerklärung auf <a href="https://policies.google.com/privacy?hl=de&amp;tid=112741413" target="_blank" rel="follow noopener">https://policies.google.com/privacy?hl=de</a>.</p>\n' +
-		'<h2 id="google-analytics-berichte-zu-demografischen-merkmalen-und-interessen">Google Analytics Berichte zu demografischen Merkmalen und Interessen</h2>\n' +
-		'<p>Wir haben in Google Analytics die Funktionen für Werbeberichte eingeschaltet. Die Berichte zu demografischen Merkmalen und Interessen enthalten Angaben zu Alter, Geschlecht und Interessen. Damit können wir uns &#8211; ohne diese Daten einzelnen Personen zuordnen zu können &#8211; ein besseres Bild von unseren Nutzern machen. Mehr über die Werbefunktionen erfahren Sie auf <a href="https://support.google.com/analytics/answer/3450482?hl=de_AT&amp;utm_id=ad">https://support.google.com/analytics/answer/3450482?hl=de_AT&amp;utm_id=ad</a>.</p>\n' +
-		'<p>Sie können die Nutzung der Aktivitäten und Informationen Ihres Google Kontos unter “Einstellungen für Werbung” auf <a href="https://adssettings.google.com/authenticated">https://adssettings.google.com/authenticated</a> per Checkbox beenden.</p>\n' +
-		'<h2 id="google-analytics-im-einwilligungsmodus">Google Analytics im Einwilligungsmodus</h2>\n' +
-		'<p>Abhängig von Ihrer Einwilligung werden im sogenannten Einwilligungsmodus (bzw. „Consent Mode“) personenbezogene Daten von Ihnen durch Google Analytics verarbeitet. Sie können wählen, ob Sie Google-Analytics-Cookies zustimmen oder nicht. Damit wählen Sie auch, welche Daten Google Analytics von Ihnen verarbeitet darf. Diese erhobenen Daten werden hauptsächlich dafür verwendet, Messungen über das Userverhalten auf der Website durchzuführen, zielgerichtete Werbung auszuspielen und uns Web-Analyseberichte zu liefern. In der Regel willigen Sie der Datenverarbeitung durch Google über ein Cookie-Consent-Tool ein. Wenn Sie der Datenverarbeitung nicht einwilligen, werden nur aggregierte Daten erfasst und verarbeitet. Das bedeutet, Daten können einzelnen Usern nicht zugeordnet werden und es entsteht somit kein Userprofil von Ihnen. Sie können auch nur der statistischen Messung zustimmen. Dabei werden keine personenbezogenen Daten verarbeitet und folglich nicht für Werbungen oder Werbemesserfolge verwendet.</p>\n' +
+		'<p>Die Verwendung von PostHog setzt Ihre Einwilligung voraus, die wir über unser Cookie-Popup eingeholt haben. Gemäß <strong>Artikel 6 Absatz 1 Buchstabe a DSGVO (Einwilligung)</strong> stellt diese Einwilligung die Rechtsgrundlage für die Verarbeitung personenbezogener Daten dar, wie sie bei der Erhebung durch Web-Analyse-Tools vorkommen kann.</p>\n' +
+		'<p>Zusätzlich zur Einwilligung haben wir ein berechtigtes Interesse daran, das Verhalten der Website-Besucher zu analysieren, um unser Angebot technisch und wirtschaftlich zu verbessern. Die Rechtsgrundlage dafür ist <strong>Artikel 6 Absatz 1 Buchstabe f DSGVO (berechtigte Interessen)</strong>. Wir setzen PostHog jedoch nur ein, wenn Sie Ihre Einwilligung erteilt haben.</p>\n' +
+		'<p>Wir verwenden PostHog Cloud EU, sodass Ihre Daten auf Servern in Deutschland, innerhalb der Europäischen Union, gespeichert und verarbeitet werden. Die PostHog Inc. hat ihren Sitz in den USA und handelt als unser Auftragsverarbeiter; PostHog stellt einen entsprechenden Auftragsverarbeitungsvertrag gemäß Art. 28 DSGVO bereit. Soweit ein Zugriff auf Daten von außerhalb der EU erfolgt, wird dieser gemäß Kapitel V der DSGVO abgesichert. Weitere Informationen darüber, wie PostHog mit Daten umgeht, finden Sie in dessen Datenschutzerklärung unter <a href="https://posthog.com/privacy" target="_blank" rel="follow noopener">https://posthog.com/privacy</a> .</p>\n' +
 		'<h2 id="content-delivery-networks-einleitung">Content Delivery Networks Einleitung</h2>\n' +
 		'<table border="1" cellpadding="15">\n' +
 		'<tbody>\n' +
