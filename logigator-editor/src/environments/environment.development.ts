@@ -10,7 +10,7 @@ export const environment: Environment = {
   gridSize: 16,
   loggingVerbosity: LogLevel.Debug,
   analytics: {
-    posthogKey: '',
+    posthogKey: 'phc_xSrwBeAfq8XzQWA4FxpPTLfVcycLwv5STWyXpwocR4vD',
     posthogHost: 'https://eu.i.posthog.com'
   },
   debug: {
