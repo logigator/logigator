@@ -16,6 +16,7 @@ import { SheetInspectionPresenter } from './sheet-inspection.presenter';
 import { WindowInspectionPresenter } from './window-inspection.presenter';
 
 class TestInspection extends ComponentInspection {
+  readonly kind = 'test';
   readonly renderer = {} as Type<unknown>;
   readonly title = signal('test');
   readonly frames = vi.fn();

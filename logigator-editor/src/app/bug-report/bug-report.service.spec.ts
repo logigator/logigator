@@ -100,6 +100,28 @@ describe('BugReportService', () => {
     expect(payload.projectDump).toBe(JSON.stringify({ dumpVersion: 1 }));
   });
 
+  it('stamps a manual report with a correlation id linking it to analytics', async () => {
+    service.openManualReport();
+    onClose$.next('found a bug');
+    onClose$.complete();
+    await flush();
+
+    const payload = report.mock.calls[0][0] as ReportErrorRequest;
+    expect(payload.correlationId).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
+    );
+  });
+
+  it('reuses the error handler correlation id when reporting an uncaught error', async () => {
+    service.handleUncaughtError(new Error('boom'), 'given-correlation-id');
+    onClose$.next('');
+    onClose$.complete();
+    await flush();
+
+    const payload = report.mock.calls[0][0] as ReportErrorRequest;
+    expect(payload.correlationId).toBe('given-correlation-id');
+  });
+
   it('reopens for a new error only once the cooldown elapses', async () => {
     service.handleUncaughtError(new Error('one'));
     onClose$.next(undefined);

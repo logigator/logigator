@@ -6,6 +6,7 @@ import { OpenInspection } from './inspection-presenter';
 import { SheetInspectionPresenter } from './sheet-inspection.presenter';
 
 class TestInspection extends ComponentInspection {
+  readonly kind = 'test';
   readonly renderer = {} as Type<unknown>;
   readonly title = signal('test');
 }

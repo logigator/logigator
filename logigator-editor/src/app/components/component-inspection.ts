@@ -28,6 +28,8 @@ export interface InspectionTitlePart {
  * track the running engine.
  */
 export abstract class ComponentInspection {
+  /** Categorical inspection kind, for analytics — never a user-authored label. */
+  public abstract readonly kind: string;
   /** Renderer component; receives this inspection as its `inspection` input. */
   public abstract readonly renderer: Type<unknown>;
   /** Live title for the hosting window / sheet tab. */

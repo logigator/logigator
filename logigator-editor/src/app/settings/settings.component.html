@@ -7,7 +7,7 @@
       <lg-toggle-switch
         [inputId]="'setting-' + setting.key"
         [ngModel]="setting.value()"
-        (ngModelChange)="setting.set($event)"
+        (ngModelChange)="setSetting(setting, $event)"
         [ngModelOptions]="{ standalone: true }"
       />
     </div>
@@ -20,7 +20,7 @@
     <lg-toggle-switch
       inputId="setting-onboarding-tips"
       [ngModel]="onboarding.tipsEnabled()"
-      (ngModelChange)="onboarding.setTipsEnabled($event)"
+      (ngModelChange)="setTipsEnabled($event)"
       [ngModelOptions]="{ standalone: true }"
     />
   </div>

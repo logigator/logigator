@@ -28,8 +28,9 @@ const ANALYTICS_CATEGORY = 'analytics';
  * {@link init} wires the self-contained observable sources (tool switches,
  * simulation lifecycle, tutorial start, and per-project edit operations); the
  * remaining events are emitted by direct {@link capture} calls at their method
- * sites (persistence, promotion, compile diagnostics, docs, tutorial end,
- * share-link, errors).
+ * sites (persistence, image export, promotion, compile diagnostics, docs,
+ * tutorial end, share-link, custom-component create/delete, settings changes,
+ * bug reports, changelog, inspection, errors).
  *
  * Construction is deliberately dependency-free — the event sources are resolved
  * lazily in {@link init} — so the many services that inject this sink to report

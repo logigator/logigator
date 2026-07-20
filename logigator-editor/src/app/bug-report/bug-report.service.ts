@@ -1,7 +1,10 @@
 import { inject, Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
+import { v4 as uuidv4 } from 'uuid';
 import { DialogService } from '@logigator/ui';
 import { TranslationService } from '../translation/translation.service';
+import { AnalyticsService } from '../analytics/analytics.service';
+import { AnalyticsEvent } from '../analytics/analytics.mapping';
 import { ReportErrorApiService } from '../api/services/report-error-api.service';
 import type { ReportErrorRequest } from '../api/models/report-error';
 import { PersistenceService } from '../persistence/persistence.service';
@@ -54,6 +57,7 @@ export class BugReportService {
   private readonly clientInfo = inject(ClientInfoService);
   private readonly logging = inject(LoggingService);
   private readonly toast = inject(ToastService);
+  private readonly analytics = inject(AnalyticsService);
 
   /** True while a report dialog is open — blocks a second one. */
   private active = false;
@@ -101,7 +105,12 @@ export class BugReportService {
       const message = await firstValueFrom(ref.onClose);
       // Dismissing resolves to `undefined`; only an explicit send submits.
       if (typeof message === 'string') {
-        this.submit(this.buildPayload(message, data.error));
+        const payload = this.buildPayload(message, data.error);
+        this.analytics.capture(AnalyticsEvent.BugReportSubmitted, {
+          mode: data.mode,
+          correlation_id: payload.correlationId
+        });
+        this.submit(payload);
       }
     } finally {
       this.active = false;
@@ -130,6 +139,10 @@ export class BugReportService {
   ): ReportErrorRequest {
     const payload: ReportErrorRequest = {
       source: 'editor-v2',
+      // Every report carries an id that links it to the matching PostHog event:
+      // an error report reuses the id the global error handler minted for its
+      // `$exception`, a manual report mints its own.
+      correlationId: error?.correlationId ?? uuidv4(),
       userMessage: userMessage || undefined,
       // The raw UA is the most reliable client field; `client` also carries a
       // coarse parsed browser/OS, but a mislabelled parse never loses this.
@@ -145,7 +158,6 @@ export class BugReportService {
       payload.file = error.file;
       payload.line = error.line;
       payload.col = error.col;
-      payload.correlationId = error.correlationId;
       if (error.stack) payload.stack = this.keepHead(error.stack, STACK_MAX);
     }
 

@@ -10,6 +10,8 @@ import {
 } from './board-snapshot.service';
 import { downloadBlob } from '../utils/download';
 import { environment } from '../../environments/environment';
+import { AnalyticsService } from '../analytics/analytics.service';
+import { AnalyticsEvent } from '../analytics/analytics.mapping';
 
 export type ImageFormat = 'png' | 'jpeg' | 'webp';
 
@@ -60,6 +62,7 @@ export class ImageExportService {
   private readonly metadataStore = inject(ProjectMetadataStore);
   private readonly toast = inject(ToastService);
   private readonly translation = inject(TranslationService);
+  private readonly analytics = inject(AnalyticsService);
 
   /**
    * Largest multiplier whose output fits {@link MAX_EXPORT_DIMENSION} on both
@@ -129,6 +132,11 @@ export class ImageExportService {
       this.metadataStore.getMetadata(options.project)?.name ??
       DEFAULT_NAME;
     downloadBlob(blob, `${name}.${EXTENSION[options.format]}`);
+
+    this.analytics.capture(AnalyticsEvent.ProjectExported, {
+      format: options.format,
+      background: options.background
+    });
 
     // A clamped export still succeeded; the clamp warning both confirms it and
     // explains the reduced size, so it stands in for the success toast.

@@ -4,6 +4,8 @@ import { LgSelectButton } from '@logigator/ui';
 import { ThemingService } from '../theming.service';
 import { ThemeType } from '../theme-type.enum';
 import { TranslationService } from '../../translation/translation.service';
+import { AnalyticsService } from '../../analytics/analytics.service';
+import { AnalyticsEvent } from '../../analytics/analytics.mapping';
 
 @Component({
   selector: 'app-theme-switcher',
@@ -13,6 +15,7 @@ import { TranslationService } from '../../translation/translation.service';
 export class ThemeSwitcherComponent {
   private readonly themingService = inject(ThemingService);
   private readonly translation = inject(TranslationService);
+  private readonly analytics = inject(AnalyticsService);
 
   protected readonly currentTheme = this.themingService.currentThemeType;
 
@@ -33,5 +36,9 @@ export class ThemeSwitcherComponent {
 
   protected setTheme(theme: ThemeType): void {
     this.themingService.setTheme(theme);
+    this.analytics.capture(AnalyticsEvent.SettingChanged, {
+      setting: 'theme',
+      value: theme
+    });
   }
 }

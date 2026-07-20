@@ -39,6 +39,7 @@ export interface WatchLevel {
  * level stack.
  */
 export class SubCircuitWatch extends ComponentInspection {
+  public readonly kind = 'watch';
   public readonly renderer = SubCircuitWatchComponent;
   public readonly title: Signal<string>;
   public override readonly sizing = {

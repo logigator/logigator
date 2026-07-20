@@ -18,6 +18,7 @@ import { RomInspectionComponent } from './rom-inspection.component';
  * `A(i+1)`) is address bit `i`.
  */
 export class RomInspection extends ComponentInspection {
+  public readonly kind = 'rom';
   public readonly renderer = RomInspectionComponent;
   public readonly title: Signal<string>;
   public override readonly sizing = {

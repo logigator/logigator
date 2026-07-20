@@ -6,6 +6,8 @@ import { TranslationService } from '../translation/translation.service';
 import { ChangelogDialogComponent } from '../ui/dialogs/changelog-dialog/changelog-dialog.component';
 import { environment } from '../../environments/environment';
 import { CookieService } from '../storage/cookie.service';
+import { AnalyticsService } from '../analytics/analytics.service';
+import { AnalyticsEvent } from '../analytics/analytics.mapping';
 import changelogEn from '@assets/changelog/changelog.en.md';
 
 const LAST_SEEN_KEY = 'logigator.changelog.lastSeenVersion';
@@ -53,6 +55,7 @@ export class ChangelogService {
   private readonly translation = inject(TranslationService);
   private readonly dialogService = inject(DialogService);
   private readonly cookieService = inject(CookieService);
+  private readonly analytics = inject(AnalyticsService);
 
   /** Changelog markdown for the active language, English as fallback. */
   public load(): Observable<string> {
@@ -66,8 +69,13 @@ export class ChangelogService {
     this.markSeen(environment.version);
   }
 
-  /** Opens the changelog dialog (which acknowledges the running version). */
-  public open(): void {
+  /**
+   * Opens the changelog dialog (which acknowledges the running version).
+   * `trigger` distinguishes the once-per-release auto-popup from an explicit
+   * open via the Help menu.
+   */
+  public open(trigger: 'auto' | 'manual' = 'manual'): void {
+    this.analytics.capture(AnalyticsEvent.ChangelogViewed, { trigger });
     this.dialogService.open(ChangelogDialogComponent, {
       header: this.translation.translate('changelogDialog.header'),
       width: '40rem',
@@ -90,13 +98,13 @@ export class ChangelogService {
     const seen = this.lastSeenVersion();
     if (seen === null) {
       if (this.isReturningLegacyUser()) {
-        this.open();
+        this.open('auto');
       }
       this.acknowledge();
       return;
     }
     if (this.isNewer(environment.version, seen)) {
-      this.open();
+      this.open('auto');
       this.acknowledge();
     }
   }

@@ -235,6 +235,10 @@ export class CustomComponentService {
     }
     this.registry.removeMaster(masterTypeId);
 
+    this.analytics.capture(AnalyticsEvent.CustomComponentDeleted, {
+      source: def.source
+    });
+
     this.toast.success(
       this.translation.translate('deleteComponent.deleted', { name: def.name }),
       'CustomComponentService'

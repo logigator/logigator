@@ -11,6 +11,8 @@ import { WorkModeService } from '../work-mode/work-mode.service';
 import { InspectionPresenter, OpenInspection } from './inspection-presenter';
 import { SheetInspectionPresenter } from './sheet-inspection.presenter';
 import { WindowInspectionPresenter } from './window-inspection.presenter';
+import { AnalyticsService } from '../analytics/analytics.service';
+import { AnalyticsEvent } from '../analytics/analytics.mapping';
 
 /**
  * Orchestrates live component inspections: while a simulation runs, tapping an
@@ -32,6 +34,7 @@ export class InspectionService {
   private readonly toastService = inject(ToastService);
   private readonly windowPresenter = inject(WindowInspectionPresenter);
   private readonly sheetPresenter = inject(SheetInspectionPresenter);
+  private readonly analytics = inject(AnalyticsService);
 
   private readonly _open = signal<readonly OpenInspection[]>([]);
   /** The open inspections, in opening order. */
@@ -94,6 +97,9 @@ export class InspectionService {
     const entry: OpenInspection = { component, inspection };
     this._open.update((entries) => [...entries, entry]);
     this._presenterFor(entry).show(entry, () => this._remove(entry));
+    this.analytics.capture(AnalyticsEvent.InspectionOpened, {
+      kind: inspection.kind
+    });
   }
 
   public close(entry: OpenInspection): void {

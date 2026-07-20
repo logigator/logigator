@@ -9,6 +9,7 @@ import { OpenInspection } from './inspection-presenter';
 import { WindowInspectionPresenter } from './window-inspection.presenter';
 
 class TestInspection extends ComponentInspection {
+  readonly kind = 'rom';
   readonly renderer = class {} as Type<unknown>;
   readonly title = signal('ROM');
   override readonly sizing = {
