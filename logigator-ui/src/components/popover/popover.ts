@@ -85,9 +85,7 @@ export class LgPopover implements OnDestroy {
 
     this.subscriptions = new Subscription();
     this.subscriptions.add(
-      caretSideChanges(this.overlayRef).subscribe((side) =>
-        this.side.set(side)
-      )
+      caretSideChanges(this.overlayRef).subscribe((side) => this.side.set(side))
     );
     this.subscriptions.add(
       this.overlayRef.backdropClick().subscribe(() => this.hide())
