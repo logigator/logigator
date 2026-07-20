@@ -100,25 +100,20 @@ export class AnalyticsService {
   }
 
   private syncConsent(): void {
-    const granted = !!window.CookieConsent?.acceptedCategory(ANALYTICS_CATEGORY);
+    const granted =
+      !!window.CookieConsent?.acceptedCategory(ANALYTICS_CATEGORY);
     if (granted && !this.initialized && environment.analytics.posthogKey) {
       posthog.init(environment.analytics.posthogKey, {
         api_host: environment.analytics.posthogHost,
+        ui_host: environment.analytics.posthogUiHost,
         person_profiles: 'identified_only',
         autocapture: false,
-        // The editor is a single-route SPA, so the load pageview is the only
-        // meaningful one — captured automatically, no per-navigation calls.
-        capture_pageview: true,
-        // Pairs with the pageview: $pageleave is what makes session duration
-        // and bounce accurate.
-        capture_pageleave: true,
         // HTTPS-only identity cookie.
         secure_cookie: true,
         // No feature flags / experiments are used, so skip the /flags request.
         advanced_disable_feature_flags: true,
-        // Core Web Vitals for the (heavy) editor load; network_timing is off so
-        // request URLs are never logged.
-        capture_performance: { web_vitals: true, network_timing: false }
+        // Core Web Vitals for the (heavy) editor load
+        capture_performance: true
       });
       this.initialized = true;
     } else if (this.initialized) {

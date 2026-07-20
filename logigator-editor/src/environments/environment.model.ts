@@ -14,8 +14,10 @@ export interface Environment {
   analytics: {
     /** PostHog project API key (public, write-only). Empty disables PostHog. */
     posthogKey: string;
-    /** PostHog ingestion host, e.g. the EU region endpoint. */
+    /** PostHog ingestion host — the `u.logigator.com` reverse proxy. */
     posthogHost: string;
+    /** PostHog app host for toolbar/session links, bypassing the proxy. */
+    posthogUiHost: string;
   };
   debug: {
     showGridBorders: boolean;

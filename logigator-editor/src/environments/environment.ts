@@ -11,7 +11,8 @@ export const environment: Environment = {
   loggingVerbosity: LogLevel.Warn,
   analytics: {
     posthogKey: 'phc_xSrwBeAfq8XzQWA4FxpPTLfVcycLwv5STWyXpwocR4vD',
-    posthogHost: 'https://eu.i.posthog.com'
+    posthogHost: 'https://u.logigator.com',
+    posthogUiHost: 'https://eu.posthog.com'
   },
   debug: {
     showGridBorders: false,
