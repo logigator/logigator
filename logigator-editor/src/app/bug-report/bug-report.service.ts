@@ -72,9 +72,10 @@ export class BugReportService {
    * cooldown. Safe to call from the global error handler on every error — only
    * the first of a burst gets through.
    */
-  public handleUncaughtError(error: unknown): void {
+  public handleUncaughtError(error: unknown, correlationId?: string): void {
     if (this.active || performance.now() < this.suppressErrorsUntil) return;
     const context = this.errorContext(error);
+    if (correlationId) context.correlationId = correlationId;
     void this.openDialog({ mode: 'error', error: context })
       .catch((err: unknown) => this.logging.error(err, CONTEXT))
       .finally(() => {
@@ -144,6 +145,7 @@ export class BugReportService {
       payload.file = error.file;
       payload.line = error.line;
       payload.col = error.col;
+      payload.correlationId = error.correlationId;
       if (error.stack) payload.stack = this.keepHead(error.stack, STACK_MAX);
     }
 

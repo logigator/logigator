@@ -1,4 +1,5 @@
 import { ErrorHandler, Injectable, Injector, inject } from '@angular/core';
+import { v4 as uuidv4 } from 'uuid';
 import { TranslationService } from '../translation/translation.service';
 import { LoggingService } from './logging.service';
 import { ToastService } from './toast.service';
@@ -15,6 +16,11 @@ import { AnalyticsService } from '../analytics/analytics.service';
  * cycle (this handler is constructed very early); if the report service isn't
  * available yet, a throttled generic toast is shown instead. Everything here is
  * guarded so a failure while reporting can never re-enter this handler.
+ *
+ * A single correlation id is minted per error and handed to both the analytics
+ * sink (as `correlation_id` on the PostHog `$exception`) and the bug report (as
+ * `correlationId` in the backend payload), so a PostHog issue can be traced to
+ * the full report — including the project dump — on our own backend.
  */
 @Injectable()
 export class GlobalErrorHandler implements ErrorHandler {
@@ -32,8 +38,10 @@ export class GlobalErrorHandler implements ErrorHandler {
       console.error('[GlobalErrorHandler]', error);
     }
 
+    const correlationId = uuidv4();
+
     try {
-      this.injector.get(AnalyticsService, null)?.captureError(error);
+      this.injector.get(AnalyticsService, null)?.captureError(error, correlationId);
     } catch {
       // Analytics must never re-enter the error handler.
     }
@@ -41,7 +49,7 @@ export class GlobalErrorHandler implements ErrorHandler {
     try {
       const bugReport = this.injector.get(BugReportService, null);
       if (bugReport) {
-        bugReport.handleUncaughtError(error);
+        bugReport.handleUncaughtError(error, correlationId);
         return;
       }
     } catch {

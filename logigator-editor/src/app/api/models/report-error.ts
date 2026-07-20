@@ -5,6 +5,9 @@ import type { ProjectElement } from './project-element';
 export interface ReportErrorRequest {
   /** Which client sent the report; the newer editor sends `editor-v2`. */
   source?: string;
+  /** Links this report to the matching PostHog `$exception` event, which
+   * carries the same id under `correlation_id`. */
+  correlationId?: string;
   line?: number;
   col?: number;
   file?: string;

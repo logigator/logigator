@@ -15,6 +15,8 @@ export interface BugReportErrorContext {
   line?: number;
   col?: number;
   stack?: string;
+  /** Shared with the matching PostHog `$exception` event for cross-reference. */
+  correlationId?: string;
 }
 
 export interface BugReportDialogData {

@@ -56,14 +56,21 @@ export class AnalyticsService {
     }
   }
 
-  /** Records an uncaught error as a behavioural signal (name + message only —
-   * a stack can carry file paths). */
-  public captureError(error: unknown): void {
-    const err = error as { name?: unknown; message?: unknown } | null;
-    this.capture(AnalyticsEvent.EditorError, {
-      name: typeof err?.name === 'string' ? err.name : 'Error',
-      message: typeof err?.message === 'string' ? err.message : String(error)
-    });
+  /** Reports an uncaught error to PostHog Error Tracking as a native
+   * `$exception` event (grouped into issues, stack traces retained — client
+   * stacks are just the app's own bundle URLs). Gated and guarded like
+   * {@link capture}: dropped before consent-time init, and never throws, since
+   * it runs inside the global error handler. */
+  public captureError(error: unknown, correlationId?: string): void {
+    if (!this.initialized) return;
+    try {
+      posthog.captureException(
+        error,
+        correlationId ? { correlation_id: correlationId } : undefined
+      );
+    } catch {
+      // Analytics must never re-enter the error handler.
+    }
   }
 
   /** Wires the consent gate and the observable event sources. Called once at
@@ -97,7 +104,20 @@ export class AnalyticsService {
       posthog.init(environment.analytics.posthogKey, {
         api_host: environment.analytics.posthogHost,
         person_profiles: 'identified_only',
-        autocapture: false
+        autocapture: false,
+        // The editor is a single-route SPA, so the load pageview is the only
+        // meaningful one — captured automatically, no per-navigation calls.
+        capture_pageview: true,
+        // Pairs with the pageview: $pageleave is what makes session duration
+        // and bounce accurate.
+        capture_pageleave: true,
+        // HTTPS-only identity cookie.
+        secure_cookie: true,
+        // No feature flags / experiments are used, so skip the /flags request.
+        advanced_disable_feature_flags: true,
+        // Core Web Vitals for the (heavy) editor load; network_timing is off so
+        // request URLs are never logged.
+        capture_performance: { web_vitals: true, network_timing: false }
       });
       this.initialized = true;
     } else if (this.initialized) {

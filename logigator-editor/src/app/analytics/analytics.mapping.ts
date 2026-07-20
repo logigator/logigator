@@ -21,8 +21,7 @@ export const AnalyticsEvent = {
   TutorialStepCompleted: 'tutorial_step_completed',
   TutorialCompleted: 'tutorial_completed',
   TutorialAbandoned: 'tutorial_abandoned',
-  DocPageOpened: 'doc_page_opened',
-  EditorError: 'editor_error'
+  DocPageOpened: 'doc_page_opened'
 } as const;
 
 const MAX_STRING_LENGTH = 64;
