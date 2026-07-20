@@ -12,6 +12,13 @@ export class ReportError {
 	@MaxLength(32)
 	source: string;
 
+	// Links this report to the matching PostHog `$exception` event, which
+	// carries the same id under `correlation_id`.
+	@IsOptional()
+	@IsString()
+	@MaxLength(64)
+	correlationId: string;
+
 	@IsOptional()
 	@IsInt()
 	line: string;

@@ -30,6 +30,9 @@ export class ReportErrorController {
 		let toAppend = `Date: ${new Date().toUTCString()}`;
 		toAppend += `\nSource: ${body.source ?? 'editor-v1'}`;
 
+		if (body.correlationId)
+			toAppend += `\nCorrelation ID: ${body.correlationId}`;
+
 		if (body.message)
 			toAppend += `\nMessage: ${body.message}`;
 
