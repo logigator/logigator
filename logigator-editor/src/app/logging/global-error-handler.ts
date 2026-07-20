@@ -41,7 +41,9 @@ export class GlobalErrorHandler implements ErrorHandler {
     const correlationId = uuidv4();
 
     try {
-      this.injector.get(AnalyticsService, null)?.captureError(error, correlationId);
+      this.injector
+        .get(AnalyticsService, null)
+        ?.captureError(error, correlationId);
     } catch {
       // Analytics must never re-enter the error handler.
     }

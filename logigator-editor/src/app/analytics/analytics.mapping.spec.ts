@@ -61,10 +61,7 @@ describe('operationProperties', () => {
   it('reports placed component types and count, not element ids', () => {
     const action: SerializedAction = {
       type: 'addComponents',
-      components: [
-        { id: 7, type: 3 } as never,
-        { id: 8, type: 5 } as never
-      ]
+      components: [{ id: 7, type: 3 } as never, { id: 8, type: 5 } as never]
     };
 
     expect(operationProperties(action)).toEqual({
