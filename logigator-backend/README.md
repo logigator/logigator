@@ -9,7 +9,7 @@ Express • routing-controllers • TypeDI • TypeORM • Passport.js • Handl
 ## Getting Started
 
 ```bash
-docker compose up   # starts backend, editor, MySQL, Redis, Apache proxy
+docker compose up   # starts backend, editor, MySQL, Redis, Caddy proxy
 # Add to /etc/hosts: 127.0.0.1 logigator.test
 ```
 

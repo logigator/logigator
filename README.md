@@ -32,7 +32,7 @@ The repo root is a **Yarn 4 + Angular CLI workspace** (managed via Corepack). Tw
 | `logigator-editor/` | ✅ | Active canvas editor (**current focus**) | Angular 22, PixiJS 8, Tailwind 4, `@logigator/ui` |
 | `logigator-ui/` | ✅ | `@logigator/ui` — in-house component library (replaces PrimeNG) | Angular 22, Angular CDK |
 | `logigator-backend/` | — | REST API + server-rendered pages | Node.js, Express, TypeORM, Handlebars |
-| `logigator-editor-legacy/` | — | Legacy editor (being replaced) | Angular 17, PixiJS 7 |
+| `logigator-editor-legacy/` | — | Legacy editor (being replaced) | Angular 17, PixiJS 5 |
 
 In development the editor consumes `@logigator/ui` directly from its TypeScript source via workspace path mapping — there is no separate build step. Commands run inside Docker containers — do not run `yarn` directly on the host.
 
@@ -106,10 +106,13 @@ All config files live in `logigator-backend/config/`. Create each from its `.exa
   "context": "development",   // "development" or "production"
   "port": 3000,
   "editor": "resources/editor",
+  "editorLegacy": "resources/legacy-editor",
   "enableErrorReportsFile": false,
   "sendErrorReportsAsEmail": false,
   "reportErrorLogFile": "report-error-log.txt",
-  "adminEmailAddresses": []
+  "adminEmailAddresses": [],
+  "reportRateLimitWindowSeconds": 600,
+  "reportRateLimitMax": 5
 }
 ```
 
@@ -118,7 +121,8 @@ All config files live in `logigator-backend/config/`. Create each from its `.exa
 ```jsonc
 {
   "rootUrl": "http://logigator.test",
-  "editor": "/editor"
+  "editor": "/editor",
+  "editorLegacy": "/legacy-editor"
 }
 ```
 
@@ -243,13 +247,18 @@ The editor is an **Angular 22 SPA** where the circuit canvas is a **PixiJS 8** s
 
 Key layers in `src/app/`:
 
-- **`components/`** — Circuit element model. Each gate/component extends `Component` (a PixiJS `Container` subclass). `ComponentProviderService` acts as the registry and factory. Gate implementations live in `component-types/`.
-- **`project/`** — `Project` (extends PixiJS `Container`) is the root of the circuit state. `ProjectService` manages the active project and persistence.
+- **`components/`** — Circuit element model. Each gate/component extends `Component` (a PixiJS `Container` subclass); port/bounds math lives in the pure, unit-tested `component-geometry.ts`. `ComponentProviderService` acts as the registry and factory. Gate implementations live in `component-types/`; side-panel form controls in `component-options/`.
+- **`project/`** — `Project` (extends PixiJS `Container`) is the root of the circuit state, exposing `viewport` (pan/zoom/camera) and `topology` (wire invariants). `ProjectService` tracks the loaded/active projects.
+- **`persistence/`** — Load/save dispatch, file import/export, and cloud promotion. The server API transports the legacy positional format; local files use a native, versioned format with a migration chain.
 - **`wires/`** — Wire model and rendering, separate from component objects.
-- **`rendering/`** — PixiJS scene management: `QuadTreeContainer` for spatial indexing, `FloatingLayer` for transient objects (selection box, placement preview), `GraphicsProviderService` for shared texture/graphics caching.
+- **`connection-points/`** — Derived visual junction dots (not persisted or selectable).
+- **`rendering/`** — PixiJS scene management: the single lease-counted renderer, `QuadTreeContainer` for spatial indexing, `FloatingLayer` for transient objects (drag ghosts, previews), `GraphicsProviderService` for shared texture/graphics caching, plus the DOM input layer (`PointerController` + `WorkModeRouter` + per-tool sessions).
+- **`clipboard/`** — Copy/cut/paste/delete, with paste opening an interactive placement session.
 - **`actions/`** — Command-pattern undo/redo via `ActionManager`. Every user operation is an `Action` subclass.
-- **`work-mode/`** — Interaction FSM (select, place, delete, wire-routing modes).
+- **`work-mode/`** — Interaction FSM (select, place, delete, wire-routing, simulation modes).
 - **`simulation/`** — Compiles the circuit into a board, runs it on a WebAssembly engine in a Web Worker, and lights up powered wires/ports on the canvas.
+- **`inspection/`** — Live component inspection during simulation (ROM data inspector, interactive custom-component watches).
+- **`documentation/`** — In-editor help pages (per-locale markdown, deep-linked from menus and hints).
 - **`ui/`** — Angular component wrappers around the canvas and sidebar panels.
 
 **Coordinate system:** `Project._gridSpace` has `scale = gridSize`, so all circuit objects use **grid units as their native PixiJS `position`** — no manual pixel↔grid conversion at the model layer. Visual children live inside a per-component `_visualSpace` container with `scale = 1/gridSize`, keeping pixel-authored geometry correct.
@@ -257,11 +266,11 @@ Key layers in `src/app/`:
 **Simulation** runs the external `@logigator/sim` WASM engine inside a Web Worker. The active circuit is compiled into a board (nets, units, link ids), the engine free-runs in the worker, and the main thread pulls per-frame state snapshots to repaint powered wires/ports. See `simulation.md`.
 
 Detailed technical docs for each subsystem are in `logigator-editor/docs/`:
-`actions-system.md`, `component-system.md`, `project.md`, `rendering.md`, `simulation.md`, `ui.md`, `wires.md`, `work-mode.md`.
+`actions-system.md`, `component-system.md`, `component-options.md`, `connection-points.md`, `custom-components.md`, `dependencies-and-promotion.md`, `inspection.md`, `persistence.md`, `project.md`, `rendering.md`, `simulation.md`, `ui.md`, `wires.md`, `work-mode.md`.
 
 ### UI library (`logigator-ui`)
 
-`@logigator/ui` is an in-house **Angular 22 + Angular CDK** component library that replaced PrimeNG in the editor. Each component lives in its own folder under `logigator-ui/src/` (`button/`, `dialog/`, `select/`, `menu/`, …) and is re-exported from `public-api.ts`. Imperative services — `DialogService` (dynamic dialogs), `ConfirmationService`, and `MessageService` (toasts) — sit alongside the declarative components, with shared overlay/focus plumbing in `internal/` and design tokens in `tokens/`.
+`@logigator/ui` is an in-house **Angular 22 + Angular CDK** component library. Each component lives in its own folder under `logigator-ui/src/` (`button/`, `dialog/`, `select/`, `menu/`, …) and is re-exported from `public-api.ts`. Imperative services — `DialogService` (dynamic dialogs), `ConfirmationService`, and `ToastService` (toasts) — sit alongside the declarative components, with shared overlay/focus plumbing in `internal/` and design tokens in `tokens/`.
 
 Theming is **colors-only** via `--lg-*` CSS variables: `styles/theme.css` defines them and `styles/theme.tw.css` maps them into Tailwind's `@theme`. The editor imports the library straight from TypeScript source through workspace path mapping (`@logigator/ui` → `logigator-ui/src/public-api.ts`), so it is *not* a `package.json` dependency of the editor and changes are picked up with no build step.
 
@@ -274,7 +283,7 @@ Express server using **routing-controllers** (decorator routing), **TypeDI** (DI
 - `src/database/entities/` — TypeORM entities. Circuit data is stored as JSON blobs in `ProjectFile`/`ComponentFile` — not decomposed into relational columns.
 - `src/services/` — Business logic, email sending, Redis session caching.
 
-The backend serves `logigator-editor` as a static SPA at the editor subdomain. The SPA calls `/api/projects`, `/api/components`, etc. to load and save circuits.
+The backend serves `logigator-editor` as a static SPA under the `/editor` path. The SPA calls `/api/projects`, `/api/components`, etc. to load and save circuits.
 
 ---
 

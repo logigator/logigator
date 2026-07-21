@@ -11,7 +11,7 @@ The repo root is a **shared Angular CLI workspace** + **Yarn 4 workspace** (core
 Two packages stay **independent** (own `yarn.lock`/`.yarnrc.yml`, *not* workspace members):
 
 - `logigator-backend/` — Node.js/Express (TypeScript, TypeORM, Handlebars)
-- `logigator-editor-legacy/` — Legacy Angular 17 editor (PixiJS 7), being replaced
+- `logigator-editor-legacy/` — Legacy Angular 17 editor (PixiJS 5), being replaced
 
 ## Dev Environment
 
