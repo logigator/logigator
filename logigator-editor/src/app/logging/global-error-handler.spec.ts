@@ -7,6 +7,7 @@ import { GlobalErrorHandler } from './global-error-handler';
 import { LoggingService } from './logging.service';
 import { ToastService } from './toast.service';
 import { BugReportService } from '../bug-report/bug-report.service';
+import { AnalyticsService } from '../analytics/analytics.service';
 
 describe('GlobalErrorHandler', () => {
   let handler: GlobalErrorHandler;
@@ -73,12 +74,14 @@ describe('GlobalErrorHandler', () => {
 
   describe('with the bug-report service available', () => {
     let bugReport: { handleUncaughtError: Mock };
+    let analytics: { captureError: Mock };
     let handlerWithReport: GlobalErrorHandler;
     let toastWithReport: { error: Mock };
 
     beforeEach(() => {
       TestBed.resetTestingModule();
       bugReport = { handleUncaughtError: vi.fn() };
+      analytics = { captureError: vi.fn() };
       toastWithReport = { error: vi.fn() };
       TestBed.configureTestingModule({
         providers: [
@@ -89,7 +92,8 @@ describe('GlobalErrorHandler', () => {
             provide: TranslationService,
             useValue: { translate: (k: string) => k }
           },
-          { provide: BugReportService, useValue: bugReport }
+          { provide: BugReportService, useValue: bugReport },
+          { provide: AnalyticsService, useValue: analytics }
         ]
       });
       handlerWithReport = TestBed.inject(GlobalErrorHandler);
@@ -98,8 +102,25 @@ describe('GlobalErrorHandler', () => {
     it('opens the report dialog for the error instead of toasting', () => {
       const err = new Error('boom');
       handlerWithReport.handleError(err);
-      expect(bugReport.handleUncaughtError).toHaveBeenCalledWith(err);
+      expect(bugReport.handleUncaughtError).toHaveBeenCalledWith(
+        err,
+        expect.any(String)
+      );
       expect(toastWithReport.error).not.toHaveBeenCalled();
+    });
+
+    it('hands the same correlation id to analytics and the bug report', () => {
+      const err = new Error('boom');
+      handlerWithReport.handleError(err);
+      const [, analyticsId] = analytics.captureError.mock.calls[0];
+      const [, reportId] = bugReport.handleUncaughtError.mock.calls[0];
+      expect(analyticsId).toBe(reportId);
+
+      // A second error gets a fresh id — ids correlate one error's sinks, not
+      // the session.
+      handlerWithReport.handleError(new Error('again'));
+      const [, secondId] = bugReport.handleUncaughtError.mock.calls[1];
+      expect(secondId).not.toBe(reportId);
     });
   });
 });
