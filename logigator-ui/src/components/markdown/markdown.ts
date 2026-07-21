@@ -77,6 +77,14 @@ import { MarkdownComponent } from 'ngx-markdown';
       padding-left: 1.5rem;
     }
 
+    lg-markdown ul {
+      list-style: disc outside;
+    }
+
+    lg-markdown ol {
+      list-style: decimal outside;
+    }
+
     lg-markdown li {
       margin: 0.25rem 0;
     }
@@ -105,13 +113,13 @@ import { MarkdownComponent } from 'ngx-markdown';
     lg-markdown code {
       font-family: var(--font-mono, monospace);
       font-size: 0.85em;
-      background: var(--lg-surface-100);
+      background: var(--lg-content-hover);
       border-radius: 0.25rem;
       padding: 0.1em 0.35em;
     }
 
     lg-markdown pre {
-      background: var(--lg-surface-100);
+      background: var(--lg-content-hover);
       border: 1px solid var(--lg-border);
       border-radius: 0.5rem;
       padding: 0.75rem 1rem;
@@ -130,6 +138,10 @@ import { MarkdownComponent } from 'ngx-markdown';
       padding: 0.25rem 0 0.25rem 1rem;
       border-left: 3px solid var(--lg-border);
       color: var(--lg-muted);
+    }
+
+    lg-markdown blockquote > :last-child {
+      margin-bottom: 0;
     }
 
     lg-markdown hr {
@@ -152,7 +164,7 @@ import { MarkdownComponent } from 'ngx-markdown';
     }
 
     lg-markdown th {
-      background: var(--lg-surface-100);
+      background: var(--lg-content-hover);
       font-weight: 700;
     }
 
