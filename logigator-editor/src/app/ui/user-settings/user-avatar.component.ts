@@ -9,6 +9,7 @@ import { UserService } from '../../user/user.service';
 @Component({
   selector: 'app-user-avatar',
   imports: [LgAvatar],
+  host: { class: 'contents' },
   template: `
     @if (userService.user()) {
       <lg-avatar
