@@ -1,4 +1,12 @@
-import { Component, computed, input, ViewEncapsulation } from '@angular/core';
+import {
+  Component,
+  computed,
+  ElementRef,
+  inject,
+  input,
+  output,
+  ViewEncapsulation
+} from '@angular/core';
 import { MarkdownComponent } from 'ngx-markdown';
 
 /**
@@ -23,6 +31,29 @@ export function resolveMarkdownUrls(
 }
 
 /**
+ * The anchor slug of a heading, derived from its text (lowercased,
+ * non-alphanumeric runs collapsed to `-`). marked no longer emits heading ids,
+ * so anchors resolve against rendered heading text.
+ */
+export function headingSlug(text: string): string {
+  return text
+    .toLowerCase()
+    .trim()
+    .replace(/[^\p{L}\p{N}]+/gu, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+/** A click on a link inside rendered markdown content. */
+export interface LgMarkdownLinkClick {
+  /** The href as rendered into the DOM. */
+  href: string;
+  /** The anchor element the click landed on. */
+  anchor: HTMLAnchorElement;
+  /** Claims the click: cancels the built-in handling and native navigation. */
+  preventDefault(): void;
+}
+
+/**
  * Themed markdown renderer. Wraps ngx-markdown's `<markdown>` (parsing via
  * `marked`) and layers a typography treatment keyed on the `--lg-*` palette, so
  * rendered content matches the rest of the UI in either theme.
@@ -30,6 +61,16 @@ export function resolveMarkdownUrls(
  * Provide exactly one source: `data` for an in-memory string, or `src` for a
  * URL/asset path the renderer fetches itself (requires `provideMarkdown` with an
  * `HttpClient` loader in the consuming app).
+ *
+ * Link clicks inside the rendered content are intercepted (the content is
+ * `innerHTML`, so a host-level listener delegates; anchors stay
+ * keyboard-accessible on their own — Enter fires a bubbling click). Every click
+ * emits `linkClick` first; unless the handler claims it via `preventDefault()`,
+ * built-in handling applies: `#slug` scrolls to the matching heading, web and
+ * relative URLs open a new tab with `noopener`, user-agent schemes (`mailto:`,
+ * `tel:`, `sms:`) navigate natively, and any other scheme does nothing —
+ * app-specific links are claim-or-inert, and `javascript:` payloads (rendered
+ * with the HTML sanitizer's `unsafe:` prefix as their scheme) stay defused.
  *
  * Uses `ViewEncapsulation.None` because ngx-markdown injects the parsed HTML as
  * `innerHTML` on its own element, out of reach of emulated encapsulation; every
@@ -39,6 +80,7 @@ export function resolveMarkdownUrls(
   selector: 'lg-markdown',
   imports: [MarkdownComponent],
   encapsulation: ViewEncapsulation.None,
+  host: { '(click)': 'onContentClick($event)' },
   template: `<markdown [data]="resolvedData()" [src]="src()" />`,
   styles: `
     lg-markdown {
@@ -206,8 +248,70 @@ export class LgMarkdown {
    * Applies to `data` only: content fetched via `src` renders as-is.
    */
   readonly assetUrls = input<Readonly<Record<string, string>>>();
+  /**
+   * A click on any link in the rendered content, emitted before the built-in
+   * handling. `preventDefault()` on the event claims the click — e.g. for an
+   * app-specific scheme the consumer routes itself.
+   */
+  readonly linkClick = output<LgMarkdownLinkClick>();
 
   protected readonly resolvedData = computed(() =>
     resolveMarkdownUrls(this.data(), this.assetUrls())
   );
+
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+
+  /** Scrolls the rendered heading whose {@link headingSlug} matches into view. */
+  scrollToHeading(slug: string): void {
+    const headings = this.host.nativeElement.querySelectorAll<HTMLElement>(
+      'h1, h2, h3, h4, h5, h6'
+    );
+    Array.from(headings)
+      .find((heading) => headingSlug(heading.textContent ?? '') === slug)
+      ?.scrollIntoView({ block: 'start' });
+  }
+
+  protected onContentClick(event: MouseEvent): void {
+    const anchor = (event.target as HTMLElement | null)?.closest('a');
+    if (!anchor || !this.host.nativeElement.contains(anchor)) {
+      return;
+    }
+    const href = anchor.getAttribute('href');
+    if (!href) {
+      return;
+    }
+    let claimed = false;
+    this.linkClick.emit({
+      href,
+      anchor,
+      preventDefault: () => {
+        claimed = true;
+        event.preventDefault();
+      }
+    });
+    if (claimed) {
+      return;
+    }
+    if (href.startsWith('#')) {
+      event.preventDefault();
+      const slug = href.slice(1);
+      if (slug) {
+        this.scrollToHeading(slug);
+      }
+      return;
+    }
+    const scheme = /^([a-z][a-z0-9+.-]*):/i.exec(href)?.[1]?.toLowerCase();
+    if (scheme === undefined || scheme === 'http' || scheme === 'https') {
+      event.preventDefault();
+      window.open(href, '_blank', 'noopener');
+    } else if (!NATIVE_SCHEMES.has(scheme)) {
+      // Unclaimed non-user-agent schemes stay inert: app-specific links carry
+      // no native meaning, and javascript: payloads (reaching here with the
+      // sanitizer's unsafe: prefix as their scheme) must never execute.
+      event.preventDefault();
+    }
+  }
 }
+
+/** Schemes the user agent handles without unloading the app. */
+const NATIVE_SCHEMES: ReadonlySet<string> = new Set(['mailto', 'tel', 'sms']);

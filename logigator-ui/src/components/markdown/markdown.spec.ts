@@ -1,5 +1,14 @@
-import { describe, expect, it } from 'vitest';
-import { resolveMarkdownUrls } from './markdown';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { Component } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
+import { provideMarkdown } from 'ngx-markdown';
+import {
+  headingSlug,
+  LgMarkdown,
+  LgMarkdownLinkClick,
+  resolveMarkdownUrls
+} from './markdown';
 
 describe('resolveMarkdownUrls', () => {
   const urls = {
@@ -35,5 +44,128 @@ describe('resolveMarkdownUrls', () => {
     expect(resolveMarkdownUrls('[a](constructor)', urls)).toBe(
       '[a](constructor)'
     );
+  });
+});
+
+describe('headingSlug', () => {
+  it('lowercases and joins words with dashes', () => {
+    expect(headingSlug('Speed Modes')).toBe('speed-modes');
+  });
+
+  it('collapses punctuation runs and trims edge dashes', () => {
+    expect(headingSlug('  Wires & Connections! ')).toBe('wires-connections');
+  });
+
+  it('keeps non-latin letters and digits', () => {
+    expect(headingSlug('Größe 2×4')).toBe('größe-2-4');
+  });
+});
+
+describe('LgMarkdown link handling', () => {
+  @Component({
+    imports: [LgMarkdown],
+    template: `<lg-markdown [data]="data" (linkClick)="handle($event)" />`
+  })
+  class HostComponent {
+    data =
+      '# Speed Modes\n\n' +
+      '[jump](#speed-modes)\n\n' +
+      '[site](https://logigator.com/features)\n\n' +
+      '[page](docs:settings)\n\n' +
+      '[mail](mailto:hi@logigator.com)\n\n' +
+      '[bad](javascript:alert(1))';
+    events: LgMarkdownLinkClick[] = [];
+    handle = (event: LgMarkdownLinkClick): void => {
+      this.events.push(event);
+    };
+  }
+
+  async function setup() {
+    TestBed.configureTestingModule({ providers: [provideMarkdown()] });
+    const fixture = TestBed.createComponent(HostComponent);
+    fixture.detectChanges();
+    // ngx-markdown assigns the parsed innerHTML asynchronously.
+    await fixture.whenStable();
+    await new Promise((resolve) => setTimeout(resolve));
+    const host = fixture.componentInstance;
+    const el = fixture.nativeElement as HTMLElement;
+    const link = (href: string) =>
+      Array.from(el.querySelectorAll('a')).find((a) =>
+        (a.getAttribute('href') ?? '').endsWith(href)
+      )!;
+    const click = (anchor: HTMLAnchorElement) =>
+      anchor.dispatchEvent(
+        new MouseEvent('click', { bubbles: true, cancelable: true })
+      );
+    return { fixture, host, el, link, click };
+  }
+
+  afterEach(() => vi.restoreAllMocks());
+
+  it('opens web links in a new tab instead of navigating the app', async () => {
+    const { link, click } = await setup();
+    const open = vi.spyOn(window, 'open').mockReturnValue(null);
+    const navigated = click(link('https://logigator.com/features'));
+    expect(navigated).toBe(false);
+    expect(open).toHaveBeenCalledWith(
+      'https://logigator.com/features',
+      '_blank',
+      'noopener'
+    );
+  });
+
+  it('scrolls to the matching heading on a fragment link', async () => {
+    const { el, link, click } = await setup();
+    const heading = el.querySelector('h1')!;
+    heading.scrollIntoView = vi.fn();
+    const navigated = click(link('#speed-modes'));
+    expect(navigated).toBe(false);
+    expect(heading.scrollIntoView).toHaveBeenCalledWith({ block: 'start' });
+  });
+
+  it('emits app-specific schemes and keeps them inert when unclaimed', async () => {
+    const { host, link, click } = await setup();
+    const open = vi.spyOn(window, 'open').mockReturnValue(null);
+    const navigated = click(link('docs:settings'));
+    expect(navigated).toBe(false);
+    expect(open).not.toHaveBeenCalled();
+    expect(host.events.map((event) => event.href)).toEqual(['docs:settings']);
+  });
+
+  it('never navigates the sanitizer-defused javascript: links', async () => {
+    const { link, click } = await setup();
+    const anchor = link('javascript:alert(1)');
+    expect(anchor.getAttribute('href')).toBe('unsafe:javascript:alert(1)');
+    const navigated = click(anchor);
+    expect(navigated).toBe(false);
+  });
+
+  it('skips the built-in handling when the listener claims the click', async () => {
+    const { host, link, click } = await setup();
+    const open = vi.spyOn(window, 'open').mockReturnValue(null);
+    host.handle = (event) => event.preventDefault();
+    const navigated = click(link('https://logigator.com/features'));
+    expect(navigated).toBe(false);
+    expect(open).not.toHaveBeenCalled();
+  });
+
+  it('leaves sanitizer-allowed non-web schemes to native navigation', async () => {
+    const { link, click } = await setup();
+    const open = vi.spyOn(window, 'open').mockReturnValue(null);
+    const navigated = click(link('mailto:hi@logigator.com'));
+    expect(navigated).toBe(true);
+    expect(open).not.toHaveBeenCalled();
+  });
+
+  it('scrollToHeading targets headings by their text slug', async () => {
+    const { fixture, el } = await setup();
+    const heading = el.querySelector('h1')!;
+    heading.scrollIntoView = vi.fn();
+    const markdown = fixture.debugElement.query(By.directive(LgMarkdown))
+      .componentInstance as LgMarkdown;
+    markdown.scrollToHeading('speed-modes');
+    expect(heading.scrollIntoView).toHaveBeenCalledWith({ block: 'start' });
+    markdown.scrollToHeading('not-a-heading');
+    expect(heading.scrollIntoView).toHaveBeenCalledTimes(1);
   });
 });
