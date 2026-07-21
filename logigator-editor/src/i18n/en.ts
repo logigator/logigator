@@ -293,6 +293,9 @@ const en = {
           share: {
             label: 'Share'
           },
+          cloneShare: {
+            label: 'Clone to my projects'
+          },
           exportFile: {
             label: 'Export to file'
           },
@@ -675,6 +678,8 @@ const en = {
     shareLoadFailed: 'Could not load the shared project.',
     shareAuthRequired:
       'Sign in to add this shared project to your cloud library.',
+    shareCloned: 'Shared project cloned to your cloud projects.',
+    shareCloneFailed: 'Could not clone the shared project.',
     dumpElementCountChanged:
       'Project Dump element count changed on load — ids and action history were not restored.',
     skippedCustomOne:

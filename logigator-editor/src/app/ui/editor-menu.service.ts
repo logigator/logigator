@@ -25,6 +25,7 @@ import { OnboardingService } from '../onboarding/onboarding.service';
 import { DebugMenuService } from './debug-menu.service';
 import { ConsentService } from '../consent/consent.service';
 import { ToastService } from '../logging/toast.service';
+import { isHandledSaveError } from '../persistence/persistence-errors';
 
 /**
  * Builds the menu models and owns the commands behind them: the desktop
@@ -86,7 +87,7 @@ export class EditorMenuService {
             separator: true
           },
           this.openItem(),
-          this.saveItem(),
+          ...this.saveItems(),
           ...this.cloudItems(),
           ...this.exportFileItems(),
           {
@@ -266,18 +267,30 @@ export class EditorMenuService {
     };
   }
 
-  private saveItem(): MenuItem {
-    return {
-      label: this.translation.translate(
-        'titleBar.menuBar.file.items.save.label'
-      ),
-      icon: 'ph ph-floppy-disk',
-      shortcut: this.shortcutService.binding(ShortcutActionEnum.SAVE)(),
-      command: () => this.saveProject()
-    };
+  /**
+   * Save, omitted for read-only shares (there is nothing to save; cloning is
+   * the way to keep one). Gated on the *active* project — the command saves it,
+   * and a component tab stays savable while a share sits in the main slot.
+   */
+  private saveItems(): MenuItem[] {
+    const project = this.projectService.activeProject();
+    const metadata = project
+      ? this.projectMetadataStore.getMetadata(project)
+      : null;
+    if (metadata?.source === 'share') return [];
+    return [
+      {
+        label: this.translation.translate(
+          'titleBar.menuBar.file.items.save.label'
+        ),
+        icon: 'ph ph-floppy-disk',
+        shortcut: this.shortcutService.binding(ShortcutActionEnum.SAVE)(),
+        command: () => this.saveProject()
+      }
+    ];
   }
 
-  /** Upload/share follow the open project's source; empty when neither applies. */
+  /** Upload/share/clone follow the open project's source; empty when none applies. */
   private cloudItems(): MenuItem[] {
     const items: MenuItem[] = [];
     if (this.canUploadMainProject()) {
@@ -296,6 +309,15 @@ export class EditorMenuService {
         ),
         icon: 'ph ph-share-network',
         command: () => this.shareProject()
+      });
+    }
+    if (this.canCloneMainShare()) {
+      items.push({
+        label: this.translation.translate(
+          'titleBar.menuBar.file.items.cloneShare.label'
+        ),
+        icon: 'ph ph-git-fork',
+        command: () => void this.cloneShare()
       });
     }
     return items;
@@ -490,6 +512,52 @@ export class EditorMenuService {
       ? this.projectMetadataStore.getMetadata(project)
       : null;
     return metadata?.type === 'project' && metadata.source === 'server';
+  }
+
+  /**
+   * Whether the open project is a read-only **share** — the only case that can
+   * be cloned into the user's own cloud projects. Component shares open as
+   * tabs, never as main, so this fires for project shares only.
+   */
+  private canCloneMainShare(): boolean {
+    const project = this.projectService.mainProject();
+    const metadata = project
+      ? this.projectMetadataStore.getMetadata(project)
+      : null;
+    return (
+      metadata?.type === 'project' &&
+      metadata.source === 'share' &&
+      !!metadata.link
+    );
+  }
+
+  /**
+   * Clones the open share into the user's cloud projects (the server copies the
+   * circuit and records the fork) and loads the fresh copy as main. A
+   * signed-out user is already toasted by the gateway's auth guard, so only
+   * unhandled failures are reported here.
+   */
+  private async cloneShare(): Promise<void> {
+    const project = this.projectService.mainProject();
+    const metadata = project
+      ? this.projectMetadataStore.getMetadata(project)
+      : null;
+    if (metadata?.source !== 'share' || !metadata.link) return;
+    try {
+      await this.persistenceService.cloneShare(metadata.link);
+      this.toastService.success(
+        this.translation.translate('persistence.shareCloned'),
+        'EditorMenuService'
+      );
+    } catch (err) {
+      if (!isHandledSaveError(err)) {
+        this.toastService.error(
+          this.translation.translate('persistence.shareCloneFailed'),
+          'EditorMenuService',
+          err
+        );
+      }
+    }
   }
 
   private shareProject(): void {
