@@ -648,6 +648,24 @@ describe('PersistenceService', () => {
       expect(metadataStore.isDirty(project)).toBe(false);
     });
 
+    it('loadShare captures the share fork attribution into metadata', async () => {
+      const forkAttribution = [
+        { projectId: 'origin-1', projectName: 'Origin', authorName: 'alice' }
+      ];
+      const promise = service.loadShare('link-fork');
+
+      const response = shareDetailResponse({ id: 'share-1' });
+      httpMock.expectOne(SHARE_URL('link-fork')).flush({
+        ...response,
+        data: { ...response.data, forkAttribution }
+      });
+
+      const { project } = await promise;
+      expect(metadataStore.getMetadata(project)!.attribution).toEqual(
+        forkAttribution
+      );
+    });
+
     it('loadShareAsMain swaps main project for project-type shares', async () => {
       const promise = service.loadShareAsMain('link-1');
 

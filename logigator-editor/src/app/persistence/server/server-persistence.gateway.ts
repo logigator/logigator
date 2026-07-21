@@ -299,7 +299,8 @@ export class ServerPersistenceGateway {
         // The link is what this share was fetched by — the response body does
         // not carry one (the share endpoint serializes without the
         // showShareLinks group). The clone action reuses it.
-        link: linkId
+        link: linkId,
+        attribution: detail.forkAttribution
       },
       false
     );

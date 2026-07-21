@@ -1,5 +1,5 @@
 import type { ProjectElement } from './project-element';
-import type { ProjectDependency } from './project';
+import type { ForkAttributionEntry, ProjectDependency } from './project';
 import type { ComponentDependency, ComponentSummary } from './component';
 
 // ---- GET /:link response ----
@@ -20,6 +20,8 @@ export interface ShareProjectDetail {
   elementsFile: { hash: string } | null;
   dependencies: ProjectDependency[];
   elements: ProjectElement[];
+  /** Fork lineage (root-first), present only when the share is a fork. */
+  forkAttribution?: ForkAttributionEntry[];
 }
 
 export interface ShareComponentDetail {
@@ -40,6 +42,8 @@ export interface ShareComponentDetail {
   elementsFile: { hash: string } | null;
   dependencies: ComponentDependency[];
   elements: ProjectElement[];
+  /** Fork lineage (root-first), present only when the share is a fork. */
+  forkAttribution?: ForkAttributionEntry[];
 }
 
 // ---- GET /dependencies/:link response ----
