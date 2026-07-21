@@ -10,3 +10,5 @@ It will cover:
 - Placing your components from the palette's user section
 - Editing a component and how instances update
 - Dependencies between components and sharing them
+
+Peeking inside a running instance is covered in [Inspection & Watches](docs:inspection); publishing to the cloud is in [Cloud & Sharing](docs:cloud).

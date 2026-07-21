@@ -10,3 +10,5 @@ It will cover:
 - Watching a custom component's inner circuit live
 - Drilling into nested components with the breadcrumb
 - Driving inner levers and buttons from a watch
+
+Inspection is only available while a [simulation](docs:simulation) is running.

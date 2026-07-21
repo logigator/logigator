@@ -2,6 +2,7 @@ import { TranslationKey } from '../translation/translation-key.model';
 import gettingStartedEn from '@assets/docs/en/getting-started.md';
 import boardAndToolsEn from '@assets/docs/en/board-and-tools.md';
 import shortcutsEn from '@assets/docs/en/shortcuts.md';
+import settingsEn from '@assets/docs/en/settings.md';
 import componentsAndOptionsEn from '@assets/docs/en/components-and-options.md';
 import wiresAndConnectionsEn from '@assets/docs/en/wires-and-connections.md';
 import customComponentsEn from '@assets/docs/en/custom-components.md';
@@ -56,6 +57,11 @@ export const DOC_SECTIONS = [
         id: 'shortcuts',
         titleKey: 'documentation.pages.shortcuts',
         urls: { en: shortcutsEn }
+      },
+      {
+        id: 'settings',
+        titleKey: 'documentation.pages.settings',
+        urls: { en: settingsEn }
       }
     ]
   },

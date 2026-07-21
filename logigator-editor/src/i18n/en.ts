@@ -391,6 +391,7 @@ const en = {
       gettingStarted: 'Getting Started',
       boardAndTools: 'Board & Tools',
       shortcuts: 'Keyboard Shortcuts',
+      settings: 'Settings & Appearance',
       componentsAndOptions: 'Components & Options',
       wiresAndConnections: 'Wires & Connections',
       customComponents: 'Custom Components',

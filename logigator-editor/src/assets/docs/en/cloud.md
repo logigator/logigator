@@ -6,7 +6,9 @@ Your Logigator account, cloud projects and share links.
 
 It will cover:
 
-- Signing in and what gets synced
+- Signing in, signing out and your account settings
+- What gets synced to your account
 - Uploading local projects and components to the cloud
 - Sharing projects and components via links
 - What recipients see and how cloning works
+- Managing cookie and consent preferences (**Help → Cookie Settings**)

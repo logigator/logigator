@@ -10,3 +10,5 @@ It will cover:
 - Interacting with levers and buttons
 - Simulation speed modes and the target frequency
 - Compile diagnostics and how to fix them
+
+To look inside a running circuit — ROM contents and live custom-component watches — see [Inspection & Watches](docs:inspection).
