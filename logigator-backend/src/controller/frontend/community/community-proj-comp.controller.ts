@@ -49,6 +49,8 @@ export class CommunityProjCompController {
 			isStared = await this.projectRepo.hasUserStaredProject(project, currentUser);
 		}
 
+		const forkedFrom = await project.forkedFrom;
+
 		return {
 			...project,
 			previewDark: project.previewDark?.publicUrl ?? '/assets/default-preview.svg',
@@ -60,6 +62,10 @@ export class CommunityProjCompController {
 			username: user.username,
 			userImage: user.image?.publicUrl ?? '/assets/default-user.svg',
 			userUrl: 'community/user/' + user.id,
+			...(forkedFrom && {
+				forkedFromName: (await forkedFrom.user).username + '/' + forkedFrom.name,
+				forkedFromUrl: 'community/project/' + forkedFrom.link
+			}),
 			isStared
 		};
 	}
@@ -80,6 +86,8 @@ export class CommunityProjCompController {
 			isStared = await this.componentRepo.hasUserStaredComponent(comp, currentUser);
 		}
 
+		const forkedFrom = await comp.forkedFrom;
+
 		return {
 			...comp,
 			previewDark: comp.previewDark?.publicUrl ?? '/assets/default-preview.svg',
@@ -91,6 +99,10 @@ export class CommunityProjCompController {
 			username: user.username,
 			userImage: user.image?.publicUrl ?? '/assets/default-user.svg',
 			userUrl: 'community/user/' + user.id,
+			...(forkedFrom && {
+				forkedFromName: (await forkedFrom.user).username + '/' + forkedFrom.name,
+				forkedFromUrl: 'community/component/' + forkedFrom.link
+			}),
 			stars: 10,
 			isStared
 		};

@@ -11,6 +11,7 @@ import {UserRepository} from '../../database/repositories/user.repository';
 import {ProjectDependencyRepository} from '../../database/repositories/project-dependency.repository';
 import {classToPlain} from 'class-transformer';
 import {buildDependencyResponse, parseStoredCircuit, synthesizeMissingSnapshots} from '../../functions/circuit-content';
+import {buildForkAttribution} from '../../functions/fork-attribution';
 import {Project} from '../../database/entities/project.entity';
 import {ComponentDependencyRepository} from '../../database/repositories/component-dependency.repository';
 import {Component} from '../../database/entities/component.entity';
@@ -50,13 +51,15 @@ export class ShareController {
 		const {elements, snapshots} = parseStoredCircuit(contentBuffer);
 		const enriched = await synthesizeMissingSnapshots(dependencies, snapshots,
 			master => this.componentDepRepo.find({where: {dependent: master as Component}}));
+		const forkAttribution = await buildForkAttribution(project);
 
 		return {
 			type: project instanceof Project ? 'project' : 'comp',
 			...classToPlain(project),
 			dependencies: buildDependencyResponse(dependencies, enriched, ['showShareLinks']),
 			elements,
-			newFormat: project.newFormat
+			newFormat: project.newFormat,
+			...(forkAttribution.length ? {forkAttribution} : {})
 		};
 	}
 

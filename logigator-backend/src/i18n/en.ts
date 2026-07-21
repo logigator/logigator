@@ -193,6 +193,7 @@ export const en = {
 		'VIEW': 'View Details',
 		'OPEN': 'Open in Editor',
 		'CLONE': 'Clone',
+		'FORKED_FROM': 'Forked from',
 		'NO_DESCRIPTION': 'No description was provided.',
 		'USER': {
 			'MEMBER_SINCE': 'Member since',

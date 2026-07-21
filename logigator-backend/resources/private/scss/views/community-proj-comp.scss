@@ -76,6 +76,21 @@
 		}
 	}
 
+	@include element('forked') {
+		margin: 0 0 0.5rem;
+		font-size: 14px;
+
+		a {
+			text-decoration: none;
+
+			&:hover {
+				@include themify() {
+					color: themed('primary');
+				}
+			}
+		}
+	}
+
 	@include element('divider') {
 		@include themify() {
 			border-width: 0;

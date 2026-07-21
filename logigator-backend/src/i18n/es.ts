@@ -195,6 +195,7 @@ export const es: ILanguage = {
 		'VIEW': 'Ver Detalles',
 		'OPEN': 'Abrir en Editor',
 		'CLONE': 'Clonar',
+		'FORKED_FROM': 'Bifurcado desde',
 		'NO_DESCRIPTION': 'No se proporcionó ninguna descripción.',
 		'USER': {
 			'MEMBER_SINCE': 'Miembro desde',

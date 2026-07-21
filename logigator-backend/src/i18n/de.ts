@@ -195,6 +195,7 @@ export const de: ILanguage = {
 		'VIEW': 'Details anzeigen',
 		'OPEN': 'Im Editor öffnen',
 		'CLONE': 'Klonen',
+		'FORKED_FROM': 'Entstammt aus',
 		'NO_DESCRIPTION': 'Beschreibung ist nicht verfügbar.',
 		'USER': {
 			'MEMBER_SINCE': 'Mitglied seit',
