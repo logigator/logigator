@@ -17,11 +17,12 @@ import {
   LgButton,
   LgDialogContent,
   LgMarkdown,
+  LgMarkdownLinkClick,
   LgNavigation,
   NavigationItem
 } from '@logigator/ui';
 import { catchError, of, switchMap, tap } from 'rxjs';
-import { classifyDocLink, headingSlug } from '../../../documentation/doc-link';
+import { parseDocsLink } from '../../../documentation/doc-link';
 import { DOC_IMAGES } from '../../../documentation/docs-images';
 import {
   DEFAULT_DOC_PAGE,
@@ -39,8 +40,9 @@ import { TranslationService } from '../../../translation/translation.service';
  * page; the compact fullscreen presentation drills down instead — topic index
  * first, then the page with a back button.
  *
- * Clicks inside the rendered page are intercepted: `docs:` links jump between
- * pages, `#` links scroll to a heading, external links open a new tab.
+ * `docs:` links inside the rendered page jump between pages; every other link
+ * kind (heading anchors, external URLs) keeps `lg-markdown`'s built-in
+ * handling.
  */
 @Component({
   selector: 'app-documentation-dialog',
@@ -52,12 +54,8 @@ import { TranslationService } from '../../../translation/translation.service';
     TranslocoDirective
   ],
   templateUrl: './documentation-dialog.component.html',
-  // The click listener delegates for anchors in the rendered markdown (there
-  // is no component to attach to inside `innerHTML` content); anchors stay
-  // keyboard-accessible on their own — Enter fires a bubbling click.
   host: {
-    class: 'flex min-h-0 grow flex-col',
-    '(click)': 'onContentClick($event)'
+    class: 'flex min-h-0 grow flex-col'
   }
 })
 export class DocumentationDialogComponent extends LgDialogContent {
@@ -69,6 +67,7 @@ export class DocumentationDialogComponent extends LgDialogContent {
 
   private readonly contentPane =
     viewChild<ElementRef<HTMLElement>>('contentPane');
+  private readonly markdownView = viewChild(LgMarkdown);
 
   /** Page shown in the content pane; the default while none is requested. */
   protected readonly activePage = computed(
@@ -148,44 +147,19 @@ export class DocumentationDialogComponent extends LgDialogContent {
     this.docs.showIndex();
   }
 
-  protected onContentClick(event: MouseEvent): void {
-    const link = (event.target as HTMLElement | null)?.closest('a');
-    if (!link) {
+  protected onLinkClick(link: LgMarkdownLinkClick): void {
+    const target = parseDocsLink(link.href);
+    if (!target) {
       return;
     }
-    const target = classifyDocLink(link.getAttribute('href'));
-    switch (target.kind) {
-      case 'page':
-        event.preventDefault();
-        if (isDocPageId(target.page)) {
-          this.docs.open(target.page, target.anchor);
-        }
-        break;
-      case 'anchor':
-        event.preventDefault();
-        this.scrollToAnchor(target.anchor);
-        break;
-      case 'external':
-        event.preventDefault();
-        window.open(target.url, '_blank', 'noopener');
-        break;
-      case 'none':
-        break;
+    link.preventDefault();
+    if (isDocPageId(target.page)) {
+      this.docs.open(target.page, target.anchor);
     }
   }
 
   private scrollToAnchor(anchor: string): void {
-    this.afterRender(() => {
-      const pane = this.contentPane()?.nativeElement;
-      if (!pane) {
-        return;
-      }
-      const headings = pane.querySelectorAll<HTMLElement>('h1, h2, h3, h4');
-      const match = Array.from(headings).find(
-        (heading) => headingSlug(heading.textContent ?? '') === anchor
-      );
-      match?.scrollIntoView({ block: 'start' });
-    });
+    this.afterRender(() => this.markdownView()?.scrollToHeading(anchor));
   }
 
   /** Runs `fn` after the pending render, so the markdown DOM is queryable. */
