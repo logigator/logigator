@@ -107,6 +107,7 @@ export class ComponentController {
 		component.numInputs = body.numInputs;
 		component.numOutputs = body.numOutputs;
 		component.labels = body.labels;
+		component.version = (component.version ?? 0) + 1;
 		component.lastEdited = new Date();
 
 		const deps = [];
@@ -163,12 +164,19 @@ export class ComponentController {
 	public async update(@Param('componentId') componentId: string, @CurrentUser() user: User, @Body() body: UpdateComponent) {
 		const component = await this.componentRepo.getOwnedComponentOrThrow(componentId, user);
 
+		// name/symbol/description travel in placed snapshots, so changing any of
+		// them bumps `version` — editors then offer instances frozen at an older
+		// version an update. Visibility/link changes are not snapshot content and
+		// leave the version alone.
+		const detailsBefore = [component.name, component.description, component.symbol];
 		if (body.name)
 			component.name = body.name;
-		if (body.description)
+		if (body.description !== undefined)
 			component.description = body.description;
 		if (body.symbol)
 			component.symbol = body.symbol;
+		if ([component.name, component.description, component.symbol].some((value, i) => value !== detailsBefore[i]))
+			component.version = (component.version ?? 0) + 1;
 		if (body.public !== undefined)
 			component.public = body.public;
 		if (body.updateLink)

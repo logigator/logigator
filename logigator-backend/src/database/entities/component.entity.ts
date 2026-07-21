@@ -52,6 +52,15 @@ export class Component {
 	@Column({length: 5, nullable: false})
 	symbol: string;
 
+	/**
+	 * Monotonic edit stamp: bumped on every circuit save and on metadata edits
+	 * that placed snapshots carry (name/symbol/description). Editors compare it
+	 * against a placed instance's frozen snapshot version to offer an update.
+	 */
+	@Expose()
+	@Column({nullable: false, default: 1})
+	version: number;
+
 	@Expose()
 	@Column({nullable: false, default: 0})
 	numInputs: number;

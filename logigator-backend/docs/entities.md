@@ -259,12 +259,14 @@ This is necessary because TypeORM's native cascade does not guarantee that lifec
 | — | — | `numInputs: number` |
 | — | — | `numOutputs: number` |
 | — | — | `labels: string[]` (simple-array) |
+| — | — | `version: number` (default 1) |
 
 **Component-specific fields:**
 
 - `symbol` — a short string (max 5 characters) representing the component type in the circuit editor (e.g., `'AND'`, `'XOR'`).
 - `numInputs` / `numOutputs` — port counts for the sub-circuit.
 - `labels` — an array of port label strings, stored as a TypeORM `simple-array` (comma-separated in the database; careful with labels containing commas).
+- `version` — monotonic edit stamp, bumped on every circuit save (PUT) and on metadata edits that placed snapshots carry (name/symbol/description via PATCH). Editors compare it against a placed instance's frozen snapshot version to offer "Update to latest".
 
 **Dependency direction — Project vs Component:**
 
