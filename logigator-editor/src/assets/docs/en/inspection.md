@@ -32,7 +32,7 @@ Tap a placed [custom component](docs:custom-components) while the simulation run
 A watch is interactive:
 
 - **Drive its inputs** — click a **switch** or **button** inside the watched circuit to operate it, just like on the main board. It drives the real running simulation, so the effect ripples out to the rest of your circuit.
-- **Drill into nested components** — tap a custom component inside the watch to descend into *its* inner circuit. A **breadcrumb** trail across the top shows how deep you are; click an earlier step to jump back out.
+- **Drill into nested components** — tap a custom component inside the watch to descend into _its_ inner circuit. A **breadcrumb** trail across the top shows how deep you are; click an earlier step to jump back out.
 - **Pan and zoom** — drag to move around the inner view and scroll or pinch to zoom, the same as on the board.
 
 If a component can't be watched you'll see a short message: it may have **no inner circuit** to inspect, or its inner circuit may no longer match the running simulation — in that case, **restart the simulation** and try again.

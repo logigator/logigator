@@ -6,54 +6,54 @@ Logigator is faster with the keyboard. Below are the default bindings, followed 
 
 ## File
 
-| Action | Shortcut |
-| --- | --- |
-| Save | `Ctrl+S` |
-| Open | `Ctrl+O` |
-| New Component | `Alt+N` |
+| Action        | Shortcut |
+| ------------- | -------- |
+| Save          | `Ctrl+S` |
+| Open          | `Ctrl+O` |
+| New Component | `Alt+N`  |
 
 ## Edit
 
-| Action | Shortcut |
-| --- | --- |
-| Undo | `Ctrl+Z` |
-| Redo | `Ctrl+Shift+Z` |
-| Copy | `Ctrl+C` |
-| Cut | `Ctrl+X` |
-| Paste | `Ctrl+V` |
-| Delete | `Delete` |
-| Rotate Clockwise | `R` |
-| Rotate Counter-Clockwise | `Shift+R` |
-| Move Selection Up | `↑` |
-| Move Selection Down | `↓` |
-| Move Selection Left | `←` |
-| Move Selection Right | `→` |
+| Action                   | Shortcut       |
+| ------------------------ | -------------- |
+| Undo                     | `Ctrl+Z`       |
+| Redo                     | `Ctrl+Shift+Z` |
+| Copy                     | `Ctrl+C`       |
+| Cut                      | `Ctrl+X`       |
+| Paste                    | `Ctrl+V`       |
+| Delete                   | `Delete`       |
+| Rotate Clockwise         | `R`            |
+| Rotate Counter-Clockwise | `Shift+R`      |
+| Move Selection Up        | `↑`            |
+| Move Selection Down      | `↓`            |
+| Move Selection Left      | `←`            |
+| Move Selection Right     | `→`            |
 
 ## View
 
-| Action | Shortcut |
-| --- | --- |
-| Zoom In | `Ctrl++` |
-| Zoom Out | `Ctrl+-` |
+| Action    | Shortcut |
+| --------- | -------- |
+| Zoom In   | `Ctrl++` |
+| Zoom Out  | `Ctrl+-` |
 | Zoom 100% | `Ctrl+0` |
 
 ## Tools
 
-| Action | Shortcut |
-| --- | --- |
-| Pan | `P` |
-| Wire Tool | `W` |
-| Select | `S` |
-| Erase | `E` |
-| Place Text | `T` |
-| Cut Wires at Selection Edge (hold) | `Alt` |
+| Action                             | Shortcut |
+| ---------------------------------- | -------- |
+| Pan                                | `P`      |
+| Wire Tool                          | `W`      |
+| Select                             | `S`      |
+| Erase                              | `E`      |
+| Place Text                         | `T`      |
+| Cut Wires at Selection Edge (hold) | `Alt`    |
 
 ## Interaction
 
-| Action | Shortcut |
-| --- | --- |
-| Start / Stop Simulation | `Enter` |
-| Cancel | `Escape` |
+| Action                  | Shortcut |
+| ----------------------- | -------- |
+| Start / Stop Simulation | `Enter`  |
+| Cancel                  | `Escape` |
 
 ## Held shortcuts
 

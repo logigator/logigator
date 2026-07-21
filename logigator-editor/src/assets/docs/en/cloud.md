@@ -35,7 +35,7 @@ There are two ways to get a project into your cloud library:
 1. **Save a Draft straight to the cloud** — when you first save a new project, pick **Destination: Cloud** in the save dialog.
 2. **Upload an existing local project** — with a saved Local project open, choose **File → Upload to cloud**. You can also upload a project from the list in the **Open** dialog.
 
-Uploading *moves* the project out of local storage into your cloud library. If the project uses local custom components, those are published to your cloud library alongside it — a cloud project can only contain cloud components, so each one is uploaded first and then referenced. The upload dialog lists exactly which components will be published before you confirm.
+Uploading _moves_ the project out of local storage into your cloud library. If the project uses local custom components, those are published to your cloud library alongside it — a cloud project can only contain cloud components, so each one is uploaded first and then referenced. The upload dialog lists exactly which components will be published before you confirm.
 
 Custom components can be moved to the cloud the same way, from their action in the settings panel.
 

@@ -19,42 +19,42 @@ To place a component, click it in the palette and it follows your cursor as a gh
 
 ### Basic
 
-| Component | What it does |
-| --- | --- |
-| **NOT Gate** | Inverts its input: HIGH in gives LOW out, and vice versa. |
-| **AND Gate** | Output is HIGH only when every input is HIGH. |
-| **OR Gate** | Output is HIGH when at least one input is HIGH. |
-| **XOR Gate** | Output is HIGH when an odd number of inputs are HIGH. |
-| **Delay** | Passes its input through unchanged, adding one simulation tick of delay. |
-| **Clock** | Emits a repeating one-tick pulse; the delay between pulses is configurable, and driving its STP input HIGH pauses it. |
-| **Tunnel** | A wireless connection — all tunnels sharing the same label are electrically joined. See [Wires & Connections](docs:wires-and-connections). |
+| Component    | What it does                                                                                                                               |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| **NOT Gate** | Inverts its input: HIGH in gives LOW out, and vice versa.                                                                                  |
+| **AND Gate** | Output is HIGH only when every input is HIGH.                                                                                              |
+| **OR Gate**  | Output is HIGH when at least one input is HIGH.                                                                                            |
+| **XOR Gate** | Output is HIGH when an odd number of inputs are HIGH.                                                                                      |
+| **Delay**    | Passes its input through unchanged, adding one simulation tick of delay.                                                                   |
+| **Clock**    | Emits a repeating one-tick pulse; the delay between pulses is configurable, and driving its STP input HIGH pauses it.                      |
+| **Tunnel**   | A wireless connection — all tunnels sharing the same label are electrically joined. See [Wires & Connections](docs:wires-and-connections). |
 
 ### Advanced
 
-| Component | What it does |
-| --- | --- |
-| **Half Adder** | Adds two 1-bit numbers; S is the sum bit, C the carry. |
-| **Full Adder** | Adds two summands plus a carry-in; S is the sum bit, C the carry. |
-| **ROM** | Read-only memory whose stored contents you edit by hand. |
-| **RAM** | Random-access memory: reads the addressed word on a clock edge, or stores one while WE is HIGH. |
-| **D Flip-Flop** | Stores one bit; captures D on the rising edge of CLK. |
-| **JK Flip-Flop** | Stores one bit; J sets, K resets, both toggle, on the rising edge of CLK. |
-| **SR Flip-Flop** | Stores one bit; S sets and R resets on the rising edge of CLK. |
-| **Random Number Generator** | Produces random data on its outputs on every rising edge of CLK. |
-| **Decoder** | Drives the one output whose index equals the binary value on its inputs. |
-| **Encoder** | Outputs the binary index of its highest powered input. |
-| **Multiplexer** | Routes the data input chosen by the select lines to the single output. |
-| **Demultiplexer** | Routes the single data input to the output chosen by the select lines. |
+| Component                   | What it does                                                                                    |
+| --------------------------- | ----------------------------------------------------------------------------------------------- |
+| **Half Adder**              | Adds two 1-bit numbers; S is the sum bit, C the carry.                                          |
+| **Full Adder**              | Adds two summands plus a carry-in; S is the sum bit, C the carry.                               |
+| **ROM**                     | Read-only memory whose stored contents you edit by hand.                                        |
+| **RAM**                     | Random-access memory: reads the addressed word on a clock edge, or stores one while WE is HIGH. |
+| **D Flip-Flop**             | Stores one bit; captures D on the rising edge of CLK.                                           |
+| **JK Flip-Flop**            | Stores one bit; J sets, K resets, both toggle, on the rising edge of CLK.                       |
+| **SR Flip-Flop**            | Stores one bit; S sets and R resets on the rising edge of CLK.                                  |
+| **Random Number Generator** | Produces random data on its outputs on every rising edge of CLK.                                |
+| **Decoder**                 | Drives the one output whose index equals the binary value on its inputs.                        |
+| **Encoder**                 | Outputs the binary index of its highest powered input.                                          |
+| **Multiplexer**             | Routes the data input chosen by the select lines to the single output.                          |
+| **Demultiplexer**           | Routes the single data input to the output chosen by the select lines.                          |
 
 ### Inputs / Outputs
 
-| Component | What it does |
-| --- | --- |
-| **Button** | A momentary push button — click it during simulation to emit a single pulse. |
-| **Switch** | A latching switch — click it during simulation to toggle its output on and off. |
-| **LED** | Lights up while the wire feeding its input is powered. |
-| **Segment Display** | Shows the binary value on its inputs as a number in a chosen base. |
-| **LED Matrix** | A square grid of LEDs that displays an image, written a row at a time on the rising edge of CLK. |
+| Component           | What it does                                                                                     |
+| ------------------- | ------------------------------------------------------------------------------------------------ |
+| **Button**          | A momentary push button — click it during simulation to emit a single pulse.                     |
+| **Switch**          | A latching switch — click it during simulation to toggle its output on and off.                  |
+| **LED**             | Lights up while the wire feeding its input is powered.                                           |
+| **Segment Display** | Shows the binary value on its inputs as a number in a chosen base.                               |
+| **LED Matrix**      | A square grid of LEDs that displays an image, written a row at a time on the rising edge of CLK. |
 
 ## Configuring a component
 
@@ -70,17 +70,17 @@ Every component has a **Direction** control: four arrows for East, South, West a
 
 Everything beyond Direction depends on the component. Many components have none at all (a NOT gate, for instance). The ones that do:
 
-| Component | Options |
-| --- | --- |
-| **AND / OR / XOR Gate**, **Decoder** | **Inputs** — how many input ports. |
-| **Encoder**, **Random Number Generator** | **Outputs** — how many output ports. |
-| **Clock** | **Delay** — the number of ticks between pulses. |
-| **Tunnel** | **Label** — the name that pairs it with other tunnels. |
-| **ROM** | **Word Size**, **Address Size**, and **Edit contents** (see below). |
-| **RAM** | **Word Size** and **Address Size**. |
-| **Multiplexer / Demultiplexer** | **Select lines** — how many select inputs, which sets the number of data lines. |
-| **Segment Display** | **Inputs** — how many input bits — and **Base** — the number base the value is shown in. |
-| **LED Matrix** | **Width/Height** — the size of the LED grid. |
+| Component                                | Options                                                                                  |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------- |
+| **AND / OR / XOR Gate**, **Decoder**     | **Inputs** — how many input ports.                                                       |
+| **Encoder**, **Random Number Generator** | **Outputs** — how many output ports.                                                     |
+| **Clock**                                | **Delay** — the number of ticks between pulses.                                          |
+| **Tunnel**                               | **Label** — the name that pairs it with other tunnels.                                   |
+| **ROM**                                  | **Word Size**, **Address Size**, and **Edit contents** (see below).                      |
+| **RAM**                                  | **Word Size** and **Address Size**.                                                      |
+| **Multiplexer / Demultiplexer**          | **Select lines** — how many select inputs, which sets the number of data lines.          |
+| **Segment Display**                      | **Inputs** — how many input bits — and **Base** — the number base the value is shown in. |
+| **LED Matrix**                           | **Width/Height** — the size of the LED grid.                                             |
 
 ### Editing ROM contents
 

@@ -18,12 +18,12 @@ Whether the simulation begins **running** or begins **paused** depends on the **
 
 When a simulation is active, the toolbar swaps its drawing tools for the run controls.
 
-| Control | What it does |
-| --- | --- |
-| **Run** | Starts (or resumes) the simulation. |
-| **Pause** | Freezes the simulation where it is, keeping its current state so you can resume or step. |
-| **Step** | Advances the circuit by a single tick. Available while paused — handy for tracing a signal one step at a time. |
-| **Stop** | Resets the circuit back to the start and clears every lit wire. The simulation stays active and paused, ready to run again. |
+| Control   | What it does                                                                                                                |
+| --------- | --------------------------------------------------------------------------------------------------------------------------- |
+| **Run**   | Starts (or resumes) the simulation.                                                                                         |
+| **Pause** | Freezes the simulation where it is, keeping its current state so you can resume or step.                                    |
+| **Step**  | Advances the circuit by a single tick. Available while paused — handy for tracing a signal one step at a time.              |
+| **Stop**  | Resets the circuit back to the start and clears every lit wire. The simulation stays active and paused, ready to run again. |
 
 **Stop** and **Exit simulation** are different: **Stop** rewinds the running circuit to the beginning but keeps you in simulation, while **Exit simulation** leaves simulation entirely and returns you to editing.
 

@@ -7,7 +7,7 @@ The board is the grid where you build your circuit. This page covers how to move
 ## Getting around the board
 
 - **Zoom** — scroll the mouse wheel over the board, or pinch on a touch device. You can also use the zoom buttons in the toolbar, **View → Zoom In / Zoom Out**, or **View → Zoom 100%** to reset to actual size.
-- **Pan** — pick the **Pan** tool (the hand) and drag. You can also pan from *any* tool by dragging with the **right mouse button**, so you rarely need to switch tools just to reposition.
+- **Pan** — pick the **Pan** tool (the hand) and drag. You can also pan from _any_ tool by dragging with the **right mouse button**, so you rarely need to switch tools just to reposition.
 - **Touch** — drag with two fingers to pan and pinch to zoom at any time; a one-finger drag pans only while the Pan tool is active.
 
 The **status bar** at the bottom always shows a short reminder of what the active tool does, plus your cursor's position on the grid.
@@ -16,13 +16,13 @@ The **status bar** at the bottom always shows a short reminder of what the activ
 
 The right-hand group of the toolbar holds the five drawing tools. Only one is active at a time; each also has a single-key shortcut.
 
-| Tool | Shortcut | What it does |
-| --- | --- | --- |
-| **Pan** | `P` | Drag to move the board; scroll or pinch to zoom. |
-| **Wire** | `W` | Drag to draw wires; tap a port to negate it, or tap a crossing to connect or split. See [Wires & Connections](docs:wires-and-connections). |
-| **Select** | `S` | Drag a box to select elements; drag the selection to move it. |
-| **Erase** | `E` | Click or drag across elements to delete them. |
-| **Text** | `T` | Place a text label on the board. |
+| Tool       | Shortcut | What it does                                                                                                                               |
+| ---------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Pan**    | `P`      | Drag to move the board; scroll or pinch to zoom.                                                                                           |
+| **Wire**   | `W`      | Drag to draw wires; tap a port to negate it, or tap a crossing to connect or split. See [Wires & Connections](docs:wires-and-connections). |
+| **Select** | `S`      | Drag a box to select elements; drag the selection to move it.                                                                              |
+| **Erase**  | `E`      | Click or drag across elements to delete them.                                                                                              |
+| **Text**   | `T`      | Place a text label on the board.                                                                                                           |
 
 ![Close-up of the five tool buttons in the toolbar, each labeled with its name and keyboard shortcut.](images/board-and-tools/tool-buttons.png)
 

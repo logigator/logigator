@@ -19,12 +19,12 @@ After that first save, **Save** writes straight back to wherever the project liv
 
 The chip next to the project name always shows the project's home:
 
-| Chip | Meaning |
-| --- | --- |
-| **Draft** | Never saved yet — save it to store it. |
-| **Local** | Saved in this browser only. |
-| **Cloud** | Saved in your account, reachable from any device. |
-| **Shared** | Opened read-only from someone's share link. |
+| Chip       | Meaning                                           |
+| ---------- | ------------------------------------------------- |
+| **Draft**  | Never saved yet — save it to store it.            |
+| **Local**  | Saved in this browser only.                       |
+| **Cloud**  | Saved in your account, reachable from any device. |
+| **Shared** | Opened read-only from someone's share link.       |
 
 ### The saved / unsaved indicator
 
