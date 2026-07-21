@@ -15,6 +15,7 @@ import { CloudSessionService } from '../user/cloud-session.service';
 import { CustomComponentRegistry } from '../components/custom/custom-component-registry.service';
 import { CUSTOM_TYPE_ID_BASE } from '../components/component-type.enum';
 import type { SnapshotDefinition } from './serialized-circuit';
+import type { ForkAttributionEntry } from '../api/models/project';
 import { AuthRequiredError } from './persistence-errors';
 import { buildProject } from './circuit-builder';
 import { warnSkippedCustoms } from './load-warnings';
@@ -140,9 +141,15 @@ export class PromotionService {
     if (!record) throw new Error(`No browser project with id ${id}`);
 
     // Upload first (the only fail-able step); build the throwaway project only to
-    // serialize it, and always tear it down.
-    await this._withProjectFromContent(record.content, (temp) =>
-      this.server.createServerProjectFromProject(temp, record.name, isPublic)
+    // serialize it, and always tear it down. The stored blob's fork attribution
+    // rides along so the server re-links the lineage.
+    await this._withProjectFromContent(record.content, (temp, attribution) =>
+      this.server.createServerProjectFromProject(
+        temp,
+        record.name,
+        isPublic,
+        attribution?.at(-1)?.projectId
+      )
     );
 
     // Uploaded — drop the local record so the project moves to the cloud.
@@ -417,13 +424,15 @@ export class PromotionService {
   /**
    * Builds a throwaway project from stored circuit JSON, runs `fn` on it (a
    * serialize-and-upload step), and always tears the project down. Shared by
-   * the upload paths that push a stored record without opening it.
+   * the upload paths that push a stored record without opening it. `fn` also
+   * receives the blob's fork attribution (if any) — a throwaway project has no
+   * metadata entry to carry it.
    */
   private async _withProjectFromContent<T>(
     content: string,
-    fn: (project: Project) => Promise<T>
+    fn: (project: Project, attribution?: ForkAttributionEntry[]) => Promise<T>
   ): Promise<T> {
-    const { components, wires, skippedCustom } =
+    const { attribution, components, wires, skippedCustom } =
       this.circuitFile.fromJson(content);
     warnSkippedCustoms(
       this.toast,
@@ -433,7 +442,7 @@ export class PromotionService {
     );
     const temp = buildProject(components, wires);
     try {
-      return await fn(temp);
+      return await fn(temp, attribution);
     } finally {
       temp.destroy();
     }

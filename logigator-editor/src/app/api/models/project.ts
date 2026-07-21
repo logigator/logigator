@@ -9,6 +9,20 @@ export interface ProjectSummary extends CircuitResource {
   stargazersCount?: number;
 }
 
+// ---- Fork attribution ----
+
+/**
+ * One ancestor in a project's fork lineage, resolved by the server from its
+ * own fork relations (client-supplied names are never trusted). Chains are
+ * ordered **root-first**: the original creation is entry 0, the immediate
+ * parent is last.
+ */
+export interface ForkAttributionEntry {
+  projectId: string;
+  projectName: string;
+  authorName: string;
+}
+
 // ---- Dependency (response) ----
 
 export interface ProjectDependency {
@@ -29,6 +43,8 @@ export interface ProjectDetail extends ProjectSummary {
    * degrade it for the old editor; the load path warns on it.
    */
   newFormat?: boolean;
+  /** Fork lineage (root-first), present only when the project is a fork. */
+  forkAttribution?: ForkAttributionEntry[];
 }
 
 // ---- POST / request ----
@@ -37,6 +53,13 @@ export interface CreateProjectRequest {
   name: string;
   description?: string;
   public?: string;
+  /**
+   * Id of the project this upload is a fork of (a re-import of an exported
+   * fork). The server links `forkedFrom` only when the id resolves to a real
+   * project; the author is looked up server-side, so a fabricated id cannot
+   * credit a false creator.
+   */
+  forkedFrom?: string;
 }
 
 // ---- PUT /:projectId request ----

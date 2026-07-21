@@ -526,6 +526,24 @@ describe('PersistenceService', () => {
       expect(Array.from(project.components).length).toBe(1);
     });
 
+    it('captures the detail response fork attribution into metadata', async () => {
+      const forkAttribution = [
+        { projectId: 'origin-1', projectName: 'Origin', authorName: 'alice' }
+      ];
+      const loadPromise = service.loadProject('fork-uuid');
+
+      const response = projectDetailResponse({ id: 'fork-uuid' });
+      httpMock.expectOne(PROJECT_URL('fork-uuid')).flush({
+        ...response,
+        data: { ...response.data, forkAttribution }
+      });
+
+      const project = await loadPromise;
+      expect(metadataStore.getMetadata(project)!.attribution).toEqual(
+        forkAttribution
+      );
+    });
+
     it('rejects when the API returns 404', async () => {
       const loadPromise = service.loadProject('missing');
       const req = httpMock.expectOne(PROJECT_URL('missing'));
@@ -762,6 +780,37 @@ describe('PersistenceService', () => {
       await expect(
         promotion.promoteProjectToServer(project, false)
       ).rejects.toThrow();
+    });
+
+    it('sends the immediate parent as forkedFrom when the project carries a lineage', async () => {
+      const project = new Project();
+      metadataStore.register(project, {
+        id: 'browser-1',
+        name: 'Fork',
+        type: 'project',
+        source: 'browser',
+        hash: '',
+        isPublic: false,
+        attribution: [
+          { projectId: 'root-id', projectName: 'Root', authorName: 'alice' },
+          { projectId: 'parent-id', projectName: 'Parent', authorName: 'bob' }
+        ]
+      });
+      metadataStore.markDirty(project);
+      await service.saveProject(project);
+
+      const promise = promotion.promoteProjectToServer(project, false);
+
+      const postReq = httpMock.expectOne(PROJECTS_LIST_URL);
+      // The lineage is root-first, so the fork claim names the last entry.
+      expect(postReq.request.body.forkedFrom).toBe('parent-id');
+      postReq.flush(projectSummaryResponse({ id: 'srv-uuid', hash: 'h0' }));
+      await Promise.resolve();
+      httpMock
+        .expectOne(PROJECT_URL('srv-uuid'))
+        .flush(projectSummaryResponse({ id: 'srv-uuid', hash: 'h1' }));
+
+      await promise;
     });
   });
 
@@ -1010,6 +1059,32 @@ describe('PersistenceService', () => {
       // Persisted immediately, and the URL reflects the new id.
       expect(browserStore.records.has(metadata!.id)).toBe(true);
       expect(locationGo).toHaveBeenCalledWith(`/local/${metadata!.id}`);
+    });
+
+    it('carries fork attribution through export → import → stored blob', async () => {
+      const lineage = [
+        { projectId: 'origin-1', projectName: 'Origin', authorName: 'alice' }
+      ];
+      const fork = new Project();
+      metadataStore.register(fork, {
+        id: 'server-uuid',
+        name: 'My Fork',
+        type: 'project',
+        source: 'server',
+        hash: '',
+        isPublic: false,
+        attribution: lineage
+      });
+
+      const exported = service.exportProjectToJson(fork);
+      expect(JSON.parse(exported).attribution).toEqual(lineage);
+
+      const imported = await service.importProjectFromJson(exported);
+      const metadata = metadataStore.getMetadata(imported)!;
+      expect(metadata.attribution).toEqual(lineage);
+      // The stored blob keeps the lineage so later loads/uploads still carry it.
+      const record = browserStore.records.get(metadata.id)!;
+      expect(JSON.parse(record.content).attribution).toEqual(lineage);
     });
 
     it('importProjectFromJson rejects on an unreadable file (and stores nothing)', async () => {

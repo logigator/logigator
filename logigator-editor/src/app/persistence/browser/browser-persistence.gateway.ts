@@ -44,7 +44,7 @@ export class BrowserPersistenceGateway {
     if (!record) {
       throw new Error(`No browser project with id ${id}`);
     }
-    const { name, components, wires, skippedCustom } =
+    const { name, attribution, components, wires, skippedCustom } =
       this.circuitFile.fromJson(record.content);
     warnSkippedCustoms(
       this.toast,
@@ -60,7 +60,8 @@ export class BrowserPersistenceGateway {
       type: 'project',
       source: 'browser',
       hash: '',
-      isPublic: false
+      isPublic: false,
+      attribution
     });
 
     return project;
@@ -131,7 +132,11 @@ export class BrowserPersistenceGateway {
   async saveProject(project: Project): Promise<void> {
     const metadata = this.metadataStore.getMetadata(project)!;
     await this.metadataStore.withDirtyGuard(project, async () => {
-      const content = this.circuitFile.toJson(project, metadata.name);
+      const content = this.circuitFile.toJson(
+        project,
+        metadata.name,
+        metadata.attribution
+      );
 
       const record = await this.projectStore.save({
         id: metadata.id || undefined,

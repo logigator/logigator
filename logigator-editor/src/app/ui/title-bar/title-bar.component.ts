@@ -12,7 +12,13 @@ import { NgOptimizedImage } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import logoUrl from '@assets/logo.svg';
 import { ProjectService } from '../../project/project.service';
-import { LgButton, LgInputText, LgMenubar, LgTooltip } from '@logigator/ui';
+import {
+  LgBadge,
+  LgButton,
+  LgInputText,
+  LgMenubar,
+  LgTooltip
+} from '@logigator/ui';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { TranslationService } from '../../translation/translation.service';
 import { UserSettingsComponent } from '../user-settings/user-settings.component';
@@ -32,6 +38,7 @@ const NAME_MAX_LENGTH = 20;
   selector: 'app-title-bar',
   imports: [
     LgMenubar,
+    LgBadge,
     LgButton,
     LgInputText,
     LgTooltip,
@@ -142,5 +149,26 @@ export class TitleBarComponent {
     if (metadata.source === 'share') return 'share';
     if (metadata.source === 'server') return 'server';
     return metadata.id !== '' ? 'browser' : 'draft';
+  });
+
+  /**
+   * Tooltip for the fork chip: the project's fork lineage, immediate parent
+   * first ("Forked from A by X, B by Y"). `null` (no chip) when the document
+   * carries no lineage. Read-only — the lineage is resolved by the server and
+   * merely carried through export/import (see `ProjectMetadata.attribution`).
+   */
+  protected readonly forkTitle = computed<string | null>(() => {
+    const attribution = this.projectMetadata()?.attribution;
+    if (!attribution?.length) return null;
+    const lineage = [...attribution]
+      .reverse()
+      .map((entry) =>
+        this.translation.translate('titleBar.fork.lineageEntry', {
+          name: entry.projectName,
+          author: entry.authorName
+        })
+      )
+      .join(', ');
+    return this.translation.translate('titleBar.fork.title', { lineage });
   });
 }

@@ -57,6 +57,12 @@
         [shareTitle]="t('sourceIndicator.shareTitle')"
       />
     }
+    @if (forkTitle(); as title) {
+      <lg-badge *transloco="let t" rounded severity="secondary" [title]="title">
+        <i class="ph ph-git-fork"></i>
+        {{ t('titleBar.fork.label') }}
+      </lg-badge>
+    }
   </ng-template>
   <ng-template #end>
     <app-user-settings />

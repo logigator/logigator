@@ -14,7 +14,7 @@ import { ProjectService } from '../project/project.service';
 import { ToastService } from '../logging/toast.service';
 import { LoggingService } from '../logging/logging.service';
 import { Project } from '../project/project';
-import { ProjectSummary } from '../api/models/project';
+import { ForkAttributionEntry, ProjectSummary } from '../api/models/project';
 import { Page } from '../api/models/shared';
 import { CustomComponentRegistry } from '../components/custom/custom-component-registry.service';
 import { DefinitionBinding } from '../custom-component/definition-binding';
@@ -247,12 +247,17 @@ export class PersistenceService {
   }
 
   /**
-   * Serializes a project to the current native file format. The name is read
-   * from project metadata (the `Project` itself has no name).
+   * Serializes a project to the current native file format. The name and fork
+   * attribution are read from project metadata (the `Project` itself has
+   * neither), so an exported fork keeps naming its original creators.
    */
   exportProjectToJson(project: Project): string {
-    const name = this.metadataStore.getMetadata(project)?.name ?? 'Untitled';
-    return this.circuitFile.toJson(project, name);
+    const metadata = this.metadataStore.getMetadata(project);
+    return this.circuitFile.toJson(
+      project,
+      metadata?.name ?? 'Untitled',
+      metadata?.attribution
+    );
   }
 
   /**
@@ -322,7 +327,7 @@ export class PersistenceService {
    * component types are dropped silently (warning only).
    */
   async importProjectFromJson(content: string): Promise<Project> {
-    const { name, components, wires, skippedCustom } =
+    const { name, attribution, components, wires, skippedCustom } =
       this.circuitFile.fromJson(content);
     warnSkippedCustoms(
       this.toast,
@@ -331,7 +336,7 @@ export class PersistenceService {
       'PersistenceService'
     );
     const project = buildProject(components, wires);
-    await this.persistImportedProject(project, name);
+    await this.persistImportedProject(project, name, attribution);
     return project;
   }
 
@@ -344,8 +349,15 @@ export class PersistenceService {
    * Imported customs are never adopted into the library: each resolves through
    * its provenance id to a local or cloud master when one exists, and stays an
    * embedded (restorable) snapshot otherwise.
+   *
+   * The file's fork attribution (if any) is carried into the metadata and the
+   * stored blob, so a later upload still credits the original creators.
    */
-  async persistImportedProject(project: Project, name: string): Promise<void> {
+  async persistImportedProject(
+    project: Project,
+    name: string,
+    attribution?: ForkAttributionEntry[]
+  ): Promise<void> {
     // addComponent/addWire don't push to the ActionManager, so the project
     // starts non-dirty even though it was just populated.
     this.metadataStore.register(project, {
@@ -354,14 +366,15 @@ export class PersistenceService {
       type: 'project',
       source: 'browser',
       hash: '',
-      isPublic: false
+      isPublic: false,
+      attribution
     });
 
     // Re-encode through the file codec so the stored blob is always at the
     // current format version (the imported content may have been older).
     const record = await this.browserStore.save({
       name,
-      content: this.circuitFile.toJson(project, name)
+      content: this.circuitFile.toJson(project, name, attribution)
     });
     this.metadataStore.updateId(project, record.id);
 

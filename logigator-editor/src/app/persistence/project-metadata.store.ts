@@ -2,6 +2,7 @@ import { computed, Injectable, signal, WritableSignal } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { SignalMap } from 'ngxtension/collections';
 import { Project } from '../project/project';
+import { ForkAttributionEntry } from '../api/models/project';
 
 export interface ProjectMetadata {
   /**
@@ -16,6 +17,14 @@ export interface ProjectMetadata {
   hash: string;
   isPublic: boolean;
   link?: string;
+  /**
+   * Fork lineage (root-first), carried so it survives the document's round
+   * trips: a server fork keeps it across export-to-file, a file import keeps
+   * it across local saves, and an upload sends the immediate parent's id so
+   * the server re-links `forkedFrom`. Read-only — the server resolves the real
+   * authors itself on load/upload.
+   */
+  attribution?: ForkAttributionEntry[];
 }
 
 interface ProjectEntry {

@@ -154,6 +154,13 @@ describe('CircuitFileService', () => {
       });
     });
 
+    it('omits the attribution field when no lineage is passed', () => {
+      const project = buildProject([{ t: 1, p: [0, 0], i: 1, o: 1 }]);
+      const json = JSON.parse(service.toJson(project, 'NoFork'));
+
+      expect('attribution' in json).toBe(false);
+    });
+
     it('encodes a plug with its named label/index options', () => {
       const project = buildProject([
         { t: 100, p: [4, 4], o: 1, n: [3], s: 'CLK' }
@@ -327,6 +334,44 @@ describe('CircuitFileService', () => {
 
       const json2 = service.toJson(rebuild(json), 'TwoDeep');
       expect(normalize(json2)).toEqual(normalize(json));
+    });
+  });
+
+  describe('fork attribution', () => {
+    const lineage = [
+      { projectId: 'root-id', projectName: 'Root', authorName: 'alice' },
+      { projectId: 'parent-id', projectName: 'Parent', authorName: 'bob' }
+    ];
+
+    it('round-trips the lineage through toJson → fromJson', () => {
+      const project = buildProject([{ t: 1, p: [0, 0], i: 1, o: 1 }]);
+      const json = service.toJson(project, 'Fork', lineage);
+
+      const { attribution } = service.fromJson(json);
+
+      expect(attribution).toEqual(lineage);
+    });
+
+    it('returns no attribution for a document without one', () => {
+      const json = service.toJson(
+        buildProject([{ t: 1, p: [0, 0], i: 1, o: 1 }]),
+        'NoFork'
+      );
+
+      expect(service.fromJson(json).attribution).toBeUndefined();
+    });
+
+    it('throws InvalidFileError on a malformed attribution entry', () => {
+      const file = JSON.stringify({
+        version: 1,
+        name: 'x',
+        components: [],
+        wires: '',
+        definitions: [],
+        attribution: [{ projectId: 'a', projectName: 'b' }] // authorName missing
+      });
+
+      expect(() => service.fromJson(file)).toThrowError(InvalidFileError);
     });
   });
 

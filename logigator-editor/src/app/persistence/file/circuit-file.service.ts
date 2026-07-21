@@ -10,7 +10,11 @@ import { LoggingService } from '../../logging/logging.service';
 import { MigrationContext } from './migrations/migration';
 import { migrateToCurrent } from './circuit-file-migrator';
 import { InvalidFileError } from './circuit-file.errors';
-import { CURRENT_FILE_VERSION, CurrentCircuitFile } from './circuit-file.types';
+import {
+  CURRENT_FILE_VERSION,
+  CurrentCircuitFile,
+  FileForkAttributionV1
+} from './circuit-file.types';
 import {
   remapComponentTypes,
   SerializedCircuitBody,
@@ -60,8 +64,12 @@ export class CircuitFileService {
   }
 
   /** Serializes a project to a current-version file JSON string. */
-  toJson(project: Project, name: string): string {
-    return JSON.stringify(this.toDocument(project, name).file);
+  toJson(
+    project: Project,
+    name: string,
+    attribution?: FileForkAttributionV1[]
+  ): string {
+    return JSON.stringify(this.toDocument(project, name, attribution).file);
   }
 
   /**
@@ -76,7 +84,8 @@ export class CircuitFileService {
    */
   toDocument(
     project: Project,
-    name: string
+    name: string,
+    attribution?: FileForkAttributionV1[]
   ): {
     file: CurrentCircuitFile;
     wireOrder: number[];
@@ -98,7 +107,10 @@ export class CircuitFileService {
         name,
         components: components.components,
         wires: wires.text,
-        definitions: definitions.map(toPersistedDefinition)
+        definitions: definitions.map(toPersistedDefinition),
+        // Fork lineage rides along only when the document has one — an empty
+        // field would suggest a checked-and-absent lineage rather than none.
+        ...(attribution?.length ? { attribution } : {})
       },
       wireOrder: wires.order,
       componentOrder: components.order
@@ -115,13 +127,14 @@ export class CircuitFileService {
    */
   decode(data: unknown): {
     name: string;
+    attribution?: FileForkAttributionV1[];
     components: Component[];
     wires: Wire[];
     skippedCustom: number;
   } {
     const file = migrateToCurrent(data, this.migrationContext);
     const name = typeof file.name === 'string' ? file.name : 'Untitled';
-    return { name, ...this.deserialize(file) };
+    return { name, attribution: file.attribution, ...this.deserialize(file) };
   }
 
   /**
@@ -145,6 +158,7 @@ export class CircuitFileService {
   /** Convenience: parse JSON + migrate + deserialize into editor instances. */
   fromJson(content: string): {
     name: string;
+    attribution?: FileForkAttributionV1[];
     components: Component[];
     wires: Wire[];
     skippedCustom: number;

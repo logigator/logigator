@@ -104,7 +104,8 @@ export class ServerPersistenceGateway {
       source: 'server',
       hash: detail.elementsFile?.hash ?? '',
       isPublic: detail.public,
-      link: detail.link
+      link: detail.link,
+      attribution: detail.forkAttribution
     });
 
     if (!detail.newFormat) {
@@ -127,7 +128,7 @@ export class ServerPersistenceGateway {
       project,
       name,
       isPublic ?? false,
-      description
+      { description }
     );
     this.metadataStore.register(project, {
       id,
@@ -155,11 +156,13 @@ export class ServerPersistenceGateway {
     name: string,
     isPublic: boolean
   ): Promise<string> {
+    const attribution = this.metadataStore.getMetadata(project)?.attribution;
     const id = await this.metadataStore.withDirtyGuard(project, async () => {
       const { id, hash } = await this._createAndSaveServerProject(
         project,
         name,
-        isPublic
+        isPublic,
+        { forkedFrom: attribution?.at(-1)?.projectId }
       );
 
       this.metadataStore.update(project, {
@@ -184,28 +187,36 @@ export class ServerPersistenceGateway {
   async createServerProjectFromProject(
     project: Project,
     name: string,
-    isPublic: boolean
+    isPublic: boolean,
+    forkedFrom?: string
   ): Promise<string> {
-    return (await this._createAndSaveServerProject(project, name, isPublic)).id;
+    return (
+      await this._createAndSaveServerProject(project, name, isPublic, {
+        forkedFrom
+      })
+    ).id;
   }
 
   /**
    * Creates a server project record and PUTs `project`'s current circuit into it
    * in one round-trip, returning the new id and its post-save hash. The shared
    * transport core behind create, promote and throwaway-upload; touches no
-   * metadata store, board preview or dirty state.
+   * metadata store, board preview or dirty state. `opts.forkedFrom` restores
+   * fork lineage when the uploaded document carries one (see
+   * {@link ProjectMetadata.attribution}).
    */
   private async _createAndSaveServerProject(
     project: Project,
     name: string,
     isPublic: boolean,
-    description?: string
+    opts?: { description?: string; forkedFrom?: string }
   ): Promise<{ id: string; hash: string }> {
     const response = await firstValueFrom(
       this.projectApi.create({
         name,
-        description,
-        public: isPublic ? 'true' : 'false'
+        description: opts?.description,
+        public: isPublic ? 'true' : 'false',
+        forkedFrom: opts?.forkedFrom
       })
     );
     const { elements, dependencies } = server.serializeProject(

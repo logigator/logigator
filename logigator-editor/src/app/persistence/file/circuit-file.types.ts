@@ -32,6 +32,22 @@ export type CurrentCircuitFile = CircuitFileV1;
 export interface CircuitFileV1 extends PersistedCircuitV1 {
   version: 1;
   name: string;
+  /**
+   * Fork lineage of the exported project, root-first (the original creation
+   * is entry 0, the immediate parent is last). Written when a fork of a cloud
+   * project is exported so a later re-import + upload keeps crediting the
+   * original creators. Display-side data only: on upload the server re-resolves
+   * the immediate parent's id against its own records and derives the real
+   * authors from there — a tampered chain can lose attribution, never forge it.
+   */
+  attribution?: FileForkAttributionV1[];
+}
+
+/** One ancestor in {@link CircuitFileV1.attribution} (frozen v1 shape). */
+export interface FileForkAttributionV1 {
+  projectId: string;
+  projectName: string;
+  authorName: string;
 }
 
 // ---- Version 0 (legacy old-editor format) ----

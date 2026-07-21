@@ -75,6 +75,19 @@ function validateDefinition(value: unknown, path: string): void {
   }
 }
 
+function validateAttributionEntry(value: unknown, path: string): void {
+  if (!isRecord(value)) fail(path, 'an object');
+  if (typeof value['projectId'] !== 'string') {
+    fail(`${path}.projectId`, 'a string');
+  }
+  if (typeof value['projectName'] !== 'string') {
+    fail(`${path}.projectName`, 'a string');
+  }
+  if (typeof value['authorName'] !== 'string') {
+    fail(`${path}.authorName`, 'a string');
+  }
+}
+
 /**
  * Validates a document already at {@link CURRENT_FILE_VERSION} and returns it
  * typed. Throws {@link InvalidFileError} on any structural mismatch.
@@ -102,6 +115,14 @@ export function validateCurrentCircuitFile(data: unknown): CurrentCircuitFile {
   if (definitions !== undefined) {
     if (!Array.isArray(definitions)) fail('definitions', 'an array');
     definitions.forEach((d, i) => validateDefinition(d, `definitions[${i}]`));
+  }
+
+  const attribution = data['attribution'];
+  if (attribution !== undefined) {
+    if (!Array.isArray(attribution)) fail('attribution', 'an array');
+    attribution.forEach((a, i) =>
+      validateAttributionEntry(a, `attribution[${i}]`)
+    );
   }
 
   return data as unknown as CurrentCircuitFile;

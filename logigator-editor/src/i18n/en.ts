@@ -367,6 +367,11 @@ const en = {
       label: 'Rename project',
       cancel: 'Cancel',
       error: 'Could not rename the project.'
+    },
+    fork: {
+      label: 'Fork',
+      title: 'Forked from {{lineage}}',
+      lineageEntry: '{{name}} by {{author}}'
     }
   },
   changelogDialog: {
