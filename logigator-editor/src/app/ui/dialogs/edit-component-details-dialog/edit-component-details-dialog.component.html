@@ -1,0 +1,53 @@
+<form *transloco="let t" class="flex flex-col gap-4" (ngSubmit)="save()">
+  <div class="flex flex-col gap-1">
+    <label for="edit-component-name">{{
+      t('editComponentDetails.name')
+    }}</label>
+    <input
+      lgInputText
+      id="edit-component-name"
+      type="text"
+      maxlength="20"
+      [ngModel]="name()"
+      (ngModelChange)="name.set($event)"
+      [ngModelOptions]="{ standalone: true }"
+    />
+  </div>
+  <div class="flex flex-col gap-1">
+    <label for="edit-component-symbol">{{
+      t('editComponentDetails.symbol')
+    }}</label>
+    <input
+      lgInputText
+      id="edit-component-symbol"
+      type="text"
+      maxlength="5"
+      [ngModel]="symbol()"
+      (ngModelChange)="symbol.set($event)"
+      [ngModelOptions]="{ standalone: true }"
+    />
+  </div>
+  <div class="flex flex-col gap-1">
+    <label for="edit-component-description">{{
+      t('editComponentDetails.description')
+    }}</label>
+    <input
+      lgInputText
+      id="edit-component-description"
+      type="text"
+      [ngModel]="description()"
+      (ngModelChange)="description.set($event)"
+      [ngModelOptions]="{ standalone: true }"
+    />
+  </div>
+  <p class="text-sm text-muted">
+    {{ t('editComponentDetails.frozenInstancesHint') }}
+  </p>
+  <div class="flex justify-end">
+    <lg-button
+      type="submit"
+      [label]="t('editComponentDetails.save')"
+      [disabled]="!canSave"
+    />
+  </div>
+</form>

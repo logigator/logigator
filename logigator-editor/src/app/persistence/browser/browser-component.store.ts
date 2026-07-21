@@ -8,6 +8,7 @@ import {
   COMPONENTS_STORE,
   IndexedDbStore
 } from '../../storage/indexed-db-store';
+import { CustomComponentDetails } from '../../components/custom/custom-component-definition.model';
 
 /**
  * CRUD over browser-local (IndexedDB) **library masters**, keyed by master id.
@@ -61,6 +62,34 @@ export class BrowserComponentStore {
 
   get(id: string): Promise<StoredBrowserComponent | undefined> {
     return this._store.get(id);
+  }
+
+  /**
+   * Patches a master's descriptive metadata in place, leaving `content`
+   * untouched. The monotonic `version` is bumped — the details travel in placed
+   * snapshots, so instances frozen at an older version can be offered an update
+   * — and `lastEdited` is re-stamped so the palette re-sorts the edited master
+   * to the top (the server PATCH does both likewise). Throws for an unknown id
+   * so the caller aborts without applying the edit anywhere else.
+   */
+  async updateDetails(
+    id: string,
+    details: CustomComponentDetails
+  ): Promise<StoredBrowserComponent> {
+    const existing = await this.get(id);
+    if (!existing) {
+      throw new Error(`No stored component with id ${id}`);
+    }
+    const record: StoredBrowserComponent = {
+      ...existing,
+      name: details.name,
+      symbol: details.symbol,
+      description: details.description,
+      version: existing.version + 1,
+      lastEdited: Date.now()
+    };
+    await this._store.put(record);
+    return record;
   }
 
   /** Stored masters without their circuit data, newest `lastEdited` first. */

@@ -10,7 +10,7 @@ export interface ComponentSummary extends CircuitResource {
   numOutputs: number;
   labels: string[];
   stargazersCount?: number;
-  /** Monotonic; bumped on each component save. */
+  /** Monotonic; bumped on each circuit save and each name/symbol/description edit. */
   version?: number;
 }
 

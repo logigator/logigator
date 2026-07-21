@@ -20,6 +20,7 @@ import type {
 import { Page } from '../../api/models/shared';
 import type { CircuitFileV0 } from '../file/circuit-file.types';
 import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
+import type { CustomComponentDetails } from '../../components/custom/custom-component-definition.model';
 import { ComponentProviderService } from '../../components/component-provider.service';
 import { deriveSummary } from '../../custom-component/definition-derivation';
 import { buildProject, instantiateBody } from '../circuit-builder';
@@ -249,6 +250,27 @@ export class ServerPersistenceGateway {
   /** Deletes (unpublishes) a server library component via the API. */
   deleteComponent(uuid: string): Observable<void> {
     return this.componentApi.delete(uuid).pipe(map(() => undefined));
+  }
+
+  /**
+   * Updates a server component's descriptive metadata via
+   * `PATCH /api/component/:id`. The backend bumps the monotonic `version` (the
+   * details travel in placed snapshots, so instances frozen at an older version
+   * can be offered an update) and re-stamps the last-edited time; both are
+   * emitted for the registry to mirror. `version` is `undefined` on a backend
+   * that does not yet implement the additive bump — the caller then leaves the
+   * master version unchanged, like the save path.
+   */
+  updateComponentDetails(
+    uuid: string,
+    details: CustomComponentDetails
+  ): Observable<{ version?: number; lastEdited?: number }> {
+    return this.componentApi.update(uuid, details).pipe(
+      map((summary) => ({
+        version: summary.version,
+        lastEdited: isoToEpoch(summary.lastEdited)
+      }))
+    );
   }
 
   /**

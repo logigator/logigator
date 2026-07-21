@@ -451,6 +451,144 @@ describe('CustomComponentService', () => {
     expect(workMode.selectedComponentType()).toBeNull();
   });
 
+  it('updateComponentDetails persists a browser master and bumps its version', async () => {
+    const editor = await service.createComponent({
+      name: 'X',
+      symbol: 'X',
+      description: '',
+      source: 'browser'
+    });
+    const masterTypeId = masterTypeIdOf(editor);
+    const id = metadataStore.getMetadata(editor)!.id;
+    const store = TestBed.inject(
+      BrowserComponentStore
+    ) as unknown as FakeBrowserComponentStore;
+    const before = store.records.get(id)!;
+
+    await service.updateComponentDetails(masterTypeId, {
+      name: 'Y',
+      symbol: 'Y2',
+      description: 'desc'
+    });
+
+    // The session master carries the new details…
+    const def = registry.getDefinition(masterTypeId)!;
+    expect(def.name).toBe('Y');
+    expect(def.symbol).toBe('Y2');
+    expect(def.description).toBe('desc');
+    // …and so does the persistent record. The circuit is untouched, but the
+    // version is bumped — the details travel in placed snapshots, so instances
+    // frozen at the older version can be offered an update.
+    const record = store.records.get(id)!;
+    expect(record.name).toBe('Y');
+    expect(record.version).toBe(before.version + 1);
+    expect(record.content).toBe(before.content);
+    expect(def.version).toBe(before.version + 1);
+    // The open editor tab follows the rename (its label, and the browser save
+    // path persists metadata.name).
+    expect(metadataStore.getMetadata(editor)?.name).toBe('Y');
+  });
+
+  it('updateComponentDetails leaves placed instances frozen but behind the master', async () => {
+    const editor = await service.createComponent({
+      name: 'X',
+      symbol: 'X',
+      description: '',
+      source: 'browser'
+    });
+    const masterTypeId = masterTypeIdOf(editor);
+    const placedBefore = placeInstance(masterTypeId, main);
+
+    await service.updateComponentDetails(masterTypeId, {
+      name: 'Y',
+      symbol: 'Y2',
+      description: ''
+    });
+
+    // The already-placed snapshot is frozen, now behind the master's bumped
+    // version — the state that offers "Update to latest" on the instance…
+    const frozen = registry.getDefinition(placedBefore.config.type)!;
+    expect(frozen.name).toBe('X');
+    expect(frozen.version!).toBeLessThan(
+      registry.getDefinition(masterTypeId)!.version!
+    );
+    // …while a placement after the edit snapshots the new metadata.
+    const placedAfter = placeInstance(masterTypeId, main);
+    expect(registry.getDefinition(placedAfter.config.type)?.name).toBe('Y');
+  });
+
+  it('updateComponentDetails PATCHes a cloud master and adopts the returned stamps', async () => {
+    const masterTypeId = registry.createMaster(
+      { id: 'srv-x', name: 'X', symbol: 'X' },
+      'server'
+    );
+    const update = vi
+      .spyOn(TestBed.inject(ServerPersistenceGateway), 'updateComponentDetails')
+      .mockReturnValue(of({ version: 5, lastEdited: 1234 }));
+
+    await service.updateComponentDetails(masterTypeId, {
+      name: 'Y',
+      symbol: 'S',
+      description: 'd'
+    });
+
+    expect(update).toHaveBeenCalledWith('srv-x', {
+      name: 'Y',
+      symbol: 'S',
+      description: 'd'
+    });
+    const def = registry.getDefinition(masterTypeId)!;
+    expect(def.name).toBe('Y');
+    expect(def.version).toBe(5);
+    expect(def.lastEdited).toBe(1234);
+  });
+
+  it('updateComponentDetails keeps the master version when the backend returns none', async () => {
+    const masterTypeId = registry.createMaster(
+      { id: 'srv-x', name: 'X', symbol: 'X', version: 3 },
+      'server'
+    );
+    vi.spyOn(
+      TestBed.inject(ServerPersistenceGateway),
+      'updateComponentDetails'
+    ).mockReturnValue(of({ version: undefined, lastEdited: 1234 }));
+
+    await service.updateComponentDetails(masterTypeId, {
+      name: 'Y',
+      symbol: 'S',
+      description: ''
+    });
+
+    // A backend without the additive bump returns no version: the details still
+    // apply, but the master version stays put so placed instances are not
+    // spuriously flagged stale.
+    const def = registry.getDefinition(masterTypeId)!;
+    expect(def.name).toBe('Y');
+    expect(def.version).toBe(3);
+  });
+
+  it('updateComponentDetails keeps the master unchanged when the persist fails', async () => {
+    const masterTypeId = registry.createMaster(
+      { id: 'srv-x', name: 'X', symbol: 'X', description: 'old' },
+      'server'
+    );
+    vi.spyOn(
+      TestBed.inject(ServerPersistenceGateway),
+      'updateComponentDetails'
+    ).mockReturnValue(throwError(() => new Error('network')));
+
+    await service.updateComponentDetails(masterTypeId, {
+      name: 'Y',
+      symbol: 'S',
+      description: 'new'
+    });
+
+    // Nothing applied: the session master still shows the old details (retryable).
+    const def = registry.getDefinition(masterTypeId)!;
+    expect(def.name).toBe('X');
+    expect(def.description).toBe('old');
+  });
+
   it('deleteComponent keeps everything intact when the persistent delete fails', async () => {
     const masterTypeId = registry.createMaster(
       { id: 'srv-x', name: 'X', symbol: 'X' },

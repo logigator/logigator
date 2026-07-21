@@ -8,7 +8,10 @@ import { ServerPersistenceGateway } from '../persistence/server/server-persisten
 import { ProjectMetadataStore } from '../persistence/project-metadata.store';
 import { buildProject, instantiateBody } from '../persistence/circuit-builder';
 import { CustomComponentRegistry } from '../components/custom/custom-component-registry.service';
-import { CustomComponentDefinition } from '../components/custom/custom-component-definition.model';
+import {
+  CustomComponentDefinition,
+  CustomComponentDetails
+} from '../components/custom/custom-component-definition.model';
 import { ComponentProviderService } from '../components/component-provider.service';
 
 /**
@@ -217,6 +220,34 @@ export class ComponentLibraryService {
     } else {
       await this.browserComponentStore.delete(def.id);
     }
+  }
+
+  /**
+   * Updates a library master's descriptive metadata in its **persistent** record —
+   * the browser store entry, or for a cloud master the API (PATCH). Both paths
+   * bump the monotonic `version` (the details travel in placed snapshots, so
+   * instances frozen at an older version can be offered an update) and re-stamp
+   * the last-edited time; both stamps are returned for the caller to mirror into
+   * the registry (`version` is `undefined` on a backend without the additive
+   * bump). Touches only the persistent record: the caller
+   * ({@link CustomComponentService}) applies the patch to the session registry
+   * after this resolves, so a failed persist leaves everything intact for a retry.
+   */
+  async updatePersistentMasterDetails(
+    def: CustomComponentDefinition,
+    details: CustomComponentDetails
+  ): Promise<{ version?: number; lastEdited?: number }> {
+    if (!def.id) return {};
+    if (def.source === 'server') {
+      return firstValueFrom(
+        this.server.updateComponentDetails(def.id, details)
+      );
+    }
+    const record = await this.browserComponentStore.updateDetails(
+      def.id,
+      details
+    );
+    return { version: record.version, lastEdited: record.lastEdited };
   }
 
   /**

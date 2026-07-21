@@ -36,7 +36,7 @@ A placed component is a self-contained copy of the circuit as it was when you pl
 
 ## Editing a component and updating instances
 
-To change a custom component, open it in its own tab: choose **Edit component** from its settings card while an instance is selected, or open it from your library. Editing the component does **not** automatically change parts you already placed — each placed instance stays as it was.
+To change a custom component's circuit, open it in its own tab: choose **Edit circuit** from its settings card while an instance is selected, or open it from your library. To change its name, symbol or description instead, choose **Edit details**. Editing the component does **not** automatically change parts you already placed — each placed instance stays as it was.
 
 When a placed instance is behind the latest version of its component, its settings card offers **Update to latest**. Choosing it swaps that instance for the current version, keeping its position and direction. Updating is per-instance and can be undone, so you decide exactly which copies move forward.
 

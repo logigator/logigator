@@ -137,11 +137,20 @@ exposes that exact config (hence `component.config.type === def.typeId`, which t
 serializer relies on). A custom name/description is a user string cast to the
 `TranslationKey` contract (built-ins stay type-safe). A master config also carries
 the [inspector actions](actions-system.md) (`EditComponentAction`,
-`UpdateInstanceComponentAction`, `UploadComponentAction`). Each renderer gates its
-own visibility off the context: edit and upload are config-scoped and surface on
-both a selected instance and a palette/ghost selection; update-to-latest hides
-itself when `context.component` is null (palette/ghost) and shows only for a
-selected instance behind its master.
+`EditDetailsAction`, `UpdateInstanceComponentAction`, `UploadComponentAction`,
+`ShareComponentAction`, `DeleteComponentAction`). Each renderer gates its
+own visibility off the context: edit circuit, edit details and upload are
+config-scoped and surface on both a selected instance and a palette/ghost
+selection; update-to-latest hides itself when `context.component` is null
+(palette/ghost) and shows only for a selected instance behind its master.
+
+`EditDetailsAction` opens a dialog editing the master's descriptive metadata
+(name/symbol/description) after creation. The persistent record is written first
+(browser store patch, or `PATCH /api/component/:id` for a cloud master), then the
+session master is patched in place. Both paths bump the monotonic `version` —
+the details travel in placed snapshots, so instances frozen at the older version
+are offered "Update to latest", exactly as after a circuit save; placed snapshots
+stay frozen, only future placements carry the new details.
 
 `EditComponentAction` also handles the **orphan** case — a placed custom whose
 master no longer resolves in any library — by degrading to _Restore & edit_ or a

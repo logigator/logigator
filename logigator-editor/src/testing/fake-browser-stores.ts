@@ -104,6 +104,26 @@ export class FakeBrowserComponentStore {
     return this.records.get(id);
   }
 
+  async updateDetails(
+    id: string,
+    details: { name: string; symbol: string; description: string }
+  ): Promise<StoredBrowserComponent> {
+    const existing = this.records.get(id);
+    if (!existing) {
+      throw new Error(`No stored component with id ${id}`);
+    }
+    const record: StoredBrowserComponent = {
+      ...existing,
+      name: details.name,
+      symbol: details.symbol,
+      description: details.description,
+      version: existing.version + 1,
+      lastEdited: 1000 + ++this._counter
+    };
+    this.records.set(id, record);
+    return record;
+  }
+
   async list() {
     return [...this.records.values()];
   }

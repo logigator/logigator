@@ -5,6 +5,7 @@ import { CustomComponentDefinition } from './custom-component-definition.model';
 import { CustomComponent } from './custom-component';
 import { SubCircuitWatch } from './sub-circuit-watch';
 import { EditComponentAction } from './actions/edit-component.component-action';
+import { EditDetailsAction } from './actions/edit-details.component-action';
 import { UpdateInstanceComponentAction } from './actions/update-instance.component-action';
 import { UploadComponentAction } from './actions/upload-component.component-action';
 import { ShareComponentAction } from './actions/share-component.component-action';
@@ -58,13 +59,15 @@ export function buildCustomComponentConfig(
     },
     options: {},
     // Inspector actions rendered generically by the settings panel, each gating
-    // its own visibility. Edit, upload, share and delete are config-scoped, so
-    // they surface on both a selected placed instance and a palette/ghost
-    // selection (delete stays visible only while the master resolves — an
-    // orphaned instance has no library entry to remove); update-to-latest hides
-    // itself unless a selected snapshot instance is behind its master.
+    // its own visibility. Edit circuit, edit details, upload, share and delete
+    // are config-scoped, so they surface on both a selected placed instance and
+    // a palette/ghost selection (details and delete stay visible only while the
+    // master resolves — an orphaned instance has no library entry to edit or
+    // remove); update-to-latest hides itself unless a selected snapshot instance
+    // is behind its master.
     actions: [
       new EditComponentAction(),
+      new EditDetailsAction(),
       new UpdateInstanceComponentAction(),
       new UploadComponentAction(),
       new ShareComponentAction(),

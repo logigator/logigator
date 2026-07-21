@@ -66,6 +66,19 @@ export interface CustomComponentDefinition {
 }
 
 /**
+ * A master's user-authored descriptive metadata — set at creation and editable
+ * afterwards through the "Edit details" dialog. The details travel in placed
+ * snapshots, so persisting an edit bumps the master's monotonic `version` like
+ * a circuit save does — instances frozen at the older version are then offered
+ * "Update to latest".
+ */
+export interface CustomComponentDetails {
+  name: string;
+  symbol: string;
+  description: string;
+}
+
+/**
  * The patch applied when a **master's** plugs change (see `deriveSummary`).
  * Port counts and labels are always recomputed together; the descriptive
  * fields are optional and only set when the create/edit dialog changes them.

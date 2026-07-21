@@ -8,6 +8,7 @@ import { PersistenceService } from '../persistence/persistence.service';
 import { ComponentLibraryService } from './component-library.service';
 import { PromotionService } from '../persistence/promotion.service';
 import { CustomComponentRegistry } from '../components/custom/custom-component-registry.service';
+import { CustomComponentDetails } from '../components/custom/custom-component-definition.model';
 import { ComponentProviderService } from '../components/component-provider.service';
 import { CustomComponent } from '../components/custom/custom-component';
 import { Action } from '../actions/action';
@@ -241,6 +242,69 @@ export class CustomComponentService {
 
     this.toast.success(
       this.translation.translate('deleteComponent.deleted', { name: def.name }),
+      'CustomComponentService'
+    );
+  }
+
+  /**
+   * Updates a master's descriptive metadata (name/symbol/description) from the
+   * "Edit details" dialog. The persistent record is written first (browser
+   * store, or the API PATCH for a cloud master): if that fails the edit aborts
+   * with nothing changed, so it stays retryable. On success the session master
+   * is patched in place and adopts the persisted `version` bump — the details
+   * travel in placed snapshots, so instances frozen at the older version are
+   * offered "Update to latest", exactly as after a circuit save. Future
+   * placements snapshot the new metadata; already-placed instances stay frozen
+   * until explicitly updated. The palette re-stamps/re-sorts, and an open
+   * editor tab for the master adopts the new name (the tab label shows it, and
+   * the browser save path persists `metadata.name`). No-op for a type id that
+   * is not a library master.
+   */
+  public async updateComponentDetails(
+    masterTypeId: number,
+    details: CustomComponentDetails
+  ): Promise<void> {
+    const def = this.registry.getDefinition(masterTypeId);
+    if (!def || def.kind !== 'master') return;
+
+    let stamps: { version?: number; lastEdited?: number };
+    try {
+      stamps = await this.componentLibrary.updatePersistentMasterDetails(
+        def,
+        details
+      );
+    } catch (err) {
+      this.toast.error(
+        this.translation.translate('editComponentDetails.saveFailed'),
+        'CustomComponentService',
+        err
+      );
+      return;
+    }
+
+    this.registry.updateDefinition(masterTypeId, {
+      numInputs: def.numInputs,
+      numOutputs: def.numOutputs,
+      labels: def.labels,
+      ...details
+    });
+    // Adopt the persisted version stamp; without one (a backend that does not
+    // yet implement the additive bump) the master version is left unchanged, so
+    // placed instances are not spuriously flagged stale — like the save path.
+    if (stamps.version !== undefined) {
+      this.registry.setMasterVersion(masterTypeId, stamps.version);
+    }
+    // Mirror the persisted last-edited stamp; this also bumps the registry
+    // revision, so the palette re-sorts and signal readers re-resolve the name.
+    this.registry.setMasterLastEdited(masterTypeId, stamps.lastEdited);
+
+    if (def.id !== undefined) {
+      const open = this._findOpenEditor(this.registry.currentIdForId(def.id));
+      if (open) this.metadataStore.update(open, { name: details.name });
+    }
+
+    this.toast.success(
+      this.translation.translate('editComponentDetails.saved'),
       'CustomComponentService'
     );
   }

@@ -718,7 +718,7 @@ const en = {
       'The inner circuit does not match the compiled simulation — restart the simulation to inspect it.'
   },
   componentActions: {
-    edit: 'Edit component',
+    edit: 'Edit circuit',
     update: 'Update to latest',
     createFailed: 'Could not create the component.',
     openFailed: 'Could not open the component.',
@@ -731,6 +731,18 @@ const en = {
     signInToEdit: 'Sign in to edit',
     signInTooltip:
       'This component lives in your cloud library. Sign in to load and edit it.'
+  },
+  editComponentDetails: {
+    button: 'Edit details',
+    header: 'Edit component details',
+    name: 'Name',
+    symbol: 'Symbol',
+    description: 'Description',
+    frozenInstancesHint:
+      'Already-placed instances keep their current details; use "Update to latest" on a selected instance to apply them.',
+    save: 'Save',
+    saved: 'Component details updated.',
+    saveFailed: 'Could not update the component details.'
   },
   library: {
     loadFailed: 'Some saved components could not be loaded.'
