@@ -132,7 +132,8 @@ function shareDetailResponse(
       description: '',
       createdOn: '2024-01-01',
       lastEdited: '2024-01-01',
-      link: 'share-link',
+      // No `link`: the real share endpoint serializes the project without the
+      // showShareLinks group, so the response never carries one.
       public: true,
       previewDark: null,
       previewLight: null,
@@ -639,7 +640,11 @@ describe('PersistenceService', () => {
 
       const { project, type } = await promise;
       expect(type).toBe('project');
-      expect(metadataStore.getMetadata(project)!.source).toBe('share');
+      const metadata = metadataStore.getMetadata(project)!;
+      expect(metadata.source).toBe('share');
+      // The fetched-by link is recorded even though the response has none —
+      // the clone action needs it.
+      expect(metadata.link).toBe('link-1');
       expect(metadataStore.isDirty(project)).toBe(false);
     });
 

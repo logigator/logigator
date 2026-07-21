@@ -296,7 +296,10 @@ export class ServerPersistenceGateway {
         source: 'share',
         hash: detail.elementsFile?.hash ?? '',
         isPublic: true,
-        link: detail.link
+        // The link is what this share was fetched by — the response body does
+        // not carry one (the share endpoint serializes without the
+        // showShareLinks group). The clone action reuses it.
+        link: linkId
       },
       false
     );
