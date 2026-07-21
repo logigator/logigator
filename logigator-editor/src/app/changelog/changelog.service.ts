@@ -78,7 +78,7 @@ export class ChangelogService {
     this.analytics.capture(AnalyticsEvent.ChangelogViewed, { trigger });
     this.dialogService.open(ChangelogDialogComponent, {
       header: this.translation.translate('changelogDialog.header'),
-      width: '40rem',
+      width: '48rem',
       modal: true,
       closable: true
     });
