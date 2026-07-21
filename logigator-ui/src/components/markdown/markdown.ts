@@ -1,5 +1,26 @@
-import { Component, input, ViewEncapsulation } from '@angular/core';
+import { Component, computed, input, ViewEncapsulation } from '@angular/core';
 import { MarkdownComponent } from 'ngx-markdown';
+
+/**
+ * Replaces markdown link/image destinations with their mapped URLs. Only the
+ * destination part matches, verbatim (an optional title is carried over);
+ * destinations without a mapping stay untouched.
+ */
+export function resolveMarkdownUrls(
+  data: string | undefined,
+  urls: Readonly<Record<string, string>> | undefined
+): string | undefined {
+  if (data === undefined || urls === undefined) {
+    return data;
+  }
+  return data.replace(
+    /\]\(([^)\s]+)([^)]*)\)/g,
+    (match, destination: string, title: string) =>
+      Object.hasOwn(urls, destination)
+        ? `](${urls[destination]}${title})`
+        : match
+  );
+}
 
 /**
  * Themed markdown renderer. Wraps ngx-markdown's `<markdown>` (parsing via
@@ -18,7 +39,7 @@ import { MarkdownComponent } from 'ngx-markdown';
   selector: 'lg-markdown',
   imports: [MarkdownComponent],
   encapsulation: ViewEncapsulation.None,
-  template: `<markdown [data]="data()" [src]="src()" />`,
+  template: `<markdown [data]="resolvedData()" [src]="src()" />`,
   styles: `
     lg-markdown {
       display: block;
@@ -178,4 +199,15 @@ export class LgMarkdown {
   readonly data = input<string>();
   /** URL/asset path the renderer fetches and renders. */
   readonly src = input<string>();
+  /**
+   * Maps link/image destinations authored in the markdown to the URLs they
+   * resolve to at runtime — e.g. relative screenshot paths to build-hashed
+   * asset imports. Destinations match verbatim; unmapped ones pass through.
+   * Applies to `data` only: content fetched via `src` renders as-is.
+   */
+  readonly assetUrls = input<Readonly<Record<string, string>>>();
+
+  protected readonly resolvedData = computed(() =>
+    resolveMarkdownUrls(this.data(), this.assetUrls())
+  );
 }
