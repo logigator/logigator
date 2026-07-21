@@ -20,7 +20,7 @@ import { LgButton, LgCaret, type LgOverlaySide } from '@logigator/ui';
   template: `
     <div
       *transloco="let t"
-      class="pointer-events-auto relative flex w-64 max-w-[calc(100vw-2rem)] flex-col gap-2 rounded-lg border border-border bg-content p-3 shadow-lg"
+      class="pointer-events-auto relative flex w-80 max-w-[calc(100vw-2rem)] flex-col gap-2 rounded-lg border border-border bg-content p-3 shadow-lg"
       role="status"
     >
       @if (side(); as s) {
