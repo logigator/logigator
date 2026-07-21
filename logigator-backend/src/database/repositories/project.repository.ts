@@ -82,13 +82,15 @@ export class ProjectRepository extends PageableRepository<Project> {
 		} as Page<Project>;
 	}
 
-	public createProjectForUser(name: string, description: string, sharePublicly: boolean, user: User) {
+	public createProjectForUser(name: string, description: string, sharePublicly: boolean, user: User, forkedFrom?: Project) {
 		const project = this.create();
 		project.name = name;
 		project.description = description;
 		project.public = sharePublicly;
 		project.user = Promise.resolve(user);
 		project.elementsFile = new ProjectFile();
+		if (forkedFrom)
+			project.forkedFrom = Promise.resolve(forkedFrom);
 		return this.save(project);
 	}
 

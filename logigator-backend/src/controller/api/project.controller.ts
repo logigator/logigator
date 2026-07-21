@@ -31,6 +31,7 @@ import {classToPlain} from 'class-transformer';
 import {ComponentRepository} from '../../database/repositories/component.repository';
 import {Component} from '../../database/entities/component.entity';
 import {buildDependencyResponse, parseStoredCircuit, serializeStoredCircuit, synthesizeMissingSnapshots} from '../../functions/circuit-content';
+import {buildForkAttribution} from '../../functions/fork-attribution';
 import {v4 as uuid} from 'uuid';
 import {getUploadedFileOptions} from '../../functions/get-uploaded-file-options';
 import {ProjectPreviewDark} from '../../database/entities/project-preview-dark.entity';
@@ -60,8 +61,14 @@ export class ProjectController {
 	@HttpCode(201)
 	@UseBefore(CheckAuthenticatedApiMiddleware)
 	@ResponseClassTransformOptions({groups: ['showShareLinks']})
-	public create(@Body() body: CreateProject, @CurrentUser() user: User) {
-		return this.projectRepo.createProjectForUser(body.name, body.description, body.public === 'true', user);
+	public async create(@Body() body: CreateProject, @CurrentUser() user: User) {
+		// A fork claim only grants attribution to the referenced project's real
+		// author, so linking any existing project is safe; an unknown id (e.g. a
+		// deleted origin) drops the claim silently rather than failing the create.
+		const forkedFrom = body.forkedFrom
+			? await this.projectRepo.findOne(body.forkedFrom)
+			: undefined;
+		return this.projectRepo.createProjectForUser(body.name, body.description, body.public === 'true', user, forkedFrom);
 	}
 
 	@Get('/:projectId')
@@ -78,12 +85,14 @@ export class ProjectController {
 		const {elements, snapshots} = parseStoredCircuit(contentBuffer);
 		const enriched = await synthesizeMissingSnapshots(dependencies, snapshots,
 			master => this.componentDepRepo.find({where: {dependent: master as Component}}));
+		const forkAttribution = await buildForkAttribution(project);
 
 		return {
 			...classToPlain(project, {groups: ['showShareLinks']}),
 			dependencies: buildDependencyResponse(dependencies, enriched),
 			elements,
-			newFormat: project.newFormat
+			newFormat: project.newFormat,
+			...(forkAttribution.length ? {forkAttribution} : {})
 		};
 	}
 
