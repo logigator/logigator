@@ -34,7 +34,13 @@
               ".wasm": "file",
               ".svg": "file",
               ".woff2": "file",
-              ".md": "file"
+              ".md": "file",
+              ".png": "file",
+              ".jpg": "file",
+              ".jpeg": "file",
+              ".webp": "file",
+              ".gif": "file",
+              ".avif": "file"
             },
             "define": {
               "GIT_COMMIT": "''",

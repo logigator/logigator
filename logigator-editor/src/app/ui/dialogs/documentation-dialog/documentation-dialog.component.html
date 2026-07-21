@@ -1,7 +1,7 @@
 <ng-container *transloco="let t">
   <ng-template #content>
     @if (markdown(); as md) {
-      <lg-markdown [data]="md" />
+      <lg-markdown [data]="md" [assetUrls]="docImages" />
     } @else if (failed()) {
       <p class="text-muted text-sm">{{ t('documentation.loadError') }}</p>
     } @else {

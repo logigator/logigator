@@ -37,6 +37,7 @@ export interface DocSection {
  * file under `src/assets/docs/<lang>/`, import it, list it here, and add its
  * title key to the locale files; {@link DocPageId} picks the id up
  * automatically. In-page cross links use the id: `[label](docs:<page-id>)`.
+ * Screenshots register in `docs-images.ts` under the path the markdown uses.
  */
 export const DOC_SECTIONS = [
   {
