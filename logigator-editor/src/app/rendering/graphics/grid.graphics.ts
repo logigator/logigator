@@ -11,8 +11,11 @@ export class GridGraphics extends StaticGraphicsContext {
     const themingService = getStaticDI(ThemingService);
     const sizePx = fromGrid(size);
 
-    for (let x = 0; x <= sizePx; x += environment.gridSize) {
-      for (let y = 0; y <= sizePx; y += environment.gridSize) {
+    // Exclusive bounds: chunks tile edge-to-edge, so the trailing row/column
+    // belongs to the neighboring chunk — drawing it here too would composite
+    // the seam dots twice and make them visibly darker.
+    for (let x = 0; x < sizePx; x += environment.gridSize) {
+      for (let y = 0; y < sizePx; y += environment.gridSize) {
         this.rect(x, y, 1 / scale, 1 / scale);
       }
     }
