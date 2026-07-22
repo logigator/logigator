@@ -8,7 +8,7 @@ import { OnboardingService } from './onboarding.service';
 import { OnboardingNudgeComponent } from './onboarding-nudge.component';
 import { TutorialRunnerService } from './tutorial-runner.service';
 
-const NUDGE_DISMISSED_KEY = 'onboarding.nudge-dismissed';
+const NUDGE_DISMISSED_KEY = 'logigator.onboarding.nudge-dismissed';
 
 describe('OnboardingNudgeComponent', () => {
   let fixture: ComponentFixture<OnboardingNudgeComponent>;

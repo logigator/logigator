@@ -7,10 +7,10 @@ import {
 } from './onboarding.service';
 
 const KEYS = [
-  'onboarding.tips-enabled',
-  'onboarding.completed-tutorials',
-  'onboarding.seen-hints',
-  'onboarding.nudge-dismissed'
+  'logigator.onboarding.tips-enabled',
+  'logigator.onboarding.completed-tutorials',
+  'logigator.onboarding.seen-hints',
+  'logigator.onboarding.nudge-dismissed'
 ];
 
 describe('OnboardingService', () => {

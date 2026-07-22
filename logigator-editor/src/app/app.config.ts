@@ -47,6 +47,7 @@ export const appConfig: ApplicationConfig = {
       loader: TranslationLoaderService
     }),
     provideTranslocoPersistLang({
+      storageKey: 'logigator.transloco.lang',
       storage: {
         useValue: localStorage
       }

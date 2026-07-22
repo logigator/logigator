@@ -14,10 +14,10 @@ export type OnboardingPlatform = 'desktop' | 'compact';
 /** The flagship first-run tutorial, launched only from the first-run nudge. */
 export const GETTING_STARTED_TUTORIAL = 'getting-started';
 
-const TIPS_ENABLED_KEY = 'onboarding.tips-enabled';
-const COMPLETED_TUTORIALS_KEY = 'onboarding.completed-tutorials';
-const SEEN_HINTS_KEY = 'onboarding.seen-hints';
-const NUDGE_DISMISSED_KEY = 'onboarding.nudge-dismissed';
+const TIPS_ENABLED_KEY = 'logigator.onboarding.tips-enabled';
+const COMPLETED_TUTORIALS_KEY = 'logigator.onboarding.completed-tutorials';
+const SEEN_HINTS_KEY = 'logigator.onboarding.seen-hints';
+const NUDGE_DISMISSED_KEY = 'logigator.onboarding.nudge-dismissed';
 
 /**
  * Single orchestrator and persistence gate for the whole onboarding surface —
