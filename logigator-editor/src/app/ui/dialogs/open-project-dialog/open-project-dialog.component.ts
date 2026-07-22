@@ -20,6 +20,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { PersistenceService } from '../../../persistence/persistence.service';
 import { UploadCoordinatorService } from '../../upload/upload-coordinator.service';
+import { DiscardChangesService } from '../../discard-changes.service';
 import { ToastService } from '../../../logging/toast.service';
 import { UserService } from '../../../user/user.service';
 import {
@@ -49,6 +50,7 @@ export class OpenProjectDialogComponent implements OnInit {
   private readonly dialogService = inject(DialogService);
   private readonly persistenceService = inject(PersistenceService);
   private readonly uploadCoordinator = inject(UploadCoordinatorService);
+  private readonly discardChanges = inject(DiscardChangesService);
   private readonly toastService = inject(ToastService);
   private readonly translation = inject(TranslationService);
   protected readonly userService = inject(UserService);
@@ -134,7 +136,8 @@ export class OpenProjectDialogComponent implements OnInit {
     this.localPage.set(0);
   }
 
-  protected openLocalProject(id: string): void {
+  protected async openLocalProject(id: string): Promise<void> {
+    if (!(await this.discardChanges.confirmDiscardMain())) return;
     this.persistenceService.loadLocalProjectAsMain(id).catch((err: unknown) => {
       this.toastService.error(
         this.translation.translate('openProjectDialog.errors.openLocal'),
@@ -223,7 +226,8 @@ export class OpenProjectDialogComponent implements OnInit {
     void this.loadServerProjects(page);
   }
 
-  protected openServerProject(id: string): void {
+  protected async openServerProject(id: string): Promise<void> {
+    if (!(await this.discardChanges.confirmDiscardMain())) return;
     this.persistenceService.loadProjectAsMain(id).catch((err: unknown) => {
       this.toastService.error(
         this.translation.translate('openProjectDialog.errors.openCloud'),
@@ -283,9 +287,10 @@ export class OpenProjectDialogComponent implements OnInit {
 
   // --- File import ---
 
-  protected onFileSelect(event: LgFileSelectEvent): void {
+  protected async onFileSelect(event: LgFileSelectEvent): Promise<void> {
     const file = event.files[0];
     if (!file) return;
+    if (!(await this.discardChanges.confirmDiscardMain())) return;
 
     this.importError.set(null);
 

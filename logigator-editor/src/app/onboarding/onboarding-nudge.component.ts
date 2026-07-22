@@ -70,7 +70,7 @@ export class OnboardingNudgeComponent {
   );
 
   protected start(): void {
-    this.runner.launch(GETTING_STARTED_TUTORIAL);
+    void this.runner.launch(GETTING_STARTED_TUTORIAL);
   }
 
   protected dismiss(): void {

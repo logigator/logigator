@@ -9,12 +9,11 @@ import {
 } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
 import { Subscription } from 'rxjs';
-import { ConfirmationService } from '@logigator/ui';
 import { WorkModeService } from '../work-mode/work-mode.service';
 import { ProjectService } from '../project/project.service';
 import { Project } from '../project/project';
 import { PersistenceService } from '../persistence/persistence.service';
-import { ProjectMetadataStore } from '../persistence/project-metadata.store';
+import { DiscardChangesService } from '../ui/discard-changes.service';
 import { SimulationService } from '../simulation/simulation.service';
 import { TranslationService } from '../translation/translation.service';
 import { LoggingService } from '../logging/logging.service';
@@ -55,8 +54,7 @@ export class TutorialRunnerService {
   private readonly translation = inject(TranslationService);
   private readonly logging = inject(LoggingService);
   private readonly persistence = inject(PersistenceService);
-  private readonly metadataStore = inject(ProjectMetadataStore);
-  private readonly confirmationService = inject(ConfirmationService);
+  private readonly discardChanges = inject(DiscardChangesService);
   private readonly analytics = inject(AnalyticsService);
   private readonly registry = inject(OnboardingTargetRegistry);
   private readonly mobileUi = inject(MobileUiService);
@@ -109,27 +107,11 @@ export class TutorialRunnerService {
   /**
    * Retires the first-run nudge and starts `tutorialId` on a fresh, empty
    * board. If the current board has unsaved changes, asks to discard them
-   * first (the File → New Project confirm); on cancel nothing happens and the
+   * first ({@link DiscardChangesService}); on cancel nothing happens and the
    * nudge stays put.
    */
-  public launch(tutorialId: string): void {
-    const project = this.projectService.mainProject();
-    if (project && this.metadataStore.isDirty(project)) {
-      this.confirmationService.confirm({
-        header: this.translation.translate('titleBar.discardChanges.header'),
-        message: this.translation.translate('titleBar.discardChanges.message'),
-        acceptButtonProps: { severity: 'danger' },
-        acceptLabel: this.translation.translate(
-          'titleBar.discardChanges.accept'
-        ),
-        rejectButtonProps: { severity: 'secondary', outlined: true },
-        rejectLabel: this.translation.translate(
-          'titleBar.discardChanges.reject'
-        ),
-        accept: () => this.launchFresh(tutorialId)
-      });
-      return;
-    }
+  public async launch(tutorialId: string): Promise<void> {
+    if (!(await this.discardChanges.confirmDiscardMain())) return;
     this.launchFresh(tutorialId);
   }
 

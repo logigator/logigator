@@ -1,9 +1,5 @@
 import { computed, inject, Injectable, Signal } from '@angular/core';
-import {
-  ConfirmationService,
-  DialogService,
-  type MenuItem
-} from '@logigator/ui';
+import { DialogService, type MenuItem } from '@logigator/ui';
 import { TranslationService } from '../translation/translation.service';
 import { PersistenceService } from '../persistence/persistence.service';
 import { ProjectService } from '../project/project.service';
@@ -12,6 +8,7 @@ import { ClipboardService } from '../clipboard/clipboard.service';
 import { ShortcutService } from '../shortcuts/shortcut.service';
 import { ShortcutActionEnum } from '../shortcuts/shortcut-action.enum';
 import { SaveCoordinatorService } from './save-coordinator.service';
+import { DiscardChangesService } from './discard-changes.service';
 import { UploadCoordinatorService } from './upload/upload-coordinator.service';
 import { OpenProjectDialogComponent } from './dialogs/open-project-dialog/open-project-dialog.component';
 import { NewComponentDialogComponent } from './dialogs/new-component-dialog/new-component-dialog.component';
@@ -43,7 +40,7 @@ export class EditorMenuService {
   private readonly changelogService = inject(ChangelogService);
   private readonly documentationService = inject(DocumentationService);
   private readonly onboardingService = inject(OnboardingService);
-  private readonly confirmationService = inject(ConfirmationService);
+  private readonly discardChanges = inject(DiscardChangesService);
   private readonly clipboardService = inject(ClipboardService);
   private readonly shortcutService = inject(ShortcutService);
   private readonly saveCoordinator = inject(SaveCoordinatorService);
@@ -239,7 +236,7 @@ export class EditorMenuService {
         'titleBar.menuBar.file.items.newProject.label'
       ),
       icon: 'ph ph-file-plus',
-      command: () => this.newProject()
+      command: () => void this.newProject()
     };
   }
 
@@ -451,25 +448,9 @@ export class EditorMenuService {
    * If the current project has unsaved changes, confirms the discard first since
    * replacing the main project throws them away.
    */
-  private newProject(): void {
-    const project = this.projectService.mainProject();
-    if (project && this.projectMetadataStore.isDirty(project)) {
-      this.confirmationService.confirm({
-        header: this.translation.translate('titleBar.discardChanges.header'),
-        message: this.translation.translate('titleBar.discardChanges.message'),
-        acceptButtonProps: { severity: 'danger' },
-        acceptLabel: this.translation.translate(
-          'titleBar.discardChanges.accept'
-        ),
-        rejectButtonProps: { severity: 'secondary', outlined: true },
-        rejectLabel: this.translation.translate(
-          'titleBar.discardChanges.reject'
-        ),
-        accept: () => this.persistenceService.createAndSetEmptyProject()
-      });
-    } else {
-      this.persistenceService.createAndSetEmptyProject();
-    }
+  private async newProject(): Promise<void> {
+    if (!(await this.discardChanges.confirmDiscardMain())) return;
+    this.persistenceService.createAndSetEmptyProject();
   }
 
   private saveProject(): void {

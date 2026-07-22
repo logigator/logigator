@@ -359,13 +359,6 @@ const en = {
         }
       }
     },
-    discardChanges: {
-      header: 'Discard changes?',
-      message:
-        'The current project has unsaved changes that will be lost. Create a new project anyway?',
-      accept: 'Discard',
-      reject: 'Cancel'
-    },
     rename: {
       label: 'Rename project',
       cancel: 'Cancel',
@@ -376,6 +369,13 @@ const en = {
       title: 'Forked from {{lineage}}',
       lineageEntry: '{{name}} by {{author}}'
     }
+  },
+  discardChanges: {
+    header: 'Discard changes?',
+    message:
+      'The current project has unsaved changes that will be lost. Continue anyway?',
+    accept: 'Discard',
+    reject: 'Cancel'
   },
   changelogDialog: {
     header: "What's New",

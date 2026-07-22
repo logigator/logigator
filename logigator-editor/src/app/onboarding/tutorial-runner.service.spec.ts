@@ -54,6 +54,7 @@ const TEST_TUTORIAL: TutorialDefinition = {
 
 interface ConfirmConfig {
   readonly accept: () => void;
+  readonly reject: () => void;
 }
 
 describe('TutorialRunnerService', () => {
@@ -255,8 +256,8 @@ describe('TutorialRunnerService', () => {
   });
 
   describe('launch', () => {
-    it('on a clean board, swaps in a fresh project and starts without asking', () => {
-      runner.launch('test');
+    it('on a clean board, swaps in a fresh project and starts without asking', async () => {
+      await runner.launch('test');
       tick();
 
       expect(confirm).not.toHaveBeenCalled();
@@ -265,23 +266,28 @@ describe('TutorialRunnerService', () => {
       expect(onboarding.nudgeDismissed()).toBe(true);
     });
 
-    it('on a dirty board, asks first and only launches after accept', () => {
+    it('on a dirty board, asks first and only launches after accept', async () => {
       dirty = true;
-      runner.launch('test');
+      const launched = runner.launch('test');
 
       expect(createAndSetEmptyProject).not.toHaveBeenCalled();
       expect(onboarding.activeTutorial()).toBeNull();
 
       confirm.mock.calls[0][0].accept();
+      await launched;
       tick();
 
       expect(createAndSetEmptyProject).toHaveBeenCalledOnce();
       expect(onboarding.activeTutorial()).toBe('test');
     });
 
-    it('on a dirty board, launches nothing when the user cancels', () => {
+    it('on a dirty board, launches nothing when the user cancels', async () => {
       dirty = true;
-      runner.launch('test');
+      const launched = runner.launch('test');
+
+      confirm.mock.calls[0][0].reject();
+      await launched;
+      tick();
 
       expect(createAndSetEmptyProject).not.toHaveBeenCalled();
       expect(onboarding.activeTutorial()).toBeNull();
