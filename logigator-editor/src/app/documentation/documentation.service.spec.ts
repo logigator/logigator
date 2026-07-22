@@ -60,8 +60,15 @@ describe('DocumentationService', () => {
     expect(service.page()).toBe('shortcuts');
   });
 
-  it('falls back to the English markdown for a language without one', () => {
+  it('resolves the markdown for a translated language', () => {
     TestBed.inject(TranslationService).setActiveLang('de');
+    expect(service.resolveUrl('getting-started')).toBe(
+      docPage('getting-started').urls['de']
+    );
+  });
+
+  it('falls back to the English markdown for a language without one', () => {
+    TestBed.inject(TranslationService).setActiveLang('it');
     expect(service.resolveUrl('getting-started')).toBe(
       docPage('getting-started').urls['en']
     );

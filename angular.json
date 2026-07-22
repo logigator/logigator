@@ -74,6 +74,7 @@
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true,
+              "outputHashing": "media",
               "fileReplacements": [
                 {
                   "replace": "logigator-editor/src/environments/environment.ts",

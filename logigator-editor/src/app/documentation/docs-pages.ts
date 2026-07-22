@@ -10,6 +10,39 @@ import simulationEn from '@assets/docs/en/simulation.md';
 import inspectionEn from '@assets/docs/en/inspection.md';
 import savingAndFilesEn from '@assets/docs/en/saving-and-files.md';
 import cloudEn from '@assets/docs/en/cloud.md';
+import gettingStartedDe from '@assets/docs/de/getting-started.md';
+import boardAndToolsDe from '@assets/docs/de/board-and-tools.md';
+import shortcutsDe from '@assets/docs/de/shortcuts.md';
+import settingsDe from '@assets/docs/de/settings.md';
+import componentsAndOptionsDe from '@assets/docs/de/components-and-options.md';
+import wiresAndConnectionsDe from '@assets/docs/de/wires-and-connections.md';
+import customComponentsDe from '@assets/docs/de/custom-components.md';
+import simulationDe from '@assets/docs/de/simulation.md';
+import inspectionDe from '@assets/docs/de/inspection.md';
+import savingAndFilesDe from '@assets/docs/de/saving-and-files.md';
+import cloudDe from '@assets/docs/de/cloud.md';
+import gettingStartedFr from '@assets/docs/fr/getting-started.md';
+import boardAndToolsFr from '@assets/docs/fr/board-and-tools.md';
+import shortcutsFr from '@assets/docs/fr/shortcuts.md';
+import settingsFr from '@assets/docs/fr/settings.md';
+import componentsAndOptionsFr from '@assets/docs/fr/components-and-options.md';
+import wiresAndConnectionsFr from '@assets/docs/fr/wires-and-connections.md';
+import customComponentsFr from '@assets/docs/fr/custom-components.md';
+import simulationFr from '@assets/docs/fr/simulation.md';
+import inspectionFr from '@assets/docs/fr/inspection.md';
+import savingAndFilesFr from '@assets/docs/fr/saving-and-files.md';
+import cloudFr from '@assets/docs/fr/cloud.md';
+import gettingStartedEs from '@assets/docs/es/getting-started.md';
+import boardAndToolsEs from '@assets/docs/es/board-and-tools.md';
+import shortcutsEs from '@assets/docs/es/shortcuts.md';
+import settingsEs from '@assets/docs/es/settings.md';
+import componentsAndOptionsEs from '@assets/docs/es/components-and-options.md';
+import wiresAndConnectionsEs from '@assets/docs/es/wires-and-connections.md';
+import customComponentsEs from '@assets/docs/es/custom-components.md';
+import simulationEs from '@assets/docs/es/simulation.md';
+import inspectionEs from '@assets/docs/es/inspection.md';
+import savingAndFilesEs from '@assets/docs/es/saving-and-files.md';
+import cloudEs from '@assets/docs/es/cloud.md';
 
 /**
  * One documentation page. `urls` maps a language to the build-time hashed URL
@@ -47,22 +80,42 @@ export const DOC_SECTIONS = [
       {
         id: 'getting-started',
         titleKey: 'documentation.pages.gettingStarted',
-        urls: { en: gettingStartedEn }
+        urls: {
+          en: gettingStartedEn,
+          de: gettingStartedDe,
+          fr: gettingStartedFr,
+          es: gettingStartedEs
+        }
       },
       {
         id: 'board-and-tools',
         titleKey: 'documentation.pages.boardAndTools',
-        urls: { en: boardAndToolsEn }
+        urls: {
+          en: boardAndToolsEn,
+          de: boardAndToolsDe,
+          fr: boardAndToolsFr,
+          es: boardAndToolsEs
+        }
       },
       {
         id: 'shortcuts',
         titleKey: 'documentation.pages.shortcuts',
-        urls: { en: shortcutsEn }
+        urls: {
+          en: shortcutsEn,
+          de: shortcutsDe,
+          fr: shortcutsFr,
+          es: shortcutsEs
+        }
       },
       {
         id: 'settings',
         titleKey: 'documentation.pages.settings',
-        urls: { en: settingsEn }
+        urls: {
+          en: settingsEn,
+          de: settingsDe,
+          fr: settingsFr,
+          es: settingsEs
+        }
       }
     ]
   },
@@ -73,17 +126,32 @@ export const DOC_SECTIONS = [
       {
         id: 'components-and-options',
         titleKey: 'documentation.pages.componentsAndOptions',
-        urls: { en: componentsAndOptionsEn }
+        urls: {
+          en: componentsAndOptionsEn,
+          de: componentsAndOptionsDe,
+          fr: componentsAndOptionsFr,
+          es: componentsAndOptionsEs
+        }
       },
       {
         id: 'wires-and-connections',
         titleKey: 'documentation.pages.wiresAndConnections',
-        urls: { en: wiresAndConnectionsEn }
+        urls: {
+          en: wiresAndConnectionsEn,
+          de: wiresAndConnectionsDe,
+          fr: wiresAndConnectionsFr,
+          es: wiresAndConnectionsEs
+        }
       },
       {
         id: 'custom-components',
         titleKey: 'documentation.pages.customComponents',
-        urls: { en: customComponentsEn }
+        urls: {
+          en: customComponentsEn,
+          de: customComponentsDe,
+          fr: customComponentsFr,
+          es: customComponentsEs
+        }
       }
     ]
   },
@@ -94,12 +162,22 @@ export const DOC_SECTIONS = [
       {
         id: 'simulation',
         titleKey: 'documentation.pages.simulation',
-        urls: { en: simulationEn }
+        urls: {
+          en: simulationEn,
+          de: simulationDe,
+          fr: simulationFr,
+          es: simulationEs
+        }
       },
       {
         id: 'inspection',
         titleKey: 'documentation.pages.inspection',
-        urls: { en: inspectionEn }
+        urls: {
+          en: inspectionEn,
+          de: inspectionDe,
+          fr: inspectionFr,
+          es: inspectionEs
+        }
       }
     ]
   },
@@ -110,12 +188,22 @@ export const DOC_SECTIONS = [
       {
         id: 'saving-and-files',
         titleKey: 'documentation.pages.savingAndFiles',
-        urls: { en: savingAndFilesEn }
+        urls: {
+          en: savingAndFilesEn,
+          de: savingAndFilesDe,
+          fr: savingAndFilesFr,
+          es: savingAndFilesEs
+        }
       },
       {
         id: 'cloud',
         titleKey: 'documentation.pages.cloud',
-        urls: { en: cloudEn }
+        urls: {
+          en: cloudEn,
+          de: cloudDe,
+          fr: cloudFr,
+          es: cloudEs
+        }
       }
     ]
   }

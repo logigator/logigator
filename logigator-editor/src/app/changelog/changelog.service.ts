@@ -9,6 +9,9 @@ import { CookieService } from '../storage/cookie.service';
 import { AnalyticsService } from '../analytics/analytics.service';
 import { AnalyticsEvent } from '../analytics/analytics.mapping';
 import changelogEn from '@assets/changelog/changelog.en.md';
+import changelogDe from '@assets/changelog/changelog.de.md';
+import changelogFr from '@assets/changelog/changelog.fr.md';
+import changelogEs from '@assets/changelog/changelog.es.md';
 
 const LAST_SEEN_KEY = 'logigator.changelog.lastSeenVersion';
 
@@ -32,7 +35,10 @@ const LEGACY_COOKIES = ['tutorials', 'autoStartSim', 'sneaks'] as const;
  * ship a translated changelog; until then every language resolves to English.
  */
 const CHANGELOG_URLS: Readonly<Record<string, string>> = {
-  en: changelogEn
+  en: changelogEn,
+  de: changelogDe,
+  fr: changelogFr,
+  es: changelogEs
 };
 
 /**
@@ -44,8 +50,8 @@ const CHANGELOG_URLS: Readonly<Record<string, string>> = {
  * lets `maybeAutoOpen` decide entirely from `localStorage` — the markdown is
  * only fetched when the dialog actually opens, never just to check for updates.
  *
- * The changelog body ships in English only; localized dialog chrome is
- * translated separately.
+ * The changelog body is localized per {@link CHANGELOG_URLS}, with English as
+ * the fallback for any language without its own entry.
  */
 @Injectable({
   providedIn: 'root'
