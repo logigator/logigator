@@ -8,7 +8,8 @@ import { Component } from '../components/component';
 import { Wire } from '../wires/wire';
 import { WireDirection } from '../wires/wire-direction.enum';
 import { ActionContainer } from '../actions/action-container';
-import { makeAnd } from '../../testing/factories';
+import { ProjectMetadataStore } from '../persistence/project-metadata.store';
+import { makeAnd, makeInput } from '../../testing/factories';
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -42,6 +43,24 @@ function makeProject(
     removeWire: vi.fn(),
     startPasteSession: vi.fn()
   } as unknown as MockedObject<Project>;
+}
+
+// Registers a mock project in the metadata store so paste() can tell a plain
+// project from a custom-component document. trackDirty=false — the mock has
+// no actionManager.actionChange$.
+function registerAs(project: Project, type: 'project' | 'comp'): void {
+  TestBed.inject(ProjectMetadataStore).register(
+    project,
+    {
+      id: '',
+      name: 'test',
+      type,
+      source: 'browser',
+      hash: '',
+      isPublic: false
+    },
+    false
+  );
 }
 
 // ── ClipboardService ──────────────────────────────────────────────────────────
@@ -306,8 +325,8 @@ describe('ClipboardService', () => {
     });
 
     it('skips unknown component types gracefully', () => {
-      // Manually set clipboard with an unknown type; paste should not throw
-      // and startPasteSession receives an empty component array.
+      // Manually set clipboard with an unknown type; paste should not throw,
+      // and with nothing left to place no session is opened.
       const comp = makeAnd();
       compsToDestroy.push(comp);
       const src = makeProject([comp]);
@@ -323,9 +342,59 @@ describe('ClipboardService', () => {
       const dest = makeProject();
       expect(() => service.paste(dest)).not.toThrow();
 
+      expect(dest.startPasteSession).not.toHaveBeenCalled();
+    });
+
+    it('drops plugs when pasting outside a custom component', () => {
+      const plug = makeInput();
+      const gate = makeAnd();
+      compsToDestroy.push(plug, gate);
+      const src = makeProject([plug, gate]);
+      service.copy(src);
+
+      const dest = makeProject();
+      registerAs(dest, 'project');
+      service.paste(dest);
+
       const mockFn = dest.startPasteSession as ReturnType<typeof vi.fn>;
       const [freshComps] = mockFn.mock.calls[0] as [Component[], Wire[]];
-      expect(freshComps).toHaveLength(0);
+      expect(freshComps).toHaveLength(1);
+      expect(freshComps[0].config.type).toBe(gate.config.type);
+      for (const c of freshComps) {
+        if (!c.destroyed) c.destroy({ children: true });
+      }
+    });
+
+    it('opens no session when only plugs were copied into a project', () => {
+      const plug = makeInput();
+      compsToDestroy.push(plug);
+      const src = makeProject([plug]);
+      service.copy(src);
+
+      const dest = makeProject();
+      registerAs(dest, 'project');
+      service.paste(dest);
+
+      expect(dest.startPasteSession).not.toHaveBeenCalled();
+    });
+
+    it('keeps plugs when pasting into a custom component', () => {
+      const plug = makeInput();
+      compsToDestroy.push(plug);
+      const src = makeProject([plug]);
+      service.copy(src);
+
+      const dest = makeProject();
+      registerAs(dest, 'comp');
+      service.paste(dest);
+
+      const mockFn = dest.startPasteSession as ReturnType<typeof vi.fn>;
+      const [freshComps] = mockFn.mock.calls[0] as [Component[], Wire[]];
+      expect(freshComps).toHaveLength(1);
+      expect(freshComps[0].config.type).toBe(plug.config.type);
+      for (const c of freshComps) {
+        if (!c.destroyed) c.destroy({ children: true });
+      }
     });
   });
 });

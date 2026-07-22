@@ -636,7 +636,9 @@ const en = {
   },
   clipboard: {
     pastePartial:
-      'Some elements could not be pasted — their component type is no longer available.'
+      'Some elements could not be pasted — their component type is no longer available.',
+    pastePlugsSkipped:
+      'Input and output plugs were not pasted — they are only supported inside custom components.'
   },
   bugReport: {
     title: 'Report a problem',

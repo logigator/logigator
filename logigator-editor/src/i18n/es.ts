@@ -646,7 +646,9 @@ const es: TranslationSchema = {
   },
   clipboard: {
     pastePartial:
-      'Algunos elementos no se pudieron pegar: su tipo de componente ya no está disponible.'
+      'Algunos elementos no se pudieron pegar: su tipo de componente ya no está disponible.',
+    pastePlugsSkipped:
+      'Los conectores de entrada y salida no se pegaron: solo se admiten dentro de componentes personalizados.'
   },
   bugReport: {
     title: 'Informar de un problema',

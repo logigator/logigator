@@ -649,7 +649,9 @@ const fr: TranslationSchema = {
   },
   clipboard: {
     pastePartial:
-      "Certains éléments n'ont pas pu être collés — leur type de composant n'est plus disponible."
+      "Certains éléments n'ont pas pu être collés — leur type de composant n'est plus disponible.",
+    pastePlugsSkipped:
+      "Les fiches d'entrée et de sortie n'ont pas été collées — elles ne sont prises en charge qu'à l'intérieur des composants personnalisés."
   },
   bugReport: {
     title: 'Signaler un problème',

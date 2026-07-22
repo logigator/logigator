@@ -646,7 +646,9 @@ const de: TranslationSchema = {
   },
   clipboard: {
     pastePartial:
-      'Einige Elemente konnten nicht eingefügt werden — ihr Komponententyp ist nicht mehr verfügbar.'
+      'Einige Elemente konnten nicht eingefügt werden — ihr Komponententyp ist nicht mehr verfügbar.',
+    pastePlugsSkipped:
+      'Ein- und Ausgangsstecker wurden nicht eingefügt — sie werden nur innerhalb benutzerdefinierter Komponenten unterstützt.'
   },
   bugReport: {
     title: 'Problem melden',

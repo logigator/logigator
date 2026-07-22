@@ -9,6 +9,8 @@ import { ActionContainer } from '../actions/action-container';
 import { RemoveComponentsAction } from '../actions/actions/remove-components.action';
 import { RemoveWiresAction } from '../actions/actions/remove-wires.action';
 import { ComponentProviderService } from '../components/component-provider.service';
+import { ComponentCategory } from '../components/component-category.enum';
+import { ProjectMetadataStore } from '../persistence/project-metadata.store';
 import { getStaticDI } from '../utils/get-di';
 import { LoggingService } from '../logging/logging.service';
 import { ToastService } from '../logging/toast.service';
@@ -25,6 +27,7 @@ export class ClipboardService {
   private readonly logging = inject(LoggingService);
   private readonly toast = inject(ToastService);
   private readonly translation = inject(TranslationService);
+  private readonly metadataStore = inject(ProjectMetadataStore);
 
   private readonly _clipboard = signal<ClipboardData | null>(null);
 
@@ -70,10 +73,19 @@ export class ClipboardService {
     const { components, wires } = data;
     const provider = getStaticDI(ComponentProviderService);
 
+    // Plugs define a custom component's ports — outside a custom-component
+    // document they are meaningless, so pasting there drops them.
+    const allowPlugs = this.metadataStore.getMetadata(project)?.type === 'comp';
+
+    let skippedPlugs = 0;
     const freshComponents: Component[] = [];
     for (const s of components) {
       const config = provider.getComponent(s.type);
       if (!config) continue;
+      if (!allowPlugs && config.category === ComponentCategory.PORT) {
+        skippedPlugs++;
+        continue;
+      }
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { id: _id, type: _type, pos, ...rest } = s;
       freshComponents.push(
@@ -98,13 +110,26 @@ export class ClipboardService {
       'ClipboardService'
     );
 
+    if (skippedPlugs > 0) {
+      this.toast.warn(
+        this.translation.translate('clipboard.pastePlugsSkipped'),
+        'ClipboardService'
+      );
+    }
+
     // A clipboard component whose type is no longer registered is skipped
-    const skipped = components.length - freshComponents.length;
+    const skipped = components.length - freshComponents.length - skippedPlugs;
     if (skipped > 0) {
       this.toast.warn(
         this.translation.translate('clipboard.pastePartial'),
         'ClipboardService'
       );
+    }
+
+    // Everything was filtered out — an empty paste session would only offer
+    // a cancel gesture, so don't open one.
+    if (freshComponents.length === 0 && freshWires.length === 0) {
+      return;
     }
 
     project.startPasteSession(freshComponents, freshWires);
