@@ -252,13 +252,14 @@ describe('WorkModeRouter in SELECT mode', () => {
       window.dispatchEvent(new KeyboardEvent('keyup', { key: 'Alt' }));
     }
 
-    // Cut at x = 3.5 (the first half-grid position outside the rect): the
-    // inside piece is selected, the outside remnant is not.
+    // Cut at x = 2.5 (the first half-grid position at or outside the rect's
+    // right edge, which is already half-grid aligned here): the inside piece
+    // is selected, the outside remnant is not.
     const wires = Array.from(project.wires);
     expect(wires).toHaveLength(2);
     const selected = Array.from(project.selectionManager.selectedWires);
     expect(selected).toHaveLength(1);
-    expect(selected[0].length).toBe(3);
+    expect(selected[0].length).toBe(2);
   });
 
   it('the scissor mode set by the toggle scissors without any key held', () => {

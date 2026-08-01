@@ -21,10 +21,10 @@ export type WireCutResult =
 //     is the piece overlapping the rect (to be selected), the others are the
 //     outside remnants.
 //
-// Cuts land on the first half-grid position OUTSIDE the rect on each side so
-// the resulting outside pieces never share a half-cell with the rect's
-// interior. This is required because the SelectionManager uses the piece IDs
-// (not gridBounds re-query) to decide which post-cut wires to select.
+// Cuts land on the first half-grid position AT OR OUTSIDE the rect on each
+// side — wire endpoints live on the half-grid lattice (k + 0.5), so that is
+// the finest granularity a cut can have. The rect itself is free-form (the
+// marquee is not snapped), hence the snapping.
 export function cutWire(wire: Wire, rect: Rectangle): WireCutResult {
   if (rect.containsRect(wire.gridBounds)) return { kind: 'keep' };
 
@@ -44,8 +44,11 @@ export function cutWire(wire: Wire, rect: Rectangle): WireCutResult {
   // of gridBounds is what produced the intersect; do not select.
   if (wPerp < rPerpStart || wPerp > rPerpEnd) return { kind: 'skip' };
 
-  const leftCut = Math.max(wStart, Math.floor(rStart) - 0.5);
-  const rightCut = Math.min(wEnd, Math.ceil(rEnd) + 0.5);
+  // Cut points sit on the half-grid lattice the wire's endpoints live on: the
+  // last lattice position at or before the rect's near edge, the first at or
+  // after its far edge.
+  const leftCut = Math.max(wStart, Math.floor(rStart - 0.5) + 0.5);
+  const rightCut = Math.min(wEnd, Math.ceil(rEnd - 0.5) + 0.5);
 
   // Centerline X (or Y) doesn't actually overlap the rect range.
   if (rightCut <= leftCut) return { kind: 'skip' };

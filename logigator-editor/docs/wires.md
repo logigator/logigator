@@ -322,19 +322,19 @@ Pure function — no DI, no `Project` access. Returns one of three variants:
 For a horizontal wire (vertical is the same mirrored onto the Y axis):
 
 ```
-leftCut  = max(wStart, floor(rect.x) - 0.5)
-rightCut = min(wEnd,   ceil(rect.right) + 0.5)
+leftCut  = max(wStart, floor(rect.x - 0.5) + 0.5)
+rightCut = min(wEnd,   ceil(rect.right - 0.5) + 0.5)
 ```
 
-Cuts land on the first half-grid position **outside** the rectangle on each side. This guarantees the outside pieces' `gridBounds.right` (or `.bottom`) lands at an integer ≤ `rect.x` (or ≥ `rect.right` for the bottom), strictly excluding the outside pieces from any future `Rectangle.intersects(rect)` test on integer-aligned rects. The outside pieces' positions are not used to decide what's selected — `SelectionManager` holds the new `Wire` instances directly in a local array and picks the inside one by ID — so the non-integer (user-drawn) rectangle case is handled correctly without re-query.
+Cuts land on the first half-grid position **at or outside** the rectangle on each side — wire endpoints live on the half-grid lattice (`n + 0.5`), so that is the finest granularity a cut can have, and the marquee is free-form (never snapped), so its edges are arbitrary floats. A rectangle drawn strictly inside one grid unit therefore cuts exactly that unit; one whose edges are already half-grid aligned cuts exactly on them. The outside pieces' positions are not used to decide what's selected — `SelectionManager` holds the new `Wire` instances directly in a local array and picks the inside one by ID — so nothing depends on where the outside pieces' `gridBounds` land relative to the rectangle.
 
 ### Worked example
 
 Wire at `(3.5, 4.5)` length 5 → endpoints `3.5 → 8.5`. Rectangle `(5, 4, 2, 1)` → `rect.x = 5`, `rect.right = 7`.
 
 ```
-leftCut  = max(3.5, floor(5) - 0.5)  = 4.5
-rightCut = min(8.5, ceil(7) + 0.5)   = 7.5
+leftCut  = max(3.5, floor(4.5) + 0.5) = 4.5
+rightCut = min(8.5, ceil(6.5) + 0.5)  = 7.5
 
 pieces:
   [0] outside-left  position=(3.5, 4.5) length=1   (3.5 → 4.5)

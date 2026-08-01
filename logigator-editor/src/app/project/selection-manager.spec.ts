@@ -347,9 +347,9 @@ describe('SelectionManager', () => {
         // Cut produces three live Wire instances added directly via project.addWire.
         expect(addedWires.length).toBe(3);
 
-        const insidePiece = addedWires.find((w) => w.position.x === 3.5);
+        const insidePiece = addedWires.find((w) => w.position.x === 4.5);
         const outsideLeft = addedWires.find((w) => w.position.x === 0.5);
-        const outsideRight = addedWires.find((w) => w.position.x === 8.5);
+        const outsideRight = addedWires.find((w) => w.position.x === 7.5);
 
         expect(insidePiece).toBeDefined();
         expect(outsideLeft).toBeDefined();

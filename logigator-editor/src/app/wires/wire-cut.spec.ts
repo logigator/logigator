@@ -66,7 +66,7 @@ describe('cutWire', () => {
 
     it('cuts a wire crossing only the left edge into 2 pieces, insideIndex=1', () => {
       // Wire (3.5, 4.5) length 5 → endpoints 3.5 → 8.5. Rect (5, 4, 5, 1) → rect.right=10.
-      // leftCut = floor(5) - 0.5 = 4.5; rightCut clamped to wEnd=8.5.
+      // leftCut = 4.5 (last half-grid before 5); rightCut clamped to wEnd=8.5.
       const wire = fakeWire(WireDirection.HORIZONTAL, 3.5, 4.5, 5);
       const result = cutWire(wire, new Rectangle(5, 4, 5, 1));
 
@@ -84,7 +84,7 @@ describe('cutWire', () => {
 
     it('cuts a wire crossing only the right edge into 2 pieces, insideIndex=0', () => {
       // Wire (3.5, 4.5) length 5. Rect (0, 4, 7, 1) → rect.right=7.
-      // leftCut clamped to wStart=3.5. rightCut = ceil(7) + 0.5 = 7.5.
+      // leftCut clamped to wStart=3.5. rightCut = 7.5 (first half-grid after 7).
       const wire = fakeWire(WireDirection.HORIZONTAL, 3.5, 4.5, 5);
       const result = cutWire(wire, new Rectangle(0, 4, 7, 1));
 
@@ -120,13 +120,10 @@ describe('cutWire', () => {
       expect(result.pieces[2].length).toBe(1);
     });
 
-    it('snaps non-integer rect bounds so outside pieces sit strictly outside the rect', () => {
+    it('snaps non-integer rect bounds out to the enclosing half-grid positions', () => {
       // Wire (0.5, 4.5) length 10. Rect (4.7, 4, 2.6, 1) → rect.x=4.7, rect.right=7.3.
-      // leftCut = floor(4.7) - 0.5 = 3.5; rightCut = ceil(7.3) + 0.5 = 8.5.
-      // Outside pieces have gridBounds ending exactly at integer 4 and starting at 8 —
-      // strictly outside the rect [4.7, 7.3] (so the SelectionManager's id-based
-      // inside lookup gives the right answer regardless of the leak risk for
-      // non-integer bounds).
+      // leftCut = 4.5 (last half-grid at or before 4.7);
+      // rightCut = 7.5 (first half-grid at or after 7.3).
       const wire = fakeWire(WireDirection.HORIZONTAL, 0.5, 4.5, 10);
       const result = cutWire(wire, new Rectangle(4.7, 4, 2.6, 1));
 
@@ -134,16 +131,16 @@ describe('cutWire', () => {
       if (result.kind !== 'cut') return;
 
       expect(result.pieces.length).toBe(3);
-      expect(result.pieces[0].length).toBe(3); // 0.5 → 3.5
-      expect(result.pieces[1].position.x).toBe(3.5);
-      expect(result.pieces[1].length).toBe(5); // 3.5 → 8.5
-      expect(result.pieces[2].position.x).toBe(8.5);
-      expect(result.pieces[2].length).toBe(2); // 8.5 → 10.5
+      expect(result.pieces[0].length).toBe(4); // 0.5 → 4.5
+      expect(result.pieces[1].position.x).toBe(4.5);
+      expect(result.pieces[1].length).toBe(3); // 4.5 → 7.5
+      expect(result.pieces[2].position.x).toBe(7.5);
+      expect(result.pieces[2].length).toBe(3); // 7.5 → 10.5
     });
 
-    it('handles a half-grid-aligned rect by snapping cuts further out', () => {
-      // Rect.x=4.5, rect.right=7.5 (both at half-grid).
-      // leftCut = floor(4.5) - 0.5 = 3.5; rightCut = ceil(7.5) + 0.5 = 8.5.
+    it('cuts a half-grid-aligned rect exactly on its own edges', () => {
+      // Rect.x=4.5, rect.right=7.5 — already on the half-grid lattice, so the
+      // snapping is a no-op and the inside piece spans the rect exactly.
       const wire = fakeWire(WireDirection.HORIZONTAL, 0.5, 4.5, 10);
       const result = cutWire(wire, new Rectangle(4.5, 4, 3, 1));
 
@@ -151,14 +148,34 @@ describe('cutWire', () => {
       if (result.kind !== 'cut') return;
 
       expect(result.pieces.length).toBe(3);
-      expect(result.pieces[1].position.x).toBe(3.5);
-      expect(result.pieces[1].length).toBe(5);
+      expect(result.pieces[1].position.x).toBe(4.5);
+      expect(result.pieces[1].length).toBe(3);
+    });
+
+    // The scissor marquee is free-form, so boxing a single grid unit means
+    // drawing inside the segment the user aims at — its endpoints are at cell
+    // centres. Snapping must widen that rect to exactly the one unit it sits
+    // in, never to the neighbouring units.
+    it('cuts exactly one unit for a rect drawn inside a single grid unit', () => {
+      // Wire (0.5, 4.5) length 10. Rect (4.7, 4, 0.6, 1) → 4.7 … 5.3, which
+      // lies strictly between the adjacent half-grid positions 4.5 and 5.5.
+      const wire = fakeWire(WireDirection.HORIZONTAL, 0.5, 4.5, 10);
+      const result = cutWire(wire, new Rectangle(4.7, 4, 0.6, 1));
+
+      expect(result.kind).toBe('cut');
+      if (result.kind !== 'cut') return;
+
+      expect(result.pieces.length).toBe(3);
+      expect(result.insideIndex).toBe(1);
+      expect(result.pieces[1].position.x).toBe(4.5);
+      expect(result.pieces[1].length).toBe(1);
+      expect(result.pieces[2].position.x).toBe(5.5);
     });
 
     it('returns kind=keep when the wire endpoint aligns exactly with the rect edge', () => {
       // Wire (4.5, 4.5) length 4 → endpoints 4.5 → 8.5. Rect (5, 4, 4, 1) → rect.x=5, rect.right=9.
       // leftCut = 4.5 = wStart → no outside-left.
-      // rightCut = ceil(9) + 0.5 = 9.5; clamped to wEnd=8.5 → no outside-right.
+      // rightCut = 9.5; clamped to wEnd=8.5 → no outside-right.
       // Inside piece would equal the original wire → keep.
       const wire = fakeWire(WireDirection.HORIZONTAL, 4.5, 4.5, 4);
       const result = cutWire(wire, new Rectangle(5, 4, 4, 1));
@@ -178,7 +195,7 @@ describe('cutWire', () => {
   describe('vertical wire', () => {
     it('cuts a vertical wire crossing the top edge into 2 pieces', () => {
       // Wire (4.5, 3.5) length 5. Rect (4, 5, 1, 5) → rect.y=5, rect.bottom=10.
-      // topCut = floor(5) - 0.5 = 4.5. bottomCut clamped to wEnd=8.5.
+      // topCut = 4.5 (last half-grid before 5). bottomCut clamped to wEnd=8.5.
       const wire = fakeWire(WireDirection.VERTICAL, 4.5, 3.5, 5);
       const result = cutWire(wire, new Rectangle(4, 5, 1, 5));
 
