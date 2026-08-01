@@ -62,6 +62,23 @@ describe('AutomationApiService simulation', () => {
     expect(status.diagnostics).toBeUndefined();
   });
 
+  it('enter resolves with a running session when auto-start is on', async () => {
+    // The shipped default — an agent hits this path, so the documented
+    // pause → setInput → step recipe has to work from a running session.
+    TestBed.inject(EditorSettingsService).autoStartSimulation.set(true);
+    const lever = makeSwitch();
+    project.addComponent(lever);
+
+    const status = await api.simEnter();
+    expect(status.state).toBe('running');
+
+    simulation.pause();
+    expect(simulation.state()).toBe('ready');
+    await api.simSetInput(lever.id, true);
+    await api.simStep();
+    expect(fakeWorker.postedOfKind('step').length).toBeGreaterThan(0);
+  });
+
   it('enter reports the diagnostics that blocked entry instead of just refusing', async () => {
     const type = TestBed.inject(CustomComponentRegistry).registerSnapshot({
       kind: 'snapshot',

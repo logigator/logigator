@@ -160,8 +160,13 @@ Mutations are refused while the editor holds project state mid-change:
 | `no-project`     | no document is open                                                                                                     |
 
 `applyEdit` reports this as a per-op error; `undo`/`redo` return `false`;
-`importProject` / `newProject` throw. View operations (camera, highlights) are
-always allowed.
+`importProject` / `newProject` throw. Reads (`getProject`, `getElements`,
+`check`, `exportProject`) and view operations (camera, highlights) are always
+allowed — `getProject().busy` is how a caller sees the state.
+
+A placement is also refused when it would close a custom-component dependency
+cycle (placing a master into the editor for a master it feeds), the same guard
+the palette applies by hiding those masters.
 
 ### Validation
 
@@ -179,8 +184,10 @@ it as a browser draft, exactly like the file import in the UI.
 
 `sim.enter()` compiles and boots the engine, resolving once it is ready — or
 with `state: 'inactive'` plus the `diagnostics` that blocked entry, so an agent
-sees _why_. Then `play` / `pause` / `step` / `stop` / `status` /
-`setTarget(value, unit)`.
+sees _why_. It resolves `'running'` rather than `'ready'` when the user's
+auto-start-simulation preference is on (the default), so read the returned
+`state` instead of assuming a paused session. Then `play` / `pause` / `step` /
+`stop` / `status` / `setTarget(value, unit)`.
 
 `sim.setInput(componentId, value)` is **absolute**: a lever already at `value`
 sends no further engine event, a button pulses on `true` and ignores `false`.

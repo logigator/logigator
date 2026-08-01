@@ -38,6 +38,7 @@ import { TogglePortNegationAction } from '../actions/actions/toggle-port-negatio
 import { Component, PortSide } from '../components/component';
 import { ComponentOption } from '../components/component-option';
 import { ComponentProviderService } from '../components/component-provider.service';
+import { wouldCyclePlacement } from '../components/custom/placement-cycle';
 import { Project } from '../project/project';
 import { Direction } from '../utils/direction';
 import { offsetRect } from '../utils/grid';
@@ -251,6 +252,15 @@ export function applyEditOps(
             op.options ?? {}
           );
           if (optionErrors) throw new EditOpError(index, op.op, optionErrors);
+          // The palette hides masters that would cycle; an agent can name any
+          // type id, so the same guard applies here.
+          if (wouldCyclePlacement(project, config)) {
+            throw new EditOpError(
+              index,
+              op.op,
+              `placing type ${op.type} here would close a dependency cycle`
+            );
+          }
 
           const component = Component.deserialize(
             {

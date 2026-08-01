@@ -6,6 +6,8 @@ import { makeAnd, makeWire } from '../../testing/factories';
 import { setStaticDIInjector } from '../utils/get-di';
 import { Project } from '../project/project';
 import { ComponentProviderService } from '../components/component-provider.service';
+import { CustomComponentRegistry } from '../components/custom/custom-component-registry.service';
+import { ProjectMetadataStore } from '../persistence/project-metadata.store';
 import { BuiltInComponentType } from '../components/component-type.enum';
 import { WireDirection } from '../wires/wire-direction.enum';
 import { Direction } from '../utils/direction';
@@ -215,6 +217,32 @@ describe('applyEditOps', () => {
       });
       expect(result.ok).toBe(false);
       expect(!result.ok && result.errors[0].message).toContain('out of range');
+      expect(project.componentCount).toBe(0);
+    });
+
+    it('refuses a placement that would close a dependency cycle', () => {
+      // Editing master A while placing A into itself — what the palette hides
+      // in the UI, and an agent can otherwise name by type id.
+      const registry = TestBed.inject(CustomComponentRegistry);
+      const master = registry.createMaster({ symbol: 'A', id: 'a' }, 'browser');
+      TestBed.inject(ProjectMetadataStore).register(project, {
+        id: 'a',
+        name: 'A',
+        type: 'comp',
+        source: 'browser',
+        hash: '',
+        isPublic: false
+      });
+
+      const result = apply({
+        op: 'addComponent',
+        type: master,
+        pos: [0, 0],
+        options: {}
+      });
+      expect(!result.ok && result.errors[0].message).toContain(
+        'dependency cycle'
+      );
       expect(project.componentCount).toBe(0);
     });
 

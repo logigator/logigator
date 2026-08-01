@@ -265,16 +265,21 @@ export class AutomationApiService {
   public applyEdit(ops: EditOp[]): EditResult {
     const refusal = this.refuseWhenBusy('applyEdit');
     if (refusal) return refusal;
-    if (!Array.isArray(ops)) {
+    const project = this.activeProject;
+    if (!project || !Array.isArray(ops)) {
       return {
         ok: false,
         errors: [
-          { index: -1, op: 'applyEdit', message: 'ops must be an array' }
+          {
+            index: -1,
+            op: 'applyEdit',
+            message: project ? 'ops must be an array' : 'no project is open'
+          }
         ]
       };
     }
     return applyEditOps(ops, {
-      project: this.activeProject!,
+      project,
       provider: this.componentProvider,
       debug: (message) => this.logging.debug(message, 'AutomationApiService')
     });
