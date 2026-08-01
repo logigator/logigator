@@ -9,6 +9,8 @@ export interface Theme {
   wireSelectColor: number;
   /** Tint for elements in an invalid state (e.g. colliding drag ghosts). */
   invalid: number;
+  /** Fill of the transient regions an automation caller marks for the user. */
+  highlight: number;
   fontTint: number;
   ledOn: number;
   ledOff: number;

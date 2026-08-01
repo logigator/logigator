@@ -158,6 +158,7 @@ export class Project extends Container {
       wire.refreshTint();
     }
     this._connectionPoints.refreshTheme();
+    this._floatingLayer.refreshTheme();
     if (triggerRender) this._ticker$.next('single');
   }
 

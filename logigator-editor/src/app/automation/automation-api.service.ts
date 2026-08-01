@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { Rectangle } from 'pixi.js';
+import { Point, Rectangle } from 'pixi.js';
 
 import { environment } from '../../environments/environment';
 import { ComponentProviderService } from '../components/component-provider.service';
@@ -32,12 +32,17 @@ import {
   EditResult,
   ElementList,
   ElementQuery,
+  FocusOptions,
+  FocusTarget,
+  GridPoint,
   GridRect,
+  HighlightRegion,
   LogigatorAutomationApi,
   PerOpError,
   PortReadout,
   ProjectState,
-  SimStatus
+  SimStatus,
+  ViewportInfo
 } from './automation-api.model';
 import { describeCatalog } from './catalog';
 import { applyEditOps } from './edit-ops';
@@ -45,6 +50,12 @@ import { buildPortLinkIndex, PortLinkIndex } from './port-index';
 
 /** How long a snapshot-dependent call waits for a frame before giving up. */
 const FRAME_WAIT_MS = 2000;
+
+/** Clearance `focus()` keeps around its target, in grid units. */
+const DEFAULT_FOCUS_PADDING = 2;
+
+/** Zoom cap `focus()` respects, so framing one gate does not fill the screen. */
+const DEFAULT_FOCUS_MAX_ZOOM = 1;
 
 /**
  * The transport-agnostic automation facade: a semantic, JSON-in/JSON-out view
@@ -125,7 +136,21 @@ export class AutomationApiService {
           this.simSetInput(componentId, value),
         readPorts: (componentIds?: number[]): Promise<PortReadout[]> =>
           this.simReadPorts(componentIds)
-      })
+      }),
+      camera: Object.freeze({
+        getViewport: (): ViewportInfo => this.getViewport(),
+        pan: (delta: GridPoint): void => this.cameraPan(delta),
+        setCenter: (pos: GridPoint): void => this.cameraSetCenter(pos),
+        setZoom: (factor: number, center?: GridPoint): void =>
+          this.cameraSetZoom(factor, center),
+        zoomIn: (): void => this.requireProject().viewport.zoomIn(),
+        zoomOut: (): void => this.requireProject().viewport.zoomOut(),
+        zoom100: (): void => this.requireProject().viewport.zoom100(),
+        focus: (target: FocusTarget, opts?: FocusOptions): ViewportInfo =>
+          this.cameraFocus(target, opts)
+      }),
+      highlight: (regions: HighlightRegion[]): void => this.highlight(regions),
+      clearHighlights: (): void => this.clearHighlights()
     });
   }
 
@@ -427,6 +452,153 @@ export class AutomationApiService {
     });
   }
 
+  // -- Camera --------------------------------------------------------------
+  //
+  // View operations are visual only: never a history entry, never part of a
+  // snapshot, and allowed during simulation. Agents speak grid units; the
+  // `ViewportController` speaks screen px, so every call converts through the
+  // current zoom here.
+
+  public getViewport(): ViewportInfo {
+    const project = this.requireProject();
+    const state = project.viewport.viewportState;
+    return {
+      view: toGridRect(project.viewport.gridView(new Rectangle())),
+      zoom: state.scale,
+      screen: { width: state.viewportSize.x, height: state.viewportSize.y }
+    };
+  }
+
+  /** Moves the camera by a grid-space delta: +x scrolls the view right. */
+  public cameraPan(delta: GridPoint): void {
+    const project = this.requireProject();
+    const factor = project.viewport.viewportState.scale * environment.gridSize;
+    project.viewport.pan(new Point(-delta.x * factor, -delta.y * factor));
+    project.triggerTicker('single');
+  }
+
+  /** Centres the viewport on a grid point. */
+  public cameraSetCenter(pos: GridPoint): void {
+    const project = this.requireProject();
+    const state = project.viewport.viewportState;
+    const factor = state.scale * environment.gridSize;
+    project.viewport.setPosition(
+      new Point(
+        state.viewportSize.x / 2 - pos.x * factor,
+        state.viewportSize.y / 2 - pos.y * factor
+      )
+    );
+    project.triggerTicker('single');
+  }
+
+  /**
+   * Sets an absolute zoom factor (1 = 100%), clamped to the editor's zoom
+   * ladder, anchored on a grid point (the viewport centre by default).
+   */
+  public cameraSetZoom(factor: number, center?: GridPoint): void {
+    if (!Number.isFinite(factor) || factor <= 0) {
+      throw new Error('logigator: zoom factor must be a positive number');
+    }
+    const project = this.requireProject();
+    const current = project.viewport.viewportState.scale;
+    project.viewport.zoomBy(
+      factor / current,
+      center ? this.gridToScreen(center) : undefined
+    );
+  }
+
+  /**
+   * Frames a target: a grid rectangle, the union of some elements' bounds, or
+   * all content. Returns the resulting viewport so a caller can confirm what is
+   * on screen.
+   */
+  public cameraFocus(
+    target: FocusTarget,
+    options: FocusOptions = {}
+  ): ViewportInfo {
+    const project = this.requireProject();
+    const rect = this.resolveFocusTarget(target);
+    if (rect) {
+      project.viewport.fitBounds(
+        rect,
+        options.paddingGrid ?? DEFAULT_FOCUS_PADDING,
+        options.maxZoom ?? DEFAULT_FOCUS_MAX_ZOOM
+      );
+    }
+    return this.getViewport();
+  }
+
+  // -- Highlights ----------------------------------------------------------
+
+  /**
+   * Replaces the marked regions — the "look here" idiom an agent pairs with
+   * `camera.focus` after an edit, so the watching user sees what changed.
+   * Element ids resolve to bounds at call time: a highlight does not follow an
+   * element that later moves.
+   */
+  public highlight(regions: HighlightRegion[]): void {
+    const project = this.requireProject();
+    const rects: Rectangle[] = [];
+    for (const region of regions) {
+      if ('bounds' in region) {
+        rects.push(
+          new Rectangle(
+            region.bounds.x,
+            region.bounds.y,
+            region.bounds.width,
+            region.bounds.height
+          )
+        );
+      } else {
+        const rect = this.elementBounds(region.elementIds);
+        if (rect) rects.push(rect);
+      }
+    }
+    project.floatingLayer.showHighlights(rects);
+    project.triggerTicker('single');
+  }
+
+  public clearHighlights(): void {
+    // Tolerates a replaced or destroyed project: a new document brings a fresh
+    // floating layer, so there is nothing left to clear.
+    const project = this.activeProject;
+    if (!project) return;
+    project.floatingLayer.clearHighlights();
+    project.triggerTicker('single');
+  }
+
+  /** Grid point → screen px within the canvas, at the current camera. */
+  private gridToScreen(pos: GridPoint): Point {
+    const state = this.requireProject().viewport.viewportState;
+    const factor = state.scale * environment.gridSize;
+    return new Point(
+      (pos.x - state.gridOrigin.x) * factor,
+      (pos.y - state.gridOrigin.y) * factor
+    );
+  }
+
+  /** The rectangle a {@link FocusTarget} designates, `null` when it is empty. */
+  private resolveFocusTarget(target: FocusTarget): Rectangle | null {
+    const project = this.requireProject();
+    if (target === 'content') return project.getContentBounds();
+    if ('elementIds' in target) return this.elementBounds(target.elementIds);
+    return new Rectangle(target.x, target.y, target.width, target.height);
+  }
+
+  /** Union of the grid bounds of the given components/wires (ids share a space). */
+  private elementBounds(ids: readonly number[]): Rectangle | null {
+    const project = this.requireProject();
+    let union: Rectangle | null = null;
+    for (const id of ids) {
+      const element =
+        project.getComponentById(id) ?? project.getWireById(id) ?? null;
+      if (!element) continue;
+      const bounds = element.gridBounds;
+      union = union ? unionRect(union, bounds) : bounds.clone();
+    }
+    return union;
+  }
+
   // -- Shared internals ----------------------------------------------------
 
   /** The project every call operates on; never cached (see the class doc). */
@@ -493,6 +665,18 @@ export function toDiagnosticReport(
       ...(d.componentId !== undefined ? { componentId: d.componentId } : {})
     }))
   };
+}
+
+/** The smallest rectangle covering both inputs. */
+function unionRect(a: Rectangle, b: Rectangle): Rectangle {
+  const x = Math.min(a.x, b.x);
+  const y = Math.min(a.y, b.y);
+  return new Rectangle(
+    x,
+    y,
+    Math.max(a.right, b.right) - x,
+    Math.max(a.bottom, b.bottom) - y
+  );
 }
 
 /** Pixi `Rectangle` → the JSON rect the contract uses. */

@@ -46,6 +46,12 @@ export class FloatingLayer extends Container {
   // The rect's base position (grid units); a mid-move offset adds onto it.
   private readonly _selectionRectBase = new Point();
 
+  // Regions an automation caller asked to mark for the watching user. One
+  // Graphics for the whole set, redrawn per set (fill-only, so zoom needs no
+  // retuning). Lazily created; living in this layer means setOverlayVisible
+  // already keeps highlights out of image exports and previews.
+  private _highlights: Graphics | null = null;
+
   // Latest zoom scale, so the negation ghost can size itself screen-constant on
   // show (drag-session children get it fanned out in updateScale instead).
   private _currentScale = 1;
@@ -177,6 +183,44 @@ export class FloatingLayer extends Container {
     );
   }
 
+  /**
+   * Replaces the highlighted regions with `rects` (grid-space bounds). An empty
+   * set hides the overlay, so this doubles as the clear. Purely visual: never a
+   * history entry, never part of a snapshot, and allowed during simulation.
+   */
+  public showHighlights(rects: readonly Rectangle[]): void {
+    const g = this._ensureHighlights();
+    g.clear();
+    for (const rect of rects) {
+      g.rect(rect.x, rect.y, rect.width, rect.height);
+    }
+    // White base + theme tint, like every other themed overlay here, so a theme
+    // switch only rewrites the tint.
+    if (rects.length > 0) g.fill(0xffffff);
+    g.tint = getStaticDI(ThemingService).currentTheme().highlight;
+    g.visible = rects.length > 0;
+  }
+
+  public clearHighlights(): void {
+    if (this._highlights) {
+      this._highlights.clear();
+      this._highlights.visible = false;
+    }
+  }
+
+  /** Whether any region is currently marked. */
+  public get hasHighlights(): boolean {
+    return this._highlights?.visible ?? false;
+  }
+
+  /** Re-derives the theme-dependent overlay colors after a theme switch. */
+  public refreshTheme(): void {
+    if (this._highlights) {
+      this._highlights.tint =
+        getStaticDI(ThemingService).currentTheme().highlight;
+    }
+  }
+
   // Sizes the ghost like a real bubble: transform sets the dot size, the
   // zoom-dependent context keeps the border a fixed 1px (see
   // NegationBubbleGraphics).
@@ -200,6 +244,18 @@ export class FloatingLayer extends Container {
       this._selectionRect = rect;
     }
     return this._selectionRect;
+  }
+
+  private _ensureHighlights(): Graphics {
+    if (!this._highlights) {
+      const g = new Graphics();
+      g.alpha = 0.3;
+      // Below the drag ghosts: a highlight marks where something is, it must
+      // not wash over an element being placed on top of it.
+      this.addChildAt(g, 0);
+      this._highlights = g;
+    }
+    return this._highlights;
   }
 
   private _ensureNegationHoverGhost(): Graphics {

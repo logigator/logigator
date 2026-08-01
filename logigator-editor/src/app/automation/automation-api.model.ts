@@ -345,6 +345,22 @@ export interface LogigatorAutomationApi {
     setInput(componentId: number, value: boolean): Promise<void>;
     readPorts(componentIds?: number[]): Promise<PortReadout[]>;
   };
+
+  // camera — grid units in, grid units out; never a history entry
+  camera: {
+    getViewport(): ViewportInfo;
+    pan(delta: GridPoint): void;
+    setCenter(pos: GridPoint): void;
+    setZoom(factor: number, center?: GridPoint): void;
+    zoomIn(): void;
+    zoomOut(): void;
+    zoom100(): void;
+    focus(target: FocusTarget, opts?: FocusOptions): ViewportInfo;
+  };
+
+  // highlighting — visual only, replaces the whole set
+  highlight(regions: HighlightRegion[]): void;
+  clearHighlights(): void;
 }
 
 declare global {

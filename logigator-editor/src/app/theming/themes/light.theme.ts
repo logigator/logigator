@@ -9,6 +9,7 @@ export const LightTheme: Theme = {
   selectTint: 0xd0d0d0,
   wireSelectColor: 0x909090,
   invalid: 0xaa2222,
+  highlight: 0xe08a1e,
   fontTint: 0,
   ledOn: 0x27ae60,
   ledOff: 0x0
