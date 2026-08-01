@@ -25,6 +25,9 @@ export class ThemingService {
     this.loadTheme();
   }
 
+  /** Every selectable theme — the keys of the theme table itself. */
+  public readonly availableThemes = Object.keys(THEMES) as ThemeType[];
+
   public setTheme(theme: ThemeType): void {
     this._currentThemeType.set(theme);
     document.documentElement.classList.toggle(

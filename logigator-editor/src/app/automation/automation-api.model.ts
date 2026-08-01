@@ -361,6 +361,14 @@ export interface LogigatorAutomationApi {
   // highlighting — visual only, replaces the whole set
   highlight(regions: HighlightRegion[]): void;
   clearHighlights(): void;
+
+  // editor settings — persisted user preferences, never history entries
+  settings: {
+    describe(): SettingDescriptor[];
+    get(): SettingsState;
+    /** Validates the whole patch first; an unknown key or value applies nothing. */
+    set(patch: Partial<SettingsState>): SettingsState;
+  };
 }
 
 declare global {

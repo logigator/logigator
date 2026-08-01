@@ -19,6 +19,9 @@ import {
   SimulationService,
   TargetSpeedUnit
 } from '../simulation/simulation.service';
+import { EditorSettingsService } from '../settings/editor-settings.service';
+import { ThemeType } from '../theming/theme-type.enum';
+import { ThemingService } from '../theming/theming.service';
 import { TranslationService } from '../translation/translation.service';
 import { WorkMode } from '../work-mode/work-mode.enum';
 import { WorkModeService } from '../work-mode/work-mode.service';
@@ -41,6 +44,8 @@ import {
   PerOpError,
   PortReadout,
   ProjectState,
+  SettingDescriptor,
+  SettingsState,
   SimStatus,
   ViewportInfo
 } from './automation-api.model';
@@ -77,6 +82,8 @@ export class AutomationApiService {
   private readonly simulation = inject(SimulationService);
   private readonly workMode = inject(WorkModeService);
   private readonly translation = inject(TranslationService);
+  private readonly theming = inject(ThemingService);
+  private readonly settings = inject(EditorSettingsService);
   private readonly logging = inject(LoggingService);
 
   public readonly enabled = environment.debug.automationApi;
@@ -150,7 +157,13 @@ export class AutomationApiService {
           this.cameraFocus(target, opts)
       }),
       highlight: (regions: HighlightRegion[]): void => this.highlight(regions),
-      clearHighlights: (): void => this.clearHighlights()
+      clearHighlights: (): void => this.clearHighlights(),
+      settings: Object.freeze({
+        describe: (): SettingDescriptor[] => this.settingsDescribe(),
+        get: (): SettingsState => this.settingsGet(),
+        set: (patch: Partial<SettingsState>): SettingsState =>
+          this.settingsSet(patch)
+      })
     });
   }
 
@@ -597,6 +610,91 @@ export class AutomationApiService {
       union = union ? unionRect(union, bounds) : bounds.clone();
     }
     return union;
+  }
+
+  // -- Editor settings -----------------------------------------------------
+  //
+  // User preferences, not project edits: they persist exactly as if the user had
+  // flipped the controls and are never history entries. The boolean half is
+  // enumerated from `EditorSettingsService.settings`, so a preference added
+  // later shows up here on its own.
+
+  public settingsDescribe(): SettingDescriptor[] {
+    return [
+      { key: 'theme', kind: 'enum', values: [...this.theming.availableThemes] },
+      { key: 'language', kind: 'enum', values: this.availableLangs() },
+      ...this.settings.settings.map(
+        (setting): SettingDescriptor => ({
+          key: setting.key,
+          kind: 'boolean',
+          label: this.translation.translate(setting.labelKey)
+        })
+      )
+    ];
+  }
+
+  public settingsGet(): SettingsState {
+    const state: SettingsState = {
+      theme: this.theming.currentThemeType(),
+      language: this.translation.getActiveLang()
+    };
+    for (const setting of this.settings.settings) {
+      state[setting.key] = setting.value();
+    }
+    return state;
+  }
+
+  /**
+   * Applies a patch of preferences. The whole patch is validated first — an
+   * unknown key or an unaccepted value rejects it and applies nothing.
+   */
+  public settingsSet(patch: Partial<SettingsState>): SettingsState {
+    const booleans = new Map(
+      this.settings.settings.map((setting) => [setting.key, setting])
+    );
+    const problems: string[] = [];
+    for (const [key, value] of Object.entries(patch)) {
+      if (key === 'theme') {
+        if (!this.theming.availableThemes.includes(value as ThemeType)) {
+          problems.push(
+            `theme must be one of ${JSON.stringify(this.theming.availableThemes)}`
+          );
+        }
+      } else if (key === 'language') {
+        if (!this.availableLangs().includes(value as string)) {
+          problems.push(
+            `language must be one of ${JSON.stringify(this.availableLangs())}`
+          );
+        }
+      } else if (!booleans.has(key)) {
+        problems.push(`unknown setting "${key}"`);
+      } else if (typeof value !== 'boolean') {
+        problems.push(`setting "${key}" expects a boolean`);
+      }
+    }
+    if (problems.length > 0) {
+      throw new Error(
+        `logigator: settings.set rejected — ${problems.join('; ')}`
+      );
+    }
+
+    for (const [key, value] of Object.entries(patch)) {
+      if (key === 'theme') {
+        this.theming.setTheme(value as ThemeType);
+      } else if (key === 'language') {
+        this.translation.setActiveLang(value as string);
+      } else {
+        booleans.get(key)!.set(value as boolean);
+      }
+    }
+    return this.settingsGet();
+  }
+
+  /** The language ids transloco accepts, normalized out of both list shapes. */
+  private availableLangs(): string[] {
+    return this.translation
+      .getAvailableLangs()
+      .map((lang) => (typeof lang === 'string' ? lang : lang.id));
   }
 
   // -- Shared internals ----------------------------------------------------
