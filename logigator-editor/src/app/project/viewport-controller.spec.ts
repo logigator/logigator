@@ -102,6 +102,89 @@ describe('ViewportController', () => {
     });
   });
 
+  describe('fitBounds', () => {
+    /** Grid rect currently on screen, derived from the container transform. */
+    const visibleRect = (): Rectangle => viewport.gridView(new Rectangle());
+
+    beforeEach(() => {
+      viewport.resizeViewport(
+        environment.gridSize * 40,
+        environment.gridSize * 20
+      );
+    });
+
+    it('scales so the limiting axis exactly spans the viewport', () => {
+      // 20 × 5 into a 40 × 20 viewport: x needs 2, y allows 4 — x limits.
+      viewport.fitBounds(new Rectangle(0, 0, 20, 5));
+      expect(container.scale.x).toBeCloseTo(2, 5);
+      expect(visibleRect().width).toBeCloseTo(20, 5);
+    });
+
+    it('centres the rect in the viewport', () => {
+      viewport.fitBounds(new Rectangle(100, 50, 20, 5));
+      const view = visibleRect();
+      expect(view.x + view.width / 2).toBeCloseTo(110, 5);
+      expect(view.y + view.height / 2).toBeCloseTo(52.5, 5);
+    });
+
+    it('padding counts on both sides of each axis', () => {
+      // 18 wide + 1 padding per side = 20 grid units across a 40-unit viewport.
+      viewport.fitBounds(new Rectangle(0, 0, 18, 5), 1);
+      expect(container.scale.x).toBeCloseTo(2, 5);
+      const view = visibleRect();
+      expect(view.x).toBeCloseTo(-1, 5);
+      expect(view.right).toBeCloseTo(19, 5);
+    });
+
+    it('clamps to the ladder maximum when the rect is tiny', () => {
+      viewport.fitBounds(new Rectangle(3, 4, 0.5, 0.5));
+      expect(container.scale.x).toBeCloseTo(Math.pow(1.2, 5), 5);
+    });
+
+    it('clamps to the ladder minimum when the rect is huge', () => {
+      viewport.fitBounds(new Rectangle(0, 0, 100_000, 100_000));
+      expect(container.scale.x).toBeCloseTo(Math.pow(1.2, -12), 5);
+    });
+
+    it('honours maxZoom instead of filling the viewport', () => {
+      viewport.fitBounds(new Rectangle(0, 0, 2, 2), 0, 1);
+      expect(container.scale.x).toBeCloseTo(1, 5);
+      // Still centred, just not zoomed in.
+      const view = visibleRect();
+      expect(view.x + view.width / 2).toBeCloseTo(1, 5);
+    });
+
+    it('frames a degenerate point rect at the requested maxZoom', () => {
+      viewport.fitBounds(new Rectangle(5, 5, 0, 0), 0, 2);
+      expect(container.scale.x).toBeCloseTo(2, 5);
+      const view = visibleRect();
+      expect(view.x + view.width / 2).toBeCloseTo(5, 5);
+      expect(view.y + view.height / 2).toBeCloseTo(5, 5);
+    });
+
+    it('resyncs the step so a later stepped zoomOut continues from the fit', () => {
+      viewport.fitBounds(new Rectangle(0, 0, 20, 5));
+      // 2 sits between 1.2^3 and 1.2^4; the nearest step is 4, so zoomOut lands on 1.2^3.
+      viewport.zoomOut(new Point(0, 0));
+      expect(container.scale.x).toBeCloseTo(Math.pow(1.2, 3), 5);
+    });
+
+    it('is inert before the viewport has a size', () => {
+      const fresh = new ViewportController(container, grid, vi.fn(), vi.fn());
+      fresh.fitBounds(new Rectangle(0, 0, 10, 10));
+      expect(container.scale.x).toBe(1);
+    });
+
+    it('emits one viewport state carrying the resulting camera', () => {
+      const emitted: ViewportState[] = [];
+      viewport.viewportChange$.subscribe((s) => emitted.push(s));
+      viewport.fitBounds(new Rectangle(0, 0, 20, 5));
+      expect(emitted.length).toBe(1);
+      expect(emitted[0].scale).toBeCloseTo(2, 5);
+      expect(emitted[0].gridOrigin.x).toBeCloseTo(visibleRect().x, 5);
+    });
+  });
+
   describe('setPosition / pan', () => {
     it('setPosition updates container position', () => {
       viewport.setPosition(new Point(100, 200));

@@ -134,6 +134,60 @@ export class ViewportController {
     this._requestRender();
   }
 
+  /**
+   * Frames a grid-space rectangle: zooms so it fits the viewport (with
+   * `paddingGrid` grid units of clearance on every side) and centres it. The
+   * scale is continuous — clamped to the same bounds the stepped zoom
+   * respects, optionally capped by `maxZoom` so framing a tiny target does not
+   * zoom to the maximum — and the discrete step is resynced afterwards, like
+   * {@link zoomBy}, so a later stepped zoom continues from here.
+   *
+   * A degenerate rectangle (zero width and height, e.g. a single element's
+   * point bounds) frames at `maxZoom` or the ladder maximum. Inert while the
+   * viewport has no size yet.
+   */
+  public fitBounds(
+    gridRect: Rectangle,
+    paddingGrid = 0,
+    maxZoom?: number
+  ): void {
+    if (this._viewPortSize.x <= 0 || this._viewPortSize.y <= 0) return;
+
+    const width = gridRect.width + 2 * paddingGrid;
+    const height = gridRect.height + 2 * paddingGrid;
+    const fitX =
+      width > 0
+        ? this._viewPortSize.x / (width * environment.gridSize)
+        : Infinity;
+    const fitY =
+      height > 0
+        ? this._viewPortSize.y / (height * environment.gridSize)
+        : Infinity;
+
+    const min = Math.pow(this._scaleStepAmount, this._scaleStepMin);
+    const max = Math.pow(this._scaleStepAmount, this._scaleStepMax);
+    const target = Math.min(
+      Math.max(Math.min(fitX, fitY, maxZoom ?? Infinity), min),
+      max
+    );
+
+    this._writeScale(target);
+    // Place the rect's centre at the viewport's centre: a grid point p renders
+    // at `position + p · scale · gridSize`.
+    const factor = target * environment.gridSize;
+    this._applyPosition(
+      new Point(
+        this._viewPortSize.x / 2 - (gridRect.x + gridRect.width / 2) * factor,
+        this._viewPortSize.y / 2 - (gridRect.y + gridRect.height / 2) * factor
+      )
+    );
+    this._scaleStep = Math.round(
+      Math.log(target) / Math.log(this._scaleStepAmount)
+    );
+    this._viewportChange$.next(this.viewportState);
+    this._requestRender();
+  }
+
   public get viewportChange$(): Observable<ViewportState> {
     return this._viewportChange$.asObservable();
   }
@@ -188,9 +242,14 @@ export class ViewportController {
         .apply(this._truePosition)
     );
 
+    this._writeScale(scale);
+    this._viewportChange$.next(this.viewportState);
+  }
+
+  /** Applies a scale to the container, the grid, and the scale listeners. */
+  private _writeScale(scale: number): void {
     this._container.scale.set(scale);
     this._grid.updateScale(scale);
     this._onApplyScale(scale);
-    this._viewportChange$.next(this.viewportState);
   }
 }
