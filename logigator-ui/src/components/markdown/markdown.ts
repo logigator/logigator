@@ -43,6 +43,16 @@ export function headingSlug(text: string): string {
     .replace(/^-+|-+$/g, '');
 }
 
+/**
+ * Width-to-height ratio below which an image lays out as a portrait aside:
+ * the height cap every image gets — so one tall screenshot can't push the
+ * prose off the page — leaves a portrait image narrow, and the text reads
+ * beside it rather than around a column of whitespace. Wide viewports only;
+ * a narrow one has no room alongside. Detail lost to the cap is the zoomable
+ * content's to give back (`LgImageZoom`).
+ */
+const PORTRAIT_MAX_RATIO = 0.9;
+
 /** A click on a link inside rendered markdown content. */
 export interface LgMarkdownLinkClick {
   /** The href as rendered into the DOM. */
@@ -232,7 +242,33 @@ export interface LgMarkdownLinkClick {
     }
 
     lg-markdown img {
+      display: block;
       max-width: 100%;
+      max-height: 24rem;
+      margin: auto;
+    }
+
+    /* Portrait images are narrow once height-capped, so the prose reads beside
+       them instead of around a column of whitespace — see PORTRAIT_MAX_RATIO. */
+    @media (min-width: 36rem) {
+      lg-markdown img.lg-portrait {
+        float: right;
+        margin-left: 0.75rem;
+      }
+
+      /* A float shortens the line boxes beside it but not the boxes
+         themselves, so a rule or fill would run on under the image. Blocks
+         that paint one end beside it instead: a block formatting context may
+         not overlap a float. Prose keeps flowing around. */
+      lg-markdown h1,
+      lg-markdown h2,
+      lg-markdown h3,
+      lg-markdown h4,
+      lg-markdown pre,
+      lg-markdown blockquote,
+      lg-markdown hr {
+        display: flow-root;
+      }
     }
   `
 })
@@ -260,6 +296,26 @@ export class LgMarkdown {
   );
 
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+
+  constructor() {
+    // Only the image itself knows its aspect ratio, and CSS can't ask — so the
+    // portrait class the layout keys off is set as each image loads (`load`
+    // doesn't bubble, hence the capture phase). Re-rendered content fires it
+    // again, cache included.
+    this.host.nativeElement.addEventListener(
+      'load',
+      (event) => {
+        const image = event.target;
+        if (image instanceof HTMLImageElement && image.naturalHeight > 0) {
+          image.classList.toggle(
+            'lg-portrait',
+            image.naturalWidth / image.naturalHeight < PORTRAIT_MAX_RATIO
+          );
+        }
+      },
+      true
+    );
+  }
 
   /** Scrolls the rendered heading whose {@link headingSlug} matches into view. */
   scrollToHeading(slug: string): void {
