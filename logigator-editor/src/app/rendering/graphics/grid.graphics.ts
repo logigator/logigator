@@ -11,12 +11,14 @@ export class GridGraphics extends StaticGraphicsContext {
     const themingService = getStaticDI(ThemingService);
     const sizePx = fromGrid(size);
 
-    // Exclusive bounds: chunks tile edge-to-edge, so the trailing row/column
-    // belongs to the neighboring chunk — drawing it here too would composite
-    // the seam dots twice and make them visibly darker.
+    // Dots sit at cell centres — the half-grid lattice wire endpoints, port
+    // tips, and junctions terminate on — so the visible grid marks exactly
+    // where elements connect. One dot per cell, strictly interior to the
+    // chunk, so edge-to-edge chunk tiling never doubles up seam dots.
+    const half = environment.gridSize / 2;
     for (let x = 0; x < sizePx; x += environment.gridSize) {
       for (let y = 0; y < sizePx; y += environment.gridSize) {
-        this.rect(x, y, 1 / scale, 1 / scale);
+        this.rect(x + half, y + half, 1 / scale, 1 / scale);
       }
     }
     this.fill({
