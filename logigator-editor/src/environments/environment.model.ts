@@ -28,5 +28,8 @@ export interface Environment {
     /** Shows the title-bar "Debug" menu (compiled-board/renderer dumps, Project
      * Dump export/import). Off in production. */
     debugMenu: boolean;
+    /** Installs the `window.__logigator` automation facade (agents/scripts
+     * drive the editor through it). Off in production. */
+    automationApi: boolean;
   };
 }

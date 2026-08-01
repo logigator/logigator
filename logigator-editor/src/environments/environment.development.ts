@@ -20,6 +20,7 @@ export const environment: Environment = {
     showOrigins: false,
     showConnectionPoints: false,
     showQuadTrees: false,
-    debugMenu: true
+    debugMenu: true,
+    automationApi: true
   }
 };

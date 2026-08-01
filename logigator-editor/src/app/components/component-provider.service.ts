@@ -84,6 +84,10 @@ export class ComponentProviderService {
   public readonly portComponents = this._categorySignal(ComponentCategory.PORT);
   public readonly userComponents = this._categorySignal(ComponentCategory.USER);
 
+  /** Every registered type, hidden ones included — the registry-derived source
+   *  the automation catalog is generated from. */
+  public readonly allComponents = computed(() => [...this._configs().values()]);
+
   public getComponent(type: number): ComponentConfig | undefined {
     return this._configs().get(type);
   }

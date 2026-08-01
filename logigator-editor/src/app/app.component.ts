@@ -64,6 +64,7 @@ import { TutorialRunnerService } from './onboarding/tutorial-runner.service';
 import { HintService } from './onboarding/hint.service';
 import { OnboardingNudgeComponent } from './onboarding/onboarding-nudge.component';
 import { OnboardTargetDirective } from './onboarding/onboard-target.directive';
+import { AutomationApiService } from './automation/automation-api.service';
 
 @Component({
   selector: 'app-root',
@@ -132,6 +133,7 @@ export class AppComponent {
   // Injected for its side effects: subscribes to hint triggers from startup.
   private readonly hintService = inject(HintService);
   private readonly title = inject(Title);
+  private readonly automationApi = inject(AutomationApiService);
 
   protected readonly cursorPosition = signal<Point>(new Point(0, 0));
 
@@ -154,6 +156,11 @@ export class AppComponent {
 
   constructor() {
     setStaticDIInjector(this.injector);
+
+    // Installed here, not from an app initializer: the facade constructs model
+    // objects (Project, Component) that resolve their dependencies through the
+    // static injector, so it must not be reachable before the line above.
+    this.automationApi.install();
 
     // Keep the browser title in sync with the open project's name.
     effect(() => {
