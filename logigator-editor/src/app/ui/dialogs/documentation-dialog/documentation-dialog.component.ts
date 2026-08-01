@@ -16,6 +16,7 @@ import { TranslocoDirective } from '@jsverse/transloco';
 import {
   LgButton,
   LgDialogContent,
+  LgImageZoom,
   LgMarkdown,
   LgMarkdownLinkClick,
   LgNavigation,
@@ -48,6 +49,7 @@ import { TranslationService } from '../../../translation/translation.service';
   selector: 'app-documentation-dialog',
   imports: [
     LgButton,
+    LgImageZoom,
     LgMarkdown,
     LgNavigation,
     NgTemplateOutlet,

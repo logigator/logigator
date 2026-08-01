@@ -2,6 +2,7 @@
   <ng-template #content>
     @if (markdown(); as md) {
       <lg-markdown
+        lgImageZoom
         [data]="md"
         [assetUrls]="docImages"
         (linkClick)="onLinkClick($event)"
