@@ -38,6 +38,20 @@ describe('LgImageZoom', () => {
     expect(enlarged()?.alt).toBe('Only shot');
   });
 
+  it('shows the zoom-out cursor on the backdrop, where a click also closes', () => {
+    const fixture = setup();
+    (
+      fixture.nativeElement.querySelector('button') as HTMLButtonElement
+    ).click();
+    fixture.detectChanges();
+
+    const backdrop = document.querySelector('.cdk-overlay-backdrop');
+    expect(backdrop?.classList.contains('cursor-zoom-out')).toBe(true);
+    expect(backdrop?.classList.contains('cdk-overlay-dark-backdrop')).toBe(
+      true
+    );
+  });
+
   it('closes when the enlarged image is clicked', () => {
     const fixture = setup();
     (

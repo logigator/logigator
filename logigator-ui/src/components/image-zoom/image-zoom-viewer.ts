@@ -34,6 +34,9 @@ export class ImageZoomViewer implements OnDestroy {
     this.overlay.open(new ComponentPortal(LgImageZoomOverlay, null, injector), {
       placement: 'center',
       dismissOnBackdrop: true,
+      // A click anywhere closes — image and backdrop alike — so the zoom-out
+      // cursor covers the whole viewport, not just the image.
+      backdropClass: 'cursor-zoom-out',
       onDismiss: () => this.overlay.close()
     });
   }

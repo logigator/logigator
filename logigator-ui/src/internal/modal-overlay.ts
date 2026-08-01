@@ -10,6 +10,11 @@ export interface ModalOpenOptions {
   placement: LgOverlayPlacement;
   panelClass?: string | string[];
   /**
+   * Extra class for the backdrop, alongside the default dark one — e.g. a
+   * cursor signalling that a backdrop click dismisses.
+   */
+  backdropClass?: string;
+  /**
    * Non-modal (`false`) drops the backdrop and the focus trap, so the page
    * behind the overlay stays visible and interactive — the panel floats over
    * it (the editor's inspection sheet). Defaults to true.
@@ -65,6 +70,9 @@ export class ModalOverlay {
     this.overlayRef = createGlobalOverlay(this.overlay, {
       placement: options.placement,
       hasBackdrop: options.hasBackdrop ?? modal,
+      backdropClass: options.backdropClass
+        ? ['cdk-overlay-dark-backdrop', options.backdropClass]
+        : undefined,
       panelClass: options.panelClass
     });
     this.overlayRef.attach(portal);

@@ -193,7 +193,7 @@ export type LgOverlayPlacement =
 export interface GlobalOverlayOptions {
   placement: LgOverlayPlacement;
   hasBackdrop?: boolean;
-  backdropClass?: string;
+  backdropClass?: string | string[];
   panelClass?: string | string[];
   /**
    * Block page scroll while open. Defaults to **false** — the consumers are
