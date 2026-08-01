@@ -285,6 +285,9 @@ export class AutomationApiService {
     const project = this.busyReason() === null ? this.activeProject : null;
     if (!project?.actionManager.undoAvailable) return false;
     project.actionManager.undo();
+    // See the frame request in `applyEditOps`: a visuals-only action does not
+    // request one itself.
+    project.triggerTicker('single');
     return true;
   }
 
@@ -292,6 +295,7 @@ export class AutomationApiService {
     const project = this.busyReason() === null ? this.activeProject : null;
     if (!project?.actionManager.redoAvailable) return false;
     project.actionManager.redo();
+    project.triggerTicker('single');
     return true;
   }
 
@@ -403,8 +407,7 @@ export class AutomationApiService {
   public async simReadPorts(componentIds?: number[]): Promise<PortReadout[]> {
     const applier = this.simulation.applier;
     const board = this.simulation.board;
-    const project = this.activeProject;
-    if (!applier || !board || !project) {
+    if (!applier || !board) {
       throw new Error('logigator: no simulation is running');
     }
     await this.nextFrame();
@@ -418,9 +421,9 @@ export class AutomationApiService {
     const ids = componentIds ?? [...index.keys()];
     const readouts: PortReadout[] = [];
     for (const id of ids) {
-      const component = project.getComponentById(id);
-      const links = index.get(id);
-      if (!component || !links) continue;
+      const entry = index.get(id);
+      if (!entry) continue;
+      const { component, links } = entry;
       const powered = (portIndex: number): boolean => {
         const linkId = links[portIndex];
         return linkId !== undefined && applier.isPowered(linkId);

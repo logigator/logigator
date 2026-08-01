@@ -68,6 +68,25 @@ describe('applyEditOps', () => {
       expect(id).toBe([...project.components][0].id);
     });
 
+    it('requests a frame for a batch that only rebuilds visuals', () => {
+      const and = makeAnd(2, Direction.E, 0, 0);
+      project.addComponent(and);
+      const frames: string[] = [];
+      project.ticker$.subscribe((signal) => frames.push(signal));
+
+      // A negation toggle rebuilds the component's children without touching the
+      // quad trees, so nothing else along the way asks for a repaint.
+      apply({
+        op: 'setPortNegation',
+        id: and.id,
+        side: 'in',
+        index: 0,
+        negated: true
+      });
+
+      expect(frames).toContain('single');
+    });
+
     it('records nothing when every op is a no-op', () => {
       const and = makeAnd(2, Direction.E, 0, 0);
       project.addComponent(and);

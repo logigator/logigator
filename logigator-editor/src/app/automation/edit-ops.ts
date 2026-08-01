@@ -526,6 +526,10 @@ export function applyEditOps(
 
   if (container.length > 0) {
     project.actionManager.register(container);
+    // Most project mutations request their own frame, but the two that only
+    // rebuild a component's visuals (an option write, a negation toggle) rely on
+    // the enclosing gesture's ticker — which a programmatic batch has not got.
+    project.triggerTicker('single');
   }
   context.debug(
     `applied ${ops.length} op(s) as ${container.length} action(s); ` +
