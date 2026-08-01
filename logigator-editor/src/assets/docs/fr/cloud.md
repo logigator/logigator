@@ -2,8 +2,6 @@
 
 Votre compte Logigator conserve projets et composants dans le cloud, accessibles depuis n'importe quel appareil — et vous permet de les partager avec un lien. Tout dans l'éditeur fonctionne sans compte ; la connexion ajoute le stockage cloud et le partage.
 
-![Le menu de compte ouvert dans le coin supérieur droit, montrant le compte connecté, les options de thème et de langue, et Se déconnecter.](images/cloud/account-menu.png)
-
 ## Se connecter et votre compte
 
 Ouvrez le menu de compte dans le coin supérieur droit. Lorsque vous êtes déconnecté, il propose **Se connecter** ; lorsque vous êtes connecté, il affiche votre **Compte** et une option **Se déconnecter**, aux côtés des paramètres **Thème** et **Langue** (voir [Paramètres et apparence](docs:settings)).
@@ -26,7 +24,7 @@ La puce à côté du nom du projet indique lequel des deux le projet ouvert util
 
 La boîte de dialogue **Fichier → Ouvrir** garde les deux séparés dans des onglets distincts — **Projets locaux** et **Projets cloud** — plus un onglet **À partir d'un fichier** pour importer un fichier de circuit. Si vous êtes déconnecté, l'onglet Projets cloud vous invite à vous connecter.
 
-![La boîte de dialogue Ouvrir un projet avec l'onglet Projets cloud sélectionné, listant les projets cloud, chacun avec les actions renommer, téléverser, partager et supprimer.](images/cloud/open-cloud-projects.png)
+![La boîte de dialogue Ouvrir un projet, onglet Projets cloud.](../images/open-cloud.png)
 
 ## Déplacer un travail vers le cloud
 
@@ -39,7 +37,7 @@ Le téléversement _déplace_ le projet du stockage local vers votre bibliothèq
 
 Les composants personnalisés peuvent être déplacés vers le cloud de la même façon, depuis leur action dans le panneau de paramètres.
 
-![La boîte de dialogue Téléverser vers le cloud montrant la bascule de visibilité et une liste de composants locaux qui seront publiés en même temps que le projet.](images/cloud/upload-to-cloud.png)
+![La boîte de dialogue Téléverser vers le cloud listant les composants qui seront publiés.](../images/upload-to-cloud.png)
 
 ## Partager un projet
 
@@ -51,7 +49,7 @@ Une fois qu'un projet est dans le cloud, **Fichier → Partager** ouvre la boît
 
 Les composants personnalisés cloud peuvent être partagés de la même façon depuis le panneau de paramètres.
 
-![La boîte de dialogue Partager le projet montrant le lien de partage avec un bouton de copie, la bascule public/privé et l'option de régénération du lien.](images/cloud/share-dialog.png)
+![La boîte de dialogue de partage avec le lien de partage et la bascule public.](../images/share-component.png)
 
 ### Ce que voit le destinataire
 

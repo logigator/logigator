@@ -2,7 +2,7 @@
 
 Leitungen führen Signale zwischen Komponentenanschlüssen. Diese Seite behandelt, wie du sie zeichnest, wo sie sich verbinden steuerst und Bauteile mit Tunneln drahtlos verbindest.
 
-![Eine kleine Schaltung mit mehreren zwischen Gattern gezeichneten Leitungen, die gerade Verläufe und eine L-förmige Biegung zeigt.](images/wires-and-connections/wired-circuit.png)
+![Zwischen Komponenten gezeichnete Leitungen mit Verbindungspunkten.](../images/wire-circuit-display.png)
 
 ## Leitungen zeichnen
 
@@ -21,7 +21,7 @@ Wo Leitungen zusammentreffen, folgt Logigator einer einfachen Regel, damit du di
 
 So kannst du Leitungen frei übereinander verlegen, ohne versehentliche Verbindungen zu erzeugen.
 
-![Zwei nebeneinanderliegende Kreuzungen: Links kreuzen sich Leitungen ohne Punkt und bleiben getrennt; rechts dieselbe Kreuzung mit einem Verbindungspunkt, der alle vier Leitungen verbindet.](images/wires-and-connections/crossing-vs-junction.png)
+![Zwei Kreuzungen: eine ohne Punkt, eine mit Verbindungspunkt.](../images/wire-junction.png)
 
 ### Eine Kreuzung umschalten
 
@@ -45,7 +45,7 @@ So verwendest du Tunnel:
 
 Alle Tunnel mit übereinstimmenden Beschriftungen verhalten sich wie ein einziges verbundenes Netz; Tunnel mit unterschiedlichen Beschriftungen bleiben unabhängig.
 
-![Zwei Tunnel an gegenüberliegenden Ecken einer Arbeitsfläche, beide gleich beschriftet, jeder mit einem Gatter verdrahtet, ohne dass eine Leitung dazwischen verläuft.](images/wires-and-connections/tunnels.png)
+![Zwei Tunnel mit derselben Beschriftung, ohne Leitung dazwischen.](../images/tunnel.png)
 
 ## Leitungen schneiden und umarrangieren
 

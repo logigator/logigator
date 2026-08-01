@@ -2,7 +2,7 @@
 
 Une fois votre circuit construit, exécutez-le pour regarder les signaux circuler. En simulation, vous alimentez le circuit, actionnez ses entrées et voyez les résultats s'illuminer en direct sur le plan de travail.
 
-![L'éditeur en simulation, avec des fils et ports alimentés illuminés, une LED qui brille, et les contrôles d'exécution dans la barre d'outils.](images/simulation/simulation-running.png)
+![Un circuit en cours de simulation, avec les contrôles d'exécution dans la barre d'outils.](../images/simulation-showcase.gif)
 
 ## Démarrer et quitter une simulation
 
@@ -27,7 +27,7 @@ Lorsqu'une simulation est active, la barre d'outils échange ses outils de dessi
 
 **Arrêter** et **Quitter la simulation** sont différents : **Arrêter** ramène le circuit en cours au début mais vous garde en simulation, tandis que **Quitter la simulation** quitte entièrement la simulation et vous ramène à l'édition.
 
-![Gros plan sur les contrôles d'exécution dans la barre d'outils : Exécuter, Pause, Pas à pas et Arrêter, suivis des contrôles de vitesse et de l'indicateur de vitesse en direct.](images/simulation/run-controls.png)
+![Les contrôles d'exécution et les réglages de vitesse dans la barre d'outils.](../images/simulation-controls.png)
 
 ## Vitesse de simulation
 

@@ -2,7 +2,7 @@
 
 Logigator hat eine Handvoll Einstellungen, um den Editor an deinen Geschmack anzupassen. Du findest sie alle an einem Ort: Öffne das **Account-Menü** in der oberen rechten Ecke des Editors. (Auf einem Smartphone oder Tablet öffnest du das Menü oben links.)
 
-![Das geöffnete Account- und Einstellungs-Panel mit dem Design-Umschalter, dem Sprach-Dropdown und den Editor-Einstellungen.](images/settings/settings-panel.png)
+![Das Account-Menü mit Design-, Sprach- und Editor-Einstellungen.](../images/account-menu.png)
 
 ## Design
 

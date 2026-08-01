@@ -63,7 +63,7 @@ Die meisten Kürzel lösen einmal aus, wenn du sie drückst. Einige wenige werde
 
 Öffne **Bearbeiten → Tastaturbefehle**, um jede Aktion und ihre aktuelle Belegung zu sehen.
 
-![Der Dialog zum Verwalten der Tastaturbefehle, der Aktionen nach Datei, Bearbeiten, Ansicht, Werkzeuge und Interaktion gruppiert auflistet, jede mit ihrer zugewiesenen Taste und Bearbeiten-/Zurücksetzen-Steuerung.](images/shortcuts/shortcut-manager.png)
+![Der Dialog zum Verwalten der Tastaturbefehle.](../images/shortcut-manager.png)
 
 Für jede Aktion kannst du:
 

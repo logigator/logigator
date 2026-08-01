@@ -2,8 +2,6 @@
 
 Where your work lives: in your browser, in your account, or in a file on your device. This page covers saving in the browser, exporting to a file, and generating an image of your circuit.
 
-![The editor with the project name and its source chip highlighted at the top, and the status bar at the bottom showing the saved / unsaved indicator.](images/saving-and-files/save-overview.png)
-
 ## Saving your project
 
 Save with **File → Save** or `Ctrl+S`. The button also sits in the toolbar.
@@ -59,7 +57,7 @@ The file is compressed but not encrypted or locked — treat it as a convenient 
 
 > Read-only projects opened from a share link cannot be exported to a file. Clone the shared project into your own library first — see [Cloud & Sharing](docs:cloud).
 
-![The Open Project dialog with its three tabs — Local Projects, Cloud Projects and From File — with the From File tab showing the Choose File button.](images/saving-and-files/open-from-file.png)
+![The Open Project dialog on the From File tab.](../images/open-file.png)
 
 ## Generating an image
 
@@ -72,7 +70,7 @@ To export a picture of your circuit, choose **File → Generate image**. The dia
 
 The dialog previews the final pixel dimensions before you export.
 
-![The Export image dialog showing the format selector, resolution, background and quality controls, with a preview of the output dimensions.](images/saving-and-files/generate-image.png)
+![The Export image dialog with its format and resolution options.](../images/export-image.png)
 
 ## See also
 

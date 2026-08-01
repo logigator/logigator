@@ -2,8 +2,6 @@
 
 Où vit votre travail : dans votre navigateur, dans votre compte, ou dans un fichier sur votre appareil. Cette page explique l'enregistrement dans le navigateur, l'export vers un fichier et la génération d'une image de votre circuit.
 
-![L'éditeur avec le nom du projet et sa puce de source mis en évidence en haut, et la barre d'état en bas montrant l'indicateur enregistré / non enregistré.](images/saving-and-files/save-overview.png)
-
 ## Enregistrer votre projet
 
 Enregistrez avec **Fichier → Enregistrer** ou `Ctrl+S`. Le bouton se trouve aussi dans la barre d'outils.
@@ -59,7 +57,7 @@ Le fichier est compressé mais ni chiffré ni verrouillé — traitez-le comme u
 
 > Les projets en lecture seule ouverts depuis un lien de partage ne peuvent pas être exportés vers un fichier. Clonez d'abord le projet partagé dans votre propre bibliothèque — voir [Cloud et partage](docs:cloud).
 
-![La boîte de dialogue Ouvrir un projet avec ses trois onglets — Projets locaux, Projets cloud et À partir d'un fichier — l'onglet À partir d'un fichier montrant le bouton Choisir un fichier.](images/saving-and-files/open-from-file.png)
+![La boîte de dialogue Ouvrir un projet, onglet À partir d'un fichier.](../images/open-file.png)
 
 ## Générer une image
 
@@ -72,7 +70,7 @@ Pour exporter une image de votre circuit, choisissez **Fichier → Générer une
 
 La boîte de dialogue prévisualise les dimensions finales en pixels avant l'export.
 
-![La boîte de dialogue Exporter une image montrant le sélecteur de format, la résolution, l'arrière-plan et les contrôles de qualité, avec un aperçu des dimensions de sortie.](images/saving-and-files/generate-image.png)
+![La boîte de dialogue Exporter une image avec ses options de format et de résolution.](../images/export-image.png)
 
 ## Voir aussi
 

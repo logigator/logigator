@@ -2,8 +2,6 @@
 
 Tu cuenta de Logigator mantiene proyectos y componentes en la nube, accesibles desde cualquier dispositivo, y te permite compartirlos con un enlace. Todo en el editor funciona sin cuenta; iniciar sesión añade almacenamiento en la nube y compartición.
 
-![El menú de cuenta abierto en la esquina superior derecha, mostrando la cuenta con sesión iniciada, las opciones de tema e idioma, y Cerrar sesión.](images/cloud/account-menu.png)
-
 ## Iniciar sesión y tu cuenta
 
 Abre el menú de cuenta en la esquina superior derecha. Con la sesión cerrada ofrece **Iniciar sesión**; con la sesión iniciada muestra tu **Cuenta** y una opción de **Cerrar sesión**, junto a los ajustes de **Tema** e **Idioma** (consulta [Ajustes y apariencia](docs:settings)).
@@ -26,7 +24,7 @@ La etiqueta junto al nombre del proyecto muestra cuál de los dos usa el proyect
 
 El diálogo **Archivo → Abrir** mantiene los dos separados en pestañas distintas —**Proyectos locales** y **Proyectos en la nube**— más una pestaña **Desde archivo** para importar un archivo de circuito. Si tienes la sesión cerrada, la pestaña Proyectos en la nube te pide que inicies sesión.
 
-![El diálogo Abrir proyecto con la pestaña Proyectos en la nube seleccionada, listando proyectos en la nube cada uno con acciones de renombrar, subir, compartir y eliminar.](images/cloud/open-cloud-projects.png)
+![El diálogo Abrir proyecto en la pestaña Proyectos en la nube.](../images/open-cloud.png)
 
 ## Trasladar el trabajo a la nube
 
@@ -39,7 +37,7 @@ Subir _traslada_ el proyecto fuera del almacenamiento local a tu biblioteca en l
 
 Los componentes personalizados se pueden trasladar a la nube de la misma manera, desde su acción en el panel de ajustes.
 
-![El diálogo Subir a la nube mostrando la alternancia de visibilidad y una lista de componentes locales que se publicarán junto con el proyecto.](images/cloud/upload-to-cloud.png)
+![El diálogo Subir a la nube con los componentes que se publicarán.](../images/upload-to-cloud.png)
 
 ## Compartir un proyecto
 
@@ -51,7 +49,7 @@ Una vez que un proyecto está en la nube, **Archivo → Compartir** abre el diá
 
 Los componentes personalizados en la nube se pueden compartir de la misma manera desde el panel de ajustes.
 
-![El diálogo Compartir proyecto mostrando el enlace para compartir con un botón de copiar, la alternancia público/privado y la opción de regenerar enlace.](images/cloud/share-dialog.png)
+![El diálogo de compartir con el enlace para compartir y la alternancia de público.](../images/share-component.png)
 
 ### Qué ve el destinatario
 

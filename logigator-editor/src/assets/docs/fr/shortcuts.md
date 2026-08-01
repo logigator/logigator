@@ -63,7 +63,7 @@ La plupart des raccourcis se déclenchent une fois lorsque vous appuyez dessus. 
 
 Ouvrez **Édition → Raccourcis clavier** pour voir chaque action et son raccourci actuel.
 
-![La boîte de dialogue du gestionnaire de raccourcis clavier, listant les actions regroupées par Fichier, Édition, Affichage, Outils et Interaction, chacune avec sa touche assignée et les contrôles Modifier / Réinitialiser.](images/shortcuts/shortcut-manager.png)
+![La boîte de dialogue du gestionnaire de raccourcis clavier.](../images/shortcut-manager.png)
 
 Pour chaque action, vous pouvez :
 

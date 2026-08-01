@@ -2,8 +2,6 @@
 
 Dónde reside tu trabajo: en tu navegador, en tu cuenta o en un archivo de tu dispositivo. Esta página explica cómo guardar en el navegador, exportar a un archivo y generar una imagen de tu circuito.
 
-![El editor con el nombre del proyecto y su etiqueta de origen resaltados en la parte superior, y la barra de estado en la parte inferior mostrando el indicador de guardado / sin guardar.](images/saving-and-files/save-overview.png)
-
 ## Guardar tu proyecto
 
 Guarda con **Archivo → Guardar** o `Ctrl+S`. El botón también está en la barra de herramientas.
@@ -59,7 +57,7 @@ El archivo está comprimido pero no cifrado ni bloqueado: trátalo como un paque
 
 > Los proyectos de solo lectura abiertos desde un enlace para compartir no se pueden exportar a un archivo. Clona primero el proyecto compartido en tu propia biblioteca; consulta [Nube y compartir](docs:cloud).
 
-![El diálogo Abrir proyecto con sus tres pestañas —Proyectos locales, Proyectos en la nube y Desde archivo— con la pestaña Desde archivo mostrando el botón Elegir archivo.](images/saving-and-files/open-from-file.png)
+![El diálogo Abrir proyecto en la pestaña Desde archivo.](../images/open-file.png)
 
 ## Generar una imagen
 
@@ -72,7 +70,7 @@ Para exportar una imagen de tu circuito, elige **Archivo → Generar imagen**. E
 
 El diálogo previsualiza las dimensiones finales en píxeles antes de que exportes.
 
-![El diálogo Exportar imagen mostrando el selector de formato, los controles de resolución, fondo y calidad, con una vista previa de las dimensiones de salida.](images/saving-and-files/generate-image.png)
+![El diálogo Exportar imagen con sus opciones de formato y resolución.](../images/export-image.png)
 
 ## Consulta también
 

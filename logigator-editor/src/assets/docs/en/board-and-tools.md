@@ -2,7 +2,7 @@
 
 The board is the grid where you build your circuit. This page covers how to move around it and how each editing tool works.
 
-![The board with a small circuit on it, the toolbar above showing the five tools — pan, wire, select, erase and text — with the active tool highlighted.](images/board-and-tools/board-and-tools.png)
+![The editor with the component palette, the board and the toolbar.](../images/board-overview.png)
 
 ## Getting around the board
 
@@ -24,7 +24,7 @@ The right-hand group of the toolbar holds the five drawing tools. Only one is ac
 | **Erase**  | `E`      | Click or drag across elements to delete them.                                                                                              |
 | **Text**   | `T`      | Place a text label on the board.                                                                                                           |
 
-![Close-up of the five tool buttons in the toolbar, each labeled with its name and keyboard shortcut.](images/board-and-tools/tool-buttons.png)
+![The five tool buttons in the toolbar.](../images/tool-buttons.png)
 
 ## Placing components
 
@@ -49,7 +49,7 @@ The select tool has a **scissor** mode that trims wires exactly at the edge of y
 
 A small pill floats above the board while the select tool is active — click it to toggle scissor mode on. On desktop you can also just **hold `Alt`** while dragging the selection box to cut for that one drag; the pill lights up to show the mode is engaged. Anything the box fully contains stays selected, and wires crossing the box edge are cut there.
 
-![The select tool active with the scissor toggle pill floating above the board, and a selection box cutting two wires at its edge.](images/board-and-tools/scissor-select.png)
+![The scissor toggle pill floating above the board.](../images/scissor-select.png)
 
 ## Copy, cut, paste and delete
 

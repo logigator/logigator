@@ -2,7 +2,7 @@
 
 A custom component packages a whole circuit into a single reusable part with its own symbol and named ports. Build a counter or an ALU once, then drop it into bigger circuits as one tidy block.
 
-![A custom component placed on the board as a single labeled box with input and output ports, sitting next to the gates it replaces.](images/custom-components/instance-on-board.png)
+![A custom component beside the gate circuit it replaces.](../images/custom-component-showcase.png)
 
 ## Creating a component
 
@@ -26,7 +26,7 @@ Place an Input or Output plug for each port you want, then wire it into your cir
 
 A dedicated **Ports** panel lists the inputs and outputs you have defined so far, so you can keep track as the component takes shape.
 
-![A component editor tab open, with Input and Output plugs placed around a small circuit and the Ports panel listing the defined ports.](images/custom-components/defining-ports.png)
+![A component editor tab with Input and Output plugs.](../images/custom-component-tab.png)
 
 ## Placing your components
 

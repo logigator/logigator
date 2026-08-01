@@ -2,7 +2,7 @@
 
 Un composant personnalisé empaquette tout un circuit dans une seule pièce réutilisable dotée de son propre symbole et de ports nommés. Construisez un compteur ou une UAL une fois, puis déposez-le dans de plus grands circuits comme un bloc bien rangé.
 
-![Un composant personnalisé placé sur le plan de travail sous forme d'une seule boîte étiquetée avec des ports d'entrée et de sortie, à côté des portes qu'il remplace.](images/custom-components/instance-on-board.png)
+![Un composant personnalisé à côté du circuit de portes qu’il remplace.](../images/custom-component-showcase.png)
 
 ## Créer un composant
 
@@ -26,7 +26,7 @@ Placez une fiche Entrée ou Sortie pour chaque port souhaité, puis câblez-la d
 
 Un panneau **Ports** dédié liste les entrées et sorties que vous avez définies jusqu'à présent, afin que vous gardiez le fil à mesure que le composant prend forme.
 
-![Un onglet d'éditeur de composant ouvert, avec des fiches Entrée et Sortie placées autour d'un petit circuit et le panneau Ports listant les ports définis.](images/custom-components/defining-ports.png)
+![Un onglet d’éditeur de composant avec des fiches Entrée et Sortie.](../images/custom-component-tab.png)
 
 ## Placer vos composants
 

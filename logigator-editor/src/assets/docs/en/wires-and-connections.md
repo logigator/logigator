@@ -2,7 +2,7 @@
 
 Wires carry signals between component ports. This page covers drawing them, controlling where they connect, and joining parts wirelessly with tunnels.
 
-![A small circuit with several wires drawn between gates, showing straight runs and an L-shaped bend.](images/wires-and-connections/wired-circuit.png)
+![Wires drawn between components, with connection dots.](../images/wire-circuit-display.png)
 
 ## Drawing wires
 
@@ -21,7 +21,7 @@ Where wires meet, Logigator follows a simple rule so you stay in control of your
 
 This lets you route wires across each other freely without creating accidental connections.
 
-![Two side-by-side crossings: on the left, wires cross with no dot and stay separate; on the right, the same crossing with a connection dot joining all four wires.](images/wires-and-connections/crossing-vs-junction.png)
+![Two crossings: one without a dot, one joined by a connection dot.](../images/wire-junction.png)
 
 ### Toggling a crossing
 
@@ -45,7 +45,7 @@ To use tunnels:
 
 All tunnels with matching labels behave as one connected net; tunnels with different labels stay independent.
 
-![Two tunnels at opposite corners of a board, both labeled the same, each wired to a gate, with no wire running between them.](images/wires-and-connections/tunnels.png)
+![Two tunnels carrying the same label, with no wire between them.](../images/tunnel.png)
 
 ## Cutting and rearranging wires
 

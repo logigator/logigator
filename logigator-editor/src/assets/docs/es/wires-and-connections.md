@@ -2,7 +2,7 @@
 
 Los cables llevan señales entre los puertos de los componentes. Esta página explica cómo dibujarlos, cómo controlar dónde se conectan y cómo unir partes sin cables mediante túneles.
 
-![Un pequeño circuito con varios cables dibujados entre puertas, mostrando tramos rectos y un codo en forma de L.](images/wires-and-connections/wired-circuit.png)
+![Cables trazados entre componentes, con puntos de conexión.](../images/wire-circuit-display.png)
 
 ## Dibujar cables
 
@@ -21,7 +21,7 @@ Donde los cables se encuentran, Logigator sigue una regla sencilla para que mant
 
 Esto te permite trazar cables cruzándolos libremente sin crear conexiones accidentales.
 
-![Dos cruces uno junto al otro: a la izquierda, los cables se cruzan sin punto y permanecen separados; a la derecha, el mismo cruce con un punto de conexión que une los cuatro cables.](images/wires-and-connections/crossing-vs-junction.png)
+![Dos cruces: uno sin punto y otro unido por un punto de conexión.](../images/wire-junction.png)
 
 ### Alternar un cruce
 
@@ -45,7 +45,7 @@ Para usar túneles:
 
 Todos los túneles con etiquetas coincidentes se comportan como una sola red conectada; los túneles con etiquetas distintas permanecen independientes.
 
-![Dos túneles en esquinas opuestas de un tablero, ambos etiquetados igual, cada uno cableado a una puerta, sin cable discurriendo entre ellos.](images/wires-and-connections/tunnels.png)
+![Dos túneles con la misma etiqueta, sin cable entre ellos.](../images/tunnel.png)
 
 ## Cortar y reorganizar cables
 

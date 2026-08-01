@@ -2,7 +2,7 @@
 
 Welcome to Logigator — an open-source editor and simulator for digital logic circuits that runs entirely in your browser.
 
-![The Logigator editor at a glance: the circuit board fills the center, the toolbar runs across the top, the component palette sits in the panel on the left, and the status bar spans the bottom.](images/intro-banner.png)
+![The Logigator logo and tagline.](../images/intro-banner.png)
 
 ## What is Logigator?
 
@@ -30,7 +30,7 @@ The editor is organized into a few fixed areas around the central board:
 
 The project's name sits next to the menus at the top; click it to rename the project, and the chip beside it shows where the project is stored (**Local**, **Cloud**, **Draft** or **Shared**).
 
-![The top of the editor, with the File/Edit/View/Help menu bar, the editable project name and its source chip, and the toolbar of tools and actions labeled.]()
+![The menu bar and toolbar at the top of the editor.](../images/menu-bar.png)
 
 ## The guided tutorial
 

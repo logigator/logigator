@@ -2,8 +2,6 @@
 
 Dein Logigator-Account bewahrt Projekte und Komponenten in der Cloud auf, von jedem Gerät erreichbar — und lässt dich sie mit einem Link teilen. Alles im Editor funktioniert ohne Account; das Anmelden fügt Cloud-Speicher und das Teilen hinzu.
 
-![Das Account-Menü in der oberen rechten Ecke geöffnet, das den angemeldeten Account, die Design- und Sprachoptionen und Abmelden zeigt.](images/cloud/account-menu.png)
-
 ## Anmelden und dein Account
 
 Öffne das Account-Menü in der oberen rechten Ecke. Wenn abgemeldet, bietet es **Anmelden**; wenn angemeldet, zeigt es deinen **Account** und eine **Abmelden**-Option, neben den Einstellungen **Design** und **Sprache** (siehe [Einstellungen & Darstellung](docs:settings)).
@@ -26,7 +24,7 @@ Das Kennzeichen neben dem Projektnamen zeigt, welchen von beiden das offene Proj
 
 Der Dialog **Datei → Öffnen** hält die beiden in getrennten Tabs auseinander — **Lokale Projekte** und **Cloud-Projekte** — plus einem Tab **Aus Datei** zum Importieren einer Schaltungsdatei. Wenn du abgemeldet bist, fordert der Tab „Cloud-Projekte“ dich zum Anmelden auf.
 
-![Der Dialog „Projekt öffnen“ mit ausgewähltem Tab „Cloud-Projekte“, der Cloud-Projekte auflistet, jedes mit Aktionen zum Umbenennen, Hochladen, Teilen und Löschen.](images/cloud/open-cloud-projects.png)
+![Der Dialog „Projekt öffnen“ im Tab „Cloud-Projekte“.](../images/open-cloud.png)
 
 ## Arbeit in die Cloud verschieben
 
@@ -39,7 +37,7 @@ Das Hochladen _verschiebt_ das Projekt aus dem lokalen Speicher in deine Cloud-B
 
 Benutzerdefinierte Komponenten können auf dieselbe Weise in die Cloud verschoben werden, über ihre Aktion im Einstellungs-Panel.
 
-![Der Dialog „In die Cloud hochladen“, der den Sichtbarkeitsschalter und eine Liste lokaler Komponenten zeigt, die gemeinsam mit dem Projekt veröffentlicht werden.](images/cloud/upload-to-cloud.png)
+![Der Dialog „In die Cloud hochladen“ mit den Komponenten, die veröffentlicht werden.](../images/upload-to-cloud.png)
 
 ## Ein Projekt teilen
 
@@ -51,7 +49,7 @@ Sobald ein Projekt in der Cloud ist, öffnet **Datei → Teilen** den Teilen-Dia
 
 Benutzerdefinierte Cloud-Komponenten können auf dieselbe Weise aus dem Einstellungs-Panel geteilt werden.
 
-![Der Dialog „Projekt teilen“, der den Freigabelink mit einer Kopieren-Schaltfläche, den Öffentlich/Privat-Schalter und die Option zum Neu-Generieren des Links zeigt.](images/cloud/share-dialog.png)
+![Der Teilen-Dialog mit Freigabelink und Öffentlich-Schalter.](../images/share-component.png)
 
 ### Was der Empfänger sieht
 

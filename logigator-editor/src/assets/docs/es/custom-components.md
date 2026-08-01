@@ -2,7 +2,7 @@
 
 Un componente personalizado empaqueta todo un circuito en una única pieza reutilizable con su propio símbolo y puertos con nombre. Construye un contador o una ALU una vez y luego colócalo en circuitos más grandes como un bloque ordenado.
 
-![Un componente personalizado colocado en el tablero como una única caja etiquetada con puertos de entrada y salida, situada junto a las puertas a las que sustituye.](images/custom-components/instance-on-board.png)
+![Un componente personalizado junto al circuito de puertas al que sustituye.](../images/custom-component-showcase.png)
 
 ## Crear un componente
 
@@ -26,7 +26,7 @@ Coloca un conector de Entrada o Salida por cada puerto que quieras, luego cablea
 
 Un panel dedicado de **Puertos** lista las entradas y salidas que has definido hasta ahora, para que puedas llevar la cuenta a medida que el componente toma forma.
 
-![Una pestaña de editor de componente abierta, con conectores de Entrada y Salida colocados alrededor de un pequeño circuito y el panel de Puertos listando los puertos definidos.](images/custom-components/defining-ports.png)
+![Una pestaña de editor de componente con conectores de Entrada y Salida.](../images/custom-component-tab.png)
 
 ## Colocar tus componentes
 

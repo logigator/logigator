@@ -2,7 +2,7 @@
 
 Komponenten sind die Bausteine einer Schaltung — Gatter, Speicher, Eingänge, Anzeigen und mehr. Diese Seite behandelt, wo du sie findest, wie du sie platzierst und wie du die gerade ausgewählte konfigurierst.
 
-![Die Komponentenpalette links geöffnet, ihre Kategorien ausgeklappt, neben einer kleinen Schaltung auf der Arbeitsfläche.](images/components-and-options/palette-and-board.png)
+![Die Komponentenpalette mit ausgeklappten Kategorien.](../images/component-palette.png)
 
 ## Die Komponentenpalette
 
@@ -60,7 +60,7 @@ Um eine Komponente zu platzieren, klicke sie in der Palette an, und sie folgt de
 
 Wenn du eine einzelne platzierte Komponente auswählst — oder während du eine platzierst — erscheint eine kleine **Einstellungskarte** neben der Arbeitsfläche, die den Namen dieser Komponente, eine kurze Beschreibung und ihre einstellbaren Optionen zeigt. Auf einem Touch-Gerät öffnen sich dieselben Optionen stattdessen in der Schublade **Einstellungen**.
 
-![Die Einstellungskarte neben der Arbeitsfläche, die Namen, Beschreibung, die Richtungspfeile und einen Eingänge-Regler eines ausgewählten UND-Gatters zeigt.](images/components-and-options/settings-card.png)
+![Die Einstellungskarte eines ausgewählten UND-Gatters.](../images/component-settings.png)
 
 ### Richtung — bei jeder Komponente
 
@@ -92,7 +92,7 @@ Jeder Eingangs- oder Ausgangsanschluss kann **negiert** werden, sodass das Signa
 
 Solange das Leitungswerkzeug aktiv ist, zeigt das Bewegen nahe eines Anschlusses eine Vorschau der Blase, die ein Tippen hinzufügen würde, sodass du genau siehst, welchen Anschluss du gerade negieren wirst.
 
-![Nahaufnahme eines Gatter-Eingangs mit einer Negationsblase darauf, gezeichnet dort, wo der Anschluss auf den Körper trifft.](images/components-and-options/port-negation.png)
+![Ein ODER-Gatter mit einer Negationsblase an seinem Ausgang.](../images/negated-gate.png)
 
 ## Text platzieren
 

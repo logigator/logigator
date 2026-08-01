@@ -2,8 +2,6 @@
 
 Wo deine Arbeit lebt: in deinem Browser, in deinem Account oder in einer Datei auf deinem Gerät. Diese Seite behandelt das Speichern im Browser, den Export in eine Datei und das Erzeugen eines Bildes deiner Schaltung.
 
-![Der Editor mit dem oben hervorgehobenen Projektnamen und seinem Quellkennzeichen und der Statusleiste unten, die die Gespeichert-/Ungespeichert-Anzeige zeigt.](images/saving-and-files/save-overview.png)
-
 ## Dein Projekt speichern
 
 Speichere mit **Datei → Speichern** oder `Ctrl+S`. Die Schaltfläche sitzt auch in der Werkzeugleiste.
@@ -59,7 +57,7 @@ Die Datei ist komprimiert, aber nicht verschlüsselt oder gesperrt — behandle 
 
 > Schreibgeschützte Projekte, die aus einem Freigabelink geöffnet wurden, können nicht in eine Datei exportiert werden. Klone zuerst das geteilte Projekt in deine eigene Bibliothek — siehe [Cloud & Teilen](docs:cloud).
 
-![Der Dialog „Projekt öffnen“ mit seinen drei Tabs — Lokale Projekte, Cloud-Projekte und Aus Datei — mit dem Tab „Aus Datei“, der die Schaltfläche „Datei auswählen“ zeigt.](images/saving-and-files/open-from-file.png)
+![Der Dialog „Projekt öffnen“ im Tab „Aus Datei“.](../images/open-file.png)
 
 ## Ein Bild erzeugen
 
@@ -72,7 +70,7 @@ Um ein Bild deiner Schaltung zu exportieren, wähle **Datei → Bild generieren*
 
 Der Dialog zeigt die endgültigen Pixelmaße als Vorschau, bevor du exportierst.
 
-![Der Dialog „Bild exportieren“ mit dem Format-Wähler, den Steuerungen für Auflösung, Hintergrund und Qualität sowie einer Vorschau der Ausgabemaße.](images/saving-and-files/generate-image.png)
+![Der Dialog „Bild exportieren“ mit den Format- und Auflösungsoptionen.](../images/export-image.png)
 
 ## Siehe auch
 

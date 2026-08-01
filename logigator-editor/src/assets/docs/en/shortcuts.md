@@ -63,7 +63,7 @@ Most shortcuts fire once when you press them. A few are **held** instead: you ke
 
 Open **Edit → Keyboard Shortcuts** to see every action and its current binding.
 
-![The keyboard shortcut manager dialog, listing actions grouped by File, Edit, View, Tools and Interaction, each with its assigned key and Edit / Reset controls.](images/shortcuts/shortcut-manager.png)
+![The keyboard shortcut manager dialog.](../images/shortcut-manager.png)
 
 For any action you can:
 

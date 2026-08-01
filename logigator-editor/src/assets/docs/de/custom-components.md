@@ -2,7 +2,7 @@
 
 Eine benutzerdefinierte Komponente verpackt eine ganze Schaltung in ein einziges wiederverwendbares Bauteil mit eigenem Symbol und benannten Anschlüssen. Baue einen Zähler oder eine ALU einmal und lass sie dann als einen ordentlichen Block in größere Schaltungen fallen.
 
-![Eine benutzerdefinierte Komponente auf der Arbeitsfläche platziert, als ein einziger beschrifteter Kasten mit Eingangs- und Ausgangsanschlüssen, neben den Gattern, die sie ersetzt.](images/custom-components/instance-on-board.png)
+![Eine benutzerdefinierte Komponente neben der Gatter-Schaltung, die sie ersetzt.](../images/custom-component-showcase.png)
 
 ## Eine Komponente erstellen
 
@@ -26,7 +26,7 @@ Platziere einen Eingangs- oder Ausgangsstecker für jeden gewünschten Anschluss
 
 Ein eigenes Panel **Anschlüsse** listet die bislang definierten Ein- und Ausgänge auf, sodass du den Überblick behältst, während die Komponente Gestalt annimmt.
 
-![Ein geöffneter Komponenten-Editor-Tab, mit Eingangs- und Ausgangssteckern rund um eine kleine Schaltung platziert und dem Anschlüsse-Panel, das die definierten Anschlüsse auflistet.](images/custom-components/defining-ports.png)
+![Ein Komponenten-Editor-Tab mit Eingangs- und Ausgangssteckern.](../images/custom-component-tab.png)
 
 ## Deine Komponenten platzieren
 

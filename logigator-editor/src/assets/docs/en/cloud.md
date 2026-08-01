@@ -2,8 +2,6 @@
 
 Your Logigator account keeps projects and components in the cloud, reachable from any device — and lets you share them with a link. Everything in the editor works without an account; signing in adds cloud storage and sharing.
 
-![The account menu open in the top-right corner, showing the signed-in account, theme and language options, and Log Out.](images/cloud/account-menu.png)
-
 ## Signing in and your account
 
 Open the account menu in the top-right corner. When signed out it offers **Log In**; when signed in it shows your **Account** and a **Log Out** option, alongside the **Theme** and **Language** settings (see [Settings & Appearance](docs:settings)).
@@ -26,7 +24,7 @@ The chip beside the project name shows which one the open project uses (**Local*
 
 The **File → Open** dialog keeps the two apart in separate tabs — **Local Projects** and **Cloud Projects** — plus a **From File** tab for importing a circuit file. If you're signed out, the Cloud Projects tab prompts you to log in.
 
-![The Open Project dialog with the Cloud Projects tab selected, listing cloud projects each with rename, upload, share and delete actions.](images/cloud/open-cloud-projects.png)
+![The Open Project dialog on the Cloud Projects tab.](../images/open-cloud.png)
 
 ## Moving work to the cloud
 
@@ -39,7 +37,7 @@ Uploading _moves_ the project out of local storage into your cloud library. If t
 
 Custom components can be moved to the cloud the same way, from their action in the settings panel.
 
-![The Upload to cloud dialog showing the visibility toggle and a list of local components that will be published alongside the project.](images/cloud/upload-to-cloud.png)
+![The Upload to cloud dialog listing the components that will be published.](../images/upload-to-cloud.png)
 
 ## Sharing a project
 
@@ -51,7 +49,7 @@ Once a project is in the cloud, **File → Share** opens the share dialog. (Shar
 
 Cloud custom components can be shared the same way from the settings panel.
 
-![The Share project dialog showing the share link with a copy button, the public/private toggle, and the regenerate link option.](images/cloud/share-dialog.png)
+![The share dialog with the share link and the public toggle.](../images/share-component.png)
 
 ### What the recipient sees
 
