@@ -290,10 +290,20 @@ export class MinimapComponent implements OnDestroy {
       MIN_RECT_SIZE_PX
     );
 
-    this._lastRect = rect;
-    rectEl.style.transform = `translate(${rect.x}px, ${rect.y}px)`;
-    rectEl.style.width = `${rect.width}px`;
-    rectEl.style.height = `${rect.height}px`;
+    // Snap to whole device pixels: the rect is a hairline border tracking
+    // every pan, and fractional offsets sweep its antialiasing phase — the
+    // same shimmer the board's camera translation snaps away.
+    const dpr = window.devicePixelRatio || 1;
+    const snap = (v: number) => Math.round(v * dpr) / dpr;
+    this._lastRect = {
+      x: snap(rect.x),
+      y: snap(rect.y),
+      width: snap(rect.width),
+      height: snap(rect.height)
+    };
+    rectEl.style.transform = `translate(${this._lastRect.x}px, ${this._lastRect.y}px)`;
+    rectEl.style.width = `${this._lastRect.width}px`;
+    rectEl.style.height = `${this._lastRect.height}px`;
   }
 
   /**
