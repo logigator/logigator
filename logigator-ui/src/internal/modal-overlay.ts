@@ -1,6 +1,6 @@
 import { ConfigurableFocusTrapFactory } from '@angular/cdk/a11y';
 import { Overlay, OverlayRef } from '@angular/cdk/overlay';
-import { TemplatePortal } from '@angular/cdk/portal';
+import { Portal } from '@angular/cdk/portal';
 import { Subscription } from 'rxjs';
 import { playEnterTransition } from './fade-in';
 import { createGlobalOverlay, LgOverlayPlacement } from './overlay';
@@ -33,7 +33,8 @@ export interface ModalOpenOptions {
 }
 
 /**
- * Lifecycle for a modal overlay (Dialog, Drawer): a global `cdk/overlay` + focus
+ * Lifecycle for a modal overlay (Dialog, Drawer, ImageZoom): a global
+ * `cdk/overlay` + focus
  * trap & restore ({@link LgFocusTrap}, its first consumer) + an enter transition
  * (`enterFrom`) + backdrop / Escape dismissal.
  *
@@ -56,7 +57,7 @@ export class ModalOverlay {
     return this.overlayRef !== null;
   }
 
-  open(portal: TemplatePortal, options: ModalOpenOptions): void {
+  open(portal: Portal<unknown>, options: ModalOpenOptions): void {
     if (this.overlayRef) {
       return;
     }
