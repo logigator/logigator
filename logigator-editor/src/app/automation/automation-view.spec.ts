@@ -9,7 +9,9 @@ import { environment } from '../../environments/environment';
 import { Project } from '../project/project';
 import { ProjectService } from '../project/project.service';
 import { WireDirection } from '../wires/wire-direction.enum';
+import { WorkMode } from '../work-mode/work-mode.enum';
 import { WorkModeService } from '../work-mode/work-mode.service';
+import { serializeProjectBody } from '../persistence/snapshots';
 import { AutomationApiService } from './automation-api.service';
 
 const VIEWPORT_GRID_WIDTH = 40;
@@ -121,43 +123,134 @@ describe('AutomationApiService camera and highlights', () => {
     });
   });
 
-  describe('highlights', () => {
-    it('marks a region and replaces the whole set on the next call', () => {
-      api.highlight([{ bounds: { x: 0, y: 0, width: 4, height: 4 } }]);
-      expect(project.floatingLayer.hasHighlights).toBe(true);
+  describe('highlight (region selection)', () => {
+    it('selects what a marquee over the region would catch', () => {
+      const inside = makeAnd(2, undefined, 1, 1);
+      const outside = makeAnd(2, undefined, 30, 30);
+      project.addComponent(inside);
+      project.addComponent(outside);
 
-      api.highlight([]);
-      expect(project.floatingLayer.hasHighlights).toBe(false);
+      const state = api.highlight({
+        bounds: { x: 0, y: 0, width: 10, height: 10 }
+      });
+
+      expect(state.componentIds).toEqual([inside.id]);
+      expect(inside.selected).toBe(true);
+      expect(outside.selected).toBe(false);
+      // The drawn rect persists as the grab rect, exactly as drawn.
+      expect(state.rect).toEqual({ x: 0, y: 0, width: 10, height: 10 });
+      expect(state.cut).toBe(false);
     });
 
-    it('resolves element ids to their bounds, skipping unknown ids', () => {
-      const and = makeAnd(2, undefined, 3, 3);
+    it('switches to the select tool so the selection is grabbable', () => {
+      const workMode = TestBed.inject(WorkModeService);
+      workMode.setMode(WorkMode.PAN);
+      const and = makeAnd(2, undefined, 1, 1);
       project.addComponent(and);
 
-      api.highlight([{ elementIds: [and.id, 999999] }]);
-      expect(project.floatingLayer.hasHighlights).toBe(true);
+      api.highlight({ bounds: { x: 0, y: 0, width: 10, height: 10 } });
 
-      api.highlight([{ elementIds: [999999] }]);
-      expect(project.floatingLayer.hasHighlights).toBe(false);
+      expect(workMode.mode()).toBe(WorkMode.SELECT);
+      expect(project.selectionManager.isGrabbedAt({ x: 2, y: 2 })).toBe(true);
     });
 
-    it('clear is safe with nothing highlighted', () => {
+    it('replaces the previous selection', () => {
+      const first = makeAnd(2, undefined, 1, 1);
+      const second = makeAnd(2, undefined, 30, 30);
+      project.addComponent(first);
+      project.addComponent(second);
+
+      api.highlight({ bounds: { x: 0, y: 0, width: 10, height: 10 } });
+      const state = api.highlight({
+        bounds: { x: 29, y: 29, width: 10, height: 10 }
+      });
+
+      expect(state.componentIds).toEqual([second.id]);
+      expect(first.selected).toBe(false);
+    });
+
+    it('a zero-area region selects the single element under the point', () => {
+      const and = makeAnd(2, undefined, 1, 1);
+      project.addComponent(and);
+
+      const state = api.highlight({
+        bounds: { x: 1.5, y: 1.5, width: 0, height: 0 }
+      });
+
+      expect(state.componentIds).toEqual([and.id]);
+      // A click draws nothing, so there is no persistent rect.
+      expect(state.rect).toBeNull();
+    });
+
+    it('cut scissors the wires crossing the region edge', () => {
+      // A wire spanning x 0.5..20.5; the region's right edge crosses it.
+      const wire = makeWire(0, 5, WireDirection.HORIZONTAL, 20);
+      project.addWire(wire);
+
+      const state = api.highlight(
+        { bounds: { x: 0, y: 0, width: 10, height: 10 } },
+        { cut: true }
+      );
+
+      expect(state.cut).toBe(true);
+      // The original is gone, replaced by pieces; the inside one is selected.
+      expect(project.getWireById(wire.id)).toBeUndefined();
+      expect(state.wireIds.length).toBe(1);
+      expect(project.getWireById(state.wireIds[0])!.length).toBeLessThan(20);
+      // The cut is a real (provisional) history entry — one Ctrl+Z reverts it.
+      expect(project.actionManager.undoAvailable).toBe(true);
+    });
+
+    it('clearing after a cut retracts it, leaving no trace', () => {
+      project.addWire(makeWire(0, 5, WireDirection.HORIZONTAL, 20));
+      const before = serializeProjectBody(project);
+
+      api.highlight(
+        { bounds: { x: 0, y: 0, width: 10, height: 10 } },
+        { cut: true }
+      );
       api.clearHighlights();
-      expect(project.floatingLayer.hasHighlights).toBe(false);
-    });
 
-    it('highlighting is not a history entry and works while simulating', () => {
-      TestBed.inject(WorkModeService).setSimulationMode(true);
-      api.highlight([{ bounds: { x: 0, y: 0, width: 2, height: 2 } }]);
-      expect(project.floatingLayer.hasHighlights).toBe(true);
+      expect(serializeProjectBody(project)).toEqual(before);
       expect(project.actionManager.undoAvailable).toBe(false);
     });
 
-    it('highlights are hidden with the rest of the overlay for snapshots', () => {
-      api.highlight([{ bounds: { x: 0, y: 0, width: 2, height: 2 } }]);
-      project.setOverlayVisible(false);
-      expect(project.floatingLayer.renderable).toBe(false);
-      project.setOverlayVisible(true);
+    it('a plain region selection is no history entry at all', () => {
+      project.addComponent(makeAnd(2, undefined, 1, 1));
+      api.highlight({ bounds: { x: 0, y: 0, width: 10, height: 10 } });
+      expect(project.actionManager.undoAvailable).toBe(false);
+    });
+
+    it('selects named elements directly, skipping unknown ids', () => {
+      const and = makeAnd(2, undefined, 3, 3);
+      project.addComponent(and);
+
+      const state = api.highlight({ elementIds: [and.id, 999999] });
+
+      expect(state.componentIds).toEqual([and.id]);
+      expect(and.selected).toBe(true);
+      // No marquee was drawn, so the rect is the padded content bounds.
+      expect(state.rect).not.toBeNull();
+    });
+
+    it('refuses a cut without an edge to cut at', () => {
+      const and = makeAnd(2, undefined, 3, 3);
+      project.addComponent(and);
+      expect(() =>
+        api.highlight({ elementIds: [and.id] }, { cut: true })
+      ).toThrow(/bounds region/);
+    });
+
+    it('is refused while the circuit is simulating', () => {
+      TestBed.inject(WorkModeService).setSimulationMode(true);
+      expect(() =>
+        api.highlight({ bounds: { x: 0, y: 0, width: 4, height: 4 } })
+      ).toThrow(/simulation/);
+    });
+
+    it('clear is safe with nothing selected', () => {
+      api.clearHighlights();
+      expect(project.selectionManager.isEmpty).toBe(true);
     });
   });
 });

@@ -2,6 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { Point, Rectangle } from 'pixi.js';
 
 import { environment } from '../../environments/environment';
+import { Component } from '../components/component';
 import { ComponentProviderService } from '../components/component-provider.service';
 import { LoggingService } from '../logging/logging.service';
 import { PersistenceService } from '../persistence/persistence.service';
@@ -25,6 +26,7 @@ import { ThemingService } from '../theming/theming.service';
 import { TranslationService } from '../translation/translation.service';
 import { WorkMode } from '../work-mode/work-mode.enum';
 import { WorkModeService } from '../work-mode/work-mode.service';
+import { Wire } from '../wires/wire';
 import {
   ApiInfo,
   AUTOMATION_API_VERSION,
@@ -39,11 +41,13 @@ import {
   FocusTarget,
   GridPoint,
   GridRect,
+  HighlightOptions,
   HighlightRegion,
   LogigatorAutomationApi,
   PerOpError,
   PortReadout,
   ProjectState,
+  SelectionState,
   SettingDescriptor,
   SettingsState,
   SimStatus,
@@ -156,7 +160,10 @@ export class AutomationApiService {
         focus: (target: FocusTarget, opts?: FocusOptions): ViewportInfo =>
           this.cameraFocus(target, opts)
       }),
-      highlight: (regions: HighlightRegion[]): void => this.highlight(regions),
+      highlight: (
+        region: HighlightRegion,
+        opts?: HighlightOptions
+      ): SelectionState => this.highlight(region, opts),
       clearHighlights: (): void => this.clearHighlights(),
       settings: Object.freeze({
         describe: (): SettingDescriptor[] => this.settingsDescribe(),
@@ -549,42 +556,81 @@ export class AutomationApiService {
     return this.getViewport();
   }
 
-  // -- Highlights ----------------------------------------------------------
+  // -- Selection ("highlighting") ------------------------------------------
 
   /**
-   * Replaces the marked regions — the "look here" idiom an agent pairs with
-   * `camera.focus` after an edit, so the watching user sees what changed.
-   * Element ids resolve to bounds at call time: a highlight does not follow an
-   * element that later moves.
+   * Selects a region — the same operation as picking the select tool and
+   * dragging a marquee over it: the elements it catches carry the selection
+   * tint, the drawn rectangle persists as the grab rect, and the selection is
+   * then movable/rotatable/deletable exactly like a user's. This is the "look
+   * here" idiom an agent pairs with `camera.focus` after an edit.
+   *
+   * `{ bounds }` is the marquee (a zero-area rectangle behaves like a click:
+   * the single element under the point); `{ elementIds }` selects those
+   * elements directly, rect-ing their padded bounds like a committed paste
+   * does. `cut` scissors the marquee — see {@link HighlightOptions}.
+   *
+   * The work mode is switched to SELECT, so the selection is grabbable
+   * afterwards; a `cut` mirrors the held-scissor-key marquee rather than the
+   * scissor tool, so it does not leave the tool in scissor mode.
    */
-  public highlight(regions: HighlightRegion[]): void {
-    const project = this.requireProject();
-    const rects: Rectangle[] = [];
-    for (const region of regions) {
-      if ('bounds' in region) {
-        rects.push(
-          new Rectangle(
-            region.bounds.x,
-            region.bounds.y,
-            region.bounds.width,
-            region.bounds.height
-          )
-        );
-      } else {
-        const rect = this.elementBounds(region.elementIds);
-        if (rect) rects.push(rect);
-      }
+  public highlight(
+    region: HighlightRegion,
+    options: HighlightOptions = {}
+  ): SelectionState {
+    const refusal = this.busyReason();
+    if (refusal) {
+      throw new Error(`logigator: highlight refused — editor ${refusal}`);
     }
-    project.floatingLayer.showHighlights(rects);
+    const project = this.activeProject!;
+    const selection = project.selectionManager;
+
+    this.workMode.setMode(WorkMode.SELECT);
+    if ('bounds' in region) {
+      selection.commit(
+        new Rectangle(
+          region.bounds.x,
+          region.bounds.y,
+          region.bounds.width,
+          region.bounds.height
+        ),
+        options.cut ? WorkMode.SELECT_EXACT : WorkMode.SELECT
+      );
+    } else {
+      if (options.cut) {
+        throw new Error(
+          'logigator: cut applies to a bounds region — there is no edge to cut at'
+        );
+      }
+      const components = region.elementIds
+        .map((id) => project.getComponentById(id))
+        .filter((c): c is Component => !!c);
+      const wires = region.elementIds
+        .map((id) => project.getWireById(id))
+        .filter((w): w is Wire => !!w);
+      selection.select(components, wires);
+    }
+
     project.triggerTicker('single');
+    const rect = selection.grabRect();
+    return {
+      componentIds: [...selection.selectedComponents].map((c) => c.id),
+      wireIds: [...selection.selectedWires].map((w) => w.id),
+      rect: rect ? toGridRect(rect) : null,
+      cut: selection.hasLiveCut
+    };
   }
 
+  /**
+   * Clears the selection, like clicking empty canvas — which also retracts an
+   * uncommitted scissor cut, so a cut nothing acted on leaves no trace.
+   */
   public clearHighlights(): void {
     // Tolerates a replaced or destroyed project: a new document brings a fresh
-    // floating layer, so there is nothing left to clear.
+    // selection, so there is nothing left to clear.
     const project = this.activeProject;
     if (!project) return;
-    project.floatingLayer.clearHighlights();
+    project.selectionManager.clear();
     project.triggerTicker('single');
   }
 
