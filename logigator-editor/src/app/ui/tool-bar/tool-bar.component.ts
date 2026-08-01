@@ -124,7 +124,7 @@ export class ToolBarComponent {
   }
 
   protected startSimulation(): void {
-    this.simulationService.enter();
+    void this.simulationService.enter();
   }
 
   protected exitSimulation(): void {

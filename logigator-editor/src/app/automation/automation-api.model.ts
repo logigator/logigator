@@ -328,6 +328,23 @@ export interface LogigatorAutomationApi {
   exportProject(): string;
   importProject(json: string): Promise<ProjectState>;
   newProject(): ProjectState;
+
+  // simulation
+  sim: {
+    /** Compiles and boots; resolves when the engine is up or entry was blocked. */
+    enter(): Promise<SimStatus>;
+    exit(): void;
+    play(): void;
+    pause(): void;
+    /** One tick while paused, resolved after the snapshot is applied. */
+    step(): Promise<SimStatus>;
+    stop(): void;
+    status(): SimStatus;
+    setTarget(value: number, unit: 'Hz' | 'kHz' | 'MHz'): void;
+    /** Lever: absolute set. Button: pulse on `true`, ignored on `false`. */
+    setInput(componentId: number, value: boolean): Promise<void>;
+    readPorts(componentIds?: number[]): Promise<PortReadout[]>;
+  };
 }
 
 declare global {

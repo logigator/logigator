@@ -13,7 +13,12 @@ import {
 import { Project } from '../project/project';
 import { ProjectService } from '../project/project.service';
 import { BoardCompilerService } from '../simulation/compiler/board-compiler.service';
+import { CompiledBoard } from '../simulation/compiler/compiled-board.model';
 import { CompileDiagnostic } from '../simulation/compiler/compile-error';
+import {
+  SimulationService,
+  TargetSpeedUnit
+} from '../simulation/simulation.service';
 import { TranslationService } from '../translation/translation.service';
 import { WorkMode } from '../work-mode/work-mode.enum';
 import { WorkModeService } from '../work-mode/work-mode.service';
@@ -30,10 +35,16 @@ import {
   GridRect,
   LogigatorAutomationApi,
   PerOpError,
-  ProjectState
+  PortReadout,
+  ProjectState,
+  SimStatus
 } from './automation-api.model';
 import { describeCatalog } from './catalog';
 import { applyEditOps } from './edit-ops';
+import { buildPortLinkIndex, PortLinkIndex } from './port-index';
+
+/** How long a snapshot-dependent call waits for a frame before giving up. */
+const FRAME_WAIT_MS = 2000;
 
 /**
  * The transport-agnostic automation facade: a semantic, JSON-in/JSON-out view
@@ -52,11 +63,17 @@ export class AutomationApiService {
   private readonly componentProvider = inject(ComponentProviderService);
   private readonly persistence = inject(PersistenceService);
   private readonly compiler = inject(BoardCompilerService);
+  private readonly simulation = inject(SimulationService);
   private readonly workMode = inject(WorkModeService);
   private readonly translation = inject(TranslationService);
   private readonly logging = inject(LoggingService);
 
   public readonly enabled = environment.debug.automationApi;
+
+  // Port → link lookup for the current compiled board, rebuilt whenever the
+  // board identity changes (one per simulation session).
+  private _portIndex: PortLinkIndex | null = null;
+  private _portIndexBoard: CompiledBoard | null = null;
 
   /**
    * Publishes the facade on `window` when enabled. Called once at startup,
@@ -91,7 +108,24 @@ export class AutomationApiService {
       exportProject: (): string => this.exportProject(),
       importProject: (json: string): Promise<ProjectState> =>
         this.importProject(json),
-      newProject: (): ProjectState => this.newProject()
+      newProject: (): ProjectState => this.newProject(),
+      sim: Object.freeze({
+        enter: (): Promise<SimStatus> => this.simEnter(),
+        exit: (): void => this.simulation.exit(),
+        play: (): void => this.simulation.play(),
+        pause: (): void => this.simulation.pause(),
+        step: (): Promise<SimStatus> => this.simStep(),
+        stop: (): void => this.simulation.stop(),
+        status: (): SimStatus => this.simStatus(),
+        setTarget: (value: number, unit: TargetSpeedUnit): void => {
+          this.simulation.setTargetValue(value);
+          this.simulation.setTargetUnit(unit);
+        },
+        setInput: (componentId: number, value: boolean): Promise<void> =>
+          this.simSetInput(componentId, value),
+        readPorts: (componentIds?: number[]): Promise<PortReadout[]> =>
+          this.simReadPorts(componentIds)
+      })
     });
   }
 
@@ -272,6 +306,125 @@ export class AutomationApiService {
     this.assertNotBusy('newProject');
     this.persistence.createAndSetEmptyProject();
     return this.getProject();
+  }
+
+  // -- Simulation ----------------------------------------------------------
+
+  /**
+   * Compiles the main project and starts a session, resolving once the engine
+   * is up. A blocked compile comes back as `state: 'inactive'` plus the
+   * diagnostics that blocked it — the same list {@link check} reports.
+   */
+  public async simEnter(): Promise<SimStatus> {
+    const diagnostics = await this.simulation.enter();
+    const status = this.simStatus();
+    return diagnostics.length > 0
+      ? { ...status, diagnostics: toDiagnosticReport(diagnostics).diagnostics }
+      : status;
+  }
+
+  public simStatus(): SimStatus {
+    return {
+      state: this.simulation.state(),
+      mode: this.simulation.mode(),
+      targetHz: this.simulation.targetHz(),
+      measuredHz: this.simulation.measuredHz(),
+      tick: this.simulation.tick()
+    };
+  }
+
+  /**
+   * One engine tick while paused, resolved after the resulting snapshot has
+   * been applied — so a `readPorts` right after it sees the new state.
+   */
+  public async simStep(): Promise<SimStatus> {
+    this.simulation.step();
+    await this.nextFrame();
+    return this.simStatus();
+  }
+
+  /**
+   * Drives a lever/button to an absolute state (see
+   * {@link SimulationService.setUserInput}). Resolves after one snapshot
+   * round-trip; the engine applies the input at its next tick, so the
+   * deterministic recipe is `pause()` → `setInput()` → `step()` → `readPorts()`.
+   */
+  public async simSetInput(componentId: number, value: boolean): Promise<void> {
+    if (!this.simulation.setUserInput(componentId, value)) {
+      throw new Error(
+        `logigator: component ${componentId} is not a user input of the running simulation`
+      );
+    }
+    await this.nextFrame();
+  }
+
+  /**
+   * Per-port powered state, resolved against a freshly pulled snapshot. Without
+   * `componentIds`, every component carrying at least one mapped port.
+   */
+  public async simReadPorts(componentIds?: number[]): Promise<PortReadout[]> {
+    const applier = this.simulation.applier;
+    const board = this.simulation.board;
+    const project = this.activeProject;
+    if (!applier || !board || !project) {
+      throw new Error('logigator: no simulation is running');
+    }
+    await this.nextFrame();
+
+    if (this._portIndexBoard !== board) {
+      this._portIndex = buildPortLinkIndex(board);
+      this._portIndexBoard = board;
+    }
+    const index = this._portIndex!;
+
+    const ids = componentIds ?? [...index.keys()];
+    const readouts: PortReadout[] = [];
+    for (const id of ids) {
+      const component = project.getComponentById(id);
+      const links = index.get(id);
+      if (!component || !links) continue;
+      const powered = (portIndex: number): boolean => {
+        const linkId = links[portIndex];
+        return linkId !== undefined && applier.isPowered(linkId);
+      };
+      readouts.push({
+        componentId: id,
+        type: component.config.type,
+        inputs: Array.from({ length: component.numInputs }, (_, i) =>
+          powered(i)
+        ),
+        outputs: Array.from({ length: component.numOutputs }, (_, i) =>
+          powered(component.numInputs + i)
+        )
+      });
+    }
+    return readouts;
+  }
+
+  /**
+   * Resolves once the next engine snapshot has been applied. A full snapshot is
+   * requested explicitly, so this settles whether the simulation is running or
+   * paused; it resolves without a frame when no session is up, and gives up
+   * after {@link FRAME_WAIT_MS} rather than hanging a driver forever.
+   */
+  private nextFrame(): Promise<void> {
+    if (!this.simulation.isReady()) return Promise.resolve();
+    return new Promise<void>((resolve) => {
+      const timeout = setTimeout(() => {
+        subscription.unsubscribe();
+        this.logging.warn(
+          `no simulation frame within ${FRAME_WAIT_MS} ms; reading possibly stale state`,
+          'AutomationApiService'
+        );
+        resolve();
+      }, FRAME_WAIT_MS);
+      const subscription = this.simulation.frame$.subscribe(() => {
+        clearTimeout(timeout);
+        subscription.unsubscribe();
+        resolve();
+      });
+      this.simulation.requestSnapshot();
+    });
   }
 
   // -- Shared internals ----------------------------------------------------

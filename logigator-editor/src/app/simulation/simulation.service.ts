@@ -16,6 +16,7 @@ import { AnalyticsService } from '../analytics/analytics.service';
 import { AnalyticsEvent } from '../analytics/analytics.mapping';
 import { BoardCompilerService } from './compiler/board-compiler.service';
 import { CompiledBoard, TOP_LEVEL_PATH } from './compiler/compiled-board.model';
+import { CompileDiagnostic } from './compiler/compile-error';
 import { LinkStateApplier, SnapshotApplier } from './state/link-state-applier';
 import { INPUT_EVENT_CONT, INPUT_EVENT_PULSE } from './worker/protocol';
 import {
@@ -108,7 +109,7 @@ export class SimulationService {
       if (this.workModeService.mode() === WorkMode.SIMULATION) {
         this.exit();
       } else {
-        this.enter();
+        void this.enter();
       }
     });
   }
@@ -181,10 +182,15 @@ export class SimulationService {
    * Switches to the main project, compiles it, enters simulation mode, and
    * boots the worker. On compile diagnostics, surfaces a toast and stays in
    * the previous mode; on worker failure, reports and leaves simulation mode.
+   *
+   * Resolves once the engine is up (or the attempt was abandoned) with the
+   * diagnostics that blocked it — empty when the session started. UI callers
+   * ignore both; a programmatic caller (the automation API) awaits readiness
+   * and reports *why* entry was refused.
    */
-  public enter(): void {
+  public async enter(): Promise<CompileDiagnostic[]> {
     if (this.workModeService.mode() === WorkMode.SIMULATION) {
-      return;
+      return [];
     }
     // Simulation always runs the main project. If a custom-component editor is
     // the active tab, switch back to the main project before compiling.
@@ -198,7 +204,7 @@ export class SimulationService {
         'enter skipped: no active project',
         'SimulationService'
       );
-      return;
+      return [];
     }
 
     const board = this.compiler.compile(project);
@@ -210,7 +216,7 @@ export class SimulationService {
       this.analytics.capture(AnalyticsEvent.SimulationCompileBlocked, {
         kinds: board.diagnostics.map((d) => d.kind)
       });
-      return;
+      return board.diagnostics;
     }
 
     this._board = board;
@@ -225,7 +231,7 @@ export class SimulationService {
     this.workModeService.setSimulationMode(true);
 
     this._state.set('starting');
-    this.workerService
+    await this.workerService
       .startSession(board.descriptor, {
         // Fan-out: the board applier first, then every registered watch.
         applier: {
@@ -264,6 +270,7 @@ export class SimulationService {
           this.exit();
         }
       });
+    return [];
   }
 
   /** Stops the session, resets all sim visuals, and restores SELECT mode. */
@@ -436,6 +443,37 @@ export class SimulationService {
     repaint: () => void
   ): void {
     this._activate(component, unitIndex, repaint);
+  }
+
+  /**
+   * Drives a top-level user input to an **absolute** state, the programmatic
+   * counterpart to the canvas tap: a switch already at `value` is left alone (so
+   * repeating the call sends no further engine event), a button pulses on
+   * `value: true` and ignores `value: false` — it holds no state to clear.
+   * Reports whether the component is a user input of the running session; the
+   * engine applies the event at its next tick boundary.
+   */
+  public setUserInput(componentId: number, value: boolean): boolean {
+    const component = this._project?.getComponentById(componentId);
+    const unitIndex = this._board?.userInputs.get(componentId);
+    if (!component || unitIndex === undefined) {
+      return false;
+    }
+    if (component instanceof SwitchComponent) {
+      if (component.isOn === value) {
+        return true;
+      }
+    } else if (component instanceof ButtonComponent) {
+      if (!value) {
+        return true;
+      }
+    } else {
+      return false;
+    }
+    this._activate(component, unitIndex, () =>
+      this._project?.triggerTicker('single')
+    );
+    return true;
   }
 
   /** Shared switch/button activation: visuals plus the engine input event. */

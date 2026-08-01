@@ -296,6 +296,54 @@ describe('SimulationService', () => {
     });
   });
 
+  describe('setUserInput', () => {
+    it('sets a switch absolutely, sending no event when already there', async () => {
+      const switchComp = makeSwitch();
+      project.addComponent(switchComp);
+      await enterAndBoot();
+
+      expect(service.setUserInput(switchComp.id, true)).toBe(true);
+      expect(switchComp.isOn).toBe(true);
+      expect(fakeWorker.postedOfKind('triggerInput')).toHaveLength(1);
+
+      // Repeating the same absolute value is a no-op — no second engine event.
+      expect(service.setUserInput(switchComp.id, true)).toBe(true);
+      expect(switchComp.isOn).toBe(true);
+      expect(fakeWorker.postedOfKind('triggerInput')).toHaveLength(1);
+
+      expect(service.setUserInput(switchComp.id, false)).toBe(true);
+      expect(switchComp.isOn).toBe(false);
+      expect(fakeWorker.postedOfKind('triggerInput')[1]).toMatchObject({
+        event: 0,
+        state: [false]
+      });
+    });
+
+    it('pulses a button on true and ignores false', async () => {
+      const button = makeButton();
+      project.addComponent(button);
+      await enterAndBoot();
+
+      expect(service.setUserInput(button.id, false)).toBe(true);
+      expect(fakeWorker.postedOfKind('triggerInput')).toHaveLength(0);
+
+      expect(service.setUserInput(button.id, true)).toBe(true);
+      expect(fakeWorker.postedOfKind('triggerInput')[0]).toMatchObject({
+        event: 1,
+        state: [true]
+      });
+    });
+
+    it('reports a component that is not a user input of this session', async () => {
+      const and = makeAnd(2, undefined, 10, 10);
+      project.addComponent(and);
+      await enterAndBoot();
+
+      expect(service.setUserInput(and.id, true)).toBe(false);
+      expect(service.setUserInput(999999, true)).toBe(false);
+    });
+  });
+
   it('flashes a button on canvas user input and forwards a Pulse event', async () => {
     const button = makeButton();
     project.addComponent(button);
