@@ -95,6 +95,60 @@ export function describeOption(
 }
 
 /**
+ * Why `value` is not acceptable for `option`, or `null` when it is. The write
+ * paths reject rather than silently accept: the option setters clamp numbers and
+ * strip characters on their own, so an unchecked write would report success
+ * while storing something else.
+ */
+export function validateOptionValue(
+  option: ComponentOption,
+  value: unknown
+): string | null {
+  if (option instanceof NumberComponentOption) {
+    if (typeof value !== 'number' || !Number.isFinite(value)) {
+      return 'expected a finite number';
+    }
+    if (value < option.min || value > option.max) {
+      return `out of range [${option.min}, ${option.max}]`;
+    }
+    return null;
+  }
+  if (
+    option instanceof SelectButtonComponentOption ||
+    option instanceof SelectDropdownComponentOption
+  ) {
+    const values = (option.options as { value: unknown }[]).map((o) => o.value);
+    return values.includes(value)
+      ? null
+      : `not one of ${JSON.stringify(values)}`;
+  }
+  if (option instanceof TextInputComponentOption) {
+    if (typeof value !== 'string') return 'expected a string';
+    if (option.maxLength !== undefined && value.length > option.maxLength) {
+      return `longer than ${option.maxLength} characters`;
+    }
+    // A fresh RegExp: a shared /g instance carries lastIndex between tests.
+    if (
+      option.forbiddenChars &&
+      new RegExp(option.forbiddenChars.source).test(value)
+    ) {
+      return `contains forbidden characters (/${option.forbiddenChars.source}/)`;
+    }
+    return null;
+  }
+  if (option instanceof TextAreaComponentOption) {
+    if (typeof value !== 'string') return 'expected a string';
+    return value.length > option.maxLength
+      ? `longer than ${option.maxLength} characters`
+      : null;
+  }
+  if (option instanceof MemoryDataComponentOption) {
+    return typeof value === 'string' ? null : 'expected a base64 blob string';
+  }
+  return null;
+}
+
+/**
  * Port counts of a default instance of `config`. The counts are a constructor
  * argument of each component subclass, not config data, so the only faithful
  * way to read them is to build a throwaway instance and drop it again.

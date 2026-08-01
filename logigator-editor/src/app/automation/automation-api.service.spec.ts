@@ -9,6 +9,8 @@ import { ProjectService } from '../project/project.service';
 import { ProjectMetadataStore } from '../persistence/project-metadata.store';
 import { WireDirection } from '../wires/wire-direction.enum';
 import { BuiltInComponentType } from '../components/component-type.enum';
+import { WorkModeService } from '../work-mode/work-mode.service';
+import { EditOp } from './automation-api.model';
 import { AutomationApiService } from './automation-api.service';
 
 describe('AutomationApiService', () => {
@@ -119,6 +121,47 @@ describe('AutomationApiService', () => {
       expect(api.getProject().busy).toBeNull();
       project.actionManager.locked = true;
       expect(api.getProject().busy).toBe('session-active');
+    });
+  });
+
+  describe('applyEdit / undo / redo', () => {
+    const addAnd: EditOp = {
+      op: 'addComponent',
+      type: BuiltInComponentType.AND,
+      pos: [0, 0],
+      options: {}
+    };
+
+    it('refuses to mutate while a drag session holds the project', () => {
+      project.actionManager.locked = true;
+      const result = api.applyEdit([addAnd]);
+      expect(result.ok).toBe(false);
+      expect(!result.ok && result.errors[0].message).toContain(
+        'session-active'
+      );
+      expect(project.componentCount).toBe(0);
+    });
+
+    it('refuses to mutate while the circuit is simulating', () => {
+      TestBed.inject(WorkModeService).setSimulationMode(true);
+      const result = api.applyEdit([addAnd]);
+      expect(!result.ok && result.errors[0].message).toContain('simulation');
+    });
+
+    it('undo/redo report whether they had anything to do', () => {
+      expect(api.undo()).toBe(false);
+      api.applyEdit([addAnd]);
+      expect(api.undo()).toBe(true);
+      expect(project.componentCount).toBe(0);
+      expect(api.redo()).toBe(true);
+      expect(project.componentCount).toBe(1);
+    });
+
+    it('leaves history alone while the editor is busy', () => {
+      api.applyEdit([addAnd]);
+      project.actionManager.locked = true;
+      expect(api.undo()).toBe(false);
+      expect(project.componentCount).toBe(1);
     });
   });
 

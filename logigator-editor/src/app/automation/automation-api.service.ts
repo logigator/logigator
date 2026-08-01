@@ -19,13 +19,17 @@ import {
   AUTOMATION_API_VERSION,
   BusyReason,
   CatalogEntry,
+  EditOp,
+  EditResult,
   ElementList,
   ElementQuery,
   GridRect,
   LogigatorAutomationApi,
+  PerOpError,
   ProjectState
 } from './automation-api.model';
 import { describeCatalog } from './catalog';
+import { applyEditOps } from './edit-ops';
 
 /**
  * The transport-agnostic automation facade: a semantic, JSON-in/JSON-out view
@@ -73,7 +77,10 @@ export class AutomationApiService {
       describeCatalog: (): CatalogEntry[] => this.describeCatalog(),
       getProject: (): ProjectState => this.getProject(),
       getElements: (query?: ElementQuery): ElementList =>
-        this.getElements(query)
+        this.getElements(query),
+      applyEdit: (ops: EditOp[]): EditResult => this.applyEdit(ops),
+      undo: (): boolean => this.undo(),
+      redo: (): boolean => this.redo()
     });
   }
 
@@ -166,6 +173,45 @@ export class AutomationApiService {
     return result;
   }
 
+  // -- Writes --------------------------------------------------------------
+
+  /**
+   * Applies a batch of edits as exactly one undo step. Refused (nothing
+   * touched) while the editor is busy — see {@link BusyReason}.
+   */
+  public applyEdit(ops: EditOp[]): EditResult {
+    const refusal = this.refuseWhenBusy('applyEdit');
+    if (refusal) return refusal;
+    if (!Array.isArray(ops)) {
+      return {
+        ok: false,
+        errors: [
+          { index: -1, op: 'applyEdit', message: 'ops must be an array' }
+        ]
+      };
+    }
+    return applyEditOps(ops, {
+      project: this.activeProject!,
+      provider: this.componentProvider,
+      debug: (message) => this.logging.debug(message, 'AutomationApiService')
+    });
+  }
+
+  /** Reverts the newest history entry; `false` when there is none (or busy). */
+  public undo(): boolean {
+    const project = this.busyReason() === null ? this.activeProject : null;
+    if (!project?.actionManager.undoAvailable) return false;
+    project.actionManager.undo();
+    return true;
+  }
+
+  public redo(): boolean {
+    const project = this.busyReason() === null ? this.activeProject : null;
+    if (!project?.actionManager.redoAvailable) return false;
+    project.actionManager.redo();
+    return true;
+  }
+
   // -- Shared internals ----------------------------------------------------
 
   /** The project every call operates on; never cached (see the class doc). */
@@ -186,6 +232,19 @@ export class AutomationApiService {
     if (this.workMode.mode() === WorkMode.SIMULATION) return 'simulation';
     if (project.actionManager.locked) return 'session-active';
     return null;
+  }
+
+  /** The per-op error a mutating call returns while the editor is busy. */
+  private refuseWhenBusy(
+    op: string
+  ): { ok: false; errors: PerOpError[] } | null {
+    const reason = this.busyReason();
+    return reason
+      ? {
+          ok: false,
+          errors: [{ index: -1, op, message: `editor busy: ${reason}` }]
+        }
+      : null;
   }
 }
 

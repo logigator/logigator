@@ -315,6 +315,11 @@ export interface LogigatorAutomationApi {
   // read
   getProject(): ProjectState;
   getElements(query?: ElementQuery): ElementList;
+
+  // write — one batch is one undo step
+  applyEdit(ops: EditOp[]): EditResult;
+  undo(): boolean;
+  redo(): boolean;
 }
 
 declare global {
