@@ -320,6 +320,14 @@ export interface LogigatorAutomationApi {
   applyEdit(ops: EditOp[]): EditResult;
   undo(): boolean;
   redo(): boolean;
+
+  // validate
+  check(): CompileDiagnosticReport;
+
+  // persistence
+  exportProject(): string;
+  importProject(json: string): Promise<ProjectState>;
+  newProject(): ProjectState;
 }
 
 declare global {

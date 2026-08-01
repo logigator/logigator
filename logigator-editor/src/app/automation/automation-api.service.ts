@@ -4,6 +4,7 @@ import { Rectangle } from 'pixi.js';
 import { environment } from '../../environments/environment';
 import { ComponentProviderService } from '../components/component-provider.service';
 import { LoggingService } from '../logging/logging.service';
+import { PersistenceService } from '../persistence/persistence.service';
 import { ProjectMetadataStore } from '../persistence/project-metadata.store';
 import {
   serializeComponentBody,
@@ -11,6 +12,8 @@ import {
 } from '../persistence/snapshots';
 import { Project } from '../project/project';
 import { ProjectService } from '../project/project.service';
+import { BoardCompilerService } from '../simulation/compiler/board-compiler.service';
+import { CompileDiagnostic } from '../simulation/compiler/compile-error';
 import { TranslationService } from '../translation/translation.service';
 import { WorkMode } from '../work-mode/work-mode.enum';
 import { WorkModeService } from '../work-mode/work-mode.service';
@@ -19,6 +22,7 @@ import {
   AUTOMATION_API_VERSION,
   BusyReason,
   CatalogEntry,
+  CompileDiagnosticReport,
   EditOp,
   EditResult,
   ElementList,
@@ -46,6 +50,8 @@ export class AutomationApiService {
   private readonly projectService = inject(ProjectService);
   private readonly metadataStore = inject(ProjectMetadataStore);
   private readonly componentProvider = inject(ComponentProviderService);
+  private readonly persistence = inject(PersistenceService);
+  private readonly compiler = inject(BoardCompilerService);
   private readonly workMode = inject(WorkModeService);
   private readonly translation = inject(TranslationService);
   private readonly logging = inject(LoggingService);
@@ -80,7 +86,12 @@ export class AutomationApiService {
         this.getElements(query),
       applyEdit: (ops: EditOp[]): EditResult => this.applyEdit(ops),
       undo: (): boolean => this.undo(),
-      redo: (): boolean => this.redo()
+      redo: (): boolean => this.redo(),
+      check: (): CompileDiagnosticReport => this.check(),
+      exportProject: (): string => this.exportProject(),
+      importProject: (json: string): Promise<ProjectState> =>
+        this.importProject(json),
+      newProject: (): ProjectState => this.newProject()
     });
   }
 
@@ -212,6 +223,57 @@ export class AutomationApiService {
     return true;
   }
 
+  // -- Validation ----------------------------------------------------------
+
+  /**
+   * Compiles the active circuit and reports the blocking diagnostics, so an
+   * agent can validate a design without entering simulation. Read-only: the
+   * compiled board is discarded.
+   */
+  public check(): CompileDiagnosticReport {
+    const project = this.activeProject;
+    if (!project) {
+      return {
+        ok: false,
+        diagnostics: [
+          {
+            kind: 'no-project',
+            message: 'no project is open',
+            instancePath: '',
+            componentType: 0
+          }
+        ]
+      };
+    }
+    return toDiagnosticReport(this.compiler.compile(project).diagnostics);
+  }
+
+  // -- Persistence ---------------------------------------------------------
+
+  /** The active project as a current-version native file JSON string. */
+  public exportProject(): string {
+    return this.persistence.exportProjectToJson(this.requireProject());
+  }
+
+  /**
+   * Replaces the open document with one loaded from native file JSON (a `.lgix`
+   * payload's inner JSON, or a legacy `logigator-editor` export). Like the file
+   * import in the UI, the result is persisted as a browser draft and the URL
+   * moves to `/local/:id`.
+   */
+  public async importProject(json: string): Promise<ProjectState> {
+    this.assertNotBusy('importProject');
+    await this.persistence.importProjectFromJson(json);
+    return this.getProject();
+  }
+
+  /** Replaces the open document with an empty, unsaved draft. */
+  public newProject(): ProjectState {
+    this.assertNotBusy('newProject');
+    this.persistence.createAndSetEmptyProject();
+    return this.getProject();
+  }
+
   // -- Shared internals ----------------------------------------------------
 
   /** The project every call operates on; never cached (see the class doc). */
@@ -234,6 +296,22 @@ export class AutomationApiService {
     return null;
   }
 
+  /**
+   * The active project, or a thrown error — for the calls whose result has no
+   * room for a refusal (the driver sees the exception through `evaluate`).
+   */
+  private requireProject(): Project {
+    const project = this.activeProject;
+    if (!project) throw new Error('logigator: no project is open');
+    return project;
+  }
+
+  /** Throws when a document-replacing call arrives while the editor is busy. */
+  private assertNotBusy(op: string): void {
+    const reason = this.busyReason();
+    if (reason) throw new Error(`logigator: ${op} refused — editor ${reason}`);
+  }
+
   /** The per-op error a mutating call returns while the editor is busy. */
   private refuseWhenBusy(
     op: string
@@ -246,6 +324,22 @@ export class AutomationApiService {
         }
       : null;
   }
+}
+
+/** Compile diagnostics → the JSON report the contract uses. */
+export function toDiagnosticReport(
+  diagnostics: readonly CompileDiagnostic[]
+): CompileDiagnosticReport {
+  return {
+    ok: diagnostics.length === 0,
+    diagnostics: diagnostics.map((d) => ({
+      kind: d.kind,
+      message: d.message,
+      instancePath: d.instancePath,
+      componentType: d.componentType,
+      ...(d.componentId !== undefined ? { componentId: d.componentId } : {})
+    }))
+  };
 }
 
 /** Pixi `Rectangle` → the JSON rect the contract uses. */

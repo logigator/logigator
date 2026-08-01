@@ -4,6 +4,9 @@ import { TestBed } from '@angular/core/testing';
 import { configureTestBed } from '../../testing/configure-test-bed';
 import { makeAnd, makeWire } from '../../testing/factories';
 import { setStaticDIInjector } from '../utils/get-di';
+import { Component } from '../components/component';
+import { ComponentProviderService } from '../components/component-provider.service';
+import { CustomComponentRegistry } from '../components/custom/custom-component-registry.service';
 import { Project } from '../project/project';
 import { ProjectService } from '../project/project.service';
 import { ProjectMetadataStore } from '../persistence/project-metadata.store';
@@ -162,6 +165,59 @@ describe('AutomationApiService', () => {
       project.actionManager.locked = true;
       expect(api.undo()).toBe(false);
       expect(project.componentCount).toBe(1);
+    });
+  });
+
+  describe('check', () => {
+    it('passes a circuit of supported components', () => {
+      project.addComponent(makeAnd(2, undefined, 0, 0));
+      expect(api.check()).toEqual({ ok: true, diagnostics: [] });
+    });
+
+    it('reports the compiler diagnostic that would block simulation', () => {
+      // A placed custom whose snapshot carries no circuit cannot be compiled.
+      const type = TestBed.inject(CustomComponentRegistry).registerSnapshot({
+        kind: 'snapshot',
+        source: 'browser',
+        name: 'Hollow',
+        symbol: 'H',
+        description: '',
+        numInputs: 0,
+        numOutputs: 0,
+        labels: []
+      });
+      const config = TestBed.inject(ComponentProviderService).getComponent(
+        type
+      )!;
+      project.addComponent(
+        Component.deserialize({ pos: [0, 0], options: {} }, config)
+      );
+
+      const report = api.check();
+      expect(report.ok).toBe(false);
+      expect(report.diagnostics[0]).toMatchObject({ kind: 'missing-circuit' });
+    });
+  });
+
+  describe('persistence', () => {
+    it('exports the open document as native file JSON under its name', () => {
+      TestBed.inject(ProjectMetadataStore).register(project, {
+        id: '',
+        name: 'Exported',
+        type: 'project',
+        source: 'browser',
+        hash: '',
+        isPublic: false
+      });
+      project.addComponent(makeAnd(2, undefined, 1, 1));
+
+      const parsed: unknown = JSON.parse(api.exportProject());
+      expect(parsed).toMatchObject({ name: 'Exported', version: 1 });
+    });
+
+    it('refuses to replace the document while the editor is busy', () => {
+      project.actionManager.locked = true;
+      expect(() => api.newProject()).toThrow(/session-active/);
     });
   });
 
