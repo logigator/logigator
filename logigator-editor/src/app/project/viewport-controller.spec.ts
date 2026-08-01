@@ -117,6 +117,29 @@ describe('ViewportController', () => {
     });
   });
 
+  describe('device-pixel snapping', () => {
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it('renders the container at whole device pixels', () => {
+      viewport.setPosition(new Point(10.3, 20.7));
+      expect(container.position.x).toBe(10);
+      expect(container.position.y).toBe(21);
+    });
+
+    it('accumulates sub-pixel pan deltas instead of rounding them away', () => {
+      for (let i = 0; i < 10; i++) viewport.pan(new Point(0.3, 0));
+      expect(container.position.x).toBe(3);
+    });
+
+    it('snaps to the device-pixel lattice, not CSS pixels', () => {
+      vi.stubGlobal('devicePixelRatio', 2);
+      viewport.setPosition(new Point(10.3, 0));
+      expect(container.position.x).toBe(10.5);
+    });
+  });
+
   describe('gridPosition', () => {
     it('returns origin when container is at (0,0) with scale 1', () => {
       const gp = viewport.gridPosition;

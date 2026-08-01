@@ -32,6 +32,13 @@ export class ViewportController {
   private _viewPortSize = new Point(0, 0);
   private readonly _viewportChange$ = new Subject<ViewportState>();
 
+  // The exact camera position — the source of truth for all camera math
+  // (pan accumulation, zoom anchoring, the grid-space accessors). The
+  // container only ever receives its device-pixel-snapped mirror (see
+  // _applyPosition), so sub-pixel pan deltas keep accumulating here and
+  // zoom cycles never collect snapping error.
+  private readonly _truePosition = new Point(0, 0);
+
   constructor(
     private readonly _container: Container,
     private readonly _grid: Grid,
@@ -48,7 +55,7 @@ export class ViewportController {
   }
 
   public pan(delta: Point): void {
-    this.setPosition(delta.add(this._container.position));
+    this.setPosition(delta.add(this._truePosition));
   }
 
   public setPosition(point: Point): void {
@@ -59,7 +66,17 @@ export class ViewportController {
   /** Moves the camera without emitting — `_updateScale` composes position and
    *  scale mutations and emits one consistent state at the end. */
   private _applyPosition(point: Point): void {
-    this._container.position.copyFrom(point);
+    this._truePosition.copyFrom(point);
+    // Snap the rendered translation to whole device pixels. Wires are
+    // one-device-pixel antialiased hairlines, so a fractional translation
+    // sweeps their pixel-coverage phase while panning — they visibly shimmer
+    // brighter/dimmer. Snapping freezes the phase; _truePosition keeps the
+    // exact camera so the snap never accumulates into drift.
+    const dpr = window.devicePixelRatio || 1;
+    this._container.position.set(
+      Math.round(point.x * dpr) / dpr,
+      Math.round(point.y * dpr) / dpr
+    );
     this._grid.updatePosition(this._container.position);
   }
 
@@ -125,8 +142,8 @@ export class ViewportController {
     const factor = this._container.scale.x * environment.gridSize;
     return {
       gridOrigin: new Point(
-        -this._container.position.x / factor,
-        -this._container.position.y / factor
+        -this._truePosition.x / factor,
+        -this._truePosition.y / factor
       ),
       scale: this._container.scale.x,
       viewportSize: this._viewPortSize.clone()
@@ -139,15 +156,15 @@ export class ViewportController {
    */
   public gridView(out: Rectangle): Rectangle {
     const factor = this._container.scale.x * environment.gridSize;
-    out.x = -this._container.position.x / factor;
-    out.y = -this._container.position.y / factor;
+    out.x = -this._truePosition.x / factor;
+    out.y = -this._truePosition.y / factor;
     out.width = this._viewPortSize.x / factor;
     out.height = this._viewPortSize.y / factor;
     return out;
   }
 
   public get gridPosition(): Point {
-    return this._container.position.multiplyScalar(
+    return this._truePosition.multiplyScalar(
       1 / (this._container.scale.x * environment.gridSize)
     );
   }
@@ -168,7 +185,7 @@ export class ViewportController {
         .scale(1 / this._container.scale.x, 1 / this._container.scale.y)
         .scale(scale, scale)
         .translate(center.x, center.y)
-        .apply(this._container.position)
+        .apply(this._truePosition)
     );
 
     this._container.scale.set(scale);
