@@ -69,7 +69,7 @@ if (!result.ok) throw new Error(JSON.stringify(result.errors));
 
 // 3. Show the user what changed — a real selection, as if they had drawn it.
 const id = result.createdIds[0].componentId;
-api.highlight({ elementIds: [id] });
+api.select({ elementIds: [id] });
 api.camera.focus({ elementIds: [id] });
 
 // 4. Close the loop: simulate and read back.
@@ -162,8 +162,8 @@ Mutations are refused while the editor holds project state mid-change:
 `applyEdit` reports this as a per-op error; `undo`/`redo` return `false`;
 `importProject` / `newProject` throw. Reads (`getProject`, `getElements`,
 `check`, `exportProject`) and camera operations are always allowed —
-`getProject().busy` is how a caller sees the state. Selecting
-(`highlight`) is a mutation-adjacent editing affordance and is refused too.
+`getProject().busy` is how a caller sees the state. `select` is refused too: it
+is an editing affordance, and a scissor cut mutates outright.
 
 A placement is also refused when it would close a custom-component dependency
 cycle (placing a master into the editor for a master it feeds), the same guard
@@ -226,9 +226,9 @@ agents work _with_ a watching user.
 No camera operation is ever a history entry, and all of them work during
 simulation.
 
-### Highlighting = selecting a region
+### Selecting a region
 
-`highlight(region, opts?)` **is** the select tool: it does exactly what a user
+`select(region, opts?)` **is** the select tool: it does exactly what a user
 picking select and dragging a marquee over the region does. The caught elements
 carry the selection tint, the drawn rectangle persists as the grab rect, and the
 selection is then movable, rotatable and deletable like any other — the work mode
@@ -243,13 +243,13 @@ user what changed.
   crossing the rectangle's edge are cut there and only the inside pieces join the
   selection. It registers a **provisional history entry** — one Ctrl+Z reverts
   it, the following move or delete folds it into itself, and
-  `clearHighlights()` retracts it so a cut nothing acted on leaves no trace.
+  `clearSelection()` retracts it so a cut nothing acted on leaves no trace.
   `cut` needs an edge, so it is refused for an `{ elementIds }` region.
 
 The returned `SelectionState` is `{ componentIds, wireIds, rect, cut }`. Read
 `wireIds` after a cut: the inside pieces are **new** wires with fresh ids.
 
-`clearHighlights()` clears the selection, like clicking empty canvas.
+`clearSelection()` clears the selection, like clicking empty canvas.
 
 Selecting is refused while the editor is busy — it is an editing affordance, and
 the select tool does not exist during simulation.

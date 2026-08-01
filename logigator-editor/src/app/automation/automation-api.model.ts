@@ -285,15 +285,15 @@ export interface FocusOptions {
   maxZoom?: number;
 }
 
-// -- Selection ("highlighting") --------------------------------------------
+// -- Selection -------------------------------------------------------------
 
 /**
  * What to select: a marquee rectangle (what a user drags with the select tool)
  * or a set of elements addressed by id.
  */
-export type HighlightRegion = { bounds: GridRect } | { elementIds: number[] };
+export type SelectRegion = { bounds: GridRect } | { elementIds: number[] };
 
-export interface HighlightOptions {
+export interface SelectOptions {
   /**
    * Scissor the selection: wires crossing the rectangle's edge are cut there
    * and only the inside pieces join the selection — the held-scissor-key
@@ -383,8 +383,8 @@ export interface LogigatorAutomationApi {
   };
 
   // selection — exactly what the select tool's marquee does
-  highlight(region: HighlightRegion, opts?: HighlightOptions): SelectionState;
-  clearHighlights(): void;
+  select(region: SelectRegion, opts?: SelectOptions): SelectionState;
+  clearSelection(): void;
 
   // editor settings — persisted user preferences, never history entries
   settings: {

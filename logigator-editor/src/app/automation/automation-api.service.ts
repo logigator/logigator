@@ -41,13 +41,13 @@ import {
   FocusTarget,
   GridPoint,
   GridRect,
-  HighlightOptions,
-  HighlightRegion,
   LogigatorAutomationApi,
   PerOpError,
   PortReadout,
   ProjectState,
   SelectionState,
+  SelectOptions,
+  SelectRegion,
   SettingDescriptor,
   SettingsState,
   SimStatus,
@@ -160,11 +160,9 @@ export class AutomationApiService {
         focus: (target: FocusTarget, opts?: FocusOptions): ViewportInfo =>
           this.cameraFocus(target, opts)
       }),
-      highlight: (
-        region: HighlightRegion,
-        opts?: HighlightOptions
-      ): SelectionState => this.highlight(region, opts),
-      clearHighlights: (): void => this.clearHighlights(),
+      select: (region: SelectRegion, opts?: SelectOptions): SelectionState =>
+        this.select(region, opts),
+      clearSelection: (): void => this.clearSelection(),
       settings: Object.freeze({
         describe: (): SettingDescriptor[] => this.settingsDescribe(),
         get: (): SettingsState => this.settingsGet(),
@@ -556,7 +554,7 @@ export class AutomationApiService {
     return this.getViewport();
   }
 
-  // -- Selection ("highlighting") ------------------------------------------
+  // -- Selection -----------------------------------------------------------
 
   /**
    * Selects a region — the same operation as picking the select tool and
@@ -568,19 +566,19 @@ export class AutomationApiService {
    * `{ bounds }` is the marquee (a zero-area rectangle behaves like a click:
    * the single element under the point); `{ elementIds }` selects those
    * elements directly, rect-ing their padded bounds like a committed paste
-   * does. `cut` scissors the marquee — see {@link HighlightOptions}.
+   * does. `cut` scissors the marquee — see {@link SelectOptions}.
    *
    * The work mode is switched to SELECT, so the selection is grabbable
    * afterwards; a `cut` mirrors the held-scissor-key marquee rather than the
    * scissor tool, so it does not leave the tool in scissor mode.
    */
-  public highlight(
-    region: HighlightRegion,
-    options: HighlightOptions = {}
+  public select(
+    region: SelectRegion,
+    options: SelectOptions = {}
   ): SelectionState {
     const refusal = this.busyReason();
     if (refusal) {
-      throw new Error(`logigator: highlight refused — editor ${refusal}`);
+      throw new Error(`logigator: select refused — editor ${refusal}`);
     }
     const project = this.activeProject!;
     const selection = project.selectionManager;
@@ -625,7 +623,7 @@ export class AutomationApiService {
    * Clears the selection, like clicking empty canvas — which also retracts an
    * uncommitted scissor cut, so a cut nothing acted on leaves no trace.
    */
-  public clearHighlights(): void {
+  public clearSelection(): void {
     // Tolerates a replaced or destroyed project: a new document brings a fresh
     // selection, so there is nothing left to clear.
     const project = this.activeProject;

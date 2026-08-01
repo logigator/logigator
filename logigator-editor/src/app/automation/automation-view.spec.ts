@@ -17,7 +17,7 @@ import { AutomationApiService } from './automation-api.service';
 const VIEWPORT_GRID_WIDTH = 40;
 const VIEWPORT_GRID_HEIGHT = 20;
 
-describe('AutomationApiService camera and highlights', () => {
+describe('AutomationApiService camera and selection', () => {
   let api: AutomationApiService;
   let project: Project;
 
@@ -123,14 +123,14 @@ describe('AutomationApiService camera and highlights', () => {
     });
   });
 
-  describe('highlight (region selection)', () => {
+  describe('select (region selection)', () => {
     it('selects what a marquee over the region would catch', () => {
       const inside = makeAnd(2, undefined, 1, 1);
       const outside = makeAnd(2, undefined, 30, 30);
       project.addComponent(inside);
       project.addComponent(outside);
 
-      const state = api.highlight({
+      const state = api.select({
         bounds: { x: 0, y: 0, width: 10, height: 10 }
       });
 
@@ -148,7 +148,7 @@ describe('AutomationApiService camera and highlights', () => {
       const and = makeAnd(2, undefined, 1, 1);
       project.addComponent(and);
 
-      api.highlight({ bounds: { x: 0, y: 0, width: 10, height: 10 } });
+      api.select({ bounds: { x: 0, y: 0, width: 10, height: 10 } });
 
       expect(workMode.mode()).toBe(WorkMode.SELECT);
       expect(project.selectionManager.isGrabbedAt({ x: 2, y: 2 })).toBe(true);
@@ -160,8 +160,8 @@ describe('AutomationApiService camera and highlights', () => {
       project.addComponent(first);
       project.addComponent(second);
 
-      api.highlight({ bounds: { x: 0, y: 0, width: 10, height: 10 } });
-      const state = api.highlight({
+      api.select({ bounds: { x: 0, y: 0, width: 10, height: 10 } });
+      const state = api.select({
         bounds: { x: 29, y: 29, width: 10, height: 10 }
       });
 
@@ -173,7 +173,7 @@ describe('AutomationApiService camera and highlights', () => {
       const and = makeAnd(2, undefined, 1, 1);
       project.addComponent(and);
 
-      const state = api.highlight({
+      const state = api.select({
         bounds: { x: 1.5, y: 1.5, width: 0, height: 0 }
       });
 
@@ -187,7 +187,7 @@ describe('AutomationApiService camera and highlights', () => {
       const wire = makeWire(0, 5, WireDirection.HORIZONTAL, 20);
       project.addWire(wire);
 
-      const state = api.highlight(
+      const state = api.select(
         { bounds: { x: 0, y: 0, width: 10, height: 10 } },
         { cut: true }
       );
@@ -205,11 +205,11 @@ describe('AutomationApiService camera and highlights', () => {
       project.addWire(makeWire(0, 5, WireDirection.HORIZONTAL, 20));
       const before = serializeProjectBody(project);
 
-      api.highlight(
+      api.select(
         { bounds: { x: 0, y: 0, width: 10, height: 10 } },
         { cut: true }
       );
-      api.clearHighlights();
+      api.clearSelection();
 
       expect(serializeProjectBody(project)).toEqual(before);
       expect(project.actionManager.undoAvailable).toBe(false);
@@ -217,7 +217,7 @@ describe('AutomationApiService camera and highlights', () => {
 
     it('a plain region selection is no history entry at all', () => {
       project.addComponent(makeAnd(2, undefined, 1, 1));
-      api.highlight({ bounds: { x: 0, y: 0, width: 10, height: 10 } });
+      api.select({ bounds: { x: 0, y: 0, width: 10, height: 10 } });
       expect(project.actionManager.undoAvailable).toBe(false);
     });
 
@@ -225,7 +225,7 @@ describe('AutomationApiService camera and highlights', () => {
       const and = makeAnd(2, undefined, 3, 3);
       project.addComponent(and);
 
-      const state = api.highlight({ elementIds: [and.id, 999999] });
+      const state = api.select({ elementIds: [and.id, 999999] });
 
       expect(state.componentIds).toEqual([and.id]);
       expect(and.selected).toBe(true);
@@ -236,20 +236,20 @@ describe('AutomationApiService camera and highlights', () => {
     it('refuses a cut without an edge to cut at', () => {
       const and = makeAnd(2, undefined, 3, 3);
       project.addComponent(and);
-      expect(() =>
-        api.highlight({ elementIds: [and.id] }, { cut: true })
-      ).toThrow(/bounds region/);
+      expect(() => api.select({ elementIds: [and.id] }, { cut: true })).toThrow(
+        /bounds region/
+      );
     });
 
     it('is refused while the circuit is simulating', () => {
       TestBed.inject(WorkModeService).setSimulationMode(true);
       expect(() =>
-        api.highlight({ bounds: { x: 0, y: 0, width: 4, height: 4 } })
+        api.select({ bounds: { x: 0, y: 0, width: 4, height: 4 } })
       ).toThrow(/simulation/);
     });
 
     it('clear is safe with nothing selected', () => {
-      api.clearHighlights();
+      api.clearSelection();
       expect(project.selectionManager.isEmpty).toBe(true);
     });
   });
