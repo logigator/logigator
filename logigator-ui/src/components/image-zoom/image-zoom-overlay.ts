@@ -13,12 +13,12 @@ export const IMAGE_ZOOM_DATA = new InjectionToken<ImageZoomData>(
 );
 
 /**
- * The enlarged image itself — the panel `LgImageZoom` attaches to its modal
- * overlay. The image is wrapped in a button so the focus trap has something to
- * focus and the keyboard can dismiss it, and so a click anywhere on the image
- * closes (matching the backdrop).
+ * The enlarged image itself — the panel `ImageZoomViewer` attaches to its
+ * modal overlay. The image is wrapped in a button so the focus trap has
+ * something to focus and the keyboard can dismiss it, and so a click anywhere
+ * on the image closes (matching the backdrop).
  *
- * Internal — reached through the {@link LgImageZoom} directive.
+ * Internal — reached through {@link ImageZoomViewer}.
  */
 @Component({
   selector: 'lg-image-zoom-overlay',

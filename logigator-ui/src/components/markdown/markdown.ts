@@ -8,6 +8,7 @@ import {
   ViewEncapsulation
 } from '@angular/core';
 import { MarkdownComponent } from 'ngx-markdown';
+import { ImageZoomViewer } from '../image-zoom/image-zoom-viewer';
 
 /**
  * Replaces markdown link/image destinations with their mapped URLs. Only the
@@ -48,8 +49,8 @@ export function headingSlug(text: string): string {
  * the height cap every image gets — so one tall screenshot can't push the
  * prose off the page — leaves a portrait image narrow, and the text reads
  * beside it rather than around a column of whitespace. Wide viewports only;
- * a narrow one has no room alongside. Detail lost to the cap is the zoomable
- * content's to give back (`LgImageZoom`).
+ * a narrow one has no room alongside. Detail lost to the cap is the built-in
+ * image zoom's to give back.
  */
 const PORTRAIT_MAX_RATIO = 0.9;
 
@@ -82,6 +83,12 @@ export interface LgMarkdownLinkClick {
  * app-specific links are claim-or-inert, and `javascript:` payloads (rendered
  * with the HTML sanitizer's `unsafe:` prefix as their scheme) stay defused.
  *
+ * Content images open full-size in a modal overlay when clicked (the zoom
+ * `LgImageZoom` gives a standalone image — content images can't host a
+ * component, so the behavior is delegated from the host like link clicks, and
+ * each image becomes a focusable button — named by its alt text — as it
+ * loads). An image wrapped in a link keeps the link's behavior instead.
+ *
  * Uses `ViewEncapsulation.None` because ngx-markdown injects the parsed HTML as
  * `innerHTML` on its own element, out of reach of emulated encapsulation; every
  * rule is therefore scoped under the `lg-markdown` host element.
@@ -90,7 +97,11 @@ export interface LgMarkdownLinkClick {
   selector: 'lg-markdown',
   imports: [MarkdownComponent],
   encapsulation: ViewEncapsulation.None,
-  host: { '(click)': 'onContentClick($event)' },
+  providers: [ImageZoomViewer],
+  host: {
+    '(click)': 'onContentClick($event)',
+    '(keydown)': 'onContentKeydown($event)'
+  },
   template: `<markdown [data]="resolvedData()" [src]="src()" />`,
   styles: `
     lg-markdown {
@@ -246,6 +257,12 @@ export interface LgMarkdownLinkClick {
       max-width: 100%;
       max-height: 24rem;
       margin: auto;
+      cursor: zoom-in;
+    }
+
+    /* An image wrapped in a link acts as the link, not as a zoom trigger. */
+    lg-markdown a img {
+      cursor: pointer;
     }
 
     /* Portrait images are narrow once height-capped, so the prose reads beside
@@ -296,21 +313,34 @@ export class LgMarkdown {
   );
 
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly imageZoom = inject(ImageZoomViewer);
 
   constructor() {
-    // Only the image itself knows its aspect ratio, and CSS can't ask — so the
-    // portrait class the layout keys off is set as each image loads (`load`
-    // doesn't bubble, hence the capture phase). Re-rendered content fires it
-    // again, cache included.
+    // Per-image setup hangs off each image's `load` event (`load` doesn't
+    // bubble, hence the capture phase) — the content is innerHTML, so there is
+    // no other per-image hook, and re-rendered content fires it again, cache
+    // included. Only the image itself knows its aspect ratio (CSS can't ask),
+    // so the portrait class the layout keys off is set here; so is the
+    // focusability the built-in zoom needs.
     this.host.nativeElement.addEventListener(
       'load',
       (event) => {
         const image = event.target;
-        if (image instanceof HTMLImageElement && image.naturalHeight > 0) {
+        if (!(image instanceof HTMLImageElement)) {
+          return;
+        }
+        if (image.naturalHeight > 0) {
           image.classList.toggle(
             'lg-portrait',
             image.naturalWidth / image.naturalHeight < PORTRAIT_MAX_RATIO
           );
+        }
+        // A linked image activates its (already focusable) link instead.
+        if (!image.closest('a')) {
+          // The button role announces that Enter does something; the image's
+          // alt text serves as the button's accessible name.
+          image.tabIndex = 0;
+          image.setAttribute('role', 'button');
         }
       },
       true
@@ -330,6 +360,9 @@ export class LgMarkdown {
   protected onContentClick(event: MouseEvent): void {
     const anchor = (event.target as HTMLElement | null)?.closest('a');
     if (!anchor || !this.host.nativeElement.contains(anchor)) {
+      if (event.target instanceof HTMLImageElement) {
+        this.openImage(event.target);
+      }
       return;
     }
     const href = anchor.getAttribute('href');
@@ -366,6 +399,20 @@ export class LgMarkdown {
       // sanitizer's unsafe: prefix as their scheme) must never execute.
       event.preventDefault();
     }
+  }
+
+  protected onContentKeydown(event: KeyboardEvent): void {
+    if (event.key !== 'Enter' && event.key !== ' ') {
+      return;
+    }
+    if (event.target instanceof HTMLImageElement) {
+      event.preventDefault();
+      this.openImage(event.target);
+    }
+  }
+
+  private openImage(image: HTMLImageElement): void {
+    this.imageZoom.open(image.currentSrc || image.src, image.alt);
   }
 }
 

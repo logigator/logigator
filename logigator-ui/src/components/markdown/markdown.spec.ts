@@ -61,7 +61,7 @@ describe('headingSlug', () => {
   });
 });
 
-describe('LgMarkdown link handling', () => {
+describe('LgMarkdown content interaction', () => {
   @Component({
     imports: [LgMarkdown],
     template: `<lg-markdown [data]="data" (linkClick)="handle($event)" />`
@@ -73,7 +73,9 @@ describe('LgMarkdown link handling', () => {
       '[site](https://logigator.com/features)\n\n' +
       '[page](docs:settings)\n\n' +
       '[mail](mailto:hi@logigator.com)\n\n' +
-      '[bad](javascript:alert(1))';
+      '[bad](javascript:alert(1))\n\n' +
+      '![Shot](shot.png)\n\n' +
+      '[![Linked shot](linked.png)](https://logigator.com/linked)';
     events: LgMarkdownLinkClick[] = [];
     handle = (event: LgMarkdownLinkClick): void => {
       this.events.push(event);
@@ -100,7 +102,12 @@ describe('LgMarkdown link handling', () => {
     return { fixture, host, el, link, click };
   }
 
-  afterEach(() => vi.restoreAllMocks());
+  afterEach(() => {
+    vi.restoreAllMocks();
+    document
+      .querySelectorAll('.cdk-overlay-container')
+      .forEach((container) => container.remove());
+  });
 
   it('opens web links in a new tab instead of navigating the app', async () => {
     const { link, click } = await setup();
@@ -155,6 +162,55 @@ describe('LgMarkdown link handling', () => {
     const navigated = click(link('mailto:hi@logigator.com'));
     expect(navigated).toBe(true);
     expect(open).not.toHaveBeenCalled();
+  });
+
+  it('opens a clicked content image full-size, with its own src and alt', async () => {
+    const { el, fixture } = await setup();
+    const image = el.querySelector('img[alt=Shot]')!;
+    image.dispatchEvent(
+      new MouseEvent('click', { bubbles: true, cancelable: true })
+    );
+    fixture.detectChanges();
+
+    const enlarged = document.querySelector('.cdk-overlay-container img');
+    expect(enlarged?.getAttribute('src')).toContain('shot.png');
+    expect((enlarged as HTMLImageElement).alt).toBe('Shot');
+  });
+
+  it('makes a loaded image keyboard-reachable and opens it on Enter', async () => {
+    const { el, fixture } = await setup();
+    const image = el.querySelector('img[alt=Shot]') as HTMLImageElement;
+    image.dispatchEvent(new Event('load'));
+    expect(image.tabIndex).toBe(0);
+    expect(image.getAttribute('role')).toBe('button');
+
+    image.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })
+    );
+    fixture.detectChanges();
+
+    expect(document.querySelector('.cdk-overlay-container img')).not.toBeNull();
+  });
+
+  it('lets an image wrapped in a link act as the link, not a zoom trigger', async () => {
+    const { el, fixture } = await setup();
+    const open = vi.spyOn(window, 'open').mockReturnValue(null);
+    const image = el.querySelector('a img') as HTMLImageElement;
+    image.dispatchEvent(new Event('load'));
+    expect(image.tabIndex).not.toBe(0);
+    expect(image.getAttribute('role')).toBeNull();
+
+    image.dispatchEvent(
+      new MouseEvent('click', { bubbles: true, cancelable: true })
+    );
+    fixture.detectChanges();
+
+    expect(open).toHaveBeenCalledWith(
+      'https://logigator.com/linked',
+      '_blank',
+      'noopener'
+    );
+    expect(document.querySelector('.cdk-overlay-container img')).toBeNull();
   });
 
   it('scrollToHeading targets headings by their text slug', async () => {
