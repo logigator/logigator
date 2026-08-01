@@ -1,0 +1,243 @@
+# Automation API
+
+A programmatic interface for driving the editor from a script or an AI agent:
+query the circuit, edit it, run the simulation, move the camera, highlight
+regions for the watching user, and round-trip files — all through a semantic,
+JSON-based command surface instead of pixel-level canvas interaction.
+
+The facade is installed as `window.__logigator` and driven externally through
+Playwright/CDP `evaluate`. It is **transport-agnostic**: an MCP server or a
+WebSocket bridge can be added later without changing anything below.
+
+## Directory Layout
+
+```
+src/app/automation/
+├── automation-api.model.ts    # The JSON contract (types) + LogigatorAutomationApi
+├── automation-api.service.ts  # The facade: install(), reads, camera, sim, settings
+├── catalog.ts                 # Registry-derived catalog + option-model reflection
+├── edit-ops.ts                # Edit-op schema, validation, integrate → commit
+└── port-index.ts              # component → link-id reverse index for port reads
+```
+
+## Gating
+
+`environment.debug.automationApi` — `true` in `environment.development.ts`,
+`false` in production (the same pattern as `debugMenu`). When false,
+`AutomationApiService.install()` is a no-op and **nothing** is put on `window`.
+`AppComponent` calls `install()` immediately after `setStaticDIInjector`, because
+the facade builds model objects (`Project`, `Component`) that resolve their
+dependencies through the static injector.
+
+## Contract rules
+
+- **JSON in, JSON out.** Every argument and result is structured-cloneable, so
+  `evaluate` transports them directly. No live editor object crosses the
+  boundary; elements are addressed by their numeric project ids.
+- **Grid units everywhere.** All coordinates are grid units. The camera
+  namespace converts to screen px internally.
+- **Element bodies reuse the persistence body.** `SerializedComponentBody` /
+  `SerializedWireBody` with the element's `id` attached — the shape an agent
+  reads back is the shape it writes.
+- **The active project is the target**, resolved per call (`ProjectService`).
+  It works the same whether a project or a custom component is open for edit,
+  and the facade never caches a `Project` (an import replaces and destroys it).
+- **The catalog is generated**, never hand-written: it walks
+  `ComponentProviderService.allComponents()`, so a custom component loaded at
+  runtime appears on the next call.
+
+## Driving the editor from an agent
+
+```js
+// Playwright: browser_evaluate
+const api = window.__logigator;
+
+// 1. What can be placed?
+const and = api.describeCatalog().find((entry) => entry.symbol === '&');
+
+// 2. Build something — one batch, one undo step.
+const result = api.applyEdit([
+  {
+    op: 'addComponent',
+    type: and.type,
+    pos: [4, 4],
+    options: { numInputs: 2 }
+  },
+  { op: 'addWire', pos: [0, 4], direction: 0, length: 4 }
+]);
+if (!result.ok) throw new Error(JSON.stringify(result.errors));
+
+// 3. Show the user what changed.
+const id = result.createdIds[0].componentId;
+api.highlight([{ elementIds: [id] }]);
+api.camera.focus({ elementIds: [id] });
+
+// 4. Close the loop: simulate and read back.
+await api.sim.enter();
+api.sim.pause();
+await api.sim.setInput(leverId, true);
+await api.sim.step();
+const [readout] = await api.sim.readPorts([id]);
+```
+
+## Surface
+
+### Discovery
+
+| call                | returns                                                    |
+| ------------------- | ---------------------------------------------------------- |
+| `version()`         | API contract version + editor version/commit               |
+| `describeCatalog()` | every registered type: ports, category, option descriptors |
+
+An `OptionDescriptor` carries the constraints a write must respect, keyed by
+`kind`: `number` (`min`/`max`), `select` (`values`), `text` (`maxLength`,
+`forbiddenChars` as a regex source string), `textarea`, `memory` (a base64
+bit-packed blob), `unknown`. `hidden` marks options the inspector does not show
+(system-managed, e.g. a plug's index).
+
+Port counts come from probing a default instance — they are a constructor
+argument of each component subclass, not config data. Adjustable types drive
+them from an option, whose `number` descriptor carries the allowed span.
+
+### Reads
+
+`getProject()` returns the document's name/id/type/source, dirty flag, content
+bounds, undo/redo availability, the current `busy` reason, and all elements.
+`getElements(query)` is the filtered read: `componentIds` / `wireIds` /
+`bounds` (a quad-tree range query) / `types`. Naming ids of one kind restricts
+the read to that kind.
+
+### Edits
+
+`applyEdit(ops)` commits the whole batch as **one** `ActionContainer` — Ctrl+Z
+reverts agent work exactly like user work.
+
+| op                           | payload                                                        |
+| ---------------------------- | -------------------------------------------------------------- |
+| `addComponent`               | `{ type, pos, direction?, options?, negInputs?, negOutputs? }` |
+| `addWire`                    | `{ pos, direction, length }`                                   |
+| `remove`                     | `{ componentIds?, wireIds? }`                                  |
+| `moveComponent` / `moveWire` | `{ id, to }`                                                   |
+| `rotateComponent`            | `{ id, direction }` — absolute facing, 0–3                     |
+| `setOption`                  | `{ id, key, value }`                                           |
+| `setPortNegation`            | `{ id, side, index, negated }`                                 |
+
+`EditResult` is `{ ok: true, createdIds, integratedWires }` or
+`{ ok: false, errors }`. Semantics worth knowing:
+
+- **All-or-nothing.** Malformed ops come back as a complete per-op error list
+  with nothing applied. Ops that only fail against live state (a collision, an
+  unknown id) fail at that op, and everything already applied in the batch is
+  rolled back — no history entry is recorded either way.
+- **Wire positions are integers.** A wire body stores its start on the integer
+  grid; the editor's half-grid lattice offset is added internally. `moveWire`'s
+  `to` follows the same convention, so a body read back round-trips.
+- **Wire integration runs per op.** Adding a component whose port lands on a
+  wire's interior splits that wire; two collinear wires drawn as one span merge.
+  The resulting adds/removes are part of the same undo step and are reported in
+  `integratedWires`.
+- **Rotation moves the position.** A component's `direction` setter re-anchors
+  it, and `rotateComponent` turns the component around its own footprint's pivot
+  (like a single-element selection rotate). Read the position back rather than
+  assuming it is unchanged.
+- **Removals do not merge.** Deleting an element leaves the surrounding wires
+  as they are — the same behavior as the eraser and the Delete key.
+- **Option values are rejected, not clamped.** The option model would silently
+  clamp an out-of-range number and strip forbidden characters; a `setOption` (or
+  an `addComponent`'s `options`) outside the declared constraints is refused
+  instead, so a reported success always means the value was stored verbatim.
+
+`undo()` / `redo()` return whether they had anything to do.
+
+### Busy refusal
+
+Mutations are refused while the editor holds project state mid-change:
+
+| reason           | when                                                                                                                    |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `session-active` | a drag session is live (`actionManager.locked`), including a paste or rotate group still floating before its first grab |
+| `simulation`     | the circuit is running — editing is locked                                                                              |
+| `no-project`     | no document is open                                                                                                     |
+
+`applyEdit` reports this as a per-op error; `undo`/`redo` return `false`;
+`importProject` / `newProject` throw. View operations (camera, highlights) are
+always allowed.
+
+### Validation
+
+`check()` compiles the active circuit and returns the `CompileDiagnostic`s that
+would block simulation, without entering it.
+
+### Persistence
+
+`exportProject()` returns the current native file JSON (the inner payload of a
+`.lgix` export). `importProject(json)` replaces the open document and persists
+it as a browser draft, exactly like the file import in the UI.
+`newProject()` opens an empty draft.
+
+### Simulation
+
+`sim.enter()` compiles and boots the engine, resolving once it is ready — or
+with `state: 'inactive'` plus the `diagnostics` that blocked entry, so an agent
+sees _why_. Then `play` / `pause` / `step` / `stop` / `status` /
+`setTarget(value, unit)`.
+
+`sim.setInput(componentId, value)` is **absolute**: a lever already at `value`
+sends no further engine event, a button pulses on `true` and ignores `false`.
+Agents never have to read-then-toggle.
+
+`sim.readPorts(ids?)` returns per-port powered booleans, split into `inputs` and
+`outputs`. It builds a component → link-id reverse index once per compiled board
+(`port-index.ts`) over the compiler's `LinkMapping`.
+
+**Read-after-write:** engine state reaches the canvas one snapshot at a time, so
+`setInput`, `step` and `readPorts` are async — each pulls a fresh full snapshot
+and resolves after it has been applied. The engine applies an input at its next
+tick, so the deterministic recipe is:
+
+```js
+api.sim.pause();
+await api.sim.setInput(leverId, true);
+await api.sim.step();
+const readouts = await api.sim.readPorts();
+```
+
+### Camera and highlights
+
+Pointing the camera at what changed is part of the contract, not a convenience:
+agents work _with_ a watching user.
+
+- `camera.getViewport()` — visible grid rect, zoom factor, screen size.
+- `camera.pan(delta)` — grid units; `+x` scrolls the view right.
+- `camera.setCenter(pos)`, `camera.setZoom(factor, center?)` (clamped to the
+  editor's zoom ladder), `zoomIn` / `zoomOut` / `zoom100`.
+- `camera.focus(target, opts?)` — frames a `Rect`, `{ elementIds }`, or
+  `'content'`; `paddingGrid` defaults to 2 and `maxZoom` to 1 so framing one gate
+  does not fill the screen. Returns the resulting viewport.
+- `highlight(regions)` replaces the marked set (`{ bounds }` or
+  `{ elementIds }`); `clearHighlights()` clears it.
+
+Highlights resolve element ids to bounds at call time — they do not follow an
+element that later moves. They live in the project's `FloatingLayer`, so
+`setOverlayVisible(false)` already keeps them out of image exports and preview
+snapshots. No view operation is ever a history entry, and all of them work
+during simulation.
+
+### Editor settings
+
+`settings.describe()` / `get()` / `set(patch)` cover the theme, the language,
+and every boolean preference. The boolean half is enumerated from
+`EditorSettingsService.settings`, so a preference added later appears on its
+own. Writes go through `ThemingService` / `TranslationService` /
+`EditorSetting`, so persistence and reactivity behave exactly as if the user had
+flipped the controls — these are user-preference mutations, never history
+entries. `set` validates the whole patch first: an unknown key or an unaccepted
+value throws and applies nothing.
+
+## Deferred
+
+- **Screenshots** — `BoardSnapshotService.renderProjectToCanvas` → PNG data URL.
+- **MCP server + WebSocket bridge** — the same facade as typed MCP tools; the
+  contract is designed so this is purely additive transport.
+- **Preview-before-commit mode** — routing a batch into a proposal-preview
+  session for untrusted callers, instead of committing directly.
