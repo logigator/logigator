@@ -441,8 +441,8 @@ __metadata:
 
 "@angular/router@file:./packages/router-stub::locator=logigator-editor%40workspace%3Alogigator-editor":
   version: 21.0.0
-  resolution: "@angular/router@file:./packages/router-stub#./packages/router-stub::hash=0cc055&locator=logigator-editor%40workspace%3Alogigator-editor"
-  checksum: 10c0/7af4020ed6b9f6d49c5ada4bccb997017859c6494c7cc978b0a67a1f031db99922abbaa48ba2be5a19c8ee6d0fa3115aa4915012da906d21134ea77d0429458b
+  resolution: "@angular/router@file:./packages/router-stub#./packages/router-stub::hash=60338e&locator=logigator-editor%40workspace%3Alogigator-editor"
+  checksum: 10c0/bd305ddedab71ff3941658d7413e671e492fab86a2acf5a1975b68091e18852d0d69c56b25c8e3f74ee7541ed4736c1932e0fd7342aa3284deefff6312ddf73e
   languageName: node
   linkType: hard
 
@@ -1716,6 +1716,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@logigator/ui@workspace:logigator-ui"
   dependencies:
+    "@angular/compiler": "npm:^22.1.0"
     "@angular/compiler-cli": "npm:^22.1.0"
     ng-packagr: "npm:^22.1.0"
     tslib: "npm:^2.8.1"
@@ -6065,6 +6066,7 @@ __metadata:
     angular-eslint: "npm:^22.1.0"
     eslint: "npm:^10.8.0"
     prettier: "npm:^3.9.6"
+    typescript: "npm:~6.0.3"
     typescript-eslint: "npm:^8.65.0"
   languageName: unknown
   linkType: soft
