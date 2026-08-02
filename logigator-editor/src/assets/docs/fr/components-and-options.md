@@ -92,7 +92,7 @@ Tout port d'entrée ou de sortie peut être **inversé** afin que le signal qui 
 
 Tant que l'outil Fil est actif, survoler à proximité d'un port prévisualise la bulle qu'un appui ajouterait, de sorte que vous voyez exactement quel port vous êtes sur le point d'inverser.
 
-![Une porte OU avec une bulle d’inversion sur sa sortie.](../images/negated-gate.png)
+![Une porte OU avec une bulle d’inversion sur sa sortie.](../images/negated-gate.gif)
 
 ## Placer du texte
 

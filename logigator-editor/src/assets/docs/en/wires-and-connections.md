@@ -45,7 +45,7 @@ To use tunnels:
 
 All tunnels with matching labels behave as one connected net; tunnels with different labels stay independent.
 
-![Two tunnels carrying the same label, with no wire between them.](../images/tunnel.png)
+![Two tunnels carrying the same label, with no wire between them.](../images/tunnel.gif)
 
 ## Cutting and rearranging wires
 

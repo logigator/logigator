@@ -2,7 +2,7 @@
 
 Algunos componentes te permiten mirar dentro de ellos mientras tu circuito se ejecuta. Puedes leer el contenido de una memoria en la dirección que está leyendo actualmente, o abrir una vista interactiva y en directo del circuito interno de un componente personalizado.
 
-![Una ventana de monitor abierta sobre un circuito en ejecución.](../images/inspection-showcase.png)
+![Una ventana de monitor abierta sobre un circuito en ejecución.](../images/inspection-showcase.gif)
 
 La inspección solo está disponible **mientras se ejecuta una [simulación](docs:simulation)**. Entra primero en la simulación y luego toca un componente que admita inspección para abrir su vista. Tocarlo de nuevo trae la misma vista de vuelta al frente, y salir de la simulación lo cierra todo.
 

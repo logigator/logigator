@@ -2,7 +2,7 @@
 
 Certains composants vous permettent de regarder à l'intérieur pendant que votre circuit tourne. Vous pouvez lire le contenu d'une mémoire à l'adresse qu'elle lit actuellement, ou ouvrir une vue interactive et en direct du circuit interne d'un composant personnalisé.
 
-![Une fenêtre de surveillance ouverte au-dessus d'un circuit en cours d'exécution.](../images/inspection-showcase.png)
+![Une fenêtre de surveillance ouverte au-dessus d'un circuit en cours d'exécution.](../images/inspection-showcase.gif)
 
 L'inspection n'est disponible **que pendant qu'une [simulation](docs:simulation) tourne**. Entrez d'abord en simulation, puis touchez un composant qui prend en charge l'inspection pour ouvrir sa vue. Le toucher à nouveau ramène la même vue au premier plan, et quitter la simulation ferme tout.
 

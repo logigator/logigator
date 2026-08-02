@@ -45,7 +45,7 @@ Para usar túneles:
 
 Todos los túneles con etiquetas coincidentes se comportan como una sola red conectada; los túneles con etiquetas distintas permanecen independientes.
 
-![Dos túneles con la misma etiqueta, sin cable entre ellos.](../images/tunnel.png)
+![Dos túneles con la misma etiqueta, sin cable entre ellos.](../images/tunnel.gif)
 
 ## Cortar y reorganizar cables
 

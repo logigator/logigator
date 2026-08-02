@@ -2,7 +2,7 @@
 
 Eine benutzerdefinierte Komponente verpackt eine ganze Schaltung in ein einziges wiederverwendbares Bauteil mit eigenem Symbol und benannten Anschlüssen. Baue einen Zähler oder eine ALU einmal und lass sie dann als einen ordentlichen Block in größere Schaltungen fallen.
 
-![Eine benutzerdefinierte Komponente neben der Gatter-Schaltung, die sie ersetzt.](../images/custom-component-showcase.png)
+![Eine benutzerdefinierte Komponente neben der Gatter-Schaltung, die sie ersetzt.](../images/custom-component-showcase.gif)
 
 ## Eine Komponente erstellen
 

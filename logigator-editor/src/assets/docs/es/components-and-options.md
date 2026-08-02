@@ -92,7 +92,7 @@ Cualquier puerto de entrada o salida se puede **negar** para que la señal que p
 
 Mientras la herramienta Cable está activa, pasar el cursor cerca de un puerto previsualiza la burbuja que añadiría un toque, para que veas exactamente qué puerto estás a punto de negar.
 
-![Una puerta O con una burbuja de negación en su salida.](../images/negated-gate.png)
+![Una puerta O con una burbuja de negación en su salida.](../images/negated-gate.gif)
 
 ## Colocar texto
 

@@ -92,7 +92,7 @@ Jeder Eingangs- oder Ausgangsanschluss kann **negiert** werden, sodass das Signa
 
 Solange das Leitungswerkzeug aktiv ist, zeigt das Bewegen nahe eines Anschlusses eine Vorschau der Blase, die ein Tippen hinzufügen würde, sodass du genau siehst, welchen Anschluss du gerade negieren wirst.
 
-![Ein ODER-Gatter mit einer Negationsblase an seinem Ausgang.](../images/negated-gate.png)
+![Ein ODER-Gatter mit einer Negationsblase an seinem Ausgang.](../images/negated-gate.gif)
 
 ## Text platzieren
 

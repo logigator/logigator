@@ -92,7 +92,7 @@ Any input or output port can be **negated** so the signal passing through it is 
 
 While the Wire tool is active, hovering near a port previews the bubble a tap would add, so you can see exactly which port you are about to negate.
 
-![An OR gate with a negation bubble on its output.](../images/negated-gate.png)
+![An OR gate with a negation bubble on its output.](../images/negated-gate.gif)
 
 ## Placing text
 

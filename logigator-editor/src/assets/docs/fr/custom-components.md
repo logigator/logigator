@@ -2,7 +2,7 @@
 
 Un composant personnalisé empaquette tout un circuit dans une seule pièce réutilisable dotée de son propre symbole et de ports nommés. Construisez un compteur ou une UAL une fois, puis déposez-le dans de plus grands circuits comme un bloc bien rangé.
 
-![Un composant personnalisé à côté du circuit de portes qu’il remplace.](../images/custom-component-showcase.png)
+![Un composant personnalisé à côté du circuit de portes qu’il remplace.](../images/custom-component-showcase.gif)
 
 ## Créer un composant
 

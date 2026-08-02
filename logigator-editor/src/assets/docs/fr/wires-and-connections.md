@@ -45,7 +45,7 @@ Pour utiliser les tunnels :
 
 Tous les tunnels avec des étiquettes correspondantes se comportent comme un seul réseau connecté ; les tunnels avec des étiquettes différentes restent indépendants.
 
-![Deux tunnels portant la même étiquette, sans fil entre eux.](../images/tunnel.png)
+![Deux tunnels portant la même étiquette, sans fil entre eux.](../images/tunnel.gif)
 
 ## Couper et réagencer les fils
 

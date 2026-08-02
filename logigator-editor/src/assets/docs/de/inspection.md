@@ -2,7 +2,7 @@
 
 Manche Komponenten lassen dich in sie hineinschauen, während deine Schaltung läuft. Du kannst den Inhalt eines Speichers an der Adresse lesen, die er gerade liest, oder eine live-interaktive Ansicht der inneren Schaltung einer benutzerdefinierten Komponente öffnen.
 
-![Ein Beobachtungsfenster über einer laufenden Schaltung.](../images/inspection-showcase.png)
+![Ein Beobachtungsfenster über einer laufenden Schaltung.](../images/inspection-showcase.gif)
 
 Die Inspektion ist nur verfügbar, **während eine [Simulation](docs:simulation) läuft**. Betritt zuerst die Simulation, tippe dann auf eine Komponente, die die Inspektion unterstützt, um ihre Ansicht zu öffnen. Erneutes Tippen holt dieselbe Ansicht wieder nach vorn, und das Verlassen der Simulation schließt alles.
 

@@ -2,7 +2,7 @@
 
 Un componente personalizado empaqueta todo un circuito en una única pieza reutilizable con su propio símbolo y puertos con nombre. Construye un contador o una ALU una vez y luego colócalo en circuitos más grandes como un bloque ordenado.
 
-![Un componente personalizado junto al circuito de puertas al que sustituye.](../images/custom-component-showcase.png)
+![Un componente personalizado junto al circuito de puertas al que sustituye.](../images/custom-component-showcase.gif)
 
 ## Crear un componente
 

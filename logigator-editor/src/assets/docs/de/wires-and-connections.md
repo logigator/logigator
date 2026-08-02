@@ -45,7 +45,7 @@ So verwendest du Tunnel:
 
 Alle Tunnel mit übereinstimmenden Beschriftungen verhalten sich wie ein einziges verbundenes Netz; Tunnel mit unterschiedlichen Beschriftungen bleiben unabhängig.
 
-![Zwei Tunnel mit derselben Beschriftung, ohne Leitung dazwischen.](../images/tunnel.png)
+![Zwei Tunnel mit derselben Beschriftung, ohne Leitung dazwischen.](../images/tunnel.gif)
 
 ## Leitungen schneiden und umarrangieren
 

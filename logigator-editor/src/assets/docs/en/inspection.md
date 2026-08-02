@@ -2,7 +2,7 @@
 
 Some components let you look inside them while your circuit runs. You can read a memory's contents at the address it's currently reading, or open a live, interactive view of a custom component's inner circuit.
 
-![A watch window open over a running circuit.](../images/inspection-showcase.png)
+![A watch window open over a running circuit.](../images/inspection-showcase.gif)
 
 Inspection is only available **while a [simulation](docs:simulation) is running**. Enter simulation first, then tap a component that supports inspection to open its view. Tapping it again brings the same view back to the front, and leaving simulation closes everything.
 

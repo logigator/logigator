@@ -2,7 +2,7 @@
 
 A custom component packages a whole circuit into a single reusable part with its own symbol and named ports. Build a counter or an ALU once, then drop it into bigger circuits as one tidy block.
 
-![A custom component beside the gate circuit it replaces.](../images/custom-component-showcase.png)
+![A custom component beside the gate circuit it replaces.](../images/custom-component-showcase.gif)
 
 ## Creating a component
 
