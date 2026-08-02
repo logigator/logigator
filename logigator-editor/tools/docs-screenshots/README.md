@@ -145,6 +145,23 @@ short.
 
 Captures repeat to within a handful of antialiased border pixels.
 
+## Encoding
+
+Chromium hands screenshots back as truecolour, while the editor draws from a
+flat palette: a full-window shot uses a few thousand distinct colours, nearly
+all of them antialiasing between a much smaller set. Every PNG is therefore
+written indexed (`sharp`, libimagequant at quality 100), which halves it and
+holds the picture to a per-channel mean difference around 0.03.
+
+A GIF leans on the same flatness twice more, because its frames are two settled
+states of one scene: a single palette is quantized across all of them and
+written as the global colour table, and every frame after the first keeps only
+the pixels whose colour index changed, writing the rest as a transparent index
+over an undisposed predecessor.
+
+Both encoders are deterministic, so re-capturing an unchanged shot produces
+identical bytes and leaves the tracked image alone.
+
 ## Cloud shots
 
 `account-menu`, `open-cloud`, `upload-to-cloud` and `share-component` run

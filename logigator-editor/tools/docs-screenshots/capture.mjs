@@ -19,6 +19,7 @@ import { Listr, PRESET_TIMER } from 'listr2';
 import { DEFAULT_BASE_URL, launchOptions } from './config.mjs';
 import { Editor } from './lib/editor.mjs';
 import { writeGif } from './lib/gif.mjs';
+import { writePng } from './lib/png.mjs';
 import { SHOTS } from './shots/index.mjs';
 
 const require = createRequire(import.meta.url);
@@ -95,7 +96,8 @@ async function capture(shot, task, browser, args) {
     } else {
       task.output = 'capturing';
       const png = await editor.snap(result);
-      await fs.writeFile(path.join(args.out, `${shot.name}.png`), png);
+      task.output = 'encoding the png';
+      await writePng(path.join(args.out, `${shot.name}.png`), png);
     }
   } finally {
     await editor.close();
