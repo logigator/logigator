@@ -11,7 +11,7 @@ import {
   ViewContainerRef,
   viewChild
 } from '@angular/core';
-import { WindowSize } from './window-config';
+import { WindowRect, WindowSize } from './window-config';
 import { WindowRef } from './window-ref';
 import { OpenWindow } from './window.service';
 import { LgButton } from '../button/button';
@@ -263,6 +263,46 @@ export class LgWindow implements AfterViewInit {
       }
     }
     entry.ref.notifyChildLoaded(componentRef.instance);
+    entry.ref.attachGeometry({
+      read: () => this.viewportRect(),
+      write: (rect) => this.placeAt(rect)
+    });
+  }
+
+  /** The rendered box in viewport CSS px — what {@link WindowRef.bounds} reads. */
+  private viewportRect(): WindowRect {
+    const box = this.host.nativeElement.getBoundingClientRect();
+    return { x: box.x, y: box.y, width: box.width, height: box.height };
+  }
+
+  /**
+   * Places the window at a viewport-relative box, clamped to the outlet like a
+   * drag. The rect the component holds is outlet-relative, so the outlet's
+   * origin is derived from the host's own measured position rather than from
+   * the outlet element. Returns the box actually taken — computed, not
+   * re-measured, since the DOM has not been written yet.
+   */
+  private placeAt(patch: Partial<WindowRect>): WindowRect | null {
+    if (this.fullscreen()) {
+      return null;
+    }
+    const current = this.rect();
+    const box = this.host.nativeElement.getBoundingClientRect();
+    const origin = { x: box.x - current.x, y: box.y - current.y };
+    const next = this.clampRect({
+      x: patch.x === undefined ? current.x : patch.x - origin.x,
+      y: patch.y === undefined ? current.y : patch.y - origin.y,
+      width: patch.width ?? current.width,
+      height: patch.height ?? current.height
+    });
+    this.draggedRect.set(next);
+    if (next.width !== current.width || next.height !== current.height) {
+      this.entry().ref.notifyResized({
+        width: next.width,
+        height: next.height
+      });
+    }
+    return { ...next, x: next.x + origin.x, y: next.y + origin.y };
   }
 
   /** Raise the window and move keyboard focus into it (for Escape-to-close). */

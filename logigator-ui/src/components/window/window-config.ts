@@ -10,6 +10,9 @@ export interface WindowPoint {
   y: number;
 }
 
+/** A window's outer box in viewport CSS px. */
+export interface WindowRect extends WindowPoint, WindowSize {}
+
 /** One segment of a structured window title (e.g. a breadcrumb). */
 export interface WindowTitlePart {
   label: string;

@@ -95,6 +95,7 @@ export type {
   WindowConfig,
   WindowSize,
   WindowPoint,
+  WindowRect,
   WindowTitlePart
 } from './components/window/window-config';
 

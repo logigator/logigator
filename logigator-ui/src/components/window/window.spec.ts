@@ -218,6 +218,68 @@ describe('WindowService + LgWindowOutlet', () => {
     expect(win.style.height).toBe('160px');
   });
 
+  // jsdom lays nothing out, so the window's measured box is stubbed from its
+  // own inline rect plus a fixed outlet origin — the relationship the
+  // viewport ↔ outlet conversion is built on.
+  function stubLayoutAt(win: HTMLElement, origin: { x: number; y: number }) {
+    win.getBoundingClientRect = () =>
+      ({
+        x: origin.x + parseFloat(win.style.left || '0'),
+        y: origin.y + parseFloat(win.style.top || '0'),
+        width: parseFloat(win.style.width || '0'),
+        height: parseFloat(win.style.height || '0')
+      }) as DOMRect;
+  }
+
+  it('places the window at a viewport box through the ref', () => {
+    const { fixture, service } = setup();
+    const ref = service.open(TestWindowChild, { inputValues: { wordSize: 1 } });
+    fixture.detectChanges();
+    const [win] = windowsIn(fixture);
+    stubLayoutAt(win, { x: 300, y: 80 });
+
+    // The default cascade puts it at 16,16 inside an outlet at 300,80.
+    expect(ref.bounds).toMatchObject({ x: 316, y: 96 });
+
+    const placed = ref.setBounds({ x: 500, y: 200, width: 640 });
+    fixture.detectChanges();
+
+    expect(win.style.left).toBe('200px');
+    expect(win.style.top).toBe('120px');
+    expect(win.style.width).toBe('640px');
+    // Unnamed fields keep their value, and the box comes back as taken.
+    expect(placed).toEqual({ x: 500, y: 200, width: 640, height: 360 });
+  });
+
+  it('clamps a placement the same way a drag does, and reports the resize', () => {
+    const { fixture, service } = setup();
+    const ref = service.open(TestWindowChild, { inputValues: { wordSize: 1 } });
+    fixture.detectChanges();
+    const [win] = windowsIn(fixture);
+    stubLayoutAt(win, { x: 300, y: 80 });
+    const sizes: WindowSize[] = [];
+    ref.resized.subscribe((size) => sizes.push(size));
+
+    // Left of and above the outlet's own corner, and below the minimum size.
+    const placed = ref.setBounds({ x: 100, y: 0, width: 100, height: 100 });
+    fixture.detectChanges();
+
+    expect(placed).toEqual({ x: 300, y: 80, width: 240, height: 160 });
+    expect(win.style.left).toBe('0px');
+    expect(sizes.at(-1)).toEqual({ width: 240, height: 160 });
+  });
+
+  it('has no box to place in a fullscreen outlet', () => {
+    const fixture = TestBed.createComponent(FullscreenHost);
+    fixture.detectChanges();
+    const ref = TestBed.inject(WindowService).open(TestWindowChild, {
+      inputValues: { wordSize: 1 }
+    });
+    fixture.detectChanges();
+
+    expect(ref.setBounds({ x: 10, y: 10 })).toBeNull();
+  });
+
   it('renders takeovers in a fullscreen outlet: no rect, no resize, back closes', () => {
     const fixture = TestBed.createComponent(FullscreenHost);
     fixture.detectChanges();
