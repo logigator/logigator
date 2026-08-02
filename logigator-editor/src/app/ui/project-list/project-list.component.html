@@ -66,7 +66,7 @@
                 <span class="truncate font-medium">{{ item.name }}</span>
                 <span class="text-sm text-muted">
                   {{ t('openProjectDialog.lastEdited') }}
-                  {{ item.lastEdited | date: 'mediumDate' }}
+                  {{ item.lastEdited | localDate }}
                 </span>
               </div>
               @if (showShare()) {

@@ -17,7 +17,7 @@
 
     @if (buildDate) {
       <dt class="text-muted">{{ t('aboutDialog.buildDate') }}</dt>
-      <dd>{{ buildDate.toLocaleDateString() }}</dd>
+      <dd>{{ buildDate | localDate }}</dd>
     }
 
     <dt class="text-muted">{{ t('aboutDialog.license') }}</dt>

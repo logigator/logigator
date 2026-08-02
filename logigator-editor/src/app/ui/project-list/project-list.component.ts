@@ -10,7 +10,6 @@ import {
   signal,
   viewChild
 } from '@angular/core';
-import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
   ConfirmationService,
@@ -24,6 +23,7 @@ import {
 } from '@logigator/ui';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { TranslationService } from '../../translation/translation.service';
+import { LocalDatePipe } from '../../utils/local-date/local-date.pipe';
 
 export interface ProjectListItem {
   id: string;
@@ -42,7 +42,7 @@ const NAME_MAX_LENGTH = 20;
 @Component({
   selector: 'app-project-list',
   imports: [
-    DatePipe,
+    LocalDatePipe,
     FormsModule,
     LgButton,
     LgInputText,
