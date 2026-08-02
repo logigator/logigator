@@ -303,6 +303,27 @@ export interface FocusOptions {
   maxZoom?: number;
 }
 
+// -- Work mode -------------------------------------------------------------
+
+/**
+ * Which tool the board is armed with — the {@link WorkMode} values verbatim.
+ * `simulation` is read-only here: it is entered through `sim.enter()`.
+ */
+export type WorkModeName =
+  | 'pan'
+  | 'wireTool'
+  | 'sel'
+  | 'selExact'
+  | 'erase'
+  | 'placeComp'
+  | 'simulation';
+
+export interface WorkModeState {
+  mode: WorkModeName;
+  /** Type id armed for placement; `null` outside `placeComp`. */
+  placementType: number | null;
+}
+
 // -- Selection -------------------------------------------------------------
 
 /**
@@ -408,6 +429,16 @@ export interface LogigatorAutomationApi {
     toGridRect(rect: ScreenRect): GridRect;
   };
 
+  // work mode — which tool the board is armed with; never a history entry
+  getWorkMode(): WorkModeState;
+  /**
+   * Arms a tool. `placeComp` needs `componentType`; `simulation` is refused
+   * (that is `sim.enter()`), as is any change while a simulation runs.
+   */
+  setWorkMode(
+    mode: WorkModeName,
+    opts?: { componentType?: number }
+  ): WorkModeState;
   // selection — exactly what the select tool's marquee does
   select(region: SelectRegion, opts?: SelectOptions): SelectionState;
   clearSelection(): void;

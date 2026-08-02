@@ -238,6 +238,25 @@ transform outside the editor.
 - `camera.toScreen(point)` / `camera.toScreenRect(rect)` — grid → viewport CSS px.
 - `camera.toGrid(point)` / `camera.toGridRect(rect)` — the inverse.
 
+### Work mode
+
+`getWorkMode()` / `setWorkMode(mode, opts?)` arm the board's tool — the tool bar's
+buttons, without matching a localized label. Which tool is active decides what a
+pointer gesture does and what floating chrome (the scissor pill, the placement
+ghost) is on screen.
+
+The modes are the `WorkMode` values verbatim: `pan`, `wireTool`, `sel`,
+`selExact`, `erase`, `placeComp`. `placeComp` needs `{ componentType }` (a
+catalog type id) and every other mode refuses one. `simulation` is read-only —
+`getWorkMode` reports it, `setWorkMode` refuses it (that is `sim.enter()`), and
+so is any switch while a simulation runs.
+
+Switching tools **clears the live selection** (the board's own behaviour), and
+the board picks the mode up in an effect. So `setWorkMode` — and the switch
+`select()` makes on its way in — flushes the pending view update before
+returning: a driver has no tick of its own to wait for, and a selection made
+before that effect ran would be wiped by it a frame later.
+
 ### Selecting a region
 
 `select(region, opts?)` **is** the select tool: it does exactly what a user

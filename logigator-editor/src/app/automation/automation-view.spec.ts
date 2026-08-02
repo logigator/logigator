@@ -1,6 +1,11 @@
 import { beforeEach, afterEach, describe, expect, it } from 'vitest';
 import 'pixi.js/math-extras';
-import { Injector } from '@angular/core';
+import {
+  ApplicationRef,
+  effect,
+  Injector,
+  runInInjectionContext
+} from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { configureTestBed } from '../../testing/configure-test-bed';
 import { makeAnd, makeWire } from '../../testing/factories';
@@ -13,6 +18,7 @@ import { WorkMode } from '../work-mode/work-mode.enum';
 import { WorkModeService } from '../work-mode/work-mode.service';
 import { serializeProjectBody } from '../persistence/snapshots';
 import { BoardSurfaceService } from '../rendering/board-surface.service';
+import { BuiltInComponentType } from '../components/component-type.enum';
 import { AutomationApiService } from './automation-api.service';
 
 const VIEWPORT_GRID_WIDTH = 40;
@@ -194,6 +200,54 @@ describe('AutomationApiService camera and selection', () => {
     });
   });
 
+  describe('work mode', () => {
+    it('arms a tool the way the tool bar does', () => {
+      expect(api.setWorkMode('erase')).toEqual({
+        mode: 'erase',
+        placementType: null
+      });
+      expect(TestBed.inject(WorkModeService).mode()).toBe(WorkMode.ERASE);
+      expect(api.getWorkMode().mode).toBe('erase');
+    });
+
+    it('arms a placement with the type to place', () => {
+      const state = api.setWorkMode('placeComp', {
+        componentType: BuiltInComponentType.AND
+      });
+
+      expect(state).toEqual({
+        mode: 'placeComp',
+        placementType: BuiltInComponentType.AND
+      });
+      expect(
+        TestBed.inject(WorkModeService).selectedComponentConfig()
+      ).not.toBe(null);
+    });
+
+    it('refuses a placement with no type, and a type without a placement', () => {
+      expect(() => api.setWorkMode('placeComp')).toThrow(/componentType/);
+      expect(() =>
+        api.setWorkMode('sel', { componentType: BuiltInComponentType.AND })
+      ).toThrow(/placeComp/);
+      expect(() => api.setWorkMode('placeComp', { componentType: -1 })).toThrow(
+        /catalog/
+      );
+    });
+
+    it('refuses simulation and unknown modes', () => {
+      expect(() => api.setWorkMode('simulation')).toThrow(/sim.enter/);
+      expect(() => api.setWorkMode('scissors' as unknown as 'sel')).toThrow(
+        /unknown work mode/
+      );
+    });
+
+    it('is refused while the circuit is simulating, and reports the mode', () => {
+      TestBed.inject(WorkModeService).setSimulationMode(true);
+      expect(api.getWorkMode().mode).toBe('simulation');
+      expect(() => api.setWorkMode('pan')).toThrow(/simulation/);
+    });
+  });
+
   describe('select (region selection)', () => {
     it('selects what a marquee over the region would catch', () => {
       const inside = makeAnd(2, undefined, 1, 1);
@@ -302,6 +356,32 @@ describe('AutomationApiService camera and selection', () => {
       expect(and.selected).toBe(true);
       // No marquee was drawn, so the rect is the padded content bounds.
       expect(state.rect).not.toBeNull();
+    });
+
+    it('finishes the tool switch before selecting, so no effect can wipe it', () => {
+      const and = makeAnd(2, undefined, 1, 1);
+      project.addComponent(and);
+      const workMode = TestBed.inject(WorkModeService);
+      workMode.setMode(WorkMode.PAN);
+      // The board drops the live selection as it swaps tools, from an effect on
+      // the work mode (WorkModeRouter.setMode). A selection made before that
+      // effect ran would be wiped by it a frame later.
+      const injector = TestBed.inject(Injector);
+      runInInjectionContext(injector, () => {
+        effect(() => {
+          workMode.mode();
+          project.selectionManager.clear();
+        });
+      });
+      TestBed.inject(ApplicationRef).tick();
+
+      const state = api.select({
+        bounds: { x: 0, y: 0, width: 10, height: 10 }
+      });
+      TestBed.inject(ApplicationRef).tick();
+
+      expect(state.componentIds).toEqual([and.id]);
+      expect(project.selectionManager.selectedComponents.size).toBe(1);
     });
 
     it('refuses a cut without an edge to cut at', () => {

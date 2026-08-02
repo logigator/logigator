@@ -1,4 +1,4 @@
-import { inject, Injectable } from '@angular/core';
+import { ApplicationRef, inject, Injectable } from '@angular/core';
 import { Point, Rectangle } from 'pixi.js';
 
 import { environment } from '../../environments/environment';
@@ -54,7 +54,9 @@ import {
   SettingDescriptor,
   SettingsState,
   SimStatus,
-  ViewportInfo
+  ViewportInfo,
+  WorkModeName,
+  WorkModeState
 } from './automation-api.model';
 import { describeCatalog } from './catalog';
 import { applyEditOps } from './edit-ops';
@@ -68,6 +70,27 @@ const DEFAULT_FOCUS_PADDING = 2;
 
 /** Zoom cap `focus()` respects, so framing one gate does not fill the screen. */
 const DEFAULT_FOCUS_MAX_ZOOM = 1;
+
+/**
+ * The tools `setWorkMode` arms, contract name → mode. Simulation is missing on
+ * purpose: it is a session, entered through `sim.enter()`.
+ */
+const WORK_MODES = new Map<WorkModeName, WorkMode>([
+  ['pan', WorkMode.PAN],
+  ['wireTool', WorkMode.WIRE_TOOL],
+  ['sel', WorkMode.SELECT],
+  ['selExact', WorkMode.SELECT_EXACT],
+  ['erase', WorkMode.ERASE],
+  ['placeComp', WorkMode.COMPONENT_PLACEMENT]
+]);
+
+/** The contract name of a mode; the one absent from {@link WORK_MODES}. */
+function workModeName(mode: WorkMode): WorkModeName {
+  for (const [name, value] of WORK_MODES) {
+    if (value === mode) return name;
+  }
+  return 'simulation';
+}
 
 /**
  * The transport-agnostic automation facade: a semantic, JSON-in/JSON-out view
@@ -88,6 +111,7 @@ export class AutomationApiService {
   private readonly compiler = inject(BoardCompilerService);
   private readonly simulation = inject(SimulationService);
   private readonly workMode = inject(WorkModeService);
+  private readonly appRef = inject(ApplicationRef);
   private readonly boardSurface = inject(BoardSurfaceService);
   private readonly translation = inject(TranslationService);
   private readonly theming = inject(ThemingService);
@@ -169,6 +193,11 @@ export class AutomationApiService {
         toGrid: (point: ScreenPoint): GridPoint => this.toGrid(point),
         toGridRect: (rect: ScreenRect): GridRect => this.toGridRect(rect)
       }),
+      getWorkMode: (): WorkModeState => this.getWorkMode(),
+      setWorkMode: (
+        mode: WorkModeName,
+        opts?: { componentType?: number }
+      ): WorkModeState => this.setWorkMode(mode, opts),
       select: (region: SelectRegion, opts?: SelectOptions): SelectionState =>
         this.select(region, opts),
       clearSelection: (): void => this.clearSelection(),
@@ -624,6 +653,76 @@ export class AutomationApiService {
     };
   }
 
+  // -- Work mode -----------------------------------------------------------
+
+  public getWorkMode(): WorkModeState {
+    return {
+      mode: workModeName(this.workMode.mode()),
+      placementType: this.workMode.selectedComponentType()
+    };
+  }
+
+  /**
+   * Arms a tool, exactly as the tool bar's buttons do — which tool is active
+   * decides what a pointer gesture on the board does, and what floating chrome
+   * (the scissor pill, the placement ghost) is on screen.
+   */
+  public setWorkMode(
+    mode: WorkModeName,
+    options: { componentType?: number } = {}
+  ): WorkModeState {
+    if (mode === 'simulation') {
+      throw new Error('logigator: simulation mode is entered via sim.enter()');
+    }
+    const target = WORK_MODES.get(mode);
+    if (target === undefined) {
+      throw new Error(
+        `logigator: unknown work mode "${mode}" — one of ` +
+          [...WORK_MODES.keys()].join(', ')
+      );
+    }
+    if (this.workMode.mode() === WorkMode.SIMULATION) {
+      throw new Error(
+        'logigator: setWorkMode refused — editing is locked during simulation'
+      );
+    }
+    const type = options.componentType;
+    if (target === WorkMode.COMPONENT_PLACEMENT) {
+      if (type === undefined) {
+        throw new Error(
+          'logigator: placeComp needs the componentType to place'
+        );
+      }
+      if (!this.componentProvider.getComponent(type)) {
+        throw new Error(`logigator: no component type ${type} in the catalog`);
+      }
+    } else if (type !== undefined) {
+      throw new Error(
+        `logigator: componentType applies to placeComp, not ${mode}`
+      );
+    }
+
+    this.workMode.setMode(target);
+    if (type !== undefined) {
+      this.workMode.setSelectedComponentType(type);
+    }
+    this.flushModeSwitch();
+    return this.getWorkMode();
+  }
+
+  /**
+   * Runs the pending view update so the whole tool swap lands before this call
+   * returns. The board picks the mode up in an effect, and the router's
+   * `setMode` aborts the live drag, deactivates the outgoing tool and clears the
+   * selection — so a caller that switched the tool and then selected something
+   * would have its selection wiped by that effect a frame later. A driver has no
+   * tick of its own to wait for; these calls have to be finished when they
+   * return.
+   */
+  private flushModeSwitch(): void {
+    this.appRef.tick();
+  }
+
   // -- Selection -----------------------------------------------------------
 
   /**
@@ -653,7 +752,12 @@ export class AutomationApiService {
     const project = this.activeProject!;
     const selection = project.selectionManager;
 
-    this.workMode.setMode(WorkMode.SELECT);
+    // Ahead of the selection, and flushed: switching tools clears the live
+    // selection, so the swap has to be finished before anything is selected.
+    if (this.workMode.mode() !== WorkMode.SELECT) {
+      this.workMode.setMode(WorkMode.SELECT);
+      this.flushModeSwitch();
+    }
     if ('bounds' in region) {
       selection.commit(
         new Rectangle(
