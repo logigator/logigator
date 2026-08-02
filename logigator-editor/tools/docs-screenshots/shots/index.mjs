@@ -13,14 +13,34 @@ function mergeRects(...rects) {
 }
 
 /**
+ * Two frames of a running circuit with the given switches flipped between them:
+ * the scene dark, then the same scene powered. The engine is stepped to a
+ * settled state for each, so both frames are deterministic. `target` is a
+ * `clip` or a `locator` and is shared by both, as every animated shot's must be.
+ */
+async function switchedFrames(ed, target, levers) {
+  const frames = [];
+  for (const on of [false, true]) {
+    for (const lever of levers) {
+      await ed.setInput(lever.id, on);
+    }
+    await ed.runUntilSettled();
+    await ed.parkPointer();
+    frames.push(await ed.snap(target));
+  }
+  return { frames };
+}
+
+/**
  * One entry per image the documentation embeds. `run(editor)` puts the editor
  * into the state the picture is of and returns what to capture: a `clip` (CSS
- * px, viewport-relative) or a `locator`. The editor arrives freshly loaded,
- * dark-themed, with tips and the changelog popup suppressed and an empty draft
- * open; circuits come from `circuits/*.json` via `editor.load(name)`.
+ * px, viewport-relative) or a `locator` — or, for an animated one, the `frames`
+ * it captured along the way. The editor arrives freshly loaded, dark-themed,
+ * with tips and the changelog popup suppressed and an empty draft open;
+ * circuits come from `circuits/*.json` via `editor.load(name)`.
  *
- * Not here, because they are not captures of the editor: `intro-banner.png` (a
- * designed banner) and the two `.gif`s (animations).
+ * Not here, because it is not a capture of the editor: `intro-banner.png`, a
+ * designed banner.
  */
 export const SHOTS = [
   // -- Chrome ---------------------------------------------------------------
@@ -91,17 +111,27 @@ export const SHOTS = [
     }
   },
   {
+    // Animated: the switch drives the far LED through the tunnel pair, so the
+    // frame that powers it shows the two ends light up with nothing between.
     name: 'tunnel',
     async run(ed) {
       await ed.load('tunnels');
-      return { clip: await ed.contentClip({ pad: 1.5 }) };
+      const [lever] = await ed.componentsOfType('SW');
+      await ed.enterSimulation();
+      const clip = await ed.contentClip({ pad: 1.5 });
+      return switchedFrames(ed, { clip }, [lever]);
     }
   },
   {
+    // Animated: the gate's negated input, which is what the page is about —
+    // the output is high until the switch feeding it goes high.
     name: 'negated-gate',
     async run(ed) {
       await ed.load('negated-gate');
-      return { clip: await ed.contentClip({ pad: 1.5 }) };
+      const [lever] = await ed.componentsOfType('SW');
+      await ed.enterSimulation();
+      const clip = await ed.contentClip({ pad: 1.5 });
+      return switchedFrames(ed, { clip }, [lever]);
     }
   },
   {
@@ -192,10 +222,27 @@ export const SHOTS = [
     }
   },
   {
+    // Animated: one switch of the built-in half of the comparison, so the gates
+    // above and the custom below are seen running the same circuit.
     name: 'custom-component-showcase',
     async run(ed) {
       await ed.load('custom-comparison');
-      return { clip: await ed.contentClip({ pad: 2, zoom: 1.2 ** 2 }) };
+      // The scene stacks the same circuit twice — gates above, the custom
+      // below. Driving the matching switch in both is what makes the two halves
+      // answer alike, which is the comparison the page is making.
+      const bounds = await ed.contentBounds();
+      const middle = bounds.y + bounds.height / 2;
+      const levers = (await ed.componentsOfType('SW')).sort(
+        (a, b) => a.pos[1] - b.pos[1]
+      );
+      const drive = [
+        levers.find((lever) => lever.pos[1] < middle),
+        levers.find((lever) => lever.pos[1] >= middle)
+      ].filter(Boolean);
+
+      await ed.enterSimulation();
+      const clip = await ed.contentClip({ pad: 2, zoom: 1.2 ** 2 });
+      return switchedFrames(ed, { clip }, drive);
     }
   },
   {
@@ -305,23 +352,43 @@ export const SHOTS = [
     }
   },
   {
+    // Animated: the instance's switch, so the watch is seen following the board
+    // it mirrors — the inner circuit lights with the outer one.
     name: 'inspection-showcase',
+    // A whole-window shot of two things side by side: the narrowest desktop
+    // viewport puts the circuit and the watch as close together as the layout
+    // allows, and the short height keeps the board from being mostly grid.
+    context: { viewport: { ...NARROW_VIEWPORT, height: 560 } },
     async run(ed) {
       await ed.load('custom-example');
-      // The circuit sits in the left third; the watch window is dragged into
-      // the space on the right, so both are readable side by side.
-      await ed.focus('content', { paddingGrid: 3, maxZoom: 1 });
-      await ed.panBy({ x: 14, y: 0 });
       await ed.hideOverlays();
 
       const [lever] = await ed.componentsOfType('SW');
       await ed.enterSimulation();
       await ed.setInput(lever.id, true);
       await ed.runUntilSettled();
+      // Zoomed to the standard board step, so the instance is the same size
+      // here as on every other board shot.
+      await ed.focus('content', { paddingGrid: 3, maxZoom: BOARD_ZOOM });
       await ed.openWatch('EX');
-      await ed.moveWatch({ x: 700, y: 150 });
-      await ed.parkPointer();
-      return { clip: await ed.fullViewportClip() };
+
+      // The window is dragged flush to the board's right edge and the circuit
+      // parked in the middle of what is left, so the two read side by side at
+      // whatever size the window came up.
+      const board = await ed.canvasBox();
+      const watch = await ed.watchWindow().boundingBox();
+      const margin = 16;
+      // The window comes up as tall as the board allows, so there is only ever
+      // room for the margin on the sides.
+      const left = Math.max(0, board.width - watch.width - margin);
+      const top = Math.max(0, Math.min(margin, board.height - watch.height));
+      await ed.moveWatch({ x: board.x + left, y: board.y + top });
+      await ed.centerContentAt({ x: left / 2 });
+      // The watch fits its circuit at 100 % at most, which leaves this one small
+      // in a window this size; framing it at `BOARD_ZOOM` gives the inner
+      // circuit the same weight as the instance on the board beside it.
+      await ed.zoomWatch(BOARD_ZOOM);
+      return switchedFrames(ed, { clip: await ed.fullViewportClip() }, [lever]);
     }
   },
   {

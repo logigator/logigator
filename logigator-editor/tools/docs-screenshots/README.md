@@ -83,10 +83,10 @@ rather than a `TypeError` inside whichever shot ran first.
 
 ## Animated shots
 
-The two animated doc images are step-throughs, not motion capture: a simulation
-before and after a tick, a ROM inspector before and after the address changes.
-A shot builds those by capturing frames into memory with `editor.snap()` and
-returning them; the runner encodes a GIF (`gifenc` + `pngjs`) instead of a PNG:
+The animated doc images are step-throughs, not motion capture: two settled
+states of the same scene, a tick or a switch apart. A shot builds those by
+capturing frames into memory with `editor.snap()` and returning them; the runner
+encodes a GIF (`gifenc` + `pngjs`) instead of a PNG:
 
 ```js
 const frames = [await ed.snap({ clip })];
@@ -96,7 +96,9 @@ frames.push(await ed.snap({ clip }));
 return { frames }; // → <name>.gif, 1200 ms per frame
 ```
 
-Every frame must use the same clip; `delay` overrides the frame time.
+Every frame must use the same clip; `delay` overrides the frame time. The shots
+that just flip a switch share `switchedFrames()`, which drives the engine to a
+settled state on either side of the flip.
 
 ## Editing the circuits
 
