@@ -116,7 +116,16 @@ Everything is captured at `deviceScaleFactor: 2` — "200% zoom", so both the DO
 chrome and the PixiJS canvas (whose resolution follows `devicePixelRatio`) come
 out at 2×. Playwright clips are always CSS px; the scale is applied by the
 renderer. Close-up board shots pin the camera to `BOARD_ZOOM` (`1.2³`, a step on
-the editor's zoom ladder) so a gate is the same size on every page.
+the editor's zoom ladder) so a gate is the same size on every page; the two
+animated shots go further up the ladder, because there the circuit shares the
+frame with chrome that sets its own size (the run controls, the ROM inspector).
+
+Framing is per shot: `context.viewport` sizes the window, and shots whose
+subject spans it (the bars, the run controls) use `NARROW_VIEWPORT` — the tool
+bar wraps to a second row below 1061 CSS px, which binds before the compact
+breakpoint (`max-width: 64rem`) does. A floating window is clamped to the board
+it hangs over, so a short viewport is also what makes the inspection window
+short.
 
 Captures repeat to within a handful of antialiased border pixels.
 

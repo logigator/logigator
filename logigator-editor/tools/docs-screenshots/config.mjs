@@ -21,11 +21,20 @@ export const DEFAULT_BASE_URL = 'http://localhost:4200/editor';
 export const DEVICE_SCALE_FACTOR = 2;
 
 /**
- * Desktop viewport. Wide enough to clear the compact breakpoint (which kicks in
- * below ~1100 CSS px and swaps the whole chrome) with room for the 320 px
+ * Desktop viewport. Wide enough to clear the compact breakpoint (`max-width:
+ * 64rem`, so 1025 px is the first desktop width) with room for the 320 px
  * side-bar plus a board that frames the example circuits.
  */
 export const VIEWPORT = { width: 1280, height: 860 };
+
+/**
+ * Narrowest desktop viewport a shot uses — for the ones whose subject spans the
+ * whole window, where {@link VIEWPORT} would put a band of empty chrome in the
+ * middle. The binding constraint is not the compact breakpoint but the tool
+ * bar: it wraps to a second row below 1061 px, so this leaves a little
+ * headroom over that.
+ */
+export const NARROW_VIEWPORT = { width: 1080 };
 
 /** One grid unit in CSS px at zoom 1 — `environment.gridSize`. */
 export const GRID_SIZE = 16;

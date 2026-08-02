@@ -1,4 +1,4 @@
-import { BOARD_ZOOM } from '../config.mjs';
+import { BOARD_ZOOM, NARROW_VIEWPORT } from '../config.mjs';
 
 /** Smallest clip covering every given rectangle. */
 function mergeRects(...rects) {
@@ -26,6 +26,9 @@ export const SHOTS = [
   // -- Chrome ---------------------------------------------------------------
   {
     name: 'menu-bar',
+    // The bars span the window, so the narrowest desktop viewport is also the
+    // tightest crop of them.
+    context: { viewport: NARROW_VIEWPORT },
     async run(ed) {
       return { clip: await ed.unionClip(['app-title-bar', 'app-tool-bar']) };
     }
@@ -41,6 +44,10 @@ export const SHOTS = [
   },
   {
     name: 'board-overview',
+    // Shorter than the standard viewport: this is a whole-window shot, and the
+    // documentation embeds it at page width, where a 3:2 window is as tall as
+    // the surrounding text can carry.
+    context: { viewport: { height: 720 } },
     async run(ed) {
       await ed.load('half-adder');
       await ed.focus('content', { paddingGrid: 4, maxZoom: BOARD_ZOOM });
@@ -57,10 +64,12 @@ export const SHOTS = [
       await ed.load('single-gate');
       const [gate] = (await ed.elements()).components;
       await ed.focus('content', { paddingGrid: 8, maxZoom: 1 });
-      // Selected with a real click: the settings card follows the selection
-      // inspector, which does not observe an `api.select()`.
-      await ed.clickButton('Select');
-      await ed.clickGrid({ x: gate.pos[0] + 1, y: gate.pos[1] + 1 });
+      // A zero-area region is a click: the single element under the point,
+      // which is what puts its card in the side panel — and no marquee stays
+      // drawn over the gate.
+      await ed.select({
+        bounds: { ...ed.bodyPoint(gate), width: 0, height: 0 }
+      });
       await ed.parkPointer();
       return { clip: await ed.unionClip('app-component-settings lg-card', 8) };
     }
@@ -99,20 +108,68 @@ export const SHOTS = [
     name: 'scissor-select',
     async run(ed) {
       await ed.load('half-adder');
-      await ed.focus('content', { paddingGrid: 3, maxZoom: BOARD_ZOOM });
+      // The editor's maximum zoom (`ZOOM_STEP_MAX`), because the subject is a
+      // one-unit piece of wire — a handful of pixels at the standard board step.
+      await ed.focus('content', { paddingGrid: 3, maxZoom: 1.2 ** 5 });
 
-      // The pill only renders while the select tool is active, and the marquee
-      // is a live gesture: press and drag, and stop before releasing so the
-      // half-drawn rectangle is in frame.
-      await ed.clickButton('Select');
+      // One grid unit of the runs feeding the LEDs, taken out of the middle of
+      // them: the box edges fall between the wires' ends, so what stays selected
+      // is a short piece of each — trimmed at the box edge instead of grabbed
+      // whole, which is the whole point of the mode. Whole grid units, because
+      // the marquee snaps to the lattice.
+      const leds = await ed.componentsOfType('LED');
+      const rows = leds.map((led) => led.pos[1]);
+      const region = {
+        x: Math.min(...leds.map((led) => led.pos[0])) - 3,
+        y: Math.min(...rows) - 1,
+        width: 1,
+        height: Math.max(...rows) - Math.min(...rows) + 2
+      };
+
+      // The pill only renders while the select tool is active. The marquee is a
+      // live gesture, and the shot is of its result: drag it, then release, so
+      // the cut lands and the enclosed elements come up selected instead of the
+      // half-drawn rectangle staying on screen.
+      await ed.setWorkMode('sel');
       await ed.clickButton('Cut wires at selection edge (hold to activate)');
-      const from = await ed.gridPoint({ x: 5, y: 13 });
-      const to = await ed.gridPoint({ x: 20, y: 16 });
+      const from = await ed.gridPoint({ x: region.x, y: region.y });
+      const to = await ed.gridPoint({
+        x: region.x + region.width,
+        y: region.y + region.height
+      });
       await ed.page.mouse.move(from.x, from.y);
       await ed.page.mouse.down();
       await ed.page.mouse.move(to.x, to.y, { steps: 8 });
-      await ed.settle();
-      return { clip: await ed.unionClip(['app-tool-bar', 'app-board']) };
+      await ed.page.mouse.up();
+      await ed.parkPointer();
+      // The pill and the cut, with nothing between them: the board is already at
+      // its maximum zoom, so cropping is the only way left to make a one-unit
+      // piece of wire read. The pill is docked to the top of the board, so the
+      // circuit is panned up under it rather than the crop reaching down to it.
+      const pill = ed.page.getByRole('button', {
+        name: 'Cut wires at selection edge (hold to activate)'
+      });
+      const pillBox = await pill.boundingBox();
+      // Where the pill sits, in grid units — the cut is panned onto that point
+      // rather than the two being related through a hand-rolled px-per-grid.
+      const under = await ed.gridOf({
+        x: pillBox.x + pillBox.width / 2,
+        y: pillBox.y + pillBox.height + 90
+      });
+      await ed.panBy({
+        x: region.x + region.width / 2 - under.x,
+        y: region.y + region.height / 2 - under.y
+      });
+
+      // From the gate that drives the wires to past the LEDs they end at, so the
+      // piece taken out of the middle has both its ends in frame.
+      const cut = await ed.gridClip({
+        x: region.x - 4,
+        y: region.y - 1,
+        width: region.width + 8,
+        height: region.height + 1.5
+      });
+      return { clip: mergeRects(await ed.unionClip(pill, 8), cut) };
     }
   },
 
@@ -148,15 +205,17 @@ export const SHOTS = [
       await ed.openCustomForEdit();
       // Back to Pan: the select tool's scissor pill floats over the board and
       // would sit in the middle of this crop.
-      await ed.clickButton('Pan');
+      await ed.setWorkMode('pan');
       await ed.hideOverlays();
       // The tab bar plus exactly the circuit the component tab opened onto.
       const circuit = await ed.contentClip({
         pad: 2,
-        zoom: 1,
+        zoom: BOARD_ZOOM,
         anchor: 'top-left'
       });
-      const tabs = await ed.unionClip('app-tab-bar');
+      // The tabs themselves, not the bar they sit in: the bar runs the full
+      // width of the board, and the shot is only as wide as its subject.
+      const tabs = await ed.unionClip('app-tab-bar [role="tab"]');
       return { clip: mergeRects(tabs, circuit) };
     }
   },
@@ -174,15 +233,21 @@ export const SHOTS = [
     // Animated: two ticks of a clock, so the LED is dark in one frame and lit
     // in the next. A `frames` result is encoded as a GIF instead of a PNG.
     name: 'simulation-showcase',
+    // The run controls span the window, and they set the frame's width — a
+    // wider viewport only adds empty bar to the right of the clock.
+    context: { viewport: NARROW_VIEWPORT },
     async run(ed) {
       await ed.load('clock');
       await ed.enterSimulation();
       // The run controls belong in frame, so the circuit is parked directly
-      // under them rather than centred in the board.
+      // under them rather than in the middle of the board — but centred across
+      // them, since the bars are what set the frame's width. Zoomed past the
+      // standard board step: the scene is one clock driving one LED, and at
+      // 100 % it reads as a detail in the corner of a picture of the bars.
       const circuit = await ed.contentClip({
-        pad: 3,
-        zoom: 1,
-        anchor: 'top-left'
+        pad: 2,
+        zoom: 1.2 ** 4,
+        anchor: 'top'
       });
       const bars = await ed.unionClip(['app-title-bar', 'app-tool-bar']);
       const clip = mergeRects(bars, circuit);
@@ -209,16 +274,27 @@ export const SHOTS = [
 
       await ed.enterSimulation();
       await ed.runUntilSettled();
+      // Zoomed well past the standard board step so the ROM and its address
+      // lines carry the frame's left column: the inspector beside them is
+      // ~450 px tall, and a 100 % circuit leaves that column mostly empty.
       const circuit = await ed.contentClip({
-        pad: 3,
-        zoom: 1,
+        pad: 2,
+        zoom: 1.2 ** 5,
         anchor: 'top-left'
       });
       await ed.openWatch('ROM');
       await ed.moveWatch({ x: circuit.x + circuit.width + 24, y: circuit.y });
+      const inspector = await ed.unionClip(ed.watchWindow(), 8);
+
+      // The inspector is the taller of the two, so the circuit rides down to
+      // its middle rather than sitting at the top of a half-empty column.
+      const board = await ed.canvasBox();
+      const bounds = await ed.contentBounds();
+      await ed.centerContentAt({
+        y: inspector.y + inspector.height / 2 - board.y
+      });
       await ed.parkPointer();
-      const window = await ed.unionClip(ed.watchWindow(), 8);
-      const clip = mergeRects(circuit, window);
+      const clip = mergeRects(await ed.gridClip(bounds, 2), inspector);
 
       const frames = [await ed.snap({ clip })];
       await ed.setInput(address.id, true);
@@ -250,6 +326,12 @@ export const SHOTS = [
   },
   {
     name: 'inspection-window-multilayer',
+    // The watch opens at 640×480 but is clamped to the board it floats over, so
+    // a short viewport is what makes the window short. The circuit inside is
+    // fit to the canvas when a level first shows, and this shot only opens its
+    // levels once the window is already at its final size — so the smaller
+    // window means less empty grid around the circuit, not a cropped one.
+    context: { viewport: { height: 440 } },
     async run(ed) {
       await ed.load('nested-custom');
       await ed.focus('content', { paddingGrid: 3, maxZoom: 1 });
@@ -309,7 +391,17 @@ export const SHOTS = [
       await panel.waitFor({ state: 'visible' });
       await ed.waitStable(panel);
       await ed.parkPointer();
-      return { clip: await ed.unionClip([trigger, panel]) };
+      // Padded, so neither the panel nor the button it hangs off is cut flush
+      // by the crop. The trigger sits 4 px from the window's right edge, and
+      // `unionClip` clamps there — that side keeps the smaller margin.
+      return {
+        clip: await ed.unionClip([trigger, panel], {
+          top: 8,
+          left: 12,
+          bottom: 8,
+          right: 8
+        })
+      };
     }
   },
   {
@@ -364,7 +456,10 @@ export const SHOTS = [
 
   {
     name: 'shortcut-manager',
-    context: { viewport: { width: 1280, height: 1400 } },
+    // The dialog fills the window's height, and its list scrolls: a viewport
+    // tall enough to hold every binding makes an image the docs cannot show at
+    // a readable size. This frames the first sections and lets the rest scroll.
+    context: { viewport: { width: 1280, height: 820 } },
     async run(ed) {
       await ed.menu('Edit', 'Keyboard Shortcuts');
       await ed.parkPointer();
