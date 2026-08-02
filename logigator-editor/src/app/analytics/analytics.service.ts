@@ -1,5 +1,5 @@
 import { effect, inject, Injectable, Injector, untracked } from '@angular/core';
-import posthog from 'posthog-js';
+import type { PostHog } from 'posthog-js';
 import { WorkModeService } from '../work-mode/work-mode.service';
 import { WorkMode } from '../work-mode/work-mode.enum';
 import { SimulationService } from '../simulation/simulation.service';
@@ -21,9 +21,13 @@ const ANALYTICS_CATEGORY = 'analytics';
  * event goes through {@link capture}, which no-ops until PostHog has been
  * initialised — and it is initialised only once the user grants the
  * `analytics` consent category (see {@link wireConsent}), so instrumentation
- * may run unconditionally and simply drops on the floor before consent. No
- * PostHog network request happens before then: importing the package is inert;
- * `posthog.init` is what loads it, and that is deferred to consent.
+ * may run unconditionally and simply drops on the floor before consent.
+ *
+ * The `posthog-js` package itself is behind a dynamic import in
+ * {@link loadPosthog}, so a session that never grants consent never downloads
+ * it — 238 kB that would otherwise sit in the initial bundle. Nothing before
+ * consent touches the network, and nothing before the import resolves touches
+ * the module: every entry point is gated on {@link initialized}.
  *
  * {@link init} wires the self-contained observable sources (tool switches,
  * simulation lifecycle, tutorial start, and per-project edit operations); the
@@ -44,6 +48,11 @@ export class AnalyticsService {
   private subscribedProject: Project | null = null;
   private unsubscribeActions: (() => void) | null = null;
 
+  /** The lazily imported package, set once {@link loadPosthog} resolves. */
+  private posthog: PostHog | null = null;
+  /** In-flight (or settled) import, so concurrent consent events share one. */
+  private posthogLoad: Promise<PostHog> | null = null;
+
   /** Sends an event, dropped silently until PostHog is initialised on consent.
    * Never throws — some call sites (the `onBeforeRecord` edit hook) run inside a
    * critical user gesture, and a failing third-party `capture` must not break
@@ -51,7 +60,10 @@ export class AnalyticsService {
   public capture(event: string, properties?: Record<string, unknown>): void {
     if (!this.initialized) return;
     try {
-      posthog.capture(event, properties && sanitizeProperties(properties));
+      this.posthog?.capture(
+        event,
+        properties && sanitizeProperties(properties)
+      );
     } catch {
       // Analytics must never break the operation that emitted the event.
     }
@@ -65,7 +77,7 @@ export class AnalyticsService {
   public captureError(error: unknown, correlationId?: string): void {
     if (!this.initialized) return;
     try {
-      posthog.captureException(
+      this.posthog?.captureException(
         error,
         correlationId ? { correlation_id: correlationId } : undefined
       );
@@ -103,23 +115,57 @@ export class AnalyticsService {
     const granted =
       !!window.CookieConsent?.acceptedCategory(ANALYTICS_CATEGORY);
     if (granted && !this.initialized && environment.analytics.posthogKey) {
-      posthog.init(environment.analytics.posthogKey, {
-        api_host: environment.analytics.posthogHost,
-        ui_host: environment.analytics.posthogUiHost,
-        person_profiles: 'identified_only',
-        autocapture: false,
-        // HTTPS-only identity cookie.
-        secure_cookie: true,
-        // No feature flags / experiments are used, so skip the /flags request.
-        advanced_disable_feature_flags: true,
-        // Core Web Vitals for the (heavy) editor load
-        capture_performance: true
-      });
-      this.initialized = true;
+      void this.initPosthog();
     } else if (this.initialized) {
-      if (granted) posthog.opt_in_capturing();
-      else posthog.opt_out_capturing();
+      if (granted) this.posthog?.opt_in_capturing();
+      else this.posthog?.opt_out_capturing();
     }
+  }
+
+  /**
+   * Downloads and initialises PostHog. Runs only on the first grant, so a
+   * session that declines analytics never fetches the package. Re-runs
+   * {@link syncConsent} afterwards because consent can be withdrawn while the
+   * import is in flight — by then {@link initialized} is set, so that pass
+   * takes the opt-in/opt-out branch instead of initialising twice.
+   */
+  private async initPosthog(): Promise<void> {
+    let posthog: PostHog;
+    try {
+      posthog = await this.loadPosthog();
+    } catch {
+      // Offline, or the chunk failed to load. Analytics stays inert; a later
+      // consent event retries.
+      return;
+    }
+    if (this.initialized) return;
+    posthog.init(environment.analytics.posthogKey, {
+      api_host: environment.analytics.posthogHost,
+      ui_host: environment.analytics.posthogUiHost,
+      person_profiles: 'identified_only',
+      autocapture: false,
+      // HTTPS-only identity cookie.
+      secure_cookie: true,
+      // No feature flags / experiments are used, so skip the /flags request.
+      advanced_disable_feature_flags: true,
+      // Core Web Vitals for the (heavy) editor load
+      capture_performance: true
+    });
+    this.initialized = true;
+    this.syncConsent();
+  }
+
+  /** Imports `posthog-js` once, sharing the promise across concurrent calls. */
+  private loadPosthog(): Promise<PostHog> {
+    this.posthogLoad ??= import('posthog-js').then((module) => {
+      this.posthog = module.default;
+      return module.default;
+    });
+    return this.posthogLoad.catch((err: unknown) => {
+      // Let a later consent event start a fresh attempt.
+      this.posthogLoad = null;
+      throw err;
+    });
   }
 
   private watchWorkMode(workMode: WorkModeService): void {
