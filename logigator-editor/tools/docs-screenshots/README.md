@@ -52,6 +52,17 @@ The CLI is a [commander](https://github.com/tj/commander.js) program, so
 `--base` also takes an HTTPS development instance (`https://logigator.test/editor`):
 certificate errors are ignored, so a self-signed local certificate needs no setup.
 
+## Progress output
+
+Shots are run as a [listr2](https://listr2.kilic.dev) task list — one line each,
+with the elapsed time when it settles and, underneath the running one, the step
+it is on (`opening the editor`, `loading half-adder`, `settling the
+simulation`). Those come from `Editor.report`, which the calls that can take
+seconds announce themselves through; a shot that stalls therefore says what it
+is waiting on. A failing shot is marked and the run carries on, and the exit
+code is 1 if any shot failed. Piped or redirected output drops to one line per
+event, so a container log stays readable.
+
 ## What a shot is
 
 `shots/index.mjs` is the registry. Each entry names the image it produces and a

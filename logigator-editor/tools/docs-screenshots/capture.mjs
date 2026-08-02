@@ -15,6 +15,7 @@ import { createRequire } from 'node:module';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { Command } from 'commander';
+import { Listr, PRESET_TIMER } from 'listr2';
 import { DEFAULT_BASE_URL, launchOptions } from './config.mjs';
 import { Editor } from './lib/editor.mjs';
 import { writeGif } from './lib/gif.mjs';
@@ -39,37 +40,72 @@ async function main(args) {
     headless: !args.headed
   });
 
-  let failed = 0;
-  try {
-    for (const shot of shots) {
-      const editor = new Editor(browser, { baseUrl: args.base });
-      try {
-        await editor.open(shot.context ?? {});
-        const result = await shot.run(editor);
-        if (result.frames) {
-          // An animated shot returns the frames it captured along the way.
-          const file = path.join(args.out, `${shot.name}.gif`);
-          await writeGif(file, result.frames, result.delay);
-          console.log(`✓ ${shot.name}.gif (${result.frames.length} frames)`);
-        } else {
-          const file = path.join(args.out, `${shot.name}.png`);
-          await editor.snap(result).then((png) => fs.writeFile(file, png));
-          console.log(`✓ ${shot.name}`);
-        }
-      } catch (error) {
-        failed++;
-        console.log(`✗ ${shot.name.padEnd(30)} ${error.message}`);
-      } finally {
-        await editor.close();
-      }
+  // One task per shot, run in sequence: they share the browser, and shots
+  // racing each other for the CPU would show up in the captures. `exitOnError`
+  // off keeps a broken shot from cancelling the rest of the run.
+  const runner = new Listr(
+    shots.map((shot, index) => ({
+      title: `${index + 1}/${shots.length}  ${shot.name}`,
+      task: (_ctx, task) => capture(shot, task, browser, args)
+    })),
+    {
+      concurrent: false,
+      exitOnError: false,
+      rendererOptions: { timer: PRESET_TIMER }
     }
+  );
+
+  try {
+    await runner.run();
   } finally {
     await browser.close();
   }
 
+  const failed = runner.tasks.filter((task) => task.hasFailed()).length;
   console.log(`\n${shots.length - failed}/${shots.length} → ${args.out}`);
   if (failed > 0) process.exitCode = 1;
 }
+
+/**
+ * Stages one shot and writes what it returns. The editor reports the step it is
+ * on as `task.output`, so a shot that sits for seconds says which part of
+ * itself it is waiting on.
+ */
+async function capture(shot, task, browser, args) {
+  const editor = new Editor(browser, {
+    baseUrl: args.base,
+    onProgress: (step) => (task.output = step)
+  });
+  try {
+    await editor.open(shot.context ?? {});
+    const result = await shot.run(editor);
+    if (result.frames) {
+      // An animated shot returns the frames it captured along the way.
+      task.output = 'encoding the gif';
+      await writeGif(
+        path.join(args.out, `${shot.name}.gif`),
+        result.frames,
+        result.delay
+      );
+      // Both, because a piped log has already printed the title by now and
+      // only the output line still reaches it.
+      const frames = `${result.frames.length} frames`;
+      task.output = frames;
+      task.title += `  ${frames}`;
+    } else {
+      task.output = 'capturing';
+      const png = await editor.snap(result);
+      await fs.writeFile(path.join(args.out, `${shot.name}.png`), png);
+    }
+  } finally {
+    await editor.close();
+  }
+}
+
+// The task list hides the cursor while it renders, and an interrupt skips the
+// cleanup that would bring it back. Playwright installs its own SIGINT handler
+// to close the browser and exit, so this one only restores the terminal.
+process.on('SIGINT', () => process.stdout.write('\u001B[?25h'));
 
 const program = new Command()
   .name('capture.mjs')

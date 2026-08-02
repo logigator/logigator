@@ -26,15 +26,25 @@ const PARKED_POINTER = { x: 2, y: 2 };
 export class Editor {
   /**
    * @param {import('playwright').Browser} browser
-   * @param {{ baseUrl: string }} options
+   * @param {{ baseUrl: string, onProgress?: (step: string) => void }} options
    */
   constructor(browser, options) {
     this.browser = browser;
     this.baseUrl = options.baseUrl;
+    this.onProgress = options.onProgress;
     this.context = null;
     this.page = null;
     /** Handle of the open inspection, set by {@link Editor.openWatch}. */
     this.watch = null;
+  }
+
+  /**
+   * Announces the step now under way. Only the calls that can take seconds
+   * report, so the line names what a stalled shot is waiting on rather than
+   * flickering through every geometry query.
+   */
+  report(step) {
+    this.onProgress?.(step);
   }
 
   /**
@@ -44,6 +54,7 @@ export class Editor {
    * backend and the signed-in session.
    */
   async open({ viewport, cloud, localStorage: overrides } = {}) {
+    this.report('opening the editor');
     this.context = await this.browser.newContext({
       viewport: { ...VIEWPORT, ...viewport },
       deviceScaleFactor: DEVICE_SCALE_FACTOR,
@@ -122,6 +133,7 @@ export class Editor {
    * {@link Editor.openCustomForEdit} for the shots that need the master.
    */
   async load(name) {
+    this.report(`loading ${name}`);
     const file = path.join(CIRCUITS_DIR, `${name}.json`);
     const json = await fs.readFile(file, 'utf8').catch(() => {
       throw new Error(`no circuit file "${name}" in ${CIRCUITS_DIR}`);
@@ -445,6 +457,7 @@ export class Editor {
    * otherwise identical capture a new file on every run.
    */
   async waitStable(locator, attempts = 20) {
+    this.report('waiting for the overlay to settle');
     let previous = null;
     for (let i = 0; i < attempts; i++) {
       const box = await locator.boundingBox();
@@ -572,6 +585,7 @@ export class Editor {
    * every shot having to carry it.
    */
   async openWatch(symbol) {
+    this.report('opening the inspection');
     const [instance] = await this.componentsOfType(symbol);
     this.watch = await this.api(
       (id) => window.__logigator.inspect.open(id),
@@ -633,6 +647,7 @@ export class Editor {
 
   /** `ticks` engine ticks, resolved after the resulting snapshot is applied. */
   async stepSimulation(ticks = 1) {
+    this.report('settling the simulation');
     await this.api(async (n) => {
       window.__logigator.sim.pause();
       await window.__logigator.sim.step(n);
@@ -691,6 +706,7 @@ export class Editor {
    * session comes up paused and the board holds still.
    */
   async enterSimulation() {
+    this.report('entering simulation');
     const status = await this.api(() => window.__logigator.sim.enter());
     if (status.state === 'inactive') {
       throw new Error(
