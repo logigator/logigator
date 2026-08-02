@@ -2,7 +2,7 @@
 
 Le plan de travail est la grille sur laquelle vous construisez votre circuit. Cette page explique comment vous y déplacer et comment fonctionne chaque outil d'édition.
 
-![L'éditeur avec la palette de composants, le plan de travail et la barre d'outils.](../images/board-overview.png)
+![L'éditeur avec la palette de composants, le plan de travail et la barre d'outils.](./images/board-overview.png)
 
 ## Se déplacer sur le plan de travail
 
@@ -24,7 +24,7 @@ Le groupe de droite de la barre d'outils contient les cinq outils de dessin. Un 
 | **Gomme**       | `E`       | Cliquez ou faites glisser sur les éléments pour les supprimer.                                                                                                                    |
 | **Texte**       | `T`       | Placez une étiquette de texte sur le plan de travail.                                                                                                                             |
 
-![Les cinq boutons d'outils de la barre d'outils.](../images/tool-buttons.png)
+![Les cinq boutons d'outils de la barre d'outils.](./images/tool-buttons.png)
 
 ## Placer des composants
 
@@ -49,7 +49,7 @@ L'outil de sélection possède un mode **ciseaux** qui rogne les fils exactement
 
 Une petite pastille flotte au-dessus du plan de travail tant que l'outil de sélection est actif — cliquez dessus pour activer le mode ciseaux. Sur bureau, vous pouvez aussi simplement **maintenir `Alt`** pendant que vous faites glisser le cadre de sélection pour couper le temps de ce seul glisser ; la pastille s'allume pour indiquer que le mode est engagé. Tout ce que le cadre contient entièrement reste sélectionné, et les fils qui traversent le bord du cadre y sont coupés.
 
-![La pastille de bascule des ciseaux flottant au-dessus du plan de travail.](../images/scissor-select.png)
+![La pastille de bascule des ciseaux flottant au-dessus du plan de travail.](./images/scissor-select.png)
 
 ## Copier, couper, coller et supprimer
 

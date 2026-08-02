@@ -57,7 +57,7 @@ The file is compressed but not encrypted or locked — treat it as a convenient 
 
 > Read-only projects opened from a share link cannot be exported to a file. Clone the shared project into your own library first — see [Cloud & Sharing](docs:cloud).
 
-![The Open Project dialog on the From File tab.](../images/open-file.png)
+![The Open Project dialog on the From File tab.](./images/open-file.png)
 
 ## Generating an image
 
@@ -70,7 +70,7 @@ To export a picture of your circuit, choose **File → Generate image**. The dia
 
 The dialog previews the final pixel dimensions before you export.
 
-![The Export image dialog with its format and resolution options.](../images/export-image.png)
+![The Export image dialog with its format and resolution options.](./images/export-image.png)
 
 ## See also
 

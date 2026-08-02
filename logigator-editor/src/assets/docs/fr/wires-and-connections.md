@@ -2,7 +2,7 @@
 
 Les fils transportent les signaux entre les ports des composants. Cette page explique comment les tracer, contrôler où ils se connectent, et relier des pièces sans fil grâce aux tunnels.
 
-![Des fils tracés entre des composants, avec des points de connexion.](../images/wire-circuit-display.png)
+![Des fils tracés entre des composants, avec des points de connexion.](./images/wire-circuit-display.png)
 
 ## Tracer des fils
 
@@ -21,7 +21,7 @@ Là où les fils se rencontrent, Logigator suit une règle simple pour que vous 
 
 Cela vous permet de router librement des fils les uns par-dessus les autres sans créer de connexions accidentelles.
 
-![Deux croisements : l’un sans point, l’autre relié par un point de connexion.](../images/wire-junction.png)
+![Deux croisements : l’un sans point, l’autre relié par un point de connexion.](./images/wire-junction.png)
 
 ### Basculer un croisement
 
@@ -45,7 +45,7 @@ Pour utiliser les tunnels :
 
 Tous les tunnels avec des étiquettes correspondantes se comportent comme un seul réseau connecté ; les tunnels avec des étiquettes différentes restent indépendants.
 
-![Deux tunnels portant la même étiquette, sans fil entre eux.](../images/tunnel.gif)
+![Deux tunnels portant la même étiquette, sans fil entre eux.](./images/tunnel.gif)
 
 ## Couper et réagencer les fils
 

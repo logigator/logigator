@@ -2,7 +2,7 @@
 
 Willkommen bei Logigator — einem Open-Source-Editor und -Simulator für digitale Logikschaltungen, der vollständig in deinem Browser läuft.
 
-![Das Logigator-Logo mit seinem Slogan.](../images/intro-banner.png)
+![Das Logigator-Logo mit seinem Slogan.](./images/intro-banner.png)
 
 ## Was ist Logigator?
 
@@ -30,7 +30,7 @@ Der Editor ist in einige feste Bereiche rund um die zentrale Arbeitsfläche gegl
 
 Der Name des Projekts steht oben neben den Menüs; klicke ihn an, um das Projekt umzubenennen, und das Kennzeichen daneben zeigt, wo das Projekt gespeichert ist (**Lokal**, **Cloud**, **Entwurf** oder **Geteilt**).
 
-![Menüleiste und Werkzeugleiste am oberen Rand des Editors.](../images/menu-bar.png)
+![Menüleiste und Werkzeugleiste am oberen Rand des Editors.](./images/menu-bar.png)
 
 ## Das geführte Tutorial
 

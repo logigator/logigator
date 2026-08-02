@@ -3,9 +3,11 @@ import {
   CIRCUITS_DIR,
   DEVICE_SCALE_FACTOR,
   GRID_SIZE,
+  LANG_STORAGE_KEY,
   SEEDED_LOCAL_STORAGE,
   VIEWPORT
 } from '../config.mjs';
+import { loadTranslations, translate } from './i18n.mjs';
 import { installApiMocks } from './mock-api.mjs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -26,16 +28,28 @@ const PARKED_POINTER = { x: 2, y: 2 };
 export class Editor {
   /**
    * @param {import('playwright').Browser} browser
-   * @param {{ baseUrl: string, onProgress?: (step: string) => void }} options
+   * @param {{ baseUrl: string, lang?: string,
+   *          onProgress?: (step: string) => void }} options
    */
   constructor(browser, options) {
     this.browser = browser;
     this.baseUrl = options.baseUrl;
+    this.lang = options.lang ?? 'en';
     this.onProgress = options.onProgress;
     this.context = null;
     this.page = null;
+    /** The language's translations, loaded by {@link Editor.open}. */
+    this.translations = null;
     /** Handle of the open inspection, set by {@link Editor.openWatch}. */
     this.watch = null;
+  }
+
+  /**
+   * The editor's own text for a translation key, in the language this run is
+   * capturing — how every label a shot matches on is addressed.
+   */
+  t(key) {
+    return translate(this.translations, key);
   }
 
   /**
@@ -55,6 +69,7 @@ export class Editor {
    */
   async open({ viewport, cloud, localStorage: overrides } = {}) {
     this.report('opening the editor');
+    this.translations = await loadTranslations(this.lang);
     this.context = await this.browser.newContext({
       viewport: { ...VIEWPORT, ...viewport },
       deviceScaleFactor: DEVICE_SCALE_FACTOR,
@@ -70,7 +85,11 @@ export class Editor {
           localStorage.setItem(key, value);
         }
       },
-      { ...SEEDED_LOCAL_STORAGE, ...overrides }
+      {
+        ...SEEDED_LOCAL_STORAGE,
+        [LANG_STORAGE_KEY]: this.lang,
+        ...overrides
+      }
     );
 
     this.page = await this.context.newPage();
@@ -414,22 +433,60 @@ export class Editor {
 
   // -- Chrome helpers ------------------------------------------------------
 
-  /** Opens a top-level menu (File / Edit / View / Help) and picks an item. */
-  async menu(menuLabel, itemLabel) {
-    await this.page.getByRole('menuitem', { name: menuLabel }).click();
-    await this.page.getByRole('menuitem', { name: itemLabel }).click();
+  /**
+   * Opens a top-level menu (File / Edit / View / Help) and picks an item, both
+   * named by translation key — the labels are whatever the run's language calls
+   * them.
+   */
+  async menu(menuKey, itemKey) {
+    await this.page.getByRole('menuitem', { name: this.t(menuKey) }).click();
+    await this.page.getByRole('menuitem', { name: this.t(itemKey) }).click();
     await this.settle();
   }
 
   /**
-   * Clicks a chrome button by its accessible name — for the buttons that *are*
-   * the shot's subject (the scissor pill) or that open a dialog. Arming a tool
-   * goes through {@link Editor.setWorkMode} instead: matching a localized
-   * accessible name is not how a tool should be picked.
+   * Clicks a chrome button by its accessible name, given as a translation key —
+   * for the buttons that *are* the shot's subject (the scissor pill) or that
+   * open a dialog. Arming a tool goes through {@link Editor.setWorkMode}
+   * instead: an accessible name is not how a tool should be picked.
    */
-  async clickButton(name, options) {
-    await this.page.getByRole('button', { name, exact: true }).click(options);
+  async clickButton(key, options) {
+    await this.button(key).click(options);
     await this.settle();
+  }
+
+  /** A chrome button, by the translation key behind its accessible name. */
+  button(key) {
+    return this.page.getByRole('button', { name: this.t(key), exact: true });
+  }
+
+  /** Switches a dialog to one of its tabs, named by translation key. */
+  async clickTab(key) {
+    await this.page.getByRole('tab', { name: this.t(key) }).click();
+    await this.settle();
+  }
+
+  /**
+   * Fails the shot when the tool bar has wrapped to a second row. Its buttons
+   * are labelled by tooltip, not by text, but its width still follows the
+   * language: the bar is laid out `flex-wrap`, so in a viewport that fits the
+   * English bar a longer language silently folds it in two and every shot
+   * framing the chrome comes out a row taller. Called by the shots that frame
+   * the bar, so a language that needs a wider viewport says so instead of
+   * quietly producing a different picture.
+   */
+  async requireSingleRowToolBar() {
+    const [bar, button] = await Promise.all([
+      this.page.locator('app-tool-bar').boundingBox(),
+      this.page.locator('app-tool-bar lg-button').first().boundingBox()
+    ]);
+    if (bar.height > button.height * 1.6) {
+      throw new Error(
+        `the tool bar wrapped to a second row in "${this.lang}" ` +
+          `(${Math.round(bar.height)} px of ${Math.round(button.height)} px ` +
+          "buttons) — widen this shot's viewport for that language"
+      );
+    }
   }
 
   /**
@@ -474,11 +531,16 @@ export class Editor {
    * destinations need a session; local needs nothing.
    */
   async saveAs(name) {
-    await this.menu('File', 'Save');
+    await this.menu(
+      'titleBar.menuBar.file.label',
+      'titleBar.menuBar.file.items.save.label'
+    );
     const dialog = this.dialog();
     await dialog.locator('#save-project-name').fill(name);
-    await dialog.getByRole('button', { name: 'Local', exact: true }).click();
-    await dialog.getByRole('button', { name: 'Save', exact: true }).click();
+    const button = (key) =>
+      dialog.getByRole('button', { name: this.t(key), exact: true });
+    await button('saveProjectDialog.destinationLocal').click();
+    await button('common.save').click();
     await dialog.waitFor({ state: 'detached' });
     await this.settle();
   }

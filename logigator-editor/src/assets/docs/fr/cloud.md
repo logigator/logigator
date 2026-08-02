@@ -24,7 +24,7 @@ La puce à côté du nom du projet indique lequel des deux le projet ouvert util
 
 La boîte de dialogue **Fichier → Ouvrir** garde les deux séparés dans des onglets distincts — **Projets locaux** et **Projets cloud** — plus un onglet **À partir d'un fichier** pour importer un fichier de circuit. Si vous êtes déconnecté, l'onglet Projets cloud vous invite à vous connecter.
 
-![La boîte de dialogue Ouvrir un projet, onglet Projets cloud.](../images/open-cloud.png)
+![La boîte de dialogue Ouvrir un projet, onglet Projets cloud.](./images/open-cloud.png)
 
 ## Déplacer un travail vers le cloud
 
@@ -37,7 +37,7 @@ Le téléversement _déplace_ le projet du stockage local vers votre bibliothèq
 
 Les composants personnalisés peuvent être déplacés vers le cloud de la même façon, depuis leur action dans le panneau de paramètres.
 
-![La boîte de dialogue Téléverser vers le cloud listant les composants qui seront publiés.](../images/upload-to-cloud.png)
+![La boîte de dialogue Téléverser vers le cloud listant les composants qui seront publiés.](./images/upload-to-cloud.png)
 
 ## Partager un projet
 
@@ -49,7 +49,7 @@ Une fois qu'un projet est dans le cloud, **Fichier → Partager** ouvre la boît
 
 Les composants personnalisés cloud peuvent être partagés de la même façon depuis le panneau de paramètres.
 
-![La boîte de dialogue de partage avec le lien de partage et la bascule public.](../images/share-component.png)
+![La boîte de dialogue de partage avec le lien de partage et la bascule public.](./images/share-component.png)
 
 ### Ce que voit le destinataire
 

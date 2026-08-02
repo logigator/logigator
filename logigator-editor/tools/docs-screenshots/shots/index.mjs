@@ -50,15 +50,21 @@ export const SHOTS = [
     // tightest crop of them.
     context: { viewport: NARROW_VIEWPORT },
     async run(ed) {
+      await ed.requireSingleRowToolBar();
       return { clip: await ed.unionClip(['app-title-bar', 'app-tool-bar']) };
     }
   },
   {
     name: 'tool-buttons',
     async run(ed) {
-      const tools = ['Pan', 'Wire Tool', 'Select', 'Eraser', 'Text'].map(
-        (name) => ed.page.getByRole('button', { name, exact: true })
-      );
+      await ed.requireSingleRowToolBar();
+      const tools = [
+        'toolBar.pan',
+        'toolBar.wireTool',
+        'toolBar.select',
+        'toolBar.eraser',
+        'toolBar.text'
+      ].map((key) => ed.button(key));
       return { clip: await ed.unionClip(tools, 6) };
     }
   },
@@ -69,6 +75,7 @@ export const SHOTS = [
     // the surrounding text can carry.
     context: { viewport: { height: 720 } },
     async run(ed) {
+      await ed.requireSingleRowToolBar();
       await ed.load('half-adder');
       await ed.focus('content', { paddingGrid: 4, maxZoom: BOARD_ZOOM });
       // The minimap renders its first frame off a debounced action stream, so
@@ -161,7 +168,7 @@ export const SHOTS = [
       // the cut lands and the enclosed elements come up selected instead of the
       // half-drawn rectangle staying on screen.
       await ed.setWorkMode('sel');
-      await ed.clickButton('Cut wires at selection edge (hold to activate)');
+      await ed.clickButton('toolBar.selExact');
       const from = await ed.gridPoint({ x: region.x, y: region.y });
       const to = await ed.gridPoint({
         x: region.x + region.width,
@@ -176,9 +183,7 @@ export const SHOTS = [
       // its maximum zoom, so cropping is the only way left to make a one-unit
       // piece of wire read. The pill is docked to the top of the board, so the
       // circuit is panned up under it rather than the crop reaching down to it.
-      const pill = ed.page.getByRole('button', {
-        name: 'Cut wires at selection edge (hold to activate)'
-      });
+      const pill = ed.button('toolBar.selExact');
       const pillBox = await pill.boundingBox();
       // Where the pill sits, in grid units — the cut is panned onto that point
       // rather than the two being related through a hand-rolled px-per-grid.
@@ -284,6 +289,7 @@ export const SHOTS = [
     // wider viewport only adds empty bar to the right of the clock.
     context: { viewport: NARROW_VIEWPORT },
     async run(ed) {
+      await ed.requireSingleRowToolBar();
       await ed.load('clock');
       await ed.enterSimulation();
       // The run controls belong in frame, so the circuit is parked directly
@@ -360,6 +366,7 @@ export const SHOTS = [
     // allows, and the short height keeps the board from being mostly grid.
     context: { viewport: { ...NARROW_VIEWPORT, height: 560 } },
     async run(ed) {
+      await ed.requireSingleRowToolBar();
       await ed.load('custom-example');
       await ed.hideOverlays();
 
@@ -416,8 +423,11 @@ export const SHOTS = [
   {
     name: 'open-file',
     async run(ed) {
-      await ed.menu('File', 'Open');
-      await ed.page.getByRole('tab', { name: 'From File' }).click();
+      await ed.menu(
+        'titleBar.menuBar.file.label',
+        'titleBar.menuBar.file.items.open.label'
+      );
+      await ed.clickTab('openProjectDialog.fromFile');
       await ed.parkPointer();
       return { locator: ed.dialog() };
     }
@@ -426,7 +436,10 @@ export const SHOTS = [
     name: 'export-image',
     async run(ed) {
       await ed.load('half-adder');
-      await ed.menu('File', 'Generate image');
+      await ed.menu(
+        'titleBar.menuBar.file.label',
+        'titleBar.menuBar.file.items.generateImage.label'
+      );
       await ed.parkPointer();
       return { locator: ed.dialog() };
     }
@@ -475,8 +488,11 @@ export const SHOTS = [
     name: 'open-cloud',
     context: { cloud: true },
     async run(ed) {
-      await ed.menu('File', 'Open');
-      await ed.page.getByRole('tab', { name: 'Cloud Projects' }).click();
+      await ed.menu(
+        'titleBar.menuBar.file.label',
+        'titleBar.menuBar.file.items.open.label'
+      );
+      await ed.clickTab('openProjectDialog.cloudProjects');
       await ed.page.getByText('Example', { exact: true }).waitFor();
       await ed.parkPointer();
       return { locator: ed.dialog() };
@@ -495,7 +511,7 @@ export const SHOTS = [
       await ed.openCustomForEdit();
       await ed.openMainTab();
       await ed.selectCustomInstance();
-      await ed.clickButton('Upload to cloud');
+      await ed.clickButton('uploadComponent.button');
       await ed.parkPointer();
       return { locator: ed.dialog() };
     }
@@ -515,7 +531,7 @@ export const SHOTS = [
         type
       );
       await ed.selectCustomInstance();
-      await ed.clickButton('Share');
+      await ed.clickButton('shareComponent.button');
       await ed.parkPointer();
       return { locator: ed.dialog() };
     }
@@ -528,7 +544,7 @@ export const SHOTS = [
     // a readable size. This frames the first sections and lets the rest scroll.
     context: { viewport: { width: 1280, height: 820 } },
     async run(ed) {
-      await ed.menu('Edit', 'Keyboard Shortcuts');
+      await ed.menu('titleBar.menuBar.edit.label', 'shortcuts.title');
       await ed.parkPointer();
       return { locator: ed.dialog() };
     }

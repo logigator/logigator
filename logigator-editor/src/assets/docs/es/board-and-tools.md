@@ -2,7 +2,7 @@
 
 El tablero es la cuadrícula donde construyes tu circuito. Esta página explica cómo moverte por él y cómo funciona cada herramienta de edición.
 
-![El editor con la paleta de componentes, el tablero y la barra de herramientas.](../images/board-overview.png)
+![El editor con la paleta de componentes, el tablero y la barra de herramientas.](./images/board-overview.png)
 
 ## Moverse por el tablero
 
@@ -24,7 +24,7 @@ El grupo de la derecha de la barra de herramientas contiene las cinco herramient
 | **Borrar**      | `E`   | Haz clic o arrastra sobre los elementos para eliminarlos.                                                                                                       |
 | **Texto**       | `T`   | Coloca una etiqueta de texto en el tablero.                                                                                                                     |
 
-![Los cinco botones de herramienta de la barra de herramientas.](../images/tool-buttons.png)
+![Los cinco botones de herramienta de la barra de herramientas.](./images/tool-buttons.png)
 
 ## Colocar componentes
 
@@ -49,7 +49,7 @@ La herramienta de selección tiene un modo **tijera** que recorta los cables exa
 
 Una pequeña pastilla flota sobre el tablero mientras la herramienta de selección está activa; haz clic en ella para activar el modo tijera. En el escritorio también puedes simplemente **mantener `Alt`** mientras arrastras el recuadro de selección para cortar durante ese arrastre; la pastilla se ilumina para indicar que el modo está activado. Todo lo que el recuadro contenga por completo permanece seleccionado, y los cables que cruzan el borde del recuadro se cortan ahí.
 
-![La pastilla de alternancia de tijera flotando sobre el tablero.](../images/scissor-select.png)
+![La pastilla de alternancia de tijera flotando sobre el tablero.](./images/scissor-select.png)
 
 ## Copiar, cortar, pegar y eliminar
 

@@ -2,7 +2,7 @@
 
 Una vez construido tu circuito, ejecútalo para ver fluir las señales. En la simulación alimentas el circuito, accionas sus entradas y ves los resultados iluminarse en directo en el tablero.
 
-![Un circuito en ejecución, con los controles de ejecución en la barra de herramientas.](../images/simulation-showcase.gif)
+![Un circuito en ejecución, con los controles de ejecución en la barra de herramientas.](./images/simulation-showcase.gif)
 
 ## Iniciar y salir de una simulación
 
@@ -27,7 +27,7 @@ Cuando una simulación está activa, la barra de herramientas cambia sus herrami
 
 **Detener** y **Salir de la simulación** son diferentes: **Detener** rebobina el circuito en ejecución al principio pero te mantiene en la simulación, mientras que **Salir de la simulación** abandona la simulación por completo y te devuelve a la edición.
 
-![Los controles de ejecución y los ajustes de velocidad en la barra de herramientas.](../images/simulation-controls.png)
+![Los controles de ejecución y los ajustes de velocidad en la barra de herramientas.](./images/simulation-controls.png)
 
 ## Velocidad de simulación
 

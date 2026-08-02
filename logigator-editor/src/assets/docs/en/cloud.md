@@ -24,7 +24,7 @@ The chip beside the project name shows which one the open project uses (**Local*
 
 The **File → Open** dialog keeps the two apart in separate tabs — **Local Projects** and **Cloud Projects** — plus a **From File** tab for importing a circuit file. If you're signed out, the Cloud Projects tab prompts you to log in.
 
-![The Open Project dialog on the Cloud Projects tab.](../images/open-cloud.png)
+![The Open Project dialog on the Cloud Projects tab.](./images/open-cloud.png)
 
 ## Moving work to the cloud
 
@@ -37,7 +37,7 @@ Uploading _moves_ the project out of local storage into your cloud library. If t
 
 Custom components can be moved to the cloud the same way, from their action in the settings panel.
 
-![The Upload to cloud dialog listing the components that will be published.](../images/upload-to-cloud.png)
+![The Upload to cloud dialog listing the components that will be published.](./images/upload-to-cloud.png)
 
 ## Sharing a project
 
@@ -49,7 +49,7 @@ Once a project is in the cloud, **File → Share** opens the share dialog. (Shar
 
 Cloud custom components can be shared the same way from the settings panel.
 
-![The share dialog with the share link and the public toggle.](../images/share-component.png)
+![The share dialog with the share link and the public toggle.](./images/share-component.png)
 
 ### What the recipient sees
 

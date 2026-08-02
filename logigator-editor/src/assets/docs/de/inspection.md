@@ -2,7 +2,7 @@
 
 Manche Komponenten lassen dich in sie hineinschauen, während deine Schaltung läuft. Du kannst den Inhalt eines Speichers an der Adresse lesen, die er gerade liest, oder eine live-interaktive Ansicht der inneren Schaltung einer benutzerdefinierten Komponente öffnen.
 
-![Ein Beobachtungsfenster über einer laufenden Schaltung.](../images/inspection-showcase.gif)
+![Ein Beobachtungsfenster über einer laufenden Schaltung.](./images/inspection-showcase.gif)
 
 Die Inspektion ist nur verfügbar, **während eine [Simulation](docs:simulation) läuft**. Betritt zuerst die Simulation, tippe dann auf eine Komponente, die die Inspektion unterstützt, um ihre Ansicht zu öffnen. Erneutes Tippen holt dieselbe Ansicht wieder nach vorn, und das Verlassen der Simulation schließt alles.
 
@@ -12,7 +12,7 @@ Auf dem Desktop öffnen sich diese Ansichten als schwebende Fenster, die du heru
 
 Tippe auf ein **ROM**, während die Simulation läuft, um einen schreibgeschützten Betrachter seiner gespeicherten Daten zu öffnen. Das Wort, das die Schaltung **gerade adressiert**, ist hervorgehoben und aktualisiert sich live, während sich die Adresse ändert, sodass du genau verfolgen kannst, was der Speicher in die Schaltung zurückspeist.
 
-![Das Speicher-Inspektionsfenster mit hervorgehobenem adressiertem Wort.](../images/rom-inspection.gif)
+![Das Speicher-Inspektionsfenster mit hervorgehobenem adressiertem Wort.](./images/rom-inspection.gif)
 
 Der Betrachter dient nur dem Lesen — du kannst den Inhalt hier nicht ändern. Seine Steuerungen lassen dich wählen, wie die Daten angezeigt werden:
 
@@ -27,7 +27,7 @@ Eine **Adresse**- und **Wert**-Anzeige zeigt die Adresse des hervorgehobenen Wor
 
 Tippe auf eine platzierte [benutzerdefinierte Komponente](docs:custom-components), während die Simulation läuft, um eine **Beobachtung** zu öffnen — eine Live-Ansicht der Schaltung in ihr. Die inneren Leitungen und Anschlüsse leuchten genau so auf, wie die laufende Schaltung sie treibt, sodass du sehen kannst, was eine Ebene tiefer geschieht, ohne die Komponente auszupacken.
 
-![Ein Beobachtungsfenster mit Brotkrümel-Spur in eine verschachtelte Komponente.](../images/inspection-window-multilayer.png)
+![Ein Beobachtungsfenster mit Brotkrümel-Spur in eine verschachtelte Komponente.](./images/inspection-window-multilayer.png)
 
 Eine Beobachtung ist interaktiv:
 

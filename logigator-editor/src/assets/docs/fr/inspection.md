@@ -2,7 +2,7 @@
 
 Certains composants vous permettent de regarder à l'intérieur pendant que votre circuit tourne. Vous pouvez lire le contenu d'une mémoire à l'adresse qu'elle lit actuellement, ou ouvrir une vue interactive et en direct du circuit interne d'un composant personnalisé.
 
-![Une fenêtre de surveillance ouverte au-dessus d'un circuit en cours d'exécution.](../images/inspection-showcase.gif)
+![Une fenêtre de surveillance ouverte au-dessus d'un circuit en cours d'exécution.](./images/inspection-showcase.gif)
 
 L'inspection n'est disponible **que pendant qu'une [simulation](docs:simulation) tourne**. Entrez d'abord en simulation, puis touchez un composant qui prend en charge l'inspection pour ouvrir sa vue. Le toucher à nouveau ramène la même vue au premier plan, et quitter la simulation ferme tout.
 
@@ -12,7 +12,7 @@ Sur bureau, ces vues s'ouvrent sous forme de fenêtres flottantes que vous pouve
 
 Touchez une **ROM** pendant que la simulation tourne pour ouvrir un visualiseur en lecture seule de ses données stockées. Le mot que le circuit **adresse actuellement** est mis en évidence, et se met à jour en direct à mesure que l'adresse change, de sorte que vous pouvez suivre exactement ce que la mémoire renvoie dans le circuit.
 
-![La fenêtre d’inspection de mémoire avec le mot adressé mis en évidence.](../images/rom-inspection.gif)
+![La fenêtre d’inspection de mémoire avec le mot adressé mis en évidence.](./images/rom-inspection.gif)
 
 Le visualiseur sert uniquement à la lecture — vous ne pouvez pas en modifier le contenu ici. Ses contrôles vous permettent de choisir comment les données sont affichées :
 
@@ -27,7 +27,7 @@ Un indicateur **Adresse** et **Valeur** montre l'adresse du mot mis en évidence
 
 Touchez un [composant personnalisé](docs:custom-components) placé pendant que la simulation tourne pour ouvrir une **surveillance** — une vue en direct du circuit qu'il contient. Les fils et ports internes s'illuminent exactement comme le circuit en cours d'exécution les pilote, de sorte que vous pouvez voir ce qui se passe un niveau en dessous sans déballer le composant.
 
-![Une fenêtre de surveillance avec un fil d’Ariane vers un composant imbriqué.](../images/inspection-window-multilayer.png)
+![Une fenêtre de surveillance avec un fil d’Ariane vers un composant imbriqué.](./images/inspection-window-multilayer.png)
 
 Une surveillance est interactive :
 

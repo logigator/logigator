@@ -2,7 +2,7 @@
 
 Bienvenue sur Logigator — un éditeur et simulateur open source de circuits logiques numériques qui fonctionne entièrement dans votre navigateur.
 
-![Le logo Logigator et son slogan.](../images/intro-banner.png)
+![Le logo Logigator et son slogan.](./images/intro-banner.png)
 
 ## Qu'est-ce que Logigator ?
 
@@ -30,7 +30,7 @@ L'éditeur est organisé en quelques zones fixes autour du plan de travail centr
 
 Le nom du projet figure à côté des menus en haut ; cliquez dessus pour renommer le projet, et la puce à côté indique où le projet est stocké (**Local**, **Cloud**, **Brouillon** ou **Partagé**).
 
-![La barre de menus et la barre d'outils en haut de l'éditeur.](../images/menu-bar.png)
+![La barre de menus et la barre d'outils en haut de l'éditeur.](./images/menu-bar.png)
 
 ## Le tutoriel guidé
 

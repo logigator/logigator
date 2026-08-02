@@ -2,7 +2,7 @@
 
 Components are the building blocks of a circuit — gates, memories, inputs, displays and more. This page covers where to find them, how to place them, and how to configure the one you have selected.
 
-![The component palette with its categories expanded.](../images/component-palette.png)
+![The component palette with its categories expanded.](./images/component-palette.png)
 
 ## The component palette
 
@@ -60,7 +60,7 @@ To place a component, click it in the palette and it follows your cursor as a gh
 
 When you select a single placed component — or while you are placing one — a small **settings card** appears by the board showing that component's name, a short description, and its adjustable options. On a touch device the same options open in the **Settings** drawer instead.
 
-![The settings card for a selected AND gate.](../images/component-settings.png)
+![The settings card for a selected AND gate.](./images/component-settings.png)
 
 ### Direction — on every component
 
@@ -92,7 +92,7 @@ Any input or output port can be **negated** so the signal passing through it is 
 
 While the Wire tool is active, hovering near a port previews the bubble a tap would add, so you can see exactly which port you are about to negate.
 
-![An OR gate with a negation bubble on its output.](../images/negated-gate.gif)
+![An OR gate with a negation bubble on its output.](./images/negated-gate.gif)
 
 ## Placing text
 

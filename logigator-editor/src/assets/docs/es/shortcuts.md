@@ -63,7 +63,7 @@ La mayoría de los atajos se disparan una vez cuando los pulsas. Unos pocos se *
 
 Abre **Editar → Atajos de teclado** para ver todas las acciones y su asignación actual.
 
-![El diálogo del gestor de atajos de teclado.](../images/shortcut-manager.png)
+![El diálogo del gestor de atajos de teclado.](./images/shortcut-manager.png)
 
 Para cualquier acción puedes:
 

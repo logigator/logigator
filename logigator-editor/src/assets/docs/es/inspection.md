@@ -2,7 +2,7 @@
 
 Algunos componentes te permiten mirar dentro de ellos mientras tu circuito se ejecuta. Puedes leer el contenido de una memoria en la dirección que está leyendo actualmente, o abrir una vista interactiva y en directo del circuito interno de un componente personalizado.
 
-![Una ventana de monitor abierta sobre un circuito en ejecución.](../images/inspection-showcase.gif)
+![Una ventana de monitor abierta sobre un circuito en ejecución.](./images/inspection-showcase.gif)
 
 La inspección solo está disponible **mientras se ejecuta una [simulación](docs:simulation)**. Entra primero en la simulación y luego toca un componente que admita inspección para abrir su vista. Tocarlo de nuevo trae la misma vista de vuelta al frente, y salir de la simulación lo cierra todo.
 
@@ -12,7 +12,7 @@ En el escritorio, estas vistas se abren como ventanas flotantes que puedes arras
 
 Toca una **ROM** mientras la simulación se ejecuta para abrir un visor de solo lectura de sus datos almacenados. La palabra que el circuito está **direccionando actualmente** se resalta y se actualiza en directo a medida que cambia la dirección, para que puedas seguir exactamente qué está devolviendo la memoria al circuito.
 
-![La ventana de inspección de memoria con la palabra direccionada resaltada.](../images/rom-inspection.gif)
+![La ventana de inspección de memoria con la palabra direccionada resaltada.](./images/rom-inspection.gif)
 
 El visor es solo para leer: aquí no puedes cambiar el contenido. Sus controles te permiten elegir cómo se muestran los datos:
 
@@ -27,7 +27,7 @@ Una lectura de **Dirección** y **Valor** muestra la dirección de la palabra re
 
 Toca un [componente personalizado](docs:custom-components) colocado mientras la simulación se ejecuta para abrir un **monitor**: una vista en directo del circuito que hay dentro de él. Los cables y puertos internos se iluminan exactamente como los alimenta el circuito en ejecución, para que puedas ver qué está ocurriendo un nivel más abajo sin desempaquetar el componente.
 
-![Una ventana de monitor con un rastro de migas de pan hacia un componente anidado.](../images/inspection-window-multilayer.png)
+![Una ventana de monitor con un rastro de migas de pan hacia un componente anidado.](./images/inspection-window-multilayer.png)
 
 Un monitor es interactivo:
 

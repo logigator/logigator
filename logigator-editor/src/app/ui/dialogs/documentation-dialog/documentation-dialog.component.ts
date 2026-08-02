@@ -23,7 +23,7 @@ import {
 } from '@logigator/ui';
 import { catchError, of, switchMap, tap } from 'rxjs';
 import { parseDocsLink } from '../../../documentation/doc-link';
-import { DOC_IMAGES } from '../../../documentation/docs-images';
+import { docImages } from '../../../documentation/docs-images';
 import {
   DEFAULT_DOC_PAGE,
   DOC_SECTIONS,
@@ -95,8 +95,13 @@ export class DocumentationDialogComponent extends LgDialogContent {
 
   protected readonly markdown = signal<string | null>(null);
   protected readonly failed = signal(false);
-  /** Hashed screenshot URLs, swapped in for the authored `images/…` paths. */
-  protected readonly docImages = DOC_IMAGES;
+  /**
+   * Hashed screenshot URLs, swapped in for the authored `./images/…` paths —
+   * the active language's, falling back to the English capture per picture.
+   */
+  protected readonly docImages = computed(() =>
+    docImages(this.translation.activeLang())
+  );
 
   constructor() {
     super();

@@ -57,7 +57,7 @@ Le fichier est compressé mais ni chiffré ni verrouillé — traitez-le comme u
 
 > Les projets en lecture seule ouverts depuis un lien de partage ne peuvent pas être exportés vers un fichier. Clonez d'abord le projet partagé dans votre propre bibliothèque — voir [Cloud et partage](docs:cloud).
 
-![La boîte de dialogue Ouvrir un projet, onglet À partir d'un fichier.](../images/open-file.png)
+![La boîte de dialogue Ouvrir un projet, onglet À partir d'un fichier.](./images/open-file.png)
 
 ## Générer une image
 
@@ -70,7 +70,7 @@ Pour exporter une image de votre circuit, choisissez **Fichier → Générer une
 
 La boîte de dialogue prévisualise les dimensions finales en pixels avant l'export.
 
-![La boîte de dialogue Exporter une image avec ses options de format et de résolution.](../images/export-image.png)
+![La boîte de dialogue Exporter une image avec ses options de format et de résolution.](./images/export-image.png)
 
 ## Voir aussi
 

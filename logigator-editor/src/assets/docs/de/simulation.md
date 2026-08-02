@@ -2,7 +2,7 @@
 
 Sobald deine Schaltung gebaut ist, lass sie laufen, um die Signale fließen zu sehen. In der Simulation versorgst du die Schaltung mit Strom, betätigst ihre Eingänge und siehst die Ergebnisse live auf der Arbeitsfläche aufleuchten.
 
-![Eine laufende Simulation mit den Ausführungssteuerungen in der Werkzeugleiste.](../images/simulation-showcase.gif)
+![Eine laufende Simulation mit den Ausführungssteuerungen in der Werkzeugleiste.](./images/simulation-showcase.gif)
 
 ## Eine Simulation starten und verlassen
 
@@ -27,7 +27,7 @@ Wenn eine Simulation aktiv ist, tauscht die Werkzeugleiste ihre Zeichenwerkzeuge
 
 **Stopp** und **Simulation verlassen** sind verschieden: **Stopp** spult die laufende Schaltung an den Anfang zurück, behält dich aber in der Simulation, während **Simulation verlassen** die Simulation ganz verlässt und dich zur Bearbeitung zurückbringt.
 
-![Die Ausführungssteuerungen und die Geschwindigkeitseinstellungen in der Werkzeugleiste.](../images/simulation-controls.png)
+![Die Ausführungssteuerungen und die Geschwindigkeitseinstellungen in der Werkzeugleiste.](./images/simulation-controls.png)
 
 ## Simulationsgeschwindigkeit
 

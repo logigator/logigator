@@ -2,7 +2,7 @@
 
 Some components let you look inside them while your circuit runs. You can read a memory's contents at the address it's currently reading, or open a live, interactive view of a custom component's inner circuit.
 
-![A watch window open over a running circuit.](../images/inspection-showcase.gif)
+![A watch window open over a running circuit.](./images/inspection-showcase.gif)
 
 Inspection is only available **while a [simulation](docs:simulation) is running**. Enter simulation first, then tap a component that supports inspection to open its view. Tapping it again brings the same view back to the front, and leaving simulation closes everything.
 
@@ -12,7 +12,7 @@ On desktop these views open as floating windows you can drag around and stack ov
 
 Tap a **ROM** while the simulation runs to open a read-only viewer of its stored data. The word the circuit is **currently addressing** is highlighted, and updates live as the address changes, so you can follow exactly what the memory is feeding back into the circuit.
 
-![The memory inspection window with the addressed word highlighted.](../images/rom-inspection.gif)
+![The memory inspection window with the addressed word highlighted.](./images/rom-inspection.gif)
 
 The viewer is for reading only — you can't change the contents here. Its controls let you choose how the data is shown:
 
@@ -27,7 +27,7 @@ An **Address** and **Value** readout shows the highlighted word's address and it
 
 Tap a placed [custom component](docs:custom-components) while the simulation runs to open a **watch** — a live view of the circuit inside it. The inner wires and ports light up exactly as the running circuit drives them, so you can see what's happening one level down without unpacking the component.
 
-![A watch window with a breadcrumb trail into a nested component.](../images/inspection-window-multilayer.png)
+![A watch window with a breadcrumb trail into a nested component.](./images/inspection-window-multilayer.png)
 
 A watch is interactive:
 

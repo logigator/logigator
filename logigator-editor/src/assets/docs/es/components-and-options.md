@@ -2,7 +2,7 @@
 
 Los componentes son los bloques de construcción de un circuito: puertas, memorias, entradas, displays y más. Esta página explica dónde encontrarlos, cómo colocarlos y cómo configurar el que tengas seleccionado.
 
-![La paleta de componentes con sus categorías desplegadas.](../images/component-palette.png)
+![La paleta de componentes con sus categorías desplegadas.](./images/component-palette.png)
 
 ## La paleta de componentes
 
@@ -60,7 +60,7 @@ Para colocar un componente, haz clic en él en la paleta y sigue a tu cursor com
 
 Cuando seleccionas un único componente colocado —o mientras colocas uno— aparece una pequeña **tarjeta de ajustes** junto al tablero mostrando el nombre de ese componente, una breve descripción y sus opciones ajustables. En un dispositivo táctil las mismas opciones se abren en el cajón de **Ajustes** en su lugar.
 
-![La tarjeta de ajustes de una puerta Y seleccionada.](../images/component-settings.png)
+![La tarjeta de ajustes de una puerta Y seleccionada.](./images/component-settings.png)
 
 ### Dirección: en todos los componentes
 
@@ -92,7 +92,7 @@ Cualquier puerto de entrada o salida se puede **negar** para que la señal que p
 
 Mientras la herramienta Cable está activa, pasar el cursor cerca de un puerto previsualiza la burbuja que añadiría un toque, para que veas exactamente qué puerto estás a punto de negar.
 
-![Una puerta O con una burbuja de negación en su salida.](../images/negated-gate.gif)
+![Una puerta O con una burbuja de negación en su salida.](./images/negated-gate.gif)
 
 ## Colocar texto
 

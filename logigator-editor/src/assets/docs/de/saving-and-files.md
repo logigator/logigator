@@ -57,7 +57,7 @@ Die Datei ist komprimiert, aber nicht verschlüsselt oder gesperrt — behandle 
 
 > Schreibgeschützte Projekte, die aus einem Freigabelink geöffnet wurden, können nicht in eine Datei exportiert werden. Klone zuerst das geteilte Projekt in deine eigene Bibliothek — siehe [Cloud & Teilen](docs:cloud).
 
-![Der Dialog „Projekt öffnen“ im Tab „Aus Datei“.](../images/open-file.png)
+![Der Dialog „Projekt öffnen“ im Tab „Aus Datei“.](./images/open-file.png)
 
 ## Ein Bild erzeugen
 
@@ -70,7 +70,7 @@ Um ein Bild deiner Schaltung zu exportieren, wähle **Datei → Bild generieren*
 
 Der Dialog zeigt die endgültigen Pixelmaße als Vorschau, bevor du exportierst.
 
-![Der Dialog „Bild exportieren“ mit den Format- und Auflösungsoptionen.](../images/export-image.png)
+![Der Dialog „Bild exportieren“ mit den Format- und Auflösungsoptionen.](./images/export-image.png)
 
 ## Siehe auch
 

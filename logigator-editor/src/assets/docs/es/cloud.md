@@ -24,7 +24,7 @@ La etiqueta junto al nombre del proyecto muestra cuál de los dos usa el proyect
 
 El diálogo **Archivo → Abrir** mantiene los dos separados en pestañas distintas —**Proyectos locales** y **Proyectos en la nube**— más una pestaña **Desde archivo** para importar un archivo de circuito. Si tienes la sesión cerrada, la pestaña Proyectos en la nube te pide que inicies sesión.
 
-![El diálogo Abrir proyecto en la pestaña Proyectos en la nube.](../images/open-cloud.png)
+![El diálogo Abrir proyecto en la pestaña Proyectos en la nube.](./images/open-cloud.png)
 
 ## Trasladar el trabajo a la nube
 
@@ -37,7 +37,7 @@ Subir _traslada_ el proyecto fuera del almacenamiento local a tu biblioteca en l
 
 Los componentes personalizados se pueden trasladar a la nube de la misma manera, desde su acción en el panel de ajustes.
 
-![El diálogo Subir a la nube con los componentes que se publicarán.](../images/upload-to-cloud.png)
+![El diálogo Subir a la nube con los componentes que se publicarán.](./images/upload-to-cloud.png)
 
 ## Compartir un proyecto
 
@@ -49,7 +49,7 @@ Una vez que un proyecto está en la nube, **Archivo → Compartir** abre el diá
 
 Los componentes personalizados en la nube se pueden compartir de la misma manera desde el panel de ajustes.
 
-![El diálogo de compartir con el enlace para compartir y la alternancia de público.](../images/share-component.png)
+![El diálogo de compartir con el enlace para compartir y la alternancia de público.](./images/share-component.png)
 
 ### Qué ve el destinatario
 

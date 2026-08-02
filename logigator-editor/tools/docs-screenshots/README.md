@@ -1,7 +1,7 @@
 # Documentation screenshots
 
 Generates the images the in-editor documentation uses
-(`src/assets/docs/images/`) by driving a real editor: `window.__logigator` (the
+(`src/assets/docs/<lang>/images/`) by driving a real editor: `window.__logigator` (the
 [automation API](../../docs/automation.md)) puts the circuit, camera, tool,
 simulation, selection, open tabs and inspection windows where a shot needs them,
 and Playwright handles what is left — the chrome the API deliberately does not
@@ -12,8 +12,23 @@ mapping (`camera.toScreen` / `toScreenRect` / `boardRect`) rather than being
 recomputed here: the editor owns that transform, and a copy of it out here would
 drift the moment the camera changed.
 
+It captures every language the editor ships, one sub-directory per language —
+the layout the tracked images use. A shot of the board carries no interface
+text and comes out byte-identical in all of them, so only the first, English
+capture of it is written and the other languages fall back to that one
+(`docs-images.ts` resolves a picture per language, per key).
+
 It only writes files into the directory you name; copying them over the tracked
-images is a separate, manual step.
+images is a separate, manual step. Which pictures a language ends up with is
+decided by the run, so the editor's registry is generated from the folders
+rather than hand-kept — after copying, run:
+
+```bash
+node logigator-editor/tools/docs-screenshots/write-registry.mjs
+```
+
+That rewrites `src/app/documentation/docs-images.ts` with one import per file
+present under `src/assets/docs/<lang>/images/`.
 
 This is a standalone package with its own `yarn.lock` and `.yarnrc.yml` — the
 same arrangement as `logigator-backend`. It is not a workspace member, so a root
@@ -45,16 +60,23 @@ The CLI is a [commander](https://github.com/tj/commander.js) program, so
 ```
 <out-dir>        required, first positional
 --only <shots>   capture just these shots (comma separated)
+--lang <codes>   languages to capture (default en,de,fr,es)
 --base <url>     editor to drive (default http://localhost:4200/editor)
 --headed         run the browser headed
 ```
+
+`--lang` narrows a run to the languages you are working on. Keep `en` in it
+whenever you can: it is the baseline the others are compared against, and
+without it every capture is written, including the ones that only duplicate an
+English picture.
 
 `--base` also takes an HTTPS development instance (`https://logigator.test/editor`):
 certificate errors are ignored, so a self-signed local certificate needs no setup.
 
 ## Progress output
 
-Shots are run as a [listr2](https://listr2.kilic.dev) task list — one line each,
+Shots are run as a [listr2](https://listr2.kilic.dev) task list, grouped by
+language — one line each,
 with the elapsed time when it settles and, underneath the running one, the step
 it is on (`opening the editor`, `loading half-adder`, `settling the
 simulation`). Those come from `Editor.report`, which the calls that can take
@@ -82,6 +104,13 @@ Every shot gets its own browser context, so IndexedDB drafts, the
 custom-component library and preferences never leak between shots. Before the
 first paint each context pins the theme, language and preferences, and silences
 the first-run nudge and the "What's new" popup — nothing depends on run order.
+
+Nothing in a shot spells an interface label out. The ones that open a menu,
+switch a dialog tab or click a button name it by translation key, which
+`lib/i18n.mjs` resolves out of the editor's own `src/i18n/<lang>.ts` (Node
+strips the types, so the locale files load as they are). A reworded label
+therefore moves the shot with it, and a key that no longer exists fails the shot
+by name instead of timing out on a missing element.
 
 Clips come from element boxes rather than from markup added for the tool:
 `unionClip` takes the union of any set of selectors (the five tool buttons, the
@@ -138,10 +167,20 @@ frame with chrome that sets its own size (the run controls, the ROM inspector).
 
 Framing is per shot: `context.viewport` sizes the window, and shots whose
 subject spans it (the bars, the run controls) use `NARROW_VIEWPORT` — the tool
-bar wraps to a second row below 1061 CSS px, which binds before the compact
-breakpoint (`max-width: 64rem`) does. A floating window is clamped to the board
-it hangs over, so a short viewport is also what makes the inspection window
-short.
+bar wraps to a second row once its buttons no longer fit, which binds before the
+compact breakpoint (`max-width: 64rem`) does. Where it wraps follows the
+language, because the run controls the bar ends in are labelled: 1061 CSS px in
+English, 1073 in Spanish, 1078 in German, 1109 in French. `NARROW_VIEWPORT` is
+the widest of those plus headroom and is the same for every language, so the
+bars come out framed alike. A floating window is clamped to the board it hangs
+over, so a short viewport is also what makes the inspection window short.
+
+That framing is measured, not assumed, so most of it follows a longer language
+on its own. The one thing that does not is the tool bar: its buttons are
+labelled by tooltip, but the bar is laid out `flex-wrap`, so a viewport that
+fits the English bar can silently fold another language's in two. The shots that
+frame the chrome call `requireSingleRowToolBar()` and fail rather than produce a
+picture a row taller; the fix is a wider `NARROW_VIEWPORT`.
 
 Captures repeat to within a handful of antialiased border pixels.
 

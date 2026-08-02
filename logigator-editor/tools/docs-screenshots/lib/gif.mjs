@@ -1,4 +1,3 @@
-import fs from 'node:fs/promises';
 import { PNG } from 'pngjs';
 import gifenc from 'gifenc';
 
@@ -22,7 +21,7 @@ export const DEFAULT_FRAME_DELAY = 1200;
  * whose colour index changed, writing the rest as a transparent index that
  * leaves what is already on screen in place.
  */
-export async function writeGif(file, frames, delay = DEFAULT_FRAME_DELAY) {
+export async function encodeGif(frames, delay = DEFAULT_FRAME_DELAY) {
   if (frames.length === 0) throw new Error('a gif needs at least one frame');
 
   const decoded = frames.map((buffer) => PNG.sync.read(buffer));
@@ -78,5 +77,5 @@ export async function writeGif(file, frames, delay = DEFAULT_FRAME_DELAY) {
   });
   encoder.finish();
 
-  await fs.writeFile(file, encoder.bytes());
+  return Buffer.from(encoder.bytes());
 }

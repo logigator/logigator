@@ -24,7 +24,7 @@ Das Kennzeichen neben dem Projektnamen zeigt, welchen von beiden das offene Proj
 
 Der Dialog **Datei → Öffnen** hält die beiden in getrennten Tabs auseinander — **Lokale Projekte** und **Cloud-Projekte** — plus einem Tab **Aus Datei** zum Importieren einer Schaltungsdatei. Wenn du abgemeldet bist, fordert der Tab „Cloud-Projekte“ dich zum Anmelden auf.
 
-![Der Dialog „Projekt öffnen“ im Tab „Cloud-Projekte“.](../images/open-cloud.png)
+![Der Dialog „Projekt öffnen“ im Tab „Cloud-Projekte“.](./images/open-cloud.png)
 
 ## Arbeit in die Cloud verschieben
 
@@ -37,7 +37,7 @@ Das Hochladen _verschiebt_ das Projekt aus dem lokalen Speicher in deine Cloud-B
 
 Benutzerdefinierte Komponenten können auf dieselbe Weise in die Cloud verschoben werden, über ihre Aktion im Einstellungs-Panel.
 
-![Der Dialog „In die Cloud hochladen“ mit den Komponenten, die veröffentlicht werden.](../images/upload-to-cloud.png)
+![Der Dialog „In die Cloud hochladen“ mit den Komponenten, die veröffentlicht werden.](./images/upload-to-cloud.png)
 
 ## Ein Projekt teilen
 
@@ -49,7 +49,7 @@ Sobald ein Projekt in der Cloud ist, öffnet **Datei → Teilen** den Teilen-Dia
 
 Benutzerdefinierte Cloud-Komponenten können auf dieselbe Weise aus dem Einstellungs-Panel geteilt werden.
 
-![Der Teilen-Dialog mit Freigabelink und Öffentlich-Schalter.](../images/share-component.png)
+![Der Teilen-Dialog mit Freigabelink und Öffentlich-Schalter.](./images/share-component.png)
 
 ### Was der Empfänger sieht
 

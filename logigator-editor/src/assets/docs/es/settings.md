@@ -2,7 +2,7 @@
 
 Logigator tiene un puñado de preferencias para adaptar el editor a tu gusto. Las encontrarás todas en un solo lugar: abre el **menú de cuenta** en la esquina superior derecha del editor. (En un teléfono o tableta, abre el menú desde la esquina superior izquierda.)
 
-![El menú de cuenta con los ajustes de tema, idioma y editor.](../images/account-menu.png)
+![El menú de cuenta con los ajustes de tema, idioma y editor.](./images/account-menu.png)
 
 ## Tema
 

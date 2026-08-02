@@ -2,7 +2,7 @@
 
 Once your circuit is built, run it to watch the signals flow. In simulation you power the circuit, flip its inputs, and see the results light up live on the board.
 
-![A circuit running in simulation, with the run controls in the toolbar.](../images/simulation-showcase.gif)
+![A circuit running in simulation, with the run controls in the toolbar.](./images/simulation-showcase.gif)
 
 ## Starting and leaving a simulation
 
@@ -27,7 +27,7 @@ When a simulation is active, the toolbar swaps its drawing tools for the run con
 
 **Stop** and **Exit simulation** are different: **Stop** rewinds the running circuit to the beginning but keeps you in simulation, while **Exit simulation** leaves simulation entirely and returns you to editing.
 
-![The run controls and the speed settings in the toolbar.](../images/simulation-controls.png)
+![The run controls and the speed settings in the toolbar.](./images/simulation-controls.png)
 
 ## Simulation speed
 

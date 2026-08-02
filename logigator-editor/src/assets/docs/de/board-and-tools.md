@@ -2,7 +2,7 @@
 
 Die Arbeitsfläche ist das Raster, auf dem du deine Schaltung baust. Diese Seite behandelt, wie du dich darauf bewegst und wie jedes Bearbeitungswerkzeug funktioniert.
 
-![Der Editor mit Komponentenpalette, Arbeitsfläche und Werkzeugleiste.](../images/board-overview.png)
+![Der Editor mit Komponentenpalette, Arbeitsfläche und Werkzeugleiste.](./images/board-overview.png)
 
 ## Sich auf der Arbeitsfläche bewegen
 
@@ -24,7 +24,7 @@ Die rechte Gruppe der Werkzeugleiste enthält die fünf Zeichenwerkzeuge. Nur ei
 | **Radieren**  | `E`    | Auf Elemente klicken oder darüberziehen, um sie zu löschen.                                                                                                                                       |
 | **Text**      | `T`    | Eine Textbeschriftung auf der Arbeitsfläche platzieren.                                                                                                                                           |
 
-![Die fünf Werkzeug-Schaltflächen in der Werkzeugleiste.](../images/tool-buttons.png)
+![Die fünf Werkzeug-Schaltflächen in der Werkzeugleiste.](./images/tool-buttons.png)
 
 ## Komponenten platzieren
 
@@ -49,7 +49,7 @@ Das Auswahlwerkzeug hat einen **Scheren**-Modus, der Leitungen exakt an der Kant
 
 Ein kleines Pill schwebt über der Arbeitsfläche, solange das Auswahlwerkzeug aktiv ist — klicke es an, um den Scherenmodus zu aktivieren. Auf dem Desktop kannst du auch einfach `Alt` **gedrückt halten**, während du den Auswahlrahmen ziehst, um für dieses eine Ziehen zu schneiden; das Pill leuchtet auf, um zu zeigen, dass der Modus aktiv ist. Alles, was der Rahmen vollständig enthält, bleibt ausgewählt, und Leitungen, die die Rahmenkante kreuzen, werden dort geschnitten.
 
-![Das schwebende Scheren-Umschalt-Pill über der Arbeitsfläche.](../images/scissor-select.png)
+![Das schwebende Scheren-Umschalt-Pill über der Arbeitsfläche.](./images/scissor-select.png)
 
 ## Kopieren, Ausschneiden, Einfügen und Löschen
 

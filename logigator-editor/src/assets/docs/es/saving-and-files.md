@@ -57,7 +57,7 @@ El archivo está comprimido pero no cifrado ni bloqueado: trátalo como un paque
 
 > Los proyectos de solo lectura abiertos desde un enlace para compartir no se pueden exportar a un archivo. Clona primero el proyecto compartido en tu propia biblioteca; consulta [Nube y compartir](docs:cloud).
 
-![El diálogo Abrir proyecto en la pestaña Desde archivo.](../images/open-file.png)
+![El diálogo Abrir proyecto en la pestaña Desde archivo.](./images/open-file.png)
 
 ## Generar una imagen
 
@@ -70,7 +70,7 @@ Para exportar una imagen de tu circuito, elige **Archivo → Generar imagen**. E
 
 El diálogo previsualiza las dimensiones finales en píxeles antes de que exportes.
 
-![El diálogo Exportar imagen con sus opciones de formato y resolución.](../images/export-image.png)
+![El diálogo Exportar imagen con sus opciones de formato y resolución.](./images/export-image.png)
 
 ## Consulta también
 
