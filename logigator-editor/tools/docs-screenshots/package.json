@@ -10,6 +10,7 @@
     "docs-screenshots": "./capture.mjs"
   },
   "dependencies": {
+    "commander": "15.0.0",
     "gifenc": "1.0.3",
     "playwright": "1.61.1",
     "pngjs": "7.0.0"

@@ -7,16 +7,14 @@
  *
  *   node tools/docs-screenshots/capture.mjs <out-dir> [options]
  *
- *   --only=a,b    capture just these shots
- *   --base=<url>  editor to drive (default http://localhost:4200/editor)
- *   --headed      run the browser headed
- *
- * The editor it points at must have `automationApi` on and the debug
- * decorations (`debugMenu`, `showGridBorders`) off — see the README.
+ * `--help` lists the options. The editor it points at must have `automationApi`
+ * on and the debug decorations (`debugMenu`, `showGridBorders`) off — see the
+ * README.
  */
 import { createRequire } from 'node:module';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { Command } from 'commander';
 import { DEFAULT_BASE_URL, launchOptions } from './config.mjs';
 import { Editor } from './lib/editor.mjs';
 import { writeGif } from './lib/gif.mjs';
@@ -24,8 +22,7 @@ import { SHOTS } from './shots/index.mjs';
 
 const require = createRequire(import.meta.url);
 
-async function main() {
-  const args = parseArgs(process.argv.slice(2));
+async function main(args) {
   const shots =
     args.only.length > 0
       ? args.only.map((name) => {
@@ -74,27 +71,27 @@ async function main() {
   if (failed > 0) process.exitCode = 1;
 }
 
-function parseArgs(argv) {
-  const args = { out: null, base: DEFAULT_BASE_URL, only: [], headed: false };
-  for (const argument of argv) {
-    if (!argument.startsWith('--')) {
-      args.out = path.resolve(argument);
-    } else if (argument.startsWith('--only=')) {
-      args.only = argument.slice('--only='.length).split(',').filter(Boolean);
-    } else if (argument.startsWith('--base=')) {
-      args.base = argument.slice('--base='.length);
-    } else if (argument === '--headed') {
-      args.headed = true;
-    } else {
-      throw new Error(`unknown argument "${argument}"`);
-    }
-  }
-  if (!args.out) throw new Error('usage: capture.mjs <out-dir> [options]');
-  return args;
-}
+const program = new Command()
+  .name('capture.mjs')
+  .description('Generates the documentation screenshots by driving the editor')
+  .argument('<out-dir>', 'directory the images are written to', (value) =>
+    path.resolve(value)
+  )
+  .option(
+    '--only <shots>',
+    'capture just these shots (comma separated)',
+    (value) => value.split(',').filter(Boolean),
+    []
+  )
+  .option('--base <url>', 'editor to drive', DEFAULT_BASE_URL)
+  .option('--headed', 'run the browser headed')
+  .action(async (out, options) => {
+    await main({ out, ...options });
+  });
 
 try {
-  await main();
+  // Commander reports usage errors itself and exits; this catches the run.
+  await program.parseAsync();
 } catch (error) {
   console.error(error.message);
   process.exit(1);

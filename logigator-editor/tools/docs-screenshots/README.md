@@ -39,10 +39,13 @@ Before running, `src/environments/environment.development.ts` needs:
 
 ## Options
 
+The CLI is a [commander](https://github.com/tj/commander.js) program, so
+`--help` prints this list:
+
 ```
 <out-dir>        required, first positional
---only=a,b       capture just these shots
---base=<url>     editor to drive (default http://localhost:4200/editor)
+--only <shots>   capture just these shots (comma separated)
+--base <url>     editor to drive (default http://localhost:4200/editor)
 --headed         run the browser headed
 ```
 
