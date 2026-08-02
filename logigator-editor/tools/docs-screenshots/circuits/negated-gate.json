@@ -5,22 +5,13 @@
     {
       "type": 3,
       "pos": [8, 1],
-      "options": {
-        "numInputs": 2
-      },
+      "options": { "numInputs": 2 },
       "negOutputs": [0]
     },
-    {
-      "type": 201,
-      "pos": [-7, 0],
-      "options": {}
-    },
-    {
-      "type": 202,
-      "pos": [17, 0],
-      "options": {}
-    }
+    { "type": 201, "pos": [-7, 0], "options": {} },
+    { "type": 201, "pos": [0, 1], "options": {} },
+    { "type": 202, "pos": [15, -1], "options": {} }
   ],
-  "wires": "2,1:e2s1e3;2,0:e3;6,0:e7",
+  "wires": "2,1:e3e2;8,0:e5;-8,1:e5",
   "definitions": []
 }
