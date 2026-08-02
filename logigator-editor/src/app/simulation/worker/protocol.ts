@@ -14,8 +14,7 @@ export type InputEventKind = typeof INPUT_EVENT_CONT | typeof INPUT_EVENT_PULSE;
  * between messages.
  */
 export type RunRequest =
-  | { mode: 'continuous' }
-  | { mode: 'target'; hz: number };
+  { mode: 'continuous' } | { mode: 'target'; hz: number };
 
 export type MainToWorkerMessage =
   /** Build the simulation; the descriptor is kept for `stop` rebuilds. */

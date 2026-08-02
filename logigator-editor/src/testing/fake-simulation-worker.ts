@@ -19,8 +19,7 @@ import {
 export class FakeSimulationWorker {
   public posted: MainToWorkerMessage[] = [];
   public onmessage:
-    | ((event: MessageEvent<WorkerToMainMessage>) => void)
-    | null = null;
+    ((event: MessageEvent<WorkerToMainMessage>) => void) | null = null;
   public onerror: ((event: ErrorEvent) => void) | null = null;
   public terminated = false;
   /** Tick reported by auto-responded status messages. */

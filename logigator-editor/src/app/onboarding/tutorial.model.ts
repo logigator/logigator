@@ -38,8 +38,7 @@ export type AdvanceOn =
 
 /** Body text: one key, or a per-platform key (tap/drag/pinch wording differs). */
 export type StepText =
-  | TranslationKey
-  | Partial<Record<OnboardingPlatform, TranslationKey>>;
+  TranslationKey | Partial<Record<OnboardingPlatform, TranslationKey>>;
 
 /** The key `text` resolves to on `platform`, falling back desktop → compact. */
 export function resolveStepText(

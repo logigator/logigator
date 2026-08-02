@@ -111,7 +111,7 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
       this.expand(elBounds);
     }
 
-    for (let entry = this._tree; ; ) {
+    for (let entry = this._tree; ;) {
       const quadrant = this.getContainingQuadrant(entry.boundsArea, elBounds);
       if (!quadrant) {
         entry.branchItems.addChild(element);

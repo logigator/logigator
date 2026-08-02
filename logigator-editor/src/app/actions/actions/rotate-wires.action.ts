@@ -35,15 +35,13 @@ export class RotateWiresAction extends Action {
   serialize(): SerializedAction {
     return {
       type: 'rotateWires',
-      entries: this._entries.map(
-        (e): SerializedRotateWireEntry => ({
-          id: e.id,
-          oldPos: [e.oldPos.x, e.oldPos.y],
-          newPos: [e.newPos.x, e.newPos.y],
-          oldDirection: e.oldDirection,
-          newDirection: e.newDirection
-        })
-      )
+      entries: this._entries.map((e): SerializedRotateWireEntry => ({
+        id: e.id,
+        oldPos: [e.oldPos.x, e.oldPos.y],
+        newPos: [e.newPos.x, e.newPos.y],
+        oldDirection: e.oldDirection,
+        newDirection: e.newDirection
+      }))
     };
   }
 

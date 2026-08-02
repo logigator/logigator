@@ -183,12 +183,7 @@ export function createConnectedOverlay(
  * its own bottom offset via `panelClass`).
  */
 export type LgOverlayPlacement =
-  | 'center'
-  | 'left'
-  | 'right'
-  | 'top'
-  | 'bottom'
-  | 'bottom-center';
+  'center' | 'left' | 'right' | 'top' | 'bottom' | 'bottom-center';
 
 export interface GlobalOverlayOptions {
   placement: LgOverlayPlacement;

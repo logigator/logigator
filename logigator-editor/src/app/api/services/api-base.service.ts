@@ -33,45 +33,45 @@ export class ApiBaseService {
   /** GET request — unwraps `ApiResponse<T>` to just `T`. */
   get<T>(path: string, params?: QueryParams): Observable<T> {
     return this.http
-      .get<
-        ApiResponse<T>
-      >(this.url(path), { params: params ? toHttpParams(params) : undefined })
+      .get<ApiResponse<T>>(this.url(path), {
+        params: params ? toHttpParams(params) : undefined
+      })
       .pipe(map((r) => r.data));
   }
 
   /** POST request. */
   post<T>(path: string, body?: unknown, params?: QueryParams): Observable<T> {
     return this.http
-      .post<
-        ApiResponse<T>
-      >(this.url(path), body ?? {}, { params: params ? toHttpParams(params) : undefined })
+      .post<ApiResponse<T>>(this.url(path), body ?? {}, {
+        params: params ? toHttpParams(params) : undefined
+      })
       .pipe(map((r) => r.data));
   }
 
   /** PUT request. */
   put<T>(path: string, body?: unknown, params?: QueryParams): Observable<T> {
     return this.http
-      .put<
-        ApiResponse<T>
-      >(this.url(path), body ?? {}, { params: params ? toHttpParams(params) : undefined })
+      .put<ApiResponse<T>>(this.url(path), body ?? {}, {
+        params: params ? toHttpParams(params) : undefined
+      })
       .pipe(map((r) => r.data));
   }
 
   /** PATCH request. */
   patch<T>(path: string, body?: unknown, params?: QueryParams): Observable<T> {
     return this.http
-      .patch<
-        ApiResponse<T>
-      >(this.url(path), body ?? {}, { params: params ? toHttpParams(params) : undefined })
+      .patch<ApiResponse<T>>(this.url(path), body ?? {}, {
+        params: params ? toHttpParams(params) : undefined
+      })
       .pipe(map((r) => r.data));
   }
 
   /** DELETE request. */
   delete<T>(path: string, params?: QueryParams): Observable<T> {
     return this.http
-      .delete<
-        ApiResponse<T>
-      >(this.url(path), { params: params ? toHttpParams(params) : undefined })
+      .delete<ApiResponse<T>>(this.url(path), {
+        params: params ? toHttpParams(params) : undefined
+      })
       .pipe(map((r) => r.data));
   }
 

@@ -10,9 +10,4 @@
  * its own severity→class table built on these names.
  */
 export type LgSeverity =
-  | 'none'
-  | 'secondary'
-  | 'info'
-  | 'success'
-  | 'warn'
-  | 'danger';
+  'none' | 'secondary' | 'info' | 'success' | 'warn' | 'danger';

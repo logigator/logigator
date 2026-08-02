@@ -4,11 +4,7 @@ import { LgBadge, LgSeverity } from '@logigator/ui';
 
 /** Where the shown circuit lives / its persistence state. */
 export type SourceIndicatorState =
-  | 'server'
-  | 'browser'
-  | 'draft'
-  | 'share'
-  | 'embedded';
+  'server' | 'browser' | 'draft' | 'share' | 'embedded';
 
 interface StateStyle {
   icon: string;

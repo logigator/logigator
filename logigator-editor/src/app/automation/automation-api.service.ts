@@ -1223,13 +1223,11 @@ export class AutomationApiService {
     return [
       { key: 'theme', kind: 'enum', values: [...this.theming.availableThemes] },
       { key: 'language', kind: 'enum', values: this.availableLangs() },
-      ...this.settings.settings.map(
-        (setting): SettingDescriptor => ({
-          key: setting.key,
-          kind: 'boolean',
-          label: this.translation.translate(setting.labelKey)
-        })
-      )
+      ...this.settings.settings.map((setting): SettingDescriptor => ({
+        key: setting.key,
+        kind: 'boolean',
+        label: this.translation.translate(setting.labelKey)
+      }))
     ];
   }
 

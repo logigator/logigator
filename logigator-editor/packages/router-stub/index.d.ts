@@ -1262,9 +1262,7 @@ declare namespace i4 {
  * @publicApi
  */
 export declare type InitialNavigation =
-  | 'disabled'
-  | 'enabledBlocking'
-  | 'enabledNonBlocking';
+  'disabled' | 'enabledBlocking' | 'enabledNonBlocking';
 
 /**
  * A type alias for providers returned by `withEnabledBlockingInitialNavigation` or
@@ -1277,8 +1275,7 @@ export declare type InitialNavigation =
  * @publicApi
  */
 export declare type InitialNavigationFeature =
-  | EnabledBlockingInitialNavigationFeature
-  | DisabledInitialNavigationFeature;
+  EnabledBlockingInitialNavigationFeature | DisabledInitialNavigationFeature;
 
 /**
  * A type alias for providers returned by `withInMemoryScrolling` for use with `provideRouter`.
@@ -3902,13 +3899,7 @@ export declare class RouterLinkActive
    * @see {@link https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Attributes/aria-current}
    */
   ariaCurrentWhenActive?:
-    | 'page'
-    | 'step'
-    | 'location'
-    | 'date'
-    | 'time'
-    | true
-    | false;
+    'page' | 'step' | 'location' | 'date' | 'time' | true | false;
   /**
    *
    * You can use the output `isActiveChange` to get notified each time the link becomes

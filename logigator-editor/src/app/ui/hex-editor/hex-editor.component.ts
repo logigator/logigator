@@ -462,8 +462,7 @@ export class HexEditorComponent {
     const viewport = this.scroller()?.viewportElement;
     const row = this.headerRow()?.nativeElement;
     const colEl = this.headerCols()?.nativeElement.children[col] as
-      | HTMLElement
-      | undefined;
+      HTMLElement | undefined;
     if (!viewport || !row || !colEl) return;
 
     // The column's offset in content space — both rects carry the header
