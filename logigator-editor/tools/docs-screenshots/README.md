@@ -2,9 +2,15 @@
 
 Generates the images the in-editor documentation uses
 (`src/assets/docs/images/`) by driving a real editor: `window.__logigator` (the
-[automation API](../../docs/automation.md)) puts the circuit, camera, simulation
-and selection where a shot needs them, and Playwright handles the parts the API
-deliberately does not model — menus, dialogs, and the drag gestures.
+[automation API](../../docs/automation.md)) puts the circuit, camera, tool,
+simulation, selection, open tabs and inspection windows where a shot needs them,
+and Playwright handles what is left — the chrome the API deliberately does not
+model (menus, dialogs) and the gestures a shot is _of_ (the scissor marquee).
+
+Every conversion between grid units and CSS px goes through the camera's own
+mapping (`camera.toScreen` / `toScreenRect` / `boardRect`) rather than being
+recomputed here: the editor owns that transform, and a copy of it out here would
+drift the moment the camera changed.
 
 It only writes files into the directory you name; copying them over the tracked
 images is a separate, manual step.
@@ -40,6 +46,9 @@ Before running, `src/environments/environment.development.ts` needs:
 --headed         run the browser headed
 ```
 
+`--base` also takes an HTTPS development instance (`https://logigator.test/editor`):
+certificate errors are ignored, so a self-signed local certificate needs no setup.
+
 ## What a shot is
 
 `shots/index.mjs` is the registry. Each entry names the image it produces and a
@@ -68,6 +77,10 @@ rectangles through the camera's own mapping.
 `intro-banner.png` is the one doc image not produced here — it is a designed
 banner, not a capture of the editor.
 
+Shots run against the automation API this branch ships. `Editor.open()` probes
+one of its newer calls, so an editor built before them fails with that message
+rather than a `TypeError` inside whichever shot ran first.
+
 ## Animated shots
 
 The two animated doc images are step-throughs, not motion capture: a simulation
@@ -93,9 +106,9 @@ the same name (**File → Export to file**) — do not hand-edit the coordinates
 they are delta-encoded.
 
 A v1 file embeds a frozen copy of every custom component in its circuit, so
-loading one is also how the custom-component shots get their masters (the
-settings card's **Restore & edit** puts an embedded copy back into the browser
-library, which is also what fills the palette's _User Components_).
+loading one is also how the custom-component shots get their masters:
+`library.edit` restores the embedded copy into the browser library and opens it
+in its own tab, which is also what fills the palette's _User Components_.
 
 ## Resolution
 

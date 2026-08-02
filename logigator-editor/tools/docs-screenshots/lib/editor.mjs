@@ -33,6 +33,8 @@ export class Editor {
     this.baseUrl = options.baseUrl;
     this.context = null;
     this.page = null;
+    /** Handle of the open inspection, set by {@link Editor.openWatch}. */
+    this.watch = null;
   }
 
   /**
@@ -46,7 +48,10 @@ export class Editor {
       viewport: { ...VIEWPORT, ...viewport },
       deviceScaleFactor: DEVICE_SCALE_FACTOR,
       colorScheme: 'dark',
-      reducedMotion: 'reduce'
+      reducedMotion: 'reduce',
+      // `--base` points at a development instance, which may be served over
+      // HTTPS with a self-signed certificate (`https://logigator.test/editor`).
+      ignoreHTTPSErrors: true
     });
     await this.context.addInitScript(
       (entries) => {
@@ -69,6 +74,18 @@ export class Editor {
             '`debug.automationApi` on?'
         );
       });
+    // The facade grows additively, so its version does not distinguish an
+    // editor without the calls this tool drives. Probe one of them instead of
+    // failing with a TypeError inside whichever shot ran first.
+    const complete = await this.api(
+      () => typeof window.__logigator.camera.toScreen === 'function'
+    );
+    if (!complete) {
+      throw new Error(
+        `the editor at ${this.baseUrl} has an older automation API — it is ` +
+          'missing camera.toScreen; rebuild it from this branch'
+      );
+    }
     await this.parkPointer();
     await this.settle();
     return this;
@@ -78,6 +95,8 @@ export class Editor {
     await this.context?.close();
     this.context = null;
     this.page = null;
+    /** Handle of the open inspection, set by {@link Editor.openWatch}. */
+    this.watch = null;
   }
 
   // -- Automation API ------------------------------------------------------
@@ -149,12 +168,50 @@ export class Editor {
     await this.settle();
   }
 
-  viewport() {
-    return this.api(() => window.__logigator.camera.getViewport());
+  /**
+   * Slides the camera until the content's centre sits at the given CSS-px
+   * offsets from the board's top-left corner — how a shot parks a circuit
+   * beside, or level with, a floating window. Either axis may be left out.
+   * Measured from where the content actually is, so it holds at any zoom and
+   * whatever framing came before it.
+   */
+  async centerContentAt({ x, y }) {
+    const bounds = await this.contentBounds();
+    const board = await this.canvasBox();
+    const centre = {
+      x: bounds.x + bounds.width / 2,
+      y: bounds.y + bounds.height / 2
+    };
+    // Both points in grid units, so the pan is their difference: where the
+    // content is now, and where the given board offsets land on the grid.
+    const target = await this.api(
+      (point) => window.__logigator.camera.toGrid(point),
+      { x: board.x + (x ?? 0), y: board.y + (y ?? 0) }
+    );
+    await this.panBy({
+      x: x === undefined ? 0 : centre.x - target.x,
+      y: y === undefined ? 0 : centre.y - target.y
+    });
+  }
+
+  /** The open circuit's tight content bounds, in grid units. */
+  async contentBounds() {
+    const bounds = await this.api(() => window.__logigator.getProject().bounds);
+    if (!bounds) throw new Error('the project is empty — nothing to frame');
+    return bounds;
   }
 
   settings(patch) {
     return this.api((p) => window.__logigator.settings.set(p), patch);
+  }
+
+  /** Arms one of the board's tools, as the tool bar's buttons do. */
+  async setWorkMode(mode, opts) {
+    await this.api(
+      (a) => window.__logigator.setWorkMode(a.mode, a.opts ?? undefined),
+      { mode, opts: opts ?? null }
+    );
+    await this.settle();
   }
 
   /** Selects elements the way the select tool's marquee would. */
@@ -201,48 +258,43 @@ export class Editor {
 
   // -- Geometry ------------------------------------------------------------
 
+  // Every conversion between grid units and CSS px goes through the camera's
+  // own mapping (`camera.toScreen` / `toScreenRect` / `boardRect`) rather than
+  // being recomputed here — the editor owns that transform, and a copy of it
+  // out here would drift the moment the camera changed.
+
   /** Bounding box of the board canvas, in CSS px relative to the viewport. */
-  async canvasBox() {
-    const box = await this.page.locator('app-board canvas').boundingBox();
-    if (!box) throw new Error('board canvas has no box');
-    return box;
+  canvasBox() {
+    return this.api(() => window.__logigator.camera.boardRect());
   }
 
   /**
-   * Grid rectangle → clip rectangle in CSS px, via the camera's current
-   * grid-to-screen mapping. `pad` is in grid units, so framing stays stable
-   * across zoom levels.
+   * Grid rectangle → clip rectangle in CSS px. `pad` is in grid units, so
+   * framing stays stable across zoom levels.
    */
   async gridClip(rect, pad = 0) {
-    const [{ view, screen }, canvas] = await Promise.all([
-      this.viewport(),
+    const [box, canvas] = await Promise.all([
+      this.api((r) => window.__logigator.camera.toScreenRect(r), {
+        x: rect.x - pad,
+        y: rect.y - pad,
+        width: rect.width + pad * 2,
+        height: rect.height + pad * 2
+      }),
       this.canvasBox()
     ]);
-    const pxPerGridX = screen.width / view.width;
-    const pxPerGridY = screen.height / view.height;
     // Clamped to the canvas, not the window: a crop that ran past the board
     // would otherwise pick up the status bar or the side-bar's edge.
-    return clampTo(
-      {
-        x: canvas.x + (rect.x - pad - view.x) * pxPerGridX,
-        y: canvas.y + (rect.y - pad - view.y) * pxPerGridY,
-        width: (rect.width + pad * 2) * pxPerGridX,
-        height: (rect.height + pad * 2) * pxPerGridY
-      },
-      canvas
-    );
+    return clampTo(box, canvas);
   }
 
   /** Grid point → viewport CSS px, for driving the mouse over the board. */
-  async gridPoint(pos) {
-    const [{ view, screen }, canvas] = await Promise.all([
-      this.viewport(),
-      this.canvasBox()
-    ]);
-    return {
-      x: canvas.x + ((pos.x - view.x) * screen.width) / view.width,
-      y: canvas.y + ((pos.y - view.y) * screen.height) / view.height
-    };
+  gridPoint(pos) {
+    return this.api((p) => window.__logigator.camera.toScreen(p), pos);
+  }
+
+  /** Viewport CSS px → grid point: what the board shows at a screen position. */
+  gridOf(point) {
+    return this.api((p) => window.__logigator.camera.toGrid(p), point);
   }
 
   /**
@@ -274,20 +326,22 @@ export class Editor {
     overlays = false,
     anchor = 'center'
   } = {}) {
-    const bounds = await this.api(() => window.__logigator.getProject().bounds);
-    if (!bounds) throw new Error('the project is empty — nothing to frame');
+    const bounds = await this.contentBounds();
     if (!overlays) await this.hideOverlays();
 
     const board = await this.canvasBox();
     // 'top-left' parks the circuit in the board's top-left corner, so a clip
-    // that also has to reach the chrome above the board stays tight.
-    const half =
-      anchor === 'top-left'
-        ? {
-            x: board.width / GRID_SIZE / zoom / 2 - pad,
-            y: board.height / GRID_SIZE / zoom / 2 - pad
-          }
-        : { x: bounds.width / 2, y: bounds.height / 2 };
+    // that also has to reach the chrome above the board stays tight; 'top'
+    // keeps that short frame but leaves the circuit centred across it.
+    const flush = {
+      x: board.width / GRID_SIZE / zoom / 2 - pad,
+      y: board.height / GRID_SIZE / zoom / 2 - pad
+    };
+    const centred = { x: bounds.width / 2, y: bounds.height / 2 };
+    const half = {
+      x: anchor === 'top-left' ? flush.x : centred.x,
+      y: anchor === 'center' ? centred.y : flush.y
+    };
     await this.setCamera({
       zoom,
       center: { x: bounds.x + half.x, y: bounds.y + half.y }
@@ -314,6 +368,7 @@ export class Editor {
    * Clip covering every given selector's box, padded. The union keeps shots of
    * button groups and adjacent bars anchored to the real chrome instead of to
    * markup this tool would otherwise have to add.
+   * @arg pad {number|{left?: number, right?: number, top?: number, bottom?: number}}
    */
   async unionClip(selectors, pad = 0) {
     const boxes = [];
@@ -328,10 +383,17 @@ export class Editor {
       }
     }
     if (boxes.length === 0) throw new Error('union of zero boxes');
-    const left = Math.min(...boxes.map((b) => b.x)) - pad;
-    const top = Math.min(...boxes.map((b) => b.y)) - pad;
-    const right = Math.max(...boxes.map((b) => b.x + b.width)) + pad;
-    const bottom = Math.max(...boxes.map((b) => b.y + b.height)) + pad;
+
+    const leftPadding = typeof pad === 'number' ? pad : (pad.left ?? 0);
+    const rightPadding = typeof pad === 'number' ? pad : (pad.right ?? 0);
+    const topPadding = typeof pad === 'number' ? pad : (pad.top ?? 0);
+    const bottomPadding = typeof pad === 'number' ? pad : (pad.bottom ?? 0);
+
+    const left = Math.min(...boxes.map((b) => b.x)) - leftPadding;
+    const top = Math.min(...boxes.map((b) => b.y)) - topPadding;
+    const right = Math.max(...boxes.map((b) => b.x + b.width)) + rightPadding;
+    const bottom =
+      Math.max(...boxes.map((b) => b.y + b.height)) + bottomPadding;
     return clampTo(
       { x: left, y: top, width: right - left, height: bottom - top },
       { x: 0, y: 0, ...(await this.page.viewportSize()) }
@@ -347,7 +409,12 @@ export class Editor {
     await this.settle();
   }
 
-  /** Clicks a toolbar/tool button by its accessible name. */
+  /**
+   * Clicks a chrome button by its accessible name — for the buttons that *are*
+   * the shot's subject (the scissor pill) or that open a dialog. Arming a tool
+   * goes through {@link Editor.setWorkMode} instead: matching a localized
+   * accessible name is not how a tool should be picked.
+   */
   async clickButton(name, options) {
     await this.page.getByRole('button', { name, exact: true }).click(options);
     await this.settle();
@@ -386,13 +453,6 @@ export class Editor {
       await this.settle();
     }
     throw new Error('element never settled into a stable position');
-  }
-
-  /** Clicks a grid point on the board with the current tool. */
-  async clickGrid(pos) {
-    const point = await this.gridPoint(pos);
-    await this.page.mouse.click(point.x, point.y);
-    await this.settle();
   }
 
   /**
@@ -443,34 +503,30 @@ export class Editor {
   }
 
   /**
-   * Opens the master behind the first custom instance in a second tab.
+   * Opens the master behind the first custom instance of the open document in
+   * its own tab.
    *
    * A loaded circuit file carries its customs as embedded copies rather than as
-   * library entries, so the settings card offers "Restore & edit" — which
-   * rebuilds the master into the browser library — where a document opened from
-   * the library would offer "Edit circuit". Either way the master ends up in the
-   * library, which is also what fills the palette's User Components section.
+   * library entries, so there is no master to open yet — `library.edit`
+   * restores the embedded circuit into the browser library first, which is also
+   * what fills the palette's User Components section.
    */
   async openCustomForEdit() {
-    await this.selectCustomInstance();
-    const edit = this.page.getByRole('button', {
-      name: 'Edit circuit',
-      exact: true
-    });
-    const restore = this.page.getByRole('button', {
-      name: 'Restore & edit',
-      exact: true
-    });
-    await edit.or(restore).first().click();
-    await this.page.locator('app-tab-bar [role="tab"]').nth(1).waitFor();
+    const [instance] = await this.customInstances();
+    await this.api(
+      (type) => window.__logigator.library.edit(type),
+      instance.type
+    );
     await this.settle();
   }
 
-  /** Clicks the first custom instance with the select tool, opening its card. */
+  /** Selects the first custom instance, opening its settings card. */
   async selectCustomInstance() {
     const [instance] = await this.customInstances();
-    await this.clickButton('Select');
-    await this.clickGrid(this.bodyPoint(instance));
+    // A zero-area region is a click: the single element under the point, and
+    // no marquee left drawn over the shot.
+    const point = this.bodyPoint(instance);
+    await this.select({ bounds: { ...point, width: 0, height: 0 } });
     await this.page.locator('app-component-settings lg-card').waitFor();
     await this.settle();
     return instance;
@@ -478,7 +534,7 @@ export class Editor {
 
   /** Switches back to the pinned main-project tab. */
   async openMainTab() {
-    await this.page.locator('app-tab-bar [role="tab"]').first().click();
+    await this.api(() => window.__logigator.tabs.activate(0));
     await this.settle();
   }
 
@@ -511,14 +567,19 @@ export class Editor {
   }
 
   /**
-   * Opens a component's live inspection the way a user does — by tapping it
-   * while the simulation runs.
+   * Opens a component's live inspection — the view a tap on it opens while the
+   * simulation runs. The handle is kept, so the calls below address it without
+   * every shot having to carry it.
    */
   async openWatch(symbol) {
     const [instance] = await this.componentsOfType(symbol);
-    await this.clickGrid(this.bodyPoint(instance));
+    this.watch = await this.api(
+      (id) => window.__logigator.inspect.open(id),
+      instance.id
+    );
     await this.watchWindow().waitFor({ state: 'visible' });
     await this.settle();
+    return this.watch;
   }
 
   /** The floating inspection window. */
@@ -526,25 +587,56 @@ export class Editor {
     return this.page.locator('lg-window').first();
   }
 
-  /** Drags the inspection window by its header to an absolute viewport point. */
+  /** The open inspection's handle, or a thrown error when none is open. */
+  requireWatch() {
+    if (!this.watch) throw new Error('no inspection is open');
+    return this.watch.id;
+  }
+
+  /**
+   * Places the inspection window at an absolute viewport point. The window is
+   * clamped to the board it floats over, so a target that does not fit is
+   * refused rather than silently reframing the shot around a window that ended
+   * up somewhere else.
+   */
   async moveWatch({ x, y }) {
-    const header = this.watchWindow().locator('div').first();
-    const box = await header.boundingBox();
-    await this.page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-    await this.page.mouse.down();
-    await this.page.mouse.move(x + box.width / 2, y + box.height / 2, {
-      steps: 6
-    });
-    await this.page.mouse.up();
+    const placed = await this.api(
+      (a) => window.__logigator.inspect.setBounds(a.id, { x: a.x, y: a.y }),
+      { id: this.requireWatch(), x, y }
+    );
+    await this.settle();
+    if (Math.abs(placed.x - x) > 2 || Math.abs(placed.y - y) > 2) {
+      throw new Error(
+        `the window was clamped to ${Math.round(placed.x)},${Math.round(placed.y)} ` +
+          `instead of ${Math.round(x)},${Math.round(y)} — it does not fit beside ` +
+          'the rest of the shot; lower the zoom or widen the shot viewport'
+      );
+    }
+  }
+
+  /**
+   * Frames the watch's circuit at an absolute zoom. A watch fits its circuit at
+   * 100 % at most, so a small circuit in a large window needs this to fill it;
+   * `BOARD_ZOOM` gives the inner circuit the same weight as the board's.
+   */
+  async zoomWatch(zoom) {
+    await this.api(
+      (a) => {
+        const { camera } = window.__logigator.inspect;
+        camera.setZoom(a.id, a.zoom);
+        camera.focus(a.id, 'content', { maxZoom: a.zoom });
+      },
+      { id: this.requireWatch(), zoom }
+    );
     await this.settle();
   }
 
-  /** One engine tick, resolved after its snapshot has been applied. */
-  async stepSimulation() {
-    await this.api(async () => {
+  /** `ticks` engine ticks, resolved after the resulting snapshot is applied. */
+  async stepSimulation(ticks = 1) {
+    await this.api(async (n) => {
       window.__logigator.sim.pause();
-      await window.__logigator.sim.step();
-    });
+      await window.__logigator.sim.step(n);
+    }, ticks);
     await this.settle();
   }
 
@@ -552,24 +644,39 @@ export class Editor {
    * Runs the engine long enough for the inputs to reach the outputs, then
    * pauses so the board holds a settled, photographable state.
    */
-  async runUntilSettled(ticks = 12) {
-    await this.api(async (n) => {
-      const api = window.__logigator;
-      api.sim.pause();
-      for (let i = 0; i < n; i++) await api.sim.step();
-    }, ticks);
-    await this.settle();
+  runUntilSettled(ticks = 12) {
+    return this.stepSimulation(ticks);
   }
 
   /**
-   * Drills one level down in an open watch by tapping the nested master at the
-   * centre of its canvas — the watch frames its circuit, so the nested
-   * component sits in the middle.
+   * Drills one level down in an open watch by activating the first nested
+   * custom of the visible level — the same routing a tap on it takes. The
+   * level's elements are a fresh copy of the inner circuit, so their ids are
+   * the copy's.
    */
   async drillIntoWatch() {
-    const canvas = this.watchWindow().locator('canvas').first();
-    const box = await canvas.boundingBox();
-    await this.page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+    const id = this.requireWatch();
+    const inner = await this.api((watchId) => {
+      const api = window.__logigator;
+      const builtIn = new Set(
+        api
+          .describeCatalog()
+          .filter((entry) => !entry.source)
+          .map((entry) => entry.type)
+      );
+      return (
+        api.inspect
+          .getElements(watchId)
+          .components.find((component) => !builtIn.has(component.type)) ?? null
+      );
+    }, id);
+    if (!inner) {
+      throw new Error('the watched circuit has no nested custom to drill into');
+    }
+    this.watch = await this.api(
+      (a) => window.__logigator.inspect.activate(a.id, a.componentId),
+      { id, componentId: inner.id }
+    );
     await this.settle();
   }
 
