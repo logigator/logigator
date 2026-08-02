@@ -66,6 +66,9 @@ por encima.
 - **Retroalimentación de colisión clara**: los componentes y los cables se vuelven
   rojos cuando una colocación, un arrastre o una rotación se solaparían con algo,
   para que las posiciones no válidas resulten obvias de un vistazo.
+- **La cuadrícula marca dónde se conecta**: los puntos de la cuadrícula ahora se
+  sitúan justo donde terminan los cables, las puntas de los puertos y los cruces,
+  de modo que los cables pasan por los puntos en lugar de entre ellos.
 - Un **conjunto de herramientas más sencillo y unificado**: el trazado de cables y la
   conexión/división de cruces se fusionaron en una sola herramienta de cable
   (arrastra para trazar, toca para alternar un cruce o la negación de un puerto), la

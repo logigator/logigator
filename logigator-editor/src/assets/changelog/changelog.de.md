@@ -65,6 +65,9 @@ bedienen, dazu einige große neue Möglichkeiten.
 - **Klares Kollisions-Feedback** — Komponenten und Leitungen färben sich rot,
   solange eine Platzierung, ein Ziehen oder eine Drehung etwas überlappen würde,
   sodass ungültige Positionen auf einen Blick offensichtlich sind.
+- **Das Raster zeigt, wo verbunden wird** — die Rasterpunkte liegen jetzt genau
+  auf den Punkten, an denen Leitungen, Anschluss-Spitzen und Kreuzungen enden,
+  sodass Leitungen durch die Punkte statt zwischen ihnen verlaufen.
 - Ein **einfacheres, vereinheitlichtes Werkzeugset**: Leitungsverlegung und
   Verbinden/Trennen wurden in ein einziges Leitungswerkzeug zusammengeführt
   (ziehen zum Verlegen, tippen zum Umschalten einer Kreuzung oder der Negation

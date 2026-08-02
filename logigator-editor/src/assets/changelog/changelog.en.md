@@ -59,6 +59,9 @@ easier to use, with some big new capabilities on top.
 - **Clear collision feedback** — components and wires turn red while a placement,
   drag, or rotation would overlap something, so invalid positions are obvious at
   a glance.
+- **The grid marks where things connect** — grid dots now sit exactly on the
+  points that wires, port tips, and junctions terminate on, so wires run through
+  the dots instead of between them.
 - A **simpler, unified tool set**: wire routing and connection join/split merged
   into one wire tool (drag to route, tap to toggle a junction or a port's
   negation), the scissor "exact" select folded into the select tool, and panning

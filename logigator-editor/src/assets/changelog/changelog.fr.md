@@ -65,6 +65,10 @@ en prime de grandes nouveautés.
 - **Un retour clair sur les collisions** — les composants et fils deviennent rouges
   lorsqu'un placement, un glisser ou une rotation chevaucherait quelque chose, de
   sorte que les positions invalides sautent aux yeux.
+- **La grille marque les points de connexion** : les points de la grille se
+  situent désormais exactement là où les fils, les extrémités de port et les
+  jonctions aboutissent, de sorte que les fils passent par les points au lieu de
+  passer entre eux.
 - Un **jeu d'outils plus simple et unifié** : le tracé des fils et la
   connexion/séparation des jonctions fusionnés en un seul outil fil (faites glisser
   pour tracer, touchez pour basculer une jonction ou l'inversion d'un port), la
