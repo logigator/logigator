@@ -4,7 +4,10 @@ import { Point, Rectangle } from 'pixi.js';
 import { environment } from '../../environments/environment';
 import { Component } from '../components/component';
 import { ComponentProviderService } from '../components/component-provider.service';
+import { CUSTOM_TYPE_ID_BASE } from '../components/component-type.enum';
+import { CustomComponentRegistry } from '../components/custom/custom-component-registry.service';
 import { SubCircuitWatch } from '../components/custom/sub-circuit-watch';
+import { CustomComponentService } from '../custom-component/custom-component.service';
 import { OpenInspection } from '../inspection/inspection-presenter';
 import { InspectionService } from '../inspection/inspection.service';
 import { WindowInspectionPresenter } from '../inspection/window-inspection.presenter';
@@ -47,6 +50,7 @@ import {
   GridPoint,
   GridRect,
   InspectionInfo,
+  LibraryEntry,
   LogigatorAutomationApi,
   PerOpError,
   PortReadout,
@@ -59,6 +63,7 @@ import {
   SettingDescriptor,
   SettingsState,
   SimStatus,
+  TabInfo,
   ViewportInfo,
   WorkModeName,
   WorkModeState
@@ -120,6 +125,8 @@ export class AutomationApiService {
   private readonly inspection = inject(InspectionService);
   private readonly windowPresenter = inject(WindowInspectionPresenter);
   private readonly boardSurface = inject(BoardSurfaceService);
+  private readonly customComponents = inject(CustomComponentService);
+  private readonly registry = inject(CustomComponentRegistry);
   private readonly translation = inject(TranslationService);
   private readonly theming = inject(ThemingService);
   private readonly settings = inject(EditorSettingsService);
@@ -254,6 +261,16 @@ export class AutomationApiService {
               this.watchCameraProject(inspectionId)
             )
         })
+      }),
+      tabs: Object.freeze({
+        list: (): TabInfo[] => this.tabList(),
+        activate: (index: number): TabInfo => this.tabActivate(index),
+        close: (index: number, opts?: { discardChanges?: boolean }): void =>
+          this.tabClose(index, opts)
+      }),
+      library: Object.freeze({
+        list: (): LibraryEntry[] => this.libraryList(),
+        edit: (type: number): Promise<TabInfo> => this.libraryEdit(type)
       }),
       select: (region: SelectRegion, opts?: SelectOptions): SelectionState =>
         this.select(region, opts),
@@ -1073,6 +1090,128 @@ export class AutomationApiService {
     };
   }
 
+  // -- Documents -----------------------------------------------------------
+  //
+  // The tab strip and the library behind it. Switching, closing and opening a
+  // component for edit are document-level state, not chrome: the same calls the
+  // tab strip and the settings card's Edit button make.
+
+  public tabList(): TabInfo[] {
+    const active = this.projectService.activeProject();
+    return this.tabProjects().map((project, index) => {
+      const metadata = this.metadataStore.getMetadata(project);
+      return {
+        index,
+        name: metadata?.name ?? '',
+        documentType: metadata?.type ?? 'unknown',
+        id: metadata?.id ?? '',
+        active: project === active,
+        dirty: this.metadataStore.isDirty(project)
+      };
+    });
+  }
+
+  public tabActivate(index: number): TabInfo {
+    const project = this.requireTab(index);
+    this.assertNotSimulating('tabs.activate');
+    this.projectService.setActiveProject(project);
+    return this.tabList()[index];
+  }
+
+  /**
+   * Closes a component editor. A dirty one needs `discardChanges` — the UI asks
+   * the user at this point, and a driver has nobody to ask.
+   */
+  public tabClose(
+    index: number,
+    options: { discardChanges?: boolean } = {}
+  ): void {
+    const project = this.requireTab(index);
+    this.assertNotSimulating('tabs.close');
+    if (project === this.projectService.mainProject()) {
+      throw new Error('logigator: the main project tab cannot be closed');
+    }
+    if (this.metadataStore.isDirty(project) && !options.discardChanges) {
+      throw new Error(
+        `logigator: tab ${index} has unsaved changes — pass { discardChanges: true } to close it anyway`
+      );
+    }
+    this.customComponents.forceCloseComponent(project);
+  }
+
+  /** The strip's projects in tab order: the pinned main one, then components. */
+  private tabProjects(): Project[] {
+    const main = this.projectService.mainProject();
+    return [...(main ? [main] : []), ...this.projectService.openComponents()];
+  }
+
+  private requireTab(index: number): Project {
+    const project = this.tabProjects()[index];
+    if (!project) {
+      throw new Error(`logigator: no tab at index ${index}`);
+    }
+    return project;
+  }
+
+  /** The library masters — what the palette's User Components section lists. */
+  public libraryList(): LibraryEntry[] {
+    const openIds = new Set(
+      this.projectService
+        .openComponents()
+        .map((project) => this.metadataStore.getMetadata(project)?.id)
+    );
+    const entries: LibraryEntry[] = [];
+    for (const config of this.componentProvider.allComponents()) {
+      if (config.type < CUSTOM_TYPE_ID_BASE) continue;
+      const definition = this.registry.getDefinition(config.type);
+      if (!definition || definition.kind !== 'master') continue;
+      entries.push({
+        type: definition.typeId,
+        id: definition.id ?? '',
+        name: definition.name,
+        symbol: definition.symbol,
+        source: definition.source,
+        open: openIds.has(definition.id)
+      });
+    }
+    return entries;
+  }
+
+  /**
+   * Opens a custom component's circuit in its own tab, taking either a master's
+   * type id or a placed instance's. An instance whose master is gone — its
+   * circuit only embedded — is restored into the browser library first, which
+   * is what the settings card's Edit / Restore & edit button does.
+   */
+  public async libraryEdit(type: number): Promise<TabInfo> {
+    this.assertNotBusy('library.edit');
+    const definition = this.registry.getDefinition(type);
+    if (!definition) {
+      throw new Error(`logigator: no custom component type ${type}`);
+    }
+    const master = this.registry.resolveMaster(type)?.master;
+    if (master?.id) {
+      await this.customComponents.openComponentForEdit(master.id);
+    } else {
+      await this.customComponents.restoreOrphanAndEdit(type);
+    }
+
+    // Identified by the master's id rather than "some component tab is active":
+    // a failed open from another component's tab would leave that one active and
+    // read as success. A restore mints a new id, so it is resolved afterwards.
+    const openedId = this.registry.resolveMaster(type)?.master.id;
+    const tab = this.tabList().find(
+      (candidate) => candidate.active && candidate.id === openedId
+    );
+    if (!tab) {
+      // Both paths report their own failure through a toast and return.
+      throw new Error(
+        `logigator: "${definition.name}" could not be opened for editing`
+      );
+    }
+    return tab;
+  }
+
   // -- Editor settings -----------------------------------------------------
   //
   // User preferences, not project edits: they persist exactly as if the user had
@@ -1188,6 +1327,13 @@ export class AutomationApiService {
     const project = this.activeProject;
     if (!project) throw new Error('logigator: no project is open');
     return project;
+  }
+
+  /** Throws while a simulation is up — it binds to the active project. */
+  private assertNotSimulating(op: string): void {
+    if (this.workMode.mode() === WorkMode.SIMULATION) {
+      throw new Error(`logigator: ${op} refused — editor simulation`);
+    }
   }
 
   /** Throws when a document-replacing call arrives while the editor is busy. */

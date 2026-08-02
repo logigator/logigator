@@ -1,9 +1,15 @@
 # Automation API
 
 A programmatic interface for driving the editor from a script or an AI agent:
-query the circuit, edit it, run the simulation, move the camera, select regions
-for the watching user, and round-trip files — all through a semantic,
-JSON-based command surface instead of pixel-level canvas interaction.
+query the circuit, edit it, run the simulation, arm a tool, move the camera,
+select regions for the watching user, open live inspections, switch documents,
+and round-trip files — all through a semantic, JSON-based command surface
+instead of pixel-level canvas interaction.
+
+It models **editor state**, not chrome interaction: the menus, dialogs and drag
+gestures stay a driver's own business (a DOM automation library's job), while
+anything the editor itself owns — which tool is armed, which document is open,
+which inspection is up — is a call here.
 
 The facade is installed as `window.__logigator` and driven externally through
 Playwright/CDP `evaluate`. It is **transport-agnostic**: an MCP server or a
@@ -14,7 +20,7 @@ WebSocket bridge can be added later without changing anything below.
 ```
 src/app/automation/
 ├── automation-api.model.ts    # The JSON contract (types) + LogigatorAutomationApi
-├── automation-api.service.ts  # The facade: install(), reads, camera, sim, settings
+├── automation-api.service.ts  # The facade: install(), reads, camera, sim, docs, settings
 ├── catalog.ts                 # Registry-derived catalog + option-model reflection
 ├── edit-ops.ts                # Edit-op schema, validation, integrate → commit
 └── port-index.ts              # component → link-id reverse index for port reads
@@ -322,6 +328,22 @@ circuit, so its elements carry the copy's ids, not the placed instance's.
   being overwritten by it on the next frame.
 
 All five of the watch-only calls refuse a data inspection.
+
+### Documents
+
+`tabs.list()` is the tab strip: the pinned main project at index 0, then the open
+component editors. `tabs.activate(index)` switches what every other call targets;
+`tabs.close(index)` closes a component editor — a dirty one needs
+`{ discardChanges: true }`, since the UI asks the user at this point and a driver
+has nobody to ask. Both are refused while a simulation runs (it binds to the
+active project), and the main project's tab cannot be closed.
+
+`library.list()` is the custom-component library the palette places from: the
+**masters**, not the frozen snapshots placed from them. `library.edit(type)`
+opens a master's circuit in its own tab, taking either a master's type id or a
+placed instance's — an instance whose master is gone (its circuit only embedded)
+is restored into the browser library first, which is exactly what the settings
+card's Edit / Restore & edit button does.
 
 ### Editor settings
 

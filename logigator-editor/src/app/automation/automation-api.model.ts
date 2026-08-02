@@ -378,6 +378,33 @@ export interface InspectionInfo {
   bounds: ScreenRect | null;
 }
 
+// -- Documents -------------------------------------------------------------
+
+/** One tab of the editor's tab strip: the main project, then open components. */
+export interface TabInfo {
+  /** Position in the strip — the main project is pinned at 0. */
+  index: number;
+  name: string;
+  documentType: 'project' | 'comp' | 'unknown';
+  /** Storage id — empty for a never-saved draft. */
+  id: string;
+  active: boolean;
+  dirty: boolean;
+}
+
+/** One custom-component master in the session's library. */
+export interface LibraryEntry {
+  /** Session type id — what `addComponent` places and the catalog lists. */
+  type: number;
+  /** Persistent master id (browser store or cloud). */
+  id: string;
+  name: string;
+  symbol: string;
+  source: 'server' | 'browser';
+  /** Whether an editor tab for this master is currently open. */
+  open: boolean;
+}
+
 // -- Settings --------------------------------------------------------------
 
 export type SettingDescriptor =
@@ -511,6 +538,27 @@ export interface LogigatorAutomationApi {
       ): ViewportInfo;
     };
   };
+
+  /** The open documents — the tab strip above the board. */
+  tabs: {
+    list(): TabInfo[];
+    activate(index: number): TabInfo;
+    /** Closes a component tab; a dirty one needs `discardChanges`. */
+    close(index: number, opts?: { discardChanges?: boolean }): void;
+  };
+
+  /** The custom-component library the palette places from. */
+  library: {
+    list(): LibraryEntry[];
+    /**
+     * Opens a custom component's circuit in its own tab. Takes a master's type
+     * id or a **placed instance's** — an instance whose master is gone (its
+     * circuit only embedded) is restored into the browser library first, like
+     * the settings card's Edit / Restore & edit button.
+     */
+    edit(type: number): Promise<TabInfo>;
+  };
+
   // selection — exactly what the select tool's marquee does
   select(region: SelectRegion, opts?: SelectOptions): SelectionState;
   clearSelection(): void;
