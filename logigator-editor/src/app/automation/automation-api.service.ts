@@ -735,7 +735,8 @@ export class AutomationApiService {
    * `{ bounds }` is the marquee (a zero-area rectangle behaves like a click:
    * the single element under the point); `{ elementIds }` selects those
    * elements directly, rect-ing their padded bounds like a committed paste
-   * does. `cut` scissors the marquee — see {@link SelectOptions}.
+   * does. `cut` scissors the marquee and `rect: false` drops the grab rect —
+   * see {@link SelectOptions}.
    *
    * The work mode is switched to SELECT, so the selection is grabbable
    * afterwards; a `cut` mirrors the held-scissor-key marquee rather than the
@@ -781,6 +782,9 @@ export class AutomationApiService {
         .map((id) => project.getWireById(id))
         .filter((w): w is Wire => !!w);
       selection.select(components, wires);
+    }
+    if (options.rect === false) {
+      selection.clearGrabRect();
     }
 
     project.triggerTicker('single');

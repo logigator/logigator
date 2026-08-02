@@ -340,6 +340,12 @@ export interface SelectOptions {
    * entry that the following move or delete folds into itself.
    */
   cut?: boolean;
+  /**
+   * Whether the selection keeps a persistent grab rect (default `true`).
+   * `false` selects without drawing one, like a single click — grabbing then
+   * falls back to the elements' own bounds.
+   */
+  rect?: boolean;
 }
 
 /** What ended up selected. */

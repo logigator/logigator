@@ -282,6 +282,10 @@ The returned `SelectionState` is `{ componentIds, wireIds, rect, cut }`. Read
 
 `clearSelection()` clears the selection, like clicking empty canvas.
 
+`{ rect: false }` selects without a persistent grab rect, the way a single click
+does — for a selection that must not draw a marquee over what it is pointing at.
+Grabbing then falls back to the elements' own bounds.
+
 Selecting is refused while the editor is busy — it is an editing affordance, and
 the select tool does not exist during simulation.
 

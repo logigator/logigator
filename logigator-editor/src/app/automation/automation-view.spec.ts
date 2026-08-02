@@ -384,6 +384,32 @@ describe('AutomationApiService camera and selection', () => {
       expect(project.selectionManager.selectedComponents.size).toBe(1);
     });
 
+    it('rect: false keeps the selection but draws no marquee', () => {
+      const and = makeAnd(2, undefined, 3, 3);
+      project.addComponent(and);
+
+      const state = api.select({ elementIds: [and.id] }, { rect: false });
+
+      expect(state.componentIds).toEqual([and.id]);
+      expect(and.selected).toBe(true);
+      expect(state.rect).toBeNull();
+      // Grabbing falls back to the element's own bounds, like a single click.
+      expect(project.selectionManager.isGrabbedAt({ x: 4, y: 4 })).toBe(true);
+    });
+
+    it('rect: false also drops a marquee region’s drawn rect', () => {
+      const and = makeAnd(2, undefined, 1, 1);
+      project.addComponent(and);
+
+      const state = api.select(
+        { bounds: { x: 0, y: 0, width: 10, height: 10 } },
+        { rect: false }
+      );
+
+      expect(state.componentIds).toEqual([and.id]);
+      expect(state.rect).toBeNull();
+    });
+
     it('refuses a cut without an edge to cut at', () => {
       const and = makeAnd(2, undefined, 3, 3);
       project.addComponent(and);

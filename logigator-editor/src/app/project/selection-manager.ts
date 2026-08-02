@@ -492,6 +492,17 @@ export class SelectionManager {
     this._grabAnchor = box ? new Point(box.x, box.y) : null;
   }
 
+  /**
+   * Drops the persistent rect while keeping the selection — for a programmatic
+   * selection that must not draw a marquee. Grabbing then falls back to the
+   * elements' own bounds, exactly like a single-click selection.
+   */
+  public clearGrabRect(): void {
+    this._setGrabRect(null);
+    this.retintCps();
+    this._selectionChange$.next();
+  }
+
   public select(components: Component[], wires: Wire[]): void {
     this.clear();
     for (const c of components) {
