@@ -211,8 +211,10 @@ export class AutomationApiService {
     };
   }
 
-  public getElements(query: ElementQuery = {}): ElementList {
-    const project = this.activeProject;
+  public getElements(
+    query: ElementQuery = {},
+    project: Project | null = this.activeProject
+  ): ElementList {
     if (!project) return { components: [], wires: [] };
 
     const componentIds = query.componentIds
@@ -485,8 +487,7 @@ export class AutomationApiService {
   // `ViewportController` speaks screen px, so every call converts through the
   // current zoom here.
 
-  public getViewport(): ViewportInfo {
-    const project = this.requireProject();
+  public getViewport(project: Project = this.requireProject()): ViewportInfo {
     const state = project.viewport.viewportState;
     return {
       view: toGridRect(project.viewport.gridView(new Rectangle())),
@@ -496,16 +497,20 @@ export class AutomationApiService {
   }
 
   /** Moves the camera by a grid-space delta: +x scrolls the view right. */
-  public cameraPan(delta: GridPoint): void {
-    const project = this.requireProject();
+  public cameraPan(
+    delta: GridPoint,
+    project: Project = this.requireProject()
+  ): void {
     const factor = project.viewport.viewportState.scale * environment.gridSize;
     project.viewport.pan(new Point(-delta.x * factor, -delta.y * factor));
     project.triggerTicker('single');
   }
 
   /** Centres the viewport on a grid point. */
-  public cameraSetCenter(pos: GridPoint): void {
-    const project = this.requireProject();
+  public cameraSetCenter(
+    pos: GridPoint,
+    project: Project = this.requireProject()
+  ): void {
     const state = project.viewport.viewportState;
     const factor = state.scale * environment.gridSize;
     project.viewport.setPosition(
@@ -521,15 +526,18 @@ export class AutomationApiService {
    * Sets an absolute zoom factor (1 = 100%), clamped to the editor's zoom
    * ladder, anchored on a grid point (the viewport centre by default).
    */
-  public cameraSetZoom(factor: number, center?: GridPoint): void {
+  public cameraSetZoom(
+    factor: number,
+    center?: GridPoint,
+    project: Project = this.requireProject()
+  ): void {
     if (!Number.isFinite(factor) || factor <= 0) {
       throw new Error('logigator: zoom factor must be a positive number');
     }
-    const project = this.requireProject();
     const current = project.viewport.viewportState.scale;
     project.viewport.zoomBy(
       factor / current,
-      center ? this.gridToScreen(center) : undefined
+      center ? this.gridToScreen(center, project) : undefined
     );
   }
 
@@ -540,10 +548,10 @@ export class AutomationApiService {
    */
   public cameraFocus(
     target: FocusTarget,
-    options: FocusOptions = {}
+    options: FocusOptions = {},
+    project: Project = this.requireProject()
   ): ViewportInfo {
-    const project = this.requireProject();
-    const rect = this.resolveFocusTarget(target);
+    const rect = this.resolveFocusTarget(target, project);
     if (rect) {
       project.viewport.fitBounds(
         rect,
@@ -551,7 +559,7 @@ export class AutomationApiService {
         options.maxZoom ?? DEFAULT_FOCUS_MAX_ZOOM
       );
     }
-    return this.getViewport();
+    return this.getViewport(project);
   }
 
   // -- Selection -----------------------------------------------------------
@@ -633,8 +641,8 @@ export class AutomationApiService {
   }
 
   /** Grid point → screen px within the canvas, at the current camera. */
-  private gridToScreen(pos: GridPoint): Point {
-    const state = this.requireProject().viewport.viewportState;
+  private gridToScreen(pos: GridPoint, project: Project): Point {
+    const state = project.viewport.viewportState;
     const factor = state.scale * environment.gridSize;
     return new Point(
       (pos.x - state.gridOrigin.x) * factor,
@@ -643,16 +651,22 @@ export class AutomationApiService {
   }
 
   /** The rectangle a {@link FocusTarget} designates, `null` when it is empty. */
-  private resolveFocusTarget(target: FocusTarget): Rectangle | null {
-    const project = this.requireProject();
+  private resolveFocusTarget(
+    target: FocusTarget,
+    project: Project
+  ): Rectangle | null {
     if (target === 'content') return project.getContentBounds();
-    if ('elementIds' in target) return this.elementBounds(target.elementIds);
+    if ('elementIds' in target) {
+      return this.elementBounds(target.elementIds, project);
+    }
     return new Rectangle(target.x, target.y, target.width, target.height);
   }
 
   /** Union of the grid bounds of the given components/wires (ids share a space). */
-  private elementBounds(ids: readonly number[]): Rectangle | null {
-    const project = this.requireProject();
+  private elementBounds(
+    ids: readonly number[],
+    project: Project
+  ): Rectangle | null {
     let union: Rectangle | null = null;
     for (const id of ids) {
       const element =
