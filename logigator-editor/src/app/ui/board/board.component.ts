@@ -28,6 +28,7 @@ import {
   RendererLease,
   RendererService
 } from '../../rendering/renderer.service';
+import { BoardSurfaceService } from '../../rendering/board-surface.service';
 
 @Component({
   selector: 'app-board',
@@ -41,6 +42,7 @@ export class BoardComponent implements OnInit, OnDestroy {
   private readonly assetsService = inject(AssetsService);
   private readonly workModeService = inject(WorkModeService);
   private readonly rendererService = inject(RendererService);
+  private readonly boardSurface = inject(BoardSurfaceService);
   private readonly loggingService = inject(LoggingService);
   private readonly toastService = inject(ToastService);
   private readonly translation = inject(TranslationService);
@@ -151,6 +153,9 @@ export class BoardComponent implements OnInit, OnDestroy {
       this._lease = lease;
 
       this._measureView();
+      // Published for the automation API's grid ↔ screen conversions, which
+      // need the canvas's page offset.
+      this.boardSurface.register(this.canvas.nativeElement);
       // The canvas fills the host via CSS; the backing store follows per render.
       // Observe the host so layout changes that don't resize the window (e.g.
       // the side bar disappearing in simulation mode) still resize the board.
@@ -198,6 +203,7 @@ export class BoardComponent implements OnInit, OnDestroy {
     this._controller?.destroy();
     this._router.destroy();
     this._resizeObserver?.disconnect();
+    this.boardSurface.unregister(this.canvas.nativeElement);
     this._renderScheduler?.destroy();
     this._ticker.destroy();
     this._lease?.release();
