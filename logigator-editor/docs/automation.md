@@ -294,6 +294,35 @@ Grabbing then falls back to the elements' own bounds.
 Selecting is refused while the editor is busy — it is an editing affordance, and
 the select tool does not exist during simulation.
 
+### Inspection
+
+The live views a tap on a component opens while the simulation runs — the ROM
+data inspector and the custom-component **watch**. `inspect.open(componentId)`
+opens (or focuses) one and returns an `InspectionInfo`: a session `id` (the
+handle every other call takes), the inspected component, the `kind`, the title,
+the window `bounds` in viewport CSS px (`null` in the compact sheet), and — for a
+watch — the breadcrumb `trail`. `list()`, `close(id)` and `closeAll()` round it
+out; `setBounds(id, box)` places the hosting window, clamped to the board it
+floats over, and returns the box actually taken.
+
+Opening is refused outside simulation, and for a component whose config declares
+no inspection.
+
+A **watch** is a second board: each breadcrumb level is a fresh copy of the inner
+circuit, so its elements carry the copy's ids, not the placed instance's.
+
+- `inspect.getElements(id, query?)` — the visible level's circuit.
+- `inspect.activate(id, componentId)` — the watch's one gesture: drives an inner
+  lever/button, drills into a nested custom (pushing a level), or opens an inner
+  component's own inspection.
+- `inspect.navigateTo(id, level)` — pops every level deeper than `level`.
+- `inspect.camera.*` — `getViewport` / `pan` / `setCenter` / `setZoom` / `focus`,
+  the board's camera operations against the visible level. A level fits its
+  circuit once, when it first shows; a write here takes that turn instead of
+  being overwritten by it on the next frame.
+
+All five of the watch-only calls refuse a data inspection.
+
 ### Editor settings
 
 `settings.describe()` / `get()` / `set(patch)` cover the theme, the language,

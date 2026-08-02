@@ -359,6 +359,25 @@ export interface SelectionState {
   cut: boolean;
 }
 
+// -- Inspection ------------------------------------------------------------
+
+/** One open live inspection, as opened by tapping a component while running. */
+export interface InspectionInfo {
+  /** Handle for the calls below; unique for the session, never reused. */
+  id: number;
+  /** The inspected component, in the project it is placed in. */
+  componentId: number;
+  componentType: number;
+  /** Inspection kind — `rom` for the data inspector, `watch` for a sub-circuit. */
+  kind: string;
+  /** Flat title (the watch's breadcrumb trail joined). */
+  title: string;
+  /** Watches: one label per open level, the visible one last. */
+  trail?: string[];
+  /** Window box in viewport CSS px; `null` when hosted in the compact sheet. */
+  bounds: ScreenRect | null;
+}
+
 // -- Settings --------------------------------------------------------------
 
 export type SettingDescriptor =
@@ -448,6 +467,50 @@ export interface LogigatorAutomationApi {
     mode: WorkModeName,
     opts?: { componentType?: number }
   ): WorkModeState;
+
+  /**
+   * Live inspections — what tapping an inspectable component while the
+   * simulation runs opens. `getElements`/`activate`/`navigateTo`/`camera`
+   * address a **watch**: its levels are fresh copies of the inner circuit, so
+   * their element ids are the copy's, not the placed instance's.
+   */
+  inspect: {
+    open(componentId: number): InspectionInfo;
+    list(): InspectionInfo[];
+    close(inspectionId: number): void;
+    closeAll(): void;
+    /** Moves/resizes the hosting window; omitted fields stay put. */
+    setBounds(
+      inspectionId: number,
+      bounds: Partial<ScreenRect>
+    ): ScreenRect | null;
+    /** The visible watch level's circuit copy. */
+    getElements(inspectionId: number, query?: ElementQuery): ElementList;
+    /**
+     * Taps a component inside the visible watch level — the one gesture the
+     * watch has: drives an inner lever/button, drills into a nested custom, or
+     * opens an inner component's own inspection.
+     */
+    activate(inspectionId: number, componentId: number): InspectionInfo;
+    /** Breadcrumb navigation: pops every level deeper than `level`. */
+    navigateTo(inspectionId: number, level: number): InspectionInfo;
+    /**
+     * The watch's camera — the same operations as the board's. A level fits
+     * its circuit once, when it first shows; a write here takes that turn
+     * instead of being overwritten by it on the next frame.
+     */
+    camera: {
+      getViewport(inspectionId: number): ViewportInfo;
+      pan(inspectionId: number, delta: GridPoint): void;
+      setCenter(inspectionId: number, pos: GridPoint): void;
+      setZoom(inspectionId: number, factor: number): void;
+      focus(
+        inspectionId: number,
+        target: FocusTarget,
+        opts?: FocusOptions
+      ): ViewportInfo;
+    };
+  };
   // selection — exactly what the select tool's marquee does
   select(region: SelectRegion, opts?: SelectOptions): SelectionState;
   clearSelection(): void;

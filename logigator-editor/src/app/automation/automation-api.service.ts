@@ -4,6 +4,10 @@ import { Point, Rectangle } from 'pixi.js';
 import { environment } from '../../environments/environment';
 import { Component } from '../components/component';
 import { ComponentProviderService } from '../components/component-provider.service';
+import { SubCircuitWatch } from '../components/custom/sub-circuit-watch';
+import { OpenInspection } from '../inspection/inspection-presenter';
+import { InspectionService } from '../inspection/inspection.service';
+import { WindowInspectionPresenter } from '../inspection/window-inspection.presenter';
 import { LoggingService } from '../logging/logging.service';
 import { BoardSurfaceService } from '../rendering/board-surface.service';
 import { PersistenceService } from '../persistence/persistence.service';
@@ -42,6 +46,7 @@ import {
   FocusTarget,
   GridPoint,
   GridRect,
+  InspectionInfo,
   LogigatorAutomationApi,
   PerOpError,
   PortReadout,
@@ -112,6 +117,8 @@ export class AutomationApiService {
   private readonly simulation = inject(SimulationService);
   private readonly workMode = inject(WorkModeService);
   private readonly appRef = inject(ApplicationRef);
+  private readonly inspection = inject(InspectionService);
+  private readonly windowPresenter = inject(WindowInspectionPresenter);
   private readonly boardSurface = inject(BoardSurfaceService);
   private readonly translation = inject(TranslationService);
   private readonly theming = inject(ThemingService);
@@ -124,6 +131,13 @@ export class AutomationApiService {
   // board identity changes (one per simulation session).
   private _portIndex: PortLinkIndex | null = null;
   private _portIndexBoard: CompiledBoard | null = null;
+
+  // Handles for the open inspections. The service identifies them by object
+  // identity, which does not cross the boundary — ids are minted on first read
+  // and never reused, so a stale handle reports "no open inspection" rather
+  // than addressing whatever opened after it.
+  private readonly _inspectionIds = new WeakMap<OpenInspection, number>();
+  private _nextInspectionId = 1;
 
   /**
    * Publishes the facade on `window` when enabled. Called once at startup,
@@ -198,6 +212,49 @@ export class AutomationApiService {
         mode: WorkModeName,
         opts?: { componentType?: number }
       ): WorkModeState => this.setWorkMode(mode, opts),
+      inspect: Object.freeze({
+        open: (componentId: number): InspectionInfo =>
+          this.inspectOpen(componentId),
+        list: (): InspectionInfo[] => this.inspectList(),
+        close: (inspectionId: number): void => this.inspectClose(inspectionId),
+        closeAll: (): void => this.inspection.closeAll(),
+        setBounds: (
+          inspectionId: number,
+          bounds: Partial<ScreenRect>
+        ): ScreenRect | null => this.inspectSetBounds(inspectionId, bounds),
+        getElements: (
+          inspectionId: number,
+          query?: ElementQuery
+        ): ElementList => this.inspectGetElements(inspectionId, query),
+        activate: (inspectionId: number, componentId: number): InspectionInfo =>
+          this.inspectActivate(inspectionId, componentId),
+        navigateTo: (inspectionId: number, level: number): InspectionInfo =>
+          this.inspectNavigateTo(inspectionId, level),
+        camera: Object.freeze({
+          getViewport: (inspectionId: number): ViewportInfo =>
+            this.getViewport(this.watchProject(inspectionId)),
+          pan: (inspectionId: number, delta: GridPoint): void =>
+            this.cameraPan(delta, this.watchCameraProject(inspectionId)),
+          setCenter: (inspectionId: number, pos: GridPoint): void =>
+            this.cameraSetCenter(pos, this.watchCameraProject(inspectionId)),
+          setZoom: (inspectionId: number, factor: number): void =>
+            this.cameraSetZoom(
+              factor,
+              undefined,
+              this.watchCameraProject(inspectionId)
+            ),
+          focus: (
+            inspectionId: number,
+            target: FocusTarget,
+            opts?: FocusOptions
+          ): ViewportInfo =>
+            this.cameraFocus(
+              target,
+              opts,
+              this.watchCameraProject(inspectionId)
+            )
+        })
+      }),
       select: (region: SelectRegion, opts?: SelectOptions): SelectionState =>
         this.select(region, opts),
       clearSelection: (): void => this.clearSelection(),
@@ -855,6 +912,165 @@ export class AutomationApiService {
       union = union ? unionRect(union, bounds) : bounds.clone();
     }
     return union;
+  }
+
+  // -- Inspection ----------------------------------------------------------
+  //
+  // The live views a tap opens while the simulation runs. A watch is a second
+  // board: its levels are fresh copies of the inner circuit, so its elements
+  // carry the copy's ids and its camera is the copy project's.
+
+  /** Opens (or focuses) a component's inspection, as a tap on it would. */
+  public inspectOpen(componentId: number): InspectionInfo {
+    if (this.workMode.mode() !== WorkMode.SIMULATION) {
+      throw new Error(
+        'logigator: inspections open only while a simulation is running'
+      );
+    }
+    const component = this.requireProject().getComponentById(componentId);
+    if (!component) {
+      throw new Error(
+        `logigator: no component ${componentId} in this document`
+      );
+    }
+    if (!component.config.inspection) {
+      throw new Error(
+        `logigator: component ${componentId} (${component.config.symbol}) is not inspectable`
+      );
+    }
+    this.inspection.openFor(component);
+    const entry = this.findInspection(component);
+    if (!entry) {
+      // openFor reports a failed factory through a toast and returns.
+      throw new Error(
+        `logigator: the inspection of component ${componentId} failed to open`
+      );
+    }
+    return this.inspectionInfo(entry);
+  }
+
+  public inspectList(): InspectionInfo[] {
+    return this.inspection.open().map((entry) => this.inspectionInfo(entry));
+  }
+
+  public inspectClose(inspectionId: number): void {
+    this.inspection.close(this.requireInspection(inspectionId));
+  }
+
+  /**
+   * Moves and/or resizes the hosting window, clamped to the board it floats
+   * over — `null` when the inspection is not in a window (the compact sheet).
+   */
+  public inspectSetBounds(
+    inspectionId: number,
+    bounds: Partial<ScreenRect>
+  ): ScreenRect | null {
+    return this.windowPresenter.setBoundsOf(
+      this.requireInspection(inspectionId),
+      bounds
+    );
+  }
+
+  /** The visible watch level's circuit copy. */
+  public inspectGetElements(
+    inspectionId: number,
+    query?: ElementQuery
+  ): ElementList {
+    return this.getElements(query, this.watchProject(inspectionId));
+  }
+
+  /**
+   * Taps a component of the visible watch level — the watch's one gesture:
+   * drives an inner lever/button, drills into a nested custom (pushing a
+   * breadcrumb level), or opens the component's own inspection.
+   */
+  public inspectActivate(
+    inspectionId: number,
+    componentId: number
+  ): InspectionInfo {
+    const watch = this.requireWatch(inspectionId);
+    const component = watch
+      .activeLevel()
+      .session.project.getComponentById(componentId);
+    if (!component) {
+      throw new Error(
+        `logigator: no component ${componentId} in the visible level of inspection ${inspectionId}`
+      );
+    }
+    watch.activate(component);
+    return this.inspectionInfo(this.requireInspection(inspectionId));
+  }
+
+  /** Breadcrumb navigation: pops every level deeper than `level`. */
+  public inspectNavigateTo(
+    inspectionId: number,
+    level: number
+  ): InspectionInfo {
+    this.requireWatch(inspectionId).navigateTo(level);
+    return this.inspectionInfo(this.requireInspection(inspectionId));
+  }
+
+  /** The project behind a watch's visible level — what its camera moves. */
+  private watchProject(inspectionId: number): Project {
+    return this.requireWatch(inspectionId).activeLevel().session.project;
+  }
+
+  /**
+   * Same, for a camera write. A level that has not been on screen yet is still
+   * waiting for the renderer's one-time fit, which runs on the next frame and
+   * would overwrite whatever is placed here — so an explicit placement takes
+   * the fit's turn instead of racing it.
+   */
+  private watchCameraProject(inspectionId: number): Project {
+    const level = this.requireWatch(inspectionId).activeLevel();
+    level.needsFit = false;
+    return level.session.project;
+  }
+
+  private requireWatch(inspectionId: number): SubCircuitWatch {
+    const { inspection } = this.requireInspection(inspectionId);
+    if (!(inspection instanceof SubCircuitWatch)) {
+      throw new Error(
+        `logigator: inspection ${inspectionId} is a "${inspection.kind}" view, not a sub-circuit watch`
+      );
+    }
+    return inspection;
+  }
+
+  private requireInspection(inspectionId: number): OpenInspection {
+    const entry = this.inspection
+      .open()
+      .find((candidate) => this._inspectionIds.get(candidate) === inspectionId);
+    if (!entry) {
+      throw new Error(`logigator: no open inspection ${inspectionId}`);
+    }
+    return entry;
+  }
+
+  private findInspection(component: Component): OpenInspection | undefined {
+    return this.inspection
+      .open()
+      .find((entry) => entry.component === component);
+  }
+
+  private inspectionInfo(entry: OpenInspection): InspectionInfo {
+    const { inspection } = entry;
+    let id = this._inspectionIds.get(entry);
+    if (id === undefined) {
+      id = this._nextInspectionId++;
+      this._inspectionIds.set(entry, id);
+    }
+    return {
+      id,
+      componentId: entry.component.id,
+      componentType: entry.component.config.type,
+      kind: inspection.kind,
+      title: inspection.title(),
+      ...(inspection instanceof SubCircuitWatch
+        ? { trail: inspection.levels().map((level) => level.name) }
+        : {}),
+      bounds: this.windowPresenter.boundsOf(entry)
+    };
   }
 
   // -- Editor settings -----------------------------------------------------

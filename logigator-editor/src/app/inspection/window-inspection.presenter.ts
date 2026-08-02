@@ -1,5 +1,10 @@
 import { computed, inject, Injectable, Signal } from '@angular/core';
-import { WindowRef, WindowService, WindowTitlePart } from '@logigator/ui';
+import {
+  WindowRect,
+  WindowRef,
+  WindowService,
+  WindowTitlePart
+} from '@logigator/ui';
 import { ComponentInspection } from '../components/component-inspection';
 import { InspectionPresenter, OpenInspection } from './inspection-presenter';
 
@@ -44,6 +49,22 @@ export class WindowInspectionPresenter implements InspectionPresenter {
     const ref = this.refs.get(entry);
     this.refs.delete(entry);
     ref?.close();
+  }
+
+  /**
+   * The entry's window box in viewport CSS px — `null` when it is not framed
+   * by a window (the compact sheet) or its chrome is not in the DOM yet.
+   */
+  public boundsOf(entry: OpenInspection): WindowRect | null {
+    return this.refs.get(entry)?.bounds ?? null;
+  }
+
+  /** Places the entry's window, clamped to the board it floats over. */
+  public setBoundsOf(
+    entry: OpenInspection,
+    rect: Partial<WindowRect>
+  ): WindowRect | null {
+    return this.refs.get(entry)?.setBounds(rect) ?? null;
   }
 
   /** Breadcrumb segments for the title bar (`navigate` → clickable). */
