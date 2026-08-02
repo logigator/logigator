@@ -1,0 +1,129 @@
+# Documentation screenshots
+
+Generates the images the in-editor documentation uses
+(`src/assets/docs/images/`) by driving a real editor: `window.__logigator` (the
+[automation API](../../docs/automation.md)) puts the circuit, camera, simulation
+and selection where a shot needs them, and Playwright handles the parts the API
+deliberately does not model — menus, dialogs, and the drag gestures.
+
+It only writes files into the directory you name; copying them over the tracked
+images is a separate, manual step.
+
+This is a standalone package with its own `yarn.lock` and `.yarnrc.yml` — the
+same arrangement as `logigator-backend`. It is not a workspace member, so a root
+`yarn install` neither sees nor installs it:
+
+```bash
+cd logigator-editor/tools/docs-screenshots && yarn install   # once
+```
+
+That also fetches a Chromium build into Playwright's shared browser cache,
+unless one is already there.
+
+```bash
+yarn start                                            # the editor to shoot
+node logigator-editor/tools/docs-screenshots/capture.mjs /tmp/shots
+```
+
+Before running, `src/environments/environment.development.ts` needs:
+
+- `automationApi: true` — the script drives the editor through it
+- `debugMenu: false` and `showGridBorders: false` — otherwise the Debug menu and
+  the red grid borders land in every shot
+
+## Options
+
+```
+<out-dir>        required, first positional
+--only=a,b       capture just these shots
+--base=<url>     editor to drive (default http://localhost:4200/editor)
+--headed         run the browser headed
+```
+
+## What a shot is
+
+`shots/index.mjs` is the registry. Each entry names the image it produces and a
+`run(editor)` that stages the editor and returns what to capture:
+
+```js
+{
+  name: 'negated-gate',
+  async run(ed) {
+    await ed.load('negated-gate');
+    return { clip: await ed.contentClip({ pad: 1.5 }) };
+  }
+}
+```
+
+Every shot gets its own browser context, so IndexedDB drafts, the
+custom-component library and preferences never leak between shots. Before the
+first paint each context pins the theme, language and preferences, and silences
+the first-run nudge and the "What's new" popup — nothing depends on run order.
+
+Clips come from element boxes rather than from markup added for the tool:
+`unionClip` takes the union of any set of selectors (the five tool buttons, the
+title bar plus the toolbar), and `gridClip` / `contentClip` convert grid
+rectangles through the camera's own mapping.
+
+`intro-banner.png` is the one doc image not produced here — it is a designed
+banner, not a capture of the editor.
+
+## Animated shots
+
+The two animated doc images are step-throughs, not motion capture: a simulation
+before and after a tick, a ROM inspector before and after the address changes.
+A shot builds those by capturing frames into memory with `editor.snap()` and
+returning them; the runner encodes a GIF (`gifenc` + `pngjs`) instead of a PNG:
+
+```js
+const frames = [await ed.snap({ clip })];
+await ed.setInput(lever.id, true);
+await ed.runUntilSettled();
+frames.push(await ed.snap({ clip }));
+return { frames }; // → <name>.gif, 1200 ms per frame
+```
+
+Every frame must use the same clip; `delay` overrides the frame time.
+
+## Editing the circuits
+
+`circuits/*.json` are ordinary editor exports. To change a scene, open its file
+in the editor (**File → Open → From File**), redraw it, and export it back over
+the same name (**File → Export to file**) — do not hand-edit the coordinates,
+they are delta-encoded.
+
+A v1 file embeds a frozen copy of every custom component in its circuit, so
+loading one is also how the custom-component shots get their masters (the
+settings card's **Restore & edit** puts an embedded copy back into the browser
+library, which is also what fills the palette's _User Components_).
+
+## Resolution
+
+Everything is captured at `deviceScaleFactor: 2` — "200% zoom", so both the DOM
+chrome and the PixiJS canvas (whose resolution follows `devicePixelRatio`) come
+out at 2×. Playwright clips are always CSS px; the scale is applied by the
+renderer. Close-up board shots pin the camera to `BOARD_ZOOM` (`1.2³`, a step on
+the editor's zoom ladder) so a gate is the same size on every page.
+
+Captures repeat to within a handful of antialiased border pixels.
+
+## Cloud shots
+
+`account-menu`, `open-cloud`, `upload-to-cloud` and `share-component` run
+against `lib/mock-api.mjs` — a fixed set of projects, components, dates and one
+share link, served by intercepting `/api/**` and setting the `isAuthenticated`
+cookie. A live account would put a drifting project list and a moving "Last
+edited" date into the docs. The share link's host is whatever `--base` points at.
+
+## Running in a container
+
+Point the script at a browser and give it software rendering:
+
+```bash
+LOGIGATOR_SHOTS_BROWSER=/usr/local/bin/pw-chromium \
+LOGIGATOR_SHOTS_BROWSER_ARGS="--no-sandbox --use-gl=angle --use-angle=swiftshader --enable-unsafe-swiftshader" \
+node logigator-editor/tools/docs-screenshots/capture.mjs /tmp/shots
+```
+
+Software-rendered canvas output can differ subtly from a GPU machine's, so
+generate the images from one consistent environment.

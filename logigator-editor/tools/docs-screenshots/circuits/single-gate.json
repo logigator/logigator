@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "name": "AND gate",
+  "components": [
+    {
+      "type": 2,
+      "pos": [4, 4],
+      "options": {
+        "numInputs": 2
+      }
+    }
+  ],
+  "wires": "",
+  "definitions": []
+}

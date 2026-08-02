@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "name": "Wiring",
+  "components": [
+    {
+      "type": 2,
+      "pos": [8, 2],
+      "options": {
+        "numInputs": 2
+      },
+      "negOutputs": [0]
+    }
+  ],
+  "wires": "13,0:s2w3;-13,2:e7;13,0:e2;0,0:s6;-10,1:s4w3;0,0:e4;0,4:e12",
+  "definitions": []
+}

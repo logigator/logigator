@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "name": "Junctions",
+  "components": [],
+  "wires": "5,0:s6;6,0:s3w11;0,3:e5;0,0:s3",
+  "definitions": []
+}
