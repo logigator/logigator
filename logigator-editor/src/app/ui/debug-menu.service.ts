@@ -2,7 +2,6 @@
 import { inject, Injectable } from '@angular/core';
 import { type MenuItem } from '@logigator/ui';
 import { RendererType, type Renderer, type WebGLRenderer } from 'pixi.js';
-import { environment } from '../../environments/environment';
 import { ProjectService } from '../project/project.service';
 import { BoardCompilerService } from '../simulation/compiler/board-compiler.service';
 import { SimulationService } from '../simulation/simulation.service';
@@ -14,11 +13,13 @@ import { ClientInfoService } from '../bug-report/client-info.service';
 import { pickTextFile } from '../utils/file-picker';
 
 /**
- * Builds the title-bar "Debug" menu and owns its commands. Gated by
- * `environment.debug.debugMenu` — {@link buildMenuItem} returns `null` when disabled,
- * so the menu is absent in production. Output goes to the console (and a toast
- * where a console object is not enough); these are developer tools and are
- * intentionally untranslated.
+ * Builds the title-bar "Debug" menu and owns its commands. Output goes to the
+ * console (and a toast where a console object is not enough); these are
+ * developer tools and are intentionally untranslated.
+ *
+ * The gate is the `DEBUG_MENU` define at the call sites in `EditorMenuService`,
+ * not a check in here: that is what keeps this module — and the commands it
+ * reaches — out of a production bundle rather than merely inert inside it.
  */
 @Injectable({ providedIn: 'root' })
 export class DebugMenuService {
@@ -31,11 +32,8 @@ export class DebugMenuService {
   private readonly toast = inject(ToastService);
   private readonly clientInfo = inject(ClientInfoService);
 
-  public readonly enabled = environment.debug.debugMenu;
-
-  /** The top-level "Debug" menubar item, or `null` when the menu is disabled. */
-  public buildMenuItem(): MenuItem | null {
-    if (!this.enabled) return null;
+  /** The top-level "Debug" menubar item. */
+  public buildMenuItem(): MenuItem {
     return {
       label: 'Debug',
       items: [

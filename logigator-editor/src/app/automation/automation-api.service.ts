@@ -105,8 +105,11 @@ function workModeName(mode: WorkMode): WorkModeName {
 /**
  * The transport-agnostic automation facade: a semantic, JSON-in/JSON-out view
  * of the editor for scripts and agents. {@link install} publishes it as
- * `window.__logigator`, gated by `environment.debug.automationApi` — nothing is
- * installed in production.
+ * `window.__logigator`.
+ *
+ * The gate is the `AUTOMATION_API` define at the single call site in
+ * `AppComponent`, not a check in here: that is what keeps this whole module out
+ * of a production bundle rather than merely inert inside it.
  *
  * Everything here targets the **active** project, resolved per call: an import
  * or a new-project call replaces the main slot (and destroys the old project),
@@ -132,8 +135,6 @@ export class AutomationApiService {
   private readonly settings = inject(EditorSettingsService);
   private readonly logging = inject(LoggingService);
 
-  public readonly enabled = environment.debug.automationApi;
-
   // Port → link lookup for the current compiled board, rebuilt whenever the
   // board identity changes (one per simulation session).
   private _portIndex: PortLinkIndex | null = null;
@@ -147,12 +148,11 @@ export class AutomationApiService {
   private _nextInspectionId = 1;
 
   /**
-   * Publishes the facade on `window` when enabled. Called once at startup,
-   * after the static DI injector is set — the facade builds model objects
-   * (`Project`, `Component`), which resolve their dependencies through it.
+   * Publishes the facade on `window`. Called once at startup, after the static
+   * DI injector is set — the facade builds model objects (`Project`,
+   * `Component`), which resolve their dependencies through it.
    */
   public install(): void {
-    if (!this.enabled) return;
     window.__logigator = this.buildApi();
     this.logging.info(
       `automation API installed as window.__logigator (v${AUTOMATION_API_VERSION})`,

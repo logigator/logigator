@@ -13,7 +13,6 @@ import { ThemingService } from '../theming/theming.service';
 import { getStaticDI } from '../utils/get-di';
 import { GraphicsProviderService } from '../rendering/graphics-provider.service';
 import { ComponentGraphics } from '../rendering/graphics/component.graphics';
-import { environment } from '../../environments/environment';
 import { PX } from '../utils/grid';
 import {
   POWERED_WIRE_PIVOT,
@@ -657,7 +656,7 @@ export abstract class Component<
     // re-derive it alongside the rebuilt children.
     this.refreshTint();
 
-    if (environment.debug.showConnectionPoints) {
+    if (SHOW_CONNECTION_POINTS) {
       const connPoints = new Graphics();
 
       for (const point of localConnectionPoints(this._shape)) {
@@ -669,14 +668,14 @@ export abstract class Component<
       this.registerRotationCounterContainer(connPoints);
     }
 
-    if (environment.debug.showOrigins) {
+    if (SHOW_ORIGINS) {
       const originGraphics = new Graphics();
       originGraphics.rect(0, 0, 2 * PX, 2 * PX);
       originGraphics.fill(0xffffff);
       this.addChild(originGraphics);
     }
 
-    if (environment.debug.showHitboxes) {
+    if (SHOW_HITBOXES) {
       const bounds = this.getLocalBounds();
       const hitbox = new Graphics();
       hitbox.rect(bounds.x, bounds.y, bounds.width, bounds.height);

@@ -1,6 +1,5 @@
 import { Container, ContainerChild, Graphics, Rectangle } from 'pixi.js';
 import { GridElement } from './grid-element';
-import { environment } from '../../environments/environment';
 import { getStaticDI } from '../utils/get-di';
 import { LoggingService } from '../logging/logging.service';
 
@@ -56,8 +55,8 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
   private _items = new Map<T, QuadTreeEntry<T>>();
 
   // Debug overlay rendering the live quadrant subdivision, gated by
-  // environment.debug.showQuadTrees. Null (and every debug path a no-op) when
-  // the flag is off, so production builds carry no overhead.
+  // SHOW_QUAD_TREES. Null (and every debug path a no-op) when the flag is off,
+  // so production builds carry no overhead.
   private _debugOverlay: Graphics | null = null;
   // Mutations only flag the overlay dirty; the actual (full-tree) redraw is
   // coalesced to at most once per frame in onRender. A bulk load fires
@@ -73,7 +72,7 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
   constructor(private readonly _debugColor = 0xff00ff) {
     super();
 
-    if (environment.debug.showQuadTrees) {
+    if (SHOW_QUAD_TREES) {
       // zIndex keeps the overlay above the entries (expand() appends a new root
       // on top of it).
       this.sortableChildren = true;

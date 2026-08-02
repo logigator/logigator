@@ -1,5 +1,10 @@
 import { LogLevel } from '../app/logging/log-level.enum';
 
+/**
+ * Deployment configuration. Developer switches are not here — they are esbuild
+ * defines (see `src/define.d.ts`) so they can be flipped per build or serve
+ * without editing tracked source.
+ */
 export interface Environment {
   /** App version from package.json. */
   version: string;
@@ -18,18 +23,5 @@ export interface Environment {
     posthogHost: string;
     /** PostHog app host for toolbar/session links, bypassing the proxy. */
     posthogUiHost: string;
-  };
-  debug: {
-    showGridBorders: boolean;
-    showHitboxes: boolean;
-    showOrigins: boolean;
-    showConnectionPoints: boolean;
-    showQuadTrees: boolean;
-    /** Shows the title-bar "Debug" menu (compiled-board/renderer dumps, Project
-     * Dump export/import). Off in production. */
-    debugMenu: boolean;
-    /** Installs the `window.__logigator` automation facade (agents/scripts
-     * drive the editor through it). Off in production. */
-    automationApi: boolean;
   };
 }

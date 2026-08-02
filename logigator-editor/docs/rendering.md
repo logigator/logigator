@@ -393,7 +393,7 @@ No parameters.
 
 **File:** `graphics/grid.graphics.ts`
 
-Draws a `size × size` grid of dots (one `1/scale × 1/scale` rect per grid intersection) into a single `GraphicsContext` chunk. A debug flag (`environment.debug.showGridBorders`) overlays a red rectangle around the chunk boundary.
+Draws a `size × size` grid of dots (one `1/scale × 1/scale` rect per grid intersection) into a single `GraphicsContext` chunk. A debug flag (the `SHOW_GRID_BORDERS` define) overlays a red rectangle around the chunk boundary.
 
 Parameters: `size` (grid units), `scale`.
 

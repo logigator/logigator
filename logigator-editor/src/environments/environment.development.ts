@@ -13,14 +13,5 @@ export const environment: Environment = {
     posthogKey: 'phc_xSrwBeAfq8XzQWA4FxpPTLfVcycLwv5STWyXpwocR4vD',
     posthogHost: 'https://u.logigator.com',
     posthogUiHost: 'https://eu.posthog.com'
-  },
-  debug: {
-    showGridBorders: true,
-    showHitboxes: false,
-    showOrigins: false,
-    showConnectionPoints: false,
-    showQuadTrees: false,
-    debugMenu: true,
-    automationApi: true
   }
 };

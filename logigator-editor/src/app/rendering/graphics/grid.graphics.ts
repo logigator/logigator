@@ -32,7 +32,7 @@ export class GridGraphics extends StaticGraphicsContext {
       alpha: scale < 0.25 ? 0.5 : 1
     });
 
-    if (environment.debug.showGridBorders) {
+    if (SHOW_GRID_BORDERS) {
       this.rect(0, 0, sizePx, sizePx);
       this.stroke({
         color: 0xff0000,

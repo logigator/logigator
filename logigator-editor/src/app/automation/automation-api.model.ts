@@ -574,7 +574,7 @@ export interface LogigatorAutomationApi {
 
 declare global {
   interface Window {
-    /** Present only when `environment.debug.automationApi` is on. */
+    /** Present only in builds where the `AUTOMATION_API` define is true. */
     __logigator?: LogigatorAutomationApi;
   }
 }

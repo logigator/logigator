@@ -44,7 +44,14 @@
             },
             "define": {
               "GIT_COMMIT": "''",
-              "BUILD_DATE": "''"
+              "BUILD_DATE": "''",
+              "AUTOMATION_API": "false",
+              "DEBUG_MENU": "false",
+              "SHOW_GRID_BORDERS": "false",
+              "SHOW_HITBOXES": "false",
+              "SHOW_ORIGINS": "false",
+              "SHOW_CONNECTION_POINTS": "false",
+              "SHOW_QUAD_TREES": "false"
             },
             "styles": ["logigator-editor/src/styles.scss"],
             "scripts": [],
@@ -75,6 +82,17 @@
               "extractLicenses": false,
               "sourceMap": true,
               "outputHashing": "media",
+              "define": {
+                "GIT_COMMIT": "''",
+                "BUILD_DATE": "''",
+                "AUTOMATION_API": "true",
+                "DEBUG_MENU": "true",
+                "SHOW_GRID_BORDERS": "true",
+                "SHOW_HITBOXES": "false",
+                "SHOW_ORIGINS": "false",
+                "SHOW_CONNECTION_POINTS": "false",
+                "SHOW_QUAD_TREES": "false"
+              },
               "fileReplacements": [
                 {
                   "replace": "logigator-editor/src/environments/environment.ts",

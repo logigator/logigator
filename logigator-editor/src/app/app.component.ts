@@ -133,7 +133,6 @@ export class AppComponent {
   // Injected for its side effects: subscribes to hint triggers from startup.
   private readonly hintService = inject(HintService);
   private readonly title = inject(Title);
-  private readonly automationApi = inject(AutomationApiService);
 
   protected readonly cursorPosition = signal<Point>(new Point(0, 0));
 
@@ -160,7 +159,12 @@ export class AppComponent {
     // Installed here, not from an app initializer: the facade constructs model
     // objects (Project, Component) that resolve their dependencies through the
     // static injector, so it must not be reachable before the line above.
-    this.automationApi.install();
+    // Resolved inside the define guard rather than held in an `inject()` field:
+    // this is the only reference to the service, so a false AUTOMATION_API
+    // drops the whole automation module from the bundle (see define.d.ts).
+    if (AUTOMATION_API) {
+      this.injector.get(AutomationApiService).install();
+    }
 
     // Keep the browser title in sync with the open project's name.
     effect(() => {

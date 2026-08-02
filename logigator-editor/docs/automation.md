@@ -28,9 +28,13 @@ src/app/automation/
 
 ## Gating
 
-`environment.debug.automationApi` — `true` in `environment.development.ts`,
-`false` in production (the same pattern as `debugMenu`). When false,
-`AutomationApiService.install()` is a no-op and **nothing** is put on `window`.
+The `AUTOMATION_API` esbuild define — `true` in the `development` configuration,
+`false` in production (the same pattern as `DEBUG_MENU`; see `src/define.d.ts`).
+When false, the guard in `AppComponent` folds away at build time and this whole
+module tree is **absent from the bundle**, not merely inert in it — the gate has
+to be a define rather than an `environment` flag for that, and the guarded
+`injector.get(AutomationApiService)` has to stay inlined inside the branch.
+
 `AppComponent` calls `install()` immediately after `setStaticDIInjector`, because
 the facade builds model objects (`Project`, `Component`) that resolve their
 dependencies through the static injector.

@@ -16,6 +16,7 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve logigator-editor",
+    "start:prod": "ng serve logigator-editor --configuration production",
     "build": "ng build logigator-editor --define \"GIT_COMMIT='$(git rev-parse --short HEAD)'\" --define \"BUILD_DATE='$(date -u +%Y-%m-%dT%H:%M:%SZ)'\"",
     "build:ui": "ng build logigator-ui",
     "watch": "ng build logigator-editor --watch --configuration development",

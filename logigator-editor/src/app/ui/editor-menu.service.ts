@@ -1,4 +1,4 @@
-import { computed, inject, Injectable, Signal } from '@angular/core';
+import { computed, inject, Injectable, Injector, Signal } from '@angular/core';
 import { DialogService, type MenuItem } from '@logigator/ui';
 import { TranslationService } from '../translation/translation.service';
 import { PersistenceService } from '../persistence/persistence.service';
@@ -45,7 +45,7 @@ export class EditorMenuService {
   private readonly shortcutService = inject(ShortcutService);
   private readonly saveCoordinator = inject(SaveCoordinatorService);
   private readonly uploadCoordinator = inject(UploadCoordinatorService);
-  private readonly debugMenuService = inject(DebugMenuService);
+  private readonly injector = inject(Injector);
   private readonly toastService = inject(ToastService);
   private readonly consentService = inject(ConsentService);
 
@@ -199,8 +199,11 @@ export class EditorMenuService {
       }
     ];
 
-    const debugMenu = this.debugMenuService.buildMenuItem();
-    if (debugMenu) items.push(debugMenu);
+    // Resolved inline rather than through an `inject()` field or a helper
+    // method: the reference has to sit inside the define guard itself, so a
+    // false DEBUG_MENU drops the service from the bundle (see define.d.ts).
+    if (DEBUG_MENU)
+      items.push(this.injector.get(DebugMenuService).buildMenuItem());
 
     return items;
   }
@@ -224,8 +227,11 @@ export class EditorMenuService {
       this.aboutItem()
     ];
 
-    const debugMenu = this.debugMenuService.buildMenuItem();
-    if (debugMenu) items.push({ separator: true }, debugMenu);
+    if (DEBUG_MENU)
+      items.push(
+        { separator: true },
+        this.injector.get(DebugMenuService).buildMenuItem()
+      );
 
     return items;
   }

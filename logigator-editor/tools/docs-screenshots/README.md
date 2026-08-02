@@ -42,15 +42,20 @@ That also fetches a Chromium build into Playwright's shared browser cache,
 unless one is already there.
 
 ```bash
-yarn start                                            # the editor to shoot
+yarn start:prod --define "AUTOMATION_API=true"        # the editor to shoot
 node logigator-editor/tools/docs-screenshots/capture.mjs /tmp/shots
 ```
 
-Before running, `src/environments/environment.development.ts` needs:
+Shoot against the **production** configuration, not `yarn start`: every developer
+switch in `src/define.d.ts` defaults to off there, so the Debug menu and the red
+grid borders stay out of every shot — and so does any switch added later, without
+this file needing an update. The shots then show what users actually see.
 
-- `automationApi: true` — the script drives the editor through it
-- `debugMenu: false` and `showGridBorders: false` — otherwise the Debug menu and
-  the red grid borders land in every shot
+`AUTOMATION_API` is the one switch that has to be turned back on, because the
+script drives the editor through it. Forgetting it is safe: `Editor.open()` probes
+for the facade and aborts with a clear error rather than producing wrong shots.
+
+No source edit is needed for any of this.
 
 ## Options
 

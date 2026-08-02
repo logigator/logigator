@@ -29,7 +29,7 @@ export class Project extends Container {
   private readonly _grid: Grid = new Grid();
   private readonly _gridSpace = new Container();
   // Distinct debug-overlay hues so the two overlapping quad trees stay legible
-  // when environment.debug.showQuadTrees is on (cyan = wires, orange = components).
+  // when SHOW_QUAD_TREES is on (cyan = wires, orange = components).
   private readonly _wires = new QuadTreeContainer<Wire>(0x00e5ff);
   private readonly _components = new QuadTreeContainer<Component>(0xff9100);
   // Id → element indexes mirroring quad-tree membership exactly (detached
