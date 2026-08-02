@@ -164,7 +164,7 @@ export class AutomationApiService {
         exit: (): void => this.simulation.exit(),
         play: (): void => this.simulation.play(),
         pause: (): void => this.simulation.pause(),
-        step: (): Promise<SimStatus> => this.simStep(),
+        step: (count?: number): Promise<SimStatus> => this.simStep(count),
         stop: (): void => this.simulation.stop(),
         status: (): SimStatus => this.simStatus(),
         setTarget: (value: number, unit: TargetSpeedUnit): void => {
@@ -426,11 +426,20 @@ export class AutomationApiService {
   }
 
   /**
-   * One engine tick while paused, resolved after the resulting snapshot has
-   * been applied — so a `readPorts` right after it sees the new state.
+   * `count` engine ticks while paused, resolved after the resulting snapshot
+   * has been applied — so a `readPorts` right after it sees the new state.
+   *
+   * The ticks are posted back to back and only the state after the last one is
+   * pulled: the worker processes its queue in order, so running a circuit to a
+   * settled state costs one round trip rather than one per tick.
    */
-  public async simStep(): Promise<SimStatus> {
-    this.simulation.step();
+  public async simStep(count = 1): Promise<SimStatus> {
+    if (!Number.isInteger(count) || count < 1) {
+      throw new Error('logigator: step count must be a positive integer');
+    }
+    for (let tick = 0; tick < count; tick++) {
+      this.simulation.step();
+    }
     await this.nextFrame();
     return this.simStatus();
   }

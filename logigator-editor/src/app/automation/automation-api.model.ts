@@ -405,8 +405,11 @@ export interface LogigatorAutomationApi {
     exit(): void;
     play(): void;
     pause(): void;
-    /** One tick while paused, resolved after the snapshot is applied. */
-    step(): Promise<SimStatus>;
+    /**
+     * `count` ticks while paused (default 1), resolved after the snapshot is
+     * applied — one round trip however many ticks were asked for.
+     */
+    step(count?: number): Promise<SimStatus>;
     stop(): void;
     status(): SimStatus;
     setTarget(value: number, unit: 'Hz' | 'kHz' | 'MHz'): void;

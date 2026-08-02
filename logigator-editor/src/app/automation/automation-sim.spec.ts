@@ -101,6 +101,32 @@ describe('AutomationApiService simulation', () => {
     expect(status.diagnostics?.[0]).toMatchObject({ kind: 'missing-circuit' });
   });
 
+  it('step runs a batch of ticks, then pulls the state after the last one', async () => {
+    project.addComponent(makeSwitch());
+    await api.simEnter();
+    fakeWorker.posted.length = 0;
+
+    await api.simStep(5);
+
+    expect(fakeWorker.postedOfKind('step')).toHaveLength(5);
+    // The batch's own pull is posted behind all five ticks, so the state it
+    // resolves with is the state after the last one — and it is one pull, not
+    // one per tick.
+    const kinds = fakeWorker.posted.map((message) => message.kind);
+    expect(kinds.indexOf('requestSnapshot')).toBe(5);
+    expect(
+      kinds.filter((kind) => kind === 'requestSnapshot').length
+    ).toBeLessThan(5);
+  });
+
+  it('step rejects a count that is not a whole number of ticks', async () => {
+    project.addComponent(makeSwitch());
+    await api.simEnter();
+
+    await expect(api.simStep(0)).rejects.toThrow(/positive integer/);
+    await expect(api.simStep(1.5)).rejects.toThrow(/positive integer/);
+  });
+
   it('setInput drives a lever absolutely and is idempotent', async () => {
     const lever = makeSwitch();
     project.addComponent(lever);

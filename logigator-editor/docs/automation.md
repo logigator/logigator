@@ -198,6 +198,11 @@ Agents never have to read-then-toggle.
 `outputs`. It builds a component → link-id reverse index once per compiled board
 (`port-index.ts`) over the compiler's `LinkMapping`.
 
+`sim.step(count?)` runs `count` ticks (default 1) and resolves once the state
+after the **last** one has been applied — the ticks are posted back to back and
+only one snapshot is pulled, so running a circuit to a settled state costs one
+round trip rather than one per tick.
+
 **Read-after-write:** engine state reaches the canvas one snapshot at a time, so
 `setInput`, `step` and `readPorts` are async — each pulls a fresh full snapshot
 and resolves after it has been applied. The engine applies an input at its next
