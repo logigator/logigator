@@ -226,6 +226,18 @@ agents work _with_ a watching user.
 No camera operation is ever a history entry, and all of them work during
 simulation.
 
+#### Grid ↔ screen
+
+The one place the contract leaves grid units. A driver that wants to point at
+the board — a synthetic click, a screenshot clip — needs the camera's mapping
+_and_ the canvas's page offset; both live here so nobody reimplements the
+transform outside the editor.
+
+- `camera.boardRect()` — the board canvas's box in **viewport CSS px**. Throws
+  when no board is mounted.
+- `camera.toScreen(point)` / `camera.toScreenRect(rect)` — grid → viewport CSS px.
+- `camera.toGrid(point)` / `camera.toGridRect(rect)` — the inverse.
+
 ### Selecting a region
 
 `select(region, opts?)` **is** the select tool: it does exactly what a user

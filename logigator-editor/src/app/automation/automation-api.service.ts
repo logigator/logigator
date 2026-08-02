@@ -5,6 +5,7 @@ import { environment } from '../../environments/environment';
 import { Component } from '../components/component';
 import { ComponentProviderService } from '../components/component-provider.service';
 import { LoggingService } from '../logging/logging.service';
+import { BoardSurfaceService } from '../rendering/board-surface.service';
 import { PersistenceService } from '../persistence/persistence.service';
 import { ProjectMetadataStore } from '../persistence/project-metadata.store';
 import {
@@ -45,6 +46,8 @@ import {
   PerOpError,
   PortReadout,
   ProjectState,
+  ScreenPoint,
+  ScreenRect,
   SelectionState,
   SelectOptions,
   SelectRegion,
@@ -85,6 +88,7 @@ export class AutomationApiService {
   private readonly compiler = inject(BoardCompilerService);
   private readonly simulation = inject(SimulationService);
   private readonly workMode = inject(WorkModeService);
+  private readonly boardSurface = inject(BoardSurfaceService);
   private readonly translation = inject(TranslationService);
   private readonly theming = inject(ThemingService);
   private readonly settings = inject(EditorSettingsService);
@@ -158,7 +162,12 @@ export class AutomationApiService {
         zoomOut: (): void => this.requireProject().viewport.zoomOut(),
         zoom100: (): void => this.requireProject().viewport.zoom100(),
         focus: (target: FocusTarget, opts?: FocusOptions): ViewportInfo =>
-          this.cameraFocus(target, opts)
+          this.cameraFocus(target, opts),
+        boardRect: (): ScreenRect => this.boardRect(),
+        toScreen: (point: GridPoint): ScreenPoint => this.toScreen(point),
+        toScreenRect: (rect: GridRect): ScreenRect => this.toScreenRect(rect),
+        toGrid: (point: ScreenPoint): GridPoint => this.toGrid(point),
+        toGridRect: (rect: ScreenRect): GridRect => this.toGridRect(rect)
       }),
       select: (region: SelectRegion, opts?: SelectOptions): SelectionState =>
         this.select(region, opts),
@@ -560,6 +569,59 @@ export class AutomationApiService {
       );
     }
     return this.getViewport(project);
+  }
+
+  // -- Grid ↔ screen -------------------------------------------------------
+  //
+  // The one place the contract leaves grid units. A driver that points at the
+  // board — a synthetic click, a screenshot clip — needs the camera's mapping
+  // *and* the canvas's page offset; reproducing either outside the editor
+  // duplicates `ViewportController` and hard-codes a DOM selector.
+
+  /** The board canvas's box in viewport CSS px. */
+  public boardRect(): ScreenRect {
+    const rect = this.boardSurface.rect();
+    if (!rect) {
+      throw new Error('logigator: no board is mounted');
+    }
+    return rect;
+  }
+
+  public toScreen(point: GridPoint): ScreenPoint {
+    const board = this.boardRect();
+    const local = this.gridToScreen(point, this.requireProject());
+    return { x: board.x + local.x, y: board.y + local.y };
+  }
+
+  public toScreenRect(rect: GridRect): ScreenRect {
+    const factor =
+      this.requireProject().viewport.viewportState.scale * environment.gridSize;
+    const origin = this.toScreen({ x: rect.x, y: rect.y });
+    return {
+      ...origin,
+      width: rect.width * factor,
+      height: rect.height * factor
+    };
+  }
+
+  public toGrid(point: ScreenPoint): GridPoint {
+    const board = this.boardRect();
+    const state = this.requireProject().viewport.viewportState;
+    const factor = state.scale * environment.gridSize;
+    return {
+      x: state.gridOrigin.x + (point.x - board.x) / factor,
+      y: state.gridOrigin.y + (point.y - board.y) / factor
+    };
+  }
+
+  public toGridRect(rect: ScreenRect): GridRect {
+    const factor =
+      this.requireProject().viewport.viewportState.scale * environment.gridSize;
+    return {
+      ...this.toGrid({ x: rect.x, y: rect.y }),
+      width: rect.width / factor,
+      height: rect.height / factor
+    };
   }
 
   // -- Selection -----------------------------------------------------------

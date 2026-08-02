@@ -12,10 +12,14 @@ import { WireDirection } from '../wires/wire-direction.enum';
 import { WorkMode } from '../work-mode/work-mode.enum';
 import { WorkModeService } from '../work-mode/work-mode.service';
 import { serializeProjectBody } from '../persistence/snapshots';
+import { BoardSurfaceService } from '../rendering/board-surface.service';
 import { AutomationApiService } from './automation-api.service';
 
 const VIEWPORT_GRID_WIDTH = 40;
 const VIEWPORT_GRID_HEIGHT = 20;
+
+/** Where the stubbed board canvas sits on the page, in CSS px. */
+const BOARD_OFFSET = { x: 320, y: 96 };
 
 describe('AutomationApiService camera and selection', () => {
   let api: AutomationApiService;
@@ -120,6 +124,73 @@ describe('AutomationApiService camera and selection', () => {
       const view = api.cameraFocus({ x: 0, y: 0, width: 10, height: 10 }).view;
       expect(view.x + view.width / 2).toBeCloseTo(5, 5);
       expect(project.actionManager.undoAvailable).toBe(false);
+    });
+  });
+
+  describe('grid ↔ screen', () => {
+    // The board's page box is a DOM fact the camera does not own; a stub
+    // stands in for the canvas so the conversions have one to add.
+    const surface = {
+      getBoundingClientRect: () => ({
+        ...BOARD_OFFSET,
+        width: VIEWPORT_GRID_WIDTH * environment.gridSize,
+        height: VIEWPORT_GRID_HEIGHT * environment.gridSize
+      })
+    };
+
+    beforeEach(() => {
+      TestBed.inject(BoardSurfaceService).register(surface);
+    });
+
+    it('maps a grid point through the camera onto the page', () => {
+      api.cameraSetZoom(2);
+      api.cameraSetCenter({ x: 10, y: 5 });
+
+      // The centred grid point lands at the centre of the board's own box.
+      const centre = api.toScreen({ x: 10, y: 5 });
+      expect(centre.x).toBeCloseTo(
+        BOARD_OFFSET.x + (VIEWPORT_GRID_WIDTH * environment.gridSize) / 2,
+        5
+      );
+      expect(centre.y).toBeCloseTo(
+        BOARD_OFFSET.y + (VIEWPORT_GRID_HEIGHT * environment.gridSize) / 2,
+        5
+      );
+      // One grid unit to the right is one unit of zoomed grid further along.
+      const next = api.toScreen({ x: 11, y: 5 });
+      expect(next.x - centre.x).toBeCloseTo(2 * environment.gridSize, 5);
+    });
+
+    it('round-trips a point back to the grid at any camera', () => {
+      api.cameraSetZoom(Math.pow(1.2, 3));
+      api.cameraPan({ x: 7.25, y: -3.5 });
+
+      const point = { x: 12.5, y: -4.25 };
+      const back = api.toGrid(api.toScreen(point));
+      expect(back.x).toBeCloseTo(point.x, 5);
+      expect(back.y).toBeCloseTo(point.y, 5);
+    });
+
+    it('scales a rectangle with the zoom and round-trips it', () => {
+      api.cameraSetZoom(2);
+      const rect = { x: 4, y: 2, width: 6, height: 3 };
+
+      const screen = api.toScreenRect(rect);
+      expect(screen.width).toBeCloseTo(6 * 2 * environment.gridSize, 5);
+      expect(screen.height).toBeCloseTo(3 * 2 * environment.gridSize, 5);
+      expect(api.toScreenRect(rect)).toMatchObject(
+        api.toScreen({ x: rect.x, y: rect.y })
+      );
+
+      const back = api.toGridRect(screen);
+      expect(back.x).toBeCloseTo(rect.x, 5);
+      expect(back.width).toBeCloseTo(rect.width, 5);
+    });
+
+    it('refuses to convert with no board mounted', () => {
+      TestBed.inject(BoardSurfaceService).unregister(surface);
+      expect(() => api.boardRect()).toThrow(/no board/);
+      expect(() => api.toScreen({ x: 0, y: 0 })).toThrow(/no board/);
     });
   });
 

@@ -44,6 +44,24 @@ export interface GridRect {
   height: number;
 }
 
+/**
+ * A point in **viewport CSS px** — the browser's own coordinate space, what a
+ * driver hands to `page.mouse` or a screenshot clip. The only place the
+ * contract leaves grid units, and always named `screen`.
+ */
+export interface ScreenPoint {
+  x: number;
+  y: number;
+}
+
+/** An axis-aligned rectangle in viewport CSS px. */
+export interface ScreenRect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 // -- Catalog ---------------------------------------------------------------
 
 /**
@@ -380,6 +398,14 @@ export interface LogigatorAutomationApi {
     zoomOut(): void;
     zoom100(): void;
     focus(target: FocusTarget, opts?: FocusOptions): ViewportInfo;
+    /** The board canvas's box in viewport CSS px. */
+    boardRect(): ScreenRect;
+    /** Grid → viewport CSS px, through the camera's own mapping. */
+    toScreen(point: GridPoint): ScreenPoint;
+    toScreenRect(rect: GridRect): ScreenRect;
+    /** Viewport CSS px → grid. */
+    toGrid(point: ScreenPoint): GridPoint;
+    toGridRect(rect: ScreenRect): GridRect;
   };
 
   // selection — exactly what the select tool's marquee does
