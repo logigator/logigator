@@ -6,6 +6,7 @@ import type { Component } from '../components/component';
 import { getStaticDI } from '../utils/get-di';
 import { LoggingService } from '../logging/logging.service';
 import { pointKey } from '../utils/point-key';
+import { WireRowColumnIndex } from './wire-line-index';
 
 export interface MovedWireEntry {
   wire: Wire;
@@ -75,9 +76,12 @@ export class WireIntegrator {
       if (!candidates.has(k)) candidates.set(k, p.clone());
     };
 
-    // Wires the caller is treating as live but that are not yet in the project tree.
-    // Starts with addedWires; grows as the integrator creates split/merge results.
-    const freshLive = new Set<Wire>();
+    // Wires the caller is treating as live but that are not yet in the project
+    // tree. Starts with addedWires; grows as the integrator creates split/merge
+    // results. Indexed rather than a plain Set: pasting a large selection puts
+    // the whole pasted set in here, and the per-candidate lookups below would
+    // otherwise scan all of it — quadratic in the size of the paste.
+    const freshLive = new WireRowColumnIndex();
     // Wires currently in the project tree that the caller should remove.
     // Starts with removedWires; grows as splits/merges consume tree wires.
     const liveOriginalsToRemove = new Set<Wire>();
@@ -149,20 +153,16 @@ export class WireIntegrator {
       const result: Wire[] = [];
       for (const w of queryWiresInRange(queryRect)) {
         if (liveOriginalsToRemove.has(w)) continue;
-        if (freshLive.has(w)) continue; // avoid duplicating an instance that lives in both
+        if (freshLive.all.has(w)) continue; // avoid duplicating an instance that lives in both
         result.push(w);
       }
-      for (const w of freshLive) {
-        if (w.gridBounds.intersects(queryRect)) {
-          result.push(w);
-        }
-      }
+      for (const w of freshLive.query(queryRect)) result.push(w);
       return result;
     };
 
     const consumeFresh = (w: Wire): boolean => {
-      if (freshLive.has(w)) {
-        freshLive.delete(w);
+      if (freshLive.all.has(w)) {
+        freshLive.remove(w);
         if (internalWires.has(w)) {
           internalWires.delete(w);
           if (!w.destroyed) w.destroy();
@@ -221,12 +221,11 @@ export class WireIntegrator {
         for (const c of queryWiresInRange(bounds)) {
           if (c === mergedW) continue;
           if (liveOriginalsToRemove.has(c)) continue;
-          if (freshLive.has(c)) continue;
+          if (freshLive.all.has(c)) continue;
           collinear.push(c);
         }
-        for (const c of freshLive) {
-          if (c === mergedW) continue;
-          if (c.gridBounds.intersects(bounds)) collinear.push(c);
+        for (const c of freshLive.query(bounds)) {
+          if (c !== mergedW) collinear.push(c);
         }
 
         for (const c of collinear) {
@@ -259,7 +258,7 @@ export class WireIntegrator {
 
     for (const w of addedWires) {
       if (w.length === 0) continue;
-      if (!freshLive.has(w)) continue;
+      if (!freshLive.all.has(w)) continue;
       consolidateWire(w);
     }
     for (const { wire } of movedWires) {
@@ -288,7 +287,7 @@ export class WireIntegrator {
     };
     // Scan all current freshLive wires (consolidate may have produced new ones
     // in place of the caller's addedWires).
-    for (const w of freshLive) scanForInteriorCandidates(w);
+    for (const w of freshLive.all) scanForInteriorCandidates(w);
     // Plus any moved wires that survived consolidation (they live in the project
     // tree, not in freshLive).
     for (const { wire } of movedWires) {
@@ -322,7 +321,7 @@ export class WireIntegrator {
             `movedWires=${movedWires.length} addedComponentPorts=${addedComponentPorts.length} ` +
             `removedComponentPorts=${removedComponentPorts.length} movedComponentPorts=${movedComponentPorts.length} ` +
             `vacatedPoints=${vacatedPoints.length}; ` +
-            `candidates=${candidates.size} freshLive=${freshLive.size} liveOriginalsToRemove=${liveOriginalsToRemove.size}`,
+            `candidates=${candidates.size} freshLive=${freshLive.all.size} liveOriginalsToRemove=${liveOriginalsToRemove.size}`,
           'WireIntegrator'
         );
         throw new Error(
@@ -407,7 +406,7 @@ export class WireIntegrator {
     }
 
     const output = {
-      toAdd: [...freshLive],
+      toAdd: [...freshLive.all],
       toRemove: [...liveOriginalsToRemove]
     };
     getStaticDI(LoggingService).debug(
