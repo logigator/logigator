@@ -22,7 +22,7 @@ describe('WireTopology.toggleConnectionAt', () => {
   });
 
   function wireCount(): number {
-    return [...project.queryWiresInRange(new Rectangle(-100, -100, 200, 200))]
+    return project.queryWiresInRange(new Rectangle(-100, -100, 200, 200))
       .length;
   }
 
@@ -105,9 +105,9 @@ describe('WireTopology.toggleConnectionAt', () => {
       expect(cpAt(project, p)).toBe(true);
       expect(wireCount()).toBe(3);
       expect(
-        [
-          ...project.queryWiresInRange(new Rectangle(-100, -100, 200, 200))
-        ].some((w) => w.id === vId)
+        project
+          .queryWiresInRange(new Rectangle(-100, -100, 200, 200))
+          .some((w) => w.id === vId)
       ).toBe(true);
     });
 
@@ -137,7 +137,7 @@ describe('WireTopology.connectionToggleKindAt', () => {
   });
 
   function wireCount(): number {
-    return [...project.queryWiresInRange(new Rectangle(-100, -100, 200, 200))]
+    return project.queryWiresInRange(new Rectangle(-100, -100, 200, 200))
       .length;
   }
 

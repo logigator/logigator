@@ -32,19 +32,15 @@ describe('QuadTreeContainer', () => {
 
   /** Query the full positive coordinate space. */
   function queryAll(): TestItem[] {
-    return Array.from(
-      tree.queryRange(
-        new Rectangle(0, 0, Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER)
-      )
+    return tree.queryRange(
+      new Rectangle(0, 0, Number.MAX_SAFE_INTEGER, Number.MAX_SAFE_INTEGER)
     );
   }
 
   /** Query the full coordinate plane including negative coordinates. */
   function queryAllFull(): TestItem[] {
     const half = Number.MAX_SAFE_INTEGER / 2;
-    return Array.from(
-      tree.queryRange(new Rectangle(-half, -half, half * 2, half * 2))
-    );
+    return tree.queryRange(new Rectangle(-half, -half, half * 2, half * 2));
   }
 
   // ── insert / queryRange (no split) ────────────────────────────────────────
@@ -63,9 +59,7 @@ describe('QuadTreeContainer', () => {
     it('item exactly matching the query range boundary is included', () => {
       const c = makeItem(10, 10, 5, 5);
       tree.insert(c);
-      expect(Array.from(tree.queryRange(new Rectangle(10, 10, 5, 5)))).toEqual([
-        c
-      ]);
+      expect(tree.queryRange(new Rectangle(10, 10, 5, 5))).toEqual([c]);
     });
 
     it('item outside the query range is not returned', () => {
@@ -74,7 +68,7 @@ describe('QuadTreeContainer', () => {
       tree.insert(inside);
       tree.insert(outside);
 
-      const result = Array.from(tree.queryRange(new Rectangle(0, 0, 25, 25)));
+      const result = tree.queryRange(new Rectangle(0, 0, 25, 25));
       expect(result).toContain(inside);
       expect(result).not.toContain(outside);
     });
@@ -84,7 +78,7 @@ describe('QuadTreeContainer', () => {
       const partial = makeItem(15, 15, 10, 10);
       tree.insert(partial);
 
-      const result = Array.from(tree.queryRange(new Rectangle(0, 0, 20, 20)));
+      const result = tree.queryRange(new Rectangle(0, 0, 20, 20));
       expect(result).toContain(partial);
     });
 
@@ -118,7 +112,7 @@ describe('QuadTreeContainer', () => {
       tree.insert(ne);
 
       // Query only the NW half (initial size = 64, midline 32)
-      const result = Array.from(tree.queryRange(new Rectangle(0, 0, 32, 32)));
+      const result = tree.queryRange(new Rectangle(0, 0, 32, 32));
       expect(result).toEqual([nw]);
       expect(result).not.toContain(ne);
     });
@@ -157,9 +151,7 @@ describe('QuadTreeContainer', () => {
 
     it('queryRange with a zero-size rectangle returns nothing', () => {
       tree.insert(makeItem(10, 10, 5, 5));
-      expect(
-        Array.from(tree.queryRange(new Rectangle(100, 100, 0, 0)))
-      ).toEqual([]);
+      expect(tree.queryRange(new Rectangle(100, 100, 0, 0))).toEqual([]);
     });
 
     it('after expansion, a narrow query excludes the far item', () => {
@@ -168,7 +160,7 @@ describe('QuadTreeContainer', () => {
       tree.insert(near);
       tree.insert(far);
 
-      const result = Array.from(tree.queryRange(new Rectangle(0, 0, 20, 20)));
+      const result = tree.queryRange(new Rectangle(0, 0, 20, 20));
       expect(result).toContain(near);
       expect(result).not.toContain(far);
     });
@@ -200,18 +192,14 @@ describe('QuadTreeContainer', () => {
     it('cross-boundary item is returned by a query range that fully contains it', () => {
       const cross = makeItem(30, 2, 5, 3);
       tree.insert(cross);
-      expect(
-        Array.from(tree.queryRange(new Rectangle(0, 0, 60, 10)))
-      ).toContain(cross);
+      expect(tree.queryRange(new Rectangle(0, 0, 60, 10))).toContain(cross);
     });
 
     it('cross-boundary item is returned by a query range that partially overlaps it', () => {
       const cross = makeItem(30, 2, 5, 3);
       tree.insert(cross);
       // range ends at x=32 but item extends to x=35; they overlap x:30-32
-      expect(
-        Array.from(tree.queryRange(new Rectangle(0, 0, 32, 10)))
-      ).toContain(cross);
+      expect(tree.queryRange(new Rectangle(0, 0, 32, 10))).toContain(cross);
     });
 
     it('cross-boundary item can be removed', () => {
@@ -344,9 +332,7 @@ describe('QuadTreeContainer', () => {
       tree.insert(pos);
       tree.insert(neg);
 
-      const result = Array.from(
-        tree.queryRange(new Rectangle(-300, -300, 200, 200))
-      );
+      const result = tree.queryRange(new Rectangle(-300, -300, 200, 200));
       expect(result).toContain(neg);
       expect(result).not.toContain(pos);
     });
@@ -398,9 +384,7 @@ describe('QuadTreeContainer', () => {
       tree.insert(c);
       parent.x = 500;
       parent.y = 300;
-      expect(
-        Array.from(tree.queryRange(new Rectangle(10, 10, 5, 5)))
-      ).toContain(c);
+      expect(tree.queryRange(new Rectangle(10, 10, 5, 5))).toContain(c);
     });
 
     it('pan does not shift an item into a different grid position', () => {
@@ -409,9 +393,7 @@ describe('QuadTreeContainer', () => {
       parent.x = 500;
       parent.y = 300;
       // if pan leaked into grid coords, the item would appear at (510, 310)
-      expect(
-        Array.from(tree.queryRange(new Rectangle(510, 310, 5, 5)))
-      ).not.toContain(c);
+      expect(tree.queryRange(new Rectangle(510, 310, 5, 5))).not.toContain(c);
     });
 
     it('item inserted after pan lands at grid coordinates, not screen coordinates', () => {
@@ -419,12 +401,8 @@ describe('QuadTreeContainer', () => {
       parent.y = 300;
       const c = makeItem(10, 10, 5, 5);
       tree.insert(c);
-      expect(
-        Array.from(tree.queryRange(new Rectangle(10, 10, 5, 5)))
-      ).toContain(c);
-      expect(
-        Array.from(tree.queryRange(new Rectangle(510, 310, 5, 5)))
-      ).not.toContain(c);
+      expect(tree.queryRange(new Rectangle(10, 10, 5, 5))).toContain(c);
+      expect(tree.queryRange(new Rectangle(510, 310, 5, 5))).not.toContain(c);
     });
 
     it('query correctly scopes to a grid subregion while panned', () => {
@@ -434,7 +412,7 @@ describe('QuadTreeContainer', () => {
       const far = makeItem(40, 40, 3, 3);
       tree.insert(near);
       tree.insert(far);
-      const result = Array.from(tree.queryRange(new Rectangle(0, 0, 20, 20)));
+      const result = tree.queryRange(new Rectangle(0, 0, 20, 20));
       expect(result).toContain(near);
       expect(result).not.toContain(far);
     });
@@ -467,15 +445,9 @@ describe('QuadTreeContainer', () => {
       const far = makeItem(5000, 5000, 10, 10);
       tree.insert(near);
       tree.insert(far);
-      expect(
-        Array.from(tree.queryRange(new Rectangle(0, 0, 20, 20)))
-      ).toContain(near);
-      expect(
-        Array.from(tree.queryRange(new Rectangle(4990, 4990, 30, 30)))
-      ).toContain(far);
-      expect(
-        Array.from(tree.queryRange(new Rectangle(0, 0, 20, 20)))
-      ).not.toContain(far);
+      expect(tree.queryRange(new Rectangle(0, 0, 20, 20))).toContain(near);
+      expect(tree.queryRange(new Rectangle(4990, 4990, 30, 30))).toContain(far);
+      expect(tree.queryRange(new Rectangle(0, 0, 20, 20))).not.toContain(far);
     });
 
     it('re-inserting an item with a new position after pan relocates it in grid space', () => {
@@ -485,12 +457,8 @@ describe('QuadTreeContainer', () => {
       parent.y = 300;
       c.position.set(500, 500);
       tree.insert(c);
-      expect(
-        Array.from(tree.queryRange(new Rectangle(0, 0, 20, 20)))
-      ).not.toContain(c);
-      expect(
-        Array.from(tree.queryRange(new Rectangle(500, 500, 50, 50)))
-      ).toContain(c);
+      expect(tree.queryRange(new Rectangle(0, 0, 20, 20))).not.toContain(c);
+      expect(tree.queryRange(new Rectangle(500, 500, 50, 50))).toContain(c);
     });
 
     it('remove after pan correctly removes the item', () => {
@@ -511,9 +479,7 @@ describe('QuadTreeContainer', () => {
       parent.y = 50;
       parent.x = 999;
       parent.y = -999;
-      expect(
-        Array.from(tree.queryRange(new Rectangle(10, 10, 5, 5)))
-      ).toContain(c);
+      expect(tree.queryRange(new Rectangle(10, 10, 5, 5))).toContain(c);
     });
 
     it('100 items inserted while panned are all retrievable', () => {
@@ -541,9 +507,7 @@ describe('QuadTreeContainer', () => {
       parent.y = 200;
       const c = makeItem(10, 10, 5, 5);
       tree.insert(c);
-      expect(
-        Array.from(tree.queryRange(new Rectangle(10, 10, 5, 5)))
-      ).toContain(c);
+      expect(tree.queryRange(new Rectangle(10, 10, 5, 5))).toContain(c);
     });
   });
 
@@ -557,12 +521,8 @@ describe('QuadTreeContainer', () => {
       c.position.set(500, 500);
       tree.insert(c);
 
-      expect(
-        Array.from(tree.queryRange(new Rectangle(0, 0, 100, 100)))
-      ).not.toContain(c);
-      expect(
-        Array.from(tree.queryRange(new Rectangle(500, 500, 50, 50)))
-      ).toContain(c);
+      expect(tree.queryRange(new Rectangle(0, 0, 100, 100))).not.toContain(c);
+      expect(tree.queryRange(new Rectangle(500, 500, 50, 50))).toContain(c);
     });
 
     it('re-inserted item appears exactly once in query results', () => {

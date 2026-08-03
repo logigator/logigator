@@ -145,7 +145,7 @@ describe('ComponentPlacementSession collision', () => {
     session.onEnd();
 
     const huge = new Rectangle(-100, -100, 200, 200);
-    const wires = Array.from(project.queryWiresInRange(huge));
+    const wires = project.queryWiresInRange(huge);
     expect(wires.find((w) => w.id === v.id)).toBeUndefined();
     const verticals = wires.filter(
       (w) => w.direction === WireDirection.VERTICAL
@@ -254,7 +254,7 @@ describe('ComponentPlacementSession collision', () => {
     project.actionManager.undo();
 
     const huge = new Rectangle(-100, -100, 200, 200);
-    const wires = Array.from(project.queryWiresInRange(huge));
+    const wires = project.queryWiresInRange(huge);
     expect(wires.length).toBe(1);
     expect(wires[0].length).toBe(5);
   });

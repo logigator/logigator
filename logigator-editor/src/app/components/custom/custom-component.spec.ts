@@ -191,7 +191,7 @@ describe('CustomComponent', () => {
     instance.position.set(5, 5);
     project.addComponent(instance);
 
-    expect([...project.queryComponentsInRange(instance.gridBounds)]).toContain(
+    expect(project.queryComponentsInRange(instance.gridBounds)).toContain(
       instance
     );
 

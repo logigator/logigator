@@ -317,15 +317,23 @@ The `INITIAL_SIZE` of 64 grid units covers a typical small circuit without any t
 
 Looks up the entry via the `items` Map, removes the element from either `branchItems` or `leafItems`, then calls `minifyBranch` on the entry's parent to potentially collapse the tree. Returns `false` if not found.
 
-### `queryRange(range: Rectangle): Generator<T>`
+### `queryRange(range: Rectangle, out?: T[]): T[]`
 
-Recursive generator. For each entry:
+Appends the matching elements to `out` — a fresh array when omitted — and returns it. `Project.queryWiresInRange` / `queryComponentsInRange` have the same shape.
 
-1. Yields `branchItems` children whose `gridBounds` **intersects** `range` (including partial overlaps).
+Deliberately not a generator: a `yield*` recursion costs a generator frame per visited entry and pushes every result back up the whole delegation chain, which on a deep tree outweighs the per-element tests the walk exists to perform. It also avoids `Object.values(entry.branches)` — a four-element array per visited entry — and tests branch regions with the scalar `overlapsRect`.
+
+Because the result is a snapshot rather than a live view, callers may add or remove elements while iterating it; `SelectionManager`'s scissor cut and `EraseSession`'s sweep both rely on that.
+
+For each entry:
+
+1. Yields `branchItems` children whose grid bounds **intersect** `range` (including partial overlaps), tested via `element.intersectsGridBounds(range)`.
 2. For each child branch whose region **intersects** `range`, recurses.
-3. For leaf items, yields those whose `gridBounds` intersects `range`.
+3. For leaf items, yields those whose grid bounds intersect `range`.
 
-Elements that partially overlap the query rectangle are included. All coordinate comparisons are against `element.gridBounds` — the tree never calls `getBounds()` or accesses the PixiJS transform chain.
+Elements that partially overlap the query rectangle are included. All coordinate comparisons are against the element's grid bounds — the tree never calls `getBounds()` or accesses the PixiJS transform chain.
+
+An element is filed by full containment, so one that straddles a quadrant midline (or is wider than a quadrant) lands in the `branchItems` of a shallow entry, where every query descending past it rescans it. That is fine for the interactive queries the tree exists for, but it makes a board-wide scan expensive, which is why `auditWireInvariants` works off its own row/column index and no rect queries at all (see `wires.md` § Board-wide repair).
 
 ### Expansion
 

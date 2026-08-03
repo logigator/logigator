@@ -280,7 +280,7 @@ describe('SelectionMoveSession collision', () => {
   describe('SELECT_EXACT cut + move (full flow)', () => {
     function allWires(): Wire[] {
       const huge = new Rectangle(-1000, -1000, 2000, 2000);
-      return Array.from(project.queryWiresInRange(huge));
+      return project.queryWiresInRange(huge);
     }
 
     it('produces no duplicate-ID wires after cut + move + push', () => {
@@ -367,7 +367,7 @@ describe('SelectionMoveSession collision', () => {
       session = undefined;
 
       const huge = new Rectangle(-100, -100, 200, 200);
-      const wires = Array.from(project.queryWiresInRange(huge));
+      const wires = project.queryWiresInRange(huge);
 
       // long should be replaced by two halves.
       expect(wires.find((w) => w.id === long.id)).toBeUndefined();
@@ -491,8 +491,8 @@ describe('SelectionMoveSession collision', () => {
       session.onEnd();
       session = undefined;
 
-      const wires = Array.from(
-        project.queryWiresInRange(new Rectangle(-100, -100, 200, 200))
+      const wires = project.queryWiresInRange(
+        new Rectangle(-100, -100, 200, 200)
       );
       expect(wires.length).toBe(1);
       const merged = wires[0];
@@ -533,9 +533,9 @@ describe('SelectionMoveSession collision', () => {
       // pieces of the external wire only touch it at an endpoint.
       expect(v.selected).toBe(true);
       expect([...project.selectionManager.selectedWires]).toEqual([v]);
-      const horizontals = Array.from(
-        project.queryWiresInRange(new Rectangle(-100, -100, 200, 200))
-      ).filter((w) => w.direction === WireDirection.HORIZONTAL);
+      const horizontals = project
+        .queryWiresInRange(new Rectangle(-100, -100, 200, 200))
+        .filter((w) => w.direction === WireDirection.HORIZONTAL);
       expect(horizontals.length).toBe(2);
       for (const piece of horizontals) {
         expect(piece.selected).toBe(false);

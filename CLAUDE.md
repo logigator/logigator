@@ -132,4 +132,4 @@ Vitest via Angular's `@angular/build:unit-test` builder. Spec files sit next to 
 - `fake-browser-stores.ts` — `FakeBrowserProjectStore`, `FakeBrowserComponentStore` (in-memory IndexedDB stand-ins)
 - `factories.ts` — `makeAnd`, `makeNot`, `makeWire`, `makeInput`, `makeMoveEvent` (circuit-element and pointer-event stubs)
 - `action-mocks.ts` — `makeAction` (mocked `Action` with named `do`/`undo` spies)
-- `vitest-helpers.ts` — `arrayWithExactContents` (asymmetric matcher replacing Jasmine's), `gen` (generator helper)
+- `vitest-helpers.ts` — `arrayWithExactContents` (asymmetric matcher replacing Jasmine's)

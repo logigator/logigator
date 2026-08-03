@@ -58,8 +58,10 @@ const MAX_ITERATIONS = 8;
 export class WireIntegrator {
   integrate(
     input: IntegrationInput,
-    queryWiresInRange: (rect: Rectangle) => Generator<Wire>,
-    queryComponentsInRange: (rect: Rectangle) => Generator<Component>,
+    // Iterable, not Generator: the project hands back arrays, the offline
+    // rebuild hands back the line index's generator.
+    queryWiresInRange: (rect: Rectangle) => Iterable<Wire>,
+    queryComponentsInRange: (rect: Rectangle) => Iterable<Component>,
     scale: number
   ): IntegrationOutput {
     const addedWires = input.addedWires ?? [];

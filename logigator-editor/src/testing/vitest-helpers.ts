@@ -19,8 +19,3 @@ export function arrayWithExactContents<T>(expected: T[]): any {
     }
   };
 }
-
-/** Generator helper — yields each argument in order. */
-export function* gen<T>(...items: T[]): Generator<T> {
-  yield* items;
-}

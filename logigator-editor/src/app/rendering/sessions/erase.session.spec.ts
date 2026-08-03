@@ -12,7 +12,6 @@ import { ActionContainer } from '../../actions/action-container';
 import { Project } from '../../project/project';
 import type { ActionManager } from '../../actions/action-manager';
 import { makeAnd, makeMoveInput, makeWire } from '../../../testing/factories';
-import { gen } from '../../../testing/vitest-helpers';
 import { AndComponent } from '../../components/component-types/and/and.component';
 
 describe('EraseSession', () => {
@@ -45,9 +44,9 @@ describe('EraseSession', () => {
           .mockReturnValue({ toAdd: [], toRemove: [] })
       }
     } as unknown as MockedObject<Project>;
-    // Use callFake so each call gets a fresh (non-exhausted) iterable
-    project.queryComponentsInRange.mockImplementation(() => gen());
-    project.queryWiresInRange.mockImplementation(() => gen());
+    // A fresh array per call, matching the real query.
+    project.queryComponentsInRange.mockImplementation(() => []);
+    project.queryWiresInRange.mockImplementation(() => []);
 
     (
       project as unknown as {
@@ -66,7 +65,7 @@ describe('EraseSession', () => {
   describe('construction — initial click position', () => {
     it('erases a component at the start position immediately', () => {
       const comp = makeAnd();
-      project.queryComponentsInRange.mockImplementation(() => gen(comp));
+      project.queryComponentsInRange.mockImplementation(() => [comp]);
 
       new EraseSession(project, new Point(3, 2));
 
@@ -78,7 +77,7 @@ describe('EraseSession', () => {
 
     it('erases a wire at the start position immediately', () => {
       const wire = new Wire(WireDirection.HORIZONTAL, 3);
-      project.queryWiresInRange.mockImplementation(() => gen(wire));
+      project.queryWiresInRange.mockImplementation(() => [wire]);
 
       new EraseSession(project, new Point(3, 2));
 
@@ -102,7 +101,7 @@ describe('EraseSession', () => {
       const wire = new Wire(WireDirection.HORIZONTAL, 3);
       const session = new EraseSession(project, new Point(0, 0));
 
-      project.queryWiresInRange.mockImplementation(() => gen(wire));
+      project.queryWiresInRange.mockImplementation(() => [wire]);
       session.onMove(makeMoveInput(5, 3));
 
       expect(project.removeWire).toHaveBeenCalledWith(wire.id);
@@ -120,7 +119,7 @@ describe('EraseSession', () => {
 
     it('does not erase the same element twice across multiple moves', () => {
       const wire = new Wire(WireDirection.HORIZONTAL, 3);
-      project.queryWiresInRange.mockImplementation(() => gen(wire));
+      project.queryWiresInRange.mockImplementation(() => [wire]);
 
       const session = new EraseSession(project, new Point(0, 0));
       // Wire already erased in constructor; subsequent moves should skip it
@@ -138,8 +137,8 @@ describe('EraseSession', () => {
       const wire = new Wire(WireDirection.VERTICAL, 2);
       const session = new EraseSession(project, new Point(0, 0));
 
-      project.queryComponentsInRange.mockImplementation(() => gen(comp));
-      project.queryWiresInRange.mockImplementation(() => gen(wire));
+      project.queryComponentsInRange.mockImplementation(() => [comp]);
+      project.queryWiresInRange.mockImplementation(() => [wire]);
       session.onMove(makeMoveInput(3, 3));
 
       expect(project.removeComponent).toHaveBeenCalledWith(comp.id);
@@ -159,7 +158,7 @@ describe('EraseSession', () => {
   describe('onEnd()', () => {
     it('registers an ActionContainer when elements were erased', () => {
       const wire = new Wire(WireDirection.HORIZONTAL, 3);
-      project.queryWiresInRange.mockImplementation(() => gen(wire));
+      project.queryWiresInRange.mockImplementation(() => [wire]);
 
       const session = new EraseSession(project, new Point(0, 0));
       session.onEnd();
@@ -183,7 +182,7 @@ describe('EraseSession', () => {
   describe('onCancel()', () => {
     it('re-adds deleted wires', () => {
       const wire = new Wire(WireDirection.HORIZONTAL, 3);
-      project.queryWiresInRange.mockImplementation(() => gen(wire));
+      project.queryWiresInRange.mockImplementation(() => [wire]);
 
       const session = new EraseSession(project, new Point(0, 0));
       session.onCancel();
@@ -196,7 +195,7 @@ describe('EraseSession', () => {
 
     it('re-adds deleted components', () => {
       const comp = makeAnd();
-      project.queryComponentsInRange.mockImplementation(() => gen(comp));
+      project.queryComponentsInRange.mockImplementation(() => [comp]);
 
       const session = new EraseSession(project, new Point(0, 0));
       session.onCancel();

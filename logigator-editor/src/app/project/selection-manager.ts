@@ -81,9 +81,9 @@ export class SelectionManager {
   }
 
   private _scissorAndSelectWires(rect: Rectangle): void {
-    // Snapshot before mutating: queryWiresInRange returns a single-use generator
-    // and the quad-tree is updated synchronously by the addWire/removeWire calls.
-    const candidates = Array.from(this.project.queryWiresInRange(rect));
+    // The query result is a snapshot, so the addWire/removeWire calls below —
+    // which update the quad tree synchronously — cannot disturb this iteration.
+    const candidates = this.project.queryWiresInRange(rect);
 
     const wiresToKeep: Wire[] = [];
     const wiresToCut: Wire[] = [];

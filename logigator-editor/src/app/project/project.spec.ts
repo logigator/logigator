@@ -699,14 +699,14 @@ describe('Project portsChange$ rebucket', () => {
     // A rect deep in the SW quadrant: outside target's original NW bounds, and
     // the traversal won't descend the NW branch for it — target not found yet.
     const farRect = new Rectangle(2, 40, 1, 1);
-    expect([...project.queryComponentsInRange(farRect)]).not.toContain(target);
+    expect(project.queryComponentsInRange(farRect)).not.toContain(target);
 
     // Growing numInputs grows bodyGridHeight (→ gridBounds y[2,52], spanning the
     // NW and SW quadrants) and fires portsChange$, whose handler must re-bucket
     // target so spatial queries reflect the new bounds.
     target.numInputs = 50;
 
-    expect([...project.queryComponentsInRange(farRect)]).toContain(target);
+    expect(project.queryComponentsInRange(farRect)).toContain(target);
   });
 });
 

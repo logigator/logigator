@@ -425,12 +425,20 @@ export class Project extends Container {
     return false;
   }
 
-  public *queryComponentsInRange(rect: Rectangle): Generator<Component> {
-    yield* this._components.queryRange(rect);
+  /**
+   * The elements intersecting `rect`, as a fresh array unless `out` is given.
+   * A snapshot, not a live view — callers are free to add or remove elements
+   * while iterating the result.
+   */
+  public queryComponentsInRange(
+    rect: Rectangle,
+    out: Component[] = []
+  ): Component[] {
+    return this._components.queryRange(rect, out);
   }
 
-  public *queryWiresInRange(rect: Rectangle): Generator<Wire> {
-    yield* this._wires.queryRange(rect);
+  public queryWiresInRange(rect: Rectangle, out: Wire[] = []): Wire[] {
+    return this._wires.queryRange(rect, out);
   }
 
   public hasWireBodyCollision(

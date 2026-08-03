@@ -82,21 +82,17 @@ function makeFullWire(
 }
 
 /**
- * Configure the project spy so queryComponentsInRange yields the given items.
- * Uses callFake so a fresh generator is created on each call (generators are
- * single-use iterators; returnValue would exhaust after the first iteration).
+ * Configure the project spy so queryComponentsInRange returns the given items.
+ * A fresh array per call, matching the real query — callers may mutate the
+ * project while iterating the result.
  */
 function setComponents(project: MockedObject<Project>, ...items: any[]): void {
-  project.queryComponentsInRange.mockImplementation(function* () {
-    yield* items;
-  });
+  project.queryComponentsInRange.mockImplementation(() => [...items]);
 }
 
-/** Configure the project spy so queryWiresInRange yields the given items. */
+/** Configure the project spy so queryWiresInRange returns the given items. */
 function setWires(project: MockedObject<Project>, ...items: any[]): void {
-  project.queryWiresInRange.mockImplementation(function* () {
-    yield* items;
-  });
+  project.queryWiresInRange.mockImplementation(() => [...items]);
 }
 
 function makeProject(): MockedObject<Project> {

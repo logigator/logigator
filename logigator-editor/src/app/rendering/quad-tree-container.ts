@@ -2,6 +2,7 @@ import { Container, ContainerChild, Graphics, Rectangle } from 'pixi.js';
 import { GridElement } from './grid-element';
 import { getStaticDI } from '../utils/get-di';
 import { LoggingService } from '../logging/logging.service';
+import { overlapsRect } from '../utils/grid';
 
 type Quadrant = 'nw' | 'ne' | 'sw' | 'se';
 
@@ -202,36 +203,54 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
   }
 
   /**
-   * Returns an iterator over all elements whose bounds intersect the given range.
-   * Elements that only partially overlap the range are included.
+   * Appends every element whose bounds intersect `range` to `out` and returns
+   * it. Elements that only partially overlap the range are included.
+   *
+   * Deliberately an array rather than a generator: a `yield*` recursion costs a
+   * generator frame per visited entry and pushes every result back up the whole
+   * delegation chain, which on a deep tree outweighs the per-element tests the
+   * walk exists to perform. The result being a snapshot also lets callers
+   * mutate the tree while iterating it.
    * @param range rectangle defining the range to query
+   * @param out array to append to; pass a reused one to avoid allocating
    */
-  public *queryRange(range: Rectangle): Generator<T> {
-    yield* this.queryRangeOfEntry(this._tree, range);
+  public queryRange(range: Rectangle, out: T[] = []): T[] {
+    this.collectRangeOfEntry(this._tree, range, out);
+    return out;
   }
 
-  private *queryRangeOfEntry(
+  private collectRangeOfEntry(
     entry: QuadTreeEntry<T>,
-    range: Rectangle
-  ): Generator<T> {
+    range: Rectangle,
+    out: T[]
+  ): void {
     for (const element of entry.branchItems.children) {
-      if (element.intersectsGridBounds(range)) {
-        yield element;
-      }
+      if (element.intersectsGridBounds(range)) out.push(element);
     }
 
-    if (entry.branches) {
-      for (const branch of Object.values(entry.branches)) {
-        if (range.intersects(branch.boundsArea)) {
-          yield* this.queryRangeOfEntry(branch, range);
-        }
-      }
+    const branches = entry.branches;
+    if (branches) {
+      // Named access, not Object.values: that allocates a four-element array on
+      // every visited entry. `cull` already walks the quadrants this way.
+      this.collectBranch(branches.nw, range, out);
+      this.collectBranch(branches.ne, range, out);
+      this.collectBranch(branches.sw, range, out);
+      this.collectBranch(branches.se, range, out);
     } else {
       for (const element of entry.leafItems!.children) {
-        if (element.intersectsGridBounds(range)) {
-          yield element;
-        }
+        if (element.intersectsGridBounds(range)) out.push(element);
       }
+    }
+  }
+
+  private collectBranch(
+    branch: QuadTreeEntry<T>,
+    range: Rectangle,
+    out: T[]
+  ): void {
+    const region = branch.boundsArea;
+    if (overlapsRect(range, region.x, region.y, region.width, region.height)) {
+      this.collectRangeOfEntry(branch, range, out);
     }
   }
 
