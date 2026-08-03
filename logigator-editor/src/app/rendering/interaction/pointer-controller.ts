@@ -49,7 +49,7 @@ export interface PointerToolTarget {
 export interface PointerControllerOptions {
   canvas: HTMLCanvasElement;
   /** The project whose viewport maps canvas pixels to grid space. Events are
-   *  dropped while it is `null`. */
+   *  dropped while it is absent or destroyed. */
   project: () => Project | null;
   nav: PointerNavTarget;
   tool: PointerToolTarget;
@@ -127,8 +127,20 @@ export class PointerController {
     this._panPointer = null;
   }
 
-  public onPointerDown(e: PointerEventLike): void {
+  /**
+   * The current project, or null when there is none or it is destroyed. Hosts
+   * re-home the controller from a change-detection effect, so a closed tab or
+   * a freshly loaded document leaves the disposed project reachable here for
+   * one cycle — and a destroyed `Container` has no `position`/`scale` left to
+   * map canvas pixels through.
+   */
+  private _project(): Project | null {
     const project = this.opts.project();
+    return project && !project.destroyed ? project : null;
+  }
+
+  public onPointerDown(e: PointerEventLike): void {
+    const project = this._project();
     if (!project) return;
     const local = this._localPosition(e);
     if (e.pointerType === 'touch') {
@@ -151,7 +163,7 @@ export class PointerController {
   }
 
   public onPointerMove(e: PointerEventLike): void {
-    const project = this.opts.project();
+    const project = this._project();
     if (!project) return;
     const local = this._localPosition(e);
     if (e.pointerType === 'touch') {
@@ -174,7 +186,7 @@ export class PointerController {
 
   public onPointerUp(e: PointerEventLike): void {
     if (this._endPointer(e) !== 'tool') return;
-    const project = this.opts.project();
+    const project = this._project();
     if (!project) return;
     this.opts.tool.up(this._input(e, this._localPosition(e), project));
   }
@@ -216,7 +228,7 @@ export class PointerController {
 
   public onWheel(e: WheelEventLike): void {
     e.preventDefault();
-    if (!this.opts.project()) return;
+    if (!this._project()) return;
     const center = this._localPosition(e);
     if (e.deltaY > 0) {
       this.opts.nav.zoomOut(center);

@@ -219,4 +219,32 @@ describe('PointerController', () => {
     expect(tool.hover).not.toHaveBeenCalled();
     expect(nav.zoomOut).not.toHaveBeenCalled();
   });
+
+  // A disposed project stays reachable until the host's effect re-homes the
+  // controller; its `position`/`scale` are already gone, so mapping a canvas
+  // point through it would throw.
+  it('drops all events while the project is destroyed', () => {
+    controller = new PointerController({
+      canvas,
+      project: () => ({ destroyed: true }) as unknown as Project,
+      nav,
+      tool
+    });
+
+    controller.onPointerDown(mouse(1, 0, 110, 60));
+    controller.onPointerMove(mouse(1, 0, 120, 60));
+    controller.onPointerUp(mouse(1, 0, 120, 60));
+    controller.onWheel({
+      clientX: 110,
+      clientY: 60,
+      deltaY: -120,
+      preventDefault: vi.fn()
+    });
+
+    expect(tool.down).not.toHaveBeenCalled();
+    expect(tool.move).not.toHaveBeenCalled();
+    expect(tool.hover).not.toHaveBeenCalled();
+    expect(tool.up).not.toHaveBeenCalled();
+    expect(nav.zoomIn).not.toHaveBeenCalled();
+  });
 });

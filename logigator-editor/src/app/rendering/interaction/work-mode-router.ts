@@ -125,7 +125,11 @@ export class WorkModeRouter implements PointerToolTarget, ToolHost {
    *  then applies the current mode's side effects to the new one. */
   public setProject(project: Project | null): void {
     this.abortActiveDrag();
-    if (this._project) this._activeTool?.deactivate?.(this._project);
+    // The outgoing project is destroyed whenever a tab closed or a document
+    // loaded — there are no previews left on it to tear down.
+    if (this._project && !this._project.destroyed) {
+      this._activeTool?.deactivate?.(this._project);
+    }
     this._pasteSub?.unsubscribe();
     this._pasteSub = null;
     this._rotateSub?.unsubscribe();

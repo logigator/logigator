@@ -218,7 +218,9 @@ export class BoardComponent implements OnInit, OnDestroy {
    */
   private _renderFrame(): void {
     const project = this.project();
-    if (!project || !this._lease) {
+    // The input trails the active project by a change-detection cycle, so a
+    // disposed project stays bound here for one rAF after its tab closes.
+    if (!project || project.destroyed || !this._lease) {
       return;
     }
     project.cull();
@@ -234,7 +236,7 @@ export class BoardComponent implements OnInit, OnDestroy {
   private _onHostResize(): void {
     this._measureView();
     const project = this.project();
-    if (!project) {
+    if (!project || project.destroyed) {
       return;
     }
     project.viewport.resizeViewport(this._view.width, this._view.height);
