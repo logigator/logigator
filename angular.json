@@ -50,8 +50,7 @@
               "SHOW_GRID_BORDERS": "false",
               "SHOW_HITBOXES": "false",
               "SHOW_ORIGINS": "false",
-              "SHOW_CONNECTION_POINTS": "false",
-              "SHOW_QUAD_TREES": "false"
+              "SHOW_CONNECTION_POINTS": "false"
             },
             "styles": ["logigator-editor/src/styles.scss"],
             "scripts": [],
@@ -90,8 +89,7 @@
                 "SHOW_GRID_BORDERS": "true",
                 "SHOW_HITBOXES": "false",
                 "SHOW_ORIGINS": "false",
-                "SHOW_CONNECTION_POINTS": "false",
-                "SHOW_QUAD_TREES": "false"
+                "SHOW_CONNECTION_POINTS": "false"
               },
               "fileReplacements": [
                 {

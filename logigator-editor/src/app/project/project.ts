@@ -28,10 +28,8 @@ export class Project extends Container {
 
   private readonly _grid: Grid = new Grid();
   private readonly _gridSpace = new Container();
-  // Distinct debug-overlay hues so the two overlapping quad trees stay legible
-  // when SHOW_QUAD_TREES is on (cyan = wires, orange = components).
-  private readonly _wires = new QuadTreeContainer<Wire>(0x00e5ff);
-  private readonly _components = new QuadTreeContainer<Component>(0xff9100);
+  private readonly _wires = new QuadTreeContainer<Wire>();
+  private readonly _components = new QuadTreeContainer<Component>();
   // Id → element indexes mirroring quad-tree membership exactly (detached
   // drag elements leave both), so id lookups are O(1) instead of tree scans.
   private readonly _componentsById = new Map<number, Component>();
@@ -216,6 +214,19 @@ export class Project extends Container {
 
   public get wires(): Iterable<Wire> {
     return this._wires.items;
+  }
+
+  /**
+   * The two spatial indexes, for debug inspection only — their shape
+   * ({@link QuadTreeContainer.stats}, {@link QuadTreeContainer.formatTree}) and
+   * their invariants ({@link QuadTreeContainer.validate}). Everything else goes
+   * through the mutation and query methods on this class.
+   */
+  public get quadTrees(): {
+    components: QuadTreeContainer<Component>;
+    wires: QuadTreeContainer<Wire>;
+  } {
+    return { components: this._components, wires: this._wires };
   }
 
   /**

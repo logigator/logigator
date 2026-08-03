@@ -1,8 +1,9 @@
-import { Container, ContainerChild, Graphics, Rectangle } from 'pixi.js';
+import { Container, ContainerChild, Rectangle } from 'pixi.js';
 import { GridElement } from './grid-element';
 import { getStaticDI } from '../utils/get-di';
 import { LoggingService } from '../logging/logging.service';
 import { overlapsRect } from '../utils/grid';
+import { formatIndexHistogram } from '../utils/histogram';
 
 type Quadrant = 'nw' | 'ne' | 'sw' | 'se';
 
@@ -44,6 +45,70 @@ class QuadTreeEntry<T extends GridElement> extends Container {
   }
 }
 
+/** Shape and occupancy of a whole tree; see {@link QuadTreeContainer.stats}. */
+export interface QuadTreeStats {
+  /** Elements the tree tracks. */
+  elements: number;
+  entries: number;
+  leaves: number;
+  branches: number;
+  /** Entries large enough to be their own PixiJS render group. */
+  renderGroups: number;
+  /** Leaves holding nothing — a large share means minifyBranch is not merging. */
+  emptyLeaves: number;
+  /** Entries the last cull pass flagged off-screen. */
+  culledEntries: number;
+  maxDepth: number;
+  /** Depth of an average element: the levels a point query descends. */
+  avgElementDepth: number;
+  entriesByDepth: number[];
+  elementsByDepth: number[];
+  /**
+   * Elements parked at a branch because they straddle its quadrant split, by
+   * depth. Every range query passing through that branch tests all of them, so
+   * the depth-0 count is paid by every query the tree ever answers.
+   */
+  branchStraddlersByDepth: number[];
+  branchStraddlers: number;
+  /**
+   * Elements straddling the quadrant split of the leaf they sit in. A split
+   * cannot move them, so they are what puts a leaf legitimately over capacity.
+   */
+  leafStraddlers: number;
+  /** Leaf count indexed by how many elements the leaf holds. */
+  leafOccupancy: number[];
+  /**
+   * Leaves whose splittable elements exceed the capacity at a size a split
+   * could still relieve — an invariant violation.
+   */
+  overfullSplittableLeaves: number;
+  /** Leaves over capacity that a split cannot relieve. */
+  saturatedLeaves: number;
+  /** Root region plus how often expand() doubled it past the initial size. */
+  root: { x: number; y: number; size: number; expansions: number };
+  /** Extent the elements actually occupy, or null while the tree is empty. */
+  occupied: Rectangle | null;
+  /** Fraction of the root region the occupied extent covers. */
+  rootFill: number;
+  thresholds: {
+    maxLeafElements: number;
+    minBranchElements: number;
+    minLeafSize: number;
+    initialSize: number;
+    renderGroupMinSize: number;
+  };
+}
+
+/** `x,y w×h` — the compact region form the debug output uses throughout. */
+function describeRect(rect: Rectangle): string {
+  return `${rect.x},${rect.y} ${rect.width}×${rect.height}`;
+}
+
+/** Element type plus grid footprint: enough to find it on the board. */
+function describeElement(element: GridElement): string {
+  return `${element.constructor.name} at ${describeRect(element.gridBounds)}`;
+}
+
 export class QuadTreeContainer<T extends GridElement> extends Container {
   private static readonly MAX_LEAF_ELEMENTS = 4;
   private static readonly MIN_BRANCH_ELEMENTS = 2;
@@ -55,48 +120,11 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
   );
   private _items = new Map<T, QuadTreeEntry<T>>();
 
-  // Debug overlay rendering the live quadrant subdivision, gated by
-  // SHOW_QUAD_TREES. Null (and every debug path a no-op) when the flag is off,
-  // so production builds carry no overhead.
-  private _debugOverlay: Graphics | null = null;
-  // Mutations only flag the overlay dirty; the actual (full-tree) redraw is
-  // coalesced to at most once per frame in onRender. A bulk load fires
-  // thousands of insert()s — redrawing on each would be O(elements × tree) and
-  // hang the page.
-  private _debugDirty = false;
-
-  /**
-   * @param debugColor base hue for the debug quadrant overlay. Pass distinct
-   * colors when multiple trees share the same space so their grids stay
-   * distinguishable (e.g. wires vs components).
-   */
-  constructor(private readonly _debugColor = 0xff00ff) {
-    super();
-
-    if (SHOW_QUAD_TREES) {
-      // zIndex keeps the overlay above the entries (expand() appends a new root
-      // on top of it).
-      this.sortableChildren = true;
-      this._debugOverlay = super.addChild(new Graphics());
-      this._debugOverlay.zIndex = 1;
-      this.onRender = () => {
-        if (!this._debugDirty) return;
-        this._debugDirty = false;
-        this.redrawDebug();
-      };
-    }
-  }
-
   /**
    * Inserts an element into the quad tree.
    * @param element element to insert
    */
   public insert(element: T): void {
-    this.insertElement(element);
-    this._debugDirty = true;
-  }
-
-  private insertElement(element: T): void {
     if (this._items.has(element)) {
       this.remove(element);
     }
@@ -138,7 +166,7 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
         return;
       } else {
         getStaticDI(LoggingService).error(
-          `insertElement reached an entry (size ${entry.size}) with neither branches nor leafItems; element bounds ${JSON.stringify(elBounds)}`,
+          `insert reached an entry (size ${entry.size}) with neither branches nor leafItems; element bounds ${JSON.stringify(elBounds)}`,
           'QuadTreeContainer'
         );
         throw new Error(
@@ -154,12 +182,6 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
    * @returns true if the element was removed, false if it was not found
    */
   public remove(element: T): boolean {
-    const removed = this.removeElement(element);
-    if (removed) this._debugDirty = true;
-    return removed;
-  }
-
-  private removeElement(element: T): boolean {
     const entry = this._items.get(element);
     if (!entry) return false;
 
@@ -169,7 +191,7 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
       entry.leafItems.removeChild(element);
     } else {
       getStaticDI(LoggingService).error(
-        `removeElement found the element in _items but in neither branchItems nor leafItems of its entry (size ${entry.size})`,
+        `remove found the element in _items but in neither branchItems nor leafItems of its entry (size ${entry.size})`,
         'QuadTreeContainer'
       );
       throw new Error(
@@ -339,6 +361,12 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
       };
     }
 
+    // The new root is a branch from birth, so it drops the leafItems container
+    // every entry starts with; a branch keeps its elements in branchItems and
+    // minifyBranch re-creates the container if the root ever collapses back.
+    newRoot.removeChild(newRoot.leafItems!);
+    newRoot.leafItems = null;
+
     this.minifyBranch(newRoot);
     this._tree = newRoot;
   }
@@ -436,39 +464,346 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
   }
 
   /**
-   * Redraws the debug overlay from scratch, mirroring the current tree
-   * structure. Driven by the dirty flag from onRender — coalesces a burst of
-   * mutations into a single redraw per frame.
+   * Measures the live tree: its shape, where the elements sit in it, and how
+   * far it drifted from the region it started with. Walks every entry, so it
+   * is a debug-only call.
    */
-  private redrawDebug(): void {
-    if (!this._debugOverlay) return;
-    this._debugOverlay.clear();
-    this.drawDebugEntry(this._tree, 0);
+  public stats(): QuadTreeStats {
+    const root = this._tree.boundsArea;
+    const stats: QuadTreeStats = {
+      elements: this._items.size,
+      entries: 0,
+      leaves: 0,
+      branches: 0,
+      renderGroups: 0,
+      emptyLeaves: 0,
+      culledEntries: 0,
+      maxDepth: 0,
+      avgElementDepth: 0,
+      entriesByDepth: [],
+      elementsByDepth: [],
+      branchStraddlersByDepth: [],
+      branchStraddlers: 0,
+      leafStraddlers: 0,
+      leafOccupancy: [],
+      overfullSplittableLeaves: 0,
+      saturatedLeaves: 0,
+      root: {
+        x: root.x,
+        y: root.y,
+        size: root.width,
+        expansions: Math.round(
+          Math.log2(root.width / QuadTreeContainer.INITIAL_SIZE)
+        )
+      },
+      occupied: this.occupiedExtent(),
+      rootFill: 0,
+      thresholds: {
+        maxLeafElements: QuadTreeContainer.MAX_LEAF_ELEMENTS,
+        minBranchElements: QuadTreeContainer.MIN_BRANCH_ELEMENTS,
+        minLeafSize: QuadTreeContainer.MIN_LEAF_SIZE,
+        initialSize: QuadTreeContainer.INITIAL_SIZE,
+        renderGroupMinSize: RENDER_GROUP_MIN_SIZE
+      }
+    };
+
+    this.collectStats(this._tree, 0, stats);
+
+    let depthSum = 0;
+    for (let depth = 0; depth < stats.elementsByDepth.length; depth++) {
+      depthSum += depth * (stats.elementsByDepth[depth] ?? 0);
+    }
+    stats.avgElementDepth = stats.elements > 0 ? depthSum / stats.elements : 0;
+    if (stats.occupied) {
+      stats.rootFill =
+        (stats.occupied.width * stats.occupied.height) /
+        (root.width * root.height);
+    }
+    return stats;
   }
 
-  private drawDebugEntry(entry: QuadTreeEntry<T>, depth: number): void {
-    const overlay = this._debugOverlay!;
-    const b = entry.boundsArea;
-    const isLeaf = !entry.branches;
+  private collectStats(
+    entry: QuadTreeEntry<T>,
+    depth: number,
+    stats: QuadTreeStats
+  ): void {
+    stats.entries++;
+    stats.maxDepth = Math.max(stats.maxDepth, depth);
+    stats.entriesByDepth[depth] = (stats.entriesByDepth[depth] ?? 0) + 1;
+    stats.elementsByDepth[depth] ??= 0;
+    stats.branchStraddlersByDepth[depth] ??= 0;
+    if (entry.size >= RENDER_GROUP_MIN_SIZE) stats.renderGroups++;
+    if (entry.culled) stats.culledEntries++;
 
-    overlay.rect(b.x, b.y, b.width, b.height);
-    if (isLeaf) {
-      overlay.fill({
-        color: this._debugColor,
-        alpha: Math.min(0.015 + depth * 0.015, 0.1)
-      });
+    const straddlers = entry.branchItems.children.length;
+    if (entry.branches) {
+      // Elements too wide for any quadrant park here, and every range query
+      // that passes through the entry on its way down tests each of them.
+      stats.branches++;
+      stats.branchStraddlers += straddlers;
+      stats.branchStraddlersByDepth[depth] += straddlers;
+      stats.elementsByDepth[depth] += straddlers;
+      this.collectStats(entry.branches.nw, depth + 1, stats);
+      this.collectStats(entry.branches.ne, depth + 1, stats);
+      this.collectStats(entry.branches.sw, depth + 1, stats);
+      this.collectStats(entry.branches.se, depth + 1, stats);
+      return;
     }
-    overlay.stroke({
-      color: this._debugColor,
-      alpha: 0.5,
-      width: 1,
-      pixelLine: true
-    });
 
+    stats.leaves++;
+    const filed = entry.leafItems!.children.length;
+    const held = straddlers + filed;
+    stats.leafStraddlers += straddlers;
+    stats.elementsByDepth[depth] += held;
+    stats.leafOccupancy[held] = (stats.leafOccupancy[held] ?? 0) + 1;
+    if (held === 0) stats.emptyLeaves++;
+    if (held > QuadTreeContainer.MAX_LEAF_ELEMENTS) {
+      if (this.isOverfullSplittable(entry)) {
+        stats.overfullSplittableLeaves++;
+      } else {
+        stats.saturatedLeaves++;
+      }
+    }
+  }
+
+  /**
+   * Whether a leaf holds more splittable elements than its capacity at a size a
+   * split could still relieve. Splitting only redistributes the elements a
+   * quadrant can hold, so a leaf over capacity through straddlers, or one
+   * already at the minimum size, is legitimately over it instead.
+   */
+  private isOverfullSplittable(entry: QuadTreeEntry<T>): boolean {
+    return (
+      !entry.branches &&
+      entry.leafItems!.children.length > QuadTreeContainer.MAX_LEAF_ELEMENTS &&
+      entry.size >= QuadTreeContainer.MIN_LEAF_SIZE * 2
+    );
+  }
+
+  /** Union of every element's cullBounds, or null while the tree is empty. */
+  private occupiedExtent(): Rectangle | null {
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    for (const element of this._items.keys()) {
+      const b = element.cullBounds;
+      if (b.x < minX) minX = b.x;
+      if (b.y < minY) minY = b.y;
+      if (b.right > maxX) maxX = b.right;
+      if (b.bottom > maxY) maxY = b.bottom;
+    }
+    if (!Number.isFinite(minX)) return null;
+    return new Rectangle(minX, minY, maxX - minX, maxY - minY);
+  }
+
+  /**
+   * Charts the distributions {@link stats} counts — the part of a measurement
+   * that a bar reads better than an array. The scalar counts stay in the stats
+   * object itself.
+   * @param s measurement to chart; taken fresh when omitted
+   */
+  public formatDistributions(s = this.stats()): string {
+    return [
+      ...formatIndexHistogram('entries by depth', s.entriesByDepth),
+      '',
+      ...formatIndexHistogram('elements by depth', s.elementsByDepth),
+      '',
+      ...formatIndexHistogram(
+        'branch straddlers by depth (query-cost multiplier)',
+        s.branchStraddlersByDepth
+      ),
+      '',
+      ...formatIndexHistogram('leaves by element count', s.leafOccupancy)
+    ].join('\n');
+  }
+
+  /**
+   * Draws the entry hierarchy as an indented text tree, one line per entry
+   * with its region and occupancy. Subtrees below `maxDepth` collapse into a
+   * single summary line.
+   * @param maxDepth deepest level to expand
+   */
+  public formatTree(maxDepth = Infinity): string {
+    const lines: string[] = [];
+    this.formatEntry(this._tree, 0, '', '', '', maxDepth, lines);
+    return lines.join('\n');
+  }
+
+  /**
+   * @param prefix guides plus the connector for this entry's own line
+   * @param indent guides its children's connectors hang off
+   */
+  private formatEntry(
+    entry: QuadTreeEntry<T>,
+    depth: number,
+    label: string,
+    prefix: string,
+    indent: string,
+    maxDepth: number,
+    lines: string[]
+  ): void {
+    const b = entry.boundsArea;
+    const straddlers = entry.branchItems.children.length;
+    const parts = [`${prefix}${label}[${b.x},${b.y} size ${b.width}]`];
+    if (entry.branches) {
+      parts.push('branch');
+    } else {
+      parts.push(`leaf ${straddlers + entry.leafItems!.children.length}`);
+    }
+    if (straddlers > 0) parts.push(`${straddlers} straddling`);
+    if (entry.culled) parts.push('culled');
+    lines.push(parts.join(' '));
+
+    if (!entry.branches) return;
+    if (depth >= maxDepth) {
+      const below = this.subtreeTotals(entry);
+      lines.push(
+        `${indent}└─ … ${below.entries - 1} entries below, ${below.elements} elements`
+      );
+      return;
+    }
+
+    const quadrants = ['nw', 'ne', 'sw', 'se'] as const;
+    quadrants.forEach((quadrant, index) => {
+      const last = index === quadrants.length - 1;
+      this.formatEntry(
+        entry.branches![quadrant],
+        depth + 1,
+        `${quadrant} `,
+        `${indent}${last ? '└─ ' : '├─ '}`,
+        `${indent}${last ? '   ' : '│  '}`,
+        maxDepth,
+        lines
+      );
+    });
+  }
+
+  /** Entry and element totals of the subtree rooted at `entry`, inclusive. */
+  private subtreeTotals(entry: QuadTreeEntry<T>): {
+    entries: number;
+    elements: number;
+  } {
+    let entries = 1;
+    let elements = entry.branchItems.children.length;
     if (entry.branches) {
       for (const child of Object.values(entry.branches)) {
-        this.drawDebugEntry(child, depth + 1);
+        const below = this.subtreeTotals(child);
+        entries += below.entries;
+        elements += below.elements;
       }
+    } else {
+      elements += entry.leafItems!.children.length;
+    }
+    return { entries, elements };
+  }
+
+  /**
+   * Cross-checks the tree against its own invariants and returns one message
+   * per problem — empty for a healthy tree. Catches the three states the
+   * mutation paths panic on, a leaf a split should have relieved, and the silent
+   * one they cannot see: an element that moved out of the region it is filed
+   * under without being re-inserted.
+   */
+  public validate(): string[] {
+    const problems: string[] = [];
+    const seen = new Set<T>();
+
+    for (const [element, entry] of this._items) {
+      const inBranch = entry.branchItems.children.includes(element);
+      const inLeaf = entry.leafItems?.children.includes(element) ?? false;
+      const where = `element ${describeElement(element)} filed under entry [${describeRect(entry.boundsArea)}]`;
+      if (!inBranch && !inLeaf) {
+        problems.push(`${where} sits in neither branchItems nor leafItems`);
+        continue;
+      }
+      if (!entry.boundsArea.containsRect(element.cullBounds)) {
+        problems.push(
+          `${where} has cullBounds ${describeRect(element.cullBounds)} outside that region — it moved without being re-inserted`
+        );
+      }
+      if (
+        inBranch &&
+        entry.branches &&
+        this.getContainingQuadrant(entry.boundsArea, element.cullBounds)
+      ) {
+        problems.push(`${where} fits a quadrant and belongs one level deeper`);
+      }
+    }
+
+    this.validateEntry(this._tree, seen, problems);
+    for (const element of seen) {
+      if (!this._items.has(element)) {
+        problems.push(
+          `element ${describeElement(element)} hangs in the tree but is missing from the item map`
+        );
+      }
+    }
+    if (seen.size !== this._items.size) {
+      problems.push(
+        `item map holds ${this._items.size} elements, the tree holds ${seen.size}`
+      );
+    }
+    return problems;
+  }
+
+  private validateEntry(
+    entry: QuadTreeEntry<T>,
+    seen: Set<T>,
+    problems: string[]
+  ): void {
+    const region = describeRect(entry.boundsArea);
+    if (entry.branches && entry.leafItems) {
+      problems.push(`entry [${region}] has both branches and leafItems`);
+    }
+    if (!entry.branches && !entry.leafItems) {
+      problems.push(`entry [${region}] has neither branches nor leafItems`);
+    }
+    if (this.isOverfullSplittable(entry)) {
+      problems.push(
+        `leaf [${region}] holds ${entry.leafItems!.children.length} contained elements over the capacity of ${QuadTreeContainer.MAX_LEAF_ELEMENTS} at a size a split could still relieve`
+      );
+    }
+
+    const children = [
+      ...entry.branchItems.children,
+      ...(entry.leafItems?.children ?? [])
+    ];
+    for (const element of children) {
+      if (seen.has(element)) {
+        problems.push(
+          `element ${describeElement(element)} hangs in the tree twice`
+        );
+      }
+      seen.add(element);
+      if (this._items.get(element) !== entry) {
+        problems.push(
+          `element ${describeElement(element)} hangs under entry [${region}] but the item map points elsewhere`
+        );
+      }
+    }
+
+    if (!entry.branches) return;
+    const b = entry.boundsArea;
+    const half = b.width / 2;
+    const expected: Record<Quadrant, [number, number]> = {
+      nw: [b.x, b.y],
+      ne: [b.x + half, b.y],
+      sw: [b.x, b.y + half],
+      se: [b.x + half, b.y + half]
+    };
+    for (const [quadrant, [x, y]] of Object.entries(expected) as [
+      Quadrant,
+      [number, number]
+    ][]) {
+      const child = entry.branches[quadrant];
+      const cb = child.boundsArea;
+      if (cb.x !== x || cb.y !== y || cb.width !== half) {
+        problems.push(
+          `entry [${region}] has a ${quadrant} branch at [${describeRect(cb)}] instead of [${x},${y} ${half}×${half}]`
+        );
+      }
+      this.validateEntry(child, seen, problems);
     }
   }
 

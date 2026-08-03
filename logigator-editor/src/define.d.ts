@@ -53,6 +53,3 @@ declare const SHOW_ORIGINS: boolean;
 
 /** Marks each component's connection points with yellow squares. */
 declare const SHOW_CONNECTION_POINTS: boolean;
-
-/** Draws the live quad-tree subdivision over the board. */
-declare const SHOW_QUAD_TREES: boolean;

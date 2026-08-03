@@ -337,11 +337,28 @@ An element is filed by full containment, so one that straddles a quadrant midlin
 
 ### Expansion
 
-When an inserted element falls outside the current root, `expand()` doubles the root's size. The old root becomes the `nw` child of a new root; three empty sibling entries fill the other quadrants. `minifyBranch` is called immediately to collapse any unnecessary empty structure.
+When an inserted element falls outside the current root, `expand()` doubles the root's size. The old root becomes the child of the new root in the quadrant opposite the expansion direction, so its region — and every element in it — keeps its coordinates; three empty sibling entries fill the other quadrants. The new root is a branch from birth, so it drops the `leafItems` container every entry is constructed with. `minifyBranch` is called immediately to collapse any unnecessary empty structure.
 
 ### PixiJS integration note
 
 `QuadTreeContainer` calls `super.addChild()` to attach the internal tree structure, bypassing the public `addChild` override. Callers must use `insert` / `remove` — not `addChild` — to manage elements.
+
+### Debug introspection
+
+Four methods describe the live tree. The commands that call them sit in the title-bar Debug menu (`DebugMenuService`, gated by the `DEBUG_MENU` define) and run over both trees of the active project, which `Project.quadTrees` exposes for that purpose alone.
+
+| Method                   | Returns                                                                                                                                                                                                   |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `stats(): QuadTreeStats` | Entry/leaf/branch counts, per-depth histograms of entries, elements and straddlers, leaf-occupancy histogram, render-group and culled-entry counts, root region + expansion count vs. the occupied extent |
+| `formatDistributions()`  | The per-depth and occupancy tallies as bar histograms — the part of a measurement a bar reads better than an array; the scalar counts stay in the stats object                                            |
+| `formatTree(maxDepth?)`  | The entry hierarchy as an indented text tree — region, leaf occupancy, straddler count, cull flag per line                                                                                                |
+| `validate(): string[]`   | One message per invariant violation, empty for a healthy tree                                                                                                                                             |
+
+The two stats worth reading first: **straddlers by depth**, because `queryRange` tests every straddler of every entry it passes through (so a root straddler is tested by every query the tree answers), and **root expansions vs. occupied extent**, because content that drifted into one quadrant of a repeatedly doubled root is invisible in a depth histogram.
+
+`validate()` covers what the `PANIC` throws cannot see on their own: `_items` and the tree agreeing in both directions, an entry being either a branch or a leaf but never both, quadrant regions matching their parent's halves, a leaf a split should have relieved, and — the silent one — an element whose `cullBounds` left the region it is filed under, i.e. one that moved without being re-inserted.
+
+The leaf invariant is what `overfullSplittableLeaves` tallies: a leaf whose _contained_ elements exceed `MAX_LEAF_ELEMENTS` at a size a split could still relieve. A leaf over capacity because of straddlers is counted `saturatedLeaves` instead — splitting cannot move those. This is the common case at the bottom of the tree: `Rectangle.containsRect` excludes the far edge, so a 1×1 element does not fit a 1×1 quadrant and unit-sized elements stack as straddlers in a size-2 leaf rather than ever reaching `MIN_LEAF_SIZE`.
 
 ---
 

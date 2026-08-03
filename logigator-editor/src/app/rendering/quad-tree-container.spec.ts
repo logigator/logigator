@@ -534,6 +534,101 @@ describe('QuadTreeContainer', () => {
     });
   });
 
+  // ── debug introspection ───────────────────────────────────────────────────
+
+  describe('validate', () => {
+    /** Inserts, moves and removes enough elements to split, expand and minify. */
+    function churn(): TestItem[] {
+      const items: TestItem[] = [];
+      for (let i = 0; i < 200; i++) {
+        const c = makeItem((i % 20) * 7, Math.floor(i / 20) * 7, 3, 3);
+        items.push(c);
+        tree.insert(c);
+      }
+      // Straddlers, an expansion into negative space, and re-insertions.
+      items.push(makeItem(30, 30, 6, 6), makeItem(-400, -400, 5, 5));
+      for (const c of items.slice(-2)) tree.insert(c);
+      for (const c of items.slice(0, 150)) {
+        c.position.set(c.position.x + 400, c.position.y + 400);
+        tree.insert(c);
+      }
+      for (const c of items.splice(0, 100)) tree.remove(c);
+      return items;
+    }
+
+    it('reports no problems for a tree that has split, expanded and minified', () => {
+      churn();
+      expect(tree.validate()).toEqual([]);
+    });
+
+    it('reports an element that moved out of its entry without being re-inserted', () => {
+      const items = churn();
+      items[0].position.set(9000, 9000);
+
+      expect(tree.validate()).toEqual([
+        expect.stringContaining('moved without being re-inserted')
+      ]);
+    });
+
+    it('accepts straddlers parked at branches under a grown root', () => {
+      // Expansion stacks new ancestors above an element without re-filing it,
+      // so a straddler stays legitimately parked far above the leaf level.
+      tree.insert(makeItem(30, 30, 5, 5)); // straddles both root midlines
+      tree.insert(makeItem(14, 30, 5, 5)); // straddles the horizontal midline
+      for (let i = 0; i < 12; i++) tree.insert(makeItem(i * 2, i, 3, 3));
+      tree.insert(makeItem(5000, 5000, 5, 5)); // forces the expansions
+
+      expect(tree.stats().branchStraddlers).toBeGreaterThan(0);
+      expect(tree.validate()).toEqual([]);
+    });
+
+    it('reports an element the tree holds but the item map lost', () => {
+      const c = makeItem(10, 10, 5, 5);
+      tree.insert(c);
+      tree.remove(c);
+      // Bypasses insert(), exactly as a stray addChild() would.
+      tree.children[0].children[1].addChild(c);
+
+      expect(tree.validate().length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('stats', () => {
+    it('accounts for every element exactly once across the depths', () => {
+      for (let i = 0; i < 200; i++) {
+        tree.insert(makeItem((i % 20) * 7, Math.floor(i / 20) * 7, 3, 3));
+      }
+      const stats = tree.stats();
+      const perDepth = stats.elementsByDepth.reduce((a, b) => a + b, 0);
+
+      expect(stats.elements).toBe(queryAll().length);
+      expect(perDepth).toBe(stats.elements);
+      expect(stats.entriesByDepth.length).toBe(stats.maxDepth + 1);
+    });
+
+    it('counts leaves over capacity as saturated only where a split cannot help', () => {
+      // Stacked at one point: the tree subdivides until the elements straddle
+      // the quadrant split of the leaf they land in, where splitting stops
+      // helping and the leaf grows past its capacity for good.
+      for (let i = 0; i < 20; i++) tree.insert(makeItem(0, 0, 1, 1));
+      const stats = tree.stats();
+
+      expect(stats.leafStraddlers).toBe(20);
+      expect(stats.overfullSplittableLeaves).toBe(0);
+      expect(stats.saturatedLeaves).toBeGreaterThan(0);
+    });
+
+    it('tracks the occupied extent and the expansions it forced', () => {
+      tree.insert(makeItem(10, 10, 5, 5));
+      tree.insert(makeItem(500, 20, 5, 5));
+      const stats = tree.stats();
+
+      expect(stats.occupied).toEqual(new Rectangle(10, 10, 495, 15));
+      expect(stats.root.size).toBe(64 * 2 ** stats.root.expansions);
+      expect(stats.root.expansions).toBeGreaterThan(0);
+    });
+  });
+
   // ── cull ──────────────────────────────────────────────────────────────────
 
   describe('cull', () => {

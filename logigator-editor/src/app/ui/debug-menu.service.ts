@@ -6,6 +6,8 @@ import { ProjectService } from '../project/project.service';
 import { BoardCompilerService } from '../simulation/compiler/board-compiler.service';
 import { SimulationService } from '../simulation/simulation.service';
 import { RendererService } from '../rendering/renderer.service';
+import { QuadTreeContainer } from '../rendering/quad-tree-container';
+import { GridElement } from '../rendering/grid-element';
 import { PersistenceService } from '../persistence/persistence.service';
 import { ProjectDumpService } from '../persistence/dump/project-dump.service';
 import { ToastService } from '../logging/toast.service';
@@ -52,6 +54,18 @@ export class DebugMenuService {
         {
           label: 'Print simulation snapshot stats',
           command: () => this.printSnapshotStats()
+        },
+        {
+          label: 'Print quad-tree stats',
+          command: () => this.printQuadTreeStats()
+        },
+        {
+          label: 'Print quad-tree structure',
+          command: () => this.printQuadTreeStructure()
+        },
+        {
+          label: 'Check quad-tree integrity',
+          command: () => this.checkQuadTrees()
         },
         { label: 'Spawn test toasts', command: () => this.spawnTestToasts() },
         { label: 'Throw test error', command: () => this.throwTestError() },
@@ -137,6 +151,71 @@ export class DebugMenuService {
         `(${stats.avgSwitchedPercent.toFixed(2)}% of ${stats.totalLinks})`,
       'DebugMenuService'
     );
+  }
+
+  /**
+   * Reports the shape and occupancy of the active project's two spatial
+   * indexes: the measurement itself, plus its distributions charted because a
+   * bar reads better than an array of counts.
+   */
+  private printQuadTreeStats(): void {
+    this.forEachQuadTree((label, tree) => {
+      const stats = tree.stats();
+      console.log(`[debug] ${label} quad tree`, stats);
+      console.log(tree.formatDistributions(stats));
+    });
+  }
+
+  /** Prints the entry hierarchy of both spatial indexes as text trees. */
+  private printQuadTreeStructure(): void {
+    this.forEachQuadTree((label, tree) => {
+      console.log(`[debug] ${label} quad tree\n${tree.formatTree()}`);
+    });
+  }
+
+  /**
+   * Runs the quad trees' invariant check — the cheapest way to tell a
+   * structural bug (a stale item map, an element that moved without being
+   * re-inserted) from a rendering or interaction one.
+   */
+  private checkQuadTrees(): void {
+    let total = 0;
+    this.forEachQuadTree((label, tree) => {
+      const problems = tree.validate();
+      total += problems.length;
+      if (problems.length === 0) {
+        console.log(`[debug] ${label} quad tree: no problems`);
+        return;
+      }
+      console.error(
+        `[debug] ${label} quad tree: ${problems.length} problem(s)`,
+        problems
+      );
+    });
+    if (total > 0) {
+      this.toast.error(
+        `Quad trees report ${total} problem(s) — see console.`,
+        'DebugMenuService'
+      );
+    } else {
+      this.toast.success('Quad trees are consistent.', 'DebugMenuService');
+    }
+  }
+
+  /**
+   * Runs `report` over the active project's component and wire trees, or warns
+   * when there is no project to inspect.
+   */
+  private forEachQuadTree(
+    report: (label: string, tree: QuadTreeContainer<GridElement>) => void
+  ): void {
+    const project = this.projectService.activeProject();
+    if (!project) {
+      this.toast.warn('No active project to inspect.', 'DebugMenuService');
+      return;
+    }
+    report('component', project.quadTrees.components);
+    report('wire', project.quadTrees.wires);
   }
 
   /** Fires one toast of every severity to eyeball the stack and its styling. */
