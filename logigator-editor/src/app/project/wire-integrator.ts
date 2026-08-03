@@ -6,7 +6,7 @@ import type { Component } from '../components/component';
 import { getStaticDI } from '../utils/get-di';
 import { LoggingService } from '../logging/logging.service';
 import { pointKey } from '../utils/point-key';
-import { WireRowColumnIndex } from './wire-line-index';
+import { axisPos, WireRowColumnIndex } from './wire-line-index';
 
 export interface MovedWireEntry {
   wire: Wire;
@@ -233,9 +233,9 @@ export class WireIntegrator {
         for (const c of collinear) {
           if (c.direction !== mergedW.direction) continue;
           if (!this._isSameAxis(mergedW, c)) continue;
-          const aStart = this._axisPos(mergedW);
+          const aStart = axisPos(mergedW);
           const aEnd = aStart + mergedW.length;
-          const cStart = this._axisPos(c);
+          const cStart = axisPos(c);
           const cEnd = cStart + c.length;
           const overlapStart = Math.max(aStart, cStart);
           const overlapEnd = Math.min(aEnd, cEnd);
@@ -448,12 +448,6 @@ export class WireIntegrator {
       if (this._endpointEquals(w, p)) return true;
     }
     return false;
-  }
-
-  private _axisPos(w: Wire): number {
-    return w.direction === WireDirection.HORIZONTAL
-      ? w.position.x
-      : w.position.y;
   }
 
   private _isSameAxis(a: Wire, b: Wire): boolean {
