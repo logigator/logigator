@@ -155,6 +155,167 @@ describe('auditWireInvariants / computeWireRepair', () => {
     expect(plan.addWires).toEqual([]);
   });
 
+  // The audit derives every violation from bucket-local sweeps and point
+  // lookups rather than comparing wires pairwise, so the invariant worth
+  // pinning is that it still agrees with an exhaustive pairwise scan. A
+  // disagreement here means the index missed a pair the definition covers.
+  describe('agrees with an exhaustive pairwise scan', () => {
+    /** Direct transcription of the invariant definitions — no spatial index. */
+    function bruteForceAudit(): string[] {
+      const wires = [...project.wires];
+      const comps = [...project.components];
+      const found: string[] = [];
+
+      const terminations = new Map<string, number>();
+      const bump = (p: { x: number; y: number }): void => {
+        const k = `${p.x},${p.y}`;
+        terminations.set(k, (terminations.get(k) ?? 0) + 1);
+      };
+      for (const w of wires) for (const p of w.connectionPoints) bump(p);
+      for (const c of comps) for (const p of c.connectionPoints) bump(p);
+
+      const axis = (w: Wire): number =>
+        w.direction === H ? w.position.x : w.position.y;
+      const cross = (w: Wire): number =>
+        w.direction === H ? w.position.y : w.position.x;
+      const inside = (w: Wire, p: { x: number; y: number }): boolean =>
+        w.direction === H
+          ? p.y === w.position.y &&
+            p.x > w.position.x &&
+            p.x < w.position.x + w.length
+          : p.x === w.position.x &&
+            p.y > w.position.y &&
+            p.y < w.position.y + w.length;
+
+      for (let i = 0; i < wires.length; i++) {
+        for (let j = i + 1; j < wires.length; j++) {
+          const [a, b] =
+            wires[i].id < wires[j].id
+              ? [wires[i], wires[j]]
+              : [wires[j], wires[i]];
+          if (a.direction === b.direction && cross(a) === cross(b)) {
+            const start = Math.max(axis(a), axis(b));
+            const end = Math.min(axis(a) + a.length, axis(b) + b.length);
+            if (start < end) {
+              found.push(`overlap ${a.id}+${b.id} by ${end - start}`);
+            } else if (start === end) {
+              const p =
+                a.direction === H
+                  ? { x: start, y: a.position.y }
+                  : { x: a.position.x, y: start };
+              if ((terminations.get(`${p.x},${p.y}`) ?? 0) < 3) {
+                found.push(`unmerged ${a.id}+${b.id} at ${p.x},${p.y}`);
+              }
+            }
+            continue;
+          }
+          for (const [owner, other] of [
+            [a, b],
+            [b, a]
+          ] as const) {
+            for (const p of owner.connectionPoints) {
+              if (inside(other, p)) {
+                found.push(
+                  `endpoint ${owner.id} in ${other.id} @ ${p.x},${p.y}`
+                );
+              }
+            }
+          }
+        }
+      }
+      for (const c of comps) {
+        for (const p of c.connectionPoints) {
+          for (const w of wires) {
+            if (inside(w, p)) {
+              found.push(`port ${c.id} in ${w.id} @ ${p.x},${p.y}`);
+            }
+          }
+        }
+      }
+      return found.sort();
+    }
+
+    /** The audit's own output, reduced to the same comparable shape. */
+    function auditKeys(): string[] {
+      return auditWireInvariants(project)
+        .map((v) => {
+          const overlap = /wires (\d+) and (\d+) overlap by (\d+)/.exec(
+            v.detail
+          );
+          if (overlap) {
+            return `overlap ${overlap[1]}+${overlap[2]} by ${overlap[3]}`;
+          }
+          const unmerged =
+            /wires (\d+) and (\d+) touch at \(([-\d.]+), ([-\d.]+)\)/.exec(
+              v.detail
+            );
+          if (unmerged) {
+            return `unmerged ${unmerged[1]}+${unmerged[2]} at ${unmerged[3]},${unmerged[4]}`;
+          }
+          const endpoint =
+            /endpoint \(([-\d.]+), ([-\d.]+)\) of wire (\d+) lies inside wire (\d+)/.exec(
+              v.detail
+            );
+          if (endpoint) {
+            return `endpoint ${endpoint[3]} in ${endpoint[4]} @ ${endpoint[1]},${endpoint[2]}`;
+          }
+          const port =
+            /port \(([-\d.]+), ([-\d.]+)\) of component (\d+) lies inside wire (\d+)/.exec(
+              v.detail
+            );
+          return `port ${port![3]} in ${port![4]} @ ${port![1]},${port![2]}`;
+        })
+        .sort();
+    }
+
+    it('on the corrupted dump state', () => {
+      loadCorruptedState();
+      expect(auditKeys()).toEqual(bruteForceAudit());
+    });
+
+    // Deterministic pseudo-random boards: dense enough that overlaps, buried
+    // endpoints and buried ports all occur, and including long wires, which
+    // are what the point-lookup form exists to keep cheap.
+    it('on dense pseudo-random boards, including long wires', () => {
+      let seed = 12345;
+      const rnd = (n: number): number => {
+        seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+        return seed % n;
+      };
+      for (let board = 0; board < 25; board++) {
+        for (const w of [...project.wires]) project.removeWire(w.id);
+        for (let i = 0; i < 40; i++) {
+          const long = rnd(5) === 0;
+          project.addWire(
+            makeWire(
+              rnd(8),
+              rnd(8),
+              rnd(2) === 0 ? H : V,
+              long ? 6 + rnd(6) : 1 + rnd(3)
+            )
+          );
+        }
+        // End-to-end pairs out in open space, so their junction stays below
+        // three terminations. Nothing above reliably produces one, and the
+        // sweep's touching case is the branch most easily lost.
+        for (let i = 0; i < 3; i++) {
+          const x = 40 + rnd(40) * 3;
+          const y = 40 + rnd(40) * 3;
+          const len = 1 + rnd(2);
+          const dir = rnd(2) === 0 ? H : V;
+          project.addWire(makeWire(x, y, dir, len));
+          project.addWire(
+            dir === H
+              ? makeWire(x + len, y, H, 1 + rnd(2))
+              : makeWire(x, y + len, V, 1 + rnd(2))
+          );
+        }
+        project.addComponent(makeAnd(2, Direction.E, rnd(8), rnd(8)));
+        expect(auditKeys(), `board ${board}`).toEqual(bruteForceAudit());
+      }
+    });
+  });
+
   it('repair keeps split state that ports justify', () => {
     // Wires split at the AND's input ports (3.5, 1.5) and (3.5, 2.5) — valid
     // split state the rebuild must reproduce rather than merge away.

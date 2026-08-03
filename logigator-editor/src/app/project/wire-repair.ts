@@ -1,8 +1,8 @@
-import { Rectangle } from 'pixi.js';
 import { Wire } from '../wires/wire';
 import { WireDirection } from '../wires/wire-direction.enum';
 import { WireIntegrator } from './wire-integrator';
 import { PointMap } from '../utils/point-key';
+import { axisPos, crossPos, WireRowColumnIndex } from './wire-line-index';
 import type { Project } from './project';
 
 /**
@@ -24,36 +24,24 @@ export interface WireRepairPlan {
   addWires: Wire[];
 }
 
-function axisPos(w: Wire): number {
-  return w.direction === WireDirection.HORIZONTAL ? w.position.x : w.position.y;
-}
-
-function crossPos(w: Wire): number {
-  return w.direction === WireDirection.HORIZONTAL ? w.position.y : w.position.x;
-}
-
-function interiorContains(w: Wire, p: { x: number; y: number }): boolean {
-  if (w.direction === WireDirection.HORIZONTAL) {
-    return (
-      p.y === w.position.y &&
-      p.x > w.position.x &&
-      p.x < w.position.x + w.length
-    );
-  }
-  return (
-    p.x === w.position.x && p.y > w.position.y && p.y < w.position.y + w.length
-  );
-}
-
 /**
  * Scans the whole board for wire-invariant violations. Pure read — reports
  * without judging how the state arose, so the caller decides whether a live
  * scissor cut (a deliberate, transient I3 violation) is in play.
+ *
+ * Runs off a {@link WireRowColumnIndex} built here rather than the project's
+ * quad tree, and never issues a rect query: collinear pairs are a sorted sweep
+ * within each grid line, and a buried endpoint or port is a lookup of the two
+ * lines through that point. Both are bounded by what shares a line with the
+ * wire, so a whole-board scan stays independent of how long the wires are.
  */
 export function auditWireInvariants(project: Project): WireViolation[] {
   const violations: WireViolation[] = [];
   const wires = [...project.wires];
   const components = [...project.components];
+
+  const index = new WireRowColumnIndex();
+  for (const w of wires) index.add(w);
 
   // Endpoint/port termination counts, for the I3 third-terminator rule.
   const terminations = new PointMap<number>();
@@ -69,121 +57,75 @@ export function auditWireInvariants(project: Project): WireViolation[] {
     for (const p of c.connectionPoints) bump(p);
   }
 
-  for (const a of wires) {
-    for (const b of project.queryWiresInRange(a.gridBounds)) {
-      // Each unordered pair once; ids are unique.
-      if (b.id <= a.id) continue;
+  // Collinear pairs (overlap, I3) — a line sweep per bucket. Sorting by axis
+  // position means each wire only meets the ones that start before it ends;
+  // everything after that is out of reach, so the scan stops.
+  for (const sorted of index.lines()) {
+    for (let i = 0; i < sorted.length; i++) {
+      const a = sorted[i];
+      const aEnd = axisPos(a) + a.length;
+      for (let j = i + 1; j < sorted.length; j++) {
+        const b = sorted[j];
+        if (axisPos(b) > aEnd) break;
+        // A bucket is one grid line, but its key is the floored coordinate —
+        // an off-lattice wire could share it without being collinear.
+        if (crossPos(a) !== crossPos(b)) continue;
 
-      if (a.direction === b.direction && crossPos(a) === crossPos(b)) {
-        const overlapStart = Math.max(axisPos(a), axisPos(b));
-        const overlapEnd = Math.min(
-          axisPos(a) + a.length,
-          axisPos(b) + b.length
-        );
-        if (overlapStart < overlapEnd) {
+        // Ids in the message stay low-first, independent of the sweep order.
+        const [lo, hi] = a.id < b.id ? [a, b] : [b, a];
+        const overlapEnd = Math.min(aEnd, axisPos(b) + b.length);
+        if (axisPos(b) < overlapEnd) {
           violations.push({
             kind: 'overlap',
-            detail: `wires ${a.id} and ${b.id} overlap by ${overlapEnd - overlapStart} unit(s)`
+            detail: `wires ${lo.id} and ${hi.id} overlap by ${overlapEnd - axisPos(b)} unit(s)`
           });
-          continue;
-        }
-        if (overlapStart === overlapEnd) {
+        } else if (axisPos(b) === overlapEnd) {
           const p =
             a.direction === WireDirection.HORIZONTAL
-              ? { x: overlapStart, y: a.position.y }
-              : { x: a.position.x, y: overlapStart };
+              ? { x: axisPos(b), y: a.position.y }
+              : { x: a.position.x, y: axisPos(b) };
           if ((terminations.get(p) ?? 0) < 3) {
             violations.push({
               kind: 'unmerged-pair',
-              detail: `wires ${a.id} and ${b.id} touch at (${p.x}, ${p.y}) with no third terminator`
+              detail: `wires ${lo.id} and ${hi.id} touch at (${p.x}, ${p.y}) with no third terminator`
             });
           }
-          continue;
         }
       }
+    }
+  }
 
-      for (const [owner, other] of [
-        [a, b],
-        [b, a]
-      ] as const) {
-        for (const p of owner.connectionPoints) {
-          if (interiorContains(other, p)) {
-            violations.push({
-              kind: 'endpoint-in-interior',
-              detail: `endpoint (${p.x}, ${p.y}) of wire ${owner.id} lies inside wire ${other.id}`
-            });
-          }
-        }
-      }
+  // I1/I2 — an endpoint or a port buried in some wire's interior. An interior
+  // point sits exactly on its wire's centre line, so only the row and column
+  // through the point can hold one: a point lookup, never a span query. This is
+  // what keeps a long bus from dragging in every wire it crosses.
+  for (const a of wires) {
+    for (const p of a.connectionPoints) {
+      index.forEachInteriorContaining(p, (other) => {
+        // Collinear neighbours (including `a` itself) are the overlap/merge
+        // case the sweep above already classified.
+        if (other.direction === a.direction && crossPos(other) === crossPos(a))
+          return;
+        violations.push({
+          kind: 'endpoint-in-interior',
+          detail: `endpoint (${p.x}, ${p.y}) of wire ${a.id} lies inside wire ${other.id}`
+        });
+      });
     }
   }
 
   for (const c of components) {
     for (const p of c.connectionPoints) {
-      const around = new Rectangle(p.x - 1, p.y - 1, 2, 2);
-      for (const w of project.queryWiresInRange(around)) {
-        if (interiorContains(w, p)) {
-          violations.push({
-            kind: 'port-in-interior',
-            detail: `port (${p.x}, ${p.y}) of component ${c.id} lies inside wire ${w.id}`
-          });
-        }
-      }
+      index.forEachInteriorContaining(p, (w) => {
+        violations.push({
+          kind: 'port-in-interior',
+          detail: `port (${p.x}, ${p.y}) of component ${c.id} lies inside wire ${w.id}`
+        });
+      });
     }
   }
 
   return violations;
-}
-
-/**
- * Spatial index over the rebuild's working set. Wires are axis-aligned and a
- * wire's gridBounds spans exactly one grid row (horizontal) or column
- * (vertical), so bucketing horizontals by row and verticals by column lets a
- * rect query touch only the buckets its rows/columns cover instead of the
- * whole set. Indexed wires must not move: the rebuild only ever adds and
- * removes instances, never repositions them.
- */
-class WorkingWireIndex {
-  private readonly _horizontal = new Map<number, Set<Wire>>();
-  private readonly _vertical = new Map<number, Set<Wire>>();
-  public readonly all = new Set<Wire>();
-
-  private _bucketsOf(w: Wire): [Map<number, Set<Wire>>, number] {
-    return w.direction === WireDirection.HORIZONTAL
-      ? [this._horizontal, Math.floor(w.position.y)]
-      : [this._vertical, Math.floor(w.position.x)];
-  }
-
-  public add(w: Wire): void {
-    this.all.add(w);
-    const [buckets, key] = this._bucketsOf(w);
-    let bucket = buckets.get(key);
-    if (!bucket) buckets.set(key, (bucket = new Set()));
-    bucket.add(w);
-  }
-
-  public remove(w: Wire): void {
-    if (!this.all.delete(w)) return;
-    const [buckets, key] = this._bucketsOf(w);
-    buckets.get(key)?.delete(w);
-  }
-
-  public *query(rect: Rectangle): Generator<Wire> {
-    // A horizontal wire in row r occupies gridBounds rows [r, r+1), which
-    // intersects [rect.y, rect.y+rect.height) iff r > rect.y - 1 — and
-    // Math.floor(rect.y) is exactly the smallest such integer. Columns mirror
-    // the same bound. The per-wire intersects test stays authoritative.
-    for (let row = Math.floor(rect.y); row < rect.y + rect.height; row++) {
-      const bucket = this._horizontal.get(row);
-      if (!bucket) continue;
-      for (const w of bucket) if (w.gridBounds.intersects(rect)) yield w;
-    }
-    for (let col = Math.floor(rect.x); col < rect.x + rect.width; col++) {
-      const bucket = this._vertical.get(col);
-      if (!bucket) continue;
-      for (const w of bucket) if (w.gridBounds.intersects(rect)) yield w;
-    }
-  }
 }
 
 /**
@@ -215,7 +157,7 @@ export function computeWireRepair(project: Project): WireRepairPlan {
         a.id - b.id
     );
 
-  const working = new WorkingWireIndex();
+  const working = new WireRowColumnIndex();
 
   for (const orig of sorted) {
     const clone = new Wire(orig.direction, orig.length);

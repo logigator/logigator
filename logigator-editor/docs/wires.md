@@ -319,6 +319,15 @@ Documents saved before integration covered every mutation path (pasting and the 
 - `auditWireInvariants(project)` — pure scan; classifies every violation (`overlap`, `endpoint-in-interior`, `port-in-interior`, `unmerged-pair`) with a loggable detail string.
 - `computeWireRepair(project)` — rebuilds the board's wires in an offline working set, re-adding each wire through the integrator one at a time (the integrator only ever sees valid state plus one wire — its designed use case), then multiset-diffs the result against the live wires by exact geometry. Wires whose spans survive unchanged keep their live instances — ids, selection and history references intact; only the changed remainder lands in the returned plan. A repair never changes which grid cells are wired, only how they group into `Wire` instances. Zero-length wires are dropped as cruft.
 
+Both work off a `WireRowColumnIndex` (`project/wire-line-index.ts`) rather than the project's quad tree. A wire is axis-aligned and its `gridBounds` spans exactly one grid row (horizontal) or column (vertical), so the index buckets horizontals by row and verticals by column — one bucket per grid line. The quad tree files by full containment instead, which parks long and boundary-straddling wires high in the tree where every descending query rescans them; tolerable for the point-sized queries of an interactive gesture, but the audit touches every wire and every port, where that rescan dominates.
+
+The audit never issues a rect query, because neither invariant needs one:
+
+- **Collinear pairs** (`overlap`, `unmerged-pair`) can only involve wires on the same grid line, so each line is sorted by axis position and swept — a wire meets only those starting before it ends, and the scan breaks at the first one that does not.
+- **Buried endpoints and ports** (`endpoint-in-interior`, `port-in-interior`) are point containment: an interior point lies exactly on its wire's centre line, so only the row and the column through that point can hold a container. Each is a binary search into that line's sorted wires, walking back only as far as the line's longest wire can reach.
+
+Both are bounded by what shares a grid line with the wire rather than by how long the wires are, which is what keeps a full-width bus from dragging in every wire it crosses. Lines are sorted lazily, so `computeWireRepair` — which mutates the index constantly and only calls `query` — never pays for the ordering. Indexed wires must not move; neither caller repositions them.
+
 `WireRepairService` orchestrates and reports (toast summary, per-violation console log). Both entry points are user-initiated — a load never repairs by itself:
 
 - **Manually** (`repairManually`) — the Edit-menu "Repair Wires" command. Clears the selection first (retracting a live scissor cut, whose seam is a deliberate transient I3 violation the repair must not fuse), registers the fix as a single undoable history entry, and always toasts — including "no wire issues found". A post-repair audit logs an error if anything survived, failing loudly on repair bugs.
