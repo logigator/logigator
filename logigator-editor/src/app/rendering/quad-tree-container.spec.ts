@@ -176,46 +176,80 @@ describe('QuadTreeContainer', () => {
     });
   });
 
-  // ── cross-quadrant items (branchItems) ───────────────────────────────────
+  // ── oversize items and loose filing ───────────────────────────────────────
 
-  describe('cross-quadrant items (branchItems)', () => {
-    // The initial tree spans (0, 0, 64, 64); its midlines are x=32 and y=32.
-    // An item whose bounds straddle a midline cannot fit in any child quadrant and is
-    // placed in the containing entry's branchItems instead of leafItems.
+  describe('oversize items and loose filing', () => {
+    // The initial tree spans (0, 0, 64, 64). An entry files an element into a
+    // child only when the element fits the child's cell (max dimension at most
+    // half the entry); larger elements park in the entry's oversizeItems.
+    // Position never parks an element high: an entry accepts anything centered
+    // in its cell through its loose bounds (the cell doubled, centered), so an
+    // item across a cell boundary files as deep as one in the cell's middle.
 
-    it('item straddling the vertical midline is inserted and retrieved', () => {
-      const cross = makeItem(30, 2, 5, 3); // right edge at 35, spans x=32
-      tree.insert(cross);
-      expect(queryAll()).toContain(cross);
+    it('item wider than half the root is inserted and retrieved', () => {
+      const wide = makeItem(2, 30, 40, 1); // maxDim 40 > 32
+      tree.insert(wide);
+      expect(queryAll()).toContain(wide);
     });
 
-    it('cross-boundary item is returned by a query range that fully contains it', () => {
-      const cross = makeItem(30, 2, 5, 3);
-      tree.insert(cross);
-      expect(tree.queryRange(new Rectangle(0, 0, 60, 10))).toContain(cross);
+    it('oversize item is returned by a query range that fully contains it', () => {
+      const wide = makeItem(2, 30, 40, 1);
+      tree.insert(wide);
+      expect(tree.queryRange(new Rectangle(0, 0, 60, 40))).toContain(wide);
     });
 
-    it('cross-boundary item is returned by a query range that partially overlaps it', () => {
-      const cross = makeItem(30, 2, 5, 3);
-      tree.insert(cross);
-      // range ends at x=32 but item extends to x=35; they overlap x:30-32
-      expect(tree.queryRange(new Rectangle(0, 0, 32, 10))).toContain(cross);
+    it('oversize item is returned by a query range that partially overlaps it', () => {
+      const wide = makeItem(2, 30, 40, 1);
+      tree.insert(wide);
+      // range ends at x=4 but the item extends to x=42; they overlap x:2-4
+      expect(tree.queryRange(new Rectangle(0, 0, 4, 40))).toContain(wide);
     });
 
-    it('cross-boundary item can be removed', () => {
-      const cross = makeItem(30, 2, 5, 3);
-      tree.insert(cross);
-      expect(tree.remove(cross)).toBe(true);
-      expect(queryAll()).not.toContain(cross);
+    it('oversize item can be removed', () => {
+      const wide = makeItem(2, 30, 40, 1);
+      tree.insert(wide);
+      expect(tree.remove(wide)).toBe(true);
+      expect(queryAll()).not.toContain(wide);
     });
 
-    it('removing a cross-boundary item leaves other items intact', () => {
-      const cross = makeItem(30, 2, 5, 3);
+    it('removing an oversize item leaves other items intact', () => {
+      const wide = makeItem(2, 30, 40, 1);
       const normal = makeItem(2, 2, 3, 3);
-      tree.insert(cross);
+      tree.insert(wide);
       tree.insert(normal);
-      tree.remove(cross);
+      tree.remove(wide);
       expect(queryAll()).toEqual([normal]);
+    });
+
+    it('only size parks an item at a branch — midline-crossing items file deep', () => {
+      const wide = makeItem(2, 30, 40, 1);
+      tree.insert(wide);
+      // Five items across the x=32 midline force splits along their column.
+      const crossers = Array.from({ length: 5 }, (_, i) =>
+        makeItem(31, 2 + i * 2, 2, 1)
+      );
+      for (const c of crossers) tree.insert(c);
+
+      expect(tree.stats().branchOversize).toBe(1); // the wide item, nothing else
+      expect(tree.validate()).toEqual([]);
+      expect(queryAll()).toEqual(arrayWithExactContents([wide, ...crossers]));
+    });
+
+    it('query pruning honors loose bounds: an item overhanging its cell is found', () => {
+      // The cluster's centers all sit east of the x=32 midline, so every item
+      // files in cells at x >= 32 — but the first one's extent reaches back to
+      // x=31. A query strictly left of every cell must still return it.
+      const poker = makeItem(31, 2, 2, 1); // center x=32
+      tree.insert(poker);
+      const rest = [
+        makeItem(33, 2, 1, 1),
+        makeItem(33, 4, 1, 1),
+        makeItem(35, 2, 1, 1),
+        makeItem(35, 4, 1, 1)
+      ];
+      for (const c of rest) tree.insert(c);
+
+      expect(tree.queryRange(new Rectangle(30, 0, 1.5, 10))).toEqual([poker]);
     });
   });
 
@@ -545,7 +579,7 @@ describe('QuadTreeContainer', () => {
         items.push(c);
         tree.insert(c);
       }
-      // Straddlers, an expansion into negative space, and re-insertions.
+      // A larger item, an expansion into negative space, and re-insertions.
       items.push(makeItem(30, 30, 6, 6), makeItem(-400, -400, 5, 5));
       for (const c of items.slice(-2)) tree.insert(c);
       for (const c of items.slice(0, 150)) {
@@ -570,15 +604,17 @@ describe('QuadTreeContainer', () => {
       ]);
     });
 
-    it('accepts straddlers parked at branches under a grown root', () => {
-      // Expansion stacks new ancestors above an element without re-filing it,
-      // so a straddler stays legitimately parked far above the leaf level.
-      tree.insert(makeItem(30, 30, 5, 5)); // straddles both root midlines
-      tree.insert(makeItem(14, 30, 5, 5)); // straddles the horizontal midline
+    it('accepts oversize items parked at branches under a grown root', () => {
+      // Expansion stacks new ancestors above the entries without re-filing
+      // anything; an element too large for the old root's children stays
+      // parked there — several levels below the new root — and still
+      // validates, because its size class matches that entry regardless of
+      // what hangs above it.
+      tree.insert(makeItem(2, 20, 40, 5)); // maxDim 40 > 32: parks at the root
       for (let i = 0; i < 12; i++) tree.insert(makeItem(i * 2, i, 3, 3));
       tree.insert(makeItem(5000, 5000, 5, 5)); // forces the expansions
 
-      expect(tree.stats().branchStraddlers).toBeGreaterThan(0);
+      expect(tree.stats().branchOversize).toBeGreaterThan(0);
       expect(tree.validate()).toEqual([]);
     });
 
@@ -607,13 +643,13 @@ describe('QuadTreeContainer', () => {
     });
 
     it('counts leaves over capacity as saturated only where a split cannot help', () => {
-      // Stacked at one point: the tree subdivides until the elements straddle
-      // the quadrant split of the leaf they land in, where splitting stops
+      // Stacked at one point: the tree subdivides until the elements are too
+      // large for any child of the cell they land in, where splitting stops
       // helping and the leaf grows past its capacity for good.
       for (let i = 0; i < 20; i++) tree.insert(makeItem(0, 0, 1, 1));
       const stats = tree.stats();
 
-      expect(stats.leafStraddlers).toBe(20);
+      expect(stats.leafOversize).toBe(20);
       expect(stats.overfullSplittableLeaves).toBe(0);
       expect(stats.saturatedLeaves).toBeGreaterThan(0);
     });
@@ -692,6 +728,25 @@ describe('QuadTreeContainer', () => {
       for (const item of [...near, ...far]) {
         expect(isCulled(item)).toBe(false);
       }
+    });
+
+    it('honors loose bounds: an item overhanging its cell is not culled away', () => {
+      // Same shape as the loose-filing query test: the item's center puts it
+      // in cells east of x=32, but its extent reaches back to x=31. A view
+      // ending left of every cell must keep it visible.
+      const poker = makeItem(31, 2, 2, 1); // center x=32
+      tree.insert(poker);
+      for (const c of [
+        makeItem(33, 2, 1, 1),
+        makeItem(33, 4, 1, 1),
+        makeItem(35, 2, 1, 1),
+        makeItem(35, 4, 1, 1)
+      ]) {
+        tree.insert(c);
+      }
+
+      tree.cull(new Rectangle(30, 0, 1.5, 10));
+      expect(isCulled(poker)).toBe(false);
     });
   });
 });

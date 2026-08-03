@@ -1,7 +1,5 @@
 import { Container, ContainerChild, Rectangle } from 'pixi.js';
 import { GridElement } from './grid-element';
-import { getStaticDI } from '../utils/get-di';
-import { LoggingService } from '../logging/logging.service';
 import { overlapsRect } from '../utils/grid';
 import { formatIndexHistogram } from '../utils/histogram';
 
@@ -15,34 +13,55 @@ type Quadrant = 'nw' | 'ne' | 'sw' | 'se';
 // entries during a pan re-batch a handful of elements, never the whole scene.
 // Lowering the threshold shrinks the rebuild regions but raises the number of
 // render groups, each of which breaks batching and adds fixed per-frame cost.
+// The threshold compares the tight cell size, so the render-group population
+// tracks the lattice, not the doubled loose bounds.
 const RENDER_GROUP_MIN_SIZE = 32;
 
+// A node in a loose quad tree (looseness factor 2): `region` is the tight
+// cell of the quadrant lattice, while the container's boundsArea is that cell
+// doubled in size and centered on it. Elements file by center point into the
+// deepest cell at least as large as they are, so an element always lies
+// within its entry's loose bounds, and a child's loose bounds nest inside its
+// parent's — the containment guarantee query pruning and culling run on.
 class QuadTreeEntry<T extends GridElement> extends Container {
-  branchItems: Container<T> = this.addChild(new Container<T>());
+  /** Elements too large for any child cell: wider or taller than half the region. */
+  oversizeItems: Container<T> = this.addChild(new Container<T>());
   leafItems: Container<T> | null = this.addChild(new Container<T>());
   branches: Record<Quadrant, QuadTreeEntry<T>> | null = null;
 
-  // x, y, size encode the spatial region via boundsArea.
+  /** The tight cell: this entry's slot in the quadrant lattice. */
+  readonly region: Rectangle;
+
   // The container itself always sits at position (0, 0) so that elements
   // reparented between entries never shift their world coordinates.
   //
-  // The same region also drives culling: QuadTreeContainer.cull() tests it
-  // against the grid-space view rectangle and sets the plain PixiJS `culled`
-  // flag at the entry level only. An on-screen entry renders all its
+  // The loose boundsArea also drives culling: QuadTreeContainer.cull() tests
+  // it against the grid-space view rectangle and sets the plain PixiJS
+  // `culled` flag at the entry level only. An on-screen entry renders all its
   // elements; an off-screen entry is culled whole and its subtree skipped —
   // both by the cull walk and at render time, where a culled render group
   // never executes. No element is ever bounds-checked.
   constructor(x: number, y: number, size: number) {
-    const region = new Rectangle(x, y, size, size);
     super({
-      boundsArea: region,
+      boundsArea: new Rectangle(x - size / 2, y - size / 2, size * 2, size * 2),
       isRenderGroup: size >= RENDER_GROUP_MIN_SIZE
     });
+    this.region = new Rectangle(x, y, size, size);
   }
 
   get size() {
-    return this.boundsArea.width;
+    return this.region.width;
   }
+}
+
+/** Center-point quadrant pick; ties on a midline go east/south. */
+function quadrantOf(region: Rectangle, cx: number, cy: number): Quadrant {
+  const midX = region.x + region.width / 2;
+  const midY = region.y + region.height / 2;
+  if (cy < midY) {
+    return cx < midX ? 'nw' : 'ne';
+  }
+  return cx < midX ? 'sw' : 'se';
 }
 
 /** Shape and occupancy of a whole tree; see {@link QuadTreeContainer.stats}. */
@@ -64,17 +83,19 @@ export interface QuadTreeStats {
   entriesByDepth: number[];
   elementsByDepth: number[];
   /**
-   * Elements parked at a branch because they straddle its quadrant split, by
-   * depth. Every range query passing through that branch tests all of them, so
-   * the depth-0 count is paid by every query the tree ever answers.
+   * Elements parked at a branch because they are too large for its children —
+   * wider or taller than half the branch cell — by depth. Every range query
+   * passing through that branch tests all of them, so the depth-0 count is
+   * paid by every query the tree ever answers. Only an element's size parks
+   * it at a branch; its position never does.
    */
-  branchStraddlersByDepth: number[];
-  branchStraddlers: number;
+  branchOversizeByDepth: number[];
+  branchOversize: number;
   /**
-   * Elements straddling the quadrant split of the leaf they sit in. A split
-   * cannot move them, so they are what puts a leaf legitimately over capacity.
+   * Elements too large for a child of the leaf they sit in. A split cannot
+   * move them down, so they are what puts a leaf legitimately over capacity.
    */
-  leafStraddlers: number;
+  leafOversize: number;
   /** Leaf count indexed by how many elements the leaf holds. */
   leafOccupancy: number[];
   /**
@@ -109,6 +130,15 @@ function describeElement(element: GridElement): string {
   return `${element.constructor.name} at ${describeRect(element.gridBounds)}`;
 }
 
+/**
+ * Spatial index and scene-graph host for the board's elements, as a loose
+ * quad tree: an entry accepts any element up to its own cell size whose
+ * center lies in the cell, because its loose bounds cover the overhang. Only
+ * an element's size decides how high it files — one sitting across a cell
+ * boundary files just as deep as one in a cell's middle. Every element hangs
+ * in exactly one entry, which is what lets the same tree double as the
+ * render/cull hierarchy.
+ */
 export class QuadTreeContainer<T extends GridElement> extends Container {
   private static readonly MAX_LEAF_ELEMENTS = 4;
   private static readonly MIN_BRANCH_ELEMENTS = 2;
@@ -134,22 +164,26 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
     // of the cull as long as any part is on screen. queryRange still tests the
     // tight gridBounds, so selection/collision are unaffected.
     const elBounds = element.cullBounds;
+    const elSize = Math.max(elBounds.width, elBounds.height);
+    const centerX = elBounds.x + elBounds.width / 2;
+    const centerY = elBounds.y + elBounds.height / 2;
 
-    while (!this._tree.boundsArea.containsRect(elBounds)) {
-      this.expand(elBounds);
+    while (!this.rootAccepts(elSize, centerX, centerY)) {
+      this.expand(centerX, centerY);
     }
 
     for (let entry = this._tree; ;) {
-      const quadrant = this.getContainingQuadrant(entry.boundsArea, elBounds);
-      if (!quadrant) {
-        entry.branchItems.addChild(element);
+      if (elSize > entry.size / 2) {
+        // Too large for any child cell: this entry's size class is the
+        // element's, wherever in the cell its center lies.
+        entry.oversizeItems.addChild(element);
         this._items.set(element, entry);
         return;
       }
 
       if (entry.branches) {
         // This is a branch, so we have to go deeper.
-        entry = entry.branches[quadrant];
+        entry = entry.branches[quadrantOf(entry.region, centerX, centerY)];
       } else if (entry.leafItems) {
         // This is a leaf, so we have to check if we can insert the element here or if we have to split the leaf.
         if (
@@ -165,15 +199,29 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
         this._items.set(element, entry);
         return;
       } else {
-        getStaticDI(LoggingService).error(
-          `insert reached an entry (size ${entry.size}) with neither branches nor leafItems; element bounds ${JSON.stringify(elBounds)}`,
-          'QuadTreeContainer'
-        );
         throw new Error(
           'PANIC: Invalid Quad Tree state: entry has no branches but is not a leaf'
         );
       }
     }
+  }
+
+  /**
+   * Whether the root can file an element: its cell must be at least the
+   * element's size and contain the element's center — the loose bounds then
+   * cover the element wherever in the cell that center lies. The interval is
+   * closed: a center exactly on the far edge files into the last cell column,
+   * whose loose bounds still cover the overhang.
+   */
+  private rootAccepts(elSize: number, cx: number, cy: number): boolean {
+    const region = this._tree.region;
+    return (
+      elSize <= region.width &&
+      cx >= region.x &&
+      cx <= region.right &&
+      cy >= region.y &&
+      cy <= region.bottom
+    );
   }
 
   /**
@@ -185,15 +233,11 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
     const entry = this._items.get(element);
     if (!entry) return false;
 
-    if (entry.branchItems.children.includes(element)) {
-      entry.branchItems.removeChild(element);
+    if (entry.oversizeItems.children.includes(element)) {
+      entry.oversizeItems.removeChild(element);
     } else if (entry.leafItems?.children.includes(element)) {
       entry.leafItems.removeChild(element);
     } else {
-      getStaticDI(LoggingService).error(
-        `remove found the element in _items but in neither branchItems nor leafItems of its entry (size ${entry.size})`,
-        'QuadTreeContainer'
-      );
       throw new Error(
         'PANIC: Invalid Quad Tree state: element was found in hashmap but not in tree'
       );
@@ -246,7 +290,7 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
     range: Rectangle,
     out: T[]
   ): void {
-    for (const element of entry.branchItems.children) {
+    for (const element of entry.oversizeItems.children) {
       if (element.intersectsGridBounds(range)) out.push(element);
     }
 
@@ -270,18 +314,20 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
     range: Rectangle,
     out: T[]
   ): void {
-    const region = branch.boundsArea;
-    if (overlapsRect(range, region.x, region.y, region.width, region.height)) {
+    // Prune by the loose bounds: an element in the subtree can overhang the
+    // branch's cell, but never its loose bounds.
+    const loose = branch.boundsArea;
+    if (overlapsRect(range, loose.x, loose.y, loose.width, loose.height)) {
       this.collectRangeOfEntry(branch, range, out);
     }
   }
 
   /**
    * Culls entries against a view rectangle in grid coordinates: an entry
-   * whose region misses the view gets its `culled` flag set and its subtree
-   * skipped; intersecting branches recurse so their children are re-tested.
-   * Pure rectangle math — the camera transform is folded into the view rect
-   * by the caller once, never applied per entry.
+   * whose loose bounds miss the view gets its `culled` flag set and its
+   * subtree skipped; intersecting branches recurse so their children are
+   * re-tested. Pure rectangle math — the camera transform is folded into the
+   * view rect by the caller once, never applied per entry.
    */
   public cull(view: Rectangle): void {
     this.cullEntry(this._tree, view);
@@ -298,35 +344,35 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
   }
 
   /**
-   * Expands the quad tree by doubling its size.
+   * Expands the quad tree by doubling its size toward the given center.
    * @private
    */
-  private expand(targetBounds: Rectangle): void {
-    const oldBounds = this._tree.boundsArea;
-    const expandLeft = targetBounds.x < oldBounds.x;
-    const expandUp = targetBounds.y < oldBounds.y;
-    const newX = expandLeft ? oldBounds.x - oldBounds.width : oldBounds.x;
-    const newY = expandUp ? oldBounds.y - oldBounds.height : oldBounds.y;
+  private expand(centerX: number, centerY: number): void {
+    const oldRegion = this._tree.region;
+    const expandLeft = centerX < oldRegion.x;
+    const expandUp = centerY < oldRegion.y;
+    const newX = expandLeft ? oldRegion.x - oldRegion.width : oldRegion.x;
+    const newY = expandUp ? oldRegion.y - oldRegion.height : oldRegion.y;
 
     const newRoot = super.addChild(
-      new QuadTreeEntry<T>(newX, newY, oldBounds.width * 2)
+      new QuadTreeEntry<T>(newX, newY, oldRegion.width * 2)
     );
 
-    const nwEntry = new QuadTreeEntry<T>(newX, newY, oldBounds.width);
+    const nwEntry = new QuadTreeEntry<T>(newX, newY, oldRegion.width);
     const neEntry = new QuadTreeEntry<T>(
-      newX + oldBounds.width,
+      newX + oldRegion.width,
       newY,
-      oldBounds.width
+      oldRegion.width
     );
     const swEntry = new QuadTreeEntry<T>(
       newX,
-      newY + oldBounds.height,
-      oldBounds.width
+      newY + oldRegion.height,
+      oldRegion.width
     );
     const seEntry = new QuadTreeEntry<T>(
-      newX + oldBounds.width,
-      newY + oldBounds.height,
-      oldBounds.width
+      newX + oldRegion.width,
+      newY + oldRegion.height,
+      oldRegion.width
     );
 
     // The old tree occupies the quadrant opposite the expansion direction
@@ -362,7 +408,7 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
     }
 
     // The new root is a branch from birth, so it drops the leafItems container
-    // every entry starts with; a branch keeps its elements in branchItems and
+    // every entry starts with; a branch keeps its elements in oversizeItems and
     // minifyBranch re-creates the container if the root ever collapses back.
     newRoot.removeChild(newRoot.leafItems!);
     newRoot.leafItems = null;
@@ -380,7 +426,7 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
       throw new Error('PANIC: Trying to split a non-leaf');
     }
 
-    const b = entry.boundsArea;
+    const b = entry.region;
     const half = b.width / 2;
 
     entry.branches = {
@@ -392,29 +438,31 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
 
     for (const element of [...entry.leafItems.children]) {
       const elBounds = element.cullBounds;
-      const quadrant = this.getContainingQuadrant(entry.boundsArea, elBounds);
-      if (!quadrant) {
-        getStaticDI(LoggingService).error(
-          `splitLeaf: leaf element with bounds ${JSON.stringify(elBounds)} is not contained in any quadrant of entry ${JSON.stringify(entry.boundsArea)}`,
-          'QuadTreeContainer'
-        );
+      const elSize = Math.max(elBounds.width, elBounds.height);
+      if (elSize > half) {
+        // leafItems only ever holds elements a child cell can take — insert
+        // files larger ones into oversizeItems.
         throw new Error(
-          'PANIC: Invalid Quad Tree state: leaf element is not contained in any quadrant'
+          'PANIC: Invalid Quad Tree state: leaf element is too large for a child cell'
         );
       }
 
-      const quadrantInner = this.getContainingQuadrant(
-        entry.branches[quadrant].boundsArea,
-        elBounds
-      );
+      const child =
+        entry.branches[
+          quadrantOf(
+            b,
+            elBounds.x + elBounds.width / 2,
+            elBounds.y + elBounds.height / 2
+          )
+        ];
 
-      if (quadrantInner) {
-        entry.branches[quadrant].leafItems!.addChild(element);
+      if (elSize > half / 2) {
+        child.oversizeItems.addChild(element);
       } else {
-        entry.branches[quadrant].branchItems.addChild(element);
+        child.leafItems!.addChild(element);
       }
 
-      this._items.set(element, entry.branches[quadrant]);
+      this._items.set(element, child);
     }
 
     entry.removeChild(entry.leafItems);
@@ -437,14 +485,16 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
       } else {
         childrenCount += child.leafItems!.children.length;
       }
-      childrenCount += child.branchItems.children.length;
+      childrenCount += child.oversizeItems.children.length;
     }
 
     if (childrenCount < QuadTreeContainer.MIN_BRANCH_ELEMENTS) {
       entry.leafItems = entry.addChild(new Container<T>());
 
+      // Everything a child holds is at most the child's cell size — half this
+      // entry's — so it all fits leafItems here.
       for (const child of Object.values(entry.branches)) {
-        for (const element of [...child.branchItems.children]) {
+        for (const element of [...child.oversizeItems.children]) {
           this._items.set(element, entry);
           entry.leafItems.addChild(element);
         }
@@ -469,7 +519,7 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
    * is a debug-only call.
    */
   public stats(): QuadTreeStats {
-    const root = this._tree.boundsArea;
+    const root = this._tree.region;
     const stats: QuadTreeStats = {
       elements: this._items.size,
       entries: 0,
@@ -482,9 +532,9 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
       avgElementDepth: 0,
       entriesByDepth: [],
       elementsByDepth: [],
-      branchStraddlersByDepth: [],
-      branchStraddlers: 0,
-      leafStraddlers: 0,
+      branchOversizeByDepth: [],
+      branchOversize: 0,
+      leafOversize: 0,
       leafOccupancy: [],
       overfullSplittableLeaves: 0,
       saturatedLeaves: 0,
@@ -531,18 +581,18 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
     stats.maxDepth = Math.max(stats.maxDepth, depth);
     stats.entriesByDepth[depth] = (stats.entriesByDepth[depth] ?? 0) + 1;
     stats.elementsByDepth[depth] ??= 0;
-    stats.branchStraddlersByDepth[depth] ??= 0;
+    stats.branchOversizeByDepth[depth] ??= 0;
     if (entry.size >= RENDER_GROUP_MIN_SIZE) stats.renderGroups++;
     if (entry.culled) stats.culledEntries++;
 
-    const straddlers = entry.branchItems.children.length;
+    const oversize = entry.oversizeItems.children.length;
     if (entry.branches) {
-      // Elements too wide for any quadrant park here, and every range query
+      // Elements too large for a child cell park here, and every range query
       // that passes through the entry on its way down tests each of them.
       stats.branches++;
-      stats.branchStraddlers += straddlers;
-      stats.branchStraddlersByDepth[depth] += straddlers;
-      stats.elementsByDepth[depth] += straddlers;
+      stats.branchOversize += oversize;
+      stats.branchOversizeByDepth[depth] += oversize;
+      stats.elementsByDepth[depth] += oversize;
       this.collectStats(entry.branches.nw, depth + 1, stats);
       this.collectStats(entry.branches.ne, depth + 1, stats);
       this.collectStats(entry.branches.sw, depth + 1, stats);
@@ -552,8 +602,8 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
 
     stats.leaves++;
     const filed = entry.leafItems!.children.length;
-    const held = straddlers + filed;
-    stats.leafStraddlers += straddlers;
+    const held = oversize + filed;
+    stats.leafOversize += oversize;
     stats.elementsByDepth[depth] += held;
     stats.leafOccupancy[held] = (stats.leafOccupancy[held] ?? 0) + 1;
     if (held === 0) stats.emptyLeaves++;
@@ -569,8 +619,8 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
   /**
    * Whether a leaf holds more splittable elements than its capacity at a size a
    * split could still relieve. Splitting only redistributes the elements a
-   * quadrant can hold, so a leaf over capacity through straddlers, or one
-   * already at the minimum size, is legitimately over it instead.
+   * child cell can hold, so a leaf over capacity through oversize elements, or
+   * one already at the minimum size, is legitimately over it instead.
    */
   private isOverfullSplittable(entry: QuadTreeEntry<T>): boolean {
     return (
@@ -610,8 +660,8 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
       ...formatIndexHistogram('elements by depth', s.elementsByDepth),
       '',
       ...formatIndexHistogram(
-        'branch straddlers by depth (query-cost multiplier)',
-        s.branchStraddlersByDepth
+        'branch oversize by depth (query-cost multiplier)',
+        s.branchOversizeByDepth
       ),
       '',
       ...formatIndexHistogram('leaves by element count', s.leafOccupancy)
@@ -643,15 +693,15 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
     maxDepth: number,
     lines: string[]
   ): void {
-    const b = entry.boundsArea;
-    const straddlers = entry.branchItems.children.length;
+    const b = entry.region;
+    const oversize = entry.oversizeItems.children.length;
     const parts = [`${prefix}${label}[${b.x},${b.y} size ${b.width}]`];
     if (entry.branches) {
       parts.push('branch');
     } else {
-      parts.push(`leaf ${straddlers + entry.leafItems!.children.length}`);
+      parts.push(`leaf ${oversize + entry.leafItems!.children.length}`);
     }
-    if (straddlers > 0) parts.push(`${straddlers} straddling`);
+    if (oversize > 0) parts.push(`${oversize} oversize`);
     if (entry.culled) parts.push('culled');
     lines.push(parts.join(' '));
 
@@ -685,7 +735,7 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
     elements: number;
   } {
     let entries = 1;
-    let elements = entry.branchItems.children.length;
+    let elements = entry.oversizeItems.children.length;
     if (entry.branches) {
       for (const child of Object.values(entry.branches)) {
         const below = this.subtreeTotals(child);
@@ -710,24 +760,48 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
     const seen = new Set<T>();
 
     for (const [element, entry] of this._items) {
-      const inBranch = entry.branchItems.children.includes(element);
+      const inOversize = entry.oversizeItems.children.includes(element);
       const inLeaf = entry.leafItems?.children.includes(element) ?? false;
-      const where = `element ${describeElement(element)} filed under entry [${describeRect(entry.boundsArea)}]`;
-      if (!inBranch && !inLeaf) {
-        problems.push(`${where} sits in neither branchItems nor leafItems`);
+      const where = `element ${describeElement(element)} filed under entry [${describeRect(entry.region)}]`;
+      if (!inOversize && !inLeaf) {
+        problems.push(`${where} sits in neither oversizeItems nor leafItems`);
         continue;
       }
-      if (!entry.boundsArea.containsRect(element.cullBounds)) {
+
+      const elBounds = element.cullBounds;
+      const elSize = Math.max(elBounds.width, elBounds.height);
+      const cx = elBounds.x + elBounds.width / 2;
+      const cy = elBounds.y + elBounds.height / 2;
+      const region = entry.region;
+      if (!entry.boundsArea.containsRect(elBounds)) {
         problems.push(
-          `${where} has cullBounds ${describeRect(element.cullBounds)} outside that region — it moved without being re-inserted`
+          `${where} has cullBounds ${describeRect(elBounds)} outside the loose bounds ${describeRect(entry.boundsArea)} — it moved without being re-inserted`
         );
+        continue;
       }
       if (
-        inBranch &&
-        entry.branches &&
-        this.getContainingQuadrant(entry.boundsArea, element.cullBounds)
+        cx < region.x ||
+        cx > region.right ||
+        cy < region.y ||
+        cy > region.bottom
       ) {
-        problems.push(`${where} fits a quadrant and belongs one level deeper`);
+        problems.push(
+          `${where} has its center at ${cx},${cy} outside that cell — it moved without being re-inserted`
+        );
+        continue;
+      }
+      if (elSize > entry.size) {
+        problems.push(
+          `${where} is larger than the cell (${elSize} > ${entry.size}) and belongs at a higher level`
+        );
+      } else if (inOversize && elSize <= entry.size / 2) {
+        problems.push(
+          `${where} fits a child cell and belongs one level deeper`
+        );
+      } else if (inLeaf && elSize > entry.size / 2) {
+        problems.push(
+          `${where} is too large for a child cell and belongs in oversizeItems`
+        );
       }
     }
 
@@ -752,7 +826,7 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
     seen: Set<T>,
     problems: string[]
   ): void {
-    const region = describeRect(entry.boundsArea);
+    const region = describeRect(entry.region);
     if (entry.branches && entry.leafItems) {
       problems.push(`entry [${region}] has both branches and leafItems`);
     }
@@ -761,12 +835,12 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
     }
     if (this.isOverfullSplittable(entry)) {
       problems.push(
-        `leaf [${region}] holds ${entry.leafItems!.children.length} contained elements over the capacity of ${QuadTreeContainer.MAX_LEAF_ELEMENTS} at a size a split could still relieve`
+        `leaf [${region}] holds ${entry.leafItems!.children.length} splittable elements over the capacity of ${QuadTreeContainer.MAX_LEAF_ELEMENTS} at a size a split could still relieve`
       );
     }
 
     const children = [
-      ...entry.branchItems.children,
+      ...entry.oversizeItems.children,
       ...(entry.leafItems?.children ?? [])
     ];
     for (const element of children) {
@@ -784,7 +858,7 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
     }
 
     if (!entry.branches) return;
-    const b = entry.boundsArea;
+    const b = entry.region;
     const half = b.width / 2;
     const expected: Record<Quadrant, [number, number]> = {
       nw: [b.x, b.y],
@@ -797,64 +871,13 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
       [number, number]
     ][]) {
       const child = entry.branches[quadrant];
-      const cb = child.boundsArea;
+      const cb = child.region;
       if (cb.x !== x || cb.y !== y || cb.width !== half) {
         problems.push(
           `entry [${region}] has a ${quadrant} branch at [${describeRect(cb)}] instead of [${x},${y} ${half}×${half}]`
         );
       }
       this.validateEntry(child, seen, problems);
-    }
-  }
-
-  /**
-   * Returns the quadrant of the entry that contains the item rectangle, or null if the item rectangle is not fully contained in any quadrant.
-   * @param bounds Rectangle defining the bounds of the entry
-   * @param itemRect Rectangle defining the bounds of the item
-   * @private
-   */
-  private getContainingQuadrant(
-    bounds: Rectangle,
-    itemRect: Rectangle
-  ): Quadrant | null {
-    if (
-      new Rectangle(
-        bounds.x,
-        bounds.y,
-        bounds.width / 2,
-        bounds.height / 2
-      ).containsRect(itemRect)
-    ) {
-      return 'nw';
-    } else if (
-      new Rectangle(
-        bounds.x + bounds.width / 2,
-        bounds.y,
-        bounds.width / 2,
-        bounds.height / 2
-      ).containsRect(itemRect)
-    ) {
-      return 'ne';
-    } else if (
-      new Rectangle(
-        bounds.x,
-        bounds.y + bounds.height / 2,
-        bounds.width / 2,
-        bounds.height / 2
-      ).containsRect(itemRect)
-    ) {
-      return 'sw';
-    } else if (
-      new Rectangle(
-        bounds.x + bounds.width / 2,
-        bounds.y + bounds.height / 2,
-        bounds.width / 2,
-        bounds.height / 2
-      ).containsRect(itemRect)
-    ) {
-      return 'se';
-    } else {
-      return null;
     }
   }
 }

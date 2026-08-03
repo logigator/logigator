@@ -275,7 +275,7 @@ Called from `Project.updateScale`. Forwards `applyScale(scale)` to every element
 
 **File:** `quad-tree-container.ts`
 
-A generic PixiJS `Container` subclass that maintains a spatial quad tree over its children. Used as `_wires` and `_components` in `Project`. The generic constraint requires `T` to implement the `GridElement` interface (`gridBounds`, `cullBounds`, `intersectsGridBounds`), ensuring the tree never calls PixiJS bounds APIs — it reads the element's own grid-unit bounds directly.
+A generic PixiJS `Container` subclass that maintains a spatial **loose quad tree** (looseness factor 2) over its children. Used as `_wires` and `_components` in `Project`. The generic constraint requires `T` to implement the `GridElement` interface (`gridBounds`, `cullBounds`, `intersectsGridBounds`), ensuring the tree never calls PixiJS bounds APIs — it reads the element's own grid-unit bounds directly.
 
 ### `GridElement` interface
 
@@ -288,13 +288,13 @@ Defined in `grid-element.ts`. Extends `ContainerChild` with:
 
 ### Tree structure
 
-The tree is composed of `QuadTreeEntry<T>` nodes (not exported). Each entry covers a square region and holds:
+The tree is composed of `QuadTreeEntry<T>` nodes (not exported). Each entry owns two rectangles: `region`, its **tight cell** in the quadrant lattice, and `boundsArea`, its **loose bounds** — the cell doubled in size and centered on it. An element is filed by its **center point** into the deepest cell at least as large as the element, so it always lies within its entry's loose bounds however it overhangs the cell, and a child's loose bounds nest inside its parent's — the containment guarantee query pruning and culling run on. Each entry holds:
 
-- `branchItems` — elements whose bounds **straddle** a quadrant boundary (cannot be placed in any child).
-- `leafItems` — elements fully contained within this node; `null` once the node has been split into branches.
+- `oversizeItems` — elements too large for any child cell (wider or taller than half the entry). Only an element's **size** parks it above the leaf level; its position never does — an element sitting across a cell boundary files as deep as one in a cell's middle.
+- `leafItems` — elements small enough for a child cell, held here while the node is a leaf; `null` once the node has been split into branches.
 - `branches` — four child `QuadTreeEntry` nodes (`nw`, `ne`, `sw`, `se`); `null` while the node is still a leaf.
 
-All `QuadTreeEntry` instances live at position `(0, 0)` in the scene graph. Their spatial region is encoded in `boundsArea` only — this means reparenting an element between entries never shifts its world coordinates.
+All `QuadTreeEntry` instances live at position `(0, 0)` in the scene graph. Their spatial extent is encoded in `region`/`boundsArea` only — this means reparenting an element between entries never shifts its world coordinates.
 
 ### Constants
 
@@ -310,8 +310,8 @@ The `INITIAL_SIZE` of 64 grid units covers a typical small circuit without any t
 ### `insert(element: T)`
 
 1. If the element is already tracked, removes it first (handles re-insertion after position change).
-2. Reads `element.gridBounds` and calls `expand()` in a loop until the bounds fit inside the root.
-3. Walks the tree from the root. At each node, `getContainingQuadrant` checks whether the element fits entirely inside one of the four child rectangles. If not, the element is placed in `branchItems` of the current node. If yes, descend; split if the leaf is full and large enough.
+2. Reads `element.cullBounds` and calls `expand()` in a loop until the root cell is at least the element's size and contains the element's center.
+3. Walks the tree from the root by the element's center. At each node, if the element is too large for a child cell (max dimension over half the node), it parks in `oversizeItems` of the current node. Otherwise descend into the center's quadrant; split if the leaf is full and large enough.
 
 ### `remove(element: T): boolean`
 
@@ -327,17 +327,17 @@ Because the result is a snapshot rather than a live view, callers may add or rem
 
 For each entry:
 
-1. Yields `branchItems` children whose grid bounds **intersect** `range` (including partial overlaps), tested via `element.intersectsGridBounds(range)`.
-2. For each child branch whose region **intersects** `range`, recurses.
+1. Yields `oversizeItems` children whose grid bounds **intersect** `range` (including partial overlaps), tested via `element.intersectsGridBounds(range)`.
+2. For each child branch whose **loose bounds** intersect `range`, recurses — the loose bounds, because an element in the subtree can overhang the branch's cell but never its loose bounds.
 3. For leaf items, yields those whose grid bounds intersect `range`.
 
 Elements that partially overlap the query rectangle are included. All coordinate comparisons are against the element's grid bounds — the tree never calls `getBounds()` or accesses the PixiJS transform chain.
 
-An element is filed by full containment, so one that straddles a quadrant midline (or is wider than a quadrant) lands in the `branchItems` of a shallow entry, where every query descending past it rescans it. That is fine for the interactive queries the tree exists for, but it makes a board-wide scan expensive, which is why `auditWireInvariants` works off its own row/column index and no rect queries at all (see `wires.md` § Board-wide repair).
+An element is filed by its size class, so one that is large relative to the board (a long wire) lands in the `oversizeItems` of a shallow entry, where every query descending past it rescans it. That is fine for the interactive queries the tree exists for, but it makes a board-wide scan expensive, which is why `auditWireInvariants` works off its own row/column index and no rect queries at all (see `wires.md` § Board-wide repair).
 
 ### Expansion
 
-When an inserted element falls outside the current root, `expand()` doubles the root's size. The old root becomes the child of the new root in the quadrant opposite the expansion direction, so its region — and every element in it — keeps its coordinates; three empty sibling entries fill the other quadrants. The new root is a branch from birth, so it drops the `leafItems` container every entry is constructed with. `minifyBranch` is called immediately to collapse any unnecessary empty structure.
+When an inserted element's center falls outside the current root cell — or the element is larger than the root — `expand()` doubles the root's size toward the center. The old root becomes the child of the new root in the quadrant opposite the expansion direction, so its region — and every element in it — keeps its coordinates; three empty sibling entries fill the other quadrants. The new root is a branch from birth, so it drops the `leafItems` container every entry is constructed with. `minifyBranch` is called immediately to collapse any unnecessary empty structure. Expansion re-files nothing: an element's filing depends only on its own size against its entry's cell and its center lying in that cell, and stacking new ancestors changes neither.
 
 ### PixiJS integration note
 
@@ -347,16 +347,16 @@ When an inserted element falls outside the current root, `expand()` doubles the 
 
 Four methods describe the live tree. The commands that call them sit in the title-bar Debug menu (`DebugMenuService`, gated by the `DEBUG_MENU` define) and run over both trees of the active project, which `Project.quadTrees` exposes for that purpose alone.
 
-| Method                   | Returns                                                                                                                                                                                                   |
-| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `stats(): QuadTreeStats` | Entry/leaf/branch counts, per-depth histograms of entries, elements and straddlers, leaf-occupancy histogram, render-group and culled-entry counts, root region + expansion count vs. the occupied extent |
-| `formatDistributions()`  | The per-depth and occupancy tallies as bar histograms — the part of a measurement a bar reads better than an array; the scalar counts stay in the stats object                                            |
-| `formatTree(maxDepth?)`  | The entry hierarchy as an indented text tree — region, leaf occupancy, straddler count, cull flag per line                                                                                                |
-| `validate(): string[]`   | One message per invariant violation, empty for a healthy tree                                                                                                                                             |
+| Method                   | Returns                                                                                                                                                                                                          |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `stats(): QuadTreeStats` | Entry/leaf/branch counts, per-depth histograms of entries, elements and oversize elements, leaf-occupancy histogram, render-group and culled-entry counts, root region + expansion count vs. the occupied extent |
+| `formatDistributions()`  | The per-depth and occupancy tallies as bar histograms — the part of a measurement a bar reads better than an array; the scalar counts stay in the stats object                                                   |
+| `formatTree(maxDepth?)`  | The entry hierarchy as an indented text tree — region, leaf occupancy, oversize count, cull flag per line                                                                                                        |
+| `validate(): string[]`   | One message per invariant violation, empty for a healthy tree                                                                                                                                                    |
 
-The two stats worth reading first: **straddlers by depth**, because `queryRange` tests every straddler of every entry it passes through (so a root straddler is tested by every query the tree answers), and **root expansions vs. occupied extent**, because content that drifted into one quadrant of a repeatedly doubled root is invisible in a depth histogram.
+The two stats worth reading first: **branch oversize by depth**, because `queryRange` tests every oversize element of every entry it passes through (so a root-level one is tested by every query the tree answers), and **root expansions vs. occupied extent**, because content that drifted into one quadrant of a repeatedly doubled root is invisible in a depth histogram.
 
-`validate()` covers what the `PANIC` throws cannot see on their own: `_items` and the tree agreeing in both directions, an entry being either a branch or a leaf but never both, quadrant regions matching their parent's halves, a leaf a split should have relieved, and — the silent one — an element whose `cullBounds` left the region it is filed under, i.e. one that moved without being re-inserted.
+`validate()` covers what the `PANIC` throws cannot see on their own: `_items` and the tree agreeing in both directions, an entry being either a branch or a leaf but never both, quadrant cells matching their parent's halves, a leaf a split should have relieved, and — the silent ones — an element whose `cullBounds` left its entry's loose bounds or whose center left the cell it is filed under, i.e. one that moved without being re-inserted, plus an element filed at the wrong level for its size.
 
 The leaf invariant is what `overfullSplittableLeaves` tallies: a leaf whose _contained_ elements exceed `MAX_LEAF_ELEMENTS` at a size a split could still relieve. A leaf over capacity because of straddlers is counted `saturatedLeaves` instead — splitting cannot move those. This is the common case at the bottom of the tree: `Rectangle.containsRect` excludes the far edge, so a 1×1 element does not fit a 1×1 quadrant and unit-sized elements stack as straddlers in a size-2 leaf rather than ever reaching `MIN_LEAF_SIZE`.
 
@@ -468,7 +468,7 @@ The FontFace is registered under a bake-only family name (`Roboto Mono Canvas`) 
 
 ### Culling
 
-Off-screen scene nodes are skipped at render time via the plain PixiJS `culled` flag, driven by the app's own grid-space cull pass (PixiJS's `Culler` is not used — it recomputes a world transform per tested node, which dominated pan-frame cost). The board's frame callback runs `project.cull()` immediately before each blit, so the pass runs on every ticker-driven render — including the demand-driven `'single'` frames — and the culled set stays current through pan/zoom with no extra scheduling. `ViewportController.gridView()` folds the camera transform into a single grid-unit view rectangle once (allocation-free), and `QuadTreeContainer.cull(view)` walks each tree testing that rectangle against entry `boundsArea` regions — pure rectangle math, no per-entry matrix work.
+Off-screen scene nodes are skipped at render time via the plain PixiJS `culled` flag, driven by the app's own grid-space cull pass (PixiJS's `Culler` is not used — it recomputes a world transform per tested node, which dominated pan-frame cost). The board's frame callback runs `project.cull()` immediately before each blit, so the pass runs on every ticker-driven render — including the demand-driven `'single'` frames — and the culled set stays current through pan/zoom with no extra scheduling. `ViewportController.gridView()` folds the camera transform into a single grid-unit view rectangle once (allocation-free), and `QuadTreeContainer.cull(view)` walks each tree testing that rectangle against entry `boundsArea` regions (the loose bounds, which cover everything the entry's elements can overhang) — pure rectangle math, no per-entry matrix work.
 
 **Culling happens only at the quad-tree level — individual elements are never bounds-checked:**
 
@@ -484,7 +484,7 @@ Culling sets only the PixiJS `culled` flag and never touches the quad tree's own
 
 PixiJS caches one instruction set per render group and rebuilds a group's set **in full** whenever anything inside it changes structurally — including any `culled` flip. With the whole scene in the root render group, a single flipped entry would re-collect and re-batch every visible element on every pan frame. The scene is therefore split so rebuilds stay local:
 
-- **Quad-tree entries of size ≥ `RENDER_GROUP_MIN_SIZE` (32 grid units)** are their own render groups. Instruction collection stops at child render groups, so a `culled` flip rebuilds only the nearest enclosing entry group — one region's few elements, never the scene. The threshold trades rebuild-region size against group count: every group breaks batching and adds a small fixed per-frame cost (`updateRenderGroupTransforms`, buffer binds, draw calls).
+- **Quad-tree entries of size ≥ `RENDER_GROUP_MIN_SIZE` (32 grid units)** are their own render groups. Instruction collection stops at child render groups, so a `culled` flip rebuilds only the nearest enclosing entry group — one region's few elements, never the scene. The threshold trades rebuild-region size against group count: every group breaks batching and adds a small fixed per-frame cost (`updateRenderGroupTransforms`, buffer binds, draw calls). It compares the entry's tight cell size, so the group population tracks the lattice, not the doubled loose bounds.
 - **`ConnectionPointLayer`** is one render group, so dot insertions/removals during edits rebuild only the dot layer and root-group rebuilds never re-batch board-wide dots.
 
 ### Work-mode integration
@@ -501,4 +501,4 @@ PixiJS caches one instruction set per render group and rebuilds a group's set **
 - **Scale-compensated stroke widths** — `ComponentGraphics` bakes `2 / scale` into its stroke width; `GridGraphics` uses `1 / scale` for dot size; `Wire.applyScale` sets `scale.y = 1 / (scale * gridSize)`. `Component` handles the `gridSize` factor via its `_visualSpace` counter-scaling; `Wire` extends `Graphics` directly and must compensate explicitly. On zoom, `Component.applyScale` swaps each scaled element to its correctly-scaled (shared, cached) `GraphicsContext` and updates stub/text scale **in place** — it never rebuilds the component or re-rasterizes a `Text`, so zoom stays cheap on large circuits (see `component-system.md`, "Build vs. rescale").
 - **`_visualSpace` counter-scaling** — `Component` owns a child `_visualSpace` with `scale = 1/gridSize`. Visual geometry (chamfers, stroke widths, text) is authored in pixels inside `_visualSpace`; the two scalings (`_gridSpace × gridSize` and `_visualSpace × 1/gridSize`) cancel so existing pixel formulas remain valid.
 - **Quad tree uses grid bounds** — `QuadTreeContainer` never calls PixiJS `getBounds()`. All spatial decisions run off the element's grid-unit bounds: filing and splitting read `cullBounds`, and `queryRange` tests candidates through `intersectsGridBounds` (the allocation-free form — a query never materializes a `Rectangle` per element). This avoids scene-graph traversal and makes collision detection integer-exact.
-- **Quad tree as PixiJS Container** — `QuadTreeContainer` and its internal `QuadTreeEntry` nodes are real PixiJS `Container` instances in the scene graph. Children keep their world coordinates because all entries sit at position `(0, 0)`; only `boundsArea` encodes the spatial region. The same region drives the entry-level cull pass (see [Culling](#culling)) — the tree doubles as both the spatial index for queries and the cull hierarchy, with no separate data mirror.
+- **Quad tree as PixiJS Container** — `QuadTreeContainer` and its internal `QuadTreeEntry` nodes are real PixiJS `Container` instances in the scene graph. Children keep their world coordinates because all entries sit at position `(0, 0)`; only `region`/`boundsArea` encode the spatial extent. The loose `boundsArea` drives the entry-level cull pass (see [Culling](#culling)) — the tree doubles as both the spatial index for queries and the cull hierarchy, with no separate data mirror. Loose filing is also what makes each element single-parented at a stable depth: exactly one entry hosts it, so the render-group strata stay intact.

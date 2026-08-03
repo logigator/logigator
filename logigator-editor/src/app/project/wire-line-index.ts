@@ -5,10 +5,10 @@
  * (horizontal) or column (vertical), so bucketing horizontals by row and
  * verticals by column puts every wire on exactly one line — and within a line,
  * ordering by axis position makes both a collinear sweep and a containment
- * lookup a binary search. The project's quad tree files by full containment
- * instead, which parks long and boundary-straddling wires high in the tree
- * where every descending query rescans them; fine for the point-sized queries
- * of an interactive gesture, ruinous for a pass that touches every wire.
+ * lookup a binary search. The project's quad tree files by size class
+ * instead, which parks long wires high in the tree where every descending
+ * query rescans them; fine for the point-sized queries of an interactive
+ * gesture, ruinous for a pass that touches every wire.
  *
  * Indexed wires must not move. Every caller only adds and removes instances.
  */
