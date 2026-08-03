@@ -30,6 +30,23 @@ const PANEL_SIZE_REGULAR = { width: 250, height: 250 };
 const PANEL_SIZE_COMPACT = { width: 200, height: 200 };
 /** Quiet period after the last committed action before the map re-renders. */
 const CONTENT_DEBOUNCE_MS = 200;
+/**
+ * Factor the content renders at before the snapshot service downscales it, so
+ * hairline wires are filtered rather than quantized onto whole pixels. Fixed
+ * rather than `subPixelSupersample`'d: the map re-renders as the board grows,
+ * and a size that happened to land pixel-exact would render crisper — i.e.
+ * brighter — than its neighbours, which is the flicker being fixed. Costs its
+ * square in render pixels: 3× turns a 250 px panel into a ~750 px texture,
+ * cheap for a debounced, occasional render.
+ */
+const SUPERSAMPLE = 3;
+/**
+ * Coverage lift for the downscaled map (see `SnapshotOptions.coverageBoost`).
+ * The map is a navigation aid, not output the user keeps, so it trades
+ * fidelity for legibility on large boards where wires are sub-pixel; exports
+ * leave it off.
+ */
+const COVERAGE_BOOST = 1;
 /** Minimum on-screen size of the viewport rectangle (CSS px). */
 const MIN_RECT_SIZE_PX = 12;
 /** Compact expansion is a peek: collapse this long after the last scrub. */
@@ -250,15 +267,20 @@ export class MinimapComponent implements OnDestroy {
     if (canvas.width !== backingWidth) canvas.width = backingWidth;
     if (canvas.height !== backingHeight) canvas.height = backingHeight;
 
+    const multiplier = (this._fit.scale * dpr) / environment.gridSize;
     const rendered = this.snapshots.renderRegionToCanvas(project, this._frame, {
-      multiplier: (this._fit.scale * dpr) / environment.gridSize,
+      multiplier,
       background: 'transparent',
-      hideText: true
+      hideText: true,
+      supersample: SUPERSAMPLE,
+      coverageBoost: COVERAGE_BOOST
     });
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Already downscaled to the display size, with its sub-pixel coverage
+    // lifted, by the snapshot service.
     ctx.drawImage(
       rendered,
       Math.round(this._fit.offsetX * dpr),

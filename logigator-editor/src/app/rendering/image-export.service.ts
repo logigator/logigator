@@ -6,6 +6,7 @@ import { ProjectMetadataStore } from '../persistence/project-metadata.store';
 import { ToastService } from '../logging/toast.service';
 import {
   BoardSnapshotService,
+  MAX_SNAPSHOT_DIMENSION,
   SnapshotBackground
 } from './board-snapshot.service';
 import { downloadBlob } from '../utils/download';
@@ -30,11 +31,10 @@ export interface ImageExportOptions {
 
 /**
  * Largest texture side (px) rendered in a single pass. Beyond it the multiplier
- * is clamped and the user warned, rather than tiling.
- * Conservative across GPUs (WebGPU `maxTextureDimension2D` defaults to 8192) and
- * browser 2D-canvas limits.
+ * is clamped and the user warned, rather than tiling. Shared with the snapshot
+ * service, which bounds its supersampling by the same cap.
  */
-export const MAX_EXPORT_DIMENSION = 8192;
+export const MAX_EXPORT_DIMENSION = MAX_SNAPSHOT_DIMENSION;
 
 const MIME: Record<ImageFormat, string> = {
   png: 'image/png',
@@ -107,7 +107,15 @@ export class ImageExportService {
     try {
       canvas = this.snapshot.renderProjectToCanvas(options.project, {
         multiplier: effective,
-        background: this._backgroundMode(options)
+        background: this._backgroundMode(options),
+        // Inert at the dialog's whole-number resolutions, which already put
+        // hairlines on whole pixels; earns its cost only if a fit-derived
+        // multiplier ever reaches here with room under the dimension cap.
+        supersample: this.snapshot.subPixelSupersample(
+          region,
+          effective,
+          MAX_EXPORT_DIMENSION
+        )
       });
     } catch (err) {
       this.toast.error(

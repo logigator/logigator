@@ -36,6 +36,7 @@ describe('ImageExportService', () => {
     computeRegion: Mock;
     outputSize: Mock;
     renderProjectToCanvas: Mock;
+    subPixelSupersample: Mock;
   };
   let toast: { error: Mock; warn: Mock; success: Mock; info: Mock };
   let downloads: string[];
@@ -50,7 +51,10 @@ describe('ImageExportService', () => {
         width: Math.round(r.width * GRID_SIZE * m),
         height: Math.round(r.height * GRID_SIZE * m)
       })),
-      renderProjectToCanvas: vi.fn(() => fakeCanvas())
+      renderProjectToCanvas: vi.fn(() => fakeCanvas()),
+      // Whole-number resolutions land hairlines on whole pixels already; the
+      // real policy declines to supersample them (see BoardSnapshotService).
+      subPixelSupersample: vi.fn(() => 1)
     };
     toast = { error: vi.fn(), warn: vi.fn(), success: vi.fn(), info: vi.fn() };
     configureTestBed([
@@ -109,7 +113,8 @@ describe('ImageExportService', () => {
     });
     expect(snapshot.renderProjectToCanvas).toHaveBeenCalledWith(project, {
       multiplier: 2,
-      background: 'grid'
+      background: 'grid',
+      supersample: 1
     });
     expect(downloads[0]).toBe('MyBoard.png');
     expect(toast.warn).not.toHaveBeenCalled();
@@ -139,7 +144,8 @@ describe('ImageExportService', () => {
     });
     expect(snapshot.renderProjectToCanvas).toHaveBeenCalledWith(project, {
       multiplier: 1,
-      background: 'transparent'
+      background: 'transparent',
+      supersample: 1
     });
   });
 

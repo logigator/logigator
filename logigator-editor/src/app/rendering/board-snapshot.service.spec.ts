@@ -1,6 +1,12 @@
 import type { Mock } from 'vitest';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { BitmapText, Container, Renderer, RenderTexture } from 'pixi.js';
+import {
+  BitmapText,
+  Container,
+  Rectangle,
+  Renderer,
+  RenderTexture
+} from 'pixi.js';
 import { TestBed } from '@angular/core/testing';
 import { configureTestBed } from '../../testing/configure-test-bed';
 import { Project } from '../project/project';
@@ -157,6 +163,59 @@ describe('BoardSnapshotService', () => {
     texture.destroy(true);
   });
 
+  describe('subPixelSupersample', () => {
+    // Component bounds are half-integers, so a full-project region starts at
+    // .5 — the same origin the export and preview paths pass.
+    const region = new Rectangle(1.5, -1, 400, 400);
+
+    it('declines when the output already lands hairlines on whole pixels', () => {
+      // The export dialog's resolutions: 16, 32 and 64 px per grid unit.
+      for (const multiplier of [1, 2, 4]) {
+        expect(service.subPixelSupersample(region, multiplier)).toBe(1);
+      }
+    });
+
+    it('supersamples a fit-derived multiplier', () => {
+      // A 1024 px square preview of this region: 2.56 px per grid unit.
+      const multiplier = 1024 / (region.width * 16);
+      expect(service.subPixelSupersample(region, multiplier)).toBe(3);
+    });
+
+    it('declines rather than enlarging past the dimension cap', () => {
+      // Clamped big-board export: unaligned, but already at the cap.
+      const multiplier = 8192 / (region.width * 16);
+      expect(service.subPixelSupersample(region, multiplier)).toBe(1);
+      // Same multiplier with room to grow does supersample.
+      expect(service.subPixelSupersample(region, multiplier, 8192 * 3)).toBe(3);
+    });
+  });
+
+  it('supersample scales the geometry but not the line weights', () => {
+    const comp = makeAnd(2);
+    comp.position.set(3, 0);
+    project.addComponent(comp);
+    const spy = vi.spyOn(comp, 'applyScale');
+
+    const texture = service.renderProjectToTexture(project, {
+      multiplier: 0.5,
+      background: 'transparent',
+      supersample: 3
+    });
+
+    // Region (1.5,-1,5,4) at gridSize 16 × 0.5 × 3 = 24 px per grid unit.
+    expect(texture.width).toBe(120);
+    expect(texture.height).toBe(96);
+    const content = renderCalls.at(-1)!;
+    expect(content.transform.a).toBeCloseTo(24);
+    expect(content.transform.tx).toBeCloseTo(-36); // -region.x(1.5) × 24
+
+    // Weights still come from the display multiplier, so a stroke drawn one
+    // pixel wide at 0.5× covers three here and lands back at one after the
+    // caller's ÷3 downscale.
+    expect(spy.mock.calls.map((c) => c[0])).toContain(Math.pow(1.2, -4));
+    texture.destroy(true);
+  });
+
   it('floors the line scale at the ladder minimum for tiny multipliers', () => {
     const comp = makeAnd(2);
     comp.position.set(0, 0);
@@ -236,11 +295,14 @@ describe('BoardSnapshotService', () => {
     expect(previews).not.toBeNull();
     expect(previews!.dark).toBeInstanceOf(Blob);
     expect(previews!.light).toBeInstanceOf(Blob);
-    // One render call per theme, each a transparent 512×512 square.
+    // One render call per theme, each a transparent square. A preview's
+    // multiplier is fit-derived, so `subPixelSupersample` renders it 3× and
+    // the canvas is downscaled back to 512 on extraction.
+    const side = 512 * 3;
     const squareTransparent = renderCalls.filter(
       (c) =>
-        c.target.width === 512 &&
-        c.target.height === 512 &&
+        c.target.width === side &&
+        c.target.height === side &&
         Array.isArray(c.clearColor) &&
         (c.clearColor as number[]).every((v) => v === 0)
     );
