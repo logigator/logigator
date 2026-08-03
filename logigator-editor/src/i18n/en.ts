@@ -645,8 +645,9 @@ const en = {
   },
   wireRepair: {
     repaired: 'Repaired {{count}} wire issue(s).',
-    loadRepaired:
-      'This circuit had {{count}} wire issue(s) — they were repaired automatically.',
+    loadDetected:
+      'This circuit has {{count}} wire issue(s), which can make connections behave unexpectedly.',
+    repairAction: 'Repair wires',
     clean: 'No wire issues found.'
   },
   bugReport: {

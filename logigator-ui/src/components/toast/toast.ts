@@ -10,13 +10,15 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { afterPaint } from '../../internal/after-paint';
 import { LgButton } from '../button/button';
 import { LgSeverity } from '../../tokens/severity';
-import { ToastService, ToastMessage } from './toast.service';
+import { ToastAction, ToastService, ToastMessage } from './toast.service';
 
 interface ActiveToast {
   id: number;
   severity: LgSeverity;
   summary?: string;
   detail?: string;
+  /** The offered follow-up, rendered as a button below the message. */
+  action?: ToastAction;
   /** Whether the enter animation has been armed (`false` for one frame). */
   shown: boolean;
   /** Whether the leave animation is playing before the toast is removed. */
@@ -76,7 +78,8 @@ const DEFAULT_SEVERITY: LgSeverity = 'info';
  * out when its `life` runs out. Hovering the toast or moving keyboard focus into
  * it freezes both the countdown and its bar; an {@link LgButton} in the
  * top-right corner dismisses it immediately (also playing the leave animation).
- * The host carries the stack's position (corner from `position`); a consumer's
+ * A message carrying an `action` also renders a button below the text that runs
+ * the handler and dismisses. The host carries the stack's position (corner from `position`); a consumer's
  * own `class` (e.g. `absolute! -mb-4`) merges and `!`-overrides as needed.
  *
  * With `embedded`, the host drops its own positioning (`fixed`, corner insets,
@@ -135,6 +138,17 @@ const DEFAULT_SEVERITY: LgSeverity = 'info';
             (onClick)="close(toast.id)"
           />
         </div>
+        @if (toast.action; as action) {
+          <div class="mt-2 flex justify-end">
+            <lg-button
+              outlined
+              size="sm"
+              [label]="action.label"
+              [severity]="toast.severity"
+              (onClick)="runAction(toast.id)"
+            />
+          </div>
+        }
         @if (toast.life > 0 && !toast.leaving) {
           <div
             class="lg-toast-progress pointer-events-none absolute inset-x-0 bottom-0 h-1 bg-current opacity-40"
@@ -224,6 +238,16 @@ export class LgToast {
     this.dismiss(id);
   }
 
+  /** Run the offered follow-up, then dismiss the toast that offered it. */
+  protected runAction(id: number): void {
+    const toast = this.toasts().find((t) => t.id === id);
+    if (!toast?.action || toast.leaving) {
+      return;
+    }
+    this.dismiss(id);
+    toast.action.handler();
+  }
+
   protected setHovered(id: number, hovered: boolean): void {
     const timer = this.timers.get(id);
     if (!timer) {
@@ -252,6 +276,7 @@ export class LgToast {
         severity: message.severity ?? DEFAULT_SEVERITY,
         summary: message.summary,
         detail: message.detail,
+        action: message.action,
         shown: false,
         leaving: false,
         life,

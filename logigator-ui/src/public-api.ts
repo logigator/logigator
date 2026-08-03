@@ -109,7 +109,10 @@ export type {
 
 export { ToastService } from './components/toast/toast.service';
 export { LgToast } from './components/toast/toast';
-export type { ToastMessage } from './components/toast/toast.service';
+export type {
+  ToastAction,
+  ToastMessage
+} from './components/toast/toast.service';
 
 export { LgOverlayService } from './components/overlay/overlay.service';
 export { LgCaret } from './internal/caret';

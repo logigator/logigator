@@ -8,6 +8,8 @@ import { Direction } from '../utils/direction';
 import { auditWireInvariants, computeWireRepair } from './wire-repair';
 import { WireRepairService } from './wire-repair.service';
 import { makeAnd, makeWire } from '../../testing/factories';
+import { ToastMessage, ToastService as UiToastService } from '@logigator/ui';
+import { ProjectMetadataStore } from '../persistence/project-metadata.store';
 
 const H = WireDirection.HORIZONTAL;
 const V = WireDirection.VERTICAL;
@@ -169,10 +171,16 @@ describe('auditWireInvariants / computeWireRepair', () => {
 describe('WireRepairService', () => {
   let service: WireRepairService;
   let project: Project;
+  /** Toasts that offer a follow-up action — what the on-load audit raises. */
+  let offered: ToastMessage[];
 
   beforeEach(() => {
     configureTestBed();
     service = TestBed.inject(WireRepairService);
+    offered = [];
+    TestBed.inject(UiToastService).messageObserver.subscribe((message) => {
+      if (message.action) offered.push(message);
+    });
     project = new Project();
   });
 
@@ -205,17 +213,46 @@ describe('WireRepairService', () => {
     expect(project.actionManager.undoAvailable).toBe(false);
   });
 
-  it('repairOnLoad fixes the board without creating history', () => {
+  it('offerRepairOnLoad leaves the board alone until the offer is accepted', () => {
     corrupt();
-    service.repairOnLoad(project);
+    service.offerRepairOnLoad(project);
+
+    // Detection only — nothing changed and nothing is undoable yet.
+    expect([...project.wires]).toHaveLength(2);
+    expect(project.actionManager.undoAvailable).toBe(false);
+
+    const offer = offered.at(-1);
+    expect(offer?.action).toBeDefined();
+    offer!.action!.handler();
 
     expect(auditWireInvariants(project)).toEqual([]);
+    expect(project.actionManager.undoAvailable).toBe(true);
+    project.actionManager.undo();
     expect(project.actionManager.undoAvailable).toBe(false);
   });
 
-  it('repairOnLoad is silent on a clean board', () => {
+  it('offerRepairOnLoad stays silent on a clean board', () => {
     project.addWire(makeWire(0, 0, H, 4));
-    service.repairOnLoad(project);
-    expect([...project.wires]).toHaveLength(1);
+    service.offerRepairOnLoad(project);
+    expect(offered).toEqual([]);
+  });
+
+  it('offerRepairOnLoad skips a read-only share', () => {
+    // A share cannot be saved or exported, so a repair would have nowhere to go.
+    TestBed.inject(ProjectMetadataStore).register(
+      project,
+      {
+        id: 'link',
+        name: 'Shared',
+        type: 'project',
+        source: 'share',
+        hash: '',
+        isPublic: true
+      },
+      false
+    );
+    corrupt();
+    service.offerRepairOnLoad(project);
+    expect(offered).toEqual([]);
   });
 });

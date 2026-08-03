@@ -2,6 +2,13 @@ import { Injectable } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
 import { LgSeverity } from '../../tokens/severity';
 
+/** A one-click follow-up offered by a toast. */
+export interface ToastAction {
+  label: string;
+  /** Runs on click; the toast dismisses itself afterwards. */
+  handler: () => void;
+}
+
 /** A toast notification handed to {@link ToastService.add}. */
 export interface ToastMessage {
   /** Severity → themed colour and icon; an omitted severity renders as `info`. */
@@ -10,6 +17,12 @@ export interface ToastMessage {
   detail?: string;
   /** Auto-dismiss delay in ms. */
   life?: number;
+  /**
+   * Turns the toast into an offer: a button below the message runs `handler`
+   * and dismisses. Pair with `life: 0` — an offer that expires before it is
+   * read is worse than one the user closes.
+   */
+  action?: ToastAction;
 }
 
 /**

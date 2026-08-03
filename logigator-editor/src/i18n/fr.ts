@@ -658,8 +658,9 @@ const fr: TranslationSchema = {
   },
   wireRepair: {
     repaired: '{{count}} problème(s) de fils réparé(s).',
-    loadRepaired:
-      'Ce circuit comportait {{count}} problème(s) de fils — ils ont été réparés automatiquement.',
+    loadDetected:
+      'Ce circuit comporte {{count}} problème(s) de fils, ce qui peut faire réagir les connexions de façon inattendue.',
+    repairAction: 'Réparer les fils',
     clean: 'Aucun problème de fils détecté.'
   },
   bugReport: {

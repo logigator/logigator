@@ -655,8 +655,9 @@ const de: TranslationSchema = {
   },
   wireRepair: {
     repaired: '{{count}} Leitungsproblem(e) behoben.',
-    loadRepaired:
-      'Diese Schaltung hatte {{count}} Leitungsproblem(e) — sie wurden automatisch behoben.',
+    loadDetected:
+      'Diese Schaltung hat {{count}} Leitungsproblem(e), wodurch sich Verbindungen unerwartet verhalten können.',
+    repairAction: 'Leitungen reparieren',
     clean: 'Keine Leitungsprobleme gefunden.'
   },
   bugReport: {

@@ -18,6 +18,7 @@ import { TranslationService } from '../translation/translation.service';
 import { firstValueFrom } from 'rxjs';
 import { DialogService } from '@logigator/ui';
 import { DefinitionBinding } from './definition-binding';
+import { WireRepairService } from '../project/wire-repair.service';
 import { UploadCoordinatorService } from '../ui/upload/upload-coordinator.service';
 import { AnalyticsService } from '../analytics/analytics.service';
 import { AnalyticsEvent } from '../analytics/analytics.mapping';
@@ -58,6 +59,7 @@ export class CustomComponentService {
   private readonly uploadCoordinator = inject(UploadCoordinatorService);
   private readonly dialogService = inject(DialogService);
   private readonly analytics = inject(AnalyticsService);
+  private readonly wireRepair = inject(WireRepairService);
   private readonly toast = inject(ToastService);
   private readonly translation = inject(TranslationService);
 
@@ -334,6 +336,9 @@ export class CustomComponentService {
       project,
       new DefinitionBinding(project, masterTypeId, this.registry)
     );
+    // A master's circuit can carry the same wire corruption as a project's;
+    // a freshly created (empty) editor audits clean and stays silent.
+    this.wireRepair.offerRepairOnLoad(project);
   }
 
   /** The library a registered master belongs to; defaults to browser if unknown. */

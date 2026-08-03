@@ -32,6 +32,7 @@ import { warnSkippedCustoms } from './load-warnings';
 import { decodeLgix, encodeLgix, hasLgixMagic } from './file/lgix-container';
 import { AnalyticsService } from '../analytics/analytics.service';
 import { AnalyticsEvent } from '../analytics/analytics.mapping';
+import { WireRepairService } from '../project/wire-repair.service';
 
 @Injectable({ providedIn: 'root' })
 export class PersistenceService {
@@ -48,6 +49,7 @@ export class PersistenceService {
   private readonly analytics = inject(AnalyticsService);
   private readonly browser = inject(BrowserPersistenceGateway);
   private readonly cloudSession = inject(CloudSessionService);
+  private readonly wireRepair = inject(WireRepairService);
 
   private _mainLoadToken = 0;
   private _shareLoadToken = 0;
@@ -380,6 +382,7 @@ export class PersistenceService {
 
     this._replaceMainProject(project);
     this.location.go(`/local/${record.id}`);
+    this.wireRepair.offerRepairOnLoad(project);
   }
 
   /**
@@ -417,6 +420,9 @@ export class PersistenceService {
         return;
       }
       opts.onLoaded(result);
+      // After onLoaded: the offer reads the document's metadata, which is
+      // registered as the project is placed.
+      this.wireRepair.offerRepairOnLoad(opts.projectOf(result));
       this.analytics.capture(AnalyticsEvent.ProjectLoaded, {
         source: opts.source
       });

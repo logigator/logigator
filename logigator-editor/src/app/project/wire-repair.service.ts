@@ -12,44 +12,56 @@ import { AddWiresAction } from '../actions/actions/add-wires.action';
 import { LoggingService } from '../logging/logging.service';
 import { ToastService } from '../logging/toast.service';
 import { TranslationService } from '../translation/translation.service';
+import { ProjectMetadataStore } from '../persistence/project-metadata.store';
 
 /**
  * Board-wide wire-invariant repair: audits I1–I3 (plus outright collinear
  * overlaps), rebuilds the broken spans via {@link computeWireRepair} and
- * reports what happened (toast summary, per-violation console log). Two
- * entry points: {@link repairManually} backs the Edit-menu command and
- * registers the fix as one undoable history entry; {@link repairOnLoad}
- * silently heals a freshly loaded document (older saves may carry corruption
- * from before integration covered every mutation path) — currently not
- * called anywhere, deliberately: repairing on load is on hold.
+ * reports what happened (toast summary, per-violation console log). Two entry
+ * points, both user-initiated: {@link repairManually} backs the Edit-menu
+ * command and registers the fix as one undoable history entry;
+ * {@link offerRepairOnLoad} audits a freshly loaded document (older saves may
+ * carry corruption from before integration covered every mutation path) and
+ * offers that same repair through a toast. A load never repairs by itself.
  */
 @Injectable({ providedIn: 'root' })
 export class WireRepairService {
   private readonly logging = inject(LoggingService);
   private readonly toast = inject(ToastService);
   private readonly translation = inject(TranslationService);
+  private readonly metadataStore = inject(ProjectMetadataStore);
 
   /**
-   * Repairs a just-loaded project in place. Meant to run before the document
-   * reaches an editor tab: no history exists yet, so the fix is applied
-   * directly and deliberately NOT registered as an undo entry. Silent when
-   * the board is clean; toasts a warning when something had to be repaired.
-   * Not wired into the load paths right now — repair-on-load is on hold, so
-   * only the Edit-menu command ({@link repairManually}) runs repairs.
+   * Audits a freshly loaded document and, when it is broken, offers the repair
+   * as a toast action rather than applying it: the fix stays user-initiated
+   * and lands in history like the Edit-menu command, so it can be undone. The
+   * audit itself is a pure read — a clean board leaves no trace.
+   *
+   * Skips read-only shares: a share cannot be saved or exported, so accepting
+   * a repair there would leave the user holding a modified document with
+   * nowhere to put it.
    */
-  public repairOnLoad(project: Project): void {
+  public offerRepairOnLoad(project: Project): void {
+    if (this.metadataStore.getMetadata(project)?.source === 'share') return;
+
     const violations = auditWireInvariants(project);
     if (violations.length === 0) return;
 
     this.logViolations(violations, 'load');
-    const plan = computeWireRepair(project);
-    this.materialize(project, plan);
-    this.verify(project);
-    this.toast.warn(
-      this.translation.translate('wireRepair.loadRepaired', {
+    this.toast.warnWithAction(
+      this.translation.translate('wireRepair.loadDetected', {
         count: violations.length
       }),
-      'WireRepairService'
+      'WireRepairService',
+      {
+        label: this.translation.translate('wireRepair.repairAction'),
+        handler: () => {
+          // The offer never times out, so it can outlive the document it was
+          // raised for — loading another circuit destroys this one.
+          if (project.destroyed) return;
+          this.repairManually(project);
+        }
+      }
     );
   }
 

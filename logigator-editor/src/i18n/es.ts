@@ -655,8 +655,9 @@ const es: TranslationSchema = {
   },
   wireRepair: {
     repaired: 'Se repararon {{count}} problema(s) de cables.',
-    loadRepaired:
-      'Este circuito tenía {{count}} problema(s) de cables — se repararon automáticamente.',
+    loadDetected:
+      'Este circuito tiene {{count}} problema(s) de cables, lo que puede hacer que las conexiones se comporten de forma inesperada.',
+    repairAction: 'Reparar cables',
     clean: 'No se encontraron problemas de cables.'
   },
   bugReport: {

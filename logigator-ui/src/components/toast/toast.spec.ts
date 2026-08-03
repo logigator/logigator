@@ -170,6 +170,35 @@ describe('LgToast', () => {
     expect(toasts(f.nativeElement)).toHaveLength(0);
   });
 
+  it('runs the offered action once and dismisses the toast', () => {
+    const handler = vi.fn();
+    const { f, service } = setup();
+    service.add({
+      severity: 'warn',
+      summary: 'broken',
+      life: 0,
+      action: { label: 'Fix it', handler }
+    });
+    f.detectChanges();
+    const toast = toasts(f.nativeElement)[0];
+    // A `life` of 0 opts out of the countdown, so the offer waits to be read.
+    expect(progressBar(toast)).toBeNull();
+
+    const buttons = Array.from(toast.querySelectorAll('button'));
+    const action = buttons.find((b) => b.textContent?.includes('Fix it'))!;
+    action.click();
+    f.detectChanges();
+    expect(handler).toHaveBeenCalledTimes(1);
+
+    // A second click on the leaving toast must not re-run the handler.
+    action.click();
+    expect(handler).toHaveBeenCalledTimes(1);
+
+    vi.advanceTimersByTime(LEAVE_MS);
+    f.detectChanges();
+    expect(toasts(f.nativeElement)).toHaveLength(0);
+  });
+
   it('positions the stack at the bottom-left corner', () => {
     const { f } = setup();
     const host = f.nativeElement.querySelector('lg-toast') as HTMLElement;

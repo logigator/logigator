@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { ToastService as UiToastService } from '@logigator/ui';
+import { ToastAction, ToastService as UiToastService } from '@logigator/ui';
 import { TranslationService } from '../translation/translation.service';
 import { LoggingService } from './logging.service';
 
@@ -42,6 +42,25 @@ export class ToastService {
       summary: this.translation.translate('logging.warn'),
       detail: message,
       life: 5000
+    });
+  }
+
+  /**
+   * A warning that offers a one-click follow-up. It never auto-dismisses: an
+   * offer that expires before the user reads it is worse than one they close.
+   */
+  public warnWithAction(
+    message: string,
+    context: string,
+    action: ToastAction
+  ): void {
+    this.logging.warn(message, context);
+    this.messageService.add({
+      severity: 'warn',
+      summary: this.translation.translate('logging.warn'),
+      detail: message,
+      life: 0,
+      action
     });
   }
 

@@ -14,7 +14,7 @@ src/app/project/
 ├── wire-topology.ts        # Wire-invariant integration + join/split toggling (project.topology)
 ├── wire-integrator.ts      # The split/merge fixed-point solver WireTopology owns
 ├── wire-repair.ts          # Board-wide invariant audit + rebuild diff (see wires.md § Board-wide repair)
-└── wire-repair.service.ts  # Repair orchestration: on-load hook, Edit-menu command, toasts/logging
+└── wire-repair.service.ts  # Repair orchestration: on-load offer, Edit-menu command, toasts/logging
 ```
 
 ---
