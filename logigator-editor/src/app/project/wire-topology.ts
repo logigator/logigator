@@ -186,7 +186,10 @@ export class WireTopology {
     const action = new ActionContainer();
     if (toRemove.length > 0) action.add(new RemoveWiresAction(...toRemove));
     if (toAdd.length > 0) action.add(new AddWiresAction(...toAdd));
-    for (const w of addedWires) if (!w.destroyed) w.destroy();
+    // Both the halves cut here and whatever integration built on top of them are
+    // throwaway: the actions snapshot their wires on construction and push() puts
+    // fresh instances in the project. toRemove holds live tree wires — leave those.
+    for (const w of [...addedWires, ...toAdd]) if (!w.destroyed) w.destroy();
     this.project.actionManager.push(action);
   }
 }
