@@ -1,8 +1,7 @@
-import { Component, inject } from '@angular/core';
+import { Component } from '@angular/core';
 import { LgButton, LgDialogContent } from '@logigator/ui';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { environment } from '../../../../environments/environment';
-import { DocumentationService } from '../../../documentation/documentation.service';
 import { LocalDatePipe } from '../../../utils/local-date/local-date.pipe';
 
 /**
@@ -17,8 +16,6 @@ import { LocalDatePipe } from '../../../utils/local-date/local-date.pipe';
   templateUrl: './about-dialog.component.html'
 })
 export class AboutDialogComponent extends LgDialogContent {
-  private readonly documentation = inject(DocumentationService);
-
   protected readonly version = environment.version;
   protected readonly commit = environment.buildCommit;
   protected readonly buildDate = environment.buildDate;
@@ -37,10 +34,5 @@ export class AboutDialogComponent extends LgDialogContent {
 
   protected close(): void {
     this.dialogRef.close();
-  }
-
-  protected openDocumentation(): void {
-    this.dialogRef.close();
-    this.documentation.open();
   }
 }
