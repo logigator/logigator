@@ -1,4 +1,4 @@
-import { Component, computed, inject, input } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { NgComponentOutlet } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LgSelectButton } from '@logigator/ui';
@@ -54,12 +54,6 @@ export class ComponentSettingsComponent {
   private readonly projectService = inject(ProjectService);
   private readonly translation = inject(TranslationService);
   private readonly registry = inject(CustomComponentRegistry);
-
-  /**
-   * Desktop floats the card in the board's bottom-right corner; the mobile
-   * settings Drawer sets this false so the card renders in-flow instead.
-   */
-  public readonly floating = input(true);
 
   // The settings panel shows the placement ghost while placing, otherwise the
   // single selected placed component. Each branch supplies a `commit`
