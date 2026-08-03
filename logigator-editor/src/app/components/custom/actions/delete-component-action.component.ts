@@ -28,7 +28,7 @@ import { resolveMasterSignal } from './resolve-master.signal';
         [outlined]="true"
         icon="ph ph-trash"
         [label]="t('deleteComponent.button')"
-        class="self-end"
+        class="w-full"
         (onClick)="confirmDelete($event)"
       />
     }

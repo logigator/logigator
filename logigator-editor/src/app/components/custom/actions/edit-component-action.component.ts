@@ -24,15 +24,17 @@ import { CUSTOM_TYPE_ID_BASE } from '../../component-type.enum';
 @Component({
   selector: 'app-edit-component-action',
   imports: [LgButton, LgTooltip, TranslocoDirective],
-  // `display: contents` so a hidden/empty action host adds no flex-gap slot to
-  // the settings form; the button aligns itself as a direct flex item.
+  // `display: contents` so a hidden/empty action host leaves no empty cell in
+  // the settings panel's action grid; the button is the grid item. The degraded
+  // modes are the only action on an orphan, so they span both columns.
   host: { class: 'contents' },
   template: `<ng-container *transloco="let t">
     @if (mode() === 'edit') {
       <lg-button
         size="sm"
         [label]="t('componentActions.edit')"
-        class="self-end"
+        icon="ph ph-circuitry"
+        class="w-full"
         (onClick)="edit()"
       />
     } @else if (mode() === 'restore') {
@@ -40,7 +42,7 @@ import { CUSTOM_TYPE_ID_BASE } from '../../component-type.enum';
         size="sm"
         icon="ph ph-arrow-counter-clockwise"
         [label]="t('componentActions.restore')"
-        class="self-end"
+        class="w-full col-span-2"
         [lgTooltip]="t('componentActions.restoreTooltip')"
         tooltipPosition="top"
         (onClick)="restore()"
@@ -50,7 +52,7 @@ import { CUSTOM_TYPE_ID_BASE } from '../../component-type.enum';
         size="sm"
         icon="ph ph-cloud-slash"
         [label]="t('componentActions.signInToEdit')"
-        class="self-end"
+        class="w-full col-span-2"
         [disabled]="true"
         [lgTooltip]="t('componentActions.signInTooltip')"
         tooltipPosition="top"

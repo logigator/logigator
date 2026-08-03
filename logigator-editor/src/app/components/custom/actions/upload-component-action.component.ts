@@ -22,8 +22,10 @@ import { resolveMasterSignal } from './resolve-master.signal';
       <lg-button
         size="sm"
         icon="ph ph-cloud-arrow-up"
+        severity="info"
+        [outlined]="true"
         [label]="t('uploadComponent.button')"
-        class="self-end"
+        class="w-full"
         [disabled]="!authenticated()"
         [lgTooltip]="authenticated() ? '' : t('uploadComponent.signInTooltip')"
         tooltipPosition="top"

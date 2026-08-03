@@ -66,9 +66,9 @@ export function buildCustomComponentConfig(
     // remove); update-to-latest hides itself unless a selected snapshot instance
     // is behind its master.
     actions: [
+      new UpdateInstanceComponentAction(),
       new EditComponentAction(),
       new EditDetailsAction(),
-      new UpdateInstanceComponentAction(),
       new UploadComponentAction(),
       new ShareComponentAction(),
       new DeleteComponentAction()

@@ -15,8 +15,8 @@ import { CustomComponentService } from '../../../custom-component/custom-compone
 @Component({
   selector: 'app-update-instance-action',
   imports: [LgButton, TranslocoDirective],
-  // `display: contents` so this action's host adds no flex-gap slot to the
-  // settings form when hidden; the button aligns itself as a direct flex item.
+  // `display: contents` so this action's host leaves no empty cell in the
+  // settings panel's action grid when hidden; the button is the grid item.
   host: { class: 'contents' },
   template: `<ng-container *transloco="let t">
     @if (updatable()) {
@@ -24,7 +24,7 @@ import { CustomComponentService } from '../../../custom-component/custom-compone
         size="sm"
         severity="warn"
         [label]="t('componentActions.update')"
-        class="self-end"
+        class="w-full col-span-2"
         (onClick)="update()"
       />
     }

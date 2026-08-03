@@ -27,7 +27,7 @@ import { resolveMasterSignal } from './resolve-master.signal';
         [outlined]="true"
         icon="ph ph-pencil-simple"
         [label]="t('editComponentDetails.button')"
-        class="self-end"
+        class="w-full"
         (onClick)="edit()"
       />
     }

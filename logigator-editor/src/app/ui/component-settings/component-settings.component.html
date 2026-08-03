@@ -36,11 +36,17 @@
       }
       @if (settings.context; as ctx) {
         @if (settings.actions.length > 0) {
-          @for (action of settings.actions; track $index) {
-            <ng-container
-              *ngComponentOutlet="action.renderer; inputs: { context: ctx }"
-            ></ng-container>
-          }
+          <!-- Two-column action grid. Every action host is `display: contents`,
+               so the buttons themselves are the grid items and a hidden action
+               leaves no empty cell; a button with a long label (or one that is
+               the only action) spans both columns. -->
+          <div class="grid grid-cols-2 gap-2">
+            @for (action of settings.actions; track $index) {
+              <ng-container
+                *ngComponentOutlet="action.renderer; inputs: { context: ctx }"
+              ></ng-container>
+            }
+          </div>
         }
       }
     </form>

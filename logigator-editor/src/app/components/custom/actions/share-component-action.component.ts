@@ -26,7 +26,7 @@ import { resolveMasterSignal } from './resolve-master.signal';
         [outlined]="true"
         icon="ph ph-share-network"
         [label]="t('shareComponent.button')"
-        class="self-end"
+        class="w-full"
         (onClick)="share()"
       />
     }
