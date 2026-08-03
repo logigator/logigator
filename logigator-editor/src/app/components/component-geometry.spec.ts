@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { Point } from 'pixi.js';
+import { Point, Rectangle } from 'pixi.js';
 import { Direction } from '../utils/direction';
 import {
   bodyGridBounds,
   ComponentShape,
   connectionPoints,
   gridBounds,
+  gridBoundsIntersects,
   negationBubbleAnchor,
   rotatedLocalPoint
 } from './component-geometry';
@@ -152,5 +153,42 @@ describe('negationBubbleAnchor', () => {
     expect(
       negationBubbleAnchor(shape({ direction: Direction.N }), 'out', 0)
     ).toEqual(new Point(10.5, 18));
+  });
+});
+
+describe('gridBoundsIntersects', () => {
+  // The overlap test exists so the quad tree can skip materializing a
+  // Rectangle per candidate; if it ever stops mirroring gridBounds, spatial
+  // queries silently return the wrong elements. Sweep both against each other.
+  it('agrees with gridBounds().intersects() in every direction', () => {
+    const probe = new Rectangle(9, 19, 3, 3);
+
+    for (const direction of ALL_DIRECTIONS) {
+      for (const numInputs of [0, 1, 3]) {
+        for (const numOutputs of [0, 1, 2]) {
+          const s = shape({ direction, numInputs, numOutputs });
+          expect(
+            gridBoundsIntersects(s, probe),
+            `dir=${direction} in=${numInputs} out=${numOutputs}`
+          ).toBe(gridBounds(s).intersects(probe));
+        }
+      }
+    }
+  });
+
+  it('agrees with gridBounds().intersects() as the probe slides across', () => {
+    for (const direction of ALL_DIRECTIONS) {
+      const s = shape({ direction });
+      const bounds = gridBounds(s);
+      for (let x = 5; x <= 16; x += 0.5) {
+        for (let y = 15; y <= 26; y += 0.5) {
+          const probe = new Rectangle(x, y, 1, 1);
+          expect(
+            gridBoundsIntersects(s, probe),
+            `dir=${direction} probe (${x}, ${y})`
+          ).toBe(bounds.intersects(probe));
+        }
+      }
+    }
   });
 });

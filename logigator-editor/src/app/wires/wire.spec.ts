@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { Rectangle } from 'pixi.js';
 import { TestBed } from '@angular/core/testing';
 import { configureTestBed } from '../../testing/configure-test-bed';
 import { makeWire } from '../../testing/factories';
@@ -114,6 +115,71 @@ describe('Wire tint', () => {
     expect(wire.tint).toBe(theming.currentTheme().wireSelectColor);
     expect(wire.context).toBe(context);
 
+    wire.destroy();
+  });
+});
+
+describe('Wire.intersectsGridBounds', () => {
+  beforeEach(() => {
+    configureTestBed();
+  });
+
+  // The quad tree tests candidates through this instead of building a
+  // Rectangle per element, so a disagreement with gridBounds would make
+  // selection and collision queries miss (or invent) wires.
+  it('agrees with gridBounds().intersects() as the probe slides across', () => {
+    for (const direction of [
+      WireDirection.HORIZONTAL,
+      WireDirection.VERTICAL
+    ]) {
+      for (const length of [1, 4]) {
+        const wire = makeWire(3, 5, direction, length);
+        const bounds = wire.gridBounds;
+        for (let x = 0; x <= 10; x += 0.5) {
+          for (let y = 0; y <= 10; y += 0.5) {
+            const probe = new Rectangle(x, y, 1, 1);
+            expect(
+              wire.intersectsGridBounds(probe),
+              `dir=${direction} len=${length} probe (${x}, ${y})`
+            ).toBe(bounds.intersects(probe));
+          }
+        }
+        wire.destroy();
+      }
+    }
+  });
+
+  // Degenerate wires reach the audit on corrupted boards, before
+  // computeWireRepair drops them.
+  it('agrees for a zero-length wire', () => {
+    const wire = makeWire(3, 5, WireDirection.HORIZONTAL);
+    wire.length = 0;
+    for (const probe of [
+      new Rectangle(3, 5, 1, 1),
+      new Rectangle(4, 5, 1, 1),
+      new Rectangle(3, 6, 1, 1)
+    ]) {
+      expect(
+        wire.intersectsGridBounds(probe),
+        `probe (${probe.x}, ${probe.y})`
+      ).toBe(wire.gridBounds.intersects(probe));
+    }
+    wire.destroy();
+  });
+
+  it('agrees for probes wider than the wire and for negative positions', () => {
+    const wire = makeWire(-6, -4, WireDirection.HORIZONTAL, 3);
+    for (const probe of [
+      new Rectangle(-20, -20, 40, 40),
+      new Rectangle(-6, -4, 0.5, 0.5),
+      new Rectangle(-3, -4, 1, 1),
+      new Rectangle(-2, -4, 1, 1)
+    ]) {
+      expect(
+        wire.intersectsGridBounds(probe),
+        `probe (${probe.x}, ${probe.y}, ${probe.width}, ${probe.height})`
+      ).toBe(wire.gridBounds.intersects(probe));
+    }
     wire.destroy();
   });
 });

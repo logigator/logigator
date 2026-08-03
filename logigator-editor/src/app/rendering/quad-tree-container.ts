@@ -215,7 +215,7 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
     range: Rectangle
   ): Generator<T> {
     for (const element of entry.branchItems.children) {
-      if (range.intersects(element.gridBounds)) {
+      if (element.intersectsGridBounds(range)) {
         yield element;
       }
     }
@@ -228,7 +228,7 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
       }
     } else {
       for (const element of entry.leafItems!.children) {
-        if (range.intersects(element.gridBounds)) {
+        if (element.intersectsGridBounds(range)) {
           yield element;
         }
       }

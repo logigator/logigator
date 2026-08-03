@@ -13,6 +13,7 @@ import { SerializedWire } from './serialized-wire.model';
 import { WireSnapshot } from './wire-snapshot.model';
 import { Connectable } from '../rendering/grid-element';
 import { IdAllocator } from '../utils/id-allocator';
+import { overlapsRect } from '../utils/grid';
 
 export class Wire extends Graphics implements Connectable {
   private static readonly _idAllocator = new IdAllocator();
@@ -226,6 +227,17 @@ export class Wire extends Graphics implements Connectable {
       return new Rectangle(x, y, this.length + 1, 1);
     }
     return new Rectangle(x, y, 1, this.length + 1);
+  }
+
+  /** Allocation-free mirror of {@link gridBounds} — the two must agree. */
+  public intersectsGridBounds(rect: Rectangle): boolean {
+    const pos = this.position;
+    const x = Math.floor(pos.x);
+    const y = Math.floor(pos.y);
+    const span = this.length + 1;
+    return this.direction === WireDirection.HORIZONTAL
+      ? overlapsRect(rect, x, y, span, 1)
+      : overlapsRect(rect, x, y, 1, span);
   }
 
   public get cullBounds(): Rectangle {

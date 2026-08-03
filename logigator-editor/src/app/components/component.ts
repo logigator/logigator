@@ -30,6 +30,7 @@ import {
   ComponentShape,
   connectionPoints,
   gridBounds,
+  gridBoundsIntersects,
   localConnectionPoints,
   negationBubbleAnchor,
   rotatedBox
@@ -575,6 +576,11 @@ export abstract class Component<
 
   public get gridBounds(): Rectangle {
     return gridBounds(this._shape);
+  }
+
+  /** Allocation-free mirror of {@link gridBounds} — see `component-geometry.ts`. */
+  public intersectsGridBounds(rect: Rectangle): boolean {
+    return gridBoundsIntersects(this._shape, rect);
   }
 
   // Bounds the quad tree files and culls by. Defaults to the logical

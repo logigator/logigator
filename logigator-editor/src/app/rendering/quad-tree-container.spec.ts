@@ -24,6 +24,9 @@ describe('QuadTreeContainer', () => {
     Object.defineProperty(c, 'gridBounds', bounds);
     // Real elements default cullBounds to gridBounds; mirror that here.
     Object.defineProperty(c, 'cullBounds', bounds);
+    // Real elements derive this without allocating; here it just has to agree
+    // with gridBounds, which is the contract the tree relies on.
+    c.intersectsGridBounds = (rect) => rect.intersects(c.gridBounds);
     return c;
   }
 

@@ -275,13 +275,14 @@ Called from `Project.updateScale`. Forwards `applyScale(scale)` to every element
 
 **File:** `quad-tree-container.ts`
 
-A generic PixiJS `Container` subclass that maintains a spatial quad tree over its children. Used as `_wires` and `_components` in `Project`. The generic constraint requires `T` to implement the `GridElement` interface (`readonly gridBounds: Rectangle`), ensuring the tree never calls PixiJS bounds APIs — it reads from `gridBounds` directly.
+A generic PixiJS `Container` subclass that maintains a spatial quad tree over its children. Used as `_wires` and `_components` in `Project`. The generic constraint requires `T` to implement the `GridElement` interface (`gridBounds`, `cullBounds`, `intersectsGridBounds`), ensuring the tree never calls PixiJS bounds APIs — it reads the element's own grid-unit bounds directly.
 
 ### `GridElement` interface
 
 Defined in `grid-element.ts`. Extends `ContainerChild` with:
 
 - `gridBounds: Rectangle` — the element's axis-aligned bounding box in grid units.
+- `intersectsGridBounds(rect): boolean` — the same answer as `gridBounds.intersects(rect)`, derived without materializing the rect. This is what `queryRange` calls: it runs once per candidate on every spatial query, and on a board-sized scan deriving a fresh `Rectangle` per element dominates the cost. Implementations mirror their own `gridBounds` off the shared `overlapsRect` helper in `utils/grid.ts` (`Wire.intersectsGridBounds`; `Component` delegates to `gridBoundsIntersects` in `component-geometry.ts`, which shares its local extents with `gridBounds` so the two cannot drift). Spec sweeps assert the agreement in both.
 
 `Connectable` further extends `GridElement` with `connectionPoints: Point[]`. Both `Component` and `Wire` implement `Connectable`.
 
@@ -474,5 +475,5 @@ PixiJS caches one instruction set per render group and rebuilds a group's set **
 - **Demand-driven render loop** — the ticker is stopped between interactions. `'single'` renders one frame for state changes (add/remove element); `'on'`/`'off'` bracket continuous drags. This avoids burning GPU cycles at 60 fps when the canvas is idle. `BoardRenderScheduler` coalesces bursts of `'single'` signals onto a single rAF-driven render so a multi-element operation (undo of a large move, paste, delete) costs one frame, not one per element.
 - **Scale-compensated stroke widths** — `ComponentGraphics` bakes `2 / scale` into its stroke width; `GridGraphics` uses `1 / scale` for dot size; `Wire.applyScale` sets `scale.y = 1 / (scale * gridSize)`. `Component` handles the `gridSize` factor via its `_visualSpace` counter-scaling; `Wire` extends `Graphics` directly and must compensate explicitly. On zoom, `Component.applyScale` swaps each scaled element to its correctly-scaled (shared, cached) `GraphicsContext` and updates stub/text scale **in place** — it never rebuilds the component or re-rasterizes a `Text`, so zoom stays cheap on large circuits (see `component-system.md`, "Build vs. rescale").
 - **`_visualSpace` counter-scaling** — `Component` owns a child `_visualSpace` with `scale = 1/gridSize`. Visual geometry (chamfers, stroke widths, text) is authored in pixels inside `_visualSpace`; the two scalings (`_gridSpace × gridSize` and `_visualSpace × 1/gridSize`) cancel so existing pixel formulas remain valid.
-- **Quad tree uses `gridBounds`** — `QuadTreeContainer` never calls PixiJS `getBounds()`. It reads `element.gridBounds` (a plain `Rectangle` in grid units) for all spatial decisions. This avoids scene-graph traversal and makes collision detection integer-exact.
+- **Quad tree uses grid bounds** — `QuadTreeContainer` never calls PixiJS `getBounds()`. All spatial decisions run off the element's grid-unit bounds: filing and splitting read `cullBounds`, and `queryRange` tests candidates through `intersectsGridBounds` (the allocation-free form — a query never materializes a `Rectangle` per element). This avoids scene-graph traversal and makes collision detection integer-exact.
 - **Quad tree as PixiJS Container** — `QuadTreeContainer` and its internal `QuadTreeEntry` nodes are real PixiJS `Container` instances in the scene graph. Children keep their world coordinates because all entries sit at position `(0, 0)`; only `boundsArea` encodes the spatial region. The same region drives the entry-level cull pass (see [Culling](#culling)) — the tree doubles as both the spatial index for queries and the cull hierarchy, with no separate data mirror.

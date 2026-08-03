@@ -1,5 +1,6 @@
 import { Point, PointData, Rectangle } from 'pixi.js';
 import { Direction } from '../utils/direction';
+import { overlapsRect } from '../utils/grid';
 import type { PortSide } from './component';
 
 /**
@@ -78,6 +79,36 @@ export function rotatedBox(
 }
 
 /**
+ * {@link rotatedBox} as an overlap test against `rect`, without materializing
+ * the box. Mirrors the four rotations above case for case.
+ */
+export function rotatedBoxIntersects(
+  direction: Direction,
+  position: PointData,
+  x0: number,
+  y0: number,
+  x1: number,
+  y1: number,
+  rect: Rectangle
+): boolean {
+  const x = position.x;
+  const y = position.y;
+  const w = x1 - x0;
+  const h = y1 - y0;
+
+  switch (direction) {
+    case Direction.E:
+      return overlapsRect(rect, x + x0, y + y0, w, h);
+    case Direction.S:
+      return overlapsRect(rect, x - y1, y + x0, h, w);
+    case Direction.W:
+      return overlapsRect(rect, x - x1, y - y1, w, h);
+    case Direction.N:
+      return overlapsRect(rect, x + y0, y - x1, h, w);
+  }
+}
+
+/**
  * Port positions in the component's local (parent-relative, unpositioned)
  * frame: inputs at the left stub tips, outputs past the body's right edge,
  * both rotated to the shape's direction. Order: inputs, then outputs.
@@ -122,16 +153,43 @@ export function bodyGridBounds(shape: ComponentShape): Rectangle {
  * frame, so they never extend the local y extent.
  */
 export function gridBounds(shape: ComponentShape): Rectangle {
-  const lx = shape.numInputs > 0 ? -0.5 : 0;
-  const x1 = shape.bodyGridWidth + (shape.numOutputs > 0 ? 0.5 : 0);
   return rotatedBox(
     shape.direction,
     shape.position,
-    lx,
+    gridBoundsLocalLeft(shape),
     0,
-    x1,
+    gridBoundsLocalRight(shape),
     shape.bodyGridHeight
   );
+}
+
+/**
+ * {@link gridBounds} as an overlap test against `rect`, without materializing
+ * the rect — backs `Component.intersectsGridBounds`.
+ */
+export function gridBoundsIntersects(
+  shape: ComponentShape,
+  rect: Rectangle
+): boolean {
+  return rotatedBoxIntersects(
+    shape.direction,
+    shape.position,
+    gridBoundsLocalLeft(shape),
+    0,
+    gridBoundsLocalRight(shape),
+    shape.bodyGridHeight,
+    rect
+  );
+}
+
+// The local x extent of gridBounds, shared by the rect and the overlap test so
+// the two can never disagree about where the stubs end.
+function gridBoundsLocalLeft(shape: ComponentShape): number {
+  return shape.numInputs > 0 ? -0.5 : 0;
+}
+
+function gridBoundsLocalRight(shape: ComponentShape): number {
+  return shape.bodyGridWidth + (shape.numOutputs > 0 ? 0.5 : 0);
 }
 
 /**

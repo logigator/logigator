@@ -1,7 +1,49 @@
 import { describe, expect, it } from 'vitest';
-import { Point } from 'pixi.js';
+import { Point, Rectangle } from 'pixi.js';
 import { environment } from '../../environments/environment';
-import { fromGrid, roundToGrid, roundToHalfGrid } from './grid';
+import { fromGrid, overlapsRect, roundToGrid, roundToHalfGrid } from './grid';
+
+describe('overlapsRect', () => {
+  // The whole point of the helper is to be substitutable for
+  // Rectangle.intersects in the quad tree's candidate test, so the contract is
+  // agreement — including the half-grid coordinates wires sit on and the
+  // edge-contact case, where intersects() answers false.
+  it('agrees with Rectangle.intersects over a sweep of box pairs', () => {
+    const coords = [-2, -0.5, 0, 1, 2.5, 3, 4];
+    const extents = [0.5, 1, 2, 5];
+    const probe = new Rectangle(0, 0, 3, 2);
+
+    for (const x of coords) {
+      for (const y of coords) {
+        for (const w of extents) {
+          for (const h of extents) {
+            expect(
+              overlapsRect(probe, x, y, w, h),
+              `box (${x}, ${y}, ${w}, ${h})`
+            ).toBe(probe.intersects(new Rectangle(x, y, w, h)));
+          }
+        }
+      }
+    }
+  });
+
+  it('treats edge contact as no overlap, on every side', () => {
+    const probe = new Rectangle(0, 0, 3, 2);
+    expect(overlapsRect(probe, 3, 0, 1, 2)).toBe(false);
+    expect(overlapsRect(probe, -1, 0, 1, 2)).toBe(false);
+    expect(overlapsRect(probe, 0, 2, 3, 1)).toBe(false);
+    expect(overlapsRect(probe, 0, -1, 3, 1)).toBe(false);
+    // One unit of real overlap on the same sides does register.
+    expect(overlapsRect(probe, 2, 0, 1, 2)).toBe(true);
+    expect(overlapsRect(probe, 0, 1, 3, 1)).toBe(true);
+  });
+
+  it('reports zero-extent boxes as no overlap', () => {
+    const probe = new Rectangle(0, 0, 3, 2);
+    expect(overlapsRect(probe, 1, 1, 0, 1)).toBe(false);
+    expect(overlapsRect(probe, 1, 1, 1, 0)).toBe(false);
+  });
+});
 
 describe('fromGrid', () => {
   it('returns 0 for input 0', () => {
