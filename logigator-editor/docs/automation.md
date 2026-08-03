@@ -150,8 +150,11 @@ reverts agent work exactly like user work.
   it, and `rotateComponent` turns the component around its own footprint's pivot
   (like a single-element selection rotate). Read the position back rather than
   assuming it is unchanged.
-- **Removals do not merge.** Deleting an element leaves the surrounding wires
-  as they are — the same behavior as the eraser and the Delete key.
+- **Removals merge.** Deleting an element re-merges a collinear pair whose
+  shared endpoint just lost its last third terminator (a removed wire's end or
+  a removed component's port) — the same behavior as the eraser and the Delete
+  key. The implied wire changes are part of the entry and reported in
+  `integratedWires` (the requested removals themselves are not).
 - **Option values are rejected, not clamped.** The option model would silently
   clamp an out-of-range number and strip forbidden characters; a `setOption` (or
   an `addComponent`'s `options`) outside the declared constraints is refused

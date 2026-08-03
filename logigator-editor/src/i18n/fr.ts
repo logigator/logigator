@@ -329,6 +329,9 @@ const fr: TranslationSchema = {
           },
           delete: {
             label: 'Supprimer'
+          },
+          repairWires: {
+            label: 'Réparer les fils'
           }
         }
       },
@@ -652,6 +655,12 @@ const fr: TranslationSchema = {
       "Certains éléments n'ont pas pu être collés — leur type de composant n'est plus disponible.",
     pastePlugsSkipped:
       "Les fiches d'entrée et de sortie n'ont pas été collées — elles ne sont prises en charge qu'à l'intérieur des composants personnalisés."
+  },
+  wireRepair: {
+    repaired: '{{count}} problème(s) de fils réparé(s).',
+    loadRepaired:
+      'Ce circuit comportait {{count}} problème(s) de fils — ils ont été réparés automatiquement.',
+    clean: 'Aucun problème de fils détecté.'
   },
   bugReport: {
     title: 'Signaler un problème',

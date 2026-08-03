@@ -11,6 +11,8 @@ import { groupGridBounds, rotateElements } from './rotate-elements';
 import { ActionContainer } from '../../actions/action-container';
 import { AddComponentsAction } from '../../actions/actions/add-components.action';
 import { AddWiresAction } from '../../actions/actions/add-wires.action';
+import { RemoveWiresAction } from '../../actions/actions/remove-wires.action';
+import { snapshotsShareSpan } from '../../wires/wire-snapshot.model';
 import { DragCollisionState } from './drag-collision';
 import { SelectionManager } from '../../project/selection-manager';
 import { getStaticDI } from '../../utils/get-di';
@@ -164,25 +166,58 @@ export class PastePlacementSession implements DragSession {
     this._dragLayer.position.set(0, 0);
     this._collision.reset();
 
-    // Build action before handing elements to the project (serializes final positions)
+    // The pasted wires' final geometry decides which integration results the
+    // selection adopts below: a merge/split successor shares a span with a
+    // pasted wire, an external wire's split pieces only touch at an endpoint.
+    const pastedSnapshots = this._wires.map((w) => Wire.snapshot(w));
+
+    // Restore the wire invariants around the drop: a pasted wire dropped onto
+    // a collinear wire merges with it (and pasted split pieces merge with each
+    // other), a termination landing on an interior splits the crossed wire —
+    // on either side — and a pasted port splits the wire under it.
+    const { toAdd, toRemove } = this._project.topology.integrate({
+      addedWires: this._wires,
+      addedComponentPorts: this._components.flatMap((c) => [
+        ...c.connectionPoints
+      ])
+    });
+
+    // Build actions before mutating (they serialize state in their constructors)
     const action = new ActionContainer();
+    if (toRemove.length > 0) {
+      action.add(new RemoveWiresAction(...toRemove));
+    }
     if (this._components.length > 0) {
       action.add(new AddComponentsAction(...this._components));
     }
-    if (this._wires.length > 0) {
-      action.add(new AddWiresAction(...this._wires));
+    if (toAdd.length > 0) {
+      action.add(new AddWiresAction(...toAdd));
     }
 
+    for (const w of toRemove) this._project.removeWire(w.id);
     // Transfer elements from drag layer to project (addChild inside insert() re-parents)
     for (const c of this._components) this._project.addComponent(c);
-    for (const w of this._wires) this._project.addWire(w);
+    const committed = new Set(toAdd);
+    for (const w of toAdd) this._project.addWire(w);
+    // A pasted wire consumed by integration (absorbed into a merge result)
+    // never enters the project — drop the ghost instance.
+    for (const w of this._wires) {
+      if (!committed.has(w) && !w.destroyed) w.destroy();
+    }
 
-    this._project.selectionManager.select(this._components, this._wires);
+    this._project.selectionManager.select(
+      this._components,
+      toAdd.filter((w) => {
+        const snap = Wire.snapshot(w);
+        return pastedSnapshots.some((s) => snapshotsShareSpan(s, snap));
+      })
+    );
 
     // State already applied — register without calling do()
     this._project.actionManager.register(action);
     getStaticDI(LoggingService).debug(
-      `committed paste: ${this._components.length} component(s) added, ${this._wires.length} wire(s) added`,
+      `committed paste: ${this._components.length} component(s) added, ${this._wires.length} wire(s) pasted; ` +
+        `integration added ${toAdd.length} and removed ${toRemove.length} wire(s)`,
       'PastePlacementSession'
     );
   }

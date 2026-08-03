@@ -341,6 +341,108 @@ describe('PastePlacementSession', () => {
 
   // ── onCancel ─────────────────────────────────────────────────────────────────
 
+  // ── onEnd — wire integration ────────────────────────────────────────────────
+
+  describe('onEnd() — wire integration', () => {
+    it('merges a pasted wire overlapping an existing collinear wire', () => {
+      project.addWire(makeWire(0, 0, WireDirection.HORIZONTAL, 4)); // 0.5..4.5
+      const pasted = makeWire(2, 0, WireDirection.HORIZONTAL, 4); // 2.5..6.5
+      session = new PastePlacementSession(project, dragLayer, [], [pasted]);
+      session.onEnd();
+      session = undefined;
+
+      const wires = [...project.wires];
+      expect(wires).toHaveLength(1);
+      expect(wires[0].position.x).toBe(0.5);
+      expect(wires[0].length).toBe(6);
+    });
+
+    it('splits an existing wire crossed by a pasted wire endpoint', () => {
+      project.addWire(makeWire(0, 3, WireDirection.HORIZONTAL, 6)); // 0.5..6.5
+      const stem = makeWire(3, 0, WireDirection.VERTICAL, 3); // ends at (3.5, 3.5)
+      session = new PastePlacementSession(project, dragLayer, [], [stem]);
+      session.onEnd();
+      session = undefined;
+
+      const wires = [...project.wires];
+      expect(wires).toHaveLength(3);
+      const horizontals = wires.filter(
+        (w) => w.direction === WireDirection.HORIZONTAL
+      );
+      expect(horizontals.map((w) => w.length).sort()).toEqual([3, 3]);
+    });
+
+    it('merges two pasted collinear pieces touching end-to-end', () => {
+      const left = makeWire(0, 0, WireDirection.HORIZONTAL, 3);
+      const right = makeWire(3, 0, WireDirection.HORIZONTAL, 3);
+      session = new PastePlacementSession(
+        project,
+        dragLayer,
+        [],
+        [left, right]
+      );
+      session.onEnd();
+      session = undefined;
+
+      const wires = [...project.wires];
+      expect(wires).toHaveLength(1);
+      expect(wires[0].length).toBe(6);
+    });
+
+    it('splits the wire under a pasted component port', () => {
+      // AND at (4,1) facing East puts its input ports at (3.5, 1.5) and
+      // (3.5, 2.5) — both on the vertical wire's interior.
+      project.addWire(makeWire(3, 0, WireDirection.VERTICAL, 4)); // 0.5..4.5
+      const comp = makeAnd(2, Direction.E, 4, 1);
+      session = new PastePlacementSession(project, dragLayer, [comp], []);
+      session.onEnd();
+      session = undefined;
+
+      expect([...project.wires]).toHaveLength(3);
+    });
+
+    it('adopts the merge successor into the selection', () => {
+      project.addWire(makeWire(0, 0, WireDirection.HORIZONTAL, 4));
+      const pasted = makeWire(2, 0, WireDirection.HORIZONTAL, 4);
+      session = new PastePlacementSession(project, dragLayer, [], [pasted]);
+      session.onEnd();
+      session = undefined;
+
+      const selected = [...project.selectionManager.selectedWires];
+      expect(selected).toHaveLength(1);
+      expect(selected[0].length).toBe(6);
+    });
+
+    it('does not select the split pieces of a crossed external wire', () => {
+      project.addWire(makeWire(0, 3, WireDirection.HORIZONTAL, 6));
+      const stem = makeWire(3, 0, WireDirection.VERTICAL, 3);
+      session = new PastePlacementSession(project, dragLayer, [], [stem]);
+      session.onEnd();
+      session = undefined;
+
+      const selected = [...project.selectionManager.selectedWires];
+      expect(selected).toHaveLength(1);
+      expect(selected[0].direction).toBe(WireDirection.VERTICAL);
+    });
+
+    it('undo restores the pre-paste wires exactly', () => {
+      const existing = makeWire(0, 0, WireDirection.HORIZONTAL, 4);
+      project.addWire(existing);
+      const existingId = existing.id;
+      const pasted = makeWire(2, 0, WireDirection.HORIZONTAL, 4);
+      session = new PastePlacementSession(project, dragLayer, [], [pasted]);
+      session.onEnd();
+      session = undefined;
+
+      project.actionManager.undo();
+
+      const wires = [...project.wires];
+      expect(wires).toHaveLength(1);
+      expect(wires[0].id).toBe(existingId);
+      expect(wires[0].length).toBe(4);
+    });
+  });
+
   describe('onCancel()', () => {
     it('destroys all components', () => {
       const comp = makeAnd(2, Direction.E, 3, 0);

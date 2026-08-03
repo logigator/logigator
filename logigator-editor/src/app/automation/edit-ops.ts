@@ -327,16 +327,38 @@ export function applyEditOps(
           const wires = (op.wireIds ?? []).map((id) =>
             resolveWire(index, op.op, id)
           );
+          // Merges the collinear pair a removed third terminator (wire end or
+          // component port) leaves behind; toRemove covers the requested wires
+          // plus any neighbours those merges absorb. Materialized inline
+          // rather than via commitIntegration so `integratedWires` reports
+          // only the integrator's own effects, not the requested removals.
+          const { toAdd, toRemove } = project.topology.integrate({
+            removedWires: wires,
+            removedComponentPorts: components.flatMap((c) => [
+              ...c.connectionPoints
+            ])
+          });
+          const requested = new Set(wires.map((w) => w.id));
           if (components.length > 0) {
             container.add(new RemoveComponentsAction(...components));
           }
-          if (wires.length > 0) {
-            container.add(new RemoveWiresAction(...wires));
+          if (toRemove.length > 0) {
+            container.add(new RemoveWiresAction(...toRemove));
+          }
+          if (toAdd.length > 0) {
+            container.add(new AddWiresAction(...toAdd));
           }
           for (const component of components) {
             project.removeComponent(component.id);
           }
-          for (const wire of wires) project.removeWire(wire.id);
+          for (const wire of toRemove) {
+            if (!requested.has(wire.id)) integrated.removed.push(wire.id);
+            project.removeWire(wire.id);
+          }
+          for (const wire of toAdd) {
+            integrated.added.push(wire.id);
+            project.addWire(wire);
+          }
           break;
         }
 

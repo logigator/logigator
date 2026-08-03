@@ -808,4 +808,37 @@ describe('WireIntegrator', () => {
     expect(toAdd[0].length).toBe(6);
     n.destroy();
   });
+
+  // --- Vacated points ---
+
+  it('vacatedPoints: merges the pair whose terminator is already gone', () => {
+    // Two collinear halves touching at (3.5, 0.5); the stem that used to end
+    // there was removed from the tree before integration (the eraser's flow).
+    const left = makeWire(0, 0, WireDirection.HORIZONTAL, 3);
+    const right = makeWire(3, 0, WireDirection.HORIZONTAL, 3);
+    existing.push(left, right);
+    const { toAdd, toRemove } = integrator.integrate(
+      { vacatedPoints: [new Point(3.5, 0.5)] },
+      makeWireQuery(existing),
+      noComponentsQuery,
+      SCALE
+    );
+    expect(toRemove).toContain(left);
+    expect(toRemove).toContain(right);
+    expect(toAdd.length).toBe(1);
+    expect(toAdd[0].length).toBe(6);
+  });
+
+  it('vacatedPoints: a point on an interior with no terminator splits nothing', () => {
+    const e = makeWire(0, 0, WireDirection.HORIZONTAL, 6);
+    existing.push(e);
+    const { toAdd, toRemove } = integrator.integrate(
+      { vacatedPoints: [new Point(3.5, 0.5)] },
+      makeWireQuery(existing),
+      noComponentsQuery,
+      SCALE
+    );
+    expect(toAdd.length).toBe(0);
+    expect(toRemove.length).toBe(0);
+  });
 });

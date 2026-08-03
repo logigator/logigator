@@ -329,6 +329,9 @@ const de: TranslationSchema = {
           },
           delete: {
             label: 'Löschen'
+          },
+          repairWires: {
+            label: 'Leitungen reparieren'
           }
         }
       },
@@ -649,6 +652,12 @@ const de: TranslationSchema = {
       'Einige Elemente konnten nicht eingefügt werden — ihr Komponententyp ist nicht mehr verfügbar.',
     pastePlugsSkipped:
       'Ein- und Ausgangsstecker wurden nicht eingefügt — sie werden nur innerhalb benutzerdefinierter Komponenten unterstützt.'
+  },
+  wireRepair: {
+    repaired: '{{count}} Leitungsproblem(e) behoben.',
+    loadRepaired:
+      'Diese Schaltung hatte {{count}} Leitungsproblem(e) — sie wurden automatisch behoben.',
+    clean: 'Keine Leitungsprobleme gefunden.'
   },
   bugReport: {
     title: 'Problem melden',

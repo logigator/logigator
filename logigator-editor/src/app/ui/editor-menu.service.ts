@@ -21,6 +21,7 @@ import { DocumentationService } from '../documentation/documentation.service';
 import { OnboardingService } from '../onboarding/onboarding.service';
 import { DebugMenuService } from './debug-menu.service';
 import { ConsentService } from '../consent/consent.service';
+import { WireRepairService } from '../project/wire-repair.service';
 import { ToastService } from '../logging/toast.service';
 import { isHandledSaveError } from '../persistence/persistence-errors';
 
@@ -48,6 +49,7 @@ export class EditorMenuService {
   private readonly injector = inject(Injector);
   private readonly toastService = inject(ToastService);
   private readonly consentService = inject(ConsentService);
+  private readonly wireRepairService = inject(WireRepairService);
 
   /**
    * Rebuilt whenever the active language changes so labels stay translated.
@@ -149,6 +151,10 @@ export class EditorMenuService {
           {
             separator: true
           },
+          this.repairWiresItem(),
+          {
+            separator: true
+          },
           {
             label: this.translation.translate('shortcuts.title'),
             command: () => this.openShortcutManager()
@@ -219,6 +225,8 @@ export class EditorMenuService {
       ...this.cloudItems(),
       ...this.exportFileItems(),
       this.generateImageItem(),
+      { separator: true },
+      this.repairWiresItem(),
       { separator: true },
       this.documentationItem(),
       this.changelogItem(),
@@ -632,5 +640,20 @@ export class EditorMenuService {
   private delete(): void {
     const project = this.projectService.activeProject();
     if (project) this.clipboardService.delete(project);
+  }
+
+  private repairWiresItem(): MenuItem {
+    return {
+      label: this.translation.translate(
+        'titleBar.menuBar.edit.items.repairWires.label'
+      ),
+      icon: 'ph ph-wrench',
+      command: () => this.repairWires()
+    };
+  }
+
+  private repairWires(): void {
+    const project = this.projectService.activeProject();
+    if (project) this.wireRepairService.repairManually(project);
   }
 }

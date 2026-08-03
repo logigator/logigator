@@ -329,6 +329,9 @@ const es: TranslationSchema = {
           },
           delete: {
             label: 'Eliminar'
+          },
+          repairWires: {
+            label: 'Reparar cables'
           }
         }
       },
@@ -649,6 +652,12 @@ const es: TranslationSchema = {
       'Algunos elementos no se pudieron pegar: su tipo de componente ya no está disponible.',
     pastePlugsSkipped:
       'Los conectores de entrada y salida no se pegaron: solo se admiten dentro de componentes personalizados.'
+  },
+  wireRepair: {
+    repaired: 'Se repararon {{count}} problema(s) de cables.',
+    loadRepaired:
+      'Este circuito tenía {{count}} problema(s) de cables — se repararon automáticamente.',
+    clean: 'No se encontraron problemas de cables.'
   },
   bugReport: {
     title: 'Informar de un problema',

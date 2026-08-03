@@ -324,6 +324,9 @@ const en = {
           },
           delete: {
             label: 'Delete'
+          },
+          repairWires: {
+            label: 'Repair Wires'
           }
         }
       },
@@ -639,6 +642,12 @@ const en = {
       'Some elements could not be pasted — their component type is no longer available.',
     pastePlugsSkipped:
       'Input and output plugs were not pasted — they are only supported inside custom components.'
+  },
+  wireRepair: {
+    repaired: 'Repaired {{count}} wire issue(s).',
+    loadRepaired:
+      'This circuit had {{count}} wire issue(s) — they were repaired automatically.',
+    clean: 'No wire issues found.'
   },
   bugReport: {
     title: 'Report a problem',

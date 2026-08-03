@@ -32,6 +32,13 @@ export interface IntegrationInput {
   // Components already at their new positions in the project; queries reflect
   // newPorts already, so the integrator only needs oldPorts to mark candidates.
   movedComponentPorts?: readonly MovedComponentPortsEntry[];
+  // Termination points of elements a caller already removed from the tree
+  // (the eraser deletes live during its sweep, so by integration time the
+  // removed instances no longer exist). Seeds candidates so the merge pass
+  // heals a collinear pair whose third terminator vanished; the split pass's
+  // termination guard keeps a vacated point with no current terminator from
+  // splitting anything.
+  vacatedPoints?: readonly Point[];
 }
 
 export interface IntegrationOutput {
@@ -60,6 +67,7 @@ export class WireIntegrator {
     const addedComponentPorts = input.addedComponentPorts ?? [];
     const removedComponentPorts = input.removedComponentPorts ?? [];
     const movedComponentPorts = input.movedComponentPorts ?? [];
+    const vacatedPoints = input.vacatedPoints ?? [];
 
     const candidates = new Map<string, Point>();
     const addCandidate = (p: Point) => {
@@ -106,6 +114,7 @@ export class WireIntegrator {
       for (const p of oldPorts) addCandidate(p);
       for (const p of newPorts) addCandidate(p);
     }
+    for (const p of vacatedPoints) addCandidate(p);
 
     // Net port-presence delta at each position relative to what queries return.
     // addedComponentPorts are not yet in the tree → +1. removedComponentPorts are
@@ -311,7 +320,8 @@ export class WireIntegrator {
           `Fixed-point loop did not converge in ${MAX_ITERATIONS} iterations; ` +
             `input: addedWires=${addedWires.length} removedWires=${removedWires.length} ` +
             `movedWires=${movedWires.length} addedComponentPorts=${addedComponentPorts.length} ` +
-            `removedComponentPorts=${removedComponentPorts.length} movedComponentPorts=${movedComponentPorts.length}; ` +
+            `removedComponentPorts=${removedComponentPorts.length} movedComponentPorts=${movedComponentPorts.length} ` +
+            `vacatedPoints=${vacatedPoints.length}; ` +
             `candidates=${candidates.size} freshLive=${freshLive.size} liveOriginalsToRemove=${liveOriginalsToRemove.size}`,
           'WireIntegrator'
         );

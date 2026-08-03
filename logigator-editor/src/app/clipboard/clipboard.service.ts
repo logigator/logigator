@@ -8,6 +8,7 @@ import { Wire } from '../wires/wire';
 import { ActionContainer } from '../actions/action-container';
 import { RemoveComponentsAction } from '../actions/actions/remove-components.action';
 import { RemoveWiresAction } from '../actions/actions/remove-wires.action';
+import { AddWiresAction } from '../actions/actions/add-wires.action';
 import { ComponentProviderService } from '../components/component-provider.service';
 import { ComponentCategory } from '../components/component-category.enum';
 import { ProjectMetadataStore } from '../persistence/project-metadata.store';
@@ -150,15 +151,33 @@ export class ClipboardService {
     // removals and coalesce below, so cut+delete stays one undo step.
     const cut = sm.consumeLiveCut();
 
+    // Restore the wire invariants around the removal: a collinear pair whose
+    // shared endpoint loses its last third terminator (a deleted wire's end or
+    // a deleted component's port) merges back into one wire. toRemove covers
+    // the selected wires plus any neighbours those merges absorb.
+    const { toAdd, toRemove } = project.topology.integrate({
+      removedWires: wires,
+      removedComponentPorts: components.flatMap((c) => [...c.connectionPoints])
+    });
+
     const container = new ActionContainer();
 
     // Serialize before removal — constructors capture positions eagerly
     if (components.length > 0)
       container.add(new RemoveComponentsAction(...components));
-    if (wires.length > 0) container.add(new RemoveWiresAction(...wires));
+    if (toRemove.length > 0) container.add(new RemoveWiresAction(...toRemove));
+    if (toAdd.length > 0) container.add(new AddWiresAction(...toAdd));
 
     for (const c of components) project.removeComponent(c.id);
-    for (const w of wires) project.removeWire(w.id);
+    for (const w of toRemove) project.removeWire(w.id);
+    for (const w of toAdd) project.addWire(w);
+
+    if (toAdd.length > 0 || toRemove.length > wires.length) {
+      this.logging.debug(
+        `delete integration merged ${toAdd.length} wire(s) from ${toRemove.length - wires.length} absorbed neighbour(s)`,
+        'ClipboardService'
+      );
+    }
 
     if (cut) {
       project.actionManager.coalesceTop(cut, container);

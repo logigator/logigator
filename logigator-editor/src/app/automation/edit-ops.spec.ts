@@ -373,5 +373,32 @@ describe('applyEditOps', () => {
       expect(result.ok).toBe(false);
       expect(project.componentCount).toBe(1);
     });
+
+    it('merges the collinear pair a removed junction stem orphans', () => {
+      const left = makeWire(0, 3, WireDirection.HORIZONTAL, 3);
+      const right = makeWire(3, 3, WireDirection.HORIZONTAL, 3);
+      const stem = makeWire(3, 0, WireDirection.VERTICAL, 3); // ends at (3.5, 3.5)
+      project.addWire(left);
+      project.addWire(right);
+      project.addWire(stem);
+
+      const result = apply({ op: 'remove', wireIds: [stem.id] });
+
+      expect(result.ok).toBe(true);
+      const wires = [...project.wires];
+      expect(wires).toHaveLength(1);
+      expect(wires[0].length).toBe(6);
+      // The requested wire is not an integration effect — only the absorbed
+      // halves and the merge result are reported.
+      if (result.ok) {
+        expect(result.integratedWires.removed.sort()).toEqual(
+          [left.id, right.id].sort()
+        );
+        expect(result.integratedWires.added).toEqual([wires[0].id]);
+      }
+
+      project.actionManager.undo();
+      expect([...project.wires]).toHaveLength(3);
+    });
   });
 });

@@ -1,16 +1,17 @@
 import type { MockedObject } from 'vitest';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Point } from 'pixi.js';
 import { setStaticDIInjector } from '../../utils/get-di';
+import { configureTestBed } from '../../../testing/configure-test-bed';
 import { EraseSession } from './erase.session';
 import { Wire } from '../../wires/wire';
 import { WireDirection } from '../../wires/wire-direction.enum';
 import { ActionContainer } from '../../actions/action-container';
-import type { Project } from '../../project/project';
+import { Project } from '../../project/project';
 import type { ActionManager } from '../../actions/action-manager';
-import { makeAnd, makeMoveInput } from '../../../testing/factories';
+import { makeAnd, makeMoveInput, makeWire } from '../../../testing/factories';
 import { gen } from '../../../testing/vitest-helpers';
 import { AndComponent } from '../../components/component-types/and/and.component';
 
@@ -36,7 +37,13 @@ describe('EraseSession', () => {
       queryComponentsInRange: vi
         .fn()
         .mockName('Project.queryComponentsInRange'),
-      queryWiresInRange: vi.fn().mockName('Project.queryWiresInRange')
+      queryWiresInRange: vi.fn().mockName('Project.queryWiresInRange'),
+      topology: {
+        integrate: vi
+          .fn()
+          .mockName('WireTopology.integrate')
+          .mockReturnValue({ toAdd: [], toRemove: [] })
+      }
     } as unknown as MockedObject<Project>;
     // Use callFake so each call gets a fresh (non-exhausted) iterable
     project.queryComponentsInRange.mockImplementation(() => gen());
@@ -201,5 +208,74 @@ describe('EraseSession', () => {
       );
       comp.destroy({ children: true });
     });
+  });
+});
+
+// ── EraseSession — wire integration (real project) ───────────────────────────
+
+describe('EraseSession — wire integration', () => {
+  let project: Project;
+
+  beforeEach(() => {
+    configureTestBed();
+    project = new Project();
+  });
+
+  afterEach(() => {
+    project.destroy({ children: true });
+  });
+
+  // A T-junction: two collinear bar halves whose shared endpoint (3.5, 3.5)
+  // is held apart by the stem terminating there.
+  function buildTee(): { left: Wire; right: Wire; stem: Wire } {
+    const left = makeWire(0, 3, WireDirection.HORIZONTAL, 3);
+    const right = makeWire(3, 3, WireDirection.HORIZONTAL, 3);
+    const stem = makeWire(3, 0, WireDirection.VERTICAL, 3);
+    project.addWire(left);
+    project.addWire(right);
+    project.addWire(stem);
+    return { left, right, stem };
+  }
+
+  it('merges the collinear pair whose junction stem was erased', () => {
+    buildTee();
+
+    // Sweep rect (3,1,1,1) touches only the stem.
+    const session = new EraseSession(project, new Point(3.5, 1));
+    session.onEnd();
+
+    const wires = [...project.wires];
+    expect(wires).toHaveLength(1);
+    expect(wires[0].direction).toBe(WireDirection.HORIZONTAL);
+    expect(wires[0].length).toBe(6);
+    expect(wires[0].position.x).toBe(0.5);
+  });
+
+  it('undo restores the stem and the split halves', () => {
+    const { left, right, stem } = buildTee();
+    const ids = [left.id, right.id, stem.id];
+
+    const session = new EraseSession(project, new Point(3.5, 1));
+    session.onEnd();
+    project.actionManager.undo();
+
+    const wires = [...project.wires];
+    expect(wires).toHaveLength(3);
+    expect(wires.map((w) => w.id).sort()).toEqual([...ids].sort());
+  });
+
+  it('does not merge when a third terminator remains at the junction', () => {
+    buildTee();
+    // A second stem from below also ends at (3.5, 3.5) — erasing one stem
+    // leaves the other as the junction's terminator.
+    project.addWire(makeWire(3, 3, WireDirection.VERTICAL, 3));
+
+    const session = new EraseSession(project, new Point(3.5, 1));
+    session.onEnd();
+
+    const horizontals = [...project.wires].filter(
+      (w) => w.direction === WireDirection.HORIZONTAL
+    );
+    expect(horizontals).toHaveLength(2);
   });
 });

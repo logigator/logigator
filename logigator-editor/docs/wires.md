@@ -261,8 +261,15 @@ interface IntegrationInput {
     oldPorts: readonly Point[];
     newPorts: readonly Point[];
   }[];
+  vacatedPoints?: readonly Point[]; // Terminations already gone from the tree
 }
 ```
+
+`vacatedPoints` seeds candidate points for elements a caller already removed
+from the tree — the eraser deletes live during its sweep, so by integration
+time the erased instances no longer exist. The merge pass heals a collinear
+pair whose third terminator vanished; the split pass's termination guard keeps
+a vacated point with no current terminator from splitting anything.
 
 - `toAdd` — fresh `Wire` instances the caller should add to the tree (splits, merges, or `addedWires` that survived integration).
 - `toRemove` — live wires currently in the tree the caller should remove (absorbed by merges, or split sources).
@@ -276,6 +283,10 @@ Callers wrap the result in `ActionContainer(RemoveWiresAction, AddWiresAction)` 
 | `WireToolSession.onEnd`                         | `addedWires`                                                                                                                                     |
 | `SelectionMoveSession.onEnd`                    | `movedWires`, `movedComponentPorts`                                                                                                              |
 | `ComponentPlacementSession.onEnd`               | `addedComponentPorts`                                                                                                                            |
+| `PastePlacementSession.onEnd`                   | `addedWires`, `addedComponentPorts` — the selection adopts span-sharing successors (merge results, split pieces of pasted wires)                 |
+| `ClipboardService._applyDelete` (Delete, Cut)   | `removedWires`, `removedComponentPorts`                                                                                                          |
+| `EraseSession.onEnd`                            | `vacatedPoints` — the sweep removes live, so the erased terminations are seeded after the fact                                                   |
+| Automation `applyEdit` ops                      | the per-op analogue of the above (`addWire`/`addComponent`/`move*`/`rotateComponent`/`remove`)                                                   |
 | `Component.portsChange$` (rotation, port-count) | `movedComponentPorts` — applied directly without action wrapping (no undo yet; see [`connection-points.md`](connection-points.md) § Future work) |
 
 The integrator runs **once per gesture** at the session/command boundary. Low-level mutators (`Project.addWire`, `removeWire`, `moveWire`, and component analogues) do not invoke it.
@@ -300,6 +311,18 @@ A junction has no state of its own — it exists only as the split state of the 
 The consolidate pass therefore records every absorbed endpoint that (a) ends up inside the merged span and (b) has a perpendicular wire endpoint at it. The merge pass skips those points, so the wires that still terminate there stay split, and the split pass re-cuts the merged span at the junction. A collinear neighbour ending at the same point is not a marker — it overlaps the merged span and gets absorbed too. Component ports need no marker either: `hasPort` reports them independently of the wires, so a port keeps blocking the merge and forcing the split on its own.
 
 This is narrower than the merge-first ordering it carves out of: a point only becomes protected when consolidation removed a termination that was there. Moving both halves of a previously split wire across another wire still merges the halves and leaves a crossing, because nothing perpendicular ends at the seam.
+
+### Board-wide repair (`project/wire-repair.ts` + `WireRepairService`)
+
+Documents saved before integration covered every mutation path (pasting and the removal gestures shipped without it) can carry violations: stacked collinear wires, endpoints buried in interiors, unmerged pairs. Two functions handle them:
+
+- `auditWireInvariants(project)` — pure scan; classifies every violation (`overlap`, `endpoint-in-interior`, `port-in-interior`, `unmerged-pair`) with a loggable detail string.
+- `computeWireRepair(project)` — rebuilds the board's wires in an offline working set, re-adding each wire through the integrator one at a time (the integrator only ever sees valid state plus one wire — its designed use case), then multiset-diffs the result against the live wires by exact geometry. Wires whose spans survive unchanged keep their live instances — ids, selection and history references intact; only the changed remainder lands in the returned plan. A repair never changes which grid cells are wired, only how they group into `Wire` instances. Zero-length wires are dropped as cruft.
+
+`WireRepairService` orchestrates and reports (toast summary, per-violation console log):
+
+- **Manually** (`repairManually`) — the Edit-menu "Repair Wires" command. Clears the selection first (retracting a live scissor cut, whose seam is a deliberate transient I3 violation the repair must not fuse), registers the fix as a single undoable history entry, and always toasts — including "no wire issues found". A post-repair audit logs an error if anything survived, failing loudly on repair bugs.
+- **On load** (`repairOnLoad`) — heals a freshly loaded document directly (no history exists yet, so deliberately not undoable) and stays silent when the board is clean. Currently not called from any load path — repair-on-load is on hold; the method waits for the hooks (`PersistenceService._replaceMainProject`, share components, `CustomComponentService._openEditor`) to be reinstated.
 
 ### Body collision during wire drawing
 

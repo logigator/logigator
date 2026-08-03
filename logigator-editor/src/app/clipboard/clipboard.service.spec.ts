@@ -9,6 +9,7 @@ import { Wire } from '../wires/wire';
 import { WireDirection } from '../wires/wire-direction.enum';
 import { ActionContainer } from '../actions/action-container';
 import { ProjectMetadataStore } from '../persistence/project-metadata.store';
+import { Direction } from '../utils/direction';
 import { makeAnd, makeInput } from '../../testing/factories';
 
 // ── helpers ───────────────────────────────────────────────────────────────────
@@ -39,8 +40,18 @@ function makeProject(
       register: vi.fn(),
       coalesceTop: vi.fn()
     },
+    // Pass-through stub: deleting integrates nothing extra, so toRemove is
+    // exactly the removed selection. Real merge behavior is covered by the
+    // real-project describe below.
+    topology: {
+      integrate: vi.fn((input: { removedWires?: Wire[] }) => ({
+        toAdd: [],
+        toRemove: [...(input.removedWires ?? [])]
+      }))
+    },
     removeComponent: vi.fn(),
     removeWire: vi.fn(),
+    addWire: vi.fn(),
     startPasteSession: vi.fn()
   } as unknown as MockedObject<Project>;
 }
@@ -396,5 +407,82 @@ describe('ClipboardService', () => {
         if (!c.destroyed) c.destroy({ children: true });
       }
     });
+  });
+});
+
+// ── delete() — wire integration (real project) ────────────────────────────────
+
+describe('ClipboardService delete() — wire integration', () => {
+  let service: ClipboardService;
+  let project: Project;
+
+  function wire(gx: number, gy: number, dir: WireDirection, length: number) {
+    const w = new Wire(dir, length);
+    w.position.set(gx + 0.5, gy + 0.5);
+    return w;
+  }
+
+  beforeEach(() => {
+    configureTestBed();
+    service = TestBed.inject(ClipboardService);
+    project = new Project();
+  });
+
+  afterEach(() => {
+    project.destroy({ children: true });
+  });
+
+  it('merges the bar halves when their junction stem is deleted', () => {
+    const left = wire(0, 3, WireDirection.HORIZONTAL, 3);
+    const right = wire(3, 3, WireDirection.HORIZONTAL, 3);
+    const stem = wire(3, 0, WireDirection.VERTICAL, 3); // ends at (3.5, 3.5)
+    project.addWire(left);
+    project.addWire(right);
+    project.addWire(stem);
+    project.selectionManager.select([], [stem]);
+
+    service.delete(project);
+
+    const wires = [...project.wires];
+    expect(wires).toHaveLength(1);
+    expect(wires[0].direction).toBe(WireDirection.HORIZONTAL);
+    expect(wires[0].length).toBe(6);
+  });
+
+  it('undo of the delete restores the stem and the split halves', () => {
+    const left = wire(0, 3, WireDirection.HORIZONTAL, 3);
+    const right = wire(3, 3, WireDirection.HORIZONTAL, 3);
+    const stem = wire(3, 0, WireDirection.VERTICAL, 3);
+    project.addWire(left);
+    project.addWire(right);
+    project.addWire(stem);
+    const ids = [left.id, right.id, stem.id].sort();
+    project.selectionManager.select([], [stem]);
+
+    service.delete(project);
+    project.actionManager.undo();
+
+    const wires = [...project.wires];
+    expect(wires).toHaveLength(3);
+    expect(wires.map((w) => w.id).sort()).toEqual(ids);
+  });
+
+  it('merges the wires held apart by a deleted component’s ports', () => {
+    // AND at (4,1) facing East: input ports at (3.5, 1.5) and (3.5, 2.5).
+    // Three vertical wires split at exactly those ports — only the ports keep
+    // them apart.
+    const comp = makeAnd(2, Direction.E, 4, 1);
+    project.addComponent(comp);
+    project.addWire(wire(3, 0, WireDirection.VERTICAL, 1)); // 0.5..1.5
+    project.addWire(wire(3, 1, WireDirection.VERTICAL, 1)); // 1.5..2.5
+    project.addWire(wire(3, 2, WireDirection.VERTICAL, 2)); // 2.5..4.5
+    project.selectionManager.select([comp], []);
+
+    service.delete(project);
+
+    const wires = [...project.wires];
+    expect(wires).toHaveLength(1);
+    expect(wires[0].direction).toBe(WireDirection.VERTICAL);
+    expect(wires[0].length).toBe(4);
   });
 });

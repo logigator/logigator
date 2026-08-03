@@ -1,5 +1,4 @@
 import { Container, Point, Rectangle } from 'pixi.js';
-import { WireDirection } from '../../wires/wire-direction.enum';
 import { DragSession } from '../drag-session';
 import { PointerInput } from '../interaction/pointer-input';
 import { Project } from '../../project/project';
@@ -24,31 +23,13 @@ import { RemoveWiresAction } from '../../actions/actions/remove-wires.action';
 import { AddWiresAction } from '../../actions/actions/add-wires.action';
 import { MoveEntry } from '../../actions/actions/move-entry.model';
 import { SerializedWire } from '../../wires/serialized-wire.model';
-import { WireSnapshot } from '../../wires/wire-snapshot.model';
+import {
+  snapshotsShareSpan,
+  WireSnapshot
+} from '../../wires/wire-snapshot.model';
 import { DragCollisionState } from './drag-collision';
 import { getStaticDI } from '../../utils/get-di';
 import { LoggingService } from '../../logging/logging.service';
-
-/**
- * Whether a wire covers part of a snapshot's span — collinear with a
- * positive-length overlap, so a mere endpoint touch does not count. This is
- * what identifies an integration replacement as a moved wire's successor: a
- * merge result contains the moved span, a split piece lies within it.
- */
-function wiresShareSpan(snapshot: WireSnapshot, wire: Wire): boolean {
-  if (snapshot.direction !== wire.direction) return false;
-  const [start, end] = wire.connectionPoints;
-  if (snapshot.direction === WireDirection.HORIZONTAL) {
-    return (
-      snapshot.start.y === start.y &&
-      Math.min(snapshot.end.x, end.x) > Math.max(snapshot.start.x, start.x)
-    );
-  }
-  return (
-    snapshot.start.x === start.x &&
-    Math.min(snapshot.end.y, end.y) > Math.max(snapshot.start.y, start.y)
-  );
-}
 
 /**
  * Drags — and turns — the committed selection. Opened two ways:
@@ -401,9 +382,10 @@ export class SelectionMoveSession implements DragSession {
       // stay out. Then re-freeze the rect captured above over the re-derived
       // membership.
       this.project.selectionManager.adoptWires(
-        toAdd.filter((w) =>
-          movedFinalSnapshots.some((s) => wiresShareSpan(s, w))
-        )
+        toAdd.filter((w) => {
+          const snap = Wire.snapshot(w);
+          return movedFinalSnapshots.some((s) => snapshotsShareSpan(s, snap));
+        })
       );
       this.project.selectionManager.freezeGrabRect(grabRectBeforeIntegration);
     }
