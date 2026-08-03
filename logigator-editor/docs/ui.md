@@ -213,7 +213,7 @@ Renders a labeled grid of component tiles for one category. Used exclusively ins
 | `components` | `ComponentConfig[]` | The component configs to display                                      |
 | `searchText` | `string`            | Passed in from parent (filtering not yet implemented in the template) |
 
-Each tile shows `comp.symbol` in a 64×64 bordered box and `t(comp.name)` below it. The tile with `selectedComponent() === comp.type` receives a `bg-white/20` highlight.
+Each tile shows `comp.symbol` in a square bordered box and `t(comp.name)` below it — or, for a config carrying a `symbolShape`, the mini-shape that `ComponentSymbolComponent` (`side-bar/component-symbol/`) paints from the config's SVG path data in place of the text. The tile with `selectedComponent() === comp.type` is outlined in the primary colour and marked with a corner check.
 
 Clicking (or pressing Enter on) a tile calls `selectComponent(config)`, which:
 

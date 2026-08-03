@@ -13,7 +13,11 @@
           selected ? 'border-primary ring-1 ring-primary' : 'border-border'
         "
       >
-        {{ comp.symbol }}
+        @if (comp.symbolShape; as shape) {
+          <app-component-symbol class="absolute inset-3" [shape]="shape" />
+        } @else {
+          {{ comp.symbol }}
+        }
         @if (comp.source; as source) {
           <app-source-indicator [source]="source" variant="badge" />
         }

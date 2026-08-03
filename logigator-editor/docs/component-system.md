@@ -156,6 +156,7 @@ Static metadata and factory definition for a component type, split into two inte
 - `type: ComponentType` — unique numeric ID
 - `category: ComponentCategory` — palette grouping
 - `symbol: string` — short label shown in the palette
+- `symbolShape?: ComponentSymbolShape` — optional palette-tile mini-shape (`{ stroke?, fill? }` SVG path data in an 18-unit box) drawn instead of `symbol`. Carried only by the types whose canvas body is a drawn shape rather than their symbol text — LED, switch, button, LED matrix, segment display — so a tile always previews what placing the component yields; for every other type the symbol text _is_ the body. Custom components never have one. Painted by `ui/side-bar/component-symbol/`
 - `name`, `description: TranslationKey` — localization keys
 - `options: TOptions` — option templates as a named record (e.g., `{ direction: DirectionComponentOption, numInputs: NumberComponentOption }`), cloned per instance
 

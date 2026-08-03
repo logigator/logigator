@@ -24,6 +24,11 @@ export const segmentDisplayComponentConfig: ComponentConfig<SegmentDisplayOption
     type: BuiltInComponentType.SEGMENT_DISPLAY,
     category: ComponentCategory.IO,
     symbol: 'SEG',
+    // A seven-segment digit, all segments lit: the readout is drawn in the
+    // segment font, so no fixed body shape identifies this type — the glyph does.
+    symbolShape: {
+      stroke: 'M6 3h6 M5 4v4 M13 4v4 M6 9h6 M5 10v4 M13 10v4 M6 15h6'
+    },
     name: 'components.def.SEGMENT_DISPLAY.name',
     description: 'components.def.SEGMENT_DISPLAY.description',
     options: {

@@ -14,6 +14,7 @@ import { MobileUiService } from '../../../layout/mobile-ui.service';
 import { WorkModeService } from '../../../work-mode/work-mode.service';
 import { WorkMode } from '../../../work-mode/work-mode.enum';
 import { andComponentConfig } from '../../../components/component-types/and/and.config';
+import { ComponentProviderService } from '../../../components/component-provider.service';
 
 /** Loader with distinct values for the AND-gate name key per language. */
 class TwoLangLoader implements TranslocoLoader {
@@ -49,6 +50,32 @@ describe('ComponentListCategoryComponent', () => {
     expect(workMode.mode()).toBe(WorkMode.COMPONENT_PLACEMENT);
     expect(workMode.selectedComponentType()).toBe(andComponentConfig.type);
     expect(mobileUi.activeSheet()).toBeNull();
+  });
+
+  // A shape declaring neither path — or an empty one — replaces the symbol text
+  // with nothing, leaving a blank tile that no type check catches. Covers every
+  // registered config, so a newly shaped component gets audited too.
+  it('draws geometry for every shape a config declares', () => {
+    const shaped = TestBed.inject(ComponentProviderService)
+      .allComponents()
+      .filter((config) => config.symbolShape !== undefined);
+    expect(shaped.length).toBeGreaterThan(0);
+
+    for (const config of shaped) {
+      const shapedFixture = TestBed.createComponent(
+        ComponentListCategoryComponent
+      );
+      shapedFixture.componentRef.setInput('components', [config]);
+      shapedFixture.detectChanges();
+
+      const paths: SVGPathElement[] = Array.from(
+        shapedFixture.nativeElement.querySelectorAll('svg path')
+      );
+      expect(
+        paths.filter((path) => (path.getAttribute('d') ?? '').length > 0),
+        `${config.symbol} renders a blank tile`
+      ).not.toHaveLength(0);
+    }
   });
 });
 

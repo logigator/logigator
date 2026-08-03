@@ -28,6 +28,27 @@ export function resolveLocalizableText(
 }
 
 /**
+ * A palette tile's mini-shape, drawn instead of the text {@link
+ * ComponentConfigView.symbol}. Only the built-ins whose canvas body is a drawn
+ * shape rather than their symbol text carry one — for every other type the
+ * symbol text *is* what appears on the board, so the text tile already previews
+ * it. Custom components (user-authored symbols) never have one.
+ *
+ * Each config owns its geometry as SVG path data in an 18-unit box with the body
+ * inset by one unit (the legacy editor's symbol-image convention), authored to
+ * mirror that type's canvas body. Path data rather than markup: it binds through
+ * `[attr.d]`, so the renderer stays a fixed two-path template — no case per
+ * component type, and no `bypassSecurityTrustHtml` (Angular's sanitizer drops
+ * SVG from `[innerHTML]` outright).
+ */
+export interface ComponentSymbolShape {
+  /** Path data stroked in `currentColor` at a constant device width. */
+  readonly stroke?: string;
+  /** Path data filled with `currentColor`. */
+  readonly fill?: string;
+}
+
+/**
  * Declarative map from a built-in's named options to the legacy positional `v0`
  * wire slots (`i`/`o`/`n`/`s`). Single source of truth for the permanent
  * `v0ToV1` file migration (decode) and the temporary server encoder (encode).
@@ -59,6 +80,12 @@ export interface ComponentConfigView<
   type: ComponentType;
   category: ComponentCategory;
   symbol: string;
+  /**
+   * Palette-tile mini-shape drawn in place of {@link symbol}. See
+   * {@link ComponentSymbolShape} for which types carry one; `symbol` stays
+   * populated either way (it is the search text and the v0/server metadata).
+   */
+  symbolShape?: ComponentSymbolShape;
   name: LocalizableText;
   description: LocalizableText;
   /**
