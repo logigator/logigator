@@ -68,13 +68,6 @@ services:
     networks:
       - net
 
-  redis_ui:
-    image: marian/rebrow:latest
-    networks:
-      - net
-    ports:
-      - 127.0.0.1:5001:5001
-
 volumes:
   caddy_data:
 
