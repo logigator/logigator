@@ -285,13 +285,21 @@ The integrator runs **once per gesture** at the session/command boundary. Low-le
 The integrator computes a **fixed-point** over a working set of wires:
 
 1. Seed candidate points from input (endpoints of added/removed/moved wires, port positions).
-2. **Consolidate pass**: for each added/moved wire, absorb any collinear-overlapping existing wires into one merged wire (this handles the case where the caller's wire was drawn on top of an existing one).
+2. **Consolidate pass**: for each added/moved wire, absorb any collinear-overlapping existing wires into one merged wire (this handles the case where the caller's wire was drawn on top of an existing one). An absorbed wire's endpoint that lands _inside_ the merged span while a perpendicular wire still ends there marks a junction the user connected; the point is remembered so the merge pass leaves it alone (see _Junction preservation_ below).
 3. **Loop until fixed point**:
    - **Split pass**: for each candidate `P` where another wire endpoint or component port terminates, split any wire whose interior contains `P` into two halves at `P`.
    - **Merge pass**: for each candidate `P` where exactly 2 collinear wires end and no third terminator is present, merge them into a single wire spanning the union.
 4. Diff the working set against the original tree wires to produce `{ toAdd, toRemove }`.
 
 The loop is bounded at 8 iterations (in practice converges in 1–2); exceeding the cap throws to fail loudly on algorithmic bugs.
+
+### Junction preservation
+
+A junction has no state of its own — it exists only as the split state of the wires meeting at it. That evidence is what the consolidate pass destroys: drawing or moving a wire along one arm of a junction absorbs that arm into a span whose _interior_ now contains the junction point, so the perpendicular pair meeting there loses its third terminator, I3 fires, and the pair fuses into a plain crossing — the junction disappears without the user asking for it.
+
+The consolidate pass therefore records every absorbed endpoint that (a) ends up inside the merged span and (b) has a perpendicular wire endpoint at it. The merge pass skips those points, so the wires that still terminate there stay split, and the split pass re-cuts the merged span at the junction. A collinear neighbour ending at the same point is not a marker — it overlaps the merged span and gets absorbed too. Component ports need no marker either: `hasPort` reports them independently of the wires, so a port keeps blocking the merge and forcing the split on its own.
+
+This is narrower than the merge-first ordering it carves out of: a point only becomes protected when consolidation removed a termination that was there. Moving both halves of a previously split wire across another wire still merges the halves and leaves a crossing, because nothing perpendicular ends at the seam.
 
 ### Body collision during wire drawing
 

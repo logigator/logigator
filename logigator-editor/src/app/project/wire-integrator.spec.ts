@@ -571,6 +571,139 @@ describe('WireIntegrator', () => {
     expect(horizontals.length).toBe(0);
   });
 
+  // --- Junction preservation ---
+
+  it('new wire absorbing a T-junction arm → junction stays split', () => {
+    // T-junction at (3.5,2.5): H pair h1|h2 plus a V stem running down from it.
+    // A new V wire drawn along the stem and past the junction absorbs the stem,
+    // which buries the junction inside the merged span. The H pair must stay
+    // split and the merged stem must re-split at the junction.
+    const h1 = makeWire(0, 2, WireDirection.HORIZONTAL, 3);
+    const h2 = makeWire(3, 2, WireDirection.HORIZONTAL, 3);
+    const v = makeWire(3, 2, WireDirection.VERTICAL, 3);
+    existing.push(h1, h2, v);
+    const n = makeWire(3, 0, WireDirection.VERTICAL, 4); // (3.5,0.5)→(3.5,4.5)
+    const { toAdd, toRemove } = integrator.integrate(
+      { addedWires: [n] },
+      makeWireQuery(existing),
+      noComponentsQuery,
+      SCALE
+    );
+    expect(toRemove).toContain(v);
+    expect(toRemove).not.toContain(h1);
+    expect(toRemove).not.toContain(h2);
+    expect(
+      toAdd.filter((w) => w.direction === WireDirection.HORIZONTAL).length
+    ).toBe(0);
+    const verticals = toAdd.filter(
+      (w) => w.direction === WireDirection.VERTICAL
+    );
+    expect(verticals.map((w) => w.position.y).sort()).toEqual([0.5, 2.5]);
+    expect(verticals.map((w) => w.length).sort()).toEqual([2, 3]);
+    for (const w of toAdd) if (!w.destroyed) w.destroy();
+  });
+
+  it('new wire absorbing both arms of a joined crossing → crossing stays joined', () => {
+    // Joined crossing at (3.5,2.5): all four arms end there. A new H wire drawn
+    // straight across absorbs both H arms; the V pair must not fuse behind it.
+    const h1 = makeWire(0, 2, WireDirection.HORIZONTAL, 3);
+    const h2 = makeWire(3, 2, WireDirection.HORIZONTAL, 3);
+    const v1 = makeWire(3, 0, WireDirection.VERTICAL, 2);
+    const v2 = makeWire(3, 2, WireDirection.VERTICAL, 3);
+    existing.push(h1, h2, v1, v2);
+    const n = makeWire(1, 2, WireDirection.HORIZONTAL, 5); // (1.5,2.5)→(6.5,2.5)
+    const { toAdd, toRemove } = integrator.integrate(
+      { addedWires: [n] },
+      makeWireQuery(existing),
+      noComponentsQuery,
+      SCALE
+    );
+    expect(toRemove).toContain(h1);
+    expect(toRemove).toContain(h2);
+    expect(toRemove).not.toContain(v1);
+    expect(toRemove).not.toContain(v2);
+    expect(
+      toAdd.filter((w) => w.direction === WireDirection.VERTICAL).length
+    ).toBe(0);
+    const horizontals = toAdd.filter(
+      (w) => w.direction === WireDirection.HORIZONTAL
+    );
+    expect(horizontals.map((w) => w.position.x).sort()).toEqual([0.5, 3.5]);
+    expect(horizontals.map((w) => w.length).sort()).toEqual([3, 3]);
+    for (const w of toAdd) if (!w.destroyed) w.destroy();
+  });
+
+  it('new wire absorbing both arms of a T-junction → arm pair re-splits at the stem', () => {
+    // The junction's only perpendicular terminator is a single stem, not a pair:
+    // absorbing both H arms buries the junction, and the split pass has to cut
+    // the merged span back open off that lone stem endpoint.
+    const h1 = makeWire(0, 2, WireDirection.HORIZONTAL, 3);
+    const h2 = makeWire(3, 2, WireDirection.HORIZONTAL, 3);
+    const v = makeWire(3, 2, WireDirection.VERTICAL, 3);
+    existing.push(h1, h2, v);
+    const n = makeWire(1, 2, WireDirection.HORIZONTAL, 5); // (1.5,2.5)→(6.5,2.5)
+    const { toAdd, toRemove } = integrator.integrate(
+      { addedWires: [n] },
+      makeWireQuery(existing),
+      noComponentsQuery,
+      SCALE
+    );
+    expect(toRemove).toContain(h1);
+    expect(toRemove).toContain(h2);
+    expect(toRemove).not.toContain(v);
+    const horizontals = toAdd.filter(
+      (w) => w.direction === WireDirection.HORIZONTAL
+    );
+    expect(horizontals.map((w) => w.position.x).sort()).toEqual([0.5, 3.5]);
+    expect(horizontals.map((w) => w.length).sort()).toEqual([3, 3]);
+    for (const w of toAdd) if (!w.destroyed) w.destroy();
+  });
+
+  it('overlapping collinear pair absorbed with no perpendicular terminator → still merges', () => {
+    // Counter-case to the two above: h1 and h2 overlap, so consolidation absorbs
+    // them, but their endpoints inside the merged span carry no perpendicular
+    // terminator — V only crosses. Nothing is a junction, so the pair merges into
+    // one wire and V stays whole.
+    const v = makeWire(3, 0, WireDirection.VERTICAL, 4);
+    const h1 = makeWire(0, 2, WireDirection.HORIZONTAL, 4); // 0.5 → 4.5
+    const h2 = makeWire(3, 2, WireDirection.HORIZONTAL, 3); // 3.5 → 6.5
+    existing.push(v, h1, h2);
+    const { toAdd, toRemove } = integrator.integrate(
+      {
+        movedWires: [
+          {
+            wire: h1,
+            oldSnapshot: {
+              start: new Point(0.5, 10.5),
+              end: new Point(4.5, 10.5),
+              direction: WireDirection.HORIZONTAL,
+              gridBounds: new Rectangle(0, 10, 5, 1)
+            }
+          },
+          {
+            wire: h2,
+            oldSnapshot: {
+              start: new Point(3.5, 10.5),
+              end: new Point(6.5, 10.5),
+              direction: WireDirection.HORIZONTAL,
+              gridBounds: new Rectangle(3, 10, 4, 1)
+            }
+          }
+        ]
+      },
+      makeWireQuery(existing),
+      noComponentsQuery,
+      SCALE
+    );
+    expect(toRemove).toContain(h1);
+    expect(toRemove).toContain(h2);
+    expect(toRemove).not.toContain(v);
+    expect(toAdd.length).toBe(1);
+    expect(toAdd[0].direction).toBe(WireDirection.HORIZONTAL);
+    expect(toAdd[0].length).toBe(6);
+    for (const w of toAdd) if (!w.destroyed) w.destroy();
+  });
+
   // --- Cascading cases ---
 
   it('cascading split — added wire crosses two endpoints', () => {

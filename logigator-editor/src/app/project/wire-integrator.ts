@@ -168,6 +168,35 @@ export class WireIntegrator {
       }
     };
 
+    // Junction points that consolidation buries inside a merged span. A wire
+    // endpoint sitting on a perpendicular wire's endpoint is a junction the user
+    // connected; absorbing that collinear wire turns the endpoint into interior,
+    // so the perpendicular pair loses its third terminator and the merge pass
+    // fuses it — silently disconnecting the junction. Remembering the point keeps
+    // the merge pass off it, and the split pass re-splits the merged span there.
+    // Ports need no such protection: hasPort() reports them independently of the
+    // wires, so a port keeps blocking the merge and forcing the split on its own.
+    const preservedJunctions = new Set<string>();
+    const notePreservedJunctions = (merged: Wire, a: Wire, b: Wire) => {
+      for (const absorbed of [a, b]) {
+        for (const p of absorbed.connectionPoints) {
+          const k = pointKey(p);
+          if (preservedJunctions.has(k)) continue;
+          if (!this._interiorContains(merged, p)) continue;
+          for (const other of collectWorkingWiresAt(p)) {
+            if (other === a || other === b) continue;
+            // A collinear neighbour ending at P overlaps the merged span and is
+            // absorbed too, so only a perpendicular endpoint marks a junction.
+            if (other.direction === merged.direction) continue;
+            if (this._endpointEquals(other, p)) {
+              preservedJunctions.add(k);
+              break;
+            }
+          }
+        }
+      }
+    };
+
     // Consolidate pass: absorb collinear-overlapping wires into a single one. This
     // runs once per added/moved wire. Without it, the split pass would split each
     // participant of an overlap and produce duplicate pieces — overlaps are only
@@ -204,6 +233,7 @@ export class WireIntegrator {
 
           const newMerged = Wire.merge(mergedW, c);
           newMerged.applyScale(scale);
+          notePreservedJunctions(newMerged, mergedW, c);
           internalWires.add(newMerged);
           consumeWire(mergedW);
           consumeWire(c);
@@ -305,6 +335,9 @@ export class WireIntegrator {
       // unsplit wire.
       const mergeSnapshot = [...candidates.values()];
       for (const p of mergeSnapshot) {
+        // A junction consolidation buried keeps its terminations: the wires that
+        // still end here stay split, and the split pass re-cuts the merged span.
+        if (preservedJunctions.has(pointKey(p))) continue;
         for (const direction of [
           WireDirection.HORIZONTAL,
           WireDirection.VERTICAL
