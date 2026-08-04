@@ -36,7 +36,8 @@ const ANALYTICS_CATEGORY = 'analytics';
  * emitted by direct {@link capture} calls at their method sites (persistence,
  * image export, promotion, compile diagnostics, docs, tutorial end, share-link,
  * custom-component create/delete, settings changes, bug reports, changelog,
- * inspection, wire repair, errors). Dialog open/close is a third path: the
+ * inspection, wire repair, legacy-editor hand-off, errors). Dialog open/close
+ * is a third path: the
  * library reports it through the hook `analytics/dialog-telemetry.ts` binds.
  *
  * Construction is deliberately dependency-free — the event sources are resolved

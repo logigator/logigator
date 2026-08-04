@@ -25,6 +25,7 @@ import { ConsentService } from '../consent/consent.service';
 import { WireRepairService } from '../project/wire-repair.service';
 import { ToastService } from '../logging/toast.service';
 import { isHandledSaveError } from '../persistence/persistence-errors';
+import { LegacyEditorService } from './legacy-editor.service';
 
 /**
  * Builds the menu models and owns the commands behind them: the desktop
@@ -51,6 +52,7 @@ export class EditorMenuService {
   private readonly toastService = inject(ToastService);
   private readonly consentService = inject(ConsentService);
   private readonly wireRepairService = inject(WireRepairService);
+  private readonly legacyEditorService = inject(LegacyEditorService);
 
   /**
    * Rebuilt whenever the active language changes so labels stay translated.
@@ -200,6 +202,7 @@ export class EditorMenuService {
           this.documentationItem(),
           this.changelogItem(),
           this.showTipsAgainItem(),
+          this.legacyEditorItem(),
           ...this.cookieSettingsItems(),
           this.aboutItem()
         ]
@@ -232,6 +235,7 @@ export class EditorMenuService {
       this.documentationItem(),
       this.changelogItem(),
       this.showTipsAgainItem(),
+      this.legacyEditorItem(),
       ...this.cookieSettingsItems(),
       this.aboutItem()
     ];
@@ -397,6 +401,20 @@ export class EditorMenuService {
         command: () => this.consentService.showPreferences()
       }
     ];
+  }
+
+  /**
+   * Escape hatch to the previous editor. Opens a new tab, so anything unsaved
+   * here survives in this one and no dirty guard is needed.
+   */
+  private legacyEditorItem(): MenuItem {
+    return {
+      label: this.translation.translate(
+        'titleBar.menuBar.help.items.legacyEditor.label'
+      ),
+      icon: 'ph ph-clock-counter-clockwise',
+      command: () => this.legacyEditorService.open('menu')
+    };
   }
 
   private aboutItem(): MenuItem {

@@ -1,4 +1,4 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import {
   LgButton,
@@ -7,6 +7,7 @@ import {
   LgTextarea
 } from '@logigator/ui';
 import { TranslateDirective } from '../translation/translate.directive';
+import { LegacyEditorService } from '../ui/legacy-editor.service';
 
 /** Error details surfaced when the dialog is opened by the global handler. */
 export interface BugReportErrorContext {
@@ -45,6 +46,8 @@ export class BugReportDialogComponent extends LgDialogContent<
   BugReportDialogData,
   string
 > {
+  private readonly legacyEditor = inject(LegacyEditorService);
+
   protected readonly maxLength = MESSAGE_MAX_LENGTH;
   protected readonly mode = this.dialogData?.mode ?? 'manual';
   protected readonly error = this.dialogData?.error;
@@ -57,6 +60,10 @@ export class BugReportDialogComponent extends LgDialogContent<
   protected send(): void {
     if (!this.canSend()) return;
     this.dialogRef.close(this.message().trim());
+  }
+
+  protected openLegacyEditor(): void {
+    this.legacyEditor.open('bug-report');
   }
 
   protected cancel(): void {

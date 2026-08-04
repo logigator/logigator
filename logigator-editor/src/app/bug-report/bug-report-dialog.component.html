@@ -5,6 +5,20 @@
     <p>{{ t('bugReport.intro') }}</p>
   }
 
+  <!-- A control, not an `<a href>`: the hand-off has to pass through
+  `LegacyEditorService` to be reported, and a link's context menu bypasses any
+  click handler. -->
+  <p class="text-sm text-muted">
+    {{ t('bugReport.legacyEditorNotice') }}
+    <button
+      type="button"
+      class="cursor-pointer text-primary hover:underline"
+      (click)="openLegacyEditor()"
+    >
+      {{ t('bugReport.legacyEditorLink') }}
+    </button>
+  </p>
+
   @if (error) {
     <details
       class="rounded-md border border-border bg-surface-50 dark:bg-surface-800"
