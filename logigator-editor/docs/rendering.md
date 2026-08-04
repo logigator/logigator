@@ -498,6 +498,7 @@ PixiJS caches one instruction set per render group and rebuilds a group's set **
 
 - **Quad-tree entries of size ≥ `RENDER_GROUP_MIN_SIZE` (32 grid units)** are their own render groups. Instruction collection stops at child render groups, so a `culled` flip rebuilds only the nearest enclosing entry group — one region's few elements, never the scene. The threshold trades rebuild-region size against group count: every group breaks batching and adds a small fixed per-frame cost (`updateRenderGroupTransforms`, buffer binds, draw calls). It compares the entry's tight cell size, so the group population tracks the lattice, not the doubled loose bounds.
 - **`ConnectionPointLayer`** is one render group, so dot insertions/removals during edits rebuild only the dot layer and root-group rebuilds never re-batch board-wide dots.
+- **`Grid`** is one render group. Every zoom step swaps each chunk's context to the new scale's geometry, and a view update inside a group rebuilds that group's whole set: from the root group that re-collects the entire scene outside the nested entry groups, from its own group only the grid. Chunks carry ~1k rects each — past the batchable vertex limit — so they never batched with content and the group boundary costs no draw calls.
 
 ### Work-mode integration
 

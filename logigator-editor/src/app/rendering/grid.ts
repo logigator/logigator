@@ -15,7 +15,14 @@ export class Grid extends Container {
   private _elPosition = new Point(0, 0);
 
   constructor() {
-    super();
+    // Its own render group: every zoom step swaps each chunk's context to the
+    // new scale's geometry, and PixiJS answers any view update inside a group
+    // by rebuilding that group's whole instruction set. In the root group that
+    // re-collects the entire scene outside the nested entry groups; here it
+    // re-collects the grid alone. Chunks carry ~1k rects each, past the
+    // batchable vertex limit, so they were never batching with content anyway
+    // and the group boundary costs no draw calls.
+    super({ isRenderGroup: true });
 
     this.boundsArea = new Rectangle(
       -Number.MAX_VALUE / 2,
