@@ -64,6 +64,7 @@ import { HintService } from './onboarding/hint.service';
 import { OnboardingNudgeComponent } from './onboarding/onboarding-nudge.component';
 import { OnboardTargetDirective } from './onboarding/onboard-target.directive';
 import { AutomationApiService } from './automation/automation-api.service';
+import { DebugMenuToggleService } from './ui/debug-menu-toggle.service';
 import { TranslateDirective } from './translation/translate.directive';
 
 @Component({
@@ -114,6 +115,7 @@ export class AppComponent {
   private readonly sessionLifecycleService = inject(SessionLifecycleService);
   private readonly location = inject(Location);
   private readonly workModeService = inject(WorkModeService);
+  private readonly debugMenuToggle = inject(DebugMenuToggleService);
   protected readonly layout = inject(LayoutService);
   protected readonly mobileUi = inject(MobileUiService);
   protected readonly editorSettings = inject(EditorSettingsService);
@@ -183,6 +185,10 @@ export class AppComponent {
     if (AUTOMATION_API) {
       this.injector.get(AutomationApiService).install();
     }
+
+    // Unconditional, unlike the facade above: the console command's whole point
+    // is reaching a build whose DEBUG_MENU define is false.
+    this.debugMenuToggle.install();
 
     // Keep the browser title in sync with the open project's name.
     effect(() => {

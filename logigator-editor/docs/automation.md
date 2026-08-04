@@ -29,11 +29,15 @@ src/app/automation/
 ## Gating
 
 The `AUTOMATION_API` esbuild define — `true` in the `development` configuration,
-`false` in production (the same pattern as `DEBUG_MENU`; see `src/define.d.ts`).
-When false, the guard in `AppComponent` folds away at build time and this whole
-module tree is **absent from the bundle**, not merely inert in it — the gate has
-to be a define rather than an `environment` flag for that, and the guarded
+`false` in production (see `src/define.d.ts`). When false, the guard in
+`AppComponent` folds away at build time and this whole module tree is **absent
+from the bundle**, not merely inert in it — the gate has to be a define rather
+than an `environment` flag for that, and the guarded
 `injector.get(AutomationApiService)` has to stay inlined inside the branch.
+
+`DEBUG_MENU` is _not_ that pattern, despite the matching name: the debug menu
+ships in every build and its define only sets the initial state, so
+`window.__logigatorDebug()` can switch it on in production.
 
 `AppComponent` calls `install()` immediately after `setStaticDIInjector`, because
 the facade builds model objects (`Project`, `Component`) that resolve their
