@@ -12,6 +12,11 @@ easier to use, with some big new capabilities on top.
 
 ### ✨ Highlights
 
+- **⚡ A rebuilt foundation.** The rendering pipeline, simulation engine, and
+  collision system were all rebuilt from the ground up: WebGPU-accelerated
+  graphics keep large circuits smooth, a new simulation core drives the logic,
+  and a more robust collision system makes editing far more stable and less
+  bug-prone.
 - **📱 Built for phones and tablets.** The editor is now fully responsive and
   touch-friendly, with multi-touch pan and zoom — build circuits anywhere, not
   just at a desk.
@@ -21,17 +26,16 @@ easier to use, with some big new capabilities on top.
   on your own device — no account needed — and pick them up again any time. When
   you're ready, upload them to the cloud with one click and Logigator brings
   along every custom component they depend on.
+- **♾️ An infinite canvas in every direction.** Build outward from the origin
+  wherever you like — left, right, up, down. The previous editor only had
+  positive coordinates, so the origin was a hard wall nothing could be placed
+  past; now the canvas simply grows with your circuit.
 - **🧩 Self-contained projects.** Every project now embeds a frozen copy of the
   custom components it uses, so it always opens, renders, and simulates — even
   offline or with the original component gone. Update placed components to the
   latest version whenever you choose, instead of every copy changing at once.
 - **🗺️ Minimap.** A live overview of your whole circuit lets you find your way
   around large designs at a glance.
-- **⚡ A rebuilt foundation.** The rendering pipeline, simulation engine, and
-  collision system were all rebuilt from the ground up: WebGPU-accelerated
-  graphics keep large circuits smooth, a new simulation core drives the logic,
-  and a more robust collision system makes editing far more stable and less
-  bug-prone.
 
 ### Under the hood
 
@@ -45,6 +49,11 @@ easier to use, with some big new capabilities on top.
 - **Rewritten collision system** — spatial checks now run on a quad tree with
   variable chunk size, making placement and drag collision more stable and far
   less bug-prone.
+- **Unbounded coordinate space** — that same quad tree carries the infinite
+  canvas: its root doubles toward whatever you place, expanding into negative
+  space exactly as readily as positive, so the canvas has no origin corner and
+  no fixed extent. The previous editor kept elements in a positive-indexed chunk
+  array and rejected both chunks and placements at negative coordinates.
 
 ### Editor & canvas
 

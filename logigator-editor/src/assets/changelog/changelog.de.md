@@ -13,6 +13,11 @@ bedienen, dazu einige große neue Möglichkeiten.
 
 ### ✨ Höhepunkte
 
+- **⚡ Ein neu gebautes Fundament.** Rendering-Pipeline, Simulations-Engine und
+  Kollisionssystem wurden alle von Grund auf neu gebaut: WebGPU-beschleunigte
+  Grafik hält große Schaltungen flüssig, ein neuer Simulationskern treibt die
+  Logik an, und ein robusteres Kollisionssystem macht das Bearbeiten weit
+  stabiler und weniger fehleranfällig.
 - **📱 Für Smartphones und Tablets gemacht.** Der Editor ist jetzt vollständig
   responsiv und touch-freundlich, mit Multitouch-Schwenken und -Zoomen — baue
   Schaltungen überall, nicht nur am Schreibtisch.
@@ -24,6 +29,11 @@ bedienen, dazu einige große neue Möglichkeiten.
   nimm sie jederzeit wieder auf. Wenn du bereit bist, lade sie mit einem Klick in
   die Cloud hoch, und Logigator bringt jede benutzerdefinierte Komponente mit,
   von der sie abhängen.
+- **♾️ Eine unendliche Arbeitsfläche in alle Richtungen.** Baue vom Ursprung aus
+  in jede Richtung — nach links, rechts, oben und unten. Der bisherige Editor
+  kannte nur positive Koordinaten, sodass der Ursprung eine harte Wand war,
+  hinter der sich nichts platzieren ließ; jetzt wächst die Arbeitsfläche einfach
+  mit deiner Schaltung.
 - **🧩 In sich geschlossene Projekte.** Jedes Projekt bettet nun eine
   eingefrorene Kopie der benutzerdefinierten Komponenten ein, die es verwendet,
   sodass es sich immer öffnen, darstellen und simulieren lässt — selbst offline
@@ -32,11 +42,6 @@ bedienen, dazu einige große neue Möglichkeiten.
   jede Kopie auf einmal ändert.
 - **🗺️ Minimap.** Eine Live-Übersicht deiner gesamten Schaltung hilft dir, dich
   in großen Entwürfen mit einem Blick zurechtzufinden.
-- **⚡ Ein neu gebautes Fundament.** Rendering-Pipeline, Simulations-Engine und
-  Kollisionssystem wurden alle von Grund auf neu gebaut: WebGPU-beschleunigte
-  Grafik hält große Schaltungen flüssig, ein neuer Simulationskern treibt die
-  Logik an, und ein robusteres Kollisionssystem macht das Bearbeiten weit
-  stabiler und weniger fehleranfällig.
 
 ### Unter der Haube
 
@@ -51,6 +56,13 @@ bedienen, dazu einige große neue Möglichkeiten.
 - **Neu geschriebenes Kollisionssystem** — räumliche Prüfungen laufen nun über
   einen Quad-Tree mit variabler Chunk-Größe, was Platzierung und
   Drag-Kollisionen stabiler und weit weniger fehleranfällig macht.
+- **Unbegrenzter Koordinatenraum** — derselbe Quad-Tree trägt die unendliche
+  Arbeitsfläche: seine Wurzel verdoppelt sich in Richtung des platzierten
+  Elements und wächst dabei genauso bereitwillig in den negativen wie in den
+  positiven Bereich, sodass die Fläche keine Ursprungsecke und keine feste
+  Ausdehnung hat. Der bisherige Editor hielt Elemente in einem positiv
+  indizierten Chunk-Array und lehnte sowohl Chunks als auch Platzierungen bei
+  negativen Koordinaten ab.
 
 ### Editor & Arbeitsfläche
 

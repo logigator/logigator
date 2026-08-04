@@ -13,6 +13,11 @@ en prime de grandes nouveautés.
 
 ### ✨ Points forts
 
+- **⚡ Des fondations reconstruites.** Le pipeline de rendu, le moteur de simulation
+  et le système de collision ont tous été reconstruits de zéro : un rendu graphique
+  accéléré par WebGPU garde les grands circuits fluides, un nouveau cœur de
+  simulation pilote la logique, et un système de collision plus robuste rend
+  l'édition bien plus stable et moins sujette aux bugs.
 - **📱 Conçu pour les téléphones et tablettes.** L'éditeur est désormais
   entièrement responsive et adapté au tactile, avec déplacement et zoom
   multi-touch — construisez des circuits n'importe où, pas seulement à un bureau.
@@ -24,6 +29,11 @@ en prime de grandes nouveautés.
   reprenez-les à tout moment. Quand vous êtes prêt, téléversez-les vers le cloud en
   un clic et Logigator emporte avec eux chaque composant personnalisé dont ils
   dépendent.
+- **♾️ Un plan de travail infini dans toutes les directions.** Construisez depuis
+  l'origine dans le sens que vous voulez — à gauche, à droite, vers le haut, vers
+  le bas. L'ancien éditeur n'avait que des coordonnées positives, si bien que
+  l'origine formait un mur infranchissable au-delà duquel rien ne pouvait être
+  placé ; désormais le plan grandit simplement avec votre circuit.
 - **🧩 Des projets autonomes.** Chaque projet intègre désormais une copie figée des
   composants personnalisés qu'il utilise, de sorte qu'il s'ouvre, s'affiche et se
   simule toujours — même hors ligne ou si le composant d'origine a disparu. Mettez
@@ -31,11 +41,6 @@ en prime de grandes nouveautés.
   lieu de voir toutes les copies changer d'un coup.
 - **🗺️ Minicarte.** Un aperçu en direct de tout votre circuit vous permet de vous
   repérer d'un coup d'œil dans les grandes conceptions.
-- **⚡ Des fondations reconstruites.** Le pipeline de rendu, le moteur de simulation
-  et le système de collision ont tous été reconstruits de zéro : un rendu graphique
-  accéléré par WebGPU garde les grands circuits fluides, un nouveau cœur de
-  simulation pilote la logique, et un système de collision plus robuste rend
-  l'édition bien plus stable et moins sujette aux bugs.
 
 ### Sous le capot
 
@@ -50,6 +55,12 @@ en prime de grandes nouveautés.
 - **Système de collision réécrit** — les vérifications spatiales s'exécutent
   désormais sur un quad tree à taille de chunk variable, rendant le placement et la
   collision lors du glisser plus stables et bien moins sujets aux bugs.
+- **Espace de coordonnées non borné** — ce même quad tree porte le plan de travail
+  infini : sa racine double vers l'élément que vous placez et s'étend dans
+  l'espace négatif tout aussi volontiers que dans le positif, si bien que le plan
+  n'a ni coin d'origine ni étendue fixe. L'ancien éditeur conservait les éléments
+  dans un tableau de chunks indexé positivement et refusait aussi bien les chunks
+  que les placements aux coordonnées négatives.
 
 ### Éditeur et plan de travail
 

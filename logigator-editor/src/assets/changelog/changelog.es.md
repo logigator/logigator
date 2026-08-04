@@ -13,6 +13,11 @@ por encima.
 
 ### ✨ Lo más destacado
 
+- **⚡ Una base reconstruida.** La canalización de renderizado, el motor de
+  simulación y el sistema de colisiones se han reconstruido desde cero: los
+  gráficos acelerados por WebGPU mantienen fluidos los circuitos grandes, un nuevo
+  núcleo de simulación impulsa la lógica y un sistema de colisiones más robusto
+  hace que la edición sea mucho más estable y menos propensa a errores.
 - **📱 Pensado para móviles y tabletas.** El editor ahora es totalmente adaptable
   y compatible con el táctil, con desplazamiento y zoom multitáctil: construye
   circuitos en cualquier sitio, no solo en un escritorio.
@@ -24,6 +29,11 @@ por encima.
   y retómalos cuando quieras. Cuando estés listo, súbelos a la nube con un solo
   clic y Logigator lleva consigo todos los componentes personalizados de los que
   dependen.
+- **♾️ Un lienzo infinito en todas las direcciones.** Construye desde el origen
+  hacia donde quieras: a la izquierda, a la derecha, arriba y abajo. El editor
+  anterior solo tenía coordenadas positivas, así que el origen era un muro
+  infranqueable más allá del cual no se podía colocar nada; ahora el lienzo
+  simplemente crece con tu circuito.
 - **🧩 Proyectos autocontenidos.** Cada proyecto ahora incrusta una copia congelada
   de los componentes personalizados que usa, de modo que siempre se abre, se
   representa y se simula, incluso sin conexión o si el componente original ya no
@@ -31,11 +41,6 @@ por encima.
   en lugar de que todas las copias cambien de golpe.
 - **🗺️ Minimapa.** Una vista general en directo de todo tu circuito te permite
   orientarte de un vistazo en diseños grandes.
-- **⚡ Una base reconstruida.** La canalización de renderizado, el motor de
-  simulación y el sistema de colisiones se han reconstruido desde cero: los
-  gráficos acelerados por WebGPU mantienen fluidos los circuitos grandes, un nuevo
-  núcleo de simulación impulsa la lógica y un sistema de colisiones más robusto
-  hace que la edición sea mucho más estable y menos propensa a errores.
 
 ### Por dentro
 
@@ -51,6 +56,12 @@ por encima.
   ejecutan sobre un quad tree con tamaño de fragmento variable, lo que hace que la
   colocación y la colisión al arrastrar sean más estables y mucho menos propensas
   a errores.
+- **Espacio de coordenadas sin límites**: ese mismo quad tree sostiene el lienzo
+  infinito; su raíz se duplica hacia el elemento que colocas y se expande hacia el
+  espacio negativo con la misma facilidad que hacia el positivo, de modo que el
+  lienzo no tiene esquina de origen ni extensión fija. El editor anterior guardaba
+  los elementos en un arreglo de fragmentos indexado en positivo y rechazaba tanto
+  los fragmentos como las colocaciones en coordenadas negativas.
 
 ### Editor y lienzo
 
