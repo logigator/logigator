@@ -271,7 +271,7 @@ const fr: TranslationSchema = {
     noOutputs: 'Aucune fiche de sortie',
     inputName: 'Entrée {{index}}',
     outputName: 'Sortie {{index}}',
-    nameLabel: 'Nom de {{name}}'
+    nameLabel: 'Nom de {{name}}, port {{position}}'
   },
   statusBar: {
     modes: {

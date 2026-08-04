@@ -28,11 +28,11 @@
         (cdkDropListDropped)="dropInput($event)"
         class="flex flex-col gap-1"
       >
-        @for (row of inputRows(); track row.component.id; let i = $index) {
+        @for (row of inputRows(); track row.component.id) {
           <div
             cdkDrag
             cdkDragLockAxis="y"
-            class="flex items-center gap-2 p-1 border bg-surface-800 border-surface-600"
+            class="flex items-center gap-2 p-1 border border-border bg-surface-50 dark:bg-surface-800"
           >
             <i
               class="ph ph-dots-six-vertical cursor-move"
@@ -45,11 +45,14 @@
               size="sm"
               class="grow min-w-0"
               type="text"
-              maxlength="8"
+              [attr.maxlength]="row.component.options.label.maxLength"
               [value]="row.label"
               [placeholder]="row.placeholder"
               [attr.aria-label]="
-                t('portsPanel.nameLabel', { name: row.placeholder })
+                t('portsPanel.nameLabel', {
+                  name: row.placeholder,
+                  position: row.position
+                })
               "
               (change)="setLabel(row, $any($event.target).value)"
             />
@@ -69,11 +72,11 @@
         (cdkDropListDropped)="dropOutput($event)"
         class="flex flex-col gap-1"
       >
-        @for (row of outputRows(); track row.component.id; let i = $index) {
+        @for (row of outputRows(); track row.component.id) {
           <div
             cdkDrag
             cdkDragLockAxis="y"
-            class="flex items-center gap-2 p-1 border bg-surface-800 border-surface-600"
+            class="flex items-center gap-2 p-1 border border-border bg-surface-50 dark:bg-surface-800"
           >
             <i
               class="ph ph-dots-six-vertical cursor-move"
@@ -86,11 +89,14 @@
               size="sm"
               class="grow min-w-0"
               type="text"
-              maxlength="8"
+              [attr.maxlength]="row.component.options.label.maxLength"
               [value]="row.label"
               [placeholder]="row.placeholder"
               [attr.aria-label]="
-                t('portsPanel.nameLabel', { name: row.placeholder })
+                t('portsPanel.nameLabel', {
+                  name: row.placeholder,
+                  position: row.position
+                })
               "
               (change)="setLabel(row, $any($event.target).value)"
             />

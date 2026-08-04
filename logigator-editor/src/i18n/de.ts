@@ -271,7 +271,7 @@ const de: TranslationSchema = {
     noOutputs: 'Keine Ausgangsstecker',
     inputName: 'Eingang {{index}}',
     outputName: 'Ausgang {{index}}',
-    nameLabel: 'Name von {{name}}'
+    nameLabel: 'Name von {{name}}, Port {{position}}'
   },
   statusBar: {
     modes: {

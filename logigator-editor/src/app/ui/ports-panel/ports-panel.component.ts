@@ -26,8 +26,15 @@ interface PlugRow {
   component: Plug;
   /** The plug's current label (empty until named). */
   label: string;
-  /** Fallback shown when unlabeled, using the row's 1-based ordinal. */
+  /**
+   * Fallback shown when unlabeled, using the plug's creation-order ordinal.
+   * Deliberately *not* the row's position: it names the plug, so a reorder
+   * moves it along with the row instead of renumbering in place — which would
+   * leave a list of unlabeled ports looking untouched after a drag.
+   */
   placeholder: string;
+  /** The plug's 1-based port position, i.e. the row's place in the list. */
+  position: number;
 }
 
 /**
@@ -42,6 +49,10 @@ interface PlugRow {
  * {@link ReorderPlugsAction}; an inline edit writes the plug's `label` via
  * {@link ChangeOptionAction} — the same option surfaced when the plug is selected
  * on the canvas, so both views stay consistent.
+ *
+ * Each row shows two ordinals, and the split matters: the leading number is the
+ * live port position, while the name field's placeholder identifies the plug by
+ * creation order. Only the former renumbers on a drag.
  */
 @Component({
   selector: 'app-ports-panel',
@@ -152,10 +163,18 @@ export class PortsPanelComponent {
     plugs.sort(
       (a, b) => a.options.index.value - b.options.index.value || a.id - b.id
     );
+    // Placeholder ordinals number the plugs by creation order (ascending
+    // instance id), which no drag can change — see PlugRow.placeholder.
+    const nameOrdinals = new Map<number, number>(
+      [...plugs].sort((a, b) => a.id - b.id).map((c, i) => [c.id, i + 1])
+    );
     return plugs.map((component, i) => ({
       component,
       label: component.options.label.value,
-      placeholder: this.translation.translate(nameKey, { index: i + 1 })
+      placeholder: this.translation.translate(nameKey, {
+        index: nameOrdinals.get(component.id)!
+      }),
+      position: i + 1
     }));
   }
 }

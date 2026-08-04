@@ -269,7 +269,7 @@ const en = {
     noOutputs: 'No output plugs',
     inputName: 'Input {{index}}',
     outputName: 'Output {{index}}',
-    nameLabel: '{{name}} name'
+    nameLabel: '{{name}} name, port {{position}}'
   },
   statusBar: {
     modes: {

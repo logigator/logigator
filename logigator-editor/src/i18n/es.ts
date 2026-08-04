@@ -271,7 +271,7 @@ const es: TranslationSchema = {
     noOutputs: 'Sin conectores de salida',
     inputName: 'Entrada {{index}}',
     outputName: 'Salida {{index}}',
-    nameLabel: 'Nombre de {{name}}'
+    nameLabel: 'Nombre de {{name}}, puerto {{position}}'
   },
   statusBar: {
     modes: {
