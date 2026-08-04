@@ -17,6 +17,7 @@ Logigator is a browser-based logic circuit editor and simulator. Users can place
 - [Configuration](#configuration)
 - [Development workflow](#development-workflow)
 - [Testing](#testing)
+- [Production stack](#production-stack)
 - [Architecture overview](#architecture-overview)
 - [Contributing](#contributing)
 - [License](#license)
@@ -91,7 +92,6 @@ The stack starts a Caddy reverse proxy on ports 80/443 with automatic self-signe
 | `editor-legacy` | Legacy Angular dev server | — (proxied) |
 | `mysql` | MySQL 8 database | 3306 (localhost only) |
 | `redis` | Session / cache store | — (internal) |
-| `redis_ui` | Rebrow Redis browser UI | 5001 |
 
 ---
 
@@ -236,6 +236,32 @@ Run the full suite:
 ```sh
 docker compose exec editor yarn test --watch=false
 ```
+
+---
+
+## Production stack
+
+`docker-compose.production.yaml` is a close-to-production environment for local testing: it builds the real `Dockerfile` image — backend, editor, and legacy editor compiled and served from one Express process — and puts Caddy in front of it. It is not the live deployment, which runs the image published to `ghcr.io` by the release workflow.
+
+```sh
+docker compose -f docker-compose.production.yaml up --build
+```
+
+The stack reuses `logigator-backend/config/`, whose `domains.json` pins `https://logigator.test`, so the hosts entry and config files from [Local setup](#local-setup) apply unchanged. `Caddyfile.production` terminates TLS with the same `tls internal` self-signed certificate.
+
+**Services started by the production stack:**
+
+| Service | Purpose | Exposed port |
+|---|---|---|
+| `proxy` | Caddy HTTPS reverse proxy (`Caddyfile.production`) | 80, 443 |
+| `app` | Built image: API, pages, and both editors | — (proxied) |
+| `mysql` | MySQL 8 database | 3306 (localhost only) |
+| `redis` | Session / cache store | — (internal) |
+
+Both compose files sit in the repo root and therefore share the Compose project name `logigator`, which has two consequences:
+
+- **The two stacks cannot run at the same time.** `proxy`, `mysql`, and `redis` are service names in both, so starting one recreates those containers from the other's definitions. Bring the dev stack down first. Compose also warns about orphan containers left by the other stack — expected, and do not pass `--remove-orphans`, which deletes them.
+- **The `caddy_data` volume is shared, deliberately.** `tls internal` stores its local root CA there, so both stacks serve certificates from the CA the browser already trusts. Isolating the stack under its own project name would mint a second CA and trigger a new trust warning.
 
 ---
 

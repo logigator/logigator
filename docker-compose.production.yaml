@@ -1,12 +1,21 @@
 services:
+  proxy:
+    image: caddy:2-alpine
+    networks:
+      - net
+    volumes:
+      - ./Caddyfile.production:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+    ports:
+      - "127.0.0.1:80:80"
+      - "127.0.0.1:443:443"
+
   app:
     build:
       context: .
       dockerfile: Dockerfile
     networks:
       - net
-    ports:
-      - "127.0.0.1:3000:3000"
     depends_on:
       - mysql
       - redis
@@ -32,6 +41,9 @@ services:
     image: redis:7
     networks:
       - net
+
+volumes:
+  caddy_data:
 
 networks:
   net:
