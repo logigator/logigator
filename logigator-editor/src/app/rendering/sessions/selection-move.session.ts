@@ -143,12 +143,16 @@ export class SelectionMoveSession implements DragSession {
   onMove(input: PointerInput): void {
     if (!this._pointerStart) return;
     const gridPos = roundToGrid(input.grid, true);
-    this.dragLayer.position.set(
-      gridPos.x - this._pointerStart.x,
-      gridPos.y - this._pointerStart.y
-    );
+    const x = gridPos.x - this._pointerStart.x;
+    const y = gridPos.y - this._pointerStart.y;
+    // Pointer moves arrive far faster than the cursor crosses grid cells, and
+    // the ghosts only ever sit on the grid: without the offset changing there
+    // is nothing to redraw and nothing new to collide with.
+    const position = this.dragLayer.position;
+    if (position.x === x && position.y === y) return;
+    position.set(x, y);
     // The selection grab rect rides along with the dragged ghosts.
-    this.project.floatingLayer.setSelectionRectOffset(this.dragLayer.position);
+    this.project.floatingLayer.setSelectionRectOffset(position);
     this._collision.update();
   }
 

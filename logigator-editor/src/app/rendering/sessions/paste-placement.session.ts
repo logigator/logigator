@@ -104,13 +104,15 @@ export class PastePlacementSession implements DragSession {
   onMove(input: PointerInput): void {
     if (!this._isDragging) return;
     const cursor = roundToGrid(input.grid, true);
-    this._dragLayer.position.set(
-      cursor.x - this._anchor!.x,
-      cursor.y - this._anchor!.y
-    );
-    this._project.floatingLayer.setSelectionRectOffset(
-      this._dragLayer.position
-    );
+    const x = cursor.x - this._anchor!.x;
+    const y = cursor.y - this._anchor!.y;
+    // Pointer moves arrive far faster than the cursor crosses grid cells, and
+    // the ghosts only ever sit on the grid: without the offset changing there
+    // is nothing to redraw and nothing new to collide with.
+    const position = this._dragLayer.position;
+    if (position.x === x && position.y === y) return;
+    position.set(x, y);
+    this._project.floatingLayer.setSelectionRectOffset(position);
     this._collision.update();
   }
 
