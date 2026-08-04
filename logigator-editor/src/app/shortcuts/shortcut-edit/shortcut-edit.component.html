@@ -7,6 +7,7 @@
       [text]="true"
       size="sm"
       [lgTooltip]="t('shortcuts.manager.edit')"
+      [ariaLabel]="t('shortcuts.manager.edit')"
       tooltipPosition="bottom"
       (onClick)="startRecording()"
     />
@@ -19,6 +20,7 @@
       severity="warn"
       [text]="true"
       size="sm"
+      [ariaLabel]="t('shortcuts.manager.cancelRecording')"
       (onClick)="stopRecording()"
     />
   }

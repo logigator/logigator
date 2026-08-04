@@ -844,6 +844,7 @@ const en = {
       reset: 'Reset',
       unassign: 'Unassign',
       edit: 'Edit Shortcut',
+      cancelRecording: 'Cancel Recording',
       recordPrompt: 'Press keys…'
     },
     toast: {

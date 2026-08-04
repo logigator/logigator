@@ -860,6 +860,7 @@ const es: TranslationSchema = {
       reset: 'Restablecer',
       unassign: 'Desasignar',
       edit: 'Editar atajo',
+      cancelRecording: 'Cancelar la grabación',
       recordPrompt: 'Pulsa las teclas…'
     },
     toast: {

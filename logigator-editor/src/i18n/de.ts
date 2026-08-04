@@ -863,6 +863,7 @@ const de: TranslationSchema = {
       reset: 'Zurücksetzen',
       unassign: 'Zuweisung aufheben',
       edit: 'Tastenkürzel bearbeiten',
+      cancelRecording: 'Aufzeichnung abbrechen',
       recordPrompt: 'Tasten drücken…'
     },
     toast: {

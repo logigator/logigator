@@ -863,6 +863,7 @@ const fr: TranslationSchema = {
       reset: 'Réinitialiser',
       unassign: 'Désassigner',
       edit: 'Modifier le raccourci',
+      cancelRecording: 'Annuler l’enregistrement',
       recordPrompt: 'Appuyez sur des touches…'
     },
     toast: {
