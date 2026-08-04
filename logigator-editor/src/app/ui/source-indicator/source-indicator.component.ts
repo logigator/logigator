@@ -85,7 +85,7 @@ export class SourceIndicatorComponent {
     draft: {
       icon: 'ph ph-pencil-simple-line',
       severity: 'warn',
-      glyph: 'text-warn'
+      glyph: 'text-warn-text'
     },
     share: {
       icon: 'ph ph-share-network',
@@ -95,7 +95,7 @@ export class SourceIndicatorComponent {
     embedded: {
       icon: 'ph ph-package',
       severity: 'warn',
-      glyph: 'text-warn'
+      glyph: 'text-warn-text'
     }
   };
 
