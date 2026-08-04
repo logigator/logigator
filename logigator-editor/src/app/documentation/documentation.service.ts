@@ -5,7 +5,7 @@ import { TranslationService } from '../translation/translation.service';
 import { DocumentationDialogComponent } from '../ui/dialogs/documentation-dialog/documentation-dialog.component';
 import { docPage, DocPageId } from './docs-pages';
 import { AnalyticsService } from '../analytics/analytics.service';
-import { AnalyticsEvent } from '../analytics/analytics.mapping';
+import { AnalyticsEvent, DialogId } from '../analytics/analytics.mapping';
 
 /**
  * Opens the in-editor documentation and tracks which page it shows. Anything
@@ -60,7 +60,10 @@ export class DocumentationService {
       fullscreen: this.layout.isCompact,
       bodyClass: 'flex flex-col overflow-hidden',
       modal: true,
-      closable: true
+      closable: true,
+      // Alongside `doc_page_opened`, which counts pages (including navigation
+      // within an already-open viewer) rather than viewer sessions.
+      telemetryId: DialogId.Documentation
     });
     this.dialogRef.onClose.subscribe(() => {
       this.dialogRef = null;

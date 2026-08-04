@@ -1,5 +1,6 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { DialogService, LgButton } from '@logigator/ui';
+import { DialogId } from '../../../analytics/analytics.mapping';
 import { TranslationService } from '../../../translation/translation.service';
 import { ComponentActionContext } from '../../component-action';
 import { CustomComponentRegistry } from '../custom-component-registry.service';
@@ -55,6 +56,7 @@ export class EditDetailsActionComponent {
       width: '28rem',
       modal: true,
       closable: true,
+      telemetryId: DialogId.ComponentDetails,
       data: { masterTypeId: resolved.masterTypeId }
     });
   }

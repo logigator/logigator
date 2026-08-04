@@ -7,7 +7,7 @@ import { ChangelogDialogComponent } from '../ui/dialogs/changelog-dialog/changel
 import { environment } from '../../environments/environment';
 import { CookieService } from '../storage/cookie.service';
 import { AnalyticsService } from '../analytics/analytics.service';
-import { AnalyticsEvent } from '../analytics/analytics.mapping';
+import { AnalyticsEvent, DialogId } from '../analytics/analytics.mapping';
 import changelogEn from '@assets/changelog/changelog.en.md';
 import changelogDe from '@assets/changelog/changelog.de.md';
 import changelogFr from '@assets/changelog/changelog.fr.md';
@@ -86,7 +86,10 @@ export class ChangelogService {
       header: this.translation.translate('changelogDialog.header'),
       width: '48rem',
       modal: true,
-      closable: true
+      closable: true,
+      // Alongside `changelog_viewed`, which carries the auto-vs-manual trigger
+      // the generic pair cannot.
+      telemetryId: DialogId.Changelog
     });
   }
 

@@ -1,5 +1,6 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { DialogService, LgButton } from '@logigator/ui';
+import { DialogId } from '../../../analytics/analytics.mapping';
 import { TranslationService } from '../../../translation/translation.service';
 import { ComponentActionContext } from '../../component-action';
 import { CustomComponentRegistry } from '../custom-component-registry.service';
@@ -58,6 +59,7 @@ export class ShareComponentActionComponent {
       width: '32rem',
       modal: true,
       closable: true,
+      telemetryId: DialogId.ShareComponent,
       data: {
         kind: 'component',
         componentId: master.id,

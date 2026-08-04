@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { DialogService } from '@logigator/ui';
 import { TranslationService } from '../translation/translation.service';
 import { AnalyticsService } from '../analytics/analytics.service';
-import { AnalyticsEvent } from '../analytics/analytics.mapping';
+import { AnalyticsEvent, DialogId } from '../analytics/analytics.mapping';
 import { ReportErrorApiService } from '../api/services/report-error-api.service';
 import type { ReportErrorRequest } from '../api/models/report-error';
 import { PersistenceService } from '../persistence/persistence.service';
@@ -98,6 +98,14 @@ export class BugReportService {
         width: '36rem',
         modal: true,
         closable: true,
+        // Split by mode rather than reported as a property: when the dialog is
+        // dismissed there is no event of ours to carry the mode, and
+        // manual-vs-error is the distinction worth having on an abandoned
+        // report.
+        telemetryId:
+          data.mode === 'error'
+            ? DialogId.BugReportError
+            : DialogId.BugReportManual,
         data
       });
       if (!ref) return;

@@ -1,5 +1,6 @@
 import { Component, computed, inject } from '@angular/core';
 import { DialogService, LgButton, LgDivider, LgTooltip } from '@logigator/ui';
+import { DialogId } from '../../analytics/analytics.mapping';
 import { TranslationService } from '../../translation/translation.service';
 import { WorkModeService } from '../../work-mode/work-mode.service';
 import { WorkMode } from '../../work-mode/work-mode.enum';
@@ -108,7 +109,8 @@ export class ToolBarComponent {
       header: this.translation.translate('openProjectDialog.title'),
       width: '40rem',
       modal: true,
-      closable: true
+      closable: true,
+      telemetryId: DialogId.OpenProject
     });
   }
 
@@ -119,7 +121,8 @@ export class ToolBarComponent {
       ),
       width: '28rem',
       modal: true,
-      closable: true
+      closable: true,
+      telemetryId: DialogId.NewComponent
     });
   }
 

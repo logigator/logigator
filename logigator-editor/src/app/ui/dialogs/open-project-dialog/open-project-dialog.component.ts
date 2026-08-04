@@ -9,6 +9,7 @@ import {
   LgTabPanel,
   LgTabs
 } from '@logigator/ui';
+import { DialogId } from '../../../analytics/analytics.mapping';
 import { TranslationService } from '../../../translation/translation.service';
 import {
   debounceTime,
@@ -270,6 +271,7 @@ export class OpenProjectDialogComponent implements OnInit {
       width: '32rem',
       modal: true,
       closable: true,
+      telemetryId: DialogId.ShareProjectFromList,
       data: {
         kind: 'project',
         projectId: item.id,

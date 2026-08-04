@@ -1,6 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { DialogService } from '@logigator/ui';
+import { DialogId } from '../analytics/analytics.mapping';
 import { TranslationService } from '../translation/translation.service';
 import { PersistenceService } from '../persistence/persistence.service';
 import { PromotionService } from '../persistence/promotion.service';
@@ -105,6 +106,7 @@ export class SaveCoordinatorService {
       width: '28rem',
       modal: true,
       closable: true,
+      telemetryId: DialogId.SaveProject,
       data: { name: currentName }
     });
     if (!ref) return Promise.resolve(undefined);

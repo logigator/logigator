@@ -1,6 +1,7 @@
 import { Component, inject, input } from '@angular/core';
 import { TranslationService } from '../../../translation/translation.service';
 import { DialogService, LgButton } from '@logigator/ui';
+import { DialogId } from '../../../analytics/analytics.mapping';
 import { ComponentOptionInput } from '../../component-option';
 import type { MemoryDataComponentOption } from './memory-data.component-option';
 import { HexEditorComponent } from '../../../ui/hex-editor/hex-editor.component';
@@ -40,6 +41,7 @@ export class MemoryDataOptionInputComponent implements ComponentOptionInput<stri
       modal: true,
       closable: true,
       dismissableMask: false,
+      telemetryId: DialogId.RomDataEditor,
       width: '64rem',
       style: { maxWidth: '100dvw', maxHeight: '100dvh' },
       inputValues: {

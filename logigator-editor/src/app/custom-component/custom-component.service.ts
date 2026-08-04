@@ -21,7 +21,7 @@ import { DefinitionBinding } from './definition-binding';
 import { WireRepairService } from '../project/wire-repair.service';
 import { UploadCoordinatorService } from '../ui/upload/upload-coordinator.service';
 import { AnalyticsService } from '../analytics/analytics.service';
-import { AnalyticsEvent } from '../analytics/analytics.mapping';
+import { AnalyticsEvent, DialogId } from '../analytics/analytics.mapping';
 import {
   CloseTabChoice,
   CloseTabDialogComponent
@@ -404,6 +404,7 @@ export class CustomComponentService {
       width: '28rem',
       modal: true,
       closable: true,
+      telemetryId: DialogId.CloseTab,
       data: {
         name: metadata?.name ?? this.translation.translate('common.untitled'),
         promotionWarning:

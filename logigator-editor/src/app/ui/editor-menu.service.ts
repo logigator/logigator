@@ -1,5 +1,6 @@
 import { computed, inject, Injectable, Injector, Signal } from '@angular/core';
 import { DialogService, type MenuItem } from '@logigator/ui';
+import { DialogId } from '../analytics/analytics.mapping';
 import { TranslationService } from '../translation/translation.service';
 import { PersistenceService } from '../persistence/persistence.service';
 import { ProjectService } from '../project/project.service';
@@ -376,7 +377,8 @@ export class EditorMenuService {
       header: this.translation.translate('shortcuts.title'),
       width: '40rem',
       modal: true,
-      closable: true
+      closable: true,
+      telemetryId: DialogId.ShortcutManager
     });
   }
 
@@ -412,7 +414,8 @@ export class EditorMenuService {
       header: this.translation.translate('aboutDialog.header'),
       width: '28rem',
       modal: true,
-      closable: true
+      closable: true,
+      telemetryId: DialogId.About
     });
   }
 
@@ -565,6 +568,7 @@ export class EditorMenuService {
       width: '32rem',
       modal: true,
       closable: true,
+      telemetryId: DialogId.ShareProject,
       data: {
         kind: 'project',
         projectId: metadata.id,
@@ -598,7 +602,8 @@ export class EditorMenuService {
       header: this.translation.translate('imageExport.title'),
       width: '28rem',
       modal: true,
-      closable: true
+      closable: true,
+      telemetryId: DialogId.ExportImage
     });
   }
 
@@ -609,7 +614,8 @@ export class EditorMenuService {
       ),
       width: '28rem',
       modal: true,
-      closable: true
+      closable: true,
+      telemetryId: DialogId.NewComponent
     });
   }
 
@@ -618,7 +624,8 @@ export class EditorMenuService {
       header: this.translation.translate('openProjectDialog.title'),
       width: '40rem',
       modal: true,
-      closable: true
+      closable: true,
+      telemetryId: DialogId.OpenProject
     });
   }
 

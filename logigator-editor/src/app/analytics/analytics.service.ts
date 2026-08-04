@@ -32,11 +32,12 @@ const ANALYTICS_CATEGORY = 'analytics';
  *
  * {@link init} wires the self-contained observable sources (tool switches,
  * simulation lifecycle, tutorial start, per-project edit operations, and the
- * `ui_language` super property every event carries); the
- * remaining events are emitted by direct {@link capture} calls at their method
- * sites (persistence, image export, promotion, compile diagnostics, docs,
- * tutorial end, share-link, custom-component create/delete, settings changes,
- * bug reports, changelog, inspection, errors).
+ * `ui_language` super property every event carries); the remaining events are
+ * emitted by direct {@link capture} calls at their method sites (persistence,
+ * image export, promotion, compile diagnostics, docs, tutorial end, share-link,
+ * custom-component create/delete, settings changes, bug reports, changelog,
+ * inspection, wire repair, errors). Dialog open/close is a third path: the
+ * library reports it through the hook `analytics/dialog-telemetry.ts` binds.
  *
  * Construction is deliberately dependency-free — the event sources are resolved
  * lazily in {@link init} — so the many services that inject this sink to report

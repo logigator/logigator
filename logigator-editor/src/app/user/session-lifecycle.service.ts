@@ -1,6 +1,7 @@
 import { effect, inject, Injectable, untracked } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { DialogService } from '@logigator/ui';
+import { DialogId } from '../analytics/analytics.mapping';
 import { TranslationService } from '../translation/translation.service';
 import { UserService } from './user.service';
 import { sessionUserId } from '../api/models/user';
@@ -213,6 +214,7 @@ export class SessionLifecycleService {
       width: '40rem',
       modal: true,
       closable: true,
+      telemetryId: DialogId.Logout,
       data: {
         items: dirty.map(({ project, metadata }) => ({
           name: metadata.name,

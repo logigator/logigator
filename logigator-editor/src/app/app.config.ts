@@ -16,6 +16,7 @@ import { provideMarkdown } from 'ngx-markdown';
 import { provideLgLabels } from '@logigator/ui';
 import { ConsentService } from './consent/consent.service';
 import { AnalyticsService } from './analytics/analytics.service';
+import { provideDialogAnalytics } from './analytics/dialog-telemetry';
 import { TranslationService } from './translation/translation.service';
 
 export const appConfig: ApplicationConfig = {
@@ -86,6 +87,7 @@ export const appConfig: ApplicationConfig = {
       const translation = inject(TranslationService);
       return (key) => translation.translate(`common.${key}`);
     }),
+    provideDialogAnalytics(),
     provideHttpClient(),
     provideMarkdown({ loader: HttpClient })
   ]

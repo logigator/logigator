@@ -18,7 +18,11 @@ export const AnalyticsEvent = {
   CustomComponentCreated: 'custom_component_created',
   CustomComponentDeleted: 'custom_component_deleted',
   SettingChanged: 'setting_changed',
+  DialogOpened: 'dialog_opened',
+  DialogClosed: 'dialog_closed',
   BugReportSubmitted: 'bug_report_submitted',
+  WireRepairOffered: 'wire_repair_offered',
+  WireRepairRun: 'wire_repair_run',
   ChangelogViewed: 'changelog_viewed',
   InspectionOpened: 'inspection_opened',
   ShareLinkGenerated: 'share_link_generated',
@@ -28,6 +32,46 @@ export const AnalyticsEvent = {
   TutorialAbandoned: 'tutorial_abandoned',
   DocPageOpened: 'doc_page_opened'
 } as const;
+
+/**
+ * Identifies each dialog to the `dialog_opened` / `dialog_closed` pair, passed
+ * to the library as `DialogConfig.telemetryId`. Centralised for the same reason
+ * as {@link AnalyticsEvent}, and because several dialogs open from more than
+ * one place: the ids that repeat (`OpenProject`, `NewComponent`) are the same
+ * surface reached by menu, toolbar and shortcut, while the share dialog splits
+ * by what is being shared, which is the axis worth breaking down by.
+ *
+ * The pair measures reach and abandonment — how often a surface is opened at
+ * all, and how often it is opened and walked away from. It deliberately does
+ * *not* measure task completion: `dialog_closed.resolved` only says whether the
+ * dialog closed with a result, and several dialogs commit their work through
+ * their own API instead (the share dialog PATCHes as you go) or have no result
+ * to give (About, Changelog, Documentation, Shortcuts). The specific outcome
+ * events — `share_link_generated`, `project_saved`, `project_uploaded`,
+ * `bug_report_submitted` — remain the completion signal.
+ */
+export const DialogId = {
+  About: 'about',
+  BugReportError: 'bug-report-error',
+  BugReportManual: 'bug-report-manual',
+  Changelog: 'changelog',
+  CloseTab: 'close-tab',
+  ComponentDetails: 'component-details',
+  Documentation: 'documentation',
+  ExportImage: 'export-image',
+  Logout: 'logout',
+  NewComponent: 'new-component',
+  OpenProject: 'open-project',
+  RomDataEditor: 'rom-data-editor',
+  SaveProject: 'save-project',
+  ShareComponent: 'share-component',
+  ShareProject: 'share-project',
+  ShareProjectFromList: 'share-project-from-list',
+  ShortcutManager: 'shortcut-manager',
+  Upload: 'upload'
+} as const;
+
+export type DialogId = (typeof DialogId)[keyof typeof DialogId];
 
 const MAX_STRING_LENGTH = 64;
 

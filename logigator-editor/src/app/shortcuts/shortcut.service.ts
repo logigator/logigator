@@ -16,6 +16,7 @@ import {
 } from 'rxjs';
 import { SignalMap } from 'ngxtension/collections';
 import { DialogService } from '@logigator/ui';
+import { DialogId } from '../analytics/analytics.mapping';
 import { TranslationService } from '../translation/translation.service';
 import {
   ShortcutActionEnum,
@@ -277,7 +278,8 @@ export class ShortcutService implements OnDestroy {
         header: this.translation.translate('openProjectDialog.title'),
         width: '40rem',
         modal: true,
-        closable: true
+        closable: true,
+        telemetryId: DialogId.OpenProject
       });
     });
 
@@ -288,7 +290,8 @@ export class ShortcutService implements OnDestroy {
         ),
         width: '28rem',
         modal: true,
-        closable: true
+        closable: true,
+        telemetryId: DialogId.NewComponent
       });
     });
 
