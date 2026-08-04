@@ -21,6 +21,7 @@ import { ChangelogService } from '../changelog/changelog.service';
 import { DocumentationService } from '../documentation/documentation.service';
 import { OnboardingService } from '../onboarding/onboarding.service';
 import { DebugMenuService } from './debug-menu.service';
+import { DebugMenuToggleService } from './debug-menu-toggle.service';
 import { ConsentService } from '../consent/consent.service';
 import { WireRepairService } from '../project/wire-repair.service';
 import { ToastService } from '../logging/toast.service';
@@ -53,6 +54,7 @@ export class EditorMenuService {
   private readonly consentService = inject(ConsentService);
   private readonly wireRepairService = inject(WireRepairService);
   private readonly legacyEditorService = inject(LegacyEditorService);
+  private readonly debugMenuToggle = inject(DebugMenuToggleService);
 
   /**
    * Rebuilt whenever the active language changes so labels stay translated.
@@ -209,10 +211,10 @@ export class EditorMenuService {
       }
     ];
 
-    // Resolved inline rather than through an `inject()` field or a helper
-    // method: the reference has to sit inside the define guard itself, so a
-    // false DEBUG_MENU drops the service from the bundle (see define.d.ts).
-    if (DEBUG_MENU)
+    // Resolved inside the guard rather than through an `inject()` field: the
+    // debug menu reaches half a dozen services, and none of them should be
+    // constructed in a session that never turns the menu on.
+    if (this.debugMenuToggle.enabled())
       items.push(this.injector.get(DebugMenuService).buildMenuItem());
 
     return items;
@@ -240,7 +242,7 @@ export class EditorMenuService {
       this.aboutItem()
     ];
 
-    if (DEBUG_MENU)
+    if (this.debugMenuToggle.enabled())
       items.push(
         { separator: true },
         this.injector.get(DebugMenuService).buildMenuItem()

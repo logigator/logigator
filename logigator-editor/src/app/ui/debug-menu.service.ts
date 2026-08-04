@@ -19,9 +19,11 @@ import { pickTextFile } from '../utils/file-picker';
  * console (and a toast where a console object is not enough); these are
  * developer tools and are intentionally untranslated.
  *
- * The gate is the `DEBUG_MENU` define at the call sites in `EditorMenuService`,
- * not a check in here: that is what keeps this module — and the commands it
- * reaches — out of a production bundle rather than merely inert inside it.
+ * The gate is `DebugMenuToggleService.enabled()` at the call sites in
+ * `EditorMenuService`, not a check in here. This module ships in every build so
+ * the `window.__logigatorDebug()` console command can reach it in production;
+ * resolving the service inside that guard is what keeps the services these
+ * commands inject unconstructed until the menu is switched on.
  */
 @Injectable({ providedIn: 'root' })
 export class DebugMenuService {
