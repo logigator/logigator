@@ -17,6 +17,7 @@ src/app/rendering/
 ├── invalid-tint.ts                 # applyInvalidTint: collision tint / own-tint restore
 ├── placement-ghost.ts              # Single-component preview (hover + placement session)
 ├── quad-tree-container.ts          # Spatial index for efficient range queries
+├── quad-tree-debug.ts              # Read-only reports over a tree: stats, histograms, text tree, validate
 ├── interaction/
 │   ├── pointer-input.ts            # PointerInput sample + canvasToGrid viewport mapping
 │   ├── pointer-controller.ts       # Per-canvas DOM listener: capture, buttons, wheel, gestures
@@ -347,6 +348,8 @@ When an inserted element's center falls outside the current root cell — or the
 ### Debug introspection
 
 Four methods describe the live tree. The commands that call them sit in the title-bar Debug menu (`DebugMenuService`, gated by the `DEBUG_MENU` define) and run over both trees of the active project, which `Project.quadTrees` exposes for that purpose alone.
+
+The walks themselves live in `quad-tree-debug.ts` as free functions over a root `QuadTreeEntry`, the item map (as a `ReadonlyMap`) and a `QuadTreeLimits` object of the container's thresholds; the four methods on `QuadTreeContainer` are one-line delegates that hand over its internals. `QuadTreeContainer` is insert/remove/query/cull/scale, and every report is a read-only walk no mutation path calls into.
 
 | Method                   | Returns                                                                                                                                                                                                          |
 | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
