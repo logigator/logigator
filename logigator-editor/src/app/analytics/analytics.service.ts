@@ -5,6 +5,7 @@ import { WorkMode } from '../work-mode/work-mode.enum';
 import { SimulationService } from '../simulation/simulation.service';
 import { OnboardingService } from '../onboarding/onboarding.service';
 import { ProjectService } from '../project/project.service';
+import { TranslationService } from '../translation/translation.service';
 import { Project } from '../project/project';
 import { Action } from '../actions/action';
 import { environment } from '../../environments/environment';
@@ -30,7 +31,8 @@ const ANALYTICS_CATEGORY = 'analytics';
  * the module: every entry point is gated on {@link initialized}.
  *
  * {@link init} wires the self-contained observable sources (tool switches,
- * simulation lifecycle, tutorial start, and per-project edit operations); the
+ * simulation lifecycle, tutorial start, per-project edit operations, and the
+ * `ui_language` super property every event carries); the
  * remaining events are emitted by direct {@link capture} calls at their method
  * sites (persistence, image export, promotion, compile diagnostics, docs,
  * tutorial end, share-link, custom-component create/delete, settings changes,
@@ -52,6 +54,9 @@ export class AnalyticsService {
   private posthog: PostHog | null = null;
   /** In-flight (or settled) import, so concurrent consent events share one. */
   private posthogLoad: Promise<PostHog> | null = null;
+  /** The active UI language, mirrored so {@link registerLanguage} can restamp
+   * it whenever PostHog itself becomes available. */
+  private uiLanguage: string | null = null;
 
   /** Sends an event, dropped silently until PostHog is initialised on consent.
    * Never throws — some call sites (the `onBeforeRecord` edit hook) run inside a
@@ -89,6 +94,7 @@ export class AnalyticsService {
   /** Wires the consent gate and the observable event sources. Called once at
    * app startup (from `main.ts`, after bootstrap). */
   public init(): void {
+    this.watchLanguage(this.injector.get(TranslationService));
     this.wireConsent();
     this.watchWorkMode(this.injector.get(WorkModeService));
     this.watchSimulation(this.injector.get(SimulationService));
@@ -117,8 +123,13 @@ export class AnalyticsService {
     if (granted && !this.initialized && environment.analytics.posthogKey) {
       void this.initPosthog();
     } else if (this.initialized) {
-      if (granted) this.posthog?.opt_in_capturing();
-      else this.posthog?.opt_out_capturing();
+      if (granted) {
+        // Before opt-in, which emits `$opt_in` and the session's `$pageview`
+        // synchronously — a super property registered after them would miss
+        // both, and `$pageview` is the only event a bounced session produces.
+        this.registerLanguage();
+        this.posthog?.opt_in_capturing();
+      } else this.posthog?.opt_out_capturing();
     }
   }
 
@@ -153,6 +164,41 @@ export class AnalyticsService {
     });
     this.initialized = true;
     this.syncConsent();
+  }
+
+  /**
+   * Stamps the active UI language on every event as a super property, so
+   * language usage is a breakdown on any event rather than a funnel over the
+   * one-off `setting_changed`. PostHog's own `$browser_language` cannot stand
+   * in: the app resolves its language from the persisted setting and otherwise
+   * falls back to `en`, never from the browser, so the two diverge for every
+   * session that has not picked a language.
+   *
+   * Called on each language change and from every consent grant, since consent
+   * — and with it the package import — can land long after startup.
+   */
+  private registerLanguage(): void {
+    if (!this.initialized || !this.uiLanguage) return;
+    try {
+      this.posthog?.register({ ui_language: this.uiLanguage });
+    } catch {
+      // Analytics must never break the surrounding operation.
+    }
+  }
+
+  private watchLanguage(translation: TranslationService): void {
+    // Seeded synchronously: the effect's first run is scheduled, and PostHog
+    // may already be initialising by then.
+    this.uiLanguage = translation.getActiveLang();
+    effect(
+      () => {
+        // `activeLang` fires before the language bundle resolves, which is what
+        // this wants — the id, not the translations.
+        this.uiLanguage = translation.activeLang();
+        this.registerLanguage();
+      },
+      { injector: this.injector }
+    );
   }
 
   /** Imports `posthog-js` once, sharing the promise across concurrent calls. */
