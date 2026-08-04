@@ -20,9 +20,13 @@ import { ThemingService } from '../theming/theming.service';
  * routing and session lifecycle live in the `WorkModeRouter`.
  */
 export class FloatingLayer extends Container {
+  // A render group of its own: a drag moves the layer, and a render group's
+  // transform reaches its contents as the group's own matrix instead of being
+  // pushed down the tree. Without it every ghost — and every visual child of
+  // every ghost — is re-derived and re-batched on each frame of the drag.
   private readonly _dragLayer = new Container<
     Component | Wire | ConnectionPoint
-  >();
+  >({ isRenderGroup: true });
 
   // Ghost bubble shown under the cursor while the wire tool hovers a port,
   // previewing the negation the next tap would toggle: translucent for the
