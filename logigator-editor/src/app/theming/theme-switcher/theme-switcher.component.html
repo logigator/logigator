@@ -1,4 +1,5 @@
 <lg-select-button
+  [ariaLabel]="themeLabel()"
   [options]="themeOptions()"
   [ngModel]="currentTheme()"
   (ngModelChange)="setTheme($event)"

@@ -148,7 +148,9 @@ export class ComponentSettingsComponent {
   });
 
   protected readonly directionChoices = DIRECTION_CHOICES;
-  protected readonly directionInputId = `component-settings-direction-${++nextDirectionInputId}`;
+  // Labels the direction group by reference: `<label for>` does not associate
+  // with the `div[role=group]` LgSelectButton renders.
+  protected readonly directionLabelId = `component-settings-direction-${++nextDirectionInputId}`;
 
   /**
    * The library/state chip for a custom component (master or placed snapshot):

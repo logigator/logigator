@@ -17,5 +17,6 @@ export class SelectButtonOptionInputComponent<
 > implements ComponentOptionInput<T> {
   public readonly option = input.required<SelectButtonComponentOption<T>>();
   public readonly commit = input.required<(value: T) => void>();
-  protected readonly inputId = `component-settings-input-${++nextId}`;
+  // Labels the group by reference; see LgSelectButton's `ariaLabelledby`.
+  protected readonly labelId = `component-settings-input-${++nextId}`;
 }

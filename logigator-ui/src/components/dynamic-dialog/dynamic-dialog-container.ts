@@ -11,6 +11,7 @@ import {
   viewChild
 } from '@angular/core';
 import { LgScaleIn } from '../../internal/fade-in';
+import { lgLabel } from '../../tokens/labels';
 import { DialogConfig } from './dialog-config';
 import { DialogRef } from './dialog-ref';
 
@@ -55,7 +56,7 @@ let nextId = 0;
           @if (config.closable !== false) {
             <button
               type="button"
-              aria-label="Close"
+              [attr.aria-label]="closeLabel"
               class="inline-flex size-10 items-center justify-center rounded-full text-muted transition-colors hover:bg-content-hover hover:text-text"
               (click)="ref.close()"
             >
@@ -79,6 +80,9 @@ export class LgDynamicDialogContainer implements AfterViewInit {
   });
 
   protected readonly headerId = `lg-dynamic-dialog-${++nextId}`;
+
+  /** Per-dialog override first, then the app-wide `LG_LABELS` string. */
+  protected readonly closeLabel = this.config.closeLabel ?? lgLabel('close');
 
   protected readonly fullscreen = computed(() => {
     const fullscreen = this.config.fullscreen;

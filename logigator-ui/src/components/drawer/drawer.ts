@@ -16,6 +16,7 @@ import {
 } from '@angular/core';
 import { ModalOverlay } from '../../internal/modal-overlay';
 import { LgOverlayPlacement } from '../../internal/overlay';
+import { lgLabel } from '../../tokens/labels';
 
 let nextId = 0;
 
@@ -82,7 +83,7 @@ const POSITION_BORDER: Record<DrawerPosition, string> = {
             @if (closable()) {
               <button
                 type="button"
-                aria-label="Close"
+                [attr.aria-label]="closeLabel()"
                 class="inline-flex size-8 items-center justify-center rounded text-muted transition-colors hover:bg-content-hover hover:text-text"
                 (click)="requestClose()"
               >
@@ -103,6 +104,8 @@ export class LgDrawer implements OnDestroy {
   readonly position = input<DrawerPosition>('left');
   readonly header = input<string>();
   readonly closable = input(true, { transform: booleanAttribute });
+  /** ARIA label for the close button — pass a localized string. */
+  readonly closeLabel = input(lgLabel('close'));
   readonly modal = input(true, { transform: booleanAttribute });
   readonly styleClass = input<string>('');
   readonly visibleChange = output<boolean>();

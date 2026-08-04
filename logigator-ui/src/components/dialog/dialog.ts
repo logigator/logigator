@@ -17,6 +17,7 @@ import {
 } from '@angular/core';
 import { LgScaleIn } from '../../internal/fade-in';
 import { ModalOverlay } from '../../internal/modal-overlay';
+import { lgLabel } from '../../tokens/labels';
 
 let nextId = 0;
 
@@ -51,7 +52,7 @@ let nextId = 0;
             @if (closable()) {
               <button
                 type="button"
-                aria-label="Close"
+                [attr.aria-label]="closeLabel()"
                 class="inline-flex size-10 items-center justify-center rounded-full text-muted transition-colors hover:bg-content-hover hover:text-text"
                 (click)="requestClose()"
               >
@@ -81,6 +82,8 @@ export class LgDialog implements OnDestroy {
   readonly modal = input(true, { transform: booleanAttribute });
   readonly dismissableMask = input(false, { transform: booleanAttribute });
   readonly closable = input(true, { transform: booleanAttribute });
+  /** ARIA label for the close button — pass a localized string. */
+  readonly closeLabel = input(lgLabel('close'));
   readonly style = input<Record<string, string>>();
   readonly visibleChange = output<boolean>();
 

@@ -43,6 +43,8 @@ export class DialogConfig<D = unknown, C = unknown> {
   width?: string;
   modal?: boolean;
   closable?: boolean;
+  /** ARIA label for the close button; defaults to `'Close'`. Localize it. */
+  closeLabel?: string;
   data?: D;
   inputValues?: DialogInputs<C>;
   dismissableMask?: boolean;

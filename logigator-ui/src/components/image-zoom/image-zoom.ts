@@ -1,5 +1,6 @@
 import { Component, inject, input } from '@angular/core';
 import { ImageZoomViewer } from './image-zoom-viewer';
+import { lgLabel } from '../../tokens/labels';
 
 /**
  * An image that opens full-size in a modal overlay when clicked — for content
@@ -27,10 +28,12 @@ import { ImageZoomViewer } from './image-zoom-viewer';
 export class LgImageZoom {
   readonly src = input.required<string>();
   readonly alt = input.required<string>();
+  /** ARIA label for the enlarged image's dismiss button. */
+  readonly closeLabel = input(lgLabel('close'));
 
   private readonly viewer = inject(ImageZoomViewer);
 
   protected open(): void {
-    this.viewer.open(this.src(), this.alt());
+    this.viewer.open(this.src(), this.alt(), this.closeLabel());
   }
 }

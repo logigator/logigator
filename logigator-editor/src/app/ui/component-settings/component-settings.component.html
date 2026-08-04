@@ -11,11 +11,11 @@
     <ng-template #subtitle>{{ text(settings.description) }}</ng-template>
     <form class="flex flex-col gap-2">
       <div class="flex gap-4 items-center justify-between">
-        <label [for]="directionInputId">{{
+        <span [id]="directionLabelId">{{
           text('components.options.direction')
-        }}</label>
+        }}</span>
         <lg-select-button
-          [id]="directionInputId"
+          [ariaLabelledby]="directionLabelId"
           optionLabel="label"
           optionValue="value"
           optionIcon="icon"

@@ -17,7 +17,11 @@ function setup() {
 }
 
 function toasts(host: HTMLElement): HTMLElement[] {
-  return Array.from(host.querySelectorAll('[role=alert]'));
+  return Array.from(host.querySelectorAll('.lg-toast'));
+}
+
+function liveRegion(host: HTMLElement, politeness: string): HTMLElement {
+  return host.querySelector(`[aria-live=${politeness}]`) as HTMLElement;
 }
 
 function progressBar(toast: HTMLElement): HTMLElement | null {
@@ -39,6 +43,112 @@ describe('LgToast', () => {
     expect(rendered).toHaveLength(1);
     expect(rendered[0].textContent).toContain('Heads up');
     expect(rendered[0].textContent).toContain('something');
+  });
+
+  describe('announcements', () => {
+    /** Both live regions exist from the first render, before any toast lands. */
+    it('keeps the live regions mounted while empty', () => {
+      const { f } = setup();
+      expect(liveRegion(f.nativeElement, 'polite')).toBeTruthy();
+      expect(liveRegion(f.nativeElement, 'assertive')).toBeTruthy();
+      expect(toasts(f.nativeElement)).toHaveLength(0);
+    });
+
+    /** The toast element itself must not also be a region, or it double-reads. */
+    it('gives the visible toast no live role of its own', () => {
+      const { f, service } = setup();
+      service.add({ severity: 'danger', summary: 'boom' });
+      f.detectChanges();
+      const toast = toasts(f.nativeElement)[0];
+      expect(toast.getAttribute('role')).toBeNull();
+      expect(toast.getAttribute('aria-live')).toBeNull();
+    });
+
+    function announce(severity: 'info' | 'success' | 'warn' | 'danger') {
+      const { f, service } = setup();
+      service.add({ severity, summary: 'Heads up', detail: 'details here' });
+      f.detectChanges();
+      // The region is cleared, then filled after a paint, so a repeat message
+      // still registers as a change.
+      vi.advanceTimersToNextFrame();
+      vi.advanceTimersToNextFrame();
+      f.detectChanges();
+      return {
+        polite: liveRegion(f.nativeElement, 'polite').textContent?.trim(),
+        assertive: liveRegion(f.nativeElement, 'assertive').textContent?.trim()
+      };
+    }
+
+    it('routes info and success politely', () => {
+      for (const severity of ['info', 'success'] as const) {
+        const { polite, assertive } = announce(severity);
+        expect(polite).toBe('Heads up. details here');
+        expect(assertive).toBe('');
+      }
+    });
+
+    it('interrupts only for warn and danger', () => {
+      for (const severity of ['warn', 'danger'] as const) {
+        const { polite, assertive } = announce(severity);
+        expect(assertive).toBe('Heads up. details here');
+        expect(polite).toBe('');
+      }
+    });
+
+    /** A burst inside one frame must not collapse to whichever wrote last. */
+    it('announces every message in a same-frame burst', () => {
+      const { f, service } = setup();
+      service.add({ severity: 'info', summary: 'first' });
+      service.add({ severity: 'info', summary: 'second' });
+      f.detectChanges();
+      vi.advanceTimersToNextFrame();
+      vi.advanceTimersToNextFrame();
+      f.detectChanges();
+
+      const polite = liveRegion(f.nativeElement, 'polite').textContent ?? '';
+      expect(polite).toContain('first');
+      expect(polite).toContain('second');
+    });
+
+    /** Repeats are distinct changes, so the second one is read too. */
+    it('re-announces an identical repeat message', () => {
+      const { f, service } = setup();
+      service.add({ severity: 'info', summary: 'same' });
+      f.detectChanges();
+      vi.advanceTimersToNextFrame();
+      vi.advanceTimersToNextFrame();
+      f.detectChanges();
+
+      service.add({ severity: 'info', summary: 'same' });
+      f.detectChanges();
+      vi.advanceTimersToNextFrame();
+      vi.advanceTimersToNextFrame();
+      f.detectChanges();
+
+      const polite = liveRegion(f.nativeElement, 'polite').textContent ?? '';
+      expect(polite.trim()).toBe('same. same');
+    });
+
+    /** Otherwise the region's text grows for the life of the page. */
+    it('empties the regions once the stack does', () => {
+      const { f, service } = setup();
+      service.add({ severity: 'info', summary: 'transient', life: 1000 });
+      f.detectChanges();
+      vi.advanceTimersToNextFrame();
+      vi.advanceTimersToNextFrame();
+      f.detectChanges();
+      expect(liveRegion(f.nativeElement, 'polite').textContent).toContain(
+        'transient'
+      );
+
+      vi.advanceTimersByTime(1000 + LEAVE_MS);
+      f.detectChanges();
+
+      expect(toasts(f.nativeElement)).toHaveLength(0);
+      expect(liveRegion(f.nativeElement, 'polite').textContent?.trim()).toBe(
+        ''
+      );
+    });
   });
 
   it('renders the danger severity on the error palette', () => {

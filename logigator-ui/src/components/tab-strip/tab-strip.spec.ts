@@ -1,19 +1,26 @@
 import { describe, expect, it } from 'vitest';
 import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { LgTabStripItem, LgTabStrip } from './tab-strip';
+import { LgTabReorder, LgTabStripItem, LgTabStrip } from './tab-strip';
 
 @Component({
   imports: [LgTabStrip],
   template: `<lg-tab-strip
     [tabs]="tabs()"
+    controls="panel-id"
+    [reorderDisabled]="reorderDisabled()"
     (selected)="selected.set($event)"
-    (closed)="closed.set($event)"
+    (closed)="onClosed($event)"
+    (reorder)="onReorder($event)"
   ></lg-tab-strip>`
 })
 class HostComponent {
   readonly selected = signal<string | null>(null);
   readonly closed = signal<string | null>(null);
+  readonly reordered = signal<LgTabReorder | null>(null);
+  readonly reorderDisabled = signal(false);
+  closeCount = 0;
+
   readonly tabs = signal<LgTabStripItem<string>[]>([
     {
       data: 'main',
@@ -31,6 +38,26 @@ class HostComponent {
     },
     { data: 'b', label: 'Comp B' }
   ]);
+
+  onClosed(data: string): void {
+    this.closed.set(data);
+    this.closeCount++;
+  }
+
+  /**
+   * Applies the move, as a real consumer does — the strip owns no tab order, so
+   * without this the list never actually changes and nothing the reorder is
+   * supposed to cause (a moved DOM node, focus following it) can be observed.
+   * Indices are in the movable subset, which sits after the fixed tabs.
+   */
+  onReorder(event: LgTabReorder): void {
+    this.reordered.set(event);
+    const fixed = this.tabs().filter((t) => t.fixed).length;
+    const next = [...this.tabs()];
+    const [moved] = next.splice(event.previousIndex + fixed, 1);
+    next.splice(event.currentIndex + fixed, 0, moved);
+    this.tabs.set(next);
+  }
 }
 
 function setup() {
@@ -80,5 +107,159 @@ describe('LgTabStrip', () => {
     expect(f.componentInstance.closed()).toBe('a');
     // Closing must not have selected the tab.
     expect(f.componentInstance.selected()).toBeNull();
+  });
+
+  it('closes exactly once per Enter on the close button', () => {
+    const { f, tabs } = setup();
+    const close = tabs[1].querySelector('.tab-close') as HTMLButtonElement;
+
+    // Enter on a native button dispatches a click of its own, so a keydown
+    // handler on the button would close the tab twice.
+    close.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Enter', bubbles: true })
+    );
+    close.click();
+    f.detectChanges();
+
+    expect(f.componentInstance.closed()).toBe('a');
+    expect(f.componentInstance.closeCount).toBe(1);
+    // The Enter that bubbled up must not have activated the tab either.
+    expect(f.componentInstance.selected()).toBeNull();
+  });
+
+  describe('keyboard', () => {
+    function key(el: HTMLElement, init: KeyboardEventInit): void {
+      el.dispatchEvent(
+        new KeyboardEvent('keydown', { bubbles: true, ...init })
+      );
+    }
+
+    it('is a single tab stop, with the active tab holding it', () => {
+      const { tabs } = setup();
+      expect(tabs.map((t) => t.getAttribute('tabindex'))).toEqual([
+        '0',
+        '-1',
+        '-1'
+      ]);
+    });
+
+    it('points every tab at the controlled region', () => {
+      const { tabs } = setup();
+      for (const tab of tabs) {
+        expect(tab.getAttribute('aria-controls')).toBe('panel-id');
+      }
+    });
+
+    it('moves focus on ArrowRight without activating (manual activation)', () => {
+      const { f, tabs } = setup();
+      key(tabs[0], { key: 'ArrowRight' });
+      f.detectChanges();
+
+      expect(document.activeElement).toBe(tabs[1]);
+      // Focus moved, but the panel must not have been swapped.
+      expect(f.componentInstance.selected()).toBeNull();
+      expect(tabs[1].getAttribute('tabindex')).toBe('0');
+      expect(tabs[0].getAttribute('tabindex')).toBe('-1');
+    });
+
+    it('activates the focused tab on Enter and on Space', () => {
+      const { f, tabs } = setup();
+      key(tabs[1], { key: 'Enter' });
+      f.detectChanges();
+      expect(f.componentInstance.selected()).toBe('a');
+
+      key(tabs[2], { key: ' ' });
+      f.detectChanges();
+      expect(f.componentInstance.selected()).toBe('b');
+    });
+
+    it('wraps with ArrowLeft and jumps with Home/End', () => {
+      const { f, tabs } = setup();
+      key(tabs[0], { key: 'ArrowLeft' });
+      f.detectChanges();
+      expect(document.activeElement).toBe(tabs[2]);
+
+      key(tabs[2], { key: 'Home' });
+      f.detectChanges();
+      expect(document.activeElement).toBe(tabs[0]);
+
+      key(tabs[0], { key: 'End' });
+      f.detectChanges();
+      expect(document.activeElement).toBe(tabs[2]);
+    });
+
+    it('reorders a movable tab with Ctrl+Arrow, in movable index space', () => {
+      const { f, tabs } = setup();
+      // tabs[1] is the first movable tab, so index 0 of the reorder set.
+      key(tabs[1], { key: 'ArrowRight', ctrlKey: true });
+      f.detectChanges();
+
+      expect(f.componentInstance.reordered()).toEqual({
+        previousIndex: 0,
+        currentIndex: 1
+      });
+    });
+
+    it('never moves a fixed tab, nor past the ends', () => {
+      const { f, tabs } = setup();
+      key(tabs[0], { key: 'ArrowRight', ctrlKey: true });
+      f.detectChanges();
+      expect(f.componentInstance.reordered()).toBeNull();
+
+      // First movable tab cannot move further left.
+      key(tabs[1], { key: 'ArrowLeft', ctrlKey: true });
+      f.detectChanges();
+      expect(f.componentInstance.reordered()).toBeNull();
+
+      // Last movable tab cannot move further right.
+      key(tabs[2], { key: 'ArrowRight', ctrlKey: true });
+      f.detectChanges();
+      expect(f.componentInstance.reordered()).toBeNull();
+    });
+
+    it('honours reorderDisabled', () => {
+      const { f, tabs } = setup();
+      f.componentInstance.reorderDisabled.set(true);
+      f.detectChanges();
+
+      key(tabs[1], { key: 'ArrowRight', ctrlKey: true });
+      f.detectChanges();
+
+      expect(f.componentInstance.reordered()).toBeNull();
+    });
+
+    /**
+     * The consumer re-renders the strip, which moves the tab's DOM node — and
+     * detaching a focused node blurs it. Without the restore, a second Ctrl+Arrow
+     * would land on <body> and do nothing.
+     */
+    it('keeps focus on the tab it moved', async () => {
+      const { f, tabs } = setup();
+      tabs[1].focus();
+      key(tabs[1], { key: 'ArrowRight', ctrlKey: true });
+      f.detectChanges();
+
+      // The restore waits for the reordered strip to paint.
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+
+      expect(document.activeElement).toBe(tabs[1]);
+    });
+
+    it('announces a keyboard reorder through a live region', () => {
+      const { f, tabs } = setup();
+      const region = f.nativeElement.querySelector(
+        '[aria-live=polite]'
+      ) as HTMLElement;
+      // The region exists before it has anything to say.
+      expect(region).toBeTruthy();
+      expect(region.textContent?.trim()).toBe('');
+
+      key(tabs[1], { key: 'ArrowRight', ctrlKey: true });
+      f.detectChanges();
+
+      expect(region.textContent).toContain('2');
+      expect(region.textContent).toContain('2 of 2');
+    });
   });
 });

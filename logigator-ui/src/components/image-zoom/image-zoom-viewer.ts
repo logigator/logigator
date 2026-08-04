@@ -3,6 +3,7 @@ import { Overlay } from '@angular/cdk/overlay';
 import { ComponentPortal } from '@angular/cdk/portal';
 import { inject, Injectable, Injector, OnDestroy } from '@angular/core';
 import { ModalOverlay } from '../../internal/modal-overlay';
+import { lgLabel } from '../../tokens/labels';
 import { IMAGE_ZOOM_DATA, LgImageZoomOverlay } from './image-zoom-overlay';
 
 /**
@@ -21,13 +22,24 @@ export class ImageZoomViewer implements OnDestroy {
     inject(ConfigurableFocusTrapFactory)
   );
 
-  open(src: string, alt: string): void {
+  /**
+   * The stock label is resolved here rather than at each call site: LgMarkdown
+   * opens the viewer directly for images inside rendered markdown, so a default
+   * on the component alone would leave that path in English.
+   */
+  private readonly defaultCloseLabel = lgLabel('close');
+
+  open(
+    src: string,
+    alt: string,
+    closeLabel: string = this.defaultCloseLabel
+  ): void {
     const injector = Injector.create({
       parent: this.injector,
       providers: [
         {
           provide: IMAGE_ZOOM_DATA,
-          useValue: { src, alt, close: () => this.overlay.close() }
+          useValue: { src, alt, closeLabel, close: () => this.overlay.close() }
         }
       ]
     });

@@ -34,56 +34,48 @@ describe('UnsavedChangesGuard', () => {
     removeEventListenerSpy.mockRestore();
   });
 
-  describe('attach', () => {
-    it('registers a beforeunload listener on window', () => {
+  /** The bound handler, or undefined if nothing was registered. */
+  function handler(): ((e: BeforeUnloadEvent) => void) | undefined {
+    const call = addEventListenerSpy.mock.calls.find(
+      ([type]: unknown[]) => type === 'beforeunload'
+    );
+    return call?.[1] as ((e: BeforeUnloadEvent) => void) | undefined;
+  }
+
+  function unloadEvent(): BeforeUnloadEvent {
+    const event = new Event('beforeunload') as BeforeUnloadEvent;
+    vi.spyOn(event, 'preventDefault');
+    return event;
+  }
+
+  describe('binds only while there is something to lose', () => {
+    // The bfcache invariant: a registered beforeunload listener disqualifies the
+    // page whether or not it fires, so a clean editor must register nothing.
+    it('registers no listener while nothing is dirty', () => {
       guard.attach();
-      expect(addEventListenerSpy).toHaveBeenCalledWith(
-        'beforeunload',
-        expect.any(Function)
-      );
+      TestBed.tick();
+
+      expect(handler()).toBeUndefined();
     });
 
-    it('is idempotent', () => {
+    it('registers the listener once a project becomes dirty', () => {
       guard.attach();
-      guard.attach();
-      guard.attach();
-      expect(addEventListenerSpy).toHaveBeenCalledTimes(1);
-    });
+      TestBed.tick();
 
-    it('handler does nothing when no project is dirty', () => {
-      guard.attach();
-      const handler = addEventListenerSpy.mock.calls[0][1] as (
-        e: BeforeUnloadEvent
-      ) => void;
-
-      const event = new Event('beforeunload') as BeforeUnloadEvent;
-      vi.spyOn(event, 'preventDefault');
-
-      handler(event);
-
-      expect(event.preventDefault).not.toHaveBeenCalled();
-    });
-
-    it('handler calls preventDefault when any project is dirty', () => {
       anyDirty.set(true);
-      guard.attach();
-      const handler = addEventListenerSpy.mock.calls[0][1] as (
-        e: BeforeUnloadEvent
-      ) => void;
+      TestBed.tick();
 
-      const event = new Event('beforeunload') as BeforeUnloadEvent;
-      vi.spyOn(event, 'preventDefault');
-
-      handler(event);
-
-      expect(event.preventDefault).toHaveBeenCalled();
+      expect(handler()).toBeDefined();
     });
-  });
 
-  describe('detach', () => {
-    it('removes the listener from window', () => {
+    it('removes the listener again once the last change is saved', () => {
       guard.attach();
-      guard.detach();
+      anyDirty.set(true);
+      TestBed.tick();
+      removeEventListenerSpy.mockClear();
+
+      anyDirty.set(false);
+      TestBed.tick();
 
       expect(removeEventListenerSpy).toHaveBeenCalledWith(
         'beforeunload',
@@ -91,15 +83,78 @@ describe('UnsavedChangesGuard', () => {
       );
     });
 
-    it('is idempotent', () => {
+    it('does not re-register while staying dirty', () => {
+      guard.attach();
+      anyDirty.set(true);
+      TestBed.tick();
+
+      // A second edit re-notifies the effect without changing the answer.
+      anyDirty.set(true);
+      TestBed.tick();
+
+      const bindings = addEventListenerSpy.mock.calls.filter(
+        ([type]: unknown[]) => type === 'beforeunload'
+      );
+      expect(bindings).toHaveLength(1);
+    });
+  });
+
+  describe('handler', () => {
+    it('calls preventDefault while a project is dirty', () => {
+      guard.attach();
+      anyDirty.set(true);
+      TestBed.tick();
+
+      const event = unloadEvent();
+      handler()!(event);
+
+      expect(event.preventDefault).toHaveBeenCalled();
+    });
+
+    it('does nothing if it survives the project going clean', () => {
+      guard.attach();
+      anyDirty.set(true);
+      TestBed.tick();
+      const bound = handler()!;
+
+      // Effects are scheduled, so the handler can outlive the dirty state it
+      // was bound for; it must re-check rather than assume.
+      anyDirty.set(false);
+      const event = unloadEvent();
+      bound(event);
+
+      expect(event.preventDefault).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('lifecycle', () => {
+    it('is idempotent across repeated attach calls', () => {
+      guard.attach();
+      guard.attach();
+      guard.attach();
+      anyDirty.set(true);
+      TestBed.tick();
+
+      const bindings = addEventListenerSpy.mock.calls.filter(
+        ([type]: unknown[]) => type === 'beforeunload'
+      );
+      expect(bindings).toHaveLength(1);
+    });
+
+    it('stops following the dirty state after detach', () => {
       guard.attach();
       guard.detach();
-      guard.detach();
-      guard.detach();
-      expect(removeEventListenerSpy).toHaveBeenCalledTimes(1);
+
+      anyDirty.set(true);
+      TestBed.tick();
+
+      expect(handler()).toBeUndefined();
     });
 
     it('is a no-op when attach was never called', () => {
+      guard.detach();
+
+      expect(addEventListenerSpy).not.toHaveBeenCalled();
       expect(removeEventListenerSpy).not.toHaveBeenCalled();
     });
   });

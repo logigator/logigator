@@ -40,15 +40,19 @@ import { OnboardTargetDirective } from '../../onboarding/onboard-target.directiv
       >
         <app-user-avatar />
       </button>
-      <button
-        type="button"
-        lgRipple
-        class="flex min-w-0 grow cursor-pointer items-center justify-center gap-1 rounded px-1 py-2 hover:bg-content-hover"
-        (click)="openProjectMenu()"
-      >
-        <span class="truncate font-semibold">{{ projectName() }}</span>
-        <i class="ph ph-caret-down text-sm text-muted" aria-hidden="true"></i>
-      </button>
+      <!-- The project name is the document's heading here, as it is in the
+           desktop title bar; the compact shell has no other h1. -->
+      <h1 class="flex min-w-0 grow">
+        <button
+          type="button"
+          lgRipple
+          class="flex min-w-0 grow cursor-pointer items-center justify-center gap-1 rounded px-1 py-2 text-base font-semibold hover:bg-content-hover"
+          (click)="openProjectMenu()"
+        >
+          <span class="truncate">{{ projectName() }}</span>
+          <i class="ph ph-caret-down text-sm text-muted" aria-hidden="true"></i>
+        </button>
+      </h1>
       @if (isSimulation()) {
         <lg-button
           icon="ph ph-sign-out"

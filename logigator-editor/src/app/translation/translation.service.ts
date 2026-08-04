@@ -38,6 +38,13 @@ export class TranslationService {
    */
   public readonly activeLang: Signal<string> = this.transloco.activeLang;
 
+  constructor() {
+    // The persisted-lang plugin has already restored the language by the time
+    // this is first injected, so the document declares the right one from the
+    // start. Later switches go through setActiveLang.
+    this.syncDocumentLang();
+  }
+
   /**
    * Translates a key. Inside a reactive context (`computed`, `effect`, or a
    * template expression — directly or through a called method) the result stays
@@ -60,6 +67,23 @@ export class TranslationService {
 
   public setActiveLang(lang: string): void {
     this.transloco.setActiveLang(lang);
+    this.syncDocumentLang();
+  }
+
+  /**
+   * Mirrors the active language onto `<html lang>`, which `index.html` ships as
+   * a static `en`. It drives screen-reader pronunciation and hyphenation, and is
+   * a language signal to crawlers, so leaving it at `en` mis-declares every
+   * document the app serves in de/fr/es.
+   *
+   * Called from the constructor and from {@link setActiveLang} — not from an app
+   * initializer — so the attribute is a property of this service existing rather
+   * than of a startup step someone has to remember. `activeLang` is enough here
+   * because the attribute names the language rather than carrying translated
+   * text, so it need not wait for the bundle to load.
+   */
+  public syncDocumentLang(): void {
+    document.documentElement.lang = this.transloco.getActiveLang();
   }
 
   public getAvailableLangs(): AvailableLangs {

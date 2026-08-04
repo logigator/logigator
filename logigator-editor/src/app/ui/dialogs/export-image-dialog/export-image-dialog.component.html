@@ -14,8 +14,9 @@
     </div>
   }
   <div class="flex flex-col gap-1">
-    <span>{{ t('imageExport.format') }}</span>
+    <span id="export-format-label">{{ t('imageExport.format') }}</span>
     <lg-select-button
+      ariaLabelledby="export-format-label"
       [options]="formatOptions"
       optionLabel="label"
       optionValue="value"
@@ -26,8 +27,9 @@
     />
   </div>
   <div class="flex flex-col gap-1">
-    <span>{{ t('imageExport.resolution') }}</span>
+    <span id="export-resolution-label">{{ t('imageExport.resolution') }}</span>
     <lg-select-button
+      ariaLabelledby="export-resolution-label"
       [options]="resolutionOptions"
       optionLabel="label"
       optionValue="value"
@@ -63,6 +65,7 @@
         >{{ t('imageExport.quality') }} — {{ quality() }}%</label
       >
       <lg-slider
+        inputId="export-quality"
         [min]="10"
         [max]="100"
         [ngModel]="quality()"

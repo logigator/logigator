@@ -1,7 +1,7 @@
 <div class="flex gap-4 items-center justify-between" *transloco="let t">
-  <label [for]="inputId">{{ t(option().label) }}</label>
+  <span [id]="labelId">{{ t(option().label) }}</span>
   <lg-select-button
-    [id]="inputId"
+    [ariaLabelledby]="labelId"
     optionLabel="label"
     optionValue="value"
     optionIcon="icon"

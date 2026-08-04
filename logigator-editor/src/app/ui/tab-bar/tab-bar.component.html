@@ -5,6 +5,8 @@
     [tabs]="tabs()"
     [reorderDisabled]="isSimulation()"
     [closeLabel]="t('tabBar.close')"
+    [movedLabel]="movedLabel"
+    controls="editor-board-panel"
     (selected)="activate($event)"
     (closed)="close($event)"
     (reorder)="drop($event)"

@@ -39,8 +39,11 @@
     />
   </div>
   <div class="flex flex-col gap-1">
-    <span>{{ t('newComponentDialog.store') }}</span>
+    <span id="new-component-store-label">{{
+      t('newComponentDialog.store')
+    }}</span>
     <lg-select-button
+      ariaLabelledby="new-component-store-label"
       [options]="sourceOptions"
       optionLabel="label"
       optionValue="value"

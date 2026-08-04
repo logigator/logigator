@@ -6,7 +6,15 @@ const en = {
   common: {
     save: 'Save',
     cancel: 'Cancel',
-    untitled: 'Untitled'
+    untitled: 'Untitled',
+    close: 'Close',
+    back: 'Back',
+    dismiss: 'Dismiss',
+    firstPage: 'First page',
+    previousPage: 'Previous page',
+    nextPage: 'Next page',
+    lastPage: 'Last page',
+    moved: 'Moved to position {{position}} of {{total}}'
   },
   user: {
     loadFailed: 'Failed to load user data. Please log in again.'
@@ -41,7 +49,9 @@ const en = {
     copy: 'Copy',
     follow: 'Follow',
     clearConfirm: 'Clear all memory contents?',
-    copyFailed: 'Could not copy to clipboard.'
+    copyFailed: 'Could not copy to clipboard.',
+    viewLabel: 'Cell grouping',
+    radixLabel: 'Number base'
   },
   settings: {
     options: {
@@ -242,6 +252,9 @@ const en = {
     title: 'Components',
     search: 'Search..'
   },
+  board: {
+    panel: 'Circuit board'
+  },
   tabBar: {
     mainProject: 'Main project',
     close: 'Close',
@@ -253,7 +266,10 @@ const en = {
     inputs: 'Inputs',
     outputs: 'Outputs',
     noInputs: 'No input plugs',
-    noOutputs: 'No output plugs'
+    noOutputs: 'No output plugs',
+    inputName: 'Input {{index}}',
+    outputName: 'Output {{index}}',
+    nameLabel: '{{name}} name'
   },
   statusBar: {
     modes: {

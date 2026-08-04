@@ -1,4 +1,5 @@
 import { Component, computed, input, output } from '@angular/core';
+import { lgLabel } from '../../tokens/labels';
 
 /** Emitted on page change. Consumers typically read only `page`. */
 export interface LgPaginatorState {
@@ -30,18 +31,18 @@ const NAV_CLASS =
         [class]="navClass"
         [disabled]="currentPage() === 0"
         (click)="toPage(0)"
-        aria-label="First page"
+        [attr.aria-label]="firstLabel()"
       >
-        <i class="ph ph-caret-double-left"></i>
+        <i class="ph ph-caret-double-left" aria-hidden="true"></i>
       </button>
       <button
         type="button"
         [class]="navClass"
         [disabled]="currentPage() === 0"
         (click)="toPage(currentPage() - 1)"
-        aria-label="Previous page"
+        [attr.aria-label]="previousLabel()"
       >
-        <i class="ph ph-caret-left"></i>
+        <i class="ph ph-caret-left" aria-hidden="true"></i>
       </button>
 
       @for (p of pages(); track p) {
@@ -60,18 +61,18 @@ const NAV_CLASS =
         [class]="navClass"
         [disabled]="currentPage() >= pageCount() - 1"
         (click)="toPage(currentPage() + 1)"
-        aria-label="Next page"
+        [attr.aria-label]="nextLabel()"
       >
-        <i class="ph ph-caret-right"></i>
+        <i class="ph ph-caret-right" aria-hidden="true"></i>
       </button>
       <button
         type="button"
         [class]="navClass"
         [disabled]="currentPage() >= pageCount() - 1"
         (click)="toPage(pageCount() - 1)"
-        aria-label="Last page"
+        [attr.aria-label]="lastLabel()"
       >
-        <i class="ph ph-caret-double-right"></i>
+        <i class="ph ph-caret-double-right" aria-hidden="true"></i>
       </button>
     </div>
   `
@@ -80,6 +81,12 @@ export class LgPaginator {
   readonly first = input(0);
   readonly rows = input(10);
   readonly totalRecords = input(0);
+
+  /** ARIA labels for the four step buttons — pass localized strings. */
+  readonly firstLabel = input(lgLabel('firstPage'));
+  readonly previousLabel = input(lgLabel('previousPage'));
+  readonly nextLabel = input(lgLabel('nextPage'));
+  readonly lastLabel = input(lgLabel('lastPage'));
 
   readonly onPageChange = output<LgPaginatorState>();
 

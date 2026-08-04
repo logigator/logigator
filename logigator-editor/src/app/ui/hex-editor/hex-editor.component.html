@@ -4,6 +4,7 @@
     <div class="flex flex-wrap items-center gap-2">
       <lg-select-button
         [options]="viewOptions"
+        [ariaLabel]="t('hexEditor.viewLabel')"
         optionValue="value"
         [allowEmpty]="false"
         [ngModel]="view()"
@@ -16,6 +17,7 @@
 
       <lg-select-button
         [options]="radixOptions"
+        [ariaLabel]="t('hexEditor.radixLabel')"
         optionValue="value"
         [allowEmpty]="false"
         [ngModel]="radix()"

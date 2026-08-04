@@ -27,7 +27,17 @@
     @if (!isSimulation()) {
       <app-tab-bar></app-tab-bar>
     }
-    <div class="relative grow">
+    <!-- The board area is what the tab strip switches, so outside SIMULATION
+         (where the strip is hidden) it is the tabs' `aria-controls` target. The
+         role is dropped along with the strip: a tabpanel with no tablist is
+         orphaned. Labelled directly rather than by the active tab — the strip
+         owns those elements and does not expose their ids. -->
+    <div
+      class="relative grow"
+      id="editor-board-panel"
+      [attr.role]="isSimulation() ? null : 'tabpanel'"
+      [attr.aria-label]="isSimulation() ? null : boardPanelLabel()"
+    >
       <!-- One canvas for every device; only the chrome around it swaps. -->
       <app-board
         class="block w-full h-full"
@@ -46,7 +56,11 @@
       @if (!layout.isCompact()) {
         <!-- Inspection windows float over the board (window band), above the
              docked canvas overlays and below the cdk overlays + toasts. -->
-        <lg-window-outlet class="z-window" />
+        <lg-window-outlet
+          class="z-window"
+          [closeLabel]="uiLabels().close"
+          [backLabel]="uiLabels().back"
+        />
 
         <!-- Select tool options, floating top-center over the canvas. -->
         <app-scissor-toggle
@@ -62,7 +76,11 @@
         <div
           class="pointer-events-none absolute left-3 bottom-3 flex max-w-sm flex-col items-start"
         >
-          <lg-toast [embedded]="true" position="bottom-left" />
+          <lg-toast
+            [embedded]="true"
+            position="bottom-left"
+            [dismissLabel]="uiLabels().dismiss"
+          />
           <app-component-settings
             class="pointer-events-auto z-canvas-overlay"
           ></app-component-settings>
@@ -80,7 +98,7 @@
           }
         </div>
       } @else {
-        <lg-toast position="bottom-left" />
+        <lg-toast position="bottom-left" [dismissLabel]="uiLabels().dismiss" />
 
         <!-- Overlays: the container lets pointer events fall through to the
              canvas; each control re-enables them for itself. -->
@@ -146,13 +164,18 @@
        window band — above the docked canvas overlays, below the cdk overlays
        (including the inspection sheet) and toasts. -->
   <div class="pointer-events-none fixed inset-0 z-window">
-    <lg-window-outlet fullscreen />
+    <lg-window-outlet
+      fullscreen
+      [closeLabel]="uiLabels().close"
+      [backLabel]="uiLabels().back"
+    />
   </div>
 
   <ng-container *transloco="let t">
     <lg-drawer
       [visible]="mobileUi.activeSheet() === 'palette'"
       (visibleChange)="onSheetClosed($event)"
+      [closeLabel]="uiLabels().close"
       position="bottom"
       [header]="t('mobile.palette')"
     >
@@ -162,6 +185,7 @@
     <lg-drawer
       [visible]="mobileUi.activeSheet() === 'settings'"
       (visibleChange)="onSheetClosed($event)"
+      [closeLabel]="uiLabels().close"
       position="bottom"
       [header]="t('mobile.settings')"
     >
@@ -172,6 +196,7 @@
       <lg-drawer
         [visible]="mobileUi.activeSheet() === 'ports'"
         (visibleChange)="onSheetClosed($event)"
+        [closeLabel]="uiLabels().close"
         position="right"
         [header]="t('mobile.ports')"
       >
@@ -182,6 +207,7 @@
     <lg-drawer
       [visible]="mobileUi.activeSheet() === 'menu'"
       (visibleChange)="onSheetClosed($event)"
+      [closeLabel]="uiLabels().close"
       position="left"
       [header]="t('mobile.account')"
     >
@@ -191,6 +217,7 @@
     <lg-drawer
       [visible]="mobileUi.activeSheet() === 'project'"
       (visibleChange)="onSheetClosed($event)"
+      [closeLabel]="uiLabels().close"
       position="bottom"
       [header]="projectName()"
     >

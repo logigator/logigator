@@ -8,6 +8,9 @@
 /* The z-index layering scale (--lg-z-* + z-* utilities). */
 @import '../../logigator-ui/styles/layers.css';
 
+/* prefers-reduced-motion: the global off switch for every transition. */
+@import '../../logigator-ui/styles/motion.css';
+
 /* Scan the library's templates so their Tailwind utilities are generated. */
 @source '../../logigator-ui/src';
 

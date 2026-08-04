@@ -136,6 +136,24 @@ export class AppComponent {
 
   protected readonly cursorPosition = signal<Point>(new Point(0, 0));
 
+  /**
+   * @logigator/ui stock labels for the shell's **long-lived** surfaces (the
+   * toasts, the window outlets, the drawers). `LG_LABELS` only resolves while a
+   * component is constructed, so these — alive for the app's whole lifetime —
+   * bind the inputs instead, and `translate()` keeps them live across a
+   * language switch.
+   */
+  protected readonly uiLabels = computed(() => ({
+    close: this.translation.translate('common.close'),
+    back: this.translation.translate('common.back'),
+    dismiss: this.translation.translate('common.dismiss')
+  }));
+
+  /** Names the board region the tab strip switches (its `aria-controls` target). */
+  protected readonly boardPanelLabel = computed(() =>
+    this.translation.translate('board.panel')
+  );
+
   public readonly isSimulation = computed(
     () => this.workModeService.mode() === WorkMode.SIMULATION
   );

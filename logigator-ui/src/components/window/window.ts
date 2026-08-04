@@ -15,6 +15,7 @@ import { WindowRect, WindowSize } from './window-config';
 import { WindowRef } from './window-ref';
 import { OpenWindow } from './window.service';
 import { LgButton } from '../button/button';
+import { lgLabel } from '../../tokens/labels';
 
 interface Rect {
   x: number;
@@ -103,8 +104,10 @@ const CASCADE_WRAP = 8;
       (pointerdown)="beginMove($event)"
     >
       @if (fullscreen() && closable()) {
+        <!-- ariaLabel input, not a static attribute: the label has to reach the
+             inner <button>, which is the node AT sees. -->
         <lg-button
-          aria-label="Back"
+          [ariaLabel]="backLabel()"
           icon="ph ph-arrow-left"
           severity="none"
           size="sm"
@@ -141,7 +144,7 @@ const CASCADE_WRAP = 8;
       }
       @if (closable() && !fullscreen()) {
         <lg-button
-          aria-label="Close"
+          [ariaLabel]="closeLabel()"
           icon="ph ph-x"
           severity="none"
           size="sm"
@@ -196,6 +199,10 @@ export class LgWindow implements AfterViewInit {
   readonly bounds = input.required<WindowSize>();
   /** Fill the outlet as a takeover instead of floating (set per outlet). */
   readonly fullscreen = input(false);
+  /** ARIA label for the close button — pass a localized string. */
+  readonly closeLabel = input(lgLabel('close'));
+  /** ARIA label for the fullscreen back button — pass a localized string. */
+  readonly backLabel = input(lgLabel('back'));
 
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly injector = inject(Injector);

@@ -7,7 +7,15 @@ const de: TranslationSchema = {
   common: {
     save: 'Speichern',
     cancel: 'Abbrechen',
-    untitled: 'Unbenannt'
+    untitled: 'Unbenannt',
+    close: 'Schließen',
+    back: 'Zurück',
+    dismiss: 'Ausblenden',
+    firstPage: 'Erste Seite',
+    previousPage: 'Vorherige Seite',
+    nextPage: 'Nächste Seite',
+    lastPage: 'Letzte Seite',
+    moved: 'Auf Position {{position}} von {{total}} verschoben'
   },
   user: {
     loadFailed:
@@ -43,7 +51,9 @@ const de: TranslationSchema = {
     copy: 'Kopieren',
     follow: 'Folgen',
     clearConfirm: 'Gesamten Speicherinhalt leeren?',
-    copyFailed: 'Konnte nicht in die Zwischenablage kopieren.'
+    copyFailed: 'Konnte nicht in die Zwischenablage kopieren.',
+    viewLabel: 'Zellgruppierung',
+    radixLabel: 'Zahlensystem'
   },
   settings: {
     options: {
@@ -244,6 +254,9 @@ const de: TranslationSchema = {
     title: 'Komponenten',
     search: 'Suchen..'
   },
+  board: {
+    panel: 'Schaltplan'
+  },
   tabBar: {
     mainProject: 'Hauptprojekt',
     close: 'Schließen',
@@ -255,7 +268,10 @@ const de: TranslationSchema = {
     inputs: 'Eingänge',
     outputs: 'Ausgänge',
     noInputs: 'Keine Eingangsstecker',
-    noOutputs: 'Keine Ausgangsstecker'
+    noOutputs: 'Keine Ausgangsstecker',
+    inputName: 'Eingang {{index}}',
+    outputName: 'Ausgang {{index}}',
+    nameLabel: 'Name von {{name}}'
   },
   statusBar: {
     modes: {

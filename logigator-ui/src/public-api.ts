@@ -11,6 +11,8 @@ export const LOGIGATOR_UI_VERSION = '0.0.0';
 export type { IconSlot } from './internal/icon';
 export type { LgSeverity } from './tokens/severity';
 export type { LgSize } from './tokens/size';
+export type { LgLabels, LgLabelResolver } from './tokens/labels';
+export { LG_DEFAULT_LABELS, LG_LABELS, provideLgLabels } from './tokens/labels';
 export type {
   MenuItem,
   MenuItemCommandEvent
@@ -65,7 +67,8 @@ export { LgTabs, LgTab, LgTabPanel } from './components/tabs/tabs';
 export { LgTabStrip } from './components/tab-strip/tab-strip';
 export type {
   LgTabStripItem,
-  LgTabReorder
+  LgTabReorder,
+  LgMovedLabel
 } from './components/tab-strip/tab-strip';
 export { LgPanelMenu } from './components/panel-menu/panel-menu';
 export { LgNavigation } from './components/navigation/navigation';

@@ -5,6 +5,8 @@ import { LgScaleIn } from '../../internal/fade-in';
 export interface ImageZoomData {
   src: string;
   alt: string;
+  /** ARIA label for the dismiss button; ImageZoomViewer always supplies it. */
+  closeLabel: string;
   close: () => void;
 }
 
@@ -26,7 +28,7 @@ export const IMAGE_ZOOM_DATA = new InjectionToken<ImageZoomData>(
   template: `
     <button
       type="button"
-      aria-label="Close"
+      [attr.aria-label]="data.closeLabel"
       class="block cursor-zoom-out"
       (click)="data.close()"
     >

@@ -7,7 +7,15 @@ const fr: TranslationSchema = {
   common: {
     save: 'Enregistrer',
     cancel: 'Annuler',
-    untitled: 'Sans titre'
+    untitled: 'Sans titre',
+    close: 'Fermer',
+    back: 'Retour',
+    dismiss: 'Masquer',
+    firstPage: 'Première page',
+    previousPage: 'Page précédente',
+    nextPage: 'Page suivante',
+    lastPage: 'Dernière page',
+    moved: 'Déplacé en position {{position}} sur {{total}}'
   },
   user: {
     loadFailed:
@@ -43,7 +51,9 @@ const fr: TranslationSchema = {
     copy: 'Copier',
     follow: 'Suivre',
     clearConfirm: 'Effacer tout le contenu de la mémoire ?',
-    copyFailed: 'Impossible de copier dans le presse-papiers.'
+    copyFailed: 'Impossible de copier dans le presse-papiers.',
+    viewLabel: 'Regroupement de cellules',
+    radixLabel: 'Base numérique'
   },
   settings: {
     options: {
@@ -244,6 +254,9 @@ const fr: TranslationSchema = {
     title: 'Composants',
     search: 'Rechercher..'
   },
+  board: {
+    panel: 'Plan de circuit'
+  },
   tabBar: {
     mainProject: 'Projet principal',
     close: 'Fermer',
@@ -255,7 +268,10 @@ const fr: TranslationSchema = {
     inputs: 'Entrées',
     outputs: 'Sorties',
     noInputs: "Aucune fiche d'entrée",
-    noOutputs: 'Aucune fiche de sortie'
+    noOutputs: 'Aucune fiche de sortie',
+    inputName: 'Entrée {{index}}',
+    outputName: 'Sortie {{index}}',
+    nameLabel: 'Nom de {{name}}'
   },
   statusBar: {
     modes: {

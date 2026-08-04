@@ -117,6 +117,10 @@
   @if (totalItems() > pageSize) {
     <lg-paginator
       class="mt-2"
+      [firstLabel]="t('common.firstPage')"
+      [previousLabel]="t('common.previousPage')"
+      [nextLabel]="t('common.nextPage')"
+      [lastLabel]="t('common.lastPage')"
       [first]="paginatorFirst()"
       [rows]="pageSize"
       [totalRecords]="totalItems()"

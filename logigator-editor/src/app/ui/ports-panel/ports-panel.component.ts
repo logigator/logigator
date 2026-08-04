@@ -18,6 +18,7 @@ import {
 } from '../../actions/actions/reorder-plugs.action';
 import { ComponentListCategoryComponent } from '../side-bar/component-list-category/component-list-category.component';
 import { ComponentProviderService } from '../../components/component-provider.service';
+import { TranslationService } from '../../translation/translation.service';
 
 type Plug = InputComponent | OutputComponent;
 
@@ -58,6 +59,7 @@ interface PlugRow {
 export class PortsPanelComponent {
   private readonly projectService = inject(ProjectService);
   private readonly componentProviderService = inject(ComponentProviderService);
+  private readonly translation = inject(TranslationService);
 
   // Re-emits on every action in the active project so the derived plug lists
   // stay live; `startWith` seeds the first render when a project becomes
@@ -82,10 +84,10 @@ export class PortsPanelComponent {
     this.componentProviderService.portComponents;
 
   protected readonly inputRows = computed(() =>
-    this._rows(InputComponent, 'Input')
+    this._rows(InputComponent, 'portsPanel.inputName')
   );
   protected readonly outputRows = computed(() =>
-    this._rows(OutputComponent, 'Output')
+    this._rows(OutputComponent, 'portsPanel.outputName')
   );
 
   protected dropInput(event: CdkDragDrop<PlugRow[]>): void {
@@ -135,7 +137,7 @@ export class PortsPanelComponent {
 
   private _rows(
     ctor: typeof InputComponent | typeof OutputComponent,
-    prefix: string
+    nameKey: 'portsPanel.inputName' | 'portsPanel.outputName'
   ): PlugRow[] {
     // Establish the dependency on action changes so the lists stay live.
     this.actionTick();
@@ -153,7 +155,7 @@ export class PortsPanelComponent {
     return plugs.map((component, i) => ({
       component,
       label: component.options.label.value,
-      placeholder: `${prefix} ${i + 1}`
+      placeholder: this.translation.translate(nameKey, { index: i + 1 })
     }));
   }
 }

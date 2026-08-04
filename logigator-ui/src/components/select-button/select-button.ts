@@ -42,7 +42,13 @@ const SEGMENT_PADDING: Record<LgSize, string> = {
     }
   ],
   template: `
-    <div role="group" [attr.id]="id() ?? null" [class]="groupClasses()">
+    <div
+      role="group"
+      [attr.id]="id() ?? null"
+      [attr.aria-label]="ariaLabel() ?? null"
+      [attr.aria-labelledby]="ariaLabelledby() ?? null"
+      [class]="groupClasses()"
+    >
       @for (option of options(); track $index) {
         <button
           type="button"
@@ -79,6 +85,14 @@ export class LgSelectButton implements ControlValueAccessor {
   readonly optionIcon = input<string>();
   readonly allowEmpty = input(false, { transform: booleanAttribute });
   readonly fluid = input(false, { transform: booleanAttribute });
+  /**
+   * Names the group. The options carry their own `aria-pressed` state, but the
+   * group itself is what says *what* is being chosen — a visible caption beside
+   * the control is not associated with it unless pointed at via
+   * `ariaLabelledby`.
+   */
+  readonly ariaLabel = input<string>();
+  readonly ariaLabelledby = input<string>();
   readonly size = input<LgSize>();
   readonly id = input<string>();
 

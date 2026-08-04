@@ -5,6 +5,7 @@
       type="button"
       [appOnboardTarget]="'palette-item-' + comp.type"
       class="relative w-full group flex flex-col items-center gap-1 rounded-md cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-primary"
+      [attr.aria-pressed]="selected"
       (click)="selectComponent(comp)"
     >
       <span
@@ -28,7 +29,7 @@
             <span
               class="absolute inset-0 flex items-start justify-end pt-0.5 pr-0.5 bg-primary text-surface-950 [clip-path:polygon(100%_0,100%_100%,0_0)]"
             >
-              <i class="ph ph-check text-[0.5rem]"></i>
+              <i class="ph ph-check text-[0.5rem]" aria-hidden="true"></i>
             </span>
           </span>
         }

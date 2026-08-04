@@ -4,13 +4,15 @@ import {
   DestroyRef,
   inject,
   input,
-  signal
+  signal,
+  WritableSignal
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { afterPaint } from '../../internal/after-paint';
 import { LgButton } from '../button/button';
 import { LgSeverity } from '../../tokens/severity';
 import { ToastAction, ToastService, ToastMessage } from './toast.service';
+import { lgLabel } from '../../tokens/labels';
 
 interface ActiveToast {
   id: number;
@@ -105,9 +107,22 @@ const DEFAULT_SEVERITY: LgSeverity = 'info';
     '[class.mb-2]': 'embedded() && !!toasts().length'
   },
   template: `
+    <!--
+      Announcements live in two persistent regions rather than on the toast
+      elements themselves. A live region has to exist *before* its text changes
+      for the change to be announced reliably, and a role=alert node created
+      together with its content (as an @for does) is the fragile form of the
+      pattern. Severity picks the channel: only warn/danger interrupt.
+    -->
+    <div aria-live="polite" aria-atomic="true" class="sr-only">
+      {{ politeMessage() }}
+    </div>
+    <div aria-live="assertive" aria-atomic="true" class="sr-only">
+      {{ assertiveMessage() }}
+    </div>
+
     @for (toast of toasts(); track toast.id) {
       <div
-        role="alert"
         [class]="toastClasses(toast)"
         (mouseenter)="setHovered(toast.id, true)"
         (mouseleave)="setHovered(toast.id, false)"
@@ -132,7 +147,7 @@ const DEFAULT_SEVERITY: LgSeverity = 'info';
             text
             size="sm"
             icon="ph ph-x"
-            ariaLabel="Dismiss"
+            [ariaLabel]="dismissLabel()"
             class="-mt-1 -mr-1 shrink-0"
             [severity]="toast.severity"
             (onClick)="close(toast.id)"
@@ -182,11 +197,18 @@ const DEFAULT_SEVERITY: LgSeverity = 'info';
 export class LgToast {
   readonly position = input<string>('bottom-left');
   readonly embedded = input<boolean>(false);
+  /** ARIA label for every toast's dismiss button — pass a localized string. */
+  readonly dismissLabel = input(lgLabel('dismiss'));
 
   protected readonly atTop = computed(() => this.position().startsWith('top'));
   protected readonly atRight = computed(() =>
     this.position().endsWith('right')
   );
+
+  protected readonly politeMessage = signal('');
+  protected readonly assertiveMessage = signal('');
+  /** Messages awaiting their deferred write, per region. */
+  private readonly pending = new Map<WritableSignal<string>, string[]>();
 
   protected readonly toasts = signal<ActiveToast[]>([]);
   private nextId = 0;
@@ -215,6 +237,10 @@ export class LgToast {
 
   protected toastClasses(toast: ActiveToast): string {
     return [
+      // lg-toast is a marker, not a style hook: the visual toast carries no
+      // role now that the live regions above own announcements, so this is what
+      // identifies one in the DOM.
+      'lg-toast',
       'pointer-events-auto relative w-80 max-w-[80vw] overflow-hidden rounded-md border p-3 shadow-lg backdrop-blur-md',
       'transition-all duration-300 ease-out',
       SEVERITY_CLASS[toast.severity],
@@ -287,6 +313,11 @@ export class LgToast {
     // Paint the off-screen "from" state first, then flip to play the enter.
     afterPaint(() => this.setShown(id));
 
+    this.announce(
+      message.severity ?? DEFAULT_SEVERITY,
+      [message.summary, message.detail].filter(Boolean).join('. ')
+    );
+
     if (life > 0) {
       const timer: ToastTimer = {
         handle: null,
@@ -298,6 +329,48 @@ export class LgToast {
       this.timers.set(id, timer);
       this.start(id, timer);
     }
+  }
+
+  /**
+   * Put a toast's text into the live region its severity calls for.
+   *
+   * Appended rather than assigned, for two reasons that pull the same way: an
+   * identical repeat message assigned over itself leaves the text unchanged and
+   * goes unannounced, and a burst of toasts within one frame would collapse to
+   * whichever wrote last. Appending makes every message a distinct change, so
+   * all of them are read. The write itself is deferred a frame so a burst
+   * accumulates into one announcement instead of interrupting itself.
+   *
+   * `clearAnnouncements` empties both regions once the stack does, so the text
+   * does not grow for the life of the page.
+   */
+  private announce(severity: LgSeverity, text: string): void {
+    if (!text) {
+      return;
+    }
+    const region =
+      severity === 'warn' || severity === 'danger'
+        ? this.assertiveMessage
+        : this.politeMessage;
+    this.pending.set(region, [...(this.pending.get(region) ?? []), text]);
+    afterPaint(() => {
+      const queued = this.pending.get(region);
+      if (!queued?.length) {
+        return;
+      }
+      this.pending.delete(region);
+      region.update((prev) => [prev, ...queued].filter(Boolean).join('. '));
+    });
+  }
+
+  /** Reset both live regions once nothing is on screen to announce. */
+  private clearAnnouncements(): void {
+    if (this.toasts().length > 0) {
+      return;
+    }
+    this.pending.clear();
+    this.politeMessage.set('');
+    this.assertiveMessage.set('');
   }
 
   /** Reconcile the countdown against hover/focus: pause while either holds. */
@@ -369,5 +442,6 @@ export class LgToast {
 
   private remove(id: number): void {
     this.toasts.update((list) => list.filter((toast) => toast.id !== id));
+    this.clearAnnouncements();
   }
 }

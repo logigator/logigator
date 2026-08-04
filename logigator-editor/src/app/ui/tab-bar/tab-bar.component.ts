@@ -42,6 +42,14 @@ export class TabBarComponent {
     () => this.workModeService.mode() === WorkMode.SIMULATION
   );
 
+  /**
+   * Live-region text for a Ctrl+Arrow tab move. An arrow property so the
+   * template can hand the strip a stable reference; `translate` runs at move
+   * time, so the announcement is in the current language.
+   */
+  protected readonly movedLabel = (position: number, total: number): string =>
+    this.translation.translate('common.moved', { position, total });
+
   protected readonly tabs = computed<LgTabStripItem<Project>[]>(() => {
     // Labels re-translate on language change through `translation.translate()`,
     // which reads the service's post-load signal inside this computed.

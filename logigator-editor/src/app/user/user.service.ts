@@ -67,7 +67,7 @@ export class UserService {
 
   /** Open the login page in a new tab. */
   login(): void {
-    window.open('/login', '_blank');
+    window.open('/login', '_blank', 'noopener');
   }
 
   /**
@@ -93,7 +93,7 @@ export class UserService {
 
   /** Open the account settings page in a new tab. */
   openAccountSettings(): void {
-    window.open('/my/account/profile', '_blank');
+    window.open('/my/account/profile', '_blank', 'noopener');
   }
 
   /** PATCH /api/user — update any combination of profile fields; updates the user signal on success. */

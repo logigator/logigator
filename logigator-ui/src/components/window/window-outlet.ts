@@ -11,6 +11,7 @@ import {
 import { WindowSize } from './window-config';
 import { LgWindow } from './window';
 import { WindowService } from './window.service';
+import { lgLabel } from '../../tokens/labels';
 
 /**
  * The {@link WindowService} outlet: renders every open window as an absolutely
@@ -39,6 +40,8 @@ import { WindowService } from './window.service';
         [entry]="window"
         [bounds]="bounds()"
         [fullscreen]="fullscreen()"
+        [closeLabel]="closeLabel()"
+        [backLabel]="backLabel()"
       />
     }
   `
@@ -46,6 +49,10 @@ import { WindowService } from './window.service';
 export class LgWindowOutlet {
   /** Render windows as outlet-filling takeovers instead of floating panels. */
   readonly fullscreen = input(false, { transform: booleanAttribute });
+  /** ARIA label for every window's close button — pass a localized string. */
+  readonly closeLabel = input(lgLabel('close'));
+  /** ARIA label for the fullscreen back button — pass a localized string. */
+  readonly backLabel = input(lgLabel('back'));
 
   protected readonly windows = inject(WindowService).windows;
 

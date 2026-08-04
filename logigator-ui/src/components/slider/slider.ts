@@ -15,6 +15,10 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
  * Pointer drag and keyboard (arrows step by `step`, Home/End jump to the
  * bounds) both move it; `role="slider"` + `aria-value*` keep it accessible.
  * Single handle only — no range/dual-handle, vertical, or custom animation.
+ *
+ * Name the handle with `inputId` (so an external `<label for>` resolves — the
+ * handle is not a labelable element, so the id has to land on it), or with
+ * `ariaLabel` / `ariaLabelledby` where there is no visible label.
  */
 @Component({
   selector: 'lg-slider',
@@ -40,10 +44,13 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
       <div
         #handle
         role="slider"
+        [attr.id]="inputId() ?? null"
         [attr.tabindex]="disabled() ? -1 : 0"
         [attr.aria-valuemin]="min()"
         [attr.aria-valuemax]="max()"
         [attr.aria-valuenow]="value()"
+        [attr.aria-label]="ariaLabel() ?? null"
+        [attr.aria-labelledby]="ariaLabelledby() ?? null"
         [attr.aria-disabled]="disabled() || null"
         class="absolute top-1/2 flex size-5 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-border outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         [style.left.%]="percent()"
@@ -61,6 +68,10 @@ export class LgSlider implements ControlValueAccessor {
   readonly min = input(0);
   readonly max = input(100);
   readonly step = input(1);
+  /** Id placed on the handle, so an external `<label for>` names it. */
+  readonly inputId = input<string>();
+  readonly ariaLabel = input<string>();
+  readonly ariaLabelledby = input<string>();
 
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly handle =
