@@ -20,6 +20,7 @@ import { BugReportService } from './bug-report.service';
       severity="secondary"
       rounded
       [lgTooltip]="t('bugReport.badgeTooltip')"
+      [ariaLabel]="t('bugReport.badgeTooltip')"
       tooltipPosition="left"
       (onClick)="report()"
     />
