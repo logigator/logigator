@@ -55,6 +55,7 @@ export class SelectionMoveSession implements DragSession {
   // Pre-session originals. Captured at construction — rotate() mutates the
   // detached elements in place, so onEnd/onCancel cannot re-derive them later.
   private readonly _wireSnapshots: SerializedWire[];
+  private readonly _wireSnapshotsById: Map<number, SerializedWire>;
   private readonly _oldWireSnapshotsList: WireSnapshot[];
   private readonly _oldWireSnapshotsById: Map<number, WireSnapshot>;
   private readonly _componentOldPorts: Map<number, readonly Point[]>;
@@ -101,6 +102,9 @@ export class SelectionMoveSession implements DragSession {
     );
 
     this._wireSnapshots = this._wires.map((w) => Wire.serialize(w));
+    this._wireSnapshotsById = new Map<number, SerializedWire>(
+      this._wireSnapshots.map((s) => [s.id, s])
+    );
     this._oldWireSnapshotsList = this._wires.map((w) => Wire.snapshot(w));
     this._oldWireSnapshotsById = new Map<number, WireSnapshot>(
       this._wires.map((w, i) => [w.id, this._oldWireSnapshotsList[i]])
@@ -316,7 +320,7 @@ export class SelectionMoveSession implements DragSession {
         action.add(
           new RotateWiresAction(
             ...survived.map((w) => {
-              const snap = this._wireSnapshots.find((s) => s.id === w.id)!;
+              const snap = this._wireSnapshotsById.get(w.id)!;
               return {
                 id: w.id,
                 oldPos: new Point(snap.pos[0] + 0.5, snap.pos[1] + 0.5),
@@ -329,7 +333,7 @@ export class SelectionMoveSession implements DragSession {
         );
       } else {
         const entries: MoveEntry[] = survived.map((w) => {
-          const snap = this._wireSnapshots.find((s) => s.id === w.id)!;
+          const snap = this._wireSnapshotsById.get(w.id)!;
           return {
             id: w.id,
             oldPos: new Point(snap.pos[0] + 0.5, snap.pos[1] + 0.5),
