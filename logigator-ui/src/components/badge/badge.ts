@@ -13,7 +13,7 @@ const SEVERITY: Record<'primary' | LgSeverity, string> = {
     'bg-surface-100 text-surface-600 dark:bg-surface-800 dark:text-surface-300',
   info: 'bg-info text-white',
   success: 'bg-success text-white',
-  warn: 'bg-warn text-white',
+  warn: 'bg-warn text-white dark:text-surface-950',
   danger: 'bg-error text-white'
 };
 

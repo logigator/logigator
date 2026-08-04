@@ -39,7 +39,7 @@ const SEVERITY: Record<LgButtonVariant, Record<SeverityKey, string>> = {
       'dark:active:bg-surface-600 dark:active:text-surface-100',
     info: 'bg-info text-white hover:brightness-95 active:brightness-90',
     success: 'bg-success text-white hover:brightness-95 active:brightness-90',
-    warn: 'bg-warn text-white hover:brightness-95 active:brightness-90',
+    warn: 'bg-warn text-white dark:text-surface-950 hover:brightness-95 active:brightness-90',
     danger: 'bg-error text-white hover:brightness-95 active:brightness-90'
   },
   outlined: {
