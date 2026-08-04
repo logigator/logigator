@@ -35,7 +35,7 @@ from the bundle**, not merely inert in it — the gate has to be a define rather
 than an `environment` flag for that, and the guarded
 `injector.get(AutomationApiService)` has to stay inlined inside the branch.
 
-`DEBUG_MENU` is *not* that pattern, despite the matching name: the debug menu
+`DEBUG_MENU` is _not_ that pattern, despite the matching name: the debug menu
 ships in every build and its define only sets the initial state, so
 `window.__logigatorDebug()` can switch it on in production.
 
