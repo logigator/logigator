@@ -1,6 +1,5 @@
 import { Component, computed, inject } from '@angular/core';
 import { LgButton } from '@logigator/ui';
-import { TranslocoDirective } from '@jsverse/transloco';
 import { WorkModeService } from '../../work-mode/work-mode.service';
 import { WorkMode } from '../../work-mode/work-mode.enum';
 import { BuiltInComponentType } from '../../components/component-type.enum';
@@ -9,6 +8,7 @@ import { MobileUiService } from '../../layout/mobile-ui.service';
 import { ProjectService } from '../../project/project.service';
 import { ProjectMetadataStore } from '../../persistence/project-metadata.store';
 import { OnboardTargetDirective } from '../../onboarding/onboard-target.directive';
+import { TranslateDirective } from '../../translation/translate.directive';
 
 /**
  * Floating mode HUD for `isCompact`: one always-visible row with every tool
@@ -19,7 +19,7 @@ import { OnboardTargetDirective } from '../../onboarding/onboard-target.directiv
  */
 @Component({
   selector: 'app-tool-hud',
-  imports: [LgButton, TranslocoDirective, OnboardTargetDirective],
+  imports: [LgButton, TranslateDirective, OnboardTargetDirective],
   templateUrl: './tool-hud.component.html'
 })
 export class ToolHudComponent {

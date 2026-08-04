@@ -1,8 +1,8 @@
 import { Component, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { LgButton, LgDialogContent, LgMarkdown } from '@logigator/ui';
-import { TranslocoDirective } from '@jsverse/transloco';
 import { ChangelogService } from '../../../changelog/changelog.service';
+import { TranslateDirective } from '../../../translation/translate.directive';
 
 /**
  * "What's new" dialog reached from the Help menu (and opened automatically on
@@ -11,7 +11,7 @@ import { ChangelogService } from '../../../changelog/changelog.service';
  */
 @Component({
   selector: 'app-changelog-dialog',
-  imports: [LgButton, LgMarkdown, TranslocoDirective],
+  imports: [LgButton, LgMarkdown, TranslateDirective],
   templateUrl: './changelog-dialog.component.html'
 })
 export class ChangelogDialogComponent extends LgDialogContent {

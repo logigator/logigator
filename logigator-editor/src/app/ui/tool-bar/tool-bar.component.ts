@@ -1,6 +1,5 @@
 import { Component, computed, inject } from '@angular/core';
 import { DialogService, LgButton, LgDivider, LgTooltip } from '@logigator/ui';
-import { TranslocoDirective } from '@jsverse/transloco';
 import { TranslationService } from '../../translation/translation.service';
 import { WorkModeService } from '../../work-mode/work-mode.service';
 import { WorkMode } from '../../work-mode/work-mode.enum';
@@ -20,6 +19,7 @@ import { ShortcutBinding } from '../../shortcuts/shortcut-binding.model';
 import { SimulationService } from '../../simulation/simulation.service';
 import { SimulationControlsComponent } from '../simulation-controls/simulation-controls.component';
 import { OnboardTargetDirective } from '../../onboarding/onboard-target.directive';
+import { TranslateDirective } from '../../translation/translate.directive';
 
 @Component({
   selector: 'app-tool-bar',
@@ -27,7 +27,7 @@ import { OnboardTargetDirective } from '../../onboarding/onboard-target.directiv
     LgButton,
     LgDivider,
     LgTooltip,
-    TranslocoDirective,
+    TranslateDirective,
     SimulationControlsComponent,
     OnboardTargetDirective
   ],

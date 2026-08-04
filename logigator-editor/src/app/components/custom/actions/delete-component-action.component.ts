@@ -1,11 +1,11 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { ConfirmationService, LgButton } from '@logigator/ui';
-import { TranslocoDirective } from '@jsverse/transloco';
 import { TranslationService } from '../../../translation/translation.service';
 import { ComponentActionContext } from '../../component-action';
 import { CustomComponentRegistry } from '../custom-component-registry.service';
 import { CustomComponentService } from '../../../custom-component/custom-component.service';
 import { resolveMasterSignal } from './resolve-master.signal';
+import { TranslateDirective } from '../../../translation/translate.directive';
 
 /**
  * Renderer for {@link DeleteComponentAction}: a danger button shown whenever the
@@ -18,9 +18,9 @@ import { resolveMasterSignal } from './resolve-master.signal';
  */
 @Component({
   selector: 'app-delete-component-action',
-  imports: [LgButton, TranslocoDirective],
+  imports: [LgButton, TranslateDirective],
   host: { class: 'contents' },
-  template: `<ng-container *transloco="let t">
+  template: `<ng-container *appTranslate="let t">
     @if (visible()) {
       <lg-button
         size="sm"

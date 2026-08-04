@@ -6,9 +6,9 @@ import { TranslationResult } from './translation-result.model';
 
 /**
  * Strictly typed facade over `TranslocoService`. It is the only translation
- * surface the app's TypeScript should touch (`*transloco` stays the mechanism
- * for templates); the strict key/result typing lives here rather than in a
- * module augmentation.
+ * surface the app's TypeScript should touch; templates go through
+ * `TranslateDirective` (`*appTranslate="let t"`), which delegates here so both
+ * sides share this key/result typing.
  *
  * The reason it exists beyond typing: the app runs zoneless, where a value
  * built with an imperative `translate()` call is not reactive on its own, and

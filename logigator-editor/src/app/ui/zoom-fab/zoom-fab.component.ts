@@ -1,15 +1,15 @@
 import { Component, inject } from '@angular/core';
 import { LgButton } from '@logigator/ui';
-import { TranslocoDirective } from '@jsverse/transloco';
 import { ProjectService } from '../../project/project.service';
+import { TranslateDirective } from '../../translation/translate.directive';
 
 /** Compact +/- zoom pill — the discoverable touch fallback to pinch-zoom. */
 @Component({
   selector: 'app-zoom-fab',
-  imports: [LgButton, TranslocoDirective],
+  imports: [LgButton, TranslateDirective],
   template: `
     <div
-      *transloco="let t"
+      *appTranslate="let t"
       class="flex flex-col gap-2 rounded-full bg-content p-1.5 shadow-lg"
     >
       <lg-button

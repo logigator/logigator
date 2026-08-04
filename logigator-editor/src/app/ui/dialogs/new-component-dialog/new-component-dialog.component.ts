@@ -9,10 +9,10 @@ import {
   LgToggleSwitch,
   LgTooltip
 } from '@logigator/ui';
-import { TranslocoDirective } from '@jsverse/transloco';
 import { TranslationService } from '../../../translation/translation.service';
 import { CustomComponentService } from '../../../custom-component/custom-component.service';
 import { UserService } from '../../../user/user.service';
+import { TranslateDirective } from '../../../translation/translate.directive';
 
 /**
  * Collects the metadata for a new custom component (name, symbol, description,
@@ -29,7 +29,7 @@ import { UserService } from '../../../user/user.service';
     LgSelectButton,
     LgTooltip,
     LgButton,
-    TranslocoDirective,
+    TranslateDirective,
     LgMessage
   ],
   templateUrl: './new-component-dialog.component.html'

@@ -1,10 +1,10 @@
 import { Component, inject } from '@angular/core';
 import { LgButton, LgTooltip } from '@logigator/ui';
-import { TranslocoDirective } from '@jsverse/transloco';
 import { WorkModeService } from '../../work-mode/work-mode.service';
 import { createScissorToggle } from '../../work-mode/work-mode-tools';
 import { ShortcutService } from '../../shortcuts/shortcut.service';
 import { OnboardTargetDirective } from '../../onboarding/onboard-target.directive';
+import { TranslateDirective } from '../../translation/translate.directive';
 
 /**
  * Floating pill over the canvas hosting the select tool's scissor sub-toggle
@@ -14,11 +14,11 @@ import { OnboardTargetDirective } from '../../onboarding/onboard-target.directiv
  */
 @Component({
   selector: 'app-scissor-toggle',
-  imports: [LgButton, LgTooltip, TranslocoDirective, OnboardTargetDirective],
+  imports: [LgButton, LgTooltip, TranslateDirective, OnboardTargetDirective],
   template: `
     @if (toggle.isVisible()) {
       <div
-        *transloco="let t"
+        *appTranslate="let t"
         class="flex items-center rounded-full bg-content/95 px-1.5 py-1 shadow-lg backdrop-blur"
       >
         <lg-button

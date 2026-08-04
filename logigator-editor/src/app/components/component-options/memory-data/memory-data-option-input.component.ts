@@ -1,5 +1,4 @@
 import { Component, inject, input } from '@angular/core';
-import { TranslocoDirective } from '@jsverse/transloco';
 import { TranslationService } from '../../../translation/translation.service';
 import { DialogService, LgButton } from '@logigator/ui';
 import { ComponentOptionInput } from '../../component-option';
@@ -10,6 +9,7 @@ import {
   bytesToBase64,
   trimTrailingZeros
 } from '../../../utils/packed-buffer';
+import { TranslateDirective } from '../../../translation/translate.directive';
 
 /**
  * Side-panel renderer for {@link MemoryDataComponentOption}. It opens the
@@ -21,7 +21,7 @@ import {
  */
 @Component({
   selector: 'app-memory-data-option-input',
-  imports: [TranslocoDirective, LgButton],
+  imports: [TranslateDirective, LgButton],
   templateUrl: './memory-data-option-input.component.html'
 })
 export class MemoryDataOptionInputComponent implements ComponentOptionInput<string> {

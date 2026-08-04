@@ -82,7 +82,7 @@ describe('ComponentListCategoryComponent', () => {
 describe('ComponentListCategoryComponent language reactivity', () => {
   it('re-renders a tile label when the active language changes', async () => {
     // The label is produced by a template method (`text()` -> the translation
-    // service) rather than the *transloco directive. Under zoneless change
+    // service) rather than the *appTranslate directive. Under zoneless change
     // detection this only stays live because the service's translate() reads a
     // signal that fires after the new language bundle loads, and that read is
     // tracked even though it happens inside a method invoked from the template.

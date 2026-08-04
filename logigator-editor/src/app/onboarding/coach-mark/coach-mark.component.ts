@@ -4,9 +4,9 @@ import {
   input,
   output
 } from '@angular/core';
-import { TranslocoDirective } from '@jsverse/transloco';
 import { LgButton, LgCaret, type LgOverlaySide } from '@logigator/ui';
 import { CoachMarkView } from '../coach-mark.model';
+import { TranslateDirective } from '../../translation/translate.directive';
 
 /**
  * Presentational coach-mark bubble for one tutorial step. Knows nothing about
@@ -18,7 +18,7 @@ import { CoachMarkView } from '../coach-mark.model';
 @Component({
   selector: 'app-coach-mark',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslocoDirective, LgButton, LgCaret],
+  imports: [TranslateDirective, LgButton, LgCaret],
   templateUrl: './coach-mark.component.html'
 })
 export class CoachMarkComponent {

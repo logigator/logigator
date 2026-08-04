@@ -1,8 +1,8 @@
 import { Component } from '@angular/core';
 import { LgButton, LgDialogContent } from '@logigator/ui';
-import { TranslocoDirective } from '@jsverse/transloco';
 import { environment } from '../../../../environments/environment';
 import { LocalDatePipe } from '../../../utils/local-date/local-date.pipe';
+import { TranslateDirective } from '../../../translation/translate.directive';
 
 /**
  * Informational About dialog reached from the Help menu: app version (with the
@@ -12,7 +12,7 @@ import { LocalDatePipe } from '../../../utils/local-date/local-date.pipe';
  */
 @Component({
   selector: 'app-about-dialog',
-  imports: [LgButton, LocalDatePipe, TranslocoDirective],
+  imports: [LgButton, LocalDatePipe, TranslateDirective],
   templateUrl: './about-dialog.component.html'
 })
 export class AboutDialogComponent extends LgDialogContent {

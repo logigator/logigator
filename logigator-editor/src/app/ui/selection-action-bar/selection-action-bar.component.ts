@@ -1,10 +1,10 @@
 import { Component, inject } from '@angular/core';
 import { LgButton } from '@logigator/ui';
-import { TranslocoDirective } from '@jsverse/transloco';
 import { SelectionInspectorService } from '../../project/selection-inspector.service';
 import { ClipboardService } from '../../clipboard/clipboard.service';
 import { ProjectService } from '../../project/project.service';
 import { MobileUiService } from '../../layout/mobile-ui.service';
+import { TranslateDirective } from '../../translation/translate.directive';
 
 /**
  * Copy/cut/paste/delete for the current selection, surfaced just above the tool
@@ -13,11 +13,11 @@ import { MobileUiService } from '../../layout/mobile-ui.service';
  */
 @Component({
   selector: 'app-selection-action-bar',
-  imports: [LgButton, TranslocoDirective],
+  imports: [LgButton, TranslateDirective],
   template: `
     @if (inspector.hasSelection()) {
       <div
-        *transloco="let t"
+        *appTranslate="let t"
         class="flex items-center gap-1 rounded-full bg-content/95 px-2 py-1 shadow-lg backdrop-blur"
       >
         <span class="px-1 text-sm text-muted tabular-nums">{{

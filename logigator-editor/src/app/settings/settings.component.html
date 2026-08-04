@@ -1,4 +1,4 @@
-<div class="flex flex-col gap-3" *transloco="let t">
+<div class="flex flex-col gap-3" *appTranslate="let t">
   @for (setting of editorSettings.settings; track setting.key) {
     <div class="flex items-center justify-between gap-4">
       <label [for]="'setting-' + setting.key" class="text-sm">{{

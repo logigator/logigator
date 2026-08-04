@@ -7,13 +7,13 @@ import {
   LgSelect,
   LgTooltip
 } from '@logigator/ui';
-import { TranslocoDirective } from '@jsverse/transloco';
 import {
   SimulationService,
   TargetSpeedUnit
 } from '../../simulation/simulation.service';
 import { SiPipe } from '../../utils/si/si.pipe';
 import { OnboardTargetDirective } from '../../onboarding/onboard-target.directive';
+import { TranslateDirective } from '../../translation/translate.directive';
 
 /**
  * The run controls shared by the desktop tool bar and the mobile sim bar:
@@ -31,7 +31,7 @@ import { OnboardTargetDirective } from '../../onboarding/onboard-target.directiv
     LgSelect,
     LgTooltip,
     SiPipe,
-    TranslocoDirective,
+    TranslateDirective,
     OnboardTargetDirective
   ],
   templateUrl: './simulation-controls.component.html'

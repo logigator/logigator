@@ -37,7 +37,20 @@ module.exports = defineConfig([
         }
       ],
       '@angular-eslint/prefer-on-push-component-change-detection': 'error',
-      'no-console': 'error'
+      'no-console': 'error',
+      '@typescript-eslint/no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: '@jsverse/transloco',
+              importNames: ['TranslocoDirective', 'TranslocoPipe'],
+              message:
+                'Use TranslateDirective (*appTranslate) in templates and TranslationService in TypeScript.'
+            }
+          ]
+        }
+      ]
     }
   },
   {

@@ -1,9 +1,9 @@
 import { Component, inject, signal } from '@angular/core';
-import { TranslocoDirective } from '@jsverse/transloco';
 import { LgMenu, LgRipple } from '@logigator/ui';
 import { UserService } from '../../user/user.service';
 import { UserSettingsPanelComponent } from './user-settings-panel.component';
 import { UserAvatarComponent } from './user-avatar.component';
+import { TranslateDirective } from '../../translation/translate.directive';
 
 /**
  * The title-bar avatar trigger: shows the signed-in user (or a placeholder)
@@ -12,7 +12,7 @@ import { UserAvatarComponent } from './user-avatar.component';
 @Component({
   selector: 'app-user-settings',
   imports: [
-    TranslocoDirective,
+    TranslateDirective,
     LgMenu,
     LgRipple,
     UserSettingsPanelComponent,

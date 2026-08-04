@@ -8,7 +8,6 @@ import {
   LgSlider,
   LgToggleSwitch
 } from '@logigator/ui';
-import { TranslocoDirective } from '@jsverse/transloco';
 import { TranslationService } from '../../../translation/translation.service';
 import { ProjectService } from '../../../project/project.service';
 import { ProjectMetadataStore } from '../../../persistence/project-metadata.store';
@@ -17,6 +16,7 @@ import {
   ImageFormat
 } from '../../../rendering/image-export.service';
 import { Project } from '../../../project/project';
+import { TranslateDirective } from '../../../translation/translate.directive';
 
 /** Slider default; converted to a 0–1 quality on export. */
 const DEFAULT_QUALITY_PERCENT = 92;
@@ -35,7 +35,7 @@ const DEFAULT_QUALITY_PERCENT = 92;
     LgToggleSwitch,
     LgSlider,
     LgButton,
-    TranslocoDirective
+    TranslateDirective
   ],
   templateUrl: './export-image-dialog.component.html'
 })

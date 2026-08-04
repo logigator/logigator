@@ -1,5 +1,4 @@
 import { Component, computed, inject } from '@angular/core';
-import { TranslocoDirective } from '@jsverse/transloco';
 import { LgTabReorder, LgTabStrip, LgTabStripItem } from '@logigator/ui';
 import { ProjectService } from '../../project/project.service';
 import { ProjectMetadataStore } from '../../persistence/project-metadata.store';
@@ -8,6 +7,7 @@ import { WorkMode } from '../../work-mode/work-mode.enum';
 import { WorkModeService } from '../../work-mode/work-mode.service';
 import { Project } from '../../project/project';
 import { TranslationService } from '../../translation/translation.service';
+import { TranslateDirective } from '../../translation/translate.directive';
 
 /**
  * The tab strip above the board: the pinned main project plus one tab per open
@@ -24,7 +24,7 @@ import { TranslationService } from '../../translation/translation.service';
  */
 @Component({
   selector: 'app-tab-bar',
-  imports: [LgTabStrip, TranslocoDirective],
+  imports: [LgTabStrip, TranslateDirective],
   templateUrl: './tab-bar.component.html'
 })
 export class TabBarComponent {

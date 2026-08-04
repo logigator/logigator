@@ -1,15 +1,15 @@
 import { Component, input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LgInputNumber } from '@logigator/ui';
-import { TranslocoDirective } from '@jsverse/transloco';
 import type { ComponentOptionInput } from '../../component-option';
 import type { NumberComponentOption } from './number.component-option';
+import { TranslateDirective } from '../../../translation/translate.directive';
 
 let nextId = 0;
 
 @Component({
   selector: 'app-number-option-input',
-  imports: [FormsModule, LgInputNumber, TranslocoDirective],
+  imports: [FormsModule, LgInputNumber, TranslateDirective],
   templateUrl: './number-option-input.component.html'
 })
 export class NumberOptionInputComponent implements ComponentOptionInput<number> {

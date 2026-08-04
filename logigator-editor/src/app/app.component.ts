@@ -37,7 +37,6 @@ import {
 } from '@logigator/ui';
 import { InspectionService } from './inspection/inspection.service';
 import { InspectionSheetComponent } from './inspection/inspection-sheet.component';
-import { TranslocoDirective } from '@jsverse/transloco';
 import { TranslationService } from './translation/translation.service';
 import { WorkMode } from './work-mode/work-mode.enum';
 import { WorkModeService } from './work-mode/work-mode.service';
@@ -65,6 +64,7 @@ import { HintService } from './onboarding/hint.service';
 import { OnboardingNudgeComponent } from './onboarding/onboarding-nudge.component';
 import { OnboardTargetDirective } from './onboarding/onboard-target.directive';
 import { AutomationApiService } from './automation/automation-api.service';
+import { TranslateDirective } from './translation/translate.directive';
 
 @Component({
   selector: 'app-root',
@@ -84,7 +84,7 @@ import { AutomationApiService } from './automation/automation-api.service';
     LgDrawer,
     LgWindowOutlet,
     InspectionSheetComponent,
-    TranslocoDirective,
+    TranslateDirective,
     MobileTopBarComponent,
     ToolHudComponent,
     SelectionActionBarComponent,

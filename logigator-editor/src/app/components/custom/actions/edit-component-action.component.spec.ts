@@ -11,7 +11,7 @@ describe('EditComponentActionComponent', () => {
   let userService: { user: () => unknown };
 
   // The visible affordance is driven by the protected `mode` signal; assert it
-  // directly rather than through the transloco-gated template.
+  // directly rather than through the rendered template.
   function mode(type: number): 'edit' | 'restore' | 'signIn' | null {
     const fixture = TestBed.createComponent(EditComponentActionComponent);
     fixture.componentRef.setInput('context', {

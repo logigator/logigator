@@ -121,9 +121,9 @@ Each renderer owns its entire row — the wrapper `<div class="flex gap-4 items-
 
 Each renderer generates a stable `inputId` once per instance via a module-level counter and uses it for both `<label [for]>` and the PrimeNG input's `[inputId]`. Don't wrap the input in the `<label>` — PrimeNG inputs render multiple spans around the real `<input>`, so click-on-label associations are unreliable; explicit `for`/`inputId` is the safe path.
 
-### Transloco
+### Translation
 
-Each renderer's template starts with `*transloco="let t"` and uses `t(option().label)` for the label text. Keeping the structural directive in each renderer template is cheaper than injecting `TranslocoService` and works regardless of which renderer is mounted.
+Each renderer's template starts with `*appTranslate="let t"` and uses `t(option().label)` for the label text (`label` is typed `TranslationKey`, so the key is schema-checked). Keeping the structural directive in each renderer template is cheaper than injecting `TranslationService` and works regardless of which renderer is mounted.
 
 ---
 

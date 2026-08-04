@@ -1,11 +1,11 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { DialogService, LgButton } from '@logigator/ui';
-import { TranslocoDirective } from '@jsverse/transloco';
 import { TranslationService } from '../../../translation/translation.service';
 import { ComponentActionContext } from '../../component-action';
 import { CustomComponentRegistry } from '../custom-component-registry.service';
 import { ShareDialogComponent } from '../../../ui/dialogs/share-dialog/share-dialog.component';
 import { resolveMasterSignal } from './resolve-master.signal';
+import { TranslateDirective } from '../../../translation/translate.directive';
 
 /**
  * Renderer for {@link ShareComponentAction}: a button shown only when the selected
@@ -16,9 +16,9 @@ import { resolveMasterSignal } from './resolve-master.signal';
  */
 @Component({
   selector: 'app-share-component-action',
-  imports: [LgButton, TranslocoDirective],
+  imports: [LgButton, TranslateDirective],
   host: { class: 'contents' },
-  template: `<ng-container *transloco="let t">
+  template: `<ng-container *appTranslate="let t">
     @if (visible()) {
       <lg-button
         size="sm"

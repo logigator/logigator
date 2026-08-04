@@ -9,9 +9,9 @@ import {
   LgToggleSwitch,
   LgTooltip
 } from '@logigator/ui';
-import { TranslocoDirective } from '@jsverse/transloco';
 import { TranslationService } from '../../../translation/translation.service';
 import { UserService } from '../../../user/user.service';
+import { TranslateDirective } from '../../../translation/translate.directive';
 
 /** The pre-fill passed to the save dialog. */
 export interface SaveProjectDialogData {
@@ -42,7 +42,7 @@ const NAME_MAX_LENGTH = 20;
     LgSelectButton,
     LgTooltip,
     LgButton,
-    TranslocoDirective,
+    TranslateDirective,
     LgMessage
   ],
   templateUrl: './save-project-dialog.component.html'

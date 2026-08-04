@@ -53,7 +53,7 @@ const TRANSLOCO_PERSIST_STUB = {
  * the static DI injector used by model classes (Project, Component, Wire).
  * Call once per beforeEach.
  *
- * The real TranslocoService is used — a stub can't drive the *transloco
+ * The real TranslocoService is used — a stub can't drive the *appTranslate
  * directive that components render — so component specs route through here too,
  * passing the standalone component(s) under test via `imports`.
  *

@@ -12,7 +12,6 @@ import {
   viewChild
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { TranslocoDirective } from '@jsverse/transloco';
 import { TranslationService } from '../../translation/translation.service';
 import {
   ConfirmationService,
@@ -30,6 +29,7 @@ import {
   writeWord
 } from '../../utils/packed-buffer';
 import { ToastService } from '../../logging/toast.service';
+import { TranslateDirective } from '../../translation/translate.directive';
 
 type HexView = 'word' | 'byte';
 type Radix = 'hex' | 'decimal' | 'octal' | 'binary';
@@ -76,7 +76,7 @@ const RADICES: Record<Radix, RadixSpec> = {
   selector: 'app-hex-editor',
   imports: [
     FormsModule,
-    TranslocoDirective,
+    TranslateDirective,
     LgButton,
     LgSelectButton,
     LgInputText,

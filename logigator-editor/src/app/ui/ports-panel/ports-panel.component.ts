@@ -6,7 +6,6 @@ import {
   moveItemInArray
 } from '@angular/cdk/drag-drop';
 import { LgCard, LgInputText, LgTag } from '@logigator/ui';
-import { TranslocoDirective } from '@jsverse/transloco';
 import { of, scan, startWith, switchMap } from 'rxjs';
 import { ProjectService } from '../../project/project.service';
 import { InputComponent } from '../../components/component-types/input/input.component';
@@ -19,6 +18,7 @@ import {
 import { ComponentListCategoryComponent } from '../side-bar/component-list-category/component-list-category.component';
 import { ComponentProviderService } from '../../components/component-provider.service';
 import { TranslationService } from '../../translation/translation.service';
+import { TranslateDirective } from '../../translation/translate.directive';
 
 type Plug = InputComponent | OutputComponent;
 
@@ -50,7 +50,7 @@ interface PlugRow {
     LgCard,
     LgTag,
     LgInputText,
-    TranslocoDirective,
+    TranslateDirective,
     ComponentListCategoryComponent
   ],
   templateUrl: './ports-panel.component.html',

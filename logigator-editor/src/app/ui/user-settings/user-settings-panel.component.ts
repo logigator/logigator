@@ -1,5 +1,4 @@
 import { Component, inject, output } from '@angular/core';
-import { TranslocoDirective } from '@jsverse/transloco';
 import { LgDivider, LgRipple } from '@logigator/ui';
 import { ThemeSwitcherComponent } from '../../theming/theme-switcher/theme-switcher.component';
 import { LanguageSwitcherComponent } from '../../translation/language-switcher/language-switcher.component';
@@ -7,6 +6,7 @@ import { UserService } from '../../user/user.service';
 import { SessionLifecycleService } from '../../user/session-lifecycle.service';
 import { SettingsComponent } from '../../settings/settings.component';
 import { UserAvatarComponent } from './user-avatar.component';
+import { TranslateDirective } from '../../translation/translate.directive';
 
 /**
  * The account/settings panel: avatar header, theme/language/editor-settings
@@ -17,7 +17,7 @@ import { UserAvatarComponent } from './user-avatar.component';
 @Component({
   selector: 'app-user-settings-panel',
   imports: [
-    TranslocoDirective,
+    TranslateDirective,
     LgDivider,
     LgRipple,
     ThemeSwitcherComponent,

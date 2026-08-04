@@ -1,17 +1,16 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { Point } from 'pixi.js';
-import { TranslocoDirective } from '@jsverse/transloco';
 import { formatShortcutLabel } from '@logigator/ui';
 import { TranslationService } from '../../translation/translation.service';
 import { WorkModeService } from '../../work-mode/work-mode.service';
 import { ComponentProviderService } from '../../components/component-provider.service';
-import { TranslationKey } from '../../translation/translation-key.model';
 import {
   LocalizableText,
   resolveLocalizableText
 } from '../../components/component-config.model';
 import { ShortcutService } from '../../shortcuts/shortcut.service';
 import { ShortcutActionEnum } from '../../shortcuts/shortcut-action.enum';
+import { TranslateDirective } from '../../translation/translate.directive';
 
 /**
  * Compact mode + grid-position pill, the top-right overlay that replaces the
@@ -21,10 +20,10 @@ import { ShortcutActionEnum } from '../../shortcuts/shortcut-action.enum';
  */
 @Component({
   selector: 'app-mobile-status',
-  imports: [TranslocoDirective],
+  imports: [TranslateDirective],
   template: `
     <div
-      *transloco="let t"
+      *appTranslate="let t"
       class="flex items-center gap-2 rounded-full bg-content/80 px-3 py-1 text-xs text-muted shadow backdrop-blur"
     >
       <span class="min-w-0 truncate">{{
@@ -54,7 +53,7 @@ export class MobileStatusComponent {
   );
 
   protected readonly workMode = computed(
-    () => `statusBar.modes.${this.workModeService.mode()}` as TranslationKey
+    () => `statusBar.modes.${this.workModeService.mode()}` as const
   );
 
   /** The select-mode hint's hold-to-scissor key, tracking rebinds live. */

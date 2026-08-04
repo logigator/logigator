@@ -12,7 +12,6 @@ import {
   viewChild
 } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
-import { TranslocoDirective } from '@jsverse/transloco';
 import {
   LgButton,
   LgDialogContent,
@@ -33,6 +32,7 @@ import {
 import { DocumentationService } from '../../../documentation/documentation.service';
 import { LayoutService } from '../../../layout/layout.service';
 import { TranslationService } from '../../../translation/translation.service';
+import { TranslateDirective } from '../../../translation/translate.directive';
 
 /**
  * The documentation viewer, reached from the Help menu or any deep link
@@ -51,7 +51,7 @@ import { TranslationService } from '../../../translation/translation.service';
     LgMarkdown,
     LgNavigation,
     NgTemplateOutlet,
-    TranslocoDirective
+    TranslateDirective
   ],
   templateUrl: './documentation-dialog.component.html',
   host: {

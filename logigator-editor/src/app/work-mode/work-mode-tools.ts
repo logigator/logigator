@@ -3,6 +3,7 @@ import { WorkModeService } from './work-mode.service';
 import { BuiltInComponentType } from '../components/component-type.enum';
 import { ShortcutActionEnum } from '../shortcuts/shortcut-action.enum';
 import { ShortcutService } from '../shortcuts/shortcut.service';
+import { TranslationKey } from '../translation/translation-key.model';
 
 /** Stable identifier for a work-mode tool, independent of its WorkMode. */
 export type WorkModeToolId = 'pan' | 'wire' | 'select' | 'erase' | 'text';
@@ -13,7 +14,7 @@ export interface WorkModeToolDescriptor {
   /** Phosphor icon class, e.g. 'ph ph-hand'. */
   icon: string;
   /** i18n key under `toolBar.*` for the label / tooltip. */
-  labelKey: string;
+  labelKey: TranslationKey;
   /** Shortcut action, for the keybinding hint in tooltips. */
   shortcut: ShortcutActionEnum;
   /** Reads signals — call inside a template binding for the active state. */
@@ -97,9 +98,9 @@ export function createWorkModeTools(
 export interface ScissorToggleDescriptor {
   icon: string;
   /** Full description — tooltip / aria label. */
-  labelKey: string;
+  labelKey: TranslationKey;
   /** Short label shown inside the floating pill. */
-  shortLabelKey: string;
+  shortLabelKey: TranslationKey;
   shortcut: ShortcutActionEnum;
   /** Visible only while the select tool is active. */
   isVisible: () => boolean;

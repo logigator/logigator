@@ -1,9 +1,9 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LgButton, LgDialogContent, LgInputText } from '@logigator/ui';
-import { TranslocoDirective } from '@jsverse/transloco';
 import { CustomComponentService } from '../../../custom-component/custom-component.service';
 import { CustomComponentRegistry } from '../../../components/custom/custom-component-registry.service';
+import { TranslateDirective } from '../../../translation/translate.directive';
 
 export interface EditComponentDetailsDialogData {
   /** The library master whose details are edited. */
@@ -20,7 +20,7 @@ export interface EditComponentDetailsDialogData {
  */
 @Component({
   selector: 'app-edit-component-details-dialog',
-  imports: [FormsModule, LgInputText, LgButton, TranslocoDirective],
+  imports: [FormsModule, LgInputText, LgButton, TranslateDirective],
   templateUrl: './edit-component-details-dialog.component.html'
 })
 export class EditComponentDetailsDialogComponent extends LgDialogContent<EditComponentDetailsDialogData> {

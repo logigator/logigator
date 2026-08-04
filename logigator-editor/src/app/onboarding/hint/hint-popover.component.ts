@@ -4,8 +4,8 @@ import {
   input,
   output
 } from '@angular/core';
-import { TranslocoDirective } from '@jsverse/transloco';
 import { LgButton, LgCaret, type LgOverlaySide } from '@logigator/ui';
+import { TranslateDirective } from '../../translation/translate.directive';
 
 /**
  * Presentational just-in-time hint: a small, non-blocking popover with the hint
@@ -16,10 +16,10 @@ import { LgButton, LgCaret, type LgOverlaySide } from '@logigator/ui';
 @Component({
   selector: 'app-hint-popover',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslocoDirective, LgButton, LgCaret],
+  imports: [TranslateDirective, LgButton, LgCaret],
   template: `
     <div
-      *transloco="let t"
+      *appTranslate="let t"
       class="pointer-events-auto relative flex w-80 max-w-[calc(100vw-2rem)] flex-col gap-2 rounded-lg border border-border bg-content p-3 shadow-lg"
       role="status"
     >

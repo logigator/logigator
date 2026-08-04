@@ -1,4 +1,4 @@
-<ng-container *transloco="let t">
+<ng-container *appTranslate="let t">
   <div class="flex flex-col gap-2">
     @for (group of groups; track group.labelKey; let last = $last) {
       <div>
@@ -7,7 +7,7 @@
         </h3>
         @for (action of group.actions; track action) {
           <div class="flex items-center justify-between py-2 px-1 rounded">
-            <span class="text-sm">{{ t('shortcuts.actions.' + action) }}</span>
+            <span class="text-sm">{{ t(`shortcuts.actions.${action}`) }}</span>
             <div class="flex items-center gap-1">
               <app-shortcut-edit
                 [binding]="shortcutService.binding(action)()"

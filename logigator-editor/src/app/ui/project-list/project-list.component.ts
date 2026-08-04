@@ -21,9 +21,9 @@ import {
   type LgPaginatorState,
   LgTooltip
 } from '@logigator/ui';
-import { TranslocoDirective } from '@jsverse/transloco';
 import { TranslationService } from '../../translation/translation.service';
 import { LocalDatePipe } from '../../utils/local-date/local-date.pipe';
+import { TranslateDirective } from '../../translation/translate.directive';
 
 export interface ProjectListItem {
   id: string;
@@ -50,7 +50,7 @@ const NAME_MAX_LENGTH = 20;
     LgInputIcon,
     LgPaginator,
     LgTooltip,
-    TranslocoDirective
+    TranslateDirective
   ],
   templateUrl: './project-list.component.html'
 })

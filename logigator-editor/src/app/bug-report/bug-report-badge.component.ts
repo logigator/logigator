@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { LgButton, LgTooltip } from '@logigator/ui';
-import { TranslocoDirective } from '@jsverse/transloco';
 import { BugReportService } from './bug-report.service';
+import { TranslateDirective } from '../translation/translate.directive';
 
 /**
  * Small floating action button that opens the bug-report dialog. Placed in the
@@ -9,10 +9,10 @@ import { BugReportService } from './bug-report.service';
  */
 @Component({
   selector: 'app-bug-report-badge',
-  imports: [LgButton, LgTooltip, TranslocoDirective],
+  imports: [LgButton, LgTooltip, TranslateDirective],
   host: { class: 'contents' },
   template: `<div
-    *transloco="let t"
+    *appTranslate="let t"
     class="rounded-full bg-content p-1.5 shadow-lg"
   >
     <lg-button

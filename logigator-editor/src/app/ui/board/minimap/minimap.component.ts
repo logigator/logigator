@@ -12,7 +12,6 @@ import {
 import { Point, Rectangle } from 'pixi.js';
 import { debounceTime, merge, Subject, takeUntil } from 'rxjs';
 import { LgButton } from '@logigator/ui';
-import { TranslocoDirective } from '@jsverse/transloco';
 import { Project } from '../../../project/project';
 import { BoardSnapshotService } from '../../../rendering/board-snapshot.service';
 import { ThemingService } from '../../../theming/theming.service';
@@ -25,6 +24,7 @@ import {
   nextFrame,
   PanelRect
 } from './minimap-frame';
+import { TranslateDirective } from '../../../translation/translate.directive';
 
 const PANEL_SIZE_REGULAR = { width: 250, height: 250 };
 const PANEL_SIZE_COMPACT = { width: 200, height: 200 };
@@ -75,7 +75,7 @@ const COLLAPSED_STORAGE_KEY = 'logigator.minimap.collapsed';
 @Component({
   selector: 'app-minimap',
   templateUrl: './minimap.component.html',
-  imports: [LgButton, TranslocoDirective],
+  imports: [LgButton, TranslateDirective],
   host: {
     '[class]': 'hostClasses()',
     '[style.display]': "hasContent() ? 'block' : 'none'",

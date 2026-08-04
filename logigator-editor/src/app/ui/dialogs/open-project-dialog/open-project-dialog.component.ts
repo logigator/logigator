@@ -9,7 +9,6 @@ import {
   LgTabPanel,
   LgTabs
 } from '@logigator/ui';
-import { TranslocoDirective } from '@jsverse/transloco';
 import { TranslationService } from '../../../translation/translation.service';
 import {
   debounceTime,
@@ -29,6 +28,7 @@ import {
 } from '../../project-list/project-list.component';
 import { ShareDialogComponent } from '../share-dialog/share-dialog.component';
 import type { BrowserProjectSummary } from '../../../persistence/browser/browser-project.types';
+import { TranslateDirective } from '../../../translation/translate.directive';
 
 const PAGE_SIZE = 20;
 
@@ -39,7 +39,7 @@ const PAGE_SIZE = 20;
     LgTab,
     LgTabPanel,
     LgFileUpload,
-    TranslocoDirective,
+    TranslateDirective,
     ProjectListComponent,
     LgMessage
   ],

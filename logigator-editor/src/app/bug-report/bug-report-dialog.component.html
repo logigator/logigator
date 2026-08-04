@@ -1,4 +1,4 @@
-<div *transloco="let t" class="flex flex-col gap-4">
+<div *appTranslate="let t" class="flex flex-col gap-4">
   @if (mode === 'error') {
     <lg-message severity="danger">{{ t('bugReport.errorIntro') }}</lg-message>
   } @else {

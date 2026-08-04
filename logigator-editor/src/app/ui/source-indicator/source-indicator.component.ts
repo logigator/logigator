@@ -1,6 +1,6 @@
 import { Component, computed, input } from '@angular/core';
-import { TranslocoDirective } from '@jsverse/transloco';
 import { LgBadge, LgSeverity } from '@logigator/ui';
+import { TranslateDirective } from '../../translation/translate.directive';
 
 /** Where the shown circuit lives / its persistence state. */
 export type SourceIndicatorState =
@@ -33,12 +33,12 @@ interface StateStyle {
 @Component({
   selector: 'app-source-indicator',
   host: { class: 'contents' },
-  imports: [LgBadge, TranslocoDirective],
-  template: `<ng-container *transloco="let t">
+  imports: [LgBadge, TranslateDirective],
+  template: `<ng-container *appTranslate="let t">
     @if (variant() === 'badge') {
       <span
         class="absolute -top-1.5 -left-1.5 flex items-center justify-center w-4 h-4 rounded-full bg-content border border-border"
-        [title]="titleOverride() || t('sourceIndicator.title.' + source())"
+        [title]="titleOverride() || t(titleKey())"
       >
         <i [class]="style().icon + ' ' + style().glyph + ' text-[0.6rem]'"></i>
       </span>
@@ -46,10 +46,10 @@ interface StateStyle {
       <lg-badge
         rounded
         [severity]="style().severity"
-        [title]="titleOverride() || t('sourceIndicator.title.' + source())"
+        [title]="titleOverride() || t(titleKey())"
       >
         <i [class]="style().icon"></i>
-        {{ t('sourceIndicator.label.' + source()) }}
+        {{ t(labelKey()) }}
       </lg-badge>
     }
   </ng-container>`
@@ -101,6 +101,16 @@ export class SourceIndicatorComponent {
 
   protected readonly style = computed(
     () => SourceIndicatorComponent.STYLES[this.source()]
+  );
+
+  // Keys are built here rather than in the template: `as const` keeps the
+  // template literal a literal type, so the state-keyed keys are checked against
+  // the translation schema like any hand-written key.
+  protected readonly titleKey = computed(
+    () => `sourceIndicator.title.${this.source()}` as const
+  );
+  protected readonly labelKey = computed(
+    () => `sourceIndicator.label.${this.source()}` as const
   );
 
   /** The host-supplied tooltip for the current state, or `''` for the default. */

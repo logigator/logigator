@@ -1,13 +1,13 @@
 import { Component, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { LgButton, LgDialog, LgTextarea } from '@logigator/ui';
-import { TranslocoDirective } from '@jsverse/transloco';
 import type { ComponentOptionInput } from '../../component-option';
 import type { TextAreaComponentOption } from './text-area.component-option';
+import { TranslateDirective } from '../../../translation/translate.directive';
 
 @Component({
   selector: 'app-text-area-option-input',
-  imports: [FormsModule, LgButton, LgDialog, LgTextarea, TranslocoDirective],
+  imports: [FormsModule, LgButton, LgDialog, LgTextarea, TranslateDirective],
   templateUrl: './text-area-option-input.component.html'
 })
 export class TextAreaOptionInputComponent implements ComponentOptionInput<string> {

@@ -19,7 +19,6 @@ import {
   LgMenubar,
   LgTooltip
 } from '@logigator/ui';
-import { TranslocoDirective } from '@jsverse/transloco';
 import { TranslationService } from '../../translation/translation.service';
 import { UserSettingsComponent } from '../user-settings/user-settings.component';
 import { ProjectMetadataStore } from '../../persistence/project-metadata.store';
@@ -30,6 +29,7 @@ import {
   SourceIndicatorComponent,
   SourceIndicatorState
 } from '../source-indicator/source-indicator.component';
+import { TranslateDirective } from '../../translation/translate.directive';
 
 /** Longest project name accepted, matching the save dialog and open-project list. */
 const NAME_MAX_LENGTH = 20;
@@ -46,7 +46,7 @@ const NAME_MAX_LENGTH = 20;
     NgOptimizedImage,
     UserSettingsComponent,
     SourceIndicatorComponent,
-    TranslocoDirective
+    TranslateDirective
   ],
   templateUrl: './title-bar.component.html'
 })

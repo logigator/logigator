@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { LgButton, LgDialogContent, LgMessage } from '@logigator/ui';
-import { TranslocoDirective } from '@jsverse/transloco';
+import { TranslateDirective } from '../../../translation/translate.directive';
 
 export interface CloseTabDialogData {
   name: string;
@@ -24,7 +24,7 @@ export type CloseTabChoice = 'save' | 'discard';
  */
 @Component({
   selector: 'app-close-tab-dialog',
-  imports: [LgButton, LgMessage, TranslocoDirective],
+  imports: [LgButton, LgMessage, TranslateDirective],
   templateUrl: './close-tab-dialog.component.html'
 })
 export class CloseTabDialogComponent extends LgDialogContent<

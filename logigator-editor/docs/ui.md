@@ -69,7 +69,7 @@ All UI components share these conventions:
 - **Signal API** — inputs use `input<T>()`, outputs use `output<T>()`, derived values use `computed()`, local mutable state uses `signal()`.
 - **PrimeNG** — all interactive widgets come from PrimeNG v19 (`p-button`, `p-menubar`, `p-card`, `p-select`, `p-inputNumber`, `p-selectButton`, `p-tooltip`, `p-divider`, `p-iconfield`, `p-inputicon`, `p-inputText`).
 - **Tailwind** — layout, spacing, borders, and opacity utilities via Tailwind 4. Prefer Tailwind utility classes over custom CSS at all times. Write custom CSS only when a style genuinely cannot be expressed as a utility class (e.g., complex pseudo-element rules or `:host` block-display overrides).
-- **Transloco** — all user-facing strings go through `*transloco="let t"` / `t('key')`. Components inject `TranslocoService` only when they need to read translations imperatively (e.g., building `MenuItem` arrays for PrimeNG menus).
+- **Translations** — all user-facing strings go through `*appTranslate="let t"` / `t('key')` (`TranslateDirective`), whose `t` accepts only keys the translation schema declares, so a typo or a renamed key fails the build. Components inject `TranslationService` when they need to translate imperatively (e.g., building menu-item arrays); no component touches `TranslocoService` — only `translation/`, the bootstrap in `app.config.ts` (language preload) and specs do — and an ESLint rule keeps transloco's untyped directive and pipe out of the app.
 - **Phosphor icons** — icon classes follow the `ph ph-<name>` pattern from the Phosphor icon font.
 - **Shared signal stores** — `WorkModeService` and `ProjectService` are the two root-provided signal stores that connect the UI components without prop-drilling through `AppComponent`.
 
@@ -130,7 +130,7 @@ Completes `destroy$`, tears down the pointer controller, router, resize observer
 
 The horizontal application bar at the top. Contains the logo (links to `/`) and a PrimeNG `p-menubar` that spans the remaining width.
 
-The menu model is a `Signal<MenuItem[]>` built by `generateMenuItems()` and re-derived reactively whenever `TranslocoService.events$` emits (i.e., on language change). Current menu structure:
+The menu model is a `Signal<MenuItem[]>` built by `generateMenuItems()` and re-derived reactively on language change, because `TranslationService.translate` reads a signal that fires once the new language bundle has loaded. Current menu structure:
 
 - **File** — New Project, New Component, _(separator)_, Open, Save, Export File, _(separator)_, Generate Image
 - **Edit** — Undo, Redo, _(separator)_, Cut, Copy, Paste, _(separator)_, Delete
@@ -285,7 +285,7 @@ Two presentations from one dialog: on desktop a wide centred card with an `lg-na
 | `ComponentProviderService` | `SideBarComponent`, `StatusBarComponent`                                                             | Registry lookup — provides component lists by category and config by type.                |
 | `ThemingService`           | `BoardComponent`                                                                                     | Supplies the background color for the PixiJS renderer at init time.                       |
 | `AssetsService`            | `BoardComponent`                                                                                     | Loads the canvas font and installs the bitmap-font atlas before the application renders.  |
-| `TranslocoService`         | `TitleBarComponent`                                                                                  | Imperative translation needed to build `MenuItem[]` objects for `p-menubar`.              |
+| `TranslationService`       | `TitleBarComponent`                                                                                  | Imperative translation needed to build the menu-bar item objects.                         |
 
 ---
 

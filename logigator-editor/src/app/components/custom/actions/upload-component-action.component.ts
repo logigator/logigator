@@ -1,11 +1,11 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { LgButton, LgTooltip } from '@logigator/ui';
-import { TranslocoDirective } from '@jsverse/transloco';
 import { ComponentActionContext } from '../../component-action';
 import { CustomComponentRegistry } from '../custom-component-registry.service';
 import { UserService } from '../../../user/user.service';
 import { UploadCoordinatorService } from '../../../ui/upload/upload-coordinator.service';
 import { resolveMasterSignal } from './resolve-master.signal';
+import { TranslateDirective } from '../../../translation/translate.directive';
 
 /**
  * Renderer for {@link UploadComponentAction}: a button shown only when the
@@ -15,9 +15,9 @@ import { resolveMasterSignal } from './resolve-master.signal';
  */
 @Component({
   selector: 'app-upload-component-action',
-  imports: [LgButton, LgTooltip, TranslocoDirective],
+  imports: [LgButton, LgTooltip, TranslateDirective],
   host: { class: 'contents' },
-  template: `<ng-container *transloco="let t">
+  template: `<ng-container *appTranslate="let t">
     @if (visible()) {
       <lg-button
         size="sm"

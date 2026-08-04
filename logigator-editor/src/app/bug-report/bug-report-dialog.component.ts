@@ -6,7 +6,7 @@ import {
   LgMessage,
   LgTextarea
 } from '@logigator/ui';
-import { TranslocoDirective } from '@jsverse/transloco';
+import { TranslateDirective } from '../translation/translate.directive';
 
 /** Error details surfaced when the dialog is opened by the global handler. */
 export interface BugReportErrorContext {
@@ -38,7 +38,7 @@ const MESSAGE_MAX_LENGTH = 512;
  */
 @Component({
   selector: 'app-bug-report-dialog',
-  imports: [FormsModule, LgButton, LgMessage, LgTextarea, TranslocoDirective],
+  imports: [FormsModule, LgButton, LgMessage, LgTextarea, TranslateDirective],
   templateUrl: './bug-report-dialog.component.html'
 })
 export class BugReportDialogComponent extends LgDialogContent<

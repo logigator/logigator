@@ -1,11 +1,11 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { LgButton, LgTooltip } from '@logigator/ui';
-import { TranslocoDirective } from '@jsverse/transloco';
 import { ComponentActionContext } from '../../component-action';
 import { CustomComponentRegistry } from '../custom-component-registry.service';
 import { CustomComponentService } from '../../../custom-component/custom-component.service';
 import { UserService } from '../../../user/user.service';
 import { CUSTOM_TYPE_ID_BASE } from '../../component-type.enum';
+import { TranslateDirective } from '../../../translation/translate.directive';
 
 /**
  * Renderer for {@link EditComponentAction}. Opens the master behind the selected
@@ -23,12 +23,12 @@ import { CUSTOM_TYPE_ID_BASE } from '../../component-type.enum';
  */
 @Component({
   selector: 'app-edit-component-action',
-  imports: [LgButton, LgTooltip, TranslocoDirective],
+  imports: [LgButton, LgTooltip, TranslateDirective],
   // `display: contents` so a hidden/empty action host leaves no empty cell in
   // the settings panel's action grid; the button is the grid item. The degraded
   // modes are the only action on an orphan, so they span both columns.
   host: { class: 'contents' },
-  template: `<ng-container *transloco="let t">
+  template: `<ng-container *appTranslate="let t">
     @if (mode() === 'edit') {
       <lg-button
         size="sm"

@@ -6,8 +6,8 @@ import {
   LgListItem,
   LgMessage
 } from '@logigator/ui';
-import { TranslocoDirective } from '@jsverse/transloco';
 import { RelativeTimePipe } from '../../../utils/relative-time/relative-time.pipe';
+import { TranslateDirective } from '../../../translation/translate.directive';
 
 /** One dirty cloud document the dialog offers to save. */
 export interface LogoutDialogItem {
@@ -42,7 +42,7 @@ export type LogoutChoice = 'save' | 'discard';
     LgList,
     LgListItem,
     LgMessage,
-    TranslocoDirective,
+    TranslateDirective,
     RelativeTimePipe
   ],
   templateUrl: './logout-dialog.component.html'

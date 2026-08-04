@@ -1,10 +1,10 @@
 import { Component, computed, inject, input } from '@angular/core';
-import { TranslocoDirective } from '@jsverse/transloco';
 import { LgButton } from '@logigator/ui';
 import { ComponentActionContext } from '../../component-action';
 import { CustomComponent } from '../custom-component';
 import { CustomComponentRegistry } from '../custom-component-registry.service';
 import { CustomComponentService } from '../../../custom-component/custom-component.service';
+import { TranslateDirective } from '../../../translation/translate.directive';
 
 /**
  * Renderer for {@link UpdateInstanceComponentAction}: a button shown only when
@@ -14,11 +14,11 @@ import { CustomComponentService } from '../../../custom-component/custom-compone
  */
 @Component({
   selector: 'app-update-instance-action',
-  imports: [LgButton, TranslocoDirective],
+  imports: [LgButton, TranslateDirective],
   // `display: contents` so this action's host leaves no empty cell in the
   // settings panel's action grid when hidden; the button is the grid item.
   host: { class: 'contents' },
-  template: `<ng-container *transloco="let t">
+  template: `<ng-container *appTranslate="let t">
     @if (updatable()) {
       <lg-button
         size="sm"

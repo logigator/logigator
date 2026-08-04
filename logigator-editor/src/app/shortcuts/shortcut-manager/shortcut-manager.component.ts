@@ -1,11 +1,11 @@
 import { Component, inject } from '@angular/core';
 import { DialogRef, LgButton, LgDivider, LgTooltip } from '@logigator/ui';
-import { TranslocoDirective } from '@jsverse/transloco';
 import { ShortcutService } from '../shortcut.service';
 import { ShortcutActionEnum } from '../shortcut-action.enum';
 import { ShortcutBinding, DEFAULT_SHORTCUTS } from '../shortcut-binding.model';
 import { ShortcutEditComponent } from '../shortcut-edit/shortcut-edit.component';
 import { TranslationKey } from '../../translation/translation-key.model';
+import { TranslateDirective } from '../../translation/translate.directive';
 
 interface ShortcutGroup {
   labelKey: TranslationKey;
@@ -18,7 +18,7 @@ interface ShortcutGroup {
     LgButton,
     LgDivider,
     LgTooltip,
-    TranslocoDirective,
+    TranslateDirective,
     ShortcutEditComponent
   ],
   templateUrl: './shortcut-manager.component.html'

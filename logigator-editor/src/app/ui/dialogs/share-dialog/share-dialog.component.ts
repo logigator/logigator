@@ -11,7 +11,6 @@ import {
   LgToggleSwitch,
   LgTooltip
 } from '@logigator/ui';
-import { TranslocoDirective } from '@jsverse/transloco';
 import { TranslationService } from '../../../translation/translation.service';
 import { ProjectApiService } from '../../../api/services/project-api.service';
 import { ComponentApiService } from '../../../api/services/component-api.service';
@@ -20,6 +19,7 @@ import { CustomComponentRegistry } from '../../../components/custom/custom-compo
 import { ToastService } from '../../../logging/toast.service';
 import { AnalyticsService } from '../../../analytics/analytics.service';
 import { AnalyticsEvent } from '../../../analytics/analytics.mapping';
+import { TranslateDirective } from '../../../translation/translate.directive';
 
 /** The share-mutating subset both the project and component PATCH accept. */
 interface ShareLinkPatch {
@@ -74,7 +74,7 @@ export type ShareDialogData =
     LgMessage,
     LgToggleSwitch,
     LgTooltip,
-    TranslocoDirective
+    TranslateDirective
   ],
   templateUrl: './share-dialog.component.html'
 })

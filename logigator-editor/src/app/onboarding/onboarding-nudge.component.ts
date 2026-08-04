@@ -4,7 +4,6 @@ import {
   computed,
   inject
 } from '@angular/core';
-import { TranslocoDirective } from '@jsverse/transloco';
 import { LgButton } from '@logigator/ui';
 import { ProjectService } from '../project/project.service';
 import { WorkModeService } from '../work-mode/work-mode.service';
@@ -14,6 +13,7 @@ import {
   OnboardingService
 } from './onboarding.service';
 import { TutorialRunnerService } from './tutorial-runner.service';
+import { TranslateDirective } from '../translation/translate.directive';
 
 /**
  * The single launch path for the getting-started tutorial — there is no
@@ -26,11 +26,11 @@ import { TutorialRunnerService } from './tutorial-runner.service';
 @Component({
   selector: 'app-onboarding-nudge',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TranslocoDirective, LgButton],
+  imports: [TranslateDirective, LgButton],
   template: `
     @if (visible()) {
       <div
-        *transloco="let t"
+        *appTranslate="let t"
         class="pointer-events-auto mx-auto flex w-fit max-w-xl items-center gap-3 rounded-lg border border-border bg-content/95 px-4 py-3 shadow-lg backdrop-blur"
       >
         <span class="text-sm text-muted">{{ t('onboarding.nudge.text') }}</span>

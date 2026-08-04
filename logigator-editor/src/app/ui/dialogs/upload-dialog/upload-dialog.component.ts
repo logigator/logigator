@@ -9,9 +9,9 @@ import {
   LgToggleSwitch,
   LgTooltip
 } from '@logigator/ui';
-import { TranslocoDirective } from '@jsverse/transloco';
 import { UserService } from '../../../user/user.service';
 import { LocalUploadDependency } from '../../../persistence/promotion.service';
+import { TranslateDirective } from '../../../translation/translate.directive';
 
 export interface UploadDialogData {
   /** Wording variant; a stored project opens as `'project'`. */
@@ -50,7 +50,7 @@ export interface UploadDialogResult {
     LgList,
     LgListItem,
     LgMessage,
-    TranslocoDirective
+    TranslateDirective
   ],
   templateUrl: './upload-dialog.component.html'
 })

@@ -1,6 +1,5 @@
 import { Component, computed, inject } from '@angular/core';
 import { LgButton, LgRipple } from '@logigator/ui';
-import { TranslocoDirective } from '@jsverse/transloco';
 import { WorkModeService } from '../../work-mode/work-mode.service';
 import { WorkMode } from '../../work-mode/work-mode.enum';
 import { ProjectService } from '../../project/project.service';
@@ -10,6 +9,7 @@ import { SimulationService } from '../../simulation/simulation.service';
 import { MobileUiService } from '../../layout/mobile-ui.service';
 import { UserAvatarComponent } from '../user-settings/user-avatar.component';
 import { OnboardTargetDirective } from '../../onboarding/onboard-target.directive';
+import { TranslateDirective } from '../../translation/translate.directive';
 
 /**
  * Compact top bar (`isCompact`): avatar → account/settings sheet, the
@@ -22,13 +22,13 @@ import { OnboardTargetDirective } from '../../onboarding/onboard-target.directiv
   imports: [
     LgButton,
     LgRipple,
-    TranslocoDirective,
+    TranslateDirective,
     UserAvatarComponent,
     OnboardTargetDirective
   ],
   template: `
     <div
-      *transloco="let t"
+      *appTranslate="let t"
       class="flex h-12 items-center gap-1 border-b border-border px-1"
     >
       <button

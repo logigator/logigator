@@ -19,8 +19,8 @@ describe('ToolBarComponent', () => {
     fixture.detectChanges();
   });
 
-  // The *transloco directive renders its template only after the language
-  // file's dynamic import resolves — poll until the DOM appears.
+  // The tool set depends on services that settle asynchronously (work mode,
+  // shortcut bindings) — poll until the buttons appear.
   async function waitForRender(): Promise<HTMLElement> {
     const el: HTMLElement = fixture.nativeElement;
     await vi.waitFor(() => {

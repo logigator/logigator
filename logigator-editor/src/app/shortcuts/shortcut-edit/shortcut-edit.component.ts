@@ -9,16 +9,16 @@ import {
 import { fromEvent, Subscription } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { LgButton, LgShortcut, LgTooltip } from '@logigator/ui';
-import { TranslocoDirective } from '@jsverse/transloco';
 import {
   MODIFIER_FLAG_BY_KEY,
   ShortcutBinding
 } from '../shortcut-binding.model';
 import { ShortcutService } from '../shortcut.service';
+import { TranslateDirective } from '../../translation/translate.directive';
 
 @Component({
   selector: 'app-shortcut-edit',
-  imports: [LgButton, LgShortcut, LgTooltip, TranslocoDirective],
+  imports: [LgButton, LgShortcut, LgTooltip, TranslateDirective],
   templateUrl: './shortcut-edit.component.html'
 })
 export class ShortcutEditComponent {

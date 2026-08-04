@@ -4,7 +4,7 @@
       <img [ngSrc]="logoUrl" alt="Logo" fill loading="eager" />
     </a>
     @if (editing()) {
-      <span class="ml-2 flex items-center gap-1" *transloco="let t">
+      <span class="ml-2 flex items-center gap-1" *appTranslate="let t">
         <input
           #renameInput
           lgInputText
@@ -31,7 +31,7 @@
         />
       </span>
     } @else {
-      <span class="ml-2 flex items-center gap-1" *transloco="let t">
+      <span class="ml-2 flex items-center gap-1" *appTranslate="let t">
         <h1 class="text-xl font-bold">{{ projectName() }}</h1>
         @if (canRename()) {
           <lg-button
@@ -49,7 +49,7 @@
     }
     @if (sourceChip(); as source) {
       <app-source-indicator
-        *transloco="let t"
+        *appTranslate="let t"
         [source]="source"
         [serverTitle]="t('sourceIndicator.cloudTitle')"
         [browserTitle]="t('sourceIndicator.localTitle')"
@@ -58,7 +58,12 @@
       />
     }
     @if (forkTitle(); as title) {
-      <lg-badge *transloco="let t" rounded severity="secondary" [title]="title">
+      <lg-badge
+        *appTranslate="let t"
+        rounded
+        severity="secondary"
+        [title]="title"
+      >
         <i class="ph ph-git-fork"></i>
         {{ t('titleBar.fork.label') }}
       </lg-badge>

@@ -9,7 +9,6 @@ import {
   LgInputIcon,
   LgInputText
 } from '@logigator/ui';
-import { TranslocoDirective } from '@jsverse/transloco';
 import { TranslationService } from '../../../translation/translation.service';
 import { ComponentProviderService } from '../../../components/component-provider.service';
 import { ComponentListCategoryComponent } from '../component-list-category/component-list-category.component';
@@ -20,13 +19,15 @@ import {
   ComponentConfig,
   resolveLocalizableText
 } from '../../../components/component-config.model';
+import { TranslateDirective } from '../../../translation/translate.directive';
+import { TranslationKey } from '../../../translation/translation-key.model';
 
 /** A palette category rendered as one accordion panel. */
 interface PaletteCategory {
   /** Stable accordion-panel key. */
   key: string;
-  /** Transloco key for the category headline. */
-  labelKey: string;
+  /** Translation key for the category headline. */
+  labelKey: TranslationKey;
   /** Components to show, already filtered by the active search. */
   components: ComponentConfig[];
 }
@@ -43,7 +44,7 @@ interface PaletteCategory {
     LgBadge,
     LgCard,
     ComponentListCategoryComponent,
-    TranslocoDirective
+    TranslateDirective
   ],
   templateUrl: './component-list.component.html'
 })

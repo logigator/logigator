@@ -1,9 +1,7 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { formatShortcutLabel } from '@logigator/ui';
 import { WorkModeService } from '../../work-mode/work-mode.service';
-import { TranslocoDirective } from '@jsverse/transloco';
 import { TranslationService } from '../../translation/translation.service';
-import { TranslationKey } from '../../translation/translation-key.model';
 import { Point } from 'pixi.js';
 import { ComponentProviderService } from '../../components/component-provider.service';
 import {
@@ -15,10 +13,11 @@ import { ProjectService } from '../../project/project.service';
 import { SelectionInspectorService } from '../../project/selection-inspector.service';
 import { ShortcutService } from '../../shortcuts/shortcut.service';
 import { ShortcutActionEnum } from '../../shortcuts/shortcut-action.enum';
+import { TranslateDirective } from '../../translation/translate.directive';
 
 @Component({
   selector: 'app-status-bar',
-  imports: [TranslocoDirective],
+  imports: [TranslateDirective],
   templateUrl: './status-bar.component.html'
 })
 export class StatusBarComponent {
@@ -45,7 +44,7 @@ export class StatusBarComponent {
   );
 
   protected readonly workMode = computed(
-    () => `statusBar.modes.${this.workModeService.mode()}` as TranslationKey
+    () => `statusBar.modes.${this.workModeService.mode()}` as const
   );
 
   /** The select-mode hint's hold-to-scissor key, tracking rebinds live. */
