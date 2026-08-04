@@ -242,6 +242,12 @@ export class SelectionMoveSession implements DragSession {
     // Back to base; the actionChange$ redraw below re-places it at the moved
     // bounds (a zero-delta end left it at base the whole time).
     this.project.floatingLayer.setSelectionRectOffset(this.dragLayer.position);
+    // Emptied in one pass before the elements go back: re-parenting drops each
+    // one from the layer by index scan, so a selection reattached in place has
+    // every insert search a layer still holding the rest of it. The carried
+    // junction dots come along — both paths below (restore, discard) take them
+    // parentless.
+    this.dragLayer.removeChildren();
     this.project.reattachFromDrag(this._components, this._wires);
 
     if (!hasMove && !hasRotation) {
@@ -446,6 +452,7 @@ export class SelectionMoveSession implements DragSession {
     this._collision.reset();
     // Bounds are unchanged on cancel, so returning to base is enough.
     this.project.floatingLayer.setSelectionRectOffset(this.dragLayer.position);
+    this.dragLayer.removeChildren();
     this.project.reattachFromDrag(this._components, this._wires);
     this.project.connectionPoints.restoreDragCps(this._capturedCps);
   }

@@ -199,7 +199,11 @@ export class PastePlacementSession implements DragSession {
     }
 
     for (const w of toRemove) this._project.removeWire(w.id);
-    // Transfer elements from drag layer to project (addChild inside insert() re-parents)
+    // Transfer elements from drag layer to project. Emptying the layer up front
+    // is what keeps the transfer linear: re-parenting drops each element from
+    // its old parent by index scan, so leaving them here has every addChild
+    // below search a layer still holding the rest of the paste.
+    this._dragLayer.removeChildren();
     for (const c of this._components) this._project.addComponent(c);
     const committed = new Set(toAdd);
     for (const w of toAdd) this._project.addWire(w);
@@ -233,6 +237,9 @@ export class PastePlacementSession implements DragSession {
     // The cancel path clears no selection, so nothing else drops the rect we
     // showed for the discarded ghosts — hide it explicitly.
     this._project.floatingLayer.hideSelectionRect();
+    // Emptied in one pass — destroying in place would drop each ghost from the
+    // layer by index scan (see onEnd).
+    this._dragLayer.removeChildren();
     for (const c of this._components) c.destroy({ children: true });
     for (const w of this._wires) w.destroy();
   }
