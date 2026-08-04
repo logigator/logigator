@@ -1,6 +1,7 @@
 import { inject, Injectable, Signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { AvailableLangs, TranslocoService } from '@jsverse/transloco';
+import { TranslateArgs } from './translate-args.model';
 import { TranslationKey } from './translation-key.model';
 import { TranslationResult } from './translation-result.model';
 
@@ -54,11 +55,11 @@ export class TranslationService {
    */
   public translate<T extends TranslationKey>(
     key: T,
-    params?: Record<string, unknown>
+    ...params: TranslateArgs<T>
   ): TranslationResult<T> {
     // Establish the post-load reactive dependency; see the class comment.
     this.loadedTranslation();
-    return this.transloco.translate(key, params);
+    return this.transloco.translate(key, params[0]);
   }
 
   public getActiveLang(): string {

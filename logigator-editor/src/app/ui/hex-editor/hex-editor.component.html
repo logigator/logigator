@@ -3,30 +3,28 @@
     <!-- View + radix selectors -->
     <div class="flex flex-wrap items-center gap-2">
       <lg-select-button
-        [options]="viewOptions"
+        [options]="viewOptions()"
         [ariaLabel]="t('hexEditor.viewLabel')"
+        optionLabel="label"
         optionValue="value"
         [allowEmpty]="false"
         [ngModel]="view()"
         (ngModelChange)="view.set($event)"
         [ngModelOptions]="{ standalone: true }"
         size="sm"
-      >
-        <ng-template #item let-o>{{ t(o.label) }}</ng-template>
-      </lg-select-button>
+      ></lg-select-button>
 
       <lg-select-button
-        [options]="radixOptions"
+        [options]="radixOptions()"
         [ariaLabel]="t('hexEditor.radixLabel')"
+        optionLabel="label"
         optionValue="value"
         [allowEmpty]="false"
         [ngModel]="radix()"
         (ngModelChange)="radix.set($event)"
         [ngModelOptions]="{ standalone: true }"
         size="sm"
-      >
-        <ng-template #item let-o>{{ t(o.label) }}</ng-template>
-      </lg-select-button>
+      ></lg-select-button>
     </div>
 
     <!-- right -->

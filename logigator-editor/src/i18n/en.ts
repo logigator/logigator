@@ -973,6 +973,9 @@ const en = {
       }
     }
   }
-};
+  // `as const` keeps every message a literal type, which is what lets
+  // `TranslateArgs` read a key's `{{placeholder}}` names. The other locales are
+  // annotated with the leaf-widened `TranslationSchema`, so only English needs it.
+} as const;
 
 export default en;

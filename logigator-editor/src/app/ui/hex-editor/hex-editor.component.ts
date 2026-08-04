@@ -139,17 +139,38 @@ export class HexEditorComponent {
   protected readonly addressText =
     this.translation.translate('hexEditor.address');
 
-  protected readonly viewOptions = [
-    { label: 'hexEditor.wordView', value: 'word' as HexView },
-    { label: 'hexEditor.byteView', value: 'byte' as HexView }
-  ];
+  // Labels are translated here rather than in an `#item` template: the select
+  // button's option type is `unknown`, so a key read off the template context
+  // carries no type. `computed` keeps them live across a language switch.
+  protected readonly viewOptions = computed(() => [
+    {
+      label: this.translation.translate('hexEditor.wordView'),
+      value: 'word' as HexView
+    },
+    {
+      label: this.translation.translate('hexEditor.byteView'),
+      value: 'byte' as HexView
+    }
+  ]);
 
-  protected readonly radixOptions = [
-    { label: 'hexEditor.hex', value: 'hex' as Radix },
-    { label: 'hexEditor.decimal', value: 'decimal' as Radix },
-    { label: 'hexEditor.octal', value: 'octal' as Radix },
-    { label: 'hexEditor.binary', value: 'binary' as Radix }
-  ];
+  protected readonly radixOptions = computed(() => [
+    {
+      label: this.translation.translate('hexEditor.hex'),
+      value: 'hex' as Radix
+    },
+    {
+      label: this.translation.translate('hexEditor.decimal'),
+      value: 'decimal' as Radix
+    },
+    {
+      label: this.translation.translate('hexEditor.octal'),
+      value: 'octal' as Radix
+    },
+    {
+      label: this.translation.translate('hexEditor.binary'),
+      value: 'binary' as Radix
+    }
+  ]);
 
   protected readonly byteCount = computed(() =>
     packedByteLength(this.wordCount(), this.wordSize())

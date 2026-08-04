@@ -10,7 +10,34 @@ import {
 } from '@jsverse/transloco';
 
 import { TranslateDirective } from './translate.directive';
+import { TranslateFn } from './translate-function.model';
+import { TranslationKey } from './translation-key.model';
 import { configureTestBed } from '../../testing/configure-test-bed';
+
+/**
+ * The key/params contract, asserted at compile time — a regression here fails the
+ * build (and this spec's compilation), since an unfulfilled `@ts-expect-error` is
+ * itself an error. Never invoked.
+ */
+function typeContract(t: TranslateFn, dynamicKey: TranslationKey): void {
+  t('common.save');
+  t('common.moved', { position: 1, total: 2 });
+  // A key of union type can't know its placeholders, so params stay optional.
+  t(dynamicKey);
+
+  // @ts-expect-error the message interpolates params, so they are required
+  t('common.moved');
+  // @ts-expect-error 'total' is missing
+  t('common.moved', { position: 1 });
+  // @ts-expect-error 'postion' is not a placeholder of this message
+  t('common.moved', { postion: 1, total: 2 });
+  // @ts-expect-error the message interpolates nothing, so it takes no params
+  t('common.save', { name: 'x' });
+  // @ts-expect-error results are `string`, never the English text
+  const text: 'Save' = t('common.save');
+  void text;
+}
+void typeContract;
 
 /** Distinct values per language, plus a key carrying interpolation params. */
 class TwoLangLoader implements TranslocoLoader {

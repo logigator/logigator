@@ -5,6 +5,7 @@ import {
   TemplateRef,
   ViewContainerRef
 } from '@angular/core';
+import { TranslateArgs } from './translate-args.model';
 import { TranslateFn } from './translate-function.model';
 import { TranslationKey } from './translation-key.model';
 import { TranslationResult } from './translation-result.model';
@@ -44,8 +45,8 @@ export class TranslateDirective implements OnInit {
 
   private readonly translate: TranslateFn = <T extends TranslationKey>(
     key: T,
-    params?: Record<string, unknown>
-  ): TranslationResult<T> => this.translation.translate(key, params);
+    ...params: TranslateArgs<T>
+  ): TranslationResult<T> => this.translation.translate(key, ...params);
 
   /** Tells the template type checker what `let t` is; never called at runtime. */
   public static ngTemplateContextGuard(
