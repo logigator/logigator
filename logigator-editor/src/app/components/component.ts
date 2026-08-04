@@ -27,6 +27,7 @@ import { ComponentOption } from './component-option';
 import { SerializedComponent } from './serialized-component.model';
 import {
   bodyGridBounds,
+  bodyGridBoundsIntersects,
   ComponentShape,
   connectionPoints,
   gridBounds,
@@ -572,6 +573,11 @@ export abstract class Component<
 
   public get bodyGridBounds(): Rectangle {
     return bodyGridBounds(this._shape);
+  }
+
+  /** Allocation-free mirror of {@link bodyGridBounds} — see `component-geometry.ts`. */
+  public intersectsBodyGridBounds(rect: Rectangle): boolean {
+    return bodyGridBoundsIntersects(this._shape, rect);
   }
 
   public get gridBounds(): Rectangle {

@@ -3,6 +3,7 @@ import { Point, Rectangle } from 'pixi.js';
 import { Direction } from '../utils/direction';
 import {
   bodyGridBounds,
+  bodyGridBoundsIntersects,
   ComponentShape,
   connectionPoints,
   gridBounds,
@@ -190,5 +191,35 @@ describe('gridBoundsIntersects', () => {
         }
       }
     }
+  });
+});
+
+describe('bodyGridBoundsIntersects', () => {
+  // Backs the collision helpers, which test every candidate against a dragged
+  // element's body without materializing its rect. A divergence here lets a
+  // drag drop onto an occupied cell (or blocks a free one).
+  it('agrees with bodyGridBounds().intersects() as the probe slides across', () => {
+    for (const direction of ALL_DIRECTIONS) {
+      const s = shape({ direction });
+      const bounds = bodyGridBounds(s);
+      for (let x = 5; x <= 16; x += 0.5) {
+        for (let y = 15; y <= 26; y += 0.5) {
+          const probe = new Rectangle(x, y, 1, 1);
+          expect(
+            bodyGridBoundsIntersects(s, probe),
+            `dir=${direction} probe (${x}, ${y})`
+          ).toBe(bounds.intersects(probe));
+        }
+      }
+    }
+  });
+
+  it('ignores the port stubs gridBoundsIntersects covers', () => {
+    // The two tests differ exactly where a stub sticks out: a probe on the
+    // input stub of an east-facing component hits the full bounds, not the body.
+    const s = shape({ direction: Direction.E, numInputs: 2, numOutputs: 1 });
+    const onInputStub = new Rectangle(9.5, 20.5, 0.5, 0.5);
+    expect(gridBoundsIntersects(s, onInputStub)).toBe(true);
+    expect(bodyGridBoundsIntersects(s, onInputStub)).toBe(false);
   });
 });

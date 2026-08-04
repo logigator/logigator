@@ -148,6 +148,25 @@ export function bodyGridBounds(shape: ComponentShape): Rectangle {
 }
 
 /**
+ * {@link bodyGridBounds} as an overlap test against `rect`, without
+ * materializing the rect — backs `Component.intersectsBodyGridBounds`.
+ */
+export function bodyGridBoundsIntersects(
+  shape: ComponentShape,
+  rect: Rectangle
+): boolean {
+  return rotatedBoxIntersects(
+    shape.direction,
+    shape.position,
+    0,
+    0,
+    shape.bodyGridWidth,
+    shape.bodyGridHeight,
+    rect
+  );
+}
+
+/**
  * The full logical AABB in grid space: the body plus the half-grid stub
  * extents on each side that has ports. Stubs are horizontal in the local
  * frame, so they never extend the local y extent.
