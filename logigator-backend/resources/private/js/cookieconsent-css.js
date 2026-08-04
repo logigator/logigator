@@ -3,7 +3,7 @@
 // so the bundle pulls in its matching stylesheet itself.
 
 (function () {
-	var link = document.createElement('link');
+	const link = document.createElement('link');
 	link.rel = 'stylesheet';
 	link.href = '/css/cookieconsent.css';
 	document.head.appendChild(link);

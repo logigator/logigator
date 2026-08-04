@@ -6,7 +6,7 @@
 (function () {
 	// Server-rendered pages carry a `.theme-dark`/`.theme-light` class on
 	// <body>; its absence identifies the editor SPA.
-	var isSpaPage =
+	const isSpaPage =
 		!document.body.classList.contains('theme-dark') &&
 		!document.body.classList.contains('theme-light');
 
@@ -16,12 +16,12 @@
 	// does (persisted choice, then the site preferences cookie, then the
 	// browser).
 	function spaLanguage() {
-		var lang = null;
+		let lang = null;
 		try {
 			lang = localStorage.getItem('translocoLang');
 		} catch (e) { /* storage access can be denied; fall through */ }
 		if (!lang) {
-			var match = document.cookie.match(/(?:^|;\s*)preferences=([^;]*)/);
+			const match = document.cookie.match(/(?:^|;\s*)preferences=([^;]*)/);
 			if (match) {
 				try {
 					lang = JSON.parse(
@@ -48,13 +48,13 @@
 	// plus the library's `cc--darkmode` root class. The editor signals dark
 	// mode via `dark-mode` on <html> and can switch at runtime, so mirror it
 	// onto the body.
-	var spaBootstrapped = false;
+	let spaBootstrapped = false;
 
 	function syncConsentTheme() {
 		spaBootstrapped =
 			spaBootstrapped ||
 			document.documentElement.classList.contains('dark-mode');
-		var dark = isSpaPage
+		const dark = isSpaPage
 			? spaBootstrapped
 				? document.documentElement.classList.contains('dark-mode')
 				: spaInitiallyDark()
@@ -74,7 +74,7 @@
 		});
 	}
 
-	var spaLang = isSpaPage ? spaLanguage() : null;
+	const spaLang = isSpaPage ? spaLanguage() : null;
 
 	// eslint-disable-next-line no-undef
 	CookieConsent.run({
