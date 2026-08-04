@@ -1,0 +1,54 @@
+@if (componentSettings(); as settings) {
+  <lg-card class="block">
+    <ng-template #title>
+      <span class="flex items-center gap-2 flex-wrap">
+        <span>{{ text(settings.name) }}</span>
+        @if (settings.source; as source) {
+          <app-source-indicator [source]="source" />
+        }
+      </span>
+    </ng-template>
+    <ng-template #subtitle>{{ text(settings.description) }}</ng-template>
+    <form class="flex flex-col gap-2">
+      <div class="flex gap-4 items-center justify-between">
+        <span [id]="directionLabelId">{{
+          text('components.options.direction')
+        }}</span>
+        <lg-select-button
+          [ariaLabelledby]="directionLabelId"
+          optionLabel="label"
+          optionValue="value"
+          optionIcon="icon"
+          [allowEmpty]="false"
+          [options]="directionChoices"
+          [ngModel]="settings.direction"
+          [ngModelOptions]="{ standalone: true }"
+          (ngModelChange)="settings.commitDirection($event)"
+        />
+      </div>
+      @for (o of options(); track o.key) {
+        <ng-container
+          *ngComponentOutlet="
+            o.option.renderer;
+            inputs: { option: o.option, commit: o.commit }
+          "
+        ></ng-container>
+      }
+      @if (settings.context; as ctx) {
+        @if (settings.actions.length > 0) {
+          <!-- Two-column action grid. Every action host is `display: contents`,
+               so the buttons themselves are the grid items and a hidden action
+               leaves no empty cell; a button with a long label (or one that is
+               the only action) spans both columns. -->
+          <div class="grid grid-cols-2 gap-2">
+            @for (action of settings.actions; track $index) {
+              <ng-container
+                *ngComponentOutlet="action.renderer; inputs: { context: ctx }"
+              ></ng-container>
+            }
+          </div>
+        }
+      }
+    </form>
+  </lg-card>
+}

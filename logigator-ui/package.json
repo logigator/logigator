@@ -1,0 +1,29 @@
+{
+  "name": "@logigator/ui",
+  "version": "0.0.0",
+  "description": "In-house Angular UI component library for Logigator (PrimeNG replacement)",
+  "license": "AGPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/logigator/logigator.git"
+  },
+  "sideEffects": false,
+  "peerDependencies": {
+    "@angular/cdk": "^22.0.0",
+    "@angular/common": "^22.0.0",
+    "@angular/core": "^22.0.0",
+    "@angular/forms": "^22.0.0",
+    "marked": "^18.0.0",
+    "ngx-markdown": "^22.0.0",
+    "rxjs": "^6.5.3 || ^7.4.0"
+  },
+  "dependencies": {
+    "tslib": "^2.8.1"
+  },
+  "devDependencies": {
+    "@angular/compiler": "^22.1.0",
+    "@angular/compiler-cli": "^22.1.0",
+    "ng-packagr": "^22.1.0",
+    "typescript": "~6.0.3"
+  }
+}

@@ -22,9 +22,10 @@ import {User} from '../../database/entities/user.entity';
 import {InjectRepository} from 'typeorm-typedi-extensions';
 import {ComponentRepository} from '../../database/repositories/component.repository';
 import {CreateComponent} from '../../models/request/shared/create-component';
-import {ProjectElement} from '../../models/request/api/project-element';
+import {buildDependencyResponse, parseStoredCircuit, serializeStoredCircuit, synthesizeMissingSnapshots} from '../../functions/circuit-content';
 import {classToPlain} from 'class-transformer';
 import {ComponentDependencyRepository} from '../../database/repositories/component-dependency.repository';
+import {Component} from '../../database/entities/component.entity';
 import {ComponentFile} from '../../database/entities/component-file.entity';
 import {SaveComponent} from '../../models/request/api/component/save-component';
 import {UpdateComponent} from '../../models/request/api/component/update-component';
@@ -76,12 +77,15 @@ export class ComponentController {
 		});
 
 		const contentBuffer = await component.elementsFile?.getFileContent();
-		const content: ProjectElement[] = contentBuffer?.length ? JSON.parse(contentBuffer.toString()) : [];
+		const {elements, snapshots} = parseStoredCircuit(contentBuffer);
+		const enriched = await synthesizeMissingSnapshots(dependencies, snapshots,
+			master => this.componentDepRepo.find({where: {dependent: master as Component}}));
 
 		return {
-			...classToPlain(component),
-			dependencies,
-			elements: content ?? []
+			...classToPlain(component, {groups: ['showShareLinks']}),
+			dependencies: buildDependencyResponse(dependencies, enriched),
+			elements,
+			newFormat: component.newFormat
 		};
 	}
 
@@ -93,18 +97,26 @@ export class ComponentController {
 		if (component.elementsFile && component.elementsFile.hash !== body.oldHash)
 			throw new BadRequestError('VersionMismatch');
 
+		const previous = parseStoredCircuit(await component.elementsFile?.getFileContent());
+
 		if (!component.elementsFile)
 			component.elementsFile = new ComponentFile();
 
-		component.elementsFile.setFileContent(JSON.stringify(body.elements));
+		component.elementsFile.setFileContent(serializeStoredCircuit(body.elements, body.dependencies, previous.snapshots));
+		component.newFormat = body.newFormat ?? false;
 		component.numInputs = body.numInputs;
 		component.numOutputs = body.numOutputs;
 		component.labels = body.labels;
+		component.version = (component.version ?? 0) + 1;
 		component.lastEdited = new Date();
 
 		const deps = [];
 		const depSet = new Set<string>();
 		for (const mapping of body.dependencies) {
+			// Local-only customs (never uploaded to the library) carry no master
+			// id — they live solely in the embedded snapshot, so create no row.
+			if (!mapping.id)
+				continue;
 			const depComp = await this.componentRepo.getOwnedComponentOrThrow(mapping.id, user, `Component for mapping '${mapping.id}' not found.`);
 			const dep = this.componentDepRepo.create();
 			dep.dependency = depComp;
@@ -148,16 +160,24 @@ export class ComponentController {
 
 	@Patch('/:componentId')
 	@UseBefore(CheckAuthenticatedApiMiddleware)
+	@ResponseClassTransformOptions({groups: ['showShareLinks']})
 	public async update(@Param('componentId') componentId: string, @CurrentUser() user: User, @Body() body: UpdateComponent) {
 		const component = await this.componentRepo.getOwnedComponentOrThrow(componentId, user);
 
+		// name/symbol/description travel in placed snapshots, so changing any of
+		// them bumps `version` — editors then offer instances frozen at an older
+		// version an update. Visibility/link changes are not snapshot content and
+		// leave the version alone.
+		const detailsBefore = [component.name, component.description, component.symbol];
 		if (body.name)
 			component.name = body.name;
-		if (body.description)
+		if (body.description !== undefined)
 			component.description = body.description;
 		if (body.symbol)
 			component.symbol = body.symbol;
-		if (body.public)
+		if ([component.name, component.description, component.symbol].some((value, i) => value !== detailsBefore[i]))
+			component.version = (component.version ?? 0) + 1;
+		if (body.public !== undefined)
 			component.public = body.public;
 		if (body.updateLink)
 			component.link = uuid();

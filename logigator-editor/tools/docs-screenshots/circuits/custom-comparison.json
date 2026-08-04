@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "name": "Example",
+  "components": [
+    { "type": 2, "pos": [7, 4], "options": { "numInputs": 2 } },
+    { "type": 4, "pos": [0, -3], "options": { "numInputs": 2 } },
+    { "type": 201, "pos": [-6, 0], "options": {} },
+    { "type": 201, "pos": [0, 1], "options": {} },
+    { "type": 201, "pos": [0, 6], "options": {} },
+    { "type": 201, "pos": [0, 1], "options": {} },
+    { "type": 202, "pos": [12, -8], "options": {} },
+    { "type": 202, "pos": [0, 1], "options": {} },
+    { "type": 202, "pos": [0, 6], "options": {} },
+    { "type": 202, "pos": [0, 1], "options": {} },
+    { "type": 1000, "pos": [-7, -1], "options": {} }
+  ],
+  "wires": "2,1:e3s3e1;3,0:e1;4,0:e3;-7,1:e2s3e2;2,0:e2;6,0:s2w1;0,0:e2;-8,6:e3;7,0:e3;-7,1:e3;7,0:e3",
+  "definitions": [
+    {
+      "type": 1000,
+      "source": {
+        "id": "d0c90f6b-a7c1-4bbc-a38c-51e7417dc209",
+        "version": 4,
+        "origin": "browser"
+      },
+      "name": "Example Comp",
+      "symbol": "EX",
+      "description": "A XOR and an AND sharing two inputs.",
+      "numInputs": 2,
+      "numOutputs": 2,
+      "labels": ["", "", "", ""],
+      "components": [
+        { "type": 2, "pos": [8, 5], "options": { "numInputs": 2 } },
+        { "type": 4, "pos": [0, -3], "options": { "numInputs": 2 } },
+        { "type": 100, "pos": [-6, 0], "options": { "label": "", "index": 0 } },
+        { "type": 100, "pos": [0, 1], "options": { "label": "", "index": 0 } },
+        {
+          "type": 101,
+          "pos": [12, -1],
+          "options": { "label": "", "index": 0 }
+        },
+        { "type": 101, "pos": [0, 1], "options": { "label": "", "index": 0 } }
+      ],
+      "wires": "3,2:e3e1;3,0:s3e1;4,0:e3;-7,1:e2e2;2,0:s3e2;6,0:s2w1;0,0:e2"
+    }
+  ]
+}

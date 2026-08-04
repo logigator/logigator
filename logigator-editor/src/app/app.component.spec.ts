@@ -1,31 +1,142 @@
-import { TestBed, waitForAsync } from '@angular/core/testing';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { TestBed } from '@angular/core/testing';
+import { Location } from '@angular/common';
+import { Rectangle } from 'pixi.js';
 import { AppComponent } from './app.component';
+import { PersistenceService } from './persistence/persistence.service';
+import { ComponentLibraryService } from './custom-component/component-library.service';
+import { configureTestBed } from '../testing/configure-test-bed';
+import { ProjectService } from './project/project.service';
+import { ProjectMetadataStore } from './persistence/project-metadata.store';
+import { MobileUiService } from './layout/mobile-ui.service';
+import { Project } from './project/project';
+import { WorkMode } from './work-mode/work-mode.enum';
+import { makeAnd } from '../testing/factories';
+
+/** Forces the compact breakpoint before LayoutService reads matchMedia. */
+function stubCompactMatchMedia(): void {
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: (query: string) =>
+      ({
+        matches: query.includes('max-width'),
+        media: query,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn()
+      }) as unknown as MediaQueryList
+  });
+}
 
 describe('AppComponent', () => {
-	beforeEach(waitForAsync(() => {
-		TestBed.configureTestingModule({
-			declarations: [AppComponent]
-		}).compileComponents();
-	}));
+  const originalMatchMedia = window.matchMedia;
 
-	it('should create the app', () => {
-		const fixture = TestBed.createComponent(AppComponent);
-		const app = fixture.debugElement.componentInstance;
-		expect(app).toBeTruthy();
-	});
+  afterEach(() => {
+    // The compact stub would otherwise leak a compact/touch environment into
+    // every later spec file (they share this window).
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      value: originalMatchMedia
+    });
+  });
 
-	it(`should have as title 'logigator-editor'`, () => {
-		const fixture = TestBed.createComponent(AppComponent);
-		const app = fixture.debugElement.componentInstance;
-		expect(app.title).toEqual('logigator-editor');
-	});
+  beforeEach(() => {
+    configureTestBed(
+      [
+        {
+          provide: Location,
+          useValue: {
+            path: () => '/',
+            go: () => undefined,
+            replaceState: () => undefined,
+            subscribe: () => ({ unsubscribe: () => undefined })
+          }
+        },
+        {
+          provide: PersistenceService,
+          useValue: {
+            createAndSetEmptyProject: vi.fn(),
+            registerOpenProject: vi.fn()
+          }
+        },
+        {
+          provide: ComponentLibraryService,
+          useValue: {
+            preloadBrowserMasters: vi.fn().mockResolvedValue(undefined),
+            preloadComponentIdAliases: vi.fn().mockResolvedValue(undefined),
+            preloadServerMasters: vi.fn().mockResolvedValue(undefined)
+          }
+        }
+      ],
+      [AppComponent]
+    );
+  });
 
-	it('should render title', () => {
-		const fixture = TestBed.createComponent(AppComponent);
-		fixture.detectChanges();
-		const compiled = fixture.debugElement.nativeElement;
-		expect(compiled.querySelector('.content span').textContent).toContain(
-			'logigator-editor app is running!'
-		);
-	});
+  it('renders the desktop shell at the default (non-compact) breakpoint', () => {
+    // matchMedia is stubbed to matches:false (vitest.setup.ts), so isCompact is
+    // false and the shell takes its desktop branch.
+    const fixture = TestBed.createComponent(AppComponent);
+    fixture.detectChanges();
+    const el: HTMLElement = fixture.nativeElement;
+    expect(el.querySelector('app-title-bar')).not.toBeNull();
+    expect(el.querySelector('app-tool-bar')).not.toBeNull();
+    expect(el.querySelector('app-board')).not.toBeNull();
+    expect(el.querySelector('app-mobile-top-bar')).toBeNull();
+    expect(el.querySelector('app-tool-hud')).toBeNull();
+  });
+
+  it('renders the mobile shell (and single board) when compact', () => {
+    stubCompactMatchMedia();
+
+    const fixture = TestBed.createComponent(AppComponent);
+    expect(() => fixture.detectChanges()).not.toThrow();
+    const el: HTMLElement = fixture.nativeElement;
+    expect(el.querySelector('app-mobile-top-bar')).not.toBeNull();
+    expect(el.querySelector('app-tool-hud')).not.toBeNull();
+    expect(el.querySelector('app-title-bar')).toBeNull();
+    // The canvas is never duplicated across the breakpoint branches.
+    expect(el.querySelectorAll('app-board').length).toBe(1);
+  });
+
+  it('never auto-opens the settings sheet on selection, but closes it when selection clears', () => {
+    stubCompactMatchMedia();
+
+    // Creating the fixture sets the static DI injector (constructor), so a
+    // standalone Project can be built afterwards.
+    const fixture = TestBed.createComponent(AppComponent);
+    fixture.detectChanges();
+
+    const mobileUi = TestBed.inject(MobileUiService);
+    const projectService = TestBed.inject(ProjectService);
+    const metadataStore = TestBed.inject(ProjectMetadataStore);
+
+    const project = new Project();
+    const comp = makeAnd();
+    comp.position.set(0, 0);
+    project.addComponent(comp);
+    metadataStore.register(project, {
+      id: 'p',
+      name: 'P',
+      type: 'project',
+      source: 'browser',
+      hash: '',
+      isPublic: false
+    });
+    projectService.setMainProject(project);
+    fixture.detectChanges();
+
+    // Selecting a single component does not open the settings sheet: it is
+    // opened on demand from the selection action bar's settings button.
+    project.selectionManager.commit(new Rectangle(0, 0, 3, 3), WorkMode.SELECT);
+    fixture.detectChanges();
+    expect(mobileUi.activeSheet()).toBeNull();
+
+    // Once opened, clearing the selection (e.g. the component editor switched
+    // tabs) closes it rather than leaving a blank panel.
+    mobileUi.open('settings');
+    project.selectionManager.clear();
+    fixture.detectChanges();
+    expect(mobileUi.activeSheet()).toBeNull();
+
+    project.destroy({ children: true });
+  });
 });

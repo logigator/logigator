@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<title>Logigator: Editor</title>
+		<link
+			rel="apple-touch-icon"
+			sizes="180x180"
+			href="assets/icons/apple-touch-icon.png"
+		/>
+		<link
+			rel="icon"
+			type="image/png"
+			sizes="32x32"
+			href="assets/icons/favicon-32x32.png"
+		/>
+		<link
+			rel="icon"
+			type="image/png"
+			sizes="16x16"
+			href="assets/icons/favicon-16x16.png"
+		/>
+		<link rel="manifest" href="site.webmanifest" />
+		<link
+			rel="mask-icon"
+			href="assets/icons/safari-pinned-tab.svg"
+			color="#27ae60"
+		/>
+
+		<meta name="apple-mobile-web-app-title" content="Logigator: Editor" />
+		<meta name="application-name" content="Logigator: Editor" />
+		<meta name="msapplication-TileColor" content="#2b5797" />
+		<meta name="theme-color" content="#27ae60" />
+		<meta
+			name="Description"
+			content="Build and simulate your own logic circuits with Logigator, a simple yet powerful web-based online tool."
+		/>
+		<meta
+			name="keywords"
+			content="logic circuit, simulator, logic, cad, computer aided design, digital, designer, build, simulate, logic circuit simulator, digital circuit simulator, online"
+		/>
+		<meta name="viewport" content="width=1000" />
+
+		<style>
+			#compatibility-warning {
+				width: 100%;
+				height: 100%;
+				background-color: rgba(0, 0, 0, 0.9);
+				position: fixed;
+				z-index: 10000;
+			}
+
+			.compatibility-warning-text {
+				color: white;
+				text-align: center;
+				font-size: 1.5em;
+			}
+
+			#compatibility-warning-img {
+				width: 50px;
+				height: 50px;
+				margin: 15px;
+			}
+		</style>
+
+		<!-- PostHog, gated on the `analytics` consent category. `before_send`
+		stamps `app` so this editor is distinguishable from editor-v2 and the
+		website, which share the project key; it runs for the `$pageview` that
+		`init` captures synchronously, which a `register` call would miss. -->
+		<!-- prettier-ignore -->
+		<script type="text/plain" data-category="analytics">
+			!function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init capture register register_once register_for_session unregister unregister_for_session getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey getNextSurveyStep identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty createPersonProfile opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing debug getPageViewId captureTraceFeedback captureTraceMetric".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+			posthog.init('phc_xSrwBeAfq8XzQWA4FxpPTLfVcycLwv5STWyXpwocR4vD',{api_host:'https://u.logigator.com',ui_host:'https://eu.posthog.com',person_profiles:'identified_only',secure_cookie:true,advanced_disable_feature_flags:true,capture_performance:true,before_send:function(e){if(e){e.properties=e.properties||{};e.properties.app='editor-legacy';}return e;}});
+		</script>
+
+		<script>
+			document.addEventListener('DOMContentLoaded', function () {
+				document.getElementById('compatibility-warning').style.display =
+					'block';
+				if (!window) return;
+
+				var el = document.createElement('div');
+
+				if (
+					window.Worker &&
+					typeof WebAssembly === 'object' &&
+					typeof WebAssembly.instantiate === 'function' &&
+					typeof el.style.grid === 'string' &&
+					(window.WebGLRenderingContext || window.WebGL2RenderingContext)
+				) {
+					document.getElementById('compatibility-warning').style.display =
+						'none';
+				}
+
+				if (
+					/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+						navigator.userAgent
+					)
+				) {
+					document.getElementById('compatibility-warning').style.display =
+						'block';
+					document.getElementById('compatibility-warning-text1').innerText =
+						'Unfortunately, mobile support is not yet implemented.';
+					document.getElementById('compatibility-warning-text2').innerText =
+						'Try using a desktop for the best experience.';
+				}
+			});
+		</script>
+	</head>
+	<body>
+		<div id="compatibility-warning" style="display: none">
+			<a
+				id="compatibility-warning-close"
+				href="#"
+				onclick="document.getElementById('compatibility-warning').style.display = 'none'; return false"
+			>
+				<img
+					id="compatibility-warning-img"
+					alt="close"
+					src="assets/icons/dark/close.svg"
+				/>
+			</a>
+			<h2 id="compatibility-warning-text1" class="compatibility-warning-text">
+				Unfortunately, it seems like your browser doesn't fully support this
+				site.
+			</h2>
+			<h2 id="compatibility-warning-text2" class="compatibility-warning-text">
+				If you experience any issues, please try using a different browser.
+			</h2>
+		</div>
+
+		<app-root></app-root>
+	</body>
+</html>

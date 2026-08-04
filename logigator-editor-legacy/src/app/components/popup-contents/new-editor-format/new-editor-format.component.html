@@ -1,0 +1,20 @@
+<div class="new-editor-format">
+	<p>{{ 'POPUP.NEW_EDITOR_FORMAT.INTRO' | translate }}</p>
+	<p>{{ 'POPUP.NEW_EDITOR_FORMAT.UNSUPPORTED' | translate }}</p>
+	<p *ngIf="isSave" class="warning">
+		{{ 'POPUP.NEW_EDITOR_FORMAT.SAVE_WARNING' | translate }}
+	</p>
+	<div class="buttons">
+		<button class="btn-raised primary" (click)="okClick()">
+			{{
+				(isSave
+					? 'POPUP.NEW_EDITOR_FORMAT.SAVE_OK'
+					: 'POPUP.NEW_EDITOR_FORMAT.OK'
+				) | translate
+			}}
+		</button>
+		<button *ngIf="isSave" class="btn-raised danger" (click)="cancelClick()">
+			{{ 'POPUP.NEW_EDITOR_FORMAT.CANCEL' | translate }}
+		</button>
+	</div>
+</div>

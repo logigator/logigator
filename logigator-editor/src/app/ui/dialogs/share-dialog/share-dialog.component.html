@@ -1,0 +1,64 @@
+<div *appTranslate="let t" class="flex flex-col gap-4">
+  <p class="m-0">{{ t('shareDialog.intro', { name: name }) }}</p>
+
+  <div class="flex flex-col gap-2">
+    <span class="text-sm text-muted">{{ t('shareDialog.linkLabel') }}</span>
+    <div class="flex gap-2 items-center">
+      <lg-icon-field iconPosition="left" class="flex-1">
+        <lg-input-icon class="ph ph-link"></lg-input-icon>
+        <input lgInputText readonly class="w-full" [value]="shareUrl()" />
+      </lg-icon-field>
+      <lg-button
+        icon="ph ph-copy"
+        [label]="t('shareDialog.copy')"
+        (onClick)="copyLink()"
+      />
+    </div>
+  </div>
+
+  <div class="flex flex-col gap-2">
+    <div>
+      <lg-button
+        severity="secondary"
+        [outlined]="true"
+        icon="ph ph-arrows-clockwise"
+        [label]="t('shareDialog.regenerate')"
+        [loading]="regenerating()"
+        [disabled]="regenerating()"
+        (onClick)="regenerateLink()"
+      />
+    </div>
+    <lg-message severity="warn">
+      {{ t('shareDialog.regenerateWarning') }}
+    </lg-message>
+  </div>
+
+  <div class="flex gap-2 items-center">
+    <lg-toggle-switch
+      inputId="share-public"
+      [ngModel]="isPublic()"
+      (ngModelChange)="setPublic($event)"
+      [ngModelOptions]="{ standalone: true }"
+    />
+    <label for="share-public">{{ t('shareDialog.public') }}</label>
+    <i
+      class="ph ph-info cursor-help text-muted"
+      [lgTooltip]="
+        t(
+          kind === 'component'
+            ? 'shareDialog.publicInfoComponent'
+            : 'shareDialog.publicInfoProject'
+        )
+      "
+    ></i>
+  </div>
+
+  <div class="flex justify-end">
+    <lg-button
+      severity="secondary"
+      [outlined]="true"
+      [label]="t('shareDialog.close')"
+      (onClick)="close()"
+    />
+  </div>
+</div>

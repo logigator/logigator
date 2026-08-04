@@ -1,0 +1,130 @@
+<div *appTranslate="let t">
+  <!-- Search -->
+  <div class="p-3">
+    <lg-icon-field class="w-full">
+      <lg-input-icon class="ph ph-magnifying-glass" />
+      <input
+        lgInputText
+        class="w-full"
+        type="text"
+        [placeholder]="t('openProjectDialog.searchPlaceholder')"
+        [(ngModel)]="searchQuery"
+        (input)="onSearchInput()"
+      />
+    </lg-icon-field>
+  </div>
+
+  <!-- List -->
+  <div class="max-h-64 overflow-y-auto">
+    @if (loading()) {
+      <p class="py-8 text-center text-muted">
+        {{ t('openProjectDialog.loading') }}
+      </p>
+    } @else if (items().length === 0) {
+      <p class="py-8 text-center text-muted">
+        {{ t('openProjectDialog.noSearchResults') }}
+      </p>
+    } @else {
+      @for (item of items(); track item.id) {
+        <div
+          class="flex cursor-pointer items-center justify-between gap-2 border-b border-border px-4 py-3 transition-colors hover:bg-content-hover sm:gap-4"
+          (click)="open.emit(item.id)"
+          (keydown.enter)="open.emit(item.id)"
+          tabindex="0"
+        >
+          @if (editingId() === item.id) {
+            <span class="flex w-full items-center gap-2">
+              <input
+                #renameInput
+                lgInputText
+                class="w-full"
+                type="text"
+                [maxlength]="nameMaxLength"
+                [ngModel]="editValue()"
+                (ngModelChange)="editValue.set($event)"
+                (click)="$event.stopPropagation()"
+                (keydown.enter)="commitRename($event, item)"
+                (keydown.escape)="cancelRename($event)"
+                (blur)="commitRename($event, item)"
+              />
+              <lg-button
+                icon="ph ph-x"
+                severity="secondary"
+                [text]="true"
+                [ariaLabel]="t('openProjectDialog.cancelRename')"
+                [lgTooltip]="t('openProjectDialog.cancelRename')"
+                tooltipPosition="bottom"
+                (mousedown)="$event.preventDefault()"
+                (click)="cancelRename($event)"
+              />
+            </span>
+          } @else {
+            <span class="flex grow shrink-0 items-center gap-1 sm:gap-4">
+              <div
+                class="flex min-w-0 flex-col grow sm:flex-row sm:justify-between sm:items-center sm:gap-4"
+              >
+                <span class="truncate font-medium">{{ item.name }}</span>
+                <span class="text-sm text-muted">
+                  {{ t('openProjectDialog.lastEdited') }}
+                  {{ item.lastEdited | localDate }}
+                </span>
+              </div>
+              @if (showShare()) {
+                <lg-button
+                  icon="ph ph-share-network"
+                  [text]="true"
+                  [ariaLabel]="t('openProjectDialog.shareProject')"
+                  [lgTooltip]="t('openProjectDialog.shareProject')"
+                  tooltipPosition="bottom"
+                  (click)="onShareClick($event, item)"
+                />
+              }
+              @if (showUpload()) {
+                <lg-button
+                  icon="ph ph-cloud-arrow-up"
+                  [text]="true"
+                  [ariaLabel]="t('openProjectDialog.uploadProject')"
+                  [lgTooltip]="t('openProjectDialog.uploadProject')"
+                  tooltipPosition="bottom"
+                  (click)="onUploadClick($event, item)"
+                />
+              }
+              <lg-button
+                icon="ph ph-pencil-simple"
+                [text]="true"
+                [ariaLabel]="t('openProjectDialog.renameProject')"
+                [lgTooltip]="t('openProjectDialog.renameProject')"
+                tooltipPosition="bottom"
+                (click)="startRename($event, item)"
+              />
+              <lg-button
+                icon="ph ph-trash"
+                severity="danger"
+                [text]="true"
+                [ariaLabel]="t('openProjectDialog.deleteProject')"
+                [lgTooltip]="t('openProjectDialog.deleteProject')"
+                tooltipPosition="bottom"
+                (click)="onDeleteClick($event, item)"
+              />
+            </span>
+          }
+        </div>
+      }
+    }
+  </div>
+
+  <!-- Pagination -->
+  @if (totalItems() > pageSize) {
+    <lg-paginator
+      class="mt-2"
+      [firstLabel]="t('common.firstPage')"
+      [previousLabel]="t('common.previousPage')"
+      [nextLabel]="t('common.nextPage')"
+      [lastLabel]="t('common.lastPage')"
+      [first]="paginatorFirst()"
+      [rows]="pageSize"
+      [totalRecords]="totalItems()"
+      (onPageChange)="onPaginatorChange($event)"
+    />
+  }
+</div>

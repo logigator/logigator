@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "name": "Example",
+  "components": [
+    { "type": 2, "pos": [10, 5], "options": { "numInputs": 2 } },
+    { "type": 4, "pos": [0, -3], "options": { "numInputs": 2 } },
+    { "type": 201, "pos": [-6, 0], "options": {} },
+    { "type": 201, "pos": [0, 1], "options": {} },
+    { "type": 202, "pos": [12, -1], "options": {} },
+    { "type": 202, "pos": [0, 1], "options": {} }
+  ],
+  "wires": "5,2:e3s3e1;3,0:e1;4,0:e3;-7,1:e2s3e2;2,0:e2;6,0:s2w1;0,0:e2",
+  "definitions": []
+}

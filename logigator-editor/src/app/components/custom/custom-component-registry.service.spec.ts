@@ -1,0 +1,717 @@
+import { beforeEach, describe, expect, it } from 'vitest';
+import { Injector } from '@angular/core';
+import { TestBed } from '@angular/core/testing';
+import { setStaticDIInjector } from '../../utils/get-di';
+import { ComponentProviderService } from '../component-provider.service';
+import { CUSTOM_TYPE_ID_BASE } from '../component-type.enum';
+import { ComponentCategory } from '../component-category.enum';
+import { CustomComponentRegistry } from './custom-component-registry.service';
+import { CustomComponentDefinition } from './custom-component-definition.model';
+
+describe('CustomComponentRegistry', () => {
+  let registry: CustomComponentRegistry;
+  let provider: ComponentProviderService;
+
+  beforeEach(() => {
+    setStaticDIInjector(TestBed.inject(Injector));
+    registry = TestBed.inject(CustomComponentRegistry);
+    provider = TestBed.inject(ComponentProviderService);
+  });
+
+  describe('createMaster', () => {
+    it('allocates ids from CUSTOM_TYPE_ID_BASE upward', () => {
+      const a = registry.createMaster({ symbol: 'A' }, 'browser');
+      const b = registry.createMaster({ symbol: 'B' }, 'browser');
+      expect(a).toBe(CUSTOM_TYPE_ID_BASE);
+      expect(b).toBe(CUSTOM_TYPE_ID_BASE + 1);
+    });
+
+    it('stores a master with the given source + summary and mints an id', () => {
+      const typeId = registry.createMaster(
+        {
+          name: 'My Comp',
+          symbol: 'MC',
+          numInputs: 2,
+          numOutputs: 1,
+          labels: ['A', 'B', 'Q']
+        },
+        'browser'
+      );
+      const def = registry.getDefinition(typeId);
+      expect(def?.kind).toBe('master');
+      expect(def?.source).toBe('browser');
+      expect(def?.numInputs).toBe(2);
+      expect(def?.labels).toEqual(['A', 'B', 'Q']);
+      expect(typeof def?.id).toBe('string');
+      expect(registry.masterTypeIdForId(def!.id!)).toBe(typeId);
+    });
+
+    it('uses an explicit id (e.g. a server uuid from the create POST)', () => {
+      const typeId = registry.createMaster(
+        { id: 'uuid-1', symbol: 'S' },
+        'server'
+      );
+      expect(registry.idForTypeId(typeId)).toBe('uuid-1');
+      expect(registry.masterTypeIdForId('uuid-1')).toBe(typeId);
+    });
+
+    it('registers a USER config (palette) resolvable through the provider', () => {
+      const typeId = registry.createMaster({ symbol: 'MC' }, 'browser');
+      const config = provider.getComponent(typeId);
+      expect(config?.type).toBe(typeId);
+      expect(config?.category).toBe(ComponentCategory.USER);
+      expect(provider.userComponents()).toContain(config!);
+    });
+
+    it('a master config reflects later edits live (palette view)', () => {
+      const typeId = registry.createMaster({ symbol: 'OLD' }, 'browser');
+      const config = provider.getComponent(typeId)!;
+      registry.updateDefinition(typeId, {
+        numInputs: 0,
+        numOutputs: 0,
+        labels: [],
+        symbol: 'NEW'
+      });
+      expect(config.symbol).toBe('NEW');
+    });
+  });
+
+  describe('snapshot', () => {
+    it('freezes the master state into a new snapshot type id with provenance', () => {
+      const master = registry.createMaster(
+        {
+          id: 'uuid-1',
+          symbol: 'MC',
+          numInputs: 2,
+          numOutputs: 1,
+          labels: ['A', 'B', 'Q']
+        },
+        'server'
+      );
+      const snap = registry.snapshot(master);
+
+      expect(snap.kind).toBe('snapshot');
+      expect(snap.typeId).not.toBe(master);
+      expect(snap.numInputs).toBe(2);
+      expect(snap.labels).toEqual(['A', 'B', 'Q']);
+      // Provenance points back at the master, but the snapshot does not own the id.
+      expect(snap.id).toBe('uuid-1');
+      expect(registry.idForTypeId(snap.typeId)).toBe('uuid-1');
+      expect(registry.masterTypeIdForId('uuid-1')).toBe(master);
+    });
+
+    it('registers a HIDDEN config (resolvable, not in the palette)', () => {
+      const master = registry.createMaster({ symbol: 'MC' }, 'browser');
+      const snap = registry.snapshot(master);
+      const config = provider.getComponent(snap.typeId);
+      expect(config?.category).toBe(ComponentCategory.HIDDEN);
+      expect(provider.userComponents()).not.toContain(config!);
+    });
+
+    it('is frozen: editing the master after snapshotting does not change the snapshot', () => {
+      const master = registry.createMaster(
+        { symbol: 'MC', numInputs: 1, numOutputs: 1, labels: ['A', 'Q'] },
+        'browser'
+      );
+      const snap = registry.snapshot(master);
+
+      registry.updateDefinition(master, {
+        numInputs: 2,
+        numOutputs: 2,
+        labels: ['A', 'B', 'Q', 'R']
+      });
+
+      // The earlier snapshot keeps its shape; a NEW snapshot picks up the edit.
+      expect(snap.numInputs).toBe(1);
+      expect(snap.labels).toEqual(['A', 'Q']);
+      const snap2 = registry.snapshot(master);
+      expect(snap2.numInputs).toBe(2);
+      expect(snap2.labels).toEqual(['A', 'B', 'Q', 'R']);
+    });
+
+    it('throws for a non-master type id', () => {
+      const master = registry.createMaster({ symbol: 'MC' }, 'browser');
+      const snap = registry.snapshot(master);
+      expect(() => registry.snapshot(snap.typeId)).toThrowError();
+    });
+  });
+
+  describe('snapshot caching', () => {
+    it('returns the same type id for repeated placements of the same master', () => {
+      const master = registry.createMaster({ symbol: 'M' }, 'browser');
+      const snap1 = registry.snapshot(master);
+      const snap2 = registry.snapshot(master);
+      expect(snap1.typeId).toBe(snap2.typeId);
+    });
+
+    it('creates a fresh snapshot after updateDefinition', () => {
+      const master = registry.createMaster(
+        { symbol: 'M', numInputs: 1 },
+        'browser'
+      );
+      const snap1 = registry.snapshot(master);
+      registry.updateDefinition(master, {
+        numInputs: 2,
+        numOutputs: 0,
+        labels: []
+      });
+      const snap2 = registry.snapshot(master);
+      expect(snap2.typeId).not.toBe(snap1.typeId);
+      expect(snap2.numInputs).toBe(2);
+    });
+
+    it('creates a fresh snapshot after setMasterCircuit', () => {
+      const master = registry.createMaster({ symbol: 'M' }, 'browser');
+      const snap1 = registry.snapshot(master);
+      registry.setMasterCircuit(master, {
+        components: [{ type: 99, pos: [0, 0], options: {} }],
+        wires: []
+      });
+      const snap2 = registry.snapshot(master);
+      expect(snap2.typeId).not.toBe(snap1.typeId);
+      expect(snap2.circuit?.components.map((c) => c.type)).toEqual([99]);
+    });
+
+    it('creates a fresh snapshot after setMasterVersion', () => {
+      const master = registry.createMaster(
+        { symbol: 'M', version: 1 },
+        'browser'
+      );
+      const snap1 = registry.snapshot(master);
+      registry.setMasterVersion(master, 2);
+      const snap2 = registry.snapshot(master);
+      expect(snap2.typeId).not.toBe(snap1.typeId);
+      expect(snap2.version).toBe(2);
+    });
+
+    it('pre-populates from ingestSnapshots when source matches current master version', () => {
+      const masterTypeId = registry.createMaster(
+        { id: 'id-x', symbol: 'X', version: 3 },
+        'server'
+      );
+      const remap = registry.ingestSnapshots([
+        {
+          type: 5000,
+          source: { id: 'id-x', version: 3 },
+          name: '',
+          symbol: 'X',
+          description: '',
+          numInputs: 0,
+          numOutputs: 0,
+          labels: [],
+          components: [],
+          wires: []
+        }
+      ]);
+      const placed = registry.snapshot(masterTypeId);
+      expect(placed.typeId).toBe(remap.get(5000)!);
+    });
+
+    it('does not pre-populate from ingestSnapshots when versions differ', () => {
+      const masterTypeId = registry.createMaster(
+        { id: 'id-x', symbol: 'X', version: 4 },
+        'server'
+      );
+      const remap = registry.ingestSnapshots([
+        {
+          type: 5000,
+          source: { id: 'id-x', version: 3 },
+          name: '',
+          symbol: 'X',
+          description: '',
+          numInputs: 0,
+          numOutputs: 0,
+          labels: [],
+          components: [],
+          wires: []
+        }
+      ]);
+      const placed = registry.snapshot(masterTypeId);
+      expect(placed.typeId).not.toBe(remap.get(5000)!);
+    });
+  });
+
+  describe('updateDefinition', () => {
+    it('mutates the master object in place (never replaces it)', () => {
+      const typeId = registry.createMaster({ numInputs: 1 }, 'browser');
+      const before = registry.getDefinition(typeId);
+      registry.updateDefinition(typeId, {
+        numInputs: 3,
+        numOutputs: 2,
+        labels: ['a', 'b', 'c', 'x', 'y']
+      });
+      const after = registry.getDefinition(typeId);
+      expect(after).toBe(before);
+      expect(after?.numInputs).toBe(3);
+      expect(after?.labels).toEqual(['a', 'b', 'c', 'x', 'y']);
+    });
+
+    it('no-ops for an unknown type id', () => {
+      expect(() =>
+        registry.updateDefinition(987654, {
+          numInputs: 0,
+          numOutputs: 0,
+          labels: []
+        })
+      ).not.toThrow();
+    });
+
+    it('no-ops for a snapshot (snapshots are immutable)', () => {
+      const master = registry.createMaster(
+        { symbol: 'MC', numInputs: 1 },
+        'browser'
+      );
+      const snap = registry.snapshot(master);
+      registry.updateDefinition(snap.typeId, {
+        numInputs: 5,
+        numOutputs: 0,
+        labels: []
+      });
+      expect(registry.getDefinition(snap.typeId)?.numInputs).toBe(1);
+    });
+  });
+
+  describe('definitionChange$', () => {
+    it('emits the master on update, scoped to its own type id', () => {
+      const a = registry.createMaster({ symbol: 'A' }, 'browser');
+      const b = registry.createMaster({ symbol: 'B' }, 'browser');
+
+      const seenA: CustomComponentDefinition[] = [];
+      const seenB: CustomComponentDefinition[] = [];
+      registry.definitionChange$(a).subscribe((d) => seenA.push(d));
+      registry.definitionChange$(b).subscribe((d) => seenB.push(d));
+
+      registry.updateDefinition(a, {
+        numInputs: 2,
+        numOutputs: 0,
+        labels: ['x', 'y']
+      });
+
+      expect(seenA.length).toBe(1);
+      expect(seenA[0].typeId).toBe(a);
+      expect(seenA[0].numInputs).toBe(2);
+      expect(seenB.length).toBe(0);
+    });
+
+    it('does not emit for a snapshot update (no-op)', () => {
+      const master = registry.createMaster({ symbol: 'MC' }, 'browser');
+      const snap = registry.snapshot(master);
+      const seen: CustomComponentDefinition[] = [];
+      registry.definitionChange$(snap.typeId).subscribe((d) => seen.push(d));
+      registry.updateDefinition(snap.typeId, {
+        numInputs: 1,
+        numOutputs: 0,
+        labels: []
+      });
+      expect(seen.length).toBe(0);
+    });
+  });
+
+  describe('setMasterCircuit', () => {
+    it('replaces the master circuit, leaving earlier snapshots frozen', () => {
+      const master = registry.createMaster(
+        {
+          symbol: 'M',
+          circuit: {
+            components: [{ type: 100, pos: [0, 0], options: {} }],
+            wires: []
+          }
+        },
+        'browser'
+      );
+      const snap = registry.snapshot(master);
+
+      registry.setMasterCircuit(master, {
+        components: [{ type: 101, pos: [1, 1], options: {} }],
+        wires: []
+      });
+
+      // The earlier snapshot deep-copied the old circuit and is untouched.
+      expect(snap.circuit?.components.map((c) => c.type)).toEqual([100]);
+      // A new snapshot reflects the replaced circuit.
+      expect(
+        registry.snapshot(master).circuit?.components.map((c) => c.type)
+      ).toEqual([101]);
+    });
+
+    it('no-ops for a snapshot', () => {
+      const master = registry.createMaster({ symbol: 'M' }, 'browser');
+      const snap = registry.snapshot(master);
+      registry.setMasterCircuit(snap.typeId, {
+        components: [{ type: 1, pos: [0, 0], options: {} }],
+        wires: []
+      });
+      expect(registry.getDefinition(snap.typeId)?.circuit).toBeUndefined();
+    });
+
+    it('recomputes the master library dependencies from the new circuit', () => {
+      // The dependency graph is derived here, so any path that sets a circuit —
+      // including lazy cloud hydration — keeps cycle detection correct.
+      const b = registry.createMaster({ id: 'b-id', symbol: 'B' }, 'browser');
+      const bSnap = registry.snapshot(b);
+      const a = registry.createMaster({ symbol: 'A' }, 'browser');
+
+      registry.setMasterCircuit(a, {
+        components: [{ type: bSnap.typeId, pos: [0, 0], options: {} }],
+        wires: []
+      });
+      expect([...registry.dependenciesOf(a)]).toEqual([b]);
+
+      // A built-in placement (no registry def) contributes no edge.
+      registry.setMasterCircuit(a, {
+        components: [{ type: 1, pos: [0, 0], options: {} }],
+        wires: []
+      });
+      expect([...registry.dependenciesOf(a)]).toEqual([]);
+    });
+  });
+
+  describe('ingestSnapshots', () => {
+    it('registers each as a resolvable HIDDEN snapshot and returns the remap', () => {
+      const remap = registry.ingestSnapshots([
+        {
+          type: 1000,
+          source: { id: 'id-x', version: 3 },
+          name: 'X',
+          symbol: 'X',
+          description: '',
+          numInputs: 2,
+          numOutputs: 1,
+          labels: ['a', 'b', 'q'],
+          components: [],
+          wires: []
+        }
+      ]);
+
+      const sessionType = remap.get(1000)!;
+      expect(sessionType).toBeGreaterThanOrEqual(CUSTOM_TYPE_ID_BASE);
+      const def = registry.getDefinition(sessionType)!;
+      expect(def.kind).toBe('snapshot');
+      expect(def.id).toBe('id-x');
+      expect(def.version).toBe(3);
+      expect(def.numInputs).toBe(2);
+      expect(provider.getComponent(sessionType)?.category).toBe(
+        ComponentCategory.HIDDEN
+      );
+      // Snapshots are not added to the masters id index.
+      expect(registry.masterTypeIdForId('id-x')).toBeUndefined();
+    });
+  });
+
+  describe('library dependency graph', () => {
+    it('reports direct dependencies set via setDependencies', () => {
+      const a = registry.createMaster({ symbol: 'A' }, 'browser');
+      const b = registry.createMaster({ symbol: 'B' }, 'browser');
+      registry.setDependencies(a, [b]);
+      expect([...registry.dependenciesOf(a)]).toEqual([b]);
+      expect([...registry.dependenciesOf(b)]).toEqual([]);
+    });
+
+    it('computes the transitive closure of dependents (for the cycle guard)', () => {
+      // C depends on B, B depends on A  =>  editing A must exclude B and C.
+      const a = registry.createMaster({ symbol: 'A' }, 'browser');
+      const b = registry.createMaster({ symbol: 'B' }, 'browser');
+      const c = registry.createMaster({ symbol: 'C' }, 'browser');
+      registry.setDependencies(b, [a]);
+      registry.setDependencies(c, [b]);
+
+      expect([...registry.dependentsOf(a)].sort()).toEqual([b, c].sort());
+      expect([...registry.dependentsOf(b)]).toEqual([c]);
+      expect([...registry.dependentsOf(c)]).toEqual([]);
+    });
+
+    it('terminates on a diamond without revisiting nodes', () => {
+      // D depends on B and C; both depend on A.
+      const a = registry.createMaster({ symbol: 'A' }, 'browser');
+      const b = registry.createMaster({ symbol: 'B' }, 'browser');
+      const c = registry.createMaster({ symbol: 'C' }, 'browser');
+      const d = registry.createMaster({ symbol: 'D' }, 'browser');
+      registry.setDependencies(b, [a]);
+      registry.setDependencies(c, [a]);
+      registry.setDependencies(d, [b, c]);
+
+      expect([...registry.dependentsOf(a)].sort()).toEqual([b, c, d].sort());
+    });
+
+    describe('wouldCycle', () => {
+      // C depends on B, B depends on A => editing A, placing A/B/C cycles.
+      let a: number;
+      let b: number;
+      let c: number;
+      let unrelated: number;
+
+      beforeEach(() => {
+        a = registry.createMaster({ symbol: 'A' }, 'browser');
+        b = registry.createMaster({ symbol: 'B' }, 'browser');
+        c = registry.createMaster({ symbol: 'C' }, 'browser');
+        unrelated = registry.createMaster({ symbol: 'U' }, 'browser');
+        registry.setDependencies(b, [a]);
+        registry.setDependencies(c, [b]);
+      });
+
+      it('flags placing a master into its own editor', () => {
+        expect(registry.wouldCycle(a, a)).toBe(true);
+      });
+
+      it('flags placing a transitive dependent into the host', () => {
+        expect(registry.wouldCycle(a, b)).toBe(true);
+        expect(registry.wouldCycle(a, c)).toBe(true);
+      });
+
+      it('allows placing a non-dependent', () => {
+        expect(registry.wouldCycle(a, unrelated)).toBe(false);
+        // Placing A into C is fine — C already depends on A, the other way.
+        expect(registry.wouldCycle(c, a)).toBe(false);
+      });
+    });
+  });
+
+  describe('resolveMaster', () => {
+    it('returns a master directly', () => {
+      const m = registry.createMaster({ id: 'm-1', symbol: 'M' }, 'browser');
+      expect(registry.resolveMaster(m)).toEqual({
+        masterTypeId: m,
+        master: registry.getDefinition(m)
+      });
+    });
+
+    it('follows a snapshot to its master via provenance', () => {
+      const m = registry.createMaster({ id: 'm-1', symbol: 'M' }, 'browser');
+      const snapType = registry.snapshot(m).typeId;
+      const resolved = registry.resolveMaster(snapType);
+      expect(resolved?.masterTypeId).toBe(m);
+      expect(resolved?.master.kind).toBe('master');
+    });
+
+    it('returns undefined for a built-in / unknown type id', () => {
+      expect(registry.resolveMaster(1)).toBeUndefined();
+      expect(registry.resolveMaster(999_999)).toBeUndefined();
+    });
+  });
+
+  describe('promoteMaster', () => {
+    it('flips source/id/version and bumps the revision', () => {
+      const before = registry.revision();
+      const m = registry.createMaster(
+        { id: 'local-1', symbol: 'M' },
+        'browser'
+      );
+      registry.promoteMaster(m, 'server-1', 7);
+
+      const def = registry.getDefinition(m)!;
+      expect(def.source).toBe('server');
+      expect(def.id).toBe('server-1');
+      expect(def.version).toBe(7);
+      expect(registry.revision()).toBeGreaterThan(before);
+    });
+
+    it('re-points the id index to the new id and keeps the old id resolvable', () => {
+      const m = registry.createMaster(
+        { id: 'local-1', symbol: 'M' },
+        'browser'
+      );
+      registry.promoteMaster(m, 'server-1', 1);
+
+      // New id resolves directly; old id resolves through the alias.
+      expect(registry.masterTypeIdForId('server-1')).toBe(m);
+      expect(registry.masterTypeIdForId('local-1')).toBe(m);
+    });
+
+    it('lets a snapshot taken before promotion still resolve to the master', () => {
+      const m = registry.createMaster(
+        { id: 'local-1', symbol: 'M' },
+        'browser'
+      );
+      const snapType = registry.snapshot(m).typeId; // captures id 'local-1'
+      registry.promoteMaster(m, 'server-1', 1);
+
+      const resolved = registry.resolveMaster(snapType);
+      expect(resolved?.masterTypeId).toBe(m);
+      expect(resolved?.master.source).toBe('server');
+    });
+
+    it('re-registers the config so the palette reflects the new source', () => {
+      const m = registry.createMaster(
+        { id: 'local-1', symbol: 'M' },
+        'browser'
+      );
+      registry.promoteMaster(m, 'server-1', 1);
+      expect(provider.getComponent(m)?.source).toBe('server');
+    });
+
+    it('no-ops for a snapshot or unknown type id', () => {
+      const m = registry.createMaster(
+        { id: 'local-1', symbol: 'M' },
+        'browser'
+      );
+      const snapType = registry.snapshot(m).typeId;
+      registry.promoteMaster(snapType, 'x', 1);
+      registry.promoteMaster(123_456, 'x', 1);
+      expect(registry.getDefinition(m)?.source).toBe('browser');
+    });
+  });
+
+  describe('registerIdAlias', () => {
+    it('resolves an aliased id to the current master', () => {
+      const m = registry.createMaster(
+        { id: 'server-1', symbol: 'M' },
+        'server'
+      );
+      registry.registerIdAlias('old-local-1', 'server-1');
+      expect(registry.masterTypeIdForId('old-local-1')).toBe(m);
+    });
+
+    it('marks the old id as promoted and bumps the revision', () => {
+      const before = registry.revision();
+      registry.registerIdAlias('old-local-1', 'server-1');
+      expect(registry.isPromotedId('old-local-1')).toBe(true);
+      expect(registry.isPromotedId('server-1')).toBe(false);
+      expect(registry.revision()).toBeGreaterThan(before);
+    });
+  });
+
+  describe('ingestSnapshots origin', () => {
+    function ingestOne(origin?: 'server' | 'browser'): number {
+      const remap = registry.ingestSnapshots([
+        {
+          type: 1000,
+          source: { id: 'x', version: 1, origin },
+          name: 'N',
+          symbol: 'S',
+          description: '',
+          numInputs: 0,
+          numOutputs: 0,
+          labels: [],
+          components: [],
+          wires: []
+        }
+      ]);
+      return remap.get(1000)!;
+    }
+
+    it('adopts the carried origin as the snapshot source', () => {
+      expect(registry.getDefinition(ingestOne('server'))?.source).toBe(
+        'server'
+      );
+    });
+
+    it('defaults to browser when no origin is carried', () => {
+      expect(registry.getDefinition(ingestOne())?.source).toBe('browser');
+    });
+  });
+
+  describe('relinkSnapshotProvenance', () => {
+    it('re-points a snapshot at a new master id and marks it browser', () => {
+      const remap = registry.ingestSnapshots([
+        {
+          type: 1000,
+          source: undefined,
+          name: 'N',
+          symbol: 'S',
+          description: '',
+          numInputs: 0,
+          numOutputs: 0,
+          labels: [],
+          components: [],
+          wires: []
+        }
+      ]);
+      const snapType = remap.get(1000)!;
+      const master = registry.createMaster(
+        { id: 'fresh', symbol: 'S' },
+        'browser'
+      );
+
+      registry.relinkSnapshotProvenance(snapType, 'fresh', 3);
+
+      expect(registry.getDefinition(snapType)?.id).toBe('fresh');
+      expect(registry.resolveMaster(snapType)?.masterTypeId).toBe(master);
+      // Version must be stamped too: a no-provenance orphan has none, and
+      // serialize drops the whole `source` unless both id and version are set.
+      expect(registry.getDefinition(snapType)?.version).toBe(3);
+    });
+  });
+
+  describe('currentIdForId', () => {
+    it('returns an id unchanged when it has no alias', () => {
+      expect(registry.currentIdForId('local-1')).toBe('local-1');
+    });
+
+    it('follows a promotion alias to the current id', () => {
+      registry.registerIdAlias('local-1', 'server-1');
+      expect(registry.currentIdForId('local-1')).toBe('server-1');
+    });
+
+    it('walks a chain of aliases and terminates on a cycle', () => {
+      registry.registerIdAlias('a', 'b');
+      registry.registerIdAlias('b', 'c');
+      expect(registry.currentIdForId('a')).toBe('c');
+      // A pathological cycle must not hang.
+      registry.registerIdAlias('c', 'a');
+      expect(registry.currentIdForId('a')).toBe('c');
+    });
+  });
+
+  describe('removeMaster / removeServerMasters', () => {
+    it('removes a master from every index and the provider', () => {
+      const typeId = registry.createMaster(
+        { id: 'gone', name: 'Gone' },
+        'server'
+      );
+      registry.setMasterCircuit(typeId, { components: [], wires: [] });
+
+      registry.removeMaster(typeId);
+
+      expect(registry.getDefinition(typeId)).toBeUndefined();
+      expect(registry.masterTypeIdForId('gone')).toBeUndefined();
+      expect(provider.getComponent(typeId)).toBeUndefined();
+      expect(registry.dependenciesOf(typeId).size).toBe(0);
+    });
+
+    it('leaves snapshots of a removed master resolvable as definitions', () => {
+      const typeId = registry.createMaster(
+        { id: 'gone', name: 'Gone' },
+        'server'
+      );
+      const snapshot = registry.snapshot(typeId);
+
+      registry.removeMaster(typeId);
+
+      expect(registry.getDefinition(snapshot.typeId)).toBeDefined();
+      expect(provider.getComponent(snapshot.typeId)).toBeDefined();
+      // The snapshot no longer resolves to a master — same as any unloaded one.
+      expect(registry.resolveMaster(snapshot.typeId)).toBeUndefined();
+    });
+
+    it('no-ops for snapshots and unknown type ids', () => {
+      const typeId = registry.createMaster({ id: 'm' }, 'browser');
+      const snapshot = registry.snapshot(typeId);
+      registry.removeMaster(snapshot.typeId);
+      registry.removeMaster(999999);
+      expect(registry.getDefinition(snapshot.typeId)).toBeDefined();
+      expect(registry.getDefinition(typeId)).toBeDefined();
+    });
+
+    it('drops dependency edges pointing at a removed master', () => {
+      const child = registry.createMaster({ id: 'child' }, 'server');
+      const parent = registry.createMaster({ id: 'parent' }, 'browser');
+      registry.setDependencies(parent, [child]);
+
+      registry.removeMaster(child);
+
+      expect(registry.dependenciesOf(parent).has(child)).toBe(false);
+    });
+
+    it('removeServerMasters removes server masters except keepIds, browser masters stay', () => {
+      const kept = registry.createMaster({ id: 'kept' }, 'server');
+      const dropped = registry.createMaster({ id: 'dropped' }, 'server');
+      const local = registry.createMaster({ id: 'local' }, 'browser');
+
+      registry.removeServerMasters(new Set(['kept']));
+
+      expect(registry.getDefinition(kept)).toBeDefined();
+      expect(registry.getDefinition(dropped)).toBeUndefined();
+      expect(registry.getDefinition(local)).toBeDefined();
+    });
+  });
+});

@@ -2,8 +2,11 @@
 	"context": "development or production",
 	"port": 3000,
 	"editor": "resources/editor",
+	"editorLegacy": "resources/legacy-editor",
 	"enableErrorReportsFile": false,
 	"sendErrorReportsAsEmail": false,
 	"reportErrorLogFile": "report-error-log.txt",
-	"adminEmailAddresses": []
+	"adminEmailAddresses": [],
+	"reportRateLimitWindowSeconds": 600,
+	"reportRateLimitMax": 5
 }

@@ -1,0 +1,59 @@
+<form *appTranslate="let t" class="flex flex-col gap-4" (ngSubmit)="save()">
+  <div class="flex flex-col gap-1">
+    <label for="save-project-name">{{ t('saveProjectDialog.name') }}</label>
+    <input
+      lgInputText
+      id="save-project-name"
+      type="text"
+      [maxlength]="nameMaxLength"
+      [ngModel]="name()"
+      (ngModelChange)="name.set($event)"
+      [ngModelOptions]="{ standalone: true }"
+    />
+  </div>
+  <div class="flex flex-col gap-1">
+    <span id="save-project-destination-label">{{
+      t('saveProjectDialog.destination')
+    }}</span>
+    <lg-select-button
+      ariaLabelledby="save-project-destination-label"
+      [options]="destinationOptions"
+      optionLabel="label"
+      optionValue="value"
+      [allowEmpty]="false"
+      [ngModel]="destination()"
+      (ngModelChange)="destination.set($event)"
+      [ngModelOptions]="{ standalone: true }"
+    />
+  </div>
+  @if (destination() === 'server') {
+    @if (!userService.user()) {
+      <lg-message severity="warn">
+        {{ t('saveProjectDialog.notLoggedIn') }}
+      </lg-message>
+    } @else {
+      <div class="flex gap-2 items-center">
+        <lg-toggle-switch
+          inputId="save-project-public"
+          [ngModel]="isPublic()"
+          (ngModelChange)="isPublic.set($event)"
+          [ngModelOptions]="{ standalone: true }"
+        />
+        <label for="save-project-public">{{
+          t('saveProjectDialog.public')
+        }}</label>
+        <i
+          class="ph ph-info cursor-help text-surface-500"
+          [lgTooltip]="t('saveProjectDialog.publicInfo')"
+        ></i>
+      </div>
+    }
+  } @else {
+    <lg-message severity="info">
+      {{ t('saveProjectDialog.localWarning') }}
+    </lg-message>
+  }
+  <div class="flex justify-end">
+    <lg-button type="submit" [label]="t('common.save')" [disabled]="!canSave" />
+  </div>
+</form>

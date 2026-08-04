@@ -35,22 +35,10 @@
 					},
 					"body": [
 						{
-							"name": "_ga",
-							"domain": "Google Analytics",
-							"description": "Cookie set by Google Analytics.",
-							"expiration": "Expires after 2 years"
-						},
-						{
-							"name": "_ga_(id)",
-							"domain": "Google Analytics",
-							"description": "Cookie set by Google Analytics.",
-							"expiration": "Expires after 2 years"
-						},
-						{
-							"name": "_gid",
-							"domain": "Google Analytics",
-							"description": "Cookie set by Google Analytics.",
-							"expiration": "Session"
+							"name": "ph_(id)_posthog",
+							"domain": "PostHog",
+							"description": "Cookie set by PostHog to store an anonymous device identifier and session id.",
+							"expiration": "Expires after 1 year"
 						}
 					]
 				}

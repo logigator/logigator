@@ -1,4 +1,4 @@
-import {Body, CurrentUser, JsonController, Post, UseInterceptor} from 'routing-controllers';
+import {Body, CurrentUser, JsonController, Post, UseBefore, UseInterceptor} from 'routing-controllers';
 import {ApiInterceptor} from '../../interceptors/api.interceptor';
 import {ReportError} from '../../models/request/api/report-error/report-error';
 import {ConfigService} from '../../services/config.service';
@@ -6,9 +6,11 @@ import {promises as fs} from 'fs';
 import {User} from '../../database/entities/user.entity';
 import {EmailService} from '../../services/email.service';
 import {StandaloneViewService} from '../../services/standalone-view.service';
+import {ReportRateLimitMiddleware} from '../../middleware/rate-limit/report-rate-limit.middleware';
 
 @JsonController('/api/report-error')
 @UseInterceptor(ApiInterceptor)
+@UseBefore(ReportRateLimitMiddleware)
 export class ReportErrorController {
 
 	constructor(
@@ -26,6 +28,10 @@ export class ReportErrorController {
 			return { success: true };
 
 		let toAppend = `Date: ${new Date().toUTCString()}`;
+		toAppend += `\nSource: ${body.source ?? 'editor-v1'}`;
+
+		if (body.correlationId)
+			toAppend += `\nCorrelation ID: ${body.correlationId}`;
 
 		if (body.message)
 			toAppend += `\nMessage: ${body.message}`;
@@ -42,15 +48,48 @@ export class ReportErrorController {
 		if (user)
 			toAppend += `\nUser: ${user.id} (Username: ${user.username}, Email: ${user.email})`;
 
+		const client = body.client;
+		if (client) {
+			if (client.browser)
+				toAppend += `\nBrowser: ${client.browser}`;
+			if (client.os)
+				toAppend += `\nOS: ${client.os}`;
+			if (client.renderingContext)
+				toAppend += `\nRendering: ${client.renderingContext}`;
+			if (client.gpu)
+				toAppend += `\nGPU: ${client.gpu}`;
+			if (client.windowWidth !== undefined && client.windowHeight !== undefined)
+				toAppend += `\nWindow: ${client.windowWidth}×${client.windowHeight}`;
+			if (client.screenWidth !== undefined && client.screenHeight !== undefined)
+				toAppend += `\nScreen: ${client.screenWidth}×${client.screenHeight}`;
+			if (client.devicePixelRatio !== undefined)
+				toAppend += `\nDevice Pixel Ratio: ${client.devicePixelRatio}`;
+			if (client.locale)
+				toAppend += `\nLocale: ${client.locale}`;
+			if (client.url)
+				toAppend += `\nURL: ${client.url}`;
+			if (client.workMode)
+				toAppend += `\nWork Mode: ${client.workMode}`;
+			if (client.simulationRunning !== undefined)
+				toAppend += `\nSimulation Running: ${client.simulationRunning}`;
+			if (client.touch !== undefined)
+				toAppend += `\nTouch: ${client.touch}`;
+		}
+
 		if (body.userMessage)
-			toAppend += `\nMessage: ${body.userMessage}`;
+			toAppend += `\nUser Message: ${body.userMessage}`;
+
+		if (body.logs)
+			toAppend += `\nRecent Logs:\n${body.logs}`;
 
 		if (body.stack)
-			toAppend += `\nStack:\n -${body.stack.replace('\n', '\n -')}`;
+			toAppend += `\nStack:\n -${body.stack.replace(/\n/g, '\n -')}`;
 
 		let projectFile: string;
 		if (body.project)
 			projectFile = JSON.stringify(body.project);
+		else if (body.projectDump)
+			projectFile = body.projectDump;
 
 		const adminEmailAddresses: string[] = this.configService.getConfig<any>('environment').adminEmailAddresses;
 		if (logToEmailEnabled && adminEmailAddresses) {

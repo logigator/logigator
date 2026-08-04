@@ -27,7 +27,16 @@ gulp.task('scss:views', function() {
 		.pipe(gulp.dest(path.join(__dirname, 'resources/public/css/views').replace(/\\/g, '/')));
 });
 
-gulp.task('scss', gulp.parallel(['scss:layouts', 'scss:views']));
+// Standalone banner stylesheet for the editor SPA; the server-rendered pages
+// get the same styles through the layout css (global.scss imports the partial).
+gulp.task('scss:cookieconsent', function() {
+	return gulp.src(path.join(__dirname, 'resources/private/scss/cookieconsent.scss').replace(/\\/g, '/'))
+		.pipe(sass().on('error', sass.logError))
+		.pipe(cleanCSS({level: 2}))
+		.pipe(gulp.dest(path.join(__dirname, 'resources/public/css').replace(/\\/g, '/')));
+});
+
+gulp.task('scss', gulp.parallel(['scss:layouts', 'scss:views', 'scss:cookieconsent']));
 
 gulp.task('scss:watch', function () {
 	gulp.watch(path.join(__dirname, 'resources/private/scss/**/*.scss').replace(/\\/g, '/'), (done) => {
@@ -40,7 +49,8 @@ gulp.task('js:global-modern', function() {
 		path.join(__dirname, 'node_modules', 'vanilla-cookieconsent', 'dist', 'cookieconsent.umd.js').replace(/\\/g, '/'),
 		path.join(__dirname, 'resources/private/js/bem.js').replace(/\\/g, '/'),
 		path.join(__dirname, 'resources/private/js/global-functions.js').replace(/\\/g, '/'),
-		path.join(__dirname, 'resources/private/js/global.js').replace(/\\/g, '/')
+		path.join(__dirname, 'resources/private/js/global.js').replace(/\\/g, '/'),
+		path.join(__dirname, 'resources/private/js/cookieconsent-init.js').replace(/\\/g, '/')
 	])
 		.pipe(sourceMaps.init())
 		.pipe(concat('global-es2015.js'))
@@ -94,7 +104,40 @@ gulp.task('js:views-modern', function() {
 		.pipe(gulp.dest(path.join(__dirname, 'resources/public/js/views').replace(/\\/g, '/')));
 });
 
-gulp.task('js-modern', gulp.parallel(['js:global-modern', 'js:views-modern']));
+// Standalone consent bundle (library + shared init) for the editor SPA, which
+// loads it directly instead of the full global site bundle.
+gulp.task('js:cookieconsent', function() {
+	return gulp.src([
+		path.join(__dirname, 'node_modules', 'vanilla-cookieconsent', 'dist', 'cookieconsent.umd.js').replace(/\\/g, '/'),
+		path.join(__dirname, 'resources/private/js/cookieconsent-css.js').replace(/\\/g, '/'),
+		path.join(__dirname, 'resources/private/js/cookieconsent-init.js').replace(/\\/g, '/')
+	])
+		.pipe(sourceMaps.init())
+		.pipe(concat('cookieconsent.js'))
+		.pipe(babel({
+			presets: [
+				['@babel/preset-env', {
+					targets: {
+						edge: "17",
+						firefox: "60",
+						chrome: "67",
+						safari: "11.1"
+					}
+				}]
+			],
+		}))
+		.on('error', function(err) {
+			console.error(err.message);
+			this.emit('end');
+		})
+		.pipe(terser({
+			ecma: 2015
+		}))
+		.pipe(sourceMaps.write('./'))
+		.pipe(gulp.dest(path.join(__dirname, 'resources/public/js').replace(/\\/g, '/')));
+});
+
+gulp.task('js-modern', gulp.parallel(['js:global-modern', 'js:views-modern', 'js:cookieconsent']));
 
 gulp.task('js:global-legacy', function() {
 	return gulp.src([
@@ -102,7 +145,8 @@ gulp.task('js:global-legacy', function() {
 		path.join(__dirname, 'node_modules', 'vanilla-cookieconsent', 'dist', 'cookieconsent.umd.js').replace(/\\/g, '/'),
 		path.join(__dirname, 'resources/private/js/bem.js').replace(/\\/g, '/'),
 		path.join(__dirname, 'resources/private/js/global-functions.js').replace(/\\/g, '/'),
-		path.join(__dirname, 'resources/private/js/global.js').replace(/\\/g, '/')
+		path.join(__dirname, 'resources/private/js/global.js').replace(/\\/g, '/'),
+		path.join(__dirname, 'resources/private/js/cookieconsent-init.js').replace(/\\/g, '/')
 	]).pipe(sourceMaps.init())
 		.pipe(concat('sources.js'))
 		.pipe(babel({

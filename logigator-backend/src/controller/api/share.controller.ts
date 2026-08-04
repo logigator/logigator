@@ -10,7 +10,8 @@ import {ComponentRepository} from '../../database/repositories/component.reposit
 import {UserRepository} from '../../database/repositories/user.repository';
 import {ProjectDependencyRepository} from '../../database/repositories/project-dependency.repository';
 import {classToPlain} from 'class-transformer';
-import {ProjectElement} from '../../models/request/api/project-element';
+import {buildDependencyResponse, parseStoredCircuit, synthesizeMissingSnapshots} from '../../functions/circuit-content';
+import {buildForkAttribution} from '../../functions/fork-attribution';
 import {Project} from '../../database/entities/project.entity';
 import {ComponentDependencyRepository} from '../../database/repositories/component-dependency.repository';
 import {Component} from '../../database/entities/component.entity';
@@ -47,13 +48,18 @@ export class ShareController {
 			}
 		});
 		const contentBuffer = await project.elementsFile?.getFileContent();
-		const content: ProjectElement[] = contentBuffer?.length ? JSON.parse(contentBuffer.toString()) : [];
+		const {elements, snapshots} = parseStoredCircuit(contentBuffer);
+		const enriched = await synthesizeMissingSnapshots(dependencies, snapshots,
+			master => this.componentDepRepo.find({where: {dependent: master as Component}}));
+		const forkAttribution = await buildForkAttribution(project);
 
 		return {
 			type: project instanceof Project ? 'project' : 'comp',
 			...classToPlain(project),
-			dependencies,
-			elements: content ?? []
+			dependencies: buildDependencyResponse(dependencies, enriched, ['showShareLinks']),
+			elements,
+			newFormat: project.newFormat,
+			...(forkAttribution.length ? {forkAttribution} : {})
 		};
 	}
 

@@ -1,0 +1,92 @@
+<form *appTranslate="let t" class="flex flex-col gap-4" (ngSubmit)="export()">
+  @if (projectOptions().length > 1) {
+    <div class="flex flex-col gap-1">
+      <label for="export-project">{{ t('imageExport.project') }}</label>
+      <lg-select
+        inputId="export-project"
+        [options]="projectOptions()"
+        optionLabel="label"
+        optionValue="value"
+        [ngModel]="selectedIndex()"
+        (ngModelChange)="selectedIndex.set($event)"
+        [ngModelOptions]="{ standalone: true }"
+      />
+    </div>
+  }
+  <div class="flex flex-col gap-1">
+    <span id="export-format-label">{{ t('imageExport.format') }}</span>
+    <lg-select-button
+      ariaLabelledby="export-format-label"
+      [options]="formatOptions"
+      optionLabel="label"
+      optionValue="value"
+      [allowEmpty]="false"
+      [ngModel]="format()"
+      (ngModelChange)="format.set($event)"
+      [ngModelOptions]="{ standalone: true }"
+    />
+  </div>
+  <div class="flex flex-col gap-1">
+    <span id="export-resolution-label">{{ t('imageExport.resolution') }}</span>
+    <lg-select-button
+      ariaLabelledby="export-resolution-label"
+      [options]="resolutionOptions"
+      optionLabel="label"
+      optionValue="value"
+      [allowEmpty]="false"
+      [ngModel]="multiplier()"
+      (ngModelChange)="multiplier.set($event)"
+      [ngModelOptions]="{ standalone: true }"
+    />
+    @if (dimensions(); as d) {
+      <span class="text-sm text-muted">
+        {{ t('imageExport.dimensions', { width: d.width, height: d.height }) }}
+        @if (d.clamped) {
+          {{ t('imageExport.clampedHint') }}
+        }
+      </span>
+    }
+  </div>
+  <div class="flex items-center gap-2">
+    <lg-toggle-switch
+      inputId="export-background"
+      [ngModel]="background()"
+      (ngModelChange)="background.set($event)"
+      [ngModelOptions]="{ standalone: true }"
+    />
+    <label for="export-background">{{ t('imageExport.background') }}</label>
+    <span class="text-sm text-muted">{{
+      t('imageExport.backgroundHint')
+    }}</span>
+  </div>
+  @if (showQuality()) {
+    <div class="flex flex-col gap-1">
+      <label for="export-quality"
+        >{{ t('imageExport.quality') }} — {{ quality() }}%</label
+      >
+      <lg-slider
+        inputId="export-quality"
+        [min]="10"
+        [max]="100"
+        [ngModel]="quality()"
+        (ngModelChange)="quality.set($event)"
+        [ngModelOptions]="{ standalone: true }"
+      />
+    </div>
+  }
+  <div class="flex justify-end gap-2">
+    <lg-button
+      type="button"
+      severity="secondary"
+      [outlined]="true"
+      [label]="t('imageExport.cancel')"
+      (onClick)="cancel()"
+    />
+    <lg-button
+      type="submit"
+      [label]="t('imageExport.export')"
+      [disabled]="!canExport"
+      [loading]="exporting()"
+    />
+  </div>
+</form>

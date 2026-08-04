@@ -1,0 +1,40 @@
+<div *appTranslate="let t" class="flex flex-col gap-4">
+  <p>{{ t('logoutDialog.message') }}</p>
+
+  <lg-list>
+    @for (item of items; track item.name) {
+      <lg-list-item leadingIcon="ph ph-file">
+        {{ item.name }}
+        @if (item.lastEditedAt) {
+          <ng-template #subtitle>
+            {{
+              t('logoutDialog.edited', {
+                relative: item.lastEditedAt | relativeTime
+              })
+            }}
+          </ng-template>
+        }
+      </lg-list-item>
+    }
+  </lg-list>
+
+  @if (promotionWarning) {
+    <lg-message severity="warn">{{ promotionWarning }}</lg-message>
+  }
+
+  <div class="flex justify-end gap-2">
+    <lg-button
+      severity="danger"
+      [outlined]="true"
+      [label]="t('logoutDialog.discard')"
+      (onClick)="discard()"
+    />
+    <lg-button
+      severity="secondary"
+      [outlined]="true"
+      [label]="t('logoutDialog.cancel')"
+      (onClick)="cancel()"
+    />
+    <lg-button [label]="t('logoutDialog.save')" (onClick)="save()" />
+  </div>
+</div>

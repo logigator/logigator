@@ -1,0 +1,28 @@
+<div *appTranslate="let t" class="flex border-t border-border">
+  <!-- min-w-0 lets the grow cell shrink below its content so the mode hint
+       truncates instead of wrapping the whole bar.
+       role=status on the three cells that report state the user acts on: the
+       work-mode hint, the saved/unsaved flag and the selection count are
+       otherwise announced nowhere. The cursor position is deliberately left
+       out — it changes on every pointer move. -->
+  <div role="status" class="grow min-w-0 truncate px-2 border-r border-border">
+    {{
+      t(workMode(), {
+        componentName: text(selectedComponentName()),
+        scissorKey: scissorKeyLabel()
+      })
+    }}
+  </div>
+  <div class="shrink-0 whitespace-nowrap px-2 border-r border-border">
+    {{ boardPositionFormatted() }}
+  </div>
+  <div
+    role="status"
+    class="shrink-0 whitespace-nowrap px-2 border-r border-border"
+  >
+    {{ dirty() ? t('statusBar.unsaved') : t('statusBar.saved') }}
+  </div>
+  <div role="status" class="shrink-0 whitespace-nowrap px-2">
+    {{ t('statusBar.selected') }}: {{ selectionCount() }}
+  </div>
+</div>

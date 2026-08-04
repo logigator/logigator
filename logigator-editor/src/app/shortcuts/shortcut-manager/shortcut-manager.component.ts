@@ -1,0 +1,112 @@
+import { Component, inject } from '@angular/core';
+import { DialogRef, LgButton, LgDivider, LgTooltip } from '@logigator/ui';
+import { ShortcutService } from '../shortcut.service';
+import { ShortcutActionEnum } from '../shortcut-action.enum';
+import { ShortcutBinding, DEFAULT_SHORTCUTS } from '../shortcut-binding.model';
+import { ShortcutEditComponent } from '../shortcut-edit/shortcut-edit.component';
+import { TranslationKey } from '../../translation/translation-key.model';
+import { TranslateDirective } from '../../translation/translate.directive';
+
+interface ShortcutGroup {
+  labelKey: TranslationKey;
+  actions: ShortcutActionEnum[];
+}
+
+@Component({
+  selector: 'app-shortcut-manager',
+  imports: [
+    LgButton,
+    LgDivider,
+    LgTooltip,
+    TranslateDirective,
+    ShortcutEditComponent
+  ],
+  templateUrl: './shortcut-manager.component.html'
+})
+export class ShortcutManagerComponent {
+  private readonly ref = inject(DialogRef);
+  protected readonly shortcutService = inject(ShortcutService);
+
+  protected readonly groups: ShortcutGroup[] = [
+    {
+      labelKey: 'shortcuts.groups.fileOps',
+      actions: [
+        ShortcutActionEnum.SAVE,
+        ShortcutActionEnum.OPEN,
+        ShortcutActionEnum.NEW_COMPONENT
+      ]
+    },
+    {
+      labelKey: 'shortcuts.groups.editOps',
+      actions: [
+        ShortcutActionEnum.UNDO,
+        ShortcutActionEnum.REDO,
+        ShortcutActionEnum.COPY,
+        ShortcutActionEnum.CUT,
+        ShortcutActionEnum.PASTE,
+        ShortcutActionEnum.DELETE,
+        ShortcutActionEnum.ROTATE_SELECTION,
+        ShortcutActionEnum.ROTATE_SELECTION_CCW,
+        ShortcutActionEnum.MOVE_SELECTION_UP,
+        ShortcutActionEnum.MOVE_SELECTION_DOWN,
+        ShortcutActionEnum.MOVE_SELECTION_LEFT,
+        ShortcutActionEnum.MOVE_SELECTION_RIGHT
+      ]
+    },
+    {
+      labelKey: 'shortcuts.groups.viewOps',
+      actions: [
+        ShortcutActionEnum.ZOOM_IN,
+        ShortcutActionEnum.ZOOM_OUT,
+        ShortcutActionEnum.ZOOM_100
+      ]
+    },
+    {
+      labelKey: 'shortcuts.groups.tools',
+      actions: [
+        ShortcutActionEnum.TOOL_PAN,
+        ShortcutActionEnum.TOOL_WIRE,
+        ShortcutActionEnum.TOOL_SELECT,
+        ShortcutActionEnum.SELECT_SCISSOR,
+        ShortcutActionEnum.TOOL_ERASE,
+        ShortcutActionEnum.TOOL_PLACE_TEXT
+      ]
+    },
+    {
+      labelKey: 'shortcuts.groups.interaction',
+      actions: [ShortcutActionEnum.TOGGLE_SIMULATION, ShortcutActionEnum.CANCEL]
+    }
+  ];
+
+  /** The hold-style scissor modifier may be bound to a bare modifier key. */
+  protected allowsModifierOnly(action: ShortcutActionEnum): boolean {
+    return action === ShortcutActionEnum.SELECT_SCISSOR;
+  }
+
+  protected isDefault(action: ShortcutActionEnum): boolean {
+    const current = this.shortcutService.binding(action)();
+    if (!current) return false;
+    const def = DEFAULT_SHORTCUTS[action];
+    return (
+      current.key === def.key &&
+      current.ctrl === def.ctrl &&
+      current.shift === def.shift &&
+      current.alt === def.alt
+    );
+  }
+
+  protected onBindingChange(
+    action: ShortcutActionEnum,
+    binding: ShortcutBinding | null
+  ): void {
+    this.shortcutService.setBinding(action, binding);
+  }
+
+  protected resetAll(): void {
+    this.shortcutService.resetAll();
+  }
+
+  protected close(): void {
+    this.ref.close();
+  }
+}

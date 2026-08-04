@@ -28,7 +28,7 @@
 	],
 	"homepage": "https://logigator.com/",
 	"bugs": "https://github.com/logigator/logigator/issues",
-	"license": "MIT",
+	"license": "AGPL-3.0-only",
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/logigator/logigator.git"

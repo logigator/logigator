@@ -1,0 +1,27 @@
+<div class="flex items-center gap-2" *appTranslate="let t">
+  @if (!isRecording()) {
+    <lg-shortcut [binding]="binding()" />
+    <lg-button
+      icon="ph ph-pencil"
+      severity="secondary"
+      [text]="true"
+      size="sm"
+      [lgTooltip]="t('shortcuts.manager.edit')"
+      [ariaLabel]="t('shortcuts.manager.edit')"
+      tooltipPosition="bottom"
+      (onClick)="startRecording()"
+    />
+  } @else {
+    <span class="text-sm italic text-primary animate-pulse">{{
+      t('shortcuts.manager.recordPrompt')
+    }}</span>
+    <lg-button
+      icon="ph ph-x"
+      severity="warn"
+      [text]="true"
+      size="sm"
+      [ariaLabel]="t('shortcuts.manager.cancelRecording')"
+      (onClick)="stopRecording()"
+    />
+  }
+</div>

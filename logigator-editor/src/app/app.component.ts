@@ -1,227 +1,248 @@
+import 'pixi.js/math-extras';
+
 import {
-	AfterViewInit,
-	Component,
-	ElementRef,
-	Inject,
-	NgZone,
-	OnDestroy,
-	OnInit,
-	ViewChild
+  Component,
+  computed,
+  effect,
+  inject,
+  Injector,
+  signal
 } from '@angular/core';
-import { SelectionService } from './services/selection/selection.service';
-import { WorkModeService } from './services/work-mode/work-mode.service';
-import { fromEvent, Subject } from 'rxjs';
-import { DOCUMENT } from '@angular/common';
-import { takeUntil } from 'rxjs/operators';
-import { ProjectsService } from './services/projects/projects.service';
-import { LangChangeEvent, TranslateService } from '@ngx-translate/core';
-import { ElementProviderService } from './services/element-provider/element-provider.service';
-import { ShortcutsService } from './services/shortcuts/shortcuts.service';
-import { WorkMode } from './models/work-modes';
-import { EditorInteractionService } from './services/editor-interaction/editor-interaction.service';
-import { EditorAction } from './models/editor-action';
+import { Location } from '@angular/common';
+import { Title } from '@angular/platform-browser';
+import { Point } from 'pixi.js';
+import { RouterService } from './routing/router.service';
+import { TitleBarComponent } from './ui/title-bar/title-bar.component';
+import { ToolBarComponent } from './ui/tool-bar/tool-bar.component';
+import { SideBarComponent } from './ui/side-bar/side-bar.component';
+import { TabBarComponent } from './ui/tab-bar/tab-bar.component';
+import { StatusBarComponent } from './ui/status-bar/status-bar.component';
+import { BoardComponent } from './ui/board/board.component';
+import { MinimapComponent } from './ui/board/minimap/minimap.component';
+import { BugReportBadgeComponent } from './bug-report/bug-report-badge.component';
+import { setStaticDIInjector } from './utils/get-di';
+import { ComponentSettingsComponent } from './ui/component-settings/component-settings.component';
+import { ProjectService } from './project/project.service';
+import { PersistenceService } from './persistence/persistence.service';
+import { ComponentLibraryService } from './custom-component/component-library.service';
+import { EditorSettingsService } from './settings/editor-settings.service';
+import { RendererService } from './rendering/renderer.service';
+import { UnsavedChangesGuard } from './persistence/unsaved-changes.guard';
 import {
-	StorageService,
-	StorageServiceModel
-} from './services/storage/storage.service';
-import { environment } from '../environments/environment';
-import * as CookieConsent from 'vanilla-cookieconsent';
-import { LocationService } from './services/location/location.service';
+  LgConfirmDialog,
+  LgConfirmPopup,
+  LgDrawer,
+  LgToast,
+  LgWindowOutlet
+} from '@logigator/ui';
+import { InspectionService } from './inspection/inspection.service';
+import { InspectionSheetComponent } from './inspection/inspection-sheet.component';
+import { TranslationService } from './translation/translation.service';
+import { WorkMode } from './work-mode/work-mode.enum';
+import { WorkModeService } from './work-mode/work-mode.service';
+import { LayoutService } from './layout/layout.service';
+import { MobileUiService } from './layout/mobile-ui.service';
+import { SelectionInspectorService } from './project/selection-inspector.service';
+import { ProjectMetadataStore } from './persistence/project-metadata.store';
+import { MobileTopBarComponent } from './ui/mobile-top-bar/mobile-top-bar.component';
+import { ToolHudComponent } from './ui/tool-hud/tool-hud.component';
+import { SelectionActionBarComponent } from './ui/selection-action-bar/selection-action-bar.component';
+import { ScissorToggleComponent } from './ui/scissor-toggle/scissor-toggle.component';
+import { ZoomFabComponent } from './ui/zoom-fab/zoom-fab.component';
+import { MobileStatusComponent } from './ui/mobile-status/mobile-status.component';
+import { SimulationControlsComponent } from './ui/simulation-controls/simulation-controls.component';
+import { ComponentListComponent } from './ui/side-bar/component-list/component-list.component';
+import { PortsPanelComponent } from './ui/ports-panel/ports-panel.component';
+import { MobileProjectMenuComponent } from './ui/mobile-menu/mobile-project-menu.component';
+import { UserSettingsPanelComponent } from './ui/user-settings/user-settings-panel.component';
+import { LoggingService } from './logging/logging.service';
+import { ToastService } from './logging/toast.service';
+import { SessionLifecycleService } from './user/session-lifecycle.service';
+import { ChangelogService } from './changelog/changelog.service';
+import { TutorialRunnerService } from './onboarding/tutorial-runner.service';
+import { HintService } from './onboarding/hint.service';
+import { OnboardingNudgeComponent } from './onboarding/onboarding-nudge.component';
+import { OnboardTargetDirective } from './onboarding/onboard-target.directive';
+import { AutomationApiService } from './automation/automation-api.service';
+import { TranslateDirective } from './translation/translate.directive';
 
 @Component({
-	selector: 'app-root',
-	templateUrl: './app.component.html',
-	styleUrls: ['./app.component.scss']
+  selector: 'app-root',
+  imports: [
+    TitleBarComponent,
+    ToolBarComponent,
+    SideBarComponent,
+    TabBarComponent,
+    StatusBarComponent,
+    BoardComponent,
+    MinimapComponent,
+    BugReportBadgeComponent,
+    ComponentSettingsComponent,
+    LgConfirmPopup,
+    LgConfirmDialog,
+    LgToast,
+    LgDrawer,
+    LgWindowOutlet,
+    InspectionSheetComponent,
+    TranslateDirective,
+    MobileTopBarComponent,
+    ToolHudComponent,
+    SelectionActionBarComponent,
+    ScissorToggleComponent,
+    ZoomFabComponent,
+    MobileStatusComponent,
+    SimulationControlsComponent,
+    ComponentListComponent,
+    PortsPanelComponent,
+    MobileProjectMenuComponent,
+    UserSettingsPanelComponent,
+    OnboardingNudgeComponent,
+    OnboardTargetDirective
+  ],
+  templateUrl: './app.component.html',
+  styleUrl: './app.component.scss'
 })
-export class AppComponent implements OnInit, OnDestroy, AfterViewInit {
-	@ViewChild('appRoot', { static: true })
-	private appRoot!: ElementRef<HTMLDivElement>;
+export class AppComponent {
+  private readonly injector = inject(Injector);
+  private readonly routerService = inject(RouterService);
+  private readonly persistenceService = inject(PersistenceService);
+  private readonly componentLibrary = inject(ComponentLibraryService);
+  protected readonly projectService = inject(ProjectService);
+  private readonly unsavedChangesGuard = inject(UnsavedChangesGuard);
+  // Injected for its side effects: follows the signed-in user (cloud library
+  // load/clear, logout teardown) from the first cookie read on.
+  private readonly sessionLifecycleService = inject(SessionLifecycleService);
+  private readonly location = inject(Location);
+  private readonly workModeService = inject(WorkModeService);
+  protected readonly layout = inject(LayoutService);
+  protected readonly mobileUi = inject(MobileUiService);
+  protected readonly editorSettings = inject(EditorSettingsService);
+  protected readonly rendererService = inject(RendererService);
+  private readonly metadataStore = inject(ProjectMetadataStore);
+  private readonly selectionInspector = inject(SelectionInspectorService);
+  // Injected for its side effects: nothing renders it, but it must live from
+  // startup to catch the first simulation session's inspect taps.
+  private readonly inspectionService = inject(InspectionService);
+  private readonly loggingService = inject(LoggingService);
+  private readonly toastService = inject(ToastService);
+  private readonly translation = inject(TranslationService);
+  private readonly changelogService = inject(ChangelogService);
+  // Injected for its side effects: the runtime driver reacts to the active
+  // tutorial signal, so it must live from startup to drive a nudge-launched run.
+  private readonly tutorialRunner = inject(TutorialRunnerService);
+  // Injected for its side effects: subscribes to hint triggers from startup.
+  private readonly hintService = inject(HintService);
+  private readonly title = inject(Title);
 
-	private _destroySubject = new Subject<void>();
+  protected readonly cursorPosition = signal<Point>(new Point(0, 0));
 
-	constructor(
-		private ngZone: NgZone,
-		private workMode: WorkModeService,
-		private selection: SelectionService,
-		private shortcutsService: ShortcutsService,
-		private projects: ProjectsService,
-		private editorInteractionService: EditorInteractionService,
-		@Inject(DOCUMENT) private document: HTMLDocument,
-		private translate: TranslateService,
-		private elementProviderService: ElementProviderService,
-		private locationService: LocationService,
-		@Inject(StorageService) private storage: StorageServiceModel
-	) {
-		this.initTranslation();
-	}
+  /**
+   * @logigator/ui stock labels for the shell's **long-lived** surfaces (the
+   * toasts, the window outlets, the drawers). `LG_LABELS` only resolves while a
+   * component is constructed, so these — alive for the app's whole lifetime —
+   * bind the inputs instead, and `translate()` keeps them live across a
+   * language switch.
+   */
+  protected readonly uiLabels = computed(() => ({
+    close: this.translation.translate('common.close'),
+    back: this.translation.translate('common.back'),
+    dismiss: this.translation.translate('common.dismiss')
+  }));
 
-	ngOnInit(): void {
-		if (!this.locationService.isValidPath) {
-			this.locationService.reset();
-		}
+  /** Names the board region the tab strip switches (its `aria-controls` target). */
+  protected readonly boardPanelLabel = computed(() =>
+    this.translation.translate('board.panel')
+  );
 
-		this.document.documentElement.lang = this.translate.currentLang;
-		this.ngZone.runOutsideAngular(() => {
-			this.listenToShortcuts();
+  public readonly isSimulation = computed(
+    () => this.workModeService.mode() === WorkMode.SIMULATION
+  );
 
-			this.editorInteractionService
-				.subscribeEditorAction(EditorAction.FULLSCREEN)
-				.pipe(takeUntil(this._destroySubject))
-				.subscribe(() => this.onRequestFullscreen());
-		});
-		fromEvent(window, 'beforeunload')
-			.pipe(takeUntil(this._destroySubject))
-			.subscribe((e) => this.onTabClose(e as Event));
-	}
+  /** Heads the compact project sheet, mirroring the top bar's title trigger. */
+  protected readonly projectName = computed(() => {
+    const project = this.projectService.mainProject();
+    if (!project) return '';
+    return this.metadataStore.getMetadata(project)?.name ?? '';
+  });
 
-	ngAfterViewInit() {
-		CookieConsent.run({
-			language: {
-				default: 'en',
-				autoDetect: 'document',
-				translations: {
-					en: '/cookieconsent/en.json',
-					de: '/cookieconsent/de.json',
-					es: '/cookieconsent/es.json',
-					fr: '/cookieconsent/fr.json'
-				}
-			},
-			categories: {
-				necessary: {
-					enabled: true, // this category is enabled by default
-					readOnly: true // this category cannot be disabled
-				},
-				analytics: {}
-			},
-			cookie: {
-				expiresAfterDays: 365
-			},
-			guiOptions: {
-				consentModal: {
-					layout: 'bar',
-					equalWeightButtons: false
-				},
-				preferencesModal: {
-					equalWeightButtons: false
-				}
-			}
-		}).catch((e) => console.error(e));
-	}
+  /** True while the active tab is a custom-component editor — gates the Ports sheet. */
+  protected readonly isEditingComponent = computed(() => {
+    const active = this.projectService.activeProject();
+    return !!active && this.metadataStore.getMetadata(active)?.type === 'comp';
+  });
 
-	private listenToShortcuts() {
-		fromEvent(this.document, 'keydown')
-			.pipe(takeUntil(this._destroySubject))
-			.subscribe((e: Event) => {
-				this.shortcutsService.keyDownListener(e as KeyboardEvent);
-			});
-	}
+  constructor() {
+    setStaticDIInjector(this.injector);
 
-	public get isSimulationMode(): boolean {
-		return this.workMode.currentWorkMode === WorkMode.SIMULATION;
-	}
+    // Installed here, not from an app initializer: the facade constructs model
+    // objects (Project, Component) that resolve their dependencies through the
+    // static injector, so it must not be reachable before the line above.
+    // Resolved inside the define guard rather than held in an `inject()` field:
+    // this is the only reference to the service, so a false AUTOMATION_API
+    // drops the whole automation module from the bundle (see define.d.ts).
+    if (AUTOMATION_API) {
+      this.injector.get(AutomationApiService).install();
+    }
 
-	public get showSettingsInfoBox(): boolean {
-		const seElTypeId = this.selectedElemTypeId;
-		return seElTypeId === undefined
-			? false
-			: this.elementProviderService.getElementById(seElTypeId).showSettings;
-	}
+    // Keep the browser title in sync with the open project's name.
+    effect(() => {
+      const name = this.projectName();
+      this.title.setTitle(
+        name ? `${name} - Logigator: Editor` : 'Logigator: Editor'
+      );
+    });
 
-	public get selectedElemTypeId(): number | undefined {
-		if (this.workMode.currentWorkMode === WorkMode.COMPONENT) {
-			return this.workMode.currentComponentToBuild;
-		} else {
-			const selectedIds = this.selection.selectedIds();
-			if (!selectedIds || selectedIds.length === 0 || selectedIds.length > 1) {
-				return undefined;
-			}
-			const elemType = this.projects.currProject.currState.getElementById(
-				selectedIds[0]
-			);
-			if (!elemType) return undefined;
-			return elemType.typeId;
-		}
-	}
+    // The mobile settings sheet is opened on demand from the selection action
+    // bar, never automatically. Close it once its component is deselected so it
+    // never lingers as a blank panel. Guarded to the settings sheet so another
+    // open sheet is left alone.
+    effect(() => {
+      const selected = this.selectionInspector.selectedComponent();
+      if (
+        !selected &&
+        this.layout.isCompact() &&
+        this.mobileUi.activeSheet() === 'settings'
+      ) {
+        this.mobileUi.close();
+      }
+    });
 
-	public get selectedCompId(): number | undefined {
-		if (
-			!this.selection.selectedIds() ||
-			this.workMode.currentWorkMode === WorkMode.COMPONENT
-		) {
-			return undefined;
-		}
-		return this.selection.selectedIds()[0];
-	}
+    // Load promotion aliases first: the browser preload skips records whose id
+    // was promoted to the cloud, and snapshots embedded before a promotion
+    // resolve through the alias — both need the alias map in place. Cloud
+    // masters are not loaded here: they follow the signed-in user, so the
+    // session lifecycle owns their preload (and teardown).
+    void (async () => {
+      try {
+        await this.componentLibrary.preloadComponentIdAliases();
+        await this.componentLibrary.preloadBrowserMasters();
+        this.loggingService.info('Editor ready', 'AppComponent');
+      } catch (err) {
+        this.toastService.warn(
+          this.translation.translate('library.loadFailed'),
+          'AppComponent',
+          err
+        );
+      }
+    })();
 
-	private onRequestFullscreen() {
-		const elem: HTMLDivElement & {
-			mozRequestFullScreen?: () => Promise<void>;
-			webkitRequestFullscreen?: () => Promise<void>;
-			msRequestFullscreen?: () => Promise<void>;
-		} = this.appRoot.nativeElement;
+    if (!this.routerService.matches(this.location.path())) {
+      this.persistenceService.createAndSetEmptyProject();
+    }
 
-		if (elem.requestFullscreen) {
-			elem.requestFullscreen();
-		} else if (elem['mozRequestFullScreen']) {
-			/* Firefox */
-			elem['mozRequestFullScreen']();
-		} else if (elem['webkitRequestFullscreen']) {
-			/* Chrome, Safari & Opera */
-			elem['webkitRequestFullscreen']();
-		} else if (elem['msRequestFullscreen']) {
-			/* IE/Edge */
-			elem['msRequestFullscreen']();
-		}
-	}
+    void this.routerService.processCurrentRoute();
 
-	private onTabClose(e: Event) {
-		if (environment.production && this.projects.hasUnsavedProjects) {
-			e.preventDefault();
-			e.returnValue = true;
-		}
-	}
+    this.unsavedChangesGuard.attach();
 
-	public onDragStart(event: Event) {
-		event.preventDefault();
-		event.stopPropagation();
-	}
+    // Greet a returning user with the changelog the first time they load a
+    // release newer than the one they last saw. A first-ever launch is
+    // acknowledged silently inside the service. The tutorial never auto-starts;
+    // its only entry is the first-run nudge (app-onboarding-nudge).
+    this.changelogService.maybeAutoOpen();
+  }
 
-	public onDragStop(event: Event) {
-		event.preventDefault();
-		event.stopPropagation();
-	}
-
-	public onFileDrop(event: DragEvent) {
-		event.preventDefault();
-		event.stopPropagation();
-
-		if (event.dataTransfer?.files && event.dataTransfer.files.length > 0) {
-			this.editorInteractionService.openProjectFile(
-				event.dataTransfer.files[0]
-			);
-		}
-	}
-
-	private initTranslation() {
-		this.translate.addLangs(['en', 'de']);
-		const lang = this.storage.get('preferences')?.lang;
-		if (lang) {
-			this.translate.setDefaultLang(lang);
-			this.translate.use(lang);
-		} else {
-			this.translate.setDefaultLang('en');
-			this.translate.use('en');
-		}
-		this.translate.onLangChange.subscribe((e: LangChangeEvent) => {
-			this.storage.set('preferences', {
-				...this.storage.get('preferences'),
-				lang: e.lang
-			});
-		});
-	}
-
-	ngOnDestroy(): void {
-		this._destroySubject.next();
-		this._destroySubject.unsubscribe();
-	}
+  /** A Drawer reporting itself hidden (mask click / Esc) clears the active sheet. */
+  protected onSheetClosed(visible: boolean): void {
+    if (!visible) this.mobileUi.close();
+  }
 }

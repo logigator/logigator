@@ -1,0 +1,42 @@
+<lg-card *appTranslate="let t">
+  <ng-template #title>
+    <span class="flex items-center gap-2 text-lg mb-2">
+      <i class="ph ph-dresser text-primary"></i>
+      <span>{{ t('sideBar.title') }}</span>
+    </span>
+  </ng-template>
+  <div class="flex flex-col gap-2">
+    <lg-icon-field iconPosition="left">
+      <lg-input-icon class="ph ph-magnifying-glass"></lg-input-icon>
+      <input
+        lgInputText
+        [placeholder]="t('sideBar.search')"
+        class="w-full"
+        [ngModel]="searchText()"
+        (ngModelChange)="searchText.set($event)"
+      />
+    </lg-icon-field>
+
+    <lg-accordion
+      [multiple]="true"
+      [value]="openPanels()"
+      (valueChange)="onPanelChange($event)"
+    >
+      @for (cat of categories(); track cat.key) {
+        <lg-accordion-panel [value]="cat.key">
+          <ng-template #header>
+            <span class="flex items-center gap-2 w-full font-semibold">
+              {{ t(cat.labelKey) }}
+              <lg-badge rounded class="ml-auto mr-2" severity="secondary">{{
+                cat.components.length
+              }}</lg-badge>
+            </span>
+          </ng-template>
+          <app-component-list-category
+            [components]="cat.components"
+          ></app-component-list-category>
+        </lg-accordion-panel>
+      }
+    </lg-accordion>
+  </div>
+</lg-card>

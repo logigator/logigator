@@ -13,14 +13,6 @@
 	}
 }
 
-@function secondaryButtonBgColor() {
-	@if (isTheme('dark')) {
-		@return lighten(themed('accent2'), 35%);
-	} @else {
-		@return darken(themed('accent2'), 35%)
-	}
-}
-
 @include themify() {
 	.btn-outline {
 		@extend .btn;

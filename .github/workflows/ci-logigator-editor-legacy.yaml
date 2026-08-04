@@ -1,0 +1,56 @@
+name: 'CI logigator-editor-legacy'
+on:
+  pull_request:
+  push:
+    branches:
+      - 'master'
+      - 'development'
+
+jobs:
+  pre_job:
+    runs-on: ubuntu-latest
+    outputs:
+      should_skip: ${{ steps.skip_check.outputs.should_skip }}
+    steps:
+      - id: skip_check
+        uses: fkirc/skip-duplicate-actions@v5
+        with:
+          concurrent_skipping: 'never'
+          cancel_others: 'true'
+          skip_after_successful_duplicate: 'true'
+          github_token: ${{ github.token }}
+          paths: '["logigator-editor-legacy/**"]'
+
+  ci:
+    name: 'CI logigator-editor-legacy'
+    needs: pre_job
+    if: ${{ needs.pre_job.outputs.should_skip != 'true' }}
+    runs-on: 'ubuntu-latest'
+    defaults:
+      run:
+        working-directory: ./logigator-editor-legacy
+    steps:
+      - name: 'Checkout'
+        uses: actions/checkout@v5
+
+      - name: 'Setup Node'
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20.x'
+          package-manager-cache: false
+
+      - name: Install Dependencies
+        uses: ./.github/actions/yarn-install
+        with:
+          cwd: ./logigator-editor-legacy
+          cache-prefix: logigator-editor-legacy
+
+      - name: 'Lint'
+        shell: bash
+        run: |
+          yarn run format
+          yarn run lint
+
+      - name: 'Build'
+        shell: bash
+        run: yarn run build

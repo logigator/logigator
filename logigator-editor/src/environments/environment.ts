@@ -1,13 +1,17 @@
-// This file can be replaced during build by using the `fileReplacements` array.
-// `ng build --prod` replaces `environment.ts` with `environment.prod.ts`.
-// The list of file replacements can be found in `angular.json`.
+import { Environment } from './environment.model';
+import { LogLevel } from '../app/logging/log-level.enum';
+import { version } from '../../package.json';
 
-export const environment = {
-	production: false,
-	version: '',
-	chunkSize: 16,
-	gridPixelWidth: 16,
-	api: 'http://dev.logigator.com/api',
-	url: 'http://dev.logigator.com/editor',
-	homeUrl: 'http://dev.logigator.com'
+export const environment: Environment = {
+  version,
+  buildCommit: GIT_COMMIT,
+  buildDate: BUILD_DATE ? new Date(BUILD_DATE) : null,
+  apiUrl: '',
+  gridSize: 16,
+  loggingVerbosity: LogLevel.Warn,
+  analytics: {
+    posthogKey: 'phc_xSrwBeAfq8XzQWA4FxpPTLfVcycLwv5STWyXpwocR4vD',
+    posthogHost: 'https://u.logigator.com',
+    posthogUiHost: 'https://eu.posthog.com'
+  }
 };
