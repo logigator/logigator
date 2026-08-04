@@ -1,12 +1,21 @@
 services:
+  proxy:
+    image: caddy:2-alpine
+    networks:
+      - net
+    volumes:
+      - ./Caddyfile.production:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+    ports:
+      - "127.0.0.1:80:80"
+      - "127.0.0.1:443:443"
+
   app:
     build:
       context: .
       dockerfile: Dockerfile
     networks:
       - net
-    ports:
-      - "127.0.0.1:3000:3000"
     depends_on:
       - mysql
       - redis
@@ -14,7 +23,7 @@ services:
       - ./logigator-backend/config:/app/config
 
   mysql:
-    image: mysql:8
+    image: mysql:8.3
     networks:
       - net
     ports:
@@ -33,12 +42,8 @@ services:
     networks:
       - net
 
-  redis_ui:
-    image: marian/rebrow:latest
-    networks:
-      - net
-    ports:
-      - "127.0.0.1:5001:5001"
+volumes:
+  caddy_data:
 
 networks:
   net:

@@ -1,0 +1,90 @@
+<form *appTranslate="let t" class="flex flex-col gap-4" (ngSubmit)="create()">
+  <div class="flex flex-col gap-1">
+    <label for="new-component-name">{{ t('newComponentDialog.name') }}</label>
+    <input
+      lgInputText
+      id="new-component-name"
+      type="text"
+      maxlength="20"
+      [ngModel]="name()"
+      (ngModelChange)="name.set($event)"
+      [ngModelOptions]="{ standalone: true }"
+    />
+  </div>
+  <div class="flex flex-col gap-1">
+    <label for="new-component-symbol">{{
+      t('newComponentDialog.symbol')
+    }}</label>
+    <input
+      lgInputText
+      id="new-component-symbol"
+      type="text"
+      maxlength="5"
+      [ngModel]="symbol()"
+      (ngModelChange)="symbol.set($event)"
+      [ngModelOptions]="{ standalone: true }"
+    />
+  </div>
+  <div class="flex flex-col gap-1">
+    <label for="new-component-description">{{
+      t('newComponentDialog.description')
+    }}</label>
+    <input
+      lgInputText
+      id="new-component-description"
+      type="text"
+      [ngModel]="description()"
+      (ngModelChange)="description.set($event)"
+      [ngModelOptions]="{ standalone: true }"
+    />
+  </div>
+  <div class="flex flex-col gap-1">
+    <span id="new-component-store-label">{{
+      t('newComponentDialog.store')
+    }}</span>
+    <lg-select-button
+      ariaLabelledby="new-component-store-label"
+      [options]="sourceOptions"
+      optionLabel="label"
+      optionValue="value"
+      [allowEmpty]="false"
+      [ngModel]="source()"
+      (ngModelChange)="source.set($event)"
+      [ngModelOptions]="{ standalone: true }"
+    />
+  </div>
+  @if (source() === 'server') {
+    @if (!userService.user()) {
+      <lg-message severity="warn">
+        {{ t('newComponentDialog.notLoggedIn') }}
+      </lg-message>
+    } @else {
+      <div class="flex gap-2 items-center">
+        <lg-toggle-switch
+          inputId="new-component-public"
+          [ngModel]="isPublic()"
+          (ngModelChange)="isPublic.set($event)"
+          [ngModelOptions]="{ standalone: true }"
+        />
+        <label for="new-component-public">{{
+          t('newComponentDialog.public')
+        }}</label>
+        <i
+          class="ph ph-info cursor-help text-surface-500"
+          [lgTooltip]="t('newComponentDialog.publicInfo')"
+        ></i>
+      </div>
+    }
+  } @else {
+    <lg-message severity="info">
+      {{ t('newComponentDialog.localWarning') }}
+    </lg-message>
+  }
+  <div class="flex justify-end">
+    <lg-button
+      type="submit"
+      [label]="t('newComponentDialog.create')"
+      [disabled]="!canCreate"
+    />
+  </div>
+</form>

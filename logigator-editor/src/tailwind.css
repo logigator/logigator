@@ -1,0 +1,22 @@
+@import 'tailwindcss';
+
+/* @logigator/ui owns the palette (theme.css → --lg-*) and the Tailwind @theme
+   mapping (theme.tw.css → --color-* aliased to var(--lg-*)). */
+@import '../../logigator-ui/styles/theme.css';
+@import '../../logigator-ui/styles/theme.tw.css';
+
+/* The z-index layering scale (--lg-z-* + z-* utilities). */
+@import '../../logigator-ui/styles/layers.css';
+
+/* prefers-reduced-motion: the global off switch for every transition. */
+@import '../../logigator-ui/styles/motion.css';
+
+/* Scan the library's templates so their Tailwind utilities are generated. */
+@source '../../logigator-ui/src';
+
+@custom-variant dark (&:where(.dark-mode, .dark-mode *));
+
+@theme {
+  --font-sans: 'Roboto Variable', sans-serif;
+  --font-mono: 'Roboto Mono Variable', monospace;
+}

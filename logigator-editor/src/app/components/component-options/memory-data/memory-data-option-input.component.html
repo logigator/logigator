@@ -1,0 +1,10 @@
+<div *appTranslate="let t">
+  <lg-button
+    class="float-right"
+    [label]="t(option().label)"
+    icon="ph ph-pencil-simple"
+    size="sm"
+    severity="secondary"
+    (onClick)="open()"
+  />
+</div>

@@ -102,41 +102,6 @@ function formValidationForGlobalForms(form) {
 }
 document.querySelectorAll('form').forEach(form => formValidationForGlobalForms(form));
 
-// ------------------------------------------------------------------------------------------------
-
-// eslint-disable-next-line no-undef
-CookieConsent.run({
-	language: {
-		default: 'en',
-		autoDetect: 'document',
-		translations: {
-			en: '/cookieconsent/en.json',
-			de: '/cookieconsent/de.json',
-			es: '/cookieconsent/es.json',
-			fr: '/cookieconsent/fr.json'
-		}
-	},
-	categories: {
-		necessary: {
-			enabled: true,  // this category is enabled by default
-			readOnly: true  // this category cannot be disabled
-		},
-		analytics: {}
-	},
-	cookie: {
-		expiresAfterDays: 365
-	},
-	guiOptions: {
-		consentModal: {
-			layout: 'bar',
-			equalWeightButtons: false
-		},
-		preferencesModal: {
-			equalWeightButtons: false
-		}
-	}
-});
-
 // GLOBAL_CALLS -----------------------------------------------------------------------------------
 
 autoAdjustFontSize(document.body);

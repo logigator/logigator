@@ -1,0 +1,14 @@
+<div class="flex gap-4 items-center justify-between" *appTranslate="let t">
+  <span [id]="labelId">{{ t(option().label) }}</span>
+  <lg-select-button
+    [ariaLabelledby]="labelId"
+    optionLabel="label"
+    optionValue="value"
+    optionIcon="icon"
+    [allowEmpty]="false"
+    [options]="option().options"
+    [ngModel]="option().value"
+    [ngModelOptions]="{ standalone: true }"
+    (ngModelChange)="commit()($event)"
+  />
+</div>

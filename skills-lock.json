@@ -1,0 +1,85 @@
+{
+  "version": 1,
+  "skills": {
+    "pixijs": {
+      "source": "pixijs/pixijs-skills",
+      "sourceType": "github",
+      "computedHash": "880175c74d347ba7e40e8434544f4ae8c1d006ed68296cec6ba355da0d532508"
+    },
+    "pixijs-application": {
+      "source": "pixijs/pixijs-skills",
+      "sourceType": "github",
+      "computedHash": "17cdbe975621930c1268585b8528a1cdfcca040b2340982326060434db5a9b0d"
+    },
+    "pixijs-assets": {
+      "source": "pixijs/pixijs-skills",
+      "sourceType": "github",
+      "computedHash": "10be9f4d243ccda92b47fb1bbd72a05ba0ff89d4f5cf218e71e27498cd725c0c"
+    },
+    "pixijs-custom-rendering": {
+      "source": "pixijs/pixijs-skills",
+      "sourceType": "github",
+      "computedHash": "94fa97b95ff8642c2575f65c911e3bb666ce5f785fcc2d4c9535db88ac39db9e"
+    },
+    "pixijs-events": {
+      "source": "pixijs/pixijs-skills",
+      "sourceType": "github",
+      "computedHash": "0989aa02f0c0673445a6b3b0c298f3c6b4c3a383668fa3656013754e6262300e"
+    },
+    "pixijs-filters": {
+      "source": "pixijs/pixijs-skills",
+      "sourceType": "github",
+      "computedHash": "41b66678a8aebcbb1b67e98e7643adb8882ceaa84077756c007a0b084436e86b"
+    },
+    "pixijs-math": {
+      "source": "pixijs/pixijs-skills",
+      "sourceType": "github",
+      "computedHash": "d93e0363f7c88506ba1f85e192236b91683d3c4b14b7b01cc3190f8f758f44bf"
+    },
+    "pixijs-performance": {
+      "source": "pixijs/pixijs-skills",
+      "sourceType": "github",
+      "computedHash": "d2855237ce322061d531135fac9956918db0226399af9a3ed46ad30ac50f100b"
+    },
+    "pixijs-scene-container": {
+      "source": "pixijs/pixijs-skills",
+      "sourceType": "github",
+      "computedHash": "c5cea512c0aff13d97938dd7fbc5955bc04513e367067455b7fa17583ee31c00"
+    },
+    "pixijs-scene-core-concepts": {
+      "source": "pixijs/pixijs-skills",
+      "sourceType": "github",
+      "computedHash": "4d6941225e873db2dc780a015d33cd698bcc547260975c3a338af5267d9c8b78"
+    },
+    "pixijs-scene-dom-container": {
+      "source": "pixijs/pixijs-skills",
+      "sourceType": "github",
+      "computedHash": "00de3635d73b0f1679ec0d958e22446566e235d594bc7a087ee6434fe6360276"
+    },
+    "pixijs-scene-graphics": {
+      "source": "pixijs/pixijs-skills",
+      "sourceType": "github",
+      "computedHash": "aa327bd51c64d295f8b96a3a2f72f27ecfa5a4922fcdd5f0a375a769d1b1cc50"
+    },
+    "pixijs-scene-mesh": {
+      "source": "pixijs/pixijs-skills",
+      "sourceType": "github",
+      "computedHash": "bb536a8d47a4dc8ba066e5597dc40f0f6805fa2f949d44fb3ef0fef147bc9b7e"
+    },
+    "pixijs-scene-sprite": {
+      "source": "pixijs/pixijs-skills",
+      "sourceType": "github",
+      "computedHash": "14d8e3e00837e0e173007f4fcc5d1ab175dbda1ada016ee92b03e725b3ed0882"
+    },
+    "pixijs-scene-text": {
+      "source": "pixijs/pixijs-skills",
+      "sourceType": "github",
+      "computedHash": "1d847869f2e33f31b5993fa6d3fb20991fd154722d5bb7ef08e688fe915c5e1c"
+    },
+    "pixijs-ticker": {
+      "source": "pixijs/pixijs-skills",
+      "sourceType": "github",
+      "computedHash": "6b3eec30377b1ec013a858301d309f3138eb512e7af8e1e8d0c3a759c8223618"
+    }
+  }
+}

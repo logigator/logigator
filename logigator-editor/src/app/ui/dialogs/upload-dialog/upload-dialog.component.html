@@ -1,0 +1,78 @@
+<div *appTranslate="let t" class="flex flex-col gap-4">
+  <p>
+    {{
+      t(
+        kind === 'component'
+          ? 'uploadDialog.introComponent'
+          : kind === 'draft'
+            ? 'uploadDialog.introDraft'
+            : 'uploadDialog.introProject',
+        { name: name }
+      )
+    }}
+  </p>
+
+  @if (publishedDependencies.length) {
+    <div class="flex flex-col gap-2">
+      <span>{{ t('uploadDialog.depsTitle') }}</span>
+      <p class="m-0 text-sm text-muted">{{ t('uploadDialog.depsHint') }}</p>
+      <lg-list>
+        @for (dep of publishedDependencies; track $index) {
+          <lg-list-item leadingIcon="ph ph-circuitry">
+            {{ dep.name }}
+          </lg-list-item>
+        }
+      </lg-list>
+    </div>
+  }
+
+  @if (unresolvableCount > 0) {
+    <lg-message severity="warn">
+      {{ t('uploadDialog.unresolvableWarning', { count: unresolvableCount }) }}
+    </lg-message>
+  }
+
+  @if (userService.user()) {
+    <!-- The toggle only shows when visibility isn't already decided upstream;
+         the sign-in warning must show regardless, so it lives outside this. -->
+    @if (!visibilityLocked) {
+      <div class="flex gap-2 items-center">
+        <lg-toggle-switch
+          inputId="upload-public"
+          [ngModel]="isPublic()"
+          (ngModelChange)="isPublic.set($event)"
+          [ngModelOptions]="{ standalone: true }"
+        />
+        <label for="upload-public">{{ t('uploadDialog.public') }}</label>
+        <i
+          class="ph ph-info cursor-help text-muted"
+          [lgTooltip]="
+            t(
+              kind === 'component'
+                ? 'uploadDialog.publicInfoComponent'
+                : 'uploadDialog.publicInfoProject'
+            )
+          "
+        ></i>
+      </div>
+    }
+  } @else {
+    <lg-message severity="warn">
+      {{ t('uploadDialog.notLoggedIn') }}
+    </lg-message>
+  }
+
+  <div class="flex justify-end gap-2">
+    <lg-button
+      severity="secondary"
+      [outlined]="true"
+      [label]="t('uploadDialog.cancel')"
+      (onClick)="cancel()"
+    />
+    <lg-button
+      [label]="t('uploadDialog.upload')"
+      [disabled]="!userService.user()"
+      (onClick)="upload()"
+    />
+  </div>
+</div>

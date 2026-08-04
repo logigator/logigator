@@ -1,0 +1,14 @@
+<!-- Navigation landmark: the tab strip is where the user switches documents.
+     The strip keeps its own role=tablist semantics inside. -->
+<nav *appTranslate="let t" [attr.aria-label]="t('tabBar.landmark')">
+  <lg-tab-strip
+    [tabs]="tabs()"
+    [reorderDisabled]="isSimulation()"
+    [closeLabel]="t('tabBar.close')"
+    [movedLabel]="movedLabel"
+    controls="editor-board-panel"
+    (selected)="activate($event)"
+    (closed)="close($event)"
+    (reorder)="drop($event)"
+  ></lg-tab-strip>
+</nav>

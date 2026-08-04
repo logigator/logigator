@@ -26,9 +26,12 @@ import {ProjectFile} from '../../database/entities/project-file.entity';
 import {SaveProject} from '../../models/request/api/project/save-project';
 import {UpdateProject} from '../../models/request/api/project/update-project';
 import {ProjectDependencyRepository} from '../../database/repositories/project-dependency.repository';
+import {ComponentDependencyRepository} from '../../database/repositories/component-dependency.repository';
 import {classToPlain} from 'class-transformer';
 import {ComponentRepository} from '../../database/repositories/component.repository';
-import {ProjectElement} from '../../models/request/api/project-element';
+import {Component} from '../../database/entities/component.entity';
+import {buildDependencyResponse, parseStoredCircuit, serializeStoredCircuit, synthesizeMissingSnapshots} from '../../functions/circuit-content';
+import {buildForkAttribution} from '../../functions/fork-attribution';
 import {v4 as uuid} from 'uuid';
 import {getUploadedFileOptions} from '../../functions/get-uploaded-file-options';
 import {ProjectPreviewDark} from '../../database/entities/project-preview-dark.entity';
@@ -43,6 +46,7 @@ export class ProjectController {
 		@InjectRepository() private projectRepo: ProjectRepository,
 		@InjectRepository() private componentRepo: ComponentRepository,
 		@InjectRepository() private projectDepRepo: ProjectDependencyRepository,
+		@InjectRepository() private componentDepRepo: ComponentDependencyRepository,
 		private shareCloningService: ShareCloningService
 	) {}
 
@@ -57,8 +61,14 @@ export class ProjectController {
 	@HttpCode(201)
 	@UseBefore(CheckAuthenticatedApiMiddleware)
 	@ResponseClassTransformOptions({groups: ['showShareLinks']})
-	public create(@Body() body: CreateProject, @CurrentUser() user: User) {
-		return this.projectRepo.createProjectForUser(body.name, body.description, body.public === 'true', user);
+	public async create(@Body() body: CreateProject, @CurrentUser() user: User) {
+		// A fork claim only grants attribution to the referenced project's real
+		// author, so linking any existing project is safe; an unknown id (e.g. a
+		// deleted origin) drops the claim silently rather than failing the create.
+		const forkedFrom = body.forkedFrom
+			? await this.projectRepo.findOne(body.forkedFrom)
+			: undefined;
+		return this.projectRepo.createProjectForUser(body.name, body.description, body.public === 'true', user, forkedFrom);
 	}
 
 	@Get('/:projectId')
@@ -72,12 +82,17 @@ export class ProjectController {
 		});
 
 		const contentBuffer = await project.elementsFile?.getFileContent();
-		const content: ProjectElement[] = contentBuffer?.length ? JSON.parse(contentBuffer.toString()) : [];
+		const {elements, snapshots} = parseStoredCircuit(contentBuffer);
+		const enriched = await synthesizeMissingSnapshots(dependencies, snapshots,
+			master => this.componentDepRepo.find({where: {dependent: master as Component}}));
+		const forkAttribution = await buildForkAttribution(project);
 
 		return {
 			...classToPlain(project, {groups: ['showShareLinks']}),
-			dependencies,
-			elements: content ?? []
+			dependencies: buildDependencyResponse(dependencies, enriched),
+			elements,
+			newFormat: project.newFormat,
+			...(forkAttribution.length ? {forkAttribution} : {})
 		};
 	}
 
@@ -89,15 +104,22 @@ export class ProjectController {
 		if (project.elementsFile && project.elementsFile.hash !== body.oldHash)
 			throw new BadRequestError('VersionMismatch');
 
+		const previous = parseStoredCircuit(await project.elementsFile?.getFileContent());
+
 		if (!project.elementsFile)
 			project.elementsFile = new ProjectFile();
 
-		project.elementsFile.setFileContent(JSON.stringify(body.elements));
+		project.elementsFile.setFileContent(serializeStoredCircuit(body.elements, body.dependencies, previous.snapshots));
+		project.newFormat = body.newFormat ?? false;
 		project.lastEdited = new Date();
 
 		const deps = [];
 		const depSet = new Set<string>();
 		for (const mapping of body.dependencies) {
+			// Local-only customs (never uploaded to the library) carry no master
+			// id — they live solely in the embedded snapshot, so create no row.
+			if (!mapping.id)
+				continue;
 			const depComp = await this.componentRepo.getOwnedComponentOrThrow(mapping.id, user, `Component for mapping '${mapping.id}' not found.`);
 			const dep = this.projectDepRepo.create();
 			dep.dependency = depComp;
@@ -150,7 +172,7 @@ export class ProjectController {
 			project.name = body.name;
 		if (body.description)
 			project.description = body.description;
-		if (body.public)
+		if (body.public !== undefined)
 			project.public = body.public;
 		if (body.updateLink)
 			project.link = uuid();

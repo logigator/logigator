@@ -1,0 +1,95 @@
+import { beforeEach, describe, expect, it } from 'vitest';
+import { TestBed } from '@angular/core/testing';
+
+import { ProjectService } from './project.service';
+import { Project } from './project';
+
+describe('ProjectService', () => {
+  let service: ProjectService;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({});
+    service = TestBed.inject(ProjectService);
+  });
+
+  it('mainProject() is null initially', () => {
+    expect(service.mainProject()).toBeNull();
+  });
+
+  it('openComponents() is an empty array initially', () => {
+    expect(service.openComponents()).toEqual([]);
+  });
+
+  it('activeProject() is null initially', () => {
+    expect(service.activeProject()).toBeNull();
+  });
+
+  describe('setMainProject', () => {
+    it('sets activeProject() to the provided project', () => {
+      const p = {} as Project;
+      service.setMainProject(p);
+      expect(service.activeProject()).toBe(p);
+    });
+  });
+
+  describe('removeOpenComponent', () => {
+    it('resets activeProject to mainProject when the active component is removed', () => {
+      const comp = {} as Project;
+      // setMainProject sets both mainProject and activeProject to comp
+      service.setMainProject(comp);
+      service.addOpenComponent(comp);
+      service.removeOpenComponent(comp);
+      // After removal of the active project, activeProject falls back to mainProject
+      expect(service.activeProject()).toBe(service.mainProject());
+    });
+
+    it('does NOT change activeProject when a non-active component is removed', () => {
+      const main = {} as Project;
+      const comp1 = {} as Project;
+      const comp2 = {} as Project;
+      service.setMainProject(main);
+      service.addOpenComponent(comp1);
+      service.addOpenComponent(comp2);
+      // activeProject is still main
+      service.removeOpenComponent(comp1);
+      expect(service.activeProject()).toBe(main);
+    });
+
+    it('is a no-op when the project is not in openComponents', () => {
+      const p = {} as Project;
+      expect(() => service.removeOpenComponent(p)).not.toThrow();
+      expect(service.openComponents()).toEqual([]);
+    });
+  });
+
+  describe('reorderOpenComponents', () => {
+    let p1: Project;
+    let p2: Project;
+    let p3: Project;
+
+    beforeEach(() => {
+      p1 = {} as Project;
+      p2 = {} as Project;
+      p3 = {} as Project;
+      service.addOpenComponent(p1);
+      service.addOpenComponent(p2);
+      service.addOpenComponent(p3);
+    });
+
+    it('moves a project forward to the target index', () => {
+      service.reorderOpenComponents(0, 2);
+      expect(service.openComponents()).toEqual([p2, p3, p1]);
+    });
+
+    it('moves a project backward to the target index', () => {
+      service.reorderOpenComponents(2, 0);
+      expect(service.openComponents()).toEqual([p3, p1, p2]);
+    });
+
+    it('is a no-op when the indices are equal', () => {
+      const before = service.openComponents();
+      service.reorderOpenComponents(1, 1);
+      expect(service.openComponents()).toBe(before);
+    });
+  });
+});

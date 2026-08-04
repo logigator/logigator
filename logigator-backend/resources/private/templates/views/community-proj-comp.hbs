@@ -10,6 +10,11 @@
 				<a class="stargazers" href="{{linkHref stargazers}}">{{stargazersCount}}</a>
 			</div>
 		</div>
+		{{#if forkedFromName}}
+			<p class="view-community-proj-comp__forked">
+				{{@root.i18n.COMMUNITY.FORKED_FROM}} <a href="{{linkHref forkedFromUrl}}">{{forkedFromName}}</a>
+			</p>
+		{{/if}}
 		<hr class="view-community-proj-comp__divider">
 		<div class="view-community-proj-comp__img-desc">
 			<div class="view-community-proj-comp__preview">

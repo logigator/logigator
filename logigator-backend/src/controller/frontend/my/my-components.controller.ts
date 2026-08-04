@@ -111,9 +111,17 @@ export class MyComponentsController {
 	@UseAfter(formErrorMiddleware(request => `/my/components/edit-popup/${request.params.id}`))
 	public async edit(@Param('id') id: string, @CurrentUser() user: User, @Body() body: EditComponent) {
 		const component = await this.componentRepo.getOwnedComponentOrThrow(id, user);
+		// name/symbol/description travel in placed snapshots, so changing any of
+		// them bumps `version` — mirroring the API PATCH — so editors offer
+		// instances frozen at an older version an update.
+		const detailsChanged = component.name !== body.name
+			|| component.symbol !== body.symbol
+			|| component.description !== body.description;
 		component.name = body.name;
 		component.symbol = body.symbol;
 		component.description = body.description;
+		if (detailsChanged)
+			component.version = (component.version ?? 0) + 1;
 		await this.componentRepo.save(component);
 		return {
 			id: component.id

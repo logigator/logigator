@@ -1,23 +1,227 @@
-<div id="app-root" #appRoot>
-	<app-top-bar></app-top-bar>
-	<app-toolbar></app-toolbar>
-	<div
-		class="main-area"
-		[class.simulation-mode]="isSimulationMode"
-		(dragenter)="onDragStart($event)"
-		(dragstart)="onDragStart($event)"
-		(dragover)="onDragStart($event)"
-		(dragend)="onDragStop($event)"
-		(dragleave)="onDragStop($event)"
-		(drop)="onFileDrop($event)"
-	>
-		<app-construction-box *ngIf="!isSimulationMode"></app-construction-box>
-		<app-work-area-container></app-work-area-container>
-	</div>
-	<app-settings-info-box
-		*ngIf="showSettingsInfoBox"
-		[selectedElemTypeId]="selectedElemTypeId"
-		[selectedCompId]="selectedCompId"
-	>
-	</app-settings-info-box>
+<lg-confirm-popup key="inline" />
+<lg-confirm-dialog />
+
+<!-- Banner: the same landmark holds the top bars on every breakpoint. flex-col
+     keeps the bars block-level flex items inside the wrapper. -->
+<header class="flex flex-col">
+  @if (layout.isCompact()) {
+    <app-mobile-top-bar></app-mobile-top-bar>
+  } @else {
+    <app-title-bar></app-title-bar>
+    <app-tool-bar class="border-b border-border"></app-tool-bar>
+  }
+</header>
+
+<div class="flex grow min-h-0">
+  @if (!layout.isCompact() && !isSimulation()) {
+    <!-- shrink-0 keeps the side-bar at its full width; overflowing content in
+         the board column (e.g. a long status-bar hint) truncates there instead
+         of squeezing the side-bar. -->
+    <aside class="w-80 shrink-0 border-r border-border overflow-y-auto">
+      <app-side-bar class="block"></app-side-bar>
+    </aside>
+  }
+  <!-- The board column is the document's main landmark: the side-bar and the
+       top bars are chrome around it. -->
+  <main class="grow flex flex-col min-w-0">
+    @if (!isSimulation()) {
+      <app-tab-bar></app-tab-bar>
+    }
+    <!-- The board area is what the tab strip switches, so outside SIMULATION
+         (where the strip is hidden) it is the tabs' `aria-controls` target. The
+         role is dropped along with the strip: a tabpanel with no tablist is
+         orphaned. Labelled directly rather than by the active tab — the strip
+         owns those elements and does not expose their ids. -->
+    <div
+      class="relative grow"
+      id="editor-board-panel"
+      [attr.role]="isSimulation() ? null : 'tabpanel'"
+      [attr.aria-label]="isSimulation() ? null : boardPanelLabel()"
+    >
+      <!-- One canvas for every device; only the chrome around it swaps. -->
+      <app-board
+        class="block w-full h-full"
+        appOnboardTarget="board"
+        [project]="projectService.activeProject()"
+        (cursorPositionChange)="cursorPosition.set($event)"
+      ></app-board>
+      @if (!isSimulation()) {
+        <!-- Soft discovery nudge, centered near the top of the empty canvas.
+             Full width with a side gutter (pointer-events fall through the
+             gutter); the card itself caps its width and centers. -->
+        <app-onboarding-nudge
+          class="pointer-events-none absolute top-12 lg:top-6 inset-x-0 px-4 z-canvas-overlay"
+        />
+      }
+      @if (!layout.isCompact()) {
+        <!-- Inspection windows float over the board (window band), above the
+             docked canvas overlays and below the cdk overlays + toasts. -->
+        <lg-window-outlet
+          class="z-window"
+          [closeLabel]="uiLabels().close"
+          [backLabel]="uiLabels().back"
+        />
+
+        <!-- Select tool options, floating top-center over the canvas. -->
+        <app-scissor-toggle
+          class="absolute top-3 left-1/2 -translate-x-1/2 z-canvas-overlay"
+        />
+
+        <!-- Bottom-left stack: toasts ride in normal flow above the
+             component-settings card, so with no selection they settle into the
+             corner. The wrapper owns placement only (no z-index, so its children
+             keep their own bands) and lets pointer events fall through; each
+             child re-enables its own. The card sits in the canvas-overlay band
+             (under windows/dialogs), the toast in the toast band (on top). -->
+        <div
+          class="pointer-events-none absolute left-3 bottom-3 flex max-w-sm flex-col items-start"
+        >
+          <lg-toast
+            [embedded]="true"
+            position="bottom-left"
+            [dismissLabel]="uiLabels().dismiss"
+          />
+          <app-component-settings
+            class="pointer-events-auto z-canvas-overlay"
+          ></app-component-settings>
+        </div>
+
+        <!-- Bottom-right stack: the bug-report badge rides above the minimap.
+             The wrapper owns placement (canvas-overlay band) and lets pointer
+             events fall through; each child re-enables its own. -->
+        <div
+          class="pointer-events-none absolute right-3 bottom-3 z-canvas-overlay flex flex-col items-end gap-2"
+        >
+          <app-bug-report-badge class="pointer-events-auto" />
+          @if (rendererService.available()) {
+            <app-minimap [project]="projectService.activeProject()" />
+          }
+        </div>
+      } @else {
+        <lg-toast position="bottom-left" [dismissLabel]="uiLabels().dismiss" />
+
+        <!-- Overlays: the container lets pointer events fall through to the
+             canvas; each control re-enables them for itself. -->
+        <div class="pointer-events-none absolute inset-0">
+          <!-- Top-right: the top-left corner is the FPS counter's spot. The
+               width cap keeps a margin to the screen edge and makes long mode
+               hints truncate; the scissor pill sits a row lower, clear of it. -->
+          <app-mobile-status
+            class="pointer-events-auto absolute right-2 top-2 max-w-[calc(100%-6rem)]"
+            [cursorPosition]="cursorPosition()"
+          ></app-mobile-status>
+          <app-zoom-fab
+            class="pointer-events-auto absolute bottom-36 right-3"
+          ></app-zoom-fab>
+          <!-- Bug-report badge, right edge above the minimap. The offset clears
+               the minimap's collapsed pill (anchored at bottom-64). -->
+          <div
+            class="pointer-events-auto absolute right-3 bottom-78 mr-[env(safe-area-inset-right)]"
+          >
+            <app-bug-report-badge />
+          </div>
+          @if (rendererService.available()) {
+            <app-minimap [project]="projectService.activeProject()" />
+          }
+          @if (!isSimulation()) {
+            <!-- Select tool options, top-center but one row below the status
+                 pill so the two never overlap. -->
+            <app-scissor-toggle
+              class="pointer-events-auto absolute top-10 left-1/2 -translate-x-1/2"
+            />
+            <app-selection-action-bar
+              class="pointer-events-auto absolute bottom-20 left-1/2 -translate-x-1/2"
+            ></app-selection-action-bar>
+            <app-tool-hud
+              class="pointer-events-auto absolute bottom-3 left-1/2 -translate-x-1/2"
+              style="padding-bottom: env(safe-area-inset-bottom)"
+            ></app-tool-hud>
+          }
+        </div>
+      }
+    </div>
+
+    @if (layout.isCompact()) {
+      @if (isSimulation()) {
+        <app-simulation-controls
+          [wrap]="false"
+          class="block overflow-x-auto border-t border-border p-2"
+          style="padding-bottom: calc(env(safe-area-inset-bottom) + 0.5rem)"
+        ></app-simulation-controls>
+      }
+    } @else {
+      <app-status-bar [cursorPosition]="cursorPosition()"></app-status-bar>
+    }
+  </main>
 </div>
+
+@if (layout.isCompact()) {
+  <!-- Non-modal inspection sheet: floats over the running simulation. -->
+  <app-inspection-sheet />
+  <!-- Watch inspections open as fullscreen windows on compact. The desktop
+       outlet lives in the board area's desktop-only branch, so exactly one
+       outlet is alive at a time. This one covers the whole viewport in the
+       window band — above the docked canvas overlays, below the cdk overlays
+       (including the inspection sheet) and toasts. -->
+  <div class="pointer-events-none fixed inset-0 z-window">
+    <lg-window-outlet
+      fullscreen
+      [closeLabel]="uiLabels().close"
+      [backLabel]="uiLabels().back"
+    />
+  </div>
+
+  <ng-container *appTranslate="let t">
+    <lg-drawer
+      [visible]="mobileUi.activeSheet() === 'palette'"
+      (visibleChange)="onSheetClosed($event)"
+      [closeLabel]="uiLabels().close"
+      position="bottom"
+      [header]="t('mobile.palette')"
+    >
+      <app-component-list></app-component-list>
+    </lg-drawer>
+
+    <lg-drawer
+      [visible]="mobileUi.activeSheet() === 'settings'"
+      (visibleChange)="onSheetClosed($event)"
+      [closeLabel]="uiLabels().close"
+      position="bottom"
+      [header]="t('mobile.settings')"
+    >
+      <app-component-settings></app-component-settings>
+    </lg-drawer>
+
+    @if (isEditingComponent()) {
+      <lg-drawer
+        [visible]="mobileUi.activeSheet() === 'ports'"
+        (visibleChange)="onSheetClosed($event)"
+        [closeLabel]="uiLabels().close"
+        position="right"
+        [header]="t('mobile.ports')"
+      >
+        <app-ports-panel></app-ports-panel>
+      </lg-drawer>
+    }
+
+    <lg-drawer
+      [visible]="mobileUi.activeSheet() === 'menu'"
+      (visibleChange)="onSheetClosed($event)"
+      [closeLabel]="uiLabels().close"
+      position="left"
+      [header]="t('mobile.account')"
+    >
+      <app-user-settings-panel (action)="mobileUi.close()" />
+    </lg-drawer>
+
+    <lg-drawer
+      [visible]="mobileUi.activeSheet() === 'project'"
+      (visibleChange)="onSheetClosed($event)"
+      [closeLabel]="uiLabels().close"
+      position="bottom"
+      [header]="projectName()"
+    >
+      <app-mobile-project-menu></app-mobile-project-menu>
+    </lg-drawer>
+  </ng-container>
+}

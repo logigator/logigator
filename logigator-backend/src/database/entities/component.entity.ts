@@ -52,6 +52,15 @@ export class Component {
 	@Column({length: 5, nullable: false})
 	symbol: string;
 
+	/**
+	 * Monotonic edit stamp: bumped on every circuit save and on metadata edits
+	 * that placed snapshots carry (name/symbol/description). Editors compare it
+	 * against a placed instance's frozen snapshot version to offer an update.
+	 */
+	@Expose()
+	@Column({nullable: false, default: 1})
+	version: number;
+
 	@Expose()
 	@Column({nullable: false, default: 0})
 	numInputs: number;
@@ -104,6 +113,14 @@ export class Component {
 	@Expose()
 	@Column({default: false, nullable: false})
 	public: boolean;
+
+	/**
+	 * Set by the new editor on save; absent on saves by the old editor or old API
+	 * clients, which default it to `false` (legacy). The read responses return it
+	 * as `newFormat` so the editors can warn on a version mismatch.
+	 */
+	@Column({default: false, nullable: false})
+	newFormat: boolean;
 
 	@ManyToOne(() => Component, object => object.forks, {nullable: true, onDelete: 'SET NULL'})
 	forkedFrom: Promise<Component>;

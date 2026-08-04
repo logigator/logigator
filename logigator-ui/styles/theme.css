@@ -1,0 +1,158 @@
+/*
+ * @logigator/ui — colors-only theme contract.
+ *
+ * Defines the `--lg-*` color palette the library is built on. Apps retheme by
+ * overriding these variables under `:root` / `.dark-mode`; colors are the only
+ * themeable surface (radius, spacing, shadows, focus-ring and transitions are
+ * owned internally by the components).
+ *
+ * The defaults below ARE the editor's current colors — the green primary plus
+ * the Aura-derived neutrals and state colors — resolved to concrete values from
+ * the PrimeNG Aura preset and app.theme.ts, so editor-v2 and other projects
+ * normally do not override anything. This is a strict superset of every color
+ * token the editor relies on.
+ *
+ * Light values live under :root; dark overrides under .dark-mode (the app's
+ * ThemingService toggles `.dark-mode` on <html>). Tokens whose value is
+ * identical across schemes (the primary scale) are declared once under :root.
+ */
+
+:root {
+  /* The UA-level scheme rides along with the palette: it drives the default
+     text color, native scrollbars and form controls, so unstyled text is
+     readable on the scheme's surfaces without an explicit text class. */
+  color-scheme: light;
+
+  /* primary scale — green; identical in light and dark */
+  --lg-primary-50: #bbf0d2;
+  --lg-primary-100: #a2eac1;
+  --lg-primary-200: #70df9f;
+  --lg-primary-300: #3ed47d;
+  --lg-primary-400: #27ae60;
+  --lg-primary-500: #209150;
+  --lg-primary-600: #1a7440;
+  --lg-primary-700: #135730;
+  --lg-primary-800: #0d3920;
+  --lg-primary-900: #061c10;
+  --lg-primary-950: #030e08;
+
+  /* primary roles — light: color=500, hover=600, active=700, contrast=#fff */
+  --lg-primary: #209150;
+  --lg-primary-emphasis: #1a7440;
+  --lg-primary-emphasis-alt: #135730;
+  --lg-primary-contrast: #ffffff;
+
+  /* surface scale — light: slate */
+  --lg-surface-0: #ffffff;
+  --lg-surface-50: #f8fafc;
+  --lg-surface-100: #f1f5f9;
+  --lg-surface-200: #e2e8f0;
+  --lg-surface-300: #cbd5e1;
+  --lg-surface-400: #94a3b8;
+  --lg-surface-500: #64748b;
+  --lg-surface-600: #475569;
+  --lg-surface-700: #334155;
+  --lg-surface-800: #1e293b;
+  --lg-surface-900: #0f172a;
+  --lg-surface-950: #020617;
+
+  /* content / text / border */
+  --lg-content: #ffffff;
+  --lg-content-hover: #f1f5f9;
+  --lg-border: #e2e8f0;
+  --lg-text: #334155;
+  --lg-text-hover: #1e293b;
+  --lg-muted: #64748b;
+  --lg-muted-hover: #475569;
+
+  /* state colors — color / surface (background) / border. Borders are one step
+     below their `-surface` tint's step: an outline, not a frame. */
+  --lg-info: #2563eb;
+  --lg-info-surface: color-mix(in srgb, #eff6ff, transparent 5%);
+  --lg-info-border: #93c5fd;
+  --lg-success: #169545;
+  --lg-success-surface: color-mix(in srgb, #f0fdf4, transparent 5%);
+  --lg-success-border: #86efac;
+  --lg-warn: #f0bd0d;
+  --lg-warn-text: #a16207;
+  --lg-warn-surface: color-mix(in srgb, #fefce8, transparent 5%);
+  --lg-warn-border: #fde047;
+  --lg-error: #dc2626;
+  --lg-error-surface: color-mix(in srgb, #fef2f2, transparent 5%);
+  --lg-error-border: #fca5a5;
+
+  /* Opaque counterparts to the state surfaces, for elements that float over
+     arbitrary content (e.g. toasts) where the translucent `-surface` tints wash
+     out and hurt legibility. Built from the accent over `--lg-content`, so — like
+     the primary scale — one declaration serves both schemes; the small
+     transparency keeps a faint frost under `backdrop-blur`. */
+  --lg-info-surface-strong: color-mix(
+    in srgb,
+    color-mix(in srgb, var(--lg-info) 18%, var(--lg-content)),
+    transparent 8%
+  );
+  --lg-success-surface-strong: color-mix(
+    in srgb,
+    color-mix(in srgb, var(--lg-success) 18%, var(--lg-content)),
+    transparent 8%
+  );
+  --lg-warn-surface-strong: color-mix(
+    in srgb,
+    color-mix(in srgb, var(--lg-warn) 18%, var(--lg-content)),
+    transparent 8%
+  );
+  --lg-error-surface-strong: color-mix(
+    in srgb,
+    color-mix(in srgb, var(--lg-error) 18%, var(--lg-content)),
+    transparent 8%
+  );
+}
+
+.dark-mode {
+  color-scheme: dark;
+
+  /* primary roles — dark: color=400, hover=300, active=200, contrast=surface.900 */
+  --lg-primary: #27ae60;
+  --lg-primary-emphasis: #3ed47d;
+  --lg-primary-emphasis-alt: #70df9f;
+  --lg-primary-contrast: #18181b;
+
+  /* surface scale — dark: zinc */
+  --lg-surface-0: #ffffff;
+  --lg-surface-50: #fafafa;
+  --lg-surface-100: #f4f4f5;
+  --lg-surface-200: #e4e4e7;
+  --lg-surface-300: #d4d4d8;
+  --lg-surface-400: #a1a1aa;
+  --lg-surface-500: #71717a;
+  --lg-surface-600: #52525b;
+  --lg-surface-700: #3f3f46;
+  --lg-surface-800: #27272a;
+  --lg-surface-900: #18181b;
+  --lg-surface-950: #09090b;
+
+  /* content / text / border */
+  --lg-content: #18181b;
+  --lg-content-hover: #27272a;
+  --lg-border: #3f3f46;
+  --lg-text: #ffffff;
+  --lg-text-hover: #ffffff;
+  --lg-muted: #a1a1aa;
+  --lg-muted-hover: #d4d4d8;
+
+  /* state colors. The borders wash the accent rather than its -700 step, at the
+     same strength: dark-on-dark leaves no outline at all on these tints. */
+  --lg-info: #3b82f6;
+  --lg-info-surface: color-mix(in srgb, #3b82f6, transparent 84%);
+  --lg-info-border: color-mix(in srgb, #3b82f6, transparent 64%);
+  --lg-success: #22c55e;
+  --lg-success-surface: color-mix(in srgb, #22c55e, transparent 84%);
+  --lg-success-border: color-mix(in srgb, #22c55e, transparent 64%);
+  --lg-warn: #f0bd0d;
+  --lg-warn-text: #f0bd0d;
+  --lg-warn-surface: color-mix(in srgb, #eab308, transparent 84%);
+  --lg-warn-border: color-mix(in srgb, #f0bd0d, transparent 64%);
+  --lg-error: #ef4444;
+  --lg-error-surface: color-mix(in srgb, #ef4444, transparent 84%);
+  --lg-error-border: color-mix(in srgb, #ef4444, transparent 64%);
+}

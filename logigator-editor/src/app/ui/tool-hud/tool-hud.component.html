@@ -1,0 +1,43 @@
+<div *appTranslate="let t" class="flex flex-col items-center gap-1">
+  @if (activeLabelKey(); as labelKey) {
+    <span
+      class="rounded bg-content/90 px-2 py-0.5 text-xs text-muted shadow backdrop-blur"
+    >
+      {{ t(labelKey) }}
+    </span>
+  }
+  <div
+    class="flex items-center gap-1 rounded-full bg-content/95 px-1.5 py-1 shadow-lg backdrop-blur"
+  >
+    @for (tool of tools; track tool.id) {
+      <lg-button
+        [appOnboardTarget]="'tool-' + tool.id"
+        [icon]="tool.icon"
+        severity="secondary"
+        rounded
+        [text]="!tool.isActive()"
+        [ariaLabel]="t(tool.labelKey)"
+        (onClick)="tool.activate()"
+      ></lg-button>
+    }
+    <lg-button
+      appOnboardTarget="mobile-components"
+      icon="ph ph-plus"
+      severity="secondary"
+      rounded
+      [text]="!partsActive()"
+      [ariaLabel]="t('toolBar.parts')"
+      (onClick)="toggleParts()"
+    ></lg-button>
+    @if (isEditingComponent()) {
+      <lg-button
+        icon="ph ph-plugs"
+        severity="secondary"
+        rounded
+        text
+        [ariaLabel]="t('mobile.ports')"
+        (onClick)="openPorts()"
+      ></lg-button>
+    }
+  </div>
+</div>

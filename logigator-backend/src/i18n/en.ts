@@ -193,6 +193,7 @@ export const en = {
 		'VIEW': 'View Details',
 		'OPEN': 'Open in Editor',
 		'CLONE': 'Clone',
+		'FORKED_FROM': 'Forked from',
 		'NO_DESCRIPTION': 'No description was provided.',
 		'USER': {
 			'MEMBER_SINCE': 'Member since',
@@ -552,13 +553,13 @@ export const en = {
 		'<p>Whenever you surf the Internet, you use a browser. Well-known browsers include Chrome, Safari, Firefox, Internet Explorer and Microsoft Edge. Most websites store small text files in your browser. These files are called cookies.</p>\n' +
 		'<p>One thing cannot be denied: Cookies are really useful little helpers. Almost all websites use cookies. To be more precise, they are HTTP cookies, as there are also other cookies for other areas of application. HTTP cookies are small files that our website stores on your computer. These cookie files are automatically stored in the cookie folder, the “brain” of your browser. A cookie consists of a name and a value. When defining a cookie, one or more attributes must also be specified.</p>\n' +
 		'<p>Cookies store certain user data about you, such as language or personal page settings. When you visit our site again, your browser sends the “user-related” information back to our site. Thanks to cookies, our website knows who you are and offers you the settings you are used to. In some browsers each cookie has its own file, in others, such as Firefox, all cookies are stored in a single file.</p>\n' +
-		'<p>There are both first-party cookies and third-party cookies. First-party cookies are created directly by our site, third-party cookies are created by partner websites (e.g. Google Analytics). Each cookie must be evaluated individually because each cookie stores different data. The expiry time of a cookie also varies from a few minutes to a few years. Cookies are not software programs and do not contain viruses, Trojans or other “malicious” things. Cookies also cannot access information on your PC.</p>\n' +
+		'<p>There are both first-party cookies and third-party cookies. First-party cookies are created directly by our site, third-party cookies are created by partner websites (e.g. PostHog). Each cookie must be evaluated individually because each cookie stores different data. The expiry time of a cookie also varies from a few minutes to a few years. Cookies are not software programs and do not contain viruses, Trojans or other “malicious” things. Cookies also cannot access information on your PC.</p>\n' +
 		'<p>For example, cookie data might look like this:</p>\n' +
 		'<p>\n' +
-		'<strong>Name:</strong> _ga <br>\n' +
-		'<strong>Value:</strong> &nbsp;GA1.2.1326744211.152112741413-9 <br>\n' +
+		'<strong>Name:</strong> ph_&lt;project-id&gt;_posthog <br>\n' +
+		'<strong>Value:</strong> &nbsp;{"distinct_id":"0190f3c2-4e5a-7b1c-9d8e-2a1b3c4d5e6f"} <br>\n' +
 		'<strong>Purpose:</strong> Differentiation of website visitors <br>\n' +
-		'<strong>Expiry date:</strong> &nbsp;after 2 years</p>\n' +
+		'<strong>Expiry date:</strong> &nbsp;after 1 year</p>\n' +
 		'<p>A browser should be able to support these minimum sizes:</p>\n' +
 		'<ul>\n' +
 		'<li>At least 4096 bytes per cookie</li>\n' +
@@ -647,115 +648,43 @@ export const en = {
 		'<p>In addition to consent, we have a legitimate interest in analyzing the behavior of website visitors and thus improving our offering technically and economically. With the help of web analytics, we detect website errors, identify attacks and improve profitability. The legal basis for this is <strong>Article 6 Paragraph 1 Letter f GDPR (legitimate interests)</strong> . However, we only use the tools if you have given your consent.</p>\n' +
 		'<p>Since cookies are used in web analytics tools, we also recommend that you read our general privacy policy on cookies. To find out exactly which of your data is stored and processed, you should read the data protection declarations of the respective tools.</p>\n' +
 		'<p>Information about special web analytics tools, if available, can be found in the following sections.</p>\n' +
-		'<h2 id="google-analytics-datenschutzerklaerung">Google Analytics privacy policy</h2>\n' +
+		'<h2 id="posthog-datenschutzerklaerung">PostHog privacy policy</h2>\n' +
 		'<table border="1" cellpadding="15">\n' +
 		'<tbody>\n' +
 		'<tr>\n' +
 		'<td>\n' +
-		'<strong>Google Analytics Data Protection Declaration Summary</strong>\n' +
+		'<strong>PostHog Data Protection Declaration Summary</strong>\n' +
 		'<br>\n' +
 		'👥 Affected: Visitors to the website <br>\n' +
 		'🤝 Purpose: Evaluation of visitor information to optimize the website. <br>\n' +
-		'📓 Data processed: Access statistics, which include data such as access locations, device data, access duration and time, navigation behavior and click behavior. You can find more details about this further down in this data protection declaration. <br>\n' +
-		'📅 Storage period: individually adjustable, by default Google Analytics 4 stores data for 14 months <br>\n' +
+		'📓 Data processed: Access statistics such as pages viewed, clicks, device and browser data, approximate location and IP address. You can find more details about this further down in this data protection declaration. <br>\n' +
+		'📅 Storage period: the device identifier cookie expires after 1 year; event data is retained according to our configured retention period <br>\n' +
 		'⚖️ Legal basis: Art. 6 Para. 1 lit. a GDPR (consent), Art. 6 Para. 1 lit. f GDPR (legitimate interests)</td>\n' +
 		'</tr>\n' +
 		'</tbody>\n' +
 		'</table>\n' +
-		'<h3>What is Google Analytics?</h3>\n' +
-		'<p>On our website we use the analysis tracking tool Google Analytics in version Google Analytics 4 (GA4) from the American company Google Inc. For the European area, the company Google Ireland Limited (Gordon House, Barrow Street Dublin 4, Ireland) is for everyone Google services responsible. Google Analytics collects data about your actions on our website. Through the combination of different technologies such as cookies, device IDs and login information, you as a user can be identified across different devices. This means your actions can also be analyzed across platforms.</p>\n' +
-		'<p>For example, if you click on a link, this event is stored in a cookie and sent to Google Analytics. The reports we receive from Google Analytics allow us to better tailor our website and service to your needs. Below we will go into more detail about the tracking tool and, above all, inform you about what data is processed and how you can prevent this.</p>\n' +
-		'<p>Google Analytics is a tracking tool that is used to analyze traffic on our website. The basis of these measurements and analyzes is a pseudonymous user identification number. This number does not contain any personal data such as name or address, but is used to assign events to a device. GA4 uses an event-based model that captures detailed information about user interactions such as page views, clicks, scrolling, conversion events. In addition, various machine learning functions have been built into GA4 to better understand user behavior and certain trends. GA4 relies on modeling with the help of machine learning functions. This means that based on the data collected, missing data can also be extrapolated in order to optimize the analysis and also to be able to make forecasts.</p>\n' +
-		'<p>In order for Google Analytics to work, a tracking code is built into the code of our website. When you visit our website, this code records various events that you perform on our website. With GA4\'s event-based data model, we as website operators can define and track specific events to obtain analysis of user interactions. In addition to general information such as clicks or page views, specific events that are important for our business can also be tracked. Such special events could be, for example, sending a contact form or purchasing a product.</p>\n' +
-		'<p>As soon as you leave our website, this data is sent to the Google Analytics servers and stored there.</p>\n' +
-		'<p>Google processes the data and we receive reports about your user behavior. These may include, among others, the following reports:</p>\n' +
-		'<ul>\n' +
-		'<li>Target group reports: Through target group reports we get to know our users better and know more precisely who is interested in our service.</li>\n' +
-		'<li>Display Reports: Display reports make it easier for us to analyze and improve our online advertising.</li>\n' +
-		'<li>Acquisition reports: Acquisition reports give us helpful information about how we can attract more people to our service.</li>\n' +
-		'<li>Behavioral reports: This is where we learn how you interact with our website. We can track the route you take on our site and which links you click on.</li>\n' +
-		'<li>Conversion reports: Conversion is the process in which you take a desired action based on a marketing message. For example, when you go from being just a website visitor to a buyer or newsletter subscriber. These reports help us learn more about how our marketing efforts are being received by you. This is how we want to increase our conversion rate.</li>\n' +
-		'<li>Real-time reports: Here we always find out immediately what is happening on our website. For example, we can see how many users are currently reading this text.</li>\n' +
-		'</ul>\n' +
-		'<p>In addition to the analysis reports mentioned above, Google Analytics 4 also offers the following functions, among others:</p>\n' +
-		'<ul>\n' +
-		'<li>Event-based data model: This model captures very specific events that may occur on our website. For example, playing a video, purchasing a product or signing up for our newsletter.</li>\n' +
-		'<li>Advanced analytics features: These features allow us to better understand your behavior on our website or certain general trends. For example, we can segment user groups, carry out comparative analyzes of target groups or track your path on our website.</li>\n' +
-		'<li>Predictive modeling: Based on collected data, machine learning can extrapolate missing data that predicts future events and trends. This can help us develop better marketing strategies.</li>\n' +
-		'<li>Cross-platform analysis: Data collection and analysis is possible from both websites and apps. This gives us the opportunity to analyze user behavior across platforms, provided you have of course consented to data processing.</li>\n' +
-		'</ul>\n' +
-		'<h3>Why do we use Google Analytics on our website?</h3>\n' +
-		'<p>Our goal with this website is clear: we want to offer you the best possible service. The statistics and data from Google Analytics help us achieve this goal.</p>\n' +
-		'<p>The statistically evaluated data shows us a clear picture of the strengths and weaknesses of our website. On the one hand, we can optimize our site so that interested people can find it more easily on Google. On the other hand, the data helps us to better understand you as a visitor. We therefore know exactly what we need to improve on our website in order to offer you the best possible service. The data also helps us to carry out our advertising and marketing measures more individually and cost-effectively. After all, it only makes sense to show our products and services to people who are interested in them.</p>\n' +
-		'<h3>What data does Google Analytics store?</h3>\n' +
-		'<p>Google Analytics creates a random, unique ID associated with your browser cookie using a tracking code. This is how Google Analytics recognizes you as a new user and you are assigned a user ID. The next time you visit our site, you will be recognized as a “returning” user. All collected data is stored together with this user ID. This makes it possible to evaluate pseudonymous user profiles.</p>\n' +
-		'<p>In order to be able to analyze our website with Google Analytics, a property ID must be inserted into the tracking code. The data is then saved in the corresponding property. The Google Analytics 4 property is the default for every newly created property. Depending on the property used, data is stored for different lengths of time.</p>\n' +
-		'<p>Using identifiers such as cookies, app instance IDs, user IDs or custom event parameters, your interactions are measured across platforms, provided you have consented. Interactions are all types of actions that you take on our website. If you also use other Google systems (such as a Google account), data generated via Google Analytics may be linked to third-party cookies. Google does not pass on Google Analytics data unless we as website operators authorize this. Exceptions may occur if required by law.</p>\n' +
-		'<p>According to Google, Google Analytics 4 does not log or store IP addresses. However, Google uses the IP address data to derive location data and deletes it immediately afterwards. All IP addresses collected from users in the EU are deleted before the data is stored in a data center or on a server.</p>\n' +
-		'<p>Because Google Analytics 4 focuses on event-based data, the tool uses significantly fewer cookies compared to previous versions (like Google Universal Analytics). However, there are some specific cookies used by GA4. These include, for example:</p>\n' +
+		'<h3>What is PostHog?</h3>\n' +
+		'<p>On our website we use PostHog, a product analytics tool provided by PostHog Inc., a company based in the United States. We use the European hosting option, PostHog Cloud EU, so the data collected about your use of our website is processed and stored on servers located in Frankfurt, Germany, within the European Union. PostHog collects data about how visitors interact with our website so that we can understand which content is useful and improve the site.</p>\n' +
+		'<p>When you visit our website and have given your consent, PostHog records events such as page views and interactions (for example which links or buttons you click). These events are associated with a pseudonymous identifier so that we can distinguish visitors and recognise returning ones, without knowing who you are as a person.</p>\n' +
+		'<h3>Why do we use PostHog on our website?</h3>\n' +
+		'<p>Our goal with this website is to offer you the best possible service. The statistics from PostHog help us understand how our website is used, which pages are popular and where visitors run into problems. This lets us improve the website and tailor it to the needs of our visitors. We deliberately chose PostHog\'s European hosting so that your data does not have to be transferred to a third country.</p>\n' +
+		'<h3>What data does PostHog store?</h3>\n' +
+		'<p>PostHog assigns a pseudonymous identifier (a "distinct id") to your browser in order to recognise you as a returning visitor. Collected events are stored together with this identifier. This typically includes which pages you view, which elements you click on, the time of access, your browser and device type, screen size and an approximate location derived from your IP address.</p>\n' +
+		'<p>Your IP address is regarded as personal data under the GDPR. PostHog uses it to derive an approximate (country or region level) location; we do not use it to identify you personally. No directly identifying data such as your name, address or email address is collected by PostHog on our public website unless you actively provide it, for example by logging in.</p>\n' +
+		'<p>PostHog stores a small amount of information in your browser to keep this analysis working across page views:</p>\n' +
 		'<p>\n' +
-		'<strong>Name:</strong> _ga <br>\n' +
-		'<strong>Value:</strong> 2.1326744211.152112741413-5 <br>\n' +
-		'<strong>Purpose:</strong> By default, analytics.js uses the _ga cookie to store the user ID. Basically, it is used to distinguish website visitors. <br>\n' +
-		'<strong>Expiry date:</strong> after 2 years</p>\n' +
-		'<p>\n' +
-		'<strong>Name:</strong> _gid <br>\n' +
-		'<strong>Value:</strong> 2.1687193234.152112741413-1 <br>\n' +
-		'<strong>Purpose:</strong> &nbsp;The cookie is also used to distinguish website visitors. <br>\n' +
-		'<strong>Expiry date:</strong> &nbsp;after 24 hours</p>\n' +
-		'<p>\n' +
-		'<strong>Name:</strong> _gat_gtag_UA_&lt;property-id&gt; <br>\n' +
-		'<strong>Value:</strong> 1 <br>\n' +
-		'<strong>Purpose:</strong> Used to reduce the request rate. If Google Analytics is provided via Google Tag Manager, this cookie is named _dc_gtm_ &lt;property-id&gt;. <br>\n' +
-		'<strong>Expiry date:</strong> after 1 minute</p>\n' +
-		'<p>\n' +
-		'<strong>Note:</strong> &nbsp;This list cannot claim to be complete, as Google continually changes its choice of cookies. GA4 also aims to improve data protection. Therefore, the tool offers some options for controlling data collection. For example, we can set the storage period ourselves and also control data collection.</p>\n' +
-		'<p>Here we show you an overview of the main types of data collected with Google Analytics:</p>\n' +
-		'<p>\n' +
-		'<strong>Heatmaps:</strong> Google creates so-called heatmaps. Heatmaps show exactly the areas you click on. This gives us information about where you are on our site.</p>\n' +
-		'<p>\n' +
-		'<strong>Session duration:</strong> Google refers to the time that you spend on our site without leaving the site. If you have been inactive for 20 minutes, the session ends automatically.</p>\n' +
-		'<p>\n' +
-		'<strong>Bounce rate</strong> : A bounce is when you only view one page on our website and then leave our website again.</p>\n' +
-		'<p>\n' +
-		'<strong>Account creation:</strong> If you create an account or place an order on our website, Google Analytics collects this data.</p>\n' +
-		'<p>\n' +
-		'<strong>Location:</strong> IP addresses are not logged or stored in Google Analytics. However, shortly before the IP address is deleted, derivatives for location data are used.</p>\n' +
-		'<p>\n' +
-		'<strong>Technical information:</strong> Technical information may include, but is not limited to, your browser type, your Internet service provider or your screen resolution.</p>\n' +
-		'<p>\n' +
-		'<strong>Source of origin:</strong> Google Analytics or we are of course also interested in which website or advertising you came to our site from.</p>\n' +
-		'<p>Other data includes contact details, any reviews, playing media (e.g. when you play a video via our site), sharing content via social media or adding it to your favorites. The list does not claim to be complete and only serves as a general guide to data storage by Google Analytics.</p>\n' +
+		'<strong>Name:</strong> ph_&lt;project-id&gt;_posthog <br>\n' +
+		'<strong>Purpose:</strong> Stores the pseudonymous device identifier and the current session id so that returning visits and sessions can be recognised. <br>\n' +
+		'<strong>Expiry date:</strong> after 1 year</p>\n' +
+		'<p><strong>Note:</strong> Depending on the configuration, PostHog also stores additional information in your browser\'s local storage. This list does not claim to be complete.</p>\n' +
 		'<h3>How long and where is the data stored?</h3>\n' +
-		'<p>Google has their servers spread all over the world. You can read exactly where the Google data centers are located here: <a href="https://www.google.com/about/datacenters/locations/?hl=de">https://www.google.com/about/datacenters/locations/?hl=de</a>\n' +
-		'</p>\n' +
-		'<p>Your data is distributed on different physical storage media. This has the advantage that the data can be accessed more quickly and is better protected against manipulation. Every Google data center has appropriate emergency programs for your data. For example, if Google\'s hardware fails or natural disasters paralyze servers, the risk of service disruption at Google remains low.</p>\n' +
-		'<p>The retention period of the data depends on the properties used. The storage period is always determined specifically for each individual property. Google Analytics offers us four options for controlling storage duration:</p>\n' +
-		'<ul>\n' +
-		'<li>2 months: this is the shortest storage period.</li>\n' +
-		'<li>14 months: By default, data is stored at GA4 for 14 months.</li>\n' +
-		'<li>26 months: you can also save the data for 26 months.</li>\n' +
-		'<li>Data will not be deleted until we delete it manually</li>\n' +
-		'</ul>\n' +
-		'<p>In addition, there is also the option that data will only be deleted if you no longer visit our website within the period chosen by us. In this case, the retention period will be reset each time you visit our website again within the specified period.</p>\n' +
-		'<p>Once the specified period has expired, the data will be deleted once a month. This retention period applies to your data linked to cookies, user recognition and advertising IDs (e.g. cookies from the DoubleClick domain). Report results are based on aggregated data and are stored independently of user data. Aggregated data is a fusion of individual data into a larger unit.</p>\n' +
+		'<p>All data collected through PostHog on our website is stored on PostHog\'s European infrastructure, hosted in Frankfurt, Germany. The device identifier cookie described above expires after one year. Event data is retained for the retention period we have configured in PostHog and is deleted afterwards.</p>\n' +
 		'<h3>How can I delete my data or prevent data storage?</h3>\n' +
-		'<p>Under European Union data protection law, you have the right to access, update, delete or restrict your data. You can use the browser add-on to deactivate Google Analytics JavaScript (analytics.js, gtag.js) to prevent Google Analytics 4 from using your data. You can download and install the browser add-on at <a href="https://tools.google.com/dlpage/gaoptout?hl=de">https://tools.google.com/dlpage/gaoptout?hl=de . </a>Please note that this add-on only deactivates data collection by Google Analytics.</p>\n' +
-		'<p>If you generally want to deactivate, delete or manage cookies, you will find the relevant links to the relevant instructions for the most popular browsers under the “Cookies” section.</p>\n' +
+		'<p>PostHog is only loaded after you have given your consent through our cookie banner. You can withdraw your consent at any time using our cookie management tool, which prevents any further data collection. You can also delete or block cookies in your browser at any time; you will find the relevant instructions for the most popular browsers under the "Cookies" section.</p>\n' +
 		'<h3>Legal basis</h3>\n' +
-		'<p>The use of Google Analytics requires your consent, which we obtained with our cookie popup. According to <strong>Article 6 Paragraph 1 Letter a of the GDPR (consent), this</strong> consent represents the legal basis for the processing of personal data, as may occur when it is collected by web analytics tools.</p>\n' +
-		'<p>In addition to consent, we have a legitimate interest in analyzing the behavior of website visitors and thus improving our offering technically and economically. With the help of Google Analytics, we detect errors on the website, identify attacks and improve profitability. The legal basis for this is <strong>Article 6 Paragraph 1 Letter f GDPR (legitimate interests)</strong> . However, we only use Google Analytics if you have given your consent.</p>\n' +
-		'<p>Google also processes your data in the USA, among other places. Google is an active participant in the EU-US Data Privacy Framework, which regulates the correct and secure transfer of personal data from EU citizens to the USA. More information can be found at <a href="https://commission.europa.eu/document/fa09cbad-dd7d-4684-ae60-be03fcb0fddf_en" target="_blank" rel="follow noopener">https://commission.europa.eu/document/fa09cbad-dd7d-4684-ae60-be03fcb0fddf_en</a> .</p>\n' +
-		'<p>Google also uses so-called standard contractual clauses (= Art. 46 Paragraphs 2 and 3 GDPR). Standard Contractual Clauses (SCC) are templates provided by the EU Commission and are intended to ensure that your data complies with European data protection standards even if it is transferred to third countries (such as the USA) and stored there. Through the EU-US Data Privacy Framework and the Standard Contractual Clauses, Google undertakes to comply with the European level of data protection when processing your relevant data, even if the data is stored, processed and managed in the USA. These clauses are based on an implementing decision of the EU Commission. You can find the resolution and the corresponding standard contractual clauses here: <a href="https://eur-lex.europa.eu/eli/dec_impl/2021/914/oj?locale=de" target="_blank" rel="follow noopener">https://eur-lex.europa.eu/eli/dec_impl/2021/914/oj?locale=de</a>\n' +
-		'</p>\n' +
-		'<p>The Google Ads Data Processing Terms, which refer to the standard contractual clauses, can be found at <a href="https://business.safety.google/intl/de/adsprocessorterms/" target="_blank" rel="follow noopener">https://business.safety.google/intl/de/adsprocessorterms/</a> .</p>\n' +
-		'<p>We hope we were able to provide you with the most important information about data processing by Google Analytics. If you want to find out more about the tracking service, we recommend these two links: <a href="https://marketingplatform.google.com/about/analytics/terms/de/" target="_blank" rel="follow noopener">https://marketingplatform.google.com/about/analytics/terms/de/</a> and <a href="https://support.google.com/analytics/answer/6004245?hl=de" target="_blank" rel="follow noopener">https://support.google.com/analytics/answer/ 6004245?hl=de</a> .</p>\n' +
-		'<p>If you want to find out more about data processing, please use the Google privacy policy at <a href="https://policies.google.com/privacy?hl=de&amp;tid=112741413" target="_blank" rel="follow noopener">https://policies.google.com/privacy?hl=de</a> .</p>\n' +
-		'<h2 id="google-analytics-berichte-zu-demografischen-merkmalen-und-interessen">Google Analytics reports on demographics and interests</h2>\n' +
-		'<p>We have activated the advertising reporting functions in Google Analytics. Demographics and interests reports include information about age, gender, and interests. This allows us to get a better picture of our users - without being able to assign this data to individual people. You can find out more about the advertising functions at&nbsp; <a href="https://support.google.com/analytics/answer/3450482?hl=de_AT&amp;utm_id=ad">https://support.google.com/analytics/answer/3450482?hl=de_AT&amp;utm_id=ad</a> .</p>\n' +
-		'<p>You can stop the use of the activities and information from your Google account under “Advertising Settings” at <a href="https://adssettings.google.com/authenticated">https://adssettings.google.com/authenticated</a> by checking the box.</p>\n' +
-		'<h2 id="google-analytics-im-einwilligungsmodus">Google Analytics in consent mode</h2>\n' +
-		'<p>Depending on your consent, your personal data will be processed by Google Analytics in the so-called consent mode. You can choose whether or not to agree to Google Analytics cookies. This also allows you to choose which data Google Analytics may process from you. This collected data is primarily used to measure user behavior on the website, deliver targeted advertising and provide us with web analysis reports. As a rule, you consent to data processing by Google via a cookie consent tool. If you do not consent to data processing, only aggregated data will be collected and processed. This means that data cannot be assigned to individual users and no user profile is created for you. You can also just agree to the statistical measurement. No personal data is processed and therefore not used for advertising or advertising campaigns.</p>\n' +
+		'<p>The use of PostHog requires your consent, which we obtain through our cookie popup. According to <strong>Article 6 Paragraph 1 Letter a of the GDPR (consent)</strong>, this consent represents the legal basis for the processing of personal data that occurs when it is collected by web analytics tools.</p>\n' +
+		'<p>In addition to consent, we have a legitimate interest in analysing the behaviour of website visitors in order to improve our offering technically and economically. The legal basis for this is <strong>Article 6 Paragraph 1 Letter f GDPR (legitimate interests)</strong>. However, we only use PostHog if you have given your consent.</p>\n' +
+		'<p>We use PostHog Cloud EU, so your data is stored and processed on servers in Germany, within the European Union. PostHog Inc. is based in the United States and acts as our data processor; PostHog provides a data processing agreement in accordance with Art. 28 GDPR. Where data is accessed from outside the EU, this is safeguarded in accordance with Chapter V of the GDPR. You can find more information about how PostHog handles data in its privacy policy at <a href="https://posthog.com/privacy" target="_blank" rel="follow noopener">https://posthog.com/privacy</a> .</p>\n' +
 		'<h2 id="content-delivery-networks-einleitung">Content Delivery Networks Introduction</h2>\n' +
 		'<table border="1" cellpadding="15">\n' +
 		'<tbody>\n' +

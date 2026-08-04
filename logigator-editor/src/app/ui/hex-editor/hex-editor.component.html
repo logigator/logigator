@@ -1,0 +1,236 @@
+<div *appTranslate="let t" class="flex h-full flex-col">
+  <div class="flex items-center gap-2 mb-3 flex-wrap justify-between">
+    <!-- View + radix selectors -->
+    <div class="flex flex-wrap items-center gap-2">
+      <lg-select-button
+        [options]="viewOptions()"
+        [ariaLabel]="t('hexEditor.viewLabel')"
+        optionLabel="label"
+        optionValue="value"
+        [allowEmpty]="false"
+        [ngModel]="view()"
+        (ngModelChange)="view.set($event)"
+        [ngModelOptions]="{ standalone: true }"
+        size="sm"
+      ></lg-select-button>
+
+      <lg-select-button
+        [options]="radixOptions()"
+        [ariaLabel]="t('hexEditor.radixLabel')"
+        optionLabel="label"
+        optionValue="value"
+        [allowEmpty]="false"
+        [ngModel]="radix()"
+        (ngModelChange)="radix.set($event)"
+        [ngModelOptions]="{ standalone: true }"
+        size="sm"
+      ></lg-select-button>
+    </div>
+
+    <!-- right -->
+    <div class="flex flex-wrap items-center gap-2">
+      <!-- Go-to-address search -->
+      <div class="flex items-center gap-1">
+        <input
+          lgInputText
+          size="sm"
+          type="text"
+          spellcheck="false"
+          autocomplete="off"
+          class="grow md:grow-0"
+          [invalid]="gotoInvalid()"
+          [placeholder]="t('hexEditor.gotoPlaceholder')"
+          [ngModel]="gotoInput()"
+          (ngModelChange)="gotoInput.set($event)"
+          (keyup.enter)="goto()"
+          [ngModelOptions]="{ standalone: true }"
+          [attr.aria-label]="t('hexEditor.goto')"
+        />
+        <lg-button
+          icon="ph ph-magnifying-glass"
+          severity="secondary"
+          size="sm"
+          (onClick)="goto()"
+          [attr.aria-label]="t('hexEditor.goto')"
+        />
+      </div>
+
+      @if (readOnly() && highlightIndex() !== null) {
+        <!-- Filled while following, outlined while paused. -->
+        <lg-button
+          [label]="t('hexEditor.follow')"
+          icon="ph ph-crosshair"
+          severity="secondary"
+          [outlined]="!follow()"
+          size="sm"
+          (onClick)="follow.set(!follow())"
+        />
+      }
+      <lg-button
+        [label]="t('hexEditor.copy')"
+        icon="ph ph-copy"
+        severity="secondary"
+        [outlined]="true"
+        size="sm"
+        (onClick)="copyAll()"
+      />
+      @if (!readOnly()) {
+        <lg-button
+          [label]="t('hexEditor.clear')"
+          icon="ph ph-eraser"
+          severity="secondary"
+          [outlined]="true"
+          size="sm"
+          (onClick)="confirmClear($event)"
+        />
+      }
+    </div>
+  </div>
+
+  <!-- Grid: the body's virtual-scroll viewport is the single scroll context
+       for both axes. Its content wrapper is absolutely positioned, so rows
+       wider than the viewport overflow it without growing it — both scrollbars
+       stay on the visible edges instead of the far edge of the wide content.
+       The header row is translated to mirror the body's horizontal offset.
+       The grow/min-h chain only bites when the host constrains the height
+       (scrollHeight="100%"); in the default dialog layout it is inert. -->
+  <div class="flex min-h-24 grow flex-col rounded-md border border-border">
+    <!-- Column header. Horizontally driven by the body's scroll offset — via a
+         transform, not scrollLeft: a scroll offset is clamped to this box's
+         own scroll range, whose end can sit a vertical-scrollbar's width off
+         the body's. Padded on the end by the body's scrollbar width, and the
+         same font size as the body, so its ch-based columns line up. -->
+    <div
+      class="shrink-0 overflow-x-hidden overflow-y-auto font-mono text-sm text-muted border-b border-border bg-content"
+      [style]="{ 'scrollbar-gutter': 'stable' }"
+    >
+      <div
+        #headerRow
+        class="flex items-stretch"
+        [style.min-width.ch]="rowMinWidthCh()"
+      >
+        <div
+          class="shrink-0 pr-2 py-1 text-end border-e border-border"
+          [style.width.ch]="gutterWidthCh()"
+        >
+          {{ addressText }}
+        </div>
+        <div #headerCols class="flex flex-1">
+          @for (c of columnIndexes(); track c) {
+            <div
+              class="flex-1 text-center px-1 py-1"
+              [style.min-width.ch]="cellMinWidthCh()"
+            >
+              {{ c.toString(16).toUpperCase() }}
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Virtualized body. `scrollbar-gutter: stable` always reserves the
+         scrollbar's width even when the content doesn't overflow, so the
+         body width — and thus the header's matching end padding — stays
+         constant whether or not the bar is showing. -->
+    <lg-scroller
+      class="min-h-0 grow"
+      tabindex="0"
+      [items]="rows()"
+      [itemSize]="rowHeight()"
+      [scrollHeight]="scrollHeight()"
+      [style]="{ 'scrollbar-gutter': 'stable' }"
+      styleClass="w-full font-mono text-sm outline-none"
+      (scrolled)="syncHeaderScroll()"
+    >
+      <ng-template #item let-rowStart>
+        <div
+          class="flex items-stretch"
+          [style.height.px]="rowHeight()"
+          [style.min-width.ch]="rowMinWidthCh()"
+        >
+          <div
+            class="shrink-0 flex items-center justify-end pr-2 text-muted bg-content border-e border-border select-none"
+            [style.width.ch]="gutterWidthCh()"
+          >
+            {{ addressLabel(rowStart) }}
+          </div>
+          <div class="flex flex-1">
+            @for (c of columnIndexes(); track c) {
+              @let idx = rowStart + c;
+              @if (readOnly()) {
+                <!-- Focus (set by clicking too) drives the status box. -->
+                <div
+                  class="flex flex-1 items-center justify-center uppercase border-e border-b border-border/50 outline-none focus:bg-primary-500/15"
+                  [class]="cellHighlight(idx)"
+                  [class.opacity-0]="isPadCell(idx)"
+                  [style.width.ch]="cellMinWidthCh()"
+                  [style.min-width.ch]="cellMinWidthCh()"
+                  [attr.tabindex]="isPadCell(idx) ? null : 0"
+                  (focus)="activeCell.set(idx)"
+                >
+                  {{ cellValue(idx) }}
+                </div>
+              } @else {
+                <input
+                  #cell
+                  class="flex-1 text-center uppercase bg-transparent outline-none border-e border-b border-border/50 focus:bg-primary-500/15 focus:text-primary-700 dark:focus:text-primary-300 disabled:opacity-0"
+                  [class]="cellHighlight(idx)"
+                  type="text"
+                  spellcheck="false"
+                  autocomplete="off"
+                  [style.width.ch]="cellMinWidthCh()"
+                  [style.min-width.ch]="cellMinWidthCh()"
+                  [disabled]="isPadCell(idx)"
+                  [attr.maxlength]="cellDigits()"
+                  [value]="cellValue(idx)"
+                  (focus)="cell.select(); activeCell.set(idx)"
+                  (beforeinput)="onCellBeforeInput($event)"
+                  (paste)="onCellPaste(idx, $event)"
+                  (change)="onCellCommit(idx, cell)"
+                  (keyup.enter)="cell.blur()"
+                />
+              }
+            }
+          </div>
+        </div>
+      </ng-template>
+    </lg-scroller>
+  </div>
+
+  <!-- Status box: the focused cell's address and value. -->
+  <div
+    class="max-w-full mt-2 px-3 py-1.5 rounded-md border border-border bg-content text-sm flex flex-wrap items-center gap-x-4 gap-y-1"
+  >
+    @if (active(); as a) {
+      <div class="flex gap-1 max-w-full">
+        <span class="text-muted">{{ t('hexEditor.activeAddress') }}:</span>
+        <span class="font-mono">0x{{ a.address }}</span>
+      </div>
+      <div class="flex gap-1 max-w-full">
+        <span class="text-muted">{{ t('hexEditor.value') }}:</span>
+        <span class="overflow-hidden font-mono text-ellipsis">{{
+          a.value
+        }}</span>
+        <span class="text-muted">({{ a.decimal }})</span>
+      </div>
+    } @else {
+      <span class="text-muted">{{ t('hexEditor.noActiveCell') }}</span>
+    }
+  </div>
+
+  <!-- Footer actions -->
+  @if (!readOnly()) {
+    <div class="mt-3 flex justify-end gap-2">
+      <lg-button
+        [label]="t('common.cancel')"
+        severity="secondary"
+        (onClick)="dismiss()"
+      />
+      <lg-button
+        [label]="t('common.save')"
+        icon="ph ph-check"
+        (onClick)="commit()"
+      />
+    </div>
+  }
+</div>

@@ -65,16 +65,21 @@
 /logigator-backend/resources/private/components/*
 !/logigator-backend/resources/private/components/.gitkeep
 
-# EDITOR
+# EDITOR (workspace member — build output lands in the root dist/)
+/dist
+/out-tsc
+/.angular/cache
+
+# LEGACY EDITOR
 # compiled output
-/logigator-editor/dist
-/logigator-editor/tmp
-/logigator-editor/out-tsc
+/logigator-editor-legacy/dist
+/logigator-editor-legacy/tmp
+/logigator-editor-legacy/out-tsc
 # Only exists if Bazel was run
-/logigator-editor/bazel-out
-/logigator-editor/custom-build-scripts/dist
-/logigator-editor/release
+/logigator-editor-legacy/bazel-out
+/logigator-editor-legacy/custom-build-scripts/dist
+/logigator-editor-legacy/release
 
 # dependencies
-/logigator-editor/src/assets/wasm/*
-!/logigator-editor/src/assets/wasm/.gitkeep
+/logigator-editor-legacy/src/assets/wasm/*
+!/logigator-editor-legacy/src/assets/wasm/.gitkeep

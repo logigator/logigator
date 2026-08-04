@@ -27,6 +27,10 @@ export class GlobalViewDataMiddleware implements ExpressMiddlewareInterface {
 			}
 		];
 
+		// Language-prefix-free absolute URL of the current page, used by the
+		// layout's og:url tag so shares of all language variants consolidate.
+		response.locals.canonicalUrl = `${domain}${url}`;
+
 		response.locals.formErrors = request.session.formErrors;
 		request.session.formErrors = undefined;
 

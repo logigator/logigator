@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker compose exec editor yarn test *)",
+      "Bash(docker compose exec editor yarn lint *)",
+      "Bash(docker compose exec editor yarn build *)",
+      "Bash(docker compose exec editor yarn format:fix *)",
+      "Bash(docker compose exec -T editor yarn test *)",
+      "Bash(docker compose exec -T editor yarn lint *)",
+      "Bash(docker compose exec -T editor yarn build *)",
+      "Bash(docker compose exec -T editor yarn format:fix *)",
+      "Bash(docker compose exec backend yarn test *)",
+      "Bash(docker compose exec backend yarn lint:backend *)",
+      "Bash(docker compose exec backend yarn build *)",
+      "Bash(docker compose exec -T backend yarn test *)",
+      "Bash(docker compose exec -T backend yarn lint:backend *)",
+      "Bash(docker compose exec -T backend yarn build *)"
+    ]
+  }
+}

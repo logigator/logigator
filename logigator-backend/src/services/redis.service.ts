@@ -51,4 +51,17 @@ export class RedisService {
 		return this.redisClient.v4.hGetAll(key);
 	}
 
+	/**
+	 * Atomically increments a counter, setting its expiry on first creation.
+	 * Backs fixed-window rate limiting: the returned count is the number of hits
+	 * in the current window, and the key self-expires after `expire` seconds.
+	 */
+	public async increment(key: string, expire: number): Promise<number> {
+		const count: number = await this.redisClient.v4.incr(key);
+		if (count === 1) {
+			await this.redisClient.v4.expire(key, expire);
+		}
+		return count;
+	}
+
 }

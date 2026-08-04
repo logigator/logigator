@@ -82,6 +82,21 @@ async function bootstrap() {
 		res.sendFile(path.join(configService.projectRootPath, configService.getConfig('environment').editor, 'index.html'));
 	});
 
+	app.get(configService.getConfig('domains').editorLegacy + '/index.html', (req, res) => {
+		res.redirect(configService.getConfig('domains').editorLegacy + '/', 301);
+	});
+
+	app.use(configService.getConfig('domains').editorLegacy, expressStatic(path.join(configService.projectRootPath, configService.getConfig('environment').editorLegacy), {
+		cacheControl: true,
+		immutable: true,
+		maxAge: '90d',
+		index: false
+	}));
+
+	app.use(configService.getConfig('domains').editorLegacy, (req, res) => {
+		res.sendFile(path.join(configService.projectRootPath, configService.getConfig('environment').editorLegacy, 'index.html'));
+	});
+
 	app.use(expressStatic(path.join(configService.projectRootPath, 'resources', 'public'), {
 		cacheControl: true,
 		immutable: true,

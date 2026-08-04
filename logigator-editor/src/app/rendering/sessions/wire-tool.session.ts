@@ -1,0 +1,159 @@
+import { Container, Point } from 'pixi.js';
+import { DragSession } from '../drag-session';
+import { PointerInput } from '../interaction/pointer-input';
+import { Project } from '../../project/project';
+import { Component } from '../../components/component';
+import { Wire } from '../../wires/wire';
+import { ConnectionPoint } from '../../connection-points/connection-point';
+import { WireDirection } from '../../wires/wire-direction.enum';
+import { AddWiresAction } from '../../actions/actions/add-wires.action';
+import { RemoveWiresAction } from '../../actions/actions/remove-wires.action';
+import { ActionContainer } from '../../actions/action-container';
+import { applyInvalidTint } from '../invalid-tint';
+
+export class WireToolSession implements DragSession {
+  // A wire released over a colliding body is discarded rather than frozen.
+  readonly discardOnInvalidRelease = true;
+
+  private _direction: WireDirection | null = null;
+  private _h: Wire | null = null;
+  private _v: Wire | null = null;
+  private _hasBodyCollision = false;
+  // Whether the pointer ever left the starting grid step — a press that never
+  // did is a tap, not a (possibly zero-length-again) wire drag.
+  private _moved = false;
+
+  /**
+   * @param onTap Invoked instead of a wire commit when the gesture stayed a
+   *   tap. The wire tool's port-negation / connection-toggle actions.
+   */
+  constructor(
+    private readonly project: Project,
+    private readonly dragLayer: Container<Component | Wire | ConnectionPoint>,
+    private readonly startPos: Point,
+    private readonly onTap?: () => void
+  ) {}
+
+  onMove(input: PointerInput): void {
+    const local = input.grid;
+    const dx = Math.round(local.x - this.startPos.x);
+    const dy = Math.round(local.y - this.startPos.y);
+    if (!this._moved && (dx !== 0 || dy !== 0)) {
+      this._moved = true;
+      // The gesture became a wire drag — only now do the tap-preview ghosts
+      // stop applying (a still-standing press keeps them visible).
+      this.project.floatingLayer.hideWireToolGhosts();
+    }
+
+    if (dx === 0 && dy === 0) {
+      this._direction = null;
+      if (this._h) this._h.length = 0;
+      if (this._v) this._v.length = 0;
+      this._updateBodyCollision();
+      return;
+    }
+
+    if (this._direction === null) {
+      this._direction =
+        dx !== 0 ? WireDirection.HORIZONTAL : WireDirection.VERTICAL;
+
+      if (!this._h) {
+        this._h = new Wire(WireDirection.HORIZONTAL, 0);
+        this._v = new Wire(WireDirection.VERTICAL, 0);
+        this._h.applyScale(this.project.scale.x);
+        this._v.applyScale(this.project.scale.x);
+        this.dragLayer.addChild(this._h);
+        this.dragLayer.addChild(this._v);
+      }
+    }
+
+    const h = this._h!;
+    const v = this._v!;
+
+    h.position.x = this.startPos.x + Math.min(0, dx);
+    h.position.y = this.startPos.y;
+    v.position.x = this.startPos.x;
+    v.position.y = this.startPos.y + Math.min(0, dy);
+    h.length = Math.abs(dx);
+    v.length = Math.abs(dy);
+
+    if (this._direction === WireDirection.HORIZONTAL) {
+      v.position.x = this.startPos.x + dx;
+    } else {
+      h.position.y = this.startPos.y + dy;
+    }
+
+    this._updateBodyCollision();
+  }
+
+  onEnd(): void {
+    if (!this._moved) {
+      this._cleanup();
+      this.onTap?.();
+      return;
+    }
+
+    const newWires = ([this._h, this._v] as const).filter(
+      (w): w is Wire => w !== null && w.length > 0
+    );
+
+    if (newWires.length > 0) {
+      const { toAdd, toRemove } = this.project.topology.integrate({
+        addedWires: newWires
+      });
+      // Actions snapshot in their constructors; the drawn instances (or their
+      // integrated variants) go into the project directly, then the action is
+      // registered against the already-materialized state.
+      const action = new ActionContainer();
+      if (toRemove.length > 0) {
+        action.add(new RemoveWiresAction(...toRemove));
+      }
+      action.add(new AddWiresAction(...toAdd));
+
+      for (const w of toRemove) this.project.removeWire(w.id);
+      // A drawn wire that survived integration is in toAdd — addWire
+      // re-parents it out of the drag layer, so cleanup must not destroy it.
+      const committed = new Set(toAdd);
+      for (const w of toAdd) this.project.addWire(w);
+
+      this.project.actionManager.register(action);
+      this._cleanup(committed);
+      return;
+    }
+
+    this._cleanup();
+  }
+
+  canEnd(): boolean {
+    return !this._hasBodyCollision;
+  }
+
+  onCancel(): void {
+    this._cleanup();
+  }
+
+  private _updateBodyCollision(): void {
+    const hCollision =
+      this._h !== null &&
+      this._h.length > 0 &&
+      this.project.hasWireBodyCollision(this._h.gridBounds);
+    const vCollision =
+      this._v !== null &&
+      this._v.length > 0 &&
+      this.project.hasWireBodyCollision(this._v.gridBounds);
+
+    if (this._h) applyInvalidTint(this._h, hCollision);
+    if (this._v) applyInvalidTint(this._v, vCollision);
+
+    this._hasBodyCollision = hCollision || vCollision;
+  }
+
+  private _cleanup(keep?: ReadonlySet<Wire>): void {
+    for (const w of [this._h, this._v]) {
+      if (w && !keep?.has(w) && !w.destroyed) w.destroy({ children: true });
+    }
+    this._h = null;
+    this._v = null;
+    this._hasBodyCollision = false;
+  }
+}

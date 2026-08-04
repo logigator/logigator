@@ -1,0 +1,23 @@
+<div *appTranslate="let t" class="flex flex-col gap-4">
+  <p>{{ t('closeTab.message', { name: name }) }}</p>
+
+  @if (promotionWarning) {
+    <lg-message severity="warn">{{ promotionWarning }}</lg-message>
+  }
+
+  <div class="flex justify-end gap-2">
+    <lg-button
+      severity="danger"
+      [outlined]="true"
+      [label]="t('closeTab.discard')"
+      (onClick)="discard()"
+    />
+    <lg-button
+      severity="secondary"
+      [outlined]="true"
+      [label]="t('closeTab.cancel')"
+      (onClick)="cancel()"
+    />
+    <lg-button [label]="t('closeTab.save')" (onClick)="save()" />
+  </div>
+</div>

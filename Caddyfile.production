@@ -1,0 +1,11 @@
+logigator.test {
+	tls internal
+
+	# The production image serves the backend and both editors from one process.
+	reverse_proxy app:3000
+
+	log {
+		output stdout
+		level warn
+	}
+}

@@ -35,22 +35,10 @@
 					},
 					"body": [
 						{
-							"name": "_ga",
-							"domain": "Google Analytics",
-							"description": "Cookie von Google Analytics gesetzt.",
-							"expiration": "Läuft nach 2 Jahren ab"
-						},
-						{
-							"name": "_ga_(id)",
-							"domain": "Google Analytics",
-							"description": "Cookie von Google Analytics gesetzt.",
-							"expiration": "Läuft nach 2 Jahren ab"
-						},
-						{
-							"name": "_gid",
-							"domain": "Google Analytics",
-							"description": "Cookie von Google Analytics gesetzt.",
-							"expiration": "Sitzung"
+							"name": "ph_(id)_posthog",
+							"domain": "PostHog",
+							"description": "Von PostHog gesetztes Cookie, das eine anonyme Gerätekennung und eine Sitzungs-ID speichert.",
+							"expiration": "Läuft nach 1 Jahr ab"
 						}
 					]
 				}

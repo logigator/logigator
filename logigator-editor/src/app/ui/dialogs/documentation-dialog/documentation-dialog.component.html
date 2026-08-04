@@ -1,0 +1,53 @@
+<ng-container *appTranslate="let t">
+  <ng-template #content>
+    @if (markdown(); as md) {
+      <lg-markdown
+        [data]="md"
+        [assetUrls]="docImages()"
+        (linkClick)="onLinkClick($event)"
+      />
+    } @else if (failed()) {
+      <p class="text-muted text-sm">{{ t('documentation.loadError') }}</p>
+    } @else {
+      <p class="text-muted text-sm">{{ t('documentation.loading') }}</p>
+    }
+  </ng-template>
+
+  @if (layout.isCompact()) {
+    @if (showIndex()) {
+      <lg-navigation
+        class="min-h-0 grow overflow-y-auto py-2"
+        [items]="navItems()"
+        (selectedChange)="onNavSelect($event)"
+      />
+    } @else {
+      <div
+        class="border-border flex shrink-0 items-center gap-2 border-b px-3 pb-2"
+      >
+        <lg-button
+          icon="ph ph-arrow-left"
+          text
+          rounded
+          [ariaLabel]="t('documentation.back')"
+          (onClick)="backToIndex()"
+        />
+        <span class="font-semibold">{{ pageTitle() }}</span>
+      </div>
+      <div #contentPane class="min-h-0 grow overflow-y-auto p-4">
+        <ng-container [ngTemplateOutlet]="content" />
+      </div>
+    }
+  } @else {
+    <div class="flex min-h-0 grow">
+      <lg-navigation
+        class="border-border w-60 shrink-0 overflow-y-auto border-r py-2"
+        [items]="navItems()"
+        [selected]="activePage()"
+        (selectedChange)="onNavSelect($event)"
+      />
+      <div #contentPane class="min-h-0 grow overflow-y-auto p-5">
+        <ng-container [ngTemplateOutlet]="content" />
+      </div>
+    </div>
+  }
+</ng-container>
