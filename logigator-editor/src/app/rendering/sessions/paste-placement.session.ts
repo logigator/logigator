@@ -12,7 +12,7 @@ import { ActionContainer } from '../../actions/action-container';
 import { AddComponentsAction } from '../../actions/actions/add-components.action';
 import { AddWiresAction } from '../../actions/actions/add-wires.action';
 import { RemoveWiresAction } from '../../actions/actions/remove-wires.action';
-import { snapshotsShareSpan } from '../../wires/wire-snapshot.model';
+import { SnapshotSpanIndex } from '../../wires/wire-snapshot.model';
 import { DragCollisionState } from './drag-collision';
 import { SelectionManager } from '../../project/selection-manager';
 import { getStaticDI } from '../../utils/get-di';
@@ -169,7 +169,9 @@ export class PastePlacementSession implements DragSession {
     // The pasted wires' final geometry decides which integration results the
     // selection adopts below: a merge/split successor shares a span with a
     // pasted wire, an external wire's split pieces only touch at an endpoint.
-    const pastedSnapshots = this._wires.map((w) => Wire.snapshot(w));
+    const pastedSpans = new SnapshotSpanIndex(
+      this._wires.map((w) => Wire.snapshot(w))
+    );
 
     // Restore the wire invariants around the drop: a pasted wire dropped onto
     // a collinear wire merges with it (and pasted split pieces merge with each
@@ -207,10 +209,7 @@ export class PastePlacementSession implements DragSession {
 
     this._project.selectionManager.select(
       this._components,
-      toAdd.filter((w) => {
-        const snap = Wire.snapshot(w);
-        return pastedSnapshots.some((s) => snapshotsShareSpan(s, snap));
-      })
+      toAdd.filter((w) => pastedSpans.sharesSpan(Wire.snapshot(w)))
     );
 
     // State already applied — register without calling do()

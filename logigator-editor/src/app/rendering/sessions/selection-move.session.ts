@@ -24,7 +24,7 @@ import { AddWiresAction } from '../../actions/actions/add-wires.action';
 import { MoveEntry } from '../../actions/actions/move-entry.model';
 import { SerializedWire } from '../../wires/serialized-wire.model';
 import {
-  snapshotsShareSpan,
+  SnapshotSpanIndex,
   WireSnapshot
 } from '../../wires/wire-snapshot.model';
 import { DragCollisionState } from './drag-collision';
@@ -365,7 +365,9 @@ export class SelectionMoveSession implements DragSession {
     // frozen grab rect (the removals evict the replaced originals, which can
     // empty or shrink the bounding box the rect's translation anchors to —
     // read afterwards it would come back displaced or null).
-    const movedFinalSnapshots = this._wires.map((w) => Wire.snapshot(w));
+    const movedFinalSpans = new SnapshotSpanIndex(
+      this._wires.map((w) => Wire.snapshot(w))
+    );
     const grabRectBeforeIntegration = this.project.selectionManager.grabRect();
 
     // Materialize the integrator's changes with the live instances (positions
@@ -382,10 +384,7 @@ export class SelectionMoveSession implements DragSession {
       // stay out. Then re-freeze the rect captured above over the re-derived
       // membership.
       this.project.selectionManager.adoptWires(
-        toAdd.filter((w) => {
-          const snap = Wire.snapshot(w);
-          return movedFinalSnapshots.some((s) => snapshotsShareSpan(s, snap));
-        })
+        toAdd.filter((w) => movedFinalSpans.sharesSpan(Wire.snapshot(w)))
       );
       this.project.selectionManager.freezeGrabRect(grabRectBeforeIntegration);
     }
