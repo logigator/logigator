@@ -36,13 +36,29 @@ export class PastePlacementSession implements DragSession {
   public onDown(input: PointerInput): boolean {
     if (this._isDragging) return true;
     if (!this.containsPoint(input.grid)) return false;
-    this.beginDrag(roundToGrid(input.grid, true));
+    const offset = this._dragLayer.position;
+    const gridPos = roundToGrid(input.grid, true);
+    // Anchor in element space: onMove derives the layer offset from it, so a
+    // press on ghosts that already carry an offset (a re-grab after a drop the
+    // collision blocked) must not fold that offset into the anchor.
+    this.beginDrag(new Point(gridPos.x - offset.x, gridPos.y - offset.y));
     return true;
   }
 
   public beginDrag(anchor: Point): void {
     this._isDragging = true;
     this._anchor = anchor;
+  }
+
+  /**
+   * The drop landed on a collision, so the ghosts stay where they are for the
+   * user to reposition. Releasing the anchor puts the session back in the
+   * state it opens in — waiting for a press — so the next press grabs the
+   * ghosts where it lands instead of pulling them under the old anchor.
+   */
+  public onInvalidRelease(): void {
+    this._isDragging = false;
+    this._anchor = null;
   }
 
   public containsPoint(p: Point): boolean {

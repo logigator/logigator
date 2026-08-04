@@ -233,8 +233,10 @@ export class WorkModeRouter implements PointerToolTarget, ToolHost {
     if (!session) return;
     if (!session.canEnd()) {
       // An invalid release either discards the session (placement) or leaves
-      // it frozen in place (move / paste) for the user to reposition.
+      // it frozen in place (move / paste) for the user to reposition — a
+      // frozen session is told, so it can let go of the ended gesture's anchor.
       if (session.discardOnInvalidRelease) this.abortActiveDrag();
+      else session.onInvalidRelease?.();
       return;
     }
     session.onEnd();

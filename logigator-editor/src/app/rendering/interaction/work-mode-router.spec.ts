@@ -202,11 +202,15 @@ describe('WorkModeRouter in SELECT mode', () => {
 
     expect(router.hasActiveSession).toBe(true); // still frozen, awaiting a valid drop
 
-    // Moving back to clear space then releasing commits the move.
-    router.move(makeInput(2, 5.5));
+    // The release ended the gesture, so the frozen group needs a fresh press
+    // before it moves again (the controller only routes moves to the tool
+    // while its pointer is down). Grabbing it and dragging to clear space
+    // commits the move — from where the second press landed, not the first.
+    router.down(makeInput(7, 5.5));
+    router.move(makeInput(3, 5.5));
     router.up();
     expect(router.hasActiveSession).toBe(false);
-    expect(comp.position.x).toBe(3);
+    expect(comp.position.x).toBe(4);
   });
 
   it('pressing outside the grab rect starts a new selection instead', () => {

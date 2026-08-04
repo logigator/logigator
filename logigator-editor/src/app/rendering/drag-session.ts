@@ -14,6 +14,14 @@ export interface DragSession {
    */
   readonly discardOnInvalidRelease?: boolean;
   /**
+   * Optional: the release that froze this session in place (`canEnd()` false,
+   * {@link discardOnInvalidRelease} unset). The gesture is over even though
+   * the session is not, so a session holding a drag anchor drops it here —
+   * the next press grabs the group where it lands rather than pulling it
+   * under the released gesture's anchor.
+   */
+  onInvalidRelease?(): void;
+  /**
    * Optional: a new primary press while this session is already active (only
    * possible for sessions that outlive a gesture, e.g. paste placement).
    * Return true when the press was consumed; false asks the router to cancel

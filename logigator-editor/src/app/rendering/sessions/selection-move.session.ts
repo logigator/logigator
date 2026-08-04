@@ -144,6 +144,16 @@ export class SelectionMoveSession implements DragSession {
     return true;
   }
 
+  /**
+   * The drop landed on a collision, so the group stays floating for the user
+   * to reposition. Releasing the anchor puts the session back in the state the
+   * rotate flow opens in — awaiting a grab — so the next press anchors where
+   * it lands and a recovery rotate/move commits as soon as it clears.
+   */
+  onInvalidRelease(): void {
+    this._pointerStart = null;
+  }
+
   onMove(input: PointerInput): void {
     if (!this._pointerStart) return;
     const gridPos = roundToGrid(input.grid, true);

@@ -201,6 +201,31 @@ describe('PastePlacementSession', () => {
     });
   });
 
+  // ── re-grab after a frozen release ──────────────────────────────────────────
+
+  describe('onInvalidRelease()', () => {
+    it('leaves the ghosts put when the next press grabs them elsewhere', () => {
+      const comp = makeAnd(2, Direction.E, 0, 0);
+      session = new PastePlacementSession(project, dragLayer, [comp], []);
+
+      // Grabbed at (0,0), dragged 4 right, released onto a collision.
+      session.onDown(makeMoveInput(0, 0));
+      session.onMove(makeMoveInput(4, 0));
+      session.onInvalidRelease();
+
+      // Grabbed again at a different point of the group — the ghosts must not
+      // slide under the first grab's anchor.
+      session.onDown(makeMoveInput(5, 1));
+      expect(dragLayer.position.x).toBe(4);
+      expect(dragLayer.position.y).toBe(0);
+
+      // ...and from there they follow the new grab point.
+      session.onMove(makeMoveInput(7, 1));
+      expect(dragLayer.position.x).toBe(6);
+      expect(dragLayer.position.y).toBe(0);
+    });
+  });
+
   // ── moveBy ──────────────────────────────────────────────────────────────────
 
   describe('moveBy()', () => {

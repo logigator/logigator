@@ -105,6 +105,44 @@ describe('SelectionMoveSession collision', () => {
     });
   });
 
+  describe('re-grab after a release the collision froze', () => {
+    it('leaves the group put and follows the new grab point', () => {
+      const blocker = makeAnd();
+      blocker.position.set(5, 0);
+      project.addComponent(blocker);
+
+      const selected = makeAnd();
+      selected.position.set(0, 0);
+      project.addComponent(selected);
+      project.selectionManager.select([selected], []);
+
+      session = new SelectionMoveSession(
+        project,
+        dragLayer,
+        new Set([selected]),
+        new Set(),
+        new Point(0, 0)
+      );
+
+      // Dragged onto the blocker and released: the group stays where it is.
+      session.onMove(makeMoveInput(5, 0));
+      expect(session.canEnd()).toBe(false);
+      session.onInvalidRelease();
+      expect(session.isAwaitingGrab()).toBe(true);
+
+      // Grabbed again at a different point of the group: the press alone must
+      // not shift it — before, the stale anchor pulled it under the cursor.
+      expect(session.onDown(makeMoveInput(6, 1))).toBe(true);
+      expect(dragLayer.position.x).toBe(5);
+      expect(dragLayer.position.y).toBe(0);
+
+      // From there it tracks the new grab point, not the old one.
+      session.onMove(makeMoveInput(8, 1));
+      expect(dragLayer.position.x).toBe(7);
+      expect(dragLayer.position.y).toBe(0);
+    });
+  });
+
   describe('wire movement', () => {
     it('canEnd() is false when wire is moved onto a component body — catches missing wire check bug', () => {
       // Stationary component at (5,0): body Rectangle(5,0,2,2).
