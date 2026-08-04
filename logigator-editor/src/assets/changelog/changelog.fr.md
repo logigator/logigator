@@ -3,7 +3,7 @@
 Toutes les modifications notables de l'éditeur Logigator sont consignées ici. La
 version la plus récente est indiquée en premier.
 
-## 2.0.0 — 2026-07-13
+## 2.0.0 — 2026-08-04
 
 Logigator a été **entièrement reconstruit** — un moteur de rendu amélioré et
 compatible WebGPU, un pipeline de rendu bien plus efficace, une interface moderne
