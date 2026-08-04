@@ -1,23 +1,29 @@
 <lg-confirm-popup key="inline" />
 <lg-confirm-dialog />
 
-@if (layout.isCompact()) {
-  <app-mobile-top-bar></app-mobile-top-bar>
-} @else {
-  <app-title-bar></app-title-bar>
-  <app-tool-bar class="border-b border-border"></app-tool-bar>
-}
+<!-- Banner: the same landmark holds the top bars on every breakpoint. flex-col
+     keeps the bars block-level flex items inside the wrapper. -->
+<header class="flex flex-col">
+  @if (layout.isCompact()) {
+    <app-mobile-top-bar></app-mobile-top-bar>
+  } @else {
+    <app-title-bar></app-title-bar>
+    <app-tool-bar class="border-b border-border"></app-tool-bar>
+  }
+</header>
 
 <div class="flex grow min-h-0">
   @if (!layout.isCompact() && !isSimulation()) {
     <!-- shrink-0 keeps the side-bar at its full width; overflowing content in
          the board column (e.g. a long status-bar hint) truncates there instead
          of squeezing the side-bar. -->
-    <app-side-bar
-      class="w-80 shrink-0 border-r border-border overflow-y-auto"
-    ></app-side-bar>
+    <aside class="w-80 shrink-0 border-r border-border overflow-y-auto">
+      <app-side-bar class="block"></app-side-bar>
+    </aside>
   }
-  <div class="grow flex flex-col min-w-0">
+  <!-- The board column is the document's main landmark: the side-bar and the
+       top bars are chrome around it. -->
+  <main class="grow flex flex-col min-w-0">
     @if (!isSimulation()) {
       <app-tab-bar></app-tab-bar>
     }
@@ -128,7 +134,7 @@
     } @else {
       <app-status-bar [cursorPosition]="cursorPosition()"></app-status-bar>
     }
-  </div>
+  </main>
 </div>
 
 @if (layout.isCompact()) {

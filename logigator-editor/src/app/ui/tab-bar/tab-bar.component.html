@@ -1,9 +1,12 @@
-<lg-tab-strip
-  *transloco="let t"
-  [tabs]="tabs()"
-  [reorderDisabled]="isSimulation()"
-  [closeLabel]="t('tabBar.close')"
-  (selected)="activate($event)"
-  (closed)="close($event)"
-  (reorder)="drop($event)"
-></lg-tab-strip>
+<!-- Navigation landmark: the tab strip is where the user switches documents.
+     The strip keeps its own role=tablist semantics inside. -->
+<nav *transloco="let t" [attr.aria-label]="t('tabBar.landmark')">
+  <lg-tab-strip
+    [tabs]="tabs()"
+    [reorderDisabled]="isSimulation()"
+    [closeLabel]="t('tabBar.close')"
+    (selected)="activate($event)"
+    (closed)="close($event)"
+    (reorder)="drop($event)"
+  ></lg-tab-strip>
+</nav>

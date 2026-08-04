@@ -246,7 +246,8 @@ const fr: TranslationSchema = {
   },
   tabBar: {
     mainProject: 'Projet principal',
-    close: 'Fermer'
+    close: 'Fermer',
+    landmark: 'Projets ouverts'
   },
   portsPanel: {
     title: 'Ports',

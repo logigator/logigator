@@ -244,7 +244,8 @@ const en = {
   },
   tabBar: {
     mainProject: 'Main project',
-    close: 'Close'
+    close: 'Close',
+    landmark: 'Open projects'
   },
   portsPanel: {
     title: 'Ports',
