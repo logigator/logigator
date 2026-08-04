@@ -700,8 +700,6 @@ const de: TranslationSchema = {
       'Der Bericht konnte nicht gesendet werden. Bitte versuche es erneut.'
   },
   persistence: {
-    legacyProjectWarning:
-      'Dieses Projekt wurde mit dem alten Editor erstellt. Beim Speichern hier wird es in das neue Format umgewandelt — wird es danach wieder im alten Editor geöffnet, können benutzerdefinierte Komponenten fehlen oder falsch dargestellt werden.',
     projectSaved: 'Projekt gespeichert.',
     projectSavedLocal: 'Projekt im lokalen Speicher gespeichert.',
     componentSaved: 'Komponente gespeichert.',

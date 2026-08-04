@@ -702,8 +702,6 @@ const fr: TranslationSchema = {
     failed: "Impossible d'envoyer le rapport. Veuillez réessayer."
   },
   persistence: {
-    legacyProjectWarning:
-      "Ce projet a été créé avec l'ancien éditeur. L'enregistrer ici le convertit au nouveau format — le rouvrir ensuite dans l'ancien éditeur peut supprimer ou mal afficher les composants personnalisés.",
     projectSaved: 'Projet enregistré.',
     projectSavedLocal: 'Projet enregistré dans le stockage local.',
     componentSaved: 'Composant enregistré.',

@@ -689,8 +689,6 @@ const en = {
     failed: 'Could not send the report. Please try again.'
   },
   persistence: {
-    legacyProjectWarning:
-      'This project was made with the old editor. Saving here converts it to the new format — reopening it in the old editor afterwards may drop or misrender custom components.',
     projectSaved: 'Project saved.',
     projectSavedLocal: 'Project saved to local storage.',
     componentSaved: 'Component saved.',

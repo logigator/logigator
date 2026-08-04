@@ -109,13 +109,6 @@ export class ServerPersistenceGateway {
       attribution: detail.forkAttribution
     });
 
-    if (!detail.newFormat) {
-      this.toast.warn(
-        this.translation.translate('persistence.legacyProjectWarning'),
-        'ServerPersistenceGateway'
-      );
-    }
-
     return project;
   }
 

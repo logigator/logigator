@@ -699,8 +699,6 @@ const es: TranslationSchema = {
     failed: 'No se pudo enviar el informe. Inténtalo de nuevo.'
   },
   persistence: {
-    legacyProjectWarning:
-      'Este proyecto se creó con el editor antiguo. Guardarlo aquí lo convierte al formato nuevo; volver a abrirlo después en el editor antiguo puede descartar o representar mal los componentes personalizados.',
     projectSaved: 'Proyecto guardado.',
     projectSavedLocal: 'Proyecto guardado en el almacenamiento local.',
     componentSaved: 'Componente guardado.',
