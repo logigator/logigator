@@ -42,12 +42,12 @@ export class NewComponentDialogComponent {
 
   protected readonly sourceOptions = [
     {
-      label: this.translation.translate('newComponentDialog.storeCloud'),
-      value: 'server' as const
-    },
-    {
       label: this.translation.translate('newComponentDialog.storeLocal'),
       value: 'browser' as const
+    },
+    {
+      label: this.translation.translate('newComponentDialog.storeCloud'),
+      value: 'server' as const
     }
   ];
 
@@ -55,7 +55,10 @@ export class NewComponentDialogComponent {
   protected readonly symbol = signal('');
   protected readonly description = signal('');
   protected readonly isPublic = signal(true);
-  protected readonly source = signal<'server' | 'browser'>('server');
+  /** Cloud for a signed-in user; local is the only creatable option otherwise. */
+  protected readonly source = signal<'server' | 'browser'>(
+    this.userService.user() ? 'server' : 'browser'
+  );
 
   protected get canCreate(): boolean {
     if (this.name().trim().length === 0 || this.symbol().trim().length === 0)

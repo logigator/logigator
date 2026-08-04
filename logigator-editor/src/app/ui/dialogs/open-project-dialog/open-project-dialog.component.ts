@@ -58,7 +58,10 @@ export class OpenProjectDialogComponent implements OnInit {
 
   private readonly ctx = 'OpenProjectDialogComponent';
 
-  protected readonly activeTab = signal<string>('local');
+  /** Cloud for a signed-in user; local is the only listable library otherwise. */
+  protected readonly activeTab = signal<string>(
+    this.userService.user() ? 'server' : 'local'
+  );
   protected readonly importError = signal<string | null>(null);
 
   // --- Local source ---
@@ -102,6 +105,11 @@ export class OpenProjectDialogComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadLocalProjects();
+    // The cloud list loads on first activation; a cloud-preselected dialog has
+    // no tab change to ride on, so kick it off here.
+    if (this.activeTab() === 'server' && this.userService.user()) {
+      void this.loadServerProjects();
+    }
   }
 
   protected onTabChange(tab: string | number | undefined): void {

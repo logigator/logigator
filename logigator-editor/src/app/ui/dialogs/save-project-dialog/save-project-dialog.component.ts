@@ -56,17 +56,20 @@ export class SaveProjectDialogComponent extends LgDialogContent<
 
   protected readonly destinationOptions = [
     {
-      label: this.translation.translate('saveProjectDialog.destinationCloud'),
-      value: 'server' as const
-    },
-    {
       label: this.translation.translate('saveProjectDialog.destinationLocal'),
       value: 'local' as const
+    },
+    {
+      label: this.translation.translate('saveProjectDialog.destinationCloud'),
+      value: 'server' as const
     }
   ];
 
   protected readonly name = signal<string>(this.dialogData?.name ?? '');
-  protected readonly destination = signal<'server' | 'local'>('server');
+  /** Cloud for a signed-in user; local is the only saveable option otherwise. */
+  protected readonly destination = signal<'server' | 'local'>(
+    this.userService.user() ? 'server' : 'local'
+  );
   protected readonly isPublic = signal(true);
   protected readonly nameMaxLength = NAME_MAX_LENGTH;
 
