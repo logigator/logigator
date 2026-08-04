@@ -39,7 +39,7 @@ import { Component, PortSide } from '../components/component';
 import { ComponentOption } from '../components/component-option';
 import { ComponentProviderService } from '../components/component-provider.service';
 import { wouldCyclePlacement } from '../components/custom/placement-cycle';
-import { Project } from '../project/project';
+import { NO_EXCLUDED_IDS, Project } from '../project/project';
 import { Direction } from '../utils/direction';
 import { offsetRect } from '../utils/grid';
 import {
@@ -455,7 +455,7 @@ export function applyEditOps(
             ) ||
             project.hasComponentBodyWireCollision(
               rotatedBody,
-              new Set(),
+              NO_EXCLUDED_IDS,
               component.ignoresWireCollision
             )
           ) {

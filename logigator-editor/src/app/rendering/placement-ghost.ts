@@ -1,5 +1,5 @@
 import { Container, PointData } from 'pixi.js';
-import { Project } from '../project/project';
+import { NO_EXCLUDED_IDS, Project } from '../project/project';
 import { Component } from '../components/component';
 import { ComponentConfig } from '../components/component-config.model';
 import { Wire } from '../wires/wire';
@@ -87,7 +87,7 @@ export class PlacementGhost {
       ) ||
       this.project.hasComponentBodyWireCollision(
         this._component.bodyGridBounds,
-        new Set(),
+        NO_EXCLUDED_IDS,
         this._component.ignoresWireCollision
       );
     if (collision === this._hasCollision) return;

@@ -1,9 +1,9 @@
 import { Container } from 'pixi.js';
-import { Project } from '../../project/project';
+import { NO_EXCLUDED_IDS, Project } from '../../project/project';
 import { Component } from '../../components/component';
 import { Wire } from '../../wires/wire';
 import { ConnectionPoint } from '../../connection-points/connection-point';
-import { offsetRect } from '../../utils/grid';
+import { offsetRectInPlace } from '../../utils/grid';
 import { applyInvalidTint } from '../invalid-tint';
 
 /**
@@ -28,21 +28,28 @@ export class DragCollisionState {
 
   update(): void {
     const offset = this._dragLayer.position;
+    // The bounds getters hand back a fresh rect each call, so the drag offset
+    // goes on in place — this runs over the whole dragged set on every pointer
+    // move, where a copy per element per check is pure garbage.
     const collision =
-      this._components.some(
-        (c) =>
+      this._components.some((c) => {
+        const bodyBounds = offsetRectInPlace(c.bodyGridBounds, offset);
+        return (
           this._project.hasComponentCollision(
-            offsetRect(c.gridBounds, offset),
-            offsetRect(c.bodyGridBounds, offset)
+            offsetRectInPlace(c.gridBounds, offset),
+            bodyBounds
           ) ||
           this._project.hasComponentBodyWireCollision(
-            offsetRect(c.bodyGridBounds, offset),
-            new Set(),
+            bodyBounds,
+            NO_EXCLUDED_IDS,
             c.ignoresWireCollision
           )
-      ) ||
+        );
+      }) ||
       this._wires.some((w) =>
-        this._project.hasWireBodyCollision(offsetRect(w.gridBounds, offset))
+        this._project.hasWireBodyCollision(
+          offsetRectInPlace(w.gridBounds, offset)
+        )
       );
 
     const changed = collision !== this._hasCollision;

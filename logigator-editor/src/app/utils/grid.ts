@@ -29,6 +29,20 @@ export function offsetRect(bounds: Rectangle, offset: PointData): Rectangle {
 }
 
 /**
+ * {@link offsetRect} translating `bounds` itself, for callers holding a rect
+ * nobody else owns — the bounds getters allocate one per call, so the copy is
+ * redundant on the per-pointer-move paths.
+ */
+export function offsetRectInPlace(
+  bounds: Rectangle,
+  offset: PointData
+): Rectangle {
+  bounds.x += offset.x;
+  bounds.y += offset.y;
+  return bounds;
+}
+
+/**
  * Whether `rect` overlaps the AABB given as loose scalars. Matches
  * `Rectangle.intersects` exactly — edge contact is not an overlap — but takes
  * the second box unmaterialized, so callers that derive their bounds on the fly

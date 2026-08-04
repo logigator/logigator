@@ -20,6 +20,12 @@ import { ViewportController } from './viewport-controller';
 import { ConnectionPointManager } from '../connection-points/connection-point-manager';
 import { LoggingService } from '../logging/logging.service';
 
+/**
+ * The default `excludeIds` of the collision helpers, shared so a per-element
+ * collision check does not allocate a set per call to say "exclude nothing".
+ */
+export const NO_EXCLUDED_IDS: ReadonlySet<number> = new Set<number>();
+
 export class Project extends Container {
   public readonly actionManager = new ActionManager(this);
   public readonly selectionManager = new SelectionManager(this);
@@ -39,6 +45,10 @@ export class Project extends Container {
   private readonly _viewport: ViewportController;
   // Reused by the per-frame cull pass (see cull()).
   private readonly _cullView = new Rectangle();
+  // Reused by the collision helpers, which run once per dragged element on
+  // every pointer move and hand their result to no one.
+  private readonly _componentScratch: Component[] = [];
+  private readonly _wireScratch: Wire[] = [];
   // Render-loop signals for the hosting canvas (TickerScheduler on the board,
   // the direct re-blit subscription on a watch).
   private readonly _ticker$ = new Subject<TickerSignal>();
@@ -420,16 +430,16 @@ export class Project extends Container {
   public hasComponentCollision(
     bounds: Rectangle,
     bodyBounds: Rectangle,
-    excludeIds: ReadonlySet<number> = new Set()
+    excludeIds: ReadonlySet<number> = NO_EXCLUDED_IDS
   ): boolean {
-    for (const comp of this.queryComponentsInRange(bounds)) {
+    for (const comp of this._queryComponentScratch(bounds)) {
       if (excludeIds.has(comp.id)) continue;
       // Allow stub-on-stub overlap (e.g. perpendicular wire ends meeting at a
       // corner). Only block if a body intersects the other component's full
       // extent (body + stubs), which catches body-body, body-stub, stub-body.
       if (
-        bodyBounds.intersects(comp.gridBounds) ||
-        bounds.intersects(comp.bodyGridBounds)
+        comp.intersectsGridBounds(bodyBounds) ||
+        comp.intersectsBodyGridBounds(bounds)
       )
         return true;
     }
@@ -454,27 +464,40 @@ export class Project extends Container {
 
   public hasWireBodyCollision(
     wireBounds: Rectangle,
-    excludeIds: ReadonlySet<number> = new Set()
+    excludeIds: ReadonlySet<number> = NO_EXCLUDED_IDS
   ): boolean {
-    for (const comp of this.queryComponentsInRange(wireBounds)) {
+    for (const comp of this._queryComponentScratch(wireBounds)) {
       if (excludeIds.has(comp.id)) continue;
       if (comp.ignoresWireCollision) continue;
-      if (wireBounds.intersects(comp.bodyGridBounds)) return true;
+      if (comp.intersectsBodyGridBounds(wireBounds)) return true;
     }
     return false;
   }
 
   public hasComponentBodyWireCollision(
     bodyBounds: Rectangle,
-    excludeIds: ReadonlySet<number> = new Set(),
+    excludeIds: ReadonlySet<number> = NO_EXCLUDED_IDS,
     ignoresWires = false
   ): boolean {
     if (ignoresWires) return false;
-    for (const wire of this.queryWiresInRange(bodyBounds)) {
+    for (const wire of this._queryWireScratch(bodyBounds)) {
       if (excludeIds.has(wire.id)) continue;
-      if (wire.gridBounds.intersects(bodyBounds)) return true;
+      if (wire.intersectsGridBounds(bodyBounds)) return true;
     }
     return false;
+  }
+
+  // The collision helpers above query into a shared buffer instead of taking a
+  // fresh array per call. queryRange appends, hence the reset; sharing is safe
+  // because no collision helper runs inside another's loop.
+  private _queryComponentScratch(rect: Rectangle): readonly Component[] {
+    this._componentScratch.length = 0;
+    return this.queryComponentsInRange(rect, this._componentScratch);
+  }
+
+  private _queryWireScratch(rect: Rectangle): readonly Wire[] {
+    this._wireScratch.length = 0;
+    return this.queryWiresInRange(rect, this._wireScratch);
   }
 
   public detachForDrag(
