@@ -13,6 +13,7 @@ import { DialogService } from './dialog.service';
 import { DialogConfig } from './dialog-config';
 import { DialogRef } from './dialog-ref';
 import { LgDialogContent } from './dialog-content';
+import { provideLgDialogTelemetry } from './dialog-telemetry';
 
 @Component({
   selector: 'lg-test-dialog-child',
@@ -246,5 +247,73 @@ describe('DialogService', () => {
     ref.onClose.subscribe(() => (closed = true));
     (document.querySelector('.cdk-overlay-backdrop') as HTMLElement).click();
     expect(closed).toBe(true);
+  });
+
+  describe('telemetry', () => {
+    function record(onOpen?: () => void): {
+      opens: string[];
+      closes: [string, boolean][];
+    } {
+      const opens: string[] = [];
+      const closes: [string, boolean][] = [];
+      TestBed.configureTestingModule({
+        providers: [
+          provideLgDialogTelemetry(() => ({
+            onOpen: (id) => {
+              opens.push(id);
+              onOpen?.();
+            },
+            onClose: (id, resolved) => closes.push([id, resolved])
+          }))
+        ]
+      });
+      return { opens, closes };
+    }
+
+    // The close notification cannot ride the service's `Subscription` bag: the
+    // disposer unsubscribes it before `onClose` emits. This is what a refactor
+    // of that teardown order breaks silently.
+    it('reports the close of a dialog that resolves a result', () => {
+      const { opens, closes } = record();
+      const ref = open({ inputValues: { wordSize: 1 }, telemetryId: 'demo' });
+
+      expect(opens).toEqual(['demo']);
+      expect(closes).toEqual([]);
+
+      ref.close('saved');
+
+      expect(closes).toEqual([['demo', true]]);
+    });
+
+    it('reports a dismissal as unresolved', () => {
+      const { closes } = record();
+      open({ inputValues: { wordSize: 1 }, telemetryId: 'demo' });
+
+      panel()!.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })
+      );
+
+      expect(closes).toEqual([['demo', false]]);
+    });
+
+    it('leaves a dialog without a telemetryId unreported', () => {
+      const { opens, closes } = record();
+      const ref = open({ inputValues: { wordSize: 1 } });
+      ref.close('saved');
+
+      expect(opens).toEqual([]);
+      expect(closes).toEqual([]);
+    });
+
+    it('opens the dialog even when the observer throws', () => {
+      record(() => {
+        throw new Error('observer is broken');
+      });
+
+      expect(() =>
+        open({ inputValues: { wordSize: 1 }, telemetryId: 'demo' })
+      ).not.toThrow();
+      expect(panel()).not.toBeNull();
+    });
   });
 });

@@ -90,6 +90,11 @@ export {
   type DialogDataOf,
   type DialogResultOf
 } from './components/dynamic-dialog/dialog-content';
+export {
+  LG_DIALOG_TELEMETRY,
+  provideLgDialogTelemetry,
+  type LgDialogTelemetry
+} from './components/dynamic-dialog/dialog-telemetry';
 
 export { WindowService } from './components/window/window.service';
 export { WindowRef } from './components/window/window-ref';

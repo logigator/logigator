@@ -62,4 +62,9 @@ export class DialogConfig<D = unknown, C = unknown> {
    * and insets. The body always keeps its flex sizing (`min-h-0 grow`).
    */
   bodyClass?: string;
+  /**
+   * Opaque identifier reported to an {@link LgDialogTelemetry} observer on open
+   * and close. Omit it and the dialog is not reported at all.
+   */
+  telemetryId?: string;
 }

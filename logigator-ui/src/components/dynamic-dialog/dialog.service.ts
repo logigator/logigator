@@ -8,6 +8,7 @@ import { createGlobalOverlay } from '../../internal/overlay';
 import { DialogConfig } from './dialog-config';
 import { DialogDataOf, DialogResultOf } from './dialog-content';
 import { DialogRef } from './dialog-ref';
+import { LG_DIALOG_TELEMETRY } from './dialog-telemetry';
 import {
   DIALOG_CHILD_COMPONENT,
   LgDynamicDialogContainer
@@ -24,6 +25,7 @@ export class DialogService {
   private readonly overlay = inject(Overlay);
   private readonly focusTrapFactory = inject(ConfigurableFocusTrapFactory);
   private readonly parentInjector = inject(Injector);
+  private readonly telemetry = inject(LG_DIALOG_TELEMETRY, { optional: true });
 
   open<C, R = DialogResultOf<C>>(
     component: Type<C>,
@@ -42,6 +44,20 @@ export class DialogService {
       focusTrap.release();
       overlayRef.dispose();
     });
+
+    // Wired before the child is attached, so a dialog that closes itself from
+    // its own constructor is still reported. Deliberately not added to
+    // `subscription`: the disposer unsubscribes that bag *before* `onClose`
+    // emits, which would swallow every close.
+    const telemetryId = config.telemetryId;
+    if (telemetryId !== undefined) {
+      this.notifyTelemetry(() => this.telemetry?.onOpen(telemetryId));
+      dialogRef.onClose.subscribe((result) =>
+        this.notifyTelemetry(() =>
+          this.telemetry?.onClose(telemetryId, result !== undefined)
+        )
+      );
+    }
 
     const injector = Injector.create({
       parent: this.parentInjector,
@@ -78,5 +94,15 @@ export class DialogService {
     );
 
     return dialogRef;
+  }
+
+  /** Runs a telemetry callback in isolation — an observer that throws must not
+   * take down the dialog opening or tearing down around it. */
+  private notifyTelemetry(notify: () => void): void {
+    try {
+      notify();
+    } catch {
+      // Telemetry is an observer; the dialog lifecycle does not depend on it.
+    }
   }
 }
