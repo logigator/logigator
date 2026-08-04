@@ -62,6 +62,7 @@
   --color-success-surface-strong: var(--lg-success-surface-strong);
   --color-success-border: var(--lg-success-border);
   --color-warn: var(--lg-warn);
+  --color-warn-text: var(--lg-warn-text);
   --color-warn-surface: var(--lg-warn-surface);
   --color-warn-surface-strong: var(--lg-warn-surface-strong);
   --color-warn-border: var(--lg-warn-border);

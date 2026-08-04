@@ -12,7 +12,7 @@ const SEVERITY_CLASSES: Record<LgSeverity, string> = {
   secondary: 'border-border text-muted',
   info: 'border-info-border bg-info-surface text-info',
   success: 'border-success-border bg-success-surface text-success',
-  warn: 'border-warn-border bg-warn-surface text-warn',
+  warn: 'border-warn-border bg-warn-surface text-warn-text',
   danger: 'border-error-border bg-error-surface text-error'
 };
 

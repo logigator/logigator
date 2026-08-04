@@ -48,7 +48,7 @@ interface ToastTimer {
 const SEVERITY_CLASS: Record<LgSeverity, string> = {
   success: 'bg-success-surface-strong text-success border-success-border',
   info: 'bg-info-surface-strong text-info border-info-border',
-  warn: 'bg-warn-surface-strong text-warn border-warn-border',
+  warn: 'bg-warn-surface-strong text-warn-text border-warn-border',
   danger: 'bg-error-surface-strong text-error border-error-border',
   none: 'bg-content text-muted border-border',
   secondary:

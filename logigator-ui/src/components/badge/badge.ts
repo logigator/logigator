@@ -4,16 +4,14 @@ import { LgSeverity } from '../../tokens/severity';
 const BASE =
   'inline-flex h-6 min-w-6 items-center justify-center gap-1 px-2 text-xs font-bold leading-none';
 
-// Solid (filled) treatment per severity, on the themeable primary/surface/state
-// palette. Tag and Badge map secondary differently — encoded separately.
 const SEVERITY: Record<'primary' | LgSeverity, string> = {
   primary: 'bg-primary text-primary-contrast',
   none: 'bg-transparent text-muted',
   secondary:
     'bg-surface-100 text-surface-600 dark:bg-surface-800 dark:text-surface-300',
   info: 'bg-info text-white',
-  success: 'bg-success text-white',
-  warn: 'bg-warn text-white dark:text-surface-950',
+  success: 'bg-success text-white dark:text-surface-950',
+  warn: 'bg-warn text-surface-950',
   danger: 'bg-error text-white'
 };
 

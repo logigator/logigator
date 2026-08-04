@@ -65,19 +65,21 @@
   --lg-muted: #64748b;
   --lg-muted-hover: #475569;
 
-  /* state colors — color / surface (background) / border */
+  /* state colors — color / surface (background) / border. Borders are one step
+     below their `-surface` tint's step: an outline, not a frame. */
   --lg-info: #2563eb;
   --lg-info-surface: color-mix(in srgb, #eff6ff, transparent 5%);
-  --lg-info-border: #bfdbfe;
-  --lg-success: #16a34a;
+  --lg-info-border: #93c5fd;
+  --lg-success: #169545;
   --lg-success-surface: color-mix(in srgb, #f0fdf4, transparent 5%);
-  --lg-success-border: #bbf7d0;
-  --lg-warn: #ca8a04;
+  --lg-success-border: #86efac;
+  --lg-warn: #f0bd0d;
+  --lg-warn-text: #a16207;
   --lg-warn-surface: color-mix(in srgb, #fefce8, transparent 5%);
-  --lg-warn-border: #fef08a;
+  --lg-warn-border: #fde047;
   --lg-error: #dc2626;
   --lg-error-surface: color-mix(in srgb, #fef2f2, transparent 5%);
-  --lg-error-border: #fecaca;
+  --lg-error-border: #fca5a5;
 
   /* Opaque counterparts to the state surfaces, for elements that float over
      arbitrary content (e.g. toasts) where the translucent `-surface` tints wash
@@ -138,17 +140,19 @@
   --lg-muted: #a1a1aa;
   --lg-muted-hover: #d4d4d8;
 
-  /* state colors */
+  /* state colors. The borders wash the accent rather than its -700 step, at the
+     same strength: dark-on-dark leaves no outline at all on these tints. */
   --lg-info: #3b82f6;
   --lg-info-surface: color-mix(in srgb, #3b82f6, transparent 84%);
-  --lg-info-border: color-mix(in srgb, #1d4ed8, transparent 64%);
+  --lg-info-border: color-mix(in srgb, #3b82f6, transparent 64%);
   --lg-success: #22c55e;
   --lg-success-surface: color-mix(in srgb, #22c55e, transparent 84%);
-  --lg-success-border: color-mix(in srgb, #15803d, transparent 64%);
-  --lg-warn: #eab308;
+  --lg-success-border: color-mix(in srgb, #22c55e, transparent 64%);
+  --lg-warn: #f0bd0d;
+  --lg-warn-text: #f0bd0d;
   --lg-warn-surface: color-mix(in srgb, #eab308, transparent 84%);
-  --lg-warn-border: color-mix(in srgb, #a16207, transparent 64%);
+  --lg-warn-border: color-mix(in srgb, #f0bd0d, transparent 64%);
   --lg-error: #ef4444;
   --lg-error-surface: color-mix(in srgb, #ef4444, transparent 84%);
-  --lg-error-border: color-mix(in srgb, #b91c1c, transparent 64%);
+  --lg-error-border: color-mix(in srgb, #ef4444, transparent 64%);
 }
