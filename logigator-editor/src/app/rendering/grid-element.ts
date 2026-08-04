@@ -16,6 +16,13 @@ export interface GridElement extends ContainerChild {
   // still on screen. Spatial queries (selection, collision) keep using the tight
   // gridBounds.
   readonly cullBounds: Rectangle;
+  /**
+   * Re-tunes every visual whose on-screen size must stay constant across zoom
+   * (stroke widths, port stubs, dots) to `scale`. The quad tree owns when this
+   * runs: it keeps the elements of on-screen entries at the live zoom and lets
+   * off-screen ones lag until the cull pass brings them back into view.
+   */
+  applyScale(scale: number): void;
 }
 
 export interface Connectable extends GridElement {

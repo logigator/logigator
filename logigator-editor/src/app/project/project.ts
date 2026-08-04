@@ -103,12 +103,10 @@ export class Project extends Container {
       (scale) => {
         this._floatingLayer.updateScale(scale);
         this._connectionPoints.layer.applyScale(scale);
-        for (const child of this._components.items) {
-          child.applyScale(scale);
-        }
-        for (const child of this._wires.items) {
-          child.applyScale(scale);
-        }
+        // Only what the viewport can see — the quad trees catch their
+        // off-screen entries up in the cull pass that reveals them.
+        this._components.applyScale(scale);
+        this._wires.applyScale(scale);
       },
       () => this._ticker$.next('single')
     );
@@ -201,11 +199,29 @@ export class Project extends Container {
   }
 
   /**
+   * Re-tunes every content element's scale-dependent visuals to `scale`,
+   * culled entries included — what a render that draws the whole board
+   * un-culled needs, since {@link cull} is what would otherwise catch the
+   * off-screen ones up. Offscreen consumers pass their own scale and restore
+   * the live one afterwards.
+   */
+  public applyContentScale(scale: number): void {
+    this._components.applyScaleToAll(scale);
+    this._wires.applyScaleToAll(scale);
+    this._connectionPoints.layer.applyScale(scale);
+  }
+
+  /**
    * Entry-level cull pass: flags quad-tree entries outside the current
    * viewport as culled so their render groups are skipped at render time. The
    * board runs this before every blit; offscreen consumers (minimap, image
    * export, watches) render un-culled instead via `uncullTree`, and the next
    * board frame re-culls.
+   *
+   * Doubles as the catch-up point for the zoom re-tuning that
+   * {@link ViewportController} skips over off-screen entries: an entry is
+   * brought to the live scale here on the frame that un-culls it, so an
+   * element is always current by the time it can be drawn.
    */
   public cull(): void {
     const view = this._viewport.gridView(this._cullView);
@@ -319,7 +335,6 @@ export class Project extends Container {
    * de-duplicated pass instead of one overlapping quad-tree query per element.
    */
   public addComponent(component: Component, deferConnectionPoints = false) {
-    component.applyScale(this.scale.x);
     this._components.insert(component);
     this._componentsById.set(component.id, component);
     if (!deferConnectionPoints) {
@@ -393,7 +408,6 @@ export class Project extends Container {
    * recompute for this add. See {@link addComponent} for the batch-load pattern.
    */
   public addWire(wire: Wire, deferConnectionPoints = false) {
-    wire.applyScale(this.scale.x);
     this._wires.insert(wire);
     this._wiresById.set(wire.id, wire);
     if (!deferConnectionPoints) {

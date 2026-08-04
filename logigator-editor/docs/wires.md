@@ -35,7 +35,7 @@ All circuit data is stored in grid units. `Wire` lives inside `Project._gridSpac
 
 ### Constant-Width Stroke
 
-Wires must appear the same visual thickness regardless of zoom level. `Wire` extends `Graphics` directly and has no `_visualSpace` wrapper, so it must absorb the `gridSize` factor in `applyScale`. The base formula is `scale.y = 1 / (scale * gridSize)`, which cancels out both the zoom scale (from `Project.scale.x`) and the gridSize scale (from `_gridSpace`). `applyScale(scale)` is called by `Project.updateScale` on every zoom change.
+Wires must appear the same visual thickness regardless of zoom level. `Wire` extends `Graphics` directly and has no `_visualSpace` wrapper, so it must absorb the `gridSize` factor in `applyScale`. The base formula is `scale.y = 1 / (scale * gridSize)`, which cancels out both the zoom scale (from `Project.scale.x`) and the gridSize scale (from `_gridSpace`). `applyScale(scale)` is called by the quad tree — on every zoom change for a wire the viewport can see, and on the cull pass that brings an off-screen one back into view (see `rendering.md` § Culling).
 
 During simulation a powered wire is `POWERED_WIRE_THICKNESS` (3) screen pixels thick. That state is **pure transform** on the same shared context: `setPowered(true)` multiplies `scale.y` by the thickness and sets `pivot.y = POWERED_WIRE_PIVOT` so the scale-up extends symmetrically around the unpowered pixel. It deliberately does _not_ swap to a thicker `GraphicsContext`: reassigning a `Graphics` context detaches/re-attaches listeners on the shared context (a linear scan over every attached wire and stub — quadratic across a blinking board) and flags the render group for a full instruction rebuild, whereas transform changes are patched into the existing batch in place. The same rule holds for port stubs (`Component.setPortPowered`), negation bubbles (alpha toggle) and LEDs (tint).
 
@@ -170,7 +170,7 @@ Project (stage root)
     └── FloatingLayer
 ```
 
-`Project.addWire(wire)` calls `wire.applyScale(this.scale.x)` before inserting it into the quad tree, ensuring the wire renders at the correct thickness for the current zoom level. `Project.removeWire(wireId)` finds the wire by ID in `_wires.items`, snapshots its geometry, then removes it from the quad tree. The snapshot is forwarded to `ConnectionPointManager.onWireRemoved` so the CP layer can recompute around the removed segment (see [`connection-points.md`](connection-points.md)).
+`Project.addWire(wire)` inserts the wire into the quad tree, whose `insert` re-tunes it to the live zoom so it renders at the correct thickness. `Project.removeWire(wireId)` finds the wire by ID in `_wires.items`, snapshots its geometry, then removes it from the quad tree. The snapshot is forwarded to `ConnectionPointManager.onWireRemoved` so the CP layer can recompute around the removed segment (see [`connection-points.md`](connection-points.md)).
 
 ---
 

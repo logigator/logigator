@@ -471,7 +471,7 @@ export class BoardSnapshotService {
     // for outputs too small to render glyphs. Everything is restored afterwards;
     // nothing renders on-screen between the calls.
     const liveScale = project.scale.x;
-    this._applyContentScale(project, lineScale);
+    project.applyContentScale(lineScale);
     const restoreText = options.hideText
       ? this._hideTextNodes(project.gridSpace)
       : this._tuneTextResolution(project.gridSpace, renderMultiplier);
@@ -491,7 +491,7 @@ export class BoardSnapshotService {
       });
     } finally {
       restoreTint();
-      this._applyContentScale(project, liveScale);
+      project.applyContentScale(liveScale);
       restoreText();
       project.setOverlayVisible(true);
       grid?.destroy({ children: true });
@@ -542,13 +542,6 @@ export class BoardSnapshotService {
       }
     }
     return container;
-  }
-
-  /** Re-tunes every content element's scale-dependent visuals (see `applyScale`). */
-  private _applyContentScale(project: Project, scale: number): void {
-    for (const component of project.components) component.applyScale(scale);
-    for (const wire of project.wires) wire.applyScale(scale);
-    project.connectionPoints.layer.applyScale(scale);
   }
 
   /** Collects every text node under a container. */

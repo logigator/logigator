@@ -4,7 +4,8 @@ import { QuadTreeContainer } from './quad-tree-container';
 import { GridElement } from './grid-element';
 import { arrayWithExactContents } from '../../testing/vitest-helpers';
 
-type TestItem = Container & GridElement;
+/** `appliedScale` records what the tree last re-tuned the item to. */
+type TestItem = Container & GridElement & { appliedScale: number };
 
 describe('QuadTreeContainer', () => {
   let tree: QuadTreeContainer<TestItem>;
@@ -27,7 +28,22 @@ describe('QuadTreeContainer', () => {
     // Real elements derive this without allocating; here it just has to agree
     // with gridBounds, which is the contract the tree relies on.
     c.intersectsGridBounds = (rect) => rect.intersects(c.gridBounds);
+    c.appliedScale = 1;
+    c.applyScale = (scale) => (c.appliedScale = scale);
     return c;
+  }
+
+  /** Inserts a 5-item cluster (forces a leaf split) around (x, y). */
+  function insertCluster(x: number, y: number): TestItem[] {
+    const items = [
+      makeItem(x, y, 1, 1),
+      makeItem(x + 2, y, 1, 1),
+      makeItem(x, y + 2, 1, 1),
+      makeItem(x + 2, y + 2, 1, 1),
+      makeItem(x + 1, y + 1, 1, 1)
+    ];
+    for (const item of items) tree.insert(item);
+    return items;
   }
 
   /** Query the full positive coordinate space. */
@@ -676,19 +692,6 @@ describe('QuadTreeContainer', () => {
       return false;
     }
 
-    /** Inserts a 5-item cluster (forces a leaf split) around (x, y). */
-    function insertCluster(x: number, y: number): TestItem[] {
-      const items = [
-        makeItem(x, y, 1, 1),
-        makeItem(x + 2, y, 1, 1),
-        makeItem(x, y + 2, 1, 1),
-        makeItem(x + 2, y + 2, 1, 1),
-        makeItem(x + 1, y + 1, 1, 1)
-      ];
-      for (const item of items) tree.insert(item);
-      return items;
-    }
-
     it('culls entries outside the view and keeps intersecting ones', () => {
       const near = insertCluster(2, 2);
       const far = insertCluster(40, 40);
@@ -747,6 +750,87 @@ describe('QuadTreeContainer', () => {
 
       tree.cull(new Rectangle(30, 0, 1.5, 10));
       expect(isCulled(poker)).toBe(false);
+    });
+  });
+
+  // ── applyScale ────────────────────────────────────────────────────────────
+
+  describe('applyScale', () => {
+    it('re-tunes on-screen elements and leaves culled ones behind', () => {
+      const near = insertCluster(2, 2);
+      const far = insertCluster(40, 40);
+      tree.cull(new Rectangle(0, 0, 10, 10));
+
+      tree.applyScale(2);
+
+      for (const item of near) expect(item.appliedScale).toBe(2);
+      for (const item of far) expect(item.appliedScale).toBe(1);
+    });
+
+    it('catches a culled element up on the cull that reveals it', () => {
+      const far = insertCluster(40, 40);
+      tree.cull(new Rectangle(0, 0, 10, 10));
+      tree.applyScale(2);
+
+      tree.cull(new Rectangle(38, 38, 10, 10));
+
+      for (const item of far) expect(item.appliedScale).toBe(2);
+    });
+
+    it('re-tunes a revealed entry only once while the scale holds', () => {
+      const [item] = insertCluster(40, 40);
+      tree.cull(new Rectangle(0, 0, 10, 10));
+      tree.applyScale(2);
+      tree.cull(new Rectangle(38, 38, 10, 10));
+
+      const calls: number[] = [];
+      item.applyScale = (scale) => calls.push(scale);
+      tree.cull(new Rectangle(38, 38, 10, 10));
+
+      expect(calls).toEqual([]);
+    });
+
+    it('applyScaleToAll reaches culled elements too', () => {
+      const near = insertCluster(2, 2);
+      const far = insertCluster(40, 40);
+      tree.cull(new Rectangle(0, 0, 10, 10));
+
+      tree.applyScaleToAll(2);
+
+      for (const item of [...near, ...far]) expect(item.appliedScale).toBe(2);
+    });
+
+    it('brings an inserted element to the live scale', () => {
+      tree.applyScale(2);
+
+      const item = makeItem(5, 5, 1, 1);
+      tree.insert(item);
+
+      expect(item.appliedScale).toBe(2);
+    });
+
+    it('re-tunes an element a merge pulls out of a culled entry', () => {
+      // Five elements split the root: four in its nw child, one in its se
+      // child. The view sees nw and the root but misses se's loose bounds, so
+      // the lone se element lags the scale. Emptying nw then collapses the
+      // root's branches, merging that lagging element into the root — whose
+      // own stamp says "current".
+      const near = [
+        makeItem(2, 2, 1, 1),
+        makeItem(4, 2, 1, 1),
+        makeItem(2, 4, 1, 1),
+        makeItem(4, 4, 1, 1)
+      ];
+      const far = makeItem(40, 40, 1, 1);
+      for (const item of [...near, far]) tree.insert(item);
+      tree.cull(new Rectangle(0, 0, 10, 10));
+      tree.applyScale(2);
+      expect(far.appliedScale).toBe(1);
+
+      for (const item of near) tree.remove(item);
+      tree.cull(new Rectangle(0, 0, 64, 64));
+
+      expect(far.appliedScale).toBe(2);
     });
   });
 });

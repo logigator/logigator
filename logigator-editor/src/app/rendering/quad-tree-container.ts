@@ -32,6 +32,12 @@ class QuadTreeEntry<T extends GridElement> extends Container {
   /** The tight cell: this entry's slot in the quadrant lattice. */
   readonly region: Rectangle;
 
+  // Zoom scale this entry's elements were last tuned to, or null while it
+  // holds none. The scale walk stops at culled entries, so an off-screen
+  // entry's stamp falls behind the live zoom; the cull pass compares it and
+  // catches the entry up on the frame that un-culls it.
+  appliedScale: number | null = null;
+
   // The container itself always sits at position (0, 0) so that elements
   // reparented between entries never shift their world coordinates.
   //
@@ -150,11 +156,22 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
   );
   private _items = new Map<T, QuadTreeEntry<T>>();
 
+  // The zoom scale every element the tree holds is tuned to — the target the
+  // per-entry stamps catch up to. See applyScale.
+  private _appliedScale = 1;
+
   /**
    * Inserts an element into the quad tree.
    * @param element element to insert
    */
   public insert(element: T): void {
+    // An arriving element carries whatever scale its previous host tuned it to
+    // — a drag layer's, or a lagging off-screen entry's on a re-bucket — so
+    // bring it to the live zoom before it can be drawn. Re-tuning an element
+    // that is already current costs a cache lookup: both the context swap and
+    // the transform writes it runs drop an unchanged value.
+    element.applyScale(this._appliedScale);
+
     if (this._items.has(element)) {
       this.remove(element);
     }
@@ -336,11 +353,73 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
   private cullEntry(entry: QuadTreeEntry<T>, view: Rectangle): void {
     const culled = !view.intersects(entry.boundsArea);
     entry.culled = culled;
-    if (culled || !entry.branches) return;
+    if (culled) return;
+    // On screen, so its elements must be current before the frame draws them.
+    // This is where an entry the scale walk skipped while off-screen catches
+    // up, whether zooming or panning brought it back into view.
+    if (entry.appliedScale !== this._appliedScale) {
+      this.applyScaleToItems(entry, this._appliedScale);
+    }
+    if (!entry.branches) return;
     this.cullEntry(entry.branches.nw, view);
     this.cullEntry(entry.branches.ne, view);
     this.cullEntry(entry.branches.sw, view);
     this.cullEntry(entry.branches.se, view);
+  }
+
+  /**
+   * Re-tunes the screen-constant visuals of every element the viewport can see
+   * to `scale`, skipping culled entries: their elements keep the scale they
+   * were last drawn at until {@link cull} brings them back on screen. Zoom
+   * runs this per gesture step, and it is not cheap per element: re-tuning one
+   * dirties its leaf transform, which PixiJS recomputes, and swaps its cached
+   * context, which dirties its whole render group's instruction set. Skipping
+   * the culled entries is what keeps a zoom step proportional to what is on
+   * screen instead of to the size of the board.
+   *
+   * A tree nobody culls (an offscreen snapshot's project, a watch canvas) has
+   * no culled entries, so the same walk covers all of it.
+   */
+  public applyScale(scale: number): void {
+    this._appliedScale = scale;
+    this.applyScaleToEntry(this._tree, scale, true);
+  }
+
+  /**
+   * Re-tunes every element regardless of culling. For renders that draw the
+   * whole board un-culled (see `uncullTree`), where the visible-only walk
+   * would leave off-screen elements at a foreign scale.
+   */
+  public applyScaleToAll(scale: number): void {
+    this._appliedScale = scale;
+    this.applyScaleToEntry(this._tree, scale, false);
+  }
+
+  private applyScaleToEntry(
+    entry: QuadTreeEntry<T>,
+    scale: number,
+    skipCulled: boolean
+  ): void {
+    if (skipCulled && entry.culled) return;
+    this.applyScaleToItems(entry, scale);
+    const branches = entry.branches;
+    if (!branches) return;
+    this.applyScaleToEntry(branches.nw, scale, skipCulled);
+    this.applyScaleToEntry(branches.ne, scale, skipCulled);
+    this.applyScaleToEntry(branches.sw, scale, skipCulled);
+    this.applyScaleToEntry(branches.se, scale, skipCulled);
+  }
+
+  private applyScaleToItems(entry: QuadTreeEntry<T>, scale: number): void {
+    for (const element of entry.oversizeItems.children) {
+      element.applyScale(scale);
+    }
+    if (entry.leafItems) {
+      for (const element of entry.leafItems.children) {
+        element.applyScale(scale);
+      }
+    }
+    entry.appliedScale = scale;
   }
 
   /**
@@ -490,6 +569,10 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
 
     if (childrenCount < QuadTreeContainer.MIN_BRANCH_ELEMENTS) {
       entry.leafItems = entry.addChild(new Container<T>());
+      // The absorbed children may have been culled, and so lagging behind the
+      // live zoom, while this entry was on screen and current. Drop the stamp
+      // so the next cull re-tunes the merged set instead of trusting it.
+      entry.appliedScale = null;
 
       // Everything a child holds is at most the child's cell size — half this
       // entry's — so it all fits leafItems here.

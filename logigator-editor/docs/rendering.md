@@ -156,11 +156,11 @@ Owns all circuit state and sub-layers. Not strictly part of `rendering/` but is 
 
 Key behaviours relevant to rendering:
 
-| Member                            | Effect                                                                                                                                                                                                                                                                                                                                                                   |
-| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `viewport` (`ViewportController`) | All camera control: `pan`/`setPosition` (forwarding to `Grid.updatePosition`), `zoomIn/zoomOut/zoom100/zoomBy` (scale + reposition around center, `Grid.updateScale`, `FloatingLayer.updateScale`, `ConnectionPointLayer.applyScale`, `applyScale` on every component and wire, then one `'single'` render request), `resizeViewport`, `viewportChange$`/`viewportState` |
-| `topology` (`WireTopology`)       | Wire-invariant integration (`integrate`) and the wire tool's connection toggling — see `wires.md`                                                                                                                                                                                                                                                                        |
-| `addComponent / addWire`          | Appends to `_components` / `_wires` (and the id → element maps behind `getComponentById`/`getWireById`), calls `applyScale`, fires the matching `ConnectionPointManager` hook, emits `'single'`                                                                                                                                                                          |
+| Member                            | Effect                                                                                                                                                                                                                                                                                                                                                                                                            |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `viewport` (`ViewportController`) | All camera control: `pan`/`setPosition` (forwarding to `Grid.updatePosition`), `zoomIn/zoomOut/zoom100/zoomBy` (scale + reposition around center, `Grid.updateScale`, `FloatingLayer.updateScale`, `ConnectionPointLayer.applyScale`, `applyScale` on each quad tree — on-screen entries only, see [Culling](#culling) — then one `'single'` render request), `resizeViewport`, `viewportChange$`/`viewportState` |
+| `topology` (`WireTopology`)       | Wire-invariant integration (`integrate`) and the wire tool's connection toggling — see `wires.md`                                                                                                                                                                                                                                                                                                                 |
+| `addComponent / addWire`          | Appends to `_components` / `_wires` (and the id → element maps behind `getComponentById`/`getWireById`; `insert` brings the element to the live zoom), fires the matching `ConnectionPointManager` hook, emits `'single'`                                                                                                                                                                                         |
 
 Zoom is clamped to ±12 steps (scale range roughly `1.2^-12` to `1.2^5`). Pivot-correct zoom uses a matrix chain to keep the pixel under the mouse stationary.
 
@@ -309,9 +309,10 @@ The `INITIAL_SIZE` of 64 grid units covers a typical small circuit without any t
 
 ### `insert(element: T)`
 
-1. If the element is already tracked, removes it first (handles re-insertion after position change).
-2. Reads `element.cullBounds` and calls `expand()` in a loop until the root cell is at least the element's size and contains the element's center.
-3. Walks the tree from the root by the element's center. At each node, if the element is too large for a child cell (max dimension over half the node), it parks in `oversizeItems` of the current node. Otherwise descend into the center's quadrant; split if the leaf is full and large enough.
+1. Re-tunes the element to the tree's live zoom scale (see [Culling](#culling)) — an arriving element may carry a drag layer's scale or a lagging off-screen entry's.
+2. If the element is already tracked, removes it first (handles re-insertion after position change).
+3. Reads `element.cullBounds` and calls `expand()` in a loop until the root cell is at least the element's size and contains the element's center.
+4. Walks the tree from the root by the element's center. At each node, if the element is too large for a child cell (max dimension over half the node), it parks in `oversizeItems` of the current node. Otherwise descend into the center's quadrant; split if the leaf is full and large enough.
 
 ### `remove(element: T): boolean`
 
@@ -479,6 +480,17 @@ Off-screen scene nodes are skipped at render time via the plain PixiJS `culled` 
 Culling composes with the render-group split (see [Render groups](#render-groups)): a culled entry is also a render group, so its `execute` is skipped wholesale at render time, and a `culled` flip dirties only the instruction set of the nearest enclosing entry group.
 
 Culling sets only the PixiJS `culled` flag and never touches the quad tree's own arrays, so `queryRange` and all collision/connection-point logic are unaffected.
+
+#### The cull pass also drives zoom re-tuning
+
+Every screen-constant visual (stroke widths, port stubs, dots) has to be re-tuned on every zoom step, and doing that board-wide is what made zoom expensive on large boards: it dirties every leaf's transform (PixiJS then recomputes each one) and swaps every body's cached context (which dirties its render group's whole instruction set). The visible payoff is viewport-sized, so the work is scoped to the viewport too:
+
+- **`QuadTreeContainer.applyScale(scale)`** — what `ViewportController` calls per zoom step — walks the tree and **skips culled entries**, stamping each visited entry with the scale it applied (`QuadTreeEntry.appliedScale`).
+- **`cull(view)`** compares the stamp of every entry it finds on screen against the live scale and re-tunes the entry's elements when they differ. Since the pass runs immediately before each blit, an element is always current by the time it can be drawn — whether zoom or a pan brought it into view.
+- **`insert`** re-tunes the arriving element, so one that comes from a drag layer or out of a lagging off-screen entry is current wherever it lands. **`minifyBranch`** drops the merged entry's stamp, because absorbing a lagging culled child into an on-screen entry is the one case a stamp would otherwise vouch for wrongly.
+- **`applyScaleToAll(scale)`** ignores culling, for renders that draw the whole board un-culled: `Project.applyContentScale` wraps it (plus the CP layer) and `BoardSnapshotService` brackets its content pass with it. A tree nobody culls at all — a watch canvas, an offscreen project — has no culled entries, so the ordinary walk already covers everything.
+
+The `ConnectionPointLayer` is not culled, so its dots are still re-tuned board-wide on every step; that is the remaining floor. `ConnectionPoint.scaleForScale` clamps to a fixed pixel size between roughly 0.5× and 1.33× zoom, where the write is a no-op that PixiJS discards, but outside that band every dot is dirtied.
 
 ### Render groups
 
