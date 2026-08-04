@@ -18,6 +18,17 @@ import {
 const ANALYTICS_CATEGORY = 'analytics';
 
 /**
+ * Identifies this app among the surfaces sharing the PostHog project — the
+ * marketing/account website and the legacy editor both report to the same key.
+ * `$pageview` and `$autocapture` are otherwise indistinguishable between them,
+ * and the alternative — filtering insights on `$pathname` — silently breaks
+ * whenever a surface is remounted at a different path. Kept in sync with the
+ * `before_send` hooks in the two snippet-based surfaces (the backend's
+ * `default.hbs` layout and the legacy editor's `index.html`).
+ */
+const APP_ID = 'editor-v2';
+
+/**
  * Vendor-neutral product-analytics sink over the `posthog-js` package. Every
  * event goes through {@link capture}, which no-ops until PostHog has been
  * initialised — and it is initialised only once the user grants the
@@ -32,7 +43,7 @@ const ANALYTICS_CATEGORY = 'analytics';
  *
  * {@link init} wires the self-contained observable sources (tool switches,
  * simulation lifecycle, tutorial start, per-project edit operations, and the
- * `ui_language` super property every event carries); the remaining events are
+ * `app` and `ui_language` super properties every event carries); the rest are
  * emitted by direct {@link capture} calls at their method sites (persistence,
  * image export, promotion, compile diagnostics, docs, tutorial end, share-link,
  * custom-component create/delete, settings changes, bug reports, changelog,
@@ -56,8 +67,8 @@ export class AnalyticsService {
   private posthog: PostHog | null = null;
   /** In-flight (or settled) import, so concurrent consent events share one. */
   private posthogLoad: Promise<PostHog> | null = null;
-  /** The active UI language, mirrored so {@link registerLanguage} can restamp
-   * it whenever PostHog itself becomes available. */
+  /** The active UI language, mirrored so {@link registerSuperProperties} can
+   * restamp it whenever PostHog itself becomes available. */
   private uiLanguage: string | null = null;
 
   /** Sends an event, dropped silently until PostHog is initialised on consent.
@@ -129,7 +140,7 @@ export class AnalyticsService {
         // Before opt-in, which emits `$opt_in` and the session's `$pageview`
         // synchronously — a super property registered after them would miss
         // both, and `$pageview` is the only event a bounced session produces.
-        this.registerLanguage();
+        this.registerSuperProperties();
         this.posthog?.opt_in_capturing();
       } else this.posthog?.opt_out_capturing();
     }
@@ -169,20 +180,26 @@ export class AnalyticsService {
   }
 
   /**
-   * Stamps the active UI language on every event as a super property, so
-   * language usage is a breakdown on any event rather than a funnel over the
-   * one-off `setting_changed`. PostHog's own `$browser_language` cannot stand
-   * in: the app resolves its language from the persisted setting and otherwise
-   * falls back to `en`, never from the browser, so the two diverge for every
-   * session that has not picked a language.
+   * Stamps {@link APP_ID} and the active UI language on every event as super
+   * properties.
+   *
+   * Language is a super property so its usage is a breakdown on any event
+   * rather than a funnel over the one-off `setting_changed`. PostHog's own
+   * `$browser_language` cannot stand in: the app resolves its language from the
+   * persisted setting and otherwise falls back to `en`, never from the browser,
+   * so the two diverge for every session that has not picked a language. It is
+   * stamped only once known, whereas `app` is a constant and always stamped.
    *
    * Called on each language change and from every consent grant, since consent
    * — and with it the package import — can land long after startup.
    */
-  private registerLanguage(): void {
-    if (!this.initialized || !this.uiLanguage) return;
+  private registerSuperProperties(): void {
+    if (!this.initialized) return;
     try {
-      this.posthog?.register({ ui_language: this.uiLanguage });
+      this.posthog?.register({
+        app: APP_ID,
+        ...(this.uiLanguage ? { ui_language: this.uiLanguage } : {})
+      });
     } catch {
       // Analytics must never break the surrounding operation.
     }
@@ -197,7 +214,7 @@ export class AnalyticsService {
         // `activeLang` fires before the language bundle resolves, which is what
         // this wants — the id, not the translations.
         this.uiLanguage = translation.activeLang();
-        this.registerLanguage();
+        this.registerSuperProperties();
       },
       { injector: this.injector }
     );
