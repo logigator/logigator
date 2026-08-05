@@ -5,6 +5,7 @@ import {
   Graphics,
   Matrix,
   Rectangle,
+  RendererType,
   RenderTexture,
   Text,
   type ColorSource
@@ -64,6 +65,13 @@ export interface SnapshotOptions {
    *
    * This trades fidelity for legibility, so it belongs to viewing aids rather
    * than to output the user keeps: the minimap opts in, exports do not.
+   *
+   * Honored only on the WebGL renderer. Its pixel readback returns
+   * premultiplied RGB that `putImageData` misreads as straight alpha
+   * (upstream ships the unpremultiply step dead-coded), darkening every
+   * partially covered pixel to `color·alpha` — the wash-out this boost was
+   * calibrated against. WebGPU extracts keep coverage exact, so the same
+   * lift there overshoots into a visibly denser map.
    */
   coverageBoost?: number;
 }
@@ -372,7 +380,8 @@ export class BoardSnapshotService {
       return this._downsample(
         canvas,
         options.supersample ?? 1,
-        options.coverageBoost
+        // WebGL-readback compensation only — see SnapshotOptions.coverageBoost.
+        renderer.type === RendererType.WEBGL ? options.coverageBoost : 0
       );
     } finally {
       texture.destroy(true);

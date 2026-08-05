@@ -5,8 +5,8 @@ más reciente se muestra primero.
 
 ## 2.0.0 — 2026-08-04
 
-Logigator se ha **reconstruido por completo**: un renderizador mejorado y capaz de
-WebGPU, una canalización de renderizado mucho más eficiente, una interfaz moderna y
+Logigator se ha **reconstruido por completo**: un renderizador mejorado, una
+canalización de renderizado mucho más eficiente, una interfaz moderna y
 una oleada de funciones nuevas. Todo aquello en lo que confiabas sigue aquí, ahora
 más rápido, más robusto y más fácil de usar, con algunas grandes capacidades nuevas
 por encima.
@@ -15,7 +15,7 @@ por encima.
 
 - **⚡ Una base reconstruida.** La canalización de renderizado, el motor de
   simulación y el sistema de colisiones se han reconstruido desde cero: los
-  gráficos acelerados por WebGPU mantienen fluidos los circuitos grandes, un nuevo
+  gráficos acelerados por GPU mantienen fluidos los circuitos grandes, un nuevo
   núcleo de simulación impulsa la lógica y un sistema de colisiones más robusto
   hace que la edición sea mucho más estable y menos propensa a errores.
 - **📱 Pensado para móviles y tabletas.** El editor ahora es totalmente adaptable
@@ -44,11 +44,10 @@ por encima.
 
 ### Por dentro
 
-- Renderizado actualizado a **PixiJS 8**, que ahora prefiere **WebGPU** (con
-  reserva a WebGL y luego a Canvas), envuelto en una canalización de renderizado
-  mucho más eficiente: la escena se divide en grupos de renderizado de GPU y se
-  descarta mediante el quad tree, de modo que el desplazamiento, el zoom y la
-  edición se mantienen fluidos en circuitos grandes.
+- Renderizado actualizado a **PixiJS 8**, envuelto en una canalización de
+  renderizado mucho más eficiente: la escena se divide en grupos de renderizado
+  de GPU y se descarta mediante el quad tree, de modo que el desplazamiento, el
+  zoom y la edición se mantienen fluidos en circuitos grandes.
 - **Motor de simulación reconstruido**: un nuevo núcleo WebAssembly, compilado
   desde Rust, sustituye al motor de simulación anterior
   ([`@logigator/sim`](https://www.npmjs.com/package/@logigator/sim)).

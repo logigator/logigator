@@ -5,8 +5,8 @@ version la plus récente est indiquée en premier.
 
 ## 2.0.0 — 2026-08-04
 
-Logigator a été **entièrement reconstruit** — un moteur de rendu amélioré et
-compatible WebGPU, un pipeline de rendu bien plus efficace, une interface moderne
+Logigator a été **entièrement reconstruit** — un moteur de rendu amélioré, un
+pipeline de rendu bien plus efficace, une interface moderne
 et une vague de nouvelles fonctionnalités. Tout ce sur quoi vous comptiez est
 toujours là, désormais plus rapide, plus robuste et plus simple à utiliser, avec
 en prime de grandes nouveautés.
@@ -15,7 +15,7 @@ en prime de grandes nouveautés.
 
 - **⚡ Des fondations reconstruites.** Le pipeline de rendu, le moteur de simulation
   et le système de collision ont tous été reconstruits de zéro : un rendu graphique
-  accéléré par WebGPU garde les grands circuits fluides, un nouveau cœur de
+  accéléré par GPU garde les grands circuits fluides, un nouveau cœur de
   simulation pilote la logique, et un système de collision plus robuste rend
   l'édition bien plus stable et moins sujette aux bugs.
 - **📱 Conçu pour les téléphones et tablettes.** L'éditeur est désormais
@@ -44,11 +44,10 @@ en prime de grandes nouveautés.
 
 ### Sous le capot
 
-- Rendu mis à niveau vers **PixiJS 8**, privilégiant désormais **WebGPU** (avec
-  repli sur WebGL, puis Canvas), enveloppé dans un pipeline de rendu bien plus
-  efficace — la scène est découpée en groupes de rendu GPU et élaguée via le quad
-  tree — pour que le déplacement, le zoom et l'édition restent fluides sur les
-  grands circuits.
+- Rendu mis à niveau vers **PixiJS 8**, enveloppé dans un pipeline de rendu bien
+  plus efficace — la scène est découpée en groupes de rendu GPU et élaguée via le
+  quad tree — pour que le déplacement, le zoom et l'édition restent fluides sur
+  les grands circuits.
 - **Moteur de simulation reconstruit** — un nouveau cœur WebAssembly, compilé
   depuis Rust, remplace l'ancien moteur de simulation
   ([`@logigator/sim`](https://www.npmjs.com/package/@logigator/sim)).
