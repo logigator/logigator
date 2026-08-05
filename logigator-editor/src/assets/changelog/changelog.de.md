@@ -5,16 +5,16 @@ aktuellste Veröffentlichung steht ganz oben.
 
 ## 2.0.0 — 2026-08-04
 
-Logigator wurde **komplett neu aufgebaut** — mit einem verbesserten,
-WebGPU-fähigen Renderer, einer deutlich effizienteren Rendering-Pipeline, einer
-modernen Oberfläche und einer Fülle neuer Funktionen. Alles, worauf du dich
+Logigator wurde **komplett neu aufgebaut** — mit einem verbesserten Renderer,
+einer deutlich effizienteren Rendering-Pipeline, einer modernen Oberfläche und
+einer Fülle neuer Funktionen. Alles, worauf du dich
 verlassen hast, ist weiterhin da, jetzt schneller, robuster und einfacher zu
 bedienen, dazu einige große neue Möglichkeiten.
 
 ### ✨ Höhepunkte
 
 - **⚡ Ein neu gebautes Fundament.** Rendering-Pipeline, Simulations-Engine und
-  Kollisionssystem wurden alle von Grund auf neu gebaut: WebGPU-beschleunigte
+  Kollisionssystem wurden alle von Grund auf neu gebaut: GPU-beschleunigte
   Grafik hält große Schaltungen flüssig, ein neuer Simulationskern treibt die
   Logik an, und ein robusteres Kollisionssystem macht das Bearbeiten weit
   stabiler und weniger fehleranfällig.
@@ -45,8 +45,7 @@ bedienen, dazu einige große neue Möglichkeiten.
 
 ### Unter der Haube
 
-- Rendering auf **PixiJS 8** aktualisiert, das nun **WebGPU** bevorzugt
-  (mit Rückfall auf WebGL, dann Canvas), eingebettet in eine weit effizientere
+- Rendering auf **PixiJS 8** aktualisiert, eingebettet in eine weit effizientere
   Rendering-Pipeline — die Szene wird in GPU-Render-Gruppen aufgeteilt und über
   den Quad-Tree gecullt — sodass Schwenken, Zoomen und Bearbeiten auf großen
   Schaltungen flüssig bleiben.

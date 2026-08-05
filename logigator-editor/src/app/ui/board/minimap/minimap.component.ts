@@ -44,7 +44,8 @@ const SUPERSAMPLE = 3;
  * Coverage lift for the downscaled map (see `SnapshotOptions.coverageBoost`).
  * The map is a navigation aid, not output the user keeps, so it trades
  * fidelity for legibility on large boards where wires are sub-pixel; exports
- * leave it off.
+ * leave it off. The snapshot service applies it only on WebGL, whose darker
+ * readback is what this value was calibrated against.
  */
 const COVERAGE_BOOST = 1;
 /** Minimum on-screen size of the viewport rectangle (CSS px). */

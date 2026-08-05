@@ -38,11 +38,12 @@ export function uncullTree(container: Container): void {
  * board, every open watch — and by the offscreen consumers (minimap, image
  * export, server previews), so the page runs one rendering context no matter
  * how many canvases are live. Created lazily on the first lease with a
- * `webgpu` → `webgl` → `canvas` ladder; WebGPU and Canvas drive multiple
- * target canvases natively, the WebGL branch needs `multiView` (an off-DOM
- * master canvas blitted to each target). Destroyed when the last lease
- * releases — in practice the board holds a lease for its whole lifetime, so
- * the renderer lives as long as a board is mounted.
+ * `webgl` → `canvas` ladder (WebGPU is deliberately disabled for now — see
+ * `docs/webgpu.md` for the findings and re-enablement checklist); the WebGL
+ * branch needs `multiView` (an off-DOM master canvas blitted to each target).
+ * Destroyed when the last lease releases — in practice the board holds a
+ * lease for its whole lifetime, so the renderer lives as long as a board is
+ * mounted.
  *
  * Offscreen consumers don't lease: they render into textures only while a
  * canvas host is alive, so they read {@link renderer} directly and gate on
@@ -91,7 +92,11 @@ export class RendererService {
       return;
     }
     this._creating ??= autoDetectRenderer({
-      preference: 'webgpu',
+      // WebGPU is disabled: pixi 8.19's WebGPU backend needs several patches
+      // to work at all here, and even patched it loses the GPU device on
+      // AMD/D3D12. Findings, patches and the re-enablement checklist live in
+      // docs/webgpu.md.
+      preference: 'webgl',
       webgl: { multiView: true },
       width: 64,
       height: 64,

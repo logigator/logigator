@@ -5,15 +5,15 @@ release is listed first.
 
 ## 2.0.0 — 2026-08-04
 
-Logigator has been **completely rebuilt** — an upgraded, WebGPU-capable renderer,
-a far more efficient rendering pipeline, a modern interface, and a wave of new
+Logigator has been **completely rebuilt** — an upgraded renderer, a far more
+efficient rendering pipeline, a modern interface, and a wave of new
 features. Everything you relied on is still here, now faster, sturdier, and
 easier to use, with some big new capabilities on top.
 
 ### ✨ Highlights
 
 - **⚡ A rebuilt foundation.** The rendering pipeline, simulation engine, and
-  collision system were all rebuilt from the ground up: WebGPU-accelerated
+  collision system were all rebuilt from the ground up: GPU-accelerated
   graphics keep large circuits smooth, a new simulation core drives the logic,
   and a more robust collision system makes editing far more stable and less
   bug-prone.
@@ -39,10 +39,9 @@ easier to use, with some big new capabilities on top.
 
 ### Under the hood
 
-- Rendering upgraded to **PixiJS 8**, now preferring **WebGPU** (falling back to
-  WebGL, then Canvas), wrapped in a far more efficient rendering pipeline — the
-  scene is split into GPU render groups and culled through the quad tree — so
-  panning, zooming, and editing stay smooth on large circuits.
+- Rendering upgraded to **PixiJS 8**, wrapped in a far more efficient rendering
+  pipeline — the scene is split into GPU render groups and culled through the
+  quad tree — so panning, zooming, and editing stay smooth on large circuits.
 - **Rebuilt simulation engine** — a new WebAssembly core, compiled from Rust,
   replaces the previous simulation engine
   ([`@logigator/sim`](https://www.npmjs.com/package/@logigator/sim)).
