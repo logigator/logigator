@@ -16,7 +16,6 @@ import {
 import { ProjectService } from '../project/project.service';
 import { CustomComponentService } from '../custom-component/custom-component.service';
 import { UploadCoordinatorService } from '../ui/upload/upload-coordinator.service';
-import { SimulationService } from '../simulation/simulation.service';
 import { ToastService } from '../logging/toast.service';
 import { LoggingService } from '../logging/logging.service';
 import { Project } from '../project/project';
@@ -47,7 +46,7 @@ interface DocumentHandle {
  * prompt Save / Discard / Cancel (a failed or cancelled save aborts, so the
  * session never ends with work in limbo), then the server session ends and the
  * cloud workspace is reset — server component tabs close, a server main document
- * becomes a blank draft (exiting a simulation that renders it), local docs stay.
+ * becomes a blank draft, local docs stay.
  */
 @Injectable({ providedIn: 'root' })
 export class SessionLifecycleService {
@@ -60,7 +59,6 @@ export class SessionLifecycleService {
   private readonly projectService = inject(ProjectService);
   private readonly customComponents = inject(CustomComponentService);
   private readonly uploadCoordinator = inject(UploadCoordinatorService);
-  private readonly simulation = inject(SimulationService);
   private readonly dialogService = inject(DialogService);
   private readonly translation = inject(TranslationService);
   private readonly toast = inject(ToastService);
@@ -156,11 +154,12 @@ export class SessionLifecycleService {
   /**
    * The deliberate teardown after a user-initiated logout: server component
    * tabs close without prompting (the dirty question was settled by the
-   * dialog), a server main document is replaced by a blank draft — exiting a
-   * running simulation first, since it renders that project — and the library
-   * clears. Local documents are untouched. The library clear also runs via the
-   * session-end transition when the auth cookie flips, but that event's timing
-   * is browser-dependent, so it is repeated here deterministically (idempotent).
+   * dialog), a server main document is replaced by a blank draft — a simulation
+   * of it leaves with the swap (see `simulation.md` § Session lifecycle) — and
+   * the library clears. Local documents are untouched. The library clear also
+   * runs via the session-end transition when the auth cookie flips, but that
+   * event's timing is browser-dependent, so it is repeated here
+   * deterministically (idempotent).
    */
   private _resetCloudWorkspace(): void {
     for (const tab of [...this.projectService.openComponents()]) {
@@ -171,7 +170,6 @@ export class SessionLifecycleService {
 
     const main = this.projectService.mainProject();
     if (main && this.metadataStore.getMetadata(main)?.source === 'server') {
-      this.simulation.exit();
       this.persistence.createAndSetEmptyProject();
     }
 
