@@ -1,4 +1,4 @@
-import { Container, Point } from 'pixi.js';
+import { Container, Point, Rectangle } from 'pixi.js';
 import { DragSession } from '../drag-session';
 import { PointerInput } from '../interaction/pointer-input';
 import { Project } from '../../project/project';
@@ -29,8 +29,8 @@ export class PastePlacementSession implements DragSession {
 
   /**
    * The paste session outlives its opening gesture: the ghosts wait in place
-   * until the user presses again. A press on a ghost locks in the drag anchor;
-   * a press off the ghost group asks the router to cancel (discarding the
+   * until the user presses again. A press inside the group's rect locks in the
+   * drag anchor; a press outside it asks the router to cancel (discarding the
    * paste). Extra presses while already dragging are consumed and ignored.
    */
   public onDown(input: PointerInput): boolean {
@@ -61,15 +61,22 @@ export class PastePlacementSession implements DragSession {
     this._anchor = null;
   }
 
+  /**
+   * The grab zone: the rect the ghosts wear, not their individual bounds. It
+   * is the zone a committed selection grabs by (`SelectionManager.isGrabbedAt`
+   * over the same padded content rect), so the gaps between pasted elements
+   * drag the group both before and after it is put down.
+   */
   public containsPoint(p: Point): boolean {
-    const offset = this._dragLayer.position;
-    for (const c of this._components) {
-      if (offsetRect(c.gridBounds, offset).contains(p.x, p.y)) return true;
-    }
-    for (const w of this._wires) {
-      if (offsetRect(w.gridBounds, offset).contains(p.x, p.y)) return true;
-    }
-    return false;
+    const rect = this._grabRect();
+    if (!rect) return false;
+    return offsetRect(rect, this._dragLayer.position).contains(p.x, p.y);
+  }
+
+  /** The ghosts' padded content bounds, in element space. */
+  private _grabRect(): Rectangle | null {
+    const bounds = groupGridBounds(this._components, this._wires);
+    return bounds?.pad(SelectionManager.GRAB_MARGIN) ?? null;
   }
 
   constructor(
@@ -108,9 +115,8 @@ export class PastePlacementSession implements DragSession {
   // to the group's own geometry (construction, rotation); a plain move only
   // shifts the offset.
   private _refreshSelectionRect(): void {
-    const bounds = groupGridBounds(this._components, this._wires);
+    const bounds = this._grabRect();
     if (!bounds) return;
-    bounds.pad(SelectionManager.GRAB_MARGIN);
     this._project.floatingLayer.showSelectionRect(bounds);
     this._project.floatingLayer.setSelectionRectOffset(
       this._dragLayer.position

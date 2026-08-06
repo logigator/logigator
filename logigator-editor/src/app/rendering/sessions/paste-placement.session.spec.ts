@@ -201,6 +201,47 @@ describe('PastePlacementSession', () => {
     });
   });
 
+  // ── grab zone ───────────────────────────────────────────────────────────────
+
+  describe('onDown()', () => {
+    it('grabs the group from a gap between the pasted elements', () => {
+      const left = makeAnd(2, Direction.E, 0, 0);
+      const right = makeAnd(2, Direction.E, 10, 0);
+      session = new PastePlacementSession(
+        project,
+        dragLayer,
+        [left, right],
+        []
+      );
+
+      // A point the rect covers but neither element does.
+      const gap = makeMoveInput(7, 0);
+      expect(left.gridBounds.contains(7, 0)).toBe(false);
+      expect(right.gridBounds.contains(7, 0)).toBe(false);
+
+      expect(session.onDown(gap)).toBe(true);
+      expect(session.isDragging).toBe(true);
+    });
+
+    it('grabs the group inside the rect margin around an element', () => {
+      const comp = makeAnd(2, Direction.E, 5, 5);
+      session = new PastePlacementSession(project, dragLayer, [comp], []);
+
+      const bounds = comp.gridBounds;
+      expect(
+        session.onDown(makeMoveInput(bounds.x - 0.5, bounds.y - 0.5))
+      ).toBe(true);
+    });
+
+    it('asks the router to cancel on a press outside the rect', () => {
+      const comp = makeAnd(2, Direction.E, 0, 0);
+      session = new PastePlacementSession(project, dragLayer, [comp], []);
+
+      expect(session.onDown(makeMoveInput(30, 30))).toBe(false);
+      expect(session.isDragging).toBe(false);
+    });
+  });
+
   // ── re-grab after a frozen release ──────────────────────────────────────────
 
   describe('onInvalidRelease()', () => {
