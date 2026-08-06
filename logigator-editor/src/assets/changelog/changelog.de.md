@@ -3,7 +3,21 @@
 Alle nennenswerten Änderungen am Logigator-Editor werden hier festgehalten. Die
 aktuellste Veröffentlichung steht ganz oben.
 
-## 2.0.1 — 2026-08-06
+## 2.1.0 — 2026-08-06
+
+### Funktionen
+
+- **Alle Instanzen aktualisieren** — bringe alle platzierten Instanzen einer
+  veralteten benutzerdefinierten Komponente in einem Schritt auf den neuesten
+  Stand, direkt im Einstellungsbereich. Die Palette markiert Komponenten, deren
+  platzierte Instanzen veraltet sind.
+- **Hineinsehen** in die benutzerdefinierten Komponenten, die in einer geteilten
+  Schaltung eingebettet sind — schreibgeschützt. Deiner Bibliothek wird nichts
+  hinzugefügt.
+- Einfügen braucht auf Handys und Tablets keine Auswahl mehr, und eingefügte
+  Elemente landen unter dem Mauszeiger statt dort, wo sie kopiert wurden.
+- Der Anschlüsse-Bereich steht jetzt an erster Stelle in der Seitenleiste, während
+  eine benutzerdefinierte Komponente bearbeitet wird.
 
 ### Korrekturen
 
@@ -11,6 +25,10 @@ aktuellste Veröffentlichung steht ganz oben.
   brachte die Simulation zum Absturz.
 - Das Öffnen eines anderen Projekts während einer laufenden Simulation brachte die
   Simulation zum Absturz.
+- Ein Klick innerhalb eines schwebenden Einfügens, aber zwischen dessen
+  Komponenten, brach das Einfügen ab, statt es zu greifen.
+- Tooltips und Popovers am Bildschirmrand zeigten mit ihrer Spitze am Element
+  vorbei, an dem sie hängen.
 
 ## 2.0.0 — 2026-08-04
 

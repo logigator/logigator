@@ -3,13 +3,27 @@
 All notable changes to the Logigator editor are recorded here. The most recent
 release is listed first.
 
-## 2.0.1 — 2026-08-06
+## 2.1.0 — 2026-08-06
+
+### Features
+
+- **Update all instances** of an outdated custom component in one step, from the
+  settings panel. The palette marks components whose placed instances are behind.
+- **View inside** the custom components embedded in a shared circuit, read-only.
+  Nothing is added to your library.
+- Paste no longer needs a selection on phones and tablets, and pasted elements land
+  under the cursor instead of where they were copied from.
+- The Ports panel now leads the side bar while a custom component is being edited.
 
 ### Fixes
 
 - Clicking a switch or button while the simulation was still starting up crashed
   the simulation.
 - Opening another project while a simulation was running crashed the simulation.
+- Clicking inside a floating paste but between its components cancelled the paste
+  instead of grabbing it.
+- Tooltips and popovers near the edge of the screen pointed their arrow past what
+  they were anchored to.
 
 ## 2.0.0 — 2026-08-04
 
