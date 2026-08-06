@@ -173,7 +173,11 @@ export class AnalyticsService {
       // No feature flags / experiments are used, so skip the /flags request.
       advanced_disable_feature_flags: true,
       // Core Web Vitals for the (heavy) editor load
-      capture_performance: true
+      capture_performance: true,
+      session_recording: {
+        captureCanvas: { canvasQuality: '0.3' },
+        canvasCapture: { resolutionScale: 0.75 }
+      }
     });
     this.initialized = true;
     this.syncConsent();
