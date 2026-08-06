@@ -156,7 +156,7 @@ Angular root-provided singleton. Tracks up to three states using Angular `signal
 
 | Signal           | Type              | Description                                                                                                                                                                     |
 | ---------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `mainProject`    | `Project \| null` | The top-level project (the user's circuit file). Set once on startup via `setMainProject`. Setting it also sets `activeProject`.                                                |
+| `mainProject`    | `Project \| null` | The top-level project (the user's circuit file). Set on startup and on every load via `setMainProject`. Setting it also sets `activeProject`.                                   |
 | `openComponents` | `Project[]`       | Sub-projects opened as component editors. Each custom component the user drills into is a separate `Project` pushed here.                                                       |
 | `activeProject`  | `Project \| null` | The project currently shown in the canvas. Defaults to `mainProject`; switches when the user opens a sub-component. Reverts to `mainProject` when that sub-component is closed. |
 
@@ -167,6 +167,8 @@ Angular root-provided singleton. Tracks up to three states using Angular `signal
 | `setMainProject(p)`      | Sets `mainProject` and `activeProject` to `p`                                                           |
 | `addOpenComponent(p)`    | Appends `p` to `openComponents`                                                                         |
 | `removeOpenComponent(p)` | Removes `p` from `openComponents`; if `p` was `activeProject`, reverts `activeProject` to `mainProject` |
+
+Besides the signals, `mainProjectReplaced$` emits the **outgoing** project synchronously from inside `setMainProject`, before the signals move — the seam for state tied to the project the caller is about to destroy (`SimulationService` leaves simulation there; see `simulation.md`). Silent on the first assignment.
 
 `AppComponent` reads `projectService.activeProject()` to pass the correct `Project` to `BoardComponent` as an input. `BoardComponent` reacts to input changes via an Angular `effect`.
 

@@ -103,6 +103,13 @@ export class SimulationService {
   private readonly _watchAppliers = new Set<SnapshotApplier>();
 
   constructor() {
+    // Opening or creating another project replaces the main slot and destroys
+    // the outgoing project. The compiled session addresses that project's live
+    // components and wires, so the session cannot outlive it: leave simulation
+    // here. The notification is synchronous and fires before the swap, so this
+    // teardown still reaches the outgoing project's sim visuals and ticker.
+    this.projectService.mainProjectReplaced$.subscribe(() => this.exit());
+
     const shortcutService = inject(ShortcutService);
     shortcutService.on(ShortcutActionEnum.CANCEL).subscribe(() => this.exit());
     shortcutService.on(ShortcutActionEnum.TOGGLE_SIMULATION).subscribe(() => {

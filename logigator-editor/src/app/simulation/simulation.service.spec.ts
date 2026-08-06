@@ -449,6 +449,36 @@ describe('SimulationService', () => {
     expect(fakeWorker.terminated).toBe(true);
   });
 
+  it('leaves simulation when another project takes the main slot', async () => {
+    const switchComp = makeSwitch();
+    project.addComponent(switchComp);
+    await enterAndBoot();
+    project.emitUserInput(switchComp);
+    const replacement = new Project();
+
+    // Opening or creating a project; the outgoing one is destroyed right after.
+    TestBed.inject(ProjectService).setMainProject(replacement);
+
+    expect(workModeService.mode()).toBe(WorkMode.PAN);
+    expect(service.state()).toBe('inactive');
+    expect(service.board).toBeNull();
+    // The teardown ran while the outgoing project was still live.
+    expect(switchComp.isOn).toBe(false);
+    expect(fakeWorker.terminated).toBe(true);
+
+    replacement.destroy({ children: true });
+  });
+
+  it('keeps the session when the main project is re-set to itself', async () => {
+    project.addComponent(makeSwitch());
+    await enterAndBoot();
+
+    TestBed.inject(ProjectService).setMainProject(project);
+
+    expect(workModeService.mode()).toBe(WorkMode.SIMULATION);
+    expect(service.isReady()).toBe(true);
+  });
+
   it('ignores user input after exit', () => {
     const switchComp = makeSwitch();
     project.addComponent(switchComp);

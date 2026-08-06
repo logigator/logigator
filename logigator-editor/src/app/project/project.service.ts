@@ -1,4 +1,5 @@
 import { computed, Injectable, signal } from '@angular/core';
+import { Observable, Subject } from 'rxjs';
 import { Project } from './project';
 
 @Injectable({
@@ -13,7 +14,22 @@ export class ProjectService {
   public readonly openComponents = computed(this._openComponents);
   public readonly activeProject = computed(this._activeProject);
 
+  private readonly _mainProjectReplaced$ = new Subject<Project>();
+  /**
+   * Fires synchronously *before* the main slot is handed to another project,
+   * carrying the outgoing one. It is still the main project and still live at
+   * that point, so listeners holding state tied to it (the simulation session)
+   * wind down against a project they may still touch — the caller destroys it
+   * right after the swap. Silent on the first assignment.
+   */
+  public readonly mainProjectReplaced$: Observable<Project> =
+    this._mainProjectReplaced$.asObservable();
+
   public setMainProject(project: Project): void {
+    const previous = this._mainProject();
+    if (previous && previous !== project) {
+      this._mainProjectReplaced$.next(previous);
+    }
     this._mainProject.set(project);
     this._activeProject.set(project);
   }

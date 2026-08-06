@@ -326,8 +326,17 @@ inactive ──enter()──► starting ──worker ready──► ready ⇄ r
   On worker failure it toasts and exits.
 - **`exit()`** — ends the worker session, resets the applier, clears every
   component's sim visuals (`clearSimState`), stops the ticker, drops the
-  compiled artifacts, and returns to `SELECT`. Also bound to the `CANCEL`
+  compiled artifacts, and returns to `PAN`. Also bound to the `CANCEL`
   shortcut.
+
+A session is additionally forced to exit when another project takes the main
+slot (File → Open/New, a share clone, a logout reset): `PersistenceService`
+destroys the outgoing project, which the compiled mapping addresses by live
+object reference. `ProjectService.mainProjectReplaced$` fires synchronously
+_before_ the swap so `exit()` still reaches the outgoing project's visuals and
+ticker. The notification inverts the dependency: `SimulationService` cannot be
+injected into `PersistenceService`, which it already reaches through
+`ShortcutService` → `SaveCoordinatorService`.
 
 Compiled artifacts (`_board`, `_applier`) live for exactly one session; editing
 being locked in between is what keeps the mapping's live object references valid.

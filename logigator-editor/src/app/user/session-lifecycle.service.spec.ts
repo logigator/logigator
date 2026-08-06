@@ -13,7 +13,6 @@ import { ProjectMetadataStore } from '../persistence/project-metadata.store';
 import { ProjectService } from '../project/project.service';
 import { CustomComponentService } from '../custom-component/custom-component.service';
 import { UploadCoordinatorService } from '../ui/upload/upload-coordinator.service';
-import { SimulationService } from '../simulation/simulation.service';
 import { ToastService } from '../logging/toast.service';
 import { Project } from '../project/project';
 import type { UserData } from '../api/models/user';
@@ -45,7 +44,6 @@ describe('SessionLifecycleService', () => {
   };
   let uploadCoordinator: { promoteLocalDepsAndSave: Mock };
   let customComponents: { forceCloseComponent: Mock };
-  let simulation: { exit: Mock };
   let dialogService: { open: Mock };
   let toast: { error: Mock; warn: Mock; success: Mock };
   let metadataStore: ProjectMetadataStore;
@@ -69,7 +67,6 @@ describe('SessionLifecycleService', () => {
       promoteLocalDepsAndSave: vi.fn().mockResolvedValue(true)
     };
     customComponents = { forceCloseComponent: vi.fn() };
-    simulation = { exit: vi.fn() };
     dialogService = { open: vi.fn() };
     toast = { error: vi.fn(), warn: vi.fn(), success: vi.fn() };
 
@@ -83,7 +80,6 @@ describe('SessionLifecycleService', () => {
       { provide: ComponentLibraryService, useValue: componentLibrary },
       { provide: UploadCoordinatorService, useValue: uploadCoordinator },
       { provide: CustomComponentService, useValue: customComponents },
-      { provide: SimulationService, useValue: simulation },
       { provide: DialogService, useValue: dialogService },
       { provide: ToastService, useValue: toast }
     ]);
@@ -154,7 +150,6 @@ describe('SessionLifecycleService', () => {
       expect(componentLibrary.clearServerMasters).toHaveBeenCalled();
       expect(customComponents.forceCloseComponent).not.toHaveBeenCalled();
       expect(persistence.createAndSetEmptyProject).not.toHaveBeenCalled();
-      expect(simulation.exit).not.toHaveBeenCalled();
     });
 
     it('reloads the library when a different user signs in', async () => {
@@ -199,13 +194,12 @@ describe('SessionLifecycleService', () => {
       expect(customComponents.forceCloseComponent).not.toHaveBeenCalledWith(
         localTab
       );
-      expect(simulation.exit).toHaveBeenCalled();
       expect(persistence.createAndSetEmptyProject).toHaveBeenCalled();
       expect(componentLibrary.clearServerMasters).toHaveBeenCalled();
       expect(toast.success).toHaveBeenCalled();
     });
 
-    it('keeps a local main project (no blank draft, no simulation exit)', async () => {
+    it('keeps a local main project — no blank draft', async () => {
       user.set(makeUser('user-1'));
       const service = start();
       const main = new Project();
@@ -215,7 +209,6 @@ describe('SessionLifecycleService', () => {
       await service.requestLogout();
 
       expect(persistence.createAndSetEmptyProject).not.toHaveBeenCalled();
-      expect(simulation.exit).not.toHaveBeenCalled();
       expect(logout).toHaveBeenCalled();
     });
 
