@@ -1,4 +1,5 @@
 import { Overlay, OverlayRef } from '@angular/cdk/overlay';
+import { ScrollDispatcher } from '@angular/cdk/scrolling';
 import { inject, Injectable } from '@angular/core';
 import {
   ConnectedOverlayOptions,
@@ -26,10 +27,21 @@ import {
 @Injectable({ providedIn: 'root' })
 export class LgOverlayService {
   private readonly overlay = inject(Overlay);
+  private readonly scrollDispatcher = inject(ScrollDispatcher);
 
-  /** Anchored overlay tracking `origin`, repositioned on scroll/resize. */
+  /**
+   * Anchored overlay tracking `origin`, repositioned on scroll/resize. The
+   * anchor's registered scrollable ancestors are resolved here, so
+   * `originVisibilityChanges` reports when the anchor scrolls out of them —
+   * they feed CDK's visibility reporting only, never its positioning.
+   */
   public connected(options: ConnectedOverlayOptions): OverlayRef {
-    return createConnectedOverlay(this.overlay, options);
+    return createConnectedOverlay(this.overlay, {
+      ...options,
+      scrollableAncestors: this.scrollDispatcher.getAncestorScrollContainers(
+        options.origin
+      )
+    });
   }
 
   /** Viewport-positioned overlay: centred, or pinned to an edge. */
