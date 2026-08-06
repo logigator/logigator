@@ -1,6 +1,8 @@
 import { inject, Injectable } from '@angular/core';
 import { ToastAction, ToastService as UiToastService } from '@logigator/ui';
 import { TranslationService } from '../translation/translation.service';
+import { AnalyticsService } from '../analytics/analytics.service';
+import { AnalyticsEvent } from '../analytics/analytics.mapping';
 import { LoggingService } from './logging.service';
 
 /**
@@ -14,6 +16,11 @@ import { LoggingService } from './logging.service';
  * level; `success`/`info` log at info (suppressed by a production
  * `loggingVerbosity` of `Warn`).
  *
+ * Error toasts additionally emit {@link AnalyticsEvent.ErrorShown}, so failures
+ * the app *handles* — which never reach the {@link GlobalErrorHandler} and thus
+ * never become a PostHog `$exception` — are still visible in analytics. Only
+ * `context` travels, never the message; see the event's own docs.
+ *
  * Inject this where the user needs feedback; inject {@link LoggingService}
  * directly for console-only output.
  */
@@ -24,9 +31,11 @@ export class ToastService {
   private readonly messageService = inject(UiToastService);
   private readonly translation = inject(TranslationService);
   private readonly logging = inject(LoggingService);
+  private readonly analytics = inject(AnalyticsService);
 
   public error(message: string, context: string, cause?: unknown): void {
     this.logging.error(cause ?? message, context);
+    this.analytics.capture(AnalyticsEvent.ErrorShown, { context });
     this.messageService.add({
       severity: 'danger',
       summary: this.translation.translate('logging.error'),

@@ -5,6 +5,7 @@ import {
   FakeSimulationWorker,
   ManualFrameScheduler
 } from '../../../testing/fake-simulation-worker';
+import { AnalyticsService } from '../../analytics/analytics.service';
 import { LinkStateApplier } from '../state/link-state-applier';
 import { packSnapshot } from './protocol';
 import {
@@ -330,6 +331,76 @@ describe('SimulationWorkerService', () => {
       event: 0,
       state: [true]
     });
+  });
+
+  it('reports worker faults to error tracking, but not session teardown', async () => {
+    const captureError = vi.spyOn(
+      TestBed.inject(AnalyticsService),
+      'captureError'
+    );
+    await service.startSession(DESCRIPTOR, hooks);
+
+    // Caught here and shown as a toast, so `GlobalErrorHandler` — the only
+    // other `$exception` source — never sees it.
+    fakeWorker.emit({ kind: 'error', reqId: null, message: 'engine died' });
+    expect(captureError).toHaveBeenCalledOnce();
+    expect(captureError.mock.calls[0][0]).toMatchObject({
+      message: 'engine died'
+    });
+
+    captureError.mockClear();
+    service.endSession();
+    expect(captureError).not.toHaveBeenCalled();
+  });
+
+  it('drops user inputs sent before the engine is initialized', async () => {
+    autoRespond = false;
+    const session = service.startSession(DESCRIPTOR, hooks);
+    fakeWorker.emit({ kind: 'ready' });
+    await vi.waitFor(() =>
+      expect(fakeWorker.postedOfKind('init')).toHaveLength(1)
+    );
+
+    // A switch tapped in the window between entering simulation mode and the
+    // engine coming up. Reaching the worker, it would fail there with nothing
+    // to correlate against and take the whole session down.
+    service.triggerInput(3, 0, [true]);
+    expect(fakeWorker.postedOfKind('triggerInput')).toHaveLength(0);
+
+    fakeWorker.emit({
+      kind: 'ok',
+      reqId: fakeWorker.postedOfKind('init')[0].reqId
+    });
+    await session;
+
+    service.triggerInput(3, 0, [true]);
+    expect(fakeWorker.postedOfKind('triggerInput')).toHaveLength(1);
+    expect(hooks.onError).not.toHaveBeenCalled();
+  });
+
+  it('serves a snapshot requested before the engine was up once it is', async () => {
+    autoRespond = false;
+    const session = service.startSession(DESCRIPTOR, hooks);
+    fakeWorker.emit({ kind: 'ready' });
+    await vi.waitFor(() =>
+      expect(fakeWorker.postedOfKind('init')).toHaveLength(1)
+    );
+
+    // A watch applier registering while the session starts.
+    service.requestSnapshot();
+    expect(fakeWorker.postedOfKind('requestSnapshot')).toHaveLength(0);
+
+    fakeWorker.emit({
+      kind: 'ok',
+      reqId: fakeWorker.postedOfKind('init')[0].reqId
+    });
+    await session;
+
+    // Dropped, not lost: it is reissued — still as a full snapshot, since a
+    // fresh applier has no baseline to apply a delta over.
+    const requests = fakeWorker.postedOfKind('requestSnapshot');
+    expect(requests).toHaveLength(1);
+    expect(requests[0].full).toBe(true);
   });
 
   it('endSession terminates the worker and rejects in-flight requests', async () => {
