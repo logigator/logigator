@@ -127,7 +127,10 @@ export { LgCaret } from './internal/caret';
 export {
   OVERLAY_GAP,
   connectedPositions,
-  caretSideChanges
+  positionForSide,
+  caretSideChanges,
+  caretOffsetFor,
+  originVisibilityChanges
 } from './internal/overlay';
 export type {
   LgOverlaySide,

@@ -3,8 +3,10 @@ import {
   ConnectedPosition,
   FlexibleConnectedPositionStrategy,
   Overlay,
-  OverlayRef
+  OverlayRef,
+  ScrollingVisibility
 } from '@angular/cdk/overlay';
+import { ScrollDispatcherTarget } from '@angular/cdk/scrolling';
 import { map, Observable } from 'rxjs';
 
 /**
@@ -31,7 +33,11 @@ const OPPOSITE: Record<LgOverlaySide, LgOverlaySide> = {
   right: 'left'
 };
 
-function positionForSide(side: LgOverlaySide, gap: number): ConnectedPosition {
+/** The overlay on `side` of the anchor, centred on it along the other axis. */
+export function positionForSide(
+  side: LgOverlaySide,
+  gap = OVERLAY_GAP
+): ConnectedPosition {
   switch (side) {
     case 'top':
       return {
@@ -71,7 +77,8 @@ function positionForSide(side: LgOverlaySide, gap: number): ConnectedPosition {
 /**
  * Positions for a preferred `side`, ordered preferred → opposite → the two
  * perpendicular sides, so `withPush`/flip can fall back when the preferred side
- * doesn't fit the viewport.
+ * doesn't fit the viewport. Pass a single {@link positionForSide} instead when
+ * the side is fixed and flipping would be worse than overflowing.
  */
 export function connectedPositions(
   side: LgOverlaySide,
@@ -113,16 +120,75 @@ export function caretClasses(side: LgOverlaySide, tone: LgCaretTone): string {
   return `rotate-45 ${CARET_POSITION[side]} ${CARET_TONE[tone]}`;
 }
 
+/** The caret rides the panel's horizontal edge, so it slides along X. */
+export function caretRunsAlongX(side: LgOverlaySide): boolean {
+  return side === 'top' || side === 'bottom';
+}
+
+/**
+ * How far the caret may slide from the panel's centre before it runs off the
+ * straight part of the edge — its own diagonal plus the corner radius.
+ */
+const CARET_EDGE_INSET = 16;
+
+/**
+ * How far to slide the caret along its edge so it keeps pointing at the anchor,
+ * for {@link LgCaret}'s `offset`. It defaults to the panel's centre, which is
+ * the anchor's centre only while the panel straddles it — near a screen edge or
+ * a scroller bound the panel is pushed aside and a centred caret then points at
+ * nothing. Pass the panel rect as it is actually drawn (including any shift the
+ * consumer applied itself); capped short of the corners.
+ */
+export function caretOffsetFor(
+  anchor: DOMRect,
+  panel: DOMRect,
+  side: LgOverlaySide
+): number {
+  const alongX = caretRunsAlongX(side);
+  const delta = alongX
+    ? (anchor.left + anchor.right - panel.left - panel.right) / 2
+    : (anchor.top + anchor.bottom - panel.top - panel.bottom) / 2;
+  const limit = Math.max(
+    0,
+    (alongX ? panel.width : panel.height) / 2 - CARET_EDGE_INSET
+  );
+  return Math.round(Math.min(Math.max(delta, -limit), limit));
+}
+
+/** The flexible position strategy an anchored {@link OverlayRef} was built with. */
+function strategyOf(ref: OverlayRef): FlexibleConnectedPositionStrategy {
+  return ref.getConfig().positionStrategy as FlexibleConnectedPositionStrategy;
+}
+
 /**
  * The side a connected overlay actually lands on, per resolved position of its
  * flexible strategy — feed it to the caret's `side` input so the caret keeps
  * pointing at the anchor across flip fallbacks.
  */
 export function caretSideChanges(ref: OverlayRef): Observable<LgOverlaySide> {
-  const strategy = ref.getConfig()
-    .positionStrategy as FlexibleConnectedPositionStrategy;
-  return strategy.positionChanges.pipe(
+  return strategyOf(ref).positionChanges.pipe(
     map((change) => sideOfPosition(change.connectionPair))
+  );
+}
+
+/**
+ * How the anchor sits in its scrollable ancestors, per resolved position —
+ * `isOriginClipped` once it is partly scrolled out, `isOriginOutsideView` once
+ * it is gone entirely. Lets a consumer follow its anchor out of a scroller
+ * instead of clamping to the viewport edge, pointing at nothing.
+ *
+ * Only meaningful when the overlay was built with scrollable ancestors;
+ * without them CDK has nothing to clip against and both stay false.
+ * `LgOverlayService.connected` resolves them, so overlays built by calling
+ * {@link createConnectedOverlay} directly must pass `scrollableAncestors`
+ * themselves. Note it emits only when the resolved position or the visibility
+ * itself changes — not on every reposition.
+ */
+export function originVisibilityChanges(
+  ref: OverlayRef
+): Observable<ScrollingVisibility> {
+  return strategyOf(ref).positionChanges.pipe(
+    map((change) => change.scrollableViewProperties)
   );
 }
 
@@ -143,6 +209,20 @@ export interface ConnectedOverlayOptions {
   hasBackdrop?: boolean;
   backdropClass?: string;
   panelClass?: string | string[];
+  /**
+   * The anchor's scrollable ancestors, so CDK can report how the anchor sits in
+   * them (see {@link originVisibilityChanges}). `LgOverlayService.connected`
+   * resolves these from the `ScrollDispatcher`.
+   */
+  scrollableAncestors?: ScrollDispatcherTarget[];
+  /**
+   * Whether CDK may shrink the overlay to fit the viewport (its default). Turn
+   * it off for a panel that sizes itself — it then gets an exact position
+   * instead of being measured into a flexible box, which is both what such a
+   * panel wants and, observed, what keeps it correctly placed after its anchor
+   * has left the viewport and come back.
+   */
+  flexibleDimensions?: boolean;
 }
 
 /**
@@ -164,7 +244,12 @@ export function createConnectedOverlay(
     .flexibleConnectedTo(origin)
     .withPush(true)
     .withViewportMargin(OVERLAY_GAP)
+    .withFlexibleDimensions(options.flexibleDimensions ?? true)
     .withPositions(options.positions);
+
+  if (options.scrollableAncestors?.length) {
+    positionStrategy.withScrollableContainers(options.scrollableAncestors);
+  }
 
   return overlay.create({
     positionStrategy,
