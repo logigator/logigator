@@ -3,7 +3,20 @@
 Toutes les modifications notables de l'éditeur Logigator sont consignées ici. La
 version la plus récente est indiquée en premier.
 
-## 2.0.1 — 2026-08-06
+## 2.1.0 — 2026-08-06
+
+### Fonctionnalités
+
+- **Mettre à jour toutes les instances** d'un composant personnalisé obsolète en
+  une seule étape, depuis le panneau des paramètres. La palette signale les
+  composants dont les instances placées ne sont plus à jour.
+- **Voir le contenu** des composants personnalisés intégrés à un circuit partagé,
+  en lecture seule. Rien n'est ajouté à votre bibliothèque.
+- Le collage ne nécessite plus de sélection sur téléphone et tablette, et les
+  éléments collés arrivent sous le curseur au lieu de l'endroit d'où ils ont été
+  copiés.
+- Le panneau Ports est désormais en tête de la barre latérale pendant l'édition
+  d'un composant personnalisé.
 
 ### Correctifs
 
@@ -11,6 +24,10 @@ version la plus récente est indiquée en premier.
   encore faisait planter la simulation.
 - Ouvrir un autre projet pendant qu'une simulation tournait faisait planter la
   simulation.
+- Cliquer à l'intérieur d'un collage flottant mais entre ses composants annulait le
+  collage au lieu de le saisir.
+- Les infobulles et les popovers près du bord de l'écran pointaient leur flèche à
+  côté de l'élément auquel ils sont rattachés.
 
 ## 2.0.0 — 2026-08-04
 

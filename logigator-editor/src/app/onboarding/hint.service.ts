@@ -254,7 +254,6 @@ export class HintService {
     session.scroller = target ? this.scrollerOf(target) : null;
     this.teardownOverlay(session);
 
-
     if (target) {
       const side = session.hint.side?.[platform];
       session.overlayRef = this.overlayService.connected({

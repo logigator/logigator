@@ -3,7 +3,19 @@
 Todos los cambios notables del editor de Logigator se registran aquí. La versión
 más reciente se muestra primero.
 
-## 2.0.1 — 2026-08-06
+## 2.1.0 — 2026-08-06
+
+### Funciones
+
+- **Actualizar todas las instancias** de un componente personalizado
+  desactualizado en un solo paso, desde el panel de ajustes. La paleta marca los
+  componentes cuyas instancias colocadas están desactualizadas.
+- **Ver por dentro** los componentes personalizados incrustados en un circuito
+  compartido, en modo de solo lectura. No se añade nada a tu biblioteca.
+- Pegar ya no necesita una selección en móviles y tabletas, y los elementos pegados
+  aparecen bajo el cursor en lugar de donde se copiaron.
+- El panel Puertos ahora encabeza la barra lateral mientras se edita un componente
+  personalizado.
 
 ### Correcciones
 
@@ -11,6 +23,10 @@ más reciente se muestra primero.
   iniciando provocaba el fallo de la simulación.
 - Abrir otro proyecto mientras se ejecutaba una simulación provocaba el fallo de la
   simulación.
+- Hacer clic dentro de un pegado flotante pero entre sus componentes cancelaba el
+  pegado en lugar de agarrarlo.
+- Las descripciones emergentes y los popovers cerca del borde de la pantalla
+  apuntaban con su flecha más allá del elemento al que están anclados.
 
 ## 2.0.0 — 2026-08-04
 
