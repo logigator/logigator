@@ -16,6 +16,9 @@ import { TranslateDirective } from '../../translation/translate.directive';
 @Component({
   selector: 'app-hint-popover',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  // Block, so the controller can shift the popover inside its overlay pane —
+  // a transform has no effect on an inline host.
+  host: { class: 'block' },
   imports: [TranslateDirective, LgButton, LgCaret],
   template: `
     <div
@@ -24,7 +27,7 @@ import { TranslateDirective } from '../../translation/translate.directive';
       role="status"
     >
       @if (side(); as s) {
-        <lg-caret [side]="s" />
+        <lg-caret [side]="s" [offset]="caretOffset()" />
       }
       <!-- Our own translated markup; trusted content. -->
       <p class="text-sm text-muted" [innerHTML]="text()"></p>
@@ -61,6 +64,8 @@ import { TranslateDirective } from '../../translation/translate.directive';
 export class HintPopoverComponent {
   public readonly text = input.required<string>();
   public readonly side = input<LgOverlaySide | null>(null);
+  /** Slides the caret along the panel edge to keep it on the anchor. */
+  public readonly caretOffset = input(0);
   /** Whether the hint links to a documentation page. */
   public readonly hasDocsLink = input(false);
 

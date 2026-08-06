@@ -1,7 +1,10 @@
 <div class="flex flex-col gap-2 p-2">
-  <app-component-list></app-component-list>
-
+  <!-- Ports lead in a component editor: the panel is the only place plugs can
+       be added, named and ordered, and below the tall palette it lands off the
+       bottom of the side bar's scroll. -->
   @if (isEditingComponent()) {
-    <app-ports-panel></app-ports-panel>
+    <app-ports-panel appOnboardTarget="ports-panel"></app-ports-panel>
   }
+
+  <app-component-list></app-component-list>
 </div>

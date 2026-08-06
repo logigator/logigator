@@ -10,6 +10,7 @@ import {
 } from '@angular/core';
 import { Location } from '@angular/common';
 import { Title } from '@angular/platform-browser';
+import { CdkScrollable } from '@angular/cdk/scrolling';
 import { Point } from 'pixi.js';
 import { RouterService } from './routing/router.service';
 import { TitleBarComponent } from './ui/title-bar/title-bar.component';
@@ -98,7 +99,8 @@ import { TranslateDirective } from './translation/translate.directive';
     MobileProjectMenuComponent,
     UserSettingsPanelComponent,
     OnboardingNudgeComponent,
-    OnboardTargetDirective
+    OnboardTargetDirective,
+    CdkScrollable
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'

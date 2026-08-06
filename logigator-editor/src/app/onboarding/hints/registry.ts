@@ -7,6 +7,8 @@ const scissorToggle = 'scissor-toggle';
 const eraseTool = 'tool-erase';
 const simControls = 'sim-controls';
 const selectionRotate = 'selection-rotate';
+const portsPanel = 'ports-panel';
+const mobilePorts = 'mobile-ports';
 
 /**
  * The Tier-1 just-in-time hints — the non-obvious behaviours the flagship
@@ -44,11 +46,6 @@ export const HINTS: readonly Hint[] = [
     docsPage: 'simulation'
   },
   {
-    id: 'inspect-component',
-    trigger: { kind: 'inspect' },
-    text: 'onboarding.hints.inspect'
-  },
-  {
     id: 'selection-actions',
     trigger: { kind: 'select' },
     // The keyboard shortcuts are the payload; the buttons exist only on desktop
@@ -65,6 +62,22 @@ export const HINTS: readonly Hint[] = [
       compact: 'onboarding.hints.pastePlacementCompact'
     },
     docsPage: 'board-and-tools'
+  },
+  {
+    id: 'ports-panel',
+    trigger: { kind: 'componentEditor' },
+    // Desktop points at the panel itself; compact at the HUD button that opens
+    // it, since there the panel only exists inside its drawer.
+    target: { desktop: portsPanel, compact: mobilePorts },
+    // Beside the panel, over the board: the side bar is only as wide as the
+    // panel, so below it the hint would cover the palette it points past. Above
+    // the button on compact — the HUD already sits on the bottom edge.
+    side: { desktop: 'right', compact: 'top' },
+    text: {
+      desktop: 'onboarding.hints.portsPanelDesktop',
+      compact: 'onboarding.hints.portsPanelCompact'
+    },
+    docsPage: 'custom-components'
   },
   {
     id: 'pan-zoom-compact',
