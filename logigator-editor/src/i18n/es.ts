@@ -252,7 +252,9 @@ const es: TranslationSchema = {
   },
   sideBar: {
     title: 'Componentes',
-    search: 'Buscar..'
+    search: 'Buscar..',
+    outdatedInstances:
+      '{{count}} instancia(s) colocada(s) de este componente están desactualizadas'
   },
   board: {
     panel: 'Placa de circuito'
@@ -767,6 +769,7 @@ const es: TranslationSchema = {
   componentActions: {
     edit: 'Editar circuito',
     update: 'Actualizar a la última versión',
+    updateAll: 'Actualizar todas las instancias ({{count}})',
     createFailed: 'No se pudo crear el componente.',
     openFailed: 'No se pudo abrir el componente.',
     cloudLoadFailed: 'No se pudo cargar el componente desde la nube.',

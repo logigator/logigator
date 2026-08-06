@@ -250,7 +250,9 @@ const en = {
   },
   sideBar: {
     title: 'Components',
-    search: 'Search..'
+    search: 'Search..',
+    outdatedInstances:
+      '{{count}} placed instance(s) of this component are out of date'
   },
   board: {
     panel: 'Circuit board'
@@ -752,6 +754,7 @@ const en = {
   componentActions: {
     edit: 'Edit circuit',
     update: 'Update to latest',
+    updateAll: 'Update all instances ({{count}})',
     createFailed: 'Could not create the component.',
     openFailed: 'Could not open the component.',
     cloudLoadFailed: 'Could not load the component from the cloud.',

@@ -7,6 +7,7 @@ import { SubCircuitWatch } from './sub-circuit-watch';
 import { EditComponentAction } from './actions/edit-component.component-action';
 import { EditDetailsAction } from './actions/edit-details.component-action';
 import { UpdateInstanceComponentAction } from './actions/update-instance.component-action';
+import { UpdateAllInstancesComponentAction } from './actions/update-all-instances.component-action';
 import { UploadComponentAction } from './actions/upload-component.component-action';
 import { ShareComponentAction } from './actions/share-component.component-action';
 import { DeleteComponentAction } from './actions/delete-component.component-action';
@@ -64,9 +65,11 @@ export function buildCustomComponentConfig(
     // a palette/ghost selection (details and delete stay visible only while the
     // master resolves — an orphaned instance has no library entry to edit or
     // remove); update-to-latest hides itself unless a selected snapshot instance
-    // is behind its master.
+    // is behind its master, and update-all unless the active project holds an
+    // outdated instance of this type.
     actions: [
       new UpdateInstanceComponentAction(),
+      new UpdateAllInstancesComponentAction(),
       new EditComponentAction(),
       new EditDetailsAction(),
       new UploadComponentAction(),

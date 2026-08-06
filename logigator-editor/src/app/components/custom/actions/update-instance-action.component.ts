@@ -4,6 +4,7 @@ import { ComponentActionContext } from '../../component-action';
 import { CustomComponent } from '../custom-component';
 import { CustomComponentRegistry } from '../custom-component-registry.service';
 import { CustomComponentService } from '../../../custom-component/custom-component.service';
+import { OutdatedInstancesService } from '../../../custom-component/outdated-instances.service';
 import { TranslateDirective } from '../../../translation/translate.directive';
 
 /**
@@ -35,22 +36,15 @@ export class UpdateInstanceActionComponent {
 
   private readonly registry = inject(CustomComponentRegistry);
   private readonly customComponentService = inject(CustomComponentService);
+  private readonly outdatedInstances = inject(OutdatedInstancesService);
 
   protected readonly updatable = computed(() => {
+    // Reading the revision re-resolves the master after a save adopts its new
+    // version stamp, so the button appears without reselecting the instance.
+    this.registry.revision();
     // Acts on a live instance, so it never surfaces on a palette/ghost selection.
     if (!this.context().component) return false;
-    const def = this.registry.getDefinition(this.context().config.type);
-    if (def?.id === undefined) return false;
-    const masterTypeId = this.registry.masterTypeIdForId(def.id);
-    const master =
-      masterTypeId !== undefined
-        ? this.registry.getDefinition(masterTypeId)
-        : undefined;
-    return (
-      master?.version !== undefined &&
-      def.version !== undefined &&
-      master.version > def.version
-    );
+    return this.outdatedInstances.isOutdated(this.context().config.type);
   });
 
   protected async update(): Promise<void> {

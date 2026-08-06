@@ -11,6 +11,7 @@ import { MobileUiService } from '../../../layout/mobile-ui.service';
 import { SourceIndicatorComponent } from '../../source-indicator/source-indicator.component';
 import { OnboardTargetDirective } from '../../../onboarding/onboard-target.directive';
 import { ComponentSymbolComponent } from '../component-symbol/component-symbol.component';
+import { OutdatedInstancesService } from '../../../custom-component/outdated-instances.service';
 
 @Component({
   selector: 'app-component-list-category',
@@ -25,6 +26,7 @@ export class ComponentListCategoryComponent {
   private readonly workModeService = inject(WorkModeService);
   private readonly translation = inject(TranslationService);
   private readonly mobileUi = inject(MobileUiService);
+  private readonly outdatedInstances = inject(OutdatedInstancesService);
 
   /** The palette tiles to render; already filtered by the parent's search. */
   public components = input<ComponentConfig[]>([]);
@@ -34,6 +36,18 @@ export class ComponentListCategoryComponent {
     return resolveLocalizableText(value, (key) =>
       this.translation.translate(key)
     );
+  }
+
+  /**
+   * How many instances of this type on the active board are behind their master.
+   * A map lookup into the service's single board scan, not a per-tile scan.
+   */
+  protected outdatedCount(typeId: number): number {
+    return this.outdatedInstances.countFor(typeId);
+  }
+
+  protected outdatedTitle(count: number): string {
+    return this.translation.translate('sideBar.outdatedInstances', { count });
   }
 
   /** The placement-armed component type, when it belongs to this list. */

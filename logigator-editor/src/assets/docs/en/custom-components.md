@@ -38,7 +38,7 @@ A placed component is a self-contained copy of the circuit as it was when you pl
 
 To change a custom component's circuit, open it in its own tab: choose **Edit circuit** from its settings card while an instance is selected, or open it from your library. To change its name, symbol or description instead, choose **Edit details**. Editing the component does **not** automatically change parts you already placed — each placed instance stays as it was.
 
-When a placed instance is behind the latest version of its component, its settings card offers **Update to latest**. Choosing it swaps that instance for the current version, keeping its position and direction. Updating is per-instance and can be undone, so you decide exactly which copies move forward.
+When a placed instance is behind the latest version of its component, its settings card offers **Update to latest**. Choosing it swaps that instance for the current version, keeping its position and direction. Updating is per-instance and can be undone, so you decide exactly which copies move forward. To move every copy at once, use **Update all instances** — it appears on the settings card (for a selected instance or for the component picked in the palette) whenever the current circuit still holds an outdated copy, and the count in its label says how many it covers. The whole batch is one undo step. A palette tile also carries a small arrow marker while any of its placed copies are behind.
 
 ## Nesting and dependencies
 
