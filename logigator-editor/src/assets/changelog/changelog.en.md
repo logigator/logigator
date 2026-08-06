@@ -3,6 +3,14 @@
 All notable changes to the Logigator editor are recorded here. The most recent
 release is listed first.
 
+## 2.0.1 — 2026-08-06
+
+### Fixes
+
+- Clicking a switch or button while the simulation was still starting up crashed
+  the simulation.
+- Opening another project while a simulation was running crashed the simulation.
+
 ## 2.0.0 — 2026-08-04
 
 Logigator has been **completely rebuilt** — an upgraded renderer, a far more

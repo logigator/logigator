@@ -3,6 +3,15 @@
 Alle nennenswerten Änderungen am Logigator-Editor werden hier festgehalten. Die
 aktuellste Veröffentlichung steht ganz oben.
 
+## 2.0.1 — 2026-08-06
+
+### Korrekturen
+
+- Ein Klick auf einen Schalter oder Taster, während die Simulation noch startete,
+  brachte die Simulation zum Absturz.
+- Das Öffnen eines anderen Projekts während einer laufenden Simulation brachte die
+  Simulation zum Absturz.
+
 ## 2.0.0 — 2026-08-04
 
 Logigator wurde **komplett neu aufgebaut** — mit einem verbesserten Renderer,
