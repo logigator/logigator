@@ -673,6 +673,7 @@ const fr: TranslationSchema = {
       "Une erreur s'est produite. Certaines actions n'ont peut-être pas abouti — consultez la console du navigateur pour plus de détails."
   },
   clipboard: {
+    clear: 'Vider le presse-papiers',
     pastePartial:
       "Certains éléments n'ont pas pu être collés — leur type de composant n'est plus disponible.",
     pastePlugsSkipped:

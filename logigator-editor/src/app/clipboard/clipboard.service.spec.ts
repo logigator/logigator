@@ -277,42 +277,47 @@ describe('ClipboardService', () => {
       }
     });
 
-    it('shifts component positions by the paste offset', () => {
+    it('keeps the copied geometry — the placement session positions the group', () => {
       const comp = makeAnd();
       comp.position.set(3, 4);
       compsToDestroy.push(comp);
-      const src = makeProject([comp]);
+      // Wire at position (5.5, 3.5) serializes as pos=[5,3] (Math.floor) and
+      // comes back on the half-grid step wires live on.
+      const wire = makeWire();
+      const src = makeProject([comp], [wire]);
       service.copy(src);
 
       const dest = makeProject();
       service.paste(dest);
 
       const mockFn = dest.startPasteSession as ReturnType<typeof vi.fn>;
-      const [freshComps] = mockFn.mock.calls[0] as [Component[], Wire[]];
-      expect(freshComps[0].position.x).toBe(5); // 3 + PASTE_OFFSET(2)
-      expect(freshComps[0].position.y).toBe(6); // 4 + PASTE_OFFSET(2)
+      const [freshComps, freshWires] = mockFn.mock.calls[0] as [
+        Component[],
+        Wire[]
+      ];
+      expect(freshComps[0].position.x).toBe(3);
+      expect(freshComps[0].position.y).toBe(4);
+      expect(freshWires[0].position.x).toBe(5.5);
+      expect(freshWires[0].position.y).toBe(3.5);
       for (const c of freshComps) {
         if (!c.destroyed) c.destroy({ children: true });
       }
-    });
-
-    it('shifts wire positions by the paste offset in the integer domain', () => {
-      // Wire at position (5.5, 3.5) serializes as pos=[5,3] (Math.floor).
-      // After paste offset: serialized pos=[7,5]. Deserialized: (7.5, 5.5).
-      const wire = makeWire(); // position (5.5, 3.5)
-      const src = makeProject([], [wire]);
-      service.copy(src);
-
-      const dest = makeProject();
-      service.paste(dest);
-
-      const mockFn = dest.startPasteSession as ReturnType<typeof vi.fn>;
-      const [, freshWires] = mockFn.mock.calls[0] as [Component[], Wire[]];
-      expect(freshWires[0].position.x).toBe(7.5);
-      expect(freshWires[0].position.y).toBe(5.5);
       for (const w of freshWires) {
         if (!w.destroyed) w.destroy();
       }
+    });
+
+    it('opens no session after the clipboard was cleared', () => {
+      const comp = makeAnd();
+      compsToDestroy.push(comp);
+      service.copy(makeProject([comp]));
+
+      service.clear();
+
+      expect(service.hasClipboard()).toBe(false);
+      const dest = makeProject();
+      service.paste(dest);
+      expect(dest.startPasteSession).not.toHaveBeenCalled();
     });
 
     it('carries port negation through copy/paste', () => {

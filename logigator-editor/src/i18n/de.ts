@@ -670,6 +670,7 @@ const de: TranslationSchema = {
       'Etwas ist schiefgelaufen. Einige Aktionen wurden möglicherweise nicht abgeschlossen — Details findest du in der Browser-Konsole.'
   },
   clipboard: {
+    clear: 'Zwischenablage leeren',
     pastePartial:
       'Einige Elemente konnten nicht eingefügt werden — ihr Komponententyp ist nicht mehr verfügbar.',
     pastePlugsSkipped:

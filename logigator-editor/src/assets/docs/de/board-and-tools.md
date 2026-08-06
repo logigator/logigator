@@ -56,7 +56,7 @@ Ein kleines Pill schwebt über der Arbeitsfläche, solange das Auswahlwerkzeug a
 Das Standard-Bearbeiten wirkt auf die aktuelle Auswahl:
 
 - **Kopieren** (`Ctrl+C`) und **Ausschneiden** (`Ctrl+X`) legen die Auswahl in die Zwischenablage; Ausschneiden entfernt sie zudem.
-- **Einfügen** (`Ctrl+V`) bringt die kopierten Elemente zurück, leicht versetzt gegenüber den Originalen. Sie erscheinen als Vorschau, die du positionierst — ziehe sie an eine freie Stelle und lass los, um sie abzulegen, oder drücke `Escape` zum Abbrechen.
+- **Einfügen** (`Ctrl+V`) bringt die kopierten Elemente unter dem Mauszeiger zurück, auf Touchgeräten in der Mitte der Ansicht. Sie erscheinen als Vorschau, die du positionierst — ziehe sie an eine freie Stelle und lass los, um sie abzulegen, oder drücke `Escape` zum Abbrechen.
 - **Löschen** (`Delete`) entfernt die Auswahl.
 
 Diese Befehle finden sich auch in der Werkzeugleiste und im Menü **Bearbeiten**. Jede Bearbeitung lässt sich mit **Rückgängig** (`Ctrl+Z`) rückgängig machen und mit **Wiederholen** (`Ctrl+Shift+Z`) wiederholen.

@@ -16,8 +16,6 @@ import { getStaticDI } from '../utils/get-di';
 import { LoggingService } from '../logging/logging.service';
 import { ToastService } from '../logging/toast.service';
 
-const PASTE_OFFSET = 2;
-
 interface ClipboardData {
   components: SerializedComponent[];
   wires: SerializedWire[];
@@ -34,6 +32,15 @@ export class ClipboardService {
 
   /** True once something has been copied — drives paste-button availability. */
   public readonly hasClipboard = computed(() => this._clipboard() !== null);
+
+  /**
+   * Drops the copied elements. The compact selection action bar stays on
+   * screen for as long as there is something to paste, so it offers this as
+   * its dismiss action.
+   */
+  public clear(): void {
+    this._clipboard.set(null);
+  }
 
   public copy(project: Project): void {
     const sm = project.selectionManager;
@@ -66,6 +73,12 @@ export class ClipboardService {
     this._applyDelete(project);
   }
 
+  /**
+   * Deserializes the clipboard into fresh instances and hands them to a
+   * placement session. The instances keep the copied geometry — where the
+   * group lands is the interaction layer's call (cursor, else the middle of
+   * the viewport), so only its relative shape matters here.
+   */
   public paste(project: Project): void {
     const data = this._clipboard();
     if (!data) {
@@ -88,22 +101,14 @@ export class ClipboardService {
         continue;
       }
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { id: _id, type: _type, pos, ...rest } = s;
-      freshComponents.push(
-        Component.deserialize(
-          { ...rest, pos: [pos[0] + PASTE_OFFSET, pos[1] + PASTE_OFFSET] },
-          config
-        )
-      );
+      const { id: _id, type: _type, ...rest } = s;
+      freshComponents.push(Component.deserialize(rest, config));
     }
 
     const freshWires: Wire[] = wires.map((w) => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { id: _id, pos, ...rest } = w;
-      return Wire.deserialize({
-        ...rest,
-        pos: [pos[0] + PASTE_OFFSET, pos[1] + PASTE_OFFSET]
-      });
+      const { id: _id, ...rest } = w;
+      return Wire.deserialize(rest);
     });
 
     this.logging.debug(
