@@ -73,10 +73,12 @@ components/custom/
 ├── custom-component.ts                   # the single black-box rendering class
 └── actions/                              # inspector ComponentActions on a selected instance
     ├── edit-component.component-action.ts     # "Edit component" — open the master in a tab
-    └── update-instance.component-action.ts    # "Update to latest" — re-snapshot a stale instance
+    ├── update-instance.component-action.ts    # "Update to latest" — re-snapshot a stale instance
+    └── update-all-instances.component-action.ts  # "Update all instances (N)" — the same, board-wide
 
 custom-component/                         # editor-side orchestration (NOT rendering)
 ├── custom-component.service.ts           # create / open / close a component editor tab
+├── outdated-instances.service.ts         # isOutdated + one board scan -> masterTypeId -> outdated count
 ├── definition-binding.ts                 # keeps a master's summary current while its editor is open
 └── definition-derivation.ts              # deriveSummary(project): plugs -> { numInputs, numOutputs, labels }
 ```
@@ -137,12 +139,15 @@ exposes that exact config (hence `component.config.type === def.typeId`, which t
 serializer relies on). A custom name/description is a user string cast to the
 `TranslationKey` contract (built-ins stay type-safe). A master config also carries
 the [inspector actions](actions-system.md) (`EditComponentAction`,
-`EditDetailsAction`, `UpdateInstanceComponentAction`, `UploadComponentAction`,
+`EditDetailsAction`, `UpdateInstanceComponentAction`,
+`UpdateAllInstancesComponentAction`, `UploadComponentAction`,
 `ShareComponentAction`, `DeleteComponentAction`). Each renderer gates its
 own visibility off the context: edit circuit, edit details and upload are
 config-scoped and surface on both a selected instance and a palette/ghost
 selection; update-to-latest hides itself when `context.component` is null
-(palette/ghost) and shows only for a selected instance behind its master.
+(palette/ghost) and shows only for a selected instance behind its master, while
+update-all is config-scoped (the type is what it acts on) and shows whenever the
+active project holds an outdated instance of it.
 
 `EditDetailsAction` opens a dialog editing the master's descriptive metadata
 (name/symbol/description) after creation. The persistent record is written first
@@ -234,9 +239,16 @@ Repeated placements within one Project share that Project's snapshot type.
 
 ## Per-instance update
 
-The **only** path by which a placed instance's shape changes. A selected custom
-instance whose `source.version` is behind its master's current `version` shows an
-"Update to latest" inspector action (`UpdateInstanceComponentAction`). It calls
+The **only** path by which a placed instance's shape changes. "Behind its master"
+has one definition — `OutdatedInstancesService.isOutdated(typeId)`: a **snapshot**
+whose frozen `version` is lower than its master's, resolved through `resolveMaster`
+(hence through the promotion alias). Built-ins, masters, orphans and either side
+missing a version stamp are never outdated. Both update actions and the palette
+indicator share it.
+
+A selected custom instance whose `source.version` is behind its master's current
+`version` shows an "Update to latest" inspector action
+(`UpdateInstanceComponentAction`). It calls
 `CustomComponentService.buildInstanceUpdate`, which re-snapshots the master and
 builds an `UpdateInstanceAction` — an `ActionContainer` that **replaces** the
 instance with a fresh `CustomComponent` of the new snapshot type at the same
@@ -244,6 +256,23 @@ position/direction (remove + add), so it is undoable and dirties the project. Th
 add fires `portsChange$`, so the rebucket + integrator run — but in **this Project
 only**, on demand. Returns `null` (no update offered) if the instance's master can
 no longer be resolved; the instance keeps working regardless.
+
+### Board-wide update
+
+`UpdateAllInstancesComponentAction` does the same for **every** outdated instance
+of one type in the active project, in one undo entry. `OutdatedInstancesService`
+scans the active project **once** per change into a `masterTypeId → count` map
+(freshness from the active project's `actionChange$` plus the registry revision,
+which `setMasterVersion` bumps), so the button's visibility, its count, and the
+palette tile's outdated marker are all map lookups rather than per-consumer scans.
+Clicking loads the master's circuit once (`ensureMasterCircuit` — a cloud master is
+preloaded summary-only, and snapshotting an unloaded one would freeze empty
+content), then `CustomComponentService.buildInstancesUpdate` maps the collected
+instances through `buildInstanceUpdate` into one `ActionContainer`. Every
+replacement re-snapshots the same master, and the registry caches that snapshot per
+master, so the whole batch lands on **one** new snapshot type id (one definition in
+the save file). Like the single-instance path, a port-count change between versions
+can leave wires no longer terminating on a port — now for N instances at once.
 
 ## Cycle prevention
 

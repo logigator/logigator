@@ -384,6 +384,49 @@ describe('CustomComponentService', () => {
     expect(restored.numInputs).toBe(1);
   });
 
+  it('buildInstancesUpdate updates every instance in one undo entry, through one shared snapshot', async () => {
+    const editor = await service.createComponent({
+      name: 'X',
+      symbol: 'X',
+      description: '',
+      source: 'browser'
+    });
+    const masterTypeId = masterTypeIdOf(editor);
+
+    editor.actionManager.push(new AddComponentsAction(makeInput(0)));
+    vi.advanceTimersByTime(1);
+    const first = placeInstance(masterTypeId, main);
+    const second = placeInstance(masterTypeId, main);
+    const staleType = first.config.type;
+
+    // Master grows a second input after both placements.
+    editor.actionManager.push(new AddComponentsAction(makeInput(1)));
+    vi.advanceTimersByTime(1);
+
+    main.actionManager.push(service.buildInstancesUpdate([first, second])!);
+
+    const updated = [...main.components].filter(
+      (c): c is CustomComponent => c instanceof CustomComponent
+    );
+    expect(updated.map((c) => c.numInputs)).toEqual([2, 2]);
+    // One re-snapshot for the whole batch, so the board (and the save file)
+    // gains a single new definition rather than one per instance.
+    expect(new Set(updated.map((c) => c.config.type)).size).toBe(1);
+    expect(updated[0].config.type).not.toBe(staleType);
+
+    // A single undo restores every instance, not just the last one.
+    main.actionManager.undo();
+    const restored = [...main.components].filter(
+      (c): c is CustomComponent => c instanceof CustomComponent
+    );
+    expect(restored.map((c) => c.numInputs)).toEqual([1, 1]);
+    expect(restored.map((c) => c.config.type)).toEqual([staleType, staleType]);
+  });
+
+  it('buildInstancesUpdate returns null when there is nothing to update', () => {
+    expect(service.buildInstancesUpdate([])).toBeNull();
+  });
+
   it('deleteComponent removes a browser master and its placed instance becomes an embedded orphan', async () => {
     const masterTypeId = registry.createMaster(
       { id: 'browser-x', name: 'X', symbol: 'X' },

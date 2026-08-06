@@ -252,7 +252,9 @@ const de: TranslationSchema = {
   },
   sideBar: {
     title: 'Komponenten',
-    search: 'Suchen..'
+    search: 'Suchen..',
+    outdatedInstances:
+      '{{count}} platzierte Instanz(en) dieser Komponente sind veraltet'
   },
   board: {
     panel: 'Schaltplan'
@@ -768,6 +770,7 @@ const de: TranslationSchema = {
   componentActions: {
     edit: 'Schaltung bearbeiten',
     update: 'Auf neueste Version aktualisieren',
+    updateAll: 'Alle Instanzen aktualisieren ({{count}})',
     createFailed: 'Die Komponente konnte nicht erstellt werden.',
     openFailed: 'Die Komponente konnte nicht geöffnet werden.',
     cloudLoadFailed:

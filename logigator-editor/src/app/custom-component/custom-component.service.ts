@@ -12,6 +12,7 @@ import { CustomComponentDetails } from '../components/custom/custom-component-de
 import { ComponentProviderService } from '../components/component-provider.service';
 import { CustomComponent } from '../components/custom/custom-component';
 import { Action } from '../actions/action';
+import { ActionContainer } from '../actions/action-container';
 import { UpdateInstanceAction } from '../actions/actions/update-instance.action';
 import { ToastService } from '../logging/toast.service';
 import { TranslationService } from '../translation/translation.service';
@@ -454,6 +455,23 @@ export class CustomComponentService {
     // real instance is created by the action's add on do(). Drop this one.
     replacement.destroy({ children: true });
     return action;
+  }
+
+  /**
+   * Groups the per-instance updates for many placed instances into one action, so
+   * updating a whole board's instances of a type is a single undo entry. All the
+   * instances re-snapshot the same master, and the registry caches that snapshot
+   * per master, so every replacement lands on one shared new type id (one
+   * definition in the save file, as with N separate placements). Returns null when
+   * no instance yields an update.
+   */
+  public buildInstancesUpdate(
+    instances: readonly CustomComponent[]
+  ): Action | null {
+    const actions = instances
+      .map((instance) => this.buildInstanceUpdate(instance))
+      .filter((action): action is Action => action !== null);
+    return actions.length > 0 ? new ActionContainer(...actions) : null;
   }
 
   /**

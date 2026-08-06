@@ -252,7 +252,9 @@ const fr: TranslationSchema = {
   },
   sideBar: {
     title: 'Composants',
-    search: 'Rechercher..'
+    search: 'Rechercher..',
+    outdatedInstances:
+      '{{count}} instance(s) placée(s) de ce composant ne sont plus à jour'
   },
   board: {
     panel: 'Plan de circuit'
@@ -769,6 +771,7 @@ const fr: TranslationSchema = {
   componentActions: {
     edit: 'Modifier le circuit',
     update: 'Mettre à jour vers la dernière version',
+    updateAll: 'Mettre à jour toutes les instances ({{count}})',
     createFailed: 'Impossible de créer le composant.',
     openFailed: "Impossible d'ouvrir le composant.",
     cloudLoadFailed: 'Impossible de charger le composant depuis le cloud.',

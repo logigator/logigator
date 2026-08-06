@@ -38,7 +38,7 @@ Un componente colocado es una copia autocontenida del circuito tal como estaba c
 
 Para cambiar el circuito de un componente personalizado, ábrelo en su propia pestaña: elige **Editar circuito** en su tarjeta de ajustes mientras una instancia está seleccionada, o ábrelo desde tu biblioteca. Para cambiar en su lugar su nombre, símbolo o descripción, elige **Editar detalles**. Editar el componente **no** cambia automáticamente las piezas que ya colocaste: cada instancia colocada permanece tal como estaba.
 
-Cuando una instancia colocada va por detrás de la última versión de su componente, su tarjeta de ajustes ofrece **Actualizar a la última versión**. Elegirla cambia esa instancia por la versión actual, conservando su posición y dirección. La actualización es por instancia y se puede deshacer, así que tú decides exactamente qué copias avanzan.
+Cuando una instancia colocada va por detrás de la última versión de su componente, su tarjeta de ajustes ofrece **Actualizar a la última versión**. Elegirla cambia esa instancia por la versión actual, conservando su posición y dirección. La actualización es por instancia y se puede deshacer, así que tú decides exactamente qué copias avanzan. Para actualizar todas las copias a la vez, usa **Actualizar todas las instancias**: aparece en la tarjeta de ajustes (con una instancia seleccionada o con el componente elegido en la paleta) mientras el circuito actual conserve una copia desactualizada, y el número de su etiqueta indica cuántas abarca. Todo el lote es un solo paso de deshacer. Además, la casilla de la paleta muestra una pequeña marca de flecha mientras alguna de sus copias colocadas esté desactualizada.
 
 ## Anidamiento y dependencias
 
