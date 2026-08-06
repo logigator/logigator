@@ -50,10 +50,11 @@ export interface SnapshotDefinition extends SerializedCircuitBody {
    * Provenance back to the library master. `origin` records which library that
    * master lived in — `'server'` for a cloud dependency (a server mapping id),
    * `'browser'` for a local dependency in a native/browser document;
-   * absent/`undefined` when unknown (older documents). It drives the orphan
-   * recovery affordance: a lost cloud master while signed out is likely just
-   * unloaded (offer sign-in), a lost local master can be restored to the browser
-   * library.
+   * absent/`undefined` when unknown (older documents). In a document the viewer
+   * owns it drives the orphan recovery affordance: a lost cloud master while
+   * signed out is likely just unloaded (offer sign-in), a lost local master can
+   * be restored to the browser library. In a borrowed share the origin is moot —
+   * the master is the publisher's, and the orphan is offered a read-only view.
    */
   source?: { id: string; version: number; origin?: 'server' | 'browser' };
   name: string;

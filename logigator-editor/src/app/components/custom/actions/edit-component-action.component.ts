@@ -4,6 +4,7 @@ import { ComponentActionContext } from '../../component-action';
 import { CustomComponentRegistry } from '../custom-component-registry.service';
 import { CustomComponentService } from '../../../custom-component/custom-component.service';
 import { UserService } from '../../../user/user.service';
+import { ProjectMetadataStore } from '../../../persistence/project-metadata.store';
 import { CUSTOM_TYPE_ID_BASE } from '../../component-type.enum';
 import { TranslateDirective } from '../../../translation/translate.directive';
 
@@ -12,12 +13,19 @@ import { TranslateDirective } from '../../../translation/translate.directive';
  * custom instance. When that master can still be resolved (in either library) it
  * is a plain **Edit** button. When it cannot — an **orphan**, whose circuit is
  * still embedded in the document but whose library entry is gone — it degrades
- * gracefully instead of dead-ending:
+ * gracefully instead of dead-ending, and which degraded mode applies turns on
+ * whether the host document is the viewer's own or a borrowed **share**:
  *
- * - a lost **local** master (or unknown origin) offers **Restore & edit**, which
- *   rebuilds it into the browser library and opens it;
- * - a lost **cloud** master while signed out offers **Sign in to edit** (it is
- *   probably just unloaded, so restoring locally would duplicate it).
+ * - inside a share, **View inside** opens the embedded circuit read-only. The
+ *   master belongs to whoever published the share, so no library recovery is
+ *   meaningful — and looking inside a borrowed document must not deposit a
+ *   stranger's component in the viewer's library. Keeping a copy is the share's
+ *   own affordance (clone it), not this button's;
+ * - in the viewer's own document, a lost **local** master (or unknown origin)
+ *   offers **Restore & edit**, which rebuilds it into the browser library;
+ * - in the viewer's own document, a lost **cloud** master while signed out
+ *   offers **Sign in to edit** (it is probably just unloaded, so restoring
+ *   locally would duplicate it).
  *
  * Self-contained — it injects what it needs rather than routing through the shell.
  */
@@ -36,6 +44,16 @@ import { TranslateDirective } from '../../../translation/translate.directive';
         icon="ph ph-circuitry"
         class="w-full"
         (onClick)="edit()"
+      />
+    } @else if (mode() === 'view') {
+      <lg-button
+        size="sm"
+        icon="ph ph-eye"
+        [label]="t('componentActions.view')"
+        class="w-full col-span-2"
+        [lgTooltip]="t('componentActions.viewTooltip')"
+        tooltipPosition="top"
+        (onClick)="view()"
       />
     } @else if (mode() === 'restore') {
       <lg-button
@@ -66,6 +84,7 @@ export class EditComponentActionComponent {
   private readonly registry = inject(CustomComponentRegistry);
   private readonly customComponentService = inject(CustomComponentService);
   private readonly userService = inject(UserService);
+  private readonly metadataStore = inject(ProjectMetadataStore);
 
   private readonly type = computed(() => this.context().config.type);
 
@@ -75,22 +94,27 @@ export class EditComponentActionComponent {
   });
 
   /**
-   * `edit` when the master resolves; `restore` for a lost local/unknown master;
-   * `signIn` for a lost cloud master while signed out; `null` for a built-in.
+   * `edit` when the master resolves; `view` for an orphan inside a borrowed
+   * share; `restore` for a lost local/unknown master; `signIn` for a lost cloud
+   * master while signed out; `null` for a built-in.
    */
-  protected readonly mode = computed<'edit' | 'restore' | 'signIn' | null>(
-    () => {
-      const type = this.type();
-      if (type < CUSTOM_TYPE_ID_BASE) return null;
-      if (this.resolved()) return 'edit';
-      // Orphan: its circuit is embedded but no library master resolves.
-      const orphanOrigin = this.registry.getDefinition(type)?.source;
-      if (orphanOrigin === 'server' && this.userService.user() === null) {
-        return 'signIn';
-      }
-      return 'restore';
+  protected readonly mode = computed<
+    'edit' | 'view' | 'restore' | 'signIn' | null
+  >(() => {
+    const type = this.type();
+    if (type < CUSTOM_TYPE_ID_BASE) return null;
+    if (this.resolved()) return 'edit';
+    // Orphan: its circuit is embedded but no library master resolves.
+    const host = this.context().project;
+    if (host && this.metadataStore.getMetadata(host)?.source === 'share') {
+      return 'view';
     }
-  );
+    const orphanOrigin = this.registry.getDefinition(type)?.source;
+    if (orphanOrigin === 'server' && this.userService.user() === null) {
+      return 'signIn';
+    }
+    return 'restore';
+  });
 
   protected edit(): void {
     const resolved = this.resolved();
@@ -103,5 +127,9 @@ export class EditComponentActionComponent {
 
   protected restore(): void {
     void this.customComponentService.restoreOrphanAndEdit(this.type());
+  }
+
+  protected view(): void {
+    this.customComponentService.viewSnapshot(this.type());
   }
 }

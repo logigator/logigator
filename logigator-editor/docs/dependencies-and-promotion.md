@@ -464,10 +464,25 @@ needed).
   client never dictates one), and a browser id never travels to the server as an
   identity. So no server collision is possible.
 
-### The origin bit decides whether to _offer_ restore
+### View inside (`viewSnapshot`) — the borrowed-document case
+
+Restore only makes sense for a document the viewer owns. In a **share** the
+embedded customs are somebody else's: no sign-in resolves them, and depositing a
+stranger's component in the viewer's library is the wrong price for a look
+inside. So a share offers **View inside** instead — `CustomComponentService.viewSnapshot`
+instantiates the frozen circuit into a tab registered as a `source:'share'`
+document, which inherits every read-only suppression already keyed off that flag
+(save refused, no File-menu save entry, dirty tracking off, no wire-repair
+offer). It writes nothing: no store record, no master, no provenance re-link —
+the placed instance stays an orphan. Nested customs inside the tab are embedded
+the same way and the tab is itself a share, so drilling further recurses. The way
+to _keep_ a share's components is to clone the share, which copies the whole
+document server-side.
+
+### Host source + the origin bit decide which degraded mode is offered
 
 The edit action (`EditComponentAction`) chooses its mode from `resolveMaster` +
-origin + login state:
+the host document's source + origin + login state:
 
 ```
    custom instance selected
@@ -475,6 +490,12 @@ origin + login state:
         ▼
    resolveMaster(type)?  ──yes──►  mode = EDIT        (open the master)
         │ no (orphan)
+        ▼
+   host document is a share?
+        │ yes ──►  mode = VIEW     (View inside → viewSnapshot → read-only tab;
+        │                            the master is the publisher's, and nothing
+        │                            is written to this viewer's library)
+        │ no
         ▼
    origin === 'server' AND signed out?
         │ yes ──►  mode = SIGN-IN  (disabled; "sign in" — the cloud master is

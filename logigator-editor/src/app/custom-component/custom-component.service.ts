@@ -5,6 +5,7 @@ import { WorkModeService } from '../work-mode/work-mode.service';
 import { WorkMode } from '../work-mode/work-mode.enum';
 import { ProjectMetadataStore } from '../persistence/project-metadata.store';
 import { PersistenceService } from '../persistence/persistence.service';
+import { buildProject, instantiateBody } from '../persistence/circuit-builder';
 import { ComponentLibraryService } from './component-library.service';
 import { PromotionService } from '../persistence/promotion.service';
 import { CustomComponentRegistry } from '../components/custom/custom-component-registry.service';
@@ -65,6 +66,9 @@ export class CustomComponentService {
   private readonly translation = inject(TranslationService);
 
   private readonly _bindings = new Map<Project, DefinitionBinding>();
+  // Snapshot type id -> its open read-only view tab, so viewing the same
+  // embedded custom twice focuses one tab instead of opening a second copy.
+  private readonly _snapshotViews = new Map<number, Project>();
 
   /**
    * Creates a new editable master and opens an empty editor tab for it. The
@@ -198,6 +202,55 @@ export class CustomComponentService {
       'CustomComponentService'
     );
     await this.openComponentForEdit(masterId);
+  }
+
+  /**
+   * Opens an embedded custom's frozen circuit in a **read-only** tab, adding
+   * nothing to the library. This is how a borrowed document — a share — is
+   * looked inside: its customs travel embedded and their masters belong to
+   * somebody else's account, so the viewer gets to read the circuit (and drill
+   * on into nested customs, which are embedded the same way) without keeping a
+   * copy of a stranger's component.
+   *
+   * The tab is a plain component {@link Project} registered as a `'share'`
+   * document — the shape a shared component link already opens as — so every
+   * read-only suppression applies unchanged: saving is refused, the File menu
+   * drops its save entry, dirty tracking is off, and the wire-repair offer stays
+   * quiet on a circuit the viewer cannot fix. It carries no
+   * {@link DefinitionBinding} (there is no master to keep in sync) and no store
+   * id; closing it just disposes it. Viewing an already-open snapshot focuses
+   * its tab. No-op for a type id that is not an embedded snapshot.
+   */
+  public viewSnapshot(typeId: number): void {
+    const def = this.registry.getDefinition(typeId);
+    if (!def || def.kind !== 'snapshot') return;
+
+    const open = this._snapshotViews.get(typeId);
+    if (open) {
+      this.projectService.setActiveProject(open);
+      return;
+    }
+
+    const { components, wires } = instantiateBody(
+      this.provider,
+      def.circuit ?? { components: [], wires: [] }
+    );
+    const project = buildProject(components, wires);
+    this.metadataStore.register(
+      project,
+      {
+        id: '',
+        name: def.name,
+        type: 'comp',
+        source: 'share',
+        hash: '',
+        isPublic: false
+      },
+      false
+    );
+    this._snapshotViews.set(typeId, project);
+    this.projectService.addOpenComponent(project);
+    this.projectService.setActiveProject(project);
   }
 
   /**
@@ -423,6 +476,9 @@ export class CustomComponentService {
   private _disposeEditor(project: Project): void {
     this._bindings.get(project)?.dispose();
     this._bindings.delete(project);
+    for (const [typeId, view] of this._snapshotViews) {
+      if (view === project) this._snapshotViews.delete(typeId);
+    }
     this.projectService.removeOpenComponent(project);
     this.metadataStore.remove(project);
     project.destroy();

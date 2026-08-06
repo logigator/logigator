@@ -158,9 +158,10 @@ are offered "Update to latest", exactly as after a circuit save; placed snapshot
 stay frozen, only future placements carry the new details.
 
 `EditComponentAction` also handles the **orphan** case — a placed custom whose
-master no longer resolves in any library — by degrading to _Restore & edit_ or a
-_Sign in_ prompt rather than dead-ending. That decision, the origin bit it keys
-off, and the restore itself are documented in
+master no longer resolves in any library — by degrading to _View inside_ (in a
+borrowed share), _Restore & edit_, or a _Sign in_ prompt rather than
+dead-ending. That decision, the host source and origin bit it keys off, and the
+restore and read-only view themselves are documented in
 [`dependencies-and-promotion.md`](dependencies-and-promotion.md).
 
 ## `CustomComponent` (rendering)

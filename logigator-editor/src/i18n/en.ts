@@ -759,6 +759,9 @@ const en = {
     createFailed: 'Could not create the component.',
     openFailed: 'Could not open the component.',
     cloudLoadFailed: 'Could not load the component from the cloud.',
+    view: 'View inside',
+    viewTooltip:
+      'Open this component read-only. It belongs to the shared circuit, so nothing is added to your library — clone the share to keep a copy.',
     restore: 'Restore & edit',
     restoreTooltip:
       "This component's library master is gone, but its circuit is embedded. Restore it to your local library to edit it.",

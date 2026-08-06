@@ -774,6 +774,9 @@ const es: TranslationSchema = {
     createFailed: 'No se pudo crear el componente.',
     openFailed: 'No se pudo abrir el componente.',
     cloudLoadFailed: 'No se pudo cargar el componente desde la nube.',
+    view: 'Ver por dentro',
+    viewTooltip:
+      'Abre este componente en modo de solo lectura. Pertenece al circuito compartido, así que no se añade nada a tu biblioteca: clona el recurso compartido para conservar una copia.',
     restore: 'Restaurar y editar',
     restoreTooltip:
       'El maestro de este componente en la biblioteca ya no existe, pero su circuito está incrustado. Restáuralo en tu biblioteca local para editarlo.',
