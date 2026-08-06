@@ -117,19 +117,23 @@ async function handle(msg: MainToWorkerMessage): Promise<void> {
       postMessage({ kind: 'ok', reqId: msg.reqId });
       break;
     }
+    // Inputs, snapshots and status polls are advisory: the main thread awaits
+    // no ack, so a missing engine has nothing to fail and is dropped instead of
+    // reported. Reporting would come back uncorrelated and kill the session —
+    // the run controls above keep `requireSim`, since their caller holds a
+    // promise that can carry the failure.
     case 'triggerInput':
-      requireSim().triggerInput(
-        msg.componentIndex,
-        msg.event as InputEvent,
-        msg.state
-      );
+      if (!sim) break;
+      sim.triggerInput(msg.componentIndex, msg.event as InputEvent, msg.state);
       postMessage({ kind: 'ok', reqId: msg.reqId });
       break;
     case 'requestSnapshot':
+      if (!sim) break;
       sendSnapshot(msg.reqId, msg.full === true);
       break;
     case 'requestStatus': {
-      const status = requireSim().getStatus();
+      if (!sim) break;
+      const status = sim.getStatus();
       postMessage({
         kind: 'status',
         reqId: msg.reqId,

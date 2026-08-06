@@ -222,10 +222,32 @@ messages (snapshot/status pulls, `triggerInput`, `returnBuffer`). An uncorrelate
 `error` or a `worker.onerror` is fatal: `_fail()` rejects everything pending and
 calls the session's `onError` hook so the owner tears down.
 
+Fire-and-forget messages are **dropped until the session is ready** — the window
+between spawning the worker and its `init` ack, during which the worker holds no
+`Simulation`. The window is reachable from the UI: `enter()` switches to
+SIMULATION mode, and with it the switch/button tap path, while the engine is
+still booting. An input arriving then has no promise to fail, so the worker's
+error would come back uncorrelated and take the session down — hence the gate on
+this side, a matching drop in the worker for the three advisory message kinds,
+and an `isReady()` guard in `_activate` so a dropped tap doesn't leave the
+switch's visuals showing a state the engine never received. Inputs from that
+window are dropped rather than queued: they have no tick to apply at. A
+`requestSnapshot` is the exception — `wantFullSnapshot` survives the drop and is
+reissued once `init` acks, so a watch registered during startup still gets
+seeded.
+
+Every fault the worker reports (a correlated rejection, an uncorrelated `_fail`,
+a crashed worker, an engine that would not load) is also sent to error tracking
+as a real `$exception` via `AnalyticsService.captureError`. These are all
+internal invariant breaks, yet all of them are caught here and surfaced as a
+toast, so none would otherwise reach `GlobalErrorHandler` — the only other
+`$exception` source. `endSession()`'s rejections are deliberately excluded:
+cancelling in-flight requests is how teardown works.
+
 ### Snapshots: delta encoding + buffer pooling
 
 `sendSnapshot` asks the engine for a snapshot with a delta threshold
-(`DELTA_THRESHOLD = 0.125`): below it, only changed link ids + their values are
+(`DELTA_THRESHOLD = 0.2`): below it, only changed link ids + their values are
 sent; above it, a full packed bitset. The snapshot bytes **must** be copied out
 of WASM linear memory immediately — a `SnapshotView` is valid only until the
 next tick and memory growth detaches JS views (hence a fresh `Uint8Array` over

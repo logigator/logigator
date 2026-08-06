@@ -1,5 +1,6 @@
 import { inject, Injectable, InjectionToken, signal } from '@angular/core';
 import { TranslationService } from '../../translation/translation.service';
+import { AnalyticsService } from '../../analytics/analytics.service';
 import { LoggingService } from '../../logging/logging.service';
 import { BoardDescriptor } from '../compiler/compiled-board.model';
 import { SnapshotApplier } from '../state/link-state-applier';
@@ -79,8 +80,12 @@ export class SimulationWorkerService {
   private readonly frameScheduler = inject(FRAME_SCHEDULER);
   private readonly logging = inject(LoggingService);
   private readonly translation = inject(TranslationService);
+  private readonly analytics = inject(AnalyticsService);
 
   private worker: Worker | null = null;
+  /** True between the `init` ack and {@link endSession} — the window in which
+   * the worker actually holds a `Simulation`. */
+  private ready = false;
   private hooks: SimulationSessionHooks | null = null;
   private nextReqId = 1;
   private readonly pending = new Map<number, PendingRequest>();
@@ -149,6 +154,13 @@ export class SimulationWorkerService {
       throw new Error('Simulation session ended');
     }
     await this._request({ kind: 'init', descriptor });
+    this.ready = true;
+    // A snapshot asked for while the engine was still coming up was dropped
+    // rather than queued (see `_post`); serve it now that there is state to
+    // read, so a watch registered during startup isn't left dark.
+    if (this.wantFullSnapshot) {
+      this._requestSnapshot();
+    }
   }
 
   /** Terminates the worker and discards all session state. */
@@ -157,6 +169,7 @@ export class SimulationWorkerService {
     this._stopStatusPolling();
     this.worker?.terminate();
     this.worker = null;
+    this.ready = false;
     this.hooks = null;
     this.resolveReady = null;
     this.runMode = 'idle';
@@ -297,10 +310,13 @@ export class SimulationWorkerService {
     if (this.snapshotInFlight) {
       return;
     }
+    // The in-flight slot is claimed only once the request is really out — a
+    // dropped post answers with no snapshot, and the flag would never clear.
+    if (!this._post({ kind: 'requestSnapshot', full: this.wantFullSnapshot })) {
+      return;
+    }
     this.snapshotInFlight = true;
-    const full = this.wantFullSnapshot;
     this.wantFullSnapshot = false;
-    this._post({ kind: 'requestSnapshot', full });
   }
 
   private _startStatusPolling(): void {
@@ -342,13 +358,26 @@ export class SimulationWorkerService {
     );
   }
 
-  /** Sends without registering a response promise (still tracked by reqId). */
+  /**
+   * Sends without registering a response promise (still tracked by reqId), and
+   * reports whether the message went out.
+   *
+   * Nothing is posted before the session is {@link ready}: the worker holds no
+   * `Simulation` until it acks `init`, and an uncorrelated op arriving in that
+   * window has no promise to fail — the worker's error would come back
+   * uncorrelated and tear down a session that was about to be usable. That is
+   * reachable from the UI, since simulation mode (and with it the switch/button
+   * tap path) is entered while the engine is still starting. Dropping is the
+   * right answer rather than queueing: an input predating the engine has no
+   * tick to apply at.
+   */
   private _post(
     msg: MainRequest | Extract<MainToWorkerMessage, { kind: 'returnBuffer' }>,
     transfer?: Transferable[]
-  ): void {
-    if (!this.worker) {
-      return;
+  ): boolean {
+    // Returning a pooled buffer is bookkeeping the worker accepts either way.
+    if (!this.worker || (!this.ready && msg.kind !== 'returnBuffer')) {
+      return false;
     }
     const message =
       msg.kind === 'returnBuffer'
@@ -359,6 +388,7 @@ export class SimulationWorkerService {
     } else {
       this.worker.postMessage(message);
     }
+    return true;
   }
 
   private _onMessage(msg: WorkerToMainMessage): void {
@@ -384,7 +414,9 @@ export class SimulationWorkerService {
           msg.reqId !== null ? this.pending.get(msg.reqId) : undefined;
         if (request) {
           this.pending.delete(msg.reqId!);
-          request.reject(new Error(userMessage));
+          const error = new Error(userMessage);
+          this._reportFault(error);
+          request.reject(error);
         } else {
           if (msg.code) {
             this.logging.error(msg.message, 'SimulationWorker');
@@ -446,10 +478,28 @@ export class SimulationWorkerService {
     }
   }
 
+  /**
+   * Reports an engine fault to error tracking as a real exception.
+   *
+   * Every failure the worker reports is an internal fault — a broken invariant,
+   * a crashed worker, or an engine that could not load — yet each one is caught
+   * on this side and surfaced as a toast, so none of them ever reaches the
+   * {@link GlobalErrorHandler} that owns the `$exception` path. Called from the
+   * two mutually exclusive arms of a worker error — the correlated rejection in
+   * {@link _onMessage} and {@link _fail} for everything else — so a fault is
+   * reported exactly once.
+   * Deliberately not called for {@link endSession}'s rejections: tearing a
+   * session down cancels in-flight requests by design.
+   */
+  private _reportFault(error: Error): void {
+    this.analytics.captureError(error);
+  }
+
   /** Unrecoverable worker failure: reject everything, notify the session owner. */
   private _fail(message: string): void {
     const hooks = this.hooks;
     const error = new Error(message);
+    this._reportFault(error);
     for (const request of this.pending.values()) {
       request.reject(error);
     }

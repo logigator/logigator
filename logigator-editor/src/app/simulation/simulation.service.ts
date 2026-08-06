@@ -482,6 +482,13 @@ export class SimulationService {
     unitIndex: number | undefined,
     repaint: () => void
   ): void {
+    // Taps are live as soon as simulation mode is entered, which happens while
+    // the engine is still starting. The worker drops inputs from that window,
+    // so toggling the visuals would leave a switch showing a state the engine
+    // never received.
+    if (!this.isReady()) {
+      return;
+    }
     if (component instanceof SwitchComponent) {
       component.toggle();
       if (unitIndex !== undefined) {
