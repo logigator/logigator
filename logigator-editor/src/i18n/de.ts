@@ -776,6 +776,9 @@ const de: TranslationSchema = {
     openFailed: 'Die Komponente konnte nicht geöffnet werden.',
     cloudLoadFailed:
       'Die Komponente konnte nicht aus der Cloud geladen werden.',
+    view: 'Hineinsehen',
+    viewTooltip:
+      'Öffnet diese Komponente schreibgeschützt. Sie gehört zur geteilten Schaltung, deiner Bibliothek wird nichts hinzugefügt — klone den Share, um eine Kopie zu behalten.',
     restore: 'Wiederherstellen & bearbeiten',
     restoreTooltip:
       'Das Bibliotheksoriginal dieser Komponente fehlt, aber ihre Schaltung ist eingebettet. Stelle sie in deiner lokalen Bibliothek wieder her, um sie zu bearbeiten.',

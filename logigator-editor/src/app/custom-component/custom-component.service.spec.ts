@@ -4,6 +4,7 @@ import { of, throwError } from 'rxjs';
 import { DialogService } from '@logigator/ui';
 import { configureTestBed } from '../../testing/configure-test-bed';
 import { CustomComponentService } from './custom-component.service';
+import { ComponentLibraryService } from './component-library.service';
 import { WorkModeService } from '../work-mode/work-mode.service';
 import { WorkMode } from '../work-mode/work-mode.enum';
 import { ServerPersistenceGateway } from '../persistence/server/server-persistence.gateway';
@@ -24,6 +25,7 @@ import {
   FakeBrowserProjectStore
 } from '../../testing/fake-browser-stores';
 import { makeInput } from '../../testing/factories';
+import { BuiltInComponentType } from '../components/component-type.enum';
 import { InputComponent } from '../components/component-types/input/input.component';
 import { collectSnapshots } from '../persistence/snapshots';
 
@@ -263,6 +265,125 @@ describe('CustomComponentService', () => {
     main.addComponent(instance);
     return orphanType;
   }
+
+  // The same orphan, but with content inside, so a view tab can be checked
+  // against the circuit it is supposed to be showing.
+  function placeEmbeddedOrphanWithContent(): number {
+    const orphanType = registry.registerSnapshot({
+      kind: 'snapshot',
+      source: 'server',
+      id: 'someone-elses',
+      version: 3,
+      name: 'Borrowed',
+      symbol: 'B',
+      description: '',
+      numInputs: 1,
+      numOutputs: 0,
+      labels: [],
+      circuit: {
+        components: [
+          { type: BuiltInComponentType.INPUT, pos: [2, 3], options: {} }
+        ],
+        wires: [{ pos: [0, 0], direction: 0, length: 4 }]
+      }
+    });
+    const config = provider.getComponent(orphanType)!;
+    main.addComponent(config.create({}) as CustomComponent);
+    return orphanType;
+  }
+
+  it('viewSnapshot opens the embedded circuit as a read-only tab', () => {
+    const orphanType = placeEmbeddedOrphanWithContent();
+
+    service.viewSnapshot(orphanType);
+
+    const [tab] = projectService.openComponents();
+    expect(projectService.activeProject()).toBe(tab);
+    expect([...tab.components]).toHaveLength(1);
+    expect([...tab.wires]).toHaveLength(1);
+
+    const metadata = metadataStore.getMetadata(tab)!;
+    expect(metadata.type).toBe('comp');
+    expect(metadata.name).toBe('Borrowed');
+    // `source: 'share'` is what makes the tab read-only: it is the flag save,
+    // the File menu and the wire-repair offer all key off.
+    expect(metadata.source).toBe('share');
+    // No store id — the tab is backed by nothing and must not be mistaken for a
+    // document that belongs somewhere.
+    expect(metadata.id).toBe('');
+  });
+
+  it('viewSnapshot adds nothing to the library', async () => {
+    const orphanType = placeEmbeddedOrphanWithContent();
+    const componentStore = TestBed.inject(BrowserComponentStore);
+    const save = vi.spyOn(componentStore, 'save');
+
+    service.viewSnapshot(orphanType);
+
+    expect(save).not.toHaveBeenCalled();
+    expect(await componentStore.list()).toHaveLength(0);
+    // The placed instance still points at an orphaned snapshot: viewing must not
+    // mint a master or re-link provenance the way restore does.
+    expect(registry.getDefinition(orphanType)!.kind).toBe('snapshot');
+    expect(registry.resolveMaster(orphanType)).toBeUndefined();
+    expect(registry.getDefinition(orphanType)!.id).toBe('someone-elses');
+  });
+
+  it('viewSnapshot never marks the host or the tab dirty', () => {
+    const orphanType = placeEmbeddedOrphanWithContent();
+    metadataStore.clearDirty(main);
+
+    service.viewSnapshot(orphanType);
+    const [tab] = projectService.openComponents();
+
+    expect(metadataStore.isDirty(main)).toBe(false);
+    // Dirty tracking is off, so poking at a borrowed circuit cannot arm the
+    // unsaved-changes prompt on a tab that can never be saved.
+    tab.addComponent(makeInput(0));
+    tab.actionManager.push(new AddComponentsAction(makeInput(1)));
+    expect(metadataStore.isDirty(tab)).toBe(false);
+  });
+
+  it('viewing the same snapshot twice focuses the open tab', async () => {
+    const orphanType = placeEmbeddedOrphanWithContent();
+
+    service.viewSnapshot(orphanType);
+    const [tab] = projectService.openComponents();
+    projectService.setActiveProject(main);
+    service.viewSnapshot(orphanType);
+
+    expect(projectService.openComponents()).toEqual([tab]);
+    expect(projectService.activeProject()).toBe(tab);
+
+    // Closing releases the entry, so a later view opens a fresh tab.
+    await service.closeComponent(tab);
+    service.viewSnapshot(orphanType);
+    expect(projectService.openComponents()).toHaveLength(1);
+    expect(projectService.openComponents()[0]).not.toBe(tab);
+  });
+
+  it('a view tab survives the logout library teardown', () => {
+    const orphanType = placeEmbeddedOrphanWithContent();
+    service.viewSnapshot(orphanType);
+    const [tab] = projectService.openComponents();
+
+    // Signing out drops the cloud library. A view tab is backed by the
+    // document's embedded snapshot, not by a master, so it must keep rendering
+    // — and its `id:''` handle must not be mistaken for an open server editor.
+    TestBed.inject(ComponentLibraryService).clearServerMasters();
+
+    expect(projectService.openComponents()).toEqual([tab]);
+    expect([...tab.components]).toHaveLength(1);
+    expect(registry.getDefinition(orphanType)!.kind).toBe('snapshot');
+  });
+
+  it('viewSnapshot is a no-op for a library master', () => {
+    const master = registry.createMaster({ id: 'm', symbol: 'M' }, 'browser');
+
+    service.viewSnapshot(master);
+
+    expect(projectService.openComponents()).toHaveLength(0);
+  });
 
   it('restoring an orphan marks the host project dirty', async () => {
     const orphanType = placeEmbeddedOrphan();

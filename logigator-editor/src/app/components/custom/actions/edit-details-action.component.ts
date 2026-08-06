@@ -13,8 +13,9 @@ import { TranslateDirective } from '../../../translation/translate.directive';
  * instance (or placement ghost) resolves to a library master — the entry that
  * owns the editable metadata. Opens the
  * {@link EditComponentDetailsDialogComponent} for that master. An orphaned
- * instance has no master and hides this action (restore it first, via the edit
- * action's degraded modes).
+ * instance has no master and hides this action; the edit action's degraded modes
+ * are what it offers instead — restoring it into the library in the viewer's own
+ * document, or a read-only look inside a borrowed share.
  */
 @Component({
   selector: 'app-edit-details-action',

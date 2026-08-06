@@ -776,6 +776,9 @@ const fr: TranslationSchema = {
     createFailed: 'Impossible de créer le composant.',
     openFailed: "Impossible d'ouvrir le composant.",
     cloudLoadFailed: 'Impossible de charger le composant depuis le cloud.',
+    view: 'Voir le contenu',
+    viewTooltip:
+      "Ouvre ce composant en lecture seule. Il appartient au circuit partagé : rien n'est ajouté à votre bibliothèque — clonez le partage pour en garder une copie.",
     restore: 'Restaurer et modifier',
     restoreTooltip:
       'Le composant maître de ce composant dans la bibliothèque a disparu, mais son circuit est intégré. Restaurez-le dans votre bibliothèque locale pour le modifier.',
