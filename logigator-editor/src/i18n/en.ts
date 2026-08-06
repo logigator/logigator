@@ -907,14 +907,16 @@ const en = {
       eraser: 'Drag across anything to delete it.',
       simControls:
         'Editing is locked while running. Use these to pause, step, and set the speed — buttons and switches stay clickable.',
-      inspect:
-        'You can inspect this while it runs — open it to watch its internals live.',
       selectionActions:
         'Rotate the selection with these buttons — or press <strong>R</strong> / <strong>Shift+R</strong>. Move it with the <strong>arrow keys</strong>.',
       pastePlacementDesktop:
         'The pasted items land as a ghost — drag them to a free spot and release to drop them, or press Esc to cancel.',
       pastePlacementCompact:
         'The pasted items land as a ghost — drag them to a free spot and lift to drop them, or tap away to cancel.',
+      portsPanelDesktop:
+        "This component's plugs live here: place <strong>Input</strong> and <strong>Output</strong> from this panel, then drag the rows to set the port order and type to name them.",
+      portsPanelCompact:
+        "This component's plugs live in here: place <strong>Input</strong> and <strong>Output</strong> from this panel, then drag the rows to set the port order and type to name them.",
       panZoomCompact:
         'Drag with two fingers to pan, pinch to zoom. One finger pans only in pan mode.'
     },

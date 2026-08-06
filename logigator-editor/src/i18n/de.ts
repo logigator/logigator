@@ -927,14 +927,16 @@ const de: TranslationSchema = {
       eraser: 'Ziehe über etwas, um es zu löschen.',
       simControls:
         'Während des Laufens ist die Bearbeitung gesperrt. Damit kannst du pausieren, schrittweise gehen und die Geschwindigkeit einstellen — Taster und Schalter bleiben klickbar.',
-      inspect:
-        'Du kannst dies während des Laufens inspizieren — öffne es, um sein Innenleben live zu beobachten.',
       selectionActions:
         'Drehe die Auswahl mit diesen Schaltflächen — oder drücke <strong>R</strong> / <strong>Shift+R</strong>. Verschiebe sie mit den <strong>Pfeiltasten</strong>.',
       pastePlacementDesktop:
         'Die eingefügten Elemente erscheinen als Vorschau — ziehe sie an eine freie Stelle und lass los, um sie abzulegen, oder drücke Esc zum Abbrechen.',
       pastePlacementCompact:
         'Die eingefügten Elemente erscheinen als Vorschau — ziehe sie an eine freie Stelle und hebe den Finger, um sie abzulegen, oder tippe daneben zum Abbrechen.',
+      portsPanelDesktop:
+        'Hier liegen die Stecker dieser Komponente: Platziere <strong>Eingang</strong> und <strong>Ausgang</strong> aus diesem Panel, ziehe dann die Zeilen für die Port-Reihenfolge und tippe Namen ein.',
+      portsPanelCompact:
+        'Hier drin liegen die Stecker dieser Komponente: Platziere <strong>Eingang</strong> und <strong>Ausgang</strong> aus diesem Panel, ziehe dann die Zeilen für die Port-Reihenfolge und tippe Namen ein.',
       panZoomCompact:
         'Ziehe mit zwei Fingern zum Schwenken, spreize sie zum Zoomen. Mit einem Finger wird nur im Schwenkmodus geschwenkt.'
     },

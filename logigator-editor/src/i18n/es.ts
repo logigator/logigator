@@ -924,14 +924,16 @@ const es: TranslationSchema = {
       eraser: 'Arrastra sobre cualquier cosa para eliminarla.',
       simControls:
         'La edición está bloqueada mientras se ejecuta. Usa estos controles para pausar, avanzar paso a paso y fijar la velocidad; los botones e interruptores siguen siendo clicables.',
-      inspect:
-        'Puedes inspeccionar esto mientras se ejecuta: ábrelo para ver sus entrañas en directo.',
       selectionActions:
         'Gira la selección con estos botones, o pulsa <strong>R</strong> / <strong>Shift+R</strong>. Muévela con las <strong>teclas de flecha</strong>.',
       pastePlacementDesktop:
         'Los elementos pegados aparecen como un fantasma: arrástralos a un sitio libre y suelta para colocarlos, o pulsa Esc para cancelar.',
       pastePlacementCompact:
         'Los elementos pegados aparecen como un fantasma: arrástralos a un sitio libre y levanta el dedo para colocarlos, o toca fuera para cancelar.',
+      portsPanelDesktop:
+        'Aquí viven los conectores de este componente: coloca <strong>Entrada</strong> y <strong>Salida</strong> desde este panel, luego arrastra las filas para fijar el orden de los puertos y escribe sus nombres.',
+      portsPanelCompact:
+        'Aquí dentro viven los conectores de este componente: coloca <strong>Entrada</strong> y <strong>Salida</strong> desde este panel, luego arrastra las filas para fijar el orden de los puertos y escribe sus nombres.',
       panZoomCompact:
         'Arrastra con dos dedos para desplazar, pellizca para hacer zoom. Con un solo dedo solo se desplaza en el modo de desplazamiento.'
     },

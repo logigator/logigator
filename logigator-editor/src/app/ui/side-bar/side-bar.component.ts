@@ -3,10 +3,15 @@ import { ComponentListComponent } from './component-list/component-list.componen
 import { PortsPanelComponent } from '../ports-panel/ports-panel.component';
 import { ProjectService } from '../../project/project.service';
 import { ProjectMetadataStore } from '../../persistence/project-metadata.store';
+import { OnboardTargetDirective } from '../../onboarding/onboard-target.directive';
 
 @Component({
   selector: 'app-side-bar',
-  imports: [ComponentListComponent, PortsPanelComponent],
+  imports: [
+    ComponentListComponent,
+    PortsPanelComponent,
+    OnboardTargetDirective
+  ],
   templateUrl: './side-bar.component.html'
 })
 export class SideBarComponent {

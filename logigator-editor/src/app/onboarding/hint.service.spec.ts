@@ -5,10 +5,14 @@ import { firstValueFrom, Subject } from 'rxjs';
 import { TranslocoService } from '@jsverse/transloco';
 import { configureTestBed } from '../../testing/configure-test-bed';
 import { ProjectService } from '../project/project.service';
-import { InspectionService } from '../inspection/inspection.service';
 import { DocumentationService } from '../documentation/documentation.service';
 import { WorkModeService } from '../work-mode/work-mode.service';
 import { WorkMode } from '../work-mode/work-mode.enum';
+import { Project } from '../project/project';
+import {
+  ProjectMetadata,
+  ProjectMetadataStore
+} from '../persistence/project-metadata.store';
 import { OnboardingService } from './onboarding.service';
 import { HintService } from './hint.service';
 import { OnboardingTargetRegistry } from './onboarding-target-registry.service';
@@ -56,7 +60,6 @@ describe('HintService', () => {
         provide: ProjectService,
         useValue: { mainProject: () => ({ componentCount: 0 }), activeProject }
       },
-      { provide: InspectionService, useValue: { open: signal(null) } },
       {
         provide: DocumentationService,
         useValue: { open: (docsOpen = vi.fn()) }
@@ -145,6 +148,50 @@ describe('HintService', () => {
     wire.remove();
   });
 
+  // Floating is for a target that has not appeared yet. Once the hint has
+  // anchored, losing the target means its surface closed (the component tab, the
+  // side bar) — floating it on would leave it over the board pointing at nothing.
+  it('dismisses an anchored hint once its target leaves the DOM', async () => {
+    const registry = TestBed.inject(OnboardingTargetRegistry);
+    const wire = document.createElement('div');
+    document.body.appendChild(wire);
+    registry.register('tool-wire', wire);
+
+    enterWireTool();
+    expect(isFloating()).toBe(false);
+
+    registry.unregister('tool-wire', wire);
+    wire.remove();
+    tick();
+    await Promise.resolve(); // the deferred re-check
+
+    expect(popover()).toBeNull();
+  });
+
+  // An anchor that is merely re-created (its host re-rendered) unregisters and
+  // registers again; the hint has to follow it, not read the loss as a close.
+  it('re-anchors an anchored hint to a re-created target', async () => {
+    const registry = TestBed.inject(OnboardingTargetRegistry);
+    const wire = document.createElement('div');
+    document.body.appendChild(wire);
+    registry.register('tool-wire', wire);
+
+    enterWireTool();
+    expect(isFloating()).toBe(false);
+
+    registry.unregister('tool-wire', wire);
+    wire.remove();
+    const replacement = document.createElement('div');
+    document.body.appendChild(replacement);
+    registry.register('tool-wire', replacement);
+    tick();
+    await Promise.resolve();
+
+    expect(popover()).not.toBeNull();
+    expect(isFloating()).toBe(false);
+    replacement.remove();
+  });
+
   it('shows the selection hint only once two or more elements are selected', () => {
     const project = makeFakeProject();
     activeProject.set(project);
@@ -162,6 +209,54 @@ describe('HintService', () => {
     tick();
     expect(popover()).not.toBeNull();
     expect(onboarding.hasSeenHint('selection-actions')).toBe(true);
+  });
+
+  it('shows the ports hint when a custom-component editor becomes active', () => {
+    const project = makeFakeProject();
+    TestBed.inject(ProjectMetadataStore).register(
+      project as unknown as Project,
+      { type: 'comp' } as ProjectMetadata,
+      false // no action manager on the fake project to track
+    );
+    activeProject.set(project);
+    tick();
+
+    expect(popover()).not.toBeNull();
+    expect(onboarding.hasSeenHint('ports-panel')).toBe(true);
+  });
+
+  // Picking a tool is what several non-tool hints ask for — the Ports hint asks
+  // for a plug, which arms COMPONENT_PLACEMENT. Only tool hints clear on a mode
+  // change, or following the instruction would close the hint giving it.
+  it('keeps a non-tool hint open across a work-mode change', () => {
+    const project = makeFakeProject();
+    TestBed.inject(ProjectMetadataStore).register(
+      project as unknown as Project,
+      { type: 'comp' } as ProjectMetadata,
+      false
+    );
+    activeProject.set(project);
+    tick();
+    expect(popover()).not.toBeNull();
+
+    enterWireTool();
+
+    expect(popover()).not.toBeNull();
+    // The tool hint is dropped rather than consumed, so it can still fire later.
+    expect(onboarding.hasSeenHint('wire-tap-actions')).toBe(false);
+  });
+
+  it('does not show the ports hint for a plain project', () => {
+    const project = makeFakeProject();
+    TestBed.inject(ProjectMetadataStore).register(
+      project as unknown as Project,
+      { type: 'project' } as ProjectMetadata,
+      false
+    );
+    activeProject.set(project);
+    tick();
+
+    expect(onboarding.hasSeenHint('ports-panel')).toBe(false);
   });
 
   it('shows the paste hint on the first paste', () => {

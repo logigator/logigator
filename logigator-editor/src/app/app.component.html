@@ -16,8 +16,14 @@
   @if (!layout.isCompact() && !isSimulation()) {
     <!-- shrink-0 keeps the side-bar at its full width; overflowing content in
          the board column (e.g. a long status-bar hint) truncates there instead
-         of squeezing the side-bar. -->
-    <aside class="w-80 shrink-0 border-r border-border overflow-y-auto">
+         of squeezing the side-bar.
+         cdkScrollable registers this scroller with the CDK ScrollDispatcher —
+         element scroll does not reach the document, so without it overlays
+         anchored to side-bar content (the Ports hint) never reposition. -->
+    <aside
+      cdkScrollable
+      class="w-80 shrink-0 border-r border-border overflow-y-auto"
+    >
       <app-side-bar class="block"></app-side-bar>
     </aside>
   }

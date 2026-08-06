@@ -927,14 +927,16 @@ const fr: TranslationSchema = {
       eraser: "Faites glisser sur n'importe quel élément pour le supprimer.",
       simControls:
         "L'édition est verrouillée pendant l'exécution. Utilisez ces contrôles pour mettre en pause, avancer pas à pas et régler la vitesse — les boutons et interrupteurs restent cliquables.",
-      inspect:
-        'Vous pouvez inspecter cet élément pendant son exécution — ouvrez-le pour observer son fonctionnement interne en direct.',
       selectionActions:
         'Faites pivoter la sélection avec ces boutons — ou appuyez sur <strong>R</strong> / <strong>Shift+R</strong>. Déplacez-la avec les <strong>touches fléchées</strong>.',
       pastePlacementDesktop:
         'Les éléments collés apparaissent comme un fantôme — faites-les glisser vers un emplacement libre et relâchez pour les déposer, ou appuyez sur Échap pour annuler.',
       pastePlacementCompact:
         'Les éléments collés apparaissent comme un fantôme — faites-les glisser vers un emplacement libre et levez le doigt pour les déposer, ou touchez ailleurs pour annuler.',
+      portsPanelDesktop:
+        "Les fiches de ce composant vivent ici : placez <strong>Entrée</strong> et <strong>Sortie</strong> depuis ce panneau, puis faites glisser les lignes pour définir l'ordre des ports et saisissez leurs noms.",
+      portsPanelCompact:
+        "Les fiches de ce composant vivent là-dedans : placez <strong>Entrée</strong> et <strong>Sortie</strong> depuis ce panneau, puis faites glisser les lignes pour définir l'ordre des ports et saisissez leurs noms.",
       panZoomCompact:
         "Faites glisser avec deux doigts pour vous déplacer, pincez pour zoomer. Un seul doigt ne déplace la vue qu'en mode déplacement."
     },
