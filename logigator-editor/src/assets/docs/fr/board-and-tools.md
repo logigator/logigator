@@ -56,7 +56,7 @@ Une petite pastille flotte au-dessus du plan de travail tant que l'outil de sél
 L'édition standard agit sur la sélection en cours :
 
 - **Copier** (`Ctrl+C`) et **Couper** (`Ctrl+X`) placent la sélection dans le presse-papiers ; couper la retire aussi.
-- **Coller** (`Ctrl+V`) ramène les éléments copiés, légèrement décalés par rapport aux originaux. Ils arrivent sous forme de fantôme que vous positionnez — faites-les glisser vers un emplacement libre et relâchez pour les déposer, ou appuyez sur `Escape` pour annuler.
+- **Coller** (`Ctrl+V`) ramène les éléments copiés sous le curseur, ou au centre de la vue sur écran tactile. Ils arrivent sous forme de fantôme que vous positionnez — faites-les glisser vers un emplacement libre et relâchez pour les déposer, ou appuyez sur `Escape` pour annuler.
 - **Supprimer** (`Delete`) retire la sélection.
 
 Ces commandes se trouvent aussi dans la barre d'outils et dans le menu **Édition**. Chaque modification peut être annulée avec **Annuler** (`Ctrl+Z`) et rétablie avec **Rétablir** (`Ctrl+Shift+Z`).

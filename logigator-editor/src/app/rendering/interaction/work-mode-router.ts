@@ -1,4 +1,5 @@
 import { Subscription } from 'rxjs';
+import { Point, Rectangle } from 'pixi.js';
 import { WorkMode } from '../../work-mode/work-mode.enum';
 import { Project } from '../../project/project';
 import { Component } from '../../components/component';
@@ -7,11 +8,12 @@ import { Wire } from '../../wires/wire';
 import { DragSession } from '../drag-session';
 import { PastePlacementSession } from '../sessions/paste-placement.session';
 import { SelectionMoveSession } from '../sessions/selection-move.session';
+import { groupGridBounds } from '../sessions/rotate-elements';
 import { ShortcutService } from '../../shortcuts/shortcut.service';
 import { ShortcutActionEnum } from '../../shortcuts/shortcut-action.enum';
 import { WorkModeService } from '../../work-mode/work-mode.service';
 import { getStaticDI } from '../../utils/get-di';
-import { PointerInput } from './pointer-input';
+import { canvasToGrid, PointerInput } from './pointer-input';
 import { PointerToolTarget } from './pointer-controller';
 import { BoardTool, ToolHost } from './tools/board-tool';
 import { PanTool } from './tools/pan.tool';
@@ -39,6 +41,13 @@ export class WorkModeRouter implements PointerToolTarget, ToolHost {
   private _project: Project | null = null;
   private _mode: WorkMode = WorkMode.PAN;
   private _activeDrag: DragSession | null = null;
+
+  // Canvas-local position of the resting cursor, or null while there is none:
+  // touch never sets it and leaving the canvas clears it. An event-initiated
+  // paste puts its ghosts here. Kept in screen space, not grid space: pans and
+  // the zoom controls move the camera without a pointer move, so a grid
+  // coordinate recorded on the last hover would point somewhere else by now.
+  private _cursorScreen: Point | null = null;
 
   private _pasteSub: Subscription | null = null;
   private _rotateSub: Subscription | null = null;
@@ -134,6 +143,7 @@ export class WorkModeRouter implements PointerToolTarget, ToolHost {
     this._pasteSub = null;
     this._rotateSub?.unsubscribe();
     this._rotateSub = null;
+    this._cursorScreen = null;
 
     this._project = project;
     if (!project) return;
@@ -250,11 +260,17 @@ export class WorkModeRouter implements PointerToolTarget, ToolHost {
   public hover(input: PointerInput): void {
     const project = this._project;
     if (!project) return;
+    // A lifted finger leaves no cursor behind: its last position is not where
+    // the user is looking, so touch input keeps paste on the centre fallback.
+    if (input.pointerType !== 'touch') {
+      this._cursorScreen = input.global.clone();
+    }
     this._activeTool?.hover?.(project, input, this);
   }
 
   /** The pointer left the canvas: hover previews stop applying. */
   public leave(): void {
+    this._cursorScreen = null;
     if (!this._project) return;
     this._activeTool?.deactivate?.(this._project);
   }
@@ -376,6 +392,7 @@ export class WorkModeRouter implements PointerToolTarget, ToolHost {
     if (!project) return;
     this.abortActiveDrag();
     project.selectionManager.clear();
+    this._positionPasteGroup(project, components, wires);
     this._startDrag(
       new PastePlacementSession(
         project,
@@ -384,6 +401,43 @@ export class WorkModeRouter implements PointerToolTarget, ToolHost {
         wires
       )
     );
+  }
+
+  /**
+   * Centres a pasted group on the cursor, or in the middle of the viewport
+   * when there is none. The fresh instances carry the copied coordinates, so
+   * without this they land wherever they were copied from — off screen as
+   * soon as the camera has moved since, where the ghosts wait for a press the
+   * user cannot see to give.
+   *
+   * The shift stays whole grid units: components sit on the lattice and wires
+   * on its half-step offsets, and both have to keep doing so.
+   */
+  private _positionPasteGroup(
+    project: Project,
+    components: Component[],
+    wires: Wire[]
+  ): void {
+    const bounds = groupGridBounds(components, wires);
+    if (!bounds) return;
+    const target = this._cursorScreen
+      ? canvasToGrid(project, this._cursorScreen)
+      : this._viewCentre(project);
+    const dx = Math.round(target.x - (bounds.x + bounds.width / 2));
+    const dy = Math.round(target.y - (bounds.y + bounds.height / 2));
+    if (dx === 0 && dy === 0) return;
+    for (const c of components) {
+      c.position.set(c.position.x + dx, c.position.y + dy);
+    }
+    for (const w of wires) {
+      w.position.set(w.position.x + dx, w.position.y + dy);
+    }
+  }
+
+  /** Grid position the viewport is centred on. */
+  private _viewCentre(project: Project): Point {
+    const view = project.viewport.gridView(new Rectangle());
+    return new Point(view.x + view.width / 2, view.y + view.height / 2);
   }
 
   private _startDrag(session: DragSession): void {

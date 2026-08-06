@@ -670,6 +670,7 @@ const es: TranslationSchema = {
       'Algo salió mal. Es posible que algunas acciones no se hayan completado: consulta la consola del navegador para más detalles.'
   },
   clipboard: {
+    clear: 'Vaciar portapapeles',
     pastePartial:
       'Algunos elementos no se pudieron pegar: su tipo de componente ya no está disponible.',
     pastePlugsSkipped:

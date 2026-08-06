@@ -660,6 +660,7 @@ const en = {
       'Something went wrong. Some actions may not have completed — see the browser console for details.'
   },
   clipboard: {
+    clear: 'Clear clipboard',
     pastePartial:
       'Some elements could not be pasted — their component type is no longer available.',
     pastePlugsSkipped:

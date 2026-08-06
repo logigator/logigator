@@ -9,7 +9,7 @@ import {
   type MockInstance
 } from 'vitest';
 import { TestBed } from '@angular/core/testing';
-import { Point } from 'pixi.js';
+import { Point, Rectangle } from 'pixi.js';
 import { configureTestBed } from '../../../testing/configure-test-bed';
 import {
   makeAnd,
@@ -27,10 +27,12 @@ import { notComponentConfig } from '../../components/component-types/not/not.con
 import { CustomComponentService } from '../../custom-component/custom-component.service';
 import { WorkModeService } from '../../work-mode/work-mode.service';
 import { ThemingService } from '../../theming/theming.service';
+import { environment } from '../../../environments/environment';
 import { Project } from '../../project/project';
 import { WorkMode } from '../../work-mode/work-mode.enum';
 import { PointerInput } from './pointer-input';
 import { WorkModeRouter } from './work-mode-router';
+import { groupGridBounds } from '../sessions/rotate-elements';
 
 /** PointerInput whose grid and global both sit at (x, y). */
 function makeInput(x: number, y: number): PointerInput {
@@ -996,6 +998,122 @@ describe('WorkModeRouter history lock around drag sessions', () => {
 
     expect(project.actionManager.locked).toBe(false);
     expect(other.actionManager.locked).toBe(false);
+    other.destroy({ children: true });
+  });
+});
+
+describe('WorkModeRouter paste placement', () => {
+  let project: Project;
+  let router: WorkModeRouter;
+
+  // 800x600 CSS px at scale 1 and gridSize 16: a 50 x 37.5 grid view whose
+  // centre sits at (25, 18.75) while the camera rests at the origin.
+  const VIEW_CENTRE = new Point(25, 18.75);
+
+  beforeEach(() => {
+    configureTestBed();
+    project = new Project();
+    project.viewport.resizeViewport(800, 600);
+    router = new WorkModeRouter();
+    router.setProject(project);
+  });
+
+  afterEach(() => {
+    router.destroy();
+    project.destroy({ children: true });
+  });
+
+  /**
+   * Rests the cursor on a grid position. The router records the canvas-local
+   * position, so the hover has to carry a `global` matching the grid one.
+   */
+  function hoverOnGrid(gx: number, gy: number, pointerType = 'mouse'): void {
+    router.hover({
+      pointerId: 1,
+      pointerType,
+      global: new Point(gx * environment.gridSize, gy * environment.gridSize),
+      grid: new Point(gx, gy)
+    });
+  }
+
+  /** Pastes one component copied from the origin and returns where it landed. */
+  function pasteAtOrigin(): Point {
+    const comp = makeAnd();
+    project.startPasteSession([comp], []);
+    const bounds = groupGridBounds([comp], [])!;
+    return new Point(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
+  }
+
+  /** The group is centred on `target` up to the half-unit snap to the grid. */
+  function expectCentredOn(centre: Point, target: Point): void {
+    expect(Math.abs(centre.x - target.x)).toBeLessThanOrEqual(0.5);
+    expect(Math.abs(centre.y - target.y)).toBeLessThanOrEqual(0.5);
+  }
+
+  it('centres the pasted group on the cursor', () => {
+    hoverOnGrid(30, 12);
+
+    expectCentredOn(pasteAtOrigin(), new Point(30, 12));
+  });
+
+  it('centres the pasted group in the view when the pointer left the canvas', () => {
+    hoverOnGrid(30, 12);
+    router.leave();
+
+    expectCentredOn(pasteAtOrigin(), VIEW_CENTRE);
+  });
+
+  it('centres the pasted group in the view for touch input', () => {
+    // A lifted finger leaves no cursor behind, so its last position must not
+    // be treated as one.
+    hoverOnGrid(30, 12, 'touch');
+
+    expectCentredOn(pasteAtOrigin(), VIEW_CENTRE);
+  });
+
+  it('reads the resting cursor through the camera it pastes under', () => {
+    // Panning (right-drag, the zoom controls, the minimap) moves the camera
+    // with no pointer move behind it: the cursor still rests on the same
+    // canvas pixel, which is now a different part of the circuit.
+    hoverOnGrid(30, 12);
+    project.viewport.setPosition(new Point(-1600, -800)); // grid origin (100, 50)
+
+    expectCentredOn(pasteAtOrigin(), new Point(130, 62));
+  });
+
+  it('follows the camera, so the group lands in view after a pan', () => {
+    project.viewport.setPosition(new Point(-1600, -800)); // grid origin (100, 50)
+
+    const centre = pasteAtOrigin();
+
+    const view = project.viewport.gridView(new Rectangle());
+    expect(view.contains(centre.x, centre.y)).toBe(true);
+  });
+
+  it('shifts wires by whole grid units, keeping them on their half-step', () => {
+    const wire = makeWire(5, 3, WireDirection.HORIZONTAL); // (5.5, 3.5)
+    project.startPasteSession([], [wire]);
+
+    expect(wire.position.x % 1).toBe(0.5);
+    expect(wire.position.y % 1).toBe(0.5);
+  });
+
+  it('drops the cursor when the router is re-homed to another project', () => {
+    hoverOnGrid(30, 12);
+
+    const other = new Project();
+    other.viewport.resizeViewport(800, 600);
+    router.setProject(other);
+
+    const comp = makeAnd();
+    other.startPasteSession([comp], []);
+    const bounds = groupGridBounds([comp], [])!;
+    expectCentredOn(
+      new Point(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2),
+      VIEW_CENTRE
+    );
+
+    router.setProject(null);
     other.destroy({ children: true });
   });
 });

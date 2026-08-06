@@ -56,7 +56,7 @@ Una pequeña pastilla flota sobre el tablero mientras la herramienta de selecci�
 La edición estándar funciona sobre la selección actual:
 
 - **Copiar** (`Ctrl+C`) y **Cortar** (`Ctrl+X`) colocan la selección en el portapapeles; cortar además la elimina.
-- **Pegar** (`Ctrl+V`) trae de vuelta los elementos copiados, ligeramente desplazados de los originales. Llegan como un fantasma que posicionas: arrástralos a un sitio libre y suelta para colocarlos, o pulsa `Escape` para cancelar.
+- **Pegar** (`Ctrl+V`) trae de vuelta los elementos copiados bajo el cursor, o en el centro de la vista en pantallas táctiles. Llegan como un fantasma que posicionas: arrástralos a un sitio libre y suelta para colocarlos, o pulsa `Escape` para cancelar.
 - **Eliminar** (`Delete`) elimina la selección.
 
 Estos comandos también están en la barra de herramientas y en el menú **Editar**. Toda edición se puede deshacer con **Deshacer** (`Ctrl+Z`) y rehacer con **Rehacer** (`Ctrl+Shift+Z`).

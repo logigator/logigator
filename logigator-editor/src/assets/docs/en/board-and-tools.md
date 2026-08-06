@@ -56,7 +56,7 @@ A small pill floats above the board while the select tool is active — click it
 Standard editing works on the current selection:
 
 - **Copy** (`Ctrl+C`) and **Cut** (`Ctrl+X`) put the selection on the clipboard; cut also removes it.
-- **Paste** (`Ctrl+V`) brings the copied elements back, slightly offset from the originals. They arrive as a ghost you position — drag them to a free spot and release to drop, or press `Escape` to cancel.
+- **Paste** (`Ctrl+V`) brings the copied elements back under the cursor, or in the middle of the view on touch. They arrive as a ghost you position — drag them to a free spot and release to drop, or press `Escape` to cancel.
 - **Delete** (`Delete`) removes the selection.
 
 These commands are also in the toolbar and the **Edit** menu. Every edit can be undone with **Undo** (`Ctrl+Z`) and redone with **Redo** (`Ctrl+Shift+Z`).
