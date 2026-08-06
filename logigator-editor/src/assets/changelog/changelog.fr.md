@@ -3,6 +3,15 @@
 Toutes les modifications notables de l'éditeur Logigator sont consignées ici. La
 version la plus récente est indiquée en premier.
 
+## 2.0.1 — 2026-08-06
+
+### Correctifs
+
+- Cliquer sur un interrupteur ou un bouton pendant que la simulation démarrait
+  encore faisait planter la simulation.
+- Ouvrir un autre projet pendant qu'une simulation tournait faisait planter la
+  simulation.
+
 ## 2.0.0 — 2026-08-04
 
 Logigator a été **entièrement reconstruit** — un moteur de rendu amélioré, un
