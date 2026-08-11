@@ -2,6 +2,8 @@ import { inject, Injectable, OnDestroy } from '@angular/core';
 import { SignalMap } from 'ngxtension/collections';
 import { LoggingService } from '../logging/logging.service';
 
+const ONE_YEAR_IN_SECONDS = 60 * 60 * 24 * 365;
+
 @Injectable({ providedIn: 'root' })
 export class CookieService implements OnDestroy {
   private readonly loggingService = inject(LoggingService);
@@ -63,6 +65,26 @@ export class CookieService implements OnDestroy {
       },
       {} as Record<string, string>
     );
+  }
+
+  /**
+   * Writes a cookie for the whole origin and mirrors it into the reactive map
+   * immediately, so readers observe the value without waiting for a change
+   * event / re-read.
+   *
+   * `path=/` is what makes a cookie shared with the pages served next to the
+   * editor: a cookie written from `/editor` without it is scoped to that path,
+   * shadows the origin-wide one on editor requests, and is invisible to the
+   * rest of the site.
+   *
+   * The value is written raw, matching what {@link get} returns — a caller
+   * storing anything but an unreserved-character string encodes it itself.
+   */
+  set(name: string, value: string, maxAgeSeconds = ONE_YEAR_IN_SECONDS): void {
+    // `document.cookie` rather than `cookieStore.set`, which is async: the map
+    // update below would then race the write it mirrors.
+    document.cookie = `${name}=${value}; path=/; max-age=${maxAgeSeconds}`;
+    this._cookies.set(name, value);
   }
 
   /**

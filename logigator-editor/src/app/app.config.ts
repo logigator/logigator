@@ -18,6 +18,11 @@ import { ConsentService } from './consent/consent.service';
 import { AnalyticsService } from './analytics/analytics.service';
 import { provideDialogAnalytics } from './analytics/dialog-telemetry';
 import { TranslationService } from './translation/translation.service';
+import { AVAILABLE_LANGUAGES } from './translation/languages';
+import {
+  preferencesLangStorage,
+  resolveStartupLang
+} from './translation/preferences-lang.storage';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -26,34 +31,23 @@ export const appConfig: ApplicationConfig = {
     provideTransloco({
       config: {
         defaultLang: 'en',
-        availableLangs: [
-          {
-            id: 'en',
-            label: 'English'
-          },
-          {
-            id: 'de',
-            label: 'Deutsch'
-          },
-          {
-            id: 'fr',
-            label: 'Français'
-          },
-          {
-            id: 'es',
-            label: 'Español'
-          }
-        ],
+        availableLangs: [...AVAILABLE_LANGUAGES],
         reRenderOnLangChange: true,
         prodMode: !isDevMode()
       },
       loader: TranslationLoaderService
     }),
+    // The language lives in the `lang` field of the origin-wide `preferences`
+    // cookie, which the pages the editor is served alongside read and write too
+    // — so switching language on either side moves both. This provider's
+    // initializer runs before the ones below, so the language is active before
+    // `<html lang>` is stamped and before the bundle preload picks a language.
     provideTranslocoPersistLang({
-      storageKey: 'logigator.transloco.lang',
+      storageKey: 'lang',
       storage: {
-        useValue: localStorage
-      }
+        useFactory: preferencesLangStorage
+      },
+      getLangFn: resolveStartupLang
     }),
     provideAppInitializer(() => {
       // Resolved for its side effect: constructing TranslationService puts the
