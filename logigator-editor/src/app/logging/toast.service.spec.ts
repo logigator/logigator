@@ -5,6 +5,9 @@ import { TestBed } from '@angular/core/testing';
 import { ToastService as UiToastService } from '@logigator/ui';
 import { TranslationService } from '../translation/translation.service';
 
+import { AnalyticsService } from '../analytics/analytics.service';
+import { AnalyticsEvent } from '../analytics/analytics.mapping';
+
 import { ToastService } from './toast.service';
 import { LoggingService } from './logging.service';
 
@@ -12,6 +15,7 @@ describe('ToastService', () => {
   let service: ToastService;
   let messageService: UiToastService;
   let logging: LoggingService;
+  let analytics: AnalyticsService;
 
   beforeEach(() => {
     const translocoSpy = {
@@ -28,8 +32,10 @@ describe('ToastService', () => {
     service = TestBed.inject(ToastService);
     messageService = TestBed.inject(UiToastService);
     logging = TestBed.inject(LoggingService);
+    analytics = TestBed.inject(AnalyticsService);
 
     vi.spyOn(messageService, 'add');
+    vi.spyOn(analytics, 'capture').mockImplementation(() => {});
     vi.spyOn(logging, 'error').mockImplementation(() => {});
     vi.spyOn(logging, 'warn').mockImplementation(() => {});
     vi.spyOn(logging, 'info').mockImplementation(() => {});
@@ -56,6 +62,25 @@ describe('ToastService', () => {
     it('falls back to the message when no cause is given', () => {
       service.error('err-msg', 'MyContext');
       expect(logging.error).toHaveBeenCalledWith('err-msg', 'MyContext');
+    });
+
+    it('reports the message and the cause identity to analytics', () => {
+      service.error('err-msg', 'MyContext', new TypeError('boom'));
+      expect(analytics.capture).toHaveBeenCalledWith(
+        AnalyticsEvent.ErrorShown,
+        { context: 'MyContext', message: 'err-msg', cause: 'TypeError: boom' }
+      );
+    });
+
+    it('reduces a non-Error cause to its class name, never its contents', () => {
+      class HttpErrorResponse {
+        public readonly url = 'https://logigator.com/api/projects/secret';
+      }
+      service.error('err-msg', 'MyContext', new HttpErrorResponse());
+      const [, properties] = vi.mocked(analytics.capture).mock.calls[0];
+      // The bundler suffixes local class names, hence the prefix match.
+      expect(properties?.['cause']).toMatch(/^HttpErrorResponse/);
+      expect(properties?.['cause']).not.toContain('secret');
     });
   });
 

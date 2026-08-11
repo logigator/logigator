@@ -4,7 +4,7 @@ import { SerializedAction } from '../actions/serialized-action.model';
 
 describe('sanitizeProperties', () => {
   it('keeps primitives and truncates over-long strings', () => {
-    const long = 'x'.repeat(200);
+    const long = 'x'.repeat(1000);
     const result = sanitizeProperties({
       count: 3,
       negated: true,
@@ -16,7 +16,7 @@ describe('sanitizeProperties', () => {
       count: 3,
       negated: true,
       mode: 'wireTool',
-      blob: 'x'.repeat(64)
+      blob: 'x'.repeat(256)
     });
   });
 
