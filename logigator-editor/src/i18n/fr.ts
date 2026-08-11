@@ -680,7 +680,8 @@ const fr: TranslationSchema = {
       "Les fiches d'entrée et de sortie n'ont pas été collées — elles ne sont prises en charge qu'à l'intérieur des composants personnalisés."
   },
   wireRepair: {
-    repaired: '{{count}} problème(s) de fils réparé(s).',
+    repaired:
+      "{{count}} problème(s) de fils réparé(s). Vérifiez que votre circuit fonctionne toujours comme prévu avant de l'enregistrer.",
     loadDetected:
       'Ce circuit comporte {{count}} problème(s) de fils, ce qui peut faire réagir les connexions de façon inattendue.',
     repairAction: 'Réparer les fils',

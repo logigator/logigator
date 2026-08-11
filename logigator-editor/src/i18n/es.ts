@@ -677,7 +677,8 @@ const es: TranslationSchema = {
       'Los conectores de entrada y salida no se pegaron: solo se admiten dentro de componentes personalizados.'
   },
   wireRepair: {
-    repaired: 'Se repararon {{count}} problema(s) de cables.',
+    repaired:
+      'Se repararon {{count}} problema(s) de cables. Comprueba que tu circuito siga funcionando como esperas antes de guardar.',
     loadDetected:
       'Este circuito tiene {{count}} problema(s) de cables, lo que puede hacer que las conexiones se comporten de forma inesperada.',
     repairAction: 'Reparar cables',

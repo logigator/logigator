@@ -667,7 +667,8 @@ const en = {
       'Input and output plugs were not pasted — they are only supported inside custom components.'
   },
   wireRepair: {
-    repaired: 'Repaired {{count}} wire issue(s).',
+    repaired:
+      'Repaired {{count}} wire issue(s). Please check that your circuit still works as expected before saving.',
     loadDetected:
       'This circuit has {{count}} wire issue(s), which can make connections behave unexpectedly.',
     repairAction: 'Repair wires',
