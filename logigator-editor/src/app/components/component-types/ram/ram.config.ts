@@ -1,6 +1,6 @@
+import { ramMeta } from '@logigator/core';
 import { ComponentConfig } from '../../component-config.model';
-import { BuiltInComponentType } from '@logigator/core';
-import { ComponentCategory } from '../../component-category.enum';
+import { configFromMeta } from '../../config-from-meta';
 import { ComponentOption } from '../../component-option';
 import { NumberComponentOption } from '../../component-options/number/number.component-option';
 import { RamComponent } from './ram.component';
@@ -11,26 +11,7 @@ export interface RamOptions {
   addressSize: NumberComponentOption;
 }
 
-export const ramComponentConfig: ComponentConfig<RamOptions> = {
-  type: BuiltInComponentType.RAM,
-  category: ComponentCategory.ADVANCED,
-  symbol: 'RAM',
-  name: 'components.def.RAM.name',
-  description: 'components.def.RAM.description',
-  options: {
-    wordSize: new NumberComponentOption(
-      'components.def.RAM.options.wordSize',
-      1,
-      64,
-      4
-    ),
-    addressSize: new NumberComponentOption(
-      'components.def.RAM.options.addressSize',
-      1,
-      16,
-      4
-    )
-  },
-  legacyV0Slots: { n: ['wordSize', 'addressSize'] },
-  create: (options) => new RamComponent(options)
-};
+export const ramComponentConfig: ComponentConfig<RamOptions> = configFromMeta(
+  ramMeta,
+  { create: (options) => new RamComponent(options) }
+);

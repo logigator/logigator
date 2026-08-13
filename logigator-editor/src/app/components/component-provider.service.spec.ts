@@ -4,8 +4,7 @@ import { TestBed } from '@angular/core/testing';
 import { setStaticDIInjector } from '../utils/get-di';
 import { ComponentProviderService } from './component-provider.service';
 import { ComponentConfig } from './component-config.model';
-import { ComponentCategory } from './component-category.enum';
-import { BuiltInComponentType } from '@logigator/core';
+import { BuiltInComponentType, ComponentCategory } from '@logigator/core';
 import { Component } from './component';
 
 const CUSTOM_TYPE = 1234;
@@ -21,6 +20,7 @@ function makeStubConfig(): ComponentConfig {
     name: 'components.def.AND.name',
     description: 'components.def.AND.description',
     options: {},
+    defaultPorts: { inputs: 0, outputs: 0 },
     create: () => ({}) as unknown as Component
   };
 }

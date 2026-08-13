@@ -157,12 +157,31 @@ Short single-line string, rendered as an inline `<input pInputText>` row — the
 
 ---
 
+## Where an option's constraints live
+
+Each option class is the **renderer-bearing half** of a pure `OptionSchema` in
+`@logigator/core` (`catalog/option-schema.ts`) — one schema kind per class:
+`number`, `select-button`, `select-dropdown`, `text`, `textarea`, `memory`. The
+schema carries the constraints (range, allowed values, max length, forbidden
+characters as a string, default); the class adds the Angular `renderer`, the
+live value and the clamping setters.
+
+`configFromMeta` (`components/config-from-meta.ts`) owns the one kind → class
+table, so a built-in's config never instantiates an option itself. The split is
+what lets the server reject an illegal option value with
+`validateOptionValue(schema, value)` — the same check the automation write path
+runs — without importing anything Angular.
+
+---
+
 ## Adding a new option kind
 
-1. Create a folder under `component-options/<name>/`.
-2. Write the option model class extending `ComponentOption<T>` (or `SelectButtonComponentOption<T>` / `SelectDropdownComponentOption<T>` if a select fits). Override `renderer` to point at your renderer component and implement `protected cloneWithValue(initialValue?)` (not `clone` — the base provides that). A built-in that must round-trip through the legacy v0 server/file format also adds a `legacyV0Slots` entry on its `ComponentConfig` (see `persistence.md`).
-3. Write the renderer as a standalone OnPush component with `option = input.required<YourComponentOption>()`. `import type` the option to avoid the value-import cycle.
-4. The renderer template owns the row (wrapper + label + input) and uses `[ngModel]` / `(ngModelChange)` to write through the option's setter.
-5. Add option-model and (at minimum) renderer specs alongside the source files.
+1. Add the schema arm to core's `OptionSchema` union and handle it in
+   `validateOptionValue`.
+2. Create a folder under `component-options/<name>/`.
+3. Write the option model class extending `ComponentOption<T>` (or `SelectButtonComponentOption<T>` / `SelectDropdownComponentOption<T>` if a select fits). Override `renderer` to point at your renderer component and implement `protected cloneWithValue(initialValue?)` (not `clone` — the base provides that). Add the kind to `config-from-meta.ts`'s table. A built-in that must round-trip through the legacy v0 server/file format also adds a `legacyV0Slots` entry on its meta (see `persistence.md`).
+4. Write the renderer as a standalone OnPush component with `option = input.required<YourComponentOption>()`. `import type` the option to avoid the value-import cycle.
+5. The renderer template owns the row (wrapper + label + input) and uses `[ngModel]` / `(ngModelChange)` to write through the option's setter.
+6. Add option-model and (at minimum) renderer specs alongside the source files.
 
 `ComponentSettingsComponent` does not need to change — it picks up the new option automatically through `option.renderer`.

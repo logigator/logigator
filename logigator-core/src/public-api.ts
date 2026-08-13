@@ -20,6 +20,7 @@ export type {
   ComponentType,
   CustomComponentType
 } from './model/component-type.enum';
+export { ComponentCategory } from './model/component-category.enum';
 export { Direction } from './model/direction';
 export { WireDirection } from './model/wire-direction.enum';
 export type { ProjectElement } from './model/project-element';
@@ -60,6 +61,73 @@ export {
   legacyCustomBodySize,
   pivotToLegacyAnchor
 } from './model/legacy-anchor';
+
+// ---- catalog: what each built-in type is, as pure data ----
+export {
+  bitWeightLabels,
+  busLabels,
+  defaultBodyHeight,
+  indexLabels,
+  NO_LABELS,
+  NO_PORTS,
+  widenMeta
+} from './catalog/component-meta';
+export type {
+  BodySize,
+  ComponentMeta,
+  LegacyV0Slots,
+  PortLabels,
+  Ports
+} from './catalog/component-meta';
+export { defaultOptionValues } from './catalog/option-schema';
+export type {
+  MemoryOptionSchema,
+  NumberOptionSchema,
+  OptionSchema,
+  OptionValues,
+  SelectButtonOptionSchema,
+  SelectDropdownOptionSchema,
+  SelectOptionValue,
+  TextAreaOptionSchema,
+  TextOptionSchema
+} from './catalog/option-schema';
+export { validateOptionValue } from './catalog/validate-option-value';
+export { BUILT_IN_META, builtInMeta } from './catalog/built-in-meta';
+export { andMeta } from './catalog/built-ins/and.meta';
+export { buttonMeta } from './catalog/built-ins/button.meta';
+export { clockMeta } from './catalog/built-ins/clock.meta';
+export { dFfMeta } from './catalog/built-ins/d-ff.meta';
+export { decoderMeta } from './catalog/built-ins/decoder.meta';
+export { delayMeta } from './catalog/built-ins/delay.meta';
+export { demuxMeta } from './catalog/built-ins/demux.meta';
+export { encoderMeta } from './catalog/built-ins/encoder.meta';
+export { fullAdderMeta } from './catalog/built-ins/full-adder.meta';
+export { halfAdderMeta } from './catalog/built-ins/half-adder.meta';
+export { inputMeta } from './catalog/built-ins/input.meta';
+export { jkFfMeta } from './catalog/built-ins/jk-ff.meta';
+export { ledMeta } from './catalog/built-ins/led.meta';
+export { ledMatrixMeta } from './catalog/built-ins/led-matrix.meta';
+export { muxMeta } from './catalog/built-ins/mux.meta';
+export { notMeta } from './catalog/built-ins/not.meta';
+export { orMeta } from './catalog/built-ins/or.meta';
+export { outputMeta } from './catalog/built-ins/output.meta';
+export { ramMeta } from './catalog/built-ins/ram.meta';
+export { rngMeta } from './catalog/built-ins/rng.meta';
+export { romMeta } from './catalog/built-ins/rom.meta';
+export { segmentDisplayMeta } from './catalog/built-ins/segment-display.meta';
+export { srFfMeta } from './catalog/built-ins/sr-ff.meta';
+export { switchMeta } from './catalog/built-ins/switch.meta';
+export { textMeta } from './catalog/built-ins/text.meta';
+export { tunnelMeta } from './catalog/built-ins/tunnel.meta';
+export { xorMeta } from './catalog/built-ins/xor.meta';
+export {
+  ledMatrixShape,
+  type LedMatrixSize
+} from './catalog/built-ins/led-matrix.meta';
+export {
+  SegmentBase,
+  segmentReadoutDigits
+} from './catalog/built-ins/segment-display.meta';
 
 // ---- codecs: the compact encodings the v1 document uses ----
 export {

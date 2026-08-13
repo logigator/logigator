@@ -1,7 +1,6 @@
 import { ComponentConfig, LocalizableText } from '../component-config.model';
-import { ComponentCategory } from '../component-category.enum';
+import { ComponentCategory, CustomComponentDefinition } from '@logigator/core';
 import { ComponentOption } from '../component-option';
-import { CustomComponentDefinition } from '@logigator/core';
 import { CustomComponent } from './custom-component';
 import { SubCircuitWatch } from './sub-circuit-watch';
 import { EditComponentAction } from './actions/edit-component.component-action';
@@ -59,6 +58,12 @@ export function buildCustomComponentConfig(
       return { literal: def.description };
     },
     options: {},
+    // A custom component has no meta: its definition is that data. Live like
+    // the fields above, so an instance placed from an edited master reports the
+    // master's current arity.
+    get defaultPorts(): { inputs: number; outputs: number } {
+      return { inputs: def.numInputs, outputs: def.numOutputs };
+    },
     // Inspector actions rendered generically by the settings panel, each gating
     // its own visibility. Edit circuit, edit details, upload, share and delete
     // are config-scoped, so they surface on both a selected placed instance and

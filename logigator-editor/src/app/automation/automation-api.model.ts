@@ -98,10 +98,10 @@ export interface CatalogEntry {
   source?: 'server' | 'browser';
   /**
    * Port counts of a default instance. Adjustable types drive these from an
-   * option (a `number` descriptor whose range is the allowed span); absent when
-   * the type could not be instantiated for probing.
+   * option (a `number` descriptor whose range is the allowed span); a custom
+   * component reports its definition's counts.
    */
-  ports?: { inputs: number; outputs: number };
+  ports: { inputs: number; outputs: number };
   options: OptionDescriptor[];
 }
 

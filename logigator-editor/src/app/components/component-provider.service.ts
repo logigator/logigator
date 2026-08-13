@@ -1,6 +1,6 @@
 import { computed, inject, Injectable, Signal, signal } from '@angular/core';
 import { ComponentConfig } from './component-config.model';
-import { ComponentCategory } from './component-category.enum';
+import { ComponentCategory } from '@logigator/core';
 import { LoggingService } from '../logging/logging.service';
 import { notComponentConfig } from './component-types/not/not.config';
 import { andComponentConfig } from './component-types/and/and.config';

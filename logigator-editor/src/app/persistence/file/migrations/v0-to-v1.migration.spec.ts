@@ -11,9 +11,9 @@ import {
   CircuitFileV0,
   decodeComponentPositions,
   decodeWireChain,
-  InvalidFileError
+  InvalidFileError,
+  LegacyV0Slots
 } from '@logigator/core';
-import { LegacyV0Slots } from '../../../components/component-config.model';
 
 describe('v0ToV1Migration', () => {
   let ctx: MigrationContext;

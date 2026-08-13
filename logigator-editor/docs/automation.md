@@ -21,7 +21,7 @@ WebSocket bridge can be added later without changing anything below.
 src/app/automation/
 ├── automation-api.model.ts    # The JSON contract (types) + LogigatorAutomationApi
 ├── automation-api.service.ts  # The facade: install(), reads, camera, sim, docs, settings
-├── catalog.ts                 # Registry-derived catalog + option-model reflection
+├── catalog.ts                 # Registry-derived catalog, read off each type's ComponentMeta
 ├── edit-ops.ts                # Edit-op schema, validation, integrate → commit
 └── port-index.ts              # component → link-id reverse index for port reads
 ```
@@ -58,7 +58,12 @@ dependencies through the static injector.
   and the facade never caches a `Project` (an import replaces and destroys it).
 - **The catalog is generated**, never hand-written: it walks
   `ComponentProviderService.allComponents()`, so a custom component loaded at
-  runtime appears on the next call.
+  runtime appears on the next call. The per-type shape data is read off each
+  config's `ComponentMeta` (`@logigator/core`) rather than probed by building a
+  throwaway instance, so the option constraints reported here are the same ones
+  the API validates a document against. Both select schema kinds flatten to one
+  `select` descriptor — button-versus-dropdown is a rendering choice a driver
+  has no use for.
 
 ## Driving the editor from an agent
 

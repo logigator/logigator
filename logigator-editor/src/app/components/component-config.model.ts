@@ -1,5 +1,10 @@
-import { ComponentCategory } from './component-category.enum';
-import { ComponentType } from '@logigator/core';
+import {
+  ComponentCategory,
+  ComponentMeta,
+  ComponentType,
+  LegacyV0Slots,
+  Ports
+} from '@logigator/core';
 import { TranslationKey } from '../translation/translation-key.model';
 import { ComponentOption } from './component-option';
 import { ComponentAction } from './component-action';
@@ -48,35 +53,19 @@ export interface ComponentSymbolShape {
   readonly fill?: string;
 }
 
-/**
- * Declarative map from a built-in's named options to the legacy positional `v0`
- * wire slots (`i`/`o`/`n`/`s`). Single source of truth for the permanent
- * `v0ToV1` file migration (decode) and the temporary server encoder (encode).
- * The `r` slot needs no entry — it always carries the component's first-class
- * `direction`, handled generically by both sides.
- *
- * FROZEN: it describes the *immutable* legacy `ProjectElement` format and names
- * **v1-era option keys**. If a live option is later renamed, do NOT edit this to
- * match — add a `v1→v2` migration instead. The mapping is purely positional;
- * a config needing computed legacy decode would handle it separately.
- */
-export interface LegacyV0Slots {
-  /** Option populated from `element.i` (input count). */
-  i?: string;
-  /** Option populated from `element.o` (output count). */
-  o?: string;
-  /** Options consuming `element.n[0]`, `n[1]`, … in declaration order. */
-  n?: string[];
-  /** The single option consuming `element.s`. */
-  s?: string;
-}
-
 export interface ComponentConfigView<
   TOptions extends Record<string, ComponentOption> = Record<
     string,
     ComponentOption
   >
 > {
+  /**
+   * The pure catalog data this config was composed from — option schemas, port
+   * arity, body extent, legacy slots. Present on every built-in (see
+   * `config-from-meta.ts`), absent on custom components, whose
+   * {@link CustomComponentDefinition} *is* that data.
+   */
+  meta?: ComponentMeta;
   type: ComponentType;
   category: ComponentCategory;
   symbol: string;
@@ -95,6 +84,12 @@ export interface ComponentConfigView<
    */
   source?: 'server' | 'browser';
   options: TOptions;
+  /**
+   * Port counts an instance built from the default option values has. A
+   * built-in derives them from its meta; a custom component reads them off its
+   * definition, so both answer without constructing anything.
+   */
+  defaultPorts: Ports;
   /**
    * Valueless inspector actions (buttons) rendered after the options form, each
    * via its own renderer. Omitted by component types that contribute none.

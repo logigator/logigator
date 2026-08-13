@@ -1,67 +1,22 @@
+import { ledMatrixMeta } from '@logigator/core';
 import { ComponentConfig } from '../../component-config.model';
-import { BuiltInComponentType } from '@logigator/core';
-import { ComponentCategory } from '../../component-category.enum';
+import { configFromMeta } from '../../config-from-meta';
 import { ComponentOption } from '../../component-option';
 import { SelectButtonComponentOption } from '../../component-options/select-button/select-button.component-option';
 import { LedMatrixComponent } from './led-matrix.component';
-
-/** Side lengths the engine's LED-matrix unit supports. */
-export type LedMatrixSize = 4 | 8 | 16;
-
-/**
- * Per-size shape: the fixed input layout (`A0..`, `D0..`, `CLK`) and the
- * square body's side in grid cells. The LED cells themselves are the engine
- * unit's outputs — they exist only inside the simulator, never as editor
- * ports.
- */
-export function ledMatrixShape(size: number): {
-  size: LedMatrixSize;
-  addressBits: number;
-  dataBits: number;
-  numInputs: number;
-  bodyCells: number;
-} {
-  const normalized: LedMatrixSize = size === 8 ? 8 : size === 16 ? 16 : 4;
-  const addressBits = normalized === 4 ? 2 : normalized === 8 ? 3 : 5;
-  const dataBits = normalized < 8 ? 4 : 8;
-  const bodyCells = normalized === 4 ? 7 : normalized === 8 ? 12 : 16;
-  return {
-    size: normalized,
-    addressBits,
-    dataBits,
-    numInputs: addressBits + dataBits + 1,
-    bodyCells
-  };
-}
 
 export interface LedMatrixOptions {
   [key: string]: ComponentOption;
   size: SelectButtonComponentOption<number>;
 }
 
-export const ledMatrixComponentConfig: ComponentConfig<LedMatrixOptions> = {
-  type: BuiltInComponentType.LED_MATRIX,
-  category: ComponentCategory.IO,
-  symbol: 'LED_M',
-  // The square body ruled into a cell grid. Grid lines rather than the discrete
-  // cells the canvas draws: at tile size the separate squares close up into a
-  // block, while the ruling still reads as a matrix.
-  symbolShape: {
-    stroke: 'M1 1h16v16H1z M5 1v16 M9 1v16 M13 1v16 M1 5h16 M1 9h16 M1 13h16'
-  },
-  name: 'components.def.LED_MATRIX.name',
-  description: 'components.def.LED_MATRIX.description',
-  options: {
-    size: new SelectButtonComponentOption<number>(
-      'components.def.LED_MATRIX.options.size',
-      [
-        { value: 4, label: '4' },
-        { value: 8, label: '8' },
-        { value: 16, label: '16' }
-      ],
-      4
-    )
-  },
-  legacyV0Slots: { n: ['size'] },
-  create: (options) => new LedMatrixComponent(options)
-};
+export const ledMatrixComponentConfig: ComponentConfig<LedMatrixOptions> =
+  configFromMeta(ledMatrixMeta, {
+    // The square body ruled into a cell grid. Grid lines rather than the discrete
+    // cells the canvas draws: at tile size the separate squares close up into a
+    // block, while the ruling still reads as a matrix.
+    symbolShape: {
+      stroke: 'M1 1h16v16H1z M5 1v16 M9 1v16 M13 1v16 M1 5h16 M1 9h16 M1 13h16'
+    },
+    create: (options) => new LedMatrixComponent(options)
+  });

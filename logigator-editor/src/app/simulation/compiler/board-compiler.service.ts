@@ -11,7 +11,7 @@ import {
 } from '@logigator/core';
 import { instantiateBody } from '../../persistence/circuit-builder';
 import { encodeRomOps } from '../../components/component-types/rom/rom-data.codec';
-import { ledMatrixShape } from '../../components/component-types/led-matrix/led-matrix.config';
+import { ledMatrixShape } from '@logigator/core';
 import { Project } from '../../project/project';
 import { Wire } from '../../wires/wire';
 import {

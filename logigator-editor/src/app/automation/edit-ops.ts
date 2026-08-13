@@ -36,7 +36,6 @@ import { RemoveWiresAction } from '../actions/actions/remove-wires.action';
 import { RotateComponentsAction } from '../actions/actions/rotate-components.action';
 import { TogglePortNegationAction } from '../actions/actions/toggle-port-negation.action';
 import { Component, PortSide } from '../components/component';
-import { ComponentOption } from '../components/component-option';
 import { ComponentProviderService } from '../components/component-provider.service';
 import { wouldCyclePlacement } from '../components/custom/placement-cycle';
 import { NO_EXCLUDED_IDS, Project } from '../project/project';
@@ -50,7 +49,7 @@ import {
 } from '../utils/rotation';
 import { Wire } from '../wires/wire';
 import { EditOp, EditResult, PerOpError } from './automation-api.model';
-import { validateOptionValue } from './catalog';
+import { validateOptionValue, validateOptionValues } from './catalog';
 
 export interface EditOpsContext {
   project: Project;
@@ -246,10 +245,7 @@ export function applyEditOps(
               `unknown component type ${op.type}`
             );
           }
-          const optionErrors = validateOptions(
-            config.options,
-            op.options ?? {}
-          );
+          const optionErrors = validateOptionValues(config, op.options ?? {});
           if (optionErrors) throw new EditOpError(index, op.op, optionErrors);
           // The palette hides masters that would cycle; an agent can name any
           // type id, so the same guard applies here.
@@ -498,7 +494,11 @@ export function applyEditOps(
               `component ${op.id} has no option "${op.key}"`
             );
           }
-          const message = validateOptionValue(option, op.value);
+          const message = validateOptionValue(
+            component.config,
+            op.key,
+            op.value
+          );
           if (message) {
             throw new EditOpError(
               index,
@@ -599,22 +599,4 @@ function componentCollisionAt(
     return 'the component body would cover a wire';
   }
   return null;
-}
-
-/** Every unknown option key, plus every value the option model rejects. */
-function validateOptions(
-  prototypes: Record<string, ComponentOption>,
-  values: Record<string, unknown>
-): string | null {
-  const problems: string[] = [];
-  for (const [key, value] of Object.entries(values)) {
-    const option = prototypes[key];
-    if (!option) {
-      problems.push(`unknown option "${key}"`);
-      continue;
-    }
-    const message = validateOptionValue(option, value);
-    if (message) problems.push(`option "${key}": ${message}`);
-  }
-  return problems.length > 0 ? problems.join('; ') : null;
 }

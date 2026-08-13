@@ -296,8 +296,7 @@ export class AutomationApiService {
 
   public describeCatalog(): CatalogEntry[] {
     return describeCatalog(this.componentProvider.allComponents(), {
-      translate: (key) => this.translation.translate(key),
-      warn: (message) => this.logging.warn(message, 'AutomationApiService')
+      translate: (key) => this.translation.translate(key)
     });
   }
 

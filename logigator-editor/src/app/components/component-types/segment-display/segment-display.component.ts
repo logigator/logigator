@@ -7,32 +7,14 @@ import {
   SEGMENT_FONT_14,
   SEGMENT_FONT_METRICS
 } from '../../../utils/segment-font';
+import { SegmentBase, segmentReadoutDigits } from '@logigator/core';
 import {
-  SegmentBase,
   segmentDisplayComponentConfig,
   SegmentDisplayOptions
 } from './segment-display.config';
 
 const READOUT_FONT_SIZE = 1.35 / PX;
 const BASE_FONT_SIZE = 0.4 / PX;
-
-/**
- * Digits the readout needs for the largest value `inputs` bits can carry —
- * the value is zero-padded to exactly this length.
- */
-export function segmentReadoutDigits(
-  base: SegmentBase,
-  inputs: number
-): number {
-  switch (base) {
-    case SegmentBase.HEX:
-      return Math.ceil(inputs / 4);
-    case SegmentBase.OCT:
-      return Math.ceil(inputs / 3);
-    default:
-      return Math.ceil(Math.log10(2 ** inputs + 1));
-  }
-}
 
 /**
  * A display-only readout: not a simulator unit — it renders the binary value

@@ -48,7 +48,7 @@ import { Component } from '../../components/component';
 import type { Wire } from '../../wires/wire';
 import type { ComponentProviderService } from '../../components/component-provider.service';
 import type { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
-import { ledMatrixShape } from '../../components/component-types/led-matrix/led-matrix.config';
+import { ledMatrixShape } from '@logigator/core';
 import { collectSnapshots } from '../snapshots';
 
 /** Old editor's ElementTypeId.WIRE — the canonical type ID for wires in ProjectElement[]. */

@@ -2,10 +2,10 @@ import { Container, DestroyOptions, Graphics } from 'pixi.js';
 import { Subject, takeUntil } from 'rxjs';
 import { Component } from '../../component';
 import { LedMatrixCellGraphics } from '../../../rendering/graphics/led-matrix-cell.graphics';
+import { ledMatrixShape } from '@logigator/core';
 import {
   ledMatrixComponentConfig,
-  LedMatrixOptions,
-  ledMatrixShape
+  LedMatrixOptions
 } from './led-matrix.config';
 
 /**

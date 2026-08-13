@@ -3,179 +3,116 @@
  * hand-written list, so a newly registered type (a freshly loaded custom
  * component included) shows up on the next call.
  *
- * Pure functions over the registry's configs plus two injected resolvers
- * (translation, logging), so the whole file is unit-testable without Angular.
+ * The shape data all comes from `@logigator/core`: a built-in's config carries
+ * the `ComponentMeta` it was composed from, so option constraints and port
+ * counts are read rather than probed, and the API reports exactly what the
+ * server would validate a document against.
+ *
+ * Pure functions over the registry's configs plus an injected translation
+ * resolver, so the whole file is unit-testable without Angular.
  */
 
 import {
+  OptionSchema,
+  validateOptionValue as validateAgainstSchema
+} from '@logigator/core';
+import {
   ComponentConfig,
+  ComponentConfigView,
   resolveLocalizableText
 } from '../components/component-config.model';
-import { Component } from '../components/component';
-import { ComponentOption } from '../components/component-option';
-import { NumberComponentOption } from '../components/component-options/number/number.component-option';
-import { SelectButtonComponentOption } from '../components/component-options/select-button/select-button.component-option';
-import { SelectDropdownComponentOption } from '../components/component-options/select-dropdown/select-dropdown.component-option';
-import { TextInputComponentOption } from '../components/component-options/text-input/text-input.component-option';
-import { TextAreaComponentOption } from '../components/component-options/text-area/text-area.component-option';
-import { MemoryDataComponentOption } from '../components/component-options/memory-data/memory-data.component-option';
 import { TranslationKey } from '../translation/translation-key.model';
 import { CatalogEntry, OptionDescriptor } from './automation-api.model';
 
 /** What the catalog needs from the app to resolve display text. */
 export interface CatalogContext {
   translate: (key: TranslationKey) => string;
-  /** Reported when a type cannot be probed for its port counts. */
-  warn: (message: string) => void;
 }
 
 /**
- * Describes one option, discriminating on its class. `instanceof` rather than a
- * `kind` field on {@link ComponentOption}: the option classes carry their
- * constraints in class-specific fields, and this is the only consumer that
- * needs them enumerated.
+ * Describes one option from its schema. The two select kinds collapse to a
+ * single `select` descriptor: button-versus-dropdown is a rendering choice, and
+ * the automation surface only cares which values are legal.
  */
 export function describeOption(
   key: string,
-  option: ComponentOption,
+  schema: OptionSchema,
   translate: (key: TranslationKey) => string
 ): OptionDescriptor {
   const base = {
     key,
-    label: translate(option.label),
-    hidden: option.inspectorHidden
+    label: translate(schema.label as TranslationKey),
+    hidden: schema.hidden === true
   };
 
-  if (option instanceof NumberComponentOption) {
-    return {
-      ...base,
-      kind: 'number',
-      default: option.value,
-      min: option.min,
-      max: option.max
-    };
+  switch (schema.kind) {
+    case 'number':
+      return {
+        ...base,
+        kind: 'number',
+        default: schema.default,
+        min: schema.min,
+        max: schema.max
+      };
+    case 'select-button':
+    case 'select-dropdown':
+      return {
+        ...base,
+        kind: 'select',
+        default: schema.default,
+        values: schema.values.map((v) => v.value)
+      };
+    case 'text':
+      return {
+        ...base,
+        kind: 'text',
+        default: schema.default,
+        ...(schema.maxLength !== undefined
+          ? { maxLength: schema.maxLength }
+          : {}),
+        ...(schema.forbiddenChars
+          ? { forbiddenChars: schema.forbiddenChars }
+          : {})
+      };
+    case 'textarea':
+      return {
+        ...base,
+        kind: 'textarea',
+        default: schema.default,
+        maxLength: schema.maxLength
+      };
+    case 'memory':
+      return { ...base, kind: 'memory', default: schema.default };
   }
-  if (
-    option instanceof SelectButtonComponentOption ||
-    option instanceof SelectDropdownComponentOption
-  ) {
-    return {
-      ...base,
-      kind: 'select',
-      default: option.value as unknown,
-      values: (option.options as { value: unknown }[]).map((o) => o.value)
-    };
-  }
-  if (option instanceof TextInputComponentOption) {
-    return {
-      ...base,
-      kind: 'text',
-      default: option.value,
-      ...(option.maxLength !== undefined
-        ? { maxLength: option.maxLength }
-        : {}),
-      // A RegExp does not survive structured cloning usefully — send its source.
-      ...(option.forbiddenChars
-        ? { forbiddenChars: option.forbiddenChars.source }
-        : {})
-    };
-  }
-  if (option instanceof TextAreaComponentOption) {
-    return {
-      ...base,
-      kind: 'textarea',
-      default: option.value,
-      maxLength: option.maxLength
-    };
-  }
-  if (option instanceof MemoryDataComponentOption) {
-    return { ...base, kind: 'memory', default: option.value };
-  }
-  return { ...base, kind: 'unknown', default: option.value as unknown };
 }
 
 /**
- * Why `value` is not acceptable for `option`, or `null` when it is. The write
- * paths reject rather than silently accept: the option setters clamp numbers and
- * strip characters on their own, so an unchecked write would report success
- * while storing something else.
+ * Why `value` is not acceptable for `config`'s `key` option, or `null` when it
+ * is. The write paths reject rather than silently accept: the option setters
+ * clamp numbers and strip characters on their own, so an unchecked write would
+ * report success while storing something else.
  */
 export function validateOptionValue(
-  option: ComponentOption,
+  config: ComponentConfigView,
+  key: string,
   value: unknown
 ): string | null {
-  if (option instanceof NumberComponentOption) {
-    if (typeof value !== 'number' || !Number.isFinite(value)) {
-      return 'expected a finite number';
-    }
-    if (value < option.min || value > option.max) {
-      return `out of range [${option.min}, ${option.max}]`;
-    }
-    return null;
-  }
-  if (
-    option instanceof SelectButtonComponentOption ||
-    option instanceof SelectDropdownComponentOption
-  ) {
-    const values = (option.options as { value: unknown }[]).map((o) => o.value);
-    return values.includes(value)
-      ? null
-      : `not one of ${JSON.stringify(values)}`;
-  }
-  if (option instanceof TextInputComponentOption) {
-    if (typeof value !== 'string') return 'expected a string';
-    if (option.maxLength !== undefined && value.length > option.maxLength) {
-      return `longer than ${option.maxLength} characters`;
-    }
-    // A fresh RegExp: a shared /g instance carries lastIndex between tests.
-    if (
-      option.forbiddenChars &&
-      new RegExp(option.forbiddenChars.source).test(value)
-    ) {
-      return `contains forbidden characters (/${option.forbiddenChars.source}/)`;
-    }
-    return null;
-  }
-  if (option instanceof TextAreaComponentOption) {
-    if (typeof value !== 'string') return 'expected a string';
-    return value.length > option.maxLength
-      ? `longer than ${option.maxLength} characters`
-      : null;
-  }
-  if (option instanceof MemoryDataComponentOption) {
-    return typeof value === 'string' ? null : 'expected a base64 blob string';
-  }
-  return null;
+  const schema = config.meta?.options[key];
+  if (!schema) return `unknown option "${key}"`;
+  return validateAgainstSchema(schema, value);
 }
 
-/**
- * Port counts of a default instance of `config`. The counts are a constructor
- * argument of each component subclass, not config data, so the only faithful
- * way to read them is to build a throwaway instance and drop it again.
- * Returns `undefined` (with a warning) if construction fails, so one broken
- * type never sinks the whole catalog.
- */
-function probePorts(
-  config: ComponentConfig,
-  warn: (message: string) => void
-): { inputs: number; outputs: number } | undefined {
-  let instance: Component | undefined;
-  try {
-    instance = config.create(
-      Object.fromEntries(
-        Object.entries(config.options).map(([key, proto]) => [
-          key,
-          proto.clone()
-        ])
-      )
-    );
-    return { inputs: instance.numInputs, outputs: instance.numOutputs };
-  } catch (err) {
-    warn(`could not probe port counts of type ${config.type}: ${String(err)}`);
-    return undefined;
-  } finally {
-    instance?.destroy({ children: true });
+/** Every problem across `values`, joined, or `null` when they all pass. */
+export function validateOptionValues(
+  config: ComponentConfigView,
+  values: Record<string, unknown>
+): string | null {
+  const problems: string[] = [];
+  for (const [key, value] of Object.entries(values)) {
+    const message = validateOptionValue(config, key, value);
+    if (message) problems.push(`option "${key}": ${message}`);
   }
+  return problems.length > 0 ? problems.join('; ') : null;
 }
 
 /** Describes one registered component type. */
@@ -183,7 +120,6 @@ export function describeCatalogEntry(
   config: ComponentConfig,
   context: CatalogContext
 ): CatalogEntry {
-  const ports = probePorts(config, context.warn);
   return {
     type: config.type,
     category: config.category,
@@ -191,9 +127,9 @@ export function describeCatalogEntry(
     name: resolveLocalizableText(config.name, context.translate),
     description: resolveLocalizableText(config.description, context.translate),
     ...(config.source ? { source: config.source } : {}),
-    ...(ports ? { ports } : {}),
-    options: Object.entries(config.options).map(([key, option]) =>
-      describeOption(key, option, context.translate)
+    ports: config.defaultPorts,
+    options: Object.entries(config.meta?.options ?? {}).map(([key, schema]) =>
+      describeOption(key, schema, context.translate)
     )
   };
 }

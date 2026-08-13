@@ -10,7 +10,7 @@ import { RemoveComponentsAction } from '../actions/actions/remove-components.act
 import { RemoveWiresAction } from '../actions/actions/remove-wires.action';
 import { AddWiresAction } from '../actions/actions/add-wires.action';
 import { ComponentProviderService } from '../components/component-provider.service';
-import { ComponentCategory } from '../components/component-category.enum';
+import { ComponentCategory } from '@logigator/core';
 import { ProjectMetadataStore } from '../persistence/project-metadata.store';
 import { getStaticDI } from '../utils/get-di';
 import { LoggingService } from '../logging/logging.service';

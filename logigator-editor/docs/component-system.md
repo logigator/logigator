@@ -4,25 +4,31 @@ The component system models every circuit element that can be placed on the edit
 
 ## Directory Layout
 
-`ComponentType` and `Direction` are document shapes, so they live in
+`ComponentType`, `ComponentCategory` and `Direction` are document shapes, and a
+built-in's pure catalog data is `ComponentMeta`; all of them live in
 `@logigator/core` and are imported by package name.
 
 ```
 src/app/components/
 ├── component.ts                    # Abstract base class
-├── component-category.enum.ts      # UI palette grouping enum
 ├── component-option.ts             # Abstract base for configurable options
 ├── component-config.model.ts       # Static metadata + factory interface
+├── config-from-meta.ts             # ComponentMeta → ComponentConfig; the kind → option-class table
+├── meta-translation-keys.ts        # Type-level gate: every meta key is a TranslationKey
 ├── serialized-component.model.ts   # Persistence DTO
 ├── component-provider.service.ts   # Angular service — registry and lookup
 ├── component-options/              # Per-option folders (model + renderer); see component-options.md
 └── component-types/                # One subdirectory per component type
     └── <name>/
-        ├── <name>.config.ts        # ComponentConfig constant
+        ├── <name>.config.ts        # configFromMeta(<name>Meta, { create, … })
         └── <name>.component.ts     # Component subclass
 
-src/app/utils/
-└── direction.ts                    # Direction enum (E/S/W/N — clockwise from East)
+logigator-core/src/catalog/
+├── option-schema.ts                # OptionSchema union + defaults
+├── component-meta.ts               # ComponentMeta + the shared label/body helpers
+├── validate-option-value.ts        # The single "is this value legal" check
+├── built-in-meta.ts                # BUILT_IN_META + builtInMeta(type)
+└── built-ins/<name>.meta.ts        # One meta per built-in
 ```
 
 ---
@@ -64,7 +70,7 @@ The serialized form stores the type, grid-unit position (`component.position.x /
 
 ## Enums
 
-**`ComponentType`** — numeric ID for every component type; used as registry keys and stored in serialized data. Built-ins (ids match the old editor's `ElementTypeId`): the basic types `NOT = 1` … `TUNNEL = 8`, the advanced types `HALF_ADDER = 10` … `DEMUX = 21` (including `ROM = 12` and `RAM = 17`), the plug types `INPUT = 100` / `OUTPUT = 101`, and the I/O types `BUTTON = 200` … `LED_MATRIX = 204` — see `component-type.enum.ts` for the full list. Numeric ids ≥ `CUSTOM_TYPE_ID_BASE` (1000) are runtime-allocated custom components.
+**`ComponentType`** — numeric ID for every component type; used as registry keys and stored in serialized data. Built-ins (ids match the old editor's `ElementTypeId`): the basic types `NOT = 1` … `TUNNEL = 8`, the advanced types `HALF_ADDER = 10` … `DEMUX = 21` (including `ROM = 12` and `RAM = 17`), the plug types `INPUT = 100` / `OUTPUT = 101`, and the I/O types `BUTTON = 200` … `LED_MATRIX = 204` — see core's `component-type.enum.ts` for the full list. Numeric ids ≥ `CUSTOM_TYPE_ID_BASE` (1000) are runtime-allocated custom components.
 
 **`Direction`** (in `@logigator/core`) — four cardinal directions clockwise from East: `E = 0`, `S = 1`, `W = 2`, `N = 3`. The numeric layout is load-bearing: `rotation = value * π/2` (Component direction → PixiJS rotation) and `oppositeDir = (value + 2) % 4` (input stub ↔ output stub flip). The `Component.direction` setter applies the PixiJS rotation automatically. Shared with the connection-points layer.
 
@@ -147,6 +153,46 @@ The concrete option classes (`NumberComponentOption`, `SelectButtonComponentOpti
 
 ---
 
+## `ComponentMeta` — the half core owns
+
+**Files:** `logigator-core/src/catalog/`, `config-from-meta.ts`
+
+A built-in's identity, option constraints and geometry are the same facts the
+API needs to check a document with, so they live in `@logigator/core` as a pure
+`ComponentMeta` — one per type under `catalog/built-ins/`, collected in
+`BUILT_IN_META`:
+
+- `type`, `category`, `symbol`, `name`, `description` — identity. The two keys
+  are opaque `string`s in core; `meta-translation-keys.ts` collects their
+  literal types and asserts the union against the translation schema, so a typo
+  fails the editor's type check.
+- `options: Record<string, OptionSchema>` — the pure half of the option classes
+  (`number`, `select-button`, `select-dropdown`, `text`, `textarea`, `memory`,
+  each carrying its own constraints and default). `validateOptionValue(schema,
+value)` is the single definition of "legal value", shared by the automation
+  write path and the server.
+- `ports(options)`, `labels(options)`, `body(options, direction)` — arity,
+  port labels and body extent as pure functions of the option values. Every
+  built-in's rule is one (the segment display is the only type whose body also
+  depends on `direction`, keeping a fixed upright width when rotated).
+- `legacyV0Slots` — see [`persistence.md`](persistence.md).
+
+`configFromMeta(meta, extras)` composes the editor's `ComponentConfig` around
+one: it instantiates an option class per schema kind and the caller supplies
+what only the editor has — the `create` factory, the palette `symbolShape`, the
+inspector `actions` and the `inspection`. A config therefore has **no** hand-
+written option list; a built-in's `<name>.config.ts` is its meta plus its
+factory.
+
+Custom components have no meta: their `CustomComponentDefinition` is that data,
+so `buildCustomComponentConfig` fills in the same fields from the definition.
+
+Until the per-class geometry getters are gone (see below), `meta-parity.spec.ts`
+instantiates every built-in across sampled option values in all four directions
+and asserts the class and its meta agree.
+
+---
+
 ## `ComponentConfigView` and `ComponentConfig`
 
 **File:** `component-config.model.ts`
@@ -155,12 +201,14 @@ Static metadata and factory definition for a component type, split into two inte
 
 **`ComponentConfigView<TOptions>`** — the read-only metadata side, exposed by `Component.config`:
 
+- `meta?: ComponentMeta` — the pure catalog data the config was composed from; absent on custom components
 - `type: ComponentType` — unique numeric ID
 - `category: ComponentCategory` — palette grouping
 - `symbol: string` — short label shown in the palette
 - `symbolShape?: ComponentSymbolShape` — optional palette-tile mini-shape (`{ stroke?, fill? }` SVG path data in an 18-unit box) drawn instead of `symbol`. Carried only by the types whose canvas body is a drawn shape rather than their symbol text — LED, switch, button, LED matrix, segment display — so a tile always previews what placing the component yields; for every other type the symbol text _is_ the body. Custom components never have one. Painted by `ui/side-bar/component-symbol/`
 - `name`, `description: TranslationKey` — localization keys
-- `options: TOptions` — option templates as a named record (e.g., `{ direction: DirectionComponentOption, numInputs: NumberComponentOption }`), cloned per instance
+- `options: TOptions` — option templates as a named record (e.g., `{ numInputs: NumberComponentOption }`), cloned per instance
+- `defaultPorts: Ports` — port counts of an instance built from the default option values, read from `meta` (built-ins) or the definition (customs) rather than probed
 
 **`ComponentConfig<TOptions>`** extends `ComponentConfigView<TOptions>` and adds the factory:
 
@@ -182,11 +230,15 @@ To add a new built-in, add its config to the `BUILT_IN_COMPONENTS` array. Custom
 
 ## Adding a New Component Type
 
-1. Add a value to `ComponentType`.
-2. Create `component-types/<name>/` with:
-   - `<name>.config.ts` — export a named options interface (e.g., `AndOptions`) and a `ComponentConfig<YourOptions>` constant with named option keys.
+1. Add a value to `BuiltInComponentType` (in `@logigator/core`).
+2. Write its meta: `logigator-core/src/catalog/built-ins/<name>.meta.ts`, declared
+   `as const satisfies ComponentMeta<…>`, and add it to `BUILT_IN_META`. Add its
+   translation keys to the locale files and its `MetaKeys<typeof …>` arm in
+   `meta-translation-keys.ts`.
+3. Create `component-types/<name>/` with:
+   - `<name>.config.ts` — export a named options interface (e.g., `AndOptions`) and `configFromMeta(<name>Meta, { create })`.
    - `<name>.component.ts` — extend `Component<YourOptions>`, implement the four abstract members. Access options by name via `this.options.<key>`.
-3. Add the entry to the `COMPONENTS` record in `component-provider.service.ts`.
+4. Add the entry to the `COMPONENTS` record in `component-provider.service.ts`.
 
 The component appears in the palette under the category specified in its config.
 

@@ -4,10 +4,10 @@ import { TestBed } from '@angular/core/testing';
 import { setStaticDIInjector } from '../../utils/get-di';
 import { ComponentProviderService } from '../component-provider.service';
 import {
+  ComponentCategory,
   CUSTOM_TYPE_ID_BASE,
   CustomComponentDefinition
 } from '@logigator/core';
-import { ComponentCategory } from '../component-category.enum';
 import { CustomComponentRegistry } from './custom-component-registry.service';
 
 describe('CustomComponentRegistry', () => {
