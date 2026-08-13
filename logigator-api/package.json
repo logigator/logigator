@@ -1,0 +1,42 @@
+{
+  "name": "logigator-api",
+  "version": "0.0.0",
+  "description": "Logigator API (NestJS on Fastify)",
+  "license": "AGPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/logigator/logigator.git"
+  },
+  "private": true,
+  "scripts": {
+    "build": "rspack build",
+    "watch": "rspack build --watch",
+    "serve": "node --enable-source-maps ../dist/logigator-api/main.js",
+    "lint": "eslint --config eslint.config.mjs src",
+    "lint:fix": "eslint --config eslint.config.mjs src --fix",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc -p tsconfig.spec.json"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.1.29",
+    "@nestjs/core": "^11.1.29",
+    "@nestjs/platform-fastify": "^11.1.29",
+    "fastify": "^5.11.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@nestjs/testing": "^11.1.29",
+    "@rspack/cli": "^2.1.9",
+    "@rspack/core": "^2.1.9",
+    "@types/node": "^24.13.3",
+    "eslint": "^10.8.0",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.65.0",
+    "vitest": "^4.1.10",
+    "webpack-node-externals": "^3.0.0"
+  }
+}
