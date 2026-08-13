@@ -7,16 +7,8 @@
     "type": "git",
     "url": "git+https://github.com/logigator/logigator.git"
   },
-  "scripts": {
-    "ng": "ng",
-    "start": "ng serve logigator-editor",
-    "build": "ng build logigator-editor",
-    "watch": "ng build logigator-editor --watch --configuration development",
-    "lint": "ng lint logigator-editor",
-    "lint:fix": "ng lint logigator-editor --fix",
-    "test": "ng test logigator-editor"
-  },
   "private": true,
+  "exports": {},
   "dependencies": {
     "@angular/animations": "^22.1.0",
     "@angular/cdk": "^22.1.0",
