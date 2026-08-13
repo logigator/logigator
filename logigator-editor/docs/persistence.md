@@ -101,16 +101,26 @@ logigator-core/src/
 └── format/                       # The versioned envelope + the migration chain
     ├── circuit-file-version.ts   # CURRENT_FILE_VERSION
     ├── circuit-file.types.ts     # CircuitFileV0/V1 envelopes; CurrentCircuitFile
-    ├── circuit-file.errors.ts    # InvalidFileError, UnsupportedVersionError
+    ├── circuit-file.errors.ts    # InvalidFileError, UnsupportedVersionError, CircuitIntegrityError
     ├── circuit-file-validator.ts # Structural validation of a current-version document
     ├── circuit-file-migrator.ts  # detectVersion + migrateToCurrent (chain runner + validation)
     ├── assemble-circuit-file.ts  # body + definitions → document (the write half)
+    ├── parse-circuit-document.ts # the server's ingest pipeline (see below)
     ├── lgix-container.ts         # .lgix export framing: gzip + magic-byte header (encode/decode)
     └── migrations/
         ├── migration.ts          # Migration<TIn,TOut> + MigrationContext
         ├── v0-to-v1.migration.ts # v0 (legacy) → v1 (meta-backed; reads legacyV0Slots)
         └── migrations.ts         # MIGRATIONS — the ordered chain
 ```
+
+`parseCircuitDocument(input, { mode })` is the API's single ingest entry point —
+migrate → validate → decode → catalog integrity → dependency extraction, returning
+the document, its decoded body and definitions, the dependency edges and derived
+counts to store beside it, plus any warnings. The editor does **not** use it: its
+load path is deliberately lenient and healing, and it needs live instances rather
+than a body. Two policy lines matter to anyone reading the editor side: board-level
+invariants are **not** checked (that is Repair Wires' job), and `strict` — the mode
+every API write runs in — rejects an illegal option value rather than normalizing it.
 
 `MigrationContext` is `{ catalog, log }` — a `type → ComponentMeta` lookup and an
 `info`/`warn` sink, both plain functions. That is what lets the chain run

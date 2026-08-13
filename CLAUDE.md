@@ -140,7 +140,10 @@ without a build step.
   `BuiltInComponentType`/`ComponentCategory`/`Direction`/`WireDirection` enums), `codecs/`
   (wire-chain, position-delta, persisted-definition), `format/` (`CURRENT_FILE_VERSION`, the
   `CircuitFileV0/V1` envelopes, errors, the structural validator, the migration chain +
-  `migrateToCurrent`, `assembleCircuitFile`, the `.lgix` container),
+  `migrateToCurrent`, `assembleCircuitFile`, the `.lgix` container, and
+  `parseCircuitDocument` — the API's one ingest pipeline: migrate → validate → decode →
+  catalog integrity → dependency extraction, `strict` on writes and `lenient` for the
+  Phase 6 migration),
   `catalog/` (one `ComponentMeta` per built-in — option schemas plus `ports`/`labels`/`body` as
   pure functions of the option values —, `BUILT_IN_META`, and `validateOptionValue`, the single
   definition of a legal option value). Boundary
@@ -148,8 +151,7 @@ without a build step.
   editor. Guarantees are enforced, not conventional: **zero runtime dependencies**, no
   `@angular/*`/`pixi.js`/`rxjs` import and no browser globals (`eslint.config.mjs` fence), plus a
   `tsc` that maps _no_ paths — so a sibling-package import fails — with `rootDir: "src"` making a
-  relative escape fail too. The server-facing `parseCircuitDocument` pipeline lands in the
-  last stage of Phase 1 of `plans/backend-rewrite.md`.
+  relative escape fail too.
 - `logigator-contract/src/` — request/response schemas per endpoint (`*.contract.ts`), inferred
   types via `z.infer`, no codegen. zod and core are its only imports (fenced the same two ways).
   Response object schemas are `.loose()` on purpose: a client holding an older contract copy must

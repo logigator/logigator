@@ -157,6 +157,7 @@ export type {
   LegacyComponentDefinition
 } from './format/circuit-file.types';
 export {
+  CircuitIntegrityError,
   InvalidFileError,
   UnsupportedVersionError
 } from './format/circuit-file.errors';
@@ -171,6 +172,14 @@ export type {
   MigrationContext
 } from './format/migrations/migration';
 export { assembleCircuitFile } from './format/assemble-circuit-file';
+export { parseCircuitDocument } from './format/parse-circuit-document';
+export type {
+  CircuitDependencyEdge,
+  CircuitStats,
+  ParseCircuitDocumentOptions,
+  ParsedCircuitDocument,
+  ParseMode
+} from './format/parse-circuit-document';
 export type { AssembledCircuitFile } from './format/assemble-circuit-file';
 export {
   LGIX_CONTAINER_VERSION,
