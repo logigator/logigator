@@ -1,7 +1,32 @@
-import { Component } from '../component';
+import { Component, ComponentGeometrySource } from '../component';
 import { ComponentConfig } from '../component-config.model';
 import { CustomComponentOptions } from './custom-component.config';
-import { CustomComponentDefinition } from '@logigator/core';
+import {
+  CUSTOM_BODY_GRID_WIDTH,
+  CustomComponentDefinition,
+  defaultBodyHeight
+} from '@logigator/core';
+
+/**
+ * A custom component needs no `ComponentMeta`: its definition *is* that data.
+ * The counts are frozen at snapshot time and an instance carries no options, so
+ * every function here ignores them and reads `def`.
+ */
+function geometryOf(def: CustomComponentDefinition): ComponentGeometrySource {
+  const ports = { inputs: def.numInputs, outputs: def.numOutputs };
+  return {
+    ports: () => ports,
+    labels: () => ({
+      inputs: def.labels.slice(0, def.numInputs),
+      outputs: def.labels.slice(def.numInputs)
+    }),
+    // A fixed body width, independent of how wide the symbol renders.
+    body: () => ({
+      width: CUSTOM_BODY_GRID_WIDTH,
+      height: defaultBodyHeight(ports)
+    })
+  };
+}
 
 /**
  * The single rendering class backing **every** custom component type: a
@@ -26,36 +51,21 @@ export class CustomComponent extends Component<CustomComponentOptions> {
     def: CustomComponentDefinition,
     config: ComponentConfig<CustomComponentOptions>
   ) {
-    // Port counts come from the definition, never the element.
-    super(def.numInputs, def.numOutputs, options);
+    // Port counts, labels and body all come from the definition, never the
+    // element.
+    super(geometryOf(def), options);
     this._def = def;
     this.config = config;
 
     // The base constructor's initial draw runs without `_def`, so it omits the
-    // symbol and labels. Redraw now that `_def` is set to add them. The snapshot
-    // is frozen, so nothing reacts after this.
+    // symbol. Redraw now that `_def` is set to add it. The snapshot is frozen,
+    // so nothing reacts after this.
     this.redraw();
   }
 
   /** The frozen snapshot definition this instance renders from. */
   public get definition(): CustomComponentDefinition {
     return this._def!;
-  }
-
-  protected get inputLabels(): string[] {
-    if (!this._def) return [];
-    return this._def.labels.slice(0, this._def.numInputs);
-  }
-
-  protected get outputLabels(): string[] {
-    if (!this._def) return [];
-    return this._def.labels.slice(this._def.numInputs);
-  }
-
-  // Fixed body width of 3 grid units, independent of symbol width.
-  // eslint-disable-next-line @typescript-eslint/class-literal-property-style
-  protected get bodyGridWidth(): number {
-    return 3;
   }
 
   // Null during the base constructor's draw — the constructor's redraw()

@@ -81,8 +81,10 @@ describe('Component.gridBounds', () => {
   });
 
   it('has no phantom 0.5-unit left padding when numInputs is zero', () => {
-    const comp = makeAnd(2);
-    comp.numInputs = 0;
+    // A switch is output-only, so it has no input stubs at all — arity follows
+    // the option values, and no built-in with a numInputs option allows zero.
+    const comp = makeSwitch();
+    expect(comp.numInputs).toBe(0);
 
     // Without input stubs the left edge comes from the body stroke (~-sqrt(2)/gridSize),
     // which is negligible (<0.1) and well above the -0.5 that a phantom stub would add.
@@ -441,7 +443,7 @@ describe('Component port-count re-anchoring (legacy-editor behavior)', () => {
       const anchorX = comp.bodyGridBounds.x;
       const anchorY = comp.bodyGridBounds.y;
 
-      comp.numInputs = 5;
+      comp.options.numInputs.value = 5;
 
       expect(comp.bodyGridBounds.x).toBeCloseTo(anchorX, 5);
       expect(comp.bodyGridBounds.y).toBeCloseTo(anchorY, 5);
@@ -454,7 +456,7 @@ describe('Component port-count re-anchoring (legacy-editor behavior)', () => {
     // E (horizontal): added inputs grow the body downward, width constant.
     const e = makeAnd(2, Direction.E, 0, 0);
     const eBefore = e.bodyGridBounds;
-    e.numInputs = 5;
+    e.options.numInputs.value = 5;
     expect(e.bodyGridBounds.width).toBeCloseTo(eBefore.width, 5);
     expect(e.bodyGridBounds.height).toBeGreaterThan(eBefore.height);
     e.destroy({ children: true });
@@ -462,7 +464,7 @@ describe('Component port-count re-anchoring (legacy-editor behavior)', () => {
     // S (vertical): added inputs grow the body rightward, height constant.
     const s = makeAnd(2, Direction.S, 0, 0);
     const sBefore = s.bodyGridBounds;
-    s.numInputs = 5;
+    s.options.numInputs.value = 5;
     expect(s.bodyGridBounds.height).toBeCloseTo(sBefore.height, 5);
     expect(s.bodyGridBounds.width).toBeGreaterThan(sBefore.width);
     s.destroy({ children: true });
@@ -625,10 +627,10 @@ describe('Component port negation', () => {
     // Shrinking below the negated index keeps it: the setter never mutates the
     // negation set, so a shrink-then-grow round-trip preserves negation and the
     // count change stays undoable via ChangeOptionAction.
-    comp.numInputs = 2;
+    comp.options.numInputs.value = 2;
     expect(comp.isPortNegated('in', 3)).toBe(true);
 
-    comp.numInputs = 5;
+    comp.options.numInputs.value = 5;
     expect(comp.isPortNegated('in', 3)).toBe(true);
 
     comp.destroy({ children: true });
@@ -812,7 +814,7 @@ describe('Component negation serialization', () => {
   it('drops out-of-range indices left by a shrink (normalize on serialize)', () => {
     const comp = makeAnd(5);
     comp.setPortNegated('in', 4, true);
-    comp.numInputs = 2; // index 4 stays in the set but is now out of range
+    comp.options.numInputs.value = 2; // index 4 stays in the set but is now out of range
 
     const s = Component.serialize(comp);
 

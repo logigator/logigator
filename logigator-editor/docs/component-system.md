@@ -87,15 +87,21 @@ The serialized form stores the type, grid-unit position (`component.position.x /
 Subclasses must implement:
 
 - `config: ComponentConfigView<TOptions>` — reference to the singleton config for this type
-- `inputLabels: string[]` — per-port labels rendered beside input wires
-- `outputLabels: string[]` — per-port labels rendered beside output wires
 - `draw(): void` — renders the component body (shapes, symbols, etc.)
+
+and pass their `ComponentMeta` to `super(meta, options)`. Everything the meta
+covers — `numInputs`/`numOutputs`, `inputLabels`/`outputLabels`,
+`bodyGridWidth`/`bodyGridHeight` — is derived by the base, which also subscribes
+to every option and re-derives them on change (`onOptionsChanged`, overridable
+for a component that needs more than a redraw). Port counts are therefore
+**read-only**: change an option to change the arity.
 
 `Component` is generic over its options type: `Component<TOptions extends Record<string, ComponentOption>>`. Each component type exports a named options interface (e.g., `AndOptions`, `NotOptions`) that maps option names to their concrete `ComponentOption` subtypes. The component class uses that interface as its type parameter.
 
 Key public members:
 
-- `id`, `direction`, `numInputs`, `numOutputs` — core state; setters on `numInputs`/`numOutputs` and `direction` trigger a redraw and emit on `portsChange$`
+- `id`, `direction` — core state; the `direction` setter triggers a redraw and emits on `portsChange$`
+- `numInputs`, `numOutputs` — derived from the option values (read-only); an option change re-anchors, redraws and emits on `portsChange$` once, even when both counts move
 - `position` (inherited from PixiJS Container) — the component's grid-unit position; this IS the canonical circuit coordinate
 - `options: TOptions` — live option instances owned by this component, accessed by name (e.g., `this.options.numInputs.value`)
 - `ignoresWireCollision: boolean` (default `false`) — when `true`, the component is skipped by `Project.hasWireBodyCollision` (wires may pass through its body) and `hasComponentBodyWireCollision` returns `false` for it. Currently only `TextComponent` sets this to `true`.
@@ -187,9 +193,10 @@ factory.
 Custom components have no meta: their `CustomComponentDefinition` is that data,
 so `buildCustomComponentConfig` fills in the same fields from the definition.
 
-Until the per-class geometry getters are gone (see below), `meta-parity.spec.ts`
-instantiates every built-in across sampled option values in all four directions
-and asserts the class and its meta agree.
+`Component` reads its meta directly — the base takes a `ComponentGeometrySource`
+(the meta itself for a built-in, a definition-derived one for a custom) and
+derives arity, labels and body extent from it, so a subclass declares none of
+them.
 
 ---
 
@@ -237,7 +244,7 @@ To add a new built-in, add its config to the `BUILT_IN_COMPONENTS` array. Custom
    `meta-translation-keys.ts`.
 3. Create `component-types/<name>/` with:
    - `<name>.config.ts` — export a named options interface (e.g., `AndOptions`) and `configFromMeta(<name>Meta, { create })`.
-   - `<name>.component.ts` — extend `Component<YourOptions>`, implement the four abstract members. Access options by name via `this.options.<key>`.
+   - `<name>.component.ts` — extend `Component<YourOptions>`, pass the meta to `super`, implement `config` and `draw`. Access options by name via `this.options.<key>`.
 4. Add the entry to the `COMPONENTS` record in `component-provider.service.ts`.
 
 The component appears in the palette under the category specified in its config.

@@ -1,4 +1,5 @@
 import { Graphics } from 'pixi.js';
+import { ledMeta } from '@logigator/core';
 import { Component } from '../../component';
 import { LedGraphics } from '../../../rendering/graphics/led.graphics';
 import { ledComponentConfig, LedOptions } from './led.config';
@@ -17,7 +18,7 @@ export class LedComponent extends Component<LedOptions> {
   private _disc?: Graphics;
 
   constructor(options: LedOptions) {
-    super(1, 0, options);
+    super(ledMeta, options);
   }
 
   // The lit state lives in the base's powered-port set (survives redraws) and
@@ -39,19 +40,6 @@ export class LedComponent extends Component<LedOptions> {
   private _discTint(): number {
     const theme = this.themingService.currentTheme();
     return this.isPortPowered(0) ? theme.ledOn : theme.ledOff;
-  }
-
-  protected get inputLabels(): string[] {
-    return [];
-  }
-
-  protected get outputLabels(): string[] {
-    return [];
-  }
-
-  // eslint-disable-next-line @typescript-eslint/class-literal-property-style
-  protected get bodyGridWidth(): number {
-    return 1;
   }
 
   protected draw(): void {

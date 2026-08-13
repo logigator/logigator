@@ -1,10 +1,9 @@
 import { Component } from '../../component';
 import { textComponentConfig, TextOptions } from './text.config';
-import { Direction } from '@logigator/core';
+import { Direction, textMeta } from '@logigator/core';
 import { ConnectionPointGraphics } from '../../../rendering/graphics/connection-point.graphics';
 import { scaleForScale } from '../../../connection-points/connection-point';
-import { BitmapText, DestroyOptions, Graphics, Rectangle } from 'pixi.js';
-import { Subject, takeUntil } from 'rxjs';
+import { BitmapText, Graphics, Rectangle } from 'pixi.js';
 import { PX } from '../../../utils/grid';
 import { CANVAS_FONT_FAMILY, monoTextWidth } from '../../../utils/text-fit';
 
@@ -12,47 +11,24 @@ export class TextComponent extends Component<TextOptions> {
   public readonly config = textComponentConfig;
   public override readonly ignoresWireCollision = true;
 
-  private readonly _destroy$ = new Subject<void>();
-
   constructor(options: TextOptions) {
-    super(0, 0, options);
-
-    this.options.text.onChange$
-      .pipe(takeUntil(this._destroy$))
-      .subscribe(() => this._redrawAndRefile());
-    this.options.fontSize.onChange$
-      .pipe(takeUntil(this._destroy$))
-      .subscribe(() => this._redrawAndRefile());
+    super(textMeta, options);
   }
 
-  // A text/fontSize edit resizes cullBounds, so the element must be re-bucketed
-  // in the quad tree — redraw() rebuilds only the visuals. portsChange$ is the
-  // established re-file signal; the text component has no ports, so it fires
-  // with empty port sets (wire integration and connection-point updates no-op).
-  private _redrawAndRefile(): void {
+  /**
+   * A text or font-size edit resizes {@link cullBounds}, so the element has to
+   * be re-bucketed in the quad tree — the base's redraw only rebuilds the
+   * visuals. `portsChange$` is the established re-file signal, and this
+   * component has no ports, so it fires with empty port sets (wire integration
+   * and connection-point updates no-op).
+   */
+  protected override onOptionsChanged(): void {
     const ports = this.connectionPoints;
-    this.redraw();
+    super.onOptionsChanged();
     this.portsChange$.next({
       oldPorts: ports,
       newPorts: this.connectionPoints
     });
-  }
-
-  protected get inputLabels(): string[] {
-    return [];
-  }
-
-  protected get outputLabels(): string[] {
-    return [];
-  }
-
-  // eslint-disable-next-line @typescript-eslint/class-literal-property-style
-  protected get bodyGridWidth(): number {
-    return 1;
-  }
-
-  protected override get bodyGridHeight(): number {
-    return 1;
   }
 
   // The rendered label overflows the 1×1 grid footprint far to the side, so
@@ -125,10 +101,5 @@ export class TextComponent extends Component<TextOptions> {
     }
     label.position.set(1, 0.5);
     this.addChild(label);
-  }
-
-  public override destroy(options?: DestroyOptions): void {
-    this._destroy$.next();
-    super.destroy(options);
   }
 }

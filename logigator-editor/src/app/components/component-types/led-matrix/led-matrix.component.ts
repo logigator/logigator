@@ -1,8 +1,7 @@
-import { Container, DestroyOptions, Graphics } from 'pixi.js';
-import { Subject, takeUntil } from 'rxjs';
+import { Container, Graphics } from 'pixi.js';
 import { Component } from '../../component';
 import { LedMatrixCellGraphics } from '../../../rendering/graphics/led-matrix-cell.graphics';
-import { ledMatrixShape } from '@logigator/core';
+import { ledMatrixMeta, ledMatrixShape } from '@logigator/core';
 import {
   ledMatrixComponentConfig,
   LedMatrixOptions
@@ -19,8 +18,6 @@ import {
 export class LedMatrixComponent extends Component<LedMatrixOptions> {
   public readonly config = ledMatrixComponentConfig;
 
-  private readonly destroy$ = new Subject<void>();
-
   // Cell graphics in row-major LED order. Assigned in draw(); the class-field
   // define runs after the base constructor's first draw and resets it to
   // undefined, so a state change arriving before the next rebuild falls back
@@ -28,11 +25,7 @@ export class LedMatrixComponent extends Component<LedMatrixOptions> {
   private _cells?: Graphics[];
 
   constructor(options: LedMatrixOptions) {
-    super(ledMatrixShape(options.size.value).numInputs, 0, options);
-
-    this.options.size.onChange$.pipe(takeUntil(this.destroy$)).subscribe(() => {
-      this.numInputs = ledMatrixShape(this.options.size.value).numInputs;
-    });
+    super(ledMatrixMeta, options);
   }
 
   public override setPortPowered(portIndex: number, powered: boolean): void {
@@ -50,33 +43,6 @@ export class LedMatrixComponent extends Component<LedMatrixOptions> {
       const theme = this.themingService.currentTheme();
       cell.tint = powered ? theme.ledOn : theme.ledOff;
     }
-  }
-
-  protected get inputLabels(): string[] {
-    const { addressBits, dataBits } = ledMatrixShape(this.options.size.value);
-    const labels = [];
-    for (let a = 0; a < addressBits; a++) {
-      labels.push(`A${a}`);
-    }
-    for (let d = 0; d < dataBits; d++) {
-      labels.push(`D${d}`);
-    }
-    labels.push('CLK');
-    return labels;
-  }
-
-  protected get outputLabels(): string[] {
-    return [];
-  }
-
-  protected get bodyGridWidth(): number {
-    return ledMatrixShape(this.options.size.value).bodyCells;
-  }
-
-  // Square regardless of the port span (legacy geometry, mirrored by the
-  // frozen legacy-anchor matrix case).
-  protected override get bodyGridHeight(): number {
-    return this.bodyGridWidth;
   }
 
   protected draw(): void {
@@ -121,10 +87,5 @@ export class LedMatrixComponent extends Component<LedMatrixOptions> {
     grid.position.set(bodyCells / 2, bodyCells / 2);
     this.registerRotationCounterContainer(grid);
     this.addChild(grid);
-  }
-
-  public override destroy(options?: DestroyOptions): void {
-    this.destroy$.next();
-    super.destroy(options);
   }
 }

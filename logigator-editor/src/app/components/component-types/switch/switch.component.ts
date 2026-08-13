@@ -1,4 +1,5 @@
 import { Component } from '../../component';
+import { switchMeta } from '@logigator/core';
 import { SwitchGraphics } from '../../../rendering/graphics/switch.graphics';
 import { switchComponentConfig, SwitchOptions } from './switch.config';
 
@@ -13,7 +14,7 @@ export class SwitchComponent extends Component<SwitchOptions> {
   private _on = false;
 
   constructor(options: SwitchOptions) {
-    super(0, 1, options);
+    super(switchMeta, options);
   }
 
   public get isOn(): boolean {
@@ -36,19 +37,6 @@ export class SwitchComponent extends Component<SwitchOptions> {
 
   public override clearSimState(): void {
     this.setOn(false);
-  }
-
-  protected get inputLabels(): string[] {
-    return [];
-  }
-
-  protected get outputLabels(): string[] {
-    return [];
-  }
-
-  // eslint-disable-next-line @typescript-eslint/class-literal-property-style
-  protected get bodyGridWidth(): number {
-    return 1;
   }
 
   protected draw(): void {

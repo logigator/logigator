@@ -7,7 +7,7 @@ import {
   Point,
   Rectangle
 } from 'pixi.js';
-import { Subject } from 'rxjs';
+import { Subject, takeUntil } from 'rxjs';
 import { ComponentConfig, ComponentConfigView } from './component-config.model';
 import { ThemingService } from '../theming/theming.service';
 import { getStaticDI } from '../utils/get-di';
@@ -38,12 +38,41 @@ import {
 } from './component-geometry';
 import { Connectable } from '../rendering/grid-element';
 import { IdAllocator } from '../utils/id-allocator';
-import { Direction } from '@logigator/core';
+import { ComponentMeta, Direction, OptionValues } from '@logigator/core';
 import { CANVAS_FONT_FAMILY, fitMonoFontSize } from '../utils/text-fit';
 
 export interface PortsChange {
   oldPorts: Point[];
   newPorts: Point[];
+}
+
+/**
+ * Where a component's arity, port labels and body extent come from — all pure
+ * functions of its option values (plus the direction, for a body whose width
+ * must not follow the rotation). A built-in's `ComponentMeta` in
+ * `@logigator/core` is one; a custom component builds one from its definition.
+ *
+ * Taken at `ComponentMeta<never>`, which is what a built-in's `as const`
+ * declaration is assignable to — see `widenMeta` for why erasing the value
+ * shape is safe.
+ */
+export type ComponentGeometrySource = Pick<
+  ComponentMeta<never>,
+  'ports' | 'labels' | 'body'
+>;
+
+/** The same source, read with the option-value record the base actually holds. */
+type ComponentGeometry = Pick<ComponentMeta, 'ports' | 'labels' | 'body'>;
+
+/** The plain value record the geometry functions read. */
+function readOptionValues(
+  options: Record<string, ComponentOption>
+): OptionValues {
+  const values: Record<string, unknown> = {};
+  for (const [key, option] of Object.entries(options)) {
+    values[key] = option.value;
+  }
+  return values;
 }
 
 /**
@@ -98,8 +127,16 @@ export abstract class Component<
   private _direction: Direction = Direction.E;
   private _appliedScale = 1;
 
+  private readonly _geometry!: ComponentGeometry;
+  private _optionValues: OptionValues = {};
+
   private _numInputs = 0;
   private _numOutputs = 0;
+  private _bodyGridWidth = 1;
+  private _bodyGridHeight = 1;
+
+  /** Completed on destroy; unsubscribes the base's option watchers. */
+  protected readonly destroy$ = new Subject<void>();
 
   private _rotationCounterContainers: Container[] = [];
 
@@ -203,28 +240,94 @@ export abstract class Component<
   }
 
   protected constructor(
-    numInputs: number,
-    numOutputs: number,
+    geometry: ComponentGeometrySource,
     options: Record<string, ComponentOption>
   ) {
     super();
 
     this._id = Component._idAllocator.next();
-
-    this.numInputs = numInputs;
-    this.numOutputs = numOutputs;
+    this._geometry = geometry as ComponentGeometry;
     this.options = options as TOptions;
+    this._optionValues = readOptionValues(options);
+
+    const ports = this._geometry.ports(this._optionValues);
+    this._numInputs = ports.inputs;
+    this._numOutputs = ports.outputs;
+    this._refreshBody();
+
+    // Every option value feeds the geometry, so the base watches all of them
+    // rather than each subclass re-declaring the same subscription for the
+    // one or two that change its arity.
+    for (const option of Object.values(options)) {
+      option.onChange$
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(() => this.onOptionsChanged());
+    }
 
     this._initialized = true;
 
     this._draw();
   }
 
-  protected abstract get inputLabels(): string[];
+  /**
+   * Re-derives everything an option value feeds. Arity, port labels and body
+   * extent all come from the same pure functions, so one pass covers them:
+   * a change that moves the ports re-anchors, redraws and fires `portsChange$`
+   * once (even when both counts move), and one that does not still redraws,
+   * since labels and body width read option values too.
+   *
+   * Override to react to an option change beyond redrawing; call `super` first.
+   */
+  protected onOptionsChanged(): void {
+    this._optionValues = readOptionValues(this.options);
+    const ports = this._geometry.ports(this._optionValues);
 
-  protected abstract get outputLabels(): string[];
+    if (
+      ports.inputs === this._numInputs &&
+      ports.outputs === this._numOutputs
+    ) {
+      this._refreshBody();
+      this.redraw();
+      return;
+    }
 
-  protected abstract get bodyGridWidth(): number;
+    const oldPorts = this.connectionPoints;
+    this._withFixedBodyAnchor(() => {
+      this._numInputs = ports.inputs;
+      this._numOutputs = ports.outputs;
+      this._refreshBody();
+    });
+    this._draw();
+    this.portsChange$.next({ oldPorts, newPorts: this.connectionPoints });
+  }
+
+  /**
+   * Body extent is read on every bounds query (culling, collision, the quad
+   * tree), so it is cached rather than recomputed per access. Both of its
+   * inputs — the option values and the direction — funnel through the two
+   * places that call this.
+   */
+  private _refreshBody(): void {
+    const body = this._geometry.body(this._optionValues, this._direction);
+    this._bodyGridWidth = body.width;
+    this._bodyGridHeight = body.height;
+  }
+
+  protected get inputLabels(): string[] {
+    return this._geometry.labels(this._optionValues).inputs;
+  }
+
+  protected get outputLabels(): string[] {
+    return this._geometry.labels(this._optionValues).outputs;
+  }
+
+  protected get bodyGridWidth(): number {
+    return this._bodyGridWidth;
+  }
+
+  protected get bodyGridHeight(): number {
+    return this._bodyGridHeight;
+  }
 
   protected abstract draw(): void;
 
@@ -263,6 +366,9 @@ export abstract class Component<
       for (const container of this._rotationCounterContainers) {
         container.rotation = -this.rotation;
       }
+      // A body may be direction-dependent (the segment display keeps a fixed
+      // upright width when turned), so the extent is re-derived here too.
+      this._refreshBody();
     });
 
     // Label anchors and the stub-thickness side both depend on the direction,
@@ -274,30 +380,17 @@ export abstract class Component<
     }
   }
 
+  /**
+   * Port counts are derived, never assigned: they are a pure function of the
+   * option values, and {@link onOptionsChanged} re-derives them whenever one
+   * moves. Change an option to change the arity.
+   */
   public get numInputs(): number {
     return this._numInputs;
   }
 
-  public set numInputs(value: number) {
-    const oldPorts = this._initialized ? this.connectionPoints : null;
-    this._withFixedBodyAnchor(() => (this._numInputs = value));
-    this._draw();
-    if (oldPorts) {
-      this.portsChange$.next({ oldPorts, newPorts: this.connectionPoints });
-    }
-  }
-
   public get numOutputs(): number {
     return this._numOutputs;
-  }
-
-  public set numOutputs(value: number) {
-    const oldPorts = this._initialized ? this.connectionPoints : null;
-    this._withFixedBodyAnchor(() => (this._numOutputs = value));
-    this._draw();
-    if (oldPorts) {
-      this.portsChange$.next({ oldPorts, newPorts: this.connectionPoints });
-    }
   }
 
   /**
@@ -403,6 +496,8 @@ export abstract class Component<
   }
 
   public override destroy(options?: DestroyOptions): void {
+    this.destroy$.next();
+    this.destroy$.complete();
     this.portsChange$.complete();
     super.destroy(options);
   }
@@ -565,10 +660,6 @@ export abstract class Component<
       NegationBubbleGraphics,
       scale
     );
-  }
-
-  protected get bodyGridHeight(): number {
-    return Math.max(1, this.numInputs, this.numOutputs);
   }
 
   public get bodyGridBounds(): Rectangle {

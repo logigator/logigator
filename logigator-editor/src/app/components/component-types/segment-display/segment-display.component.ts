@@ -1,5 +1,4 @@
-import { BitmapText, Container, DestroyOptions } from 'pixi.js';
-import { Subject, takeUntil } from 'rxjs';
+import { BitmapText, Container } from 'pixi.js';
 import { Component } from '../../component';
 import { PX } from '../../../utils/grid';
 import {
@@ -7,7 +6,11 @@ import {
   SEGMENT_FONT_14,
   SEGMENT_FONT_METRICS
 } from '../../../utils/segment-font';
-import { SegmentBase, segmentReadoutDigits } from '@logigator/core';
+import {
+  SegmentBase,
+  segmentDisplayMeta,
+  segmentReadoutDigits
+} from '@logigator/core';
 import {
   segmentDisplayComponentConfig,
   SegmentDisplayOptions
@@ -25,26 +28,13 @@ const BASE_FONT_SIZE = 0.4 / PX;
 export class SegmentDisplayComponent extends Component<SegmentDisplayOptions> {
   public readonly config = segmentDisplayComponentConfig;
 
-  private readonly destroy$ = new Subject<void>();
-
   // Assigned in draw(); the class-field define runs after the base
   // constructor's first draw and resets it to undefined, so a state change
   // arriving before the next rebuild falls back to a full redraw.
   private _readout?: BitmapText;
 
   constructor(options: SegmentDisplayOptions) {
-    super(options.numInputs.value, 0, options);
-
-    this.options.numInputs.onChange$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.numInputs = this.options.numInputs.value;
-      });
-
-    // Base changes swap the readout font, digit count and body width.
-    this.options.base.onChange$.pipe(takeUntil(this.destroy$)).subscribe(() => {
-      this.redraw();
-    });
+    super(segmentDisplayMeta, options);
   }
 
   public override setPortPowered(portIndex: number, powered: boolean): void {
@@ -54,40 +44,6 @@ export class SegmentDisplayComponent extends Component<SegmentDisplayOptions> {
     } else {
       this.redraw();
     }
-  }
-
-  protected get inputLabels(): string[] {
-    const labels = [];
-    for (let i = 0; i < this.numInputs; i++) {
-      labels.push(String(i));
-    }
-    return labels;
-  }
-
-  protected get outputLabels(): string[] {
-    return [];
-  }
-
-  // Mirrors the legacy geometry (frozen for the v0 anchor math in
-  // legacy-anchor.ts): wide enough for the zero-padded readout when
-  // horizontal, a fixed 4 when standing upright.
-  protected get bodyGridWidth(): number {
-    if (this.direction % 2 === 1) {
-      return 4;
-    }
-    return (
-      2 +
-      segmentReadoutDigits(
-        this.options.base.value,
-        this.options.numInputs.value
-      )
-    );
-  }
-
-  // At least three rows tall so the readout fits beside few inputs (legacy
-  // geometry, mirrored by the frozen LEGACY_MIN_BODY_HEIGHTS entry).
-  protected override get bodyGridHeight(): number {
-    return Math.max(3, this.numInputs, this.numOutputs);
   }
 
   protected draw(): void {
@@ -158,10 +114,5 @@ export class SegmentDisplayComponent extends Component<SegmentDisplayOptions> {
     return value
       .toString(radix)
       .padStart(segmentReadoutDigits(base, this.numInputs), '0');
-  }
-
-  public override destroy(options?: DestroyOptions): void {
-    this.destroy$.next();
-    super.destroy(options);
   }
 }

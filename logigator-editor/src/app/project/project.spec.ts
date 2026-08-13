@@ -703,7 +703,7 @@ describe('Project portsChange$ rebucket', () => {
     // Growing numInputs grows bodyGridHeight (→ gridBounds y[2,52], spanning the
     // NW and SW quadrants) and fires portsChange$, whose handler must re-bucket
     // target so spatial queries reflect the new bounds.
-    target.numInputs = 50;
+    target.options.numInputs.value = 50;
 
     expect(project.queryComponentsInRange(farRect)).toContain(target);
   });

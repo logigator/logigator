@@ -66,7 +66,7 @@ describe('BoardCompilerService negation emission', () => {
   it('ignores out-of-range negated indices left by a port-count shrink', () => {
     const and = makeAnd(5, undefined, 0, 0);
     and.setPortNegated('in', 4, true);
-    and.numInputs = 2; // index 4 stays in the set but is now out of range
+    and.options.numInputs.value = 2; // index 4 stays in the set but is now out of range
     project.addComponent(and);
 
     expect('negInputs' in andUnit()).toBe(false);
