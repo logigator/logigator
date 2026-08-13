@@ -132,7 +132,7 @@
         "lint": {
           "builder": "@angular-eslint/builder:lint",
           "options": {
-            "eslintConfig": "logigator-editor/eslint.config.js",
+            "eslintConfig": "logigator-editor/eslint.config.mjs",
             "lintFilePatterns": [
               "logigator-editor/src/**/*.ts",
               "logigator-editor/src/**/*.html"
@@ -168,7 +168,7 @@
         "lint": {
           "builder": "@angular-eslint/builder:lint",
           "options": {
-            "eslintConfig": "logigator-ui/eslint.config.js",
+            "eslintConfig": "logigator-ui/eslint.config.mjs",
             "lintFilePatterns": [
               "logigator-ui/src/**/*.ts",
               "logigator-ui/src/**/*.html"

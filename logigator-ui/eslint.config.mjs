@@ -1,10 +1,10 @@
 // @ts-check
-const eslint = require('@eslint/js');
-const { defineConfig } = require('eslint/config');
-const tseslint = require('typescript-eslint');
-const angular = require('angular-eslint');
+import eslint from '@eslint/js';
+import { defineConfig } from 'eslint/config';
+import tseslint from 'typescript-eslint';
+import angular from 'angular-eslint';
 
-module.exports = defineConfig([
+export default defineConfig([
   {
     files: ['**/*.ts'],
     extends: [
@@ -15,7 +15,7 @@ module.exports = defineConfig([
     ],
     languageOptions: {
       parserOptions: {
-        tsconfigRootDir: __dirname
+        tsconfigRootDir: import.meta.dirname
       }
     },
     processor: angular.processInlineTemplates,
@@ -24,7 +24,7 @@ module.exports = defineConfig([
         'error',
         {
           type: 'attribute',
-          prefix: 'app',
+          prefix: 'lg',
           style: 'camelCase'
         }
       ],
@@ -32,25 +32,14 @@ module.exports = defineConfig([
         'error',
         {
           type: 'element',
-          prefix: 'app',
+          prefix: 'lg',
           style: 'kebab-case'
         }
       ],
       '@angular-eslint/prefer-on-push-component-change-detection': 'error',
-      'no-console': 'error',
-      '@typescript-eslint/no-restricted-imports': [
-        'error',
-        {
-          paths: [
-            {
-              name: '@jsverse/transloco',
-              importNames: ['TranslocoDirective', 'TranslocoPipe'],
-              message:
-                'Use TranslateDirective (*appTranslate) in templates and TranslationService in TypeScript.'
-            }
-          ]
-        }
-      ]
+      // Outputs use PrimeNG-style `on`-prefixed names (onClick, onSelect, …).
+      '@angular-eslint/no-output-on-prefix': 'off',
+      'no-console': 'error'
     }
   },
   {
