@@ -3,8 +3,9 @@
  *
  * These types are FROZEN per version: they intentionally do NOT alias the live
  * `api/models` DTOs (which track the legacy server API and will change). When a
- * new version is introduced, bump {@link CURRENT_FILE_VERSION}, add a new
- * `CircuitFileV<N>` interface + a migration, and re-point
+ * new version is introduced, bump {@link CURRENT_FILE_VERSION} in
+ * `@logigator/core` (the server normalizes documents to the same constant), add
+ * a new `CircuitFileV<N>` interface + a migration, and re-point
  * {@link CurrentCircuitFile} — older `CircuitFileV<N>` types stay untouched so
  * shipped files keep their meaning.
  *
@@ -24,7 +25,7 @@ import {
 import { EmbeddedDependency } from '../../api/models/dependencies';
 import { ProjectElement } from '../../api/models/project-element';
 
-export const CURRENT_FILE_VERSION = 1;
+export { CURRENT_FILE_VERSION } from '@logigator/core';
 export type CurrentCircuitFile = CircuitFileV1;
 
 // ---- Version 1 (current, native, self-contained) ----
