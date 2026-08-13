@@ -25,17 +25,43 @@ services:
       - DEBUG=express:*
       - DEBUG_COLORS=on
 
+  deps:
+    image: node:24
+    networks:
+      - net
+    volumes:
+      - ./:/app
+    working_dir: /app
+    command: "sh -c 'corepack enable && exec yarn'"
+
   editor:
     image: node:24
     networks:
       - net
-    # The editor dev server compiles @logigator/ui from source via tsconfig
-    # path mapping, so the whole Yarn/Angular workspace root is mounted (not just
-    # logigator-editor/). Install + serve run from the workspace root.
+    depends_on:
+      deps:
+        condition: service_completed_successfully
     volumes:
       - ./:/app
     working_dir: /app
-    command: "sh -c 'corepack enable && yarn && exec yarn start'"
+    command: "sh -c 'corepack enable && exec yarn start:editor'"
+
+  api:
+    image: node:24
+    networks:
+      - net
+    depends_on:
+      deps:
+        condition: service_completed_successfully
+    volumes:
+      - ./:/app
+    working_dir: /app
+    ports:
+      - 127.0.0.1:3001:3000
+    env_file:
+      - path: ./logigator-api/.env
+        required: false
+    command: "sh -c 'corepack enable && exec yarn start:api'"
 
   editor-legacy:
     image: node:20
