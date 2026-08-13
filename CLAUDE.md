@@ -2,38 +2,73 @@
 
 ## Repository Layout
 
-The repo root is a **shared Angular CLI workspace** + **Yarn 4 workspace** (corepack). Two members:
+The repo root is a **shared Angular CLI workspace** + **Yarn 4 workspace** (corepack). Five members:
 
 - `logigator-editor/` — Angular 22 editor (PixiJS 8, Tailwind 4), current focus
-- `logigator-ui/` — `@logigator/ui`, in-house Angular component library replacing PrimeNG;
-  path-mapped to its TypeScript source in dev (no build step). See `plans/logigator-ui.md`.
+- `logigator-ui/` — `@logigator/ui`, in-house Angular component library replacing PrimeNG.
+  See `plans/logigator-ui.md`.
+- `logigator-core/` — `@logigator/core`, rendering-free circuit code shared by the editor,
+  the API and migration tooling; zero runtime dependencies.
+- `logigator-contract/` — `@logigator/contract`, the API surface as zod schemas
+  (server validation + typed clients); zod only.
+- `logigator-api/` — NestJS on Fastify, the API-only replacement for `logigator-backend`.
 
-Two packages stay **independent** (own `yarn.lock`/`.yarnrc.yml`, *not* workspace members):
+**One shared-code rule:** the three libraries are never built. Every consumer compiles their
+**source** through the root tsconfig `paths` mapping, and each application's bundler (Angular's for
+the editor, Rspack's for the API) inlines what it uses. No `dist/`, no `exports`, no build ordering,
+no stale output — an edit anywhere is picked up by everything that watches.
 
-- `logigator-backend/` — Node.js/Express (TypeScript, TypeORM, Handlebars)
+Only `logigator-editor` and `logigator-ui` are Angular CLI projects (`angular.json`); the other
+three run on plain Yarn scripts (vitest, eslint, tsc, rspack). Each package holds the same config
+set: one primary tsconfig (`tsconfig.json`, or `tsconfig.app.json`/`tsconfig.lib.json` where
+angular.json points at it), `tsconfig.spec.json`, `eslint.config.mjs`, `vitest.config.ts`.
+Only the two applications produce an artifact, and it lands in the root `dist/<project>/`. See
+`plans/backend-rewrite.md`.
+
+Two packages stay **independent** (own `yarn.lock`/`.yarnrc.yml`, _not_ workspace members):
+
+- `logigator-backend/` — Node.js/Express (TypeScript, TypeORM, Handlebars), being replaced
 - `logigator-editor-legacy/` — Legacy Angular 17 editor (PixiJS 5), being replaced
 
 ## Dev Environment
 
-Backend config files must be created from `.example` files in `logigator-backend/config/`.
+Legacy backend config files must be created from `.example` files in `logigator-backend/config/`.
+`logigator-api` needs no config files: env vars only, all defaulted (`logigator-api/.env.example`).
 
 ## Commands
 
-Editor + library: run **from the repo root** (Angular CLI targets / root Yarn scripts). The backend
-is independent: run its commands from `logigator-backend/`.
+Every workspace member (editor, UI library, core, contract, API) runs **from the repo root** — the
+Angular CLI targets and the root Yarn scripts. The legacy backend is independent: run its commands
+from `logigator-backend/`.
 
-### Workspace (editor + logigator-ui), from repo root
+### Workspace (all five members), from repo root
+
+Uniform surface: `<verb>:<package>` runs the verb for one package, and the **bare verb runs it for
+every package that has it** — there is no `:all` suffix and no bare shorthand for a single package
+(`test:*` is always a single run). Not every package has every verb: only the two applications
+build, and `typecheck` exists where tsc is the only type gate, since the Angular projects are
+type-checked by their own build and test targets.
+
 ```bash
-yarn build                          # ng build logigator-editor (production)
-yarn test --watch=false             # Vitest (full editor suite, single run)
-yarn test --watch=false --include='**/some.spec.ts'  # single test
-yarn lint                           # ng lint (both projects)
-yarn format:fix                     # Prettier
-yarn build:ui                       # ng build logigator-ui (ng-packagr; publish deferred)
-yarn test:ui                        # Vitest (logigator-ui)
+yarn start:editor                   # ng serve  (start:editor:prod for the production config)
+yarn start:api                      # rspack --watch + node --watch (restarts on core edits too)
+yarn build                          # = build:editor + build:api
+yarn build:editor                   # production build → dist/logigator-editor
+yarn build:api                      # rspack bundle → dist/logigator-api
+yarn test                           # every package, single run each
+yarn test:editor                    # add --include='**/some.spec.ts' for one file
+yarn test:ui / test:core / test:contract / test:api
+yarn lint                           # eslint over all five; lint:fix writes the fixes
+yarn typecheck                      # tsc over core, contract, api (specs included)
+yarn format / format:fix            # Prettier over the whole repo
 ```
 
+`@logigator/ui` has no build script — every consumer compiles its source. The ng-packagr target in
+`angular.json` stays for an eventual publish and because the unit-test builder reads its build
+options from it, so `ng build logigator-ui` still works; nothing in CI runs it.
+
 ### logigator-backend (from logigator-backend/)
+
 ```bash
 yarn build                        # tsc + Gulp asset pipeline
 yarn lint:backend                 # ESLint on src/
@@ -51,8 +86,8 @@ Angular 22 standalone components + PixiJS 8 canvas.
 
 - `components/` — Circuit element model. Each extends `Component` (PixiJS `Container`) with `connectionPoints`, `portStubs`, `portsChange$` Subject; port/bounds math lives in the pure `component-geometry.ts` (lattice-exact, unit-tested). `ComponentProviderService` is the registry/factory. Gate implementations in `component-types/`. Doc: `component-system.md`.
 - `components/component-options/` — `ComponentOption` subclasses each paired with an Angular renderer; side-panel form is `*ngComponentOutlet` driven by `option.renderer`. Doc: `component-options.md`.
-- `project/` — `Project` (PixiJS `Container`) owns circuit state; exposes `viewport` (`ViewportController` — all pan/zoom/camera state) and `topology` (`WireTopology` — wire-invariant integration + the wire tool's join/split toggling), and keeps O(1) id → element maps beside the quad trees. `ProjectService` tracks the loaded/active projects. `wire-repair.ts` + `WireRepairService` audit and heal invariant-violating boards (Edit-menu "Repair Wires"; loads audit and *offer* the repair through a toast action — repairing is always user-initiated). Doc: `project.md`.
-- `persistence/` — `PersistenceService` (facade: load/save dispatch + file import/export + main-slot lifecycle) over two symmetric gateways (`server/server-persistence.gateway.ts`, `browser/browser-persistence.gateway.ts`); `PromotionService` (upload-to-cloud + local-dependency queries), `ProjectMetadataStore` (name/source/dirty, `withDirtyGuard`); library lifecycle (preloads, orphan restore) is `custom-component/component-library.service.ts`. The legacy server API transports `ProjectElement[]` — *file-format v0 over HTTP*: reads route through the permanent `v0ToV1` migration, encode through the temporary `persistence/server/` codec (deleted when the native API ships). `persistence/file/` holds the **native versioned file format** + a migration chain (v0→v1, …) for save-to-file / load-from-file. Docs: `persistence.md`; the custom-component dependency/promotion system (how documents carry the customs they use, cloud promotion, UUID mapping, orphans) is `dependencies-and-promotion.md`.
+- `project/` — `Project` (PixiJS `Container`) owns circuit state; exposes `viewport` (`ViewportController` — all pan/zoom/camera state) and `topology` (`WireTopology` — wire-invariant integration + the wire tool's join/split toggling), and keeps O(1) id → element maps beside the quad trees. `ProjectService` tracks the loaded/active projects. `wire-repair.ts` + `WireRepairService` audit and heal invariant-violating boards (Edit-menu "Repair Wires"; loads audit and _offer_ the repair through a toast action — repairing is always user-initiated). Doc: `project.md`.
+- `persistence/` — `PersistenceService` (facade: load/save dispatch + file import/export + main-slot lifecycle) over two symmetric gateways (`server/server-persistence.gateway.ts`, `browser/browser-persistence.gateway.ts`); `PromotionService` (upload-to-cloud + local-dependency queries), `ProjectMetadataStore` (name/source/dirty, `withDirtyGuard`); library lifecycle (preloads, orphan restore) is `custom-component/component-library.service.ts`. The legacy server API transports `ProjectElement[]` — _file-format v0 over HTTP_: reads route through the permanent `v0ToV1` migration, encode through the temporary `persistence/server/` codec (deleted when the native API ships). `persistence/file/` holds the **native versioned file format** + a migration chain (v0→v1, …) for save-to-file / load-from-file. Docs: `persistence.md`; the custom-component dependency/promotion system (how documents carry the customs they use, cloud promotion, UUID mapping, orphans) is `dependencies-and-promotion.md`.
 - `wires/` — Wire model and rendering. Doc: `wires.md`.
 - `connection-points/` — Derived visual junction dots (≥3 cardinal directions filled + ≥1 element terminates). Pure visual sugar, not persisted or selectable. Doc: `connection-points.md`.
 - `rendering/` — `RendererService` (the app's single lease-counted PixiJS renderer: the board and every watch canvas are render targets of it; minimap/image-export render to textures on it), `QuadTreeContainer` (spatial indexing), `FloatingLayer` (visual host for drag ghosts + negation preview), `GraphicsProviderService` (shared texture/graphics cache), `DragCollisionState` (shared collision for drag sessions). `sessions/` contains per-interaction `DragSession` implementations (convention: sessions materialize their final state in the live project, then `ActionManager.register` it — `push` is for instantaneous non-gesture ops). `interaction/` is the DOM input layer: `PointerController` (per-canvas pointer/wheel/touch normalization with capture; PixiJS events are fully disabled) + `WorkModeRouter` (dispatch + session lifecycle, incl. the undo lock around live drags) + `interaction/tools/` (one `BoardTool` per work mode: press → session, hover previews). Doc: `rendering.md`.
@@ -70,14 +105,14 @@ Angular 22 standalone components + PixiJS 8 canvas.
 - `setStaticDIInjector()` in `app.config.ts` — bootstraps static Angular injector so model classes (`Component`, `Wire`) can call `inject()` without being Angular-managed.
 - Grid coordinates — `Project._gridSpace` has `scale = gridSize`, so circuit objects use **grid units as native `position`**. Visual children in `Component._visualSpace` (`scale = 1/gridSize`) keep pixel-authored geometry. Only remaining converter is `fromGrid` in `utils/grid.ts` (used inside `_visualSpace` and background grid). Snapping: `roundToGrid` / `roundToHalfGrid`.
 - `@logigator/sim` — external npm package (separate repo, Rust→WASM) holding the simulation engine. It runs in a Web Worker; the engine free-runs (or self-paces in target mode) while the main thread pulls one delta/full snapshot per `requestAnimationFrame`. Compilation is synchronous: nets via union-find over `"x,y"` termination points, custom components flattened by cached template instantiation, dense link ids assigned in emission order. Any `CompileDiagnostic` blocks entering simulation. See `simulation.md`.
-- Two serialization encodings: the **API** uses the legacy positional `ProjectElement[]` wire format (`t/p/q/r/i/o/n/s`) — *file-format v0 over HTTP*, decoded by the `v0ToV1` migration and encoded by the temporary `persistence/server/` codec; **local files** use a **native, versioned** format (named options; wires as one SVG-path-style chain string `"x,y:e5s3;…"` with relative chunk heads via `persistence/wire-chain.codec.ts`; component positions (type,y,x)-sorted and delta-encoded via `persistence/position-delta.codec.ts`) under `persistence/file/`. Files have a `version` field (absent ⇒ legacy v0; native current = v1); a migration chain upgrades older files to the newest version on load, and only the newest version is ever saved. The built-in configs' `legacyV0Slots` descriptor is the single source of truth the v0 decode and encode share. `SerializedComponent`/`SerializedWire` are a *third*, separate in-memory snapshot used by undo/redo — not a persistence format.
+- Two serialization encodings: the **API** uses the legacy positional `ProjectElement[]` wire format (`t/p/q/r/i/o/n/s`) — _file-format v0 over HTTP_, decoded by the `v0ToV1` migration and encoded by the temporary `persistence/server/` codec; **local files** use a **native, versioned** format (named options; wires as one SVG-path-style chain string `"x,y:e5s3;…"` with relative chunk heads via `persistence/wire-chain.codec.ts`; component positions (type,y,x)-sorted and delta-encoded via `persistence/position-delta.codec.ts`) under `persistence/file/`. Files have a `version` field (absent ⇒ legacy v0; native current = v1); a migration chain upgrades older files to the newest version on load, and only the newest version is ever saved. The built-in configs' `legacyV0Slots` descriptor is the single source of truth the v0 decode and encode share. `SerializedComponent`/`SerializedWire` are a _third_, separate in-memory snapshot used by undo/redo — not a persistence format.
 - Paste flow — `ClipboardService.paste()` deserializes clipboard snapshots into fresh `Component`/`Wire` instances (new IDs, copied geometry), then calls `Project.startPasteSession()`, which emits on `pasteRequest$`; the `WorkModeRouter` positions the group (centred on the cursor, else on the middle of the grid view) and opens a `PastePlacementSession`. Pasting is a non-modal drag session: elements appear as tinted ghosts in the floating layer's `dragLayer`, follow the cursor, and check collision via `DragCollisionState`. `isDragging` stays false until the user clicks on one of the ghosts, at which point `beginDrag` locks in the anchor; releasing commits at the current position. Clicking off the ghost group cancels, as does Escape (both destroy the fresh instances). `SelectionMoveSession` shares `DragCollisionState` for its own collision check.
 - `src/testing/` — shared test fakes (`FakeBrowserProjectStore`, `FakeBrowserComponentStore`). In-memory stand-ins for the IndexedDB-backed stores, extracted so both `persistence.service.spec` and `custom-component.service.spec` can use them without duplication.
 - Language and theme are **origin-wide, not editor-local**: both are fields of the `preferences` cookie (`storage/preferences.service.ts`) that the backend's pages write and read as well, so a switch on either side moves both (see `ui.md`). Everything else the editor persists (`logigator.*` keys) is localStorage and editor-only.
 
 ### UI Library (logigator-ui)
 
-`@logigator/ui` — in-house Angular 22 component library that replaced PrimeNG in editor. Built on Angular CDK; theming is **colors-only** via `--lg-*` CSS variables. Path-mapped to source in dev (root `tsconfig.json` maps `@logigator/ui` → `logigator-ui/src/public-api.ts`), so the editor compiles it from TypeScript with no build step — it is *not* a `package.json` dependency of editor. Detailed plan: `plans/logigator-ui.md`.
+`@logigator/ui` — in-house Angular 22 component library that replaced PrimeNG in editor. Built on Angular CDK; theming is **colors-only** via `--lg-*` CSS variables. Path-mapped to source in dev (root `tsconfig.json` maps `@logigator/ui` → `logigator-ui/src/public-api.ts`), so the editor compiles it from TypeScript with no build step — it is _not_ a `package.json` dependency of editor. Detailed plan: `plans/logigator-ui.md`.
 
 **`logigator-ui/src/` layout** — one folder per component under `components/`, all re-exported from `public-api.ts`; shared helpers (`internal/`, `tokens/`) stay at `src/`:
 
@@ -88,9 +123,74 @@ Angular 22 standalone components + PixiJS 8 canvas.
 - `tokens/` — shared types (`LgSeverity`, `LgSize`, form-field tokens).
 - `styles/theme.css` defines the `--lg-*` vars; `styles/theme.tw.css` maps them into Tailwind's `@theme` for editor.
 
-Specs sit next to source (Vitest, `yarn test:ui`). Build is `ng build logigator-ui` (ng-packagr; publishing deferred).
+Specs sit next to source (Vitest, `yarn test:ui`). There is no build script — the library ships as source to its consumers; the ng-packagr target survives for an eventual publish (`ng build logigator-ui`).
 
-### Backend (logigator-backend)
+### Shared packages (@logigator/core, @logigator/contract)
+
+Layering is one-directional — **core ← contract ← api** — and core knows nothing about any of
+them. Both are consumed exactly like `@logigator/ui`: **every consumer compiles their source**
+through the root tsconfig `paths` mapping. They are never built, have no `dist/`, no `main`, no
+`exports`; the editor's Angular build and the API's Rspack build each bundle the source they use,
+and specs alias the same paths. One consumption model, so a change is picked up everywhere
+without a build step.
+
+- `logigator-core/src/` — the rendering-free half of the circuit code, planned as `format/`
+  (file types, validator, migrator, migrations, lgix), `codecs/`, `model/`, `catalog/`. Boundary
+  rule: **core = data↔data, editor = live↔data** — snapshotting live PixiJS objects stays in the
+  editor. Guarantees are enforced, not conventional: **zero runtime dependencies**, no
+  `@angular/*`/`pixi.js`/`rxjs` import and no browser globals (`eslint.config.mjs` fence), plus a
+  `tsc` that maps _no_ paths — so a sibling-package import fails — with `rootDir: "src"` making a
+  relative escape fail too. Currently holds `CURRENT_FILE_VERSION` — the format version the editor
+  writes and the API normalizes to — which the editor's
+  `persistence/file/circuit-file.types.ts` re-exports; the rest of the layer moves in Phase 1 of
+  `plans/backend-rewrite.md`.
+- `logigator-contract/src/` — request/response schemas per endpoint (`*.contract.ts`), inferred
+  types via `z.infer`, no codegen. zod and core are its only imports (fenced the same two ways).
+  Response object schemas are `.loose()` on purpose: a client holding an older contract copy must
+  tolerate fields the API added rather than reject or silently strip them. Clients can import the
+  types only (`import type`) and pay nothing at runtime.
+
+### API (logigator-api)
+
+NestJS on the **Fastify adapter**, API only — no SSR, no asset pipeline. Env vars validated by a
+zod schema (`src/config/env.ts`) once at bootstrap; the parsed object is passed into
+`AppModule.forEnv(env)` and provided globally under the `ENV` token, so providers never read
+`process.env`. `GET /api/meta` reports core's `CURRENT_FILE_VERSION`.
+
+**Build: Rspack** (`rspack.config.mjs`, following Rspack's NestJS guide), which is what lets the
+API compile the shared packages from source like every other consumer. NestJS 12 replaces its
+webpack builder with Rspack, so this is where upstream is going; when v12 lands, its CLI builder
+may replace this config.
+
+**Non-obvious build details:**
+
+- `builtin:swc-loader` needs `legacyDecorator` + `decoratorMetadata`, and the tsconfig keeps
+  `experimentalDecorators`/`emitDecoratorMetadata` in step — Nest resolves constructor
+  dependencies from `design:paramtypes`, so losing either breaks DI at runtime.
+- **`tsconfig.json` is where the workspace aliases live**, and `resolve.tsConfig` points the
+  bundler at it, so bundler and type checker cannot drift. `baseUrl` is declared _there_ rather
+  than inherited from the workspace config: Rspack's resolver reads it relative to the file it is
+  handed. The mapping deliberately covers core and the contract only, but it is not the layering
+  fence: `rootDir` is the repo, so a relative escape into a sibling package type-checks, and every
+  workspace member is symlinked into the root `node_modules`. `eslint.config.mjs` is the fence in
+  the API and the contract; `logigator-editor/package.json` declares `"exports": {}` so a bare deep
+  import of editor source cannot resolve either. Core is the exception — its `rootDir: "src"` plus
+  the empty `paths` really is structural.
+- **`webpack-node-externals` needs `allowlist: [/^@logigator\//]`** — Yarn symlinks workspace
+  members into `node_modules`, so without it they are treated as ordinary dependencies and left as
+  a runtime `require` of a package with no entry point.
+- **No minification.** A long-running server gains nothing, and Nest reflects on class and
+  function names, so mangling would break DI.
+- **`output.clean` is off** and the dev loop watches the output _directory_
+  (`node --watch --watch-path`): cleaning deletes and recreates `main.js`, which drops a
+  file-level watch and silently stops restarts.
+- Vitest discovers `tsconfig.json` **by convention** to pick up `emitDecoratorMetadata`; that is
+  why the Node packages name their primary config `tsconfig.json` rather than `tsconfig.app.json`.
+  Rename it and DI in specs breaks with `Cannot read properties of undefined`.
+- `rootDir: ".."` in the Node packages that map `paths`: their programs legitimately contain
+  sibling-package source, and tsc validates the inferred root even under `noEmit`.
+
+### Legacy backend (logigator-backend)
 
 Express with **routing-controllers** (decorators), **TypeDI** (DI), **TypeORM** (MySQL), **Passport.js** (auth), **Handlebars** (SSR).
 
@@ -128,7 +228,13 @@ Backend serves `logigator-editor` as a static SPA. SPA calls `/api/projects`, `/
 
 ## Testing
 
-Vitest via Angular's `@angular/build:unit-test` builder. Spec files sit next to source. Angular specs use `TestBed`; pure-logic specs don't. Shared helpers in `src/testing/`:
+The editor and `@logigator/ui` run Vitest via Angular's `@angular/build:unit-test` builder; core,
+the contract and the API run **plain Vitest** in Node (own `vitest.config.ts`, no Angular, no
+jsdom — they are framework-free, and the API's specs boot Nest testing modules). The Node
+packages' configs alias `@logigator/core`/`@logigator/contract` to their source, mirroring the
+tsconfig `paths` mapping, so specs compile exactly what ships. Spec files always sit next to
+source. Angular specs use `TestBed`; pure-logic specs don't. Shared editor helpers in
+`src/testing/`:
 
 - `fake-browser-stores.ts` — `FakeBrowserProjectStore`, `FakeBrowserComponentStore` (in-memory IndexedDB stand-ins)
 - `factories.ts` — `makeAnd`, `makeNot`, `makeWire`, `makeInput`, `makeMoveEvent` (circuit-element and pointer-event stubs)
