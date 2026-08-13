@@ -1,0 +1,22 @@
+/* Type-check config for @logigator/contract. Never built — the API and the
+   browser clients compile its source through the workspace `paths` mapping.
+
+   Only `@logigator/core` is mapped. The mapping is not the fence, though:
+   `rootDir` has to be the repo (the program contains core's source), so a
+   relative escape into another package still type-checks. `eslint.config.mjs`
+   is what keeps the server, the editor and the UI library out. */
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    // The program legitimately contains core's source, so the source root is the
+    // repo. Inert with `noEmit`, but tsc validates the inferred root regardless.
+    "rootDir": "..",
+    "types": [],
+    "paths": {
+      "@logigator/core": ["logigator-core/src/public-api.ts"]
+    }
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/*.spec.ts"]
+}

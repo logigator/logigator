@@ -1,0 +1,29 @@
+{
+  "name": "@logigator/contract",
+  "version": "0.0.0",
+  "description": "Shared zod schemas describing the Logigator API surface — imported by the API for validation and by its clients for typed requests",
+  "license": "AGPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/logigator/logigator.git"
+  },
+  "private": true,
+  "sideEffects": false,
+  "scripts": {
+    "lint": "eslint --config eslint.config.mjs src",
+    "lint:fix": "eslint --config eslint.config.mjs src --fix",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc -p tsconfig.spec.json"
+  },
+  "dependencies": {
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.8.0",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.65.0",
+    "vitest": "^4.1.10"
+  }
+}
