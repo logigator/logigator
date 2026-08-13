@@ -4,12 +4,12 @@
  * flipped for a single build or serve without editing tracked source:
  *
  * ```bash
- * yarn start --define "SHOW_HITBOXES=true"
+ * yarn start:editor --define "SHOW_HITBOXES=true"
  * ```
  *
  * A CLI `--define` merges into the active configuration's values and wins on
  * conflict. To serve with every switch off, use the production configuration
- * (`yarn start:prod`) rather than listing them — that also covers switches
+ * (`yarn start:editor:prod`) rather than listing them — that also covers switches
  * added here later.
  *
  * Defaults live in angular.json under `build.options.define`, and the
