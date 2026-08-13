@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { Point, Rectangle } from 'pixi.js';
 import { cutWire } from './wire-cut';
 import { Wire } from './wire';
-import { WireDirection } from './wire-direction.enum';
+import { WireDirection } from '@logigator/core';
 
 // Fake wire matching cutWire's read-only access pattern. Mirrors
 // Wire.gridBounds: floor the position and extend the spanning side by 1.

@@ -18,14 +18,16 @@ import type {
   ComponentSummary
 } from '../../api/models/component';
 import { Page } from '../../api/models/shared';
-import type { CircuitFileV0 } from '../file/circuit-file.types';
+import {
+  type CircuitFileV0,
+  type CustomComponentDetails,
+  type SerializedCircuitBody
+} from '@logigator/core';
 import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
-import type { CustomComponentDetails } from '../../components/custom/custom-component-definition.model';
 import { ComponentProviderService } from '../../components/component-provider.service';
 import { deriveSummary } from '../../custom-component/definition-derivation';
 import { buildProject, instantiateBody } from '../circuit-builder';
 import { warnSkippedCustoms } from '../load-warnings';
-import type { SerializedCircuitBody } from '../serialized-circuit';
 import { AuthRequiredError, formatHttpError } from '../persistence-errors';
 import { BoardSnapshotService } from '../../rendering/board-snapshot.service';
 import { UserService } from '../../user/user.service';

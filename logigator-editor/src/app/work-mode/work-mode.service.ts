@@ -1,9 +1,8 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { WorkMode } from './work-mode.enum';
-import { ComponentType } from '../components/component-type.enum';
+import { ComponentType, Direction } from '@logigator/core';
 import { ComponentProviderService } from '../components/component-provider.service';
 import { LoggingService } from '../logging/logging.service';
-import { Direction } from '../utils/direction';
 
 @Injectable({
   providedIn: 'root'

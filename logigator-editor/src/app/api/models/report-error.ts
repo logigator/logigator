@@ -1,4 +1,4 @@
-import type { ProjectElement } from './project-element';
+import type { ProjectElement } from '@logigator/core';
 
 // ---- POST /api/report-error request ----
 

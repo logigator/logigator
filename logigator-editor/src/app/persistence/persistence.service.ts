@@ -29,7 +29,7 @@ import { ServerPersistenceGateway } from './server/server-persistence.gateway';
 import { BrowserPersistenceGateway } from './browser/browser-persistence.gateway';
 import { downloadBlob } from '../utils/download';
 import { warnSkippedCustoms } from './load-warnings';
-import { decodeLgix, encodeLgix, hasLgixMagic } from './file/lgix-container';
+import { decodeLgix, encodeLgix, hasLgixMagic } from '@logigator/core';
 import { AnalyticsService } from '../analytics/analytics.service';
 import { AnalyticsEvent } from '../analytics/analytics.mapping';
 import { WireRepairService } from '../project/wire-repair.service';

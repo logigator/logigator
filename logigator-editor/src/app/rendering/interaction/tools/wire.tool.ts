@@ -1,7 +1,7 @@
 import { Point, Rectangle } from 'pixi.js';
 import { Project } from '../../../project/project';
 import { Component, PortSide } from '../../../components/component';
-import { CUSTOM_TYPE_ID_BASE } from '../../../components/component-type.enum';
+import { CUSTOM_TYPE_ID_BASE } from '@logigator/core';
 import { TogglePortNegationAction } from '../../../actions/actions/toggle-port-negation.action';
 import { roundToHalfGrid } from '../../../utils/grid';
 import { WireToolSession } from '../../sessions/wire-tool.session';

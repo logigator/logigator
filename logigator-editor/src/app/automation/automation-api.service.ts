@@ -4,7 +4,7 @@ import { Point, Rectangle } from 'pixi.js';
 import { environment } from '../../environments/environment';
 import { Component } from '../components/component';
 import { ComponentProviderService } from '../components/component-provider.service';
-import { CUSTOM_TYPE_ID_BASE } from '../components/component-type.enum';
+import { CUSTOM_TYPE_ID_BASE } from '@logigator/core';
 import { CustomComponentRegistry } from '../components/custom/custom-component-registry.service';
 import { SubCircuitWatch } from '../components/custom/sub-circuit-watch';
 import { CustomComponentService } from '../custom-component/custom-component.service';

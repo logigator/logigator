@@ -1,4 +1,4 @@
-import { SerializedComponentBody } from './serialized-circuit';
+import { SerializedComponentBody } from '../model/serialized-circuit';
 
 /**
  * Delta codec for persisted component positions. Components are emitted sorted

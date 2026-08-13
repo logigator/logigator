@@ -26,7 +26,7 @@ import { SubCircuitWatch } from '../components/custom/sub-circuit-watch';
 import { outputComponentConfig } from '../components/component-types/output/output.config';
 import { RomComponent } from '../components/component-types/rom/rom.component';
 import { Wire } from '../wires/wire';
-import { WireDirection } from '../wires/wire-direction.enum';
+import { WireDirection } from '@logigator/core';
 import { AutomationApiService } from './automation-api.service';
 
 describe('AutomationApiService inspection', () => {

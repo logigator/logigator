@@ -11,7 +11,7 @@ import { CustomComponentRegistry } from '../components/custom/custom-component-r
 import {
   CustomComponentDefinition,
   CustomComponentDetails
-} from '../components/custom/custom-component-definition.model';
+} from '@logigator/core';
 import { ComponentProviderService } from '../components/component-provider.service';
 
 /**

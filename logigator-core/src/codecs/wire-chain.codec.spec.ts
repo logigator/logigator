@@ -4,8 +4,8 @@ import {
   encodeWireChain,
   WireChainDecodeError
 } from './wire-chain.codec';
-import { SerializedWireBody } from './serialized-circuit';
-import { WireDirection } from '../wires/wire-direction.enum';
+import { SerializedWireBody } from '../model/serialized-circuit';
+import { WireDirection } from '../model/wire-direction.enum';
 
 const H = WireDirection.HORIZONTAL;
 const V = WireDirection.VERTICAL;

@@ -1,9 +1,8 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { Point } from 'pixi.js';
 import { configureTestBed } from '../../../testing/configure-test-bed';
-import { Direction } from '../../utils/direction';
+import { Direction, WireDirection } from '@logigator/core';
 import { rotatePointAroundPivot, rotationPivotFor } from '../../utils/rotation';
-import { WireDirection } from '../../wires/wire-direction.enum';
 import { Component } from '../../components/component';
 import { makeAnd, makeWire } from '../../../testing/factories';
 import { groupGridBounds, rotateElements } from './rotate-elements';

@@ -2,10 +2,9 @@ import { Project } from '../project/project';
 import { Component } from '../components/component';
 import { Wire } from '../wires/wire';
 import { ComponentProviderService } from '../components/component-provider.service';
-import { SerializedCircuitBody } from './serialized-circuit';
+import { Direction, SerializedCircuitBody } from '@logigator/core';
 import { getStaticDI } from '../utils/get-di';
 import { LoggingService } from '../logging/logging.service';
-import { Direction } from '../utils/direction';
 
 export function buildProject(components: Component[], wires: Wire[]): Project {
   const project = new Project();

@@ -3,10 +3,12 @@ import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { setStaticDIInjector } from '../../utils/get-di';
 import { ComponentProviderService } from '../component-provider.service';
-import { CUSTOM_TYPE_ID_BASE } from '../component-type.enum';
+import {
+  CUSTOM_TYPE_ID_BASE,
+  CustomComponentDefinition
+} from '@logigator/core';
 import { ComponentCategory } from '../component-category.enum';
 import { CustomComponentRegistry } from './custom-component-registry.service';
-import { CustomComponentDefinition } from './custom-component-definition.model';
 
 describe('CustomComponentRegistry', () => {
   let registry: CustomComponentRegistry;

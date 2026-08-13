@@ -1,6 +1,6 @@
 import { WorkMode } from './work-mode.enum';
 import { WorkModeService } from './work-mode.service';
-import { BuiltInComponentType } from '../components/component-type.enum';
+import { BuiltInComponentType } from '@logigator/core';
 import { ShortcutActionEnum } from '../shortcuts/shortcut-action.enum';
 import { ShortcutService } from '../shortcuts/shortcut.service';
 import { TranslationKey } from '../translation/translation-key.model';

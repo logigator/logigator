@@ -2,7 +2,7 @@ import { Component, computed, inject } from '@angular/core';
 import { LgButton } from '@logigator/ui';
 import { WorkModeService } from '../../work-mode/work-mode.service';
 import { WorkMode } from '../../work-mode/work-mode.enum';
-import { BuiltInComponentType } from '../../components/component-type.enum';
+import { BuiltInComponentType } from '@logigator/core';
 import { createWorkModeTools } from '../../work-mode/work-mode-tools';
 import { MobileUiService } from '../../layout/mobile-ui.service';
 import { ProjectService } from '../../project/project.service';

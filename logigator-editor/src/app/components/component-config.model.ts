@@ -1,5 +1,5 @@
 import { ComponentCategory } from './component-category.enum';
-import { ComponentType } from './component-type.enum';
+import { ComponentType } from '@logigator/core';
 import { TranslationKey } from '../translation/translation-key.model';
 import { ComponentOption } from './component-option';
 import { ComponentAction } from './component-action';

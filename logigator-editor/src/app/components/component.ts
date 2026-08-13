@@ -38,7 +38,7 @@ import {
 } from './component-geometry';
 import { Connectable } from '../rendering/grid-element';
 import { IdAllocator } from '../utils/id-allocator';
-import { Direction } from '../utils/direction';
+import { Direction } from '@logigator/core';
 import { CANVAS_FONT_FAMILY, fitMonoFontSize } from '../utils/text-fit';
 
 export interface PortsChange {

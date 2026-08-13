@@ -1,11 +1,12 @@
 import { MIGRATIONS } from './migrations/migrations';
 import { MigrationContext } from './migrations/migration';
-import { CURRENT_FILE_VERSION, CurrentCircuitFile } from './circuit-file.types';
-import { validateCurrentCircuitFile } from './circuit-file-validator';
 import {
+  CURRENT_FILE_VERSION,
+  CurrentCircuitFile,
   InvalidFileError,
-  UnsupportedVersionError
-} from './circuit-file.errors';
+  UnsupportedVersionError,
+  validateCurrentCircuitFile
+} from '@logigator/core';
 
 /**
  * Reads a parsed file's format version. Legacy files have no `version` field, so

@@ -4,7 +4,7 @@ import { TestBed } from '@angular/core/testing';
 import { configureTestBed } from '../../testing/configure-test-bed';
 import { setStaticDIInjector } from '../utils/get-di';
 import { ComponentProviderService } from '../components/component-provider.service';
-import { BuiltInComponentType } from '../components/component-type.enum';
+import { BuiltInComponentType } from '@logigator/core';
 import { ComponentCategory } from '../components/component-category.enum';
 import { ComponentConfig } from '../components/component-config.model';
 import { NotComponent } from '../components/component-types/not/not.component';

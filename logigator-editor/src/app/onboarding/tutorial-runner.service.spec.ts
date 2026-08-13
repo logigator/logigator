@@ -5,7 +5,7 @@ import { firstValueFrom, Subject } from 'rxjs';
 import { TranslocoService } from '@jsverse/transloco';
 import { configureTestBed } from '../../testing/configure-test-bed';
 import { Component } from '../components/component';
-import { BuiltInComponentType } from '../components/component-type.enum';
+import { BuiltInComponentType } from '@logigator/core';
 import { ConfirmationService } from '@logigator/ui';
 import { ProjectService } from '../project/project.service';
 import { PersistenceService } from '../persistence/persistence.service';

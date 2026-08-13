@@ -9,7 +9,7 @@ import { buildProject, instantiateBody } from '../persistence/circuit-builder';
 import { ComponentLibraryService } from './component-library.service';
 import { PromotionService } from '../persistence/promotion.service';
 import { CustomComponentRegistry } from '../components/custom/custom-component-registry.service';
-import { CustomComponentDetails } from '../components/custom/custom-component-definition.model';
+import { CustomComponentDetails } from '@logigator/core';
 import { ComponentProviderService } from '../components/component-provider.service';
 import { CustomComponent } from '../components/custom/custom-component';
 import { Action } from '../actions/action';

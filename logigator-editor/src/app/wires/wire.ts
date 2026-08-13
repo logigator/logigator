@@ -1,5 +1,5 @@
 import { Graphics, Point, Rectangle } from 'pixi.js';
-import { WireDirection } from './wire-direction.enum';
+import { WireDirection } from '@logigator/core';
 import { getStaticDI } from '../utils/get-di';
 import { GraphicsProviderService } from '../rendering/graphics-provider.service';
 import {

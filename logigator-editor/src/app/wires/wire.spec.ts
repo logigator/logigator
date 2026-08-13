@@ -9,7 +9,7 @@ import {
   POWERED_WIRE_THICKNESS,
   WireGraphics
 } from '../rendering/graphics/wire.graphics';
-import { WireDirection } from './wire-direction.enum';
+import { WireDirection } from '@logigator/core';
 import { environment } from '../../environments/environment';
 import { ThemingService } from '../theming/theming.service';
 import { ThemeType } from '../theming/theme-type.enum';

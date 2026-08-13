@@ -22,7 +22,7 @@ import {
   SIMULATION_WORKER_FACTORY
 } from '../../simulation/worker/simulation-worker.service';
 import { Wire } from '../../wires/wire';
-import { WireDirection } from '../../wires/wire-direction.enum';
+import { WireDirection } from '@logigator/core';
 import { WatchSession } from './watch-session';
 
 /** Wire spanning the two given half-grid termination points (axis-aligned). */

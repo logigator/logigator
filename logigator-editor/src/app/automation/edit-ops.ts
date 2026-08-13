@@ -40,7 +40,7 @@ import { ComponentOption } from '../components/component-option';
 import { ComponentProviderService } from '../components/component-provider.service';
 import { wouldCyclePlacement } from '../components/custom/placement-cycle';
 import { NO_EXCLUDED_IDS, Project } from '../project/project';
-import { Direction } from '../utils/direction';
+import { Direction, WireDirection } from '@logigator/core';
 import { offsetRect } from '../utils/grid';
 import {
   normalizeRotationSteps,
@@ -49,7 +49,6 @@ import {
   rotationPivotFor
 } from '../utils/rotation';
 import { Wire } from '../wires/wire';
-import { WireDirection } from '../wires/wire-direction.enum';
 import { EditOp, EditResult, PerOpError } from './automation-api.model';
 import { validateOptionValue } from './catalog';
 

@@ -32,7 +32,7 @@ import { SaveCoordinatorService } from '../ui/save-coordinator.service';
 import { ClipboardService } from '../clipboard/clipboard.service';
 import { WorkModeService } from '../work-mode/work-mode.service';
 import { WorkMode } from '../work-mode/work-mode.enum';
-import { BuiltInComponentType } from '../components/component-type.enum';
+import { BuiltInComponentType } from '@logigator/core';
 import { OpenProjectDialogComponent } from '../ui/dialogs/open-project-dialog/open-project-dialog.component';
 import { NewComponentDialogComponent } from '../ui/dialogs/new-component-dialog/new-component-dialog.component';
 import { ToastService } from '../logging/toast.service';

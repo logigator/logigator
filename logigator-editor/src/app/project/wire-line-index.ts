@@ -14,7 +14,7 @@
  */
 import { Rectangle } from 'pixi.js';
 import { Wire } from '../wires/wire';
-import { WireDirection } from '../wires/wire-direction.enum';
+import { WireDirection } from '@logigator/core';
 
 export function axisPos(w: Wire): number {
   return w.direction === WireDirection.HORIZONTAL ? w.position.x : w.position.y;

@@ -4,7 +4,7 @@ import { TestBed } from '@angular/core/testing';
 import { BitmapText } from 'pixi.js';
 import { setStaticDIInjector } from '../../../utils/get-di';
 import { Component } from '../../component';
-import { BuiltInComponentType } from '../../component-type.enum';
+import { BuiltInComponentType } from '@logigator/core';
 import { outputComponentConfig } from './output.config';
 import { OutputComponent } from './output.component';
 

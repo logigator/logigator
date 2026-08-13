@@ -13,12 +13,11 @@ import { setStaticDIInjector } from '../utils/get-di';
 import { environment } from '../../environments/environment';
 import { Project } from '../project/project';
 import { ProjectService } from '../project/project.service';
-import { WireDirection } from '../wires/wire-direction.enum';
+import { BuiltInComponentType, WireDirection } from '@logigator/core';
 import { WorkMode } from '../work-mode/work-mode.enum';
 import { WorkModeService } from '../work-mode/work-mode.service';
 import { serializeProjectBody } from '../persistence/snapshots';
 import { BoardSurfaceService } from '../rendering/board-surface.service';
-import { BuiltInComponentType } from '../components/component-type.enum';
 import { AutomationApiService } from './automation-api.service';
 
 const VIEWPORT_GRID_WIDTH = 40;

@@ -1,5 +1,5 @@
 import { Point, PointData, Rectangle } from 'pixi.js';
-import { Direction } from './direction';
+import { Direction } from '@logigator/core';
 
 /**
  * Pure quarter-turn helpers for rotating a group of circuit elements around a

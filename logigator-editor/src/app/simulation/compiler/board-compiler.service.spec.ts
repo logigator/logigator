@@ -19,10 +19,9 @@ import { clockComponentConfig } from '../../components/component-types/clock/clo
 import { tunnelComponentConfig } from '../../components/component-types/tunnel/tunnel.config';
 import { ledMatrixComponentConfig } from '../../components/component-types/led-matrix/led-matrix.config';
 import { bytesToBase64 } from '../../utils/packed-buffer';
-import { SerializedCircuitBody } from '../../persistence/serialized-circuit';
+import { SerializedCircuitBody, WireDirection } from '@logigator/core';
 import { Project } from '../../project/project';
 import { Wire } from '../../wires/wire';
-import { WireDirection } from '../../wires/wire-direction.enum';
 import { BoardCompilerService } from './board-compiler.service';
 
 /** Wire spanning the two given half-grid termination points (axis-aligned). */

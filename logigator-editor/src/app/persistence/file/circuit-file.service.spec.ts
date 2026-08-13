@@ -12,14 +12,14 @@ import { ComponentProviderService } from '../../components/component-provider.se
 import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
 import {
   BuiltInComponentType,
-  CUSTOM_TYPE_ID_BASE
-} from '../../components/component-type.enum';
+  CUSTOM_TYPE_ID_BASE,
+  decodeWireChain,
+  InvalidFileError,
+  ProjectElement,
+  SerializedCircuitBody
+} from '@logigator/core';
 import { Component } from '../../components/component';
 import { Project } from '../../project/project';
-import { ProjectElement } from '../../api/models/project-element';
-import { SerializedCircuitBody } from '../serialized-circuit';
-import { decodeWireChain } from '../wire-chain.codec';
-import { InvalidFileError } from './circuit-file.errors';
 
 interface BodyComponent {
   type: number;

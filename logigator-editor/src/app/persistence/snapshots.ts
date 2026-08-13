@@ -2,13 +2,13 @@ import type { Project } from '../project/project';
 import { Component } from '../components/component';
 import type { Wire } from '../wires/wire';
 import type { CustomComponentRegistry } from '../components/custom/custom-component-registry.service';
-import { CUSTOM_TYPE_ID_BASE } from '../components/component-type.enum';
 import {
+  CUSTOM_TYPE_ID_BASE,
   SerializedCircuitBody,
   SerializedComponentBody,
   SerializedWireBody,
   SnapshotDefinition
-} from './serialized-circuit';
+} from '@logigator/core';
 
 /**
  * The universal snapshot codec, shared by every transport (local file, browser

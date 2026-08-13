@@ -1,6 +1,6 @@
 import { Point, Rectangle } from 'pixi.js';
 import { Wire } from '../wires/wire';
-import { WireDirection } from '../wires/wire-direction.enum';
+import { WireDirection } from '@logigator/core';
 import { WireSnapshot } from '../wires/wire-snapshot.model';
 import type { Component } from '../components/component';
 import { getStaticDI } from '../utils/get-di';

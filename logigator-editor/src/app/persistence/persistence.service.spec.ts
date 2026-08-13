@@ -12,15 +12,19 @@ import { AuthRequiredError, ForeignDocumentError } from './persistence-errors';
 import { ProjectMetadataStore } from './project-metadata.store';
 import { ProjectService } from '../project/project.service';
 import { Project } from '../project/project';
-import { ProjectElement } from '../api/models/project-element';
+import {
+  CUSTOM_TYPE_ID_BASE,
+  encodeLgix,
+  InvalidFileError,
+  ProjectElement,
+  SerializedCircuitBody
+} from '@logigator/core';
 import { environment } from '../../environments/environment';
 import { LogLevel } from '../logging/log-level.enum';
 import { ToastService } from '../logging/toast.service';
 import { ProjectDumpService } from './dump/project-dump.service';
 import { ComponentLibraryService } from '../custom-component/component-library.service';
 import { PromotionService } from './promotion.service';
-import { InvalidFileError } from './file/circuit-file.errors';
-import { encodeLgix } from './file/lgix-container';
 import { BrowserProjectStore } from './browser/browser-project.store';
 import { BrowserComponentStore } from './browser/browser-component.store';
 import { ComponentIdMapStore } from './browser/component-id-map.store';
@@ -32,8 +36,6 @@ import { Component } from '../components/component';
 import { Wire } from '../wires/wire';
 import { Point } from 'pixi.js';
 import { MoveComponentsAction } from '../actions/actions/move-components.action';
-import { SerializedCircuitBody } from './serialized-circuit';
-import { CUSTOM_TYPE_ID_BASE } from '../components/component-type.enum';
 import {
   FakeBrowserComponentStore,
   FakeBrowserProjectStore,

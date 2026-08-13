@@ -3,7 +3,7 @@ import { configureTestBed } from '../../../../testing/configure-test-bed';
 import { Component } from '../../component';
 import { Project } from '../../../project/project';
 import { QuadTreeContainer } from '../../../rendering/quad-tree-container';
-import { Direction } from '../../../utils/direction';
+import { Direction } from '@logigator/core';
 import { textComponentConfig } from './text.config';
 
 function makeText(

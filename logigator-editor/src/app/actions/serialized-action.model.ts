@@ -1,8 +1,7 @@
 import { SerializedComponent } from '../components/serialized-component.model';
 import { SerializedWire } from '../wires/serialized-wire.model';
 import { PortSide } from '../components/component';
-import { Direction } from '../utils/direction';
-import { WireDirection } from '../wires/wire-direction.enum';
+import { Direction, WireDirection } from '@logigator/core';
 
 /** A {@link MoveEntry} with its `Point`s flattened to `[x, y]` for JSON. */
 export interface SerializedMoveEntry {

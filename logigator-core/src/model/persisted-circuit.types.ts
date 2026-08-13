@@ -10,7 +10,7 @@
  *   ({@link SnapshotDefinition.source}'s `version`) — a per-master content
  *   revision counter, unrelated to the format version.
  */
-import { ProjectElement } from '../api/models/project-element';
+import { ProjectElement } from './project-element';
 import {
   SerializedComponentBody,
   SnapshotDefinition

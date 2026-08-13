@@ -3,18 +3,16 @@ import { filter, Observable, Subject } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 import { ComponentProviderService } from '../component-provider.service';
 import { LoggingService } from '../../logging/logging.service';
-import { CUSTOM_TYPE_ID_BASE } from '../component-type.enum';
-import {
-  CustomComponentDefinition,
-  CustomComponentSummaryPatch
-} from './custom-component-definition.model';
-import { buildCustomComponentConfig } from './custom-component.config';
 import {
   cloneCircuit,
+  CUSTOM_TYPE_ID_BASE,
+  CustomComponentDefinition,
+  CustomComponentSummaryPatch,
   remapComponentTypes,
   SerializedCircuitBody,
   SnapshotDefinition
-} from '../../persistence/serialized-circuit';
+} from '@logigator/core';
+import { buildCustomComponentConfig } from './custom-component.config';
 
 /** A definition without its (registry-allocated) type id. */
 type DefinitionInit = Omit<CustomComponentDefinition, 'typeId'>;

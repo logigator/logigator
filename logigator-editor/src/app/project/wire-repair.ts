@@ -1,5 +1,5 @@
 import { Wire } from '../wires/wire';
-import { WireDirection } from '../wires/wire-direction.enum';
+import { WireDirection } from '@logigator/core';
 import { WireIntegrator } from './wire-integrator';
 import { PointMap } from '../utils/point-key';
 import { axisPos, crossPos, WireRowColumnIndex } from './wire-line-index';

@@ -1,4 +1,4 @@
-import { SerializedCircuitBody } from '../../persistence/serialized-circuit';
+import { SerializedCircuitBody } from './serialized-circuit';
 
 /**
  * A session definition of a custom component — enough to render and place a

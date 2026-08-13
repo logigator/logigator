@@ -1,6 +1,6 @@
 import { Component } from '../../component';
 import { textComponentConfig, TextOptions } from './text.config';
-import { Direction } from '../../../utils/direction';
+import { Direction } from '@logigator/core';
 import { ConnectionPointGraphics } from '../../../rendering/graphics/connection-point.graphics';
 import { scaleForScale } from '../../../connection-points/connection-point';
 import { BitmapText, DestroyOptions, Graphics, Rectangle } from 'pixi.js';

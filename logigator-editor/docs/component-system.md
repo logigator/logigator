@@ -4,10 +4,12 @@ The component system models every circuit element that can be placed on the edit
 
 ## Directory Layout
 
+`ComponentType` and `Direction` are document shapes, so they live in
+`@logigator/core` and are imported by package name.
+
 ```
 src/app/components/
 ├── component.ts                    # Abstract base class
-├── component-type.enum.ts          # Numeric ID enum for all component types
 ├── component-category.enum.ts      # UI palette grouping enum
 ├── component-option.ts             # Abstract base for configurable options
 ├── component-config.model.ts       # Static metadata + factory interface
@@ -64,7 +66,7 @@ The serialized form stores the type, grid-unit position (`component.position.x /
 
 **`ComponentType`** — numeric ID for every component type; used as registry keys and stored in serialized data. Built-ins (ids match the old editor's `ElementTypeId`): the basic types `NOT = 1` … `TUNNEL = 8`, the advanced types `HALF_ADDER = 10` … `DEMUX = 21` (including `ROM = 12` and `RAM = 17`), the plug types `INPUT = 100` / `OUTPUT = 101`, and the I/O types `BUTTON = 200` … `LED_MATRIX = 204` — see `component-type.enum.ts` for the full list. Numeric ids ≥ `CUSTOM_TYPE_ID_BASE` (1000) are runtime-allocated custom components.
 
-**`Direction`** (in `utils/direction.ts`) — four cardinal directions clockwise from East: `E = 0`, `S = 1`, `W = 2`, `N = 3`. The numeric layout is load-bearing: `rotation = value * π/2` (Component direction → PixiJS rotation) and `oppositeDir = (value + 2) % 4` (input stub ↔ output stub flip). The `Component.direction` setter applies the PixiJS rotation automatically. Shared with the connection-points layer.
+**`Direction`** (in `@logigator/core`) — four cardinal directions clockwise from East: `E = 0`, `S = 1`, `W = 2`, `N = 3`. The numeric layout is load-bearing: `rotation = value * π/2` (Component direction → PixiJS rotation) and `oppositeDir = (value + 2) % 4` (input stub ↔ output stub flip). The `Component.direction` setter applies the PixiJS rotation automatically. Shared with the connection-points layer.
 
 **Body re-anchoring** — the body is drawn from, and rotated around, the local origin, so the `direction`, `numInputs`, and `numOutputs` setters all run their mutation through `_withFixedBodyAnchor`, which holds the body's top-left corner fixed by shifting `position` by the change in `bodyGridBounds` (matching the legacy editor): rotation never moves the component (E↔W / N↔S flips stay put), and added ports grow the body toward the bottom (E/W) or the right (S/N) instead of jumping. (Group/selection rotation instead pivots about the selection midpoint — `RotateComponentsAction` stores the direction _and_ the orbited position per entry.)
 

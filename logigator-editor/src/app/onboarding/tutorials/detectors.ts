@@ -1,5 +1,5 @@
 import { Component } from '../../components/component';
-import { BuiltInComponentType } from '../../components/component-type.enum';
+import { BuiltInComponentType } from '@logigator/core';
 import { Project } from '../../project/project';
 import { SimulationService } from '../../simulation/simulation.service';
 import { extractNets, Net } from '../../simulation/compiler/net-extractor';

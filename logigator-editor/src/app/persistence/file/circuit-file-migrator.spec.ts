@@ -5,10 +5,11 @@ import { MigrationContext } from './migrations/migration';
 import { ComponentProviderService } from '../../components/component-provider.service';
 import { LoggingService } from '../../logging/logging.service';
 import {
+  CircuitFileV1,
+  CURRENT_FILE_VERSION,
   InvalidFileError,
   UnsupportedVersionError
-} from './circuit-file.errors';
-import { CircuitFileV1, CURRENT_FILE_VERSION } from './circuit-file.types';
+} from '@logigator/core';
 
 describe('circuit-file-migrator', () => {
   describe('detectVersion', () => {

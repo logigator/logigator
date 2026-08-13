@@ -1,32 +1,26 @@
 import { Migration, MigrationContext } from './migration';
 import {
+  BuiltInComponentType,
   CircuitFileV0,
   CircuitFileV1,
-  LegacyComponentDefinition
-} from '../circuit-file.types';
-import { InvalidFileError } from '../circuit-file.errors';
-import {
-  SerializedComponentBody,
-  SerializedWireBody,
-  SnapshotDefinition
-} from '../../serialized-circuit';
-import { ProjectElement } from '../../../api/models/project-element';
-import { WireDirection } from '../../../wires/wire-direction.enum';
-import { ComponentConfig } from '../../../components/component-config.model';
-import {
-  BuiltInComponentType,
-  CUSTOM_TYPE_ID_BASE
-} from '../../../components/component-type.enum';
-import { Direction } from '../../../utils/direction';
-import {
+  CUSTOM_TYPE_ID_BASE,
+  Direction,
+  encodeComponentPositions,
+  encodeWireChain,
+  InvalidFileError,
   legacyAnchorToPivot,
   legacyBodyHeight,
   legacyBodyWidth,
-  legacyCustomBodySize
-} from '../../legacy-anchor';
-import { encodeWireChain } from '../../wire-chain.codec';
-import { encodeComponentPositions } from '../../position-delta.codec';
-import { toPersistedDefinition } from '../../persisted-definition.codec';
+  LegacyComponentDefinition,
+  legacyCustomBodySize,
+  ProjectElement,
+  SerializedComponentBody,
+  SerializedWireBody,
+  SnapshotDefinition,
+  toPersistedDefinition,
+  WireDirection
+} from '@logigator/core';
+import { ComponentConfig } from '../../../components/component-config.model';
 
 /** Old editor's ElementTypeId.WIRE — the canonical type ID for wires in the v0 format. */
 const WIRE_TYPE_ID = 0;

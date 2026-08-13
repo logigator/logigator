@@ -7,7 +7,7 @@ import { ConnectionPoint } from '../connection-points/connection-point';
 import { applyInvalidTint } from './invalid-tint';
 import { WorkModeService } from '../work-mode/work-mode.service';
 import { getStaticDI } from '../utils/get-di';
-import { Direction } from '../utils/direction';
+import { Direction } from '@logigator/core';
 
 /**
  * A single-component placement preview living in the floating layer's drag

@@ -1,7 +1,7 @@
 import { Point } from 'pixi.js';
 import { Action } from '../action';
 import type { Project } from '../../project/project';
-import { Direction } from '../../utils/direction';
+import { Direction } from '@logigator/core';
 import {
   SerializedAction,
   SerializedRotateComponentEntry

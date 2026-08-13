@@ -1,7 +1,7 @@
 import { Point } from 'pixi.js';
 import { Action } from '../action';
 import type { Project } from '../../project/project';
-import { WireDirection } from '../../wires/wire-direction.enum';
+import { WireDirection } from '@logigator/core';
 import {
   SerializedAction,
   SerializedRotateWireEntry

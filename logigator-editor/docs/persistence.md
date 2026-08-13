@@ -51,19 +51,20 @@ Three unrelated version concepts live in this layer:
 
 ## Directory Layout
 
+The data↔data half of this layer — the document types, their validator, the compact
+codecs and the `.lgix` container — lives in **`@logigator/core`**, which the API and
+the migration tooling share; the editor imports it from `@logigator/core` and keeps
+the live↔data half (snapshotting `Project`, building instances, the Angular
+services). See [Core's share of the layer](#cores-share-of-the-layer).
+
 ```
 src/app/persistence/
 ├── persistence.service.ts        # Facade: load/save dispatch, file import/export, main-slot lifecycle
 ├── promotion.service.ts          # Upload-to-cloud: draft/project/component promotion + local-dependency queries
 ├── project-metadata.store.ts     # Per-project metadata + dirty tracking (incl. withDirtyGuard)
-├── persisted-circuit.types.ts    # Version bases: PersistedComponentV0/V1, PersistedCircuitV0/V1
-├── serialized-circuit.ts         # Native body types (SerializedComponentBody/WireBody) + SnapshotDefinition + helpers
 ├── snapshots.ts                  # Universal snapshot codec (collect/serialize the native body + definitions[])
 ├── circuit-builder.ts            # buildProject + instantiateBody — the single body→instances path
 ├── load-warnings.ts              # Shared "customs skipped" toast for the load entry points
-├── wire-chain.codec.ts           # Persisted wire encoding: chain string with relative heads
-├── position-delta.codec.ts       # Persisted component positions: (type,y,x) sort + deltas
-├── persisted-definition.codec.ts # SnapshotDefinition ↔ persisted form (delta components, chain wires)
 ├── dump/                         # Debug project dumps (circuit + element ids + undo history)
 │   └── project-dump.service.ts   # build/export/import — debug menu + bug-report payloads
 ├── server/                       # ⚠️ TEMPORARY — legacy server (v0-over-HTTP) transport
@@ -76,17 +77,44 @@ src/app/persistence/
 │   ├── browser-component.store.ts# IndexedDB CRUD for library masters
 │   └── component-id-map.store.ts # Durable old→new id map written on component promotion
 └── file/                         # Native versioned file format + migrations
-    ├── circuit-file.types.ts     # CircuitFileV0/V1 envelopes; CURRENT_FILE_VERSION; CurrentCircuitFile
-    ├── circuit-file.errors.ts    # InvalidFileError, UnsupportedVersionError
     ├── circuit-file-migrator.ts  # detectVersion + migrateToCurrent (chain runner + validation)
-    ├── circuit-file-validator.ts # Structural validation of a current-version document
     ├── circuit-file.service.ts   # toJson / decode / deserialize / fromJson (the file codec)
-    ├── lgix-container.ts         # .lgix export framing: gzip + magic-byte header (encode/decode)
     └── migrations/
         ├── migration.ts          # Migration<TIn,TOut> + MigrationContext
         ├── v0-to-v1.migration.ts # v0 (legacy) → v1 (registry-backed; reads legacyV0Slots)
         └── migrations.ts         # MIGRATIONS — the ordered chain
 ```
+
+### Core's share of the layer
+
+```
+logigator-core/src/
+├── model/                        # The shapes a document is made of
+│   ├── serialized-circuit.ts     # Native body types (SerializedComponentBody/WireBody) + SnapshotDefinition + helpers
+│   ├── persisted-circuit.types.ts# Version bases: PersistedComponentV0/V1, PersistedCircuitV0/V1
+│   ├── project-element.ts        # The legacy positional element (t/p/q/r/i/o/n/s)
+│   ├── dependencies.ts           # DependencyMapping / DependencySnapshot / EmbeddedDependency
+│   ├── custom-component-definition.model.ts # CustomComponentDefinition (master|snapshot) + summary patch
+│   ├── legacy-anchor.ts          # Legacy body-anchor ↔ pivot conversion
+│   ├── component-type.enum.ts    # BuiltInComponentType + CUSTOM_TYPE_ID_BASE
+│   ├── direction.ts              # Direction (E/S/W/N)
+│   └── wire-direction.enum.ts    # WireDirection (HORIZONTAL/VERTICAL)
+├── codecs/                       # The compact encodings v1 uses
+│   ├── wire-chain.codec.ts       # Persisted wire encoding: chain string with relative heads
+│   ├── position-delta.codec.ts   # Persisted component positions: (type,y,x) sort + deltas
+│   └── persisted-definition.codec.ts # SnapshotDefinition ↔ persisted form (delta components, chain wires)
+└── format/                       # The versioned envelope
+    ├── circuit-file-version.ts   # CURRENT_FILE_VERSION
+    ├── circuit-file.types.ts     # CircuitFileV0/V1 envelopes; CurrentCircuitFile
+    ├── circuit-file.errors.ts    # InvalidFileError, UnsupportedVersionError
+    ├── circuit-file-validator.ts # Structural validation of a current-version document
+    └── lgix-container.ts         # .lgix export framing: gzip + magic-byte header (encode/decode)
+```
+
+Everything above is re-exported from `@logigator/core`, so the editor imports it by
+package name and never by path. The split follows the boundary rule **core =
+data↔data, editor = live↔data**: turning a live `Project` into a body (`snapshots.ts`)
+and a body back into PixiJS instances (`circuit-builder.ts`) stays here.
 
 The shared IndexedDB connection wrapper lives in `src/app/storage/indexed-db-store.ts`;
 custom-component **library** lifecycle (startup preloads, alias hydration, logout
@@ -234,7 +262,7 @@ legacyV0Slots: { s: 'label', n: ['index'] }
 > option keys**. If a live option is later renamed, do **not** edit the descriptor — add a
 > `v1→v2` migration instead.
 
-### Legacy-anchor conversion (`persistence/legacy-anchor.ts`)
+### Legacy-anchor conversion (`legacy-anchor.ts` in core)
 
 The old editor anchors a component by its body's **top-left corner**, held fixed across
 rotation; editor-v2 anchors by the **rotation pivot** (body drawn from the local origin,
@@ -342,7 +370,7 @@ build supports). Both follow the `AuthRequiredError` convention (set `.name`).
 
 ### `.lgix` container
 
-**File:** `persistence/file/lgix-container.ts`
+**File:** `logigator-core/src/format/lgix-container.ts`
 
 Exported files are **not** raw JSON. `CircuitFileService.toJson` output is wrapped in a
 gzip-compressed, magic-byte-framed binary container written to `<name>.lgix`:
@@ -382,7 +410,7 @@ holds the plain `toJson` string, and the server v0 codec is untouched.
 
 ## Snapshot / custom-component codec
 
-**Files:** `persistence/serialized-circuit.ts`, `persistence/snapshots.ts`
+**Files:** `serialized-circuit.ts` (core), `persistence/snapshots.ts`
 
 The native document is self-contained: it embeds a frozen snapshot of every custom
 component it (transitively) uses, so it can be loaded with no library present.

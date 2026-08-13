@@ -1,7 +1,7 @@
 import { Point } from 'pixi.js';
 import { PointerInput } from '../app/rendering/interaction/pointer-input';
 import { Wire } from '../app/wires/wire';
-import { WireDirection } from '../app/wires/wire-direction.enum';
+import { Direction, WireDirection } from '@logigator/core';
 import { AndComponent } from '../app/components/component-types/and/and.component';
 import { andComponentConfig } from '../app/components/component-types/and/and.config';
 import { NotComponent } from '../app/components/component-types/not/not.component';
@@ -11,7 +11,6 @@ import { ButtonComponent } from '../app/components/component-types/button/button
 import { SwitchComponent } from '../app/components/component-types/switch/switch.component';
 import { RomComponent } from '../app/components/component-types/rom/rom.component';
 import { romComponentConfig } from '../app/components/component-types/rom/rom.config';
-import { Direction } from '../app/utils/direction';
 
 /** AndComponent with the given port count, rotation, and grid position. */
 export function makeAnd(

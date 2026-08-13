@@ -5,9 +5,8 @@ import { Point, Rectangle } from 'pixi.js';
 import { setStaticDIInjector } from '../utils/get-di';
 import { WireIntegrator } from './wire-integrator';
 import { Wire } from '../wires/wire';
-import { WireDirection } from '../wires/wire-direction.enum';
+import { Direction, WireDirection } from '@logigator/core';
 import { Component } from '../components/component';
-import { Direction } from '../utils/direction';
 import { makeAnd, makeWire } from '../../testing/factories';
 
 function makeWireQuery(wires: Wire[]): (rect: Rectangle) => Generator<Wire> {

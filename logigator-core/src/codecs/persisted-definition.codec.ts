@@ -1,5 +1,5 @@
-import { SnapshotDefinition } from './serialized-circuit';
-import { PersistedSnapshotDefinitionV1 } from './persisted-circuit.types';
+import { SnapshotDefinition } from '../model/serialized-circuit';
+import { PersistedSnapshotDefinitionV1 } from '../model/persisted-circuit.types';
 import { decodeWireChain, encodeWireChain } from './wire-chain.codec';
 import {
   decodeComponentPositions,

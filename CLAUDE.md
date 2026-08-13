@@ -105,7 +105,7 @@ Angular 22 standalone components + PixiJS 8 canvas.
 - `setStaticDIInjector()` in `app.config.ts` — bootstraps static Angular injector so model classes (`Component`, `Wire`) can call `inject()` without being Angular-managed.
 - Grid coordinates — `Project._gridSpace` has `scale = gridSize`, so circuit objects use **grid units as native `position`**. Visual children in `Component._visualSpace` (`scale = 1/gridSize`) keep pixel-authored geometry. Only remaining converter is `fromGrid` in `utils/grid.ts` (used inside `_visualSpace` and background grid). Snapping: `roundToGrid` / `roundToHalfGrid`.
 - `@logigator/sim` — external npm package (separate repo, Rust→WASM) holding the simulation engine. It runs in a Web Worker; the engine free-runs (or self-paces in target mode) while the main thread pulls one delta/full snapshot per `requestAnimationFrame`. Compilation is synchronous: nets via union-find over `"x,y"` termination points, custom components flattened by cached template instantiation, dense link ids assigned in emission order. Any `CompileDiagnostic` blocks entering simulation. See `simulation.md`.
-- Two serialization encodings: the **API** uses the legacy positional `ProjectElement[]` wire format (`t/p/q/r/i/o/n/s`) — _file-format v0 over HTTP_, decoded by the `v0ToV1` migration and encoded by the temporary `persistence/server/` codec; **local files** use a **native, versioned** format (named options; wires as one SVG-path-style chain string `"x,y:e5s3;…"` with relative chunk heads via `persistence/wire-chain.codec.ts`; component positions (type,y,x)-sorted and delta-encoded via `persistence/position-delta.codec.ts`) under `persistence/file/`. Files have a `version` field (absent ⇒ legacy v0; native current = v1); a migration chain upgrades older files to the newest version on load, and only the newest version is ever saved. The built-in configs' `legacyV0Slots` descriptor is the single source of truth the v0 decode and encode share. `SerializedComponent`/`SerializedWire` are a _third_, separate in-memory snapshot used by undo/redo — not a persistence format.
+- Two serialization encodings: the **API** uses the legacy positional `ProjectElement[]` wire format (`t/p/q/r/i/o/n/s`) — _file-format v0 over HTTP_, decoded by the `v0ToV1` migration and encoded by the temporary `persistence/server/` codec; **local files** use a **native, versioned** format (named options; wires as one SVG-path-style chain string `"x,y:e5s3;…"` with relative chunk heads via core's `codecs/wire-chain.codec.ts`; component positions (type,y,x)-sorted and delta-encoded via core's `codecs/position-delta.codec.ts`), whose types, validator and container live in `@logigator/core` and whose editor-side codec/migration adapters are `persistence/file/`. Files have a `version` field (absent ⇒ legacy v0; native current = v1); a migration chain upgrades older files to the newest version on load, and only the newest version is ever saved. The built-in configs' `legacyV0Slots` descriptor is the single source of truth the v0 decode and encode share. `SerializedComponent`/`SerializedWire` are a _third_, separate in-memory snapshot used by undo/redo — not a persistence format.
 - Paste flow — `ClipboardService.paste()` deserializes clipboard snapshots into fresh `Component`/`Wire` instances (new IDs, copied geometry), then calls `Project.startPasteSession()`, which emits on `pasteRequest$`; the `WorkModeRouter` positions the group (centred on the cursor, else on the middle of the grid view) and opens a `PastePlacementSession`. Pasting is a non-modal drag session: elements appear as tinted ghosts in the floating layer's `dragLayer`, follow the cursor, and check collision via `DragCollisionState`. `isDragging` stays false until the user clicks on one of the ghosts, at which point `beginDrag` locks in the anchor; releasing commits at the current position. Clicking off the ghost group cancels, as does Escape (both destroy the fresh instances). `SelectionMoveSession` shares `DragCollisionState` for its own collision check.
 - `src/testing/` — shared test fakes (`FakeBrowserProjectStore`, `FakeBrowserComponentStore`). In-memory stand-ins for the IndexedDB-backed stores, extracted so both `persistence.service.spec` and `custom-component.service.spec` can use them without duplication.
 - Language and theme are **origin-wide, not editor-local**: both are fields of the `preferences` cookie (`storage/preferences.service.ts`) that the backend's pages write and read as well, so a switch on either side moves both (see `ui.md`). Everything else the editor persists (`logigator.*` keys) is localStorage and editor-only.
@@ -134,16 +134,18 @@ through the root tsconfig `paths` mapping. They are never built, have no `dist/`
 and specs alias the same paths. One consumption model, so a change is picked up everywhere
 without a build step.
 
-- `logigator-core/src/` — the rendering-free half of the circuit code, planned as `format/`
-  (file types, validator, migrator, migrations, lgix), `codecs/`, `model/`, `catalog/`. Boundary
+- `logigator-core/src/` — the rendering-free half of the circuit code: `model/` (the shapes a
+  document is made of — serialized bodies, persisted version bases, the legacy `ProjectElement`
+  and dependency types, custom-component definitions, legacy-anchor conversion, and the
+  `BuiltInComponentType`/`Direction`/`WireDirection` enums), `codecs/` (wire-chain,
+  position-delta, persisted-definition), `format/` (`CURRENT_FILE_VERSION`, the `CircuitFileV0/V1`
+  envelopes, errors, the structural validator, the `.lgix` container). Boundary
   rule: **core = data↔data, editor = live↔data** — snapshotting live PixiJS objects stays in the
   editor. Guarantees are enforced, not conventional: **zero runtime dependencies**, no
   `@angular/*`/`pixi.js`/`rxjs` import and no browser globals (`eslint.config.mjs` fence), plus a
   `tsc` that maps _no_ paths — so a sibling-package import fails — with `rootDir: "src"` making a
-  relative escape fail too. Currently holds `CURRENT_FILE_VERSION` — the format version the editor
-  writes and the API normalizes to — which the editor's
-  `persistence/file/circuit-file.types.ts` re-exports; the rest of the layer moves in Phase 1 of
-  `plans/backend-rewrite.md`.
+  relative escape fail too. The migrator + migration chain and `catalog/` land in the later
+  stages of Phase 1 of `plans/backend-rewrite.md`.
 - `logigator-contract/src/` — request/response schemas per endpoint (`*.contract.ts`), inferred
   types via `z.infer`, no codegen. zod and core are its only imports (fenced the same two ways).
   Response object schemas are `.loose()` on purpose: a client holding an older contract copy must

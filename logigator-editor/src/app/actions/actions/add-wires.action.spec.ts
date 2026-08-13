@@ -5,7 +5,7 @@ import { TestBed } from '@angular/core/testing';
 import { setStaticDIInjector } from '../../utils/get-di';
 import { AddWiresAction } from './add-wires.action';
 import { Wire } from '../../wires/wire';
-import { WireDirection } from '../../wires/wire-direction.enum';
+import { WireDirection } from '@logigator/core';
 import type { Project } from '../../project/project';
 
 describe('AddWiresAction', () => {

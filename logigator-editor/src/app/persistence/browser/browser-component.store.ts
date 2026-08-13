@@ -8,7 +8,7 @@ import {
   COMPONENTS_STORE,
   IndexedDbStore
 } from '../../storage/indexed-db-store';
-import { CustomComponentDetails } from '../../components/custom/custom-component-definition.model';
+import { CustomComponentDetails } from '@logigator/core';
 
 /**
  * CRUD over browser-local (IndexedDB) **library masters**, keyed by master id.

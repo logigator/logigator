@@ -26,33 +26,29 @@
  * file-local type ids (≥ {@link CUSTOM_TYPE_ID_BASE}) so the decode's
  * `ingestSnapshots` can remap them to session ids in one pass.
  */
-import type { ProjectElement } from '../../api/models/project-element';
-import type { DependencyMapping } from '../../api/models/dependencies';
+import {
+  BuiltInComponentType,
+  CircuitFileV0,
+  CUSTOM_TYPE_ID_BASE,
+  type DependencyMapping,
+  legacyBodyHeight,
+  legacyBodyWidth,
+  legacyCustomBodySize,
+  PersistedCircuitV0,
+  pivotToLegacyAnchor,
+  type ProjectElement,
+  type SerializedComponentBody,
+  type SerializedWireBody,
+  type SnapshotDefinition,
+  WireDirection
+} from '@logigator/core';
 import type { ComponentConfig } from '../../components/component-config.model';
 import type { Project } from '../../project/project';
 import { Component } from '../../components/component';
 import type { Wire } from '../../wires/wire';
 import type { ComponentProviderService } from '../../components/component-provider.service';
 import type { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
-import type {
-  SerializedComponentBody,
-  SerializedWireBody,
-  SnapshotDefinition
-} from '../serialized-circuit';
-import { WireDirection } from '../../wires/wire-direction.enum';
-import {
-  BuiltInComponentType,
-  CUSTOM_TYPE_ID_BASE
-} from '../../components/component-type.enum';
-import {
-  legacyBodyHeight,
-  legacyBodyWidth,
-  legacyCustomBodySize,
-  pivotToLegacyAnchor
-} from '../legacy-anchor';
 import { ledMatrixShape } from '../../components/component-types/led-matrix/led-matrix.config';
-import { PersistedCircuitV0 } from '../persisted-circuit.types';
-import { CircuitFileV0 } from '../file/circuit-file.types';
 import { collectSnapshots } from '../snapshots';
 
 /** Old editor's ElementTypeId.WIRE — the canonical type ID for wires in ProjectElement[]. */

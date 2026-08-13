@@ -1,6 +1,6 @@
 import { computed, Signal } from '@angular/core';
 import { CustomComponentRegistry } from '../custom-component-registry.service';
-import { CustomComponentDefinition } from '../custom-component-definition.model';
+import { CustomComponentDefinition } from '@logigator/core';
 
 /**
  * A computed that resolves an instance's config type id to its master entry,

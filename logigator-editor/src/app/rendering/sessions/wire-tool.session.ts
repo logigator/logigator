@@ -5,7 +5,7 @@ import { Project } from '../../project/project';
 import { Component } from '../../components/component';
 import { Wire } from '../../wires/wire';
 import { ConnectionPoint } from '../../connection-points/connection-point';
-import { WireDirection } from '../../wires/wire-direction.enum';
+import { WireDirection } from '@logigator/core';
 import { AddWiresAction } from '../../actions/actions/add-wires.action';
 import { RemoveWiresAction } from '../../actions/actions/remove-wires.action';
 import { ActionContainer } from '../../actions/action-container';

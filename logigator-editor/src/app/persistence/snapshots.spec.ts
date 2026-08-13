@@ -3,9 +3,8 @@ import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { setStaticDIInjector } from '../utils/get-di';
 import { CustomComponentRegistry } from '../components/custom/custom-component-registry.service';
-import { BuiltInComponentType } from '../components/component-type.enum';
+import { BuiltInComponentType, SerializedCircuitBody } from '@logigator/core';
 import { Project } from '../project/project';
-import { SerializedCircuitBody } from './serialized-circuit';
 import { collectSnapshots } from './snapshots';
 
 // collectSnapshots only reads `project.components` (each component's config.type),

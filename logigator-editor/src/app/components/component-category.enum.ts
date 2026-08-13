@@ -1,4 +1,4 @@
-export const enum ComponentCategory {
+export enum ComponentCategory {
   HIDDEN = 'hidden',
   BASIC = 'basic',
   ADVANCED = 'advanced',

@@ -5,7 +5,7 @@ import { setStaticDIInjector } from '../utils/get-di';
 import { ComponentProviderService } from './component-provider.service';
 import { ComponentConfig } from './component-config.model';
 import { ComponentCategory } from './component-category.enum';
-import { BuiltInComponentType } from './component-type.enum';
+import { BuiltInComponentType } from '@logigator/core';
 import { Component } from './component';
 
 const CUSTOM_TYPE = 1234;

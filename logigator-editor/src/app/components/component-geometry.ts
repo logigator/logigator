@@ -1,5 +1,5 @@
 import { Point, PointData, Rectangle } from 'pixi.js';
-import { Direction } from '../utils/direction';
+import { Direction } from '@logigator/core';
 import { overlapsRect } from '../utils/grid';
 import type { PortSide } from './component';
 

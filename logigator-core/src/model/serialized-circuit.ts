@@ -1,8 +1,8 @@
 /**
  * The native, named-option serialized circuit body shared by every snapshot
  * transport (local file, browser store) and held in memory as a definition's
- * own circuit. Distinct from the legacy positional `ProjectElement[]` wire
- * format (server) — see `server/server-circuit.codec.ts`.
+ * own circuit. Distinct from the legacy positional `ProjectElement` wire format
+ * the old server API speaks.
  *
  * Pure data + pure helpers, with **no** imports, so it can be referenced from
  * both the component layer (a definition's `circuit`) and the persistence layer

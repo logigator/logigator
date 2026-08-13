@@ -7,7 +7,6 @@ Wires connect circuit elements on the editor canvas. Each wire is an axis-aligne
 ```
 src/app/wires/
 ├── wire.ts                    # Wire class (PixiJS Graphics subclass)
-├── wire-direction.enum.ts     # HORIZONTAL / VERTICAL enum
 ├── wire-snapshot.model.ts     # Geometry-only DTO (start/end/direction/gridBounds)
 └── serialized-wire.model.ts   # Persistence DTO
 
@@ -43,12 +42,11 @@ During simulation a powered wire is `POWERED_WIRE_THICKNESS` (3) screen pixels t
 
 ## `WireDirection` enum
 
-```
-src/app/wires/wire-direction.enum.ts
-```
+A document shape, so it lives in `@logigator/core`
+(`logigator-core/src/model/wire-direction.enum.ts`):
 
 ```ts
-export const enum WireDirection {
+export enum WireDirection {
   HORIZONTAL, // = 0
   VERTICAL // = 1
 }

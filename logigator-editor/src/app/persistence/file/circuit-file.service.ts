@@ -3,41 +3,33 @@ import { Project } from '../../project/project';
 import { Component } from '../../components/component';
 import { Wire } from '../../wires/wire';
 import { ComponentProviderService } from '../../components/component-provider.service';
-import { CUSTOM_TYPE_ID_BASE } from '../../components/component-type.enum';
+import {
+  CURRENT_FILE_VERSION,
+  CurrentCircuitFile,
+  CUSTOM_TYPE_ID_BASE,
+  decodeComponentPositions,
+  decodeWireChain,
+  encodeComponentPositions,
+  encodeWireChain,
+  FileForkAttributionV1,
+  fromPersistedDefinition,
+  InvalidFileError,
+  PersistedSnapshotDefinitionV1,
+  PositionDeltaDecodeError,
+  remapComponentTypes,
+  SerializedCircuitBody,
+  SerializedComponentBody,
+  SerializedWireBody,
+  SnapshotDefinition,
+  toPersistedDefinition,
+  WireChainDecodeError
+} from '@logigator/core';
 import { instantiateBody } from '../circuit-builder';
 import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
 import { LoggingService } from '../../logging/logging.service';
 import { MigrationContext } from './migrations/migration';
 import { migrateToCurrent } from './circuit-file-migrator';
-import { InvalidFileError } from './circuit-file.errors';
-import {
-  CURRENT_FILE_VERSION,
-  CurrentCircuitFile,
-  FileForkAttributionV1
-} from './circuit-file.types';
-import {
-  remapComponentTypes,
-  SerializedCircuitBody,
-  SerializedComponentBody,
-  SerializedWireBody,
-  SnapshotDefinition
-} from '../serialized-circuit';
 import { collectSnapshots, serializeProjectBody } from '../snapshots';
-import {
-  decodeWireChain,
-  encodeWireChain,
-  WireChainDecodeError
-} from '../wire-chain.codec';
-import {
-  decodeComponentPositions,
-  encodeComponentPositions,
-  PositionDeltaDecodeError
-} from '../position-delta.codec';
-import {
-  fromPersistedDefinition,
-  toPersistedDefinition
-} from '../persisted-definition.codec';
-import { PersistedSnapshotDefinitionV1 } from '../persisted-circuit.types';
 
 /**
  * Reads/writes the native circuit file format. Encoding always emits the current

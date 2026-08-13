@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
 import { ApiBaseService } from './api-base.service';
 import type { Page } from '../models/shared';
-import type { ProjectElement } from '../models/project-element';
+import type { ProjectElement } from '@logigator/core';
 import type {
   CreateProjectRequest,
   ProjectDetail,

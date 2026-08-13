@@ -13,7 +13,7 @@ import {
   buildProject,
   instantiateBody
 } from '../../persistence/circuit-builder';
-import { SerializedCircuitBody } from '../../persistence/serialized-circuit';
+import { SerializedCircuitBody } from '@logigator/core';
 import { Project } from '../../project/project';
 import { getStaticDI } from '../../utils/get-di';
 import { TranslationService } from '../../translation/translation.service';

@@ -18,8 +18,7 @@ import {
   makeRom,
   makeWire
 } from '../../../testing/factories';
-import { WireDirection } from '../../wires/wire-direction.enum';
-import { Direction } from '../../utils/direction';
+import { Direction, WireDirection } from '@logigator/core';
 import { Component } from '../../components/component';
 import { ComponentConfig } from '../../components/component-config.model';
 import { andComponentConfig } from '../../components/component-types/and/and.config';

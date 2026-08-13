@@ -1,6 +1,6 @@
 import { Point, Rectangle } from 'pixi.js';
 import { Project } from '../../../project/project';
-import { BuiltInComponentType } from '../../../components/component-type.enum';
+import { BuiltInComponentType } from '@logigator/core';
 import { PanSession } from '../../sessions/pan.session';
 import { PointerInput } from '../pointer-input';
 import { BoardTool, ToolHost } from './board-tool';

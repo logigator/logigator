@@ -1,4 +1,4 @@
-import { BuiltInComponentType } from '../../components/component-type.enum';
+import { BuiltInComponentType } from '@logigator/core';
 import { WorkMode } from '../../work-mode/work-mode.enum';
 import { TutorialDefinition } from '../tutorial.model';
 import {

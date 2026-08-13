@@ -5,8 +5,7 @@ import { Point } from 'pixi.js';
 import { setStaticDIInjector } from '../utils/get-di';
 import { ConnectionPointManager } from './connection-point-manager';
 import { Wire } from '../wires/wire';
-import { Direction } from '../utils/direction';
-import { WireDirection } from '../wires/wire-direction.enum';
+import { Direction, WireDirection } from '@logigator/core';
 import { Component } from '../components/component';
 import { makeAnd, makeWire } from '../../testing/factories';
 

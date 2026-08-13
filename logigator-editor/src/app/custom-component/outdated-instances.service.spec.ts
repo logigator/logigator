@@ -8,7 +8,7 @@ import { ProjectService } from '../project/project.service';
 import { Project } from '../project/project';
 import { CustomComponent } from '../components/custom/custom-component';
 import { AddComponentsAction } from '../actions/actions/add-components.action';
-import { BuiltInComponentType } from '../components/component-type.enum';
+import { BuiltInComponentType } from '@logigator/core';
 import { makeAnd } from '../../testing/factories';
 
 describe('OutdatedInstancesService', () => {

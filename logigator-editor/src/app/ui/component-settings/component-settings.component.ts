@@ -13,10 +13,9 @@ import {
 } from '../../components/component-config.model';
 import { TranslationService } from '../../translation/translation.service';
 import { ChangeOptionAction } from '../../actions/actions/change-option.action';
-import { Direction } from '../../utils/direction';
+import { CUSTOM_TYPE_ID_BASE, Direction } from '@logigator/core';
 import { normalizeRotationSteps } from '../../utils/rotation';
 import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
-import { CUSTOM_TYPE_ID_BASE } from '../../components/component-type.enum';
 import {
   SourceIndicatorComponent,
   SourceIndicatorState

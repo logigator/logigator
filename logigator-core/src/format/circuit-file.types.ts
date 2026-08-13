@@ -2,30 +2,29 @@
  * Versioned native file format for save-to-file / load-from-file.
  *
  * These types are FROZEN per version: they intentionally do NOT alias the live
- * `api/models` DTOs (which track the legacy server API and will change). When a
- * new version is introduced, bump {@link CURRENT_FILE_VERSION} in
- * `@logigator/core` (the server normalizes documents to the same constant), add
- * a new `CircuitFileV<N>` interface + a migration, and re-point
- * {@link CurrentCircuitFile} — older `CircuitFileV<N>` types stay untouched so
- * shipped files keep their meaning.
+ * server DTOs (which track the legacy API and will change). When a new version
+ * is introduced, bump {@link CURRENT_FILE_VERSION} (the editor writes it and the
+ * server normalizes documents to it), add a new `CircuitFileV<N>` interface + a
+ * migration, and re-point {@link CurrentCircuitFile} — older `CircuitFileV<N>`
+ * types stay untouched so shipped files keep their meaning.
  *
  * The current format mirrors the editor's in-memory model (named options; wires
- * chain-encoded as `"x,y:e5s3;…"`, see `wire-chain.codec.ts`) and is
- * self-contained: it embeds a frozen snapshot
- * of every custom component it transitively uses in {@link PersistedCircuitV1.definitions}
- * via the universal codec (`persistence/snapshots.ts`).
+ * chain-encoded as `"x,y:e5s3;…"`, see `codecs/wire-chain.codec.ts`) and is
+ * self-contained: it embeds a frozen snapshot of every custom component it
+ * transitively uses in {@link PersistedCircuitV1.definitions}, taken by the
+ * editor's universal snapshot builder.
  *
  * Each `CircuitFileV<N>` is the file-target envelope around the shared
- * version payload in `persistence/persisted-circuit.types.ts`.
+ * version payload in `model/persisted-circuit.types.ts`.
  */
 import {
   PersistedCircuitV0,
   PersistedCircuitV1
-} from '../persisted-circuit.types';
-import { EmbeddedDependency } from '../../api/models/dependencies';
-import { ProjectElement } from '../../api/models/project-element';
+} from '../model/persisted-circuit.types';
+import { EmbeddedDependency } from '../model/dependencies';
+import { ProjectElement } from '../model/project-element';
 
-export { CURRENT_FILE_VERSION } from '@logigator/core';
+export { CURRENT_FILE_VERSION } from './circuit-file-version';
 export type CurrentCircuitFile = CircuitFileV1;
 
 // ---- Version 1 (current, native, self-contained) ----

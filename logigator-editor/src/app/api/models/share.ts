@@ -1,4 +1,4 @@
-import type { ProjectElement } from './project-element';
+import type { ProjectElement } from '@logigator/core';
 import type { ForkAttributionEntry, ProjectDependency } from './project';
 import type { ComponentDependency, ComponentSummary } from './component';
 

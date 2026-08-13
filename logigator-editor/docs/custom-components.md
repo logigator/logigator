@@ -65,9 +65,11 @@ definition` is a clean function: one type id denotes exactly one immutable
 
 ## Files
 
+`CustomComponentDefinition` (and its details/summary-patch shapes) travel in
+documents, so they live in `@logigator/core`.
+
 ```
 components/custom/
-├── custom-component-definition.model.ts  # CustomComponentDefinition (master|snapshot) + summary patch
 ├── custom-component-registry.service.ts  # session-global registry (root singleton)
 ├── custom-component.config.ts            # buildCustomComponentConfig + CustomComponentOptions
 ├── custom-component.ts                   # the single black-box rendering class

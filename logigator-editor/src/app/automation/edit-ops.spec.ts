@@ -8,9 +8,11 @@ import { Project } from '../project/project';
 import { ComponentProviderService } from '../components/component-provider.service';
 import { CustomComponentRegistry } from '../components/custom/custom-component-registry.service';
 import { ProjectMetadataStore } from '../persistence/project-metadata.store';
-import { BuiltInComponentType } from '../components/component-type.enum';
-import { WireDirection } from '../wires/wire-direction.enum';
-import { Direction } from '../utils/direction';
+import {
+  BuiltInComponentType,
+  Direction,
+  WireDirection
+} from '@logigator/core';
 import { serializeProjectBody } from '../persistence/snapshots';
 import { EditOp } from './automation-api.model';
 import { applyEditOps, EditOpsContext } from './edit-ops';

@@ -1,7 +1,7 @@
 import { PointData, Rectangle } from 'pixi.js';
 import { Component } from '../../components/component';
 import { Wire } from '../../wires/wire';
-import { WireDirection } from '../../wires/wire-direction.enum';
+import { WireDirection } from '@logigator/core';
 import {
   normalizeRotationSteps,
   rotateDirection,

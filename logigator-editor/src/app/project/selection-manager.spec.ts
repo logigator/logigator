@@ -7,7 +7,7 @@ import { Point, Rectangle } from 'pixi.js';
 import { SelectionManager } from './selection-manager';
 import { WorkMode } from '../work-mode/work-mode.enum';
 import { setStaticDIInjector } from '../utils/get-di';
-import { WireDirection } from '../wires/wire-direction.enum';
+import { WireDirection } from '@logigator/core';
 import { ActionContainer } from '../actions/action-container';
 import type { Project } from './project';
 import { makeAnd } from '../../testing/factories';

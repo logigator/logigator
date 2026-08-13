@@ -1,5 +1,5 @@
 // Values are fixed by the wire format.
-export const enum BuiltInComponentType {
+export enum BuiltInComponentType {
   NOT = 1,
   AND = 2,
   OR = 3,

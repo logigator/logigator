@@ -1,6 +1,6 @@
 import { Point, Rectangle } from 'pixi.js';
 import { Wire } from './wire';
-import { WireDirection } from './wire-direction.enum';
+import { WireDirection } from '@logigator/core';
 
 export interface WireCutPiece {
   position: Point;

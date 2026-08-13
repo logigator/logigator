@@ -7,7 +7,7 @@ import { setStaticDIInjector } from '../../utils/get-di';
 import { configureTestBed } from '../../../testing/configure-test-bed';
 import { EraseSession } from './erase.session';
 import { Wire } from '../../wires/wire';
-import { WireDirection } from '../../wires/wire-direction.enum';
+import { WireDirection } from '@logigator/core';
 import { ActionContainer } from '../../actions/action-container';
 import { Project } from '../../project/project';
 import type { ActionManager } from '../../actions/action-manager';

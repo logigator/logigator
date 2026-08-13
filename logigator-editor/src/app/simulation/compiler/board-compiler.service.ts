@@ -4,11 +4,11 @@ import { LoggingService } from '../../logging/logging.service';
 import { Component } from '../../components/component';
 import { ComponentProviderService } from '../../components/component-provider.service';
 import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
-import { CustomComponentDefinition } from '../../components/custom/custom-component-definition.model';
 import {
   BuiltInComponentType,
-  CUSTOM_TYPE_ID_BASE
-} from '../../components/component-type.enum';
+  CUSTOM_TYPE_ID_BASE,
+  CustomComponentDefinition
+} from '@logigator/core';
 import { instantiateBody } from '../../persistence/circuit-builder';
 import { encodeRomOps } from '../../components/component-types/rom/rom-data.codec';
 import { ledMatrixShape } from '../../components/component-types/led-matrix/led-matrix.config';

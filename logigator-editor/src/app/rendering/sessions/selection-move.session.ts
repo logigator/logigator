@@ -6,7 +6,7 @@ import { Component } from '../../components/component';
 import { Wire } from '../../wires/wire';
 import { ConnectionPoint } from '../../connection-points/connection-point';
 import { roundToGrid } from '../../utils/grid';
-import { Direction } from '../../utils/direction';
+import { Direction } from '@logigator/core';
 import {
   normalizeRotationSteps,
   rotatePointAroundPivot,

@@ -1,5 +1,5 @@
 import { ComponentConfig } from '../../component-config.model';
-import { BuiltInComponentType } from '../../component-type.enum';
+import { BuiltInComponentType } from '@logigator/core';
 import { ComponentCategory } from '../../component-category.enum';
 import { ComponentOption } from '../../component-option';
 import { NotComponent } from './not.component';

@@ -6,7 +6,7 @@ import { Rectangle } from 'pixi.js';
 import { ComponentSettingsComponent } from './component-settings.component';
 import { configureTestBed } from '../../../testing/configure-test-bed';
 import { WorkModeService } from '../../work-mode/work-mode.service';
-import { BuiltInComponentType } from '../../components/component-type.enum';
+import { BuiltInComponentType, Direction } from '@logigator/core';
 import { ProjectService } from '../../project/project.service';
 import { ProjectMetadataStore } from '../../persistence/project-metadata.store';
 import { Project } from '../../project/project';
@@ -14,7 +14,6 @@ import { NumberOptionInputComponent } from '../../components/component-options/n
 import { LgSelectButton } from '@logigator/ui';
 import { WorkMode } from '../../work-mode/work-mode.enum';
 import { makeAnd } from '../../../testing/factories';
-import { Direction } from '../../utils/direction';
 
 describe('ComponentSettingsComponent', () => {
   let fixture: ComponentFixture<ComponentSettingsComponent>;

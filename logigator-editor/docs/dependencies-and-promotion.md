@@ -109,7 +109,7 @@ Key resolvers:
 
 ## 3. The universal snapshot codec
 
-**Files:** `persistence/snapshots.ts`, `persistence/serialized-circuit.ts`. One
+**Files:** `persistence/snapshots.ts`, `serialized-circuit.ts` (core). One
 codec feeds **every** transport (file, browser, server); each transport only
 chooses a byte layout for the body.
 

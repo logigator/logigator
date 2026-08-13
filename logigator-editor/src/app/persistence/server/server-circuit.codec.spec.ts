@@ -8,17 +8,17 @@ import {
   toCircuitFileV0,
   WIRE_TYPE_ID
 } from './server-circuit.codec';
-import { EmbeddedDependency } from '../../api/models/dependencies';
-import { CircuitFileService } from '../file/circuit-file.service';
-import { Project } from '../../project/project';
-import { ProjectElement } from '../../api/models/project-element';
-import { ComponentProviderService } from '../../components/component-provider.service';
-import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
 import {
   BuiltInComponentType,
-  CUSTOM_TYPE_ID_BASE
-} from '../../components/component-type.enum';
-import { SerializedCircuitBody } from '../serialized-circuit';
+  CUSTOM_TYPE_ID_BASE,
+  EmbeddedDependency,
+  ProjectElement,
+  SerializedCircuitBody
+} from '@logigator/core';
+import { CircuitFileService } from '../file/circuit-file.service';
+import { Project } from '../../project/project';
+import { ComponentProviderService } from '../../components/component-provider.service';
+import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
 
 // The server transport is legacy v0-over-HTTP: decode routes through the
 // permanent `v0ToV1` migration (covered in v0-to-v1.migration.spec), encode

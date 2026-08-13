@@ -5,7 +5,7 @@ import {
   snapshotsShareSpan,
   WireSnapshot
 } from './wire-snapshot.model';
-import { WireDirection } from './wire-direction.enum';
+import { WireDirection } from '@logigator/core';
 
 function h(x: number, y: number, length: number): WireSnapshot {
   return {

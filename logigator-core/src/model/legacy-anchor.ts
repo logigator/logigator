@@ -1,5 +1,5 @@
-import { Direction } from '../utils/direction';
-import { BuiltInComponentType } from '../components/component-type.enum';
+import { Direction } from './direction';
+import { BuiltInComponentType } from './component-type.enum';
 
 /**
  * Shared legacy-anchor geometry for the positional v0 format. The old editor

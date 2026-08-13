@@ -4,7 +4,7 @@ import {
   encodeComponentPositions,
   PositionDeltaDecodeError
 } from './position-delta.codec';
-import { SerializedComponentBody } from './serialized-circuit';
+import { SerializedComponentBody } from '../model/serialized-circuit';
 
 const comp = (
   type: number,

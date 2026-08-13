@@ -1,7 +1,7 @@
 import { Component } from '../component';
 import { ComponentConfig } from '../component-config.model';
 import { CustomComponentOptions } from './custom-component.config';
-import { CustomComponentDefinition } from './custom-component-definition.model';
+import { CustomComponentDefinition } from '@logigator/core';
 
 /**
  * The single rendering class backing **every** custom component type: a

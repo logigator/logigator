@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Point, Rectangle } from 'pixi.js';
-import { Direction } from '../utils/direction';
+import { Direction } from '@logigator/core';
 import {
   bodyGridBounds,
   bodyGridBoundsIntersects,

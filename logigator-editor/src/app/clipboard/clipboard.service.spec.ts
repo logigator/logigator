@@ -6,10 +6,9 @@ import { ClipboardService } from './clipboard.service';
 import { Project } from '../project/project';
 import { Component } from '../components/component';
 import { Wire } from '../wires/wire';
-import { WireDirection } from '../wires/wire-direction.enum';
+import { Direction, WireDirection } from '@logigator/core';
 import { ActionContainer } from '../actions/action-container';
 import { ProjectMetadataStore } from '../persistence/project-metadata.store';
-import { Direction } from '../utils/direction';
 import { makeAnd, makeInput } from '../../testing/factories';
 
 // ── helpers ───────────────────────────────────────────────────────────────────

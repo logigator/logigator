@@ -2,11 +2,13 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { Point } from 'pixi.js';
 import { TestBed } from '@angular/core/testing';
 import { configureTestBed } from '../../testing/configure-test-bed';
-import { BuiltInComponentType } from '../components/component-type.enum';
+import {
+  BuiltInComponentType,
+  SerializedCircuitBody,
+  WireDirection
+} from '@logigator/core';
 import { ComponentProviderService } from '../components/component-provider.service';
 import { buildProject, instantiateBody } from './circuit-builder';
-import { SerializedCircuitBody } from './serialized-circuit';
-import { WireDirection } from '../wires/wire-direction.enum';
 import { makeWire } from '../../testing/factories';
 
 // The simulation watch tables are keyed by element position in the body

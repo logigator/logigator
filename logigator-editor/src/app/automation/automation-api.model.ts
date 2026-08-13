@@ -10,10 +10,7 @@
  * attached, so the shape an agent reads is the shape it writes back.
  */
 
-import {
-  SerializedComponentBody,
-  SerializedWireBody
-} from '../persistence/serialized-circuit';
+import { SerializedComponentBody, SerializedWireBody } from '@logigator/core';
 
 /**
  * Contract version, bumped on any breaking change to the shapes in this file.

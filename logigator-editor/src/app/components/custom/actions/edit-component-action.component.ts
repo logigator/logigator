@@ -5,7 +5,7 @@ import { CustomComponentRegistry } from '../custom-component-registry.service';
 import { CustomComponentService } from '../../../custom-component/custom-component.service';
 import { UserService } from '../../../user/user.service';
 import { ProjectMetadataStore } from '../../../persistence/project-metadata.store';
-import { CUSTOM_TYPE_ID_BASE } from '../../component-type.enum';
+import { CUSTOM_TYPE_ID_BASE } from '@logigator/core';
 import { TranslateDirective } from '../../../translation/translate.directive';
 
 /**

@@ -8,7 +8,7 @@ import { ComponentConfig } from './component-config.model';
 import { andComponentConfig } from './component-types/and/and.config';
 import { romComponentConfig } from './component-types/rom/rom.config';
 import { PX } from '../utils/grid';
-import { Direction } from '../utils/direction';
+import { Direction } from '@logigator/core';
 import {
   makeAnd,
   makeButton,

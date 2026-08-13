@@ -3,7 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { Container, BitmapText } from 'pixi.js';
 import { PX } from '../../utils/grid';
 import { CANVAS_FONT_FAMILY } from '../../utils/text-fit';
-import { Direction } from '../../utils/direction';
+import { Direction } from '@logigator/core';
 import { configureTestBed } from '../../../testing/configure-test-bed';
 import { Component } from '../component';
 import { ComponentProviderService } from '../component-provider.service';

@@ -1,6 +1,9 @@
 import type { CircuitResource } from './shared';
-import type { ProjectElement } from './project-element';
-import type { DependencyMapping, DependencySnapshot } from './dependencies';
+import {
+  type DependencyMapping,
+  type DependencySnapshot,
+  type ProjectElement
+} from '@logigator/core';
 
 // ---- Entity (list / summary) ----
 

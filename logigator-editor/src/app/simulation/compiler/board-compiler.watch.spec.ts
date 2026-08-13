@@ -7,10 +7,9 @@ import { Component } from '../../components/component';
 import { ComponentProviderService } from '../../components/component-provider.service';
 import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
 import { outputComponentConfig } from '../../components/component-types/output/output.config';
-import { SerializedCircuitBody } from '../../persistence/serialized-circuit';
+import { SerializedCircuitBody, WireDirection } from '@logigator/core';
 import { Project } from '../../project/project';
 import { Wire } from '../../wires/wire';
-import { WireDirection } from '../../wires/wire-direction.enum';
 import { BoardCompilerService } from './board-compiler.service';
 
 /** Wire spanning the two given half-grid termination points (axis-aligned). */

@@ -1,8 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { configureTestBed } from '../../../../testing/configure-test-bed';
 import { makeSwitch } from '../../../../testing/factories';
-import { BuiltInComponentType } from '../../component-type.enum';
-import { Direction } from '../../../utils/direction';
+import { BuiltInComponentType, Direction } from '@logigator/core';
 import { switchComponentConfig } from './switch.config';
 
 describe('SwitchComponent', () => {

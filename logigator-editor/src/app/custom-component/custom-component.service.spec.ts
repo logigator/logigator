@@ -25,7 +25,7 @@ import {
   FakeBrowserProjectStore
 } from '../../testing/fake-browser-stores';
 import { makeInput } from '../../testing/factories';
-import { BuiltInComponentType } from '../components/component-type.enum';
+import { BuiltInComponentType } from '@logigator/core';
 import { InputComponent } from '../components/component-types/input/input.component';
 import { collectSnapshots } from '../persistence/snapshots';
 

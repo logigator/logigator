@@ -1,7 +1,7 @@
 import { ComponentConfig, LocalizableText } from '../component-config.model';
 import { ComponentCategory } from '../component-category.enum';
 import { ComponentOption } from '../component-option';
-import { CustomComponentDefinition } from './custom-component-definition.model';
+import { CustomComponentDefinition } from '@logigator/core';
 import { CustomComponent } from './custom-component';
 import { SubCircuitWatch } from './sub-circuit-watch';
 import { EditComponentAction } from './actions/edit-component.component-action';

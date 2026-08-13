@@ -5,7 +5,7 @@ import { makeAnd } from '../../../testing/factories';
 import { Component } from '../../components/component';
 import { ComponentProviderService } from '../../components/component-provider.service';
 import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
-import { BuiltInComponentType } from '../../components/component-type.enum';
+import { BuiltInComponentType } from '@logigator/core';
 import { Project } from '../../project/project';
 import { BoardCompilerService } from './board-compiler.service';
 

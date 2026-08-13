@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Component } from '../../components/component';
-import { BuiltInComponentType } from '../../components/component-type.enum';
+import { BuiltInComponentType } from '@logigator/core';
 import { Project } from '../../project/project';
 import { SimulationService } from '../../simulation/simulation.service';
 import { TOP_LEVEL_PATH } from '../../simulation/compiler/compiled-board.model';

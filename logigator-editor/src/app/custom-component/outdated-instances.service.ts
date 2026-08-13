@@ -4,7 +4,7 @@ import { of, scan, startWith, switchMap } from 'rxjs';
 import { ProjectService } from '../project/project.service';
 import { CustomComponentRegistry } from '../components/custom/custom-component-registry.service';
 import { CustomComponent } from '../components/custom/custom-component';
-import { CUSTOM_TYPE_ID_BASE } from '../components/component-type.enum';
+import { CUSTOM_TYPE_ID_BASE } from '@logigator/core';
 
 /**
  * Owns "a placed instance is behind its master": the predicate itself, which

@@ -6,12 +6,14 @@ import { v0ToV1Migration } from './v0-to-v1.migration';
 import { MigrationContext } from './migration';
 import { ComponentProviderService } from '../../../components/component-provider.service';
 import { LoggingService } from '../../../logging/logging.service';
-import { InvalidFileError } from '../circuit-file.errors';
-import { CircuitFileV0 } from '../circuit-file.types';
-import { BuiltInComponentType } from '../../../components/component-type.enum';
+import {
+  BuiltInComponentType,
+  CircuitFileV0,
+  decodeComponentPositions,
+  decodeWireChain,
+  InvalidFileError
+} from '@logigator/core';
 import { LegacyV0Slots } from '../../../components/component-config.model';
-import { decodeWireChain } from '../../wire-chain.codec';
-import { decodeComponentPositions } from '../../position-delta.codec';
 
 describe('v0ToV1Migration', () => {
   let ctx: MigrationContext;

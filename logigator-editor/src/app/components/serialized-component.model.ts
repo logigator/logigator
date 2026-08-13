@@ -1,5 +1,4 @@
-import { ComponentType } from './component-type.enum';
-import { Direction } from '../utils/direction';
+import { ComponentType, Direction } from '@logigator/core';
 
 export interface SerializedComponent {
   id: number;
