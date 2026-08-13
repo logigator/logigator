@@ -162,6 +162,17 @@ export {
 } from './format/circuit-file.errors';
 export { validateCurrentCircuitFile } from './format/circuit-file-validator';
 export {
+  detectVersion,
+  migrateToCurrent
+} from './format/circuit-file-migrator';
+export { MIGRATIONS } from './format/migrations/migrations';
+export type {
+  Migration,
+  MigrationContext
+} from './format/migrations/migration';
+export { assembleCircuitFile } from './format/assemble-circuit-file';
+export type { AssembledCircuitFile } from './format/assemble-circuit-file';
+export {
   LGIX_CONTAINER_VERSION,
   decodeLgix,
   encodeLgix,

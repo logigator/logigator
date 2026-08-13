@@ -76,13 +76,8 @@ src/app/persistence/
 │   ├── browser-project.store.ts  # IndexedDB CRUD for saved projects
 │   ├── browser-component.store.ts# IndexedDB CRUD for library masters
 │   └── component-id-map.store.ts # Durable old→new id map written on component promotion
-└── file/                         # Native versioned file format + migrations
-    ├── circuit-file-migrator.ts  # detectVersion + migrateToCurrent (chain runner + validation)
-    ├── circuit-file.service.ts   # toJson / decode / deserialize / fromJson (the file codec)
-    └── migrations/
-        ├── migration.ts          # Migration<TIn,TOut> + MigrationContext
-        ├── v0-to-v1.migration.ts # v0 (legacy) → v1 (registry-backed; reads legacyV0Slots)
-        └── migrations.ts         # MIGRATIONS — the ordered chain
+└── file/                         # Native versioned file format — the Angular adapter
+    └── circuit-file.service.ts   # toJson / decode / deserialize / fromJson (the file codec)
 ```
 
 ### Core's share of the layer
@@ -103,13 +98,25 @@ logigator-core/src/
 │   ├── wire-chain.codec.ts       # Persisted wire encoding: chain string with relative heads
 │   ├── position-delta.codec.ts   # Persisted component positions: (type,y,x) sort + deltas
 │   └── persisted-definition.codec.ts # SnapshotDefinition ↔ persisted form (delta components, chain wires)
-└── format/                       # The versioned envelope
+└── format/                       # The versioned envelope + the migration chain
     ├── circuit-file-version.ts   # CURRENT_FILE_VERSION
     ├── circuit-file.types.ts     # CircuitFileV0/V1 envelopes; CurrentCircuitFile
     ├── circuit-file.errors.ts    # InvalidFileError, UnsupportedVersionError
     ├── circuit-file-validator.ts # Structural validation of a current-version document
-    └── lgix-container.ts         # .lgix export framing: gzip + magic-byte header (encode/decode)
+    ├── circuit-file-migrator.ts  # detectVersion + migrateToCurrent (chain runner + validation)
+    ├── assemble-circuit-file.ts  # body + definitions → document (the write half)
+    ├── lgix-container.ts         # .lgix export framing: gzip + magic-byte header (encode/decode)
+    └── migrations/
+        ├── migration.ts          # Migration<TIn,TOut> + MigrationContext
+        ├── v0-to-v1.migration.ts # v0 (legacy) → v1 (meta-backed; reads legacyV0Slots)
+        └── migrations.ts         # MIGRATIONS — the ordered chain
 ```
+
+`MigrationContext` is `{ catalog, log }` — a `type → ComponentMeta` lookup and an
+`info`/`warn` sink, both plain functions. That is what lets the chain run
+anywhere: `CircuitFileService` answers `catalog` from the component registry's
+configs and forwards the sink to `LoggingService`, while the server answers from
+`builtInMeta` and collects the warnings into its parse result.
 
 Everything above is re-exported from `@logigator/core`, so the editor imports it by
 package name and never by path. The split follows the boundary rule **core =
@@ -324,11 +331,11 @@ Rules that keep the format maintainable:
 `MIGRATIONS` (`migrations/migrations.ts`) is the ordered list; `v0ToV1` is the only entry
 today, with future native `v1→v2…` steps appended.
 
-**Migration rule:** a migration _may_ read the component registry (option metadata,
-`legacyV0Slots`) and log via its `MigrationContext` (`{ componentProvider, logging }`),
+**Migration rule:** a migration _may_ read a type's catalog data (option schemas,
+`legacyV0Slots`) and report progress via its `MigrationContext` (`{ catalog, log }`),
 but must **not** instantiate render objects. Decoding legacy positional slots into named
-options needs the config schemas — that is the only reason the registry is in the
-context. Native version→version migrations are pure data transforms and ignore it.
+options needs the option schemas and the slot map — that is the only reason `catalog` is
+in the context. Native version→version migrations are pure data transforms and ignore it.
 
 ### `v0-to-v1.migration.ts`
 

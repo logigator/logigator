@@ -149,7 +149,7 @@ An observable wrapper around a single configurable value.
 
 ### Option implementations
 
-The concrete option classes (`NumberComponentOption`, `SelectButtonComponentOption<T>`, `SelectDropdownComponentOption<T>`, `DirectionComponentOption`, `TextAreaComponentOption`, `TextInputComponentOption`) live in per-kind folders under `component-options/`, alongside the Angular components that render them in the side panel. See [`component-options.md`](component-options.md) for the option model, the renderer contract, and how to add a new option kind. Writing to `DirectionComponentOption.value` from the side panel flows into `Component.direction = ...`, which fires `portsChange$` and lets the CP manager rebuild dots at the new tip positions.
+The concrete option classes (`NumberComponentOption`, `SelectButtonComponentOption<T>`, `SelectDropdownComponentOption<T>`, `TextAreaComponentOption`, `TextInputComponentOption`) live in per-kind folders under `component-options/`, alongside the Angular components that render them in the side panel. See [`component-options.md`](component-options.md) for the option model, the renderer contract, and how to add a new option kind. Writing to `DirectionComponentOption.value` from the side panel flows into `Component.direction = ...`, which fires `portsChange$` and lets the CP manager rebuild dots at the new tip positions.
 
 ---
 

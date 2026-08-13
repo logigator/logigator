@@ -1,15 +1,13 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { TestBed } from '@angular/core/testing';
 import { detectVersion, migrateToCurrent } from './circuit-file-migrator';
 import { MigrationContext } from './migrations/migration';
-import { ComponentProviderService } from '../../components/component-provider.service';
-import { LoggingService } from '../../logging/logging.service';
+import { builtInMeta } from '../catalog/built-in-meta';
+import { CURRENT_FILE_VERSION } from './circuit-file-version';
+import { CircuitFileV1 } from './circuit-file.types';
 import {
-  CircuitFileV1,
-  CURRENT_FILE_VERSION,
   InvalidFileError,
   UnsupportedVersionError
-} from '@logigator/core';
+} from './circuit-file.errors';
 
 describe('circuit-file-migrator', () => {
   describe('detectVersion', () => {
@@ -42,12 +40,16 @@ describe('circuit-file-migrator', () => {
 
   describe('migrateToCurrent', () => {
     let ctx: MigrationContext;
+    let messages: string[];
 
     beforeEach(() => {
-      TestBed.configureTestingModule({});
+      messages = [];
       ctx = {
-        componentProvider: TestBed.inject(ComponentProviderService),
-        logging: TestBed.inject(LoggingService)
+        catalog: builtInMeta,
+        log: {
+          info: (message) => messages.push(message),
+          warn: (message) => messages.push(message)
+        }
       };
     });
 
@@ -77,6 +79,7 @@ describe('circuit-file-migrator', () => {
       expect(result.name).toBe('Legacy');
       expect(result.components.length).toBe(1);
       expect(result.definitions).toEqual([]);
+      expect(messages).toEqual(['Migrated circuit 0 -> 1']);
     });
   });
 });

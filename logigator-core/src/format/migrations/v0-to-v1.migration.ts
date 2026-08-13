@@ -1,26 +1,33 @@
 import { Migration, MigrationContext } from './migration';
 import {
   BuiltInComponentType,
-  CircuitFileV0,
-  CircuitFileV1,
-  CUSTOM_TYPE_ID_BASE,
-  Direction,
-  encodeComponentPositions,
-  encodeWireChain,
-  InvalidFileError,
+  CUSTOM_TYPE_ID_BASE
+} from '../../model/component-type.enum';
+import { Direction } from '../../model/direction';
+import { WireDirection } from '../../model/wire-direction.enum';
+import { ProjectElement } from '../../model/project-element';
+import {
+  SerializedComponentBody,
+  SerializedWireBody,
+  SnapshotDefinition
+} from '../../model/serialized-circuit';
+import {
   legacyAnchorToPivot,
   legacyBodyHeight,
   legacyBodyWidth,
-  LegacyComponentDefinition,
-  legacyCustomBodySize,
-  ProjectElement,
-  SerializedComponentBody,
-  SerializedWireBody,
-  SnapshotDefinition,
-  toPersistedDefinition,
-  WireDirection
-} from '@logigator/core';
-import { ComponentConfig } from '../../../components/component-config.model';
+  legacyCustomBodySize
+} from '../../model/legacy-anchor';
+import { encodeComponentPositions } from '../../codecs/position-delta.codec';
+import { encodeWireChain } from '../../codecs/wire-chain.codec';
+import { toPersistedDefinition } from '../../codecs/persisted-definition.codec';
+import {
+  CircuitFileV0,
+  CircuitFileV1,
+  LegacyComponentDefinition
+} from '../circuit-file.types';
+import { InvalidFileError } from '../circuit-file.errors';
+import { ComponentMeta } from '../../catalog/component-meta';
+import { defaultOptionValues } from '../../catalog/option-schema';
 
 /** Old editor's ElementTypeId.WIRE — the canonical type ID for wires in the v0 format. */
 const WIRE_TYPE_ID = 0;
@@ -49,21 +56,18 @@ function legacyWireToBody(el: ProjectElement): SerializedWireBody {
 
 /**
  * Decodes a v0 element's positional option slots into **named** option values,
- * driven by the config's {@link ComponentConfig.legacyV0Slots} descriptor. Every
+ * driven by the type's {@link ComponentMeta.legacyV0Slots} descriptor. Every
  * option starts at its default; the descriptor then overrides those it maps to a
  * present `i`/`o`/`n`/`s` field (`r` is decoded generically into the body's
- * first-class `direction`, not an option). Pure: reads only config metadata,
+ * first-class `direction`, not an option). Pure: reads only catalog metadata,
  * builds no render objects.
  */
 function decodeOptions(
   element: ProjectElement,
-  config: ComponentConfig
+  meta: ComponentMeta
 ): Record<string, unknown> {
-  const slots = config.legacyV0Slots ?? {};
-  const values: Record<string, unknown> = {};
-  for (const [key, proto] of Object.entries(config.options)) {
-    values[key] = proto.value;
-  }
+  const slots = meta.legacyV0Slots ?? {};
+  const values = defaultOptionValues(meta.options);
 
   if (slots.i && element.i !== undefined) values[slots.i] = element.i;
   if (slots.o && element.o !== undefined) values[slots.o] = element.o;
@@ -122,11 +126,10 @@ function decodeElements(
       continue;
     }
 
-    const config = ctx.componentProvider.getComponent(element.t);
-    if (!config || !config.legacyV0Slots) {
-      ctx.logging.warn(
-        `Unknown component type ID: ${element.t} — skipping element at [${element.p[0]}, ${element.p[1]}]`,
-        'v0ToV1Migration'
+    const meta = ctx.catalog(element.t);
+    if (!meta || !meta.legacyV0Slots) {
+      ctx.log.warn(
+        `Unknown component type ID: ${element.t} — skipping element at [${element.p[0]}, ${element.p[1]}]`
       );
       continue;
     }
@@ -145,7 +148,7 @@ function decodeElements(
       element.n
     );
 
-    const options = decodeOptions(element, config);
+    const options = decodeOptions(element, meta);
     if (
       element.t === BuiltInComponentType.TEXT &&
       typeof element.n?.[0] === 'number'

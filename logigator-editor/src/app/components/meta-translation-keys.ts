@@ -46,9 +46,19 @@ interface TranslatableMeta {
   readonly options: Readonly<Record<string, { readonly label: string }>>;
 }
 
-/** Every display string one meta contributes. */
+type SchemasOf<M extends TranslatableMeta> = M['options'][keyof M['options']];
+
+/**
+ * Every display string one meta contributes. `placeholder` and `dialogTitle`
+ * are optional per schema kind, so they are picked out of the union rather than
+ * indexed — indexing would fail on the kinds that lack them.
+ */
 type MetaKeys<M extends TranslatableMeta> =
-  M['name'] | M['description'] | M['options'][keyof M['options']]['label'];
+  | M['name']
+  | M['description']
+  | SchemasOf<M>['label']
+  | Extract<SchemasOf<M>, { placeholder: string }>['placeholder']
+  | Extract<SchemasOf<M>, { dialogTitle: string }>['dialogTitle'];
 
 export type BuiltInTranslationKeys =
   | MetaKeys<typeof andMeta>

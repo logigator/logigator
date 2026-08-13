@@ -1,12 +1,12 @@
 import { MIGRATIONS } from './migrations/migrations';
 import { MigrationContext } from './migrations/migration';
+import { CURRENT_FILE_VERSION } from './circuit-file-version';
+import { CurrentCircuitFile } from './circuit-file.types';
 import {
-  CURRENT_FILE_VERSION,
-  CurrentCircuitFile,
   InvalidFileError,
-  UnsupportedVersionError,
-  validateCurrentCircuitFile
-} from '@logigator/core';
+  UnsupportedVersionError
+} from './circuit-file.errors';
+import { validateCurrentCircuitFile } from './circuit-file-validator';
 
 /**
  * Reads a parsed file's format version. Legacy files have no `version` field, so
@@ -47,10 +47,7 @@ export function migrateToCurrent(
       throw new InvalidFileError(`No migration path from version ${version}`);
     }
     current = migration.migrate(current, ctx);
-    ctx.logging.info(
-      `Migrated circuit ${migration.from} -> ${migration.to}`,
-      'CircuitFileMigrator'
-    );
+    ctx.log.info(`Migrated circuit ${migration.from} -> ${migration.to}`);
     version = migration.to;
   }
 

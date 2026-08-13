@@ -1,30 +1,23 @@
-/* eslint-disable @typescript-eslint/no-empty-function */
-
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { TestBed } from '@angular/core/testing';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { v0ToV1Migration } from './v0-to-v1.migration';
 import { MigrationContext } from './migration';
-import { ComponentProviderService } from '../../../components/component-provider.service';
-import { LoggingService } from '../../../logging/logging.service';
-import {
-  BuiltInComponentType,
-  CircuitFileV0,
-  decodeComponentPositions,
-  decodeWireChain,
-  InvalidFileError,
-  LegacyV0Slots
-} from '@logigator/core';
+import { builtInMeta } from '../../catalog/built-in-meta';
+import { LegacyV0Slots } from '../../catalog/component-meta';
+import { BuiltInComponentType } from '../../model/component-type.enum';
+import { decodeComponentPositions } from '../../codecs/position-delta.codec';
+import { decodeWireChain } from '../../codecs/wire-chain.codec';
+import { CircuitFileV0 } from '../circuit-file.types';
+import { InvalidFileError } from '../circuit-file.errors';
 
 describe('v0ToV1Migration', () => {
   let ctx: MigrationContext;
+  let warnings: string[];
 
   beforeEach(() => {
-    // Suppress console.warn from expected warning-path tests.
-    vi.spyOn(console, 'warn').mockImplementation(() => {});
-    TestBed.configureTestingModule({});
+    warnings = [];
     ctx = {
-      componentProvider: TestBed.inject(ComponentProviderService),
-      logging: TestBed.inject(LoggingService)
+      catalog: builtInMeta,
+      log: { info: () => undefined, warn: (message) => warnings.push(message) }
     };
   });
 
@@ -195,7 +188,6 @@ describe('v0ToV1Migration', () => {
   });
 
   it('drops unsupported component types with a warning', () => {
-    const warnSpy = vi.spyOn(ctx.logging, 'warn');
     const result = migrate({
       project: {
         elements: [
@@ -207,10 +199,9 @@ describe('v0ToV1Migration', () => {
 
     expect(result.components.length).toBe(1);
     expect(result.components[0].type).toBe(1);
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining('Unknown component type ID: 98'),
-      'v0ToV1Migration'
-    );
+    expect(warnings).toEqual([
+      expect.stringContaining('Unknown component type ID: 98')
+    ]);
   });
 
   it('decodes tunnel labels from s, falling back to the legacy numeric id', () => {
@@ -269,9 +260,7 @@ describe('v0ToV1Migration', () => {
 
     for (const [type, slots] of Object.entries(expected)) {
       it(`pins the descriptor for built-in type ${type}`, () => {
-        expect(
-          ctx.componentProvider.getComponent(Number(type))?.legacyV0Slots
-        ).toEqual(slots);
+        expect(builtInMeta(Number(type))?.legacyV0Slots).toEqual(slots);
       });
     }
   });

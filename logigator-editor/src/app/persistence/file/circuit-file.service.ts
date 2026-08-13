@@ -4,16 +4,16 @@ import { Component } from '../../components/component';
 import { Wire } from '../../wires/wire';
 import { ComponentProviderService } from '../../components/component-provider.service';
 import {
-  CURRENT_FILE_VERSION,
+  assembleCircuitFile,
   CurrentCircuitFile,
   CUSTOM_TYPE_ID_BASE,
   decodeComponentPositions,
   decodeWireChain,
-  encodeComponentPositions,
-  encodeWireChain,
   FileForkAttributionV1,
   fromPersistedDefinition,
   InvalidFileError,
+  migrateToCurrent,
+  MigrationContext,
   PersistedSnapshotDefinitionV1,
   PositionDeltaDecodeError,
   remapComponentTypes,
@@ -21,14 +21,11 @@ import {
   SerializedComponentBody,
   SerializedWireBody,
   SnapshotDefinition,
-  toPersistedDefinition,
   WireChainDecodeError
 } from '@logigator/core';
 import { instantiateBody } from '../circuit-builder';
 import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
 import { LoggingService } from '../../logging/logging.service';
-import { MigrationContext } from './migrations/migration';
-import { migrateToCurrent } from './circuit-file-migrator';
 import { collectSnapshots, serializeProjectBody } from '../snapshots';
 
 /**
@@ -48,10 +45,19 @@ export class CircuitFileService {
   private readonly registry = inject(CustomComponentRegistry);
   private readonly logging = inject(LoggingService);
 
+  /**
+   * Core's migration chain takes its catalog and its log as plain functions, so
+   * this is the whole Angular adapter: the registry's configs answer through
+   * their `meta`, and the two sinks land in `LoggingService`. (The server
+   * collects the same warnings into its parse result instead.)
+   */
   private get migrationContext(): MigrationContext {
     return {
-      componentProvider: this.componentProvider,
-      logging: this.logging
+      catalog: (type) => this.componentProvider.getComponent(type)?.meta,
+      log: {
+        info: (message) => this.logging.info(message, 'CircuitFileMigrator'),
+        warn: (message) => this.logging.warn(message, 'CircuitFileMigrator')
+      }
     };
   }
 
@@ -88,25 +94,15 @@ export class CircuitFileService {
       this.registry
     );
     const body = serializeProjectBody(project);
-    const wires = encodeWireChain(body.wires);
-    const components = encodeComponentPositions(
-      remapComponentTypes(body.components, sessionToLocal)
-    );
-
-    return {
-      file: {
-        version: CURRENT_FILE_VERSION,
-        name,
-        components: components.components,
-        wires: wires.text,
-        definitions: definitions.map(toPersistedDefinition),
-        // Fork lineage rides along only when the document has one — an empty
-        // field would suggest a checked-and-absent lineage rather than none.
-        ...(attribution?.length ? { attribution } : {})
+    return assembleCircuitFile(
+      {
+        components: remapComponentTypes(body.components, sessionToLocal),
+        wires: body.wires
       },
-      wireOrder: wires.order,
-      componentOrder: components.order
-    };
+      definitions,
+      name,
+      attribution
+    );
   }
 
   /**

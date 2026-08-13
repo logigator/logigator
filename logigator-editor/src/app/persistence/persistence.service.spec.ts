@@ -1033,7 +1033,7 @@ describe('PersistenceService', () => {
         expect(warnSpy).toHaveBeenCalledWith(
           '%c[%s]',
           'color:#888',
-          'v0ToV1Migration',
+          'CircuitFileMigrator',
           expect.stringContaining('Unknown component type ID: 999')
         );
       } finally {
