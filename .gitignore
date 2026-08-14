@@ -43,7 +43,10 @@ lerna-debug.log*
 *.launch
 .settings/
 *.sublime-workspace
+
+# Local planning and scratch notes
 plans/
+/todo.md
 
 # IDE - VSCode
 .vscode/*
