@@ -1,5 +1,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { eq } from 'drizzle-orm';
 import { userResponseSchema } from '@logigator/contract';
+import { users } from '../src/database/schema';
 import { CookieJar } from './cookie-jar';
 import { startE2eApp, type E2eApp } from './harness';
 
@@ -248,6 +250,65 @@ describe('local authentication', () => {
 
     expect(response.statusCode).toBe(204);
     expect(api.mail.sent).toHaveLength(0);
+  });
+});
+
+describe('accounts migrated from the legacy backend', () => {
+  let api: E2eApp;
+
+  /**
+   * A row as the migration will write it: a hash the legacy stack produced with
+   * `bcrypt` at 9 salt rounds, and an address it had already verified. Nothing
+   * about it goes through the new registration path, which is the point — this is
+   * the shape the database will be full of on cutover day.
+   */
+  const legacy = {
+    username: 'Alan',
+    email: 'alan@example.com',
+    password: 'correct horse battery staple',
+    hash: '$2b$09$18bH31m/iSlckJkNuwtz2.Lsp.hLj2qqcwFcgHaTzWmJS5zMLTWTe'
+  };
+
+  beforeAll(async () => {
+    // Cost 12, so the legacy hash is below it and the login has a reason to
+    // rewrite it. The rest of the suite runs cheaper.
+    api = await startE2eApp({ BCRYPT_COST: '12' });
+    await api.db.insert(users).values({
+      username: legacy.username,
+      email: legacy.email,
+      passwordHash: legacy.hash,
+      emailVerified: true
+    });
+  });
+
+  afterAll(async () => {
+    await api.close();
+  });
+
+  it('signs in with its old password and strengthens the stored hash', async () => {
+    const response = await api.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      payload: { email: legacy.email, password: legacy.password }
+    });
+
+    expect(response.statusCode).toBe(200);
+
+    const [stored] = await api.db
+      .select()
+      .from(users)
+      .where(eq(users.email, legacy.email));
+    // Rewritten at the current cost — the one moment the password is known.
+    expect(stored.passwordHash).not.toBe(legacy.hash);
+    expect(stored.passwordHash?.startsWith('$2b$12$')).toBe(true);
+
+    // And the account still belongs to the same password afterwards.
+    const again = await api.inject({
+      method: 'POST',
+      url: '/api/auth/login',
+      payload: { email: legacy.email, password: legacy.password }
+    });
+    expect(again.statusCode).toBe(200);
   });
 });
 
