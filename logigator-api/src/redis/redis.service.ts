@@ -65,6 +65,20 @@ export class RedisService {
   }
 
   /**
+   * Reads a value and deletes it in one command, so it is usable at most once
+   * even when two requests arrive together — what a one-shot mail token needs.
+   */
+  async takeJson<T>(key: string): Promise<T | null> {
+    const raw = await this.client.getDel(this.key(key));
+    if (raw === null) return null;
+    try {
+      return JSON.parse(raw) as T;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
    * Atomically counts a hit in a fixed window and returns the count so far. The
    * expiry is set when the counter is created, so the window starts with its
    * first hit and the key disappears on its own.

@@ -23,6 +23,7 @@ const CODE_BY_STATUS = new Map<number, ApiErrorCode>([
   [HttpStatus.NOT_FOUND, 'not_found'],
   [HttpStatus.CONFLICT, 'conflict'],
   [HttpStatus.UNPROCESSABLE_ENTITY, 'validation_failed'],
+  [HttpStatus.TOO_MANY_REQUESTS, 'rate_limited'],
   [HttpStatus.SERVICE_UNAVAILABLE, 'service_unavailable']
 ]);
 

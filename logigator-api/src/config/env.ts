@@ -1,12 +1,24 @@
 import { z } from 'zod';
 
 /**
+ * The session secret a development machine runs on. Every variable is defaulted
+ * so a bare `docker compose up` works, and a secret is no exception — but a
+ * production deployment holding this value would let anyone forge a session
+ * cookie, so the schema refuses to start there. Its being a fixed constant
+ * rather than a per-boot random value is deliberate: the dev loop restarts on
+ * every edit, and a fresh secret each time would sign every developer out
+ * constantly.
+ */
+export const DEVELOPMENT_SESSION_SECRET =
+  'logigator-development-session-secret';
+
+/**
  * Every environment variable the API reads. Configuration is env-only — there
  * is no `config/*.json` convention any more — and it is validated once, at
  * bootstrap, so a misconfigured deployment fails immediately with a readable
  * report instead of on the first request that happens to need a value.
  */
-export const envSchema = z.object({
+const variables = z.object({
   NODE_ENV: z
     .enum(['development', 'production', 'test'])
     .default('development'),
@@ -47,8 +59,57 @@ export const envSchema = z.object({
    * and logged instead of sent, which is the only sane development default.
    */
   SMTP_URL: z.string().optional(),
-  MAIL_FROM: z.string().min(1).default('Logigator <noreply@logigator.com>')
+  MAIL_FROM: z.string().min(1).default('Logigator <noreply@logigator.com>'),
+
+  /** Signs the session cookie. `@fastify/session` requires 32 characters or more. */
+  SESSION_SECRET: z.string().min(32).default(DEVELOPMENT_SESSION_SECRET),
+  SESSION_COOKIE_NAME: z.string().min(1).default('lg_sid'),
+  /** How long a session survives. Sliding: every request pushes it out again. */
+  SESSION_MAX_AGE_DAYS: z.coerce.number().int().min(1).default(30),
+  /**
+   * Whether cookies are `Secure`. Defaults to on in production, where Caddy
+   * terminates TLS, and off elsewhere so a plain-HTTP development origin can
+   * still hold a session.
+   */
+  COOKIE_SECURE: z.stringbool().optional(),
+  /** Set to share cookies across subdomains; unset keeps them host-only. */
+  COOKIE_DOMAIN: z.string().optional(),
+
+  /**
+   * How many reverse proxies sit in front of the process. `1` behind Caddy makes
+   * `request.ip` the real client address; `0` (the default) trusts no forwarding
+   * header, since a directly reachable server must not let callers choose their
+   * own address and slip the rate limiter.
+   */
+  TRUST_PROXY: z.coerce.number().int().min(0).max(10).default(0),
+
+  /** Lifetime of the one-shot mail tokens (verification, password reset). */
+  AUTH_TOKEN_TTL_MINUTES: z.coerce.number().int().min(1).default(60),
+  /** Cost of new bcrypt hashes. Legacy hashes carry their own and verify unchanged. */
+  BCRYPT_COST: z.coerce.number().int().min(4).max(15).default(12)
 });
+
+export const envSchema = variables
+  .check((ctx) => {
+    if (
+      ctx.value.NODE_ENV === 'production' &&
+      ctx.value.SESSION_SECRET === DEVELOPMENT_SESSION_SECRET
+    ) {
+      ctx.issues.push({
+        code: 'custom',
+        input: ctx.value.SESSION_SECRET,
+        path: ['SESSION_SECRET'],
+        message:
+          'must be set to a private value in production — the development default is public'
+      });
+    }
+  })
+  // Resolved here rather than left optional, so every consumer reads a boolean
+  // and nobody re-derives the rule.
+  .transform((env) => ({
+    ...env,
+    COOKIE_SECURE: env.COOKIE_SECURE ?? env.NODE_ENV === 'production'
+  }));
 
 export type Env = z.infer<typeof envSchema>;
 

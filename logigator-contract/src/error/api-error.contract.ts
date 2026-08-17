@@ -20,7 +20,15 @@ export const apiErrorCodeSchema = z.enum([
   'validation_failed',
   'internal',
   /** A backing service the request needs is unreachable; retrying may succeed. */
-  'service_unavailable'
+  'service_unavailable',
+  /** Email or password did not match — as opposed to `unauthorized`, which is a missing session. */
+  'invalid_credentials',
+  /** The account exists but its address is unconfirmed; offer to resend the mail. */
+  'email_not_verified',
+  /** A one-shot mail token is unknown, already used, or expired. */
+  'token_invalid',
+  /** Too many attempts in the current window. */
+  'rate_limited'
 ]);
 
 export type ApiErrorCode = z.infer<typeof apiErrorCodeSchema>;

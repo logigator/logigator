@@ -2,14 +2,26 @@ import { type DynamicModule, Module } from '@nestjs/common';
 import { APP_FILTER } from '@nestjs/core';
 import { ENV, type Env } from './config/env';
 import { ApiExceptionFilter } from './common/api-exception.filter';
+import { AuthModule } from './auth/auth.module';
 import { DatabaseModule } from './database/database.module';
 import { HealthModule } from './health/health.module';
 import { MailModule } from './mail/mail.module';
 import { MetaModule } from './meta/meta.module';
 import { RedisModule } from './redis/redis.module';
+import { SessionModule } from './session/session.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
-  imports: [DatabaseModule, RedisModule, MailModule, HealthModule, MetaModule],
+  imports: [
+    DatabaseModule,
+    RedisModule,
+    SessionModule,
+    MailModule,
+    AuthModule,
+    UsersModule,
+    HealthModule,
+    MetaModule
+  ],
   // Registered as a provider rather than through `useGlobalFilters`, so the
   // filter is constructed by the container and specs get it from the module
   // under test without repeating the bootstrap wiring.

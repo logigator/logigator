@@ -27,3 +27,34 @@ export {
   type HealthCheck,
   type ReadinessResponse
 } from './health/health.contract';
+export {
+  emailSchema,
+  passwordSchema,
+  usernameSchema,
+  userResponseSchema,
+  updateUserRequestSchema,
+  updateUserResponseSchema,
+  deleteUserRequestSchema,
+  type UserResponse,
+  type UpdateUserRequest,
+  type UpdateUserResponse,
+  type DeleteUserRequest
+} from './user/user.contract';
+export {
+  registerRequestSchema,
+  registerResponseSchema,
+  loginRequestSchema,
+  loginResponseSchema,
+  resendVerificationRequestSchema,
+  verifyEmailRequestSchema,
+  requestPasswordResetSchema,
+  confirmPasswordResetSchema,
+  type RegisterRequest,
+  type RegisterResponse,
+  type LoginRequest,
+  type LoginResponse,
+  type ResendVerificationRequest,
+  type VerifyEmailRequest,
+  type RequestPasswordReset,
+  type ConfirmPasswordReset
+} from './auth/auth.contract';
