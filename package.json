@@ -32,6 +32,7 @@
     "test:core": "yarn workspace @logigator/core run test",
     "test:contract": "yarn workspace @logigator/contract run test",
     "test:api": "yarn workspace logigator-api run test",
+    "test:e2e:api": "yarn workspace logigator-api run test:e2e",
     "lint": "yarn lint:editor && yarn lint:ui && yarn lint:core && yarn lint:contract && yarn lint:api",
     "lint:editor": "ng lint logigator-editor",
     "lint:ui": "ng lint logigator-ui",

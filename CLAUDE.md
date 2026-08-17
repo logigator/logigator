@@ -35,6 +35,12 @@ Two packages stay **independent** (own `yarn.lock`/`.yarnrc.yml`, _not_ workspac
 Legacy backend config files must be created from `.example` files in `logigator-backend/config/`.
 `logigator-api` needs no config files: env vars only, all defaulted (`logigator-api/.env.example`).
 
+The dev compose stack runs both databases side by side until cutover — MySQL for the legacy backend,
+**Postgres for `logigator-api`** — plus one Redis they share (the API namespaces its keys). Both are
+published on localhost, so host-run tooling (`db:generate`, `db:migrate`, `test:e2e:api`) reaches
+them at `postgresql://logigator:logigator@localhost:5432/logigator` and `redis://localhost:6379`.
+`data/` holds both data directories and is ignored.
+
 ## Commands
 
 Every workspace member (editor, UI library, core, contract, API) runs **from the repo root** — the
@@ -58,10 +64,17 @@ yarn build:api                      # rspack bundle → dist/logigator-api
 yarn test                           # every package, single run each
 yarn test:editor                    # add --include='**/some.spec.ts' for one file
 yarn test:ui / test:core / test:contract / test:api
+yarn test:e2e:api                   # API against real Postgres + Redis (needs DATABASE_URL, REDIS_URL)
 yarn lint                           # eslint over all five; lint:fix writes the fixes
 yarn typecheck                      # tsc over core, contract, api (specs included)
 yarn format / format:fix            # Prettier over the whole repo
 ```
+
+The API's database scripts run from its own package (`yarn workspace logigator-api run …`):
+`db:generate` diffs the Drizzle schema into a new SQL migration under
+`logigator-api/drizzle/`, `db:check` validates the migration history, and `db:migrate` applies
+pending migrations through the bundled runner (`dist/logigator-api/migrate.js`) — the same function
+the E2E harness and a release call, so no path applies DDL that CI has not.
 
 `@logigator/ui` has no build script — every consumer compiles its source. The ng-packagr target in
 `angular.json` stays for an eventual publish and because the unit-test builder reads its build
@@ -163,7 +176,42 @@ without a build step.
 NestJS on the **Fastify adapter**, API only — no SSR, no asset pipeline. Env vars validated by a
 zod schema (`src/config/env.ts`) once at bootstrap; the parsed object is passed into
 `AppModule.forEnv(env)` and provided globally under the `ENV` token, so providers never read
-`process.env`. `GET /api/meta` reports core's `CURRENT_FILE_VERSION`.
+`process.env`. `GET /api/meta` reports core's `CURRENT_FILE_VERSION` plus the sign-in methods the
+deployment offers; `GET /api/health/ready` probes Postgres and Redis (503 naming the failing one),
+while `/api/meta` doubles as the liveness probe that reaches nothing.
+
+**`src/` layers:**
+
+- `config/` — the zod env schema. Every variable is defaulted so a bare `docker compose up` works;
+  the two rules that cannot be defaulted are enforced in the schema instead (production refuses the
+  public development `SESSION_SECRET`, and the Google credentials must be set together or not at
+  all). `COOKIE_SECURE` and the two OAuth URLs are _resolved_ in a transform, so consumers read
+  values rather than re-deriving rules.
+- `database/` — Drizzle over `pg`. `schema/` is the DDL in TypeScript (tables + `defineRelations`
+  for RQBv2), `drizzle/` the generated SQL migrations, `migrate.ts` the runner both the
+  `migrate.js` bundle entry and the E2E harness call. `DB` injects a typed `Database`; there are no
+  entity classes and no lazy relations.
+- `redis/` — one shared node-redis client, connected in a lifecycle hook (so unit specs can
+  instantiate the graph without a server) and namespaced by `REDIS_KEY_PREFIX`, because development
+  shares one Redis with the legacy backend.
+- `session/` — `@fastify/cookie` + `@fastify/session` over a small in-repo Redis store; sliding
+  expiry, `saveUninitialized: false`, and `SessionService` owning sign-in (id regenerated first),
+  sign-out and the non-httpOnly `isAuthenticated` hint cookie the editor reads.
+- `auth/` — local credentials (`AuthService`, bcrypt via `@node-rs/bcrypt`, rehash-on-login when a
+  stored hash predates the current cost), one-shot mail tokens in Redis (`AuthTokenService`), and
+  Google sign-in through `openid-client` (code flow + PKCE, state/verifier server-side, linking only
+  from inside an account). `AuthGuard` + `@CurrentUser()` are exported, never global.
+- `users/` — the caller's own account: profile, password, address change (confirmed by mail before
+  it takes effect), avatar, deletion (one cascading statement).
+- `mail/` — nodemailer plus rendering functions, four locales, HTML and text; unset `SMTP_URL` logs
+  the mail with its link instead of sending.
+- `storage/` — files on a volume under immutable random names (avatars now, previews next); the row
+  holds only the filename.
+- `common/` — the error filter and `ApiException`, the zod validation pipe (a shim to delete when
+  NestJS 12's `@Body({ schema })` lands), the Redis-backed `@RateLimit()` guard, and locale
+  resolution from the shared `preferences` cookie.
+- `app.setup.ts` — the plugin registration and route prefix shared by `main.ts` and the E2E
+  harness, so the specs exercise the same HTTP layer as production.
 
 **Build: Rspack** (`rspack.config.mjs`, following Rspack's NestJS guide), which is what lets the
 API compile the shared packages from source like every other consumer. NestJS 12 replaces its
@@ -197,6 +245,18 @@ may replace this config.
   Rename it and DI in specs breaks with `Cannot read properties of undefined`.
 - `rootDir: ".."` in the Node packages that map `paths`: their programs legitimately contain
   sibling-package source, and tsc validates the inferred root even under `noEmit`.
+- **`fastify` is pinned to the exact version `@nestjs/platform-fastify` depends on.** With two
+  copies installed, a plugin's type augmentation lands on one and Nest's `register` reads the other,
+  so `app.register(fastifyCookie)` fails to type-check.
+- **`migrate` is a second Rspack entry**, and the deploy artifact ships `drizzle/` beside it: the
+  runner reads migration SQL from disk (`__dirname/drizzle` by default, hence
+  `node: { __dirname: false }`), so a release applies migrations with plain `node` and no dev
+  tooling. drizzle-kit only ever _generates_ them.
+- Drizzle is pinned to an exact `1.0.0-rc` build. RQBv2 `defineRelations`, the DDL-snapshot
+  migration format and the consolidated zod integration are 1.0-only surfaces with no compat path
+  from 0.45; bump the pin when 1.0 stable ships. Relations name their columns explicitly and the
+  through-relations carry matching aliases — a user has two relations to projects (owns, starred)
+  and the builder refuses to guess.
 
 ### Legacy backend (logigator-backend)
 
@@ -248,3 +308,13 @@ source. Angular specs use `TestBed`; pure-logic specs don't. Shared editor helpe
 - `factories.ts` — `makeAnd`, `makeNot`, `makeWire`, `makeInput`, `makeMoveEvent` (circuit-element and pointer-event stubs)
 - `action-mocks.ts` — `makeAction` (mocked `Action` with named `do`/`undo` spies)
 - `vitest-helpers.ts` — `arrayWithExactContents` (asymmetric matcher replacing Jasmine's)
+
+The API additionally has an **E2E suite** (`logigator-api/test/*.e2e-spec.ts`, its own
+`vitest.e2e.config.ts`, `yarn test:e2e:api`) that boots the real application through
+`app.setup.ts` and drives it with injected requests. It is a separate script because it needs a real
+Postgres and Redis: `yarn test:api` must stay runnable anywhere, and a suite that skipped itself
+without a database would report green having tested nothing. `test/harness.ts` creates a throwaway
+database per spec file and migrates it with the runner a release uses; Redis keys are namespaced per
+run and deleted afterwards. Only two things differ from production — the mail transport is captured
+(`test/mail-capture.ts`, so specs read the link a recipient would click) and bcrypt runs at its
+minimum cost. `test/cookie-jar.ts` carries cookies across requests the way a browser would.

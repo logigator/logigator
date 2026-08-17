@@ -1,6 +1,8 @@
-/* Type checking including the specs, which tsconfig.json excludes. */
+/* Type checking including the specs, which tsconfig.json excludes: the unit
+   specs beside the source, and the E2E suite in `test/` (which imports the
+   application's own modules, so it is part of the same program). */
 {
   "extends": "./tsconfig.json",
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "test/**/*.ts"],
   "exclude": []
 }

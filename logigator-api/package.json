@@ -12,13 +12,14 @@
     "build": "rspack build",
     "watch": "rspack build --watch",
     "serve": "node --enable-source-maps ../dist/logigator-api/main.js",
-    "lint": "eslint --config eslint.config.mjs src",
-    "lint:fix": "eslint --config eslint.config.mjs src --fix",
+    "lint": "eslint --config eslint.config.mjs src test",
+    "lint:fix": "eslint --config eslint.config.mjs src test --fix",
     "db:generate": "drizzle-kit generate",
     "db:check": "drizzle-kit check",
     "db:migrate": "rspack build && node ../dist/logigator-api/migrate.js ./drizzle",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:e2e": "vitest run --config vitest.e2e.config.ts",
     "typecheck": "tsc -p tsconfig.spec.json"
   },
   "dependencies": {
