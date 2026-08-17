@@ -15,7 +15,14 @@ import './session.types';
  */
 const AUTH_HINT_COOKIE = 'isAuthenticated';
 
-const DAY_IN_MS = 24 * 60 * 60 * 1000;
+/**
+ * Seconds, because that is what `Set-Cookie`'s `Max-Age` is and what
+ * `@fastify/cookie` passes through. `@fastify/session` redefines its own
+ * `cookie.maxAge` as milliseconds — the two are set in different units on
+ * purpose, and mixing them silently gives the hint cookie a lifetime a thousand
+ * times the session's.
+ */
+const DAY_IN_SECONDS = 24 * 60 * 60;
 
 /** Starts and ends signed-in sessions. */
 @Injectable()
@@ -39,7 +46,7 @@ export class SessionService {
     reply.setCookie(AUTH_HINT_COOKIE, 'true', {
       ...this.cookieOptions(),
       httpOnly: false,
-      maxAge: this.env.SESSION_MAX_AGE_DAYS * DAY_IN_MS
+      maxAge: this.env.SESSION_MAX_AGE_DAYS * DAY_IN_SECONDS
     });
   }
 

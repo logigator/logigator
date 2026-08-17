@@ -104,10 +104,24 @@ export class AuthService {
     const user = await this.users.findById(verification.userId);
     if (!user) throw invalidToken();
 
-    await this.users.update(user.id, {
-      email: verification.email,
-      emailVerified: true
-    });
+    try {
+      await this.users.update(user.id, {
+        email: verification.email,
+        emailVerified: true
+      });
+    } catch (error) {
+      // The address was free when the mail went out; an hour is long enough for
+      // somebody else to have taken it, and the unique constraint is the only
+      // place that can be noticed without a lock.
+      if (isUniqueViolation(error)) {
+        throw new ApiException(
+          HttpStatus.CONFLICT,
+          'conflict',
+          'That email address already has an account.'
+        );
+      }
+      throw error;
+    }
   }
 
   /**
@@ -201,6 +215,18 @@ export class AuthService {
       );
     }
   }
+}
+
+/**
+ * PostgreSQL's `unique_violation`, wherever it ended up in the chain: Drizzle
+ * wraps a driver error in its own and keeps the original as `cause`, so the code
+ * is one level down from what the query threw.
+ */
+function isUniqueViolation(error: unknown): boolean {
+  for (let current = error; current; current = (current as Error).cause) {
+    if ((current as { code?: unknown }).code === '23505') return true;
+  }
+  return false;
 }
 
 function invalidCredentials(): ApiException {

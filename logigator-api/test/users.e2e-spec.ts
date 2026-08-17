@@ -159,6 +159,39 @@ describe('the signed-in user', () => {
     expect(response.json().code).toBe('conflict');
   });
 
+  it('refuses a confirmation whose address was taken meanwhile', async () => {
+    // The address is free when the mail goes out, and the token lives an hour —
+    // long enough for somebody else to register it. The unique constraint is
+    // where that is noticed, and it has to read as a conflict, not a crash.
+    const change = await api.inject({
+      method: 'PATCH',
+      url: '/api/user',
+      headers: jar.headers(),
+      payload: { email: 'contested@example.com' }
+    });
+    expect(change.statusCode).toBe(200);
+    const token = api.mail.lastToken();
+
+    await api.inject({
+      method: 'POST',
+      url: '/api/auth/register',
+      payload: {
+        username: 'Squatter',
+        email: 'contested@example.com',
+        password: 'firstcome1'
+      }
+    });
+
+    const confirmation = await api.inject({
+      method: 'POST',
+      url: '/api/auth/verify-email',
+      payload: { token }
+    });
+
+    expect(confirmation.statusCode).toBe(409);
+    expect(confirmation.json().code).toBe('conflict');
+  });
+
   it('changes the password only with the current one', async () => {
     const withoutProof = await api.inject({
       method: 'PATCH',

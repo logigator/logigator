@@ -131,6 +131,10 @@ describe('local authentication', () => {
     const hint = response.cookies.find((c) => c.name === 'isAuthenticated');
     expect(hint?.value).toBe('true');
     expect(hint?.httpOnly).toBeFalsy();
+    // Seconds, not milliseconds: `Max-Age` is seconds and `@fastify/cookie`
+    // passes it through, while `@fastify/session` takes its own in milliseconds.
+    // Mixing the two gives the hint a lifetime a thousand times the session's.
+    expect(hint?.maxAge).toBe(api.env.SESSION_MAX_AGE_DAYS * 24 * 60 * 60);
 
     // The session is what authenticates, not the hint.
     const profile = await api.inject({
