@@ -61,6 +61,40 @@ const variables = z.object({
   SMTP_URL: z.string().optional(),
   MAIL_FROM: z.string().min(1).default('Logigator <noreply@logigator.com>'),
 
+  /**
+   * Google sign-in credentials. Both unset means the feature is off — a client
+   * secret has no sensible default, and a deployment without one must still
+   * start and serve local logins. `GET /meta` reports whether it is available,
+   * so a client never has to discover it from a failing route.
+   */
+  GOOGLE_CLIENT_ID: z.string().optional(),
+  GOOGLE_CLIENT_SECRET: z.string().optional(),
+  /**
+   * Where Google sends the browser back. Must match the redirect URI registered
+   * with the OAuth client exactly; defaults to this API's callback route under
+   * `PUBLIC_URL`.
+   */
+  GOOGLE_CALLBACK_URL: z.string().optional(),
+  /**
+   * Where the browser lands after an OAuth round trip: the landing app's login
+   * page, which reads `?error=` on failure. A fixed target rather than one taken
+   * from the request — a redirect a caller can choose is an open redirect.
+   */
+  OAUTH_RETURN_URL: z.string().optional(),
+
+  /**
+   * Root of the volume that holds derived, browser-served files (avatars now,
+   * previews next). Relative paths resolve from the working directory, which in
+   * development is the repository — where `data/` is already ignored.
+   */
+  STORAGE_DIR: z.string().min(1).default('data/storage'),
+  /** Ceiling on any single uploaded file, in bytes. */
+  UPLOAD_MAX_BYTES: z.coerce
+    .number()
+    .int()
+    .min(1024)
+    .default(5 * 1024 * 1024),
+
   /** Signs the session cookie. `@fastify/session` requires 32 characters or more. */
   SESSION_SECRET: z.string().min(32).default(DEVELOPMENT_SESSION_SECRET),
   SESSION_COOKIE_NAME: z.string().min(1).default('lg_sid'),
@@ -104,11 +138,29 @@ export const envSchema = variables
       });
     }
   })
-  // Resolved here rather than left optional, so every consumer reads a boolean
-  // and nobody re-derives the rule.
+  .check((ctx) => {
+    const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET } = ctx.value;
+    // Half-configured is the dangerous state: it looks enabled and fails at the
+    // token exchange, after the user has already been to Google and back.
+    if (Boolean(GOOGLE_CLIENT_ID) !== Boolean(GOOGLE_CLIENT_SECRET)) {
+      ctx.issues.push({
+        code: 'custom',
+        input: GOOGLE_CLIENT_ID,
+        path: ['GOOGLE_CLIENT_ID'],
+        message:
+          'GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be set together, or neither (which disables Google sign-in)'
+      });
+    }
+  })
+  // Resolved here rather than left optional, so every consumer reads a value and
+  // nobody re-derives the rules — including the two URLs that default to a path
+  // under `PUBLIC_URL`.
   .transform((env) => ({
     ...env,
-    COOKIE_SECURE: env.COOKIE_SECURE ?? env.NODE_ENV === 'production'
+    COOKIE_SECURE: env.COOKIE_SECURE ?? env.NODE_ENV === 'production',
+    GOOGLE_CALLBACK_URL:
+      env.GOOGLE_CALLBACK_URL ?? `${env.PUBLIC_URL}/api/auth/google/callback`,
+    OAUTH_RETURN_URL: env.OAUTH_RETURN_URL ?? `${env.PUBLIC_URL}/login`
   }));
 
 export type Env = z.infer<typeof envSchema>;

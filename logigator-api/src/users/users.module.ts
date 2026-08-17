@@ -1,8 +1,21 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
+import { AuthModule } from '../auth/auth.module';
+import { MailModule } from '../mail/mail.module';
+import { ProfileService } from './profile.service';
+import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 
+/**
+ * `AuthModule` is imported through `forwardRef` because the two modules
+ * genuinely need each other: authentication looks accounts up, and account
+ * management verifies passwords and issues the same mail tokens. Splitting the
+ * credential helpers into a third module would only move the cycle around — they
+ * belong with the code that owns credentials.
+ */
 @Module({
-  providers: [UsersService],
+  imports: [forwardRef(() => AuthModule), MailModule],
+  controllers: [UsersController],
+  providers: [UsersService, ProfileService],
   exports: [UsersService]
 })
 export class UsersModule {}

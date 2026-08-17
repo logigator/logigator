@@ -9,6 +9,7 @@ import { MailModule } from './mail/mail.module';
 import { MetaModule } from './meta/meta.module';
 import { RedisModule } from './redis/redis.module';
 import { SessionModule } from './session/session.module';
+import { StorageModule } from './storage/storage.module';
 import { UsersModule } from './users/users.module';
 
 @Module({
@@ -16,6 +17,7 @@ import { UsersModule } from './users/users.module';
     DatabaseModule,
     RedisModule,
     SessionModule,
+    StorageModule,
     MailModule,
     AuthModule,
     UsersModule,

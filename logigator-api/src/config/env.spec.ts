@@ -16,6 +16,10 @@ describe('loadEnv', () => {
       REDIS_KEY_PREFIX: 'lg:',
       PUBLIC_URL: 'http://logigator.test',
       MAIL_FROM: 'Logigator <noreply@logigator.com>',
+      GOOGLE_CALLBACK_URL: 'http://logigator.test/api/auth/google/callback',
+      OAUTH_RETURN_URL: 'http://logigator.test/login',
+      STORAGE_DIR: 'data/storage',
+      UPLOAD_MAX_BYTES: 5 * 1024 * 1024,
       SESSION_SECRET: DEVELOPMENT_SESSION_SECRET,
       SESSION_COOKIE_NAME: 'lg_sid',
       SESSION_MAX_AGE_DAYS: 30,
@@ -55,6 +59,27 @@ describe('loadEnv', () => {
       loadEnv({ NODE_ENV: 'production', SESSION_SECRET: 'x'.repeat(32) })
         .SESSION_SECRET
     ).toBe('x'.repeat(32));
+  });
+
+  it('rejects half-configured Google credentials', () => {
+    // Half-configured is the dangerous state: it looks enabled and fails at the
+    // token exchange, after the user has already been to Google and back.
+    expect(() => loadEnv({ GOOGLE_CLIENT_ID: 'id' })).toThrowError(/GOOGLE/);
+    expect(() => loadEnv({ GOOGLE_CLIENT_SECRET: 'secret' })).toThrowError(
+      /GOOGLE/
+    );
+    expect(() =>
+      loadEnv({ GOOGLE_CLIENT_ID: 'id', GOOGLE_CLIENT_SECRET: 'secret' })
+    ).not.toThrow();
+  });
+
+  it('derives the OAuth URLs from the public URL', () => {
+    const env = loadEnv({ PUBLIC_URL: 'https://logigator.com' });
+
+    expect(env.GOOGLE_CALLBACK_URL).toBe(
+      'https://logigator.com/api/auth/google/callback'
+    );
+    expect(env.OAUTH_RETURN_URL).toBe('https://logigator.com/login');
   });
 
   it('rejects a session secret too short to sign a cookie with', () => {

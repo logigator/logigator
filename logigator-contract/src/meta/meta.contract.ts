@@ -9,7 +9,13 @@ import { z } from 'zod';
  */
 export const metaResponseSchema = z
   .object({
-    formatVersion: z.number().int().positive()
+    formatVersion: z.number().int().positive(),
+    /**
+     * Which sign-in methods this deployment offers. `local` is always there;
+     * `google` depends on credentials being configured, so a client reads it here
+     * rather than finding out from a route that answers 501.
+     */
+    authProviders: z.array(z.enum(['local', 'google']))
   })
   .loose();
 
