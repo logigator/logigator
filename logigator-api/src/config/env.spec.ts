@@ -13,7 +13,9 @@ describe('loadEnv', () => {
       DATABASE_URL: 'postgresql://logigator:logigator@postgres:5432/logigator',
       DATABASE_POOL_MAX: 10,
       REDIS_URL: 'redis://redis:6379',
-      REDIS_KEY_PREFIX: 'lg:'
+      REDIS_KEY_PREFIX: 'lg:',
+      PUBLIC_URL: 'http://logigator.test',
+      MAIL_FROM: 'Logigator <noreply@logigator.com>'
     });
   });
 

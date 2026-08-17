@@ -34,7 +34,20 @@ export const envSchema = z.object({
    * the legacy backend until cutover, and a session id is a session id in both —
    * so the prefix is what keeps them from reading each other's keys.
    */
-  REDIS_KEY_PREFIX: z.string().min(1).default('lg:')
+  REDIS_KEY_PREFIX: z.string().min(1).default('lg:'),
+
+  /**
+   * Where the site is reachable from outside. Mails build their links from it,
+   * so it must be the address a recipient can actually open — not the container's.
+   */
+  PUBLIC_URL: z.string().min(1).default('http://logigator.test'),
+  /**
+   * SMTP connection string, credentials included
+   * (`smtps://user:pass@smtp.example.com:465`). Unset means mails are rendered
+   * and logged instead of sent, which is the only sane development default.
+   */
+  SMTP_URL: z.string().optional(),
+  MAIL_FROM: z.string().min(1).default('Logigator <noreply@logigator.com>')
 });
 
 export type Env = z.infer<typeof envSchema>;
