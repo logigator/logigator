@@ -10,7 +10,13 @@ const here = fileURLToPath(new URL('.', import.meta.url));
 
 export default {
   target: 'node',
-  entry: { main: './src/main.ts' },
+  // Two entry points: the server, and the migration runner a release runs before
+  // it (`node migrate.js`). Bundling the migrator too keeps deploys free of
+  // drizzle-kit and of any TypeScript loader.
+  entry: { main: './src/main.ts', migrate: './src/database/migrate.main.ts' },
+  // Real `__dirname`/`__filename` instead of the bundler's mocks, so the
+  // migration runner can find the SQL folder shipped beside its bundle.
+  node: { __dirname: false, __filename: false },
   output: {
     // Alongside the frontend bundles: every artifact in the workspace lands in
     // the root dist/ under its project name.

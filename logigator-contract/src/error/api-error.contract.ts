@@ -18,7 +18,9 @@ export const apiErrorCodeSchema = z.enum([
   'not_found',
   'conflict',
   'validation_failed',
-  'internal'
+  'internal',
+  /** A backing service the request needs is unreachable; retrying may succeed. */
+  'service_unavailable'
 ]);
 
 export type ApiErrorCode = z.infer<typeof apiErrorCodeSchema>;

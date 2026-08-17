@@ -15,7 +15,26 @@ export const envSchema = z.object({
   PORT: z.coerce.number().int().min(1).max(65535).default(3000),
   LOG_LEVEL: z
     .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'])
-    .default('info')
+    .default('info'),
+
+  /**
+   * PostgreSQL connection string. The default names the compose service, the
+   * same way the legacy backend's config example named `mysql`.
+   */
+  DATABASE_URL: z
+    .string()
+    .min(1)
+    .default('postgresql://logigator:logigator@postgres:5432/logigator'),
+  /** Upper bound on pooled connections; the default is `pg`'s own. */
+  DATABASE_POOL_MAX: z.coerce.number().int().min(1).default(10),
+
+  REDIS_URL: z.string().min(1).default('redis://redis:6379'),
+  /**
+   * Namespace for every key this API writes. Development shares one Redis with
+   * the legacy backend until cutover, and a session id is a session id in both —
+   * so the prefix is what keeps them from reading each other's keys.
+   */
+  REDIS_KEY_PREFIX: z.string().min(1).default('lg:')
 });
 
 export type Env = z.infer<typeof envSchema>;

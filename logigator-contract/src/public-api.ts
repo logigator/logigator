@@ -21,3 +21,9 @@ export {
   type ApiErrorCodeOrUnknown
 } from './error/api-error.contract';
 export { metaResponseSchema, type MetaResponse } from './meta/meta.contract';
+export {
+  healthCheckSchema,
+  readinessResponseSchema,
+  type HealthCheck,
+  type ReadinessResponse
+} from './health/health.contract';

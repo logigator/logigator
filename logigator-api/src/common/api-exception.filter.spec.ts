@@ -13,11 +13,11 @@ import {
   FastifyAdapter,
   type NestFastifyApplication
 } from '@nestjs/platform-fastify';
+import { APP_FILTER } from '@nestjs/core';
 import { Test } from '@nestjs/testing';
 import { apiErrorSchema } from '@logigator/contract';
 import { ApiException } from './api-exception';
-import { AppModule } from '../app.module';
-import { loadEnv } from '../config/env';
+import { ApiExceptionFilter } from './api-exception.filter';
 
 @Controller('probe')
 class ProbeController {
@@ -58,9 +58,13 @@ describe('ApiExceptionFilter', () => {
   let app: NestFastifyApplication;
 
   beforeAll(async () => {
+    // The filter is registered here rather than by importing `AppModule`, whose
+    // graph now reaches a database and a Redis: what this spec is about is the
+    // response body every failure produces, and that needs neither. The real
+    // root module is exercised by the E2E suite, against real services.
     const moduleRef = await Test.createTestingModule({
-      imports: [AppModule.forEnv(loadEnv({ LOG_LEVEL: 'silent' }))],
-      controllers: [ProbeController]
+      controllers: [ProbeController],
+      providers: [{ provide: APP_FILTER, useClass: ApiExceptionFilter }]
     }).compile();
 
     app = moduleRef.createNestApplication<NestFastifyApplication>(

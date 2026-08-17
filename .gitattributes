@@ -1,0 +1,4 @@
+# drizzle-kit regenerates the full schema state beside every migration it writes.
+# The SQL is what reviewers read; the snapshot is machine-written noise, so mark
+# it generated and let GitHub collapse it by default.
+logigator-api/drizzle/**/snapshot.json linguist-generated=true

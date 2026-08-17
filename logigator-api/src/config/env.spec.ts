@@ -3,11 +3,17 @@ import { loadEnv } from './env';
 
 describe('loadEnv', () => {
   it('falls back to defaults for an empty environment', () => {
+    // Every variable is defaulted on purpose: a bare `docker compose up` must
+    // bring the API up with no configuration file anywhere.
     expect(loadEnv({})).toEqual({
       NODE_ENV: 'development',
       HOST: '0.0.0.0',
       PORT: 3000,
-      LOG_LEVEL: 'info'
+      LOG_LEVEL: 'info',
+      DATABASE_URL: 'postgresql://logigator:logigator@postgres:5432/logigator',
+      DATABASE_POOL_MAX: 10,
+      REDIS_URL: 'redis://redis:6379',
+      REDIS_KEY_PREFIX: 'lg:'
     });
   });
 

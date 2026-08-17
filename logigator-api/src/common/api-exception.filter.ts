@@ -22,7 +22,8 @@ const CODE_BY_STATUS = new Map<number, ApiErrorCode>([
   [HttpStatus.FORBIDDEN, 'forbidden'],
   [HttpStatus.NOT_FOUND, 'not_found'],
   [HttpStatus.CONFLICT, 'conflict'],
-  [HttpStatus.UNPROCESSABLE_ENTITY, 'validation_failed']
+  [HttpStatus.UNPROCESSABLE_ENTITY, 'validation_failed'],
+  [HttpStatus.SERVICE_UNAVAILABLE, 'service_unavailable']
 ]);
 
 function codeFor(status: number): ApiErrorCode {

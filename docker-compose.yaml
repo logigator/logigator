@@ -53,6 +53,10 @@ services:
     depends_on:
       deps:
         condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
     volumes:
       - ./:/app
     working_dir: /app
@@ -89,10 +93,33 @@ services:
       - MYSQL_USER=logigator
       - MYSQL_PASSWORD=logigator
 
+  # The new API's database. MySQL stays for the legacy backend until cutover, so
+  # both run side by side and each app talks to its own.
+  postgres:
+    image: postgres:17-alpine
+    networks:
+      - net
+    ports:
+      - 127.0.0.1:5432:5432
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=logigator
+      - POSTGRES_USER=logigator
+      - POSTGRES_PASSWORD=logigator
+    # The API probes its connection at startup, so it must not start first.
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U logigator -d logigator']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   redis:
     image: redis:7
     networks:
       - net
+    ports:
+      - 127.0.0.1:6379:6379
 
 volumes:
   caddy_data:
