@@ -7,10 +7,8 @@ import { AuthTokenService } from '../auth/auth-token.service';
 import { PasswordService } from '../auth/password.service';
 import { MailService } from '../mail/mail.service';
 import { SessionService } from '../session/session.service';
-import {
-  extensionForImageType,
-  FileStorageService
-} from '../storage/file-storage.service';
+import { FileStorageService } from '../storage/file-storage.service';
+import { ImageService } from '../storage/image.service';
 import { UsersService } from './users.service';
 
 /** Whether the update is still waiting on a confirmation mail. */
@@ -40,6 +38,7 @@ export class ProfileService {
     private readonly tokens: AuthTokenService,
     private readonly mail: MailService,
     private readonly files: FileStorageService,
+    private readonly images: ImageService,
     private readonly sessions: SessionService
   ) {}
 
@@ -90,40 +89,31 @@ export class ProfileService {
   }
 
   /**
-   * Replaces the avatar and deletes the file it replaces.
+   * Replaces the avatar and deletes the asset it replaces.
    *
-   * The order matters: the pointer moves first, so a failed delete leaves an
+   * Two orderings matter. The encode runs before anything is written, so an
+   * unusable upload changes nothing and answers a 415 — the client's own
+   * declared content type is not consulted, since it is not evidence. And the
+   * pointer moves before the old asset is deleted, so a failed delete leaves an
    * orphan for the sweep rather than a row pointing at nothing.
    */
-  async setAvatar(
-    user: UserRow,
-    content: Buffer,
-    mimeType: string
-  ): Promise<UserRow> {
-    const extension = extensionForImageType(mimeType);
-    if (!extension) {
-      throw new ApiException(
-        HttpStatus.UNSUPPORTED_MEDIA_TYPE,
-        'bad_request',
-        'An avatar must be a PNG, JPEG or WebP image.'
-      );
-    }
+  async setAvatar(user: UserRow, content: Buffer): Promise<UserRow> {
+    const files = await this.images.encodeAvatar(content);
 
-    const filename = await this.files.write('profile', content, extension);
+    const avatarId = await this.files.writeAsset('profile', files);
     const updated =
-      (await this.users.update(user.id, { avatarFile: filename })) ??
-      accountGone();
-    if (user.avatarFile) await this.files.remove('profile', user.avatarFile);
+      (await this.users.update(user.id, { avatarId })) ?? accountGone();
+    if (user.avatarId) await this.files.removeAsset('profile', user.avatarId);
 
     return updated;
   }
 
   async removeAvatar(user: UserRow): Promise<UserRow> {
-    if (!user.avatarFile) return user;
+    if (!user.avatarId) return user;
 
     const updated =
-      (await this.users.update(user.id, { avatarFile: null })) ?? accountGone();
-    await this.files.remove('profile', user.avatarFile);
+      (await this.users.update(user.id, { avatarId: null })) ?? accountGone();
+    await this.files.removeAsset('profile', user.avatarId);
     return updated;
   }
 
@@ -150,7 +140,7 @@ export class ProfileService {
     }
 
     await this.users.delete(user.id);
-    if (user.avatarFile) await this.files.remove('profile', user.avatarFile);
+    if (user.avatarId) await this.files.removeAsset('profile', user.avatarId);
   }
 
   /**

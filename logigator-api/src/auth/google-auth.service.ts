@@ -17,7 +17,7 @@ import { isUniqueViolation } from '../database/unique-violation';
 import { RedisService } from '../redis/redis.service';
 import { isGoogleAuthConfigured } from './google-auth.config';
 import { FileStorageService } from '../storage/file-storage.service';
-import { extensionForImageType } from '../storage/file-storage.service';
+import { ImageService } from '../storage/image.service';
 import { UsersService } from '../users/users.service';
 
 const GOOGLE_ISSUER = new URL('https://accounts.google.com');
@@ -73,7 +73,8 @@ export class GoogleAuthService {
     @Inject(ENV) private readonly env: Env,
     private readonly redis: RedisService,
     private readonly users: UsersService,
-    private readonly files: FileStorageService
+    private readonly files: FileStorageService,
+    private readonly images: ImageService
   ) {}
 
   /** Whether the deployment has credentials, and so whether the routes work. */
@@ -224,7 +225,7 @@ export class GoogleAuthService {
         googleUserId,
         // The provider asserts the address, so there is nothing left to confirm.
         emailVerified: true,
-        avatarFile: await this.importAvatar(claims['picture'])
+        avatarId: await this.importAvatar(claims['picture'])
       });
     } catch (error) {
       if (!isUniqueViolation(error)) throw error;
@@ -257,15 +258,14 @@ export class GoogleAuthService {
       });
       if (!response.ok) return null;
 
-      const extension = extensionForImageType(
-        response.headers.get('content-type') ?? ''
-      );
-      if (!extension) return null;
-
       const content = await readCapped(response, this.env.UPLOAD_MAX_BYTES);
       if (!content) return null;
 
-      return await this.files.write('profile', content, extension);
+      // Through the same encoder as an upload, so what the provider sends is
+      // proof of nothing here either and the served variants are identical
+      // whichever way an avatar arrived.
+      const files = await this.images.encodeAvatar(content);
+      return await this.files.writeAsset('profile', files);
     } catch (error) {
       this.logger.warn('Importing the Google profile picture failed', error);
       return null;

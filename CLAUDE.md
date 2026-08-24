@@ -212,8 +212,15 @@ while `/api/meta` doubles as the liveness probe that reaches nothing.
   complete takeover, since a new address confirms a password reset.
 - `mail/` — nodemailer plus rendering functions, four locales, HTML and text; unset `SMTP_URL` logs
   the mail with its link instead of sending.
-- `storage/` — files on a volume under immutable random names (avatars now, previews next); the row
-  holds only the filename.
+- `storage/` — images on a volume, and the pipeline that produces them. Every upload is decoded
+  and re-encoded by `ImageService` (sharp/libvips) rather than stored: the bytes and the declared
+  content type are the client's word, and the accepted formats are checked against what libvips
+  _detects_ (so the SVG it would happily rasterize is refused). Each asset becomes a fixed matrix
+  of size × format — WebP plus a fallback, declared once in `image-variants.ts` because the upload
+  path writes it and every response lists its URLs — written into one directory per asset under a
+  two-hex shard of its id (`profile/a3/<uuid>/256.webp`). The row holds only that id, a fresh one
+  per write, so URLs are immutable and a half-written asset is unnameable; deleting is removing the
+  directory, which is what lets the matrix change without stranding what an older one named.
 - `common/` — the error filter and `ApiException`, the zod validation pipe (a shim to delete when
   NestJS 12's `@Body({ schema })` lands), the Redis-backed `@RateLimit()` guard, and locale
   resolution from the shared `preferences` cookie.
@@ -242,6 +249,10 @@ may replace this config.
 - **`webpack-node-externals` needs `allowlist: [/^@logigator\//]`** — Yarn symlinks workspace
   members into `node_modules`, so without it they are treated as ordinary dependencies and left as
   a runtime `require` of a package with no entry point.
+- **`sharp` stays external** and must: it is a native module, so `webpack-node-externals` leaving
+  it a runtime `require` is the only thing that works. Nothing pins architectures in
+  `.yarnrc.yml`, so the lockfile carries every prebuilt binary including
+  `@img/sharp-linuxmusl-x64` — which is what an alpine runtime image needs.
 - **No minification.** A long-running server gains nothing, and Nest reflects on class and
   function names, so mangling would break DI.
 - **`output.clean` is off** and the dev loop watches the output _directory_

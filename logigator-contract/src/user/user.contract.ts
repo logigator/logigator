@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { imageVariantSchema } from '../image/image.contract';
 
 /**
  * The field rules shared by every endpoint that accepts them — registration,
@@ -31,8 +32,10 @@ export const passwordSchema = z
  *
  * There are no serialization groups any more: the endpoint is authenticated and
  * only ever describes the caller, so it always carries the private fields. What
- * used to be a nested profile-picture resource is one URL — the file behind it is
- * served by the static layer, and its name is an implementation detail.
+ * used to be a nested profile-picture resource is a list of variants — the files
+ * behind them are served by the static layer, and their names are an
+ * implementation detail. `null` means the account has no avatar and the client
+ * shows whatever it uses for that.
  *
  * `hasPassword` and `googleLinked` are what an account page needs to decide
  * which credential controls it can offer.
@@ -43,7 +46,7 @@ export const userResponseSchema = z
     username: z.string(),
     email: z.string(),
     emailVerified: z.boolean(),
-    avatarUrl: z.string().nullable(),
+    avatar: z.array(imageVariantSchema).nullable(),
     memberSince: z.string(),
     hasPassword: z.boolean(),
     googleLinked: z.boolean()

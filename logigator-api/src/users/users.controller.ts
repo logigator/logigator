@@ -98,11 +98,9 @@ export class UsersController {
       );
     }
 
-    const updated = await this.profile.setAvatar(
-      user,
-      content,
-      upload.mimetype
-    );
+    // The declared part type is not passed on: what the file actually is gets
+    // decided by decoding it.
+    const updated = await this.profile.setAvatar(user, content);
     return toUserResponse(updated);
   }
 

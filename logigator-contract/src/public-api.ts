@@ -22,6 +22,12 @@ export {
 } from './error/api-error.contract';
 export { metaResponseSchema, type MetaResponse } from './meta/meta.contract';
 export {
+  imageFormatSchema,
+  imageVariantSchema,
+  type ImageFormat,
+  type ImageVariant
+} from './image/image.contract';
+export {
   healthCheckSchema,
   readinessResponseSchema,
   type HealthCheck,

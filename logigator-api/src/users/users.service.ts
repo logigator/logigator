@@ -3,6 +3,7 @@ import { eq } from 'drizzle-orm';
 import type { UserResponse } from '@logigator/contract';
 import { DB, type Database } from '../database/database.module';
 import { users, type NewUserRow, type UserRow } from '../database/schema';
+import { AVATAR_VARIANTS, variantUrls } from '../storage/image-variants';
 
 /**
  * Reads and writes of the `users` table.
@@ -91,8 +92,10 @@ export function normalizeEmail(email: string): string {
 }
 
 /**
- * The row as clients see it. The avatar is a URL: the file behind it is served
- * by the static layer, and its name is nobody else's business.
+ * The row as clients see it. The avatar is a list of variants: the files behind
+ * them are served by the static layer, and their names are nobody else's
+ * business. The list comes from the matrix rather than from the volume — the
+ * files are written together or not at all, so there is nothing to look up.
  */
 export function toUserResponse(user: UserRow): UserResponse {
   return {
@@ -100,7 +103,9 @@ export function toUserResponse(user: UserRow): UserResponse {
     username: user.username,
     email: user.email,
     emailVerified: user.emailVerified,
-    avatarUrl: user.avatarFile ? `/profile/${user.avatarFile}` : null,
+    avatar: user.avatarId
+      ? variantUrls('profile', user.avatarId, AVATAR_VARIANTS)
+      : null,
     memberSince: user.memberSince.toISOString(),
     hasPassword: user.passwordHash !== null,
     googleLinked: user.googleUserId !== null

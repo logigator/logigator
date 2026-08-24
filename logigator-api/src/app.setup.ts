@@ -30,9 +30,10 @@ export async function configureApiApp(
   env: Env
 ): Promise<void> {
   await app.register(fastifyMultipart, {
-    // One file per request, capped: the only upload today is an avatar, and the
-    // limit is what keeps a stream from filling the disk before a handler sees it.
-    limits: { files: 1, fileSize: env.UPLOAD_MAX_BYTES },
+    // Two files per request, each capped: a preview upload carries the light and
+    // the dark render together, and the limit is what keeps a stream from
+    // filling the disk before a handler sees it.
+    limits: { files: 2, fileSize: env.UPLOAD_MAX_BYTES },
     // The plugin's own way of reporting the limit is to throw from `toBuffer`,
     // which lands in the error filter as an unhandled defect — a 500 for a file
     // that is merely too big. Off, the truncation shows up as a flag the handler

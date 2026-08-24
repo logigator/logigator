@@ -55,12 +55,16 @@ function circuitColumns() {
     link: uuid('link').notNull().defaultRandom().unique(),
     public: boolean('public').notNull().default(false),
     /**
-     * Filenames of the rendered previews on the served volume. Regenerable
-     * renders with a cache-friendly `<img>` read path, so they stay files and
-     * the row holds only the pointer.
+     * Id of the preview's directory on the served volume. Regenerable renders
+     * with a cache-friendly `<img>` read path, so they stay files and the row
+     * holds only the pointer.
+     *
+     * One pointer for both themes: the editor renders the light and the dark
+     * variant in one pass and uploads them together, so they are replaced
+     * together and there is nothing for a second column to point at
+     * independently.
      */
-    previewLightFile: varchar('preview_light_file', { length: 64 }),
-    previewDarkFile: varchar('preview_dark_file', { length: 64 }),
+    previewId: uuid('preview_id'),
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()
       .defaultNow(),

@@ -1,13 +1,20 @@
+import { stat } from 'node:fs/promises';
+import { join } from 'node:path';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { users } from '../src/database/schema';
 import { CookieJar } from './cookie-jar';
 import { startE2eApp, type E2eApp } from './harness';
 
-/** A 1×1 PNG, so an avatar upload carries something a client would send. */
+/** An 8×8 PNG, so an avatar upload carries something a client would send. */
 const PNG = Buffer.from(
-  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFAAH/q842iQAAAABJRU5ErkJggg==',
+  'iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAADklEQVQYlWNgGAWgEAAAAQgAAa5MwN8AAAAASUVORK5CYII=',
   'base64'
+);
+
+/** Bytes libvips can open and this API still refuses to accept. */
+const SVG = Buffer.from(
+  '<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"/>'
 );
 
 /**
@@ -279,7 +286,7 @@ describe('the signed-in user', () => {
     credentials.password = 'babbage99';
   });
 
-  it('stores an avatar and serves its URL', async () => {
+  it('re-encodes an avatar into every variant it advertises', async () => {
     const upload = await multipart(PNG, 'me.png', 'image/png');
     const response = await api.inject({
       method: 'POST',
@@ -289,9 +296,21 @@ describe('the signed-in user', () => {
     });
 
     expect(response.statusCode).toBe(201);
-    const { avatarUrl } = response.json();
-    // A pointer to the static layer, not the file's bytes or its internal name.
-    expect(avatarUrl).toMatch(/^\/profile\/[\w-]+\.png$/);
+    const { avatar } = response.json();
+    expect(avatar.length).toBeGreaterThan(0);
+
+    for (const variant of avatar) {
+      // Pointers to the static layer — sharded, and named after nothing the
+      // client sent. That none of them is a `.png` is the upload being
+      // re-encoded rather than stored: what arrived was one.
+      expect(variant.url).toMatch(
+        /^\/profile\/[0-9a-f]{2}\/[0-9a-f-]{36}\/\d+\.(webp|jpg)$/
+      );
+      // What the response promises has to be on the volume, or the client is
+      // holding URLs that 404.
+      const file = await stat(join(api.env.STORAGE_DIR, variant.url));
+      expect(file.size).toBeGreaterThan(0);
+    }
 
     const removed = await api.inject({
       method: 'DELETE',
@@ -299,15 +318,22 @@ describe('the signed-in user', () => {
       headers: jar.headers()
     });
     expect(removed.statusCode).toBe(200);
-    expect(removed.json().avatarUrl).toBeNull();
+    expect(removed.json().avatar).toBeNull();
+    await expect(
+      stat(join(api.env.STORAGE_DIR, avatar[0].url))
+    ).rejects.toMatchObject({ code: 'ENOENT' });
   });
 
-  it('refuses a file type it will not serve', async () => {
-    const upload = await multipart(
-      Buffer.from('<svg xmlns="http://www.w3.org/2000/svg"/>'),
-      'me.svg',
-      'image/svg+xml'
-    );
+  /**
+   * The declared part type is the client's word for what it sent, and an
+   * endpoint that trusts it serves whatever the client chose under whatever type
+   * the client chose. What the file is gets decided by decoding it.
+   */
+  it.each([
+    ['for what they are', 'image/svg+xml', 'me.svg'],
+    ['when they claim to be a PNG', 'image/png', 'me.png']
+  ])('refuses bytes it will not serve, %s', async (_, type, filename) => {
+    const upload = await multipart(SVG, filename, type);
 
     const response = await api.inject({
       method: 'POST',

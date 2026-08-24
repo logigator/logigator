@@ -119,7 +119,7 @@ describe('local authentication', () => {
       emailVerified: true,
       hasPassword: true,
       googleLinked: false,
-      avatarUrl: null
+      avatar: null
     });
 
     const session = response.cookies.find((c) => c.name === 'lg_sid');

@@ -34,11 +34,12 @@ export const users = pgTable(
     passwordHash: varchar('password_hash', { length: 72 }),
     googleUserId: varchar('google_user_id', { length: 64 }).unique(),
     /**
-     * Filename of the avatar on the served volume, or null for the default
+     * Id of the avatar's directory on the served volume, or null for the default
      * avatar. Derived, browser-served binaries stay files; the row holds the
-     * pointer only, and the file is replaced by writing a new name here.
+     * pointer only, and the avatar is replaced by writing a new id here — which
+     * is what keeps the URLs behind it cacheable forever.
      */
-    avatarFile: varchar('avatar_file', { length: 64 }),
+    avatarId: uuid('avatar_id'),
     memberSince: timestamp('member_since', { withTimezone: true })
       .notNull()
       .defaultNow()
