@@ -18,6 +18,13 @@ export interface CapturedMail {
 export class MailCapture {
   readonly sent: CapturedMail[] = [];
 
+  /**
+   * Set to make the next send reject, for the flows that have to keep their
+   * promise when the mail server is down — a password reset must answer a known
+   * and an unknown address identically either way.
+   */
+  failNextSend = false;
+
   /** Only `sendMail` is ever called on a transport by {@link MailService}. */
   readonly transport = {
     sendMail: (message: {
@@ -26,6 +33,11 @@ export class MailCapture {
       html?: unknown;
       text?: unknown;
     }) => {
+      if (this.failNextSend) {
+        this.failNextSend = false;
+        return Promise.reject(new Error('SMTP unavailable'));
+      }
+
       this.sent.push({
         to: String(message.to ?? ''),
         subject: String(message.subject ?? ''),

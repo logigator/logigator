@@ -57,7 +57,9 @@ export class UsersController {
     const result = await this.profile.update(
       user,
       body,
-      localeFromRequest(request)
+      localeFromRequest(request),
+      // Spared when a password change signs the account's other sessions out.
+      request.session.sessionId
     );
 
     return {

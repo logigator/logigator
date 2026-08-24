@@ -65,11 +65,10 @@ export class AuthController {
   @RateLimit({ limit: 10, windowSeconds: 600, scope: 'credentials' })
   async login(
     @Body(new ZodValidationPipe(loginRequestSchema)) body: LoginRequest,
-    @Req() request: FastifyRequest,
-    @Res({ passthrough: true }) reply: FastifyReply
+    @Req() request: FastifyRequest
   ): Promise<LoginResponse> {
     const user = await this.auth.login(body);
-    await this.session.signIn(request, reply, user.id);
+    await this.session.signIn(request, user.id);
     return toUserResponse(user);
   }
 

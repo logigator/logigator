@@ -111,9 +111,14 @@ const variables = z.object({
 
   /**
    * How many reverse proxies sit in front of the process. `1` behind Caddy makes
-   * `request.ip` the real client address; `0` (the default) trusts no forwarding
-   * header, since a directly reachable server must not let callers choose their
-   * own address and slip the rate limiter.
+   * `request.ip` the real client address and `request.protocol` the scheme the
+   * browser used; `0` (the default) trusts no forwarding header, since a
+   * directly reachable server must not let callers choose their own address and
+   * slip the rate limiter.
+   *
+   * Secure cookies force the question: the process only ever speaks plain HTTP,
+   * so `COOKIE_SECURE` means something in front terminates TLS — and the check
+   * below refuses to start until that is declared here.
    */
   TRUST_PROXY: z.coerce.number().int().min(0).max(10).default(0),
 
@@ -135,6 +140,24 @@ export const envSchema = variables
         path: ['SESSION_SECRET'],
         message:
           'must be set to a private value in production — the development default is public'
+      });
+    }
+  })
+  .check((ctx) => {
+    // Resolved here rather than read off the transform, which has not run yet.
+    const secure =
+      ctx.value.COOKIE_SECURE ?? ctx.value.NODE_ENV === 'production';
+    if (secure && ctx.value.TRUST_PROXY === 0) {
+      // `@fastify/session` refuses to write a `Secure` cookie over a connection
+      // it believes is plain, and it believes that whenever `X-Forwarded-Proto`
+      // is untrusted. The whole login then succeeds and does nothing: a 200, a
+      // hint cookie, no session — so this is a boot failure, not a warning.
+      ctx.issues.push({
+        code: 'custom',
+        input: ctx.value.TRUST_PROXY,
+        path: ['TRUST_PROXY'],
+        message:
+          'must be at least 1 when cookies are Secure — the process serves plain HTTP, so a TLS-terminating proxy sits in front and its forwarding headers have to be trusted for sessions to be written at all'
       });
     }
   })

@@ -9,9 +9,11 @@ import {
   randomState,
   type Configuration
 } from 'openid-client';
+import { usernameSchema } from '@logigator/contract';
 import { ApiException } from '../common/api-exception';
 import { ENV, type Env } from '../config/env';
 import type { UserRow } from '../database/schema';
+import { isUniqueViolation } from '../database/unique-violation';
 import { RedisService } from '../redis/redis.service';
 import { isGoogleAuthConfigured } from './google-auth.config';
 import { FileStorageService } from '../storage/file-storage.service';
@@ -186,7 +188,16 @@ export class GoogleAuthService {
     }
     if (existing) return;
 
-    await this.users.update(userId, { googleUserId });
+    try {
+      await this.users.update(userId, { googleUserId });
+    } catch (error) {
+      // Two tabs linking the same identity at once: the loser reads the same as
+      // arriving second, which is what it is.
+      if (isUniqueViolation(error)) {
+        throw new GoogleAuthError('google_already_linked');
+      }
+      throw error;
+    }
   }
 
   private async findOrCreate(
@@ -206,14 +217,26 @@ export class GoogleAuthService {
       throw new GoogleAuthError('google_email_taken');
     }
 
-    return this.users.create({
-      email,
-      username: usernameFrom(claims['name'], email),
-      googleUserId,
-      // The provider asserts the address, so there is nothing left to confirm.
-      emailVerified: true,
-      avatarFile: await this.importAvatar(claims['picture'])
-    });
+    try {
+      return await this.users.create({
+        email,
+        username: usernameFrom(claims['name'], email),
+        googleUserId,
+        // The provider asserts the address, so there is nothing left to confirm.
+        emailVerified: true,
+        avatarFile: await this.importAvatar(claims['picture'])
+      });
+    } catch (error) {
+      if (!isUniqueViolation(error)) throw error;
+
+      // Both reads above passed and the insert still lost: either the same
+      // identity signed in twice at once — in which case the account it just
+      // created is the one to use — or the address was taken in between, which is
+      // the refusal the read would have given.
+      const raced = await this.users.findByGoogleUserId(googleUserId);
+      if (raced) return raced;
+      throw new GoogleAuthError('google_email_taken');
+    }
   }
 
   /**
@@ -239,8 +262,8 @@ export class GoogleAuthService {
       );
       if (!extension) return null;
 
-      const content = Buffer.from(await response.arrayBuffer());
-      if (content.byteLength > this.env.UPLOAD_MAX_BYTES) return null;
+      const content = await readCapped(response, this.env.UPLOAD_MAX_BYTES);
+      if (!content) return null;
 
       return await this.files.write('profile', content, extension);
     } catch (error) {
@@ -278,12 +301,54 @@ function flowKey(state: string): string {
 }
 
 /**
- * A display name from the provider, or the address' local part. Trimmed to the
- * column's width — a Google display name has no length limit, and this is a
- * label, not an identity.
+ * Reads a response body, giving up once it exceeds `maxBytes`.
+ *
+ * The size has to be decided while reading, not after: the timeout bounds how
+ * long a picture URL may take but says nothing about how much it may send, and a
+ * `content-length` is a claim, not a promise. Both are checked — the header
+ * first, so an honest oversized response costs nothing to refuse.
  */
-function usernameFrom(name: unknown, email: string): string {
-  const candidate =
-    typeof name === 'string' && name.trim() ? name.trim() : email.split('@')[0];
-  return candidate.slice(0, 32);
+async function readCapped(
+  response: Response,
+  maxBytes: number
+): Promise<Buffer | null> {
+  const declared = Number(response.headers.get('content-length'));
+  if (Number.isFinite(declared) && declared > maxBytes) return null;
+  if (!response.body) return null;
+
+  const chunks: Uint8Array[] = [];
+  let size = 0;
+  for await (const chunk of response.body) {
+    size += chunk.byteLength;
+    if (size > maxBytes) return null;
+    chunks.push(chunk);
+  }
+
+  return Buffer.concat(chunks);
+}
+
+/**
+ * A username for an account arriving from Google: its display name if that can
+ * be one, the address' local part otherwise.
+ *
+ * Neither is usable as given. A display name is free text — spaces, dots,
+ * accents, any length — and the contract says a username is 2 to 20 characters of
+ * letters, digits, `_` and `-`. Storing one verbatim puts values in the column
+ * that the API's own schema rejects, so everything that later reads a username
+ * expecting the contract's shape is reading something impossible. Each candidate
+ * is reduced to that shape and checked against the schema itself, and the last
+ * resort is a name that needs no cleaning.
+ */
+export function usernameFrom(name: unknown, email: string): string {
+  for (const candidate of [name, email.split('@')[0]]) {
+    if (typeof candidate !== 'string') continue;
+
+    const cleaned = candidate
+      .replaceAll(/\s+/g, '_')
+      .replaceAll(/[^a-zA-Z0-9_-]/g, '')
+      .slice(0, 20);
+    if (usernameSchema.safeParse(cleaned).success) return cleaned;
+  }
+
+  return 'user';
 }

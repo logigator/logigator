@@ -39,8 +39,9 @@ export class RedisService {
     });
   }
 
-  async delete(key: string): Promise<void> {
-    await this.client.del(this.key(key));
+  async delete(...keys: string[]): Promise<void> {
+    if (keys.length === 0) return;
+    await this.client.del(keys.map((key) => this.key(key)));
   }
 
   async getJson<T>(key: string): Promise<T | null> {
@@ -80,15 +81,52 @@ export class RedisService {
 
   /**
    * Atomically counts a hit in a fixed window and returns the count so far. The
-   * expiry is set when the counter is created, so the window starts with its
-   * first hit and the key disappears on its own.
+   * window starts with its first hit and the key disappears on its own.
+   *
+   * Both commands travel in one transaction, and the expiry is `NX` — set only
+   * when the key has none. Counting and expiring as two round trips leaves a
+   * window where the process can die in between, and the counter that survives
+   * it has no TTL at all: the address it belongs to is then rate limited for
+   * good, with nothing short of manual surgery to bring it back. `NX` also heals
+   * such a key on its next hit, rather than sliding the window of a client that
+   * keeps knocking.
    */
   async countInWindow(key: string, windowSeconds: number): Promise<number> {
     const namespaced = this.key(key);
-    const count = await this.client.incr(namespaced);
-    if (count === 1) {
-      await this.client.expire(namespaced, windowSeconds);
-    }
-    return count;
+    const [count] = await this.client
+      .multi()
+      .incr(namespaced)
+      .expire(namespaced, windowSeconds, 'NX')
+      .exec();
+    return Number(count);
+  }
+
+  /**
+   * Adds a member to a set and pushes the set's expiry out, in one transaction.
+   *
+   * The expiry is unconditional: the set indexes things that expire on their own
+   * (a user's session ids), so it has to outlive its newest member, and every
+   * write is that member's own lifetime restarting.
+   */
+  async addToSet(
+    key: string,
+    member: string,
+    ttlSeconds: number
+  ): Promise<void> {
+    const namespaced = this.key(key);
+    await this.client
+      .multi()
+      .sAdd(namespaced, member)
+      .expire(namespaced, ttlSeconds)
+      .exec();
+  }
+
+  async membersOf(key: string): Promise<string[]> {
+    return this.client.sMembers(this.key(key));
+  }
+
+  async removeFromSet(key: string, members: string[]): Promise<void> {
+    if (members.length === 0) return;
+    await this.client.sRem(this.key(key), members);
   }
 }

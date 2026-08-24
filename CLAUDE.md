@@ -183,10 +183,12 @@ while `/api/meta` doubles as the liveness probe that reaches nothing.
 **`src/` layers:**
 
 - `config/` — the zod env schema. Every variable is defaulted so a bare `docker compose up` works;
-  the two rules that cannot be defaulted are enforced in the schema instead (production refuses the
-  public development `SESSION_SECRET`, and the Google credentials must be set together or not at
-  all). `COOKIE_SECURE` and the two OAuth URLs are _resolved_ in a transform, so consumers read
-  values rather than re-deriving rules.
+  the rules that cannot be defaulted are enforced in the schema instead (production refuses the
+  public development `SESSION_SECRET`, the Google credentials must be set together or not at all,
+  and `TRUST_PROXY` must be at least 1 wherever cookies are `Secure` — the process serves plain
+  HTTP, so untrusted forwarding headers make `@fastify/session` treat every request as insecure and
+  write no session at all). `COOKIE_SECURE` and the two OAuth URLs are _resolved_ in a transform, so
+  consumers read values rather than re-deriving rules.
 - `database/` — Drizzle over `pg`. `schema/` is the DDL in TypeScript (tables + `defineRelations`
   for RQBv2), `drizzle/` the generated SQL migrations, `migrate.ts` the runner both the
   `migrate.js` bundle entry and the E2E harness call. `DB` injects a typed `Database`; there are no
@@ -195,14 +197,19 @@ while `/api/meta` doubles as the liveness probe that reaches nothing.
   instantiate the graph without a server) and namespaced by `REDIS_KEY_PREFIX`, because development
   shares one Redis with the legacy backend.
 - `session/` — `@fastify/cookie` + `@fastify/session` over a small in-repo Redis store; sliding
-  expiry, `saveUninitialized: false`, and `SessionService` owning sign-in (id regenerated first),
-  sign-out and the non-httpOnly `isAuthenticated` hint cookie the editor reads.
+  expiry, `saveUninitialized: false`, a per-account index of session ids (so a credential change can
+  end the sessions the old one opened), and `SessionService` owning sign-in (id regenerated first),
+  sign-out (which clears the session cookie itself) and the non-httpOnly `isAuthenticated` hint
+  cookie the editor reads — written by an `onSend` hook rather than at sign-in, so it slides with the
+  session cookie and a hint no session backs is cleared on the next request.
 - `auth/` — local credentials (`AuthService`, bcrypt via `@node-rs/bcrypt`, rehash-on-login when a
   stored hash predates the current cost), one-shot mail tokens in Redis (`AuthTokenService`), and
   Google sign-in through `openid-client` (code flow + PKCE, state/verifier server-side, linking only
   from inside an account). `AuthGuard` + `@CurrentUser()` are exported, never global.
-- `users/` — the caller's own account: profile, password, address change (confirmed by mail before
-  it takes effect), avatar, deletion (one cascading statement).
+- `users/` — the caller's own account: profile, password, address change (gated by the current
+  password, then confirmed by mail before it takes effect), avatar, deletion (one cascading
+  statement). A session alone is proof of intent for none of the three: it would otherwise be a
+  complete takeover, since a new address confirms a password reset.
 - `mail/` — nodemailer plus rendering functions, four locales, HTML and text; unset `SMTP_URL` logs
   the mail with its link instead of sending.
 - `storage/` — files on a volume under immutable random names (avatars now, previews next); the row

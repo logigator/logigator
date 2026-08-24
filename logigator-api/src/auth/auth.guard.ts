@@ -5,9 +5,10 @@ import {
   HttpStatus,
   Injectable
 } from '@nestjs/common';
-import type { FastifyRequest } from 'fastify';
+import type { FastifyReply, FastifyRequest } from 'fastify';
 import { ApiException } from '../common/api-exception';
 import type { UserRow } from '../database/schema';
+import { SessionService } from '../session/session.service';
 import { UsersService } from '../users/users.service';
 import '../session/session.types';
 
@@ -27,18 +28,24 @@ declare module 'fastify' {
  */
 @Injectable()
 export class AuthGuard implements CanActivate {
-  constructor(private readonly users: UsersService) {}
+  constructor(
+    private readonly users: UsersService,
+    private readonly session: SessionService
+  ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest<FastifyRequest>();
+    const http = context.switchToHttp();
+    const request = http.getRequest<FastifyRequest>();
     const userId = request.session?.userId;
     if (!userId) throw unauthorized();
 
     const user = await this.users.findById(userId);
     if (!user) {
-      // The session outlived its account. Drop it, so the client stops sending
-      // a cookie that can never resolve again.
-      await request.session.destroy();
+      // The session outlived its account, and no later request can resolve it
+      // either. Signing out is what clears the cookies and the account's
+      // session index — `destroy` alone leaves both behind, so the client keeps
+      // sending a dead id and rendering a signed-in shell.
+      await this.session.signOut(request, http.getResponse<FastifyReply>());
       throw unauthorized();
     }
 

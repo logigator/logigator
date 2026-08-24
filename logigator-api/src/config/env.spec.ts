@@ -1,6 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { DEVELOPMENT_SESSION_SECRET, loadEnv } from './env';
 
+/**
+ * What a production deployment has to say for itself before the schema lets it
+ * boot: a private secret, and a declared proxy — cookies are `Secure` there, and
+ * the process serves plain HTTP.
+ */
+const PRODUCTION = {
+  NODE_ENV: 'production',
+  SESSION_SECRET: 'x'.repeat(32),
+  TRUST_PROXY: '1'
+};
+
 describe('loadEnv', () => {
   it('falls back to defaults for an empty environment', () => {
     // Every variable is defaulted on purpose: a bare `docker compose up` must
@@ -52,13 +63,10 @@ describe('loadEnv', () => {
   it('refuses to run in production on the public development secret', () => {
     // Anyone holding it could forge a session cookie, and it is in the
     // repository — so this is the one default production may not inherit.
-    expect(() => loadEnv({ NODE_ENV: 'production' })).toThrowError(
-      /SESSION_SECRET/
-    );
-    expect(
-      loadEnv({ NODE_ENV: 'production', SESSION_SECRET: 'x'.repeat(32) })
-        .SESSION_SECRET
-    ).toBe('x'.repeat(32));
+    expect(() =>
+      loadEnv({ ...PRODUCTION, SESSION_SECRET: undefined })
+    ).toThrowError(/SESSION_SECRET/);
+    expect(loadEnv(PRODUCTION).SESSION_SECRET).toBe('x'.repeat(32));
   });
 
   it('rejects half-configured Google credentials', () => {
@@ -89,20 +97,36 @@ describe('loadEnv', () => {
   });
 
   it('makes cookies secure in production and leaves them overridable', () => {
-    expect(
-      loadEnv({ NODE_ENV: 'production', SESSION_SECRET: 'x'.repeat(32) })
-        .COOKIE_SECURE
-    ).toBe(true);
+    expect(loadEnv(PRODUCTION).COOKIE_SECURE).toBe(true);
     expect(loadEnv({}).COOKIE_SECURE).toBe(false);
     // A deployment terminating TLS somewhere unusual has to be able to say so.
-    expect(loadEnv({ COOKIE_SECURE: 'true' }).COOKIE_SECURE).toBe(true);
     expect(
-      loadEnv({
-        NODE_ENV: 'production',
-        SESSION_SECRET: 'x'.repeat(32),
-        COOKIE_SECURE: 'false'
-      }).COOKIE_SECURE
+      loadEnv({ COOKIE_SECURE: 'true', TRUST_PROXY: '1' }).COOKIE_SECURE
+    ).toBe(true);
+    expect(
+      loadEnv({ ...PRODUCTION, COOKIE_SECURE: 'false' }).COOKIE_SECURE
     ).toBe(false);
+  });
+
+  it('refuses secure cookies without a trusted proxy', () => {
+    // The combination looks fine and is silently broken: `@fastify/session` will
+    // not write a `Secure` cookie over a connection it thinks is plain, and it
+    // thinks that for as long as `X-Forwarded-Proto` is untrusted. Logins would
+    // answer 200 and start no session at all.
+    expect(() => loadEnv({ ...PRODUCTION, TRUST_PROXY: '0' })).toThrowError(
+      /TRUST_PROXY/
+    );
+    expect(() => loadEnv({ COOKIE_SECURE: 'true' })).toThrowError(
+      /TRUST_PROXY/
+    );
+
+    // Plain-HTTP deployments are the ones that may trust nothing: a directly
+    // reachable server must not let a caller pick its own address.
+    expect(loadEnv({}).TRUST_PROXY).toBe(0);
+    expect(
+      loadEnv({ ...PRODUCTION, COOKIE_SECURE: 'false', TRUST_PROXY: '0' })
+        .TRUST_PROXY
+    ).toBe(0);
   });
 
   it('reports every problem at once', () => {

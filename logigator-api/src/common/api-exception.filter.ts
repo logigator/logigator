@@ -53,6 +53,25 @@ function messageFrom(payload: string | object): string {
 }
 
 /**
+ * The status a Fastify plugin's own error carries, when it blames the client.
+ *
+ * `@fastify/error` instances — what the multipart plugin throws for a request
+ * that is not multipart, or one file too many — are plain errors with a
+ * `statusCode`, not `HttpException`s, so they would otherwise be answered and
+ * logged as server defects. Only 4xx is taken at its word: a plugin's 5xx is a
+ * defect like any other, and its message stays internal.
+ */
+function clientErrorStatus(exception: unknown): number | null {
+  // A thrown value need not even be an object — `throw null` reaches here too.
+  if (typeof exception !== 'object' || exception === null) return null;
+
+  const status = (exception as { statusCode?: unknown }).statusCode;
+  if (typeof status !== 'number' || !Number.isInteger(status)) return null;
+
+  return status >= 400 && status < 500 ? status : null;
+}
+
+/**
  * Renders every failure as the contract's single error body, so clients need
  * one failure path.
  *
@@ -75,9 +94,8 @@ export class ApiExceptionFilter implements ExceptionFilter {
   }
 
   private statusFor(exception: unknown): number {
-    return exception instanceof HttpException
-      ? exception.getStatus()
-      : HttpStatus.INTERNAL_SERVER_ERROR;
+    if (exception instanceof HttpException) return exception.getStatus();
+    return clientErrorStatus(exception) ?? HttpStatus.INTERNAL_SERVER_ERROR;
   }
 
   // The contract reads `code` as any string so an old client survives a code it
@@ -96,6 +114,16 @@ export class ApiExceptionFilter implements ExceptionFilter {
       return {
         code: codeFor(exception.getStatus()),
         message: messageFrom(exception.getResponse())
+      };
+    }
+
+    const clientStatus = clientErrorStatus(exception);
+    if (clientStatus !== null) {
+      return {
+        code: codeFor(clientStatus),
+        // Every error the plugins throw carries one, but `message` is required on
+        // the wire and an object with a bare `statusCode` would drop the key.
+        message: (exception as Error).message || 'Request failed.'
       };
     }
 

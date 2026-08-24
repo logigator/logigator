@@ -7,7 +7,8 @@ import { RedisService } from '../redis/redis.service';
 const DAY_IN_SECONDS = 24 * 60 * 60;
 
 /**
- * Session storage in Redis, as the three callbacks `@fastify/session` asks for.
+ * Session storage in Redis: the three callbacks `@fastify/session` asks for, and
+ * an index of which sessions belong to which account.
  *
  * Written here rather than taken from `connect-redis`, which imports
  * `express-session` for its `Store` base class and speaks only node-redis'
@@ -34,9 +35,7 @@ export class RedisSessionStore implements SessionStore {
     session: Session,
     callback: (err?: unknown) => void
   ): void {
-    this.redis
-      .setEx(key(sessionId), JSON.stringify(session), this.ttlFor(session))
-      .then(() => callback(), callback);
+    this.persist(sessionId, session).then(() => callback(), callback);
   }
 
   get(
@@ -53,6 +52,59 @@ export class RedisSessionStore implements SessionStore {
 
   destroy(sessionId: string, callback: (err?: unknown) => void): void {
     this.redis.delete(key(sessionId)).then(() => callback(), callback);
+  }
+
+  /**
+   * Deletes every session of an account, optionally sparing one.
+   *
+   * This is what makes a password reset mean something: whoever was signed in on
+   * the strength of the old password is signed out by it. The spared id is for
+   * the opposite case — a user changing their own password from a session that
+   * has no reason to end.
+   *
+   * Ids that no longer resolve are deleted as no-ops and dropped from the index
+   * on the way through, which is the only pruning it needs: `destroy` is handed a
+   * session id and no user, so a session that ends on its own leaves its id
+   * behind here.
+   */
+  async destroyForUser(
+    userId: string,
+    exceptSessionId?: string
+  ): Promise<void> {
+    const index = userIndexKey(userId);
+    const doomed = (await this.redis.membersOf(index)).filter(
+      (sessionId) => sessionId !== exceptSessionId
+    );
+    if (doomed.length === 0) return;
+
+    await this.redis.delete(...doomed.map(key));
+    await this.redis.removeFromSet(index, doomed);
+  }
+
+  /** Drops one id from the index, for a session that is ending deliberately. */
+  async forget(userId: string, sessionId: string): Promise<void> {
+    await this.redis.removeFromSet(userIndexKey(userId), [sessionId]);
+  }
+
+  /**
+   * Writes the session, and — once it belongs to somebody — records its id under
+   * that account, so the sessions of one user can be found without scanning every
+   * key in a shared Redis.
+   */
+  private async persist(sessionId: string, session: Session): Promise<void> {
+    await this.redis.setEx(
+      key(sessionId),
+      JSON.stringify(session),
+      this.ttlFor(session)
+    );
+
+    if (session.userId) {
+      await this.redis.addToSet(
+        userIndexKey(session.userId),
+        sessionId,
+        this.maxAgeSeconds
+      );
+    }
   }
 
   /**
@@ -73,4 +125,8 @@ export class RedisSessionStore implements SessionStore {
 
 function key(sessionId: string): string {
   return `sess:${sessionId}`;
+}
+
+function userIndexKey(userId: string): string {
+  return `sessions:user:${userId}`;
 }

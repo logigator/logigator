@@ -8,7 +8,9 @@ import type {
 import { ApiException } from '../common/api-exception';
 import type { Locale } from '../common/locale';
 import type { UserRow } from '../database/schema';
+import { isUniqueViolation } from '../database/unique-violation';
 import { MailService } from '../mail/mail.service';
+import { SessionService } from '../session/session.service';
 import { UsersService } from '../users/users.service';
 import { AuthTokenService } from './auth-token.service';
 import { PasswordService } from './password.service';
@@ -29,7 +31,8 @@ export class AuthService {
     private readonly users: UsersService,
     private readonly passwords: PasswordService,
     private readonly tokens: AuthTokenService,
-    private readonly mail: MailService
+    private readonly mail: MailService,
+    private readonly sessions: SessionService
   ) {}
 
   /**
@@ -43,19 +46,24 @@ export class AuthService {
       // Registration cannot hide that an address is taken — it would have to
       // either create a second account for it or pretend to. Saying so plainly
       // is what lets the form offer signing in instead.
-      throw new ApiException(
-        HttpStatus.CONFLICT,
-        'conflict',
-        'That email address already has an account.'
-      );
+      throw emailTaken();
     }
 
-    const user = await this.users.create({
-      username: body.username,
-      email: body.email,
-      passwordHash: await this.passwords.hash(body.password),
-      emailVerified: false
-    });
+    let user: UserRow;
+    try {
+      user = await this.users.create({
+        username: body.username,
+        email: body.email,
+        passwordHash: await this.passwords.hash(body.password),
+        emailVerified: false
+      });
+    } catch (error) {
+      // The read above and this insert are two statements, and a double-clicked
+      // form sends two requests: the loser has to read as the same conflict, not
+      // as a server fault.
+      if (isUniqueViolation(error)) throw emailTaken();
+      throw error;
+    }
 
     await this.sendVerification(user, locale);
   }
@@ -104,8 +112,9 @@ export class AuthService {
     const user = await this.users.findById(verification.userId);
     if (!user) throw invalidToken();
 
+    let updated;
     try {
-      await this.users.update(user.id, {
+      updated = await this.users.update(user.id, {
         email: verification.email,
         emailVerified: true
       });
@@ -113,15 +122,13 @@ export class AuthService {
       // The address was free when the mail went out; an hour is long enough for
       // somebody else to have taken it, and the unique constraint is the only
       // place that can be noticed without a lock.
-      if (isUniqueViolation(error)) {
-        throw new ApiException(
-          HttpStatus.CONFLICT,
-          'conflict',
-          'That email address already has an account.'
-        );
-      }
+      if (isUniqueViolation(error)) throw emailTaken();
       throw error;
     }
+
+    // The account was deleted while the mail sat in an inbox: there is nothing
+    // left for the link to activate, so it reads as a dead one.
+    if (!updated) throw invalidToken();
   }
 
   /**
@@ -136,10 +143,19 @@ export class AuthService {
     if (!user) return;
 
     const token = await this.tokens.issuePasswordReset(user.id);
-    await this.mail.sendPasswordReset(
-      { email: user.email, username: user.username, locale },
-      token
-    );
+    try {
+      await this.mail.sendPasswordReset(
+        { email: user.email, username: user.username, locale },
+        token
+      );
+    } catch (error) {
+      // Answering 503 here would undo the whole point of the endpoint: an
+      // unknown address cannot fail to send, so a failure that reached the
+      // caller would say "this address has an account" every time the mail
+      // server hiccups. The operator gets the log; the caller gets the same
+      // nothing either way, and retrying is already the advice on screen.
+      this.logger.error(`Password reset mail to ${user.email} failed`, error);
+    }
   }
 
   /**
@@ -147,7 +163,7 @@ export class AuthService {
    *
    * It also verifies the address: holding a token proves the mailbox was
    * reachable, and an account stuck unverified would otherwise have no way back
-   * in.
+   * in. And it ends every session the account had — see below.
    */
   async confirmPasswordReset(body: ConfirmPasswordReset): Promise<void> {
     const reset = await this.tokens.redeemPasswordReset(body.token);
@@ -156,10 +172,17 @@ export class AuthService {
     const user = await this.users.findById(reset.userId);
     if (!user) throw invalidToken();
 
-    await this.users.update(user.id, {
+    const updated = await this.users.update(user.id, {
       passwordHash: await this.passwords.hash(body.password),
       emailVerified: true
     });
+    if (!updated) throw invalidToken();
+
+    // Whoever was signed in on the strength of the old password is signed out by
+    // the new one. A reset is what a locked-out or compromised account has, and
+    // leaving live sessions behind would mean the intruder keeps their access
+    // through the very act meant to end it.
+    await this.sessions.signOutEverywhere(user.id);
   }
 
   /**
@@ -188,6 +211,8 @@ export class AuthService {
     if (this.passwords.needsRehash(user.passwordHash)) {
       // The password is known to be correct right now, which is the only moment
       // a stored hash can be strengthened. Legacy hashes were made at cost 9.
+      // The row it answers with is ignored: the caller is authenticating against
+      // the copy it already read, and a vanished account is the guard's business.
       await this.users.update(user.id, {
         passwordHash: await this.passwords.hash(password)
       });
@@ -217,16 +242,12 @@ export class AuthService {
   }
 }
 
-/**
- * PostgreSQL's `unique_violation`, wherever it ended up in the chain: Drizzle
- * wraps a driver error in its own and keeps the original as `cause`, so the code
- * is one level down from what the query threw.
- */
-function isUniqueViolation(error: unknown): boolean {
-  for (let current = error; current; current = (current as Error).cause) {
-    if ((current as { code?: unknown }).code === '23505') return true;
-  }
-  return false;
+function emailTaken(): ApiException {
+  return new ApiException(
+    HttpStatus.CONFLICT,
+    'conflict',
+    'That email address already has an account.'
+  );
 }
 
 function invalidCredentials(): ApiException {

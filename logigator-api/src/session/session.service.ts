@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { ENV, type Env } from '../config/env';
+import { RedisSessionStore } from './redis-session.store';
 import './session.types';
 
 /**
@@ -27,7 +28,10 @@ const DAY_IN_SECONDS = 24 * 60 * 60;
 /** Starts and ends signed-in sessions. */
 @Injectable()
 export class SessionService {
-  constructor(@Inject(ENV) private readonly env: Env) {}
+  constructor(
+    @Inject(ENV) private readonly env: Env,
+    private readonly store: RedisSessionStore
+  ) {}
 
   /**
    * Binds the session to `userId`.
@@ -36,24 +40,75 @@ export class SessionService {
    * (an anonymous one, or another account's), and reusing that id would let
    * whoever handed it over ride along on the new sign-in — session fixation.
    */
-  async signIn(
-    request: FastifyRequest,
-    reply: FastifyReply,
-    userId: string
-  ): Promise<void> {
+  async signIn(request: FastifyRequest, userId: string): Promise<void> {
     await request.session.regenerate();
     request.session.userId = userId;
-    reply.setCookie(AUTH_HINT_COOKIE, 'true', {
-      ...this.cookieOptions(),
-      httpOnly: false,
-      maxAge: this.env.SESSION_MAX_AGE_DAYS * DAY_IN_SECONDS
-    });
   }
 
-  /** Ends the session and clears both cookies. */
+  /**
+   * Writes the hint cookie of the response being sent, so it says what the
+   * session says.
+   *
+   * Per response rather than at sign-in, because the session cookie slides:
+   * `rolling` re-sets it on every request, so an active user's session outlives
+   * the lifetime its first cookie announced. A hint written once would expire
+   * underneath a session that is still good, and the editor would render a
+   * signed-out shell to a signed-in user.
+   *
+   * The other direction is the same invariant read backwards: a request carrying
+   * a hint that no session backs — an expired session, or one ended from
+   * somewhere else — goes back without it.
+   */
+  syncHintCookie(request: FastifyRequest, reply: FastifyReply): void {
+    if (request.session?.userId) {
+      reply.setCookie(AUTH_HINT_COOKIE, 'true', {
+        ...this.cookieOptions(),
+        httpOnly: false,
+        maxAge: this.env.SESSION_MAX_AGE_DAYS * DAY_IN_SECONDS
+      });
+      return;
+    }
+
+    // Only for a client that has one: an anonymous request must come back with
+    // no `Set-Cookie` at all, which is why nothing here runs unconditionally.
+    if (request.cookies[AUTH_HINT_COOKIE] !== undefined) {
+      reply.clearCookie(AUTH_HINT_COOKIE, this.cookieOptions());
+    }
+  }
+
+  /**
+   * Ends the session and clears its cookie.
+   *
+   * Clearing it here is explicit because `destroy` leaves `request.session`
+   * null, and `@fastify/session` then returns without writing a `Set-Cookie` of
+   * its own, so a browser would keep sending an id that resolves to nothing.
+   * The hint needs no line here — a null session is exactly what
+   * {@link syncHintCookie} clears it for.
+   */
   async signOut(request: FastifyRequest, reply: FastifyReply): Promise<void> {
+    // Read before destroying — afterwards there is no session to ask.
+    const { userId, sessionId } = request.session;
+
     await request.session.destroy();
-    reply.clearCookie(AUTH_HINT_COOKIE, this.cookieOptions());
+    if (userId) await this.store.forget(userId, sessionId);
+
+    reply.clearCookie(this.env.SESSION_COOKIE_NAME, this.cookieOptions());
+  }
+
+  /**
+   * Signs an account out of every session, optionally sparing the one asking.
+   *
+   * Used where a credential changes: a reset ends every session, and a password
+   * change from inside the account ends every other one. The hint cookie of those
+   * sessions cannot be cleared from here — no response is going to them — but
+   * their next request answers with a session that no longer resolves, and
+   * {@link syncHintCookie} clears it there.
+   */
+  async signOutEverywhere(
+    userId: string,
+    exceptSessionId?: string
+  ): Promise<void> {
+    await this.store.destroyForUser(userId, exceptSessionId);
   }
 
   private cookieOptions() {

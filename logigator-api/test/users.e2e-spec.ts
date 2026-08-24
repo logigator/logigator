@@ -39,7 +39,9 @@ describe('the signed-in user', () => {
   const credentials = { email: 'ada@example.com', password: 'lovelace1' };
 
   beforeAll(async () => {
-    api = await startE2eApp();
+    // The upload ceiling at its floor, so the oversized-avatar case is a couple
+    // of kilobytes instead of five megabytes of payload.
+    api = await startE2eApp({ UPLOAD_MAX_BYTES: '1024' });
 
     await api.inject({
       method: 'POST',
@@ -104,12 +106,31 @@ describe('the signed-in user', () => {
     expect(Object.keys(response.json().details)).toEqual(['username']);
   });
 
+  it('changes the address only with the current password', async () => {
+    // A session is not proof of intent here: whoever holds a stolen cookie could
+    // otherwise move the account to their own mailbox, confirm it from there, and
+    // reset the password — a takeover the owner's password never gates.
+    const withoutProof = await api.inject({
+      method: 'PATCH',
+      url: '/api/user',
+      headers: jar.headers(),
+      payload: { email: 'ada@newmail.test' }
+    });
+
+    expect(withoutProof.statusCode).toBe(401);
+    expect(withoutProof.json().code).toBe('invalid_credentials');
+    expect(api.mail.sent).toHaveLength(0);
+  });
+
   it('keeps the old address until the new one is confirmed', async () => {
     const response = await api.inject({
       method: 'PATCH',
       url: '/api/user',
       headers: jar.headers(),
-      payload: { email: 'ada@newmail.test' }
+      payload: {
+        email: 'ada@newmail.test',
+        currentPassword: credentials.password
+      }
     });
 
     expect(response.statusCode).toBe(200);
@@ -152,7 +173,10 @@ describe('the signed-in user', () => {
       method: 'PATCH',
       url: '/api/user',
       headers: jar.headers(),
-      payload: { email: 'grace@example.com' }
+      payload: {
+        email: 'grace@example.com',
+        currentPassword: credentials.password
+      }
     });
 
     expect(response.statusCode).toBe(409);
@@ -167,7 +191,10 @@ describe('the signed-in user', () => {
       method: 'PATCH',
       url: '/api/user',
       headers: jar.headers(),
-      payload: { email: 'contested@example.com' }
+      payload: {
+        email: 'contested@example.com',
+        currentPassword: credentials.password
+      }
     });
     expect(change.statusCode).toBe(200);
     const token = api.mail.lastToken();
@@ -193,6 +220,16 @@ describe('the signed-in user', () => {
   });
 
   it('changes the password only with the current one', async () => {
+    // A second signed-in device, to watch what the change does to it.
+    const phone = new CookieJar();
+    phone.store(
+      await api.inject({
+        method: 'POST',
+        url: '/api/auth/login',
+        payload: credentials
+      })
+    );
+
     const withoutProof = await api.inject({
       method: 'PATCH',
       url: '/api/user',
@@ -229,6 +266,16 @@ describe('the signed-in user', () => {
       headers: jar.headers()
     });
     expect(stillSignedIn.statusCode).toBe(200);
+
+    // Every other one does not: a password is changed because the old one is not
+    // trusted any more, and the sessions it opened are exactly what that means.
+    const onThePhone = await api.inject({
+      method: 'GET',
+      url: '/api/user',
+      headers: phone.headers()
+    });
+    expect(onThePhone.statusCode).toBe(401);
+
     credentials.password = 'babbage99';
   });
 
@@ -272,6 +319,27 @@ describe('the signed-in user', () => {
     expect(response.statusCode).toBe(415);
   });
 
+  it('refuses an image over the upload ceiling', async () => {
+    const upload = await multipart(
+      Buffer.alloc(api.env.UPLOAD_MAX_BYTES + 1, 1),
+      'huge.png',
+      'image/png'
+    );
+
+    const response = await api.inject({
+      method: 'POST',
+      url: '/api/user/avatar',
+      headers: { ...jar.headers(), ...upload.headers },
+      payload: upload.payload
+    });
+
+    // A file too large is the client's business to fix, not a server fault: the
+    // multipart plugin's own way of reporting it is an error that reads as neither
+    // unless it is turned off and the truncation flag read instead.
+    expect(response.statusCode).toBe(413);
+    expect(response.json().code).toBe('bad_request');
+  });
+
   it('deletes the account with its password, and not without', async () => {
     const withoutProof = await api.inject({
       method: 'DELETE',
@@ -280,6 +348,16 @@ describe('the signed-in user', () => {
       payload: {}
     });
     expect(withoutProof.statusCode).toBe(401);
+
+    // And with no body at all — the natural call for an account that has no
+    // password to send, which must reach the handler rather than fail validation.
+    const bodyless = await api.inject({
+      method: 'DELETE',
+      url: '/api/user',
+      headers: jar.headers()
+    });
+    expect(bodyless.statusCode).toBe(401);
+    expect(bodyless.json().code).toBe('invalid_credentials');
 
     const deleted = await api.inject({
       method: 'DELETE',

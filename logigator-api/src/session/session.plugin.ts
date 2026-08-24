@@ -3,6 +3,7 @@ import fastifySession from '@fastify/session';
 import type { NestFastifyApplication } from '@nestjs/platform-fastify';
 import type { Env } from '../config/env';
 import { RedisSessionStore } from './redis-session.store';
+import { SessionService } from './session.service';
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
 
@@ -43,4 +44,16 @@ export async function registerSessionPlugins(
       ...(env.COOKIE_DOMAIN ? { domain: env.COOKIE_DOMAIN } : {})
     }
   });
+
+  // After the session plugin, so the session of this request is resolved — and
+  // destroyed, where a handler ended it. The hint cookie is derived state, and
+  // this is the one place that writes it: `rolling` re-sets the session cookie
+  // on every response, and the hint has to slide with it.
+  const sessions = app.get<SessionService>(SessionService);
+  app
+    .getHttpAdapter()
+    .getInstance()
+    .addHook('onSend', async (request, reply) => {
+      sessions.syncHintCookie(request, reply);
+    });
 }

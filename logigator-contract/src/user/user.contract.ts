@@ -53,9 +53,11 @@ export const userResponseSchema = z
 export type UserResponse = z.infer<typeof userResponseSchema>;
 
 /**
- * A partial profile update. `currentPassword` is required to change the
- * password of an account that already has one, and changing the address does not
- * take effect until the verification link in the mail is opened.
+ * A partial profile update. `currentPassword` is required to change either the
+ * password or the address of an account that has a password — a session is not
+ * proof of intent for anything that moves control of the account — and changing
+ * the address does not take effect until the verification link in the mail is
+ * opened.
  */
 export const updateUserRequestSchema = z
   .object({
@@ -81,9 +83,17 @@ export const updateUserResponseSchema = z
 
 export type UpdateUserResponse = z.infer<typeof updateUserResponseSchema>;
 
-/** Deleting an account requires the password of an account that has one. */
-export const deleteUserRequestSchema = z.object({
-  password: z.string().min(1).optional()
-});
+/**
+ * Deleting an account requires the password of an account that has one.
+ *
+ * The whole body is optional, and an absent one reads as `{}`: an account with
+ * no password has nothing to send, and `fetch(url, { method: 'DELETE' })` — the
+ * natural call for it — carries no payload at all.
+ */
+export const deleteUserRequestSchema = z
+  .object({
+    password: z.string().min(1).optional()
+  })
+  .default({});
 
 export type DeleteUserRequest = z.infer<typeof deleteUserRequestSchema>;

@@ -48,6 +48,34 @@ class ProbeController {
     throw new TypeError('a defect with a leaky message');
   }
 
+  /** Not every thrown value is an object, and the filter is the last stop. */
+  @Get('nothing')
+  nothing(): never {
+    throw null;
+  }
+
+  /**
+   * What a Fastify plugin throws: a plain error carrying its own status, not an
+   * `HttpException`. `@fastify/multipart` raises these for a file over the limit
+   * and for a request that is not multipart at all.
+   */
+  @Get('plugin-refusal')
+  pluginRefusal(): never {
+    throw Object.assign(new Error('request file too large'), {
+      statusCode: 413,
+      code: 'FST_REQ_FILE_TOO_LARGE'
+    });
+  }
+
+  /** The same shape, but blaming the server — still a defect. */
+  @Get('plugin-defect')
+  pluginDefect(): never {
+    throw Object.assign(new Error('the file buffer was not found'), {
+      statusCode: 500,
+      code: 'FST_FILE_BUFFER_NOT_FOUND'
+    });
+  }
+
   @Post('echo')
   echo(@Body() body: unknown): unknown {
     return body;
@@ -138,6 +166,26 @@ describe('ApiExceptionFilter', () => {
       { method: 'GET', url: '/probe/boom' },
       500,
       'internal'
+    ],
+    // A plugin's own error is not an `HttpException`, so without reading the
+    // status it carries, a file over the upload limit would answer 500.
+    [
+      'a plugin error blaming the caller',
+      { method: 'GET', url: '/probe/plugin-refusal' },
+      413,
+      'bad_request'
+    ],
+    [
+      'a plugin error blaming the server',
+      { method: 'GET', url: '/probe/plugin-defect' },
+      500,
+      'internal'
+    ],
+    [
+      'a thrown non-object',
+      { method: 'GET', url: '/probe/nothing' },
+      500,
+      'internal'
     ]
   ])('answers %s with the contract body', async (_, request, status, code) => {
     const response = await app.inject(
@@ -154,6 +202,21 @@ describe('ApiExceptionFilter', () => {
     const response = await app.inject({ method: 'GET', url: '/probe/boom' });
 
     expect(response.payload).not.toContain('leaky');
+  });
+
+  it('says why a plugin refused, and stays silent about its defects', async () => {
+    const refusal = await app.inject({
+      method: 'GET',
+      url: '/probe/plugin-refusal'
+    });
+    // Worth passing on: the caller can act on a file being too large.
+    expect(refusal.json().message).toBe('request file too large');
+
+    const defect = await app.inject({
+      method: 'GET',
+      url: '/probe/plugin-defect'
+    });
+    expect(defect.payload).not.toContain('buffer');
   });
 
   it('prefers the code and details an ApiException names over the status', async () => {

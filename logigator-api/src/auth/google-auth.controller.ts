@@ -65,7 +65,7 @@ export class GoogleAuthController {
         query,
         request.session?.userId
       );
-      if (user) await this.session.signIn(request, reply, user.id);
+      if (user) await this.session.signIn(request, user.id);
 
       await reply.redirect(this.env.PUBLIC_URL, 302);
     } catch (error) {

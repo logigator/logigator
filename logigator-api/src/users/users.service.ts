@@ -51,11 +51,19 @@ export class UsersService {
     return user;
   }
 
-  /** Applies a partial change and answers with the stored row. */
+  /**
+   * Applies a partial change and answers with the stored row, or `null` when
+   * there is no such row any more.
+   *
+   * Nullable rather than assumed: an account can be deleted between the moment a
+   * guard loaded it and the moment a handler writes to it, and reading the first
+   * element of an empty `returning()` would answer a `TypeError` from deep inside
+   * the next thing that touched it.
+   */
   async update(
     id: string,
     changes: Partial<Omit<NewUserRow, 'id'>>
-  ): Promise<UserRow> {
+  ): Promise<UserRow | null> {
     const [user] = await this.db
       .update(users)
       .set(
@@ -65,7 +73,7 @@ export class UsersService {
       )
       .where(eq(users.id, id))
       .returning();
-    return user;
+    return user ?? null;
   }
 
   /**
