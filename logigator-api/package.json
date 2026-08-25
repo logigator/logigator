@@ -17,6 +17,7 @@
     "db:generate": "drizzle-kit generate",
     "db:check": "drizzle-kit check",
     "db:migrate": "rspack build && node ../dist/logigator-api/migrate.js ./drizzle",
+    "db:renormalize": "rspack build && node ../dist/logigator-api/renormalize.js",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "vitest run --config vitest.e2e.config.ts",

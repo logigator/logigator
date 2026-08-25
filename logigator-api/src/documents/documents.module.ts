@@ -8,6 +8,7 @@ import { DependenciesService } from './dependencies.service';
 import { PreviewService } from './preview.service';
 import { ProjectsController } from './projects.controller';
 import { ProjectsService } from './projects.service';
+import { RenormalizeService } from './renormalize.service';
 
 /**
  * Stored circuits: the caller's own projects and library components.
@@ -32,13 +33,15 @@ import { ProjectsService } from './projects.service';
     DependenciesService,
     PreviewService,
     ProjectsService,
-    ComponentsService
+    ComponentsService,
+    RenormalizeService
   ],
   exports: [
     CircuitDocumentService,
     DependenciesService,
     ProjectsService,
-    ComponentsService
+    ComponentsService,
+    RenormalizeService
   ]
 })
 export class DocumentsModule {}

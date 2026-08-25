@@ -10,10 +10,15 @@ const here = fileURLToPath(new URL('.', import.meta.url));
 
 export default {
   target: 'node',
-  // Two entry points: the server, and the migration runner a release runs before
-  // it (`node migrate.js`). Bundling the migrator too keeps deploys free of
-  // drizzle-kit and of any TypeScript loader.
-  entry: { main: './src/main.ts', migrate: './src/database/migrate.main.ts' },
+  // Three entry points: the server, the migration runner a release runs before
+  // it (`node migrate.js`), and the document re-normalizer a format bump deploys
+  // with (`node renormalize.js`). Bundling them keeps deploys free of drizzle-kit
+  // and of any TypeScript loader.
+  entry: {
+    main: './src/main.ts',
+    migrate: './src/database/migrate.main.ts',
+    renormalize: './src/database/renormalize.main.ts'
+  },
   // Real `__dirname`/`__filename` instead of the bundler's mocks, so the
   // migration runner can find the SQL folder shipped beside its bundle.
   node: { __dirname: false, __filename: false },

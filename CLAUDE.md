@@ -74,7 +74,10 @@ The API's database scripts run from its own package (`yarn workspace logigator-a
 `db:generate` diffs the Drizzle schema into a new SQL migration under
 `logigator-api/drizzle/`, `db:check` validates the migration history, and `db:migrate` applies
 pending migrations through the bundled runner (`dist/logigator-api/migrate.js`) — the same function
-the E2E harness and a release call, so no path applies DDL that CI has not.
+the E2E harness and a release call, so no path applies DDL that CI has not. `db:renormalize` runs
+the third bundle entry (`dist/logigator-api/renormalize.js`): bare, it re-normalizes documents an
+older format version wrote; with `--all`, it re-extracts every derived row (counts, port surface,
+dependency edges) from the documents they came from.
 
 `@logigator/ui` has no build script — every consumer compiles its source. The ng-packagr target in
 `angular.json` stays for an eventual publish and because the unit-test builder reads its build
@@ -220,10 +223,52 @@ while `/api/meta` doubles as the liveness probe that reaches nothing.
   path writes it and every response lists its URLs — written into one directory per asset under a
   two-hex shard of its id (`profile/a3/<uuid>/256.webp`). The row holds only that id, a fresh one
   per write, so URLs are immutable and a half-written asset is unnameable; deleting is removing the
-  directory, which is what lets the matrix change without stranding what an older one named.
+  directory, which is what lets the matrix change without stranding what an older one named. The
+  whole volume is served under **one URL root, `/files`** (`STORAGE_URL_PREFIX`), not one prefix per
+  area, because the legacy backend answers `/profile/…` and `/preview/…` from its own disk on the
+  same origin until cutover. `OrphanSweepService` (`@nestjs/schedule`, nightly) deletes asset
+  directories no row points at, sparing anything younger than `STORAGE_SWEEP_GRACE_MINUTES` — an
+  upload in flight is a directory no row names _yet_.
+- `documents/` — projects and components: the caller's own stored circuits. **Every write goes
+  through `CircuitDocumentService.ingest`**, which parses with core's `parseCircuitDocument` in
+  strict mode and stores what parsing produced, so a row this server wrote is a document it can
+  read. Everything else on a row is derived there and never taken from a client: the counts, the
+  dependency edges (from the document's embedded `definitions[].source`), and a component's
+  `numInputs`/`numOutputs`/`labels` (from the INPUT/OUTPUT plugs, via core's
+  `deriveCircuitSummary`). Two envelope fields belong to the server — the stored `document.name` is
+  written from the row's column, and the client-asserted `attribution` chain is stripped, with only
+  the immediate parent's id kept to resolve against real rows (`forkedFromId`, the attribution trust
+  anchor; reads walk it back with `forkLineage`). Concurrency is the integer `version` in the
+  `WHERE` of one guarded `UPDATE` (409 `version_conflict`); it bumps for the document, the name, the
+  symbol and the description, never for visibility or a regenerated link. `circuit-queries.ts` holds
+  the reads over the half both tables share, **overloaded per table** because Drizzle's builder types
+  are conditional on the table and cannot resolve against an unresolved type parameter. Previews are
+  `PreviewService` (both themes in one multipart request, both replaced together; not an edit, so no
+  version bump). `RenormalizeService` is the format-bump _and_ re-extract job — keyset-paginated, one
+  transaction per row, idempotent, no version bump — run as the third Rspack entry
+  (`node renormalize.js [--all]`).
+- `sharing/` — reading a document by its share link and cloning it. The link is a **capability**:
+  the read needs no session and ignores `public`. A clone copies the whole transitive dependency
+  graph (one recursive CTE with a path array as a cycle guard) and **rewrites every embedded
+  snapshot's `source.id`** to the new copies — a snapshot whose master no longer exists loses its
+  `source` instead. New ids are chosen before any insert, so insert order is irrelevant; copies go
+  through the same write path, so their ports and edges are re-derived, and a copy is always private.
+- `community/` — the public half: listings, stars, stargazers, public profiles. **Every predicate
+  carries `public = true`**, which is why these queries live apart from the owner-scoped ones rather
+  than being those with a flag flipped. Documents are addressed by their `link`, so regenerating the
+  token takes the public page down with it. Star counts and "did the caller star it" are correlated
+  subqueries (no counter column, no `GROUP BY` to keep in step with the select list); ranking is
+  stars then edit time, so paging is stable. `@SessionUserId()` reads the session without requiring
+  one — the reason `AuthGuard` is per-route rather than global.
+- `reports/` — `POST /api/report-error`, keeping the path and the field-by-field shape the editor
+  already sends (the old editor's positional `project` payload included). Unauthenticated and
+  rate-limited; every report is one log line, and a configured `REPORT_MAIL_TO` also gets it with the
+  circuit attached.
 - `common/` — the error filter and `ApiException`, the zod validation pipe (a shim to delete when
-  NestJS 12's `@Body({ schema })` lands), the Redis-backed `@RateLimit()` guard, and locale
-  resolution from the shared `preferences` cookie.
+  NestJS 12's `@Body({ schema })` lands), the Redis-backed `@RateLimit()` guard, the `UuidParam`
+  pipe (every id is a `uuid` column, and Postgres rejects a comparison against something that is
+  not — so a mistyped path is a 404 rather than a 500), and locale resolution from the shared
+  `preferences` cookie.
 - `app.setup.ts` — the plugin registration and route prefix shared by `main.ts` and the E2E
   harness, so the specs exercise the same HTTP layer as production.
 
@@ -270,6 +315,10 @@ may replace this config.
   runner reads migration SQL from disk (`__dirname/drizzle` by default, hence
   `node: { __dirname: false }`), so a release applies migrations with plain `node` and no dev
   tooling. drizzle-kit only ever _generates_ them.
+- **`renormalize` is a third entry**, for the same reason, but unlike the migration runner it boots
+  the real application container (`NestFactory.createApplicationContext`) — the point is to rewrite
+  documents through the same parse-and-extract path every other write uses, and a second
+  implementation of that path is what would let the derived tables drift.
 - Drizzle is pinned to an exact `1.0.0-rc` build. RQBv2 `defineRelations`, the DDL-snapshot
   migration format and the consolidated zod integration are 1.0-only surfaces with no compat path
   from 0.45; bump the pin when 1.0 stable ships. Relations name their columns explicitly and the
@@ -335,4 +384,7 @@ without a database would report green having tested nothing. `test/harness.ts` c
 database per spec file and migrates it with the runner a release uses; Redis keys are namespaced per
 run and deleted afterwards. Only two things differ from production — the mail transport is captured
 (`test/mail-capture.ts`, so specs read the link a recipient would click) and bcrypt runs at its
-minimum cost. `test/cookie-jar.ts` carries cookies across requests the way a browser would.
+minimum cost. `test/cookie-jar.ts` carries cookies across requests the way a browser would,
+`test/circuits.ts` builds documents through core's own encoder rather than hand-written JSON (a
+fixture gets the wire chain and the position deltas subtly wrong), and `test/assets.ts` maps a served
+URL back to its path on the volume — the two are not the same string.
