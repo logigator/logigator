@@ -92,6 +92,8 @@ export type {
   TextOptionSchema
 } from './catalog/option-schema';
 export { validateOptionValue } from './catalog/validate-option-value';
+export { deriveCircuitSummary } from './catalog/derive-circuit-summary';
+export type { CircuitSummary } from './catalog/derive-circuit-summary';
 export { BUILT_IN_META, builtInMeta } from './catalog/built-in-meta';
 export { andMeta } from './catalog/built-ins/and.meta';
 export { buttonMeta } from './catalog/built-ins/button.meta';

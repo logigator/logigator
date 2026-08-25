@@ -64,3 +64,88 @@ export {
   type RequestPasswordReset,
   type ConfirmPasswordReset
 } from './auth/auth.contract';
+export {
+  pageQuerySchema,
+  pageSchema,
+  type Page,
+  type PageQuery
+} from './page/page.contract';
+export {
+  authorSchema,
+  circuitDocumentInputSchema,
+  circuitDocumentSchema,
+  circuitFields,
+  circuitPreviewSchema,
+  componentSymbolSchema,
+  documentDependencySchema,
+  documentDescriptionSchema,
+  documentNameSchema,
+  forkAttributionSchema,
+  requireSomeField,
+  saveCircuitRequestSchema,
+  type Author,
+  type CircuitPreview,
+  type DocumentDependency,
+  type ForkAttribution,
+  type SaveCircuitRequest
+} from './document/document.contract';
+export {
+  createProjectRequestSchema,
+  projectPageSchema,
+  projectResponseSchema,
+  projectSummarySchema,
+  updateProjectRequestSchema,
+  type CreateProjectRequest,
+  type ProjectPage,
+  type ProjectResponse,
+  type ProjectSummary,
+  type UpdateProjectRequest
+} from './document/project.contract';
+export {
+  componentPageSchema,
+  componentResponseSchema,
+  componentSummarySchema,
+  createComponentRequestSchema,
+  updateComponentRequestSchema,
+  type ComponentPage,
+  type ComponentResponse,
+  type ComponentSummary,
+  type CreateComponentRequest,
+  type UpdateComponentRequest
+} from './document/component.contract';
+export {
+  cloneResponseSchema,
+  shareResponseSchema,
+  type CloneResponse,
+  type ShareResponse
+} from './share/share.contract';
+export {
+  communityComponentDetailSchema,
+  communityComponentPageSchema,
+  communityComponentSchema,
+  communityProjectDetailSchema,
+  communityProjectPageSchema,
+  communityProjectSchema,
+  communityQuerySchema,
+  publicProfileSchema,
+  stargazerPageSchema,
+  starResponseSchema,
+  type CommunityComponent,
+  type CommunityComponentDetail,
+  type CommunityComponentPage,
+  type CommunityProject,
+  type CommunityProjectDetail,
+  type CommunityProjectPage,
+  type CommunityQuery,
+  type PublicProfile,
+  type StargazerPage,
+  type StarResponse
+} from './community/community.contract';
+export {
+  reportClientInfoSchema,
+  reportErrorRequestSchema,
+  reportErrorResponseSchema,
+  type ReportClientInfo,
+  type ReportErrorRequest,
+  type ReportErrorResponse
+} from './report/report.contract';

@@ -28,7 +28,26 @@ export const apiErrorCodeSchema = z.enum([
   /** A one-shot mail token is unknown, already used, or expired. */
   'token_invalid',
   /** Too many attempts in the current window. */
-  'rate_limited'
+  'rate_limited',
+  /**
+   * The document did not survive the format pipeline: it is structurally
+   * invalid, its compact encodings do not decode, or it names components or
+   * option values the catalog does not have. Never stored — the whole point of
+   * parsing on write is that what is in the column is always readable.
+   */
+  'invalid_document',
+  /**
+   * The document claims a format version this server does not know. Distinct
+   * from `invalid_document` because it is the one document rejection that says
+   * nothing is wrong with the document: the client is ahead of the server, which
+   * during a rollout is a matter of waiting rather than of fixing anything.
+   */
+  'unsupported_format_version',
+  /**
+   * The write was against a version that is no longer current — something else
+   * saved in between. The client re-reads and decides; the server will not merge.
+   */
+  'version_conflict'
 ]);
 
 export type ApiErrorCode = z.infer<typeof apiErrorCodeSchema>;
