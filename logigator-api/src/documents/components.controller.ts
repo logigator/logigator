@@ -28,6 +28,7 @@ import {
 } from '@logigator/contract';
 import type { FastifyRequest } from 'fastify';
 import { AuthGuard, CurrentUser } from '../auth/auth.guard';
+import { UuidParam } from '../common/uuid-param.pipe';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { components, type UserRow } from '../database/schema';
 import { mapPage, toComponentSummary } from './circuit-responses';
@@ -68,7 +69,7 @@ export class ComponentsController {
   @Get(':id')
   open(
     @CurrentUser() user: UserRow,
-    @Param('id') id: string
+    @Param('id', UuidParam) id: string
   ): Promise<ComponentResponse> {
     return this.components.open(user.id, id);
   }
@@ -76,7 +77,7 @@ export class ComponentsController {
   @Put(':id')
   save(
     @CurrentUser() user: UserRow,
-    @Param('id') id: string,
+    @Param('id', UuidParam) id: string,
     @Body(new ZodValidationPipe(saveCircuitRequestSchema))
     body: SaveCircuitRequest
   ): Promise<ComponentSummary> {
@@ -86,7 +87,7 @@ export class ComponentsController {
   @Patch(':id')
   update(
     @CurrentUser() user: UserRow,
-    @Param('id') id: string,
+    @Param('id', UuidParam) id: string,
     @Body(new ZodValidationPipe(updateComponentRequestSchema))
     body: UpdateComponentRequest
   ): Promise<ComponentSummary> {
@@ -95,7 +96,10 @@ export class ComponentsController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  delete(@CurrentUser() user: UserRow, @Param('id') id: string): Promise<void> {
+  delete(
+    @CurrentUser() user: UserRow,
+    @Param('id', UuidParam) id: string
+  ): Promise<void> {
     return this.components.delete(user.id, id);
   }
 
@@ -110,7 +114,7 @@ export class ComponentsController {
   @Post(':id/preview')
   async setPreview(
     @CurrentUser() user: UserRow,
-    @Param('id') id: string,
+    @Param('id', UuidParam) id: string,
     @Req() request: FastifyRequest
   ): Promise<ComponentSummary> {
     const sources = await readPreviewUpload(request);
@@ -122,7 +126,7 @@ export class ComponentsController {
   @Delete(':id/preview')
   async removePreview(
     @CurrentUser() user: UserRow,
-    @Param('id') id: string
+    @Param('id', UuidParam) id: string
   ): Promise<ComponentSummary> {
     return toComponentSummary(
       await this.previews.clear(components, user.id, id)

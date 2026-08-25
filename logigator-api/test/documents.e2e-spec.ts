@@ -908,6 +908,18 @@ describe('stored circuits', () => {
       });
       expect(response.statusCode).toBe(401);
     });
+
+    it('answers 404 for an id that is not one', async () => {
+      // Every id here is a `uuid` column, and Postgres refuses to compare one
+      // against something that is not — so a mistyped URL has to be turned away
+      // before it becomes a driver error surfacing as a 500.
+      const response = await api.inject({
+        method: 'GET',
+        url: '/api/projects/not-a-uuid',
+        headers: jar.headers()
+      });
+      expect(response.statusCode).toBe(404);
+    });
   });
 
   describe('deleting', () => {

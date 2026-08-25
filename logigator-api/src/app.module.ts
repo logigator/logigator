@@ -11,6 +11,7 @@ import { MailModule } from './mail/mail.module';
 import { MetaModule } from './meta/meta.module';
 import { RedisModule } from './redis/redis.module';
 import { SessionModule } from './session/session.module';
+import { SharingModule } from './sharing/sharing.module';
 import { StorageModule } from './storage/storage.module';
 import { UsersModule } from './users/users.module';
 
@@ -27,6 +28,7 @@ import { UsersModule } from './users/users.module';
     AuthModule,
     UsersModule,
     DocumentsModule,
+    SharingModule,
     HealthModule,
     MetaModule
   ],

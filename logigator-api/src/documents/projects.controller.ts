@@ -28,6 +28,7 @@ import {
 } from '@logigator/contract';
 import type { FastifyRequest } from 'fastify';
 import { AuthGuard, CurrentUser } from '../auth/auth.guard';
+import { UuidParam } from '../common/uuid-param.pipe';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { projects, type UserRow } from '../database/schema';
 import { mapPage, toProjectSummary } from './circuit-responses';
@@ -68,7 +69,7 @@ export class ProjectsController {
   @Get(':id')
   open(
     @CurrentUser() user: UserRow,
-    @Param('id') id: string
+    @Param('id', UuidParam) id: string
   ): Promise<ProjectResponse> {
     return this.projects.open(user.id, id);
   }
@@ -77,7 +78,7 @@ export class ProjectsController {
   @Put(':id')
   save(
     @CurrentUser() user: UserRow,
-    @Param('id') id: string,
+    @Param('id', UuidParam) id: string,
     @Body(new ZodValidationPipe(saveCircuitRequestSchema))
     body: SaveCircuitRequest
   ): Promise<ProjectSummary> {
@@ -87,7 +88,7 @@ export class ProjectsController {
   @Patch(':id')
   update(
     @CurrentUser() user: UserRow,
-    @Param('id') id: string,
+    @Param('id', UuidParam) id: string,
     @Body(new ZodValidationPipe(updateProjectRequestSchema))
     body: UpdateProjectRequest
   ): Promise<ProjectSummary> {
@@ -96,7 +97,10 @@ export class ProjectsController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  delete(@CurrentUser() user: UserRow, @Param('id') id: string): Promise<void> {
+  delete(
+    @CurrentUser() user: UserRow,
+    @Param('id', UuidParam) id: string
+  ): Promise<void> {
     return this.projects.delete(user.id, id);
   }
 
@@ -111,7 +115,7 @@ export class ProjectsController {
   @Post(':id/preview')
   async setPreview(
     @CurrentUser() user: UserRow,
-    @Param('id') id: string,
+    @Param('id', UuidParam) id: string,
     @Req() request: FastifyRequest
   ): Promise<ProjectSummary> {
     const sources = await readPreviewUpload(request);
@@ -123,7 +127,7 @@ export class ProjectsController {
   @Delete(':id/preview')
   async removePreview(
     @CurrentUser() user: UserRow,
-    @Param('id') id: string
+    @Param('id', UuidParam) id: string
   ): Promise<ProjectSummary> {
     return toProjectSummary(await this.previews.clear(projects, user.id, id));
   }
