@@ -5,6 +5,8 @@ export interface CapturedMail {
   subject: string;
   html: string;
   text: string;
+  /** What rode along beside the body, by name — an error report's circuit. */
+  attachments: { filename: string; content: string }[];
 }
 
 /**
@@ -32,6 +34,7 @@ export class MailCapture {
       subject?: unknown;
       html?: unknown;
       text?: unknown;
+      attachments?: { filename?: unknown; content?: unknown }[];
     }) => {
       if (this.failNextSend) {
         this.failNextSend = false;
@@ -42,7 +45,11 @@ export class MailCapture {
         to: String(message.to ?? ''),
         subject: String(message.subject ?? ''),
         html: String(message.html ?? ''),
-        text: String(message.text ?? '')
+        text: String(message.text ?? ''),
+        attachments: (message.attachments ?? []).map((attachment) => ({
+          filename: String(attachment.filename ?? ''),
+          content: String(attachment.content ?? '')
+        }))
       });
       return Promise.resolve({ accepted: [message.to] });
     }

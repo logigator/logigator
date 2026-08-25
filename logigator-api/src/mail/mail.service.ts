@@ -58,6 +58,40 @@ export class MailService {
     );
   }
 
+  /**
+   * Mails a client-side error report to whoever reads them, or does nothing when
+   * nobody does.
+   *
+   * The one mail with no recipient in its signature and no locale: it goes to the
+   * operator rather than to a user, so the address is configuration and the
+   * language is not a question. It is still an intent rather than a template —
+   * the caller says what happened, and where that goes is decided here.
+   *
+   * The circuit rides along as an attachment. It is the most useful part of a
+   * report and the part that would make the body unreadable inline.
+   *
+   * @returns whether a mail was sent.
+   */
+  async sendErrorReport(report: {
+    subject: string;
+    body: string;
+    circuit?: string;
+  }): Promise<boolean> {
+    if (!this.env.REPORT_MAIL_TO) return false;
+
+    await this.transport.sendMail({
+      from: this.env.MAIL_FROM,
+      to: this.env.REPORT_MAIL_TO,
+      // A crash message can be any length, and a subject line cannot.
+      subject: report.subject.slice(0, 160),
+      text: report.body,
+      attachments: report.circuit
+        ? [{ filename: 'circuit.json', content: report.circuit }]
+        : []
+    });
+    return true;
+  }
+
   private verifyLink(token: string): string {
     return `${this.env.PUBLIC_URL}/verify-email/${encodeURIComponent(token)}`;
   }

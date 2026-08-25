@@ -60,6 +60,13 @@ const variables = z.object({
    */
   SMTP_URL: z.string().optional(),
   MAIL_FROM: z.string().min(1).default('Logigator <noreply@logigator.com>'),
+  /**
+   * Where client-side error reports are mailed. Unset means they are only
+   * logged, which is the sensible default: a development machine wants the line,
+   * not the mail, and a report is worth nothing unread — so naming a mailbox is
+   * the deliberate act of deciding to read them.
+   */
+  REPORT_MAIL_TO: z.string().optional(),
 
   /**
    * Google sign-in credentials. Both unset means the feature is off — a client

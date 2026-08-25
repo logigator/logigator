@@ -80,3 +80,24 @@ export const CurrentUser = createParamDecorator(
     return user;
   }
 );
+
+/**
+ * The signed-in account's id, or `null` — for the routes that serve everybody
+ * and personalize for whoever is there.
+ *
+ * The public community listings are the case: they answer the same rows to a
+ * visitor as to an account, plus whether that account has starred each one.
+ * Requiring a session would make them private; loading the row would cost a
+ * query for a single boolean. So this reads the session and nothing else, and a
+ * session whose account is gone simply personalizes nothing.
+ *
+ * It is deliberately *not* a way to skip {@link AuthGuard}. Anything that acts
+ * on the account behind the session — a write, or reading something private —
+ * needs the row loaded and its existence established, which is the guard's job.
+ */
+export const SessionUserId = createParamDecorator(
+  (_data: unknown, context: ExecutionContext): string | null => {
+    const request = context.switchToHttp().getRequest<FastifyRequest>();
+    return request.session?.userId ?? null;
+  }
+);

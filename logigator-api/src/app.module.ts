@@ -4,12 +4,14 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { ENV, type Env } from './config/env';
 import { ApiExceptionFilter } from './common/api-exception.filter';
 import { AuthModule } from './auth/auth.module';
+import { CommunityModule } from './community/community.module';
 import { DatabaseModule } from './database/database.module';
 import { DocumentsModule } from './documents/documents.module';
 import { HealthModule } from './health/health.module';
 import { MailModule } from './mail/mail.module';
 import { MetaModule } from './meta/meta.module';
 import { RedisModule } from './redis/redis.module';
+import { ReportsModule } from './reports/reports.module';
 import { SessionModule } from './session/session.module';
 import { SharingModule } from './sharing/sharing.module';
 import { StorageModule } from './storage/storage.module';
@@ -29,6 +31,8 @@ import { UsersModule } from './users/users.module';
     UsersModule,
     DocumentsModule,
     SharingModule,
+    CommunityModule,
+    ReportsModule,
     HealthModule,
     MetaModule
   ],
