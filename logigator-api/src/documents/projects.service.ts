@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 import type {
   CreateProjectRequest,
@@ -24,6 +24,7 @@ import {
 } from './circuit-queries';
 import { toAttribution, toProjectSummary } from './circuit-responses';
 import { DependenciesService, PROJECT_EDGES } from './dependencies.service';
+import { renameInDocument } from './rename-in-document';
 
 /**
  * The caller's own boards.
@@ -182,8 +183,9 @@ export class ProjectsService {
   }
 
   /**
-   * Changes metadata. A rename rewrites the document's own copy of the name, so
-   * the column stays the one place a name is set.
+   * Changes metadata. A rename rewrites the document's own copy of the name from
+   * inside the same statement, so the column stays the one place a name is set and
+   * a save landing at the same moment keeps its circuit.
    *
    * `version` bumps for a rename or a new description, and not for visibility or
    * a fresh share token. The rule is the same on both kinds and it is about what
@@ -198,27 +200,36 @@ export class ProjectsService {
     id: string,
     body: UpdateProjectRequest
   ): Promise<ProjectSummary> {
-    const existing = await this.require(userId, id);
-    const name = body.name ?? existing.name;
     const contentChanged =
       body.name !== undefined || body.description !== undefined;
 
+    const changes = {
+      ...(body.name === undefined
+        ? {}
+        : {
+            name: body.name,
+            document: renameInDocument(projects.document, body.name)
+          }),
+      ...(body.description === undefined
+        ? {}
+        : { description: body.description }),
+      ...(body.public === undefined ? {} : { public: body.public }),
+      ...(body.regenerateLink ? { link: randomUUID() } : {}),
+      ...(contentChanged
+        ? { version: sql`${projects.version} + 1`, lastEditedAt: new Date() }
+        : {})
+    };
+
+    // A body that asks for nothing — `regenerateLink: false` alone — is answered
+    // with the row as it stands, because an `UPDATE` with an empty `SET` is not a
+    // statement.
+    if (Object.keys(changes).length === 0) {
+      return toProjectSummary(await this.require(userId, id));
+    }
+
     const [row] = await this.db
       .update(projects)
-      .set({
-        name,
-        ...(body.description === undefined
-          ? {}
-          : { description: body.description }),
-        ...(body.public === undefined ? {} : { public: body.public }),
-        ...(body.regenerateLink ? { link: randomUUID() } : {}),
-        ...(body.name === undefined
-          ? {}
-          : { document: { ...existing.document, name } }),
-        ...(contentChanged
-          ? { version: existing.version + 1, lastEditedAt: new Date() }
-          : {})
-      })
+      .set(changes)
       .where(and(eq(projects.id, id), eq(projects.userId, userId)))
       .returning();
 

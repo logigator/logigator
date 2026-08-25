@@ -19,6 +19,7 @@ import {
 export interface RenormalizeReport {
   scanned: number;
   rewritten: number;
+  skipped: number;
   failed: number;
 }
 
@@ -47,10 +48,14 @@ const BATCH = 100;
  *
  * Three properties make it safe to run against a live database:
  *
- * - **`version` is not bumped.** Rewriting an encoding is not a user edit. A
- *   client holding a pre-rewrite copy is covered by the read-time guard, and
- *   bumping the counter here would offer every placed instance of every
- *   component an update that changes nothing about it.
+ * - **`version` is not bumped, and it guards the write.** Rewriting an encoding
+ *   is not a user edit: a client holding a pre-rewrite copy is covered by the
+ *   read-time guard, and bumping the counter here would offer every placed
+ *   instance of every component an update that changes nothing about it. It is
+ *   still in the `WHERE`, because a save between reading a row and rewriting it
+ *   would otherwise be overwritten with the document as it was before the save.
+ *   A row whose counter moved is reported as skipped and left for the next run,
+ *   which is why a full rebuild is a pass repeated until nothing is skipped.
  * - **One transaction per row**, so a failure costs one document and the pass
  *   keeps going. A row that cannot be parsed is reported and left exactly as it
  *   was — the alternative is a job that stops on the first bad row and leaves the
@@ -102,8 +107,8 @@ export class RenormalizeService {
       for (const row of batch) {
         report.scanned += 1;
         try {
-          await this.rewriteProject(row);
-          report.rewritten += 1;
+          if (await this.rewriteProject(row)) report.rewritten += 1;
+          else report.skipped += 1;
         } catch (error) {
           report.failed += 1;
           this.logger.error(`project ${row.id}: ${describe(error)}`);
@@ -133,8 +138,8 @@ export class RenormalizeService {
       for (const row of batch) {
         report.scanned += 1;
         try {
-          await this.rewriteComponent(row);
-          report.rewritten += 1;
+          if (await this.rewriteComponent(row)) report.rewritten += 1;
+          else report.skipped += 1;
         } catch (error) {
           report.failed += 1;
           this.logger.error(`component ${row.id}: ${describe(error)}`);
@@ -145,11 +150,12 @@ export class RenormalizeService {
     return report;
   }
 
-  private async rewriteProject(row: ProjectRow): Promise<void> {
+  /** `false` when the row was written while this pass was reading it. */
+  private async rewriteProject(row: ProjectRow): Promise<boolean> {
     const ingested = this.documents.ingest(row.document, row.name);
 
-    await this.db.transaction(async (tx) => {
-      await tx
+    return this.db.transaction(async (tx) => {
+      const [written] = await tx
         .update(projects)
         .set({
           document: ingested.document,
@@ -157,7 +163,9 @@ export class RenormalizeService {
           componentCount: ingested.componentCount,
           wireCount: ingested.wireCount
         })
-        .where(eq(projects.id, row.id));
+        .where(and(eq(projects.id, row.id), eq(projects.version, row.version)))
+        .returning({ id: projects.id });
+      if (!written) return false;
 
       await this.dependencies.replace(
         tx,
@@ -165,14 +173,15 @@ export class RenormalizeService {
         row.id,
         ingested.dependencies
       );
+      return true;
     });
   }
 
-  private async rewriteComponent(row: ComponentRow): Promise<void> {
+  private async rewriteComponent(row: ComponentRow): Promise<boolean> {
     const ingested = this.documents.ingest(row.document, row.name);
 
-    await this.db.transaction(async (tx) => {
-      await tx
+    return this.db.transaction(async (tx) => {
+      const [written] = await tx
         .update(components)
         .set({
           document: ingested.document,
@@ -183,7 +192,11 @@ export class RenormalizeService {
           numOutputs: ingested.summary.numOutputs,
           labels: ingested.summary.labels
         })
-        .where(eq(components.id, row.id));
+        .where(
+          and(eq(components.id, row.id), eq(components.version, row.version))
+        )
+        .returning({ id: components.id });
+      if (!written) return false;
 
       await this.dependencies.replace(
         tx,
@@ -191,6 +204,7 @@ export class RenormalizeService {
         row.id,
         ingested.dependencies
       );
+      return true;
     });
   }
 }
@@ -211,7 +225,7 @@ function stale(
 }
 
 function blank(): RenormalizeReport {
-  return { scanned: 0, rewritten: 0, failed: 0 };
+  return { scanned: 0, rewritten: 0, skipped: 0, failed: 0 };
 }
 
 function describe(error: unknown): string {

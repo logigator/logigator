@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 import type {
   ComponentResponse,
@@ -24,6 +24,7 @@ import {
 } from './circuit-queries';
 import { toAttribution, toComponentSummary } from './circuit-responses';
 import { COMPONENT_EDGES, DependenciesService } from './dependencies.service';
+import { renameInDocument } from './rename-in-document';
 
 /**
  * The caller's own library components.
@@ -174,30 +175,36 @@ export class ComponentsService {
     id: string,
     body: UpdateComponentRequest
   ): Promise<ComponentSummary> {
-    const existing = await this.require(userId, id);
-    const name = body.name ?? existing.name;
     const contentChanged =
       body.name !== undefined ||
       body.symbol !== undefined ||
       body.description !== undefined;
 
+    const changes = {
+      ...(body.name === undefined
+        ? {}
+        : {
+            name: body.name,
+            document: renameInDocument(components.document, body.name)
+          }),
+      ...(body.symbol === undefined ? {} : { symbol: body.symbol }),
+      ...(body.description === undefined
+        ? {}
+        : { description: body.description }),
+      ...(body.public === undefined ? {} : { public: body.public }),
+      ...(body.regenerateLink ? { link: randomUUID() } : {}),
+      ...(contentChanged
+        ? { version: sql`${components.version} + 1`, lastEditedAt: new Date() }
+        : {})
+    };
+
+    if (Object.keys(changes).length === 0) {
+      return toComponentSummary(await this.require(userId, id));
+    }
+
     const [row] = await this.db
       .update(components)
-      .set({
-        name,
-        ...(body.symbol === undefined ? {} : { symbol: body.symbol }),
-        ...(body.description === undefined
-          ? {}
-          : { description: body.description }),
-        ...(body.public === undefined ? {} : { public: body.public }),
-        ...(body.regenerateLink ? { link: randomUUID() } : {}),
-        ...(body.name === undefined
-          ? {}
-          : { document: { ...existing.document, name } }),
-        ...(contentChanged
-          ? { version: existing.version + 1, lastEditedAt: new Date() }
-          : {})
-      })
+      .set(changes)
       .where(and(eq(components.id, id), eq(components.userId, userId)))
       .returning();
 

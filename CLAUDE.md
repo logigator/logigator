@@ -240,12 +240,16 @@ while `/api/meta` doubles as the liveness probe that reaches nothing.
   the immediate parent's id kept to resolve against real rows (`forkedFromId`, the attribution trust
   anchor; reads walk it back with `forkLineage`). Concurrency is the integer `version` in the
   `WHERE` of one guarded `UPDATE` (409 `version_conflict`); it bumps for the document, the name, the
-  symbol and the description, never for visibility or a regenerated link. `circuit-queries.ts` holds
+  symbol and the description, never for visibility or a regenerated link. No write computes a column
+  from a value it read in an earlier statement: a rename edits the document's own copy of the name
+  through `jsonb_set` and increments `version` in SQL (`rename-in-document.ts`), so a save landing at
+  the same moment keeps its circuit and neither write has to guess. `circuit-queries.ts` holds
   the reads over the half both tables share, **overloaded per table** because Drizzle's builder types
   are conditional on the table and cannot resolve against an unresolved type parameter. Previews are
   `PreviewService` (both themes in one multipart request, both replaced together; not an edit, so no
   version bump). `RenormalizeService` is the format-bump _and_ re-extract job — keyset-paginated, one
-  transaction per row, idempotent, no version bump — run as the third Rspack entry
+  transaction per row, idempotent, and it does not bump `version` but does put it in the `WHERE`, so
+  a row a save reached first is skipped rather than rewritten back — run as the third Rspack entry
   (`node renormalize.js [--all]`).
 - `sharing/` — reading a document by its share link and cloning it. The link is a **capability**:
   the read needs no session and ignores `public`. A clone copies the whole transitive dependency
@@ -386,5 +390,8 @@ run and deleted afterwards. Only two things differ from production — the mail 
 (`test/mail-capture.ts`, so specs read the link a recipient would click) and bcrypt runs at its
 minimum cost. `test/cookie-jar.ts` carries cookies across requests the way a browser would,
 `test/circuits.ts` builds documents through core's own encoder rather than hand-written JSON (a
-fixture gets the wire chain and the position deltas subtly wrong), and `test/assets.ts` maps a served
-URL back to its path on the volume — the two are not the same string.
+fixture gets the wire chain and the position deltas subtly wrong), `test/assets.ts` maps a served
+URL back to its path on the volume — the two are not the same string — and `test/row-lock.ts` runs a
+request while an uncommitted transaction holds the row it writes, which is the only way an injected
+request (they run one at a time) meets a concurrent write, and it waits for the block rather than
+sleeping so the interleaving is a fact of the run.

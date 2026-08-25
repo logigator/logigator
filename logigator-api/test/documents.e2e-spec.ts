@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import type { ComponentSummary, ProjectSummary } from '@logigator/contract';
 import {
   BuiltInComponentType,
@@ -17,6 +17,7 @@ import {
 } from './circuits';
 import { CookieJar } from './cookie-jar';
 import { startE2eApp, type E2eApp } from './harness';
+import { whileRowLocked } from './row-lock';
 
 describe('stored circuits', () => {
   let api: E2eApp;
@@ -810,6 +811,70 @@ describe('stored circuits', () => {
         payload: {}
       });
       expect(response.statusCode).toBe(422);
+    });
+
+    it('answers a body that turns out to ask for nothing', async () => {
+      const created = await createProject({ name: 'Kept' });
+
+      // `regenerateLink: false` is a field, so the request is well-formed, and it
+      // names no change — the one body that reaches the write path with nothing
+      // to set.
+      const response = await api.inject({
+        method: 'PATCH',
+        url: `/api/projects/${created.id}`,
+        headers: jar.headers(),
+        payload: { regenerateLink: false }
+      });
+      expect(response.statusCode).toBe(200);
+      expect(response.json()).toMatchObject({
+        name: 'Kept',
+        version: created.version,
+        link: created.link
+      });
+    });
+
+    it('renames the circuit that is there when it writes, not the one it read', async () => {
+      const created = await createProject({ name: 'Raced' });
+      const saved = circuitDocument('Raced', HALF_ADDER_BODY);
+
+      // A save landing between a rename's read and its write is the interleaving
+      // that loses an edit silently: the rename would put the document it read
+      // back, and its own version bump would land on the number the save
+      // produced, so nothing downstream could tell.
+      const patched = await whileRowLocked(
+        api.db,
+        (tx) =>
+          tx
+            .update(projects)
+            .set({
+              document: sql`${JSON.stringify(saved)}::jsonb`,
+              componentCount: 4,
+              wireCount: 2,
+              version: created.version + 1
+            })
+            .where(eq(projects.id, created.id)),
+        () =>
+          api.inject({
+            method: 'PATCH',
+            url: `/api/projects/${created.id}`,
+            headers: jar.headers(),
+            payload: { name: 'Renamed' }
+          })
+      );
+
+      expect(patched.statusCode).toBe(200);
+      expect(patched.json()).toMatchObject({
+        name: 'Renamed',
+        version: created.version + 2
+      });
+
+      const opened = await api.inject({
+        method: 'GET',
+        url: `/api/projects/${created.id}`,
+        headers: jar.headers()
+      });
+      // The circuit the save wrote, with the new name and nothing else changed.
+      expect(opened.json().document).toEqual({ ...saved, name: 'Renamed' });
     });
 
     it('bumps a component´s version for every field a snapshot carries', async () => {

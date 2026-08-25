@@ -12,6 +12,7 @@ import { RenormalizeService } from '../src/documents/renormalize.service';
 import { circuitDocument, HALF_ADDER_BODY } from './circuits';
 import { CookieJar } from './cookie-jar';
 import { startE2eApp, type E2eApp } from './harness';
+import { whileRowLocked } from './row-lock';
 
 describe('re-normalizing stored documents', () => {
   let api: E2eApp;
@@ -34,27 +35,34 @@ describe('re-normalizing stored documents', () => {
   const renormalize = (all: boolean) =>
     api.app.get(RenormalizeService).run(all);
 
-  beforeAll(async () => {
-    api = await startE2eApp();
-    const credentials = { email: 'ada@example.com', password: 'lovelace1' };
-    await api.inject({
+  /** Registers, verifies and signs in, on whichever app is handed over. */
+  async function signIn(app: E2eApp, email: string): Promise<CookieJar> {
+    const credentials = { email, password: 'lovelace1' };
+    await app.inject({
       method: 'POST',
       url: '/api/auth/register',
-      payload: { username: 'Ada', ...credentials }
+      payload: { username: 'Owner', ...credentials }
     });
-    await api.inject({
+    await app.inject({
       method: 'POST',
       url: '/api/auth/verify-email',
-      payload: { token: api.mail.lastToken() }
+      payload: { token: app.mail.lastToken() }
     });
-    jar = new CookieJar();
-    jar.store(
-      await api.inject({
+
+    const cookies = new CookieJar();
+    cookies.store(
+      await app.inject({
         method: 'POST',
         url: '/api/auth/login',
         payload: credentials
       })
     );
+    return cookies;
+  }
+
+  beforeAll(async () => {
+    api = await startE2eApp();
+    jar = await signIn(api, 'ada@example.com');
   });
 
   afterAll(async () => {
@@ -204,6 +212,63 @@ describe('re-normalizing stored documents', () => {
       expect((await renormalize(false)).projects.scanned).toBe(0);
     });
 
+    it('skips a row a save reached first, and leaves that save intact', async () => {
+      // Its own database: the pass walks every stale row, and the point here is
+      // what it does to exactly one of them.
+      const fresh = await startE2eApp();
+      try {
+        const cookies = await signIn(fresh, 'racer@example.com');
+        const created = await fresh.inject({
+          method: 'POST',
+          url: '/api/projects',
+          headers: cookies.headers(),
+          payload: { name: 'Raced' }
+        });
+        const project: ProjectSummary = created.json();
+
+        // Stale, so the format-bump pass picks it up.
+        await fresh.db
+          .update(projects)
+          .set({ formatVersion: 0 })
+          .where(eq(projects.id, project.id));
+
+        // What a save landing mid-pass leaves behind: a newer document and the
+        // counter to go with it. Re-encoding the document read before it would
+        // put the circuit back as it was — a lost edit, and an invisible one,
+        // since this job deliberately does not touch the counter.
+        const saved = circuitDocument('Raced', HALF_ADDER_BODY);
+        const report = await whileRowLocked(
+          fresh.db,
+          (tx) =>
+            tx
+              .update(projects)
+              .set({
+                document: sql`${JSON.stringify(saved)}::jsonb`,
+                formatVersion: CURRENT_FILE_VERSION,
+                version: project.version + 1
+              })
+              .where(eq(projects.id, project.id)),
+          () => fresh.app.get(RenormalizeService).run(false)
+        );
+
+        expect(report.projects).toMatchObject({
+          scanned: 1,
+          rewritten: 0,
+          skipped: 1,
+          failed: 0
+        });
+
+        const [row] = await fresh.db
+          .select()
+          .from(projects)
+          .where(eq(projects.id, project.id));
+        expect(row.document).toEqual(saved);
+        expect(row.version).toBe(project.version + 1);
+      } finally {
+        await fresh.close();
+      }
+    });
+
     it('reports a row it cannot parse, leaves it alone, and keeps going', async () => {
       const broken = await create<ProjectSummary>('projects', {
         name: 'Unparseable'
@@ -252,28 +317,7 @@ describe('re-normalizing stored documents', () => {
     // an offset walk over a shifting set does both.
     const fresh = await startE2eApp();
     try {
-      const cookies = new CookieJar();
-      await fresh.inject({
-        method: 'POST',
-        url: '/api/auth/register',
-        payload: {
-          username: 'Bulk',
-          email: 'bulk@example.com',
-          password: 'lovelace1'
-        }
-      });
-      await fresh.inject({
-        method: 'POST',
-        url: '/api/auth/verify-email',
-        payload: { token: fresh.mail.lastToken() }
-      });
-      cookies.store(
-        await fresh.inject({
-          method: 'POST',
-          url: '/api/auth/login',
-          payload: { email: 'bulk@example.com', password: 'lovelace1' }
-        })
-      );
+      const cookies = await signIn(fresh, 'bulk@example.com');
 
       const total = 105;
       for (let index = 0; index < total; index += 1) {
