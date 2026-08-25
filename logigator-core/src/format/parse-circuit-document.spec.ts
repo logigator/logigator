@@ -125,6 +125,40 @@ describe('parseCircuitDocument', () => {
       );
       expect(result.dependencies).toEqual([]);
     });
+
+    describe('two snapshots of one master', () => {
+      const twice = {
+        ...EMPTY,
+        definitions: [1000, 1001].map((type) => ({
+          type,
+          name: 'D',
+          symbol: 'D',
+          description: '',
+          numInputs: 0,
+          numOutputs: 0,
+          labels: [],
+          components: [],
+          wires: '',
+          source: { id: 'uuid-1', version: 7, origin: 'server' }
+        }))
+      };
+
+      it('is rejected in strict mode', () => {
+        expect(() => parseCircuitDocument(twice)).toThrow(
+          CircuitIntegrityError
+        );
+      });
+
+      it('keeps the first edge in lenient mode and reports the second', () => {
+        const result = parseCircuitDocument(twice, { mode: 'lenient' });
+        expect(result.dependencies).toEqual([
+          { id: 'uuid-1', version: 7, model: 1000 }
+        ]);
+        expect(result.warnings).toEqual([
+          expect.stringContaining('two snapshots of library component uuid-1')
+        ]);
+      });
+    });
   });
 
   describe('version handling', () => {

@@ -232,6 +232,35 @@ describe('v0ToV1Migration', () => {
     );
   });
 
+  // The legacy format has no schema, and `ProjectElement` describes what the old
+  // editor wrote rather than what a file may hold — so an element missing a
+  // coordinate has to be a rejection. Reading past it would make a malformed
+  // upload a crash, which on the server is a 500 for what is plainly bad input.
+  describe('elements with unreadable coordinates', () => {
+    const malformed: Record<string, unknown> = {
+      'a wire with no end': { t: 0, p: [0, 0] },
+      'a wire with a one-element end': { t: 0, p: [0, 0], q: [4] },
+      'a component with no position': { t: BuiltInComponentType.AND, i: 2 },
+      'a custom with no position': { t: 1000, i: 1, o: 1 },
+      'a position that is not numeric': {
+        t: BuiltInComponentType.AND,
+        p: ['x', 'y']
+      },
+      'a position that is not finite': {
+        t: BuiltInComponentType.AND,
+        p: [Number.NaN, 0]
+      }
+    };
+
+    for (const [what, element] of Object.entries(malformed)) {
+      it(`rejects ${what}`, () => {
+        expect(() =>
+          migrate({ project: { elements: [element] } } as CircuitFileV0)
+        ).toThrowError(InvalidFileError);
+      });
+    }
+  });
+
   // Pins each built-in's legacyV0Slots descriptor exactly. A new built-in
   // without one — or a wrong n[]/s mapping — would silently drop or transpose
   // options on decode; this catches it. Mirrors the encoder, which reads the

@@ -1,4 +1,8 @@
-import type { ImageFormat, ImageVariant } from '@logigator/contract';
+import type {
+  CircuitPreview,
+  ImageFormat,
+  ImageVariant
+} from '@logigator/contract';
 import { assetUrl, type StorageArea } from './file-storage.service';
 
 /**
@@ -93,4 +97,22 @@ export function variantUrls(
     height: spec.height,
     format: spec.format
   }));
+}
+
+/**
+ * A stored preview, split by the render it came from.
+ *
+ * One asset, two lists: a client picks the theme it is drawing in, and no
+ * content negotiation can make that choice for it — the two renders are the
+ * same board, so nothing about the request says which one is wanted.
+ */
+export function previewUrls(id: string): CircuitPreview {
+  return {
+    light: variantUrls('preview', id, variantsForSlot('light')),
+    dark: variantUrls('preview', id, variantsForSlot('dark'))
+  };
+}
+
+function variantsForSlot(slot: ImageSlot): ImageVariantSpec[] {
+  return PREVIEW_VARIANTS.filter((spec) => spec.slot === slot);
 }

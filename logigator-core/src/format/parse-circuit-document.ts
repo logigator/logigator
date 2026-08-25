@@ -139,7 +139,7 @@ export function parseCircuitDocument(
     file: mode === 'lenient' ? reassemble(file, body, definitions) : file,
     body,
     definitions,
-    dependencies: extractDependencies(definitions),
+    dependencies: extractDependencies(definitions, report),
     stats: {
       components: body.components.length,
       wires: body.wires.length,
@@ -165,14 +165,34 @@ function reassemble(
  * an id in someone's local library, and an absent `source` is a legitimate
  * self-contained snapshot (a custom that was never saved to a library). Neither
  * is an error; they simply contribute no edge.
+ *
+ * At most one edge per master: a document naming the same master under two
+ * type ids would have instances of both rendering from snapshots of one
+ * component, which is a document disagreeing with itself. The editor cannot
+ * produce it, so `strict` rejects it and `lenient` keeps the first — and it
+ * matters beyond tidiness, because an edge table keyed by (dependent,
+ * dependency) has exactly one row to give it either way.
  */
 function extractDependencies(
-  definitions: readonly SnapshotDefinition[]
+  definitions: readonly SnapshotDefinition[],
+  report: (message: string) => void
 ): CircuitDependencyEdge[] {
   const edges: CircuitDependencyEdge[] = [];
+  const seen = new Set<string>();
+
   for (const definition of definitions) {
     const source = definition.source;
     if (source?.origin !== 'server') continue;
+
+    if (seen.has(source.id)) {
+      report(
+        `definitions embed two snapshots of library component ${source.id}, under types ` +
+          `${edges.find((edge) => edge.id === source.id)?.model} and ${definition.type}`
+      );
+      continue;
+    }
+    seen.add(source.id);
+
     edges.push({
       id: source.id,
       version: source.version,

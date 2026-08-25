@@ -4,6 +4,7 @@ import { ENV, type Env } from './config/env';
 import { ApiExceptionFilter } from './common/api-exception.filter';
 import { AuthModule } from './auth/auth.module';
 import { DatabaseModule } from './database/database.module';
+import { DocumentsModule } from './documents/documents.module';
 import { HealthModule } from './health/health.module';
 import { MailModule } from './mail/mail.module';
 import { MetaModule } from './meta/meta.module';
@@ -21,6 +22,7 @@ import { UsersModule } from './users/users.module';
     MailModule,
     AuthModule,
     UsersModule,
+    DocumentsModule,
     HealthModule,
     MetaModule
   ],

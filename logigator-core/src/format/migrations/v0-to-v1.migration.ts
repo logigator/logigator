@@ -43,9 +43,30 @@ type CustomDims = ReadonlyMap<
   { numInputs: number; numOutputs: number }
 >;
 
+/**
+ * A coordinate pair out of a v0 element.
+ *
+ * The legacy format has no schema and its `ProjectElement` type describes what
+ * the old editor *wrote*, not what a file may contain — so every position is
+ * checked here rather than trusted. An element missing one is unreadable, and
+ * saying so is the point: this pipeline's whole contract is that a document it
+ * cannot parse is rejected, and reading past a missing field would turn a
+ * malformed upload into a crash instead.
+ */
+function legacyPoint(value: unknown, what: string): [number, number] {
+  if (
+    !Array.isArray(value) ||
+    !Number.isFinite(value[0]) ||
+    !Number.isFinite(value[1])
+  ) {
+    throw new InvalidFileError(`Legacy element has no readable ${what}`);
+  }
+  return [value[0] as number, value[1] as number];
+}
+
 function legacyWireToBody(el: ProjectElement): SerializedWireBody {
-  const [px, py] = el.p;
-  const [qx, qy] = el.q!;
+  const [px, py] = legacyPoint(el.p, 'position');
+  const [qx, qy] = legacyPoint(el.q, 'wire end');
   const horizontal = qy === py;
   return {
     pos: [px, py],
@@ -119,17 +140,24 @@ function decodeElements(
       );
       components.push({
         type: element.t,
-        pos: legacyAnchorToPivot(element.p[0], element.p[1], direction, w, h),
+        pos: legacyAnchorToPivot(
+          ...legacyPoint(element.p, 'position'),
+          direction,
+          w,
+          h
+        ),
         ...(direction ? { direction } : {}),
         options: {}
       });
       continue;
     }
 
+    const [px, py] = legacyPoint(element.p, 'position');
+
     const meta = ctx.catalog(element.t);
     if (!meta || !meta.legacyV0Slots) {
       ctx.log.warn(
-        `Unknown component type ID: ${element.t} — skipping element at [${element.p[0]}, ${element.p[1]}]`
+        `Unknown component type ID: ${element.t} — skipping element at [${px}, ${py}]`
       );
       continue;
     }
@@ -168,13 +196,7 @@ function decodeElements(
 
     components.push({
       type: element.t,
-      pos: legacyAnchorToPivot(
-        element.p[0],
-        element.p[1],
-        direction,
-        width,
-        height
-      ),
+      pos: legacyAnchorToPivot(px, py, direction, width, height),
       ...(direction ? { direction } : {}),
       options,
       ...decodeNegation(element)

@@ -15,6 +15,20 @@ import { relations } from './schema';
 /** The typed Drizzle handle every repository injects. */
 export type Database = NodePgDatabase<typeof relations>;
 
+/**
+ * The handle inside `db.transaction(…)`. Derived from the callback's own
+ * parameter rather than named directly, so it cannot drift from whatever the
+ * driver actually hands over.
+ */
+export type Transaction = Parameters<Parameters<Database['transaction']>[0]>[0];
+
+/**
+ * Either handle, for the queries that must be able to run inside a transaction
+ * or on their own — a write's steps have to share one, while the read that
+ * serves a request has nothing to join.
+ */
+export type Queryable = Database | Transaction;
+
 /** DI token for {@link Database}. */
 export const DB = Symbol('DB');
 
