@@ -96,13 +96,13 @@ services:
   # The new API's database. MySQL stays for the legacy backend until cutover, so
   # both run side by side and each app talks to its own.
   postgres:
-    image: postgres:17-alpine
+    image: postgres:18-alpine
     networks:
       - net
     ports:
       - 127.0.0.1:5432:5432
     volumes:
-      - ./data/postgres:/var/lib/postgresql/data
+      - ./data/postgres:/var/lib/postgresql
     environment:
       - POSTGRES_DB=logigator
       - POSTGRES_USER=logigator
@@ -115,7 +115,7 @@ services:
       retries: 10
 
   redis:
-    image: redis:7
+    image: redis:8
     networks:
       - net
     ports:

@@ -38,7 +38,7 @@ services:
       - MYSQL_PASSWORD=logigator
 
   redis:
-    image: redis:7
+    image: redis:8
     networks:
       - net
 

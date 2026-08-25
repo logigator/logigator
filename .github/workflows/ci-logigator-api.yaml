@@ -32,7 +32,7 @@ jobs:
     # spec file creates and drops a database of its own on this server.
     services:
       postgres:
-        image: postgres:17-alpine
+        image: postgres:18-alpine
         env:
           POSTGRES_USER: logigator
           POSTGRES_PASSWORD: logigator
@@ -44,7 +44,7 @@ jobs:
           --health-timeout 5s
           --health-retries 10
       redis:
-        image: redis:7
+        image: redis:8
         ports:
           - 6379:6379
         options: >-
