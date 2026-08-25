@@ -11,6 +11,21 @@ logigator.test {
 		reverse_proxy editor-legacy:8202
 	}
 
+	# The API's storage volume: avatars and circuit previews. Every file under it
+	# is written once under a name nothing reuses — replacing an asset means a new
+	# directory and a new pointer — so the URLs are safe to cache forever, and
+	# serving them here keeps a static read off the application entirely.
+	#
+	# One root of its own rather than `/profile` and `/preview`, which the legacy
+	# backend still answers from its own disk while both stacks share this origin.
+	@storage path /files/*
+	handle @storage {
+		root * /srv
+		uri strip_prefix /files
+		file_server
+		header Cache-Control "public, max-age=31536000, immutable"
+	}
+
 	handle {
 		reverse_proxy backend:3000
 	}

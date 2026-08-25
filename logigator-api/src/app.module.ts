@@ -1,5 +1,6 @@
 import { type DynamicModule, Module } from '@nestjs/common';
 import { APP_FILTER } from '@nestjs/core';
+import { ScheduleModule } from '@nestjs/schedule';
 import { ENV, type Env } from './config/env';
 import { ApiExceptionFilter } from './common/api-exception.filter';
 import { AuthModule } from './auth/auth.module';
@@ -15,6 +16,9 @@ import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
+    // The one recurring job so far is the storage sweep; the cron registry has
+    // to exist before the module holding it is constructed.
+    ScheduleModule.forRoot(),
     DatabaseModule,
     RedisModule,
     SessionModule,

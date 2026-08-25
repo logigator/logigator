@@ -22,8 +22,19 @@ describe('the asset layout', () => {
   it('shards an asset under the first two characters of its own id', () => {
     expect(assetPath('profile', id)).toBe(`profile/a3/${id}`);
     expect(assetUrl('preview', id, 'light-256.webp')).toBe(
-      `/preview/a3/${id}/light-256.webp`
+      `/files/preview/a3/${id}/light-256.webp`
     );
+  });
+
+  /**
+   * The whole volume is served under one root of its own, not one prefix per
+   * area. The legacy backend answers `/profile/…` and `/preview/…` from its own
+   * disk and both stacks share an origin until cutover, so a static handler
+   * matching those prefixes would swallow its requests.
+   */
+  it('serves every area under one url root', () => {
+    expect(assetUrl('profile', id, '64.webp')).toMatch(/^\/files\//);
+    expect(assetUrl('preview', id, 'dark-256.webp')).toMatch(/^\/files\//);
   });
 });
 

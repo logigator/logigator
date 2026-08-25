@@ -5,6 +5,7 @@ import { CircuitDocumentService } from './circuit-document.service';
 import { ComponentsController } from './components.controller';
 import { ComponentsService } from './components.service';
 import { DependenciesService } from './dependencies.service';
+import { PreviewService } from './preview.service';
 import { ProjectsController } from './projects.controller';
 import { ProjectsService } from './projects.service';
 
@@ -29,6 +30,7 @@ import { ProjectsService } from './projects.service';
   providers: [
     CircuitDocumentService,
     DependenciesService,
+    PreviewService,
     ProjectsService,
     ComponentsService
   ],

@@ -10,6 +10,7 @@ import {
   Post,
   Put,
   Query,
+  Req,
   UseGuards
 } from '@nestjs/common';
 import {
@@ -25,17 +26,23 @@ import {
   type SaveCircuitRequest,
   type UpdateComponentRequest
 } from '@logigator/contract';
+import type { FastifyRequest } from 'fastify';
 import { AuthGuard, CurrentUser } from '../auth/auth.guard';
 import { ZodValidationPipe } from '../common/zod-validation.pipe';
-import type { UserRow } from '../database/schema';
+import { components, type UserRow } from '../database/schema';
 import { mapPage, toComponentSummary } from './circuit-responses';
+import { readPreviewUpload } from './preview-upload';
+import { PreviewService } from './preview.service';
 import { ComponentsService } from './components.service';
 
 /** The caller's own library components. Mirrors `ProjectsController`. */
 @Controller('components')
 @UseGuards(AuthGuard)
 export class ComponentsController {
-  constructor(private readonly components: ComponentsService) {}
+  constructor(
+    private readonly components: ComponentsService,
+    private readonly previews: PreviewService
+  ) {}
 
   @Get()
   async list(
@@ -90,5 +97,35 @@ export class ComponentsController {
   @HttpCode(HttpStatus.NO_CONTENT)
   delete(@CurrentUser() user: UserRow, @Param('id') id: string): Promise<void> {
     return this.components.delete(user.id, id);
+  }
+
+  /**
+   * Replaces the preview: one render per theme, in one multipart request.
+   *
+   * The editor draws both in a single pass, so they arrive and are replaced
+   * together — a project whose light and dark previews showed different circuits
+   * would be worse than one with none. Writing a preview is not an edit, so it
+   * leaves `version` and the edit time alone.
+   */
+  @Post(':id/preview')
+  async setPreview(
+    @CurrentUser() user: UserRow,
+    @Param('id') id: string,
+    @Req() request: FastifyRequest
+  ): Promise<ComponentSummary> {
+    const sources = await readPreviewUpload(request);
+    return toComponentSummary(
+      await this.previews.replace(components, user.id, id, sources)
+    );
+  }
+
+  @Delete(':id/preview')
+  async removePreview(
+    @CurrentUser() user: UserRow,
+    @Param('id') id: string
+  ): Promise<ComponentSummary> {
+    return toComponentSummary(
+      await this.previews.clear(components, user.id, id)
+    );
   }
 }

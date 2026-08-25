@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
 import { users } from '../src/database/schema';
+import { assetFilePath } from './assets';
 import { CookieJar } from './cookie-jar';
 import { startE2eApp, type E2eApp } from './harness';
 
@@ -304,11 +305,11 @@ describe('the signed-in user', () => {
       // client sent. That none of them is a `.png` is the upload being
       // re-encoded rather than stored: what arrived was one.
       expect(variant.url).toMatch(
-        /^\/profile\/[0-9a-f]{2}\/[0-9a-f-]{36}\/\d+\.(webp|jpg)$/
+        /^\/files\/profile\/[0-9a-f]{2}\/[0-9a-f-]{36}\/\d+\.(webp|jpg)$/
       );
       // What the response promises has to be on the volume, or the client is
       // holding URLs that 404.
-      const file = await stat(join(api.env.STORAGE_DIR, variant.url));
+      const file = await stat(assetFilePath(api, variant.url));
       expect(file.size).toBeGreaterThan(0);
     }
 

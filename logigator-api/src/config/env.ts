@@ -94,6 +94,15 @@ const variables = z.object({
     .int()
     .min(1024)
     .default(5 * 1024 * 1024),
+  /**
+   * How long an asset directory no row points at is left alone before the sweep
+   * deletes it.
+   *
+   * An upload in flight is a directory nothing names *yet*, which is
+   * indistinguishable from an orphan except by age — so this is the margin
+   * between the two, and a day of it costs a few kilobytes.
+   */
+  STORAGE_SWEEP_GRACE_MINUTES: z.coerce.number().int().min(0).default(1440),
 
   /** Signs the session cookie. `@fastify/session` requires 32 characters or more. */
   SESSION_SECRET: z.string().min(32).default(DEVELOPMENT_SESSION_SECRET),

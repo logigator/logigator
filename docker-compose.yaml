@@ -6,6 +6,9 @@ services:
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
+      # What the API writes under STORAGE_DIR, read-only: Caddy serves these
+      # files, and only the API ever produces them.
+      - ./data/storage:/srv:ro
     ports:
       - 127.0.0.1:80:80
       - 127.0.0.1:443:443

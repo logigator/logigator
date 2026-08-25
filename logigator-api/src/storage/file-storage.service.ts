@@ -31,9 +31,22 @@ export function assetPath(area: StorageArea, id: string): string {
   return `${area}/${id.slice(0, 2)}/${id}`;
 }
 
+/**
+ * URL root the storage volume is served under.
+ *
+ * A root of its own rather than one prefix per area, because the legacy backend
+ * already serves `/profile/…` and `/preview/…` from its own disk and both stacks
+ * answer on one origin until cutover. The two naming schemes happen not to
+ * collide on any concrete path — the legacy ones are a file, these are a
+ * shard — but a static handler matching `/profile/*` would swallow the legacy
+ * requests all the same, and a matcher clever enough to tell them apart is a
+ * worse thing to get wrong than an extra path segment.
+ */
+export const STORAGE_URL_PREFIX = '/files';
+
 /** Where a client reads one of an asset's files from. */
 export function assetUrl(area: StorageArea, id: string, file: string): string {
-  return `/${assetPath(area, id)}/${file}`;
+  return `${STORAGE_URL_PREFIX}/${assetPath(area, id)}/${file}`;
 }
 
 /**

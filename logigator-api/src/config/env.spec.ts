@@ -30,6 +30,7 @@ describe('loadEnv', () => {
       GOOGLE_CALLBACK_URL: 'http://logigator.test/api/auth/google/callback',
       OAUTH_RETURN_URL: 'http://logigator.test/login',
       STORAGE_DIR: 'data/storage',
+      STORAGE_SWEEP_GRACE_MINUTES: 1440,
       UPLOAD_MAX_BYTES: 5 * 1024 * 1024,
       SESSION_SECRET: DEVELOPMENT_SESSION_SECRET,
       SESSION_COOKIE_NAME: 'lg_sid',
