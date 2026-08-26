@@ -329,10 +329,13 @@ export class EditorMenuService {
         command: () => this.shareProject()
       });
     }
-    if (this.canCloneMainShare()) {
+    const shareKind = this.cloneableShareKind();
+    if (shareKind) {
       items.push({
         label: this.translation.translate(
-          'titleBar.menuBar.file.items.cloneShare.label'
+          shareKind === 'comp'
+            ? 'titleBar.menuBar.file.items.cloneShareComponent.label'
+            : 'titleBar.menuBar.file.items.cloneShare.label'
         ),
         icon: 'ph ph-git-fork',
         command: () => void this.cloneShare()
@@ -533,20 +536,18 @@ export class EditorMenuService {
   }
 
   /**
-   * Whether the open project is a read-only **share** — the only case that can
-   * be cloned into the user's own cloud projects. Component shares open as
-   * tabs, never as main, so this fires for project shares only.
+   * Which kind of read-only **share** is open as main, or `null` when the main
+   * slot holds something else — a share is the only case that can be cloned
+   * into the user's own cloud library. Both kinds open as main, and the kind
+   * decides the label as well as the endpoint the clone goes through.
    */
-  private canCloneMainShare(): boolean {
+  private cloneableShareKind(): 'project' | 'comp' | null {
     const project = this.projectService.mainProject();
     const metadata = project
       ? this.projectMetadataStore.getMetadata(project)
       : null;
-    return (
-      metadata?.type === 'project' &&
-      metadata.source === 'share' &&
-      !!metadata.link
-    );
+    if (metadata?.source !== 'share' || !metadata.link) return null;
+    return metadata.type;
   }
 
   /**
@@ -562,7 +563,7 @@ export class EditorMenuService {
       : null;
     if (metadata?.source !== 'share' || !metadata.link) return;
     try {
-      await this.persistenceService.cloneShare(metadata.link);
+      await this.persistenceService.cloneShare(metadata.link, metadata.type);
       this.toastService.success(
         this.translation.translate('persistence.shareCloned'),
         'EditorMenuService'
