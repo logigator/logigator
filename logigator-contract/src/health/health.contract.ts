@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 
 /** One dependency's verdict. `error` carries the failure for an operator to read. */
 export const healthCheckSchema = z

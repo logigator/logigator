@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import { imageVariantSchema } from '../image/image.contract';
 
 /**

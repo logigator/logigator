@@ -8,7 +8,11 @@
  * consumers ever need one — never authored as a second source of truth.
  *
  * Layering: the contract may import `@logigator/core` (the document format it
- * carries), never the server. Response object schemas are deliberately loose,
+ * carries), never the server. zod is imported as `import * as z from 'zod'`
+ * everywhere here, and the lint fence enforces it: the `z` named export is a
+ * namespace object carrying every locale table and the JSON-Schema generator,
+ * and a bundler can only drop what a schema does not touch when it can see the
+ * namespace. Response object schemas are deliberately loose,
  * so a client holding an older contract copy tolerates fields the API added
  * instead of rejecting the response or silently stripping them.
  */

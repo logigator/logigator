@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import { imageVariantSchema } from '../image/image.contract';
 import { pageQuerySchema, pageSchema } from '../page/page.contract';
 import { authorSchema } from '../document/document.contract';

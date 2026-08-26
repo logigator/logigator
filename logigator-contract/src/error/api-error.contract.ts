@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 
 /**
  * Machine-readable failure kinds. Clients branch on `code`, never on the HTTP

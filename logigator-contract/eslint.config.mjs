@@ -25,6 +25,23 @@ export default defineConfig([
     },
     rules: {
       'no-console': 'error',
+      // `import * as z from 'zod'`, never `import { z }`. zod's `z` export is a
+      // namespace object holding every locale table and the JSON-Schema
+      // generator; a named import of it is one opaque value a bundler cannot
+      // see into, so all of it lands in every browser client that ships these
+      // schemas. A namespace import is analysed property by property and drops
+      // what no schema here touches — measured at 35kB gzipped off the editor's
+      // bundle. `no-restricted-imports` cannot express this: it reads
+      // `import * as z` as importing every name, the restricted one included.
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector:
+            "ImportDeclaration[source.value='zod'] > ImportSpecifier[imported.name='z']",
+          message:
+            "import zod as a namespace (`import * as z from 'zod'`); a named `z` import defeats tree-shaking and ships every locale to every client."
+        }
+      ],
       '@typescript-eslint/no-restricted-imports': [
         'error',
         {

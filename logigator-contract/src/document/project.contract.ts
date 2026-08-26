@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import { pageSchema } from '../page/page.contract';
 import {
   circuitDocumentInputSchema,

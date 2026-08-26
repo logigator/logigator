@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import type { CurrentCircuitFile } from '@logigator/core';
 import { imageVariantSchema } from '../image/image.contract';
 

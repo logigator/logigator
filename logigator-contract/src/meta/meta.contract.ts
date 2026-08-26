@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 
 /**
  * What the API tells clients about itself. `formatVersion` is the newest
