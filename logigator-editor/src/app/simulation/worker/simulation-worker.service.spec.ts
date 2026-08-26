@@ -353,6 +353,34 @@ describe('SimulationWorkerService', () => {
     expect(captureError).not.toHaveBeenCalled();
   });
 
+  it('reports the untranslated reason behind a coded engine failure', async () => {
+    const captureError = vi.spyOn(
+      TestBed.inject(AnalyticsService),
+      'captureError'
+    );
+    await service.startSession(DESCRIPTOR, hooks);
+
+    const detail =
+      'Failed to initialize the simulation engine: CompileError: expected magic word';
+    fakeWorker.emit({
+      kind: 'error',
+      reqId: null,
+      code: 'engineInitFailed',
+      message: detail
+    });
+
+    // The exception's own message is the toast text: localised, and a catch-all
+    // that fits every reason the engine can fail for. What names the reason
+    // rides along as properties.
+    const [error, , properties] = captureError.mock.calls[0];
+    expect((error as Error).message).not.toContain('CompileError');
+    expect(properties).toEqual({
+      source: 'workerError',
+      code: 'engineInitFailed',
+      detail
+    });
+  });
+
   it('drops user inputs sent before the engine is initialized', async () => {
     autoRespond = false;
     const session = service.startSession(DESCRIPTOR, hooks);

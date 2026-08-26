@@ -64,6 +64,23 @@ interface PendingRequest {
 }
 
 /**
+ * Machine-readable context on a worker fault, reported alongside the exception.
+ *
+ * The reported `Error` carries the translated, user-facing text — the string a
+ * toast shows —, which names no cause and names it in the reporter's language.
+ * Everything that identifies the failure is here: which of the three failure
+ * channels saw it, and the untranslated reason as the worker (or the browser)
+ * phrased it.
+ */
+interface FaultContext {
+  source: 'workerError' | 'workerCrash' | 'messageError';
+  /** Set when the worker had a translatable message; `detail` is then its raw
+   * counterpart. */
+  code?: string;
+  detail?: string;
+}
+
+/**
  * Main-thread bridge to the simulation worker: owns the `Worker`, the
  * request/response correlation map, and the per-frame snapshot pull loop.
  * Snapshots apply straight to the session's {@link LinkStateApplier} (hot
@@ -141,13 +158,15 @@ export class SimulationWorkerService {
       this._onMessage(event.data);
     worker.onerror = (event: ErrorEvent) =>
       this._fail(
-        event.message || this.translation.translate('simulation.workerCrashed')
+        event.message || this.translation.translate('simulation.workerCrashed'),
+        { source: 'workerCrash', detail: event.message || undefined }
       );
     // A message that can't be deserialized never reaches onmessage — route it
     // into the same failure path as onerror.
     worker.onmessageerror = () =>
       this._fail(
-        this.translation.translate('simulation.workerMessageUnreadable')
+        this.translation.translate('simulation.workerMessageUnreadable'),
+        { source: 'messageError' }
       );
     await ready;
     if (this.worker !== worker) {
@@ -410,18 +429,23 @@ export class SimulationWorkerService {
           msg.code === 'engineInitFailed'
             ? this.translation.translate('simulation.engineInitFailed')
             : msg.message;
+        const fault: FaultContext = {
+          source: 'workerError',
+          code: msg.code,
+          detail: msg.message
+        };
         const request =
           msg.reqId !== null ? this.pending.get(msg.reqId) : undefined;
         if (request) {
           this.pending.delete(msg.reqId!);
           const error = new Error(userMessage);
-          this._reportFault(error);
+          this._reportFault(error, fault);
           request.reject(error);
         } else {
           if (msg.code) {
             this.logging.error(msg.message, 'SimulationWorker');
           }
-          this._fail(userMessage);
+          this._fail(userMessage, fault);
         }
         break;
       }
@@ -491,15 +515,15 @@ export class SimulationWorkerService {
    * Deliberately not called for {@link endSession}'s rejections: tearing a
    * session down cancels in-flight requests by design.
    */
-  private _reportFault(error: Error): void {
-    this.analytics.captureError(error);
+  private _reportFault(error: Error, context: FaultContext): void {
+    this.analytics.captureError(error, undefined, { ...context });
   }
 
   /** Unrecoverable worker failure: reject everything, notify the session owner. */
-  private _fail(message: string): void {
+  private _fail(message: string, context: FaultContext): void {
     const hooks = this.hooks;
     const error = new Error(message);
-    this._reportFault(error);
+    this._reportFault(error, context);
     for (const request of this.pending.values()) {
       request.reject(error);
     }

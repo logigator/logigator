@@ -94,13 +94,28 @@ export class AnalyticsService {
    * `$exception` event (grouped into issues, stack traces retained — client
    * stacks are just the app's own bundle URLs). Gated and guarded like
    * {@link capture}: dropped before consent-time init, and never throws, since
-   * it runs inside the global error handler. */
-  public captureError(error: unknown, correlationId?: string): void {
+   * it runs inside the global error handler.
+   *
+   * `properties` carries the machine-readable cause for a fault whose `Error`
+   * message is a translated, user-facing string — one that names no cause on
+   * its own, and names it in a different language per reporter. They ride the
+   * event rather than the message, so issue grouping (exception type plus stack
+   * frames) is unaffected, and they pass the same {@link sanitizeProperties}
+   * backstop as every other event's. */
+  public captureError(
+    error: unknown,
+    correlationId?: string,
+    properties?: Record<string, unknown>
+  ): void {
     if (!this.initialized) return;
     try {
+      const eventProperties = {
+        ...(properties ? sanitizeProperties(properties) : {}),
+        ...(correlationId ? { correlation_id: correlationId } : {})
+      };
       this.posthog?.captureException(
         error,
-        correlationId ? { correlation_id: correlationId } : undefined
+        Object.keys(eventProperties).length > 0 ? eventProperties : undefined
       );
     } catch {
       // Analytics must never re-enter the error handler.
