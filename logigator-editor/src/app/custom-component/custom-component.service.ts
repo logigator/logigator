@@ -213,13 +213,12 @@ export class CustomComponentService {
    * copy of a stranger's component.
    *
    * The tab is a plain component {@link Project} registered as a `'share'`
-   * document — the shape a shared component link already opens as — so every
-   * read-only suppression applies unchanged: saving is refused, the File menu
-   * drops its save entry, dirty tracking is off, and the wire-repair offer stays
-   * quiet on a circuit the viewer cannot fix. It carries no
-   * {@link DefinitionBinding} (there is no master to keep in sync) and no store
-   * id; closing it just disposes it. Viewing an already-open snapshot focuses
-   * its tab. No-op for a type id that is not an embedded snapshot.
+   * document, so every read-only suppression applies unchanged: saving is
+   * refused, the File menu drops its save entry, dirty tracking is off, and the
+   * wire-repair offer stays quiet on a circuit the viewer cannot fix. It carries
+   * no {@link DefinitionBinding} (there is no master to keep in sync) and no
+   * store id; closing it just disposes it. Viewing an already-open snapshot
+   * focuses its tab. No-op for a type id that is not an embedded snapshot.
    */
   public viewSnapshot(typeId: number): void {
     const def = this.registry.getDefinition(typeId);

@@ -325,7 +325,16 @@ export class ServerPersistenceGateway {
     return { project, type: detail.type };
   }
 
-  async cloneFromShare(linkId: string): Promise<string> {
+  /**
+   * Clones a share into the signed-in user's own library, returning the copy's
+   * id. Projects and components are separate endpoints and separate stores, so
+   * the share's `type` picks which one the link is cloned through — a component
+   * link cloned as a project resolves to nothing server-side.
+   */
+  async cloneFromShare(
+    linkId: string,
+    type: 'project' | 'comp'
+  ): Promise<string> {
     try {
       await firstValueFrom(this.userApi.get());
     } catch {
@@ -338,7 +347,9 @@ export class ServerPersistenceGateway {
     }
 
     const response = await firstValueFrom(
-      this.projectApi.cloneFromShare(linkId)
+      type === 'comp'
+        ? this.componentApi.cloneFromShare(linkId)
+        : this.projectApi.cloneFromShare(linkId)
     );
     return response.id;
   }

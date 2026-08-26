@@ -52,7 +52,6 @@ export class PersistenceService {
   private readonly wireRepair = inject(WireRepairService);
 
   private _mainLoadToken = 0;
-  private _shareLoadToken = 0;
   private readonly _saveInFlight = new WeakMap<Project, Promise<void>>();
   // Bindings for component editors opened **as main** (the /component/:uuid
   // route). Tab-opened editors track their own bindings in CustomComponentService;
@@ -204,9 +203,20 @@ export class PersistenceService {
     return this.server.loadShare(linkId);
   }
 
-  async cloneShare(linkId: string): Promise<Project> {
-    const id = await this.server.cloneFromShare(linkId);
-    await this.loadProjectAsMain(id);
+  /**
+   * Copies a share into the viewer's own cloud library and opens the copy as
+   * main. `type` selects both the clone endpoint and the load path, so a cloned
+   * component lands in the components library and reopens through
+   * {@link loadComponentAsMain} (which attaches its `DefinitionBinding`), not as
+   * a project.
+   */
+  async cloneShare(linkId: string, type: 'project' | 'comp'): Promise<Project> {
+    const id = await this.server.cloneFromShare(linkId, type);
+    if (type === 'comp') {
+      await this.loadComponentAsMain(id);
+    } else {
+      await this.loadProjectAsMain(id);
+    }
     return this.projectService.mainProject()!;
   }
 
@@ -393,13 +403,6 @@ export class PersistenceService {
    * back to a blank draft when no main project exists at all.
    */
   private async _loadAsMain<T>(opts: {
-    /**
-     * Which race token guards this load. Server projects, browser projects
-     * and server components all fill the single main slot, so they share one
-     * token ('main') — starting any of them discards a still-pending load of
-     * the others. Shares have their own slot ('share').
-     */
-    token: 'main' | 'share';
     /** Where the loaded document came from, for analytics. */
     source: 'server' | 'browser' | 'component' | 'share';
     load: () => Promise<T>;
@@ -408,11 +411,10 @@ export class PersistenceService {
     failureMessageKey: TranslationKey;
     failureDetail: string;
   }): Promise<void> {
-    const token =
-      opts.token === 'main' ? ++this._mainLoadToken : ++this._shareLoadToken;
-    const isCurrent = (): boolean =>
-      token ===
-      (opts.token === 'main' ? this._mainLoadToken : this._shareLoadToken);
+    // One race token for every entry point: they all fill the single main slot,
+    // so starting any of them discards a still-pending load of the others.
+    const token = ++this._mainLoadToken;
+    const isCurrent = (): boolean => token === this._mainLoadToken;
     try {
       const result = await opts.load();
       if (!isCurrent()) {
@@ -445,7 +447,6 @@ export class PersistenceService {
     opts?: { skipUrlUpdate?: boolean }
   ): Promise<void> {
     await this._loadAsMain({
-      token: 'main',
       source: 'server',
       load: () => this.loadProject(uuid),
       projectOf: (project) => project,
@@ -464,18 +465,22 @@ export class PersistenceService {
     });
   }
 
+  /**
+   * Loads a share link into the main slot. Both kinds fill it: a component
+   * share opens standalone exactly as `/component/:uuid` does, so the title
+   * bar names it, its tab is the pinned one, and the clone affordance reads the
+   * document the viewer is actually looking at. Opening one as a *tab* instead
+   * would leave the main slot empty on a `/share/:linkId` page load (the route
+   * matched, so no blank draft was created), and closing that tab would leave
+   * no project at all.
+   */
   async loadShareAsMain(linkId: string): Promise<void> {
     await this._loadAsMain({
-      token: 'share',
       source: 'share',
       load: () => this.loadShare(linkId),
       projectOf: ({ project }) => project,
       onLoaded: ({ project, type }) => {
-        if (type === 'comp') {
-          this.projectService.addOpenComponent(project);
-        } else {
-          this._replaceMainProject(project);
-        }
+        this._replaceMainProject(project);
         this.logging.info(
           `Loaded share ${linkId} (${type})`,
           'PersistenceService'
@@ -561,7 +566,6 @@ export class PersistenceService {
     opts?: { skipUrlUpdate?: boolean }
   ): Promise<void> {
     await this._loadAsMain({
-      token: 'main',
       source: 'component',
       load: () => this.loadServerComponent(uuid),
       projectOf: ({ project }) => project,
@@ -589,7 +593,6 @@ export class PersistenceService {
     opts?: { skipUrlUpdate?: boolean }
   ): Promise<void> {
     await this._loadAsMain({
-      token: 'main',
       source: 'browser',
       load: () => this.loadLocalProject(id),
       projectOf: (project) => project,

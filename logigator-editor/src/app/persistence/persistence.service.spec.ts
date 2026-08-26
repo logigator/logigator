@@ -90,6 +90,31 @@ function projectDetailResponse(
   };
 }
 
+/** A cloned component, as both the clone POST's and the open GET's payload. */
+function sharedComponentResponse(id: string) {
+  return {
+    status: 200,
+    data: {
+      id,
+      name: 'Comp',
+      description: '',
+      symbol: 'C',
+      numInputs: 0,
+      numOutputs: 0,
+      labels: [],
+      createdOn: '2024-01-01',
+      lastEdited: '2024-01-01',
+      elementsFile: { hash: 'comp-hash' },
+      previewDark: null,
+      previewLight: null,
+      public: false,
+      version: 1,
+      elements: [],
+      dependencies: []
+    }
+  };
+}
+
 function projectSummaryResponse(
   overrides: Partial<{
     id: string;
@@ -681,11 +706,12 @@ describe('PersistenceService', () => {
       expect(metadataStore.getMetadata(main!)?.source).toBe('share');
     });
 
-    it('loadShareAsMain adds component-type shares to open components', async () => {
-      // Establish a main project first so the comp doesn't become main
-      service.createAndSetEmptyProject();
-      const initialMain = projectService.mainProject();
-
+    it('loadShareAsMain fills the main slot for component-type shares', async () => {
+      // A `/share/:linkId` page load creates no blank draft (the route
+      // matched), so a component share opened as a *tab* would leave the main
+      // slot empty: no name and no share chip in the title bar, its tab
+      // closable into an editor with no project, and nothing for the clone
+      // action to read.
       const promise = service.loadShareAsMain('link-comp');
 
       httpMock
@@ -694,8 +720,15 @@ describe('PersistenceService', () => {
 
       await promise;
 
-      expect(projectService.mainProject()).toBe(initialMain);
-      expect(projectService.openComponents().length).toBe(1);
+      const main = projectService.mainProject();
+      expect(metadataStore.getMetadata(main!)).toEqual(
+        expect.objectContaining({
+          id: 'comp-1',
+          type: 'comp',
+          source: 'share'
+        })
+      );
+      expect(projectService.openComponents()).toEqual([]);
     });
   });
 
@@ -964,7 +997,7 @@ describe('PersistenceService', () => {
 
   describe('cloneShare', () => {
     it('rejects with AuthRequiredError when /api/user returns 401', async () => {
-      const promise = service.cloneShare('link-1');
+      const promise = service.cloneShare('link-1', 'project');
 
       httpMock
         .expectOne(USER_URL)
@@ -977,7 +1010,7 @@ describe('PersistenceService', () => {
     });
 
     it('clones, loads, sets as main, and updates URL', async () => {
-      const promise = service.cloneShare('link-1');
+      const promise = service.cloneShare('link-1', 'project');
 
       httpMock.expectOne(USER_URL).flush({
         status: 200,
@@ -1003,6 +1036,39 @@ describe('PersistenceService', () => {
         'cloned-uuid'
       );
       expect(locationGo).toHaveBeenCalledWith('/project/cloned-uuid');
+    });
+
+    it('clones a component share through the component endpoints', async () => {
+      // The two kinds are separate endpoints over separate stores: cloning a
+      // component link as a project resolves to nothing server-side, and the
+      // copy has to reopen as a component to carry its DefinitionBinding.
+      const tick = () => new Promise((r) => setTimeout(r, 0));
+      const promise = service.cloneShare('link-c', 'comp');
+
+      httpMock.expectOne(USER_URL).flush({
+        status: 200,
+        data: makeUser('user-1')
+      });
+      await tick();
+
+      httpMock
+        .expectOne(`${environment.apiUrl}/api/component/clone/link-c`)
+        .flush(sharedComponentResponse('cloned-comp'));
+      await tick();
+
+      httpMock
+        .expectOne(`${environment.apiUrl}/api/component/cloned-comp`)
+        .flush(sharedComponentResponse('cloned-comp'));
+
+      await promise;
+      expect(metadataStore.getMetadata(projectService.mainProject()!)).toEqual(
+        expect.objectContaining({
+          id: 'cloned-comp',
+          type: 'comp',
+          source: 'server'
+        })
+      );
+      expect(locationGo).toHaveBeenCalledWith('/component/cloned-comp');
     });
   });
 
