@@ -11,6 +11,7 @@ export const LOGIGATOR_UI_VERSION = '0.0.0';
 export type { IconSlot } from './internal/icon';
 export type { LgSeverity } from './tokens/severity';
 export type { LgSize } from './tokens/size';
+export type { LgImageSource } from './tokens/image-source';
 export type { LgLabels, LgLabelResolver } from './tokens/labels';
 export { LG_DEFAULT_LABELS, LG_LABELS, provideLgLabels } from './tokens/labels';
 export type {
