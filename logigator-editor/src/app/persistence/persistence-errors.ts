@@ -1,4 +1,4 @@
-import { HttpErrorResponse } from '@angular/common/http';
+import { ApiRequestError } from '../api/api-error';
 
 export class AuthRequiredError extends Error {
   constructor() {
@@ -31,9 +31,14 @@ export function isHandledSaveError(err: unknown): boolean {
   );
 }
 
+/**
+ * A failure as a toast detail line. An {@link ApiRequestError} carries the API's
+ * own message, which says more than the status ever did — a rejected document
+ * names what about it did not parse.
+ */
 export function formatHttpError(err: unknown): string {
-  if (err instanceof HttpErrorResponse) {
-    return `HTTP ${err.status} ${err.statusText}`;
+  if (err instanceof ApiRequestError) {
+    return `${err.code}: ${err.message}`;
   }
   if (err instanceof Error) {
     return err.message;

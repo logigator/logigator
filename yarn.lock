@@ -7315,6 +7315,7 @@ __metadata:
     uuid: "npm:^14.0.1"
     vitest: "npm:^4.1.10"
     vitest-canvas-mock: "npm:^1.1.4"
+    zod: "npm:^4.4.3"
   languageName: unknown
   linkType: soft
 

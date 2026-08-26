@@ -1,6 +1,5 @@
 import { effect, inject, Injectable } from '@angular/core';
 import { UserService } from './user.service';
-import { sessionUserId } from '../api/models/user';
 import { ProjectMetadataStore } from '../persistence/project-metadata.store';
 import { Project } from '../project/project';
 
@@ -41,7 +40,7 @@ export class CloudSessionService {
       for (const { project, metadata } of this.metadataStore.getAllHandles()) {
         if (metadata.source !== 'server') continue;
         if (!this._owners.has(project)) {
-          this._owners.set(project, sessionUserId(user));
+          this._owners.set(project, user.id);
         }
       }
     });
@@ -61,7 +60,7 @@ export class CloudSessionService {
     const user = this.userService.user();
     if (!user) return 'logged-out';
     const owner = this._owners.get(project);
-    if (owner !== undefined && owner !== sessionUserId(user)) return 'foreign';
+    if (owner !== undefined && owner !== user.id) return 'foreign';
     return 'ok';
   }
 }

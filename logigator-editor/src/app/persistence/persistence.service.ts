@@ -14,8 +14,7 @@ import { ProjectService } from '../project/project.service';
 import { ToastService } from '../logging/toast.service';
 import { LoggingService } from '../logging/logging.service';
 import { Project } from '../project/project';
-import { ForkAttributionEntry, ProjectSummary } from '../api/models/project';
-import { Page } from '../api/models/shared';
+import type { ProjectPage } from '@logigator/contract';
 import { CustomComponentRegistry } from '../components/custom/custom-component-registry.service';
 import { DefinitionBinding } from '../custom-component/definition-binding';
 import { buildProject } from './circuit-builder';
@@ -29,7 +28,12 @@ import { ServerPersistenceGateway } from './server/server-persistence.gateway';
 import { BrowserPersistenceGateway } from './browser/browser-persistence.gateway';
 import { downloadBlob } from '../utils/download';
 import { warnSkippedCustoms } from './load-warnings';
-import { decodeLgix, encodeLgix, hasLgixMagic } from '@logigator/core';
+import {
+  decodeLgix,
+  encodeLgix,
+  hasLgixMagic,
+  type FileForkAttributionV1
+} from '@logigator/core';
 import { AnalyticsService } from '../analytics/analytics.service';
 import { AnalyticsEvent } from '../analytics/analytics.mapping';
 import { WireRepairService } from '../project/wire-repair.service';
@@ -138,10 +142,7 @@ export class PersistenceService {
     return id;
   }
 
-  listProjects(
-    page?: number,
-    search?: string
-  ): Observable<Page<ProjectSummary>> {
+  listProjects(page?: number, search?: string): Observable<ProjectPage> {
     return this.server.listProjects(page, search);
   }
 
@@ -205,13 +206,12 @@ export class PersistenceService {
 
   /**
    * Copies a share into the viewer's own cloud library and opens the copy as
-   * main. `type` selects both the clone endpoint and the load path, so a cloned
-   * component lands in the components library and reopens through
-   * {@link loadComponentAsMain} (which attaches its `DefinitionBinding`), not as
-   * a project.
+   * main. The clone answers which library it landed in, and that picks the load
+   * path: a cloned component reopens through {@link loadComponentAsMain} (which
+   * attaches its `DefinitionBinding`), not as a project.
    */
-  async cloneShare(linkId: string, type: 'project' | 'comp'): Promise<Project> {
-    const id = await this.server.cloneFromShare(linkId, type);
+  async cloneShare(linkId: string): Promise<Project> {
+    const { id, type } = await this.server.cloneFromShare(linkId);
     if (type === 'comp') {
       await this.loadComponentAsMain(id);
     } else {
@@ -249,7 +249,6 @@ export class PersistenceService {
       name: 'Untitled',
       type: 'project',
       source: 'browser',
-      hash: '',
       isPublic: false
     });
 
@@ -368,7 +367,7 @@ export class PersistenceService {
   async persistImportedProject(
     project: Project,
     name: string,
-    attribution?: ForkAttributionEntry[]
+    attribution?: FileForkAttributionV1[]
   ): Promise<void> {
     // addComponent/addWire don't push to the ActionManager, so the project
     // starts non-dirty even though it was just populated.
@@ -377,7 +376,6 @@ export class PersistenceService {
       name,
       type: 'project',
       source: 'browser',
-      hash: '',
       isPublic: false,
       attribution
     });
@@ -517,10 +515,10 @@ export class PersistenceService {
   }
 
   /**
-   * Creates a new **server** library master: POSTs to `/api/component`, registers
-   * the master, opens an empty editor Project and persists the initial empty
-   * circuit to establish a hash. Returns the Project + master type id so the
-   * caller (`CustomComponentService`) opens the tab and attaches a binding.
+   * Creates a new **server** library master: POSTs to `/api/components`,
+   * registers the master and opens an empty editor Project. Returns the Project
+   * + master type id so the caller (`CustomComponentService`) opens the tab and
+   * attaches a binding.
    */
   async createServerComponent(meta: {
     name: string;

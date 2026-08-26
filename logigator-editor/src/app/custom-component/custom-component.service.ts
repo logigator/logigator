@@ -111,7 +111,6 @@ export class CustomComponentService {
       name: meta.name,
       type: 'comp',
       source: 'browser',
-      hash: '',
       isPublic: meta.isPublic ?? false
     });
 
@@ -242,7 +241,6 @@ export class CustomComponentService {
         name: def.name,
         type: 'comp',
         source: 'share',
-        hash: '',
         isPublic: false
       },
       false

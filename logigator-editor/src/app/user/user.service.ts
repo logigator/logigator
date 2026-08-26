@@ -1,10 +1,14 @@
 import { computed, effect, inject, Injectable, signal } from '@angular/core';
 import { tap } from 'rxjs/operators';
-import type { Observable } from 'rxjs';
-import { HttpErrorResponse } from '@angular/common/http';
+import { firstValueFrom, type Observable } from 'rxjs';
 import { TranslationService } from '../translation/translation.service';
 import { UserApiService } from '../api/services/user-api.service';
-import type { Shortcut, UpdateUserRequest, UserData } from '../api/models/user';
+import type {
+  UpdateUserRequest,
+  UpdateUserResponse,
+  UserResponse
+} from '@logigator/contract';
+import { isApiError } from '../api/api-error';
 import { ToastService } from '../logging/toast.service';
 import { CookieService } from '../storage/cookie.service';
 
@@ -29,7 +33,7 @@ export class UserService {
     () => this.cookieService.get(AUTH_COOKIE) === 'true'
   );
 
-  private readonly _user = signal<UserData | null>(null);
+  private readonly _user = signal<UserResponse | null>(null);
   readonly user = this._user.asReadonly();
 
   constructor() {
@@ -51,7 +55,7 @@ export class UserService {
         // signed-out cleanly (including the stale cookie, so a later login
         // produces a fresh cookie transition). Anything else (offline, 5xx)
         // leaves the cookie alone: the session may well still be valid.
-        if (err instanceof HttpErrorResponse && err.status === 401) {
+        if (isApiError(err, 'unauthorized')) {
           this.sessionExpired();
           return;
         }
@@ -71,13 +75,13 @@ export class UserService {
   }
 
   /**
-   * Ends the server session (GET `/auth/logout`). Pure transport: throws on
+   * Ends the server session (`POST /api/auth/logout`). Pure transport: throws on
    * failure and emits no toast — `SessionLifecycleService.requestLogout()` owns
    * the surrounding flow (unsaved-changes dialog, teardown, feedback). The
-   * server response flips the `isAuthenticated` cookie, which clears `user()`.
+   * server response clears the `isAuthenticated` cookie, which clears `user()`.
    */
   logout(): Promise<void> {
-    return this.userApi.logout();
+    return firstValueFrom(this.userApi.logout());
   }
 
   /**
@@ -96,13 +100,15 @@ export class UserService {
     window.open('/my/account/profile', '_blank', 'noopener');
   }
 
-  /** PATCH /api/user — update any combination of profile fields; updates the user signal on success. */
-  update(req: UpdateUserRequest): Observable<UserData> {
-    return this.userApi.update(req).pipe(tap((user) => this._user.set(user)));
-  }
-
-  /** Convenience wrapper for persisting keyboard shortcut bindings to the server. */
-  updateShortcuts(shortcuts: Shortcut[]): Observable<UserData> {
-    return this.update({ shortcuts });
+  /**
+   * PATCH /api/user — update any combination of profile fields; updates the user
+   * signal on success. An address change waits on the mail it sends, so the
+   * updated account still carries the old address until the link is opened —
+   * which is what `emailVerificationSent` tells the caller.
+   */
+  update(req: UpdateUserRequest): Observable<UpdateUserResponse> {
+    return this.userApi
+      .update(req)
+      .pipe(tap((response) => this._user.set(response.user)));
   }
 }

@@ -13,8 +13,8 @@ the pieces it builds on and only cross-reference here:
   model, the registry, the rendering class, the editor-tab lifecycle, cycle
   prevention, and per-instance update.
 - [`persistence.md`](persistence.md) — the file format, migration chain, browser
-  stores, the legacy v0-over-HTTP server transport, and the `PersistenceService` /
-  `PromotionService` / `ComponentLibraryService` method surfaces.
+  stores, the cloud transport, and the `PersistenceService` / `PromotionService` /
+  `ComponentLibraryService` method surfaces.
 - [`ui.md`](ui.md) — the `SaveCoordinatorService` / `UploadCoordinatorService`
   dialogs and the settings-panel affordances.
 
@@ -168,9 +168,10 @@ own circuit from file-local → session. The stored circuit therefore holds post
 
 ## 4. How a document carries its dependencies (per transport)
 
-There are two serialization encodings across three targets.
+One serialization across all three targets — the native versioned document. What
+differs between them is only what the _receiver_ derives from it.
 
-### 4.1 Native file & browser store (v1, permanent)
+### 4.1 Native file & browser store (v1)
 
 `persistence/file/` — the native versioned format. A document is
 `{ version, name, components, wires, definitions[] }`, where `definitions[]` is the
@@ -180,71 +181,53 @@ There are two serialization encodings across three targets.
 design: a file import is just "decode, then browser-save the re-encoded blob," and
 the migration chain upgrades stored circuits on load for free.
 
-### 4.2 Server API (legacy v0-over-HTTP, **temporary**)
+### 4.2 Server API (the same native document)
 
-`persistence/server/` — **deleted when the native-model API ships.** The server
-transports the positional `ProjectElement[]` (file-format v0) plus a
-`dependencies[]` array. Decode is permanent (folds into the `v0ToV1` migration);
-encode (`server-circuit.codec.ts`) is throwaway.
+`persistence/server/` — the cloud API stores the **native versioned document**, so
+there is no second dependency encoding to describe. A cloud save sends exactly what
+a `.lgix` export carries: the body plus `definitions[]`, each definition a frozen
+copy of the custom's circuit carrying `source: { id, version, origin }`.
 
-Each `dependencies[]` entry is a `DependencyMapping`:
+The server does not take a dependency list from the client. It reads
+`definitions[].source` out of the document it was handed, keeps the entries whose
+`origin` is `'server'`, and writes one **dependency edge row** per distinct master —
+which is what the server-side graph (share cloning, the transitive copy) walks. Two
+rules follow from deriving rather than accepting:
 
-```
-{ id: string,          // mapping to an OWNED server component, or '' (see below)
-  model: number,       // the file-local type id — matches the body `t` and snapshot
-  snapshot: {          // the additive frozen copy (R14)
-    version, name, symbol, description, numInputs, numOutputs, labels,
-    elements           // positional body of the snapshot's circuit
-  } }
-```
+- **A snapshot with no `source` is not an error.** It is a legitimate self-contained
+  copy: no edge, and the instance keeps rendering from the embedded circuit.
+- **An edge whose master no longer exists is dropped, not fatal.** The cascade on the
+  dependency key makes "snapshot, no edge" the steady state after a delete, and
+  failing the save instead would let somebody else's deletion break a circuit that
+  does not need them.
 
-**The mapping-id rule (`serverDependencyId`).** `id` is only set when the
-dependency resolves to a **registered server master the user owns**; everything
-else — a local (browser) custom, an unregistered/foreign id — is sent as `''`.
-
-- The backend validates a non-empty `id` with `getOwnedComponentOrThrow` and creates
-  a **dependency row** (used for the server-side dependency graph: share cloning,
-  etc.). An empty `id` creates **no row** — the dependency rides solely on its
-  embedded `snapshot`.
-- Under the [one-directional rule](#8-one-directional-rule-no-local-in-cloud) a cloud
-  save has **no** local dependencies (they are promoted first), so in practice every
-  entry gets a real id. The `''` path is a defensive fallback: a local custom that
-  somehow reaches a cloud serialize (a bypass) is embedded with `id:''` and no
-  re-link hint, so it loads as a recoverable **orphan** — never the "Component for
-  mapping not found" crash (that only happens if a _browser id_ is sent, which
-  `serverDependencyId` never does).
-
-**The snapshot blob round-trips whole.** `serializeStoredCircuit` stores each
-mapping's `snapshot` verbatim in the circuit file, and `buildDependencyResponse`
-echoes it back on read — so **any field inside `snapshot` survives a round-trip with
-no backend storage changes**. The backend `DependencySnapshot` DTO must still
-_declare_ every field it accepts, because validation runs `forbidNonWhitelisted:
-true` — an undeclared field is rejected, not ignored (see
-[§11](#11-backend-contract--deployment)).
-
-**`synthesizeMissingSnapshots`.** For an old-editor document whose dependency rows
-carry no embedded snapshot, the backend backfills one from the live master — but
-only for **leaf** masters (whose own circuit places no further custom), because a
-hierarchical master's nested file-local ids would collide with the host document's.
-Non-leaf reference-only deps stay unresolved and are dropped on load (§10).
+The response's `dependencies[]` is the mirror image: not something a client renders
+from — the document already embeds everything — but how each master stands _now_, so
+a snapshot frozen at an older `version` becomes an offer to update rather than a
+silent divergence. A dependency whose master has since been deleted is simply absent
+from that list.
 
 ### 4.3 Decode: resolving provenance
 
-The `v0ToV1` migration's `decodeDependencies` revives each embedded `snapshot` into
-a native `SnapshotDefinition`. Provenance:
+A native document needs no provenance reconstruction — `definitions[].source` is
+read back verbatim by `fromPersistedDefinition`.
+
+The `v0ToV1` migration's `decodeDependencies` still exists for the two legacy shapes
+it reads: an old-editor file's `components[]` sub-circuit definitions, and the
+`dependencies[]` rows the Phase 6 database migration attaches to a legacy blob before
+parsing it (a legacy row's customs are relations, not part of the blob). There:
 
 ```
 id     = mapping.id || dependency.id      // the owned cloud component
-origin = 'server'                          // a server dependency is always cloud
+origin = 'server'                          // a legacy dependency row is always cloud
 ```
 
 - A present mapping id ⇒ a cloud dependency ⇒ **cloud origin** (`'server'`).
 - No id (`''`) ⇒ `source = undefined` — no provenance survives, so the instance
-  loads as an embedded **orphan** (recoverable via restore). This covers a legacy
-  reference-only dep and the bypass case above.
+  loads as an embedded **orphan** (recoverable via restore).
 
-A reference-only dependency (no embedded `snapshot`) is skipped here; its body
-elements then surface as unresolved customs and are dropped with a warning (§10).
+A reference-only dependency (no embedded `snapshot`) is skipped; its body elements
+then surface as unresolved customs and are dropped with a warning (§10).
 
 ---
 
@@ -265,10 +248,11 @@ For every custom in a document's closure, at save time:
        definitions[]: source { id, version,      (a browser dependency in a local doc,
        origin } — id is the current id           allowed — origin 'browser'; a lost id is
        ─────────────────────────────────────     kept for same-device re-link / orphan recovery)
-       ── SERVER (v0) ───────────────────────    ── SERVER (v0) — should not occur ────────────
-       mapping.id = id  (owned server)           mapping.id = ''   (defensive: embedded, no dep
-       → backend creates a dependency ROW        row; loads as an orphan). A local dep is
-                                                 promoted BEFORE a cloud save (see §7/§8).
+       ── CLOUD ─────────────────────────────    ── CLOUD — should not occur ──────────────────
+       identical document; the server reads      the definition still travels, but its browser
+       definitions[].source and derives one      origin means the server derives no edge from
+       dependency EDGE per server master         it. A local dep is promoted BEFORE a cloud
+                                                 save (see §7/§8).
 ```
 
 The **snapshot circuit is always embedded**, in every branch. The only variable is
@@ -396,13 +380,11 @@ one-sentence mental model ("cloud projects contain cloud components") and remove
 old confusing "half-editable embedded copy" state. Consequences:
 
 - **No `localId`.** The earlier mechanism that let a local component live inside a
-  cloud document (re-linkable only on the author's device) is gone — removed from the
-  frontend (codec/decode/model) and from the backend `DependencySnapshot` DTO. Under
-  `forbidNonWhitelisted`, dropping the DTO field means the editor that stops sending
-  it must deploy **before** the backend removes it (see the deployment note).
+  cloud document (re-linkable only on the author's device) is gone.
 - **A bypass degrades to an orphan, not a crash.** If a local dependency ever reaches
-  a cloud serialize without promotion, it is embedded with `mapping.id:''` and no
-  provenance → a restorable orphan on reload (§9). No data loss, no 400.
+  a cloud serialize without promotion, the definition still travels but its browser
+  origin means the server derives no edge from it → a restorable orphan on reload
+  (§9). No data loss, no rejection.
 - **Files still hold cloud deps.** Because cloud-in-local is allowed, exporting a
   cloud project to a native file (which carries cloud dependency ids) and importing
   it round-trips fine.
@@ -552,28 +534,30 @@ Cross-cutting guarantees:
 
 ---
 
-## 11. Backend contract & deployment
+## 11. Server contract & deployment
 
-`logigator-backend` (`project.controller` / `component.controller`, DTOs in
-`models/request/api/`):
+`logigator-api` (`documents/`) takes a document and derives everything else from it:
 
-- `ProjectMapping { id, model, snapshot }` — `id` is `''` **or** an owned server
-  component uuid; a non-empty id is validated by `getOwnedComponentOrThrow` and
-  creates a `ComponentDependency` / `ProjectDependency` row. `''` ⇒ no row.
-- `DependencySnapshot` — the frozen embedded circuit + summary. Stored verbatim in
-  the circuit blob (`serializeStoredCircuit`) and echoed on read
-  (`buildDependencyResponse`), so fields inside it round-trip without storage
-  changes. `synthesizeMissingSnapshots` backfills leaf masters for old documents.
-- **`forbidNonWhitelisted: true`** (global validation): any field the DTO does not
-  declare is **rejected with 400**, not stripped.
+- **A write carries `{ document, version }` and nothing about dependencies.**
+  `parseCircuitDocument` reads `definitions[].source`, keeps the `origin: 'server'`
+  entries, and writes one dependency edge per distinct master. There is no
+  client-asserted list to validate, so there is no field to get wrong.
+- **A document embedding two snapshots of one master is refused.** Its instances
+  would render from two frozen copies of one component, and the edge table keyed by
+  (dependent, dependency) has one row to give it either way.
+- **A read answers `dependencies[]` describing each master as it stands now** —
+  `version` against the embedded snapshot's own is the whole "an update is available"
+  signal. A master that has since been deleted is absent from the list, and the
+  embedded snapshot keeps working.
+- **Unknown fields are tolerated, not rejected.** Response schemas in
+  `@logigator/contract` are `.loose()`, and a document field the server does not know
+  fails the format validator rather than a DTO whitelist.
 
-> ⚠️ **Deployment order (both directions).** Because unknown fields are rejected:
-> _adding_ a wire field means the backend DTO must deploy **first / together with**
-> the editor; _removing_ one (as `localId` was) means the editor that stops sending
-> it must deploy **before** the backend drops the field, or an in-flight save from an
-> old editor 400s. An old document that still carries `localId` inside a stored
-> snapshot blob is unaffected — the blob is echoed verbatim on read and the field is
-> simply ignored, never re-validated against the DTO.
+> **Deployment order.** The old whitelist rule is gone, but a _format_ bump still
+> couples the two sides: the API normalizes every write to the newest version it
+> knows and rejects a document claiming a newer one with
+> `unsupported_format_version`. So the server deploys first on a format bump, and a
+> bulk re-normalization job follows it.
 
 ---
 
@@ -586,11 +570,11 @@ Cross-cutting guarantees:
   correct.
 - **A cloud document may only contain cloud components** (§8). Local deps are
   promoted at save; enforced across _every_ cloud-save path (project save, first
-  server save, component-editor save, tab-close save), since a bypass now degrades
-  to an orphan instead of the old graceful `localId` re-link.
-- **Empty mapping id for local/foreign deps.** A browser (or non-owned) id in
-  `mapping.id` = the "Component for mapping not found" 400. Send `''`. `serverDependencyId`
-  never sends a browser id, so a bypass orphans rather than crashes.
+  server save, component-editor save, tab-close save), since a bypass degrades to an
+  orphan.
+- **A browser-origin definition in a cloud document is inert, not fatal.** The server
+  derives edges only from `origin: 'server'` sources, so a bypass leaves an embedded
+  snapshot with no edge — it loads as an orphan rather than failing the save.
 - **Topological (post-order) dependency order**, not reversed pre-order — diamonds
   break under a naive reverse.
 - **Serialize resolves ids through the alias** (`currentIdForId`) — device-local

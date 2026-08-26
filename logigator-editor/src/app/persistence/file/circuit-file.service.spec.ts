@@ -6,7 +6,6 @@ import { of } from 'rxjs';
 import { TranslationService } from '../../translation/translation.service';
 import { configureTestBed } from '../../../testing/configure-test-bed';
 import { CircuitFileService } from './circuit-file.service';
-import { toCircuitFileV0 } from '../server/server-circuit.codec';
 import { LoggingService } from '../../logging/logging.service';
 import { ComponentProviderService } from '../../components/component-provider.service';
 import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
@@ -94,12 +93,12 @@ describe('CircuitFileService', () => {
     logging = TestBed.inject(LoggingService);
   });
 
-  // Build a Project from legacy positional elements via the server-read decode
-  // path (v0→v1 migration + instance build), the same route real server loads take.
+  // Build a Project from legacy positional elements through the v0→v1 migration
+  // and the instance build — the route a legacy `.json` import takes.
   function buildProject(elements: ProjectElement[]): Project {
-    const { components, wires } = service.decode(
-      toCircuitFileV0({ name: 'x', elements })
-    );
+    const { components, wires } = service.decode({
+      project: { name: 'x', elements }
+    });
     const project = new Project();
     for (const c of components) project.addComponent(c);
     for (const w of wires) project.addWire(w);

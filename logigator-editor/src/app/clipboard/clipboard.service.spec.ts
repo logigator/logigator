@@ -66,7 +66,6 @@ function registerAs(project: Project, type: 'project' | 'comp'): void {
       name: 'test',
       type,
       source: 'browser',
-      hash: '',
       isPublic: false
     },
     false

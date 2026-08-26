@@ -1,85 +1,84 @@
 import { inject, Injectable } from '@angular/core';
-import { map, Observable } from 'rxjs';
+import { Observable } from 'rxjs';
+import {
+  projectPageSchema,
+  projectResponseSchema,
+  projectSummarySchema,
+  type CreateProjectRequest,
+  type ProjectPage,
+  type ProjectResponse,
+  type ProjectSummary,
+  type SaveCircuitRequest,
+  type UpdateProjectRequest
+} from '@logigator/contract';
 import { ApiBaseService } from './api-base.service';
-import type { Page } from '../models/shared';
-import type { ProjectElement } from '@logigator/core';
-import type {
-  CreateProjectRequest,
-  ProjectDetail,
-  ProjectSummary,
-  SaveProjectRequest,
-  UpdateProjectRequest
-} from '../models/project';
 
+/** The caller's own projects: `/api/projects`. */
 @Injectable({ providedIn: 'root' })
 export class ProjectApiService {
   private readonly api = inject(ApiBaseService);
-  private readonly path = '/api/project';
+  private readonly path = '/api/projects';
 
-  /** GET /api/project — paginated list of the user's projects. */
-  list(
-    page: number,
-    size: number,
-    search?: string
-  ): Observable<Page<ProjectSummary>> {
-    return this.api.get<Page<ProjectSummary>>(this.path, {
-      page,
-      size,
-      search
-    });
+  /** GET /api/projects — one page of the user's projects. */
+  list(page: number, size: number, search?: string): Observable<ProjectPage> {
+    return this.api.get(this.path, projectPageSchema, { page, size, search });
   }
 
-  /** POST /api/project — create a new project. */
+  /**
+   * POST /api/projects — create a project, optionally with its circuit already
+   * in it. A create carrying a document is one round trip where the legacy API
+   * needed a create and a save.
+   */
   create(body: CreateProjectRequest): Observable<ProjectSummary> {
-    return this.api.post<ProjectSummary>(this.path, body);
+    return this.api.post(this.path, projectSummarySchema, body);
   }
 
-  /** GET /api/project/:projectId — open a project (includes elements + dependencies). */
-  open(projectId: string): Observable<ProjectDetail> {
-    return this.api.get<ProjectDetail>(`${this.path}/${projectId}`);
+  /** GET /api/projects/:id — the document, its dependencies and its lineage. */
+  open(projectId: string): Observable<ProjectResponse> {
+    return this.api.get(`${this.path}/${projectId}`, projectResponseSchema);
   }
 
-  /** PUT /api/project/:projectId — save circuit content. */
+  /** PUT /api/projects/:id — replace the circuit, against the version read. */
   save(
     projectId: string,
-    body: SaveProjectRequest
+    body: SaveCircuitRequest
   ): Observable<ProjectSummary> {
-    return this.api.put<ProjectSummary>(`${this.path}/${projectId}`, body);
+    return this.api.put(
+      `${this.path}/${projectId}`,
+      projectSummarySchema,
+      body
+    );
   }
 
-  /** PATCH /api/project/:projectId — update metadata (name, description, visibility, share link). */
+  /** PATCH /api/projects/:id — name, description, visibility, share link. */
   update(
     projectId: string,
     body: UpdateProjectRequest
   ): Observable<ProjectSummary> {
-    return this.api.patch<ProjectSummary>(`${this.path}/${projectId}`, body);
-  }
-
-  /** DELETE /api/project/:projectId */
-  delete(projectId: string): Observable<ProjectSummary> {
-    return this.api.delete<ProjectSummary>(`${this.path}/${projectId}`);
-  }
-
-  /** POST /api/project/:projectId/preview — upload dark + light preview PNGs. */
-  updatePreviews(
-    projectId: string,
-    formData: FormData
-  ): Observable<ProjectSummary> {
-    return this.api.postFormData<ProjectSummary>(
-      `${this.path}/${projectId}/preview`,
-      formData
+    return this.api.patch(
+      `${this.path}/${projectId}`,
+      projectSummarySchema,
+      body
     );
   }
 
-  /** GET /api/project/clone/:link — clone a shared project. */
-  cloneFromShare(link: string): Observable<ProjectSummary> {
-    return this.api.get<ProjectSummary>(`${this.path}/clone/${link}`);
+  /** DELETE /api/projects/:id */
+  delete(projectId: string): Observable<void> {
+    return this.api.deleteEmpty(`${this.path}/${projectId}`);
   }
 
-  // ---- Convenience wrappers for callers that only need elements ----
-
-  /** Open a project and return only its elements array. */
-  openElements(projectId: string): Observable<ProjectElement[]> {
-    return this.open(projectId).pipe(map((detail) => detail.elements));
+  /**
+   * POST /api/projects/:id/preview — both theme renders in one request, each
+   * part named for the theme it shows.
+   */
+  setPreview(
+    projectId: string,
+    formData: FormData
+  ): Observable<ProjectSummary> {
+    return this.api.postFormData(
+      `${this.path}/${projectId}/preview`,
+      projectSummarySchema,
+      formData
+    );
   }
 }

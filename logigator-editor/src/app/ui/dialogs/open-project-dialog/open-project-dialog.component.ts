@@ -208,7 +208,7 @@ export class OpenProjectDialogComponent implements OnInit {
         result.entries.map((p) => ({
           id: p.id,
           name: p.name,
-          lastEdited: p.lastEdited,
+          lastEdited: p.lastEditedAt,
           link: p.link,
           isPublic: p.public
         }))

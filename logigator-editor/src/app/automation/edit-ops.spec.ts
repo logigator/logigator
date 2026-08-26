@@ -232,7 +232,6 @@ describe('applyEditOps', () => {
         name: 'A',
         type: 'comp',
         source: 'browser',
-        hash: '',
         isPublic: false
       });
 

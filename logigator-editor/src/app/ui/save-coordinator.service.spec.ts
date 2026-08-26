@@ -19,7 +19,6 @@ function meta(overrides: Partial<ProjectMetadata> = {}): ProjectMetadata {
     name: 'Untitled',
     type: 'project',
     source: 'browser',
-    hash: '',
     isPublic: false,
     ...overrides
   };

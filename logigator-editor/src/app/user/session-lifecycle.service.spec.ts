@@ -15,13 +15,10 @@ import { CustomComponentService } from '../custom-component/custom-component.ser
 import { UploadCoordinatorService } from '../ui/upload/upload-coordinator.service';
 import { ToastService } from '../logging/toast.service';
 import { Project } from '../project/project';
-import type { UserData } from '../api/models/user';
+import type { UserResponse } from '@logigator/contract';
+import { makeUser } from '../../testing/user-fixtures';
 import type { ProjectMetadata } from '../persistence/project-metadata.store';
 import { configureTestBed } from '../../testing/configure-test-bed';
-
-function makeUser(id: string): UserData {
-  return { id, memberSince: '2024-01-01', username: id, image: null };
-}
 
 /** Settle the fire-and-forget async work behind the login transition. */
 function flush(): Promise<void> {
@@ -29,7 +26,7 @@ function flush(): Promise<void> {
 }
 
 describe('SessionLifecycleService', () => {
-  let user: ReturnType<typeof signal<UserData | null>>;
+  let user: ReturnType<typeof signal<UserResponse | null>>;
   let logout: Mock;
   let persistence: {
     createAndSetEmptyProject: Mock;
@@ -50,7 +47,7 @@ describe('SessionLifecycleService', () => {
   let projectService: ProjectService;
 
   beforeEach(() => {
-    user = signal<UserData | null>(null);
+    user = signal<UserResponse | null>(null);
     logout = vi.fn().mockResolvedValue(undefined);
     persistence = {
       createAndSetEmptyProject: vi.fn()
@@ -102,7 +99,6 @@ describe('SessionLifecycleService', () => {
       name: 'Doc',
       type: 'project',
       source: 'server',
-      hash: '',
       isPublic: false,
       ...patch
     });

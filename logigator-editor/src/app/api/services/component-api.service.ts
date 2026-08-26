@@ -1,93 +1,75 @@
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import {
+  componentPageSchema,
+  componentResponseSchema,
+  componentSummarySchema,
+  type ComponentPage,
+  type ComponentResponse,
+  type ComponentSummary,
+  type CreateComponentRequest,
+  type SaveCircuitRequest,
+  type UpdateComponentRequest
+} from '@logigator/contract';
 import { ApiBaseService } from './api-base.service';
-import type { Page } from '../models/shared';
-import type {
-  ComponentDetail,
-  ComponentSummary,
-  CreateComponentRequest,
-  SaveComponentRequest,
-  UpdateComponentRequest
-} from '../models/component';
 
+/** The caller's own library components: `/api/components`. */
 @Injectable({ providedIn: 'root' })
 export class ComponentApiService {
   private readonly api = inject(ApiBaseService);
-  private readonly path = '/api/component';
+  private readonly path = '/api/components';
 
   /**
-   * GET /api/component
-   * When called with no params, returns ALL components (not paginated).
-   * When called with page/size, returns a paginated result.
+   * GET /api/components — one page of the user's library.
+   *
+   * Paginated always: the caller picks the page, never how much work the server
+   * does, so the startup preload walks the pages rather than asking for all of
+   * them at once.
    */
-  list(): Observable<ComponentSummary[]>;
-  list(
-    page: number,
-    size: number,
-    search?: string
-  ): Observable<Page<ComponentSummary>>;
-  list(
-    page?: number,
-    size?: number,
-    search?: string
-  ): Observable<ComponentSummary[] | Page<ComponentSummary>> {
-    if (page !== undefined || size !== undefined || search !== undefined) {
-      return this.api.get<Page<ComponentSummary>>(this.path, {
-        page,
-        size,
-        search
-      });
-    }
-    return this.api.get<ComponentSummary[]>(this.path);
+  list(page: number, size: number, search?: string): Observable<ComponentPage> {
+    return this.api.get(this.path, componentPageSchema, { page, size, search });
   }
 
-  /** POST /api/component — create a new component. */
+  /** POST /api/components — create a component, optionally with its circuit. */
   create(body: CreateComponentRequest): Observable<ComponentSummary> {
-    return this.api.post<ComponentSummary>(this.path, body);
+    return this.api.post(this.path, componentSummarySchema, body);
   }
 
-  /** GET /api/component/:componentId — open a component (includes elements + dependencies). */
-  open(componentId: string): Observable<ComponentDetail> {
-    return this.api.get<ComponentDetail>(`${this.path}/${componentId}`);
+  /** GET /api/components/:id — the document, its dependencies and its lineage. */
+  open(componentId: string): Observable<ComponentResponse> {
+    return this.api.get(`${this.path}/${componentId}`, componentResponseSchema);
   }
 
-  /** PUT /api/component/:componentId — save circuit content. */
+  /**
+   * PUT /api/components/:id — replace the circuit, against the version read.
+   * The port surface is derived server-side from the document, so nothing here
+   * declares it.
+   */
   save(
     componentId: string,
-    body: SaveComponentRequest
+    body: SaveCircuitRequest
   ): Observable<ComponentSummary> {
-    return this.api.put<ComponentSummary>(`${this.path}/${componentId}`, body);
-  }
-
-  /** PATCH /api/component/:componentId — update metadata. */
-  update(
-    componentId: string,
-    body: UpdateComponentRequest
-  ): Observable<ComponentSummary> {
-    return this.api.patch<ComponentSummary>(
+    return this.api.put(
       `${this.path}/${componentId}`,
+      componentSummarySchema,
       body
     );
   }
 
-  /** DELETE /api/component/:componentId */
-  delete(componentId: string): Observable<ComponentSummary> {
-    return this.api.delete<ComponentSummary>(`${this.path}/${componentId}`);
-  }
-
-  /** POST /api/component/:componentId/preview — upload dark + light preview PNGs. */
-  updatePreviews(
+  /** PATCH /api/components/:id — name, symbol, description, visibility, link. */
+  update(
     componentId: string,
-    formData: FormData
+    body: UpdateComponentRequest
   ): Observable<ComponentSummary> {
-    return this.api.postFormData<ComponentSummary>(
-      `${this.path}/${componentId}/preview`,
-      formData
+    return this.api.patch(
+      `${this.path}/${componentId}`,
+      componentSummarySchema,
+      body
     );
   }
 
-  /** GET /api/component/clone/:link — clone a shared component. */
-  cloneFromShare(link: string): Observable<ComponentSummary> {
-    return this.api.get<ComponentSummary>(`${this.path}/clone/${link}`);
+  /** DELETE /api/components/:id */
+  delete(componentId: string): Observable<void> {
+    return this.api.deleteEmpty(`${this.path}/${componentId}`);
   }
 }

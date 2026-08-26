@@ -406,7 +406,6 @@ describe('WireRepairService', () => {
         name: 'Shared',
         type: 'project',
         source: 'share',
-        hash: '',
         isPublic: true
       },
       false

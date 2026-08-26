@@ -1,6 +1,14 @@
 logigator.test {
 	tls internal
 
+	# The new API. Everything else still reaches the legacy backend, which serves
+	# its own pages until the cutover — but `/api` is the editor's, and the editor
+	# now speaks the native document format only this one answers in.
+	@api path /api /api/*
+	handle @api {
+		reverse_proxy api:3000
+	}
+
 	@editor path /editor /editor/*
 	handle @editor {
 		reverse_proxy editor:4200

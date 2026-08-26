@@ -6,7 +6,7 @@ import { TranslationService } from '../translation/translation.service';
 import { AnalyticsService } from '../analytics/analytics.service';
 import { AnalyticsEvent, DialogId } from '../analytics/analytics.mapping';
 import { ReportErrorApiService } from '../api/services/report-error-api.service';
-import type { ReportErrorRequest } from '../api/models/report-error';
+import type { ReportErrorRequest } from '@logigator/contract';
 import { PersistenceService } from '../persistence/persistence.service';
 import { ProjectDumpService } from '../persistence/dump/project-dump.service';
 import { ProjectService } from '../project/project.service';

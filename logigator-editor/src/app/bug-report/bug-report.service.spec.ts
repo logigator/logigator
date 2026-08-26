@@ -12,7 +12,7 @@ import { ProjectDumpService } from '../persistence/dump/project-dump.service';
 import { ProjectService } from '../project/project.service';
 import { LoggingService } from '../logging/logging.service';
 import { ToastService } from '../logging/toast.service';
-import type { ReportErrorRequest } from '../api/models/report-error';
+import type { ReportErrorRequest } from '@logigator/contract';
 
 /** Lets the awaited `onClose` promise (and its follow-on submit) settle. */
 const flush = (): Promise<void> =>

@@ -15,6 +15,10 @@ import { UploadCoordinatorService } from '../ui/upload/upload-coordinator.servic
 import { SimulationService } from '../simulation/simulation.service';
 import { environment } from '../../environments/environment';
 import { configureTestBed } from '../../testing/configure-test-bed';
+import { makeUser } from '../../testing/user-fixtures';
+
+/** The signed-in account both flows resolve to. */
+const USER_ID = '550e8400-e29b-41d4-a716-446655440000';
 
 /**
  * The real startup chain end-to-end: auth cookie → real `UserService` loads
@@ -87,45 +91,12 @@ describe('session startup (integration)', () => {
     TestBed.tick();
 
     const req = httpMock.expectOne(`${environment.apiUrl}/api/user`);
-    req.flush({
-      status: 200,
-      data: {
-        id: 'user-1',
-        memberSince: '2024-01-01',
-        username: 'andreas',
-        image: null
-      }
-    });
+    req.flush(makeUser(USER_ID));
     TestBed.tick();
     await new Promise((resolve) => setTimeout(resolve));
 
     expect(componentLibrary.preloadServerMasters).toHaveBeenCalledTimes(1);
     expect(componentLibrary.clearServerMasters).not.toHaveBeenCalled();
-  });
-
-  it('still loads the library when the backend omits the user id (pre-@Expose responses)', async () => {
-    // The regression that motivated this file: /api/user serialized without
-    // `id` (class-level @Exclude, no @Expose), so an id-keyed transition never
-    // fired and the cloud library never loaded. Identity must fall back to the
-    // unique account fields.
-    authCookie.set('true');
-    TestBed.inject(SessionLifecycleService);
-    TestBed.inject(UserService);
-    TestBed.tick();
-
-    httpMock.expectOne(`${environment.apiUrl}/api/user`).flush({
-      status: 200,
-      data: {
-        username: 'andreas',
-        email: 'andreas@example.com',
-        image: null,
-        shortcuts: []
-      }
-    });
-    TestBed.tick();
-    await new Promise((resolve) => setTimeout(resolve));
-
-    expect(componentLibrary.preloadServerMasters).toHaveBeenCalledTimes(1);
   });
 
   it('logging in later (cookie flip) loads the cloud library', async () => {
@@ -136,15 +107,9 @@ describe('session startup (integration)', () => {
 
     authCookie.set('true');
     TestBed.tick();
-    httpMock.expectOne(`${environment.apiUrl}/api/user`).flush({
-      status: 200,
-      data: {
-        id: 'user-1',
-        memberSince: '2024-01-01',
-        username: 'andreas',
-        image: null
-      }
-    });
+    httpMock
+      .expectOne(`${environment.apiUrl}/api/user`)
+      .flush(makeUser(USER_ID));
     TestBed.tick();
     await new Promise((resolve) => setTimeout(resolve));
 

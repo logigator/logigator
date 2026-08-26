@@ -563,7 +563,7 @@ export class EditorMenuService {
       : null;
     if (metadata?.source !== 'share' || !metadata.link) return;
     try {
-      await this.persistenceService.cloneShare(metadata.link, metadata.type);
+      await this.persistenceService.cloneShare(metadata.link);
       this.toastService.success(
         this.translation.translate('persistence.shareCloned'),
         'EditorMenuService'

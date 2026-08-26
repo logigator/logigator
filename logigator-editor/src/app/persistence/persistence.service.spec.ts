@@ -13,11 +13,14 @@ import { ProjectMetadataStore } from './project-metadata.store';
 import { ProjectService } from '../project/project.service';
 import { Project } from '../project/project';
 import {
+  assembleCircuitFile,
+  BuiltInComponentType,
   CUSTOM_TYPE_ID_BASE,
   encodeLgix,
   InvalidFileError,
-  ProjectElement,
-  SerializedCircuitBody
+  type FileForkAttributionV1,
+  type SerializedCircuitBody,
+  type SnapshotDefinition
 } from '@logigator/core';
 import { environment } from '../../environments/environment';
 import { LogLevel } from '../logging/log-level.enum';
@@ -44,131 +47,191 @@ import {
 import { configureTestBed } from '../../testing/configure-test-bed';
 import { arrayWithExactContents } from '../../testing/vitest-helpers';
 import { signal } from '@angular/core';
-import type { UserData } from '../api/models/user';
+import type { UserResponse } from '@logigator/contract';
+import { makeUser } from '../../testing/user-fixtures';
 import { UserService } from '../user/user.service';
 
-function makeUser(id: string): UserData {
-  return { id, memberSince: '2024-01-01', username: id, image: null };
+/**
+ * A stable uuid for a readable label.
+ *
+ * Every id the API answers with is a uuid — the contract says so and the
+ * columns behind it enforce it — and the editor validates what it is handed, so
+ * a fixture id like `'test-uuid'` would describe a response the server cannot
+ * produce and the read path would rightly refuse it.
+ */
+function uuid(label: string): string {
+  let hash = 0x9e3779b9;
+  for (const char of label) {
+    hash = Math.imul(hash ^ char.charCodeAt(0), 0x01000193) >>> 0;
+  }
+  const hex = hash.toString(16).padStart(8, '0');
+  return `${hex}-0000-4000-8000-${hex}0000`;
 }
 
-const PROJECT_URL = (uuid: string) =>
-  `${environment.apiUrl}/api/project/${uuid}`;
+const PROJECT_URL = (id: string) => `${environment.apiUrl}/api/projects/${id}`;
+const PROJECTS_LIST_URL = `${environment.apiUrl}/api/projects`;
+const COMPONENTS_URL = `${environment.apiUrl}/api/components`;
+/** The library listing is paginated, so the preload's URL carries its page. */
+const COMPONENTS_PAGE_URL = `${COMPONENTS_URL}?page=0&size=100`;
+const COMPONENT_URL = (id: string) =>
+  `${environment.apiUrl}/api/components/${id}`;
 const SHARE_URL = (link: string) => `${environment.apiUrl}/api/share/${link}`;
 const CLONE_URL = (link: string) =>
-  `${environment.apiUrl}/api/project/clone/${link}`;
-const USER_URL = `${environment.apiUrl}/api/user`;
-const PROJECTS_LIST_URL = `${environment.apiUrl}/api/project`;
+  `${environment.apiUrl}/api/share/${link}/clone`;
+
+/** The fields every stored circuit answers with, whichever kind it is. */
+function circuitFields(o: {
+  id: string;
+  name: string;
+  version?: number;
+  public?: boolean;
+}) {
+  return {
+    id: o.id,
+    name: o.name,
+    description: '',
+    public: o.public ?? false,
+    link: uuid(`${o.id}-link`),
+    version: o.version ?? 1,
+    componentCount: 0,
+    wireCount: 0,
+    preview: null,
+    createdAt: '2024-01-01T00:00:00.000Z',
+    lastEditedAt: '2024-01-01T00:00:00.000Z'
+  };
+}
+
+/**
+ * A native circuit document, built by the same encoder the editor writes files
+ * with — a hand-written fixture gets the wire chain and the position deltas
+ * subtly wrong.
+ */
+function circuitDocument(
+  name: string,
+  body: SerializedCircuitBody = { components: [], wires: [] },
+  definitions: SnapshotDefinition[] = []
+) {
+  return assembleCircuitFile(body, definitions, name).file;
+}
+
+function projectSummaryResponse(
+  overrides: Partial<{ id: string; name: string; version: number }> = {}
+) {
+  return circuitFields({
+    id: overrides.id ?? uuid('test-uuid'),
+    name: overrides.name ?? 'Test',
+    version: overrides.version
+  });
+}
 
 function projectDetailResponse(
   overrides: Partial<{
     id: string;
     name: string;
-    hash: string;
-    elements: ProjectElement[];
-    public: boolean;
+    version: number;
+    body: SerializedCircuitBody;
+    attribution: FileForkAttributionV1[];
   }> = {}
 ) {
+  const name = overrides.name ?? 'Test Project';
   return {
-    status: 200,
-    data: {
-      id: overrides.id ?? 'test-uuid',
-      name: overrides.name ?? 'Test Project',
-      description: '',
-      createdOn: '2024-01-01',
-      lastEdited: '2024-01-01',
-      elementsFile: {
-        hash: overrides.hash ?? 'hash-1',
-        mimeType: 'application/json',
-        publicUrl: ''
-      },
-      previewDark: null,
-      previewLight: null,
-      public: overrides.public ?? false,
-      dependencies: [],
-      elements: overrides.elements ?? []
-    }
+    ...projectSummaryResponse({
+      id: overrides.id ?? uuid('test-uuid'),
+      name,
+      version: overrides.version
+    }),
+    document: circuitDocument(name, overrides.body),
+    dependencies: [],
+    attribution: overrides.attribution ?? []
   };
 }
 
-/** A cloned component, as both the clone POST's and the open GET's payload. */
-function sharedComponentResponse(id: string) {
+function componentSummaryResponse(
+  overrides: Partial<{ id: string; name: string; version: number }> = {}
+) {
   return {
-    status: 200,
-    data: {
-      id,
-      name: 'Comp',
-      description: '',
-      symbol: 'C',
-      numInputs: 0,
-      numOutputs: 0,
-      labels: [],
-      createdOn: '2024-01-01',
-      lastEdited: '2024-01-01',
-      elementsFile: { hash: 'comp-hash' },
-      previewDark: null,
-      previewLight: null,
-      public: false,
-      version: 1,
-      elements: [],
-      dependencies: []
-    }
+    ...circuitFields({
+      id: overrides.id ?? uuid('srv-comp'),
+      name: overrides.name ?? 'Comp',
+      version: overrides.version
+    }),
+    symbol: 'C',
+    numInputs: 0,
+    numOutputs: 0,
+    labels: []
   };
 }
 
-function projectSummaryResponse(
+function componentDetailResponse(
   overrides: Partial<{
     id: string;
     name: string;
-    hash: string;
+    version: number;
+    body: SerializedCircuitBody;
+    definitions: SnapshotDefinition[];
   }> = {}
 ) {
+  const name = overrides.name ?? 'Comp';
   return {
-    status: 200,
-    data: {
-      id: overrides.id ?? 'test-uuid',
-      name: overrides.name ?? 'Test',
-      description: '',
-      createdOn: '2024-01-01',
-      lastEdited: '2024-01-01',
-      elementsFile: {
-        hash: overrides.hash ?? 'hash-1',
-        mimeType: 'application/json',
-        publicUrl: ''
-      },
-      previewDark: null,
-      previewLight: null,
-      public: false
-    }
+    ...componentSummaryResponse({
+      id: overrides.id,
+      name,
+      version: overrides.version
+    }),
+    document: circuitDocument(name, overrides.body, overrides.definitions),
+    dependencies: [],
+    attribution: []
   };
 }
 
+/** What a share link resolves to — a discriminated union over the two kinds. */
 function shareDetailResponse(
   overrides: Partial<{
     id: string;
     name: string;
     type: 'project' | 'comp';
-    elements: ProjectElement[];
+    attribution: FileForkAttributionV1[];
   }> = {}
 ) {
-  return {
-    status: 200,
-    data: {
-      type: overrides.type ?? 'project',
-      id: overrides.id ?? 'share-uuid',
-      name: overrides.name ?? 'Shared',
-      description: '',
-      createdOn: '2024-01-01',
-      lastEdited: '2024-01-01',
-      // No `link`: the real share endpoint serializes the project without the
-      // showShareLinks group, so the response never carries one.
-      public: true,
-      previewDark: null,
-      previewLight: null,
-      elementsFile: { hash: 'share-hash' },
-      dependencies: [],
-      elements: overrides.elements ?? []
-    }
+  const id = overrides.id ?? uuid('share-uuid');
+  const name = overrides.name ?? 'Shared';
+  const shared = {
+    document: circuitDocument(name),
+    dependencies: [],
+    attribution: overrides.attribution ?? [],
+    author: { id: uuid('author-1'), username: 'alice', avatar: null }
   };
+  return overrides.type === 'comp'
+    ? {
+        kind: 'component',
+        component: componentSummaryResponse({ id, name }),
+        ...shared
+      }
+    : {
+        kind: 'project',
+        project: projectSummaryResponse({ id, name }),
+        ...shared
+      };
+}
+
+/** What cloning a share answers: the copy, and the library it brought along. */
+function cloneResponse(kind: 'project' | 'comp', id: string) {
+  return kind === 'comp'
+    ? {
+        kind: 'component',
+        component: componentSummaryResponse({ id }),
+        dependencies: []
+      }
+    : {
+        kind: 'project',
+        project: projectSummaryResponse({ id }),
+        dependencies: []
+      };
+}
+
+/** An API failure body, which is what every endpoint answers a failure with. */
+function apiError(code: string, message = 'nope') {
+  return { code, message };
 }
 
 describe('PersistenceService', () => {
@@ -187,7 +250,7 @@ describe('PersistenceService', () => {
   // Signed in by default: most tests exercise cloud saves, which the session
   // guard would otherwise reject. Individual tests flip it to null / another
   // user to exercise the guard itself.
-  let user: ReturnType<typeof signal<UserData | null>>;
+  let user: ReturnType<typeof signal<UserResponse | null>>;
 
   beforeEach(() => {
     // Console output from expected error-path tests is suppressed.
@@ -196,7 +259,7 @@ describe('PersistenceService', () => {
     browserStore = new FakeBrowserProjectStore();
     componentStore = new FakeBrowserComponentStore();
     idMapStore = new FakeComponentIdMapStore();
-    user = signal<UserData | null>(makeUser('user-1'));
+    user = signal<UserResponse | null>(makeUser('user-1'));
     configureTestBed([
       { provide: UserService, useValue: { user, sessionExpired: vi.fn() } },
       {
@@ -254,11 +317,11 @@ describe('PersistenceService', () => {
     it('is a no-op for non-dirty projects (no HTTP call, no storage write)', async () => {
       const project = new Project();
       metadataStore.register(project, {
-        id: 'test-uuid',
+        id: uuid('test-uuid'),
         name: 'Test',
         type: 'project',
         source: 'server',
-        hash: 'abc123',
+        version: 1,
         isPublic: false
       });
 
@@ -272,11 +335,10 @@ describe('PersistenceService', () => {
       metadataStore.register(
         project,
         {
-          id: 'share-uuid',
+          id: uuid('share-uuid'),
           name: 'Shared',
           type: 'project',
           source: 'share',
-          hash: '',
           isPublic: true
         },
         false
@@ -295,7 +357,6 @@ describe('PersistenceService', () => {
         name: 'Local',
         type: 'project',
         source: 'browser',
-        hash: '',
         isPublic: false
       });
       metadataStore.markDirty(project);
@@ -321,38 +382,41 @@ describe('PersistenceService', () => {
       expect(metadataStore.isDirty(project)).toBe(false);
     });
 
-    it('PUTs elements, updates hash, and clears dirty on success', async () => {
+    it('PUTs the document against the read version and adopts the new one', async () => {
       const project = new Project();
       metadataStore.register(project, {
-        id: 'test-uuid',
+        id: uuid('test-uuid'),
         name: 'Test',
         type: 'project',
         source: 'server',
-        hash: 'old-hash',
+        version: 4,
         isPublic: false
       });
       metadataStore.markDirty(project);
 
       const promise = service.saveProject(project);
 
-      const req = httpMock.expectOne(PROJECT_URL('test-uuid'));
+      const req = httpMock.expectOne(PROJECT_URL(uuid('test-uuid')));
       expect(req.request.method).toBe('PUT');
-      expect(req.request.body.oldHash).toBe('old-hash');
-      req.flush(projectSummaryResponse({ hash: 'new-hash' }));
+      // The native document, and the counter the server checks it against.
+      expect(req.request.body.version).toBe(4);
+      expect(req.request.body.document.version).toBe(1);
+      expect(req.request.body.document.name).toBe('Test');
+      req.flush(projectSummaryResponse({ version: 5 }));
 
       await promise;
-      expect(metadataStore.getMetadata(project)!.hash).toBe('new-hash');
+      expect(metadataStore.getMetadata(project)!.version).toBe(5);
       expect(metadataStore.isDirty(project)).toBe(false);
     });
 
     it('deduplicates concurrent saves into a single request', async () => {
       const project = new Project();
       metadataStore.register(project, {
-        id: 'test-uuid',
+        id: uuid('test-uuid'),
         name: 'Test',
         type: 'project',
         source: 'server',
-        hash: 'abc123',
+        version: 1,
         isPublic: false
       });
       metadataStore.markDirty(project);
@@ -361,46 +425,47 @@ describe('PersistenceService', () => {
       const promise2 = service.saveProject(project);
 
       // expectOne asserts exactly one request was issued (dedup worked).
-      const req = httpMock.expectOne(PROJECT_URL('test-uuid'));
-      req.flush(projectSummaryResponse({ hash: 'new-hash' }));
+      const req = httpMock.expectOne(PROJECT_URL(uuid('test-uuid')));
+      req.flush(projectSummaryResponse({ version: 2 }));
 
       await Promise.all([promise1, promise2]);
-      expect(metadataStore.getMetadata(project)!.hash).toBe('new-hash');
+      expect(metadataStore.getMetadata(project)!.version).toBe(2);
     });
 
-    it('on VersionMismatch: rejects, leaves hash unchanged and dirty true', async () => {
+    it('on version_conflict: rejects, keeps the stale version and stays dirty', async () => {
       const project = new Project();
       metadataStore.register(project, {
-        id: 'test-uuid',
+        id: uuid('test-uuid'),
         name: 'Test',
         type: 'project',
         source: 'server',
-        hash: 'stale-hash',
+        version: 2,
         isPublic: false
       });
       metadataStore.markDirty(project);
 
       const promise = service.saveProject(project);
 
-      const req = httpMock.expectOne(PROJECT_URL('test-uuid'));
-      req.flush(
-        { status: 400, message: 'VersionMismatch' },
-        { status: 400, statusText: 'Bad Request' }
-      );
+      const req = httpMock.expectOne(PROJECT_URL(uuid('test-uuid')));
+      req.flush(apiError('version_conflict', 'Somebody else saved first'), {
+        status: 409,
+        statusText: 'Conflict'
+      });
 
       await expect(promise).rejects.toThrow();
-      expect(metadataStore.getMetadata(project)!.hash).toBe('stale-hash');
+      // Nothing was merged, so the client keeps what it read and stays dirty.
+      expect(metadataStore.getMetadata(project)!.version).toBe(2);
       expect(metadataStore.isDirty(project)).toBe(true);
     });
 
     it('keeps dirty=true when an edit lands during the save (race protection)', async () => {
       const project = new Project();
       metadataStore.register(project, {
-        id: 'test-uuid',
+        id: uuid('test-uuid'),
         name: 'Test',
         type: 'project',
         source: 'server',
-        hash: 'h0',
+        version: 1,
         isPublic: false
       });
       metadataStore.markDirty(project);
@@ -410,14 +475,14 @@ describe('PersistenceService', () => {
       // Simulate an edit landing while the save HTTP request is in flight
       metadataStore.markDirty(project);
 
-      const req = httpMock.expectOne(PROJECT_URL('test-uuid'));
-      req.flush(projectSummaryResponse({ hash: 'h1' }));
+      const req = httpMock.expectOne(PROJECT_URL(uuid('test-uuid')));
+      req.flush(projectSummaryResponse({ version: 2 }));
 
       await promise;
 
-      // Hash advances, but dirty stays true because a concurrent edit
+      // The version advances, but dirty stays true because a concurrent edit
       // fired while we were saving the previous snapshot.
-      expect(metadataStore.getMetadata(project)!.hash).toBe('h1');
+      expect(metadataStore.getMetadata(project)!.version).toBe(2);
       expect(metadataStore.isDirty(project)).toBe(true);
     });
   });
@@ -426,11 +491,11 @@ describe('PersistenceService', () => {
     function registerServerProject(): Project {
       const project = new Project();
       metadataStore.register(project, {
-        id: 'test-uuid',
+        id: uuid('test-uuid'),
         name: 'Test',
         type: 'project',
         source: 'server',
-        hash: 'old-hash',
+        version: 1,
         isPublic: false
       });
       metadataStore.markDirty(project);
@@ -466,8 +531,8 @@ describe('PersistenceService', () => {
       user.set(makeUser('user-1'));
 
       const promise = service.saveProject(project);
-      const req = httpMock.expectOne(PROJECT_URL('test-uuid'));
-      req.flush({ status: 200, data: projectSummaryResponse().data });
+      const req = httpMock.expectOne(PROJECT_URL(uuid('test-uuid')));
+      req.flush(projectSummaryResponse());
       await promise;
       expect(metadataStore.isDirty(project)).toBe(false);
     });
@@ -524,7 +589,6 @@ describe('PersistenceService', () => {
         name: 'Open',
         type: 'comp',
         source: 'server',
-        hash: '',
         isPublic: false
       });
 
@@ -538,74 +602,94 @@ describe('PersistenceService', () => {
 
   describe('loadProject', () => {
     it('loads project, populates metadata, and starts clean', async () => {
-      const elements: ProjectElement[] = [{ t: 1, p: [5, 3], i: 1, o: 1 }];
-      const loadPromise = service.loadProject('test-uuid');
+      const body: SerializedCircuitBody = {
+        components: [
+          { type: BuiltInComponentType.NOT, pos: [5, 3], options: {} }
+        ],
+        wires: []
+      };
+      const loadPromise = service.loadProject(uuid('test-uuid'));
 
-      const req = httpMock.expectOne(PROJECT_URL('test-uuid'));
+      const req = httpMock.expectOne(PROJECT_URL(uuid('test-uuid')));
       expect(req.request.method).toBe('GET');
-      req.flush(projectDetailResponse({ elements, hash: 'h1' }));
+      req.flush(projectDetailResponse({ body, version: 3 }));
 
       const project = await loadPromise;
       const metadata = metadataStore.getMetadata(project);
-      expect(metadata!.id).toBe('test-uuid');
-      expect(metadata!.hash).toBe('h1');
+      expect(metadata!.id).toBe(uuid('test-uuid'));
+      expect(metadata!.version).toBe(3);
       expect(metadata!.source).toBe('server');
       expect(metadataStore.isDirty(project)).toBe(false);
       expect(Array.from(project.components).length).toBe(1);
     });
 
     it('captures the detail response fork attribution into metadata', async () => {
-      const forkAttribution = [
-        { projectId: 'origin-1', projectName: 'Origin', authorName: 'alice' }
+      const attribution = [
+        {
+          projectId: uuid('origin-1'),
+          projectName: 'Origin',
+          authorName: 'alice'
+        }
       ];
-      const loadPromise = service.loadProject('fork-uuid');
+      const loadPromise = service.loadProject(uuid('fork-uuid'));
 
-      const response = projectDetailResponse({ id: 'fork-uuid' });
-      httpMock.expectOne(PROJECT_URL('fork-uuid')).flush({
-        ...response,
-        data: { ...response.data, forkAttribution }
-      });
+      httpMock
+        .expectOne(PROJECT_URL(uuid('fork-uuid')))
+        .flush(projectDetailResponse({ id: uuid('fork-uuid'), attribution }));
 
       const project = await loadPromise;
       expect(metadataStore.getMetadata(project)!.attribution).toEqual(
-        forkAttribution
+        attribution
       );
+    });
+
+    it("leaves attribution unset for a project that is nobody's fork", async () => {
+      // The API spells "no lineage" as an empty array and the file format as an
+      // absent field; carrying the empty one would read as a checked-and-absent
+      // lineage rather than none, and an export would then claim one.
+      const loadPromise = service.loadProject(uuid('plain-uuid'));
+      httpMock
+        .expectOne(PROJECT_URL(uuid('plain-uuid')))
+        .flush(projectDetailResponse({ id: uuid('plain-uuid') }));
+
+      const project = await loadPromise;
+      expect(metadataStore.getMetadata(project)!.attribution).toBeUndefined();
     });
 
     it('rejects when the API returns 404', async () => {
       const loadPromise = service.loadProject('missing');
       const req = httpMock.expectOne(PROJECT_URL('missing'));
-      req.flush(
-        { status: 404, message: 'NotFound' },
-        { status: 404, statusText: 'Not Found' }
-      );
+      req.flush(apiError('not_found', 'No such project'), {
+        status: 404,
+        statusText: 'Not Found'
+      });
       await expect(loadPromise).rejects.toThrow();
     });
   });
 
   describe('loadProjectAsMain', () => {
     it('replaces main project and registers it', async () => {
-      const promise = service.loadProjectAsMain('uuid-1');
+      const promise = service.loadProjectAsMain(uuid('uuid-1'));
 
-      const req = httpMock.expectOne(PROJECT_URL('uuid-1'));
-      req.flush(projectDetailResponse({ id: 'uuid-1' }));
+      const req = httpMock.expectOne(PROJECT_URL(uuid('uuid-1')));
+      req.flush(projectDetailResponse({ id: uuid('uuid-1') }));
 
       await promise;
 
       expect(projectService.mainProject()).toBeDefined();
       expect(metadataStore.getMetadata(projectService.mainProject()!)?.id).toBe(
-        'uuid-1'
+        uuid('uuid-1')
       );
-      expect(locationGo).toHaveBeenCalledWith('/project/uuid-1');
+      expect(locationGo).toHaveBeenCalledWith(`/project/${uuid('uuid-1')}`);
     });
 
     it('skips URL update when skipUrlUpdate=true', async () => {
-      const promise = service.loadProjectAsMain('uuid-1', {
+      const promise = service.loadProjectAsMain(uuid('uuid-1'), {
         skipUrlUpdate: true
       });
 
-      const req = httpMock.expectOne(PROJECT_URL('uuid-1'));
-      req.flush(projectDetailResponse({ id: 'uuid-1' }));
+      const req = httpMock.expectOne(PROJECT_URL(uuid('uuid-1')));
+      req.flush(projectDetailResponse({ id: uuid('uuid-1') }));
 
       await promise;
       expect(locationGo).not.toHaveBeenCalled();
@@ -615,10 +699,10 @@ describe('PersistenceService', () => {
       const promise = service.loadProjectAsMain('missing');
 
       const req = httpMock.expectOne(PROJECT_URL('missing'));
-      req.flush(
-        { status: 404, message: 'NotFound' },
-        { status: 404, statusText: 'Not Found' }
-      );
+      req.flush(apiError('not_found', 'No such project'), {
+        status: 404,
+        statusText: 'Not Found'
+      });
 
       await promise;
 
@@ -630,30 +714,30 @@ describe('PersistenceService', () => {
 
     it('stale loads are discarded with full cleanup (no metadata leak)', async () => {
       // Start load A
-      const promiseA = service.loadProjectAsMain('uuid-a');
+      const promiseA = service.loadProjectAsMain(uuid('uuid-a'));
 
       // Before A resolves, start load B — bumps the token
-      const promiseB = service.loadProjectAsMain('uuid-b');
+      const promiseB = service.loadProjectAsMain(uuid('uuid-b'));
 
       // Resolve B first
       httpMock
-        .expectOne(PROJECT_URL('uuid-b'))
-        .flush(projectDetailResponse({ id: 'uuid-b' }));
+        .expectOne(PROJECT_URL(uuid('uuid-b')))
+        .flush(projectDetailResponse({ id: uuid('uuid-b') }));
 
       // Now resolve A — this is stale; the project must be disposed and
       // its metadata removed from the store.
       httpMock
-        .expectOne(PROJECT_URL('uuid-a'))
-        .flush(projectDetailResponse({ id: 'uuid-a' }));
+        .expectOne(PROJECT_URL(uuid('uuid-a')))
+        .flush(projectDetailResponse({ id: uuid('uuid-a') }));
 
       await Promise.all([promiseA, promiseB]);
 
       // Only B's project should be in the metadata store
-      const handle = metadataStore.getHandleById('uuid-a');
+      const handle = metadataStore.getHandleById(uuid('uuid-a'));
       expect(handle).toBeUndefined();
-      expect(metadataStore.getHandleById('uuid-b')).toBeDefined();
+      expect(metadataStore.getHandleById(uuid('uuid-b'))).toBeDefined();
       expect(projectService.mainProject()).toBe(
-        metadataStore.getHandleById('uuid-b')!.project
+        metadataStore.getHandleById(uuid('uuid-b'))!.project
       );
     });
   });
@@ -663,7 +747,7 @@ describe('PersistenceService', () => {
       const promise = service.loadShare('link-1');
 
       const req = httpMock.expectOne(SHARE_URL('link-1'));
-      req.flush(shareDetailResponse({ id: 'share-1' }));
+      req.flush(shareDetailResponse({ id: uuid('share-1') }));
 
       const { project, type } = await promise;
       expect(type).toBe('project');
@@ -676,20 +760,22 @@ describe('PersistenceService', () => {
     });
 
     it('loadShare captures the share fork attribution into metadata', async () => {
-      const forkAttribution = [
-        { projectId: 'origin-1', projectName: 'Origin', authorName: 'alice' }
+      const attribution = [
+        {
+          projectId: uuid('origin-1'),
+          projectName: 'Origin',
+          authorName: 'alice'
+        }
       ];
       const promise = service.loadShare('link-fork');
 
-      const response = shareDetailResponse({ id: 'share-1' });
-      httpMock.expectOne(SHARE_URL('link-fork')).flush({
-        ...response,
-        data: { ...response.data, forkAttribution }
-      });
+      httpMock
+        .expectOne(SHARE_URL('link-fork'))
+        .flush(shareDetailResponse({ id: uuid('share-1'), attribution }));
 
       const { project } = await promise;
       expect(metadataStore.getMetadata(project)!.attribution).toEqual(
-        forkAttribution
+        attribution
       );
     });
 
@@ -698,7 +784,7 @@ describe('PersistenceService', () => {
 
       httpMock
         .expectOne(SHARE_URL('link-1'))
-        .flush(shareDetailResponse({ id: 'share-1', type: 'project' }));
+        .flush(shareDetailResponse({ id: uuid('share-1'), type: 'project' }));
 
       await promise;
 
@@ -716,14 +802,14 @@ describe('PersistenceService', () => {
 
       httpMock
         .expectOne(SHARE_URL('link-comp'))
-        .flush(shareDetailResponse({ id: 'comp-1', type: 'comp' }));
+        .flush(shareDetailResponse({ id: uuid('comp-1'), type: 'comp' }));
 
       await promise;
 
       const main = projectService.mainProject();
       expect(metadataStore.getMetadata(main!)).toEqual(
         expect.objectContaining({
-          id: 'comp-1',
+          id: uuid('comp-1'),
           type: 'comp',
           source: 'share'
         })
@@ -752,7 +838,7 @@ describe('PersistenceService', () => {
   });
 
   describe('saveDraftAsServer', () => {
-    it('creates the server project, PUTs current content, flips metadata in place and navigates', async () => {
+    it('creates the server project with its circuit in one POST, flips metadata in place and navigates', async () => {
       const project = service.createAndSetEmptyProject();
 
       const promise = promotion.saveDraftAsServer(
@@ -761,31 +847,27 @@ describe('PersistenceService', () => {
         true
       );
 
+      // One round trip: a create carries the document, where the legacy API
+      // needed a create and then a save into it.
       const postReq = httpMock.expectOne(PROJECTS_LIST_URL);
       expect(postReq.request.method).toBe('POST');
-      expect(postReq.request.body).toEqual({
-        name: 'My Server Circuit',
-        public: 'true'
+      expect(postReq.request.body.name).toBe('My Server Circuit');
+      expect(postReq.request.body.public).toBe(true);
+      expect(postReq.request.body.document.version).toBe(1);
+      postReq.flush({
+        ...projectSummaryResponse({ id: uuid('srv-uuid'), version: 1 }),
+        public: true
       });
-      postReq.flush(projectSummaryResponse({ id: 'srv-uuid', hash: 'h0' }));
-
-      // Drain the microtask queue so the PUT chained after the POST is issued.
-      await Promise.resolve();
-
-      const putReq = httpMock.expectOne(PROJECT_URL('srv-uuid'));
-      expect(putReq.request.method).toBe('PUT');
-      expect(putReq.request.body.oldHash).toBe('h0');
-      putReq.flush(projectSummaryResponse({ id: 'srv-uuid', hash: 'h1' }));
 
       await promise;
 
       const metadata = metadataStore.getMetadata(project)!;
       expect(metadata.source).toBe('server');
-      expect(metadata.id).toBe('srv-uuid');
+      expect(metadata.id).toBe(uuid('srv-uuid'));
       expect(metadata.name).toBe('My Server Circuit');
       expect(metadata.isPublic).toBe(true);
-      expect(metadata.hash).toBe('h1');
-      expect(locationGo).toHaveBeenCalledWith('/project/srv-uuid');
+      expect(metadata.version).toBe(1);
+      expect(locationGo).toHaveBeenCalledWith(`/project/${uuid('srv-uuid')}`);
       // The live project instance is retained — its circuit and undo history
       // are preserved across promotion (not replaced by a fresh empty one).
       expect(projectService.mainProject()).toBe(project);
@@ -802,7 +884,6 @@ describe('PersistenceService', () => {
         name: 'Local',
         type: 'project',
         source: 'browser',
-        hash: '',
         isPublic: false
       });
       metadataStore.markDirty(project);
@@ -813,22 +894,20 @@ describe('PersistenceService', () => {
 
       const postReq = httpMock.expectOne(PROJECTS_LIST_URL);
       expect(postReq.request.method).toBe('POST');
-      expect(postReq.request.body).toEqual({ name: 'Local', public: 'true' });
-      postReq.flush(projectSummaryResponse({ id: 'srv-uuid', hash: 'h0' }));
-
-      await Promise.resolve();
-
-      const putReq = httpMock.expectOne(PROJECT_URL('srv-uuid'));
-      expect(putReq.request.method).toBe('PUT');
-      putReq.flush(projectSummaryResponse({ id: 'srv-uuid', hash: 'h1' }));
+      expect(postReq.request.body.name).toBe('Local');
+      expect(postReq.request.body.public).toBe(true);
+      postReq.flush({
+        ...projectSummaryResponse({ id: uuid('srv-uuid') }),
+        public: true
+      });
 
       await promise;
 
       const metadata = metadataStore.getMetadata(project)!;
       expect(metadata.source).toBe('server');
-      expect(metadata.id).toBe('srv-uuid');
+      expect(metadata.id).toBe(uuid('srv-uuid'));
       expect(metadata.isPublic).toBe(true);
-      expect(locationGo).toHaveBeenCalledWith('/project/srv-uuid');
+      expect(locationGo).toHaveBeenCalledWith(`/project/${uuid('srv-uuid')}`);
       // Moved, not copied: the old browser record is gone.
       expect(browserStore.records.has('browser-1')).toBe(false);
     });
@@ -840,14 +919,13 @@ describe('PersistenceService', () => {
       ).rejects.toThrow();
     });
 
-    it('sends the immediate parent as forkedFrom when the project carries a lineage', async () => {
+    it('carries the lineage inside the uploaded document, so the server can re-link the fork', async () => {
       const project = new Project();
       metadataStore.register(project, {
         id: 'browser-1',
         name: 'Fork',
         type: 'project',
         source: 'browser',
-        hash: '',
         isPublic: false,
         attribution: [
           { projectId: 'root-id', projectName: 'Root', authorName: 'alice' },
@@ -860,13 +938,15 @@ describe('PersistenceService', () => {
       const promise = promotion.promoteProjectToServer(project, false);
 
       const postReq = httpMock.expectOne(PROJECTS_LIST_URL);
-      // The lineage is root-first, so the fork claim names the last entry.
-      expect(postReq.request.body.forkedFrom).toBe('parent-id');
-      postReq.flush(projectSummaryResponse({ id: 'srv-uuid', hash: 'h0' }));
-      await Promise.resolve();
-      httpMock
-        .expectOne(PROJECT_URL('srv-uuid'))
-        .flush(projectSummaryResponse({ id: 'srv-uuid', hash: 'h1' }));
+      // There is no request field for the fork parent: the claim travels inside
+      // the document, and the server reads the chain's last entry — the
+      // immediate parent, since the chain is root-first — and checks it against
+      // its own rows before it becomes a link.
+      expect(postReq.request.body.document.attribution).toEqual([
+        { projectId: 'root-id', projectName: 'Root', authorName: 'alice' },
+        { projectId: 'parent-id', projectName: 'Parent', authorName: 'bob' }
+      ]);
+      postReq.flush(projectSummaryResponse({ id: uuid('srv-uuid') }));
 
       await promise;
     });
@@ -880,7 +960,6 @@ describe('PersistenceService', () => {
         name: 'Local',
         type: 'project',
         source: 'browser',
-        hash: '',
         isPublic: false
       });
       metadataStore.markDirty(project);
@@ -890,12 +969,9 @@ describe('PersistenceService', () => {
       const promise = promotion.uploadStoredProjectToServer('browser-1', false);
 
       const postReq = httpMock.expectOne(PROJECTS_LIST_URL);
-      expect(postReq.request.body).toEqual({ name: 'Local', public: 'false' });
-      postReq.flush(projectSummaryResponse({ id: 'srv-uuid', hash: 'h0' }));
-      await Promise.resolve();
-      httpMock
-        .expectOne(PROJECT_URL('srv-uuid'))
-        .flush(projectSummaryResponse({ id: 'srv-uuid', hash: 'h1' }));
+      expect(postReq.request.body.name).toBe('Local');
+      expect(postReq.request.body.public).toBe(false);
+      postReq.flush(projectSummaryResponse({ id: uuid('srv-uuid') }));
 
       await promise;
 
@@ -911,7 +987,6 @@ describe('PersistenceService', () => {
         name: 'Archived',
         type: 'project',
         source: 'browser',
-        hash: '',
         isPublic: false
       });
       metadataStore.markDirty(stored);
@@ -927,15 +1002,9 @@ describe('PersistenceService', () => {
       // so let that microtask settle before asserting the request.
       await Promise.resolve();
       const postReq = httpMock.expectOne(PROJECTS_LIST_URL);
-      expect(postReq.request.body).toEqual({
-        name: 'Archived',
-        public: 'true'
-      });
-      postReq.flush(projectSummaryResponse({ id: 'srv-uuid', hash: 'h0' }));
-      await Promise.resolve();
-      httpMock
-        .expectOne(PROJECT_URL('srv-uuid'))
-        .flush(projectSummaryResponse({ id: 'srv-uuid', hash: 'h1' }));
+      expect(postReq.request.body.name).toBe('Archived');
+      expect(postReq.request.body.public).toBe(true);
+      postReq.flush(projectSummaryResponse({ id: uuid('srv-uuid') }));
 
       await promise;
 
@@ -947,138 +1016,124 @@ describe('PersistenceService', () => {
   });
 
   describe('createProject', () => {
-    it('POSTs, then PUTs initial empty save, sets as main, updates URL', async () => {
+    it('POSTs an empty board, sets it as main and updates the URL', async () => {
       const promise = service.createProject('My Project', undefined, false);
 
-      // POST /api/project
+      // No document: a create without one is an empty board server-side, which
+      // is exactly what the editor is about to show.
       const postReq = httpMock.expectOne(PROJECTS_LIST_URL);
       expect(postReq.request.method).toBe('POST');
       expect(postReq.request.body).toEqual({
         name: 'My Project',
         description: undefined,
-        public: 'false'
+        public: false
       });
-      postReq.flush(projectSummaryResponse({ id: 'new-uuid', hash: 'h0' }));
+      postReq.flush(
+        projectSummaryResponse({ id: uuid('new-uuid'), version: 1 })
+      );
 
-      // Drain the microtask queue so the PUT chained after the POST is
-      // actually issued before we expect it.
-      await Promise.resolve();
-
-      const putReq = httpMock.expectOne(PROJECT_URL('new-uuid'));
-      expect(putReq.request.method).toBe('PUT');
-      expect(putReq.request.body.elements).toEqual([]);
-      expect(putReq.request.body.oldHash).toBe('h0');
-      putReq.flush(projectSummaryResponse({ id: 'new-uuid', hash: 'h1' }));
-
-      const uuid = await promise;
-      expect(uuid).toBe('new-uuid');
+      const created = await promise;
+      expect(created).toBe(uuid('new-uuid'));
       expect(projectService.mainProject()).toBeDefined();
       expect(
-        metadataStore.getMetadata(projectService.mainProject()!)!.hash
-      ).toBe('h1');
-      expect(locationGo).toHaveBeenCalledWith('/project/new-uuid');
+        metadataStore.getMetadata(projectService.mainProject()!)!.version
+      ).toBe(1);
+      expect(locationGo).toHaveBeenCalledWith(`/project/${uuid('new-uuid')}`);
     });
 
-    it('sends public:"true" when isPublic=true', async () => {
+    it('sends public:true when isPublic=true', async () => {
       const promise = service.createProject('Pub', undefined, true);
 
       const postReq = httpMock.expectOne(PROJECTS_LIST_URL);
-      expect(postReq.request.body.public).toBe('true');
-      postReq.flush(projectSummaryResponse({ id: 'pub-uuid', hash: 'h0' }));
-      await Promise.resolve();
-
-      httpMock
-        .expectOne(PROJECT_URL('pub-uuid'))
-        .flush(projectSummaryResponse({ id: 'pub-uuid', hash: 'h1' }));
+      expect(postReq.request.body.public).toBe(true);
+      postReq.flush(projectSummaryResponse({ id: uuid('pub-uuid') }));
 
       await promise;
     });
   });
 
   describe('cloneShare', () => {
-    it('rejects with AuthRequiredError when /api/user returns 401', async () => {
-      const promise = service.cloneShare('link-1', 'project');
+    it('rejects with AuthRequiredError when the clone needs a session', async () => {
+      // Reading a share needs none — the link is the capability — but cloning
+      // writes into an account, so the API is what says so. Nothing is asked in
+      // advance.
+      const promise = service.cloneShare('link-1');
 
       httpMock
-        .expectOne(USER_URL)
-        .flush(
-          { status: 401, message: 'Unauthorized' },
-          { status: 401, statusText: 'Unauthorized' }
-        );
+        .expectOne(CLONE_URL('link-1'))
+        .flush(apiError('unauthorized', 'Not signed in'), {
+          status: 401,
+          statusText: 'Unauthorized'
+        });
 
       await expect(promise).rejects.toEqual(expect.any(AuthRequiredError));
     });
 
     it('clones, loads, sets as main, and updates URL', async () => {
-      const promise = service.cloneShare('link-1', 'project');
+      const promise = service.cloneShare('link-1');
 
-      httpMock.expectOne(USER_URL).flush({
-        status: 200,
-        data: { id: 'user-1', username: 'me', email: 'me@x.test' }
-      });
-      await Promise.resolve();
-
-      httpMock
-        .expectOne(CLONE_URL('link-1'))
-        .flush(projectSummaryResponse({ id: 'cloned-uuid' }));
+      const clone = httpMock.expectOne(CLONE_URL('link-1'));
+      expect(clone.request.method).toBe('POST');
+      clone.flush(cloneResponse('project', uuid('cloned-uuid')));
       // cloneShare awaits the gateway clone, then loadProjectAsMain — two
       // async hops to drain before the project GET is issued.
       await Promise.resolve();
       await Promise.resolve();
 
       httpMock
-        .expectOne(PROJECT_URL('cloned-uuid'))
-        .flush(projectDetailResponse({ id: 'cloned-uuid' }));
+        .expectOne(PROJECT_URL(uuid('cloned-uuid')))
+        .flush(projectDetailResponse({ id: uuid('cloned-uuid') }));
 
       await promise;
       expect(projectService.mainProject()).toBeDefined();
       expect(metadataStore.getMetadata(projectService.mainProject()!)!.id).toBe(
-        'cloned-uuid'
+        uuid('cloned-uuid')
       );
-      expect(locationGo).toHaveBeenCalledWith('/project/cloned-uuid');
+      expect(locationGo).toHaveBeenCalledWith(
+        `/project/${uuid('cloned-uuid')}`
+      );
     });
 
-    it('clones a component share through the component endpoints', async () => {
-      // The two kinds are separate endpoints over separate stores: cloning a
-      // component link as a project resolves to nothing server-side, and the
-      // copy has to reopen as a component to carry its DefinitionBinding.
+    it('reopens a cloned component share as a component', async () => {
+      // One clone endpoint serves both kinds — the link already says what it
+      // points at — but the copy still has to reopen as a component, so that it
+      // carries its DefinitionBinding and lands in the component library.
       const tick = () => new Promise((r) => setTimeout(r, 0));
-      const promise = service.cloneShare('link-c', 'comp');
+      const promise = service.cloneShare('link-c');
 
-      httpMock.expectOne(USER_URL).flush({
-        status: 200,
-        data: makeUser('user-1')
-      });
+      httpMock
+        .expectOne(CLONE_URL('link-c'))
+        .flush(cloneResponse('comp', uuid('cloned-comp')));
       await tick();
 
       httpMock
-        .expectOne(`${environment.apiUrl}/api/component/clone/link-c`)
-        .flush(sharedComponentResponse('cloned-comp'));
-      await tick();
-
-      httpMock
-        .expectOne(`${environment.apiUrl}/api/component/cloned-comp`)
-        .flush(sharedComponentResponse('cloned-comp'));
+        .expectOne(COMPONENT_URL(uuid('cloned-comp')))
+        .flush(componentDetailResponse({ id: uuid('cloned-comp') }));
 
       await promise;
       expect(metadataStore.getMetadata(projectService.mainProject()!)).toEqual(
         expect.objectContaining({
-          id: 'cloned-comp',
+          id: uuid('cloned-comp'),
           type: 'comp',
           source: 'server'
         })
       );
-      expect(locationGo).toHaveBeenCalledWith('/component/cloned-comp');
+      expect(locationGo).toHaveBeenCalledWith(
+        `/component/${uuid('cloned-comp')}`
+      );
     });
   });
 
   describe('deserialization tolerance', () => {
     it('loadProject silently skips unknown component types', async () => {
-      const elements: ProjectElement[] = [
-        { t: 1, p: [0, 0], i: 1, o: 1 }, // NOT — known
-        { t: 999, p: [5, 5] }, // unimplemented legacy type
-        { t: 1, p: [10, 0], i: 1, o: 1 } // NOT — known
-      ];
+      const body: SerializedCircuitBody = {
+        components: [
+          { type: BuiltInComponentType.NOT, pos: [0, 0], options: {} },
+          { type: 999, pos: [5, 5], options: {} }, // no such component
+          { type: BuiltInComponentType.NOT, pos: [10, 0], options: {} }
+        ],
+        wires: []
+      };
       const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
       // Tests run at Silent verbosity; raise it so the migration's warning is
       // actually emitted for this assertion.
@@ -1086,21 +1141,21 @@ describe('PersistenceService', () => {
       environment.loggingVerbosity = LogLevel.Warn;
 
       try {
-        const promise = service.loadProject('test-uuid');
+        const promise = service.loadProject(uuid('test-uuid'));
         httpMock
-          .expectOne(PROJECT_URL('test-uuid'))
-          .flush(projectDetailResponse({ elements }));
+          .expectOne(PROJECT_URL(uuid('test-uuid')))
+          .flush(projectDetailResponse({ body }));
 
         const project = await promise;
         expect(Array.from(project.components).length).toBe(2);
-        // Server reads route through the v0→v1 migration, which drops unknown
-        // types with a warning. LoggingService.warn forwards to
+        // The instance builder drops an element whose type resolves to no
+        // config, with a warning. LoggingService.warn forwards to
         // console.warn('%c[%s]', style, context, message).
         expect(warnSpy).toHaveBeenCalledWith(
           '%c[%s]',
           'color:#888',
-          'CircuitFileMigrator',
-          expect.stringContaining('Unknown component type ID: 999')
+          'circuit-builder',
+          expect.stringContaining('Dropped element with unresolved type 999')
         );
       } finally {
         environment.loggingVerbosity = originalVerbosity;
@@ -1116,7 +1171,6 @@ describe('PersistenceService', () => {
         name: 'My Circuit',
         type: 'project',
         source: 'server',
-        hash: '',
         isPublic: false
       });
 
@@ -1154,7 +1208,11 @@ describe('PersistenceService', () => {
 
     it('carries fork attribution through export → import → stored blob', async () => {
       const lineage = [
-        { projectId: 'origin-1', projectName: 'Origin', authorName: 'alice' }
+        {
+          projectId: uuid('origin-1'),
+          projectName: 'Origin',
+          authorName: 'alice'
+        }
       ];
       const fork = new Project();
       metadataStore.register(fork, {
@@ -1162,7 +1220,6 @@ describe('PersistenceService', () => {
         name: 'My Fork',
         type: 'project',
         source: 'server',
-        hash: '',
         isPublic: false,
         attribution: lineage
       });
@@ -1216,7 +1273,6 @@ describe('PersistenceService', () => {
           name: 'Borrowed',
           type: 'project',
           source: 'share',
-          hash: '',
           isPublic: false
         },
         false
@@ -1508,23 +1564,31 @@ describe('PersistenceService', () => {
     it('PATCHes the new name and syncs an open project', async () => {
       const project = new Project();
       metadataStore.register(project, {
-        id: 'srv-1',
+        id: uuid('srv-1'),
         name: 'Before',
         type: 'project',
         source: 'server',
-        hash: 'h',
+        version: 2,
         isPublic: false
       });
 
-      const promise = firstValueFrom(service.renameProject('srv-1', 'After'));
+      const promise = firstValueFrom(
+        service.renameProject(uuid('srv-1'), 'After')
+      );
 
-      const req = httpMock.expectOne(PROJECT_URL('srv-1'));
+      const req = httpMock.expectOne(PROJECT_URL(uuid('srv-1')));
       expect(req.request.method).toBe('PATCH');
       expect(req.request.body).toEqual({ name: 'After' });
-      req.flush(projectSummaryResponse({ id: 'srv-1', name: 'After' }));
+      req.flush(
+        projectSummaryResponse({ id: uuid('srv-1'), name: 'After', version: 3 })
+      );
 
       await promise;
-      expect(metadataStore.getMetadata(project)!.name).toBe('After');
+      const metadata = metadataStore.getMetadata(project)!;
+      expect(metadata.name).toBe('After');
+      // A rename is content the server stamps, so it bumps the counter; without
+      // adopting it here the next save would present a version that has moved.
+      expect(metadata.version).toBe(3);
     });
   });
 
@@ -1532,20 +1596,20 @@ describe('PersistenceService', () => {
     it('PATCHes a server project', async () => {
       const project = new Project();
       metadataStore.register(project, {
-        id: 'srv-1',
+        id: uuid('srv-1'),
         name: 'Before',
         type: 'project',
         source: 'server',
-        hash: 'h',
+        version: 2,
         isPublic: false
       });
 
       const promise = service.renameOpenProject(project, 'After');
 
-      const req = httpMock.expectOne(PROJECT_URL('srv-1'));
+      const req = httpMock.expectOne(PROJECT_URL(uuid('srv-1')));
       expect(req.request.method).toBe('PATCH');
       expect(req.request.body).toEqual({ name: 'After' });
-      req.flush(projectSummaryResponse({ id: 'srv-1', name: 'After' }));
+      req.flush(projectSummaryResponse({ id: uuid('srv-1'), name: 'After' }));
 
       await promise;
       expect(metadataStore.getMetadata(project)!.name).toBe('After');
@@ -1579,7 +1643,6 @@ describe('PersistenceService', () => {
         name: 'Untitled',
         type: 'project',
         source: 'browser',
-        hash: '',
         isPublic: false
       });
 
@@ -1597,7 +1660,6 @@ describe('PersistenceService', () => {
         name: 'Shared',
         type: 'project',
         source: 'share',
-        hash: 'h',
         isPublic: false
       });
 
@@ -1614,7 +1676,6 @@ describe('PersistenceService', () => {
         name: 'Gate',
         type: 'comp',
         source: 'server',
-        hash: 'h',
         isPublic: false
       });
 
@@ -1649,7 +1710,6 @@ describe('PersistenceService', () => {
         name: 'Host',
         type: 'project',
         source: 'browser',
-        hash: '',
         isPublic: false
       });
       return project;
@@ -1764,7 +1824,6 @@ describe('PersistenceService', () => {
         name: 'Comp',
         type: 'comp',
         source: 'browser',
-        hash: '',
         isPublic: false
       });
       metadataStore.markDirty(editor);
@@ -1856,10 +1915,6 @@ describe('PersistenceService', () => {
   });
 
   describe('custom component persistence (server)', () => {
-    const COMPONENTS_URL = `${environment.apiUrl}/api/component`;
-    const COMPONENT_URL = (id: string) =>
-      `${environment.apiUrl}/api/component/${id}`;
-
     const plugCircuit: SerializedCircuitBody = {
       components: [
         {
@@ -1875,70 +1930,6 @@ describe('PersistenceService', () => {
       ],
       wires: []
     };
-
-    function componentSummaryResponse(
-      o: Partial<{
-        id: string;
-        hash: string;
-        version: number;
-      }> = {}
-    ) {
-      return {
-        status: 200,
-        data: {
-          id: o.id ?? 'srv-comp',
-          name: 'Comp',
-          description: '',
-          symbol: 'C',
-          numInputs: 0,
-          numOutputs: 0,
-          labels: [],
-          createdOn: '2024-01-01',
-          lastEdited: '2024-01-01',
-          elementsFile: {
-            hash: o.hash ?? 'h1',
-            mimeType: 'application/json',
-            publicUrl: ''
-          },
-          previewDark: null,
-          previewLight: null,
-          public: false,
-          version: o.version
-        }
-      };
-    }
-
-    function componentDetailResponse(o: {
-      id: string;
-      hash?: string;
-      version?: number;
-    }) {
-      return {
-        status: 200,
-        data: {
-          id: o.id,
-          name: 'Comp',
-          description: '',
-          symbol: 'C',
-          numInputs: 0,
-          numOutputs: 0,
-          labels: [],
-          createdOn: '2024-01-01',
-          lastEdited: '2024-01-01',
-          elementsFile: {
-            hash: o.hash ?? 'h1',
-            mimeType: 'application/json',
-            publicUrl: ''
-          },
-          previewDark: null,
-          previewLight: null,
-          public: false,
-          version: o.version ?? 1,
-          elements: [],
-          dependencies: []
-        }
-      };
-    }
 
     function customInstanceOf(project: Project): CustomComponent {
       return [...project.components].find(
@@ -1974,7 +1965,7 @@ describe('PersistenceService', () => {
       );
 
       // The POST is issued only after the store read + temp-project build, so
-      // flush pending microtasks (a macrotask tick) before each HTTP expectation.
+      // flush pending microtasks (a macrotask tick) before the HTTP expectation.
       const tick = () => new Promise((r) => setTimeout(r, 0));
 
       const promise = promotion.promoteComponentToServer(masterTypeId);
@@ -1982,22 +1973,21 @@ describe('PersistenceService', () => {
       await tick();
       const post = httpMock.expectOne(COMPONENTS_URL);
       expect(post.request.method).toBe('POST');
-      post.flush(componentSummaryResponse({ id: 'srv-comp', hash: 'h0' }));
-
-      await tick();
-      const put = httpMock.expectOne(COMPONENT_URL('srv-comp'));
-      expect(put.request.method).toBe('PUT');
-      put.flush(componentSummaryResponse({ id: 'srv-comp', version: 5 }));
+      // The circuit rides along with the create — one round trip.
+      expect(post.request.body.document.version).toBe(1);
+      post.flush(
+        componentSummaryResponse({ id: uuid('srv-comp'), version: 5 })
+      );
 
       await promise;
 
       const def = registry.getDefinition(masterTypeId)!;
       expect(def.source).toBe('server');
-      expect(def.id).toBe('srv-comp');
+      expect(def.id).toBe(uuid('srv-comp'));
       expect(def.version).toBe(5);
       // Old local id still resolves (alias) and was persisted to the id-map.
       expect(registry.masterTypeIdForId('local-1')).toBe(masterTypeId);
-      expect(idMapStore.records.get('local-1')).toBe('srv-comp');
+      expect(idMapStore.records.get('local-1')).toBe(uuid('srv-comp'));
       // The local record is gone — the component moved to the cloud.
       expect(await componentStore.get('local-1')).toBeUndefined();
     });
@@ -2039,18 +2029,14 @@ describe('PersistenceService', () => {
       await tick();
       httpMock
         .expectOne(COMPONENTS_URL)
-        .flush(componentSummaryResponse({ id: 'srv-comp', hash: 'h0' }));
-      await tick();
-      httpMock
-        .expectOne(COMPONENT_URL('srv-comp'))
-        .flush(componentSummaryResponse({ id: 'srv-comp', version: 5 }));
+        .flush(componentSummaryResponse({ id: uuid('srv-comp'), version: 5 }));
 
       await expect(promise).resolves.toBeUndefined();
       const def = registry.getDefinition(masterTypeId)!;
       expect(def.source).toBe('server');
       // The durable alias was written before the (failed) delete, so a reload
       // self-heals (the browser preload skips the orphaned record).
-      expect(idMapStore.records.get('local-1')).toBe('srv-comp');
+      expect(idMapStore.records.get('local-1')).toBe(uuid('srv-comp'));
     });
 
     it('promoteComponentToServer re-points an open editor of the master to the new server identity', async () => {
@@ -2077,7 +2063,6 @@ describe('PersistenceService', () => {
         name: 'Comp',
         type: 'comp',
         source: 'browser',
-        hash: '',
         isPublic: false
       });
       const tick = () => new Promise((r) => setTimeout(r, 0));
@@ -2086,21 +2071,15 @@ describe('PersistenceService', () => {
       await tick();
       httpMock
         .expectOne(COMPONENTS_URL)
-        .flush(componentSummaryResponse({ id: 'srv-comp', hash: 'h0' }));
-      await tick();
-      httpMock
-        .expectOne(COMPONENT_URL('srv-comp'))
-        .flush(
-          componentSummaryResponse({ id: 'srv-comp', version: 5, hash: 'h2' })
-        );
+        .flush(componentSummaryResponse({ id: uuid('srv-comp'), version: 5 }));
       await promise;
 
       // The editor now points at the cloud record, so a later save routes to the
       // server instead of re-creating the deleted browser record.
       const meta = metadataStore.getMetadata(editor)!;
       expect(meta.source).toBe('server');
-      expect(meta.id).toBe('srv-comp');
-      expect(meta.hash).toBe('h2');
+      expect(meta.id).toBe(uuid('srv-comp'));
+      expect(meta.version).toBe(5);
       editor.destroy();
     });
 
@@ -2108,10 +2087,10 @@ describe('PersistenceService', () => {
       const circuitFile = TestBed.inject(CircuitFileService);
       // The cloud master and the persisted promotion alias (as hydrated at startup).
       const serverType = registry.createMaster(
-        { id: 'srv-1', symbol: 'C', name: 'Comp' },
+        { id: uuid('srv-1'), symbol: 'C', name: 'Comp' },
         'server'
       );
-      registry.registerIdAlias('local-1', 'srv-1');
+      registry.registerIdAlias('local-1', uuid('srv-1'));
       // A stale local record left behind by a partially-failed promotion.
       await componentStore.save({
         id: 'local-1',
@@ -2367,33 +2346,30 @@ describe('PersistenceService', () => {
       const promise = library.preloadServerMasters();
 
       await tick();
-      const list = httpMock.expectOne(COMPONENTS_URL);
+      const list = httpMock.expectOne(COMPONENTS_PAGE_URL);
       expect(list.request.method).toBe('GET');
       list.flush({
-        status: 200,
-        data: [
+        entries: [
           {
-            id: 'srv-1',
-            name: 'Cloud Comp',
-            description: 'desc',
+            ...componentSummaryResponse({
+              id: uuid('srv-1'),
+              name: 'Cloud Comp',
+              version: 2
+            }),
             symbol: 'CL',
             numInputs: 1,
             numOutputs: 1,
-            labels: ['a', 'q'],
-            createdOn: '2024-01-01',
-            lastEdited: '2024-01-01',
-            elementsFile: null,
-            previewDark: null,
-            previewLight: null,
-            public: false,
-            version: 2
+            labels: ['a', 'q']
           }
-        ]
+        ],
+        page: 0,
+        pageSize: 100,
+        total: 1
       });
 
       await promise;
 
-      const typeId = registry.masterTypeIdForId('srv-1');
+      const typeId = registry.masterTypeIdForId(uuid('srv-1'));
       expect(typeId).toBeDefined();
       const def = registry.getDefinition(typeId!)!;
       expect(def.source).toBe('server');
@@ -2408,40 +2384,16 @@ describe('PersistenceService', () => {
     it('ensureServerMasterCircuit fetches and sets the circuit on demand', async () => {
       const tick = () => new Promise((r) => setTimeout(r, 0));
       const masterTypeId = registry.createMaster(
-        { id: 'srv-2', symbol: 'C', name: 'C' },
+        { id: uuid('srv-2'), symbol: 'C', name: 'C' },
         'server'
       );
       expect(registry.getDefinition(masterTypeId)?.circuit).toBeUndefined();
 
       const promise = library.ensureServerMasterCircuit(masterTypeId);
       await tick();
-      const open = httpMock.expectOne(COMPONENT_URL('srv-2'));
+      const open = httpMock.expectOne(COMPONENT_URL(uuid('srv-2')));
       expect(open.request.method).toBe('GET');
-      open.flush({
-        status: 200,
-        data: {
-          id: 'srv-2',
-          name: 'C',
-          description: '',
-          symbol: 'C',
-          numInputs: 0,
-          numOutputs: 0,
-          labels: [],
-          createdOn: '2024-01-01',
-          lastEdited: '2024-01-01',
-          elementsFile: {
-            hash: 'h',
-            mimeType: 'application/json',
-            publicUrl: ''
-          },
-          previewDark: null,
-          previewLight: null,
-          public: false,
-          version: 1,
-          elements: [],
-          dependencies: []
-        }
-      });
+      open.flush(componentDetailResponse({ id: uuid('srv-2'), name: 'C' }));
       await promise;
 
       expect(registry.getDefinition(masterTypeId)?.circuit).toBeDefined();
@@ -2459,7 +2411,7 @@ describe('PersistenceService', () => {
     it('fetches a server master circuit once, shared by placement and edit-open', async () => {
       const tick = () => new Promise((r) => setTimeout(r, 0));
       const masterTypeId = registry.createMaster(
-        { id: 'srv-cache', symbol: 'C', name: 'C' },
+        { id: uuid('srv-cache'), symbol: 'C', name: 'C' },
         'server'
       );
 
@@ -2467,52 +2419,54 @@ describe('PersistenceService', () => {
       const ensure = library.ensureServerMasterCircuit(masterTypeId);
       await tick();
       httpMock
-        .expectOne(COMPONENT_URL('srv-cache'))
-        .flush(componentDetailResponse({ id: 'srv-cache', hash: 'ch' }));
+        .expectOne(COMPONENT_URL(uuid('srv-cache')))
+        .flush(componentDetailResponse({ id: uuid('srv-cache'), version: 3 }));
       await ensure;
 
       // Second use (edit-open) is served from the cache: no second GET (the
       // afterEach verify() would fail on an outstanding request), and the editor
-      // adopts the cached hash so its save keeps a valid concurrency check.
+      // adopts the cached version so its save keeps a valid concurrency check.
       const { project, masterTypeId: editType } =
-        await service.loadServerComponentForEdit('srv-cache');
+        await service.loadServerComponentForEdit(uuid('srv-cache'));
       expect(editType).toBe(masterTypeId);
-      expect(metadataStore.getMetadata(project)!.hash).toBe('ch');
+      expect(metadataStore.getMetadata(project)!.version).toBe(3);
     });
 
     it('invalidates the cached circuit on save so a reopen re-fetches', async () => {
       const tick = () => new Promise((r) => setTimeout(r, 0));
       const masterTypeId = registry.createMaster(
-        { id: 'srv-inv', symbol: 'C', name: 'C' },
+        { id: uuid('srv-inv'), symbol: 'C', name: 'C' },
         'server'
       );
 
       const ensure = library.ensureServerMasterCircuit(masterTypeId);
       await tick();
       httpMock
-        .expectOne(COMPONENT_URL('srv-inv'))
-        .flush(componentDetailResponse({ id: 'srv-inv', hash: 'h1' }));
+        .expectOne(COMPONENT_URL(uuid('srv-inv')))
+        .flush(componentDetailResponse({ id: uuid('srv-inv'), version: 1 }));
       await ensure;
 
-      const { project } = await service.loadServerComponentForEdit('srv-inv');
+      const { project } = await service.loadServerComponentForEdit(
+        uuid('srv-inv')
+      );
       metadataStore.markDirty(project);
 
       const save = service.saveProject(project);
       await tick();
-      const put = httpMock.expectOne(COMPONENT_URL('srv-inv'));
+      const put = httpMock.expectOne(COMPONENT_URL(uuid('srv-inv')));
       expect(put.request.method).toBe('PUT');
-      put.flush(componentSummaryResponse({ id: 'srv-inv', hash: 'h2' }));
+      put.flush(componentSummaryResponse({ id: uuid('srv-inv'), version: 2 }));
       await save;
 
       // The save dropped the cache entry: the next edit-open goes back to the API
       // rather than serving the pre-save circuit.
-      const reopen = service.loadServerComponentForEdit('srv-inv');
+      const reopen = service.loadServerComponentForEdit(uuid('srv-inv'));
       await tick();
-      const get = httpMock.expectOne(COMPONENT_URL('srv-inv'));
+      const get = httpMock.expectOne(COMPONENT_URL(uuid('srv-inv')));
       expect(get.request.method).toBe('GET');
-      get.flush(componentDetailResponse({ id: 'srv-inv', hash: 'h2' }));
+      get.flush(componentDetailResponse({ id: uuid('srv-inv'), version: 2 }));
       const { project: reopened } = await reopen;
-      expect(metadataStore.getMetadata(reopened)!.hash).toBe('h2');
+      expect(metadataStore.getMetadata(reopened)!.version).toBe(2);
     });
 
     it('preloadServerMasters is a silent no-op when signed out (list 401s)', async () => {
@@ -2520,103 +2474,89 @@ describe('PersistenceService', () => {
       const promise = library.preloadServerMasters();
 
       await tick();
-      const list = httpMock.expectOne(COMPONENTS_URL);
-      list.flush(
-        { status: 401, data: null },
-        { status: 401, statusText: 'Unauthorized' }
-      );
+      const list = httpMock.expectOne(COMPONENTS_PAGE_URL);
+      list.flush(apiError('unauthorized', 'Not signed in'), {
+        status: 401,
+        statusText: 'Unauthorized'
+      });
 
       await expect(promise).resolves.toBeUndefined();
     });
 
-    it('createServerComponent POSTs, PUTs an empty initial save, registers a server master', async () => {
+    it('createServerComponent POSTs once and registers a server master', async () => {
       const promise = service.createServerComponent({
         name: 'Comp',
         symbol: 'C',
         description: 'd'
       });
 
+      // A new component starts on an empty board, so the create carries no
+      // document at all and there is no initial save to establish a version.
       const post = httpMock.expectOne(COMPONENTS_URL);
       expect(post.request.method).toBe('POST');
-      post.flush(componentSummaryResponse({ id: 'srv-comp', hash: 'h0' }));
-
-      // Drain microtasks so the PUT chained after the POST is issued.
-      await Promise.resolve();
-
-      const put = httpMock.expectOne(COMPONENT_URL('srv-comp'));
-      expect(put.request.method).toBe('PUT');
-      expect(put.request.body.elements).toEqual([]);
-      expect(put.request.body.numInputs).toBe(0);
-      expect(put.request.body.labels).toEqual([]);
-      put.flush(componentSummaryResponse({ id: 'srv-comp', hash: 'h1' }));
+      expect(post.request.body).toEqual({
+        name: 'Comp',
+        symbol: 'C',
+        description: 'd',
+        public: false
+      });
+      post.flush(
+        componentSummaryResponse({ id: uuid('srv-comp'), version: 1 })
+      );
 
       const { project, masterTypeId } = await promise;
       const meta = metadataStore.getMetadata(project)!;
       expect(meta.type).toBe('comp');
       expect(meta.source).toBe('server');
-      expect(meta.hash).toBe('h1');
-      expect(registry.masterTypeIdForId('srv-comp')).toBe(masterTypeId);
+      expect(meta.version).toBe(1);
+      expect(registry.masterTypeIdForId(uuid('srv-comp'))).toBe(masterTypeId);
     });
 
     it('loadServerComponent revives the embedded snapshot — ports come from it (Inv. A)', async () => {
-      const promise = service.loadServerComponent('host-comp');
+      // The document is self-contained: every custom it places travels with it
+      // as a frozen definition, so opening it needs no second fetch.
+      const dependency: SnapshotDefinition = {
+        type: CUSTOM_TYPE_ID_BASE,
+        source: { id: 'dep-master', version: 6, origin: 'server' },
+        name: 'Dep',
+        symbol: 'D',
+        description: '',
+        numInputs: 1,
+        numOutputs: 1,
+        labels: ['in', 'out'],
+        components: plugCircuit.components,
+        wires: []
+      };
+      const promise = service.loadServerComponent(uuid('host-comp'));
 
-      const get = httpMock.expectOne(COMPONENT_URL('host-comp'));
+      const get = httpMock.expectOne(COMPONENT_URL(uuid('host-comp')));
       expect(get.request.method).toBe('GET');
-      get.flush({
-        status: 200,
-        data: {
-          id: 'host-comp',
+      get.flush(
+        componentDetailResponse({
+          id: uuid('host-comp'),
           name: 'Host',
-          description: '',
-          symbol: 'H',
-          numInputs: 0,
-          numOutputs: 0,
-          labels: [],
-          createdOn: '2024-01-01',
-          lastEdited: '2024-01-01',
-          elementsFile: {
-            hash: 'gh',
-            mimeType: 'application/json',
-            publicUrl: ''
-          },
-          previewDark: null,
-          previewLight: null,
-          public: false,
           version: 4,
-          elements: [{ t: 1000, p: [3, 3], i: 9, o: 9 }],
-          dependencies: [
-            {
-              dependency: { id: 'dep-master', version: 6 },
-              model: 1000,
-              snapshot: {
-                version: 4,
-                name: 'Dep',
-                symbol: 'D',
-                description: '',
-                numInputs: 1,
-                numOutputs: 1,
-                labels: ['in', 'out'],
-                elements: [
-                  { t: 100, p: [0, 0], o: 1, n: [0], s: 'in' },
-                  { t: 101, p: [5, 0], i: 1, n: [0], s: 'out' }
-                ]
-              }
-            }
-          ]
-        }
-      });
+          body: {
+            components: [
+              { type: CUSTOM_TYPE_ID_BASE, pos: [3, 3], options: {} }
+            ],
+            wires: []
+          },
+          definitions: [dependency]
+        })
+      );
 
       const { project, masterTypeId } = await promise;
       const instance = customInstanceOf(project);
-      // Counts come from the snapshot, not the body element's bogus i/o.
+      // The instance's arity comes from the embedded definition.
       expect(instance.numInputs).toBe(1);
       expect(instance.numOutputs).toBe(1);
       expect(metadataStore.getMetadata(project)!.source).toBe('server');
-      expect(registry.masterTypeIdForId('host-comp')).toBe(masterTypeId);
+      expect(metadataStore.getMetadata(project)!.version).toBe(4);
+      expect(registry.masterTypeIdForId(uuid('host-comp'))).toBe(masterTypeId);
     });
 
-    it('server project save embeds dependencies[].snapshot plus legacy { id, model }', async () => {
+    it('a server project save embeds a self-contained definition of every custom it places', async () => {
       const master = registry.createMaster(
         {
           id: 'pm1',
@@ -2631,44 +2571,48 @@ describe('PersistenceService', () => {
       );
       const project = new Project();
       metadataStore.register(project, {
-        id: 'proj-1',
+        id: uuid('proj-1'),
         name: 'P',
         type: 'project',
         source: 'server',
-        hash: 'ph',
+        version: 1,
         isPublic: false
       });
       placeSnapshot(project, master);
       metadataStore.markDirty(project);
 
       const promise = service.saveProject(project);
-      const put = httpMock.expectOne(PROJECT_URL('proj-1'));
+      const put = httpMock.expectOne(PROJECT_URL(uuid('proj-1')));
       expect(put.request.method).toBe('PUT');
-      const dep = put.request.body.dependencies[0];
-      expect(dep.id).toBe('pm1');
-      expect(dep.model).toBe(1000);
-      expect(dep.snapshot.version).toBe(3);
-      expect(dep.snapshot.numInputs).toBe(1);
-      expect(dep.snapshot.labels).toEqual(['in', 'out']);
-      expect(dep.snapshot.elements.length).toBeGreaterThan(0);
-      put.flush(projectSummaryResponse({ id: 'proj-1', hash: 'ph2' }));
+      const definition = put.request.body.document.definitions[0];
+      // Provenance, so the server can derive the dependency edge and a reader
+      // can tell whether the master has moved on since the snapshot was taken.
+      expect(definition.source).toEqual({
+        id: 'pm1',
+        version: 3,
+        origin: 'server'
+      });
+      expect(definition.numInputs).toBe(1);
+      expect(definition.labels).toEqual(['in', 'out']);
+      expect(definition.components.length).toBeGreaterThan(0);
+      put.flush(projectSummaryResponse({ id: uuid('proj-1'), version: 2 }));
 
       await promise;
       expect(metadataStore.isDirty(project)).toBe(false);
     });
 
-    it('server component save sends the recomputed summary and adopts the returned version', async () => {
+    it('a server component save sends only the document and adopts the returned version', async () => {
       const masterType = registry.createMaster(
-        { id: 'ec1', version: 2, symbol: 'E' },
+        { id: uuid('ec1'), version: 2, symbol: 'E' },
         'server'
       );
       const editor = new Project();
       metadataStore.register(editor, {
-        id: 'ec1',
+        id: uuid('ec1'),
         name: 'E',
         type: 'comp',
         source: 'server',
-        hash: 'eh',
+        version: 2,
         isPublic: false
       });
       editor.addComponent(
@@ -2680,13 +2624,17 @@ describe('PersistenceService', () => {
       metadataStore.markDirty(editor);
 
       const promise = service.saveProject(editor);
-      const put = httpMock.expectOne(COMPONENT_URL('ec1'));
+      const put = httpMock.expectOne(COMPONENT_URL(uuid('ec1')));
       expect(put.request.method).toBe('PUT');
-      expect(put.request.body.numInputs).toBe(1);
-      expect(put.request.body.labels).toEqual(['in']);
-      put.flush(
-        componentSummaryResponse({ id: 'ec1', hash: 'eh2', version: 7 })
-      );
+      // No port surface in the body: the plugs in the circuit are what a
+      // component's ports *are*, so a client declaring them could only ever
+      // disagree with the document it sent them beside.
+      expect(Object.keys(put.request.body).sort()).toEqual([
+        'document',
+        'version'
+      ]);
+      expect(put.request.body.version).toBe(2);
+      put.flush(componentSummaryResponse({ id: uuid('ec1'), version: 7 }));
 
       await promise;
       // The server's save-time version stamp is adopted onto the master.

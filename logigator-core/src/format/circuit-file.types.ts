@@ -58,14 +58,17 @@ export interface CircuitFileV0 extends PersistedCircuitV0 {
    * Old-editor *file* sub-circuit definitions: each pairs a component `info`
    * header with its inner positional circuit. The `v0ToV1` migration revives
    * these into `definitions[]` (`info.id` is the file-local type id the body's
-   * custom elements reference). The server transport uses `dependencies`
-   * instead; a given document carries one shape or the other.
+   * custom elements reference). A legacy database row carries `dependencies`
+   * instead; a given document has one shape or the other.
    */
   components?: LegacyComponentDefinition[];
   /**
-   * Server-transport only: the response `dependencies`, each carrying the
-   * additive embedded `snapshot`. Old-editor *files* never have this; the
-   * `v0ToV1` migration revives present snapshots into `definitions[]`.
+   * A legacy document's dependencies as rows beside it rather than inside it,
+   * each carrying the embedded `snapshot`. Old-editor *files* never have this:
+   * it is the shape the legacy database stores, where a circuit's customs are
+   * relations rather than part of the blob, so the migration attaches them to
+   * the envelope before parsing. The `v0ToV1` migration revives present
+   * snapshots into `definitions[]`.
    */
   dependencies?: EmbeddedDependency[];
 }

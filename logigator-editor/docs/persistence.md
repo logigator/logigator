@@ -4,10 +4,11 @@ The persistence layer turns a live `Project` into stored data and back. It cover
 three storage targets that share the same in-memory model but differ in encoding and
 durability:
 
-- **Server API** (`source: 'server'`) — circuits are stored on the backend as
-  `ProjectElement[]`, the legacy positional wire format (`t/p/q/r/i/o/n/s`). This API is
-  **legacy and temporary**: it is conceptually **file-format version 0 over HTTP** (see
-  [Server = legacy v0-over-HTTP](#server--legacy-v0-over-http)).
+- **Server API** (`source: 'server'`) — circuits are stored by `logigator-api` as the
+  **native versioned document**, byte-for-byte the thing a `.lgix` export carries. So the
+  cloud target has no codec of its own: it encodes with `CircuitFileService.toDocument`
+  and decodes with `CircuitFileService.decode`, exactly as a local file does (see
+  [Server = the native document over HTTP](#server--the-native-document-over-http)).
 - **Browser local storage** (`source: 'browser'`) — circuits and custom-component
   library masters persist in **IndexedDB** without a server account, restored on reload
   via the `/local/:id` route. The stored blob **is the native file format**, so this
@@ -24,14 +25,14 @@ importing a file converts it into a browser project, and any project can be expo
 
 `PersistenceService` is the facade for all targets: it owns the project lifecycle
 (load → register → set as main → save) and dispatches to two symmetric gateways —
-`ServerPersistenceGateway` (temporary, legacy API) and `BrowserPersistenceGateway`
+`ServerPersistenceGateway` (the cloud API) and `BrowserPersistenceGateway`
 (IndexedDB). Moving documents _between_ the targets is `PromotionService`; debug dumps
 are `ProjectDumpService`. `ProjectMetadataStore` holds the per-project bookkeeping
 (name, source, dirty state) that a bare `Project` does not.
 
-> When the planned editor-native API lands, it will resemble the native file format — at
-> which point it becomes a new file-format version plus one migration, and
-> `persistence/server/` is deleted. The versioned format is built for exactly that.
+> All three targets now speak one format. A format bump is therefore one migration plus a
+> coordinated deploy: the API normalizes every write to the newest version, so the editor
+> and the server must agree on what that version is.
 
 ## ⚠️ Three `version` axes — do not conflate
 
@@ -67,9 +68,8 @@ src/app/persistence/
 ├── load-warnings.ts              # Shared "customs skipped" toast for the load entry points
 ├── dump/                         # Debug project dumps (circuit + element ids + undo history)
 │   └── project-dump.service.ts   # build/export/import — debug menu + bug-report payloads
-├── server/                       # ⚠️ TEMPORARY — legacy server (v0-over-HTTP) transport
-│   ├── server-persistence.gateway.ts # Server transport + codec + metadata + build, returning Projects
-│   └── server-circuit.codec.ts   # v0 ENCODER (Project → ProjectElement[]) + toCircuitFileV0 read adapter
+├── server/                       # Cloud API transport (native documents)
+│   └── server-persistence.gateway.ts # Server transport + metadata + build, returning Projects
 ├── browser/                      # Browser-local (IndexedDB) targets
 │   ├── browser-persistence.gateway.ts # Browser transport + codec + metadata + build — the server gateway's sibling
 │   ├── browser-project.types.ts  # StoredBrowserProject / StoredBrowserComponent records + summaries
@@ -149,18 +149,19 @@ Each file-format version has a shared **payload base** (`persisted-circuit.types
 concrete transport **envelopes** add their own framing in their target folder:
 
 ```
-── V0 (legacy positional; "v0 of the file format", also today's server wire shape) ──
+── V0 (legacy positional; "v0 of the file format") ──
 PersistedComponentV0  = ProjectElement (t/p/q/r/i/o/n/s)    // components + wires intermixed
 PersistedCircuitV0    = { elements?: PersistedComponentV0[] }
-  ├── CircuitFileV0   extends PersistedCircuitV0 → { project: { name, elements } }   (legacy file import — PERMANENT)
-  └── ServerCircuitV0 extends PersistedCircuitV0 → { elements, dependencies }        (old API transport — TEMPORARY)
+  └── CircuitFileV0   extends PersistedCircuitV0 → { project: { name, elements }, dependencies? }
+                        (legacy old-editor file import, and the shape the Phase 6 database
+                         migration assembles from a legacy row plus its dependency relations)
 
 ── V1 (native current; named options, split components/wires) ──
 PersistedComponentV1           = SerializedComponentBody   // { type, pos, direction?, options } — pos delta-encoded, direction omitted when East
 PersistedWiresV1               = string                    // chain-encoded: "x,y:e5s3;x,y:n2"
 PersistedSnapshotDefinitionV1  = SnapshotDefinition with delta components + chain wires
 PersistedCircuitV1    = { components: PersistedComponentV1[]; wires: PersistedWiresV1; definitions: PersistedSnapshotDefinitionV1[] }
-  └── CircuitFileV1   extends PersistedCircuitV1 → { version: 1, name }   (file + browser store this verbatim)
+  └── CircuitFileV1   extends PersistedCircuitV1 → { version: 1, name }   (file, browser store and the API all hold this verbatim)
 ```
 
 **Why deltas everywhere:** repeated JSON structure is free after gzip; what gzip cannot
@@ -195,20 +196,20 @@ by the file and browser targets — it makes "the browser store reuses the file 
 explicit contract. V0's circuit is an intermixed positional element array; that
 internal-shape difference from V1 is normal across versions.
 
-### Two encodings, three targets
+### One encoding, three targets
 
-All targets ultimately produce/consume `Component` and `Wire` instances, but there are
-only **two** serialized shapes — the legacy v0 wire format and the native v1 format. The
-browser target reuses the native format, so it shares `CircuitFileService` end to end:
+All three targets produce and consume the **native v1 document**, so all three share
+`CircuitFileService` end to end. The legacy positional shape survives on the read side
+only, as file-format v0:
 
 |           | Legacy v0 (`ProjectElement`)                                   | Native v1 (`CircuitFileV1`)                                         |
 | --------- | -------------------------------------------------------------- | ------------------------------------------------------------------- |
-| Used by   | Server API (temporary)                                         | Browser storage **and** save/load-to-file                           |
+| Used by   | Old-editor file import (read only)                             | The cloud API, browser storage **and** save/load-to-file            |
 | Component | `{ t, p, i?, o?, r?, n?[], s? }` — options packed positionally | `{ type, pos, direction?, options }` — options keyed by config name |
 | Wire      | `{ t: 0, p, q }` — endpoints                                   | chain string (`"x,y:e5s3;…"`)                                       |
-| Customs   | dropped (v0 has none)                                          | embedded as `definitions[]` snapshots                               |
+| Customs   | revived from `components[]` / `dependencies[]`                 | embedded as `definitions[]` snapshots                               |
 | Decode    | `v0ToV1` migration                                             | `CircuitFileService`                                                |
-| Encode    | `server/server-circuit.codec` (temporary)                      | `CircuitFileService` + `snapshots.ts`                               |
+| Encode    | — nothing writes v0 any more                                   | `CircuitFileService` + `snapshots.ts`                               |
 
 ### Name lives in metadata, not on `Project`
 
@@ -223,39 +224,90 @@ begins once the user performs an undoable action (see `ProjectMetadataStore`).
 
 ---
 
-## Server = legacy v0-over-HTTP
+## Server = the native document over HTTP
 
-**Folder:** `persistence/server/` — **⚠️ TEMPORARY, deleted when the native API ships.**
+**Folder:** `persistence/server/` — one file, `server-persistence.gateway.ts`.
 
-The server API transports `ProjectElement[]`, which is just file-format **v0** over the
-wire. So its two halves are treated asymmetrically:
+`logigator-api` stores the **native versioned document**, so the cloud target has no
+codec of its own: a read hands the gateway a `CurrentCircuitFile` and it calls
+`CircuitFileService.decode`; a write calls `CircuitFileService.toDocument` and puts the
+result in the request body. The same encoder writes a `.lgix` export, an IndexedDB blob
+and a cloud save, so a circuit cannot mean one thing in one target and something else in
+another.
 
-- **Decode is permanent.** A server read wraps its `{ name, elements }` response as a
-  `CircuitFileV0` via `server.toCircuitFileV0(detail)` and feeds it to
-  `CircuitFileService.decode`, which runs the **same `v0ToV1` migration** that legacy
-  file import uses. There is no separate server decoder. Reads are therefore validated by
-  the migration (malformed elements throw `InvalidFileError`); unknown component types are
-  dropped with a warning. Custom components **do** round-trip (R14): each server
-  `dependencies[]` entry carries an additive embedded `snapshot`, which the migration's
-  `decodeDependencies` revives into native `definitions[]` (provenance resolution, the
-  `mapping.id`/`localId` rule, and reference-only handling are in
-  [`dependencies-and-promotion.md`](dependencies-and-promotion.md)).
-- **Encode is throwaway.** `server-circuit.codec.ts` is the only place that packs a live
-  `Project` back into the v0 wire shape (`ServerCircuitV0 = { elements, dependencies }`)
-  for PUT/save. It reads each config's `legacyV0Slots` descriptor (below) **in reverse**
-  for the `n`/`s` slots; `i`/`o`/`r` come straight from the component's first-class
-  `numInputs`/`numOutputs`/`direction` fields, so fixed-arity types (e.g. NOT) still emit
-  them without a descriptor entry. The file is `@deprecated`.
+The gateway is still the seam it always was — transport plus metadata plus instance
+build, returning `Project`s — but what it owns now is the _conversation_, not a format.
 
-When the native-model API lands, `persistence/server/` and `ServerCircuitV0` are deleted;
-`CircuitFileV0`, the `v0ToV1` migration, and the `legacyV0Slots` descriptors stay
-(legacy old-editor **file** import is supported indefinitely).
+### Concurrency is a counter the server owns
+
+Every stored circuit carries an integer `version`. A read hands one back (kept in
+`ProjectMetadata.version`), a save presents it, and the server's `UPDATE` carries it in
+the `WHERE`, so a write that lost the race matches no row and answers `409` with
+`code: 'version_conflict'` rather than being merged. The gateway adopts the version the
+response returns; the editor never invents one.
+
+Two consequences worth knowing:
+
+- **Metadata edits bump it too.** A rename (and, for a component, a symbol or description
+  change) is content the server stamps, so `renameProject` and `updateComponentDetails`
+  adopt the version their `PATCH` answers with. Visibility and a regenerated share link
+  do not bump it.
+- **A re-encode is not a conflict.** The counter replaces the legacy MD5 `oldHash`
+  handshake for exactly this reason: a format bump rewrites every stored document, which
+  would change every hash, but leaves the counter alone.
+
+### One round trip to create
+
+A create carries its document, so promoting a draft, uploading a stored local project and
+promoting a library master are each **one** `POST` — where the legacy API needed a create
+followed by a save into it, with an unwind path for the half that failed. Creating an
+empty cloud project or component sends no document at all: an absent one _is_ an empty
+board server-side.
+
+### The server derives what it can see
+
+A component's port surface (`numInputs`/`numOutputs`/`labels`) is not sent. The INPUT and
+OUTPUT plugs placed in the circuit are what a component's ports _are_, so anything a
+client declared about them could only ever disagree with the document beside it — and it
+is the placed instances elsewhere that would render wrong. The same rule takes the
+document's `name` from the row and strips the client-asserted attribution chain.
+
+**Fork lineage** therefore has no request field: the chain rides inside the uploaded
+document (`CircuitFileService.toDocument(project, name, attribution)`), the server reads
+its last entry — the immediate parent, since the chain is root-first — checks it against
+its own rows, and stores it as the fork key it answers every future lineage query from.
+A tampered chain can lose attribution; it cannot forge it.
+
+### Errors are codes, not statuses
+
+Every failure comes back as `{ code, message, details? }`. `ApiBaseService` turns it into
+an `ApiRequestError` and the save path branches on `code`: `unauthorized` flips the editor
+to signed-out (the server session expired underneath a still-true auth cookie),
+`version_conflict` asks the user to reload, and anything else — including the
+`invalid_document` a rejected circuit produces — surfaces the server's own message.
+Responses are validated against their `@logigator/contract` schema on the way in, so a
+shape mismatch is a named boundary failure rather than an `undefined` surfacing deep
+inside the decode.
+
+### The library listing is paged
+
+`GET /api/components` is paginated and capped, so `preloadServerMasters` walks pages
+until it has the whole library. None of those requests carries a circuit: a master's body
+is fetched lazily on first placement or edit-open, and cached per session
+(`_masterCircuitCache`, invalidated by a save so a reopen re-reads the saved state).
+
+### What the legacy format is still for
+
+`CircuitFileV0`, the `v0ToV1` migration and the `legacyV0Slots` descriptors stay, and are
+**read-only**: they decode an old-editor `.json` export, which is supported indefinitely,
+and they are what the Phase 6 database migration reads the legacy backend's stored blobs
+with. Nothing writes v0 any more.
 
 ### `legacyV0Slots` descriptor
 
 Each built-in `ComponentConfig` carries a declarative `legacyV0Slots` mapping its named
-options to the legacy positional slots — the single source of truth for both the
-permanent decode and the temporary encode:
+options to the legacy positional slots — the single source of truth for the decode,
+and the reason a legacy circuit's options land under their v1-era names:
 
 ```ts
 // rom.config.ts — `s` carries the ROM contents (base64 bit-packed blob)
@@ -264,10 +316,9 @@ legacyV0Slots: { s: 'data', n: ['wordSize', 'addressSize'] }
 legacyV0Slots: { s: 'label', n: ['index'] }
 ```
 
-- `i` / `o` — option populated from `element.i` / `o` (decode only; encode emits
-  these from the component's first-class fields). `r` never needs an entry: it
-  always carries the first-class `direction`, decoded into the body's own
-  `direction` field and encoded back from it generically. An empty descriptor
+- `i` / `o` — option populated from `element.i` / `o`. `r` never needs an entry:
+  it always carries the first-class `direction`, decoded into the body's own
+  `direction` field. An empty descriptor
   (`legacyV0Slots: {}`) still matters — its presence marks the type as existing
   in the v0 format.
 - `n: [...]` — options consuming `element.n[0]`, `n[1]`, … in **declaration order** (the
@@ -286,19 +337,17 @@ rotation; editor-v2 anchors by the **rotation pivot** (body drawn from the local
 rotated around `position`). The two coincide only for `Direction.E`, so a rotated
 component's `p` must be re-anchored when crossing the v0 boundary, or it lands offset.
 
-`legacy-anchor.ts` is the single source of truth for that conversion, shared like
-`legacyV0Slots` between the permanent decode and the temporary encode:
+`legacy-anchor.ts` is the single source of truth for that conversion:
 
 - **Decode** (`v0ToV1` migration) — `legacyAnchorToPivot(p, direction, w, h)` shifts the
   legacy top-left to the v2 pivot. `w` comes from the frozen `LEGACY_BODY_WIDTHS` map
   (per-type `bodyGridWidth`, so no render object is instantiated); `h = legacyBodyHeight(i, o)`.
-- **Encode** (`server-circuit.codec`) — `pivotToLegacyAnchor` reverses it. For a live
-  `Project` component the codec just emits `component.bodyGridBounds` (whose corner already
-  **is** the legacy anchor); for built-ins inside a snapshot body (decoded through the same
-  migration) it calls `pivotToLegacyAnchor` with the frozen width map.
+- **`pivotToLegacyAnchor`** reverses it. Nothing in the editor writes v0 any more, so it
+  is there for the Phase 6 database migration and for anything else that has to hand a
+  circuit back to the old editor's coordinate convention.
 
-Customs (`t ≥ CUSTOM_TYPE_ID_BASE`) keep `p` verbatim on both sides — re-anchoring rotated
-customs is a deferred follow-up (their `bodyGridWidth` isn't in the frozen map).
+Customs (`t ≥ CUSTOM_TYPE_ID_BASE`) keep `p` verbatim — re-anchoring rotated customs is a
+deferred follow-up (their `bodyGridWidth` isn't in the frozen map).
 
 ---
 
@@ -349,7 +398,8 @@ in the context. Native version→version migrations are pure data transforms and
 
 ### `v0-to-v1.migration.ts`
 
-The permanent v0→v1 decode — used by both legacy file import **and** server reads:
+The permanent v0→v1 decode — the read path for an old-editor `.json` export, and what
+the Phase 6 database migration runs the legacy backend's stored blobs through:
 
 - Validates the envelope (`project.elements` is an array) → else `InvalidFileError`.
 - Splits `elements`: `t === WIRE_TYPE_ID (0)` → wire bodies, chain-encoded into the v1
@@ -420,8 +470,9 @@ offset 6   gzip(utf8(json))      …         the CircuitFileService JSON string
   **permanent** legacy `logigator-editor` `.json` import working. Both paths converge on
   `importProjectFromJson`.
 
-Only the file export/import boundary uses the container. The browser IndexedDB store still
-holds the plain `toJson` string, and the server v0 codec is untouched.
+Only the file export/import boundary uses the container: gzip is a transport concern.
+The browser IndexedDB store holds the plain `toJson` string, and the API stores the same
+document as JSON in a column the database compresses at rest.
 
 ---
 
@@ -510,37 +561,37 @@ deduplicates concurrent saves. The per-target work lives in the two gateways
 (`ServerPersistenceGateway`, `BrowserPersistenceGateway`); the facade dispatches on
 metadata `source`/`type`.
 
-| Method                                                                   | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `loadProject(uuid)` / `loadProjectAsMain(uuid)`                          | GET from API → `circuitFile.decode(server.toCircuitFileV0(detail))` → register `source:'server'` → (As Main) set as main + update URL.                                                                                                                                                                                                                                                                                                                                         |
-| `loadLocalProject(id)` / `loadLocalProjectAsMain(id)`                    | Read from `projects` store → `circuitFile.fromJson` → register `source:'browser'` → (As Main) set as main + `/local/:id`. Shares `_mainLoadToken` with the server path (both own the single main slot).                                                                                                                                                                                                                                                                        |
-| `loadComponentForEdit(id)`                                               | Read a **library master** from the `components` store → build a Project from its self-contained circuit → reuse or `createMaster` its session type id → register `type:'comp', source:'browser'`. Returns the Project + master type id so the caller can open a tab.                                                                                                                                                                                                           |
-| `saveProject(project)`                                                   | No-op unless dirty. Dispatches on metadata: `comp`+`browser` → `browser.saveComponent`; `server` → `server.saveProject`/`saveComponent` (PUT with `oldHash` guard; logs `VersionMismatch`); `browser` → `browser.saveProject` (a fresh draft is promoted to `/local/:id`). Every save path runs under `ProjectMetadataStore.withDirtyGuard`, so an edit landing mid-save keeps the project dirty. `share` is read-only → no-op.                                                |
-| `createProject(name, …)`                                                 | POST + initial PUT (`server.serializeProject`), register, set as main, update URL.                                                                                                                                                                                                                                                                                                                                                                                             |
-| `saveDraftAsLocal(project, name)`                                        | First save of a never-saved draft to the browser store: applies the chosen `name`, then `browser.saveProject` (generates id, `/local/:id`). Bypasses the `saveProject` dirty-guard so a pristine board can still be named and persisted.                                                                                                                                                                                                                                       |
-| `persistImportedProject(project, name)`                                  | Common tail of the import paths (file import here, dump import in `ProjectDumpService`): register, write a fresh browser draft, set as main, `/local/:id`. Imported customs are **not** adopted into the library — each resolves through its provenance id (local or cloud master) or stays an embedded, restorable snapshot.                                                                                                                                                  |
-| `loadShare` / `loadShareAsMain` / `cloneShare`                           | Share read paths (`source:'share'`, dirty tracking disabled); decode via the same server v0 route. **Both kinds fill the main slot** — a component share opens standalone exactly as `/component/:uuid` does, so the title bar names it, its tab is the pinned one, and the File menu's clone action has a document to read. `cloneShare(link, type)` dispatches on that kind: the project or the component clone endpoint, then `loadProjectAsMain` or `loadComponentAsMain`. |
-| `createAndSetEmptyProject()`                                             | Blank `source:'browser'` project with empty id (name `'Untitled'`), set as main. **Not written to storage** until the first save. Used both on a project-less page load and by the **New Project** menu action — no name/destination is asked up front; that prompt is deferred to the first save (see `SaveCoordinatorService` in `ui.md`).                                                                                                                                   |
-| `exportProjectToJson(project)`                                           | Reads name from metadata, delegates to `circuitFile.toJson`. Source-agnostic. Returns the JSON string — triggering a download is a UI concern.                                                                                                                                                                                                                                                                                                                                 |
-| `importProjectFromJson(content)`                                         | `circuitFile.fromJson` → build a Project → register `source:'browser'` (clean) → **persist immediately** (re-encoded current-version) → set as main → `/local/:id`. Embedded customs stay embedded (no library adoption); a master-less one is a restorable orphan. **Throws** on an unreadable file (no fallback, unlike server loads).                                                                                                                                       |
-| `listBrowserProjects` / `deleteBrowserProject` / `listBrowserComponents` | Browser-store listing/removal for the two stores.                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| `renameBrowserProject(id, name)` / `renameProject(uuid, name)`           | Rename a stored project from the Open Project dialog. Browser: rewrites the blob's top-level `name` (the codec reads the blob, not the summary column, on open) **and** the column via `BrowserProjectStore.save`. Server: `PATCH /api/project/:id` with `{ name }`. Both sync the in-memory metadata (title bar) when the renamed project is currently open.                                                                                                                  |
+| Method                                                                   | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `loadProject(uuid)` / `loadProjectAsMain(uuid)`                          | GET from API → `circuitFile.decode(detail.document)` → register `source:'server'` (carrying the response's `version`) → (As Main) set as main + update URL.                                                                                                                                                                                                                                                                                                                                    |
+| `loadLocalProject(id)` / `loadLocalProjectAsMain(id)`                    | Read from `projects` store → `circuitFile.fromJson` → register `source:'browser'` → (As Main) set as main + `/local/:id`. Shares `_mainLoadToken` with the server path (both own the single main slot).                                                                                                                                                                                                                                                                                        |
+| `loadComponentForEdit(id)`                                               | Read a **library master** from the `components` store → build a Project from its self-contained circuit → reuse or `createMaster` its session type id → register `type:'comp', source:'browser'`. Returns the Project + master type id so the caller can open a tab.                                                                                                                                                                                                                           |
+| `saveProject(project)`                                                   | No-op unless dirty. Dispatches on metadata: `comp`+`browser` → `browser.saveComponent`; `server` → `server.saveProject`/`saveComponent` (PUT of the native document against the metadata `version`; a `version_conflict` toasts and stays dirty); `browser` → `browser.saveProject` (a fresh draft is promoted to `/local/:id`). Every save path runs under `ProjectMetadataStore.withDirtyGuard`, so an edit landing mid-save keeps the project dirty. `share` is read-only → no-op.          |
+| `createProject(name, …)`                                                 | One POST with no document (an absent one is an empty board server-side), register, set as main, update URL.                                                                                                                                                                                                                                                                                                                                                                                    |
+| `saveDraftAsLocal(project, name)`                                        | First save of a never-saved draft to the browser store: applies the chosen `name`, then `browser.saveProject` (generates id, `/local/:id`). Bypasses the `saveProject` dirty-guard so a pristine board can still be named and persisted.                                                                                                                                                                                                                                                       |
+| `persistImportedProject(project, name)`                                  | Common tail of the import paths (file import here, dump import in `ProjectDumpService`): register, write a fresh browser draft, set as main, `/local/:id`. Imported customs are **not** adopted into the library — each resolves through its provenance id (local or cloud master) or stays an embedded, restorable snapshot.                                                                                                                                                                  |
+| `loadShare` / `loadShareAsMain` / `cloneShare`                           | Share read paths (`source:'share'`, dirty tracking disabled); decode the response's native document. **Both kinds fill the main slot** — a component share opens standalone exactly as `/component/:uuid` does, so the title bar names it, its tab is the pinned one, and the File menu's clone action has a document to read. `cloneShare(link)` posts to the one clone endpoint and reopens through `loadProjectAsMain` or `loadComponentAsMain` depending on the kind the response reports. |
+| `createAndSetEmptyProject()`                                             | Blank `source:'browser'` project with empty id (name `'Untitled'`), set as main. **Not written to storage** until the first save. Used both on a project-less page load and by the **New Project** menu action — no name/destination is asked up front; that prompt is deferred to the first save (see `SaveCoordinatorService` in `ui.md`).                                                                                                                                                   |
+| `exportProjectToJson(project)`                                           | Reads name from metadata, delegates to `circuitFile.toJson`. Source-agnostic. Returns the JSON string — triggering a download is a UI concern.                                                                                                                                                                                                                                                                                                                                                 |
+| `importProjectFromJson(content)`                                         | `circuitFile.fromJson` → build a Project → register `source:'browser'` (clean) → **persist immediately** (re-encoded current-version) → set as main → `/local/:id`. Embedded customs stay embedded (no library adoption); a master-less one is a restorable orphan. **Throws** on an unreadable file (no fallback, unlike server loads).                                                                                                                                                       |
+| `listBrowserProjects` / `deleteBrowserProject` / `listBrowserComponents` | Browser-store listing/removal for the two stores.                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `renameBrowserProject(id, name)` / `renameProject(uuid, name)`           | Rename a stored project from the Open Project dialog. Browser: rewrites the blob's top-level `name` (the codec reads the blob, not the summary column, on open) **and** the column via `BrowserProjectStore.save`. Server: `PATCH /api/projects/:id` with `{ name }` (adopting the bumped `version` it answers with). Both sync the in-memory metadata (title bar) when the renamed project is currently open.                                                                                 |
 
 ### Flows
 
 ```
-API load:     GET → ProjectElement[] → server.toCircuitFileV0 → v0ToV1 migration → circuitFile.decode → Project → register(server) → main
-API save:     Project → server.serializeProject → ProjectElement[] → PUT (oldHash guard)
+API load:     GET → CircuitFileV1 → circuitFile.decode → Project → register(server, version) → main
+API save:     Project → circuitFile.toDocument → PUT { document, version } → adopt the new version
 Browser load: IndexedDB record → circuitFile.fromJson → Project → register(browser) → main (/local/:id)
 Browser save: Project → circuitFile.toJson → BrowserProjectStore.save (generate id on first save)
 File import:  ArrayBuffer → (decodeLgix | utf8) → circuitFile.fromJson → Project → Browser save → main (/local/:id)
 File export:  Project → circuitFile.toJson → encodeLgix (gzip + header) → <name>.lgix (download)
 ```
 
-All funnel through the same `Component`/`Wire` instances. The API uses the legacy v0
-encoding (decoded through the migration); the browser target and files use the native v1
-envelope — which is why a file import is simply "decode, then browser-save the re-encoded
-blob."
+All funnel through the same `Component`/`Wire` instances, and all three now carry the
+same native v1 envelope — which is why a file import is simply "decode, then
+browser-save the re-encoded blob," and why a cloud save and a `.lgix` export produce
+byte-identical documents.
 
 ### Sibling services
 
@@ -639,15 +690,11 @@ browser projects.
 Specs sit next to source. Pure logic (`detectVersion`, `migrateToCurrent`, the `v0ToV1`
 migration) is testable with `TestBed.inject(ComponentProviderService)` and no
 `setStaticDIInjector` (no render objects are built). Codecs that build `Component`/`Wire`
-instances (`circuit-file.service.spec`, `server-circuit.codec.spec`,
-`persistence.service.spec`) call `setStaticDIInjector(TestBed.inject(Injector))` and use
+instances (`circuit-file.service.spec`, `persistence.service.spec`) call `setStaticDIInjector(TestBed.inject(Injector))` and use
 inline fixtures (no JSON imports).
 
 The guardrails that pin the legacy mapping:
 
-- **`server-circuit.codec.spec`** — decode→encode round-trips over every built-in type
-  (NOT/AND/TEXT/ROM/INPUT/OUTPUT), rotations, distinct `n[]` values, and wires; an
-  `i/o/n/s` transposition fails it.
 - **`v0-to-v1.migration.spec`** — asserts decoded named options per type and **pins each
   `legacyV0Slots` descriptor exactly**, so a new built-in without one (which would
   silently drop on decode) is caught.

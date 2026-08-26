@@ -17,7 +17,7 @@ function makeMetadata(
     name: 'Test',
     type: 'project',
     source: 'server',
-    hash: 'hash-1',
+    version: 1,
     isPublic: false,
     ...overrides
   };
@@ -165,17 +165,17 @@ describe('ProjectMetadataStore', () => {
     });
   });
 
-  describe('updateHash', () => {
-    it('updates the hash on existing metadata', () => {
+  describe('updateVersion', () => {
+    it('updates the version on existing metadata', () => {
       const project = new Project();
-      store.register(project, makeMetadata({ hash: 'old' }));
-      store.updateHash(project, 'new');
-      expect(store.getMetadata(project)!.hash).toBe('new');
+      store.register(project, makeMetadata({ version: 1 }));
+      store.updateVersion(project, 2);
+      expect(store.getMetadata(project)!.version).toBe(2);
     });
 
     it('is a no-op for unknown project', () => {
       const project = new Project();
-      expect(() => store.updateHash(project, 'x')).not.toThrow();
+      expect(() => store.updateVersion(project, 2)).not.toThrow();
     });
   });
 

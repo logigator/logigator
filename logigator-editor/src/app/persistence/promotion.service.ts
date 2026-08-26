@@ -13,8 +13,11 @@ import { ProjectMetadataStore } from './project-metadata.store';
 import { ServerPersistenceGateway } from './server/server-persistence.gateway';
 import { CloudSessionService } from '../user/cloud-session.service';
 import { CustomComponentRegistry } from '../components/custom/custom-component-registry.service';
-import { CUSTOM_TYPE_ID_BASE, type SnapshotDefinition } from '@logigator/core';
-import type { ForkAttributionEntry } from '../api/models/project';
+import {
+  CUSTOM_TYPE_ID_BASE,
+  type FileForkAttributionV1,
+  type SnapshotDefinition
+} from '@logigator/core';
 import { AuthRequiredError } from './persistence-errors';
 import { buildProject } from './circuit-builder';
 import { warnSkippedCustoms } from './load-warnings';
@@ -61,7 +64,7 @@ export class PromotionService {
 
   /**
    * First save of a fresh draft to the **server**: creates the project record
-   * and PUTs the current circuit (see
+   * with its circuit already in it (see
    * {@link ServerPersistenceGateway.promoteToServer}), then navigates to
    * `/project/:id`.
    */
@@ -147,7 +150,7 @@ export class PromotionService {
         temp,
         record.name,
         isPublic,
-        attribution?.at(-1)?.projectId
+        attribution
       )
     );
 
@@ -191,7 +194,6 @@ export class PromotionService {
     const {
       id: newId,
       version,
-      hash: newHash,
       link: newLink,
       isPublic: newIsPublic
     } = await this._withProjectFromContent(record.content, (temp) =>
@@ -236,7 +238,7 @@ export class PromotionService {
     // If the master's own editor tab is open, flip its metadata to the new server
     // identity so a later save routes to the cloud instead of re-creating the
     // browser record that was just deleted.
-    this._reconcilePromotedEditor(oldId, newId, newHash);
+    this._reconcilePromotedEditor(oldId, newId, version);
   }
 
   /**
@@ -390,7 +392,7 @@ export class PromotionService {
   private _reconcilePromotedEditor(
     oldId: string,
     newId: string,
-    hash: string
+    version: number
   ): void {
     const handle = this.metadataStore.getHandleById(oldId);
     if (
@@ -400,7 +402,7 @@ export class PromotionService {
       this.metadataStore.update(handle.project, {
         source: 'server',
         id: newId,
-        hash
+        version
       });
     }
   }
@@ -429,7 +431,7 @@ export class PromotionService {
    */
   private async _withProjectFromContent<T>(
     content: string,
-    fn: (project: Project, attribution?: ForkAttributionEntry[]) => Promise<T>
+    fn: (project: Project, attribution?: FileForkAttributionV1[]) => Promise<T>
   ): Promise<T> {
     const { attribution, components, wires, skippedCustom } =
       this.circuitFile.fromJson(content);

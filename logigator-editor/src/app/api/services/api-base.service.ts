@@ -1,9 +1,13 @@
 import { inject, Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
-import type { ApiResponse } from '../models/shared';
+import {
+  HttpClient,
+  HttpErrorResponse,
+  HttpParams
+} from '@angular/common/http';
+import { catchError, map, Observable, throwError } from 'rxjs';
+import type { z } from 'zod';
 import { environment } from '../../../environments/environment';
+import { InvalidResponseError, toApiRequestError } from '../api-error';
 
 /** Plain-object form of HTTP query parameters. */
 export type QueryParams = Record<string, string | number | boolean | undefined>;
@@ -19,67 +23,119 @@ function toHttpParams(params: QueryParams): HttpParams {
 }
 
 /**
- * Thin wrapper around Angular's HttpClient for the Logigator API.
+ * Thin wrapper around Angular's `HttpClient` for the Logigator API.
  *
- * - Prepends the configured base URL from `environment.api`
- * - Unwraps the backend's `{ status, data }` envelope automatically
+ * - Prepends the configured base URL from `environment.apiUrl`
+ * - Validates every response against its `@logigator/contract` schema
+ * - Turns a failure into an {@link ApiRequestError} carrying the API's own code
  * - Converts plain-object query params to `HttpParams`
+ *
+ * Responses are not enveloped: a body *is* the resource. Validating it here
+ * rather than trusting it is what keeps a shape mismatch a boundary failure
+ * with a name, instead of an `undefined` surfacing deep inside the decode.
+ * The schemas are loose, so an API that grows a field does not break a client
+ * holding an older contract copy.
  */
 @Injectable({ providedIn: 'root' })
 export class ApiBaseService {
   private readonly http = inject(HttpClient);
   private readonly baseUrl = environment.apiUrl;
 
-  /** GET request — unwraps `ApiResponse<T>` to just `T`. */
-  get<T>(path: string, params?: QueryParams): Observable<T> {
-    return this.http
-      .get<ApiResponse<T>>(this.url(path), {
-        params: params ? toHttpParams(params) : undefined
-      })
-      .pipe(map((r) => r.data));
+  get<T>(
+    path: string,
+    schema: z.ZodType<T>,
+    params?: QueryParams
+  ): Observable<T> {
+    return this._validate(
+      path,
+      schema,
+      this.http.get<unknown>(this.url(path), this._options(params))
+    );
   }
 
-  /** POST request. */
-  post<T>(path: string, body?: unknown, params?: QueryParams): Observable<T> {
-    return this.http
-      .post<ApiResponse<T>>(this.url(path), body ?? {}, {
-        params: params ? toHttpParams(params) : undefined
-      })
-      .pipe(map((r) => r.data));
+  post<T>(path: string, schema: z.ZodType<T>, body?: unknown): Observable<T> {
+    return this._validate(
+      path,
+      schema,
+      this.http.post<unknown>(this.url(path), body ?? {})
+    );
   }
 
-  /** PUT request. */
-  put<T>(path: string, body?: unknown, params?: QueryParams): Observable<T> {
-    return this.http
-      .put<ApiResponse<T>>(this.url(path), body ?? {}, {
-        params: params ? toHttpParams(params) : undefined
-      })
-      .pipe(map((r) => r.data));
+  put<T>(path: string, schema: z.ZodType<T>, body?: unknown): Observable<T> {
+    return this._validate(
+      path,
+      schema,
+      this.http.put<unknown>(this.url(path), body ?? {})
+    );
   }
 
-  /** PATCH request. */
-  patch<T>(path: string, body?: unknown, params?: QueryParams): Observable<T> {
-    return this.http
-      .patch<ApiResponse<T>>(this.url(path), body ?? {}, {
-        params: params ? toHttpParams(params) : undefined
-      })
-      .pipe(map((r) => r.data));
+  patch<T>(path: string, schema: z.ZodType<T>, body?: unknown): Observable<T> {
+    return this._validate(
+      path,
+      schema,
+      this.http.patch<unknown>(this.url(path), body ?? {})
+    );
   }
 
-  /** DELETE request. */
-  delete<T>(path: string, params?: QueryParams): Observable<T> {
-    return this.http
-      .delete<ApiResponse<T>>(this.url(path), {
-        params: params ? toHttpParams(params) : undefined
-      })
-      .pipe(map((r) => r.data));
+  /** POST with a `FormData` body, for the multipart upload routes. */
+  postFormData<T>(
+    path: string,
+    schema: z.ZodType<T>,
+    formData: FormData
+  ): Observable<T> {
+    return this._validate(
+      path,
+      schema,
+      this.http.post<unknown>(this.url(path), formData)
+    );
   }
 
-  /** POST with `FormData` body (for file uploads). */
-  postFormData<T>(path: string, formData: FormData): Observable<T> {
-    return this.http
-      .post<ApiResponse<T>>(this.url(path), formData)
-      .pipe(map((r) => r.data));
+  /**
+   * A request whose response carries nothing to read — the routes that answer
+   * `204`. No schema, because there is no body to describe.
+   */
+  postEmpty(path: string, body?: unknown): Observable<void> {
+    return this._discard(this.http.post<unknown>(this.url(path), body ?? {}));
+  }
+
+  deleteEmpty(path: string): Observable<void> {
+    return this._discard(this.http.delete<unknown>(this.url(path)));
+  }
+
+  private _options(params?: QueryParams) {
+    return { params: params ? toHttpParams(params) : undefined };
+  }
+
+  private _validate<T>(
+    path: string,
+    schema: z.ZodType<T>,
+    request: Observable<unknown>
+  ): Observable<T> {
+    return request.pipe(
+      this._mapError(),
+      map((body) => {
+        const parsed = schema.safeParse(body);
+        if (!parsed.success) {
+          throw new InvalidResponseError(path, parsed.error.message);
+        }
+        return parsed.data;
+      })
+    );
+  }
+
+  private _discard(request: Observable<unknown>): Observable<void> {
+    return request.pipe(
+      this._mapError(),
+      map(() => undefined)
+    );
+  }
+
+  private _mapError() {
+    return catchError((err: unknown) =>
+      throwError(() =>
+        err instanceof HttpErrorResponse ? toApiRequestError(err) : err
+      )
+    );
   }
 
   // Merge baseUrl and path, ensuring there's exactly one slash between them

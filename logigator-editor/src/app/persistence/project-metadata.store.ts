@@ -2,7 +2,7 @@ import { computed, Injectable, signal, WritableSignal } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { SignalMap } from 'ngxtension/collections';
 import { Project } from '../project/project';
-import { ForkAttributionEntry } from '../api/models/project';
+import type { FileForkAttributionV1 } from '@logigator/core';
 
 export interface ProjectMetadata {
   /**
@@ -14,7 +14,17 @@ export interface ProjectMetadata {
   name: string;
   type: 'project' | 'comp';
   source: 'server' | 'browser' | 'share';
-  hash: string;
+  /**
+   * The cloud document's optimistic-concurrency counter, as the last read or
+   * write left it: a save presents it and the server rejects the write if
+   * anything moved in between. Server documents only — a browser record is the
+   * one writer of its own blob, and a share is read-only.
+   *
+   * A counter the server owns rather than the legacy MD5 of the stored bytes,
+   * so a document re-encoded underneath a client (which a format bump does to
+   * every row) does not read as a conflict.
+   */
+  version?: number;
   isPublic: boolean;
   link?: string;
   /**
@@ -24,7 +34,7 @@ export interface ProjectMetadata {
    * the server re-links `forkedFrom`. Read-only — the server resolves the real
    * authors itself on load/upload.
    */
-  attribution?: ForkAttributionEntry[];
+  attribution?: FileForkAttributionV1[];
 }
 
 interface ProjectEntry {
@@ -165,8 +175,9 @@ export class ProjectMetadataStore {
     return result;
   }
 
-  public updateHash(project: Project, hash: string): void {
-    this.update(project, { hash });
+  /** Adopts the version a cloud read or write answered with. */
+  public updateVersion(project: Project, version: number): void {
+    this.update(project, { version });
   }
 
   /**

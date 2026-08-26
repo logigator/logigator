@@ -4,7 +4,7 @@ import { RendererService } from '../rendering/renderer.service';
 import { WorkModeService } from '../work-mode/work-mode.service';
 import { SimulationService } from '../simulation/simulation.service';
 import { LayoutService } from '../layout/layout.service';
-import type { ReportClientInfo } from '../api/models/report-error';
+import type { ReportClientInfo } from '@logigator/contract';
 
 /**
  * Gathers a snapshot of the client environment for a bug report: browser/OS

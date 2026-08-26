@@ -4,7 +4,6 @@ import { DialogService } from '@logigator/ui';
 import { DialogId } from '../analytics/analytics.mapping';
 import { TranslationService } from '../translation/translation.service';
 import { UserService } from './user.service';
-import { sessionUserId } from '../api/models/user';
 import { CloudSessionService } from './cloud-session.service';
 import { PersistenceService } from '../persistence/persistence.service';
 import { ComponentLibraryService } from '../custom-component/component-library.service';
@@ -69,7 +68,7 @@ export class SessionLifecycleService {
   constructor() {
     effect(() => {
       const user = this.userService.user();
-      const userId = user ? sessionUserId(user) : null;
+      const userId = user?.id ?? null;
       const prevId = this._lastUserId;
       if (userId === prevId) return; // data refresh (e.g. profile PATCH), not a transition
       this._lastUserId = userId;

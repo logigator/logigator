@@ -59,7 +59,6 @@ export class BrowserPersistenceGateway {
       name,
       type: 'project',
       source: 'browser',
-      hash: '',
       isPublic: false,
       attribution
     });
@@ -116,7 +115,6 @@ export class BrowserPersistenceGateway {
       name: record.name,
       type: 'comp',
       source: 'browser',
-      hash: '',
       isPublic: false
     });
 

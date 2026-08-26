@@ -44,7 +44,6 @@ describe('SelectionInspectorService', () => {
       name: 'P',
       type: 'project',
       source: 'browser',
-      hash: '',
       isPublic: false
     });
     projectService.setMainProject(project);
