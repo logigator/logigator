@@ -16,7 +16,8 @@ const env = loadEnv(process.env);
 // Default: beside the bundle, which is the deploy layout — the image ships
 // `drizzle/` next to `migrate.js`. In the repository the migrations sit in the
 // package instead, so the `db:migrate` script passes that path explicitly.
-const migrationsFolder = process.argv[2] ?? join(__dirname, 'drizzle');
+const migrationsFolder =
+  process.argv[2] ?? join(import.meta.dirname, 'drizzle');
 
 runMigrations(env.DATABASE_URL, migrationsFolder).then(
   () => {

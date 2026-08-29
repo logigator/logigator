@@ -7,7 +7,7 @@ import { registerSessionPlugins } from './session/session.plugin';
 /**
  * Fastify options derived from the environment.
  *
- * `trustProxy` says how many proxies sit in front of the process, so
+ * `trustProxy` names the proxies sitting in front of the process, so
  * `request.ip` is the caller's address rather than Caddy's — the rate limiter
  * counts per address. It trusts none by default: a directly reachable server must
  * not let a caller pick its own identity through a header.
@@ -15,7 +15,7 @@ import { registerSessionPlugins } from './session/session.plugin';
 export function apiServerOptions(env: Env): FastifyServerOptions {
   return {
     logger: { level: env.LOG_LEVEL },
-    trustProxy: env.TRUST_PROXY === 0 ? false : env.TRUST_PROXY
+    trustProxy: env.TRUST_PROXY
   };
 }
 

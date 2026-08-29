@@ -29,7 +29,6 @@ import {
 import type { FastifyRequest } from 'fastify';
 import { AuthGuard, CurrentUser } from '../auth/auth.guard';
 import { UuidParam } from '../common/uuid-param.pipe';
-import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { components, type UserRow } from '../database/schema';
 import { mapPage, toComponentSummary } from './circuit-responses';
 import { readPreviewUpload } from './preview-upload';
@@ -48,7 +47,7 @@ export class ComponentsController {
   @Get()
   async list(
     @CurrentUser() user: UserRow,
-    @Query(new ZodValidationPipe(pageQuerySchema)) query: PageQuery
+    @Query({ schema: pageQuerySchema }) query: PageQuery
   ): Promise<Page<ComponentSummary>> {
     return mapPage(
       await this.components.list(user.id, query),
@@ -60,7 +59,7 @@ export class ComponentsController {
   @HttpCode(HttpStatus.CREATED)
   create(
     @CurrentUser() user: UserRow,
-    @Body(new ZodValidationPipe(createComponentRequestSchema))
+    @Body({ schema: createComponentRequestSchema })
     body: CreateComponentRequest
   ): Promise<ComponentSummary> {
     return this.components.create(user.id, body);
@@ -78,7 +77,7 @@ export class ComponentsController {
   save(
     @CurrentUser() user: UserRow,
     @Param('id', UuidParam) id: string,
-    @Body(new ZodValidationPipe(saveCircuitRequestSchema))
+    @Body({ schema: saveCircuitRequestSchema })
     body: SaveCircuitRequest
   ): Promise<ComponentSummary> {
     return this.components.save(user.id, id, body);
@@ -88,7 +87,7 @@ export class ComponentsController {
   update(
     @CurrentUser() user: UserRow,
     @Param('id', UuidParam) id: string,
-    @Body(new ZodValidationPipe(updateComponentRequestSchema))
+    @Body({ schema: updateComponentRequestSchema })
     body: UpdateComponentRequest
   ): Promise<ComponentSummary> {
     return this.components.update(user.id, id, body);

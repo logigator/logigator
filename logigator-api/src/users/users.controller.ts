@@ -22,7 +22,6 @@ import {
 } from '@logigator/contract';
 import { ApiException } from '../common/api-exception';
 import { localeFromRequest } from '../common/locale';
-import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { AuthGuard, CurrentUser } from '../auth/auth.guard';
 import type { UserRow } from '../database/schema';
 import { SessionService } from '../session/session.service';
@@ -50,7 +49,7 @@ export class UsersController {
   @Patch()
   async update(
     @CurrentUser() user: UserRow,
-    @Body(new ZodValidationPipe(updateUserRequestSchema))
+    @Body({ schema: updateUserRequestSchema })
     body: UpdateUserRequest,
     @Req() request: FastifyRequest
   ): Promise<UpdateUserResponse> {
@@ -114,7 +113,7 @@ export class UsersController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteAccount(
     @CurrentUser() user: UserRow,
-    @Body(new ZodValidationPipe(deleteUserRequestSchema))
+    @Body({ schema: deleteUserRequestSchema })
     body: DeleteUserRequest,
     @Req() request: FastifyRequest,
     @Res({ passthrough: true }) reply: FastifyReply

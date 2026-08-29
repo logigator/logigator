@@ -27,7 +27,6 @@ import {
 } from '@logigator/contract';
 import { RateLimit, RateLimitGuard } from '../common/rate-limit.guard';
 import { localeFromRequest } from '../common/locale';
-import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { SessionService } from '../session/session.service';
 import { toUserResponse } from '../users/users.service';
 import { AuthService } from './auth.service';
@@ -53,7 +52,7 @@ export class AuthController {
   @HttpCode(HttpStatus.CREATED)
   @RateLimit({ limit: 5, windowSeconds: 3600, scope: 'register' })
   async register(
-    @Body(new ZodValidationPipe(registerRequestSchema)) body: RegisterRequest,
+    @Body({ schema: registerRequestSchema }) body: RegisterRequest,
     @Req() request: FastifyRequest
   ): Promise<RegisterResponse> {
     await this.auth.register(body, localeFromRequest(request));
@@ -64,7 +63,7 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @RateLimit({ limit: 10, windowSeconds: 600, scope: 'credentials' })
   async login(
-    @Body(new ZodValidationPipe(loginRequestSchema)) body: LoginRequest,
+    @Body({ schema: loginRequestSchema }) body: LoginRequest,
     @Req() request: FastifyRequest
   ): Promise<LoginResponse> {
     const user = await this.auth.login(body);
@@ -86,7 +85,7 @@ export class AuthController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @RateLimit({ limit: 10, windowSeconds: 600, scope: 'credentials' })
   async resendVerification(
-    @Body(new ZodValidationPipe(resendVerificationRequestSchema))
+    @Body({ schema: resendVerificationRequestSchema })
     body: ResendVerificationRequest,
     @Req() request: FastifyRequest
   ): Promise<void> {
@@ -97,7 +96,7 @@ export class AuthController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @RateLimit({ limit: 20, windowSeconds: 600, scope: 'token' })
   async verifyEmail(
-    @Body(new ZodValidationPipe(verifyEmailRequestSchema))
+    @Body({ schema: verifyEmailRequestSchema })
     body: VerifyEmailRequest
   ): Promise<void> {
     await this.auth.verifyEmail(body.token);
@@ -107,7 +106,7 @@ export class AuthController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @RateLimit({ limit: 5, windowSeconds: 3600, scope: 'password-reset' })
   async requestPasswordReset(
-    @Body(new ZodValidationPipe(requestPasswordResetSchema))
+    @Body({ schema: requestPasswordResetSchema })
     body: RequestPasswordReset,
     @Req() request: FastifyRequest
   ): Promise<void> {
@@ -121,7 +120,7 @@ export class AuthController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @RateLimit({ limit: 20, windowSeconds: 600, scope: 'token' })
   async confirmPasswordReset(
-    @Body(new ZodValidationPipe(confirmPasswordResetSchema))
+    @Body({ schema: confirmPasswordResetSchema })
     body: ConfirmPasswordReset
   ): Promise<void> {
     await this.auth.confirmPasswordReset(body);

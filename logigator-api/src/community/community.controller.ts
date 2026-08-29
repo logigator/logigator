@@ -23,7 +23,6 @@ import {
 } from '@logigator/contract';
 import { AuthGuard, CurrentUser, SessionUserId } from '../auth/auth.guard';
 import { UuidParam } from '../common/uuid-param.pipe';
-import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import type { UserRow } from '../database/schema';
 import { CommunityService } from './community.service';
 
@@ -41,7 +40,7 @@ export class CommunityController {
 
   @Get('projects')
   listProjects(
-    @Query(new ZodValidationPipe(communityQuerySchema)) query: CommunityQuery,
+    @Query({ schema: communityQuerySchema }) query: CommunityQuery,
     @SessionUserId() callerId: string | null
   ): Promise<Page<CommunityProject>> {
     return this.community.listProjects(query, callerId);
@@ -49,7 +48,7 @@ export class CommunityController {
 
   @Get('components')
   listComponents(
-    @Query(new ZodValidationPipe(communityQuerySchema)) query: CommunityQuery,
+    @Query({ schema: communityQuerySchema }) query: CommunityQuery,
     @SessionUserId() callerId: string | null
   ): Promise<Page<CommunityComponent>> {
     return this.community.listComponents(query, callerId);
@@ -64,7 +63,7 @@ export class CommunityController {
   @UseGuards(AuthGuard)
   starredProjects(
     @CurrentUser() user: UserRow,
-    @Query(new ZodValidationPipe(pageQuerySchema)) query: PageQuery
+    @Query({ schema: pageQuerySchema }) query: PageQuery
   ): Promise<Page<CommunityProject>> {
     return this.community.listStarredProjects(user.id, query);
   }
@@ -73,7 +72,7 @@ export class CommunityController {
   @UseGuards(AuthGuard)
   starredComponents(
     @CurrentUser() user: UserRow,
-    @Query(new ZodValidationPipe(pageQuerySchema)) query: PageQuery
+    @Query({ schema: pageQuerySchema }) query: PageQuery
   ): Promise<Page<CommunityComponent>> {
     return this.community.listStarredComponents(user.id, query);
   }
@@ -137,7 +136,7 @@ export class CommunityController {
   @Get('projects/:link/stargazers')
   projectStargazers(
     @Param('link', UuidParam) link: string,
-    @Query(new ZodValidationPipe(pageQuerySchema)) query: PageQuery
+    @Query({ schema: pageQuerySchema }) query: PageQuery
   ): Promise<Page<Author>> {
     return this.community.projectStargazers(link, query);
   }
@@ -145,7 +144,7 @@ export class CommunityController {
   @Get('components/:link/stargazers')
   componentStargazers(
     @Param('link', UuidParam) link: string,
-    @Query(new ZodValidationPipe(pageQuerySchema)) query: PageQuery
+    @Query({ schema: pageQuerySchema }) query: PageQuery
   ): Promise<Page<Author>> {
     return this.community.componentStargazers(link, query);
   }
@@ -158,7 +157,7 @@ export class CommunityController {
   @Get('users/:id/projects')
   userProjects(
     @Param('id', UuidParam) id: string,
-    @Query(new ZodValidationPipe(pageQuerySchema)) query: PageQuery,
+    @Query({ schema: pageQuerySchema }) query: PageQuery,
     @SessionUserId() callerId: string | null
   ): Promise<Page<CommunityProject>> {
     return this.community.listUserProjects(id, query, callerId);
@@ -167,7 +166,7 @@ export class CommunityController {
   @Get('users/:id/components')
   userComponents(
     @Param('id', UuidParam) id: string,
-    @Query(new ZodValidationPipe(pageQuerySchema)) query: PageQuery,
+    @Query({ schema: pageQuerySchema }) query: PageQuery,
     @SessionUserId() callerId: string | null
   ): Promise<Page<CommunityComponent>> {
     return this.community.listUserComponents(id, query, callerId);

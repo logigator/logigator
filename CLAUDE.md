@@ -188,10 +188,16 @@ while `/api/meta` doubles as the liveness probe that reaches nothing.
 - `config/` — the zod env schema. Every variable is defaulted so a bare `docker compose up` works;
   the rules that cannot be defaulted are enforced in the schema instead (production refuses the
   public development `SESSION_SECRET`, the Google credentials must be set together or not at all,
-  and `TRUST_PROXY` must be at least 1 wherever cookies are `Secure` — the process serves plain
+  and `TRUST_PROXY` must name a proxy wherever cookies are `Secure` — the process serves plain
   HTTP, so untrusted forwarding headers make `@fastify/session` treat every request as insecure and
-  write no session at all). `COOKIE_SECURE` and the two OAuth URLs are _resolved_ in a transform, so
-  consumers read values rather than re-deriving rules.
+  write no session at all). `TRUST_PROXY` is Fastify's own vocabulary — `false`, `true`, a
+  proxy-addr preset or an address/CIDR list — because trust has to be pinned to an address: a hop
+  count says how far down the chain to look without saying who may be in it, so anyone reaching the
+  process directly passes for the proxy (Fastify GHSA-3m5p-2c4r-xxw2, which is why Fastify no
+  longer takes one). The schema refuses bare digits for the same reason it defaults everything
+  else: Fastify's matcher reads `1` as the address `0.0.0.1`, so a `TRUST_PROXY` left over from the
+  hop-count contract would boot trusting nothing real. `COOKIE_SECURE`, `TRUST_PROXY` and the two
+  OAuth URLs are _resolved_ in a transform, so consumers read values rather than re-deriving rules.
 - `database/` — Drizzle over `pg`. `schema/` is the DDL in TypeScript (tables + `defineRelations`
   for RQBv2), `drizzle/` the generated SQL migrations, `migrate.ts` the runner both the
   `migrate.js` bundle entry and the E2E harness call. `DB` injects a typed `Database`; there are no
@@ -268,8 +274,11 @@ while `/api/meta` doubles as the liveness probe that reaches nothing.
   already sends (the old editor's positional `project` payload included). Unauthenticated and
   rate-limited; every report is one log line, and a configured `REPORT_MAIL_TO` also gets it with the
   circuit attached.
-- `common/` — the error filter and `ApiException`, the zod validation pipe (a shim to delete when
-  NestJS 12's `@Body({ schema })` lands), the Redis-backed `@RateLimit()` guard, the `UuidParam`
+- `common/` — the error filter and `ApiException`, `ApiValidationPipe` (global, over NestJS's
+  `StandardSchemaValidationPipe`: the framework validates whatever a route declares through
+  `@Body({ schema })`/`@Query({ schema })` — the contract's zod schemas are Standard Schema — and
+  the subclass exists for the failure body alone, since the contract's error shape is what clients
+  read), the Redis-backed `@RateLimit()` guard, the `UuidParam`
   pipe (every id is a `uuid` column, and Postgres rejects a comparison against something that is
   not — so a mistyped path is a 404 rather than a 500), and locale resolution from the shared
   `preferences` cookie.
@@ -277,9 +286,15 @@ while `/api/meta` doubles as the liveness probe that reaches nothing.
   harness, so the specs exercise the same HTTP layer as production.
 
 **Build: Rspack** (`rspack.config.mjs`, following Rspack's NestJS guide), which is what lets the
-API compile the shared packages from source like every other consumer. NestJS 12 replaces its
-webpack builder with Rspack, so this is where upstream is going; when v12 lands, its CLI builder
-may replace this config.
+API compile the shared packages from source like every other consumer. Rspack is also NestJS 12's
+own default bundler, so this is upstream's direction — but the config stays local: the CLI's
+builder assumes one entry where there are three, and its bare `nodeExternals()` would externalise
+the workspace packages, which is the shared-source model breaking.
+
+The bundle is **ESM**, matching the `"type": "module"` on the package, the ESM-only `@nestjs/*`
+packages and what NestJS 12 scaffolds — the settings mirror the CLI builder's own ESM branch
+(`experiments.outputModule`, `importType: 'module'` externals, the `node` externals preset off with
+Node's builtins named as ESM externals instead). Nothing CommonJS survives in the output.
 
 **Non-obvious build details:**
 
@@ -297,9 +312,15 @@ may replace this config.
   the empty `paths` really is structural.
 - **`webpack-node-externals` needs `allowlist: [/^@logigator\//]`** — Yarn symlinks workspace
   members into `node_modules`, so without it they are treated as ordinary dependencies and left as
-  a runtime `require` of a package with no entry point.
+  a runtime import of a package with no entry point.
+- **The build emits `dist/logigator-api/package.json` holding `{ "type": "module" }`**, which is
+  what makes Node read the `.js` bundles as modules. NestJS puts that marker on the package itself,
+  but the artifact lands in the workspace's root `dist/` and would inherit the root manifest, which
+  declares no type — so the marker is written into the output directory and ships with the bundle
+  the way `drizzle/` does. Without it every entry dies on its first `import`.
 - **`sharp` stays external** and must: it is a native module, so `webpack-node-externals` leaving
-  it a runtime `require` is the only thing that works. Nothing pins architectures in
+  it a runtime import is the only thing that works — Node's ESM loader gives it back as a default
+  import. Nothing pins architectures in
   `.yarnrc.yml`, so the lockfile carries every prebuilt binary including
   `@img/sharp-linuxmusl-x64` — which is what an alpine runtime image needs.
 - **No minification.** A long-running server gains nothing, and Nest reflects on class and
@@ -316,9 +337,8 @@ may replace this config.
   copies installed, a plugin's type augmentation lands on one and Nest's `register` reads the other,
   so `app.register(fastifyCookie)` fails to type-check.
 - **`migrate` is a second Rspack entry**, and the deploy artifact ships `drizzle/` beside it: the
-  runner reads migration SQL from disk (`__dirname/drizzle` by default, hence
-  `node: { __dirname: false }`), so a release applies migrations with plain `node` and no dev
-  tooling. drizzle-kit only ever _generates_ them.
+  runner reads migration SQL from disk (`import.meta.dirname/drizzle` by default), so a release
+  applies migrations with plain `node` and no dev tooling. drizzle-kit only ever _generates_ them.
 - **`renormalize` is a third entry**, for the same reason, but unlike the migration runner it boots
   the real application container (`NestFactory.createApplicationContext`) — the point is to rewrite
   documents through the same parse-and-extract path every other write uses, and a second

@@ -29,7 +29,6 @@ import {
 import type { FastifyRequest } from 'fastify';
 import { AuthGuard, CurrentUser } from '../auth/auth.guard';
 import { UuidParam } from '../common/uuid-param.pipe';
-import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { projects, type UserRow } from '../database/schema';
 import { mapPage, toProjectSummary } from './circuit-responses';
 import { readPreviewUpload } from './preview-upload';
@@ -51,7 +50,7 @@ export class ProjectsController {
   @Get()
   async list(
     @CurrentUser() user: UserRow,
-    @Query(new ZodValidationPipe(pageQuerySchema)) query: PageQuery
+    @Query({ schema: pageQuerySchema }) query: PageQuery
   ): Promise<Page<ProjectSummary>> {
     return mapPage(await this.projects.list(user.id, query), toProjectSummary);
   }
@@ -60,7 +59,7 @@ export class ProjectsController {
   @HttpCode(HttpStatus.CREATED)
   create(
     @CurrentUser() user: UserRow,
-    @Body(new ZodValidationPipe(createProjectRequestSchema))
+    @Body({ schema: createProjectRequestSchema })
     body: CreateProjectRequest
   ): Promise<ProjectSummary> {
     return this.projects.create(user.id, body);
@@ -79,7 +78,7 @@ export class ProjectsController {
   save(
     @CurrentUser() user: UserRow,
     @Param('id', UuidParam) id: string,
-    @Body(new ZodValidationPipe(saveCircuitRequestSchema))
+    @Body({ schema: saveCircuitRequestSchema })
     body: SaveCircuitRequest
   ): Promise<ProjectSummary> {
     return this.projects.save(user.id, id, body);
@@ -89,7 +88,7 @@ export class ProjectsController {
   update(
     @CurrentUser() user: UserRow,
     @Param('id', UuidParam) id: string,
-    @Body(new ZodValidationPipe(updateProjectRequestSchema))
+    @Body({ schema: updateProjectRequestSchema })
     body: UpdateProjectRequest
   ): Promise<ProjectSummary> {
     return this.projects.update(user.id, id, body);

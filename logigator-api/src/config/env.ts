@@ -126,17 +126,38 @@ const variables = z.object({
   COOKIE_DOMAIN: z.string().optional(),
 
   /**
-   * How many reverse proxies sit in front of the process. `1` behind Caddy makes
-   * `request.ip` the real client address and `request.protocol` the scheme the
-   * browser used; `0` (the default) trusts no forwarding header, since a
-   * directly reachable server must not let callers choose their own address and
-   * slip the rate limiter.
+   * Which callers' `X-Forwarded-*` headers to believe, so that `request.ip` is
+   * the real client address and `request.protocol` the scheme the browser used.
+   * `false` (the default) believes none, since a directly reachable server must
+   * not let callers choose their own address and slip the rate limiter; `true`
+   * believes every caller, which is only safe where nothing but the proxy can
+   * reach the process. Anything else names the proxy by address: a
+   * comma-separated list of addresses and CIDR ranges, or one of the presets
+   * `loopback`, `linklocal`, `uniquelocal`.
+   *
+   * Naming the address is the point. A hop count cannot: it says how far down
+   * the chain to look without saying who is allowed to be in it, so anyone
+   * reaching the process directly passes for the proxy (Fastify
+   * GHSA-3m5p-2c4r-xxw2), which is why Fastify no longer takes one.
+   *
+   * The digits are refused here rather than left to Fastify, which is the one
+   * malformed value it would not catch: its matcher reads a bare integer as an
+   * address (`1` is `0.0.0.1`), so a `TRUST_PROXY` left over from the hop-count
+   * contract would boot, trust an address nothing connects from, and write no
+   * session — the exact silent failure the check below exists to prevent.
    *
    * Secure cookies force the question: the process only ever speaks plain HTTP,
    * so `COOKIE_SECURE` means something in front terminates TLS — and the check
    * below refuses to start until that is declared here.
    */
-  TRUST_PROXY: z.coerce.number().int().min(0).max(10).default(0),
+  TRUST_PROXY: z
+    .string()
+    .min(1)
+    .refine((value) => !/^\d+$/.test(value.trim()), {
+      error:
+        'is no longer a count of the proxies in front of the process — name them instead: a preset (loopback, linklocal, uniquelocal), a comma-separated list of addresses and CIDR ranges, true where nothing but the proxy can reach the process, or false to trust none'
+    })
+    .default('false'),
 
   /** Lifetime of the one-shot mail tokens (verification, password reset). */
   AUTH_TOKEN_TTL_MINUTES: z.coerce.number().int().min(1).default(60),
@@ -163,7 +184,7 @@ export const envSchema = variables
     // Resolved here rather than read off the transform, which has not run yet.
     const secure =
       ctx.value.COOKIE_SECURE ?? ctx.value.NODE_ENV === 'production';
-    if (secure && ctx.value.TRUST_PROXY === 0) {
+    if (secure && resolveTrustProxy(ctx.value.TRUST_PROXY) === false) {
       // `@fastify/session` refuses to write a `Secure` cookie over a connection
       // it believes is plain, and it believes that whenever `X-Forwarded-Proto`
       // is untrusted. The whole login then succeeds and does nothing: a 200, a
@@ -173,7 +194,7 @@ export const envSchema = variables
         input: ctx.value.TRUST_PROXY,
         path: ['TRUST_PROXY'],
         message:
-          'must be at least 1 when cookies are Secure — the process serves plain HTTP, so a TLS-terminating proxy sits in front and its forwarding headers have to be trusted for sessions to be written at all'
+          'must name the proxy when cookies are Secure — the process serves plain HTTP, so a TLS-terminating proxy sits in front and its forwarding headers have to be trusted for sessions to be written at all'
       });
     }
   })
@@ -197,10 +218,25 @@ export const envSchema = variables
   .transform((env) => ({
     ...env,
     COOKIE_SECURE: env.COOKIE_SECURE ?? env.NODE_ENV === 'production',
+    TRUST_PROXY: resolveTrustProxy(env.TRUST_PROXY),
     GOOGLE_CALLBACK_URL:
       env.GOOGLE_CALLBACK_URL ?? `${env.PUBLIC_URL}/api/auth/google/callback`,
     OAUTH_RETURN_URL: env.OAUTH_RETURN_URL ?? `${env.PUBLIC_URL}/login`
   }));
+
+/**
+ * The configured value in the shape Fastify's `trustProxy` takes. Only the two
+ * literals are interpreted here; an address list or a preset is Fastify's own
+ * vocabulary and is handed over untouched, so a malformed one is rejected by
+ * the matcher that will use it (`invalid IP address: …`) rather than by a
+ * second parser here — the one exception being the digits the schema catches.
+ */
+function resolveTrustProxy(value: string): boolean | string {
+  const configured = value.trim();
+  if (configured === 'false') return false;
+  if (configured === 'true') return true;
+  return configured;
+}
 
 export type Env = z.infer<typeof envSchema>;
 

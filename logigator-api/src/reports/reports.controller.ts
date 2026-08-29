@@ -6,7 +6,6 @@ import {
 } from '@logigator/contract';
 import { RateLimit, RateLimitGuard } from '../common/rate-limit.guard';
 import { UseGuards } from '@nestjs/common';
-import { ZodValidationPipe } from '../common/zod-validation.pipe';
 import { SessionUserId } from '../auth/auth.guard';
 import { ReportsService } from './reports.service';
 
@@ -35,7 +34,7 @@ export class ReportsController {
   @Post()
   @RateLimit({ limit: 10, windowSeconds: 600, scope: 'report-error' })
   async report(
-    @Body(new ZodValidationPipe(reportErrorRequestSchema))
+    @Body({ schema: reportErrorRequestSchema })
     body: ReportErrorRequest,
     @SessionUserId() reporterId: string | null
   ): Promise<ReportErrorResponse> {

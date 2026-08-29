@@ -9,7 +9,7 @@ import { DEVELOPMENT_SESSION_SECRET, loadEnv } from './env';
 const PRODUCTION = {
   NODE_ENV: 'production',
   SESSION_SECRET: 'x'.repeat(32),
-  TRUST_PROXY: '1'
+  TRUST_PROXY: 'uniquelocal'
 };
 
 describe('loadEnv', () => {
@@ -36,7 +36,7 @@ describe('loadEnv', () => {
       SESSION_COOKIE_NAME: 'lg_sid',
       SESSION_MAX_AGE_DAYS: 30,
       COOKIE_SECURE: false,
-      TRUST_PROXY: 0,
+      TRUST_PROXY: false,
       AUTH_TOKEN_TTL_MINUTES: 60,
       BCRYPT_COST: 12
     });
@@ -102,7 +102,7 @@ describe('loadEnv', () => {
     expect(loadEnv({}).COOKIE_SECURE).toBe(false);
     // A deployment terminating TLS somewhere unusual has to be able to say so.
     expect(
-      loadEnv({ COOKIE_SECURE: 'true', TRUST_PROXY: '1' }).COOKIE_SECURE
+      loadEnv({ COOKIE_SECURE: 'true', TRUST_PROXY: 'loopback' }).COOKIE_SECURE
     ).toBe(true);
     expect(
       loadEnv({ ...PRODUCTION, COOKIE_SECURE: 'false' }).COOKIE_SECURE
@@ -114,7 +114,7 @@ describe('loadEnv', () => {
     // not write a `Secure` cookie over a connection it thinks is plain, and it
     // thinks that for as long as `X-Forwarded-Proto` is untrusted. Logins would
     // answer 200 and start no session at all.
-    expect(() => loadEnv({ ...PRODUCTION, TRUST_PROXY: '0' })).toThrowError(
+    expect(() => loadEnv({ ...PRODUCTION, TRUST_PROXY: 'false' })).toThrowError(
       /TRUST_PROXY/
     );
     expect(() => loadEnv({ COOKIE_SECURE: 'true' })).toThrowError(
@@ -123,11 +123,34 @@ describe('loadEnv', () => {
 
     // Plain-HTTP deployments are the ones that may trust nothing: a directly
     // reachable server must not let a caller pick its own address.
-    expect(loadEnv({}).TRUST_PROXY).toBe(0);
+    expect(loadEnv({}).TRUST_PROXY).toBe(false);
     expect(
-      loadEnv({ ...PRODUCTION, COOKIE_SECURE: 'false', TRUST_PROXY: '0' })
+      loadEnv({ ...PRODUCTION, COOKIE_SECURE: 'false', TRUST_PROXY: 'false' })
         .TRUST_PROXY
-    ).toBe(0);
+    ).toBe(false);
+  });
+
+  it('refuses a hop count left over from the old contract', () => {
+    // The one malformed value Fastify would not catch: its matcher reads a bare
+    // integer as an address (`1` is `0.0.0.1`), so an untouched `TRUST_PROXY=1`
+    // would boot, trust an address nothing connects from, and write no session.
+    expect(() => loadEnv({ TRUST_PROXY: '1' })).toThrowError(/TRUST_PROXY/);
+    expect(() => loadEnv({ ...PRODUCTION, TRUST_PROXY: '0' })).toThrowError(
+      /TRUST_PROXY/
+    );
+  });
+
+  it('hands an addressed proxy to Fastify as written', () => {
+    // Only the two literals mean anything here; a preset or an address list is
+    // Fastify's vocabulary and has to reach its matcher unparsed, or a
+    // deployment naming its proxy exactly would silently trust something else.
+    expect(loadEnv({ TRUST_PROXY: 'true' }).TRUST_PROXY).toBe(true);
+    expect(loadEnv({ TRUST_PROXY: 'uniquelocal' }).TRUST_PROXY).toBe(
+      'uniquelocal'
+    );
+    expect(
+      loadEnv({ TRUST_PROXY: '127.0.0.1, 172.16.0.0/12' }).TRUST_PROXY
+    ).toBe('127.0.0.1, 172.16.0.0/12');
   });
 
   it('reports every problem at once', () => {
