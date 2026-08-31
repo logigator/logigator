@@ -3,6 +3,16 @@
 Todos los cambios notables del editor de Logigator se registran aquí. La versión
 más reciente se muestra primero.
 
+## 2.1.1 — 2026-08-31
+
+### Correcciones
+
+- El editor ahora se abre en el idioma y el tema que usas en el resto de
+  Logigator, y si cambias cualquiera de los dos dentro del editor, cambia en todo
+  el sitio.
+- En la primera visita, el editor elige su idioma entre todos los idiomas que pide
+  tu navegador, y no solo el primero.
+
 ## 2.1.0 — 2026-08-06
 
 ### Funciones

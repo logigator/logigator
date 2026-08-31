@@ -677,7 +677,8 @@ const de: TranslationSchema = {
       'Ein- und Ausgangsstecker wurden nicht eingefügt — sie werden nur innerhalb benutzerdefinierter Komponenten unterstützt.'
   },
   wireRepair: {
-    repaired: '{{count}} Leitungsproblem(e) behoben.',
+    repaired:
+      '{{count}} Leitungsproblem(e) behoben. Bitte prüfe vor dem Speichern, ob deine Schaltung noch wie erwartet funktioniert.',
     loadDetected:
       'Diese Schaltung hat {{count}} Leitungsproblem(e), wodurch sich Verbindungen unerwartet verhalten können.',
     repairAction: 'Leitungen reparieren',

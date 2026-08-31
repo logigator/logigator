@@ -23,8 +23,8 @@ const LAST_SEEN_KEY = 'logigator.changelog.lastSeenVersion';
  * toggling simulation auto-start, `sneaks` on discovering an easter egg. None is
  * written by the rebuilt editor or the marketing site, so their presence
  * identifies a returning legacy user — unlike `cc_cookie` (the cookie-consent
- * bar runs site-wide) or `preferences` (the backend sets it for language), both
- * of which any first-time visitor also has.
+ * bar runs site-wide) or `preferences` (language and theme, written by the
+ * server and by this editor alike), both of which any first-time visitor has.
  */
 const LEGACY_COOKIES = ['tutorials', 'autoStartSim', 'sneaks'] as const;
 

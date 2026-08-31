@@ -18,8 +18,11 @@ import { LoggingService } from './logging.service';
  *
  * Error toasts additionally emit {@link AnalyticsEvent.ErrorShown}, so failures
  * the app *handles* — which never reach the {@link GlobalErrorHandler} and thus
- * never become a PostHog `$exception` — are still visible in analytics. Only
- * `context` travels, never the message; see the event's own docs.
+ * never become a PostHog `$exception` — are still visible in analytics. The
+ * `context`, the shown message and the cause's identity travel, each truncated
+ * by the sanitizer. They are the one place free-form text — toast details
+ * interpolate project and component names, file names, diagnostic text —
+ * reaches analytics.
  *
  * Inject this where the user needs feedback; inject {@link LoggingService}
  * directly for console-only output.
@@ -35,7 +38,11 @@ export class ToastService {
 
   public error(message: string, context: string, cause?: unknown): void {
     this.logging.error(cause ?? message, context);
-    this.analytics.capture(AnalyticsEvent.ErrorShown, { context });
+    this.analytics.capture(AnalyticsEvent.ErrorShown, {
+      context,
+      message,
+      cause: formatCause(cause)
+    });
     this.messageService.add({
       severity: 'danger',
       summary: this.translation.translate('logging.error'),
@@ -92,4 +99,23 @@ export class ToastService {
       life: 5000
     });
   }
+}
+
+/**
+ * Renders a cause for {@link AnalyticsEvent.ErrorShown}: the error's identity,
+ * never its stack — stacks belong to `$exception`, and an object of unknown
+ * shape becomes its class name rather than its contents (a name the production
+ * bundler mangles, so that branch says little beyond "some object"; call sites
+ * wanting a readable cause pass a string or an `Error`). `undefined` is dropped
+ * by the sanitizer, so a cause-less toast simply omits the property.
+ */
+function formatCause(cause: unknown): string | undefined {
+  if (cause === undefined) return undefined;
+  if (cause instanceof Error) return `${cause.name}: ${cause.message}`;
+  if (typeof cause === 'string') return cause;
+  if (typeof cause !== 'object') return typeof cause;
+  // Deliberately no `String(cause)`: it throws on a null prototype and dumps a
+  // function's source. This runs on the error path and outside the guard in
+  // `AnalyticsService.capture`, so it must be total.
+  return cause?.constructor?.name ?? 'object';
 }

@@ -136,14 +136,20 @@ Key behaviors:
 @Middleware({type: 'before'})
 export class DefaultPreferencesMiddleware implements ExpressMiddlewareInterface {
     use(request: Request, response: Response, next: (err?: any) => any): any {
-        if (!request.cookies.preferences ||
-            !availableLanguages.includes(request.cookies.preferences.lang as LanguageCode)) {
-            updatePreferences(request, response, {
-                lang: (request.acceptsLanguages().find(
-                    accepted => availableLanguages.includes(accepted as LanguageCode)
-                ) ?? 'en') as LanguageCode,
-                theme: 'dark'
-            });
+        const preferences = request.cookies.preferences ?? {};
+        const patch: Partial<UserPreferences> = {};
+
+        if (!availableLanguages.includes(preferences.lang as LanguageCode)) {
+            patch.lang = (request.acceptsLanguages().find(
+                accepted => availableLanguages.includes(accepted as LanguageCode)
+            ) ?? 'en') as LanguageCode;
+        }
+        if (!availableThemes.includes(preferences.theme as Theme)) {
+            patch.theme = defaultTheme;
+        }
+
+        if (Object.keys(patch).length > 0) {
+            updatePreferences(request, response, patch);
         }
         next();
     }
@@ -152,9 +158,9 @@ export class DefaultPreferencesMiddleware implements ExpressMiddlewareInterface 
 
 Key behaviors:
 - Runs on **every request** including `/api` — the preferences cookie is consumed by both frontend Handlebars templates and API error responses (for i18n).
-- When no cookie exists, the language is derived from the browser's `Accept-Language` header, falling back to `'en'`.
-- The `updatePreferences` function (in `src/functions/update-preferences.ts`) sets the cookie with `httpOnly: false` and a 1-year maxAge. The `httpOnly: false` flag is intentional — the client-side JavaScript needs to read the cookie for the Angular editor application.
-- Also checks whether an existing cookie has an invalid language code (e.g., after a locale is removed from `availableLanguages`), and reinitializes if so.
+- When no cookie exists, the language is derived from the browser's `Accept-Language` header, falling back to `'en'`; the theme defaults to `dark`.
+- The `updatePreferences` function (in `src/functions/update-preferences.ts`) sets the cookie with `httpOnly: false` and a 1-year maxAge. The `httpOnly: false` flag is intentional — the client-side JavaScript needs to read the cookie for the Angular editor application. It merges over the current cookie only when that is an object, since cookie-parser passes anything but its own `j:` JSON encoding through as a plain string.
+- Each preference is validated and repaired **on its own** (e.g. after a locale is removed from `availableLanguages`, or against a hand-edited cookie). This matters because the cookie is shared with the editor at `/editor`, which writes `lang` and `theme` separately: repairing the language must not overwrite a theme the visitor chose there.
 
 ### 3. TranslationMiddleware
 

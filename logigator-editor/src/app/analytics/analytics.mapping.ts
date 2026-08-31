@@ -20,16 +20,6 @@ export const AnalyticsEvent = {
   SettingChanged: 'setting_changed',
   DialogOpened: 'dialog_opened',
   DialogClosed: 'dialog_closed',
-  /**
-   * A user-facing error toast was shown, carrying only the originating class as
-   * `context`. Every handled failure emits it, so it measures how often users
-   * hit errors at all and which subsystem produced them — the breadth signal
-   * that `$exception` (uncaught errors only) cannot give. The message itself is
-   * deliberately absent: toast details interpolate user-authored content
-   * (project and component names, file names, diagnostic text). Errors worth a
-   * stack trace and an issue are reported separately through
-   * `AnalyticsService.captureError`.
-   */
   ErrorShown: 'error_shown',
   BugReportSubmitted: 'bug_report_submitted',
   WireRepairOffered: 'wire_repair_offered',
@@ -85,7 +75,7 @@ export const DialogId = {
 
 export type DialogId = (typeof DialogId)[keyof typeof DialogId];
 
-const MAX_STRING_LENGTH = 64;
+const MAX_STRING_LENGTH = 256;
 
 /**
  * Enforces the "properties are structural/categorical only" rule as

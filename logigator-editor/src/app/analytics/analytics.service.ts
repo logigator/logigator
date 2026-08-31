@@ -2,7 +2,10 @@ import { effect, inject, Injectable, Injector, untracked } from '@angular/core';
 import type { PostHog } from 'posthog-js';
 import { WorkModeService } from '../work-mode/work-mode.service';
 import { WorkMode } from '../work-mode/work-mode.enum';
-import { SimulationService } from '../simulation/simulation.service';
+import {
+  SimulationService,
+  SimulationState
+} from '../simulation/simulation.service';
 import { OnboardingService } from '../onboarding/onboarding.service';
 import { ProjectService } from '../project/project.service';
 import { TranslationService } from '../translation/translation.service';
@@ -259,7 +262,11 @@ export class AnalyticsService {
         const state = simulation.state();
         const prev = previous;
         previous = state;
-        if (state === 'ready' && prev !== 'ready' && prev !== 'running')
+        // Keyed on the session becoming active rather than on `ready` itself:
+        // with auto-start on, `ready` and `running` are set in one synchronous
+        // block, and the effect only ever observes the latter. Treating both as
+        // active also keeps pause/play from re-reporting a start.
+        if (isActive(state) && !isActive(prev))
           this.capture(AnalyticsEvent.SimulationStarted, {
             runMode: untracked(() => simulation.mode())
           });
@@ -311,4 +318,9 @@ export class AnalyticsService {
       operationProperties(action.serialize())
     );
   }
+}
+
+/** Whether a simulation session is up — `starting` is not yet a session. */
+function isActive(state: SimulationState): boolean {
+  return state === 'ready' || state === 'running';
 }
