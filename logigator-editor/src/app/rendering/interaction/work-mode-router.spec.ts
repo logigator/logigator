@@ -31,6 +31,7 @@ import { Project } from '../../project/project';
 import { WorkMode } from '../../work-mode/work-mode.enum';
 import { PointerInput } from './pointer-input';
 import { WorkModeRouter } from './work-mode-router';
+import { DragSession } from '../drag-session';
 import { groupGridBounds } from '../sessions/rotate-elements';
 
 /** PointerInput whose grid and global both sit at (x, y). */
@@ -1104,5 +1105,63 @@ describe('WorkModeRouter paste placement', () => {
 
     router.setProject(null);
     other.destroy({ children: true });
+  });
+});
+
+describe('WorkModeRouter session retirement', () => {
+  let project: Project;
+  let router: WorkModeRouter;
+
+  beforeEach(() => {
+    configureTestBed();
+    project = new Project();
+    router = new WorkModeRouter();
+    router.setProject(project);
+  });
+
+  afterEach(() => {
+    router.destroy();
+    project.destroy({ children: true });
+  });
+
+  /** A session whose terminal callback fails the way a commit can. */
+  function makeFailingSession(on: 'end' | 'cancel'): DragSession {
+    return {
+      onMove: vi.fn(),
+      onEnd: vi.fn(() => {
+        if (on === 'end') throw new Error('commit failed');
+      }),
+      onCancel: vi.fn(() => {
+        if (on === 'cancel') throw new Error('cancel failed');
+      }),
+      canEnd: () => true
+    };
+  }
+
+  it('retires a session whose commit throws', () => {
+    const session = makeFailingSession('end');
+    router.startSession(session);
+
+    expect(() => router.up()).toThrow('commit failed');
+
+    expect(router.hasActiveSession).toBe(false);
+    expect(project.actionManager.locked).toBe(false);
+
+    // Nothing left for the next release to re-enter.
+    router.up();
+    expect(session.onEnd).toHaveBeenCalledTimes(1);
+  });
+
+  it('retires a session whose cancel throws', () => {
+    const session = makeFailingSession('cancel');
+    router.startSession(session);
+
+    expect(() => router.abortActiveDrag()).toThrow('cancel failed');
+
+    expect(router.hasActiveSession).toBe(false);
+    expect(project.actionManager.locked).toBe(false);
+
+    router.abortActiveDrag();
+    expect(session.onCancel).toHaveBeenCalledTimes(1);
   });
 });

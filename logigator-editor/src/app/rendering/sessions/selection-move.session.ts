@@ -250,11 +250,11 @@ export class SelectionMoveSession implements DragSession {
         'ended move with zero delta: nothing committed',
         'SelectionMoveSession'
       );
-      this.project.connectionPoints.restoreDragCps(this._capturedCps);
+      this.project.connectionPoints.restoreDragCps(this._takeCapturedCps());
       return;
     }
 
-    this.project.connectionPoints.discardDragCps(this._capturedCps);
+    this.project.connectionPoints.discardDragCps(this._takeCapturedCps());
 
     // The integrator may split wires whose interiors a moved port/endpoint now
     // crosses, and merge wires at old positions it no longer blocks.
@@ -435,6 +435,14 @@ export class SelectionMoveSession implements DragSession {
     this.project.floatingLayer.setSelectionRectOffset(this.dragLayer.position);
     this.dragLayer.removeChildren();
     this.project.reattachFromDrag(this._components, this._wires);
-    this.project.connectionPoints.restoreDragCps(this._capturedCps);
+    this.project.connectionPoints.restoreDragCps(this._takeCapturedCps());
+  }
+
+  // Handing the dots over empties the field, so a second end/cancel on the
+  // same session works on nothing rather than on freed instances.
+  private _takeCapturedCps(): ConnectionPoint[] {
+    const captured = this._capturedCps;
+    this._capturedCps = [];
+    return captured;
   }
 }
