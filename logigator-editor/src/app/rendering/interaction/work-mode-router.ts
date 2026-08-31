@@ -205,9 +205,9 @@ export class WorkModeRouter implements PointerToolTarget, ToolHost {
     // Invalidate any not-yet-started placement load too — Escape / mode /
     // project switches must cancel a gesture whose session has not opened yet.
     this._gestureSeq++;
-    if (!this._activeDrag) return;
-    this._activeDrag.onCancel();
-    this._stopDrag();
+    const session = this._activeDrag;
+    if (!session) return;
+    this._endDrag(() => session.onCancel());
   }
 
   public down(input: PointerInput): void {
@@ -249,8 +249,7 @@ export class WorkModeRouter implements PointerToolTarget, ToolHost {
       else session.onInvalidRelease?.();
       return;
     }
-    session.onEnd();
-    this._stopDrag();
+    this._endDrag(() => session.onEnd());
   }
 
   public cancel(): void {
@@ -297,18 +296,15 @@ export class WorkModeRouter implements PointerToolTarget, ToolHost {
   }
 
   /**
-   * After a discrete rotate/move on an already-open session: commit the moment
-   * a floating (not-yet-grabbed) selection edit becomes collision-free, so a
-   * recovery turn/step lands like the first op does instead of leaving a valid
-   * group floating until it is reverted by a click-off. `_stopDrag` (not a bare
-   * `onEnd`) is required here — unlike the first-op path, `_startDrag` already
-   * set `_activeDrag` and locked the action manager.
+   * Commits the moment a floating (not-yet-grabbed) selection edit becomes
+   * collision-free, so a recovery turn/step lands like the first op did.
+   * `_endDrag` rather than a bare `onEnd`: `_startDrag` already set
+   * `_activeDrag` and locked the action manager.
    */
   private _commitIfFloatingAndValid(): void {
     const session = this._activeDrag;
     if (!session?.isAwaitingGrab?.() || !session.canEnd()) return;
-    session.onEnd();
-    this._stopDrag();
+    this._endDrag(() => session.onEnd());
   }
 
   /**
@@ -450,6 +446,19 @@ export class WorkModeRouter implements PointerToolTarget, ToolHost {
       // until the session ends (its commit registers before the unlock).
       this._project.actionManager.locked = true;
       this._project.triggerTicker('on');
+    }
+  }
+
+  /**
+   * Runs a session's terminal callback and retires it either way: a throw
+   * mid-commit still clears `_activeDrag`, so the next press, release or mode
+   * switch cannot re-enter a session whose state is already half-unwound.
+   */
+  private _endDrag(terminal: () => void): void {
+    try {
+      terminal();
+    } finally {
+      this._stopDrag();
     }
   }
 
