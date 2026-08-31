@@ -28,12 +28,18 @@ const ANALYTICS_CATEGORY = 'analytics';
  */
 const APP_ID = 'editor-v2';
 
+/** Ceiling on the {@link AnalyticsService.captureWhenReady} queue, so a session
+ * that never answers the consent prompt cannot grow it without bound. */
+const MAX_DEFERRED_EVENTS = 20;
+
 /**
  * Vendor-neutral product-analytics sink over `posthog-js`. PostHog is loaded
  * and initialised only once the user grants the `analytics` consent category,
  * so instrumentation may run unconditionally: every entry point is gated on
- * {@link initialized} and drops on the floor before consent. The package sits
- * behind a dynamic import, so a session that declines never downloads it.
+ * {@link initialized} and drops on the floor before consent, except
+ * {@link captureWhenReady}, which holds its event until PostHog is up. The
+ * package sits behind a dynamic import, so a session that declines never
+ * downloads it.
  *
  * Construction is dependency-free and the event sources are resolved lazily in
  * {@link init}, so the many services injecting this sink cannot form a DI cycle
@@ -54,6 +60,12 @@ export class AnalyticsService {
    * PostHog becomes available. */
   private uiLanguage: string | null = null;
 
+  /** Events held by {@link captureWhenReady} until PostHog comes up. */
+  private readonly deferred: {
+    event: string;
+    properties?: Record<string, unknown>;
+  }[] = [];
+
   /** Sends an event, dropped silently until PostHog is initialised on consent.
    * Never throws: some sources run inside a critical user gesture, and a
    * failing third-party `capture` must not break the operation. */
@@ -66,6 +78,25 @@ export class AnalyticsService {
       );
     } catch {
       // Analytics must never break the operation that emitted the event.
+    }
+  }
+
+  /**
+   * Sends an event that happens too early to have been consented to, holding it
+   * until PostHog is initialised instead of dropping it on the floor. A startup
+   * fact — which browser the session runs — is reportable no other way: the
+   * consent answer and the package import both land after it.
+   */
+  public captureWhenReady(
+    event: string,
+    properties?: Record<string, unknown>
+  ): void {
+    if (this.initialized) {
+      this.capture(event, properties);
+      return;
+    }
+    if (this.deferred.length < MAX_DEFERRED_EVENTS) {
+      this.deferred.push({ event, properties });
     }
   }
 
@@ -168,6 +199,19 @@ export class AnalyticsService {
     });
     this.initialized = true;
     this.syncConsent();
+    this.flushDeferred();
+  }
+
+  /**
+   * Replays what {@link captureWhenReady} held. Runs after
+   * {@link syncConsent}, so the super properties are stamped first and a
+   * consent withdrawn while the import was in flight has already opted out —
+   * which is what drops the queue for a session that declines.
+   */
+  private flushDeferred(): void {
+    for (const { event, properties } of this.deferred.splice(0)) {
+      this.capture(event, properties);
+    }
   }
 
   /**

@@ -739,6 +739,10 @@ const de: TranslationSchema = {
     skippedCustomMany:
       '{{count}} benutzerdefinierte Komponenten konnten nicht geladen werden — ihre Definitionen fehlen — und wurden übersprungen.'
   },
+  browserSupport: {
+    unsupported:
+      'Dieser Browser wird nicht offiziell unterstützt — es können Fehler auftreten. Versuche bei Problemen, deinen Browser zu aktualisieren.'
+  },
   editor: {
     rendererInitFailed:
       'Der Grafik-Renderer konnte nicht gestartet werden. Dein Browser oder deine GPU wird möglicherweise nicht unterstützt.',

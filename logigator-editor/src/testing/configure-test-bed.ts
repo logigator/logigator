@@ -21,6 +21,9 @@ class NoopAnalyticsService {
   capture(): void {
     /* empty */
   }
+  captureWhenReady(): void {
+    /* empty */
+  }
   captureError(): void {
     /* empty */
   }

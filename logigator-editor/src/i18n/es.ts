@@ -738,6 +738,10 @@ const es: TranslationSchema = {
     skippedCustomMany:
       'No se pudieron cargar {{count}} componentes personalizados (faltan sus definiciones) y se omitieron.'
   },
+  browserSupport: {
+    unsupported:
+      'Este navegador no es compatible oficialmente: pueden producirse errores. Si tienes problemas, prueba a actualizar tu navegador.'
+  },
   editor: {
     rendererInitFailed:
       'No se pudo iniciar el renderizador de gráficos. Puede que tu navegador o GPU no sean compatibles.',

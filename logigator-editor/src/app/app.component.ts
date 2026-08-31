@@ -60,6 +60,7 @@ import { LoggingService } from './logging/logging.service';
 import { ToastService } from './logging/toast.service';
 import { SessionLifecycleService } from './user/session-lifecycle.service';
 import { ChangelogService } from './changelog/changelog.service';
+import { BrowserSupportService } from './browser-support/browser-support.service';
 import { TutorialRunnerService } from './onboarding/tutorial-runner.service';
 import { HintService } from './onboarding/hint.service';
 import { OnboardingNudgeComponent } from './onboarding/onboarding-nudge.component';
@@ -131,6 +132,7 @@ export class AppComponent {
   private readonly toastService = inject(ToastService);
   private readonly translation = inject(TranslationService);
   private readonly changelogService = inject(ChangelogService);
+  private readonly browserSupport = inject(BrowserSupportService);
   // Injected for its side effects: the runner reacts to the active-tutorial
   // signal, so it must live from startup to drive a nudge-launched run.
   private readonly tutorialRunner = inject(TutorialRunnerService);
@@ -240,6 +242,8 @@ export class AppComponent {
 
     // The tutorial never auto-starts; its only entry is the first-run nudge.
     this.changelogService.maybeAutoOpen();
+
+    this.browserSupport.warnIfUnsupported();
   }
 
   /** A Drawer reporting itself hidden clears the active sheet. */

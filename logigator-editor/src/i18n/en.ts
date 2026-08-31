@@ -726,6 +726,10 @@ const en = {
     skippedCustomMany:
       '{{count}} custom components could not be loaded — their definitions are missing — and were skipped.'
   },
+  browserSupport: {
+    unsupported:
+      'This browser is not officially supported — you may encounter errors. If you run into problems, try updating your browser.'
+  },
   editor: {
     rendererInitFailed:
       'Could not start the graphics renderer. Your browser or GPU may be unsupported.',

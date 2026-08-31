@@ -741,6 +741,10 @@ const fr: TranslationSchema = {
     skippedCustomMany:
       "{{count}} composants personnalisés n'ont pas pu être chargés — leurs définitions sont manquantes — et ont été ignorés."
   },
+  browserSupport: {
+    unsupported:
+      "Ce navigateur n'est pas officiellement pris en charge — des erreurs peuvent survenir. Si vous rencontrez des problèmes, essayez de mettre à jour votre navigateur."
+  },
   editor: {
     rendererInitFailed:
       "Impossible de démarrer le moteur de rendu graphique. Votre navigateur ou votre GPU n'est peut-être pas pris en charge.",
