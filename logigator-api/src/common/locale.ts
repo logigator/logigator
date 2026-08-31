@@ -32,16 +32,45 @@ function localeFromPreferencesCookie(raw: string | undefined): Locale | null {
   }
 }
 
-/** The first supported language named in an `Accept-Language` header. */
-function localeFromAcceptLanguage(header: string | undefined): Locale | null {
-  if (!header) return null;
-  const accepted = header
+/**
+ * The languages an `Accept-Language` header asks for, most preferred first.
+ *
+ * Quality values are honoured, since a browser configured with a secondary
+ * language sends it at a lower `q` rather than in list order. `*` is dropped:
+ * it means "anything", which is what falling through to the default already is.
+ *
+ * The site reads the header by these same rules, so one visitor gets one
+ * language across the origin — the pages they read and the mails they get.
+ */
+function parseAcceptLanguage(header: string | undefined): string[] {
+  if (!header) return [];
+  return header
     .split(',')
-    .map((part) => part.split(';')[0].trim().toLowerCase().slice(0, 2));
-  return (
-    accepted.find((tag): tag is Locale => LOCALES.includes(tag as Locale)) ??
-    null
-  );
+    .map((part) => {
+      const [tag, ...parameters] = part.trim().split(';');
+      const quality = parameters
+        .map((parameter) => /^\s*q=([0-9.]+)\s*$/.exec(parameter))
+        .find(Boolean);
+      return { tag: tag.trim(), quality: quality ? Number(quality[1]) : 1 };
+    })
+    .filter((entry) => entry.tag && entry.tag !== '*' && entry.quality > 0)
+    .sort((a, b) => b.quality - a.quality)
+    .map((entry) => entry.tag);
+}
+
+/**
+ * The first supported language named in an `Accept-Language` header.
+ *
+ * A tag is cut at its region subtag rather than at two characters, so a
+ * three-letter language stays itself instead of becoming a two-letter one that
+ * means something else.
+ */
+function localeFromAcceptLanguage(header: string | undefined): Locale | null {
+  for (const tag of parseAcceptLanguage(header)) {
+    const lang = tag.split('-')[0].toLowerCase();
+    if (LOCALES.includes(lang as Locale)) return lang as Locale;
+  }
+  return null;
 }
 
 /**

@@ -51,6 +51,19 @@ describe('localeFromRequest', () => {
     expect(localeFromRequest(broken)).toBe('de');
   });
 
+  it('orders the header by quality rather than by position', () => {
+    // A browser configured with a secondary language sends it at a lower `q`
+    // instead of further down the list, so reading the list in order answers
+    // in the language the visitor asked for least.
+    expect(localeFromRequest(request({}, 'de;q=0.1, fr;q=0.9'))).toBe('fr');
+  });
+
+  it('cuts a tag at its region subtag, not after two characters', () => {
+    // `frr` is Northern Frisian; its first two characters name French, which
+    // this deployment does speak and this visitor did not ask for.
+    expect(localeFromRequest(request({}, 'frr'))).toBe('en');
+  });
+
   it('skips languages the site does not speak', () => {
     expect(localeFromRequest(request({}, 'it-IT,it;q=0.9,fr;q=0.8'))).toBe(
       'fr'
