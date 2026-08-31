@@ -49,6 +49,30 @@ services:
     working_dir: /app
     command: "sh -c 'corepack enable && exec yarn start:editor'"
 
+  # The website. Angular SSR, so a Node process rather than a static bundle:
+  # every page is rendered per request, in the visitor's language and theme and
+  # with their session already resolved.
+  web:
+    image: node:24
+    networks:
+      - net
+    depends_on:
+      deps:
+        condition: service_completed_successfully
+    volumes:
+      - ./:/app
+    working_dir: /app
+    environment:
+      # The server render reaches the API inside the network; the browser
+      # reaches it as a path on the same origin.
+      - API_ORIGIN=http://api:3000
+      # Angular refuses a request whose Host it was not told to expect, and
+      # behind Caddy the host and scheme only arrive as forwarded headers —
+      # which it likewise only reads once trusted.
+      - NG_ALLOWED_HOSTS=logigator.test
+      - NG_TRUST_PROXY_HEADERS=x-forwarded-host,x-forwarded-proto
+    command: "sh -c 'corepack enable && exec yarn start:web'"
+
   api:
     image: node:24
     networks:

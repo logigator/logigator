@@ -25,6 +25,7 @@ COPY ["./logigator-core/package.json", "./logigator-core/"]
 COPY ["./logigator-contract/package.json", "./logigator-contract/"]
 COPY ["./logigator-api/package.json", "./logigator-api/"]
 COPY ["./logigator-editor/package.json", "./logigator-editor/"]
+COPY ["./logigator-web/package.json", "./logigator-web/"]
 # @angular/router is a file: dependency whose lockfile hash covers the whole
 # stub dir, so it must be copied in full (not package.json-only) for the
 # immutable install to reproduce the pinned hash.

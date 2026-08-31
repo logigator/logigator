@@ -1,0 +1,33 @@
+<div class="flex flex-col gap-3" *webTranslate="let t">
+  <div class="flex items-center justify-between gap-6">
+    <label class="text-sm text-text" for="web-settings-dark-mode">
+      {{ t('header.darkMode') }}
+    </label>
+    <lg-toggle-switch
+      inputId="web-settings-dark-mode"
+      [ngModel]="theming.isDark()"
+      (ngModelChange)="setDark($event)"
+    />
+  </div>
+
+  <div class="flex flex-col gap-1">
+    <p class="text-sm text-text">{{ t('header.language') }}</p>
+    <ul class="flex flex-col">
+      @for (language of languages; track language.id) {
+      <li>
+        <a
+          class="block rounded px-2 py-1 text-sm hover:bg-content-hover"
+          [class.text-primary]="language.id === activeLang"
+          [class.text-muted]="language.id !== activeLang"
+          [attr.aria-current]="language.id === activeLang ? 'true' : null"
+          [attr.hreflang]="language.id"
+          [href]="languageHref(language.id)"
+          (click)="rememberLanguage(language.id)"
+        >
+          {{ language.label }}
+        </a>
+      </li>
+      }
+    </ul>
+  </div>
+</div>

@@ -1,0 +1,62 @@
+<ng-container *webTranslate="let t">
+  <lg-drawer
+    position="left"
+    [header]="t('header.navigation')"
+    [visible]="visible()"
+    (visibleChange)="visibleChange.emit($event)"
+  >
+    <nav class="flex flex-col gap-1 p-2">
+      <a
+        routerLinkActive="text-primary!"
+        [class]="menuLinkClass"
+        [routerLink]="links.features"
+        (click)="close()"
+        >{{ t('header.features') }}</a
+      >
+      <a
+        routerLinkActive="text-primary!"
+        [class]="menuLinkClass"
+        [routerLink]="links.community"
+        (click)="close()"
+        >{{ t('header.community') }}</a
+      >
+
+      <lg-divider />
+
+      @if (session.user()) {
+      <a
+        routerLinkActive="text-primary!"
+        [class]="menuLinkClass"
+        [routerLink]="links.myProjects"
+        (click)="close()"
+        >{{ t('header.myProjects') }}</a
+      >
+      <a
+        routerLinkActive="text-primary!"
+        [class]="menuLinkClass"
+        [routerLink]="links.myComponents"
+        (click)="close()"
+        >{{ t('header.myComponents') }}</a
+      >
+      <a
+        routerLinkActive="text-primary!"
+        [class]="menuLinkClass"
+        [routerLink]="links.account"
+        (click)="close()"
+        >{{ t('header.account') }}</a
+      >
+      } @else {
+      <a [class]="menuLinkClass" [routerLink]="links.login" (click)="close()"
+        >{{ t('header.login') }}</a
+      >
+      <a [class]="menuLinkClass" [routerLink]="links.register" (click)="close()"
+        >{{ t('header.register') }}</a
+      >
+      }
+
+      <lg-divider />
+
+      <web-settings-panel class="block px-3 py-2" />
+    </nav>
+  </lg-drawer>
+</ng-container>

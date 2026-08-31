@@ -2,9 +2,10 @@
 
 ## Repository Layout
 
-The repo root is a **shared Angular CLI workspace** + **Yarn 4 workspace** (corepack). Five members:
+The repo root is a **shared Angular CLI workspace** + **Yarn 4 workspace** (corepack). Six members:
 
 - `logigator-editor/` — Angular 22 editor (PixiJS 8, Tailwind 4), current focus
+- `logigator-web/` — Angular 22 website, server-rendered (`@angular/ssr`), replacing the legacy pages
 - `logigator-ui/` — `@logigator/ui`, in-house Angular component library
 - `logigator-core/` — `@logigator/core`, rendering-free circuit code; zero runtime dependencies
 - `logigator-contract/` — `@logigator/contract`, the API surface as zod schemas; zod only
@@ -12,13 +13,14 @@ The repo root is a **shared Angular CLI workspace** + **Yarn 4 workspace** (core
 
 **One shared-code rule:** the three libraries are never built. Every consumer compiles their
 **source** through the root tsconfig `paths` mapping, and each application's bundler (Angular's for
-the editor, Rspack's for the API) inlines what it uses. No `dist/`, no `exports`, no build ordering.
+the editor and the site, Rspack's for the API) inlines what it uses. No `dist/`, no `exports`, no
+build ordering.
 
-Only `logigator-editor` and `logigator-ui` are Angular CLI projects (`angular.json`); the other
-three run on plain Yarn scripts. Each package holds the same config set: one primary tsconfig
-(`tsconfig.json`, or `tsconfig.app.json`/`tsconfig.lib.json` where angular.json points at it),
-`tsconfig.spec.json`, `eslint.config.mjs`, `vitest.config.ts`. Only the two applications produce an
-artifact, in the root `dist/<project>/`.
+`logigator-editor`, `logigator-web` and `logigator-ui` are Angular CLI projects (`angular.json`);
+the other two run on plain Yarn scripts. Each package holds the same config set: one primary
+tsconfig (`tsconfig.json`, or `tsconfig.app.json`/`tsconfig.lib.json` where angular.json points at
+it), `tsconfig.spec.json`, `eslint.config.mjs`, `vitest.config.ts`. Only the three applications
+produce an artifact, in the root `dist/<project>/`.
 
 Two deprecated packages stay **independent** (own `yarn.lock`/`.yarnrc.yml`, _not_ workspace
 members): `logigator-backend/` (Express/TypeORM/Handlebars, still serving everything outside `/api`)
@@ -35,25 +37,31 @@ published on localhost, so host-run tooling (`db:generate`, `db:migrate`, `test:
 them at `postgresql://logigator:logigator@localhost:5432/logigator` and `redis://localhost:6379`.
 `data/` holds both data directories and is ignored.
 
+Caddy serves **`logigator-web` at the origin root**, so the legacy backend is off the dev origin
+entirely — the same shape the Phase 6 cutover produces, and the reason the site owns the consent
+bundle and the icons the other stacks link to by absolute path.
+
 ## Commands
 
 Every workspace member runs **from the repo root**. Uniform surface: `<verb>:<package>` runs the
 verb for one package, and the **bare verb runs it for every package that has it** — no `:all`
-suffix, no bare shorthand for a single package (`test:*` is always a single run). Only the two
+suffix, no bare shorthand for a single package (`test:*` is always a single run). Only the three
 applications build; `typecheck` exists only where tsc is the sole type gate, since the Angular
 projects are type-checked by their build and test targets.
 
 ```bash
 yarn start:editor                   # ng serve  (start:editor:prod for the production config)
+yarn start:web                      # ng serve, SSR in the dev server (same middleware as production)
 yarn start:api                      # rspack --watch + node --watch (restarts on core edits too)
-yarn build                          # = build:editor + build:api
+yarn build                          # = build:editor + build:api + build:web
 yarn build:editor                   # production build → dist/logigator-editor
 yarn build:api                      # rspack bundle → dist/logigator-api
+yarn build:web                      # browser + server bundles → dist/logigator-web
 yarn test                           # every package, single run each
 yarn test:editor                    # add --include='**/some.spec.ts' for one file
-yarn test:ui / test:core / test:contract / test:api
+yarn test:web / test:ui / test:core / test:contract / test:api
 yarn test:e2e:api                   # API against real Postgres + Redis (needs DATABASE_URL, REDIS_URL)
-yarn lint                           # eslint over all five; lint:fix writes the fixes
+yarn lint                           # eslint over all six; lint:fix writes the fixes
 yarn typecheck                      # tsc over core, contract, api (specs included)
 yarn format / format:fix            # Prettier over the whole repo
 ```
@@ -169,11 +177,93 @@ Angular 22 standalone components + PixiJS 8 canvas.
   switch on either side moves both. Everything else the editor persists (`logigator.*`) is
   localStorage and editor-only.
 
+### Website (logigator-web)
+
+Angular 22, standalone and zoneless like the editor, rendered per request by `@angular/ssr` and
+served by a small Node process at the **origin root**. It replaces the legacy Handlebars pages as a
+feature checklist, not a route map. Phase 5a laid the foundation — i18n, shell, consent, SEO head;
+the pages themselves arrive in 5b–5f (`plans/backend-rewrite.md`).
+
+**Entry points.** `src/main.ts` (browser), `src/main.server.ts` + `app.config.server.ts` (server),
+`src/server.ts` (the Express host, which the CLI's dev server imports too, so a redirect or a static
+path behaves the same in development).
+
+**`src/app/` layers:**
+
+- `translation/` — Transloco with the editor's typed tooling **duplicated and adapted**, not
+  extracted: `@logigator/ui` cannot host it without gaining a Transloco dependency. Templates use
+  `*webTranslate="let t"`; TypeScript goes through `TranslationService`. `languages.ts` is the
+  language set plus `Accept-Language` parsing; `language-url.ts` is the one place a `/de/…` prefix
+  is added, stripped or swapped; `language-negotiation.ts` is the cookie-then-header order the SSR
+  redirect uses. `TranslationLoaderService` loads a locale chunk and, on the server, leaves it in
+  the transfer state, so the browser reads the table out of the HTML instead of fetching it again.
+- `theming/` — the `dark-mode` class on `<html>`, applied during the server render, so the first
+  byte carries the right scheme.
+- `storage/` — `preferences-cookie.ts` is the origin-wide cookie as pure data (the SSR server reads
+  it before the app exists); `CookieService` reads the request header on the server and
+  `document.cookie` in the browser, and writes only in the browser.
+- `api/` — `ApiBaseService` mirroring the editor's: contract-typed, every response validated at the
+  boundary. `apiOriginInterceptor` is what makes a server render able to call the API — it rewrites
+  the relative path onto `API_ORIGIN` and forwards the visitor's cookie. It is registered on both
+  platforms and inert in the browser, where `API_ORIGIN` is not provided.
+- `user/` — `SessionService`, resolved before the first render so the top bar is personalized in the
+  first byte, and handed to the browser through an explicit transfer-state key.
+- `seo/` — `SeoService` (title, description, canonical, the four `hreflang` alternates plus
+  `x-default`) driven by a `TitleStrategy`, so it runs once per completed navigation, the server
+  render included. Routes carry a `seo` data entry naming their title key.
+- `layout/` — the shell: top bar, compact navigation drawer, footer, and the one settings panel
+  (language + theme) both of them render.
+- `pages/` — one folder per page. The 404 sets the response status through `RESPONSE_INIT`; a soft
+  404 would be indexable.
+
+**Non-obvious details:**
+
+- **Routing is `/:lang/…` for every page.** A `canMatch` guard rejects a first segment that is not a
+  language, so `/nonsense` 404s instead of rendering the home page. An unprefixed URL is redirected
+  by `server.ts` — a real `302`, since the target depends on the visitor's cookie and headers.
+- **A language switch is a document load**, so the active language is settled at bootstrap
+  (`document-language.ts`, off `PlatformLocation`) and never changes within a document. That is what
+  lets the server render one language per response and `SiteLinks` hold plain prefixed strings.
+- **Angular's HTTP transfer cache is off** (`withNoHttpTransferCache`): it treats the forwarded
+  `cookie` header as an authorization header and skips such requests, and it keys on the URL after
+  the interceptor has moved it onto the API's origin. Anything that must cross the server/browser
+  boundary does so through an explicit `TransferState` key.
+- **Rendered pages answer `Cache-Control: no-store`** — every one is personalized by language, theme
+  and session, and the account is in both the markup and the transfer state.
+- **`public/` is for URLs that are contracts with something outside the app**; anything the app
+  itself renders is `import`ed, so the build hashes it (`src/assets.d.ts` types the loader's URL
+  imports, `SITE_LOGO` is the example). That is what the static handler's cache policy keys off:
+  `media/` and the root bundles are `immutable`, everything else expires, matched **by position, not
+  by the shape of a name** — a `public/` file called `feature-overview.png` also ends in eight
+  characters after a dash, and pinning one of those forever is a mistake only a rename can undo. The
+  set that stays unhashed is fixed by contract: the consent bundle and its translations, the
+  favicons and `site.webmanifest` (Angular rewrites its own tags in `index.html`, not these), and
+  `social-card.png`, whose absolute URL the editor's own Open Graph tags name.
+- **`NG_ALLOWED_HOSTS` and `NG_TRUST_PROXY_HEADERS` are required behind Caddy.** Angular refuses a
+  request whose `Host` it was not told to expect and only reads forwarded headers once trusted;
+  `SITE_ORIGIN` is then derived from the request URL rather than configured a second time.
+- **The consent bundle** is `vanilla-cookieconsent` plus `src/consent/cookieconsent-init.js`,
+  concatenated by two `scripts` entries sharing one `bundleName` — non-injected bundles keep their
+  name even under `outputHashing: all`. A bundle name may not contain a slash, so `server.ts`
+  redirects `/js/cookieconsent.js` (the URL the editor injects, and a contract with it) to
+  `/cookieconsent.js`. The stylesheet is the library's with the `--lg-*` tokens mapped over it, and
+  the bundle links it in itself, so the editor gets the styles by loading the script and nothing
+  else.
+- **PostHog is the legacy inline snippet**, not the editor's `AnalyticsService`: a
+  `type="text/plain" data-category="analytics"` tag in `index.html` that the consent bundle
+  re-inserts on consent, with `before_send` stamping `app = 'website'`.
+- **`@angular/platform-server`, `@angular/router` and `@angular/ssr` are pinned to exact versions**
+  matching the framework and CLI already in the lockfile: Angular's intra-framework peer
+  dependencies are exact, and a caret would float them ahead of `@angular/core`.
+- **`@angular/router` is the real one here and a stub in the editor.** Yarn hoists the real package
+  to the root and nests the stub under `logigator-editor/node_modules`; if that ever flips, the
+  router lands in the editor bundle. `yarn build:editor` is the check.
+
 ### UI Library (logigator-ui)
 
 `@logigator/ui` — in-house Angular 22 component library on Angular CDK; theming is **colors-only**
-via `--lg-*` CSS variables. Path-mapped to source, so the editor compiles it from TypeScript with no
-build step — it is _not_ a `package.json` dependency of the editor. One folder per component under
+via `--lg-*` CSS variables. Path-mapped to source, so the editor and the site compile it from
+TypeScript with no build step — it is _not_ a `package.json` dependency of either. One folder per component under
 `components/`, all re-exported from `public-api.ts`; specs sit next to source.
 
 - `components/` — declarative components, plus imperative services with their outlet components:
@@ -184,7 +274,12 @@ build step — it is _not_ a `package.json` dependency of the editor. One folder
   `key-manager`, `after-paint`, `caret`, `collapse`, `icon`.
 - `tokens/` — shared types (`LgSeverity`, `LgSize`, form-field tokens).
 - `styles/theme.css` defines the `--lg-*` vars; `styles/theme.tw.css` maps them into Tailwind's
-  `@theme` for the editor.
+  `@theme` for the editor and the site.
+- **Server-render safe**: nothing the library does at construction touches a browser global. The
+  overlay-backed components (drawer, popover, menu, select, dialog, window) build their overlay when
+  they open, and `internal/after-paint.ts` guards `requestAnimationFrame`, so a component reached by
+  a server render emits its markup and nothing else. New components keep that shape — browser
+  globals belong in event handlers and `afterNextRender`, never in a constructor or `ngOnInit`.
 
 ### Shared packages (@logigator/core, @logigator/contract)
 
@@ -379,7 +474,11 @@ plus cross-cutting `architecture.md`, `authentication.md`, `configuration.md`, `
 
 ### Backend ↔ Frontend
 
-Caddy serves `logigator-editor` as a static SPA. The SPA calls `logigator-api` — `/api/projects`,
+Caddy serves `logigator-web` at the origin root and `logigator-editor` as a static SPA under
+`/editor`. Both call `logigator-api` the same way; the site additionally calls it **from its server
+render**, over the internal network with the visitor's session cookie forwarded.
+
+The SPA calls `logigator-api` — `/api/projects`,
 `/api/components`, `/api/share`, `/api/user` — importing its request/response types from
 `@logigator/contract` and validating every response against those schemas at the boundary
 (`api/services/api-base.service.ts`; a failure becomes an `ApiRequestError` carrying the API's own
@@ -388,8 +487,8 @@ column. The editor can independently save and load circuits as **local files** i
 
 ## Testing
 
-The editor and `@logigator/ui` run Vitest via Angular's `@angular/build:unit-test` builder; core,
-the contract and the API run **plain Vitest** in Node (own `vitest.config.ts`, no Angular, no jsdom;
+The editor, `logigator-web` and `@logigator/ui` run Vitest via Angular's `@angular/build:unit-test`
+builder; core, the contract and the API run **plain Vitest** in Node (own `vitest.config.ts`, no Angular, no jsdom;
 the API's specs boot Nest testing modules). The Node packages' configs alias
 `@logigator/core`/`@logigator/contract` to their source, mirroring the tsconfig `paths` mapping, so
 specs compile exactly what ships. Spec files always sit next to source. Angular specs use `TestBed`.

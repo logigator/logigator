@@ -1,6 +1,10 @@
 logigator.test {
 	tls internal
 
+	# Compression for every upstream at once. A response that already names an
+	# encoding is left alone, so an upstream compressing its own output keeps it.
+	encode zstd gzip
+
 	# The new API. Everything else still reaches the legacy backend, which serves
 	# its own pages until the cutover — but `/api` is the editor's, and the editor
 	# now speaks the native document format only this one answers in.
@@ -34,8 +38,12 @@ logigator.test {
 		header Cache-Control "public, max-age=31536000, immutable"
 	}
 
+	# The website, at the origin root. It owns everything the legacy backend's
+	# pages used to answer — including the consent bundle the editor loads by
+	# absolute path — so from here on the legacy backend is off the dev origin
+	# entirely, which is what the cutover will do to it in production.
 	handle {
-		reverse_proxy backend:3000
+		reverse_proxy web:4200
 	}
 
 	log {

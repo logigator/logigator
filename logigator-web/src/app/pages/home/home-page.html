@@ -1,0 +1,16 @@
+<section
+  class="mx-auto flex max-w-3xl flex-col items-center gap-6 px-4 py-24 text-center"
+  *webTranslate="let t"
+>
+  <h1 class="text-4xl font-semibold text-text sm:text-5xl">
+    {{ t('pages.home.title') }}
+  </h1>
+  <p class="text-lg text-muted">{{ t('pages.home.lead') }}</p>
+  <a
+    class="px-5 py-2.5 text-base"
+    [class]="buttonLinkClass"
+    [href]="links.editor"
+  >
+    {{ t('pages.home.openEditor') }}
+  </a>
+</section>

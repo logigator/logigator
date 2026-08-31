@@ -1,0 +1,147 @@
+<header
+  class="sticky top-0 z-navbar border-b border-border bg-content"
+  *webTranslate="let t"
+>
+  <nav
+    class="mx-auto flex h-14 max-w-7xl items-center gap-2 px-4"
+    [attr.aria-label]="t('header.navigation')"
+  >
+    <lg-button
+      class="md:hidden"
+      icon="ph ph-list"
+      text
+      severity="secondary"
+      [ariaLabel]="t('header.openNavigation')"
+      (onClick)="drawerOpen.set(true)"
+    />
+
+    <!-- Two files rather than one CSS-themed mark: the wordmark is two-tone
+         artwork, so only its lettering flips. Swapped by the `dark` variant
+         rather than a binding, so the server render already picks the right
+         one. -->
+    <a class="flex items-center" [routerLink]="links.home">
+      <img
+        class="h-7 w-auto dark:hidden"
+        width="140"
+        height="28"
+        [src]="logo.onLight"
+        [alt]="t('header.home')"
+      />
+      <img
+        class="hidden h-7 w-auto dark:block"
+        width="140"
+        height="28"
+        alt=""
+        aria-hidden="true"
+        [src]="logo.onDark"
+      />
+    </a>
+
+    <ul class="ml-4 hidden items-center gap-1 md:flex">
+      <li>
+        <a
+          routerLinkActive="text-primary!"
+          [class]="navLinkClass"
+          [routerLink]="links.features"
+          >{{ t('header.features') }}</a
+        >
+      </li>
+      <li>
+        <a
+          routerLinkActive="text-primary!"
+          [class]="navLinkClass"
+          [routerLink]="links.community"
+          >{{ t('header.community') }}</a
+        >
+      </li>
+    </ul>
+
+    <span class="flex-1"></span>
+
+    @if (session.user(); as user) {
+    <ul class="hidden items-center gap-1 md:flex">
+      <li>
+        <a
+          routerLinkActive="text-primary!"
+          [class]="navLinkClass"
+          [routerLink]="links.myProjects"
+          >{{ t('header.myProjects') }}</a
+        >
+      </li>
+      <li>
+        <a
+          routerLinkActive="text-primary!"
+          [class]="navLinkClass"
+          [routerLink]="links.myComponents"
+          >{{ t('header.myComponents') }}</a
+        >
+      </li>
+    </ul>
+
+    <button
+      type="button"
+      class="flex cursor-pointer items-center gap-2 rounded px-2 py-1 hover:bg-content-hover"
+      [attr.aria-label]="t('header.userMenu')"
+      (click)="toggleAccount($event)"
+    >
+      <span class="hidden text-sm text-text sm:inline"
+        >{{ user.username }}</span
+      >
+      <lg-avatar
+        shape="circle"
+        [image]="user.avatar ?? undefined"
+        [label]="user.username"
+      />
+    </button>
+    <lg-popover #account>
+      <ul class="flex w-48 flex-col">
+        <li>
+          <a
+            [class]="menuLinkClass"
+            [routerLink]="links.account"
+            (click)="account.hide()"
+            >{{ t('header.account') }}</a
+          >
+        </li>
+        <li><lg-divider /></li>
+        <li>
+          <button
+            type="button"
+            class="w-full cursor-pointer text-left"
+            [class]="menuLinkClass"
+            (click)="account.hide(); logout()"
+          >
+            {{ t('header.logout') }}
+          </button>
+        </li>
+      </ul>
+    </lg-popover>
+    } @else {
+    <div class="hidden items-center gap-2 sm:flex">
+      <a [class]="buttonLinkOutlinedClass" [routerLink]="links.login"
+        >{{ t('header.login') }}</a
+      >
+      <a [class]="buttonLinkClass" [routerLink]="links.register"
+        >{{ t('header.register') }}</a
+      >
+    </div>
+    }
+
+    <lg-button
+      class="hidden md:inline-flex"
+      icon="ph ph-gear"
+      text
+      severity="secondary"
+      [ariaLabel]="t('header.settings')"
+      (onClick)="toggleSettings($event)"
+    />
+    <lg-popover #settings>
+      <web-settings-panel class="block w-56" />
+    </lg-popover>
+  </nav>
+</header>
+
+<web-nav-drawer
+  [visible]="drawerOpen()"
+  (visibleChange)="drawerOpen.set($event)"
+/>
