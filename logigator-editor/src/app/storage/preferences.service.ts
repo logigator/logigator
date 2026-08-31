@@ -4,10 +4,7 @@ import { CookieService } from './cookie.service';
 /** The origin-wide cookie the editor and the surrounding pages both read. */
 const COOKIE_NAME = 'preferences';
 
-/**
- * Express serializes an object cookie value as `j:` + JSON, URI-encoded. The
- * server writes this cookie, so both sides of the encoding live here.
- */
+/** Express serializes an object cookie value as `j:` + JSON, URI-encoded. */
 const JSON_PREFIX = 'j:';
 
 /**
@@ -21,14 +18,12 @@ export interface Preferences {
 }
 
 /**
- * The user's language and theme, held in the `preferences` cookie that every
- * page on the origin shares (the editor is served under `/editor`). It is the
- * single source of truth for both, so a choice made on the landing pages
- * carries into the editor and a choice made in the editor carries back out.
+ * The user's language and theme, in the `preferences` cookie every page on the
+ * origin shares, so a choice made on either side carries to the other.
  *
  * Values are validated by their consumers, not here: the cookie is
  * client-writable and the server's language and theme sets need not match the
- * editor's, so anything unrecognized has to fall back rather than throw.
+ * editor's, so anything unrecognized falls back rather than throws.
  */
 @Injectable({ providedIn: 'root' })
 export class PreferencesService {
@@ -42,9 +37,8 @@ export class PreferencesService {
     }
 
     try {
-      // A cookie the server wrote arrives URI-encoded; one this service wrote
-      // and mirrored into the reactive map may not be. Decoding is a no-op on
-      // the latter, so a single path handles both.
+      // A cookie the server wrote arrives URI-encoded, one mirrored into the
+      // reactive map here may not; decoding is a no-op on the latter.
       const decoded = decodeURIComponent(raw);
       if (!decoded.startsWith(JSON_PREFIX)) {
         return {};
@@ -54,8 +48,8 @@ export class PreferencesService {
         ? (parsed as Preferences)
         : {};
     } catch {
-      // Client-writable, so a malformed value is a state to absorb rather than
-      // an error: consumers fall back to their default.
+      // Client-writable, so a malformed value is absorbed and consumers fall
+      // back to their default.
       return {};
     }
   }

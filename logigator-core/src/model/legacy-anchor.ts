@@ -2,26 +2,19 @@ import { Direction } from './direction';
 import { BuiltInComponentType } from './component-type.enum';
 
 /**
- * Shared legacy-anchor geometry for the positional v0 format. The old editor
- * anchors a component by its body's top-left corner, held fixed across rotation;
- * editor-v2 anchors by the rotation pivot (body drawn from the local origin,
- * rotated around `position`). The two coincide only for {@link Direction.E}, so
- * rotated components must be re-anchored when crossing the v0 boundary.
- *
- * Single source of truth shared by the permanent `v0ToV1` migration (decode:
- * {@link legacyAnchorToPivot}) and the temporary server encoder (encode:
- * {@link pivotToLegacyAnchor}), mirroring how both already share
- * {@link LegacyV0Slots}.
+ * Anchor geometry for the positional v0 format. v0 anchors a component by its
+ * body's top-left corner, held fixed across rotation; the native format anchors
+ * by the rotation pivot (body drawn from the local origin, rotated around
+ * `position`). The two coincide only for {@link Direction.E}, so rotated
+ * components are re-anchored when crossing the v0 boundary.
  */
 
 /**
- * Per-type body width (`bodyGridWidth`) for every v0 built-in, mirroring each
- * component's instance getter. FROZEN against the v1-era geometry: lets the
- * re-anchor run without instantiating a render object (which would consume a
- * global id and touch the texture cache). TEXT's body is a 1×1 anchor dot; its
- * floating label is decorative and excluded, matching the live `TextComponent`.
- * SEGMENT_DISPLAY is absent here — its width is direction- and option-dependent
- * (see {@link legacyBodyWidth}).
+ * Per-type body width for every v0 built-in, so the re-anchor runs without
+ * instantiating a render object. FROZEN against the v1-era geometry. TEXT's
+ * body is a 1×1 anchor dot; its floating label is decorative and excluded.
+ * SEGMENT_DISPLAY is absent — its width is direction- and option-dependent (see
+ * {@link legacyBodyWidth}).
  */
 const LEGACY_BODY_WIDTHS: Record<number, number> = {
   [BuiltInComponentType.NOT]: 2,
@@ -53,8 +46,8 @@ const LEGACY_BODY_WIDTHS: Record<number, number> = {
 
 /**
  * Per-type minimum body height for the v0 built-ins whose body is taller than
- * their port span (the old editor gave them room for the symbol), mirroring the
- * matching `bodyGridHeight` overrides. Absent types use the port span alone.
+ * their port span, to leave room for the symbol. Absent types use the port
+ * span.
  */
 const LEGACY_MIN_BODY_HEIGHTS: Record<number, number> = {
   [BuiltInComponentType.CLOCK]: 2,
@@ -62,17 +55,16 @@ const LEGACY_MIN_BODY_HEIGHTS: Record<number, number> = {
   [BuiltInComponentType.SEGMENT_DISPLAY]: 3
 };
 
-/**
- * Unrotated body width — mirrors `Component.bodyGridWidth` per type. Only the
- * segment display needs the extra context: its width tracks the zero-padded
- * readout (base in `n[0]`, digit count from the input count) when horizontal
- * and is a fixed 4 when standing upright.
- */
-/** LED-matrix square body side per size option — mirrors `ledMatrixShape`. */
+/** LED-matrix square body side per size option. */
 function legacyMatrixCells(size: number | undefined): number {
   return size === 8 ? 12 : size === 16 ? 16 : 7;
 }
 
+/**
+ * Unrotated body width. Only the segment display needs the extra context: its
+ * width tracks the zero-padded readout (base in `n[0]`, digit count from the
+ * input count) when horizontal, and is a fixed 4 when standing upright.
+ */
 export function legacyBodyWidth(
   type: number,
   direction: Direction,
@@ -99,9 +91,8 @@ export function legacyBodyWidth(
 }
 
 /**
- * Unrotated body height — mirrors `Component.bodyGridHeight` per type. `n`
- * are the raw v0 option slots; only the LED matrix (square, sized by `n[0]`)
- * consults them.
+ * Unrotated body height. `n` are the raw v0 option slots; only the LED matrix
+ * (square, sized by `n[0]`) consults them.
  */
 export function legacyBodyHeight(
   type: number,
@@ -116,20 +107,16 @@ export function legacyBodyHeight(
 }
 
 /**
- * Custom-component body grid width — mirrors `CustomComponent.bodyGridWidth`
- * (a fixed 3). Customs are not a fixed built-in type so they are absent from
- * {@link LEGACY_BODY_WIDTHS}; this constant lets the re-anchor treat them
- * uniformly with built-ins. FROZEN alongside the built-in widths.
+ * Custom-component body grid width. Customs are not a built-in type, so they
+ * are absent from {@link LEGACY_BODY_WIDTHS}. FROZEN alongside the built-in
+ * widths.
  */
 export const CUSTOM_BODY_GRID_WIDTH = 3;
 
 /**
- * Unrotated body grid size of a custom instance — mirrors `CustomComponent`
- * (fixed width 3, height by the port span). Port counts come from the resolved
- * definition (Invariant A), so the two sides of the v0 boundary re-anchor a
- * rotated custom about the same body extent. Shared by the `v0ToV1` decode and
- * the server encoder, mirroring how they share {@link legacyBodyWidth} for
- * built-ins.
+ * Unrotated body grid size of a custom instance: fixed width, height by the
+ * port span. Port counts come from the resolved definition, so both sides of
+ * the v0 boundary re-anchor a rotated custom about the same body extent.
  */
 export function legacyCustomBodySize(
   numInputs: number,
@@ -138,11 +125,7 @@ export function legacyCustomBodySize(
   return { w: CUSTOM_BODY_GRID_WIDTH, h: Math.max(1, numInputs, numOutputs) };
 }
 
-/**
- * Legacy body top-left → v2 rotation pivot (decode). `w`/`h` are the unrotated
- * body grid size; mirrors the corner of `Component.bodyGridBounds`
- * (`_rotatedBounds(0, w, h)`).
- */
+/** Legacy body top-left → rotation pivot; `w`/`h` are the unrotated size. */
 export function legacyAnchorToPivot(
   px: number,
   py: number,
@@ -163,7 +146,7 @@ export function legacyAnchorToPivot(
   }
 }
 
-/** v2 rotation pivot → legacy body top-left (encode) — inverse of the above. */
+/** Rotation pivot → legacy body top-left; inverse of the above. */
 export function pivotToLegacyAnchor(
   px: number,
   py: number,

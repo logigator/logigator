@@ -1,10 +1,9 @@
 import { Component, computed, input } from '@angular/core';
 
 /**
- * A thin separator line. `layout="vertical"` draws a vertical rule (stretches
- * in a flex row); the default is a full-width horizontal rule. `variant="double"`
- * draws two parallel lines back-to-back with a small gap between them. The
- * divider owns no outer margin — callers space it themselves (e.g. `class="mx-1"`).
+ * A thin separator line: a full-width horizontal rule, or a vertical one that
+ * stretches in a flex row. `variant="double"` draws two parallel lines. It
+ * owns no outer margin, so callers space it themselves.
  */
 @Component({
   selector: 'lg-divider',

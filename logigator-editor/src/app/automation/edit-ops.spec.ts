@@ -78,8 +78,8 @@ describe('applyEditOps', () => {
       const frames: string[] = [];
       project.ticker$.subscribe((signal) => frames.push(signal));
 
-      // A negation toggle rebuilds the component's children without touching the
-      // quad trees, so nothing else along the way asks for a repaint.
+      // A negation toggle rebuilds children without touching the quad trees, so
+      // nothing else along the way asks for a repaint.
       apply({
         op: 'setPortNegation',
         id: and.id,
@@ -106,8 +106,8 @@ describe('applyEditOps', () => {
 
   describe('wire integration', () => {
     it('splits a crossed wire the way the wire tool does', () => {
-      // A vertical wire along x = 4.5; an AND at (5, 4) puts its two input port
-      // tips on that line, in the wire's interior — so it must split there.
+      // An AND at (5, 4) puts both input port tips in the interior of a wire
+      // along x = 4.5, so the wire must split there.
       project.addWire(makeWire(4, 0, WireDirection.VERTICAL, 10));
       const result = apply({
         op: 'addComponent',
@@ -223,8 +223,8 @@ describe('applyEditOps', () => {
     });
 
     it('refuses a placement that would close a dependency cycle', () => {
-      // Editing master A while placing A into itself — what the palette hides
-      // in the UI, and an agent can otherwise name by type id.
+      // Placing master A into itself: what the palette hides in the UI, and an
+      // agent can otherwise name by type id.
       const registry = TestBed.inject(CustomComponentRegistry);
       const master = registry.createMaster({ symbol: 'A', id: 'a' }, 'browser');
       TestBed.inject(ProjectMetadataStore).register(project, {
@@ -389,7 +389,7 @@ describe('applyEditOps', () => {
       const wires = [...project.wires];
       expect(wires).toHaveLength(1);
       expect(wires[0].length).toBe(6);
-      // The requested wire is not an integration effect — only the absorbed
+      // The requested wire is not an integration effect; only the absorbed
       // halves and the merge result are reported.
       if (result.ok) {
         expect(result.integratedWires.removed.sort()).toEqual(

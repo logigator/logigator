@@ -9,13 +9,9 @@ import { resolveMasterSignal } from './resolve-master.signal';
 import { TranslateDirective } from '../../../translation/translate.directive';
 
 /**
- * Renderer for {@link EditDetailsAction}: a button shown whenever the selected
- * instance (or placement ghost) resolves to a library master — the entry that
- * owns the editable metadata. Opens the
- * {@link EditComponentDetailsDialogComponent} for that master. An orphaned
- * instance has no master and hides this action; the edit action's degraded modes
- * are what it offers instead — restoring it into the library in the viewer's own
- * document, or a read-only look inside a borrowed share.
+ * Shown whenever the selection resolves to a library master, the entry that
+ * owns the editable metadata. An orphaned instance has none, so it hides this
+ * action and offers the edit action's degraded modes instead.
  */
 @Component({
   selector: 'app-edit-details-action',

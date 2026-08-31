@@ -23,8 +23,8 @@ function makeMetadata(
   };
 }
 
-// Tests work against the real Project class (it touches PixiJS and the DI
-// container at construction time, so we use TestBed to bootstrap statics).
+// The real Project class touches PixiJS and the DI container at construction,
+// hence TestBed to bootstrap the statics.
 describe('ProjectMetadataStore', () => {
   let store: ProjectMetadataStore;
 
@@ -74,9 +74,7 @@ describe('ProjectMetadataStore', () => {
       store.remove(project);
       expect(store.getMetadata(project)).toBeUndefined();
 
-      // After removal, action changes must not re-mark the project dirty.
-      // We can't fire actionChange$ directly without ActionManager state,
-      // but isDirty stays false because the entry is gone.
+      // The entry is gone, so an action change cannot re-mark it dirty.
       expect(store.isDirty(project)).toBe(false);
     });
 
@@ -194,9 +192,8 @@ describe('ProjectMetadataStore', () => {
 
       expect(id()).toBe('');
       store.updateId(project, 'generated-id');
-      // Re-`set`s the entry rather than mutating in place, so the title-bar chip
-      // and File-menu upload item that read the id through a computed re-resolve
-      // after a draft's first local save.
+      // The entry is re-`set` rather than mutated, so computed readers of the
+      // id re-resolve after a draft's first local save.
       expect(id()).toBe('generated-id');
     });
 
@@ -217,7 +214,6 @@ describe('ProjectMetadataStore', () => {
       expect(meta.name).toBe('Renamed');
       expect(meta.source).toBe('browser');
       expect(meta.id).toBe('x');
-      // Untouched fields survive the merge.
       expect(meta.type).toBe('project');
     });
 
@@ -256,10 +252,7 @@ describe('ProjectMetadataStore', () => {
 
       expect(store.isDirty(project)).toBe(false);
 
-      // actionChange$ is an Observable<void> exposed from a Subject inside
-      // ActionManager. Trigger a real action push so the chain wires up.
-      // Using the underlying subject directly via type assertion keeps the
-      // test focused on the metadata store's reaction.
+      // A real action push, so the actionChange$ chain wires up.
       const subject = (
         project.actionManager as unknown as {
           _actionChange$: Subject<void>;
@@ -289,8 +282,7 @@ describe('ProjectMetadataStore', () => {
       store.register(project, makeMetadata());
       store.remove(project);
 
-      // Re-register without dirty tracking so we can observe the flag
-      // without re-subscribing.
+      // Re-registered without dirty tracking, so the flag stays observable.
       store.register(project, makeMetadata(), false);
 
       const subject = (
@@ -331,7 +323,6 @@ describe('ProjectMetadataStore', () => {
     });
 
     it('reacts to a project registered after the computed was first read', () => {
-      // First read primes the computed with an empty map.
       expect(store.anyDirty()).toBe(false);
 
       const project = new Project();

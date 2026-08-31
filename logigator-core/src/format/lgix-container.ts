@@ -4,25 +4,20 @@ import {
 } from './circuit-file.errors';
 
 /**
- * The `.lgix` container: a small binary framing around the native circuit-file
- * JSON, adding gzip compression and a magic-byte header.
+ * The `.lgix` container: gzip compression and a magic-byte header around the
+ * native circuit-document JSON.
  *
  * ```
  * offset 0   "LGIX"                4 bytes   magic
  * offset 4   container version     1 byte    (= LGIX_CONTAINER_VERSION)
  * offset 5   flags                 1 byte    bit0..: compression algorithm
- * offset 6   gzip(utf8(json))      …         the CircuitFileService JSON string
+ * offset 6   gzip(utf8(json))      …         the document JSON string
  * ```
  *
- * Integrity is corruption-detection only: the magic + version + flags validate
- * the header, and gzip's own CRC32 trailer makes {@link decodeLgix} reject any
- * corrupted or truncated payload (the decompression stream errors). There is no
- * keyed check — a client-only SPA ships its own verification logic, so nothing
- * here resists a determined forger; the share-reimport defense lives in the UI
- * (export is not offered for borrowed `source:'share'` documents).
- *
- * The framing touches only the file export/import boundary. The JSON it wraps —
- * and every other target (browser IndexedDB, server v0) — is unchanged.
+ * Integrity is corruption detection only: the header validates magic, version
+ * and flags, and gzip's CRC32 trailer makes {@link decodeLgix} reject a
+ * corrupted or truncated payload. There is no keyed check — a client-only SPA
+ * ships its own verification logic, so nothing here resists a forger.
  */
 
 /** ASCII `LGIX`. */
@@ -32,9 +27,9 @@ const VERSION_OFFSET = 4;
 const FLAGS_OFFSET = 5;
 
 /**
- * Container-framing version — a **third** version axis, independent of the
- * circuit file-format version (inside the JSON payload) and the custom-component
- * master version. Bump only when the byte framing itself changes.
+ * Container-framing version: a third axis, independent of the document's format
+ * version and of a custom-component master version. Bump only when the byte
+ * framing changes.
  */
 export const LGIX_CONTAINER_VERSION = 1;
 
@@ -67,19 +62,17 @@ async function collect(
 }
 
 /**
- * Runs a byte buffer through a (de)compression transform by pushing it into the
- * writer and draining the reader concurrently — write/close are intentionally
- * not awaited before {@link collect} starts, so a bounded internal buffer can't
- * deadlock. A decompression failure (gzip CRC mismatch, truncation) rejects the
- * stream, surfacing as a thrown error to the caller.
+ * Runs a byte buffer through a (de)compression transform. Write and close are
+ * deliberately not awaited before {@link collect} starts, so a bounded internal
+ * buffer cannot deadlock. A decompression failure rejects the stream.
  */
 async function transform(
   data: Uint8Array<ArrayBuffer>,
   stream: CompressionStream | DecompressionStream
 ): Promise<Uint8Array<ArrayBuffer>> {
   const writer = stream.writable.getWriter();
-  // The failure we care about surfaces through the readable (collect throws);
-  // swallow the mirrored writable-side rejection so it isn't left unhandled.
+  // The failure surfaces through the readable; swallow the mirrored
+  // writable-side rejection so it is not left unhandled.
   const ignore = () => undefined;
   void writer.write(data).catch(ignore);
   void writer.close().catch(ignore);
@@ -102,7 +95,7 @@ export function hasLgixMagic(bytes: Uint8Array): boolean {
   return MAGIC.every((b, i) => bytes[i] === b);
 }
 
-/** Frames a circuit-file JSON string into a gzip-compressed `.lgix` container. */
+/** Frames a document JSON string into a gzip-compressed `.lgix` container. */
 export async function encodeLgix(
   json: string
 ): Promise<Uint8Array<ArrayBuffer>> {
@@ -116,10 +109,9 @@ export async function encodeLgix(
 }
 
 /**
- * Unwraps a `.lgix` container back into its circuit-file JSON string. Throws
- * {@link InvalidFileError} on a bad header, an unknown compression flag, or a
- * corrupted payload (gzip CRC mismatch), and {@link UnsupportedVersionError}
- * when the container was written by a newer editor.
+ * Unwraps a `.lgix` container back into its JSON string. Throws
+ * {@link InvalidFileError} on a bad header, an unknown compression flag or a
+ * corrupted payload, and {@link UnsupportedVersionError} for a newer container.
  */
 export async function decodeLgix(bytes: Uint8Array): Promise<string> {
   if (bytes.length < HEADER_LENGTH || !hasLgixMagic(bytes)) {

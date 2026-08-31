@@ -31,10 +31,9 @@ export const romMeta = {
       max: 64,
       default: 4
     },
-    // addressSize is capped at 11 (not the engine's 16) so a fully populated
-    // ROM's bit-packed contents stay within the legacy server `s` field's
-    // 32768-char limit: 2^11 words × 64-bit words = 16 KiB ≈ 21 845 base64
-    // chars. Trailing-zero trimming on save keeps typical ROMs far smaller.
+    // Capped at 11 rather than the engine's 16 so a fully populated ROM's
+    // bit-packed contents fit the v0 `s` field's 32768 chars: 2^11 × 64-bit
+    // words = 16 KiB ≈ 21 845 base64 chars.
     addressSize: {
       kind: 'number',
       label: 'components.def.ROM.options.addressSize',

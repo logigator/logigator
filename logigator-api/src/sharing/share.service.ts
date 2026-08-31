@@ -31,16 +31,12 @@ export type ShareTarget =
   | { kind: 'component'; row: ComponentRow };
 
 /**
- * Reading a document through its share link.
+ * Reading a document through its share link. The link is a **capability**:
+ * holding the URL is the grant, so this needs no session and ignores `public`,
+ * and revoking is minting a new token rather than tracking who was told.
  *
- * The link is a **capability**: holding the URL is the grant, so this needs no
- * session and does not consult the `public` flag. That is what makes a share
- * usable by someone with no account, and what makes revoking one a matter of
- * minting a new token rather than of tracking who was told.
- *
- * It is also why the token is a uuid in its own column rather than the document's
- * id: an id is guessable from any other reference to the document, and it cannot
- * be rotated.
+ * Hence a uuid in its own column rather than the document's id, which is
+ * guessable from any other reference and cannot be rotated.
  */
 @Injectable()
 export class ShareService {
@@ -105,8 +101,8 @@ export class ShareService {
       .where(eq(users.id, userId))
       .limit(1);
 
-    // The owner column is `ON DELETE CASCADE`, so a document without one cannot
-    // exist — reading it as a defect rather than papering over it.
+    // The owner column is `ON DELETE CASCADE`, so a document without one is a
+    // defect rather than a case to handle.
     if (!user) {
       throw new Error(`Document owner ${userId} does not exist.`);
     }

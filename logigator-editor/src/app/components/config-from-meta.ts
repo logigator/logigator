@@ -17,17 +17,14 @@ import { TextAreaComponentOption } from './component-options/text-area/text-area
 import { MemoryDataComponentOption } from './component-options/memory-data/memory-data.component-option';
 
 /**
- * Builds an editor {@link ComponentConfig} around a built-in's pure
- * {@link ComponentMeta}. Meta owns everything both the editor and the server
- * need — identity, option schemas, arity, labels, body extent, legacy slots —
- * and the editor supplies what only it has: the factory, the option renderers,
- * the palette shape and the inspector affordances.
+ * Meta owns everything both the editor and the server need — identity, option
+ * schemas, arity, labels, body extent, legacy slots — and the editor supplies
+ * the factory, the option renderers, the palette shape and the inspector
+ * affordances.
  *
  * Translation keys are opaque `string`s in core, so the label casts below are
- * unchecked on their own. `meta-translation-keys.ts` is what makes them safe:
- * it collects every built-in's literal key types into one union and asserts it
- * against the translation schema, re-exported here so the gate is compiled
- * wherever this is.
+ * unchecked on their own; `meta-translation-keys.ts` asserts them against the
+ * translation schema, re-exported here so the gate compiles wherever this does.
  */
 export type { BuiltInTranslationKeysAreValid } from './meta-translation-keys';
 
@@ -76,8 +73,8 @@ function buildOption(
       return new TextInputComponentOption(label, schema.default, {
         placeholder: schema.placeholder as TranslationKey | undefined,
         maxLength: schema.maxLength,
-        // Rebuilt per config rather than shared: a /g instance carries
-        // lastIndex between the sanitizing calls on every write.
+        // Per config, not shared: a /g instance carries lastIndex between
+        // the sanitizing calls on every write.
         forbiddenChars: schema.forbiddenChars
           ? new RegExp(schema.forbiddenChars, 'g')
           : undefined

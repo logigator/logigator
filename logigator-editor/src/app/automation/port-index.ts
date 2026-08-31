@@ -1,16 +1,12 @@
 /**
  * Reverse index from a top-level component to the link ids its ports sit on —
- * the read direction the compiler's {@link LinkMapping} does not provide (it
- * maps link id → render targets).
+ * the read direction the compiler's link mapping does not provide. One scan per
+ * compiled board, here rather than in the compiler because nothing else in the
+ * editor needs it.
  *
- * Built with one scan per compiled board in the automation layer rather than in
- * the compiler: nothing in the editor itself needs it. If a second consumer ever
- * wants the same lookup (verilog-llm's truth-table stage is the candidate),
- * promote it onto `CompiledBoard` then.
- *
- * The entries carry the component instance the mapping pointed at, so a port
- * read never has to re-resolve ids through a project — it reads exactly the
- * components the running session was compiled from.
+ * Entries carry the component instance the mapping pointed at, so a port read
+ * never re-resolves ids through a project: it reads exactly the components the
+ * running session was compiled from.
  */
 
 import { Component } from '../components/component';

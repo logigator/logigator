@@ -25,12 +25,11 @@ import { AnalyticsService } from '../analytics/analytics.service';
 import { AnalyticsEvent } from '../analytics/analytics.mapping';
 
 /**
- * One **local** custom component that a circuit about to be uploaded embeds
- * (transitively). `masterTypeId` is set when it is still a registered browser
- * master — those can be promoted to the cloud as their own library entries —
- * and `null` when the dependency only survives as an embedded snapshot copy.
- * Lists are ordered children-before-parents, so uploading resolvable entries
- * in order lets every later upload reference its already-promoted children.
+ * One local custom component a circuit about to be uploaded embeds
+ * transitively. `masterTypeId` is set for a registered browser master, which
+ * can be promoted as its own library entry, and `null` for a dependency that
+ * only survives as an embedded snapshot. Lists run children-before-parents, so
+ * uploading in order lets every upload reference its promoted children.
  */
 export interface LocalUploadDependency {
   name: string;
@@ -38,12 +37,11 @@ export interface LocalUploadDependency {
 }
 
 /**
- * Moving documents from the browser store to the cloud: draft/project/
- * component promotion and the local-dependency queries that drive the
- * upload-to-cloud dialog. Every upload here is a **silent primitive** — no
- * toasts on success; `UploadCoordinatorService` sequences the uploads
- * (children first) and owns the outcome reporting. The whole story lives in
- * `docs/dependencies-and-promotion.md`.
+ * Moving documents from the browser store to the cloud: draft, project and
+ * component promotion, plus the local-dependency queries behind the
+ * upload-to-cloud dialog. Every upload here is a silent primitive;
+ * `UploadCoordinatorService` sequences them children-first and reports the
+ * outcome. See `docs/dependencies-and-promotion.md`.
  */
 @Injectable({ providedIn: 'root' })
 export class PromotionService {
@@ -63,10 +61,8 @@ export class PromotionService {
   private readonly analytics = inject(AnalyticsService);
 
   /**
-   * First save of a fresh draft to the **server**: creates the project record
-   * with its circuit already in it (see
-   * {@link ServerPersistenceGateway.promoteToServer}), then navigates to
-   * `/project/:id`.
+   * First save of a fresh draft to the server, creating the project record with
+   * its circuit already in it.
    */
   async saveDraftAsServer(
     project: Project,
@@ -83,12 +79,10 @@ export class PromotionService {
   }
 
   /**
-   * Uploads an already-saved **local** project to the cloud — the project
-   * analogue of component upload. Promotes the live project (preserving its
-   * circuit + undo history and its embedded custom snapshots), navigates to
-   * `/project/:id`, then deletes the now-orphaned browser record so the project
-   * *moves* to the cloud rather than being copied. Rejects a project that is not
-   * a stored browser project (a fresh draft goes through the save-draft flow).
+   * Uploads an already-saved local project to the cloud, keeping the live
+   * project's circuit, undo history and embedded snapshots, then deletes the
+   * browser record so the project moves rather than being copied. Rejects
+   * anything but a stored browser project; a fresh draft saves as a draft.
    */
   async promoteProjectToServer(
     project: Project,
@@ -106,13 +100,11 @@ export class PromotionService {
     this._requireSignedIn();
     const oldId = metadata.id;
 
-    // The server round-trip is the only fail-able, irreversible step. Until it
-    // returns, nothing local has changed and the upload can be retried.
+    // The only fail-able, irreversible step: until it returns nothing local
+    // has changed and the upload can be retried.
     await this.server.promoteToServer(project, metadata.name, isPublic);
     this.location.go(`/project/${this.metadataStore.getMetadata(project)!.id}`);
 
-    // Now cloud-backed — drop the orphaned browser record so the project moves
-    // to the cloud rather than being copied.
     await this._dropBrowserProjectRecord(oldId);
     this.analytics.capture(AnalyticsEvent.ProjectUploaded, {
       kind: 'project',
@@ -121,12 +113,10 @@ export class PromotionService {
   }
 
   /**
-   * Uploads a browser project by its store id, which may be a project other than
-   * the currently open one (the Open dialog's local list). When the id is the
-   * open main project it delegates to {@link promoteProjectToServer} so the live
-   * state (including unsaved edits) and metadata flip are used; otherwise it
-   * uploads a throwaway project built from the stored record and deletes that
-   * record on success (a *move*, mirroring {@link promoteComponentToServer}).
+   * Uploads a browser project by store id, which need not be the open one. The
+   * open main project delegates to {@link promoteProjectToServer}, so unsaved
+   * edits and the metadata flip are used; anything else uploads a throwaway
+   * project built from the record, which is then deleted.
    */
   async uploadStoredProjectToServer(
     id: string,
@@ -142,9 +132,8 @@ export class PromotionService {
     const record = await this.browserStore.get(id);
     if (!record) throw new Error(`No browser project with id ${id}`);
 
-    // Upload first (the only fail-able step); build the throwaway project only to
-    // serialize it, and always tear it down. The stored blob's fork attribution
-    // rides along so the server re-links the lineage.
+    // The throwaway project exists only to be serialized. The stored blob's
+    // fork attribution rides along so the server re-links the lineage.
     await this._withProjectFromContent(record.content, (temp, attribution) =>
       this.server.createServerProjectFromProject(
         temp,
@@ -154,10 +143,8 @@ export class PromotionService {
       )
     );
 
-    // Uploaded — drop the local record so the project moves to the cloud.
+    // Dropping the local record makes this a move, not a copy.
     await this._dropBrowserProjectRecord(id);
-    // The delegating main-project branch above returns early, captured by
-    // promoteProjectToServer; only this stored-record path reaches here.
     this.analytics.capture(AnalyticsEvent.ProjectUploaded, {
       kind: 'project',
       isPublic
@@ -165,13 +152,11 @@ export class PromotionService {
   }
 
   /**
-   * Uploads (moves) a **browser** master to the server library: creates the server
-   * record and pushes its circuit (embedding a self-contained copy of every custom
-   * it places), flips the registry to the new server id while keeping the old id
-   * as an alias, persists that alias, then removes the browser record. The master
-   * keeps its session type id, so placed instances and the palette tile survive —
-   * the tile's indicator just flips to "cloud". Rejects if the master is not a
-   * local component or its stored record is missing.
+   * Moves a browser master to the server library: create the record with its
+   * circuit, flip the registry to the new server id keeping the old one as a
+   * persisted alias, then remove the browser record. The master keeps its
+   * session type id, so placed instances and the palette tile survive. Rejects
+   * a master that is not local or whose stored record is missing.
    */
   async promoteComponentToServer(
     masterTypeId: number,
@@ -188,9 +173,8 @@ export class PromotionService {
       throw new Error(`No browser component with id ${oldId}`);
     }
 
-    // Upload to the server first — the only irreversible, fail-able step. If it
-    // throws, nothing local has changed: the master is still browser-sourced, the
-    // record is intact and the upload button stays visible for a retry.
+    // The only irreversible, fail-able step: on a throw the master is still
+    // browser-sourced, the record intact and the upload retryable.
     const {
       id: newId,
       version,
@@ -205,14 +189,11 @@ export class PromotionService {
       })
     );
 
-    // The component now lives in the cloud — past the point of no return. Persist
-    // the durable old→new alias and drop the local record *before* the in-memory
-    // flip, so a reload stays consistent even if interrupted here. These local
-    // writes must not fail the operation: the upload already succeeded, so
-    // surfacing an error would be a lie (and would hide the now-disabled retry).
-    // A failure here self-heals on reload — the browser preload ignores a record
-    // whose id has been promoted (see ComponentLibraryService.preloadBrowserMasters
-    // / isPromotedId).
+    // Past the point of no return. The durable old→new alias and the record
+    // delete land before the in-memory flip, so an interruption still leaves a
+    // consistent reload. Neither may fail the operation — the upload already
+    // succeeded — and a failure self-heals: the browser preload ignores a
+    // record whose id has been promoted.
     try {
       await this.componentIdMapStore.put(oldId, newId);
       await this.browserComponentStore.delete(oldId);
@@ -235,18 +216,13 @@ export class PromotionService {
       `Promoted component ${oldId} -> ${newId} (v${version})`,
       'PromotionService'
     );
-    // If the master's own editor tab is open, flip its metadata to the new server
-    // identity so a later save routes to the cloud instead of re-creating the
-    // browser record that was just deleted.
     this._reconcilePromotedEditor(oldId, newId, version);
   }
 
   /**
-   * The **local** custom components a browser master embeds (transitively).
-   * Read straight from the master's stored record — the transitive closure is
-   * already baked in at save time — without building a live project or ingesting
-   * throwaway definitions into the registry. Empty for a server master or one
-   * with no local dependencies. Drives the upload-to-cloud dialog.
+   * The local custom components a browser master embeds transitively, read
+   * straight from its stored record: the closure is baked in at save time, so
+   * no live project is built and no throwaway definition enters the registry.
    */
   async localDependencies(
     masterTypeId: number
@@ -263,16 +239,14 @@ export class PromotionService {
   }
 
   /**
-   * The **local** custom components a live project places (transitively) —
-   * the project analogue of {@link localDependencies}, walked over the registry
+   * {@link localDependencies} for a live project, walked over the registry
    * definitions of the placed snapshots so unsaved edits are reflected.
    */
   localDependenciesOfProject(project: Project): LocalUploadDependency[] {
     const entries: { name: string; sourceId?: string }[] = [];
     const visited = new Set<number>();
-    // Post-order DFS: a definition is emitted only after everything it places,
-    // so the result is children-before-parents (the upload order — a parent's
-    // snapshot then references its already-promoted children).
+    // Post-order DFS emits a definition only after everything it places, which
+    // is the children-before-parents upload order.
     const visit = (typeId: number): void => {
       if (visited.has(typeId)) return;
       visited.add(typeId);
@@ -288,11 +262,9 @@ export class PromotionService {
   }
 
   /**
-   * The **local** custom components a stored browser project embeds
-   * (transitively), read from its record like {@link localDependencies}. When
-   * `id` is the currently open main project it walks the live project instead
-   * (mirroring {@link uploadStoredProjectToServer}, which uploads the live
-   * state), so unsaved edits are reflected. Rejects if no record exists.
+   * {@link localDependencies} for a stored browser project. The open main
+   * project is walked live instead, matching what
+   * {@link uploadStoredProjectToServer} uploads. Rejects if no record exists.
    */
   async localDependenciesOfStoredProject(
     id: string
@@ -311,11 +283,10 @@ export class PromotionService {
   }
 
   /**
-   * Orders embedded file definitions children-before-parents via a post-order
-   * DFS over their inter-definition references (each definition's body places
-   * others by file-local type id). `peekDefinitions` yields them
-   * ancestors-first (collect order), which reversed is *not* a valid topological
-   * order once a dependency is shared, so the graph is walked explicitly.
+   * Orders embedded file definitions children-before-parents by a post-order
+   * DFS over their file-local type references. `peekDefinitions` yields them
+   * ancestors-first, and reversing that is not a valid topological order once a
+   * dependency is shared, so the graph is walked explicitly.
    */
   private _depsFromFileDefinitions(
     defs: SnapshotDefinition[]
@@ -341,14 +312,12 @@ export class PromotionService {
   }
 
   /**
-   * Shared tail of the dependency queries: classifies embedded definitions —
-   * already in children-before-parents order — into {@link LocalUploadDependency}s,
-   * preserving that order (which the coordinator uploads in). Server-sourced
-   * entries are omitted (already in the cloud — resolution goes through the
-   * promotion alias, so a dependency uploaded earlier drops out even when the
-   * document still references its old id), and the list is deduplicated per
-   * master (several snapshots of one master — e.g. frozen at different versions —
-   * are one dependency; the first, deepest occurrence wins).
+   * Classifies already-ordered embedded definitions into
+   * {@link LocalUploadDependency}s, preserving that order. Server-sourced
+   * entries drop out — resolution goes through the promotion alias, so a
+   * dependency uploaded earlier is skipped even when the document still
+   * references its old id — and several snapshots of one master count as one
+   * dependency, the deepest occurrence winning.
    */
   private _classifyLocalDependencies(
     entries: { name: string; sourceId?: string }[]
@@ -364,7 +333,6 @@ export class PromotionService {
         masterTypeId !== undefined
           ? this.registry.getDefinition(masterTypeId)
           : undefined;
-      // Already in the cloud — its copy is fine, nothing local to mention.
       if (master?.source === 'server') continue;
       const key =
         masterTypeId !== undefined
@@ -384,10 +352,9 @@ export class PromotionService {
   }
 
   /**
-   * After a master is promoted to the cloud, re-points an open editor tab for it
-   * (matched by the old browser id) to the new server identity, so closing/saving
-   * that editor routes to the server save path rather than resurrecting the
-   * deleted browser record. No-op when no such editor is open.
+   * Re-points an open editor tab, matched by the old browser id, at the new
+   * server identity, so saving it routes to the server rather than
+   * resurrecting the deleted browser record.
    */
   private _reconcilePromotedEditor(
     oldId: string,
@@ -408,10 +375,8 @@ export class PromotionService {
   }
 
   /**
-   * Rejects creating a *new* cloud record (create / promote / upload) while
-   * signed out — the proactive counterpart to the 401 the API would return.
-   * Toasts once and throws the marker error the outer flows recognize as
-   * already surfaced (see `isHandledSaveError`).
+   * Rejects creating a new cloud record while signed out — the proactive
+   * counterpart to the API's 401. The marker error reads as already surfaced.
    */
   private _requireSignedIn(): void {
     if (this.cloudSession.isSignedIn()) return;
@@ -423,11 +388,9 @@ export class PromotionService {
   }
 
   /**
-   * Builds a throwaway project from stored circuit JSON, runs `fn` on it (a
-   * serialize-and-upload step), and always tears the project down. Shared by
-   * the upload paths that push a stored record without opening it. `fn` also
-   * receives the blob's fork attribution (if any) — a throwaway project has no
-   * metadata entry to carry it.
+   * Builds a throwaway project from stored circuit JSON, runs `fn` on it and
+   * always tears it down. `fn` also receives the blob's fork attribution: a
+   * throwaway project has no metadata entry to carry it.
    */
   private async _withProjectFromContent<T>(
     content: string,
@@ -450,9 +413,8 @@ export class PromotionService {
   }
 
   /**
-   * Deletes a browser project record after its content has been uploaded to the
-   * cloud, so the project *moves* rather than being copied. Best-effort: the
-   * upload already committed, so a cleanup failure is logged, not surfaced.
+   * Best-effort: the upload already committed, so a cleanup failure is logged
+   * rather than surfaced.
    */
   private async _dropBrowserProjectRecord(id: string): Promise<void> {
     try {

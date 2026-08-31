@@ -4,12 +4,9 @@ import { randomUUID } from 'node:crypto';
 import { ENV, type Env } from '../config/env';
 
 /**
- * bcrypt, still — the legacy database is full of `$2b$09$` hashes and they have
- * to keep verifying, which rules out moving to another algorithm without a
- * rehash-on-login scheme for a family of hashes we would then have to support
- * anyway. bcrypt encodes its cost in the hash, so raising the cost for new
- * passwords costs nothing, and {@link needsRehash} lets an old hash catch up the
- * next time its owner signs in.
+ * bcrypt, because the stored hashes have to keep verifying. It encodes its cost
+ * in the hash, so raising the cost for new passwords costs nothing, and
+ * {@link needsRehash} lets a weaker stored hash catch up on the next sign-in.
  */
 @Injectable()
 export class PasswordService {
@@ -32,12 +29,9 @@ export class PasswordService {
   }
 
   /**
-   * Burns the same time a real verification would.
-   *
-   * Login must take as long for an unknown address as for a known one; otherwise
-   * response times alone tell an attacker which addresses have accounts. The
-   * hash is of a random string generated at first use, so it matches nothing, and
-   * it is built at the configured cost so the timing actually matches.
+   * Burns the same time a real verification would, so response times do not
+   * tell an attacker which addresses have accounts. The hash is of a random
+   * string, at the configured cost so the timing actually matches.
    */
   async verifyNothing(plain: string): Promise<false> {
     this.dummyHash ??= hashSync(randomUUID(), this.env.BCRYPT_COST);

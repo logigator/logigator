@@ -11,16 +11,13 @@ import { TranslateDirective } from '../../translation/translate.directive';
 
 /**
  * The tab strip above the board: the pinned main project plus one tab per open
- * custom-component editor. Clicking a tab switches the canvas via
- * {@link ProjectService.setActiveProject}; the ✕ on a component tab closes its
- * editor through {@link CustomComponentService.closeComponent}. The board already
- * renders whatever `activeProject()` is, so no board change is needed.
+ * custom-component editor. The board renders whatever `activeProject()` is, so
+ * switching a tab needs no board change.
  *
- * Presentation and reordering (closable, draggable, dirty/icon tabs) live in the
- * generic `LgTabStrip`; this component only maps projects onto its `tabs` model.
- * The main project stays pinned first (`fixed`) and out of the reorder set.
- * Switching and reordering are both inert during simulation, which binds to the
- * active project.
+ * Presentation and reordering live in the generic `LgTabStrip`; this component
+ * only maps projects onto its `tabs` model. The main project stays pinned first
+ * and out of the reorder set. Switching and reordering are both inert during
+ * simulation, which binds to the active project.
  */
 @Component({
   selector: 'app-tab-bar',
@@ -44,15 +41,13 @@ export class TabBarComponent {
 
   /**
    * Live-region text for a Ctrl+Arrow tab move. An arrow property so the
-   * template can hand the strip a stable reference; `translate` runs at move
-   * time, so the announcement is in the current language.
+   * template hands the strip a stable reference, and `translate` runs at move
+   * time so the announcement is in the current language.
    */
   protected readonly movedLabel = (position: number, total: number): string =>
     this.translation.translate('common.moved', { position, total });
 
   protected readonly tabs = computed<LgTabStripItem<Project>[]>(() => {
-    // Labels re-translate on language change through `translation.translate()`,
-    // which reads the service's post-load signal inside this computed.
     const active = this.activeProject();
     const tabs: LgTabStripItem<Project>[] = [];
 
@@ -90,8 +85,7 @@ export class TabBarComponent {
     );
   }
 
-  // Tab switching is disabled while simulating — the simulation binds to the
-  // active project.
+  // Inert while simulating: the simulation binds to the active project.
   protected activate(project: Project): void {
     if (this.isSimulation()) return;
     this.projectService.setActiveProject(project);

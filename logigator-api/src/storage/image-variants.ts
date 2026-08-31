@@ -15,12 +15,9 @@ export type ImageSlot = 'light' | 'dark';
 export const IMAGE_SLOTS: readonly ImageSlot[] = ['light', 'dark'];
 
 /**
- * One file an asset directory holds: what to encode it as, and what to call it.
- *
- * The matrices below are data rather than encoder calls because two places need
- * them and only one of them encodes: the upload path writes these files, and
- * every response that carries the image lists their URLs without touching the
- * disk.
+ * One file an asset directory holds. The matrices below are data, not encoder
+ * calls, because the upload path writes these files and every response carrying
+ * the image lists their URLs without touching the disk.
  */
 export interface ImageVariantSpec {
   /** Name inside the asset directory, extension included. */
@@ -68,23 +65,20 @@ export const AVATAR_VARIANTS: readonly ImageVariantSpec[] = matrix(
 
 /**
  * Previews: 256 for listing grids, 1024 for a detail view and for the grid at
- * twice the device pixel ratio. 1024 is also what the editor renders, so that
- * rung is a transcode rather than a resize.
+ * twice the device pixel ratio. 1024 is what the editor renders, so that rung
+ * is a transcode rather than a resize.
  *
- * The fallback is PNG, not JPEG. A circuit render is line art on a transparent
- * ground: JPEG cannot carry the transparency and smears one-pixel wires, and
- * measured on a synthetic board a lossy WebP came out *larger* than a lossless
- * one — anti-aliased hairlines are the worst case for a DCT and the best case
- * for a lossless predictor.
+ * PNG fallback, not JPEG: a circuit render is line art on a transparent ground,
+ * which JPEG cannot carry and whose one-pixel wires it smears. Anti-aliased
+ * hairlines are the worst case for a DCT — a lossy WebP measured *larger* than
+ * a lossless one.
  */
 export const PREVIEW_VARIANTS: readonly ImageVariantSpec[] =
   IMAGE_SLOTS.flatMap((slot) => matrix([256, 1024], ['webp', 'png'], slot));
 
 /**
- * The variants of one stored asset, as a client reads them.
- *
- * Derived from the matrix rather than from the directory: the files are written
- * together or not at all, so listing them needs no disk access.
+ * The variants of one stored asset, from the matrix rather than the directory:
+ * the files are written together or not at all, so listing needs no disk.
  */
 export function variantUrls(
   area: StorageArea,
@@ -100,11 +94,9 @@ export function variantUrls(
 }
 
 /**
- * A stored preview, split by the render it came from.
- *
- * One asset, two lists: a client picks the theme it is drawing in, and no
- * content negotiation can make that choice for it — the two renders are the
- * same board, so nothing about the request says which one is wanted.
+ * A stored preview, split by the render it came from. One asset, two lists: the
+ * client picks the theme it is drawing in, and nothing about the request could
+ * negotiate that for it.
  */
 export function previewUrls(id: string): CircuitPreview {
   return {

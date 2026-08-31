@@ -1,13 +1,9 @@
 /**
- * A fake Logigator backend for the four shots that show cloud state.
- *
- * The point is reproducibility: a live account would put a drifting project
- * list and a moving "Last edited" date into the docs, so the screenshots would
- * churn on every capture. Everything here is frozen — names, dates, ids and the
- * share link — and no request ever leaves the machine.
- *
- * Only the reads those dialogs perform are modelled. Writes are acknowledged
- * with an echo so a dialog can be photographed mid-flow, but nothing persists.
+ * A fake Logigator backend for the four shots that show cloud state. A live
+ * account would put a drifting project list and a moving "Last edited" date
+ * into the docs, so everything here is frozen and no request leaves the
+ * machine. Only the reads those dialogs perform are modelled; writes echo back
+ * so a dialog can be photographed mid-flow, but nothing persists.
  */
 
 /** The signed-in user shown in the account menu. */
@@ -98,8 +94,8 @@ const pageOf = (entries) => ({
 
 /**
  * Routes `/api/**` to the fixtures and marks the session as signed in. The
- * `isAuthenticated` cookie is what the editor watches — flipping it true is
- * what makes `UserService` fetch the user and the cloud tabs come alive.
+ * editor watches the `isAuthenticated` cookie: flipping it true is what fetches
+ * the user and brings the cloud tabs alive.
  */
 export async function installApiMocks(page, { baseUrl }) {
   await page

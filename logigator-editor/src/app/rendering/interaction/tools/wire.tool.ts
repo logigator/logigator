@@ -18,16 +18,14 @@ interface PortHit {
 }
 
 /**
- * The wire tool: a drag draws wires (via {@link WireToolSession}); a press
- * that never leaves its grid step is a tap — a port within tolerance toggles
- * its negation bubble, otherwise the nearest half-grid point toggles the wire
- * connection there (join/split). Hovering previews exactly what the next tap
- * would do.
+ * A drag draws wires; a press that never leaves its grid step is a tap, where
+ * a port within tolerance toggles its negation bubble and otherwise the
+ * nearest half-grid point toggles its wire connection. Hovering previews what
+ * the next tap would do.
  */
 export class WireTool implements BoardTool {
   public down(project: Project, input: PointerInput, host: ToolHost): void {
-    // Cloned before the inline rounding below: the tap fallback needs the
-    // unsnapped position for the port hit test.
+    // The tap fallback needs the unsnapped position for the port hit test.
     const tapPoint = input.grid.clone();
     host.startSession(
       new WireToolSession(
@@ -50,9 +48,9 @@ export class WireTool implements BoardTool {
   }
 
   /**
-   * Previews what a tap at the point would do: the negation bubble for a port
-   * in reach (which wins over a junction — same precedence as {@link _tap}),
-   * else the connection-toggle ghost, else nothing.
+   * Previews what a tap would do: the negation bubble for a port in reach
+   * (which wins over a junction, as in {@link _tap}), else the
+   * connection-toggle ghost, else nothing.
    */
   private _updateGhosts(project: Project, gridPoint: Point): void {
     const hit = this._findPortAt(project, gridPoint);
@@ -90,15 +88,14 @@ export class WireTool implements BoardTool {
     } else {
       project.topology.toggleConnectionAt(roundToHalfGrid(gridPoint));
     }
-    // The toggle changed what the next tap here would do (split ⇄ join) —
-    // re-derive the preview in place instead of leaving the stale ghost.
+    // The toggle flipped what the next tap here would do (split ⇄ join).
     this._updateGhosts(project, gridPoint);
   }
 
   /**
-   * Nearest negatable port to a grid-space point, within tolerance. Uses the
-   * quad-tree range query (never iterates every component) and rejects placed
-   * custom instances — their external ports are not independently negatable.
+   * Nearest negatable port to a grid-space point, within tolerance. Rejects
+   * placed custom instances: their external ports are not independently
+   * negatable.
    */
   private _findPortAt(project: Project, localPoint: Point): PortHit | null {
     const queryRect = new Rectangle(

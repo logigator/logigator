@@ -14,8 +14,7 @@ describe('readiness', () => {
   });
 
   it('reports both backing services as reachable', async () => {
-    // The one endpoint that can only pass against real services — which is why
-    // it is asserted here and not in the unit suite.
+    // The one endpoint that can only pass against real services.
     const response = await api.inject({
       method: 'GET',
       url: '/api/health/ready'

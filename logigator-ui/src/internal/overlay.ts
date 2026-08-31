@@ -10,16 +10,9 @@ import { ScrollDispatcherTarget } from '@angular/cdk/scrolling';
 import { map, Observable } from 'rxjs';
 
 /**
- * Shared `cdk/overlay` plumbing for the connected (anchored) overlays — the
- * most-reused behavioral primitive in the library (Tooltip, Popover,
- * ConfirmPopup, Select, menus). It owns the bits every anchored overlay gets
- * right the same way: the side→position mapping with sensible flip fallbacks,
- * `withPush`, and a repositioning scroll strategy.
- *
- * Drawing the caret/arrow and wiring dismissal stay with each consumer (they
- * differ — a tooltip dismisses on blur, a popover on outside-click), but
- * {@link caretSideChanges} lets a consumer read back which side actually won so
- * it can place its caret.
+ * Shared `cdk/overlay` plumbing for anchored overlays: the side→position
+ * mapping with flip fallbacks, `withPush`, and a repositioning scroll
+ * strategy. Caret drawing and dismissal stay with each consumer.
  */
 export type LgOverlaySide = 'top' | 'bottom' | 'left' | 'right';
 
@@ -75,10 +68,10 @@ export function positionForSide(
 }
 
 /**
- * Positions for a preferred `side`, ordered preferred → opposite → the two
- * perpendicular sides, so `withPush`/flip can fall back when the preferred side
- * doesn't fit the viewport. Pass a single {@link positionForSide} instead when
- * the side is fixed and flipping would be worse than overflowing.
+ * Positions for a preferred `side`, ordered preferred → opposite →
+ * perpendicular, so flip can fall back when the preferred side doesn't fit.
+ * Pass a single {@link positionForSide} when flipping would be worse than
+ * overflowing.
  */
 export function connectedPositions(
   side: LgOverlaySide,
@@ -90,11 +83,9 @@ export function connectedPositions(
   return order.map((s) => positionForSide(s, gap));
 }
 
-// Diamond caret pointing toward the anchor: a rotated square parked
-// half-overlapping the panel edge nearest the anchor, so its inner half blends
-// into the panel and its outward corner shows the panel's border on the two
-// protruding edges. Keyed by the side the panel sits on relative to the
-// anchor; the entries pick which two edges carry the border width.
+// A rotated square half-overlapping the panel edge nearest the anchor, so its
+// inner half blends into the panel. Keyed by the side the panel sits on; the
+// two bordered edges are the ones that protrude.
 const CARET_POSITION: Record<LgOverlaySide, string> = {
   top: '-bottom-1.25 left-1/2 -translate-x-1/2 border-r border-b',
   bottom: '-top-1.25 left-1/2 -translate-x-1/2 border-l border-t',
@@ -103,10 +94,8 @@ const CARET_POSITION: Record<LgOverlaySide, string> = {
 };
 
 /**
- * The caret's surface per panel background: `content` pairs with a
- * `bg-content` panel (Popover, ConfirmPopup), `raised` with the elevated
- * chrome (the Tooltip bubble: the bordered content surface in light, the
- * borderless `surface-700` box in dark).
+ * The caret's surface per panel background: `content` for a `bg-content`
+ * panel, `raised` for the elevated chrome of a tooltip bubble.
  */
 export type LgCaretTone = 'content' | 'raised';
 
@@ -115,29 +104,23 @@ const CARET_TONE: Record<LgCaretTone, string> = {
   raised: 'bg-content border-border dark:bg-surface-700 dark:border-transparent'
 };
 
-/** Tailwind classes for a caret pointing at the anchor from the given side. */
 export function caretClasses(side: LgOverlaySide, tone: LgCaretTone): string {
   return `rotate-45 ${CARET_POSITION[side]} ${CARET_TONE[tone]}`;
 }
 
-/** The caret rides the panel's horizontal edge, so it slides along X. */
 export function caretRunsAlongX(side: LgOverlaySide): boolean {
   return side === 'top' || side === 'bottom';
 }
 
-/**
- * How far the caret may slide from the panel's centre before it runs off the
- * straight part of the edge — its own diagonal plus the corner radius.
- */
+// The caret's own diagonal plus the corner radius: how far it may slide from
+// the panel's centre before it runs off the straight part of the edge.
 const CARET_EDGE_INSET = 16;
 
 /**
- * How far to slide the caret along its edge so it keeps pointing at the anchor,
- * for {@link LgCaret}'s `offset`. It defaults to the panel's centre, which is
- * the anchor's centre only while the panel straddles it — near a screen edge or
- * a scroller bound the panel is pushed aside and a centred caret then points at
- * nothing. Pass the panel rect as it is actually drawn (including any shift the
- * consumer applied itself); capped short of the corners.
+ * How far to slide the caret along its edge so it keeps pointing at the
+ * anchor. A centred caret points at nothing once `withPush` shoves the panel
+ * off the anchor, so pass the panel rect as actually drawn, including any
+ * shift the consumer applied itself. Capped short of the corners.
  */
 export function caretOffsetFor(
   anchor: DOMRect,
@@ -155,15 +138,13 @@ export function caretOffsetFor(
   return Math.round(Math.min(Math.max(delta, -limit), limit));
 }
 
-/** The flexible position strategy an anchored {@link OverlayRef} was built with. */
 function strategyOf(ref: OverlayRef): FlexibleConnectedPositionStrategy {
   return ref.getConfig().positionStrategy as FlexibleConnectedPositionStrategy;
 }
 
 /**
- * The side a connected overlay actually lands on, per resolved position of its
- * flexible strategy — feed it to the caret's `side` input so the caret keeps
- * pointing at the anchor across flip fallbacks.
+ * The side a connected overlay actually lands on. Feed it to the caret's
+ * `side` input so the caret survives flip fallbacks.
  */
 export function caretSideChanges(ref: OverlayRef): Observable<LgOverlaySide> {
   return strategyOf(ref).positionChanges.pipe(
@@ -172,17 +153,11 @@ export function caretSideChanges(ref: OverlayRef): Observable<LgOverlaySide> {
 }
 
 /**
- * How the anchor sits in its scrollable ancestors, per resolved position —
- * `isOriginClipped` once it is partly scrolled out, `isOriginOutsideView` once
- * it is gone entirely. Lets a consumer follow its anchor out of a scroller
- * instead of clamping to the viewport edge, pointing at nothing.
- *
- * Only meaningful when the overlay was built with scrollable ancestors;
- * without them CDK has nothing to clip against and both stay false.
- * `LgOverlayService.connected` resolves them, so overlays built by calling
- * {@link createConnectedOverlay} directly must pass `scrollableAncestors`
- * themselves. Note it emits only when the resolved position or the visibility
- * itself changes — not on every reposition.
+ * How the anchor sits in its scrollable ancestors, so a consumer can follow it
+ * out of a scroller instead of clamping to the viewport edge. Both flags stay
+ * false unless the overlay was built with `scrollableAncestors`, and it emits
+ * only when the resolved position or the visibility changes, not on every
+ * reposition.
  */
 export function originVisibilityChanges(
   ref: OverlayRef
@@ -192,7 +167,6 @@ export function originVisibilityChanges(
   );
 }
 
-/** Which side a resolved {@link ConnectedPosition} placed the overlay on. */
 export function sideOfPosition(position: ConnectedPosition): LgOverlaySide {
   if (position.overlayY === 'bottom') {
     return 'top';
@@ -209,26 +183,20 @@ export interface ConnectedOverlayOptions {
   hasBackdrop?: boolean;
   backdropClass?: string;
   panelClass?: string | string[];
-  /**
-   * The anchor's scrollable ancestors, so CDK can report how the anchor sits in
-   * them (see {@link originVisibilityChanges}). `LgOverlayService.connected`
-   * resolves these from the `ScrollDispatcher`.
-   */
+  /** Required for {@link originVisibilityChanges} to report anything. */
   scrollableAncestors?: ScrollDispatcherTarget[];
   /**
-   * Whether CDK may shrink the overlay to fit the viewport (its default). Turn
-   * it off for a panel that sizes itself — it then gets an exact position
-   * instead of being measured into a flexible box, which is both what such a
-   * panel wants and, observed, what keeps it correctly placed after its anchor
-   * has left the viewport and come back.
+   * Whether CDK may shrink the overlay to fit the viewport (its default). Off
+   * for a panel that sizes itself: it then gets an exact position rather than
+   * being measured into a flexible box, which is also what keeps it placed
+   * correctly after its anchor leaves the viewport and comes back.
    */
   flexibleDimensions?: boolean;
 }
 
 /**
- * Build an anchored {@link OverlayRef} with the library's shared defaults:
- * flexible connected positioning with `withPush`, a viewport margin, and a
- * repositioning scroll strategy. The caller attaches a portal and disposes it.
+ * An anchored {@link OverlayRef} with the library's shared defaults. The
+ * caller attaches a portal and disposes it.
  */
 export function createConnectedOverlay(
   overlay: Overlay,
@@ -261,12 +229,7 @@ export function createConnectedOverlay(
   });
 }
 
-/**
- * Where a global (viewport-positioned, non-anchored) overlay sits: centred for
- * modal dialogs, pinned to an edge for drawers, or floated bottom-centre (a
- * horizontally centred toast/hint pinned to the bottom edge — the panel supplies
- * its own bottom offset via `panelClass`).
- */
+/** Where a global (viewport-positioned, non-anchored) overlay sits. */
 export type LgOverlayPlacement =
   'center' | 'left' | 'right' | 'top' | 'bottom' | 'bottom-center';
 
@@ -276,17 +239,17 @@ export interface GlobalOverlayOptions {
   backdropClass?: string | string[];
   panelClass?: string | string[];
   /**
-   * Block page scroll while open. Defaults to **false** — the consumers are
+   * Block page scroll while open. Defaults to false: the consumers are
    * full-screen, non-scrolling apps where blocking only risks a layout shift.
    */
   blockScroll?: boolean;
 }
 
 /**
- * Build a global (viewport-positioned) {@link OverlayRef}: centred for modal
- * dialogs, edge-pinned for drawers. Edge placements pin the corner; the panel
- * itself supplies the cross-axis size (`h-screen` for a side drawer, `w-screen`
- * for a bottom/top one). Backdrop and dismissal wiring stay with the caller.
+ * A global (viewport-positioned) {@link OverlayRef}. Edge placements pin the
+ * corner only; the panel supplies its own cross-axis size (`h-screen` for a
+ * side drawer, `w-screen` for a bottom/top one). Dismissal stays with the
+ * caller.
  */
 export function createGlobalOverlay(
   overlay: Overlay,
@@ -310,9 +273,8 @@ export function createGlobalOverlay(
       strategy.bottom('0').left('0');
       break;
     case 'bottom-center':
-      // Centre horizontally, pin to the bottom edge with no baked-in offset —
-      // `bottom()` leaves margin-bottom unset so the panel's own `panelClass`
-      // margin controls how far it floats up.
+      // Bare `bottom()` leaves margin-bottom unset, so the panel's own
+      // `panelClass` margin controls how far it floats up.
       strategy.centerHorizontally().bottom();
       break;
   }

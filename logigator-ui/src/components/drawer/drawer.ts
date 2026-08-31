@@ -22,9 +22,8 @@ let nextId = 0;
 
 type DrawerPosition = 'left' | 'right' | 'top' | 'bottom';
 
-// Default cross-axis size per edge. Side drawers fill the (dynamic) viewport
-// height at a fixed width; bottom/top sheets size to their content, capped at
-// `calc(100dvh - 2.5rem)`. `styleClass` (with `!`) can still override.
+// Side drawers fill the dynamic viewport height at a fixed width; bottom/top
+// sheets size to their content, capped. `styleClass` with `!` overrides.
 const SHEET_MAX = 'max-h-[calc(100dvh-2.5rem)]';
 const POSITION_SIZE: Record<DrawerPosition, string> = {
   left: 'h-dvh w-80',
@@ -50,18 +49,14 @@ const POSITION_BORDER: Record<DrawerPosition, string> = {
 };
 
 /**
- * A drawer (side / bottom sheet) pinned to a viewport edge. `visible` is
- * **one-way** like {@link LgDialog} — backdrop click, Escape, or the close
- * button emit `visibleChange(false)` for the parent to re-derive `visible`.
- * Edge-pinned over a `cdk/overlay` global overlay with focus trap + restore;
- * slides in from its edge. Bottom/top sheets size to their content (capped near
- * the viewport height); default content is projected and `styleClass` is merged
- * onto the panel for any further sizing.
+ * A drawer or bottom sheet pinned to a viewport edge, over a `cdk/overlay`
+ * global overlay. `visible` is **one-way** like {@link LgDialog}: backdrop
+ * click, Escape and the close button emit `visibleChange(false)` for the
+ * parent to re-derive it. `styleClass` merges onto the panel for sizing.
  *
- * `modal` (default true) scrims the page behind a backdrop and traps focus.
- * With `[modal]="false"` there is no backdrop and no focus trap: everything
- * around the drawer stays visible and interactive — a live overlay panel,
- * like the inspection sheet floating over a running simulation.
+ * `modal` (default true) scrims the page and traps focus. With
+ * `[modal]="false"` there is neither, so everything around the drawer stays
+ * visible and interactive.
  */
 @Component({
   selector: 'lg-drawer',
@@ -104,7 +99,7 @@ export class LgDrawer implements OnDestroy {
   readonly position = input<DrawerPosition>('left');
   readonly header = input<string>();
   readonly closable = input(true, { transform: booleanAttribute });
-  /** ARIA label for the close button — pass a localized string. */
+  /** ARIA label for the close button; localize it. */
   readonly closeLabel = input(lgLabel('close'));
   readonly modal = input(true, { transform: booleanAttribute });
   readonly styleClass = input<string>('');

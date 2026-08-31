@@ -2,41 +2,35 @@ import { SerializedCircuitBody } from './serialized-circuit';
 
 /**
  * A session definition of a custom component — enough to render and place a
- * black-box instance. Every definition is one of two **kinds**:
+ * black-box instance. Every definition is one of two kinds:
  *
- * - a **master** — the editable library/catalog entry. Mutable; it owns the
- *   persistent {@link id} and is what the user places *from* and edits.
- * - a **snapshot** — a **frozen** copy embedded in a host project at place time,
- *   carrying provenance ({@link id} + {@link version}) back to its master. A
- *   placed instance always wraps a snapshot, so editing a master never changes
- *   already-placed instances.
+ * - a master: the mutable library entry, owning the persistent {@link id}, that
+ *   the user places from and edits.
+ * - a snapshot: a frozen copy embedded in a host project at place time,
+ *   carrying provenance ({@link id} + {@link version}) back to its master.
  *
- * The "one mutable object, mutated in place by `updateDefinition`" rule applies
- * **only to masters**. Snapshots are immutable — created frozen and never edited;
- * bringing an instance up to date replaces it with a *new* snapshot.
+ * A placed instance always wraps a snapshot, so editing a master never changes
+ * already-placed instances. Only masters are mutated in place; bringing an
+ * instance up to date replaces its snapshot with a new one.
  */
 export interface CustomComponentDefinition {
-  /** Session-local numeric type id — the value written as `t` in the wire format. */
+  /** Session-local numeric type id — the value written as `t` in the body. */
   readonly typeId: number;
   /** `master` = editable catalog entry; `snapshot` = frozen placed copy. */
   kind: 'master' | 'snapshot';
   /** Which library the {@link id} belongs to. */
   source: 'server' | 'browser';
   /**
-   * Persistent identity (a string, never conflated with {@link typeId}). For a
-   * master: its own id (server uuid / browser store id). For a snapshot: the id
-   * of the master it was copied from (provenance, used only to offer an explicit
-   * "update"). Reverse `id → typeId` is masters-only — one id maps to many
-   * snapshot type ids.
+   * Persistent identity, never conflated with {@link typeId}. A master's own
+   * id; for a snapshot, the master it was copied from. Reverse `id → typeId` is
+   * masters-only: one id maps to many snapshot type ids.
    */
   id?: string;
-  /** Master: its current monotonic version. Snapshot: the master version this copy was taken at. */
+  /** A master's monotonic version; a snapshot's, the one it was taken at. */
   version?: number;
   /**
-   * Masters only: epoch-ms of the master's last save, used to order the USER
-   * palette newest-first. Normalised to epoch ms regardless of library (the
-   * browser store keeps epoch ms, the server sends an ISO string). Absent on
-   * snapshots (never listed).
+   * Masters only: epoch-ms of the last save, normalised across libraries (the
+   * server sends an ISO string), used to order the palette newest-first.
    */
   lastEdited?: number;
   name: string;
@@ -49,28 +43,24 @@ export interface CustomComponentDefinition {
   /** Port labels, inputs first then outputs, in plug-index order. */
   labels: string[];
   /**
-   * Server masters only: the share-link token (`showShareLinks`), captured from
-   * the summary/response when the master is registered so the share dialog reads
-   * it without an extra fetch. Absent for browser masters and snapshots.
+   * Server masters only: the share-link token, captured when the master is
+   * registered so the share dialog reads it without an extra fetch.
    */
   link?: string;
   /** Server masters only: whether the component is published publicly. */
   isPublic?: boolean;
   /**
-   * The definition's own circuit in the native body encoding, holding **session**
-   * type ids. For a snapshot: travels embedded with the host document (present
-   * once loaded). For a master: materialised from its open editor Project (see
-   * `DefinitionBinding`) / freshly created.
+   * The definition's own circuit in the native body encoding, holding session
+   * type ids. A snapshot's travels embedded with the host document; a master's
+   * is materialised from its open project.
    */
   circuit?: SerializedCircuitBody;
 }
 
 /**
- * A master's user-authored descriptive metadata — set at creation and editable
- * afterwards through the "Edit details" dialog. The details travel in placed
- * snapshots, so persisting an edit bumps the master's monotonic `version` like
- * a circuit save does — instances frozen at the older version are then offered
- * "Update to latest".
+ * A master's user-authored descriptive metadata. It travels in placed
+ * snapshots, so persisting an edit bumps the master's `version` like a circuit
+ * save does and instances frozen at the older version are offered an update.
  */
 export interface CustomComponentDetails {
   name: string;
@@ -79,9 +69,9 @@ export interface CustomComponentDetails {
 }
 
 /**
- * The patch applied when a **master's** plugs change (see `deriveSummary`).
- * Port counts and labels are always recomputed together; the descriptive
- * fields are optional and only set when the create/edit dialog changes them.
+ * The patch applied when a master's plugs change. Port counts and labels are
+ * always recomputed together; the descriptive fields are set only when the
+ * create/edit dialog changes them.
  */
 export interface CustomComponentSummaryPatch {
   numInputs: number;

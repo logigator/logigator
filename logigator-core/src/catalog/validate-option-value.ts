@@ -1,12 +1,9 @@
 import { OptionSchema } from './option-schema';
 
 /**
- * Why `value` is not acceptable for `schema`, or `null` when it is.
- *
- * Callers reject rather than silently accept: the editor's option setters clamp
- * numbers and strip characters on their own, so an unchecked write would report
- * success while storing something else, and the API refuses to store a document
- * whose option values it had to change.
+ * Why `value` is not acceptable for `schema`, or `null` when it is. Callers
+ * reject rather than silently accept, so a write never reports success while
+ * storing something else.
  */
 export function validateOptionValue(
   schema: OptionSchema,

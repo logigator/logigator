@@ -32,12 +32,11 @@ import { TranslationKey } from '../translation/translation-key.model';
 /**
  * Compile-time gate on the display text that lives in `@logigator/core`.
  *
- * Core knows nothing about the editor's translation schema, so a meta's `name`,
- * `description` and option labels are opaque `string`s there. Each meta is
- * declared with `satisfies`, though, so its literal key types survive — and
- * this file collects them into one union and asserts it against
- * {@link TranslationKey}. A typo, or a key removed from the locale files, fails
- * the editor's type check rather than rendering as a raw key at runtime.
+ * Core knows nothing about the editor's translation schema, so a meta's name,
+ * description and option labels are opaque `string`s there. Each meta is
+ * declared with `satisfies`, so its literal key types survive; collecting them
+ * into one union and asserting it against {@link TranslationKey} turns a typo
+ * or a dropped locale key into a type error rather than a raw key on screen.
  */
 
 interface TranslatableMeta {
@@ -50,8 +49,8 @@ type SchemasOf<M extends TranslatableMeta> = M['options'][keyof M['options']];
 
 /**
  * Every display string one meta contributes. `placeholder` and `dialogTitle`
- * are optional per schema kind, so they are picked out of the union rather than
- * indexed — indexing would fail on the kinds that lack them.
+ * are picked out of the union rather than indexed: they are optional per
+ * schema kind, and indexing fails on the kinds that lack them.
  */
 type MetaKeys<M extends TranslatableMeta> =
   | M['name']

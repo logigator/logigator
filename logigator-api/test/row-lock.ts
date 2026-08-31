@@ -2,21 +2,19 @@ import { sql } from 'drizzle-orm';
 import type { Database, Transaction } from '../src/database/database.module';
 
 /**
- * Runs something while a row it writes is locked by an uncommitted transaction,
+ * Runs `racing` while a row it writes is locked by an uncommitted transaction,
  * and answers what it returned.
  *
- * Two writes landing on one row at the same moment is the interleaving injected
- * requests cannot produce on their own — they run one at a time — and it is the
- * one that decides whether a write is safe. An open transaction reproduces it
- * exactly, and deterministically: everything the racing write does *before* it
- * reaches the row happens while `write` is still invisible, its own statement
- * blocks on the lock, and the commit is what releases it. Under `READ COMMITTED`
- * that statement is then re-evaluated against the committed row — so a write that
- * computes its new value in SQL picks the fresh one up, and one that carries a
- * value it read earlier writes the stale one back.
+ * Injected requests run one at a time, so this is the only way to reach the
+ * interleaving that decides whether a write is safe. Everything `racing` does
+ * before it reaches the row happens while `write` is still invisible; its
+ * statement then blocks until the commit. Under `READ COMMITTED` that statement
+ * is re-evaluated against the committed row, so a write computing its value in
+ * SQL picks the fresh one up and one carrying a value it read earlier writes
+ * the stale one back.
  *
  * The wait is observed rather than slept through, so the ordering is a fact of
- * the run and not a guess about timing.
+ * the run.
  */
 export async function whileRowLocked<T>(
   db: Database,
@@ -39,8 +37,8 @@ export async function whileRowLocked<T>(
     await held;
     return await pending;
   } finally {
-    // The transaction holds a pooled connection until it ends, so a failure
-    // above must not leave it open — every later query would wait on it.
+    // The transaction holds a pooled connection until it ends; left open, every
+    // later query waits on it.
     release?.();
     await held.catch(() => undefined);
   }

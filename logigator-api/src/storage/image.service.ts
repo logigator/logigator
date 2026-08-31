@@ -11,63 +11,47 @@ import {
 } from './image-variants';
 
 /**
- * How a kind of image wants to be encoded. The two differ in every choice that
- * matters, so naming them beats threading four flags through the pipeline:
- *
- * - `photo` — an avatar. Cropped square (a face belongs in the middle, not in a
- *   letterbox), lossy WebP, and a JPEG fallback flattened onto white, since JPEG
- *   has no alpha and the alternative renders transparency as black.
- * - `lineArt` — a circuit preview. Padded square so nothing is cropped out,
- *   transparency kept, and lossless on both formats: hairlines are what a lossy
- *   encoder destroys first, and on this content it produces bigger files anyway.
+ * - `photo` — an avatar. Cropped square, lossy WebP, JPEG fallback flattened
+ *   onto white (JPEG has no alpha, and transparency would render black).
+ * - `lineArt` — a circuit preview. Padded square so nothing is cropped,
+ *   transparency kept, lossless: hairlines are what a lossy encoder destroys
+ *   first, and on this content it produces bigger files anyway.
  */
 type EncodeMode = 'photo' | 'lineArt';
 
 /**
- * The formats accepted from a client, as *detected from the bytes* rather than
- * declared in a header.
- *
- * The allowlist is the point of the check, not the convenience of it: libvips
- * also reads SVG, PDF, TIFF and more, and an SVG that got this far would be
- * rasterized into a perfectly valid avatar — turning "images only" into "any
- * document libvips can open".
+ * Accepted formats, as *detected from the bytes* rather than declared in a
+ * header. The allowlist is the point: libvips also reads SVG, PDF and TIFF, and
+ * an SVG would rasterize into a perfectly valid avatar.
  */
 const ACCEPTED_FORMATS = new Set(['png', 'jpeg', 'webp']);
 
 /**
- * Ceiling on the decoded size of an upload, in pixels.
- *
- * `UPLOAD_MAX_BYTES` bounds what arrives, not what it becomes: a few kilobytes
- * of PNG can describe a gigapixel canvas, and decoding it is the denial of
- * service. 40 megapixels sits above any camera whose output fits in the byte
- * limit and far below anything that threatens the process.
+ * Ceiling on the decoded size of an upload. `UPLOAD_MAX_BYTES` bounds what
+ * arrives, not what it becomes — a few kilobytes of PNG can describe a
+ * gigapixel canvas, and decoding it is the denial of service.
  */
 const MAX_INPUT_PIXELS = 40_000_000;
 
-/** Quality for the lossy encodes. High enough that an avatar shows no artifacts. */
 const PHOTO_QUALITY = 82;
 
 /**
  * Turns an uploaded image into the set of files that gets served.
  *
- * Re-encoding is not an optimization here, it is the validation: the bytes a
- * client sends are proof of nothing, and storing them verbatim under a
- * content type the same client chose is how an upload endpoint becomes a file
- * host. What comes out is decoded by libvips, oriented, resized to a matrix this
- * server chose, and re-encoded with no metadata carried over — so the camera
- * position in an avatar's EXIF does not become public, and nothing reaches the
- * volume that could not be decoded first.
+ * Re-encoding is the validation: client bytes are proof of nothing, and storing
+ * them verbatim under a client-chosen content type makes this a file host.
+ * Everything served was decoded by libvips, oriented, resized to a matrix this
+ * server chose, and re-encoded with no metadata carried over.
  */
 @Injectable()
 export class ImageService {
   private readonly logger = new Logger(ImageService.name);
 
-  /** The files an avatar upload becomes. */
   async encodeAvatar(source: Buffer): Promise<AssetFile[]> {
     return this.derive(source, AVATAR_VARIANTS, 'photo');
   }
 
-  /** The files a preview upload becomes, both themes in one asset. */
+  /** Both themes in one asset. */
   async encodePreviews(
     sources: Readonly<Record<ImageSlot, Buffer>>
   ): Promise<AssetFile[]> {
@@ -84,12 +68,9 @@ export class ImageService {
   }
 
   /**
-   * Decodes once, then encodes every variant from the result.
-   *
-   * The intermediate is raw pixels at the largest size the matrix asks for:
-   * every variant is at most that, so each one costs a downscale instead of
-   * another decode of the original, and a five-megabyte JPEG is read exactly
-   * once no matter how wide the matrix grows.
+   * Decodes once, then encodes every variant from the result. The intermediate
+   * is raw pixels at the largest size the matrix asks for, so each variant
+   * costs a downscale rather than another decode of the original.
    */
   private async derive(
     source: Buffer,
@@ -102,37 +83,29 @@ export class ImageService {
     return Promise.all(
       specs.map(async (spec) => ({
         name: spec.file,
-        // Everything below is our own doing, so a failure here is a defect and
-        // belongs in the 500 it will become — unlike `normalize`, where a
-        // failure is the upload's fault and says so.
+        // A failure here is our defect, not the upload's, so it stays a 500 —
+        // unlike `normalize`, which answers the client.
         content: await this.encode(master, spec, mode)
       }))
     );
   }
 
   /**
-   * Decodes the upload and squares it, answering raw pixels.
-   *
-   * Everything a client can get wrong fails here, which is why it is one step:
-   * a format we will not serve, a decode error, a pixel count meant to exhaust
-   * the process. The answer is the same for all of them — the image is not
-   * usable, and no amount of retrying the same bytes changes that.
+   * Decodes the upload and squares it, answering raw pixels. Everything a
+   * client can get wrong fails here — unservable format, decode error, a pixel
+   * count meant to exhaust the process — and all of it gets one answer.
    */
   private async normalize(
     source: Buffer,
     size: number,
     mode: EncodeMode
   ): Promise<Sharp> {
-    // `failOn: 'error'` rather than the stricter default: a warning is usually
-    // trailing junk after an otherwise perfect JPEG, which no viewer minds and
-    // rejecting would only frustrate. A checksum that does not match is
-    // different — the file is damaged, and telling the client so beats storing
-    // whatever the decoder guessed.
+    // `failOn: 'error'`, not the stricter default: a warning is usually
+    // trailing junk after an otherwise perfect JPEG, which no viewer minds.
     const image = sharp(source, {
       failOn: 'error',
       limitInputPixels: MAX_INPUT_PIXELS,
-      // Only the first frame of an animation. A still avatar is what every
-      // surface showing one expects, and it costs nothing to guarantee.
+      // First frame only; a still avatar is what every surface expects.
       animated: false
     });
 
@@ -147,15 +120,14 @@ export class ImageService {
     }
 
     try {
-      // `rotate()` before anything else applies the EXIF orientation while it is
-      // still there to read — the re-encode drops that metadata, so a phone
-      // photo would otherwise be stored on its side.
+      // `rotate()` first applies the EXIF orientation while it is still there
+      // to read; the re-encode drops that metadata.
       const { data, info } = await image
         .rotate()
         .resize(size, size, {
-          // Enlarging a small upload is deliberate: the matrix is a constant, so
-          // every URL in it has to resolve, and a variant that quietly came out
-          // narrower than it claims would make `srcset` pick it wrongly.
+          // Small uploads are enlarged on purpose: the matrix is a constant, so
+          // every URL has to resolve, and a variant narrower than it claims
+          // would make `srcset` pick it wrongly.
           fit: mode === 'photo' ? 'cover' : 'contain',
           position: 'centre',
           background: TRANSPARENT
@@ -182,8 +154,7 @@ export class ImageService {
     spec: ImageVariantSpec,
     mode: EncodeMode
   ): Promise<Buffer> {
-    // The master is already square and at least this big, so this is a plain
-    // downscale — or nothing at all, at the rung the master was made for.
+    // The master is square and at least this big, so this only ever downscales.
     const image = master.clone().resize(spec.width, spec.height);
 
     switch (spec.format) {
@@ -204,11 +175,9 @@ export class ImageService {
   }
 
   /**
-   * One answer for every way an upload can fail to become an image, because a
-   * client can act on only one thing: send a different file. Which decoder
-   * complained about what stays server-side — naming it in the response would
-   * describe this stack to anyone probing it — but it is logged, so a report of
-   * "my avatar will not upload" leaves something to read.
+   * One answer for every way an upload fails to become an image: a client can
+   * only send a different file. The decoder's complaint stays server-side —
+   * naming it describes this stack to anyone probing — but is logged.
    */
   private unreadable(cause: unknown): ApiException {
     this.logger.debug(`Refused an upload that would not decode: ${cause}`);

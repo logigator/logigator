@@ -40,12 +40,10 @@ export class SwitchComponent extends Component<SwitchOptions> {
   }
 
   protected draw(): void {
-    // The square switch body replaces the standard chamfered body entirely,
-    // and stays upright regardless of direction — only the output stub rotates
-    // — so the on/off slider bar is always read the same way (legacy-editor
-    // behavior). Counter-rotating about the body's centre keeps the square in
-    // its (rotation-invariant) footprint: local (0.5, 0.5) maps to the body
-    // footprint centre in every direction, so the net screen rotation is zero.
+    // The square body replaces the chamfered one and stays upright whatever
+    // the direction — only the output stub turns — so the on/off bar always
+    // reads the same way. Counter-rotating about local (0.5, 0.5) keeps the
+    // square in its rotation-invariant footprint at zero net screen rotation.
     const body = this.addScaledGraphics((scale) =>
       this.geometryService.getGraphicsContext(SwitchGraphics, scale, this.isOn)
     );

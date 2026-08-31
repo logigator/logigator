@@ -7,9 +7,9 @@ import { BuiltInComponentType, SerializedCircuitBody } from '@logigator/core';
 import { Project } from '../project/project';
 import { collectSnapshots } from './snapshots';
 
-// collectSnapshots only reads `project.components` (each component's config.type),
-// so a lightweight stand-in keeps these tests free of PixiJS construction. The
-// body serialization is exercised by the file round-trip spec via real Projects.
+// collectSnapshots only reads each component's `config.type`, so a stand-in
+// keeps these tests free of PixiJS construction. Body serialization is covered
+// by the file round-trip spec, over real Projects.
 function fakeProject(types: number[]): Project {
   return {
     components: types.map((type) => ({ config: { type } }))
@@ -24,8 +24,8 @@ describe('snapshots codec', () => {
     registry = TestBed.inject(CustomComponentRegistry);
   });
 
-  // Master B (1 in / 1 out, two plugs) nested inside master A. Returns the
-  // snapshot type ids the way the palette would place them.
+  // Master B nested inside master A, returning snapshot type ids the way the
+  // palette would place them.
   function buildNestedSnapshots(): {
     snapA: number;
     snapB: number;
@@ -111,25 +111,22 @@ describe('snapshots codec', () => {
         version: 1,
         origin: 'browser'
       });
-      // The body remap covers the directly-placed snapshot.
       expect(sessionToLocal.get(snapB)).toBe(1000);
     });
 
     it('rewrites a snapshot provenance id through the promotion alias', () => {
-      // A snapshot frozen while its master was local captured the browser id.
       const masterB = registry.createMaster(
         { id: 'id-b', symbol: 'B' },
         'browser'
       );
       const snapB = registry.snapshot(masterB).typeId;
 
-      // The master is then uploaded to the cloud, which records old -> new.
       registry.promoteMaster(masterB, 'srv-b', 2);
 
       const { definitions } = collectSnapshots(fakeProject([snapB]), registry);
-      // The written document references the master's current (server) id and
-      // origin, while the frozen version stays as captured — otherwise the id
-      // would strand on any other device (the alias table is device-local).
+      // The document references the master's current id and origin, the frozen
+      // version staying as captured: the alias table is device-local, so a
+      // stale id would strand everywhere else.
       expect(definitions[0].source).toEqual({
         id: 'srv-b',
         version: 1,
@@ -138,9 +135,8 @@ describe('snapshots codec', () => {
     });
 
     it('emits provenance for an id-carrying snapshot with no version (defaults to 1)', () => {
-      // A no-provenance orphan re-linked to a fresh master could carry an id but
-      // no version. Provenance must still be emitted — otherwise the server codec
-      // sends an empty mapping id and the instance re-orphans on reload.
+      // An orphan re-linked to a fresh master can carry an id but no version,
+      // and must still emit provenance or it re-orphans on reload.
       const snap = registry.registerSnapshot({
         kind: 'snapshot',
         source: 'browser',
@@ -174,7 +170,6 @@ describe('snapshots codec', () => {
 
     it('emits one definition when the same master is placed multiple times', () => {
       const master = registry.createMaster({ symbol: 'M' }, 'browser');
-      // Simulate palette placements: each calls registry.snapshot independently.
       const snap1 = registry.snapshot(master).typeId;
       const snap2 = registry.snapshot(master).typeId;
       const snap3 = registry.snapshot(master).typeId;
@@ -191,8 +186,7 @@ describe('snapshots codec', () => {
         'browser'
       );
       const snap1 = registry.snapshot(master).typeId;
-      // Change port count without bumping version — source.{id,version} would be
-      // identical, but the two snapshots have different content.
+      // Same source.{id,version}, different content.
       registry.updateDefinition(master, {
         numInputs: 2,
         numOutputs: 1,
@@ -212,16 +206,14 @@ describe('snapshots codec', () => {
       const { snapA } = buildNestedSnapshots();
       const { definitions } = collectSnapshots(fakeProject([snapA]), registry);
 
-      // First-encounter order: A is 1000, the B it nests is 1001.
       expect(definitions.map((d) => d.type)).toEqual([1000, 1001]);
       const defA = definitions.find((d) => d.symbol === 'A')!;
       const defB = definitions.find((d) => d.symbol === 'B')!;
       expect(defA.type).toBe(1000);
       expect(defB.type).toBe(1001);
 
-      // The crux: A's body references B by its file-local id, not its session id.
+      // A's body references B by its file-local id, not its session id.
       expect(defA.components.map((c) => c.type)).toEqual([defB.type]);
-      // B's own body keeps built-in plug ids untouched.
       expect(defB.components.map((c) => c.type)).toEqual([
         BuiltInComponentType.INPUT,
         BuiltInComponentType.OUTPUT
@@ -234,8 +226,7 @@ describe('snapshots codec', () => {
       const { snapA, idA } = buildNestedSnapshots();
       const { definitions } = collectSnapshots(fakeProject([snapA]), registry);
 
-      // Ingesting allocates fresh session ids; the returned remap keys are the
-      // file-local ids.
+      // Ingesting allocates fresh session ids, keyed by the file-local ones.
       const remap = registry.ingestSnapshots(definitions);
       const sessionA = remap.get(1000)!;
       const sessionB = remap.get(1001)!;
@@ -246,7 +237,6 @@ describe('snapshots codec', () => {
       expect(ingestedA.kind).toBe('snapshot');
       expect(ingestedA.symbol).toBe('A');
       expect(ingestedA.id).toBe(idA);
-      // id-space rule: the stored circuit holds post-remap SESSION ids.
       expect(ingestedA.circuit!.components.map((c) => c.type)).toEqual([
         sessionB
       ]);

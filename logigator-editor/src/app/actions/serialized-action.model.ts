@@ -23,14 +23,12 @@ export interface SerializedRotateWireEntry extends SerializedMoveEntry {
 }
 
 /**
- * JSON-safe, discriminated representation of every {@link Action} subclass,
- * produced by `Action.serialize()` and reconstructed by `deserializeAction`
- * (see `action-codec.ts`). Used only by the debug Project Dump feature — it is
- * not a persistence format for circuits.
+ * JSON-safe, discriminated representation of every {@link Action} subclass.
+ * Not a persistence format for circuits.
  *
  * `ReorderPlugsAction`/`UpdateInstanceAction` extend `ActionContainer`, so they
- * serialize as `container` and rehydrate as a plain container (their do/undo is
- * pure child delegation, so behaviour is identical).
+ * serialize as `container` and rehydrate as one — identical behaviour, since
+ * their do/undo is pure child delegation.
  */
 export type SerializedAction =
   | { type: 'addComponents'; components: SerializedComponent[] }

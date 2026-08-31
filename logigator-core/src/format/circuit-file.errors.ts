@@ -1,6 +1,6 @@
 /**
- * A file could not be parsed/decoded: malformed JSON, a structurally invalid
- * element, or an envelope that doesn't match any known format.
+ * A document could not be parsed: malformed JSON, a structurally invalid
+ * element, or an envelope matching no known format.
  */
 export class InvalidFileError extends Error {
   constructor(message = 'InvalidFile') {
@@ -12,9 +12,8 @@ export class InvalidFileError extends Error {
 /**
  * A document that parses but is not catalog-consistent: an unknown component
  * type, an unresolvable custom reference, an illegal option value, or a
- * definition whose declared ports disagree with its own circuit. Distinct from
- * {@link InvalidFileError} because the document's *shape* is fine — what it
- * names does not exist or is out of range. Only `strict` parsing throws it.
+ * definition whose declared ports disagree with its circuit. The shape is fine;
+ * what it names does not exist or is out of range. Only `strict` throws it.
  */
 export class CircuitIntegrityError extends Error {
   constructor(message: string) {
@@ -24,9 +23,8 @@ export class CircuitIntegrityError extends Error {
 }
 
 /**
- * The file declares a format version newer than this build supports. Saving only
- * ever emits the current version, so a higher version means a newer editor wrote
- * it and we cannot safely migrate forward.
+ * The document declares a format version newer than this build supports. There
+ * is no forward migration, so it cannot be read.
  */
 export class UnsupportedVersionError extends Error {
   constructor(

@@ -15,19 +15,15 @@ import { findOwned } from './circuit-queries';
 import type { PreviewSources } from './preview-upload';
 
 /**
- * A stored circuit's preview: written by the editor, served as files.
+ * A stored circuit's preview: written by the editor, served as files. Shared
+ * between both kinds because what matters is an ordering, and orderings are
+ * what duplication gets wrong. Nothing is written until the renders decode and
+ * re-encode; the pointer moves before the old asset is deleted, so a failed
+ * unlink leaves an orphan for the sweep rather than a dangling row; and an
+ * asset the pointer never reached is removed again.
  *
- * Shared between both kinds rather than written twice, because what matters here
- * is an ordering and orderings are what duplication gets wrong. Nothing is
- * written until the renders have been decoded and re-encoded, so an unusable
- * upload changes nothing; the pointer moves before the asset it replaces is
- * deleted, so a failed unlink leaves an orphan for the sweep rather than a row
- * pointing at nothing; and a fresh asset the pointer never reached is removed
- * again, since no row can name it.
- *
- * A preview is not content, so writing one does not touch `version` or the
- * edit time. It is a picture of the circuit, not a change to it — and for a
- * component that same counter is what offers a placed instance an update.
+ * A preview is a picture of the circuit, not a change to it, so writing one
+ * leaves `version` and the edit time alone.
  */
 @Injectable()
 export class PreviewService {

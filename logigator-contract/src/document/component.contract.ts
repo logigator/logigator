@@ -14,12 +14,10 @@ import {
 
 /**
  * The fields a component has beyond a project's, and a placed instance's whole
- * view of its master: the symbol on its body and the ports around it.
- *
- * All three are **derived from the document**, never sent by a client. A
- * circuit's ports are the INPUT/OUTPUT plugs placed in it, so anything a writer
- * declares about them is a claim that can disagree with the circuit it
- * describes — and it is the placed instances elsewhere that would render wrong.
+ * view of its master: the symbol on its body and the ports around it. The port
+ * surface is derived from the document, never sent by a client — a circuit's
+ * ports are the plugs placed in it, and a writer's claim about them could
+ * disagree, leaving placed instances elsewhere rendering wrong.
  */
 const componentFields = {
   ...circuitFields,
@@ -51,10 +49,9 @@ export const componentResponseSchema = z
 export type ComponentResponse = z.infer<typeof componentResponseSchema>;
 
 /**
- * Creating a library component. `symbol` is the one piece of a component's
- * identity the circuit cannot supply, so it is asked for here; the port surface
- * is derived from whatever document the row starts life with, which for an empty
- * one is no ports at all.
+ * Creating a library component. `symbol` is the one piece of identity the
+ * circuit cannot supply; the port surface is derived from whatever document the
+ * row starts with, which for an empty one is no ports at all.
  */
 export const createComponentRequestSchema = z.object({
   name: documentNameSchema,
@@ -69,12 +66,10 @@ export type CreateComponentRequest = z.infer<
 >;
 
 /**
- * Changing a component's metadata.
- *
- * Name, symbol and description travel inside every placed snapshot, so changing
- * any of them bumps `version` and every instance frozen at an older one is
- * offered an update. Visibility and the share link are not snapshot content and
- * leave the version alone.
+ * Changing a component's metadata. Name, symbol and description travel inside
+ * every placed snapshot, so changing them bumps `version` and instances frozen
+ * at an older one are offered an update. Visibility and the share link are not
+ * snapshot content and leave the version alone.
  */
 export const updateComponentRequestSchema = requireSomeField(
   z.object({

@@ -27,22 +27,19 @@ export interface IngestedCircuit {
   /** Which library masters the document embeds, at most one edge each. */
   dependencies: CircuitDependencyEdge[];
   /**
-   * The fork parent the document *claims*, straight out of its attribution
-   * chain and resolved against nothing. The caller checks it against its own
-   * rows — that check is the trust anchor of the whole attribution feature.
+   * The fork parent the document *claims*, resolved against nothing. Checking
+   * it against real rows is the trust anchor of the attribution feature.
    */
   claimedParentId: string | null;
 }
 
 /**
- * The half of the document path that does not know which table it is writing to.
+ * The half of the document path that does not know which table it writes to.
  *
- * Every write goes through here, and it is the only place a document enters the
- * system: parse, and store what parsing produced. That ordering is the invariant
- * the column depends on — a row this server wrote is a document this server can
- * read, at the newest format version, with every component and option value in
- * the catalog. Anything the pipeline rejects never reaches the database, so a
- * read has nothing to defend against.
+ * Every write goes through here, and it is the only way a document enters the
+ * system: parse, then store what parsing produced. So a row this server wrote
+ * is a document it can read, at the newest format version, with every component
+ * and option value in the catalog — and a read has nothing to defend against.
  */
 @Injectable()
 export class CircuitDocumentService {
@@ -52,20 +49,18 @@ export class CircuitDocumentService {
    * Parses a document a client sent, or produces an empty board when it sent
    * none.
    *
-   * `strict` always: an option value out of range or a component the catalog
-   * does not have is a rejection, never a silent normalization. The editor does
-   * not produce one, so such a document is tampered or bugged, and storing a
-   * different circuit than the client sent is worse than refusing it. The
-   * lenient mode exists for the one-time migration of the legacy database, where
-   * junk has to be salvaged rather than dropped.
+   * `strict` always: an out-of-range option or an unknown component is a
+   * rejection, never a silent normalization — storing a different circuit than
+   * the client sent is worse than refusing it. Lenient mode belongs to the
+   * one-time legacy-database migration, where junk has to be salvaged.
    */
   ingest(input: object | undefined, name: string): IngestedCircuit {
     if (input === undefined) return this.empty(name);
 
     const parsed = this.parse(input);
     if (parsed.warnings.length > 0) {
-      // Migration notices, and nothing a client can act on: the document was
-      // accepted. Worth a line for the day a legacy upload behaves oddly.
+      // Migration notices; the document was accepted, so there is nothing for
+      // the client to act on.
       this.logger.debug(
         `Accepted "${name}" with notices: ${parsed.warnings.join('; ')}`
       );
@@ -83,15 +78,10 @@ export class CircuitDocumentService {
   }
 
   /**
-   * The read guard: a version check that passes a current row through
-   * untouched.
-   *
-   * It exists for the window a format bump opens — between the deploy and the
-   * bulk re-normalization finishing, and after a crashed run of it — so the API
-   * can never hand out a version it no longer speaks. It is a safety net rather
-   * than the strategy: relying on it alone would let the table drift back to
-   * holding several versions at once, which is exactly what normalizing on write
-   * buys.
+   * The read guard, for the window a format bump opens between the deploy and
+   * the bulk re-normalization finishing: the API never hands out a version it
+   * no longer speaks. A safety net, not the strategy — leaning on it would let
+   * the table drift back to holding several versions at once.
    */
   read(stored: CurrentCircuitFile, id: string): CurrentCircuitFile {
     if (stored.version === CURRENT_FILE_VERSION) return stored;
@@ -143,14 +133,10 @@ export class CircuitDocumentService {
 }
 
 /**
- * What actually goes in the column, which is not quite what parsing returned.
- *
- * Two envelope fields belong to the server rather than to the writer. The name
- * is set from the row, so the column and the document's copy of it can never
- * disagree and a rename has one place to happen. The attribution chain is
- * dropped: it is display data a client asserted, and the API answers it by
- * walking its own fork keys — keeping a copy beside that walk would be a second
- * answer to the same question, and a stale or forged one at that.
+ * Two envelope fields belong to the server, not the writer. The name is set
+ * from the row, so a rename has one place to happen. The client-asserted
+ * attribution chain is dropped — the API answers that by walking its own fork
+ * keys, and a stored copy would be a second, forgeable answer.
  */
 function toStoredDocument(
   file: CurrentCircuitFile,
@@ -171,12 +157,10 @@ function claimedParentId(file: CurrentCircuitFile): string | null {
 
 /**
  * Failures of the format pipeline, as a client sees them.
- *
- * `unsupported_format_version` is separated out because it is the one rejection
- * that says nothing is wrong with the document: the client is ahead of the
- * server, which mid-rollout is a matter of waiting. Everything else is the
- * document's own fault and reads the same whether it was truncated, tampered
- * with, or written by a bug.
+ * `unsupported_format_version` is separate because nothing is wrong with the
+ * document — the client is ahead of the server, which mid-rollout is a matter
+ * of waiting. Everything else is the document's own fault, however it got that
+ * way.
  */
 function asApiException(error: unknown): unknown {
   if (error instanceof UnsupportedVersionError) {

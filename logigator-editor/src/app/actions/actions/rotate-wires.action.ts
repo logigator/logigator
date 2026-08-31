@@ -9,8 +9,7 @@ import {
 
 /**
  * One wire's share of a group rotation: the orbited start position plus the
- * axis it lands on (a quarter-turn swaps HORIZONTAL/VERTICAL; the length is
- * rotation-invariant and stays untouched).
+ * axis it lands on. The length is rotation-invariant and stays untouched.
  */
 export interface RotateWireEntry {
   id: number;

@@ -1,4 +1,4 @@
-// Values are fixed by the wire format.
+// Values are fixed by the document format.
 export enum BuiltInComponentType {
   NOT = 1,
   AND = 2,
@@ -25,7 +25,7 @@ export enum BuiltInComponentType {
   OUTPUT = 101,
   // User-input components driving a running simulation.
   BUTTON = 200,
-  // Wire format names id 201 a lever; shown as a switch here.
+  // The document format names id 201 a lever; shown as a switch here.
   SWITCH = 201,
   LED = 202,
   SEGMENT_DISPLAY = 203,
@@ -36,16 +36,15 @@ export enum BuiltInComponentType {
 export type CustomComponentType = number;
 
 /**
- * A component type id — a named built-in or a runtime-allocated custom id; the
- * value written as `t` in the wire format. Structurally `number` (the union
- * collapses), so the named arm documents intent rather than constraining.
+ * A component type id — a built-in or a runtime-allocated custom — written as
+ * `t` in a document. Structurally `number`, since the union collapses, so the
+ * named arm documents intent rather than constraining.
  */
 export type ComponentType = BuiltInComponentType | CustomComponentType;
 
 /**
- * Type ids at or above this are runtime-allocated custom components; built-ins
- * occupy the fixed {@link BuiltInComponentType} range below it. A custom type id
- * is session-global and stable across every open project for the lifetime of the
- * page.
+ * Type ids at or above this are runtime-allocated custom components, built-ins
+ * the fixed range below. A custom type id is session-global and stable across
+ * every open project.
  */
 export const CUSTOM_TYPE_ID_BASE = 1000;

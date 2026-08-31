@@ -1,7 +1,6 @@
 /**
- * Vitest-compatible replacement for jasmine.arrayWithExactContents.
- * Returns an asymmetric matcher that succeeds when the actual array contains
- * exactly the expected items (any order, no extras), compared by identity.
+ * Asymmetric matcher succeeding when the actual array holds exactly the
+ * expected items by identity — any order, no extras.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function arrayWithExactContents<T>(expected: T[]): any {

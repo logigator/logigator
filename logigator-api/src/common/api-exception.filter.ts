@@ -12,9 +12,7 @@ import { ApiException } from './api-exception';
 
 /**
  * Codes for the statuses that have a distinct meaning to a client. Anything
- * else is collapsed: a remaining 4xx becomes `bad_request` (a client can do no
- * more about a 415 than about a 400 — the status is still there for the rare
- * caller that cares), and everything at 5xx becomes `internal`.
+ * else collapses: a remaining 4xx to `bad_request`, every 5xx to `internal`.
  */
 const CODE_BY_STATUS = new Map<number, ApiErrorCode>([
   [HttpStatus.BAD_REQUEST, 'bad_request'],
@@ -34,13 +32,10 @@ function codeFor(status: number): ApiErrorCode {
 }
 
 /**
- * Extracts the human-facing message from an `HttpException` payload.
- *
- * The payload is not one shape. Nest's own exceptions carry an object, but the
- * Fastify adapter wraps its transport-level failures — malformed JSON body,
- * payload over the body limit, unsupported media type — into an `HttpException`
- * whose payload is a bare string, and `ValidationPipe` puts an array there.
- * Reading `.message` off any of those but the first yields `undefined`.
+ * Extracts the human-facing message from an `HttpException` payload, which is
+ * not one shape: Nest's own exceptions carry an object, the Fastify adapter
+ * wraps transport-level failures around a bare string, and `ValidationPipe`
+ * puts an array there.
  */
 function messageFrom(payload: string | object): string {
   if (typeof payload === 'string') return payload;
@@ -54,15 +49,12 @@ function messageFrom(payload: string | object): string {
 
 /**
  * The status a Fastify plugin's own error carries, when it blames the client.
- *
- * `@fastify/error` instances — what the multipart plugin throws for a request
- * that is not multipart, or one file too many — are plain errors with a
- * `statusCode`, not `HttpException`s, so they would otherwise be answered and
- * logged as server defects. Only 4xx is taken at its word: a plugin's 5xx is a
- * defect like any other, and its message stays internal.
+ * `@fastify/error` instances are plain errors with a `statusCode`, not
+ * `HttpException`s, so they would otherwise be logged as server defects. Only
+ * 4xx is taken at its word; a plugin's 5xx is a defect like any other.
  */
 function clientErrorStatus(exception: unknown): number | null {
-  // A thrown value need not even be an object — `throw null` reaches here too.
+  // A thrown value need not be an object — `throw null` reaches here too.
   if (typeof exception !== 'object' || exception === null) return null;
 
   const status = (exception as { statusCode?: unknown }).statusCode;
@@ -73,14 +65,10 @@ function clientErrorStatus(exception: unknown): number | null {
 
 /**
  * Renders every failure as the contract's single error body, so clients need
- * one failure path.
- *
- * It catches unconditionally on purpose. Nest's default responses are three
- * different shapes — `{message, error, statusCode}` for its own exceptions,
- * `{statusCode, message}` for an unhandled error, and a bare JSON string for
- * the adapter-wrapped Fastify failures — and none of them carries a `code`.
- * Everything reaches here, including the 404 for an unmatched route and the
- * transport-level failures Fastify raises before a handler runs.
+ * one failure path. It catches unconditionally on purpose: Nest's own defaults
+ * are three different shapes and none carries a `code`, and everything reaches
+ * here — the 404 for an unmatched route and the transport-level failures
+ * Fastify raises before a handler runs included.
  */
 @Catch()
 export class ApiExceptionFilter implements ExceptionFilter {
@@ -99,8 +87,7 @@ export class ApiExceptionFilter implements ExceptionFilter {
   }
 
   // The contract reads `code` as any string so an old client survives a code it
-  // predates. The server is the writing side, so it stays pinned to the enum —
-  // a code that is not declared there never reaches the wire.
+  // predates; the writing side stays pinned to the enum.
   private toBody(exception: unknown): ApiError & { code: ApiErrorCode } {
     if (exception instanceof ApiException) {
       return {
@@ -121,14 +108,14 @@ export class ApiExceptionFilter implements ExceptionFilter {
     if (clientStatus !== null) {
       return {
         code: codeFor(clientStatus),
-        // Every error the plugins throw carries one, but `message` is required on
-        // the wire and an object with a bare `statusCode` would drop the key.
+        // `message` is required on the wire, and an object carrying a bare
+        // `statusCode` would drop the key.
         message: (exception as Error).message || 'Request failed.'
       };
     }
 
-    // An error that reached here is a defect, not a client mistake: log it with
-    // its stack, and answer with a fixed message so nothing internal leaks.
+    // A defect, not a client mistake: log the stack, answer with a fixed
+    // message so nothing internal leaks.
     this.logger.error('Unhandled exception', exception);
 
     return { code: 'internal', message: 'Internal server error.' };

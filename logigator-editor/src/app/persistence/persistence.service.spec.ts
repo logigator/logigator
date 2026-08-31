@@ -52,12 +52,9 @@ import { makeUser } from '../../testing/user-fixtures';
 import { UserService } from '../user/user.service';
 
 /**
- * A stable uuid for a readable label.
- *
- * Every id the API answers with is a uuid — the contract says so and the
- * columns behind it enforce it — and the editor validates what it is handed, so
- * a fixture id like `'test-uuid'` would describe a response the server cannot
- * produce and the read path would rightly refuse it.
+ * A stable uuid for a readable label. Every id the API answers with is a uuid,
+ * and the editor validates responses, so a fixture id like `'test-uuid'` would
+ * describe a response the read path would rightly refuse.
  */
 function uuid(label: string): string {
   let hash = 0x9e3779b9;
@@ -71,7 +68,6 @@ function uuid(label: string): string {
 const PROJECT_URL = (id: string) => `${environment.apiUrl}/api/projects/${id}`;
 const PROJECTS_LIST_URL = `${environment.apiUrl}/api/projects`;
 const COMPONENTS_URL = `${environment.apiUrl}/api/components`;
-/** The library listing is paginated, so the preload's URL carries its page. */
 const COMPONENTS_PAGE_URL = `${COMPONENTS_URL}?page=0&size=100`;
 const COMPONENT_URL = (id: string) =>
   `${environment.apiUrl}/api/components/${id}`;
@@ -79,7 +75,6 @@ const SHARE_URL = (link: string) => `${environment.apiUrl}/api/share/${link}`;
 const CLONE_URL = (link: string) =>
   `${environment.apiUrl}/api/share/${link}/clone`;
 
-/** The fields every stored circuit answers with, whichever kind it is. */
 function circuitFields(o: {
   id: string;
   name: string;
@@ -102,9 +97,8 @@ function circuitFields(o: {
 }
 
 /**
- * A native circuit document, built by the same encoder the editor writes files
- * with — a hand-written fixture gets the wire chain and the position deltas
- * subtly wrong.
+ * Built by the same encoder the editor writes files with: a hand-written
+ * fixture gets the wire chain and the position deltas subtly wrong.
  */
 function circuitDocument(
   name: string,
@@ -184,7 +178,6 @@ function componentDetailResponse(
   };
 }
 
-/** What a share link resolves to — a discriminated union over the two kinds. */
 function shareDetailResponse(
   overrides: Partial<{
     id: string;
@@ -214,7 +207,6 @@ function shareDetailResponse(
       };
 }
 
-/** What cloning a share answers: the copy, and the library it brought along. */
 function cloneResponse(kind: 'project' | 'comp', id: string) {
   return kind === 'comp'
     ? {
@@ -229,7 +221,6 @@ function cloneResponse(kind: 'project' | 'comp', id: string) {
       };
 }
 
-/** An API failure body, which is what every endpoint answers a failure with. */
 function apiError(code: string, message = 'nope') {
   return { code, message };
 }
@@ -247,13 +238,11 @@ describe('PersistenceService', () => {
   let idMapStore: FakeComponentIdMapStore;
   let registry: CustomComponentRegistry;
   let provider: ComponentProviderService;
-  // Signed in by default: most tests exercise cloud saves, which the session
-  // guard would otherwise reject. Individual tests flip it to null / another
-  // user to exercise the guard itself.
+  // Signed in by default; the session guard would reject the cloud saves most
+  // tests exercise. Tests of the guard itself flip it.
   let user: ReturnType<typeof signal<UserResponse | null>>;
 
   beforeEach(() => {
-    // Console output from expected error-path tests is suppressed.
     vi.spyOn(console, 'error').mockImplementation(() => {});
     locationGo = vi.fn();
     browserStore = new FakeBrowserProjectStore();
@@ -308,7 +297,6 @@ describe('PersistenceService', () => {
       expect(metadata!.name).toBe('Untitled');
       expect(metadataStore.isDirty(project)).toBe(false);
       expect(projectService.mainProject()).toBe(project);
-      // A fresh draft leaves no storage record until the first save.
       expect(browserStore.records.size).toBe(0);
     });
   });
@@ -327,7 +315,7 @@ describe('PersistenceService', () => {
 
       await service.saveProject(project);
       expect(browserStore.records.size).toBe(0);
-      // httpMock.verify() in afterEach will fail if a request was made
+      // afterEach verify() fails if a request was made.
     });
 
     it('is a no-op for read-only shares even when dirty', async () => {
@@ -398,7 +386,6 @@ describe('PersistenceService', () => {
 
       const req = httpMock.expectOne(PROJECT_URL(uuid('test-uuid')));
       expect(req.request.method).toBe('PUT');
-      // The native document, and the counter the server checks it against.
       expect(req.request.body.version).toBe(4);
       expect(req.request.body.document.version).toBe(1);
       expect(req.request.body.document.name).toBe('Test');
@@ -424,7 +411,6 @@ describe('PersistenceService', () => {
       const promise1 = service.saveProject(project);
       const promise2 = service.saveProject(project);
 
-      // expectOne asserts exactly one request was issued (dedup worked).
       const req = httpMock.expectOne(PROJECT_URL(uuid('test-uuid')));
       req.flush(projectSummaryResponse({ version: 2 }));
 
@@ -453,7 +439,6 @@ describe('PersistenceService', () => {
       });
 
       await expect(promise).rejects.toThrow();
-      // Nothing was merged, so the client keeps what it read and stays dirty.
       expect(metadataStore.getMetadata(project)!.version).toBe(2);
       expect(metadataStore.isDirty(project)).toBe(true);
     });
@@ -472,7 +457,7 @@ describe('PersistenceService', () => {
 
       const promise = service.saveProject(project);
 
-      // Simulate an edit landing while the save HTTP request is in flight
+      // An edit landing while the save request is in flight.
       metadataStore.markDirty(project);
 
       const req = httpMock.expectOne(PROJECT_URL(uuid('test-uuid')));
@@ -480,8 +465,7 @@ describe('PersistenceService', () => {
 
       await promise;
 
-      // The version advances, but dirty stays true because a concurrent edit
-      // fired while we were saving the previous snapshot.
+      // The version advances, but the concurrent edit keeps it dirty.
       expect(metadataStore.getMetadata(project)!.version).toBe(2);
       expect(metadataStore.isDirty(project)).toBe(true);
     });
@@ -510,7 +494,6 @@ describe('PersistenceService', () => {
         AuthRequiredError
       );
       expect(metadataStore.isDirty(project)).toBe(true);
-      // httpMock.verify() in afterEach asserts no PUT went out.
     });
 
     it('rejects a cloud save of a document owned by a different account', async () => {
@@ -644,9 +627,8 @@ describe('PersistenceService', () => {
     });
 
     it("leaves attribution unset for a project that is nobody's fork", async () => {
-      // The API spells "no lineage" as an empty array and the file format as an
-      // absent field; carrying the empty one would read as a checked-and-absent
-      // lineage rather than none, and an export would then claim one.
+      // The API spells "no lineage" as an empty array, the file format as an
+      // absent field; carrying the empty one would make an export claim one.
       const loadPromise = service.loadProject(uuid('plain-uuid'));
       httpMock
         .expectOne(PROJECT_URL(uuid('plain-uuid')))
@@ -713,26 +695,21 @@ describe('PersistenceService', () => {
     });
 
     it('stale loads are discarded with full cleanup (no metadata leak)', async () => {
-      // Start load A
       const promiseA = service.loadProjectAsMain(uuid('uuid-a'));
-
-      // Before A resolves, start load B — bumps the token
+      // Starting B before A resolves bumps the race token.
       const promiseB = service.loadProjectAsMain(uuid('uuid-b'));
 
-      // Resolve B first
       httpMock
         .expectOne(PROJECT_URL(uuid('uuid-b')))
         .flush(projectDetailResponse({ id: uuid('uuid-b') }));
 
-      // Now resolve A — this is stale; the project must be disposed and
-      // its metadata removed from the store.
+      // A is stale: its project must be disposed and its metadata removed.
       httpMock
         .expectOne(PROJECT_URL(uuid('uuid-a')))
         .flush(projectDetailResponse({ id: uuid('uuid-a') }));
 
       await Promise.all([promiseA, promiseB]);
 
-      // Only B's project should be in the metadata store
       const handle = metadataStore.getHandleById(uuid('uuid-a'));
       expect(handle).toBeUndefined();
       expect(metadataStore.getHandleById(uuid('uuid-b'))).toBeDefined();
@@ -753,8 +730,7 @@ describe('PersistenceService', () => {
       expect(type).toBe('project');
       const metadata = metadataStore.getMetadata(project)!;
       expect(metadata.source).toBe('share');
-      // The fetched-by link is recorded even though the response has none —
-      // the clone action needs it.
+      // The fetched-by link is recorded even though the response has none.
       expect(metadata.link).toBe('link-1');
       expect(metadataStore.isDirty(project)).toBe(false);
     });
@@ -793,11 +769,8 @@ describe('PersistenceService', () => {
     });
 
     it('loadShareAsMain fills the main slot for component-type shares', async () => {
-      // A `/share/:linkId` page load creates no blank draft (the route
-      // matched), so a component share opened as a *tab* would leave the main
-      // slot empty: no name and no share chip in the title bar, its tab
-      // closable into an editor with no project, and nothing for the clone
-      // action to read.
+      // A `/share/:linkId` page load creates no blank draft, so a component
+      // share opened as a tab would leave the main slot empty.
       const promise = service.loadShareAsMain('link-comp');
 
       httpMock
@@ -821,8 +794,7 @@ describe('PersistenceService', () => {
   describe('saveDraftAsLocal', () => {
     it('applies the chosen name, persists to storage, assigns an id and updates the URL', async () => {
       const project = service.createAndSetEmptyProject();
-      // A pristine, never-edited draft is not dirty — the first save must
-      // persist it anyway (the saveProject dirty-guard is bypassed).
+      // A pristine draft is not dirty; the first save persists it anyway.
       expect(metadataStore.isDirty(project)).toBe(false);
 
       await service.saveDraftAsLocal(project, 'My Local Circuit');
@@ -847,8 +819,7 @@ describe('PersistenceService', () => {
         true
       );
 
-      // One round trip: a create carries the document, where the legacy API
-      // needed a create and then a save into it.
+      // One round trip: a create carries the document.
       const postReq = httpMock.expectOne(PROJECTS_LIST_URL);
       expect(postReq.request.method).toBe('POST');
       expect(postReq.request.body.name).toBe('My Server Circuit');
@@ -868,10 +839,8 @@ describe('PersistenceService', () => {
       expect(metadata.isPublic).toBe(true);
       expect(metadata.version).toBe(1);
       expect(locationGo).toHaveBeenCalledWith(`/project/${uuid('srv-uuid')}`);
-      // The live project instance is retained — its circuit and undo history
-      // are preserved across promotion (not replaced by a fresh empty one).
+      // The live instance is retained, so circuit and undo history survive.
       expect(projectService.mainProject()).toBe(project);
-      // No storage record is written for a server promotion.
       expect(browserStore.records.size).toBe(0);
     });
   });
@@ -938,10 +907,9 @@ describe('PersistenceService', () => {
       const promise = promotion.promoteProjectToServer(project, false);
 
       const postReq = httpMock.expectOne(PROJECTS_LIST_URL);
-      // There is no request field for the fork parent: the claim travels inside
-      // the document, and the server reads the chain's last entry — the
-      // immediate parent, since the chain is root-first — and checks it against
-      // its own rows before it becomes a link.
+      // There is no request field for the fork parent: the claim travels
+      // inside the document, and the server checks the chain's last entry (the
+      // immediate parent, the chain being root-first) against its own rows.
       expect(postReq.request.body.document.attribution).toEqual([
         { projectId: 'root-id', projectName: 'Root', authorName: 'alice' },
         { projectId: 'parent-id', projectName: 'Parent', authorName: 'bob' }
@@ -980,7 +948,6 @@ describe('PersistenceService', () => {
     });
 
     it('uploads a stored record via a throwaway project and deletes it, leaving the open project untouched', async () => {
-      // A stored local project that is NOT the open one.
       const stored = new Project();
       metadataStore.register(stored, {
         id: 'stored-1',
@@ -993,13 +960,11 @@ describe('PersistenceService', () => {
       await service.saveProject(stored);
       expect(browserStore.records.has('stored-1')).toBe(true);
 
-      // The open project is a different, fresh draft.
       const main = service.createAndSetEmptyProject();
 
       const promise = promotion.uploadStoredProjectToServer('stored-1', true);
 
-      // The temp path reads the stored record (an await) before issuing the POST,
-      // so let that microtask settle before asserting the request.
+      // The temp path awaits the stored record before it POSTs.
       await Promise.resolve();
       const postReq = httpMock.expectOne(PROJECTS_LIST_URL);
       expect(postReq.request.body.name).toBe('Archived');
@@ -1008,7 +973,6 @@ describe('PersistenceService', () => {
 
       await promise;
 
-      // The stored record moved to the cloud; the open project is unchanged.
       expect(browserStore.records.has('stored-1')).toBe(false);
       expect(projectService.mainProject()).toBe(main);
       expect(metadataStore.getMetadata(main)!.source).toBe('browser');
@@ -1019,8 +983,7 @@ describe('PersistenceService', () => {
     it('POSTs an empty board, sets it as main and updates the URL', async () => {
       const promise = service.createProject('My Project', undefined, false);
 
-      // No document: a create without one is an empty board server-side, which
-      // is exactly what the editor is about to show.
+      // No document: a create without one is an empty board server-side.
       const postReq = httpMock.expectOne(PROJECTS_LIST_URL);
       expect(postReq.request.method).toBe('POST');
       expect(postReq.request.body).toEqual({
@@ -1054,9 +1017,8 @@ describe('PersistenceService', () => {
 
   describe('cloneShare', () => {
     it('rejects with AuthRequiredError when the clone needs a session', async () => {
-      // Reading a share needs none — the link is the capability — but cloning
-      // writes into an account, so the API is what says so. Nothing is asked in
-      // advance.
+      // Reading a share needs no session — the link is the capability — but
+      // cloning writes into an account, and the API is what says so.
       const promise = service.cloneShare('link-1');
 
       httpMock
@@ -1075,8 +1037,7 @@ describe('PersistenceService', () => {
       const clone = httpMock.expectOne(CLONE_URL('link-1'));
       expect(clone.request.method).toBe('POST');
       clone.flush(cloneResponse('project', uuid('cloned-uuid')));
-      // cloneShare awaits the gateway clone, then loadProjectAsMain — two
-      // async hops to drain before the project GET is issued.
+      // Two async hops (clone, then loadProjectAsMain) before the project GET.
       await Promise.resolve();
       await Promise.resolve();
 
@@ -1095,9 +1056,8 @@ describe('PersistenceService', () => {
     });
 
     it('reopens a cloned component share as a component', async () => {
-      // One clone endpoint serves both kinds — the link already says what it
-      // points at — but the copy still has to reopen as a component, so that it
-      // carries its DefinitionBinding and lands in the component library.
+      // The copy must reopen as a component so it carries its
+      // DefinitionBinding and lands in the component library.
       const tick = () => new Promise((r) => setTimeout(r, 0));
       const promise = service.cloneShare('link-c');
 
@@ -1135,8 +1095,7 @@ describe('PersistenceService', () => {
         wires: []
       };
       const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-      // Tests run at Silent verbosity; raise it so the migration's warning is
-      // actually emitted for this assertion.
+      // Tests run at Silent verbosity; raise it so the warning is emitted.
       const originalVerbosity = environment.loggingVerbosity;
       environment.loggingVerbosity = LogLevel.Warn;
 
@@ -1148,8 +1107,7 @@ describe('PersistenceService', () => {
 
         const project = await promise;
         expect(Array.from(project.components).length).toBe(2);
-        // The instance builder drops an element whose type resolves to no
-        // config, with a warning. LoggingService.warn forwards to
+        // LoggingService.warn forwards to
         // console.warn('%c[%s]', style, context, message).
         expect(warnSpy).toHaveBeenCalledWith(
           '%c[%s]',
@@ -1201,7 +1159,6 @@ describe('PersistenceService', () => {
       expect(metadataStore.isDirty(project)).toBe(false);
       expect(Array.from(project.components).length).toBe(1);
 
-      // Persisted immediately, and the URL reflects the new id.
       expect(browserStore.records.has(metadata!.id)).toBe(true);
       expect(locationGo).toHaveBeenCalledWith(`/local/${metadata!.id}`);
     });
@@ -1230,7 +1187,6 @@ describe('PersistenceService', () => {
       const imported = await service.importProjectFromJson(exported);
       const metadata = metadataStore.getMetadata(imported)!;
       expect(metadata.attribution).toEqual(lineage);
-      // The stored blob keeps the lineage so later loads/uploads still carry it.
       const record = browserStore.records.get(metadata.id)!;
       expect(JSON.parse(record.content).attribution).toEqual(lineage);
     });
@@ -1245,8 +1201,8 @@ describe('PersistenceService', () => {
     it('importProjectFromJson warns the user once when customs are skipped', async () => {
       const toast = TestBed.inject(ToastService);
       const warnSpy = vi.spyOn(toast, 'warn').mockImplementation(() => {});
-      // A custom-range element with no embedded definition — its snapshot is
-      // missing, so the element drops and the skip must surface as one toast.
+      // A custom-range element with no embedded definition: it drops, and the
+      // skip must surface as one toast.
       const content = JSON.stringify({
         version: 1,
         name: 'Partial',
@@ -1337,7 +1293,6 @@ describe('PersistenceService', () => {
         })
       );
 
-      // Push a real action so the history is non-empty and the body reflects it.
       const movedId = Array.from(source.components)[0].id;
       source.actionManager.push(
         new MoveComponentsAction({
@@ -1352,9 +1307,8 @@ describe('PersistenceService', () => {
       const dumpJson = JSON.stringify(dumpService.buildDump(source));
       const restored = await dumpService.importDump(dumpJson);
 
-      // Ids re-stamped exactly (the native format drops them on load); the
-      // encoders reorder elements, so compare as sets — the geometry-level
-      // mapping is covered by the dedicated reorder test below.
+      // The native format drops ids on load, so they are re-stamped; the
+      // encoders reorder elements, so compare as sets.
       expect(Array.from(restored.components).map((c) => c.id)).toEqual(
         arrayWithExactContents(sourceComponentIds)
       );
@@ -1362,12 +1316,10 @@ describe('PersistenceService', () => {
         arrayWithExactContents(sourceWireIds)
       );
 
-      // History + pointer restored without re-applying.
       expect(restored.actionManager.history.length).toBe(1);
       expect(restored.actionManager.pointer).toBe(1);
 
-      // The restored action targets the re-stamped element: the body shows the
-      // moved position, and undo reverts it.
+      // The restored action targets the re-stamped element.
       const moved = restored.getComponentById(movedId)!;
       expect([moved.position.x, moved.position.y]).toEqual([9, 9]);
       restored.actionManager.undo();
@@ -1375,11 +1327,9 @@ describe('PersistenceService', () => {
     });
 
     it('re-stamps element ids by geometry when the encoders reorder', async () => {
-      // Both fixtures decode to an insertion order that differs from the
-      // encoders' emission order: the wire at (10,10) precedes the touching
-      // run at (0,0) that the sorted walk emits first, and the component at
-      // (5,6) precedes the one at (2,3) that the (type, y, x) sort emits
-      // first.
+      // Both fixtures decode into an insertion order that differs from the
+      // encoders' emission order: the wire at (10,10) precedes the run at
+      // (0,0), and the component at (5,6) the one at (2,3).
       const source = await service.importProjectFromJson(
         JSON.stringify({
           version: 1,
@@ -1410,14 +1360,13 @@ describe('PersistenceService', () => {
       const restoredComponents = Array.from(restored.components);
       expect(restoredWires).toHaveLength(3);
       expect(restoredComponents).toHaveLength(2);
-      // The dump did reorder relative to the source project…
       expect(restoredWires.map((w) => w.id)).not.toEqual(
         Array.from(source.wires).map((w) => w.id)
       );
       expect(restoredComponents.map((c) => c.id)).not.toEqual(
         Array.from(source.components).map((c) => c.id)
       );
-      // …but every element still carries its original id.
+      // Reordered relative to the source, but the ids travel with geometry.
       for (const w of restoredWires) {
         expect(w.id).toBe(sourceWireIds.get(wireGeometry(w)));
       }
@@ -1444,7 +1393,7 @@ describe('PersistenceService', () => {
         })
       );
 
-      // Tamper with the saved id list so it no longer lines up with the body.
+      // An id list that no longer lines up with the body.
       const dump = dumpService.buildDump(source);
       dump.componentIds = [...dump.componentIds, 999];
       const restored = await dumpService.importDump(JSON.stringify(dump));
@@ -1456,7 +1405,6 @@ describe('PersistenceService', () => {
 
   describe('browser projects', () => {
     it('loadLocalProject reads a stored circuit and registers it as a browser project', async () => {
-      // Seed a record using the same encoding the service writes.
       const imported = await service.importProjectFromJson(
         JSON.stringify({
           version: 1,
@@ -1527,10 +1475,9 @@ describe('PersistenceService', () => {
       expect(stored.name).toBe('New');
       const parsed = JSON.parse(stored.content);
       expect(parsed.name).toBe('New');
-      // The rest of the blob is preserved.
       expect(parsed.version).toBe(1);
 
-      // Reopening reflects the new name — the codec reads the blob, not the column.
+      // Reopening reads the blob, not the summary column.
       const reopened = await service.loadLocalProject(record.id);
       expect(metadataStore.getMetadata(reopened)!.name).toBe('New');
     });
@@ -1586,8 +1533,8 @@ describe('PersistenceService', () => {
       await promise;
       const metadata = metadataStore.getMetadata(project)!;
       expect(metadata.name).toBe('After');
-      // A rename is content the server stamps, so it bumps the counter; without
-      // adopting it here the next save would present a version that has moved.
+      // A rename bumps the counter, and the next save must present the new
+      // one.
       expect(metadata.version).toBe(3);
     });
   });
@@ -1649,7 +1596,6 @@ describe('PersistenceService', () => {
       await service.renameOpenProject(project, 'Draft name');
 
       expect(metadataStore.getMetadata(project)!.name).toBe('Draft name');
-      // Nothing was written to the browser store — a draft has no record yet.
       expect(browserStore.records.size).toBe(0);
     });
 
@@ -1715,7 +1661,7 @@ describe('PersistenceService', () => {
       return project;
     }
 
-    // Mirror the placement session: snapshot the master, place an instance.
+    // Mirrors the placement session: snapshot the master, place an instance.
     function placeSnapshot(
       project: Project,
       masterTypeId: number
@@ -1783,7 +1729,6 @@ describe('PersistenceService', () => {
       const project = registerBrowserProject();
       placeSnapshot(project, master); // captures shape: 1 input
 
-      // Master grows a second input after placement.
       registry.updateDefinition(master, {
         numInputs: 2,
         numOutputs: 0,
@@ -1795,7 +1740,7 @@ describe('PersistenceService', () => {
       const id = metadataStore.getMetadata(project)!.id;
 
       const reopened = await service.loadLocalProject(id);
-      // The embedded snapshot was frozen at place time — still 1 input.
+      // The embedded snapshot is frozen at place time.
       expect(customInstanceOf(reopened).numInputs).toBe(1);
     });
 
@@ -1838,7 +1783,6 @@ describe('PersistenceService', () => {
 
       const { project: reopened, masterTypeId: reopenedType } =
         await service.loadComponentForEdit(id);
-      // The session master is reused, not duplicated.
       expect(reopenedType).toBe(masterTypeId);
       expect([...reopened.components].length).toBe(2);
     });
@@ -1848,7 +1792,6 @@ describe('PersistenceService', () => {
     });
 
     function importedCustomContent(): string {
-      // A file embedding one custom, provenance id 'external-id'.
       return JSON.stringify({
         version: 1,
         name: 'Imported',
@@ -1876,11 +1819,10 @@ describe('PersistenceService', () => {
         importedCustomContent()
       );
 
-      // The instance renders from its embedded snapshot…
       const instance = customInstanceOf(project);
       expect(instance.numInputs).toBe(1);
-      // …but no browser master was created: the custom stays an embedded
-      // (restorable) snapshot instead of silently entering the library.
+      // No browser master: the custom stays an embedded snapshot instead of
+      // silently entering the library.
       expect(componentStore.records.size).toBe(0);
       expect(registry.masterTypeIdForId('external-id')).toBeUndefined();
       expect(registry.resolveMaster(instance.config.type)).toBeUndefined();
@@ -1905,7 +1847,6 @@ describe('PersistenceService', () => {
         importedCustomContent()
       );
 
-      // The instance resolves to the existing master; no duplicate is created.
       const instance = customInstanceOf(project);
       expect(registry.resolveMaster(instance.config.type)?.masterTypeId).toBe(
         masterTypeId
@@ -1937,7 +1878,6 @@ describe('PersistenceService', () => {
       )!;
     }
 
-    // Snapshot a master and place an instance, mirroring snapshot-on-place.
     function placeSnapshot(project: Project, masterTypeId: number): void {
       const def = registry.snapshot(masterTypeId);
       const config = provider.getComponent(def.typeId)!;
@@ -1945,7 +1885,6 @@ describe('PersistenceService', () => {
     }
 
     it('promoteComponentToServer uploads a local master, flips it to server, and removes the local record', async () => {
-      // A local master with its circuit stored in the browser components store.
       const circuitFile = TestBed.inject(CircuitFileService);
       const content = circuitFile.toJson(new Project(), 'Comp');
       await componentStore.save({
@@ -1964,8 +1903,8 @@ describe('PersistenceService', () => {
         'browser'
       );
 
-      // The POST is issued only after the store read + temp-project build, so
-      // flush pending microtasks (a macrotask tick) before the HTTP expectation.
+      // The POST follows the store read and temp-project build, so drain the
+      // pending microtasks first.
       const tick = () => new Promise((r) => setTimeout(r, 0));
 
       const promise = promotion.promoteComponentToServer(masterTypeId);
@@ -1973,7 +1912,6 @@ describe('PersistenceService', () => {
       await tick();
       const post = httpMock.expectOne(COMPONENTS_URL);
       expect(post.request.method).toBe('POST');
-      // The circuit rides along with the create — one round trip.
       expect(post.request.body.document.version).toBe(1);
       post.flush(
         componentSummaryResponse({ id: uuid('srv-comp'), version: 5 })
@@ -1985,10 +1923,9 @@ describe('PersistenceService', () => {
       expect(def.source).toBe('server');
       expect(def.id).toBe(uuid('srv-comp'));
       expect(def.version).toBe(5);
-      // Old local id still resolves (alias) and was persisted to the id-map.
+      // The old local id still resolves through the persisted alias.
       expect(registry.masterTypeIdForId('local-1')).toBe(masterTypeId);
       expect(idMapStore.records.get('local-1')).toBe(uuid('srv-comp'));
-      // The local record is gone — the component moved to the cloud.
       expect(await componentStore.get('local-1')).toBeUndefined();
     });
 
@@ -2019,9 +1956,8 @@ describe('PersistenceService', () => {
         { id: 'local-1', symbol: 'C', name: 'Comp' },
         'browser'
       );
-      // The upload has already committed server-side when the local record delete
-      // fails — the operation must NOT surface as a failure (that would lie and
-      // hide the now-disabled retry).
+      // The upload has committed server-side by the time the local delete
+      // fails, so the operation must not surface as a failure.
       vi.spyOn(componentStore, 'delete').mockRejectedValue(new Error('boom'));
       const tick = () => new Promise((r) => setTimeout(r, 0));
 
@@ -2034,8 +1970,8 @@ describe('PersistenceService', () => {
       await expect(promise).resolves.toBeUndefined();
       const def = registry.getDefinition(masterTypeId)!;
       expect(def.source).toBe('server');
-      // The durable alias was written before the (failed) delete, so a reload
-      // self-heals (the browser preload skips the orphaned record).
+      // The alias was written before the failed delete, so a reload
+      // self-heals: the browser preload skips the orphaned record.
       expect(idMapStore.records.get('local-1')).toBe(uuid('srv-comp'));
     });
 
@@ -2056,7 +1992,7 @@ describe('PersistenceService', () => {
         { id: 'local-1', symbol: 'C', name: 'Comp' },
         'browser'
       );
-      // The master's editor tab is open (browser comp), registered under its old id.
+      // The master's editor tab is open, registered under its old id.
       const editor = new Project();
       metadataStore.register(editor, {
         id: 'local-1',
@@ -2074,7 +2010,7 @@ describe('PersistenceService', () => {
         .flush(componentSummaryResponse({ id: uuid('srv-comp'), version: 5 }));
       await promise;
 
-      // The editor now points at the cloud record, so a later save routes to the
+      // The editor points at the cloud record, so a later save routes to the
       // server instead of re-creating the deleted browser record.
       const meta = metadataStore.getMetadata(editor)!;
       expect(meta.source).toBe('server');
@@ -2085,13 +2021,12 @@ describe('PersistenceService', () => {
 
     it('preloadBrowserMasters skips a record whose id was promoted to the cloud', async () => {
       const circuitFile = TestBed.inject(CircuitFileService);
-      // The cloud master and the persisted promotion alias (as hydrated at startup).
+      // The cloud master and the promotion alias, as hydrated at startup.
       const serverType = registry.createMaster(
         { id: uuid('srv-1'), symbol: 'C', name: 'Comp' },
         'server'
       );
       registry.registerIdAlias('local-1', uuid('srv-1'));
-      // A stale local record left behind by a partially-failed promotion.
       await componentStore.save({
         id: 'local-1',
         version: 1,
@@ -2106,8 +2041,8 @@ describe('PersistenceService', () => {
 
       await library.preloadBrowserMasters();
 
-      // No browser duplicate: the old id still resolves through the alias to the
-      // single (server) master, instead of a freshly-registered browser dupe.
+      // The old id still resolves through the alias to the single server
+      // master, rather than registering a browser duplicate.
       expect(registry.masterTypeIdForId('local-1')).toBe(serverType);
       expect(registry.getDefinition(serverType)?.source).toBe('server');
     });
@@ -2192,21 +2127,20 @@ describe('PersistenceService', () => {
         'browser'
       );
 
-      // B is now in the cloud: promoting flips its source and records the alias,
-      // so the stored snapshot's old id resolves to a server master.
+      // Promoting B records an alias, so the stored snapshot's old id now
+      // resolves to a server master.
       registry.promoteMaster(bType, 'srv-b', 2);
 
       expect(await promotion.localDependencies(aType)).toEqual([]);
     });
 
     it('localDependenciesOfProject walks a live project, children before parents', () => {
-      // C (leaf) embedded by B; the live project places B.
       const cType = registry.createMaster(
         { id: 'dep-c', symbol: 'C', name: 'Dep C' },
         'browser'
       );
-      // B's circuit places C — reference C's type id directly (the walk resolves
-      // any custom type through its provenance id, master or snapshot alike).
+      // B's circuit references C's type id directly: the walk resolves any
+      // custom type through its provenance id, master or snapshot alike.
       const bType = registry.createMaster(
         {
           id: 'dep-b',
@@ -2225,15 +2159,15 @@ describe('PersistenceService', () => {
       const deps = promotion.localDependenciesOfProject(project);
       project.destroy();
 
-      // Children before parents: C precedes B (upload order).
+      // Upload order: children before parents.
       expect(deps.map((d) => d.name)).toEqual(['Dep C', 'Dep B']);
       expect(deps.map((d) => d.masterTypeId)).toEqual([cType, bType]);
     });
 
     it('localDependenciesOfProject orders a diamond children-before-parents', () => {
-      // A places B and C; both B and C place D. Every dependency must precede
-      // each one that embeds it — a plain reverse of collect order would put the
-      // shared D after one of its parents.
+      // A places B and C, both of which place D. Every dependency must precede
+      // each one that embeds it; reversing collect order would put the shared D
+      // after one of its parents.
       const ref = (type: number) => ({
         type,
         pos: [0, 0] as [number, number],
@@ -2279,8 +2213,7 @@ describe('PersistenceService', () => {
       expect(idx('C')).toBeLessThan(idx('A'));
     });
 
-    // Ingests one orphan snapshot (no master resolves for its id) and returns
-    // its session type id.
+    // Ingests one orphan snapshot — no master resolves for its id.
     function ingestOrphan(
       source:
         | { id: string; version: number; origin?: 'server' | 'browser' }
@@ -2314,7 +2247,6 @@ describe('PersistenceService', () => {
       const masterId = await library.restoreOrphanToLibrary(snapType);
 
       expect(masterId).toBe('lost-local');
-      // Re-linked: the placed snapshot now resolves to the restored master.
       const resolved = registry.resolveMaster(snapType);
       expect(resolved?.master.source).toBe('browser');
       expect(resolved?.master.version).toBe(2); // frozen version adopted
@@ -2328,7 +2260,6 @@ describe('PersistenceService', () => {
       const masterId = await library.restoreOrphanToLibrary(snapType);
 
       expect(masterId).toBeTruthy();
-      // The snapshot was re-pointed at the fresh master, so it resolves now.
       expect(registry.resolveMaster(snapType)?.master.id).toBe(masterId);
     });
 
@@ -2376,9 +2307,9 @@ describe('PersistenceService', () => {
       expect(def.name).toBe('Cloud Comp');
       expect(def.numInputs).toBe(1);
       expect(def.version).toBe(2);
-      // No circuit yet — it is fetched lazily on first placement / update.
+      // The circuit is fetched lazily on first placement or update.
       expect(def.circuit).toBeUndefined();
-      // verify() in afterEach asserts no per-component GET was issued.
+      // afterEach verify() asserts no per-component GET was issued.
     });
 
     it('ensureServerMasterCircuit fetches and sets the circuit on demand', async () => {
@@ -2405,7 +2336,7 @@ describe('PersistenceService', () => {
         'browser'
       );
       await library.ensureServerMasterCircuit(masterTypeId);
-      // verify() in afterEach asserts no HTTP request was made.
+      // afterEach verify() asserts no HTTP request was made.
     });
 
     it('fetches a server master circuit once, shared by placement and edit-open', async () => {
@@ -2415,7 +2346,6 @@ describe('PersistenceService', () => {
         'server'
       );
 
-      // First use (place-time): one GET populates the cache.
       const ensure = library.ensureServerMasterCircuit(masterTypeId);
       await tick();
       httpMock
@@ -2423,9 +2353,8 @@ describe('PersistenceService', () => {
         .flush(componentDetailResponse({ id: uuid('srv-cache'), version: 3 }));
       await ensure;
 
-      // Second use (edit-open) is served from the cache: no second GET (the
-      // afterEach verify() would fail on an outstanding request), and the editor
-      // adopts the cached version so its save keeps a valid concurrency check.
+      // The edit-open is served from the cache — no second GET — and adopts
+      // the cached version, so its save keeps a valid concurrency check.
       const { project, masterTypeId: editType } =
         await service.loadServerComponentForEdit(uuid('srv-cache'));
       expect(editType).toBe(masterTypeId);
@@ -2458,8 +2387,7 @@ describe('PersistenceService', () => {
       put.flush(componentSummaryResponse({ id: uuid('srv-inv'), version: 2 }));
       await save;
 
-      // The save dropped the cache entry: the next edit-open goes back to the API
-      // rather than serving the pre-save circuit.
+      // The save dropped the cache entry, so the next edit-open re-fetches.
       const reopen = service.loadServerComponentForEdit(uuid('srv-inv'));
       await tick();
       const get = httpMock.expectOne(COMPONENT_URL(uuid('srv-inv')));
@@ -2491,7 +2419,7 @@ describe('PersistenceService', () => {
       });
 
       // A new component starts on an empty board, so the create carries no
-      // document at all and there is no initial save to establish a version.
+      // document.
       const post = httpMock.expectOne(COMPONENTS_URL);
       expect(post.request.method).toBe('POST');
       expect(post.request.body).toEqual({
@@ -2513,8 +2441,8 @@ describe('PersistenceService', () => {
     });
 
     it('loadServerComponent revives the embedded snapshot — ports come from it (Inv. A)', async () => {
-      // The document is self-contained: every custom it places travels with it
-      // as a frozen definition, so opening it needs no second fetch.
+      // Every custom it places travels with it as a frozen definition, so
+      // opening the document needs no second fetch.
       const dependency: SnapshotDefinition = {
         type: CUSTOM_TYPE_ID_BASE,
         source: { id: 'dep-master', version: 6, origin: 'server' },
@@ -2548,7 +2476,6 @@ describe('PersistenceService', () => {
 
       const { project, masterTypeId } = await promise;
       const instance = customInstanceOf(project);
-      // The instance's arity comes from the embedded definition.
       expect(instance.numInputs).toBe(1);
       expect(instance.numOutputs).toBe(1);
       expect(metadataStore.getMetadata(project)!.source).toBe('server');
@@ -2586,7 +2513,7 @@ describe('PersistenceService', () => {
       expect(put.request.method).toBe('PUT');
       const definition = put.request.body.document.definitions[0];
       // Provenance, so the server can derive the dependency edge and a reader
-      // can tell whether the master has moved on since the snapshot was taken.
+      // can tell whether the master has moved on.
       expect(definition.source).toEqual({
         id: 'pm1',
         version: 3,
@@ -2627,8 +2554,8 @@ describe('PersistenceService', () => {
       const put = httpMock.expectOne(COMPONENT_URL(uuid('ec1')));
       expect(put.request.method).toBe('PUT');
       // No port surface in the body: the plugs in the circuit are what a
-      // component's ports *are*, so a client declaring them could only ever
-      // disagree with the document it sent them beside.
+      // component's ports *are*, so a client declaring them could only
+      // disagree with the document it sent.
       expect(Object.keys(put.request.body).sort()).toEqual([
         'document',
         'version'
@@ -2637,7 +2564,6 @@ describe('PersistenceService', () => {
       put.flush(componentSummaryResponse({ id: uuid('ec1'), version: 7 }));
 
       await promise;
-      // The server's save-time version stamp is adopted onto the master.
       expect(registry.getDefinition(masterType)!.version).toBe(7);
       expect(metadataStore.isDirty(editor)).toBe(false);
     });

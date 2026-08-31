@@ -16,9 +16,8 @@ function clearCookie(): void {
 }
 
 /**
- * Starts the editor with the given cookie in place. The cookie has to exist
- * before bootstrap, as it does on a page load: the theme is read once, when the
- * service is constructed.
+ * Starts the editor with the given cookie in place. The cookie must exist
+ * before bootstrap, as on a page load: the theme is read once, at construction.
  */
 function startEditor(preferences?: Record<string, unknown>): ThemingService {
   if (preferences) {
@@ -55,16 +54,16 @@ describe('ThemingService', () => {
   it('leaves a theme it cannot render for the server to repair', () => {
     const theming = startEditor({ lang: 'de', theme: 'sepia' });
 
-    // Falling back to dark is a rendering decision; overwriting the field would
-    // discard a preference the pages around the editor may well understand.
+    // Falling back to dark is a rendering decision; overwriting the field
+    // would discard a preference the surrounding pages may understand.
     expect(theming.currentThemeType()).toBe(ThemeType.DARK);
     expect(TestBed.inject(PreferencesService).get('theme')).toBe('sepia');
   });
 
   it('does not claim a theme for the origin on load', () => {
-    // Loading applies dark as a fallback; writing it would push a theme the user
-    // never chose onto every other page. The server establishes the cookie on the
-    // next page view, from the same default.
+    // Dark is applied as a fallback but not written: that would push a theme
+    // the user never chose onto every other page. The server establishes the
+    // cookie on the next page view, from the same default.
     startEditor();
 
     expect(TestBed.inject(PreferencesService).get('theme')).toBeNull();

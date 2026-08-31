@@ -218,9 +218,8 @@ describe('WindowService + LgWindowOutlet', () => {
     expect(win.style.height).toBe('160px');
   });
 
-  // jsdom lays nothing out, so the window's measured box is stubbed from its
-  // own inline rect plus a fixed outlet origin — the relationship the
-  // viewport ↔ outlet conversion is built on.
+  // jsdom lays nothing out, so the measured box is stubbed from the inline
+  // rect plus a fixed outlet origin: what the viewport↔outlet conversion uses.
   function stubLayoutAt(win: HTMLElement, origin: { x: number; y: number }) {
     win.getBoundingClientRect = () =>
       ({
@@ -247,7 +246,6 @@ describe('WindowService + LgWindowOutlet', () => {
     expect(win.style.left).toBe('200px');
     expect(win.style.top).toBe('120px');
     expect(win.style.width).toBe('640px');
-    // Unnamed fields keep their value, and the box comes back as taken.
     expect(placed).toEqual({ x: 500, y: 200, width: 640, height: 360 });
   });
 
@@ -291,8 +289,7 @@ describe('WindowService + LgWindowOutlet', () => {
     fixture.detectChanges();
 
     const win = fixture.nativeElement.querySelector('lg-window') as HTMLElement;
-    // Fills the outlet instead of floating: no inline rect, no resize zones,
-    // no drag cursor, no ✕.
+    // Fills the outlet: no inline rect, resize zones, drag cursor or ✕.
     expect(win.style.left).toBe('');
     expect(win.style.width).toBe('');
     expect(win.classList.contains('inset-0')).toBe(true);

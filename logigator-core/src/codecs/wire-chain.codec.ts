@@ -3,22 +3,19 @@ import { WireDirection } from '../model/wire-direction.enum';
 
 /**
  * Chain codec for the persisted wire encoding: SVG-path-style walks over the
- * wire graph, `"x,y:e5s3;x,y:n2"` — each chunk starts at a point and every
- * segment is one wire leaving the current point (`e`/`s`/`w`/`n` + length, no
- * separator needed: the next letter ends the number), whose far endpoint
- * becomes the next segment's start. Chunk heads are themselves deltas against
- * the previous chunk's head (the first is relative to the origin), and walks
- * start in (y, x) order — nearby chunks then open with small, repeating head
- * deltas instead of high-entropy absolute coordinates, which is where the
- * compressed size win comes from.
+ * wire graph, `"x,y:e5s3;x,y:n2"`. Each chunk starts at a point; every segment
+ * is one wire leaving the current point (`e`/`s`/`w`/`n` + length, no separator
+ * needed since the next letter ends the number), and its far endpoint starts
+ * the next segment. Chunk heads are deltas against the previous head, the first
+ * against the origin, and walks start in (y, x) order — so nearby chunks open
+ * with small repeating deltas rather than high-entropy absolutes, which is
+ * where the compressed size win comes from.
  *
- * The four letters are a property of the *walk*, not the wire: the in-memory
- * model stays canonical (`WireDirection` horizontal/vertical, positive length,
- * `pos` at the west/north endpoint), and `w`/`n` simply mean the walk entered
- * the wire from its far end. Decoding normalizes right back, so a document
- * round-trips to the same wire set — in emission order, which is what defines
- * "the body's wire order" for consumers that align per-wire data with the
- * document (see `ProjectDump.wireIds`).
+ * The four letters describe the walk, not the wire: the in-memory model stays
+ * canonical (horizontal/vertical, positive length, `pos` at the west/north
+ * endpoint), and `w`/`n` mean the walk entered the wire from its far end.
+ * Decoding normalizes back, so a document round-trips to the same wire set in
+ * emission order — which is what defines the body's wire order.
  */
 
 /** A decode failure: structurally invalid chain text. */
@@ -37,8 +34,8 @@ export interface EncodedWireChain {
 
 type GridPoint = [number, number];
 
-/** A wire's two endpoints; the second may lie west/north of `pos` when the
- * length is negative (legacy data) — encoding normalizes either way. */
+/** A wire's two endpoints; the second may lie west/north of `pos` for a
+ * negative length, which encoding normalizes. */
 function endpointsOf(wire: SerializedWireBody): [GridPoint, GridPoint] {
   const [x, y] = wire.pos;
   return wire.direction === WireDirection.HORIZONTAL
@@ -56,18 +53,17 @@ const keyOf = (p: GridPoint): string => `${p[0]},${p[1]}`;
 
 /**
  * Encodes wires as chain text. Deterministic: chunks start at the first
- * not-yet-emitted wire in (y, x) order of the canonical (west/north) start
- * point, each walk greedily continues with the first unused wire incident to
- * the current point (both endpoints of every wire are indexed, so a wire is
- * picked up from either end). Chunk heads are emitted relative to the
- * previous chunk's head.
+ * not-yet-emitted wire in (y, x) order of the canonical west/north start point,
+ * and each walk greedily continues with the first unused wire incident to the
+ * current point, indexed from both endpoints so a wire is picked up from either
+ * end.
  */
 export function encodeWireChain(
   wires: readonly SerializedWireBody[]
 ): EncodedWireChain {
   const ends = wires.map(endpointsOf);
-  // Canonical start: the west/north endpoint (equals `pos` except for
-  // legacy negative lengths, where the endpoints come out swapped).
+  // Canonical start: the west/north endpoint, which equals `pos` unless a
+  // negative length swapped them.
   const startOf = (i: number): GridPoint => {
     const [a, b] = ends[i];
     return b[1] < a[1] || (b[1] === a[1] && b[0] < a[0]) ? b : a;
@@ -130,9 +126,8 @@ export function encodeWireChain(
 
 const HEAD_PATTERN = /^(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)$/;
 // Sticky tokenizer: segments abut with no separator, so each match must start
-// exactly where the previous one ended. Digits/dot only — a direction letter
-// can never be part of a length (in particular `e` must not be read as an
-// exponent), so the next letter unambiguously starts the next segment.
+// exactly where the previous ended. Digits and dot only, so `e` reads as a
+// direction letter rather than an exponent.
 const SEGMENT_PATTERN = /([eswn])(\d+(?:\.\d+)?)/y;
 
 /**

@@ -44,12 +44,12 @@ export class ToolBarComponent {
   private readonly shortcutService = inject(ShortcutService);
   private readonly simulationService = inject(SimulationService);
 
-  /** Drives the disabled state of the no-op-able action buttons. */
+  /** Drives the disabled state of the buttons whose action can be a no-op. */
   protected readonly commandState = inject(EditorCommandStateService);
 
   protected readonly actions = ShortcutActionEnum;
 
-  /** Shared editing tool set; the desktop bar and mobile HUD both render it. */
+  /** Shared editing tool set; the mobile HUD renders the same one. */
   protected readonly tools: WorkModeToolDescriptor[] = createWorkModeTools(
     this.workModeService
   );
@@ -61,8 +61,7 @@ export class ToolBarComponent {
     return this.shortcutService.binding(action)();
   }
 
-  // Swaps the toolbar between the editing tool set and the simulation
-  // controls.
+  // Swaps the bar between the editing tool set and the simulation controls.
   protected isSimulationMode = computed(
     () => this.workModeService.mode() === WorkMode.SIMULATION
   );

@@ -1,15 +1,11 @@
 /**
  * Derives the automation catalog from the live component registry — never a
- * hand-written list, so a newly registered type (a freshly loaded custom
- * component included) shows up on the next call.
+ * hand-written list, so a newly registered type shows up on the next call.
  *
- * The shape data all comes from `@logigator/core`: a built-in's config carries
- * the `ComponentMeta` it was composed from, so option constraints and port
- * counts are read rather than probed, and the API reports exactly what the
- * server would validate a document against.
- *
- * Pure functions over the registry's configs plus an injected translation
- * resolver, so the whole file is unit-testable without Angular.
+ * Option constraints and port counts are read off each config's
+ * `ComponentMeta` rather than probed from an instance, so the API reports
+ * exactly what the server would validate a document against. Pure functions
+ * over configs plus an injected translation resolver, so no Angular is needed.
  */
 
 import {
@@ -30,9 +26,8 @@ export interface CatalogContext {
 }
 
 /**
- * Describes one option from its schema. The two select kinds collapse to a
- * single `select` descriptor: button-versus-dropdown is a rendering choice, and
- * the automation surface only cares which values are legal.
+ * Describes one option from its schema. The two select kinds collapse into one
+ * `select` descriptor — button versus dropdown is a rendering choice.
  */
 export function describeOption(
   key: string,
@@ -88,9 +83,9 @@ export function describeOption(
 
 /**
  * Why `value` is not acceptable for `config`'s `key` option, or `null` when it
- * is. The write paths reject rather than silently accept: the option setters
- * clamp numbers and strip characters on their own, so an unchecked write would
- * report success while storing something else.
+ * is. Write paths reject rather than accept: the option setters clamp numbers
+ * and strip characters, so an unchecked write reports success while storing
+ * something else.
  */
 export function validateOptionValue(
   config: ComponentConfigView,

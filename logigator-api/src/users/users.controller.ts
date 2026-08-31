@@ -29,9 +29,8 @@ import { ProfileService } from './profile.service';
 import { toUserResponse } from './users.service';
 
 /**
- * The signed-in user's own account. Every route requires a session and describes
- * only its caller, so there are no ownership checks to get wrong and no
- * serialization groups to leak past.
+ * The signed-in user's own account. Every route requires a session and
+ * describes only its caller, so there are no ownership checks to get wrong.
  */
 @Controller('user')
 @UseGuards(AuthGuard)
@@ -68,8 +67,8 @@ export class UsersController {
   }
 
   /**
-   * Replaces the avatar. Multipart rather than JSON: the file arrives as bytes,
-   * and base64 in a JSON body would inflate it by a third for nothing.
+   * Replaces the avatar. Multipart rather than JSON: base64 in a JSON body
+   * would inflate the file by a third for nothing.
    */
   @Post('avatar')
   async setAvatar(
@@ -87,8 +86,7 @@ export class UsersController {
 
     const content = await upload.toBuffer();
     // `toBuffer` resolves even when the stream was cut off at the limit, so the
-    // flag is the only thing that distinguishes a truncated file from a whole
-    // one — storing the truncation would mean a corrupt image.
+    // flag is the only thing that tells a truncated file from a whole one.
     if (upload.file.truncated) {
       throw new ApiException(
         HttpStatus.PAYLOAD_TOO_LARGE,
@@ -97,8 +95,7 @@ export class UsersController {
       );
     }
 
-    // The declared part type is not passed on: what the file actually is gets
-    // decided by decoding it.
+    // The declared part type is not passed on: decoding decides what this is.
     const updated = await this.profile.setAvatar(user, content);
     return toUserResponse(updated);
   }
@@ -108,7 +105,6 @@ export class UsersController {
     return toUserResponse(await this.profile.removeAvatar(user));
   }
 
-  /** Deletes the account, then ends the session it was made from. */
   @Delete()
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteAccount(

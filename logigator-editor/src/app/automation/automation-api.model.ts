@@ -1,27 +1,18 @@
 /**
- * The `window.__logigator` contract: every argument and every result here is
- * structured-cloneable, so a driver (Playwright/CDP `evaluate`, a future MCP
- * bridge) can transport them verbatim. No live editor object ever crosses the
- * boundary — elements are addressed by their numeric project ids, coordinates
- * are always **grid units**.
- *
- * Circuit bodies deliberately reuse `SerializedComponentBody` /
- * `SerializedWireBody` (the native persistence body) with the element's id
- * attached, so the shape an agent reads is the shape it writes back.
+ * The `window.__logigator` contract. Everything here is structured-cloneable
+ * and no live editor object crosses the boundary: elements are addressed by
+ * their numeric project ids, coordinates are grid units unless named `screen`.
+ * Circuit bodies reuse the native persistence bodies, so the shape an agent
+ * reads is the shape it writes back.
  */
 
 import { SerializedComponentBody, SerializedWireBody } from '@logigator/core';
 
-/**
- * Contract version, bumped on any breaking change to the shapes in this file.
- * Independent of the editor's release version.
- */
+/** Contract version, independent of the editor's release version. */
 export const AUTOMATION_API_VERSION = 1;
 
 export interface ApiInfo {
-  /** Version of this contract — see {@link AUTOMATION_API_VERSION}. */
   apiVersion: number;
-  /** Editor release version (package.json). */
   editorVersion: string;
   /** Git short SHA the bundle was built from; empty in a dev build. */
   buildCommit: string;
@@ -41,11 +32,7 @@ export interface GridRect {
   height: number;
 }
 
-/**
- * A point in **viewport CSS px** — the browser's own coordinate space, what a
- * driver hands to `page.mouse` or a screenshot clip. The only place the
- * contract leaves grid units, and always named `screen`.
- */
+/** A point in viewport CSS px; the contract's only non-grid coordinate. */
 export interface ScreenPoint {
   x: number;
   y: number;
@@ -61,11 +48,7 @@ export interface ScreenRect {
 
 // -- Catalog ---------------------------------------------------------------
 
-/**
- * One option of a component type. `kind` discriminates on the option class, so
- * the constraints an agent must respect (a number's range, a select's allowed
- * values, a text field's cap) are always in the payload.
- */
+/** One option of a component type; `kind` carries its value constraints. */
 export type OptionDescriptor = {
   key: string;
   label: string;
@@ -96,11 +79,7 @@ export interface CatalogEntry {
   description: string;
   /** Custom components only: which library the master lives in. */
   source?: 'server' | 'browser';
-  /**
-   * Port counts of a default instance. Adjustable types drive these from an
-   * option (a `number` descriptor whose range is the allowed span); a custom
-   * component reports its definition's counts.
-   */
+  /** Port counts of a default instance; an option drives adjustable ones. */
   ports: { inputs: number; outputs: number };
   options: OptionDescriptor[];
 }
@@ -119,11 +98,9 @@ export interface ElementList {
 }
 
 /**
- * Filters for {@link ElementList} reads; omitting everything returns the whole
- * circuit. Filters combine (AND): `bounds` keeps only elements intersecting the
- * rectangle, `types` keeps only components of those type ids. Naming ids of one
- * kind restricts the read to that kind — `{ componentIds }` alone returns no
- * wires rather than every wire.
+ * Filters for an {@link ElementList} read; they AND, and omitting all of them
+ * returns the whole circuit. Naming ids of one kind restricts the read to that
+ * kind — `{ componentIds }` alone returns no wires.
  */
 export interface ElementQuery {
   componentIds?: number[];
@@ -153,10 +130,7 @@ export interface ProjectState {
   elements: ElementList;
 }
 
-/**
- * Why the editor refuses a mutation: a drag session holds project state
- * mid-mutation, the circuit is running, or no project is open at all.
- */
+/** Why the editor refuses a mutation. */
 export type BusyReason = 'session-active' | 'simulation' | 'no-project';
 
 // -- Edits -----------------------------------------------------------------
@@ -232,10 +206,7 @@ export interface PerOpError {
   message: string;
 }
 
-/**
- * Outcome of an `applyEdit` batch — all-or-nothing: `ok: false` means the
- * project was not touched at all.
- */
+/** Outcome of an `applyEdit` batch; `ok: false` means nothing was touched. */
 export type EditResult =
   | {
       ok: true;
@@ -331,17 +302,12 @@ export type SelectRegion = { bounds: GridRect } | { elementIds: number[] };
 
 export interface SelectOptions {
   /**
-   * Scissor the selection: wires crossing the rectangle's edge are cut there
-   * and only the inside pieces join the selection — the held-scissor-key
-   * marquee. Rectangle regions only; a cut registers a provisional history
-   * entry that the following move or delete folds into itself.
+   * Scissor the marquee: wires crossing its edge are cut and only the inside
+   * pieces join the selection. Rectangle regions only. The cut registers a
+   * provisional history entry the following move or delete folds into itself.
    */
   cut?: boolean;
-  /**
-   * Whether the selection keeps a persistent grab rect (default `true`).
-   * `false` selects without drawing one, like a single click — grabbing then
-   * falls back to the elements' own bounds.
-   */
+  /** Keep a persistent grab rect (default `true`), else select like a click. */
   rect?: boolean;
 }
 
@@ -358,7 +324,7 @@ export interface SelectionState {
 
 // -- Inspection ------------------------------------------------------------
 
-/** One open live inspection, as opened by tapping a component while running. */
+/** One open live inspection — what tapping a component while running opens. */
 export interface InspectionInfo {
   /** Handle for the calls below; unique for the session, never reused. */
   id: number;
@@ -493,10 +459,9 @@ export interface LogigatorAutomationApi {
   ): WorkModeState;
 
   /**
-   * Live inspections — what tapping an inspectable component while the
-   * simulation runs opens. `getElements`/`activate`/`navigateTo`/`camera`
-   * address a **watch**: its levels are fresh copies of the inner circuit, so
-   * their element ids are the copy's, not the placed instance's.
+   * Live inspections. `getElements`/`activate`/`navigateTo`/`camera` address a
+   * **watch**, whose levels are fresh copies of the inner circuit — their
+   * element ids are the copy's, not the placed instance's.
    */
   inspect: {
     open(componentId: number): InspectionInfo;
@@ -511,17 +476,15 @@ export interface LogigatorAutomationApi {
     /** The visible watch level's circuit copy. */
     getElements(inspectionId: number, query?: ElementQuery): ElementList;
     /**
-     * Taps a component inside the visible watch level — the one gesture the
-     * watch has: drives an inner lever/button, drills into a nested custom, or
-     * opens an inner component's own inspection.
+     * Taps a component inside the visible watch level: drives an inner
+     * lever/button, drills into a nested custom, or opens its own inspection.
      */
     activate(inspectionId: number, componentId: number): InspectionInfo;
     /** Breadcrumb navigation: pops every level deeper than `level`. */
     navigateTo(inspectionId: number, level: number): InspectionInfo;
     /**
-     * The watch's camera — the same operations as the board's. A level fits
-     * its circuit once, when it first shows; a write here takes that turn
-     * instead of being overwritten by it on the next frame.
+     * The watch's camera. A level fits its circuit once when it first shows; a
+     * write here takes that turn instead of being overwritten by it.
      */
     camera: {
       getViewport(inspectionId: number): ViewportInfo;
@@ -548,10 +511,9 @@ export interface LogigatorAutomationApi {
   library: {
     list(): LibraryEntry[];
     /**
-     * Opens a custom component's circuit in its own tab. Takes a master's type
-     * id or a **placed instance's** — an instance whose master is gone (its
-     * circuit only embedded) is restored into the browser library first, like
-     * the settings card's Edit / Restore & edit button.
+     * Opens a custom component's circuit in its own tab, by master type id or
+     * placed-instance type id. An instance whose master is gone is restored
+     * into the browser library first.
      */
     edit(type: number): Promise<TabInfo>;
   };

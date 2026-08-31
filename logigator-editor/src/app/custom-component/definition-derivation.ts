@@ -10,14 +10,12 @@ export interface DerivedSummary {
 }
 
 /**
- * Derives a custom component's port summary from the INPUT/OUTPUT plugs placed
- * in its circuit — the **only** place that knows the plug → port mapping. Both
- * the live editor binding and the save path use it.
+ * A custom component's port summary from the INPUT/OUTPUT plugs in its circuit
+ * — the only place that knows the plug → port mapping.
  *
- * Ports are ordered by each plug's `index` option, then by instance id as a
- * defensive tiebreaker: the Ports panel always writes clean `0..n-1` indices, so
- * duplicate/gappy values never arise from in-app editing, but externally-authored
- * or legacy data might contain them. This stays a total order and never throws.
+ * Ports are ordered by each plug's `index` option, then by instance id: the
+ * Ports panel writes clean `0..n-1` indices, but externally-authored data may
+ * have duplicates or gaps, and this stays a total order regardless.
  */
 export function deriveSummary(project: Project): DerivedSummary {
   const inputs: InputComponent[] = [];

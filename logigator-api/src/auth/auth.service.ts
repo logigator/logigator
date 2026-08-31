@@ -15,14 +15,7 @@ import { UsersService } from '../users/users.service';
 import { AuthTokenService } from './auth-token.service';
 import { PasswordService } from './password.service';
 
-/**
- * Local (email + password) authentication.
- *
- * Passport is gone. What it contributed here was a strategy registry and a
- * user-serialization hook, and this API needs neither: a guard reads the session
- * and loads the account, and the two credential kinds — password and Google —
- * are two services rather than two plugins.
- */
+/** Local (email + password) authentication. */
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
@@ -37,15 +30,14 @@ export class AuthService {
 
   /**
    * Creates an unverified account and mails it a confirmation link. Login stays
-   * refused until that link is opened, which is what keeps an address from being
+   * refused until that link is opened, which keeps an address from being
    * claimed by somebody who does not own it.
    */
   async register(body: RegisterRequest, locale: Locale): Promise<void> {
     const existing = await this.users.findByEmail(body.email);
     if (existing) {
-      // Registration cannot hide that an address is taken — it would have to
-      // either create a second account for it or pretend to. Saying so plainly
-      // is what lets the form offer signing in instead.
+      // Registration cannot hide that an address is taken, and saying so
+      // plainly is what lets the form offer signing in instead.
       throw emailTaken();
     }
 
@@ -59,8 +51,7 @@ export class AuthService {
       });
     } catch (error) {
       // The read above and this insert are two statements, and a double-clicked
-      // form sends two requests: the loser has to read as the same conflict, not
-      // as a server fault.
+      // form sends two requests: the loser reads as the same conflict.
       if (isUniqueViolation(error)) throw emailTaken();
       throw error;
     }
@@ -69,10 +60,9 @@ export class AuthService {
   }
 
   /**
-   * Verifies credentials and answers with the account.
-   *
-   * Every failure mode of a wrong password is one error; only the unverified
-   * address is distinguished, because the client has something to offer there.
+   * Verifies credentials and answers with the account. Every failure mode of a
+   * wrong password is one error; only the unverified address is distinguished,
+   * because the client has something to offer there.
    */
   async login(body: LoginRequest): Promise<UserRow> {
     const user = await this.authenticate(body.email, body.password);
@@ -100,10 +90,9 @@ export class AuthService {
   }
 
   /**
-   * Activates the address a token stands for.
-   *
-   * The same token type serves registration and a later change of address, so
-   * this is where a new address actually lands on the account.
+   * Activates the address a token stands for. The same token type serves
+   * registration and a later change of address, so this is where a new address
+   * lands on the account.
    */
   async verifyEmail(token: string): Promise<void> {
     const verification = await this.tokens.redeemEmailVerification(token);
@@ -119,24 +108,21 @@ export class AuthService {
         emailVerified: true
       });
     } catch (error) {
-      // The address was free when the mail went out; an hour is long enough for
-      // somebody else to have taken it, and the unique constraint is the only
-      // place that can be noticed without a lock.
+      // The address was free when the mail went out; the unique constraint is
+      // the only place a race for it can be noticed without a lock.
       if (isUniqueViolation(error)) throw emailTaken();
       throw error;
     }
 
-    // The account was deleted while the mail sat in an inbox: there is nothing
-    // left for the link to activate, so it reads as a dead one.
+    // The account was deleted while the mail sat in an inbox, so the link reads
+    // as a dead one.
     if (!updated) throw invalidToken();
   }
 
   /**
    * Mails a reset link, if the address belongs to an account that can use one.
-   *
    * Answers the same either way: whether an address has an account is not
-   * something an unauthenticated caller gets to probe, and this endpoint would
-   * otherwise be the easiest place to ask.
+   * something an unauthenticated caller gets to probe.
    */
   async requestPasswordReset(email: string, locale: Locale): Promise<void> {
     const user = await this.users.findByEmail(email);
@@ -149,21 +135,17 @@ export class AuthService {
         token
       );
     } catch (error) {
-      // Answering 503 here would undo the whole point of the endpoint: an
-      // unknown address cannot fail to send, so a failure that reached the
-      // caller would say "this address has an account" every time the mail
-      // server hiccups. The operator gets the log; the caller gets the same
-      // nothing either way, and retrying is already the advice on screen.
+      // Answering 503 would undo the point of the endpoint: an unknown address
+      // cannot fail to send, so a failure that reached the caller would say
+      // "this address has an account" every time the mail server hiccups.
       this.logger.error(`Password reset mail to ${user.email} failed`, error);
     }
   }
 
   /**
-   * Sets a new password from a reset token.
-   *
-   * It also verifies the address: holding a token proves the mailbox was
-   * reachable, and an account stuck unverified would otherwise have no way back
-   * in. And it ends every session the account had — see below.
+   * Sets a new password from a reset token. It also verifies the address:
+   * holding a token proves the mailbox was reachable, and an account stuck
+   * unverified would otherwise have no way back in.
    */
   async confirmPasswordReset(body: ConfirmPasswordReset): Promise<void> {
     const reset = await this.tokens.redeemPasswordReset(body.token);
@@ -178,20 +160,18 @@ export class AuthService {
     });
     if (!updated) throw invalidToken();
 
-    // Whoever was signed in on the strength of the old password is signed out by
-    // the new one. A reset is what a locked-out or compromised account has, and
-    // leaving live sessions behind would mean the intruder keeps their access
-    // through the very act meant to end it.
+    // A reset is what a locked-out or compromised account has; leaving live
+    // sessions behind would let an intruder keep the access it is meant to end.
     await this.sessions.signOutEverywhere(user.id);
   }
 
   /**
    * Checks an email and password pair.
    *
-   * An unknown address and an account with no password (a Google-only or
-   * migrated Twitter login) both still run a verification, against a hash that
-   * matches nothing: the answer has to take the same time in every case, or the
-   * response time alone reveals which addresses have accounts.
+   * An unknown address and an account with no password (a Google-only login)
+   * both still run a verification against a hash that matches nothing: the
+   * answer has to take the same time in every case, or the response time alone
+   * reveals which addresses have accounts.
    */
   private async authenticate(
     email: string,
@@ -209,10 +189,9 @@ export class AuthService {
     }
 
     if (this.passwords.needsRehash(user.passwordHash)) {
-      // The password is known to be correct right now, which is the only moment
-      // a stored hash can be strengthened. Legacy hashes were made at cost 9.
-      // The row it answers with is ignored: the caller is authenticating against
-      // the copy it already read, and a vanished account is the guard's business.
+      // The password is known correct right now, which is the only moment a
+      // stored hash can be strengthened. The row it answers with is ignored:
+      // the caller authenticates against the copy it already read.
       await this.users.update(user.id, {
         passwordHash: await this.passwords.hash(password)
       });
@@ -229,9 +208,8 @@ export class AuthService {
         token
       );
     } catch (error) {
-      // The account exists either way, and the token is valid for an hour, so
-      // this is recoverable by asking for the mail again — which is what the
-      // client is told.
+      // The account exists either way and the token is valid for an hour, so
+      // this is recoverable by asking for the mail again.
       this.logger.error(`Verification mail to ${user.email} failed`, error);
       throw new ApiException(
         HttpStatus.SERVICE_UNAVAILABLE,

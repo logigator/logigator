@@ -9,9 +9,9 @@ import { Direction, WireDirection } from '@logigator/core';
 import { Component } from '../components/component';
 import { makeAnd, makeWire } from '../../testing/factories';
 
-// The manager derives connection points from termination counts it maintains
-// through its own notifications, so tests build state by calling onWireAdded /
-// onComponentAdded / recomputeAll — not through any injected spatial query.
+// Connection points come from termination counts the manager maintains through
+// its own notifications, so these build state by calling onWireAdded /
+// onComponentAdded / recomputeAll rather than any injected spatial query.
 function makeManager(): ConnectionPointManager {
   return new ConnectionPointManager(() => 1);
 }
@@ -61,7 +61,6 @@ describe('ConnectionPointManager', () => {
     const mgr = makeManager();
     mgr.onWireAdded(snap(h));
     mgr.onWireAdded(snap(v));
-    // Interior-on-interior is allowed and does not form a CP.
     expect(mgr.hasCpAt(new Point(2.5, 2.5))).toBe(false);
   });
 
@@ -129,7 +128,7 @@ describe('ConnectionPointManager', () => {
   // --- Lifecycle / hooks ---
 
   it('onWireAdded creates CP when terminations reach 3', () => {
-    // 3-wire T: two collinear H halves + one V endpoint at the meeting point.
+    // 3-wire T: two collinear H halves plus a V endpoint at the meeting point.
     const h1 = makeWire(0, 2, WireDirection.HORIZONTAL, 2);
     const h2 = makeWire(2, 2, WireDirection.HORIZONTAL, 3);
     const v = makeWire(2, 0, WireDirection.VERTICAL, 2);

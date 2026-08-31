@@ -3,10 +3,7 @@ import { LgButton, LgTooltip } from '@logigator/ui';
 import { BugReportService } from './bug-report.service';
 import { TranslateDirective } from '../translation/translate.directive';
 
-/**
- * Small floating action button that opens the bug-report dialog. Placed in the
- * board's bottom-right corner above the minimap by the app shell.
- */
+/** Floating action button that opens the bug-report dialog. */
 @Component({
   selector: 'app-bug-report-badge',
   imports: [LgButton, LgTooltip, TranslateDirective],

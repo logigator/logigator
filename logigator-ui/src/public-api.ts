@@ -1,10 +1,5 @@
-/*
- * Public API surface of @logigator/ui.
- *
- * Components, directives, and services are re-exported here. Consumers
- * `import { … } from '@logigator/ui'`; the bundler tree-shakes everything
- * unused ("sideEffects": false).
- */
+// Public API surface of @logigator/ui. The bundler tree-shakes everything
+// unused ("sideEffects": false).
 
 export const LOGIGATOR_UI_VERSION = '0.0.0';
 

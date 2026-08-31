@@ -27,19 +27,14 @@ import { DependenciesService, PROJECT_EDGES } from './dependencies.service';
 import { renameInDocument } from './rename-in-document';
 
 /**
- * The caller's own boards.
+ * The caller's own boards. Ownership is in every predicate, so this service has
+ * no notion of reading somebody else's row; public reads go through the share
+ * and community modules.
  *
- * Everything a client can ask about a project it owns, and nothing about one it
- * does not: ownership is in every predicate, so this service has no notion of
- * reading somebody else's row and there is no check to forget. Public reads go
- * through the share and community endpoints instead, which is why those are
- * separate modules rather than a flag on these queries.
- *
- * The near-twin of `ComponentsService`. The two are not folded together because
- * the columns that differ are exactly the ones a write sets: a component derives
- * its port surface from its circuit, and a project has none. Sharing the reads
- * that touch only the common half — `circuit-queries.ts` — is where the
- * duplication actually was.
+ * The near-twin of `ComponentsService`, kept apart because the columns that
+ * differ are exactly the ones a write sets — a component derives a port surface
+ * from its circuit, a project has none. The common reads are shared through
+ * `circuit-queries.ts`.
  */
 @Injectable()
 export class ProjectsService {
@@ -83,12 +78,9 @@ export class ProjectsService {
   }
 
   /**
-   * Creates a project, optionally with a document already in it.
-   *
-   * The whole thing is one transaction because the edges are derived from the
-   * document: a row whose dependency edges do not describe the circuit beside
-   * them is the state this pair must never be observed in, and a create that
-   * failed halfway would leave exactly that.
+   * Creates a project, optionally with a document already in it. One
+   * transaction: the edges are derived from the document, and a row whose edges
+   * do not describe the circuit beside them must never be observable.
    */
   async create(
     userId: string,
@@ -124,16 +116,13 @@ export class ProjectsService {
   }
 
   /**
-   * Replaces the circuit, if nothing else has since the client read it.
+   * Replaces the circuit, if nothing else has since the client read it. The
+   * counter in the `WHERE` is the whole concurrency mechanism, and it works
+   * because the check and the write are one statement.
    *
-   * The counter in the `WHERE` is the whole concurrency mechanism, and it works
-   * because the check and the write are one statement — a read-then-write would
-   * leave a window in which both tabs see the version they expect.
-   *
-   * The name is not taken from the document. A save is about the circuit;
-   * renaming is a metadata change with its own route and its own validated
-   * length. So the column's name is written back into the document, and the two
-   * cannot disagree about it whatever a client sent.
+   * The name comes from the column, not the document: renaming is a metadata
+   * change with its own route, so the two cannot disagree whatever a client
+   * sent.
    */
   async save(
     userId: string,
@@ -163,9 +152,8 @@ export class ProjectsService {
         )
         .returning();
 
-      // Nothing matched, and the row existed a moment ago: either the version
-      // moved or the project is gone. One read on the failure path buys the
-      // difference between "reload" and "it is not there any more".
+      // Nothing matched though the row existed a moment ago: one read on the
+      // failure path tells a moved version from a deleted project.
       if (!row) {
         throw (await findOwned(tx, projects, userId, id))
           ? versionConflict()
@@ -183,17 +171,13 @@ export class ProjectsService {
   }
 
   /**
-   * Changes metadata. A rename rewrites the document's own copy of the name from
-   * inside the same statement, so the column stays the one place a name is set and
-   * a save landing at the same moment keeps its circuit.
+   * Changes metadata. A rename rewrites the document's own copy of the name in
+   * the same statement, so a save landing at the same moment keeps its circuit.
    *
-   * `version` bumps for a rename or a new description, and not for visibility or
-   * a fresh share token. The rule is the same on both kinds and it is about what
-   * the counter *means*: it stamps everything a placed instance or an open editor
-   * would have to re-read. Whether a document is public is neither — and for
-   * components, where the same counter is what offers an instance an update,
-   * bumping it there would ask every board using the component to accept a change
-   * that is invisible to it.
+   * `version` stamps what a placed instance or an open editor must re-read, so
+   * it bumps for a rename or description and not for visibility or a fresh
+   * share token — bumping it on those would offer every board using a component
+   * an update it cannot see.
    */
   async update(
     userId: string,
@@ -220,9 +204,8 @@ export class ProjectsService {
         : {})
     };
 
-    // A body that asks for nothing — `regenerateLink: false` alone — is answered
-    // with the row as it stands, because an `UPDATE` with an empty `SET` is not a
-    // statement.
+    // An `UPDATE` with an empty `SET` is not a statement, so a body that asks
+    // for nothing is answered with the row as it stands.
     if (Object.keys(changes).length === 0) {
       return toProjectSummary(await this.require(userId, id));
     }
@@ -238,11 +221,9 @@ export class ProjectsService {
   }
 
   /**
-   * Deletes the project. Its edges and stars go with it through the cascade;
-   * the preview follows, since a file on a volume has no foreign key to follow.
-   *
-   * The row goes first, so a failed unlink leaves an orphan for the sweep rather
-   * than a row pointing at nothing.
+   * Deletes the project. Edges and stars go with it through the cascade; the
+   * preview has no foreign key, so it is unlinked here — after the row, so a
+   * failed unlink leaves an orphan for the sweep rather than a dangling row.
    */
   async delete(userId: string, id: string): Promise<void> {
     const [row] = await this.db

@@ -6,18 +6,17 @@ import { CoachMarkPlacement } from './coach-mark.model';
 import { OnboardingPlatform } from './onboarding.service';
 
 /**
- * What a step's completion predicate sees. Predicates read the live project (and
- * simulation) and compare against `baseline` — the component counts captured
- * when the step started — so any path to the goal advances: a different order,
- * extra parts, or a self-corrected mistake all still satisfy an absolute
- * threshold over the baseline. `userInteracted` is set once the user drives a
- * lever/button during the step (for the "flip a switch" step).
+ * What a step's completion predicate sees. Predicates compare live state
+ * against `baseline`, the counts captured when the step started, so any path to
+ * the goal advances — a different order, extra parts or a self-corrected
+ * mistake all still clear an absolute threshold over the baseline.
  */
 export interface TutorialContext {
   readonly project: Project;
   readonly sim: SimulationService;
-  /** Component count by {@link ComponentType}, captured at step entry. */
+  /** Component count by type id, captured at step entry. */
   readonly baseline: ReadonlyMap<number, number>;
+  /** Set once the user drives a lever or button during the step. */
   readonly userInteracted: boolean;
 }
 
@@ -25,9 +24,8 @@ export type TutorialPredicate = (ctx: TutorialContext) => boolean;
 
 /**
  * When a step auto-completes. `action`/`simFrame`/`userInput` wake on the
- * matching editor stream and then test their predicate against project state
- * (state-diff, not gesture-match — the interaction model is tolerant);
- * `workMode` completes on entering a mode; `manual` waits for the Next button.
+ * matching editor stream and test their predicate against project state —
+ * a state diff, not a gesture match, so the interaction model stays tolerant.
  */
 export type AdvanceOn =
   | { readonly kind: 'manual' }
@@ -36,7 +34,7 @@ export type AdvanceOn =
   | { readonly kind: 'simFrame'; readonly predicate?: TutorialPredicate }
   | { readonly kind: 'userInput'; readonly predicate?: TutorialPredicate };
 
-/** Body text: one key, or a per-platform key (tap/drag/pinch wording differs). */
+/** Body text: one key, or a per-platform key — gesture wording differs. */
 export type StepText =
   TranslationKey | Partial<Record<OnboardingPlatform, TranslationKey>>;
 
@@ -56,24 +54,23 @@ export interface TutorialStep {
   /** Platforms this step applies to; omit for all. */
   readonly platforms?: readonly OnboardingPlatform[];
   /**
-   * Onboarding target id of the anchor per platform; omit a platform to center
-   * there. A platform may list several candidate ids in priority order — the
-   * first one currently registered wins, so a step can follow an element that
-   * moves between hosts (e.g. compact: anchor the palette item while its sheet
-   * is open, else fall back to the button that opens the sheet).
+   * Onboarding target id of the anchor per platform; omit a platform to centre
+   * there. Several candidate ids may be listed in priority order — the first
+   * registered one wins, so a step can follow an element that moves between
+   * hosts, such as a palette item that is only in the DOM while its sheet is
+   * open.
    */
   readonly target?: Partial<
     Record<OnboardingPlatform, string | readonly string[]>
   >;
-  /** Bubble placement; a single side, or per-platform (the anchor can sit at
-   *  opposite screen edges across breakpoints). Omit to auto-pick per target. */
+  /** Bubble placement, one side or per-platform. Omit to auto-pick. */
   readonly placement?:
     | CoachMarkPlacement
     | Partial<Record<OnboardingPlatform, CoachMarkPlacement>>;
   readonly advanceOn: AdvanceOn;
   /** Interpolation params for `text` (e.g. a "1 of 2 placed" sub-count). */
   readonly params?: (ctx: TutorialContext) => Record<string, unknown>;
-  /** Advisory "not quite" text shown on a clearly off-script action; never blocks. */
+  /** Advisory "not quite" text for an off-script action; never blocks. */
   readonly nudge?: (ctx: TutorialContext) => TranslationKey | null;
 }
 

@@ -12,18 +12,18 @@ import { ledComponentConfig, LedOptions } from './led.config';
 export class LedComponent extends Component<LedOptions> {
   public readonly config = ledComponentConfig;
 
-  // Assigned in draw(); the class-field define runs after the base
-  // constructor's first draw and resets it to undefined, so a state change
-  // arriving before the next rebuild falls back to a full redraw.
+  // Assigned in draw(). The class-field define runs after the base
+  // constructor's first draw and resets this to undefined, so a state change
+  // before the next rebuild falls back to a full redraw.
   private _disc?: Graphics;
 
   constructor(options: LedOptions) {
     super(ledMeta, options);
   }
 
-  // The lit state lives in the base's powered-port set (survives redraws) and
-  // renders as a pure tint on the white disc — the per-frame blink path must
-  // never redraw, which would force a render-group instruction rebuild.
+  // The lit state lives in the base's powered-port set and renders as a pure
+  // tint: the per-frame blink path must never redraw, which would force a
+  // render-group instruction rebuild.
   public override setPortPowered(portIndex: number, powered: boolean): void {
     const wasLit = this.isPortPowered(0);
     super.setPortPowered(portIndex, powered);
@@ -47,8 +47,8 @@ export class LedComponent extends Component<LedOptions> {
       this.geometryService.getGraphicsContext(LedGraphics)
     );
     this._disc = disc;
-    // Covers draw-time setup and theme restyles; the per-frame blink path
-    // writes the tint directly in setPortPowered.
+    // Draw-time setup and theme restyles; the blink path writes the tint
+    // directly in setPortPowered.
     this.onApplyTheme(() => (disc.tint = this._discTint()));
     this.addChild(disc);
   }

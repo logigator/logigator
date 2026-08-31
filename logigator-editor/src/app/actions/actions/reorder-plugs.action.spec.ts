@@ -41,7 +41,7 @@ describe('ReorderPlugsAction', () => {
   });
 
   it('do() rewrites each changed plug index to its list position', () => {
-    // Move plug 3 (index 2) to the front: new order [3, 1, 2] -> indices 0,1,2.
+    // Plug 3 moves to the front, so the order becomes [3, 1, 2].
     const action = new ReorderPlugsAction([
       { componentId: 3, oldIndex: 2, newIndex: 0 },
       { componentId: 1, oldIndex: 0, newIndex: 1 },

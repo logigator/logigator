@@ -13,14 +13,9 @@ import type { Project } from './project';
 import { makeAnd } from '../../testing/factories';
 import { AndComponent } from '../components/component-types/and/and.component';
 
-// ---------------------------------------------------------------------------
-// Fake factories
-// ---------------------------------------------------------------------------
-
 /**
- * Creates a minimal component-like object. Because the only place that uses
- * `instanceof Component` is `evict()`, every other test path works fine with
- * a plain object. The `evict()` tests use a real AndComponent instead.
+ * A plain object suffices everywhere except `evict()`, the only path that uses
+ * `instanceof Component`; those tests use a real AndComponent.
  */
 function makeComponent(x: number, y: number, w: number, h: number): any {
   return {
@@ -33,7 +28,6 @@ function makeComponent(x: number, y: number, w: number, h: number): any {
   };
 }
 
-/** Creates a minimal wire-like object. */
 function makeWire(x: number, y: number, w: number, h: number): any {
   return {
     selected: false,
@@ -49,9 +43,9 @@ function makeWire(x: number, y: number, w: number, h: number): any {
 }
 
 /**
- * Wire-like fake that also exposes position/direction/length so cutWire() can
- * inspect it. gridBounds mirrors Wire.gridBounds: floor(position) extended by 1
- * on the spanning axis.
+ * Also exposes position/direction/length so cutWire() can inspect it.
+ * gridBounds mirrors Wire.gridBounds: floor(position) extended by 1 on the
+ * spanning axis.
  */
 function makeFullWire(
   direction: WireDirection,
@@ -81,16 +75,11 @@ function makeFullWire(
   };
 }
 
-/**
- * Configure the project spy so queryComponentsInRange returns the given items.
- * A fresh array per call, matching the real query — callers may mutate the
- * project while iterating the result.
- */
+/** A fresh array per call, matching the real query's snapshot semantics. */
 function setComponents(project: MockedObject<Project>, ...items: any[]): void {
   project.queryComponentsInRange.mockImplementation(() => [...items]);
 }
 
-/** Configure the project spy so queryWiresInRange returns the given items. */
 function setWires(project: MockedObject<Project>, ...items: any[]): void {
   project.queryWiresInRange.mockImplementation(() => [...items]);
 }
@@ -102,15 +91,13 @@ function makeProject(): MockedObject<Project> {
     addWire: vi.fn().mockName('Project.addWire'),
     removeWire: vi.fn().mockName('Project.removeWire')
   };
-  // The SELECT_EXACT path registers/retracts the cut against the history;
-  // emulate just enough of the contract (topDone tracking, retract running
-  // the action's undo) for hasLiveCut and clear() to behave.
+  // Enough of the history contract — topDone tracking, retract running the
+  // action's undo — for hasLiveCut and clear() to behave.
   const actionManager = {
     topDone: null as unknown,
     push: vi.fn().mockName('ActionManager.push'),
     register: vi.fn().mockName('ActionManager.register'),
     retract: vi.fn().mockName('ActionManager.retract'),
-    // Captures the dissolve hook the manager installs so tests can fire it.
     onBeforeRecord: vi.fn().mockName('ActionManager.onBeforeRecord')
   };
   actionManager.onBeforeRecord.mockReturnValue(() => undefined);
@@ -124,17 +111,12 @@ function makeProject(): MockedObject<Project> {
     return true;
   });
   (project as any).actionManager = actionManager;
-  // retintCps() reads project.connectionPoints.getCpsAtPoints — provide a no-op stub.
   (project as any).connectionPoints = {
     getCpsAtPoints: vi.fn().mockReturnValue([])
   };
 
   return project as unknown as MockedObject<Project>;
 }
-
-// ---------------------------------------------------------------------------
-// Suite
-// ---------------------------------------------------------------------------
 
 describe('SelectionManager', () => {
   let project: MockedObject<Project>;
@@ -146,8 +128,6 @@ describe('SelectionManager', () => {
     setWires(project);
     manager = new SelectionManager(project);
   });
-
-  // ── isEmpty / initial state ────────────────────────────────────────────────
 
   describe('isEmpty / initial state', () => {
     it('is empty on construction', () => {
@@ -162,8 +142,6 @@ describe('SelectionManager', () => {
       expect(manager.selectedWires.size).toBe(0);
     });
   });
-
-  // ── commit — rect mode (SELECT) ────────────────────────────────────────────
 
   describe('commit — rect mode (SELECT)', () => {
     it('adds components returned by queryComponentsInRange to selectedComponents', () => {
@@ -229,12 +207,8 @@ describe('SelectionManager', () => {
     });
   });
 
-  // ── commit — SELECT_EXACT mode (scissor select) ───────────────────────────
-  //
-  // SELECT_EXACT selects everything touching the rect (same intersect rule as
-  // SELECT) but additionally scissors wires that extend past the rect at the
-  // rect boundary. The inside piece(s) are then selected via re-query.
-
+  // SELECT_EXACT selects on the same intersect rule as SELECT, but also
+  // scissors wires extending past the rect at the boundary.
   describe('commit — SELECT_EXACT mode', () => {
     it('includes a component fully inside the rect', () => {
       const comp = makeComponent(2, 2, 3, 3);
@@ -246,7 +220,6 @@ describe('SelectionManager', () => {
     });
 
     it('includes a component that partially overlaps the rect boundary (touching rule)', () => {
-      // Touch is enough — same intersect rule as SELECT.
       const comp = makeComponent(5, 2, 3, 2);
       setComponents(project, comp);
 
@@ -262,7 +235,6 @@ describe('SelectionManager', () => {
     });
 
     it('selects a wire fully inside the rect without pushing a cut action', () => {
-      // Wire (1.5, 1.5) length 2 → gridBounds (1, 1, 3, 1) fully inside (0,0,5,5).
       const wire = makeFullWire(WireDirection.HORIZONTAL, 1.5, 1.5, 2);
       setWires(project, wire);
 
@@ -296,7 +268,6 @@ describe('SelectionManager', () => {
 
         manager.commit(new Rectangle(5, 4, 2, 1), WorkMode.SELECT_EXACT);
 
-        // Registered (state already materialized), never pushed.
         expect((project as any).actionManager.push).not.toHaveBeenCalled();
         expect((project as any).actionManager.register).toHaveBeenCalledTimes(
           1
@@ -310,8 +281,7 @@ describe('SelectionManager', () => {
 
         manager.commit(new Rectangle(5, 4, 2, 1), WorkMode.SELECT_EXACT);
 
-        // Rect (5,4)+(2,1) cuts the wire into 3 pieces: outside-left, inside,
-        // outside-right. Originals are removed via project.removeWire(id).
+        // The rect cuts the wire into outside-left, inside, outside-right.
         expect(project.removeWire).toHaveBeenCalledTimes(1);
         expect(project.addWire).toHaveBeenCalledTimes(3);
       });
@@ -325,10 +295,9 @@ describe('SelectionManager', () => {
         expect((project as any).actionManager.push).not.toHaveBeenCalled();
       });
 
-      // Regression test: a free-form drag rect has non-integer bounds, which means
-      // outside-piece gridBounds half-cell padding still intersects the rect via
-      // PixiJS' strict-< rule. The SelectionManager must therefore identify
-      // inside pieces by their own bookkeeping rather than any post-cut query.
+      // With non-integer rect bounds, an outside piece's half-cell gridBounds
+      // padding still intersects the rect under PixiJS' strict-< rule, so
+      // inside pieces must come from the cut's own bookkeeping, not a re-query.
       it('selects only the inside piece when the rect has non-integer bounds', () => {
         const wire = makeFullWire(WireDirection.HORIZONTAL, 0.5, 4.5, 10);
         setWires(project, wire);
@@ -340,7 +309,6 @@ describe('SelectionManager', () => {
 
         manager.commit(new Rectangle(4.7, 4, 2.6, 1), WorkMode.SELECT_EXACT);
 
-        // Cut produces three live Wire instances added directly via project.addWire.
         expect(addedWires.length).toBe(3);
 
         const insidePiece = addedWires.find((w) => w.position.x === 4.5);
@@ -355,7 +323,6 @@ describe('SelectionManager', () => {
         expect(manager.selectedWires.has(outsideLeft)).toBe(false);
         expect(manager.selectedWires.has(outsideRight)).toBe(false);
 
-        // Inside piece is highlighted; outside pieces stay unselected.
         expect(insidePiece.selected).toBe(true);
         expect(outsideLeft.selected).toBe(false);
         expect(outsideRight.selected).toBe(false);
@@ -374,8 +341,6 @@ describe('SelectionManager', () => {
         manager.clear();
 
         expect(manager.hasLiveCut).toBe(false);
-        // The retract runs the cut's undo: removes the 3 new pieces and
-        // re-adds the 1 original.
         expect((project as any).actionManager.retract).toHaveBeenCalledTimes(1);
         expect(project.removeWire).toHaveBeenCalledTimes(3);
         expect(project.addWire).toHaveBeenCalledTimes(1);
@@ -394,16 +359,13 @@ describe('SelectionManager', () => {
         const consumed = manager.consumeLiveCut();
 
         expect(consumed).toBeInstanceOf(ActionContainer);
-        // The consumed action is exactly the history entry the cut registered.
         expect(consumed).toBe(
           (project as any).actionManager.register.mock.calls[0][0]
         );
         expect(manager.hasLiveCut).toBe(false);
-        // Consume does NOT mutate the project — the caller coalesces the
-        // entry with its own committed action.
+        // Consuming does not mutate the project; the committing action does.
         expect(project.removeWire).not.toHaveBeenCalled();
         expect(project.addWire).not.toHaveBeenCalled();
-        // A later clear() must not retract the handed-over cut.
         manager.clear();
         expect((project as any).actionManager.retract).not.toHaveBeenCalled();
       });
@@ -419,14 +381,12 @@ describe('SelectionManager', () => {
         manager.commit(new Rectangle(5, 4, 2, 1), WorkMode.SELECT_EXACT);
         expect(manager.hasLiveCut).toBe(true);
 
-        // Something else becomes the newest history entry.
         (project as any).actionManager.topDone = {};
 
         expect(manager.hasLiveCut).toBe(false);
         expect(manager.consumeLiveCut()).toBeNull();
 
-        // clear() attempts the retract, which reports non-top and reverts
-        // nothing — the cut stays wherever the history has it.
+        // The retract reports non-top and reverts nothing.
         project.addWire.mockClear();
         project.removeWire.mockClear();
         manager.clear();
@@ -435,11 +395,9 @@ describe('SelectionManager', () => {
       });
 
       it('the installed pre-record hook dissolves a live cut and no-ops otherwise', () => {
-        // The manager registers its dissolve policy on construction.
         const hook = (project as any).actionManager.onBeforeRecord.mock
           .calls[0][0] as () => void;
 
-        // No live cut: the hook must not touch the selection or the history.
         hook();
         expect((project as any).actionManager.retract).not.toHaveBeenCalled();
 
@@ -448,7 +406,6 @@ describe('SelectionManager', () => {
         manager.commit(new Rectangle(5, 4, 2, 1), WorkMode.SELECT_EXACT);
         expect(manager.hasLiveCut).toBe(true);
 
-        // Live cut: the hook clears the selection, retracting the cut.
         hook();
         expect(manager.hasLiveCut).toBe(false);
         expect(manager.isEmpty).toBe(true);
@@ -457,11 +414,8 @@ describe('SelectionManager', () => {
     });
   });
 
-  // ── commit — single click (zero-size rect) ─────────────────────────────────
-
   describe('commit — single click (zero-size rect)', () => {
     it('selects a component whose gridBounds contains the click point', () => {
-      // Click at (3, 3). Component covers (2,2)+(2,2) → contains (3,3).
       const comp = makeComponent(2, 2, 2, 2);
       setComponents(project, comp);
 
@@ -472,7 +426,6 @@ describe('SelectionManager', () => {
     });
 
     it('selects a wire when no component is at the click point', () => {
-      // Wire at (0,3) w=5 h=1 → contains (2,3).
       const wire = makeWire(0, 3, 5, 1);
       setWires(project, wire);
 
@@ -483,7 +436,6 @@ describe('SelectionManager', () => {
     });
 
     it('prefers the component over a wire when the component has a smaller bounding area', () => {
-      // Click at (3,3). Component: 1×1 area=1. Wire: 5×2 area=10.
       const comp = makeComponent(3, 3, 1, 1); // area=1; contains (3,3)
       const wire = makeWire(0, 2, 5, 2); // area=10; contains (3,3)
       setComponents(project, comp);
@@ -496,7 +448,6 @@ describe('SelectionManager', () => {
     });
 
     it('selects the wire when the wire has a smaller area than the component', () => {
-      // Click at (3,3). Component: 4×4 area=16. Wire: 1×1 area=1.
       const comp = makeComponent(1, 1, 4, 4); // area=16; contains (3,3)
       const wire = makeWire(3, 3, 1, 1); // area=1;  contains (3,3)
       setComponents(project, comp);
@@ -509,7 +460,6 @@ describe('SelectionManager', () => {
     });
 
     it('selects nothing when the click point is in empty space', () => {
-      // Component exists in the query result but its bounds do NOT contain the click.
       const comp = makeComponent(10, 10, 2, 2); // far away from click (3,3)
       setComponents(project, comp);
 
@@ -529,7 +479,7 @@ describe('SelectionManager', () => {
     });
 
     it('selects the component when component and wire have equal bounding area', () => {
-      // Click at (3,3). Both have area 1×1=1. Component wins (<=).
+      // Equal areas: the component wins the <= tie-break.
       const comp = makeComponent(3, 3, 1, 1);
       const wire = makeWire(3, 3, 1, 1);
       setComponents(project, comp);
@@ -541,8 +491,6 @@ describe('SelectionManager', () => {
       expect(manager.selectedWires.has(wire)).toBe(false);
     });
   });
-
-  // ── clear ──────────────────────────────────────────────────────────────────
 
   describe('clear', () => {
     it('empties selectedComponents', () => {
@@ -591,12 +539,10 @@ describe('SelectionManager', () => {
       setComponents(project, comp);
       manager.commit(new Rectangle(0, 0, 5, 5), WorkMode.SELECT);
 
-      // Simulate destruction after the component was selected.
       comp.destroyed = true;
 
       manager.clear();
 
-      // The flag must NOT have been touched on a destroyed node.
       expect(comp.selected).toBe(true);
     });
 
@@ -623,11 +569,8 @@ describe('SelectionManager', () => {
     });
   });
 
-  // ── evict ──────────────────────────────────────────────────────────────────
-  //
-  // evict() uses `instanceof Component` to distinguish between the two sets.
-  // We use real AndComponent instances (via TestBed DI) to satisfy that check.
-
+  // evict() splits the two sets with `instanceof Component`, so these need
+  // real AndComponent instances.
   describe('evict', () => {
     let comp: AndComponent;
 
@@ -641,7 +584,6 @@ describe('SelectionManager', () => {
     });
 
     it('removes a selected component from selectedComponents', () => {
-      // Manually insert the real component into the manager via commit.
       setComponents(project, comp);
       manager.commit(new Rectangle(-10, -10, 20, 20), WorkMode.SELECT);
       expect(manager.selectedComponents.has(comp)).toBe(true);
@@ -666,7 +608,6 @@ describe('SelectionManager', () => {
       let emitCount = 0;
       manager.selectionChange$.subscribe(() => emitCount++);
 
-      // comp was never committed.
       manager.evict(comp);
 
       expect(emitCount).toBe(0);
@@ -695,8 +636,6 @@ describe('SelectionManager', () => {
     });
   });
 
-  // ── grabRect / isGrabbedAt ─────────────────────────────────────────────────
-
   describe('grabRect / isGrabbedAt', () => {
     it('returns null when selection is empty', () => {
       expect(manager.grabRect()).toBeNull();
@@ -714,13 +653,12 @@ describe('SelectionManager', () => {
       expect(rect.y).toBe(0);
       expect(rect.width).toBe(20);
       expect(rect.height).toBe(20);
-      // Empty space inside the drawn rect is a grab target.
       expect(manager.isGrabbedAt({ x: 15, y: 15 })).toBe(true);
       expect(manager.isGrabbedAt({ x: 25, y: 25 })).toBe(false);
     });
 
     it('translates the frozen rect with the selection bounds without resizing', () => {
-      // Mutable bounds stand in for a committed move (and its undo).
+      // Mutable bounds stand in for a committed move.
       const pos = new Point(2, 3);
       const comp: any = {
         selected: false,
@@ -768,15 +706,11 @@ describe('SelectionManager', () => {
     });
   });
 
-  // ── retintCps — connection-point highlighting ──────────────────────────────
-  //
-  // A junction dot is highlighted only when the selection rect touches the
-  // grid-unit cell the CP sits in, so selecting a wire never drags its endpoint
-  // junctions (which may connect to unselected wires) into the highlight.
-
+  // A junction dot is highlighted only when the selection rect touches its
+  // grid cell, so selecting a wire never drags in endpoint junctions that may
+  // connect to unselected wires.
   describe('retintCps', () => {
     it('looks up only the endpoints whose grid cell the rect touches', () => {
-      // Endpoints at (0,0) and (10,0); the rect reaches only the first cell.
       const wire = makeWire(0, 0, 11, 1);
       setWires(project, wire);
 
@@ -788,8 +722,7 @@ describe('SelectionManager', () => {
     });
 
     it('selects a junction when the rect grazes its cell but stops short of its centre', () => {
-      // Half-grid endpoint centre at (5.5, 0.5) → cell (5,0)–(6,1); the second
-      // endpoint's cell (5,6)–(6,7) is out of reach.
+      // Centre (5.5, 0.5) → cell (5,0)–(6,1); the other cell is out of reach.
       const wire: any = {
         selected: false,
         destroyed: false,
@@ -800,7 +733,6 @@ describe('SelectionManager', () => {
       };
       setWires(project, wire);
 
-      // Right edge at 5.5 clips into the first cell without covering (5.5, 0.5).
       manager.commit(new Rectangle(0, 0, 5.5, 5), WorkMode.SELECT);
 
       expect(project.connectionPoints.getCpsAtPoints).toHaveBeenCalledWith([
@@ -818,8 +750,6 @@ describe('SelectionManager', () => {
       expect(calls.every((c: any[]) => c[0].length === 0)).toBe(true);
     });
   });
-
-  // ── boundingBox ────────────────────────────────────────────────────────────
 
   describe('boundingBox', () => {
     it('returns null when selection is empty', () => {
@@ -841,8 +771,6 @@ describe('SelectionManager', () => {
     });
 
     it('returns tight bounding box enclosing multiple elements', () => {
-      // comp: (0,0,3,2) → right=3, bottom=2
-      // wire: (1,1,5,1) → right=6, bottom=2
       const comp = makeComponent(0, 0, 3, 2);
       const wire = makeWire(1, 1, 5, 1);
       setComponents(project, comp);
@@ -864,13 +792,11 @@ describe('SelectionManager', () => {
       setComponents(project, compAlive, compDead);
       manager.commit(new Rectangle(0, 0, 20, 20), WorkMode.SELECT);
 
-      // Destroy the large component after it was added to the selection.
       compDead.destroyed = true;
 
       const bb = manager.boundingBox();
 
       expect(bb).not.toBeNull();
-      // Bounding box should only reflect compAlive.
       expect(bb!.x).toBe(5);
       expect(bb!.y).toBe(5);
       expect(bb!.width).toBe(2);
@@ -888,8 +814,6 @@ describe('SelectionManager', () => {
     });
   });
 
-  // ── selectionChange$ emissions ─────────────────────────────────────────────
-
   describe('selectionChange$', () => {
     it('emits after a rect commit', () => {
       let emitCount = 0;
@@ -899,7 +823,6 @@ describe('SelectionManager', () => {
 
       manager.commit(new Rectangle(0, 0, 5, 5), WorkMode.SELECT);
 
-      // _commitRect calls this.clear() first (1 emit) then emits itself (1 emit).
       expect(emitCount).toBeGreaterThanOrEqual(1);
     });
 
@@ -909,7 +832,6 @@ describe('SelectionManager', () => {
 
       manager.commit(new Rectangle(3, 3, 0, 0), WorkMode.SELECT);
 
-      // _commitSingleClick calls this.clear() first (1 emit) then emits itself (1 emit).
       expect(emitCount).toBeGreaterThanOrEqual(1);
     });
 

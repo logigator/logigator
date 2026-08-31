@@ -9,13 +9,13 @@ export enum ShortcutActionEnum {
   CUT = 'cut',
   PASTE = 'paste',
   DELETE = 'delete',
-  // Handled by the WorkModeRouter (like CANCEL): an active session's floating
-  // content turns in place, otherwise the committed selection rotates.
+  // Handled by the WorkModeRouter: an active session's floating content turns
+  // in place, otherwise the committed selection rotates.
   ROTATE_SELECTION = 'rotateSelection',
   ROTATE_SELECTION_CCW = 'rotateSelectionCcw',
-  // Handled by the WorkModeRouter: an active session's floating content
-  // shifts one grid unit, otherwise the committed selection moves —
-  // committing immediately when the target spot is free.
+  // Handled by the WorkModeRouter: an active session's floating content shifts
+  // one grid unit, otherwise the committed selection moves, committing at once
+  // when the target spot is free.
   MOVE_SELECTION_UP = 'moveSelectionUp',
   MOVE_SELECTION_DOWN = 'moveSelectionDown',
   MOVE_SELECTION_LEFT = 'moveSelectionLeft',
@@ -28,8 +28,8 @@ export enum ShortcutActionEnum {
   TOOL_PAN = 'toolPan',
   TOOL_WIRE = 'toolWire',
   TOOL_SELECT = 'toolSelect',
-  // Hold-style binding: scissors wires at the marquee edge while a select
-  // drag is in progress (checked via ShortcutService.isHeld, not on()).
+  // Hold-style binding: scissors wires at the marquee edge during a select
+  // drag. Read through ShortcutService.isHeld, not on().
   SELECT_SCISSOR = 'selectScissor',
   TOOL_ERASE = 'toolErase',
   TOOL_PLACE_TEXT = 'toolPlaceText',

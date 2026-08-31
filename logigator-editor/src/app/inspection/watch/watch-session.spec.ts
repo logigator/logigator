@@ -156,7 +156,7 @@ describe('WatchSession', () => {
     const copiedSwitch = session.components[0] as SwitchComponent;
     const setPowered = vi.spyOn(copiedWire, 'setPowered');
 
-    // The board's only unit is the inner switch; its output link is powered.
+    // The board's only unit is the inner switch.
     const switchLink = simulation.board!.descriptor.components[0].outputs[0];
     fakeWorker.emit({
       kind: 'snapshot',
@@ -171,10 +171,10 @@ describe('WatchSession', () => {
     });
 
     expect(setPowered).toHaveBeenCalledWith(true);
-    // First frame after the seed: needs a render and poses the switch.
+    // The first frame after the seed poses the switch.
     expect(session.onFrame()).toBe(true);
     expect(copiedSwitch.isOn).toBe(true);
-    // Nothing changed since — no render needed.
+    // Nothing changed since.
     expect(session.onFrame()).toBe(false);
     session.destroy();
   });

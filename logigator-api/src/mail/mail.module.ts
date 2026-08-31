@@ -4,9 +4,8 @@ import { MailService } from './mail.service';
 import { createMailTransport, MAIL_TRANSPORT } from './mail.transport';
 
 /**
- * Two transactional mails and a change-of-address confirmation is the whole mail
- * surface, so this is nodemailer plus rendering functions — no template engine,
- * no view directory, no standalone renderer.
+ * Three mails is the whole surface, so this is nodemailer plus rendering
+ * functions — no template engine, no view directory.
  */
 @Module({
   providers: [

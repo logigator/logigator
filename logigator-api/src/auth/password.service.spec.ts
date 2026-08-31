@@ -4,10 +4,9 @@ import { ENV, loadEnv } from '../config/env';
 import { PasswordService } from './password.service';
 
 /**
- * A hash the stack being replaced produced: `bcrypt` at its 9 salt rounds, for
- * the password below. The whole migration rests on hashes like this one still
- * verifying, so it is pinned here rather than generated — a hash made by the
- * library under test could not detect a change in what it accepts.
+ * A `bcrypt` hash at 9 salt rounds, for the password below. Pinned rather than
+ * generated: a hash made by the library under test could not detect a change in
+ * what it accepts.
  */
 const LEGACY_HASH =
   '$2b$09$18bH31m/iSlckJkNuwtz2.Lsp.hLj2qqcwFcgHaTzWmJS5zMLTWTe';
@@ -38,15 +37,15 @@ describe('PasswordService', () => {
   it('marks a hash weaker than the configured cost for rehashing', async () => {
     const passwords = await passwordService();
 
-    // Cost 9 is what the legacy stack used; the default is higher now, so those
-    // hashes are upgraded the next time their owner signs in.
+    // The default cost is higher than 9, so such a hash is upgraded on the next
+    // sign-in.
     expect(passwords.needsRehash(LEGACY_HASH)).toBe(true);
     expect(passwords.needsRehash(await passwords.hash('freshly1'))).toBe(false);
   });
 
   it('leaves a hash alone when the cost was lowered', async () => {
-    // Not a rehash-on-every-login loop: only an increase in cost is a reason to
-    // rewrite a hash, and the E2E harness deliberately runs at cost 4.
+    // Only an increase in cost is a reason to rewrite a hash, and the E2E
+    // harness deliberately runs at cost 4.
     const passwords = await passwordService('4');
 
     expect(passwords.needsRehash(LEGACY_HASH)).toBe(false);

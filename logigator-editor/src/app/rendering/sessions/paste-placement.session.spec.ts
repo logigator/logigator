@@ -17,8 +17,6 @@ function hasWire(project: Project, wire: Wire): boolean {
   return [...project.wires].includes(wire);
 }
 
-// ── PastePlacementSession ─────────────────────────────────────────────────────
-
 describe('PastePlacementSession', () => {
   let project: Project;
   let dragLayer: Container<Component | Wire | ConnectionPoint>;
@@ -31,15 +29,12 @@ describe('PastePlacementSession', () => {
   });
 
   afterEach(() => {
-    // onCancel is safe to call; PixiJS destroy() is idempotent.
     // Tests that call onEnd() null out `session` to avoid double-destroy.
     session?.onCancel();
     session = undefined;
     dragLayer.destroy();
     project.destroy({ children: true });
   });
-
-  // ── constructor ─────────────────────────────────────────────────────────────
 
   describe('constructor', () => {
     it('adds both components and wires to dragLayer', () => {
@@ -56,8 +51,6 @@ describe('PastePlacementSession', () => {
       expect([...project.components]).toHaveLength(0);
     });
   });
-
-  // ── selection rect ────────────────────────────────────────────────────────────
 
   describe('selection rect', () => {
     it('shows a rect around the padded group bounds while the ghosts float', () => {
@@ -89,7 +82,6 @@ describe('PastePlacementSession', () => {
     });
 
     it('re-fits the rect to the rotated bounds while keeping the drag offset', () => {
-      // A tall 1×2 wire so a quarter turn changes the group's AABB.
       const wire = makeWire(0, 0, WireDirection.VERTICAL);
       session = new PastePlacementSession(project, dragLayer, [], [wire]);
 
@@ -121,8 +113,6 @@ describe('PastePlacementSession', () => {
     });
   });
 
-  // ── canEnd / collision ───────────────────────────────────────────────────────
-
   describe('canEnd()', () => {
     it('returns true when no existing elements block the paste position', () => {
       const comp = makeAnd(2, Direction.E, 10, 10);
@@ -131,7 +121,6 @@ describe('PastePlacementSession', () => {
     });
 
     it('returns false when a pasted component overlaps an existing component', () => {
-      // Existing AND at (0,0); pasted AND also at (0,0).
       const existing = makeAnd(2, Direction.E, 0, 0);
       project.addComponent(existing);
 
@@ -154,8 +143,6 @@ describe('PastePlacementSession', () => {
       expect(session.canEnd()).toBe(true);
     });
   });
-
-  // ── onMove / drag behaviour ──────────────────────────────────────────────────
 
   describe('onMove()', () => {
     it('does nothing before beginDrag() is called (hover phase)', () => {
@@ -200,8 +187,6 @@ describe('PastePlacementSession', () => {
     });
   });
 
-  // ── grab zone ───────────────────────────────────────────────────────────────
-
   describe('onDown()', () => {
     it('grabs the group from a gap between the pasted elements', () => {
       const left = makeAnd(2, Direction.E, 0, 0);
@@ -213,7 +198,6 @@ describe('PastePlacementSession', () => {
         []
       );
 
-      // A point the rect covers but neither element does.
       const gap = makeMoveInput(7, 0);
       expect(left.gridBounds.contains(7, 0)).toBe(false);
       expect(right.gridBounds.contains(7, 0)).toBe(false);
@@ -241,32 +225,25 @@ describe('PastePlacementSession', () => {
     });
   });
 
-  // ── re-grab after a frozen release ──────────────────────────────────────────
-
   describe('onInvalidRelease()', () => {
     it('leaves the ghosts put when the next press grabs them elsewhere', () => {
       const comp = makeAnd(2, Direction.E, 0, 0);
       session = new PastePlacementSession(project, dragLayer, [comp], []);
 
-      // Grabbed at (0,0), dragged 4 right, released onto a collision.
       session.onDown(makeMoveInput(0, 0));
       session.onMove(makeMoveInput(4, 0));
       session.onInvalidRelease();
 
-      // Grabbed again at a different point of the group — the ghosts must not
-      // slide under the first grab's anchor.
+      // Grabbed elsewhere: the ghosts must not slide under the first anchor.
       session.onDown(makeMoveInput(5, 1));
       expect(dragLayer.position.x).toBe(4);
       expect(dragLayer.position.y).toBe(0);
 
-      // ...and from there they follow the new grab point.
       session.onMove(makeMoveInput(7, 1));
       expect(dragLayer.position.x).toBe(6);
       expect(dragLayer.position.y).toBe(0);
     });
   });
-
-  // ── moveBy ──────────────────────────────────────────────────────────────────
 
   describe('moveBy()', () => {
     it('shifts the waiting ghosts without a drag anchor', () => {
@@ -292,8 +269,6 @@ describe('PastePlacementSession', () => {
       expect(dragLayer.position.y).toBe(1);
     });
   });
-
-  // ── onEnd ───────────────────────────────────────────────────────────────────
 
   describe('onEnd()', () => {
     it('adds components to the project at their final position', () => {
@@ -403,10 +378,6 @@ describe('PastePlacementSession', () => {
       expect([...project.wires].some((w) => w.id === wireId)).toBe(true);
     });
   });
-
-  // ── onCancel ─────────────────────────────────────────────────────────────────
-
-  // ── onEnd — wire integration ────────────────────────────────────────────────
 
   describe('onEnd() — wire integration', () => {
     it('merges a pasted wire overlapping an existing collinear wire', () => {

@@ -5,14 +5,8 @@ import { OptionSchema, OptionValues } from './option-schema';
 
 /**
  * Everything about a built-in component type that is a pure function of its
- * option values: its identity, its option schemas, its port arity, its port
- * labels and its body extent.
- *
- * This is the half both sides need. The editor composes a `ComponentConfig`
- * around it (adding the factory, the inspector actions, the palette shape and
- * the option renderers); the server reads it straight off a document to check
- * that a component's options are legal and that its ports line up. Custom
- * components have no meta — their definition *is* this data.
+ * option values: identity, option schemas, port arity, labels, body extent.
+ * Custom components have no meta — their definition is this data.
  */
 
 /** Port counts of one instance. */
@@ -34,16 +28,13 @@ export interface BodySize {
 }
 
 /**
- * Declarative map from a built-in's named options to the legacy positional `v0`
- * wire slots (`i`/`o`/`n`/`s`). Single source of truth for the permanent
- * `v0ToV1` file migration (decode) and the temporary server encoder (encode).
- * The `r` slot needs no entry — it always carries the component's first-class
- * `direction`, handled generically by both sides.
+ * Maps a built-in's named options onto the positional v0 slots
+ * (`i`/`o`/`n`/`s`). The `r` slot needs no entry: it always carries the
+ * first-class `direction`, handled generically.
  *
- * FROZEN: it describes the *immutable* legacy `ProjectElement` format and names
- * **v1-era option keys**. If a live option is later renamed, do NOT edit this to
- * match — add a `v1→v2` migration instead. The mapping is purely positional;
- * a type needing computed legacy decode would handle it separately.
+ * FROZEN. It describes the immutable v0 format and names v1-era option keys.
+ * Renaming a live option does not change this — add a `v1→v2` migration
+ * instead. The mapping is purely positional.
  */
 export interface LegacyV0Slots {
   /** Option populated from `element.i` (input count). */
@@ -57,11 +48,10 @@ export interface LegacyV0Slots {
 }
 
 /**
- * `TValues` names the option-value shape a type's own functions read. The table
- * below stores every meta under the base `ComponentMeta`, where TypeScript's
- * bivariant method parameters let a narrower shape through — sound here because
- * a caller reaching the functions has already run the values through
- * {@link validateOptionValue} against the very schemas in `options`.
+ * `TValues` names the option-value shape a type's own functions read. Metas are
+ * stored under the base `ComponentMeta`, where bivariant method parameters let
+ * a narrower shape through — sound because those functions only ever see values
+ * already checked by {@link validateOptionValue} against `options`.
  */
 export interface ComponentMeta<TValues extends object = OptionValues> {
   readonly type: ComponentType;
@@ -79,24 +69,19 @@ export interface ComponentMeta<TValues extends object = OptionValues> {
   ports(options: TValues): Ports;
   labels(options: TValues): PortLabels;
   /**
-   * `direction` is a parameter because a body may be direction-dependent: the
-   * segment display keeps a fixed upright width when rotated, since its readout
-   * would otherwise decide the extent along the wrong axis.
+   * A body may be direction-dependent: the segment display keeps a fixed
+   * upright width when rotated, or its readout would decide the extent along
+   * the wrong axis.
    */
   body(options: TValues, direction: Direction): BodySize;
 }
 
 /**
- * Erases a meta's value shape so it can be stored and passed around uniformly.
- *
- * Each built-in is declared `as const` so its literal key types survive for the
- * editor's translation-key gate. That also makes `ports`/`labels`/`body` plain
- * properties rather than methods — strictly contravariant, so a meta reading a
- * narrow value shape is not assignable to `ComponentMeta` on its own.
- * `ComponentMeta<never>` accepts every one of them soundly, and this is the
- * single place the remaining widening happens. It is safe because the functions
- * are only ever called with values already checked by
- * {@link validateOptionValue} against the schemas in that same meta.
+ * Erases a meta's value shape so metas can be stored uniformly. Declaring each
+ * built-in `as const` keeps its literal key types but makes
+ * `ports`/`labels`/`body` plain properties — strictly contravariant, so a meta
+ * reading a narrow value shape is not assignable to `ComponentMeta` on its own.
+ * `ComponentMeta<never>` accepts them all, and this is the single widening.
  */
 export function widenMeta(meta: ComponentMeta<never>): ComponentMeta {
   return meta as ComponentMeta;

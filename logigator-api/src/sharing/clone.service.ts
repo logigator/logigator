@@ -33,20 +33,15 @@ type IdMap = ReadonlyMap<string, string>;
 /**
  * Taking a copy of a shared document into your own account.
  *
- * A document is self-contained, so a *read* needs nothing cloned. A working copy
- * is different: to keep editing the components it uses, the cloner needs masters
- * of their own — so the whole transitive dependency graph comes along, and every
- * embedded snapshot in every copied document is re-pointed at the new ids.
+ * A *read* needs nothing cloned — a document is self-contained. A working copy
+ * needs masters of its own to keep editing, so the whole transitive dependency
+ * graph comes along and every embedded snapshot is re-pointed at the new ids: a
+ * copy left pointing at the originals would hear about updates to somebody
+ * else's components and never about its own.
  *
- * That rewrite is the part the legacy version had no need for, and the part that
- * matters most. Its dependencies were rows the response carried, so remapping
- * them was remapping rows; here the provenance lives inside the document, and a
- * copy left pointing at the original masters would be told about updates to
- * somebody else's components and could never be told about its own.
- *
- * The new ids are chosen before anything is inserted. That is what makes the
- * order irrelevant: every document can be rewritten against the complete map, so
- * there is no topological sort to get wrong and no second pass to fix up.
+ * New ids are chosen before any insert, so insert order is irrelevant — every
+ * document is rewritten against the complete map, with no topological sort and
+ * no fix-up pass.
  */
 @Injectable()
 export class CloneService {
@@ -93,11 +88,9 @@ export class CloneService {
   }
 
   /**
-   * The masters the copy will need, read before the transaction opens.
-   *
-   * Deliberately outside it: the graph a clone captures is a snapshot either
-   * way — that is what cloning is — so holding a transaction across the walk
-   * would buy nothing but contention with whoever is editing the original.
+   * The masters the copy will need, read outside the transaction: a clone
+   * captures a snapshot either way, so holding one across the walk would only
+   * contend with whoever is editing the original.
    */
   private async dependencyRows(target: ShareTarget): Promise<ComponentRow[]> {
     const ids = await transitiveDependencyIds(this.db, {
@@ -127,7 +120,6 @@ export class CloneService {
         userId,
         name: source.name,
         description: source.description,
-        // A copy is the cloner's own private draft until they choose otherwise.
         // Inheriting the original's visibility would republish somebody else's
         // work under a new owner as a side effect of taking a copy.
         public: false,
@@ -135,8 +127,8 @@ export class CloneService {
         formatVersion: ingested.formatVersion,
         componentCount: ingested.componentCount,
         wireCount: ingested.wireCount,
-        // The trust anchor for attribution: the copy records what it came from,
-        // and every author in the chain is derived from these keys.
+        // The attribution trust anchor: every author in the chain is derived
+        // from these keys.
         forkedFromId: source.id
       })
       .returning();
@@ -174,8 +166,8 @@ export class CloneService {
         formatVersion: ingested.formatVersion,
         componentCount: ingested.componentCount,
         wireCount: ingested.wireCount,
-        // Re-derived rather than copied, like any other write: the ports are the
-        // plugs in the circuit, and the circuit is what was just rewritten.
+        // Re-derived, not copied, like any other write: the ports are the plugs
+        // in the circuit, and the circuit was just rewritten.
         numInputs: ingested.summary.numInputs,
         numOutputs: ingested.summary.numOutputs,
         labels: ingested.summary.labels,
@@ -194,14 +186,10 @@ export class CloneService {
 }
 
 /**
- * Re-points a document's embedded snapshots at the copies of their masters.
- *
- * A source with no entry in the map names a master that does not exist — the
- * graph is walked over the edges, and an edge exists for every server-origin
- * source whose master does. So its `source` is dropped rather than carried:
- * without a master it *is* a self-contained snapshot, which the format already
- * has a meaning for, and keeping a dead id would leave the copy asking about a
- * document nobody can see.
+ * Re-points a document's embedded snapshots at the copies of their masters. A
+ * source missing from the map names a master that does not exist, so its
+ * `source` is dropped — a snapshot without one is self-contained, which the
+ * format already has a meaning for.
  */
 function remapSources(
   document: CurrentCircuitFile,

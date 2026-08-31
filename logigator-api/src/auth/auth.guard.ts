@@ -20,11 +20,9 @@ declare module 'fastify' {
 }
 
 /**
- * Requires a signed-in session, and loads the account onto the request.
- *
- * Loading per request rather than trusting a copy in the session is what makes a
- * changed profile, a revoked address or a deleted account take effect at once —
- * the legacy `deserializeUser` did the same, for the same reason.
+ * Requires a signed-in session, and loads the account onto the request. Loading
+ * per request rather than trusting a copy in the session is what makes a
+ * changed profile or a deleted account take effect at once.
  */
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -41,10 +39,9 @@ export class AuthGuard implements CanActivate {
 
     const user = await this.users.findById(userId);
     if (!user) {
-      // The session outlived its account, and no later request can resolve it
-      // either. Signing out is what clears the cookies and the account's
-      // session index — `destroy` alone leaves both behind, so the client keeps
-      // sending a dead id and rendering a signed-in shell.
+      // The session outlived its account. Signing out clears the cookies and
+      // the account's session index; `destroy` alone leaves both behind, so the
+      // client keeps sending a dead id and rendering a signed-in shell.
       await this.session.signOut(request, http.getResponse<FastifyReply>());
       throw unauthorized();
     }
@@ -63,11 +60,9 @@ function unauthorized(): ApiException {
 }
 
 /**
- * The account behind the session, on a route guarded by {@link AuthGuard}.
- *
- * It throws rather than returning `undefined` when the guard did not run: a
- * handler reading the current user without requiring one is a wiring mistake,
- * and failing loudly beats serving somebody else's data.
+ * The account behind the session, on a route guarded by {@link AuthGuard}. It
+ * throws rather than returning `undefined` when the guard did not run: reading
+ * the current user without requiring one is a wiring mistake.
  */
 export const CurrentUser = createParamDecorator(
   (_data: unknown, context: ExecutionContext): UserRow => {
@@ -83,17 +78,13 @@ export const CurrentUser = createParamDecorator(
 
 /**
  * The signed-in account's id, or `null` — for the routes that serve everybody
- * and personalize for whoever is there.
+ * and personalize for whoever is there. The public community listings are the
+ * case: requiring a session would make them private, and loading the row would
+ * cost a query for a single boolean, so a session whose account is gone simply
+ * personalizes nothing.
  *
- * The public community listings are the case: they answer the same rows to a
- * visitor as to an account, plus whether that account has starred each one.
- * Requiring a session would make them private; loading the row would cost a
- * query for a single boolean. So this reads the session and nothing else, and a
- * session whose account is gone simply personalizes nothing.
- *
- * It is deliberately *not* a way to skip {@link AuthGuard}. Anything that acts
- * on the account behind the session — a write, or reading something private —
- * needs the row loaded and its existence established, which is the guard's job.
+ * Deliberately *not* a way to skip {@link AuthGuard}: anything that acts on the
+ * account needs the row loaded and its existence established.
  */
 export const SessionUserId = createParamDecorator(
   (_data: unknown, context: ExecutionContext): string | null => {

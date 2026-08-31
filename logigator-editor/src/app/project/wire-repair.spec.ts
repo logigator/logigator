@@ -14,9 +14,9 @@ const H = WireDirection.HORIZONTAL;
 const V = WireDirection.VERTICAL;
 
 /**
- * The final wire state of a real corrupted user save (wire-junction-bug.dump):
- * pastes committed without integration left one collinear overlap and six
- * endpoints buried inside other wires' interiors.
+ * The wire state of a real corrupted user save: pastes committed without
+ * integration left one collinear overlap and six endpoints buried inside other
+ * wires' interiors.
  */
 const CORRUPTED_STATE: [number, number, WireDirection, number][] = [
   [24, 11, V, 6],
@@ -38,9 +38,8 @@ const CORRUPTED_STATE: [number, number, WireDirection, number][] = [
 ];
 
 /**
- * The set of unit grid segments covered by wires, keyed per axis. A repair
- * must never change which cells carry a wire — only how the cells are grouped
- * into Wire instances.
+ * The unit grid segments covered by wires, keyed per axis. A repair changes
+ * only how cells are grouped into Wire instances, never which carry a wire.
  */
 function coveredSegments(project: Project): Set<string> {
   const covered = new Set<string>();
@@ -134,7 +133,7 @@ describe('auditWireInvariants / computeWireRepair', () => {
 
   it('repair leaves wires outside the broken region untouched', () => {
     loadCorruptedState();
-    // (21,18) H 9 — the bottom-most row, nothing terminates on it.
+    // The bottom-most row, with nothing terminating on it.
     const untouched = [...project.wires].find(
       (w) => w.position.y === 18.5 && w.direction === H
     )!;
@@ -143,8 +142,7 @@ describe('auditWireInvariants / computeWireRepair', () => {
   });
 
   it('repair drops zero-length wires', () => {
-    // The constructor treats 0 as "unset" (length stays 1), so degeneracy has
-    // to be forced through the setter — as a runtime mutation would.
+    // The constructor treats 0 as "unset", so force it through the setter.
     const degenerate = new Wire(H, 2);
     degenerate.length = 0;
     degenerate.position.set(2.5, 2.5);
@@ -154,12 +152,10 @@ describe('auditWireInvariants / computeWireRepair', () => {
     expect(plan.addWires).toEqual([]);
   });
 
-  // The audit derives every violation from bucket-local sweeps and point
-  // lookups rather than comparing wires pairwise, so the invariant worth
-  // pinning is that it still agrees with an exhaustive pairwise scan. A
-  // disagreement here means the index missed a pair the definition covers.
+  // The audit works from bucket-local sweeps and point lookups, so what is
+  // worth pinning is that it still agrees with an exhaustive pairwise scan.
   describe('agrees with an exhaustive pairwise scan', () => {
-    /** Direct transcription of the invariant definitions — no spatial index. */
+    /** Direct transcription of the invariant definitions, no spatial index. */
     function bruteForceAudit(): string[] {
       const wires = [...project.wires];
       const comps = [...project.components];
@@ -272,9 +268,9 @@ describe('auditWireInvariants / computeWireRepair', () => {
       expect(auditKeys()).toEqual(bruteForceAudit());
     });
 
-    // Deterministic pseudo-random boards: dense enough that overlaps, buried
-    // endpoints and buried ports all occur, and including long wires, which
-    // are what the point-lookup form exists to keep cheap.
+    // Deterministic pseudo-random boards, dense enough that overlaps, buried
+    // endpoints and buried ports all occur, and long enough to exercise the
+    // point-lookup form.
     it('on dense pseudo-random boards, including long wires', () => {
       let seed = 12345;
       const rnd = (n: number): number => {
@@ -294,9 +290,8 @@ describe('auditWireInvariants / computeWireRepair', () => {
             )
           );
         }
-        // End-to-end pairs out in open space, so their junction stays below
-        // three terminations. Nothing above reliably produces one, and the
-        // sweep's touching case is the branch most easily lost.
+        // End-to-end pairs in open space, so their junction stays below three
+        // terminations — the sweep's touching case, easily lost otherwise.
         for (let i = 0; i < 3; i++) {
           const x = 40 + rnd(40) * 3;
           const y = 40 + rnd(40) * 3;
@@ -316,8 +311,8 @@ describe('auditWireInvariants / computeWireRepair', () => {
   });
 
   it('repair keeps split state that ports justify', () => {
-    // Wires split at the AND's input ports (3.5, 1.5) and (3.5, 2.5) — valid
-    // split state the rebuild must reproduce rather than merge away.
+    // Split at the AND's input ports (3.5, 1.5) and (3.5, 2.5): valid state
+    // the rebuild must reproduce rather than merge away.
     project.addComponent(makeAnd(2, Direction.E, 4, 1));
     project.addWire(makeWire(3, 0, V, 1)); // 0.5..1.5, ends at the first port
     project.addWire(makeWire(3, 1, V, 1)); // 1.5..2.5, port to port
@@ -349,7 +344,7 @@ describe('WireRepairService', () => {
   });
 
   function corrupt(): void {
-    // Two overlapping collinear wires — the paste-without-integration shape.
+    // Two overlapping collinear wires: the paste-without-integration shape.
     project.addWire(makeWire(0, 0, H, 4));
     project.addWire(makeWire(2, 0, H, 4));
   }
@@ -377,7 +372,7 @@ describe('WireRepairService', () => {
     corrupt();
     service.offerRepairOnLoad(project);
 
-    // Detection only — nothing changed and nothing is undoable yet.
+    // Detection only: nothing changed and nothing is undoable yet.
     expect([...project.wires]).toHaveLength(2);
     expect(project.actionManager.undoAvailable).toBe(false);
 

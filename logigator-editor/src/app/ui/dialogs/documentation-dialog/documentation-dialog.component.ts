@@ -35,14 +35,12 @@ import { TranslationService } from '../../../translation/translation.service';
 import { TranslateDirective } from '../../../translation/translate.directive';
 
 /**
- * The documentation viewer, reached from the Help menu or any deep link
- * ({@link DocumentationService.open}). Desktop shows the topic tree beside the
- * page; the compact fullscreen presentation drills down instead — topic index
- * first, then the page with a back button.
+ * The documentation viewer. Desktop shows the topic tree beside the page; the
+ * compact fullscreen presentation drills down instead: topic index first,
+ * then the page with a back button.
  *
  * `docs:` links inside the rendered page jump between pages; every other link
- * kind (heading anchors, external URLs) keeps `lg-markdown`'s built-in
- * handling.
+ * kind keeps `lg-markdown`'s built-in handling.
  */
 @Component({
   selector: 'app-documentation-dialog',
@@ -69,7 +67,7 @@ export class DocumentationDialogComponent extends LgDialogContent {
     viewChild<ElementRef<HTMLElement>>('contentPane');
   private readonly markdownView = viewChild(LgMarkdown);
 
-  /** Page shown in the content pane; the default while none is requested. */
+  /** Page shown in the content pane. */
   protected readonly activePage = computed(
     () => this.docs.page() ?? DEFAULT_DOC_PAGE
   );
@@ -96,8 +94,8 @@ export class DocumentationDialogComponent extends LgDialogContent {
   protected readonly markdown = signal<string | null>(null);
   protected readonly failed = signal(false);
   /**
-   * Hashed screenshot URLs, swapped in for the authored `./images/…` paths —
-   * the active language's, falling back to the English capture per picture.
+   * Hashed screenshot URLs replacing the authored `./images/…` paths: the
+   * active language's, falling back per picture to the English capture.
    */
   protected readonly docImages = computed(() =>
     docImages(this.translation.activeLang())

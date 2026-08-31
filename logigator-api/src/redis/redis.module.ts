@@ -12,12 +12,10 @@ import { createRedisClient, REDIS, type RedisClient } from './redis.client';
 import { RedisService } from './redis.service';
 
 /**
- * Connects at application init and closes on shutdown.
- *
- * Connecting in a lifecycle hook rather than in the provider factory is what
- * keeps unit specs free of infrastructure: instantiating the module graph does
- * not open a socket, while a real bootstrap — which runs the hooks before it
- * listens — still fails immediately on an unreachable Redis.
+ * Connects at application init and closes on shutdown. A lifecycle hook rather
+ * than the provider factory keeps unit specs free of infrastructure:
+ * instantiating the module graph opens no socket, while a real bootstrap still
+ * fails immediately on an unreachable Redis.
  */
 @Injectable()
 class RedisConnection implements OnModuleInit, OnApplicationShutdown {
@@ -36,12 +34,9 @@ class RedisConnection implements OnModuleInit, OnApplicationShutdown {
 }
 
 /**
- * Sessions, short-lived verification tokens and rate-limit counters all live in
- * Redis, so one client is shared process-wide.
- *
- * The `error` listener is not optional: node-redis reports connection trouble by
- * emitting `error` on the client and reconnects on its own, and an unhandled
- * `error` event on an EventEmitter takes the process down.
+ * One client, shared process-wide. The `error` listener is not optional:
+ * node-redis reports connection trouble by emitting `error` and reconnects on
+ * its own, and an unhandled `error` event takes the process down.
  */
 @Global()
 @Module({

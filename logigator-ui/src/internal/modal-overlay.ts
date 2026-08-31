@@ -9,15 +9,11 @@ import { LgFocusTrap } from './focus-trap';
 export interface ModalOpenOptions {
   placement: LgOverlayPlacement;
   panelClass?: string | string[];
-  /**
-   * Extra class for the backdrop, alongside the default dark one — e.g. a
-   * cursor signalling that a backdrop click dismisses.
-   */
+  /** Extra class alongside the default dark backdrop. */
   backdropClass?: string;
   /**
    * Non-modal (`false`) drops the backdrop and the focus trap, so the page
-   * behind the overlay stays visible and interactive — the panel floats over
-   * it (the editor's inspection sheet). Defaults to true.
+   * behind stays interactive and the panel floats over it. Defaults to true.
    */
   modal?: boolean;
   /** Whether to render (and animate) a modal backdrop. Defaults to `modal`. */
@@ -25,10 +21,9 @@ export interface ModalOpenOptions {
   /** Dismiss when the backdrop is clicked. */
   dismissOnBackdrop?: boolean;
   /**
-   * Enter-transition "from" classes for the panel (the portal's root element),
-   * lifted once the from state has painted (see {@link playEnterTransition}).
-   * For a caller whose from state varies at open time (the Drawer's per-side
-   * slide-in); a fixed from state belongs in LgFadeIn / LgScaleIn instead.
+   * Enter-transition "from" classes for the panel, lifted once that state has
+   * painted. For a from state that varies at open time, such as a drawer's
+   * per-side slide-in; a fixed one belongs in LgFadeIn / LgScaleIn.
    */
   enterFrom?: string[];
   /** Transition classes accompanying `enterFrom`; they stay on the panel. */
@@ -38,13 +33,10 @@ export interface ModalOpenOptions {
 }
 
 /**
- * Lifecycle for a modal overlay (Dialog, Drawer, ImageZoom): a global
- * `cdk/overlay` + focus
- * trap & restore ({@link LgFocusTrap}, its first consumer) + an enter transition
- * (`enterFrom`) + backdrop / Escape dismissal.
- *
- * Closing disposes **immediately** — the backdrop still fades out via cdk —
- * which keeps the controller small (no exit-animation bookkeeping).
+ * Lifecycle for a modal overlay: a global `cdk/overlay`, {@link LgFocusTrap}
+ * with focus restore, an `enterFrom` transition, and backdrop/Escape
+ * dismissal. Closing disposes immediately — cdk still fades the backdrop out
+ * — so there is no exit-animation bookkeeping.
  */
 export class ModalOverlay {
   private readonly focusTrap: LgFocusTrap;

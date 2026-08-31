@@ -12,27 +12,21 @@ import { ShareComponentAction } from './actions/share-component.component-action
 import { DeleteComponentAction } from './actions/delete-component.component-action';
 
 /**
- * Option set for every custom component instance. Unlike built-ins, a custom
- * component's port counts come from its {@link CustomComponentDefinition}, never
- * from the element — so an instance carries no options at all (its direction,
- * like every component's, is first-class state).
+ * A custom component's port counts come from its definition, never from the
+ * element, so an instance carries no options at all.
  */
 export type CustomComponentOptions = Record<string, ComponentOption>;
 
 /**
- * Builds the single {@link ComponentConfig} that backs a custom component type —
- * one config per definition, resolved through the same `getComponent(t)` path as
- * built-ins.
+ * One config per definition, resolved through the same `getComponent(t)` path
+ * as built-ins. Master configs are `USER` and populate the palette; snapshot
+ * configs are `HIDDEN` — resolvable but never listed, since you place *from*
+ * a master and a project's types reference snapshots.
  *
- * **Master** configs are `USER` category (they populate the palette); **snapshot**
- * configs are `HIDDEN` (resolvable by `getComponent(t)` but never listed — you
- * place *from* a master, and a project's `t`s reference snapshots).
- *
- * The config is a **live view** of its definition: `symbol`/`name`/`description`
- * are getters reading `def`, so a master's edits surface in the palette without
- * rebuilding the config and a frozen snapshot's stay fixed. `create` closes over
- * both `def` and the config itself, so a built instance exposes this exact object
- * (hence `component.config.type === def.typeId`, which the serializer relies on).
+ * The config is a live view of its definition, so a master's edits surface in
+ * the palette without rebuilding it. `create` closes over both `def` and the
+ * config, so a built instance exposes this exact object — hence
+ * `component.config.type === def.typeId`, which the serializer relies on.
  */
 export function buildCustomComponentConfig(
   def: CustomComponentDefinition
@@ -44,13 +38,11 @@ export function buildCustomComponentConfig(
     get symbol(): string {
       return def.symbol;
     },
-    // Live view of the definition's library, so the palette tile's cloud/local
-    // indicator tracks an upload-to-cloud promotion without rebuilding the config.
+    // Live, so the palette tile's cloud/local indicator tracks a promotion.
     get source(): 'server' | 'browser' {
       return def.source;
     },
-    // User-authored strings, shown verbatim (the literal arm of LocalizableText)
-    // rather than resolved against the translation schema.
+    // User-authored, so shown verbatim rather than resolved as keys.
     get name(): LocalizableText {
       return { literal: def.name };
     },
@@ -58,20 +50,15 @@ export function buildCustomComponentConfig(
       return { literal: def.description };
     },
     options: {},
-    // A custom component has no meta: its definition is that data. Live like
-    // the fields above, so an instance placed from an edited master reports the
-    // master's current arity.
+    // Live like the fields above, so an instance placed from an edited master
+    // reports the master's current arity.
     get defaultPorts(): { inputs: number; outputs: number } {
       return { inputs: def.numInputs, outputs: def.numOutputs };
     },
-    // Inspector actions rendered generically by the settings panel, each gating
-    // its own visibility. Edit circuit, edit details, upload, share and delete
-    // are config-scoped, so they surface on both a selected placed instance and
-    // a palette/ghost selection (details and delete stay visible only while the
-    // master resolves — an orphaned instance has no library entry to edit or
-    // remove); update-to-latest hides itself unless a selected snapshot instance
-    // is behind its master, and update-all unless the active project holds an
-    // outdated instance of this type.
+    // Each action gates its own visibility. Edit, details, upload, share and
+    // delete are config-scoped, so they surface on a placed instance and on a
+    // palette selection alike, but details and delete need a resolving master;
+    // the two update actions appear only while something is outdated.
     actions: [
       new UpdateInstanceComponentAction(),
       new UpdateAllInstancesComponentAction(),
@@ -81,8 +68,6 @@ export function buildCustomComponentConfig(
       new ShareComponentAction(),
       new DeleteComponentAction()
     ],
-    // Tapping a placed instance during simulation opens a live watch of its
-    // inner circuit.
     inspection: (component) =>
       new SubCircuitWatch(component as CustomComponent),
     create: (options) => new CustomComponent(options, def, config)

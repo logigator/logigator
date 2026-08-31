@@ -32,13 +32,9 @@ import { toUserResponse } from '../users/users.service';
 import { AuthService } from './auth.service';
 
 /**
- * The credential endpoints, all JSON.
- *
- * Each one that takes a password or sends a mail is rate limited per address:
- * guessing passwords and using the API as a mail relay are what an
- * unauthenticated caller can otherwise do at volume. The budgets are shared by
- * scope, so spreading attempts across `login` and `resend-verification` does not
- * buy more of them.
+ * The credential endpoints, all JSON. Each one that takes a password or sends a
+ * mail is rate limited per address, and the budgets are shared by scope, so
+ * spreading attempts across `login` and `resend-verification` buys nothing.
  */
 @Controller('auth')
 @UseGuards(RateLimitGuard)
@@ -71,7 +67,7 @@ export class AuthController {
     return toUserResponse(user);
   }
 
-  /** Answers 204 whether or not there was a session, so a stale client can always clear itself. */
+  /** Answers 204 with or without a session, so a stale client can reset. */
   @Post('logout')
   @HttpCode(HttpStatus.NO_CONTENT)
   async logout(

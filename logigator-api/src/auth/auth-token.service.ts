@@ -3,13 +3,11 @@ import { randomBytes } from 'node:crypto';
 import { ENV, type Env } from '../config/env';
 import { RedisService } from '../redis/redis.service';
 
-/** What an address-confirmation token stands for. */
 interface EmailVerification {
   userId: string;
   /**
    * The address to activate. Held on the token rather than on the row, so an
-   * unconfirmed change never touches the account: a typo expires instead of
-   * locking its owner out.
+   * unconfirmed change never touches the account and a typo simply expires.
    */
   email: string;
 }
@@ -19,12 +17,10 @@ interface PasswordReset {
 }
 
 /**
- * The one-shot tokens the mails carry, in Redis.
- *
- * Redis rather than a table because expiry is the whole semantics: a token is a
- * short-lived capability, and a key that deletes itself cannot be left behind by
- * a missing cleanup job. Redeeming one reads and deletes it in a single command,
- * so a link cannot be used twice — including by two requests arriving together.
+ * The one-shot tokens the mails carry. Redis rather than a table because expiry
+ * is the whole semantics: a key that deletes itself needs no cleanup job.
+ * Redeeming reads and deletes in a single command, so a link cannot be used
+ * twice, including by two requests arriving together.
  */
 @Injectable()
 export class AuthTokenService {
@@ -66,10 +62,7 @@ export class AuthTokenService {
   }
 }
 
-/**
- * 32 random bytes, base64url — long enough that guessing is hopeless and safe to
- * put in a URL path or query without escaping.
- */
+/** 32 random bytes, base64url — unguessable and safe in a URL unescaped. */
 function newToken(): string {
   return randomBytes(32).toString('base64url');
 }

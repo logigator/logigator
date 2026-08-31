@@ -19,32 +19,27 @@ interface ActiveToast {
   severity: LgSeverity;
   summary?: string;
   detail?: string;
-  /** The offered follow-up, rendered as a button below the message. */
   action?: ToastAction;
   /** Whether the enter animation has been armed (`false` for one frame). */
   shown: boolean;
-  /** Whether the leave animation is playing before the toast is removed. */
   leaving: boolean;
   /** Auto-dismiss delay in ms; `0` means the toast never times out. */
   life: number;
-  /** Whether the countdown (and its progress bar) is currently frozen. */
   paused: boolean;
 }
 
 /** Non-reactive countdown bookkeeping, kept out of the rendered state. */
 interface ToastTimer {
   handle: ReturnType<typeof setTimeout> | null;
-  /** Milliseconds still to run when the timer was last (re)started. */
+  /** Milliseconds still to run at the last (re)start. */
   remaining: number;
-  /** `Date.now()` when the timer was last (re)started. */
   startedAt: number;
   hovered: boolean;
   focused: boolean;
 }
 
-// Toasts float over the arbitrary editor canvas, so they use the opaque
-// `-surface-strong` fills rather than the translucent `-surface` tints, which
-// would wash out and leave the text hard to read over some backgrounds.
+// Toasts float over an arbitrary canvas, so the fills are the opaque
+// `-surface-strong` ones: translucent `-surface` tints wash out over it.
 const SEVERITY_CLASS: Record<LgSeverity, string> = {
   success: 'bg-success-surface-strong text-success border-success-border',
   info: 'bg-info-surface-strong text-info border-info-border',
@@ -70,26 +65,17 @@ const DEFAULT_LIFE = 3000;
 /** How long the leave animation plays before the toast is removed (ms). */
 const LEAVE_MS = 300;
 
-/** Severity for a toast that arrives without one. */
 const DEFAULT_SEVERITY: LgSeverity = 'info';
 
 /**
- * The {@link ToastService} outlet: a fixed-position CSS stack of toasts (no
- * overlay). Each toast fades and slides in, rests while a progress bar drains
- * along its bottom edge to show the time left, then fades, shrinks and slides
- * out when its `life` runs out. Hovering the toast or moving keyboard focus into
- * it freezes both the countdown and its bar; an {@link LgButton} in the
- * top-right corner dismisses it immediately (also playing the leave animation).
- * A message carrying an `action` also renders a button below the text that runs
- * the handler and dismisses. The host carries the stack's position (corner from `position`); a consumer's
- * own `class` (e.g. `absolute! -mb-4`) merges and `!`-overrides as needed.
+ * The {@link ToastService} outlet: a fixed-position CSS stack of toasts, no
+ * overlay. A progress bar drains along each toast's bottom edge; hover or
+ * keyboard focus freezes the countdown and the bar. The host carries the
+ * corner from `position`, and a consumer's own `class` merges over it.
  *
- * With `embedded`, the host drops its own positioning (`fixed`, corner insets,
- * z-index, padding) and lives in normal flow, so a parent container owns
- * placement and stacking — e.g. a flex column where the toasts sit above
- * another overlay. It collapses to zero footprint when empty and lifts what
- * follows it by `mb-2` only while a toast is showing; `position` then only
- * picks the horizontal alignment.
+ * With `embedded` the host drops its positioning and lives in normal flow, so
+ * a parent owns placement and stacking. It collapses to zero footprint when
+ * empty, and `position` then picks the horizontal alignment only.
  */
 @Component({
   selector: 'lg-toast',
@@ -108,11 +94,9 @@ const DEFAULT_SEVERITY: LgSeverity = 'info';
   },
   template: `
     <!--
-      Announcements live in two persistent regions rather than on the toast
-      elements themselves. A live region has to exist *before* its text changes
-      for the change to be announced reliably, and a role=alert node created
-      together with its content (as an @for does) is the fragile form of the
-      pattern. Severity picks the channel: only warn/danger interrupt.
+      A live region must exist *before* its text changes to be announced
+      reliably, so announcements live in these two persistent regions rather
+      than on the toast elements an @for creates. Only warn/danger interrupt.
     -->
     <div aria-live="polite" aria-atomic="true" class="sr-only">
       {{ politeMessage() }}
@@ -237,9 +221,8 @@ export class LgToast {
 
   protected toastClasses(toast: ActiveToast): string {
     return [
-      // lg-toast is a marker, not a style hook: the visual toast carries no
-      // role now that the live regions above own announcements, so this is what
-      // identifies one in the DOM.
+      // A marker, not a style hook: the live regions own announcements, so
+      // the toast has no role and this is what identifies one in the DOM.
       'lg-toast',
       'pointer-events-auto relative w-80 max-w-[80vw] overflow-hidden rounded-md border p-3 shadow-lg backdrop-blur-md',
       'transition-all duration-300 ease-out',
@@ -248,7 +231,6 @@ export class LgToast {
     ].join(' ');
   }
 
-  /** The transform/opacity for a toast's lifecycle stage (enter / rest / leave). */
   private motionClasses(toast: ActiveToast): string {
     if (toast.leaving) {
       return `scale-95 opacity-0 ${this.atRight() ? 'translate-x-6' : '-translate-x-6'}`;
@@ -259,7 +241,6 @@ export class LgToast {
     return 'translate-x-0 translate-y-0 scale-100 opacity-100';
   }
 
-  /** Dismiss a toast by hand (the close button). */
   protected close(id: number): void {
     this.dismiss(id);
   }
@@ -332,17 +313,11 @@ export class LgToast {
   }
 
   /**
-   * Put a toast's text into the live region its severity calls for.
-   *
-   * Appended rather than assigned, for two reasons that pull the same way: an
-   * identical repeat message assigned over itself leaves the text unchanged and
-   * goes unannounced, and a burst of toasts within one frame would collapse to
-   * whichever wrote last. Appending makes every message a distinct change, so
-   * all of them are read. The write itself is deferred a frame so a burst
-   * accumulates into one announcement instead of interrupting itself.
-   *
-   * `clearAnnouncements` empties both regions once the stack does, so the text
-   * does not grow for the life of the page.
+   * Put a toast's text into the live region its severity calls for. Appended,
+   * not assigned: an identical repeat assigned over itself is no change and
+   * goes unannounced, and a burst within one frame would collapse to whichever
+   * wrote last. The write is deferred a frame so a burst accumulates into one
+   * announcement instead of interrupting itself.
    */
   private announce(severity: LgSeverity, text: string): void {
     if (!text) {
@@ -373,7 +348,7 @@ export class LgToast {
     this.assertiveMessage.set('');
   }
 
-  /** Reconcile the countdown against hover/focus: pause while either holds. */
+  /** Pause the countdown while hover or focus holds, resume when both let go. */
   private reconcile(id: number): void {
     const timer = this.timers.get(id);
     if (!timer) {

@@ -22,9 +22,8 @@ type Placeholders<S> = S extends `${string}{{${infer Name}}}${infer Rest}`
 type IsUnion<T, U = T> = T extends U ? ([U] extends [T] ? false : true) : never;
 
 /**
- * True for `any`, which no conditional type can inspect meaningfully. It keeps
- * `TranslateArgs<any>` a usable single branch; a *call* with an `any` key is a
- * separate matter (see below).
+ * True for `any`, which no conditional type can inspect meaningfully, keeping
+ * `TranslateArgs<any>` a single branch.
  */
 type IsAny<T> = 0 extends 1 & T ? true : false;
 
@@ -36,20 +35,17 @@ export type TranslationParams<T extends TranslationKey> = Record<
 
 /**
  * The argument list after the key: a params object where the message
- * interpolates placeholders, nothing where it doesn't. So a forgotten or
- * misnamed param is a build error rather than a `{{name}}` leaking into the UI.
+ * interpolates placeholders, nothing where it doesn't, so a forgotten or
+ * misnamed param is a build error rather than a `{{name}}` in the UI.
  *
- * A key of union type — a `TranslationKey`-typed field, or a key built from an
- * enum — takes optional untyped params instead: the placeholder set isn't
- * knowable until the key is, and requiring the union of every member's
- * placeholders would make such a call impossible to write.
+ * A key of union type takes optional untyped params instead: the placeholder
+ * set is not knowable until the key is, and requiring the union of every
+ * member's placeholders would make such a call impossible to write.
  *
- * A key typed `any` (a template context without a type, e.g. `let-o` on an
- * `<ng-template>` a library component fills) escapes none of this: TypeScript
- * resolves the arity of a generic rest tuple against every branch at once, so
- * such a call reports "Expected 2 arguments, but got 1" whatever the message
- * needs. Give the key a type — translate in TypeScript and pass the text in,
- * the way `HexEditorComponent` builds its select-button options.
+ * A key typed `any` — an untyped template context, say — escapes none of this:
+ * TypeScript resolves a generic rest tuple's arity against every branch at
+ * once, so the call reports "Expected 2 arguments, but got 1" whatever the
+ * message needs. Type the key, or translate in TypeScript and pass the text in.
  */
 export type TranslateArgs<T extends TranslationKey> =
   IsAny<T> extends true

@@ -18,10 +18,7 @@ export interface MailParams {
   publicUrl: string;
 }
 
-/**
- * Escapes text interpolated into the HTML part. `username` is user-chosen, and a
- * mail body is a place markup would otherwise be rendered.
- */
+/** Escapes text interpolated into the HTML part; `username` is user-chosen. */
 function escapeHtml(value: string): string {
   return value
     .replace(/&/g, '&amp;')
@@ -32,17 +29,11 @@ function escapeHtml(value: string): string {
 }
 
 /**
- * Renders one of the API's mails in the recipient's language.
- *
- * Deliberately a function that returns a string rather than a template engine
- * with a view directory: there are three mails, and the legacy stack's answer —
- * a whole standalone Handlebars renderer plus a layout, partials and an asset
- * pipeline — was the tail wagging the dog. Both parts are produced, because a
- * mail with no text alternative is a deliverability problem.
- *
- * The markup stays table-based with inline styles: that is what mail clients
- * render predictably, and it keeps the visual identity of the mails users
- * already receive.
+ * Renders one of the API's mails in the recipient's language. A function
+ * returning a string rather than a template engine with a view directory, for
+ * three mails. Both parts are produced, because a mail with no text alternative
+ * is a deliverability problem, and the markup is table-based with inline
+ * styles, which is what mail clients render predictably.
  */
 export function renderMail(
   kind: MailKind,
@@ -51,13 +42,12 @@ export function renderMail(
 ): RenderedMail {
   const strings: MailStrings = MAIL_STRINGS[locale][kind];
   const username = escapeHtml(params.username);
-  // Escaped for the attribute it lands in, not URI-encoded: the caller builds
-  // the URL and encodes the token inside it, and encoding again here would turn
-  // that token's `%2F` into `%252F`.
+  // Escaped for the attribute it lands in, not URI-encoded: the caller already
+  // encoded the token, and encoding again turns its `%2F` into `%252F`.
   const link = escapeHtml(params.link);
 
-  // Escaped as they are collected, so the one paragraph that carries markup is
-  // the only one built out of markup.
+  // Escaped as collected, so the one paragraph carrying markup is the only one
+  // built out of markup.
   const paragraphs: string[] = [];
   if (strings.note !== undefined) paragraphs.push(escapeHtml(strings.note));
   paragraphs.push(

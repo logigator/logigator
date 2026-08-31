@@ -8,20 +8,13 @@ import { SessionService } from './session.service';
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
 
 /**
- * Installs cookie parsing and sessions on the Fastify instance.
- *
- * A function rather than inline bootstrap code because the E2E suite has to
- * install exactly the same plugins on its own instance — a session bug that only
- * appears under real cookie signing is precisely what those specs are for.
- *
- * `@fastify/session` needs `@fastify/cookie` registered first, and the store
- * comes out of the DI container, since it is the same Redis client everything
- * else uses.
+ * Installs cookie parsing and sessions on the Fastify instance. A function so
+ * the E2E suite installs exactly the same plugins on its own instance.
+ * `@fastify/session` needs `@fastify/cookie` registered first.
  *
  * CSRF: `sameSite: 'lax'` keeps the cookie off cross-site requests that are not
- * top-level navigations, and the API sends no CORS headers, so a foreign origin
- * can neither read a response nor make the browser attach the cookie to a
- * state-changing one. No token layer is needed on top of that.
+ * top-level navigations, and the API sends no CORS headers, so no token layer
+ * is needed on top.
  */
 export async function registerSessionPlugins(
   app: NestFastifyApplication,
@@ -32,8 +25,8 @@ export async function registerSessionPlugins(
     secret: env.SESSION_SECRET,
     cookieName: env.SESSION_COOKIE_NAME,
     store: app.get<RedisSessionStore>(RedisSessionStore),
-    // Anonymous requests must not mint a session: it would write a Redis key and
-    // set a cookie for every crawler, and consent rules frown on both.
+    // Anonymous requests must not mint a session: a Redis key and a cookie for
+    // every crawler, which consent rules frown on too.
     saveUninitialized: false,
     cookie: {
       path: '/',
@@ -45,10 +38,10 @@ export async function registerSessionPlugins(
     }
   });
 
-  // After the session plugin, so the session of this request is resolved — and
-  // destroyed, where a handler ended it. The hint cookie is derived state, and
-  // this is the one place that writes it: `rolling` re-sets the session cookie
-  // on every response, and the hint has to slide with it.
+  // After the session plugin, so this request's session is resolved — and
+  // destroyed, where a handler ended it. The one place the hint cookie is
+  // written: `rolling` re-sets the session cookie on every response, and the
+  // hint has to slide with it.
   const sessions = app.get<SessionService>(SessionService);
   app
     .getHttpAdapter()

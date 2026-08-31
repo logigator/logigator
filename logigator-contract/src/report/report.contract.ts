@@ -1,17 +1,13 @@
 import * as z from 'zod';
 
 /**
- * A client-side error report.
+ * A client-side error report. The shape is fixed from outside — shipped editors
+ * already post it — so every field stays optional and keeps its name, `project`
+ * (the positional payload only the old editor sends) included, accepted as an
+ * opaque object rather than modelled.
  *
- * This is the one endpoint whose shape is fixed from outside: the editor already
- * posts it, in the field-by-field shape the legacy backend grew additively, and
- * a report arriving during the cutover must not be rejected for being what it
- * has always been. So every field stays optional and keeps its name — including
- * `project`, the legacy positional payload only the old editor sends, which is
- * accepted as an opaque object rather than modelled.
- *
- * Nothing here is trusted for anything but a log line: it is unauthenticated,
- * self-reported, and rate-limited on the way in.
+ * Nothing here is trusted for anything but a log line: unauthenticated,
+ * self-reported and rate-limited on the way in.
  */
 export const reportClientInfoSchema = z
   .object({
@@ -35,13 +31,13 @@ export const reportClientInfoSchema = z
 export type ReportClientInfo = z.infer<typeof reportClientInfoSchema>;
 
 /**
- * The caps are the point of the schema here — a report is an unauthenticated
- * write of attacker-chosen text, and the only defence against one used as
- * storage is a bound on every field.
+ * The caps are the point: a report is an unauthenticated write of
+ * attacker-chosen text, and a bound on every field is the only defence against
+ * one used as storage.
  */
 export const reportErrorRequestSchema = z
   .object({
-    /** Which client sent it; the current editor sends `editor-v2`. */
+    /** Which client sent it. */
     source: z.string().max(50).optional(),
     /** Ties the report to the matching analytics exception event. */
     correlationId: z.string().max(100).optional(),
@@ -65,9 +61,9 @@ export const reportErrorRequestSchema = z
 export type ReportErrorRequest = z.infer<typeof reportErrorRequestSchema>;
 
 /**
- * Acknowledgement only. What a deployment does with a report — mail it, log it,
- * drop it — is its own configuration, and telling a client which would say more
- * about the server than the client has any use for.
+ * Acknowledgement only. What a deployment does with a report is its own
+ * configuration, and saying which would tell a client more about the server
+ * than it has any use for.
  */
 export const reportErrorResponseSchema = z
   .object({ received: z.boolean() })

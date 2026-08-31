@@ -5,10 +5,8 @@ export interface DocsLinkTarget {
 }
 
 /**
- * Parses a `docs:<page-id>` href (optionally `docs:<page-id>#<heading-anchor>`)
- * — the scheme documentation pages use for cross links between pages. Returns
- * null for an href of any other shape; those carry no doc semantics and keep
- * the markdown renderer's built-in link handling.
+ * Parses a `docs:<page-id>` href, optionally `docs:<page-id>#<anchor>`. Null
+ * for any other shape, which keeps the markdown renderer's own link handling.
  */
 export function parseDocsLink(href: string): DocsLinkTarget | null {
   if (!href.startsWith('docs:')) {

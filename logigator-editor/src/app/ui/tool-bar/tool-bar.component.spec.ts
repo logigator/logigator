@@ -19,8 +19,8 @@ describe('ToolBarComponent', () => {
     fixture.detectChanges();
   });
 
-  // The tool set depends on services that settle asynchronously (work mode,
-  // shortcut bindings) — poll until the buttons appear.
+  // Work mode and shortcut bindings settle asynchronously, so poll until the
+  // buttons appear.
   async function waitForRender(): Promise<HTMLElement> {
     const el: HTMLElement = fixture.nativeElement;
     await vi.waitFor(() => {
@@ -47,8 +47,8 @@ describe('ToolBarComponent', () => {
     expect(el.querySelector('.ph-line-segment')).toBeNull(); // tools hidden
     expect(el.querySelector('.ph-trash')).toBeNull(); // delete hidden
 
-    // Run controls stay disabled until the worker session reports ready —
-    // here no session was started, so they render inert.
+    // Run controls stay disabled until a worker session reports ready; none
+    // was started, so they render inert.
     const playButton = el
       .querySelector('.ph-play')
       ?.closest('button') as HTMLButtonElement;

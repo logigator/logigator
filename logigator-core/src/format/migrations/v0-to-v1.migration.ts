@@ -29,14 +29,13 @@ import { InvalidFileError } from '../circuit-file.errors';
 import { ComponentMeta } from '../../catalog/component-meta';
 import { defaultOptionValues } from '../../catalog/option-schema';
 
-/** Old editor's ElementTypeId.WIRE — the canonical type ID for wires in the v0 format. */
+/** v0's ElementTypeId.WIRE. */
 const WIRE_TYPE_ID = 0;
 
 /**
  * File-local custom type id → its definition's port counts, used to re-anchor a
- * rotated custom instance about its body extent. Keyed by the same id the body's
- * custom elements carry as `t` (`info.id` for a legacy file, `dep.model` for a
- * server response).
+ * rotated custom instance about its body extent. Keyed by the same id the
+ * body's custom elements carry as `t`.
  */
 type CustomDims = ReadonlyMap<
   number,
@@ -44,14 +43,8 @@ type CustomDims = ReadonlyMap<
 >;
 
 /**
- * A coordinate pair out of a v0 element.
- *
- * The legacy format has no schema and its `ProjectElement` type describes what
- * the old editor *wrote*, not what a file may contain — so every position is
- * checked here rather than trusted. An element missing one is unreadable, and
- * saying so is the point: this pipeline's whole contract is that a document it
- * cannot parse is rejected, and reading past a missing field would turn a
- * malformed upload into a crash instead.
+ * A coordinate pair out of a v0 element. v0 has no schema, so a malformed
+ * position is rejected rather than read past.
  */
 function legacyPoint(value: unknown, what: string): [number, number] {
   if (
@@ -76,12 +69,10 @@ function legacyWireToBody(el: ProjectElement): SerializedWireBody {
 }
 
 /**
- * Decodes a v0 element's positional option slots into **named** option values,
- * driven by the type's {@link ComponentMeta.legacyV0Slots} descriptor. Every
- * option starts at its default; the descriptor then overrides those it maps to a
- * present `i`/`o`/`n`/`s` field (`r` is decoded generically into the body's
- * first-class `direction`, not an option). Pure: reads only catalog metadata,
- * builds no render objects.
+ * Decodes a v0 element's positional slots into named option values through the
+ * type's {@link ComponentMeta.legacyV0Slots} descriptor: every option starts at
+ * its default, overridden where the descriptor maps a present `i`/`o`/`n`/`s`.
+ * `r` becomes the body's first-class `direction`, not an option.
  */
 function decodeOptions(
   element: ProjectElement,
@@ -105,17 +96,11 @@ function decodeOptions(
 }
 
 /**
- * Decodes a positional element list into the native body (components + wires),
- * shared by the document body and every embedded snapshot's circuit. Wires
- * become {@link SerializedWireBody}; built-ins map their positional slots to
- * named options; custom-range elements (`t >= CUSTOM_TYPE_ID_BASE`, written by a
- * snapshot-bearing save) keep their file-local type id and round-trip only
- * `direction` — port counts/labels come from the resolved definition on load
- * (Invariant A). A rotated custom is still re-anchored from the legacy body
- * top-left to the v2 pivot like any other component; its body extent comes from
- * {@link CustomDims} (the definition's port counts), falling back to the
- * instance's own `i`/`o` when absent. Unknown built-in types are dropped with a
- * warning, consistent with the editor's silent-drop behaviour.
+ * Decodes a positional element list into the native body. Custom-range elements
+ * keep their file-local type id and round-trip only `direction`; their ports
+ * come from the resolved definition. Every component is re-anchored from the
+ * legacy top-left to the pivot, a custom's extent from {@link CustomDims} with
+ * its own `i`/`o` as fallback. Unknown built-ins are dropped with a warning.
  */
 function decodeElements(
   elements: ProjectElement[],
@@ -181,15 +166,14 @@ function decodeElements(
       element.t === BuiltInComponentType.TEXT &&
       typeof element.n?.[0] === 'number'
     ) {
-      // v0 stored an abstract size the old editor rendered at
-      // gridPixelWidth * size / 8 = size * (16 / 8) px; v2's fontSize is
-      // already a pixel value, so scale by that same 16/8 = 2 factor.
+      // v0's `n[0]` is an abstract size rendered at gridPixelWidth * size / 8
+      // = size * 2 px; `fontSize` is already pixels, so scale by 2.
       options['fontSize'] = element.n[0] * 2;
     }
     if (element.t === BuiltInComponentType.TUNNEL) {
-      // Tunnel labels have no positional slot of their own: a v2 save carries
-      // the label additively in `s`, a legacy save only its numeric id in
-      // `n[0]` — which becomes the label so equal ids stay joined.
+      // Tunnel labels have no positional slot: `s` carries the label when
+      // present, otherwise the numeric id in `n[0]` becomes it so equal ids
+      // stay joined.
       options['label'] =
         typeof element.s === 'string' ? element.s : String(element.n?.[0] ?? 0);
     }
@@ -208,9 +192,7 @@ function decodeElements(
 
 /**
  * Copies a v0 element's negation arrays into the native body, omitting empty or
- * non-array fields. Defensive against the array shape so a stray value can't
- * crash the later `Component.deserialize` iteration (the backend DTO already
- * validates them, this just keeps the permanent decode path robust).
+ * non-array fields so a stray value cannot crash a later iteration over them.
  */
 function decodeNegation(element: ProjectElement): {
   negInputs?: number[];
@@ -227,15 +209,11 @@ function decodeNegation(element: ProjectElement): {
 }
 
 /**
- * Revives the additive embedded snapshots carried by a server response's
- * `dependencies` into native {@link SnapshotDefinition}s. Each entry's `model`
- * is the file-local type id (kept verbatim so the body's custom `t`s match);
- * the summary travels frozen inside the `snapshot` (so a stale instance renders
- * at its own ports, not the master's current ones); `source` provenance comes
- * from the dependency id + the snapshot version. Reference-only dependencies (no
- * embedded `snapshot`, i.e. the old always-latest model) are skipped here — their
- * body elements then surface as unresolved customs and are dropped with a warning
- * on load (see `CircuitFileService.deserialize`).
+ * Revives a v0 `dependencies` array's embedded snapshots into native
+ * {@link SnapshotDefinition}s. `model` is the file-local type id, kept verbatim
+ * so the body's custom `t`s match, and the summary stays frozen inside the
+ * snapshot so a stale instance renders at its own ports. A dependency carrying
+ * no snapshot is skipped and its instances drop on load.
  */
 function decodeDependencies(
   input: CircuitFileV0,
@@ -250,11 +228,9 @@ function decodeDependencies(
       ctx,
       customDims
     );
-    // A server dependency carries an owned cloud-component mapping id; the
-    // current model allows only cloud dependencies in a cloud document, so a
-    // present id is always cloud-origin. A missing id (`''`, e.g. a legacy
-    // reference-only or a bypass) leaves no provenance — the instance loads as an
-    // embedded orphan, recoverable via restore.
+    // Only cloud dependencies are allowed in a cloud document, so a present id
+    // is always cloud-origin. A missing id leaves no provenance and the
+    // instance loads as an embedded orphan.
     const id = dep.id || dep.dependency?.id;
     definitions.push({
       type: dep.model,
@@ -275,18 +251,11 @@ function decodeDependencies(
 }
 
 /**
- * Revives the old-editor *file* sub-circuit definitions (the top-level
- * `components` array) into native {@link SnapshotDefinition}s. Each entry's
- * `info.id` is the custom-range type id its instances reference in the body, so
- * it becomes the definition's file-local `type` (kept verbatim, remapped to a
- * session id on load). The inner circuit decodes through the same
- * {@link decodeElements} as everything else, so nested customs stay file-local
- * and resolve via the load-time two-pass remap. Entries without a numeric
- * `info.id` can't be referenced and are skipped. `source` is left absent — a
- * legacy file carries no library provenance, so these load as never-saved-to-
- * library snapshots. Types already produced by {@link decodeDependencies} are
- * skipped so the two sources never collide (in practice a document has one or
- * the other).
+ * Revives a v0 file's top-level `components` definitions into native
+ * {@link SnapshotDefinition}s, `info.id` becoming the file-local `type` its
+ * instances reference. Skips entries with no numeric `info.id` and types
+ * {@link decodeDependencies} already produced, so the two sources never
+ * collide. `source` stays absent: a v0 file carries no provenance.
  */
 function decodeLegacyComponents(
   components: LegacyComponentDefinition[] | undefined,
@@ -320,10 +289,9 @@ function decodeLegacyComponents(
 }
 
 /**
- * Indexes every custom definition's port counts by its file-local type id, so a
- * custom instance in any body can be re-anchored about its true body extent.
- * Pulls from both definition sources (legacy-file `components`, server
- * `dependencies`); the two never share a type id in a real document.
+ * Indexes every custom definition's port counts by file-local type id, so an
+ * instance can be re-anchored about its true body extent. Both definition
+ * sources feed it and never share a type id in a real document.
  */
 function collectCustomDims(input: CircuitFileV0): CustomDims {
   const dims = new Map<number, { numInputs: number; numOutputs: number }>();
@@ -346,18 +314,10 @@ function collectCustomDims(input: CircuitFileV0): CustomDims {
 }
 
 /**
- * Converts the legacy `logigator-editor` file format (v0: no `version` field,
- * options packed positionally into the `t/p/q/r/i/o/n/s` wire format) into the
- * native v1 format with named options. This is a single v0→v1 step — the next
- * version in the chain, not a jump to newest.
- *
- * Registry-backed (needs the component configs and their `legacyV0Slots`
- * descriptors to map positional slots to named options) but instantiates no
- * render objects. Both sub-circuit-definition sources are revived into
- * `definitions[]`: the old-editor *file*'s inline `components` array (via
- * {@link decodeLegacyComponents}) and the server transport's additive embedded
- * snapshots (via {@link decodeDependencies}). Either way the migrated document
- * is self-contained and indistinguishable from a native file load downstream.
+ * Converts v0 (no `version` field, options packed positionally into
+ * `t/p/q/r/i/o/n/s`) into v1 with named options — one step in the chain, not a
+ * jump to newest. Both definition sources are revived into `definitions[]`, so
+ * the result is self-contained and indistinguishable from a native load.
  */
 export const v0ToV1Migration: Migration<CircuitFileV0, CircuitFileV1> = {
   from: 0,

@@ -10,10 +10,9 @@ import {
 } from '../database/schema';
 
 /**
- * Either edge table. The two carry the same three columns and exist separately
- * only so both foreign keys can be real — a dependent is a project or a
- * component, a dependency is always a component — so every query over them is
- * written once and handed the table.
+ * Either edge table. Same three columns; two tables only so both foreign keys
+ * can be real, a dependent being a project or a component and a dependency
+ * always a component. Queries are written once and handed the table.
  */
 type EdgeTable = typeof projectDependencies | typeof componentDependencies;
 
@@ -21,31 +20,23 @@ export const PROJECT_EDGES = projectDependencies;
 export const COMPONENT_EDGES = componentDependencies;
 
 /**
- * The dependency edges: which library components a stored circuit embeds.
- *
- * These rows are a cache of what the document already says, extracted by the
- * server on every write and never asserted by a client — which is the whole
- * difference from the legacy API, where the save body listed its own
- * dependencies and nothing checked them against the circuit. Being derived is
- * also what makes them safe to truncate and rebuild, and what lets a write
- * simply replace a document's whole edge set rather than diff it.
+ * The dependency edges: which library components a stored circuit embeds. A
+ * cache of what the document already says, extracted by the server on every
+ * write and never asserted by a client — which is what makes them safe to
+ * truncate and rebuild rather than diff.
  */
 @Injectable()
 export class DependenciesService {
   constructor(@Inject(DB) private readonly db: Database) {}
 
   /**
-   * Points a document's edges at exactly `edges`, dropping whatever it had.
+   * Points a document's edges at exactly `edges`. Runs inside the caller's
+   * transaction: an edge set not matching the document beside it must never be
+   * observable.
    *
-   * Runs inside the caller's transaction, because an edge set that does not
-   * match the document beside it is the one state this table must never be
-   * observed in.
-   *
-   * Edges naming a component that no longer exists are skipped rather than
-   * fatal. A document embeds a frozen snapshot of everything it uses, so it
-   * keeps working when a master is deleted — and the cascade on the dependency
-   * key means "snapshot embedded, no edge" is already the steady state after a
-   * delete, not an anomaly. Failing the save instead would make somebody else's
+   * An edge naming a deleted component is skipped, not fatal. The document
+   * embeds a frozen snapshot, and the cascade makes "snapshot, no edge" the
+   * steady state after a delete — failing the save would let somebody else's
    * deletion break a circuit that does not need them.
    */
   async replace(
@@ -73,11 +64,9 @@ export class DependenciesService {
   }
 
   /**
-   * The masters a document embeds, as they stand now.
-   *
-   * An inner join, so a master that has since been deleted is absent rather than
-   * a null-filled row — the client's cue that its embedded snapshot is all there
-   * is. `version` against the snapshot's own is what tells it an update exists.
+   * The masters a document embeds, as they stand now. An inner join, so a
+   * deleted master is absent rather than a null-filled row — the client's cue
+   * that its snapshot is all there is. `version` tells it an update exists.
    */
   async summaries(
     table: EdgeTable,
@@ -100,7 +89,6 @@ export class DependenciesService {
       .where(eq(table.dependentId, dependentId));
   }
 
-  /** Which of `ids` are component rows, so the rest can be skipped. */
   private async existing(
     tx: Queryable,
     ids: readonly string[]

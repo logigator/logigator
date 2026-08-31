@@ -6,9 +6,8 @@ import {
 } from './api-error.contract';
 
 describe('apiErrorSchema', () => {
-  // The point of reading `code` as a string: a client holding this copy of the
-  // contract has to survive a code added to the API after it shipped, because
-  // the response that carries it is the one explaining what went wrong.
+  // Why `code` reads as a string: a client has to survive a code the API added
+  // after it shipped, on the very response explaining what went wrong.
   it('accepts a code this copy does not know', () => {
     const parsed = apiErrorSchema.parse({
       code: 'quota_exceeded',

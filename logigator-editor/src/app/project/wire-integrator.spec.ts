@@ -116,14 +116,14 @@ describe('WireIntegrator', () => {
   });
 
   it('component port at the shared endpoint blocks merge', () => {
-    // Component port at (3.5, 0.5): AND at (4,0) facing East → input port at (3.5, 0.5).
+    // AND at (4,0) facing East → input port at (3.5, 0.5).
     const comp = makeAnd(2, Direction.E, 4, 0);
     components.push(comp);
     // A (0.5,0.5)→(3.5,0.5) and B (3.5,0.5)→(6.5,0.5).
     const a = makeWire(0, 0, WireDirection.HORIZONTAL, 3);
     const b = makeWire(3, 0, WireDirection.HORIZONTAL, 3);
     existing.push(a, b);
-    // Remove a perpendicular blocker D to trigger merge consideration at (3.5, 0.5).
+    // Removing the perpendicular blocker D triggers merge consideration.
     const d = new Wire(WireDirection.VERTICAL, 2);
     d.position.set(3.5, -1.5); // ends at (3.5, 0.5)
     existing.push(d);
@@ -133,7 +133,7 @@ describe('WireIntegrator', () => {
       makeComponentQuery(components),
       SCALE
     );
-    // Port at (3.5, 0.5) still blocks A+B merge.
+    // The port still blocks the A+B merge.
     expect(toRemove).toContain(d);
     expect(toRemove).not.toContain(a);
     expect(toRemove).not.toContain(b);
@@ -222,7 +222,6 @@ describe('WireIntegrator', () => {
       SCALE
     );
     expect(toRemove).toContain(e);
-    // n1 and n2 were addedWires, so they don't appear in toRemove.
     expect(toRemove).not.toContain(n1);
     expect(toRemove).not.toContain(n2);
     expect(toAdd.length).toBe(1);
@@ -254,10 +253,9 @@ describe('WireIntegrator', () => {
   // --- Split cases ---
 
   it('new wire endpoint lands on existing wire interior → splits existing', () => {
-    // Existing H wire (0.5,0.5)→(6.5,0.5); new V wire endpoint at (3.5, 0.5).
+    // H (0.5,0.5)→(6.5,0.5); the new V ends at (3.5, 0.5).
     const h = makeWire(0, 0, WireDirection.HORIZONTAL, 6);
     existing.push(h);
-    // V wire ending at (3.5, 0.5): pos.y + length = 0.5; pos=(3.5, -2.5), length=3.
     const v = new Wire(WireDirection.VERTICAL, 3);
     v.position.set(3.5, -2.5);
     const { toAdd, toRemove } = integrator.integrate(
@@ -267,7 +265,6 @@ describe('WireIntegrator', () => {
       SCALE
     );
     expect(toRemove).toContain(h);
-    // Two split halves of h plus the original v.
     const horizontals = toAdd.filter(
       (w) => w.direction === WireDirection.HORIZONTAL
     );
@@ -279,11 +276,10 @@ describe('WireIntegrator', () => {
   });
 
   it('new wire interior contains existing endpoint → splits new wire', () => {
-    // Existing V wire endpoint at (3.5, 0.5).
     const v = new Wire(WireDirection.VERTICAL, 3);
     v.position.set(3.5, -2.5);
     existing.push(v);
-    // New H wire (0.5,0.5)→(6.5,0.5), interior contains (3.5, 0.5).
+    // H (0.5,0.5)→(6.5,0.5); its interior contains the V endpoint.
     const h = makeWire(0, 0, WireDirection.HORIZONTAL, 6);
     const { toAdd, toRemove } = integrator.integrate(
       { addedWires: [h] },
@@ -291,9 +287,7 @@ describe('WireIntegrator', () => {
       noComponentsQuery,
       SCALE
     );
-    // v stays in the tree.
     expect(toRemove).not.toContain(v);
-    // h was split — it should NOT be in toAdd; two halves should be.
     expect(toAdd).not.toContain(h);
     const horizontals = toAdd.filter(
       (w) => w.direction === WireDirection.HORIZONTAL
@@ -305,12 +299,8 @@ describe('WireIntegrator', () => {
   });
 
   it('new wire interior crosses a component port → splits new wire', () => {
-    // AndComponent facing E with 2 inputs at (4,0) has input ports at (3.5, 0.5) and (3.5, 1.5)
-    // and an output port at (4 + 2, 0.5) = (6, 0.5)... actually let me re-derive:
-    // bodyGridWidth = 2; bodyGridBounds.x = position.x; right = x + 2.
-    // Input port (E, i=0): apply matrix(rot=0) to (-0.5, 0.5) → (-0.5, 0.5); + position.
-    //   pos = (4, 0): port = (3.5, 0.5).
-    // We want a port at (3.5, 0.5) inside an H wire (0.5,0.5)→(6.5,0.5).
+    // AND at (4,0) facing East: input ports at (3.5, 0.5) and (3.5, 1.5). The
+    // first lands inside the H wire (0.5,0.5)→(6.5,0.5).
     const comp = makeAnd(2, Direction.E, 4, 0);
     components.push(comp);
     const h = makeWire(0, 0, WireDirection.HORIZONTAL, 6);
@@ -325,14 +315,13 @@ describe('WireIntegrator', () => {
     const horizontals = toAdd.filter(
       (w) => w.direction === WireDirection.HORIZONTAL
     );
-    // Port at (3.5, 0.5) splits h once → 2 halves.
-    // Port at (3.5, 1.5) is NOT on h (different y).
+    // Only (3.5, 0.5) is on h, so it splits once.
     expect(horizontals.length).toBe(2);
     h.destroy();
   });
 
   it('new wire interior crosses multiple existing endpoints → multiple splits', () => {
-    // Two vertical wires ending at (3.5, 0.5) and (5.5, 0.5); new H wire (0.5,0.5)→(7.5,0.5).
+    // Verticals end at (3.5, 0.5) and (5.5, 0.5); new H (0.5,0.5)→(7.5,0.5).
     const v1 = new Wire(WireDirection.VERTICAL, 3);
     v1.position.set(3.5, -2.5);
     const v2 = new Wire(WireDirection.VERTICAL, 3);
@@ -357,7 +346,7 @@ describe('WireIntegrator', () => {
   // --- Re-merge cases ---
 
   it('wire removed leaves merge-able collinear neighbors → merge', () => {
-    // A (0.5,2.5)→(3.5,2.5), B (3.5,2.5)→(6.5,2.5), V endpoint at (3.5, 2.5) blocking merge.
+    // A (0.5,2.5)→(3.5,2.5) and B (3.5,2.5)→(6.5,2.5); V blocks at (3.5, 2.5).
     const a = makeWire(0, 2, WireDirection.HORIZONTAL, 3);
     const b = makeWire(3, 2, WireDirection.HORIZONTAL, 3);
     const v = new Wire(WireDirection.VERTICAL, 2);
@@ -380,7 +369,6 @@ describe('WireIntegrator', () => {
     const a = makeWire(0, 0, WireDirection.HORIZONTAL, 3); // ends at (3.5, 0.5)
     const b = makeWire(3, 0, WireDirection.HORIZONTAL, 3); // starts at (3.5, 0.5)
     existing.push(a, b);
-    // Removed component port at (3.5, 0.5).
     const { toAdd, toRemove } = integrator.integrate(
       { removedComponentPorts: [new Point(3.5, 0.5)] },
       makeWireQuery(existing),
@@ -409,9 +397,8 @@ describe('WireIntegrator', () => {
   // --- Move cases ---
 
   it('moved wire endpoint lands on existing wire interior → splits existing', () => {
-    // Existing horizontal wire (0.5, 0.5)→(6.5, 0.5).
     const h = makeWire(0, 0, WireDirection.HORIZONTAL, 6);
-    // Moved vertical wire now ends at (3.5, 0.5) — was elsewhere previously.
+    // The moved vertical now ends at (3.5, 0.5), on the H wire's interior.
     const v = new Wire(WireDirection.VERTICAL, 3);
     v.position.set(3.5, -2.5);
     existing.push(h, v);
@@ -436,10 +423,9 @@ describe('WireIntegrator', () => {
   });
 
   it('moved wire vacates old position, leaving merge-able neighbors', () => {
-    // A (0.5,0.5)→(3.5,0.5), B (3.5,0.5)→(6.5,0.5), V was at (3.5, 0.5) and moved away.
+    // A (0.5,0.5)→(3.5,0.5) and B (3.5,0.5)→(6.5,0.5); V has left the seam.
     const a = makeWire(0, 0, WireDirection.HORIZONTAL, 3);
     const b = makeWire(3, 0, WireDirection.HORIZONTAL, 3);
-    // V is now at a different location — far away.
     const v = new Wire(WireDirection.VERTICAL, 3);
     v.position.set(20.5, 20.5);
     existing.push(a, b, v);
@@ -455,7 +441,6 @@ describe('WireIntegrator', () => {
       noComponentsQuery,
       SCALE
     );
-    // A and B should merge now.
     expect(toRemove).toContain(a);
     expect(toRemove).toContain(b);
     const merged = toAdd.find(
@@ -465,11 +450,10 @@ describe('WireIntegrator', () => {
   });
 
   it('moved collinear pair whose seam lands on a wire interior → pair merges, no split', () => {
-    // H1 (0.5,2.5)→(3.5,2.5) and H2 (3.5,2.5)→(6.5,2.5) are split pieces of a
-    // former T-junction at (3.5,0.5), moved down together so their shared
-    // endpoint sits on the interior of V (3.5,0.5)→(3.5,4.5). With no genuine
-    // third terminator at the seam, the pair merges back into one wire and V
-    // stays whole — a plain crossing, as if one unsplit wire had been moved.
+    // Split pieces H1 (0.5,2.5)→(3.5,2.5) and H2 (3.5,2.5)→(6.5,2.5) move
+    // together so their seam sits on the interior of V (3.5,0.5)→(3.5,4.5).
+    // Nothing else terminates at the seam, so the pair merges back and V stays
+    // whole — a plain crossing.
     const v = makeWire(3, 0, WireDirection.VERTICAL, 4);
     const h1 = makeWire(0, 2, WireDirection.HORIZONTAL, 3);
     const h2 = makeWire(3, 2, WireDirection.HORIZONTAL, 3);
@@ -510,17 +494,15 @@ describe('WireIntegrator', () => {
   });
 
   it('moved T-junction (pair + port) lands on a wire interior → splits it', () => {
-    // Counter-case to the seam merge: the pair's shared endpoint arrives
-    // together with a component port terminating there — a genuine T-junction
-    // moved as a selection. The port blocks the pair's merge, so the crossed
-    // wire splits and the junction taps it.
-    // Port at (3.5, 0.5): AND at (4,0) facing East → input port at (3.5, 0.5).
+    // The same seam, but a component port terminates there — a genuine
+    // T-junction moved as a selection. The port blocks the merge, so the
+    // crossed wire splits and the junction taps it. AND at (4,0) facing East
+    // puts an input port at (3.5, 0.5).
     const comp = makeAnd(2, Direction.E, 4, 0);
     components.push(comp);
-    // V (3.5,-0.5)→(3.5,1.5) — its interior contains the seam (3.5,0.5).
+    // V (3.5,-0.5)→(3.5,1.5): its interior contains the seam.
     const v = new Wire(WireDirection.VERTICAL, 2);
     v.position.set(3.5, -0.5);
-    // Pair H1 (0.5,0.5)→(3.5,0.5), H2 (3.5,0.5)→(6.5,0.5).
     const h1 = makeWire(0, 0, WireDirection.HORIZONTAL, 3);
     const h2 = makeWire(3, 0, WireDirection.HORIZONTAL, 3);
     existing.push(v, h1, h2);
@@ -573,10 +555,9 @@ describe('WireIntegrator', () => {
   // --- Junction preservation ---
 
   it('new wire absorbing a T-junction arm → junction stays split', () => {
-    // T-junction at (3.5,2.5): H pair h1|h2 plus a V stem running down from it.
-    // A new V wire drawn along the stem and past the junction absorbs the stem,
-    // which buries the junction inside the merged span. The H pair must stay
-    // split and the merged stem must re-split at the junction.
+    // T-junction at (3.5,2.5): H pair h1|h2 plus a V stem. A new V drawn along
+    // the stem and past the junction absorbs it, burying the junction inside
+    // the merged span. The H pair must stay split and the span must re-cut.
     const h1 = makeWire(0, 2, WireDirection.HORIZONTAL, 3);
     const h2 = makeWire(3, 2, WireDirection.HORIZONTAL, 3);
     const v = makeWire(3, 2, WireDirection.VERTICAL, 3);
@@ -603,8 +584,8 @@ describe('WireIntegrator', () => {
   });
 
   it('new wire absorbing both arms of a joined crossing → crossing stays joined', () => {
-    // Joined crossing at (3.5,2.5): all four arms end there. A new H wire drawn
-    // straight across absorbs both H arms; the V pair must not fuse behind it.
+    // Joined crossing at (3.5,2.5), all four arms ending there. A new H drawn
+    // across absorbs both H arms; the V pair must not fuse behind it.
     const h1 = makeWire(0, 2, WireDirection.HORIZONTAL, 3);
     const h2 = makeWire(3, 2, WireDirection.HORIZONTAL, 3);
     const v1 = makeWire(3, 0, WireDirection.VERTICAL, 2);
@@ -633,9 +614,8 @@ describe('WireIntegrator', () => {
   });
 
   it('new wire absorbing both arms of a T-junction → arm pair re-splits at the stem', () => {
-    // The junction's only perpendicular terminator is a single stem, not a pair:
-    // absorbing both H arms buries the junction, and the split pass has to cut
-    // the merged span back open off that lone stem endpoint.
+    // A lone stem, not a pair: absorbing both H arms buries the junction, and
+    // the split pass must cut the merged span back open off that endpoint.
     const h1 = makeWire(0, 2, WireDirection.HORIZONTAL, 3);
     const h2 = makeWire(3, 2, WireDirection.HORIZONTAL, 3);
     const v = makeWire(3, 2, WireDirection.VERTICAL, 3);
@@ -659,10 +639,9 @@ describe('WireIntegrator', () => {
   });
 
   it('overlapping collinear pair absorbed with no perpendicular terminator → still merges', () => {
-    // Counter-case to the two above: h1 and h2 overlap, so consolidation absorbs
-    // them, but their endpoints inside the merged span carry no perpendicular
-    // terminator — V only crosses. Nothing is a junction, so the pair merges into
-    // one wire and V stays whole.
+    // h1 and h2 overlap, so consolidation absorbs them, but no perpendicular
+    // wire terminates inside the merged span — V only crosses. Nothing is a
+    // junction, so the pair merges and V stays whole.
     const v = makeWire(3, 0, WireDirection.VERTICAL, 4);
     const h1 = makeWire(0, 2, WireDirection.HORIZONTAL, 4); // 0.5 → 4.5
     const h2 = makeWire(3, 2, WireDirection.HORIZONTAL, 3); // 3.5 → 6.5
@@ -726,8 +705,8 @@ describe('WireIntegrator', () => {
   });
 
   it('cascading merge — removing wires unblocks chain of merges', () => {
-    // A (0.5,2.5)→(2.5,2.5), B (2.5,2.5)→(4.5,2.5), C (4.5,2.5)→(6.5,2.5).
-    // D vertical at (2.5,2.5), E vertical at (4.5,2.5). Remove D and E.
+    // Collinear A|B|C with verticals D at (2.5,2.5) and E at (4.5,2.5) blocking
+    // both seams; removing D and E must cascade into one merge.
     const a = makeWire(0, 2, WireDirection.HORIZONTAL, 2);
     const b = makeWire(2, 2, WireDirection.HORIZONTAL, 2);
     const c = makeWire(4, 2, WireDirection.HORIZONTAL, 2);
@@ -747,7 +726,6 @@ describe('WireIntegrator', () => {
     expect(toRemove).toContain(c);
     expect(toRemove).toContain(d);
     expect(toRemove).toContain(e);
-    // One unified wire spanning (0.5,2.5)→(6.5,2.5).
     const horizontals = toAdd.filter(
       (w) => w.direction === WireDirection.HORIZONTAL
     );
@@ -811,8 +789,8 @@ describe('WireIntegrator', () => {
   // --- Vacated points ---
 
   it('vacatedPoints: merges the pair whose terminator is already gone', () => {
-    // Two collinear halves touching at (3.5, 0.5); the stem that used to end
-    // there was removed from the tree before integration (the eraser's flow).
+    // Two collinear halves touching at (3.5, 0.5), whose stem the caller
+    // already removed from the tree (the eraser's flow).
     const left = makeWire(0, 0, WireDirection.HORIZONTAL, 3);
     const right = makeWire(3, 0, WireDirection.HORIZONTAL, 3);
     existing.push(left, right);

@@ -1,15 +1,13 @@
 #!/usr/bin/env node
 /**
  * Rewrites `src/app/documentation/docs-images.ts` from what is on disk under
- * `src/assets/docs/<lang>/images/`.
+ * `src/assets/docs/<lang>/images/`. Run it after copying a capture into the
+ * tree.
  *
  *   node tools/docs-screenshots/write-registry.mjs
  *
- * Run it after copying a capture into the tree. Which pictures a language has
- * is decided by the run — a capture identical to the English one is never
- * written — so the registry follows the folders rather than a hand-kept list,
- * and a reworded label that makes a language stop (or start) differing from
- * English needs no edit here.
+ * Which pictures a language has is decided by the run, so the registry follows
+ * the folders rather than a hand-kept list.
  */
 import fs from 'node:fs';
 import path from 'node:path';

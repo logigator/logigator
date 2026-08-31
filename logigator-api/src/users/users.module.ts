@@ -6,11 +6,9 @@ import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 
 /**
- * `AuthModule` is imported through `forwardRef` because the two modules
- * genuinely need each other: authentication looks accounts up, and account
- * management verifies passwords and issues the same mail tokens. Splitting the
- * credential helpers into a third module would only move the cycle around — they
- * belong with the code that owns credentials.
+ * `forwardRef` because the two modules genuinely need each other:
+ * authentication looks accounts up, and account management verifies passwords
+ * and issues the same mail tokens.
  */
 @Module({
   imports: [forwardRef(() => AuthModule), MailModule],

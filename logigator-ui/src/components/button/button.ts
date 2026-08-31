@@ -12,21 +12,18 @@ import { controlPadding, LgSize } from '../../tokens/size';
 type LgButtonVariant = 'solid' | 'outlined' | 'text';
 type SeverityKey = 'primary' | LgSeverity;
 
-// The inner button fills the host box (`size-full`) so any layout class the
-// caller puts on `<lg-button>` (e.g. `class="w-full"`) sizes the button too;
-// icon-only square sizing lives on the host (see the `size-*` host bindings).
-// The border width lives here so every variant shares one box size; its color
-// comes from the variant (`border-transparent` would fight the outlined
-// severities' border colors at the stylesheet-order level).
+// The inner button fills the host box, so a layout class on `<lg-button>`
+// sizes the button too. The border width lives here so every variant shares
+// one box size; its color comes from the variant, since `border-transparent`
+// would fight the outlined severities at stylesheet order.
 const BASE =
   'inline-flex size-full items-center justify-center gap-2 border font-medium ' +
   'transition-colors duration-200 cursor-pointer select-none ' +
   'disabled:pointer-events-none disabled:opacity-60 focus:outline-none ' +
   'focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-current';
 
-// Severity → class table. primary/secondary track the themeable primary/surface
-// scales; info/success/warn/danger use the semantic state palette; none is a
-// muted, chromeless neutral.
+// primary/secondary track the themeable primary/surface scales, the state
+// severities the semantic palette, and none is a chromeless neutral.
 const SEVERITY: Record<LgButtonVariant, Record<SeverityKey, string>> = {
   solid: {
     primary:
@@ -79,12 +76,9 @@ const ICON_ONLY_TEXT: Record<LgSize, string> = {
 };
 
 /**
- * A native `<button>` skin. Exposes `label` (omit for an icon-only button),
- * `icon` (an icon-font class string), `severity`, `size`,
- * `text`/`outlined`/`rounded`, `disabled`, `loading`, `type`, and `ariaLabel`,
- * and emits `onClick`. Layout classes go on the host (`<lg-button
- * class="w-full">`); the inner button fills it. `styleClass` is merged onto
- * the inner `<button>` alongside the variant/severity classes.
+ * A native `<button>` skin. Omit `label` for an icon-only button. Layout
+ * classes go on the host and the inner button fills it; `styleClass` merges
+ * onto that inner `<button>` beside the variant/severity classes.
  */
 @Component({
   selector: 'lg-button',
@@ -150,8 +144,8 @@ export class LgButton {
         ? 'outlined'
         : 'solid';
     const severityKey: SeverityKey = this.severity() ?? 'primary';
-    // Icon-only square sizing comes from the host; here the icon-only button
-    // only needs its text size, while a labelled button gets the shared padding.
+    // The host carries icon-only square sizing, so only the text size is
+    // needed here; a labelled button gets the shared padding instead.
     const sizing = this.iconOnly()
       ? ICON_ONLY_TEXT[this.resolvedSize()]
       : controlPadding(this.size());

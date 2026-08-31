@@ -2,11 +2,11 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { startE2eApp, type E2eApp } from './harness';
 
 /**
- * The parts of the OAuth round trip that never talk to Google: the refusal when
- * no credentials are configured, and the failure redirect a callback takes when it
- * cannot name a flow this server started. Between them they cover the routes'
- * own behaviour — everything past the state lookup is `openid-client`'s protocol
- * work against a live provider, which belongs in a manual pass, not in CI.
+ * The parts of the OAuth round trip that never talk to Google: the refusal with
+ * no credentials configured, and the failure redirect when a callback cannot
+ * name a flow this server started. Past the state lookup it is
+ * `openid-client`'s protocol work against a live provider, which belongs in a
+ * manual pass.
  */
 describe('Google sign-in when it is not configured', () => {
   let api: E2eApp;
@@ -40,8 +40,7 @@ describe('Google sign-in callbacks', () => {
   let api: E2eApp;
 
   beforeAll(async () => {
-    // Credentials only have to exist for the routes to be enabled; nothing here
-    // reaches the point of using them.
+    // Credentials only have to exist for the routes to be enabled.
     api = await startE2eApp({
       GOOGLE_CLIENT_ID: 'test-client-id',
       GOOGLE_CLIENT_SECRET: 'test-client-secret',
@@ -59,8 +58,7 @@ describe('Google sign-in callbacks', () => {
       url: '/api/auth/google/callback?code=whatever&state=never-issued'
     });
 
-    // A callback that cannot name a flow this server started gets no further —
-    // the state lookup fails before any token exchange is attempted.
+    // The state lookup fails before any token exchange is attempted.
     expect(response.statusCode).toBe(302);
     expect(response.headers.location).toBe(
       'http://logigator.test/login?error=google_state_invalid'

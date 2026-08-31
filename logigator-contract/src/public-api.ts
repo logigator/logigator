@@ -1,20 +1,20 @@
 /**
  * Public surface of `@logigator/contract` — the API contract as zod schemas.
+ * The server validates requests with them and clients build typed callers from
+ * the inferred types. No codegen, so a contract change breaks every consumer at
+ * type-check time; an OpenAPI document may be derived from these schemas, never
+ * authored beside them.
  *
- * The server validates incoming requests with these schemas; the editor and
- * `logigator-web` build typed clients from the inferred types. There is no
- * codegen step, so a contract change breaks every consumer at type-check time.
- * An OpenAPI document can be derived from these schemas later if third-party
- * consumers ever need one — never authored as a second source of truth.
+ * Layering: the contract may import `@logigator/core`, never the server.
  *
- * Layering: the contract may import `@logigator/core` (the document format it
- * carries), never the server. zod is imported as `import * as z from 'zod'`
- * everywhere here, and the lint fence enforces it: the `z` named export is a
- * namespace object carrying every locale table and the JSON-Schema generator,
- * and a bundler can only drop what a schema does not touch when it can see the
- * namespace. Response object schemas are deliberately loose,
- * so a client holding an older contract copy tolerates fields the API added
- * instead of rejecting the response or silently stripping them.
+ * zod is imported as `import * as z from 'zod'` everywhere, enforced by the
+ * lint fence: the `z` named export is a namespace object carrying every locale
+ * table and the JSON-Schema generator, and a bundler can only drop what a
+ * schema does not touch when it can see the namespace.
+ *
+ * Response object schemas are `.loose()`, so a client holding an older contract
+ * copy tolerates fields the API added instead of rejecting the response or
+ * silently stripping them.
  */
 export {
   apiErrorCodeSchema,

@@ -4,14 +4,12 @@ import { Confirmation } from './confirmation';
 import { ConfirmationService } from './confirmation.service';
 
 /**
- * Shared behaviour for the two {@link ConfirmationService} outlets
- * ({@link LgConfirmDialog}, {@link LgConfirmPopup}): the `key` routing, the
- * `current` confirmation, the reject/accept button-prop mapping, and the
- * accept/reject → settle flow. Subclasses only supply how the confirmation is
- * shown ({@link present}) and torn down ({@link teardown}).
+ * Shared behaviour for the two {@link ConfirmationService} outlets: `key`
+ * routing, the `current` confirmation, the button-prop mapping and the settle
+ * flow. Subclasses supply only {@link present} and {@link teardown}.
  *
- * A selectorless abstract `@Directive` so the subclasses inherit its signal
- * `input()` (`key`) — never used on its own.
+ * A selectorless abstract `@Directive` so subclasses inherit its `key`
+ * `input()`; never used on its own.
  */
 @Directive()
 export abstract class LgConfirmOutlet {
@@ -46,8 +44,7 @@ export abstract class LgConfirmOutlet {
 
   /** Tear down any visual state opened by {@link present}. */
   protected teardown(): void {
-    // No-op by default — an overlay-based outlet (the popup) overrides this to
-    // dispose its overlay. A dialog outlet derives visibility from `current()`.
+    // A no-op for an outlet deriving its visibility from `current()`.
   }
 
   protected accept(): void {

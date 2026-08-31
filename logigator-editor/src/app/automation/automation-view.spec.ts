@@ -133,8 +133,8 @@ describe('AutomationApiService camera and selection', () => {
   });
 
   describe('grid ↔ screen', () => {
-    // The board's page box is a DOM fact the camera does not own; a stub
-    // stands in for the canvas so the conversions have one to add.
+    // The board's page box is a DOM fact the camera does not own, so a stub
+    // stands in for the canvas.
     const surface = {
       getBoundingClientRect: () => ({
         ...BOARD_OFFSET,
@@ -362,9 +362,8 @@ describe('AutomationApiService camera and selection', () => {
       project.addComponent(and);
       const workMode = TestBed.inject(WorkModeService);
       workMode.setMode(WorkMode.PAN);
-      // The board drops the live selection as it swaps tools, from an effect on
-      // the work mode (WorkModeRouter.setMode). A selection made before that
-      // effect ran would be wiped by it a frame later.
+      // The board drops the live selection from an effect as it swaps tools, so
+      // a selection made before that effect ran would be wiped a frame later.
       const injector = TestBed.inject(Injector);
       runInInjectionContext(injector, () => {
         effect(() => {

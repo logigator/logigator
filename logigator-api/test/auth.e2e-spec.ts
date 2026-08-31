@@ -61,9 +61,8 @@ describe('local authentication', () => {
     const response = await api.inject({
       method: 'POST',
       url: '/api/auth/register',
-      // Registered in mixed case: PostgreSQL compares text exactly, so the
-      // address has to be normalized on the way in or one mailbox gets two
-      // accounts.
+      // PostgreSQL compares text exactly, so a mixed-case address has to be
+      // normalized on the way in or one mailbox gets two accounts.
       payload: {
         username: 'Grace',
         email: 'Grace@Example.COM',
@@ -101,8 +100,8 @@ describe('local authentication', () => {
     });
 
     expect(response.statusCode).toBe(403);
-    // Distinguished from a wrong password on purpose: it is the one failure the
-    // client can offer to fix, by asking for the mail again.
+    // Distinguished from a wrong password: the one failure a client can offer
+    // to fix, by asking for the mail again.
     expect(response.json().code).toBe('email_not_verified');
   });
 
@@ -126,14 +125,14 @@ describe('local authentication', () => {
     expect(session?.httpOnly).toBe(true);
     expect(session?.sameSite?.toLowerCase()).toBe('lax');
 
-    // The hint cookie must stay readable to scripts: the editor drives its whole
-    // signed-in state off it, and a login in another tab is noticed through it.
+    // The hint must stay readable to scripts: the editor drives its signed-in
+    // state off it, and notices a login in another tab through it.
     const hint = response.cookies.find((c) => c.name === 'isAuthenticated');
     expect(hint?.value).toBe('true');
     expect(hint?.httpOnly).toBeFalsy();
-    // Seconds, not milliseconds: `Max-Age` is seconds and `@fastify/cookie`
-    // passes it through, while `@fastify/session` takes its own in milliseconds.
-    // Mixing the two gives the hint a lifetime a thousand times the session's.
+    // Seconds, not milliseconds: `@fastify/cookie` passes `Max-Age` through as
+    // seconds while `@fastify/session` takes milliseconds, and mixing the two
+    // gives the hint a thousand times the session's lifetime.
     expect(hint?.maxAge).toBe(api.env.SESSION_MAX_AGE_DAYS * 24 * 60 * 60);
 
     // The session is what authenticates, not the hint.
@@ -151,10 +150,9 @@ describe('local authentication', () => {
     await login(jar);
     const maxAge = api.env.SESSION_MAX_AGE_DAYS * 24 * 60 * 60;
 
-    // Every response of a signed-in request carries the hint again, because the
-    // session cookie is re-set on every response too (`rolling`). Written once at
-    // sign-in, it would expire under a session that is still valid, and the
-    // client would show a signed-out shell to a signed-in user.
+    // The hint rides along on every response, as the `rolling` session cookie
+    // does. Written once at sign-in it would expire under a live session, and
+    // the client would show a signed-out shell to a signed-in user.
     const authenticated = await api.inject({
       method: 'GET',
       url: '/api/user',
@@ -166,8 +164,8 @@ describe('local authentication', () => {
     expect(refreshed?.value).toBe('true');
     expect(refreshed?.maxAge).toBe(maxAge);
 
-    // A hint no session backs is cleared, which is what corrects a client whose
-    // session ended somewhere else — a password reset, or another tab.
+    // A hint no session backs is cleared, correcting a client whose session
+    // ended elsewhere — a password reset, or another tab.
     const stale = await api.inject({
       method: 'GET',
       url: '/api/user',
@@ -178,8 +176,7 @@ describe('local authentication', () => {
       ''
     );
 
-    // And a caller that has no cookies is given none: an anonymous request must
-    // not be answered with state it did not ask for.
+    // A caller with no cookies is given none.
     const anonymous = await api.inject({ method: 'GET', url: '/api/meta' });
     expect(anonymous.cookies).toEqual([]);
   });
@@ -198,8 +195,7 @@ describe('local authentication', () => {
 
     expect(wrongPassword.statusCode).toBe(401);
     expect(unknownAddress.statusCode).toBe(401);
-    // Identical bodies: whether an address has an account is not something this
-    // endpoint answers.
+    // Whether an address has an account is not something this endpoint says.
     expect(unknownAddress.json()).toEqual(wrongPassword.json());
     expect(wrongPassword.json().code).toBe('invalid_credentials');
   });
@@ -207,8 +203,7 @@ describe('local authentication', () => {
   it('ends the session on logout, and the cookie stops working', async () => {
     const jar = new CookieJar();
     await login(jar);
-    // What the browser holds at this moment, kept so it can be replayed after
-    // the jar has been cleaned up by the logout response.
+    // Kept so it can be replayed after the logout response empties the jar.
     const staleCookies = jar.header() as string;
 
     const logout = await api.inject({
@@ -221,13 +216,13 @@ describe('local authentication', () => {
     jar.store(logout);
     // The hint is cleared, so a client reading only that agrees with the server.
     expect(jar.has('isAuthenticated')).toBe(false);
-    // And so is the session cookie. `destroy` leaves `@fastify/session` with
-    // nothing to write, so without clearing it here the browser would keep
-    // sending an id that resolves to nothing for another thirty days.
+    // And so is the session cookie: `destroy` leaves `@fastify/session` nothing
+    // to write, so unless it is cleared here the browser keeps sending a dead
+    // id for another thirty days.
     expect(jar.has('lg_sid')).toBe(false);
 
-    // And the session is gone server-side, not merely dropped by the client:
-    // replaying the cookie it held resolves to nothing.
+    // Gone server-side, not merely dropped by the client: replaying the cookie
+    // resolves to nothing.
     const replay = await api.inject({
       method: 'GET',
       url: '/api/user',
@@ -238,8 +233,8 @@ describe('local authentication', () => {
   });
 
   it('clears the cookies of a session whose account is gone', async () => {
-    // A second session of the same account, deleted from the first: the deleting
-    // response cleans up its own cookies, and nothing has reached this one.
+    // A second session of the same account: the deleting response cleans up its
+    // own cookies, and nothing has reached this one.
     await registerAndVerify('turing@example.com', 'Alan');
     const credentials = {
       email: 'turing@example.com',
@@ -267,9 +262,9 @@ describe('local authentication', () => {
     expect(response.statusCode).toBe(401);
     expect(response.json().code).toBe('unauthorized');
 
-    // The session resolves to a row that no longer exists, so the answer clears
-    // both cookies: the id can never resolve again, and a hint left behind has
-    // the client rendering a signed-in shell for an account that is gone.
+    // The session resolves to a row that no longer exists, so both cookies are
+    // cleared — a hint left behind renders a signed-in shell for a gone
+    // account.
     survivor.store(response);
     expect(survivor.has('lg_sid')).toBe(false);
     expect(survivor.has('isAuthenticated')).toBe(false);
@@ -337,10 +332,9 @@ describe('local authentication', () => {
   });
 
   it('says nothing about it when the mail server is down either', async () => {
-    // The dangerous asymmetry: an unknown address has no mail that can fail, so a
-    // failure reaching the caller would mark out every address that does have an
-    // account — the one thing this endpoint exists not to do. The answer is the
-    // 204 the spec above pins for an unknown address.
+    // An unknown address has no mail that can fail, so a failure reaching the
+    // caller would mark out every address that does have an account. Hence the
+    // same 204 the spec above pins for an unknown address.
     api.mail.failNextSend = true;
 
     const response = await api.inject({
@@ -358,10 +352,9 @@ describe('accounts migrated from the legacy backend', () => {
   let api: E2eApp;
 
   /**
-   * A row as the migration will write it: a hash the legacy stack produced with
-   * `bcrypt` at 9 salt rounds, and an address it had already verified. Nothing
-   * about it goes through the new registration path, which is the point — this is
-   * the shape the database will be full of on cutover day.
+   * A row as the migration writes it: a legacy `bcrypt` hash at 9 salt rounds
+   * and an already-verified address, reaching the database without passing
+   * through the registration path.
    */
   const legacy = {
     username: 'Alan',
@@ -371,8 +364,7 @@ describe('accounts migrated from the legacy backend', () => {
   };
 
   beforeAll(async () => {
-    // Cost 12, so the legacy hash is below it and the login has a reason to
-    // rewrite it. The rest of the suite runs cheaper.
+    // Cost 12, above the legacy hash, so the login has a reason to rewrite it.
     api = await startE2eApp({ BCRYPT_COST: '12' });
     await api.db.insert(users).values({
       username: legacy.username,
@@ -465,9 +457,8 @@ describe('what a password reset does to sessions', () => {
     });
     expect(confirm.statusCode).toBe(204);
 
-    // A reset is what a compromised account has. Sessions opened on the old
-    // password have to end with it, or an intruder keeps their access through the
-    // very act meant to take it away.
+    // A reset is what a compromised account gets, so sessions opened on the old
+    // password have to end with it.
     for (const jar of [desktop, phone]) {
       const response = await api.inject({
         method: 'GET',
@@ -494,8 +485,8 @@ describe('credential rate limiting', () => {
   });
 
   it('cuts off repeated attempts from one address', async () => {
-    // Ten per ten minutes on the shared `credentials` budget, so the eleventh is
-    // refused whether or not the address exists.
+    // Ten per ten minutes on the shared `credentials` budget, whether or not
+    // the address exists.
     const attempts = await Promise.all(
       Array.from({ length: 11 }, () =>
         api.inject({

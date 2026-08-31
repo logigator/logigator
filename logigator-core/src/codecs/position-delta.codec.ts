@@ -2,15 +2,14 @@ import { SerializedComponentBody } from '../model/serialized-circuit';
 
 /**
  * Delta codec for persisted component positions. Components are emitted sorted
- * by (type, y, x) and each `pos` is stored relative to the previous
- * component's absolute position (the first is relative to the origin). The
- * sort clusters nearby same-type components so the deltas are small, repeating
- * values — absolute coordinates are the high-entropy part of the document that
- * gzip cannot remove, deltas compress away almost entirely.
+ * by (type, y, x), each `pos` relative to the previous component's absolute
+ * position and the first relative to the origin. The sort clusters nearby
+ * same-type components so the deltas are small and repeating: absolute
+ * coordinates are the high-entropy part gzip cannot remove, deltas compress
+ * away almost entirely.
  *
- * Like the wire chain, encoding defines the document's component order;
- * consumers that align per-component data with the document
- * (`ProjectDump.componentIds`) map through the returned emission order.
+ * As with the wire chain, encoding defines the document's component order, so
+ * per-component data is aligned through the returned emission order.
  */
 
 /** A decode failure: structurally invalid persisted component positions. */
@@ -67,9 +66,9 @@ function isNumberPair(value: unknown): value is [number, number] {
 
 /**
  * Restores absolute positions from the delta encoding, in document order.
- * Throws {@link PositionDeltaDecodeError} when an entry's `pos` is not a
- * number pair (every entry contributes to the running position, so a broken
- * one poisons everything after it — fail the document instead).
+ * Throws {@link PositionDeltaDecodeError} when an entry's `pos` is not a number
+ * pair: every entry feeds the running position, so a broken one would poison
+ * everything after it.
  */
 export function decodeComponentPositions(
   components: readonly SerializedComponentBody[]

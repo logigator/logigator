@@ -8,20 +8,15 @@ import { ProjectService } from '../../../project/project.service';
 import { TranslateDirective } from '../../../translation/translate.directive';
 
 /**
- * Renderer for {@link UpdateAllInstancesComponentAction}: a button shown whenever
- * the active project holds at least one instance of this type that is behind its
- * master, which brings **all** of them up to date in one undo entry.
- *
- * Config-scoped, so it surfaces on a selected instance *and* on a palette
- * selection — the type is what it acts on, not the selection. It stays visible
- * when the selected instance is the only outdated one; the count in the label
- * says how many instances the click covers.
+ * Brings every instance of this type up to its master in one undo entry, shown
+ * whenever the active project holds an outdated one. Config-scoped: the type
+ * is what it acts on, so a palette selection carries it too.
  */
 @Component({
   selector: 'app-update-all-instances-action',
   imports: [LgButton, TranslateDirective],
-  // `display: contents` so this action's host leaves no empty cell in the
-  // settings panel's action grid when hidden; the button is the grid item.
+  // `display: contents` so a hidden host leaves no empty cell in the action
+  // grid; the button is the grid item.
   host: { class: 'contents' },
   template: `<ng-container *appTranslate="let t">
     @if (outdatedCount(); as count) {
@@ -45,7 +40,7 @@ export class UpdateAllInstancesActionComponent {
   private readonly outdatedInstances = inject(OutdatedInstancesService);
   private readonly projectService = inject(ProjectService);
 
-  /** Guards against a second click while the master's circuit is being fetched. */
+  /** Guards a second click while the master's circuit is fetched. */
   protected readonly busy = signal(false);
 
   protected readonly outdatedCount = computed(() =>
@@ -54,8 +49,8 @@ export class UpdateAllInstancesActionComponent {
 
   protected async updateAll(): Promise<void> {
     const project = this.projectService.activeProject();
-    // The counts are scanned from the active project, so that is what the batch
-    // acts on — the ghost context carries no project of its own.
+    // The counts are scanned from the active project, so that is what the
+    // batch acts on; a ghost context carries no project of its own.
     if (!project || this.busy()) return;
 
     const typeId = this.context().config.type;
@@ -64,8 +59,8 @@ export class UpdateAllInstancesActionComponent {
 
     this.busy.set(true);
     try {
-      // The master may be a summary-only cloud preload; load its circuit once for
-      // the whole batch, or every replacement would snapshot empty content.
+      // The master may be a summary-only cloud preload; load its circuit once
+      // for the batch, or every replacement snapshots empty content.
       if (
         !(await this.customComponentService.ensureMasterCircuit(masterTypeId))
       )

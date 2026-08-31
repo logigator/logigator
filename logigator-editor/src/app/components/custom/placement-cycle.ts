@@ -5,14 +5,13 @@ import { getStaticDI } from '../../utils/get-di';
 import { CustomComponentRegistry } from './custom-component-registry.service';
 
 /**
- * Whether placing `config` into `project` would close a dependency cycle: only
- * possible when placing a custom **master** into the editor for a custom master
- * it (transitively) feeds. Built-ins, frozen snapshots, and placements into the
- * main project never cycle.
+ * Whether placing `config` into `project` closes a dependency cycle, which is
+ * possible only for a custom master placed into the editor for a master it
+ * transitively feeds. Built-ins, frozen snapshots and the main project never
+ * cycle.
  *
- * The palette already hides masters that would cycle, but every path that can
- * place a component checks anyway — the placement session (a stale
- * `componentToPlace`) and the automation API (an agent naming any type id).
+ * The palette already hides masters that would cycle, but a stale
+ * `componentToPlace` or an automation call naming any type id reaches here too.
  */
 export function wouldCyclePlacement(
   project: Project,

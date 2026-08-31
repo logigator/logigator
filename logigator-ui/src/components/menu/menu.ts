@@ -17,10 +17,7 @@ import { LgFadeIn } from '../../internal/fade-in';
 import { createConnectedOverlay } from '../../internal/overlay';
 import { MENU_ITEM_CLASS, MenuItem } from './menu-item.model';
 
-/**
- * Edge-aligned drop positions (the panel hugs an edge of the trigger, not its
- * centre) — below/right-aligned first, then below/left, then the upward flips.
- */
+/** Edge-aligned, not centred: below/right first, then below/left, then flips. */
 const MENU_POSITIONS: ConnectedPosition[] = [
   {
     originX: 'end',
@@ -53,13 +50,11 @@ const MENU_POSITIONS: ConnectedPosition[] = [
 ];
 
 /**
- * A popup menu over `cdk/overlay`. A trigger calls `toggle($event)` (anchors to
- * the event target) / `hide()`; `onShow`/`onHide` fire on open/close so the
- * trigger can reflect the open state. Renders an optional projected `#start`
- * block (large non-menu content) above the `model` items; each item uses the
- * `#item` slot (`$implicit` = the item) or default icon+label chrome. Items run
- * their `command` and close; dismisses on outside-click or Escape. Keyboard
- * focus roves the items with the arrow keys.
+ * A popup menu over `cdk/overlay`. A trigger calls `toggle($event)`, which
+ * anchors to the event target, or `hide()`; `onShow`/`onHide` let the trigger
+ * reflect the open state. An optional `#start` block sits above the `model`
+ * items, and `#item` replaces a row's default icon+label chrome. Items run
+ * their `command` and close; outside-click and Escape dismiss.
  */
 @Component({
   selector: 'lg-menu',
@@ -128,7 +123,6 @@ export class LgMenu implements OnDestroy {
   private subscriptions: Subscription | null = null;
   private trigger: HTMLElement | null = null;
 
-  /** Open anchored to the event target, or close if already open. */
   toggle(event: Event): void {
     if (this.overlayRef) {
       this.hide();
@@ -156,8 +150,8 @@ export class LgMenu implements OnDestroy {
   }
 
   protected onKeydown(event: KeyboardEvent): void {
-    // A nested control in the #start slot (e.g. an lg-select) handles its own
-    // keys and preventDefaults them; don't also rove/close the menu on those.
+    // A nested control in the #start slot handles and preventDefaults its own
+    // keys; those must not also rove or close the menu.
     if (event.defaultPrevented) {
       return;
     }
@@ -235,9 +229,8 @@ export class LgMenu implements OnDestroy {
   }
 
   /**
-   * Moves focus into the overlay so its keydown handler (Escape, roving) is
-   * reachable: the first item, or the panel itself when the menu is all
-   * `#start` content with no items.
+   * Moves focus into the overlay so its keydown handler is reachable: the
+   * first item, or the panel itself when the menu is all `#start` content.
    */
   private focusFirstItem(): void {
     queueMicrotask(() => {

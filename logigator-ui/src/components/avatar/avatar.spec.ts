@@ -46,9 +46,7 @@ describe('LgAvatar', () => {
   it('offers every width of every encoding, the first format first', () => {
     const el = render({ image: LADDER });
 
-    // One <source> per encoding, in the order the caller listed them — so the
-    // caller's ordering is the preference order and the component holds no
-    // opinion about which formats are better.
+    // One <source> per encoding, in the order the caller listed them.
     const sources = [...el.querySelectorAll('source')];
     expect(sources.map((s) => s.getAttribute('type'))).toEqual(['image/webp']);
     expect(sources[0].getAttribute('srcset')).toBe(

@@ -25,12 +25,9 @@ export class UserApiService {
   }
 
   /**
-   * POST /api/auth/logout — ends the server session.
-   *
-   * Answers 204 whether or not there was a session, so a client holding a stale
-   * hint cookie can always clear itself. Nothing navigates: the legacy route
-   * answered with a redirect, which the editor had to defuse with
-   * `fetch(redirect: 'manual')`.
+   * POST /api/auth/logout — ends the server session. Answers 204 whether or not
+   * there was one, so a client holding a stale hint cookie can clear itself,
+   * and nothing navigates.
    */
   logout(): Observable<void> {
     return this.api.postEmpty('/api/auth/logout');

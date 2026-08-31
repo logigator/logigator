@@ -17,8 +17,7 @@ describe('CookieService', () => {
   });
 
   afterEach(() => {
-    // Destroy the injector (runs the service's ngOnDestroy) while the stubbed
-    // cookieStore is still in place, then remove the stub.
+    // ngOnDestroy has to run while the stubbed cookieStore is still there.
     TestBed.resetTestingModule();
     clearCookie('tutorials');
     clearCookie('preferences');
@@ -28,12 +27,11 @@ describe('CookieService', () => {
   });
 
   it('reads existing cookies synchronously at construction', () => {
-    // Set before bootstrap, as a page load has it: the service reads the
-    // document's cookies when it is constructed.
+    // Set before bootstrap, as a page load has it.
     document.cookie = 'tutorials=abc;path=/';
     configureTestBed();
 
-    // No await/tick: the value must be available on the first synchronous read.
+    // The value must be there on the first synchronous read.
     expect(TestBed.inject(CookieService).get('tutorials')).toBe('abc');
   });
 
@@ -44,18 +42,17 @@ describe('CookieService', () => {
 
     service.set('tutorials', 'abc');
 
-    // Written for `/`, not for the editor's path: a path-scoped copy shadows the
-    // origin-wide cookie on editor requests and is invisible to the rest of the
-    // site, which is the whole point of sharing one.
+    // Written for `/`: a path-scoped copy shadows the origin-wide cookie on
+    // editor requests and is invisible to the rest of the site.
     expect(write).toHaveBeenCalledWith(expect.stringContaining('path=/'));
-    // No await: the mirror into the reactive map has to be synchronous, since
-    // cookieStore change events arrive a task later.
+    // The mirror into the reactive map is synchronous; cookieStore change
+    // events arrive a task later.
     expect(service.get('tutorials')).toBe('abc');
   });
 
   it('seeds from document.cookie even when cookieStore reads are async', () => {
-    // Force the cookieStore branch with a getAll() that never resolves; without
-    // the synchronous seed the map would stay empty until that promise settles.
+    // A getAll() that never resolves: without the synchronous seed the map
+    // would stay empty until it settles.
     (window as unknown as { cookieStore: unknown }).cookieStore = {
       getAll: () => new Promise<never>(() => undefined),
       addEventListener: () => undefined,

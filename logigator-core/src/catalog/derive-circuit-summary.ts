@@ -6,14 +6,9 @@ import type {
 import { PLUG_OPTIONS } from './built-ins/input.meta';
 
 /**
- * The port surface a circuit exposes when it is placed inside another one: how
- * many ports, and what each is called.
- *
- * The same three values a stored library component carries as columns, and the
- * same three an embedded {@link SnapshotDefinition} declares — which is why they
- * are derived here rather than asserted by whoever wrote the document. A
- * circuit's ports *are* the plugs placed in it; anything else is a claim about
- * them that can be wrong.
+ * The port surface a circuit exposes when placed inside another one. Derived
+ * rather than taken from the document: a circuit's ports are the plugs placed
+ * in it, and anything else is a claim about them that can be wrong.
  */
 export interface CircuitSummary {
   numInputs: number;
@@ -23,14 +18,10 @@ export interface CircuitSummary {
 }
 
 /**
- * Reads a circuit's port surface off the INPUT/OUTPUT plugs in its body.
- *
- * This is the data-side twin of the editor's live derivation, and the only place
- * on this side that knows the plug → port mapping. Ports are ordered by each
- * plug's `index` option and then by document order: the editor's Ports panel
- * always writes clean `0..n-1` indices, so duplicates and gaps only arise in
- * externally authored or legacy data, and the tiebreaker keeps this a total
- * order that never throws.
+ * Reads a circuit's port surface off the INPUT/OUTPUT plugs in its body. Ports
+ * are ordered by each plug's `index` option, then by document order — the
+ * editor writes clean `0..n-1` indices, so duplicates and gaps arise only in
+ * externally authored data and the tiebreaker keeps the order total.
  */
 export function deriveCircuitSummary(
   body: SerializedCircuitBody
@@ -58,10 +49,9 @@ function plugsInPortOrder(
 }
 
 /**
- * A plug's position in its group. Absent or non-numeric reads as 0, which sorts
- * it to the front of the group and leaves document order to break the tie —
- * {@link deriveCircuitSummary} must answer for any parseable document, and a
- * document that omits the option is one the editor's own load path accepts.
+ * A plug's position in its group. Absent or non-numeric reads as 0, sorting it
+ * to the front with document order breaking the tie, because
+ * {@link deriveCircuitSummary} must answer for any parseable document.
  */
 function plugIndex(component: SerializedComponentBody): number {
   const value = component.options[INDEX_OPTION];

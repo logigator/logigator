@@ -11,9 +11,8 @@ import { WorkMode } from '../work-mode/work-mode.enum';
 import { makeAnd } from '../../testing/factories';
 import { AndComponent } from '../components/component-types/and/and.component';
 
-// A trivial host whose change-detection pass flushes the inspector's
-// `toObservable` subscription effect, so the active project's selection stream
-// is live before the assertions run.
+// Its change-detection pass flushes the inspector's `toObservable` subscription
+// effect, so the selection stream is live before the assertions run.
 @Component({
   selector: 'app-test-host',
   template: ''
@@ -47,7 +46,7 @@ describe('SelectionInspectorService', () => {
       isPublic: false
     });
     projectService.setMainProject(project);
-    // Flush the inspector's effect so it subscribes to this project's selection.
+    // Subscribe the inspector to this project's selection.
     fixture.detectChanges();
   });
 

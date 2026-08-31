@@ -5,7 +5,6 @@ import type { Locale } from '../common/locale';
 import { renderMail, type MailKind } from './mail-template';
 import { MAIL_TRANSPORT } from './mail.transport';
 
-/** Who the mail goes to, and what to call them. */
 export interface MailRecipient {
   email: string;
   username: string;
@@ -13,11 +12,9 @@ export interface MailRecipient {
 }
 
 /**
- * Sends the handful of transactional mails the API owns.
- *
- * Callers name an intent, never a template or a URL: the link a mail carries is
- * built here, from the configured public URL, so the paths live in one place and
- * a token can never be pasted into the wrong one.
+ * Sends the handful of transactional mails the API owns. Callers name an
+ * intent, never a template or a URL: the link is built here from the configured
+ * public URL, so a token can never be pasted into the wrong path.
  */
 @Injectable()
 export class MailService {
@@ -59,16 +56,10 @@ export class MailService {
   }
 
   /**
-   * Mails a client-side error report to whoever reads them, or does nothing when
-   * nobody does.
-   *
-   * The one mail with no recipient in its signature and no locale: it goes to the
-   * operator rather than to a user, so the address is configuration and the
-   * language is not a question. It is still an intent rather than a template —
-   * the caller says what happened, and where that goes is decided here.
-   *
-   * The circuit rides along as an attachment. It is the most useful part of a
-   * report and the part that would make the body unreadable inline.
+   * Mails a client-side error report to whoever reads them, or does nothing
+   * when nobody does. The one mail with no recipient and no locale: it goes to
+   * the operator, so the address is configuration. The circuit rides along as
+   * an attachment, since inline it would make the body unreadable.
    *
    * @returns whether a mail was sent.
    */
@@ -116,8 +107,7 @@ export class MailService {
     });
 
     if (!this.env.SMTP_URL) {
-      // Nothing was sent: log enough for a developer to follow the flow, link
-      // included, since that is the only way to reach the next step locally.
+      // Nothing was sent, so the link is the only way to reach the next step.
       this.logger.warn(
         `No SMTP_URL configured — ${kind} mail for ${recipient.email} was not sent. Link: ${link}`
       );

@@ -26,26 +26,20 @@ import { UserService } from '../../user/user.service';
 import { whenIdle } from '../../utils/scheduling';
 
 /**
- * Longest wait for an idle slice before a preview generation starts anyway.
- * Under a free-running simulation the main thread may never report idle, and
- * a preview of stale content is worse the longer it lags behind the save.
+ * Longest wait for an idle slice before preview generation starts anyway: a
+ * free-running simulation may never leave the main thread idle.
  */
 const PREVIEW_IDLE_TIMEOUT_MS = 2000;
 
-/**
- * Page size for the startup walk over the cloud library. The API caps a page at
- * a hundred rows, so the preload asks for the largest page it will serve and
- * pages until it has them all.
- */
+/** The API's page cap, so the library preload makes the fewest requests. */
 const LIBRARY_PAGE_SIZE = 100;
 
 /** Page size the Open dialog lists cloud projects at. */
 const PROJECT_PAGE_SIZE = 20;
 
 /**
- * Parses an API ISO timestamp into epoch ms for the registry's numeric
- * `lastEdited` (which the palette sorts by), or `undefined` when unparsable
- * so the registry falls back to now.
+ * Epoch ms for the registry's numeric `lastEdited`, or `undefined` when
+ * unparsable, which makes the registry fall back to now.
  */
 function isoToEpoch(iso: string): number | undefined {
   const t = Date.parse(iso);
@@ -53,9 +47,8 @@ function isoToEpoch(iso: string): number | undefined {
 }
 
 /**
- * The API answers an empty lineage with an empty array; the file format spells
- * "not a fork" as an absent field. Normalizing here keeps the difference out of
- * everything downstream, which only ever asks for the last entry.
+ * The API spells "not a fork" as an empty array, the file format as an absent
+ * field.
  */
 function toMetadataAttribution(
   chain: FileForkAttributionV1[]
@@ -64,14 +57,12 @@ function toMetadataAttribution(
 }
 
 /**
- * Server transport + codec + metadata + build, returning `Project`s. Owns every
- * method that talks to the cloud API; the facade keeps main-slot orchestration,
- * navigation and dirty-dispatch.
+ * Server transport + codec + metadata + build, returning `Project`s. The
+ * facade keeps main-slot orchestration, navigation and dirty-dispatch.
  *
- * The wire format is the **native versioned document** — the same one a `.lgix`
- * export carries — so encoding is `CircuitFileService.toDocument` and decoding
- * is `CircuitFileService.decode`, exactly as for a local file. There is no
- * server-specific codec any more.
+ * The wire format is the native versioned document, the same one a `.lgix`
+ * export carries, so this gateway has no codec of its own: it encodes with
+ * `CircuitFileService.toDocument` and decodes with `CircuitFileService.decode`.
  *
  * Concurrency is the document's integer `version`: a read hands one back, a
  * save presents it, and a write that lost the race answers `version_conflict`
@@ -93,13 +84,10 @@ export class ServerPersistenceGateway {
   private readonly userService = inject(UserService);
 
   /**
-   * Per-session cache of a server master's last-fetched circuit body + version,
-   * keyed by the master's server uuid. Populated by the first fetch (placement
-   * or edit-open) and read by both so a component is fetched from the API at
-   * most once, then invalidated on save so a reopen re-reads the saved state.
-   * Holds the clean persisted body — never the live editor working copy (that
-   * lives on the registry definition, kept current by `DefinitionBinding`), so
-   * discarded edits are never resurrected on reopen.
+   * Per-session cache of a server master's circuit body + version by server
+   * uuid, so a master is fetched at most once; invalidated on save. Holds the
+   * clean persisted body, never the live working copy (that lives on the
+   * registry definition), so discarded edits are not resurrected on reopen.
    */
   private readonly _masterCircuitCache = new Map<
     string,
@@ -155,13 +143,10 @@ export class ServerPersistenceGateway {
   }
 
   /**
-   * Promotes a fresh in-memory draft to a **server** project without discarding
-   * its circuit or undo history: one `POST /api/projects` carrying the document,
-   * then flips the project's metadata to `source:'server'` — but only once that
-   * round-trip commits, so a failed create leaves the live project an untouched
-   * local draft (retryable) rather than a half-promoted record. Returns the new
-   * server id. Runs under the same mid-save edit guard as {@link saveProject}:
-   * an edit landing mid-promote keeps the project dirty.
+   * Promotes a fresh in-memory draft to a server project without discarding
+   * its circuit or undo history. Metadata flips to `source:'server'` only once
+   * the create commits, so a failure leaves an untouched, retryable local
+   * draft. An edit landing mid-promote keeps the project dirty.
    */
   async promoteToServer(
     project: Project,
@@ -189,10 +174,9 @@ export class ServerPersistenceGateway {
   }
 
   /**
-   * Creates a server project from an arbitrary project's current circuit — pure
-   * transport, touching no metadata store, board preview or dirty state, so it is
-   * safe for a throwaway project built from a stored record (uploading a
-   * not-currently-open local project). Returns the new server id.
+   * Creates a server project from an arbitrary project's current circuit. Pure
+   * transport, touching no metadata store, preview or dirty state, so it is
+   * safe for a throwaway project built from a stored record.
    */
   async createServerProjectFromProject(
     project: Project,
@@ -207,15 +191,12 @@ export class ServerPersistenceGateway {
   }
 
   /**
-   * Creates a server project record with `project`'s current circuit already in
-   * it — one round trip, because a create carries its document. The shared
-   * transport core behind create-from-draft, promote and throwaway-upload;
-   * touches no metadata store, board preview or dirty state.
+   * Shared transport core behind create-from-draft, promote and
+   * throwaway-upload; a create carries its document, so it is one round trip.
    *
-   * `opts.attribution` is how fork lineage survives an upload: the server reads
-   * the chain's last entry out of the document, checks it against its own rows
-   * and links `forkedFrom` from that. There is no request field for it — the
-   * claim travels inside the document it describes.
+   * `opts.attribution` is how fork lineage survives an upload: there is no
+   * request field for it, the claim travels inside the document it describes,
+   * and the server links `forkedFrom` from the chain's last entry.
    */
   private _createServerProject(
     project: Project,
@@ -246,17 +227,15 @@ export class ServerPersistenceGateway {
     return this.projectApi.delete(uuid);
   }
 
-  /** Deletes (unpublishes) a server library component via the API. */
+  /** Deletes (unpublishes) a server library component. */
   deleteComponent(uuid: string): Observable<void> {
     return this.componentApi.delete(uuid);
   }
 
   /**
-   * Updates a server component's descriptive metadata via
-   * `PATCH /api/components/:id`. Name, symbol and description travel in placed
-   * snapshots, so the server bumps the monotonic `version` and re-stamps the
-   * last-edited time; both are emitted for the registry to mirror, which is what
-   * offers instances frozen at an older version an update.
+   * Name, symbol and description travel in placed snapshots, so the server
+   * bumps `version` and re-stamps the edit time; both are emitted for the
+   * registry to mirror, which is what offers older instances an update.
    */
   updateComponentDetails(
     uuid: string,
@@ -271,10 +250,8 @@ export class ServerPersistenceGateway {
   }
 
   /**
-   * Renames a server project via `PATCH /api/projects/:id`. A rename is content
-   * the server stamps, so it bumps `version`; if the project is currently open,
-   * its in-memory metadata — the title bar, and the counter the next save
-   * presents — is synced on success.
+   * A rename is content the server stamps, so it bumps `version`; an open
+   * project's metadata is synced so the next save presents the new one.
    */
   renameProject(uuid: string, name: string): Observable<void> {
     return this.projectApi.update(uuid, { name }).pipe(
@@ -312,8 +289,8 @@ export class ServerPersistenceGateway {
     );
     const project = buildProject(components, wires);
 
-    // Shares are read-only — disable dirty tracking subscription, and carry no
-    // version: nothing here will ever present one.
+    // Shares are read-only: no dirty tracking, and no version — nothing here
+    // ever presents one.
     this.metadataStore.register(
       project,
       {
@@ -322,7 +299,6 @@ export class ServerPersistenceGateway {
         type,
         source: 'share',
         isPublic: summary.public,
-        // The link is what this share was fetched by; the clone action reuses it.
         link: linkId,
         attribution: toMetadataAttribution(detail.attribution)
       },
@@ -332,11 +308,7 @@ export class ServerPersistenceGateway {
     return { project, type };
   }
 
-  /**
-   * Clones a share into the signed-in user's own library, returning the copy's
-   * id and which library it landed in. One endpoint for both kinds — the link
-   * already says what it points at, so the caller no longer has to.
-   */
+  /** One endpoint for both kinds: the link says what it points at. */
   async cloneFromShare(
     linkId: string
   ): Promise<{ id: string; type: 'project' | 'comp' }> {
@@ -347,7 +319,7 @@ export class ServerPersistenceGateway {
         : { id: response.component.id, type: 'comp' };
     } catch (err) {
       // Cloning writes into an account, so it is the one half of sharing that
-      // needs a session. The API says so; nothing is asked in advance.
+      // needs a session.
       if (isApiError(err, 'unauthorized')) {
         this.toast.error(
           this.translation.translate('persistence.shareAuthRequired'),
@@ -360,13 +332,7 @@ export class ServerPersistenceGateway {
     }
   }
 
-  /**
-   * Creates a new **server** library master: one `POST /api/components`
-   * establishing the record and its version, then registers the master (server
-   * uuid id) and opens an empty editor Project (`type:'comp'`,
-   * `source:'server'`). Returns the Project + master type id so the caller
-   * (`CustomComponentService`) opens the tab and attaches a binding.
-   */
+  /** Creates a server library master and an empty editor Project for it. */
   async createComponent(meta: {
     name: string;
     symbol: string;
@@ -408,13 +374,10 @@ export class ServerPersistenceGateway {
   }
 
   /**
-   * Promotes a browser master to the server library: one `POST /api/components`
-   * carrying the given (temp) project's circuit — embedding a self-contained
-   * snapshot of every custom it places, exactly like a normal component save.
-   * The caller owns flipping the registry/metadata and removing the browser
-   * record; this method is pure transport (no local state changes), so a failed
-   * create leaves nothing to unwind. Returns the new server id, its version and
-   * its share details, so the caller can re-point an open editor's metadata.
+   * Promotes a browser master to the server library, carrying the temp
+   * project's circuit. Pure transport — the caller owns the registry/metadata
+   * flip and removing the browser record — so a failed create leaves nothing
+   * to unwind.
    */
   async promoteComponentFromProject(
     project: Project,
@@ -450,11 +413,9 @@ export class ServerPersistenceGateway {
   }
 
   /**
-   * Loads a **server** library master into a fresh editor Project (the universal
-   * embedded-snapshot path: the document embeds every custom it places, so no
-   * extra fetches). Registers the master, reusing its session type id if already
-   * known. Returns the Project + master type id for the caller to open a tab /
-   * set as main and attach a binding.
+   * Loads a server library master into a fresh editor Project; the document
+   * embeds every custom it places, so there are no extra fetches. Reuses the
+   * master's session type id when already known.
    */
   async loadComponent(
     uuid: string
@@ -503,17 +464,14 @@ export class ServerPersistenceGateway {
   }
 
   /**
-   * Registers every cloud (server) library master into the registry at startup so
-   * they show in the palette and resolve through the promotion alias map after a
-   * reload (the alias points at a server id that must be loaded to be useful).
+   * Registers every cloud master into the registry at startup so they show in
+   * the palette and resolve through the promotion alias map after a reload.
    *
-   * Walks `GET /api/components` page by page — the listing is bounded, so the
-   * whole library is several requests rather than one unbounded read, and none
-   * of them carry a circuit. The summary carries everything a master needs
-   * except its circuit body, which is fetched lazily on first placement / update
-   * (see {@link PersistenceService.ensureServerMasterCircuit}). Best-effort:
-   * skips when unauthenticated/offline (the list call fails). Masters already
-   * known (loaded by an open project) are left alone.
+   * The listing is bounded and carries no circuit bodies; a body is fetched
+   * lazily on first placement or update
+   * (see {@link PersistenceService.ensureServerMasterCircuit}). Best-effort: a
+   * failing list call (unauthenticated or offline) just stops the walk.
+   * Masters already known are left alone.
    */
   async preloadServerMasters(): Promise<void> {
     let page = 0;
@@ -526,9 +484,9 @@ export class ServerPersistenceGateway {
           this.componentApi.list(page, LIBRARY_PAGE_SIZE)
         );
       } catch (err) {
-        // Usually not authenticated (401) or offline — no cloud library to
-        // preload. Logged at debug so a genuine failure is still traceable
-        // without nagging signed-out users.
+        // Usually unauthenticated or offline — no cloud library to preload.
+        // Debug so a genuine failure stays traceable without nagging
+        // signed-out users.
         this.logging.debug(
           `Server master preload stopped at page ${page}: ${formatHttpError(err)}`,
           'ServerPersistenceGateway'
@@ -551,7 +509,7 @@ export class ServerPersistenceGateway {
             link: summary.link,
             isPublic: summary.public,
             lastEdited: isoToEpoch(summary.lastEditedAt)
-            // circuit omitted — loaded on demand by ensureServerMasterCircuit
+            // circuit omitted — fetched on demand
           },
           'server'
         );
@@ -560,26 +518,22 @@ export class ServerPersistenceGateway {
       loaded += result.entries.length;
       page++;
       // An empty page ends the walk whatever the count says: a component
-      // deleted while the walk was in flight would otherwise loop forever.
+      // deleted mid-walk would otherwise loop forever.
       if (result.entries.length === 0 || loaded >= result.total) return;
     }
   }
 
   /**
-   * Fetches a server component's circuit body (`GET /api/components/:id`) for
-   * lazy hydration of a summary-only master. Used the first time a preloaded
-   * cloud master is placed or updated. Served from {@link _masterCircuitCache}
-   * when the master was already fetched this session (placement or edit-open).
+   * A server component's circuit body, for lazy hydration of a summary-only
+   * master. Served from {@link _masterCircuitCache} after the first fetch.
    */
   async loadComponentCircuit(uuid: string): Promise<SerializedCircuitBody> {
     return (await this._fetchMasterCircuit(uuid)).body;
   }
 
   /**
-   * The single fetch-once primitive behind placement and edit-open: returns the
-   * master's circuit body + version, fetching (and ingesting its embedded
-   * snapshots) exactly once per session and caching the result. A cache hit skips
-   * the GET and re-ingest — the snapshots are already registered.
+   * The fetch-once primitive behind placement and edit-open: a cache hit skips
+   * the GET and the re-ingest of the document's embedded snapshots.
    */
   private async _fetchMasterCircuit(
     uuid: string
@@ -596,13 +550,11 @@ export class ServerPersistenceGateway {
   }
 
   /**
-   * Loads an already-registered server master into a fresh editor Project from
-   * the shared circuit cache (a single GET across placement and every edit-open),
-   * mirroring {@link loadComponent} but without a redundant fetch. The master's
-   * summary is read from the registry (it is preloaded before it can be edited);
-   * the metadata version comes from the cached fetch so saves keep their
-   * optimistic concurrency check. Falls back to {@link loadComponent} when the
-   * master is not registered (a direct deep link that outraced the preload).
+   * Loads an already-registered server master from the shared circuit cache,
+   * so placement and every edit-open share one GET. The summary comes from the
+   * registry, the version from the cached fetch so saves keep their
+   * concurrency check. Falls back to {@link loadComponent} when the master is
+   * not registered — a deep link that outraced the preload.
    */
   async loadComponentForEdit(
     uuid: string
@@ -633,9 +585,8 @@ export class ServerPersistenceGateway {
   }
 
   /**
-   * Drops the cached circuits, e.g. on logout when the server masters are removed
-   * from the registry and their session type ids retired — a stale cached body
-   * would hold ids the registry no longer knows.
+   * Dropped on logout: the server masters leave the registry and their session
+   * type ids retire, so a cached body would hold ids nothing can resolve.
    */
   clearMasterCircuitCache(): void {
     this._masterCircuitCache.clear();
@@ -667,15 +618,12 @@ export class ServerPersistenceGateway {
   }
 
   /**
-   * Saves a custom-component editor (`type: 'comp'`, `source: 'server'`) to the
-   * server: `PUT /api/components/:id` with the native document, which embeds a
-   * self-contained snapshot of every custom it places. The port surface is
-   * derived server-side from that document rather than declared here — the
-   * plugs in the circuit are what a component's ports *are*, so a client
-   * asserting them could only ever disagree with the circuit it sent. Adopts the
-   * server's save-time `version`. Does not retroactively change placed instances
-   * — they are frozen snapshots; this only affects future placements and
-   * explicit per-instance updates.
+   * Saves a custom-component editor as the native document, which embeds a
+   * snapshot of every custom it places. The port surface is derived
+   * server-side from that document: the plugs in the circuit are what a
+   * component's ports *are*, so a client asserting them could only disagree
+   * with the circuit it sent. Placed instances are frozen snapshots and do not
+   * change; this affects future placements and explicit per-instance updates.
    */
   async saveComponent(project: Project): Promise<void> {
     const metadata = this.metadataStore.getMetadata(project)!;
@@ -692,16 +640,14 @@ export class ServerPersistenceGateway {
           })
         );
 
-        // The persisted state changed: drop the cached body/version so the next
-        // placement or edit-open re-fetches the saved circuit rather than serving
-        // the pre-save copy.
+        // The next placement or edit-open must re-fetch the saved circuit
+        // rather than serve the pre-save copy.
         this._masterCircuitCache.delete(metadata.id);
 
         this.metadataStore.updateVersion(project, summary.version);
         if (masterTypeId !== undefined) {
           this.registry.setMasterVersion(masterTypeId, summary.version);
-          // Re-stamp the save time so the palette re-sorts the just-edited
-          // master to the top.
+          // Re-stamp the save time so the palette re-sorts this master up.
           this.registry.setMasterLastEdited(
             masterTypeId,
             isoToEpoch(summary.lastEditedAt)
@@ -719,14 +665,12 @@ export class ServerPersistenceGateway {
   }
 
   /**
-   * Toasts a failed project/component save with the most specific message
-   * available, branching on the API's own error code rather than on the status:
-   * several failures share a status, and the message is human-facing.
+   * Branches on the API's own error code rather than the status: several
+   * failures share a status, and the message is human-facing.
    *
-   * `unauthorized` means the server session is gone underneath a still-true auth
-   * cookie — flip to signed-out (which also clears the cookie and, via the
-   * session lifecycle, the cloud library) and tell the user to log in again; the
-   * unsaved changes stay dirty in the editor.
+   * `unauthorized` means the server session is gone underneath a still-true
+   * auth cookie — flip to signed-out and ask for a fresh login; the unsaved
+   * changes stay dirty.
    */
   private _reportSaveError(err: unknown): void {
     if (isApiError(err, 'unauthorized')) {
@@ -754,18 +698,18 @@ export class ServerPersistenceGateway {
   }
 
   /**
-   * Renders and uploads both theme thumbnails after a successful server save.
-   * Fire-and-forget: a preview is a nice-to-have, so any failure is logged and
-   * swallowed rather than surfaced or allowed to fail the save. The parts are
-   * named for the theme each shows, so neither side depends on their order.
+   * Renders and uploads both theme thumbnails after a successful save.
+   * Fire-and-forget: a failure is logged and swallowed rather than failing the
+   * save. The parts are named for the theme each shows, so neither side
+   * depends on their order.
    */
   private async _uploadPreview(
     project: Project,
     projectId: string
   ): Promise<void> {
     try {
-      // A preview is cosmetic — wait for an idle slice so the generation
-      // cost never stacks onto the frames doing the save's own UI work.
+      // Cosmetic — wait for an idle slice rather than stacking the generation
+      // cost onto the frames doing the save's own UI work.
       await whenIdle(PREVIEW_IDLE_TIMEOUT_MS);
       const previews = await this.snapshot.generatePreviews(project);
       if (!previews) return;

@@ -9,18 +9,16 @@ import { AnalyticsService } from '../analytics/analytics.service';
 /**
  * Catches every otherwise-uncaught exception and unhandled promise rejection.
  *
- * The full error is logged on *every* occurrence (the console dedupes visually).
- * The first error then opens the bug-report dialog via {@link BugReportService},
- * which owns the lockout/cooldown so a cascade of follow-on errors can't reopen
- * it. Services are resolved lazily through the injector to avoid a bootstrap DI
- * cycle (this handler is constructed very early); if the report service isn't
- * available yet, a throttled generic toast is shown instead. Everything here is
- * guarded so a failure while reporting can never re-enter this handler.
+ * Every occurrence is logged; the first then opens the bug-report dialog via
+ * {@link BugReportService}, which owns the lockout and cooldown. Services are
+ * resolved lazily through the injector to avoid a bootstrap DI cycle, since
+ * this handler is constructed very early; before the report service exists, a
+ * throttled generic toast stands in. Everything is guarded so a failure while
+ * reporting cannot re-enter the handler.
  *
- * A single correlation id is minted per error and handed to both the analytics
- * sink (as `correlation_id` on the PostHog `$exception`) and the bug report (as
- * `correlationId` in the backend payload), so a PostHog issue can be traced to
- * the full report — including the project dump — on our own backend.
+ * One correlation id per error goes to both the PostHog `$exception` and the
+ * bug report, so an issue can be traced to the full report — project dump
+ * included — on our own backend.
  */
 @Injectable()
 export class GlobalErrorHandler implements ErrorHandler {
@@ -55,8 +53,8 @@ export class GlobalErrorHandler implements ErrorHandler {
         return;
       }
     } catch {
-      // The report service isn't constructable yet (very early boot); fall
-      // through to the throttled toast so the error is still surfaced.
+      // Not constructable yet (very early boot); fall through to the
+      // throttled toast so the error is still surfaced.
     }
 
     try {

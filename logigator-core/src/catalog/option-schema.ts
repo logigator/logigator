@@ -1,14 +1,10 @@
 /**
  * The pure half of a component option: what values it accepts and what it
- * defaults to, with no renderer and no framework attached.
+ * defaults to, with no renderer attached. The editor pairs each `kind` with a
+ * `ComponentOption` subclass and the server validates documents against the
+ * same schemas, so a legal value has one definition rather than one per side.
  *
- * The editor pairs each schema `kind` with a `ComponentOption` subclass (which
- * adds the Angular renderer and the live value), and the server validates
- * documents against the same schemas — so "what is a legal value" has one
- * definition rather than one per side.
- *
- * `label`, `placeholder` and `dialogTitle` are translation keys, opaque
- * `string`s here; the editor re-asserts them against its translation schema.
+ * `label`, `placeholder` and `dialogTitle` are translation keys, opaque here.
  */
 
 /** One choice offered by a select option. */
@@ -22,9 +18,8 @@ interface OptionSchemaBase {
   /** Translation key of the option's inspector label. */
   readonly label: string;
   /**
-   * When `true`, the option is omitted from the generic settings form. The
-   * value still round-trips through the wire format — it is system-managed
-   * (e.g. a plug's `index`, driven by the Ports panel).
+   * Omits the option from the generic settings form. The value still
+   * round-trips; it is system-managed, like a plug's `index`.
    */
   readonly hidden?: boolean;
 }
@@ -60,10 +55,10 @@ export interface TextOptionSchema extends OptionSchemaBase {
   readonly placeholder?: string;
   readonly maxLength?: number;
   /**
-   * Source of the character class stripped from every write, as a string
-   * rather than a `RegExp`: a schema is plain data that crosses process and
-   * postMessage boundaries, and a shared `/g` instance would carry
-   * `lastIndex` between tests.
+   * Source of the character class stripped from every write. A string rather
+   * than a `RegExp` because a schema is plain data crossing postMessage
+   * boundaries, and a shared `/g` instance would carry `lastIndex` between
+   * tests.
    */
   readonly forbiddenChars?: string;
 }

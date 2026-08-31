@@ -52,8 +52,7 @@ describe('ImageExportService', () => {
         height: Math.round(r.height * GRID_SIZE * m)
       })),
       renderProjectToCanvas: vi.fn(() => fakeCanvas()),
-      // Whole-number resolutions land hairlines on whole pixels already; the
-      // real policy declines to supersample them (see BoardSnapshotService).
+      // The real policy declines to supersample whole-number resolutions.
       subPixelSupersample: vi.fn(() => 1)
     };
     toast = { error: vi.fn(), warn: vi.fn(), success: vi.fn(), info: vi.fn() };
@@ -70,8 +69,8 @@ describe('ImageExportService', () => {
 
   beforeEach(() => {
     downloads = [];
-    // jsdom/happy-dom don't implement object URLs; stub them and capture the
-    // download via the anchor's click rather than letting it navigate.
+    // jsdom/happy-dom implement no object URLs; capture the download via the
+    // anchor's click rather than letting it navigate.
     globalThis.URL.createObjectURL = vi.fn(() => 'blob:x');
     globalThis.URL.revokeObjectURL = vi.fn();
     clickSpy = vi

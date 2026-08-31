@@ -3,14 +3,10 @@ import { ENV, type Env } from '../config/env';
 import { REDIS, type RedisClient } from './redis.client';
 
 /**
- * Redis access, namespaced.
- *
- * Every key this API writes goes through {@link key}, because development shares
- * one Redis instance with the legacy backend until cutover — an unprefixed
- * `sess:<id>` would be ambiguous between the two. The helpers below are the
- * handful of shapes the API actually uses (sessions, short-lived verification
- * and reset tokens, fixed-window counters); anything more exotic can reach for
- * {@link client} directly.
+ * Redis access, namespaced. Every key goes through {@link key}, because
+ * development shares one Redis instance with the legacy backend and an
+ * unprefixed `sess:<id>` would be ambiguous between the two. The helpers cover
+ * the shapes the API uses; anything else reaches for {@link client} directly.
  */
 @Injectable()
 export class RedisService {
@@ -23,7 +19,6 @@ export class RedisService {
     this.prefix = env.REDIS_KEY_PREFIX;
   }
 
-  /** Namespaces a logical key. */
   key(...parts: string[]): string {
     return this.prefix + parts.join(':');
   }
@@ -50,9 +45,8 @@ export class RedisService {
     try {
       return JSON.parse(raw) as T;
     } catch {
-      // A value that does not parse is indistinguishable from an expired one for
-      // every caller here, and treating it as absent keeps a corrupt entry from
-      // failing requests until it expires.
+      // A value that does not parse is indistinguishable from an expired one
+      // for every caller here, so a corrupt entry reads as absent.
       return null;
     }
   }
@@ -83,13 +77,10 @@ export class RedisService {
    * Atomically counts a hit in a fixed window and returns the count so far. The
    * window starts with its first hit and the key disappears on its own.
    *
-   * Both commands travel in one transaction, and the expiry is `NX` — set only
-   * when the key has none. Counting and expiring as two round trips leaves a
-   * window where the process can die in between, and the counter that survives
-   * it has no TTL at all: the address it belongs to is then rate limited for
-   * good, with nothing short of manual surgery to bring it back. `NX` also heals
-   * such a key on its next hit, rather than sliding the window of a client that
-   * keeps knocking.
+   * Both commands travel in one transaction: a process dying between two round
+   * trips would leave a counter with no TTL, rate limiting its address for
+   * good. The expiry is `NX`, which heals such a key on its next hit rather
+   * than sliding the window of a client that keeps knocking.
    */
   async countInWindow(key: string, windowSeconds: number): Promise<number> {
     const namespaced = this.key(key);
@@ -103,10 +94,8 @@ export class RedisService {
 
   /**
    * Adds a member to a set and pushes the set's expiry out, in one transaction.
-   *
-   * The expiry is unconditional: the set indexes things that expire on their own
-   * (a user's session ids), so it has to outlive its newest member, and every
-   * write is that member's own lifetime restarting.
+   * The expiry is unconditional: the set indexes things that expire on their
+   * own, so it has to outlive its newest member.
    */
   async addToSet(
     key: string,

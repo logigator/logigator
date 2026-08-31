@@ -8,15 +8,12 @@ import { AnalyticsService } from '../analytics/analytics.service';
 import { AnalyticsEvent, DialogId } from '../analytics/analytics.mapping';
 
 /**
- * Opens the in-editor documentation and tracks which page it shows. Anything
- * in the editor can deep link to a page via {@link open} — the Help menu, the
- * viewer's navigation, `docs:` cross links inside pages, and contextual
- * "learn more" links all funnel through it.
+ * Opens the in-editor documentation and tracks which page it shows;
+ * {@link DocumentationService.open} is the one deep-link entry point.
  *
- * The dialog is a centred card on desktop and a fullscreen takeover on the
- * compact breakpoint (live across flips, via the `fullscreen` signal). `page`
- * is `null` while no page was explicitly requested; the compact viewer shows
- * its topic index then, the desktop viewer falls back to the default page.
+ * The dialog is a centred card on desktop and a fullscreen takeover on compact,
+ * live across flips. `page` is `null` while none was explicitly requested — the
+ * compact viewer shows its topic index then, the desktop one its default page.
  */
 @Injectable({ providedIn: 'root' })
 export class DocumentationService {
@@ -36,9 +33,8 @@ export class DocumentationService {
   public readonly anchor = computed(this._anchor);
 
   /**
-   * Opens the documentation viewer on `page`, or — without one — wherever it
-   * was: a fresh open lands on the topic index (compact) / default page
-   * (desktop), while a call on an already open viewer changes nothing.
+   * Opens the viewer on `page`, or without one leaves it where it is: a fresh
+   * open lands on the index/default page, an open viewer is left alone.
    */
   public open(page?: DocPageId, anchor?: string): void {
     if (page) {
@@ -61,8 +57,7 @@ export class DocumentationService {
       bodyClass: 'flex flex-col overflow-hidden',
       modal: true,
       closable: true,
-      // Alongside `doc_page_opened`, which counts pages (including navigation
-      // within an already-open viewer) rather than viewer sessions.
+      // Alongside `doc_page_opened`, which counts pages rather than sessions.
       telemetryId: DialogId.Documentation
     });
     this.dialogRef.onClose.subscribe(() => {

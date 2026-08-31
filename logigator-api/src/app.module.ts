@@ -20,8 +20,8 @@ import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
-    // The one recurring job so far is the storage sweep; the cron registry has
-    // to exist before the module holding it is constructed.
+    // The cron registry has to exist before the module holding a job is
+    // constructed.
     ScheduleModule.forRoot(),
     DatabaseModule,
     RedisModule,
@@ -37,9 +37,8 @@ import { UsersModule } from './users/users.module';
     HealthModule,
     MetaModule
   ],
-  // Registered as providers rather than through `useGlobalFilters`/
-  // `useGlobalPipes`, so both are constructed by the container and specs get
-  // them from the module under test without repeating the bootstrap wiring.
+  // Providers rather than `useGlobalFilters`/`useGlobalPipes`, so both are
+  // constructed by the container and specs get them from the module under test.
   providers: [
     { provide: APP_FILTER, useClass: ApiExceptionFilter },
     { provide: APP_PIPE, useClass: ApiValidationPipe }
@@ -48,10 +47,9 @@ import { UsersModule } from './users/users.module';
 export class AppModule {
   /**
    * Root module bound to an already-validated environment. Passing the parsed
-   * env in (rather than letting providers read `process.env`) keeps validation
-   * at a single bootstrap-time point and lets specs supply their own
-   * configuration. The provider is global so feature modules can inject
-   * {@link ENV} without importing anything.
+   * env in rather than letting providers read `process.env` keeps validation at
+   * one bootstrap-time point and lets specs supply their own. The provider is
+   * global, so a feature module injects {@link ENV} without importing anything.
    */
   static forEnv(env: Env): DynamicModule {
     return {

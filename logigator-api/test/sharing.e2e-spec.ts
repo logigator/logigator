@@ -61,9 +61,8 @@ describe('share links', () => {
   }
 
   /**
-   * A two-level library: `outer` embeds `inner`, and a board embeds `outer`.
-   * That depth is the point — a one-level graph would pass with no recursion at
-   * all.
+   * A two-level library: `outer` embeds `inner`, and a board embeds `outer`. A
+   * one-level graph would pass with no recursion at all.
    */
   async function publishLibrary(): Promise<{
     inner: ComponentSummary;
@@ -170,8 +169,7 @@ describe('share links', () => {
       );
       expect(project.public).toBe(false);
 
-      // Holding the URL *is* the grant; that is what makes a share usable by
-      // somebody with no account, and revocation a matter of a new token.
+      // Holding the URL *is* the grant, so a share works with no account.
       const response = await api.inject({
         method: 'GET',
         url: `/api/share/${project.link}`
@@ -214,8 +212,7 @@ describe('share links', () => {
         payload: { regenerateLink: true }
       });
 
-      // Every URL handed out under the old token stops working, which is the
-      // whole mechanism for taking a share back.
+      // Every URL under the old token stops working: that is the revocation.
       const response = await api.inject({
         method: 'GET',
         url: `/api/share/${project.link}`
@@ -232,8 +229,8 @@ describe('share links', () => {
           method: 'GET',
           url: `/api/share/${link}`
         });
-        // A malformed token is not a uuid column comparison the database can
-        // make, so it has to be turned away before it becomes a 500.
+        // A malformed token is not a comparison the uuid column can make, so
+        // it is turned away before it becomes a 500.
         expect(response.statusCode).toBe(404);
       }
     });
@@ -283,8 +280,8 @@ describe('share links', () => {
         (d: ComponentSummary) => d.name === 'Inner'
       );
 
-      // The board's snapshot of Outer must name the *copy*, or the clone would
-      // be told about updates to somebody else's component and never its own.
+      // The board's snapshot of Outer names the *copy*, or the clone hears
+      // about updates to somebody else's component and never its own.
       const opened = await api.inject({
         method: 'GET',
         url: `/api/projects/${clone.project.id}`,
@@ -348,7 +345,7 @@ describe('share links', () => {
       ).json();
 
       // Inheriting the visibility would republish somebody else's work under a
-      // new owner as a side effect of taking a copy.
+      // new owner.
       expect(clone.project.public).toBe(false);
     });
 
@@ -392,8 +389,8 @@ describe('share links', () => {
         })
       ).json();
 
-      // The point of cloning the library rather than only the document: the
-      // cloner needs masters of their own to keep editing.
+      // Why the library is cloned too: the cloner needs masters of their own
+      // to keep editing.
       const listed = await api.inject({
         method: 'GET',
         url: '/api/components',
@@ -455,9 +452,8 @@ describe('share links', () => {
         })
       ).json();
 
-      // Nothing to point at, and the format already means "self-contained
-      // snapshot" — a dead id would leave the copy asking about a document
-      // nobody can see.
+      // Nothing to point at, and a snapshot without a source is already the
+      // format's "self-contained".
       expect(clone.dependencies).toEqual([]);
       const opened = await api.inject({
         method: 'GET',

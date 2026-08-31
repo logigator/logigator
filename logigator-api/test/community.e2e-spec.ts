@@ -96,8 +96,7 @@ describe('the community surface', () => {
         name: 'Published',
         author: { id: adaId, username: 'Ada' },
         stars: 0,
-        // No session, so nothing is starred — and a browse page draws the same
-        // control either way.
+        // No session, so nothing is starred.
         starred: false
       });
     });
@@ -109,8 +108,7 @@ describe('the community surface', () => {
         ada
       );
 
-      // Even to its owner: publishing is the access rule here, and the owner has
-      // their own listing for everything else.
+      // Even to its owner: publishing is the access rule here.
       const response = await api.inject({
         method: 'GET',
         url: '/api/community/projects',
@@ -141,9 +139,8 @@ describe('the community surface', () => {
     });
 
     it('rank by stars, and break the tie so paging is stable', async () => {
-      // The starred one is created *first*, so the two orderings disagree —
-      // otherwise both would put the same row on top and the test would pass
-      // whichever ranking ran.
+      // The starred one is created *first*, so the two orderings disagree;
+      // otherwise the test would pass whichever ranking ran.
       const hot = await publicProject('Starred');
       const cold = await publicProject('Unstarred');
 
@@ -228,8 +225,7 @@ describe('the community surface', () => {
         payload: { regenerateLink: true }
       });
 
-      // Regenerating the token takes the public page with it — the same
-      // revocation the share link gets, for free.
+      // Regenerating the token takes the public page with it.
       const gone = await api.inject({
         method: 'GET',
         url: `/api/community/projects/${project.link}`
@@ -250,8 +246,8 @@ describe('the community surface', () => {
       });
       expect(community.statusCode).toBe(404);
 
-      // The same token still opens the share, which is a different grant: a link
-      // is a capability, publishing is a listing.
+      // The same token still opens the share: a link is a capability,
+      // publishing is a listing.
       const share = await api.inject({
         method: 'GET',
         url: `/api/share/${project.link}`
@@ -300,7 +296,7 @@ describe('the community surface', () => {
         });
 
       expect((await star()).json()).toEqual({ starred: true, stars: 1 });
-      // A double-tapped button is not a conflict, and not two stars.
+      // A double-tapped button is not two stars.
       expect((await star()).json()).toEqual({ starred: true, stars: 1 });
 
       const unstar = () =>
@@ -378,7 +374,7 @@ describe('the community surface', () => {
       expect(mine.json().entries.map((e: CommunityProject) => e.id)).toContain(
         project.id
       );
-      // Every row in it is one they starred, by construction.
+      // Every row in it is one they starred.
       for (const entry of mine.json().entries) {
         expect(entry.starred).toBe(true);
       }
@@ -443,8 +439,8 @@ describe('the community surface', () => {
         publicProjects: 1,
         publicComponents: 1
       });
-      // A public profile is a different shape, not the account holder's with
-      // fields left out — there is nothing here to leave out.
+      // A public profile is its own shape, not the account holder's with fields
+      // left out.
       expect(response.json().email).toBeUndefined();
       expect(response.json().hasPassword).toBeUndefined();
     });

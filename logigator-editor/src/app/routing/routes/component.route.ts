@@ -5,8 +5,8 @@ import { RouteKeys } from '../route-keys.model';
 
 /**
  * `/component/:uuid` — opens a server component as the main project for
- * standalone editing (mirrors {@link ProjectRoute}). Opening a component from
- * *within* a project instead uses the tab flow (`CustomComponentService`).
+ * standalone editing. Opening one from *within* a project goes through the tab
+ * flow instead (`CustomComponentService`).
  */
 @Injectable({
   providedIn: 'root'

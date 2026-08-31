@@ -14,10 +14,8 @@ describe('the asset layout', () => {
   const id = 'a3f1c2d4-1111-4222-8333-444455556666';
 
   /**
-   * A directory per asset would move the fan-out one level up — one entry per
-   * avatar in `profile/` — so the shard is what keeps any single directory small
-   * enough for a sweep to walk. Two hex characters of a v4 uuid are uniformly
-   * distributed across 256 of them.
+   * The shard keeps any single directory small enough for a sweep to walk. Two
+   * hex characters of a v4 uuid distribute uniformly across 256 of them.
    */
   it('shards an asset under the first two characters of its own id', () => {
     expect(assetPath('profile', id)).toBe(`profile/a3/${id}`);
@@ -27,10 +25,9 @@ describe('the asset layout', () => {
   });
 
   /**
-   * The whole volume is served under one root of its own, not one prefix per
-   * area. The legacy backend answers `/profile/…` and `/preview/…` from its own
-   * disk and both stacks share an origin until cutover, so a static handler
-   * matching those prefixes would swallow its requests.
+   * One root for the whole volume, not one prefix per area: the legacy backend
+   * answers `/profile/…` and `/preview/…` from its own disk on the same origin
+   * until cutover, and a handler on those prefixes would swallow its requests.
    */
   it('serves every area under one url root', () => {
     expect(assetUrl('profile', id, '64.webp')).toMatch(/^\/files\//);
@@ -45,8 +42,7 @@ describe('FileStorageService', () => {
   beforeEach(async () => {
     root = await mkdtemp(join(tmpdir(), 'logigator-storage-'));
     files = new FileStorageService({ STORAGE_DIR: root } as Env);
-    // The refusal below logs, and a passing suite should not read like a failing
-    // one.
+    // The refusal below logs; a passing suite should not read like a failure.
     vi.spyOn(Logger.prototype, 'warn').mockReturnValue(undefined);
   });
 
@@ -69,9 +65,8 @@ describe('FileStorageService', () => {
   });
 
   /**
-   * Deleting an asset takes its directory rather than the files it knows about,
-   * which is what lets the variant matrix change without stranding whatever an
-   * older one named.
+   * Deleting takes the directory, not the files it knows about, so the variant
+   * matrix can change without stranding what an older one named.
    */
   it('deletes files it never wrote, along with the rest of the asset', async () => {
     const id = await files.writeAsset('profile', [
@@ -86,9 +81,8 @@ describe('FileStorageService', () => {
   });
 
   /**
-   * The delete is recursive, so an id that is not one would not fail — it would
-   * take a shard, or an entire area, with it. An orphaned asset costs disk; a
-   * wrong delete costs everybody's avatars.
+   * The delete is recursive, so a bad id would take a shard or an entire area
+   * with it rather than fail.
    */
   it.each(['..', '.', 'a3/../..', '', 'not-a-uuid'])(
     'refuses to delete the id %o',
@@ -105,8 +99,8 @@ describe('FileStorageService', () => {
   );
 
   /**
-   * Nothing names the directory yet, so a half-written asset is invisible either
-   * way — but leaving it would hand the sweep work that belongs to the writer.
+   * A half-written asset is unnameable either way, but leaving it hands the
+   * sweep work that belongs to the writer.
    */
   it('leaves nothing behind when a write fails part-way', async () => {
     await expect(
@@ -116,8 +110,7 @@ describe('FileStorageService', () => {
       ])
     ).rejects.toMatchObject({ code: 'ENOENT' });
 
-    // The shard survives — it is shared, and empty shards are expected — but no
-    // asset directory under it does.
+    // The shard survives, being shared; no asset directory under it does.
     const shards = await readdir(join(root, 'profile'));
     for (const shard of shards) {
       expect(await readdir(join(root, 'profile', shard))).toEqual([]);

@@ -12,9 +12,8 @@ import { buildProject, instantiateBody } from './circuit-builder';
 import { makeWire } from '../../testing/factories';
 
 // The simulation watch tables are keyed by element position in the body
-// arrays: the compiler records against one instantiateBody run and a watch
-// session addresses another. This pins the shared contract — output order
-// matches body array order, for components and wires alike.
+// arrays, across two separate instantiateBody runs. This pins the contract:
+// output order matches body array order, for components and wires alike.
 describe('instantiateBody order contract', () => {
   let provider: ComponentProviderService;
 
@@ -49,8 +48,7 @@ describe('instantiateBody order contract', () => {
       );
     });
     wires.forEach((wire, i) => {
-      // Deserialization adds the half-grid centre-line offset to the stored
-      // integer position.
+      // Deserialization adds the half-grid centre-line offset.
       expect([wire.position.x, wire.position.y]).toEqual([
         body.wires[i].pos[0] + 0.5,
         body.wires[i].pos[1] + 0.5
@@ -63,9 +61,8 @@ describe('instantiateBody order contract', () => {
   });
 });
 
-// buildProject adds every element with connection-point derivation deferred,
-// then derives all dots in a single pass. This pins that the batched result
-// matches the incremental one: a 3-wire T-junction still produces its CP.
+// buildProject defers connection-point derivation to one pass, which must
+// match the incremental result: a 3-wire T-junction still produces its CP.
 describe('buildProject connection-point derivation', () => {
   beforeEach(() => {
     configureTestBed();

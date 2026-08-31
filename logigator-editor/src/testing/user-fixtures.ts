@@ -1,11 +1,8 @@
 import type { UserResponse } from '@logigator/contract';
 
 /**
- * A signed-in account as `GET /api/user` answers it.
- *
- * Shared because the session specs all need one and the response has a fixed
- * shape they have no opinion about — only the id matters to them, since that is
- * what a session transition and a document's ownership stamp compare.
+ * A signed-in account as `GET /api/user` answers it. Only the id matters to the
+ * session specs: it is what a transition and an ownership stamp compare.
  */
 export function makeUser(id: string): UserResponse {
   return {

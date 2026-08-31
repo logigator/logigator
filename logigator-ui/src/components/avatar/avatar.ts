@@ -3,10 +3,9 @@ import { IconSlot } from '../../internal/icon';
 import { LgImageSource } from '../../tokens/image-source';
 
 /**
- * The rendered box per size, as both the utility classes and the CSS pixels a
- * `sizes` attribute has to state. One table, because the two cannot be allowed
- * to drift: a `sizes` that disagrees with the box makes the browser pick the
- * wrong rung of a `srcset` — invisibly, since either rung still draws.
+ * The rendered box per size, as utility classes and as the CSS pixels `sizes`
+ * states. One table because the two must not drift: a `sizes` disagreeing with
+ * the box picks the wrong `srcset` rung, invisibly — either rung still draws.
  */
 const BOX = {
   default: { classes: 'size-8 text-base', px: 32 },
@@ -15,22 +14,19 @@ const BOX = {
 
 /** One `<source>`: every width offered in a single encoding. */
 interface FormatGroup {
-  /** `undefined` for sources that named no format — then there is nothing to negotiate. */
+  /** `undefined` when the source named no format; nothing to negotiate. */
   type: string | undefined;
   srcset: string;
 }
 
 /**
- * A user/entity avatar. Renders `image`, else `label` (an initial), else `icon`
- * — in that precedence. `shape="circle"` rounds it fully; `size="xlarge"` is the
- * large variant (default otherwise).
+ * A user/entity avatar, rendering `image`, else `label`, else `icon`.
  *
- * `image` takes either a single URL or a list of {@link LgImageSource}s, in
- * which case the browser chooses: one `<source>` per encoding in the order
- * given (so the list's own order is the preference order — put WebP before its
- * fallback), each carrying every width as a `srcset`. The avatar knows the box
- * it draws in, so it states `sizes` itself and the device pixel ratio does the
- * rest.
+ * `image` takes a single URL or a list of {@link LgImageSource}s, which
+ * becomes one `<source>` per encoding in the order given — the list's order is
+ * the preference order, so put WebP before its fallback — each carrying every
+ * width as a `srcset`. The avatar states `sizes` itself from the box it draws
+ * in, and the device pixel ratio does the rest.
  */
 @Component({
   selector: 'lg-avatar',
@@ -87,13 +83,10 @@ export class LgAvatar {
   );
 
   /**
-   * What to draw, or `undefined` when there is no image and the label/icon
-   * fallbacks take over.
-   *
-   * The last encoding is the one on the `<img>` rather than on a `<source>`,
-   * because that is what a browser matching none of the sources falls back to —
-   * so the caller's least-preferred encoding is the one that has to work
-   * everywhere. A single URL degrades to a bare `src`.
+   * What to draw, or `undefined` when the label/icon fallbacks take over. The
+   * last encoding goes on the `<img>` rather than a `<source>`: a browser
+   * matching no source falls back to it, so the caller's least-preferred
+   * encoding is the one that has to work everywhere.
    */
   protected readonly picture = computed(
     ():
@@ -110,8 +103,8 @@ export class LgAvatar {
 
       return {
         groups,
-        // A `srcset` decides what is fetched, so `src` only matters to a client
-        // that cannot read one; the narrowest rung is the cheapest thing to give it.
+        // `src` only matters to a client that cannot read a `srcset`; the
+        // narrowest rung is the cheapest thing to give it.
         src: fallback.sources[0].url,
         srcset: fallback.srcset
       };
@@ -120,9 +113,9 @@ export class LgAvatar {
 }
 
 /**
- * Splits the ladder into one entry per encoding, in the order the encodings
- * first appear — so the caller's ordering *is* the preference order, and this
- * component never has to hold an opinion about which formats are better.
+ * One entry per encoding, in the order the encodings first appear, so the
+ * caller's ordering is the preference order and this component holds no
+ * opinion on which formats are better.
  */
 function groupByFormat(
   sources: readonly LgImageSource[]
@@ -141,10 +134,7 @@ function groupByFormat(
   }));
 }
 
-/**
- * `'jpg'` is a file extension, not a format name, and there is no
- * `image/jpg` — the two get confused often enough to be worth one line here.
- */
+// `'jpg'` is a file extension, not a format name; there is no `image/jpg`.
 function mediaType(format: string | undefined): string | undefined {
   if (!format) return undefined;
   return `image/${format === 'jpg' ? 'jpeg' : format}`;

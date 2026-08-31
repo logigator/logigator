@@ -8,10 +8,9 @@ import {
 
 /**
  * Converts embedded snapshot definitions between the in-memory form (absolute
- * component positions, object wires) and the persisted form (delta-encoded
- * component positions, chain-encoded wires). A definition's internal element
- * order carries no meaning, so the encoders' reordering needs no order
- * bookkeeping here — unlike the document body (see `ProjectDump`).
+ * positions, object wires) and the persisted form (delta-encoded positions,
+ * chain-encoded wires). A definition's internal element order carries no
+ * meaning, so the encoders' reordering needs no bookkeeping here.
  */
 
 /** Converts an in-memory definition to its persisted form. */

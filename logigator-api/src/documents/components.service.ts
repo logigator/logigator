@@ -29,13 +29,11 @@ import { renameInDocument } from './rename-in-document';
 /**
  * The caller's own library components.
  *
- * `ProjectsService`' twin, with the one difference that motivates keeping them
- * apart: a component is placed inside other circuits, so it also stores the port
- * surface a placed instance renders from — and that surface is **derived from
- * its document on every write**, never sent by a client. A circuit's ports are
- * the plugs in it, so a declared count is a claim that can disagree with the
- * circuit it describes, and the boards embedding this component are what would
- * render wrong.
+ * `ProjectsService`' twin, differing in the one thing that keeps them apart: a
+ * component is placed inside other circuits, so it also stores the port surface
+ * an instance renders from. That surface is **derived from its document on
+ * every write**, never sent by a client — a declared count could disagree with
+ * the plugs in the circuit, and the boards embedding it would render wrong.
  */
 @Injectable()
 export class ComponentsService {
@@ -111,11 +109,9 @@ export class ComponentsService {
   }
 
   /**
-   * Replaces the circuit and re-derives the ports it exposes.
-   *
-   * Adding a plug is therefore an interface change with no separate step: the
-   * next board to open picks up the new arity from the version bump this write
-   * already carries.
+   * Replaces the circuit and re-derives the ports it exposes, so adding a plug
+   * is an interface change with no separate step — the next board to open picks
+   * up the new arity from this write's version bump.
    */
   async save(
     userId: string,
@@ -165,10 +161,10 @@ export class ComponentsService {
   }
 
   /**
-   * Changes metadata. Name, symbol and description all travel inside every
-   * placed snapshot, so each of them bumps `version` and every instance frozen at
-   * an older one is offered the update. Visibility and the share token are not
-   * snapshot content and leave the counter alone.
+   * Changes metadata. Name, symbol and description travel inside every placed
+   * snapshot, so each bumps `version` and instances frozen at an older one are
+   * offered the update. Visibility and the share token are not snapshot
+   * content.
    */
   async update(
     userId: string,
@@ -213,12 +209,9 @@ export class ComponentsService {
   }
 
   /**
-   * Deletes the component.
-   *
-   * The boards that embed it keep working: a document carries a frozen snapshot
-   * of everything it uses, so what the cascade removes is the edge recording
-   * where the snapshot came from, not the circuit itself. That is the whole
-   * reason a delete needs no dependent check.
+   * Deletes the component. The boards embedding it keep working — the cascade
+   * removes the edge recording where their snapshot came from, not the circuit
+   * itself — so no dependent check is needed.
    */
   async delete(userId: string, id: string): Promise<void> {
     const [row] = await this.db

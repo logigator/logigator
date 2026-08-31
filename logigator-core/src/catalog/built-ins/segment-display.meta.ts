@@ -66,9 +66,9 @@ export const segmentDisplayMeta = {
   legacyV0Slots: { i: 'numInputs', n: ['base'] },
   ports,
   labels: (o) => ({ inputs: indexLabels(o.numInputs), outputs: [] }),
-  // The readout decides the width, so a rotated display would grow along the
-  // wrong axis — upright quarter-turns take a fixed four cells instead. Three
-  // rows minimum so the digits have room even with a single input.
+  // The readout decides the width, so an upright quarter-turn takes a fixed
+  // four cells rather than growing along the wrong axis. Three rows minimum so
+  // the digits have room with a single input.
   body: (o, direction) => {
     const width =
       direction % 2 === 1 ? 4 : 2 + segmentReadoutDigits(o.base, o.numInputs);

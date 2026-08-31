@@ -30,8 +30,7 @@ describe('renderMail', () => {
     const mail = renderMail(kind, 'en', params);
 
     expect(mail.html).toContain(`href="${params.link}"`);
-    // The text part must carry the bare URL: a client that renders only text
-    // has no other way to reach the flow.
+    // A client that renders only text has no other way to reach the flow.
     expect(mail.text).toContain(params.link);
   });
 
@@ -48,8 +47,7 @@ describe('renderMail', () => {
       const strings = MAIL_STRINGS[locale][kind];
 
       expect(mail.subject).toBe(strings.subject);
-      // An optional string that is absent must leave nothing behind — the note
-      // is missing from the reset mail in every language.
+      // The note is missing from the reset mail in every language.
       expect(mail.html).not.toContain('undefined');
       expect(mail.text).not.toContain('undefined');
       expect(mail.html).toContain(strings.closing);

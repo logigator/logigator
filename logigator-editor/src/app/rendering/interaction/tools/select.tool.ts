@@ -11,10 +11,9 @@ import { ScissorKeyState } from '../scissor-key-state';
 import { BoardTool, ToolHost } from './board-tool';
 
 /**
- * The select tool: a press inside the committed selection's grab zone starts
- * a move; anywhere else it draws a new marquee. One instance per marquee
- * flavor — SELECT and SELECT_EXACT register their own, so the session gets
- * the right base mode while the hold-to-scissor key stays live in both.
+ * A press inside the committed selection's grab zone starts a move; anywhere
+ * else it draws a new marquee. SELECT and SELECT_EXACT register their own
+ * instance, so the session gets the right base mode.
  */
 export class SelectTool implements BoardTool {
   private readonly _shortcuts = getStaticDI(ShortcutService);
@@ -27,9 +26,8 @@ export class SelectTool implements BoardTool {
 
   public down(project: Project, input: PointerInput, host: ToolHost): void {
     const localPoint = input.grid;
-    // The persistent grab rect (the marquee as drawn) is the drag target
-    // where one exists, so the gaps inside it are grabbable too; rect-less
-    // selections (single click) fall back to element bounds.
+    // Where a persistent grab rect exists it is the drag target, so the gaps
+    // inside it are grabbable; rect-less selections fall back to bounds.
     if (project.selectionManager.isGrabbedAt(localPoint)) {
       host.startSession(
         new SelectionMoveSession(

@@ -8,11 +8,10 @@ export interface PlugReorderEntry {
 }
 
 /**
- * Rewrites plug `index` options to a clean `0..n-1` in list order (the Ports
- * panel's drag-to-reorder). A thin specialization of {@link ActionContainer}
- * over one {@link ChangeOptionAction} per plug whose index actually changed, so
- * it is undoable and dirty-tracked like any option edit — and clean indices make
- * duplicate/gappy ordering structurally impossible.
+ * Rewrites plug `index` options to a clean `0..n-1` in list order, making
+ * duplicate or gappy ordering structurally impossible. One
+ * {@link ChangeOptionAction} per plug that actually changed, so it is undoable
+ * and dirty-tracked like any option edit.
  */
 export class ReorderPlugsAction extends ActionContainer {
   constructor(entries: PlugReorderEntry[]) {

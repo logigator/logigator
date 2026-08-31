@@ -11,13 +11,10 @@ import {
 import { CustomComponentDetails } from '@logigator/core';
 
 /**
- * CRUD over browser-local (IndexedDB) **library masters**, keyed by master id.
- * The sibling of `BrowserProjectStore`: it owns id generation, timestamps and
- * `createdOn` preservation, and stores the master summary columns alongside the
- * `content` so the palette can list masters without parsing each circuit blob.
- *
- * `PersistenceService` orchestrates encoding and the registry; this store knows
- * only its record shape.
+ * CRUD over IndexedDB library masters, keyed by master id. Owns id generation,
+ * timestamps and `createdOn` preservation, and keeps the summary columns beside
+ * the `content` so the palette lists masters without parsing each blob.
+ * Encoding and the registry belong to `PersistenceService`.
  */
 @Injectable({ providedIn: 'root' })
 export class BrowserComponentStore {
@@ -27,8 +24,7 @@ export class BrowserComponentStore {
 
   /**
    * Inserts or updates a master. Without an `id` a fresh one is generated and
-   * `createdOn` is stamped; with an existing `id` the original `createdOn` is
-   * preserved. `lastEdited` is always set to now. Returns the stored record.
+   * `createdOn` stamped; an existing record keeps its original `createdOn`.
    */
   async save(params: {
     id?: string;
@@ -65,12 +61,11 @@ export class BrowserComponentStore {
   }
 
   /**
-   * Patches a master's descriptive metadata in place, leaving `content`
-   * untouched. The monotonic `version` is bumped — the details travel in placed
-   * snapshots, so instances frozen at an older version can be offered an update
-   * — and `lastEdited` is re-stamped so the palette re-sorts the edited master
-   * to the top (the server PATCH does both likewise). Throws for an unknown id
-   * so the caller aborts without applying the edit anywhere else.
+   * Patches a master's descriptive metadata in place, leaving `content` alone.
+   * The `version` bump is what lets instances frozen at an older version be
+   * offered an update, and the re-stamped `lastEdited` re-sorts the palette, as
+   * the server PATCH does. Throws for an unknown id, so the caller aborts
+   * without applying the edit anywhere else.
    */
   async updateDetails(
     id: string,

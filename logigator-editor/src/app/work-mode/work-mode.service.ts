@@ -25,10 +25,8 @@ export class WorkModeService {
       : null;
   });
 
-  // Sticky per-type placement direction: the settings panel writes it while a
-  // placement is armed, and every fresh placement ghost of that type picks it
-  // up — so consecutive placements keep facing the way the user chose.
-  // Session-lifetime, defaulting to East for types never adjusted.
+  // Sticky per-type placement direction, so consecutive placements keep facing
+  // the way the user chose. Session-lifetime, defaulting to East.
   private readonly _placementDirections = signal<
     ReadonlyMap<ComponentType, Direction>
   >(new Map());

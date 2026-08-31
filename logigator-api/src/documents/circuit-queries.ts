@@ -19,21 +19,18 @@ import {
 
 /**
  * Either stored-circuit table. Projects and components are the same thing — a
- * document plus derived metadata — stored twice so that ownership, forks and
- * dependency edges can all be real foreign keys, and so a component can carry
- * the extra columns a placed instance renders from.
+ * document plus derived metadata — in two tables, so ownership, forks and
+ * dependency edges are real foreign keys and a component can carry the extra
+ * columns a placed instance renders from.
  *
- * The queries here are the ones that touch only the shared half, so they are
- * written once and handed the table. Anything that reads or writes a component's
- * port columns lives in its own service instead: sharing those would mean a
- * union of insert shapes, which is more indirection than two plain statements.
+ * Only the shared half is queried here; a component's port columns stay in its
+ * own service, since sharing those would mean a union of insert shapes.
  *
- * Each one is **overloaded per table** rather than generic. Drizzle's builder
- * types are conditional on the table it is given, and a conditional type cannot
- * resolve against an unresolved type parameter — so `<T extends CircuitTable>`
- * fails to compile at the first `.from(table)`. Two signatures over a union
- * implementation is what keeps the call sites exactly typed with no assertions
- * at all.
+ * Each query is **overloaded per table** rather than generic: Drizzle's builder
+ * types are conditional on the table, and a conditional type cannot resolve
+ * against an unresolved type parameter, so `<T extends CircuitTable>` fails at
+ * the first `.from(table)`. Two signatures over a union implementation keeps
+ * the call sites exactly typed with no assertions.
  */
 export type CircuitTable = typeof projects | typeof components;
 
@@ -41,12 +38,9 @@ export type CircuitTable = typeof projects | typeof components;
 export type CircuitRow = ProjectRow | ComponentRow;
 
 /**
- * The caller's own row, or `null`.
- *
- * Ownership is part of the predicate rather than a check after the fact: no code
- * path then holds a row without having established whose it is, and a document
- * belonging to somebody else is indistinguishable from one that does not exist —
- * which is what it should be.
+ * The caller's own row, or `null`. Ownership is in the predicate, not a check
+ * afterwards: no path holds a row without knowing whose it is, and somebody
+ * else's document is indistinguishable from one that does not exist.
  */
 export function findOwned(
   db: Queryable,
@@ -99,11 +93,8 @@ export async function findByLink(
 }
 
 /**
- * One page of rows matching `where`, with the total the predicate matched.
- *
- * Two statements rather than a window function: the count is the same predicate
- * without the limit, and a second index scan is cheaper to read — and, at this
- * scale, to run — than a `count(*) OVER ()` carried on every row of the page.
+ * One page of rows matching `where`, with the total the predicate matched. Two
+ * statements rather than a `count(*) OVER ()` carried on every row of the page.
  */
 export function pageOf(
   db: Queryable,
@@ -146,10 +137,8 @@ export async function pageOf(
 }
 
 /**
- * A name search, or `undefined` when there is nothing to search for.
- *
- * `%` and `_` are escaped: they are ordinary characters in what somebody typed,
- * and left alone they turn a search box into a way to ask for every row.
+ * A name search, or `undefined` when there is nothing to search for. `%` and
+ * `_` are escaped — left alone they let a search box ask for every row.
  */
 export function nameMatches(
   name: Column,
@@ -169,21 +158,14 @@ export interface AncestorRow {
 }
 
 /**
- * A document's fork lineage, **root-first**: the original creation first, the
- * immediate parent last.
+ * A document's fork lineage, **root-first**: original creation first, immediate
+ * parent last. Resolved entirely from this server's rows — an upload
+ * contributes only the immediate parent's id, checked against real rows before
+ * it becomes a fork key, so a tampered chain can only lose attribution.
  *
- * Resolved entirely from this server's rows. All that is ever taken from an
- * uploaded document is the immediate parent's id, checked against real rows
- * before it becomes a fork key — so every author named here is that ancestor's
- * actual one, and a tampered chain can only lose attribution.
- *
- * A deleted ancestor ends the chain, because the fork key is `ON DELETE SET
- * NULL`. A repeated id ends it too: the key cannot describe a cycle, but a walk
- * that would loop forever on corrupt data is not worth the alternative.
- *
- * One statement per ancestor, which is what the shape of the data buys — real
- * chains are a few entries long, and a recursive CTE for that would be harder to
- * read than the walk it replaces.
+ * A deleted ancestor ends the chain (the key is `ON DELETE SET NULL`), and so
+ * does a repeated id, so corrupt data cannot loop the walk. One statement per
+ * ancestor: real chains are a few entries long.
  */
 export async function forkLineage(
   db: Queryable,
@@ -233,13 +215,10 @@ async function findAncestor(
 }
 
 /**
- * Whether the document a client claims to have forked exists here at all.
- *
- * Any existing row is a legitimate parent, somebody else's included: the claim
- * only ever grants attribution to that document's real author, so there is
- * nothing to be gained by naming one. An unknown id — a deleted origin, a
- * document from another deployment — drops the claim silently rather than
- * failing the create, since the copy is otherwise perfectly good.
+ * Whether the document a client claims to have forked exists here at all. Any
+ * existing row is a legitimate parent, somebody else's included — the claim
+ * only grants attribution to that document's real author. An unknown id drops
+ * the claim silently rather than failing an otherwise good create.
  */
 export async function forkParentExists(
   db: Queryable,

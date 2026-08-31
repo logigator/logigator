@@ -5,11 +5,7 @@ import { authorSchema } from '../document/document.contract';
 import { componentSummarySchema } from '../document/component.contract';
 import { projectSummarySchema } from '../document/project.contract';
 
-/**
- * A community listing's query. `orderBy` defaults to `stars`, which is the
- * ranking a browse page wants; `latest` is the toggle for seeing what is new
- * rather than what is liked.
- */
+/** A community listing's query, ranked by stars unless asked for `latest`. */
 export const communityQuerySchema = pageQuerySchema.extend({
   orderBy: z.enum(['stars', 'latest']).default('stars')
 });
@@ -18,11 +14,9 @@ export type CommunityQuery = z.infer<typeof communityQuerySchema>;
 
 /**
  * What a public listing adds to a summary: who made it, how many stars it has,
- * and whether the caller is one of them.
- *
- * `starred` is `false` for an anonymous caller rather than absent — a browse page
- * renders the same control either way, and "not starred" is what an unauthenticated
- * visitor's star state is.
+ * and whether the caller is one of them. `starred` is `false` rather than
+ * absent for an anonymous caller, so a browse page renders the same control
+ * either way.
  */
 const communityFields = {
   author: authorSchema,
@@ -79,10 +73,9 @@ export type CommunityComponentDetail = z.infer<
 >;
 
 /**
- * A public profile. Strictly less than `UserResponse`: the address, the
- * verification state and which credentials exist are the account holder's
- * business, so a public profile is a different shape rather than the same one
- * with fields omitted — there are no serialization groups to get wrong.
+ * A public profile. A different shape from `UserResponse` rather than the same
+ * one with fields omitted: the address, verification state and credentials are
+ * the account holder's business, and nothing here can leak them by accident.
  */
 export const publicProfileSchema = z
   .object({

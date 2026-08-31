@@ -10,24 +10,23 @@ export interface BoardComponentDescriptor {
   outputs: number[];
   /**
    * Per-type parameter blob (e.g. a ROM's bit-packed contents table). Opaque to
-   * the compiler and invariant under pin remapping; omitted when the type takes
-   * no ops.
+   * the compiler, invariant under pin remapping, omitted when the type takes
+   * none. The engine arity-checks it against the type.
    */
   ops?: number[];
   /**
    * Negated input-pin indices (into `inputs[]`) the engine inverts before the
    * kernel runs; `negOutputs` into `outputs[]`, inverted after. Sparse index
-   * arrays (no bitmask), separate from per-type `ops`. Omitted when empty.
+   * arrays, not a bitmask. Omitted when empty.
    */
   negInputs?: number[];
   negOutputs?: number[];
 }
 
 /**
- * The WASM simulator's board format (JSON-ready). `links` is the number of
- * nets; a link id is an index into the simulator's link state. The component
- * order is the submission order that defines `triggerInput` comp ids and the
- * `getOutputs()` layout.
+ * The WASM simulator's board format (JSON-ready). A link id indexes the
+ * simulator's link state. The component order is the submission order that
+ * defines `triggerInput` comp ids and the `getOutputs()` layout.
  */
 export interface BoardDescriptor {
   links: number;
@@ -36,7 +35,8 @@ export interface BoardDescriptor {
 
 export interface LinkPortRef {
   component: Component;
-  /** Index in the component's `connectionPoints` order (inputs, then outputs). */
+  /** Index in the component's `connectionPoints` order: inputs, then
+   * outputs. */
   portIndex: number;
 }
 
@@ -53,14 +53,13 @@ export const TOP_LEVEL_PATH = '';
  * Per-circuit render targets, indexed by link id, keyed by instance path
  * (custom-instance component ids joined by `/`; `''` = top level). Only the
  * top-level entry is materialized — inner circuits resolve through the
- * {@link WatchIndex}, whose render targets are built at watch-open time.
+ * {@link WatchIndex} at watch-open time.
  */
 export type LinkMapping = ReadonlyMap<string, LinkRenderTargets[]>;
 
 /**
- * One compiled simulation board. Holds live object references on the
- * rendering side — valid for one simulation session (editing is locked while
- * simulating); rebuilt on every start and discarded on exit.
+ * One compiled simulation board. Holds live rendering-side object references,
+ * so it is valid for exactly one session (editing is locked while simulating).
  */
 export interface CompiledBoard {
   descriptor: BoardDescriptor;

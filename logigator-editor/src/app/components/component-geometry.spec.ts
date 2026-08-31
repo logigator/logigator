@@ -44,9 +44,9 @@ describe('component geometry lattice exactness', () => {
   });
 
   it('rotatedLocalPoint carries no float noise near the origin', () => {
-    // The regression a trig Matrix introduces: rotating (0, 0.5) by 90°
-    // yields -0.5 ± 1e-16, which survives the final addition for components
-    // near the origin and breaks exact-coordinate port matching.
+    // A trig Matrix rotating (0, 0.5) by 90° yields -0.5 ± 1e-16, which
+    // survives the final addition near the origin and breaks exact-coordinate
+    // port matching.
     expect(rotatedLocalPoint(Direction.S, 0, 0.5)).toMatchObject({
       x: -0.5,
       y: 0
@@ -158,9 +158,8 @@ describe('negationBubbleAnchor', () => {
 });
 
 describe('gridBoundsIntersects', () => {
-  // The overlap test exists so the quad tree can skip materializing a
-  // Rectangle per candidate; if it ever stops mirroring gridBounds, spatial
-  // queries silently return the wrong elements. Sweep both against each other.
+  // The overlap test lets the quad tree skip materializing a Rectangle per
+  // candidate; drift from gridBounds silently corrupts spatial queries.
   it('agrees with gridBounds().intersects() in every direction', () => {
     const probe = new Rectangle(9, 19, 3, 3);
 
@@ -195,9 +194,8 @@ describe('gridBoundsIntersects', () => {
 });
 
 describe('bodyGridBoundsIntersects', () => {
-  // Backs the collision helpers, which test every candidate against a dragged
-  // element's body without materializing its rect. A divergence here lets a
-  // drag drop onto an occupied cell (or blocks a free one).
+  // Collision tests every candidate against a dragged element's body without
+  // materializing its rect; a divergence lets a drag drop onto a taken cell.
   it('agrees with bodyGridBounds().intersects() as the probe slides across', () => {
     for (const direction of ALL_DIRECTIONS) {
       const s = shape({ direction });
@@ -215,8 +213,8 @@ describe('bodyGridBoundsIntersects', () => {
   });
 
   it('ignores the port stubs gridBoundsIntersects covers', () => {
-    // The two tests differ exactly where a stub sticks out: a probe on the
-    // input stub of an east-facing component hits the full bounds, not the body.
+    // The two differ exactly where a stub sticks out: a probe on an
+    // east-facing component's input stub hits the full bounds, not the body.
     const s = shape({ direction: Direction.E, numInputs: 2, numOutputs: 1 });
     const onInputStub = new Rectangle(9.5, 20.5, 0.5, 0.5);
     expect(gridBoundsIntersects(s, onInputStub)).toBe(true);

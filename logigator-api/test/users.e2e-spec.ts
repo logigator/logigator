@@ -18,10 +18,7 @@ const SVG = Buffer.from(
   '<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"/>'
 );
 
-/**
- * Serializes a file upload the way a browser does. Node's `Request` does the
- * multipart encoding, boundary included, so the specs do not hand-roll one.
- */
+/** A file upload as a browser sends it, encoded by Node's own `Request`. */
 async function multipart(
   content: Buffer,
   filename: string,
@@ -47,8 +44,7 @@ describe('the signed-in user', () => {
   const credentials = { email: 'ada@example.com', password: 'lovelace1' };
 
   beforeAll(async () => {
-    // The upload ceiling at its floor, so the oversized-avatar case is a couple
-    // of kilobytes instead of five megabytes of payload.
+    // The upload ceiling at its floor, so the oversized case costs kilobytes.
     api = await startE2eApp({ UPLOAD_MAX_BYTES: '1024' });
 
     await api.inject({
@@ -115,9 +111,9 @@ describe('the signed-in user', () => {
   });
 
   it('changes the address only with the current password', async () => {
-    // A session is not proof of intent here: whoever holds a stolen cookie could
-    // otherwise move the account to their own mailbox, confirm it from there, and
-    // reset the password — a takeover the owner's password never gates.
+    // A session is not proof of intent: a stolen cookie could otherwise move
+    // the account to another mailbox, confirm from there and reset the
+    // password, never meeting the owner's own.
     const withoutProof = await api.inject({
       method: 'PATCH',
       url: '/api/user',
@@ -143,8 +139,8 @@ describe('the signed-in user', () => {
 
     expect(response.statusCode).toBe(200);
     expect(response.json()).toMatchObject({
-      // Unchanged: a typo in an address must not lock its owner out, so nothing
-      // moves until the mail is opened.
+      // A typo must not lock its owner out, so nothing moves until the mail is
+      // opened.
       user: { email: credentials.email },
       emailVerificationSent: true
     });
@@ -192,9 +188,8 @@ describe('the signed-in user', () => {
   });
 
   it('refuses a confirmation whose address was taken meanwhile', async () => {
-    // The address is free when the mail goes out, and the token lives an hour —
-    // long enough for somebody else to register it. The unique constraint is
-    // where that is noticed, and it has to read as a conflict, not a crash.
+    // The token lives an hour, long enough for somebody else to register the
+    // address. The unique constraint has to read as a conflict, not a crash.
     const change = await api.inject({
       method: 'PATCH',
       url: '/api/user',
@@ -266,8 +261,8 @@ describe('the signed-in user', () => {
     });
     expect(changed.statusCode).toBe(200);
 
-    // The session survives its own password change — it is the credential that
-    // changed, not the identity.
+    // The session survives its own password change: the credential changed,
+    // not the identity.
     const stillSignedIn = await api.inject({
       method: 'GET',
       url: '/api/user',
@@ -275,8 +270,8 @@ describe('the signed-in user', () => {
     });
     expect(stillSignedIn.statusCode).toBe(200);
 
-    // Every other one does not: a password is changed because the old one is not
-    // trusted any more, and the sessions it opened are exactly what that means.
+    // Every other one ends: a password is changed because the old one is no
+    // longer trusted, and so are the sessions it opened.
     const onThePhone = await api.inject({
       method: 'GET',
       url: '/api/user',
@@ -301,14 +296,12 @@ describe('the signed-in user', () => {
     expect(avatar.length).toBeGreaterThan(0);
 
     for (const variant of avatar) {
-      // Pointers to the static layer — sharded, and named after nothing the
-      // client sent. That none of them is a `.png` is the upload being
-      // re-encoded rather than stored: what arrived was one.
+      // Sharded, named after nothing the client sent, and not a `.png` —
+      // the upload was re-encoded rather than stored, and a PNG arrived.
       expect(variant.url).toMatch(
         /^\/files\/profile\/[0-9a-f]{2}\/[0-9a-f-]{36}\/\d+\.(webp|jpg)$/
       );
-      // What the response promises has to be on the volume, or the client is
-      // holding URLs that 404.
+      // What the response promises has to be on the volume.
       const file = await stat(assetFilePath(api, variant.url));
       expect(file.size).toBeGreaterThan(0);
     }
@@ -326,9 +319,8 @@ describe('the signed-in user', () => {
   });
 
   /**
-   * The declared part type is the client's word for what it sent, and an
-   * endpoint that trusts it serves whatever the client chose under whatever type
-   * the client chose. What the file is gets decided by decoding it.
+   * The declared part type is the client's word. What the file is gets decided
+   * by decoding it.
    */
   it.each([
     ['for what they are', 'image/svg+xml', 'me.svg'],
@@ -360,9 +352,9 @@ describe('the signed-in user', () => {
       payload: upload.payload
     });
 
-    // A file too large is the client's business to fix, not a server fault: the
-    // multipart plugin's own way of reporting it is an error that reads as neither
-    // unless it is turned off and the truncation flag read instead.
+    // Too large is the client's fault, not the server's — the multipart
+    // plugin's own error reads as neither, so it is off and the truncation flag
+    // is read instead.
     expect(response.statusCode).toBe(413);
     expect(response.json().code).toBe('bad_request');
   });
@@ -376,8 +368,8 @@ describe('the signed-in user', () => {
     });
     expect(withoutProof.statusCode).toBe(401);
 
-    // And with no body at all — the natural call for an account that has no
-    // password to send, which must reach the handler rather than fail validation.
+    // No body at all is the natural call for an account with no password to
+    // send, and must reach the handler rather than fail validation.
     const bodyless = await api.inject({
       method: 'DELETE',
       url: '/api/user',

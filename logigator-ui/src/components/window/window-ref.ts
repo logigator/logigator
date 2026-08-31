@@ -14,13 +14,10 @@ export interface WindowGeometry {
 }
 
 /**
- * Handle to an open floating window ({@link WindowService.open}). The shape
- * mirrors {@link DialogRef} — `close(result?)` settles `onClose` exactly once,
- * `onChildComponentLoaded` replays the instantiated content instance — plus
- * the window-specific bits: `focus()` raises the window in the stack,
- * `resized` streams the window size after each user resize so canvas-hosting
- * content can re-render, and `bounds`/`setBounds` place the window the way a
- * title-bar drag would.
+ * Handle to an open floating window. The shape mirrors {@link DialogRef}, plus
+ * the window-specific bits: `focus()` raises it in the stack, `resized`
+ * streams the size after each user resize so canvas-hosting content can
+ * re-render, and `bounds`/`setBounds` place it as a title-bar drag would.
  */
 export class WindowRef<R = unknown> {
   private readonly closeSubject = new Subject<R | undefined>();
@@ -33,12 +30,11 @@ export class WindowRef<R = unknown> {
     this.closeSubject.asObservable();
   readonly onChildComponentLoaded: Observable<unknown> =
     this.childLoadedSubject.asObservable();
-  /** Emits the window's outer size after each user-driven resize. */
   readonly resized: Observable<WindowSize> = this.resizedSubject.asObservable();
 
   /**
-   * @param disposer Removes the window from the open set; supplied by
-   * {@link WindowService}. Runs once, before `onClose` emits.
+   * @param disposer Removes the window from the open set. Runs once, before
+   * `onClose` emits.
    * @param focuser Brings the window to the front of the stack.
    */
   constructor(
@@ -46,7 +42,6 @@ export class WindowRef<R = unknown> {
     private readonly focuser: () => void = () => undefined
   ) {}
 
-  /** Close the window, resolving {@link onClose} with `result`. Idempotent. */
   close(result?: R): void {
     if (this.settled) {
       return;
@@ -59,26 +54,20 @@ export class WindowRef<R = unknown> {
     this.resizedSubject.complete();
   }
 
-  /** Bring the window to the front of the window stack. */
   focus(): void {
     this.focuser();
   }
 
-  /**
-   * The window's outer box in viewport CSS px, or `null` before the chrome is
-   * in the DOM.
-   */
+  /** The outer box in viewport CSS px, `null` before the chrome is in the DOM. */
   get bounds(): WindowRect | null {
     return this.geometry?.read() ?? null;
   }
 
   /**
-   * Moves and/or resizes the window, in viewport CSS px — the programmatic
-   * equivalent of a title-bar drag, and clamped to the outlet the same way.
-   * Omitted fields keep their current value. Returns the box actually taken
-   * (which the clamp may have shrunk or shifted), or `null` when the window
-   * has no geometry to write: before its chrome is in the DOM, or in a
-   * fullscreen outlet, where it fills its host.
+   * Moves and/or resizes the window in viewport CSS px, clamped to the outlet
+   * as a title-bar drag is. Omitted fields keep their value. Returns the box
+   * actually taken, or `null` when there is no geometry to write: before the
+   * chrome is in the DOM, or in a fullscreen outlet.
    */
   setBounds(rect: Partial<WindowRect>): WindowRect | null {
     return this.geometry?.write(rect) ?? null;

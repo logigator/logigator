@@ -9,10 +9,10 @@ import { UserAvatarComponent } from './user-avatar.component';
 import { TranslateDirective } from '../../translation/translate.directive';
 
 /**
- * The account/settings panel: avatar header, theme/language/editor-settings
- * sections and the account actions (log in/out, account page). `action` fires
- * after an account action runs so a hosting overlay can dismiss itself; the
- * switcher sections don't fire it — toggling a setting keeps the panel open.
+ * The account/settings panel: avatar header, the theme/language/editor-settings
+ * sections and the account actions. `action` fires after an account action so a
+ * hosting overlay can dismiss itself; the switcher sections don't fire it, so
+ * toggling a setting keeps the panel open.
  */
 @Component({
   selector: 'app-user-settings-panel',

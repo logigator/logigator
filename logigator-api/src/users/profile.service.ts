@@ -20,13 +20,11 @@ export interface ProfileUpdateResult {
 /**
  * What a signed-in user may change about their own account.
  *
- * Every path here already knows who the caller is — the guard resolved the
- * session — so the questions left are about proof of intent. A session alone is
- * not that proof for anything that moves control of the account: the password and
- * the address both need the current password, and so does deleting it. Leaving
- * the address out of that list is what turns a stolen session cookie into a
- * takeover — change the address, confirm from the new mailbox, then reset the
- * password, none of it gated by anything the owner knows.
+ * A session alone is not proof of intent for anything that moves control of the
+ * account: the password, the address and deletion all need the current
+ * password. Leaving the address off that list turns a stolen session cookie
+ * into a takeover — change the address, confirm from the new mailbox, then
+ * reset the password, none of it gated by anything the owner knows.
  */
 @Injectable()
 export class ProfileService {
@@ -54,8 +52,8 @@ export class ProfileService {
   ): Promise<ProfileUpdateResult> {
     const changes: Partial<Pick<UserRow, 'username' | 'passwordHash'>> = {};
 
-    // Once, for both: a combined change would otherwise verify the same password
-    // twice, and bcrypt is deliberately expensive.
+    // Once for both: bcrypt is deliberately expensive, and a combined change
+    // would otherwise verify the same password twice.
     if (body.password !== undefined || body.email !== undefined) {
       await this.assertPasswordAllowed(user, body.currentPassword);
     }
@@ -79,9 +77,8 @@ export class ProfileService {
         : user;
 
     if (body.password !== undefined) {
-      // The password that let those other sessions in is gone, so they go with
-      // it. This one stays: the identity did not change, and signing a user out
-      // of the page they just used is not a security property.
+      // The password that let the other sessions in is gone, so they go with
+      // it. This one stays: the identity did not change.
       await this.sessions.signOutEverywhere(user.id, currentSessionId);
     }
 
@@ -89,13 +86,11 @@ export class ProfileService {
   }
 
   /**
-   * Replaces the avatar and deletes the asset it replaces.
-   *
-   * Two orderings matter. The encode runs before anything is written, so an
-   * unusable upload changes nothing and answers a 415 — the client's own
-   * declared content type is not consulted, since it is not evidence. And the
-   * pointer moves before the old asset is deleted, so a failed delete leaves an
-   * orphan for the sweep rather than a row pointing at nothing.
+   * Replaces the avatar and deletes the asset it replaces. Two orderings
+   * matter: the encode runs before anything is written, so an unusable upload
+   * changes nothing and answers a 415; and the pointer moves before the old
+   * asset is deleted, so a failed delete leaves an orphan for the sweep rather
+   * than a row pointing at nothing.
    */
   async setAvatar(user: UserRow, content: Buffer): Promise<UserRow> {
     const files = await this.images.encodeAvatar(content);
@@ -118,12 +113,8 @@ export class ProfileService {
   }
 
   /**
-   * Deletes the account and everything it owns.
-   *
-   * The cascade does the work in one statement, which is the point of modelling
-   * ownership as real foreign keys: the legacy version removed projects,
-   * components and the picture by hand across several transactions and could
-   * leave an account half-deleted.
+   * Deletes the account and everything it owns. The cascade does the work in
+   * one statement, so an account cannot be left half-deleted.
    */
   async deleteAccount(user: UserRow, password?: string): Promise<void> {
     if (user.passwordHash) {
@@ -169,9 +160,8 @@ export class ProfileService {
         token
       );
     } catch (error) {
-      // Nothing has moved yet — the address lives on the token — so this is
-      // simply a request that did not happen, and the caller has to be told
-      // rather than left believing a mail is on its way.
+      // Nothing has moved yet — the address lives on the token — so the caller
+      // is told rather than left believing a mail is on its way.
       this.logger.error(`Email change mail to ${email} failed`, error);
       throw new ApiException(
         HttpStatus.SERVICE_UNAVAILABLE,
@@ -184,9 +174,8 @@ export class ProfileService {
 
   /**
    * An account that has a password must prove it knows it, for a change of
-   * password or of address alike. One that does not — a Google sign-in, or a
-   * migrated Twitter login — has nothing to prove with, and its session is the
-   * only proof available.
+   * password or of address alike. One that does not — a Google sign-in — has
+   * nothing to prove with, and its session is the only proof available.
    */
   private async assertPasswordAllowed(
     user: UserRow,
@@ -208,9 +197,8 @@ export class ProfileService {
 }
 
 /**
- * The guard loaded this account moments ago, so its disappearing means it was
- * deleted mid-request — in another tab, or by the very request that raced this
- * one. There is no caller left to serve, which is what 401 says.
+ * The account was loaded moments ago, so its disappearing means it was deleted
+ * mid-request. There is no caller left to serve, which is what 401 says.
  */
 function accountGone(): never {
   throw new ApiException(

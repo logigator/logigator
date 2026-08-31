@@ -1,11 +1,10 @@
 import { Injectable, signal } from '@angular/core';
 
 /**
- * Loads the backend-served cookie-consent bundle (vanilla-cookieconsent plus
- * the shared config; see `src/consent.d.ts`). The script tag is created at
- * runtime because the dev server rewrites root-relative URLs in static
- * index.html tags under the /editor/ base href. Without the backend on the
- * same origin (bare `ng serve`) the script 404s and consent simply stays
+ * Loads the backend-served cookie-consent bundle (see `src/consent.d.ts`). The
+ * script tag is created at runtime because the dev server rewrites
+ * root-relative URLs in static index.html tags under the /editor/ base href.
+ * Without the backend on the same origin the script 404s and consent stays
  * unavailable.
  */
 @Injectable({ providedIn: 'root' })

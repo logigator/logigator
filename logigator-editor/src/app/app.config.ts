@@ -38,10 +38,9 @@ export const appConfig: ApplicationConfig = {
       loader: TranslationLoaderService
     }),
     // The language lives in the `lang` field of the origin-wide `preferences`
-    // cookie, which the pages the editor is served alongside read and write too
-    // — so switching language on either side moves both. This provider's
+    // cookie, which the surrounding pages read and write too. This provider's
     // initializer runs before the ones below, so the language is active before
-    // `<html lang>` is stamped and before the bundle preload picks a language.
+    // `<html lang>` is stamped and before the bundle preload picks one.
     provideTranslocoPersistLang({
       storageKey: 'lang',
       storage: {
@@ -50,17 +49,15 @@ export const appConfig: ApplicationConfig = {
       getLangFn: resolveStartupLang
     }),
     provideAppInitializer(() => {
-      // Resolved for its side effect: constructing TranslationService puts the
-      // active language on <html lang> before first paint. Nothing else needs
-      // the service this early.
+      // Resolved for its side effect: constructing TranslationService puts
+      // the active language on <html lang> before first paint.
       inject(TranslationService);
     }),
     provideAppInitializer(() => {
       const transloco = inject(TranslocoService);
-      // load() ends with takeUntilDestroyed: if the injector is torn down
-      // before the lazy language bundle resolves, the stream completes without
-      // emitting. defaultValue resolves that empty completion instead of
-      // rejecting; a genuine load error still propagates.
+      // load() ends with takeUntilDestroyed, so a teardown before the lazy
+      // bundle resolves completes the stream without emitting. defaultValue
+      // resolves that instead of rejecting; a genuine error still propagates.
       return firstValueFrom(transloco.load(transloco.getActiveLang()), {
         defaultValue: undefined
       });
@@ -71,12 +68,10 @@ export const appConfig: ApplicationConfig = {
     provideAppInitializer(() => {
       inject(AnalyticsService).init();
     }),
-    // @logigator/ui's stock strings (close/back/dismiss buttons, paginator
-    // steps, reorder announcements) come from `common.*`, so every dialog,
-    // drawer and window the library renders is localized without each call site
-    // passing a label — including ones added later. The resolver is consulted
-    // per component construction, so a short-lived surface always opens in the
-    // current language; long-lived ones bind the input in their template.
+    // @logigator/ui's stock strings come from `common.*`, so every surface the
+    // library renders is localized without its call site passing a label. The
+    // resolver is consulted per component construction, so a short-lived
+    // surface opens in the current language; long-lived ones bind the input.
     provideLgLabels(() => {
       const translation = inject(TranslationService);
       return (key) => translation.translate(`common.${key}`);

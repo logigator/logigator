@@ -77,9 +77,8 @@ describe('validateCurrentCircuitFile', () => {
     );
   });
 
-  // The definition body is fed straight into the delta/chain decoders and the
-  // registry, so a broken shape must fail as InvalidFileError here — not
-  // surface later as a raw TypeError from an array method on a non-array.
+  // The definition body feeds straight into the decoders, so a broken shape has
+  // to fail as InvalidFileError here rather than as a later TypeError.
   it.each([
     [
       'definition components not an array',

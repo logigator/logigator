@@ -17,11 +17,8 @@ import { TranslateDirective } from '../translation/translate.directive';
 
 /**
  * The single launch path for the getting-started tutorial — there is no
- * auto-start. A soft, dismissible prompt shown once to a first-time user (until
- * dismissed or the tutorial started), regardless of what's on the canvas.
- * Clicking Start hands off to {@link TutorialRunnerService.launch}, which swaps
- * in a fresh empty board (behind a discard-changes confirm) before running the
- * tutorial, and retires the nudge.
+ * auto-start. A soft, dismissible prompt shown once to a first-time user, until
+ * dismissed or the tutorial starts.
  */
 @Component({
   selector: 'app-onboarding-nudge',
@@ -64,7 +61,7 @@ export class OnboardingNudgeComponent {
       !this.onboarding.hasCompletedTutorial(GETTING_STARTED_TUTORIAL) &&
       this.onboarding.activeTutorial() === null &&
       this.workMode.mode() !== WorkMode.SIMULATION &&
-      // Only over the main board — the tutorial targets the main project, not a
+      // Only over the main board: the tutorial targets the main project, not a
       // custom-component edit tab that happens to be active.
       this.projectService.activeProject() === this.projectService.mainProject()
   );

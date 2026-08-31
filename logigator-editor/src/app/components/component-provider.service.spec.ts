@@ -9,9 +9,8 @@ import { Component } from './component';
 
 const CUSTOM_TYPE = 1234;
 
-// A minimal config standing in for a runtime-registered custom component. Its
-// `create` factory is never invoked by these tests (they exercise only
-// registration/lookup), so it returns a placeholder.
+// A minimal config standing in for a runtime-registered custom component;
+// these tests exercise registration and lookup only, so `create` is a stub.
 function makeStubConfig(): ComponentConfig {
   return {
     type: CUSTOM_TYPE,

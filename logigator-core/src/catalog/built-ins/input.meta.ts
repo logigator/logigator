@@ -4,10 +4,9 @@ import { ComponentMeta, NO_LABELS } from '../component-meta';
 
 /**
  * Option set shared by the two plug types: a user-facing port name and the
- * system-managed port order. The name is constrained to the backend's label
- * column (max 5 chars, no commas — labels are stored comma-joined); the index
- * is hidden from the inspector because the user reorders ports through the
- * Ports panel, never by typing.
+ * system-managed port order. The name allows no commas because labels are
+ * stored comma-joined; the index is hidden because ports are reordered through
+ * the Ports panel, never by typing.
  */
 export const PLUG_OPTIONS = {
   label: {
@@ -31,9 +30,8 @@ export const PLUG_OPTIONS = {
 export const PLUG_LEGACY_V0_SLOTS = { s: 'label', n: ['index'] } as const;
 
 /**
- * A plug's port counts are fixed: an INPUT exposes exactly one output — the
- * signal it feeds into the circuit. The `i`/`o` wire fields are ignored on
- * load; the counts come from here, not from the element.
+ * A plug's port counts are fixed: an INPUT exposes exactly one output, the
+ * signal it feeds into the circuit. The `i`/`o` slots are ignored on load.
  */
 export const inputMeta = {
   type: BuiltInComponentType.INPUT,

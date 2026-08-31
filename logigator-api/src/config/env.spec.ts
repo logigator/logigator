@@ -3,8 +3,7 @@ import { DEVELOPMENT_SESSION_SECRET, loadEnv } from './env';
 
 /**
  * What a production deployment has to say for itself before the schema lets it
- * boot: a private secret, and a declared proxy — cookies are `Secure` there, and
- * the process serves plain HTTP.
+ * boot: a private secret, and a declared proxy.
  */
 const PRODUCTION = {
   NODE_ENV: 'production',
@@ -14,8 +13,7 @@ const PRODUCTION = {
 
 describe('loadEnv', () => {
   it('falls back to defaults for an empty environment', () => {
-    // Every variable is defaulted on purpose: a bare `docker compose up` must
-    // bring the API up with no configuration file anywhere.
+    // A bare `docker compose up` must boot with no configuration anywhere.
     expect(loadEnv({})).toEqual({
       NODE_ENV: 'development',
       HOST: '0.0.0.0',
@@ -62,8 +60,7 @@ describe('loadEnv', () => {
   });
 
   it('refuses to run in production on the public development secret', () => {
-    // Anyone holding it could forge a session cookie, and it is in the
-    // repository — so this is the one default production may not inherit.
+    // It is in the repository, so anyone could forge a session cookie.
     expect(() =>
       loadEnv({ ...PRODUCTION, SESSION_SECRET: undefined })
     ).toThrowError(/SESSION_SECRET/);
@@ -71,8 +68,8 @@ describe('loadEnv', () => {
   });
 
   it('rejects half-configured Google credentials', () => {
-    // Half-configured is the dangerous state: it looks enabled and fails at the
-    // token exchange, after the user has already been to Google and back.
+    // Half-configured looks enabled and fails at the token exchange, after the
+    // user has already been to Google and back.
     expect(() => loadEnv({ GOOGLE_CLIENT_ID: 'id' })).toThrowError(/GOOGLE/);
     expect(() => loadEnv({ GOOGLE_CLIENT_SECRET: 'secret' })).toThrowError(
       /GOOGLE/
@@ -110,10 +107,9 @@ describe('loadEnv', () => {
   });
 
   it('refuses secure cookies without a trusted proxy', () => {
-    // The combination looks fine and is silently broken: `@fastify/session` will
-    // not write a `Secure` cookie over a connection it thinks is plain, and it
-    // thinks that for as long as `X-Forwarded-Proto` is untrusted. Logins would
-    // answer 200 and start no session at all.
+    // Silently broken: `@fastify/session` writes no `Secure` cookie over a
+    // connection it thinks is plain, and it thinks that for as long as
+    // `X-Forwarded-Proto` is untrusted. Logins would 200 and start no session.
     expect(() => loadEnv({ ...PRODUCTION, TRUST_PROXY: 'false' })).toThrowError(
       /TRUST_PROXY/
     );
@@ -121,8 +117,7 @@ describe('loadEnv', () => {
       /TRUST_PROXY/
     );
 
-    // Plain-HTTP deployments are the ones that may trust nothing: a directly
-    // reachable server must not let a caller pick its own address.
+    // A directly reachable server must not let a caller pick its own address.
     expect(loadEnv({}).TRUST_PROXY).toBe(false);
     expect(
       loadEnv({ ...PRODUCTION, COOKIE_SECURE: 'false', TRUST_PROXY: 'false' })
@@ -131,9 +126,8 @@ describe('loadEnv', () => {
   });
 
   it('refuses a hop count left over from the old contract', () => {
-    // The one malformed value Fastify would not catch: its matcher reads a bare
-    // integer as an address (`1` is `0.0.0.1`), so an untouched `TRUST_PROXY=1`
-    // would boot, trust an address nothing connects from, and write no session.
+    // The one malformed value Fastify would not catch: its matcher reads `1` as
+    // the address `0.0.0.1`, so the process would boot trusting nothing real.
     expect(() => loadEnv({ TRUST_PROXY: '1' })).toThrowError(/TRUST_PROXY/);
     expect(() => loadEnv({ ...PRODUCTION, TRUST_PROXY: '0' })).toThrowError(
       /TRUST_PROXY/
@@ -142,8 +136,7 @@ describe('loadEnv', () => {
 
   it('hands an addressed proxy to Fastify as written', () => {
     // Only the two literals mean anything here; a preset or an address list is
-    // Fastify's vocabulary and has to reach its matcher unparsed, or a
-    // deployment naming its proxy exactly would silently trust something else.
+    // Fastify's vocabulary and has to reach its matcher unparsed.
     expect(loadEnv({ TRUST_PROXY: 'true' }).TRUST_PROXY).toBe(true);
     expect(loadEnv({ TRUST_PROXY: 'uniquelocal' }).TRUST_PROXY).toBe(
       'uniquelocal'

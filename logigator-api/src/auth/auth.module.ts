@@ -11,10 +11,9 @@ import { GoogleAuthService } from './google-auth.service';
 import { PasswordService } from './password.service';
 
 /**
- * `AuthGuard` is exported rather than registered globally: most endpoints will
- * need a session, but the public community listings will not, and an opt-out
- * default is the kind of thing that leaks a private document the day somebody
- * forgets the decorator.
+ * `AuthGuard` is exported rather than registered globally: the public community
+ * listings need no session, and an opt-out default leaks a private document the
+ * day somebody forgets the decorator.
  */
 @Module({
   imports: [forwardRef(() => UsersModule), MailModule],

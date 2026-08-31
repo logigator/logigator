@@ -9,7 +9,6 @@ import type { z } from 'zod';
 import { environment } from '../../../environments/environment';
 import { InvalidResponseError, toApiRequestError } from '../api-error';
 
-/** Plain-object form of HTTP query parameters. */
 export type QueryParams = Record<string, string | number | boolean | undefined>;
 
 function toHttpParams(params: QueryParams): HttpParams {
@@ -23,18 +22,14 @@ function toHttpParams(params: QueryParams): HttpParams {
 }
 
 /**
- * Thin wrapper around Angular's `HttpClient` for the Logigator API.
+ * `HttpClient` for the Logigator API: prepends `environment.apiUrl`, validates
+ * every response against its `@logigator/contract` schema and turns a failure
+ * into an {@link ApiRequestError} carrying the API's own code.
  *
- * - Prepends the configured base URL from `environment.apiUrl`
- * - Validates every response against its `@logigator/contract` schema
- * - Turns a failure into an {@link ApiRequestError} carrying the API's own code
- * - Converts plain-object query params to `HttpParams`
- *
- * Responses are not enveloped: a body *is* the resource. Validating it here
- * rather than trusting it is what keeps a shape mismatch a boundary failure
- * with a name, instead of an `undefined` surfacing deep inside the decode.
- * The schemas are loose, so an API that grows a field does not break a client
- * holding an older contract copy.
+ * Responses are not enveloped — a body *is* the resource — so validating here
+ * keeps a shape mismatch a named boundary failure rather than an `undefined`
+ * surfacing deep inside the decode. The schemas are loose, so an API that grows
+ * a field does not break a client holding an older contract copy.
  */
 @Injectable({ providedIn: 'root' })
 export class ApiBaseService {
@@ -90,10 +85,7 @@ export class ApiBaseService {
     );
   }
 
-  /**
-   * A request whose response carries nothing to read — the routes that answer
-   * `204`. No schema, because there is no body to describe.
-   */
+  /** For the routes that answer `204`: no body, so no schema. */
   postEmpty(path: string, body?: unknown): Observable<void> {
     return this._discard(this.http.post<unknown>(this.url(path), body ?? {}));
   }
@@ -138,7 +130,7 @@ export class ApiBaseService {
     );
   }
 
-  // Merge baseUrl and path, ensuring there's exactly one slash between them
+  // Exactly one slash between baseUrl and path.
   private url(path: string): string {
     return `${this.baseUrl.replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}`;
   }

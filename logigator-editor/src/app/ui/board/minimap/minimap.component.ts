@@ -33,45 +33,39 @@ const CONTENT_DEBOUNCE_MS = 200;
 /**
  * Factor the content renders at before the snapshot service downscales it, so
  * hairline wires are filtered rather than quantized onto whole pixels. Fixed
- * rather than `subPixelSupersample`'d: the map re-renders as the board grows,
- * and a size that happened to land pixel-exact would render crisper — i.e.
- * brighter — than its neighbours, which is the flicker being fixed. Costs its
- * square in render pixels: 3× turns a 250 px panel into a ~750 px texture,
- * cheap for a debounced, occasional render.
+ * rather than `subPixelSupersample`'d: a size landing pixel-exact would render
+ * brighter than its neighbours, which is the flicker this avoids. Costs its
+ * square in render pixels, cheap for a debounced render.
  */
 const SUPERSAMPLE = 3;
 /**
  * Coverage lift for the downscaled map (see `SnapshotOptions.coverageBoost`).
- * The map is a navigation aid, not output the user keeps, so it trades
- * fidelity for legibility on large boards where wires are sub-pixel; exports
- * leave it off. The snapshot service applies it only on WebGL, whose darker
- * readback is what this value was calibrated against.
+ * A navigation aid trades fidelity for legibility on large boards where wires
+ * are sub-pixel; exports leave it off. Calibrated against WebGL's darker
+ * readback, which is the only backend the snapshot service applies it on.
  */
 const COVERAGE_BOOST = 1;
 /** Minimum on-screen size of the viewport rectangle (CSS px). */
 const MIN_RECT_SIZE_PX = 12;
 /** Compact expansion is a peek: collapse this long after the last scrub. */
 const AUTO_COLLAPSE_MS = 3000;
-/** Desktop collapse is an explicit choice, so it persists (plain key, not an
- *  `EditorSetting` — it's UI state, not a settings-page row). */
+/** Desktop collapse is an explicit choice, so it persists. A plain key, not
+ *  an `EditorSetting`: UI state, not a settings-page row. */
 const COLLAPSED_STORAGE_KEY = 'logigator.minimap.collapsed';
 
 /**
- * Always-available overview map in the board's corner: a shrunk render of the
- * whole circuit plus a rectangle marking the visible viewport. Two layers with
- * two update rates — the content canvas re-renders debounced on committed
- * actions (and immediately on project/theme switches), while the viewport
- * rectangle is a plain div tracking every pan/zoom via `viewportChange$`.
+ * Overview map in the board's corner: a shrunk render of the whole circuit plus
+ * a rectangle marking the visible viewport. Two layers at two update rates:
+ * the content canvas re-renders debounced on committed actions (immediately
+ * on project/theme switches), the rectangle is a div tracking every pan/zoom.
  *
  * The mapped region derives only from content bounds (with hysteresis, see
  * `minimap-frame.ts`), never from the camera, so panning can never force a
- * content re-render. Hidden while the project is empty — a map of nothing has
- * no navigation value.
+ * content re-render. Hidden while the project is empty.
  *
- * Collapsing pauses the whole pipeline (bounds tracking excepted) and
- * expansion renders once. On compact layouts the panel starts collapsed, sits
- * in the right-edge stack above the zoom FAB, and expansion is a transient
- * peek: it auto-collapses shortly after a scrub and on any tap outside.
+ * Collapsing pauses the pipeline (bounds tracking excepted) and expansion
+ * renders once. On compact layouts expansion is a transient peek: it
+ * auto-collapses shortly after a scrub and on any tap outside.
  */
 @Component({
   selector: 'app-minimap',
@@ -98,10 +92,8 @@ export class MinimapComponent implements OnDestroy {
     this.layout.isCompact() ? PANEL_SIZE_COMPACT : PANEL_SIZE_REGULAR
   );
   /**
-   * Desktop: owns the bottom-right corner (the FPS counter owns the top-left,
-   * the toasts and component-settings card the bottom-left). The app shell
-   * places the host, so it carries only `pointer-events-auto`.
-   * Compact: right-edge stack above the zoom FAB, below the status pill.
+   * Desktop: the app shell places the host, so it carries only
+   * `pointer-events-auto`. Compact: right-edge stack above the zoom FAB.
    */
   protected readonly hostClasses = computed(() =>
     this.layout.isCompact()
@@ -123,7 +115,7 @@ export class MinimapComponent implements OnDestroy {
   private _renderFrameId: number | null = null;
   private _rectFrameId: number | null = null;
 
-  /** The rect as last drawn (panel CSS px) — the pointer-down hit target. */
+  /** The rect as last drawn (panel CSS px); the pointer-down hit target. */
   private _lastRect: PanelRect | null = null;
   /** First captured pointer of a scrub; later pointers are ignored. */
   private _activePointerId: number | null = null;
@@ -170,16 +162,15 @@ export class MinimapComponent implements OnDestroy {
     });
 
     // Content colors are theme-baked, so a theme switch needs a fresh render.
-    // The rAF deferral lets every project's own theme effect redraw the cached
+    // The rAF deferral lets each project's theme effect redraw its cached
     // graphics first.
     effect(() => {
       this.themingService.currentTheme();
       this._scheduleRender();
     });
 
-    // Compact defaults to collapsed (expansion is a transient peek); desktop
-    // restores the user's persisted choice. Re-evaluated when the layout axis
-    // flips, e.g. on rotation.
+    // Compact defaults to collapsed; desktop restores the persisted choice.
+    // Re-evaluated when the layout axis flips, e.g. on rotation.
     effect(() => {
       this.collapsed.set(
         this.layout.isCompact()
@@ -188,9 +179,9 @@ export class MinimapComponent implements OnDestroy {
       );
     });
 
-    // Expansion re-creates the canvas, so it always renders once — this is
-    // also what catches up after edits made while the pipeline was paused.
-    // Panel-size flips re-render through the same dependency chain.
+    // Expansion re-creates the canvas, so it renders once, which is also what
+    // catches up on edits made while the pipeline was paused. Panel-size flips
+    // ride the same dependency chain.
     effect(() => {
       this.panelSize();
       if (!this.collapsed()) this._scheduleRender();
@@ -247,13 +238,13 @@ export class MinimapComponent implements OnDestroy {
       return;
     }
     this.hasContent.set(true);
-    // Paused while collapsed — expansion renders once (see the effect above).
+    // Paused while collapsed; expansion renders once.
     if (this.collapsed()) return;
 
     const canvas = this.canvasRef()?.nativeElement;
     if (!canvas) {
-      // Just expanded: the panel isn't in the DOM until the next change
-      // detection pass. Retry on the following frame.
+      // Just expanded: the panel reaches the DOM on the next change-detection
+      // pass. Retry on the following frame.
       this._scheduleRender();
       return;
     }
@@ -280,8 +271,8 @@ export class MinimapComponent implements OnDestroy {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    // Already downscaled to the display size, with its sub-pixel coverage
-    // lifted, by the snapshot service.
+    // The snapshot service already downscaled this to the display size and
+    // lifted its sub-pixel coverage.
     ctx.drawImage(
       rendered,
       Math.round(this._fit.offsetX * dpr),
@@ -330,11 +321,10 @@ export class MinimapComponent implements OnDestroy {
   }
 
   /**
-   * Press-and-scrub, one code path for mouse and touch: pressing on the rect
-   * starts a relative drag (the grab offset is preserved), pressing anywhere
-   * else jumps the viewport to that point first — so the whole panel is the
-   * touch target and the rect never has to be hit precisely. A tap is the
-   * degenerate no-move case.
+   * Press-and-scrub, one code path for mouse and touch: pressing the rect
+   * starts a relative drag preserving the grab offset, pressing anywhere else
+   * jumps the viewport there first, so the whole panel is the touch target
+   * and the rect never has to be hit precisely. A tap is the no-move case.
    */
   protected onPointerDown(event: PointerEvent): void {
     const project = this.project();
@@ -453,7 +443,7 @@ export class MinimapComponent implements OnDestroy {
     project.viewport.setPosition(
       new Point(-gridOriginX * pxPerUnit, -gridOriginY * pxPerUnit)
     );
-    // setPosition alone doesn't tick the ticker; repaint while scrubbing.
+    // setPosition doesn't tick the ticker; repaint while scrubbing.
     project.triggerTicker('single');
   }
 }

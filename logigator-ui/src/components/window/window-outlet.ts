@@ -14,19 +14,14 @@ import { WindowService } from './window.service';
 import { lgLabel } from '../../tokens/labels';
 
 /**
- * The {@link WindowService} outlet: renders every open window as an absolutely
- * positioned child, so the host element doubles as the windows' drag/resize
- * bounds. Place it inside the container the windows should float over (e.g.
- * the editor's board area) — the host is pointer-transparent, each window
- * re-enables its own pointer events. Stacking against sibling overlays is the
- * consumer's business: pass a `z-*` class on the element.
+ * The {@link WindowService} outlet: every open window as an absolutely
+ * positioned child, so the host doubles as their drag/resize bounds. The host
+ * is pointer-transparent and each window re-enables its own pointer events;
+ * stacking against sibling overlays is a `z-*` class the consumer passes.
  *
- * A `fullscreen` outlet renders every window as an outlet-filling takeover
- * (back button, no drag/resize) instead — a compact-breakpoint alternative.
- * Every outlet in the tree renders **all** open windows, so keep at most one
- * outlet alive at a time (e.g. swap a floating and a fullscreen one under a
- * breakpoint condition); two live outlets would instantiate every window's
- * content twice.
+ * A `fullscreen` outlet renders each window as an outlet-filling takeover
+ * instead. Every outlet in the tree renders **all** open windows, so keep at
+ * most one alive: two would instantiate every window's content twice.
  */
 @Component({
   selector: 'lg-window-outlet',
@@ -49,9 +44,9 @@ import { lgLabel } from '../../tokens/labels';
 export class LgWindowOutlet {
   /** Render windows as outlet-filling takeovers instead of floating panels. */
   readonly fullscreen = input(false, { transform: booleanAttribute });
-  /** ARIA label for every window's close button — pass a localized string. */
+  /** ARIA label for every window's close button; localize it. */
   readonly closeLabel = input(lgLabel('close'));
-  /** ARIA label for the fullscreen back button — pass a localized string. */
+  /** ARIA label for the fullscreen back button; localize it. */
   readonly backLabel = input(lgLabel('back'));
 
   protected readonly windows = inject(WindowService).windows;

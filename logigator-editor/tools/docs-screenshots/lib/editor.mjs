@@ -13,17 +13,15 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 
 /**
- * Where the pointer rests whenever a shot is not deliberately hovering
- * something: the very top-left of the chrome, clear of every button (so no
- * tooltip opens) and clear of the canvas (so the status bar's coordinate
- * readout and the tools' hover ghosts stay at their idle state).
+ * Where the pointer rests when a shot is not deliberately hovering something:
+ * clear of every button so no tooltip opens, and clear of the canvas so the
+ * coordinate readout and hover ghosts stay idle.
  */
 const PARKED_POINTER = { x: 2, y: 2 };
 
 /**
- * Drives one editor page for one shot. Every shot gets a fresh browser context,
- * so IndexedDB drafts, the custom-component library and the preference store
- * never leak from one shot into the next.
+ * Drives one editor page for one shot. Each shot gets a fresh browser context,
+ * so drafts, the component library and preferences never leak between shots.
  */
 export class Editor {
   /**
@@ -38,34 +36,22 @@ export class Editor {
     this.onProgress = options.onProgress;
     this.context = null;
     this.page = null;
-    /** The language's translations, loaded by {@link Editor.open}. */
     this.translations = null;
-    /** Handle of the open inspection, set by {@link Editor.openWatch}. */
     this.watch = null;
   }
 
-  /**
-   * The editor's own text for a translation key, in the language this run is
-   * capturing — how every label a shot matches on is addressed.
-   */
   t(key) {
     return translate(this.translations, key);
   }
 
-  /**
-   * Announces the step now under way. Only the calls that can take seconds
-   * report, so the line names what a stalled shot is waiting on rather than
-   * flickering through every geometry query.
-   */
+  /** Announces the step under way; only calls that can take seconds do. */
   report(step) {
     this.onProgress?.(step);
   }
 
   /**
-   * Opens the editor in a clean context. `viewport` widens or heightens the
-   * window for shots that frame something taller than the standard one (the
-   * full component palette, the shortcut manager); `cloud` installs the mocked
-   * backend and the signed-in session.
+   * Opens the editor in a clean context. `cloud` installs the mocked backend
+   * and the signed-in session.
    */
   async open({ viewport, cloud, localStorage: overrides } = {}) {
     this.report('opening the editor');
@@ -75,8 +61,7 @@ export class Editor {
       deviceScaleFactor: DEVICE_SCALE_FACTOR,
       colorScheme: 'dark',
       reducedMotion: 'reduce',
-      // `--base` points at a development instance, which may be served over
-      // HTTPS with a self-signed certificate (`https://logigator.test/editor`).
+      // `--base` may be an HTTPS instance with a self-signed certificate.
       ignoreHTTPSErrors: true
     });
     await this.context.addInitScript(
@@ -104,9 +89,9 @@ export class Editor {
             '`debug.automationApi` on?'
         );
       });
-    // The facade grows additively, so its version does not distinguish an
-    // editor without the calls this tool drives. Probe one of them instead of
-    // failing with a TypeError inside whichever shot ran first.
+    // The facade grows additively, so its version does not identify an editor
+    // missing the calls this tool drives. Probing one beats a TypeError inside
+    // whichever shot ran first.
     const complete = await this.api(
       () => typeof window.__logigator.camera.toScreen === 'function'
     );
@@ -125,7 +110,6 @@ export class Editor {
     await this.context?.close();
     this.context = null;
     this.page = null;
-    /** Handle of the open inspection, set by {@link Editor.openWatch}. */
     this.watch = null;
   }
 
@@ -133,8 +117,7 @@ export class Editor {
 
   /**
    * Runs `body(arg)` in the page, where the facade is `window.__logigator`.
-   * Everything crossing this boundary is structured-cloneable, exactly like the
-   * contract an agent driving the editor sees.
+   * Everything crossing this boundary must be structured-cloneable.
    */
   api(body, arg) {
     return this.page.evaluate(body, arg ?? null);
@@ -142,14 +125,12 @@ export class Editor {
 
   /**
    * Loads one of the recorded circuits from `circuits/`, replacing whatever is
-   * open. The files are ordinary editor exports (File → Export to file), so a
-   * scene is edited by opening it in the editor, changing it and exporting it
-   * back over the same name — not by editing coordinates here.
+   * open. The files are ordinary editor exports; a scene is edited by opening
+   * it in the editor and exporting it back, never by editing coordinates here.
    *
-   * The document's name comes from the file, and so do any custom components
-   * it uses: a v1 file embeds a frozen definition of every custom in its
-   * circuit. Those arrive as embedded copies, not as library masters — see
-   * {@link Editor.openCustomForEdit} for the shots that need the master.
+   * A v1 file embeds a frozen definition of every custom it uses, so those
+   * arrive as embedded copies rather than library masters; see
+   * {@link Editor.openCustomForEdit}.
    */
   async load(name) {
     this.report(`loading ${name}`);
@@ -161,7 +142,7 @@ export class Editor {
     await this.settle();
   }
 
-  /** Every element in the open document, as the API's serialized bodies. */
+  /** The open document's elements, as the API's serialized bodies. */
   elements(query) {
     return this.api(
       (q) => window.__logigator.getElements(q ?? undefined),
@@ -177,11 +158,6 @@ export class Editor {
     await this.settle();
   }
 
-  /**
-   * Absolute camera placement. Zoom first, then centre: `setZoom` keeps the
-   * viewport centre fixed, so the order does not matter for the result but does
-   * keep the intermediate frame from jumping.
-   */
   async setCamera({ center, zoom }) {
     await this.api(
       (a) => {
@@ -202,9 +178,8 @@ export class Editor {
   /**
    * Slides the camera until the content's centre sits at the given CSS-px
    * offsets from the board's top-left corner — how a shot parks a circuit
-   * beside, or level with, a floating window. Either axis may be left out.
-   * Measured from where the content actually is, so it holds at any zoom and
-   * whatever framing came before it.
+   * beside a floating window. Either axis may be left out. Measured from where
+   * the content is, so it holds at any zoom and prior framing.
    */
   async centerContentAt({ x, y }) {
     const bounds = await this.contentBounds();
@@ -213,8 +188,7 @@ export class Editor {
       x: bounds.x + bounds.width / 2,
       y: bounds.y + bounds.height / 2
     };
-    // Both points in grid units, so the pan is their difference: where the
-    // content is now, and where the given board offsets land on the grid.
+    // Both points in grid units, so the pan is their difference.
     const target = await this.api(
       (point) => window.__logigator.camera.toGrid(point),
       { x: board.x + (x ?? 0), y: board.y + (y ?? 0) }
@@ -236,7 +210,6 @@ export class Editor {
     return this.api((p) => window.__logigator.settings.set(p), patch);
   }
 
-  /** Arms one of the board's tools, as the tool bar's buttons do. */
   async setWorkMode(mode, opts) {
     await this.api(
       (a) => window.__logigator.setWorkMode(a.mode, a.opts ?? undefined),
@@ -245,7 +218,7 @@ export class Editor {
     await this.settle();
   }
 
-  /** Selects elements the way the select tool's marquee would. */
+  /** Selects as the select tool's marquee would. */
   async select(region, opts) {
     const state = await this.api(
       (a) => window.__logigator.select(a.region, a.opts ?? undefined),
@@ -258,11 +231,10 @@ export class Editor {
   // -- Waiting -------------------------------------------------------------
 
   /**
-   * Waits until the page is visually stable: web fonts resolved (they are
-   * self-hosted and load async, so an early shot catches fallback metrics),
-   * running transitions finished (an overlay caught mid-scale rasterizes its
-   * border a subpixel off), and two animation frames painted — the board
-   * renders on demand, so one frame after an edit is not enough.
+   * Waits until the page is visually stable: fonts resolved (an early shot
+   * catches fallback metrics), transitions finished (an overlay caught
+   * mid-scale rasterizes its border a subpixel off), and two frames painted —
+   * the board renders on demand, so one frame after an edit is not enough.
    */
   async settle() {
     await this.page.evaluate(async () => {
@@ -271,7 +243,7 @@ export class Editor {
         .getAnimations()
         .filter((animation) => animation.playState === 'running')
         .map((animation) => animation.finished.catch(() => undefined));
-      // Raced against a deadline so an indefinite animation cannot hang a shot.
+      // Deadlined so an indefinite animation cannot hang a shot.
       await Promise.race([
         Promise.all(running),
         new Promise((resolve) => setTimeout(resolve, 1000))
@@ -281,7 +253,6 @@ export class Editor {
     });
   }
 
-  /** Moves the pointer out of every hover target and settles. */
   async parkPointer() {
     await this.page.mouse.move(PARKED_POINTER.x, PARKED_POINTER.y);
     await this.settle();
@@ -290,19 +261,14 @@ export class Editor {
   // -- Geometry ------------------------------------------------------------
 
   // Every conversion between grid units and CSS px goes through the camera's
-  // own mapping (`camera.toScreen` / `toScreenRect` / `boardRect`) rather than
-  // being recomputed here — the editor owns that transform, and a copy of it
-  // out here would drift the moment the camera changed.
+  // own mapping: a copy of the editor's transform out here would drift.
 
   /** Bounding box of the board canvas, in CSS px relative to the viewport. */
   canvasBox() {
     return this.api(() => window.__logigator.camera.boardRect());
   }
 
-  /**
-   * Grid rectangle → clip rectangle in CSS px. `pad` is in grid units, so
-   * framing stays stable across zoom levels.
-   */
+  /** Grid rectangle → CSS-px clip. `pad` is in grid units. */
   async gridClip(rect, pad = 0) {
     const [box, canvas] = await Promise.all([
       this.api((r) => window.__logigator.camera.toScreenRect(r), {
@@ -313,8 +279,8 @@ export class Editor {
       }),
       this.canvasBox()
     ]);
-    // Clamped to the canvas, not the window: a crop that ran past the board
-    // would otherwise pick up the status bar or the side-bar's edge.
+    // Clamped to the canvas, not the window: a crop past the board would pick
+    // up the status bar or the side-bar's edge.
     return clampTo(box, canvas);
   }
 
@@ -323,16 +289,12 @@ export class Editor {
     return this.api((p) => window.__logigator.camera.toScreen(p), pos);
   }
 
-  /** Viewport CSS px → grid point: what the board shows at a screen position. */
+  /** Viewport CSS px → grid point. */
   gridOf(point) {
     return this.api((p) => window.__logigator.camera.toGrid(p), point);
   }
 
-  /**
-   * Captures one frame into memory instead of to disk — how an animated shot
-   * builds its frames, advancing the editor between calls. Same target shape a
-   * still shot returns.
-   */
+  /** Captures one frame into memory rather than to disk. */
   snap(target) {
     const options = { animations: 'disabled' };
     return target.locator
@@ -340,7 +302,6 @@ export class Editor {
       : this.page.screenshot({ ...options, clip: target.clip });
   }
 
-  /** The whole window — what a "here is the editor" shot frames. */
   async fullViewportClip() {
     const size = await this.page.viewportSize();
     return { x: 0, y: 0, ...size };
@@ -348,8 +309,8 @@ export class Editor {
 
   /**
    * Centres the circuit at the canonical board zoom and clips to its bounds.
-   * `pad` is in grid units, so the margin around a circuit is the same on every
-   * page regardless of how big the circuit is.
+   * `pad` is in grid units, so the margin is the same whatever the circuit's
+   * size.
    */
   async contentClip({
     pad = 2,
@@ -361,9 +322,8 @@ export class Editor {
     if (!overlays) await this.hideOverlays();
 
     const board = await this.canvasBox();
-    // 'top-left' parks the circuit in the board's top-left corner, so a clip
-    // that also has to reach the chrome above the board stays tight; 'top'
-    // keeps that short frame but leaves the circuit centred across it.
+    // 'top-left' parks the circuit in the board's corner, keeping a clip that
+    // also reaches the chrome above tight; 'top' centres it across that frame.
     const flush = {
       x: board.width / GRID_SIZE / zoom / 2 - pad,
       y: board.height / GRID_SIZE / zoom / 2 - pad
@@ -396,9 +356,8 @@ export class Editor {
   }
 
   /**
-   * Clip covering every given selector's box, padded. The union keeps shots of
-   * button groups and adjacent bars anchored to the real chrome instead of to
-   * markup this tool would otherwise have to add.
+   * Padded clip covering every given selector's box, so shots of button groups
+   * and adjacent bars anchor to real chrome rather than added markup.
    * @arg pad {number|{left?: number, right?: number, top?: number, bottom?: number}}
    */
   async unionClip(selectors, pad = 0) {
@@ -433,11 +392,7 @@ export class Editor {
 
   // -- Chrome helpers ------------------------------------------------------
 
-  /**
-   * Opens a top-level menu (File / Edit / View / Help) and picks an item, both
-   * named by translation key — the labels are whatever the run's language calls
-   * them.
-   */
+  /** Opens a top-level menu and picks an item, both by translation key. */
   async menu(menuKey, itemKey) {
     await this.page.getByRole('menuitem', { name: this.t(menuKey) }).click();
     await this.page.getByRole('menuitem', { name: this.t(itemKey) }).click();
@@ -445,35 +400,28 @@ export class Editor {
   }
 
   /**
-   * Clicks a chrome button by its accessible name, given as a translation key —
-   * for the buttons that *are* the shot's subject (the scissor pill) or that
-   * open a dialog. Arming a tool goes through {@link Editor.setWorkMode}
-   * instead: an accessible name is not how a tool should be picked.
+   * Clicks a chrome button by translation key. Arming a tool goes through
+   * {@link Editor.setWorkMode} instead.
    */
   async clickButton(key, options) {
     await this.button(key).click(options);
     await this.settle();
   }
 
-  /** A chrome button, by the translation key behind its accessible name. */
+  /** A chrome button, by the key behind its accessible name. */
   button(key) {
     return this.page.getByRole('button', { name: this.t(key), exact: true });
   }
 
-  /** Switches a dialog to one of its tabs, named by translation key. */
   async clickTab(key) {
     await this.page.getByRole('tab', { name: this.t(key) }).click();
     await this.settle();
   }
 
   /**
-   * Fails the shot when the tool bar has wrapped to a second row. Its buttons
-   * are labelled by tooltip, not by text, but its width still follows the
-   * language: the bar is laid out `flex-wrap`, so in a viewport that fits the
-   * English bar a longer language silently folds it in two and every shot
-   * framing the chrome comes out a row taller. Called by the shots that frame
-   * the bar, so a language that needs a wider viewport says so instead of
-   * quietly producing a different picture.
+   * Fails the shot when the tool bar has wrapped to a second row. The bar is
+   * `flex-wrap`, so a viewport fitting the English bar silently folds a longer
+   * language in two and every shot of the chrome comes out a row taller.
    */
   async requireSingleRowToolBar() {
     const [bar, button] = await Promise.all([
@@ -489,12 +437,7 @@ export class Editor {
     }
   }
 
-  /**
-   * Hides the controls docked over the board — the minimap and the bug-report
-   * badge — so a close-up of a circuit does not catch a corner of them. They
-   * are chrome, not circuit, and every board crop would otherwise have to dodge
-   * the bottom-right corner.
-   */
+  /** Hides the controls docked over the board, which a close-up would catch. */
   async hideOverlays() {
     await this.page.addStyleTag({
       content: 'app-minimap, app-bug-report-badge { display: none !important }'
@@ -502,7 +445,7 @@ export class Editor {
     await this.settle();
   }
 
-  /** Waits for a deferred piece of chrome (the minimap debounces its first render). */
+  /** Waits for a deferred piece of chrome, such as the debounced minimap. */
   async waitVisible(selector) {
     await this.page.locator(selector).waitFor({ state: 'visible' });
     await this.settle();
@@ -511,7 +454,7 @@ export class Editor {
   /**
    * Waits until an element has stopped moving. Overlays scale and fade in, and
    * a clip measured mid-animation lands a pixel or two off — enough to make an
-   * otherwise identical capture a new file on every run.
+   * unchanged shot a new file on every run.
    */
   async waitStable(locator, attempts = 20) {
     this.report('waiting for the overlay to settle');
@@ -525,11 +468,7 @@ export class Editor {
     throw new Error('element never settled into a stable position');
   }
 
-  /**
-   * Saves the draft as a named local project, which is what turns the title
-   * bar's "Draft" chip into a name and the status bar into "Saved". Cloud
-   * destinations need a session; local needs nothing.
-   */
+  /** Saves the draft as a named local project; needs no session. */
   async saveAs(name) {
     await this.menu(
       'titleBar.menuBar.file.label',
@@ -555,7 +494,7 @@ export class Editor {
     return components;
   }
 
-  /** Type id of a catalog entry, looked up by its unique symbol or name. */
+  /** Type id of a catalog entry, by its unique symbol or name. */
   async typeOf(nameOrSymbol) {
     const type = await this.api(
       (needle) =>
@@ -570,21 +509,18 @@ export class Editor {
   }
 
   /**
-   * A point inside a component's body, one grid unit in from its anchor —
-   * inside every body the palette can place, and clear of the port stubs.
+   * A point one grid unit in from a component's anchor: inside every body the
+   * palette can place, and clear of the port stubs.
    */
   bodyPoint(component) {
     return { x: component.pos[0] + 1, y: component.pos[1] + 1 };
   }
 
   /**
-   * Opens the master behind the first custom instance of the open document in
-   * its own tab.
-   *
-   * A loaded circuit file carries its customs as embedded copies rather than as
-   * library entries, so there is no master to open yet — `library.edit`
-   * restores the embedded circuit into the browser library first, which is also
-   * what fills the palette's User Components section.
+   * Opens the master behind the first custom instance in its own tab. A loaded
+   * file carries its customs as embedded copies, so `library.edit` restores one
+   * into the browser library first — which is also what fills the palette's
+   * User Components section.
    */
   async openCustomForEdit() {
     const [instance] = await this.customInstances();
@@ -598,8 +534,7 @@ export class Editor {
   /** Selects the first custom instance, opening its settings card. */
   async selectCustomInstance() {
     const [instance] = await this.customInstances();
-    // A zero-area region is a click: the single element under the point, and
-    // no marquee left drawn over the shot.
+    // A zero-area region is a click: one element, no marquee in the shot.
     const point = this.bodyPoint(instance);
     await this.select({ bounds: { ...point, width: 0, height: 0 } });
     await this.page.locator('app-component-settings lg-card').waitFor();
@@ -613,7 +548,7 @@ export class Editor {
     await this.settle();
   }
 
-  /** Placed instances of custom masters, which live above the built-in type ids. */
+  /** Placed instances of custom masters, above the built-in type ids. */
   async customInstances() {
     const custom = await this.api(() => {
       const builtIn = new Set(
@@ -641,11 +576,7 @@ export class Editor {
     await this.settle();
   }
 
-  /**
-   * Opens a component's live inspection — the view a tap on it opens while the
-   * simulation runs. The handle is kept, so the calls below address it without
-   * every shot having to carry it.
-   */
+  /** Opens a component's live inspection; the handle is kept for later. */
   async openWatch(symbol) {
     this.report('opening the inspection');
     const [instance] = await this.componentsOfType(symbol);
@@ -658,12 +589,10 @@ export class Editor {
     return this.watch;
   }
 
-  /** The floating inspection window. */
   watchWindow() {
     return this.page.locator('lg-window').first();
   }
 
-  /** The open inspection's handle, or a thrown error when none is open. */
   requireWatch() {
     if (!this.watch) throw new Error('no inspection is open');
     return this.watch.id;
@@ -671,9 +600,8 @@ export class Editor {
 
   /**
    * Places the inspection window at an absolute viewport point. The window is
-   * clamped to the board it floats over, so a target that does not fit is
-   * refused rather than silently reframing the shot around a window that ended
-   * up somewhere else.
+   * clamped to the board, so a target that does not fit is refused rather than
+   * silently reframing the shot.
    */
   async moveWatch({ x, y }) {
     const placed = await this.api(
@@ -692,8 +620,7 @@ export class Editor {
 
   /**
    * Frames the watch's circuit at an absolute zoom. A watch fits its circuit at
-   * 100 % at most, so a small circuit in a large window needs this to fill it;
-   * `BOARD_ZOOM` gives the inner circuit the same weight as the board's.
+   * 100 % at most, so a small circuit in a large window needs this to fill it.
    */
   async zoomWatch(zoom) {
     await this.api(
@@ -717,19 +644,15 @@ export class Editor {
     await this.settle();
   }
 
-  /**
-   * Runs the engine long enough for the inputs to reach the outputs, then
-   * pauses so the board holds a settled, photographable state.
-   */
+  /** Runs until the inputs reach the outputs, then pauses. */
   runUntilSettled(ticks = 12) {
     return this.stepSimulation(ticks);
   }
 
   /**
-   * Drills one level down in an open watch by activating the first nested
-   * custom of the visible level — the same routing a tap on it takes. The
-   * level's elements are a fresh copy of the inner circuit, so their ids are
-   * the copy's.
+   * Drills one level down by activating the first nested custom of the visible
+   * level, as a tap would. Each level is a fresh copy of the inner circuit, so
+   * its ids are the copy's.
    */
   async drillIntoWatch() {
     const id = this.requireWatch();
@@ -757,7 +680,6 @@ export class Editor {
     await this.settle();
   }
 
-  /** The open dynamic dialog's card — the thing a dialog shot is of. */
   dialog() {
     return this.page.locator('.cdk-overlay-pane [role="dialog"]').first();
   }
@@ -765,7 +687,7 @@ export class Editor {
   /**
    * Enters simulation and waits for the engine, so a shot never catches the
    * controls mid-boot. Auto-start is off in the seeded preferences, so the
-   * session comes up paused and the board holds still.
+   * session comes up paused.
    */
   async enterSimulation() {
     this.report('entering simulation');

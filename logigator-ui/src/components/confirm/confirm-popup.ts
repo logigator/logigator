@@ -26,11 +26,9 @@ import { LgConfirmOutlet } from './confirm-outlet';
 const POPUP_GAP = 10;
 
 /**
- * The anchored, `key`-routed outlet for {@link ConfirmationService}. When a
- * matching confirmation arrives it opens a `cdk/overlay` connected overlay (with
- * a caret) at `confirmation.target`, with small reject/accept buttons. An
- * outside click or Escape rejects. Handles only confirmations whose `key`
- * matches its own (e.g. `key="inline"`).
+ * The anchored, `key`-routed outlet for {@link ConfirmationService}: a
+ * connected overlay with a caret at `confirmation.target`. An outside click or
+ * Escape rejects. It handles only confirmations whose `key` matches its own.
  */
 @Component({
   selector: 'lg-confirm-popup',

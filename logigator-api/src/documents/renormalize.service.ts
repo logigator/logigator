@@ -23,7 +23,6 @@ export interface RenormalizeReport {
   failed: number;
 }
 
-/** Both tables, named rather than keyed, so a caller reads a field. */
 export interface RenormalizeResult {
   projects: RenormalizeReport;
   components: RenormalizeReport;
@@ -33,41 +32,27 @@ export interface RenormalizeResult {
 const BATCH = 100;
 
 /**
- * Re-derives every stored document's encoding and its derived metadata.
+ * Re-derives every stored document's encoding and its derived metadata. A
+ * **format bump** deploys with this over `format_version < current`, keeping
+ * the table at one version; a **re-extract** (`--all`) rebuilds the dependency
+ * edges, counts and port surface, so those tables stay a cache rather than a
+ * second source of truth. One job, since migrating a document changes what the
+ * derived metadata should say.
  *
- * Two jobs that are one job. A **format bump** deploys with this over the rows
- * an older version wrote (`format_version < current`), which is what keeps
- * normalize-on-write true: the table only ever holds one version, so revisions
- * stay diffable and a collaboration snapshot is uniform. And a **re-extract**
- * runs it over everything, rebuilding the dependency edges, the counts and the
- * port surface from the documents they were derived from — the admin command that
- * makes those tables a cache rather than a second source of truth.
+ * Three properties make it safe against a live database:
  *
- * They are the same work because migrating a document changes what the derived
- * metadata should say, so a format bump has to re-extract anyway.
+ * - **`version` is not bumped, but it guards the write.** Rewriting an encoding
+ *   is not a user edit — the read-time guard covers a client holding an older
+ *   copy, and bumping would offer every placed instance a no-op update. In the
+ *   `WHERE` so a save that landed first is skipped rather than reverted; a full
+ *   rebuild is therefore a pass repeated until nothing is skipped.
+ * - **One transaction per row**, so a failure costs one document rather than
+ *   leaving the table half-converted.
+ * - **Idempotent**, so a crashed run resumes by running it again.
  *
- * Three properties make it safe to run against a live database:
- *
- * - **`version` is not bumped, and it guards the write.** Rewriting an encoding
- *   is not a user edit: a client holding a pre-rewrite copy is covered by the
- *   read-time guard, and bumping the counter here would offer every placed
- *   instance of every component an update that changes nothing about it. It is
- *   still in the `WHERE`, because a save between reading a row and rewriting it
- *   would otherwise be overwritten with the document as it was before the save.
- *   A row whose counter moved is reported as skipped and left for the next run,
- *   which is why a full rebuild is a pass repeated until nothing is skipped.
- * - **One transaction per row**, so a failure costs one document and the pass
- *   keeps going. A row that cannot be parsed is reported and left exactly as it
- *   was — the alternative is a job that stops on the first bad row and leaves the
- *   table half-converted.
- * - **Idempotent**, so a crashed run is resumed by running it again. The
- *   format-bump pass resumes for free, since a converted row no longer matches
- *   its predicate.
- *
- * Strict mode, like every other write. The lenient parse exists for the one-time
- * migration of the legacy database, where junk has to be salvaged; here the input
- * is a document this server already accepted, and one that no longer parses is
- * something to be told about rather than to quietly rewrite.
+ * Strict mode, like every other write: the input is a document this server
+ * already accepted, so one that no longer parses is worth reporting rather than
+ * quietly rewriting.
  */
 @Injectable()
 export class RenormalizeService {
@@ -210,9 +195,8 @@ export class RenormalizeService {
 }
 
 /**
- * Keyset pagination, not `OFFSET`: rows are being written while this runs, and an
- * offset walk over a shifting set skips and repeats. Ordering by the primary key
- * and remembering where it got to cannot.
+ * Start of the keyset walk. Keyset, not `OFFSET`: rows are written while this
+ * runs, and an offset walk over a shifting set skips and repeats.
  */
 const EMPTY_UUID = '00000000-0000-0000-0000-000000000000';
 

@@ -11,12 +11,9 @@ export interface EditComponentDetailsDialogData {
 }
 
 /**
- * Edits a library master's descriptive metadata (name, symbol, description)
- * after creation — the counterpart of the new-component dialog's fields, with
- * the same limits (name ≤ 20, symbol ≤ 5, both required). Prefilled from the
- * master's current definition; Save hands the trimmed values to
- * {@link CustomComponentService.updateComponentDetails}. Placed instances are
- * frozen snapshots and keep their old details until explicitly updated.
+ * Edits a library master's name, symbol and description after creation, under
+ * the same limits as the new-component dialog. Placed instances are frozen
+ * snapshots and keep their old details until explicitly updated.
  */
 @Component({
   selector: 'app-edit-component-details-dialog',
@@ -41,8 +38,8 @@ export class EditComponentDetailsDialogComponent extends LgDialogContent<EditCom
 
   protected save(): void {
     if (!this.canSave || !this.dialogData) return;
-    // Fire-and-forget, mirroring the create dialog: the dialog closes
-    // optimistically; a failed persist surfaces via the service's toast.
+    // Fire-and-forget: the dialog closes optimistically and a failed persist
+    // surfaces through the service's toast.
     void this.customComponentService.updateComponentDetails(
       this.dialogData.masterTypeId,
       {

@@ -6,14 +6,13 @@ import {
 
 /**
  * Message-level stand-in for the simulation worker, structurally compatible
- * with the `Worker` surface the bridge uses. Records every posted message in
- * `posted`; `emit()` delivers worker→main messages.
+ * with the `Worker` surface the bridge uses. Posted messages land in `posted`;
+ * `emit()` delivers worker→main messages.
  *
- * With `autoRespond` (default) it behaves like a healthy worker: `ready`
- * after construction, `ok` for every correlated request, an empty-delta
- * snapshot per `requestSnapshot`, and a `status` with `statusTick` per
- * `requestStatus`. Responses arrive on microtasks, like real worker messages
- * relative to the posting call. Set `autoRespond` to `false` to script the
+ * With `autoRespond` it behaves like a healthy worker: `ready` after
+ * construction, `ok` for every correlated request, an empty-delta snapshot per
+ * `requestSnapshot`, a `status` with `statusTick` per `requestStatus` — all on
+ * microtasks, like real worker messages. Turn it off to script the
  * conversation manually.
  */
 export class FakeSimulationWorker {
@@ -94,10 +93,7 @@ export class FakeSimulationWorker {
   }
 }
 
-/**
- * Deterministic {@link FrameScheduler} for specs: frames fire only when the
- * test calls `fire()`.
- */
+/** Deterministic {@link FrameScheduler}: frames fire only on `fire()`. */
 export class ManualFrameScheduler {
   private callbacks = new Map<number, () => void>();
   private nextHandle = 1;

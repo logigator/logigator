@@ -4,15 +4,13 @@ import { ImageService } from './image.service';
 import { OrphanSweepService } from './orphan-sweep.service';
 
 /**
- * Global, because the rule it implements is workspace-wide: canonical, queried,
- * transactional data goes in the database; derived, browser-served, regenerable
- * binaries go on a volume. Avatars and circuit previews are both.
+ * Global, because the rule is workspace-wide: canonical, queried, transactional
+ * data goes in the database, and derived regenerable binaries — avatars and
+ * circuit previews — go on a volume.
  *
- * Three services, because placing files, producing them and cleaning up after
- * them are separate jobs: `ImageService` turns one upload into the set of
- * encodings clients should get, `FileStorageService` puts a set of files
- * somewhere immutable, and `OrphanSweepService` deletes what a crash between a
- * write and a pointer update left behind.
+ * `ImageService` turns one upload into the encodings clients get,
+ * `FileStorageService` puts a set of files somewhere immutable, and
+ * `OrphanSweepService` collects what a crash between the two left behind.
  */
 @Global()
 @Module({

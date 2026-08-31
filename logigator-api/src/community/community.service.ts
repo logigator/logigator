@@ -47,10 +47,9 @@ const authorColumns = {
 const JUST_ONE: PageQuery = { page: 0, size: 1 };
 
 /**
- * Either star table. Both are a plain join of an account to a document, so the
- * queries that only need "how many" and "who" are written once and handed the
- * table with the columns to use — their circuit column has a different name on
- * each, which is the only thing keeping them from being one table.
+ * Either star table. Both are a plain join of an account to a document; only
+ * the name of the circuit column differs, so the "how many" and "who" queries
+ * are written once and handed the table plus its columns.
  */
 type StarTable = typeof projectStars | typeof componentStars;
 
@@ -59,16 +58,12 @@ type StarTable = typeof projectStars | typeof componentStars;
  *
  * Every predicate here carries `public = true`. That is the whole access rule,
  * and it is why these queries live apart from the owner-scoped ones rather than
- * being the same ones with a flag flipped — there is no single place the clause
- * could be forgotten if the two never share a query at all.
+ * being the same ones with a flag flipped — sharing no query means no place to
+ * forget the clause. A share link is the other way in, and independent of the
+ * flag: publishing is `public`, sharing is the token.
  *
- * A share link is the other way in, and a different thing: it grants one
- * document to whoever holds it, whatever this flag says. Publishing is `public`;
- * sharing is the token.
- *
- * Documents are addressed here by their `link`, as the legacy community pages
- * were. The token is a document's public name, so regenerating it takes the
- * public page with it — the same revocation the share link gets, for free.
+ * Documents are addressed by their `link`, so regenerating the token takes the
+ * public page down with it.
  */
 @Injectable()
 export class CommunityService {
@@ -129,12 +124,9 @@ export class CommunityService {
   }
 
   /**
-   * What the caller has starred.
-   *
-   * The membership test is the same `EXISTS` that fills in `starred`, so this is
-   * the ordinary listing with one more predicate rather than a query of its own
-   * shape. A star on something since made private stops being listed, which is
-   * what `public = true` everywhere means.
+   * What the caller has starred: the ordinary listing with the same `EXISTS`
+   * that fills in `starred` as one more predicate. A star on something since
+   * made private stops being listed.
    */
   listStarredProjects(
     userId: string,
@@ -204,8 +196,6 @@ export class CommunityService {
     const row = await this.requirePublicProject(link);
 
     if (starred) {
-      // Starring twice is starring once. A double-tapped button is not a
-      // conflict worth reporting.
       await this.db
         .insert(projectStars)
         .values({ userId, projectId: row.id })
@@ -293,10 +283,9 @@ export class CommunityService {
   // ---- profiles ----
 
   /**
-   * A public profile: strictly less than the account holder's own view of
-   * themselves, and a separate shape rather than that one with fields omitted.
-   * There are no serialization groups to get wrong because there is nothing here
-   * to leave out.
+   * A public profile is its own shape, not the account holder's view with
+   * fields omitted — there is nothing here to leave out, so no serialization
+   * group to get wrong.
    */
   async profile(userId: string): Promise<PublicProfile> {
     const [user] = await this.db
@@ -353,9 +342,8 @@ export class CommunityService {
           starred: this.projectStarredBy(callerId)
         })
         .from(projects)
-        // Inner, not left: the owner column cascades, so a document without one
-        // cannot exist — and a left join would invite handling a row that cannot
-        // occur.
+        // Inner, not left: the owner column cascades, so a document without an
+        // author cannot exist.
         .innerJoin(users, eq(users.id, projects.userId))
         .where(where)
         .orderBy(...order)
@@ -438,8 +426,7 @@ export class CommunityService {
     return {
       ...toProjectSummary(row.circuit),
       author: toAuthor(row.author),
-      // `count(*)` is `bigint`, which `pg` hands over as a string rather than
-      // lose precision — a number here or the contract is a lie.
+      // `count(*)` is `bigint`, which `pg` hands over as a string.
       stars: Number(row.stars),
       starred: row.starred
     };
@@ -480,12 +467,9 @@ export class CommunityService {
   }
 
   /**
-   * Most-starred first by default, newest-edited first on request.
-   *
-   * Stars alone leave every unstarred document tied, so the edit time breaks the
-   * tie. Without it the tail of a browse page would come back in whatever order
-   * the planner happened to produce, and paging through it would repeat and skip
-   * rows.
+   * Most-starred first by default, newest-edited first on request. Stars alone
+   * leave every unstarred document tied, so edit time breaks the tie and paging
+   * stays stable.
    */
   private projectRanking(query: CommunityQuery): SQL[] {
     const newest = desc(projects.lastEditedAt);
@@ -564,13 +548,9 @@ export class CommunityService {
   }
 
   /**
-   * The document this one was forked from, with the link its own public page
-   * lives at — the credit a community page shows.
-   *
-   * The last entry of the lineage, since the chain is root-first. Named even when
-   * the ancestor is not itself public: the whole point of the fork record is that
-   * the original creator is credited, and withholding the name because they have
-   * since unpublished would quietly turn a fork into original work.
+   * The document this one was forked from — the last entry of the root-first
+   * lineage. Named even when the ancestor is not public: withholding the credit
+   * because they unpublished would turn a fork into original work.
    */
   private async parentOf(
     table: typeof projects | typeof components,

@@ -6,13 +6,10 @@ import {
 } from '@logigator/contract';
 
 /**
- * A failure the API described in its own error body.
- *
- * Every endpoint answers failures with one shape (`{ code, message, details }`),
- * so the whole client needs one error type and one place that recognizes it.
- * Callers branch on {@link code} rather than on the status: several distinct
- * failures share a status, and the message is human-facing and may be
- * translated.
+ * A failure the API described in its own error body. Every endpoint answers
+ * failures with one shape, so one error type covers the client. Callers branch
+ * on {@link code} rather than the status: several failures share a status, and
+ * the message is human-facing.
  */
 export class ApiRequestError extends Error {
   constructor(
@@ -27,11 +24,9 @@ export class ApiRequestError extends Error {
 }
 
 /**
- * A response whose body is not what the contract describes.
- *
- * Distinct from {@link ApiRequestError} because nothing about the request was
- * wrong: the server and this client disagree about a shape, which is a deploy
- * skew or a bug rather than something a user can act on.
+ * A response whose body is not what the contract describes. Distinct from
+ * {@link ApiRequestError}: nothing about the request was wrong, the two sides
+ * disagree about a shape, which is deploy skew or a bug.
  */
 export class InvalidResponseError extends Error {
   constructor(path: string, detail: string) {
@@ -42,8 +37,7 @@ export class InvalidResponseError extends Error {
 
 /**
  * Reads a transport failure as the API's own error body, falling back to the
- * status when the body is not one — a proxy's HTML error page, a network
- * failure, an offline browser.
+ * status for a proxy's HTML error page or an offline browser.
  */
 export function toApiRequestError(err: HttpErrorResponse): ApiRequestError {
   const parsed = apiErrorSchema.safeParse(err.error);

@@ -1,7 +1,6 @@
 import { Component, inject, InjectionToken } from '@angular/core';
 import { LgScaleIn } from '../../internal/fade-in';
 
-/** The image an {@link LgImageZoomOverlay} shows, and how it closes. */
 export interface ImageZoomData {
   src: string;
   alt: string;
@@ -15,12 +14,9 @@ export const IMAGE_ZOOM_DATA = new InjectionToken<ImageZoomData>(
 );
 
 /**
- * The enlarged image itself — the panel `ImageZoomViewer` attaches to its
- * modal overlay. The image is wrapped in a button so the focus trap has
- * something to focus and the keyboard can dismiss it, and so a click anywhere
- * on the image closes (matching the backdrop).
- *
- * Internal — reached through {@link ImageZoomViewer}.
+ * Internal. The panel {@link ImageZoomViewer} attaches to its modal overlay. A
+ * button wraps the image, so the focus trap has something to focus, the
+ * keyboard can dismiss it, and a click anywhere on it closes.
  */
 @Component({
   selector: 'lg-image-zoom-overlay',

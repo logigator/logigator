@@ -1,11 +1,10 @@
 /* Entry point of the `migrate.js` bundle: applies pending migrations and exits.
 
-   It is a second Rspack entry rather than a script run through a TypeScript
-   loader, so migrating uses exactly the toolchain the server already needs — no
-   extra dev dependency, and the deployed image can run it with plain `node`.
+   A second Rspack entry rather than a script behind a TypeScript loader, so the
+   deployed image can run it with plain `node`.
 
-   eslint-disable no-console: this is a CLI whose only output channel is the
-   terminal, and Nest's logger is never bootstrapped in this entry point. */
+   eslint-disable no-console: a CLI whose only output channel is the terminal,
+   and Nest's logger is never bootstrapped in this entry point. */
 /* eslint-disable no-console */
 import { join } from 'node:path';
 import { loadEnv } from '../config/env';
@@ -13,9 +12,8 @@ import { runMigrations } from './migrate';
 
 const env = loadEnv(process.env);
 
-// Default: beside the bundle, which is the deploy layout — the image ships
-// `drizzle/` next to `migrate.js`. In the repository the migrations sit in the
-// package instead, so the `db:migrate` script passes that path explicitly.
+// The deploy layout ships `drizzle/` beside `migrate.js`. In the repository the
+// migrations sit in the package, so `db:migrate` passes that path explicitly.
 const migrationsFolder =
   process.argv[2] ?? join(import.meta.dirname, 'drizzle');
 

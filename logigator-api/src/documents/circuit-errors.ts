@@ -15,12 +15,9 @@ export function circuitNotFound(kind: 'project' | 'component'): ApiException {
 }
 
 /**
- * The write was against a version that is no longer current: another session, or
- * another tab, saved in between.
- *
- * The server will not merge, and does not pretend to have an opinion about which
- * copy is right. It says so, and the client — which is the only thing that has
- * both the user and the other version's content — decides.
+ * The write was against a version that is no longer current: another session or
+ * tab saved in between. The server does not merge — the client, which has both
+ * the user and the other version's content, decides.
  */
 export function versionConflict(): ApiException {
   return new ApiException(

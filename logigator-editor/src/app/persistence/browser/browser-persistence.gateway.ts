@@ -17,11 +17,10 @@ import { buildProject } from '../circuit-builder';
 import { warnSkippedCustoms } from '../load-warnings';
 
 /**
- * Browser-local (IndexedDB) transport + codec + metadata + build, returning
- * `Project`s — the browser sibling of {@link ServerPersistenceGateway}. Stored
- * `content` is the native file format (a `CircuitFileService.toJson` string),
- * so loads ride the migration chain exactly like file imports. The facade
- * keeps main-slot orchestration and dirty-dispatch.
+ * IndexedDB transport + codec + metadata + build, returning `Project`s — the
+ * browser sibling of {@link ServerPersistenceGateway}. Stored `content` is the
+ * native file format, so loads ride the migration chain like file imports. The
+ * facade keeps main-slot orchestration and dirty-dispatch.
  */
 @Injectable({ providedIn: 'root' })
 export class BrowserPersistenceGateway {
@@ -34,11 +33,7 @@ export class BrowserPersistenceGateway {
   private readonly translation = inject(TranslationService);
   private readonly location = inject(Location);
 
-  /**
-   * Loads a browser-stored circuit into a new project and registers it as a
-   * `'browser'` project. Mirrors the server gateway's `loadProject`. Rejects
-   * if no record exists for `id`.
-   */
+  /** Rejects if no record exists for `id`. */
   async loadProject(id: string): Promise<Project> {
     const record = await this.projectStore.get(id);
     if (!record) {
@@ -67,13 +62,10 @@ export class BrowserPersistenceGateway {
   }
 
   /**
-   * Loads a browser-stored **library master** into a fresh editor Project and
-   * registers it (reusing the master's session type id if it is already known,
-   * so placing it from the palette and opening it share one definition).
-   * Returns the Project plus the master type id so the caller can attach a
-   * `DefinitionBinding` and open a tab. The circuit is self-contained — its
-   * embedded snapshots are ingested with no cross-row resolution. Rejects if
-   * no record exists for `id`.
+   * Loads a browser-stored library master into a fresh editor Project, reusing
+   * a known session type id so palette placement and the editor share one
+   * definition. The circuit is self-contained, so its embedded snapshots are
+   * ingested with no cross-row resolution. Rejects if no record exists.
    */
   async loadComponentForEdit(
     id: string
@@ -123,9 +115,8 @@ export class BrowserPersistenceGateway {
 
   /**
    * Writes a project to the browser store under the mid-save edit guard. A
-   * fresh draft (empty metadata id) gets a generated id, recorded in the
-   * metadata and reflected in the URL so a reload restores it via the
-   * `/local/:id` route.
+   * fresh draft gets a generated id, recorded in the metadata and in the URL so
+   * a reload restores it through the `/local/:id` route.
    */
   async saveProject(project: Project): Promise<void> {
     const metadata = this.metadataStore.getMetadata(project)!;
@@ -154,12 +145,10 @@ export class BrowserPersistenceGateway {
   }
 
   /**
-   * Saves a custom-component editor (`type: 'comp'`) to the browser
-   * `components` store: its summary columns (recomputed from its plugs at save
-   * time) plus its `content` (own circuit + embedded snapshots of its
-   * dependencies). Does not retroactively change placed instances — they are
-   * frozen snapshots; this only affects future placements and explicit
-   * per-instance updates.
+   * Saves a component editor to the browser `components` store: summary columns
+   * recomputed from its plugs, plus its circuit and the embedded snapshots of
+   * its dependencies. Placed instances are frozen snapshots and do not change;
+   * this affects future placements and explicit per-instance updates.
    */
   async saveComponent(project: Project): Promise<void> {
     const metadata = this.metadataStore.getMetadata(project)!;
@@ -172,8 +161,8 @@ export class BrowserPersistenceGateway {
       const summary = deriveSummary(project);
       const content = this.circuitFile.toJson(project, metadata.name);
 
-      // Auto-increment the monotonic version so that placed instances frozen at an
-      // older version can detect "a newer master exists" and offer the update button.
+      // The monotonic bump is what lets instances frozen at an older version
+      // detect that a newer master exists.
       const newVersion = (master?.version ?? 0) + 1;
 
       const record = await this.componentStore.save({
@@ -188,10 +177,8 @@ export class BrowserPersistenceGateway {
         content
       });
 
-      // Adopt the bumped version so the in-memory master reflects it, invalidates
-      // the placement snapshot cache, and placed instances behind this version can
-      // detect "a newer master exists". Re-stamp the save time so the palette
-      // re-sorts the just-edited master to the top.
+      // Adopting the bump also invalidates the placement snapshot cache; the
+      // re-stamped save time re-sorts the palette.
       if (masterTypeId !== undefined) {
         this.registry.setMasterVersion(masterTypeId, newVersion);
         this.registry.setMasterLastEdited(masterTypeId, record.lastEdited);
@@ -204,11 +191,9 @@ export class BrowserPersistenceGateway {
   }
 
   /**
-   * Renames a browser-stored project. The display name is duplicated out of the
-   * stored content blob (the codec reads the blob's top-level `name` on open, not
-   * the summary column), so both must change: the blob's `name` field is rewritten
-   * and the new value re-saved as the column. If the project is currently open,
-   * its in-memory metadata — and thus the title bar — is synced too.
+   * Renames a browser-stored project. The codec reads the blob's top-level
+   * `name` on open, not the summary column, so both are rewritten; an open
+   * project's live metadata is synced too.
    */
   async renameProject(id: string, name: string): Promise<void> {
     const record = await this.projectStore.get(id);
@@ -243,11 +228,10 @@ export class BrowserPersistenceGateway {
   }
 
   /**
-   * Returns the stored circuit JSON with its top-level `name` replaced. Browser
-   * blobs are always current-version with a top-level `name` (every write path
-   * goes through `CircuitFileService.toJson`), so a structural rewrite suffices —
-   * decoding to instances would needlessly ingest the project's custom snapshots
-   * into the live registry as a side effect of a background rename.
+   * The stored circuit JSON with its top-level `name` replaced. Every write
+   * path goes through `CircuitFileService.toJson`, so a structural rewrite
+   * suffices — decoding to instances would ingest the project's custom
+   * snapshots into the live registry as a side effect of a rename.
    */
   private _withRenamedContent(content: string, name: string): string {
     let parsed: Record<string, unknown>;

@@ -1,14 +1,11 @@
 /**
- * Version bases for the persisted-circuit type hierarchy. A "persisted circuit"
- * is the version-specific payload shape shared by every transport that carries
- * it; concrete transport envelopes (the local file, the legacy server wire) add
- * their own framing on top and live in their target folder (`file/`, `server/`).
+ * Version bases for the persisted-circuit hierarchy: the version-specific
+ * payload shape every transport shares, with envelopes adding their own
+ * framing.
  *
- * Two axes of versioning meet in this layer — keep them distinct:
- * - **File-format version** (this hierarchy: V0, V1, `CURRENT_FILE_VERSION`).
- * - **Custom-component master / snapshot version**
- *   ({@link SnapshotDefinition.source}'s `version`) — a per-master content
- *   revision counter, unrelated to the format version.
+ * Two versioning axes meet here and stay distinct: the format version (V0, V1,
+ * `CURRENT_FILE_VERSION`) and a custom-component master's content revision
+ * counter ({@link SnapshotDefinition.source}'s `version`).
  */
 import { ProjectElement } from './project-element';
 import {
@@ -16,44 +13,39 @@ import {
   SnapshotDefinition
 } from './serialized-circuit';
 
-// ---- V0: legacy positional format ("v0 of the file format", also today's
-//          server wire shape). Components and wires are intermixed in one
-//          positional `ProjectElement[]` array. ----
+// ---- V0: positional format, read-only. Components and wires intermixed in
+//          one `ProjectElement[]` array. ----
 
 /** One v0 element — a component instance or a wire — in the positional encoding. */
 export type PersistedComponentV0 = ProjectElement;
 
 /**
- * The v0 circuit: an intermixed array of positional elements. Each envelope
- * places this array where its wire shape dictates — at the top level for the
- * server transport, nested under `project` for the legacy file — so `elements`
+ * The v0 circuit: an intermixed array of positional elements. Envelopes place
+ * the array differently (top level, or nested under `project`), so `elements`
  * is optional on the base.
  */
 export interface PersistedCircuitV0 {
   elements?: PersistedComponentV0[];
 }
 
-// ---- V1: native current format. Named options, components and wires split. ----
+// ---- V1: current format. Named options, components and wires split. ----
 
 /**
- * One placed component in the native body (type id, position, named options).
- * Persisted `pos` is **delta-encoded**: components are stored sorted by
- * (type, y, x) and each position is relative to the previous component's
- * absolute position (`position-delta.codec.ts`); the decoded order is the
- * body's component order.
+ * One placed component in the native body. Persisted `pos` is delta-encoded:
+ * components are stored sorted by (type, y, x), each position relative to the
+ * previous component's absolute position. The decoded order is the body's.
  */
 export type PersistedComponentV1 = SerializedComponentBody;
 
 /**
  * A circuit's wires as chain text (`"x,y:e5s3;x,y:n2"`): SVG-path-style walks
  * over the wire graph, one segment per wire, chunk heads relative to the
- * previous chunk's head. Encoded/decoded by `wire-chain.codec.ts`; the
- * decoded order is the body's wire order.
+ * previous chunk's head. The decoded order is the body's wire order.
  */
 export type PersistedWiresV1 = string;
 
-/** A {@link SnapshotDefinition} as persisted: components delta-encoded,
- * wires chain-encoded (`persisted-definition.codec.ts`). */
+/** A {@link SnapshotDefinition} as persisted: components delta-encoded, wires
+ * chain-encoded. */
 export type PersistedSnapshotDefinitionV1 = Omit<
   SnapshotDefinition,
   'wires'
@@ -62,10 +54,8 @@ export type PersistedSnapshotDefinitionV1 = Omit<
 };
 
 /**
- * The v1 transport payload: the native circuit body plus the frozen snapshots
- * of every custom it transitively uses. Shared verbatim by the file and browser
- * targets — the explicit contract behind "the browser store reuses the file
- * format".
+ * The v1 payload: the native circuit body plus frozen snapshots of every custom
+ * it transitively uses. Shared verbatim by every target.
  */
 export interface PersistedCircuitV1 {
   components: PersistedComponentV1[];

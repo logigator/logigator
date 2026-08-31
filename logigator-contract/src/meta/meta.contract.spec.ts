@@ -30,9 +30,8 @@ describe('metaResponseSchema', () => {
   });
 
   it('rejects a sign-in method this copy of the contract does not know', () => {
-    // Unlike the error codes, this list is closed on purpose: a client cannot do
-    // anything useful with a provider it has no button for, and silently
-    // accepting one would hide the mismatch.
+    // Closed on purpose, unlike the error codes: a client can do nothing with a
+    // provider it has no button for, and accepting one would hide the mismatch.
     expect(
       metaResponseSchema.safeParse({ ...response, authProviders: ['twitter'] })
         .success

@@ -4,9 +4,8 @@ import { getStaticDI } from '../../utils/get-di';
 import { ThemingService } from '../../theming/theming.service';
 
 /**
- * A button's full body (legacy look): a plain square outline — not the
- * chamfered standard body — with an inset inner square that fills with the
- * wire color while the button is pressed.
+ * A button's body: a plain square outline, not the chamfered standard body,
+ * with an inset inner square that fills while the button is pressed.
  */
 export class ButtonGraphics extends StaticGraphicsContext {
   constructor(scale: number, pressed: boolean) {

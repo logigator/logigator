@@ -20,11 +20,10 @@ import {
 } from '../../internal/overlay';
 
 /**
- * A click-triggered popover. The trigger calls `toggle($event)` (anchors to the
- * event target) and `hide()`; the projected content is shown in a `cdk/overlay`
- * connected overlay below the anchor, with a caret, and dismisses on
- * outside-click (transparent backdrop) or Escape. The content is only
- * instantiated while open.
+ * A click-triggered popover. The trigger calls `toggle($event)`, anchoring to
+ * the event target, or `hide()`; the content sits in a connected overlay with
+ * a caret, is instantiated only while open, and dismisses on outside-click or
+ * Escape.
  */
 @Component({
   selector: 'lg-popover',
@@ -52,7 +51,6 @@ export class LgPopover implements OnDestroy {
 
   protected readonly side = signal<LgOverlaySide>('bottom');
 
-  /** Open anchored to the event target, or close if already open. */
   toggle(event: Event): void {
     if (this.overlayRef) {
       this.hide();

@@ -20,16 +20,16 @@ export class ThemeSwitcherComponent {
   protected readonly currentTheme = this.themingService.currentThemeType;
 
   /**
-   * Names the option group. Its visible caption belongs to the settings panel
-   * that hosts this component, so the group carries its own name rather than
-   * pointing at markup it does not own.
+   * Names the option group. The visible caption belongs to the hosting settings
+   * panel, so the group carries its own name rather than pointing at markup it
+   * does not own.
    */
   protected readonly themeLabel = computed(() =>
     this.translation.translate('userSettings.theme')
   );
 
-  // The labels re-translate on language change because `translate()` reads the
-  // service's post-load signal, making this computed depend on it.
+  // The labels re-translate on a language change: `translate()` reads the
+  // service's post-load signal, so this computed depends on it.
   protected readonly themeOptions = computed(() => [
     {
       label: this.translation.translate('theming.light'),

@@ -18,9 +18,9 @@ import { users } from './users';
  * column builders are stateful, so two tables must never be handed the same
  * instances.
  *
- * The `document` column is the single source of truth. Everything derived from
- * it — the dependency edges, the counts below — is a rebuildable cache, which is
- * what makes the admin re-extract command safe to run at any time.
+ * `document` is the single source of truth; everything derived from it — the
+ * dependency edges, the counts below — is a rebuildable cache, which is what
+ * makes the re-extract command safe to run at any time.
  */
 function circuitColumns() {
   return {
@@ -29,40 +29,32 @@ function circuitColumns() {
     description: varchar('description', { length: 2048 }).notNull().default(''),
     /**
      * The native versioned document, always at the newest format version:
-     * writes are normalized before they are stored, so the table only ever
-     * holds one version. Reads still pass through `migrateToCurrent`, which is
-     * a version check on a current row — a safety net for a crashed bulk
-     * re-normalization, not the strategy.
+     * writes are normalized before they are stored. Reads still pass through
+     * `migrateToCurrent` as a safety net for a crashed bulk re-normalization.
      */
     document: jsonb('document').$type<CurrentCircuitFile>().notNull(),
     /**
-     * The document's format version, denormalized out of the JSON so the bulk
-     * re-normalization job that follows a format bump can find its work with an
-     * indexed `WHERE format_version < current` scan.
+     * Denormalized out of the JSON so the re-normalization job that follows a
+     * format bump finds its work with an indexed scan.
      */
     formatVersion: integer('format_version').notNull(),
     /**
-     * Optimistic-concurrency counter, bumped on every user-visible edit. It
-     * replaces the legacy MD5 `oldHash` handshake, and for components it is
-     * also the stamp a placed snapshot is compared against to offer an update.
-     * The format re-normalization job deliberately does not bump it: rewriting
-     * an encoding is not an edit.
+     * Optimistic-concurrency counter, bumped on every user-visible edit. For
+     * components it is also the stamp a placed snapshot is compared against to
+     * offer an update. Re-normalization does not bump it: rewriting an encoding
+     * is not an edit.
      */
     version: integer('version').notNull().default(1),
     componentCount: integer('component_count').notNull().default(0),
     wireCount: integer('wire_count').notNull().default(0),
-    /** Share-link token. Migrated rows keep their existing value so old share URLs keep working. */
+    /** Share-link token; migrated rows keep theirs, so old share URLs work. */
     link: uuid('link').notNull().defaultRandom().unique(),
     public: boolean('public').notNull().default(false),
     /**
-     * Id of the preview's directory on the served volume. Regenerable renders
-     * with a cache-friendly `<img>` read path, so they stay files and the row
-     * holds only the pointer.
-     *
-     * One pointer for both themes: the editor renders the light and the dark
-     * variant in one pass and uploads them together, so they are replaced
-     * together and there is nothing for a second column to point at
-     * independently.
+     * Id of the preview's directory on the served volume; the renders stay
+     * files behind a cache-friendly `<img>` path. One pointer for both themes,
+     * since the editor uploads the light and dark variant together and they are
+     * replaced together.
      */
     previewId: uuid('preview_id'),
     createdAt: timestamp('created_at', { withTimezone: true })

@@ -2,12 +2,8 @@ import type { Locale } from '../common/locale';
 
 /**
  * The wording of every mail the API sends, in each language the site speaks.
- *
- * Carried over verbatim from the pages this API replaces: the sentences were
- * already written and reviewed in all four languages, and a mail is the one
- * place where a change of voice is most conspicuous. The `toDoSo`/`clickHere`
- * split is what lets the same sentence carry a link in the HTML part and a bare
- * URL in the text part.
+ * The `callToAction`/`linkLabel` split is what lets one sentence carry a link
+ * in the HTML part and a bare URL in the text part.
  */
 export interface MailStrings {
   subject: string;

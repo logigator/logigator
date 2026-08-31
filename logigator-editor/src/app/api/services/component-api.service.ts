@@ -20,11 +20,8 @@ export class ComponentApiService {
   private readonly path = '/api/components';
 
   /**
-   * GET /api/components — one page of the user's library.
-   *
-   * Paginated always: the caller picks the page, never how much work the server
-   * does, so the startup preload walks the pages rather than asking for all of
-   * them at once.
+   * GET /api/components — one page of the user's library. Always paginated, so
+   * the startup preload walks the pages rather than asking for everything.
    */
   list(page: number, size: number, search?: string): Observable<ComponentPage> {
     return this.api.get(this.path, componentPageSchema, { page, size, search });
@@ -42,8 +39,7 @@ export class ComponentApiService {
 
   /**
    * PUT /api/components/:id — replace the circuit, against the version read.
-   * The port surface is derived server-side from the document, so nothing here
-   * declares it.
+   * The port surface is derived server-side, so nothing here declares it.
    */
   save(
     componentId: string,

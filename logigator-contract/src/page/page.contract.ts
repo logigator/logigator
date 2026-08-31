@@ -1,13 +1,10 @@
 import * as z from 'zod';
 
 /**
- * The query every listing endpoint accepts.
- *
- * Coerced rather than parsed by hand because query parameters arrive as strings,
- * and defaulted so a bare `GET` is a valid first page. `size` is capped: the
- * caller chooses the page, never how much work the server does — the legacy
- * ceiling of a thousand rows per request was a page size nothing asked for and
- * every listing had to be able to serve.
+ * The query every listing endpoint accepts. Coerced because query parameters
+ * arrive as strings, and defaulted so a bare `GET` is a valid first page.
+ * `size` is capped: the caller chooses the page, never how much work the server
+ * does.
  */
 export const pageQuerySchema = z.object({
   page: z.coerce.number().int().min(0).default(0),
@@ -18,14 +15,7 @@ export const pageQuerySchema = z.object({
 
 export type PageQuery = z.infer<typeof pageQuerySchema>;
 
-/**
- * One page of results.
- *
- * `total` is the number of matching rows, not of pages — the legacy `Page<T>`
- * called the page count `total` and the row count nothing, so every consumer
- * had to know which one it was looking at. A client that wants the page count
- * divides; a client that wants to render "42 results" can.
- */
+/** One page of results. `total` counts matching rows, not pages. */
 export interface Page<T> {
   entries: T[];
   page: number;

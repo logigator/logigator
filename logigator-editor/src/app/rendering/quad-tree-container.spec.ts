@@ -23,10 +23,8 @@ describe('QuadTreeContainer', () => {
       }
     };
     Object.defineProperty(c, 'gridBounds', bounds);
-    // Real elements default cullBounds to gridBounds; mirror that here.
     Object.defineProperty(c, 'cullBounds', bounds);
-    // Real elements derive this without allocating; here it just has to agree
-    // with gridBounds, which is the contract the tree relies on.
+    // Must agree with gridBounds, which is the contract the tree relies on.
     c.intersectsGridBounds = (rect) => rect.intersects(c.gridBounds);
     c.appliedScale = 1;
     c.applyScale = (scale) => (c.appliedScale = scale);
@@ -58,8 +56,6 @@ describe('QuadTreeContainer', () => {
     const half = Number.MAX_SAFE_INTEGER / 2;
     return tree.queryRange(new Rectangle(-half, -half, half * 2, half * 2));
   }
-
-  // ── insert / queryRange (no split) ────────────────────────────────────────
 
   describe('insert / queryRange', () => {
     it('empty tree returns no items', () => {
@@ -99,7 +95,6 @@ describe('QuadTreeContainer', () => {
     });
 
     it('multiple items in the same leaf are all returned', () => {
-      // ≤ MAX_LEAF_ELEMENTS (4) items, no split triggered
       const items = [
         makeItem(2, 2, 3, 3),
         makeItem(20, 20, 3, 3),
@@ -111,7 +106,7 @@ describe('QuadTreeContainer', () => {
     });
 
     it('items placed in different quadrants are all returned (pre-split)', () => {
-      // Only 4 items: they all stay in the root leaf, no split
+      // Four items stay in the root leaf: no split.
       const nw = makeItem(2, 2, 3, 3);
       const ne = makeItem(40, 2, 3, 3);
       const sw = makeItem(2, 40, 3, 3);
@@ -127,7 +122,7 @@ describe('QuadTreeContainer', () => {
       tree.insert(nw);
       tree.insert(ne);
 
-      // Query only the NW half (initial size = 64, midline 32)
+      // The NW half: initial size 64, midline 32.
       const result = tree.queryRange(new Rectangle(0, 0, 32, 32));
       expect(result).toEqual([nw]);
       expect(result).not.toContain(ne);
@@ -182,7 +177,6 @@ describe('QuadTreeContainer', () => {
     });
 
     it('leaf splits when more than 4 items accumulate in the same area and all are still returned', () => {
-      // 5 items in the same region exceeds MAX_LEAF_ELEMENTS and forces a split
       const items = Array.from({ length: 5 }, (_, i) =>
         makeItem(i * 2, i * 2, 1, 1)
       );
@@ -192,15 +186,10 @@ describe('QuadTreeContainer', () => {
     });
   });
 
-  // ── oversize items and loose filing ───────────────────────────────────────
-
   describe('oversize items and loose filing', () => {
-    // The initial tree spans (0, 0, 64, 64). An entry files an element into a
-    // child only when the element fits the child's cell (max dimension at most
-    // half the entry); larger elements park in the entry's oversizeItems.
-    // Position never parks an element high: an entry accepts anything centered
-    // in its cell through its loose bounds (the cell doubled, centered), so an
-    // item across a cell boundary files as deep as one in the cell's middle.
+    // The initial tree spans (0, 0, 64, 64). An element files into a child
+    // only if its max dimension is at most half the entry; larger ones park in
+    // oversizeItems. Position never parks an element high.
 
     it('item wider than half the root is inserted and retrieved', () => {
       const wide = makeItem(2, 30, 40, 1); // maxDim 40 > 32
@@ -217,7 +206,7 @@ describe('QuadTreeContainer', () => {
     it('oversize item is returned by a query range that partially overlaps it', () => {
       const wide = makeItem(2, 30, 40, 1);
       tree.insert(wide);
-      // range ends at x=4 but the item extends to x=42; they overlap x:2-4
+      // The range ends at x=4, the item at x=42: they overlap x:2-4.
       expect(tree.queryRange(new Rectangle(0, 0, 4, 40))).toContain(wide);
     });
 
@@ -252,9 +241,8 @@ describe('QuadTreeContainer', () => {
     });
 
     it('query pruning honors loose bounds: an item overhanging its cell is found', () => {
-      // The cluster's centers all sit east of the x=32 midline, so every item
-      // files in cells at x >= 32 — but the first one's extent reaches back to
-      // x=31. A query strictly left of every cell must still return it.
+      // Every center sits east of the x=32 midline, but the first item's
+      // extent reaches back to x=31; a query left of every cell must find it.
       const poker = makeItem(31, 2, 2, 1); // center x=32
       tree.insert(poker);
       const rest = [
@@ -268,8 +256,6 @@ describe('QuadTreeContainer', () => {
       expect(tree.queryRange(new Rectangle(30, 0, 1.5, 10))).toEqual([poker]);
     });
   });
-
-  // ── remove ────────────────────────────────────────────────────────────────
 
   describe('remove', () => {
     it('returns false for an element not in the tree', () => {
@@ -312,7 +298,6 @@ describe('QuadTreeContainer', () => {
     });
 
     it('tree compacts after enough elements are removed', () => {
-      // Insert 5 items to force a split, then remove 4 to trigger minification
       const items = Array.from({ length: 5 }, (_, i) =>
         makeItem(i * 2, i * 2, 1, 1)
       );
@@ -324,10 +309,9 @@ describe('QuadTreeContainer', () => {
     });
 
     it('multi-level compaction: remaining item is still retrievable after a two-level split collapses', () => {
-      // With INITIAL_SIZE=64, root NW = (0,0,32,32), NW sub-quadrants are 16x16.
-      // 1 NE item + 5 NW items forces: root to split, then NW to split.
-      // The NW items are spread across all four NW sub-quadrants so NW.nw
-      // never overflows a third time — the tree is exactly two levels deep.
+      // Root NW is (0,0,32,32) with 16x16 sub-quadrants. One NE + five NW
+      // items split the root, then NW; the NW items spread across all four
+      // sub-quadrants so the tree stays exactly two levels deep.
       const ne = makeItem(40, 2, 3, 3);
       const nw = [
         makeItem(2, 2, 3, 3), // → NW.nw after NW splits
@@ -346,8 +330,6 @@ describe('QuadTreeContainer', () => {
       expect(queryAll()).toEqual([nw[4]]);
     });
   });
-
-  // ── negative coordinates ─────────────────────────────────────────────────
 
   describe('negative coordinates', () => {
     it('item with negative x is retrievable', () => {
@@ -415,11 +397,8 @@ describe('QuadTreeContainer', () => {
     });
   });
 
-  // ── panned parent ────────────────────────────────────────────────────────
-  //
-  // queryRange/insert operate on the items' gridBounds, which are pure data
-  // independent of the scene graph. Panning the parent must not affect query
-  // results — these tests guard that invariant.
+  // queryRange/insert operate on gridBounds, which are independent of the
+  // scene graph: panning the parent must not affect query results.
 
   describe('with a panned parent', () => {
     let parent: Container;
@@ -442,7 +421,7 @@ describe('QuadTreeContainer', () => {
       tree.insert(c);
       parent.x = 500;
       parent.y = 300;
-      // if pan leaked into grid coords, the item would appear at (510, 310)
+      // A pan leaking into grid coords would put the item at (510, 310).
       expect(tree.queryRange(new Rectangle(510, 310, 5, 5))).not.toContain(c);
     });
 
@@ -480,7 +459,6 @@ describe('QuadTreeContainer', () => {
     it('leaf split triggered while panned preserves all items', () => {
       parent.x = 500;
       parent.y = 300;
-      // 5 items exceed MAX_LEAF_ELEMENTS and force a split
       const items = Array.from({ length: 5 }, (_, i) =>
         makeItem(i * 2, i * 2, 1, 1)
       );
@@ -561,8 +539,6 @@ describe('QuadTreeContainer', () => {
     });
   });
 
-  // ── re-insertion ──────────────────────────────────────────────────────────
-
   describe('re-insertion', () => {
     it('re-inserting an item with a new position relocates it', () => {
       const c = makeItem(10, 10, 5, 5);
@@ -584,8 +560,6 @@ describe('QuadTreeContainer', () => {
     });
   });
 
-  // ── debug introspection ───────────────────────────────────────────────────
-
   describe('validate', () => {
     /** Inserts, moves and removes enough elements to split, expand and minify. */
     function churn(): TestItem[] {
@@ -595,7 +569,6 @@ describe('QuadTreeContainer', () => {
         items.push(c);
         tree.insert(c);
       }
-      // A larger item, an expansion into negative space, and re-insertions.
       items.push(makeItem(30, 30, 6, 6), makeItem(-400, -400, 5, 5));
       for (const c of items.slice(-2)) tree.insert(c);
       for (const c of items.slice(0, 150)) {
@@ -621,11 +594,9 @@ describe('QuadTreeContainer', () => {
     });
 
     it('accepts oversize items parked at branches under a grown root', () => {
-      // Expansion stacks new ancestors above the entries without re-filing
-      // anything; an element too large for the old root's children stays
-      // parked there — several levels below the new root — and still
-      // validates, because its size class matches that entry regardless of
-      // what hangs above it.
+      // Expansion stacks ancestors above the entries without re-filing, so an
+      // element parked deep below the new root still validates: its size class
+      // matches its entry regardless of what hangs above.
       tree.insert(makeItem(2, 20, 40, 5)); // maxDim 40 > 32: parks at the root
       for (let i = 0; i < 12; i++) tree.insert(makeItem(i * 2, i, 3, 3));
       tree.insert(makeItem(5000, 5000, 5, 5)); // forces the expansions
@@ -659,9 +630,8 @@ describe('QuadTreeContainer', () => {
     });
 
     it('counts leaves over capacity as saturated only where a split cannot help', () => {
-      // Stacked at one point: the tree subdivides until the elements are too
-      // large for any child of the cell they land in, where splitting stops
-      // helping and the leaf grows past its capacity for good.
+      // Stacked at one point, the tree subdivides until the elements exceed
+      // any child cell and splitting stops helping.
       for (let i = 0; i < 20; i++) tree.insert(makeItem(0, 0, 1, 1));
       const stats = tree.stats();
 
@@ -680,8 +650,6 @@ describe('QuadTreeContainer', () => {
       expect(stats.root.expansions).toBeGreaterThan(0);
     });
   });
-
-  // ── cull ──────────────────────────────────────────────────────────────────
 
   describe('cull', () => {
     /** True if the item renders as culled, i.e. any ancestor entry is culled. */
@@ -734,9 +702,8 @@ describe('QuadTreeContainer', () => {
     });
 
     it('honors loose bounds: an item overhanging its cell is not culled away', () => {
-      // Same shape as the loose-filing query test: the item's center puts it
-      // in cells east of x=32, but its extent reaches back to x=31. A view
-      // ending left of every cell must keep it visible.
+      // The center files it east of x=32 but its extent reaches back to x=31,
+      // so a view ending left of every cell must keep it visible.
       const poker = makeItem(31, 2, 2, 1); // center x=32
       tree.insert(poker);
       for (const c of [
@@ -752,8 +719,6 @@ describe('QuadTreeContainer', () => {
       expect(isCulled(poker)).toBe(false);
     });
   });
-
-  // ── applyScale ────────────────────────────────────────────────────────────
 
   describe('applyScale', () => {
     it('re-tunes on-screen elements and leaves culled ones behind', () => {
@@ -810,11 +775,9 @@ describe('QuadTreeContainer', () => {
     });
 
     it('re-tunes an element a merge pulls out of a culled entry', () => {
-      // Five elements split the root: four in its nw child, one in its se
-      // child. The view sees nw and the root but misses se's loose bounds, so
-      // the lone se element lags the scale. Emptying nw then collapses the
-      // root's branches, merging that lagging element into the root — whose
-      // own stamp says "current".
+      // Four elements in nw, one in se. The view misses se's loose bounds, so
+      // that element lags the scale; emptying nw then collapses the branches
+      // and merges the lagging element into a root whose stamp says current.
       const near = [
         makeItem(2, 2, 1, 1),
         makeItem(4, 2, 1, 1),

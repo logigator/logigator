@@ -19,10 +19,7 @@ import { LgRipple } from '../ripple/ripple';
 import { LgShortcut } from '../shortcut/shortcut';
 import { MENU_ITEM_CLASS, MenuItem } from './menu-item.model';
 
-/**
- * Submenu drop positions: flush below/left-aligned (the panel hugs the bar),
- * flipping up, then right-aligned.
- */
+/** Flush below and left-aligned, then flipping up, then right-aligned. */
 const SUBMENU_POSITIONS: ConnectedPosition[] = [
   {
     originX: 'start',
@@ -46,22 +43,20 @@ const SUBMENU_POSITIONS: ConnectedPosition[] = [
 
 /**
  * A horizontal menu bar with **one** level of pop-up submenu. `model` is the
- * top-level `MenuItem[]`; items with `items` open a submenu on click (and switch
- * on hover while a submenu is already open), leaf items run their `command`.
+ * top-level `MenuItem[]`; items with `items` open a submenu, leaf items run
+ * their `command`.
  *
- * Three optional content slots — `#start` / `#end` (edge-pinned content) and
- * `#item` (each menu row, context `{ $implicit: item, root }` where `root`
- * distinguishes a top-level item from a submenu item). The default rows render
- * the label, the item's `shortcut` as {@link LgShortcut} chips, and a caret on
- * top-level parents — item icons are a custom-`#item` concern. The bar imposes
- * no colour of its own; tint it by passing utility classes on the host.
+ * Optional content slots: `#start`/`#end` pin content to the edges, `#item`
+ * replaces a menu row (context `{ $implicit: item, root }`, `root` marking a
+ * top-level item). Default rows render the label, the `shortcut` as
+ * {@link LgShortcut} chips, and a caret on top-level parents; icons are a
+ * custom-`#item` concern. The bar imposes no colour of its own.
  *
- * The submenu overlay deliberately has **no backdrop** so the other top-level
- * items stay hoverable/clickable. While a submenu is open the bar is *armed*:
- * hovering another parent switches panels, and hovering a leaf closes the panel
- * but keeps the bar armed so the next parent opens on hover again. Dismissal —
- * a `pointerdown` outside the item strip and the panel (projected `#start`/
- * `#end` content counts as outside), Escape, or running a command — disarms.
+ * The submenu overlay has **no backdrop**, so the other top-level items stay
+ * clickable. While one is open the bar is *armed*: hovering another parent
+ * switches panels, and hovering a leaf closes the panel but stays armed.
+ * A `pointerdown` outside the item strip and the panel (projected content
+ * counts as outside), Escape, or running a command disarms it.
  */
 @Component({
   selector: 'lg-menubar',
@@ -271,8 +266,8 @@ export class LgMenubar implements OnDestroy {
   }
 
   protected onSubmenuKeydown(event: KeyboardEvent): void {
-    // A nested control that already handled (and preventDefaulted) the key
-    // shouldn't also drive submenu roving.
+    // A nested control that already handled the key must not also drive
+    // submenu roving.
     if (event.defaultPrevented) {
       return;
     }

@@ -16,11 +16,10 @@ export class ProjectService {
 
   private readonly _mainProjectReplaced$ = new Subject<Project>();
   /**
-   * Fires synchronously *before* the main slot is handed to another project,
-   * carrying the outgoing one. It is still the main project and still live at
-   * that point, so listeners holding state tied to it (the simulation session)
-   * wind down against a project they may still touch — the caller destroys it
-   * right after the swap. Silent on the first assignment.
+   * Fires synchronously *before* the main slot is handed over, carrying the
+   * outgoing project while it is still live, so a listener holding state tied
+   * to it can wind down against something it may still touch. Silent on the
+   * first assignment.
    */
   public readonly mainProjectReplaced$: Observable<Project> =
     this._mainProjectReplaced$.asObservable();
@@ -49,9 +48,8 @@ export class ProjectService {
     this._openComponents.update((v) => v.filter((p) => p !== project));
   }
 
-  // Reorders the open-component tabs in place. Both indices are relative to the
-  // `openComponents` array (the pinned main project is not part of it). Session
-  // state only — the order is not persisted.
+  // Both indices are relative to `openComponents`, which excludes the pinned
+  // main project. Session state only; the order is not persisted.
   public reorderOpenComponents(
     previousIndex: number,
     currentIndex: number

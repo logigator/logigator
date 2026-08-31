@@ -2,19 +2,15 @@ import { InvalidFileError } from './circuit-file.errors';
 import { CURRENT_FILE_VERSION, CurrentCircuitFile } from './circuit-file.types';
 
 /**
- * Structural validation of a current-version circuit document — the single
- * place that turns untrusted parsed JSON into a {@link CurrentCircuitFile}
- * downstream code can index into without shape checks. Runs after the
- * migration chain, so it sees native documents (files, browser records) and
- * migrated legacy ones alike; everything structurally wrong throws
- * {@link InvalidFileError}.
+ * Structural validation of a current-version document: the single place that
+ * turns untrusted parsed JSON into a {@link CurrentCircuitFile} downstream code
+ * can index into without shape checks. Runs after the migration chain, and
+ * anything structurally wrong throws {@link InvalidFileError}.
  *
- * Deliberate tolerances, matching the decode behavior: the `components` /
- * `wires` / `definitions` sections may be absent (decoded as empty), `name` is
- * unchecked (decode falls back to a default), and `negInputs`/`negOutputs`
- * are unchecked (deserialization sanitizes them element-wise). Option *values*
- * are not validated — only that `options` is an object; a wrong-typed value
- * degrades to that option's default behavior, not a crash.
+ * Deliberate tolerances, matching decode: `components`/`wires`/`definitions`
+ * may be absent (decoded as empty), `name` falls back to a default, and
+ * `negInputs`/`negOutputs` are sanitized element-wise later. Option values are
+ * not checked here — only that `options` is an object.
  */
 
 function fail(path: string, expected: string): never {

@@ -6,9 +6,8 @@ import type { FileForkAttributionV1 } from '@logigator/core';
 
 export interface ProjectMetadata {
   /**
-   * The project's id within its store: the server uuid for `'server'`/`'share'`
-   * projects, the generated IndexedDB id for `'browser'` projects, or `''` for a
-   * browser project that has not been written to storage yet.
+   * The project's id within its store: the server uuid, the generated IndexedDB
+   * id, or `''` for a browser project not yet written to storage.
    */
   id: string;
   name: string;
@@ -16,23 +15,19 @@ export interface ProjectMetadata {
   source: 'server' | 'browser' | 'share';
   /**
    * The cloud document's optimistic-concurrency counter, as the last read or
-   * write left it: a save presents it and the server rejects the write if
-   * anything moved in between. Server documents only — a browser record is the
-   * one writer of its own blob, and a share is read-only.
-   *
-   * A counter the server owns rather than the legacy MD5 of the stored bytes,
-   * so a document re-encoded underneath a client (which a format bump does to
-   * every row) does not read as a conflict.
+   * write left it: a save presents it and the server answers `version_conflict`
+   * if anything moved in between. Server documents only — a browser record is
+   * the one writer of its own blob, and a share is read-only. The server owns
+   * the counter, so re-encoding a document underneath a client (which a format
+   * bump does to every row) is not a conflict.
    */
   version?: number;
   isPublic: boolean;
   link?: string;
   /**
-   * Fork lineage (root-first), carried so it survives the document's round
-   * trips: a server fork keeps it across export-to-file, a file import keeps
-   * it across local saves, and an upload sends the immediate parent's id so
-   * the server re-links `forkedFrom`. Read-only — the server resolves the real
-   * authors itself on load/upload.
+   * Fork lineage, root-first, carried so it survives the document's round
+   * trips; an upload sends the immediate parent's id and the server re-links
+   * `forkedFrom`. Read-only: the server resolves the real authors itself.
    */
   attribution?: FileForkAttributionV1[];
 }
@@ -40,7 +35,7 @@ export interface ProjectMetadata {
 interface ProjectEntry {
   metadata: ProjectMetadata;
   dirty: WritableSignal<boolean>;
-  /** Monotonic counter incremented on every markDirty call (even when already dirty). */
+  /** Bumped by every markDirty call, even when already dirty. */
   dirtyVersion: number;
   /** Epoch-ms of the most recent markDirty; absent until the first local edit. */
   lastEditedAt?: number;
@@ -59,12 +54,9 @@ export class ProjectMetadataStore {
   });
 
   /**
-   * Registers a project with its metadata.
-   *
-   * When `trackDirty` is true (the default), the store subscribes to the
-   * project's `actionManager.actionChange$` and marks the project dirty on
-   * every state change. Shared (read-only) projects can opt out by passing
-   * `false`. Either way, `remove()` will tear the subscription down.
+   * Registers a project with its metadata. `trackDirty` subscribes to the
+   * project's `actionManager.actionChange$`; read-only shares opt out. Either
+   * way `remove()` tears the subscription down.
    */
   public register(
     project: Project,
@@ -89,10 +81,9 @@ export class ProjectMetadataStore {
   }
 
   /**
-   * All registered projects with their metadata. Reactive: reading it inside a
-   * computed/effect tracks registrations and removals (the map is a SignalMap),
-   * so session-level consumers (owner stamping, logout teardown) observe
-   * documents appearing and disappearing.
+   * All registered projects with their metadata. Reactive: read inside a
+   * computed or effect it tracks registrations and removals, so session-level
+   * consumers see documents appear and disappear.
    */
   public getAllHandles(): { project: Project; metadata: ProjectMetadata }[] {
     return Array.from(this._entries, ([project, entry]) => ({
@@ -128,9 +119,8 @@ export class ProjectMetadataStore {
   }
 
   /**
-   * Epoch-ms of the project's most recent local edit (its last `markDirty`), or
-   * `undefined` if it has not been edited this session. A one-shot snapshot,
-   * not reactive — the logout confirmation reads it once when it opens.
+   * Epoch-ms of the project's last `markDirty`, or `undefined` when it has not
+   * been edited this session. A one-shot snapshot, not reactive.
    */
   public lastEditedAt(project: Project): number | undefined {
     return this._entries.get(project)?.lastEditedAt;
@@ -147,21 +137,18 @@ export class ProjectMetadataStore {
   }
 
   /**
-   * Returns a token that changes on every `markDirty` call. Callers (e.g. the
-   * save flow) capture it before async work and compare on completion to
-   * detect concurrent edits.
+   * A token that changes on every `markDirty`, captured before async work and
+   * compared on completion to detect concurrent edits.
    */
   public dirtyVersion(project: Project): number {
     return this._entries.get(project)?.dirtyVersion ?? 0;
   }
 
   /**
-   * Runs an async save step under the mid-save edit guard: snapshots
-   * {@link dirtyVersion} before `fn` runs (so `fn` must include the
-   * serialization, not just the write), and clears the dirty flag afterwards
-   * only when no edit landed while `fn` was in flight — a save must not mark
-   * newer, unsaved edits as saved. An error from `fn` propagates with the
-   * flag untouched.
+   * Runs an async save step under the mid-save edit guard. `fn` must include
+   * the serialization, not just the write: the dirty flag is cleared only when
+   * no edit landed while `fn` was in flight, so a save never marks newer edits
+   * as saved. An error from `fn` propagates with the flag untouched.
    */
   public async withDirtyGuard<T>(
     project: Project,
@@ -181,11 +168,9 @@ export class ProjectMetadataStore {
   }
 
   /**
-   * Sets the store id after a project is first written to its backing store
-   * (e.g. a fresh browser project promoted into IndexedDB on its first save).
-   * Re-`set`s the map entry rather than mutating in place, so reactive readers
-   * (the title-bar source chip, the File-menu upload item) observe a draft
-   * gaining its store id.
+   * Sets the store id once a project is first written to its backing store.
+   * Re-`set`s the map entry rather than mutating it, so reactive readers see a
+   * draft gain its store id.
    */
   public updateId(project: Project, id: string): void {
     this.update(project, { id });
@@ -193,8 +178,7 @@ export class ProjectMetadataStore {
 
   /**
    * Merges `patch` into a project's metadata by re-`set`ting the map entry, so
-   * reactive readers observe the change (e.g. flipping `source`/`id`/`isPublic`
-   * when a draft is promoted to the server, or applying a chosen name).
+   * reactive readers observe the change.
    */
   public update(project: Project, patch: Partial<ProjectMetadata>): void {
     const entry = this._entries.get(project);

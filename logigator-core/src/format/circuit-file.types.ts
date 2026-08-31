@@ -1,21 +1,15 @@
 /**
- * Versioned native file format for save-to-file / load-from-file.
+ * Versioned native circuit-document format.
  *
- * These types are FROZEN per version: they intentionally do NOT alias the live
- * server DTOs (which track the legacy API and will change). When a new version
- * is introduced, bump {@link CURRENT_FILE_VERSION} (the editor writes it and the
- * server normalizes documents to it), add a new `CircuitFileV<N>` interface + a
- * migration, and re-point {@link CurrentCircuitFile} — older `CircuitFileV<N>`
- * types stay untouched so shipped files keep their meaning.
+ * FROZEN per version. A new version bumps {@link CURRENT_FILE_VERSION}, adds a
+ * `CircuitFileV<N>` interface and a migration, and re-points
+ * {@link CurrentCircuitFile}; older `CircuitFileV<N>` types stay untouched so
+ * shipped documents keep their meaning.
  *
- * The current format mirrors the editor's in-memory model (named options; wires
- * chain-encoded as `"x,y:e5s3;…"`, see `codecs/wire-chain.codec.ts`) and is
- * self-contained: it embeds a frozen snapshot of every custom component it
- * transitively uses in {@link PersistedCircuitV1.definitions}, taken by the
- * editor's universal snapshot builder.
- *
- * Each `CircuitFileV<N>` is the file-target envelope around the shared
- * version payload in `model/persisted-circuit.types.ts`.
+ * The format is self-contained: it embeds a frozen snapshot of every custom
+ * component it transitively uses in {@link PersistedCircuitV1.definitions}.
+ * Each `CircuitFileV<N>` is the envelope around the shared version payload in
+ * `model/persisted-circuit.types.ts`.
  */
 import {
   PersistedCircuitV0,
@@ -27,18 +21,16 @@ import { ProjectElement } from '../model/project-element';
 export { CURRENT_FILE_VERSION } from './circuit-file-version';
 export type CurrentCircuitFile = CircuitFileV1;
 
-// ---- Version 1 (current, native, self-contained) ----
+// ---- Version 1 (current) ----
 
 export interface CircuitFileV1 extends PersistedCircuitV1 {
   version: 1;
   name: string;
   /**
-   * Fork lineage of the exported project, root-first (the original creation
-   * is entry 0, the immediate parent is last). Written when a fork of a cloud
-   * project is exported so a later re-import + upload keeps crediting the
+   * Fork lineage root-first, so a re-import and upload keeps crediting the
    * original creators. Display-side data only: on upload the server re-resolves
-   * the immediate parent's id against its own records and derives the real
-   * authors from there — a tampered chain can lose attribution, never forge it.
+   * the immediate parent's id against its own records and derives the authors
+   * from there, so a tampered chain can lose attribution, never forge it.
    */
   attribution?: FileForkAttributionV1[];
 }
@@ -50,34 +42,29 @@ export interface FileForkAttributionV1 {
   authorName: string;
 }
 
-// ---- Version 0 (legacy old-editor format) ----
+// ---- Version 0 (read-only) ----
 
 export interface CircuitFileV0 extends PersistedCircuitV0 {
   project?: { name?: string; elements?: PersistedCircuitV0['elements'] };
   /**
-   * Old-editor *file* sub-circuit definitions: each pairs a component `info`
-   * header with its inner positional circuit. The `v0ToV1` migration revives
-   * these into `definitions[]` (`info.id` is the file-local type id the body's
-   * custom elements reference). A legacy database row carries `dependencies`
-   * instead; a given document has one shape or the other.
+   * Sub-circuit definitions as a v0 *file* carries them: an `info` header plus
+   * the inner positional circuit, with `info.id` the file-local type id the
+   * body's custom elements reference. A legacy database row carries
+   * `dependencies` instead; a document has one shape or the other.
    */
   components?: LegacyComponentDefinition[];
   /**
-   * A legacy document's dependencies as rows beside it rather than inside it,
-   * each carrying the embedded `snapshot`. Old-editor *files* never have this:
-   * it is the shape the legacy database stores, where a circuit's customs are
-   * relations rather than part of the blob, so the migration attaches them to
-   * the envelope before parsing. The `v0ToV1` migration revives present
-   * snapshots into `definitions[]`.
+   * Dependencies as rows beside the document rather than inside it, each with
+   * its embedded `snapshot`. This is the legacy *database* shape, where customs
+   * are relations rather than part of the blob; the migration attaches them to
+   * the envelope before parsing.
    */
   dependencies?: EmbeddedDependency[];
 }
 
 /**
- * One old-editor sub-circuit definition as written to a local file: an `info`
- * header (all fields optional — legacy saves may omit any) plus the inner
- * circuit as a positional `ProjectElement[]`. `info.id` is the custom-range
- * type id the outer body's instances reference.
+ * One v0 sub-circuit definition: an `info` header (every field optional, since
+ * a v0 save may omit any) plus the inner positional circuit.
  */
 export interface LegacyComponentDefinition {
   info?: {

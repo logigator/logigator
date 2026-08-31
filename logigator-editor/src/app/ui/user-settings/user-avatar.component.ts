@@ -6,11 +6,10 @@ import { UserService } from '../../user/user.service';
  * The signed-in user's avatar — photo, else username initial — or the generic
  * placeholder when signed out.
  *
- * The API answers an avatar as the whole ladder it encoded, widest-first per
- * format and WebP before its fallback, and that list goes to `lg-avatar`
- * unchanged: the browser picks the width for its pixel ratio and the first
- * encoding it can decode. Nothing here chooses, which is the point — the server
- * owns what it generates and the client owns what its device needs.
+ * The API answers the whole ladder it encoded, widest-first per format and WebP
+ * before its fallback, and that list reaches `lg-avatar` unchanged. Nothing
+ * here chooses: the browser picks the width for its pixel ratio and the first
+ * encoding it can decode.
  */
 @Component({
   selector: 'app-user-avatar',
@@ -34,8 +33,8 @@ export class UserAvatarComponent {
 
   public readonly size = input<'xlarge'>();
 
-  // An account with no avatar answers `null`; an empty ladder would be the same
-  // thing said differently, and either way the initial is what should show.
+  // An account with no avatar answers `null`, and an empty ladder says the same
+  // thing; either way the initial shows.
   protected readonly avatar = computed(() => {
     const variants = this.userService.user()?.avatar;
     return variants?.length ? variants : undefined;

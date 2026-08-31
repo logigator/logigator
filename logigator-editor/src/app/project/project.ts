@@ -19,10 +19,7 @@ import { ViewportController } from './viewport-controller';
 import { ConnectionPointManager } from '../connection-points/connection-point-manager';
 import { LoggingService } from '../logging/logging.service';
 
-/**
- * The default `excludeIds` of the collision helpers, shared so a per-element
- * collision check does not allocate a set per call to say "exclude nothing".
- */
+/** Shared "exclude nothing" set, so a collision check allocates none. */
 export const NO_EXCLUDED_IDS: ReadonlySet<number> = new Set<number>();
 
 export class Project extends Container {
@@ -35,38 +32,28 @@ export class Project extends Container {
   private readonly _gridSpace = new Container();
   private readonly _wires = new QuadTreeContainer<Wire>();
   private readonly _components = new QuadTreeContainer<Component>();
-  // Id → element indexes mirroring quad-tree membership exactly (detached
-  // drag elements leave both), so id lookups are O(1) instead of tree scans.
+  // Mirror quad-tree membership exactly (detached drag elements leave both).
   private readonly _componentsById = new Map<number, Component>();
   private readonly _wiresById = new Map<number, Wire>();
   private readonly _floatingLayer = new FloatingLayer();
 
   private readonly _viewport: ViewportController;
-  // Reused by the per-frame cull pass (see cull()).
   private readonly _cullView = new Rectangle();
-  // Reused by the collision helpers, which run once per dragged element on
-  // every pointer move and hand their result to no one.
+  // Reused by the collision helpers: one query per dragged element per move.
   private readonly _componentScratch: Component[] = [];
   private readonly _wireScratch: Wire[] = [];
-  // Render-loop signals for the hosting canvas (TickerScheduler on the board,
-  // the direct re-blit subscription on a watch).
+  // Render-loop signals for the hosting canvas.
   private readonly _ticker$ = new Subject<TickerSignal>();
-  // Paste requests (ClipboardService → the WorkModeRouter, which opens the
-  // placement session in this project's floating layer).
   private readonly _pasteRequest$ = new Subject<{
     components: Component[];
     wires: Wire[];
   }>();
-  // Selection-rotation requests (toolbar / selection-bar buttons → the
-  // WorkModeRouter, which turns the active session's floating content or the
-  // committed selection). Payload: clockwise quarter-turns.
+  // Payload: clockwise quarter-turns.
   private readonly _rotateRequest$ = new Subject<number>();
-  // User-input components (button/switch) clicked while in simulation mode.
-  // The model layer stays service-free: SimulationService subscribes while a
-  // simulation is active.
+  // Button/switch components clicked during simulation. A Subject rather than
+  // a direct call keeps the model layer service-free.
   private readonly _userInput$ = new Subject<Component>();
-  // Inspectable components (config declares an inspection) tapped while in
-  // simulation mode; InspectionService subscribes while a simulation is active.
+  // Inspectable components tapped during simulation.
   private readonly _inspectRequest$ = new Subject<Component>();
 
   private readonly _connectionPoints = new ConnectionPointManager(
@@ -77,10 +64,9 @@ export class Project extends Container {
 
   private readonly _themingService = getStaticDI(ThemingService);
   private readonly _logging = getStaticDI(LoggingService);
-  // Theme colors are baked into cached GraphicsContexts, so a theme switch
-  // requires re-fetching every context. Each project self-heals via this
-  // effect — including inactive (background) tabs, which the stage swap never
-  // redraws. Created/run after the scene graph is wired up below.
+  // Theme colors are baked into cached GraphicsContexts, so every project
+  // re-fetches them on a theme switch — background tabs included, which no
+  // stage swap redraws.
   private _themeEffect: EffectRef | null = null;
 
   constructor() {
@@ -102,8 +88,8 @@ export class Project extends Container {
       (scale) => {
         this._floatingLayer.updateScale(scale);
         this._connectionPoints.layer.applyScale(scale);
-        // Only what the viewport can see — the quad trees catch their
-        // off-screen entries up in the cull pass that reveals them.
+        // Only what the viewport can see; the cull pass catches off-screen
+        // entries up when it reveals them.
         this._components.applyScale(scale);
         this._wires.applyScale(scale);
       },
@@ -119,11 +105,9 @@ export class Project extends Container {
       { injector: getStaticInjector() }
     );
 
-    // The persistent selection grab rect mirrors the selection's grabRect():
-    // selectionChange$ covers commits/clears/evictions, actionChange$ covers
-    // geometry changes that keep the selection alive — a committed move and
-    // its undo/redo. Hosted in the floating layer, so offscreen snapshots
-    // (minimap, exports) never capture it.
+    // selectionChange$ covers commits/clears/evictions, actionChange$ the
+    // geometry changes that keep a selection alive (a move and its undo).
+    // Hosted in the floating layer, so offscreen snapshots never capture it.
     this._selectionRectSub = merge(
       this.selectionManager.selectionChange$,
       this.actionManager.actionChange$
@@ -138,21 +122,13 @@ export class Project extends Container {
   }
 
   /**
-   * Re-derives every theme-dependent color after a theme change, entirely in
-   * place — nothing is rebuilt. Components swap their shared theme-keyed
-   * contexts and rewrite tints/glyph colors ({@link Component.refreshTheme});
-   * wires and connection points only re-derive their tint — their shared
-   * context is a theme-independent white base; the grid swaps each chunk's
-   * context. A no-op on a still-empty scene.
+   * Re-derives every theme-dependent color in place; nothing is rebuilt and no
+   * connection point is re-derived, since a theme change never alters which
+   * dots exist.
    *
-   * A theme change never alters which dots exist, so connection points are
-   * restyled in place rather than re-derived from the quad tree. Selection
-   * state lives on each instance and every path re-reads it, so a selected
-   * element keeps its highlight in the new theme's colors.
-   *
-   * @param triggerRender request an on-screen frame after restyling. Pass
-   * `false` when restyling only to feed an offscreen snapshot (dual-theme
-   * previews), so the live canvas isn't repainted in the temporary theme.
+   * @param triggerRender request an on-screen frame afterwards. Pass `false`
+   * when restyling only to feed an offscreen snapshot, so the live canvas is
+   * not repainted in the temporary theme.
    */
   public applyTheme(triggerRender = true): void {
     this._grid.redraw();
@@ -170,7 +146,7 @@ export class Project extends Container {
     return this._gridSpace;
   }
 
-  /** The transient overlay (drag ghosts, negation preview) sessions render into. */
+  /** Transient overlay: drag ghosts, wire and negation previews. */
   public get floatingLayer(): FloatingLayer {
     return this._floatingLayer;
   }
@@ -192,17 +168,14 @@ export class Project extends Container {
     this.triggerTicker('single');
   }
 
-  /** Camera control (pan/zoom/state); zooms request their own render frame. */
   public get viewport(): ViewportController {
     return this._viewport;
   }
 
   /**
-   * Re-tunes every content element's scale-dependent visuals to `scale`,
-   * culled entries included — what a render that draws the whole board
-   * un-culled needs, since {@link cull} is what would otherwise catch the
-   * off-screen ones up. Offscreen consumers pass their own scale and restore
-   * the live one afterwards.
+   * Re-tunes every content element's scale-dependent visuals, culled entries
+   * included — what an un-culled whole-board render needs, since {@link cull}
+   * is what would otherwise catch the off-screen ones up.
    */
   public applyContentScale(scale: number): void {
     this._components.applyScaleToAll(scale);
@@ -211,16 +184,10 @@ export class Project extends Container {
   }
 
   /**
-   * Entry-level cull pass: flags quad-tree entries outside the current
-   * viewport as culled so their render groups are skipped at render time. The
-   * board runs this before every blit; offscreen consumers (minimap, image
-   * export, watches) render un-culled instead via `uncullTree`, and the next
-   * board frame re-culls.
-   *
-   * Doubles as the catch-up point for the zoom re-tuning that
-   * {@link ViewportController} skips over off-screen entries: an entry is
-   * brought to the live scale here on the frame that un-culls it, so an
-   * element is always current by the time it can be drawn.
+   * Flags quad-tree entries outside the viewport as culled, so their render
+   * groups are skipped. Also the catch-up point for the zoom re-tuning
+   * {@link ViewportController} skips over off-screen entries: an entry reaches
+   * the live scale on the frame that un-culls it.
    */
   public cull(): void {
     const view = this._viewport.gridView(this._cullView);
@@ -232,7 +199,7 @@ export class Project extends Container {
     return this._components.items;
   }
 
-  /** Number of components on the board — O(1), unlike counting {@link components}. */
+  /** O(1), unlike counting {@link components}. */
   public get componentCount(): number {
     return this._componentsById.size;
   }
@@ -241,12 +208,7 @@ export class Project extends Container {
     return this._wires.items;
   }
 
-  /**
-   * The two spatial indexes, for debug inspection only — their shape
-   * ({@link QuadTreeContainer.stats}, {@link QuadTreeContainer.formatTree}) and
-   * their invariants ({@link QuadTreeContainer.validate}). Everything else goes
-   * through the mutation and query methods on this class.
-   */
+  /** Debug inspection only; mutations and queries go through this class. */
   public get quadTrees(): {
     components: QuadTreeContainer<Component>;
     wires: QuadTreeContainer<Wire>;
@@ -255,10 +217,8 @@ export class Project extends Container {
   }
 
   /**
-   * Tight axis-aligned bounds (grid units) covering all committed content
-   * (components incl. port stubs + wires), or `null` when the project is empty.
-   * Pure arithmetic over each element's `gridBounds` — no render-bounds
-   * traversal — and run once per snapshot, so the O(n) cost is negligible.
+   * Tight bounds in grid units over all committed content (component bodies
+   * incl. port stubs, plus wires), or `null` when the project is empty.
    * Transient overlays are excluded.
    */
   public getContentBounds(): Rectangle | null {
@@ -279,9 +239,8 @@ export class Project extends Container {
   }
 
   /**
-   * Toggles the transient overlay (drag ghosts, wire preview, paste ghosts) so
-   * an offscreen snapshot captures only committed circuit content. The snapshot
-   * renders {@link gridSpace}, which contains this overlay as a child.
+   * Hides the transient overlay so an offscreen snapshot of {@link gridSpace},
+   * which contains it, captures only committed circuit content.
    */
   public setOverlayVisible(visible: boolean): void {
     this._floatingLayer.renderable = visible;
@@ -320,8 +279,7 @@ export class Project extends Container {
 
   /**
    * Asks the interaction layer to rotate the current selection (or the active
-   * session's floating content) by `steps` clockwise quarter-turns — the
-   * paste-request pattern: UI surfaces emit, the WorkModeRouter executes.
+   * session's floating content) by `steps` clockwise quarter-turns.
    */
   public requestSelectionRotation(steps: number): void {
     this._rotateRequest$.next(steps);
@@ -329,9 +287,8 @@ export class Project extends Container {
 
   /**
    * @param deferConnectionPoints skip the incremental connection-point
-   * recompute for this add. Bulk loaders pass `true` and follow the batch with
-   * a single {@link recomputeConnectionPoints}, which derives every dot in one
-   * de-duplicated pass instead of one overlapping quad-tree query per element.
+   * recompute. Bulk loaders pass `true` and follow the batch with one
+   * {@link recomputeConnectionPoints}, deriving every dot in a single pass.
    */
   public addComponent(component: Component, deferConnectionPoints = false) {
     this._components.insert(component);
@@ -342,22 +299,17 @@ export class Project extends Container {
     this._portsChangeSubs.set(
       component.id,
       component.portsChange$.subscribe(({ oldPorts, newPorts }) => {
-        // Ports changed while the component is not indexed — it is detached
-        // into a drag session or mid-rotateComponent. The owner re-buckets
-        // and integrates (undoably) itself, so the automatic pass below must
-        // stay out: its insert would corrupt the detach and its integration
-        // would double-apply.
+        // Not indexed: detached into a drag session, or mid-rotateComponent.
+        // Its owner re-buckets and integrates undoably itself, so the pass
+        // below must stay out or it double-applies.
         if (this._componentsById.get(component.id) !== component) return;
-        // A port-count (or rotation) change resizes the component's
-        // gridBounds, so it must be re-bucketed in the quad tree before any
-        // spatial query below sees stale bounds. insert() does a
-        // remove-then-reinsert for an already-tracked element.
+        // A port-count or rotation change resizes gridBounds, so re-bucket
+        // (insert re-inserts a tracked element) before any query below sees
+        // stale bounds.
         this._components.insert(component);
-        // Rotation/port-count changes can leave a wire's interior crossing a
-        // new port position (I2 violation) or unblock a previously-blocked
-        // collinear merge at an old port. Run the integrator to restore
-        // invariants. This path bypasses ActionManager, so the implied
-        // wire splits/merges are NOT undoable.
+        // The change can leave a wire's interior crossing a new port (I2) or
+        // unblock a collinear merge at an old one. This path bypasses
+        // ActionManager, so the resulting splits/merges are NOT undoable.
         const { toAdd, toRemove } = this.topology.integrate({
           movedComponentPorts: [{ oldPorts, newPorts }]
         });
@@ -378,12 +330,10 @@ export class Project extends Container {
     this._ticker$.next('single');
   }
 
-  /** Looks up a tracked component by its instance id; `undefined` if none. */
   public getComponentById(componentId: number): Component | undefined {
     return this._componentsById.get(componentId);
   }
 
-  /** Looks up a tracked wire by its instance id; `undefined` if none. */
   public getWireById(wireId: number): Wire | undefined {
     return this._wiresById.get(wireId);
   }
@@ -402,10 +352,7 @@ export class Project extends Container {
     this._ticker$.next('single');
   }
 
-  /**
-   * @param deferConnectionPoints skip the incremental connection-point
-   * recompute for this add. See {@link addComponent} for the batch-load pattern.
-   */
+  /** @param deferConnectionPoints see {@link addComponent}. */
   public addWire(wire: Wire, deferConnectionPoints = false) {
     this._wires.insert(wire);
     this._wiresById.set(wire.id, wire);
@@ -415,11 +362,7 @@ export class Project extends Container {
     this._ticker$.next('single');
   }
 
-  /**
-   * Derives every connection point from the current circuit in one pass. Used
-   * after a batch of deferred adds (see {@link addComponent}) to build all dots
-   * once rather than incrementally per element.
-   */
+  /** Derives every connection point from the current circuit in one pass. */
   public recomputeConnectionPoints(): void {
     this._connectionPoints.recomputeAll(
       this._wires.items,
@@ -447,9 +390,8 @@ export class Project extends Container {
   ): boolean {
     for (const comp of this._queryComponentScratch(bounds)) {
       if (excludeIds.has(comp.id)) continue;
-      // Allow stub-on-stub overlap (e.g. perpendicular wire ends meeting at a
-      // corner). Only block if a body intersects the other component's full
-      // extent (body + stubs), which catches body-body, body-stub, stub-body.
+      // Stub-on-stub overlap is legal (perpendicular wire ends meeting at a
+      // corner); only a body intersecting the other's full extent blocks.
       if (
         comp.intersectsGridBounds(bodyBounds) ||
         comp.intersectsBodyGridBounds(bounds)
@@ -460,9 +402,8 @@ export class Project extends Container {
   }
 
   /**
-   * The elements intersecting `rect`, as a fresh array unless `out` is given.
-   * A snapshot, not a live view — callers are free to add or remove elements
-   * while iterating the result.
+   * A snapshot, not a live view — the result stays valid while elements are
+   * added or removed.
    */
   public queryComponentsInRange(
     rect: Rectangle,
@@ -500,9 +441,9 @@ export class Project extends Container {
     return false;
   }
 
-  // The collision helpers above query into a shared buffer instead of taking a
-  // fresh array per call. queryRange appends, hence the reset; sharing is safe
-  // because no collision helper runs inside another's loop.
+  // Shared buffer instead of a fresh array per call. queryRange appends, hence
+  // the reset; sharing is safe because no collision helper runs inside
+  // another's loop.
   private _queryComponentScratch(rect: Rectangle): readonly Component[] {
     this._componentScratch.length = 0;
     return this.queryComponentsInRange(rect, this._componentScratch);
@@ -525,10 +466,9 @@ export class Project extends Container {
       this._wires.remove(w);
       this._wiresById.delete(w.id);
     }
-    // Drop the pre-drag termination counts (the elements are still at their old
-    // positions here); reattachFromDrag re-adds them at the new ones. Existing
-    // dots stay put until the settle pass — this only keeps the count map in
-    // step with quad-tree membership.
+    // Drop the termination counts at the old positions, keeping the count map
+    // in step with quad-tree membership. Existing dots stay put until the
+    // settle pass.
     this._connectionPoints.removeTerminations(components, wires);
     this._ticker$.next('single');
   }
@@ -549,8 +489,7 @@ export class Project extends Container {
         this._wiresById.set(w.id, w);
       }
     }
-    // Re-add termination counts at the post-drag positions (destroyed elements
-    // are skipped in both places, so their counts stay dropped).
+    // Destroyed elements are skipped above too, so their counts stay dropped.
     this._connectionPoints.addTerminations(components, wires);
     this._ticker$.next('single');
   }
@@ -578,12 +517,10 @@ export class Project extends Container {
   }
 
   /**
-   * Applies a rotate entry to a tracked component — direction plus the
-   * pivot-orbited position — with re-bucketing and connection-point refresh;
-   * the rotate analog of {@link moveComponent}. The component is unindexed
-   * around the direction write so its portsChange$ handler skips the
-   * automatic (non-undoable) wire integration: the rotate action's container
-   * replays those wire changes itself.
+   * The rotate analog of {@link moveComponent}: direction plus the
+   * pivot-orbited position. The component is unindexed around the direction
+   * write so its portsChange$ handler skips the automatic, non-undoable wire
+   * integration — the rotate action's container replays those changes itself.
    */
   public rotateComponent(id: number, direction: Direction, pos: Point): void {
     const component = this.getComponentById(id);
@@ -600,9 +537,8 @@ export class Project extends Container {
   }
 
   /**
-   * Moves a tracked wire and sets its axis in one step — how a rotate entry
-   * lands (a quarter-turn swaps HORIZONTAL/VERTICAL). The length is
-   * rotation-invariant, so it stays untouched.
+   * Moves a wire and sets its axis in one step, as a rotate entry lands. The
+   * length is rotation-invariant, so it stays untouched.
    */
   public setWireGeometry(
     id: number,

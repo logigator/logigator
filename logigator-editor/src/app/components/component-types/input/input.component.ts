@@ -6,15 +6,14 @@ export class InputComponent extends Component<InputOptions> {
   public readonly config = inputComponentConfig;
 
   constructor(options: InputOptions) {
-    // A plug's port counts are fixed: an INPUT exposes exactly one output
-    // (the signal it feeds into the circuit). The `i`/`o` wire fields are
-    // ignored on load — counts come from here, not from the element.
+    // A plug's port counts are fixed: an INPUT exposes exactly one output.
+    // The `i`/`o` wire fields are ignored on load.
     super(inputMeta, options);
   }
 
   // The user-set port name takes the body's centre, falling back to the "IN"
-  // glyph while unnamed (legacy-editor behavior). Module-level config: evaluated
-  // before the `config` field is assigned.
+  // glyph while unnamed. Module-level config: evaluated before the `config`
+  // field is assigned.
   protected override get symbol(): string {
     return this.options.label.value || inputComponentConfig.symbol;
   }

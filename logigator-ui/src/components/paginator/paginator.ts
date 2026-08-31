@@ -1,7 +1,7 @@
 import { Component, computed, input, output } from '@angular/core';
 import { lgLabel } from '../../tokens/labels';
 
-/** Emitted on page change. Consumers typically read only `page`. */
+/** Emitted on page change; consumers typically read only `page`. */
 export interface LgPaginatorState {
   page: number;
   first: number;
@@ -16,10 +16,9 @@ const NAV_CLASS =
   'hover:bg-content-hover hover:text-text disabled:pointer-events-none disabled:opacity-40';
 
 /**
- * A page navigator: first/prev, a window of numbered links, next/last.
- * Stateless — driven by `first`/`rows`/`totalRecords` and emitting
- * `onPageChange` (the consumer owns the page state). Skips rows-per-page,
- * jump-to-page and current-page report.
+ * A page navigator: first/prev, a window of numbered links, next/last. It is
+ * stateless — the consumer owns the page state — and has no rows-per-page,
+ * jump-to-page or current-page report.
  */
 @Component({
   selector: 'lg-paginator',
@@ -82,7 +81,7 @@ export class LgPaginator {
   readonly rows = input(10);
   readonly totalRecords = input(0);
 
-  /** ARIA labels for the four step buttons — pass localized strings. */
+  /** ARIA labels for the four step buttons; localize them. */
   readonly firstLabel = input(lgLabel('firstPage'));
   readonly previousLabel = input(lgLabel('previousPage'));
   readonly nextLabel = input(lgLabel('nextPage'));

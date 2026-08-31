@@ -8,16 +8,14 @@ import { OutdatedInstancesService } from '../../../custom-component/outdated-ins
 import { TranslateDirective } from '../../../translation/translate.directive';
 
 /**
- * Renderer for {@link UpdateInstanceComponentAction}: a button shown only when
- * the selected instance's frozen snapshot is behind its master's current version,
- * which dispatches the undoable replace ({@link UpdateInstanceAction}) into the
- * active project. Self-contained — owns its own visibility and dispatch.
+ * Dispatches the undoable replace, shown only while the selected instance's
+ * frozen snapshot is behind its master's current version.
  */
 @Component({
   selector: 'app-update-instance-action',
   imports: [LgButton, TranslateDirective],
-  // `display: contents` so this action's host leaves no empty cell in the
-  // settings panel's action grid when hidden; the button is the grid item.
+  // `display: contents` so a hidden host leaves no empty cell in the action
+  // grid; the button is the grid item.
   host: { class: 'contents' },
   template: `<ng-container *appTranslate="let t">
     @if (updatable()) {
@@ -39,18 +37,18 @@ export class UpdateInstanceActionComponent {
   private readonly outdatedInstances = inject(OutdatedInstancesService);
 
   protected readonly updatable = computed(() => {
-    // Reading the revision re-resolves the master after a save adopts its new
-    // version stamp, so the button appears without reselecting the instance.
+    // Reading the revision re-resolves the master after a save adopts a new
+    // version stamp, so the button appears without reselecting.
     this.registry.revision();
-    // Acts on a live instance, so it never surfaces on a palette/ghost selection.
+    // Acts on a live instance, so never on a palette selection.
     if (!this.context().component) return false;
     return this.outdatedInstances.isOutdated(this.context().config.type);
   });
 
   protected async update(): Promise<void> {
     const { component, project } = this.context();
-    // instanceOnly: only ever rendered with a live instance + project, but the
-    // context types them nullable for the palette/ghost case.
+    // Only rendered with a live instance and project, which the context still
+    // types nullable for the palette case.
     if (!project || !(component instanceof CustomComponent)) return;
     // The master may be a summary-only cloud preload; load its circuit first.
     const def = this.registry.getDefinition(component.config.type);
@@ -62,7 +60,7 @@ export class UpdateInstanceActionComponent {
       masterTypeId !== undefined &&
       !(await this.customComponentService.ensureMasterCircuit(masterTypeId))
     ) {
-      // Cloud fetch failed (the service toasted) — leave the instance as-is.
+      // Cloud fetch failed (the service toasted); leave the instance as-is.
       return;
     }
     const action = this.customComponentService.buildInstanceUpdate(component);

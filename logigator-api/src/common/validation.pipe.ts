@@ -11,11 +11,9 @@ import { ApiException } from './api-exception';
  * Validates every request payload that declares a schema — `@Body({ schema })`,
  * `@Query({ schema })` — against the contract's own zod schema.
  *
- * The framework's pipe does the validating; this subclass exists for the failure
- * body alone, because the contract's error shape is the one thing a client may
- * rely on and Nest's default is a list of prefixed strings. A parameter that
- * declares no schema passes through untouched, which is what leaves
- * {@link UuidParam} and the custom parameter decorators to their own handling.
+ * The framework's pipe does the validating; this subclass exists for the
+ * failure body alone, since the contract's error shape is what clients read. A
+ * parameter that declares no schema passes through untouched.
  */
 @Injectable()
 export class ApiValidationPipe extends StandardSchemaValidationPipe {
@@ -33,9 +31,9 @@ export class ApiValidationPipe extends StandardSchemaValidationPipe {
 }
 
 /**
- * Groups the issues by the field they belong to, which is what a form needs to
- * put each message next to its input. Issues that belong to the payload as a
- * whole (a cross-field rule) are keyed by an empty path.
+ * Groups the issues by field, so a form can put each message next to its input.
+ * A cross-field issue belongs to the payload as a whole and is keyed by an
+ * empty path.
  */
 function detailsFor(
   issues: readonly StandardSchemaV1.Issue[]
@@ -50,8 +48,7 @@ function detailsFor(
 
 /**
  * A path segment is either the key itself or an object wrapping it. Both are
- * spec-legal, and reading `String(segment)` off the second gives
- * `[object Object]` for the field a client is meant to highlight.
+ * spec-legal, and `String(segment)` on the second gives `[object Object]`.
  */
 function segmentKey(
   segment: PropertyKey | StandardSchemaV1.PathSegment

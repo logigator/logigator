@@ -1,8 +1,7 @@
 /**
- * The database schema, in TypeScript. `drizzle-kit` diffs these tables to
- * generate the SQL migrations under `drizzle/`, which are the checked-in,
- * reviewable source of truth for the actual DDL; nothing is ever pushed
- * straight to a production database.
+ * The database schema, in TypeScript. `drizzle-kit` diffs these tables into the
+ * SQL migrations under `drizzle/`, which are the source of truth for the DDL;
+ * nothing is ever pushed straight to a database.
  */
 export * from './users';
 export * from './documents';

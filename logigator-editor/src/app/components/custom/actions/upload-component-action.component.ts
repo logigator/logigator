@@ -8,10 +8,8 @@ import { resolveMasterSignal } from './resolve-master.signal';
 import { TranslateDirective } from '../../../translation/translate.directive';
 
 /**
- * Renderer for {@link UploadComponentAction}: a button shown only when the
- * selected instance resolves to a **local** master, which hands that master to
- * the shared {@link UploadCoordinatorService} (dependency analysis + dialog +
- * upload). Disabled with a hint when signed out.
+ * Shown only when the selection resolves to a local master, and disabled with
+ * a hint when signed out.
  */
 @Component({
   selector: 'app-upload-component-action',

@@ -21,9 +21,9 @@ import { MailCapture } from './mail-capture';
 const MIGRATIONS_FOLDER = join(import.meta.dirname, '..', 'drizzle');
 
 /**
- * Where the throwaway databases are created. Explicit rather than defaulted: the
- * schema-level defaults point at the compose service names, and a suite that
- * quietly connected to whatever those resolve to could drop a real database.
+ * Where the throwaway databases are created. Explicit rather than defaulted:
+ * the schema defaults name the compose services, and a suite that quietly
+ * connected to whatever those resolve to could drop a real database.
  */
 function requireServiceUrls(): { databaseUrl: string; redisUrl: string } {
   const databaseUrl = process.env['DATABASE_URL'];
@@ -47,8 +47,8 @@ function withDatabase(url: string, database: string): string {
 }
 
 async function onAdminDatabase(url: string, statement: string): Promise<void> {
-  // `CREATE DATABASE` cannot run inside a transaction or against the database
-  // being created, so it goes through a connection to the server's own database.
+  // `CREATE DATABASE` cannot run in a transaction or against the database being
+  // created, so it goes through the server's own database.
   const client = new Client({
     connectionString: withDatabase(url, 'postgres')
   });
@@ -67,21 +67,18 @@ export interface E2eApp {
   /** What the API tried to mail, in order. */
   mail: MailCapture;
   inject(options: InjectOptions): Promise<LightMyRequestResponse>;
-  /** Drops the database, clears the Redis keys and removes the storage directory. */
+  /** Drops the database, clears the Redis keys, removes the storage dir. */
   close(): Promise<void>;
 }
 
 /**
- * Boots the real application against a database of its own.
+ * Boots the real application against a database of its own: fresh per spec
+ * file, migrated by the same function a release runs, so these specs exercise
+ * the schema a deploy produces and no spec sees another's rows. Redis is
+ * shared, so every key is namespaced by the run and deleted afterwards.
  *
- * A fresh database per spec file, migrated by the same function a release runs,
- * is what makes these specs trustworthy: they exercise the schema a deploy
- * produces, and no spec can see another's rows. Redis is shared, so every key
- * this app writes is namespaced by the run and deleted afterwards.
- *
- * Only two things differ from production: the mail transport is captured, and
- * bcrypt runs at its minimum cost — a suite that signs in a dozen times would
- * otherwise spend most of its time hashing.
+ * Two things differ from production: the mail transport is captured, and bcrypt
+ * runs at its minimum cost.
  */
 export async function startE2eApp(
   overrides: Record<string, string> = {}
@@ -120,8 +117,8 @@ export async function startE2eApp(
     new FastifyAdapter(apiServerOptions(env)),
     { logger: false }
   );
-  // The same registration production runs, so cookie signing, the session store
-  // and the route prefix are the real ones.
+  // The registration production runs, so cookie signing, the session store and
+  // the route prefix are the real ones.
   await configureApiApp(app, env);
   await app.init();
   await app.getHttpAdapter().getInstance().ready();
@@ -141,10 +138,7 @@ export async function startE2eApp(
   };
 }
 
-/**
- * Removes what the run wrote to Redis. The prefix makes this safe on a shared
- * instance — the point of having one at all.
- */
+/** Removes what the run wrote to Redis; the prefix keeps it to this run. */
 async function deleteRedisKeys(url: string, prefix: string): Promise<void> {
   const client = createRedisClient(url);
   await client.connect();

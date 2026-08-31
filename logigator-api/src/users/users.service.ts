@@ -6,12 +6,9 @@ import { users, type NewUserRow, type UserRow } from '../database/schema';
 import { AVATAR_VARIANTS, variantUrls } from '../storage/image-variants';
 
 /**
- * Reads and writes of the `users` table.
- *
- * Addresses are normalized to lower case on the way in and looked up the same
- * way. MySQL's default collation made this moot in the legacy backend;
- * PostgreSQL compares text exactly, so without normalizing here one address
- * could hold two accounts.
+ * Reads and writes of the `users` table. Addresses are normalized to lower case
+ * on the way in and looked up the same way: PostgreSQL compares text exactly,
+ * so without it one address could hold two accounts.
  */
 @Injectable()
 export class UsersService {
@@ -54,12 +51,8 @@ export class UsersService {
 
   /**
    * Applies a partial change and answers with the stored row, or `null` when
-   * there is no such row any more.
-   *
-   * Nullable rather than assumed: an account can be deleted between the moment a
-   * guard loaded it and the moment a handler writes to it, and reading the first
-   * element of an empty `returning()` would answer a `TypeError` from deep inside
-   * the next thing that touched it.
+   * there is no such row any more — an account can be deleted between the guard
+   * loading it and a handler writing to it.
    */
   async update(
     id: string,
@@ -77,11 +70,7 @@ export class UsersService {
     return user ?? null;
   }
 
-  /**
-   * Deletes the account. Everything it owns follows through `ON DELETE CASCADE`,
-   * which replaces the legacy `@BeforeRemove` choreography that removed
-   * projects, components and the profile picture by hand — and could half-fail.
-   */
+  /** Deletes the account; everything it owns follows through the cascade. */
   async delete(id: string): Promise<void> {
     await this.db.delete(users).where(eq(users.id, id));
   }
@@ -92,10 +81,8 @@ export function normalizeEmail(email: string): string {
 }
 
 /**
- * The row as clients see it. The avatar is a list of variants: the files behind
- * them are served by the static layer, and their names are nobody else's
- * business. The list comes from the matrix rather than from the volume — the
- * files are written together or not at all, so there is nothing to look up.
+ * The row as clients see it. The avatar's variant list comes from the matrix
+ * rather than the volume: the files are written together or not at all.
  */
 export function toUserResponse(user: UserRow): UserResponse {
   return {

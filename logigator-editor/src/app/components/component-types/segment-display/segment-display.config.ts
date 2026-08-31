@@ -15,7 +15,7 @@ export interface SegmentDisplayOptions {
 export const segmentDisplayComponentConfig: ComponentConfig<SegmentDisplayOptions> =
   configFromMeta(segmentDisplayMeta, {
     // A seven-segment digit, all segments lit: the readout is drawn in the
-    // segment font, so no fixed body shape identifies this type — the glyph does.
+    // segment font, so the glyph is what identifies this type.
     symbolShape: {
       stroke: 'M6 3h6 M5 4v4 M13 4v4 M6 9h6 M5 10v4 M13 10v4 M6 15h6'
     },

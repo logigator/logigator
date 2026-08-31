@@ -12,10 +12,9 @@ export class CookieService implements OnDestroy {
 
   private readonly _changeHandler = (e: CookieChangeEvent) =>
     this._handleChange(e);
-  // Without cookieStore there are no change events, so external cookie changes
-  // (login/logout in another tab, session expiry) would go unnoticed until a
-  // reload. Re-reading on window focus catches them at the moment that matters:
-  // the user coming back from the login tab.
+  // Without cookieStore there are no change events, so an external change
+  // (a login in another tab, session expiry) would go unnoticed until a
+  // reload. Focus is the moment the user comes back from that tab.
   private readonly _focusHandler = () => {
     this._read().catch((e) => {
       this.loggingService.error(
@@ -26,10 +25,9 @@ export class CookieService implements OnDestroy {
   };
 
   constructor() {
-    // `cookieStore.getAll()` is async, so on browsers that have it the map
-    // would stay empty until a microtask resolves — a synchronous `get()` at
-    // startup would miss every cookie. Seed synchronously from `document.cookie`
-    // first; the async read below then reconciles to the same values.
+    // `cookieStore.getAll()` is async, so a synchronous `get()` at startup
+    // would miss every cookie. The async read below reconciles to the same
+    // values.
     this._reconcile(this._parseDocumentCookie());
     this._read().catch((e) => {
       this.loggingService.error(
@@ -68,30 +66,23 @@ export class CookieService implements OnDestroy {
   }
 
   /**
-   * Writes a cookie for the whole origin and mirrors it into the reactive map
-   * immediately, so readers observe the value without waiting for a change
-   * event / re-read.
+   * Writes an origin-wide cookie and mirrors it into the reactive map at once,
+   * so readers do not wait for a change event.
    *
-   * `path=/` is what makes a cookie shared with the pages served next to the
-   * editor: a cookie written from `/editor` without it is scoped to that path,
-   * shadows the origin-wide one on editor requests, and is invisible to the
-   * rest of the site.
+   * `path=/` is what shares the cookie with the pages beside the editor: from
+   * `/editor` without it the cookie is scoped to that path, shadows the
+   * origin-wide one and is invisible to the rest of the site.
    *
-   * The value is written raw, matching what {@link get} returns — a caller
-   * storing anything but an unreserved-character string encodes it itself.
+   * The value is written raw, matching what {@link get} returns, so a caller
+   * storing anything but unreserved characters encodes it itself.
    */
   set(name: string, value: string, maxAgeSeconds = ONE_YEAR_IN_SECONDS): void {
-    // `document.cookie` rather than `cookieStore.set`, which is async: the map
-    // update below would then race the write it mirrors.
+    // `cookieStore.set` is async, so the map update would race the write.
     document.cookie = `${name}=${value}; path=/; max-age=${maxAgeSeconds}`;
     this._cookies.set(name, value);
   }
 
-  /**
-   * Deletes a cookie (client-side) and drops it from the reactive map
-   * immediately, so readers observe the change without waiting for a change
-   * event / re-read.
-   */
+  /** Drops the cookie from the reactive map at once, as {@link set} does. */
   delete(name: string): void {
     if (this._hasCookieStore) {
       void window.cookieStore.delete(name);
@@ -127,8 +118,8 @@ export class CookieService implements OnDestroy {
   }
 
   private _reconcile(present: { name: string; value: string }[]): void {
-    // Reconcile instead of only merging: a re-read (focus fallback) must also
-    // observe deletions, e.g. the auth cookie cleared by a logout elsewhere.
+    // Reconcile rather than merge: a re-read must observe deletions too, such
+    // as the auth cookie cleared by a logout elsewhere.
     const names = new Set(present.map((c) => c.name));
     for (const name of [...this._cookies.keys()]) {
       if (!names.has(name)) this._cookies.delete(name);

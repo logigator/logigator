@@ -11,11 +11,10 @@ import { OnboardTargetDirective } from '../../onboarding/onboard-target.directiv
 import { TranslateDirective } from '../../translation/translate.directive';
 
 /**
- * Floating mode HUD for `isCompact`: one always-visible row with every tool
- * (pan / wire / select / erase / text) plus the Parts button and, in a
- * custom-component editor, the Ports sheet. Renders from the same
- * `createWorkModeTools` descriptors as the desktop tool bar, so the two
- * surfaces never diverge.
+ * Floating mode HUD for `isCompact`: one always-visible row of every tool plus
+ * the Parts button and, in a custom-component editor, the Ports sheet. Renders
+ * from the same `createWorkModeTools` descriptors as the desktop tool bar, so
+ * the two surfaces never diverge.
  */
 @Component({
   selector: 'app-tool-hud',
@@ -30,30 +29,28 @@ export class ToolHudComponent {
 
   protected readonly tools = createWorkModeTools(this.workModeService);
 
-  /** True while the active tab is a custom-component editor — the desktop side
-   *  bar shows the Ports panel here; the HUD exposes it as an extra button. */
+  /** True while the active tab is a custom-component editor, where the desktop
+   *  side bar shows a Ports panel and the HUD an extra button. */
   protected readonly isEditingComponent = computed(() => {
     const active = this.projectService.activeProject();
     return !!active && this.metadataStore.getMetadata(active)?.type === 'comp';
   });
 
-  /**
-   * Placing a palette component (the Parts flow) — TEXT excluded, since it has
-   * its own tool button that lights up instead.
-   */
+  /** Placing a palette component. TEXT is excluded: its own tool button lights
+   *  up instead. */
   protected readonly placingComponent = computed(
     () =>
       this.workModeService.mode() === WorkMode.COMPONENT_PLACEMENT &&
       this.workModeService.selectedComponentType() !== BuiltInComponentType.TEXT
   );
 
-  // The Parts button is "armed" while the palette sheet is open or a palette
-  // component is being placed, so it reads as active like the other mode tools.
+  // Armed while the palette sheet is open or a palette component is being
+  // placed, so it reads as active like the other mode tools.
   protected readonly partsActive = computed(
     () => this.mobileUi.activeSheet() === 'palette' || this.placingComponent()
   );
 
-  /** Label shown above the row; null while no mode is armed. */
+  /** Null while no mode is armed. */
   protected readonly activeLabelKey = computed(() => {
     const activeTool = this.tools.find((t) => t.isActive());
     if (activeTool) return activeTool.labelKey;

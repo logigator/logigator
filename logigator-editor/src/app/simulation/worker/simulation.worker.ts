@@ -24,7 +24,7 @@ const addEventListener = self.addEventListener as (
   listener: (event: MessageEvent<MainToWorkerMessage>) => void
 ) => void;
 
-/** Changed-link fraction above which the engine falls back to a full snapshot. */
+/** Changed-link fraction above which the engine sends a full snapshot. */
 const DELTA_THRESHOLD = 0.2;
 
 const BUFFER_POOL_LIMIT = 4;
@@ -43,7 +43,7 @@ let paceStart = { tick: 0, time: 0 };
 const bufferPool: ArrayBuffer[] = [];
 
 // The emitted artifact path is relative to the build output root, where the
-// worker chunk also lives — resolving against the script URL covers any
+// worker chunk also lives, so resolving against the script URL covers any
 // base href.
 void init({
   module_or_path: new URL(wasmUrl, self.location.href)
@@ -109,8 +109,7 @@ async function handle(msg: MainToWorkerMessage): Promise<void> {
       postMessage({ kind: 'ok', reqId: msg.reqId });
       break;
     case 'stop': {
-      // The engine has no reset: stopping for good = destroy and rebuild
-      // from the kept descriptor.
+      // The engine has no reset: destroy and rebuild from the descriptor.
       await stopRun();
       requireSim().destroy();
       sim = new Simulation(descriptor!);
@@ -118,10 +117,9 @@ async function handle(msg: MainToWorkerMessage): Promise<void> {
       break;
     }
     // Inputs, snapshots and status polls are advisory: the main thread awaits
-    // no ack, so a missing engine has nothing to fail and is dropped instead of
-    // reported. Reporting would come back uncorrelated and kill the session —
-    // the run controls above keep `requireSim`, since their caller holds a
-    // promise that can carry the failure.
+    // no ack, so a missing engine is dropped rather than reported — an
+    // uncorrelated error would kill the session. The run controls above keep
+    // `requireSim`, since their caller holds a promise to carry the failure.
     case 'triggerInput':
       if (!sim) break;
       sim.triggerInput(msg.componentIndex, msg.event as InputEvent, msg.state);
@@ -175,12 +173,8 @@ async function stopRun(): Promise<void> {
 /**
  * Target-Hz pacing: each iteration runs the ticks the wall clock says are due
  * since the run started. Batches are bounded by wall-clock time, not tick
- * count: at a high target rate a tick-count cap would block the worker for
- * hundreds of ms in one synchronous `run`, starving the per-frame snapshot
- * pull — the `ms` bound returns control to the message pump after a few ms so
- * inputs and snapshots interleave. When a batch is cut short by the budget the
- * target is unreachable on this machine, so the next batch runs back-to-back
- * rather than idling an interval.
+ * count — a tick-count cap would block the worker in one synchronous `run` and
+ * starve the per-frame snapshot pull.
  */
 function paceLoop(): void {
   if (runMode !== 'target' || !sim) {

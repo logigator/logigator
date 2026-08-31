@@ -56,8 +56,7 @@ class ProbeController {
 
   /**
    * What a Fastify plugin throws: a plain error carrying its own status, not an
-   * `HttpException`. `@fastify/multipart` raises these for a file over the limit
-   * and for a request that is not multipart at all.
+   * `HttpException`.
    */
   @Get('plugin-refusal')
   pluginRefusal(): never {
@@ -86,10 +85,8 @@ describe('ApiExceptionFilter', () => {
   let app: NestFastifyApplication;
 
   beforeAll(async () => {
-    // The filter is registered here rather than by importing `AppModule`, whose
-    // graph now reaches a database and a Redis: what this spec is about is the
-    // response body every failure produces, and that needs neither. The real
-    // root module is exercised by the E2E suite, against real services.
+    // Registered here rather than by importing `AppModule`, whose graph reaches
+    // a database and a Redis this spec does not need.
     const moduleRef = await Test.createTestingModule({
       controllers: [ProbeController],
       providers: [{ provide: APP_FILTER, useClass: ApiExceptionFilter }]
@@ -98,8 +95,7 @@ describe('ApiExceptionFilter', () => {
     app = moduleRef.createNestApplication<NestFastifyApplication>(
       // Small enough that a modest payload trips the body limit.
       new FastifyAdapter({ bodyLimit: 128, logger: false }),
-      // The defect cases log a stack by design; silence it so a passing run
-      // does not read like a failing one.
+      // The defect cases log a stack by design; silence it.
       { logger: false }
     );
     await app.init();
@@ -111,8 +107,7 @@ describe('ApiExceptionFilter', () => {
   });
 
   // Every one of these reaches the filter, including the failures Fastify
-  // raises before a handler runs — those arrive as an HttpException whose
-  // payload is a bare string rather than an object.
+  // raises before a handler runs, whose payload is a bare string, not object.
   it.each([
     ['an unmatched route', { method: 'GET', url: '/nope' }, 404, 'not_found'],
     [
@@ -167,8 +162,8 @@ describe('ApiExceptionFilter', () => {
       500,
       'internal'
     ],
-    // A plugin's own error is not an `HttpException`, so without reading the
-    // status it carries, a file over the upload limit would answer 500.
+    // A plugin's own error is not an `HttpException`, so without reading its
+    // status a file over the upload limit would answer 500.
     [
       'a plugin error blaming the caller',
       { method: 'GET', url: '/probe/plugin-refusal' },

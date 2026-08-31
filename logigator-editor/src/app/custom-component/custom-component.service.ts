@@ -40,13 +40,9 @@ export interface NewComponentMeta {
 
 /**
  * Editor-side orchestration of custom components: create / open / close a
- * component **editor** tab, distinct from the rendering/registry layer. A
- * component editor is just a {@link Project} registered with `type: 'comp'`,
- * carrying a {@link DefinitionBinding} that keeps its master's summary current.
- *
- * Masters live in the browser id space: creating opens an empty editor, opening
- * loads a saved master's circuit from the browser `components` store (or re-focuses
- * an already-open editor), and closing saves a dirty editor before disposing it.
+ * component editor tab, distinct from the rendering/registry layer. An editor
+ * is a {@link Project} registered with `type: 'comp'`, carrying a
+ * {@link DefinitionBinding} that keeps its master's summary current.
  */
 @Injectable({ providedIn: 'root' })
 export class CustomComponentService {
@@ -71,9 +67,8 @@ export class CustomComponentService {
   private readonly _snapshotViews = new Map<number, Project>();
 
   /**
-   * Creates a new editable master and opens an empty editor tab for it. The
-   * user picks the store in the new-component dialog: a `'server'` master is
-   * created via the API (POST), a `'browser'` master is minted locally.
+   * Creates a new editable master and opens an empty editor tab for it. A
+   * `'server'` master is created through the API, a `'browser'` one locally.
    */
   public async createComponent(meta: NewComponentMeta): Promise<Project> {
     if (meta.source === 'server') {
@@ -125,18 +120,14 @@ export class CustomComponentService {
   }
 
   /**
-   * Brings the editor for a master to the front, re-focusing an already-open
-   * editor or loading the master's circuit (the universal embedded-snapshot
-   * path) from whichever library the master belongs to — server (GET) or the
-   * browser `components` store. A reused master shares its session type id, so
-   * the palette tile and the editor stay one definition.
+   * Brings a master's editor to the front, re-focusing an open one or loading
+   * the circuit from whichever library the master belongs to. A reused master
+   * shares its session type id, so palette tile and editor stay one definition.
    */
   public async openComponentForEdit(masterId: string): Promise<void> {
-    // The caller may pass a placed instance's frozen snapshot id, which — if the
-    // master was promoted to the cloud after that snapshot was taken — is the
-    // pre-promotion (browser) id. Resolve it to the master's current id through
-    // the promotion alias so the open-editor match and the load both use the id
-    // the store/API actually knows (otherwise the server GET 404s until reload).
+    // A placed instance's frozen snapshot id predates a later promotion, so
+    // resolve it through the alias: the match and the load both need the id the
+    // store or API knows, or the GET 404s until a reload.
     const id = this.registry.currentIdForId(masterId);
     const open = this._findOpenEditor(id);
     if (open) {
@@ -161,20 +152,17 @@ export class CustomComponentService {
   }
 
   /**
-   * Recovers an **orphaned** placed custom — one whose master is no longer in any
-   * library, though its circuit is still embedded — by restoring it into the
-   * browser library, then opening it for editing. Restores at the frozen version;
-   * every instance that referenced it re-links to the new master. No-op if the
-   * type is not a restorable orphan.
+   * Recovers an orphaned placed custom — no master in any library, but its
+   * circuit still embedded — into the browser library at the frozen version,
+   * then opens it. Every instance that referenced it re-links to the new
+   * master. No-op for a type that is not a restorable orphan.
    */
   public async restoreOrphanAndEdit(typeId: number): Promise<void> {
-    // The host project whose placed instance is being restored. Capture it now:
-    // `openComponentForEdit` below switches the active tab to the new master's
-    // editor, so reading it afterwards would mark the wrong project.
+    // Captured before `openComponentForEdit` switches the active tab, which
+    // would otherwise mark the wrong project.
     const host = this.projectService.activeProject();
     let masterId: string | null;
-    // Captured so the failure toast below can carry a stack; stays undefined
-    // when the restore returned null (not a restorable orphan) rather than threw.
+    // Stays undefined when the restore returned null rather than threw.
     let restoreError: unknown;
     try {
       masterId = await this.componentLibrary.restoreOrphanToLibrary(typeId);
@@ -190,11 +178,9 @@ export class CustomComponentService {
       );
       return;
     }
-    // Restore relinked the placed snapshot's provenance in the registry, so the
-    // host's serialized content changed — but no Action ran, so it was never
-    // marked dirty. Flag it explicitly, else the follow-up save no-ops on the
-    // dirty guard (after the dependency was already promoted) and a reload shows
-    // the component embedded again.
+    // The relink changed the host's serialized content without running an
+    // Action, so nothing marked it dirty; without this flag the follow-up save
+    // no-ops and a reload shows the component embedded again.
     if (host) this.metadataStore.markDirty(host);
     this.toast.success(
       this.translation.translate('componentActions.restored'),
@@ -204,20 +190,15 @@ export class CustomComponentService {
   }
 
   /**
-   * Opens an embedded custom's frozen circuit in a **read-only** tab, adding
-   * nothing to the library. This is how a borrowed document — a share — is
-   * looked inside: its customs travel embedded and their masters belong to
-   * somebody else's account, so the viewer gets to read the circuit (and drill
-   * on into nested customs, which are embedded the same way) without keeping a
-   * copy of a stranger's component.
+   * Opens an embedded custom's frozen circuit in a read-only tab, adding
+   * nothing to the library. This is how a borrowed document is looked inside:
+   * the viewer reads the circuit, and drills into nested customs, without
+   * keeping a copy of a stranger's component.
    *
-   * The tab is a plain component {@link Project} registered as a `'share'`
-   * document, so every read-only suppression applies unchanged: saving is
-   * refused, the File menu drops its save entry, dirty tracking is off, and the
-   * wire-repair offer stays quiet on a circuit the viewer cannot fix. It carries
-   * no {@link DefinitionBinding} (there is no master to keep in sync) and no
-   * store id; closing it just disposes it. Viewing an already-open snapshot
-   * focuses its tab. No-op for a type id that is not an embedded snapshot.
+   * The tab registers as a `'share'` document, so every read-only suppression
+   * applies unchanged. It carries no {@link DefinitionBinding} — there is no
+   * master to keep in sync — and no store id, so closing it just disposes it.
+   * No-op for a type id that is not an embedded snapshot.
    */
   public viewSnapshot(typeId: number): void {
     const def = this.registry.getDefinition(typeId);
@@ -251,16 +232,13 @@ export class CustomComponentService {
   }
 
   /**
-   * Deletes a custom component from the library. The persistent record is removed
-   * first (browser store, or the API for a cloud master — unpublishing it): if that
-   * fails the delete aborts with nothing changed, so it stays retryable. On success
-   * any open editor tab for the master is force-closed (its unsaved edits are moot —
-   * the component is going away), a placement armed for it is disarmed, and the
-   * master is dropped from the registry. Placed instances are frozen snapshots, so
-   * they keep rendering; they simply stop resolving to a master and read as embedded
-   * copies — across every open project, since the registry is session-wide. Their
-   * embedded provenance is unchanged, so no open project is marked dirty. No-op for
-   * a type id that is not a library master.
+   * Deletes a custom component from the library. The persistent record goes
+   * first, so a failure aborts with nothing changed and stays retryable; then
+   * the editor tab is force-closed, an armed placement disarmed and the master
+   * dropped from the registry. Placed instances are frozen snapshots, so they
+   * keep rendering and simply read as embedded copies, in every open project —
+   * their provenance is unchanged, so none is marked dirty. No-op for a type id
+   * that is not a library master.
    */
   public async deleteComponent(masterTypeId: number): Promise<void> {
     const def = this.registry.getDefinition(masterTypeId);
@@ -282,8 +260,7 @@ export class CustomComponentService {
       const open = this._findOpenEditor(this.registry.currentIdForId(def.id));
       if (open) this.forceCloseComponent(open);
     }
-    // Disarm a placement still pointed at the master whose palette tile just
-    // vanished (the settings-panel delete acts on the placement ghost).
+    // The palette tile is gone, so a placement still pointed at it must go.
     if (this.workModeService.selectedComponentType() === masterTypeId) {
       this.workModeService.setMode(WorkMode.PAN);
     }
@@ -300,18 +277,12 @@ export class CustomComponentService {
   }
 
   /**
-   * Updates a master's descriptive metadata (name/symbol/description) from the
-   * "Edit details" dialog. The persistent record is written first (browser
-   * store, or the API PATCH for a cloud master): if that fails the edit aborts
-   * with nothing changed, so it stays retryable. On success the session master
-   * is patched in place and adopts the persisted `version` bump — the details
-   * travel in placed snapshots, so instances frozen at the older version are
-   * offered "Update to latest", exactly as after a circuit save. Future
-   * placements snapshot the new metadata; already-placed instances stay frozen
-   * until explicitly updated. The palette re-stamps/re-sorts, and an open
-   * editor tab for the master adopts the new name (the tab label shows it, and
-   * the browser save path persists `metadata.name`). No-op for a type id that
-   * is not a library master.
+   * Updates a master's name/symbol/description. The persistent record is
+   * written first, so a failure aborts with nothing changed and stays
+   * retryable; then the session master is patched in place and adopts the
+   * persisted `version` bump. The details travel in placed snapshots, so
+   * instances frozen at the older version are offered "Update to latest" and
+   * stay frozen until then. No-op for a type id that is not a library master.
    */
   public async updateComponentDetails(
     masterTypeId: number,
@@ -341,14 +312,13 @@ export class CustomComponentService {
       labels: def.labels,
       ...details
     });
-    // Adopt the persisted version stamp; without one (a backend that does not
-    // yet implement the additive bump) the master version is left unchanged, so
-    // placed instances are not spuriously flagged stale — like the save path.
+    // Without a persisted stamp the master version stays put, so placed
+    // instances are not spuriously flagged stale.
     if (stamps.version !== undefined) {
       this.registry.setMasterVersion(masterTypeId, stamps.version);
     }
-    // Mirror the persisted last-edited stamp; this also bumps the registry
-    // revision, so the palette re-sorts and signal readers re-resolve the name.
+    // Also bumps the registry revision, so the palette re-sorts and signal
+    // readers re-resolve the name.
     this.registry.setMasterLastEdited(masterTypeId, stamps.lastEdited);
 
     if (def.id !== undefined) {
@@ -363,11 +333,9 @@ export class CustomComponentService {
   }
 
   /**
-   * Drops back to the pan tool when a placement is still armed for the master
-   * just opened for editing — opening a library tile's editor from its palette
-   * ghost should leave the ghost deselected. No-op when a different (or no)
-   * placement is armed, e.g. editing an already-placed instance. Mirrors the
-   * delete flow's disarm.
+   * Drops back to the pan tool when a placement is armed for the master just
+   * opened for editing: opening an editor from the palette ghost should leave
+   * the ghost deselected.
    */
   private _disarmPlacementFor(masterId: string): void {
     const typeId = this.registry.masterTypeIdForId(masterId);
@@ -387,8 +355,7 @@ export class CustomComponentService {
       project,
       new DefinitionBinding(project, masterTypeId, this.registry)
     );
-    // A master's circuit can carry the same wire corruption as a project's;
-    // a freshly created (empty) editor audits clean and stays silent.
+    // A master's circuit can carry the same wire corruption as a project's.
     this.wireRepair.offerRepairOnLoad(project);
   }
 
@@ -401,12 +368,9 @@ export class CustomComponentService {
   }
 
   /**
-   * Closes a component editor tab. A clean editor is disposed straight away; a
-   * dirty one prompts **Save / Discard / Cancel** first (dismissing the dialog
-   * cancels, keeping the tab, so work is never lost by accident). Saving a cloud
-   * component that embeds local components publishes those to the cloud library —
-   * that warning is folded into the same dialog. On a failed save the tab is kept
-   * open so the user can retry.
+   * Closes a component editor tab. A clean editor is disposed straight away, a
+   * dirty one prompts Save / Discard / Cancel first, and a dismissal counts as
+   * cancel so work is never lost by accident. A failed save keeps the tab open.
    */
   public async closeComponent(project: Project): Promise<void> {
     if (!this.metadataStore.isDirty(project)) {
@@ -421,15 +385,13 @@ export class CustomComponentService {
       if (await this.uploadCoordinator.promoteLocalDepsAndSave(project)) {
         this._disposeEditor(project);
       }
-      // else: save failed (already toasted) — keep the tab open for a retry.
+      // A failed save is already toasted; keep the tab open for a retry.
     }
-    // dismissed (cancel) — keep the tab open.
   }
 
   /**
-   * Closes a component editor tab with no prompting, discarding any unsaved
-   * changes. For flows that have already resolved the dirty question themselves.
-   * Regular tab closing goes through {@link closeComponent}.
+   * Closes a component editor tab with no prompting, for flows that have
+   * already resolved the dirty question themselves.
    */
   public forceCloseComponent(project: Project): void {
     this._disposeEditor(project);
@@ -437,9 +399,8 @@ export class CustomComponentService {
 
   /**
    * Opens the close-confirmation dialog for a dirty editor, folding in the
-   * cloud-promotion warning when saving would publish embedded local components
-   * (a cloud document with resolvable local deps). Resolves the user's choice, or
-   * `undefined` when the dialog is dismissed (cancel).
+   * warning that saving a cloud document publishes its local dependencies.
+   * Resolves `undefined` when the dialog is dismissed.
    */
   private _promptClose(project: Project): Promise<CloseTabChoice | undefined> {
     const metadata = this.metadataStore.getMetadata(project);
@@ -482,12 +443,10 @@ export class CustomComponentService {
   }
 
   /**
-   * Builds an undoable action that brings one placed custom instance up to its
-   * master's current state: re-snapshot the master, then replace the instance
-   * with a fresh one of the new snapshot type at the same position/direction.
-   * Returns null if the instance's master can no longer be resolved (e.g. it was
-   * deleted) — there is nothing to update against. The instance keeps working
-   * either way; this only changes its shape.
+   * Brings one placed instance up to its master's current state: re-snapshot
+   * the master, then replace the instance with one of the new snapshot type at
+   * the same position and direction. Null when the master no longer resolves —
+   * there is nothing to update against, and the instance keeps working.
    */
   public buildInstanceUpdate(instance: CustomComponent): Action | null {
     const def = this.registry.getDefinition(instance.config.type);
@@ -504,19 +463,16 @@ export class CustomComponentService {
     replacement.position.copyFrom(instance.position);
 
     const action = new UpdateInstanceAction(instance, replacement);
-    // The replacement was only built to be serialized into the action; the
-    // real instance is created by the action's add on do(). Drop this one.
+    // Only built to be serialized into the action, which creates the real
+    // instance on do().
     replacement.destroy({ children: true });
     return action;
   }
 
   /**
-   * Groups the per-instance updates for many placed instances into one action, so
-   * updating a whole board's instances of a type is a single undo entry. All the
-   * instances re-snapshot the same master, and the registry caches that snapshot
-   * per master, so every replacement lands on one shared new type id (one
-   * definition in the save file, as with N separate placements). Returns null when
-   * no instance yields an update.
+   * Groups per-instance updates into one undo entry. The registry caches a
+   * master's snapshot, so every replacement lands on one shared new type id and
+   * the save file holds one definition. Null when no instance yields an update.
    */
   public buildInstancesUpdate(
     instances: readonly CustomComponent[]
@@ -528,12 +484,10 @@ export class CustomComponentService {
   }
 
   /**
-   * Ensures a master's circuit is loaded before it is placed or updated. Cloud
-   * masters are preloaded summary-only (no circuit); this lazily fetches the
-   * circuit on first use. No-op for built-ins, browser masters, and already-loaded
-   * masters. Returns whether the circuit is ready: a failed cloud fetch shows a
-   * toast and returns `false` so the caller can abort (rather than arm placement /
-   * apply an update against empty content).
+   * Ensures a master's circuit is loaded before it is placed or updated: cloud
+   * masters are preloaded summary-only. No-op for built-ins, browser masters
+   * and loaded ones. `false` means a failed fetch, so the caller aborts instead
+   * of working against empty content.
    */
   public async ensureMasterCircuit(masterTypeId: number): Promise<boolean> {
     try {

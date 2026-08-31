@@ -6,7 +6,6 @@ import { ENV, Env, loadEnv } from './config/env';
 describe('AppModule', () => {
   it('exposes the validated environment to feature modules', async () => {
     // The provider is global, so a module that imports nothing can inject it.
-    // Everything downstream (database, Redis, mail) depends on that.
     const env = loadEnv({ PORT: '4242' });
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule.forEnv(env)]

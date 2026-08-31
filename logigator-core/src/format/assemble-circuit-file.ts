@@ -16,11 +16,9 @@ export interface AssembledCircuitFile {
   file: CurrentCircuitFile;
   /**
    * `wireOrder[k]` / `componentOrder[k]` is the index, in the input body's
-   * arrays, of the element emitted k-th. Both encoders reorder — the chain walk
-   * for wires, the position-delta sort for components — so the document's
-   * element order is the emission order, and a consumer aligning per-element
-   * data with the document (the editor's project dump maps element ids) has to
-   * map through these rather than iterate its own source.
+   * arrays, of the element emitted k-th. Both encoders reorder, so aligning
+   * per-element data with the document means mapping through these rather than
+   * iterating the source arrays.
    */
   wireOrder: number[];
   componentOrder: number[];
@@ -28,13 +26,8 @@ export interface AssembledCircuitFile {
 
 /**
  * Encodes a circuit body and its embedded definitions into a current-version
- * document. The write half of the format, and the counterpart to
- * `migrateToCurrent` + the decoders on the read side.
- *
- * Pure data → data, so both sides share it: the editor calls it after
- * snapshotting its live `Project` into a body (and remapping session type ids
- * to file-local ones), and the server's bulk re-normalization job calls it to
- * write a migrated document back.
+ * document: the write half of the format. Pure data → data, so every writer
+ * shares it.
  */
 export function assembleCircuitFile(
   body: SerializedCircuitBody,
@@ -52,8 +45,8 @@ export function assembleCircuitFile(
       components: components.components,
       wires: wires.text,
       definitions: definitions.map(toPersistedDefinition),
-      // Fork lineage rides along only when the document has one — an empty
-      // field would suggest a checked-and-absent lineage rather than none.
+      // Only present when there is a lineage; an empty field would read as a
+      // checked-and-absent one.
       ...(attribution?.length ? { attribution: [...attribution] } : {})
     },
     wireOrder: wires.order,

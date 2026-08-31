@@ -21,12 +21,10 @@ export const projectPageSchema = pageSchema(projectSummarySchema);
 export type ProjectPage = z.infer<typeof projectPageSchema>;
 
 /**
- * A project opened for editing.
- *
- * `document` is self-contained — every custom component it uses is embedded — so
- * the client needs nothing else to render it. `dependencies` describes those
- * masters as they stand now, which is what turns a stale embedded snapshot into
- * an offer to update rather than a silent divergence.
+ * A project opened for editing. `document` is self-contained — every custom it
+ * uses is embedded — so the client needs nothing else to render it.
+ * `dependencies` describes those masters as they stand now, which turns a stale
+ * embedded snapshot into an offer to update rather than silent divergence.
  */
 export const projectResponseSchema = z
   .object({
@@ -41,14 +39,11 @@ export const projectResponseSchema = z
 export type ProjectResponse = z.infer<typeof projectResponseSchema>;
 
 /**
- * Creating a project. `document` is optional and absent means an empty board:
- * the editor's "new project" makes the row first and saves into it, while
- * uploading a local project to the cloud arrives complete and should not need
- * two round trips to land.
- *
- * `name` is required either way and wins over the document's own — a create
- * names the row, and the server writes that name back into the document it
- * stores, so the column and the document never disagree about it.
+ * Creating a project. An absent `document` means an empty board, so a new
+ * project can make the row first, while an upload arrives complete without two
+ * round trips. `name` is required either way and wins over the document's own:
+ * the server writes it back into the stored document, so the column and the
+ * document never disagree.
  */
 export const createProjectRequestSchema = z.object({
   name: documentNameSchema,
@@ -61,8 +56,7 @@ export type CreateProjectRequest = z.infer<typeof createProjectRequestSchema>;
 
 /**
  * Changing a project's metadata. `regenerateLink` mints a new share token,
- * which is how a share is revoked — every URL handed out under the old one stops
- * resolving.
+ * which is how a share is revoked: every URL under the old one stops resolving.
  */
 export const updateProjectRequestSchema = requireSomeField(
   z.object({

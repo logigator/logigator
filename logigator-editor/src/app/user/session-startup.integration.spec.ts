@@ -21,10 +21,9 @@ import { makeUser } from '../../testing/user-fixtures';
 const USER_ID = '550e8400-e29b-41d4-a716-446655440000';
 
 /**
- * The real startup chain end-to-end: auth cookie → real `UserService` loads
- * `/api/user` → real `SessionLifecycleService` effect → cloud library preload.
- * The unit specs mock `UserService`; this one exists because the chain broke
- * once with every unit green (the pieces worked, their composition did not).
+ * The real startup chain end-to-end: auth cookie → `UserService` loads
+ * `/api/user` → `SessionLifecycleService` effect → cloud library preload. The
+ * unit specs mock `UserService`, so only this one covers the composition.
  */
 describe('session startup (integration)', () => {
   let authCookie: ReturnType<typeof signal<string | null>>;
@@ -84,8 +83,8 @@ describe('session startup (integration)', () => {
     // The auth cookie is already set when the app boots.
     authCookie.set('true');
 
-    // AppComponent-equivalent bootstrap: instantiate the lifecycle (and with
-    // it the real UserService, whose cookie effect fires the user load).
+    // AppComponent-equivalent bootstrap: instantiating the lifecycle brings up
+    // the real UserService, whose cookie effect fires the user load.
     TestBed.inject(SessionLifecycleService);
     TestBed.inject(UserService);
     TestBed.tick();

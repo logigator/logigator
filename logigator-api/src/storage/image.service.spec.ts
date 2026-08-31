@@ -60,9 +60,8 @@ describe('an encoded avatar', () => {
   });
 
   /**
-   * The response lists the matrix without reading the volume, so a file that
-   * came out at another size or in another format would be advertised wrongly
-   * and `srcset` would pick it on that false claim.
+   * Responses list the matrix without reading the volume, so a file that came
+   * out at another size or format would be advertised — and picked — wrongly.
    */
   it('is exactly what the matrix advertises', async () => {
     expect([...files.keys()].sort()).toEqual(
@@ -86,14 +85,13 @@ describe('an encoded avatar', () => {
   });
 
   /**
-   * The re-encode drops the EXIF block — which is the point, a phone's location
-   * has no business being served — so the orientation in it has to be spent
-   * before it goes.
+   * The re-encode drops the EXIF block, so the orientation in it has to be
+   * spent first.
    */
   it('applies the EXIF orientation before discarding the metadata', async () => {
     // Orientation 6 is a quarter turn clockwise: red moves from the left half
-    // to the top half. Without it, cropping this landscape source to a square
-    // takes the middle band and mixes both colours instead.
+    // to the top half. Without it, a square crop takes the middle band and
+    // mixes both colours.
     const rotated = await sharp(await twoTone(64, 32))
       .withMetadata({ orientation: 6 })
       .jpeg({ quality: 100 })
@@ -110,9 +108,8 @@ describe('an encoded avatar', () => {
   });
 
   /**
-   * JPEG has no alpha channel, and an unflattened transparent source comes out
-   * of one as black — so a logo with a transparent ground would be served as a
-   * black square to every client that gets the fallback.
+   * JPEG has no alpha, and an unflattened transparent source comes out black —
+   * a logo would reach every fallback client as a black square.
    */
   it('keeps transparency in WebP and flattens it onto white for JPEG', async () => {
     const transparent = await sharp({
@@ -193,9 +190,8 @@ describe('encoded previews', () => {
   });
 
   /**
-   * The two renders differ only in theme, so an encode that mixed up its sources
-   * would still produce a complete, plausible-looking set — worth pinning that
-   * each slot carries its own image.
+   * The two renders differ only in theme, so swapped sources would still
+   * produce a complete, plausible-looking set.
    */
   it('keep the render of each theme in its own slot', async () => {
     const light = await pixel(files.get('light-256.webp') as Buffer, 128, 128);
@@ -206,9 +202,9 @@ describe('encoded previews', () => {
   });
 
   /**
-   * A preview is padded rather than cropped: a wide board losing its left and
-   * right thirds to a square crop would be a thumbnail of the wrong circuit.
-   * The padding is transparent, which is also what the editor renders on.
+   * Padded rather than cropped: a wide board losing its outer thirds would be a
+   * thumbnail of the wrong circuit. The padding is transparent, as the editor
+   * renders on.
    */
   it('pad to square instead of cropping, on transparency', async () => {
     const content = files.get('light-256.png') as Buffer;
@@ -220,8 +216,7 @@ describe('encoded previews', () => {
 
 describe('an upload that is not a usable image', () => {
   beforeAll(() => {
-    // Each refusal logs why, and a passing suite should not read like a failing
-    // one.
+    // Each refusal logs why; a passing suite should not read like a failure.
     vi.spyOn(Logger.prototype, 'debug').mockReturnValue(undefined);
   });
 
@@ -239,8 +234,8 @@ describe('an upload that is not a usable image', () => {
     ['bytes of no image format at all', Buffer.from('not an image at all')],
     [
       // A 1×1 PNG whose IDAT checksum does not match its data. Browsers render
-      // it; libpng refuses it — and re-encoding is what turns that from a
-      // stored-and-broken file into an answer the client can act on.
+      // it, libpng refuses it, and re-encoding turns that into an answer the
+      // client can act on.
       'a PNG with a damaged chunk',
       Buffer.from(
         'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFAAH/q842iQAAAABJRU5ErkJggg==',

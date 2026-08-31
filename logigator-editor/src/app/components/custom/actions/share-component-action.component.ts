@@ -9,11 +9,9 @@ import { resolveMasterSignal } from './resolve-master.signal';
 import { TranslateDirective } from '../../../translation/translate.directive';
 
 /**
- * Renderer for {@link ShareComponentAction}: a button shown only when the selected
- * instance resolves to a **cloud** master, which opens the shared
- * {@link ShareDialogComponent} for that component's server id (share link + public
- * visibility). Local masters use the upload action instead; there is nothing to
- * share until a component lives in the cloud.
+ * Shown only when the selection resolves to a cloud master: there is nothing
+ * to share until a component lives in the cloud, and a local master offers the
+ * upload action instead.
  */
 @Component({
   selector: 'app-share-component-action',

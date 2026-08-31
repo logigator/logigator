@@ -30,22 +30,17 @@ interface DocumentHandle {
 }
 
 /**
- * Orchestrates what happens when the sign-in changes — the action half of the
- * session lifecycle ({@link CloudSessionService} is the state half).
+ * The action half of the session lifecycle ({@link CloudSessionService} is the
+ * state half).
  *
- * One effect follows `UserService.user()` and keeps a single invariant for
- * *every* transition (initial load, login tab, another browser tab, session
- * expiry): **the cloud component library mirrors the session** — a session
- * starting loads the user's masters, ending removes them. Nothing else is
- * touched reactively, so an *external* logout leaves the open project, tabs and
- * a running simulation as they are; later cloud saves are rejected by the save
- * guard until the user signs in again.
+ * One effect follows `UserService.user()` and keeps a single invariant across
+ * every transition: the cloud component library mirrors the session. Nothing
+ * else is touched reactively, so an *external* logout leaves the open project,
+ * tabs and a running simulation alone; the save guard rejects later cloud saves
+ * until the user signs in again.
  *
- * A *user-initiated* logout runs {@link requestLogout}: dirty cloud documents
- * prompt Save / Discard / Cancel (a failed or cancelled save aborts, so the
- * session never ends with work in limbo), then the server session ends and the
- * cloud workspace is reset — server component tabs close, a server main document
- * becomes a blank draft, local docs stay.
+ * A *user-initiated* logout runs {@link requestLogout}, which additionally
+ * resets the cloud workspace.
  */
 @Injectable({ providedIn: 'root' })
 export class SessionLifecycleService {
@@ -70,7 +65,7 @@ export class SessionLifecycleService {
       const user = this.userService.user();
       const userId = user?.id ?? null;
       const prevId = this._lastUserId;
-      if (userId === prevId) return; // data refresh (e.g. profile PATCH), not a transition
+      if (userId === prevId) return; // data refresh, not a transition
       this._lastUserId = userId;
       untracked(() => {
         if (prevId !== null) this._onSessionEnded();
@@ -80,8 +75,8 @@ export class SessionLifecycleService {
   }
 
   /**
-   * The Log Out menu action. Resolves when the flow completes — whether it
-   * ended the session or was aborted (cancel, failed save, failed logout).
+   * The Log Out action. Resolves whether the flow ended the session or aborted
+   * (cancel, failed save, failed logout).
    */
   async requestLogout(): Promise<void> {
     const dirty = this._dirtySavableCloudDocs();
@@ -90,10 +85,9 @@ export class SessionLifecycleService {
       if (choice === undefined) return; // cancelled — keep the session
       if (choice === 'save') {
         for (const { project } of dirty) {
-          // Consent to publish embedded local components was collected by the
-          // dialog's warning line, so save without further prompting. A failure
-          // was already surfaced — abort with the session (and the dirty state)
-          // intact so the user can retry or discard explicitly.
+          // The dialog's warning line already collected consent to publish
+          // embedded local components. A failure is surfaced there, so abort
+          // with the session and dirty state intact.
           if (
             !(await this.uploadCoordinator.promoteLocalDepsAndSave(project))
           ) {
@@ -122,10 +116,9 @@ export class SessionLifecycleService {
   }
 
   /**
-   * A session started (initial load with an existing session, or a login from
-   * anywhere): load the user's cloud masters into the palette. The promotion
-   * aliases must be in place first so pre-promotion references resolve; the
-   * preload is memoized, so this never double-loads against the startup path.
+   * Loads the user's cloud masters into the palette. Promotion aliases must be
+   * in place first so pre-promotion references resolve; the preload is
+   * memoized, so this never double-loads against the startup path.
    */
   private async _onSessionStarted(): Promise<void> {
     try {
@@ -142,23 +135,21 @@ export class SessionLifecycleService {
   }
 
   /**
-   * A session ended (initiated or external): the cloud library empties. This is
-   * deliberately *all* that happens here — an external logout must leave the
-   * workspace untouched; the initiated flow layers its reset on top.
+   * Deliberately *all* that happens on a session end: an external logout must
+   * leave the workspace untouched. The initiated flow layers its reset on top.
    */
   private _onSessionEnded(): void {
     this.componentLibrary.clearServerMasters();
   }
 
   /**
-   * The deliberate teardown after a user-initiated logout: server component
-   * tabs close without prompting (the dirty question was settled by the
-   * dialog), a server main document is replaced by a blank draft — a simulation
-   * of it leaves with the swap (see `simulation.md` § Session lifecycle) — and
-   * the library clears. Local documents are untouched. The library clear also
-   * runs via the session-end transition when the auth cookie flips, but that
-   * event's timing is browser-dependent, so it is repeated here
-   * deterministically (idempotent).
+   * Teardown after a user-initiated logout: server component tabs close without
+   * prompting (the dialog settled the dirty question), a server main document
+   * is replaced by a blank draft — a simulation of it leaves with the swap (see
+   * `simulation.md` § Session lifecycle) — and the library clears. Local
+   * documents are untouched. The session-end transition clears the library too,
+   * but its timing depends on when the auth cookie flips, so the idempotent
+   * clear is repeated here.
    */
   private _resetCloudWorkspace(): void {
     for (const tab of [...this.projectService.openComponents()]) {
@@ -176,9 +167,8 @@ export class SessionLifecycleService {
   }
 
   /**
-   * The dirty cloud documents the logout dialog offers to save. Foreign
-   * documents (loaded under a different account) are excluded — they cannot be
-   * saved under this session, so there is nothing to offer.
+   * The dirty cloud documents the logout dialog offers to save. Foreign ones
+   * (loaded under a different account) cannot be saved under this session.
    */
   private _dirtySavableCloudDocs(): DocumentHandle[] {
     return this.metadataStore
@@ -192,9 +182,9 @@ export class SessionLifecycleService {
   }
 
   /**
-   * Opens the logout confirmation for dirty cloud documents, folding in the
-   * cloud-promotion warning when saving them would publish embedded local
-   * components. Resolves the choice, or `undefined` when dismissed (cancel).
+   * Opens the logout confirmation, folding in the cloud-promotion warning when
+   * saving would publish embedded local components. Resolves `undefined` when
+   * dismissed.
    */
   private _promptLogout(
     dirty: DocumentHandle[]

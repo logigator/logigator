@@ -3,11 +3,9 @@ import { STORAGE_URL_PREFIX } from '../src/storage/file-storage.service';
 import type { E2eApp } from './harness';
 
 /**
- * Where on the volume a served URL resolves to.
- *
- * The two are not the same string: the whole volume is served under a URL root
- * of its own, which the static layer strips. Going through the exported constant
- * means a spec cannot quietly assert the old shape after that root moves.
+ * Where on the volume a served URL resolves to — not the same string, since the
+ * static layer strips the URL root. Going through the exported constant keeps a
+ * spec from asserting a stale shape after that root moves.
  */
 export function assetFilePath(app: E2eApp, url: string): string {
   return join(app.env.STORAGE_DIR, url.slice(STORAGE_URL_PREFIX.length));

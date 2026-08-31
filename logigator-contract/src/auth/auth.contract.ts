@@ -7,10 +7,8 @@ import {
 } from '../user/user.contract';
 
 /**
- * The auth surface is JSON, under `/api/auth`. None of the legacy form-post,
- * session-flash and redirect machinery survives: the landing app owns the forms
- * and reads these responses, and the editor only ever needs the session cookie
- * they set.
+ * The auth surface, JSON under `/api/auth`. Clients own their forms and read
+ * these responses; the editor needs only the session cookie they set.
  */
 
 export const registerRequestSchema = z.object({
@@ -22,8 +20,8 @@ export const registerRequestSchema = z.object({
 export type RegisterRequest = z.infer<typeof registerRequestSchema>;
 
 /**
- * Registration answers what has to happen next rather than a user: the account
- * exists but cannot sign in until the address is confirmed.
+ * Registration answers what happens next rather than a user: the account exists
+ * but cannot sign in until the address is confirmed.
  */
 export const registerResponseSchema = z
   .object({
@@ -47,7 +45,7 @@ export const loginResponseSchema = userResponseSchema;
 
 export type LoginResponse = z.infer<typeof loginResponseSchema>;
 
-/** Resending the verification mail needs the credentials, so it cannot be used to spam an address. */
+/** Needs the credentials, so it cannot be used to spam an address. */
 export const resendVerificationRequestSchema = z.object({
   email: emailSchema,
   password: z.string().min(1)

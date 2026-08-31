@@ -3,10 +3,9 @@ import { usernameSchema } from '@logigator/contract';
 import { usernameFrom } from './google-auth.service';
 
 /**
- * A Google display name is free text of any length, and the address' local part
- * is barely more constrained. The column takes either; the contract does not —
- * and a username the API's own schema rejects is a value every reader of it is
- * entitled to assume cannot exist.
+ * A Google display name is free text and the address' local part barely more
+ * constrained. The column takes either; the contract does not, and a username
+ * the API's own schema rejects is a value no reader expects to exist.
  */
 describe('usernameFrom', () => {
   it.each([

@@ -1,26 +1,16 @@
 /*
- * @logigator/ui — colors-only theme contract.
+ * @logigator/ui — colors-only theme contract. Apps retheme by overriding these
+ * `--lg-*` variables; colors are the only themeable surface, with radius,
+ * spacing, shadows, focus rings and transitions owned by the components.
  *
- * Defines the `--lg-*` color palette the library is built on. Apps retheme by
- * overriding these variables under `:root` / `.dark-mode`; colors are the only
- * themeable surface (radius, spacing, shadows, focus-ring and transitions are
- * owned internally by the components).
- *
- * The defaults below ARE the editor's current colors — the green primary plus
- * the Aura-derived neutrals and state colors — resolved to concrete values from
- * the PrimeNG Aura preset and app.theme.ts, so editor-v2 and other projects
- * normally do not override anything. This is a strict superset of every color
- * token the editor relies on.
- *
- * Light values live under :root; dark overrides under .dark-mode (the app's
- * ThemingService toggles `.dark-mode` on <html>). Tokens whose value is
- * identical across schemes (the primary scale) are declared once under :root.
+ * Light values live under :root, dark overrides under `.dark-mode`, which the
+ * app toggles on <html>. A token identical across schemes — the primary scale
+ * — is declared once under :root.
  */
 
 :root {
-  /* The UA-level scheme rides along with the palette: it drives the default
-     text color, native scrollbars and form controls, so unstyled text is
-     readable on the scheme's surfaces without an explicit text class. */
+  /* Drives native scrollbars, form controls and the default text color, so
+     unstyled text is readable without an explicit text class. */
   color-scheme: light;
 
   /* primary scale — green; identical in light and dark */
@@ -81,10 +71,9 @@
   --lg-error-surface: color-mix(in srgb, #fef2f2, transparent 5%);
   --lg-error-border: #fca5a5;
 
-  /* Opaque counterparts to the state surfaces, for elements that float over
-     arbitrary content (e.g. toasts) where the translucent `-surface` tints wash
-     out and hurt legibility. Built from the accent over `--lg-content`, so — like
-     the primary scale — one declaration serves both schemes; the small
+  /* Opaque counterparts for elements floating over arbitrary content, where
+     the translucent `-surface` tints wash out. Built from the accent over
+     `--lg-content`, so one declaration serves both schemes; the small
      transparency keeps a faint frost under `backdrop-blur`. */
   --lg-info-surface-strong: color-mix(
     in srgb,

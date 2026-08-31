@@ -77,9 +77,8 @@ describe('re-normalizing stored documents', () => {
         document: circuitDocument('Ported', HALF_ADDER_BODY)
       });
 
-      // Corrupt every derived column and drop the edges, the way a bug or a
-      // half-finished job would — this is what makes them a cache rather than a
-      // second source of truth.
+      // Corrupt every derived column and drop the edges, as a bug or a
+      // half-finished job would.
       await api.db
         .update(components)
         .set({
@@ -122,8 +121,8 @@ describe('re-normalizing stored documents', () => {
         .select()
         .from(projects)
         .where(eq(projects.id, project.id));
-      // Rewriting an encoding is not a user edit. Bumping here would offer every
-      // placed instance of every component an update that changes nothing.
+      // Rewriting an encoding is not a user edit; bumping would offer every
+      // placed instance an update that changes nothing.
       expect(row.version).toBe(project.version);
       expect(row.lastEditedAt.toISOString()).toBe(project.lastEditedAt);
     });
@@ -158,8 +157,8 @@ describe('re-normalizing stored documents', () => {
       await create<ProjectSummary>('projects', { name: 'Already current' });
 
       const report = await renormalize(false);
-      // Writes are normalized, so the table only ever holds one version; this
-      // pass exists for the rows an *older deploy* wrote.
+      // Writes are normalized, so this pass exists for the rows an *older
+      // deploy* wrote.
       expect(report.projects.scanned).toBe(0);
       expect(report.components.scanned).toBe(0);
     });
@@ -169,8 +168,8 @@ describe('re-normalizing stored documents', () => {
         name: 'Legacy row'
       });
 
-      // Exactly what a pre-bump deploy leaves behind: a document at the older
-      // version, with the column beside it saying so.
+      // What a pre-bump deploy leaves behind: an older document, with the
+      // column beside it saying so.
       const legacy = {
         project: {
           name: 'Legacy row',
@@ -204,8 +203,8 @@ describe('re-normalizing stored documents', () => {
         .where(eq(projects.id, project.id));
       expect(row.formatVersion).toBe(CURRENT_FILE_VERSION);
       expect(row.document.version).toBe(CURRENT_FILE_VERSION);
-      // Migrating changes what the derived metadata should say, which is why the
-      // two passes are one job.
+      // Migrating changes what the derived metadata says, which is why the two
+      // passes are one job.
       expect(row).toMatchObject({ componentCount: 2, wireCount: 1 });
 
       // And the row is now current, so a second pass has nothing to do.
@@ -213,8 +212,8 @@ describe('re-normalizing stored documents', () => {
     });
 
     it('skips a row a save reached first, and leaves that save intact', async () => {
-      // Its own database: the pass walks every stale row, and the point here is
-      // what it does to exactly one of them.
+      // Its own database: the pass walks every stale row, and this is about
+      // what it does to one of them.
       const fresh = await startE2eApp();
       try {
         const cookies = await signIn(fresh, 'racer@example.com');
@@ -232,10 +231,9 @@ describe('re-normalizing stored documents', () => {
           .set({ formatVersion: 0 })
           .where(eq(projects.id, project.id));
 
-        // What a save landing mid-pass leaves behind: a newer document and the
-        // counter to go with it. Re-encoding the document read before it would
-        // put the circuit back as it was — a lost edit, and an invisible one,
-        // since this job deliberately does not touch the counter.
+        // What a save landing mid-pass leaves: a newer document and counter.
+        // Re-encoding the document read before it would put the circuit back —
+        // an invisible lost edit, since this job never touches the counter.
         const saved = circuitDocument('Raced', HALF_ADDER_BODY);
         const report = await whileRowLocked(
           fresh.db,
@@ -292,8 +290,7 @@ describe('re-normalizing stored documents', () => {
 
       const report = await renormalize(false);
 
-      // A job that stopped on the first bad row would leave the table half
-      // converted, which is the state this whole design exists to avoid.
+      // Stopping on the first bad row would leave the table half converted.
       expect(report.projects.failed).toBe(1);
       expect(report.projects.rewritten).toBeGreaterThanOrEqual(1);
 
@@ -313,8 +310,8 @@ describe('re-normalizing stored documents', () => {
   });
 
   it('walks past a batch boundary without skipping or repeating a row', async () => {
-    // Keyset pagination is what makes that true while rows are being written;
-    // an offset walk over a shifting set does both.
+    // Keyset pagination holds while rows are being written; an offset walk
+    // over a shifting set skips and repeats.
     const fresh = await startE2eApp();
     try {
       const cookies = await signIn(fresh, 'bulk@example.com');

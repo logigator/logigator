@@ -8,10 +8,7 @@ import {
 } from './circuit-file.errors';
 import { validateCurrentCircuitFile } from './circuit-file-validator';
 
-/**
- * Reads a parsed file's format version. Legacy files have no `version` field, so
- * a missing or non-integer `version` is treated as version 0 (legacy).
- */
+/** Reads a document's format version; a missing or non-integer one is v0. */
 export function detectVersion(data: unknown): number {
   if (typeof data !== 'object' || data === null) {
     throw new InvalidFileError('File is not an object');
@@ -24,12 +21,10 @@ export function detectVersion(data: unknown): number {
 }
 
 /**
- * Runs the migration chain to bring any supported document up to
- * `CURRENT_FILE_VERSION`, then structurally validates the result — the
- * returned document is safe to index into without further shape checks. A
- * version newer than we support throws `UnsupportedVersionError`; a gap with
- * no matching migration or a structurally broken document throws
- * `InvalidFileError`.
+ * Runs the migration chain up to `CURRENT_FILE_VERSION` and structurally
+ * validates the result, which is then safe to index into without shape checks.
+ * A newer version throws `UnsupportedVersionError`; a gap in the chain or a
+ * structurally broken document throws `InvalidFileError`.
  */
 export function migrateToCurrent(
   data: unknown,

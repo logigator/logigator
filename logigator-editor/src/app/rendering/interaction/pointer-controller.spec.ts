@@ -163,7 +163,6 @@ describe('PointerController', () => {
     expect(tool.cancel).toHaveBeenCalledTimes(1);
     expect(nav.setActive).toHaveBeenCalledWith(true);
 
-    // Centroid moves +10 → gesture pan; the tool stream stays silent.
     controller.onPointerMove(touch(1, 120, 60));
     expect(nav.pan).toHaveBeenCalled();
     expect(tool.move).not.toHaveBeenCalled();
@@ -220,9 +219,8 @@ describe('PointerController', () => {
     expect(nav.zoomOut).not.toHaveBeenCalled();
   });
 
-  // A disposed project stays reachable until the host's effect re-homes the
-  // controller; its `position`/`scale` are already gone, so mapping a canvas
-  // point through it would throw.
+  // A disposed project stays reachable until the host re-homes the
+  // controller, and mapping a canvas point through it would throw.
   it('drops all events while the project is destroyed', () => {
     controller = new PointerController({
       canvas,

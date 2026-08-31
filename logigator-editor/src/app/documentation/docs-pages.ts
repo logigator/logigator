@@ -46,11 +46,9 @@ import cloudEs from '@assets/docs/es/cloud.md';
 
 /**
  * One documentation page. `urls` maps a language to the build-time hashed URL
- * of that language's markdown (the `.md` file loader emits a cache-busted copy
- * per import), with English as the fallback for languages without an entry —
- * the same scheme the changelog uses. The page body is fetched only when the
- * page is shown; titles are regular translation keys so the navigation is
- * localized even while a body is English-only.
+ * of that language's markdown, English being the fallback. Bodies are fetched
+ * only when shown; titles are translation keys, so the navigation is localized
+ * even while a body is English-only.
  */
 export interface DocPage {
   id: string;
@@ -66,11 +64,10 @@ export interface DocSection {
 }
 
 /**
- * The documentation tree, in display order. Adding a page = drop a markdown
- * file under `src/assets/docs/<lang>/`, import it, list it here, and add its
- * title key to the locale files; {@link DocPageId} picks the id up
- * automatically. In-page cross links use the id: `[label](docs:<page-id>)`.
- * Screenshots register in `docs-images.ts` under the path the markdown uses.
+ * The documentation tree, in display order. To add a page: drop a markdown file
+ * under `src/assets/docs/<lang>/`, import it, list it here and add its title
+ * key to the locale files — {@link DocPageId} picks the id up. In-page cross
+ * links use that id, `[label](docs:<page-id>)`.
  */
 export const DOC_SECTIONS = [
   {

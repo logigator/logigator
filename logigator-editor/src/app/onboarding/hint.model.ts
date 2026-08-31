@@ -4,11 +4,7 @@ import { DocPageId } from '../documentation/docs-pages';
 import { StepText } from './tutorial.model';
 import { OnboardingPlatform } from './onboarding.service';
 
-/**
- * What makes a hint fire (its first occurrence only). All reuse streams the
- * editor already exposes: the work-mode signal, the active project's metadata,
- * and the compact breakpoint.
- */
+/** What makes a hint fire, on its first occurrence only. */
 export type HintTrigger =
   | { readonly kind: 'workMode'; readonly mode: WorkMode }
   | { readonly kind: 'compactEmpty' }
@@ -17,9 +13,8 @@ export type HintTrigger =
   | { readonly kind: 'componentEditor' };
 
 /**
- * A just-in-time hint: shown once, the first time its trigger fires, as a small
- * dismissible popover. Teaches a non-obvious behaviour the flagship tutorial
- * doesn't cover.
+ * A just-in-time hint: a small dismissible popover, shown once the first time
+ * its trigger fires, teaching something the flagship tutorial does not cover.
  */
 export interface Hint {
   readonly id: string;
@@ -27,14 +22,11 @@ export interface Hint {
   readonly text: StepText;
   /** Onboarding target id of the anchor per platform; omit to float it. */
   readonly target?: Partial<Record<OnboardingPlatform, string>>;
-  /**
-   * Which side of the anchor to sit on, per platform; defaults to below it.
-   * A declared side is pinned — see {@link HintService.mount}.
-   */
+  /** Side of the anchor to sit on, per platform. A declared side is pinned. */
   readonly side?: Partial<Record<OnboardingPlatform, LgOverlaySide>>;
   /** Documentation page behind the hint's "learn more" link; omit for none. */
   readonly docsPage?: DocPageId;
   readonly platforms?: readonly OnboardingPlatform[];
-  /** Suppress if this tutorial was already completed (it taught the same thing). */
+  /** Suppress once this tutorial is complete; it taught the same thing. */
   readonly suppressIfCompleted?: string;
 }

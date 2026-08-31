@@ -7,17 +7,13 @@ import {
 } from '@logigator/core';
 
 /**
- * Real documents for the specs that write them, built with core's own encoder.
- *
- * Hand-written JSON would drift from the format the editor actually produces —
- * the compact wire chain and the delta-encoded positions are exactly the parts a
- * fixture gets subtly wrong — so these go through `assembleCircuitFile`, the same
- * function the editor's save path calls.
+ * Real documents for the specs that write them, through `assembleCircuitFile` —
+ * the function the editor's save path calls. Hand-written JSON gets the compact
+ * wire chain and the delta-encoded positions subtly wrong.
  */
 
 export const EMPTY_BODY: SerializedCircuitBody = { components: [], wires: [] };
 
-/** A document, as a client would send it. */
 export function circuitDocument(
   name: string,
   body: SerializedCircuitBody = EMPTY_BODY,
@@ -47,8 +43,8 @@ export function gate(
   x: number,
   y: number
 ): SerializedComponentBody {
-  // Options left out on purpose: a document that omits one takes the catalog
-  // default, in both parse modes, which is what the editor's own load path does.
+  // Options omitted on purpose: a document without one takes the catalog
+  // default in both parse modes, as the editor's load path does.
   return { type, pos: [x, y], options: {} };
 }
 
@@ -67,9 +63,9 @@ export const HALF_ADDER_BODY: SerializedCircuitBody = {
 };
 
 /**
- * A snapshot of a library component, the way a document embeds one. `source`
- * with a `'server'` origin is what makes it a dependency edge; the declared port
- * counts have to match the plugs in `body`, which the parse checks.
+ * A snapshot of a library component, the way a document embeds one. A `source`
+ * of origin `'server'` is what makes it a dependency edge, and the declared
+ * port counts must match the plugs in `body` — the parse checks.
  */
 export function serverSnapshot(options: {
   type: number;

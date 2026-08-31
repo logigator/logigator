@@ -21,10 +21,7 @@ const SVG = Buffer.from(
   '<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"/>'
 );
 
-/**
- * A multipart body with the given file parts, encoded the way a browser does —
- * Node's own `Request` does the boundary, so no spec hand-rolls one.
- */
+/** A multipart body of file parts, encoded by Node's own `Request`. */
 async function upload(
   parts: Record<string, Buffer>
 ): Promise<{ headers: Record<string, string>; payload: Buffer }> {
@@ -114,8 +111,7 @@ describe('circuit previews', () => {
       expect(response.statusCode).toBe(201);
       const preview = response.json().preview;
 
-      // Two lists, because a client picks by the theme it draws in — nothing
-      // about the request says which render is wanted.
+      // Two lists: the client picks by the theme it draws in.
       for (const slot of ['light', 'dark'] as const) {
         expect(preview[slot]).toHaveLength(4);
         expect(
@@ -140,8 +136,8 @@ describe('circuit previews', () => {
       ].map((variant: { url: string }) => variant.url);
 
       for (const url of urls) {
-        // The response lists the matrix, so a URL it names must resolve — the
-        // list comes from a table rather than from the volume.
+        // The list comes from a table rather than the volume, so every URL it
+        // names has to resolve.
         expect((await stat(assetFilePath(api, url))).size).toBeGreaterThan(0);
       }
     });
@@ -193,8 +189,7 @@ describe('circuit previews', () => {
       const project = await createProject('Not an image');
 
       const response = await setPreview(project.id, { light: SVG, dark: PNG });
-      // "Images only" has to mean the formats we serve, not every document
-      // libvips can open.
+      // "Images only" means the formats served, not everything libvips opens.
       expect(response.statusCode).toBe(415);
     });
 
@@ -266,8 +261,8 @@ describe('circuit previews', () => {
       const set = await setPreview(kept.id);
       const keptId = assetIdOf(set.json().preview.light[0].url);
 
-      // An asset whose pointer never landed: exactly what a crash between the
-      // write and the update leaves behind.
+      // An asset whose pointer never landed, as a crash between the write and
+      // the update leaves behind.
       const orphanId = await writeOrphan(api);
 
       const report = await api.app.get(OrphanSweepService).sweep('preview');
@@ -287,7 +282,7 @@ describe('circuit previews', () => {
       });
       try {
         // Not backdated: a directory written moments ago is the in-flight
-        // upload the window exists to protect.
+        // upload the window protects.
         const orphanId = await fresh.app
           .get(FileStorageService)
           .writeAsset('preview', [
@@ -295,8 +290,8 @@ describe('circuit previews', () => {
           ]);
         const report = await fresh.app.get(OrphanSweepService).sweep('preview');
 
-        // An upload in flight is a directory no row names *yet*, and the only
-        // thing telling it from an orphan is its age.
+        // An upload in flight is a directory no row names *yet*; only its age
+        // tells it from an orphan.
         expect(report.removed).toBe(0);
         expect(report.spared).toBe(1);
         await expect(
@@ -316,18 +311,15 @@ describe('circuit previews', () => {
 
     it('leaves alone anything not shaped like an asset', async () => {
       const report = await api.app.get(OrphanSweepService).sweep('preview');
-      // Two runs in a row: the second has nothing left to do, which is what
-      // makes the job safe to run at any time.
+      // The second run has nothing left to do.
       expect(report.removed).toBe(0);
     });
   });
 });
 
 /**
- * Writes an asset directory nothing points at, and answers its id.
- *
- * Through the same service the upload path uses, so the sweep is shown the
- * layout it actually has to recognise rather than one this spec invented.
+ * Writes an asset directory nothing points at, through the service the upload
+ * path uses, so the sweep meets the layout it has to recognise.
  */
 async function writeOrphan(app: E2eApp): Promise<string> {
   const id = await app.app
@@ -345,7 +337,6 @@ async function writeOrphan(app: E2eApp): Promise<string> {
   return id;
 }
 
-/** How many asset directories the whole volume holds. */
 async function countAssets(root: string): Promise<number> {
   let total = 0;
   for (const area of ['profile', 'preview']) {

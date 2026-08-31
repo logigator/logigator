@@ -1,26 +1,23 @@
-/**
- * A single element in a circuit (component instance or wire).
- * This is the core wire format sent to / received from the backend.
- */
+/** A single v0 element: a component instance or a wire. */
 export interface ProjectElement {
-  /** typeId */
+  /** Type id. */
   t: number;
-  /** number of outputs */
+  /** Number of outputs. */
   o?: number;
-  /** number of inputs */
+  /** Number of inputs. */
   i?: number;
-  /** position [x, y] in grid units */
+  /** Position [x, y] in grid units. */
   p: [number, number];
-  /** end position [x, y] in grid units (for wires) */
+  /** End position of a wire, in grid units. */
   q?: [number, number];
-  /** rotation */
+  /** Rotation. */
   r?: number;
-  /** numerical data (up to 64 values) */
+  /** Numerical option slots, up to 64. */
   n?: number[];
-  /** string data (up to 32768 chars) */
+  /** String option slot, up to 32768 chars. */
   s?: string;
-  /** negated input-port indices (0-based within the input group) */
+  /** Negated input-port indices, 0-based within the group. */
   negInputs?: number[];
-  /** negated output-port indices (0-based within the output group) */
+  /** Negated output-port indices, 0-based within the group. */
   negOutputs?: number[];
 }

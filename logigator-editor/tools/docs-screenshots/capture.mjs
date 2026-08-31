@@ -1,18 +1,14 @@
 #!/usr/bin/env node
 /**
- * Generates the documentation screenshots (and the two animated ones) by
- * driving a real editor through
- * `window.__logigator` (the automation API) plus Playwright for the parts that
- * are pure chrome — menus, dialogs and drag gestures the API does not model.
+ * Generates the documentation screenshots by driving a real editor through
+ * `window.__logigator` (the automation API), plus Playwright for the chrome the
+ * API does not model — menus, dialogs, drag gestures.
  *
  *   node tools/docs-screenshots/capture.mjs <out-dir> [options]
  *
  * Each language lands in its own sub-directory of <out-dir>, mirroring
- * `src/assets/docs/<lang>/images/`.
- *
- * `--help` lists the options. The editor it points at must have `automationApi`
- * on and the debug decorations (`debugMenu`, `showGridBorders`) off — see the
- * README.
+ * `src/assets/docs/<lang>/images/`. The editor must have `automationApi` on and
+ * the debug decorations off — see the README.
  */
 import { createRequire } from 'node:module';
 import fs from 'node:fs/promises';
@@ -36,8 +32,7 @@ async function main(args) {
           return shot;
         })
       : SHOTS;
-  // In the shipped order, so English — the language the rest are compared
-  // against — always runs first.
+  // In the shipped order, so English — the baseline — always runs first.
   const langs = LOCALES.filter((lang) => args.lang.includes(lang));
   for (const lang of args.lang) {
     if (!langs.includes(lang)) throw new Error(`unknown language "${lang}"`);
@@ -49,14 +44,13 @@ async function main(args) {
     headless: !args.headed
   });
 
-  // English's bytes, keyed by file name: a localized capture that matches one
-  // is not written, and the documentation falls back to the English picture.
-  // The encoders are deterministic, so this compares pictures, not runs.
+  // English's bytes, keyed by file name. The encoders are deterministic, so
+  // this compares pictures, not runs.
   const english = new Map();
 
-  // One task per shot within one per language, run in sequence: they share the
-  // browser, and shots racing each other for the CPU would show up in the
-  // captures. `exitOnError` off keeps a broken shot from cancelling the rest.
+  // Sequential: the shots share a browser, and racing for the CPU would show
+  // up in the captures. `exitOnError` off keeps one failure from cancelling
+  // the rest.
   const runner = new Listr(
     langs.map((lang) => ({
       title: lang,
@@ -103,8 +97,8 @@ async function main(args) {
 
 /**
  * Stages one shot in one language and writes what it returns. The editor
- * reports the step it is on as `task.output`, so a shot that sits for seconds
- * says which part of itself it is waiting on.
+ * reports its current step as `task.output`, so a stalled shot says what it is
+ * waiting on.
  */
 async function capture(shot, task, browser, args) {
   const editor = new Editor(browser, {
@@ -118,12 +112,11 @@ async function capture(shot, task, browser, args) {
     let file;
     let bytes;
     if (result.frames) {
-      // An animated shot returns the frames it captured along the way.
       task.output = 'encoding the gif';
       file = `${shot.name}.gif`;
       bytes = await encodeGif(result.frames, result.delay);
-      // Both, because a piped log has already printed the title by now and
-      // only the output line still reaches it.
+      // Both: a piped log has already printed the title, and only the output
+      // line still reaches it.
       const frames = `${result.frames.length} frames`;
       task.output = frames;
       task.title += `  ${frames}`;
@@ -141,11 +134,9 @@ async function capture(shot, task, browser, args) {
 }
 
 /**
- * Writes one capture — unless an earlier language already produced the same
- * picture. A shot of the board carries no interface text, so every language
- * captures it identically; leaving those unwritten is what keeps the
- * documentation down to one copy of each, the other languages falling back to
- * the English one.
+ * Writes one capture, unless English already produced the same picture. A board
+ * shot carries no interface text and captures identically in every language, so
+ * the documentation keeps one copy and the rest fall back to it.
  */
 async function write(file, bytes, task, args) {
   const english = args.english;
@@ -159,9 +150,9 @@ async function write(file, bytes, task, args) {
   await fs.writeFile(path.join(args.out, file), bytes);
 }
 
-// The task list hides the cursor while it renders, and an interrupt skips the
-// cleanup that would bring it back. Playwright installs its own SIGINT handler
-// to close the browser and exit, so this one only restores the terminal.
+// The task list hides the cursor and an interrupt skips the cleanup that brings
+// it back. Playwright's own SIGINT handler closes the browser and exits, so
+// this one only restores the terminal.
 process.on('SIGINT', () => process.stdout.write('\u001B[?25h'));
 
 const program = new Command()
@@ -191,7 +182,7 @@ const program = new Command()
   });
 
 try {
-  // Commander reports usage errors itself and exits; this catches the run.
+  // Commander reports usage errors itself; this catches the run.
   await program.parseAsync();
 } catch (error) {
   console.error(error.message);

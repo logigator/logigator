@@ -16,19 +16,14 @@ export interface RateLimitOptions {
   /** Attempts allowed per window, per client address. */
   limit: number;
   windowSeconds: number;
-  /**
-   * Names the counter. Endpoints that share a scope share a budget, which is
-   * what makes "credential guessing" one limit rather than one per route.
-   */
+  /** Names the counter; endpoints that share a scope share a budget. */
   scope: string;
 }
 
 /**
- * Caps how often one address may call a handler.
- *
- * Applied to the endpoints that take credentials or send mail: password guessing
- * and using someone else's address as a mail relay are the two things an
- * unauthenticated caller can do at volume here.
+ * Caps how often one address may call a handler. Applied to the endpoints that
+ * take credentials or send mail — password guessing and using someone else's
+ * address as a mail relay are what an unauthenticated caller can do at volume.
  */
 export const RateLimit = (options: RateLimitOptions) =>
   SetMetadata(RATE_LIMIT, options);

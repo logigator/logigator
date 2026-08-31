@@ -72,8 +72,7 @@ describe('CustomComponentService', () => {
     return registry.masterTypeIdForId(metadataStore.getMetadata(editor)!.id)!;
   }
 
-  // Snapshot the master and place an instance in `target`, mirroring the
-  // placement session's snapshot-on-place.
+  // Mirrors the placement session's snapshot-on-place.
   function placeInstance(
     masterTypeId: number,
     target: Project
@@ -169,7 +168,6 @@ describe('CustomComponentService', () => {
       source: 'browser'
     });
     metadataStore.markDirty(editor);
-    // Dismissed dialog resolves undefined.
     vi.spyOn(TestBed.inject(DialogService), 'open').mockReturnValue({
       onClose: of(undefined)
     } as never);
@@ -196,7 +194,7 @@ describe('CustomComponentService', () => {
   });
 
   it('opens a promoted master by its current server id, not a placed snapshot stale id', async () => {
-    // A local master, placed in the project (the snapshot freezes the browser id).
+    // The placed snapshot freezes the browser id.
     const masterTypeId = registry.createMaster(
       { id: 'browser-dep', name: 'Dep', symbol: 'D' },
       'browser'
@@ -205,16 +203,15 @@ describe('CustomComponentService', () => {
     const staleId = registry.idForTypeId(instance.config.type);
     expect(staleId).toBe('browser-dep');
 
-    // The master is uploaded to the cloud (e.g. as a project dependency): the
-    // registry flips it to a server id and keeps the old id as an alias.
+    // Uploading flips the registry to a server id, keeping the old as alias.
     registry.promoteMaster(masterTypeId, 'srv-new', 2);
 
     const load = vi
       .spyOn(persistence, 'loadServerComponentForEdit')
       .mockResolvedValue({ project: new Project(), masterTypeId });
 
-    // Editing the still-placed instance passes the frozen (old) id; it must be
-    // resolved to the current server id before the API load, not sent verbatim.
+    // The still-placed instance passes the frozen id, which must resolve to
+    // the current server id before the API load.
     await service.openComponentForEdit(staleId!);
 
     expect(load).toHaveBeenCalledWith('srv-new');
@@ -230,21 +227,18 @@ describe('CustomComponentService', () => {
       masterTypeId
     });
 
-    // Arm the palette tile's placement, as clicking the library tile does.
     const workMode = TestBed.inject(WorkModeService);
     workMode.setMode(WorkMode.COMPONENT_PLACEMENT);
     workMode.setSelectedComponentType(masterTypeId);
 
     await service.openComponentForEdit('browser-x');
 
-    // Opening its editor leaves the pan tool active, not the palette ghost.
     expect(workMode.mode()).toBe(WorkMode.PAN);
     expect(workMode.selectedComponentType()).toBeNull();
   });
 
-  // A no-provenance embedded orphan, as ingested from an `id:''` server
-  // dependency (or a legacy document): no id, no version, defaulted to browser
-  // origin. This is the "embedded component in a server project" case.
+  // A no-provenance embedded orphan: no id, no version, browser origin by
+  // default — the "embedded component in a server project" case.
   function placeEmbeddedOrphan(): number {
     const orphanType = registry.registerSnapshot({
       kind: 'snapshot',
@@ -265,8 +259,7 @@ describe('CustomComponentService', () => {
     return orphanType;
   }
 
-  // The same orphan, but with content inside, so a view tab can be checked
-  // against the circuit it is supposed to be showing.
+  // The same orphan with content, so a view tab can be checked against it.
   function placeEmbeddedOrphanWithContent(): number {
     const orphanType = registry.registerSnapshot({
       kind: 'snapshot',
@@ -304,11 +297,10 @@ describe('CustomComponentService', () => {
     const metadata = metadataStore.getMetadata(tab)!;
     expect(metadata.type).toBe('comp');
     expect(metadata.name).toBe('Borrowed');
-    // `source: 'share'` is what makes the tab read-only: it is the flag save,
-    // the File menu and the wire-repair offer all key off.
+    // `source: 'share'` is the flag save, the File menu and the wire-repair
+    // offer all key off.
     expect(metadata.source).toBe('share');
-    // No store id — the tab is backed by nothing and must not be mistaken for a
-    // document that belongs somewhere.
+    // No store id: the tab is backed by nothing.
     expect(metadata.id).toBe('');
   });
 
@@ -321,8 +313,7 @@ describe('CustomComponentService', () => {
 
     expect(save).not.toHaveBeenCalled();
     expect(await componentStore.list()).toHaveLength(0);
-    // The placed instance still points at an orphaned snapshot: viewing must not
-    // mint a master or re-link provenance the way restore does.
+    // Viewing must not mint a master or re-link provenance, as restore does.
     expect(registry.getDefinition(orphanType)!.kind).toBe('snapshot');
     expect(registry.resolveMaster(orphanType)).toBeUndefined();
     expect(registry.getDefinition(orphanType)!.id).toBe('someone-elses');
@@ -336,8 +327,8 @@ describe('CustomComponentService', () => {
     const [tab] = projectService.openComponents();
 
     expect(metadataStore.isDirty(main)).toBe(false);
-    // Dirty tracking is off, so poking at a borrowed circuit cannot arm the
-    // unsaved-changes prompt on a tab that can never be saved.
+    // Dirty tracking is off, so a tab that can never be saved cannot arm the
+    // unsaved-changes prompt.
     tab.addComponent(makeInput(0));
     tab.actionManager.push(new AddComponentsAction(makeInput(1)));
     expect(metadataStore.isDirty(tab)).toBe(false);
@@ -354,7 +345,6 @@ describe('CustomComponentService', () => {
     expect(projectService.openComponents()).toEqual([tab]);
     expect(projectService.activeProject()).toBe(tab);
 
-    // Closing releases the entry, so a later view opens a fresh tab.
     await service.closeComponent(tab);
     service.viewSnapshot(orphanType);
     expect(projectService.openComponents()).toHaveLength(1);
@@ -366,9 +356,8 @@ describe('CustomComponentService', () => {
     service.viewSnapshot(orphanType);
     const [tab] = projectService.openComponents();
 
-    // Signing out drops the cloud library. A view tab is backed by the
-    // document's embedded snapshot, not by a master, so it must keep rendering
-    // — and its `id:''` handle must not be mistaken for an open server editor.
+    // Signing out drops the cloud library, but a view tab is backed by the
+    // embedded snapshot, and its `id:''` handle is not an open server editor.
     TestBed.inject(ComponentLibraryService).clearServerMasters();
 
     expect(projectService.openComponents()).toEqual([tab]);
@@ -388,16 +377,15 @@ describe('CustomComponentService', () => {
     const orphanType = placeEmbeddedOrphan();
     expect(registry.resolveMaster(orphanType)).toBeUndefined();
 
-    // A pristine, freshly-loaded project; isolate from the editor-open side
-    // effect so the test asserts only the dirty flag.
+    // Isolated from the editor-open side effect, so only the dirty flag is
+    // under test.
     metadataStore.clearDirty(main);
     vi.spyOn(service, 'openComponentForEdit').mockResolvedValue();
 
     await service.restoreOrphanAndEdit(orphanType);
 
     // The relink changed the host's serialized content but ran no Action, so
-    // restore must mark it dirty itself — otherwise the follow-up save no-ops on
-    // the dirty guard and a reload shows the component embedded again.
+    // restore marks it dirty itself or the follow-up save no-ops.
     expect(metadataStore.isDirty(main)).toBe(true);
   });
 
@@ -407,16 +395,13 @@ describe('CustomComponentService', () => {
 
     await service.restoreOrphanAndEdit(orphanType);
 
-    // Restore rebuilt a browser master and relinked the placed snapshot to it.
     const masterId = registry.idForTypeId(orphanType)!;
     const masterTypeId = registry.masterTypeIdForId(masterId)!;
 
-    // Saving the server project promotes that browser master to the cloud.
     registry.promoteMaster(masterTypeId, 'srv-2', 1);
 
-    // The re-serialized dependency must carry complete provenance (id AND
-    // version) so it maps to the owned server component — otherwise it is
-    // written with an empty id and reloads as an embedded orphan again.
+    // The re-serialized dependency needs both id and version to map to the
+    // owned server component, or it reloads as an embedded orphan again.
     const { definitions } = collectSnapshots(main, registry);
     expect(definitions).toHaveLength(1);
     expect(definitions[0].source).toEqual({
@@ -464,7 +449,6 @@ describe('CustomComponentService', () => {
     const instance = placeInstance(masterTypeId, main);
     expect(instance.numInputs).toBe(1);
 
-    // Edit the master after placing — the instance must not change.
     editor.actionManager.push(new AddComponentsAction(makeInput(1)));
     vi.advanceTimersByTime(1);
     expect(registry.getDefinition(masterTypeId)?.numInputs).toBe(2);
@@ -484,7 +468,6 @@ describe('CustomComponentService', () => {
     vi.advanceTimersByTime(1);
     const instance = placeInstance(masterTypeId, main);
 
-    // Master grows a second input after placement.
     editor.actionManager.push(new AddComponentsAction(makeInput(1)));
     vi.advanceTimersByTime(1);
 
@@ -519,7 +502,6 @@ describe('CustomComponentService', () => {
     const second = placeInstance(masterTypeId, main);
     const staleType = first.config.type;
 
-    // Master grows a second input after both placements.
     editor.actionManager.push(new AddComponentsAction(makeInput(1)));
     vi.advanceTimersByTime(1);
 
@@ -529,12 +511,11 @@ describe('CustomComponentService', () => {
       (c): c is CustomComponent => c instanceof CustomComponent
     );
     expect(updated.map((c) => c.numInputs)).toEqual([2, 2]);
-    // One re-snapshot for the whole batch, so the board (and the save file)
-    // gains a single new definition rather than one per instance.
+    // One re-snapshot for the batch, so the save file gains a single new
+    // definition rather than one per instance.
     expect(new Set(updated.map((c) => c.config.type)).size).toBe(1);
     expect(updated[0].config.type).not.toBe(staleType);
 
-    // A single undo restores every instance, not just the last one.
     main.actionManager.undo();
     const restored = [...main.components].filter(
       (c): c is CustomComponent => c instanceof CustomComponent
@@ -558,11 +539,10 @@ describe('CustomComponentService', () => {
 
     await service.deleteComponent(masterTypeId);
 
-    // Persistent record deleted, master gone from the registry + palette.
     expect(del).toHaveBeenCalledWith('browser-x');
     expect(registry.getDefinition(masterTypeId)).toBeUndefined();
     expect(provider.getComponent(masterTypeId)).toBeUndefined();
-    // The placed instance survives, now an embedded orphan (no resolvable master).
+    // The placed instance survives as an embedded orphan.
     expect(main.components).toContain(instance);
     expect(registry.resolveMaster(instance.config.type)).toBeUndefined();
   });
@@ -634,21 +614,19 @@ describe('CustomComponentService', () => {
       description: 'desc'
     });
 
-    // The session master carries the new details…
     const def = registry.getDefinition(masterTypeId)!;
     expect(def.name).toBe('Y');
     expect(def.symbol).toBe('Y2');
     expect(def.description).toBe('desc');
-    // …and so does the persistent record. The circuit is untouched, but the
-    // version is bumped — the details travel in placed snapshots, so instances
-    // frozen at the older version can be offered an update.
+    // The circuit is untouched, but the version bumps: the details travel in
+    // placed snapshots, so frozen instances can be offered an update.
     const record = store.records.get(id)!;
     expect(record.name).toBe('Y');
     expect(record.version).toBe(before.version + 1);
     expect(record.content).toBe(before.content);
     expect(def.version).toBe(before.version + 1);
-    // The open editor tab follows the rename (its label, and the browser save
-    // path persists metadata.name).
+    // The open editor tab follows the rename; the browser save path persists
+    // metadata.name.
     expect(metadataStore.getMetadata(editor)?.name).toBe('Y');
   });
 
@@ -668,14 +646,13 @@ describe('CustomComponentService', () => {
       description: ''
     });
 
-    // The already-placed snapshot is frozen, now behind the master's bumped
-    // version — the state that offers "Update to latest" on the instance…
+    // The frozen snapshot is now behind the master, which is what offers
+    // "Update to latest"…
     const frozen = registry.getDefinition(placedBefore.config.type)!;
     expect(frozen.name).toBe('X');
     expect(frozen.version!).toBeLessThan(
       registry.getDefinition(masterTypeId)!.version!
     );
-    // …while a placement after the edit snapshots the new metadata.
     const placedAfter = placeInstance(masterTypeId, main);
     expect(registry.getDefinition(placedAfter.config.type)?.name).toBe('Y');
   });
@@ -722,9 +699,8 @@ describe('CustomComponentService', () => {
       description: ''
     });
 
-    // A backend without the additive bump returns no version: the details still
-    // apply, but the master version stays put so placed instances are not
-    // spuriously flagged stale.
+    // With no version returned the details still apply, but the master version
+    // stays put so instances are not spuriously flagged stale.
     const def = registry.getDefinition(masterTypeId)!;
     expect(def.name).toBe('Y');
     expect(def.version).toBe(3);
@@ -746,7 +722,7 @@ describe('CustomComponentService', () => {
       description: 'new'
     });
 
-    // Nothing applied: the session master still shows the old details (retryable).
+    // Nothing applied, so the edit stays retryable.
     const def = registry.getDefinition(masterTypeId)!;
     expect(def.name).toBe('X');
     expect(def.description).toBe('old');
@@ -765,7 +741,7 @@ describe('CustomComponentService', () => {
 
     await service.deleteComponent(masterTypeId);
 
-    // Nothing removed: master still resolves, instance still linked (retryable).
+    // Nothing removed, so the delete stays retryable.
     expect(registry.getDefinition(masterTypeId)).toBeDefined();
     expect(registry.resolveMaster(instance.config.type)).toBeDefined();
   });

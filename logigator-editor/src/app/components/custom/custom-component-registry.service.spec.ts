@@ -96,7 +96,7 @@ describe('CustomComponentRegistry', () => {
       expect(snap.typeId).not.toBe(master);
       expect(snap.numInputs).toBe(2);
       expect(snap.labels).toEqual(['A', 'B', 'Q']);
-      // Provenance points back at the master, but the snapshot does not own the id.
+      // Provenance points at the master; the snapshot does not own the id.
       expect(snap.id).toBe('uuid-1');
       expect(registry.idForTypeId(snap.typeId)).toBe('uuid-1');
       expect(registry.masterTypeIdForId('uuid-1')).toBe(master);
@@ -347,8 +347,8 @@ describe('CustomComponentRegistry', () => {
     });
 
     it('recomputes the master library dependencies from the new circuit', () => {
-      // The dependency graph is derived here, so any path that sets a circuit —
-      // including lazy cloud hydration — keeps cycle detection correct.
+      // The dependency graph is derived here, so every path that sets a
+      // circuit keeps cycle detection correct.
       const b = registry.createMaster({ id: 'b-id', symbol: 'B' }, 'browser');
       const bSnap = registry.snapshot(b);
       const a = registry.createMaster({ symbol: 'A' }, 'browser');
@@ -681,7 +681,7 @@ describe('CustomComponentRegistry', () => {
 
       expect(registry.getDefinition(snapshot.typeId)).toBeDefined();
       expect(provider.getComponent(snapshot.typeId)).toBeDefined();
-      // The snapshot no longer resolves to a master — same as any unloaded one.
+      // The snapshot no longer resolves to a master, like any unloaded one.
       expect(registry.resolveMaster(snapshot.typeId)).toBeUndefined();
     });
 

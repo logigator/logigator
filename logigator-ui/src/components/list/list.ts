@@ -3,11 +3,9 @@ import { Component, contentChild, input, TemplateRef } from '@angular/core';
 import { IconSlot } from '../../internal/icon';
 
 /**
- * An enclosed list container: a bordered, rounded surface whose rows are
- * separated by hairline dividers. Projects any number of {@link LgListItem}
- * children. Carries `role="list"` so the list semantics survive the
- * `list-style:none` reset (Safari drops them otherwise); items carry
- * `role="listitem"`.
+ * An enclosed list container: a bordered surface whose projected
+ * {@link LgListItem} rows are separated by hairline dividers. `role="list"`
+ * because Safari drops list semantics under the `list-style:none` reset.
  */
 @Component({
   selector: 'lg-list',
@@ -21,16 +19,9 @@ import { IconSlot } from '../../internal/icon';
 export class LgList {}
 
 /**
- * One row of an {@link LgList}. Projected default content is the row title;
- * three optional template slots enrich it:
- *
- * - `#leading` — a leading icon/graphic, muted by default. `leadingIcon` is a
- *   shorthand for a plain glyph without a template; a `#leading` template wins.
- * - `#subtitle` — a muted supporting line under the title (e.g. "last edited").
- * - `#trailing` — trailing content pinned to the row's end (tag, badge, button).
- *
- * With no slots filled it's a plain single-line row. A bottom divider separates
- * rows; the last row drops it (`last:border-b-0`).
+ * One row of an {@link LgList}, the projected default content being its title.
+ * Optional `#leading` (winning over the `leadingIcon` shorthand), `#subtitle`
+ * and `#trailing` slots enrich it; with none it is a plain single-line row.
  */
 @Component({
   selector: 'lg-list-item',

@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 
 // The contract is framework-free, so its specs run on plain Vitest in Node.
 // `@logigator/core` is aliased to its source, mirroring the workspace tsconfig
-// `paths` mapping: the package is never built, every consumer compiles it.
+// `paths` mapping: it is never built, every consumer compiles it.
 export default defineConfig({
   test: {
     root: import.meta.dirname,

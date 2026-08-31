@@ -7,11 +7,9 @@ import { LayoutService } from '../layout/layout.service';
 import type { ReportClientInfo } from '@logigator/contract';
 
 /**
- * Gathers a snapshot of the client environment for a bug report: browser/OS
- * parsed from the user agent, the live rendering backend, GPU string, window
- * and screen geometry, locale, current route, and the editor's interaction
- * state. Every field is best-effort — a failing probe is simply omitted rather
- * than allowed to break the report.
+ * Snapshot of the client environment for a bug report. Every field is
+ * best-effort: a failing probe is omitted rather than allowed to break the
+ * report.
  */
 @Injectable({ providedIn: 'root' })
 export class ClientInfoService {
@@ -69,7 +67,7 @@ export class ClientInfoService {
     return undefined;
   }
 
-  /** Resolves which backend the live renderer is running on. */
+  /** Which backend the live renderer is running on. */
   private rendererMode(renderer: Renderer): string {
     switch (renderer.type) {
       case RendererType.WEBGPU:
@@ -86,9 +84,9 @@ export class ClientInfoService {
   }
 
   /**
-   * The unmasked GPU renderer string via a throwaway WebGL context. Works
-   * regardless of the app's active backend, but the extension is privacy-gated
-   * in some browsers — absent then.
+   * The unmasked GPU renderer string via a throwaway WebGL context, so it works
+   * whatever the app's active backend. Some browsers privacy-gate the
+   * extension, leaving it absent.
    */
   private gpu(): string | undefined {
     try {

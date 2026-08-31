@@ -9,10 +9,8 @@ import { components, projects } from './documents';
 import { users } from './users';
 
 /**
- * Stars, as two plain join tables. A count is a `count(*)` over the index on the
- * starred side rather than a counter column: the community listings read it in
- * aggregate anyway, and a denormalized counter is one more thing that can drift
- * from the rows it summarizes.
+ * Stars, as two plain join tables. A count is a `count(*)` over the index on
+ * the starred side rather than a counter column that can drift.
  */
 export const projectStars = pgTable(
   'project_stars',

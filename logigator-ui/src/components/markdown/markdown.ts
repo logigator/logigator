@@ -11,9 +11,9 @@ import { MarkdownComponent } from 'ngx-markdown';
 import { ImageZoomViewer } from '../image-zoom/image-zoom-viewer';
 
 /**
- * Replaces markdown link/image destinations with their mapped URLs. Only the
- * destination part matches, verbatim (an optional title is carried over);
- * destinations without a mapping stay untouched.
+ * Rewrites markdown link/image destinations to their mapped URLs. Only the
+ * destination matches, verbatim; an optional title is carried over and
+ * unmapped destinations stay untouched.
  */
 export function resolveMarkdownUrls(
   data: string | undefined,
@@ -32,9 +32,8 @@ export function resolveMarkdownUrls(
 }
 
 /**
- * The anchor slug of a heading, derived from its text (lowercased,
- * non-alphanumeric runs collapsed to `-`). marked no longer emits heading ids,
- * so anchors resolve against rendered heading text.
+ * A heading's anchor slug, derived from its text: marked emits no heading ids,
+ * so anchors resolve against the rendered text.
  */
 export function headingSlug(text: string): string {
   return text
@@ -45,53 +44,38 @@ export function headingSlug(text: string): string {
 }
 
 /**
- * Width-to-height ratio below which an image lays out as a portrait aside:
- * the height cap every image gets — so one tall screenshot can't push the
- * prose off the page — leaves a portrait image narrow, and the text reads
- * beside it rather than around a column of whitespace. Wide viewports only;
- * a narrow one has no room alongside. Detail lost to the cap is the built-in
- * image zoom's to give back.
+ * Width-to-height ratio below which an image floats as a portrait aside on
+ * wide viewports. The height cap every image carries leaves such an image
+ * narrow, so the prose reads beside it instead of around whitespace.
  */
 const PORTRAIT_MAX_RATIO = 0.9;
 
 /** A click on a link inside rendered markdown content. */
 export interface LgMarkdownLinkClick {
-  /** The href as rendered into the DOM. */
   href: string;
-  /** The anchor element the click landed on. */
   anchor: HTMLAnchorElement;
   /** Claims the click: cancels the built-in handling and native navigation. */
   preventDefault(): void;
 }
 
 /**
- * Themed markdown renderer. Wraps ngx-markdown's `<markdown>` (parsing via
- * `marked`) and layers a typography treatment keyed on the `--lg-*` palette, so
- * rendered content matches the rest of the UI in either theme.
+ * Themed markdown renderer over ngx-markdown's `<markdown>`, with typography
+ * keyed on the `--lg-*` palette.
  *
  * Provide exactly one source: `data` for an in-memory string, or `src` for a
- * URL/asset path the renderer fetches itself (requires `provideMarkdown` with an
- * `HttpClient` loader in the consuming app).
+ * path the renderer fetches (needs `provideMarkdown` with an `HttpClient`
+ * loader in the consuming app).
  *
- * Link clicks inside the rendered content are intercepted (the content is
- * `innerHTML`, so a host-level listener delegates; anchors stay
- * keyboard-accessible on their own — Enter fires a bubbling click). Every click
- * emits `linkClick` first; unless the handler claims it via `preventDefault()`,
- * built-in handling applies: `#slug` scrolls to the matching heading, web and
- * relative URLs open a new tab with `noopener`, user-agent schemes (`mailto:`,
- * `tel:`, `sms:`) navigate natively, and any other scheme does nothing —
- * app-specific links are claim-or-inert, and `javascript:` payloads (rendered
- * with the HTML sanitizer's `unsafe:` prefix as their scheme) stay defused.
+ * Every link click emits `linkClick` first. Unless the handler claims it,
+ * `#slug` scrolls to the matching heading, web and relative URLs open a new
+ * tab with `noopener`, `mailto:`/`tel:`/`sms:` navigate natively, and any
+ * other scheme does nothing — so app-specific links are claim-or-inert and
+ * `javascript:` payloads stay defused. Content images open full-size in a
+ * modal overlay; one wrapped in a link keeps the link's behavior.
  *
- * Content images open full-size in a modal overlay when clicked (the zoom
- * `LgImageZoom` gives a standalone image — content images can't host a
- * component, so the behavior is delegated from the host like link clicks, and
- * each image becomes a focusable button — named by its alt text — as it
- * loads). An image wrapped in a link keeps the link's behavior instead.
- *
- * Uses `ViewEncapsulation.None` because ngx-markdown injects the parsed HTML as
- * `innerHTML` on its own element, out of reach of emulated encapsulation; every
- * rule is therefore scoped under the `lg-markdown` host element.
+ * `ViewEncapsulation.None` because the parsed HTML lands as `innerHTML` on
+ * ngx-markdown's element, out of reach of emulated encapsulation; every rule
+ * is therefore scoped under the `lg-markdown` host.
  */
 @Component({
   selector: 'lg-markdown',
@@ -265,8 +249,6 @@ export interface LgMarkdownLinkClick {
       cursor: pointer;
     }
 
-    /* Portrait images are narrow once height-capped, so the prose reads beside
-       them instead of around a column of whitespace — see PORTRAIT_MAX_RATIO. */
     @media (min-width: 36rem) {
       lg-markdown img.lg-portrait {
         float: right;
@@ -274,9 +256,8 @@ export interface LgMarkdownLinkClick {
       }
 
       /* A float shortens the line boxes beside it but not the boxes
-         themselves, so a rule or fill would run on under the image. Blocks
-         that paint one end beside it instead: a block formatting context may
-         not overlap a float. Prose keeps flowing around. */
+         themselves, so a rule or fill would run on under the image. A block
+         formatting context may not overlap a float; prose keeps flowing. */
       lg-markdown h1,
       lg-markdown h2,
       lg-markdown h3,
@@ -295,16 +276,14 @@ export class LgMarkdown {
   /** URL/asset path the renderer fetches and renders. */
   readonly src = input<string>();
   /**
-   * Maps link/image destinations authored in the markdown to the URLs they
-   * resolve to at runtime — e.g. relative screenshot paths to build-hashed
-   * asset imports. Destinations match verbatim; unmapped ones pass through.
-   * Applies to `data` only: content fetched via `src` renders as-is.
+   * Maps authored link/image destinations to their runtime URLs, e.g.
+   * relative screenshot paths to build-hashed asset imports. Applies to
+   * `data` only; content fetched via `src` renders as-is.
    */
   readonly assetUrls = input<Readonly<Record<string, string>>>();
   /**
-   * A click on any link in the rendered content, emitted before the built-in
-   * handling. `preventDefault()` on the event claims the click — e.g. for an
-   * app-specific scheme the consumer routes itself.
+   * A link click, emitted before the built-in handling. `preventDefault()`
+   * claims it, e.g. for an app-specific scheme the consumer routes itself.
    */
   readonly linkClick = output<LgMarkdownLinkClick>();
 
@@ -316,12 +295,10 @@ export class LgMarkdown {
   private readonly imageZoom = inject(ImageZoomViewer);
 
   constructor() {
-    // Per-image setup hangs off each image's `load` event (`load` doesn't
-    // bubble, hence the capture phase) — the content is innerHTML, so there is
-    // no other per-image hook, and re-rendered content fires it again, cache
-    // included. Only the image itself knows its aspect ratio (CSS can't ask),
-    // so the portrait class the layout keys off is set here; so is the
-    // focusability the built-in zoom needs.
+    // The content is innerHTML, so `load` in the capture phase (it doesn't
+    // bubble) is the only per-image hook; re-rendered content fires it again,
+    // cache included. Only the image knows its aspect ratio, so the portrait
+    // class and the zoom's focusability are set here.
     this.host.nativeElement.addEventListener(
       'load',
       (event) => {
@@ -337,8 +314,8 @@ export class LgMarkdown {
         }
         // A linked image activates its (already focusable) link instead.
         if (!image.closest('a')) {
-          // The button role announces that Enter does something; the image's
-          // alt text serves as the button's accessible name.
+          // The role announces that Enter does something; the alt text is the
+          // accessible name.
           image.tabIndex = 0;
           image.setAttribute('role', 'button');
         }
@@ -395,8 +372,7 @@ export class LgMarkdown {
       window.open(href, '_blank', 'noopener');
     } else if (!NATIVE_SCHEMES.has(scheme)) {
       // Unclaimed non-user-agent schemes stay inert: app-specific links carry
-      // no native meaning, and javascript: payloads (reaching here with the
-      // sanitizer's unsafe: prefix as their scheme) must never execute.
+      // no native meaning, and javascript: payloads must never execute.
       event.preventDefault();
     }
   }

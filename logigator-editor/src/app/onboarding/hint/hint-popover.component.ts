@@ -9,15 +9,13 @@ import { TranslateDirective } from '../../translation/translate.directive';
 
 /**
  * Presentational just-in-time hint: a small, non-blocking popover with the hint
- * body and a dismiss button. Anchored (with a caret from `side`) or centered by
- * the controller; unlike the tutorial coach-mark it has no backdrop and no
- * persistent tutorial controls.
+ * body and a dismiss button, anchored or centred by the controller.
  */
 @Component({
   selector: 'app-hint-popover',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  // Block, so the controller can shift the popover inside its overlay pane —
-  // a transform has no effect on an inline host.
+  // Block, so the controller can shift the popover inside its overlay pane: a
+  // transform has no effect on an inline host.
   host: { class: 'block' },
   imports: [TranslateDirective, LgButton, LgCaret],
   template: `

@@ -4,9 +4,8 @@ import { MultiTouchGesture } from '../multi-touch-gesture';
 import { canvasToGrid, PointerInput } from './pointer-input';
 
 /**
- * The DOM event surface the controller consumes — the subset of
- * `PointerEvent`/`WheelEvent` it reads, so specs can drive the handlers with
- * plain objects.
+ * The subset of `PointerEvent`/`WheelEvent` the controller reads, so specs can
+ * drive the handlers with plain objects.
  */
 export interface PointerEventLike {
   pointerId: number;
@@ -58,24 +57,22 @@ export interface PointerControllerOptions {
 }
 
 /**
- * Normalizes DOM pointer input on a canvas into tool/navigation streams —
- * the single input path for the board and every watch canvas (the shared
- * watch renderer has no event system on its target canvases, and the board
- * disables PixiJS's via `eventFeatures`).
+ * Normalizes DOM pointer input on a canvas into tool/navigation streams — the
+ * single input path for the board and every watch canvas, since PixiJS's own
+ * event system is disabled.
  *
  * - Primary button: captured, streamed to the tool target from down to up.
- *   Click-vs-drag semantics live in the sessions (see `PanSession`).
+ *   Click-vs-drag semantics live in the sessions.
  * - Right button: pan-only drag by successive position deltas; the canvas
- *   context menu is suppressed outright (there is no circuit context menu).
- * - Touch: pointers feed the {@link MultiTouchGesture} first; when a second
- *   finger lands the gesture takes over and the tool stream is cancelled, so
- *   a finger never both operates a tool and navigates.
- * - Wheel: zoom anchored at the cursor (non-passive, so page scroll/zoom is
- *   suppressed over the canvas).
+ *   context menu is suppressed outright.
+ * - Touch: pointers feed the {@link MultiTouchGesture} first; a second finger
+ *   hands it navigation and cancels the tool stream, so a finger never both
+ *   operates a tool and navigates.
+ * - Wheel: zoom anchored at the cursor, non-passive so page scroll/zoom is
+ *   suppressed over the canvas.
  *
  * Pointer capture keeps move/up flowing when a drag leaves the canvas.
- * Handlers are public so specs can drive them without synthesizing DOM
- * events; `destroy()` detaches all listeners.
+ * Handlers are public so specs can drive them without DOM events.
  */
 export class PointerController {
   private readonly _abort = new AbortController();
@@ -128,11 +125,9 @@ export class PointerController {
   }
 
   /**
-   * The current project, or null when there is none or it is destroyed. Hosts
-   * re-home the controller from a change-detection effect, so a closed tab or
-   * a freshly loaded document leaves the disposed project reachable here for
-   * one cycle — and a destroyed `Container` has no `position`/`scale` left to
-   * map canvas pixels through.
+   * The current project, or null when it is destroyed. Re-homing happens from
+   * a change-detection effect, so a disposed project stays reachable here for
+   * one cycle — and it has no `position`/`scale` left to map pixels through.
    */
   private _project(): Project | null {
     const project = this.opts.project();
@@ -197,18 +192,16 @@ export class PointerController {
   }
 
   /**
-   * The pointer left the canvas. While a pointer is captured this doesn't
-   * fire for the geometric boundary, so it only ends hover previews — an
-   * in-flight drag keeps streaming through move/up.
+   * Ends hover previews. While a pointer is captured this does not fire for
+   * the geometric boundary, so an in-flight drag keeps streaming.
    */
   public onPointerLeave(): void {
     this.opts.tool.leave?.();
   }
 
   /**
-   * Shared teardown for a lifted pointer (up and cancel): feeds the gesture,
-   * releases capture, and drops pan/tool ownership. Returns which stream the
-   * pointer owned so the caller can dispatch the final tool call.
+   * Teardown for a lifted pointer: feeds the gesture, releases capture, drops
+   * ownership. Returns which stream the pointer owned.
    */
   private _endPointer(e: PointerEventLike): 'pan' | 'tool' | null {
     if (e.pointerType === 'touch') {
@@ -237,8 +230,8 @@ export class PointerController {
     }
   }
 
-  /** Cancels the tool stream (a second finger landed — the gesture owns
-   *  navigation now; the pressed finger must not commit a tool action). */
+  /** Cancels the tool stream once the gesture owns navigation, so the pressed
+   *  finger cannot commit a tool action. */
   private _cancelTool(): void {
     if (this._toolPointer === null) return;
     this._toolPointer = null;
@@ -264,9 +257,8 @@ export class PointerController {
   }
 
   private _capture(pointerId: number): void {
-    // The pointer may already be gone (e.g. a pen leaving the digitizer
-    // between down and capture) — losing capture only degrades off-canvas
-    // tracking, so don't let the exception kill the interaction.
+    // The pointer may already be gone (a pen leaving the digitizer between
+    // down and capture); losing capture only degrades off-canvas tracking.
     try {
       this.opts.canvas.setPointerCapture(pointerId);
     } catch {

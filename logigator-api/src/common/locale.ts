@@ -7,18 +7,14 @@ export type Locale = (typeof LOCALES)[number];
 
 export const DEFAULT_LOCALE: Locale = 'en';
 
-/** Narrows an arbitrary value to a supported locale, falling back to English. */
 export function resolveLocale(value: unknown): Locale {
   return LOCALES.includes(value as Locale) ? (value as Locale) : DEFAULT_LOCALE;
 }
 
 /**
- * The `preferences` cookie the whole origin shares (language and theme). Express
- * serialized object cookies as `j:` + JSON, URI-encoded, and the landing app
- * keeps writing them that way, so the format outlives the server that invented
- * it.
- *
- * It is client-writable, so anything unreadable is absorbed rather than raised.
+ * The `preferences` cookie the whole origin shares (language and theme). The
+ * landing app writes it as `j:` + JSON, URI-encoded — Express' object-cookie
+ * format. It is client-writable, so anything unreadable is absorbed.
  */
 function localeFromPreferencesCookie(raw: string | undefined): Locale | null {
   if (!raw) return null;
@@ -49,13 +45,9 @@ function localeFromAcceptLanguage(header: string | undefined): Locale | null {
 }
 
 /**
- * Which language to write to this visitor in. The API renders no pages, so this
- * exists for the mails it sends: the chosen preference wins, an
- * `Accept-Language` match is the fallback, English is the floor — the same order
- * the legacy pages used.
- *
- * Reading it is all the API does with the cookie; the landing app owns writing
- * it, client-side.
+ * Which language to write to this visitor in — the API renders no pages, so
+ * this is for the mails it sends. The chosen preference wins, an
+ * `Accept-Language` match is the fallback, English is the floor.
  */
 export function localeFromRequest(request: FastifyRequest): Locale {
   const cookies = (request as { cookies?: Record<string, string | undefined> })

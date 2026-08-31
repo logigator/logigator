@@ -20,17 +20,16 @@ const READOUT_FONT_SIZE = 1.35 / PX;
 const BASE_FONT_SIZE = 0.4 / PX;
 
 /**
- * A display-only readout: not a simulator unit — it renders the binary value
- * on its input nets (input 0 = least significant bit) as a zero-padded number
- * in the configured base, applied through the regular
- * {@link Component.setPortPowered} path.
+ * A display-only readout, not a simulator unit: it renders the binary value on
+ * its input nets (input 0 = least significant bit) as a zero-padded number in
+ * the configured base.
  */
 export class SegmentDisplayComponent extends Component<SegmentDisplayOptions> {
   public readonly config = segmentDisplayComponentConfig;
 
-  // Assigned in draw(); the class-field define runs after the base
-  // constructor's first draw and resets it to undefined, so a state change
-  // arriving before the next rebuild falls back to a full redraw.
+  // Assigned in draw(). The class-field define runs after the base
+  // constructor's first draw and resets this to undefined, so a state change
+  // before the next rebuild falls back to a full redraw.
   private _readout?: BitmapText;
 
   constructor(options: SegmentDisplayOptions) {
@@ -84,9 +83,9 @@ export class SegmentDisplayComponent extends Component<SegmentDisplayOptions> {
       readout.tint = fontTint;
       baseIndicator.tint = fontTint;
     });
-    // The readout extents are computed arithmetically (see
-    // SEGMENT_FONT_METRICS) — measuring the BitmapText here resolves through
-    // a fallback font when the component draws before the atlases install.
+    // Extents are arithmetic (SEGMENT_FONT_METRICS): measuring the BitmapText
+    // resolves through a fallback font when the component draws before the
+    // atlases install.
     const metrics = SEGMENT_FONT_METRICS[font];
     const readoutEm = READOUT_FONT_SIZE * PX;
     baseIndicator.position.set(

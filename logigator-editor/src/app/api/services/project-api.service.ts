@@ -26,8 +26,7 @@ export class ProjectApiService {
 
   /**
    * POST /api/projects — create a project, optionally with its circuit already
-   * in it. A create carrying a document is one round trip where the legacy API
-   * needed a create and a save.
+   * in it, which makes the upload one round trip.
    */
   create(body: CreateProjectRequest): Observable<ProjectSummary> {
     return this.api.post(this.path, projectSummarySchema, body);

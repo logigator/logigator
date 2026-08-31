@@ -1,7 +1,5 @@
-// Clockwise from East. The numeric values are load-bearing:
-//   - `rotation = value * π/2`              (Component direction → PixiJS rotation)
-//   - `oppositeDir = (value + 2) % 4`       (input stub ↔ output stub flip)
-// Do not reorder.
+// Clockwise from East. The numeric values are load-bearing — `value * π/2` is
+// the rotation and `(value + 2) % 4` the opposite direction. Do not reorder.
 export enum Direction {
   E = 0,
   S = 1,

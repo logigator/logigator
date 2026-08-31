@@ -5,29 +5,26 @@ export interface CapturedMail {
   subject: string;
   html: string;
   text: string;
-  /** What rode along beside the body, by name — an error report's circuit. */
+  /** What rode along beside the body — an error report's circuit. */
   attachments: { filename: string; content: string }[];
 }
 
 /**
- * Stands in for the nodemailer transport so specs can read what was sent.
- *
- * The alternative — letting the real transport render into its log and digging
- * the token out of Redis — would test the flow without ever asserting that a mail
- * went to the right address, which is half of what these flows promise. The token
- * is recovered from the link, exactly as a recipient would.
+ * Stands in for the nodemailer transport so specs can read what was sent —
+ * including that it went to the right address, which digging the token out of
+ * Redis would never assert. The token is recovered from the link, as a
+ * recipient would.
  */
 export class MailCapture {
   readonly sent: CapturedMail[] = [];
 
   /**
-   * Set to make the next send reject, for the flows that have to keep their
-   * promise when the mail server is down — a password reset must answer a known
-   * and an unknown address identically either way.
+   * Makes the next send reject: a password reset must answer a known and an
+   * unknown address identically even when the mail server is down.
    */
   failNextSend = false;
 
-  /** Only `sendMail` is ever called on a transport by {@link MailService}. */
+  /** `sendMail` is the only method `MailService` calls on a transport. */
   readonly transport = {
     sendMail: (message: {
       to?: unknown;
@@ -55,14 +52,13 @@ export class MailCapture {
     }
   } as unknown as Transporter;
 
-  /** The most recent mail, or a failure that names what did arrive. */
   last(): CapturedMail {
     const mail = this.sent.at(-1);
     if (!mail) throw new Error('No mail was sent');
     return mail;
   }
 
-  /** The token from the last mail's link — what a recipient clicking it would send. */
+  /** The token from the last mail's link, as a recipient clicking it sends. */
   lastToken(): string {
     const match =
       /https?:\/\/\S+?\/(?:verify-email\/|reset-password\?token=)([\w-]+)/.exec(

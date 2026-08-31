@@ -30,10 +30,9 @@ interface PendingFlow {
   verifier: string;
   nonce: string;
   /**
-   * Whether this round trip is a sign-in or the linking of a provider to an
-   * account that is already signed in. Recorded when the flow starts rather than
-   * inferred from the session at the end: the session may have changed in
-   * between, and the two outcomes are very different.
+   * Sign-in, or the linking of a provider to an account already signed in.
+   * Recorded when the flow starts rather than inferred from the session at the
+   * end, which may have changed in between.
    */
   mode: 'login' | 'link';
   /** For `link`, the account that asked — the callback refuses any other. */
@@ -54,11 +53,8 @@ export class GoogleAuthError extends Error {
 }
 
 /**
- * Google sign-in, as the authorization-code flow with PKCE.
- *
- * `openid-client` does the protocol work — discovery, the token exchange, and
- * ID-token signature and claim validation. Passport's Google strategy is gone
- * with the rest of it, and what replaces it is two routes and this service.
+ * Google sign-in as the authorization-code flow with PKCE; `openid-client` does
+ * the protocol work, including ID-token signature and claim validation.
  *
  * Discovery is lazy and memoized: a deployment must not fail to start because
  * Google is unreachable, and the metadata is stable enough to fetch once per
@@ -84,7 +80,7 @@ export class GoogleAuthService {
 
   /**
    * Starts a flow and answers the URL to send the browser to. The verifier and
-   * nonce stay server-side, keyed by the `state` that comes back — so a callback
+   * nonce stay server-side, keyed by the `state` that comes back, so a callback
    * that cannot name a flow this server started goes nowhere.
    */
   async createAuthorizationUrl(signedInUserId?: string): Promise<string> {
@@ -141,7 +137,6 @@ export class GoogleAuthService {
     if (typeof email !== 'string') throw new GoogleAuthError('google_failed');
 
     if (flow.mode === 'link') {
-      // The account that started the linking must still be the one signed in.
       if (!signedInUserId || signedInUserId !== flow.userId) {
         throw new GoogleAuthError('google_state_invalid');
       }
@@ -175,8 +170,8 @@ export class GoogleAuthService {
       if (!claims) throw new Error('no ID token in the token response');
       return claims;
     } catch (error) {
-      // Everything from here is between us and Google: a denied consent, an
-      // expired code, a clock skew. The user gets one failure to act on.
+      // A denied consent, an expired code, a clock skew: everything here is
+      // between us and Google, and the user gets one failure to act on.
       this.logger.warn('Google token exchange failed', error);
       throw new GoogleAuthError('google_failed');
     }
@@ -192,8 +187,7 @@ export class GoogleAuthService {
     try {
       await this.users.update(userId, { googleUserId });
     } catch (error) {
-      // Two tabs linking the same identity at once: the loser reads the same as
-      // arriving second, which is what it is.
+      // Two tabs linking the same identity at once; the loser arrived second.
       if (isUniqueViolation(error)) {
         throw new GoogleAuthError('google_already_linked');
       }
@@ -209,11 +203,10 @@ export class GoogleAuthService {
     const linked = await this.users.findByGoogleUserId(googleUserId);
     if (linked) return linked;
 
-    // An address that already has an account is not signed into from here.
-    // Google asserts the address, but treating that as proof of ownership of an
-    // existing local account would be an account takeover by anyone who can
-    // register the same address with Google — the legacy backend refused too,
-    // and linking stays an action taken from inside the account.
+    // Google asserting an address is not proof of owning an existing local
+    // account: treating it as one is an account takeover by anyone who can
+    // register the same address with Google. Linking stays an action taken from
+    // inside the account.
     if (await this.users.findByEmail(email)) {
       throw new GoogleAuthError('google_email_taken');
     }
@@ -231,9 +224,8 @@ export class GoogleAuthService {
       if (!isUniqueViolation(error)) throw error;
 
       // Both reads above passed and the insert still lost: either the same
-      // identity signed in twice at once — in which case the account it just
-      // created is the one to use — or the address was taken in between, which is
-      // the refusal the read would have given.
+      // identity signed in twice at once, in which case the account it just
+      // created is the one to use, or the address was taken in between.
       const raced = await this.users.findByGoogleUserId(googleUserId);
       if (raced) return raced;
       throw new GoogleAuthError('google_email_taken');
@@ -241,11 +233,10 @@ export class GoogleAuthService {
   }
 
   /**
-   * Copies the profile picture onto our own volume, best effort.
-   *
-   * Hotlinking the Google URL would leak every profile view to them and break
-   * when the URL rotates. A failure here costs a default avatar, so it is logged
-   * and dropped rather than allowed to fail a sign-in.
+   * Copies the profile picture onto our own volume, best effort. Hotlinking the
+   * Google URL would leak every profile view to them and break when the URL
+   * rotates; a failure here costs a default avatar, so it is logged and dropped
+   * rather than allowed to fail a sign-in.
    */
   private async importAvatar(picture: unknown): Promise<string | null> {
     if (typeof picture !== 'string' || !picture.startsWith('https://')) {
@@ -262,8 +253,7 @@ export class GoogleAuthService {
       if (!content) return null;
 
       // Through the same encoder as an upload, so what the provider sends is
-      // proof of nothing here either and the served variants are identical
-      // whichever way an avatar arrived.
+      // proof of nothing and the served variants are identical either way.
       const files = await this.images.encodeAvatar(content);
       return await this.files.writeAsset('profile', files);
     } catch (error) {
@@ -286,8 +276,8 @@ export class GoogleAuthService {
       this.env.GOOGLE_CLIENT_ID as string,
       this.env.GOOGLE_CLIENT_SECRET
     ).catch((error: unknown) => {
-      // Do not cache a failure: the next attempt should try again rather than
-      // keep answering with a transient network problem for the process's life.
+      // Do not cache a failure: a transient network problem must not answer for
+      // the life of the process.
       this.configuration = undefined;
       throw error;
     });
@@ -301,12 +291,10 @@ function flowKey(state: string): string {
 }
 
 /**
- * Reads a response body, giving up once it exceeds `maxBytes`.
- *
- * The size has to be decided while reading, not after: the timeout bounds how
- * long a picture URL may take but says nothing about how much it may send, and a
- * `content-length` is a claim, not a promise. Both are checked — the header
- * first, so an honest oversized response costs nothing to refuse.
+ * Reads a response body, giving up once it exceeds `maxBytes`. The size has to
+ * be decided while reading: the timeout bounds how long a URL may take but not
+ * how much it may send, and a `content-length` is a claim, not a promise. The
+ * header is checked first, so an honest oversized response costs nothing.
  */
 async function readCapped(
   response: Response,
@@ -331,13 +319,11 @@ async function readCapped(
  * A username for an account arriving from Google: its display name if that can
  * be one, the address' local part otherwise.
  *
- * Neither is usable as given. A display name is free text — spaces, dots,
- * accents, any length — and the contract says a username is 2 to 20 characters of
- * letters, digits, `_` and `-`. Storing one verbatim puts values in the column
- * that the API's own schema rejects, so everything that later reads a username
- * expecting the contract's shape is reading something impossible. Each candidate
- * is reduced to that shape and checked against the schema itself, and the last
- * resort is a name that needs no cleaning.
+ * Neither is usable as given — a display name is free text, and the contract
+ * says 2 to 20 characters of letters, digits, `_` and `-`. Storing one verbatim
+ * would put values in the column that the API's own schema rejects, so each
+ * candidate is reduced to that shape and checked against the schema itself. The
+ * last resort is a name that needs no cleaning.
  */
 export function usernameFrom(name: unknown, email: string): string {
   for (const candidate of [name, email.split('@')[0]]) {

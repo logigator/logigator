@@ -3,20 +3,12 @@ import type { ReportErrorRequest } from '@logigator/contract';
 import { MailService } from '../mail/mail.service';
 
 /**
- * Where a client-side error report goes.
+ * Where a client-side error report goes: always one structured log line, and a
+ * mail too when `REPORT_MAIL_TO` is set. The circuit that was open is an
+ * attachment, kept out of both the log line and the mail body — a hundred
+ * kilobytes of JSON per report would bury everything around it.
  *
- * Always to the log, as one structured line. That replaces the legacy backend's
- * append-to-a-file sink, which needed a path, a rotation policy and a writable
- * volume to be useful — in a container the process's own output is collected by
- * something better at all three, and a report nobody had configured a file for
- * was simply discarded.
- *
- * And to a mailbox when one is configured, because a report is worth nothing
- * unread. The circuit that was open goes as an attachment; it is kept out of the
- * log line for the reason it is kept out of the mail body — a hundred kilobytes
- * of JSON per report would bury everything around it.
- *
- * Nothing here is trusted for anything but text. The endpoint is
+ * Nothing here is trusted for anything but text: the endpoint is
  * unauthenticated and rate-limited, every field is length-capped by the
  * contract, and what a client says about itself is recorded as a claim.
  */
@@ -33,8 +25,8 @@ export class ReportsService {
     const summary = {
       source: report.source ?? 'unknown',
       correlationId: report.correlationId,
-      // Which account hit a bug is most of what makes a report actionable, and
-      // it is the one field a client cannot assert.
+      // The one field a client cannot assert, and most of what makes a report
+      // actionable.
       user: reporterId,
       message: report.message,
       at: location(report),
@@ -46,10 +38,8 @@ export class ReportsService {
 
     this.logger.warn(JSON.stringify(summary));
 
-    // A report never fails the request that sent it: the client is telling us
-    // something already went wrong, and answering with a second failure loses
-    // the report and tells the user nothing they can act on. The log line above
-    // is the part that always works.
+    // A report never fails the request that sent it — something already went
+    // wrong client-side, and the log line above is the part that always works.
     try {
       await this.mail.sendErrorReport({
         subject: `Error report: ${report.message ?? 'no message'}`,

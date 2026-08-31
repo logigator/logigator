@@ -126,8 +126,7 @@ describe('CircuitDocumentService', () => {
 
   describe('what it refuses', () => {
     it('rejects a version it does not know, as its own kind of failure', () => {
-      // Nothing is wrong with the document — the client is simply ahead of the
-      // server, which mid-rollout is a matter of waiting rather than of fixing.
+      // Nothing is wrong with the document; the client is ahead of the server.
       const ahead = { ...document('from the future'), version: 99 };
 
       expect(() => documents.ingest(ahead, 'x')).toThrow(
@@ -165,7 +164,7 @@ describe('CircuitDocumentService', () => {
 
     it('rejects wires the chain codec cannot decode', () => {
       // The structural validator only checks that `wires` is a string, so the
-      // codec's own failure has to become the same rejection.
+      // codec's own failure must become the same rejection.
       const broken = { ...document('broken'), wires: 'not a wire chain' };
 
       expect(() => documents.ingest(broken, 'x')).toThrow(

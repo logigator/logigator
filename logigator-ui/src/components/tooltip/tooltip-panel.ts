@@ -5,11 +5,10 @@ import { LgOverlaySide } from '../../internal/overlay';
 import { LgShortcut, LgShortcutBinding } from '../shortcut/shortcut';
 
 /**
- * The tooltip bubble rendered inside the overlay: the content surface with the
- * standard panel border in light (so it stands off same-colored surfaces) and
- * a borderless raised `surface-700` box with `surface-0` text in dark, plus a
- * caret that tracks the resolved {@link LgOverlaySide}. An optional `shortcut`
- * renders as {@link LgShortcut} chips after the text. Fades in on attach.
+ * The tooltip bubble inside the overlay: a bordered content surface in light
+ * so it stands off same-colored surfaces, a borderless raised box in dark,
+ * and a caret tracking the resolved {@link LgOverlaySide}. An optional
+ * `shortcut` renders as {@link LgShortcut} chips after the text.
  */
 @Component({
   selector: 'lg-tooltip-panel',

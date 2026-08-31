@@ -3,14 +3,11 @@ import { components, projects } from './documents';
 
 /**
  * Which library components a stored circuit embeds, extracted from the document
- * by the server on every write — never asserted by the client, as the legacy API
- * let it be.
+ * by the server on every write and never asserted by the client. The rows are a
+ * rebuildable cache of the document column.
  *
- * These rows are a rebuildable cache of the document column, which is what lets
- * the admin re-extract command truncate and repopulate them. `modelId` is the
- * document-local type id the instances reference, so a save can be matched back
- * to what it replaces; a document carries at most one snapshot per master, hence
- * the composite primary key.
+ * `modelId` is the document-local type id the instances reference. A document
+ * carries at most one snapshot per master, hence the composite primary key.
  *
  * The two tables are separate rather than one polymorphic edge table so both
  * foreign keys stay real: a dependent is a project or a component, but a
@@ -29,8 +26,8 @@ export const projectDependencies = pgTable(
   },
   (t) => [
     primaryKey({ columns: [t.dependentId, t.dependencyId] }),
-    // The reverse direction: "which circuits would break if this component
-    // went away", and the recursive dependency-graph CTE's join column.
+    // The reverse direction — which circuits break if this component goes
+    // away — and the recursive dependency-graph CTE's join column.
     index('project_dependencies_dependency_idx').on(t.dependencyId)
   ]
 );

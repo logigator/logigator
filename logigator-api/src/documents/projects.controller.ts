@@ -73,7 +73,6 @@ export class ProjectsController {
     return this.projects.open(user.id, id);
   }
 
-  /** Saves the circuit. See `saveCircuitRequestSchema` for the version handshake. */
   @Put(':id')
   save(
     @CurrentUser() user: UserRow,
@@ -104,12 +103,8 @@ export class ProjectsController {
   }
 
   /**
-   * Replaces the preview: one render per theme, in one multipart request.
-   *
-   * The editor draws both in a single pass, so they arrive and are replaced
-   * together — a project whose light and dark previews showed different circuits
-   * would be worse than one with none. Writing a preview is not an edit, so it
-   * leaves `version` and the edit time alone.
+   * Replaces the preview: one render per theme, in one multipart request, both
+   * replaced together. Not an edit, so `version` and the edit time stand.
    */
   @Post(':id/preview')
   async setPreview(

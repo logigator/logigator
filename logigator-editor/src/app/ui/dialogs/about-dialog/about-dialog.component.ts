@@ -5,10 +5,9 @@ import { LocalDatePipe } from '../../../utils/local-date/local-date.pipe';
 import { TranslateDirective } from '../../../translation/translate.directive';
 
 /**
- * Informational About dialog reached from the Help menu: app version (with the
- * build-time commit and date when stamped), the source repository, license and
- * copyright, and links to the legal pages on logigator.com. Carries no data or
- * result — dismissing simply closes it.
+ * Informational About dialog: app version with the build-time commit and date
+ * when stamped, the source repository, license and copyright, and links to the
+ * legal pages. Carries no data or result.
  */
 @Component({
   selector: 'app-about-dialog',

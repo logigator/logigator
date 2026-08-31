@@ -290,9 +290,9 @@ describe('stored circuits', () => {
 
   describe('what a document must survive to be stored', () => {
     it('normalizes a legacy document to the current version', async () => {
-      // A v0 document has no `version` field at all, which is how it is
-      // detected: positional elements, a wire as a `p`→`q` segment, and the
-      // plug type ids the old editor used.
+      // A v0 document has no `version` field, which is how it is detected:
+      // positional elements, a wire as a `p`→`q` segment, and the old plug
+      // type ids.
       const legacy = {
         project: {
           name: 'Legacy board',
@@ -466,8 +466,8 @@ describe('stored circuits', () => {
         url: `/api/projects/${board.id}`,
         headers: jar.headers()
       });
-      // The board's embedded snapshot is still at the old version; the live one
-      // is ahead, which is exactly what the client compares.
+      // The embedded snapshot is behind the live master, which is what the
+      // client compares.
       expect(opened.json().dependencies[0]).toMatchObject({
         name: 'Moved',
         version: master.version + 1
@@ -627,8 +627,8 @@ describe('stored circuits', () => {
         }
       });
 
-      // An edge table keyed by (dependent, dependency) has one row to give it,
-      // and a document naming one master under two types disagrees with itself.
+      // The edge table is keyed by (dependent, dependency), and a document
+      // naming one master under two types disagrees with itself.
       expect(response.statusCode).toBe(422);
       expect(response.json().code).toBe('invalid_document');
     });
@@ -664,8 +664,8 @@ describe('stored circuits', () => {
         headers: otherJar.headers()
       });
 
-      // Names and authors come from this server's rows, so a tampered chain can
-      // lose attribution but never forge it.
+      // Names and authors come from this server's rows, so a tampered chain
+      // loses attribution rather than forging it.
       expect(opened.json().attribution).toEqual([
         {
           projectId: original.id,
@@ -791,9 +791,8 @@ describe('stored circuits', () => {
         payload: { public: true, regenerateLink: true }
       });
 
-      // For a component the same counter offers placed instances an update, so
-      // bumping it here would ask every board using it to accept a change it
-      // cannot see.
+      // The same counter offers placed instances an update, so bumping it here
+      // would ask every board to accept a change it cannot see.
       expect(patched.json()).toMatchObject({
         public: true,
         version: created.version
@@ -816,9 +815,8 @@ describe('stored circuits', () => {
     it('answers a body that turns out to ask for nothing', async () => {
       const created = await createProject({ name: 'Kept' });
 
-      // `regenerateLink: false` is a field, so the request is well-formed, and it
-      // names no change — the one body that reaches the write path with nothing
-      // to set.
+      // Well-formed and naming no change: the one body that reaches the write
+      // path with nothing to set.
       const response = await api.inject({
         method: 'PATCH',
         url: `/api/projects/${created.id}`,
@@ -837,10 +835,9 @@ describe('stored circuits', () => {
       const created = await createProject({ name: 'Raced' });
       const saved = circuitDocument('Raced', HALF_ADDER_BODY);
 
-      // A save landing between a rename's read and its write is the interleaving
-      // that loses an edit silently: the rename would put the document it read
-      // back, and its own version bump would land on the number the save
-      // produced, so nothing downstream could tell.
+      // A save landing between a rename's read and its write loses an edit
+      // silently: the rename puts the document it read back, and its version
+      // bump lands on the number the save produced.
       const patched = await whileRowLocked(
         api.db,
         (tx) =>
@@ -975,9 +972,8 @@ describe('stored circuits', () => {
     });
 
     it('answers 404 for an id that is not one', async () => {
-      // Every id here is a `uuid` column, and Postgres refuses to compare one
-      // against something that is not — so a mistyped URL has to be turned away
-      // before it becomes a driver error surfacing as a 500.
+      // Postgres refuses to compare a `uuid` column against something that is
+      // not one, so a mistyped URL is turned away before it becomes a 500.
       const response = await api.inject({
         method: 'GET',
         url: '/api/projects/not-a-uuid',

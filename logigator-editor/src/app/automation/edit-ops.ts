@@ -1,26 +1,17 @@
 /**
- * The automation write path: turns a batch of {@link EditOp}s into exactly one
- * undoable history entry, or into per-op errors with the project untouched.
+ * The automation write path: a batch of {@link EditOp}s becomes exactly one
+ * undoable history entry, or per-op errors with the project untouched.
  *
- * Two conventions from the drag sessions are load-bearing here:
+ * Each op runs validate → integrate → materialize, and the batch registers one
+ * {@link ActionContainer} at the end. Actions snapshot their payload in their
+ * constructors and `ActionManager.register` records them *without* running
+ * `do()`, so an op builds its actions before mutating the live project.
+ * `project.topology.integrate` folds the wires an op splits or merges into the
+ * same container, so undo restores the topology too.
  *
- * - **Materialize, then register.** Actions snapshot their payload in their
- *   constructors and `ActionManager.register` records them *without* running
- *   `do()`, so every op builds its actions first, mutates the live project with
- *   the actual instances, and the batch registers one {@link ActionContainer} at
- *   the end (`component-placement.session.ts` is the reference).
- * - **Wire integration.** Adding a component or a wire can split a wire whose
- *   interior gains a termination, and moving one can merge collinear pairs that
- *   lose one. Every such op runs `project.topology.integrate` and folds the
- *   resulting adds/removes into the same container, so undo restores the
- *   topology too.
- *
- * All-or-nothing is implemented by applying ops in order and, on the first
- * failure, undoing the container built so far. A pure dry run cannot work: a
- * later op's validity depends on where earlier ops in the same batch put
- * things, so anything short of applying them would have to simulate the whole
- * batch anyway. Nothing is registered unless every op succeeded, so a failed
- * batch leaves no history entry and no net state change.
+ * All-or-nothing: ops apply in order and the first failure undoes the container
+ * built so far, which was never registered. A dry run cannot work — a later
+ * op's validity depends on where earlier ops in the same batch put things.
  */
 
 import { Point } from 'pixi.js';
@@ -78,9 +69,8 @@ const isIndexArray = (value: unknown): boolean =>
   Array.isArray(value) && value.every((v) => isInt(v) && (v as number) >= 0);
 
 /**
- * Shape-only validation: everything checkable without reading the project, so a
- * malformed batch comes back with *every* bad op listed rather than just the
- * first one the apply loop trips over.
+ * Shape-only validation, so a malformed batch reports *every* bad op rather
+ * than only the first one the apply loop trips over.
  */
 function validateShape(op: EditOp): string | null {
   switch (op.op) {
@@ -162,9 +152,8 @@ function validateShape(op: EditOp): string | null {
 }
 
 /**
- * Applies a batch. Returns the created ids and the wires integration
- * split/merged on success; on failure the project is back to its pre-batch
- * state and no history entry was recorded.
+ * Applies a batch. On failure the project is back to its pre-batch state and
+ * no history entry was recorded.
  */
 export function applyEditOps(
   ops: readonly EditOp[],
@@ -196,8 +185,8 @@ export function applyEditOps(
     toRemove: readonly Wire[],
     place: () => void
   ): void => {
-    // Actions snapshot in their constructors, so every action is built while the
-    // project still holds the pre-op state.
+    // Actions snapshot in their constructors, so each is built while the
+    // project still holds the state that action reverts to.
     if (toRemove.length > 0) {
       container.add(new RemoveWiresAction(...toRemove));
     }
@@ -248,7 +237,7 @@ export function applyEditOps(
           const optionErrors = validateOptionValues(config, op.options ?? {});
           if (optionErrors) throw new EditOpError(index, op.op, optionErrors);
           // The palette hides masters that would cycle; an agent can name any
-          // type id, so the same guard applies here.
+          // type id.
           if (wouldCyclePlacement(project, config)) {
             throw new EditOpError(
               index,
@@ -303,8 +292,8 @@ export function applyEditOps(
               'the wire would cross a component body'
             );
           }
-          // The drawn wire may itself be split or merged away; whatever comes
-          // back from integration is what lands in the project.
+          // The drawn wire may itself be split or merged away; integration's
+          // result is what lands in the project.
           const { toAdd, toRemove } = project.topology.integrate({
             addedWires: [wire]
           });
@@ -322,11 +311,10 @@ export function applyEditOps(
           const wires = (op.wireIds ?? []).map((id) =>
             resolveWire(index, op.op, id)
           );
-          // Merges the collinear pair a removed third terminator (wire end or
-          // component port) leaves behind; toRemove covers the requested wires
-          // plus any neighbours those merges absorb. Materialized inline
-          // rather than via commitIntegration so `integratedWires` reports
-          // only the integrator's own effects, not the requested removals.
+          // Merges the collinear pair a removed terminator leaves behind, so
+          // `toRemove` also covers neighbours those merges absorb. Materialized
+          // inline so `integratedWires` reports only the integrator's own
+          // effects, not the requested removals.
           const { toAdd, toRemove } = project.topology.integrate({
             removedWires: wires,
             removedComponentPorts: components.flatMap((c) => [
@@ -386,8 +374,8 @@ export function applyEditOps(
         case 'moveWire': {
           const wire = resolveWire(index, op.op, op.id);
           const oldPos = wire.position.clone();
-          // Wire bodies are stored on the integer grid and live on the
-          // half-grid lattice — the same +0.5 convention as `Wire.deserialize`.
+          // Wire bodies are stored on the integer grid but live on the
+          // half-grid lattice — the +0.5 convention of `Wire.deserialize`.
           const target = new Point(op.to[0] + 0.5, op.to[1] + 0.5);
           const delta = new Point(target.x - oldPos.x, target.y - oldPos.y);
           if (
@@ -422,10 +410,9 @@ export function applyEditOps(
           );
           if (steps === 0) break;
 
-          // Turned around its own footprint's pivot, exactly like a
-          // single-element selection rotate: the body stays put instead of
-          // swinging off its corner (the direction setter's own re-anchoring is
-          // overridden by the orbited position).
+          // Turned around its own footprint's pivot like a single-element
+          // selection rotate, so the body stays put; the orbited position
+          // overrides the direction setter's own re-anchoring.
           const pivot = rotationPivotFor(component.gridBounds);
           const newPos = rotatePointAroundPivot(
             pivot,
@@ -471,9 +458,9 @@ export function applyEditOps(
               newDirection
             })
           );
-          // rotateComponent unindexes around the direction write, so the
-          // project's automatic (non-undoable) integration stays out of the way
-          // and the container below owns the wire changes.
+          // rotateComponent unindexes around the direction write, keeping the
+          // project's own non-undoable integration out of the way so the
+          // container owns the wire changes.
           project.rotateComponent(component.id, newDirection, newPos);
           const { toAdd, toRemove } = project.topology.integrate({
             movedComponentPorts: [
@@ -512,8 +499,8 @@ export function applyEditOps(
             option.value,
             op.value
           );
-          // A change-option's materialization *is* its do(); registering the
-          // container afterwards never re-runs it.
+          // A change-option's materialization *is* its do(); register never
+          // re-runs it.
           action.do(project);
           container.add(action);
           break;
@@ -543,8 +530,8 @@ export function applyEditOps(
       }
     });
   } catch (err) {
-    // Undo whatever landed so the caller's "nothing was committed" holds. The
-    // container was never registered, so the history is untouched either way.
+    // Undo whatever landed; the container was never registered, so the history
+    // is untouched either way.
     container.undo(project);
     if (err instanceof EditOpError) {
       return {
@@ -557,9 +544,8 @@ export function applyEditOps(
 
   if (container.length > 0) {
     project.actionManager.register(container);
-    // Most project mutations request their own frame, but the two that only
-    // rebuild a component's visuals (an option write, a negation toggle) rely on
-    // the enclosing gesture's ticker — which a programmatic batch has not got.
+    // An option write and a negation toggle only rebuild visuals and rely on
+    // the enclosing gesture's ticker, which a programmatic batch has not got.
     project.triggerTicker('single');
   }
   context.debug(
@@ -570,9 +556,8 @@ export function applyEditOps(
 }
 
 /**
- * Why placing `component` shifted by `delta` collides, or `null`. Mirrors the
- * drag sessions' predicate (`DragCollisionState`): body-on-body and body-on-stub
- * overlap block, stub-on-stub does not.
+ * Why placing `component` shifted by `delta` collides, or `null`. Body-on-body
+ * and body-on-stub overlap block; stub-on-stub does not.
  */
 function componentCollisionAt(
   project: Project,

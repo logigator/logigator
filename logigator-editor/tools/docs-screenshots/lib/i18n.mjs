@@ -3,18 +3,13 @@ import { pathToFileURL } from 'node:url';
 import { I18N_DIR } from '../config.mjs';
 
 /**
- * The editor's own translations, loaded straight from `src/i18n/<lang>.ts`.
+ * The editor's own translations, loaded straight from `src/i18n/<lang>.ts`, so
+ * a reworded label moves the shots with it. Node strips the type annotations
+ * and the only imports are `import type`, so the locale files load as they are.
  *
- * Every label this tool matches on — menu items, dialog tabs, the buttons a
- * shot clicks — is addressed by its translation key and resolved here, so a
- * localized run reads the same strings the editor renders instead of a table
- * out here that would drift the moment one of them was reworded.
- *
- * Node strips the type annotations, so the locale files load as they are; their
- * only imports are `import type`, which erase. The files sit outside any
- * package declaring `"type": "module"`, which Node reports as a typeless
- * module — a warning that would print into the middle of the task list, so it
- * is dropped (and only that one) here.
+ * They sit outside any package declaring `"type": "module"`, which Node reports
+ * as a typeless module — a warning that would print into the middle of the task
+ * list, so that one is dropped here.
  */
 process.removeAllListeners('warning');
 process.on('warning', (warning) => {
@@ -37,8 +32,8 @@ export async function loadTranslations(lang) {
 
 /**
  * Resolves a dot-notation translation key against a loaded bundle. A key that
- * does not resolve to a string is an error rather than an empty selector: the
- * shot would otherwise fail on a missing element, several steps later.
+ * misses throws here rather than yielding an empty selector that fails the shot
+ * several steps later.
  */
 export function translate(bundle, key) {
   const value = key

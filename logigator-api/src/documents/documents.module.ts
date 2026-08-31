@@ -13,17 +13,14 @@ import { RenormalizeService } from './renormalize.service';
 /**
  * Stored circuits: the caller's own projects and library components.
  *
- * `AuthModule` for `AuthGuard`, which is imported route by route rather than
- * registered globally — public community listings are coming, and a
+ * `AuthModule` for `AuthGuard`, applied route by route rather than globally — a
  * guard-everything default leaks a private document the first time somebody
- * forgets the opt-out decorator. `UsersModule` comes with it because
- * `@UseGuards(AuthGuard)` names a class, and Nest builds it in the context of
- * the module that used it — so the guard's own dependencies have to be
- * resolvable from here, not merely from where it was declared.
+ * forgets the opt-out decorator. `UsersModule` comes with it because Nest
+ * builds a guard in the context of the module that used it, so the guard's own
+ * dependencies must resolve from here.
  *
- * The services are exported because the sharing and community modules read the
- * same rows through them, which is what keeps "a document is parsed on the way
- * in" true of every path rather than of this one.
+ * The services are exported so sharing and community read the same rows through
+ * them, keeping "a document is parsed on the way in" true of every path.
  */
 @Module({
   imports: [AuthModule, UsersModule],

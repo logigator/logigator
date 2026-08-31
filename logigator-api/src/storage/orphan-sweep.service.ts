@@ -8,7 +8,6 @@ import { DB, type Database } from '../database/database.module';
 import { components, projects, users } from '../database/schema';
 import { FileStorageService, type StorageArea } from './file-storage.service';
 
-/** What the sweep found and did, so a run is legible in the log. */
 export interface SweepReport {
   scanned: number;
   removed: number;
@@ -17,20 +16,14 @@ export interface SweepReport {
 }
 
 /**
- * Deletes asset directories no row points at.
+ * Deletes asset directories no row points at. The write path keeps the volume
+ * and the database in step by writing a new directory and moving a pointer;
+ * this sweep is the whole answer to a crash between those two steps.
  *
- * There is no lifecycle machinery keeping the volume and the database in step —
- * no entity hooks, no rename-on-update — because the write path deliberately
- * does not need any: it writes a new directory and moves a pointer, and the old
- * directory is deleted after. What that leaves behind is a crash between those
- * two steps, and a periodic sweep is the whole answer to it. An orphan costs
- * disk; the alternative designs cost correctness.
- *
- * Two rules make it safe to run at any time. It only ever considers a directory
- * whose name is a uuid in a two-character shard, so nothing outside the shape the
- * write path produces is a candidate. And it spares anything younger than the
- * grace window: an upload in flight is a directory no row names *yet*, which is
- * indistinguishable from an orphan except by age.
+ * Two rules make it safe to run at any time. Only a uuid directory inside a
+ * two-character shard is ever a candidate, so nothing outside the shape the
+ * write path produces qualifies. And anything younger than the grace window is
+ * spared: an upload in flight is a directory no row names *yet*.
  */
 @Injectable()
 export class OrphanSweepService {
@@ -48,9 +41,8 @@ export class OrphanSweepService {
   }
 
   /**
-   * Nightly, and off-peak: the work is proportional to what is on the volume,
-   * not to what happened that day, and nothing depends on an orphan going away
-   * promptly.
+   * Nightly and off-peak: the work is proportional to what is on the volume,
+   * and nothing depends on an orphan going away promptly.
    */
   @Cron(CronExpression.EVERY_DAY_AT_4AM)
   async scheduled(): Promise<void> {
@@ -63,14 +55,12 @@ export class OrphanSweepService {
           );
         }
       } catch (error) {
-        // A sweep that fails is a sweep that runs again tomorrow; it must not
-        // take the process with it.
+        // A failed sweep runs again tomorrow; it must not take the process.
         this.logger.error(`Sweeping ${area} failed`, error);
       }
     }
   }
 
-  /** One area, from the referenced set down to the deletions. */
   async sweep(area: StorageArea): Promise<SweepReport> {
     const referenced = await this.referenced(area);
     const cutoff = Date.now() - this.graceMs;
@@ -84,7 +74,7 @@ export class OrphanSweepService {
         report.scanned += 1;
         if (referenced.has(id)) continue;
 
-        // Read after the pointer lookup, never before: a directory created since
+        // After the pointer lookup, never before: a directory created since
         // that query is exactly the in-flight upload the window protects.
         const created = await this.createdAt(join(area, shard, id));
         if (created === null || created > cutoff) {
@@ -101,11 +91,9 @@ export class OrphanSweepService {
   }
 
   /**
-   * Every id a row currently names in this area.
-   *
-   * Read whole rather than checked per directory: the columns are narrow, the
-   * scan is one statement instead of one per asset, and a set read *before* the
-   * volume walk can only be missing ids the grace window then spares.
+   * Every id a row currently names in this area, read whole rather than checked
+   * per directory. Reading it *before* the volume walk can only miss ids the
+   * grace window then spares.
    */
   private async referenced(area: StorageArea): Promise<Set<string>> {
     if (area === 'profile') {
@@ -133,17 +121,15 @@ export class OrphanSweepService {
     try {
       return await readdir(join(...segments));
     } catch {
-      // An area with nothing in it yet has no directory, which is not a problem
-      // to report — it is what an empty volume looks like.
+      // An area with nothing in it yet has no directory.
       return [];
     }
   }
 
   private async createdAt(relative: string): Promise<number | null> {
     try {
-      // `mtime`, not `birthtime`: the latter is unavailable on some filesystems
-      // and reads as the epoch there, which would make every directory look
-      // ancient and sweep an upload out from under itself.
+      // `mtime`, not `birthtime`: the latter reads as the epoch on filesystems
+      // that lack it, making every directory look old enough to sweep.
       return (await stat(join(this.root, relative))).mtimeMs;
     } catch {
       return null;

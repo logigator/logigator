@@ -5,9 +5,8 @@ import { ReportsController } from './reports.controller';
 import { ReportsService } from './reports.service';
 
 /**
- * Client-side error reports. `MailModule` for the transport — the report goes
- * out as plain text with the circuit attached, so it needs no template and none
- * of the localized rendering the transactional mails use.
+ * Client-side error reports. `MailModule` for the transport: plain text with
+ * the circuit attached, so no template and no localized rendering.
  */
 @Module({
   imports: [MailModule, AuthModule],

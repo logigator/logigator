@@ -5,12 +5,9 @@ import type { Env } from './config/env';
 import { registerSessionPlugins } from './session/session.plugin';
 
 /**
- * Fastify options derived from the environment.
- *
- * `trustProxy` names the proxies sitting in front of the process, so
- * `request.ip` is the caller's address rather than Caddy's — the rate limiter
- * counts per address. It trusts none by default: a directly reachable server must
- * not let a caller pick its own identity through a header.
+ * Fastify options derived from the environment. `trustProxy` names the proxies
+ * in front of the process, so `request.ip` is the caller's address rather than
+ * Caddy's — the rate limiter counts per address.
  */
 export function apiServerOptions(env: Env): FastifyServerOptions {
   return {
@@ -21,23 +18,18 @@ export function apiServerOptions(env: Env): FastifyServerOptions {
 
 /**
  * Everything that has to be true of the HTTP layer before it serves a request,
- * in one place so the server and the E2E suite cannot drift: the specs exercise
- * the same plugins, the same cookie signing and the same route prefix as
- * production.
+ * in one place so the server and the E2E suite cannot drift.
  */
 export async function configureApiApp(
   app: NestFastifyApplication,
   env: Env
 ): Promise<void> {
   await app.register(fastifyMultipart, {
-    // Two files per request, each capped: a preview upload carries the light and
-    // the dark render together, and the limit is what keeps a stream from
-    // filling the disk before a handler sees it.
+    // Two files per request: a preview upload carries the light and the dark
+    // render together.
     limits: { files: 2, fileSize: env.UPLOAD_MAX_BYTES },
-    // The plugin's own way of reporting the limit is to throw from `toBuffer`,
-    // which lands in the error filter as an unhandled defect — a 500 for a file
-    // that is merely too big. Off, the truncation shows up as a flag the handler
-    // reads and answers 413 to.
+    // The plugin reports the limit by throwing from `toBuffer`, which the error
+    // filter answers 500 to. Off, the truncation is a flag a handler reads.
     throwFileSizeLimit: false
   });
   await registerSessionPlugins(app, env);

@@ -18,10 +18,9 @@ import {
 } from './google-auth.service';
 
 /**
- * The two browser-facing routes of the OAuth round trip. They answer with
- * redirects rather than JSON — the user agent is walking through them, not a
- * client library — which is also why failures come back as `?error=` on the
- * return URL instead of an error body no page would ever show.
+ * The two browser-facing routes of the OAuth round trip. A user agent walks
+ * through them, not a client library, so they answer with redirects and a
+ * failure comes back as `?error=` on the return URL rather than an error body.
  */
 @Controller('auth/google')
 @UseGuards(RateLimitGuard)
@@ -33,8 +32,8 @@ export class GoogleAuthController {
   ) {}
 
   /**
-   * Sends the browser to Google. A caller who is already signed in is starting a
-   * link rather than a sign-in, and the flow records which.
+   * Sends the browser to Google. A caller who is already signed in is starting
+   * a link rather than a sign-in, and the flow records which.
    */
   @Get()
   @RateLimit({ limit: 20, windowSeconds: 600, scope: 'oauth' })
@@ -70,7 +69,7 @@ export class GoogleAuthController {
       await reply.redirect(this.env.PUBLIC_URL, 302);
     } catch (error) {
       // Only the flow's own failures become a redirect; anything else is a
-      // defect and belongs in the error filter's hands.
+      // defect for the error filter.
       if (!(error instanceof GoogleAuthError)) throw error;
 
       await reply.redirect(this.returnUrlWith(error.failure), 302);
@@ -78,9 +77,8 @@ export class GoogleAuthController {
   }
 
   /**
-   * The failure target is configured, never taken from the request: a redirect a
-   * caller can choose is an open redirect, and this one is reachable
-   * unauthenticated.
+   * The failure target is configured, never taken from the request: a redirect
+   * a caller can choose is an open redirect, and this one is unauthenticated.
    */
   private returnUrlWith(failure: GoogleAuthFailure): string {
     const url = new URL(this.env.OAUTH_RETURN_URL);

@@ -43,8 +43,7 @@ describe('SimulationService', () => {
     service = TestBed.inject(SimulationService);
     workModeService = TestBed.inject(WorkModeService);
     toastService = TestBed.inject(ToastService);
-    // These tests drive the run controls by hand and assert on a paused boot;
-    // keep auto-start off (its own test below covers the on path).
+    // These tests drive the run controls by hand and assert on a paused boot.
     TestBed.inject(EditorSettingsService).autoStartSimulation.set(false);
     project = new Project();
     TestBed.inject(ProjectService).setMainProject(project);
@@ -109,8 +108,7 @@ describe('SimulationService', () => {
 
   it('refuses to enter on diagnostics and reports via toast', () => {
     const error = vi.spyOn(toastService, 'error');
-    // A custom whose circuit has no plugs but declares one port compiles to a
-    // blocking plug-mismatch diagnostic.
+    // No plugs but one declared port: a blocking plug-mismatch diagnostic.
     const broken = TestBed.inject(CustomComponentRegistry).registerSnapshot({
       kind: 'snapshot',
       source: 'browser',
@@ -154,7 +152,7 @@ describe('SimulationService', () => {
 
     service.play();
     expect(service.isRunning()).toBe(true);
-    // Default mode is sync-to-frame: the worker idles, frames drive ticks.
+    // Sync-to-frame is the default: the worker idles, frames drive ticks.
     expect(fakeWorker.postedOfKind('start')).toHaveLength(0);
 
     await vi.waitFor(() =>
@@ -221,7 +219,7 @@ describe('SimulationService', () => {
       hz: 5
     });
 
-    // 5 read in kHz is 5000 Hz; the typed value is kept, not converted.
+    // 5 read in kHz is 5000 Hz; the typed value is kept.
     service.setTargetUnit('kHz');
     await vi.waitFor(() =>
       expect(fakeWorker.postedOfKind('start')).toHaveLength(2)
@@ -306,7 +304,7 @@ describe('SimulationService', () => {
       expect(switchComp.isOn).toBe(true);
       expect(fakeWorker.postedOfKind('triggerInput')).toHaveLength(1);
 
-      // Repeating the same absolute value is a no-op — no second engine event.
+      // Repeating an absolute value sends no second engine event.
       expect(service.setUserInput(switchComp.id, true)).toBe(true);
       expect(switchComp.isOn).toBe(true);
       expect(fakeWorker.postedOfKind('triggerInput')).toHaveLength(1);
@@ -372,7 +370,6 @@ describe('SimulationService', () => {
     const unregister = service.registerApplier(watch);
     service.requestSnapshot();
 
-    // The seed request forces a full snapshot.
     const requests = fakeWorker.postedOfKind('requestSnapshot');
     expect(requests).toHaveLength(1);
     expect(requests[0].full).toBe(true);
@@ -456,13 +453,13 @@ describe('SimulationService', () => {
     project.emitUserInput(switchComp);
     const replacement = new Project();
 
-    // Opening or creating a project; the outgoing one is destroyed right after.
+    // The outgoing project is destroyed right after this notification.
     TestBed.inject(ProjectService).setMainProject(replacement);
 
     expect(workModeService.mode()).toBe(WorkMode.PAN);
     expect(service.state()).toBe('inactive');
     expect(service.board).toBeNull();
-    // The teardown ran while the outgoing project was still live.
+    // The teardown ran while the outgoing project was live.
     expect(switchComp.isOn).toBe(false);
     expect(fakeWorker.terminated).toBe(true);
 

@@ -1,5 +1,4 @@
 <div *appTranslate="let t">
-  <!-- Search -->
   <div class="p-3">
     <lg-icon-field class="w-full">
       <lg-input-icon class="ph ph-magnifying-glass" />
@@ -14,7 +13,6 @@
     </lg-icon-field>
   </div>
 
-  <!-- List -->
   <div class="max-h-64 overflow-y-auto">
     @if (loading()) {
       <p class="py-8 text-center text-muted">
@@ -113,7 +111,6 @@
     }
   </div>
 
-  <!-- Pagination -->
   @if (totalItems() > pageSize) {
     <lg-paginator
       class="mt-2"

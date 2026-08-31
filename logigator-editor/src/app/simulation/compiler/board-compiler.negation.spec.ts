@@ -9,8 +9,8 @@ import { BuiltInComponentType } from '@logigator/core';
 import { Project } from '../../project/project';
 import { BoardCompilerService } from './board-compiler.service';
 
-// The compiler emits negation into the descriptor verbatim; the negation-capable
-// @logigator/sim engine consumes the index arrays.
+// The compiler emits negation into the descriptor verbatim; the engine
+// consumes the index arrays.
 describe('BoardCompilerService negation emission', () => {
   let compiler: BoardCompilerService;
   let registry: CustomComponentRegistry;
@@ -73,8 +73,8 @@ describe('BoardCompilerService negation emission', () => {
   });
 
   it('propagates negation of a built-in flattened out of a custom component', () => {
-    // A custom whose circuit is a single AND with input 1 negated; no plugs
-    // (0/0 declared) so it compiles cleanly with the AND's pins dangling.
+    // A single AND with input 1 negated and no plugs (0/0 declared), so it
+    // compiles cleanly with the AND's pins dangling.
     const master = registry.createMaster(
       {
         id: 'id-neg',
@@ -104,7 +104,7 @@ describe('BoardCompilerService negation emission', () => {
       )
     );
 
-    // The flattened descriptor carries the inner AND's negation unchanged.
+    // Flattening carries the inner AND's negation unchanged.
     expect(andUnit().negInputs).toEqual([1]);
   });
 });

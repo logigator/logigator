@@ -5,11 +5,10 @@ import { ShortcutActionEnum } from '../shortcuts/shortcut-action.enum';
 import { ShortcutService } from '../shortcuts/shortcut.service';
 import { TranslationKey } from '../translation/translation-key.model';
 
-/** Stable identifier for a work-mode tool, independent of its WorkMode. */
 export type WorkModeToolId = 'pan' | 'wire' | 'select' | 'erase' | 'text';
 
 export interface WorkModeToolDescriptor {
-  /** Stable id so surfaces can group/select tools (e.g. HUD primary row). */
+  /** Stable id, so a surface can group or select tools. */
   id: WorkModeToolId;
   /** Phosphor icon class, e.g. 'ph ph-hand'. */
   icon: string;
@@ -17,17 +16,16 @@ export interface WorkModeToolDescriptor {
   labelKey: TranslationKey;
   /** Shortcut action, for the keybinding hint in tooltips. */
   shortcut: ShortcutActionEnum;
-  /** Reads signals — call inside a template binding for the active state. */
+  /** Reads signals, so call it inside a template binding. */
   isActive: () => boolean;
-  /** Switches the editor into this tool's mode. */
   activate: () => void;
 }
 
 /**
- * The editing tool set shared by the desktop tool bar and the mobile tool HUD,
- * so the two surfaces can never drift. `isActive`/`activate` stay functions:
- * the TEXT tool is COMPONENT_PLACEMENT + a selected type (active only when both
- * match), not a plain `setMode`, so a `{ mode }`-only descriptor would break it.
+ * The editing tool set shared by every tool surface, so the two can never
+ * drift. `isActive`/`activate` stay functions because the TEXT tool is
+ * COMPONENT_PLACEMENT plus a selected type, which a `{ mode }`-only descriptor
+ * could not express.
  */
 export function createWorkModeTools(
   workMode: WorkModeService
@@ -87,17 +85,14 @@ export function createWorkModeTools(
 }
 
 /**
- * The scissor sub-toggle of the select tool: switches the marquee between
- * plain SELECT and SELECT_EXACT (cut wires at the marquee edge). Rendered by
- * `ScissorToggleComponent` as a floating pill over the canvas while the select
- * tool is active — on touch it is the only way to scissor; on desktop it
- * doubles as a discoverable hint for the hold-to-scissor key (SELECT_SCISSOR,
- * Alt by default). Holding that key in plain SELECT lights the pill as active,
- * mirroring the marquee, so the engaged cut-wires mode is visible.
+ * The select tool's scissor sub-toggle, switching the marquee between plain
+ * SELECT and SELECT_EXACT. On touch it is the only way to scissor; on desktop
+ * it also hints at the hold-to-scissor key, lighting up while that key is held
+ * so the engaged cut-wires mode stays visible.
  */
 export interface ScissorToggleDescriptor {
   icon: string;
-  /** Full description — tooltip / aria label. */
+  /** Full description, for the tooltip and aria label. */
   labelKey: TranslationKey;
   /** Short label shown inside the floating pill. */
   shortLabelKey: TranslationKey;

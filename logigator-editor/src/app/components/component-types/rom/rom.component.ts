@@ -8,11 +8,9 @@ export class RomComponent extends Component<RomOptions> {
   constructor(options: RomOptions) {
     super(romMeta, options);
 
-    // Supply the contents option with the editing dimensions so the hex editor
-    // knows the table shape. The ROM-specific `2^addressSize` mapping lives here
-    // (not in the generic option), and doing it in the constructor — not the
-    // config — keeps the link alive across every clone path, which rebuilds
-    // options and runs this constructor.
+    // The ROM-specific `2^addressSize` mapping stays out of the generic
+    // option, and doing it in the constructor rather than the config keeps the
+    // link alive across every clone path, which reruns this constructor.
     this.options.data.attachDimensions(
       () => this.options.wordSize.value,
       () => 1 << this.options.addressSize.value

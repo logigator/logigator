@@ -1,9 +1,8 @@
 import { Component, computed, input } from '@angular/core';
 
 /**
- * A modifier+key combination for display. A structural subset of the editor's
- * shortcut binding, so a binding object is assignable directly; the modifiers
- * are optional and default to absent.
+ * A modifier+key combination for display. A structural subset of a consumer's
+ * own shortcut binding, so such an object is assignable directly.
  */
 export interface LgShortcutBinding {
   /** `KeyboardEvent.key` value, e.g. 'z', 'Escape', 'Delete'. */
@@ -29,7 +28,6 @@ const IS_MAC =
   typeof navigator !== 'undefined' &&
   /Mac|iPod|iPhone|iPad/.test(navigator.platform);
 
-/** The display label for a single `KeyboardEvent.key` value. */
 export function formatShortcutKey(key: string): string {
   return KEY_LABELS[key] ?? (key.length === 1 ? key.toUpperCase() : key);
 }
@@ -50,8 +48,8 @@ function shortcutParts(binding: LgShortcutBinding, mac: boolean): string[] {
 }
 
 /**
- * A shortcut as a plain string (tooltips, aria labels): `Ctrl+S`, or the mac
- * glyph run `⇧⌘Z`. `mac` defaults to the platform.
+ * A shortcut as a plain string for tooltips and aria labels: `Ctrl+S`, or the
+ * mac glyph run `⇧⌘Z`. `mac` defaults to the platform.
  */
 export function formatShortcutLabel(
   binding: LgShortcutBinding,
@@ -61,9 +59,8 @@ export function formatShortcutLabel(
 }
 
 /**
- * The chips' backdrop: `content` sits on a `bg-content` surface (menus,
- * dialogs), `raised` on the elevated chrome (the tooltip bubble): the content
- * surface in light, `surface-700` in dark.
+ * The chips' backdrop: `content` for a `bg-content` surface, `raised` for the
+ * elevated chrome of a tooltip bubble.
  */
 export type LgShortcutTone = 'content' | 'raised';
 
@@ -80,10 +77,9 @@ const JOINER_TONE: Record<LgShortcutTone, string> = {
 };
 
 /**
- * A key combination rendered as `<kbd>` chips — `Ctrl + S`, or the glyph run
- * `⇧ ⌘ Z` on mac (no separators there). A `null` binding renders an en dash,
- * the "unassigned" placeholder. `mac` defaults to the platform and exists as
- * an input for tests and previews.
+ * A key combination as `<kbd>` chips: `Ctrl + S`, or the separator-less mac
+ * glyph run `⇧ ⌘ Z`. A `null` binding renders an en dash for "unassigned".
+ * `mac` defaults to the platform and is an input for tests and previews.
  */
 @Component({
   selector: 'lg-shortcut',

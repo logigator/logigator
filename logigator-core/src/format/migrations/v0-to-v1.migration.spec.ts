@@ -47,8 +47,8 @@ describe('v0ToV1Migration', () => {
     // Persisted positions are delta-encoded; restore absolutes to assert.
     const components = decodeComponentPositions(result.components);
     const and = components.find((c) => c.type === 2)!;
-    // Rotated South (W=2, H=max(1,3)=3): legacy anchors by the body's fixed
-    // top-left, v2 by the rotation pivot, so the pivot shifts by +H on x.
+    // Rotated South (W=2, H=max(1,3)=3): the legacy top-left is fixed, so the
+    // pivot shifts by +H on x.
     expect(and.pos).toEqual([6, 4]);
     expect(and.direction).toBe(1);
     expect(and.options).toEqual({ numInputs: 3 });
@@ -68,8 +68,8 @@ describe('v0ToV1Migration', () => {
       text: 'Hello world'
     });
 
-    // Decoded in emission order — the chain walk starts at the (y, x)-smallest
-    // canonical start, so the vertical wire at y=2 comes first.
+    // Emission order: the walk starts at the (y, x)-smallest canonical start,
+    // so the vertical wire at y=2 comes first.
     expect(decodeWireChain(result.wires)).toEqual([
       { pos: [5, 2], direction: 1, length: 5 },
       { pos: [3, 5], direction: 0, length: 5 }
@@ -127,8 +127,8 @@ describe('v0ToV1Migration', () => {
 
   it('re-anchors a rotated custom instance from body top-left to pivot', () => {
     // A 0-in/1-out custom (W=3, H=max(1,0,1)=1) at legacy anchor [10,10] in
-    // each direction. Its body extent comes from the inline definition's port
-    // counts; the pivot offsets per that extent, exactly like a built-in.
+    // each direction, its extent taken from the inline definition's port
+    // counts.
     const positions = [0, 1, 2, 3].map((r) => {
       const result = migrate({
         project: { elements: [{ t: 1003, p: [10, 10], o: 1, r }] },
@@ -151,9 +151,8 @@ describe('v0ToV1Migration', () => {
   });
 
   it('re-anchors a rotated custom from its own instance i/o when no definition', () => {
-    // No matching definition, so dims fall back to the instance's i/o. A
-    // 2-in/2-out custom (W=3, H=max(1,2,2)=2) rotated South at anchor [10,10]:
-    // pivot = [px + H, py] = [12, 10].
+    // No matching definition, so dims fall back to the instance's i/o: a
+    // 2-in/2-out custom (W=3, H=2) rotated South at [10,10] pivots to [12,10].
     const result = migrate({
       project: { elements: [{ t: 1003, p: [10, 10], i: 2, o: 2, r: 1 }] }
     });
@@ -170,8 +169,7 @@ describe('v0ToV1Migration', () => {
 
   it('re-anchors a rotated component from body top-left to rotation pivot', () => {
     // Same AND (type 2, W=2, H=max(1,3)=3) at legacy anchor [3,4] in each
-    // direction. The legacy top-left is fixed; the v2 pivot offsets per the
-    // body extent: E (0,0), S (+H,0), W (+W,+H), N (0,+W).
+    // direction. Pivot offsets: E (0,0), S (+H,0), W (+W,+H), N (0,+W).
     const positions = [0, 1, 2, 3].map((r) => {
       const result = migrate({
         project: { elements: [{ t: 2, p: [3, 4], i: 3, r }] }
@@ -232,10 +230,8 @@ describe('v0ToV1Migration', () => {
     );
   });
 
-  // The legacy format has no schema, and `ProjectElement` describes what the old
-  // editor wrote rather than what a file may hold — so an element missing a
-  // coordinate has to be a rejection. Reading past it would make a malformed
-  // upload a crash, which on the server is a 500 for what is plainly bad input.
+  // v0 has no schema, so an element missing a coordinate must be a rejection:
+  // reading past it turns a malformed upload into a crash.
   describe('elements with unreadable coordinates', () => {
     const malformed: Record<string, unknown> = {
       'a wire with no end': { t: 0, p: [0, 0] },
@@ -261,10 +257,8 @@ describe('v0ToV1Migration', () => {
     }
   });
 
-  // Pins each built-in's legacyV0Slots descriptor exactly. A new built-in
-  // without one — or a wrong n[]/s mapping — would silently drop or transpose
-  // options on decode; this catches it. Mirrors the encoder, which reads the
-  // same descriptor in reverse (server-circuit.codec.spec round-trips).
+  // Pins each built-in's legacyV0Slots descriptor exactly: a missing one, or a
+  // wrong n[]/s mapping, silently drops or transposes options on decode.
   describe('legacyV0Slots descriptors', () => {
     const expected: Record<number, LegacyV0Slots> = {
       [BuiltInComponentType.NOT]: {},

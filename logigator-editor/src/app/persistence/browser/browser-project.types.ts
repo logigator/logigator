@@ -1,12 +1,9 @@
 /**
- * Records persisted in the browser (IndexedDB). The circuit itself is stored as
- * `content` — the native versioned file-format JSON string produced by
- * `CircuitFileService.toJson` (body + embedded `definitions[]`). Reusing that
- * encoding means the file migration chain upgrades stored circuits on load for
- * free, exactly like a file import, and every stored document is self-contained.
- *
- * Each lives in its own object store (`projects` / `components`), so the store —
- * not a field — is the discriminator.
+ * Records persisted in IndexedDB. The circuit is stored as `content`, the
+ * native versioned file-format JSON, so the migration chain upgrades stored
+ * circuits on load exactly as for a file import and every record is
+ * self-contained. Each kind lives in its own object store, so the store — not
+ * a field — is the discriminator.
  */
 export interface StoredBrowserProject {
   /** Generated client-side; the `/local/:id` route key. */
@@ -15,16 +12,14 @@ export interface StoredBrowserProject {
   name: string;
   createdOn: number;
   lastEdited: number;
-  /** `CircuitFileService.toJson(...)` output (native versioned file format). */
   content: string;
 }
 
 /**
- * A **library master** stored in the browser `components` object store: the
- * editable catalog entry the palette places *from* and the user edits. Its
- * `content` is its own circuit plus embedded snapshots of its dependencies, so
- * loading it needs no cross-row resolution. Its `id` shares the id space with
- * {@link StoredBrowserProject.id}.
+ * A library master: the editable catalog entry the palette places from. Its
+ * `content` carries its own circuit plus embedded snapshots of its
+ * dependencies, so loading it needs no cross-row resolution, and its `id`
+ * shares the id space with {@link StoredBrowserProject.id}.
  */
 export interface StoredBrowserComponent {
   id: string;
@@ -40,17 +35,16 @@ export interface StoredBrowserComponent {
   labels: string[];
   createdOn: number;
   lastEdited: number;
-  /** `CircuitFileService.toJson(...)` output (body + `definitions[]`). */
   content: string;
 }
 
-/** Lightweight projection for listing stored projects without their circuit data. */
+/** Listing projection, without the circuit data. */
 export type BrowserProjectSummary = Pick<
   StoredBrowserProject,
   'id' | 'name' | 'createdOn' | 'lastEdited'
 >;
 
-/** Lightweight projection for listing stored masters without their circuit data. */
+/** Listing projection, without the circuit data. */
 export type BrowserComponentSummary = Pick<
   StoredBrowserComponent,
   | 'id'

@@ -28,11 +28,9 @@ import { CommunityService } from './community.service';
 
 /**
  * The public half of the API: published documents, who made them, and stars.
- *
- * Nothing here is guarded except what writes — the listings are the reason
- * `AuthGuard` is applied per route rather than globally. They do read the session
- * when there is one, for the single boolean saying whether the caller has starred
- * a row; a visitor gets `false` and the same page.
+ * Only writes are guarded — these listings are why `AuthGuard` is per route
+ * rather than global. They read the session when there is one, for the boolean
+ * saying whether the caller starred a row; a visitor gets `false`.
  */
 @Controller('community')
 export class CommunityController {
@@ -55,9 +53,8 @@ export class CommunityController {
   }
 
   /**
-   * What the caller has starred. Above the `:link` routes because `starred` is a
-   * literal segment and a token is not — declared the other way round, a path
-   * matcher could take it for one.
+   * Above the `:link` routes: declared after them, a path matcher could take
+   * the literal `starred` segment for a token.
    */
   @Get('starred/projects')
   @UseGuards(AuthGuard)
@@ -94,8 +91,8 @@ export class CommunityController {
   }
 
   /**
-   * `PUT`/`DELETE` rather than a `POST /toggle`: each states the state it wants,
-   * so a retried request lands where the caller meant instead of undoing itself.
+   * `PUT`/`DELETE` rather than a toggle: each states the state it wants, so a
+   * retry lands where the caller meant instead of undoing itself.
    */
   @Put('projects/:link/star')
   @UseGuards(AuthGuard)

@@ -8,18 +8,11 @@ const { GIFEncoder, quantize, applyPalette } = gifenc;
 export const DEFAULT_FRAME_DELAY = 1200;
 
 /**
- * Encodes captured frames into an animated GIF.
- *
- * The animated doc images are step-throughs — a simulation before and after a
- * tick, a ROM inspector before and after the address changes — so each frame is
- * an ordinary shot of a deterministic state and this only has to stitch them.
- *
- * The frames of a step-through are the same picture with a few things lit
- * differently, which the encoding leans on twice. One palette is quantized
- * across all of them and written as the global colour table, so a frame carries
- * no table of its own; and every frame after the first keeps only the pixels
- * whose colour index changed, writing the rest as a transparent index that
- * leaves what is already on screen in place.
+ * Encodes captured frames into an animated GIF. The animated doc images are
+ * step-throughs — the same picture with a few things lit differently — which
+ * the encoding leans on twice: one palette quantized across every frame serves
+ * as the global colour table, and every frame after the first keeps only the
+ * pixels whose colour index changed.
  */
 export async function encodeGif(frames, delay = DEFAULT_FRAME_DELAY) {
   if (frames.length === 0) throw new Error('a gif needs at least one frame');
@@ -35,10 +28,9 @@ export async function encodeGif(frames, delay = DEFAULT_FRAME_DELAY) {
     }
   }
 
-  // Quantized over every frame at once, so a colour means the same index in all
-  // of them — what makes both the shared table and the diff below possible. The
-  // 256th slot is left out here and claimed for transparency afterwards, so no
-  // pixel can quantize onto the index that means "unchanged".
+  // Quantized over every frame at once, so a colour means the same index in
+  // all of them. Only 255 slots, the 256th claimed for transparency
+  // afterwards, so no pixel can land on the index meaning "unchanged".
   const pixels = new Uint8Array(decoded.length * decoded[0].data.length);
   decoded.forEach((frame, index) => {
     pixels.set(frame.data, index * frame.data.length);
@@ -50,8 +42,8 @@ export async function encodeGif(frames, delay = DEFAULT_FRAME_DELAY) {
   );
   palette.push([0, 0, 0]);
 
-  // Backwards, so each frame is compared against a predecessor that has not
-  // been punched through yet.
+  // Backwards, so each frame is compared against a predecessor that is not
+  // punched through yet.
   for (let index = indexed.length - 1; index > 0; index--) {
     const frame = indexed[index];
     const previous = indexed[index - 1];
@@ -64,14 +56,12 @@ export async function encodeGif(frames, delay = DEFAULT_FRAME_DELAY) {
   indexed.forEach((frame, index) => {
     encoder.writeFrame(frame, width, height, {
       delay,
-      // Only the first frame carries the palette, which makes it the global
-      // colour table every later frame reads from.
+      // Only on the first frame, which makes it the global colour table.
       ...(index === 0 ? { palette } : {}),
       transparent: index > 0,
       transparentIndex,
-      // "Do not dispose": the frame stays on screen as the base the next one is
-      // punched through onto. The first frame is fully opaque, so a looping gif
-      // starts clean again.
+      // "Do not dispose": the frame stays on screen as the base the next is
+      // punched through onto. The first is opaque, so a loop starts clean.
       dispose: 1
     });
   });

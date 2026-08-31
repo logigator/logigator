@@ -7,14 +7,13 @@ import { MobileUiService } from '../../layout/mobile-ui.service';
 import { TranslateDirective } from '../../translation/translate.directive';
 
 /**
- * Copy/cut/paste/delete for the current selection, surfaced just above the tool
- * HUD on `isCompact`; the same ClipboardService calls the desktop tool bar and
- * Edit menu make.
+ * Copy/cut/paste/delete for the current selection, above the tool HUD on
+ * `isCompact`, through the same ClipboardService the desktop surfaces use.
  *
- * With nothing selected the bar stays up in a paste-only form for as long as
- * the clipboard holds something — pasting does not depend on the selection,
- * and compact has no menu bar to reach it through. Clearing the clipboard is
- * that form's dismiss action.
+ * With nothing selected the bar stays up in a paste-only form while the
+ * clipboard holds something: pasting does not depend on the selection, and
+ * compact has no menu bar to reach it through. Clearing the clipboard dismisses
+ * that form.
  */
 @Component({
   selector: 'app-selection-action-bar',

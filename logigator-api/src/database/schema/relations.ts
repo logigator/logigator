@@ -16,23 +16,14 @@ export const tables = {
 
 /**
  * Relations for the relational query builder, declared separately from the
- * tables so the schema files stay pure DDL.
- *
- * This is RQBv2 (`defineRelations`), where relations are a query-time
- * convenience over explicit joins rather than a property of the tables: there
- * are no entity classes and nothing is loaded unless a query asks for it with
- * `with`. That is the point of the whole data-access choice — the legacy
- * `Promise<T>` lazy relations, and the `__proxy__` fields that existed only to
- * make them serializable, cannot come back this way.
- *
- * The star relations reach through the join tables, so a query can ask for a
- * user's starred projects without naming `project_stars`.
+ * tables so the schema files stay pure DDL. In RQBv2 they are a query-time
+ * convenience over explicit joins rather than a property of the tables:
+ * nothing is loaded unless a query asks for it with `with`.
  */
 export const relations = defineRelations(tables, (r) => ({
-  // Every relation names its columns explicitly, and the two that run through a
-  // join table carry a matching `alias` on both sides: a user has two distinct
-  // relations to projects (owns, starred), and drizzle refuses to guess which
-  // pairs with which.
+  // Relations through a join table carry a matching `alias` on both sides: a
+  // user has two relations to projects (owns, starred), and drizzle refuses to
+  // guess which pairs with which.
   users: {
     projects: r.many.projects({ from: r.users.id, to: r.projects.userId }),
     components: r.many.components({

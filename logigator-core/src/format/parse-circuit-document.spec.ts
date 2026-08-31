@@ -15,12 +15,9 @@ import nestedCustomV1 from './fixtures/nested-custom.v1.json';
 import halfAdderV0 from './fixtures/half-adder.v0.json';
 
 /**
- * The v1 fixtures are real editor exports, copied unchanged out of the docs
- * screenshot tool's circuit set — the point of parsing them here is that they
- * were produced by the shipping save path, not written to satisfy the parser.
- * The v0 fixture is hand-authored against the legacy shape (an old-editor file
- * with an inline sub-circuit definition), since the repo carries no committed
- * legacy export.
+ * The v1 fixtures are real editor exports, so what is parsed here came out of
+ * the shipping save path rather than being written to satisfy the parser. The
+ * v0 fixture is hand-authored, since the repo carries no committed v0 export.
  */
 
 /** A structurally valid but empty current-version document. */
@@ -71,16 +68,16 @@ describe('parseCircuitDocument', () => {
 
       expect(result.warnings).toEqual([]);
       expect(result.stats.definitions).toBe(2);
-      // The outer definition's own circuit places the inner one, so the check
-      // has to resolve custom ids inside definitions too.
+      // The outer definition places the inner one, so custom ids have to
+      // resolve inside definitions too.
       const outer = result.definitions.find((d) => d.name === 'Outer')!;
       const inner = result.definitions.find((d) => d.name === 'Inner')!;
       expect(outer.components.some((c) => c.type === inner.type)).toBe(true);
     });
 
     it('extracts no edges for browser-origin snapshots', () => {
-      // Both fixture definitions were saved to a local library, so nothing
-      // here names a server master the API could resolve.
+      // Both fixture definitions are browser-origin, so nothing names a server
+      // master the API could resolve.
       expect(parseCircuitDocument(nestedCustomV1).dependencies).toEqual([]);
     });
   });
@@ -209,8 +206,7 @@ describe('parseCircuitDocument', () => {
     const cases: { name: string; doc: unknown; warning: string }[] = [
       {
         name: 'an unknown built-in type',
-        // Below CUSTOM_TYPE_ID_BASE, so it claims to be a built-in — an
-        // unassigned id in the legacy numbering.
+        // Below CUSTOM_TYPE_ID_BASE, so it claims to be a built-in.
         doc: withComponent({ type: 99, pos: [0, 0], options: {} }),
         warning: 'unknown component type 99'
       },
@@ -301,8 +297,8 @@ describe('parseCircuitDocument', () => {
     });
 
     it('lenient clamps an out-of-range number to the nearest bound', () => {
-      // Real legacy rows carry ROMs addressed wider than v2 allows; falling
-      // back to the default would replace the circuit rather than salvage it.
+      // Legacy rows carry ROMs addressed wider than the catalog allows; the
+      // default would replace the circuit rather than salvage it.
       const result = parseCircuitDocument(
         {
           ...EMPTY,
@@ -327,8 +323,8 @@ describe('parseCircuitDocument', () => {
     });
 
     it('lenient returns a document a later strict read accepts', () => {
-      // The migration job stores `file`, so the repairs have to be in it —
-      // otherwise the row keeps the junk and every strict read of it throws.
+      // The migration job stores `file`, so the repairs have to be in it or the
+      // row keeps the junk and every strict read throws.
       const result = parseCircuitDocument(
         {
           ...EMPTY,
@@ -385,9 +381,8 @@ describe('parseCircuitDocument', () => {
     });
 
     it('does not enforce board-level invariants', () => {
-      // Two components stacked on the same cell, and a wire crossing them:
-      // geometrically nonsense, but real documents contain worse and the
-      // editor has a repair command for exactly that.
+      // Two components on one cell and a wire crossing them: nonsense, but real
+      // documents contain worse and the editor has a repair command for it.
       const result = parseCircuitDocument({
         ...EMPTY,
         components: [
