@@ -1,297 +1,223 @@
 # UI Layer
 
-The `ui/` directory contains Angular component wrappers that frame the PixiJS canvas and provide the editor's interactive panels. These components do not contain circuit logic — they read from shared signal services and delegate circuit state mutations to those services.
-
-## Directory Layout
-
-```
-src/app/ui/
-├── board/
-│   ├── board.component.ts       # Board canvas host — the Angular/PixiJS bridge
-│   └── board.component.html
-├── component-settings/
-│   ├── component-settings.component.ts   # Dynamic option form for a selected component type
-│   └── component-settings.component.html
-├── side-bar/
-│   ├── side-bar.component.ts    # Left panel with search and component palette
-│   ├── side-bar.component.html
-│   └── component-list/
-│       ├── component-list.component.ts   # One category grid within the palette
-│       └── component-list.component.html
-├── status-bar/
-│   ├── status-bar.component.ts  # Bottom bar: mode, position, save state, selection count
-│   └── status-bar.component.html
-├── title-bar/
-│   ├── title-bar.component.ts   # Top application bar with logo and menu bar
-│   └── title-bar.component.html
-└── tool-bar/
-    ├── tool-bar.component.ts    # Icon buttons that switch the active work mode
-    └── tool-bar.component.html
-```
-
----
-
-## App Shell Composition
-
-`AppComponent` (`app.component.ts`) assembles all six UI components into a single full-viewport layout:
-
-```
-┌──────────────────────────────────────────────┐
-│  app-title-bar  (h-12, bg-primary)           │
-├──────────────────────────────────────────────┤
-│  app-tool-bar   (flex-wrap row of buttons)   │
-├────────────────┬─────────────────────────────┤
-│                │  app-board  (grow, relative) │
-│  app-side-bar  │  ┌── floating p-card ──────┐│
-│  (w-80)        │  │  app-component-settings ││
-│                │  └─────────────────────────┘│
-│                ├─────────────────────────────┤
-│                │  app-status-bar             │
-└────────────────┴─────────────────────────────┘
-```
-
-The root host uses `display: flex; flex-direction: column; width: 100vw; height: 100vh`.
-
-`AppComponent` owns two pieces of shared state:
-
-- `boardPosition: signal<Point>` — receives the `(positionChange)` output from `BoardComponent` and passes it down to `StatusBarComponent` via input binding.
-- `componentSettings: computed<ComponentConfig | null>` — mirrors `WorkModeService.selectedComponentConfig()`. When non-null, a `p-card` is absolutely positioned in the bottom-right corner of the board and hosts `ComponentSettingsComponent`.
-
-`AppComponent` also calls `setStaticDIInjector(injector)` during construction to bootstrap the static DI escape hatch used by model classes that are instantiated with plain `new` (see CLAUDE.md).
-
----
-
-## Cross-cutting Patterns
-
-All UI components share these conventions:
-
-- **Standalone + OnPush** — every component declares `standalone: true` (implicit in Angular 22) and uses `ChangeDetectionStrategy.OnPush`. Reactivity flows entirely through Angular signals.
-- **Signal API** — inputs use `input<T>()`, outputs use `output<T>()`, derived values use `computed()`, local mutable state uses `signal()`.
-- **PrimeNG** — all interactive widgets come from PrimeNG v19 (`p-button`, `p-menubar`, `p-card`, `p-select`, `p-inputNumber`, `p-selectButton`, `p-tooltip`, `p-divider`, `p-iconfield`, `p-inputicon`, `p-inputText`).
-- **Tailwind** — layout, spacing, borders, and opacity utilities via Tailwind 4. Prefer Tailwind utility classes over custom CSS at all times. Write custom CSS only when a style genuinely cannot be expressed as a utility class (e.g., complex pseudo-element rules or `:host` block-display overrides).
-- **Translations** — all user-facing strings go through `*appTranslate="let t"` / `t('key')` (`TranslateDirective`), whose `t` accepts only keys the translation schema declares, along with exactly the `{{params}}` that key's message interpolates, so a typo, a renamed key or a forgotten param fails the build. Components inject `TranslationService` when they need to translate imperatively (e.g., building menu-item arrays); no component touches `TranslocoService` — only `translation/`, the bootstrap in `app.config.ts` (language preload) and specs do — and an ESLint rule keeps transloco's untyped directive and pipe out of the app.
-- **Shared language and theme** — both live in the origin-wide `preferences` cookie, not in the editor's own storage: the editor is served under `/editor` alongside the backend's pages, which write that cookie from the `/de/…` URL prefix, from `Accept-Language` on a first visit, and from their own switchers. `PreferencesService` (`storage/preferences.service.ts`) is the only reader/writer — it owns express' `j:`+JSON encoding and patches single fields so the side that does not own a field never clears it. Language is wired in through `provideTranslocoPersistLang`'s storage (`translation/preferences-lang.storage.ts`, `storageKey: 'lang'`), so transloco's own persistence writes the shared cookie; theme through `ThemingService`. Consequences worth knowing: a language or theme switch inside the editor changes the surrounding site too (and `preferences.lang` also drives the backend's redirect targets and transactional-email language), and neither value can be trusted on read — the cookie is client-writable and the two language/theme sets are independent, so `isAvailableLanguage` / the theme table gate every read and fall back (the browser's `Accept-Language` list negotiated by `negotiateBrowserLanguage`, then `defaultLang`; dark). Those fallbacks are load-bearing rather than defensive: the static editor bundle is served ahead of the middleware that writes the cookie, so a visitor whose first request is `/editor/` arrives without one. For that visitor the language is negotiated over the browser's whole list, matching what the server picks from `Accept-Language`, so the two agree once a page view does establish the cookie. The editor never writes on a plain load — only a real switch writes, and it patches its one field: establishing and repairing the cookie belongs to the server, whose middleware validates `lang` and `theme` independently (`logigator-backend/docs/middleware.md`), so a single-field write is safe.
-- **Phosphor icons** — icon classes follow the `ph ph-<name>` pattern from the Phosphor icon font.
-- **Shared signal stores** — `WorkModeService` and `ProjectService` are the two root-provided signal stores that connect the UI components without prop-drilling through `AppComponent`.
-- **Dialog telemetry** — every `DialogService.open` call passes a `telemetryId` from the `DialogId` registry (`app/analytics/analytics.mapping.ts`). `@logigator/ui` reports open and close to the `LG_DIALOG_TELEMETRY` hook, which `provideDialogAnalytics()` binds to `AnalyticsService` as `dialog_opened` / `dialog_closed`, so a dialog that is opened and abandoned is still measured. A new dialog needs an id added to the registry — one without a `telemetryId` is silently unreported. `dialog_closed.resolved` means only that the dialog closed with a result: task completion stays with the specific events (`project_saved`, `share_link_generated`, …), since several dialogs commit through their own API or return nothing at all. The `lg-drawer` sheets and inspection windows are deliberately not instrumented — `inspection_opened` covers the latter's reach.
-- **Legacy-editor hand-off** — the escape hatch to the previous editor (Help menu, and the bug-report dialog, where a user is already stuck) goes through `LegacyEditorService.open(source)`, which reports `legacy_editor_opened` and then opens `/legacy-editor` in a new tab. It is the only place that names that URL: every surface renders a control rather than an `<a href>`, since a link's context menu ("open in new tab", "copy link") leaves the app without passing any click handler, and the whole point of the event is measuring users who give up on this editor.
-
----
-
-## Components
-
-### `BoardComponent`
-
-**File:** `board/board.component.ts`
-
-The PixiJS bridge. Hosts a single `<canvas>` element and blits the active project through the app-wide shared renderer (`RendererService`, see `rendering.md`). All other UI components are Angular; this one straddles the Angular/PixiJS boundary and owns only what is per-canvas: the render ticker, the cull pass, the viewport size and the input wiring.
-
-**Inputs / Outputs**
-
-| Name                   | Direction | Type              | Purpose                                                                       |
-| ---------------------- | --------- | ----------------- | ----------------------------------------------------------------------------- |
-| `project`              | input     | `Project \| null` | The active project to display and render each frame.                          |
-| `cursorPositionChange` | output    | `Point`           | Emits the current grid position of the cursor. Throttled to 33 ms (≈ 30 fps). |
-
-**Initialization (`ngOnInit`)**
-
-1. Calls `AssetsService.init()` to load the Roboto Mono subset font and install the canvas bitmap-font atlas.
-2. Acquires a `RendererService` lease (held until teardown) — this is what boots the shared renderer on app start.
-3. Measures the host and observes it with a `ResizeObserver`; resizes feed `project.viewport.resizeViewport()` and repaint one frame. The canvas fills the host via CSS, its backing store is sized per render.
-4. Creates the `PointerController` on the canvas (see `rendering.md`).
-5. Sets `loaded` signal to `true`, making the canvas visible (it starts at `opacity-0` to avoid a flash before PixiJS is ready).
-
-**Rendering**
-
-The component runs its own never-auto-started PixiJS `Ticker`. Each frame culls the active project against the viewport (`Culler.shared.cull`) and blits it via `lease.render(project, canvas)`, clearing to the theme background.
-
-**Project swapping**
-
-An Angular `effect` watches the `project` input and pushes changes into a `projectChange$` subject. On each new non-null project:
-
-- Re-homes the `WorkModeRouter` via `setProject`.
-- Calls `project.viewport.resizeViewport()` with the measured host box.
-- Calls `ticker.update()` to force a single frame.
-- Creates a `TickerScheduler` over `project.ticker$` to control the render loop:
-  - `'single'` — run one frame with `ticker.update()`
-  - `'on'` — start the continuous ticker
-  - `'off'` — run one final frame and stop
-
-A second `effect` synchronizes `WorkModeService.mode()` and `WorkModeService.selectedComponentConfig()` onto the project (`project.mode`, `project.componentToPlace`) whenever either changes.
-
-All subscriptions are scoped to `takeUntil(merge(destroy$, projectChange$))` so they clean up when the project is replaced or the component is destroyed.
-
-**Cleanup (`ngOnDestroy`)**
-
-Completes `destroy$`, tears down the pointer controller, router, resize observer, scheduler and ticker, and releases the renderer lease (which destroys the shared renderer once no other canvas holds one).
-
----
-
-### `TitleBarComponent`
-
-**File:** `title-bar/title-bar.component.ts`
-
-The horizontal application bar at the top. Contains the logo (links to `/`) and a PrimeNG `p-menubar` that spans the remaining width.
-
-The menu model is a `Signal<MenuItem[]>` built by `generateMenuItems()` and re-derived reactively on language change, because `TranslationService.translate` reads a signal that fires once the new language bundle has loaded. Current menu structure:
-
-- **File** — New Project, New Component, _(separator)_, Open, Save, Export File, _(separator)_, Generate Image
-- **Edit** — Undo, Redo, _(separator)_, Cut, Copy, Paste, _(separator)_, Delete
-- **View** — (no items yet)
-- **Help** — (no items yet)
-
-Wired file menu items: **New Project** creates a blank board (`PersistenceService.createAndSetEmptyProject`) — no name/destination prompt up front; if the current project is dirty it first asks to discard via the modal `<p-confirmdialog />` (a keyless `ConfirmationService.confirm(...)`). The app shell hosts two confirm targets: the **keyless** `<p-confirmdialog />` is the generic modal confirm, and `<p-confirmpopup key="inline" />` is the anchored inline confirm — callers opt into the popup with `confirm({ key: 'inline', target })` (e.g. the project-list delete), while plain `confirm(...)` routes to the dialog. **Save** delegates to `SaveCoordinatorService` (see below). **Open** opens `OpenProjectDialogComponent`; **Export File** downloads the native file. Edit menu items (Cut, Copy, Paste, Delete, Undo, Redo) are wired to `ClipboardService` and `ActionManager`. The `p-menubar` uses `[autoDisplay]="false"` so submenus open only on click, not hover.
-
-The logo `<img>` uses Angular's `NgOptimizedImage` directive (`[ngSrc]`) with the `hashed` pipe, which appends a content hash to the URL for cache-busting.
-
----
-
-### `ToolBarComponent`
-
-**File:** `tool-bar/tool-bar.component.ts`
-
-A horizontal row of icon-only `p-button` elements (severity `secondary`, tooltips on bottom) that switch the active work mode via `WorkModeService.setMode()`.
-
-Button groups (separated by `p-divider`):
-
-1. **File actions** — Save, Open, New Component (Save delegates to `SaveCoordinatorService`; Open and New Component are stubs)
-2. **Clipboard** — Copy, Cut, Paste, Delete (wired to `ClipboardService`)
-3. **History** — Undo, Redo (wired to `ActionManager`)
-4. **Zoom** — Zoom Out, Zoom In (stubs)
-5. **Drawing tools** — Pan, Wire Tool, Select, Erase, Place Text (shared descriptors from `work-mode-tools.ts`)
-
-Each drawing-tool button has a `[styleClass]` bound to a `computed()` that returns `'bg-bluegray-300'` when its corresponding `WorkMode` is active, providing a visual active state.
-
-Clicking any drawing-tool button calls `WorkModeService.setMode(mode)`. Because `setMode` clears `selectedComponentType` for any mode other than `COMPONENT_PLACEMENT`, activating a drawing tool also implicitly deselects any component chosen in the palette — which causes the floating `component-settings` card to disappear.
-
----
-
-### `SaveCoordinatorService`
-
-**File:** `save-coordinator.service.ts`
-
-Single entry point for the **Save** action, shared by the title bar, tool bar and Ctrl+S shortcut (`ShortcutService`). `requestSave(project)` decides whether a save needs a name/destination prompt first:
-
-- A **never-saved project draft** (`type:'project'`, `source:'browser'`, empty id — the blank board created on a project-less page load or via New Project) opens `SaveProjectDialogComponent` (name + Server/Local destination + Public flag). On confirm, a **local** destination routes to `PersistenceService.saveDraftAsLocal`; a **server** destination is handed to `UploadCoordinatorService` (a `draft-to-server` upload) so any embedded local custom components get the promotion treatment. Cancelling either dialog does nothing.
-- An **already-saved server document** (project _or_ component editor) that has gained local custom components is handed to `UploadCoordinatorService` (a `save-server` upload) — a cloud document may only contain cloud components, so they are promoted first. Only routed when the document actually embeds local components; cancelling aborts the save.
-- Everything else already persisted (server documents with no local components, browser projects/components with an id) goes straight to `PersistenceService.saveProject`.
-
-Closing a **dirty tab** (`CustomComponentService.closeComponent`) prompts **Save / Discard / Cancel** via `CloseTabDialogComponent`; the Save branch runs the same promote-then-save, folding the promotion warning into that one dialog. See [`dependencies-and-promotion.md`](dependencies-and-promotion.md) §8.1.
-
-Errors are caught and surfaced as a toast centrally here, so the three call sites just `void requestSave(project)`. The service lives in `ui/` (not `persistence/`) because it orchestrates a dialog; persistence stays UI-free. `SaveProjectDialogComponent` only collects input. Why the two server-save shapes route through the upload flow — and the promotion mechanics — is [`dependencies-and-promotion.md`](dependencies-and-promotion.md).
-
----
-
-### `UploadCoordinatorService`
-
-**File:** `upload/upload-coordinator.service.ts`
-
-Single entry point for **moving anything local to the cloud** — projects and custom components share one pipeline (**analyze** embedded local dependencies → **prompt** with `UploadDialogComponent` for visibility + which to promote → **upload children-first, then the target**). `requestUpload(target)` takes a discriminated `UploadTarget` (`project`, `stored-project`, `component`, `draft-to-server`, `save-server`). It **owns every upload toast** (the `PersistenceService` primitives are silent) and resolves `true` when the target committed so list callers refresh. Like `SaveCoordinatorService` it lives in `ui/` because it orchestrates a dialog.
-
-Wired from the title-bar/File-menu (open project), the Open dialog's per-row cloud button (stored project), the component-actions **Upload to cloud** button, and `SaveCoordinatorService` (the two server-save shapes). The full pipeline — children-before-parents topological ordering, the visibility preset, the id-alias linking, failure/retry semantics, and the backend contract — is in **[`dependencies-and-promotion.md`](dependencies-and-promotion.md)**.
-
----
-
-### `SideBarComponent`
-
-**File:** `side-bar/side-bar.component.ts`
-
-The left panel. Contains a search field and two `ComponentListComponent` instances — one for the `basic` category, one for `advanced`. Component lists are populated by `ComponentProviderService.basicComponents` and `ComponentProviderService.advancedComponents`.
-
-The search field binds to a local `searchText: string` property (two-way via `ngModel`) and passes the value as an input to each `ComponentListComponent`. Filtering by search text is the responsibility of the child list component.
-
----
-
-### `ComponentListComponent`
-
-**File:** `side-bar/component-list/component-list.component.ts`
-
-Renders a labeled grid of component tiles for one category. Used exclusively inside `SideBarComponent`.
-
-**Inputs**
-
-| Name         | Type                | Purpose                                                               |
-| ------------ | ------------------- | --------------------------------------------------------------------- |
-| `headline`   | `string`            | Category label shown in the section header                            |
-| `components` | `ComponentConfig[]` | The component configs to display                                      |
-| `searchText` | `string`            | Passed in from parent (filtering not yet implemented in the template) |
-
-Each tile shows `comp.symbol` in a square bordered box and `t(comp.name)` below it — or, for a config carrying a `symbolShape`, the mini-shape that `ComponentSymbolComponent` (`side-bar/component-symbol/`) paints from the config's SVG path data in place of the text. The tile with `selectedComponent() === comp.type` is outlined in the primary colour and marked with a corner check.
-
-Clicking (or pressing Enter on) a tile calls `selectComponent(config)`, which:
-
-1. Calls `workModeService.setMode(WorkMode.COMPONENT_PLACEMENT)`.
-2. Calls `workModeService.setSelectedComponentType(config.type)`.
-
-`selectedComponent` is a `computed` that reads `WorkModeService.selectedComponentType()` and checks whether it matches any tile in the current list — if the active type is not in this list the computed returns `null`, so only the correct list highlights its tile.
-
----
-
-### `StatusBarComponent`
-
-**File:** `status-bar/status-bar.component.ts`
-
-A thin bar at the bottom of the board column. Displays four segments separated by border dividers:
-
-| Segment         | Content                                                                                                                                               |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Work mode       | Translated work-mode string, e.g. `"Draw Wire"`. Includes selected component name for `COMPONENT_PLACEMENT`.                                          |
-| Board position  | `−x, −y` in grid units (negated because the viewport pans opposite to the stage position). Updated via the `boardPosition` input from `AppComponent`. |
-| Save state      | Static `t('statusBar.saved')` (save integration not yet implemented).                                                                                 |
-| Selection count | Static `"Selected: 0"` (selection integration not yet implemented).                                                                                   |
-
-**Inputs**
-
-| Name            | Type    | Purpose                                                   |
-| --------------- | ------- | --------------------------------------------------------- |
-| `boardPosition` | `Point` | Current grid-space viewport origin; defaults to `(0, 0)`. |
-
-`boardPositionFormatted` is a `computed` that formats the point as `"x, y"` with `Math.round`.
-
-`workMode` is a `computed` that derives the translation key `statusBar.modes.<workModeValue>` from `WorkModeService.mode()`.
-
----
-
-### `ComponentSettingsComponent`
-
-**File:** `component-settings/component-settings.component.ts`
-
-A thin loop rendered inside the floating `p-card` in `AppComponent` when a component type is selected for placement. It renders a fixed **direction row** (an `lg-select-button` bound to the component's first-class `direction` — not an option) followed by one renderer per option via `*ngComponentOutlet="option.renderer; inputs: { option }"` — each `ComponentOption` subclass declares its own renderer component, so this component owns no per-option chrome. See [`component-options.md`](component-options.md) for the option/renderer contract.
-
-Direction commits diverge by branch: a **placed** component routes through `project.requestSelectionRotation(steps)` (midpoint pivot, collision handling, shared undo entry with the rotate buttons); a **placement ghost** writes the sticky per-type direction on `WorkModeService` (`setPlacementDirection`), which every fresh ghost of that type starts from.
-
-**Input**
-
-| Name     | Type                | Purpose                                                |
-| -------- | ------------------- | ------------------------------------------------------ |
-| `config` | `ComponentOption[]` | Live option instances owned by the component-to-place. |
-
----
-
-### `DocumentationDialogComponent`
-
-**File:** `dialogs/documentation-dialog/documentation-dialog.component.ts`
-
-The in-editor documentation viewer, opened only through `DocumentationService.open(pageId?, anchor?)` (`app/documentation/`) — the Help menus, hint "learn more" links (`Hint.docsPage`), and the About dialog all deep-link through that one entry point. Content comes from the page registry `app/documentation/docs-pages.ts` (`DOC_SECTIONS`, per-locale markdown under `assets/docs/<lang>/` with English fallback, hashed-import loading like the changelog). Screenshots inside the pages resolve the same way: `app/documentation/docs-images.ts` maps each authored `images/…` path to its hashed import, passed to `lg-markdown` as `assetUrls`.
-
-Two presentations from one dialog: on desktop a wide centred card with an `lg-navigation` topic tree beside an `lg-markdown` page pane; on the compact breakpoint the dialog goes fullscreen (`DialogConfig.fullscreen` bound to `LayoutService.isCompact`, live across flips) and drills down — topic index first, page with a back row after. Link handling splits along domain lines: `lg-markdown` itself intercepts clicks in the rendered content (its `linkClick` event plus built-ins — `#anchor` scrolls to the matching heading via `scrollToHeading`/`headingSlug`, web links open a new tab, unclaimed unknown schemes stay inert); the dialog only claims `docs:<page-id>[#anchor]` hrefs (parsed by `app/documentation/doc-link.ts`) and routes them through `DocumentationService`. Deep-link anchors reuse the same `scrollToHeading` after the page's markdown lands.
-
----
-
-## Service Dependencies
-
-| Service                    | Consumers                                                                                            | Role                                                                                      |
-| -------------------------- | ---------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| `WorkModeService`          | `BoardComponent`, `ToolBarComponent`, `ComponentListComponent`, `StatusBarComponent`, `AppComponent` | Single source of truth for the active `WorkMode` and the selected `ComponentType`.        |
-| `ProjectService`           | `AppComponent`, `TitleBarComponent`, `ToolBarComponent`                                              | Holds the active `Project`; `AppComponent` passes it into `BoardComponent`.               |
-| `ClipboardService`         | `TitleBarComponent`, `ToolBarComponent`                                                              | Copy/cut/paste/delete operations; serializes selected elements and drives paste sessions. |
-| `ComponentProviderService` | `SideBarComponent`, `StatusBarComponent`                                                             | Registry lookup — provides component lists by category and config by type.                |
-| `ThemingService`           | `BoardComponent`                                                                                     | Supplies the background color for the PixiJS renderer at init time.                       |
-| `AssetsService`            | `BoardComponent`                                                                                     | Loads the canvas font and installs the bitmap-font atlas before the application renders.  |
-| `TranslationService`       | `TitleBarComponent`                                                                                  | Imperative translation needed to build the menu-bar item objects.                         |
-
----
-
-## Testing
-
-All seven components have a smoke-test spec (e.g., `board.component.spec.ts`) that uses `TestBed` with `appConfig.providers` and asserts the component creates without error. There are no behavioral or interaction tests in the UI layer at this time.
+`src/app/ui/` holds the Angular chrome around the PixiJS canvas: the bars,
+panels, sheets and dialogs. None of it contains circuit logic — components read
+signal services and delegate every mutation back to them. Most files carry a
+class-level doc comment; this page is the map, not a per-component reference.
+
+## App shell
+
+`AppComponent` composes the whole viewport and branches on
+`LayoutService.isCompact()`. One `<app-board>` canvas serves every breakpoint;
+only the chrome around it swaps.
+
+| Region       | Regular (`!isCompact`)                                         | Compact                                                               |
+| ------------ | -------------------------------------------------------------- | --------------------------------------------------------------------- |
+| Top          | `app-title-bar` + `app-tool-bar`                               | `app-mobile-top-bar`                                                  |
+| Left         | `app-side-bar` in a scrollable `aside` (hidden in SIMULATION)  | palette/ports reached as sheets                                       |
+| Board column | `app-tab-bar`, board, `app-status-bar`                         | `app-tab-bar`, board, sim controls when running                       |
+| Over canvas  | scissor toggle, component settings + toast, bug badge, minimap | mobile status pill, tool HUD, selection bar, zoom FAB, badge, minimap |
+| Inspection   | `lg-window-outlet` in the board area                           | non-modal `app-inspection-sheet` + a fullscreen `lg-window-outlet`    |
+
+Exactly one window outlet is alive at a time, so a watch re-homes on a
+breakpoint flip. `LayoutService` keeps `isCompact` (layout) and `isTouch`
+(input capability) deliberately separate — a touch laptop is one, a narrow
+desktop window the other; there is no `isMobile`. The compact sheets are
+`lg-drawer`s (palette, component settings, ports, account, project menu) driven
+by `MobileUiService.activeSheet()`, which allows one open at a time; overlay
+stacking uses the named z-bands from `@logigator/ui`'s `layers.css`.
+
+`AppComponent` calls `setStaticDIInjector(injector)` before anything else in its
+constructor: the services it goes on to touch construct model objects
+(`Project`, `Component`) that resolve dependencies through the static injector.
+
+## Cross-cutting patterns
+
+- **Standalone + signals** throughout; the app is zoneless. Every widget comes
+  from `@logigator/ui`.
+- **Tailwind first.** Write custom CSS only for what a utility cannot express,
+  and prefer the semantic colour aliases (`bg-content`, `text-muted`,
+  `border-border`) — fixed `surface-N` steps are not theme-adaptive.
+- **Typed translations.** User-facing strings go through
+  `*appTranslate="let t"` / `t('key')` (`TranslateDirective`), whose `t` accepts
+  only declared keys with exactly that key's params, so a typo or a missing
+  param fails the build. Imperative call sites inject `TranslationService`;
+  nothing outside `translation/` touches `TranslocoService`, and an ESLint rule
+  keeps transloco's own untyped directive and pipe out of the app.
+- **Phosphor icons** as `ph ph-<name>` classes.
+- **Dialog telemetry.** Every `DialogService.open` passes a `telemetryId` from
+  the `DialogId` registry (`analytics/analytics.mapping.ts`); `@logigator/ui`
+  reports open and close through `LG_DIALOG_TELEMETRY`, bound to
+  `AnalyticsService` by `provideDialogAnalytics()`, so an abandoned dialog is
+  still measured. A dialog with no id is silently unreported, and
+  `dialog_closed.resolved` says only that a result came back — completion stays
+  with the specific events. Drawer sheets and inspection windows are
+  deliberately uninstrumented.
+- **Legacy-editor hand-off.** `LegacyEditorService.open(source)` is the only
+  place that names `/legacy-editor`; it reports `legacy_editor_opened` first.
+  Surfaces render a control, never an `<a href>`: a link's context menu leaves
+  the app without passing any handler, and measuring users who give up here is
+  the point of the event.
+
+### Shared language and theme
+
+Both live in the origin-wide `preferences` cookie, not in editor storage: the
+editor is served under `/editor` beside the backend's pages, which write the
+same cookie. A switch on either side moves both, and `preferences.lang` also
+drives the backend's redirect targets and transactional-email language.
+`PreferencesService` (`storage/preferences.service.ts`) is the sole reader and
+writer — it owns express' `j:`+JSON encoding and patches single fields, so
+neither side clears a field it does not own. Language reaches it through
+`provideTranslocoPersistLang`'s storage
+(`translation/preferences-lang.storage.ts`, `storageKey: 'lang'`), theme through
+`ThemingService`.
+
+Neither value can be trusted on read: the cookie is client-writable and the
+server's language and theme sets need not match the editor's, so
+`isAvailableLanguage` and the theme table gate every read. Those fallbacks are
+load-bearing — the static bundle is served ahead of the middleware that writes
+the cookie, so a visitor whose first request is `/editor/` arrives without one.
+Their language is negotiated over the whole `Accept-Language` list
+(`negotiateBrowserLanguage`, then `defaultLang`; theme falls back to dark),
+matching what the server would pick, so the two agree once a page view
+establishes the cookie. The editor writes only on a real switch, and only that
+one field: establishing and repairing the cookie is the server's job.
+
+## `BoardComponent`
+
+`board/board.component.ts` — the only component that straddles the
+Angular/PixiJS boundary. It hosts one `<canvas>` and draws the active project
+through the app-wide shared renderer (`RendererService`, see
+[`rendering.md`](rendering.md)), owning just what is per-canvas: the render
+ticker, the cull pass, the viewport size and the input wiring. Its renderer
+lease is held until teardown, which is what boots and later destroys the shared
+renderer. All canvas input runs through the `PointerController` it creates;
+PixiJS event features are off entirely.
+
+An effect pushes `project` input changes into `projectChange$`: each new project
+re-homes the `WorkModeRouter`, resizes the viewport, and gets a fresh
+`TickerScheduler` over `project.ticker$` (`'single'` renders one frame, `'on'`
+runs continuously, `'off'` renders once more and stops). Subscriptions are
+scoped to `takeUntil(merge(destroy$, projectChange$))`.
+
+## Desktop chrome
+
+| Component            | Role                                                                                                                                                                                                                  |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `TitleBarComponent`  | Logo, the `lg-menubar` fed by `EditorMenuService.items`, inline rename (real projects only, not component editors or read-only shares), source indicator, account menu                                                |
+| `ToolBarComponent`   | File/clipboard/history/rotate/zoom buttons plus the shared `createWorkModeTools` descriptors; swaps wholesale to `app-simulation-controls` in SIMULATION. `EditorCommandStateService` disables the no-op-able buttons |
+| `SideBarComponent`   | The `aside` content: ports panel first while editing a component, then the palette                                                                                                                                    |
+| `TabBarComponent`    | Pinned main project plus one tab per open component editor, over the generic `LgTabStrip`; inert during simulation                                                                                                    |
+| `StatusBarComponent` | Work mode (with the live scissor key hint), cursor position, dirty state, selection count                                                                                                                             |
+
+`EditorMenuService` builds both menu models from one set of per-item builders —
+the File/Edit/View/Help tree for the menubar and the curated flat
+`compactItems` for the mobile sheet — so every command is defined once. The
+Debug menu is appended only while `DebugMenuToggleService.enabled()`; that
+service holds no dependencies, so `DebugMenuService` and everything its commands
+inject stay unconstructed until the `window.__logigatorDebug()` console command
+switches the menu on.
+
+## Compact chrome
+
+`MobileTopBarComponent` (avatar, project title, undo/redo/save/run),
+`ToolHudComponent` (every tool plus Parts and, in a component editor, Ports),
+`SelectionActionBarComponent` (clipboard actions, staying up in a paste-only
+form while the clipboard holds something), `MobileStatusComponent`,
+`ZoomFabComponent`, and `MobileProjectMenuComponent` — the flat editor action
+list, wrapped in `withSheetClose` so every command dismisses its sheet first and
+a dialog lands on an uncovered board.
+
+## Shared panels
+
+- `ComponentListComponent` — the palette: search field over `LgAccordion`
+  category panels with count badges, empty categories dropped while searching.
+  Ports is present only in a component editor. Tiles render `comp.symbol`, or
+  the mini-shape `ComponentSymbolComponent` paints from the config's SVG path
+  data for built-ins whose canvas body is a shape rather than text.
+- `ComponentSettingsComponent` — a fixed direction row (`lg-select-button` over
+  first-class `direction`, not an option) plus one renderer per option via
+  `*ngComponentOutlet`, so it owns no per-option chrome (see
+  [`component-options.md`](component-options.md)). It shows the placement ghost
+  while placing, otherwise the selected component, and the two commit
+  differently: the ghost writes directly (the eventual `AddComponentsAction`
+  captures the final values) and sets the sticky per-type placement direction,
+  a placed component routes through `ChangeOptionAction` and
+  `project.requestSelectionRotation`. Hidden during simulation.
+- `PortsPanelComponent` — a live view of the open component editor's
+  INPUT/OUTPUT plugs; drag to reorder (`ReorderPlugsAction`), edit a label
+  inline (`ChangeOptionAction`), both undoable.
+- `SourceIndicatorComponent` — provenance chip or tile badge for the five
+  states (`server`, `browser`, `draft`, `share`, `embedded`).
+- `HexEditorComponent` — generic packed-buffer editor, also the read-only live
+  ROM viewer during inspection. `SimulationControlsComponent` is shared by the
+  desktop tool bar and the mobile sim bar; `MinimapComponent` and
+  `FpsCounterComponent` are board overlays.
+
+## Dialogs
+
+`dialogs/` holds the `DialogService` contents (About, Changelog, Close Tab,
+Documentation, Edit Component Details, Export Image, Logout, New Component,
+Open Project, Save Project, Share, Upload), each with its own doc comment. The
+convention throughout: a dialog **collects input only** and closes with a typed
+result or `undefined`, leaving the work to the caller, and dismissing is always
+the safe default.
+
+`DocumentationDialogComponent`, the in-editor documentation viewer, is opened
+only through `DocumentationService.open(pageId?, anchor?)`. Desktop puts an
+`lg-navigation` topic tree beside an `lg-markdown` pane; compact goes fullscreen
+(`DialogConfig.fullscreen` bound to `LayoutService.isCompact`, live across
+flips) and drills down instead. `lg-markdown` handles heading anchors and web
+links itself; the dialog claims only `docs:<page-id>[#anchor]` hrefs
+(`documentation/doc-link.ts`).
+
+The shell hosts two confirm targets: the keyless `<lg-confirm-dialog />` is the
+generic modal confirm, `<lg-confirm-popup key="inline" />` the anchored one —
+callers opt into the popup with `confirm({ key: 'inline', target })`.
+`DiscardChangesService` gates anything that replaces the main project.
+
+## `SaveCoordinatorService`
+
+`save-coordinator.service.ts` — the single entry point for **Save**, shared by
+the title bar, tool bar, mobile top bar and Ctrl+S. `requestSave(project)`
+routes three ways:
+
+- A **never-saved draft** (`type:'project'`, `source:'browser'`, empty id)
+  prompts `SaveProjectDialogComponent` for a name and destination. Local goes to
+  `PersistenceService.saveDraftAsLocal`; server goes to
+  `UploadCoordinatorService` as a `draft-to-server` upload so embedded local
+  components are promoted and linked.
+- A **server document** holding a _promotable_ local custom component goes to
+  `UploadCoordinatorService` as `save-server` — a cloud document may only
+  contain cloud components. An orphan (no `masterTypeId`) cannot be promoted,
+  rides along as an embedded copy, and does not force the dialog.
+- Everything else already persisted goes straight to
+  `PersistenceService.saveProject`.
+
+Closing a dirty tab prompts Save / Discard / Cancel via
+`CloseTabDialogComponent`, whose Save branch runs the same promote-then-save.
+
+Errors are toasted centrally here (already-toasted guard rejections are
+swallowed), so call sites just `void requestSave(project)`. The service lives in
+`ui/` because it orchestrates a dialog; persistence stays UI-free. The promotion
+mechanics behind the two upload detours are
+[`dependencies-and-promotion.md`](dependencies-and-promotion.md).
+
+## `UploadCoordinatorService`
+
+`upload/upload-coordinator.service.ts` — the single entry point for moving
+anything local to the cloud; projects and components share one pipeline. Analyze
+the embedded local dependencies, prompt with `UploadDialogComponent` for
+visibility, upload children before parents (so each later upload resolves its
+already-promoted children through the serialize-time id rewrite), then the
+target. `requestUpload(target)` takes a discriminated `UploadTarget` (`project`,
+`stored-project`, `component`, `draft-to-server`, `save-server`), owns every
+upload toast (the `PersistenceService` primitives are silent), and resolves
+`true` once the target committed so list callers can refresh. A failure stops
+the sequence and leaves everything not yet uploaded untouched, so a retry simply
+re-analyzes.
+
+Reached from the File menu, the Open dialog's per-row cloud button, the
+component-actions Upload button, and `SaveCoordinatorService`. Ordering,
+id-aliasing and the API contract are in
+[`dependencies-and-promotion.md`](dependencies-and-promotion.md).

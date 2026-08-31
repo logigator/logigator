@@ -1,226 +1,109 @@
 # Persistence Layer
 
-The persistence layer turns a live `Project` into stored data and back. It covers
-three storage targets that share the same in-memory model but differ in encoding and
-durability:
+The persistence layer turns a live `Project` into stored data and back. Three
+targets share one encoding — the **native versioned document**:
 
-- **Server API** (`source: 'server'`) — circuits are stored by `logigator-api` as the
-  **native versioned document**, byte-for-byte the thing a `.lgix` export carries. So the
-  cloud target has no codec of its own: it encodes with `CircuitFileService.toDocument`
-  and decodes with `CircuitFileService.decode`, exactly as a local file does (see
-  [Server = the native document over HTTP](#server--the-native-document-over-http)).
-- **Browser local storage** (`source: 'browser'`) — circuits and custom-component
-  library masters persist in **IndexedDB** without a server account, restored on reload
-  via the `/local/:id` route. The stored blob **is the native file format**, so this
-  target reuses the file codec wholesale.
-- **Local files** — save-to-file / load-from-file use a **native, versioned** file
-  format that mirrors the editor's own model (named options; wires chain-encoded as
-  `"x,y:e5s3;…"`; embedded custom-component snapshots). A migration chain
-  upgrades older files — including the legacy `logigator-editor` export — to the current
-  version on load.
+- **Server API** (`source: 'server'`) — `logigator-api` stores the document
+  verbatim in a JSONB column.
+- **Browser storage** (`source: 'browser'`) — projects and custom-component
+  library masters in IndexedDB, restored on reload via `/local/:id`.
+- **Local files** — `.lgix` export/import, plus a permanent read path for the
+  legacy old-editor `.json`.
 
-A file is **never a save target** — only an import source and an export sink. Saving
-always dispatches to the server (API) or the browser (IndexedDB) depending on `source`;
-importing a file converts it into a browser project, and any project can be exported.
+A file is **never a save target** — only an import source and an export sink.
+Saving dispatches to the server or the browser depending on `source`; importing
+a file converts it into a browser project, and any project can be exported.
 
-`PersistenceService` is the facade for all targets: it owns the project lifecycle
-(load → register → set as main → save) and dispatches to two symmetric gateways —
-`ServerPersistenceGateway` (the cloud API) and `BrowserPersistenceGateway`
-(IndexedDB). Moving documents _between_ the targets is `PromotionService`; debug dumps
-are `ProjectDumpService`. `ProjectMetadataStore` holds the per-project bookkeeping
-(name, source, dirty state) that a bare `Project` does not.
+`PersistenceService` is the facade — project lifecycle (load → register → main
+→ save) over two symmetric gateways, `ServerPersistenceGateway` and
+`BrowserPersistenceGateway`. Moving documents _between_ targets is
+`PromotionService`; the bookkeeping a bare `Project` lacks (name, source, dirty,
+cloud version) is `ProjectMetadataStore`.
 
-> All three targets now speak one format. A format bump is therefore one migration plus a
-> coordinated deploy: the API normalizes every write to the newest version, so the editor
-> and the server must agree on what that version is.
+Because every target holds the same bytes, a format bump is one migration plus a
+coordinated deploy: the API normalizes every write to the newest version, so
+editor and server must agree on what that version is.
 
 ## ⚠️ Three `version` axes — do not conflate
 
-Three unrelated version concepts live in this layer:
-
 1. **File-format version** — `CircuitFileV1.version`, `CURRENT_FILE_VERSION`, a
-   migration's `from`/`to`, `detectVersion`. Legacy = `V0`, native current = `V1`
-   (`CURRENT_FILE_VERSION = 1`). This is what the migration chain advances.
-2. **Custom-component master / snapshot version** — `StoredBrowserComponent.version`,
-   `SnapshotDefinition.source.version`, `CustomComponentDefinition.version`. A per-master
-   **content revision counter**, bumped each time a library master is saved and copied
-   into placed snapshots' provenance. **Unrelated to the file-format version.**
-3. **`.lgix` container version** — `LGIX_CONTAINER_VERSION`, the byte-framing of the
-   exported file (magic + version + flags around the gzipped JSON). Bumped only when the
-   framing itself changes; the JSON _inside_ still carries its own file-format version.
-   Only the file export/import boundary sees it. See [`.lgix` container](#lgix-container).
+   migration's `from`/`to`, `detectVersion`. Legacy = `0`, current = `1`. This
+   is what the migration chain advances.
+2. **Custom-component master version** — `StoredBrowserComponent.version`,
+   `SnapshotDefinition.source.version`. A per-master content revision counter,
+   bumped on each master save and copied into placed snapshots' provenance.
+3. **`.lgix` container version** — `LGIX_CONTAINER_VERSION`, the byte framing
+   around the gzipped JSON. Bumped only when the framing changes; the JSON
+   inside still carries its own file-format version.
 
-## Directory Layout
+A fourth counter, the cloud document's optimistic-concurrency `version`, is not
+a format version at all — see
+[Concurrency](#concurrency-is-a-counter-the-server-owns).
 
-The data↔data half of this layer — the document types, their validator, the compact
-codecs and the `.lgix` container — lives in **`@logigator/core`**, which the API and
-the migration tooling share; the editor imports it from `@logigator/core` and keeps
-the live↔data half (snapshotting `Project`, building instances, the Angular
-services). See [Core's share of the layer](#cores-share-of-the-layer).
+## The core boundary
 
-```
-src/app/persistence/
-├── persistence.service.ts        # Facade: load/save dispatch, file import/export, main-slot lifecycle
-├── promotion.service.ts          # Upload-to-cloud: draft/project/component promotion + local-dependency queries
-├── project-metadata.store.ts     # Per-project metadata + dirty tracking (incl. withDirtyGuard)
-├── snapshots.ts                  # Universal snapshot codec (collect/serialize the native body + definitions[])
-├── circuit-builder.ts            # buildProject + instantiateBody — the single body→instances path
-├── load-warnings.ts              # Shared "customs skipped" toast for the load entry points
-├── dump/                         # Debug project dumps (circuit + element ids + undo history)
-│   └── project-dump.service.ts   # build/export/import — debug menu + bug-report payloads
-├── server/                       # Cloud API transport (native documents)
-│   └── server-persistence.gateway.ts # Server transport + metadata + build, returning Projects
-├── browser/                      # Browser-local (IndexedDB) targets
-│   ├── browser-persistence.gateway.ts # Browser transport + codec + metadata + build — the server gateway's sibling
-│   ├── browser-project.types.ts  # StoredBrowserProject / StoredBrowserComponent records + summaries
-│   ├── browser-project.store.ts  # IndexedDB CRUD for saved projects
-│   ├── browser-component.store.ts# IndexedDB CRUD for library masters
-│   └── component-id-map.store.ts # Durable old→new id map written on component promotion
-└── file/                         # Native versioned file format — the Angular adapter
-    └── circuit-file.service.ts   # toJson / decode / deserialize / fromJson (the file codec)
-```
+The data↔data half — document types, codecs, structural validator, migration
+chain and the `.lgix` container — lives in **`@logigator/core`** (`model/`,
+`codecs/`, `format/`), shared with the API and the migration tooling. The editor
+keeps the live↔data half: snapshotting a `Project` (`snapshots.ts`) and building
+PixiJS instances (`circuit-builder.ts`). Boundary rule: **core = data↔data,
+editor = live↔data**.
 
-### Core's share of the layer
+`parseCircuitDocument` is the API's ingest pipeline, not the editor's: the
+editor's load path is deliberately lenient and healing, and it needs live
+instances rather than a body. Two of its policy lines still matter here —
+board-level invariants are **not** checked (that is Repair Wires' job), and
+`strict`, the mode every API write runs in, rejects an illegal option value
+rather than normalizing it.
 
-```
-logigator-core/src/
-├── model/                        # The shapes a document is made of
-│   ├── serialized-circuit.ts     # Native body types (SerializedComponentBody/WireBody) + SnapshotDefinition + helpers
-│   ├── persisted-circuit.types.ts# Version bases: PersistedComponentV0/V1, PersistedCircuitV0/V1
-│   ├── project-element.ts        # The legacy positional element (t/p/q/r/i/o/n/s)
-│   ├── dependencies.ts           # DependencyMapping / DependencySnapshot / EmbeddedDependency
-│   ├── custom-component-definition.model.ts # CustomComponentDefinition (master|snapshot) + summary patch
-│   ├── legacy-anchor.ts          # Legacy body-anchor ↔ pivot conversion
-│   ├── component-type.enum.ts    # BuiltInComponentType + CUSTOM_TYPE_ID_BASE
-│   ├── direction.ts              # Direction (E/S/W/N)
-│   └── wire-direction.enum.ts    # WireDirection (HORIZONTAL/VERTICAL)
-├── codecs/                       # The compact encodings v1 uses
-│   ├── wire-chain.codec.ts       # Persisted wire encoding: chain string with relative heads
-│   ├── position-delta.codec.ts   # Persisted component positions: (type,y,x) sort + deltas
-│   └── persisted-definition.codec.ts # SnapshotDefinition ↔ persisted form (delta components, chain wires)
-└── format/                       # The versioned envelope + the migration chain
-    ├── circuit-file-version.ts   # CURRENT_FILE_VERSION
-    ├── circuit-file.types.ts     # CircuitFileV0/V1 envelopes; CurrentCircuitFile
-    ├── circuit-file.errors.ts    # InvalidFileError, UnsupportedVersionError, CircuitIntegrityError
-    ├── circuit-file-validator.ts # Structural validation of a current-version document
-    ├── circuit-file-migrator.ts  # detectVersion + migrateToCurrent (chain runner + validation)
-    ├── assemble-circuit-file.ts  # body + definitions → document (the write half)
-    ├── parse-circuit-document.ts # the server's ingest pipeline (see below)
-    ├── lgix-container.ts         # .lgix export framing: gzip + magic-byte header (encode/decode)
-    └── migrations/
-        ├── migration.ts          # Migration<TIn,TOut> + MigrationContext
-        ├── v0-to-v1.migration.ts # v0 (legacy) → v1 (meta-backed; reads legacyV0Slots)
-        └── migrations.ts         # MIGRATIONS — the ordered chain
-```
+`MigrationContext` is `{ catalog, log }` — a `type → ComponentMeta` lookup and a
+log sink, both plain functions, which is what lets the chain run anywhere:
+`CircuitFileService` answers from the component registry and logs to
+`LoggingService`, the server from `builtInMeta` into its parse result.
 
-`parseCircuitDocument(input, { mode })` is the API's single ingest entry point —
-migrate → validate → decode → catalog integrity → dependency extraction, returning
-the document, its decoded body and definitions, the dependency edges and derived
-counts to store beside it, plus any warnings. The editor does **not** use it: its
-load path is deliberately lenient and healing, and it needs live instances rather
-than a body. Two policy lines matter to anyone reading the editor side: board-level
-invariants are **not** checked (that is Repair Wires' job), and `strict` — the mode
-every API write runs in — rejects an illegal option value rather than normalizing it.
-
-`MigrationContext` is `{ catalog, log }` — a `type → ComponentMeta` lookup and an
-`info`/`warn` sink, both plain functions. That is what lets the chain run
-anywhere: `CircuitFileService` answers `catalog` from the component registry's
-configs and forwards the sink to `LoggingService`, while the server answers from
-`builtInMeta` and collects the warnings into its parse result.
-
-Everything above is re-exported from `@logigator/core`, so the editor imports it by
-package name and never by path. The split follows the boundary rule **core =
-data↔data, editor = live↔data**: turning a live `Project` into a body (`snapshots.ts`)
-and a body back into PixiJS instances (`circuit-builder.ts`) stays here.
-
-The shared IndexedDB connection wrapper lives in `src/app/storage/indexed-db-store.ts`;
-custom-component **library** lifecycle (startup preloads, alias hydration, logout
-teardown, orphan restore) lives in
-`src/app/custom-component/component-library.service.ts` (see
-[`dependencies-and-promotion.md`](dependencies-and-promotion.md)).
+Custom-component **library** lifecycle (preloads, alias hydration, logout
+teardown, orphan restore) is `custom-component/component-library.service.ts`;
+see [`dependencies-and-promotion.md`](dependencies-and-promotion.md).
 
 ---
 
 ## Core Concepts
 
-### The versioned type hierarchy
+### Why the compact encodings
 
-Each file-format version has a shared **payload base** (`persisted-circuit.types.ts`);
-concrete transport **envelopes** add their own framing in their target folder:
+Repeated JSON structure is free after gzip; what gzip cannot remove is the
+entropy of absolute coordinates. Both persisted encodings therefore sort
+elements spatially and store positions relative to the previous element — ~3–4×
+smaller gzipped per section. Wires become one SVG-path-style chain string
+(`wire-chain.codec.ts`); components sort by (type, y, x) with delta positions
+(`position-delta.codec.ts`). The in-memory wire model stays canonical
+(`WireDirection` H/V, positive length, `pos` at the west/north endpoint) no
+matter which end the chain walk entered from, and decoding normalizes back.
 
-```
-── V0 (legacy positional; "v0 of the file format") ──
-PersistedComponentV0  = ProjectElement (t/p/q/r/i/o/n/s)    // components + wires intermixed
-PersistedCircuitV0    = { elements?: PersistedComponentV0[] }
-  └── CircuitFileV0   extends PersistedCircuitV0 → { project: { name, elements }, dependencies? }
-                        (legacy old-editor file import, and the shape the Phase 6 database
-                         migration assembles from a legacy row plus its dependency relations)
+Both encoders reorder elements, so the document's element order is the
+**emission order**. `toDocument()` returns it as `wireOrder`/`componentOrder`
+for consumers aligning per-element data with the document
+(`ProjectDump.wireIds`/`componentIds`). Embedded definitions get the same
+treatment via `persisted-definition.codec.ts`, without order bookkeeping.
 
-── V1 (native current; named options, split components/wires) ──
-PersistedComponentV1           = SerializedComponentBody   // { type, pos, direction?, options } — pos delta-encoded, direction omitted when East
-PersistedWiresV1               = string                    // chain-encoded: "x,y:e5s3;x,y:n2"
-PersistedSnapshotDefinitionV1  = SnapshotDefinition with delta components + chain wires
-PersistedCircuitV1    = { components: PersistedComponentV1[]; wires: PersistedWiresV1; definitions: PersistedSnapshotDefinitionV1[] }
-  └── CircuitFileV1   extends PersistedCircuitV1 → { version: 1, name }   (file, browser store and the API all hold this verbatim)
-```
+### Legacy v0 is read-only
 
-**Why deltas everywhere:** repeated JSON structure is free after gzip; what gzip cannot
-remove is the entropy of absolute coordinates. Both persisted encodings therefore sort
-elements spatially and store positions relative to the previous element, turning
-coordinates into small, repeating deltas (measured on real circuits: ~3–4× smaller
-gzipped per section than absolute positions).
-
-**Wire chain encoding** (`wire-chain.codec.ts`) — wires persist as one SVG-path-style
-string: each `;`-separated chunk starts at a head point (`x,y:` — itself a delta
-against the previous chunk's head, the first relative to the origin), then every
-segment is one wire leaving the current point (`e`/`s`/`w`/`n` + length; segments abut
-with no separator — the next letter ends the number), whose far endpoint becomes the
-next segment's start. The encoder is a greedy walk over an adjacency map keyed `"x,y"`
-with every wire indexed under **both** endpoints, starting chunks in (y, x) order of
-the canonical start; `w`/`n` mean the walk entered a wire from its far end — the
-in-memory model stays canonical (`WireDirection` H/V, positive length, `pos` at the
-west/north endpoint) and decoding normalizes back.
-
-**Component position deltas** (`position-delta.codec.ts`) — persisted components are
-sorted by (type, y, x) and each `pos` is stored relative to the previous component's
-absolute position. Decoding restores absolutes in document order.
-
-Both encoders reorder elements, so the document's element order is the **emission
-order**; `toDocument()` returns it (`wireOrder`/`componentOrder`) for consumers that
-align per-element data with the document (`ProjectDump.wireIds`/`componentIds`).
-Embedded definitions get the same treatment via `persisted-definition.codec.ts` (their
-internal order has no consumers, so no order bookkeeping).
-
-`PersistedCircuitV1` is the named **transport payload** (body + `definitions[]`) shared
-by the file and browser targets — it makes "the browser store reuses the file format" an
-explicit contract. V0's circuit is an intermixed positional element array; that
-internal-shape difference from V1 is normal across versions.
-
-### One encoding, three targets
-
-All three targets produce and consume the **native v1 document**, so all three share
-`CircuitFileService` end to end. The legacy positional shape survives on the read side
-only, as file-format v0:
-
-|           | Legacy v0 (`ProjectElement`)                                   | Native v1 (`CircuitFileV1`)                                         |
-| --------- | -------------------------------------------------------------- | ------------------------------------------------------------------- |
-| Used by   | Old-editor file import (read only)                             | The cloud API, browser storage **and** save/load-to-file            |
-| Component | `{ t, p, i?, o?, r?, n?[], s? }` — options packed positionally | `{ type, pos, direction?, options }` — options keyed by config name |
-| Wire      | `{ t: 0, p, q }` — endpoints                                   | chain string (`"x,y:e5s3;…"`)                                       |
-| Customs   | revived from `components[]` / `dependencies[]`                 | embedded as `definitions[]` snapshots                               |
-| Decode    | `v0ToV1` migration                                             | `CircuitFileService`                                                |
-| Encode    | — nothing writes v0 any more                                   | `CircuitFileService` + `snapshots.ts`                               |
+`CircuitFileV0` (the intermixed positional `ProjectElement[]`), the `v0ToV1`
+migration and the `legacyV0Slots` descriptors decode an old-editor `.json`
+export — supported indefinitely — and are what the Phase 6 database migration
+reads the legacy backend's stored blobs with. Nothing writes v0.
 
 ### Name lives in metadata, not on `Project`
 
-A `Project` has no `name`. The display name is held in `ProjectMetadataStore`. Export
-reads it from there; import writes it back. Code must never reach for `project.name`.
+A `Project` has no `name`. The display name is held in `ProjectMetadataStore`.
+Export reads it from there; import writes it back. Code must never reach for
+`project.name`.
 
 ### Clean-on-load
 
-`Project.addComponent`/`addWire` do **not** push to the `ActionManager`, so a project
-built by load/import starts non-dirty even though it was just populated. Dirty tracking
-begins once the user performs an undoable action (see `ProjectMetadataStore`).
+`Project.addComponent`/`addWire` do **not** push to the `ActionManager`, so a
+project built by load or import starts non-dirty even though it was just
+populated. Dirty tracking begins at the user's first undoable action.
 
 ---
 
@@ -228,218 +111,165 @@ begins once the user performs an undoable action (see `ProjectMetadataStore`).
 
 **Folder:** `persistence/server/` — one file, `server-persistence.gateway.ts`.
 
-`logigator-api` stores the **native versioned document**, so the cloud target has no
-codec of its own: a read hands the gateway a `CurrentCircuitFile` and it calls
-`CircuitFileService.decode`; a write calls `CircuitFileService.toDocument` and puts the
-result in the request body. The same encoder writes a `.lgix` export, an IndexedDB blob
-and a cloud save, so a circuit cannot mean one thing in one target and something else in
-another.
-
-The gateway is still the seam it always was — transport plus metadata plus instance
-build, returning `Project`s — but what it owns now is the _conversation_, not a format.
+The cloud target has no codec of its own: a read hands the gateway a
+`CurrentCircuitFile` and it calls `CircuitFileService.decode`; a write calls
+`CircuitFileService.toDocument`. The gateway owns the _conversation_ —
+transport, metadata, instance build — not a format. So a cloud save and a
+`.lgix` export produce identical documents.
 
 ### Concurrency is a counter the server owns
 
-Every stored circuit carries an integer `version`. A read hands one back (kept in
-`ProjectMetadata.version`), a save presents it, and the server's `UPDATE` carries it in
-the `WHERE`, so a write that lost the race matches no row and answers `409` with
-`code: 'version_conflict'` rather than being merged. The gateway adopts the version the
-response returns; the editor never invents one.
+Every stored circuit carries an integer `version`. A read hands one back (kept
+in `ProjectMetadata.version`), a save presents it, and the server's `UPDATE`
+carries it in the `WHERE`, so a write that lost the race matches no row and
+answers `409` with `code: 'version_conflict'` rather than being merged. The
+gateway adopts the version the response returns; the editor never invents one.
 
-Two consequences worth knowing:
+A counter rather than a hash of the stored bytes, precisely because a format
+bump rewrites every stored document and must not read as a conflict. Metadata
+edits bump it too: a rename (and a component's symbol or description) is content
+the server stamps, so those `PATCH`es answer with a version to adopt. Visibility
+and a regenerated share link do not bump it.
 
-- **Metadata edits bump it too.** A rename (and, for a component, a symbol or description
-  change) is content the server stamps, so `renameProject` and `updateComponentDetails`
-  adopt the version their `PATCH` answers with. Visibility and a regenerated share link
-  do not bump it.
-- **A re-encode is not a conflict.** The counter replaces the legacy MD5 `oldHash`
-  handshake for exactly this reason: a format bump rewrites every stored document, which
-  would change every hash, but leaves the counter alone.
+### What the server owns, not the client
 
-### One round trip to create
+A create carries its document, so promoting a draft, uploading a stored local
+project and promoting a library master are each **one** `POST` — no
+create-then-save with an unwind path for the half that failed. An absent
+document _is_ an empty board server-side.
 
-A create carries its document, so promoting a draft, uploading a stored local project and
-promoting a library master are each **one** `POST` — where the legacy API needed a create
-followed by a save into it, with an unwind path for the half that failed. Creating an
-empty cloud project or component sends no document at all: an absent one _is_ an empty
-board server-side.
-
-### The server derives what it can see
-
-A component's port surface (`numInputs`/`numOutputs`/`labels`) is not sent. The INPUT and
-OUTPUT plugs placed in the circuit are what a component's ports _are_, so anything a
-client declared about them could only ever disagree with the document beside it — and it
-is the placed instances elsewhere that would render wrong. The same rule takes the
-document's `name` from the row and strips the client-asserted attribution chain.
-
-**Fork lineage** therefore has no request field: the chain rides inside the uploaded
-document (`CircuitFileService.toDocument(project, name, attribution)`), the server reads
-its last entry — the immediate parent, since the chain is root-first — checks it against
-its own rows, and stores it as the fork key it answers every future lineage query from.
-A tampered chain can lose attribution; it cannot forge it.
+A component's port surface (`numInputs`/`numOutputs`/`labels`) is not sent: the
+INPUT and OUTPUT plugs placed in the circuit are what its ports _are_, so a
+client's declaration could only disagree with the document beside it. The same
+rule takes the document's `name` from the row and strips the client-asserted
+attribution chain. **Fork lineage** therefore has no request field: the chain
+rides inside the uploaded document, and the server checks its last entry (the
+immediate parent — the chain is root-first) against its own rows. A tampered
+chain can lose attribution; it cannot forge it.
 
 ### Errors are codes, not statuses
 
-Every failure comes back as `{ code, message, details? }`. `ApiBaseService` turns it into
-an `ApiRequestError` and the save path branches on `code`: `unauthorized` flips the editor
-to signed-out (the server session expired underneath a still-true auth cookie),
-`version_conflict` asks the user to reload, and anything else — including the
-`invalid_document` a rejected circuit produces — surfaces the server's own message.
-Responses are validated against their `@logigator/contract` schema on the way in, so a
-shape mismatch is a named boundary failure rather than an `undefined` surfacing deep
-inside the decode.
+Failures come back as `{ code, message, details? }`, which `ApiBaseService`
+turns into an `ApiRequestError`. The save path branches on `code`:
+`unauthorized` flips the editor to signed-out (the session expired under a
+still-true auth cookie), `version_conflict` asks the user to reload, anything
+else surfaces the server's own message. Responses are validated against their
+`@logigator/contract` schema on the way in, so a shape mismatch is a named
+boundary failure, not an `undefined` deep inside the decode.
 
-### The library listing is paged
-
-`GET /api/components` is paginated and capped, so `preloadServerMasters` walks pages
-until it has the whole library. None of those requests carries a circuit: a master's body
-is fetched lazily on first placement or edit-open, and cached per session
-(`_masterCircuitCache`, invalidated by a save so a reopen re-reads the saved state).
-
-### What the legacy format is still for
-
-`CircuitFileV0`, the `v0ToV1` migration and the `legacyV0Slots` descriptors stay, and are
-**read-only**: they decode an old-editor `.json` export, which is supported indefinitely,
-and they are what the Phase 6 database migration reads the legacy backend's stored blobs
-with. Nothing writes v0 any more.
+`GET /api/components` is paged and capped, so `preloadServerMasters` walks until
+it has the whole library. None of those requests carries a circuit: a master's
+body is fetched lazily on first placement or edit-open and cached per session
+(`_masterCircuitCache`, invalidated by a save). The cache holds the clean
+persisted body, never the live working copy, so discarded edits are not
+resurrected on reopen.
 
 ### `legacyV0Slots` descriptor
 
-Each built-in `ComponentConfig` carries a declarative `legacyV0Slots` mapping its named
-options to the legacy positional slots — the single source of truth for the decode,
-and the reason a legacy circuit's options land under their v1-era names:
+Each built-in's `ComponentMeta` maps its named options to the legacy positional
+slots — the single source of truth for the v0 decode, e.g. the ROM's
+`{ s: 'data', n: ['wordSize', 'addressSize'] }`. `i`/`o` and `s` each name one
+option; `n: [...]` names the options consuming `element.n[0]`, `n[1]`, … in
+**declaration order**, the one place a transposition would corrupt data (pinned
+by a per-config test). `r` never needs an entry — it always carries the
+first-class `direction`. Unlisted options take their default, and even an empty
+descriptor matters: its presence marks the type as existing in v0.
 
-```ts
-// rom.config.ts — `s` carries the ROM contents (base64 bit-packed blob)
-legacyV0Slots: { s: 'data', n: ['wordSize', 'addressSize'] }
-// input.config.ts
-legacyV0Slots: { s: 'label', n: ['index'] }
-```
-
-- `i` / `o` — option populated from `element.i` / `o`. `r` never needs an entry:
-  it always carries the first-class `direction`, decoded into the body's own
-  `direction` field. An empty descriptor
-  (`legacyV0Slots: {}`) still matters — its presence marks the type as existing
-  in the v0 format.
-- `n: [...]` — options consuming `element.n[0]`, `n[1]`, … in **declaration order** (the
-  one place an `n[]` transposition would corrupt data — pinned by a per-config test).
-- `s` — the single option consuming `element.s`.
-- Options not listed take their default on decode.
-
-> **Frozen.** `legacyV0Slots` describes the _immutable_ legacy format and names **v1-era
-> option keys**. If a live option is later renamed, do **not** edit the descriptor — add a
-> `v1→v2` migration instead.
+> **Frozen.** The descriptor describes the _immutable_ legacy format but names
+> **v1-era option keys**. If a live option is renamed, do **not** edit the
+> descriptor — add a `v1→v2` migration instead.
 
 ### Legacy-anchor conversion (`legacy-anchor.ts` in core)
 
-The old editor anchors a component by its body's **top-left corner**, held fixed across
-rotation; editor-v2 anchors by the **rotation pivot** (body drawn from the local origin,
-rotated around `position`). The two coincide only for `Direction.E`, so a rotated
-component's `p` must be re-anchored when crossing the v0 boundary, or it lands offset.
-
-`legacy-anchor.ts` is the single source of truth for that conversion:
-
-- **Decode** (`v0ToV1` migration) — `legacyAnchorToPivot(p, direction, w, h)` shifts the
-  legacy top-left to the v2 pivot. `w` comes from the frozen `LEGACY_BODY_WIDTHS` map
-  (per-type `bodyGridWidth`, so no render object is instantiated); `h = legacyBodyHeight(i, o)`.
-- **`pivotToLegacyAnchor`** reverses it. Nothing in the editor writes v0 any more, so it
-  is there for the Phase 6 database migration and for anything else that has to hand a
-  circuit back to the old editor's coordinate convention.
-
-Customs (`t ≥ CUSTOM_TYPE_ID_BASE`) keep `p` verbatim — re-anchoring rotated customs is a
-deferred follow-up (their `bodyGridWidth` isn't in the frozen map).
+The old editor anchors a component by its body's **top-left corner**, held fixed
+across rotation; this editor anchors by the **rotation pivot**. The two coincide
+only for `Direction.E`, so a rotated component's `p` must be re-anchored when
+crossing the v0 boundary or it lands offset. `legacyAnchorToPivot` decodes,
+taking its width from the frozen `LEGACY_BODY_WIDTHS` map so no render object is
+instantiated; `pivotToLegacyAnchor` reverses it for the Phase 6 database
+migration. Customs (`t ≥ CUSTOM_TYPE_ID_BASE`) are absent from that map, so
+`legacyCustomBodySize` supplies their extent instead — the frozen
+`CUSTOM_BODY_GRID_WIDTH` by the port span. The migration threads a file-local
+id → port-count map through, so nested customs re-anchor too.
 
 ---
 
 ## File Format & Migrations (`persistence/file/`)
 
-### Versioned, frozen types
+`CircuitFileV1` extends the shared payload `PersistedCircuitV1` (`components`,
+`wires`, `definitions[]`) with `version: 1`, `name` and an optional
+`attribution` chain.
 
-`circuit-file.types.ts` defines the envelopes; the current version is
-`CURRENT_FILE_VERSION = 1`:
-
-```ts
-interface CircuitFileV1 extends PersistedCircuitV1 {
-  version: 1;
-  name: string;
-  // from PersistedCircuitV1: components, wires, definitions[]
-}
-```
-
-Rules that keep the format maintainable:
-
-- **Frozen per version.** These types intentionally do **not** alias the live
-  `api/models` DTOs (which track the changing legacy API). A new version adds a new
-  `CircuitFileV<N>` interface + migration and re-points `CurrentCircuitFile`; older
-  `CircuitFileV<N>` types are never edited, so shipped files keep their meaning.
-- **No instance `id`.** Files store no element ids; fresh ids are allocated on load
-  (`Component.deserialize`/`Wire.deserialize` set an `id` only when one is passed — undo/
-  redo passes one to preserve identity, file load omits it).
-- **Self-contained.** A file embeds a frozen snapshot of every custom component it
-  transitively uses in `definitions[]` (see [Snapshot codec](#snapshot--custom-component-codec)).
+- **Frozen per version.** These types deliberately alias no live API DTO. A new
+  version adds a new `CircuitFileV<N>` + migration and re-points
+  `CurrentCircuitFile`; older interfaces are never edited, so shipped files keep
+  their meaning.
+- **No instance `id`.** Files store no element ids; fresh ones are allocated on
+  load. (`Component.deserialize`/`Wire.deserialize` take an `id` only when
+  passed one — undo/redo does, to preserve identity.)
+- **Self-contained.** A file embeds a frozen snapshot of every custom it
+  transitively uses (see [Snapshot codec](#snapshot--custom-component-codec)).
 
 ### Migration chain
 
-`circuit-file-migrator.ts` runs the chain:
+`detectVersion` treats a missing or non-integer `version` field as `0` (legacy)
+and a non-object as `InvalidFileError`. `migrateToCurrent` refuses anything
+newer than supported, then walks `MIGRATIONS` — each entry advances to the
+**next** version, never straight to newest — and ends in
+`validateCurrentCircuitFile`, the single structural pass over the current shape.
+Downstream code therefore indexes into the document without shape checks, and
+everything structurally wrong fails uniformly as `InvalidFileError`. The
+validator keeps the decode tolerances: absent sections, unchecked `name`,
+element-wise negation sanitizing, unvalidated option _values_.
 
-| Function                      | Behavior                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `detectVersion(data)`         | Integer `version` field → that number; missing/non-integer → `0` (legacy); non-object → `InvalidFileError`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| `migrateToCurrent(data, ctx)` | Newer-than-supported → `UnsupportedVersionError`. Otherwise walk `MIGRATIONS`, applying the entry whose `from` matches the current version until `CURRENT_FILE_VERSION`. Each entry advances to the **next** version, never straight to newest. Ends in `validateCurrentCircuitFile` (`circuit-file-validator.ts`) — the single structural pass over the current-version shape (body elements, wires string, definitions incl. their inner bodies), so downstream code indexes into the document without shape checks and everything structurally wrong fails uniformly as `InvalidFileError`. The validator keeps the decode tolerances: absent sections, unchecked `name`, element-wise negation sanitizing, unvalidated option _values_. |
+**Migration rule:** a migration _may_ read catalog data (option schemas,
+`legacyV0Slots`) and log through its `MigrationContext`, but must **not**
+instantiate render objects. Decoding legacy positional slots into named options
+is the only reason `catalog` is in the context; native version→version
+migrations are pure data transforms and ignore it.
 
-`MIGRATIONS` (`migrations/migrations.ts`) is the ordered list; `v0ToV1` is the only entry
-today, with future native `v1→v2…` steps appended.
+`v0ToV1` is the only entry today. It splits `elements` into chain-encoded wires
+(`t === 0`) and named-option bodies, drops with a warning any element whose type
+is unknown or has no descriptor, and revives both sub-circuit sources into
+`definitions[]` — the old file's inline `components` array and the legacy
+transport's embedded snapshots — so the result is indistinguishable from a
+native load.
 
-**Migration rule:** a migration _may_ read a type's catalog data (option schemas,
-`legacyV0Slots`) and report progress via its `MigrationContext` (`{ catalog, log }`),
-but must **not** instantiate render objects. Decoding legacy positional slots into named
-options needs the option schemas and the slot map — that is the only reason `catalog` is
-in the context. Native version→version migrations are pure data transforms and ignore it.
-
-### `v0-to-v1.migration.ts`
-
-The permanent v0→v1 decode — the read path for an old-editor `.json` export, and what
-the Phase 6 database migration runs the legacy backend's stored blobs through:
-
-- Validates the envelope (`project.elements` is an array) → else `InvalidFileError`.
-- Splits `elements`: `t === WIRE_TYPE_ID (0)` → wire bodies, chain-encoded into the v1
-  `wires` string; everything else → a named-option component body via the config's
-  `legacyV0Slots` descriptor.
-- Drops any element whose type is **unknown or has no `legacyV0Slots`** descriptor (with a
-  warning), consistent with the editor's silent-drop behavior.
-- Revives both sub-circuit-definition sources into `definitions[]`: the old-editor
-  _file_'s inline `components` array (`decodeLegacyComponents`) and the server
-  transport's additive embedded snapshots (`decodeDependencies`). Either way the
-  migrated document is self-contained and indistinguishable from a native file load.
+`assembleCircuitFile` is the write half: body + definitions → document.
 
 ### `CircuitFileService`
 
-**File:** `persistence/file/circuit-file.service.ts`
+The native-format codec, a thin adapter over `snapshots.ts`: encoding embeds a
+frozen snapshot of every custom the project uses and rewrites the body to
+file-local type ids; decoding ingests those snapshots and remaps back to session
+ids. It touches neither metadata nor the active-project lifecycle.
 
-The native-format codec. A thin adapter over the universal snapshot codec
-(`snapshots.ts`): encoding embeds a frozen snapshot of every custom the project uses and
-rewrites the body to file-local type ids; decoding ingests those snapshots into the
-registry and remaps back to session ids. It does not touch metadata or the
-active-project lifecycle.
+| Method                          | Notes                                                           |
+| ------------------------------- | --------------------------------------------------------------- |
+| `toDocument(project, name, …?)` | The encoder. Returns `{ file, wireOrder, componentOrder }`.     |
+| `toJson(…)`                     | `toDocument` stringified.                                       |
+| `decode(data)`                  | Migrate + `deserialize`. Shared by file reads and server reads. |
+| `deserialize(file)`             | Validated document → instances + `skippedCustom`.               |
+| `fromJson(content)`             | `JSON.parse` (malformed → `InvalidFileError`) then `decode`.    |
+| `decodeToBody(FromData)`        | Migrate + ingest → body, **no PixiJS instances**. Preload path. |
 
-| Method                  | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `toJson(project, name)` | Encodes to a **current-version** JSON string: `collectSnapshots` + `serializeProjectBody`, then `remapComponentTypes` to file-local ids. Builds the v1 shape explicitly (not via `Component.serialize`).                                                                                                                                                                                                                                                                                                                                                      |
-| `decode(data)`          | Object-level entry: `migrateToCurrent` + `deserialize` → `{ name, components, wires, skippedCustom }`. **Shared by file reads (`fromJson`) and server reads** (`server.toCircuitFileV0(detail)` wraps the API response).                                                                                                                                                                                                                                                                                                                                      |
-| `deserialize(file)`     | Current, validated document → `{ components, wires, skippedCustom }`: the shared file→session-body remap (`_toSessionBody`: ingests `definitions[]`, remaps file-local → session ids, never falls a custom id through to its own value) + the shared instance builder (`circuit-builder.instantiateBody`, which also sanitizes negation arrays). Unknown types drop with a warning; a custom with a missing snapshot drops and is **counted** — the codec owns no UI, so the load entry points surface the count via `load-warnings.ts`. Fresh ids allocated. |
-| `fromJson(content)`     | Convenience: `JSON.parse` (malformed → `InvalidFileError`) then `decode`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+The load-side invariant lives in `_toSessionBody`: a custom-range type id
+resolves **only** through the snapshot remap, never falling through to its own
+value. File-local and session custom ids both count up from
+`CUSTOM_TYPE_ID_BASE`, so a missing snapshot would otherwise alias an unrelated
+session type. Such elements drop and are **counted** — the codec owns no UI, so
+the load entry points surface the count via `load-warnings.ts`.
 
-### Error types
-
-`circuit-file.errors.ts`: `InvalidFileError` (malformed JSON, invalid element, or an
-unrecognizable envelope) and `UnsupportedVersionError` (file version newer than this
-build supports). Both follow the `AuthRequiredError` convention (set `.name`).
+`circuit-file.errors.ts` holds `InvalidFileError` (malformed JSON or an
+unrecognizable envelope), `CircuitIntegrityError` (parses, but names something
+the catalog lacks or an out-of-range value; `strict` parsing only) and
+`UnsupportedVersionError`.
 
 ### `.lgix` container
 
 **File:** `logigator-core/src/format/lgix-container.ts`
 
-Exported files are **not** raw JSON. `CircuitFileService.toJson` output is wrapped in a
+Exported files are not raw JSON. The `toJson` output is wrapped in a
 gzip-compressed, magic-byte-framed binary container written to `<name>.lgix`:
 
 ```
@@ -449,30 +279,23 @@ offset 5   flags                 1 byte    bit0..: compression algorithm (0 = gz
 offset 6   gzip(utf8(json))      …         the CircuitFileService JSON string
 ```
 
-- **Compression.** gzip via the platform `CompressionStream`/`DecompressionStream` — no
-  dependency, and (unlike `crypto.subtle`) **not** secure-context-gated, so it works on
-  plain-http LAN dev hosts too. A circuit's repeated option keys and embedded definitions
-  compress heavily.
-- **Integrity is corruption-detection only.** The magic + version + flags validate the
-  header; gzip's own CRC32 trailer makes `decodeLgix` reject a corrupted or truncated
-  payload (the decompression stream errors → `InvalidFileError`). There is **no keyed
-  check** — a client-only SPA ships its own verification logic and key, so nothing in the
-  format resists a determined forger. This is deliberate: the format is tamper-_evident_,
-  not tamper-_proof_.
-- **Share re-import defense lives in the UI, not the format.** Because the check can't be
-  cryptographically enforced client-side, the effective control is policy:
-  `EditorMenuService` hides **Export to File** for read-only `source:'share'` documents,
-  and `PersistenceService.exportProjectToFile` throws for them as defense-in-depth. A
-  borrowed share therefore never reaches the export path.
-- **Import accepts both `.lgix` and plain `.json`.** `importProjectFromFile` reads the
-  file as an `ArrayBuffer` and branches on the `LGIX` magic: a match is
-  `decodeLgix`-unwrapped, anything else is decoded as UTF-8 JSON — which keeps the
-  **permanent** legacy `logigator-editor` `.json` import working. Both paths converge on
-  `importProjectFromJson`.
+- **Compression** is the platform `CompressionStream`/`DecompressionStream` — no
+  dependency, and (unlike `crypto.subtle`) **not** secure-context-gated, so it
+  works on plain-http LAN dev hosts.
+- **Integrity is corruption detection only.** Header fields validate the framing
+  and gzip's CRC32 trailer makes `decodeLgix` reject a corrupted or truncated
+  payload. There is **no keyed check**: a client-only SPA ships its own
+  verification logic and key, so nothing resists a determined forger.
+- **Share re-import defense lives in the UI, not the format.** Since the check
+  cannot be enforced client-side, the control is policy: `EditorMenuService`
+  hides Export to File for read-only `source:'share'` documents and
+  `exportProjectToFile` throws for them as defense in depth.
+- **Import accepts both `.lgix` and plain `.json`**, branching on the magic, so
+  the permanent legacy `.json` import keeps working.
 
-Only the file export/import boundary uses the container: gzip is a transport concern.
-The browser IndexedDB store holds the plain `toJson` string, and the API stores the same
-document as JSON in a column the database compresses at rest.
+Only the file boundary uses the container: gzip is a transport concern. The
+IndexedDB store holds the plain `toJson` string, and the API stores the same
+document in a column the database compresses at rest.
 
 ---
 
@@ -480,71 +303,47 @@ document as JSON in a column the database compresses at rest.
 
 **Files:** `serialized-circuit.ts` (core), `persistence/snapshots.ts`
 
-The native document is self-contained: it embeds a frozen snapshot of every custom
-component it (transitively) uses, so it can be loaded with no library present.
+The native document is self-contained: it embeds a frozen snapshot of every
+custom component it transitively uses, so it loads with no library present.
 
-- **`serialized-circuit.ts`** — the native body types and pure helpers, with **no
-  imports** so both the component layer (a definition's `circuit`) and the persistence
-  layer can use them without an import cycle:
-  - `SerializedComponentBody` `{ type, pos, direction?, options }`, `SerializedWireBody`
-    `{ pos, direction, length }`, `SerializedCircuitBody` `{ components, wires }`.
-    These are the **in-memory** shapes; on write, `wire-chain.codec.ts` folds the wire
-    objects into the persisted chain string and `position-delta.codec.ts` delta-encodes
-    the component positions (both unfold on read).
-  - `SnapshotDefinition extends SerializedCircuitBody` — a frozen custom: a **file-local**
-    `type` id, `source?: { id, version, origin? }` provenance (id + the axis-2 master
-    version + the master's library origin), and the display fields (`name`, `symbol`,
-    `numInputs`, …).
-  - `cloneComponentBody` / `cloneCircuit` (deep copy) and `remapComponentTypes`
-    (translate `type` ids through a map; ids absent from the map pass through).
-- **`snapshots.ts`** — the universal codec, owning _which_ customs a document embeds and
-  the session ↔ file-local type-id remap (but not a byte layout — each target encodes the
-  body its own way): `serializeProjectBody` and the `collectSnapshots` /
-  `CustomComponentRegistry.ingestSnapshots` round-trip.
+`serialized-circuit.ts` has **no imports**, so both the component layer (a
+definition's `circuit`) and the persistence layer can use it without an import
+cycle. It holds the in-memory body shapes, `SnapshotDefinition` (a frozen
+custom: a **file-local** `type` id, `source?: { id, version, origin? }`
+provenance, display fields) and pure helpers. `snapshots.ts` owns _which_
+customs a document embeds and the session ↔ file-local type-id remap — not a
+byte layout, since each target encodes the body its own way.
 
-The transitive-closure walk, file-local numbering, provenance (`source.id`/`version`/
-`origin`) resolution, nesting/recursion, and how every transport carries these snapshots
-are documented in
-**[`dependencies-and-promotion.md`](dependencies-and-promotion.md)** (the single
-reference for the dependency/promotion system).
+The transitive-closure walk, file-local numbering, provenance resolution,
+nesting/recursion and how every transport carries these snapshots are in
+**[`dependencies-and-promotion.md`](dependencies-and-promotion.md)**.
 
-The `SerializedComponent`/`SerializedWire` snapshot used by **undo/redo** is a separate
-in-memory shape, not a persistence format.
+`SerializedComponent`/`SerializedWire` (undo/redo) are a separate in-memory
+shape, not a persistence format.
 
 ---
 
 ## Browser Storage (`persistence/browser/`)
 
-Two IndexedDB object stores in one database (`logigator-editor`), opened through a shared
-connection in `indexed-db-store.ts` (`IndexedDbStore<T>` is a thin promise wrapper; the
-DB version is bumped only to **create** stores, never to migrate records — record upgrades
-ride the file migration chain on load):
+Two object stores in one IndexedDB database (`logigator-editor`), opened through
+the shared connection in `storage/indexed-db-store.ts`: `projects`
+(`BrowserProjectStore`) and `components` — library **masters** —
+(`BrowserComponentStore`). A third, `componentIdMap`, holds the durable old→new
+id map written on component promotion.
 
-- **`projects`** — saved projects, via `BrowserProjectStore`.
-- **`components`** — custom-component **library masters**, via `BrowserComponentStore`.
-
-Each store owns id generation, timestamps, and `createdOn` preservation, so
-`PersistenceService` only deals with `{ name/…, content }` — mirroring how it drives
-`ProjectApiService` for the server target. The stores know nothing about `Project`,
-metadata, or encoding; the **store is the discriminator** (no `type` field).
-
-In both records, **`content` is a `CircuitFileService.toJson` string** — the native
-versioned format (body + embedded `definitions[]`). This is the crux of the design: an
-import is just "decode the file, then browser-save the re-encoded blob," every stored
-document is self-contained, and the migration chain upgrades stored circuits on load for
-free. Summary columns (`name`; for masters also `symbol`/`numInputs`/`labels`/…) are
-duplicated out of `content` so listing does not parse every blob.
-
-| Store                   | Record                   | Save params                                                                           |
-| ----------------------- | ------------------------ | ------------------------------------------------------------------------------------- |
-| `BrowserProjectStore`   | `StoredBrowserProject`   | `{ id?, name, content }`                                                              |
-| `BrowserComponentStore` | `StoredBrowserComponent` | `{ id?, version, name, symbol, description, numInputs, numOutputs, labels, content }` |
-
-Both expose `save` (upsert: no `id` → generate + stamp `createdOn`; existing `id` →
-preserve it; always set `lastEdited`), `get(id)`, `list()` (summaries, newest first), and
-`delete(id)`. Ids are RFC-4122 v4 from the `uuid` package (`v4`), avoiding
-`crypto.randomUUID` which is restricted to secure contexts and unavailable on plain-http
-dev hosts.
+- The DB version is bumped only to **create** stores, never to migrate records:
+  record upgrades ride the file migration chain on load.
+- In both records **`content` is a `CircuitFileService.toJson` string**. This is
+  the crux: an import is just "decode the file, then browser-save the re-encoded
+  blob", every stored document is self-contained, and stored circuits get the
+  migration chain for free. Summary columns (`name`, and for masters
+  `symbol`/`numInputs`/`labels`/…) are duplicated out of `content` so listing
+  does not parse every blob.
+- The **store is the discriminator** — no `type` field. Each store owns id
+  generation, timestamps and `createdOn` preservation, so callers deal only in
+  `{ name/…, content }`.
+- Ids are RFC-4122 v4 from the `uuid` package, not `crypto.randomUUID`, which is
+  restricted to secure contexts and unavailable on plain-http dev hosts.
 
 ---
 
@@ -552,30 +351,37 @@ dev hosts.
 
 **File:** `persistence/persistence.service.ts`
 
-Root-provided singleton; the facade for loading and saving. The four load-as-main entry
-points share one `_loadAsMain` skeleton: one race token discards stale async loads (they
-all fill the single main slot, so starting any of them abandons a still-pending load of
-the others), a stale result is disposed, and a failure toasts + falls back to a blank
-draft. `_saveInFlight`
-deduplicates concurrent saves. The per-target work lives in the two gateways
-(`ServerPersistenceGateway`, `BrowserPersistenceGateway`); the facade dispatches on
-metadata `source`/`type`.
+The load-as-main entry points share one `_loadAsMain` skeleton: a single race
+token discards stale async loads (they all fill the one main slot, so starting
+any abandons a pending load of the others), a stale result is disposed, and a
+failure toasts and falls back to a blank draft. `_saveInFlight` deduplicates
+concurrent saves. Per-target work lives in the two gateways; the facade
+dispatches on metadata `source`/`type`.
 
-| Method                                                                   | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `loadProject(uuid)` / `loadProjectAsMain(uuid)`                          | GET from API → `circuitFile.decode(detail.document)` → register `source:'server'` (carrying the response's `version`) → (As Main) set as main + update URL.                                                                                                                                                                                                                                                                                                                                    |
-| `loadLocalProject(id)` / `loadLocalProjectAsMain(id)`                    | Read from `projects` store → `circuitFile.fromJson` → register `source:'browser'` → (As Main) set as main + `/local/:id`. Shares `_mainLoadToken` with the server path (both own the single main slot).                                                                                                                                                                                                                                                                                        |
-| `loadComponentForEdit(id)`                                               | Read a **library master** from the `components` store → build a Project from its self-contained circuit → reuse or `createMaster` its session type id → register `type:'comp', source:'browser'`. Returns the Project + master type id so the caller can open a tab.                                                                                                                                                                                                                           |
-| `saveProject(project)`                                                   | No-op unless dirty. Dispatches on metadata: `comp`+`browser` → `browser.saveComponent`; `server` → `server.saveProject`/`saveComponent` (PUT of the native document against the metadata `version`; a `version_conflict` toasts and stays dirty); `browser` → `browser.saveProject` (a fresh draft is promoted to `/local/:id`). Every save path runs under `ProjectMetadataStore.withDirtyGuard`, so an edit landing mid-save keeps the project dirty. `share` is read-only → no-op.          |
-| `createProject(name, …)`                                                 | One POST with no document (an absent one is an empty board server-side), register, set as main, update URL.                                                                                                                                                                                                                                                                                                                                                                                    |
-| `saveDraftAsLocal(project, name)`                                        | First save of a never-saved draft to the browser store: applies the chosen `name`, then `browser.saveProject` (generates id, `/local/:id`). Bypasses the `saveProject` dirty-guard so a pristine board can still be named and persisted.                                                                                                                                                                                                                                                       |
-| `persistImportedProject(project, name)`                                  | Common tail of the import paths (file import here, dump import in `ProjectDumpService`): register, write a fresh browser draft, set as main, `/local/:id`. Imported customs are **not** adopted into the library — each resolves through its provenance id (local or cloud master) or stays an embedded, restorable snapshot.                                                                                                                                                                  |
-| `loadShare` / `loadShareAsMain` / `cloneShare`                           | Share read paths (`source:'share'`, dirty tracking disabled); decode the response's native document. **Both kinds fill the main slot** — a component share opens standalone exactly as `/component/:uuid` does, so the title bar names it, its tab is the pinned one, and the File menu's clone action has a document to read. `cloneShare(link)` posts to the one clone endpoint and reopens through `loadProjectAsMain` or `loadComponentAsMain` depending on the kind the response reports. |
-| `createAndSetEmptyProject()`                                             | Blank `source:'browser'` project with empty id (name `'Untitled'`), set as main. **Not written to storage** until the first save. Used both on a project-less page load and by the **New Project** menu action — no name/destination is asked up front; that prompt is deferred to the first save (see `SaveCoordinatorService` in `ui.md`).                                                                                                                                                   |
-| `exportProjectToJson(project)`                                           | Reads name from metadata, delegates to `circuitFile.toJson`. Source-agnostic. Returns the JSON string — triggering a download is a UI concern.                                                                                                                                                                                                                                                                                                                                                 |
-| `importProjectFromJson(content)`                                         | `circuitFile.fromJson` → build a Project → register `source:'browser'` (clean) → **persist immediately** (re-encoded current-version) → set as main → `/local/:id`. Embedded customs stay embedded (no library adoption); a master-less one is a restorable orphan. **Throws** on an unreadable file (no fallback, unlike server loads).                                                                                                                                                       |
-| `listBrowserProjects` / `deleteBrowserProject` / `listBrowserComponents` | Browser-store listing/removal for the two stores.                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| `renameBrowserProject(id, name)` / `renameProject(uuid, name)`           | Rename a stored project from the Open Project dialog. Browser: rewrites the blob's top-level `name` (the codec reads the blob, not the summary column, on open) **and** the column via `BrowserProjectStore.save`. Server: `PATCH /api/projects/:id` with `{ name }` (adopting the bumped `version` it answers with). Both sync the in-memory metadata (title bar) when the renamed project is currently open.                                                                                 |
+Behavior beyond what the method names say:
+
+- **`saveProject`** is a no-op unless dirty, and always for `share` (read-only).
+  Dispatch: `comp`+`browser` → `browser.saveComponent`; `server` → the server
+  gateway (PUT against the metadata `version`; a `version_conflict` toasts and
+  stays dirty); `browser` → `browser.saveProject`, promoting a fresh draft to
+  `/local/:id`. Every path runs under `withDirtyGuard`.
+- **`saveDraftAsLocal`** bypasses the dirty guard so a pristine board can still
+  be named and persisted.
+- **`createAndSetEmptyProject`** makes a blank `source:'browser'` project with
+  an empty id, **not written to storage** until the first save. No name or
+  destination is asked up front; that prompt is deferred to the first save (see
+  `SaveCoordinatorService` in `ui.md`).
+- **`importProjectFromJson`** is the one path that writes a fresh draft to
+  storage up front, so a reload restores it, and the one that **throws** on an
+  unreadable file (server loads fall back instead). Imported customs are not
+  adopted into the library: each resolves through its provenance id or stays an
+  embedded, restorable snapshot.
+- **Share loads** register `source:'share'` with dirty tracking off, and **both
+  kinds fill the main slot** — a component share opens standalone exactly as
+  `/component/:uuid` does, so the title bar names it, its tab is the pinned one,
+  and the File menu's clone action has a document to read.
+- **`renameBrowserProject`** rewrites the blob's top-level `name` **and** the
+  summary column, because the codec reads the blob on open, not the column.
 
 ### Flows
 
@@ -588,74 +394,41 @@ File import:  ArrayBuffer → (decodeLgix | utf8) → circuitFile.fromJson → P
 File export:  Project → circuitFile.toJson → encodeLgix (gzip + header) → <name>.lgix (download)
 ```
 
-All funnel through the same `Component`/`Wire` instances, and all three now carry the
-same native v1 envelope — which is why a file import is simply "decode, then
-browser-save the re-encoded blob," and why a cloud save and a `.lgix` export produce
-byte-identical documents.
-
 ### Sibling services
 
-The facade's former side-jobs live in dedicated services:
+**`PromotionService`** moves documents from the browser store to the cloud:
+`saveDraftAsServer` flips the **live** project's metadata so circuit and undo
+history survive; `promoteComponentToServer` does a server round-trip, then
+`promoteMaster` on the registry with the old id kept as an alias, persists the
+`oldId→newId` map, deletes the browser record and re-points any open tab; the
+`localDependencies*` queries return children before parents to drive the upload
+dialog. All uploads are **silent primitives** — `UploadCoordinatorService` owns
+the outcome toasts. See
+[`dependencies-and-promotion.md`](dependencies-and-promotion.md).
 
-- **`PromotionService`** (`persistence/promotion.service.ts`) — moving documents from
-  the browser store to the cloud: `saveDraftAsServer` (first server save of a draft,
-  flipping the **live** project's metadata so circuit + undo history survive),
-  `promoteProjectToServer` (move an already-saved local project: upload → navigate →
-  delete the orphaned browser record), `uploadStoredProjectToServer` (by store id, via a
-  throwaway project when it isn't the open one), `promoteComponentToServer` (server
-  round-trip → registry `promoteMaster` with the old id kept as an alias → persist the
-  `oldId→newId` id-map → delete the browser record → re-point any open editor tab), and
-  the `localDependencies*` queries (children-before-parents) that drive the upload
-  dialog. All uploads are **silent primitives** — `UploadCoordinatorService` owns the
-  outcome toasts. See [`dependencies-and-promotion.md`](dependencies-and-promotion.md).
-- **`ComponentLibraryService`** (`custom-component/component-library.service.ts`) —
-  library lifecycle: `preloadBrowserMasters` / `preloadServerMasters` /
-  `preloadComponentIdAliases` (startup + login), `ensureServerMasterCircuit` (lazy
-  hydration), `clearServerMasters` (logout teardown), `restoreOrphanToLibrary`
-  (orphan recovery).
-- **`ProjectDumpService`** (`persistence/dump/project-dump.service.ts`) — debug dumps:
-  the native document plus element ids and the serialized undo history, driven by the
-  debug menu and the bug-report payload builder; its import reuses the facade's
-  `persistImportedProject` tail.
+**`ProjectDumpService`** builds debug dumps: the native document plus element
+ids and the serialized undo history.
 
 ### Session lifecycle & the cloud save guard
 
-Cloud persistence follows the signed-in user (`src/app/user/`):
+`CloudSessionService` (`src/app/user/`) stamps every registered
+`source:'server'` document with the user id it was loaded under and answers
+`verdict(project): 'ok' | 'logged-out' | 'foreign'`. `saveProject` consults it
+for server documents; create/promote/upload require a signed-in session. A
+rejection toasts once and throws `AuthRequiredError` / `ForeignDocumentError`,
+which outer flows recognize via `isHandledSaveError` and do not re-toast. An
+HTTP 401 on a save additionally flips `UserService.sessionExpired()`.
 
-- **`CloudSessionService`** stamps every registered `source:'server'` document
-  with the user id it was loaded under and answers
-  `verdict(project): 'ok' | 'logged-out' | 'foreign'`. `saveProject` consults it
-  for server documents and the create/promote/upload entry points require a
-  signed-in session — a rejection toasts the specific reason once and throws
-  `AuthRequiredError` / `ForeignDocumentError`, which outer flows recognize via
-  `isHandledSaveError` and don't re-toast. An HTTP 401 on a save additionally
-  flips `UserService.sessionExpired()` (stale auth cookie cleaned up).
-- **`SessionLifecycleService`** (injected by `AppComponent` for its side
-  effects, like `InspectionService`) reacts to `UserService.user()` transitions:
-  login → `ComponentLibraryService.preloadComponentIdAliases` (memoized) +
-  `preloadServerMasters`;
-  logout (any kind) → `clearServerMasters()`, which drops server masters from
-  the registry/palette except those backing an open server component editor
-  (their `DefinitionBinding` must stay live); placed snapshots keep rendering.
-  Its `requestLogout()` drives the Log Out menu action: dirty cloud documents
-  prompt Save / Discard / Cancel (save runs `promoteLocalDepsAndSave`; any
-  failure aborts the logout), then the session ends and the cloud workspace is
-  deliberately reset — server component tabs force-close, a server main is
-  replaced by a blank draft (exiting a running simulation first), local
-  documents stay. An **external** logout (expiry / another tab) touches nothing
-  but the library.
-
-### Dependencies, promotion & orphan recovery
-
-How a document carries the custom components it uses, how a local component is
-**promoted** to the cloud, how ids are re-mapped so references survive, and how a
-lost master is recovered — the whole story, including the `dependencies[].id`
-mapping rule, `snapshot.localId`, the promotion alias, and orphan restore — lives
-in **[`dependencies-and-promotion.md`](dependencies-and-promotion.md)**. The
-`PromotionService` methods (`promote*`, `uploadStoredProjectToServer`,
-`saveDraftAsServer`, `localDependencies*`) and
-`ComponentLibraryService.restoreOrphanToLibrary` are the primitives that document
-sequences.
+`SessionLifecycleService` reacts to `UserService.user()` transitions: login →
+alias preload + `preloadServerMasters`; any logout → `clearServerMasters()`,
+which drops server masters from registry and palette except those backing an
+open server component editor (their `DefinitionBinding` must stay live); placed
+snapshots keep rendering. Its `requestLogout()` drives the Log Out action: dirty
+cloud documents prompt Save / Discard / Cancel and any failure aborts the
+logout, then the cloud workspace is deliberately reset — server component tabs
+force-close, a server main is replaced by a blank draft (exiting a running
+simulation first), local documents stay. An **external** logout (expiry, another
+tab) touches nothing but the library.
 
 ---
 
@@ -663,51 +436,46 @@ sequences.
 
 **File:** `persistence/project-metadata.store.ts`
 
-Root-provided singleton holding metadata a bare `Project` lacks.
+Holds what a bare `Project` lacks: `{ id, name, type, source, version?,
+isPublic, link?, attribution? }`. `id` is the identifier **within the project's
+store**: the server uuid for `'server'`/`'share'`, the IndexedDB id for
+`'browser'`, or `''` for a browser project not yet written to storage. `version`
+is server-only — a browser record is the sole writer of its own blob and a share
+is read-only. `attribution` is carried read-only so fork lineage survives
+export → import → upload.
 
-`ProjectMetadata`: `{ id, name, type: 'project'|'comp', source:
-'server'|'browser'|'share', hash, isPublic, link? }`.
-
-`id` is the project's identifier **within its store**: the server uuid for
-`'server'`/`'share'`, the generated IndexedDB id for `'browser'`, or `''` for a browser
-project not yet written to storage (a fresh draft). `hash`/`isPublic`/`link` are inert for
-browser projects.
-
-| Method                                         | Description                                                                                                                                                                                                                                    |
-| ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `register(project, metadata, trackDirty=true)` | Stores metadata; when `trackDirty`, subscribes to `project.actionManager.actionChange$` to auto-mark dirty. Shares register with `trackDirty:false`.                                                                                           |
-| `getMetadata` / `getHandleById` / `remove`     | Lookup and teardown.                                                                                                                                                                                                                           |
-| `markDirty` / `clearDirty` / `isDirty`         | Dirty flag (Angular signal).                                                                                                                                                                                                                   |
-| `dirtyVersion`                                 | Monotonic counter used by the save paths to detect edits that land during a save.                                                                                                                                                              |
-| `withDirtyGuard(project, fn)`                  | Runs an async save step (which must include the serialization) under the mid-save edit guard: snapshot `dirtyVersion` → await `fn` → clear the dirty flag only when no edit landed in flight. Every save path (both gateways) runs through it. |
-| `updateHash`                                   | Updates the optimistic-concurrency hash after a successful server save.                                                                                                                                                                        |
-| `updateId`                                     | Sets the store id after a project is first written (e.g. a fresh browser draft promoted into IndexedDB on save).                                                                                                                               |
+- `register(project, metadata, trackDirty = true)` subscribes to
+  `project.actionManager.actionChange$` to auto-mark dirty; shares register with
+  `trackDirty: false`.
+- `dirtyVersion` — a monotonic counter bumped on every `markDirty`, even when
+  already dirty.
+- `withDirtyGuard(project, fn)` — runs an async save step (which must include
+  the serialization) under the mid-save edit guard: snapshot `dirtyVersion` →
+  await `fn` → clear the dirty flag only if no edit landed in flight. Both
+  gateways run every save through it.
+- `updateVersion` adopts the version a cloud read or write answered with;
+  `updateId` sets the store id once a fresh draft is first written.
 
 ---
 
 ## Testing
 
-Specs sit next to source. Pure logic (`detectVersion`, `migrateToCurrent`, the `v0ToV1`
-migration) is testable with `TestBed.inject(ComponentProviderService)` and no
-`setStaticDIInjector` (no render objects are built). Codecs that build `Component`/`Wire`
-instances (`circuit-file.service.spec`, `persistence.service.spec`) call `setStaticDIInjector(TestBed.inject(Injector))` and use
-inline fixtures (no JSON imports).
+Pure logic (`detectVersion`, `migrateToCurrent`, `v0ToV1`, the codecs, the
+validator, the `.lgix` container) is tested in **`@logigator/core`** with plain
+Vitest and no Angular. Editor specs that build `Component`/`Wire` instances call
+`setStaticDIInjector(TestBed.inject(Injector))`. Guardrails worth keeping
+intact:
 
-The guardrails that pin the legacy mapping:
+- **`v0-to-v1.migration.spec`** (core) pins each `legacyV0Slots` descriptor
+  exactly, so a new built-in without one — which would silently drop on decode —
+  is caught.
+- **`circuit-file.service.spec`** round-trips `toJson → fromJson → toJson`
+  (normalized-equal) for multi-element circuits and 1- and 2-deep nested
+  customs, covering snapshot embedding and the type-id remap.
+- **`circuit-file-validator.spec`** (core) asserts malformed documents raise
+  `InvalidFileError` — never a raw `TypeError` — and pins the deliberate
+  tolerances (absent sections, absent `source`).
 
-- **`v0-to-v1.migration.spec`** — asserts decoded named options per type and **pins each
-  `legacyV0Slots` descriptor exactly**, so a new built-in without one (which would
-  silently drop on decode) is caught.
-- **`circuit-file.service.spec`** — `toJson → fromJson → toJson` (normalized-equal) for
-  multi-element circuits and 1-/2-deep nested customs (snapshot embedding + remap).
-- **`circuit-file-validator.spec`** — malformed-document fixtures (broken component
-  entries, non-string wires, definitions with broken inner bodies) assert
-  `InvalidFileError` — never a raw `TypeError` — plus the deliberate tolerances
-  (absent sections, absent `source`).
-
-`browser-project.store.spec` runs against the **real** IndexedDB (Karma uses a real
-browser), clearing records between tests rather than deleting the DB (which would block on
-open connections). `persistence.service.spec` swaps in the in-memory stores from
-`src/testing/fake-browser-stores.ts` (`useValue`) so the orchestration — import persists,
-save dispatches by source, browser load reads back — is tested deterministically without
+`persistence.service.spec` swaps in the in-memory stores from
+`src/testing/fake-browser-stores.ts`, so the orchestration is tested without
 touching IndexedDB.

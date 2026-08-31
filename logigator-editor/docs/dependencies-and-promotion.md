@@ -1,365 +1,213 @@
 # Custom-Component Dependencies & Promotion
 
-The single reference for how a custom component travels through the editor: how a
-document carries the customs it uses, how those references resolve on load, how a
-local component is _promoted_ to the cloud, how identities are re-mapped so
-references survive, and every degenerate case — nested/recursive dependencies,
-orphans, cross-device copies, unresolved snapshots — the system must handle.
+How a document carries the customs it uses, how those references resolve on
+load, how a local component is _promoted_ to the cloud, how identities are
+re-mapped so references survive, and the degenerate cases.
 
-This document owns the dependency/promotion story end to end. Adjacent docs cover
-the pieces it builds on and only cross-reference here:
-
-- [`custom-components.md`](custom-components.md) — the in-memory master/snapshot
-  model, the registry, the rendering class, the editor-tab lifecycle, cycle
-  prevention, and per-instance update.
-- [`persistence.md`](persistence.md) — the file format, migration chain, browser
-  stores, the cloud transport, and the `PersistenceService` / `PromotionService` /
-  `ComponentLibraryService` method surfaces.
-- [`ui.md`](ui.md) — the `SaveCoordinatorService` / `UploadCoordinatorService`
-  dialogs and the settings-panel affordances.
+Adjacent docs: [`custom-components.md`](custom-components.md) (master/snapshot
+model, registry, editor tabs, cycle prevention),
+[`persistence.md`](persistence.md) (format, migration chain, stores,
+transports), [`ui.md`](ui.md) (the save/upload dialogs).
 
 ---
 
-## 1. The model in one picture
+## 1. The model
 
-```
-   LIBRARY (a master lives in exactly one)          A HOST DOCUMENT (project or component)
- ┌───────────────────────┐  ┌──────────────┐        ┌──────────────────────────────────────┐
- │  browser library       │  │ cloud library│        │  body: components + wires              │
- │  (IndexedDB)           │  │ (server)     │        │  definitions[]: a FROZEN SNAPSHOT of   │
- │                        │  │              │        │    every custom the body transitively  │
- │   master  ◄── id ──────┼──┼── master     │        │    places (self-contained)             │
- └────────┬──────────────┘  └──────┬───────┘        └───────────────┬──────────────────────┘
-          │ snapshot()             │                                │ each placed custom instance
-          ▼ (freeze current state) ▼                                ▼ wraps ONE snapshot
-        ┌──────────────────────────────────┐              config.type = snapshot type id
-        │ snapshot: frozen circuit + summary│  ◄───────────  (NOT the master's type id)
-        │ + source{ id, version, origin }   │
-        └──────────────────────────────────┘
-```
+A **master** is the editable library entry. It lives in exactly **one** library
+— `browser` (IndexedDB `components` store) or `server` (cloud API) — and owns a
+persistent string **id**. A **snapshot** is a frozen, immutable copy of a
+master's circuit + summary taken at place time, carrying `source` provenance (`{
+id, version, origin }`).
 
-- A **master** is the editable library entry. It lives in **one** library —
-  `browser` (IndexedDB `components` store) or `server` (cloud `/api/component`) —
-  and owns a persistent string **id** (browser store id or server uuid).
-- A **snapshot** is a frozen copy of a master's circuit + summary, taken at place
-  time, carrying `source` provenance (`{ id, version, origin }`) back to the
-  master. It is immutable.
-- A **placed instance** wraps a **snapshot**, never a master (`component.config.type`
-  is the _snapshot's_ session type id). **This is the load-bearing fact:** an
-  instance renders and simulates purely from its snapshot, so a document is
-  **self-contained** — it needs no library present to open. A master is required
-  only to _edit_ the component or to _update_ an instance to a newer version.
-- Every saved document embeds the frozen snapshot of every custom it transitively
-  uses in `definitions[]` (native) / `dependencies[]` (server). Losing the master
-  never loses the circuit.
+A **placed instance wraps a snapshot, never a master** (`component.config.type`
+is the _snapshot's_ session type id). This is the load-bearing fact: an instance
+renders and simulates purely from its snapshot, so a document is
+**self-contained** and needs no library to open — a master is needed only to
+_edit_ the component or _update_ an instance. Every saved document embeds the
+snapshot of every custom it **transitively** uses in `definitions[]`, so losing
+the master never loses the circuit.
 
-**The one-directional rule.** A **cloud** document may contain only **cloud**
-components; a local document may use cloud components, but a browser-local custom
-may not live inside a cloud document — it is promoted to the cloud first (enforced at
-save, [§8](#8-one-directional-rule-no-local-in-cloud)). "Cloud-in-local" is allowed;
-"local-in-cloud" is not.
-
-> Full model, id spaces, invariants, and cycle prevention live in
-> [`custom-components.md`](custom-components.md). The essentials repeated here are
-> only what the dependency/promotion flows depend on.
+**The one-directional rule:** a cloud document may contain only cloud
+components. Cloud-in-local is fine; local-in-cloud is not — a local custom is
+promoted first, enforced at save
+([§8](#8-one-directional-rule-no-local-in-cloud)).
 
 ---
 
-## 2. Identity: ids, versions, origin, and the registry indexes
+## 2. Identity: ids, versions, origin, registry indexes
 
 Three **id spaces** — never conflate them:
 
-| Space                  | Type                                    | Who owns it                                                                                                                                                                                          |
-| ---------------------- | --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Persistent id**      | `string` (uuid)                         | a **master** (browser store id or server uuid). A snapshot carries it as `source.id` provenance but does not own it — many snapshots share one master id. Reverse `id → typeId` is **masters-only**. |
-| **Session type id**    | `number` ≥ `CUSTOM_TYPE_ID_BASE` (1000) | every master **and** every snapshot, allocated by the registry, unique per session. Written as `t` in the wire format.                                                                               |
-| **File-local type id** | `number` ≥ 1000                         | a document-local id used only inside one serialized document; remapped to a session id on load.                                                                                                      |
+| Space              | Type                                    | Who owns it                                                                                                              |
+| ------------------ | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Persistent id      | `string` uuid                           | a **master**. A snapshot carries it as `source.id` provenance but does not own it, so the reverse index is masters-only. |
+| Session type id    | `number` ≥ 1000 (`CUSTOM_TYPE_ID_BASE`) | every master **and** every snapshot, registry-allocated, unique per session. Written as `t`.                             |
+| File-local type id | `number` ≥ 1000                         | valid only inside one serialized document; remapped to a session id on load.                                             |
 
-Two more axes on a definition:
+**`version`** (monotonic) is a master's current version, or on a snapshot the
+master state it froze — comparing them is how "a newer version exists" (the
+_Update to latest_ affordance) is detected, and **a frozen version is never
+rewritten** by any transport. **`origin`** is the library the master lives in.
 
-- **`version`** (monotonic) — a master's current version; a snapshot's frozen
-  version (the master state it copied). Comparing them is how "a newer version
-  exists" (the _Update to latest_ affordance) is detected. **Frozen version is
-  never rewritten** by any transport.
-- **`source` (origin)** — which library the master lives in: `'server'` |
-  `'browser'`. On a snapshot definition this records the master's origin (see
-  [§9](#9-orphans--restore)).
-
-The **`CustomComponentRegistry`** ([`custom-components.md`](custom-components.md))
-holds the session-global state the whole dependency system pivots on:
-
-- `_idToMasterTypeId` — masters-only `id → typeId`.
-- `_idAliases` — `oldId → newId` remap (promotion + restore); see [§6](#6-uuid-mapping--the-alias-table).
-- `_dependencies` — `masterTypeId → its direct child master type ids`, for cycle
-  detection.
-- `_masterToSnapshotTypeId` — placement cache (one snapshot type per unchanged
-  master), invalidated by any master mutation.
-- `revision` signal — bumped on identity-changing mutations (promotion, restore,
-  alias) so reactive readers (settings-panel chip, actions) re-resolve.
-
-Key resolvers:
-
-- `masterTypeIdForId(id)` — direct lookup, then **through the alias map**. Direct
-  wins over alias.
-- `resolveMaster(typeId)` — a master returns itself; a snapshot follows its
-  `source.id` (through the alias) to its master. `undefined` ⇒ **orphan**.
-- `currentIdForId(id)` — walks the alias chain to the current id (see §6).
+`CustomComponentRegistry` owns the session-global state: `_idToMasterTypeId`
+(masters-only `id → typeId`), `_idAliases` (§6), `_dependencies` (master →
+direct child masters, for cycle detection), `_masterToSnapshotTypeId` (placement
+cache, invalidated by any master mutation), and a `revision` signal bumped on
+identity-changing mutations so reactive readers re-resolve.
+`resolveMaster(typeId)` returns a master as itself and follows a snapshot's
+`source.id` to its master; `undefined` ⇒ **orphan**.
 
 ---
 
 ## 3. The universal snapshot codec
 
-**Files:** `persistence/snapshots.ts`, `serialized-circuit.ts` (core). One
-codec feeds **every** transport (file, browser, server); each transport only
-chooses a byte layout for the body.
+`persistence/snapshots.ts` plus core's `serialized-circuit.ts`. One codec feeds
+**every** transport; each transport only chooses a byte layout for the body.
 
 ### 3.1 Collect (save)
 
-`collectSnapshots(project, registry)` walks every custom the project **transitively**
-places — the snapshots in its body, then recursively the customs inside those
-snapshots' circuits — and returns `{ definitions, sessionToLocal }`:
+`collectSnapshots(project, registry)` walks the transitive closure of placed
+customs — the snapshots in the body, then recursively the customs inside those
+snapshots' circuits — and returns `{ definitions, sessionToLocal }`, rewriting
+nested references session → file-local. Numbering is first-encounter
+(depth-first, body) order from `CUSTOM_TYPE_ID_BASE`, so it is
+session-order-independent and the same circuit always serializes
+byte-identically.
 
-- **Transitive closure.** Depth-first from each placed component's type, following
-  `def.circuit.components`. A nested custom that is never placed at top level is
-  still embedded (it lives inside its parent's circuit).
-- **File-local numbering.** Definitions are numbered from `CUSTOM_TYPE_ID_BASE` in
-  first-encounter (depth-first, body order) order — deterministic and
-  session-order-independent, so the same circuit always serializes byte-identically.
-- **Reference rewrite.** Every nested custom reference inside a definition's body is
-  rewritten from session id → file-local id, and `sessionToLocal` maps the document
-  body the same way.
-- **Provenance.** `source = { id: currentIdForId(def.id), version, origin }`:
-  - `id` resolved **through the promotion alias** so a document saved after a
-    dependency's upload references the dependency's _current_ (cloud) id (§6).
-  - `version` is the frozen version, kept verbatim.
-  - `origin` is the master's **current** library (`resolveMaster(...).master.source`),
-    falling back to the snapshot's own frozen kind when the master is already gone.
-    So a promoted master round-trips as `'server'`.
+Provenance is `{ id: currentIdForId(def.id), version, origin }`. The `version`
+is kept verbatim but defaults to 1: an id with no version emits no provenance at
+all and re-orphans on reload. `origin` is read live from `resolveMaster`, so a
+promoted master round-trips as `'server'`, falling back to the snapshot's frozen
+kind when the master is gone.
 
 ### 3.2 Ingest (load)
 
-`CustomComponentRegistry.ingestSnapshots(defs)` registers a document's embedded
-snapshots and returns the `fileLocal → session` remap the caller applies to the
-document body. **Two passes** so nested references resolve: pass 1 allocates a
-session id per definition; pass 2 registers each, rewriting the type ids inside its
-own circuit from file-local → session. The stored circuit therefore holds post-remap
-**session** ids, so re-saving or re-opening resolves correctly.
-
-- The ingested snapshot's `source` (kind) = `def.source?.origin ?? 'browser'` (the
-  master's library origin; older documents that omit `origin` default to browser).
-- It pre-populates the placement cache when an ingested snapshot's `source` matches a
-  currently-loaded master at the same version, so palette placements after opening a
-  project reuse the ingested type id instead of minting a duplicate on save.
+`ingestSnapshots(defs)` registers the embedded snapshots and returns the
+`fileLocal → session` remap the caller applies to the body. **Two passes** so
+nested references resolve: pass 1 allocates a session id per definition, pass 2
+registers each while rewriting the type ids inside its own circuit. The stored
+circuit therefore holds post-remap **session** ids, so re-saving or re-opening
+resolves correctly. Origin defaults to `'browser'` for older documents that omit
+it. Ingest also pre-populates the placement cache when a snapshot matches a
+loaded master at the same version, so palette placements after opening a project
+reuse the ingested type id instead of minting a duplicate on save.
 
 ### 3.3 Nesting & recursion
 
-- **Nesting is unbounded.** A→B→C→… all embed self-contained: A's snapshot circuit
-  references B's file-local id, B's references C's, etc. `collectSnapshots` emits one
-  definition per distinct custom in the closure.
-- **Recursion (cycles) is prevented at author time, not serialize time.** A master
-  may not transitively contain itself. The registry maintains the live master
-  dependency graph; `wouldCycle(host, placed)` gates both the palette filter and the
-  placement session (see [`custom-components.md`](custom-components.md) → Cycle
-  prevention). So `collectSnapshots`' DFS is always over a DAG and terminates; the
-  `sessionToLocal` visited-set also guards against re-emitting a shared dependency
-  (diamonds).
+Nesting is unbounded and self-contained: A→B→C each get one definition, A's
+circuit referencing B's file-local id and so on. **Cycles are prevented at
+author time, not serialize time** — `wouldCycle(host, placed)` gates the palette
+filter and the placement session, so the DFS is always over a DAG; its visited
+set also keeps a shared dependency (a diamond) from being emitted twice.
 
 ---
 
-## 4. How a document carries its dependencies (per transport)
+## 4. How a document carries its dependencies
 
-One serialization across all three targets — the native versioned document. What
-differs between them is only what the _receiver_ derives from it.
+One serialization across all targets — the native versioned document (`{
+version, name, components, wires, definitions[] }`). Browser-store records hold
+that exact JSON as their `content` and the cloud API transports it unchanged, so
+a file import is just "decode, then browser-save the re-encoded blob" and there
+is no second dependency encoding anywhere. What differs between transports is
+only what the receiver _derives_ (§11).
 
-### 4.1 Native file & browser store (v1)
+### 4.1 Legacy decode
 
-`persistence/file/` — the native versioned format. A document is
-`{ version, name, components, wires, definitions[] }`, where `definitions[]` is the
-`SnapshotDefinition[]` from `collectSnapshots`, each carrying
-`source: { id, version, origin }`. Browser-store records (`projects` and
-`components`) store this exact JSON as their `content`. This is the crux of the
-design: a file import is just "decode, then browser-save the re-encoded blob," and
-the migration chain upgrades stored circuits on load for free.
-
-### 4.2 Server API (the same native document)
-
-`persistence/server/` — the cloud API stores the **native versioned document**, so
-there is no second dependency encoding to describe. A cloud save sends exactly what
-a `.lgix` export carries: the body plus `definitions[]`, each definition a frozen
-copy of the custom's circuit carrying `source: { id, version, origin }`.
-
-The server does not take a dependency list from the client. It reads
-`definitions[].source` out of the document it was handed, keeps the entries whose
-`origin` is `'server'`, and writes one **dependency edge row** per distinct master —
-which is what the server-side graph (share cloning, the transitive copy) walks. Two
-rules follow from deriving rather than accepting:
-
-- **A snapshot with no `source` is not an error.** It is a legitimate self-contained
-  copy: no edge, and the instance keeps rendering from the embedded circuit.
-- **An edge whose master no longer exists is dropped, not fatal.** The cascade on the
-  dependency key makes "snapshot, no edge" the steady state after a delete, and
-  failing the save instead would let somebody else's deletion break a circuit that
-  does not need them.
-
-The response's `dependencies[]` is the mirror image: not something a client renders
-from — the document already embeds everything — but how each master stands _now_, so
-a snapshot frozen at an older `version` becomes an offer to update rather than a
-silent divergence. A dependency whose master has since been deleted is simply absent
-from that list.
-
-### 4.3 Decode: resolving provenance
-
-A native document needs no provenance reconstruction — `definitions[].source` is
-read back verbatim by `fromPersistedDefinition`.
-
-The `v0ToV1` migration's `decodeDependencies` still exists for the two legacy shapes
-it reads: an old-editor file's `components[]` sub-circuit definitions, and the
-`dependencies[]` rows the Phase 6 database migration attaches to a legacy blob before
-parsing it (a legacy row's customs are relations, not part of the blob). There:
-
-```
-id     = mapping.id || dependency.id      // the owned cloud component
-origin = 'server'                          // a legacy dependency row is always cloud
-```
-
-- A present mapping id ⇒ a cloud dependency ⇒ **cloud origin** (`'server'`).
-- No id (`''`) ⇒ `source = undefined` — no provenance survives, so the instance
-  loads as an embedded **orphan** (recoverable via restore).
-
-A reference-only dependency (no embedded `snapshot`) is skipped; its body elements
-then surface as unresolved customs and are dropped with a warning (§10).
+A native document needs no provenance reconstruction; `fromPersistedDefinition`
+reads `source` back verbatim. The `v0ToV1` migration's `decodeDependencies`
+handles the two legacy shapes — an old-editor file's `components[]` sub-circuit
+definitions, and the `dependencies[]` rows the Phase 6 database migration
+attaches to a legacy blob (a legacy row's customs are relations, not part of the
+blob). There a present mapping id means a cloud dependency (`origin: 'server'`);
+no id means `source = undefined`, so the instance loads as an embedded
+**orphan**. A reference-only dependency (no embedded `snapshot`) is skipped, and
+its body elements surface as unresolved customs dropped with a warning
+([§9](#9-orphans--restore)).
 
 ---
 
-## 5. The write/serialize decision, per dependency
+## 5. The write decision, per dependency
 
-For every custom in a document's closure, at save time:
-
-```
-                       ┌─────────────────────────────────────────────┐
-                       │ dependency D (a placed custom's snapshot)     │
-                       └───────────────────────┬─────────────────────┘
-                                               │  id = currentIdForId(D.source.id)
-                                               ▼
-                          resolveMaster(D) → registered SERVER master?
-                              │ yes                         │ no (browser / unresolvable)
-                              ▼                             ▼
-       ── NATIVE FILE / BROWSER ──────────    definitions[]: source { id, version, origin }
-       definitions[]: source { id, version,      (a browser dependency in a local doc,
-       origin } — id is the current id           allowed — origin 'browser'; a lost id is
-       ─────────────────────────────────────     kept for same-device re-link / orphan recovery)
-       ── CLOUD ─────────────────────────────    ── CLOUD — should not occur ──────────────────
-       identical document; the server reads      the definition still travels, but its browser
-       definitions[].source and derives one      origin means the server derives no edge from
-       dependency EDGE per server master         it. A local dep is promoted BEFORE a cloud
-                                                 save (see §7/§8).
-```
-
-The **snapshot circuit is always embedded**, in every branch. The only variable is
-_whether a dependency link/id is recorded_ and _which library it points at_. A local
-dependency in a **cloud** document is not a normal state — it is promoted to the
-cloud first ([§8](#8-one-directional-rule-no-local-in-cloud)).
+**The snapshot circuit is always embedded, in every branch.** The only variables
+are whether a provenance id is recorded and which library it names.
 
 ---
 
 ## 6. UUID mapping — the alias table
 
-A component's persistent id can change (promotion) or be re-established (restore).
-The registry's **alias map** (`_idAliases: oldId → newId`) makes references survive
-without rewriting every placed snapshot.
+A component's persistent id changes on promotion. The registry's **alias map**
+(`_idAliases: oldId → newId`) makes references survive without rewriting every
+placed snapshot. `promoteMaster(typeId, newId, version)` drops the old `id →
+typeId` entry, records the alias, flips the master to `source: 'server'` with
+the new id, and bumps `revision`.
 
-- `promoteMaster(typeId, newId, version)` (on upload) removes the old `id → typeId`
-  entry, records `oldId → newId`, flips the master to `source:'server'` with the new
-  id, and bumps `revision`.
-- `masterTypeIdForId(id)` resolves **direct first, then through the alias** — so a
-  snapshot that captured the pre-promotion id still finds the (now-cloud) master.
-  Direct beats alias, so a real master reappearing under `oldId` wins over a stale
-  alias.
-- `currentIdForId(id)` walks the alias chain to the current id. **Serialization uses
-  it** (§3.1) so a document written after a dependency's promotion references the new
-  cloud id — not the captured browser id.
+**Resolution always runs through the alias chain first** —
+`masterTypeIdForId(id)` is `_idToMasterTypeId.get(currentIdForId(id))` — so a
+snapshot holding a pre-promotion id finds the now-cloud master, and a promoted
+old id can never resolve to a second master registered under it.
 
-**Why the rewrite matters (device-local safety, not cosmetics).** The alias table
-lives only in this browser. If a document that lands on the server kept a captured
-_pre-promotion_ browser id, every **other** device — which has no such alias — would
-strand the reference. Writing the _current_ id keeps it resolvable everywhere the
-master actually exists.
+**Serialization writes `currentIdForId`** (§3.1), which is device-local safety
+rather than cosmetics: the alias table lives only in this browser, so a document
+landing on the server with a captured _pre-promotion_ id would strand the
+reference on every other device.
 
-**Persistence & startup.** The `oldId → newId` map is persisted in the
-`componentIdMapStore` (IndexedDB) and hydrated at startup by
-`preloadComponentIdAliases`, before `preloadBrowserMasters` / `preloadServerMasters`
-register the libraries. `isPromotedId(oldId)` lets the browser preload skip a stale
-local record left behind by a partially-failed promotion (so a promoted component is
-not duplicated as both a local and a cloud master).
+**Startup ordering.** The map is persisted in `componentIdMapStore` and hydrated
+by `preloadComponentIdAliases` **before** `preloadBrowserMasters` /
+`preloadServerMasters` register the libraries. `isPromotedId(oldId)` lets the
+browser preload skip a stale local record left by a partially-failed promotion,
+so a promoted component is not duplicated as both a local and a cloud master.
 
 ---
 
 ## 7. Promotion (browser → cloud)
 
-Promotion **moves** a component or project from the browser to the cloud. It is one
+Promotion **moves** a component or project from the browser to the cloud — one
 pipeline for every entry shape, orchestrated by `UploadCoordinatorService`
-(`ui/upload/`), with `PromotionService` primitives underneath
-(`persistence/promotion.service.ts`).
+(`ui/upload/`) over `PromotionService` primitives.
 
 ### 7.1 The five entry shapes (`UploadTarget`)
 
-| Kind              | Trigger                                                      | Target primitive              |
-| ----------------- | ------------------------------------------------------------ | ----------------------------- |
-| `component`       | a placed local master's _Upload to cloud_ action             | `promoteComponentToServer`    |
-| `project`         | the open local project (title bar / File menu)               | `promoteProjectToServer`      |
-| `stored-project`  | a browser project by id (Open dialog list)                   | `uploadStoredProjectToServer` |
-| `draft-to-server` | first save of a never-saved draft to the server              | `saveDraftAsServer`           |
-| `save-server`     | re-saving an already-cloud project that gained local customs | `saveProject`                 |
+| Kind              | Trigger                                             | Target primitive              |
+| ----------------- | --------------------------------------------------- | ----------------------------- |
+| `component`       | a local master's _Upload to cloud_ action           | `promoteComponentToServer`    |
+| `project`         | the open local project (title bar / File menu)      | `promoteProjectToServer`      |
+| `stored-project`  | a browser project by id (Open dialog list)          | `uploadStoredProjectToServer` |
+| `draft-to-server` | first save of a never-saved draft to the server     | `saveDraftAsServer`           |
+| `save-server`     | re-saving a cloud project that gained local customs | `saveProject`                 |
 
-`SaveCoordinatorService` routes the server-save shapes here: a first server save
-(`draft-to-server`) and a re-save of a **server project or component editor** that
-embeds local customs (`save-server`) both need the promotion treatment, because a
-cloud document may only contain cloud components. It only routes `save-server` when
-the document actually embeds local customs; otherwise it saves directly. The
-tab-close flow ([§8.1](#81-the-tab-close-flow)) is a fourth trigger.
+`SaveCoordinatorService` routes `save-server` here only when the document
+actually embeds local customs; otherwise it saves directly. Tab close
+([§8.1](#81-the-tab-close-flow)) is a fourth trigger.
 
 ### 7.2 The sequence
 
-```
- requestUpload(target)
-   │
-   ├─ 1. ANALYZE   localDependencies* → local customs embedded, CHILDREN-BEFORE-PARENTS
-   │
-   ├─ 2. PROMPT    upload dialog: visibility + an INFORMATIONAL list of the local
-   │               components that will be published (promotion is mandatory — no
-   │               opt-out). Skipped when visibility is preset AND no local deps
-   │               (draft-to-server / save-server common case). Cancel ⇒ abort.
-   │
-   ├─ 3. PROMOTE EVERY RESOLVABLE DEPENDENCY, in child→parent order:
-   │       for each dep:  promoteComponentToServer(dep)
-   │         → registry.promoteMaster records oldId→newId alias
-   │         → because serialize resolves ids through the alias, the NEXT upload
-   │           (and the target) references the already-promoted child by its cloud id
-   │       first failure ⇒ STOP (nothing after it uploaded; retry re-analyzes)
-   │
-   └─ 4. UPLOAD TARGET   promote/save the project or component itself
-```
+Analyze the transitively embedded local customs → prompt → promote every
+**resolvable** dependency child-before-parent → upload the target itself.
 
-**Promotion is mandatory (one-directional rule, §8).** The dialog lists the local
-components that will be published but offers no per-component opt-out — a cloud
-document cannot keep a local dependency. A dependency that no longer resolves to a
-library master (an already-embedded orphan) cannot be published; it stays an
-embedded copy and the dialog warns about it.
+- The **prompt** collects visibility and lists the local components that will be
+  published; promotion is mandatory, so there is no per-component opt-out. It is
+  skipped when visibility is already preset **and** nothing resolvable is left
+  to publish, so an orphan-only document skips too.
+- Each promotion records an `oldId → newId` alias, and because serialization
+  resolves through aliases, every later upload references the already-promoted
+  child by its cloud id. The **first failure stops the sequence**; nothing after
+  it uploaded, so a retry re-analyzes cleanly with promoted entries dropping
+  out.
+- **Child-before-parent is a true topological (post-order DFS) sort**, not a
+  reversed collect order — reversing a pre-order mis-orders a _diamond_, landing
+  a shared grandchild after one of its parents. `_depsFromFileDefinitions`
+  (stored records) and `localDependenciesOfProject` (live registry) both
+  post-order.
 
-**Children-before-parents ordering is a true topological (post-order DFS) sort**,
-not a reversed collect order — a reversed pre-order mis-orders a _diamond_ (a shared
-grandchild landing after one of its parents). `_depsFromFileDefinitions` (record
-sources) and `localDependenciesOfProject` (live registry) both post-order.
-
-**`promoteComponentToServer` (the primitive).** Upload the circuit → server
-create+save → `registry.promoteMaster` (flip source, new id, alias) → persist the
-`oldId→newId` map → delete the browser record → re-point any open editor tab. It is
-**silent** (no toast) — the coordinator owns the outcome toast, so the two layers
-never double-toast. (`saveProject` is the exception: it self-toasts, so the
-coordinator suppresses its toast for `save-server`.)
+`promoteComponentToServer` uploads the circuit, then `promoteMaster` → persist
+the alias → delete the browser record → re-point any open editor tab. The server
+round-trip runs first because it is the only fail-able, irreversible step: until
+it returns nothing local has changed and a retry is clean. The local writes
+after it are best-effort — the upload already committed, so surfacing their
+failure would be a lie, and `isPromotedId` self-heals the leftover on reload.
 
 **Linking semantics.** The server model has no first-class linking; every entry
-stays self-contained (a parent still embeds its own copy of a child). Promotion's
+stays self-contained, a parent embedding its own copy of a child. Promotion's
 only "link" is keeping the id current via the alias, so the embedded copy is
 _recognizably the same component_.
 
@@ -367,232 +215,146 @@ _recognizably the same component_.
 
 ## 8. One-directional rule: no local-in-cloud
 
-**A cloud document may contain only cloud components.** A _local_ project may still
-use _cloud_ components (cloud-in-local is fine — the natural "use a published thing
-in private work" direction), but the reverse — a browser-local custom embedded in a
-server project or component — is disallowed. Putting a local component into cloud
-work publishes it (promotion, §7); there is no "keep it local inside the cloud
-document" option.
+**A cloud document may contain only cloud components.** A local project may use
+cloud components — the natural "use a published thing in private work" direction
+— but a browser-local custom may not live inside a server project or component;
+putting one into cloud work publishes it (§7).
 
-This is enforced **at save**, not at placement: you edit freely, and any cloud save
-of a document that embeds local customs promotes them first (mandatory). It gives a
-one-sentence mental model ("cloud projects contain cloud components") and removes the
-old confusing "half-editable embedded copy" state. Consequences:
-
-- **No `localId`.** The earlier mechanism that let a local component live inside a
-  cloud document (re-linkable only on the author's device) is gone.
-- **A bypass degrades to an orphan, not a crash.** If a local dependency ever reaches
-  a cloud serialize without promotion, the definition still travels but its browser
-  origin means the server derives no edge from it → a restorable orphan on reload
-  (§9). No data loss, no rejection.
-- **Files still hold cloud deps.** Because cloud-in-local is allowed, exporting a
-  cloud project to a native file (which carries cloud dependency ids) and importing
-  it round-trips fine.
+Enforcement is **at save, not at placement**: you edit freely, and any cloud
+save of a document embedding local customs promotes them first. A bypass
+degrades to an orphan rather than crashing — an unpromoted local dependency
+still travels as a definition, but its browser origin yields no server edge, so
+it reloads as a restorable orphan (§9). Because cloud-in-local is allowed,
+exporting a cloud project to a native file and re-importing it round-trips.
 
 ### 8.1 The tab-close flow
 
-Closing a component-editor tab funnels through `CustomComponentService.closeComponent`:
-
-```
- close tab
-   │ dirty?
-   ├─ no  → dispose
-   └─ yes → CloseTabDialogComponent (Save / Discard / Cancel; dismiss = Cancel)
-              │
-              ├─ Save    → uploadCoordinator.promoteLocalDepsAndSave(project)
-              │             (a cloud comp with local deps promotes them first — NO
-              │              second dialog; the close dialog already carried the
-              │              promotion warning) → dispose on success, else keep open
-              ├─ Discard → dispose without saving
-              └─ Cancel  → keep the tab open (the safe default for a stray dismissal)
-```
-
-`promoteLocalDepsAndSave` is the no-dialog core: for a server document it promotes
-every resolvable local dependency (children-first, at the document's own visibility),
-then saves; for a browser document it just saves. The close dialog folds the
-promotion warning inline so the user is never hit with two modals.
+Closing a dirty component-editor tab (`CustomComponentService.closeComponent`)
+prompts Save / Discard / Cancel via `CloseTabDialogComponent`; a dismissal is
+Cancel (the safe default), and Save keeps the tab open if the save fails. Save
+runs `uploadCoordinator.promoteLocalDepsAndSave(project)` — the no-dialog core,
+which promotes a server document's resolvable local dependencies at the
+document's own visibility and then saves. The close dialog folds the promotion
+warning inline so the user never meets two modals.
 
 ---
 
 ## 9. Orphans & restore
 
-An **orphan** is a placed custom whose master resolves in **no** library
-(`resolveMaster` is `undefined`). It is **not broken** — its circuit is embedded, so
-it renders and simulates fine; only _editing_ was a dead-end. The settings panel
-marks it with the `embedded` source-indicator state.
+An **orphan** is a placed custom whose master resolves in **no** library. It is
+**not broken** — its circuit is embedded, so it renders and simulates fine; only
+_editing_ dead-ends, and the settings panel marks it `embedded`. Orphans arise
+from a deleted cloud master, someone else's shared project referencing _their_
+cloud component, being **signed out** (no cloud masters loaded, so every cloud
+dep looks lost), a local dep absent from this browser's library (a hand-carried
+file — import never adopts), or an unpromoted local dep that reached a cloud
+save. The first three record `origin: 'server'`; the rest `'browser'`, as does
+any document predating `origin`.
 
-How orphans arise:
+**Restore** (`restoreOrphanToLibrary`) rebuilds a **browser** master from the
+frozen snapshot's circuit at its frozen version — always browser, no login
+needed. **Id reuse is origin-gated:** the new master reuses the snapshot's own
+`source.id` only when that id is **browser**-origin, in which case every placed
+instance re-links with no further work. An anonymous snapshot (no id) or a
+**cloud**-origin one mints a fresh id and `relinkSnapshotProvenance` re-points
+the snapshot at it — reusing a cloud uuid in the browser store would collide
+with the real cloud entry once it reloads. The relink stamps a `version` too,
+since serialization needs both id and version to emit resolvable provenance and
+a no-provenance orphan has neither.
 
-| Scenario                                                                                                                   | Origin recorded                    |
-| -------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
-| You deleted the cloud component your project depends on                                                                    | `server`                           |
-| You opened someone else's shared cloud project referencing _their_ cloud component                                         | `server`                           |
-| You are **signed out**, so no cloud masters are loaded — every cloud dep looks lost                                        | `server`                           |
-| A local project's local dependency isn't in this browser's library (e.g. a hand-carried native file — import never adopts) | `browser`                          |
-| A local dependency reached a cloud save via a bypass (no promotion) — degraded, `id:''`                                    | `undefined` → treated as `browser` |
-| A file/document authored before `origin` existed                                                                           | `undefined` → treated as `browser` |
+**View inside** (`viewSnapshot`) is the borrowed-document alternative. In a
+**share** the embedded customs are somebody else's: no sign-in resolves them,
+and depositing a stranger's component in the viewer's library is the wrong price
+for a look inside. So the frozen circuit opens in a tab registered as a `source:
+'share'` document, inheriting every read-only suppression keyed off that flag.
+It writes nothing — no store record, no master, no relink — so the instance
+stays an orphan, and nested customs recurse the same way. Keeping a share's
+components means cloning the share.
 
-### Restore (`restoreOrphanToLibrary`)
-
-Rebuilds a **browser** master from the frozen snapshot's circuit at its frozen
-version, so the component is editable again. Restore is **always browser** (no login
-needed).
-
-- **Re-linking** reuses the snapshot's own `source.id` as the new master's id, so
-  every placed instance resolves to the restore with no further change. An anonymous
-  snapshot (no id) mints a fresh id and `relinkSnapshotProvenance` re-points the
-  snapshot.
-- **Reusing the id is server-safe** — server ids are always server-minted (the
-  client never dictates one), and a browser id never travels to the server as an
-  identity. So no server collision is possible.
-
-### View inside (`viewSnapshot`) — the borrowed-document case
-
-Restore only makes sense for a document the viewer owns. In a **share** the
-embedded customs are somebody else's: no sign-in resolves them, and depositing a
-stranger's component in the viewer's library is the wrong price for a look
-inside. So a share offers **View inside** instead — `CustomComponentService.viewSnapshot`
-instantiates the frozen circuit into a tab registered as a `source:'share'`
-document, which inherits every read-only suppression already keyed off that flag
-(save refused, no File-menu save entry, dirty tracking off, no wire-repair
-offer). It writes nothing: no store record, no master, no provenance re-link —
-the placed instance stays an orphan. Nested customs inside the tab are embedded
-the same way and the tab is itself a share, so drilling further recurses. The way
-to _keep_ a share's components is to clone the share, which copies the whole
-document server-side.
-
-### Host source + the origin bit decide which degraded mode is offered
-
-The edit action (`EditComponentAction`) chooses its mode from `resolveMaster` +
-the host document's source + origin + login state:
-
-```
-   custom instance selected
-        │
-        ▼
-   resolveMaster(type)?  ──yes──►  mode = EDIT        (open the master)
-        │ no (orphan)
-        ▼
-   host document is a share?
-        │ yes ──►  mode = VIEW     (View inside → viewSnapshot → read-only tab;
-        │                            the master is the publisher's, and nothing
-        │                            is written to this viewer's library)
-        │ no
-        ▼
-   origin === 'server' AND signed out?
-        │ yes ──►  mode = SIGN-IN  (disabled; "sign in" — the cloud master is
-        │                            probably just unloaded; restoring locally
-        │                            would DUPLICATE an owned cloud master)
-        │ no  ──►  mode = RESTORE  (Restore & edit → restoreOrphanToLibrary → open)
-```
+`EditComponentAction` picks the mode from `resolveMaster`, the host document's
+source, the snapshot's origin, and login state: a resolvable master is **Edit**;
+an orphan in a share is **View inside**; an orphan whose origin is `'server'`
+while signed out is a disabled **Sign in to edit** (the master is probably just
+unloaded, and restoring would duplicate an owned cloud master); anything else is
+**Restore & edit**.
 
 ### Genuinely unresolvable: an absent snapshot
 
-Distinct from an orphan (which _has_ its circuit): a body `t` whose **snapshot is
-absent** — an old reference-only server document, or one an old client re-saved and
-stripped of the additive `snapshot`. There is **no tombstone**: the element is
-**skipped with a warning** (`CircuitFileService.deserialize`, the single load
-chokepoint), counted, and surfaced as one aggregated toast. A custom-range `t`
-resolves **only** through the snapshot remap, never falling through to its own value
-(which could alias an unrelated session type).
+Distinct from an orphan (which _has_ its circuit): a body `t` whose **snapshot
+is absent** — an old reference-only server document, or one an old client
+re-saved and stripped of the additive `snapshot`. There is **no tombstone**: the
+element is **skipped with a warning** at the single load chokepoint
+(`CircuitFileService.deserialize`), counted, and surfaced as one aggregated
+toast. A custom-range `t` resolves **only** through the snapshot remap, never
+falling through to its own value (which could alias an unrelated session type).
 
 ---
 
-## 10. The scenario matrix — everything that must be supported
+## 10. The scenario matrix
 
-Every combination of {what is being saved} × {where its dependencies live}. In all
-rows the dependency's **circuit is embedded** (self-contained); the columns record
-what _else_ happens.
+Every combination of {what is saved} × {where its dependencies live}. In all
+rows the dependency's **circuit is embedded**; the columns record what _else_
+happens.
 
-| #   | Scenario                                               | Mapping id (server) / `source.id` (native)                                         | Dep row (server)     | On reload / other device                                      |
-| --- | ------------------------------------------------------ | ---------------------------------------------------------------------------------- | -------------------- | ------------------------------------------------------------- |
-| 1   | **Local dep in a local document**                      | native `source.id` = browser id                                                    | n/a                  | re-links to browser master; editable                          |
-| 2   | **Local dep in a cloud document**                      | **not allowed** — promoted to the cloud at save (§8), becoming a cloud dep (row 5) | —                    | after save it is a cloud dependency everywhere                |
-| 3   | **Local dep reaches a cloud save unpromoted** (bypass) | `id:''`, no provenance                                                             | no                   | loads as a restorable **orphan** (no crash)                   |
-| 4   | **Cloud dep in a local document**                      | native `source.id` = cloud id, origin `server`                                     | n/a                  | re-links to cloud master if loaded; else orphan               |
-| 5   | **Cloud dep in a cloud document**                      | server id                                                                          | yes                  | re-links to cloud master everywhere                           |
-| 6   | **Local dep inside a local dep** (nesting)             | each custom = its own definition; parent circuit references child's file-local id  | per §4.2 recursively | full closure embedded; each re-links per its own origin       |
-| 7   | **Cloud dep inside a local dep**                       | inner definition's `source.id` = cloud id                                          | per §4.2             | inner re-links to cloud master if present                     |
-| 8   | **Recursive dependency (A→…→A)**                       | —                                                                                  | —                    | **prevented at author time** (`wouldCycle`); never serialized |
-| 9   | **Diamond (A→B, A→C, B→D, C→D)**                       | D emitted once; promote order D→B,C→A                                              | —                    | shared D promotes/links once; topological order               |
-| 10  | **Orphan — deleted/foreign cloud master**              | `source.id` = lost cloud id, origin `server`                                       | none                 | renders; edit ⇒ restore (signed in) or sign-in (signed out)   |
-| 11  | **Orphan — local master missing on this device**       | `source.id` = browser id, origin `browser`                                         | n/a                  | renders; edit ⇒ restore                                       |
-| 12  | **Absent snapshot (reference-only)**                   | —                                                                                  | (row may exist)      | element **dropped** with a counted warning                    |
+| #   | Scenario                                     | `source.id` / origin                                         | Server dep row  | On reload / other device                            |
+| --- | -------------------------------------------- | ------------------------------------------------------------ | --------------- | --------------------------------------------------- |
+| 1   | Local dep in a local document                | browser id, `browser`                                        | n/a             | re-links to browser master; editable                |
+| 2   | Local dep reaching a cloud save unpromoted   | browser id, `browser`                                        | no              | restorable **orphan** (no crash)                    |
+| 3   | Cloud dep in a local document                | cloud id, `server`                                           | n/a             | re-links to the cloud master if loaded; else orphan |
+| 4   | Cloud dep in a cloud document                | cloud id, `server`                                           | yes             | re-links everywhere                                 |
+| 5   | Nesting (dep inside a dep)                   | one definition each; parent references child's file-local id | recursively     | full closure embedded; each re-links per its origin |
+| 6   | Diamond (A→B, A→C, B→D, C→D)                 | D emitted once                                               | one edge        | promote order D → B,C → A                           |
+| 7   | Orphan — deleted or foreign cloud master     | lost cloud id, `server`                                      | none            | renders; edit ⇒ restore (signed in) or sign-in      |
+| 8   | Orphan — local master missing on this device | browser id, `browser`                                        | n/a             | renders; edit ⇒ restore                             |
+| 9   | Absent snapshot (reference-only)             | —                                                            | (row may exist) | element **dropped** with a counted warning          |
 
-Cross-cutting guarantees:
-
-- **A cloud document only ever contains cloud components** (§8) — a local dependency
-  is promoted before a cloud save, or (bypass) degrades to a restorable orphan.
-- **No dependency is ever silently lost** — every custom in the closure is embedded,
-  so the worst case is "embedded copy / orphan," never a broken circuit. The one
-  hard-loss case (#12) is user-visible via a toast.
-- **Promotion is a move, not a copy** — the browser record is deleted and the id is
-  aliased, so a promoted component is not duplicated across libraries.
-- **Restore is a copy into the browser library** — it does not touch the (gone)
-  original; if the original cloud master ever reappears, the local restore may
-  shadow it (deletable to un-shadow). This edge is accepted, not specially handled.
+Two combinations have no row: a local dep in a cloud document is promoted at
+save (§8) and becomes row 4, and a recursive dependency (A→…→A) is prevented at
+author time by `wouldCycle` and never serialized.
 
 ---
 
 ## 11. Server contract & deployment
 
-`logigator-api` (`documents/`) takes a document and derives everything else from it:
+`logigator-api` (`documents/`) takes a document and **derives everything else
+from it**:
 
 - **A write carries `{ document, version }` and nothing about dependencies.**
-  `parseCircuitDocument` reads `definitions[].source`, keeps the `origin: 'server'`
-  entries, and writes one dependency edge per distinct master. There is no
-  client-asserted list to validate, so there is no field to get wrong.
-- **A document embedding two snapshots of one master is refused.** Its instances
-  would render from two frozen copies of one component, and the edge table keyed by
-  (dependent, dependency) has one row to give it either way.
+  `parseCircuitDocument` reads `definitions[].source`, keeps the `origin:
+'server'` entries and writes one dependency edge per distinct master — the
+  graph share-cloning walks. With no client-asserted list there is no field to
+  get wrong. A snapshot with **no `source` is not an error** but a legitimate
+  self-contained copy, and an **edge whose master no longer exists is dropped,
+  not fatal**: the cascade makes "snapshot, no edge" the steady state after a
+  delete, and failing the save would let somebody else's deletion break a
+  circuit that does not need them.
+- **A document embedding two snapshots of one master is refused** in strict mode
+  (lenient keeps the first): its instances would render from two frozen copies
+  of one component, and an edge table keyed by (dependent, dependency) has one
+  row to give it either way.
 - **A read answers `dependencies[]` describing each master as it stands now** —
-  `version` against the embedded snapshot's own is the whole "an update is available"
-  signal. A master that has since been deleted is absent from the list, and the
-  embedded snapshot keeps working.
-- **Unknown fields are tolerated, not rejected.** Response schemas in
-  `@logigator/contract` are `.loose()`, and a document field the server does not know
-  fails the format validator rather than a DTO whitelist.
+  that `version` against the embedded snapshot's is the whole "an update is
+  available" signal, since the document already embeds everything needed to
+  render. A deleted master is absent and its embedded snapshot keeps working.
+- **Unknown fields are tolerated.** Response schemas in `@logigator/contract`
+  are `.loose()`, and an unknown document field fails the format validator
+  rather than a DTO whitelist.
 
-> **Deployment order.** The old whitelist rule is gone, but a _format_ bump still
-> couples the two sides: the API normalizes every write to the newest version it
-> knows and rejects a document claiming a newer one with
-> `unsupported_format_version`. So the server deploys first on a format bump, and a
-> bulk re-normalization job follows it.
+> **Deployment order.** A format bump couples the two sides: the API normalizes
+> every write to the newest version it knows and rejects a document claiming a
+> newer one with `unsupported_format_version`. The server deploys first, and a
+> bulk re-normalization job follows.
 
 ---
 
-## 12. Invariants & non-obvious gotchas
+## 12. Invariants & gotchas
 
-- **Instances wrap snapshots, not masters.** Rendering/simulation never need a
-  library; the master is only for edit/update. A "lost" component still works.
-- **Frozen version is never rewritten.** Only `source.id`/`origin` are re-resolved
-  at serialize time; the version stays as captured so "update available" stays
-  correct.
-- **A cloud document may only contain cloud components** (§8). Local deps are
-  promoted at save; enforced across _every_ cloud-save path (project save, first
-  server save, component-editor save, tab-close save), since a bypass degrades to an
-  orphan.
-- **A browser-origin definition in a cloud document is inert, not fatal.** The server
-  derives edges only from `origin: 'server'` sources, so a bypass leaves an embedded
-  snapshot with no edge — it loads as an orphan rather than failing the save.
-- **Topological (post-order) dependency order**, not reversed pre-order — diamonds
-  break under a naive reverse.
-- **Serialize resolves ids through the alias** (`currentIdForId`) — device-local
-  alias tables must not leak captured ids into shared documents.
-- **`origin` is the _current_ master origin**, resolved live at collect time — a
-  promoted master serializes as `server` even from an old snapshot.
-- **Reusing an id on restore is server-safe** — server ids are server-minted; a
-  browser id never travels to the server as an identity.
-- **Reappear-collision edge** — an undeleted cloud master vs a local restore/reuse
-  of its id: `masterTypeIdForId` gives direct precedence over the alias, but the
-  startup preload order decides which registers under the shared id. Rare
-  (undelete), documented, self-recoverable (delete the local copy).
-- **Import never adopts.** Opening a file registers nothing into the library: each
-  embedded custom re-links through its provenance id to a **local** or **cloud**
-  master when one exists and otherwise stays an **embedded** (orphan) snapshot,
-  recoverable via restore.
-- **Toasts: coordinator owns, primitives are silent** (except `saveProject`, which
-  self-toasts, so `save-server` suppresses the coordinator toast).
-- **The `SerializedComponent`/`SerializedWire` undo/redo snapshot is a _third_,
-  separate in-memory shape** — not a persistence format, unrelated to
+- **Import never adopts.** Opening a file registers nothing into the library:
+  each embedded custom re-links through its provenance id when a master exists,
+  and otherwise stays an embedded orphan.
+- **Toasts: the coordinator owns them, primitives are silent** (except
+  `saveProject`, which self-toasts, so `save-server` suppresses the
+  coordinator's).
+- **`SerializedComponent`/`SerializedWire` are a _third_, separate in-memory
+  shape** for undo/redo — not a persistence format, unrelated to
   `SnapshotDefinition`.
