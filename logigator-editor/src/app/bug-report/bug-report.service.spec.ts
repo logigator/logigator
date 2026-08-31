@@ -12,7 +12,10 @@ import { ProjectDumpService } from '../persistence/dump/project-dump.service';
 import { ProjectService } from '../project/project.service';
 import { LoggingService } from '../logging/logging.service';
 import { ToastService } from '../logging/toast.service';
-import type { ReportErrorRequest } from '@logigator/contract';
+import {
+  reportErrorRequestSchema,
+  type ReportErrorRequest
+} from '@logigator/contract';
 
 /** Lets the awaited `onClose` promise (and its follow-on submit) settle. */
 const flush = (): Promise<void> =>
@@ -98,6 +101,66 @@ describe('BugReportService', () => {
     expect(payload.stack).toContain('kaboom');
     expect(payload.client?.browser).toBe('TestBrowser');
     expect(payload.projectDump).toBe(JSON.stringify({ dumpVersion: 1 }));
+  });
+
+  it('builds a payload the contract accepts even when every field overflows', async () => {
+    // The client truncates against its own constants; if any of them exceeds
+    // the schema's bound, the server rejects the whole report rather than the
+    // offending field — so the two have to be checked against each other.
+    TestBed.resetTestingModule();
+    const huge = 'x'.repeat(3_000_000);
+    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('u'.repeat(2000));
+    TestBed.configureTestingModule({
+      providers: [
+        BugReportService,
+        { provide: DialogService, useValue: { open } },
+        {
+          provide: TranslationService,
+          useValue: { translate: (key: string) => key }
+        },
+        { provide: ReportErrorApiService, useValue: { report } },
+        {
+          provide: PersistenceService,
+          useValue: { exportProjectToJson: () => huge }
+        },
+        { provide: ProjectDumpService, useValue: { buildDump: () => huge } },
+        {
+          provide: ProjectService,
+          useValue: {
+            activeProject: () => ({ components: [], wires: [] })
+          }
+        },
+        {
+          provide: ClientInfoService,
+          useValue: { collect: () => ({ browser: 'TestBrowser' }) }
+        },
+        {
+          provide: LoggingService,
+          useValue: {
+            error: vi.fn(),
+            warn: vi.fn(),
+            recentLogs: () => huge
+          }
+        },
+        {
+          provide: ToastService,
+          useValue: { success: vi.fn(), error: vi.fn() }
+        }
+      ]
+    });
+    const svc = TestBed.inject(BugReportService);
+
+    const err = new Error('m'.repeat(10_000));
+    err.stack = 's'.repeat(60_000);
+    svc.handleUncaughtError(err);
+    onClose$.next('here is what happened');
+    onClose$.complete();
+    await flush();
+
+    const payload = report.mock.calls[0][0] as ReportErrorRequest;
+    const parsed = reportErrorRequestSchema.safeParse(payload);
+    expect(parsed.error?.issues ?? []).toEqual([]);
+    expect(parsed.success).toBe(true);
   });
 
   it('stamps a manual report with a correlation id linking it to analytics', async () => {

@@ -21,13 +21,23 @@ import {
 
 const CONTEXT = 'BugReportService';
 
-/** Backend field limits, mirrored here as client-side truncation backstops. */
-const MESSAGE_MAX = 2048;
-const STACK_MAX = 16384;
-const LOGS_MAX = 16384;
-const USER_AGENT_MAX = 512;
-/** Kept under the endpoint's 8 MB `projectDump` cap, with headroom. */
-const DUMP_MAX = 7_500_000;
+/**
+ * The bounds `reportErrorRequestSchema` enforces, mirrored here so an oversized
+ * field is trimmed instead of failing the whole report. `keepHead`/`keepTail`
+ * emit exactly `max` characters, which the schema accepts, so these match the
+ * contract rather than sitting under it.
+ */
+const MESSAGE_MAX = 4000;
+const STACK_MAX = 20_000;
+const LOGS_MAX = 100_000;
+const USER_AGENT_MAX = 500;
+/**
+ * The contract's `projectDump` bound. This one gates rather than truncates — a
+ * dump over it is dropped in favour of the next-richest payload — so it has to
+ * match the schema exactly, or the fallback ladder keeps handing the server
+ * something it refuses.
+ */
+const DUMP_MAX = 2_000_000;
 
 /**
  * How long error-triggered reports stay suppressed after one closes, so a
