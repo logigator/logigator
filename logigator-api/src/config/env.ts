@@ -1,167 +1,122 @@
 import { z } from 'zod';
 
 /**
- * The session secret a development machine runs on. Every variable is defaulted
- * so a bare `docker compose up` works, and a secret is no exception — but a
- * production deployment holding this value would let anyone forge a session
- * cookie, so the schema refuses to start there. Its being a fixed constant
- * rather than a per-boot random value is deliberate: the dev loop restarts on
- * every edit, and a fresh secret each time would sign every developer out
- * constantly.
+ * The session secret a development machine runs on. A fixed constant rather
+ * than a per-boot random value: the dev loop restarts on every edit, and a
+ * fresh secret each time would sign every developer out.
  */
 export const DEVELOPMENT_SESSION_SECRET =
   'logigator-development-session-secret';
 
 /**
- * Every environment variable the API reads. Configuration is env-only — there
- * is no `config/*.json` convention any more — and it is validated once, at
- * bootstrap, so a misconfigured deployment fails immediately with a readable
- * report instead of on the first request that happens to need a value.
+ * Every environment variable the API reads, validated once at bootstrap so a
+ * misconfigured deployment fails immediately with a readable report.
  */
 const variables = z.object({
   NODE_ENV: z
     .enum(['development', 'production', 'test'])
     .default('development'),
-  /** Interface the HTTP server binds to; `0.0.0.0` to be reachable in a container. */
   HOST: z.string().min(1).default('0.0.0.0'),
   PORT: z.coerce.number().int().min(1).max(65535).default(3000),
   LOG_LEVEL: z
     .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'])
     .default('info'),
 
-  /**
-   * PostgreSQL connection string. The default names the compose service, the
-   * same way the legacy backend's config example named `mysql`.
-   */
   DATABASE_URL: z
     .string()
     .min(1)
     .default('postgresql://logigator:logigator@postgres:5432/logigator'),
-  /** Upper bound on pooled connections; the default is `pg`'s own. */
   DATABASE_POOL_MAX: z.coerce.number().int().min(1).default(10),
 
   REDIS_URL: z.string().min(1).default('redis://redis:6379'),
   /**
    * Namespace for every key this API writes. Development shares one Redis with
-   * the legacy backend until cutover, and a session id is a session id in both —
-   * so the prefix is what keeps them from reading each other's keys.
+   * the legacy backend, and a session id is a session id in both.
    */
   REDIS_KEY_PREFIX: z.string().min(1).default('lg:'),
 
   /**
    * Where the site is reachable from outside. Mails build their links from it,
-   * so it must be the address a recipient can actually open — not the container's.
+   * so it must be an address a recipient can open, not the container's.
    */
   PUBLIC_URL: z.string().min(1).default('http://logigator.test'),
   /**
-   * SMTP connection string, credentials included
-   * (`smtps://user:pass@smtp.example.com:465`). Unset means mails are rendered
-   * and logged instead of sent, which is the only sane development default.
+   * `smtps://user:pass@smtp.example.com:465`. Unset means mails are logged
+   * instead of sent.
    */
   SMTP_URL: z.string().optional(),
   MAIL_FROM: z.string().min(1).default('Logigator <noreply@logigator.com>'),
-  /**
-   * Where client-side error reports are mailed. Unset means they are only
-   * logged, which is the sensible default: a development machine wants the line,
-   * not the mail, and a report is worth nothing unread — so naming a mailbox is
-   * the deliberate act of deciding to read them.
-   */
+  /** Where client-side error reports are mailed. Unset means logged only. */
   REPORT_MAIL_TO: z.string().optional(),
 
   /**
-   * Google sign-in credentials. Both unset means the feature is off — a client
-   * secret has no sensible default, and a deployment without one must still
-   * start and serve local logins. `GET /meta` reports whether it is available,
-   * so a client never has to discover it from a failing route.
+   * Both unset means Google sign-in is off; `GET /meta` reports whether it is
+   * available, so a client never discovers that from a failing route.
    */
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
-  /**
-   * Where Google sends the browser back. Must match the redirect URI registered
-   * with the OAuth client exactly; defaults to this API's callback route under
-   * `PUBLIC_URL`.
-   */
+  /** Defaults to this API's callback route under `PUBLIC_URL`. */
   GOOGLE_CALLBACK_URL: z.string().optional(),
   /**
-   * Where the browser lands after an OAuth round trip: the landing app's login
-   * page, which reads `?error=` on failure. A fixed target rather than one taken
-   * from the request — a redirect a caller can choose is an open redirect.
+   * Where the browser lands after an OAuth round trip, reading `?error=` on
+   * failure. Fixed rather than taken from the request: a redirect a caller can
+   * choose is an open redirect.
    */
   OAUTH_RETURN_URL: z.string().optional(),
 
   /**
-   * Root of the volume that holds derived, browser-served files (avatars now,
-   * previews next). Relative paths resolve from the working directory, which in
-   * development is the repository — where `data/` is already ignored.
+   * Root of the volume that holds derived, browser-served files. Relative paths
+   * resolve from the working directory.
    */
   STORAGE_DIR: z.string().min(1).default('data/storage'),
-  /** Ceiling on any single uploaded file, in bytes. */
   UPLOAD_MAX_BYTES: z.coerce
     .number()
     .int()
     .min(1024)
     .default(5 * 1024 * 1024),
   /**
-   * How long an asset directory no row points at is left alone before the sweep
-   * deletes it.
-   *
-   * An upload in flight is a directory nothing names *yet*, which is
-   * indistinguishable from an orphan except by age — so this is the margin
-   * between the two, and a day of it costs a few kilobytes.
+   * How long an asset directory no row points at survives the sweep. An upload
+   * in flight is a directory nothing names *yet*, indistinguishable from an
+   * orphan except by age.
    */
   STORAGE_SWEEP_GRACE_MINUTES: z.coerce.number().int().min(0).default(1440),
 
-  /** Signs the session cookie. `@fastify/session` requires 32 characters or more. */
+  /** Signs the session cookie; `@fastify/session` requires 32+ characters. */
   SESSION_SECRET: z.string().min(32).default(DEVELOPMENT_SESSION_SECRET),
   SESSION_COOKIE_NAME: z.string().min(1).default('lg_sid'),
   /** How long a session survives. Sliding: every request pushes it out again. */
   SESSION_MAX_AGE_DAYS: z.coerce.number().int().min(1).default(30),
   /**
-   * Whether cookies are `Secure`. Defaults to on in production, where Caddy
-   * terminates TLS, and off elsewhere so a plain-HTTP development origin can
-   * still hold a session.
+   * Defaults to on in production, where Caddy terminates TLS, and off elsewhere
+   * so a plain-HTTP development origin can still hold a session.
    */
   COOKIE_SECURE: z.stringbool().optional(),
   /** Set to share cookies across subdomains; unset keeps them host-only. */
   COOKIE_DOMAIN: z.string().optional(),
 
   /**
-   * Which callers' `X-Forwarded-*` headers to believe, so that `request.ip` is
-   * the real client address and `request.protocol` the scheme the browser used.
-   * `false` (the default) believes none, since a directly reachable server must
-   * not let callers choose their own address and slip the rate limiter; `true`
-   * believes every caller, which is only safe where nothing but the proxy can
-   * reach the process. Anything else names the proxy by address: a
-   * comma-separated list of addresses and CIDR ranges, or one of the presets
-   * `loopback`, `linklocal`, `uniquelocal`.
-   *
-   * Naming the address is the point. A hop count cannot: it says how far down
-   * the chain to look without saying who is allowed to be in it, so anyone
-   * reaching the process directly passes for the proxy (Fastify
-   * GHSA-3m5p-2c4r-xxw2), which is why Fastify no longer takes one.
-   *
-   * The digits are refused here rather than left to Fastify, which is the one
-   * malformed value it would not catch: its matcher reads a bare integer as an
-   * address (`1` is `0.0.0.1`), so a `TRUST_PROXY` left over from the hop-count
-   * contract would boot, trust an address nothing connects from, and write no
-   * session — the exact silent failure the check below exists to prevent.
-   *
-   * Secure cookies force the question: the process only ever speaks plain HTTP,
-   * so `COOKIE_SECURE` means something in front terminates TLS — and the check
-   * below refuses to start until that is declared here.
+   * Which callers' `X-Forwarded-*` headers to believe, so `request.ip` is the
+   * real client address. `false` (the default) believes none, `true` believes
+   * everyone — safe only where nothing but the proxy can reach the process —
+   * and anything else names the proxy: the presets `loopback`, `linklocal`,
+   * `uniquelocal`, or a comma-separated list of addresses and CIDR ranges. A
+   * hop count cannot say who may be in the chain, so anyone reaching the
+   * process directly passes for the proxy (Fastify GHSA-3m5p-2c4r-xxw2). Bare
+   * digits are refused here because Fastify's matcher would read `1` as the
+   * address `0.0.0.1` and boot trusting nothing real.
    */
   TRUST_PROXY: z
     .string()
     .min(1)
     .refine((value) => !/^\d+$/.test(value.trim()), {
       error:
-        'is no longer a count of the proxies in front of the process — name them instead: a preset (loopback, linklocal, uniquelocal), a comma-separated list of addresses and CIDR ranges, true where nothing but the proxy can reach the process, or false to trust none'
+        'must name the proxies rather than count them: a preset (loopback, linklocal, uniquelocal), a comma-separated list of addresses and CIDR ranges, true where nothing but the proxy can reach the process, or false to trust none'
     })
     .default('false'),
 
   /** Lifetime of the one-shot mail tokens (verification, password reset). */
   AUTH_TOKEN_TTL_MINUTES: z.coerce.number().int().min(1).default(60),
-  /** Cost of new bcrypt hashes. Legacy hashes carry their own and verify unchanged. */
+  /** Cost of new hashes; existing ones carry their own and still verify. */
   BCRYPT_COST: z.coerce.number().int().min(4).max(15).default(12)
 });
 
@@ -185,10 +140,10 @@ export const envSchema = variables
     const secure =
       ctx.value.COOKIE_SECURE ?? ctx.value.NODE_ENV === 'production';
     if (secure && resolveTrustProxy(ctx.value.TRUST_PROXY) === false) {
-      // `@fastify/session` refuses to write a `Secure` cookie over a connection
-      // it believes is plain, and it believes that whenever `X-Forwarded-Proto`
-      // is untrusted. The whole login then succeeds and does nothing: a 200, a
-      // hint cookie, no session — so this is a boot failure, not a warning.
+      // `@fastify/session` refuses a `Secure` cookie over a connection it
+      // believes is plain, and it believes that whenever `X-Forwarded-Proto` is
+      // untrusted. The login then 200s with no session, so this is a boot
+      // failure rather than a warning.
       ctx.issues.push({
         code: 'custom',
         input: ctx.value.TRUST_PROXY,
@@ -212,9 +167,8 @@ export const envSchema = variables
       });
     }
   })
-  // Resolved here rather than left optional, so every consumer reads a value and
-  // nobody re-derives the rules — including the two URLs that default to a path
-  // under `PUBLIC_URL`.
+  // Resolved here so every consumer reads a value rather than re-deriving the
+  // rules.
   .transform((env) => ({
     ...env,
     COOKIE_SECURE: env.COOKIE_SECURE ?? env.NODE_ENV === 'production',
@@ -225,11 +179,9 @@ export const envSchema = variables
   }));
 
 /**
- * The configured value in the shape Fastify's `trustProxy` takes. Only the two
- * literals are interpreted here; an address list or a preset is Fastify's own
- * vocabulary and is handed over untouched, so a malformed one is rejected by
- * the matcher that will use it (`invalid IP address: …`) rather than by a
- * second parser here — the one exception being the digits the schema catches.
+ * The configured value in the shape Fastify's `trustProxy` takes. An address
+ * list or a preset is Fastify's own vocabulary and is handed over untouched, so
+ * a malformed one is rejected by the matcher that uses it.
  */
 function resolveTrustProxy(value: string): boolean | string {
   const configured = value.trim();
@@ -240,13 +192,11 @@ function resolveTrustProxy(value: string): boolean | string {
 
 export type Env = z.infer<typeof envSchema>;
 
-/** DI token for the parsed environment. */
 export const ENV = Symbol('ENV');
 
 /**
  * Validates a raw environment. Blank values are treated as absent: an unset
- * variable in a compose file or a `.env` line without a value arrives as `''`,
- * which should fall back to the default rather than fail the schema.
+ * variable in a compose file arrives as `''` and falls back to the default.
  *
  * @throws if any value is missing or malformed, listing every problem at once.
  */
