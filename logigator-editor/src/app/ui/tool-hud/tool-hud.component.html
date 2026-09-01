@@ -10,7 +10,8 @@
     class="flex items-center gap-1 rounded-full bg-content/95 px-1.5 py-1 shadow-lg backdrop-blur"
   >
     @for (tool of tools; track tool.id) {
-      <lg-button
+      <button
+        lgButton
         [appOnboardTarget]="'tool-' + tool.id"
         [icon]="tool.icon"
         severity="secondary"
@@ -18,9 +19,10 @@
         [text]="!tool.isActive()"
         [ariaLabel]="t(tool.labelKey)"
         (onClick)="tool.activate()"
-      ></lg-button>
+      ></button>
     }
-    <lg-button
+    <button
+      lgButton
       appOnboardTarget="mobile-components"
       icon="ph ph-plus"
       severity="secondary"
@@ -28,9 +30,10 @@
       [text]="!partsActive()"
       [ariaLabel]="t('toolBar.parts')"
       (onClick)="toggleParts()"
-    ></lg-button>
+    ></button>
     @if (isEditingComponent()) {
-      <lg-button
+      <button
+        lgButton
         appOnboardTarget="mobile-ports"
         icon="ph ph-plugs"
         severity="secondary"
@@ -38,7 +41,7 @@
         text
         [ariaLabel]="t('mobile.ports')"
         (onClick)="openPorts()"
-      ></lg-button>
+      ></button>
     }
   </div>
 </div>

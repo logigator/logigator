@@ -30,43 +30,52 @@ import { TranslateDirective } from '../../../translation/translate.directive';
   host: { class: 'contents' },
   template: `<ng-container *appTranslate="let t">
     @if (mode() === 'edit') {
-      <lg-button
+      <button
+        lgButton
         size="sm"
-        [label]="t('componentActions.edit')"
         icon="ph ph-circuitry"
         class="w-full"
         (onClick)="edit()"
-      />
+      >
+        {{ t('componentActions.edit') }}
+      </button>
     } @else if (mode() === 'view') {
-      <lg-button
+      <button
+        lgButton
         size="sm"
         icon="ph ph-eye"
-        [label]="t('componentActions.view')"
         class="w-full col-span-2"
         [lgTooltip]="t('componentActions.viewTooltip')"
         tooltipPosition="top"
         (onClick)="view()"
-      />
+      >
+        {{ t('componentActions.view') }}
+      </button>
     } @else if (mode() === 'restore') {
-      <lg-button
+      <button
+        lgButton
         size="sm"
         icon="ph ph-arrow-counter-clockwise"
-        [label]="t('componentActions.restore')"
         class="w-full col-span-2"
         [lgTooltip]="t('componentActions.restoreTooltip')"
         tooltipPosition="top"
         (onClick)="restore()"
-      />
+      >
+        {{ t('componentActions.restore') }}
+      </button>
     } @else if (mode() === 'signIn') {
-      <lg-button
+      <button
+        lgButton
+        disabledInteractive
         size="sm"
         icon="ph ph-cloud-slash"
-        [label]="t('componentActions.signInToEdit')"
         class="w-full col-span-2"
         [disabled]="true"
         [lgTooltip]="t('componentActions.signInTooltip')"
         tooltipPosition="top"
-      />
+      >
+        {{ t('componentActions.signInToEdit') }}
+      </button>
     }
   </ng-container>`
 })

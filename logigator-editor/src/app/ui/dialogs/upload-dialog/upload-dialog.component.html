@@ -62,16 +62,16 @@
   }
 
   <div class="flex justify-end gap-2">
-    <lg-button
+    <button
+      lgButton
       severity="secondary"
       [outlined]="true"
-      [label]="t('uploadDialog.cancel')"
       (onClick)="cancel()"
-    />
-    <lg-button
-      [label]="t('uploadDialog.upload')"
-      [disabled]="!userService.user()"
-      (onClick)="upload()"
-    />
+    >
+      {{ t('uploadDialog.cancel') }}
+    </button>
+    <button lgButton [disabled]="!userService.user()" (onClick)="upload()">
+      {{ t('uploadDialog.upload') }}
+    </button>
   </div>
 </div>

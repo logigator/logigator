@@ -24,18 +24,22 @@ import { LgConfirmOutlet } from './confirm-outlet';
     >
       <p class="text-text">{{ current()?.message }}</p>
       <ng-template #footer>
-        <lg-button
-          [label]="current()?.rejectLabel"
+        <button
+          lgButton
           [severity]="rejectSeverity()"
           [outlined]="rejectOutlined()"
           (onClick)="reject()"
-        />
-        <lg-button
-          [label]="current()?.acceptLabel"
+        >
+          {{ current()?.rejectLabel }}
+        </button>
+        <button
+          lgButton
           [severity]="acceptSeverity()"
           [outlined]="acceptOutlined()"
           (onClick)="accept()"
-        />
+        >
+          {{ current()?.acceptLabel }}
+        </button>
       </ng-template>
     </lg-dialog>
   `

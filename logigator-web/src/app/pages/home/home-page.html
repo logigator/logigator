@@ -6,11 +6,7 @@
     {{ t('pages.home.title') }}
   </h1>
   <p class="text-lg text-muted">{{ t('pages.home.lead') }}</p>
-  <a
-    class="px-5 py-2.5 text-base"
-    [class]="buttonLinkClass"
-    [href]="links.editor"
+  <a lgButton class="px-5 py-2.5" [href]="links.editor"
+    >{{ t('pages.home.openEditor') }}</a
   >
-    {{ t('pages.home.openEditor') }}
-  </a>
 </section>

@@ -19,13 +19,15 @@ import { TranslateDirective } from '../../../translation/translate.directive';
   host: { class: 'contents' },
   template: `<ng-container *appTranslate="let t">
     @if (updatable()) {
-      <lg-button
+      <button
+        lgButton
         size="sm"
         severity="warn"
-        [label]="t('componentActions.update')"
         class="w-full col-span-2"
         (onClick)="update()"
-      />
+      >
+        {{ t('componentActions.update') }}
+      </button>
     }
   </ng-container>`
 })

@@ -21,19 +21,21 @@ import { TranslateDirective } from '../../translation/translate.directive';
         *appTranslate="let t"
         class="flex items-center rounded-full bg-content/95 px-1.5 py-1 shadow-lg backdrop-blur"
       >
-        <lg-button
+        <button
+          lgButton
           appOnboardTarget="scissor-toggle"
           [icon]="toggle.icon"
           severity="secondary"
           rounded
           [text]="!toggle.isActive()"
-          [label]="t(toggle.shortLabelKey)"
           [lgTooltip]="t(toggle.labelKey)"
           [tooltipShortcut]="shortcutService.binding(toggle.shortcut)()"
           tooltipPosition="bottom"
           [ariaLabel]="t(toggle.labelKey)"
           (onClick)="toggle.toggle()"
-        ></lg-button>
+        >
+          {{ t(toggle.shortLabelKey) }}
+        </button>
       </div>
     }
   `

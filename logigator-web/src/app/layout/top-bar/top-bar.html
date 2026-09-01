@@ -6,14 +6,15 @@
     class="mx-auto flex h-14 max-w-7xl items-center gap-2 px-4"
     [attr.aria-label]="t('header.navigation')"
   >
-    <lg-button
+    <button
+      lgButton
       class="md:hidden"
       icon="ph ph-list"
       text
       severity="secondary"
       [ariaLabel]="t('header.openNavigation')"
       (onClick)="drawerOpen.set(true)"
-    />
+    ></button>
 
     <!-- Two files rather than one CSS-themed mark: the wordmark is two-tone
          artwork, so only its lettering flips. Swapped by the `dark` variant
@@ -118,23 +119,24 @@
     </lg-popover>
     } @else {
     <div class="hidden items-center gap-2 sm:flex">
-      <a [class]="buttonLinkOutlinedClass" [routerLink]="links.login"
+      <a lgButton outlined size="sm" [routerLink]="links.login"
         >{{ t('header.login') }}</a
       >
-      <a [class]="buttonLinkClass" [routerLink]="links.register"
+      <a lgButton size="sm" [routerLink]="links.register"
         >{{ t('header.register') }}</a
       >
     </div>
     }
 
-    <lg-button
+    <button
+      lgButton
       class="hidden md:inline-flex"
       icon="ph ph-gear"
       text
       severity="secondary"
       [ariaLabel]="t('header.settings')"
       (onClick)="toggleSettings($event)"
-    />
+    ></button>
     <lg-popover #settings>
       <web-settings-panel class="block w-56" />
     </lg-popover>

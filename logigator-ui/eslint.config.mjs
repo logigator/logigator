@@ -28,13 +28,14 @@ export default defineConfig([
           style: 'camelCase'
         }
       ],
+      // Most components are elements; a skin that has to be the interactive
+      // element itself (`button[lgButton]`) is an attribute one instead.
       '@angular-eslint/component-selector': [
         'error',
-        {
-          type: 'element',
-          prefix: 'lg',
-          style: 'kebab-case'
-        }
+        [
+          { type: 'element', prefix: 'lg', style: 'kebab-case' },
+          { type: 'attribute', prefix: 'lg', style: 'camelCase' }
+        ]
       ],
       '@angular-eslint/prefer-on-push-component-change-detection': 'error',
       // Outputs use PrimeNG-style `on`-prefixed names (onClick, onSelect, …).
@@ -48,6 +49,15 @@ export default defineConfig([
       angular.configs.templateRecommended,
       angular.configs.templateAccessibility
     ],
-    rules: {}
+    rules: {
+      // An icon-only `<button lgButton>` carries no template content and takes
+      // its accessible name from the `ariaLabel` input, which this rule cannot
+      // see. `[attr.aria-label]`, which it does accept, collides with the
+      // component's own host binding.
+      '@angular-eslint/template/elements-content': [
+        'error',
+        { allowList: ['lgButton'] }
+      ]
+    }
   }
 ]);

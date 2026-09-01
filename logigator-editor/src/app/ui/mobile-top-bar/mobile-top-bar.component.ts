@@ -53,42 +53,47 @@ import { TranslateDirective } from '../../translation/translate.directive';
         </button>
       </h1>
       @if (isSimulation()) {
-        <lg-button
+        <button
+          lgButton
           icon="ph ph-sign-out"
           severity="secondary"
           text
           [ariaLabel]="t('toolBar.exitSim')"
           (onClick)="exitSimulation()"
-        ></lg-button>
+        ></button>
       } @else {
-        <lg-button
+        <button
+          lgButton
           icon="ph ph-arrow-u-up-left"
           severity="secondary"
           text
           [ariaLabel]="t('toolBar.undo')"
           (onClick)="undo()"
-        ></lg-button>
-        <lg-button
+        ></button>
+        <button
+          lgButton
           icon="ph ph-arrow-u-up-right"
           severity="secondary"
           text
           [ariaLabel]="t('toolBar.redo')"
           (onClick)="redo()"
-        ></lg-button>
-        <lg-button
+        ></button>
+        <button
+          lgButton
           icon="ph ph-floppy-disk"
           severity="secondary"
           text
           [ariaLabel]="t('toolBar.save')"
           (onClick)="save()"
-        ></lg-button>
-        <lg-button
+        ></button>
+        <button
+          lgButton
           appOnboardTarget="sim-start"
           icon="ph ph-play"
           severity="secondary"
           [ariaLabel]="t('toolBar.startSim')"
           (onClick)="startSimulation()"
-        ></lg-button>
+        ></button>
       }
     </div>
   `

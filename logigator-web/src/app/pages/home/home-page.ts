@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { LgButton } from '@logigator/ui';
 import { SiteLinks } from '../../layout/site-links';
 import { TranslateDirective } from '../../translation/translate.directive';
-import { BUTTON_LINK_CLASS } from '../../layout/link-classes';
 
 /**
  * The landing page. Phase 5a puts the shell around it; the hero, feature
@@ -9,11 +9,10 @@ import { BUTTON_LINK_CLASS } from '../../layout/link-classes';
  */
 @Component({
   selector: 'web-home-page',
-  imports: [TranslateDirective],
+  imports: [LgButton, TranslateDirective],
   templateUrl: './home-page.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class HomePage {
   protected readonly links = inject(SiteLinks);
-  protected readonly buttonLinkClass = BUTTON_LINK_CLASS;
 }

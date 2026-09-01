@@ -31,19 +31,18 @@ import { TranslateDirective } from '../translation/translate.directive';
         class="pointer-events-auto mx-auto flex w-fit max-w-xl items-center gap-3 rounded-lg border border-border bg-content/95 px-4 py-3 shadow-lg backdrop-blur"
       >
         <span class="text-sm text-muted">{{ t('onboarding.nudge.text') }}</span>
-        <lg-button
-          size="sm"
-          [label]="t('onboarding.nudge.start')"
-          (onClick)="start()"
-        ></lg-button>
-        <lg-button
+        <button lgButton size="sm" (onClick)="start()">
+          {{ t('onboarding.nudge.start') }}
+        </button>
+        <button
+          lgButton
           size="sm"
           severity="secondary"
           text
           icon="ph ph-x"
           [ariaLabel]="t('onboarding.nudge.dismiss')"
           (onClick)="dismiss()"
-        ></lg-button>
+        ></button>
       </div>
     }
   `

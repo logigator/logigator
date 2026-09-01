@@ -19,15 +19,17 @@ import { TranslateDirective } from '../../../translation/translate.directive';
   host: { class: 'contents' },
   template: `<ng-container *appTranslate="let t">
     @if (visible()) {
-      <lg-button
+      <button
+        lgButton
         size="sm"
         severity="danger"
         [outlined]="true"
         icon="ph ph-trash"
-        [label]="t('deleteComponent.button')"
         class="w-full"
         (onClick)="confirmDelete($event)"
-      />
+      >
+        {{ t('deleteComponent.button') }}
+      </button>
     }
   </ng-container>`
 })

@@ -24,13 +24,14 @@
       <div
         class="border-border flex shrink-0 items-center gap-2 border-b px-3 pb-2"
       >
-        <lg-button
+        <button
+          lgButton
           icon="ph ph-arrow-left"
           text
           rounded
           [ariaLabel]="t('documentation.back')"
           (onClick)="backToIndex()"
-        />
+        ></button>
         <span class="font-semibold">{{ pageTitle() }}</span>
       </div>
       <div #contentPane class="min-h-0 grow overflow-y-auto p-4">

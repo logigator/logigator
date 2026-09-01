@@ -102,13 +102,14 @@ const CASCADE_WRAP = 8;
       @if (fullscreen() && closable()) {
         <!-- ariaLabel input, not a static attribute: the label has to reach the
              inner <button>, which is the node AT sees. -->
-        <lg-button
+        <button
+          lgButton
           [ariaLabel]="backLabel()"
           icon="ph ph-arrow-left"
           severity="none"
           size="sm"
           (click)="entry().ref.close()"
-        ></lg-button>
+        ></button>
       }
       @if (titleParts(); as parts) {
         <h2
@@ -139,13 +140,14 @@ const CASCADE_WRAP = 8;
         </h2>
       }
       @if (closable() && !fullscreen()) {
-        <lg-button
+        <button
+          lgButton
           [ariaLabel]="closeLabel()"
           icon="ph ph-x"
           severity="none"
           size="sm"
           (click)="entry().ref.close()"
-        ></lg-button>
+        ></button>
       }
     </div>
     <div class="min-h-0 grow overflow-auto" [class]="bodyClass()">

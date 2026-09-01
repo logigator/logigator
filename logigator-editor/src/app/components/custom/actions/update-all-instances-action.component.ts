@@ -20,15 +20,17 @@ import { TranslateDirective } from '../../../translation/translate.directive';
   host: { class: 'contents' },
   template: `<ng-container *appTranslate="let t">
     @if (outdatedCount(); as count) {
-      <lg-button
+      <button
+        lgButton
         size="sm"
         severity="warn"
         outlined
-        [label]="t('componentActions.updateAll', { count })"
         [loading]="busy()"
         class="w-full col-span-2"
         (onClick)="updateAll()"
-      />
+      >
+        {{ t('componentActions.updateAll', { count }) }}
+      </button>
     }
   </ng-container>`
 })

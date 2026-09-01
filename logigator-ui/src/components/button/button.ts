@@ -2,24 +2,29 @@ import {
   booleanAttribute,
   Component,
   computed,
+  ElementRef,
+  inject,
   input,
   output
 } from '@angular/core';
 import { IconSlot } from '../../internal/icon';
 import { LgSeverity } from '../../tokens/severity';
-import { controlPadding, LgSize } from '../../tokens/size';
+import { LgSize } from '../../tokens/size';
 
 type LgButtonVariant = 'solid' | 'outlined' | 'text';
 type SeverityKey = 'primary' | LgSeverity;
 
-// The inner button fills the host box, so a layout class on `<lg-button>`
-// sizes the button too. The border width lives here so every variant shares
-// one box size; its color comes from the variant, since `border-transparent`
-// would fight the outlined severities at stylesheet order.
+// The host is the interactive element, so a consumer's own layout classes sit
+// beside these. The border width lives here so every variant shares one box
+// size; its color comes from the variant, since `border-transparent` would
+// fight the outlined severities at stylesheet order. `disabled:` covers the
+// native attribute, `aria-disabled:` the suppressed variant — which stays
+// hoverable on purpose, so a tooltip explaining the disabled state still fires.
 const BASE =
-  'inline-flex size-full items-center justify-center gap-2 border font-medium ' +
+  'inline-flex items-center justify-center gap-2 border font-medium ' +
   'transition-colors duration-200 cursor-pointer select-none ' +
   'disabled:pointer-events-none disabled:opacity-60 focus:outline-none ' +
+  'aria-disabled:opacity-60 aria-disabled:cursor-default ' +
   'focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-current';
 
 // primary/secondary track the themeable primary/surface scales, the state
@@ -67,52 +72,60 @@ const SEVERITY: Record<LgButtonVariant, Record<SeverityKey, string>> = {
   }
 };
 
-/** Icon-only glyph text size, keyed by the same `LgSize` scale. */
-const ICON_ONLY_TEXT: Record<LgSize, string> = {
-  sm: 'text-sm',
-  md: 'text-base',
-  lg: 'text-lg',
-  xl: 'text-xl'
+// A floor plus padding, keyed by the `LgSize` scale. The floor is the height
+// a one-line label produces at that step, so an icon on its own lands on a
+// square of the same height and the two line up in a row. `min-*` rather than
+// a fixed box: a label that wraps grows the button instead of spilling out of
+// it.
+const SIZE: Record<LgSize, string> = {
+  sm: 'min-h-8.5 min-w-8.5 px-2 py-1.5 text-sm',
+  md: 'min-h-10.5 min-w-10.5 px-3 py-2 text-base',
+  lg: 'min-h-12.5 min-w-12.5 px-3.5 py-2.5 text-lg',
+  xl: 'min-h-13.5 min-w-13.5 px-4 py-3 text-xl'
 };
 
+/** Drops the hover/active tokens a disabled control must not react with. */
+function withoutInteractionStates(severity: string): string {
+  return severity
+    .split(' ')
+    .filter((token) => !token.includes('hover:') && !token.includes('active:'))
+    .join(' ');
+}
+
 /**
- * A native `<button>` skin. Omit `label` for an icon-only button. Layout
- * classes go on the host and the inner button fills it; `styleClass` merges
- * onto that inner `<button>` beside the variant/severity classes.
+ * A button skin hosted on the real `<button>` or `<a>`, so `class`, `href`,
+ * `routerLink` and the rest belong to the consumer. The projected content is
+ * the label; an `icon` with nothing beside it renders as a square, and names
+ * itself through `ariaLabel`.
+ *
+ * `disabled` sets the native attribute on a `<button>`; on an `<a>`, and
+ * wherever `disabledInteractive` is set, it becomes `aria-disabled` with the
+ * activation suppressed instead, which keeps the element hoverable so a
+ * tooltip can explain why it is off.
  */
 @Component({
-  selector: 'lg-button',
+  selector: 'button[lgButton], a[lgButton]',
   host: {
-    class: 'inline-flex',
-    '[class.size-8]': 'iconOnly() && resolvedSize() === "sm"',
-    '[class.size-10]': 'iconOnly() && resolvedSize() === "md"',
-    '[class.size-12]': 'iconOnly() && resolvedSize() === "lg"',
-    '[class.size-14]': 'iconOnly() && resolvedSize() === "xl"'
+    '[class]': 'hostClasses()',
+    '[attr.type]': 'typeAttr()',
+    '[attr.disabled]': 'disabledAttr()',
+    '[attr.aria-disabled]': 'ariaDisabledAttr()',
+    '[attr.aria-label]': 'ariaLabel() ?? null',
+    '(click)': 'handleClick($event)'
   },
   template: `
-    <button
-      [type]="type()"
-      [disabled]="disabled() || loading()"
-      [attr.aria-label]="ariaLabel() ?? null"
-      [class]="buttonClasses()"
-      (click)="handleClick($event)"
-    >
-      @if (loading()) {
-        <span
-          class="inline-block size-4 animate-spin rounded-full border-2 border-current border-t-transparent"
-          aria-hidden="true"
-        ></span>
-      } @else if (icon()) {
-        <i [class]="icon()" aria-hidden="true"></i>
-      }
-      @if (hasLabel()) {
-        <span>{{ label() }}</span>
-      }
-    </button>
+    @if (loading()) {
+      <span
+        class="inline-block size-4 animate-spin rounded-full border-2 border-current border-t-transparent"
+        aria-hidden="true"
+      ></span>
+    } @else if (icon()) {
+      <i [class]="icon()" aria-hidden="true"></i>
+    }
+    <ng-content />
   `
 })
 export class LgButton {
-  readonly label = input<string>();
   readonly icon = input<IconSlot>();
   readonly severity = input<LgSeverity>();
   readonly size = input<LgSize>();
@@ -121,50 +134,64 @@ export class LgButton {
   readonly rounded = input(false, { transform: booleanAttribute });
   readonly disabled = input(false, { transform: booleanAttribute });
   readonly loading = input(false, { transform: booleanAttribute });
+  readonly disabledInteractive = input(false, { transform: booleanAttribute });
   readonly type = input<'button' | 'submit' | 'reset'>('button');
   readonly ariaLabel = input<string>();
-  readonly styleClass = input<string>('');
 
   // On-prefixed output name; no-output-on-prefix is disabled for it.
   readonly onClick = output<MouseEvent>();
 
-  protected readonly hasLabel = computed(() => {
-    const l = this.label();
-    return l !== undefined && l !== '';
-  });
-
-  protected readonly iconOnly = computed(() => !this.hasLabel());
+  private readonly isAnchor =
+    inject<ElementRef<HTMLElement>>(ElementRef).nativeElement.tagName === 'A';
 
   protected readonly resolvedSize = computed(() => this.size() ?? 'md');
 
-  protected readonly buttonClasses = computed(() => {
+  private readonly inactive = computed(() => this.disabled() || this.loading());
+
+  /** `disabled` an anchor cannot carry, and the opt-in hoverable variant. */
+  private readonly suppressed = computed(
+    () => this.inactive() && (this.isAnchor || this.disabledInteractive())
+  );
+
+  protected readonly typeAttr = computed(() =>
+    this.isAnchor ? null : this.type()
+  );
+
+  protected readonly disabledAttr = computed(() =>
+    this.inactive() && !this.suppressed() ? '' : null
+  );
+
+  protected readonly ariaDisabledAttr = computed(() =>
+    this.suppressed() ? 'true' : null
+  );
+
+  protected readonly hostClasses = computed(() => {
     const variant: LgButtonVariant = this.text()
       ? 'text'
       : this.outlined()
         ? 'outlined'
         : 'solid';
     const severityKey: SeverityKey = this.severity() ?? 'primary';
-    // The host carries icon-only square sizing, so only the text size is
-    // needed here; a labelled button gets the shared padding instead.
-    const sizing = this.iconOnly()
-      ? ICON_ONLY_TEXT[this.resolvedSize()]
-      : controlPadding(this.size());
+    const severity = SEVERITY[variant][severityKey];
     return [
       BASE,
       variant === 'outlined' ? '' : 'border-transparent',
       this.rounded() ? 'rounded-4xl' : 'rounded-md',
-      sizing,
-      SEVERITY[variant][severityKey],
-      this.styleClass()
+      SIZE[this.resolvedSize()],
+      this.inactive() ? withoutInteractionStates(severity) : severity
     ]
       .filter(Boolean)
       .join(' ');
   });
 
-  protected handleClick(event: MouseEvent): void {
-    if (this.disabled() || this.loading()) {
+  // A host listener types `$event` as `Event`; a click always delivers a
+  // `MouseEvent`, which is what the output carries.
+  protected handleClick(event: Event): void {
+    if (this.inactive()) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
       return;
     }
-    this.onClick.emit(event);
+    this.onClick.emit(event as MouseEvent);
   }
 }

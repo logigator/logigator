@@ -12,7 +12,8 @@ import { TranslateDirective } from '../translation/translate.directive';
     *appTranslate="let t"
     class="rounded-full bg-content p-1.5 shadow-lg"
   >
-    <lg-button
+    <button
+      lgButton
       icon="ph ph-bug"
       severity="secondary"
       rounded
@@ -20,7 +21,7 @@ import { TranslateDirective } from '../translation/translate.directive';
       [ariaLabel]="t('bugReport.badgeTooltip')"
       tooltipPosition="left"
       (onClick)="report()"
-    />
+    ></button>
   </div>`
 })
 export class BugReportBadgeComponent {

@@ -17,18 +17,21 @@ import { TranslateDirective } from '../../../translation/translate.directive';
   host: { class: 'contents' },
   template: `<ng-container *appTranslate="let t">
     @if (visible()) {
-      <lg-button
+      <button
+        lgButton
+        disabledInteractive
         size="sm"
         icon="ph ph-cloud-arrow-up"
         severity="info"
         [outlined]="true"
-        [label]="t('uploadComponent.button')"
         class="w-full"
         [disabled]="!authenticated()"
         [lgTooltip]="authenticated() ? '' : t('uploadComponent.signInTooltip')"
         tooltipPosition="top"
         (onClick)="upload()"
-      />
+      >
+        {{ t('uploadComponent.button') }}
+      </button>
     }
   </ng-container>`
 })

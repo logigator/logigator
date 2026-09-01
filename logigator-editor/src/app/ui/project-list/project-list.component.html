@@ -45,7 +45,8 @@
                 (keydown.escape)="cancelRename($event)"
                 (blur)="commitRename($event, item)"
               />
-              <lg-button
+              <button
+                lgButton
                 icon="ph ph-x"
                 severity="secondary"
                 [text]="true"
@@ -54,7 +55,7 @@
                 tooltipPosition="bottom"
                 (mousedown)="$event.preventDefault()"
                 (click)="cancelRename($event)"
-              />
+              ></button>
             </span>
           } @else {
             <span class="flex grow shrink-0 items-center gap-1 sm:gap-4">
@@ -68,34 +69,38 @@
                 </span>
               </div>
               @if (showShare()) {
-                <lg-button
+                <button
+                  lgButton
                   icon="ph ph-share-network"
                   [text]="true"
                   [ariaLabel]="t('openProjectDialog.shareProject')"
                   [lgTooltip]="t('openProjectDialog.shareProject')"
                   tooltipPosition="bottom"
                   (click)="onShareClick($event, item)"
-                />
+                ></button>
               }
               @if (showUpload()) {
-                <lg-button
+                <button
+                  lgButton
                   icon="ph ph-cloud-arrow-up"
                   [text]="true"
                   [ariaLabel]="t('openProjectDialog.uploadProject')"
                   [lgTooltip]="t('openProjectDialog.uploadProject')"
                   tooltipPosition="bottom"
                   (click)="onUploadClick($event, item)"
-                />
+                ></button>
               }
-              <lg-button
+              <button
+                lgButton
                 icon="ph ph-pencil-simple"
                 [text]="true"
                 [ariaLabel]="t('openProjectDialog.renameProject')"
                 [lgTooltip]="t('openProjectDialog.renameProject')"
                 tooltipPosition="bottom"
                 (click)="startRename($event, item)"
-              />
-              <lg-button
+              ></button>
+              <button
+                lgButton
                 icon="ph ph-trash"
                 severity="danger"
                 [text]="true"
@@ -103,7 +108,7 @@
                 [lgTooltip]="t('openProjectDialog.deleteProject')"
                 tooltipPosition="bottom"
                 (click)="onDeleteClick($event, item)"
-              />
+              ></button>
             </span>
           }
         </div>

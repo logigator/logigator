@@ -59,6 +59,15 @@ export default defineConfig([
       angular.configs.templateRecommended,
       angular.configs.templateAccessibility
     ],
-    rules: {}
+    rules: {
+      // An icon-only `<button lgButton>` carries no template content and takes
+      // its accessible name from the `ariaLabel` input, which this rule cannot
+      // see. `[attr.aria-label]`, which it does accept, collides with the
+      // component's own host binding.
+      '@angular-eslint/template/elements-content': [
+        'error',
+        { allowList: ['lgButton'] }
+      ]
+    }
   }
 ]);

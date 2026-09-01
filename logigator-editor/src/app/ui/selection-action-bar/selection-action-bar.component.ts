@@ -29,76 +29,84 @@ import { TranslateDirective } from '../../translation/translate.directive';
             inspector.selectionCount()
           }}</span>
           @if (inspector.selectedComponent()) {
-            <lg-button
+            <button
+              lgButton
               icon="ph ph-sliders-horizontal"
               severity="secondary"
               rounded
               text
               [ariaLabel]="t('mobile.settings')"
               (onClick)="mobileUi.toggle('settings')"
-            ></lg-button>
+            ></button>
           }
-          <lg-button
+          <button
+            lgButton
             icon="ph ph-copy"
             severity="secondary"
             rounded
             text
             [ariaLabel]="t('toolBar.copy')"
             (onClick)="copy()"
-          ></lg-button>
-          <lg-button
+          ></button>
+          <button
+            lgButton
             icon="ph ph-scissors"
             severity="secondary"
             rounded
             text
             [ariaLabel]="t('toolBar.cut')"
             (onClick)="cut()"
-          ></lg-button>
+          ></button>
         }
         @if (clipboard.hasClipboard()) {
-          <lg-button
+          <button
+            lgButton
             icon="ph ph-clipboard"
             severity="secondary"
             rounded
             text
             [ariaLabel]="t('toolBar.paste')"
             (onClick)="paste()"
-          ></lg-button>
+          ></button>
         }
         @if (inspector.hasSelection()) {
-          <lg-button
+          <button
+            lgButton
             icon="ph ph-trash"
             severity="secondary"
             rounded
             text
             [ariaLabel]="t('toolBar.delete')"
             (onClick)="delete()"
-          ></lg-button>
-          <lg-button
+          ></button>
+          <button
+            lgButton
             icon="ph ph-arrow-clockwise"
             severity="secondary"
             rounded
             text
             [ariaLabel]="t('toolBar.rotateCw')"
             (onClick)="rotate(1)"
-          ></lg-button>
-          <lg-button
+          ></button>
+          <button
+            lgButton
             icon="ph ph-arrow-counter-clockwise"
             severity="secondary"
             rounded
             text
             [ariaLabel]="t('toolBar.rotateCcw')"
             (onClick)="rotate(3)"
-          ></lg-button>
+          ></button>
         } @else {
-          <lg-button
+          <button
+            lgButton
             icon="ph ph-x"
             severity="secondary"
             rounded
             text
             [ariaLabel]="t('clipboard.clear')"
             (onClick)="clearClipboard()"
-          ></lg-button>
+          ></button>
         }
       </div>
     }

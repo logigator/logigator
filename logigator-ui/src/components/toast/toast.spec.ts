@@ -254,7 +254,7 @@ describe('LgToast', () => {
     expect(toasts(f.nativeElement)).toHaveLength(0);
   });
 
-  it('dismisses the toast when the lg-button is clicked', () => {
+  it('dismisses the toast when its close button is clicked', () => {
     const { f, service } = setup();
     service.add({ severity: 'info', summary: 'closable', life: 5000 });
     f.detectChanges();

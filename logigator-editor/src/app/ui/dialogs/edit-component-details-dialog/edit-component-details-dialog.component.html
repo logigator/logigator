@@ -44,10 +44,8 @@
     {{ t('editComponentDetails.frozenInstancesHint') }}
   </p>
   <div class="flex justify-end">
-    <lg-button
-      type="submit"
-      [label]="t('editComponentDetails.save')"
-      [disabled]="!canSave"
-    />
+    <button lgButton type="submit" [disabled]="!canSave">
+      {{ t('editComponentDetails.save') }}
+    </button>
   </div>
 </form>

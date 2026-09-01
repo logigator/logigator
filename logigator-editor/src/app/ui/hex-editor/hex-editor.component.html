@@ -43,42 +43,49 @@
           [ngModelOptions]="{ standalone: true }"
           [attr.aria-label]="t('hexEditor.goto')"
         />
-        <lg-button
+        <button
+          lgButton
           icon="ph ph-magnifying-glass"
           severity="secondary"
           size="sm"
           (onClick)="goto()"
-          [attr.aria-label]="t('hexEditor.goto')"
-        />
+          [ariaLabel]="t('hexEditor.goto')"
+        ></button>
       </div>
 
       @if (readOnly() && highlightIndex() !== null) {
-        <lg-button
-          [label]="t('hexEditor.follow')"
+        <button
+          lgButton
           icon="ph ph-crosshair"
           severity="secondary"
           [outlined]="!follow()"
           size="sm"
           (onClick)="follow.set(!follow())"
-        />
+        >
+          {{ t('hexEditor.follow') }}
+        </button>
       }
-      <lg-button
-        [label]="t('hexEditor.copy')"
+      <button
+        lgButton
         icon="ph ph-copy"
         severity="secondary"
         [outlined]="true"
         size="sm"
         (onClick)="copyAll()"
-      />
+      >
+        {{ t('hexEditor.copy') }}
+      </button>
       @if (!readOnly()) {
-        <lg-button
-          [label]="t('hexEditor.clear')"
+        <button
+          lgButton
           icon="ph ph-eraser"
           severity="secondary"
           [outlined]="true"
           size="sm"
           (onClick)="confirmClear($event)"
-        />
+        >
+          {{ t('hexEditor.clear') }}
+        </button>
       }
     </div>
   </div>
@@ -210,16 +217,12 @@
 
   @if (!readOnly()) {
     <div class="mt-3 flex justify-end gap-2">
-      <lg-button
-        [label]="t('common.cancel')"
-        severity="secondary"
-        (onClick)="dismiss()"
-      />
-      <lg-button
-        [label]="t('common.save')"
-        icon="ph ph-check"
-        (onClick)="commit()"
-      />
+      <button lgButton severity="secondary" (onClick)="dismiss()">
+        {{ t('common.cancel') }}
+      </button>
+      <button lgButton icon="ph ph-check" (onClick)="commit()">
+        {{ t('common.save') }}
+      </button>
     </div>
   }
 </div>

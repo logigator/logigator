@@ -13,12 +13,7 @@ import { SettingsPanel } from '../settings-panel/settings-panel';
 import { TranslateDirective } from '../../translation/translate.directive';
 import { NavDrawer } from '../nav-drawer/nav-drawer';
 import { SITE_LOGO } from '../site-logo';
-import {
-  BUTTON_LINK_CLASS,
-  BUTTON_LINK_OUTLINED_CLASS,
-  MENU_LINK_CLASS,
-  NAV_LINK_CLASS
-} from '../link-classes';
+import { MENU_LINK_CLASS, NAV_LINK_CLASS } from '../link-classes';
 
 /**
  * The site header. It renders personalized in the server's first byte: the
@@ -55,8 +50,6 @@ export class TopBar {
   protected readonly logo = SITE_LOGO;
   protected readonly navLinkClass = NAV_LINK_CLASS;
   protected readonly menuLinkClass = MENU_LINK_CLASS;
-  protected readonly buttonLinkClass = BUTTON_LINK_CLASS;
-  protected readonly buttonLinkOutlinedClass = BUTTON_LINK_OUTLINED_CLASS;
 
   protected readonly drawerOpen = signal(false);
 

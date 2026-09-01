@@ -127,7 +127,8 @@ const DEFAULT_SEVERITY: LgSeverity = 'info';
               <p class="break-words text-sm">{{ toast.detail }}</p>
             }
           </div>
-          <lg-button
+          <button
+            lgButton
             text
             size="sm"
             icon="ph ph-x"
@@ -135,17 +136,19 @@ const DEFAULT_SEVERITY: LgSeverity = 'info';
             class="-mt-1 -mr-1 shrink-0"
             [severity]="toast.severity"
             (onClick)="close(toast.id)"
-          />
+          ></button>
         </div>
         @if (toast.action; as action) {
           <div class="mt-2 flex justify-end">
-            <lg-button
+            <button
+              lgButton
               outlined
               size="sm"
-              [label]="action.label"
               [severity]="toast.severity"
               (onClick)="runAction(toast.id)"
-            />
+            >
+              {{ action.label }}
+            </button>
           </div>
         }
         @if (toast.life > 0 && !toast.leaving) {

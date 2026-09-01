@@ -42,20 +42,24 @@ const POPUP_GAP = 10;
       >
         <p class="mb-3 text-sm">{{ current()?.message }}</p>
         <div class="flex justify-end gap-2">
-          <lg-button
+          <button
+            lgButton
             size="sm"
-            [label]="current()?.rejectLabel"
             [severity]="rejectSeverity()"
             [outlined]="rejectOutlined()"
             (onClick)="reject()"
-          />
-          <lg-button
+          >
+            {{ current()?.rejectLabel }}
+          </button>
+          <button
+            lgButton
             size="sm"
-            [label]="current()?.acceptLabel"
             [severity]="acceptSeverity()"
             [outlined]="acceptOutlined()"
             (onClick)="accept()"
-          />
+          >
+            {{ current()?.acceptLabel }}
+          </button>
         </div>
         <lg-caret [side]="side()" />
       </div>

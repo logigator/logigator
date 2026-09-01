@@ -25,7 +25,7 @@ describe('ToolBarComponent', () => {
     const el: HTMLElement = fixture.nativeElement;
     await vi.waitFor(() => {
       fixture.detectChanges();
-      expect(el.querySelector('lg-button')).not.toBeNull();
+      expect(el.querySelector('button[lgButton]')).not.toBeNull();
     });
     return el;
   }
@@ -47,11 +47,13 @@ describe('ToolBarComponent', () => {
     expect(el.querySelector('.ph-line-segment')).toBeNull(); // tools hidden
     expect(el.querySelector('.ph-trash')).toBeNull(); // delete hidden
 
-    // Run controls stay disabled until a worker session reports ready; none
-    // was started, so they render inert.
+    // Run controls stay inert until a worker session reports ready; none was
+    // started. They carry `disabledInteractive`, so the element stays
+    // hoverable and its tooltip keeps explaining why the button is off.
     const playButton = el
       .querySelector('.ph-play')
       ?.closest('button') as HTMLButtonElement;
-    expect(playButton.disabled).toBe(true);
+    expect(playButton.getAttribute('aria-disabled')).toBe('true');
+    expect(playButton.hasAttribute('disabled')).toBe(false);
   });
 });
