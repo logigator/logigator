@@ -1,6 +1,7 @@
 import { inject, Injectable, Signal } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 import { toSignal } from '@angular/core/rxjs-interop';
+import { firstValueFrom } from 'rxjs';
 import { TranslocoService } from '@jsverse/transloco';
 import { TranslateArgs } from './translate-args.model';
 import { TranslationKey } from './translation-key.model';
@@ -12,9 +13,9 @@ import { LanguageId } from '@logigator/core';
  * surface the app's TypeScript should touch; templates go through
  * `TranslateDirective` (`*webTranslate="let t"`), which delegates here.
  *
- * The active language is the URL's, so nothing here switches it — a language
- * change is a document load, which is also what lets the server render one
- * language per response.
+ * The active language is the URL's first segment: a server render answers in
+ * the language it was asked for, and {@link setActiveLang} moves the document
+ * to another one, the caller navigating to the same page under the new prefix.
  */
 @Injectable({ providedIn: 'root' })
 export class TranslationService {
@@ -29,7 +30,7 @@ export class TranslationService {
     this.transloco.selectTranslation()
   );
 
-  /** The language this document is rendered in. */
+  /** The language the document currently renders in. */
   public readonly activeLang = this.transloco.activeLang as Signal<LanguageId>;
 
   /**
@@ -43,6 +44,18 @@ export class TranslationService {
     // The post-load reactive dependency; see the field comment.
     this.loadedTranslation();
     return this.transloco.translate(key, params[0]);
+  }
+
+  /**
+   * Switches the document to another language: the table is loaded before it
+   * becomes active, so nothing renders through the untranslated keys, and
+   * `<html lang>` follows. The URL is the language's other half — a caller
+   * navigates to the same page under the new prefix.
+   */
+  public async setActiveLang(lang: LanguageId): Promise<void> {
+    await firstValueFrom(this.transloco.load(lang));
+    this.transloco.setActiveLang(lang);
+    this.syncDocumentLang();
   }
 
   public getActiveLang(): LanguageId {

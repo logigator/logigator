@@ -1,4 +1,4 @@
-import { inject, Injectable, PLATFORM_ID } from '@angular/core';
+import { effect, inject, Injectable, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import type { PostHog } from 'posthog-js';
 import { environment } from '../../environments/environment';
@@ -29,8 +29,24 @@ export class AnalyticsService {
 
   private initialized = false;
   private posthog: PostHog | null = null;
+  /**
+   * Seeded synchronously, then kept current by the effect below: the effect's
+   * first run is only scheduled, and PostHog may already be initialising.
+   */
+  private uiLanguage = this.translation.getActiveLang();
   /** In-flight (or settled) import, so concurrent consent events share one. */
   private posthogLoad: Promise<PostHog> | null = null;
+
+  constructor() {
+    // The language is a segment of every URL and the document can switch to
+    // another one in place, so the super property follows it. `activeLang`
+    // fires before the table resolves, which is what this wants: the id, not
+    // the translations.
+    effect(() => {
+      this.uiLanguage = this.translation.activeLang();
+      this.registerLanguage();
+    });
+  }
 
   /** Sends an event, dropped silently until PostHog is initialised on consent.
    * Never throws: a failing third-party `capture` must not break the operation
@@ -108,7 +124,7 @@ export class AnalyticsService {
   /**
    * Stamps {@link APP_ID} and the page's language on every event, so language
    * is a breakdown on any event. PostHog's `$browser_language` cannot stand in:
-   * the language is the URL's first segment, negotiated once per document.
+   * the language is the URL's first segment, negotiated per document.
    *
    * Registered from `loaded` rather than after `init` returns, because the
    * session's `$pageview` is captured from a timeout PostHog schedules in that
@@ -117,10 +133,17 @@ export class AnalyticsService {
    */
   private registerSuperProperties(instance: PostHog): void {
     try {
-      instance.register({
-        app: APP_ID,
-        ui_language: this.translation.getActiveLang()
-      });
+      instance.register({ app: APP_ID, ui_language: this.uiLanguage });
+    } catch {
+      // Analytics must never break the surrounding operation.
+    }
+  }
+
+  /** Restamps the language on a document that has switched to another one. */
+  private registerLanguage(): void {
+    if (!this.initialized) return;
+    try {
+      this.posthog?.register({ ui_language: this.uiLanguage });
     } catch {
       // Analytics must never break the surrounding operation.
     }

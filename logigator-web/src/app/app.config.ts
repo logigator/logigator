@@ -65,13 +65,17 @@ export const appConfig: ApplicationConfig = {
       config: {
         defaultLang: DEFAULT_LANGUAGE,
         availableLangs: [...AVAILABLE_LANGUAGES],
+        // Transloco's own directive and pipe are unused — templates go
+        // through `*webTranslate`, whose `t` is a reactive read of the loaded
+        // table — so a language change needs no re-render pass of its own.
         reRenderOnLangChange: false,
         prodMode: !isDevMode()
       },
       loader: TranslationLoaderService
     }),
-    // The language is the URL's first segment, so it is settled before anything
-    // renders and never changes within a document — a switch rewrites the URL.
+    // The language is the URL's first segment, so it is settled and its table
+    // loaded before anything renders — the shell included, which is outside the
+    // router. A later switch is a navigation, and the route loads the table.
     provideAppInitializer(() => {
       const transloco = inject(TranslocoService);
       transloco.setActiveLang(resolveDocumentLanguage());

@@ -23,7 +23,10 @@
 
     <!-- One file for both schemes: the bar is the same green either way, so the
          wordmark that reads on it is the dark-ink one. -->
-    <a class="flex items-center justify-self-center" [routerLink]="links.home">
+    <a
+      class="flex items-center justify-self-center"
+      [routerLink]="links.home()"
+    >
       <img
         class="h-8 w-auto"
         width="145"
@@ -38,7 +41,7 @@
         <a
           [class]="barLinkClass"
           [routerLinkActive]="barLinkActiveClass"
-          [routerLink]="links.features"
+          [routerLink]="links.features()"
           >{{ t('header.features') }}</a
         >
       </li>
@@ -46,7 +49,7 @@
         <a
           [class]="barLinkClass"
           [routerLinkActive]="barLinkActiveClass"
-          [routerLink]="links.community"
+          [routerLink]="links.community()"
           >{{ t('header.community') }}</a
         >
       </li>
@@ -61,7 +64,7 @@
           <a
             [class]="barLinkClass"
             [routerLinkActive]="barLinkActiveClass"
-            [routerLink]="links.myProjects"
+            [routerLink]="links.myProjects()"
             >{{ t('header.myProjects') }}</a
           >
         </li>
@@ -69,7 +72,7 @@
           <a
             [class]="barLinkClass"
             [routerLinkActive]="barLinkActiveClass"
-            [routerLink]="links.myComponents"
+            [routerLink]="links.myComponents()"
             >{{ t('header.myComponents') }}</a
           >
         </li>

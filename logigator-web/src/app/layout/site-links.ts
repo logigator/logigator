@@ -1,19 +1,19 @@
-import { inject, Injectable } from '@angular/core';
+import { computed, inject, Injectable, Signal } from '@angular/core';
 import { environment } from '../../environments/environment';
 import { pathInLanguage } from '../translation/language-url';
-import { LanguageId } from '@logigator/core';
 import { TranslationService } from '../translation/translation.service';
 
 /**
  * Every in-app destination, already carrying the document's language prefix.
  *
- * A page's language cannot change without a document load — the switch rewrites
- * the URL — so these are plain strings rather than signals, and a template can
- * bind one straight to `routerLink`.
+ * Signals, because the language is part of the path and the document can switch
+ * to another one in place: a link read in a template re-prefixes itself when it
+ * does. The two absolute URLs are plain strings — they belong to deployments of
+ * their own and carry no language.
  */
 @Injectable({ providedIn: 'root' })
 export class SiteLinks {
-  private readonly lang = inject(TranslationService).getActiveLang();
+  private readonly lang = inject(TranslationService).activeLang;
 
   public readonly home = this.path('/');
   public readonly features = this.path('/features');
@@ -31,13 +31,8 @@ export class SiteLinks {
 
   public readonly repository = 'https://github.com/logigator/logigator';
 
-  /** A path in this app, language-prefixed. */
-  public path(path: string): string {
-    return pathInLanguage(this.lang, path);
-  }
-
-  /** The URL currently open, in another language. */
-  public inLanguage(lang: LanguageId, pathname: string): string {
-    return pathInLanguage(lang, pathname);
+  /** A path in this app, in the language the document renders in. */
+  public path(path: string): Signal<string> {
+    return computed(() => pathInLanguage(this.lang(), path));
   }
 }

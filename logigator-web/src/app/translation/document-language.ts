@@ -4,7 +4,7 @@ import { languageFromPath } from './language-url';
 import { DEFAULT_LANGUAGE, LanguageId } from '@logigator/core';
 
 /**
- * The language this document renders in, read from the URL's first segment.
+ * The language a URL asks for, read from its first segment.
  *
  * `PlatformLocation` answers on both platforms — from the incoming request
  * during a server render, from `location` after hydration — so the two agree by

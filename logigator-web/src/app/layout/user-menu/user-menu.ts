@@ -4,7 +4,6 @@ import {
   computed,
   inject
 } from '@angular/core';
-import { DOCUMENT, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import {
@@ -34,9 +33,6 @@ const LANGUAGE_FIELD = 'lang';
  *
  * Two sections rather than the editor's three — there are no editor settings
  * here — and both are the editor's own controls, so the two panels read alike.
- * A language switch is still a document load; the select performs it rather
- * than swapping a table in place, and the four translations stay discoverable
- * through the `hreflang` alternates `SeoService` emits.
  */
 @Component({
   selector: 'web-user-menu',
@@ -52,8 +48,6 @@ const LANGUAGE_FIELD = 'lang';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class UserMenu {
-  private readonly document = inject(DOCUMENT);
-  private readonly location = inject(Location);
   private readonly router = inject(Router);
   private readonly preferences = inject(PreferencesService);
   private readonly translation = inject(TranslationService);
@@ -62,7 +56,7 @@ export class UserMenu {
   protected readonly session = inject(SessionService);
   protected readonly theming = inject(ThemingService);
   protected readonly languages = AVAILABLE_LANGUAGES;
-  protected readonly activeLang = this.translation.getActiveLang();
+  protected readonly activeLang = this.translation.activeLang;
 
   /**
    * The avatar ladder the API encoded, untouched: the browser picks the width
@@ -97,21 +91,18 @@ export class UserMenu {
   );
 
   /**
-   * Leaves for the page currently open, in another language.
-   *
-   * The preference goes into the shared cookie first — that is what carries the
-   * choice to the editor and to the language the API writes mails in — and the
-   * document load follows, since the language is a URL segment and a server
-   * render is what puts the right one in the first byte.
+   * Moves the document to another language: the preference into the shared
+   * cookie — that is what carries the choice to the editor and to the language
+   * the API writes mails in — then the same page under the new prefix. The
+   * language is a segment of every URL, so the navigation is the switch; the
+   * route loads the table before it activates.
    */
   protected switchLanguage(lang: LanguageId): void {
-    if (lang === this.activeLang) {
+    if (lang === this.activeLang()) {
       return;
     }
     this.preferences.set(LANGUAGE_FIELD, lang);
-    this.document.location.assign(
-      urlInLanguage(lang, this.location.path(true) || '/')
-    );
+    void this.router.navigateByUrl(urlInLanguage(lang, this.router.url));
   }
 
   private signedInRows(): MenuItem[] {
@@ -119,7 +110,7 @@ export class UserMenu {
       {
         label: this.translation.translate('header.account'),
         icon: 'ph ph-user',
-        command: () => void this.router.navigateByUrl(this.links.account)
+        command: () => void this.router.navigateByUrl(this.links.account())
       },
       {
         label: this.translation.translate('header.logout'),
@@ -134,12 +125,12 @@ export class UserMenu {
       {
         label: this.translation.translate('header.login'),
         icon: 'ph ph-sign-in',
-        command: () => void this.router.navigateByUrl(this.links.login)
+        command: () => void this.router.navigateByUrl(this.links.login())
       },
       {
         label: this.translation.translate('header.register'),
         icon: 'ph ph-user-plus',
-        command: () => void this.router.navigateByUrl(this.links.register)
+        command: () => void this.router.navigateByUrl(this.links.register())
       }
     ];
   }

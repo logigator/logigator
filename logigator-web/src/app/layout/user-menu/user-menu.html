@@ -27,7 +27,7 @@
         fluid
         [ariaLabel]="t('header.language')"
         [options]="languages"
-        [ngModel]="activeLang"
+        [ngModel]="activeLang()"
         (ngModelChange)="switchLanguage($event)"
       />
     </lg-user-panel-section>

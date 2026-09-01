@@ -1,9 +1,11 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { ComponentFixture } from '@angular/core/testing';
 import { AVAILABLE_LANGUAGES } from '@logigator/core';
 import { configureTestBed } from '../../../testing/configure-test-bed';
+import { Router } from '@angular/router';
 import { PreferencesService } from '../../storage/preferences.service';
+import { TranslationService } from '../../translation/translation.service';
 import { UserMenu } from './user-menu';
 
 function overlay(selector: string): HTMLElement[] {
@@ -56,18 +58,21 @@ describe('UserMenu', () => {
     ).toEqual(['English']);
   });
 
-  it('records the choice in the shared preference before leaving', async () => {
-    // The document load is what performs the switch; the cookie is what carries
-    // the choice to the editor and to the language the API writes mails in, so
-    // it has to be written while this document is still here to write it.
+  it('switches the document to the chosen language, on the page it is on', async () => {
+    // The language is a segment of every URL, so the switch is the table and
+    // the prefix together; the shared cookie is what carries the choice to the
+    // editor and to the language the API writes mails in.
     const f = await openLanguages();
 
-    const german = overlay('[role=option]').find(
-      (option) => option.textContent?.trim() === 'Deutsch'
-    );
-    german?.click();
+    overlay('[role=option]')
+      .find((option) => option.textContent?.trim() === 'Deutsch')
+      ?.click();
     f.detectChanges();
 
     expect(TestBed.inject(PreferencesService).get('lang')).toBe('de');
+    await vi.waitFor(() => {
+      expect(TestBed.inject(TranslationService).getActiveLang()).toBe('de');
+      expect(TestBed.inject(Router).url).toBe('/de');
+    });
   });
 });

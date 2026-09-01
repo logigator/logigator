@@ -9,14 +9,14 @@
       <a
         routerLinkActive="text-primary!"
         [class]="menuLinkClass"
-        [routerLink]="links.features"
+        [routerLink]="links.features()"
         (click)="close()"
         >{{ t('header.features') }}</a
       >
       <a
         routerLinkActive="text-primary!"
         [class]="menuLinkClass"
-        [routerLink]="links.community"
+        [routerLink]="links.community()"
         (click)="close()"
         >{{ t('header.community') }}</a
       >
@@ -27,14 +27,14 @@
       <a
         routerLinkActive="text-primary!"
         [class]="menuLinkClass"
-        [routerLink]="links.myProjects"
+        [routerLink]="links.myProjects()"
         (click)="close()"
         >{{ t('header.myProjects') }}</a
       >
       <a
         routerLinkActive="text-primary!"
         [class]="menuLinkClass"
-        [routerLink]="links.myComponents"
+        [routerLink]="links.myComponents()"
         (click)="close()"
         >{{ t('header.myComponents') }}</a
       >

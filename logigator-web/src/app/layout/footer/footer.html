@@ -2,10 +2,10 @@
   <div
     class="mx-auto flex max-w-7xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-6 text-sm text-muted"
   >
-    <a class="hover:text-text" [routerLink]="links.privacyPolicy"
+    <a class="hover:text-text" [routerLink]="links.privacyPolicy()"
       >{{ t('footer.privacyPolicy') }}</a
     >
-    <a class="hover:text-text" [routerLink]="links.imprint"
+    <a class="hover:text-text" [routerLink]="links.imprint()"
       >{{ t('footer.imprint') }}</a
     >
     <a

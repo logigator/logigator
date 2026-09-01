@@ -2,6 +2,7 @@ import { inject } from '@angular/core';
 import { CanMatchFn, Route, Router, Routes } from '@angular/router';
 import { isAvailableLanguage } from '@logigator/core';
 import { resolveDocumentLanguage } from './translation/document-language';
+import { languageTableGuard } from './translation/language-guard';
 import { HomePage } from './pages/home/home-page';
 import { NotFoundPage } from './pages/not-found/not-found-page';
 import { PageMeta } from './seo/seo.service';
@@ -32,6 +33,7 @@ export const routes: Route[] = [
   {
     path: ':lang',
     canMatch: [languagePrefix],
+    canActivate: [languageTableGuard],
     children: localizedRoutes
   },
   // A URL carrying no language. The SSR server redirects one before Angular

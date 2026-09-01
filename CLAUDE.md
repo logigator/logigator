@@ -238,12 +238,15 @@ path behaves the same in development).
 - **Routing is `/:lang/…` for every page.** A `canMatch` guard rejects a first segment that is not a
   language, so `/nonsense` 404s instead of rendering the home page. An unprefixed URL is redirected
   by `server.ts` — a real `302`, since the target depends on the visitor's cookie and headers.
-- **A language switch is a document load**, so the active language is settled at bootstrap
-  (`document-language.ts`, off `PlatformLocation`) and never changes within a document. That is what
-  lets the server render one language per response and `SiteLinks` hold plain prefixed strings. The
-  account panel's language select performs the load itself (cookie first, then `location.assign`),
-  so it is the editor's control rather than a list of links; the four translations stay discoverable
-  through the `hreflang` alternates `SeoService` emits.
+- **A language switch is a navigation.** `lang` is a route parameter, and `languageTableGuard` on
+  it loads the table before the route activates, so the switch and the browser's back button both
+  carry the translations with them and no page renders through its keys. Switching is therefore
+  `navigateByUrl(urlInLanguage(lang, router.url))` plus the cookie write; nothing else calls
+  `TranslationService.setActiveLang`. The prefix is part of every path, so `SiteLinks` are signals
+  off the active language and anything else holding a prefixed string has to be too — a link left
+  behind sends the next click back to the language just left. A document still opens in the
+  language its URL names (`document-language.ts`, off `PlatformLocation`, so server and browser
+  agree), which is what lets a server render answer one language per request.
 - **Angular's HTTP transfer cache is off** (`withNoHttpTransferCache`): it treats the forwarded
   `cookie` header as an authorization header and skips such requests, and it keys on the URL after
   the interceptor has moved it onto the API's origin. Anything that must cross the server/browser

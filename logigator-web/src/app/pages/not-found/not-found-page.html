@@ -7,7 +7,7 @@
     {{ t('pages.notFound.title') }}
   </h1>
   <p class="text-muted">{{ t('pages.notFound.text') }}</p>
-  <a class="text-primary hover:underline" [routerLink]="links.home"
+  <a class="text-primary hover:underline" [routerLink]="links.home()"
     >{{ t('pages.notFound.back') }}</a
   >
 </section>
