@@ -58,5 +58,14 @@
       <i class="ph ph-sign-in" aria-hidden="true"></i>
       <span>{{ t('userSettings.logIn') }}</span>
     </button>
+    <button
+      type="button"
+      lgRipple
+      class="flex w-full cursor-pointer items-center gap-2 rounded px-3 py-2 text-left text-text hover:bg-content-hover"
+      (click)="register()"
+    >
+      <i class="ph ph-user-plus" aria-hidden="true"></i>
+      <span>{{ t('userSettings.signUp') }}</span>
+    </button>
   }
 </ng-container>

@@ -26,7 +26,8 @@ const en = {
     editorSettings: 'Editor Settings',
     account: 'Account',
     logOut: 'Log Out',
-    logIn: 'Log In'
+    logIn: 'Log In',
+    signUp: 'Sign Up'
   },
   theming: {
     light: 'Light',

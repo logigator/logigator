@@ -73,6 +73,11 @@ export class UserService {
     window.open('/login', '_blank', 'noopener');
   }
 
+  /** Open the registration page in a new tab. */
+  register(): void {
+    window.open('/register', '_blank', 'noopener');
+  }
+
   /**
    * Ends the server session. Pure transport: throws on failure and emits no
    * toast; `SessionLifecycleService` owns the surrounding flow. The server

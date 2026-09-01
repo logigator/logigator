@@ -47,4 +47,9 @@ export class UserSettingsPanelComponent {
     this.userService.login();
     this.action.emit();
   }
+
+  protected register(): void {
+    this.userService.register();
+    this.action.emit();
+  }
 }

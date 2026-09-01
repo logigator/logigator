@@ -28,7 +28,8 @@ const fr: TranslationSchema = {
     editorSettings: "Paramètres de l'éditeur",
     account: 'Compte',
     logOut: 'Se déconnecter',
-    logIn: 'Se connecter'
+    logIn: 'Se connecter',
+    signUp: "S'inscrire"
   },
   theming: {
     light: 'Clair',
