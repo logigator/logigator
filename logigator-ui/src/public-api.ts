@@ -134,6 +134,7 @@ export {
   positionForSide,
   caretSideChanges,
   caretOffsetFor,
+  externalTeardown,
   originVisibilityChanges
 } from './internal/overlay';
 export type {

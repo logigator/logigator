@@ -202,4 +202,26 @@ describe('LgMenubar', () => {
     f.detectChanges();
     expect(openMenu()).toBeNull();
   });
+
+  it('disarms when cdk disposes the panel on navigation', () => {
+    const { f, host } = setup();
+    topButtons(host)[0].click();
+    f.detectChanges();
+    expect(openMenu()).not.toBeNull();
+
+    // `disposeOnNavigation` disposes the overlay behind the bar's back, which
+    // nulls its pane.
+    window.dispatchEvent(new PopStateEvent('popstate'));
+    f.detectChanges();
+    expect(openMenu()).toBeNull();
+
+    // The bar is disarmed, so the outside pointerdown reaches a dropped ref
+    // and the next click opens the submenu instead of toggling it shut.
+    document.body.dispatchEvent(
+      new PointerEvent('pointerdown', { bubbles: true })
+    );
+    topButtons(host)[0].click();
+    f.detectChanges();
+    expect(openMenu()).not.toBeNull();
+  });
 });

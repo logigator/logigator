@@ -16,6 +16,7 @@ import {
   caretSideChanges,
   connectedPositions,
   createConnectedOverlay,
+  externalTeardown,
   LgOverlaySide
 } from '../../internal/overlay';
 import { LgButton } from '../button/button';
@@ -103,6 +104,12 @@ export class LgConfirmPopup extends LgConfirmOutlet implements OnDestroy {
           event.preventDefault();
           this.reject();
         }
+      })
+    );
+    this.subscriptions.add(
+      externalTeardown(this.overlayRef, () => {
+        this.overlayRef = null;
+        this.reject();
       })
     );
   }

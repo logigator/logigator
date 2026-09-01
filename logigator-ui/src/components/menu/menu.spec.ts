@@ -123,4 +123,22 @@ describe('LgMenu', () => {
     // Escape was pre-handled, so the menu must NOT close.
     expect(f.componentInstance.open()).toBe(true);
   });
+
+  it('reports closed when cdk disposes the panel on navigation', () => {
+    const { f, trigger } = setup();
+    trigger.click();
+    f.detectChanges();
+    expect(f.componentInstance.open()).toBe(true);
+
+    // `disposeOnNavigation` disposes the overlay behind the menu's back.
+    window.dispatchEvent(new PopStateEvent('popstate'));
+    f.detectChanges();
+    expect(f.componentInstance.open()).toBe(false);
+    expect(container()?.querySelector('[role=menu]')).toBeNull();
+
+    // The ref went with it, so the trigger opens rather than toggling shut.
+    trigger.click();
+    f.detectChanges();
+    expect(container()?.querySelector('[role=menu]')).not.toBeNull();
+  });
 });
