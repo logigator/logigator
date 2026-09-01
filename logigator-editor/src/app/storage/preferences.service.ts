@@ -1,21 +1,11 @@
 import { inject, Injectable } from '@angular/core';
+import {
+  decodePreferences,
+  encodePreferences,
+  Preferences,
+  PREFERENCES_COOKIE
+} from '@logigator/core';
 import { CookieService } from './cookie.service';
-
-/** The origin-wide cookie the editor and the surrounding pages both read. */
-const COOKIE_NAME = 'preferences';
-
-/** Express serializes an object cookie value as `j:` + JSON, URI-encoded. */
-const JSON_PREFIX = 'j:';
-
-/**
- * Fields of the `preferences` cookie the editor uses. Others may be present —
- * it is written by the server too — so reads and writes keep the rest intact.
- */
-export interface Preferences {
-  lang?: string;
-  theme?: string;
-  [field: string]: unknown;
-}
 
 /**
  * The user's language and theme, in the `preferences` cookie every page on the
@@ -31,27 +21,7 @@ export class PreferencesService {
 
   /** The whole cookie; `{}` when it is absent or unreadable. */
   public read(): Preferences {
-    const raw = this.cookies.get(COOKIE_NAME);
-    if (!raw) {
-      return {};
-    }
-
-    try {
-      // A cookie the server wrote arrives URI-encoded, one mirrored into the
-      // reactive map here may not; decoding is a no-op on the latter.
-      const decoded = decodeURIComponent(raw);
-      if (!decoded.startsWith(JSON_PREFIX)) {
-        return {};
-      }
-      const parsed: unknown = JSON.parse(decoded.slice(JSON_PREFIX.length));
-      return typeof parsed === 'object' && parsed !== null
-        ? (parsed as Preferences)
-        : {};
-    } catch {
-      // Client-writable, so a malformed value is absorbed and consumers fall
-      // back to their default.
-      return {};
-    }
+    return decodePreferences(this.cookies.get(PREFERENCES_COOKIE));
   }
 
   /** One field's value, or `null` when it is absent or not a string. */
@@ -73,9 +43,6 @@ export class PreferencesService {
   }
 
   private write(preferences: Preferences): void {
-    this.cookies.set(
-      COOKIE_NAME,
-      encodeURIComponent(`${JSON_PREFIX}${JSON.stringify(preferences)}`)
-    );
+    this.cookies.set(PREFERENCES_COOKIE, encodePreferences(preferences));
   }
 }

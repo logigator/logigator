@@ -5,7 +5,7 @@ import { TranslocoService } from '@jsverse/transloco';
 import { TranslateArgs } from './translate-args.model';
 import { TranslationKey } from './translation-key.model';
 import { TranslationResult } from './translation-result.model';
-import { LanguageId } from './languages';
+import { LanguageId } from '@logigator/core';
 
 /**
  * Strictly typed facade over `TranslocoService`, and the only translation

@@ -5,7 +5,7 @@ import { LgToggleSwitch } from '@logigator/ui';
 import { ThemingService } from '../../theming/theming.service';
 import { TranslateDirective } from '../../translation/translate.directive';
 import { TranslationService } from '../../translation/translation.service';
-import { AVAILABLE_LANGUAGES, LanguageId } from '../../translation/languages';
+import { AVAILABLE_LANGUAGES, LanguageId } from '@logigator/core';
 import { urlInLanguage } from '../../translation/language-url';
 import { PreferencesService } from '../../storage/preferences.service';
 

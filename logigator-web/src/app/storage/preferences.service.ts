@@ -1,11 +1,11 @@
 import { inject, Injectable } from '@angular/core';
-import { CookieService } from './cookie.service';
 import {
   decodePreferences,
   encodePreferences,
   Preferences,
   PREFERENCES_COOKIE
-} from './preferences-cookie';
+} from '@logigator/core';
+import { CookieService } from './cookie.service';
 
 /**
  * The user's language and theme, in the `preferences` cookie every page on the

@@ -1,6 +1,6 @@
 import { inject } from '@angular/core';
 import { CanMatchFn, Route, Router, Routes } from '@angular/router';
-import { isAvailableLanguage } from './translation/languages';
+import { isAvailableLanguage } from '@logigator/core';
 import { resolveDocumentLanguage } from './translation/document-language';
 import { HomePage } from './pages/home/home-page';
 import { NotFoundPage } from './pages/not-found/not-found-page';

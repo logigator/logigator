@@ -1,7 +1,11 @@
 /**
- * The origin-wide `preferences` cookie, as data. Pure functions, no Angular:
- * the SSR server reads the same cookie off a raw request before the app exists,
- * to decide which language an unprefixed URL redirects to.
+ * The origin-wide `preferences` cookie, as data. Every app on the origin reads
+ * and writes it, so the encoding lives here rather than in any one of them: the
+ * editor and the site through their cookie services, the API off a raw request
+ * when it picks the language to write a mail in.
+ *
+ * Pure functions over strings — a header or a `document.cookie` value is passed
+ * in, so this stays usable on both platforms.
  */
 
 export const PREFERENCES_COOKIE = 'preferences';
@@ -10,8 +14,8 @@ export const PREFERENCES_COOKIE = 'preferences';
 const JSON_PREFIX = 'j:';
 
 /**
- * Fields of the cookie this app uses. Others may be present — the legacy
- * backend writes it too — so reads and writes keep the rest intact.
+ * The fields the apps use. Others may be present, so reads and writes keep the
+ * rest of the object intact.
  */
 export interface Preferences {
   lang?: string;
@@ -40,7 +44,7 @@ export function parseCookieHeader(header: string): Record<string, string> {
  * client-writable, so anything unreadable is absorbed here and every consumer
  * falls back to its own default.
  */
-export function decodePreferences(raw: string | null): Preferences {
+export function decodePreferences(raw: string | null | undefined): Preferences {
   if (!raw) {
     return {};
   }

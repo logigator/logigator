@@ -1,7 +1,7 @@
 import { inject } from '@angular/core';
 import { PlatformLocation } from '@angular/common';
 import { languageFromPath } from './language-url';
-import { DEFAULT_LANGUAGE, LanguageId } from './languages';
+import { DEFAULT_LANGUAGE, LanguageId } from '@logigator/core';
 
 /**
  * The language this document renders in, read from the URL's first segment.

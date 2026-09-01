@@ -18,7 +18,7 @@ import { ConsentService } from './consent/consent.service';
 import { AnalyticsService } from './analytics/analytics.service';
 import { provideDialogAnalytics } from './analytics/dialog-telemetry';
 import { TranslationService } from './translation/translation.service';
-import { AVAILABLE_LANGUAGES } from './translation/languages';
+import { AVAILABLE_LANGUAGES } from '@logigator/core';
 import {
   preferencesLangStorage,
   resolveStartupLang

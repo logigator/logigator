@@ -1,15 +1,13 @@
 import {
   decodePreferences,
-  parseCookieHeader,
-  PREFERENCES_COOKIE
-} from '../storage/preferences-cookie';
-import {
   DEFAULT_LANGUAGE,
   isAvailableLanguage,
   LanguageId,
   negotiateLanguage,
-  parseAcceptLanguage
-} from './languages';
+  parseAcceptLanguage,
+  parseCookieHeader,
+  PREFERENCES_COOKIE
+} from '@logigator/core';
 
 /** The headers language negotiation reads; a subset of a real request's. */
 export interface NegotiationHeaders {

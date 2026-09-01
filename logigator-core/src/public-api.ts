@@ -9,7 +9,29 @@
  *
  * Boundary rule: core is data to data. Turning live editor objects into
  * documents, and back, stays in the editor.
+ *
+ * Most of it is the circuit document. The `origin/` half is the other kind of
+ * shared truth: the small contracts every app on the origin has to agree about
+ * — the `preferences` cookie and the language set — which qualify for the same
+ * reason, being pure data with no platform of their own.
  */
+
+// ---- origin: what every app on the origin must agree about ----
+export {
+  decodePreferences,
+  encodePreferences,
+  parseCookieHeader,
+  PREFERENCES_COOKIE
+} from './origin/preferences-cookie';
+export type { Preferences } from './origin/preferences-cookie';
+export {
+  AVAILABLE_LANGUAGES,
+  DEFAULT_LANGUAGE,
+  isAvailableLanguage,
+  negotiateLanguage,
+  parseAcceptLanguage
+} from './origin/languages';
+export type { LanguageId } from './origin/languages';
 
 // ---- model: the shapes documents are made of ----
 export {

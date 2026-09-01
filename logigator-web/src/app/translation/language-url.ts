@@ -1,4 +1,4 @@
-import { isAvailableLanguage, LanguageId } from './languages';
+import { isAvailableLanguage, LanguageId } from '@logigator/core';
 
 /**
  * Every page lives under a language segment (`/de/features`). The legacy

@@ -1,6 +1,6 @@
 import { inject, Injectable, PLATFORM_ID, REQUEST } from '@angular/core';
 import { DOCUMENT, isPlatformServer } from '@angular/common';
-import { parseCookieHeader } from './preferences-cookie';
+import { parseCookieHeader } from '@logigator/core';
 
 const ONE_YEAR_IN_SECONDS = 60 * 60 * 24 * 365;
 

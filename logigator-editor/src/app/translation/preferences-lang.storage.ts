@@ -1,7 +1,8 @@
 import { inject } from '@angular/core';
 import { GetLangParams, PersistStorage } from '@jsverse/transloco-persist-lang';
 import { PreferencesService } from '../storage/preferences.service';
-import { isAvailableLanguage, negotiateBrowserLanguage } from './languages';
+import { isAvailableLanguage } from '@logigator/core';
+import { negotiateBrowserLanguage } from './languages';
 
 /**
  * Backs transloco's persisted language with the origin-wide `preferences`

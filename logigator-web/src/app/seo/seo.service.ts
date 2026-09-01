@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 import { Meta, Title } from '@angular/platform-browser';
-import { AVAILABLE_LANGUAGES } from '../translation/languages';
+import { AVAILABLE_LANGUAGES } from '@logigator/core';
 import {
   pathInLanguage,
   pathWithoutLanguage

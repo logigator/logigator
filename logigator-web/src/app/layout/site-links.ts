@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { environment } from '../../environments/environment';
 import { pathInLanguage } from '../translation/language-url';
-import { LanguageId } from '../translation/languages';
+import { LanguageId } from '@logigator/core';
 import { TranslationService } from '../translation/translation.service';
 
 /**

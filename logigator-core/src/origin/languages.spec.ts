@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { negotiateLanguage, parseAcceptLanguage } from './languages';
+import {
+  isAvailableLanguage,
+  negotiateLanguage,
+  parseAcceptLanguage
+} from './languages';
 
 describe('parseAcceptLanguage', () => {
   it('orders by quality rather than by position', () => {
@@ -30,5 +34,14 @@ describe('negotiateLanguage', () => {
 
   it('reports none for a list naming none', () => {
     expect(negotiateLanguage(['it', 'ja'])).toBeNull();
+  });
+});
+
+describe('isAvailableLanguage', () => {
+  it('rejects a language sharing a prefix with one the origin speaks', () => {
+    // `frr` is Northern Frisian; its first two characters name French, which
+    // the origin does speak and this visitor did not ask for.
+    expect(isAvailableLanguage('frr')).toBe(false);
+    expect(negotiateLanguage(['frr'])).toBeNull();
   });
 });

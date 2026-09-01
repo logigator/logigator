@@ -26,7 +26,7 @@ import { provideTransloco, TranslocoService } from '@jsverse/transloco';
 import { firstValueFrom } from 'rxjs';
 import { provideLgLabels } from '@logigator/ui';
 import { routes } from './app.routes';
-import { AVAILABLE_LANGUAGES, DEFAULT_LANGUAGE } from './translation/languages';
+import { AVAILABLE_LANGUAGES, DEFAULT_LANGUAGE } from '@logigator/core';
 import { TranslationLoaderService } from './translation/translation-loader.service';
 import { TranslationService } from './translation/translation.service';
 import { resolveDocumentLanguage } from './translation/document-language';

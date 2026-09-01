@@ -7,7 +7,8 @@ The repo root is a **shared Angular CLI workspace** + **Yarn 4 workspace** (core
 - `logigator-editor/` — Angular 22 editor (PixiJS 8, Tailwind 4), current focus
 - `logigator-web/` — Angular 22 website, server-rendered (`@angular/ssr`), replacing the legacy pages
 - `logigator-ui/` — `@logigator/ui`, in-house Angular component library
-- `logigator-core/` — `@logigator/core`, rendering-free circuit code; zero runtime dependencies
+- `logigator-core/` — `@logigator/core`, rendering-free circuit code plus the origin-wide
+  contracts; zero runtime dependencies
 - `logigator-contract/` — `@logigator/contract`, the API surface as zod schemas; zod only
 - `logigator-api/` — NestJS on Fastify, API only
 
@@ -192,15 +193,15 @@ path behaves the same in development).
 
 - `translation/` — Transloco with the editor's typed tooling **duplicated and adapted**, not
   extracted: `@logigator/ui` cannot host it without gaining a Transloco dependency. Templates use
-  `*webTranslate="let t"`; TypeScript goes through `TranslationService`. `languages.ts` is the
-  language set plus `Accept-Language` parsing; `language-url.ts` is the one place a `/de/…` prefix
-  is added, stripped or swapped; `language-negotiation.ts` is the cookie-then-header order the SSR
+  `*webTranslate="let t"`; TypeScript goes through `TranslationService`. The language set and
+  `Accept-Language` parsing come from `@logigator/core`; `language-url.ts` is the one place a
+  `/de/…` prefix is added, stripped or swapped; `language-negotiation.ts` is the cookie-then-header order the SSR
   redirect uses. `TranslationLoaderService` loads a locale chunk and, on the server, leaves it in
   the transfer state, so the browser reads the table out of the HTML instead of fetching it again.
 - `theming/` — the `dark-mode` class on `<html>`, applied during the server render, so the first
   byte carries the right scheme.
-- `storage/` — `preferences-cookie.ts` is the origin-wide cookie as pure data (the SSR server reads
-  it before the app exists); `CookieService` reads the request header on the server and
+- `storage/` — `PreferencesService` over core's origin-wide cookie codec, which the SSR server also
+  reads before the app exists; `CookieService` reads the request header on the server and
   `document.cookie` in the browser, and writes only in the browser.
 - `api/` — `ApiBaseService` mirroring the editor's: contract-typed, every response validated at the
   boundary. `apiOriginInterceptor` is what makes a server render able to call the API — it rewrites
@@ -299,8 +300,11 @@ tsconfig `paths` mapping. They are never built and have no `dist/`, `main` or `e
   → catalog integrity → dependency extraction, `strict` on writes and `lenient` for the Phase 6
   migration), `catalog/` (one `ComponentMeta` per built-in — option schemas plus
   `ports`/`labels`/`body` as pure functions of the option values —, and `validateOptionValue`, the
-  single definition of a legal option value). Boundary rule: **core = data↔data, editor =
-  live↔data** — snapshotting live PixiJS objects stays in the editor. Guarantees are enforced, not
+  single definition of a legal option value), and `origin/` (the `preferences` cookie codec and
+  the language set with its `Accept-Language` negotiation — what every app on the origin has to
+  agree about, here for the same reason as the rest: pure data with no platform of its own).
+  Boundary rule: **core = data↔data, editor = live↔data** — snapshotting live PixiJS objects stays
+  in the editor. Guarantees are enforced, not
   conventional: **zero runtime dependencies**, no `@angular/*`/`pixi.js`/`rxjs` import and no
   browser globals (`eslint.config.mjs` fence), plus a `tsc` that maps _no_ paths with
   `rootDir: "src"`, so neither a sibling-package import nor a relative escape compiles.
