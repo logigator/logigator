@@ -30,10 +30,12 @@ const en = {
     logout: 'Logout',
     openNavigation: 'Open navigation',
     navigation: 'Navigation',
-    settings: 'Settings',
     userMenu: 'Account menu',
+    notSignedIn: 'Not signed in',
+    theme: 'Theme',
+    themeLight: 'Light',
+    themeDark: 'Dark',
     language: 'Language',
-    darkMode: 'Dark Mode',
     skipToContent: 'Skip to content'
   },
   footer: {

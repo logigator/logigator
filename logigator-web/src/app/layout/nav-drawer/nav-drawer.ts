@@ -9,14 +9,15 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 import { LgDivider, LgDrawer } from '@logigator/ui';
 import { SessionService } from '../../user/session.service';
 import { SiteLinks } from '../site-links';
-import { SettingsPanel } from '../settings-panel/settings-panel';
 import { TranslateDirective } from '../../translation/translate.directive';
 import { MENU_LINK_CLASS } from '../link-classes';
 
 /**
- * The compact-viewport navigation: the header's links plus the settings pair,
- * in a drawer. `visible` is one-way, as `LgDrawer`'s own is — the header owns
- * the state and re-derives it from `visibleChange`.
+ * The compact-viewport navigation: the destinations the bar drops below `md`,
+ * and nothing else — the account rows and the language and theme controls are
+ * in the account panel, which the bar keeps at every width. `visible` is
+ * one-way, as `LgDrawer`'s own is — the bar owns the state and re-derives it
+ * from `visibleChange`.
  */
 @Component({
   selector: 'web-nav-drawer',
@@ -25,7 +26,6 @@ import { MENU_LINK_CLASS } from '../link-classes';
     RouterLinkActive,
     LgDivider,
     LgDrawer,
-    SettingsPanel,
     TranslateDirective
   ],
   templateUrl: './nav-drawer.html',

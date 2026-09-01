@@ -2,39 +2,35 @@ import {
   ChangeDetectionStrategy,
   Component,
   inject,
-  signal,
-  viewChild
+  signal
 } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import { LgAvatar, LgButton, LgDivider, LgPopover } from '@logigator/ui';
 import { SessionService } from '../../user/session.service';
 import { SiteLinks } from '../site-links';
-import { SettingsPanel } from '../settings-panel/settings-panel';
 import { TranslateDirective } from '../../translation/translate.directive';
 import { NavDrawer } from '../nav-drawer/nav-drawer';
+import { UserMenu } from '../user-menu/user-menu';
 import { SITE_LOGO } from '../site-logo';
-import { MENU_LINK_CLASS, NAV_LINK_CLASS } from '../link-classes';
+import { BAR_LINK_ACTIVE_CLASS, BAR_LINK_CLASS } from '../link-classes';
 
 /**
- * The site header. It renders personalized in the server's first byte: the
- * render forwards the visitor's session cookie on its API hop, so a signed-in
- * visitor sees no signed-out flash and hydration costs no request.
+ * The site bar. It renders personalized in the server's first byte: the render
+ * forwards the visitor's session cookie on its API hop, so a signed-in visitor
+ * sees no signed-out flash and hydration costs no request.
  *
- * Below the `md` breakpoint the links collapse into {@link NavDrawer}. The
- * language and theme controls are one component used in both places, rather
- * than the two independent copies the legacy header and burger menu carried.
+ * One 56px green bar at every width, which is the treatment the editor's title
+ * bar carries: the primary scale is scheme-independent, so the bar and its ink
+ * are the same in light and dark. Below `md` the navigation links collapse into
+ * {@link NavDrawer}; the account control stays, and with it the site's only
+ * language and theme controls — hence no gear, and no auth buttons.
  */
 @Component({
   selector: 'web-top-bar',
   imports: [
     RouterLink,
     RouterLinkActive,
-    LgAvatar,
-    LgButton,
-    LgDivider,
-    LgPopover,
-    SettingsPanel,
     NavDrawer,
+    UserMenu,
     TranslateDirective
   ],
   templateUrl: './top-bar.html',
@@ -44,27 +40,9 @@ export class TopBar {
   protected readonly links = inject(SiteLinks);
   protected readonly session = inject(SessionService);
 
-  private readonly settings = viewChild.required<LgPopover>('settings');
-  private readonly account = viewChild.required<LgPopover>('account');
-
   protected readonly logo = SITE_LOGO;
-  protected readonly navLinkClass = NAV_LINK_CLASS;
-  protected readonly menuLinkClass = MENU_LINK_CLASS;
+  protected readonly barLinkClass = BAR_LINK_CLASS;
+  protected readonly barLinkActiveClass = BAR_LINK_ACTIVE_CLASS;
 
   protected readonly drawerOpen = signal(false);
-
-  protected toggleSettings(event: Event): void {
-    this.settings().toggle(event);
-  }
-
-  protected toggleAccount(event: Event): void {
-    this.account().toggle(event);
-  }
-
-  protected logout(): void {
-    // The signed-out header is the only feedback needed, and the API answers
-    // 204 whether or not there was a session, so a failure here means the
-    // request never landed and the session the header shows is still real.
-    void this.session.logout().catch(() => undefined);
-  }
 }

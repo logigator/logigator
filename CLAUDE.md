@@ -223,8 +223,13 @@ path behaves the same in development).
 - `seo/` — `SeoService` (title, description, canonical, the four `hreflang` alternates plus
   `x-default`) driven by a `TitleStrategy`, so it runs once per completed navigation, the server
   render included. Routes carry a `seo` data entry naming their title key.
-- `layout/` — the shell: top bar, compact navigation drawer, footer, and the one settings panel
-  (language + theme) both of them render.
+- `layout/` — the shell: the top bar, the compact navigation drawer, the footer, and the account
+  menu. One 56px `bg-primary-400` bar at every width, the treatment the editor's title bar carries
+  (the primary scale is scheme-independent, so bar and ink are the same in light and dark); its
+  links wash black on hover rather than reaching for a scheme-following token. The bar carries no
+  gear and no auth buttons: `user-menu/` fills `@logigator/ui`'s shared account control with the
+  language and theme sections and the sign-in/sign-out rows, and it is there at every width, which
+  leaves the drawer only the destinations the bar drops below `md`.
 - `pages/` — one folder per page. The 404 sets the response status through `RESPONSE_INIT`; a soft
   404 would be indexable.
 
@@ -235,7 +240,10 @@ path behaves the same in development).
   by `server.ts` — a real `302`, since the target depends on the visitor's cookie and headers.
 - **A language switch is a document load**, so the active language is settled at bootstrap
   (`document-language.ts`, off `PlatformLocation`) and never changes within a document. That is what
-  lets the server render one language per response and `SiteLinks` hold plain prefixed strings.
+  lets the server render one language per response and `SiteLinks` hold plain prefixed strings. The
+  account panel's language select performs the load itself (cookie first, then `location.assign`),
+  so it is the editor's control rather than a list of links; the four translations stay discoverable
+  through the `hreflang` alternates `SeoService` emits.
 - **Angular's HTTP transfer cache is off** (`withNoHttpTransferCache`): it treats the forwarded
   `cookie` header as an authorization header and skips such requests, and it keys on the URL after
   the interceptor has moved it onto the API's origin. Anything that must cross the server/browser
@@ -290,6 +298,9 @@ TypeScript with no build step — it is _not_ a `package.json` dependency of eit
   `dynamic-dialog/` (`DialogService` → `DialogRef`/`DialogConfig`; `fullscreen` — optionally a live
   `Signal<boolean>` — turns the card into a viewport takeover), `confirm/`, `toast/` (`danger`
   severity maps to `error`). `navigation/` is `panel-menu`'s stateful, selectable sibling.
+  `user-control/` is the account control both bars share — trigger, panel scaffold and section
+  caption; the sections themselves are projected through a `#sections` template rather than
+  `<ng-content>`, the panel's overlay being built again on every open.
 - `internal/` — shared, non-exported plumbing: CDK-based `overlay`/`modal-overlay`, `focus-trap`,
   `key-manager`, `after-paint`, `caret`, `collapse`, `icon`.
 - `tokens/` — shared types (`LgSeverity`, `LgSize`, form-field tokens).

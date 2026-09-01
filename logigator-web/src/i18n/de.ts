@@ -27,10 +27,12 @@ const de: TranslationSchema = {
     logout: 'Abmelden',
     openNavigation: 'Navigation öffnen',
     navigation: 'Navigation',
-    settings: 'Einstellungen',
     userMenu: 'Account-Menü',
+    notSignedIn: 'Nicht angemeldet',
+    theme: 'Design',
+    themeLight: 'Hell',
+    themeDark: 'Dunkel',
     language: 'Sprache',
-    darkMode: 'Dunkles Design',
     skipToContent: 'Zum Inhalt springen'
   },
   footer: {
