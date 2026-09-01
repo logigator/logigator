@@ -18,6 +18,7 @@ import {
   caretOffsetFor,
   caretSideChanges,
   connectedPositions,
+  externalTeardown,
   LgOverlayService,
   type LgOverlaySide,
   originVisibilityChanges,
@@ -274,6 +275,16 @@ export class HintService {
 
     session.subscriptions.add(
       cmp.instance.dismiss.subscribe(() => this.dismiss())
+    );
+    // A hint counts as seen the moment it is served, so an overlay cdk disposed
+    // on navigation is dismissed like one whose anchor went away. Keeping the
+    // dead ref would skip the re-mount for the same target and leave the
+    // keydown listener behind.
+    session.subscriptions.add(
+      externalTeardown(session.overlayRef, () => {
+        session.overlayRef = null;
+        this.dismiss();
+      })
     );
     session.subscriptions.add(
       cmp.instance.disableTips.subscribe(() => {

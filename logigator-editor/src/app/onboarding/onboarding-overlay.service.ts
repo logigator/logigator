@@ -5,6 +5,7 @@ import { Subscription } from 'rxjs';
 import {
   caretSideChanges,
   connectedPositions,
+  externalTeardown,
   LgOverlayService
 } from '@logigator/ui';
 import { CoachMarkHandlers, CoachMarkView } from './coach-mark.model';
@@ -24,7 +25,8 @@ interface CoachMarkSession {
   /** The step view; mutable so a same-target update swaps it in place. */
   view: CoachMarkView;
   handlers: CoachMarkHandlers;
-  readonly backdropRef: OverlayRef;
+  /** Nulled when cdk disposed it itself, so the teardown skips it. */
+  backdropRef: OverlayRef | null;
   readonly backdropCmp: ComponentRef<CoachMarkBackdropComponent>;
   /** The bubble mounts only once the anchor settles; null until then. */
   bubbleRef: OverlayRef | null;
@@ -103,7 +105,7 @@ export class OnboardingOverlayService {
     session.resizeObserver?.disconnect();
     session.subscriptions.unsubscribe();
     session.bubbleRef?.dispose();
-    session.backdropRef.dispose();
+    session.backdropRef?.dispose();
   }
 
   /** A fresh session with the dim/highlight backdrop up and no bubble yet. */
@@ -120,7 +122,8 @@ export class OnboardingOverlayService {
     const backdropCmp = backdropRef.attach(
       new ComponentPortal(CoachMarkBackdropComponent, null, this.injector)
     );
-    return {
+    const subscriptions = new Subscription();
+    const session: CoachMarkSession = {
       target,
       view,
       handlers,
@@ -128,11 +131,24 @@ export class OnboardingOverlayService {
       backdropCmp,
       bubbleRef: null,
       bubbleCmp: null,
-      subscriptions: new Subscription(),
+      subscriptions,
       resizeObserver: null,
       settleRaf: null,
       scrolledIntoView: false
     };
+    // cdk disposes its own overlays on navigation. A step cannot be rebuilt
+    // around an anchor the navigation may have replaced, so the coach-mark ends
+    // the tutorial the way Skip does — which leaves it un-completed and still
+    // offered. Watching the backdrop is enough: the same navigation takes the
+    // bubble, and `hide()` disposes whichever is left.
+    subscriptions.add(
+      externalTeardown(backdropRef, () => {
+        session.backdropRef = null;
+        this.hide();
+        session.handlers.skip();
+      })
+    );
+    return session;
   }
 
   /**
