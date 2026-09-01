@@ -1,55 +1,32 @@
 import { Component, inject, output } from '@angular/core';
-import { LgDivider, LgRipple } from '@logigator/ui';
-import { ThemeSwitcherComponent } from '../../theming/theme-switcher/theme-switcher.component';
-import { LanguageSwitcherComponent } from '../../translation/language-switcher/language-switcher.component';
-import { UserService } from '../../user/user.service';
-import { SessionLifecycleService } from '../../user/session-lifecycle.service';
-import { SettingsComponent } from '../../settings/settings.component';
-import { UserAvatarComponent } from './user-avatar.component';
-import { TranslateDirective } from '../../translation/translate.directive';
+import { LgUserPanel } from '@logigator/ui';
+import { UserMenuService } from './user-menu.service';
+import { UserSettingsSectionsComponent } from './user-settings-sections.component';
 
 /**
- * The account/settings panel: avatar header, the theme/language/editor-settings
- * sections and the account actions. `action` fires after an account action so a
- * hosting overlay can dismiss itself; the switcher sections don't fire it, so
- * toggling a setting keeps the panel open.
+ * The account/settings panel as a surface of its own — the compact account
+ * sheet. The title bar's control renders the same panel inside its menu.
+ *
+ * `action` fires after an account action so the hosting sheet can close; a
+ * setting change doesn't, so toggling one keeps the panel open.
  */
 @Component({
   selector: 'app-user-settings-panel',
-  imports: [
-    TranslateDirective,
-    LgDivider,
-    LgRipple,
-    ThemeSwitcherComponent,
-    LanguageSwitcherComponent,
-    SettingsComponent,
-    UserAvatarComponent
-  ],
-  templateUrl: './user-settings-panel.component.html'
+  imports: [LgUserPanel, UserSettingsSectionsComponent],
+  template: `
+    <lg-user-panel
+      [username]="userMenu.username()"
+      [signedOutLabel]="userMenu.signedOutLabel()"
+      [image]="userMenu.avatar()"
+      [model]="userMenu.rows()"
+      (action)="action.emit()"
+    >
+      <app-user-settings-sections />
+    </lg-user-panel>
+  `
 })
 export class UserSettingsPanelComponent {
-  protected readonly userService = inject(UserService);
-  private readonly sessionLifecycle = inject(SessionLifecycleService);
+  protected readonly userMenu = inject(UserMenuService);
 
   public readonly action = output<void>();
-
-  protected openAccountSettings(): void {
-    this.userService.openAccountSettings();
-    this.action.emit();
-  }
-
-  protected logout(): void {
-    void this.sessionLifecycle.requestLogout();
-    this.action.emit();
-  }
-
-  protected login(): void {
-    this.userService.login();
-    this.action.emit();
-  }
-
-  protected register(): void {
-    this.userService.register();
-    this.action.emit();
-  }
 }
