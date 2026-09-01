@@ -177,6 +177,14 @@ Angular 22 standalone components + PixiJS 8 canvas.
   cookie (`storage/preferences.service.ts`) that the backend's pages also read and write, so a
   switch on either side moves both. Everything else the editor persists (`logigator.*`) is
   localStorage and editor-only.
+- **The production build ships its source maps**, and `logigator-web`'s does too. PostHog error
+  tracking symbolifies a stack trace from the map the bundle's own `sourceMappingURL` names, so the
+  `.map` files are part of the deployed artifact rather than something a release uploads out of
+  band — which is what keeps the whole pipeline unchanged, the editor still being built inside the
+  image. That makes `hidden` load-bearing: turning it on removes the comment and the traces go back
+  to minified. `vendor` is on so a frame inside `pixi.js` resolves to its TypeScript rather than the
+  published `.mjs`; `styles` is off, since no stack trace names a stylesheet. The one thing this
+  cannot do is symbolify a crash reported after the next release replaced the hashed files.
 
 ### Website (logigator-web)
 
@@ -257,6 +265,9 @@ path behaves the same in development).
   registered from `init`'s `loaded` callback, which runs before the timeout the session's own
   `$pageview` is captured from. `providePageviewTracking` adds the `$pageview` a router navigation
   makes, which stays in one document and would otherwise go uncounted.
+  Stack traces are symbolified from the source maps the production build ships, as the editor's are.
+  The SSR build emits maps for the server bundles as well, which nothing reads unless the Node
+  process runs with `--enable-source-maps`.
 - **`@angular/platform-server`, `@angular/router` and `@angular/ssr` are pinned to exact versions**
   matching the framework and CLI already in the lockfile: Angular's intra-framework peer
   dependencies are exact, and a caret would float them ahead of `@angular/core`.

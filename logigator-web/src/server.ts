@@ -16,7 +16,8 @@ const browserDistFolder = join(import.meta.dirname, '../browser');
 
 /**
  * Where the build stamps a content hash: everything the loader emits, under
- * `media/`, plus the bundles at the output root.
+ * `media/`, plus the bundles at the output root and the source maps beside
+ * them, which carry the bundle's own hashed name.
  *
  * Matched by position rather than by the shape of a name, because a hash is not
  * recognizable — a `public/` file called `feature-overview.png` ends in eight
@@ -25,7 +26,8 @@ const browserDistFolder = join(import.meta.dirname, '../browser');
  * files sit in subdirectories, and the three at the root are neither JS nor
  * CSS.
  */
-const IMMUTABLE_PATH = /^\/media\/|^\/[^/]+-[A-Za-z0-9_-]{8}\.(?:js|css)$/;
+const IMMUTABLE_PATH =
+  /^\/media\/|^\/[^/]+-[A-Za-z0-9_-]{8}\.(?:js|css)(?:\.map)?$/;
 
 /** How long a file that can be republished under its own name may be held. */
 const MUTABLE_ASSET_MAX_AGE = 300;
