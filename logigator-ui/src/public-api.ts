@@ -72,6 +72,9 @@ export type { NavigationItem } from './components/navigation/navigation-item.mod
 export { LgMenu } from './components/menu/menu';
 export { LgMenubar } from './components/menu/menubar';
 export { LgPaginator } from './components/paginator/paginator';
+export { LgUserControl } from './components/user-control/user-control';
+export { LgUserPanel } from './components/user-control/user-panel';
+export { LgUserPanelSection } from './components/user-control/user-panel-section';
 export { LgFileUpload } from './components/file-upload/file-upload';
 export { LgScroller } from './components/scroller/scroller';
 
