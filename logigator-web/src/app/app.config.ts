@@ -33,6 +33,7 @@ import { resolveDocumentLanguage } from './translation/document-language';
 import { SeoTitleStrategy } from './seo/seo-title.strategy';
 import { ThemingService } from './theming/theming.service';
 import { SessionService } from './user/session.service';
+import { AnalyticsService } from './analytics/analytics.service';
 import { providePageviewTracking } from './analytics/pageview-tracking';
 import { apiOriginInterceptor } from './api/server-api.interceptor';
 import { SITE_ORIGIN } from './seo/site-origin';
@@ -90,6 +91,11 @@ export const appConfig: ApplicationConfig = {
       inject(ThemingService);
     }),
     provideAppInitializer(() => inject(SessionService).resolve()),
+    provideAppInitializer(() => {
+      // Inert until the consent bundle reports the `analytics` category, and
+      // inert altogether on the server.
+      inject(AnalyticsService).init();
+    }),
     providePageviewTracking(),
     // @logigator/ui's stock strings come from `common.*`, so every surface the
     // library renders is localized without its call site passing a label.

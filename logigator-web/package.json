@@ -23,6 +23,7 @@
     "@jsverse/transloco": "^8.4.0",
     "@jsverse/utils": "1.0.0-beta.5",
     "express": "^5.1.0",
+    "posthog-js": "^1.409.5",
     "rxjs": "~7.8.2",
     "tslib": "^2.8.1",
     "vanilla-cookieconsent": "^3.1.0",

@@ -249,9 +249,13 @@ path behaves the same in development).
   `/cookieconsent.js`. The stylesheet is the library's with the `--lg-*` tokens mapped over it, and
   the bundle links it in itself, so the editor gets the styles by loading the script and nothing
   else.
-- **PostHog is the legacy inline snippet**, not the editor's `AnalyticsService`: a
-  `type="text/plain" data-category="analytics"` tag in `index.html` that the consent bundle
-  re-inserts on consent, with `before_send` stamping `app = 'website'`.
+- **PostHog is `posthog-js` behind a dynamic import**, in `analytics/analytics.service.ts` — the
+  editor's service, trimmed to what a content site emits. A consent event for the `analytics`
+  category is what loads the package and initialises it, so a declining session never downloads it
+  and a server render never reaches the import. `app = 'website'` and the page's language are
+  registered from `init`'s `loaded` callback, which runs before the timeout the session's own
+  `$pageview` is captured from. `providePageviewTracking` adds the `$pageview` a router navigation
+  makes, which stays in one document and would otherwise go uncounted.
 - **`@angular/platform-server`, `@angular/router` and `@angular/ssr` are pinned to exact versions**
   matching the framework and CLI already in the lockfile: Angular's intra-framework peer
   dependencies are exact, and a caret would float them ahead of `@angular/core`.

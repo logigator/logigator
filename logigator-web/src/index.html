@@ -48,18 +48,6 @@
       name="twitter:image"
       content="https://logigator.com/assets/social-card.png"
     />
-
-    <!-- PostHog, gated on the `analytics` consent category: the consent bundle
-         rewrites this tag's type once the category is granted, so nothing loads
-         before then. `before_send` stamps `app`, distinguishing this surface
-         from the two editors sharing the project key, and it has to be set here
-         rather than through `register` because it must also apply to the
-         `$pageview` that `init` captures synchronously. -->
-    <script
-      type="text/plain"
-      data-category="analytics"
-      src="js/posthog-init.js"
-    ></script>
   </head>
   <body>
     <web-root></web-root>

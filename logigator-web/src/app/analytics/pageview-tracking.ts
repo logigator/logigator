@@ -10,18 +10,19 @@ import { isPlatformServer } from '@angular/common';
 import { NavigationEnd, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter, skip } from 'rxjs/operators';
+import { AnalyticsService } from './analytics.service';
 
 /**
  * Reports a `$pageview` for every navigation after the first.
  *
- * The snippet's `init` captures one for the document load, which is all the
- * legacy pages ever needed — each of them *was* a document load. Here a visitor
- * moving between pages stays in one document, so without this every session
- * would count as a single page view.
+ * PostHog's `init` captures one for the document load, which is all the legacy
+ * pages ever needed — each of them *was* a document load. Here a visitor moving
+ * between pages stays in one document, so without this every session would
+ * count as a single page view.
  *
- * The capture is unconditional and optional: `window.posthog` exists only once
- * the visitor has granted the `analytics` category, so a declining session
- * silently does nothing.
+ * The capture is unconditional: `AnalyticsService` drops it until the visitor
+ * has granted the `analytics` category, so a declining session silently does
+ * nothing.
  */
 export function providePageviewTracking(): EnvironmentProviders {
   return makeEnvironmentProviders([
@@ -30,6 +31,7 @@ export function providePageviewTracking(): EnvironmentProviders {
         return;
       }
       const destroyRef = inject(DestroyRef);
+      const analytics = inject(AnalyticsService);
       inject(Router)
         .events.pipe(
           filter((event) => event instanceof NavigationEnd),
@@ -37,7 +39,7 @@ export function providePageviewTracking(): EnvironmentProviders {
           skip(1),
           takeUntilDestroyed(destroyRef)
         )
-        .subscribe(() => window.posthog?.capture('$pageview'));
+        .subscribe(() => analytics.capture('$pageview'));
     })
   ]);
 }
