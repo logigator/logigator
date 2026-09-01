@@ -1,17 +1,10 @@
-import {
-  inject,
-  Injectable,
-  makeStateKey,
-  PLATFORM_ID,
-  signal,
-  TransferState
-} from '@angular/core';
-import { isPlatformServer } from '@angular/common';
+import { inject, Injectable, makeStateKey, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import type { UserResponse } from '@logigator/contract';
 import { UserApiService } from '../api/services/user-api.service';
 import { CookieService } from '../storage/cookie.service';
 import { isApiError } from '@logigator/contract';
+import { TransferHandoffService } from '../transfer/transfer-handoff.service';
 
 /**
  * Non-httpOnly cookie the API keeps in step with the session cookie. It carries
@@ -28,19 +21,16 @@ const SESSION_STATE = makeStateKey<UserResponse | null>('session.user');
  * Who is viewing the page, resolved once before the first render so the top bar
  * is personalized in the server's first byte: the render forwards the visitor's
  * session cookie on its API hop (`apiOriginInterceptor`) and hands the answer
- * over in the transfer state, so hydration neither flickers nor repeats it.
- *
- * The hand-off is explicit rather than Angular's HTTP transfer cache, which
- * cannot cover these requests: it treats a `cookie` header as an authorization
- * header and skips them, and it keys on the URL the interceptor has already
- * rewritten onto the API's own origin.
+ * over through {@link TransferHandoffService}, so hydration neither flickers
+ * nor repeats the request. The hand-off is consume-once, so a later
+ * client-side resolve asks again rather than replaying an answer from page
+ * load.
  */
 @Injectable({ providedIn: 'root' })
 export class SessionService {
   private readonly userApi = inject(UserApiService);
   private readonly cookies = inject(CookieService);
-  private readonly transferState = inject(TransferState);
-  private readonly isServer = isPlatformServer(inject(PLATFORM_ID));
+  private readonly handoff = inject(TransferHandoffService);
 
   private readonly _user = signal<UserResponse | null>(null);
 
@@ -49,34 +39,12 @@ export class SessionService {
 
   /**
    * Resolves the account behind the request, if the hint cookie says there is
-   * one. Failures are swallowed: the site is readable signed out, so an API
-   * that is down costs the personalization, not the page.
+   * one.
    */
   public async resolve(): Promise<void> {
-    if (this.transferState.hasKey(SESSION_STATE)) {
-      this._user.set(this.transferState.get(SESSION_STATE, null));
-      // Consumed: a later client-side resolve must ask again rather than
-      // replay an answer from page load.
-      this.transferState.remove(SESSION_STATE);
-      return;
-    }
-
-    if (this.cookies.get(AUTH_HINT_COOKIE) !== 'true') {
-      this.publish(null);
-      return;
-    }
-
-    try {
-      this.publish(await firstValueFrom(this.userApi.get()));
-    } catch (err) {
-      this.publish(null);
-      // A rejected hint means the session is gone; clearing it keeps the next
-      // page view from paying for the same 401. Anything else — offline, 5xx —
-      // leaves it alone: the session may well still be valid.
-      if (isApiError(err, 'unauthorized')) {
-        this.cookies.delete(AUTH_HINT_COOKIE);
-      }
-    }
+    this._user.set(
+      await this.handoff.resolve(SESSION_STATE, () => this.fetchUser())
+    );
   }
 
   /** Ends the server session. The response clears the hint cookie. */
@@ -85,10 +53,27 @@ export class SessionService {
     this._user.set(null);
   }
 
-  private publish(user: UserResponse | null): void {
-    this._user.set(user);
-    if (this.isServer) {
-      this.transferState.set(SESSION_STATE, user);
+  /**
+   * Asks the API who the session belongs to. Never throws — the site is
+   * readable signed out, so an API that is down costs the personalization,
+   * not the page — which also means a server render transfers the anonymous
+   * answer instead of making the browser repeat a failed request.
+   */
+  private async fetchUser(): Promise<UserResponse | null> {
+    if (this.cookies.get(AUTH_HINT_COOKIE) !== 'true') {
+      return null;
+    }
+
+    try {
+      return await firstValueFrom(this.userApi.get());
+    } catch (err) {
+      // A rejected hint means the session is gone; clearing it keeps the next
+      // page view from paying for the same 401. Anything else — offline, 5xx —
+      // leaves it alone: the session may well still be valid.
+      if (isApiError(err, 'unauthorized')) {
+        this.cookies.delete(AUTH_HINT_COOKIE);
+      }
+      return null;
     }
   }
 }

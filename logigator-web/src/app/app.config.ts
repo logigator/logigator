@@ -51,8 +51,8 @@ export const appConfig: ApplicationConfig = {
     // request carries the visitor's cookie, which the cache treats as an
     // authorization header and skips, and it keys on the URL after
     // `apiOriginInterceptor` has moved it onto the API's own origin. What has
-    // to cross does so explicitly, as `SessionService` and the translation
-    // loader do.
+    // to cross does so explicitly: API reads through `TransferHandoffService`,
+    // the locale table through the translation loader's own key.
     provideClientHydration(withEventReplay(), withNoHttpTransferCache()),
     // The interceptor is registered on both platforms and is inert in the
     // browser, where the API is a path on the same origin.

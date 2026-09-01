@@ -216,7 +216,10 @@ path behaves the same in development).
   the relative path onto `API_ORIGIN` and forwards the visitor's cookie. It is registered on both
   platforms and inert in the browser, where `API_ORIGIN` is not provided.
 - `user/` — `SessionService`, resolved before the first render so the top bar is personalized in the
-  first byte, and handed to the browser through an explicit transfer-state key.
+  first byte, and handed to the browser through `TransferHandoffService`.
+- `transfer/` — `TransferHandoffService`, the consume-once server → browser hand-off. Every API read
+  a server render resolves goes through it; skipping it silently repeats the request after
+  hydration.
 - `seo/` — `SeoService` (title, description, canonical, the four `hreflang` alternates plus
   `x-default`) driven by a `TitleStrategy`, so it runs once per completed navigation, the server
   render included. Routes carry a `seo` data entry naming their title key.
@@ -236,7 +239,8 @@ path behaves the same in development).
 - **Angular's HTTP transfer cache is off** (`withNoHttpTransferCache`): it treats the forwarded
   `cookie` header as an authorization header and skips such requests, and it keys on the URL after
   the interceptor has moved it onto the API's origin. Anything that must cross the server/browser
-  boundary does so through an explicit `TransferState` key.
+  boundary does so through an explicit `TransferState` key — `TransferHandoffService` for API reads,
+  the translation loader's own key for the locale table.
 - **Rendered pages answer `Cache-Control: no-store`** — every one is personalized by language, theme
   and session, and the account is in both the markup and the transfer state.
 - **`public/` is for URLs that are contracts with something outside the app**; anything the app
