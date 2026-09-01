@@ -1,4 +1,4 @@
-import { ApiRequestError } from '../api/api-error';
+import { ApiRequestError } from '@logigator/contract';
 
 export class AuthRequiredError extends Error {
   constructor() {

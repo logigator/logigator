@@ -24,6 +24,11 @@ export {
   type ApiErrorCode,
   type ApiErrorCodeOrUnknown
 } from './error/api-error.contract';
+export {
+  ApiRequestError,
+  InvalidResponseError,
+  isApiError
+} from './error/api-request-error';
 export { metaResponseSchema, type MetaResponse } from './meta/meta.contract';
 export {
   imageFormatSchema,

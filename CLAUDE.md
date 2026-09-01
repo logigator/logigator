@@ -309,7 +309,9 @@ tsconfig `paths` mapping. They are never built and have no `dist/`, `main` or `e
   browser globals (`eslint.config.mjs` fence), plus a `tsc` that maps _no_ paths with
   `rootDir: "src"`, so neither a sibling-package import nor a relative escape compiles.
 - `logigator-contract/src/` — request/response schemas per endpoint (`*.contract.ts`), inferred
-  types via `z.infer`, no codegen. zod and core are its only imports, fenced the same two ways.
+  types via `z.infer`, no codegen. `error/api-request-error.ts` holds `ApiRequestError`,
+  `InvalidResponseError` and `isApiError`: the error body is contract surface, while turning a
+  given transport's failure into one of them is not, so that adapter stays in each client. zod and core are its only imports, fenced the same two ways.
   Response object schemas are `.loose()` on purpose: a client holding an older contract copy must
   tolerate fields the API added rather than reject or strip them. Clients can import the types only
   (`import type`) and pay nothing at runtime.

@@ -3,7 +3,7 @@ import type { Mock } from 'vitest';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { throwError, of } from 'rxjs';
-import { ApiRequestError } from '../api/api-error';
+import { ApiRequestError } from '@logigator/contract';
 import { UserService } from './user.service';
 import { UserApiService } from '../api/services/user-api.service';
 import { CookieService } from '../storage/cookie.service';

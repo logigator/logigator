@@ -11,7 +11,7 @@ import { firstValueFrom } from 'rxjs';
 import type { UserResponse } from '@logigator/contract';
 import { UserApiService } from '../api/services/user-api.service';
 import { CookieService } from '../storage/cookie.service';
-import { isApiError } from '../api/api-error';
+import { isApiError } from '@logigator/contract';
 
 /**
  * Non-httpOnly cookie the API keeps in step with the session cookie. It carries

@@ -8,7 +8,7 @@ import type {
   UpdateUserResponse,
   UserResponse
 } from '@logigator/contract';
-import { isApiError } from '../api/api-error';
+import { isApiError } from '@logigator/contract';
 import { ToastService } from '../logging/toast.service';
 import { CookieService } from '../storage/cookie.service';
 

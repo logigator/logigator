@@ -7,7 +7,8 @@ import {
 import { catchError, map, Observable, throwError } from 'rxjs';
 import type { z } from 'zod';
 import { environment } from '../../../environments/environment';
-import { InvalidResponseError, toApiRequestError } from '../api-error';
+import { InvalidResponseError } from '@logigator/contract';
+import { toApiRequestError } from '../api-error';
 
 export type QueryParams = Record<string, string | number | boolean | undefined>;
 

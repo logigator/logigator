@@ -4,13 +4,16 @@ import { firstValueFrom, map, Observable, tap } from 'rxjs';
 import { ProjectApiService } from '../../api/services/project-api.service';
 import { ComponentApiService } from '../../api/services/component-api.service';
 import { ShareApiService } from '../../api/services/share-api.service';
-import { isApiError } from '../../api/api-error';
 import { CircuitFileService } from '../file/circuit-file.service';
 import { ProjectMetadataStore } from '../project-metadata.store';
 import { ToastService } from '../../logging/toast.service';
 import { LoggingService } from '../../logging/logging.service';
 import { Project } from '../../project/project';
-import type { ProjectPage, ProjectSummary } from '@logigator/contract';
+import {
+  isApiError,
+  type ProjectPage,
+  type ProjectSummary
+} from '@logigator/contract';
 import {
   type CustomComponentDetails,
   type FileForkAttributionV1,
