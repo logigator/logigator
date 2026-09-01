@@ -14,7 +14,10 @@ import {
 } from '@angular/core';
 import { Subscription } from 'rxjs';
 import { LgFadeIn } from '../../internal/fade-in';
-import { createConnectedOverlay } from '../../internal/overlay';
+import {
+  createConnectedOverlay,
+  externalTeardown
+} from '../../internal/overlay';
 import { MENU_ITEM_CLASS, MenuItem } from './menu-item.model';
 
 /** Edge-aligned, not centred: below/right first, then below/left, then flips. */
@@ -205,6 +208,13 @@ export class LgMenu implements OnDestroy {
     this.subscriptions = new Subscription();
     this.subscriptions.add(
       this.overlayRef.backdropClick().subscribe(() => this.hide())
+    );
+    this.subscriptions.add(
+      externalTeardown(this.overlayRef, () => {
+        this.overlayRef = null;
+        this.disposeOverlay();
+        this.onHide.emit();
+      })
     );
     this.onShow.emit();
     this.focusFirstItem();

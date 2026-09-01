@@ -3,7 +3,11 @@ import { Overlay, OverlayRef } from '@angular/cdk/overlay';
 import { Portal } from '@angular/cdk/portal';
 import { Subscription } from 'rxjs';
 import { playEnterTransition } from './fade-in';
-import { createGlobalOverlay, LgOverlayPlacement } from './overlay';
+import {
+  createGlobalOverlay,
+  externalTeardown,
+  LgOverlayPlacement
+} from './overlay';
 import { LgFocusTrap } from './focus-trap';
 
 export interface ModalOpenOptions {
@@ -94,6 +98,15 @@ export class ModalOverlay {
           event.preventDefault();
           options.onDismiss();
         }
+      })
+    );
+    // Reported as a dismissal, so the consumer's own `visible` state follows
+    // the panel cdk took away rather than sticking open around nothing.
+    this.subscriptions.add(
+      externalTeardown(this.overlayRef, () => {
+        this.overlayRef = null;
+        this.close();
+        options.onDismiss();
       })
     );
   }

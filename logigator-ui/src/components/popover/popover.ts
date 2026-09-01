@@ -16,6 +16,7 @@ import {
   caretSideChanges,
   connectedPositions,
   createConnectedOverlay,
+  externalTeardown,
   LgOverlaySide
 } from '../../internal/overlay';
 
@@ -87,6 +88,12 @@ export class LgPopover implements OnDestroy {
     );
     this.subscriptions.add(
       this.overlayRef.backdropClick().subscribe(() => this.hide())
+    );
+    this.subscriptions.add(
+      externalTeardown(this.overlayRef, () => {
+        this.overlayRef = null;
+        this.hide();
+      })
     );
     this.subscriptions.add(
       this.overlayRef.keydownEvents().subscribe((event) => {

@@ -7,7 +7,7 @@ import {
   ScrollingVisibility
 } from '@angular/cdk/overlay';
 import { ScrollDispatcherTarget } from '@angular/cdk/scrolling';
-import { map, Observable } from 'rxjs';
+import { map, Observable, Subscription } from 'rxjs';
 
 /**
  * Shared `cdk/overlay` plumbing for anchored overlays: the side→position
@@ -167,6 +167,25 @@ export function originVisibilityChanges(
   );
 }
 
+/**
+ * Runs `onTeardown` when an overlay goes away without its consumer asking:
+ * both factories here pass `disposeOnNavigation`, so cdk disposes the overlay
+ * itself on a popstate or a hash change — which nulls the pane a consumer
+ * would go on reading and leaves its open state stuck around a panel that is
+ * gone.
+ *
+ * Two rules, or the teardown re-enters cdk's: add it to the bag the consumer
+ * unsubscribes *before* its own `dispose()`, so only an outside teardown
+ * reaches `onTeardown`, and drop the ref inside `onTeardown` before closing,
+ * since cdk emits this from inside `dispose()` itself.
+ */
+export function externalTeardown(
+  ref: OverlayRef,
+  onTeardown: () => void
+): Subscription {
+  return ref.detachments().subscribe(onTeardown);
+}
+
 export function sideOfPosition(position: ConnectedPosition): LgOverlaySide {
   if (position.overlayY === 'bottom') {
     return 'top';
@@ -196,7 +215,8 @@ export interface ConnectedOverlayOptions {
 
 /**
  * An anchored {@link OverlayRef} with the library's shared defaults. The
- * caller attaches a portal and disposes it.
+ * caller attaches a portal and disposes it, and follows
+ * {@link externalTeardown} for the disposal cdk does itself on navigation.
  */
 export function createConnectedOverlay(
   overlay: Overlay,
@@ -249,7 +269,7 @@ export interface GlobalOverlayOptions {
  * A global (viewport-positioned) {@link OverlayRef}. Edge placements pin the
  * corner only; the panel supplies its own cross-axis size (`h-screen` for a
  * side drawer, `w-screen` for a bottom/top one). Dismissal stays with the
- * caller.
+ * caller, {@link externalTeardown} included.
  */
 export function createGlobalOverlay(
   overlay: Overlay,

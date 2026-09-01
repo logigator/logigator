@@ -16,6 +16,7 @@ import {
   caretSideChanges,
   connectedPositions,
   createConnectedOverlay,
+  externalTeardown,
   LgOverlaySide
 } from '../../internal/overlay';
 import { formatShortcutLabel, LgShortcutBinding } from '../shortcut/shortcut';
@@ -52,7 +53,7 @@ export class LgTooltip implements OnDestroy {
 
   private overlayRef: OverlayRef | null = null;
   private panelRef: ComponentRef<LgTooltipPanel> | null = null;
-  private positionsSub: Subscription | null = null;
+  private subscriptions: Subscription | null = null;
 
   constructor() {
     // Cleanup removes the previous hidden description on change and destroy.
@@ -104,14 +105,23 @@ export class LgTooltip implements OnDestroy {
     this.panelRef.setInput('shortcut', this.tooltipShortcut());
     this.panelRef.setInput('side', side);
 
-    this.positionsSub = caretSideChanges(this.overlayRef).subscribe(
-      (resolvedSide) => this.panelRef?.setInput('side', resolvedSide)
+    this.subscriptions = new Subscription();
+    this.subscriptions.add(
+      caretSideChanges(this.overlayRef).subscribe((resolvedSide) =>
+        this.panelRef?.setInput('side', resolvedSide)
+      )
+    );
+    this.subscriptions.add(
+      externalTeardown(this.overlayRef, () => {
+        this.overlayRef = null;
+        this.hide();
+      })
     );
   }
 
   protected hide(): void {
-    this.positionsSub?.unsubscribe();
-    this.positionsSub = null;
+    this.subscriptions?.unsubscribe();
+    this.subscriptions = null;
     this.overlayRef?.dispose();
     this.overlayRef = null;
     this.panelRef = null;

@@ -19,7 +19,10 @@ import {
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { LgFadeIn } from '../../internal/fade-in';
-import { createConnectedOverlay } from '../../internal/overlay';
+import {
+  createConnectedOverlay,
+  externalTeardown
+} from '../../internal/overlay';
 import { createListKeyManager } from '../../internal/key-manager';
 import { FORM_FIELD_BASE } from '../../tokens/form-field';
 import { CONTROL_PADDING_MD } from '../../tokens/size';
@@ -328,6 +331,12 @@ export class LgSelect implements ControlValueAccessor, OnDestroy {
     this.subscriptions = new Subscription();
     this.subscriptions.add(
       this.overlayRef.backdropClick().subscribe(() => this.close())
+    );
+    this.subscriptions.add(
+      externalTeardown(this.overlayRef, () => {
+        this.overlayRef = null;
+        this.close();
+      })
     );
   }
 
