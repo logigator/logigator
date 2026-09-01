@@ -12,11 +12,7 @@ import {
   withNoHttpTransferCache
 } from '@angular/platform-browser';
 import { DOCUMENT } from '@angular/common';
-import {
-  provideHttpClient,
-  withFetch,
-  withInterceptors
-} from '@angular/common/http';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import {
   provideRouter,
   TitleStrategy,
@@ -58,10 +54,9 @@ export const appConfig: ApplicationConfig = {
     // to cross does so explicitly, as `SessionService` and the translation
     // loader do.
     provideClientHydration(withEventReplay(), withNoHttpTransferCache()),
-    // `withFetch` because the server render has no XHR; the interceptor is
-    // registered on both platforms and is inert in the browser, where the API
-    // is a path on the same origin.
-    provideHttpClient(withFetch(), withInterceptors([apiOriginInterceptor])),
+    // The interceptor is registered on both platforms and is inert in the
+    // browser, where the API is a path on the same origin.
+    provideHttpClient(withInterceptors([apiOriginInterceptor])),
     {
       provide: SITE_ORIGIN,
       useFactory: () => inject(DOCUMENT).location.origin
