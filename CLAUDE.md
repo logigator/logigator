@@ -329,9 +329,10 @@ tsconfig `paths` mapping. They are never built and have no `dist/`, `main` or `e
   → catalog integrity → dependency extraction, `strict` on writes and `lenient` for the Phase 6
   migration), `catalog/` (one `ComponentMeta` per built-in — option schemas plus
   `ports`/`labels`/`body` as pure functions of the option values —, and `validateOptionValue`, the
-  single definition of a legal option value), and `origin/` (the `preferences` cookie codec and
-  the language set with its `Accept-Language` negotiation — what every app on the origin has to
-  agree about, here for the same reason as the rest: pure data with no platform of its own).
+  single definition of a legal option value), and `origin/` (the `preferences` cookie codec, the
+  language set with its `Accept-Language` negotiation, and `safeReturnPath` — what every app on the
+  origin has to agree about, here for the same reason as the rest: pure data with no platform of its
+  own).
   Boundary rule: **core = data↔data, editor = live↔data** — snapshotting live PixiJS objects stays
   in the editor. Guarantees are enforced, not
   conventional: **zero runtime dependencies**, no `@angular/*`/`pixi.js`/`rxjs` import and no

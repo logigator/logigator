@@ -32,6 +32,7 @@ export {
   parseAcceptLanguage
 } from './origin/languages';
 export type { LanguageId } from './origin/languages';
+export { RETURN_PATH_PARAM, safeReturnPath } from './origin/return-path';
 
 // ---- model: the shapes documents are made of ----
 export {
