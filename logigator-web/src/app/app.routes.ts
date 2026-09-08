@@ -4,6 +4,7 @@ import { isAvailableLanguage } from '@logigator/core';
 import { resolveDocumentLanguage } from './translation/document-language';
 import { languageTableGuard } from './translation/language-guard';
 import { HomePage } from './pages/home/home-page';
+import { homeContentGuard } from './pages/home/home-content.guard';
 import { LoginPage } from './pages/auth/login/login-page';
 import { RegisterPage } from './pages/auth/register/register-page';
 import { ResetPasswordPage } from './pages/auth/reset-password/reset-password-page';
@@ -25,6 +26,7 @@ const localizedRoutes: Routes = [
   {
     path: '',
     component: HomePage,
+    canActivate: [homeContentGuard],
     data: { seo: { titleKey: 'pages.home.title' } satisfies PageMeta }
   },
   {

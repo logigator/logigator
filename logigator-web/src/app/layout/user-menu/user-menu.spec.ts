@@ -6,7 +6,18 @@ import { configureTestBed } from '../../../testing/configure-test-bed';
 import { Router } from '@angular/router';
 import { PreferencesService } from '../../storage/preferences.service';
 import { TranslationService } from '../../translation/translation.service';
+import { HomeContentService } from '../../pages/home/home-content.service';
 import { UserMenu } from './user-menu';
+
+/**
+ * The home route resolves its listings before it activates, and a language
+ * switch is a navigation — so without this the switch under test would wait on
+ * three API reads that have nothing to do with it.
+ */
+const resolvedHomeContent = {
+  provide: HomeContentService,
+  useValue: { resolve: () => Promise.resolve() }
+};
 
 function overlay(selector: string): HTMLElement[] {
   return [
@@ -33,7 +44,7 @@ async function openLanguages(): Promise<ComponentFixture<UserMenu>> {
 
 describe('UserMenu', () => {
   beforeEach(() => {
-    configureTestBed();
+    configureTestBed([resolvedHomeContent]);
   });
 
   afterEach(() => {
