@@ -11,6 +11,7 @@ import {
   pathInLanguage
 } from './app/translation/language-url';
 import { negotiateRequestLanguage } from './app/translation/language-negotiation';
+import { canonicalPath } from './canonical-path';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
@@ -78,6 +79,28 @@ app.use(
  */
 app.get('/js/cookieconsent.js', (_req, res) => {
   res.redirect(302, '/cookieconsent.js');
+});
+
+/**
+ * A URL whose path is not canonical is redirected to the one that is,
+ * before anything reads a segment out of it.
+ *
+ * It runs after the static handler and before the language redirect, so a file
+ * is answered by its own name and the prefix is added to a settled path.
+ *
+ * `301`, unlike the redirect below: the canonical form of a path is the same
+ * for everyone.
+ */
+app.use((req, res, next) => {
+  const canonical =
+    req.method === 'GET' || req.method === 'HEAD'
+      ? canonicalPath(req.path)
+      : null;
+  if (canonical === null) {
+    next();
+    return;
+  }
+  res.redirect(301, canonical + req.originalUrl.slice(req.path.length));
 });
 
 /**
