@@ -7,6 +7,7 @@ export const environment: Environment = {
   buildDate: BUILD_DATE ? new Date(BUILD_DATE) : null,
   apiUrl: '',
   editorUrl: '/editor',
+  exampleUserId: '00000000-0000-0000-0000-000000000000',
   analytics: {
     posthogKey: 'phc_xSrwBeAfq8XzQWA4FxpPTLfVcycLwv5STWyXpwocR4vD',
     posthogHost: 'https://u.logigator.com',

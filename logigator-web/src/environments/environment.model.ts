@@ -19,6 +19,11 @@ export interface Environment {
    * deployments that only share a hostname.
    */
   editorUrl: string;
+  /**
+   * The account whose public projects are the site's examples: editing an
+   * example is a save in the editor, not a deploy.
+   */
+  exampleUserId: string;
   analytics: {
     /** PostHog project API key (public, write-only). Empty disables PostHog. */
     posthogKey: string;
