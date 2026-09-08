@@ -13,13 +13,6 @@ import './session.types';
  */
 const AUTH_HINT_COOKIE = 'isAuthenticated';
 
-/**
- * Seconds, matching `Set-Cookie`'s `Max-Age`. `@fastify/session` redefines its
- * own `cookie.maxAge` as milliseconds; mixing the two silently gives the hint
- * cookie a lifetime a thousand times the session's.
- */
-const DAY_IN_SECONDS = 24 * 60 * 60;
-
 /** Starts and ends signed-in sessions. */
 @Injectable()
 export class SessionService {
@@ -46,13 +39,19 @@ export class SessionService {
    * hint written once would expire underneath a session that is still good. The
    * other direction is the same invariant backwards — a request carrying a hint
    * that no session backs goes back without it.
+   *
+   * The expiry is the session cookie's own, already slid forward for this
+   * response, rather than a second reading of `SESSION_MAX_AGE_DAYS`: an
+   * `Expires` is read against the visitor's clock, so a hint given a duration of
+   * its own outlives a session cookie a skewed clock discarded on arrival — the
+   * failure this method exists to prevent, in the direction it cannot see.
    */
   syncHintCookie(request: FastifyRequest, reply: FastifyReply): void {
     if (request.session?.userId) {
       reply.setCookie(AUTH_HINT_COOKIE, 'true', {
         ...this.cookieOptions(),
         httpOnly: false,
-        maxAge: this.env.SESSION_MAX_AGE_DAYS * DAY_IN_SECONDS
+        expires: request.session.cookie.expires ?? undefined
       });
       return;
     }

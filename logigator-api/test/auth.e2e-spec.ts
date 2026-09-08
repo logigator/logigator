@@ -130,10 +130,11 @@ describe('local authentication', () => {
     const hint = response.cookies.find((c) => c.name === 'isAuthenticated');
     expect(hint?.value).toBe('true');
     expect(hint?.httpOnly).toBeFalsy();
-    // Seconds, not milliseconds: `@fastify/cookie` passes `Max-Age` through as
-    // seconds while `@fastify/session` takes milliseconds, and mixing the two
-    // gives the hint a thousand times the session's lifetime.
-    expect(hint?.maxAge).toBe(api.env.SESSION_MAX_AGE_DAYS * 24 * 60 * 60);
+    // The instant the session cookie carries, not a lifetime computed a second
+    // time: a hint that outlives the session it mirrors shows a signed-in shell
+    // to a visitor the API has already forgotten.
+    expect(hint?.expires).toBeInstanceOf(Date);
+    expect(hint?.expires).toEqual(session?.expires);
 
     // The session is what authenticates, not the hint.
     const profile = await api.inject({
@@ -148,7 +149,6 @@ describe('local authentication', () => {
   it('slides the hint cookie with the session, and only for a session', async () => {
     const jar = new CookieJar();
     await login(jar);
-    const maxAge = api.env.SESSION_MAX_AGE_DAYS * 24 * 60 * 60;
 
     // The hint rides along on every response, as the `rolling` session cookie
     // does. Written once at sign-in it would expire under a live session, and
@@ -162,7 +162,9 @@ describe('local authentication', () => {
       (c) => c.name === 'isAuthenticated'
     );
     expect(refreshed?.value).toBe('true');
-    expect(refreshed?.maxAge).toBe(maxAge);
+    const slid = authenticated.cookies.find((c) => c.name === 'lg_sid');
+    expect(slid?.expires).toBeInstanceOf(Date);
+    expect(refreshed?.expires).toEqual(slid?.expires);
 
     // A hint no session backs is cleared, correcting a client whose session
     // ended elsewhere — a password reset, or another tab.
