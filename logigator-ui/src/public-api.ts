@@ -31,6 +31,11 @@ export type { LgMarkdownLinkClick } from './components/markdown/markdown';
 export { LgImageZoom } from './components/image-zoom/image-zoom';
 export { LgAvatar } from './components/avatar/avatar';
 export { LgCard } from './components/card/card';
+export {
+  LgCircuitTile,
+  LgCircuitTileLink,
+  LgCircuitTileAuthor
+} from './components/circuit-tile/circuit-tile';
 export { LgList, LgListItem } from './components/list/list';
 export { LgRipple } from './components/ripple/ripple';
 export {
