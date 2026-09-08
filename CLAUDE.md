@@ -390,6 +390,15 @@ the liveness probe; `GET /api/health/ready` probes Postgres and Redis (503 namin
 - `database/` — Drizzle over `pg`. `schema/` is the DDL in TypeScript (tables + `defineRelations`
   for RQBv2), `drizzle/` the generated SQL migrations, `migrate.ts` the runner both the bundle entry
   and the E2E harness call. `DB` injects a typed `Database`; no entity classes, no lazy relations.
+  `migration-state.ts` is the startup gate: the pool lifecycle hook that proves the database
+  reachable also proves it carries **exactly** the migrations the build ships, so a boot on a schema
+  the code was not written against fails instead of answering requests. Drift is fatal in both
+  directions — pending migrations, migrations the build does not carry (there are no down migrations
+  to walk a schema back, so the fix is the matching build), and a migration whose file changed after
+  it was applied, which only the recorded digest can catch. It is a gate, not a repair: nothing
+  migrates on boot, since drizzle's migrator reads the applied set before opening its transaction
+  and takes no lock, so replicas booting together would race on the same DDL.
+  `DATABASE_MIGRATION_CHECK=false` forces a boot the check would refuse.
 - `redis/` — one shared node-redis client, connected in a lifecycle hook (so unit specs can
   instantiate the graph without a server) and namespaced by `REDIS_KEY_PREFIX`.
 - `session/` — `@fastify/cookie` + `@fastify/session` over a small in-repo Redis store; sliding
@@ -508,10 +517,13 @@ ESM-only `@nestjs/*` packages; the settings mirror the CLI builder's own ESM bra
 - **`fastify` is pinned to the exact version `@nestjs/platform-fastify` depends on.** With two
   copies installed, a plugin's type augmentation lands on one and Nest's `register` reads the other,
   so `app.register(fastifyCookie)` fails to type-check.
-- **`migrate` and `renormalize` are the second and third Rspack entries**; the deploy artifact ships
-  `drizzle/` beside them, since the runner reads migration SQL from disk and a release applies
-  migrations with plain `node`. drizzle-kit only ever _generates_ them. Unlike the migration runner,
-  `renormalize` boots the real application container: rewriting documents through the same
+- **`migrate` and `renormalize` are the second and third Rspack entries**; a `CopyRspackPlugin` puts
+  the migrations' `migration.sql` files in `dist/logigator-api/drizzle/`, since the runner reads them
+  from disk and a release applies migrations with plain `node` — and so does the server's startup
+  gate, which is why the folder is resolved in one place (`defaultMigrationsFolder`) rather than
+  handed to the runner as an argument. The snapshots stay behind: they are drizzle-kit's input for
+  generating the next migration, and drizzle-kit only ever _generates_ them. Unlike the migration
+  runner, `renormalize` boots the real application container: rewriting documents through the same
   parse-and-extract path every other write uses is what keeps the derived tables from drifting.
 - Drizzle is pinned to an exact `1.0.0-rc` build. RQBv2 `defineRelations`, the DDL-snapshot migration
   format and the consolidated zod integration are 1.0-only surfaces with no compat path from 0.45;
@@ -571,7 +583,9 @@ and drives it with injected requests. It is a separate script because it needs a
 Redis: `yarn test:api` must stay runnable anywhere, and a suite that skipped itself without a
 database would report green having tested nothing. `test/harness.ts` creates a throwaway database
 per spec file and migrates it with the runner a release uses; Redis keys are namespaced per run and
-deleted afterwards. Only two things differ from production: the mail transport is captured
+deleted afterwards. It also boots the database layer on its own (`startDatabaseLayer`), which is how
+a spec watches the startup schema gate accept or reject a database it has tampered with. Only two
+things differ from production: the mail transport is captured
 (`test/mail-capture.ts`, so specs read the link a recipient would click) and bcrypt runs at its
 minimum cost. `test/cookie-jar.ts` carries cookies across requests the way a browser would,
 `test/circuits.ts` builds documents through core's own encoder rather than hand-written JSON (a

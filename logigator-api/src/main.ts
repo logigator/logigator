@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import {
   FastifyAdapter,
@@ -21,4 +22,10 @@ async function bootstrap(): Promise<void> {
   await app.listen({ host: env.HOST, port: env.PORT });
 }
 
-void bootstrap();
+void bootstrap().catch((error: unknown) => {
+  // Nothing is listening when this runs, so every failure here is fatal: one
+  // record through the logger the rest of the boot uses, rather than Node's
+  // unhandled-rejection dump.
+  new Logger('Bootstrap').fatal(error);
+  process.exit(1);
+});

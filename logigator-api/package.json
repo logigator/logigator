@@ -17,7 +17,7 @@
     "lint:fix": "eslint --config eslint.config.mjs src test --fix",
     "db:generate": "drizzle-kit generate",
     "db:check": "drizzle-kit check",
-    "db:migrate": "rspack build && node ../dist/logigator-api/migrate.js ./drizzle",
+    "db:migrate": "rspack build && node ../dist/logigator-api/migrate.js",
     "db:renormalize": "rspack build && node ../dist/logigator-api/renormalize.js",
     "test": "vitest run",
     "test:watch": "vitest",

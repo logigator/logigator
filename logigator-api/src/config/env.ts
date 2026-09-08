@@ -27,6 +27,15 @@ const variables = z.object({
     .min(1)
     .default('postgresql://logigator:logigator@postgres:5432/logigator'),
   DATABASE_POOL_MAX: z.coerce.number().int().min(1).default(10),
+  /**
+   * Whether boot requires the database to be on exactly the migrations this
+   * build carries. On by default: a schema the code does not expect is a
+   * failure that surfaces as a wrong answer on some later request, and a
+   * process that refuses to start is the one shape a deploy notices. Turn it
+   * off only to force a boot the check would refuse, on the operator's word
+   * that the schema is compatible.
+   */
+  DATABASE_MIGRATION_CHECK: z.stringbool().default(true),
 
   REDIS_URL: z.string().min(1).default('redis://redis:6379'),
   /**

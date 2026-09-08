@@ -3,8 +3,11 @@
 // `@logigator/contract`, so those packages are compiled from source rather than
 // from a built `dist/`. The ESM settings mirror the NestJS 12 CLI's own Rspack
 // builder for a package declaring `"type": "module"`.
+import { readdir, rm } from 'node:fs/promises';
 import { builtinModules } from 'node:module';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { CopyRspackPlugin } from '@rspack/core';
 import nodeExternals from 'webpack-node-externals';
 
 const here = fileURLToPath(new URL('.', import.meta.url));
@@ -78,7 +81,7 @@ export default {
       }
     ]
   },
-  plugins: [emitModuleTypeMarker],
+  plugins: [emitModuleTypeMarker, copyMigrations(), pruneStaleMigrations],
   // Nest reflects on class and function names, so mangling breaks DI, and a
   // long-running server gains nothing from minification anyway.
   optimization: { minimize: false },
@@ -97,6 +100,51 @@ function externalBuiltins({ request }, callback) {
   return builtinModules.includes(bare)
     ? callback(null, `module ${request}`)
     : callback();
+}
+
+/**
+ * Ships the checked-in migrations beside the bundle. Both the migration runner
+ * and the server's startup schema check read them from there, so the set a
+ * deploy applies is the set the running process demands — and neither can be
+ * pointed somewhere else.
+ *
+ * Only the SQL is copied: `snapshot.json` is drizzle-kit's input for generating
+ * the next migration, and drizzle-kit never runs outside the repository.
+ */
+function copyMigrations() {
+  return new CopyRspackPlugin({
+    patterns: [
+      {
+        context: `${here}drizzle`,
+        from: '*/migration.sql',
+        to: 'drizzle'
+      }
+    ]
+  });
+}
+
+/**
+ * Drops migrations an earlier build copied and this one did not. `output.clean`
+ * is off, so a migration regenerated under a new name would otherwise leave the
+ * old SQL behind — and the runner reading the output folder would apply what the
+ * repository no longer holds. Pruning after the emit rather than before it
+ * leaves Rspack's own accounting of what it has written alone.
+ */
+function pruneStaleMigrations(compiler) {
+  compiler.hooks.afterEmit.tapPromise('prune-stale-migrations', async () => {
+    const target = join(compiler.options.output.path, 'drizzle');
+    const [checkedIn, copied] = await Promise.all([
+      readdir(`${here}drizzle`),
+      readdir(target).catch(() => [])
+    ]);
+
+    const expected = new Set(checkedIn);
+    await Promise.all(
+      copied
+        .filter((name) => !expected.has(name))
+        .map((name) => rm(join(target, name), { recursive: true, force: true }))
+    );
+  });
 }
 
 /**

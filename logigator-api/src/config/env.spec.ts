@@ -21,6 +21,7 @@ describe('loadEnv', () => {
       LOG_LEVEL: 'info',
       DATABASE_URL: 'postgresql://logigator:logigator@postgres:5432/logigator',
       DATABASE_POOL_MAX: 10,
+      DATABASE_MIGRATION_CHECK: true,
       REDIS_URL: 'redis://redis:6379',
       REDIS_KEY_PREFIX: 'lg:',
       PUBLIC_URL: 'http://logigator.test',

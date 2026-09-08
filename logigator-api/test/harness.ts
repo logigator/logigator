@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { Client } from 'pg';
+import { type DynamicModule, Module } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import {
   FastifyAdapter,
@@ -11,14 +12,28 @@ import {
 import type { InjectOptions, LightMyRequestResponse } from 'fastify';
 import { AppModule } from '../src/app.module';
 import { apiServerOptions, configureApiApp } from '../src/app.setup';
-import { loadEnv, type Env } from '../src/config/env';
-import { DB, type Database } from '../src/database/database.module';
+import { ENV, loadEnv, type Env } from '../src/config/env';
+import {
+  DatabaseModule,
+  DB,
+  MIGRATIONS_FOLDER,
+  type Database
+} from '../src/database/database.module';
 import { runMigrations } from '../src/database/migrate';
 import { MAIL_TRANSPORT } from '../src/mail/mail.transport';
 import { createRedisClient } from '../src/redis/redis.client';
 import { MailCapture } from './mail-capture';
 
-const MIGRATIONS_FOLDER = join(import.meta.dirname, '..', 'drizzle');
+/**
+ * The migrations in the package. The application resolves them beside its
+ * bundle, which a spec running the source has no equivalent of, so every graph
+ * booted here overrides the provider with this.
+ */
+export const MIGRATIONS_FOLDER_PATH = join(
+  import.meta.dirname,
+  '..',
+  'drizzle'
+);
 
 /**
  * Where the throwaway databases are created. Explicit rather than defaulted:
@@ -90,7 +105,7 @@ export async function startE2eApp(
 
   await onAdminDatabase(databaseUrl, `CREATE DATABASE "${database}"`);
   const testDatabaseUrl = withDatabase(databaseUrl, database);
-  await runMigrations(testDatabaseUrl, MIGRATIONS_FOLDER);
+  await runMigrations(testDatabaseUrl, MIGRATIONS_FOLDER_PATH);
 
   const keyPrefix = `e2e:${run}:`;
   const env = loadEnv({
@@ -111,6 +126,8 @@ export async function startE2eApp(
   })
     .overrideProvider(MAIL_TRANSPORT)
     .useValue(mail.transport)
+    .overrideProvider(MIGRATIONS_FOLDER)
+    .useValue(MIGRATIONS_FOLDER_PATH)
     .compile();
 
   const app = moduleRef.createNestApplication<NestFastifyApplication>(
@@ -152,4 +169,41 @@ async function deleteRedisKeys(url: string, prefix: string): Promise<void> {
   } finally {
     await client.close();
   }
+}
+
+/**
+ * Hosts {@link DatabaseModule} on its own: the global `ENV` provider it injects,
+ * and nothing else. The rest of the graph would bring Redis, the scheduler and
+ * the HTTP layer along, none of which say anything about the schema.
+ */
+@Module({})
+class DatabaseLayerHost {
+  static forEnv(env: Env): DynamicModule {
+    return {
+      module: DatabaseLayerHost,
+      global: true,
+      imports: [DatabaseModule],
+      providers: [{ provide: ENV, useValue: env }],
+      exports: [ENV]
+    };
+  }
+}
+
+/**
+ * Boots the database layer against `env`, so a spec can watch the startup
+ * schema gate accept or reject a database. Rejects with what would have stopped
+ * the application from listening.
+ */
+export async function startDatabaseLayer(
+  env: Env
+): Promise<() => Promise<void>> {
+  const moduleRef = await Test.createTestingModule({
+    imports: [DatabaseLayerHost.forEnv(env)]
+  })
+    .overrideProvider(MIGRATIONS_FOLDER)
+    .useValue(MIGRATIONS_FOLDER_PATH)
+    .compile();
+
+  await moduleRef.init();
+  return () => moduleRef.close();
 }
