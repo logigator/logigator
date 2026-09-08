@@ -381,7 +381,12 @@ the liveness probe; `GET /api/health/ready` probes Postgres and Redis (503 namin
 - `auth/` — local credentials (bcrypt via `@node-rs/bcrypt`, rehash-on-login when a stored hash
   predates the current cost), one-shot mail tokens in Redis, and Google sign-in through
   `openid-client` (code flow + PKCE, state/verifier server-side, linking only from inside an
-  account). `AuthGuard` + `@CurrentUser()` are exported, never global.
+  account). Where the browser lands afterwards travels in that same server-side flow record: the
+  start route takes a `returnUrl`, keeps it only if core's `safeReturnPath` accepts it, and the
+  callback redirects there on success and appends it beside `?error=` on failure — `redirect_uri` is
+  this API's own callback and is registered with Google, so it cannot carry it, and a target read
+  off the callback request would be an unauthenticated open redirect. `AuthGuard` +
+  `@CurrentUser()` are exported, never global.
 - `users/` — the caller's own account: profile, password, address change (gated by the current
   password, then confirmed by mail), avatar, deletion. A session alone is proof of intent for none
   of the three: it would otherwise be a complete takeover, since a new address confirms a password

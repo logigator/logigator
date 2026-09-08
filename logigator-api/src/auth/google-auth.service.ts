@@ -10,6 +10,7 @@ import {
   type Configuration
 } from 'openid-client';
 import { usernameSchema } from '@logigator/contract';
+import { safeReturnPath } from '@logigator/core';
 import { ApiException } from '../common/api-exception';
 import { ENV, type Env } from '../config/env';
 import type { UserRow } from '../database/schema';
@@ -37,6 +38,12 @@ interface PendingFlow {
   mode: 'login' | 'link';
   /** For `link`, the account that asked — the callback refuses any other. */
   userId?: string;
+  /**
+   * Where to send the browser once the round trip ends, as a path on the public
+   * origin. Kept with the flow rather than passed through Google, so the value
+   * the callback redirects to is the one this server accepted at the start.
+   */
+  returnPath?: string;
 }
 
 /** Why a sign-in did not complete, for the return URL's `?error=`. */
@@ -47,9 +54,24 @@ export type GoogleAuthFailure =
   | 'google_already_linked';
 
 export class GoogleAuthError extends Error {
-  constructor(readonly failure: GoogleAuthFailure) {
+  constructor(
+    readonly failure: GoogleAuthFailure,
+    /** The flow's return path, so a failure lands where a retry can continue. */
+    readonly returnPath?: string
+  ) {
     super(failure);
   }
+}
+
+/** What a completed round trip leaves the controller to act on. */
+export interface GoogleCallbackResult {
+  /**
+   * The account whose session should be started, or `null` when a link
+   * succeeded and the caller is already signed in as that account.
+   */
+  user: UserRow | null;
+  /** Where the browser asked to be sent, if it named a place. */
+  returnPath?: string;
 }
 
 /**
@@ -83,11 +105,17 @@ export class GoogleAuthService {
    * nonce stay server-side, keyed by the `state` that comes back, so a callback
    * that cannot name a flow this server started goes nowhere.
    */
-  async createAuthorizationUrl(signedInUserId?: string): Promise<string> {
+  async createAuthorizationUrl(
+    signedInUserId?: string,
+    returnPath?: string | null
+  ): Promise<string> {
     const configuration = await this.load();
     const verifier = randomPKCECodeVerifier();
     const state = randomState();
     const nonce = randomNonce();
+    // Checked here rather than trusted from the caller: this is the value the
+    // callback redirects to, and it never leaves this server in between.
+    const destination = safeReturnPath(returnPath);
 
     await this.redis.setJson(
       flowKey(state),
@@ -95,7 +123,8 @@ export class GoogleAuthService {
         verifier,
         nonce,
         mode: signedInUserId ? 'link' : 'login',
-        ...(signedInUserId ? { userId: signedInUserId } : {})
+        ...(signedInUserId ? { userId: signedInUserId } : {}),
+        ...(destination ? { returnPath: destination } : {})
       } satisfies PendingFlow,
       FLOW_TTL_SECONDS
     );
@@ -113,14 +142,11 @@ export class GoogleAuthService {
   /**
    * Completes a flow: exchanges the code, then either signs the identity in or
    * links it to the account that asked.
-   *
-   * @returns the account whose session should be started, or `null` when a link
-   * succeeded and the caller is already signed in as that account.
    */
   async completeCallback(
     query: Record<string, string>,
     signedInUserId?: string
-  ): Promise<UserRow | null> {
+  ): Promise<GoogleCallbackResult> {
     const state = query['state'];
     const flow = state
       ? await this.redis.takeJson<PendingFlow>(flowKey(state))
@@ -129,6 +155,29 @@ export class GoogleAuthService {
     // replayed callback finds nothing.
     if (!flow || !state) throw new GoogleAuthError('google_state_invalid');
 
+    try {
+      return {
+        user: await this.identify(query, flow, state, signedInUserId),
+        returnPath: flow.returnPath
+      };
+    } catch (error) {
+      // Every failure from here on belongs to a flow that may have named a
+      // destination, and the page it lands on is where the retry happens — so
+      // the destination survives the failure rather than only the success.
+      if (error instanceof GoogleAuthError) {
+        throw new GoogleAuthError(error.failure, flow.returnPath);
+      }
+      throw error;
+    }
+  }
+
+  /** The account behind a callback, or `null` when it completed a link. */
+  private async identify(
+    query: Record<string, string>,
+    flow: PendingFlow,
+    state: string,
+    signedInUserId?: string
+  ): Promise<UserRow | null> {
     const claims = await this.exchange(query, flow, state);
     const googleUserId = claims.sub;
     // Beyond `sub`, ID-token claims are an index signature: the standard ones
