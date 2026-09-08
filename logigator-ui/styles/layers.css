@@ -7,6 +7,9 @@
  *   canvas-overlay  controls docked over the board (minimap, HUDs, cards)
  *   window          non-modal floating windows; the outlet carries the band
  *                   and stacks its own windows within it
+ *   navbar          a page's own top bar, over the content that scrolls under
+ *                   it and under every panel it opens
+ *   skip-link       the focused skip link, over the bar it jumps past
  *   overlay         the shared cdk/overlay container, whose panes order among
  *                   themselves by open order
  *   toast           above dialogs, so they stay visible
@@ -16,6 +19,8 @@
 :root {
   --lg-z-canvas-overlay: 10;
   --lg-z-window: 20;
+  --lg-z-navbar: 24;
+  --lg-z-skip-link: 26;
   --lg-z-overlay: 30;
   --lg-z-toast: 40;
   --lg-z-max: 100;
@@ -26,6 +31,12 @@
 }
 @utility z-window {
   z-index: var(--lg-z-window);
+}
+@utility z-navbar {
+  z-index: var(--lg-z-navbar);
+}
+@utility z-skip-link {
+  z-index: var(--lg-z-skip-link);
 }
 @utility z-overlay {
   z-index: var(--lg-z-overlay);
