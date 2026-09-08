@@ -34,6 +34,7 @@ describe('loadEnv', () => {
       SESSION_SECRET: DEVELOPMENT_SESSION_SECRET,
       SESSION_COOKIE_NAME: 'lg_sid',
       SESSION_MAX_AGE_DAYS: 30,
+      SESSION_TOUCH_INTERVAL_MINUTES: 60,
       COOKIE_SECURE: false,
       TRUST_PROXY: false,
       AUTH_TOKEN_TTL_MINUTES: 60,
@@ -124,6 +125,24 @@ describe('loadEnv', () => {
       loadEnv({ ...PRODUCTION, COOKIE_SECURE: 'false', TRUST_PROXY: 'false' })
         .TRUST_PROXY
     ).toBe(false);
+  });
+
+  it('refuses a refresh interval a session cannot outlive', () => {
+    // Silently broken the other way: nothing refreshes a session inside its own
+    // lifetime, so every account is signed out a fixed time after signing in,
+    // weeks later and with nothing in the logs to connect it to a setting.
+    expect(() =>
+      loadEnv({
+        SESSION_MAX_AGE_DAYS: '1',
+        SESSION_TOUCH_INTERVAL_MINUTES: '1440'
+      })
+    ).toThrowError(/SESSION_TOUCH_INTERVAL_MINUTES/);
+
+    // Zero is refreshing on every response, which a short-lived session wants.
+    expect(
+      loadEnv({ SESSION_TOUCH_INTERVAL_MINUTES: '0' })
+        .SESSION_TOUCH_INTERVAL_MINUTES
+    ).toBe(0);
   });
 
   it('refuses a hop count left over from the old contract', () => {

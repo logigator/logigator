@@ -146,40 +146,41 @@ describe('local authentication', () => {
     expect(profile.json().email).toBe(CREDENTIALS.email);
   });
 
-  it('slides the hint cookie with the session, and only for a session', async () => {
+  it('says nothing on the responses between two refreshes', async () => {
     const jar = new CookieJar();
     await login(jar);
 
-    // The hint rides along on every response, as the `rolling` session cookie
-    // does. Written once at sign-in it would expire under a live session, and
-    // the client would show a signed-out shell to a signed-in user.
+    // Sign-in has just pushed the session out to its full lifetime, and the
+    // default interval is an hour, so the responses in between repeat neither
+    // cookie: a session is no shorter for having been slid a moment ago.
     const authenticated = await api.inject({
       method: 'GET',
       url: '/api/user',
       headers: jar.headers()
     });
-    const refreshed = authenticated.cookies.find(
-      (c) => c.name === 'isAuthenticated'
-    );
-    expect(refreshed?.value).toBe('true');
-    const slid = authenticated.cookies.find((c) => c.name === 'lg_sid');
-    expect(slid?.expires).toBeInstanceOf(Date);
-    expect(refreshed?.expires).toEqual(slid?.expires);
 
-    // A hint no session backs is cleared, correcting a client whose session
-    // ended elsewhere — a password reset, or another tab.
+    expect(authenticated.statusCode).toBe(200);
+    expect(authenticated.cookies).toEqual([]);
+  });
+
+  it('clears a hint no session backs', async () => {
+    // Corrects a client whose session ended elsewhere — a password reset, or
+    // another tab. Not a refresh, so the interval has no say in it.
     const stale = await api.inject({
       method: 'GET',
       url: '/api/user',
       headers: { cookie: 'isAuthenticated=true' }
     });
+
     expect(stale.statusCode).toBe(401);
     expect(stale.cookies.find((c) => c.name === 'isAuthenticated')?.value).toBe(
       ''
     );
+  });
 
-    // A caller with no cookies is given none.
+  it('gives a caller with no cookies none', async () => {
     const anonymous = await api.inject({ method: 'GET', url: '/api/meta' });
+
     expect(anonymous.cookies).toEqual([]);
   });
 
@@ -503,5 +504,76 @@ describe('credential rate limiting', () => {
     expect(statuses.filter((status) => status === 401)).toHaveLength(10);
     expect(statuses.filter((status) => status === 429)).toHaveLength(1);
     expect(attempts.at(-1)?.json().code).toBe('rate_limited');
+  });
+});
+
+describe('a session refreshed on every response', () => {
+  let api: E2eApp;
+  const jar = new CookieJar();
+
+  beforeAll(async () => {
+    // No interval, so every response refreshes — the granularity the throttle
+    // quantizes away, and the only setting under which one request can be
+    // watched slide the next.
+    api = await startE2eApp({ SESSION_TOUCH_INTERVAL_MINUTES: '0' });
+    await api.inject({
+      method: 'POST',
+      url: '/api/auth/register',
+      payload: { username: 'Ada', ...CREDENTIALS }
+    });
+    await api.inject({
+      method: 'POST',
+      url: '/api/auth/verify-email',
+      payload: { token: api.mail.lastToken() }
+    });
+    jar.store(
+      await api.inject({
+        method: 'POST',
+        url: '/api/auth/login',
+        payload: CREDENTIALS
+      })
+    );
+  });
+
+  afterAll(async () => {
+    await api.close();
+  });
+
+  it('carries the session and its hint on the same response', async () => {
+    const response = await api.inject({
+      method: 'GET',
+      url: '/api/user',
+      headers: jar.headers()
+    });
+
+    const session = response.cookies.find((c) => c.name === 'lg_sid');
+    const hint = response.cookies.find((c) => c.name === 'isAuthenticated');
+    expect(session?.expires).toBeInstanceOf(Date);
+    // Two cookies saying one thing: a hint on a response the session cookie
+    // skipped would keep advancing past the session it stands for.
+    expect(hint?.expires).toEqual(session?.expires);
+  });
+
+  it('pushes the expiry out as the clock moves', async () => {
+    const first = await api.inject({
+      method: 'GET',
+      url: '/api/user',
+      headers: jar.headers()
+    });
+    const firstExpiry = first.cookies.find((c) => c.name === 'lg_sid')?.expires;
+
+    // A second of real time: `Expires` is second-resolution, so anything less
+    // reads as no movement whether or not the refresh happened.
+    await new Promise((resolve) => setTimeout(resolve, 1100));
+
+    const later = await api.inject({
+      method: 'GET',
+      url: '/api/user',
+      headers: jar.headers()
+    });
+    const laterExpiry = later.cookies.find((c) => c.name === 'lg_sid')?.expires;
+
+    expect(firstExpiry).toBeInstanceOf(Date);
+    expect(laterExpiry?.getTime()).toBeGreaterThan(firstExpiry!.getTime());
   });
 });

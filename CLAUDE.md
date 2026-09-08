@@ -415,9 +415,14 @@ the liveness probe; `GET /api/health/ready` probes Postgres and Redis (503 namin
 - `session/` — `@fastify/cookie` + `@fastify/session` over a small in-repo Redis store; sliding
   expiry, `saveUninitialized: false`, a per-account index of session ids (so a credential change can
   end the sessions the old one opened), and `SessionService` owning sign-in (id regenerated first),
-  sign-out, and the non-httpOnly `isAuthenticated` hint cookie the editor reads — written by an
-  `onSend` hook so it slides with the session cookie and a hint no session backs is cleared on the
-  next request.
+  sign-out, and the non-httpOnly `isAuthenticated` hint cookie the editor reads. **`rolling` is
+  off**: a session that slid on every response costs a store write and two `Set-Cookie` headers each
+  time to say what the last response said, so `touchIfStale` stamps `session.touchedAt` once per
+  `SESSION_TOUCH_INTERVAL_MINUTES` and that write — the field being part of what `@fastify/session`
+  hashes to decide whether to save — is what pushes the expiry out. The hint is written by an
+  `onSend` hook registered after the plugin's, which is what lets it ask whether the session cookie
+  is on this response and appear only beside it; a hint no session backs is cleared regardless, on
+  the next request.
 - `auth/` — local credentials (bcrypt via `@node-rs/bcrypt`, rehash-on-login when a stored hash
   predates the current cost), one-shot mail tokens in Redis, and Google sign-in through
   `openid-client` (code flow + PKCE, state/verifier server-side, linking only from inside an

@@ -28,6 +28,10 @@ export async function registerSessionPlugins(
     // Anonymous requests must not mint a session: a Redis key and a cookie for
     // every crawler, which consent rules frown on too.
     saveUninitialized: false,
+    // Off so that saving and re-sending the cookie follow the session's own
+    // fields rather than the response count. `SessionService.touchIfStale` is
+    // then what slides the expiry, on the interval it decides.
+    rolling: false,
     cookie: {
       path: '/',
       httpOnly: true,
@@ -38,15 +42,19 @@ export async function registerSessionPlugins(
     }
   });
 
-  // After the session plugin, so this request's session is resolved — and
-  // destroyed, where a handler ended it. The one place the hint cookie is
-  // written: `rolling` re-sets the session cookie on every response, and the
-  // hint has to slide with it.
   const sessions = app.get<SessionService>(SessionService);
-  app
-    .getHttpAdapter()
-    .getInstance()
-    .addHook('onSend', async (request, reply) => {
-      sessions.syncHintCookie(request, reply);
-    });
+  const fastify = app.getHttpAdapter().getInstance();
+
+  // After the session plugin's own `onRequest`, so the session is resolved, and
+  // before any handler, so a request that ends the session still overrules it.
+  fastify.addHook('onRequest', async (request) => {
+    sessions.touchIfStale(request);
+  });
+
+  // Likewise the later `onSend`, which is what lets the hint read whether the
+  // session cookie is on the response it is about to join. The one place the
+  // hint is written.
+  fastify.addHook('onSend', async (request, reply) => {
+    sessions.syncHintCookie(request, reply);
+  });
 }

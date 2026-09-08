@@ -93,8 +93,16 @@ const variables = z.object({
   /** Signs the session cookie; `@fastify/session` requires 32+ characters. */
   SESSION_SECRET: z.string().min(32).default(DEVELOPMENT_SESSION_SECRET),
   SESSION_COOKIE_NAME: z.string().min(1).default('lg_sid'),
-  /** How long a session survives. Sliding: every request pushes it out again. */
+  /** How long a session survives its last refresh. */
   SESSION_MAX_AGE_DAYS: z.coerce.number().int().min(1).default(30),
+  /**
+   * How stale a session may get before a response refreshes it. Sessions slide,
+   * and sliding is not free — a store write and two `Set-Cookie` headers on
+   * every response — while a session pushed out to its full lifetime is no
+   * shorter for having been pushed an hour ago. `0` refreshes on every
+   * response, which is what a lifetime measured in minutes would want.
+   */
+  SESSION_TOUCH_INTERVAL_MINUTES: z.coerce.number().int().min(0).default(60),
   /**
    * Defaults to on in production, where Caddy terminates TLS, and off elsewhere
    * so a plain-HTTP development origin can still hold a session.
@@ -159,6 +167,21 @@ export const envSchema = variables
         path: ['TRUST_PROXY'],
         message:
           'must name the proxy when cookies are Secure — the process serves plain HTTP, so a TLS-terminating proxy sits in front and its forwarding headers have to be trusted for sessions to be written at all'
+      });
+    }
+  })
+  .check((ctx) => {
+    const lifetimeMinutes = ctx.value.SESSION_MAX_AGE_DAYS * 24 * 60;
+    if (ctx.value.SESSION_TOUCH_INTERVAL_MINUTES >= lifetimeMinutes) {
+      // A session refreshed less often than it expires never slides at all, and
+      // the symptom is every account being signed out a fixed time after
+      // signing in — a week later, with nothing in the logs to connect it.
+      ctx.issues.push({
+        code: 'custom',
+        input: ctx.value.SESSION_TOUCH_INTERVAL_MINUTES,
+        path: ['SESSION_TOUCH_INTERVAL_MINUTES'],
+        message:
+          'must be shorter than SESSION_MAX_AGE_DAYS, which is the window it refreshes a session within'
       });
     }
   })

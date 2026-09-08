@@ -13,6 +13,8 @@ import './session.types';
  */
 const AUTH_HINT_COOKIE = 'isAuthenticated';
 
+const MINUTE_IN_MS = 60 * 1000;
+
 /** Starts and ends signed-in sessions. */
 @Injectable()
 export class SessionService {
@@ -29,16 +31,46 @@ export class SessionService {
   async signIn(request: FastifyRequest, userId: string): Promise<void> {
     await request.session.regenerate();
     request.session.userId = userId;
+    request.session.touchedAt = Date.now();
+  }
+
+  /**
+   * Pushes the session's expiry out, at most once per
+   * `SESSION_TOUCH_INTERVAL_MINUTES`.
+   *
+   * Refreshing is what `rolling` would do on every response, and it is not
+   * free: a store write, and two `Set-Cookie` headers the response carries to
+   * say what it already said. A session is no shorter for having been pushed to
+   * its full lifetime an hour ago, so the interval is the granularity of the
+   * slide rather than a shortening of it.
+   *
+   * Writing the field is the whole mechanism: with `rolling` off,
+   * `@fastify/session` saves and re-sends the cookie exactly when the session's
+   * own fields have changed.
+   */
+  touchIfStale(request: FastifyRequest): void {
+    const session = request.session;
+    if (!session?.userId) return;
+
+    const interval = this.env.SESSION_TOUCH_INTERVAL_MINUTES * MINUTE_IN_MS;
+    if (Date.now() - (session.touchedAt ?? 0) >= interval) {
+      session.touchedAt = Date.now();
+    }
   }
 
   /**
    * Writes the hint cookie of the response being sent, so it says what the
    * session says.
    *
-   * Per response rather than at sign-in, because the session cookie slides: a
-   * hint written once would expire underneath a session that is still good. The
-   * other direction is the same invariant backwards — a request carrying a hint
-   * that no session backs goes back without it.
+   * Written alongside the session cookie rather than at sign-in, because that
+   * cookie slides: a hint written once would expire underneath a session that
+   * is still good. The other direction is the same invariant backwards — a
+   * request carrying a hint that no session backs goes back without it.
+   *
+   * Alongside is literal. The response is asked whether it carries the session
+   * cookie, so the two are written on the same responses and never on
+   * different ones — which is also what keeps the hint off a response
+   * {@link touchIfStale} decided not to refresh.
    *
    * The expiry is the session cookie's own, already slid forward for this
    * response, rather than a second reading of `SESSION_MAX_AGE_DAYS`: an
@@ -48,11 +80,13 @@ export class SessionService {
    */
   syncHintCookie(request: FastifyRequest, reply: FastifyReply): void {
     if (request.session?.userId) {
-      reply.setCookie(AUTH_HINT_COOKIE, 'true', {
-        ...this.cookieOptions(),
-        httpOnly: false,
-        expires: request.session.cookie.expires ?? undefined
-      });
+      if (this.wroteSessionCookie(reply)) {
+        reply.setCookie(AUTH_HINT_COOKIE, 'true', {
+          ...this.cookieOptions(),
+          httpOnly: false,
+          expires: request.session.cookie.expires ?? undefined
+        });
+      }
       return;
     }
 
@@ -88,6 +122,18 @@ export class SessionService {
     exceptSessionId?: string
   ): Promise<void> {
     await this.store.destroyForUser(userId, exceptSessionId);
+  }
+
+  /**
+   * Whether `@fastify/session` has already put its cookie on this response.
+   * Readable only because this runs in the later of the two `onSend` hooks.
+   */
+  private wroteSessionCookie(reply: FastifyReply): boolean {
+    const written = reply.getHeader('set-cookie');
+    const values = Array.isArray(written) ? written : [written];
+    return values.some((value) =>
+      String(value ?? '').startsWith(`${this.env.SESSION_COOKIE_NAME}=`)
+    );
   }
 
   private cookieOptions() {
