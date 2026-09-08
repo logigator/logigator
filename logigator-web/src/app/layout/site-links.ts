@@ -23,6 +23,7 @@ export class SiteLinks {
   public readonly account = this.path('/my/account');
   public readonly login = this.path('/login');
   public readonly register = this.path('/register');
+  public readonly resetPassword = this.path('/reset-password');
   public readonly imprint = this.path('/imprint');
   public readonly privacyPolicy = this.path('/privacy-policy');
 

@@ -47,6 +47,15 @@ export class SessionService {
     );
   }
 
+  /**
+   * Records the account a sign-in just returned. `POST /auth/login` answers
+   * with the same body `GET /user` does, so the page it lands on is
+   * personalized without asking again for what the response already carried.
+   */
+  public signedIn(user: UserResponse): void {
+    this._user.set(user);
+  }
+
   /** Ends the server session. The response clears the hint cookie. */
   public async logout(): Promise<void> {
     await firstValueFrom(this.userApi.logout());

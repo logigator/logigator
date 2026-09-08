@@ -216,7 +216,10 @@ path behaves the same in development).
   the relative path onto `API_ORIGIN` and forwards the visitor's cookie. It is registered on both
   platforms and inert in the browser, where `API_ORIGIN` is not provided.
 - `user/` — `SessionService`, resolved before the first render so the top bar is personalized in the
-  first byte, and handed to the browser through `TransferHandoffService`.
+  first byte, and handed to the browser through `TransferHandoffService`; `AuthProvidersService`
+  (which sign-in methods `GET /meta` reports, so the Google button is drawn only where the round
+  trip works); `auth-guards.ts` — `guestGuard` keeps a signed-in visitor off the sign-in pages,
+  `authProvidersGuard` resolves the methods before one activates.
 - `transfer/` — `TransferHandoffService`, the consume-once server → browser hand-off. Every API read
   a server render resolves goes through it; skipping it silently repeats the request after
   hydration.
@@ -230,8 +233,16 @@ path behaves the same in development).
   gear and no auth buttons: `user-menu/` fills `@logigator/ui`'s shared account control with the
   language and theme sections and the sign-in/sign-out rows, and it is there at every width, which
   leaves the drawer only the destinations the bar drops below `md`.
-- `pages/` — one folder per page. The 404 sets the response status through `RESPONSE_INIT`; a soft
-  404 would be indexable.
+- `forms/` — the bridge from the contract's zod schemas to reactive forms, so a field's rules are
+  the ones the API enforces: `zodValidator` puts a schema on a control and records the failing
+  _issue codes_ (never zod's English message text), `fieldError` maps a code to a translation key
+  and is driven by the **root** form's events, so a cross-field rule re-decides when the sibling is
+  the field edited. `setServerError` parks a verdict only the server can reach — a taken address —
+  outside the validator chain, so the next edit drops it. The body a form submits is the request
+  schema's `safeParse` output, which is what makes `.trim().toLowerCase()` apply.
+- `pages/` — one folder per page; `pages/auth/` holds the four sign-in pages plus the card frame and
+  the Google entry they share. The 404 sets the response status through `RESPONSE_INIT`; a soft 404
+  would be indexable.
 
 **Non-obvious details:**
 
@@ -254,6 +265,15 @@ path behaves the same in development).
   the translation loader's own key for the locale table.
 - **Rendered pages answer `Cache-Control: no-store`** — every one is personalized by language, theme
   and session, and the account is in both the markup and the transfer state.
+- **A one-shot mail token is redeemed from the browser, never from a render.** `verify-email/:token`
+  fires its `POST` in `afterNextRender`; a server render happens for every crawler and every mail
+  client that fetches a link to preview it, and any one of those would spend the token before the
+  recipient clicked. `afterNextRender` is gated on the `ngServerMode` global rather than on
+  `PLATFORM_ID`, which is what a spec has to set to exercise the server side.
+- **A sign-in destination is a `returnUrl` query parameter**, validated by core's `safeReturnPath` on
+  both sides — the site drops one it will not navigate to, and the API refuses to redirect to one,
+  since its OAuth routes are unauthenticated and a caller-chosen target is an open redirect. Google
+  carries it in the flow record the `state` names, not through Google.
 - **`public/` is for URLs that are contracts with something outside the app**; anything the app
   itself renders is `import`ed, so the build hashes it (`src/assets.d.ts` types the loader's URL
   imports, `SITE_LOGO` is the example). That is what the static handler's cache policy keys off:

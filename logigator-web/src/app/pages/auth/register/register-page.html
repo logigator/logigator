@@ -1,0 +1,130 @@
+<ng-container *webTranslate="let t">
+  @if (awaitingConfirmation(); as address) {
+  <web-auth-shell
+    [heading]="t('pages.register.confirmHeading')"
+    [lead]="t('pages.register.confirmLead', { email: address })"
+  >
+    <a
+      lgButton
+      outlined
+      class="w-full"
+      [routerLink]="links.login()"
+      [queryParams]="loginQuery()"
+    >
+      {{ t('pages.register.toLogin') }}
+    </a>
+  </web-auth-shell>
+  } @else { @let usernameMessage = usernameError(); @let emailMessage =
+  emailError(); @let passwordMessage = passwordError(); @let repeatMessage =
+  passwordRepeatError();
+
+  <web-auth-shell [heading]="t('pages.register.heading')">
+    <form class="flex flex-col gap-4" [formGroup]="form" (ngSubmit)="submit()">
+      @if (formError(); as message) {
+      <lg-message severity="danger">{{ t(message) }}</lg-message>
+      }
+
+      <lg-form-field
+        #usernameField="lgFormField"
+        inputId="register-username"
+        required
+        [label]="t('auth.username')"
+        [error]="usernameMessage ? t(usernameMessage) : undefined"
+      >
+        <input
+          lgInputText
+          id="register-username"
+          type="text"
+          autocomplete="username"
+          class="w-full"
+          formControlName="username"
+          [invalid]="!!usernameMessage"
+          [attr.aria-describedby]="usernameField.describedBy()"
+        />
+      </lg-form-field>
+
+      <lg-form-field
+        #emailField="lgFormField"
+        inputId="register-email"
+        required
+        [label]="t('auth.email')"
+        [error]="emailMessage ? t(emailMessage) : undefined"
+      >
+        <input
+          lgInputText
+          id="register-email"
+          type="email"
+          autocomplete="email"
+          class="w-full"
+          formControlName="email"
+          [invalid]="!!emailMessage"
+          [attr.aria-describedby]="emailField.describedBy()"
+        />
+      </lg-form-field>
+
+      <lg-form-field
+        #passwordField="lgFormField"
+        inputId="register-password"
+        required
+        [label]="t('auth.password')"
+        [hint]="t('auth.passwordRules')"
+        [error]="passwordMessage ? t(passwordMessage) : undefined"
+      >
+        <input
+          lgInputText
+          id="register-password"
+          type="password"
+          autocomplete="new-password"
+          class="w-full"
+          formControlName="password"
+          [invalid]="!!passwordMessage"
+          [attr.aria-describedby]="passwordField.describedBy()"
+        />
+      </lg-form-field>
+
+      <lg-form-field
+        #repeatField="lgFormField"
+        inputId="register-password-repeat"
+        required
+        [label]="t('auth.passwordRepeat')"
+        [error]="repeatMessage ? t(repeatMessage) : undefined"
+      >
+        <input
+          lgInputText
+          id="register-password-repeat"
+          type="password"
+          autocomplete="new-password"
+          class="w-full"
+          formControlName="passwordRepeat"
+          [invalid]="!!repeatMessage"
+          [attr.aria-describedby]="repeatField.describedBy()"
+        />
+      </lg-form-field>
+
+      <p class="text-sm text-muted">
+        {{ t('pages.register.privacyNoticeBefore') }}<a
+          class="text-primary hover:underline"
+          [routerLink]="links.privacyPolicy()"
+          >{{ t('pages.register.privacyNoticeLink') }}</a
+        >{{ t('pages.register.privacyNoticeAfter') }}
+      </p>
+
+      <button lgButton type="submit" [loading]="submitting()">
+        {{ t('pages.register.submit') }}
+      </button>
+    </form>
+
+    <web-google-sign-in class="block" [returnPath]="returnPath()" />
+
+    <p class="mt-6 text-center text-sm text-muted">
+      {{ t('pages.register.haveAccount') }}
+      <a
+        class="text-primary hover:underline"
+        [routerLink]="links.login()"
+        [queryParams]="loginQuery()"
+        >{{ t('pages.register.loginLink') }}</a
+      >
+    </p>
+  </web-auth-shell>
+  }
+</ng-container>

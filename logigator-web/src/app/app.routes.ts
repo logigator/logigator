@@ -4,7 +4,12 @@ import { isAvailableLanguage } from '@logigator/core';
 import { resolveDocumentLanguage } from './translation/document-language';
 import { languageTableGuard } from './translation/language-guard';
 import { HomePage } from './pages/home/home-page';
+import { LoginPage } from './pages/auth/login/login-page';
+import { RegisterPage } from './pages/auth/register/register-page';
+import { ResetPasswordPage } from './pages/auth/reset-password/reset-password-page';
+import { VerifyEmailPage } from './pages/auth/verify-email/verify-email-page';
 import { NotFoundPage } from './pages/not-found/not-found-page';
+import { authProvidersGuard, guestGuard } from './user/auth-guards';
 import { PageMeta } from './seo/seo.service';
 
 /**
@@ -21,6 +26,32 @@ const localizedRoutes: Routes = [
     path: '',
     component: HomePage,
     data: { seo: { titleKey: 'pages.home.title' } satisfies PageMeta }
+  },
+  {
+    path: 'login',
+    component: LoginPage,
+    canActivate: [guestGuard, authProvidersGuard],
+    data: { seo: { titleKey: 'pages.login.title' } satisfies PageMeta }
+  },
+  {
+    path: 'register',
+    component: RegisterPage,
+    canActivate: [guestGuard, authProvidersGuard],
+    data: { seo: { titleKey: 'pages.register.title' } satisfies PageMeta }
+  },
+  // One page for both halves of a reset: the mail links straight to it with a
+  // `?token=`, and without one it asks for the address to mail.
+  {
+    path: 'reset-password',
+    component: ResetPasswordPage,
+    data: { seo: { titleKey: 'pages.resetPassword.title' } satisfies PageMeta }
+  },
+  // The token is a path segment because that is the shape the API's mails
+  // build, and those links are already in inboxes.
+  {
+    path: 'verify-email/:token',
+    component: VerifyEmailPage,
+    data: { seo: { titleKey: 'pages.verifyEmail.title' } satisfies PageMeta }
   },
   {
     path: '**',

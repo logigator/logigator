@@ -1,10 +1,11 @@
-import { Provider } from '@angular/core';
+import { Provider, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import {
   TRANSLOCO_MISSING_HANDLER,
   TranslocoMissingHandler
 } from '@jsverse/transloco';
+import type { UserResponse } from '@logigator/contract';
 import { appConfig } from '../app/app.config';
 import { SessionService } from '../app/user/session.service';
 
@@ -25,9 +26,15 @@ class SilentTranslocoMissingHandler implements TranslocoMissingHandler {
  * arranged for; the resolution itself is tested directly.
  */
 class AnonymousSessionService {
-  public readonly user = () => null;
+  private readonly _user = signal<UserResponse | null>(null);
+  public readonly user = this._user.asReadonly();
+
   public resolve(): Promise<void> {
     return Promise.resolve();
+  }
+
+  public signedIn(user: UserResponse): void {
+    this._user.set(user);
   }
 }
 
