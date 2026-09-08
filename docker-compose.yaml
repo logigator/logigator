@@ -68,9 +68,12 @@ services:
       - API_ORIGIN=http://api:3000
       # Angular refuses a request whose Host it was not told to expect, and
       # behind Caddy the host and scheme only arrive as forwarded headers —
-      # which it likewise only reads once trusted.
+      # which it likewise only reads once trusted. An untrusted `x-forwarded-*`
+      # is deleted rather than ignored, so `x-forwarded-for` is named here to
+      # reach the render at all: the API hop passes it on, and its rate limiter
+      # counts the visitor instead of this container.
       - NG_ALLOWED_HOSTS=logigator.test
-      - NG_TRUST_PROXY_HEADERS=x-forwarded-host,x-forwarded-proto
+      - NG_TRUST_PROXY_HEADERS=x-forwarded-host,x-forwarded-proto,x-forwarded-for
     command: "sh -c 'corepack enable && exec yarn start:web'"
 
   api:

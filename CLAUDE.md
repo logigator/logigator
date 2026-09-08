@@ -292,7 +292,11 @@ path behaves the same in development).
   `social-card.png`, whose absolute URL the editor's own Open Graph tags name.
 - **`NG_ALLOWED_HOSTS` and `NG_TRUST_PROXY_HEADERS` are required behind Caddy.** Angular refuses a
   request whose `Host` it was not told to expect and only reads forwarded headers once trusted;
-  `SITE_ORIGIN` is then derived from the request URL rather than configured a second time.
+  `SITE_ORIGIN` is then derived from the request URL rather than configured a second time. An
+  untrusted `x-forwarded-*` is **deleted**, not ignored, so the list also names every proxy header
+  the API hop passes on — `x-forwarded-for`, which the rate limiter buckets by. The scheme has to be
+  trusted for the request URL to carry it, and the hop then reads that URL rather than the header,
+  so a deployment told to trust nothing forwards nothing.
 - **The consent bundle** is `vanilla-cookieconsent` plus `src/consent/cookieconsent-init.js`,
   concatenated by two `scripts` entries sharing one `bundleName` — non-injected bundles keep their
   name even under `outputHashing: all`. A bundle name may not contain a slash, so `server.ts`

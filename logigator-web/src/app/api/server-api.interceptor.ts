@@ -16,8 +16,21 @@ import { tap } from 'rxjs';
  */
 export const API_ORIGIN = new InjectionToken<string>('API_ORIGIN');
 
-/** Only these travel from the visitor's request to the API hop. */
-const FORWARDED_HEADERS = ['cookie', 'user-agent', 'accept-language'];
+/**
+ * Only these travel from the visitor's request to the API hop. `x-forwarded-for`
+ * is the chain the proxy built, so the API's rate limiter counts the visitor
+ * rather than this container, which every render would otherwise share — and it
+ * arrives only where `NG_TRUST_PROXY_HEADERS` names it, an untrusted
+ * `x-forwarded-*` being deleted before a render sees it. Passing it on decides
+ * nothing: the API believes a forwarded header only where its own `TRUST_PROXY`
+ * names the sender.
+ */
+const FORWARDED_HEADERS = [
+  'cookie',
+  'user-agent',
+  'accept-language',
+  'x-forwarded-for'
+];
 
 /**
  * Hands the API's cookies to the visitor. A server render is one hop inside a
@@ -74,6 +87,21 @@ export const apiOriginInterceptor: HttpInterceptorFn = (
     if (value && !headers.has(name)) {
       headers = headers.set(name, value);
     }
+  }
+
+  // This hop is plain HTTP inside the deployment while the API's cookies are
+  // `Secure`, and `@fastify/session` writes no cookie at all on a connection it
+  // reads as insecure — so without this the session it slides forward on a
+  // render never reaches the browser, and only the hint cookie does.
+  //
+  // The scheme comes from the URL Angular resolved rather than from the header
+  // itself: that URL is what `NG_TRUST_PROXY_HEADERS` has already been applied
+  // to, so a deployment told to trust nothing forwards nothing.
+  if (incoming && !headers.has('x-forwarded-proto')) {
+    headers = headers.set(
+      'x-forwarded-proto',
+      new URL(incoming.url).protocol.replace(':', '')
+    );
   }
 
   return next(
