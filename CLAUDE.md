@@ -229,7 +229,11 @@ path behaves the same in development).
   `authProvidersGuard` resolves the methods before one activates.
 - `transfer/` — `TransferHandoffService`, the consume-once server → browser hand-off. Every API read
   a server render resolves goes through it; skipping it silently repeats the request after
-  hydration.
+  hydration. `contentSection()` is the pattern packaged: one listing a page's guard resolves,
+  exposing `entries` / `failureKey` / `retry`, where a failed read **resolves to a translation key**
+  rather than rejecting — a rejection transfers nothing, so hydration would repeat a request that
+  already failed — and an empty list stays distinct from a failed one. The retry deliberately
+  bypasses the hand-off: what it holds is the answer that failed.
 - `seo/` — `SeoService` (title, description, canonical, the four `hreflang` alternates plus
   `x-default`) driven by a `TitleStrategy`, so it runs once per completed navigation, the server
   render included. Routes carry a `seo` data entry naming their title key.
@@ -247,10 +251,13 @@ path behaves the same in development).
   the field edited. `setServerError` parks a verdict only the server can reach — a taken address —
   outside the validator chain, so the next edit drops it. The body a form submits is the request
   schema's `safeParse` output, which is what makes `.trim().toLowerCase()` apply.
-- `documents/` — how a circuit document is presented wherever a list of them appears:
-  `CircuitTiles` (the grid or the edge-to-edge rail, and the one place a preview is picked for the
-  active theme — both themes are separate renders, so a CSS-hidden second image would be downloaded
-  for nothing) over `@logigator/ui`'s `LgCircuitTile`, plus the listing-row → tile mapping.
+- `documents/` — how a circuit document is presented wherever one appears: `CircuitTiles` (the grid
+  or the edge-to-edge rail) over `@logigator/ui`'s `LgCircuitTile`, plus the listing-row → tile
+  mapping, and `web-circuit-preview` for a render shown outside a tile (an examples row, later a
+  document's own page). Both pick the preview for the active theme in TypeScript — the two themes
+  are separate renders, so a CSS-hidden second image would be downloaded for nothing; the tile does
+  it because it takes one theme's ladder, the preview because it draws the `<picture>` itself
+  through `@logigator/ui`'s exported `pictureFor`.
 - `states/` — the shared empty and section-error objects (`web-empty-state`, `web-section-error`).
   There is no skeleton: every list is resolved by a guard, so the first byte carries content and a
   client-side navigation waits.
@@ -258,11 +265,13 @@ path behaves the same in development).
   repeats. `web-wire-run` is the orthogonal rule that steps and tees between two blocks; its
   1px borders are why it is not a scaled SVG.
 - `pages/` — one folder per page; `pages/auth/` holds the four sign-in pages plus the card frame and
-  the Google entry they share. `pages/home/` resolves its three listings through
-  `HomeContentService` + `homeContentGuard`, where a failed read **resolves** to the translation key
-  its error `code` maps to rather than rejecting — a rejection transfers nothing, so hydration would
-  repeat a request that already failed — and an empty list stays distinct from a failed one. The 404
-  sets the response status through `RESPONSE_INIT`; a soft 404 would be indexable.
+  the Google entry they share. `pages/home/` resolves its three listings through `contentSection()`
+  - `homeContentGuard`.
+    `pages/examples/` is the seed account's public projects, one row each — the render beside the
+    description that teaches it, sides alternating — since a tile has nowhere to put a description;
+    it is also where the **inner-page header** (h1 + lede in `page-wrap`, no eyebrow, the rule under
+    it being the first row's) is set for the pages that follow. The 404 sets the response status
+    through `RESPONSE_INIT`; a soft 404 would be indexable.
 
 **Non-obvious details:**
 
@@ -362,10 +371,12 @@ TypeScript with no build step — it is _not_ a `package.json` dependency of eit
   `a[lgCircuitTileAuthor]`, lifted above it by `z-1` — and routes both itself, which is what keeps
   `@angular/router` out of the library. It takes one theme's preview ladder, not both, and the star
   count's screen-reader word is an input like every other string it shows.
-- `internal/` — shared, non-exported plumbing: CDK-based `overlay`/`modal-overlay`, `focus-trap`,
-  `key-manager`, `after-paint`, `caret`, `collapse`, `icon`, `picture` (the `<picture>`/`srcset`
-  grouping the avatar and the circuit tile share, which turns an image ladder into one `<source>`
-  per encoding in the caller's own preference order).
+- `internal/` — shared plumbing, not exported unless something outside genuinely needs the same
+  rule: CDK-based `overlay`/`modal-overlay`, `focus-trap`, `key-manager`, `after-paint`, `caret`,
+  `collapse`, `icon`, `picture` (the `<picture>`/`srcset` grouping the avatar and the circuit tile
+  share, which turns an image ladder into one `<source>` per encoding in the caller's own preference
+  order — `pictureFor` is in `public-api.ts` because a consumer drawing a preview of its own has to
+  group it the same way, and a second copy of the rule would drift).
 - `tokens/` — shared types (`LgSeverity`, `LgSize`, form-field tokens).
 - `styles/theme.css` defines the `--lg-*` vars; `styles/theme.tw.css` maps them into Tailwind's
   `@theme` for the editor and the site.
