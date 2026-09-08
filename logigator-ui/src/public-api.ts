@@ -7,6 +7,11 @@ export type { IconSlot } from './internal/icon';
 export type { LgSeverity } from './tokens/severity';
 export type { LgSize } from './tokens/size';
 export type { LgImageSource } from './tokens/image-source';
+// An image ladder grouped for `<picture>`. Exported because a consumer that
+// draws a preview of its own — the site's circuit rows — must group it the way
+// the tile and the avatar do, and a second copy of the rule would drift.
+export type { LgPicture, LgPictureGroup } from './internal/picture';
+export { pictureFor } from './internal/picture';
 export type { LgLabels, LgLabelResolver } from './tokens/labels';
 export { LG_DEFAULT_LABELS, LG_LABELS, provideLgLabels } from './tokens/labels';
 export type {
