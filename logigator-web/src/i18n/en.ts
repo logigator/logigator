@@ -144,8 +144,6 @@ const en = {
     },
     home: {
       title: 'Build and Simulate Logic Circuits',
-      lead: 'Build, simulate and manage complex logic circuits for free.',
-      openEditor: 'Open the editor',
       hero: {
         headline: 'Build, simulate and manage complex logic circuits for free.',
         lede: 'Gates, wires and reusable subcircuits, in the browser. The simulation runs on a WebAssembly engine and the board renders on the GPU, so a circuit keeps stepping as it grows.',

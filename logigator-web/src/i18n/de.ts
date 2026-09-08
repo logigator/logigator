@@ -150,8 +150,6 @@ const de: TranslationSchema = {
     },
     home: {
       title: 'Der Editor für Logikschaltungen',
-      lead: 'Erstelle, simuliere und verwalte komplexe Logikschaltungen — kostenlos.',
-      openEditor: 'Editor öffnen',
       hero: {
         headline: 'Baue, simuliere und verwalte komplexe Logikschaltungen.',
         lede: 'Gatter, Leitungen und wiederverwendbare Unterschaltungen, direkt im Browser. Die Simulation läuft auf einer WebAssembly-Engine, das Board rendert die GPU — die Schaltung läuft also weiter, während sie wächst.',

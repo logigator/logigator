@@ -141,8 +141,6 @@ const fr: TranslationSchema = {
     },
     home: {
       title: 'Construisez et simulez des circuits logiques',
-      lead: 'Construisez, simulez et gérez gratuitement des circuits logiques complexes.',
-      openEditor: "Ouvrir l'éditeur",
       hero: {
         headline:
           'Construisez, simulez et gérez des circuits logiques complexes gratuitement.',

@@ -145,8 +145,6 @@ const es: TranslationSchema = {
     },
     home: {
       title: 'Construye y Simula Circuitos Lógicos',
-      lead: 'Construye, simula y gestiona circuitos lógicos complejos de forma gratuita.',
-      openEditor: 'Abrir el editor',
       hero: {
         headline:
           'Construye, simula y gestiona circuitos lógicos complejos de forma gratuita.',
