@@ -92,7 +92,7 @@ services:
     env_file:
       - path: ./logigator-api/.env
         required: false
-    command: "sh -c 'corepack enable && exec yarn start:api'"
+    command: "sh -c 'corepack enable && yarn workspace logigator-api run db:migrate && exec yarn start:api'"
 
   editor-legacy:
     image: node:20

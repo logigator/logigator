@@ -38,6 +38,13 @@ published on localhost, so host-run tooling (`db:generate`, `db:migrate`, `test:
 them at `postgresql://logigator:logigator@localhost:5432/logigator` and `redis://localhost:6379`.
 `data/` holds both data directories and is ignored.
 
+The compose `api` service **applies migrations before it starts the API**, so a fresh clone and a
+pull that brings new ones both come up on their own — the environment doing it, never the server. A
+migration generated while the stack runs lands on the next `docker compose restart api`, not on the
+next rebuild, and a database left _ahead_ of the checked-out branch is dealt with by hand: no down
+migrations exist, so it is `DATABASE_MIGRATION_CHECK=false` or a database dropped and migrated
+again.
+
 Caddy serves **`logigator-web` at the origin root**, so the legacy backend is off the dev origin
 entirely — the same shape the Phase 6 cutover produces, and the reason the site owns the consent
 bundle and the icons the other stacks link to by absolute path.
