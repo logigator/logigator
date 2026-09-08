@@ -5,11 +5,9 @@ import {
   type TestRequest
 } from '@angular/common/http/testing';
 import { configureTestBed } from '../../../testing/configure-test-bed';
+import { EMPTY_PAGE } from '../../../testing/community-rows';
 import { environment } from '../../../environments/environment';
 import { HomeContentService } from './home-content.service';
-
-/** An empty page envelope, which is what an unseeded deployment answers. */
-const EMPTY_PAGE = { entries: [], page: 0, pageSize: 4, total: 0 };
 
 /** The API's own error body, which is where the mapped code comes from. */
 const UNAVAILABLE = {

@@ -5,6 +5,8 @@ import { resolveDocumentLanguage } from './translation/document-language';
 import { languageTableGuard } from './translation/language-guard';
 import { HomePage } from './pages/home/home-page';
 import { homeContentGuard } from './pages/home/home-content.guard';
+import { ExamplesPage } from './pages/examples/examples-page';
+import { examplesContentGuard } from './pages/examples/examples-content.guard';
 import { LoginPage } from './pages/auth/login/login-page';
 import { RegisterPage } from './pages/auth/register/register-page';
 import { ResetPasswordPage } from './pages/auth/reset-password/reset-password-page';
@@ -28,6 +30,17 @@ const localizedRoutes: Routes = [
     component: HomePage,
     canActivate: [homeContentGuard],
     data: { seo: { titleKey: 'pages.home.title' } satisfies PageMeta }
+  },
+  {
+    path: 'examples',
+    component: ExamplesPage,
+    canActivate: [examplesContentGuard],
+    data: {
+      seo: {
+        titleKey: 'pages.examples.title',
+        descriptionKey: 'pages.examples.lede'
+      } satisfies PageMeta
+    }
   },
   {
     path: 'login',

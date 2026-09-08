@@ -21,6 +21,7 @@ const en = {
   header: {
     home: 'Logigator home',
     features: 'Features',
+    examples: 'Examples',
     community: 'Community',
     myProjects: 'My Projects',
     myComponents: 'My Components',
@@ -204,6 +205,17 @@ const en = {
           'Nothing has been shared with the community so far.',
         componentsFailed: 'Components could not be loaded'
       }
+    },
+    examples: {
+      // One string for the <title> and the h1: the page is named the same
+      // thing in the tab and on the page itself.
+      title: 'Example Circuits',
+      lede: 'Learn to design simple and more complex circuits from our examples. Every one of them opens in the editor, ready to run.',
+      open: 'Open in editor',
+      openNamed: 'Open “{{name}}” in the editor',
+      emptyHeading: 'No examples yet',
+      emptyBody: 'Nothing has been published for this deployment.',
+      failed: 'Examples could not be loaded'
     },
     notFound: {
       title: 'Page not found',

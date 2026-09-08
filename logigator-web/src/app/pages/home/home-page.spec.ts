@@ -2,41 +2,13 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { HttpTestingController } from '@angular/common/http/testing';
 import { configureTestBed } from '../../../testing/configure-test-bed';
+import { communityRow, EMPTY_PAGE } from '../../../testing/community-rows';
 import { TranslationService } from '../../translation/translation.service';
 import { HomeContentService } from './home-content.service';
 import { HomePage } from './home-page';
 
-const EMPTY_PAGE = { entries: [], page: 0, pageSize: 4, total: 0 };
-
 const EXAMPLE_LINK = '11111111-1111-4111-8111-111111111111';
 const PROJECT_LINK = '22222222-2222-4222-8222-222222222222';
-
-/**
- * One community row. The ids are real uuids because the contract's schemas
- * check them, and a response the boundary rejects is a failed read.
- */
-function row(name: string, link: string) {
-  return {
-    id: link,
-    name,
-    description: '',
-    public: true,
-    link,
-    version: 1,
-    componentCount: 0,
-    wireCount: 0,
-    preview: null,
-    createdAt: '2026-01-01T00:00:00.000Z',
-    lastEditedAt: '2026-01-01T00:00:00.000Z',
-    author: {
-      id: '33333333-3333-4333-8333-333333333333',
-      username: 'marek_h',
-      avatar: null
-    },
-    stars: 12,
-    starred: false
-  };
-}
 
 describe('HomePage', () => {
   let http: HttpTestingController;
@@ -87,8 +59,14 @@ describe('HomePage', () => {
 
   it('opens an example in the editor, and a community row on its own page', async () => {
     const el = await render({
-      examples: { ...EMPTY_PAGE, entries: [row('Half Adder', EXAMPLE_LINK)] },
-      projects: { ...EMPTY_PAGE, entries: [row('8-Bit ALU', PROJECT_LINK)] }
+      examples: {
+        ...EMPTY_PAGE,
+        entries: [communityRow('Half Adder', EXAMPLE_LINK)]
+      },
+      projects: {
+        ...EMPTY_PAGE,
+        entries: [communityRow('8-Bit ALU', PROJECT_LINK)]
+      }
     });
 
     const hrefs = [...el.querySelectorAll('a[lgCircuitTileLink]')].map((a) =>
@@ -102,7 +80,10 @@ describe('HomePage', () => {
 
   it('sends the author of a community row to their own page', async () => {
     const el = await render({
-      projects: { ...EMPTY_PAGE, entries: [row('8-Bit ALU', PROJECT_LINK)] }
+      projects: {
+        ...EMPTY_PAGE,
+        entries: [communityRow('8-Bit ALU', PROJECT_LINK)]
+      }
     });
 
     const author = el.querySelector('a[lgCircuitTileAuthor]')!;
@@ -114,7 +95,10 @@ describe('HomePage', () => {
 
   it('leaves the rest of the page alone when one read fails', async () => {
     const el = await render({
-      projects: { ...EMPTY_PAGE, entries: [row('8-Bit ALU', PROJECT_LINK)] },
+      projects: {
+        ...EMPTY_PAGE,
+        entries: [communityRow('8-Bit ALU', PROJECT_LINK)]
+      },
       failComponents: true
     });
 

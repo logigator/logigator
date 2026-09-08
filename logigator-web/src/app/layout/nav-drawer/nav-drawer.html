@@ -16,6 +16,13 @@
       <a
         routerLinkActive="text-primary!"
         [class]="menuLinkClass"
+        [routerLink]="links.examples()"
+        (click)="close()"
+        >{{ t('header.examples') }}</a
+      >
+      <a
+        routerLinkActive="text-primary!"
+        [class]="menuLinkClass"
         [routerLink]="links.communityProjects()"
         (click)="close()"
         >{{ t('header.community') }}</a

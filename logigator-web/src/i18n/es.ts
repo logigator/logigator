@@ -18,6 +18,7 @@ const es: TranslationSchema = {
   header: {
     home: 'Inicio de Logigator',
     features: 'Características',
+    examples: 'Ejemplos',
     community: 'Comunidad',
     myProjects: 'Mis Proyectos',
     myComponents: 'Mis Componentes',
@@ -207,6 +208,15 @@ const es: TranslationSchema = {
           'Hasta ahora no se ha compartido nada con la comunidad.',
         componentsFailed: 'No se pudieron cargar los componentes'
       }
+    },
+    examples: {
+      title: 'Circuitos de Ejemplo',
+      lede: 'Aprende a diseñar circuitos simples y más complejos a partir de nuestros ejemplos. Todos se abren en el editor, listos para simular.',
+      open: 'Abrir en el editor',
+      openNamed: 'Abrir «{{name}}» en el editor',
+      emptyHeading: 'Todavía no hay ejemplos',
+      emptyBody: 'Aún no se ha publicado nada para esta instalación.',
+      failed: 'No se pudieron cargar los ejemplos'
     },
     notFound: {
       title: 'Página no encontrada',

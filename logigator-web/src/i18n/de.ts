@@ -18,6 +18,7 @@ const de: TranslationSchema = {
   header: {
     home: 'Logigator Startseite',
     features: 'Features',
+    examples: 'Beispiele',
     community: 'Community',
     myProjects: 'Meine Projekte',
     myComponents: 'Meine Komponenten',
@@ -209,6 +210,15 @@ const de: TranslationSchema = {
         componentsEmptyBody: 'Bisher wurde nichts mit der Community geteilt.',
         componentsFailed: 'Komponenten konnten nicht geladen werden'
       }
+    },
+    examples: {
+      title: 'Beispielschaltungen',
+      lede: 'Lerne mit unseren Beispielen einfache, als auch komplexere Schaltungen zu bauen. Jede davon öffnet sich startklar im Editor.',
+      open: 'Im Editor öffnen',
+      openNamed: '„{{name}}“ im Editor öffnen',
+      emptyHeading: 'Noch keine Beispiele',
+      emptyBody: 'Für diese Installation wurde noch nichts veröffentlicht.',
+      failed: 'Beispiele konnten nicht geladen werden'
     },
     notFound: {
       title: 'Seite nicht gefunden',

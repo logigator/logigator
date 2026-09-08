@@ -46,6 +46,14 @@
         <a
           [class]="barLinkClass"
           [routerLinkActive]="barLinkActiveClass"
+          [routerLink]="links.examples()"
+          >{{ t('header.examples') }}</a
+        >
+      </li>
+      <li>
+        <a
+          [class]="barLinkClass"
+          [routerLinkActive]="barLinkActiveClass"
           [routerLink]="links.communityProjects()"
           >{{ t('header.community') }}</a
         >
