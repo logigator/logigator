@@ -34,6 +34,11 @@ import { BAR_LINK_ACTIVE_CLASS, BAR_LINK_CLASS } from '../link-classes';
     TranslateDirective
   ],
   templateUrl: './top-bar.html',
+  // The bar sticks from the host, not from the `<header>` inside it: a sticky
+  // box travels only within its parent's box, and the parent of anything in
+  // this template is the host — one bar tall, so a sticky `<header>` has
+  // nowhere to travel. The host is what the shell's flex column lays out.
+  host: { class: 'block sticky top-0 z-navbar' },
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TopBar {
