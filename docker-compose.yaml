@@ -49,9 +49,6 @@ services:
     working_dir: /app
     command: "sh -c 'corepack enable && exec yarn start:editor'"
 
-  # The website. Angular SSR, so a Node process rather than a static bundle:
-  # every page is rendered per request, in the visitor's language and theme and
-  # with their session already resolved.
   web:
     image: node:24
     networks:
@@ -63,15 +60,7 @@ services:
       - ./:/app
     working_dir: /app
     environment:
-      # The server render reaches the API inside the network; the browser
-      # reaches it as a path on the same origin.
       - API_ORIGIN=http://api:3000
-      # Angular refuses a request whose Host it was not told to expect, and
-      # behind Caddy the host and scheme only arrive as forwarded headers —
-      # which it likewise only reads once trusted. An untrusted `x-forwarded-*`
-      # is deleted rather than ignored, so `x-forwarded-for` is named here to
-      # reach the render at all: the API hop passes it on, and its rate limiter
-      # counts the visitor instead of this container.
       - NG_ALLOWED_HOSTS=logigator.test
       - NG_TRUST_PROXY_HEADERS=x-forwarded-host,x-forwarded-proto,x-forwarded-for
     command: "sh -c 'corepack enable && exec yarn start:web'"
@@ -123,8 +112,6 @@ services:
       - MYSQL_USER=logigator
       - MYSQL_PASSWORD=logigator
 
-  # The new API's database. MySQL stays for the legacy backend until cutover, so
-  # both run side by side and each app talks to its own.
   postgres:
     image: postgres:18-alpine
     networks:
@@ -137,7 +124,6 @@ services:
       - POSTGRES_DB=logigator
       - POSTGRES_USER=logigator
       - POSTGRES_PASSWORD=logigator
-    # The API probes its connection at startup, so it must not start first.
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U logigator -d logigator']
       interval: 5s
