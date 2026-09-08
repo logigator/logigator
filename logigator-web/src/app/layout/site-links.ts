@@ -17,7 +17,9 @@ export class SiteLinks {
 
   public readonly home = this.path('/');
   public readonly features = this.path('/features');
-  public readonly community = this.path('/community/projects');
+  public readonly examples = this.path('/examples');
+  public readonly communityProjects = this.path('/community/projects');
+  public readonly communityComponents = this.path('/community/components');
   public readonly myProjects = this.path('/my/projects');
   public readonly myComponents = this.path('/my/components');
   public readonly account = this.path('/my/account');
@@ -31,6 +33,16 @@ export class SiteLinks {
   public readonly editor = environment.editorUrl;
 
   public readonly repository = 'https://github.com/logigator/logigator';
+
+  /** A member's public profile. Reactive when read in a reactive context. */
+  public communityUser(id: string): string {
+    return pathInLanguage(this.lang(), `/community/users/${id}`);
+  }
+
+  /** The share link is a capability, so this opens without a session. */
+  public editorShare(link: string): string {
+    return `${this.editor}/share/${link}`;
+  }
 
   /** A path in this app, in the language the document renders in. */
   public path(path: string): Signal<string> {
