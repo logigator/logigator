@@ -41,6 +41,7 @@ export {
 export { LgIconField } from './components/icon-field/icon-field';
 export { LgInputIcon } from './components/icon-field/input-icon';
 
+export { LgFormField } from './components/form-field/form-field';
 export { LgInputText } from './components/input-text/input-text';
 export { LgTextarea } from './components/textarea/textarea';
 export { LgToggleSwitch } from './components/toggle-switch/toggle-switch';

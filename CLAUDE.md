@@ -301,6 +301,9 @@ TypeScript with no build step — it is _not_ a `package.json` dependency of eit
   `dynamic-dialog/` (`DialogService` → `DialogRef`/`DialogConfig`; `fullscreen` — optionally a live
   `Signal<boolean>` — turns the card into a viewport takeover), `confirm/`, `toast/` (`danger`
   severity maps to `error`). `navigation/` is `panel-menu`'s stateful, selectable sibling.
+  `form-field/` is the stringless label/hint/error scaffold around one projected control; it hands
+  the consumer a `describedBy` through `exportAs` rather than writing attributes into projected
+  content, so the wiring is in the server's first byte.
   `user-control/` is the account control both bars share — trigger, panel scaffold and section
   caption; the sections themselves are projected through a `#sections` template rather than
   `<ng-content>`, the panel's overlay being built again on every open.
