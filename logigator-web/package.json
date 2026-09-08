@@ -20,6 +20,7 @@
     "@angular/router": "22.1.0",
     "@angular/ssr": "22.1.2",
     "@fontsource-variable/roboto": "^5.3.0",
+    "@fontsource-variable/roboto-mono": "^5.3.0",
     "@jsverse/transloco": "^8.4.0",
     "@jsverse/utils": "1.0.0-beta.5",
     "express": "^5.1.0",

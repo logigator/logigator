@@ -18,4 +18,25 @@
 
 @theme {
   --font-sans: 'Roboto Variable', sans-serif;
+  --font-mono: 'Roboto Mono Variable', monospace;
+}
+
+/* The page's content column and its gutter, shared by the bar, the footer and
+   every section. The gutter grows with the viewport rather than stepping at a
+   breakpoint. */
+@utility page-wrap {
+  --page-gutter: clamp(1.25rem, 4vw, 2rem);
+  margin-inline: auto;
+  max-width: 80rem;
+  padding-inline: var(--page-gutter);
+}
+
+/* The editor's dot ground, as a section background. */
+@utility lattice {
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    var(--lg-border) 1px,
+    transparent 0
+  );
+  background-size: 16px 16px;
 }
