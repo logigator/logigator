@@ -40,6 +40,12 @@ const es: TranslationSchema = {
     imprint: 'Aviso Legal',
     contributing: 'Contribuir'
   },
+  documents: {
+    stars: 'estrellas'
+  },
+  errors: {
+    retry: 'Reintentar'
+  },
   forms: {
     errors: {
       required: 'Este campo es obligatorio.',
@@ -140,7 +146,69 @@ const es: TranslationSchema = {
     home: {
       title: 'Construye y Simula Circuitos Lógicos',
       lead: 'Construye, simula y gestiona circuitos lógicos complejos de forma gratuita.',
-      openEditor: 'Abrir el editor'
+      openEditor: 'Abrir el editor',
+      hero: {
+        headline:
+          'Construye, simula y gestiona circuitos lógicos complejos de forma gratuita.',
+        lede: 'Compuertas, cables y subcircuitos reutilizables, en el navegador. La simulación corre sobre un motor WebAssembly y la placa se dibuja en la GPU, así que un circuito sigue funcionando a medida que crece.',
+        cta: 'Comenzar a Construir Ahora',
+        ctaSecondary: 'Ver ejemplos'
+      },
+      features: {
+        title: 'Características',
+        description:
+          'Construye y simula tus propios circuitos con Logigator, una herramienta en línea simple pero poderosa.',
+        more: 'Ver todas las características',
+        performance: {
+          title: 'Rendimiento',
+          body: 'El editor de Logigator puede manejar incluso los proyectos más grandes con facilidad gracias a WebAssembly y WebGL.'
+        },
+        subcircuits: {
+          title: 'Subcircuitos',
+          body: 'Crea subcircuitos y úsalos en todos tus proyectos para ayudar a mantenerlos organizados.'
+        },
+        share: {
+          title: 'Compartir Proyectos',
+          body: 'Comparte tus circuitos con otros usuarios para que puedan aprender de tu trabajo.'
+        },
+        images: {
+          title: 'Exportar Imágenes',
+          body: 'Con Logigator puedes exportar imágenes de alta resolución en tres formatos diferentes (SVG, PNG, JPG) para usarlas en cualquier lugar.'
+        }
+      },
+      examples: {
+        title: 'Circuitos de Ejemplo',
+        description:
+          'Aprende a diseñar circuitos simples y más complejos a partir de nuestros ejemplos.',
+        more: 'Ver Más Ejemplos',
+        emptyHeading: 'Todavía no hay ejemplos',
+        emptyBody: 'Aún no se ha publicado nada para esta instalación.',
+        failed: 'No se pudieron cargar los ejemplos'
+      },
+      video: {
+        title: '¿Qué son los circuitos lógicos?',
+        description:
+          'Si no sabes qué son las compuertas lógicas o los circuitos lógicos, hemos animado una breve explicación para que la veas.',
+        play: 'Reproducir el vídeo «{{title}}» en YouTube'
+      },
+      community: {
+        projectsTitle: 'Proyectos de la Comunidad',
+        projectsDescription:
+          'Explora otros proyectos creados por nuestra comunidad. Tu proyecto podría ser el próximo en esta lista.',
+        moreProjects: 'Ver Más Proyectos',
+        projectsEmptyHeading: 'Todavía no hay proyectos públicos',
+        projectsEmptyBody:
+          'Hasta ahora no se ha compartido nada con la comunidad.',
+        projectsFailed: 'No se pudieron cargar los proyectos',
+        componentsTitle: 'Componentes de la Comunidad',
+        componentsDescription:
+          'Explora otros componentes creados por nuestra comunidad. Pueden ser útiles para ti.',
+        moreComponents: 'Ver Más Componentes',
+        componentsEmptyHeading: 'Todavía no hay componentes públicos',
+        componentsEmptyBody:
+          'Hasta ahora no se ha compartido nada con la comunidad.',
+        componentsFailed: 'No se pudieron cargar los componentes'
+      }
     },
     notFound: {
       title: 'Página no encontrada',

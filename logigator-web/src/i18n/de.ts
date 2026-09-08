@@ -40,6 +40,12 @@ const de: TranslationSchema = {
     imprint: 'Impressum',
     contributing: 'Mitwirken'
   },
+  documents: {
+    stars: 'Sterne'
+  },
+  errors: {
+    retry: 'Erneut laden'
+  },
   forms: {
     errors: {
       required: 'Dieses Feld ist erforderlich.',
@@ -145,7 +151,66 @@ const de: TranslationSchema = {
     home: {
       title: 'Der Editor für Logikschaltungen',
       lead: 'Erstelle, simuliere und verwalte komplexe Logikschaltungen — kostenlos.',
-      openEditor: 'Editor öffnen'
+      openEditor: 'Editor öffnen',
+      hero: {
+        headline: 'Baue, simuliere und verwalte komplexe Logikschaltungen.',
+        lede: 'Gatter, Leitungen und wiederverwendbare Unterschaltungen, direkt im Browser. Die Simulation läuft auf einer WebAssembly-Engine, das Board rendert die GPU — die Schaltung läuft also weiter, während sie wächst.',
+        cta: 'Zum Editor',
+        ctaSecondary: 'Beispiele ansehen'
+      },
+      features: {
+        title: 'Features',
+        description:
+          'Baue und simuliere deine eigenen Schaltungen mit Logigator, einem einfachen aber mächtigen online Tool.',
+        more: 'Alle Features ansehen',
+        performance: {
+          title: 'Performance',
+          body: "Logigators' Editor kann dank WebAssembly und WebGL auch mit den größten Projekten umgehen."
+        },
+        subcircuits: {
+          title: 'Unterschaltungen',
+          body: 'Erstelle deine eigenen Komponenten und verwende sie in all deinen Projekten. Somit können deine Projekte übersichtlich und einfach gehalten werden.'
+        },
+        share: {
+          title: 'Projekte teilen',
+          body: 'Teile deine Schaltungen mit anderen Benutzern, damit sie von deiner Arbeit lernen können.'
+        },
+        images: {
+          title: 'Bilder exportieren',
+          body: 'Mit Logigator kannst du hochauflösende Bilder in verschieden Formaten (SVG, PNG, JPG) generieren, um sie überall zu verwenden.'
+        }
+      },
+      examples: {
+        title: 'Beispielschaltungen',
+        description:
+          'Lerne mit unseren Beispielen einfache, als auch komplexere Schaltungen zu bauen.',
+        more: 'Weitere Beispielschaltungen',
+        emptyHeading: 'Noch keine Beispiele',
+        emptyBody: 'Für diese Installation wurde noch nichts veröffentlicht.',
+        failed: 'Beispiele konnten nicht geladen werden'
+      },
+      video: {
+        title: 'Was sind Logikschaltungen?',
+        description:
+          'Wenn du nicht weißt, was Logikschaltungen oder Logikgatter sind, haben wir eine kurze Erklärung für dich gemacht.',
+        play: 'Video „{{title}}“ auf YouTube abspielen'
+      },
+      community: {
+        projectsTitle: 'Community erstellte Projekte',
+        projectsDescription:
+          'Erkunde andere Projekte unserer User. Dein Projekt könnte das nächste auf dieser Liste sein.',
+        moreProjects: 'Weitere Projekte',
+        projectsEmptyHeading: 'Noch keine öffentlichen Projekte',
+        projectsEmptyBody: 'Bisher wurde nichts mit der Community geteilt.',
+        projectsFailed: 'Projekte konnten nicht geladen werden',
+        componentsTitle: 'Community erstellte Komponenten',
+        componentsDescription:
+          'Erkunde andere Komponenten unserer User. Sie sind vielleicht hilfreich für dich.',
+        moreComponents: 'Weitere Komponenten',
+        componentsEmptyHeading: 'Noch keine öffentlichen Komponenten',
+        componentsEmptyBody: 'Bisher wurde nichts mit der Community geteilt.',
+        componentsFailed: 'Komponenten konnten nicht geladen werden'
+      }
     },
     notFound: {
       title: 'Seite nicht gefunden',

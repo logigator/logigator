@@ -43,6 +43,13 @@ const en = {
     imprint: 'Imprint',
     contributing: 'Contributing'
   },
+  documents: {
+    /** Read after the count, so a screen reader says “214 stars”. */
+    stars: 'stars'
+  },
+  errors: {
+    retry: 'Retry'
+  },
   forms: {
     errors: {
       required: 'This field is required.',
@@ -138,7 +145,67 @@ const en = {
     home: {
       title: 'Build and Simulate Logic Circuits',
       lead: 'Build, simulate and manage complex logic circuits for free.',
-      openEditor: 'Open the editor'
+      openEditor: 'Open the editor',
+      hero: {
+        headline: 'Build, simulate and manage complex logic circuits for free.',
+        lede: 'Gates, wires and reusable subcircuits, in the browser. The simulation runs on a WebAssembly engine and the board renders on the GPU, so a circuit keeps stepping as it grows.',
+        cta: 'Start Building Now',
+        ctaSecondary: 'Browse examples'
+      },
+      features: {
+        title: 'Features',
+        description:
+          'Build and simulate your own circuits with Logigator, a simple yet powerful online tool.',
+        more: 'See all features',
+        performance: {
+          title: 'Performance',
+          body: "Logigators' editor can handle even the largest projects with ease thanks to WebAssembly and WebGL."
+        },
+        subcircuits: {
+          title: 'Subcircuits',
+          body: 'Create subcircuits and use them all over your projects to help keep them organized.'
+        },
+        share: {
+          title: 'Share Projects',
+          body: 'Share your circuits with other users, so they can learn from your work.'
+        },
+        images: {
+          title: 'Export Images',
+          body: 'With Logigator you can export high resolution images in three different formats (SVG, PNG, JPG) to use them anywhere.'
+        }
+      },
+      examples: {
+        title: 'Example Circuits',
+        description:
+          'Learn to design simple and more complex circuits from our examples.',
+        more: 'See More Examples',
+        emptyHeading: 'No examples yet',
+        emptyBody: 'Nothing has been published for this deployment.',
+        failed: 'Examples could not be loaded'
+      },
+      video: {
+        title: 'What are logic circuits?',
+        description:
+          "If you don't know what logic gates or logic circuits are, we animated a short explanation for you to watch.",
+        play: 'Play the video “{{title}}” on YouTube'
+      },
+      community: {
+        projectsTitle: 'Community Projects',
+        projectsDescription:
+          'Explore other projects created by our community. Your Project could be the next on this list.',
+        moreProjects: 'See More Projects',
+        projectsEmptyHeading: 'No public projects yet',
+        projectsEmptyBody: 'Nothing has been shared with the community so far.',
+        projectsFailed: 'Projects could not be loaded',
+        componentsTitle: 'Community Components',
+        componentsDescription:
+          'Explore other components created by our community. They may be useful for you.',
+        moreComponents: 'See More Components',
+        componentsEmptyHeading: 'No public components yet',
+        componentsEmptyBody:
+          'Nothing has been shared with the community so far.',
+        componentsFailed: 'Components could not be loaded'
+      }
     },
     notFound: {
       title: 'Page not found',

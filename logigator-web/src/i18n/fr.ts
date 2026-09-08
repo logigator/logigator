@@ -40,6 +40,12 @@ const fr: TranslationSchema = {
     imprint: 'Mentions légales',
     contributing: 'Contributions'
   },
+  documents: {
+    stars: 'étoiles'
+  },
+  errors: {
+    retry: 'Réessayer'
+  },
   forms: {
     errors: {
       required: 'Ce champ est obligatoire.',
@@ -136,7 +142,67 @@ const fr: TranslationSchema = {
     home: {
       title: 'Construisez et simulez des circuits logiques',
       lead: 'Construisez, simulez et gérez gratuitement des circuits logiques complexes.',
-      openEditor: "Ouvrir l'éditeur"
+      openEditor: "Ouvrir l'éditeur",
+      hero: {
+        headline:
+          'Construisez, simulez et gérez des circuits logiques complexes gratuitement.',
+        lede: "Portes, fils et sous-circuits réutilisables, directement dans le navigateur. La simulation tourne sur un moteur WebAssembly et la carte est rendue par le GPU : un circuit continue donc de tourner à mesure qu'il grandit.",
+        cta: 'Commencez à construire maintenant',
+        ctaSecondary: 'Voir les exemples'
+      },
+      features: {
+        title: 'Fonctionnalités',
+        description:
+          'Construisez et simulez vos propres circuits avec Logigator, un outil en ligne simple mais puissant.',
+        more: 'Voir toutes les fonctionnalités',
+        performance: {
+          title: 'Performance',
+          body: "L'éditeur de Logigator peut gérer même les plus grands projets facilement grâce à WebAssembly et WebGL."
+        },
+        subcircuits: {
+          title: 'Sous-circuits',
+          body: 'Créez des sous-circuits et utilisez-les partout dans vos projets pour les garder organisés.'
+        },
+        share: {
+          title: 'Partager des Projets',
+          body: "Partagez vos circuits avec d'autres utilisateurs, afin qu'ils puissent apprendre de votre travail."
+        },
+        images: {
+          title: 'Exporter des Images',
+          body: "Avec Logigator, vous pouvez exporter des images haute résolution dans trois formats différents (SVG, PNG, JPG) pour les utiliser n'importe où."
+        }
+      },
+      examples: {
+        title: 'Circuits Exemples',
+        description:
+          'Apprenez à concevoir des circuits simples et plus complexes à partir de nos exemples.',
+        more: "Voir Plus d'Exemples",
+        emptyHeading: 'Pas encore d’exemples',
+        emptyBody: "Rien n'a encore été publié pour cette installation.",
+        failed: "Les exemples n'ont pas pu être chargés"
+      },
+      video: {
+        title: 'Quels sont les circuits logiques ?',
+        description:
+          'Si vous ne savez pas ce que sont les portes logiques ou les circuits logiques, nous avons animé une brève explication pour que vous puissiez regarder.',
+        play: 'Lire la vidéo « {{title}} » sur YouTube'
+      },
+      community: {
+        projectsTitle: 'Projets Communautaires',
+        projectsDescription:
+          "Explorez d'autres projets créés par notre communauté. Votre projet pourrait être le prochain sur cette liste.",
+        moreProjects: 'Voir Plus de Projets',
+        projectsEmptyHeading: 'Pas encore de projets publics',
+        projectsEmptyBody: "Rien n'a encore été partagé avec la communauté.",
+        projectsFailed: "Les projets n'ont pas pu être chargés",
+        componentsTitle: 'Composants Communautaires',
+        componentsDescription:
+          "Explorez d'autres composants créés par notre communauté. Ils peuvent être utiles pour vous.",
+        moreComponents: 'Voir Plus de Composants',
+        componentsEmptyHeading: 'Pas encore de composants publics',
+        componentsEmptyBody: "Rien n'a encore été partagé avec la communauté.",
+        componentsFailed: "Les composants n'ont pas pu être chargés"
+      }
     },
     notFound: {
       title: 'Page introuvable',
