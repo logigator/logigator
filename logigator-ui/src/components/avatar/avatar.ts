@@ -1,5 +1,6 @@
 import { Component, computed, input } from '@angular/core';
 import { IconSlot } from '../../internal/icon';
+import { pictureFor } from '../../internal/picture';
 import { LgImageSource } from '../../tokens/image-source';
 
 /**
@@ -8,16 +9,10 @@ import { LgImageSource } from '../../tokens/image-source';
  * the box picks the wrong `srcset` rung, invisibly — either rung still draws.
  */
 const BOX = {
+  small: { classes: 'size-5 text-[9px]', px: 20 },
   default: { classes: 'size-8 text-base', px: 32 },
   xlarge: { classes: 'size-16 text-2xl', px: 64 }
 } as const;
-
-/** One `<source>`: every width offered in a single encoding. */
-interface FormatGroup {
-  /** `undefined` when the source named no format; nothing to negotiate. */
-  type: string | undefined;
-  srcset: string;
-}
 
 /**
  * A user/entity avatar, rendering `image`, else `label`, else `icon`.
@@ -68,7 +63,7 @@ export class LgAvatar {
   readonly label = input<string>();
   readonly icon = input<IconSlot>();
   readonly shape = input<'circle' | 'square'>('square');
-  readonly size = input<'xlarge'>();
+  readonly size = input<'small' | 'xlarge'>();
 
   private readonly box = computed(() => BOX[this.size() ?? 'default']);
 
@@ -82,60 +77,6 @@ export class LgAvatar {
     ].join(' ')
   );
 
-  /**
-   * What to draw, or `undefined` when the label/icon fallbacks take over. The
-   * last encoding goes on the `<img>` rather than a `<source>`: a browser
-   * matching no source falls back to it, so the caller's least-preferred
-   * encoding is the one that has to work everywhere.
-   */
-  protected readonly picture = computed(
-    ():
-      | { groups: FormatGroup[]; src: string; srcset: string | null }
-      | undefined => {
-      const image = this.image();
-      if (!image) return undefined;
-      if (typeof image === 'string')
-        return { groups: [], src: image, srcset: null };
-
-      const groups = groupByFormat(image);
-      const fallback = groups.pop();
-      if (!fallback) return undefined;
-
-      return {
-        groups,
-        // `src` only matters to a client that cannot read a `srcset`; the
-        // narrowest rung is the cheapest thing to give it.
-        src: fallback.sources[0].url,
-        srcset: fallback.srcset
-      };
-    }
-  );
-}
-
-/**
- * One entry per encoding, in the order the encodings first appear, so the
- * caller's ordering is the preference order and this component holds no
- * opinion on which formats are better.
- */
-function groupByFormat(
-  sources: readonly LgImageSource[]
-): (FormatGroup & { sources: LgImageSource[] })[] {
-  const byFormat = new Map<string | undefined, LgImageSource[]>();
-  for (const source of sources) {
-    const existing = byFormat.get(source.format);
-    if (existing) existing.push(source);
-    else byFormat.set(source.format, [source]);
-  }
-
-  return Array.from(byFormat, ([format, entries]) => ({
-    type: mediaType(format),
-    srcset: entries.map((s) => `${s.url} ${s.width}w`).join(', '),
-    sources: entries
-  }));
-}
-
-// `'jpg'` is a file extension, not a format name; there is no `image/jpg`.
-function mediaType(format: string | undefined): string | undefined {
-  if (!format) return undefined;
-  return `image/${format === 'jpg' ? 'jpeg' : format}`;
+  /** What to draw, or `undefined` when the label/icon fallbacks take over. */
+  protected readonly picture = computed(() => pictureFor(this.image()));
 }
