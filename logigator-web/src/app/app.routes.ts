@@ -8,6 +8,9 @@ import { homeContentGuard } from './pages/home/home-content.guard';
 import { homeJsonLd } from './pages/home/home-json-ld';
 import { ExamplesPage } from './pages/examples/examples-page';
 import { examplesContentGuard } from './pages/examples/examples-content.guard';
+import { LegalPage } from './pages/legal/legal-page';
+import { legalContentGuard } from './pages/legal/legal-content.guard';
+import { LegalRouteData } from './pages/legal/legal-document';
 import { LoginPage } from './pages/auth/login/login-page';
 import { RegisterPage } from './pages/auth/register/register-page';
 import { ResetPasswordPage } from './pages/auth/reset-password/reset-password-page';
@@ -47,6 +50,32 @@ const localizedRoutes: Routes = [
         descriptionKey: 'pages.examples.lede'
       } satisfies PageMeta
     }
+  },
+  // Two documents, one page: which text it renders is route data, and the
+  // guard loads it before the first byte.
+  {
+    path: 'imprint',
+    component: LegalPage,
+    canActivate: [legalContentGuard],
+    data: {
+      legalDocument: 'imprint',
+      seo: {
+        titleKey: 'pages.imprint.title',
+        descriptionKey: 'pages.imprint.lede'
+      } satisfies PageMeta
+    } satisfies LegalRouteData & { seo: PageMeta }
+  },
+  {
+    path: 'privacy-policy',
+    component: LegalPage,
+    canActivate: [legalContentGuard],
+    data: {
+      legalDocument: 'privacy-policy',
+      seo: {
+        titleKey: 'pages.privacyPolicy.title',
+        descriptionKey: 'pages.privacyPolicy.lede'
+      } satisfies PageMeta
+    } satisfies LegalRouteData & { seo: PageMeta }
   },
   {
     path: 'login',

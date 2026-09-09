@@ -40,7 +40,7 @@ const en = {
     skipToContent: 'Skip to content'
   },
   footer: {
-    privacyPolicy: 'Data Policy',
+    privacyPolicy: 'Privacy Policy',
     imprint: 'Imprint',
     contributing: 'Contributing'
   },
@@ -108,7 +108,7 @@ const en = {
       mailFailed:
         'Your account was created, but the confirmation mail could not be sent. Sign in to have it sent again.',
       privacyNoticeBefore: 'By signing up you confirm that you have read our ',
-      privacyNoticeLink: 'data policy',
+      privacyNoticeLink: 'privacy policy',
       privacyNoticeAfter: ' and accept it.',
       haveAccount: 'Already have an account?',
       loginLink: 'Log in',
@@ -216,6 +216,14 @@ const en = {
       emptyHeading: 'No examples yet',
       emptyBody: 'Nothing has been published for this deployment.',
       failed: 'Examples could not be loaded'
+    },
+    imprint: {
+      title: 'Imprint',
+      lede: 'Who runs Logigator, and how to reach us.'
+    },
+    privacyPolicy: {
+      title: 'Privacy Policy',
+      lede: 'Which data Logigator processes, why it is processed, and what rights you have over it.'
     },
     notFound: {
       title: 'Page not found',

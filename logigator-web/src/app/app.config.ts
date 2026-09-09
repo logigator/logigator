@@ -19,6 +19,7 @@ import {
   withInMemoryScrolling
 } from '@angular/router';
 import { provideTransloco, TranslocoService } from '@jsverse/transloco';
+import { provideMarkdown } from 'ngx-markdown';
 import { firstValueFrom } from 'rxjs';
 import { provideLgLabels } from '@logigator/ui';
 import { routes } from './app.routes';
@@ -96,6 +97,11 @@ export const appConfig: ApplicationConfig = {
       inject(AnalyticsService).init();
     }),
     providePageviewTracking(),
+    // The legal pages' markdown. No `loader`: their text is imported as a
+    // chunk rather than fetched, so nothing here needs `HttpClient` — and a
+    // server render, which has no origin to fetch a relative path from, still
+    // renders the whole document.
+    provideMarkdown(),
     // @logigator/ui's stock strings come from `common.*`, so every surface the
     // library renders is localized without its call site passing a label.
     provideLgLabels(() => {

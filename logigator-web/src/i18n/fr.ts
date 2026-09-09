@@ -37,7 +37,7 @@ const fr: TranslationSchema = {
     skipToContent: 'Aller au contenu'
   },
   footer: {
-    privacyPolicy: 'Politique de données',
+    privacyPolicy: 'Politique de confidentialité',
     imprint: 'Mentions légales',
     contributing: 'Contributions'
   },
@@ -211,6 +211,14 @@ const fr: TranslationSchema = {
       emptyHeading: 'Pas encore d’exemples',
       emptyBody: "Rien n'a encore été publié pour cette installation.",
       failed: "Les exemples n'ont pas pu être chargés"
+    },
+    imprint: {
+      title: 'Mentions légales',
+      lede: 'Qui exploite Logigator et comment nous joindre.'
+    },
+    privacyPolicy: {
+      title: 'Politique de confidentialité',
+      lede: 'Quelles données Logigator traite, pourquoi elles le sont et quels droits tu as sur elles.'
     },
     notFound: {
       title: 'Page introuvable',

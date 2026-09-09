@@ -7563,6 +7563,8 @@ __metadata:
     "@types/node": "npm:^24.13.3"
     express: "npm:^5.1.0"
     jsdom: "npm:^30.0.1"
+    marked: "npm:^18.0.7"
+    ngx-markdown: "npm:^22.0.0"
     postcss: "npm:^8.5.25"
     posthog-js: "npm:^1.409.5"
     rxjs: "npm:~7.8.2"

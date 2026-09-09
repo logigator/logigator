@@ -220,6 +220,14 @@ const de: TranslationSchema = {
       emptyBody: 'Für diese Installation wurde noch nichts veröffentlicht.',
       failed: 'Beispiele konnten nicht geladen werden'
     },
+    imprint: {
+      title: 'Impressum',
+      lede: 'Wer Logigator betreibt und wie du uns erreichst.'
+    },
+    privacyPolicy: {
+      title: 'Datenschutzerklärung',
+      lede: 'Welche Daten Logigator verarbeitet, warum das geschieht und welche Rechte du daran hast.'
+    },
     notFound: {
       title: 'Seite nicht gefunden',
       text: 'Die angegebene Seite konnte nicht gefunden werden.',

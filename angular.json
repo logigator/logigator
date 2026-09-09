@@ -185,7 +185,8 @@
               ".jpg": "file",
               ".jpeg": "file",
               ".webp": "file",
-              ".avif": "file"
+              ".avif": "file",
+              ".md": "text"
             },
             "define": {
               "GIT_COMMIT": "''",
@@ -217,7 +218,7 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "800kB",
+                  "maximumWarning": "900kB",
                   "maximumError": "1MB"
                 },
                 {
