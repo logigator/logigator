@@ -281,7 +281,9 @@ path behaves the same in development).
     `pages/examples/` is the seed account's public projects, one row each — the render beside the
     description that teaches it, sides alternating — since a tile has nowhere to put a description;
     it is also where the **inner-page header** (h1 + lede in `page-wrap`, no eyebrow, the rule under
-    it being the first row's) is set for the pages that follow. The 404 sets the response status
+    it being the first row's) is set for the pages that follow. `pages/legal/` is the imprint and the
+    privacy policy: one component for both, the document it draws named in route data, over markdown
+    per locale in `content/<page>/<lang>.md`. The 404 sets the response status
     through `RESPONSE_INIT`; a soft 404 would be indexable.
 
 **Non-obvious details:**
@@ -342,6 +344,19 @@ path behaves the same in development).
   `/cookieconsent.js`. The stylesheet is the library's with the `--lg-*` tokens mapped over it, and
   the bundle links it in itself, so the editor gets the styles by loading the script and nothing
   else.
+- **A legal page's text is a chunk, not a locale key.** `.md` is a `text` loader in the build, so
+  each `pages/legal/content/<page>/<lang>.md` compiles into a dynamic-import chunk of its own on
+  both bundles. The locale table stays the size of the interface's strings — the privacy policy
+  alone is 60–75 kB per language, and that table travels in every page's first byte — while a guard
+  awaits the import, so the server render carries the whole document and the browser downloads
+  exactly the language it draws, hashed and cached past the visit. Nothing crosses through
+  `TransferHandoffService`: what it would carry is that same text a second time. The imports are
+  written out per language rather than assembled from a template literal, so `Record<LanguageId, …>`
+  makes a missing file a compile error. `@logigator/ui`'s `lg-markdown` renders it, which is what
+  puts `ngx-markdown` and `marked` in the site's dependencies and moved the initial budget to 900 kB
+  (still eager, for the reason the auth pages are). The renderer emits no heading ids — a
+  `#fragment` resolves against `headingSlug` of a heading's own text — so each locale's table of
+  contents names its own slugs, and a spec holds every one of them to a heading that exists.
 - **PostHog is `posthog-js` behind a dynamic import**, in `analytics/analytics.service.ts` — the
   editor's service, trimmed to what a content site emits. A consent event for the `analytics`
   category is what loads the package and initialises it, so a declining session never downloads it
