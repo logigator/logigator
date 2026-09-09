@@ -6,6 +6,15 @@
 
 @import '../../logigator-ui/styles/overlay.css';
 
+/* The bar is sticky at the top of the document, so the scrollport's usable top
+   edge starts below it. Without this, every jump to an anchor parks its target
+   underneath the bar — the privacy policy's table of contents, the skip link,
+   a scroll position the router restores — since each of them scrolls the
+   target to the very top. One bar (`h-14`) plus a little air. */
+html {
+  scroll-padding-top: 4rem;
+}
+
 body {
   @apply m-0 p-0;
   @apply bg-surface-0 text-text dark:bg-surface-950;
