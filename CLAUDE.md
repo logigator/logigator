@@ -239,7 +239,15 @@ path behaves the same in development).
   completed navigation, the server render included. Routes carry a `seo` data entry naming their
   title key. Each language version canonicalizes to **itself**, and the unprefixed URL is
   `x-default`'s alone. The language the head describes is read off the URL, not the translation
-  service.
+  service. It also emits the page's **JSON-LD graph**: one `<script>` holding a `@graph` whose
+  nodes reference one another by `@id`, so the site is named once rather than in each. Site level
+  is `WebSite` + `Organization`; a page adds its own through the route's `jsonLd` factory (the home
+  page's is the editor as `SoftwareApplication`/`WebApplication` plus the explainer's
+  `VideoObject`), and a two-step `BreadcrumbList` is derived from the URL unless the route sets
+  `breadcrumb: false` — the 404 and `verify-email/:token`, whose crumb would name the token.
+  `structured-data.ts` holds the node types and the serializer; it escapes every `<`, because 5d
+  puts circuit names and usernames in the graph, and hands factories absolute URLs, a crawler
+  having no document to resolve the build's `./media/…` imports against.
 - `layout/` — the shell: the top bar, the compact navigation drawer, the footer, and the account
   menu. One 56px `bg-primary-400` bar at every width, the treatment the editor's title bar carries
   (the primary scale is scheme-independent, so bar and ink are the same in light and dark); its
