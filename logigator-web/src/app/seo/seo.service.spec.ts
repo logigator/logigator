@@ -12,6 +12,14 @@ function links(rel: string): { hreflang: string; href: string }[] {
   ].map((link) => ({ hreflang: link.hreflang, href: link.href }));
 }
 
+function metaContent(property: string): string[] {
+  return [
+    ...document.head.querySelectorAll<HTMLMetaElement>(
+      `meta[property="${property}"]`
+    )
+  ].map((tag) => tag.content);
+}
+
 describe('SeoService', () => {
   beforeEach(() => {
     configureTestBed([{ provide: SITE_ORIGIN, useValue: ORIGIN }]);
@@ -19,24 +27,25 @@ describe('SeoService', () => {
 
   afterEach(() => {
     TestBed.resetTestingModule();
-    for (const link of document.head.querySelectorAll(
-      'link[rel="canonical"], link[rel="alternate"]'
+    for (const tag of document.head.querySelectorAll(
+      'link[rel="canonical"], link[rel="alternate"], meta[property^="og:locale"]'
     )) {
-      link.remove();
+      tag.remove();
     }
   });
 
-  it('canonicalizes to the language-prefix-free URL', () => {
-    // The four translations must not read as duplicates of one another, so all
-    // of them name one canonical, and it is the URL that negotiates a language.
+  it('canonicalizes a language version to itself', () => {
+    // A canonical naming another language's URL asks to be dropped as a
+    // duplicate of it, so three of the four translations would never index.
     TestBed.inject(SeoService).apply(
       { titleKey: 'pages.home.title' },
       '/de/features'
     );
 
     expect(links('canonical')).toEqual([
-      { hreflang: '', href: `${ORIGIN}/features` }
+      { hreflang: '', href: `${ORIGIN}/de/features` }
     ]);
+    expect(metaContent('og:url')).toEqual([`${ORIGIN}/de/features`]);
   });
 
   it('names every language plus x-default as alternates', () => {
@@ -45,6 +54,8 @@ describe('SeoService', () => {
       '/en/features'
     );
 
+    // The unprefixed URL is x-default's: it negotiates a language, so it answers
+    // a visitor no alternate matches.
     expect(links('alternate')).toEqual([
       { hreflang: 'en', href: `${ORIGIN}/en/features` },
       { hreflang: 'de', href: `${ORIGIN}/de/features` },
@@ -54,16 +65,32 @@ describe('SeoService', () => {
     ]);
   });
 
+  it('reports the page locale and the ones it translates to', () => {
+    TestBed.inject(SeoService).apply(
+      { titleKey: 'pages.home.title' },
+      '/de/features'
+    );
+
+    expect(metaContent('og:locale')).toEqual(['de_DE']);
+    expect(metaContent('og:locale:alternate').sort()).toEqual([
+      'en_US',
+      'es_ES',
+      'fr_FR'
+    ]);
+  });
+
   it('rewrites the links a second navigation replaces', () => {
     // A client-side navigation reuses the document, so appending would leave
     // the head naming every page the visitor passed through.
     const seo = TestBed.inject(SeoService);
     seo.apply({ titleKey: 'pages.home.title' }, '/en/features');
-    seo.apply({ titleKey: 'pages.notFound.title' }, '/en/imprint');
+    seo.apply({ titleKey: 'pages.notFound.title' }, '/de/imprint');
 
     expect(links('canonical')).toEqual([
-      { hreflang: '', href: `${ORIGIN}/imprint` }
+      { hreflang: '', href: `${ORIGIN}/de/imprint` }
     ]);
     expect(links('alternate')).toHaveLength(5);
+    expect(metaContent('og:locale')).toEqual(['de_DE']);
+    expect(metaContent('og:locale:alternate')).toHaveLength(3);
   });
 });
