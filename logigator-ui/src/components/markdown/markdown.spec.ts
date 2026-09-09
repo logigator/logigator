@@ -130,6 +130,36 @@ describe('LgMarkdown content interaction', () => {
     expect(heading.scrollIntoView).toHaveBeenCalledWith({ block: 'start' });
   });
 
+  it('resolves a fragment the renderer percent-encoded', async () => {
+    // marked encodes a destination, so a heading whose slug carries a
+    // non-ASCII letter — every language but English has them — reaches the
+    // handler as %XX escapes rather than as the slug it was written as.
+    @Component({
+      imports: [LgMarkdown],
+      template: `<lg-markdown [data]="data" />`
+    })
+    class NonAsciiHost {
+      data = '# Größe 2×4\n\n[jump](#größe-2-4)';
+    }
+
+    TestBed.configureTestingModule({ providers: [provideMarkdown()] });
+    const fixture = TestBed.createComponent(NonAsciiHost);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise((resolve) => setTimeout(resolve));
+
+    const el = fixture.nativeElement as HTMLElement;
+    const anchor = el.querySelector('a')!;
+    expect(anchor.getAttribute('href')).toBe('#gr%C3%B6%C3%9Fe-2-4');
+
+    const heading = el.querySelector('h1')!;
+    heading.scrollIntoView = vi.fn();
+    anchor.dispatchEvent(
+      new MouseEvent('click', { bubbles: true, cancelable: true })
+    );
+    expect(heading.scrollIntoView).toHaveBeenCalledWith({ block: 'start' });
+  });
+
   it('emits app-specific schemes and keeps them inert when unclaimed', async () => {
     const { host, link, click } = await setup();
     const open = vi.spyOn(window, 'open').mockReturnValue(null);
