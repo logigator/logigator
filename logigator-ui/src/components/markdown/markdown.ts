@@ -360,7 +360,7 @@ export class LgMarkdown {
     }
     if (href.startsWith('#')) {
       event.preventDefault();
-      const slug = href.slice(1);
+      const slug = decodeFragment(href.slice(1));
       if (slug) {
         this.scrollToHeading(slug);
       }
@@ -389,6 +389,20 @@ export class LgMarkdown {
 
   private openImage(image: HTMLImageElement): void {
     this.imageZoom.open(image.currentSrc || image.src, image.alt);
+  }
+}
+
+/**
+ * A fragment as the heading slug it names. The renderer percent-encodes a
+ * destination, so a heading whose slug carries a non-ASCII letter — every
+ * language but English has them — arrives encoded and would match nothing.
+ */
+function decodeFragment(fragment: string): string {
+  try {
+    return decodeURIComponent(fragment);
+  } catch {
+    // A stray `%` is not an escape; the slug is what was written.
+    return fragment;
   }
 }
 
