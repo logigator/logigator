@@ -8,7 +8,7 @@ import {
 import { DomSanitizer } from '@angular/platform-browser';
 import { TranslateDirective } from '../../translation/translate.directive';
 import { TranslationService } from '../../translation/translation.service';
-import { homeVideo } from './home-video';
+import { homeVideo, videoEmbedUrl } from './home-video';
 
 /**
  * The YouTube explainer, behind a click: nothing reaches Google before the
@@ -71,7 +71,7 @@ export class VideoEmbed {
   // Nothing a visitor can steer reaches this URL.
   protected readonly embedUrl = computed(() =>
     this.sanitizer.bypassSecurityTrustResourceUrl(
-      `https://www.youtube-nocookie.com/embed/${this.video().id}?autoplay=1&rel=0`
+      `${videoEmbedUrl(this.video())}?autoplay=1&rel=0`
     )
   );
 

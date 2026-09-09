@@ -9,7 +9,17 @@ import {
 } from '../translation/language-url';
 import { TranslationService } from '../translation/translation.service';
 import { TranslationKey } from '../translation/translation-key.model';
+import { SiteLinks } from '../layout/site-links';
 import { SITE_ORIGIN } from './site-origin';
+import {
+  absoluteAssetUrl,
+  BreadcrumbListNode,
+  JsonLdContext,
+  JsonLdNode,
+  jsonLdIds,
+  serializeJsonLd,
+  siteNodes
+} from './structured-data';
 
 /**
  * Open Graph names a locale in its `language_TERRITORY` form, so the bare
@@ -28,11 +38,28 @@ export interface PageMeta {
   titleKey: TranslationKey;
   /** Key of the page's description; the site's own is the fallback. */
   descriptionKey?: TranslationKey;
+  /**
+   * The page's own JSON-LD nodes, beside the site-level ones every page emits.
+   * A factory rather than a value: the nodes name absolute URLs and read
+   * translated strings, neither of which a route definition can know. It runs
+   * after the route's guards, so a page whose content a guard resolved can
+   * describe what it actually rendered.
+   */
+  jsonLd?: (context: JsonLdContext) => JsonLdNode[];
+  /**
+   * Whether the page is a step in a trail. On by default, since every page but
+   * the home page is one level under it. Off for a page that must not name
+   * itself: a 404, and anything whose URL carries a one-shot token.
+   *
+   * A page deeper than one level declares its own ancestors when one exists —
+   * the community pages are the first, and none is built yet.
+   */
+  breadcrumb?: false;
 }
 
 /**
- * The per-page head: title, description, canonical, the `hreflang` alternates
- * and the Open Graph locale.
+ * The per-page head: title, description, canonical, the `hreflang` alternates,
+ * the Open Graph locale, and the page's JSON-LD graph.
  *
  * Every page exists in four languages under a prefix of its own. Each one
  * canonicalizes to itself and names all four as alternates, the pairing that
@@ -41,9 +68,9 @@ export interface PageMeta {
  * for a visitor no alternate matches. `og:url` follows the canonical, a scraper
  * reading it as the object's identity and re-fetching it.
  *
- * The links are rewritten in place rather than appended, since a client-side
- * navigation reuses the same document and appending would leave every page it
- * passed through in the head.
+ * The links, and the graph's script tag, are rewritten in place rather than
+ * appended: a client-side navigation reuses the same document, and appending
+ * would leave every page the visitor passed through in the head.
  */
 @Injectable({ providedIn: 'root' })
 export class SeoService {
@@ -51,6 +78,7 @@ export class SeoService {
   private readonly title = inject(Title);
   private readonly meta = inject(Meta);
   private readonly translation = inject(TranslationService);
+  private readonly links = inject(SiteLinks);
   private readonly origin = inject(SITE_ORIGIN).replace(/\/+$/, '');
 
   /** Applies a page's head for the URL currently being rendered. */
@@ -89,6 +117,95 @@ export class SeoService {
     // `x-default` is the URL for a visitor no alternate matches; that is the
     // unprefixed one, which negotiates a language of its own.
     this.setLink('alternate', 'x-default', `${this.origin}${canonicalPath}`);
+
+    this.setStructuredData(
+      page,
+      {
+        origin: this.origin,
+        lang,
+        url: canonicalUrl,
+        siteId: jsonLdIds(this.origin).site,
+        absolute: (url) => absoluteAssetUrl(this.origin, url),
+        translate: (key, ...params) =>
+          this.translation.translate(key, ...params)
+      },
+      canonicalPath,
+      pageTitle
+    );
+  }
+
+  /**
+   * The page's `@graph`: the site and its publisher, the trail the page sits on,
+   * and whatever the page itself declares.
+   *
+   * One script tag, replaced whole. A client-side navigation reuses the
+   * document, so a second graph appended beside the first would describe two
+   * pages at once and leave a consumer to guess which one it is reading.
+   */
+  private setStructuredData(
+    page: PageMeta,
+    context: JsonLdContext,
+    canonicalPath: string,
+    pageTitle: string
+  ): void {
+    const graph: JsonLdNode[] = siteNodes(context, this.links.repository);
+    const trail = this.breadcrumb(page, context, canonicalPath, pageTitle);
+    if (trail) {
+      graph.push(trail);
+    }
+    graph.push(...(page.jsonLd?.(context) ?? []));
+
+    this.setScript('web-json-ld', serializeJsonLd(graph));
+  }
+
+  /**
+   * Home followed by the page, or nothing for the home page itself — a trail of
+   * one item says only that the page is where it is.
+   */
+  private breadcrumb(
+    page: PageMeta,
+    context: JsonLdContext,
+    canonicalPath: string,
+    pageTitle: string
+  ): BreadcrumbListNode | null {
+    if (page.breadcrumb === false || canonicalPath === '/') {
+      return null;
+    }
+    return {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        {
+          '@type': 'ListItem',
+          position: 1,
+          name: context.translate('site.name'),
+          item: `${context.origin}/${context.lang}`
+        },
+        {
+          '@type': 'ListItem',
+          position: 2,
+          name: pageTitle,
+          item: context.url
+        }
+      ]
+    };
+  }
+
+  /**
+   * A `<script>` in the head, addressed by id so a navigation replaces the one
+   * it wrote. `textContent`, not `innerHTML`: script content is raw text, and
+   * the JSON is already escaped so that it cannot close the tag.
+   */
+  private setScript(id: string, json: string): void {
+    let script = this.document.head.querySelector<HTMLScriptElement>(
+      `script#${id}`
+    );
+    if (!script) {
+      script = this.document.createElement('script');
+      script.id = id;
+      script.type = 'application/ld+json';
+      this.document.head.appendChild(script);
+    }
+    script.textContent = json;
   }
 
   /**

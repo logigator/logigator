@@ -5,6 +5,7 @@ import { resolveDocumentLanguage } from './translation/document-language';
 import { languageTableGuard } from './translation/language-guard';
 import { HomePage } from './pages/home/home-page';
 import { homeContentGuard } from './pages/home/home-content.guard';
+import { homeJsonLd } from './pages/home/home-json-ld';
 import { ExamplesPage } from './pages/examples/examples-page';
 import { examplesContentGuard } from './pages/examples/examples-content.guard';
 import { LoginPage } from './pages/auth/login/login-page';
@@ -29,7 +30,12 @@ const localizedRoutes: Routes = [
     path: '',
     component: HomePage,
     canActivate: [homeContentGuard],
-    data: { seo: { titleKey: 'pages.home.title' } satisfies PageMeta }
+    data: {
+      seo: {
+        titleKey: 'pages.home.title',
+        jsonLd: homeJsonLd
+      } satisfies PageMeta
+    }
   },
   {
     path: 'examples',
@@ -66,12 +72,24 @@ const localizedRoutes: Routes = [
   {
     path: 'verify-email/:token',
     component: VerifyEmailPage,
-    data: { seo: { titleKey: 'pages.verifyEmail.title' } satisfies PageMeta }
+    // No trail: an item naming this page would name the token in it.
+    data: {
+      seo: {
+        titleKey: 'pages.verifyEmail.title',
+        breadcrumb: false
+      } satisfies PageMeta
+    }
   },
   {
     path: '**',
     component: NotFoundPage,
-    data: { seo: { titleKey: 'pages.notFound.title' } satisfies PageMeta }
+    // No trail: the URL is not a page, so it is not a step towards one.
+    data: {
+      seo: {
+        titleKey: 'pages.notFound.title',
+        breadcrumb: false
+      } satisfies PageMeta
+    }
   }
 ];
 

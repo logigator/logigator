@@ -1,8 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { configureTestBed } from '../../testing/configure-test-bed';
+import { homeJsonLd } from '../pages/home/home-json-ld';
 import { SeoService } from './seo.service';
 import { SITE_ORIGIN } from './site-origin';
+import { jsonLdIds, JsonLdNode } from './structured-data';
 
 const ORIGIN = 'https://logigator.com';
 
@@ -10,6 +12,26 @@ function links(rel: string): { hreflang: string; href: string }[] {
   return [
     ...document.head.querySelectorAll<HTMLLinkElement>(`link[rel="${rel}"]`)
   ].map((link) => ({ hreflang: link.hreflang, href: link.href }));
+}
+
+/** The one graph in the head, as the objects a consumer would read. */
+function graph(): (JsonLdNode & Record<string, unknown>)[] {
+  const scripts = document.head.querySelectorAll(
+    'script[type="application/ld+json"]'
+  );
+  expect(scripts).toHaveLength(1);
+  const parsed = JSON.parse(scripts[0].textContent ?? '') as {
+    '@graph': (JsonLdNode & Record<string, unknown>)[];
+  };
+  return parsed['@graph'];
+}
+
+function nodeTypes(): string[] {
+  return graph().flatMap((node) =>
+    Array.isArray(node['@type'])
+      ? [...node['@type']]
+      : [node['@type'] as string]
+  );
 }
 
 function metaContent(property: string): string[] {
@@ -28,7 +50,7 @@ describe('SeoService', () => {
   afterEach(() => {
     TestBed.resetTestingModule();
     for (const tag of document.head.querySelectorAll(
-      'link[rel="canonical"], link[rel="alternate"], meta[property^="og:locale"]'
+      'link[rel="canonical"], link[rel="alternate"], meta[property^="og:locale"], script[type="application/ld+json"]'
     )) {
       tag.remove();
     }
@@ -77,6 +99,64 @@ describe('SeoService', () => {
       'es_ES',
       'fr_FR'
     ]);
+  });
+
+  it('describes the page in a graph, not the one before it', () => {
+    // A client-side navigation reuses the document, so a second script beside
+    // the first would leave a consumer to guess which page it is reading.
+    const seo = TestBed.inject(SeoService);
+    seo.apply({ titleKey: 'pages.home.title', jsonLd: homeJsonLd }, '/en');
+    seo.apply({ titleKey: 'pages.examples.title' }, '/de/examples');
+
+    expect(nodeTypes()).not.toContain('SoftwareApplication');
+    expect(graph().find((node) => node['@type'] === 'WebSite')).toMatchObject({
+      '@id': jsonLdIds(ORIGIN).site,
+      inLanguage: 'de'
+    });
+  });
+
+  it('places an inner page under the home page, and the home page nowhere', () => {
+    const seo = TestBed.inject(SeoService);
+
+    seo.apply({ titleKey: 'pages.home.title' }, '/en');
+    expect(nodeTypes()).not.toContain('BreadcrumbList');
+
+    seo.apply({ titleKey: 'pages.examples.title' }, '/de/examples');
+    const trail = graph().find((node) => node['@type'] === 'BreadcrumbList');
+    expect(trail?.['itemListElement']).toMatchObject([
+      { position: 1, item: `${ORIGIN}/de` },
+      { position: 2, item: `${ORIGIN}/de/examples` }
+    ]);
+  });
+
+  it('leaves out the trail a page must not name itself in', () => {
+    // A crumb for `verify-email/<token>` would publish the token, and one for
+    // a 404 would claim the URL is a page.
+    TestBed.inject(SeoService).apply(
+      { titleKey: 'pages.verifyEmail.title', breadcrumb: false },
+      '/en/verify-email/a-one-shot-token'
+    );
+
+    expect(nodeTypes()).not.toContain('BreadcrumbList');
+  });
+
+  it('names the editor rather than the page advertising it', () => {
+    // The application node is what a crawler reads to learn what the site is
+    // for, so its URL has to be the thing it describes.
+    TestBed.inject(SeoService).apply(
+      { titleKey: 'pages.home.title', jsonLd: homeJsonLd },
+      '/en'
+    );
+
+    expect(
+      graph().find((node) => node['@id'] === jsonLdIds(ORIGIN).editor)
+    ).toMatchObject({ url: `${ORIGIN}/editor` });
+    expect(
+      graph().find((node) => node['@type'] === 'VideoObject')
+    ).toMatchObject({
+      duration: 'PT3M34S',
+      thumbnailUrl: expect.stringContaining(ORIGIN)
+    });
   });
 
   it('rewrites the links a second navigation replaces', () => {
