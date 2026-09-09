@@ -235,8 +235,11 @@ path behaves the same in development).
   already failed — and an empty list stays distinct from a failed one. The retry deliberately
   bypasses the hand-off: what it holds is the answer that failed.
 - `seo/` — `SeoService` (title, description, canonical, the four `hreflang` alternates plus
-  `x-default`) driven by a `TitleStrategy`, so it runs once per completed navigation, the server
-  render included. Routes carry a `seo` data entry naming their title key.
+  `x-default`, and the Open Graph locale set) driven by a `TitleStrategy`, so it runs once per
+  completed navigation, the server render included. Routes carry a `seo` data entry naming their
+  title key. Each language version canonicalizes to **itself**, and the unprefixed URL is
+  `x-default`'s alone. The language the head describes is read off the URL, not the translation
+  service.
 - `layout/` — the shell: the top bar, the compact navigation drawer, the footer, and the account
   menu. One 56px `bg-primary-400` bar at every width, the treatment the editor's title bar carries
   (the primary scale is scheme-independent, so bar and ink are the same in light and dark); its
