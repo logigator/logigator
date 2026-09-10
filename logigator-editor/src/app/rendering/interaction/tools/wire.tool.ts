@@ -96,6 +96,11 @@ export class WireTool implements BoardTool {
    * Nearest negatable port to a grid-space point, within tolerance. Rejects
    * placed custom instances: their external ports are not independently
    * negatable.
+   *
+   * Two tips coincide where an output stub meets an input head-on, so reach
+   * alone cannot say which port a tap means. The pick is the port whose
+   * bubble anchor is nearest — the side of the tip the pointer is on, which
+   * is the bubble the hover ghost draws.
    */
   private _findPortAt(project: Project, localPoint: Point): PortHit | null {
     const queryRect = new Rectangle(
@@ -104,22 +109,29 @@ export class WireTool implements BoardTool {
       PORT_HIT_TOLERANCE * 2,
       PORT_HIT_TOLERANCE * 2
     );
+    let best: PortHit | null = null;
+    let bestAnchorDist = Infinity;
     for (const comp of project.queryComponentsInRange(queryRect)) {
       if (comp.config.type >= CUSTOM_TYPE_ID_BASE) continue;
       const points = comp.connectionPoints;
       for (let i = 0; i < points.length; i++) {
         const dx = points[i].x - localPoint.x;
         const dy = points[i].y - localPoint.y;
-        if (dx * dx + dy * dy <= PORT_HIT_TOLERANCE * PORT_HIT_TOLERANCE) {
-          const side: PortSide = i < comp.numInputs ? 'in' : 'out';
-          return {
-            comp,
-            side,
-            index: side === 'in' ? i : i - comp.numInputs
-          };
+        if (dx * dx + dy * dy > PORT_HIT_TOLERANCE * PORT_HIT_TOLERANCE) {
+          continue;
+        }
+        const side: PortSide = i < comp.numInputs ? 'in' : 'out';
+        const index = side === 'in' ? i : i - comp.numInputs;
+        const anchor = comp.negationBubbleAnchor(side, index);
+        const ax = anchor.x - localPoint.x;
+        const ay = anchor.y - localPoint.y;
+        const anchorDist = ax * ax + ay * ay;
+        if (anchorDist < bestAnchorDist) {
+          bestAnchorDist = anchorDist;
+          best = { comp, side, index };
         }
       }
     }
-    return null;
+    return best;
   }
 }
