@@ -315,6 +315,20 @@ path behaves the same in development).
     re-running a guard only on a _path_ parameter change. The 404 sets
     the response status through `RESPONSE_INIT`; a soft 404 would be indexable, and the document and
     profile pages render that same component inline for a link naming nothing published.
+    `pages/my/` is the same shape from the owning side: two shelves (`/my/projects`,
+    `/my/components`) over the caller-scoped document routes, and `/my/account`. Every one is behind
+    `authGuard`, which returns a `UrlTree` — a real `302` during a server render, `@angular/ssr`
+    comparing the URL it rendered against the one asked for — carrying the shelf as the `returnUrl`.
+    A shelf reuses `LgCircuitTile` (decision 49) with the two slots the library grew for it: the
+    meta row states what an author and a star count cannot on a shelf where every row is the
+    reader's — published or not, and when it was last edited — and the corner carries the kebab.
+    The card opens the **editor**, so it is an `href`; creating is the editor's too, and
+    _New project_ is a link to it rather than a form. `MyDocumentsService` applies a metadata write
+    over the resolved page instead of re-reading it: the API answers with the row it wrote, and a
+    re-read would re-sort the grid under the cursor, a rename bumping the edit time. `pages/my/account/`
+    is one page of stacked sections rather than a route each — nothing under `my/*` is indexable, so
+    decision 60's crawler argument does not apply — with every write putting its answer back into
+    `SessionService`, which is what moves a changed username into the bar.
 
 **Non-obvious details:**
 
