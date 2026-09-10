@@ -2,7 +2,7 @@
 
 ## Repository Layout
 
-The repo root is a **shared Angular CLI workspace** + **Yarn 4 workspace** (corepack). Six members:
+The repo root is a **shared Angular CLI workspace** + **Yarn 4 workspace** (corepack). Seven members:
 
 - `logigator-editor/` — Angular 22 editor (PixiJS 8, Tailwind 4), current focus
 - `logigator-web/` — Angular 22 website, server-rendered (`@angular/ssr`), replacing the legacy pages
@@ -10,15 +10,18 @@ The repo root is a **shared Angular CLI workspace** + **Yarn 4 workspace** (core
 - `logigator-core/` — `@logigator/core`, rendering-free circuit code plus the origin-wide
   contracts; zero runtime dependencies
 - `logigator-contract/` — `@logigator/contract`, the API surface as zod schemas; zod only
+- `logigator-docs/` — `@logigator/docs`, the authored documentation: eleven pages of markdown in
+  four locales, their screenshots, the page tree and the search matcher as pure data; no
+  dependencies at all
 - `logigator-api/` — NestJS on Fastify, API only
 
-**One shared-code rule:** the three libraries are never built. Every consumer compiles their
+**One shared-code rule:** the four libraries are never built. Every consumer compiles their
 **source** through the root tsconfig `paths` mapping, and each application's bundler (Angular's for
 the editor and the site, Rspack's for the API) inlines what it uses. No `dist/`, no `exports`, no
 build ordering.
 
 `logigator-editor`, `logigator-web` and `logigator-ui` are Angular CLI projects (`angular.json`);
-the other two run on plain Yarn scripts. Each package holds the same config set: one primary
+the other three run on plain Yarn scripts. Each package holds the same config set: one primary
 tsconfig (`tsconfig.json`, or `tsconfig.app.json`/`tsconfig.lib.json` where angular.json points at
 it), `tsconfig.spec.json`, `eslint.config.mjs`, `vitest.config.ts`. Only the three applications
 produce an artifact, in the root `dist/<project>/`.
@@ -67,10 +70,10 @@ yarn build:api                      # rspack bundle → dist/logigator-api
 yarn build:web                      # browser + server bundles → dist/logigator-web
 yarn test                           # every package, single run each
 yarn test:editor                    # add --include='**/some.spec.ts' for one file
-yarn test:web / test:ui / test:core / test:contract / test:api
+yarn test:web / test:ui / test:core / test:contract / test:docs / test:api
 yarn test:e2e:api                   # API against real Postgres + Redis (needs DATABASE_URL, REDIS_URL)
-yarn lint                           # eslint over all six; lint:fix writes the fixes
-yarn typecheck                      # tsc over core, contract, api (specs included)
+yarn lint                           # eslint over all seven; lint:fix writes the fixes
+yarn typecheck                      # tsc over core, contract, docs, api (specs included)
 yarn format / format:fix            # Prettier over the whole repo
 ```
 
@@ -147,10 +150,13 @@ Angular 22 standalone components + PixiJS 8 canvas.
   Data is pull-based via `SimulationService.frame$`. Two content kinds: the ROM data inspector
   (read-only hex editor) and the custom-component **watch**, a live canvas view of an instance's
   inner circuit with breadcrumb drill-down.
-- `documentation/` — in-editor help. `docs-pages.ts` is the page registry (`DOC_SECTIONS` → derived
-  `DocPageId` union; per-locale markdown under `assets/docs/<lang>/`, `en` fallback, loaded via the
-  changelog's hashed-import pattern); `DocumentationService.open(pageId?, anchor?)` is the single
-  deep-link entry point.
+- `documentation/` — in-editor help. The pages themselves are `@logigator/docs`; this holds the
+  editor's half of them — `docs-pages.ts` maps each id to its hashed markdown URL per language (`en`
+  fallback, the changelog's hashed-import pattern) and to the title key it is shown under.
+  `DocumentationService.open(pageId?, anchor?)` is the single deep-link entry point.
+  `DocsSearchService` is the viewer's search field: it fetches all eleven pages of the active
+  language once, indexes them through the member's matcher, and the results replace the content
+  pane.
 - `automation/` — programmatic control surface for scripts and agents, installed as
   `window.__logigator` where the `AUTOMATION_API` esbuild define is true (off in prod, and the
   define drops the module from the bundle rather than branching around it). `catalog.ts`
@@ -283,8 +289,11 @@ path behaves the same in development).
     it is also where the **inner-page header** (h1 + lede in `page-wrap`, no eyebrow, the rule under
     it being the first row's) is set for the pages that follow. `pages/legal/` is the imprint and the
     privacy policy: one component for both, the document it draws named in route data, over markdown
-    per locale in `content/<page>/<lang>.md`. The 404 sets the response status
-    through `RESPONSE_INIT`; a soft 404 would be indexable.
+    per locale in `content/<page>/<lang>.md`. `pages/docs/` is the editor's own manual, published:
+    the index at `/:lang/docs` and one generated route per page under it, the topic tree beside the
+    prose as real links, the pages and their screenshots coming from `@logigator/docs`. The index
+    is also the search results page (`?q=`), the one surface wide enough for them. The 404 sets
+    the response status through `RESPONSE_INIT`; a soft 404 would be indexable.
 
 **Non-obvious details:**
 
@@ -357,6 +366,33 @@ path behaves the same in development).
   (still eager, for the reason the auth pages are). The renderer emits no heading ids — a
   `#fragment` resolves against `headingSlug` of a heading's own text — so each locale's table of
   contents names its own slugs, and a spec holds every one of them to a heading that exists.
+- **A documentation page is the same chunk-per-language shape**, one route per page generated from
+  `@logigator/docs`'s tree rather than `docs/:id`: the title key, the breadcrumb ancestors and the
+  markdown twin are then static route data, and an id that names no page falls to the 404 with its
+  status. The page draws no heading of its own — the markdown opens with its own `# …` — and a
+  `docs:<id>` cross link is **rewritten to a real href** through `lg-markdown`'s `assetUrls` rather
+  than intercepted, so a crawler follows it; the click is still claimed and routed in-app.
+- **Documentation search indexes the same chunks the pages are** — 16–19 kB gzipped per language,
+  hashed, so it is paid once and the page a result opens is already downloaded. A generated index
+  would be the prose a second time in the repository, stale on the next copy edit. A `?q=` render
+  resolves its own results through a guard like every other list here, and hands them to the browser
+  through `TransferHandoffService`; the index is **module state** (`pages/docs/doc-index.ts`), since
+  a server request has its own injector and a provider-held one would be rebuilt per visitor. The
+  field's form carries `action`/`method`, so search works with no JavaScript.
+- **A reader arriving from a search sees the words marked in the document**, through the CSS
+  Custom Highlight API rather than markup: `lg-markdown` takes a `highlightMatches` function (the
+  matching rule is the consumer's, the library importing no `@logigator/docs`), turns what it
+  reports into `Range`s and styles them with `::highlight()`. The terms are the `?q=` a result link
+  carries, so a reload or a paste marks the same words.
+- **A fragment scrolls off `lg-markdown`'s `ready`, not the router.** The renderer emits no heading
+  ids, so `anchorScrolling` finds nothing and `scrollToHeading` matches `headingSlug` of a heading's
+  own text instead — and the content is assigned asynchronously, so `ready` is the only point at
+  which there is a heading to find.
+- **Every documentation page has a raw-markdown twin at `/:lang/docs/<id>.md`**, answered by
+  `server.ts` and named in the page's head as `<link rel="alternate" type="text/markdown">`. It runs
+  the same destination rewrite the renderer does — `resolveMarkdownUrls`, which lives in
+  `@logigator/ui/internal/markdown-urls` so the SSR host can apply it without pulling in Angular —
+  but roots the URLs, markdown carrying no `<base href="/">`.
 - **PostHog is `posthog-js` behind a dynamic import**, in `analytics/analytics.service.ts` — the
   editor's service, trimmed to what a content site emits. A consent event for the `analytics`
   category is what loads the package and initialises it, so a declining session never downloads it
@@ -412,11 +448,12 @@ TypeScript with no build step — it is _not_ a `package.json` dependency of eit
   a server render emits its markup and nothing else. New components keep that shape — browser
   globals belong in event handlers and `afterNextRender`, never in a constructor or `ngOnInit`.
 
-### Shared packages (@logigator/core, @logigator/contract)
+### Shared packages (@logigator/core, @logigator/contract, @logigator/docs)
 
-Layering is one-directional — **core ← contract ← api** — and core knows nothing about any of them.
-Both are consumed like `@logigator/ui`: every consumer compiles their source through the root
-tsconfig `paths` mapping. They are never built and have no `dist/`, `main` or `exports`.
+Layering is one-directional — **core ← contract ← api** — and core knows nothing about any of them;
+`@logigator/docs` sits beside them and depends on nothing at all. All three are consumed like
+`@logigator/ui`: every consumer compiles their source through the root tsconfig `paths` mapping.
+They are never built and have no `dist/`, `main` or `exports`.
 
 - `logigator-core/src/` — `model/` (the shapes a document is made of, plus the
   `BuiltInComponentType`/`ComponentCategory`/`Direction`/`WireDirection` enums), `codecs/`
@@ -442,6 +479,18 @@ tsconfig `paths` mapping. They are never built and have no `dist/`, `main` or `e
   Response object schemas are `.loose()` on purpose: a client holding an older contract copy must
   tolerate fields the API added rather than reject or strip them. Clients can import the types only
   (`import type`) and pay nothing at runtime.
+- `logigator-docs/src/` — `pages/<lang>/<id>.md` and `pages/<lang>/images/`, plus `docs-structure.ts`
+  (the section/page tree as ids, and the `DocPageId` union both viewers' targets are checked
+  against), `images.ts` (the screenshot import map, written by the capture tool), `parseDocsLink`
+  and `docs-search.ts` — the search matcher, so both viewers rank identically. It takes the
+  renderer's `headingSlug` as an argument rather than reimplementing it: a second definition of
+  that rule would send half the results to the top of the page.
+  **The member imports no markdown**, and must not: the editor's loader emits a `.md` as a file and
+  the website's as text, so each app writes its own import map out per page and language, the way
+  `pages/legal/content/` is. The screenshots _are_ shared — both apps emit a picture through a
+  `file` loader — which works because an app's ambient `*.png`/`*.gif` declaration is program-global
+  and reaches library source. A page's title is a translation key in each app rather than the
+  markdown's own `# …`: both viewers build their navigation before any body is loaded.
 
 ### API (logigator-api)
 
@@ -647,8 +696,8 @@ column. The editor can independently save and load circuits as **local files** i
 ## Testing
 
 The editor, `logigator-web` and `@logigator/ui` run Vitest via Angular's `@angular/build:unit-test`
-builder; core, the contract and the API run **plain Vitest** in Node (own `vitest.config.ts`, no Angular, no jsdom;
-the API's specs boot Nest testing modules). The Node packages' configs alias
+builder; core, the contract, the docs member and the API run **plain Vitest** in Node (own
+`vitest.config.ts`, no Angular, no jsdom; the API's specs boot Nest testing modules). The Node packages' configs alias
 `@logigator/core`/`@logigator/contract` to their source, mirroring the tsconfig `paths` mapping, so
 specs compile exactly what ships. Spec files always sit next to source. Angular specs use `TestBed`.
 

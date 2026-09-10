@@ -169,7 +169,10 @@ only through `DocumentationService.open(pageId?, anchor?)`. Desktop puts an
 (`DialogConfig.fullscreen` bound to `LayoutService.isCompact`, live across
 flips) and drills down instead. `lg-markdown` handles heading anchors and web
 links itself; the dialog claims only `docs:<page-id>[#anchor]` hrefs
-(`documentation/doc-link.ts`).
+(`parseDocsLink`, in `@logigator/docs`). The pages, their screenshots and the
+tree they hang in are that member's; `documentation/docs-pages.ts` is the
+editor's own half — the hashed markdown URL per page and language, and the
+title key each id is shown under.
 
 The shell hosts two confirm targets: the keyless `<lg-confirm-dialog />` is the
 generic modal confirm, `<lg-confirm-popup key="inline" />` the anchored one —
