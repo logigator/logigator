@@ -1,7 +1,7 @@
 import { Point } from 'pixi.js';
 import { Action } from '../action';
 import type { Project } from '../../project/project';
-import { Direction } from '../../utils/direction';
+import { Direction } from '@logigator/core';
 import {
   SerializedAction,
   SerializedRotateComponentEntry
@@ -9,9 +9,8 @@ import {
 
 /**
  * One component's share of a group rotation: the direction step plus the
- * pivot-orbited position. Carried together because neither move nor
- * change-option alone round-trips a rotation — the direction setter re-anchors
- * the position on its own.
+ * pivot-orbited position. They travel together because the direction setter
+ * re-anchors the position on its own, so neither half round-trips alone.
  */
 export interface RotateComponentEntry {
   id: number;

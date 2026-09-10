@@ -31,7 +31,7 @@ import {
 } from '../source-indicator/source-indicator.component';
 import { TranslateDirective } from '../../translation/translate.directive';
 
-/** Longest project name accepted, matching the save dialog and open-project list. */
+/** Mirrors the contract's `documentNameSchema` limit. */
 const NAME_MAX_LENGTH = 20;
 
 @Component({
@@ -77,9 +77,8 @@ export class TitleBarComponent {
   );
 
   /**
-   * Whether the name can be renamed inline. Only real projects (not component
-   * editors) that aren't read-only shares; the persistence layer enforces the
-   * same guard, this just gates the affordance.
+   * Only real projects, not component editors, and not read-only shares. The
+   * persistence layer enforces the same guard; this gates the affordance.
    */
   protected readonly canRename = computed(() => {
     const metadata = this.projectMetadata();
@@ -88,8 +87,6 @@ export class TitleBarComponent {
     );
   });
 
-  // Inline-rename state: whether the name is in edit mode and the working value
-  // bound to the input.
   protected readonly editing = signal(false);
   protected readonly editValue = signal('');
   private readonly renameInput =
@@ -112,10 +109,8 @@ export class TitleBarComponent {
   }
 
   /**
-   * Commits the rename if still in edit mode and the trimmed name is non-empty
-   * and actually changed. Both Enter and blur route here; the edit-mode guard
-   * makes the second (blur firing after Enter already closed the editor) a
-   * no-op.
+   * Both Enter and blur route here. The edit-mode guard makes the second, a
+   * blur firing after Enter already closed the editor, a no-op.
    */
   protected commitRename(): void {
     if (!this.editing()) return;
@@ -137,11 +132,9 @@ export class TitleBarComponent {
   }
 
   /**
-   * The provenance/state chip shown next to the project name: `server` (cloud),
-   * `browser` (saved locally), `draft` (a browser circuit not yet written to
-   * storage — empty id) or `share` (opened read-only from a share link). Covers
-   * both projects and component editors shown as main; `null` only when there is
-   * no project. The upload affordance lives in the File menu and Open dialog.
+   * The provenance chip next to the project name. A `draft` is a browser
+   * circuit not yet written to storage, hence the empty id. `null` only when
+   * there is no project.
    */
   protected readonly sourceChip = computed<SourceIndicatorState | null>(() => {
     const metadata = this.projectMetadata();
@@ -152,10 +145,9 @@ export class TitleBarComponent {
   });
 
   /**
-   * Tooltip for the fork chip: the project's fork lineage, immediate parent
-   * first ("Forked from A by X, B by Y"). `null` (no chip) when the document
-   * carries no lineage. Read-only — the lineage is resolved by the server and
-   * merely carried through export/import (see `ProjectMetadata.attribution`).
+   * The project's fork lineage, immediate parent first, or `null` for no chip.
+   * Read-only: the server resolves the lineage and export/import merely carries
+   * it through.
    */
   protected readonly forkTitle = computed<string | null>(() => {
     const attribution = this.projectMetadata()?.attribution;

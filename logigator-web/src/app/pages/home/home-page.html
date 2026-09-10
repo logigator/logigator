@@ -1,0 +1,239 @@
+<ng-container *webTranslate="let t">
+  <section class="relative overflow-hidden">
+    <img
+      class="absolute inset-0 h-full w-full scale-115 object-cover object-[68%_50%]"
+      alt=""
+      aria-hidden="true"
+      fetchpriority="high"
+      [src]="heroBoard()"
+    />
+    <!-- Opaque under the copy, clear over the board: down the page while the
+         board sits below the copy, across it once there is room beside it. -->
+    <div
+      class="hero-scrim absolute inset-0 [--hero-page:var(--lg-surface-0)] dark:[--hero-page:var(--lg-surface-950)]"
+    ></div>
+
+    <div class="page-wrap relative pt-11 pb-38 lg:py-24">
+      <div class="max-w-2xl lg:max-w-lg">
+        <h1
+          class="text-3xl leading-[1.12] font-bold tracking-[-0.01em] text-balance text-text-hover md:text-4xl lg:text-[44px]"
+        >
+          {{ t('pages.home.hero.headline') }}
+        </h1>
+        <p class="mt-4 max-w-[46ch] text-[17px] leading-relaxed text-muted">
+          {{ t('pages.home.hero.lede') }}
+        </p>
+        <div class="mt-6.5 flex flex-wrap gap-2.5">
+          <a lgButton size="lg" class="px-5 py-2.5" [href]="links.editor">
+            {{ t('pages.home.hero.cta') }}
+          </a>
+          <a
+            lgButton
+            size="lg"
+            outlined
+            severity="secondary"
+            class="px-5 py-2.5"
+            [routerLink]="links.examples()"
+          >
+            {{ t('pages.home.hero.ctaSecondary') }}
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section
+    class="lattice border-y border-border bg-surface-50 py-11 md:py-16 dark:bg-surface-900"
+  >
+    <div
+      class="page-wrap grid gap-7 lg:grid-cols-[minmax(0,19rem)_minmax(0,1fr)] lg:gap-14"
+    >
+      <div class="flex flex-col items-start gap-3">
+        <h2
+          class="text-2xl leading-tight font-bold text-balance text-text-hover md:text-[28px]"
+        >
+          {{ t('pages.home.features.title') }}
+        </h2>
+        <p class="max-w-[62ch] leading-relaxed text-pretty text-muted">
+          {{ t('pages.home.features.description') }}
+        </p>
+      </div>
+
+      <!-- Ruled by position: first column, second column, second row. -->
+      <div class="grid gap-6 sm:grid-cols-2 sm:gap-0">
+        @for (feature of FEATURES; track feature.key) {
+        <div
+          class="flex flex-col gap-2 border-border sm:px-6.5 sm:pb-6.5 sm:odd:pl-0 sm:even:border-l sm:even:pr-0 sm:nth-[n+3]:border-t sm:nth-[n+3]:pt-6.5 sm:nth-[n+3]:pb-0"
+        >
+          <h3 class="text-[17px] font-medium text-text-hover">
+            {{ t(feature.title) }}
+          </h3>
+          <p class="text-sm leading-relaxed text-muted">
+            {{ t(feature.body) }}
+          </p>
+        </div>
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="py-11 md:py-16">
+    <div class="page-wrap">
+      <div class="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-4">
+        <h2
+          class="text-2xl leading-tight font-bold text-balance text-text-hover md:text-[28px]"
+        >
+          {{ t('pages.home.examples.title') }}
+        </h2>
+        <a
+          class="inline-flex shrink-0 items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+          [routerLink]="links.examples()"
+        >
+          <span>{{ t('pages.home.examples.more') }}</span>
+          <i class="ph ph-arrow-right text-sm" aria-hidden="true"></i>
+        </a>
+        <p
+          class="col-span-full mt-2 max-w-[62ch] leading-relaxed text-pretty text-muted"
+        >
+          {{ t('pages.home.examples.description') }}
+        </p>
+      </div>
+
+      @if (examples.failureKey(); as failure) {
+      <web-section-error
+        class="mt-6"
+        [heading]="t('pages.home.examples.failed')"
+        [message]="t(failure)"
+        [retryLabel]="t('errors.retry')"
+        [retrying]="examples.retrying()"
+        (retry)="examples.retry()"
+      />
+      } @else if (exampleTiles().length) {
+      <web-circuit-tiles
+        class="mt-6"
+        layout="rail"
+        [entries]="exampleTiles()"
+      />
+      } @else {
+      <web-empty-state
+        class="mt-6"
+        [heading]="t('pages.home.examples.emptyHeading')"
+        [body]="t('pages.home.examples.emptyBody')"
+      />
+      }
+    </div>
+  </section>
+
+  <!-- Contrast against the page rather than a dark colour, so it reads as an
+       inversion in both schemes. -->
+  <section
+    class="border-y border-transparent bg-surface-900 text-surface-50 dark:border-border dark:bg-surface-800"
+  >
+    <div
+      class="page-wrap grid items-center gap-7 py-11 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] lg:gap-12 lg:py-16"
+    >
+      <div>
+        <h2
+          class="text-2xl leading-tight font-bold text-balance md:text-[28px]"
+        >
+          {{ t('pages.home.video.title') }}
+        </h2>
+        <p
+          class="mt-3 max-w-[44ch] text-[15px] leading-relaxed text-surface-400"
+        >
+          {{ t('pages.home.video.description') }}
+        </p>
+        <p class="mt-4.5 font-mono text-xs text-surface-400">
+          {{ videoCaption() }}
+        </p>
+      </div>
+      <web-video-embed />
+    </div>
+  </section>
+
+  <section
+    class="border-b border-border bg-surface-50 py-11 md:py-16 dark:bg-surface-900"
+  >
+    <div class="page-wrap">
+      <div class="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-4">
+        <h2
+          class="text-2xl leading-tight font-bold text-balance text-text-hover md:text-[28px]"
+        >
+          {{ t('pages.home.community.projectsTitle') }}
+        </h2>
+        <a
+          class="inline-flex shrink-0 items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+          [routerLink]="links.communityProjects()"
+        >
+          <span>{{ t('pages.home.community.moreProjects') }}</span>
+          <i class="ph ph-arrow-right text-sm" aria-hidden="true"></i>
+        </a>
+        <p
+          class="col-span-full mt-2 max-w-[62ch] leading-relaxed text-pretty text-muted"
+        >
+          {{ t('pages.home.community.projectsDescription') }}
+        </p>
+      </div>
+
+      @if (projects.failureKey(); as failure) {
+      <web-section-error
+        class="mt-6"
+        [heading]="t('pages.home.community.projectsFailed')"
+        [message]="t(failure)"
+        [retryLabel]="t('errors.retry')"
+        [retrying]="projects.retrying()"
+        (retry)="projects.retry()"
+      />
+      } @else if (projectTiles().length) {
+      <web-circuit-tiles class="mt-6" [entries]="projectTiles()" />
+      } @else {
+      <web-empty-state
+        class="mt-6"
+        [heading]="t('pages.home.community.projectsEmptyHeading')"
+        [body]="t('pages.home.community.projectsEmptyBody')"
+      />
+      }
+
+      <web-wire-run class="mt-9" />
+
+      <div
+        class="mt-5 grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-4"
+      >
+        <h3 class="text-xl leading-tight font-medium text-text-hover">
+          {{ t('pages.home.community.componentsTitle') }}
+        </h3>
+        <a
+          class="inline-flex shrink-0 items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+          [routerLink]="links.communityComponents()"
+        >
+          <span>{{ t('pages.home.community.moreComponents') }}</span>
+          <i class="ph ph-arrow-right text-sm" aria-hidden="true"></i>
+        </a>
+        <p
+          class="col-span-full mt-2 max-w-[62ch] leading-relaxed text-pretty text-muted"
+        >
+          {{ t('pages.home.community.componentsDescription') }}
+        </p>
+      </div>
+
+      @if (components.failureKey(); as failure) {
+      <web-section-error
+        class="mt-6"
+        [heading]="t('pages.home.community.componentsFailed')"
+        [message]="t(failure)"
+        [retryLabel]="t('errors.retry')"
+        [retrying]="components.retrying()"
+        (retry)="components.retry()"
+      />
+      } @else if (componentTiles().length) {
+      <web-circuit-tiles class="mt-6" [entries]="componentTiles()" />
+      } @else {
+      <web-empty-state
+        class="mt-6"
+        [heading]="t('pages.home.community.componentsEmptyHeading')"
+        [body]="t('pages.home.community.componentsEmptyBody')"
+      />
+      }
+    </div>
+  </section>
+</ng-container>

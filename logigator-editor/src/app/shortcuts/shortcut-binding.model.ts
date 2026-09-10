@@ -10,9 +10,9 @@ export interface ShortcutBinding {
 
 /**
  * The binding flag a modifier key sets about itself. A bare-modifier binding
- * (hold-style, e.g. plain Alt) keeps its own flag `false` — the key field
- * already names it, and a `true` flag would render as "Alt + Alt" — so
- * binding matchers skip that flag's comparison for the binding's own key.
+ * keeps its own flag `false`, since the key field already names it and a `true`
+ * flag would render as "Alt + Alt", so matchers skip that comparison for the
+ * binding's own key.
  */
 export const MODIFIER_FLAG_BY_KEY: Readonly<
   Record<string, 'ctrl' | 'shift' | 'alt'>

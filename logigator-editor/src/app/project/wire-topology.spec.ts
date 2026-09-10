@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { Point, Rectangle } from 'pixi.js';
 import { configureTestBed } from '../../testing/configure-test-bed';
 import { Project } from './project';
-import { WireDirection } from '../wires/wire-direction.enum';
+import { WireDirection } from '@logigator/core';
 import { makeWire } from '../../testing/factories';
 
 function cpAt(project: Project, p: Point): boolean {

@@ -1,20 +1,18 @@
 /**
  * Row/column index over a set of wires, and the axis helpers that go with it.
  *
- * A wire is axis-aligned and its `gridBounds` spans exactly one grid row
- * (horizontal) or column (vertical), so bucketing horizontals by row and
- * verticals by column puts every wire on exactly one line — and within a line,
- * ordering by axis position makes both a collinear sweep and a containment
- * lookup a binary search. The project's quad tree files by size class
- * instead, which parks long wires high in the tree where every descending
- * query rescans them; fine for the point-sized queries of an interactive
- * gesture, ruinous for a pass that touches every wire.
+ * A wire's `gridBounds` spans exactly one grid row (horizontal) or column
+ * (vertical), so bucketing by row/column puts every wire on exactly one line,
+ * and ordering a line by axis position makes both a collinear sweep and a
+ * containment lookup a binary search. The quad tree files by size class
+ * instead, parking long wires high up where every descending query rescans
+ * them — fine for point-sized gesture queries, ruinous for a whole-board pass.
  *
- * Indexed wires must not move. Every caller only adds and removes instances.
+ * Indexed wires must not move: callers only add and remove instances.
  */
 import { Rectangle } from 'pixi.js';
 import { Wire } from '../wires/wire';
-import { WireDirection } from '../wires/wire-direction.enum';
+import { WireDirection } from '@logigator/core';
 
 export function axisPos(w: Wire): number {
   return w.direction === WireDirection.HORIZONTAL ? w.position.x : w.position.y;
@@ -41,9 +39,8 @@ export function interiorContains(
 }
 
 /**
- * One grid line's wires. `sorted` (by axis position) and `maxLength` back the
- * ordered scans and are rebuilt lazily and per line, so a mutation-heavy
- * caller only re-sorts the one or two lines it touched.
+ * One grid line's wires. `sorted` and `maxLength` are rebuilt lazily per line,
+ * so a mutation only re-sorts the one or two lines it touched.
  */
 interface WireLine {
   readonly wires: Set<Wire>;
@@ -95,10 +92,9 @@ export class WireRowColumnIndex {
   }
 
   public *query(rect: Rectangle): Generator<Wire> {
-    // A horizontal wire in row r occupies gridBounds rows [r, r+1), which
-    // intersects [rect.y, rect.y+rect.height) iff r > rect.y - 1 — and
-    // Math.floor(rect.y) is exactly the smallest such integer. Columns mirror
-    // the same bound.
+    // A wire in row r occupies gridBounds rows [r, r+1), which intersects
+    // [rect.y, rect.y+rect.height) iff r > rect.y - 1; Math.floor(rect.y) is
+    // the smallest such integer. Columns mirror the bound.
     for (let row = Math.floor(rect.y); row < rect.y + rect.height; row++) {
       const line = this._horizontal.get(row);
       if (line) yield* this._span(line, rect.x, rect.x + rect.width, rect);
@@ -111,11 +107,10 @@ export class WireRowColumnIndex {
 
   /**
    * The wires of one line that can reach `[from, to)` along its axis, in axis
-   * order. Both ends are binary-searched — a line holds every wire on its grid
-   * row or column, which on a wide board is far more than any one query wants.
-   * The bounds are deliberately loose (a wire's gridBounds origin is its
-   * floored position, and it extends `length + 1`); `intersectsGridBounds`
-   * stays the authoritative test.
+   * order. Both ends are binary-searched, since a line holds every wire on its
+   * whole grid row or column. The bounds are deliberately loose — a wire's
+   * gridBounds origin is its floored position and it extends `length + 1` — so
+   * `intersectsGridBounds` stays the authoritative test.
    */
   private *_span(
     line: WireLine,
@@ -132,9 +127,9 @@ export class WireRowColumnIndex {
   }
 
   /**
-   * Every grid line's wires, each sorted by axis position. Two wires can only
-   * be collinear if they share a line, so a whole-board collinear scan is a
-   * walk over these instead of a query per wire.
+   * Every grid line's wires, sorted by axis position. Two wires are collinear
+   * only if they share a line, so a whole-board collinear scan walks these
+   * instead of querying per wire.
    */
   public *lines(): Generator<Wire[]> {
     for (const line of this._horizontal.values()) yield this._sortedOf(line);
@@ -142,10 +137,9 @@ export class WireRowColumnIndex {
   }
 
   /**
-   * Calls `visit` for every wire whose interior contains `p`. An interior
-   * point lies exactly on its wire's centre line, so only the row and the
-   * column through `p` can hold one — and within a line the wires are ordered,
-   * so this binary-searches rather than scanning the line.
+   * Calls `visit` for every wire whose interior contains `p`. An interior point
+   * lies on its wire's centre line, so only the row and column through `p` can
+   * hold one, and each is binary-searched rather than scanned.
    */
   public forEachInteriorContaining(
     p: { x: number; y: number },
@@ -177,10 +171,10 @@ export class WireRowColumnIndex {
     if (!line) return;
     const sorted = this._sortedOf(line);
 
-    // A wire containing q in its interior starts strictly before it, so binary
-    // search for the first wire at or after q and walk back from there. It also
-    // has to reach q, which no wire starting further back than the line's
-    // longest can — that bounds the walk.
+    // A wire containing q in its interior starts strictly before it, so walk
+    // back from the first wire at or after q. It must also reach q, which no
+    // wire starting further back than the line's longest can: that bounds the
+    // walk.
     const end = lowerBound(sorted, q);
     const reach = q - line.maxLength;
     for (let i = end - 1; i >= 0 && axisPos(sorted[i]) > reach; i--) {

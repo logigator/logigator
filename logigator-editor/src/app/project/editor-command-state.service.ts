@@ -6,15 +6,11 @@ import { SelectionInspectorService } from './selection-inspector.service';
 import { ClipboardService } from '../clipboard/clipboard.service';
 
 /**
- * Exposes whether each editing command is currently a no-op, so the tool bar
- * (and any other surface) can disable the matching buttons.
- *
- * The predicates live on the active project's `ActionManager`/`ViewportController`
- * as plain getters. Their change streams are folded into signals with the same
- * {@link switchMap} + {@link toSignal} bridge as {@link SelectionInspectorService}:
- * `startWith` reflects the project's current state the moment it becomes active,
- * and `scan` turns the void emissions into a monotonic counter so `toSignal`
- * doesn't dedupe identical `undefined`s and stall the computed.
+ * Whether each editing command is currently a no-op, so a surface can disable
+ * the matching buttons. The predicates are plain getters on the active
+ * project's `ActionManager`/`ViewportController`, folded into signals through
+ * the same {@link switchMap} + {@link toSignal} bridge as
+ * {@link SelectionInspectorService}.
  */
 @Injectable({ providedIn: 'root' })
 export class EditorCommandStateService {
@@ -76,7 +72,7 @@ export class EditorCommandStateService {
     );
   });
 
-  /** True when anything is selected — gates copy/cut/delete/rotate. */
+  /** True when anything is selected. */
   public readonly hasSelection = this.selectionInspector.hasSelection;
 
   /** True when a project is open and the clipboard holds a copied snapshot. */

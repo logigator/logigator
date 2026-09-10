@@ -68,7 +68,7 @@ describe('LinkStateApplier', () => {
     const wires = [stubWire(), stubWire(), stubWire()];
     const applier = new LinkStateApplier(wires.map((w) => target([w])));
 
-    // Links 2 and 0 change; values bit 0 → link 2 on, bit 1 → link 0 off.
+    // Values bit 0 → link 2 on, bit 1 → link 0 off.
     applier.setLink(0, true);
     applier.applyDelta(new Uint32Array([2, 0]), new Uint8Array([0b01]));
 
@@ -81,9 +81,8 @@ describe('LinkStateApplier', () => {
     const wires = Array.from({ length: 9 }, stubWire);
     const applier = new LinkStateApplier(wires.map((w) => target([w])));
 
-    // Links 0 and 8 on (byte 0 bit 0, byte 1 bit 0).
+    // Links 0 and 8 on: byte 0 bit 0, byte 1 bit 0.
     applier.applyFull(new Uint8Array([0b0000_0001, 0b0000_0001]));
-    // Link 0 stays on, link 8 turns off, link 3 turns on.
     applier.applyFull(new Uint8Array([0b0000_1001, 0b0000_0000]));
 
     expect(wires[0].setPowered).toHaveBeenCalledExactlyOnceWith(true);
@@ -112,7 +111,6 @@ describe('LinkStateApplier', () => {
     expect(applier.consumeChanged()).toBe(false);
     applier.setLink(0, true);
     expect(applier.consumeChanged()).toBe(true);
-    // Consumed — no change since.
     expect(applier.consumeChanged()).toBe(false);
     applier.setLink(0, true);
     expect(applier.consumeChanged()).toBe(false);
@@ -124,15 +122,14 @@ describe('LinkStateApplier', () => {
     const applier = new LinkStateApplier([target([wire]), target([])]);
 
     expect(applier.switchedLinks).toBe(0);
-    // An empty slot flips state but has no visual — not counted.
+    // An empty slot flips state but has no visual.
     applier.setLink(1, true);
     expect(applier.switchedLinks).toBe(0);
     applier.setLink(0, true);
     applier.setLink(0, false);
-    // A no-op re-apply is not a flip.
     applier.setLink(0, false);
     expect(applier.switchedLinks).toBe(2);
-    // Denominator for the activity percentage: the full link-id space.
+    // The denominator for the activity percentage.
     expect(applier.totalLinks).toBe(2);
   });
 
@@ -144,7 +141,6 @@ describe('LinkStateApplier', () => {
     applier.reset();
 
     expect(wires[1].setPowered).toHaveBeenLastCalledWith(false);
-    // Never-powered links are untouched by reset.
     expect(wires[0].setPowered).not.toHaveBeenCalled();
   });
 });

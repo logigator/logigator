@@ -13,25 +13,23 @@ import {
   buildProject,
   instantiateBody
 } from '../../persistence/circuit-builder';
-import { SerializedCircuitBody } from '../../persistence/serialized-circuit';
+import { SerializedCircuitBody } from '@logigator/core';
 import { Project } from '../../project/project';
 import { getStaticDI } from '../../utils/get-di';
 import { TranslationService } from '../../translation/translation.service';
 import { Wire } from '../../wires/wire';
 
 /**
- * One live view of one inner circuit (one breadcrumb level of a watch): a
- * fresh headless {@link Project} instantiated from the level's circuit body,
- * wired to the running engine through a sparse {@link LinkStateApplier} whose
- * targets resolve through the compiler's watch index. Registered with the
- * simulation's snapshot fan-out on construction and seeded by a full
- * snapshot; `destroy()` unregisters and destroys the copies.
+ * One live view of one inner circuit (one breadcrumb level of a watch): a fresh
+ * headless {@link Project} instantiated from the level's circuit body, wired to
+ * the running engine through a sparse {@link LinkStateApplier} whose targets
+ * resolve through the compiler's watch index. Registered with the snapshot
+ * fan-out on construction and seeded by a full snapshot.
  *
- * The index tables are keyed by body-array position, so the arrays produced
- * by `instantiateBody` here line up with the ones the compiler recorded
- * against (the order contract pinned in `circuit-builder.spec.ts`). A shape
- * mismatch means the definition changed under the session — construction
- * fails loudly instead of mis-lighting wires.
+ * The index tables are keyed by body-array position, so the arrays
+ * `instantiateBody` produces here must line up with the ones the compiler
+ * recorded against. A shape mismatch means the definition changed under the
+ * session — construction fails loudly instead of mis-lighting wires.
  */
 export class WatchSession {
   public readonly project: Project;
@@ -70,11 +68,14 @@ export class WatchSession {
     }
     this.components = components;
     this.wires = wires;
+    // A watch only ever exists inside a live session, so its copies read a
+    // negated input the way the board's own components do.
+    for (const component of components) component.setSimulating(true);
     this.project = buildProject(components, wires);
 
     // Sparse render targets over the full link-id space: only this circuit's
-    // links carry targets. `-1` local nets (wire-only, never powered) and
-    // `-1` links are skipped.
+    // links carry targets. `-1` local nets (wire-only) and `-1` links are
+    // skipped.
     const targets: LinkRenderTargets[] = Array.from({ length: links }, () => ({
       wires: [],
       ports: []
@@ -93,8 +94,8 @@ export class WatchSession {
     });
 
     this.applier = new LinkStateApplier(targets);
-    // Wrap the applier so the first *full* snapshot triggers the one-time
-    // switch pose sync — deltas arriving before the seed don't count.
+    // Only a *full* snapshot triggers the one-time switch pose sync; deltas
+    // arriving before the seed don't count.
     const sessionApplier: SnapshotApplier = {
       applyDelta: (ids, values) => this.applier.applyDelta(ids, values),
       applyFull: (bits) => {
@@ -107,10 +108,10 @@ export class WatchSession {
   }
 
   /**
-   * Per-frame pull (after each applied snapshot): returns whether the view
-   * needs a re-render. The first full snapshot additionally poses the copied
-   * switches from their output-port power — a switch drives its output link
-   * directly, so the link state *is* the switch state.
+   * Per-frame pull: returns whether the view needs a re-render. The first full
+   * snapshot additionally poses the copied switches from their output-port
+   * power — a switch drives its output link directly, so the link state *is*
+   * the switch state.
    */
   public onFrame(): boolean {
     const changed = this.applier.consumeChanged();

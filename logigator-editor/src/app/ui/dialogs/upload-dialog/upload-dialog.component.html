@@ -33,8 +33,7 @@
   }
 
   @if (userService.user()) {
-    <!-- The toggle only shows when visibility isn't already decided upstream;
-         the sign-in warning must show regardless, so it lives outside this. -->
+    <!-- The sign-in warning shows regardless, so it lives outside this. -->
     @if (!visibilityLocked) {
       <div class="flex gap-2 items-center">
         <lg-toggle-switch
@@ -63,16 +62,16 @@
   }
 
   <div class="flex justify-end gap-2">
-    <lg-button
+    <button
+      lgButton
       severity="secondary"
       [outlined]="true"
-      [label]="t('uploadDialog.cancel')"
       (onClick)="cancel()"
-    />
-    <lg-button
-      [label]="t('uploadDialog.upload')"
-      [disabled]="!userService.user()"
-      (onClick)="upload()"
-    />
+    >
+      {{ t('uploadDialog.cancel') }}
+    </button>
+    <button lgButton [disabled]="!userService.user()" (onClick)="upload()">
+      {{ t('uploadDialog.upload') }}
+    </button>
   </div>
 </div>

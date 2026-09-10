@@ -1,231 +1,159 @@
+import { DocPageId, DocSectionId } from '@logigator/docs';
+import { LanguageId } from '@logigator/core';
 import { TranslationKey } from '../translation/translation-key.model';
-import gettingStartedEn from '@assets/docs/en/getting-started.md';
-import boardAndToolsEn from '@assets/docs/en/board-and-tools.md';
-import shortcutsEn from '@assets/docs/en/shortcuts.md';
-import settingsEn from '@assets/docs/en/settings.md';
-import componentsAndOptionsEn from '@assets/docs/en/components-and-options.md';
-import wiresAndConnectionsEn from '@assets/docs/en/wires-and-connections.md';
-import customComponentsEn from '@assets/docs/en/custom-components.md';
-import simulationEn from '@assets/docs/en/simulation.md';
-import inspectionEn from '@assets/docs/en/inspection.md';
-import savingAndFilesEn from '@assets/docs/en/saving-and-files.md';
-import cloudEn from '@assets/docs/en/cloud.md';
-import gettingStartedDe from '@assets/docs/de/getting-started.md';
-import boardAndToolsDe from '@assets/docs/de/board-and-tools.md';
-import shortcutsDe from '@assets/docs/de/shortcuts.md';
-import settingsDe from '@assets/docs/de/settings.md';
-import componentsAndOptionsDe from '@assets/docs/de/components-and-options.md';
-import wiresAndConnectionsDe from '@assets/docs/de/wires-and-connections.md';
-import customComponentsDe from '@assets/docs/de/custom-components.md';
-import simulationDe from '@assets/docs/de/simulation.md';
-import inspectionDe from '@assets/docs/de/inspection.md';
-import savingAndFilesDe from '@assets/docs/de/saving-and-files.md';
-import cloudDe from '@assets/docs/de/cloud.md';
-import gettingStartedFr from '@assets/docs/fr/getting-started.md';
-import boardAndToolsFr from '@assets/docs/fr/board-and-tools.md';
-import shortcutsFr from '@assets/docs/fr/shortcuts.md';
-import settingsFr from '@assets/docs/fr/settings.md';
-import componentsAndOptionsFr from '@assets/docs/fr/components-and-options.md';
-import wiresAndConnectionsFr from '@assets/docs/fr/wires-and-connections.md';
-import customComponentsFr from '@assets/docs/fr/custom-components.md';
-import simulationFr from '@assets/docs/fr/simulation.md';
-import inspectionFr from '@assets/docs/fr/inspection.md';
-import savingAndFilesFr from '@assets/docs/fr/saving-and-files.md';
-import cloudFr from '@assets/docs/fr/cloud.md';
-import gettingStartedEs from '@assets/docs/es/getting-started.md';
-import boardAndToolsEs from '@assets/docs/es/board-and-tools.md';
-import shortcutsEs from '@assets/docs/es/shortcuts.md';
-import settingsEs from '@assets/docs/es/settings.md';
-import componentsAndOptionsEs from '@assets/docs/es/components-and-options.md';
-import wiresAndConnectionsEs from '@assets/docs/es/wires-and-connections.md';
-import customComponentsEs from '@assets/docs/es/custom-components.md';
-import simulationEs from '@assets/docs/es/simulation.md';
-import inspectionEs from '@assets/docs/es/inspection.md';
-import savingAndFilesEs from '@assets/docs/es/saving-and-files.md';
-import cloudEs from '@assets/docs/es/cloud.md';
+import gettingStartedEn from '@logigator/docs/pages/en/getting-started.md';
+import boardAndToolsEn from '@logigator/docs/pages/en/board-and-tools.md';
+import shortcutsEn from '@logigator/docs/pages/en/shortcuts.md';
+import settingsEn from '@logigator/docs/pages/en/settings.md';
+import componentsAndOptionsEn from '@logigator/docs/pages/en/components-and-options.md';
+import wiresAndConnectionsEn from '@logigator/docs/pages/en/wires-and-connections.md';
+import customComponentsEn from '@logigator/docs/pages/en/custom-components.md';
+import simulationEn from '@logigator/docs/pages/en/simulation.md';
+import inspectionEn from '@logigator/docs/pages/en/inspection.md';
+import savingAndFilesEn from '@logigator/docs/pages/en/saving-and-files.md';
+import cloudEn from '@logigator/docs/pages/en/cloud.md';
+import gettingStartedDe from '@logigator/docs/pages/de/getting-started.md';
+import boardAndToolsDe from '@logigator/docs/pages/de/board-and-tools.md';
+import shortcutsDe from '@logigator/docs/pages/de/shortcuts.md';
+import settingsDe from '@logigator/docs/pages/de/settings.md';
+import componentsAndOptionsDe from '@logigator/docs/pages/de/components-and-options.md';
+import wiresAndConnectionsDe from '@logigator/docs/pages/de/wires-and-connections.md';
+import customComponentsDe from '@logigator/docs/pages/de/custom-components.md';
+import simulationDe from '@logigator/docs/pages/de/simulation.md';
+import inspectionDe from '@logigator/docs/pages/de/inspection.md';
+import savingAndFilesDe from '@logigator/docs/pages/de/saving-and-files.md';
+import cloudDe from '@logigator/docs/pages/de/cloud.md';
+import gettingStartedFr from '@logigator/docs/pages/fr/getting-started.md';
+import boardAndToolsFr from '@logigator/docs/pages/fr/board-and-tools.md';
+import shortcutsFr from '@logigator/docs/pages/fr/shortcuts.md';
+import settingsFr from '@logigator/docs/pages/fr/settings.md';
+import componentsAndOptionsFr from '@logigator/docs/pages/fr/components-and-options.md';
+import wiresAndConnectionsFr from '@logigator/docs/pages/fr/wires-and-connections.md';
+import customComponentsFr from '@logigator/docs/pages/fr/custom-components.md';
+import simulationFr from '@logigator/docs/pages/fr/simulation.md';
+import inspectionFr from '@logigator/docs/pages/fr/inspection.md';
+import savingAndFilesFr from '@logigator/docs/pages/fr/saving-and-files.md';
+import cloudFr from '@logigator/docs/pages/fr/cloud.md';
+import gettingStartedEs from '@logigator/docs/pages/es/getting-started.md';
+import boardAndToolsEs from '@logigator/docs/pages/es/board-and-tools.md';
+import shortcutsEs from '@logigator/docs/pages/es/shortcuts.md';
+import settingsEs from '@logigator/docs/pages/es/settings.md';
+import componentsAndOptionsEs from '@logigator/docs/pages/es/components-and-options.md';
+import wiresAndConnectionsEs from '@logigator/docs/pages/es/wires-and-connections.md';
+import customComponentsEs from '@logigator/docs/pages/es/custom-components.md';
+import simulationEs from '@logigator/docs/pages/es/simulation.md';
+import inspectionEs from '@logigator/docs/pages/es/inspection.md';
+import savingAndFilesEs from '@logigator/docs/pages/es/saving-and-files.md';
+import cloudEs from '@logigator/docs/pages/es/cloud.md';
 
 /**
- * One documentation page. `urls` maps a language to the build-time hashed URL
- * of that language's markdown (the `.md` file loader emits a cache-busted copy
- * per import), with English as the fallback for languages without an entry —
- * the same scheme the changelog uses. The page body is fetched only when the
- * page is shown; titles are regular translation keys so the navigation is
- * localized even while a body is English-only.
+ * Each page's markdown, one build-time hashed URL per language. The bodies are
+ * fetched only when a page is shown; the editor's loader emits a `.md` as a
+ * file, which is what keeps 44 documents out of the bundle.
+ *
+ * The imports are written out rather than assembled from a template literal:
+ * the record then makes a page or a language with no file a compile error
+ * instead of a viewer that 404s in it.
  */
-export interface DocPage {
-  id: string;
-  titleKey: TranslationKey;
-  urls: Readonly<Record<string, string>>;
-}
-
-/** A group of pages under one navigation header. */
-export interface DocSection {
-  id: string;
-  titleKey: TranslationKey;
-  pages: readonly DocPage[];
-}
-
-/**
- * The documentation tree, in display order. Adding a page = drop a markdown
- * file under `src/assets/docs/<lang>/`, import it, list it here, and add its
- * title key to the locale files; {@link DocPageId} picks the id up
- * automatically. In-page cross links use the id: `[label](docs:<page-id>)`.
- * Screenshots register in `docs-images.ts` under the path the markdown uses.
- */
-export const DOC_SECTIONS = [
-  {
-    id: 'basics',
-    titleKey: 'documentation.sections.basics',
-    pages: [
-      {
-        id: 'getting-started',
-        titleKey: 'documentation.pages.gettingStarted',
-        urls: {
-          en: gettingStartedEn,
-          de: gettingStartedDe,
-          fr: gettingStartedFr,
-          es: gettingStartedEs
-        }
-      },
-      {
-        id: 'board-and-tools',
-        titleKey: 'documentation.pages.boardAndTools',
-        urls: {
-          en: boardAndToolsEn,
-          de: boardAndToolsDe,
-          fr: boardAndToolsFr,
-          es: boardAndToolsEs
-        }
-      },
-      {
-        id: 'shortcuts',
-        titleKey: 'documentation.pages.shortcuts',
-        urls: {
-          en: shortcutsEn,
-          de: shortcutsDe,
-          fr: shortcutsFr,
-          es: shortcutsEs
-        }
-      },
-      {
-        id: 'settings',
-        titleKey: 'documentation.pages.settings',
-        urls: {
-          en: settingsEn,
-          de: settingsDe,
-          fr: settingsFr,
-          es: settingsEs
-        }
-      }
-    ]
+const DOC_PAGE_URLS: Record<DocPageId, Record<LanguageId, string>> = {
+  'getting-started': {
+    en: gettingStartedEn,
+    de: gettingStartedDe,
+    fr: gettingStartedFr,
+    es: gettingStartedEs
   },
-  {
-    id: 'building',
-    titleKey: 'documentation.sections.building',
-    pages: [
-      {
-        id: 'components-and-options',
-        titleKey: 'documentation.pages.componentsAndOptions',
-        urls: {
-          en: componentsAndOptionsEn,
-          de: componentsAndOptionsDe,
-          fr: componentsAndOptionsFr,
-          es: componentsAndOptionsEs
-        }
-      },
-      {
-        id: 'wires-and-connections',
-        titleKey: 'documentation.pages.wiresAndConnections',
-        urls: {
-          en: wiresAndConnectionsEn,
-          de: wiresAndConnectionsDe,
-          fr: wiresAndConnectionsFr,
-          es: wiresAndConnectionsEs
-        }
-      },
-      {
-        id: 'custom-components',
-        titleKey: 'documentation.pages.customComponents',
-        urls: {
-          en: customComponentsEn,
-          de: customComponentsDe,
-          fr: customComponentsFr,
-          es: customComponentsEs
-        }
-      }
-    ]
+  'board-and-tools': {
+    en: boardAndToolsEn,
+    de: boardAndToolsDe,
+    fr: boardAndToolsFr,
+    es: boardAndToolsEs
   },
-  {
-    id: 'simulation',
-    titleKey: 'documentation.sections.simulation',
-    pages: [
-      {
-        id: 'simulation',
-        titleKey: 'documentation.pages.simulation',
-        urls: {
-          en: simulationEn,
-          de: simulationDe,
-          fr: simulationFr,
-          es: simulationEs
-        }
-      },
-      {
-        id: 'inspection',
-        titleKey: 'documentation.pages.inspection',
-        urls: {
-          en: inspectionEn,
-          de: inspectionDe,
-          fr: inspectionFr,
-          es: inspectionEs
-        }
-      }
-    ]
+  shortcuts: {
+    en: shortcutsEn,
+    de: shortcutsDe,
+    fr: shortcutsFr,
+    es: shortcutsEs
   },
-  {
-    id: 'projects',
-    titleKey: 'documentation.sections.projects',
-    pages: [
-      {
-        id: 'saving-and-files',
-        titleKey: 'documentation.pages.savingAndFiles',
-        urls: {
-          en: savingAndFilesEn,
-          de: savingAndFilesDe,
-          fr: savingAndFilesFr,
-          es: savingAndFilesEs
-        }
-      },
-      {
-        id: 'cloud',
-        titleKey: 'documentation.pages.cloud',
-        urls: {
-          en: cloudEn,
-          de: cloudDe,
-          fr: cloudFr,
-          es: cloudEs
-        }
-      }
-    ]
+  settings: {
+    en: settingsEn,
+    de: settingsDe,
+    fr: settingsFr,
+    es: settingsEs
+  },
+  'components-and-options': {
+    en: componentsAndOptionsEn,
+    de: componentsAndOptionsDe,
+    fr: componentsAndOptionsFr,
+    es: componentsAndOptionsEs
+  },
+  'wires-and-connections': {
+    en: wiresAndConnectionsEn,
+    de: wiresAndConnectionsDe,
+    fr: wiresAndConnectionsFr,
+    es: wiresAndConnectionsEs
+  },
+  'custom-components': {
+    en: customComponentsEn,
+    de: customComponentsDe,
+    fr: customComponentsFr,
+    es: customComponentsEs
+  },
+  simulation: {
+    en: simulationEn,
+    de: simulationDe,
+    fr: simulationFr,
+    es: simulationEs
+  },
+  inspection: {
+    en: inspectionEn,
+    de: inspectionDe,
+    fr: inspectionFr,
+    es: inspectionEs
+  },
+  'saving-and-files': {
+    en: savingAndFilesEn,
+    de: savingAndFilesDe,
+    fr: savingAndFilesFr,
+    es: savingAndFilesEs
+  },
+  cloud: {
+    en: cloudEn,
+    de: cloudDe,
+    fr: cloudFr,
+    es: cloudEs
   }
-] as const satisfies readonly DocSection[];
+};
 
-/** Ids of all documentation pages — `open()` targets are compile-checked. */
-export type DocPageId = (typeof DOC_SECTIONS)[number]['pages'][number]['id'];
+/**
+ * A page's title, as this app's own translation key. The shared member holds
+ * ids alone — the website names the same pages through keys of its own — and
+ * the record is total, so a page added there is a compile error here until it
+ * is named.
+ */
+export const DOC_PAGE_TITLES: Record<DocPageId, TranslationKey> = {
+  'getting-started': 'documentation.pages.gettingStarted',
+  'board-and-tools': 'documentation.pages.boardAndTools',
+  shortcuts: 'documentation.pages.shortcuts',
+  settings: 'documentation.pages.settings',
+  'components-and-options': 'documentation.pages.componentsAndOptions',
+  'wires-and-connections': 'documentation.pages.wiresAndConnections',
+  'custom-components': 'documentation.pages.customComponents',
+  simulation: 'documentation.pages.simulation',
+  inspection: 'documentation.pages.inspection',
+  'saving-and-files': 'documentation.pages.savingAndFiles',
+  cloud: 'documentation.pages.cloud'
+};
 
-export const DEFAULT_DOC_PAGE: DocPageId = 'getting-started';
+/** A navigation group's title, the same way. */
+export const DOC_SECTION_TITLES: Record<DocSectionId, TranslationKey> = {
+  basics: 'documentation.sections.basics',
+  building: 'documentation.sections.building',
+  simulation: 'documentation.sections.simulation',
+  projects: 'documentation.sections.projects'
+};
 
-const PAGES_BY_ID: ReadonlyMap<DocPageId, DocPage> = new Map(
-  DOC_SECTIONS.flatMap((section) =>
-    section.pages.map((page): [DocPageId, DocPage] => [page.id, page])
-  )
-);
-
-export function docPage(id: DocPageId): DocPage {
-  // The map holds every member of the DocPageId union by construction.
-  return PAGES_BY_ID.get(id)!;
-}
-
-/** Whether an arbitrary string (e.g. from a markdown link) is a page id. */
-export function isDocPageId(id: string): id is DocPageId {
-  return PAGES_BY_ID.has(id as DocPageId);
+/** Markdown URL of a page in `lang`, English where it has no translation. */
+export function docPageUrl(page: DocPageId, lang: string): string {
+  const urls = DOC_PAGE_URLS[page];
+  return urls[lang as LanguageId] ?? urls.en;
 }

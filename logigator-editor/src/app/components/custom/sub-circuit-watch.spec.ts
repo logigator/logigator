@@ -20,7 +20,7 @@ import {
   SIMULATION_WORKER_FACTORY
 } from '../../simulation/worker/simulation-worker.service';
 import { Wire } from '../../wires/wire';
-import { WireDirection } from '../../wires/wire-direction.enum';
+import { WireDirection } from '@logigator/core';
 import { CustomComponentRegistry } from './custom-component-registry.service';
 import { CustomComponent } from './custom-component';
 import { SubCircuitWatch } from './sub-circuit-watch';

@@ -13,7 +13,7 @@ import {
   WorkerToMainMessage
 } from './protocol';
 
-/** Worker construction, injectable so specs can substitute a message-level fake. */
+/** Worker construction, injectable so specs can substitute a fake. */
 export const SIMULATION_WORKER_FACTORY = new InjectionToken<() => Worker>(
   'SIMULATION_WORKER_FACTORY',
   {
@@ -55,7 +55,6 @@ export interface SimulationSessionHooks {
   onError(message: string): void;
 }
 
-/** Status polling rate for the measured-Hz readout. */
 const STATUS_POLL_MS = 1000;
 
 interface PendingRequest {
@@ -64,10 +63,22 @@ interface PendingRequest {
 }
 
 /**
+ * Machine-readable context on a worker fault. The reported `Error` carries only
+ * the translated toast text, so what identifies the failure lives here.
+ */
+interface FaultContext {
+  source: 'workerError' | 'workerCrash' | 'messageError';
+  /** Set when the worker had a translatable message; `detail` is then the raw
+   * counterpart. */
+  code?: string;
+  detail?: string;
+}
+
+/**
  * Main-thread bridge to the simulation worker: owns the `Worker`, the
  * request/response correlation map, and the per-frame snapshot pull loop.
- * Snapshots apply straight to the session's {@link LinkStateApplier} (hot
- * path — no Observables); measured speed and tick count surface as signals.
+ * Snapshots apply straight to the session's {@link LinkStateApplier} — a hot
+ * path, no Observables. Measured speed and tick count surface as signals.
  *
  * Pacing is a pull model with a single in-flight snapshot request per frame;
  * payload buffers are pooled worker-side and returned after applying.
@@ -84,7 +95,7 @@ export class SimulationWorkerService {
 
   private worker: Worker | null = null;
   /** True between the `init` ack and {@link endSession} — the window in which
-   * the worker actually holds a `Simulation`. */
+   * the worker holds a `Simulation`. */
   private ready = false;
   private hooks: SimulationSessionHooks | null = null;
   private nextReqId = 1;
@@ -96,8 +107,6 @@ export class SimulationWorkerService {
   private statusTimer: ReturnType<typeof setInterval> | null = null;
   private snapshotInFlight = false;
   private wantFullSnapshot = false;
-  // Debug tallies of snapshots applied this session, by kind (empty deltas
-  // included). Read via {@link snapshotCounts}; reset per session.
   private fullSnapshots = 0;
   private deltaSnapshots = 0;
   private lastStatus: { tick: number; at: number } | null = null;
@@ -111,18 +120,16 @@ export class SimulationWorkerService {
   public readonly tick = this._tick.asReadonly();
 
   /**
-   * Snapshots applied since the session started, split by kind (`full` counts
-   * engine delta→full fallbacks and seed/reset fulls alike; `delta` counts
-   * empty deltas too). A debug readout — reset on every {@link startSession}.
+   * Debug tallies of snapshots applied since the session started: `full` counts
+   * engine delta→full fallbacks and seed/reset fulls alike, `delta` counts
+   * empty deltas too. Reset on every {@link startSession}.
    */
   public get snapshotCounts(): { full: number; delta: number } {
     return { full: this.fullSnapshots, delta: this.deltaSnapshots };
   }
 
-  /**
-   * Spawns the worker, waits for the WASM engine to come up, and builds the
-   * simulation from the descriptor. Resolves once the session can run.
-   */
+  /** Spawns the worker, waits for the engine, and builds the simulation.
+   * Resolves once the session can run. */
   public async startSession(
     descriptor: BoardDescriptor,
     hooks: SimulationSessionHooks
@@ -141,13 +148,14 @@ export class SimulationWorkerService {
       this._onMessage(event.data);
     worker.onerror = (event: ErrorEvent) =>
       this._fail(
-        event.message || this.translation.translate('simulation.workerCrashed')
+        event.message || this.translation.translate('simulation.workerCrashed'),
+        { source: 'workerCrash', detail: event.message || undefined }
       );
-    // A message that can't be deserialized never reaches onmessage — route it
-    // into the same failure path as onerror.
+    // A message that can't be deserialized never reaches onmessage.
     worker.onmessageerror = () =>
       this._fail(
-        this.translation.translate('simulation.workerMessageUnreadable')
+        this.translation.translate('simulation.workerMessageUnreadable'),
+        { source: 'messageError' }
       );
     await ready;
     if (this.worker !== worker) {
@@ -155,15 +163,13 @@ export class SimulationWorkerService {
     }
     await this._request({ kind: 'init', descriptor });
     this.ready = true;
-    // A snapshot asked for while the engine was still coming up was dropped
-    // rather than queued (see `_post`); serve it now that there is state to
-    // read, so a watch registered during startup isn't left dark.
+    // `_post` drops a snapshot request made before the engine is up; serve it
+    // now, so a watch registered during startup isn't left dark.
     if (this.wantFullSnapshot) {
       this._requestSnapshot();
     }
   }
 
-  /** Terminates the worker and discards all session state. */
   public endSession(): void {
     this._stopFrameLoop();
     this._stopStatusPolling();
@@ -191,7 +197,7 @@ export class SimulationWorkerService {
       return;
     }
     if (mode === 'sync') {
-      // The worker idles in sync mode — the frame loop drives the ticks. An
+      // The frame loop drives the ticks in sync mode; the worker idles, so an
       // active worker-paced run must stop first.
       await this._request({ kind: 'pause' });
     } else {
@@ -232,9 +238,8 @@ export class SimulationWorkerService {
   }
 
   /**
-   * Resets the simulation to tick 0 (worker-side destroy + rebuild). The
-   * caller resets the applier and sim visuals — the engine's next snapshot
-   * is a full one against a fresh baseline.
+   * Resets the simulation to tick 0 (worker-side destroy + rebuild). The caller
+   * resets the applier and sim visuals; the next snapshot is a full one.
    */
   public async reset(): Promise<void> {
     if (!this.worker) {
@@ -250,11 +255,9 @@ export class SimulationWorkerService {
   }
 
   /**
-   * Pulls one **full** snapshot — the engine answers with its complete
-   * current state whether running or paused. Seeds a freshly-registered
-   * watch applier, which would otherwise only see future deltas. If a
-   * snapshot is already in flight, the full request is carried over to the
-   * next one instead of being dropped.
+   * Pulls one **full** snapshot, running or paused, seeding a freshly
+   * registered watch applier that would otherwise only see future deltas. With
+   * a snapshot in flight the full request carries over to the next one.
    */
   public requestSnapshot(): void {
     if (!this.worker) {
@@ -289,9 +292,9 @@ export class SimulationWorkerService {
     }
   }
 
-  // One snapshot request in flight at most: a slow worker answers late
-  // rather than piling up a queue. In sync mode the tick is skipped too,
-  // keeping the tick rate at or below the frame rate.
+  // One snapshot request in flight at most: a slow worker answers late rather
+  // than piling up a queue. In sync mode the tick is skipped too, keeping the
+  // tick rate at or below the frame rate.
   private readonly _frame = (): void => {
     this.frameHandle = null;
     if (this.runMode === 'idle' || !this.worker) {
@@ -310,8 +313,8 @@ export class SimulationWorkerService {
     if (this.snapshotInFlight) {
       return;
     }
-    // The in-flight slot is claimed only once the request is really out — a
-    // dropped post answers with no snapshot, and the flag would never clear.
+    // Claim the in-flight slot only once the request is really out: a dropped
+    // post answers with no snapshot, and the flag would never clear.
     if (!this._post({ kind: 'requestSnapshot', full: this.wantFullSnapshot })) {
       return;
     }
@@ -359,17 +362,13 @@ export class SimulationWorkerService {
   }
 
   /**
-   * Sends without registering a response promise (still tracked by reqId), and
-   * reports whether the message went out.
-   *
-   * Nothing is posted before the session is {@link ready}: the worker holds no
-   * `Simulation` until it acks `init`, and an uncorrelated op arriving in that
-   * window has no promise to fail — the worker's error would come back
-   * uncorrelated and tear down a session that was about to be usable. That is
-   * reachable from the UI, since simulation mode (and with it the switch/button
-   * tap path) is entered while the engine is still starting. Dropping is the
-   * right answer rather than queueing: an input predating the engine has no
-   * tick to apply at.
+   * Sends without registering a response promise, reporting whether the message
+   * went out. Nothing is posted before the session is {@link ready}: the worker
+   * holds no `Simulation` until it acks `init`, and an uncorrelated op in that
+   * window would come back as an uncorrelated error and tear down a session
+   * that was about to be usable. The switch/button tap path reaches this, since
+   * simulation mode is entered while the engine is still starting. Dropping
+   * beats queueing — an input predating the engine has no tick to apply at.
    */
   private _post(
     msg: MainRequest | Extract<MainToWorkerMessage, { kind: 'returnBuffer' }>,
@@ -404,24 +403,29 @@ export class SimulationWorkerService {
         this.pending.delete(msg.reqId);
         break;
       case 'error': {
-        // A coded failure carries a raw detail in `message` for the log and a
-        // translatable, user-facing message under the code.
+        // A coded failure carries the raw detail in `message` for the log and
+        // a translatable, user-facing message under the code.
         const userMessage =
           msg.code === 'engineInitFailed'
             ? this.translation.translate('simulation.engineInitFailed')
             : msg.message;
+        const fault: FaultContext = {
+          source: 'workerError',
+          code: msg.code,
+          detail: msg.message
+        };
         const request =
           msg.reqId !== null ? this.pending.get(msg.reqId) : undefined;
         if (request) {
           this.pending.delete(msg.reqId!);
           const error = new Error(userMessage);
-          this._reportFault(error);
+          this._reportFault(error, fault);
           request.reject(error);
         } else {
           if (msg.code) {
             this.logging.error(msg.message, 'SimulationWorker');
           }
-          this._fail(userMessage);
+          this._fail(userMessage, fault);
         }
         break;
       }
@@ -437,9 +441,8 @@ export class SimulationWorkerService {
         if (applier) {
           const { ids, values } = unpackSnapshot(msg);
           if (msg.isDelta) {
-            // An empty delta (no changed links) means nothing changed since
-            // the last poll — hold current state. Falling through to
-            // applyFull here would read an empty buffer and clear every link.
+            // An empty delta means nothing changed — hold current state.
+            // applyFull would read the empty buffer and clear every link.
             if (ids) {
               applier.applyDelta(ids, values);
             }
@@ -479,27 +482,22 @@ export class SimulationWorkerService {
   }
 
   /**
-   * Reports an engine fault to error tracking as a real exception.
-   *
-   * Every failure the worker reports is an internal fault — a broken invariant,
-   * a crashed worker, or an engine that could not load — yet each one is caught
-   * on this side and surfaced as a toast, so none of them ever reaches the
-   * {@link GlobalErrorHandler} that owns the `$exception` path. Called from the
-   * two mutually exclusive arms of a worker error — the correlated rejection in
-   * {@link _onMessage} and {@link _fail} for everything else — so a fault is
-   * reported exactly once.
-   * Deliberately not called for {@link endSession}'s rejections: tearing a
-   * session down cancels in-flight requests by design.
+   * Reports an engine fault to error tracking as a real exception: every worker
+   * failure is an internal fault, but each is caught here and shown as a toast,
+   * so none reaches the {@link GlobalErrorHandler} that owns `$exception`. The
+   * two call sites are mutually exclusive, so a fault is reported once. Not
+   * called for {@link endSession}'s rejections — tearing a session down cancels
+   * in-flight requests by design.
    */
-  private _reportFault(error: Error): void {
-    this.analytics.captureError(error);
+  private _reportFault(error: Error, context: FaultContext): void {
+    this.analytics.captureError(error, undefined, { ...context });
   }
 
-  /** Unrecoverable worker failure: reject everything, notify the session owner. */
-  private _fail(message: string): void {
+  /** Unrecoverable failure: reject everything, notify the session owner. */
+  private _fail(message: string, context: FaultContext): void {
     const hooks = this.hooks;
     const error = new Error(message);
-    this._reportFault(error);
+    this._reportFault(error, context);
     for (const request of this.pending.values()) {
       request.reject(error);
     }

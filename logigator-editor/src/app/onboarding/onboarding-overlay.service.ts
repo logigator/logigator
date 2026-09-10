@@ -5,6 +5,7 @@ import { Subscription } from 'rxjs';
 import {
   caretSideChanges,
   connectedPositions,
+  externalTeardown,
   LgOverlayService
 } from '@logigator/ui';
 import { CoachMarkHandlers, CoachMarkView } from './coach-mark.model';
@@ -18,13 +19,14 @@ const SETTLE_CAP_MS = 1000;
 /** Onboarding target id of the board canvas (registered in the app shell). */
 const BOARD_TARGET_ID = 'board';
 
-/** Everything one showing coach-mark owns; {@link hide} disposes it as a unit. */
+/** Everything one showing coach-mark owns; `hide` disposes it as a unit. */
 interface CoachMarkSession {
   target: HTMLElement | null;
   /** The step view; mutable so a same-target update swaps it in place. */
   view: CoachMarkView;
   handlers: CoachMarkHandlers;
-  readonly backdropRef: OverlayRef;
+  /** Nulled when cdk disposed it itself, so the teardown skips it. */
+  backdropRef: OverlayRef | null;
   readonly backdropCmp: ComponentRef<CoachMarkBackdropComponent>;
   /** The bubble mounts only once the anchor settles; null until then. */
   bubbleRef: OverlayRef | null;
@@ -39,15 +41,13 @@ interface CoachMarkSession {
 
 /**
  * Imperatively shows the tutorial coach-mark: the dim/highlight backdrop plus
- * the step bubble, built on {@link LgOverlayService}. The bubble anchors to a
- * target element (connected overlay, caret tracking the resolved side) or
- * centers when there is none; the backdrop tracks the target's rect on
- * scroll/resize so the highlight ring stays put. The coach-mark claims no
- * keyboard input — Escape stays free for the board's own cancel handling, so
- * the tutorial only ends through its own Skip control.
+ * the step bubble. The bubble anchors to a target element or centres when there
+ * is none, and the backdrop tracks the target's rect so the highlight ring
+ * stays put. The coach-mark claims no keyboard input — Escape stays free for
+ * the board's own cancel handling, so a tutorial ends only through Skip.
  *
- * Presentation only — the {@link TutorialRunnerService} decides which step to
- * show and supplies the handlers. One coach-mark is visible at a time.
+ * Presentation only, and one coach-mark at a time; the runner decides which
+ * step to show and supplies the handlers.
  */
 @Injectable({ providedIn: 'root' })
 export class OnboardingOverlayService {
@@ -59,11 +59,7 @@ export class OnboardingOverlayService {
   private session: CoachMarkSession | null = null;
   private readonly trackRect = () => this.refreshRect();
 
-  /**
-   * Shows (or, if a coach-mark is already open on the same target, updates in
-   * place) the bubble for one step. Reusing the overlays on a same-target
-   * update avoids a teardown flicker for mid-step text changes.
-   */
+  /** Shows the bubble for one step, updating in place on the same target. */
   public show(
     target: HTMLElement | null,
     view: CoachMarkView,
@@ -71,8 +67,8 @@ export class OnboardingOverlayService {
   ): void {
     const current = this.session;
     if (current?.bubbleCmp && current.target === target) {
-      // Same anchor: refresh content without rebuilding the overlays, so a
-      // mid-step text change ("1 of 2 placed") doesn't flicker.
+      // Refresh content without rebuilding the overlays, so a mid-step text
+      // change ("1 of 2 placed") does not flicker.
       current.handlers = handlers;
       current.view = view;
       current.bubbleCmp.setInput('view', view);
@@ -83,18 +79,16 @@ export class OnboardingOverlayService {
     this.hide();
     const session = this.createSession(target, view, handlers);
     this.session = session;
-    // The bubble is NOT mounted here — trackUntilSettled mounts it once the
-    // anchor's rect holds still. The CDK connected overlay must never position
-    // against a mid-animation origin (a palette item riding the Drawer's slide):
-    // an apply against a moving/off-screen origin can drop the pane into the
-    // flexible-dimensions fallback (`position: static`), a state later
-    // updatePosition() calls never recover from.
+    // The bubble mounts in trackUntilSettled, once the anchor's rect holds
+    // still. A CDK connected overlay applied against a moving or off-screen
+    // origin can drop the pane into the flexible-dimensions fallback
+    // (`position: static`), which no later updatePosition() recovers from.
     this.trackUntilSettled(session);
 
     window.addEventListener('scroll', this.trackRect, true);
     window.addEventListener('resize', this.trackRect);
-    // A later layout shift (a Drawer accordion expanding, moving the anchor)
-    // ends in a transition; re-measure so the coach-mark follows.
+    // A later layout shift ends in a transition; re-measure so the coach-mark
+    // follows the anchor.
     window.addEventListener('transitionend', this.trackRect, true);
     this.observeBoard(session);
   }
@@ -111,7 +105,7 @@ export class OnboardingOverlayService {
     session.resizeObserver?.disconnect();
     session.subscriptions.unsubscribe();
     session.bubbleRef?.dispose();
-    session.backdropRef.dispose();
+    session.backdropRef?.dispose();
   }
 
   /** A fresh session with the dim/highlight backdrop up and no bubble yet. */
@@ -128,7 +122,8 @@ export class OnboardingOverlayService {
     const backdropCmp = backdropRef.attach(
       new ComponentPortal(CoachMarkBackdropComponent, null, this.injector)
     );
-    return {
+    const subscriptions = new Subscription();
+    const session: CoachMarkSession = {
       target,
       view,
       handlers,
@@ -136,21 +131,31 @@ export class OnboardingOverlayService {
       backdropCmp,
       bubbleRef: null,
       bubbleCmp: null,
-      subscriptions: new Subscription(),
+      subscriptions,
       resizeObserver: null,
       settleRaf: null,
       scrolledIntoView: false
     };
+    // cdk disposes its own overlays on navigation. A step cannot be rebuilt
+    // around an anchor the navigation may have replaced, so the coach-mark ends
+    // the tutorial the way Skip does — which leaves it un-completed and still
+    // offered. Watching the backdrop is enough: the same navigation takes the
+    // bubble, and `hide()` disposes whichever is left.
+    subscriptions.add(
+      externalTeardown(backdropRef, () => {
+        session.backdropRef = null;
+        this.hide();
+        session.handlers.skip();
+      })
+    );
+    return session;
   }
 
   /**
-   * Track the target each animation frame (the backdrop ring follows live via
-   * {@link refreshRect}) until its rect holds steady for a couple of frames or
-   * a safety cap expires, then mount the bubble on the settled anchor. A target
-   * that settles outside the viewport — a palette item below its sheet's fold —
-   * is scrolled into view first (once) so the bubble has a real on-screen
-   * anchor. A static target settles within a few frames, so the deferred mount
-   * is imperceptible.
+   * Tracks the target each frame until its rect holds steady or
+   * {@link SETTLE_CAP_MS} expires, then mounts the bubble on the settled
+   * anchor. A target that settles outside the viewport is scrolled into view
+   * once first, so the bubble has a real on-screen anchor.
    */
   private trackUntilSettled(session: CoachMarkSession): void {
     if (session.settleRaf !== null) cancelAnimationFrame(session.settleRaf);
@@ -223,7 +228,7 @@ export class OnboardingOverlayService {
       cmp.instance.skip.subscribe(() => session.handlers.skip())
     );
     if (!centered) {
-      // Point the caret at the anchor from whichever side CDK actually placed it.
+      // Point the caret from whichever side CDK actually placed the bubble on.
       session.subscriptions.add(
         caretSideChanges(session.bubbleRef).subscribe((side) =>
           cmp.setInput('side', side)
@@ -248,8 +253,7 @@ export class OnboardingOverlayService {
       'targetRect',
       session.target?.getBoundingClientRect() ?? null
     );
-    // The board canvas is always interactive, so it is always cut out of the
-    // dim; steps that only touch it (e.g. "Move around") have no other target.
+    // The board canvas is always interactive, so always cut out of the dim.
     const board = this.registry.get(BOARD_TARGET_ID);
     session.backdropCmp.setInput(
       'canvasRect',

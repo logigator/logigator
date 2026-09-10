@@ -5,7 +5,7 @@ import { Project } from '../../project/project';
 import { Component } from '../../components/component';
 import { Wire } from '../../wires/wire';
 import { ConnectionPoint } from '../../connection-points/connection-point';
-import { WireDirection } from '../../wires/wire-direction.enum';
+import { WireDirection } from '@logigator/core';
 import { AddWiresAction } from '../../actions/actions/add-wires.action';
 import { RemoveWiresAction } from '../../actions/actions/remove-wires.action';
 import { ActionContainer } from '../../actions/action-container';
@@ -19,8 +19,7 @@ export class WireToolSession implements DragSession {
   private _h: Wire | null = null;
   private _v: Wire | null = null;
   private _hasBodyCollision = false;
-  // Whether the pointer ever left the starting grid step — a press that never
-  // did is a tap, not a (possibly zero-length-again) wire drag.
+  // A press that never left its starting grid step is a tap, not a wire drag.
   private _moved = false;
 
   /**
@@ -40,8 +39,7 @@ export class WireToolSession implements DragSession {
     const dy = Math.round(local.y - this.startPos.y);
     if (!this._moved && (dx !== 0 || dy !== 0)) {
       this._moved = true;
-      // The gesture became a wire drag — only now do the tap-preview ghosts
-      // stop applying (a still-standing press keeps them visible).
+      // Now a wire drag, so the tap-preview ghosts stop applying.
       this.project.floatingLayer.hideWireToolGhosts();
     }
 
@@ -101,9 +99,8 @@ export class WireToolSession implements DragSession {
       const { toAdd, toRemove } = this.project.topology.integrate({
         addedWires: newWires
       });
-      // Actions snapshot in their constructors; the drawn instances (or their
-      // integrated variants) go into the project directly, then the action is
-      // registered against the already-materialized state.
+      // Actions snapshot in their constructors; the drawn instances go into
+      // the project directly and the action registers against that state.
       const action = new ActionContainer();
       if (toRemove.length > 0) {
         action.add(new RemoveWiresAction(...toRemove));
@@ -111,8 +108,8 @@ export class WireToolSession implements DragSession {
       action.add(new AddWiresAction(...toAdd));
 
       for (const w of toRemove) this.project.removeWire(w.id);
-      // A drawn wire that survived integration is in toAdd — addWire
-      // re-parents it out of the drag layer, so cleanup must not destroy it.
+      // addWire re-parents a survived wire out of the drag layer, so cleanup
+      // must not destroy it.
       const committed = new Set(toAdd);
       for (const w of toAdd) this.project.addWire(w);
 

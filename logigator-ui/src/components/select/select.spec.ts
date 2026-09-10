@@ -154,6 +154,23 @@ describe('LgSelect', () => {
     button.dispatchEvent(event);
     expect(event.defaultPrevented).toBe(true);
   });
+
+  it('reopens after cdk disposes the panel on navigation', async () => {
+    const { f, button } = await setup();
+    button.click();
+    f.detectChanges();
+    expect(panelOptions()).toHaveLength(3);
+
+    // `disposeOnNavigation` disposes the overlay behind the select's back; its
+    // own `opened` state has to follow, or the trigger stops working.
+    window.dispatchEvent(new PopStateEvent('popstate'));
+    f.detectChanges();
+    expect(panelOptions()).toHaveLength(0);
+
+    button.click();
+    f.detectChanges();
+    expect(panelOptions()).toHaveLength(3);
+  });
 });
 
 @Component({

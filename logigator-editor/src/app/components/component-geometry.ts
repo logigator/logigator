@@ -1,24 +1,21 @@
 import { Point, PointData, Rectangle } from 'pixi.js';
-import { Direction } from '../utils/direction';
+import { Direction } from '@logigator/core';
 import { overlapsRect } from '../utils/grid';
 import type { PortSide } from './component';
 
 /**
- * Pure component geometry: port positions, rotated bounds and anchors derived
- * from a plain shape descriptor — no PixiJS containers involved, so the
- * lattice invariants below are unit-testable on their own.
+ * Pure component geometry over a plain shape descriptor, so the lattice
+ * invariants are unit-testable without PixiJS.
  *
- * Connection points must land exactly on the half-grid lattice: wires, the
- * net extractor, and the connection-point manager all match termination
- * points by exact coordinates (see `utils/point-key.ts`), so any drift
- * disconnects the port logically while it still looks attached. Two
- * consequences here:
+ * Connection points must land exactly on the half-grid lattice: wires, the net
+ * extractor and the connection-point manager match termination points by exact
+ * coordinates, so any drift disconnects the port logically while it still
+ * looks attached. Two consequences:
  *   - Ports sit at the nominal stub tips, never at rendered bounds: the body
- *     stroke is screen-constant, so its grid-space extent grows as the zoom
- *     shrinks and below ~18% zoom it pokes past the stub tip.
- *   - Rotation is exact per-direction arithmetic, never a trig Matrix:
- *     cos/sin of the quarter-turns carry ~1e-16 noise that survives the final
- *     addition for components near the origin.
+ *     stroke is screen-constant, so below ~18% zoom it pokes past the tip.
+ *   - Rotation is exact per-direction arithmetic, never a trig Matrix: cos/sin
+ *     of the quarter-turns carry ~1e-16 noise that survives the final addition
+ *     for components near the origin.
  */
 export interface ComponentShape {
   direction: Direction;
@@ -78,10 +75,7 @@ export function rotatedBox(
   }
 }
 
-/**
- * {@link rotatedBox} as an overlap test against `rect`, without materializing
- * the box. Mirrors the four rotations above case for case.
- */
+/** {@link rotatedBox} as an overlap test, without materializing the box. */
 export function rotatedBoxIntersects(
   direction: Direction,
   position: PointData,
@@ -147,10 +141,7 @@ export function bodyGridBounds(shape: ComponentShape): Rectangle {
   );
 }
 
-/**
- * {@link bodyGridBounds} as an overlap test against `rect`, without
- * materializing the rect — backs `Component.intersectsBodyGridBounds`.
- */
+/** {@link bodyGridBounds} as an overlap test, without materializing it. */
 export function bodyGridBoundsIntersects(
   shape: ComponentShape,
   rect: Rectangle
@@ -182,10 +173,7 @@ export function gridBounds(shape: ComponentShape): Rectangle {
   );
 }
 
-/**
- * {@link gridBounds} as an overlap test against `rect`, without materializing
- * the rect — backs `Component.intersectsGridBounds`.
- */
+/** {@link gridBounds} as an overlap test, without materializing it. */
 export function gridBoundsIntersects(
   shape: ComponentShape,
   rect: Rectangle
@@ -212,11 +200,10 @@ function gridBoundsLocalRight(shape: ComponentShape): number {
 }
 
 /**
- * Grid-space body-edge point where the inverter bubble for a port (0-based
- * within its group) is pinned — the bubble's tangent point, from which it
- * grows outward along the stub. Mirrors the bubble placement in the drawn
- * connections so the port-negation tool's hover preview lands exactly on the
- * real bubble's spot.
+ * Grid-space body-edge point the inverter bubble for a port (0-based within
+ * its group) is pinned to — its tangent point, from which it grows outward
+ * along the stub. Mirrors the drawn connections, so a hover preview lands
+ * exactly on the real bubble's spot.
  */
 export function negationBubbleAnchor(
   shape: ComponentShape,

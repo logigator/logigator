@@ -18,6 +18,7 @@ import {
   caretOffsetFor,
   caretSideChanges,
   connectedPositions,
+  externalTeardown,
   LgOverlayService,
   type LgOverlaySide,
   originVisibilityChanges,
@@ -44,22 +45,19 @@ function shiftRect(rect: DOMRect, dy: number): DOMRect {
     : new DOMRect(rect.x, rect.y + dy, rect.width, rect.height);
 }
 
-/** Everything one showing hint owns; {@link dismiss} disposes it as a unit. */
+/** Everything one showing hint owns; `dismiss` disposes it as a unit. */
 interface HintSession {
   readonly hint: Hint;
-  /** Per-hint effect that tracks the target element and re-anchors reactively. */
+  /** Tracks the target element and re-anchors reactively. */
   effectRef: EffectRef | null;
   overlayRef: OverlayRef | null;
-  /**
-   * The element the live overlay is anchored to (null = floated). Doubles as
-   * "has ever been anchored" — see {@link HintService.mount}.
-   */
+  /** The live overlay's anchor (null = floated); doubles as "ever anchored". */
   target: HTMLElement | null;
   /** The anchor's scrolling ancestor, the bound the hint stays inside. */
   scroller: HTMLElement | null;
   /** The mounted popover; its host is the element the clamp shifts. */
   popover: ComponentRef<HintPopoverComponent> | null;
-  /** The side CDK resolved, i.e. which edge the caret sits on. */
+  /** The side CDK resolved — which edge the caret sits on. */
   side: LgOverlaySide | null;
   /** Watches the anchor and the hint for size changes; null while floated. */
   resizeObserver: ResizeObserver | null;
@@ -70,16 +68,15 @@ interface HintSession {
 }
 
 /**
- * Fires the just-in-time hints. Subscribes to the triggers (work-mode signal,
- * active document, compact breakpoint) and, the first time each fires,
- * shows a small dismissible popover — unless tips are off, a tutorial is
- * running, the hint was already seen, or its platform/completion gate excludes
- * it. At most one hint shows at a time; a trigger that fires while one is up is
- * dropped. Instantiated by the app shell for its side effects.
+ * Fires the just-in-time hints: the first time each trigger fires, a small
+ * dismissible popover — unless tips are off, a tutorial is running, the hint
+ * was already seen, or its platform/completion gate excludes it. At most one
+ * shows at a time; a trigger firing while one is up is dropped. Instantiated
+ * for its side effects.
  *
- * Once open, a hint stays anchored reactively: a per-hint effect re-resolves its
+ * An open hint stays anchored reactively: a per-hint effect re-resolves its
  * target from {@link OnboardingTargetRegistry}, so the popover follows the
- * element as it enters, leaves, or is re-created (floating bottom-centre while
+ * element as it enters, leaves or is re-created (floating bottom-centre while
  * there is no target) with no querySelector timing race.
  */
 @Injectable({ providedIn: 'root' })
@@ -122,8 +119,7 @@ export class HintService {
       });
     });
 
-    // First custom-component editor — points at the Ports panel, the only
-    // place a component's plugs can be added, named and ordered.
+    // First custom-component editor — points at the Ports panel.
     effect(() => {
       const project = this.projectService.activeProject();
       const editingComponent =
@@ -155,11 +151,9 @@ export class HintService {
   }
 
   private onMode(mode: WorkMode): void {
-    // A tool switch clears a showing tool hint — the user has moved on from the
-    // tool it describes. Hints triggered by anything else survive it: picking a
-    // tool is often the very thing they ask for (the Ports hint asks for a plug,
-    // which arms COMPONENT_PLACEMENT), so clearing them would cut them off
-    // mid-read, for good — a hint shows once.
+    // A tool switch clears a showing tool hint. Hints triggered by anything
+    // else survive it: picking a tool is often the very thing they ask for, and
+    // a hint shows once, so clearing one would cut it off mid-read for good.
     if (this.session?.hint.trigger.kind === 'workMode') this.dismiss();
     this.fire(hintForTrigger({ kind: 'workMode', mode }));
   }
@@ -191,12 +185,7 @@ export class HintService {
     return true;
   }
 
-  /**
-   * Opens a hint and keeps it anchored reactively: the effect re-resolves the
-   * target from the registry (and the platform), so the popover follows its
-   * element as it enters, leaves, or is re-created in the DOM — no querySelector
-   * race, no manual deferral. Torn down as one unit by {@link dismiss}.
-   */
+  /** Opens a hint, kept anchored as its target comes and goes. */
   private open(hint: Hint): void {
     const session: HintSession = {
       hint,
@@ -222,16 +211,14 @@ export class HintService {
   }
 
   /**
-   * (Re)builds the overlay for the open hint. A no-op when the anchor is
-   * unchanged; otherwise it swaps between an anchored (connected, with caret)
-   * and a floated (bottom-centre) placement as the target comes and goes.
+   * (Re)builds the overlay, swapping between an anchored (connected, with
+   * caret) and a floated (bottom-centre) placement; a no-op when the anchor is
+   * unchanged.
    *
-   * Floating is for a hint whose target has not appeared *yet* (the sim controls
-   * on entering simulation). A target that leaves after the hint anchored to it
-   * means its surface is gone — the component tab was closed — so the hint goes
-   * with it rather than floating over the board pointing at nothing. Deferred
-   * and re-checked, since an anchor that is merely re-created unregisters and
-   * registers again, and that flicker must not take the hint down.
+   * Floating is for a target that has not appeared *yet*. A target that leaves
+   * after the hint anchored to it means its surface is gone, so the hint goes
+   * with it — deferred and re-checked, since a merely re-created anchor
+   * unregisters and registers again and that flicker must not take it down.
    */
   private mount(
     session: HintSession,
@@ -242,8 +229,8 @@ export class HintService {
       queueMicrotask(() => {
         if (this.session !== session) return;
         const current = this.resolveTarget(session.hint, platform);
-        // Re-mount here rather than wait for the effect: it has already run for
-        // this change, so a re-created anchor gets no second notification.
+        // The effect has already run for this change, so a re-created anchor
+        // gets no second notification — re-mount here instead.
         if (current) this.mount(session, current, platform);
         else this.dismiss();
       });
@@ -258,22 +245,19 @@ export class HintService {
       const side = session.hint.side?.[platform];
       session.overlayRef = this.overlayService.connected({
         origin: target,
-        // The popover sizes itself; letting CDK measure it into a flexible box
-        // instead leaves it positioned against a stale one once the anchor has
-        // scrolled out of view and back.
+        // The popover sizes itself; a CDK-measured flexible box goes stale once
+        // the anchor has scrolled out of view and back.
         flexibleDimensions: false,
         // A declared side is a demand, not a preference: it is chosen against
-        // what surrounds the anchor, so flipping to a fallback lands the hint
-        // beside something else entirely. Pinned to that one position, it stays
-        // centred on its anchor and rides the anchor out of view instead.
-        // Hints that take the default side keep the fallbacks — those anchor to
+        // what surrounds the anchor, so a flip would land the hint beside
+        // something else entirely — pinned, it rides the anchor out of view
+        // instead. Hints on the default side keep the fallbacks: they anchor to
         // chrome at the screen edge, where flipping is the point.
         positions: side ? [positionForSide(side)] : connectedPositions('bottom')
       });
     } else {
-      // No anchor (targetless hint, or its target isn't registered): float it
-      // bottom-centre, well clear of the bottom chrome — lifted higher on
-      // compact where the tool/sim bars occupy the bottom edge.
+      // No anchor: float bottom-centre, clear of the bottom chrome — lifted
+      // higher on compact where the tool/sim bars occupy that edge.
       session.overlayRef = this.overlayService.global({
         placement: 'bottom-center',
         hasBackdrop: false,
@@ -291,6 +275,16 @@ export class HintService {
 
     session.subscriptions.add(
       cmp.instance.dismiss.subscribe(() => this.dismiss())
+    );
+    // A hint counts as seen the moment it is served, so an overlay cdk disposed
+    // on navigation is dismissed like one whose anchor went away. Keeping the
+    // dead ref would skip the re-mount for the same target and leave the
+    // keydown listener behind.
+    session.subscriptions.add(
+      externalTeardown(session.overlayRef, () => {
+        session.overlayRef = null;
+        this.dismiss();
+      })
     );
     session.subscriptions.add(
       cmp.instance.disableTips.subscribe(() => {
@@ -310,7 +304,7 @@ export class HintService {
     }
     if (target) {
       session.popover = cmp;
-      // Point the caret at the anchor from whichever side CDK actually placed it.
+      // Point the caret from whichever side CDK actually placed the hint on.
       session.subscriptions.add(
         caretSideChanges(session.overlayRef).subscribe((side) => {
           session.side = side;
@@ -318,13 +312,11 @@ export class HintService {
           this.refresh(session);
         })
       );
-      // Scrolling the anchor out of its container (e.g. the side bar) would
-      // otherwise leave the hint clamped to the viewport pointing at nothing:
-      // hide it while the anchor is gone and bring it back with it — not
-      // dismiss, since a hint is spent once dismissed and scrolling past it is
-      // not the user saying they read it. `visibility` rather than a detach
-      // keeps its place in the position strategy, so it re-appears where it
-      // belongs, and stops it being hit-testable meanwhile, children included.
+      // Hide the hint while its anchor is scrolled out of its container, rather
+      // than dismiss it — a hint is spent once dismissed, and scrolling past it
+      // is not the user saying they read it. `visibility` rather than a detach
+      // keeps its place in the position strategy and stops it being
+      // hit-testable meanwhile, children included.
       const pane = session.overlayRef.overlayElement;
       session.subscriptions.add(
         originVisibilityChanges(session.overlayRef).subscribe((visibility) => {
@@ -333,21 +325,19 @@ export class HintService {
             : '';
         })
       );
-      // Re-measure off the scroll stream, not off `positionChanges`: with a
-      // single fixed position CDK only emits a position change when the anchor's
-      // visibility flips, so most repositions pass silently. `ancestorScrolled`
-      // is the stream its own reposition strategy listens to, narrowed to this
-      // anchor's scrollers, and subscribed after the overlay attached — so CDK
-      // has already moved the pane by the time this runs.
+      // Re-measure off the scroll stream, not `positionChanges`: with a single
+      // fixed position CDK only emits on a visibility flip, so most repositions
+      // pass silently. `ancestorScrolled` is what its own reposition strategy
+      // listens to, and subscribing after attach means CDK has already moved
+      // the pane by the time this runs.
       session.subscriptions.add(
         this.scrollDispatcher
           .ancestorScrolled(target, 0)
           .subscribe(() => this.refresh(session))
       );
-      // Everything that moves the anchor *without* a scroll: a window resize or
-      // rotation, and the anchor or the hint itself changing size (the Ports
-      // panel grows with every plug added, the HUD row with every tool shown).
-      // CDK repositions on scroll alone, so these have to drive it by hand.
+      // Everything that moves the anchor *without* a scroll: a resize, a
+      // rotation, or the anchor or hint changing size. CDK repositions on
+      // scroll alone, so these have to drive it by hand.
       session.subscriptions.add(
         this.viewportRuler.change().subscribe(() => this.refresh(session, true))
       );
@@ -355,9 +345,9 @@ export class HintService {
       observer.observe(target);
       observer.observe(cmp.location.nativeElement as HTMLElement);
       session.resizeObserver = observer;
-      // The first pass waits for the render that gives the popover its size —
-      // measured before that, an empty pane reads as overflowing the scroller
-      // and its centre is meaningless.
+      // Wait for the render that gives the popover its size: measured empty,
+      // the pane reads as overflowing the scroller and its centre is
+      // meaningless.
       session.firstMeasure = afterNextRender(() => this.refresh(session), {
         injector: this.injector
       });
@@ -366,16 +356,15 @@ export class HintService {
   }
 
   /**
-   * Re-measures the open hint against its anchor: reads the three rects it
-   * needs, then writes both the scroller clamp and the caret offset from them.
-   * One read phase, one write phase — and the caret is aimed at where the clamp
-   * puts the panel, which a second measurement taken after the write could not
-   * see (the shift is a transform on a descendant, so the pane's own box, which
-   * is what CDK reads, never moves).
+   * Re-measures the open hint against its anchor: one read phase, then one
+   * write phase for both the scroller clamp and the caret offset. The caret is
+   * aimed at where the clamp puts the panel, which re-measuring after the write
+   * could not see — the shift is a transform on a descendant, so the pane's own
+   * box, which is what CDK reads, never moves.
    *
-   * `reposition` first asks CDK to re-run its own pass — needed whenever the
-   * anchor moved for a reason CDK does not watch (it only listens for scrolls),
-   * and skipped on the scroll path where its strategy has already run.
+   * `reposition` first re-runs CDK's own pass, needed whenever the anchor moved
+   * for a reason CDK does not watch, and skipped on the scroll path where its
+   * strategy has already run.
    */
   private refresh(session: HintSession, reposition = false): void {
     if (reposition) session.overlayRef?.updatePosition();
@@ -387,24 +376,22 @@ export class HintService {
     const bounds = scroller?.getBoundingClientRect();
     const anchor = target?.getBoundingClientRect();
 
-    // CDK pushes an overlay that would overflow back into the *viewport*, which
-    // for an anchor in the side bar means the hint rides up over the top bars
-    // and points above the scroller's first visible row. The container is the
-    // real boundary, so the overshoot is taken back here.
+    // CDK pushes an overflowing overlay back into the *viewport*, which for an
+    // anchor in the side bar rides the hint up over the top bars. The container
+    // is the real boundary, so the overshoot is taken back here.
     let shift = 0;
     if (bounds) {
       if (panel.top < bounds.top) {
         shift = bounds.top - panel.top;
       } else if (panel.bottom > bounds.bottom) {
-        // Never past the top edge: a hint taller than its scroller would other-
-        // wise trade an overhang at the bottom for one at the top.
+        // Never past the top edge: a hint taller than its scroller would
+        // otherwise trade an overhang at the bottom for one at the top.
         shift = Math.max(bounds.bottom - panel.bottom, bounds.top - panel.top);
       }
     }
 
-    // Applied to the popover host, not the pane: CDK owns the pane's `top`/
-    // `left` and measures that same element to decide its push, so shifting the
-    // pane itself feeds back into the next pass and the two oscillate.
+    // Applied to the popover host, not the pane: CDK measures the pane to
+    // decide its push, so shifting the pane feeds back and the two oscillate.
     const content = popover.location.nativeElement as HTMLElement;
     content.style.transform = shift === 0 ? '' : `translateY(${shift}px)`;
 
@@ -416,12 +403,10 @@ export class HintService {
 
   /**
    * The innermost scrolling ancestor of `element` — the bound the hint stays
-   * inside. Deliberately CDK's registered `cdkScrollable`s rather than a walk
-   * over computed `overflow`: those are the only scrollers whose movement this
-   * service is told about (both the scroll stream and CDK's own visibility
-   * reporting are keyed to them), so clamping against any other would bind the
-   * hint to something it never sees move. A scroller a hint must respect needs
-   * `cdkScrollable` on it.
+   * inside. CDK's registered `cdkScrollable`s rather than a walk over computed
+   * `overflow`: those are the only scrollers whose movement this service is
+   * told about, so clamping against any other would bind the hint to something
+   * it never sees move. A scroller a hint must respect needs `cdkScrollable`.
    */
   private scrollerOf(element: HTMLElement): HTMLElement | null {
     let innermost: HTMLElement | null = null;
@@ -435,7 +420,7 @@ export class HintService {
     return innermost;
   }
 
-  /** Disposes the session's overlay instance and its listeners (keeps the effect). */
+  /** Disposes the overlay instance and its listeners, keeping the effect. */
   private teardownOverlay(session: HintSession): void {
     document.removeEventListener('keydown', this.onKeydown, true);
     session.subscriptions.unsubscribe();

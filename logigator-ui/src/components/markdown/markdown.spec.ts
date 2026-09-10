@@ -1,13 +1,14 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Component } from '@angular/core';
+import { Component, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideMarkdown } from 'ngx-markdown';
+import { resolveMarkdownUrls } from '../../internal/markdown-urls';
 import {
   headingSlug,
   LgMarkdown,
   LgMarkdownLinkClick,
-  resolveMarkdownUrls
+  LgTextMatcher
 } from './markdown';
 
 describe('resolveMarkdownUrls', () => {
@@ -130,6 +131,36 @@ describe('LgMarkdown content interaction', () => {
     expect(heading.scrollIntoView).toHaveBeenCalledWith({ block: 'start' });
   });
 
+  it('resolves a fragment the renderer percent-encoded', async () => {
+    // marked encodes a destination, so a heading whose slug carries a
+    // non-ASCII letter — every language but English has them — reaches the
+    // handler as %XX escapes rather than as the slug it was written as.
+    @Component({
+      imports: [LgMarkdown],
+      template: `<lg-markdown [data]="data" />`
+    })
+    class NonAsciiHost {
+      data = '# Größe 2×4\n\n[jump](#größe-2-4)';
+    }
+
+    TestBed.configureTestingModule({ providers: [provideMarkdown()] });
+    const fixture = TestBed.createComponent(NonAsciiHost);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise((resolve) => setTimeout(resolve));
+
+    const el = fixture.nativeElement as HTMLElement;
+    const anchor = el.querySelector('a')!;
+    expect(anchor.getAttribute('href')).toBe('#gr%C3%B6%C3%9Fe-2-4');
+
+    const heading = el.querySelector('h1')!;
+    heading.scrollIntoView = vi.fn();
+    anchor.dispatchEvent(
+      new MouseEvent('click', { bubbles: true, cancelable: true })
+    );
+    expect(heading.scrollIntoView).toHaveBeenCalledWith({ block: 'start' });
+  });
+
   it('emits app-specific schemes and keeps them inert when unclaimed', async () => {
     const { host, link, click } = await setup();
     const open = vi.spyOn(window, 'open').mockReturnValue(null);
@@ -223,5 +254,104 @@ describe('LgMarkdown content interaction', () => {
     expect(heading.scrollIntoView).toHaveBeenCalledWith({ block: 'start' });
     markdown.scrollToHeading('not-a-heading');
     expect(heading.scrollIntoView).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('LgMarkdown match marking', () => {
+  /**
+   * jsdom implements neither the registry nor `Highlight`, so they are stood
+   * in for: what is under test is the walk over the rendered text and the
+   * ranges built from it, not the browser's painting of them.
+   */
+  function stubHighlightApi(): Map<string, Range[]> {
+    const registry = new Map<string, Range[]>();
+    const globals = globalThis as unknown as Record<string, unknown>;
+    globals['Highlight'] = class {
+      public readonly ranges: Range[];
+      constructor(...ranges: Range[]) {
+        this.ranges = ranges;
+      }
+    };
+    globals['CSS'] = {
+      highlights: {
+        set: (name: string, highlight: { ranges: Range[] }) =>
+          registry.set(name, highlight.ranges),
+        delete: (name: string) => registry.delete(name)
+      }
+    };
+    return registry;
+  }
+
+  @Component({
+    imports: [LgMarkdown],
+    template: `<lg-markdown [data]="data" [highlightMatches]="matcher()" />`
+  })
+  class HighlightHost {
+    data = '# Speed Modes\n\nThe engine paces itself to a target frequency.';
+    matcher = signal<LgTextMatcher | undefined>(undefined);
+  }
+
+  async function render() {
+    TestBed.configureTestingModule({ providers: [provideMarkdown()] });
+    const fixture = TestBed.createComponent(HighlightHost);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    await new Promise((resolve) => setTimeout(resolve));
+    fixture.detectChanges();
+    return fixture;
+  }
+
+  /** Marks every run the matcher reports, wherever the text sits. */
+  it('turns what the matcher finds into ranges over the rendered text', async () => {
+    const registry = stubHighlightApi();
+    const fixture = await render();
+
+    fixture.componentInstance.matcher.set((text) => {
+      const at = text.toLowerCase().indexOf('speed');
+      return at === -1 ? [] : [{ start: at, end: at + 5 }];
+    });
+    fixture.detectChanges();
+
+    const ranges = registry.get('lg-markdown-match') ?? [];
+    // Once in the heading, once in nothing else — the body has no "speed".
+    expect(ranges).toHaveLength(1);
+    expect(ranges[0].toString()).toBe('Speed');
+  });
+
+  /**
+   * The matcher runs over every text node, including the short ones between
+   * elements: a range longer than the node it is built on throws, and would
+   * take the whole render with it.
+   */
+  it('skips a range the text it is given cannot carry', async () => {
+    const registry = stubHighlightApi();
+    const fixture = await render();
+
+    fixture.componentInstance.matcher.set(() => [{ start: 0, end: 3 }]);
+    expect(() => fixture.detectChanges()).not.toThrow();
+    expect(registry.get('lg-markdown-match')?.length).toBeGreaterThan(0);
+  });
+
+  it('unmarks when the matcher goes away', async () => {
+    const registry = stubHighlightApi();
+    const fixture = await render();
+
+    fixture.componentInstance.matcher.set(() => [{ start: 0, end: 3 }]);
+    fixture.detectChanges();
+    expect(registry.has('lg-markdown-match')).toBe(true);
+
+    fixture.componentInstance.matcher.set(undefined);
+    fixture.detectChanges();
+    expect(registry.has('lg-markdown-match')).toBe(false);
+  });
+
+  /** A browser without the API renders the document, marks and all skipped. */
+  it('does nothing where the browser has no highlight registry', async () => {
+    const globals = globalThis as unknown as Record<string, unknown>;
+    globals['CSS'] = {};
+    const fixture = await render();
+
+    fixture.componentInstance.matcher.set(() => [{ start: 0, end: 3 }]);
+    expect(() => fixture.detectChanges()).not.toThrow();
   });
 });

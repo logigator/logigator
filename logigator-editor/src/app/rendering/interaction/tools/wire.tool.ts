@@ -1,7 +1,7 @@
 import { Point, Rectangle } from 'pixi.js';
 import { Project } from '../../../project/project';
 import { Component, PortSide } from '../../../components/component';
-import { CUSTOM_TYPE_ID_BASE } from '../../../components/component-type.enum';
+import { acceptsPortNegation } from '../../../components/port-negation';
 import { TogglePortNegationAction } from '../../../actions/actions/toggle-port-negation.action';
 import { roundToHalfGrid } from '../../../utils/grid';
 import { WireToolSession } from '../../sessions/wire-tool.session';
@@ -18,16 +18,14 @@ interface PortHit {
 }
 
 /**
- * The wire tool: a drag draws wires (via {@link WireToolSession}); a press
- * that never leaves its grid step is a tap — a port within tolerance toggles
- * its negation bubble, otherwise the nearest half-grid point toggles the wire
- * connection there (join/split). Hovering previews exactly what the next tap
- * would do.
+ * A drag draws wires; a press that never leaves its grid step is a tap, where
+ * a port within tolerance toggles its negation bubble and otherwise the
+ * nearest half-grid point toggles its wire connection. Hovering previews what
+ * the next tap would do.
  */
 export class WireTool implements BoardTool {
   public down(project: Project, input: PointerInput, host: ToolHost): void {
-    // Cloned before the inline rounding below: the tap fallback needs the
-    // unsnapped position for the port hit test.
+    // The tap fallback needs the unsnapped position for the port hit test.
     const tapPoint = input.grid.clone();
     host.startSession(
       new WireToolSession(
@@ -50,9 +48,9 @@ export class WireTool implements BoardTool {
   }
 
   /**
-   * Previews what a tap at the point would do: the negation bubble for a port
-   * in reach (which wins over a junction — same precedence as {@link _tap}),
-   * else the connection-toggle ghost, else nothing.
+   * Previews what a tap would do: the negation bubble for a port in reach
+   * (which wins over a junction, as in {@link _tap}), else the
+   * connection-toggle ghost, else nothing.
    */
   private _updateGhosts(project: Project, gridPoint: Point): void {
     const hit = this._findPortAt(project, gridPoint);
@@ -90,15 +88,19 @@ export class WireTool implements BoardTool {
     } else {
       project.topology.toggleConnectionAt(roundToHalfGrid(gridPoint));
     }
-    // The toggle changed what the next tap here would do (split ⇄ join) —
-    // re-derive the preview in place instead of leaving the stale ghost.
+    // The toggle flipped what the next tap here would do (split ⇄ join).
     this._updateGhosts(project, gridPoint);
   }
 
   /**
-   * Nearest negatable port to a grid-space point, within tolerance. Uses the
-   * quad-tree range query (never iterates every component) and rejects placed
-   * custom instances — their external ports are not independently negatable.
+   * Nearest negatable port to a grid-space point, within tolerance. A type
+   * {@link acceptsPortNegation} refuses is skipped unless the port already
+   * carries a bubble, which stays removable.
+   *
+   * Two tips coincide where an output stub meets an input head-on, so reach
+   * alone cannot say which port a tap means. The pick is the port whose
+   * bubble anchor is nearest — the side of the tip the pointer is on, which
+   * is the bubble the hover ghost draws.
    */
   private _findPortAt(project: Project, localPoint: Point): PortHit | null {
     const queryRect = new Rectangle(
@@ -107,22 +109,30 @@ export class WireTool implements BoardTool {
       PORT_HIT_TOLERANCE * 2,
       PORT_HIT_TOLERANCE * 2
     );
+    let best: PortHit | null = null;
+    let bestAnchorDist = Infinity;
     for (const comp of project.queryComponentsInRange(queryRect)) {
-      if (comp.config.type >= CUSTOM_TYPE_ID_BASE) continue;
+      const negatable = acceptsPortNegation(comp.config.type);
       const points = comp.connectionPoints;
       for (let i = 0; i < points.length; i++) {
         const dx = points[i].x - localPoint.x;
         const dy = points[i].y - localPoint.y;
-        if (dx * dx + dy * dy <= PORT_HIT_TOLERANCE * PORT_HIT_TOLERANCE) {
-          const side: PortSide = i < comp.numInputs ? 'in' : 'out';
-          return {
-            comp,
-            side,
-            index: side === 'in' ? i : i - comp.numInputs
-          };
+        if (dx * dx + dy * dy > PORT_HIT_TOLERANCE * PORT_HIT_TOLERANCE) {
+          continue;
+        }
+        const side: PortSide = i < comp.numInputs ? 'in' : 'out';
+        const index = side === 'in' ? i : i - comp.numInputs;
+        if (!negatable && !comp.isPortNegated(side, index)) continue;
+        const anchor = comp.negationBubbleAnchor(side, index);
+        const ax = anchor.x - localPoint.x;
+        const ay = anchor.y - localPoint.y;
+        const anchorDist = ax * ax + ay * ay;
+        if (anchorDist < bestAnchorDist) {
+          bestAnchorDist = anchorDist;
+          best = { comp, side, index };
         }
       }
     }
-    return null;
+    return best;
   }
 }

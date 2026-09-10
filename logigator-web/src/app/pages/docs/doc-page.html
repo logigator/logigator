@@ -1,0 +1,32 @@
+<ng-container *webTranslate="let t">
+  <div
+    class="page-wrap grid gap-8 pt-8 pb-14 md:pt-10 md:pb-20 lg:grid-cols-[minmax(0,14rem)_minmax(0,1fr)] lg:gap-12"
+  >
+    <web-docs-nav
+      class="hidden self-start lg:sticky lg:top-20 lg:block"
+      [current]="page"
+    />
+
+    <div class="min-w-0">
+      <!-- Below the sidebar's breakpoint the tree is gone, so the index is
+           the way back to the other topics. -->
+      <a
+        class="mb-6 inline-flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-text-hover lg:hidden"
+        [routerLink]="indexHref()"
+      >
+        <i class="ph ph-arrow-left text-sm" aria-hidden="true"></i>
+        <span>{{ t('pages.docs.allTopics') }}</span>
+      </a>
+
+      @if (markdown(); as body) {
+      <lg-markdown
+        [data]="body"
+        [assetUrls]="destinations()"
+        [highlightMatches]="highlightMatches()"
+        (linkClick)="onLinkClick($event)"
+        (ready)="onRendered()"
+      />
+      }
+    </div>
+  </div>
+</ng-container>

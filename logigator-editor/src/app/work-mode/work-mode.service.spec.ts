@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 
 import { configureTestBed } from '../../testing/configure-test-bed';
-import { BuiltInComponentType } from '../components/component-type.enum';
+import { BuiltInComponentType } from '@logigator/core';
 import { WorkMode } from './work-mode.enum';
 import { WorkModeService } from './work-mode.service';
 

@@ -31,8 +31,8 @@ describe('AppComponent', () => {
   const originalMatchMedia = window.matchMedia;
 
   afterEach(() => {
-    // The compact stub would otherwise leak a compact/touch environment into
-    // every later spec file (they share this window).
+    // The compact stub would otherwise leak into every later spec file, which
+    // shares this window.
     Object.defineProperty(window, 'matchMedia', {
       writable: true,
       value: originalMatchMedia
@@ -72,8 +72,8 @@ describe('AppComponent', () => {
   });
 
   it('renders the desktop shell at the default (non-compact) breakpoint', () => {
-    // matchMedia is stubbed to matches:false (vitest.setup.ts), so isCompact is
-    // false and the shell takes its desktop branch.
+    // matchMedia is stubbed to matches:false, so the shell takes its desktop
+    // branch.
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
     const el: HTMLElement = fixture.nativeElement;
@@ -93,15 +93,14 @@ describe('AppComponent', () => {
     expect(el.querySelector('app-mobile-top-bar')).not.toBeNull();
     expect(el.querySelector('app-tool-hud')).not.toBeNull();
     expect(el.querySelector('app-title-bar')).toBeNull();
-    // The canvas is never duplicated across the breakpoint branches.
     expect(el.querySelectorAll('app-board').length).toBe(1);
   });
 
   it('never auto-opens the settings sheet on selection, but closes it when selection clears', () => {
     stubCompactMatchMedia();
 
-    // Creating the fixture sets the static DI injector (constructor), so a
-    // standalone Project can be built afterwards.
+    // Creating the fixture sets the static DI injector, so a standalone
+    // Project can be built afterwards.
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
 
@@ -118,20 +117,19 @@ describe('AppComponent', () => {
       name: 'P',
       type: 'project',
       source: 'browser',
-      hash: '',
       isPublic: false
     });
     projectService.setMainProject(project);
     fixture.detectChanges();
 
-    // Selecting a single component does not open the settings sheet: it is
-    // opened on demand from the selection action bar's settings button.
+    // Selecting a component does not open the settings sheet; the selection
+    // action bar's settings button does.
     project.selectionManager.commit(new Rectangle(0, 0, 3, 3), WorkMode.SELECT);
     fixture.detectChanges();
     expect(mobileUi.activeSheet()).toBeNull();
 
-    // Once opened, clearing the selection (e.g. the component editor switched
-    // tabs) closes it rather than leaving a blank panel.
+    // Clearing the selection then closes it rather than leaving a blank
+    // panel.
     mobileUi.open('settings');
     project.selectionManager.clear();
     fixture.detectChanges();

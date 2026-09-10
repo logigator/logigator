@@ -15,13 +15,11 @@ export class Grid extends Container {
   private _elPosition = new Point(0, 0);
 
   constructor() {
-    // Its own render group: every zoom step swaps each chunk's context to the
-    // new scale's geometry, and PixiJS answers any view update inside a group
-    // by rebuilding that group's whole instruction set. In the root group that
-    // re-collects the entire scene outside the nested entry groups; here it
-    // re-collects the grid alone. Chunks carry ~1k rects each, past the
-    // batchable vertex limit, so they were never batching with content anyway
-    // and the group boundary costs no draw calls.
+    // Its own render group: every zoom step swaps each chunk's context, and a
+    // view update inside a group rebuilds that group's whole instruction set.
+    // Here that re-collects the grid alone instead of the whole scene. Chunks
+    // carry ~1k rects each, past the batchable vertex limit, so the group
+    // boundary costs no draw calls.
     super({ isRenderGroup: true });
 
     this.boundsArea = new Rectangle(
@@ -50,9 +48,8 @@ export class Grid extends Container {
   }
 
   /**
-   * Re-runs draw() so each chunk picks up a freshly-built GridGraphics context.
-   * Used on theme change: the cache is theme-keyed, so getGraphicsContext now
-   * returns a new context and the `child.context !== geometry` swap repaints.
+   * Re-runs draw() so each chunk picks up a fresh GridGraphics context. The
+   * cache is theme-keyed, so a theme change repaints through the context swap.
    */
   public redraw(): void {
     this.draw();
@@ -95,11 +92,14 @@ export class Grid extends Container {
     }
 
     if (i < this.children.length) {
-      const indexFromWhichToRemove = i;
-      for (; i < this.children.length; ++i) {
-        this.children[i].destroy();
+      // Detach the surplus in one splice, then destroy what came back:
+      // destroy() removes the child from its parent, so destroying inside a
+      // loop over `children` shrinks the array being iterated. The guard is
+      // load-bearing — removeChildren over an empty range of a non-empty
+      // container throws a RangeError.
+      for (const child of this.removeChildren(i)) {
+        child.destroy();
       }
-      this.removeChildren(indexFromWhichToRemove);
     }
   }
 

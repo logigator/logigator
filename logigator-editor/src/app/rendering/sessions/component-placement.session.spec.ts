@@ -5,9 +5,8 @@ import { configureTestBed } from '../../../testing/configure-test-bed';
 import { WorkModeService } from '../../work-mode/work-mode.service';
 import { Project } from '../../project/project';
 import { Wire } from '../../wires/wire';
-import { WireDirection } from '../../wires/wire-direction.enum';
+import { Direction, WireDirection } from '@logigator/core';
 import { textComponentConfig } from '../../components/component-types/text/text.config';
-import { Direction } from '../../utils/direction';
 import { Component } from '../../components/component';
 import { ComponentConfig } from '../../components/component-config.model';
 import { ComponentOption } from '../../components/component-option';
@@ -66,8 +65,7 @@ describe('ComponentPlacementSession collision', () => {
   });
 
   it('canEnd() is false when body lands on a wire — catches missing wire check bug', () => {
-    // Body at startPos=(5,0): Rectangle(5,0,2,2).
-    // Wire gx=3, len=3: gridBounds=[3,7)×[0,1) → enters body at x=5.
+    // Body Rectangle(5,0,2,2); wire gridBounds [3,7)×[0,1) enters it at x=5.
     const wire = makeWire(3, 0, WireDirection.HORIZONTAL, 3);
     project.addWire(wire);
     session = new ComponentPlacementSession(
@@ -81,8 +79,7 @@ describe('ComponentPlacementSession collision', () => {
   });
 
   it('canEnd() is true when wire ends at the stub boundary (not inside body)', () => {
-    // Body at (5,0): Rectangle(5,0,2,2). Wire gx=0, len=4: gridBounds=[0,5)×[0,1).
-    // Wire right=5 equals body left=5 → no intersection (touches but does not overlap).
+    // Wire right = 5 equals body left = 5: touching, not overlapping.
     const wire = makeWire(0, 0, WireDirection.HORIZONTAL, 4);
     project.addWire(wire);
     session = new ComponentPlacementSession(
@@ -128,9 +125,8 @@ describe('ComponentPlacementSession collision', () => {
   });
 
   it('placing a component whose port lands on a wire interior splits the wire', () => {
-    // AND at (4, 0) facing East has input ports at (3.5, 0.5) and (3.5, 1.5).
-    // V wire (3.5, -2.5)→(3.5, 2.5) passes through both ports in its interior
-    // without overlapping the body (body x∈[4,6), wire gridBounds.right=4 — touch only).
+    // The vertical wire passes through both input ports in its interior while
+    // only touching the body (body x ∈ [4,6), wire right = 4).
     const v = new Wire(WireDirection.VERTICAL, 5);
     v.position.set(3.5, -2.5);
     project.addWire(v);
@@ -150,22 +146,19 @@ describe('ComponentPlacementSession collision', () => {
     const verticals = wires.filter(
       (w) => w.direction === WireDirection.VERTICAL
     );
-    // Two ports split V into three pieces.
     expect(verticals.length).toBe(3);
     const lengths = verticals.map((w) => w.length).sort();
     expect(lengths).toEqual([1, 1, 3]);
   });
 
-  // NOT gate geometry (bodyGridWidth=2, bodyGridHeight=1, 1 input, 1 output):
-  //   East at (0,0):  body [0,2]×[0,1],  output stub tip at (2.5, 0.5)
-  //   North at (2,0): body [2,3]×[-2,0], input  stub tip at (2.5,  0.5)
-  // The two stubs share the region [2,2.5]×[0,0.5] — stub-on-stub, not stub-on-body.
+  // East at (0,0): body [0,2]×[0,1], output stub tip (2.5, 0.5).
+  // North at (2,0): body [2,3]×[-2,0], input stub tip (2.5, 0.5).
+  // The stubs share [2,2.5]×[0,0.5]: stub-on-stub, not stub-on-body.
   it('canEnd() is true when perpendicular NOT gates meet only at stub ends', () => {
     const existing = makeNot(Direction.E);
     existing.position.set(0, 0);
     project.addComponent(existing);
 
-    // The session's ghost starts facing the type's sticky placement direction.
     TestBed.inject(WorkModeService).setPlacementDirection(
       notComponentConfig.type,
       Direction.N
@@ -182,8 +175,8 @@ describe('ComponentPlacementSession collision', () => {
     expect(session.canEnd()).toBe(true);
   });
 
-  // North at (2,1): body [2,3]×[-1,1].  East output stub [2,2.5]×[0,1] extends
-  // into that body — stub-in-body is a real collision.
+  // North at (2,1) has body [2,3]×[-1,1]; the East output stub [2,2.5]×[0,1]
+  // extends into it, which is a real collision.
   it('canEnd() is false when perpendicular NOT gate output stub enters existing body', () => {
     const existing = makeNot(Direction.E);
     existing.position.set(0, 0);
@@ -206,7 +199,7 @@ describe('ComponentPlacementSession collision', () => {
   });
 
   it('TEXT under a wire: canEnd() is true (ignoresWireCollision)', () => {
-    // Wire at (0,0) horizontal length 5. TEXT placed at (1,0) — body inside wire.
+    // The TEXT body at (1,0) sits inside the wire.
     const wire = makeWire(0, 0, WireDirection.HORIZONTAL, 5);
     project.addWire(wire);
     placeConfig = textComponentConfig as unknown as ComponentConfig<

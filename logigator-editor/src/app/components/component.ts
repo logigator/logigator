@@ -7,7 +7,7 @@ import {
   Point,
   Rectangle
 } from 'pixi.js';
-import { Subject } from 'rxjs';
+import { Subject, takeUntil } from 'rxjs';
 import { ComponentConfig, ComponentConfigView } from './component-config.model';
 import { ThemingService } from '../theming/theming.service';
 import { getStaticDI } from '../utils/get-di';
@@ -38,7 +38,7 @@ import {
 } from './component-geometry';
 import { Connectable } from '../rendering/grid-element';
 import { IdAllocator } from '../utils/id-allocator';
-import { Direction } from '../utils/direction';
+import { ComponentMeta, Direction, OptionValues } from '@logigator/core';
 import { CANVAS_FONT_FAMILY, fitMonoFontSize } from '../utils/text-fit';
 
 export interface PortsChange {
@@ -47,12 +47,35 @@ export interface PortsChange {
 }
 
 /**
+ * Arity, port labels and body extent as pure functions of the option values
+ * (plus the direction, for a body whose width must not follow the rotation).
+ * A built-in's `ComponentMeta` is one; a custom component builds one from its
+ * definition. `ComponentMeta<never>` is what a built-in's `as const` meta is
+ * assignable to; `widenMeta` explains why erasing the value shape is safe.
+ */
+export type ComponentGeometrySource = Pick<
+  ComponentMeta<never>,
+  'ports' | 'labels' | 'body'
+>;
+
+/** The same source, read with the option-value record the base holds. */
+type ComponentGeometry = Pick<ComponentMeta, 'ports' | 'labels' | 'body'>;
+
+function readOptionValues(
+  options: Record<string, ComponentOption>
+): OptionValues {
+  const values: Record<string, unknown> = {};
+  for (const [key, option] of Object.entries(options)) {
+    values[key] = option.value;
+  }
+  return values;
+}
+
+/**
  * Port-label anchor per direction, keyed by the side the *input* edge faces
- * (outputs use the opposite direction's entry). Labels are counter-rotated to
- * stay horizontal, so the anchor picks the texture point that faces the body
- * edge. Anchoring to the edge — rather than rotating the label around its
- * centre — keeps every label at the same fixed inset regardless of its text
- * width (legacy-editor behavior).
+ * (outputs use the opposite direction's entry). Anchoring to the body edge
+ * rather than the counter-rotated label's centre keeps every label at the
+ * same inset whatever its text width, matching the legacy editor.
  */
 const LABEL_ANCHOR: Record<Direction, { x: number; y: number }> = {
   [Direction.E]: { x: 0, y: 0.5 },
@@ -82,9 +105,8 @@ export abstract class Component<
   public readonly ignoresWireCollision: boolean = false;
   public readonly options: TOptions;
 
-  // Fires when port positions change (rotation, input/output count). The listener
-  // (typically Project) is responsible for refreshing derived state such as
-  // connection-point markers. Not fired during construction.
+  // Fires when port positions change (rotation, input/output count). Not
+  // fired during construction.
   public readonly portsChange$ = new Subject<PortsChange>();
 
   protected readonly themingService: ThemingService =
@@ -98,35 +120,39 @@ export abstract class Component<
   private _direction: Direction = Direction.E;
   private _appliedScale = 1;
 
+  private readonly _geometry!: ComponentGeometry;
+  private _optionValues: OptionValues = {};
+
   private _numInputs = 0;
   private _numOutputs = 0;
+  private _bodyGridWidth = 1;
+  private _bodyGridHeight = 1;
+
+  /** Completed on destroy; unsubscribes the base's option watchers. */
+  protected readonly destroy$ = new Subject<void>();
 
   private _rotationCounterContainers: Container[] = [];
 
-  // Stub graphics in `connectionPoints` order, rebuilt by _drawConnections.
   private _portStubs: Graphics[] = [];
-  // Inverter-bubble graphics keyed by `connectionPoints` index, only for
-  // negated ports; rebuilt by _drawConnections alongside the stubs. Always
-  // white — the bubble does not react to the port's power state.
   private _portBubbles = new Map<number, Graphics>();
-  // Scale-dependent visual updates registered during draw(). applyScale runs
-  // these in place on zoom instead of rebuilding the whole visual tree (which
-  // would re-rasterize every Text on every zoom step). Reset on each _draw().
+  // Run in place on zoom instead of rebuilding the visual tree, which would
+  // re-rasterize every Text per zoom step. Reset on each _draw().
   private _rescalers: ((scale: number) => void)[] = [];
-  // Theme-dependent color writes (tints, glyph colors) registered during
-  // draw(); refreshTheme runs these in place instead of rebuilding. Reset on
-  // each _draw().
+  // Reset on each _draw(); refreshTheme runs them in place.
   private _themeRestylers: (() => void)[] = [];
-  // Powered port indexes survive redraws (zoom applyScale, theme change) —
-  // _drawConnections re-applies them to the rebuilt stubs.
+  // Survives redraws; _drawConnections re-applies it to the rebuilt stubs.
   private readonly _poweredPorts = new Set<number>();
 
-  // Negated ports, indexed 0-based within each group (separate sets so an
-  // input-count change can never shift output indices). Out-of-range entries
-  // are ignored on read (rendering/serialize/compile) and pruned on serialize,
-  // so a count change never has to mutate these — keeping resize undo-safe.
+  // Indexed 0-based within each group; separate sets so an input-count change
+  // cannot shift output indices. Out-of-range entries are ignored on read and
+  // dropped on serialize, so a resize never mutates these — which is what
+  // makes it undo-safe.
   private readonly _negatedInputs = new Set<number>();
   private readonly _negatedOutputs = new Set<number>();
+
+  // Only a live session inverts a negated input for the display components:
+  // at rest the board draws nothing powered.
+  private _simulating = false;
 
   private _selected = false;
 
@@ -148,11 +174,8 @@ export abstract class Component<
   }
 
   /**
-   * Sorted, in-range negation indices for serialization (native body, undo
-   * snapshot, clipboard, server). Out-of-range entries left by a port-count
-   * shrink are dropped here and empty groups are omitted, so a component with
-   * no negation serializes to nothing. Single source of truth shared by both
-   * the {@link SerializedComponent} and `SerializedComponentBody` producers.
+   * Sorted, in-range negation indices: out-of-range entries left by a
+   * port-count shrink are dropped and empty groups omitted.
    */
   public static serializeNegations(component: Component): {
     negInputs?: number[];
@@ -169,8 +192,7 @@ export abstract class Component<
   }
 
   public static deserialize(
-    // `id` is optional: if not specified, a fresh id is
-    // allocated by the constructor.
+    // Without an id, the constructor allocates a fresh one.
     serialized: Omit<SerializedComponent, 'id' | 'type'> & { id?: number },
     config: ComponentConfig
   ): Component {
@@ -185,9 +207,9 @@ export abstract class Component<
       component.id = serialized.id;
     }
     if (serialized.direction) {
-      // Ordered before `pos`: the direction setter's fixed-body-anchor shift
-      // moves `position`, which the absolute write below overrides. Skipped
-      // for East (the constructed default) so the common case pays no redraw.
+      // Before `pos`: the direction setter's fixed-body-anchor shift moves
+      // `position`, which the absolute write below overrides. East is the
+      // constructed default, so the common case pays no redraw.
       component.direction = serialized.direction;
     }
     component.position.set(serialized.pos[0], serialized.pos[1]);
@@ -203,38 +225,94 @@ export abstract class Component<
   }
 
   protected constructor(
-    numInputs: number,
-    numOutputs: number,
+    geometry: ComponentGeometrySource,
     options: Record<string, ComponentOption>
   ) {
     super();
 
     this._id = Component._idAllocator.next();
-
-    this.numInputs = numInputs;
-    this.numOutputs = numOutputs;
+    this._geometry = geometry as ComponentGeometry;
     this.options = options as TOptions;
+    this._optionValues = readOptionValues(options);
+
+    const ports = this._geometry.ports(this._optionValues);
+    this._numInputs = ports.inputs;
+    this._numOutputs = ports.outputs;
+    this._refreshBody();
+
+    // Every option value feeds the geometry, so the base watches all of them.
+    for (const option of Object.values(options)) {
+      option.onChange$
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(() => this.onOptionsChanged());
+    }
 
     this._initialized = true;
 
     this._draw();
   }
 
-  protected abstract get inputLabels(): string[];
+  /**
+   * Re-derives arity, port labels and body extent. A change that moves the
+   * ports re-anchors, redraws and fires `portsChange$` once even when both
+   * counts move; one that does not still redraws, since labels and body width
+   * read option values too.
+   *
+   * Override to react beyond redrawing; call `super` first.
+   */
+  protected onOptionsChanged(): void {
+    this._optionValues = readOptionValues(this.options);
+    const ports = this._geometry.ports(this._optionValues);
 
-  protected abstract get outputLabels(): string[];
+    if (
+      ports.inputs === this._numInputs &&
+      ports.outputs === this._numOutputs
+    ) {
+      this._refreshBody();
+      this.redraw();
+      return;
+    }
 
-  protected abstract get bodyGridWidth(): number;
+    const oldPorts = this.connectionPoints;
+    this._withFixedBodyAnchor(() => {
+      this._numInputs = ports.inputs;
+      this._numOutputs = ports.outputs;
+      this._refreshBody();
+    });
+    this._draw();
+    this.portsChange$.next({ oldPorts, newPorts: this.connectionPoints });
+  }
+
+  /** Cached: every bounds query (culling, collision, quad tree) reads it. */
+  private _refreshBody(): void {
+    const body = this._geometry.body(this._optionValues, this._direction);
+    this._bodyGridWidth = body.width;
+    this._bodyGridHeight = body.height;
+  }
+
+  protected get inputLabels(): string[] {
+    return this._geometry.labels(this._optionValues).inputs;
+  }
+
+  protected get outputLabels(): string[] {
+    return this._geometry.labels(this._optionValues).outputs;
+  }
+
+  protected get bodyGridWidth(): number {
+    return this._bodyGridWidth;
+  }
+
+  protected get bodyGridHeight(): number {
+    return this._bodyGridHeight;
+  }
 
   protected abstract draw(): void;
 
   /**
-   * Symbol rendered centred in the body — normally the config's sidebar
-   * symbol. Null (the default) for components whose body carries its own
-   * visual identity instead (button, switch, free text). Overrides must read a
-   * module-level config constant, not `this.config`: this is evaluated during
-   * the base constructor's draw, before the subclass `config` field is
-   * assigned.
+   * Symbol rendered centred in the body; null for components whose body is
+   * its own visual identity (button, switch, free text). Overrides must read
+   * a module-level config constant, not `this.config` — this runs during the
+   * base constructor's draw, before the subclass `config` field is assigned.
    */
   // eslint-disable-next-line @typescript-eslint/class-literal-property-style
   protected get symbol(): string | null {
@@ -263,52 +341,38 @@ export abstract class Component<
       for (const container of this._rotationCounterContainers) {
         container.rotation = -this.rotation;
       }
+      // The body may be direction-dependent: the segment display keeps a
+      // fixed upright width when turned.
+      this._refreshBody();
     });
 
-    // Label anchors and the stub-thickness side both depend on the direction,
-    // so rebuild the visual tree for the new rotation.
+    // Label anchors and the stub-thickness side depend on the direction.
     this._draw();
 
-    if (oldPorts) {
-      this.portsChange$.next({ oldPorts, newPorts: this.connectionPoints });
-    }
-  }
-
-  public get numInputs(): number {
-    return this._numInputs;
-  }
-
-  public set numInputs(value: number) {
-    const oldPorts = this._initialized ? this.connectionPoints : null;
-    this._withFixedBodyAnchor(() => (this._numInputs = value));
-    this._draw();
-    if (oldPorts) {
-      this.portsChange$.next({ oldPorts, newPorts: this.connectionPoints });
-    }
-  }
-
-  public get numOutputs(): number {
-    return this._numOutputs;
-  }
-
-  public set numOutputs(value: number) {
-    const oldPorts = this._initialized ? this.connectionPoints : null;
-    this._withFixedBodyAnchor(() => (this._numOutputs = value));
-    this._draw();
     if (oldPorts) {
       this.portsChange$.next({ oldPorts, newPorts: this.connectionPoints });
     }
   }
 
   /**
-   * Runs a mutation that changes the body's size or rotation while holding its
-   * top-left corner fixed (legacy-editor behavior): the body is drawn from — and
-   * rotated around — the local origin, so without this a turn would swing it off
-   * its corner and a port-count change would grow it from the origin. Shifting
-   * `position` by the change in `bodyGridBounds` keeps the corner put, so
-   * rotation never moves the element and added ports expand it toward the bottom
-   * (E/W) or the right (S/N). No-op before construction completes — the caller
-   * sets `position` afterwards.
+   * Derived, never assigned: a pure function of the option values, re-derived
+   * by {@link onOptionsChanged}. Change an option to change the arity.
+   */
+  public get numInputs(): number {
+    return this._numInputs;
+  }
+
+  public get numOutputs(): number {
+    return this._numOutputs;
+  }
+
+  /**
+   * Runs a mutation that changes the body's size or rotation while holding
+   * its top-left corner fixed, matching the legacy editor: the body is drawn
+   * from and rotated around the local origin, so shifting `position` by the
+   * change in `bodyGridBounds` keeps rotation from moving the element and
+   * makes added ports expand it toward the bottom (E/W) or the right (S/N).
+   * No-op before construction completes.
    */
   private _withFixedBodyAnchor(mutate: () => void): void {
     const oldAnchor = this._initialized ? this.bodyGridBounds : null;
@@ -332,10 +396,9 @@ export abstract class Component<
   }
 
   /**
-   * Registers a scale-dependent visual update. The callback runs immediately
-   * with the current scale (so draw-time setup is covered) and again on every
-   * applyScale, without rebuilding the component. Call from draw() for any
-   * element whose on-screen size must stay constant across zoom.
+   * Registers a scale-dependent visual update; runs immediately and again on
+   * every applyScale, without rebuilding. Call from draw() for anything whose
+   * on-screen size must stay constant across zoom.
    */
   protected onApplyScale(rescale: (scale: number) => void): void {
     this._rescalers.push(rescale);
@@ -343,10 +406,9 @@ export abstract class Component<
   }
 
   /**
-   * Adds a Graphics whose shared GraphicsContext depends on zoom scale, swapping
-   * to the correctly-scaled cached context on every applyScale. Context swaps
-   * are affordable at zoom-gesture rate, but never swap contexts per
-   * simulation frame — see WireGraphics for the costs involved.
+   * Adds a Graphics that swaps to the scale-keyed cached context on every
+   * applyScale. Affordable at zoom-gesture rate; never swap contexts per
+   * simulation frame (see WireGraphics).
    */
   protected addScaledGraphics(
     contextFor: (scale: number) => GraphicsContext
@@ -356,10 +418,7 @@ export abstract class Component<
     return this.addChild(graphics);
   }
 
-  /**
-   * Adds the standard chamfered component body outline (width/height in grid
-   * units) and keeps its stroke screen-constant across zoom.
-   */
+  /** Chamfered body outline (grid units); stroke stays screen-constant. */
   protected addBody(width: number, height: number): Graphics {
     return this.addScaledGraphics((scale) =>
       this.geometryService.getGraphicsContext(
@@ -372,12 +431,10 @@ export abstract class Component<
   }
 
   /**
-   * Registers a theme-dependent color write (a tint or glyph color). The
-   * callback runs immediately (draw-time setup) and again on every
-   * {@link refreshTheme}. Zoom does NOT run these — colors don't depend on
-   * scale, and re-tinting every element per zoom step would dirty render
-   * groups for nothing. Call from draw() for anything that reads a theme
-   * color.
+   * Registers a theme-dependent color write; runs immediately and again on
+   * every {@link refreshTheme}. Zoom does not run these — re-tinting per zoom
+   * step would dirty render groups for nothing. Call from draw() for anything
+   * reading a theme color.
    */
   protected onApplyTheme(restyle: () => void): void {
     this._themeRestylers.push(restyle);
@@ -385,14 +442,10 @@ export abstract class Component<
   }
 
   /**
-   * Restyles every theme-dependent visual in place after a theme change;
-   * never rebuilds children (structural changes go through redraw()).
-   * Re-running the rescalers re-fetches the shared scale-keyed contexts —
-   * their cache key includes the active theme — so context-baked colors
-   * (body, switch/button faces, negation bubbles) swap pointers without any
-   * object churn; the theme restylers rewrite instance tints and glyph
-   * colors; refreshTint re-derives the selection highlight, whose tint value
-   * is theme-keyed.
+   * Restyles in place, never rebuilding children. The rescalers re-fetch the
+   * scale-keyed contexts, whose cache key includes the theme, so context-baked
+   * colors swap pointers with no object churn; the restylers rewrite instance
+   * tints; the selection tint value is theme-keyed too.
    */
   public refreshTheme(): void {
     this.applyScale(this._appliedScale);
@@ -403,14 +456,13 @@ export abstract class Component<
   }
 
   public override destroy(options?: DestroyOptions): void {
+    this.destroy$.next();
+    this.destroy$.complete();
     this.portsChange$.complete();
     super.destroy(options);
   }
 
-  /**
-   * The plain shape descriptor the pure geometry functions work on — see
-   * `component-geometry.ts` for the lattice-exactness invariants they keep.
-   */
+  /** The geometry functions' lattice invariants: `component-geometry.ts`. */
   private get _shape(): ComponentShape {
     return {
       direction: this._direction,
@@ -431,12 +483,31 @@ export abstract class Component<
     return negationBubbleAnchor(this._shape, side, index);
   }
 
-  /**
-   * Resets transient simulation visual state (button pressed, switch on) when
-   * a simulation stops. No-op for components without sim state.
-   */
+  /** Resets transient simulation visual state (button pressed, switch on). */
   public clearSimState(): void {
     // Overridden by user-input components.
+  }
+
+  /**
+   * Marks a live simulation session, entered and left for every component of
+   * the simulated project. Overridden by the display components, which re-read
+   * their inputs through {@link isInputHigh}.
+   */
+  public setSimulating(active: boolean): void {
+    this._simulating = active;
+  }
+
+  /**
+   * The value a display reads off input `index`: a negated input reads high
+   * while its net is low. Only a live session inverts, so a bubble placed
+   * while editing does not light the board on its own. The stub keeps showing
+   * the net's own state either way, as a gate's negated input does.
+   */
+  public isInputHigh(index: number): boolean {
+    const powered = this.isPortPowered(index);
+    return this._simulating && this.isPortNegated('in', index)
+      ? !powered
+      : powered;
   }
 
   /** Stub graphics in `connectionPoints` order (rebuilt on every redraw). */
@@ -444,35 +515,24 @@ export abstract class Component<
     return this._portStubs;
   }
 
-  /**
-   * Inverter-bubble graphics keyed by `connectionPoints` index, present only
-   * for negated ports (rebuilt on every redraw).
-   */
+  /** Bubble graphics by `connectionPoints` index, only for negated ports. */
   public get portBubbles(): ReadonlyMap<number, Graphics> {
     return this._portBubbles;
   }
 
-  /** Negated input-port indices (0-based within the input group). Read-only. */
   public get negatedInputs(): ReadonlySet<number> {
     return this._negatedInputs;
   }
 
-  /** Negated output-port indices (0-based within the output group). Read-only. */
   public get negatedOutputs(): ReadonlySet<number> {
     return this._negatedOutputs;
   }
 
-  /** Whether port `index` on `side` is negated (an inverter bubble is drawn). */
   public isPortNegated(side: PortSide, index: number): boolean {
     return this._negationSet(side).has(index);
   }
 
-  /**
-   * Toggles negation on a single port. Rebuilds the visual tree (via redraw)
-   * so the bubble appears/disappears immediately; a no-op when already in the
-   * requested state, so undo/redo stay idempotent. Does not touch port counts,
-   * so it never needs an out-of-range prune (see `_negatedInputs`).
-   */
+  /** No-op when already in that state, so undo/redo stay idempotent. */
   public setPortNegated(side: PortSide, index: number, negated: boolean): void {
     const set = this._negationSet(side);
     if (set.has(index) === negated) {
@@ -490,11 +550,7 @@ export abstract class Component<
     return side === 'in' ? this._negatedInputs : this._negatedOutputs;
   }
 
-  /**
-   * Replaces both negation sets in a single redraw. Used by deserialize to
-   * apply persisted negation after construction; callers skip it when there is
-   * nothing to negate, so the common no-negation load pays no extra redraw.
-   */
+  /** Replaces both negation sets in a single redraw. */
   public setNegations(
     inputs: Iterable<number>,
     outputs: Iterable<number>
@@ -507,10 +563,9 @@ export abstract class Component<
   }
 
   /**
-   * Thickens one port stub while its link is powered during simulation.
-   * `portIndex` follows `connectionPoints` order. This is the per-frame hot
-   * path, so state lands as a transform on the stub only — never a context
-   * swap or redraw (see WireGraphics).
+   * Thickens one port stub while its link is powered. `portIndex` follows
+   * `connectionPoints` order. Per-frame hot path: state lands as a transform
+   * on the stub only, never a context swap or redraw (see WireGraphics).
    */
   public setPortPowered(portIndex: number, powered: boolean): void {
     if (powered) {
@@ -524,11 +579,7 @@ export abstract class Component<
     }
   }
 
-  /**
-   * Whether the link on a port is powered, as last applied by the simulation
-   * (`connectionPoints` order: inputs, then outputs). Live inspections read
-   * this on each frame.
-   */
+  /** Powered as last applied by the simulation (`connectionPoints` order). */
   public isPortPowered(portIndex: number): boolean {
     return this._poweredPorts.has(portIndex);
   }
@@ -543,9 +594,8 @@ export abstract class Component<
 
   /**
    * Cross-axis transform of a stub: 1 screen pixel, times
-   * POWERED_WIRE_THICKNESS while the port's link is powered, mirrored per
-   * _stubThicknessSign. The pivot keeps the powered scale-up centred on the
-   * unpowered pixel (sign-independent, see POWERED_WIRE_PIVOT).
+   * POWERED_WIRE_THICKNESS while powered, mirrored per _stubThicknessSign.
+   * The pivot centres the powered scale-up on the unpowered pixel.
    */
   private _applyStubThickness(
     stub: Graphics,
@@ -567,15 +617,11 @@ export abstract class Component<
     );
   }
 
-  protected get bodyGridHeight(): number {
-    return Math.max(1, this.numInputs, this.numOutputs);
-  }
-
   public get bodyGridBounds(): Rectangle {
     return bodyGridBounds(this._shape);
   }
 
-  /** Allocation-free mirror of {@link bodyGridBounds} — see `component-geometry.ts`. */
+  /** Allocation-free mirror of {@link bodyGridBounds}. */
   public intersectsBodyGridBounds(rect: Rectangle): boolean {
     return bodyGridBoundsIntersects(this._shape, rect);
   }
@@ -584,14 +630,14 @@ export abstract class Component<
     return gridBounds(this._shape);
   }
 
-  /** Allocation-free mirror of {@link gridBounds} — see `component-geometry.ts`. */
+  /** Allocation-free mirror of {@link gridBounds}. */
   public intersectsGridBounds(rect: Rectangle): boolean {
     return gridBoundsIntersects(this._shape, rect);
   }
 
-  // Bounds the quad tree files and culls by. Defaults to the logical
-  // gridBounds; components whose rendered extent overflows their grid footprint
-  // widen this so panning past the footprint doesn't cull still-visible pixels.
+  // Bounds the quad tree files and culls by. Components whose rendered extent
+  // overflows their grid footprint widen this, so panning past the footprint
+  // does not cull still-visible pixels.
   public get cullBounds(): Rectangle {
     return this.gridBounds;
   }
@@ -613,7 +659,6 @@ export abstract class Component<
     return container;
   }
 
-  /** Whether the component carries the selection tint (see {@link refreshTint}). */
   public get selected(): boolean {
     return this._selected;
   }
@@ -624,11 +669,9 @@ export abstract class Component<
   }
 
   /**
-   * Re-derives the container tint from the current theme and selection state.
-   * Selection is a multiplicative tint over the themed children (a component
-   * bakes several theme colors, so it cannot be white-based like a wire);
-   * `theme.selectTint` darkens toward gray in both themes. Also the way to
-   * restore the proper tint after a transient one (collision red).
+   * Selection is a multiplicative tint over the themed children: a component
+   * bakes several theme colors, so it cannot be white-based like a wire. Also
+   * restores the tint after a transient one (collision red).
    */
   public refreshTint(): void {
     this.tint = this._selected
@@ -664,8 +707,7 @@ export abstract class Component<
     this._drawConnections(this._numInputs, 'inputs');
     this._drawConnections(this._numOutputs, 'outputs');
 
-    // The selection tint value is theme-keyed, so a theme-change redraw must
-    // re-derive it alongside the rebuilt children.
+    // The selection tint value is theme-keyed, so a redraw re-derives it.
     this.refreshTint();
 
     if (SHOW_CONNECTION_POINTS) {
@@ -706,19 +748,15 @@ export abstract class Component<
     );
   }
 
-  /**
-   * Whether the body stands upright on screen (rotated S/N), swapping which
-   * of bodyGridWidth/bodyGridHeight spans the screen's horizontal axis.
-   */
+  /** S/N: bodyGridHeight, not width, spans the screen's horizontal axis. */
   private get _isVertical(): boolean {
     return this._direction === Direction.S || this._direction === Direction.N;
   }
 
   /**
    * Which local side of the port centre-line the stub's 1-px thickness hangs
-   * on so that, after the component's rotation, it lands on the same screen
-   * side as a connecting wire's thickness (below for horizontal, left for
-   * vertical).
+   * on, so that after rotation it lands on the same screen side as a
+   * connecting wire's (below for horizontal, left for vertical).
    */
   private get _stubThicknessSign(): 1 | -1 {
     return this._direction === Direction.W || this._direction === Direction.N
@@ -726,17 +764,14 @@ export abstract class Component<
       : 1;
   }
 
-  // Renders the symbol centred in the body, fitted to its slot with a 2-px
-  // clearance per side, kept upright across rotations.
   private _drawSymbol(): void {
     const symbol = this.symbol;
     if (!symbol) {
       return;
     }
-    // The symbol is kept upright, so its horizontal room is the body's
-    // *screen* width: bodyGridWidth for E/W, bodyGridHeight for S/N. Port
-    // labels flank the symbol on its own line only in E/W and halve its room
-    // there; in S/N they sit above/below it, leaving the full width.
+    // The symbol is upright, so its room is the body's *screen* width. Port
+    // labels flank it only in E/W and halve that room; in S/N they sit
+    // above/below, leaving the full width.
     const symbolSlot = this._isVertical
       ? this.bodyGridHeight / PX
       : this.bodyGridWidth / (this._maxLabelLength > 0 ? 2 : 1) / PX;
@@ -750,9 +785,8 @@ export abstract class Component<
           SYMBOL_FONT_SIZE,
           MIN_FONT_SIZE
         ),
-        // White base over the white glyph atlas; the theme's font color is
-        // applied as tint so a theme restyle never re-runs the glyph layout
-        // (a style.fill write rebuilds the text's proxy context).
+        // White base over the white glyph atlas, themed by tint: a style.fill
+        // write would rebuild the text's proxy context and re-run layout.
         fill: 0xffffff
       },
       anchor: { x: 0.5, y: 0.5 }
@@ -774,22 +808,17 @@ export abstract class Component<
     for (let i = 0; i < n; i++) {
       const portIndex = type === 'inputs' ? i : this._numInputs + i;
       const wire = new Graphics(geometry);
-      // The shared stub context is a white base (see WireGraphics); the theme's
-      // wire color is applied as tint. The component-level selection tint
-      // multiplies over it, exactly as it does over the themed body stroke.
+      // White-base shared context (see WireGraphics), themed by tint; the
+      // selection tint multiplies over it.
       this.onApplyTheme(
         () => (wire.tint = this.themingService.currentTheme().wire)
       );
       wire.position.set(0, i + 0.5);
       wire.scale.x = 0.5;
-      // Stub stays 1 screen pixel thick: scale.y compensates for zoom. The
-      // shared wire rect hangs its whole thickness on the +y side of the
-      // centre-line, and Wire renders it at 0° or +90°, so the pixel always
-      // lands below (horizontal) or left (vertical) of the line. The W/N
-      // rotations map +y to the opposite screen side, which would leave the
-      // stub one pixel off the wire it touches — the sign mirror in
-      // _applyStubThickness makes the stub fill the same pixel as the wire.
-      // Runs immediately, so a redraw re-applies any surviving powered state.
+      // The shared wire rect hangs its thickness on the +y side of the
+      // centre-line and Wire renders it at 0° or +90°, but W/N map +y to the
+      // opposite screen side — hence the sign mirror in _applyStubThickness.
+      // Runs immediately, so a redraw re-applies surviving powered state.
       this.onApplyScale((scale) =>
         this._applyStubThickness(wire, portIndex, scale)
       );
@@ -797,13 +826,10 @@ export abstract class Component<
       container.addChild(wire);
 
       if (this.isPortNegated(type === 'inputs' ? 'in' : 'out', i)) {
-        // Sits on the stub at the body edge so its white fill interrupts the
-        // stub — the classic inverter look. Added after the stub so it draws on
-        // top. A unit-diameter circle pinned by its tangent point (the extreme
-        // facing the body) to the body edge and grown outward along the stub.
-        // The transform sizes the white dot via negationBubbleScaleForScale; the
-        // context is re-fetched per zoom so the border stays a fixed 1px (see
-        // NegationBubbleGraphics). Always white — it does not react to power.
+        // A unit-diameter circle pinned by its body-facing tangent point to
+        // the body edge, drawn after the stub so its white fill interrupts it
+        // — the classic inverter look. The context is re-fetched per zoom so
+        // the border stays a fixed 1 px. Always white, whatever the power.
         const bubble = new Graphics();
         const bodyEdgeX = type === 'inputs' ? 0.5 : 0;
         bubble.pivot.set(type === 'inputs' ? 0.5 : -0.5, 0);
@@ -821,10 +847,9 @@ export abstract class Component<
           type === 'inputs'
             ? this._direction
             : (((this._direction + 2) % 4) as Direction);
-        // The horizontal room a label may take before it collides with its
-        // neighbour: rotated S/N the labels sit side by side one grid pitch
-        // apart, in E/W the input and output label share the body row, each
-        // side keeping its 2-px inset plus clearance at the centre.
+        // Room before a label collides with its neighbour: in S/N labels sit
+        // one grid pitch apart, in E/W the input and output labels share the
+        // body row, each keeping its 2-px inset plus centre clearance.
         const labelSlot = this._isVertical
           ? 1 / PX - 2
           : this.bodyGridWidth / 2 / PX - 4;
@@ -848,10 +873,9 @@ export abstract class Component<
         );
         text.scale.set(PX);
 
-        // The anchor point sits a fixed 2-px inset inward from the body edge
-        // on the port's centre-line; the counter-rotation (applied by
-        // registerRotationCounterContainer) turns about that point, so the
-        // label hangs inward from the edge in every direction.
+        // The anchor sits a fixed 2-px inset inward from the body edge on the
+        // port's centre-line, and the counter-rotation turns about that point,
+        // so the label hangs inward in every direction.
         if (type === 'inputs') {
           text.position.set(0.5 + 2 * PX, i + 0.5);
         } else {
@@ -863,9 +887,9 @@ export abstract class Component<
       }
     }
 
-    // For outputs: use bodyGridWidth (path right edge) not getLocalBounds().right,
-    // which includes the stroke's miter extension and would place stubs ~sqrt(2)*PX
-    // too far right — causing valid touching connections to falsely collide.
+    // bodyGridWidth, not getLocalBounds().right: the latter includes the
+    // stroke's miter extension and would place stubs ~sqrt(2)*PX too far
+    // right, making valid touching connections collide.
     if (type === 'outputs') {
       container.position.x = this.bodyGridWidth;
     } else {

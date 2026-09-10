@@ -5,7 +5,7 @@ import {
   snapshotsShareSpan,
   WireSnapshot
 } from './wire-snapshot.model';
-import { WireDirection } from './wire-direction.enum';
+import { WireDirection } from '@logigator/core';
 
 function h(x: number, y: number, length: number): WireSnapshot {
   return {
@@ -26,9 +26,8 @@ function v(x: number, y: number, length: number): WireSnapshot {
 }
 
 describe('SnapshotSpanIndex', () => {
-  // The index answers the same question as a scan over every snapshot, which
-  // is what the commit paths use it for — a divergence changes which wires a
-  // paste or move keeps selected.
+  // The index must answer exactly what a scan over every snapshot would: a
+  // divergence changes which wires a paste or move keeps selected.
   it('answers exactly what a scan with snapshotsShareSpan answers', () => {
     const indexed = [
       h(2.5, 3.5, 4),
@@ -62,15 +61,13 @@ describe('SnapshotSpanIndex', () => {
   });
 
   it('finds a sharer on a line holding many snapshots', () => {
-    // The bucket a probe lands in is scanned in full, so a line has to keep
-    // every one of its snapshots — not just the last one added.
+    // A probe's bucket is scanned in full, so a line keeps every snapshot.
     const row = Array.from({ length: 50 }, (_, i) => h(i * 10 + 0.5, 4.5, 8));
     const index = new SnapshotSpanIndex(row);
 
     for (const s of row) {
       expect(index.sharesSpan(h(s.start.x + 2, 4.5, 3))).toBe(true);
     }
-    // Between two of them: touches neither span.
     expect(index.sharesSpan(h(8.5, 4.5, 2))).toBe(false);
   });
 

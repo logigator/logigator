@@ -8,31 +8,23 @@ import { environment } from '../../environments/environment';
 import { CookieService } from '../storage/cookie.service';
 import { AnalyticsService } from '../analytics/analytics.service';
 import { AnalyticsEvent, DialogId } from '../analytics/analytics.mapping';
-import changelogEn from '@assets/changelog/changelog.en.md';
-import changelogDe from '@assets/changelog/changelog.de.md';
-import changelogFr from '@assets/changelog/changelog.fr.md';
-import changelogEs from '@assets/changelog/changelog.es.md';
+import changelogEn from '@logigator/docs/changelog/en.md';
+import changelogDe from '@logigator/docs/changelog/de.md';
+import changelogFr from '@logigator/docs/changelog/fr.md';
+import changelogEs from '@logigator/docs/changelog/es.md';
 
 const LAST_SEEN_KEY = 'logigator.changelog.lastSeenVersion';
 
 /**
- * Cookies the old editor writes that mark a browser as having used it. The
- * legacy editor persists everything through cookies (its `StorageService` is
- * bound to a cookie-backed store) on the shared origin: `tutorials` on
- * finishing/skipping the auto-started getting-started tour, `autoStartSim` on
- * toggling simulation auto-start, `sneaks` on discovering an easter egg. None is
- * written by the rebuilt editor or the marketing site, so their presence
- * identifies a returning legacy user — unlike `cc_cookie` (the cookie-consent
- * bar runs site-wide) or `preferences` (language and theme, written by the
- * server and by this editor alike), both of which any first-time visitor has.
+ * Cookies only the legacy editor writes on the shared origin, so their presence
+ * identifies a returning legacy user. Site-wide cookies (`cc_cookie`,
+ * `preferences`) cannot serve: any first-time visitor has them.
  */
 const LEGACY_COOKIES = ['tutorials', 'autoStartSim', 'sneaks'] as const;
 
 /**
  * Build-time hashed URLs of the changelog markdown, keyed by language (the `.md`
- * file loader emits a cache-busted copy per import). English is the fallback for
- * any language without its own entry. Add a `changelog.<lang>.md` import here to
- * ship a translated changelog; until then every language resolves to English.
+ * file loader emits a cache-busted copy per import). English is the fallback.
  */
 const CHANGELOG_URLS: Readonly<Record<string, string>> = {
   en: changelogEn,
@@ -45,13 +37,10 @@ const CHANGELOG_URLS: Readonly<Record<string, string>> = {
  * Tracks which release the user has seen and opens the "what's new" dialog once
  * per new version.
  *
- * The version comparison uses the build's `environment.version`, so a new
- * release must bump the app version (package.json) to trigger the dialog. This
- * lets `maybeAutoOpen` decide entirely from `localStorage` — the markdown is
- * only fetched when the dialog actually opens, never just to check for updates.
- *
- * The changelog body is localized per {@link CHANGELOG_URLS}, with English as
- * the fallback for any language without its own entry.
+ * The comparison uses the build's `environment.version`, so a release must bump
+ * the app version in package.json to trigger the dialog. That lets
+ * {@link maybeAutoOpen} decide from `localStorage` alone; the markdown is
+ * fetched only when the dialog opens.
  */
 @Injectable({
   providedIn: 'root'
@@ -76,9 +65,8 @@ export class ChangelogService {
   }
 
   /**
-   * Opens the changelog dialog (which acknowledges the running version).
-   * `trigger` distinguishes the once-per-release auto-popup from an explicit
-   * open via the Help menu.
+   * Opens the changelog dialog, which acknowledges the running version.
+   * `trigger` separates the once-per-release auto-popup from a manual open.
    */
   public open(trigger: 'auto' | 'manual' = 'manual'): void {
     this.analytics.capture(AnalyticsEvent.ChangelogViewed, { trigger });
@@ -87,21 +75,17 @@ export class ChangelogService {
       width: '48rem',
       modal: true,
       closable: true,
-      // Alongside `changelog_viewed`, which carries the auto-vs-manual trigger
-      // the generic pair cannot.
+      // Alongside `changelog_viewed`, which carries the auto-vs-manual
+      // trigger the generic pair cannot.
       telemetryId: DialogId.Changelog
     });
   }
 
   /**
-   * Opens the changelog once when the running version is newer than the one the
-   * user last saw — decided from `localStorage` alone, without fetching the
-   * markdown.
-   *
-   * On the first ever load (no stored version) the running release is
-   * acknowledged silently so the dialog never greets a genuinely new user — with
-   * one exception: a user arriving from the old editor is shown the changelog so
-   * they learn what changed in the rebuild.
+   * Opens the changelog once when the running version is newer than the one
+   * last seen. On the first ever load the running release is acknowledged
+   * silently, so the dialog never greets a genuinely new user — except one
+   * arriving from the old editor, who is shown what changed.
    */
   public maybeAutoOpen(): void {
     const seen = this.lastSeenVersion();
@@ -148,11 +132,7 @@ export class ChangelogService {
     }
   }
 
-  /**
-   * Whether this browser has used the old editor, decided from the cookies the
-   * legacy editor leaves behind (see {@link LEGACY_COOKIES}). A returning user
-   * is shown the changelog on their first load of the rebuilt editor.
-   */
+  /** Whether this browser has used the old editor; see {@link LEGACY_COOKIES}. */
   private isReturningLegacyUser(): boolean {
     return LEGACY_COOKIES.some((name) => this.cookieService.get(name) !== null);
   }

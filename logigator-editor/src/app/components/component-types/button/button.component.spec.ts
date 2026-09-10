@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { configureTestBed } from '../../../../testing/configure-test-bed';
 import { makeButton } from '../../../../testing/factories';
-import { BuiltInComponentType } from '../../component-type.enum';
+import { BuiltInComponentType } from '@logigator/core';
 import { buttonComponentConfig } from './button.config';
 
 describe('ButtonComponent', () => {

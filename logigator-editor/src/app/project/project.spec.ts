@@ -4,8 +4,7 @@ import { configureTestBed } from '../../testing/configure-test-bed';
 import { Project } from './project';
 import { SelectionManager } from './selection-manager';
 import { Wire } from '../wires/wire';
-import { WireDirection } from '../wires/wire-direction.enum';
-import { Direction } from '../utils/direction';
+import { Direction, WireDirection } from '@logigator/core';
 import { MoveComponentsAction } from '../actions/actions/move-components.action';
 import { makeAnd, makeWire } from '../../testing/factories';
 import { environment } from '../../environments/environment';
@@ -32,21 +31,19 @@ describe('Project.hasComponentCollision', () => {
     comp.position.set(3, 3);
     project.addComponent(comp);
 
-    // Query a rect that clearly overlaps the component body
     const query = new Rectangle(3, 3, 1, 1);
     expect(project.hasComponentCollision(query, query)).toBe(true);
   });
 
   it('allows adjacent components whose stubs touch (no collision)', () => {
-    // Component A: body width 2 at (0,0), output stub reaches x=2.5
+    // A: body width 2 at (0,0), output stub reaching x=2.5.
     const compA = makeAnd(2);
     compA.position.set(0, 0);
     project.addComponent(compA);
 
-    // Component B: input stub at x=2.5 when placed at (3,0)
+    // B at (3,0): input stub at x=2.5, so its gridBounds start there too.
     const compB = makeAnd(2);
     compB.position.set(3, 0);
-    // gridBounds of B: x = 3 - 0.5 = 2.5
     expect(
       project.hasComponentCollision(compB.gridBounds, compB.bodyGridBounds)
     ).toBe(false);
@@ -55,12 +52,12 @@ describe('Project.hasComponentCollision', () => {
   });
 
   it("detects collision when component B's body enters component A's stub", () => {
-    // Component A at (0,0): body [0,2)×[0,2), output stub [2,2.5)×[0,2)
+    // A at (0,0): body [0,2)×[0,2), output stub [2,2.5)×[0,2).
     const compA = makeAnd(2);
     compA.position.set(0, 0);
     project.addComponent(compA);
 
-    // Component B at (2,0): body starts at x=2 — inside A's output stub
+    // B at (2,0): its body starts inside A's output stub.
     const compB = makeAnd(2);
     compB.position.set(2, 0);
     expect(
@@ -94,18 +91,16 @@ describe('Project.hasWireBodyCollision', () => {
     project.destroy({ children: true });
   });
 
-  // Component at (3,0): body [3,5)x[0,2), stubs: input at x=2.5, output at x=5.5
-  // (Right-facing, 2 inputs, 1 output, bodyGridWidth=2, bodyGridHeight=2)
+  // Right-facing AND at (3,0): body [3,5)×[0,2), input stub at x=2.5, output
+  // stub at x=5.5.
 
   it('wire endpoint exactly at stub tip is not a collision', () => {
     const comp = makeAnd(2);
     comp.position.set(3, 0);
     project.addComponent(comp);
 
-    // Horizontal wire ending at stub tip (2.5, 0.5): pos=(px,0.5), length s.t. end=2.5
-    // Wire from x=0.5 length 2 → ends at 2.5
+    // Ends exactly on the input stub tip (2.5, 0.5).
     const wire = makeWire(0, 0, WireDirection.HORIZONTAL, 2);
-    // wire.position = (0.5, 0.5), length=2, endpoints (0.5,0.5) and (2.5,0.5)
     expect(project.hasWireBodyCollision(wire.gridBounds)).toBe(false);
     wire.destroy();
   });
@@ -115,7 +110,7 @@ describe('Project.hasWireBodyCollision', () => {
     comp.position.set(3, 0);
     project.addComponent(comp);
 
-    // Wire from x=0.5 length 3 → ends at (3.5, 0.5), inside body
+    // Ends at (3.5, 0.5), inside the body.
     const wire = makeWire(0, 0, WireDirection.HORIZONTAL, 3);
     expect(project.hasWireBodyCollision(wire.gridBounds)).toBe(true);
     wire.destroy();
@@ -126,7 +121,7 @@ describe('Project.hasWireBodyCollision', () => {
     comp.position.set(3, 0);
     project.addComponent(comp);
 
-    // Wire from x=0.5 length 6 → passes through entire body
+    // Passes through the whole body.
     const wire = makeWire(0, 0, WireDirection.HORIZONTAL, 6);
     expect(project.hasWireBodyCollision(wire.gridBounds)).toBe(true);
     wire.destroy();
@@ -137,7 +132,7 @@ describe('Project.hasWireBodyCollision', () => {
     comp.position.set(3, 0);
     project.addComponent(comp);
 
-    // Vertical wire at x=2.5 (input stub column), y span [0.5, 4.5]
+    // In the input stub column, spanning y [0.5, 4.5].
     const wire = makeWire(2, 0, WireDirection.VERTICAL, 4);
     expect(project.hasWireBodyCollision(wire.gridBounds)).toBe(false);
     wire.destroy();
@@ -168,8 +163,6 @@ describe('Project.hasComponentBodyWireCollision', () => {
     project.destroy({ children: true });
   });
 
-  // Body under test: Rectangle(3, 0, 2, 2) — covers x∈[3,5), y∈[0,2)
-
   it('returns false for an empty project', () => {
     expect(
       project.hasComponentBodyWireCollision(new Rectangle(3, 0, 2, 2))
@@ -177,7 +170,7 @@ describe('Project.hasComponentBodyWireCollision', () => {
   });
 
   it('horizontal wire passing through body is a collision', () => {
-    // Wire gx=0, len=4: gridBounds=[0,5)×[0,1) — enters body at x=3
+    // gridBounds [0,5)×[0,1) enters the body at x=3.
     const wire = makeWire(0, 0, WireDirection.HORIZONTAL, 4);
     project.addWire(wire);
     expect(
@@ -187,7 +180,7 @@ describe('Project.hasComponentBodyWireCollision', () => {
   });
 
   it('vertical wire passing through body is a collision', () => {
-    // Vertical wire at (3,0) len=2: gridBounds=[3,4)×[0,3) — overlaps body
+    // gridBounds [3,4)×[0,3) overlaps the body.
     const wire = makeWire(3, 0, WireDirection.VERTICAL, 2);
     project.addWire(wire);
     expect(
@@ -197,7 +190,7 @@ describe('Project.hasComponentBodyWireCollision', () => {
   });
 
   it('wire whose right edge is exactly at the body left boundary is not a collision', () => {
-    // Wire gx=0, len=2: gridBounds=[0,3)×[0,1) — right=3 equals body left=3 → no overlap
+    // gridBounds right=3 equals the body's left edge, so they don't overlap.
     const wire = makeWire(0, 0, WireDirection.HORIZONTAL, 2);
     project.addWire(wire);
     expect(
@@ -207,7 +200,7 @@ describe('Project.hasComponentBodyWireCollision', () => {
   });
 
   it('wire whose left edge is exactly at the body right boundary is not a collision', () => {
-    // Wire gx=5, len=2: gridBounds=[5,8)×[0,1) — left=5 equals body right=5 → no overlap
+    // gridBounds left=5 equals the body's right edge, so they don't overlap.
     const wire = makeWire(5, 0, WireDirection.HORIZONTAL, 2);
     project.addWire(wire);
     expect(
@@ -245,12 +238,9 @@ describe('Project connection-point integration', () => {
     project.destroy({ children: true });
   });
 
-  // Under the split-on-touch invariants, a wire endpoint never sits on
-  // another wire's interior at rest. A 3-wire T-junction at (2.5, 2.5) is the
-  // canonical 3-termination junction: H1 + H2 collinear, V perpendicular.
-  // H1 wire: makeWire(0,2,H,2) → (0.5,2.5)→(2.5,2.5)
-  // H2 wire: makeWire(2,2,H,3) → (2.5,2.5)→(5.5,2.5)
-  // V  wire: makeWire(2,0,V,2) → (2.5,0.5)→(2.5,2.5)
+  // A wire endpoint never rests on another wire's interior, so the canonical
+  // 3-termination junction is a T at (2.5, 2.5): collinear H1 (0.5,2.5)→
+  // (2.5,2.5) and H2 (2.5,2.5)→(5.5,2.5), plus V (2.5,0.5)→(2.5,2.5).
 
   it('addWire creates CP at 3-wire T-junction', () => {
     const h1 = makeWire(0, 2, WireDirection.HORIZONTAL, 2);
@@ -282,8 +272,7 @@ describe('Project connection-point integration', () => {
   });
 
   it('pure 2-wire X crossing (no endpoint at crossing) — no CP', () => {
-    // H and V cross at (2.5,2.5) but neither has an endpoint there.
-    // Interior-on-interior is allowed and produces no CP.
+    // Interior-on-interior crossing: allowed, and produces no CP.
     const h = makeWire(0, 2, WireDirection.HORIZONTAL, 5);
     const v = makeWire(2, 0, WireDirection.VERTICAL, 5);
     project.addWire(h);
@@ -317,18 +306,17 @@ describe('Project connection-point integration', () => {
 
     project.applyTheme(false);
 
-    // A theme change recolours in place: the dot is neither destroyed nor
-    // replaced, and its selection state survives the retint.
+    // A theme change recolours in place, keeping the instance and its
+    // selection state.
     expect(project.connectionPoints.getCpAt(jn)).toBe(cp);
     expect(cp!.destroyed).toBe(false);
     expect(cp!.selected).toBe(true);
     expect(cp!.tint).toBe(selectionTint);
   });
 
-  // The drag lifecycle maintains termination counts out of band: detach drops
-  // them at the old positions, reattach re-adds them at the new ones, and the
-  // settle pass reconciles the visible dots. These two pin that a drag which
-  // changes a junction's termination count flips the CP correctly.
+  // A drag maintains termination counts out of band: detach drops them at the
+  // old positions, reattach re-adds them at the new ones, and the settle pass
+  // reconciles the visible dots.
   it('dragging an endpoint onto a 2-termination point creates a CP', () => {
     const h1 = makeWire(0, 2, WireDirection.HORIZONTAL, 2); // end (2.5,2.5)
     const v = makeWire(2, 0, WireDirection.VERTICAL, 2); // end (2.5,2.5)
@@ -341,8 +329,7 @@ describe('Project connection-point integration', () => {
     project.addWire(mover);
     const oldSnap = Wire.snapshot(mover);
 
-    // Drag it so its start lands on the junction: detach (old pos) → move →
-    // reattach (new pos) → settle.
+    // Drag its start onto the junction: detach → move → reattach → settle.
     project.detachForDrag([], [mover]);
     mover.position.set(mover.position.x - 3, mover.position.y - 3);
     project.reattachFromDrag([], [mover]);
@@ -425,9 +412,8 @@ describe('Project connection-point integration', () => {
   });
 
   it('captureDragCps skips a termination-point CP absent from the given set', () => {
-    // Same junction as above, but the CP is not in the selected set — so even
-    // though the dragged wire terminates there, the junction is left in place.
-    // This keeps what a drag carries matched to what looks selected.
+    // The CP is not in the selected set, so it stays put even though the
+    // dragged wire terminates there: what moves matches what looks selected.
     const h1 = makeWire(0, 2, WireDirection.HORIZONTAL, 2);
     const h2 = makeWire(2, 2, WireDirection.HORIZONTAL, 3);
     const v = makeWire(2, 0, WireDirection.VERTICAL, 2);
@@ -456,9 +442,8 @@ describe('Project connection-point integration', () => {
   });
 
   it('captureDragCps does not capture CPs that sit at the interior of the dragged wire', () => {
-    // CP at (2.5, 0.5) formed by 2 collinear H halves + 1 V wire. Dragging a
-    // long H wire whose interior passes through that CP must NOT capture it,
-    // since the long H doesn't have an endpoint there.
+    // A CP at (2.5, 0.5) from two collinear H halves plus a V. A dragged wire
+    // whose interior merely passes through it has no endpoint there.
     const longH = makeWire(-5, 5, WireDirection.HORIZONTAL, 20);
     const h1 = makeWire(0, 0, WireDirection.HORIZONTAL, 2);
     const h2 = makeWire(2, 0, WireDirection.HORIZONTAL, 3);
@@ -479,7 +464,6 @@ describe('Project connection-point integration', () => {
       dragLayer
     );
 
-    // longH has no endpoint at (2.5, 0.5), so no CP is captured.
     expect(cpAt(project, jn)).toBe(true);
     expect(captured.length).toBe(0);
 
@@ -537,7 +521,6 @@ describe('Project connection-point integration', () => {
   });
 
   it('moveWire updates CPs', () => {
-    // 3-wire T at (2.5, 2.5); move V away → CP disappears.
     const h1 = makeWire(0, 2, WireDirection.HORIZONTAL, 2);
     const h2 = makeWire(2, 2, WireDirection.HORIZONTAL, 3);
     const v = makeWire(2, 0, WireDirection.VERTICAL, 2);
@@ -553,11 +536,9 @@ describe('Project connection-point integration', () => {
   });
 
   it('rotating a component via the direction setter updates CPs', () => {
-    // Place a Right-facing AND at (3,0): input tips at (2.5, 0.5)/(2.5, 1.5), output at (5.5, 0.5).
-    // Two horizontal wires both ending at the same input tip would yield D=3 (E from stub,
-    // W from each wire's W direction — dedup'd to just W), so use a 3-wire junction
-    // at the (2.5, 0.5) input tip: one H wire ending there + one V wire ending there.
-    // D = E (stub) + W (H wire end) + N (V wire end) = 3, T = 3 → CP.
+    // Right-facing AND at (3,0), input tip (2.5, 0.5). Two H wires ending
+    // there would share the W direction and dedup to D=2, so the junction is
+    // one H plus one V: D = E (stub) + W + N = 3 and T = 3, hence a CP.
     const comp = makeAnd(2);
     comp.position.set(3, 0);
     project.addComponent(comp);
@@ -572,15 +553,14 @@ describe('Project connection-point integration', () => {
     const oldTip = new Point(2.5, 0.5);
     expect(cpAt(project, oldTip)).toBe(true);
 
-    // Rotate the component. The Down rotation moves port tips elsewhere; the CP
-    // at the old tip should disappear since the stub no longer terminates there.
+    // Rotating moves the port tips, so the stub stops terminating at the old
+    // one and its CP disappears.
     comp.direction = Direction.S;
 
     expect(cpAt(project, oldTip)).toBe(false);
   });
 
   it('recomputeCpsForMovedSelection drops stale CP at old position', () => {
-    // 3-wire T at (2.5, 2.5); move V far away → CP at old position disappears.
     const h1 = makeWire(0, 2, WireDirection.HORIZONTAL, 2);
     const h2 = makeWire(2, 2, WireDirection.HORIZONTAL, 3);
     const v = makeWire(2, 0, WireDirection.VERTICAL, 2);
@@ -648,11 +628,11 @@ describe('Project.getContentBounds', () => {
   });
 
   it('unions components and wires across the board', () => {
-    // AND at (3,0): gridBounds x∈[2.5,5.5], y∈[0,2]
+    // gridBounds x∈[2.5,5.5], y∈[0,2].
     const comp = makeAnd(2);
     comp.position.set(3, 0);
     project.addComponent(comp);
-    // Vertical wire at (2,5): gridBounds x∈[2,3], y∈[5,10]
+    // gridBounds x∈[2,3], y∈[5,10].
     const wire = makeWire(2, 5, WireDirection.VERTICAL, 4);
     project.addWire(wire);
 
@@ -677,11 +657,10 @@ describe('Project portsChange$ rebucket', () => {
   });
 
   it('re-queries a component at its grown bounds after a numInputs increase', () => {
-    // The quad tree (root [0,64]²) re-filters every *visited* element against
-    // its live gridBounds, so a stale bucket is only observable once the tree
-    // has branched: a query that never descends into the component's old
-    // quadrant can't re-filter it. Force a split by exceeding the 4-element
-    // leaf cap, with one filler per quadrant.
+    // The quad tree re-filters every *visited* element against its live
+    // gridBounds, so a stale bucket only shows once the tree has branched and
+    // a query can skip the old quadrant. Exceed the 4-element leaf cap to
+    // force the split.
     const target = makeAnd(2); // NW: gridBounds ≈ x[1.5,4.5] y[2,4]
     target.position.set(2, 2);
     project.addComponent(target);
@@ -696,15 +675,13 @@ describe('Project portsChange$ rebucket', () => {
       project.addComponent(filler);
     }
 
-    // A rect deep in the SW quadrant: outside target's original NW bounds, and
-    // the traversal won't descend the NW branch for it — target not found yet.
+    // Deep in the SW quadrant, so the traversal never descends into NW.
     const farRect = new Rectangle(2, 40, 1, 1);
     expect(project.queryComponentsInRange(farRect)).not.toContain(target);
 
-    // Growing numInputs grows bodyGridHeight (→ gridBounds y[2,52], spanning the
-    // NW and SW quadrants) and fires portsChange$, whose handler must re-bucket
-    // target so spatial queries reflect the new bounds.
-    target.numInputs = 50;
+    // Growing numInputs grows gridBounds to y[2,52], spanning NW and SW, and
+    // fires portsChange$, whose handler must re-bucket target.
+    target.options.numInputs.value = 50;
 
     expect(project.queryComponentsInRange(farRect)).toContain(target);
   });
@@ -718,7 +695,6 @@ describe('Project.cull', () => {
   beforeEach(() => {
     configureTestBed();
     project = new Project();
-    // A 10×10 grid-unit viewport at scale 1.
     project.viewport.resizeViewport(gridSize * 10, gridSize * 10);
   });
 

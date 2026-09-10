@@ -3,7 +3,7 @@ import { configureTestBed } from '../../../../testing/configure-test-bed';
 import { Component } from '../../component';
 import { Project } from '../../../project/project';
 import { QuadTreeContainer } from '../../../rendering/quad-tree-container';
-import { Direction } from '../../../utils/direction';
+import { Direction } from '@logigator/core';
 import { textComponentConfig } from './text.config';
 
 function makeText(
@@ -42,9 +42,9 @@ describe('TextComponent cull bounds', () => {
     const comp = makeText('x'.repeat(100));
     const cull = comp.cullBounds;
 
-    // The tail of the text sits far to the right of the 1×1 anchor cell, so the
-    // cull box must extend to reach it — this is what keeps the label rendered
-    // once the anchor cell pans off the left viewport edge.
+    // The tail sits far right of the 1×1 anchor cell, so the cull box must
+    // reach it to keep the label rendered once the anchor cell pans off the
+    // left viewport edge.
     expect(cull.x).toBe(0);
     expect(cull.width).toBeGreaterThan(40);
     expect(cull.contains(40, 0.5)).toBe(true);

@@ -5,17 +5,14 @@ import { CloudSessionService } from './cloud-session.service';
 import { UserService } from './user.service';
 import { ProjectMetadataStore } from '../persistence/project-metadata.store';
 import { Project } from '../project/project';
-import type { UserData } from '../api/models/user';
+import type { UserResponse } from '@logigator/contract';
+import { makeUser } from '../../testing/user-fixtures';
 import { configureTestBed } from '../../testing/configure-test-bed';
-
-function makeUser(id: string): UserData {
-  return { id, memberSince: '2024-01-01', username: id, image: null };
-}
 
 describe('CloudSessionService', () => {
   let service: CloudSessionService;
   let metadataStore: ProjectMetadataStore;
-  let user: ReturnType<typeof signal<UserData | null>>;
+  let user: ReturnType<typeof signal<UserResponse | null>>;
 
   function registerServerDoc(): Project {
     const project = new Project();
@@ -24,14 +21,13 @@ describe('CloudSessionService', () => {
       name: 'Doc',
       type: 'project',
       source: 'server',
-      hash: '',
       isPublic: false
     });
     return project;
   }
 
   beforeEach(() => {
-    user = signal<UserData | null>(null);
+    user = signal<UserResponse | null>(null);
     configureTestBed([
       { provide: UserService, useValue: { user, sessionExpired: vi.fn() } }
     ]);

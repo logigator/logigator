@@ -1,9 +1,8 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { WorkMode } from './work-mode.enum';
-import { ComponentType } from '../components/component-type.enum';
+import { ComponentType, Direction } from '@logigator/core';
 import { ComponentProviderService } from '../components/component-provider.service';
 import { LoggingService } from '../logging/logging.service';
-import { Direction } from '../utils/direction';
 
 @Injectable({
   providedIn: 'root'
@@ -26,10 +25,8 @@ export class WorkModeService {
       : null;
   });
 
-  // Sticky per-type placement direction: the settings panel writes it while a
-  // placement is armed, and every fresh placement ghost of that type picks it
-  // up — so consecutive placements keep facing the way the user chose.
-  // Session-lifetime, defaulting to East for types never adjusted.
+  // Sticky per-type placement direction, so consecutive placements keep facing
+  // the way the user chose. Session-lifetime, defaulting to East.
   private readonly _placementDirections = signal<
     ReadonlyMap<ComponentType, Direction>
   >(new Map());

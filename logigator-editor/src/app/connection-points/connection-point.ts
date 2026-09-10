@@ -13,9 +13,8 @@ export const MIN_DIAMETER = 3 * PX;
 /** Largest on-screen dot diameter; the ceiling when zoomed in. */
 export const MAX_DIAMETER = 8 * PX;
 
-// Grid-unit dot size, applied as the ConnectionPoint transform: DIAMETER across
-// (so it scales with the board), clamped to a fixed pixel floor/ceiling on
-// screen — the `/ scale` on the bounds counter-scales the zoom.
+// Grid-unit dot size: DIAMETER across so it scales with the board, clamped to
+// a fixed on-screen floor and ceiling by counter-scaling the bounds.
 export function scaleForScale(scale: number): number {
   return clamp(DIAMETER, MIN_DIAMETER / scale, MAX_DIAMETER / scale);
 }
@@ -35,7 +34,7 @@ export class ConnectionPoint extends Graphics {
     );
     this.refreshTint();
     this.position.copyFrom(position);
-    // pivot at (0.5, 0.5) within the 1×1 unit square centres the dot on position
+    // Centres the dot on position within the 1×1 unit square.
     this.pivot.set(0.5, 0.5);
   }
 
@@ -43,7 +42,7 @@ export class ConnectionPoint extends Graphics {
     this.scale.set(scaleForScale(scale));
   }
 
-  /** Whether the dot carries the selection color (see {@link refreshTint}). */
+  /** Whether the dot carries the selection color. */
   public get selected(): boolean {
     return this._selected;
   }
@@ -54,9 +53,8 @@ export class ConnectionPoint extends Graphics {
   }
 
   /**
-   * Re-derives the tint from the current theme and selection state. The
-   * shared context is a white base (see ConnectionPointGraphics), so the tint
-   * IS the dot's color — this doubles as the theme-change hook.
+   * Re-derives the tint from theme and selection state. The shared context is a
+   * white base, so the tint *is* the dot's color; also the theme-change hook.
    */
   public refreshTint(): void {
     const theme = this._themingService.currentTheme();

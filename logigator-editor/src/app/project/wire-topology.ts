@@ -1,6 +1,6 @@
 import { Point, Rectangle } from 'pixi.js';
 import { Wire } from '../wires/wire';
-import { WireDirection } from '../wires/wire-direction.enum';
+import { WireDirection } from '@logigator/core';
 import {
   IntegrationInput,
   IntegrationOutput,
@@ -14,10 +14,10 @@ import { LoggingService } from '../logging/logging.service';
 import type { Project } from './project';
 
 /**
- * The project's wire-topology editor: owns the {@link WireIntegrator} (the
- * split/merge invariant restorer every structural mutation runs through) and
- * the wire tool's connection toggling — joining the wires that meet at a
- * junction dot, or splitting a pure crossing into four wires so a dot appears.
+ * The project's wire-topology editor: the {@link WireIntegrator} every
+ * structural mutation runs through, plus the wire tool's connection toggling —
+ * joining the wires meeting at a junction dot, or splitting a pure crossing
+ * into four so a dot appears.
  */
 export class WireTopology {
   private readonly _integrator = new WireIntegrator();
@@ -26,9 +26,9 @@ export class WireTopology {
   constructor(private readonly project: Project) {}
 
   /**
-   * Restores the wire invariants around a structural change: splits wires
-   * whose interiors gained a termination, merges collinear pairs that lost
-   * one. Returns the wires the caller must add/remove; mutates nothing itself.
+   * Restores the wire invariants around a structural change: splits wires whose
+   * interiors gained a termination, merges collinear pairs that lost one.
+   * Returns the wires to add and remove; mutates nothing itself.
    */
   public integrate(input: IntegrationInput): IntegrationOutput {
     return this._integrator.integrate(
@@ -50,10 +50,8 @@ export class WireTopology {
   /**
    * What {@link toggleConnectionAt} would do at a half-grid point: 'join'
    * merges the wires ending at an existing CP, 'split' cuts a pure crossing,
-   * `null` means the tap would be a no-op. Non-mutating — the join case
-   * dry-runs the full plan (including the blocked re-split check, so a
-   * T-junction reports `null`) and discards it. Drives the wire tool's
-   * hover ghost.
+   * `null` is a no-op. Non-mutating: the join case dry-runs the full plan,
+   * blocked re-split check included, so a T-junction reports `null`.
    */
   public connectionToggleKindAt(p: Point): 'join' | 'split' | null {
     if (this.project.connectionPoints.hasCpAt(p)) {
@@ -84,12 +82,11 @@ export class WireTopology {
   }
 
   /**
-   * Builds the join plan for a CP point without mutating the project: merges
-   * each collinear pair ending at `p` and integrates the result. Returns
-   * `null` when there is nothing to merge or the integrator would re-split at
-   * `p` (a third terminator blocks the merge — the T-junction case). The
-   * caller must `discard()` the plan after using it (the actions snapshot the
-   * wires in their constructors) — it destroys the temporary instances.
+   * Merges each collinear pair ending at `p` and integrates the result, without
+   * mutating the project. `null` when there is nothing to merge, or when the
+   * integrator would re-split at `p` because a third terminator blocks it.
+   * `discard()` destroys the temporary instances and must be called once the
+   * plan has been used.
    */
   private _planJoinAt(
     p: Point
@@ -186,9 +183,9 @@ export class WireTopology {
     const action = new ActionContainer();
     if (toRemove.length > 0) action.add(new RemoveWiresAction(...toRemove));
     if (toAdd.length > 0) action.add(new AddWiresAction(...toAdd));
-    // Both the halves cut here and whatever integration built on top of them are
-    // throwaway: the actions snapshot their wires on construction and push() puts
-    // fresh instances in the project. toRemove holds live tree wires — leave those.
+    // The halves and whatever integration built on them are throwaway: the
+    // actions snapshot their wires on construction and push() puts fresh
+    // instances in the project. toRemove holds live tree wires; leave those.
     for (const w of [...addedWires, ...toAdd]) if (!w.destroyed) w.destroy();
     this.project.actionManager.push(action);
   }

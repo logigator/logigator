@@ -74,7 +74,13 @@
                   "maximumError": "4kB"
                 }
               ],
-              "outputHashing": "all"
+              "outputHashing": "all",
+              "sourceMap": {
+                "scripts": true,
+                "styles": false,
+                "vendor": true,
+                "hidden": false
+              }
             },
             "development": {
               "optimization": false,
@@ -132,10 +138,142 @@
         "lint": {
           "builder": "@angular-eslint/builder:lint",
           "options": {
-            "eslintConfig": "logigator-editor/eslint.config.js",
+            "eslintConfig": "logigator-editor/eslint.config.mjs",
             "lintFilePatterns": [
               "logigator-editor/src/**/*.ts",
               "logigator-editor/src/**/*.html"
+            ]
+          }
+        }
+      }
+    },
+    "logigator-web": {
+      "projectType": "application",
+      "schematics": {
+        "@schematics/angular:component": {
+          "style": "scss"
+        }
+      },
+      "root": "logigator-web",
+      "sourceRoot": "logigator-web/src",
+      "prefix": "web",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:application",
+          "options": {
+            "outputPath": "dist/logigator-web",
+            "index": "logigator-web/src/index.html",
+            "browser": "logigator-web/src/main.ts",
+            "server": "logigator-web/src/main.server.ts",
+            "outputMode": "server",
+            "ssr": {
+              "entry": "logigator-web/src/server.ts"
+            },
+            "polyfills": [],
+            "tsConfig": "logigator-web/tsconfig.app.json",
+            "inlineStyleLanguage": "scss",
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "logigator-web/public"
+              }
+            ],
+            "loader": {
+              ".svg": "file",
+              ".woff2": "file",
+              ".png": "file",
+              ".jpg": "file",
+              ".jpeg": "file",
+              ".webp": "file",
+              ".avif": "file",
+              ".gif": "file",
+              ".md": "text"
+            },
+            "define": {
+              "GIT_COMMIT": "''",
+              "BUILD_DATE": "''"
+            },
+            "styles": [
+              "logigator-web/src/styles.scss",
+              {
+                "input": "logigator-web/src/consent/cookieconsent.css",
+                "bundleName": "cookieconsent",
+                "inject": false
+              }
+            ],
+            "scripts": [
+              {
+                "input": "node_modules/vanilla-cookieconsent/dist/cookieconsent.umd.js",
+                "bundleName": "cookieconsent",
+                "inject": false
+              },
+              {
+                "input": "logigator-web/src/consent/cookieconsent-init.js",
+                "bundleName": "cookieconsent",
+                "inject": false
+              }
+            ]
+          },
+          "configurations": {
+            "production": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "900kB",
+                  "maximumError": "1MB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "3kB",
+                  "maximumError": "4kB"
+                }
+              ],
+              "outputHashing": "all",
+              "sourceMap": {
+                "scripts": true,
+                "styles": false,
+                "vendor": true,
+                "hidden": false
+              }
+            },
+            "development": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "outputHashing": "media"
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "serve": {
+          "builder": "@angular/build:dev-server",
+          "configurations": {
+            "production": {
+              "buildTarget": "logigator-web:build:production"
+            },
+            "development": {
+              "buildTarget": "logigator-web:build:development"
+            }
+          },
+          "defaultConfiguration": "development",
+          "options": {
+            "host": "0.0.0.0",
+            "allowedHosts": ["logigator.test"]
+          }
+        },
+        "test": {
+          "builder": "@angular/build:unit-test",
+          "options": {
+            "runnerConfig": "logigator-web/vitest.config.ts"
+          }
+        },
+        "lint": {
+          "builder": "@angular-eslint/builder:lint",
+          "options": {
+            "eslintConfig": "logigator-web/eslint.config.mjs",
+            "lintFilePatterns": [
+              "logigator-web/src/**/*.ts",
+              "logigator-web/src/**/*.html"
             ]
           }
         }
@@ -168,7 +306,7 @@
         "lint": {
           "builder": "@angular-eslint/builder:lint",
           "options": {
-            "eslintConfig": "logigator-ui/eslint.config.js",
+            "eslintConfig": "logigator-ui/eslint.config.mjs",
             "lintFilePatterns": [
               "logigator-ui/src/**/*.ts",
               "logigator-ui/src/**/*.html"

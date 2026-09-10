@@ -21,8 +21,7 @@ function popover(): Element | null {
   return document.querySelector('.cdk-overlay-container app-hint-popover');
 }
 
-/** A global (bottom-centre float) overlay sits in a global wrapper; an anchored
- *  (connected) one does not — this distinguishes the two placements. */
+/** A floated overlay sits in a global wrapper; an anchored one does not. */
 function isFloating(): boolean {
   return !!popover()?.closest('.cdk-global-overlay-wrapper');
 }
@@ -111,9 +110,8 @@ describe('HintService', () => {
     expect(onboarding.hasSeenHint('wire-tap-actions')).toBe(false);
   });
 
-  // A hint's target can enter the DOM only after its trigger fires (e.g. the
-  // sim controls on entering simulation). Resolution reads the reactive target
-  // registry, so it anchors once the element is registered instead of floating.
+  // A hint's target can enter the DOM only after its trigger fires; the
+  // reactive registry read anchors it once the element registers.
   it('anchors a hint to its target element when the target is registered', () => {
     const wire = document.createElement('div');
     document.body.appendChild(wire);
@@ -138,7 +136,7 @@ describe('HintService', () => {
     enterWireTool(); // target not registered yet → floats
     expect(isFloating()).toBe(true);
 
-    // The target appears later (e.g. the sim controls on entering simulation).
+    // The target appears later, as the sim controls do.
     const wire = document.createElement('div');
     document.body.appendChild(wire);
     TestBed.inject(OnboardingTargetRegistry).register('tool-wire', wire);
@@ -148,9 +146,8 @@ describe('HintService', () => {
     wire.remove();
   });
 
-  // Floating is for a target that has not appeared yet. Once the hint has
-  // anchored, losing the target means its surface closed (the component tab, the
-  // side bar) — floating it on would leave it over the board pointing at nothing.
+  // Floating is for a target that has not appeared yet. Losing one the hint had
+  // already anchored to means its surface closed, so the hint goes with it.
   it('dismisses an anchored hint once its target leaves the DOM', async () => {
     const registry = TestBed.inject(OnboardingTargetRegistry);
     const wire = document.createElement('div');
@@ -168,8 +165,8 @@ describe('HintService', () => {
     expect(popover()).toBeNull();
   });
 
-  // An anchor that is merely re-created (its host re-rendered) unregisters and
-  // registers again; the hint has to follow it, not read the loss as a close.
+  // A merely re-created anchor unregisters and registers again; the hint
+  // follows it rather than reading the loss as a close.
   it('re-anchors an anchored hint to a re-created target', async () => {
     const registry = TestBed.inject(OnboardingTargetRegistry);
     const wire = document.createElement('div');
@@ -225,9 +222,8 @@ describe('HintService', () => {
     expect(onboarding.hasSeenHint('ports-panel')).toBe(true);
   });
 
-  // Picking a tool is what several non-tool hints ask for — the Ports hint asks
-  // for a plug, which arms COMPONENT_PLACEMENT. Only tool hints clear on a mode
-  // change, or following the instruction would close the hint giving it.
+  // Picking a tool is what several non-tool hints ask for, so only tool hints
+  // clear on a mode change — otherwise following a hint would close it.
   it('keeps a non-tool hint open across a work-mode change', () => {
     const project = makeFakeProject();
     TestBed.inject(ProjectMetadataStore).register(

@@ -6,13 +6,10 @@ import { ClipboardService } from './clipboard.service';
 import { Project } from '../project/project';
 import { Component } from '../components/component';
 import { Wire } from '../wires/wire';
-import { WireDirection } from '../wires/wire-direction.enum';
+import { Direction, WireDirection } from '@logigator/core';
 import { ActionContainer } from '../actions/action-container';
 import { ProjectMetadataStore } from '../persistence/project-metadata.store';
-import { Direction } from '../utils/direction';
 import { makeAnd, makeInput } from '../../testing/factories';
-
-// ── helpers ───────────────────────────────────────────────────────────────────
 
 function makeWire(): Wire {
   const w = new Wire(WireDirection.HORIZONTAL, 4);
@@ -20,9 +17,8 @@ function makeWire(): Wire {
   return w;
 }
 
-// Mock project where selectionManager.selectedComponents/selectedWires can be
-// set directly per test. removeComponent/removeWire are no-ops by default so
-// evict() is never triggered here (that's tested on the real SelectionManager).
+// selectedComponents/selectedWires are set directly per test, and
+// removeComponent/removeWire are no-ops so evict() never fires here.
 function makeProject(
   comps: Component[] = [],
   wires: Wire[] = []
@@ -40,9 +36,8 @@ function makeProject(
       register: vi.fn(),
       coalesceTop: vi.fn()
     },
-    // Pass-through stub: deleting integrates nothing extra, so toRemove is
-    // exactly the removed selection. Real merge behavior is covered by the
-    // real-project describe below.
+    // Pass-through: toRemove is exactly the removed selection. Real merge
+    // behaviour is covered against a real project below.
     topology: {
       integrate: vi.fn((input: { removedWires?: Wire[] }) => ({
         toAdd: [],
@@ -56,9 +51,8 @@ function makeProject(
   } as unknown as MockedObject<Project>;
 }
 
-// Registers a mock project in the metadata store so paste() can tell a plain
-// project from a custom-component document. trackDirty=false — the mock has
-// no actionManager.actionChange$.
+// Lets paste() tell a plain project from a custom-component document.
+// trackDirty is off: the mock has no actionManager.actionChange$.
 function registerAs(project: Project, type: 'project' | 'comp'): void {
   TestBed.inject(ProjectMetadataStore).register(
     project,
@@ -67,14 +61,11 @@ function registerAs(project: Project, type: 'project' | 'comp'): void {
       name: 'test',
       type,
       source: 'browser',
-      hash: '',
       isPublic: false
     },
     false
   );
 }
-
-// ── ClipboardService ──────────────────────────────────────────────────────────
 
 describe('ClipboardService', () => {
   let service: ClipboardService;
@@ -91,8 +82,6 @@ describe('ClipboardService', () => {
       if (!c.destroyed) c.destroy({ children: true });
     }
   });
-
-  // ── copy ────────────────────────────────────────────────────────────────────
 
   describe('copy()', () => {
     it('hasClipboard is false before any copy', () => {
@@ -139,8 +128,6 @@ describe('ClipboardService', () => {
       expect(project.removeWire).not.toHaveBeenCalled();
     });
   });
-
-  // ── delete ──────────────────────────────────────────────────────────────────
 
   describe('delete()', () => {
     it('does nothing when selection is empty', () => {
@@ -189,7 +176,6 @@ describe('ClipboardService', () => {
 
       service.delete(project);
 
-      // The cut's history entry absorbs the delete container.
       expect(project.actionManager.coalesceTop).toHaveBeenCalledTimes(1);
       const [top, next] = (
         project.actionManager.coalesceTop as ReturnType<typeof vi.fn>
@@ -210,8 +196,6 @@ describe('ClipboardService', () => {
       expect(container).toBeInstanceOf(ActionContainer);
     });
   });
-
-  // ── cut ─────────────────────────────────────────────────────────────────────
 
   describe('cut()', () => {
     it('does nothing when selection is empty', () => {
@@ -237,8 +221,6 @@ describe('ClipboardService', () => {
       expect(project.removeComponent).toHaveBeenCalledWith(comp.id);
     });
   });
-
-  // ── paste ───────────────────────────────────────────────────────────────────
 
   describe('paste()', () => {
     it('does nothing when clipboard is empty', () => {
@@ -281,8 +263,7 @@ describe('ClipboardService', () => {
       const comp = makeAnd();
       comp.position.set(3, 4);
       compsToDestroy.push(comp);
-      // Wire at position (5.5, 3.5) serializes as pos=[5,3] (Math.floor) and
-      // comes back on the half-grid step wires live on.
+      // (5.5, 3.5) serializes as pos=[5,3] and comes back on the half-grid.
       const wire = makeWire();
       const src = makeProject([comp], [wire]);
       service.copy(src);
@@ -341,14 +322,12 @@ describe('ClipboardService', () => {
     });
 
     it('skips unknown component types gracefully', () => {
-      // Manually set clipboard with an unknown type; paste should not throw,
-      // and with nothing left to place no session is opened.
+      // With nothing left to place, paste opens no session and does not throw.
       const comp = makeAnd();
       compsToDestroy.push(comp);
       const src = makeProject([comp]);
       service.copy(src);
 
-      // Corrupt the type to an unknown value
       (
         service as unknown as {
           _clipboard: () => { components: { type: string }[] };
@@ -415,8 +394,6 @@ describe('ClipboardService', () => {
   });
 });
 
-// ── delete() — wire integration (real project) ────────────────────────────────
-
 describe('ClipboardService delete() — wire integration', () => {
   let service: ClipboardService;
   let project: Project;
@@ -473,9 +450,8 @@ describe('ClipboardService delete() — wire integration', () => {
   });
 
   it('merges the wires held apart by a deleted component’s ports', () => {
-    // AND at (4,1) facing East: input ports at (3.5, 1.5) and (3.5, 2.5).
-    // Three vertical wires split at exactly those ports — only the ports keep
-    // them apart.
+    // AND at (4,1) facing East has input ports at (3.5, 1.5) and (3.5, 2.5);
+    // only those ports keep the three vertical wires split.
     const comp = makeAnd(2, Direction.E, 4, 1);
     project.addComponent(comp);
     project.addWire(wire(3, 0, WireDirection.VERTICAL, 1)); // 0.5..1.5

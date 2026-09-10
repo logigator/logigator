@@ -13,17 +13,15 @@ import {
 } from '../../components/component-config.model';
 import { TranslationService } from '../../translation/translation.service';
 import { ChangeOptionAction } from '../../actions/actions/change-option.action';
-import { Direction } from '../../utils/direction';
+import { CUSTOM_TYPE_ID_BASE, Direction } from '@logigator/core';
 import { normalizeRotationSteps } from '../../utils/rotation';
 import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
-import { CUSTOM_TYPE_ID_BASE } from '../../components/component-type.enum';
 import {
   SourceIndicatorComponent,
   SourceIndicatorState
 } from '../source-indicator/source-indicator.component';
 
-// Choices for the universal direction row, in the clockwise-from-East order
-// the Direction enum encodes.
+// Clockwise from East, the order the Direction enum encodes.
 const DIRECTION_CHOICES: { value: Direction; icon: string }[] = [
   { value: Direction.E, icon: 'ph ph-arrow-fat-right' },
   { value: Direction.S, icon: 'ph ph-arrow-fat-down' },
@@ -43,9 +41,8 @@ let nextDirectionInputId = 0;
     SourceIndicatorComponent
   ],
   templateUrl: './component-settings.component.html',
-  // Clamp to the host container so a long, unbreakable description word can't
-  // inflate the card's min-content and push it past the layout's width cap
-  // (the desktop corner's max-width wrapper or the mobile settings drawer).
+  // Clamped so a long unbreakable description word can't inflate the card's
+  // min-content and push it past the layout's width cap.
   host: { class: 'block max-w-full' }
 })
 export class ComponentSettingsComponent {
@@ -55,20 +52,17 @@ export class ComponentSettingsComponent {
   private readonly translation = inject(TranslationService);
   private readonly registry = inject(CustomComponentRegistry);
 
-  // The settings panel shows the placement ghost while placing, otherwise the
-  // single selected placed component. Each branch supplies a `commit`
-  // callback that a renderer invokes on edit: the ghost writes its option
-  // directly (the eventual AddComponentsAction captures the final values); a
-  // placed component routes the write through ChangeOptionAction (undoable +
-  // dirty-tracked). Direction is not an option but universal first-class
-  // component state, so each branch also supplies the fixed direction row's
-  // value and its own `commitDirection`. Both branches carry the config's
-  // inspector actions and a context to act on; the ghost has no instance, so
-  // its context omits component/project and instance-scoped actions (e.g.
-  // update-to-latest) hide themselves on the null component.
+  // The placement ghost while placing, otherwise the single selected placed
+  // component. Each branch supplies the `commit` a renderer invokes on edit:
+  // the ghost writes its option directly, since the eventual
+  // AddComponentsAction captures the final values, while a placed component
+  // routes through ChangeOptionAction so the edit is undoable and dirty-
+  // tracked. Direction is first-class state rather than an option, hence the
+  // separate `commitDirection`. The ghost has no instance, so its context
+  // omits component/project and instance-scoped actions hide themselves.
   protected readonly componentSettings = computed(() => {
-    // Hidden during simulation: editing is locked, and the mode switch has
-    // already cleared selection and placement state anyway.
+    // Hidden during simulation: editing is locked and the mode switch has
+    // already cleared selection and placement state.
     if (this.workModeService.mode() === WorkMode.SIMULATION) {
       return null;
     }
@@ -82,9 +76,9 @@ export class ComponentSettingsComponent {
         commit: (key: string, value: unknown) => {
           ghost.options[key].value = value;
         },
-        // The ghost's direction is the sticky per-type placement direction:
-        // the live hover ghost is rebuilt from it whenever the pointer
-        // re-enters the board, so the panel write lands on the next ghost.
+        // The sticky per-type placement direction: the hover ghost is rebuilt
+        // from it whenever the pointer re-enters the board, so a write here
+        // lands on the next ghost.
         direction: this.workModeService.placementDirectionFor(ghost.type),
         commitDirection: (value: Direction) =>
           this.workModeService.setPlacementDirection(ghost.type, value),
@@ -109,13 +103,10 @@ export class ComponentSettingsComponent {
           );
         },
         direction: selected.direction,
-        // A direction change rotates about the component's midpoint, matching
-        // the rotate buttons/shortcuts, rather than pinning the body's
-        // top-left corner (the `direction` setter's own anchor). Routing
-        // through the shared selection-rotate command reuses the buttons'
-        // pivot, collision handling, and undo entry — the single selected
-        // component this panel edits is exactly the selection that command
-        // turns.
+        // Rotates about the component's midpoint rather than pinning the
+        // body's top-left corner, which is the `direction` setter's own
+        // anchor. The shared selection-rotate command already has that pivot
+        // plus collision handling and one undo entry.
         commitDirection: (value: Direction) => {
           const steps = normalizeRotationSteps(value - selected.direction);
           if (steps === 0) return;
@@ -130,10 +121,10 @@ export class ComponentSettingsComponent {
     return null;
   });
 
-  // Inspector-hidden options (e.g. a plug's system-managed `index`) still
-  // round-trip through the wire format but are never rendered in the form.
-  // Each row binds the option to its renderer plus a `commit` bound to the
-  // option's key, so the renderer reports edits without knowing how they apply.
+  // Inspector-hidden options (a plug's system-managed `index`, say) still
+  // round-trip through the wire format but never reach the form. Each row's
+  // `commit` is bound to the option's key, so a renderer reports an edit
+  // without knowing how it applies.
   protected readonly options = computed(() => {
     const settings = this.componentSettings();
     if (!settings) return [];
@@ -149,15 +140,14 @@ export class ComponentSettingsComponent {
 
   protected readonly directionChoices = DIRECTION_CHOICES;
   // Labels the direction group by reference: `<label for>` does not associate
-  // with the `div[role=group]` LgSelectButton renders.
+  // with the `div[role=group]` that LgSelectButton renders.
   protected readonly directionLabelId = `component-settings-direction-${++nextDirectionInputId}`;
 
   /**
-   * The library/state chip for a custom component (master or placed snapshot):
-   * its master's `server`/`browser` library when resolvable, or `embedded` when
-   * the master is gone but the circuit still rides in the document (an orphan).
-   * `null` for built-ins. Reads the registry revision so the chip re-resolves
-   * after an upload-to-cloud flips the source or a restore re-links an orphan.
+   * The library chip for a custom component: its master's `server`/`browser`
+   * library when resolvable, `embedded` when the master is gone but the circuit
+   * still rides in the document, `null` for built-ins. Reads the registry
+   * revision so the chip re-resolves when a source flips or an orphan re-links.
    */
   private _customSource(typeId: number): SourceIndicatorState | null {
     this.registry.revision();

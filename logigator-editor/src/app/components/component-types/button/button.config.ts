@@ -1,20 +1,14 @@
+import { buttonMeta } from '@logigator/core';
 import { ComponentConfig } from '../../component-config.model';
-import { BuiltInComponentType } from '../../component-type.enum';
-import { ComponentCategory } from '../../component-category.enum';
+import { configFromMeta } from '../../config-from-meta';
 import { ComponentOption } from '../../component-option';
 import { ButtonComponent } from './button.component';
 
 export type ButtonOptions = Record<string, ComponentOption>;
 
-export const buttonComponentConfig: ComponentConfig<ButtonOptions> = {
-  type: BuiltInComponentType.BUTTON,
-  category: ComponentCategory.IO,
-  symbol: 'BTN',
-  // The square body and its inset inner square, unpressed (see ButtonGraphics).
-  symbolShape: { stroke: 'M1 1h16v16H1z M4 4h10v10H4z' },
-  name: 'components.def.BUTTON.name',
-  description: 'components.def.BUTTON.description',
-  options: {},
-  legacyV0Slots: {},
-  create: (options) => new ButtonComponent(options)
-};
+export const buttonComponentConfig: ComponentConfig<ButtonOptions> =
+  configFromMeta(buttonMeta, {
+    // The square body and its inset inner square, unpressed.
+    symbolShape: { stroke: 'M1 1h16v16H1z M4 4h10v10H4z' },
+    create: (options) => new ButtonComponent(options)
+  });

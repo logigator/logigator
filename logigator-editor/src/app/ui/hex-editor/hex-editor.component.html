@@ -1,6 +1,5 @@
 <div *appTranslate="let t" class="flex h-full flex-col">
   <div class="flex items-center gap-2 mb-3 flex-wrap justify-between">
-    <!-- View + radix selectors -->
     <div class="flex flex-wrap items-center gap-2">
       <lg-select-button
         [options]="viewOptions()"
@@ -27,9 +26,7 @@
       ></lg-select-button>
     </div>
 
-    <!-- right -->
     <div class="flex flex-wrap items-center gap-2">
-      <!-- Go-to-address search -->
       <div class="flex items-center gap-1">
         <input
           lgInputText
@@ -46,60 +43,63 @@
           [ngModelOptions]="{ standalone: true }"
           [attr.aria-label]="t('hexEditor.goto')"
         />
-        <lg-button
+        <button
+          lgButton
           icon="ph ph-magnifying-glass"
           severity="secondary"
           size="sm"
           (onClick)="goto()"
-          [attr.aria-label]="t('hexEditor.goto')"
-        />
+          [ariaLabel]="t('hexEditor.goto')"
+        ></button>
       </div>
 
       @if (readOnly() && highlightIndex() !== null) {
-        <!-- Filled while following, outlined while paused. -->
-        <lg-button
-          [label]="t('hexEditor.follow')"
+        <button
+          lgButton
           icon="ph ph-crosshair"
           severity="secondary"
           [outlined]="!follow()"
           size="sm"
           (onClick)="follow.set(!follow())"
-        />
+        >
+          {{ t('hexEditor.follow') }}
+        </button>
       }
-      <lg-button
-        [label]="t('hexEditor.copy')"
+      <button
+        lgButton
         icon="ph ph-copy"
         severity="secondary"
         [outlined]="true"
         size="sm"
         (onClick)="copyAll()"
-      />
+      >
+        {{ t('hexEditor.copy') }}
+      </button>
       @if (!readOnly()) {
-        <lg-button
-          [label]="t('hexEditor.clear')"
+        <button
+          lgButton
           icon="ph ph-eraser"
           severity="secondary"
           [outlined]="true"
           size="sm"
           (onClick)="confirmClear($event)"
-        />
+        >
+          {{ t('hexEditor.clear') }}
+        </button>
       }
     </div>
   </div>
 
-  <!-- Grid: the body's virtual-scroll viewport is the single scroll context
-       for both axes. Its content wrapper is absolutely positioned, so rows
-       wider than the viewport overflow it without growing it — both scrollbars
-       stay on the visible edges instead of the far edge of the wide content.
-       The header row is translated to mirror the body's horizontal offset.
-       The grow/min-h chain only bites when the host constrains the height
-       (scrollHeight="100%"); in the default dialog layout it is inert. -->
+  <!-- The body's virtual-scroll viewport is the single scroll context for both
+       axes. Its content wrapper is absolutely positioned, so rows wider than
+       the viewport overflow without growing it and both scrollbars stay on the
+       visible edges. The grow/min-h chain only bites when the host constrains
+       the height. -->
   <div class="flex min-h-24 grow flex-col rounded-md border border-border">
-    <!-- Column header. Horizontally driven by the body's scroll offset — via a
-         transform, not scrollLeft: a scroll offset is clamped to this box's
-         own scroll range, whose end can sit a vertical-scrollbar's width off
-         the body's. Padded on the end by the body's scrollbar width, and the
-         same font size as the body, so its ch-based columns line up. -->
+    <!-- Driven by the body's scroll offset through a transform, not
+         scrollLeft, which would clamp to this box's own scroll range. Padded on
+         the end by the body's scrollbar width and set to the body's font size,
+         so the ch-based columns line up. -->
     <div
       class="shrink-0 overflow-x-hidden overflow-y-auto font-mono text-sm text-muted border-b border-border bg-content"
       [style]="{ 'scrollbar-gutter': 'stable' }"
@@ -128,10 +128,9 @@
       </div>
     </div>
 
-    <!-- Virtualized body. `scrollbar-gutter: stable` always reserves the
-         scrollbar's width even when the content doesn't overflow, so the
-         body width — and thus the header's matching end padding — stays
-         constant whether or not the bar is showing. -->
+    <!-- `scrollbar-gutter: stable` reserves the scrollbar's width even without
+         overflow, so the body width, and the header's matching end padding,
+         stay constant whether or not the bar shows. -->
     <lg-scroller
       class="min-h-0 grow"
       tabindex="0"
@@ -158,7 +157,6 @@
             @for (c of columnIndexes(); track c) {
               @let idx = rowStart + c;
               @if (readOnly()) {
-                <!-- Focus (set by clicking too) drives the status box. -->
                 <div
                   class="flex flex-1 items-center justify-center uppercase border-e border-b border-border/50 outline-none focus:bg-primary-500/15"
                   [class]="cellHighlight(idx)"
@@ -197,7 +195,6 @@
     </lg-scroller>
   </div>
 
-  <!-- Status box: the focused cell's address and value. -->
   <div
     class="max-w-full mt-2 px-3 py-1.5 rounded-md border border-border bg-content text-sm flex flex-wrap items-center gap-x-4 gap-y-1"
   >
@@ -218,19 +215,14 @@
     }
   </div>
 
-  <!-- Footer actions -->
   @if (!readOnly()) {
     <div class="mt-3 flex justify-end gap-2">
-      <lg-button
-        [label]="t('common.cancel')"
-        severity="secondary"
-        (onClick)="dismiss()"
-      />
-      <lg-button
-        [label]="t('common.save')"
-        icon="ph ph-check"
-        (onClick)="commit()"
-      />
+      <button lgButton severity="secondary" (onClick)="dismiss()">
+        {{ t('common.cancel') }}
+      </button>
+      <button lgButton icon="ph ph-check" (onClick)="commit()">
+        {{ t('common.save') }}
+      </button>
     </div>
   }
 </div>

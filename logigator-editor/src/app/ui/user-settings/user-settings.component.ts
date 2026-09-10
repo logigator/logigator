@@ -1,26 +1,28 @@
-import { Component, inject, signal } from '@angular/core';
-import { LgMenu, LgRipple } from '@logigator/ui';
-import { UserService } from '../../user/user.service';
-import { UserSettingsPanelComponent } from './user-settings-panel.component';
-import { UserAvatarComponent } from './user-avatar.component';
-import { TranslateDirective } from '../../translation/translate.directive';
+import { Component, inject } from '@angular/core';
+import { LgUserControl } from '@logigator/ui';
+import { UserMenuService } from './user-menu.service';
+import { UserSettingsSectionsComponent } from './user-settings-sections.component';
 
 /**
- * The title-bar avatar trigger: shows the signed-in user (or a placeholder)
- * and toggles a popover holding the account/settings panel.
+ * The title-bar account control: the shared trigger and panel, filled with the
+ * editor's sections and account rows.
  */
 @Component({
   selector: 'app-user-settings',
-  imports: [
-    TranslateDirective,
-    LgMenu,
-    LgRipple,
-    UserSettingsPanelComponent,
-    UserAvatarComponent
-  ],
-  templateUrl: './user-settings.component.html'
+  imports: [LgUserControl, UserSettingsSectionsComponent],
+  template: `
+    <lg-user-control
+      [username]="userMenu.username()"
+      [signedOutLabel]="userMenu.signedOutLabel()"
+      [image]="userMenu.avatar()"
+      [model]="userMenu.rows()"
+    >
+      <ng-template #sections>
+        <app-user-settings-sections />
+      </ng-template>
+    </lg-user-control>
+  `
 })
 export class UserSettingsComponent {
-  protected readonly userService = inject(UserService);
-  protected readonly menuOpen = signal(false);
+  protected readonly userMenu = inject(UserMenuService);
 }

@@ -29,8 +29,8 @@ describe('GlobalErrorHandler', () => {
         { provide: LoggingService, useValue: loggingSpy },
         { provide: ToastService, useValue: toastSpy },
         { provide: TranslationService, useValue: translocoSpy },
-        // Force the report service unavailable so these cover the early-boot
-        // fallback (toast) path; the delegation path is covered below.
+        // Report service forced unavailable, covering the early-boot toast
+        // fallback; delegation is covered below.
         { provide: BugReportService, useValue: null }
       ]
     });
@@ -116,7 +116,7 @@ describe('GlobalErrorHandler', () => {
       const [, reportId] = bugReport.handleUncaughtError.mock.calls[0];
       expect(analyticsId).toBe(reportId);
 
-      // A second error gets a fresh id — ids correlate one error's sinks, not
+      // A second error gets a fresh id: ids correlate one error's sinks, not
       // the session.
       handlerWithReport.handleError(new Error('again'));
       const [, secondId] = bugReport.handleUncaughtError.mock.calls[1];

@@ -112,4 +112,23 @@ describe('LgDrawer', () => {
     // Focus was not pulled into the drawer.
     expect(document.activeElement).toBe(previouslyFocused);
   });
+
+  it('asks its host to close when cdk disposes the panel on navigation', () => {
+    const f = setup();
+    f.componentInstance.visible.set(true);
+    f.detectChanges();
+    expect(panel()).not.toBeNull();
+
+    // `disposeOnNavigation` disposes the overlay behind the drawer's back; the
+    // host has to hear about it, or `visible` sticks true and the trigger that
+    // sets it can never reopen the drawer.
+    window.dispatchEvent(new PopStateEvent('popstate'));
+    f.detectChanges();
+    expect(panel()).toBeNull();
+    expect(f.componentInstance.changes.at(-1)).toBe(false);
+
+    f.componentInstance.visible.set(true);
+    f.detectChanges();
+    expect(panel()).not.toBeNull();
+  });
 });

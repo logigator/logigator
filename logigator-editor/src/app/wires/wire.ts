@@ -1,5 +1,5 @@
 import { Graphics, Point, Rectangle } from 'pixi.js';
-import { WireDirection } from './wire-direction.enum';
+import { WireDirection } from '@logigator/core';
 import { getStaticDI } from '../utils/get-di';
 import { GraphicsProviderService } from '../rendering/graphics-provider.service';
 import {
@@ -24,8 +24,7 @@ export class Wire extends Graphics implements Connectable {
 
   private _id: number;
 
-  // Powered state and the zoom-derived cross-axis scale, combined by
-  // _applyThickness. Kept separately so a zoom change during simulation
+  // Combined by _applyThickness, kept apart so a zoom during simulation
   // preserves the powered thickness and vice versa.
   private _powered = false;
   private _baseScaleY = 1;
@@ -41,17 +40,15 @@ export class Wire extends Graphics implements Connectable {
   }
 
   public static deserialize(
-    // `id` is optional: when omitted, fresh id is
-    // allocated by the constructor.
+    // Without an `id` the constructor allocates a fresh one.
     serialized: Omit<SerializedWire, 'id'> & { id?: number }
   ): Wire {
     const wire = new Wire(serialized.direction, serialized.length);
     if (serialized.id !== undefined) {
       wire.id = serialized.id;
     }
-    // Serialized coordinates are integer grid positions; the +0.5 half-grid
-    // offset is the convention for wire centre-line alignment and is added
-    // at load time rather than stored on disk.
+    // Stored as integer grid positions; the +0.5 centre-line offset is added
+    // at load time rather than held on disk.
     wire.position.set(serialized.pos[0] + 0.5, serialized.pos[1] + 0.5);
 
     return wire;
@@ -145,17 +142,16 @@ export class Wire extends Graphics implements Connectable {
   }
 
   /**
-   * Thickens the wire during simulation. This is the per-frame hot path, so
-   * the state is pure transform on the one shared context — PixiJS patches
-   * transform changes into the existing batch in place (see WireGraphics for
-   * why a context swap here would be catastrophic).
+   * Thickens the wire during simulation. A per-frame hot path, so it stays a
+   * pure transform on the one shared context, which PixiJS patches into the
+   * existing batch in place; a context swap here would be catastrophic.
    */
   public setPowered(powered: boolean): void {
     this._powered = powered;
     this._applyThickness();
   }
 
-  /** Whether the wire carries the selection color (see {@link refreshTint}). */
+  /** Whether the wire carries the selection color. */
   public get selected(): boolean {
     return this._selected;
   }
@@ -166,10 +162,9 @@ export class Wire extends Graphics implements Connectable {
   }
 
   /**
-   * Re-derives the tint from the current theme and selection state. The
-   * shared context is a white base (see WireGraphics), so the tint IS the
-   * wire's color — this is both the theme-change hook and the way to restore
-   * the proper color after a transient tint (collision red).
+   * Re-derives the tint from theme and selection state. The shared context is a
+   * white base, so the tint *is* the wire's color: this is both the
+   * theme-change hook and the way back from a transient tint (collision red).
    */
   public refreshTint(): void {
     const theme = this.themingService.currentTheme();
@@ -177,9 +172,8 @@ export class Wire extends Graphics implements Connectable {
   }
 
   public applyScale(scale: number): void {
-    // Wire is a leaf Graphics with no _visualSpace wrapper, so it absorbs the
-    // gridSize factor here. Component takes care of this via its _visualSpace
-    // counter-scaling instead.
+    // A leaf Graphics with no _visualSpace wrapper, so it absorbs the gridSize
+    // factor here rather than through a counter-scaling child.
     this._baseScaleY = 1 / (scale * environment.gridSize);
     this._applyThickness();
   }
@@ -217,10 +211,9 @@ export class Wire extends Graphics implements Connectable {
   }
 
   public get gridBounds(): Rectangle {
-    // Wires sit at half-grid positions (e.g., x=3.5). Floor the origin and
-    // extend the spanning side by 1 so the rect covers the full half-grid
-    // padding on both ends. For a wire at (3.5, 4.5) of length 5, the visual
-    // extent is x ∈ [3.5, 8.5], which the AABB [3, 9) × [4, 5) encloses.
+    // Wires sit at half-grid positions, so flooring the origin and extending
+    // the spanning side by 1 covers the half-grid padding at both ends: a wire
+    // at (3.5, 4.5) of length 5 spans x ∈ [3.5, 8.5], inside [3, 9)×[4, 5).
     const x = Math.floor(this.position.x);
     const y = Math.floor(this.position.y);
     if (this.direction === WireDirection.HORIZONTAL) {

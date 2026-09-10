@@ -1,26 +1,47 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { configureTestBed } from '../../testing/configure-test-bed';
-import { makeAnd, makeButton, makeSwitch } from '../../testing/factories';
+import {
+  makeAnd,
+  makeButton,
+  makeLed,
+  makeNot,
+  makeSwitch
+} from '../../testing/factories';
 import {
   FakeSimulationWorker,
   ManualFrameScheduler
 } from '../../testing/fake-simulation-worker';
+import { Point } from 'pixi.js';
 import { Component } from '../components/component';
 import { ComponentProviderService } from '../components/component-provider.service';
 import { CustomComponentRegistry } from '../components/custom/custom-component-registry.service';
 import { ToastService } from '../logging/toast.service';
 import { EditorSettingsService } from '../settings/editor-settings.service';
 import { Project } from '../project/project';
+import { Wire } from '../wires/wire';
+import { WireDirection } from '@logigator/core';
 import { ProjectService } from '../project/project.service';
 import { WorkMode } from '../work-mode/work-mode.enum';
 import { WorkModeService } from '../work-mode/work-mode.service';
 import { SimulationService } from './simulation.service';
+import { TOP_LEVEL_PATH } from './compiler/compiled-board.model';
 import { packSnapshot } from './worker/protocol';
 import {
   FRAME_SCHEDULER,
   SIMULATION_WORKER_FACTORY
 } from './worker/simulation-worker.service';
+
+/** Wire spanning the two given half-grid termination points (axis-aligned). */
+function wireBetween(a: Point, b: Point): Wire {
+  const horizontal = a.y === b.y;
+  const wire = new Wire(
+    horizontal ? WireDirection.HORIZONTAL : WireDirection.VERTICAL,
+    horizontal ? Math.abs(b.x - a.x) : Math.abs(b.y - a.y)
+  );
+  wire.position.set(Math.min(a.x, b.x), Math.min(a.y, b.y));
+  return wire;
+}
 
 describe('SimulationService', () => {
   let service: SimulationService;
@@ -43,8 +64,7 @@ describe('SimulationService', () => {
     service = TestBed.inject(SimulationService);
     workModeService = TestBed.inject(WorkModeService);
     toastService = TestBed.inject(ToastService);
-    // These tests drive the run controls by hand and assert on a paused boot;
-    // keep auto-start off (its own test below covers the on path).
+    // These tests drive the run controls by hand and assert on a paused boot.
     TestBed.inject(EditorSettingsService).autoStartSimulation.set(false);
     project = new Project();
     TestBed.inject(ProjectService).setMainProject(project);
@@ -109,8 +129,7 @@ describe('SimulationService', () => {
 
   it('refuses to enter on diagnostics and reports via toast', () => {
     const error = vi.spyOn(toastService, 'error');
-    // A custom whose circuit has no plugs but declares one port compiles to a
-    // blocking plug-mismatch diagnostic.
+    // No plugs but one declared port: a blocking plug-mismatch diagnostic.
     const broken = TestBed.inject(CustomComponentRegistry).registerSnapshot({
       kind: 'snapshot',
       source: 'browser',
@@ -154,7 +173,7 @@ describe('SimulationService', () => {
 
     service.play();
     expect(service.isRunning()).toBe(true);
-    // Default mode is sync-to-frame: the worker idles, frames drive ticks.
+    // Sync-to-frame is the default: the worker idles, frames drive ticks.
     expect(fakeWorker.postedOfKind('start')).toHaveLength(0);
 
     await vi.waitFor(() =>
@@ -221,7 +240,7 @@ describe('SimulationService', () => {
       hz: 5
     });
 
-    // 5 read in kHz is 5000 Hz; the typed value is kept, not converted.
+    // 5 read in kHz is 5000 Hz; the typed value is kept.
     service.setTargetUnit('kHz');
     await vi.waitFor(() =>
       expect(fakeWorker.postedOfKind('start')).toHaveLength(2)
@@ -273,6 +292,28 @@ describe('SimulationService', () => {
     expect(service.state()).toBe('ready');
   });
 
+  it('lights a negated display for the length of the session', async () => {
+    // The LED's net stays low throughout, so the engine reports nothing about
+    // it: only the session's own start and end tell it to invert.
+    const led = makeLed(4, 0);
+    led.setPortNegated('in', 0, true);
+    project.addComponent(led);
+    project.addComponent(makeAnd(2, undefined, 0, 0));
+    expect(led.isInputHigh(0)).toBe(false);
+
+    await enterAndBoot();
+    expect(led.isInputHigh(0)).toBe(true);
+
+    service.stop();
+    await vi.waitFor(() =>
+      expect(fakeWorker.postedOfKind('stop')).toHaveLength(1)
+    );
+    expect(led.isInputHigh(0)).toBe(true);
+
+    service.exit();
+    expect(led.isInputHigh(0)).toBe(false);
+  });
+
   it('toggles a switch on canvas user input and forwards a Cont event', async () => {
     const switchComp = makeSwitch();
     project.addComponent(switchComp);
@@ -306,7 +347,7 @@ describe('SimulationService', () => {
       expect(switchComp.isOn).toBe(true);
       expect(fakeWorker.postedOfKind('triggerInput')).toHaveLength(1);
 
-      // Repeating the same absolute value is a no-op — no second engine event.
+      // Repeating an absolute value sends no second engine event.
       expect(service.setUserInput(switchComp.id, true)).toBe(true);
       expect(switchComp.isOn).toBe(true);
       expect(fakeWorker.postedOfKind('triggerInput')).toHaveLength(1);
@@ -372,7 +413,6 @@ describe('SimulationService', () => {
     const unregister = service.registerApplier(watch);
     service.requestSnapshot();
 
-    // The seed request forces a full snapshot.
     const requests = fakeWorker.postedOfKind('requestSnapshot');
     expect(requests).toHaveLength(1);
     expect(requests[0].full).toBe(true);
@@ -412,6 +452,31 @@ describe('SimulationService', () => {
       )
     });
     expect(watch.applyDelta).toHaveBeenCalledOnce();
+  });
+
+  it('completes the teardown when the visual reset throws', async () => {
+    const and = makeAnd(2, undefined, 0, 0);
+    const not = makeNot();
+    not.position.set(10, 0);
+    project.addComponent(and);
+    project.addComponent(not);
+    const wire = wireBetween(and.connectionPoints[2], not.connectionPoints[0]);
+    project.addWire(wire);
+    await enterAndBoot();
+
+    // A powered wire freed under the live session: the mapping still addresses
+    // it, so resetting its link writes to a destroyed PixiJS object.
+    const targets = service.board!.mapping.get(TOP_LEVEL_PATH)!;
+    const linkId = targets.findIndex((target) => target.wires.includes(wire));
+    service.applier!.setLink(linkId, true);
+    wire.destroy();
+
+    expect(() => service.exit()).toThrow();
+
+    expect(workModeService.mode()).toBe(WorkMode.PAN);
+    expect(service.board).toBeNull();
+    expect(service.applier).toBeNull();
+    expect(service.state()).toBe('inactive');
   });
 
   it('drops watch appliers on exit', async () => {
@@ -456,13 +521,13 @@ describe('SimulationService', () => {
     project.emitUserInput(switchComp);
     const replacement = new Project();
 
-    // Opening or creating a project; the outgoing one is destroyed right after.
+    // The outgoing project is destroyed right after this notification.
     TestBed.inject(ProjectService).setMainProject(replacement);
 
     expect(workModeService.mode()).toBe(WorkMode.PAN);
     expect(service.state()).toBe('inactive');
     expect(service.board).toBeNull();
-    // The teardown ran while the outgoing project was still live.
+    // The teardown ran while the outgoing project was live.
     expect(switchComp.isOn).toBe(false);
     expect(fakeWorker.terminated).toBe(true);
 

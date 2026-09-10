@@ -1,16 +1,17 @@
-/*
- * Public API surface of @logigator/ui.
- *
- * Components, directives, and services are re-exported here. Consumers
- * `import { … } from '@logigator/ui'`; the bundler tree-shakes everything
- * unused ("sideEffects": false).
- */
+// Public API surface of @logigator/ui. The bundler tree-shakes everything
+// unused ("sideEffects": false).
 
 export const LOGIGATOR_UI_VERSION = '0.0.0';
 
 export type { IconSlot } from './internal/icon';
 export type { LgSeverity } from './tokens/severity';
 export type { LgSize } from './tokens/size';
+export type { LgImageSource } from './tokens/image-source';
+// An image ladder grouped for `<picture>`. Exported because a consumer that
+// draws a preview of its own — the site's circuit rows — must group it the way
+// the tile and the avatar do, and a second copy of the rule would drift.
+export type { LgPicture, LgPictureGroup } from './internal/picture';
+export { pictureFor } from './internal/picture';
 export type { LgLabels, LgLabelResolver } from './tokens/labels';
 export { LG_DEFAULT_LABELS, LG_LABELS, provideLgLabels } from './tokens/labels';
 export type {
@@ -30,11 +31,24 @@ export { LgTag } from './components/tag/tag';
 export { LgBadge } from './components/badge/badge';
 export { LgMessage } from './components/message/message';
 export { LgMarkdown } from './components/markdown/markdown';
-export type { LgMarkdownLinkClick } from './components/markdown/markdown';
+export type {
+  LgMarkdownLinkClick,
+  LgTextMatcher,
+  LgTextRange
+} from './components/markdown/markdown';
+// The slug a `#fragment` inside rendered markdown resolves against. Exported
+// because content that links to its own headings — the site's legal pages —
+// has to author those links by the same rule the renderer resolves them by.
+export { headingSlug } from './components/markdown/markdown';
 
 export { LgImageZoom } from './components/image-zoom/image-zoom';
 export { LgAvatar } from './components/avatar/avatar';
 export { LgCard } from './components/card/card';
+export {
+  LgCircuitTile,
+  LgCircuitTileLink,
+  LgCircuitTileAuthor
+} from './components/circuit-tile/circuit-tile';
 export { LgList, LgListItem } from './components/list/list';
 export { LgRipple } from './components/ripple/ripple';
 export {
@@ -45,6 +59,7 @@ export {
 export { LgIconField } from './components/icon-field/icon-field';
 export { LgInputIcon } from './components/icon-field/input-icon';
 
+export { LgFormField } from './components/form-field/form-field';
 export { LgInputText } from './components/input-text/input-text';
 export { LgTextarea } from './components/textarea/textarea';
 export { LgToggleSwitch } from './components/toggle-switch/toggle-switch';
@@ -76,6 +91,9 @@ export type { NavigationItem } from './components/navigation/navigation-item.mod
 export { LgMenu } from './components/menu/menu';
 export { LgMenubar } from './components/menu/menubar';
 export { LgPaginator } from './components/paginator/paginator';
+export { LgUserControl } from './components/user-control/user-control';
+export { LgUserPanel } from './components/user-control/user-panel';
+export { LgUserPanelSection } from './components/user-control/user-panel-section';
 export { LgFileUpload } from './components/file-upload/file-upload';
 export { LgScroller } from './components/scroller/scroller';
 
@@ -130,6 +148,7 @@ export {
   positionForSide,
   caretSideChanges,
   caretOffsetFor,
+  externalTeardown,
   originVisibilityChanges
 } from './internal/overlay';
 export type {

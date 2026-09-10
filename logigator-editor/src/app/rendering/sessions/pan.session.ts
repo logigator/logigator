@@ -8,20 +8,15 @@ import { WorkMode } from '../../work-mode/work-mode.enum';
 const CLICK_MOVE_THRESHOLD = 5;
 
 /**
- * One-pointer pan (the hand tool / WorkMode.PAN). Shared by mouse and touch,
- * and by the sub-circuit watch (tap-to-activate via `onTap`).
+ * One-pointer pan, shared by mouse, touch and the sub-circuit watch.
  *
  * Pans by the delta between successive `input.global` positions — canvas-local
- * CSS pixels, which is exactly what `Project.pan` expects (it adds the delta
- * to the stage position). Do not convert to grid space here.
+ * CSS pixels, which is what `Project.pan` expects. Do not convert to grid
+ * space here.
  *
- * A press that never moves past a small threshold is treated as a click/tap.
- * By default it single-selects the element under it (clearing on empty space),
- * reusing SELECT mode's click path — so PAN stays navigate-first but a tap still
- * selects. The board does not move until the threshold is crossed, so a tap
- * never nudges it. Passing `onTap` overrides the tap action (simulation mode
- * activates a button/switch, the watch drills into or actuates the tapped
- * component), keeping the same drag-to-pan navigation.
+ * A press that never passes the threshold is a tap, and the board does not
+ * move until it is crossed, so a tap never nudges it. A tap single-selects by
+ * default; `onTap` overrides that while keeping drag-to-pan.
  */
 export class PanSession implements DragSession {
   private readonly _lastGlobal: Point;

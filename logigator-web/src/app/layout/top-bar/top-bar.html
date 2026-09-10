@@ -1,0 +1,95 @@
+<header class="bg-primary-400 text-surface-900" *webTranslate="let t">
+  <!-- Compact centres the logo against the bar — equal side tracks, not two
+       unequal neighbours — the way the editor's compact bar centres the
+       project name. Desktop lays the same three groups out in a row. -->
+  <nav
+    class="page-wrap grid h-14 grid-cols-[1fr_auto_1fr] items-center md:flex md:gap-2"
+    [attr.aria-label]="t('header.navigation')"
+  >
+    <!-- A plain button rather than `lgButton`: every severity the library
+         offers hovers to a scheme-following surface, where the bar washes
+         black in both schemes. -->
+    <button
+      type="button"
+      class="inline-flex size-9 cursor-pointer items-center justify-center justify-self-start rounded transition-colors hover:bg-black/10 md:hidden"
+      [attr.aria-label]="t('header.openNavigation')"
+      (click)="drawerOpen.set(true)"
+    >
+      <i class="ph ph-list text-xl" aria-hidden="true"></i>
+    </button>
+
+    <!-- One file for both schemes: the bar is the same green either way, so the
+         wordmark that reads on it is the dark-ink one. -->
+    <a
+      class="flex items-center justify-self-center"
+      [routerLink]="links.home()"
+    >
+      <img
+        class="h-8 w-auto"
+        width="145"
+        height="32"
+        [src]="logo.onLight"
+        [alt]="t('header.home')"
+      />
+    </a>
+
+    <ul class="ml-4 hidden items-center gap-1 md:flex">
+      <li>
+        <a
+          [class]="barLinkClass"
+          [routerLinkActive]="barLinkActiveClass"
+          [routerLink]="links.docs()"
+          >{{ t('header.docs') }}</a
+        >
+      </li>
+      <li>
+        <a
+          [class]="barLinkClass"
+          [routerLinkActive]="barLinkActiveClass"
+          [routerLink]="links.examples()"
+          >{{ t('header.examples') }}</a
+        >
+      </li>
+      <li>
+        <a
+          [class]="barLinkClass"
+          [routerLinkActive]="barLinkActiveClass"
+          [routerLink]="links.communityProjects()"
+          >{{ t('header.community') }}</a
+        >
+      </li>
+    </ul>
+
+    <span class="hidden flex-1 md:block"></span>
+
+    <div class="flex items-center gap-2 justify-self-end">
+      @if (session.user()) {
+      <ul class="hidden items-center gap-1 md:flex">
+        <li>
+          <a
+            [class]="barLinkClass"
+            [routerLinkActive]="barLinkActiveClass"
+            [routerLink]="links.myProjects()"
+            >{{ t('header.myProjects') }}</a
+          >
+        </li>
+        <li>
+          <a
+            [class]="barLinkClass"
+            [routerLinkActive]="barLinkActiveClass"
+            [routerLink]="links.myComponents()"
+            >{{ t('header.myComponents') }}</a
+          >
+        </li>
+      </ul>
+      }
+
+      <web-user-menu />
+    </div>
+  </nav>
+</header>
+
+<web-nav-drawer
+  [visible]="drawerOpen()"
+  (visibleChange)="drawerOpen.set($event)"
+/>

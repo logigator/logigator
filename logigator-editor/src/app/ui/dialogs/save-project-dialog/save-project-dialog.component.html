@@ -54,6 +54,8 @@
     </lg-message>
   }
   <div class="flex justify-end">
-    <lg-button type="submit" [label]="t('common.save')" [disabled]="!canSave" />
+    <button lgButton type="submit" [disabled]="!canSave">
+      {{ t('common.save') }}
+    </button>
   </div>
 </form>

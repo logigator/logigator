@@ -1,6 +1,6 @@
 import { Point, Rectangle } from 'pixi.js';
 import { Wire } from './wire';
-import { WireDirection } from './wire-direction.enum';
+import { WireDirection } from '@logigator/core';
 
 export interface WireCutPiece {
   position: Point;
@@ -13,18 +13,14 @@ export type WireCutResult =
   | { kind: 'keep' }
   | { kind: 'cut'; pieces: WireCutPiece[]; insideIndex: number };
 
-// Decides how a wire interacts with `rect`:
-//   - skip: wire's centerline is outside the rect; do not select.
-//   - keep: wire stays whole and should be selected (fully inside the rect, or
-//     centerline inside with endpoints aligned to the rect edges).
-//   - cut: wire is split into 2–3 axis-aligned pieces; `pieces[insideIndex]`
-//     is the piece overlapping the rect (to be selected), the others are the
-//     outside remnants.
+// How a wire interacts with `rect`:
+//   - skip: the centerline is outside the rect; do not select.
+//   - keep: the wire stays whole and is selected.
+//   - cut: 2–3 pieces, `pieces[insideIndex]` being the one to select.
 //
-// Cuts land on the first half-grid position AT OR OUTSIDE the rect on each
-// side — wire endpoints live on the half-grid lattice (k + 0.5), so that is
-// the finest granularity a cut can have. The rect itself is free-form (the
-// marquee is not snapped), hence the snapping.
+// The marquee is free-form, but wire endpoints live on the half-grid lattice
+// (k + 0.5), so cuts snap to the first lattice position at or outside the rect
+// on each side.
 export function cutWire(wire: Wire, rect: Rectangle): WireCutResult {
   if (rect.containsRect(wire.gridBounds)) return { kind: 'keep' };
 
@@ -40,17 +36,16 @@ export function cutWire(wire: Wire, rect: Rectangle): WireCutResult {
   const rPerpStart = horizontal ? rect.y : rect.x;
   const rPerpEnd = horizontal ? rect.bottom : rect.right;
 
-  // Centerline outside the rect's perpendicular range — the half-cell padding
-  // of gridBounds is what produced the intersect; do not select.
+  // The centerline is outside the rect: only gridBounds' half-cell padding
+  // produced the intersect.
   if (wPerp < rPerpStart || wPerp > rPerpEnd) return { kind: 'skip' };
 
-  // Cut points sit on the half-grid lattice the wire's endpoints live on: the
-  // last lattice position at or before the rect's near edge, the first at or
-  // after its far edge.
+  // The last lattice position at or before the near edge, the first at or
+  // after the far edge.
   const leftCut = Math.max(wStart, Math.floor(rStart - 0.5) + 0.5);
   const rightCut = Math.min(wEnd, Math.ceil(rEnd - 0.5) + 0.5);
 
-  // Centerline X (or Y) doesn't actually overlap the rect range.
+  // The centerline does not overlap the rect's range along the wire's axis.
   if (rightCut <= leftCut) return { kind: 'skip' };
 
   const pieces: WireCutPiece[] = [];
@@ -79,9 +74,8 @@ export function cutWire(wire: Wire, rect: Rectangle): WireCutResult {
     });
   }
 
-  // No actual cut happened — the wire's centerline was fully inside the rect
-  // (rect aligned to the wire's half-grid endpoints) so containsRect()
-  // returned false but the clamping collapsed to the original wire.
+  // The clamping collapsed back to the original wire: the centerline was
+  // inside all along, with the rect aligned to its half-grid endpoints.
   if (pieces.length === 1 && pieces[0].length === wire.length) {
     return { kind: 'keep' };
   }

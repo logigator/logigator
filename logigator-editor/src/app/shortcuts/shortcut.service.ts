@@ -32,7 +32,7 @@ import { SaveCoordinatorService } from '../ui/save-coordinator.service';
 import { ClipboardService } from '../clipboard/clipboard.service';
 import { WorkModeService } from '../work-mode/work-mode.service';
 import { WorkMode } from '../work-mode/work-mode.enum';
-import { BuiltInComponentType } from '../components/component-type.enum';
+import { BuiltInComponentType } from '@logigator/core';
 import { OpenProjectDialogComponent } from '../ui/dialogs/open-project-dialog/open-project-dialog.component';
 import { NewComponentDialogComponent } from '../ui/dialogs/new-component-dialog/new-component-dialog.component';
 import { ToastService } from '../logging/toast.service';
@@ -78,24 +78,22 @@ export class ShortcutService implements OnDestroy {
   private readonly _holdSubs: Subscription[];
   private readonly STORAGE_KEY = 'logigator.shortcuts';
 
-  // Live keyboard state for hold-style bindings (see isHeld). Tracks every
-  // key by KeyboardEvent.key plus the current modifier flags, so a binding
-  // rebound to a plain letter works the same as the default bare 'Alt'.
+  // Live keyboard state for hold-style bindings (see isHeld), tracked by
+  // KeyboardEvent.key plus modifier flags, so a binding rebound to a plain
+  // letter works like the default bare 'Alt'.
   private readonly _heldKeys = new Set<string>();
   private _heldCtrl = false;
   private _heldShift = false;
   private _heldAlt = false;
   private readonly _heldChange$ = new Subject<void>();
-  // Reactive mirror of the held-key state: bumped on every change so that
-  // {@link isHeld}, read inside a template or computed, re-evaluates under
-  // zoneless change detection (e.g. the scissor pill lighting up on Alt).
+  // Reactive mirror of the held-key state, so {@link isHeld} read inside a
+  // template or computed re-evaluates under zoneless change detection.
   private readonly _heldVersion = signal(0);
 
   /**
-   * Fires after every held-key state change (keydown, keyup, window blur).
-   * Lets an in-flight gesture re-poll {@link isHeld} without waiting for the
-   * next pointer event — e.g. the select marquee restyling the moment the
-   * scissor key goes down under a motionless pointer.
+   * Fires after every held-key state change (keydown, keyup, window blur), so
+   * an in-flight gesture can re-poll {@link isHeld} without waiting for the
+   * next pointer event.
    */
   public readonly heldChange$: Observable<void> =
     this._heldChange$.asObservable();
@@ -146,8 +144,8 @@ export class ShortcutService implements OnDestroy {
         this._trackModifiers(e);
         this._notifyHeldChange();
       }),
-      // Keyups delivered to another window (tab switch, alt-tab) would leave
-      // keys stuck held — a focus loss releases everything.
+      // A keyup delivered to another window (alt-tab) would leave keys stuck
+      // held, so a focus loss releases everything.
       fromEvent(window, 'blur').subscribe(() => {
         this._heldKeys.clear();
         this._heldCtrl = false;
@@ -162,17 +160,17 @@ export class ShortcutService implements OnDestroy {
 
   /**
    * Whether the action's binding is physically held right now. For hold-style
-   * bindings (SELECT_SCISSOR): `on()` fires once at keydown, this reports the
-   * live state for the duration of a pointer gesture.
+   * bindings `on()` fires once at keydown; this reports the live state for the
+   * duration of a pointer gesture.
    */
   public isHeld(action: ShortcutActionEnum): boolean {
     // Track the reactive mirror so a template/computed read re-evaluates on
-    // key changes; a poll from a non-reactive gesture context ignores it.
+    // key changes; a non-reactive gesture poll ignores it.
     this._heldVersion();
     const binding = this._bindingSignals[action]();
     if (!binding) return false;
     // A bare-modifier binding keeps its own flag false (it would display as
-    // "Alt + Alt") — skip that flag, the held key itself already proves it.
+    // "Alt + Alt"), so skip that flag; the held key already proves it.
     const own = MODIFIER_FLAG_BY_KEY[binding.key];
     return (
       this._heldKeys.has(binding.key) &&
@@ -193,7 +191,7 @@ export class ShortcutService implements OnDestroy {
     this._heldAlt = e.altKey;
   }
 
-  /** Pre-built signal for one action's current binding. Pure lookup — never allocates. */
+  /** Pre-built signal for one action's current binding; never allocates. */
   public binding(action: ShortcutActionEnum): Signal<ShortcutBinding | null> {
     return this._bindingSignals[action];
   }
@@ -260,8 +258,8 @@ export class ShortcutService implements OnDestroy {
 
   /**
    * Editing actions (undo/redo/clipboard) are gated off while a simulation
-   * locks editing; Escape (CANCEL) exits the simulation instead. Tool
-   * switches need no gate — WorkModeService.setMode ignores them itself.
+   * locks editing; Escape exits the simulation instead. Tool switches need no
+   * gate, since `WorkModeService.setMode` ignores them itself.
    */
   private _editingLocked(): boolean {
     return this.workModeService.mode() === WorkMode.SIMULATION;
@@ -362,7 +360,7 @@ export class ShortcutService implements OnDestroy {
       this.workModeService.setMode(WorkMode.SELECT);
     });
 
-    // SELECT_SCISSOR has no trigger handler — it is a hold-style binding
+    // SELECT_SCISSOR has no trigger handler: it is a hold-style binding
     // queried via isHeld() during a select drag. The keydown match still
     // preventDefaults, which keeps a bare Alt from focusing the browser menu.
 
@@ -378,9 +376,8 @@ export class ShortcutService implements OnDestroy {
 
   private _matchesBinding(binding: ShortcutBinding, e: KeyboardEvent): boolean {
     const ctrl = this.isMac ? e.ctrlKey || e.metaKey : e.ctrlKey;
-    // Skip the flag a bare-modifier binding's own key sets (see
-    // MODIFIER_FLAG_BY_KEY) — pressing Alt reports altKey=true, but the
-    // binding stores alt=false so it displays as just "Alt".
+    // Skip the flag a bare-modifier binding's own key sets: pressing Alt
+    // reports altKey=true, but the binding stores alt=false to display "Alt".
     const own = MODIFIER_FLAG_BY_KEY[binding.key];
     return (
       this._keysEqual(e.key, binding.key) &&
@@ -391,10 +388,9 @@ export class ShortcutService implements OnDestroy {
   }
 
   /**
-   * Character keys compare case-insensitively: a held Shift reports the
-   * shifted character (Shift+r → 'R'), so a shifted binding stored as a
-   * lowercase letter would otherwise never match. The shift flag itself keeps
-   * the shifted and unshifted bindings distinct.
+   * Character keys compare case-insensitively: a held Shift reports the shifted
+   * character, so a shifted binding stored lowercase would never match. The
+   * shift flag keeps shifted and unshifted bindings distinct.
    */
   private _keysEqual(a: string, b: string): boolean {
     if (a.length === 1 && b.length === 1) {

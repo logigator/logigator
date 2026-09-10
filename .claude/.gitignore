@@ -1,1 +1,4 @@
 worktrees
+
+# Machine-local permissions (settings.json is shared)
+settings.local.json

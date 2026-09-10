@@ -16,19 +16,18 @@ import {
   caretSideChanges,
   connectedPositions,
   createConnectedOverlay,
+  externalTeardown,
   LgOverlaySide
 } from '../../internal/overlay';
 import { formatShortcutLabel, LgShortcutBinding } from '../shortcut/shortcut';
 import { LgTooltipPanel } from './tooltip-panel';
 
 /**
- * A hover/focus tooltip on any host element. The content is the `lgTooltip`
- * value; an **empty / null value is a no-op** (renders no tooltip). An optional
- * `tooltipShortcut` binding renders as key chips after the text. The bubble
- * is a `cdk/overlay` connected overlay with a caret tracking the anchor; the
- * directive never steals pointer or focus, and registers the text (plus the
- * shortcut's plain label) with `AriaDescriber` so it reaches screen readers via
- * `aria-describedby`.
+ * A hover/focus tooltip on any host element, its content the `lgTooltip`
+ * value; an **empty or null value renders nothing**. An optional
+ * `tooltipShortcut` renders as key chips after the text. The bubble is a
+ * connected overlay with a caret tracking the anchor; the directive never
+ * steals pointer or focus, and registers the text with `AriaDescriber`.
  */
 @Directive({
   selector: '[lgTooltip]',
@@ -54,11 +53,10 @@ export class LgTooltip implements OnDestroy {
 
   private overlayRef: OverlayRef | null = null;
   private panelRef: ComponentRef<LgTooltipPanel> | null = null;
-  private positionsSub: Subscription | null = null;
+  private subscriptions: Subscription | null = null;
 
   constructor() {
-    // Keep aria-describedby in sync with the content (cleanup removes the
-    // previous hidden description on change and on destroy).
+    // Cleanup removes the previous hidden description on change and destroy.
     effect((onCleanup) => {
       const text = this.content();
       const el = this.host.nativeElement;
@@ -69,8 +67,7 @@ export class LgTooltip implements OnDestroy {
       }
     });
 
-    // Keep an already-visible bubble in sync when the content changes (a cleared
-    // value hides it, matching show()'s no-op-on-empty contract).
+    // A cleared value hides an open bubble, matching show()'s no-op on empty.
     effect(() => {
       const text = this.content();
       const shortcut = this.tooltipShortcut();
@@ -108,14 +105,23 @@ export class LgTooltip implements OnDestroy {
     this.panelRef.setInput('shortcut', this.tooltipShortcut());
     this.panelRef.setInput('side', side);
 
-    this.positionsSub = caretSideChanges(this.overlayRef).subscribe(
-      (resolvedSide) => this.panelRef?.setInput('side', resolvedSide)
+    this.subscriptions = new Subscription();
+    this.subscriptions.add(
+      caretSideChanges(this.overlayRef).subscribe((resolvedSide) =>
+        this.panelRef?.setInput('side', resolvedSide)
+      )
+    );
+    this.subscriptions.add(
+      externalTeardown(this.overlayRef, () => {
+        this.overlayRef = null;
+        this.hide();
+      })
     );
   }
 
   protected hide(): void {
-    this.positionsSub?.unsubscribe();
-    this.positionsSub = null;
+    this.subscriptions?.unsubscribe();
+    this.subscriptions = null;
     this.overlayRef?.dispose();
     this.overlayRef = null;
     this.panelRef = null;

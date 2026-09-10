@@ -16,6 +16,7 @@ import {
   caretSideChanges,
   connectedPositions,
   createConnectedOverlay,
+  externalTeardown,
   LgOverlaySide
 } from '../../internal/overlay';
 import { LgButton } from '../button/button';
@@ -26,11 +27,9 @@ import { LgConfirmOutlet } from './confirm-outlet';
 const POPUP_GAP = 10;
 
 /**
- * The anchored, `key`-routed outlet for {@link ConfirmationService}. When a
- * matching confirmation arrives it opens a `cdk/overlay` connected overlay (with
- * a caret) at `confirmation.target`, with small reject/accept buttons. An
- * outside click or Escape rejects. Handles only confirmations whose `key`
- * matches its own (e.g. `key="inline"`).
+ * The anchored, `key`-routed outlet for {@link ConfirmationService}: a
+ * connected overlay with a caret at `confirmation.target`. An outside click or
+ * Escape rejects. It handles only confirmations whose `key` matches its own.
  */
 @Component({
   selector: 'lg-confirm-popup',
@@ -43,20 +42,24 @@ const POPUP_GAP = 10;
       >
         <p class="mb-3 text-sm">{{ current()?.message }}</p>
         <div class="flex justify-end gap-2">
-          <lg-button
+          <button
+            lgButton
             size="sm"
-            [label]="current()?.rejectLabel"
             [severity]="rejectSeverity()"
             [outlined]="rejectOutlined()"
             (onClick)="reject()"
-          />
-          <lg-button
+          >
+            {{ current()?.rejectLabel }}
+          </button>
+          <button
+            lgButton
             size="sm"
-            [label]="current()?.acceptLabel"
             [severity]="acceptSeverity()"
             [outlined]="acceptOutlined()"
             (onClick)="accept()"
-          />
+          >
+            {{ current()?.acceptLabel }}
+          </button>
         </div>
         <lg-caret [side]="side()" />
       </div>
@@ -103,6 +106,12 @@ export class LgConfirmPopup extends LgConfirmOutlet implements OnDestroy {
           event.preventDefault();
           this.reject();
         }
+      })
+    );
+    this.subscriptions.add(
+      externalTeardown(this.overlayRef, () => {
+        this.overlayRef = null;
+        this.reject();
       })
     );
   }

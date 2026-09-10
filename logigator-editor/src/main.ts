@@ -3,9 +3,8 @@ import { appConfig } from './app/app.config';
 import { AppComponent } from './app/app.component';
 
 bootstrapApplication(AppComponent, appConfig).catch((err) => {
-  // The Angular app never came up, so the runtime GlobalErrorHandler and
-  // ToastService are unavailable. Log the full error and show a bare DOM
-  // banner so the user isn't left staring at a blank page.
+  // The app never came up, so GlobalErrorHandler and ToastService are
+  // unavailable; a bare DOM banner is all that is left.
   // eslint-disable-next-line no-console
   console.error('[bootstrap] failed to start the editor', err);
   showBootstrapFailureBanner();
@@ -25,8 +24,8 @@ function showBootstrapFailureBanner(): void {
     'text-align:center',
     'background:#1a1a1a',
     'color:#f5f5f5',
-    // The `max` layer (see layers.css). Hardcoded, not var(--lg-z-max): this is
-    // the "editor failed to load" screen, so the stylesheet may not be in play.
+    // The `max` layer (layers.css), hardcoded rather than var(--lg-z-max):
+    // the stylesheet may not be in play on a failed load.
     'z-index:100'
   ].join(';');
   banner.innerHTML =

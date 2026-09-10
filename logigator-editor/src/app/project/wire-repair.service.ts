@@ -1,4 +1,4 @@
-import { inject, Injectable } from '@angular/core';
+import { inject, Injectable, Injector } from '@angular/core';
 import { Project } from './project';
 import {
   auditWireInvariants,
@@ -15,20 +15,20 @@ import { TranslationService } from '../translation/translation.service';
 import { ProjectMetadataStore } from '../persistence/project-metadata.store';
 import { AnalyticsService } from '../analytics/analytics.service';
 import { AnalyticsEvent } from '../analytics/analytics.mapping';
+import { SimulationService } from '../simulation/simulation.service';
+import { WorkMode } from '../work-mode/work-mode.enum';
+import { WorkModeService } from '../work-mode/work-mode.service';
 
-/** Where a repair run came from. A `load-offer` run is also the acceptance of
- * the offer raised by {@link WireRepairService.offerRepairOnLoad}. */
+/** Where a repair run came from; `load-offer` is an accepted on-load offer. */
 export type WireRepairTrigger = 'menu' | 'load-offer';
 
 /**
- * Board-wide wire-invariant repair: audits I1–I3 (plus outright collinear
- * overlaps), rebuilds the broken spans via {@link computeWireRepair} and
- * reports what happened (toast summary, per-violation console log). Two entry
- * points, both user-initiated: {@link repairManually} backs the Edit-menu
- * command and registers the fix as one undoable history entry;
- * {@link offerRepairOnLoad} audits a freshly loaded document (older saves may
- * carry corruption from before integration covered every mutation path) and
- * offers that same repair through a toast. A load never repairs by itself.
+ * Board-wide wire-invariant repair: audits I1–I3 plus outright collinear
+ * overlaps, rebuilds the broken spans and reports the outcome. Both entry
+ * points are user-initiated — {@link repairManually} backs the Edit-menu
+ * command and registers one undoable entry, {@link offerRepairOnLoad} audits a
+ * freshly loaded document and offers that same repair through a toast. A load
+ * never repairs by itself.
  */
 @Injectable({ providedIn: 'root' })
 export class WireRepairService {
@@ -37,16 +37,16 @@ export class WireRepairService {
   private readonly translation = inject(TranslationService);
   private readonly metadataStore = inject(ProjectMetadataStore);
   private readonly analytics = inject(AnalyticsService);
+  private readonly workModeService = inject(WorkModeService);
+  private readonly injector = inject(Injector);
 
   /**
-   * Audits a freshly loaded document and, when it is broken, offers the repair
-   * as a toast action rather than applying it: the fix stays user-initiated
-   * and lands in history like the Edit-menu command, so it can be undone. The
-   * audit itself is a pure read — a clean board leaves no trace.
+   * Offers the repair as a toast action rather than applying it, so the fix
+   * stays user-initiated and undoable. The audit is a pure read, and a clean
+   * board leaves no trace.
    *
-   * Skips read-only shares: a share cannot be saved or exported, so accepting
-   * a repair there would leave the user holding a modified document with
-   * nowhere to put it.
+   * Skips read-only shares: accepting there would leave the user holding a
+   * modified document with nowhere to put it.
    */
   public offerRepairOnLoad(project: Project): void {
     if (this.metadataStore.getMetadata(project)?.source === 'share') return;
@@ -67,8 +67,7 @@ export class WireRepairService {
       {
         label: this.translation.translate('wireRepair.repairAction'),
         handler: () => {
-          // The offer never times out, so it can outlive the document it was
-          // raised for — loading another circuit destroys this one.
+          // The offer never times out, so it can outlive its document.
           if (project.destroyed) return;
           this.repairManually(project, 'load-offer');
         }
@@ -77,9 +76,9 @@ export class WireRepairService {
   }
 
   /**
-   * The Edit-menu command: audits, repairs, registers the change as a single
-   * undoable history entry and always toasts the outcome — including the
-   * nothing-to-repair case.
+   * Audits, repairs, registers the change as one undoable entry and always
+   * toasts the outcome, the nothing-to-repair case included. A live simulation
+   * session is left first, once the plan is known to change something.
    */
   public repairManually(
     project: Project,
@@ -93,7 +92,7 @@ export class WireRepairService {
       this.captureRun(trigger, 'locked');
       return;
     }
-    // Clearing first retracts a live scissor cut — its seam is a deliberate,
+    // Clearing retracts a live scissor cut, whose seam is a deliberate,
     // transient I3 violation that must not be fused behind the cut's back.
     project.selectionManager.clear();
 
@@ -111,7 +110,7 @@ export class WireRepairService {
     this.logViolations(violations, 'manual');
     const plan = computeWireRepair(project);
     if (plan.removeWires.length === 0 && plan.addWires.length === 0) {
-      // The audit flagged something the rebuild reproduced identically — a
+      // The audit flagged what the rebuild reproduced identically: a
       // checker/rebuild disagreement worth failing loudly over.
       this.logging.error(
         `audit found ${violations.length} violation(s) but the rebuild produced no diff`,
@@ -128,8 +127,25 @@ export class WireRepairService {
       return;
     }
 
-    // The actions serialize state in their constructors — build them before
-    // materializing, then register against the already-applied state.
+    // The plan destroys the wires it replaces, and a live session's link →
+    // render mapping addresses those instances: a session left up writes
+    // powered state onto freed objects on its way out, over a compiled board
+    // that no longer describes the circuit. The offer toast never
+    // auto-dismisses, so it is clickable from inside a session that started
+    // after it was raised.
+    const leftSimulation = this.workModeService.mode() === WorkMode.SIMULATION;
+    if (leftSimulation) {
+      // Resolved here rather than injected: SimulationService reaches back to
+      // this service through the shortcut and save chain.
+      this.injector.get(SimulationService).exit();
+      this.toast.info(
+        this.translation.translate('wireRepair.leftSimulation'),
+        'WireRepairService'
+      );
+    }
+
+    // The actions serialize in their constructors, so build them before
+    // materializing and register against the applied state.
     const action = new ActionContainer();
     if (plan.removeWires.length > 0) {
       action.add(new RemoveWiresAction(...plan.removeWires));
@@ -144,6 +160,7 @@ export class WireRepairService {
       kinds: distinctKinds(violations),
       removedWires: plan.removeWires.length,
       addedWires: plan.addWires.length,
+      leftSimulation,
       // Non-zero means a repair bug: the audit still fails on its own output.
       survivingViolations: this.verify(project)
     });
@@ -175,8 +192,7 @@ export class WireRepairService {
     );
   }
 
-  /** Post-repair audit — anything left indicates a repair bug. Returns how many
-   * violations survived, so the count reaches analytics as well as the log. */
+  /** Post-repair audit; anything surviving indicates a repair bug. */
   private verify(project: Project): number {
     const remaining = auditWireInvariants(project);
     if (remaining.length > 0) {
@@ -202,9 +218,7 @@ export class WireRepairService {
   }
 }
 
-/** The violation kinds present, for a breakdown of *what* boards break by —
- * the counts stay separate, and no violation detail (which names elements) is
- * ever reported. */
+/** The kinds present; violation details name elements and are never sent. */
 function distinctKinds(violations: WireViolation[]): string[] {
   return [...new Set(violations.map((v) => v.kind))].sort();
 }

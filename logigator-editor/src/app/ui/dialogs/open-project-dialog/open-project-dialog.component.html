@@ -4,7 +4,6 @@
     <lg-tab value="server">{{ t('openProjectDialog.cloudProjects') }}</lg-tab>
     <lg-tab value="file">{{ t('openProjectDialog.fromFile') }}</lg-tab>
 
-    <!-- Local Projects -->
     <lg-tab-panel value="local">
       <app-project-list
         [items]="localItems()"
@@ -21,7 +20,6 @@
       />
     </lg-tab-panel>
 
-    <!-- Server Projects -->
     <lg-tab-panel value="server">
       @if (!userService.user()) {
         <lg-message centered class="py-12">
@@ -44,7 +42,6 @@
       }
     </lg-tab-panel>
 
-    <!-- From File -->
     <lg-tab-panel value="file">
       <div class="flex flex-col gap-4 py-4">
         <lg-file-upload

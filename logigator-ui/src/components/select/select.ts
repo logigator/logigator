@@ -19,7 +19,10 @@ import {
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { LgFadeIn } from '../../internal/fade-in';
-import { createConnectedOverlay } from '../../internal/overlay';
+import {
+  createConnectedOverlay,
+  externalTeardown
+} from '../../internal/overlay';
 import { createListKeyManager } from '../../internal/key-manager';
 import { FORM_FIELD_BASE } from '../../tokens/form-field';
 import { CONTROL_PADDING_MD } from '../../tokens/size';
@@ -52,17 +55,15 @@ let nextId = 0;
 
 /**
  * A single-select dropdown. `ControlValueAccessor` whose value is the
- * **`optionValue` primitive** (string/number), or the whole option when
- * `optionValue` is unset. Options are matched by **strict `===` on that
- * resolved value — never a structural compare** (strict `===` dodges a
- * deep-equals over a heavy object like a PixiJS `Project`).
+ * `optionValue` primitive, or the whole option when `optionValue` is unset.
+ * Options are matched by **strict `===` on that resolved value, never a
+ * structural compare**, which dodges a deep-equals over a heavy object.
  *
- * The trigger is a `role="combobox"` button skinned like the other form fields;
- * the panel is a `role="listbox"` `cdk/overlay`, with keyboard navigation
- * (arrows / Home / End / type-ahead) via the shared `ListKeyManager` and the
- * active-descendant pattern (focus stays on the trigger). Two optional content
- * slots: `#selectedItem` (closed trigger) and `#item` (each row), each with the
- * option as `$implicit`.
+ * The trigger is a `role="combobox"` button skinned like the other form
+ * fields; the panel is a `role="listbox"` `cdk/overlay` navigated through the
+ * shared `ListKeyManager` and the active-descendant pattern, so focus stays on
+ * the trigger. Optional `#selectedItem` and `#item` slots take the option as
+ * `$implicit`.
  */
 @Component({
   selector: 'lg-select',
@@ -217,10 +218,8 @@ export class LgSelect implements ControlValueAccessor, OnDestroy {
   }
 
   /**
-   * Per-option classes. The selected row gets a primary-tinted highlight
-   * (primary-100/primary-800 in light, a translucent primary wash in dark);
-   * the keyboard/hover-active row that is *not* selected gets the neutral
-   * content-hover surface.
+   * Per-option classes: a primary-tinted highlight for the selected row, the
+   * neutral content-hover surface for an active but unselected one.
    */
   protected optionClasses(index: number, selected: boolean): string {
     return [
@@ -248,7 +247,6 @@ export class LgSelect implements ControlValueAccessor, OnDestroy {
     return raw == null ? '' : String(raw);
   }
 
-  /** The option's icon class (`optionIcon` field), or undefined for none. */
   protected iconOf(option: unknown): string | undefined {
     const key = this.optionIcon();
     const raw = key ? (option as Record<string, unknown>)[key] : undefined;
@@ -275,9 +273,8 @@ export class LgSelect implements ControlValueAccessor, OnDestroy {
     this.focusTrigger();
   }
 
-  // Enter/Space are handled here (open / navigate / select). A native button
-  // also synthesises a click from Space on *keyup*, which keydown's
-  // preventDefault can't cancel — the template's `(keyup.space)` does, so the
+  // A native button synthesises a click from Space on *keyup*, which keydown's
+  // preventDefault cannot cancel; the template's `(keyup.space)` does, so the
   // synthesised click never re-toggles the panel.
   protected onTriggerKeydown(event: KeyboardEvent): void {
     if (this.isDisabled()) {
@@ -334,6 +331,12 @@ export class LgSelect implements ControlValueAccessor, OnDestroy {
     this.subscriptions = new Subscription();
     this.subscriptions.add(
       this.overlayRef.backdropClick().subscribe(() => this.close())
+    );
+    this.subscriptions.add(
+      externalTeardown(this.overlayRef, () => {
+        this.overlayRef = null;
+        this.close();
+      })
     );
   }
 

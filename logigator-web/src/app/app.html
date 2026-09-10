@@ -1,0 +1,23 @@
+<!-- `routerLink` with a fragment, not a bare `href="#content"`: under
+     `<base href="/">` a fragment-only href resolves against the base, so the
+     link would leave the page for the site root instead of skipping to its
+     content. The link moves within the page it is on, so `queryParamsHandling`
+     keeps the query state that page holds. -->
+<a
+  *webTranslate="let t"
+  class="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-skip-link focus:rounded focus:bg-content focus:px-3 focus:py-2 focus:text-text"
+  fragment="content"
+  queryParamsHandling="preserve"
+  [routerLink]="[]"
+  >{{ t('header.skipToContent') }}</a
+>
+
+<div class="flex min-h-dvh flex-col bg-surface-0 dark:bg-surface-950">
+  <web-top-bar />
+  <main id="content" class="flex-1">
+    <router-outlet />
+  </main>
+  <web-footer />
+</div>
+
+<lg-toast />

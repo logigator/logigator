@@ -20,14 +20,10 @@ const DEFAULTS: Required<HistogramOptions> = {
 };
 
 /**
- * Renders `buckets` as a text bar chart: a `title:` line followed by one
- * indented row per bucket — right-aligned label, bar, count. Bars scale to the
- * largest bucket, so they read as a distribution rather than an absolute
- * magnitude, and a non-zero bucket always gets at least one block so it stays
- * visible next to a dominant one.
- *
- * Returns the lines rather than a joined string so callers can splice several
- * histograms into one report.
+ * Renders `buckets` as a text bar chart. Bars scale to the largest bucket, so
+ * they read as a distribution, and a non-zero bucket always gets at least one
+ * block so it stays visible next to a dominant one. Returns lines rather than
+ * one string, so several histograms can be spliced into one report.
  */
 export function formatHistogram(
   title: string,
@@ -61,10 +57,8 @@ export function formatHistogram(
 }
 
 /**
- * Renders a count-per-index array — the shape a tally keyed by depth, size or
- * occupancy takes, where the index carries the meaning. A bucket nothing landed
- * in is a hole in such an array; it becomes a zero row so every bar lines up
- * with its own index.
+ * Renders a count-per-index array, where the index carries the meaning. Holes
+ * become zero rows so every bar lines up with its own index.
  */
 export function formatIndexHistogram(
   title: string,

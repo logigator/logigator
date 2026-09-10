@@ -11,26 +11,24 @@ import { PointerInput } from '../pointer-input';
 import { BoardTool, ToolHost } from './board-tool';
 
 /**
- * The placement tool: hovers the component the next press would place and
- * opens the placement session when the press lands. Which config to place
- * comes from the palette via {@link setConfig}.
+ * Hovers the component the next press would place and opens the placement
+ * session when the press lands. The config comes from the palette via
+ * {@link setConfig}.
  */
 export class PlacementTool implements BoardTool {
   private readonly _customComponents = getStaticDI(CustomComponentService);
 
   private _config: ComponentConfig | null = null;
 
-  // Hover preview: the component the next press would place, following the
-  // cursor before any press. Torn down whenever its context changes
-  // (mode/project/palette selection) or a session takes over.
+  // Torn down whenever its context changes (mode, project, palette
+  // selection) or a session takes over.
   private _hoverGhost: PlacementGhost | null = null;
   private _hoverGhostConfig: ComponentConfig | null = null;
   private _hoverGhostProject: Project | null = null;
 
   public setConfig(value: ComponentConfig | null): void {
     if (value !== this._hoverGhostConfig) {
-      // The palette selection changed under the preview — the next hover
-      // rebuilds the ghost from the new config.
+      // The next hover rebuilds the ghost from the new config.
       this._destroyHoverGhost();
     }
     this._config = value;
@@ -47,11 +45,9 @@ export class PlacementTool implements BoardTool {
   }
 
   /**
-   * Follows the cursor with the component the next press would place —
-   * the same ghost (selection look, invalid tint on collision) the placement
-   * session shows once the press lands, so the handoff is seamless. Rebuilt
-   * when the palette selection changes; skipped while any session is active
-   * (its own ghosts own the preview then).
+   * Follows the cursor with the same ghost the placement session shows once
+   * the press lands, so the handoff is seamless. Skipped while a session is
+   * active, since its own ghosts own the preview.
    */
   public hover(project: Project, input: PointerInput, host: ToolHost): void {
     const config = this._config;
@@ -63,7 +59,7 @@ export class PlacementTool implements BoardTool {
     if (this._hoverGhost) {
       this._hoverGhost.moveTo(snapped);
     } else {
-      // A master previews from its own config — snapshotting stays a
+      // A master previews from its own config; snapshotting stays a
       // commit-time effect of the placement session.
       this._hoverGhost = new PlacementGhost(
         project,
@@ -81,20 +77,16 @@ export class PlacementTool implements BoardTool {
     this._destroyHoverGhost();
   }
 
-  /** The session's own ghost takes over the preview (a visually identical
-   *  ghost at the same spot — a seamless handoff). */
+  /** The session's own, visually identical ghost takes over the preview. */
   public onSessionStart(): void {
     this._destroyHoverGhost();
   }
 
   /**
-   * Opens the placement session, ensuring a cloud custom master's circuit is
-   * loaded first — the load is deferred to place-time, not palette-select.
-   * The ensure is a microtask no-op for built-ins, browser masters, and
-   * already-loaded masters, so the session opens before any pointer-up; only
-   * a first, uncached cloud master actually awaits a request. If the gesture
-   * ends or the context changes during that await, the host's gesture stamp
-   * (bumped on pointer-up / cancel / context switches) keeps the stale load
+   * Opens the placement session, loading a cloud custom master's circuit
+   * first — deferred to place-time rather than palette-select. The ensure is
+   * a microtask no-op for everything already cached, so only a first,
+   * uncached cloud master awaits. The host's gesture stamp keeps a stale load
    * from opening a session with no pointer to drive it.
    */
   private async _beginPlacement(

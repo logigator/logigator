@@ -20,27 +20,26 @@
 
   <div class="flex items-center justify-between gap-2 pt-1">
     @if (!view().isFinal) {
-      <lg-button
+      <button
+        lgButton
         size="sm"
         severity="secondary"
         text
-        [label]="t('onboarding.bubble.skip')"
         (onClick)="skip.emit()"
-      ></lg-button>
+      >
+        {{ t('onboarding.bubble.skip') }}
+      </button>
     }
     @if (view().showNext) {
-      <lg-button
-        size="sm"
-        class="ml-auto"
-        [label]="
+      <button lgButton size="sm" class="ml-auto" (onClick)="next.emit()">
+        {{
           t(
             view().isFinal
               ? 'onboarding.bubble.finish'
               : 'onboarding.bubble.next'
           )
-        "
-        (onClick)="next.emit()"
-      ></lg-button>
+        }}
+      </button>
     }
   </div>
 </div>

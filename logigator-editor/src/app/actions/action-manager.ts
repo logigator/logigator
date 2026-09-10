@@ -6,16 +6,13 @@ import { LoggingService } from '../logging/logging.service';
 import { getStaticDI } from '../utils/get-di';
 
 /**
- * Undo/redo history. Two commit styles, one convention:
+ * Undo/redo history, with two commit styles:
  *
- * - {@link push} records the action AND runs its `do()` — for instantaneous,
- *   non-gesture operations (wire-tap toggles, option panels) that build fresh
- *   actions against the current state.
- * - {@link register} records the action WITHOUT running `do()` — for drag
- *   sessions, which always materialize their final state in the live project
- *   during the gesture and then record it. Re-running `do()` would
- *   double-apply (and re-deserialize instances whose ids are already in the
- *   tree).
+ * - {@link push} records the action and runs its `do()` — for instantaneous,
+ *   non-gesture operations built against the current state.
+ * - {@link register} records it without running `do()` — for drag sessions,
+ *   which materialize their final state during the gesture. Re-running `do()`
+ *   would double-apply and re-deserialize ids already in the tree.
  */
 export class ActionManager {
   private _history: Action[] = [];
@@ -27,25 +24,22 @@ export class ActionManager {
   public readonly actionChange$: Observable<void> =
     this._actionChange$.asObservable();
 
-  // While locked, undo/redo are inert; recording stays allowed. The host
-  // locks around interactions that hold project state mid-mutation, where a
-  // history operation would run against an inconsistent tree.
+  // While locked, undo/redo are inert but recording stays allowed — for
+  // interactions that hold project state mid-mutation.
   public locked = false;
 
-  // Hooks that run synchronously before push/register records a new action
-  // (see onBeforeRecord). Guarded against re-entry: a hook that records an
-  // action itself must not re-trigger the hook pass.
+  // Guarded against re-entry: a hook that records an action itself must not
+  // re-trigger the hook pass.
   private readonly _beforeRecordHooks: ((action: Action) => void)[] = [];
   private _notifyingHooks = false;
 
   constructor(private readonly project: Project) {}
 
   /**
-   * Registers a hook that runs synchronously before {@link push} or
-   * {@link register} records a new action. A hook may itself mutate the
-   * history — e.g. {@link retract} a provisional entry it owns — before the
-   * new action lands; the history operations a hook performs never re-enter
-   * the hook pass. Returns an unsubscribe function.
+   * Registers a hook running synchronously before {@link push} or
+   * {@link register} records an action. A hook may mutate the history itself —
+   * {@link retract} a provisional entry it owns, say — before the new action
+   * lands, without re-entering the hook pass. Returns an unsubscribe function.
    */
   public onBeforeRecord(hook: (action: Action) => void): () => void {
     this._beforeRecordHooks.push(hook);
@@ -96,9 +90,9 @@ export class ActionManager {
   }
 
   /**
-   * Reverts and removes an action, provided it is still the newest done entry
-   * — how the owner of a provisional entry takes it back out of history so it
-   * leaves no trace. Returns false (touching nothing) otherwise.
+   * Reverts and removes an action, provided it is still the newest done entry,
+   * so a provisional entry can leave no trace. Returns false and touches
+   * nothing otherwise.
    */
   public retract(action: Action): boolean {
     if (this.topDone !== action) return false;
@@ -114,12 +108,10 @@ export class ActionManager {
   }
 
   /**
-   * Replaces the newest done entry with a container grouping it and `next`,
-   * WITHOUT executing anything — `next`'s state must already be materialized
-   * (the register convention). This is how a provisional entry and the
-   * operation that finalizes it collapse into one undo step. Falls back to a
-   * plain register when `expectedTop` is no longer on top (it then stays its
-   * own undo step).
+   * Collapses a provisional entry and the operation finalizing it into one
+   * undo step, by replacing the newest done entry with a container over both.
+   * Executes nothing, so `next`'s state must already be materialized. Falls
+   * back to a plain {@link register} when `expectedTop` is no longer on top.
    */
   public coalesceTop(expectedTop: Action, next: Action): void {
     if (this.topDone !== expectedTop) {
@@ -153,11 +145,9 @@ export class ActionManager {
 
     const action = this._history[--this._pointer];
     action.undo(this.project);
-    // The selection persists across undo/redo, but the action's project
-    // mutations replace connection-point instances (a wire/component move
-    // cycles the terminations at its junctions, destroying and recreating
-    // the dot at an exactly-3-termination point) — re-derive which dots are
-    // highlighted so the selection keeps holding live instances.
+    // The selection survives undo/redo, but the mutations replace
+    // connection-point instances, so re-derive which dots are highlighted and
+    // keep the selection holding live ones.
     this.project.selectionManager.retintCps();
     this.logging.debug(
       `undo ${action.constructor.name} → pointer ${this._pointer}`,
@@ -175,7 +165,7 @@ export class ActionManager {
 
     const action = this._history[this._pointer++];
     action.do(this.project);
-    // Same as undo: keep the highlighted dots pointing at live instances.
+    // Keep the highlighted dots pointing at live instances.
     this.project.selectionManager.retintCps();
     this.logging.debug(
       `redo ${action.constructor.name} → pointer ${this._pointer}`,
@@ -193,21 +183,19 @@ export class ActionManager {
     this._pointer = 0;
   }
 
-  /** The recorded actions, oldest first. Read-only view for the debug dump. */
+  /** The recorded actions, oldest first. */
   public get history(): readonly Action[] {
     return this._history;
   }
 
-  /** Index of the next redo (== number of done actions). For the debug dump. */
+  /** Index of the next redo, i.e. the number of done actions. */
   public get pointer(): number {
     return this._pointer;
   }
 
   /**
-   * Replaces the history and pointer wholesale **without** re-applying any
-   * action — the project is expected to already hold the matching post-`do`
-   * state (debug Project Dump import loads the circuit body first, then restores
-   * this stack so undo/redo walks the real session history). The pointer is
+   * Replaces the history and pointer wholesale without re-applying anything:
+   * the project must already hold the matching post-`do` state. The pointer is
    * clamped into range.
    */
   public restore(history: Action[], pointer: number): void {
@@ -225,9 +213,8 @@ export class ActionManager {
   }
 
   /**
-   * Completes {@link actionChange$} so subscribers (dirty tracking, a
-   * `DefinitionBinding`) release without an explicit unsubscribe. Called from
-   * `Project.destroy`; the manager is single-use afterwards.
+   * Completes {@link actionChange$} so subscribers release without an explicit
+   * unsubscribe. The manager is single-use afterwards.
    */
   public destroy(): void {
     this._actionChange$.complete();

@@ -1,0 +1,66 @@
+<ng-container *webTranslate="let t">
+  <header class="page-wrap pt-10 pb-8 md:pt-14 md:pb-10">
+    <h1
+      class="text-2xl leading-tight font-bold tracking-[-0.01em] text-balance text-text-hover md:text-[32px]"
+    >
+      {{ t('pages.examples.title') }}
+    </h1>
+    <p
+      class="mt-3 max-w-[62ch] text-[17px] leading-relaxed text-pretty text-muted"
+    >
+      {{ t('pages.examples.lede') }}
+    </p>
+  </header>
+
+  <div class="page-wrap pb-14 md:pb-20">
+    @if (examples.failureKey(); as failure) {
+    <web-section-error
+      [heading]="t('pages.examples.failed')"
+      [message]="t(failure)"
+      [retryLabel]="t('errors.retry')"
+      [retrying]="examples.retrying()"
+      (retry)="examples.retry()"
+    />
+    } @else if (rows().length) { @for (row of rows(); track row.id; let first =
+    $first; let even = $even) {
+    <article [class]="rowClass(even)">
+      <web-circuit-preview
+        [class]="figureClass(even)"
+        [preview]="row.preview"
+        [sizes]="PREVIEW_SIZES"
+        [loading]="first ? 'eager' : 'lazy'"
+      />
+
+      <div class="flex flex-col items-start">
+        <h2 class="text-xl font-medium text-text-hover md:text-2xl">
+          {{ row.name }}
+        </h2>
+        <!-- Author-written text with its own line breaks, as text: the
+                 seed account is still an account. -->
+        <p
+          class="mt-3 max-w-[62ch] leading-relaxed whitespace-pre-line text-muted"
+        >
+          {{ row.description }}
+        </p>
+        <a
+          lgButton
+          class="mt-6"
+          target="_blank"
+          rel="noopener"
+          [href]="row.href"
+          [ariaLabel]="t('pages.examples.openNamed', { name: row.name })"
+        >
+          <span>{{ t('pages.examples.open') }}</span>
+          <i class="ph ph-arrow-square-out text-base" aria-hidden="true"></i>
+        </a>
+      </div>
+    </article>
+    } } @else {
+    <web-empty-state
+      class="lattice rounded-md border border-border"
+      [heading]="t('pages.examples.emptyHeading')"
+      [body]="t('pages.examples.emptyBody')"
+    />
+    }
+  </div>
+</ng-container>

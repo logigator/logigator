@@ -1,13 +1,14 @@
 <ng-container *appTranslate="let t">
   @if (collapsed()) {
     <div class="rounded-full bg-content p-1.5 shadow-lg">
-      <lg-button
+      <button
+        lgButton
         icon="ph ph-map-trifold"
         severity="secondary"
         rounded
         [ariaLabel]="t('minimap.expand')"
         (onClick)="toggleCollapsed()"
-      ></lg-button>
+      ></button>
     </div>
   } @else {
     <div
@@ -33,16 +34,16 @@
           [class.cursor-grab]="!scrubbing()"
         ></div>
       </div>
-      <lg-button
-        class="absolute right-2 top-2"
-        styleClass="shadow-md"
+      <button
+        lgButton
+        class="absolute right-2 top-2 shadow-md"
         icon="ph ph-arrows-in-simple"
         severity="secondary"
         size="sm"
         rounded
         [ariaLabel]="t('minimap.collapse')"
         (onClick)="toggleCollapsed()"
-      ></lg-button>
+      ></button>
     </div>
   }
 </ng-container>

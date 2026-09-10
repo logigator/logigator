@@ -22,10 +22,9 @@ import { LoggingService } from '../logging/logging.service';
 import { getStaticDI } from '../utils/get-di';
 
 /**
- * Reconstructs an {@link Action} from its `Action.serialize()` output — the read
- * side of the debug Project Dump format. The discriminated `type` maps back to a
- * concrete action; `ReorderPlugsAction`/`UpdateInstanceAction` collapse to a
- * plain {@link ActionContainer} (their behaviour is pure child delegation).
+ * Reconstructs an {@link Action} from its `serialize()` output.
+ * `ReorderPlugsAction`/`UpdateInstanceAction` collapse to a plain
+ * {@link ActionContainer}, since their behaviour is pure child delegation.
  */
 export function deserializeAction(dto: SerializedAction): Action {
   switch (dto.type) {
@@ -66,9 +65,8 @@ export function deserializeAction(dto: SerializedAction): Action {
     case 'container':
       return new ActionContainer(...dto.actions.map(deserializeAction));
     default:
-      // Unknown/future type from a malformed or newer dump: fail at parse time
-      // rather than leaking `undefined` into the restored stack (which would
-      // crash on the next undo/redo).
+      // Fail at parse time rather than leak `undefined` into the restored
+      // stack, which would crash on the next undo/redo.
       getStaticDI(LoggingService).warn(
         `unknown serialized action type: ${(dto as { type?: string }).type}`,
         'ActionCodec'

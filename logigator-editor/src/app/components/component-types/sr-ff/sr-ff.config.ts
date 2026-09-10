@@ -1,18 +1,12 @@
+import { srFfMeta } from '@logigator/core';
 import { ComponentConfig } from '../../component-config.model';
-import { BuiltInComponentType } from '../../component-type.enum';
-import { ComponentCategory } from '../../component-category.enum';
+import { configFromMeta } from '../../config-from-meta';
 import { ComponentOption } from '../../component-option';
 import { SrFfComponent } from './sr-ff.component';
 
 export type SrFfOptions = Record<string, ComponentOption>;
 
-export const srFfComponentConfig: ComponentConfig<SrFfOptions> = {
-  type: BuiltInComponentType.SR_FF,
-  category: ComponentCategory.ADVANCED,
-  symbol: 'SR',
-  name: 'components.def.SR_FF.name',
-  description: 'components.def.SR_FF.description',
-  options: {},
-  legacyV0Slots: {},
-  create: (options) => new SrFfComponent(options)
-};
+export const srFfComponentConfig: ComponentConfig<SrFfOptions> = configFromMeta(
+  srFfMeta,
+  { create: (options) => new SrFfComponent(options) }
+);

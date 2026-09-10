@@ -3,52 +3,40 @@ import { Project } from '../../project/project';
 import { Component } from '../../components/component';
 import { Wire } from '../../wires/wire';
 import { ComponentProviderService } from '../../components/component-provider.service';
-import { CUSTOM_TYPE_ID_BASE } from '../../components/component-type.enum';
-import { instantiateBody } from '../circuit-builder';
-import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
-import { LoggingService } from '../../logging/logging.service';
-import { MigrationContext } from './migrations/migration';
-import { migrateToCurrent } from './circuit-file-migrator';
-import { InvalidFileError } from './circuit-file.errors';
 import {
-  CURRENT_FILE_VERSION,
+  assembleCircuitFile,
   CurrentCircuitFile,
-  FileForkAttributionV1
-} from './circuit-file.types';
-import {
+  CUSTOM_TYPE_ID_BASE,
+  decodeComponentPositions,
+  decodeWireChain,
+  FileForkAttributionV1,
+  fromPersistedDefinition,
+  InvalidFileError,
+  migrateToCurrent,
+  MigrationContext,
+  PersistedSnapshotDefinitionV1,
+  PositionDeltaDecodeError,
   remapComponentTypes,
   SerializedCircuitBody,
   SerializedComponentBody,
   SerializedWireBody,
-  SnapshotDefinition
-} from '../serialized-circuit';
-import { collectSnapshots, serializeProjectBody } from '../snapshots';
-import {
-  decodeWireChain,
-  encodeWireChain,
+  SnapshotDefinition,
   WireChainDecodeError
-} from '../wire-chain.codec';
-import {
-  decodeComponentPositions,
-  encodeComponentPositions,
-  PositionDeltaDecodeError
-} from '../position-delta.codec';
-import {
-  fromPersistedDefinition,
-  toPersistedDefinition
-} from '../persisted-definition.codec';
-import { PersistedSnapshotDefinitionV1 } from '../persisted-circuit.types';
+} from '@logigator/core';
+import { instantiateBody } from '../circuit-builder';
+import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
+import { LoggingService } from '../../logging/logging.service';
+import { collectSnapshots, serializeProjectBody } from '../snapshots';
 
 /**
- * Reads/writes the native circuit file format. Encoding always emits the current
- * version; decoding parses, migrates any older document up to current (via the
- * migration chain), then turns it into editor instances.
+ * Reads and writes the native circuit file format. Encoding always emits the
+ * current version; decoding migrates an older document up to it first.
  *
- * It is a thin adapter over the universal snapshot codec (`persistence/snapshots.ts`):
- * encoding embeds a frozen snapshot of every custom the project uses and rewrites
- * the body to file-local type ids; decoding ingests those snapshots into the
- * registry and remaps the body back to session type ids. It does not touch project
- * metadata or the active-project lifecycle (that is `PersistenceService`'s job).
+ * A thin adapter over the snapshot codec (`persistence/snapshots.ts`):
+ * encoding embeds a frozen snapshot of every custom the project uses and
+ * rewrites the body to file-local type ids, decoding ingests those snapshots
+ * and remaps back to session type ids. Project metadata and the
+ * active-project lifecycle belong to `PersistenceService`.
  */
 @Injectable({ providedIn: 'root' })
 export class CircuitFileService {
@@ -56,10 +44,17 @@ export class CircuitFileService {
   private readonly registry = inject(CustomComponentRegistry);
   private readonly logging = inject(LoggingService);
 
+  /**
+   * Core's migration chain takes its catalog and log as plain functions, so
+   * this is the whole Angular adapter.
+   */
   private get migrationContext(): MigrationContext {
     return {
-      componentProvider: this.componentProvider,
-      logging: this.logging
+      catalog: (type) => this.componentProvider.getComponent(type)?.meta,
+      log: {
+        info: (message) => this.logging.info(message, 'CircuitFileMigrator'),
+        warn: (message) => this.logging.warn(message, 'CircuitFileMigrator')
+      }
     };
   }
 
@@ -73,14 +68,11 @@ export class CircuitFileService {
   }
 
   /**
-   * Serializes a project to a current-version file document, alongside the
-   * emission orders: `wireOrder[k]` / `componentOrder[k]` is the index (in
-   * `project.wires` / `project.components` iteration order) of the element
-   * emitted k-th. Both encoders reorder (the chain walk for wires, the
-   * position-delta sort for components), so the document's element order is
-   * the emission order — consumers that align per-element data with the
-   * document (the project dump's `wireIds`/`componentIds`) map through these
-   * instead of iterating the project.
+   * Serializes a project to a current-version document, alongside the emission
+   * orders: `wireOrder[k]` / `componentOrder[k]` is the index, in project
+   * iteration order, of the element emitted k-th. Both encoders reorder, so
+   * anything aligning per-element data with the document maps through these
+   * rather than iterating the project.
    */
   toDocument(
     project: Project,
@@ -96,34 +88,21 @@ export class CircuitFileService {
       this.registry
     );
     const body = serializeProjectBody(project);
-    const wires = encodeWireChain(body.wires);
-    const components = encodeComponentPositions(
-      remapComponentTypes(body.components, sessionToLocal)
-    );
-
-    return {
-      file: {
-        version: CURRENT_FILE_VERSION,
-        name,
-        components: components.components,
-        wires: wires.text,
-        definitions: definitions.map(toPersistedDefinition),
-        // Fork lineage rides along only when the document has one — an empty
-        // field would suggest a checked-and-absent lineage rather than none.
-        ...(attribution?.length ? { attribution } : {})
+    return assembleCircuitFile(
+      {
+        components: remapComponentTypes(body.components, sessionToLocal),
+        wires: body.wires
       },
-      wireOrder: wires.order,
-      componentOrder: components.order
-    };
+      definitions,
+      name,
+      attribution
+    );
   }
 
   /**
    * Migrates an already-parsed document up to the current version and turns it
    * into editor instances. The object-level entry shared by file reads
-   * ({@link fromJson}) and server reads (which wrap their `ProjectElement[]`
-   * response as a {@link CircuitFileV0} via `server.toCircuitFileV0`, so they
-   * route through the same `v0ToV1` migration). Returns the document `name`
-   * alongside the instances.
+   * ({@link fromJson}) and server reads, which carry the same document.
    */
   decode(data: unknown): {
     name: string;
@@ -138,13 +117,10 @@ export class CircuitFileService {
   }
 
   /**
-   * Decodes a current-version, validated document into editor instances: the
-   * shared file→session-body path ({@link _toSessionBody}) followed by the
-   * shared instance builder (`instantiateBody`). A custom whose snapshot is
-   * missing (an old reference-only or client-stripped server document) is
-   * dropped and reported via `skippedCustom` — the codec owns no UI, so the
-   * load entry points surface the count to the user (`warnSkippedCustoms`).
-   * Elements carry no id, so fresh ids are allocated on construction.
+   * Decodes a current-version, validated document into editor instances. A
+   * custom whose snapshot is missing is dropped and counted in
+   * `skippedCustom`: the codec owns no UI, so the load entry points surface
+   * the count. Elements carry no id, so fresh ones are allocated.
    */
   deserialize(file: CurrentCircuitFile): {
     components: Component[];
@@ -173,10 +149,9 @@ export class CircuitFileService {
   }
 
   /**
-   * Parses and migrates a JSON string, ingests its embedded snapshots into the
-   * registry, and returns the remapped serialized circuit body. Cheaper than
-   * {@link fromJson} — no live PixiJS objects are constructed. Used by the
-   * startup preload path to register masters without opening editor projects.
+   * Parses and migrates a JSON string, ingests its embedded snapshots and
+   * returns the remapped body. Cheaper than {@link fromJson}: no live PixiJS
+   * objects, so the startup preload registers masters without opening editors.
    */
   decodeToBody(content: string): SerializedCircuitBody {
     let parsed: unknown;
@@ -189,10 +164,8 @@ export class CircuitFileService {
   }
 
   /**
-   * The object-level form of {@link decodeToBody}: migrates an already-parsed
-   * document (e.g. a server response wrapped via `server.toCircuitFileV0`),
-   * ingests its embedded snapshots and returns the remapped body — no JSON parse,
-   * no live instances. Used by the startup preload of server masters.
+   * The object-level form of {@link decodeToBody}, for an already-parsed
+   * document such as a server response.
    */
   decodeToBodyFromData(data: unknown): SerializedCircuitBody {
     const file = migrateToCurrent(data, this.migrationContext);
@@ -200,14 +173,11 @@ export class CircuitFileService {
   }
 
   /**
-   * The shared file→session decode: ingests the document's embedded snapshots
-   * into the registry and remaps the body's file-local custom ids to session
-   * ids. A custom-range id resolves ONLY through the snapshot remap; a
-   * built-in passes through. Never fall a custom id through to its own value:
-   * file-local and session custom ids both count up from CUSTOM_TYPE_ID_BASE,
-   * so a missing snapshot would otherwise alias an unrelated session type —
-   * such elements are dropped with a warning and counted for the caller to
-   * surface.
+   * Ingests the document's embedded snapshots and remaps the body's file-local
+   * custom ids to session ids. A custom-range id resolves ONLY through the
+   * snapshot remap, never through its own value: both id spaces count up from
+   * CUSTOM_TYPE_ID_BASE, so a missing snapshot would alias an unrelated
+   * session type. Such elements are dropped, warned about and counted.
    */
   private _toSessionBody(file: CurrentCircuitFile): {
     body: SerializedCircuitBody;
@@ -243,11 +213,9 @@ export class CircuitFileService {
   }
 
   /**
-   * Parses and migrates a stored circuit and returns its embedded snapshot
-   * definitions **without ingesting them into the registry** — a read-only peek
-   * for inspecting a component's dependencies (e.g. the upload-to-cloud
-   * confirmation). Builds no live instances and allocates no type ids, so unlike
-   * {@link decodeToBody} it leaves the registry untouched.
+   * A stored circuit's embedded snapshot definitions, without ingesting them:
+   * no live instances and no type ids, so unlike {@link decodeToBody} the
+   * registry is left untouched.
    */
   peekDefinitions(content: string): SnapshotDefinition[] {
     let parsed: unknown;
@@ -279,8 +247,7 @@ export class CircuitFileService {
     throw err;
   }
 
-  /** Decodes the body's chain-encoded wires, mapping structural failures
-   * (including a non-string field) to {@link InvalidFileError}. */
+  /** Chain-encoded wires; a non-string field is a structural failure too. */
   private _decodeWires(value: unknown): SerializedWireBody[] {
     if (value === undefined) return [];
     try {
@@ -290,8 +257,7 @@ export class CircuitFileService {
     }
   }
 
-  /** Restores absolute positions from the body's delta-encoded components,
-   * mapping structural failures to {@link InvalidFileError}. */
+  /** Restores absolute positions from the delta-encoded components. */
   private _decodeComponents(
     value: SerializedComponentBody[] | undefined
   ): SerializedComponentBody[] {
@@ -302,9 +268,7 @@ export class CircuitFileService {
     }
   }
 
-  /** Revives persisted definitions (delta components, chain wires) into
-   * in-memory {@link SnapshotDefinition}s, mapping decode failures to
-   * {@link InvalidFileError}. */
+  /** Revives persisted definitions into in-memory {@link SnapshotDefinition}s. */
   private _decodeDefinitions(
     value: PersistedSnapshotDefinitionV1[] | undefined
   ): SnapshotDefinition[] {

@@ -58,7 +58,7 @@ export class OpenProjectDialogComponent implements OnInit {
 
   private readonly ctx = 'OpenProjectDialogComponent';
 
-  /** Cloud for a signed-in user; local is the only listable library otherwise. */
+  /** Cloud when signed in; local is the only listable library otherwise. */
   protected readonly activeTab = signal<string>(
     this.userService.user() ? 'server' : 'local'
   );
@@ -105,8 +105,8 @@ export class OpenProjectDialogComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadLocalProjects();
-    // The cloud list loads on first activation; a cloud-preselected dialog has
-    // no tab change to ride on, so kick it off here.
+    // The cloud list loads on first activation, and a cloud-preselected dialog
+    // has no tab change to ride on.
     if (this.activeTab() === 'server' && this.userService.user()) {
       void this.loadServerProjects();
     }
@@ -177,8 +177,7 @@ export class OpenProjectDialogComponent implements OnInit {
       name: item.name
     });
     if (!uploaded) return;
-    // Moved to the cloud: the local record is gone, so refresh the local list
-    // (and the server list if it has been loaded) to reflect the relocation.
+    // Moved to the cloud, so the local record is gone: refresh both lists.
     this.loadLocalProjects();
     if (this.serverLoaded()) void this.loadServerProjects(this.serverPage());
   }
@@ -208,7 +207,7 @@ export class OpenProjectDialogComponent implements OnInit {
         result.entries.map((p) => ({
           id: p.id,
           name: p.name,
-          lastEdited: p.lastEdited,
+          lastEdited: p.lastEditedAt,
           link: p.link,
           isPublic: p.public
         }))
@@ -288,8 +287,8 @@ export class OpenProjectDialogComponent implements OnInit {
         isPublic: item.isPublic ?? false
       }
     });
-    // The share dialog PATCHes link/visibility; refresh the list so the row's
-    // stored values (which seed a later share) reflect any change.
+    // The share dialog PATCHes link and visibility; refresh so the row's stored
+    // values, which seed a later share, reflect the change.
     void firstValueFrom(shareRef.onClose).then(() =>
       this.loadServerProjects(this.serverPage())
     );

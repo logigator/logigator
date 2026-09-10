@@ -1,6 +1,6 @@
 import type { WorkMode } from '../app/work-mode/work-mode.enum';
 import type { ShortcutActionEnum } from '../app/shortcuts/shortcut-action.enum';
-import type { ComponentCategory } from '../app/components/component-category.enum';
+import type { ComponentCategory } from '@logigator/core';
 
 const en = {
   common: {
@@ -26,7 +26,8 @@ const en = {
     editorSettings: 'Editor Settings',
     account: 'Account',
     logOut: 'Log Out',
-    logIn: 'Log In'
+    logIn: 'Log In',
+    signUp: 'Sign Up'
   },
   theming: {
     light: 'Light',
@@ -315,6 +316,9 @@ const en = {
           cloneShare: {
             label: 'Clone to my projects'
           },
+          cloneShareComponent: {
+            label: 'Clone to my components'
+          },
           exportFile: {
             label: 'Export to file'
           },
@@ -414,6 +418,12 @@ const en = {
     loadError: 'This page could not be loaded.',
     back: 'All topics',
     learnMore: 'Learn more',
+    search: {
+      label: 'Search the documentation',
+      placeholder: 'Search..',
+      loading: 'Loading the documentation…',
+      empty: 'Nothing matches “{{query}}”.'
+    },
     sections: {
       basics: 'Basics',
       building: 'Building Circuits',
@@ -672,6 +682,7 @@ const en = {
     loadDetected:
       'This circuit has {{count}} wire issue(s), which can make connections behave unexpectedly.',
     repairAction: 'Repair wires',
+    leftSimulation: 'Simulation stopped so the wires could be repaired.',
     clean: 'No wire issues found.'
   },
   bugReport: {
@@ -711,17 +722,21 @@ const en = {
       'This project changed elsewhere — reload before saving again.',
     loadFailed: 'Could not load the project.',
     componentLoadFailed: 'Could not load the component.',
-    shareLoadFailed: 'Could not load the shared project.',
+    shareLoadFailed: 'Could not load the shared circuit.',
     shareAuthRequired:
-      'Sign in to add this shared project to your cloud library.',
-    shareCloned: 'Shared project cloned to your cloud projects.',
-    shareCloneFailed: 'Could not clone the shared project.',
+      'Sign in to add this shared circuit to your cloud library.',
+    shareCloned: 'Shared circuit cloned to your cloud library.',
+    shareCloneFailed: 'Could not clone the shared circuit.',
     dumpElementCountChanged:
       'Project Dump element count changed on load — ids and action history were not restored.',
     skippedCustomOne:
       'A custom component could not be loaded — its definition is missing — and was skipped.',
     skippedCustomMany:
       '{{count}} custom components could not be loaded — their definitions are missing — and were skipped.'
+  },
+  browserSupport: {
+    unsupported:
+      'This browser is not officially supported — you may encounter errors. If you run into problems, try updating your browser.'
   },
   editor: {
     rendererInitFailed:

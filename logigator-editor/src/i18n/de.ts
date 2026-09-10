@@ -1,6 +1,6 @@
 import type { WorkMode } from '../app/work-mode/work-mode.enum';
 import type { ShortcutActionEnum } from '../app/shortcuts/shortcut-action.enum';
-import type { ComponentCategory } from '../app/components/component-category.enum';
+import type { ComponentCategory } from '@logigator/core';
 import type { TranslationSchema } from '../app/translation/translation-schema.model';
 
 const de: TranslationSchema = {
@@ -28,7 +28,8 @@ const de: TranslationSchema = {
     editorSettings: 'Editor-Einstellungen',
     account: 'Account',
     logOut: 'Abmelden',
-    logIn: 'Anmelden'
+    logIn: 'Anmelden',
+    signUp: 'Registrieren'
   },
   theming: {
     light: 'Hell',
@@ -320,6 +321,9 @@ const de: TranslationSchema = {
           cloneShare: {
             label: 'In meine Projekte klonen'
           },
+          cloneShareComponent: {
+            label: 'In meine Komponenten klonen'
+          },
           exportFile: {
             label: 'Als Datei exportieren'
           },
@@ -419,6 +423,12 @@ const de: TranslationSchema = {
     loadError: 'Diese Seite konnte nicht geladen werden.',
     back: 'Alle Themen',
     learnMore: 'Mehr erfahren',
+    search: {
+      label: 'Dokumentation durchsuchen',
+      placeholder: 'Suchen..',
+      loading: 'Dokumentation wird geladen…',
+      empty: 'Nichts passt zu „{{query}}“.'
+    },
     sections: {
       basics: 'Grundlagen',
       building: 'Schaltungen bauen',
@@ -682,6 +692,8 @@ const de: TranslationSchema = {
     loadDetected:
       'Diese Schaltung hat {{count}} Leitungsproblem(e), wodurch sich Verbindungen unerwartet verhalten können.',
     repairAction: 'Leitungen reparieren',
+    leftSimulation:
+      'Die Simulation wurde beendet, um die Leitungen zu reparieren.',
     clean: 'Keine Leitungsprobleme gefunden.'
   },
   bugReport: {
@@ -724,17 +736,21 @@ const de: TranslationSchema = {
       'Dieses Projekt wurde anderswo geändert — lade neu, bevor du erneut speicherst.',
     loadFailed: 'Das Projekt konnte nicht geladen werden.',
     componentLoadFailed: 'Die Komponente konnte nicht geladen werden.',
-    shareLoadFailed: 'Das geteilte Projekt konnte nicht geladen werden.',
+    shareLoadFailed: 'Die geteilte Schaltung konnte nicht geladen werden.',
     shareAuthRequired:
-      'Melde dich an, um dieses geteilte Projekt zu deiner Cloud-Bibliothek hinzuzufügen.',
-    shareCloned: 'Geteiltes Projekt in deine Cloud-Projekte geklont.',
-    shareCloneFailed: 'Das geteilte Projekt konnte nicht geklont werden.',
+      'Melde dich an, um diese geteilte Schaltung zu deiner Cloud-Bibliothek hinzuzufügen.',
+    shareCloned: 'Geteilte Schaltung in deine Cloud-Bibliothek geklont.',
+    shareCloneFailed: 'Die geteilte Schaltung konnte nicht geklont werden.',
     dumpElementCountChanged:
       'Die Elementanzahl des Projekt-Dumps hat sich beim Laden geändert — IDs und Aktionsverlauf wurden nicht wiederhergestellt.',
     skippedCustomOne:
       'Eine benutzerdefinierte Komponente konnte nicht geladen werden — ihre Definition fehlt — und wurde übersprungen.',
     skippedCustomMany:
       '{{count}} benutzerdefinierte Komponenten konnten nicht geladen werden — ihre Definitionen fehlen — und wurden übersprungen.'
+  },
+  browserSupport: {
+    unsupported:
+      'Dieser Browser wird nicht offiziell unterstützt — es können Fehler auftreten. Versuche bei Problemen, deinen Browser zu aktualisieren.'
   },
   editor: {
     rendererInitFailed:

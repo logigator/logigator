@@ -1,4 +1,5 @@
 import { Component } from '../../component';
+import { buttonMeta } from '@logigator/core';
 import { ButtonGraphics } from '../../../rendering/graphics/button.graphics';
 import { buttonComponentConfig, ButtonOptions } from './button.config';
 
@@ -13,7 +14,7 @@ export class ButtonComponent extends Component<ButtonOptions> {
   private _pressed = false;
 
   constructor(options: ButtonOptions) {
-    super(0, 1, options);
+    super(buttonMeta, options);
   }
 
   public get pressed(): boolean {
@@ -32,19 +33,6 @@ export class ButtonComponent extends Component<ButtonOptions> {
 
   public override clearSimState(): void {
     this.setPressed(false);
-  }
-
-  protected get inputLabels(): string[] {
-    return [];
-  }
-
-  protected get outputLabels(): string[] {
-    return [];
-  }
-
-  // eslint-disable-next-line @typescript-eslint/class-literal-property-style
-  protected get bodyGridWidth(): number {
-    return 1;
   }
 
   protected draw(): void {

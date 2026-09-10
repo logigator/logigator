@@ -7,18 +7,15 @@ import { ConnectionPoint } from '../connection-points/connection-point';
 import { applyInvalidTint } from './invalid-tint';
 import { WorkModeService } from '../work-mode/work-mode.service';
 import { getStaticDI } from '../utils/get-di';
-import { Direction } from '../utils/direction';
+import { Direction } from '@logigator/core';
 
 /**
- * A single-component placement preview living in the floating layer's drag
- * layer: a fresh instance built from a config, wearing the selection look,
- * tinted with the theme's invalid color whenever the spot it sits on
- * collides. Shared by the hover preview (the ghost under the cursor before
- * any press) and the `ComponentPlacementSession` (the same ghost while the
- * placing press is held), so the press-down handoff is seamless.
+ * A single-component placement preview in the floating layer's drag layer: a
+ * fresh instance from a config, wearing the selection look and the invalid
+ * tint whenever its spot collides. The hover preview and the
+ * `ComponentPlacementSession` share it, so the press-down handoff is seamless.
  *
- * Zoom is handled by the host: the drag layer fans `applyScale` out to its
- * children on every zoom change.
+ * Zoom is the host's: the drag layer fans `applyScale` out to its children.
  */
 export class PlacementGhost {
   private readonly _component: Component;
@@ -34,29 +31,27 @@ export class PlacementGhost {
       Object.entries(config.options).map(([key, opt]) => [key, opt.clone()])
     );
     this._component = config.create(options);
-    // The ghost starts facing the type's sticky placement direction (set by
-    // the settings panel while placing; East until then).
+    // Faces the type's sticky placement direction; East until one is set.
     const direction = getStaticDI(WorkModeService).placementDirectionFor(
       config.type
     );
     if (direction !== Direction.E) {
       this._component.direction = direction;
     }
-    // The ghost wears the selection look (theme-keyed tint).
     this._component.selected = true;
     this._component.applyScale(project.scale.x);
     parent.addChild(this._component);
     this.moveTo(startPos);
   }
 
-  /** The ghost instance itself — the component a commit would add. */
+  /** The component a commit would add. */
   public get component(): Component {
     return this._component;
   }
 
   /**
-   * Ends preview duty and hands the component over for committing: drops the
-   * ghost's selection look so the instance is board-ready. The caller adds it
+   * Ends preview duty and hands the component over board-ready, dropping the
+   * ghost's selection look. The caller adds it
    * to the project (re-parenting it out of the drag layer) and must not call
    * {@link destroy} afterwards.
    */

@@ -1,0 +1,51 @@
+<ng-container *webTranslate="let t">
+  <lg-drawer
+    position="left"
+    [header]="t('header.navigation')"
+    [visible]="visible()"
+    (visibleChange)="visibleChange.emit($event)"
+  >
+    <nav class="flex flex-col gap-1 p-2">
+      <a
+        routerLinkActive="text-primary!"
+        [class]="menuLinkClass"
+        [routerLink]="links.docs()"
+        (click)="close()"
+        >{{ t('header.docs') }}</a
+      >
+      <a
+        routerLinkActive="text-primary!"
+        [class]="menuLinkClass"
+        [routerLink]="links.examples()"
+        (click)="close()"
+        >{{ t('header.examples') }}</a
+      >
+      <a
+        routerLinkActive="text-primary!"
+        [class]="menuLinkClass"
+        [routerLink]="links.communityProjects()"
+        (click)="close()"
+        >{{ t('header.community') }}</a
+      >
+
+      @if (session.user()) {
+      <lg-divider />
+
+      <a
+        routerLinkActive="text-primary!"
+        [class]="menuLinkClass"
+        [routerLink]="links.myProjects()"
+        (click)="close()"
+        >{{ t('header.myProjects') }}</a
+      >
+      <a
+        routerLinkActive="text-primary!"
+        [class]="menuLinkClass"
+        [routerLink]="links.myComponents()"
+        (click)="close()"
+        >{{ t('header.myComponents') }}</a
+      >
+      }
+    </nav>
+  </lg-drawer>
+</ng-container>

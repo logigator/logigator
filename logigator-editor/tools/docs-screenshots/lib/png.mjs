@@ -1,14 +1,11 @@
 import sharp from 'sharp';
 
 /**
- * Encodes a captured screenshot as an indexed PNG.
- *
- * Chromium hands screenshots back as truecolour, while the editor draws its
- * chrome and its board from a flat palette — a full-window shot lands around
- * 250 distinct colours. Quantizing at quality 100 therefore keeps every colour
- * the picture actually uses and only changes how it is stored. libimagequant
- * is deterministic, so an unchanged shot re-captures to identical bytes and
- * leaves the tracked image alone.
+ * Encodes a captured screenshot as an indexed PNG. Chromium returns truecolour
+ * but the editor draws from a flat palette, so quantizing at quality 100 keeps
+ * every colour the picture uses and only changes how it is stored.
+ * libimagequant is deterministic: an unchanged shot re-encodes to identical
+ * bytes.
  */
 export function encodePng(buffer) {
   return sharp(buffer)

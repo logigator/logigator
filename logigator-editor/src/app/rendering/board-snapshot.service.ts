@@ -31,47 +31,25 @@ export interface SnapshotOptions {
   /** Margin around content, in grid units. Defaults to {@link EXPORT_MARGIN_GRID}. */
   marginGrid?: number;
   /**
-   * Hides every text node (`Text` and `BitmapText`) during the content pass
-   * instead of re-tuning glyph resolution. For tiny outputs (minimap) where
-   * glyphs are sub-pixel smears — shapes carry the layout, text is noise.
+   * Hides every text node during the content pass, for outputs too small for
+   * glyphs to read (minimap).
    */
   hideText?: boolean;
   /**
-   * Renders this many times larger than `multiplier` asks for. Line weights
-   * still come from `multiplier`, so a wire drawn one pixel wide at the
-   * display size covers `supersample` pixels here and lands back at one after
-   * the downscale — with its sub-pixel coverage averaged instead of quantized
-   * to whole pixels.
-   *
-   * `renderRegionToCanvas` does the downscale and hands back a canvas at the
-   * display size; `renderRegionToTexture` returns the enlarged texture and
-   * leaves the downscale to the caller. Defaults to 1; see
-   * {@link subPixelSupersample} for when it earns its quadratic cost.
+   * Renders this many times larger than `multiplier` asks for; line weights
+   * still come from `multiplier`, so the downscale averages each stroke's
+   * sub-pixel coverage instead of quantizing it. Defaults to 1.
    */
   supersample?: number;
   /**
-   * Lifts the sub-pixel coverage a supersampled downscale leaves behind: the
-   * result is composited over itself at this alpha, taking a pixel's coverage
-   * from `a` to `a + k·a·(1-a)`. Defaults to 0 (off), and only applies where
-   * there is a downscale to lift.
+   * Composites a downscaled result over itself at this alpha, lifting coverage
+   * from `a` to `a + k·a·(1-a)`. Sub-pixel wires lose alpha, not color, so an
+   * RGB transfer function cannot lift them. Trades fidelity for legibility:
+   * viewing aids opt in, exports do not. Defaults to 0.
    *
-   * Sub-pixel-wide wires rasterize as full-brightness color at partial
-   * coverage, so what washes a shrunken board out is alpha, not color — which
-   * is why a `brightness()`/`contrast()` filter can't lift it (both are
-   * transfer functions on RGB alone). Self-compositing lifts the faint end
-   * hardest and tapers to nothing as pixels approach solid, so content already
-   * drawn at full coverage is untouched. It has no effect over an opaque
-   * background, where the strokes are already blended in.
-   *
-   * This trades fidelity for legibility, so it belongs to viewing aids rather
-   * than to output the user keeps: the minimap opts in, exports do not.
-   *
-   * Honored only on the WebGL renderer. Its pixel readback returns
-   * premultiplied RGB that `putImageData` misreads as straight alpha
-   * (upstream ships the unpremultiply step dead-coded), darkening every
-   * partially covered pixel to `color·alpha` — the wash-out this boost was
-   * calibrated against. WebGPU extracts keep coverage exact, so the same
-   * lift there overshoots into a visibly denser map.
+   * WebGL only — its readback returns premultiplied RGB that `putImageData`
+   * misreads as straight alpha, the wash-out this is calibrated against.
+   * WebGPU extracts are exact and the same lift overshoots.
    */
   coverageBoost?: number;
 }
@@ -82,39 +60,29 @@ export const EXPORT_MARGIN_GRID = 1;
 export const EMPTY_FALLBACK_GRID = 16;
 /** Default edge length (px) of a server-save preview. */
 export const PREVIEW_SIZE = 1024;
-/**
- * Previews rendered below this multiplier hide text outright (the minimap's
- * rationale): glyphs are sub-pixel smears that add scene nodes to both theme
- * passes without adding legibility.
- */
+/** Below this multiplier a preview hides text: glyphs are sub-pixel smears. */
 const PREVIEW_HIDE_TEXT_BELOW = 0.5;
 /** Grid units per export-grid chunk; matches the live {@link Grid}. */
 const GRID_CHUNK = 32;
 /**
- * The zoom-ladder step the content renders at for multipliers ≥ 1: the "100%
- * zoom" look. Decoupling the render from the live zoom keeps snapshots
- * deterministic, and rendering at scale 1 lets the output matrix scale line
- * weights and grid dots up proportionally with the multiplier instead of
- * holding them screen-constant.
+ * The zoom-ladder step content renders at for multipliers ≥ 1 (the "100% zoom"
+ * look). Decoupled from the live zoom so snapshots are deterministic and the
+ * output matrix scales line weights with the multiplier.
  */
 const REFERENCE_STEP = 0;
 /**
- * Largest texture side (px) rendered in a single pass — conservative across
- * GPUs (WebGPU's `maxTextureDimension2D` defaults to 8192) and browser
- * 2D-canvas limits. Image export clamps its multiplier to this, and it bounds
- * what {@link BoardSnapshotService.subPixelSupersample} may enlarge to.
+ * Largest texture side (px) per pass — conservative across GPUs (WebGPU's
+ * `maxTextureDimension2D` defaults to 8192) and 2D-canvas limits.
  */
 export const MAX_SNAPSHOT_DIMENSION = 8192;
 /** Supersample factor {@link BoardSnapshotService.subPixelSupersample} picks. */
 const SUB_PIXEL_SUPERSAMPLE = 3;
 
 /**
- * Renders a project's content into an offscreen `RenderTexture`. The reusable
- * primitive behind image export, server previews and the minimap: it
- * renders the *real* scene graph, so every component type — including ROM and
- * flattened custom components — is covered without any per-type code.
- *
- * Callers own the returned texture and must destroy it (`texture.destroy(true)`).
+ * Renders a project's content into an offscreen `RenderTexture` — the
+ * primitive behind image export, server previews and the minimap. It renders
+ * the real scene graph, so every component type is covered with no per-type
+ * code. Callers own the returned texture (`texture.destroy(true)`).
  */
 @Injectable({
   providedIn: 'root'
@@ -149,7 +117,6 @@ export class BoardSnapshotService {
     );
   }
 
-  /** Output pixel dimensions for a region at a multiplier. */
   public outputSize(
     region: Rectangle,
     multiplier: number
@@ -162,20 +129,11 @@ export class BoardSnapshotService {
   }
 
   /**
-   * How much to supersample a render, given what it would otherwise produce.
-   *
-   * Wires and port stubs are hairlines on the half-grid (`roundToHalfGrid` —
-   * cell centres), so their centre-lines land at
-   * `(g + 0.5 - region.x) × pxPerUnit`. When that is a whole number for every
-   * `g` the output is already pixel-exact and supersampling would only soften
-   * it — which is the case for every whole-number image-export multiplier
-   * (16, 32, 64 px per grid unit). When it isn't — a fit-derived multiplier
-   * like a square preview's — each hairline picks up its own sub-pixel phase,
-   * antialiasing quantizes it to whatever coverage that phase gives, and the
-   * result reads as uneven brightness that a filtered downscale evens out.
-   *
-   * Returns 1 rather than enlarging past `maxDimension`, so a render already
-   * near the texture cap stays renderable.
+   * Hairlines sit on the half-grid, at `(g + 0.5 - region.x) × pxPerUnit`.
+   * Whole ⇒ already pixel-exact, and supersampling would only soften it.
+   * Otherwise each hairline picks up its own sub-pixel phase and reads as
+   * uneven brightness that a filtered downscale evens out. Returns 1 rather
+   * than enlarging past `maxDimension`.
    */
   public subPixelSupersample(
     region: Rectangle,
@@ -196,10 +154,8 @@ export class BoardSnapshotService {
 
   /**
    * Downscales a supersampled canvas to its display size, optionally lifting
-   * the sub-pixel coverage the filtering leaves behind (see
-   * {@link SnapshotOptions.coverageBoost}). Returns the source untouched when
-   * there is nothing to downscale, and where the environment gives us nothing
-   * to downscale *with* — an unsized canvas or no 2D context.
+   * coverage (see {@link SnapshotOptions.coverageBoost}). Returns the source
+   * untouched when there is nothing, or nothing to downscale with.
    */
   private _downsample(
     source: HTMLCanvasElement,
@@ -217,9 +173,8 @@ export class BoardSnapshotService {
     ctx.imageSmoothingQuality = 'high';
     ctx.drawImage(source, 0, 0, target.width, target.height);
     if (coverageBoost > 0) {
-      // Compositing the downscaled result over itself, rather than blitting
-      // the source a second time, keeps this a same-size copy instead of a
-      // second filtered downscale.
+      // Compositing the target over itself keeps this a same-size copy
+      // instead of a second filtered downscale.
       ctx.globalAlpha = coverageBoost;
       ctx.drawImage(target, 0, 0);
       ctx.globalAlpha = 1;
@@ -227,10 +182,7 @@ export class BoardSnapshotService {
     return target;
   }
 
-  /**
-   * Renders a project's content (tight bounds + margin, or empty fallback) into
-   * a texture. Caller owns the returned texture.
-   */
+  /** Content bounds + margin, or the empty fallback. Caller owns it. */
   public renderProjectToTexture(
     project: Project,
     options: SnapshotOptions
@@ -239,11 +191,7 @@ export class BoardSnapshotService {
     return this.renderRegionToTexture(project, region, options);
   }
 
-  /**
-   * Renders a project's content into an `HTMLCanvasElement` (extracted from the
-   * texture). The texture is destroyed before returning; the canvas is a
-   * standalone copy.
-   */
+  /** As {@link renderProjectToTexture}, returning a standalone canvas. */
   public renderProjectToCanvas(
     project: Project,
     options: SnapshotOptions
@@ -253,20 +201,14 @@ export class BoardSnapshotService {
   }
 
   /**
-   * Renders dark- and light-themed PNG previews of the project for server-side
-   * thumbnails: a square `sizePx × sizePx` image with a **transparent**
-   * background and the content centered. Resolves `null` when no renderer is
-   * available so the save flow can skip the upload silently.
+   * Dark- and light-themed square PNG previews with a transparent background
+   * and the content centered. Resolves `null` when no renderer is available,
+   * so the save flow skips the upload.
    *
-   * The non-live theme is produced by briefly switching the global theme and
-   * restyling the project in place ({@link Component.refreshTheme} — the
-   * live-toggle path; no rebuild, cheap even on large boards). All switching,
-   * restyling and offscreen rendering happens synchronously, and the live
-   * theme is restored in a `finally` *before* the first `await` — so no
-   * wrong-theme frame can ever paint, effects never observe the temporary
-   * theme, and no other consumer has to coordinate with this. Only the GPU
-   * readbacks wait one frame, letting the queued render work drain so they
-   * pay only their own transfer cost.
+   * The non-live theme comes from briefly switching the global theme and
+   * restyling in place. Switch, restyle and offscreen render all happen
+   * synchronously and the live theme is restored before the first `await`, so
+   * no wrong-theme frame can paint and no effect observes it.
    */
   public async generatePreviews(
     project: Project,
@@ -277,8 +219,7 @@ export class BoardSnapshotService {
     const region = this._squareRegion(this.computeRegion(project));
     const multiplier = sizePx / (region.width * environment.gridSize);
     // A preview's multiplier is fit-derived, so it practically never puts
-    // hairlines on whole pixels — on a large board that is the difference
-    // between a legible thumbnail and a faint smear.
+    // hairlines on whole pixels.
     const supersample = this.subPixelSupersample(region, multiplier);
     const options: SnapshotOptions = {
       multiplier,
@@ -299,17 +240,15 @@ export class BoardSnapshotService {
         project.applyTheme(false);
         otherTexture = this.renderRegionToTexture(project, region, options);
       } finally {
-        // Always restore the live theme, even if the pass throws — the caller
-        // swallows errors, so a leaked theme switch would be silent and
-        // baffling. Restyling is idempotent, so a half-restyled scene heals.
+        // A leaked theme switch would be silent; restyling is idempotent, so
+        // a half-restyled scene heals.
         this.themingService.setActiveThemeType(original);
         project.applyTheme(false);
       }
       liveTexture = this.renderRegionToTexture(project, region, options);
 
-      // Both renders are queued on the GPU; reading back immediately would
-      // block on that whole pipeline. Give it a frame to drain so the
-      // readbacks below pay only their own transfer cost.
+      // Let the queued render work drain, so the readbacks below pay only
+      // their own transfer cost.
       await nextAnimationFrame();
       const renderer = this.rendererService.renderer;
       if (!renderer) return null;
@@ -356,8 +295,7 @@ export class BoardSnapshotService {
 
   /**
    * Renders a region into an `HTMLCanvasElement` at the size `multiplier` asks
-   * for — a supersampled render is downscaled here. See
-   * {@link renderProjectToCanvas}.
+   * for; a supersampled render is downscaled here.
    */
   public renderRegionToCanvas(
     project: Project,
@@ -390,9 +328,8 @@ export class BoardSnapshotService {
 
   /**
    * Renders an arbitrary region (grid units) of a project into a texture. A
-   * passed transform replaces the rendered container's own transform (see
-   * PixiJS `renderer.render`), so the matrices below bake in the `gridSize`
-   * scale that `gridSpace` would otherwise apply.
+   * passed transform *replaces* the container's own transform, so the matrices
+   * below bake in the `gridSize` scale `gridSpace` would otherwise apply.
    */
   public renderRegionToTexture(
     project: Project,
@@ -409,19 +346,16 @@ export class BoardSnapshotService {
     }
 
     const gridSize = environment.gridSize;
-    // Geometry renders at the supersampled scale while the line weights below
-    // stay derived from `multiplier`, so every stroke comes out `supersample`
-    // times its display thickness and the caller's downscale averages it back.
+    // Geometry renders at the supersampled scale while line weights stay
+    // derived from `multiplier`, so the downscale averages each stroke back.
     const supersample = options.supersample ?? 1;
     const renderMultiplier = options.multiplier * supersample;
     const pxPerUnit = gridSize * renderMultiplier;
     const { width, height } = this.outputSize(region, renderMultiplier);
 
-    // Scale that drives line weights / grid-dot sizes. Capped at the 100%
-    // reference so weights grow proportionally for multipliers ≥ 1, but for
-    // multipliers < 1 (capped huge boards, previews, minimap) it tracks the
-    // multiplier so strokes and dots never render thinner than they do at
-    // 100% zoom — otherwise they go sub-pixel and the thumbnail washes out.
+    // Drives line weights and grid-dot sizes. Capped at the 100% reference so
+    // weights grow proportionally for multipliers ≥ 1; below 1 it tracks the
+    // multiplier so strokes never go sub-pixel and wash the output out.
     const lineScale = this._quantizeLineScale(options.multiplier);
 
     const texture = RenderTexture.create({
@@ -444,8 +378,7 @@ export class BoardSnapshotService {
     let grid: Container | null = null;
     if (withGrid) {
       // Dots authored at `lineScale` (project-pixel space); the matrix scales
-      // them by the multiplier. Spacing always grows with the multiplier; dot
-      // size grows for multipliers ≥ 1 and is floored at ~1px below that.
+      // them by the multiplier.
       grid = this._buildGrid(region, lineScale);
       const gridMatrix = new Matrix()
         .scale(renderMultiplier, renderMultiplier)
@@ -459,35 +392,27 @@ export class BoardSnapshotService {
       });
     }
 
-    // Content pass. gridSpace children sit in grid units, so scale by
-    // gridSize × multiplier.
+    // gridSpace children sit in grid units, so scale by gridSize × multiplier.
     const contentMatrix = new Matrix()
       .scale(pxPerUnit, pxPerUnit)
       .translate(tx, ty);
 
-    // The board's cull pass only runs on the on-screen ticker render, never on
-    // a manual render-to-texture, so off-screen quad-tree entries keep last
-    // frame's `culled` bit and would be missing here. Force the content subtree
-    // visible; the next on-screen frame re-culls against the live viewport.
+    // The cull pass runs only on the on-screen ticker render, so off-screen
+    // quad-tree entries still carry last frame's `culled` bit and would be
+    // missing here. The next on-screen frame re-culls.
     uncullTree(project.gridSpace);
     project.setOverlayVisible(false);
 
-    // Render the content at `lineScale`, independent of the live zoom, so the
-    // export keeps the natural look: the matrix scales line weights up
-    // proportionally with the multiplier, and the `lineScale` floor keeps them
-    // visible below 1×. Text is pre-rasterized, so its glyph resolution is
-    // bumped to the multiplier separately to stay crisp — or hidden (`hideText`)
-    // for outputs too small to render glyphs. Everything is restored afterwards;
-    // nothing renders on-screen between the calls.
+    // Render at `lineScale`, independent of the live zoom. Text is
+    // pre-rasterized, so glyph resolution is bumped separately. Everything is
+    // restored afterwards; nothing renders on-screen in between.
     const liveScale = project.scale.x;
     project.applyContentScale(lineScale);
     const restoreText = options.hideText
       ? this._hideTextNodes(project.gridSpace)
       : this._tuneTextResolution(project.gridSpace, renderMultiplier);
-    // Selection is a tint highlight on the real scene objects; without this a
-    // snapshot taken while a selection is live (e.g. the minimap re-rendering
-    // after a drag-move, which commits an action yet leaves the moved elements
-    // selected) bakes the highlight into committed content.
+    // Selection is a tint on the real scene objects, so a snapshot taken with
+    // a live selection would bake the highlight in.
     const restoreTint = project.selectionManager.suppressTintForRender();
     try {
       renderer.render({
@@ -495,7 +420,6 @@ export class BoardSnapshotService {
         transform: contentMatrix,
         target: texture,
         clearColor,
-        // When a grid pass already cleared, draw the content over it.
         clear: !withGrid
       });
     } finally {
@@ -510,14 +434,10 @@ export class BoardSnapshotService {
   }
 
   /**
-   * Snaps a snapshot multiplier onto the live zoom ladder
-   * (`ZOOM_STEP_BASE^step`, step ∈ [{@link ZOOM_STEP_MIN}, 0]). Line weights
-   * only ever get re-tuned to scales the live zoom also produces, so the
-   * scale-keyed GraphicsContext cache is reused instead of growing a permanent
-   * entry per arbitrary multiplier (previews and minimap re-frames derive
-   * theirs from content size, a different float almost every time). The floor
-   * additionally keeps strokes on huge boards at the fully-zoomed-out weight
-   * instead of washing out.
+   * Snaps a multiplier onto the live zoom ladder (`ZOOM_STEP_BASE^step`,
+   * step ∈ [{@link ZOOM_STEP_MIN}, 0]), so the scale-keyed GraphicsContext
+   * cache is reused rather than growing an entry per arbitrary multiplier.
+   * The floor keeps strokes on huge boards at the fully-zoomed-out weight.
    */
   private _quantizeLineScale(multiplier: number): number {
     const step = Math.round(Math.log(multiplier) / Math.log(ZOOM_STEP_BASE));
@@ -527,9 +447,8 @@ export class BoardSnapshotService {
 
   /**
    * Tiles the cached, theme-keyed {@link GridGraphics} context over the region
-   * so the export grid matches the editor exactly. Every chunk shares one
-   * context, so even a large region stays cheap. Chunks overhanging the region
-   * are clipped by the texture bounds.
+   * so the export grid matches the editor. Every chunk shares one context;
+   * overhanging chunks are clipped by the texture bounds.
    */
   private _buildGrid(region: Rectangle, lineScale: number): Container {
     const gridSize = environment.gridSize;
@@ -553,7 +472,6 @@ export class BoardSnapshotService {
     return container;
   }
 
-  /** Collects every text node under a container. */
   private _collectTextNodes(container: Container): (Text | BitmapText)[] {
     const out: (Text | BitmapText)[] = [];
     const visit = (node: Container): void => {

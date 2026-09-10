@@ -15,10 +15,9 @@ import { UserService } from '../../../user/user.service';
 import { TranslateDirective } from '../../../translation/translate.directive';
 
 /**
- * Collects the metadata for a new custom component (name, symbol, description,
- * visibility) and hands it to {@link CustomComponentService.createComponent},
- * which opens an empty editor tab. Limits mirror the backend's columns
- * (name ≤ 20, symbol ≤ 5).
+ * Collects the metadata for a new custom component and hands it to
+ * {@link CustomComponentService.createComponent}, which opens an empty editor
+ * tab. The length limits mirror the contract's schemas.
  */
 @Component({
   selector: 'app-new-component-dialog',
@@ -55,7 +54,7 @@ export class NewComponentDialogComponent {
   protected readonly symbol = signal('');
   protected readonly description = signal('');
   protected readonly isPublic = signal(true);
-  /** Cloud for a signed-in user; local is the only creatable option otherwise. */
+  /** Cloud when signed in; local is the only creatable option otherwise. */
   protected readonly source = signal<'server' | 'browser'>(
     this.userService.user() ? 'server' : 'browser'
   );
@@ -69,8 +68,8 @@ export class NewComponentDialogComponent {
 
   protected create(): void {
     if (!this.canCreate) return;
-    // Fire-and-forget: a server create is async (POST) but the dialog closes
-    // optimistically; failures surface via a toast from the service.
+    // Fire-and-forget: the dialog closes optimistically and a failed create
+    // surfaces through the service's toast.
     void this.customComponentService
       .createComponent({
         name: this.name().trim(),

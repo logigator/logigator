@@ -3,20 +3,15 @@ import type { Mock } from 'vitest';
 import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { throwError, of } from 'rxjs';
-import { HttpErrorResponse } from '@angular/common/http';
+import { ApiRequestError } from '@logigator/contract';
 import { UserService } from './user.service';
 import { UserApiService } from '../api/services/user-api.service';
 import { CookieService } from '../storage/cookie.service';
 import { ToastService } from '../logging/toast.service';
-import type { UserData } from '../api/models/user';
+import { makeUser } from '../../testing/user-fixtures';
 import { configureTestBed } from '../../testing/configure-test-bed';
 
-const USER: UserData = {
-  id: 'user-1',
-  memberSince: '2024-01-01',
-  username: 'andreas',
-  image: null
-};
+const USER = makeUser('user-1');
 
 describe('UserService', () => {
   let authCookie: ReturnType<typeof signal<string | null>>;
@@ -31,7 +26,7 @@ describe('UserService', () => {
     });
     userApi = {
       get: vi.fn().mockReturnValue(of(USER)),
-      logout: vi.fn().mockResolvedValue(undefined)
+      logout: vi.fn().mockReturnValue(of(undefined))
     };
     toast = { error: vi.fn(), warn: vi.fn(), success: vi.fn() };
 
@@ -71,7 +66,7 @@ describe('UserService', () => {
 
   it('treats a 401 on user load as an expired session: cookie cleaned, no error toast', () => {
     userApi.get.mockReturnValue(
-      throwError(() => new HttpErrorResponse({ status: 401 }))
+      throwError(() => new ApiRequestError(401, 'unauthorized', 'No session'))
     );
     const service = start();
     authCookie.set('true');
@@ -84,7 +79,7 @@ describe('UserService', () => {
 
   it('keeps the cookie on other load failures (the session may still be valid)', () => {
     userApi.get.mockReturnValue(
-      throwError(() => new HttpErrorResponse({ status: 500 }))
+      throwError(() => new ApiRequestError(500, 'internal', 'Server error'))
     );
     const service = start();
     authCookie.set('true');
@@ -114,7 +109,7 @@ describe('UserService', () => {
     expect(userApi.logout).toHaveBeenCalled();
     expect(toast.success).not.toHaveBeenCalled();
 
-    userApi.logout.mockRejectedValue(new Error('offline'));
+    userApi.logout.mockReturnValue(throwError(() => new Error('offline')));
     await expect(service.logout()).rejects.toThrow('offline');
     expect(toast.error).not.toHaveBeenCalled();
   });

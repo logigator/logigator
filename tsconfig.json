@@ -22,6 +22,10 @@
     "paths": {
       "@logigator/ui": ["logigator-ui/src/public-api.ts"],
       "@logigator/ui/*": ["logigator-ui/src/*"],
+      "@logigator/core": ["logigator-core/src/public-api.ts"],
+      "@logigator/contract": ["logigator-contract/src/public-api.ts"],
+      "@logigator/docs": ["logigator-docs/src/public-api.ts"],
+      "@logigator/docs/*": ["logigator-docs/src/*"],
       "@assets/*": ["logigator-editor/src/assets/*"]
     },
     "target": "ES2022",

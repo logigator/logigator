@@ -1,6 +1,6 @@
 import type { WorkMode } from '../app/work-mode/work-mode.enum';
 import type { ShortcutActionEnum } from '../app/shortcuts/shortcut-action.enum';
-import type { ComponentCategory } from '../app/components/component-category.enum';
+import type { ComponentCategory } from '@logigator/core';
 import type { TranslationSchema } from '../app/translation/translation-schema.model';
 
 const fr: TranslationSchema = {
@@ -28,7 +28,8 @@ const fr: TranslationSchema = {
     editorSettings: "Paramètres de l'éditeur",
     account: 'Compte',
     logOut: 'Se déconnecter',
-    logIn: 'Se connecter'
+    logIn: 'Se connecter',
+    signUp: "S'inscrire"
   },
   theming: {
     light: 'Clair',
@@ -320,6 +321,9 @@ const fr: TranslationSchema = {
           cloneShare: {
             label: 'Cloner vers mes projets'
           },
+          cloneShareComponent: {
+            label: 'Cloner vers mes composants'
+          },
           exportFile: {
             label: 'Exporter vers un fichier'
           },
@@ -419,6 +423,12 @@ const fr: TranslationSchema = {
     loadError: 'Impossible de charger cette page.',
     back: 'Tous les sujets',
     learnMore: 'En savoir plus',
+    search: {
+      label: 'Rechercher dans la documentation',
+      placeholder: 'Rechercher..',
+      loading: 'Chargement de la documentation…',
+      empty: 'Aucun résultat pour « {{query}} ».'
+    },
     sections: {
       basics: 'Bases',
       building: 'Construction de circuits',
@@ -685,6 +695,7 @@ const fr: TranslationSchema = {
     loadDetected:
       'Ce circuit comporte {{count}} problème(s) de fils, ce qui peut faire réagir les connexions de façon inattendue.',
     repairAction: 'Réparer les fils',
+    leftSimulation: 'La simulation a été arrêtée pour réparer les fils.',
     clean: 'Aucun problème de fils détecté.'
   },
   bugReport: {
@@ -726,17 +737,21 @@ const fr: TranslationSchema = {
       "Ce projet a changé ailleurs — rechargez-le avant de l'enregistrer à nouveau.",
     loadFailed: 'Impossible de charger le projet.',
     componentLoadFailed: 'Impossible de charger le composant.',
-    shareLoadFailed: 'Impossible de charger le projet partagé.',
+    shareLoadFailed: 'Impossible de charger le circuit partagé.',
     shareAuthRequired:
-      'Connectez-vous pour ajouter ce projet partagé à votre bibliothèque cloud.',
-    shareCloned: 'Projet partagé cloné dans vos projets cloud.',
-    shareCloneFailed: 'Impossible de cloner le projet partagé.',
+      'Connectez-vous pour ajouter ce circuit partagé à votre bibliothèque cloud.',
+    shareCloned: 'Circuit partagé cloné dans votre bibliothèque cloud.',
+    shareCloneFailed: 'Impossible de cloner le circuit partagé.',
     dumpElementCountChanged:
       "Le nombre d'éléments du vidage de projet a changé au chargement — les identifiants et l'historique des actions n'ont pas été restaurés.",
     skippedCustomOne:
       "Un composant personnalisé n'a pas pu être chargé — sa définition est manquante — et a été ignoré.",
     skippedCustomMany:
       "{{count}} composants personnalisés n'ont pas pu être chargés — leurs définitions sont manquantes — et ont été ignorés."
+  },
+  browserSupport: {
+    unsupported:
+      "Ce navigateur n'est pas officiellement pris en charge — des erreurs peuvent survenir. Si vous rencontrez des problèmes, essayez de mettre à jour votre navigateur."
   },
   editor: {
     rendererInitFailed:

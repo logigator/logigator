@@ -5,7 +5,7 @@ import { firstValueFrom, Subject } from 'rxjs';
 import { TranslocoService } from '@jsverse/transloco';
 import { configureTestBed } from '../../testing/configure-test-bed';
 import { Component } from '../components/component';
-import { BuiltInComponentType } from '../components/component-type.enum';
+import { BuiltInComponentType } from '@logigator/core';
 import { ConfirmationService } from '@logigator/ui';
 import { ProjectService } from '../project/project.service';
 import { PersistenceService } from '../persistence/persistence.service';
@@ -23,8 +23,8 @@ import { TUTORIALS } from './tutorials/registry';
 
 const SW = BuiltInComponentType.SWITCH;
 
-// Two manual steps around one action step, so the runner mechanics can be
-// exercised without depending on the real script's detectors.
+// Two manual steps around one action step, exercising the runner mechanics
+// without depending on the real script's detectors.
 const TEST_TUTORIAL: TutorialDefinition = {
   id: 'test',
   steps: [
@@ -228,8 +228,7 @@ describe('TutorialRunnerService', () => {
     (TUTORIALS as Record<string, TutorialDefinition>)['candidates'] =
       candidates;
 
-    // A registered-but-detached top candidate (a closed sheet's palette item)
-    // and a connected fallback (the button that opens it).
+    // A registered-but-detached top candidate and a connected fallback.
     const detached = document.createElement('div');
     const fallback = document.createElement('div');
     document.body.appendChild(fallback);
@@ -242,8 +241,8 @@ describe('TutorialRunnerService', () => {
     // The detached primary is skipped; the connected fallback wins.
     expect(show.mock.calls.at(-1)![0]).toBe(fallback);
 
-    // The primary attaches without re-registering (a sheet opening its
-    // already-registered, projected content); a sheet toggle re-anchors it.
+    // The primary attaches without re-registering, as a sheet opening its
+    // projected content does; the sheet toggle re-anchors it.
     document.body.appendChild(detached);
     TestBed.inject(MobileUiService).open('palette');
     tick();

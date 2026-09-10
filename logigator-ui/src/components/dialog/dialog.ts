@@ -22,14 +22,10 @@ import { lgLabel } from '../../tokens/labels';
 let nextId = 0;
 
 /**
- * A declarative modal dialog. `visible` is **one-way**: the dialog opens/closes
- * as the bound value changes, and a close request (backdrop — only when
- * `dismissableMask` — / Escape / the close button) emits `visibleChange(false)`
- * for the parent to re-derive `visible` from. Centred over a `cdk/overlay`
- * global overlay with focus trap + restore; scales/fades in.
- *
- * Default body content is projected; the footer is an optional `#footer`
- * template slot.
+ * A declarative modal dialog, centred over a `cdk/overlay` global overlay with
+ * focus trap and restore. `visible` is **one-way**: a close request — Escape,
+ * the close button, or the backdrop under `dismissableMask` — emits
+ * `visibleChange(false)` for the parent to re-derive `visible` from.
  */
 @Component({
   selector: 'lg-dialog',
@@ -82,7 +78,7 @@ export class LgDialog implements OnDestroy {
   readonly modal = input(true, { transform: booleanAttribute });
   readonly dismissableMask = input(false, { transform: booleanAttribute });
   readonly closable = input(true, { transform: booleanAttribute });
-  /** ARIA label for the close button — pass a localized string. */
+  /** ARIA label for the close button; localize it. */
   readonly closeLabel = input(lgLabel('close'));
   readonly style = input<Record<string, string>>();
   readonly visibleChange = output<boolean>();

@@ -27,7 +27,7 @@ interface ShareLinkPatch {
   updateLink?: boolean;
 }
 
-/** Name/link/visibility every dialog kind supplies up front. */
+/** What every dialog kind supplies up front. */
 interface ShareDialogBase {
   name: string;
   link: string;
@@ -36,18 +36,15 @@ interface ShareDialogBase {
 
 export type ShareDialogData =
   /**
-   * A cloud project addressed by its server id. Visibility/link changes sync back
-   * into the metadata store if that project is currently open (a no-op otherwise).
-   * Callers pass the current name/link/visibility directly — the open File-menu
-   * path from the metadata store, the open-project dialog from the listed summary —
-   * so the dialog needs no fetch and no live `Project` reference.
+   * A cloud project addressed by its server id. Visibility and link changes
+   * sync back into the metadata store when that project is open, and are a
+   * no-op otherwise. The current values are passed in, so the dialog needs no
+   * fetch and no live `Project` reference.
    */
   | ({ kind: 'project'; projectId: string } & ShareDialogBase)
   /**
-   * A cloud custom-component master. Its share link + visibility are read from
-   * the master definition (already preloaded), so they are passed in directly;
-   * `componentId` is the server id used for PATCHes and `masterTypeId` addresses
-   * the registry for write-back.
+   * A cloud custom-component master. `componentId` is the server id PATCHes go
+   * to, `masterTypeId` addresses the registry for write-back.
    */
   | ({
       kind: 'component';
@@ -58,10 +55,9 @@ export type ShareDialogData =
 /**
  * Manages a cloud project's or custom component's share link: shows the public
  * `/share/:link` URL with a copy button, regenerates the link (invalidating the
- * old one), and toggles public visibility. Both kinds carry a `@Generated('uuid')`
- * link, so the URL is never empty. Initial name/link/visibility are passed in by
- * the caller; changes write back to keep the session fresh without a re-fetch
- * (see `_persist`).
+ * old one) and toggles public visibility. Both kinds always carry a link, so
+ * the URL is never empty. Changes write back into the session so it stays fresh
+ * without a re-fetch.
  */
 @Component({
   selector: 'app-share-dialog',
@@ -177,10 +173,9 @@ export class ShareDialogComponent extends LgDialogContent<ShareDialogData> {
   }
 
   /**
-   * Writes a mutated link/visibility back into the session so it stays fresh
-   * without a re-fetch: for a component, onto its master definition; for a
-   * project, onto the metadata store entry of the open project addressed by id —
-   * a no-op when that project is not currently loaded.
+   * Writes a mutated link or visibility back into the session: for a component
+   * onto its master definition, for a project onto the metadata store entry
+   * addressed by id — a no-op when that project is not loaded.
    */
   private _persist(patch: { link?: string; isPublic?: boolean }): void {
     if (this.data.kind === 'component') {

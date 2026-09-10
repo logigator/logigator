@@ -18,12 +18,13 @@ import {
   makeRom,
   makeWire
 } from '../../../testing/factories';
-import { WireDirection } from '../../wires/wire-direction.enum';
-import { Direction } from '../../utils/direction';
-import { Component } from '../../components/component';
+import { Direction, WireDirection } from '@logigator/core';
+import { Component, PortSide } from '../../components/component';
 import { ComponentConfig } from '../../components/component-config.model';
 import { andComponentConfig } from '../../components/component-types/and/and.config';
 import { notComponentConfig } from '../../components/component-types/not/not.config';
+import { tunnelComponentConfig } from '../../components/component-types/tunnel/tunnel.config';
+import { inputComponentConfig } from '../../components/component-types/input/input.config';
 import { CustomComponentService } from '../../custom-component/custom-component.service';
 import { WorkModeService } from '../../work-mode/work-mode.service';
 import { ThemingService } from '../../theming/theming.service';
@@ -32,6 +33,7 @@ import { Project } from '../../project/project';
 import { WorkMode } from '../../work-mode/work-mode.enum';
 import { PointerInput } from './pointer-input';
 import { WorkModeRouter } from './work-mode-router';
+import { DragSession } from '../drag-session';
 import { groupGridBounds } from '../sessions/rotate-elements';
 
 /** PointerInput whose grid and global both sit at (x, y). */
@@ -179,8 +181,7 @@ describe('WorkModeRouter in SELECT mode', () => {
     project.addComponent(comp);
     project.selectionManager.select([comp], []);
 
-    // (2, 5.5) is outside the component bounds but inside the padded grab
-    // rect — grabbable only through the margin.
+    // Outside the component bounds but inside the padded grab rect.
     router.down(makeInput(2, 5.5));
     router.move(makeInput(6, 5.5));
     router.up();
@@ -190,14 +191,12 @@ describe('WorkModeRouter in SELECT mode', () => {
   });
 
   it('freezes a selection move on an invalid release instead of discarding it', () => {
-    // AND at (3,3), a second AND at (8,3) to collide with.
     const comp = makeAnd(2);
     comp.position.set(3, 3);
     project.addComponent(comp);
     project.addComponent(makeAnd(2, undefined, 8, 3));
     project.selectionManager.select([comp], []);
 
-    // Grab through the margin, drag onto the second component.
     router.down(makeInput(2, 5.5));
     router.move(makeInput(7, 5.5)); // overlaps the second AND
     router.up(); // released over a collision
@@ -205,9 +204,8 @@ describe('WorkModeRouter in SELECT mode', () => {
     expect(router.hasActiveSession).toBe(true); // still frozen, awaiting a valid drop
 
     // The release ended the gesture, so the frozen group needs a fresh press
-    // before it moves again (the controller only routes moves to the tool
-    // while its pointer is down). Grabbing it and dragging to clear space
-    // commits the move — from where the second press landed, not the first.
+    // before it moves again, and the move commits from where that press
+    // landed rather than the first one.
     router.down(makeInput(7, 5.5));
     router.move(makeInput(3, 5.5));
     router.up();
@@ -221,7 +219,7 @@ describe('WorkModeRouter in SELECT mode', () => {
     project.addComponent(comp);
     project.selectionManager.select([comp], []);
 
-    // (10, 10) is well outside the grab rect: a fresh (empty) click-select.
+    // Well outside the grab rect: a fresh, empty click-select.
     router.down(makeInput(10, 10));
     router.up();
 
@@ -258,9 +256,8 @@ describe('WorkModeRouter in SELECT mode', () => {
       window.dispatchEvent(new KeyboardEvent('keyup', { key: 'Alt' }));
     }
 
-    // Cut at x = 2.5 (the first half-grid position at or outside the rect's
-    // right edge, which is already half-grid aligned here): the inside piece
-    // is selected, the outside remnant is not.
+    // Cut at x = 2.5, the first half-grid position at or outside the rect's
+    // right edge: the inside piece is selected, the outside remnant is not.
     const wires = Array.from(project.wires);
     expect(wires).toHaveLength(2);
     const selected = Array.from(project.selectionManager.selectedWires);
@@ -412,8 +409,7 @@ describe('WorkModeRouter move-selection shortcuts (arrow keys)', () => {
   });
 
   it('keeps the session floating on a colliding move; Escape reverts it', () => {
-    // Bodies touch edge-on: selected Rectangle(3,3,2,2) above stationary
-    // Rectangle(3,5,2,2) — one step down makes them overlap.
+    // The bodies touch edge-on; one step down makes them overlap.
     const stationary = makeAnd(2, undefined, 3, 5);
     project.addComponent(stationary);
     const comp = makeAnd(2, undefined, 3, 3);
@@ -504,8 +500,8 @@ describe('WorkModeRouter rotate-selection requests', () => {
   });
 
   it('commits a colliding rotation once a second turn clears it — no revert on click-off', () => {
-    // The obstacle sits only in the selection's one-quarter-turn footprint:
-    // rotating once drives the AND onto it (floats), rotating again clears it.
+    // The obstacle sits only in the one-quarter-turn footprint, so the first
+    // rotate floats and the second clears it.
     const obstacle = makeAnd(2, Direction.E, 2, 6);
     project.addComponent(obstacle);
     const comp = makeAnd(3, Direction.E, 5, 5);
@@ -538,8 +534,7 @@ describe('WorkModeRouter rotate-selection requests', () => {
     project.requestSelectionRotation(1); // clears → commits
     expect(router.hasActiveSession).toBe(false);
 
-    // The bug: a press elsewhere used to cancel the (now committed) float and
-    // snap the rotation back. The commit already landed, so it must stick.
+    // A press elsewhere must not snap back a rotation that already committed.
     router.down(makeInput(20, 20));
     expect(comp.direction).toBe(Direction.W);
   });
@@ -549,8 +544,8 @@ describe('WorkModeRouter rotate-selection requests', () => {
     project.addComponent(comp);
     project.selectionManager.select([comp], []);
 
-    // Grab the selection with the pointer: a live drag whose anchor is locked,
-    // so isAwaitingGrab() is false and the auto-commit guard must not fire.
+    // A live drag has its anchor locked, so isAwaitingGrab() is false and the
+    // auto-commit guard must not fire.
     router.down(makeInput(6, 6));
     router.move(makeInput(8, 8));
     expect(router.hasActiveSession).toBe(true);
@@ -616,8 +611,7 @@ describe('WorkModeRouter wire-tool taps (WIRE_TOOL mode)', () => {
   });
 
   it('splits crossing wires on a tap and rejoins them on a second tap', () => {
-    // Horizontal x ∈ [0.5, 4.5] at y 2.5; vertical y ∈ [0.5, 4.5] at x 2.5 —
-    // they cross at (2.5, 2.5) without either ending there.
+    // The wires cross at (2.5, 2.5) without either ending there.
     project.addWire(makeWire(0, 2, WireDirection.HORIZONTAL, 4));
     project.addWire(makeWire(2, 0, WireDirection.VERTICAL, 4));
 
@@ -640,6 +634,89 @@ describe('WorkModeRouter wire-tool taps (WIRE_TOOL mode)', () => {
     expect(toggleSpy).not.toHaveBeenCalled();
   });
 
+  it('picks the port on the tapped side where an output meets an input', () => {
+    // Bodies 2..4 and 5..7: the output stub tip and the input stub tip meet.
+    const driver = makeAnd(2, undefined, 2, 2);
+    const load = makeAnd(2, undefined, 5, 2);
+    project.addComponent(driver);
+    project.addComponent(load);
+    const tip = driver.connectionPoints[2];
+    expect(load.connectionPoints[0]).toEqual(tip);
+
+    tap(tip.x - 0.2, tip.y);
+    expect(driver.isPortNegated('out', 0)).toBe(true);
+    expect(load.isPortNegated('in', 0)).toBe(false);
+
+    tap(tip.x + 0.2, tip.y);
+    expect(load.isPortNegated('in', 0)).toBe(true);
+    expect(driver.isPortNegated('out', 0)).toBe(true);
+  });
+
+  it('previews the port on the hovered side of a met stub pair', () => {
+    const driver = makeAnd(2, undefined, 2, 2);
+    const load = makeAnd(2, undefined, 5, 2);
+    project.addComponent(driver);
+    project.addComponent(load);
+    const tip = driver.connectionPoints[2];
+    const show = vi.spyOn(project.floatingLayer, 'showNegationGhost');
+
+    router.hover(makeInput(tip.x - 0.2, tip.y));
+    expect(show).toHaveBeenLastCalledWith(
+      driver.negationBubbleAnchor('out', 0),
+      'out',
+      expect.anything(),
+      false
+    );
+
+    router.hover(makeInput(tip.x + 0.2, tip.y));
+    expect(show).toHaveBeenLastCalledWith(
+      load.negationBubbleAnchor('in', 0),
+      'in',
+      expect.anything(),
+      false
+    );
+  });
+
+  /** A tunnel and an Input plug, the transparent types no bubble is offered on. */
+  function addNonNegatable(): Component[] {
+    const tunnel = tunnelComponentConfig.create({
+      label: tunnelComponentConfig.options.label.clone('bus')
+    });
+    tunnel.position.set(2, 2);
+    const plug = inputComponentConfig.create({
+      label: inputComponentConfig.options.label.clone(''),
+      index: inputComponentConfig.options.index.clone(0)
+    });
+    plug.position.set(8, 2);
+    project.addComponent(tunnel);
+    project.addComponent(plug);
+    return [tunnel, plug];
+  }
+
+  it('leaves a tunnel or a plug alone: their ports carry no negatable signal', () => {
+    const show = vi.spyOn(project.floatingLayer, 'showNegationGhost');
+
+    for (const comp of addNonNegatable()) {
+      const cp = comp.connectionPoints[0];
+      const side: PortSide = comp.numInputs > 0 ? 'in' : 'out';
+      router.hover(makeInput(cp.x, cp.y));
+      tap(cp.x, cp.y);
+      expect(comp.isPortNegated(side, 0)).toBe(false);
+    }
+    expect(show).not.toHaveBeenCalled();
+  });
+
+  it('still removes a bubble an older board left on one', () => {
+    for (const comp of addNonNegatable()) {
+      const side: PortSide = comp.numInputs > 0 ? 'in' : 'out';
+      comp.setPortNegated(side, 0, true);
+      const cp = comp.connectionPoints[0];
+
+      tap(cp.x, cp.y);
+      expect(comp.isPortNegated(side, 0)).toBe(false);
+    }
+  });
+
   it('does nothing when the tap is outside port tolerance on empty canvas', () => {
     const and = makeAnd(2, undefined, 2, 2);
     project.addComponent(and);
@@ -660,8 +737,8 @@ describe('WorkModeRouter wire-tool taps (WIRE_TOOL mode)', () => {
     router.move(makeInput(2.5, 8.5));
     router.up();
 
-    // The new piece merges into the collinear vertical wire (now spanning
-    // y 0.5–8.5), and the crossing was not split by the press.
+    // The new piece merges into the collinear vertical wire (y 0.5–8.5), and
+    // the crossing is not split.
     const lengths = Array.from(project.wires, (w) => w.length).sort();
     expect(lengths).toEqual([4, 8]);
   });
@@ -1025,7 +1102,7 @@ describe('WorkModeRouter paste placement', () => {
 
   /**
    * Rests the cursor on a grid position. The router records the canvas-local
-   * position, so the hover has to carry a `global` matching the grid one.
+   * position, so the hover must carry a `global` matching the grid one.
    */
   function hoverOnGrid(gx: number, gy: number, pointerType = 'mouse'): void {
     router.hover({
@@ -1064,17 +1141,15 @@ describe('WorkModeRouter paste placement', () => {
   });
 
   it('centres the pasted group in the view for touch input', () => {
-    // A lifted finger leaves no cursor behind, so its last position must not
-    // be treated as one.
+    // A lifted finger leaves no cursor behind.
     hoverOnGrid(30, 12, 'touch');
 
     expectCentredOn(pasteAtOrigin(), VIEW_CENTRE);
   });
 
   it('reads the resting cursor through the camera it pastes under', () => {
-    // Panning (right-drag, the zoom controls, the minimap) moves the camera
-    // with no pointer move behind it: the cursor still rests on the same
-    // canvas pixel, which is now a different part of the circuit.
+    // A pan moves the camera with no pointer move behind it: the cursor rests
+    // on the same canvas pixel, now a different part of the circuit.
     hoverOnGrid(30, 12);
     project.viewport.setPosition(new Point(-1600, -800)); // grid origin (100, 50)
 
@@ -1115,5 +1190,63 @@ describe('WorkModeRouter paste placement', () => {
 
     router.setProject(null);
     other.destroy({ children: true });
+  });
+});
+
+describe('WorkModeRouter session retirement', () => {
+  let project: Project;
+  let router: WorkModeRouter;
+
+  beforeEach(() => {
+    configureTestBed();
+    project = new Project();
+    router = new WorkModeRouter();
+    router.setProject(project);
+  });
+
+  afterEach(() => {
+    router.destroy();
+    project.destroy({ children: true });
+  });
+
+  /** A session whose terminal callback fails the way a commit can. */
+  function makeFailingSession(on: 'end' | 'cancel'): DragSession {
+    return {
+      onMove: vi.fn(),
+      onEnd: vi.fn(() => {
+        if (on === 'end') throw new Error('commit failed');
+      }),
+      onCancel: vi.fn(() => {
+        if (on === 'cancel') throw new Error('cancel failed');
+      }),
+      canEnd: () => true
+    };
+  }
+
+  it('retires a session whose commit throws', () => {
+    const session = makeFailingSession('end');
+    router.startSession(session);
+
+    expect(() => router.up()).toThrow('commit failed');
+
+    expect(router.hasActiveSession).toBe(false);
+    expect(project.actionManager.locked).toBe(false);
+
+    // Nothing left for the next release to re-enter.
+    router.up();
+    expect(session.onEnd).toHaveBeenCalledTimes(1);
+  });
+
+  it('retires a session whose cancel throws', () => {
+    const session = makeFailingSession('cancel');
+    router.startSession(session);
+
+    expect(() => router.abortActiveDrag()).toThrow('cancel failed');
+
+    expect(router.hasActiveSession).toBe(false);
+    expect(project.actionManager.locked).toBe(false);
+
+    router.abortActiveDrag();
+    expect(session.onCancel).toHaveBeenCalledTimes(1);
   });
 });

@@ -2,33 +2,30 @@ import { Component, computed, input } from '@angular/core';
 import { LgBadge, LgSeverity } from '@logigator/ui';
 import { TranslateDirective } from '../../translation/translate.directive';
 
-/** Where the shown circuit lives / its persistence state. */
+/** Where the shown circuit lives, or its persistence state. */
 export type SourceIndicatorState =
   'server' | 'browser' | 'draft' | 'share' | 'embedded';
 
 interface StateStyle {
   icon: string;
-  /** Badge colour role (chip variant). */
+  /** Badge colour role, chip variant. */
   severity: LgSeverity;
-  /** Icon colour class for the compact corner glyph (badge variant). */
+  /** Icon colour class, badge variant. */
   glyph: string;
 }
 
 /**
- * Provenance / persistence indicator for a custom component or project, in two
- * variants:
+ * Provenance indicator for a custom component or project, in two variants:
  *
- * - `chip` (default) — a filled {@link LgBadge} pill (icon + label), legible on
- *   any surface, including the coloured title bar.
- * - `badge` — a small corner glyph on a palette tile (host is `display: contents`
- *   so the absolute badge anchors to the tile); a bespoke dot, too small for
- *   `LgBadge`.
+ * - `chip` (default) — a filled {@link LgBadge} pill, legible on any surface.
+ * - `badge` — a bespoke corner glyph on a palette tile, too small for
+ *   `LgBadge`. The host is `display: contents` so the absolute badge anchors
+ *   to the tile.
  *
- * Five states: `server` (cloud), `browser` (saved locally), `draft` (never saved
- * yet), `share` (read-only from a share link), `embedded` (placed custom whose
- * library master is gone — circuit survives only as the embedded copy). Owns the
- * icon and colour per state; labels are translated per state, and each tooltip
- * defaults to a translated component-context string that hosts can override.
+ * The states are `server` (cloud), `browser` (saved locally), `draft` (never
+ * saved), `share` (read-only from a share link) and `embedded` (a placed custom
+ * whose library master is gone, so the circuit survives only as the embedded
+ * copy). Each tooltip defaults to a translated string hosts can override.
  */
 @Component({
   selector: 'app-source-indicator',
@@ -55,15 +52,12 @@ interface StateStyle {
   </ng-container>`
 })
 export class SourceIndicatorComponent {
-  /** Which library the component/project lives in, or its unsaved/shared state. */
   public readonly source = input.required<SourceIndicatorState>();
-  /** Visual form: a labelled `LgBadge` pill (`chip`) or a tile corner glyph (`badge`). */
   public readonly variant = input<'chip' | 'badge'>('chip');
 
   /**
-   * Per-state tooltip overrides. Empty falls back to the translated
-   * component-context default (`sourceIndicator.title.<state>`); hosts pass a
-   * context-specific string (e.g. project wording in the title bar).
+   * Per-state tooltip overrides. Empty falls back to the translated default
+   * `sourceIndicator.title.<state>`.
    */
   public readonly serverTitle = input<string>('');
   public readonly browserTitle = input<string>('');
@@ -103,9 +97,9 @@ export class SourceIndicatorComponent {
     () => SourceIndicatorComponent.STYLES[this.source()]
   );
 
-  // Keys are built here rather than in the template: `as const` keeps the
-  // template literal a literal type, so the state-keyed keys are checked against
-  // the translation schema like any hand-written key.
+  // Built here rather than in the template: `as const` keeps the template
+  // literal a literal type, so these state-keyed keys are checked against the
+  // translation schema like any hand-written key.
   protected readonly titleKey = computed(
     () => `sourceIndicator.title.${this.source()}` as const
   );
@@ -113,7 +107,7 @@ export class SourceIndicatorComponent {
     () => `sourceIndicator.label.${this.source()}` as const
   );
 
-  /** The host-supplied tooltip for the current state, or `''` for the default. */
+  /** The host-supplied tooltip for the current state, `''` for the default. */
   protected readonly titleOverride = computed(() => {
     switch (this.source()) {
       case 'server':

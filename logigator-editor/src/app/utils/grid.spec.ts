@@ -4,10 +4,9 @@ import { environment } from '../../environments/environment';
 import { fromGrid, overlapsRect, roundToGrid, roundToHalfGrid } from './grid';
 
 describe('overlapsRect', () => {
-  // The whole point of the helper is to be substitutable for
-  // Rectangle.intersects in the quad tree's candidate test, so the contract is
-  // agreement — including the half-grid coordinates wires sit on and the
-  // edge-contact case, where intersects() answers false.
+  // The helper must be substitutable for Rectangle.intersects in the quad
+  // tree's candidate test, so the contract is agreement — half-grid wire
+  // coordinates and the edge-contact case, where intersects() answers false.
   it('agrees with Rectangle.intersects over a sweep of box pairs', () => {
     const coords = [-2, -0.5, 0, 1, 2.5, 3, 4];
     const extents = [0.5, 1, 2, 5];

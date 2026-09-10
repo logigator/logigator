@@ -8,13 +8,10 @@ import { resolveMasterSignal } from './resolve-master.signal';
 import { TranslateDirective } from '../../../translation/translate.directive';
 
 /**
- * Renderer for {@link DeleteComponentAction}: a danger button shown whenever the
- * selected instance (or placement ghost) resolves to a library master — the only
- * time there is a library entry to remove. It opens an anchored confirm popover
- * (the delete is permanent, and for a cloud master also unpublishes it and kills
- * its share link) and, on accept, hands the master to
- * {@link CustomComponentService.deleteComponent}. Placed instances survive as
- * embedded copies; an orphaned instance has no master and hides this action.
+ * Shown whenever the selection resolves to a library master, the only time
+ * there is an entry to remove. The delete is permanent and, for a cloud
+ * master, also unpublishes it and kills its share link, so it confirms first.
+ * Placed instances survive as embedded copies.
  */
 @Component({
   selector: 'app-delete-component-action',
@@ -22,15 +19,17 @@ import { TranslateDirective } from '../../../translation/translate.directive';
   host: { class: 'contents' },
   template: `<ng-container *appTranslate="let t">
     @if (visible()) {
-      <lg-button
+      <button
+        lgButton
         size="sm"
         severity="danger"
         [outlined]="true"
         icon="ph ph-trash"
-        [label]="t('deleteComponent.button')"
         class="w-full"
         (onClick)="confirmDelete($event)"
-      />
+      >
+        {{ t('deleteComponent.button') }}
+      </button>
     }
   </ng-container>`
 })

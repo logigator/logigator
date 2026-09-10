@@ -29,10 +29,9 @@ import { isHandledSaveError } from '../persistence/persistence-errors';
 import { LegacyEditorService } from './legacy-editor.service';
 
 /**
- * Builds the menu models and owns the commands behind them: the desktop
- * File/Edit/View/Help menubar tree (`items`) and the curated flat list for the
- * compact menu sheet (`compactItems`). Both compose the same per-item builders,
- * so every action is defined exactly once.
+ * Builds the menu models and owns the commands behind them: the desktop menubar
+ * tree (`items`) and the flat compact list (`compactItems`). Both compose the
+ * same per-item builders, so every action is defined exactly once.
  */
 @Injectable({ providedIn: 'root' })
 export class EditorMenuService {
@@ -56,25 +55,16 @@ export class EditorMenuService {
   private readonly legacyEditorService = inject(LegacyEditorService);
   private readonly debugMenuToggle = inject(DebugMenuToggleService);
 
-  /**
-   * Rebuilt whenever the active language changes so labels stay translated.
-   * Driven by `selectTranslation()` rather than `events$`: that source replays
-   * the current language to late subscribers (this service is instantiated only
-   * once the title bar renders, after the initial load event has fired), so the
-   * menu is built immediately instead of waiting for the next language change.
-   */
+  /** Rebuilt whenever the active language changes so labels stay translated. */
   public readonly items: Signal<MenuItem[]> = computed(() =>
     this.generateMenuItems()
   );
 
   /**
-   * Flat, curated model for the compact editor sheet behind the top bar's
-   * project title — every editor action from the desktop menubar that has no
-   * dedicated compact surface (undo/redo/save/run live in the top bar,
-   * cut/copy/paste/delete in the selection action bar, zoom in the FAB and
-   * the pinch gesture, and keyboard shortcuts don't apply to touch). The
-   * burger sheet stays editor-agnostic: it holds only the account/settings
-   * panel.
+   * Flat model for the compact editor sheet: every menubar action that has no
+   * dedicated compact surface of its own. Undo/redo/save/run live in the top
+   * bar, cut/copy/paste/delete in the selection action bar, zoom in the FAB,
+   * and keyboard shortcuts don't apply to touch.
    */
   public readonly compactItems: Signal<MenuItem[]> = computed(() =>
     this.generateCompactItems()
@@ -212,7 +202,7 @@ export class EditorMenuService {
     ];
 
     // Resolved inside the guard rather than through an `inject()` field: the
-    // debug menu reaches half a dozen services, and none of them should be
+    // debug menu reaches half a dozen services, none of which should be
     // constructed in a session that never turns the menu on.
     if (this.debugMenuToggle.enabled())
       items.push(this.injector.get(DebugMenuService).buildMenuItem());
@@ -286,9 +276,9 @@ export class EditorMenuService {
   }
 
   /**
-   * Save, omitted for read-only shares (there is nothing to save; cloning is
-   * the way to keep one). Gated on the *active* project — the command saves it,
-   * and a component tab stays savable while a share sits in the main slot.
+   * Save, omitted for read-only shares, where cloning is the way to keep one.
+   * Gated on the *active* project, so a component tab stays savable while a
+   * share sits in the main slot.
    */
   private saveItems(): MenuItem[] {
     const project = this.projectService.activeProject();
@@ -308,7 +298,7 @@ export class EditorMenuService {
     ];
   }
 
-  /** Upload/share/clone follow the open project's source; empty when none applies. */
+  /** Upload/share/clone follow the open project's source. */
   private cloudItems(): MenuItem[] {
     const items: MenuItem[] = [];
     if (this.canUploadMainProject()) {
@@ -329,10 +319,13 @@ export class EditorMenuService {
         command: () => this.shareProject()
       });
     }
-    if (this.canCloneMainShare()) {
+    const shareKind = this.cloneableShareKind();
+    if (shareKind) {
       items.push({
         label: this.translation.translate(
-          'titleBar.menuBar.file.items.cloneShare.label'
+          shareKind === 'comp'
+            ? 'titleBar.menuBar.file.items.cloneShareComponent.label'
+            : 'titleBar.menuBar.file.items.cloneShare.label'
         ),
         icon: 'ph ph-git-fork',
         command: () => void this.cloneShare()
@@ -356,9 +349,8 @@ export class EditorMenuService {
   }
 
   /**
-   * Whether the open project may be exported to a file. Every source except a
-   * borrowed `share` can: exporting a read-only share would let it be
-   * re-imported as the user's own.
+   * Every source except a borrowed `share` may be exported: exporting a
+   * read-only share would let it be re-imported as the user's own.
    */
   private canExportMainProject(): boolean {
     const project = this.projectService.mainProject();
@@ -390,9 +382,8 @@ export class EditorMenuService {
 
   private cookieSettingsItems(): MenuItem[] {
     // The consent banner comes from the backend-served bundle; without it
-    // (bare ng serve) there are no preferences to manage. The bundle loads
-    // asynchronously, so the signal read makes the menus recompute once it
-    // arrives.
+    // (bare ng serve) there are no preferences to manage. It loads
+    // asynchronously, so the signal read recomputes the menus once it arrives.
     if (!this.consentService.available()) return [];
     return [
       {
@@ -407,7 +398,7 @@ export class EditorMenuService {
 
   /**
    * Escape hatch to the previous editor. Opens a new tab, so anything unsaved
-   * here survives in this one and no dirty guard is needed.
+   * survives here and no dirty guard is needed.
    */
   private legacyEditorItem(): MenuItem {
     return {
@@ -480,10 +471,9 @@ export class EditorMenuService {
   }
 
   /**
-   * Creates a fresh blank board. No name/destination is asked up front — that
-   * prompt is deferred to the first save (see {@link SaveCoordinatorService}).
-   * If the current project has unsaved changes, confirms the discard first since
-   * replacing the main project throws them away.
+   * Creates a fresh blank board. Name and destination are not asked up front;
+   * that prompt is deferred to the first save. Replacing the main project
+   * throws away unsaved changes, so confirm the discard first.
    */
   private async newProject(): Promise<void> {
     if (!(await this.discardChanges.confirmDiscardMain())) return;
@@ -496,9 +486,8 @@ export class EditorMenuService {
   }
 
   /**
-   * Whether the open project is a stored **local** project — the only case that
-   * can be moved to the cloud. Reads the metadata signal so the menu item toggles
-   * as the source flips (e.g. right after an upload).
+   * A stored **local** project is the only case that can be moved to the cloud.
+   * Reads the metadata signal so the item toggles as the source flips.
    */
   private canUploadMainProject(): boolean {
     const project = this.projectService.mainProject();
@@ -520,9 +509,8 @@ export class EditorMenuService {
   }
 
   /**
-   * Whether the open project is a stored **cloud** project — the only case that
-   * has a share link to manage. Reads the metadata signal so the menu item
-   * toggles as the source flips (e.g. right after an upload to the cloud).
+   * A stored **cloud** project is the only case that has a share link to
+   * manage. Reads the metadata signal so the item toggles as the source flips.
    */
   private canShareMainProject(): boolean {
     const project = this.projectService.mainProject();
@@ -533,27 +521,24 @@ export class EditorMenuService {
   }
 
   /**
-   * Whether the open project is a read-only **share** — the only case that can
-   * be cloned into the user's own cloud projects. Component shares open as
-   * tabs, never as main, so this fires for project shares only.
+   * Which kind of read-only **share** is open as main, or `null` for anything
+   * else — a share is the only case that can be cloned into the user's own
+   * library. The kind decides both the label and the clone endpoint.
    */
-  private canCloneMainShare(): boolean {
+  private cloneableShareKind(): 'project' | 'comp' | null {
     const project = this.projectService.mainProject();
     const metadata = project
       ? this.projectMetadataStore.getMetadata(project)
       : null;
-    return (
-      metadata?.type === 'project' &&
-      metadata.source === 'share' &&
-      !!metadata.link
-    );
+    if (metadata?.source !== 'share' || !metadata.link) return null;
+    return metadata.type;
   }
 
   /**
-   * Clones the open share into the user's cloud projects (the server copies the
-   * circuit and records the fork) and loads the fresh copy as main. A
-   * signed-out user is already toasted by the gateway's auth guard, so only
-   * unhandled failures are reported here.
+   * Clones the open share into the user's cloud projects — the server copies
+   * the circuit and records the fork — and loads the copy as main. The
+   * gateway's auth guard already toasts a signed-out user, so only unhandled
+   * failures are reported here.
    */
   private async cloneShare(): Promise<void> {
     const project = this.projectService.mainProject();

@@ -21,8 +21,6 @@ describe('ActionContainer', () => {
     project = makeProject();
   });
 
-  // ── Empty container ───────────────────────────────────────────────────────
-
   describe('empty container', () => {
     it('do() does not throw on an empty container', () => {
       const container = new ActionContainer();
@@ -40,8 +38,6 @@ describe('ActionContainer', () => {
     });
   });
 
-  // ── length ────────────────────────────────────────────────────────────────
-
   describe('length', () => {
     it('returns the correct count for multiple constructor actions', () => {
       const container = new ActionContainer(
@@ -52,8 +48,6 @@ describe('ActionContainer', () => {
       expect(container.length).toBe(3);
     });
   });
-
-  // ── do() ─────────────────────────────────────────────────────────────────
 
   describe('do()', () => {
     it('calls do() on every contained action', () => {
@@ -101,8 +95,6 @@ describe('ActionContainer', () => {
     });
   });
 
-  // ── undo() ────────────────────────────────────────────────────────────────
-
   describe('undo()', () => {
     it('calls undo() on every contained action', () => {
       const a1 = makeAction();
@@ -148,8 +140,6 @@ describe('ActionContainer', () => {
       expect(a2.do).not.toHaveBeenCalled();
     });
   });
-
-  // ── add() ─────────────────────────────────────────────────────────────────
 
   describe('add()', () => {
     it('the added action is included in a subsequent do()', () => {

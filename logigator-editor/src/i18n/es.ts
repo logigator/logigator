@@ -1,6 +1,6 @@
 import type { WorkMode } from '../app/work-mode/work-mode.enum';
 import type { ShortcutActionEnum } from '../app/shortcuts/shortcut-action.enum';
-import type { ComponentCategory } from '../app/components/component-category.enum';
+import type { ComponentCategory } from '@logigator/core';
 import type { TranslationSchema } from '../app/translation/translation-schema.model';
 
 const es: TranslationSchema = {
@@ -28,7 +28,8 @@ const es: TranslationSchema = {
     editorSettings: 'Ajustes del editor',
     account: 'Cuenta',
     logOut: 'Cerrar sesión',
-    logIn: 'Iniciar sesión'
+    logIn: 'Iniciar sesión',
+    signUp: 'Registrarse'
   },
   theming: {
     light: 'Claro',
@@ -320,6 +321,9 @@ const es: TranslationSchema = {
           cloneShare: {
             label: 'Clonar a mis proyectos'
           },
+          cloneShareComponent: {
+            label: 'Clonar a mis componentes'
+          },
           exportFile: {
             label: 'Exportar a archivo'
           },
@@ -419,6 +423,12 @@ const es: TranslationSchema = {
     loadError: 'No se pudo cargar esta página.',
     back: 'Todos los temas',
     learnMore: 'Más información',
+    search: {
+      label: 'Buscar en la documentación',
+      placeholder: 'Buscar..',
+      loading: 'Cargando la documentación…',
+      empty: 'Nada coincide con «{{query}}».'
+    },
     sections: {
       basics: 'Conceptos básicos',
       building: 'Construir circuitos',
@@ -682,6 +692,7 @@ const es: TranslationSchema = {
     loadDetected:
       'Este circuito tiene {{count}} problema(s) de cables, lo que puede hacer que las conexiones se comporten de forma inesperada.',
     repairAction: 'Reparar cables',
+    leftSimulation: 'La simulación se detuvo para reparar los cables.',
     clean: 'No se encontraron problemas de cables.'
   },
   bugReport: {
@@ -723,17 +734,21 @@ const es: TranslationSchema = {
       'Este proyecto cambió en otro sitio: recárgalo antes de volver a guardarlo.',
     loadFailed: 'No se pudo cargar el proyecto.',
     componentLoadFailed: 'No se pudo cargar el componente.',
-    shareLoadFailed: 'No se pudo cargar el proyecto compartido.',
+    shareLoadFailed: 'No se pudo cargar el circuito compartido.',
     shareAuthRequired:
-      'Inicia sesión para añadir este proyecto compartido a tu biblioteca en la nube.',
-    shareCloned: 'Proyecto compartido clonado a tus proyectos en la nube.',
-    shareCloneFailed: 'No se pudo clonar el proyecto compartido.',
+      'Inicia sesión para añadir este circuito compartido a tu biblioteca en la nube.',
+    shareCloned: 'Circuito compartido clonado a tu biblioteca en la nube.',
+    shareCloneFailed: 'No se pudo clonar el circuito compartido.',
     dumpElementCountChanged:
       'El número de elementos del volcado del proyecto cambió al cargar: los identificadores y el historial de acciones no se restauraron.',
     skippedCustomOne:
       'No se pudo cargar un componente personalizado (falta su definición) y se omitió.',
     skippedCustomMany:
       'No se pudieron cargar {{count}} componentes personalizados (faltan sus definiciones) y se omitieron.'
+  },
+  browserSupport: {
+    unsupported:
+      'Este navegador no es compatible oficialmente: pueden producirse errores. Si tienes problemas, prueba a actualizar tu navegador.'
   },
   editor: {
     rendererInitFailed:

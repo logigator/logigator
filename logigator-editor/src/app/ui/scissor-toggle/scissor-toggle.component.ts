@@ -7,10 +7,10 @@ import { OnboardTargetDirective } from '../../onboarding/onboard-target.directiv
 import { TranslateDirective } from '../../translation/translate.directive';
 
 /**
- * Floating pill over the canvas hosting the select tool's scissor sub-toggle
- * (cut wires at the marquee edge). Renders only while the select tool is
- * active; on touch it is the only way to scissor, on desktop the tooltip's
- * shortcut hint doubles as discovery for the hold-to-scissor key.
+ * Floating pill hosting the select tool's scissor sub-toggle, which cuts wires
+ * at the marquee edge. Rendered only while the select tool is active. On touch
+ * it is the only way to scissor; on desktop its tooltip is where the
+ * hold-to-scissor key is discovered.
  */
 @Component({
   selector: 'app-scissor-toggle',
@@ -21,19 +21,21 @@ import { TranslateDirective } from '../../translation/translate.directive';
         *appTranslate="let t"
         class="flex items-center rounded-full bg-content/95 px-1.5 py-1 shadow-lg backdrop-blur"
       >
-        <lg-button
+        <button
+          lgButton
           appOnboardTarget="scissor-toggle"
           [icon]="toggle.icon"
           severity="secondary"
           rounded
           [text]="!toggle.isActive()"
-          [label]="t(toggle.shortLabelKey)"
           [lgTooltip]="t(toggle.labelKey)"
           [tooltipShortcut]="shortcutService.binding(toggle.shortcut)()"
           tooltipPosition="bottom"
           [ariaLabel]="t(toggle.labelKey)"
           (onClick)="toggle.toggle()"
-        ></lg-button>
+        >
+          {{ t(toggle.shortLabelKey) }}
+        </button>
       </div>
     }
   `

@@ -13,10 +13,9 @@ function mergeRects(...rects) {
 }
 
 /**
- * Two frames of a running circuit with the given switches flipped between them:
- * the scene dark, then the same scene powered. The engine is stepped to a
- * settled state for each, so both frames are deterministic. `target` is a
- * `clip` or a `locator` and is shared by both, as every animated shot's must be.
+ * Two frames of a running circuit, dark then powered, with the given switches
+ * flipped between them. The engine is settled for each, so both are
+ * deterministic. Both frames share one `target`, as every animated shot's must.
  */
 async function switchedFrames(ed, target, levers) {
   const frames = [];
@@ -32,22 +31,19 @@ async function switchedFrames(ed, target, levers) {
 }
 
 /**
- * One entry per image the documentation embeds. `run(editor)` puts the editor
- * into the state the picture is of and returns what to capture: a `clip` (CSS
- * px, viewport-relative) or a `locator` — or, for an animated one, the `frames`
- * it captured along the way. The editor arrives freshly loaded, dark-themed,
- * with tips and the changelog popup suppressed and an empty draft open;
- * circuits come from `circuits/*.json` via `editor.load(name)`.
+ * One entry per image the documentation embeds. `run(editor)` stages the state
+ * the picture is of and returns what to capture: a `clip` (CSS px,
+ * viewport-relative), a `locator`, or `frames` for an animated one. The editor
+ * arrives freshly loaded, dark-themed, tips and changelog popup suppressed,
+ * with an empty draft; circuits come from `circuits/*.json`.
  *
- * Not here, because it is not a capture of the editor: `intro-banner.png`, a
- * designed banner.
+ * `intro-banner.png` is absent: it is a designed banner, not a capture.
  */
 export const SHOTS = [
   // -- Chrome ---------------------------------------------------------------
   {
     name: 'menu-bar',
-    // The bars span the window, so the narrowest desktop viewport is also the
-    // tightest crop of them.
+    // The bars span the window, so the narrowest viewport crops them tightest.
     context: { viewport: NARROW_VIEWPORT },
     async run(ed) {
       await ed.requireSingleRowToolBar();
@@ -70,16 +66,14 @@ export const SHOTS = [
   },
   {
     name: 'board-overview',
-    // Shorter than the standard viewport: this is a whole-window shot, and the
-    // documentation embeds it at page width, where a 3:2 window is as tall as
-    // the surrounding text can carry.
+    // Embedded at page width, where 3:2 is as tall as the text carries.
     context: { viewport: { height: 720 } },
     async run(ed) {
       await ed.requireSingleRowToolBar();
       await ed.load('half-adder');
       await ed.focus('content', { paddingGrid: 4, maxZoom: BOARD_ZOOM });
-      // The minimap renders its first frame off a debounced action stream, so
-      // it is not on screen when the import returns.
+      // The minimap's first frame comes off a debounced action stream, so it
+      // is not on screen when the import returns.
       await ed.waitVisible('app-minimap canvas');
       await ed.parkPointer();
       return { clip: await ed.fullViewportClip() };
@@ -91,9 +85,8 @@ export const SHOTS = [
       await ed.load('single-gate');
       const [gate] = (await ed.elements()).components;
       await ed.focus('content', { paddingGrid: 8, maxZoom: 1 });
-      // A zero-area region is a click: the single element under the point,
-      // which is what puts its card in the side panel — and no marquee stays
-      // drawn over the gate.
+      // A zero-area region is a click: one element, its card in the side
+      // panel, and no marquee left drawn over the gate.
       await ed.select({
         bounds: { ...ed.bodyPoint(gate), width: 0, height: 0 }
       });
@@ -119,7 +112,7 @@ export const SHOTS = [
   },
   {
     // Animated: the switch drives the far LED through the tunnel pair, so the
-    // frame that powers it shows the two ends light up with nothing between.
+    // powered frame lights both ends with nothing between.
     name: 'tunnel',
     async run(ed) {
       await ed.load('tunnels');
@@ -130,8 +123,8 @@ export const SHOTS = [
     }
   },
   {
-    // Animated: the gate's negated input, which is what the page is about —
-    // the output is high until the switch feeding it goes high.
+    // Animated: the gate's negated input — the output is high until the switch
+    // feeding it goes high.
     name: 'negated-gate',
     async run(ed) {
       await ed.load('negated-gate');
@@ -145,15 +138,14 @@ export const SHOTS = [
     name: 'scissor-select',
     async run(ed) {
       await ed.load('half-adder');
-      // The editor's maximum zoom (`ZOOM_STEP_MAX`), because the subject is a
-      // one-unit piece of wire — a handful of pixels at the standard board step.
+      // The editor's maximum zoom: the subject is a one-unit piece of wire, a
+      // handful of pixels at the standard board step.
       await ed.focus('content', { paddingGrid: 3, maxZoom: 1.2 ** 5 });
 
-      // One grid unit of the runs feeding the LEDs, taken out of the middle of
-      // them: the box edges fall between the wires' ends, so what stays selected
-      // is a short piece of each — trimmed at the box edge instead of grabbed
-      // whole, which is the whole point of the mode. Whole grid units, because
-      // the marquee snaps to the lattice.
+      // One grid unit out of the middle of the runs feeding the LEDs: the box
+      // edges fall between the wires' ends, so each stays selected as a short
+      // piece trimmed at the edge rather than grabbed whole — the point of the
+      // mode. Whole grid units, because the marquee snaps to the lattice.
       const leds = await ed.componentsOfType('LED');
       const rows = leds.map((led) => led.pos[1]);
       const region = {
@@ -163,10 +155,8 @@ export const SHOTS = [
         height: Math.max(...rows) - Math.min(...rows) + 2
       };
 
-      // The pill only renders while the select tool is active. The marquee is a
-      // live gesture, and the shot is of its result: drag it, then release, so
-      // the cut lands and the enclosed elements come up selected instead of the
-      // half-drawn rectangle staying on screen.
+      // The pill only renders while the select tool is active. The shot is of
+      // the gesture's result, so the drag is released and the cut lands.
       await ed.setWorkMode('sel');
       await ed.clickButton('toolBar.selExact');
       const from = await ed.gridPoint({ x: region.x, y: region.y });
@@ -179,14 +169,12 @@ export const SHOTS = [
       await ed.page.mouse.move(to.x, to.y, { steps: 8 });
       await ed.page.mouse.up();
       await ed.parkPointer();
-      // The pill and the cut, with nothing between them: the board is already at
-      // its maximum zoom, so cropping is the only way left to make a one-unit
-      // piece of wire read. The pill is docked to the top of the board, so the
-      // circuit is panned up under it rather than the crop reaching down to it.
+      // At maximum zoom, cropping is the only way left to make a one-unit
+      // wire read. The pill is docked to the top of the board, so the circuit
+      // is panned up under it rather than the crop reaching down.
       const pill = ed.button('toolBar.selExact');
       const pillBox = await pill.boundingBox();
-      // Where the pill sits, in grid units — the cut is panned onto that point
-      // rather than the two being related through a hand-rolled px-per-grid.
+      // Where the pill sits, in grid units, so the pan needs no px-per-grid.
       const under = await ed.gridOf({
         x: pillBox.x + pillBox.width / 2,
         y: pillBox.y + pillBox.height + 90
@@ -196,8 +184,7 @@ export const SHOTS = [
         y: region.y + region.height / 2 - under.y
       });
 
-      // From the gate that drives the wires to past the LEDs they end at, so the
-      // piece taken out of the middle has both its ends in frame.
+      // Gate to past the LEDs, so the piece cut out has both ends in frame.
       const cut = await ed.gridClip({
         x: region.x - 4,
         y: region.y - 1,
@@ -211,30 +198,28 @@ export const SHOTS = [
   // -- Custom components ----------------------------------------------------
   {
     name: 'component-palette',
-    // Tall enough to hold the whole palette: it is one scrolling column, and a
-    // clip only ever captures what is laid out on screen.
+    // Tall enough for the whole palette: it is one scrolling column, and a
+    // clip only captures what is laid out on screen.
     context: { viewport: { width: 1280, height: 1500 } },
     async run(ed) {
       // A loaded file carries its customs as embedded copies; restoring one
-      // into the browser library is what fills "User Components".
+      // fills "User Components".
       await ed.load('custom-example');
       await ed.openCustomForEdit();
       await ed.openMainTab();
       await ed.parkPointer();
-      // The side-bar host is a scroll container that fills the window; its
-      // single child is the palette itself, which is what the shot frames.
+      // The side-bar host is a window-filling scroll container; its single
+      // child is the palette.
       return { clip: await ed.unionClip('app-side-bar > *') };
     }
   },
   {
-    // Animated: one switch of the built-in half of the comparison, so the gates
-    // above and the custom below are seen running the same circuit.
+    // Animated: the gates above and the custom below running the same circuit.
     name: 'custom-component-showcase',
     async run(ed) {
       await ed.load('custom-comparison');
-      // The scene stacks the same circuit twice — gates above, the custom
-      // below. Driving the matching switch in both is what makes the two halves
-      // answer alike, which is the comparison the page is making.
+      // The scene stacks the circuit twice; driving the matching switch in
+      // both halves is what makes them answer alike.
       const bounds = await ed.contentBounds();
       const middle = bounds.y + bounds.height / 2;
       const levers = (await ed.componentsOfType('SW')).sort(
@@ -255,18 +240,16 @@ export const SHOTS = [
     async run(ed) {
       await ed.load('custom-example');
       await ed.openCustomForEdit();
-      // Back to Pan: the select tool's scissor pill floats over the board and
-      // would sit in the middle of this crop.
+      // Back to Pan: the select tool's scissor pill would float in this crop.
       await ed.setWorkMode('pan');
       await ed.hideOverlays();
-      // The tab bar plus exactly the circuit the component tab opened onto.
       const circuit = await ed.contentClip({
         pad: 2,
         zoom: BOARD_ZOOM,
         anchor: 'top-left'
       });
-      // The tabs themselves, not the bar they sit in: the bar runs the full
-      // width of the board, and the shot is only as wide as its subject.
+      // The tabs, not the bar: the bar spans the board and the shot is only as
+      // wide as its subject.
       const tabs = await ed.unionClip('app-tab-bar [role="tab"]');
       return { clip: mergeRects(tabs, circuit) };
     }
@@ -282,21 +265,18 @@ export const SHOTS = [
     }
   },
   {
-    // Animated: two ticks of a clock, so the LED is dark in one frame and lit
-    // in the next. A `frames` result is encoded as a GIF instead of a PNG.
+    // Animated: two ticks of a clock, so the LED is dark then lit.
     name: 'simulation-showcase',
-    // The run controls span the window, and they set the frame's width — a
-    // wider viewport only adds empty bar to the right of the clock.
+    // The run controls set the frame's width; a wider viewport only adds empty
+    // bar to the right of the clock.
     context: { viewport: NARROW_VIEWPORT },
     async run(ed) {
       await ed.requireSingleRowToolBar();
       await ed.load('clock');
       await ed.enterSimulation();
-      // The run controls belong in frame, so the circuit is parked directly
-      // under them rather than in the middle of the board — but centred across
-      // them, since the bars are what set the frame's width. Zoomed past the
-      // standard board step: the scene is one clock driving one LED, and at
-      // 100 % it reads as a detail in the corner of a picture of the bars.
+      // Parked under the run controls but centred across them, since the bars
+      // set the frame's width. Zoomed past the standard board step, or one
+      // clock and one LED read as a detail.
       const circuit = await ed.contentClip({
         pad: 2,
         zoom: 1.2 ** 4,
@@ -315,21 +295,19 @@ export const SHOTS = [
     }
   },
   {
-    // Animated: the ROM inspector following the address as the low address
-    // line flips, so the highlighted word and the lit output both move.
+    // Animated: the low address line flips, so the highlighted word and the
+    // lit output both move.
     name: 'rom-inspection',
     async run(ed) {
       await ed.load('rom');
-      // The topmost lever drives A1, the low address bit — flipping it is what
-      // moves the addressed word from 0x00 to 0x01.
+      // The topmost lever drives A1, the low address bit: 0x00 → 0x01.
       const levers = await ed.componentsOfType('SW');
       const address = levers.sort((a, b) => a.pos[1] - b.pos[1])[0];
 
       await ed.enterSimulation();
       await ed.runUntilSettled();
       // Zoomed well past the standard board step so the ROM and its address
-      // lines carry the frame's left column: the inspector beside them is
-      // ~450 px tall, and a 100 % circuit leaves that column mostly empty.
+      // lines fill the left column beside the ~450 px-tall inspector.
       const circuit = await ed.contentClip({
         pad: 2,
         zoom: 1.2 ** 5,
@@ -339,8 +317,7 @@ export const SHOTS = [
       await ed.moveWatch({ x: circuit.x + circuit.width + 24, y: circuit.y });
       const inspector = await ed.unionClip(ed.watchWindow(), 8);
 
-      // The inspector is the taller of the two, so the circuit rides down to
-      // its middle rather than sitting at the top of a half-empty column.
+      // The inspector is the taller, so the circuit rides down to its middle.
       const board = await ed.canvasBox();
       const bounds = await ed.contentBounds();
       await ed.centerContentAt({
@@ -358,12 +335,11 @@ export const SHOTS = [
     }
   },
   {
-    // Animated: the instance's switch, so the watch is seen following the board
-    // it mirrors — the inner circuit lights with the outer one.
+    // Animated: the watch following the board it mirrors, inner circuit
+    // lighting with the outer one.
     name: 'inspection-showcase',
-    // A whole-window shot of two things side by side: the narrowest desktop
-    // viewport puts the circuit and the watch as close together as the layout
-    // allows, and the short height keeps the board from being mostly grid.
+    // Two things side by side: the narrowest viewport puts them as close as
+    // the layout allows, and the short height keeps the board off mostly grid.
     context: { viewport: { ...NARROW_VIEWPORT, height: 560 } },
     async run(ed) {
       await ed.requireSingleRowToolBar();
@@ -374,45 +350,40 @@ export const SHOTS = [
       await ed.enterSimulation();
       await ed.setInput(lever.id, true);
       await ed.runUntilSettled();
-      // Zoomed to the standard board step, so the instance is the same size
-      // here as on every other board shot.
+      // The standard board step, so the instance matches every other shot.
       await ed.focus('content', { paddingGrid: 3, maxZoom: BOARD_ZOOM });
       await ed.openWatch('EX');
 
-      // The window is dragged flush to the board's right edge and the circuit
-      // parked in the middle of what is left, so the two read side by side at
-      // whatever size the window came up.
+      // The window goes flush to the board's right edge and the circuit into
+      // the middle of what is left, whatever size the window came up.
       const board = await ed.canvasBox();
       const watch = await ed.watchWindow().boundingBox();
       const margin = 16;
-      // The window comes up as tall as the board allows, so there is only ever
-      // room for the margin on the sides.
+      // The window is as tall as the board allows: margin only on the sides.
       const left = Math.max(0, board.width - watch.width - margin);
       const top = Math.max(0, Math.min(margin, board.height - watch.height));
       await ed.moveWatch({ x: board.x + left, y: board.y + top });
       await ed.centerContentAt({ x: left / 2 });
-      // The watch fits its circuit at 100 % at most, which leaves this one small
-      // in a window this size; framing it at `BOARD_ZOOM` gives the inner
-      // circuit the same weight as the instance on the board beside it.
+      // A watch fits its circuit at 100 % at most, which leaves this one small
+      // in a window this size; `BOARD_ZOOM` gives the inner circuit the same
+      // weight as the instance beside it.
       await ed.zoomWatch(BOARD_ZOOM);
       return switchedFrames(ed, { clip: await ed.fullViewportClip() }, [lever]);
     }
   },
   {
     name: 'inspection-window-multilayer',
-    // The watch opens at 640×480 but is clamped to the board it floats over, so
-    // a short viewport is what makes the window short. The circuit inside is
-    // fit to the canvas when a level first shows, and this shot only opens its
-    // levels once the window is already at its final size — so the smaller
-    // window means less empty grid around the circuit, not a cropped one.
+    // The watch is clamped to the board it floats over, so a short viewport
+    // makes a short window. Each level is fit to the canvas when it first
+    // shows, and these open at the window's final size, so the smaller window
+    // means less empty grid, not a cropped circuit.
     context: { viewport: { height: 440 } },
     async run(ed) {
       await ed.load('nested-custom');
       await ed.focus('content', { paddingGrid: 3, maxZoom: 1 });
       await ed.enterSimulation();
       await ed.openWatch('OTR');
-      // Drill into the nested master from the watch canvas, which is what puts
-      // the "Outer › Inner" trail in the window's header.
+      // Drilling in is what puts the "Outer › Inner" trail in the header.
       await ed.drillIntoWatch();
       await ed.parkPointer();
       return { locator: ed.watchWindow() };
@@ -446,13 +417,12 @@ export const SHOTS = [
   },
   // -- Cloud ----------------------------------------------------------------
   //
-  // These run against `lib/mock-api.mjs` rather than a real backend: a live
-  // account would put a drifting project list and a moving "Last edited" date
-  // into the docs, so the images would churn on every capture.
+  // `context: { cloud: true }` runs the shot against `lib/mock-api.mjs`, not a
+  // real backend.
   {
     name: 'account-menu',
-    // This shot is *of* the preferences, so it shows them at their shipped
-    // defaults rather than at the values the capture run pins for determinism.
+    // This shot is *of* the preferences, so it shows their shipped defaults
+    // rather than the values the capture run pins for determinism.
     context: {
       cloud: true,
       localStorage: {
@@ -471,9 +441,9 @@ export const SHOTS = [
       await panel.waitFor({ state: 'visible' });
       await ed.waitStable(panel);
       await ed.parkPointer();
-      // Padded, so neither the panel nor the button it hangs off is cut flush
-      // by the crop. The trigger sits 4 px from the window's right edge, and
-      // `unionClip` clamps there — that side keeps the smaller margin.
+      // Padded, so neither the panel nor its trigger is cut flush. The
+      // trigger sits 4 px from the window's right edge and `unionClip` clamps
+      // there, so that side keeps the smaller margin.
       return {
         clip: await ed.unionClip([trigger, panel], {
           top: 8,
@@ -503,9 +473,8 @@ export const SHOTS = [
     context: { cloud: true },
     async run(ed) {
       // "Outer" embeds "Inner", so the dialog has a local dependency to list.
-      // Both have to reach the browser library for that: restoring "Outer"
-      // opens its circuit, where "Inner" is still an embedded copy until it is
-      // restored in turn.
+      // Both must reach the browser library: restoring "Outer" opens its
+      // circuit, where "Inner" is an embedded copy until restored in turn.
       await ed.load('nested-custom');
       await ed.openCustomForEdit();
       await ed.openCustomForEdit();
@@ -520,8 +489,7 @@ export const SHOTS = [
     name: 'share-component',
     context: { cloud: true },
     async run(ed) {
-      // A cloud master from the mocked library, placed and selected: sharing is
-      // an action on a component that already lives in the cloud.
+      // Sharing acts on a component that already lives in the cloud.
       const type = await ed.typeOf('Memory');
       await ed.api(
         (t) =>
@@ -539,9 +507,9 @@ export const SHOTS = [
 
   {
     name: 'shortcut-manager',
-    // The dialog fills the window's height, and its list scrolls: a viewport
-    // tall enough to hold every binding makes an image the docs cannot show at
-    // a readable size. This frames the first sections and lets the rest scroll.
+    // The dialog fills the window's height and its list scrolls. A viewport
+    // holding every binding makes an image too tall to read, so this frames
+    // the first sections only.
     context: { viewport: { width: 1280, height: 820 } },
     async run(ed) {
       await ed.menu('titleBar.menuBar.edit.label', 'shortcuts.title');

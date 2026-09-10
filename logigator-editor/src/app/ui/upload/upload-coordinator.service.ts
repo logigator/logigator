@@ -21,17 +21,16 @@ import {
 
 /** What is being moved to the cloud. */
 export type UploadTarget =
-  /** The currently open project (title bar, File menu). */
+  /** The currently open project. */
   | { kind: 'project'; project: Project }
-  /** A browser project by store id (the Open dialog's local list). */
+  /** A browser project by store id. */
   | { kind: 'stored-project'; id: string; name: string }
-  /** A local custom-component master (the component actions panel). */
+  /** A local custom-component master. */
   | { kind: 'component'; masterTypeId: number }
   /**
-   * A never-saved project draft being saved to the server for the first time.
-   * Its name + visibility are already chosen in the save dialog, so the upload
-   * dialog is shown only to pick which embedded local components to promote —
-   * and skipped entirely when there are none.
+   * A never-saved draft being saved to the server for the first time. Name and
+   * visibility come from the save dialog, so the upload dialog only picks the
+   * embedded local components to promote, and is skipped when there are none.
    */
   | {
       kind: 'draft-to-server';
@@ -40,25 +39,22 @@ export type UploadTarget =
       isPublic: boolean;
     }
   /**
-   * An already-saved **server** project being re-saved after it gained local
-   * components (which the backend rejects as dependencies). Promotes the chosen
-   * ones — riding the project's own visibility — then re-saves. Only routed here
-   * when the project actually embeds local components.
+   * A saved **server** project being re-saved after it gained local components,
+   * which the server rejects as dependencies. Promotes them on the project's
+   * own visibility, then re-saves.
    */
   | { kind: 'save-server'; project: Project };
 
 /**
- * Single entry point for moving anything local to the cloud — projects and
- * custom components share one pipeline: analyze which local custom components
- * the circuit embeds, prompt with {@link UploadDialogComponent} (visibility +
- * dependency selection), upload the chosen dependencies **first**
+ * Single entry point for moving anything local to the cloud; projects and
+ * custom components share one pipeline. Analyze which local custom components
+ * the circuit embeds, prompt for visibility, upload the dependencies **first**
  * (children-before-parents, so each later upload references its
- * already-promoted children via the serialize-time id rewrite), then the target
- * itself. Owns all upload toasts; failures stop the sequence — everything not
- * yet uploaded is untouched, so the user can simply retry (already-promoted
- * dependencies drop out of the next analysis).
+ * already-promoted children through the serialize-time id rewrite), then the
+ * target itself.
  *
- * Resolves `true` when the target committed, so list callers can refresh.
+ * Owns all upload toasts. A failure stops the sequence, leaving everything not
+ * yet uploaded untouched, so a retry re-analyzes cleanly.
  */
 @Injectable({ providedIn: 'root' })
 export class UploadCoordinatorService {
@@ -84,13 +80,9 @@ export class UploadCoordinatorService {
       return false;
     }
 
-    // When visibility is already decided upstream (a first server save, or a
-    // re-save riding the project's own visibility) and there is nothing
-    // promotable to publish, there is nothing to decide — skip the dialog. Only
-    // resolvable dependencies are ever promoted, so an orphan-only document (no
-    // library master to publish) skips too. Every other case prompts (the dialog
-    // now only confirms + collects visibility; promotion is mandatory, so there
-    // is no per-component choice).
+    // Skip the dialog when visibility is already decided upstream and there is
+    // nothing promotable to publish. Only resolvable dependencies are ever
+    // promoted, so an orphan-only document (no library master) skips too.
     const resolvable = this._resolvable(dependencies);
     const preset = this._presetVisibility(target);
     let isPublic: boolean;
@@ -102,9 +94,9 @@ export class UploadCoordinatorService {
       isPublic = result.isPublic;
     }
 
-    // A cloud document may only contain cloud components, so promote **every**
-    // resolvable local dependency (children-before-parents). An unresolvable one
-    // (no library master) cannot be promoted and rides along as an embedded copy.
+    // A cloud document may only contain cloud components, so promote every
+    // resolvable local dependency. An unresolvable one cannot be promoted and
+    // rides along as an embedded copy.
     if (!(await this._uploadDependencies(resolvable, isPublic))) {
       return false;
     }
@@ -112,11 +104,9 @@ export class UploadCoordinatorService {
     try {
       await this._uploadTarget(target, isPublic);
     } catch (err) {
-      // `save-server` delegates to `saveProject`, which surfaces its own error;
-      // toasting here too would stack a second error. Every other target's
-      // primitive is silent, so the coordinator reports the failure — except a
-      // signed-out / foreign-account rejection, whose specific reason was
-      // already toasted at the guard.
+      // `saveProject` surfaces its own error, and a signed-out or
+      // foreign-account rejection is already toasted at the guard; every other
+      // primitive is silent, so the coordinator reports those.
       if (target.kind !== 'save-server' && !isHandledSaveError(err)) {
         this.toast.error(
           this.translation.translate('uploadDialog.uploadFailed', { name }),
@@ -127,8 +117,6 @@ export class UploadCoordinatorService {
       return false;
     }
 
-    // A plain re-save (`save-server`) reports its own outcome via `saveProject`;
-    // every other target's primitive is silent, so the coordinator toasts.
     const successKey = this._successKey(target);
     if (successKey) {
       this.toast.success(
@@ -140,12 +128,11 @@ export class UploadCoordinatorService {
   }
 
   /**
-   * Promotes a document's local components (if it is a cloud document) and then
-   * saves it — **without** a dialog, for callers that have already obtained the
-   * user's consent (the tab-close prompt). A browser document just saves (local
-   * components are fine there). Local components ride the document's own
-   * visibility. Returns whether everything committed; `saveProject` reports its
-   * own outcome, so no toast is emitted here beyond a dependency failure.
+   * Promotes a cloud document's local components on its own visibility and
+   * then saves it, **without** a dialog, for consent obtained elsewhere. A
+   * browser document just saves; local components are fine there. Returns
+   * whether everything committed. `saveProject` reports its own outcome, so
+   * nothing but a dependency failure is toasted here.
    */
   async promoteLocalDepsAndSave(project: Project): Promise<boolean> {
     const metadata = this.metadataStore.getMetadata(project);
@@ -166,10 +153,9 @@ export class UploadCoordinatorService {
   }
 
   /**
-   * The visibility already chosen for a target outside the upload dialog, or
-   * `undefined` when the dialog must ask. A first server save carries it from the
-   * save dialog; a server re-save rides the project's own visibility. Either way
-   * the dialog locks the toggle, so it is purely about component selection.
+   * The visibility already chosen outside the upload dialog, or `undefined`
+   * when the dialog must ask. A first server save carries it from the save
+   * dialog, a re-save rides the project's own; either way the toggle locks.
    */
   private _presetVisibility(target: UploadTarget): boolean | undefined {
     if (target.kind === 'draft-to-server') return target.isPublic;
@@ -179,7 +165,7 @@ export class UploadCoordinatorService {
     return undefined;
   }
 
-  /** The resolvable local dependencies' master type ids, children-before-parents. */
+  /** Resolvable dependencies' master type ids, children-before-parents. */
   private _resolvable(dependencies: LocalUploadDependency[]): number[] {
     return dependencies
       .map((d) => d.masterTypeId)
@@ -187,11 +173,10 @@ export class UploadCoordinatorService {
   }
 
   /**
-   * Uploads the chosen dependencies first, children-before-parents: each
-   * promotion registers an id alias, and serialization resolves provenance
-   * through those aliases, so every subsequent upload (and the target) references
-   * the cloud entries created before it. Returns `false` on the first failure —
-   * nothing after it is uploaded, so a retry re-analyzes cleanly.
+   * Uploads dependencies children-before-parents: each promotion registers an
+   * id alias and serialization resolves provenance through those aliases, so
+   * every later upload references the cloud entries created before it. Returns
+   * `false` on the first failure, leaving the rest unuploaded.
    */
   private async _uploadDependencies(
     masterTypeIds: number[],
@@ -221,7 +206,7 @@ export class UploadCoordinatorService {
     if (target.kind === 'component') return 'persistence.componentUploaded';
     // A first server save reads as a save, not a move.
     if (target.kind === 'draft-to-server') return 'persistence.projectSaved';
-    // A re-save reports its own outcome via saveProject; don't double-toast.
+    // A re-save reports its own outcome via `saveProject`.
     if (target.kind === 'save-server') return undefined;
     return 'persistence.projectUploaded';
   }
@@ -253,8 +238,8 @@ export class UploadCoordinatorService {
           )
         };
       case 'draft-to-server':
-        // The draft's metadata name is still 'Untitled' until the save writes
-        // the chosen one, so take it from the target.
+        // The draft's metadata name stays 'Untitled' until the save writes the
+        // chosen one, so take it from the target.
         return {
           name: target.name,
           dependencies: this.promotion.localDependenciesOfProject(
@@ -312,8 +297,7 @@ export class UploadCoordinatorService {
         kind: this._dialogKind(target),
         name,
         dependencies,
-        // When visibility is decided upstream, lock it so the dialog is purely
-        // about which local components to promote.
+        // Locks the toggle when visibility is decided upstream.
         presetIsPublic
       }
     });
@@ -323,8 +307,8 @@ export class UploadCoordinatorService {
 
   private _dialogKind(target: UploadTarget): UploadDialogData['kind'] {
     if (target.kind === 'component') return 'component';
-    // Both the first-save and re-save shapes present the same choice: which
-    // embedded local components to promote alongside the project.
+    // Both save shapes present the same choice: which embedded local components
+    // to promote alongside the project.
     if (target.kind === 'draft-to-server' || target.kind === 'save-server') {
       return 'draft';
     }

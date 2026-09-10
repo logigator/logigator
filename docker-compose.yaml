@@ -6,6 +6,9 @@ services:
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
+      # What the API writes under STORAGE_DIR, read-only: Caddy serves these
+      # files, and only the API ever produces them.
+      - ./data/storage:/srv:ro
     ports:
       - 127.0.0.1:80:80
       - 127.0.0.1:443:443
@@ -25,17 +28,63 @@ services:
       - DEBUG=express:*
       - DEBUG_COLORS=on
 
+  deps:
+    image: node:24
+    networks:
+      - net
+    volumes:
+      - ./:/app
+    working_dir: /app
+    command: "sh -c 'corepack enable && exec yarn'"
+
   editor:
     image: node:24
     networks:
       - net
-    # The editor dev server compiles @logigator/ui from source via tsconfig
-    # path mapping, so the whole Yarn/Angular workspace root is mounted (not just
-    # logigator-editor/). Install + serve run from the workspace root.
+    depends_on:
+      deps:
+        condition: service_completed_successfully
     volumes:
       - ./:/app
     working_dir: /app
-    command: "sh -c 'corepack enable && yarn && exec yarn start'"
+    command: "sh -c 'corepack enable && exec yarn start:editor'"
+
+  web:
+    image: node:24
+    networks:
+      - net
+    depends_on:
+      deps:
+        condition: service_completed_successfully
+    volumes:
+      - ./:/app
+    working_dir: /app
+    environment:
+      - API_ORIGIN=http://api:3000
+      - NG_ALLOWED_HOSTS=logigator.test
+      - NG_TRUST_PROXY_HEADERS=x-forwarded-host,x-forwarded-proto,x-forwarded-for
+    command: "sh -c 'corepack enable && exec yarn start:web'"
+
+  api:
+    image: node:24
+    networks:
+      - net
+    depends_on:
+      deps:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    volumes:
+      - ./:/app
+    working_dir: /app
+    ports:
+      - 127.0.0.1:3001:3000
+    env_file:
+      - path: ./logigator-api/.env
+        required: false
+    command: "sh -c 'corepack enable && yarn workspace logigator-api run db:migrate && exec yarn start:api'"
 
   editor-legacy:
     image: node:20
@@ -63,10 +112,30 @@ services:
       - MYSQL_USER=logigator
       - MYSQL_PASSWORD=logigator
 
-  redis:
-    image: redis:7
+  postgres:
+    image: postgres:18-alpine
     networks:
       - net
+    ports:
+      - 127.0.0.1:5432:5432
+    volumes:
+      - ./data/postgres:/var/lib/postgresql
+    environment:
+      - POSTGRES_DB=logigator
+      - POSTGRES_USER=logigator
+      - POSTGRES_PASSWORD=logigator
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U logigator -d logigator']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:8
+    networks:
+      - net
+    ports:
+      - 127.0.0.1:6379:6379
 
 volumes:
   caddy_data:

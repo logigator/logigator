@@ -10,8 +10,7 @@ import { CustomComponentRegistry } from '../components/custom/custom-component-r
 import { Project } from '../project/project';
 import { ProjectService } from '../project/project.service';
 import { ProjectMetadataStore } from '../persistence/project-metadata.store';
-import { WireDirection } from '../wires/wire-direction.enum';
-import { BuiltInComponentType } from '../components/component-type.enum';
+import { BuiltInComponentType, WireDirection } from '@logigator/core';
 import { WorkModeService } from '../work-mode/work-mode.service';
 import { EditOp } from './automation-api.model';
 import { AutomationApiService } from './automation-api.service';
@@ -95,7 +94,6 @@ describe('AutomationApiService', () => {
         name: 'My Circuit',
         type: 'project',
         source: 'browser',
-        hash: '',
         isPublic: false
       });
       project.addComponent(makeAnd(2, undefined, 2, 3));
@@ -206,7 +204,6 @@ describe('AutomationApiService', () => {
         name: 'Exported',
         type: 'project',
         source: 'browser',
-        hash: '',
         isPublic: false
       });
       project.addComponent(makeAnd(2, undefined, 1, 1));

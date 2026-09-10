@@ -29,14 +29,14 @@ export interface ProjectListItem {
   id: string;
   name: string;
   lastEdited: string | number;
-  /** Cloud share token; present on server items, drives the share dialog. */
+  /** Cloud share token; present on server items. */
   link?: string;
   /** Cloud public visibility; present on server items. */
   isPublic?: boolean;
 }
 
 const PAGE_SIZE = 20;
-/** Mirrors the backend `UpdateProject.name` `@MaxLength(20)` constraint. */
+/** Mirrors the contract's `documentNameSchema` limit. */
 const NAME_MAX_LENGTH = 20;
 
 @Component({
@@ -63,9 +63,9 @@ export class ProjectListComponent {
   readonly loading = input(false);
   readonly page = input(0);
   readonly totalItems = input(0);
-  /** Whether each row offers an upload-to-cloud button (local projects only). */
+  /** Local projects only. */
   readonly showUpload = input(false);
-  /** Whether each row offers a share button (cloud projects only). */
+  /** Cloud projects only. */
   readonly showShare = input(false);
 
   readonly open = output<string>();
@@ -80,8 +80,8 @@ export class ProjectListComponent {
   protected readonly nameMaxLength = NAME_MAX_LENGTH;
   protected searchQuery = '';
 
-  // Inline-rename state: the id of the row currently in edit mode (or null) and
-  // the working name bound to its input.
+  // Inline-rename state: the row in edit mode, and the name bound to its
+  // input.
   protected readonly editingId = signal<string | null>(null);
   protected readonly editValue = signal('');
   private readonly renameInput =
@@ -98,8 +98,8 @@ export class ProjectListComponent {
     event.preventDefault();
     this.editValue.set(item.name);
     this.editingId.set(item.id);
-    // The input is rendered by the @if branch this signal flip enables, so focus
-    // it only once that render has flushed.
+    // The input is rendered by the @if branch this flip enables, so focus it
+    // only once that render has flushed.
     afterNextRender(
       () => {
         const el = this.renameInput()?.nativeElement;
@@ -111,10 +111,8 @@ export class ProjectListComponent {
   }
 
   /**
-   * Commits the rename if the row is still in edit mode and the trimmed name is
-   * non-empty and actually changed. Both Enter and blur route here; the
-   * edit-mode guard makes the second (blur firing after Enter already closed the
-   * editor) a no-op.
+   * Both Enter and blur route here. The edit-mode guard makes the second, a
+   * blur firing after Enter already closed the editor, a no-op.
    */
   protected commitRename(event: Event, item: ProjectListItem): void {
     event.stopPropagation();

@@ -1,0 +1,43 @@
+<ng-container *webTranslate="let t">
+  @if (rows().length) {
+  <ul class="flex flex-col">
+    @for (row of rows(); track row.page + '#' + row.anchor) {
+    <li class="border-b border-border last:border-b-0">
+      <a
+        class="block py-4 transition-colors hover:bg-surface-50 dark:hover:bg-surface-900"
+        [routerLink]="row.href"
+        [queryParams]="{ q: search.query() }"
+        [fragment]="row.anchor ?? undefined"
+      >
+        <span class="text-[17px] font-medium text-text-hover">
+          @for (part of row.headingParts; track $index) { @if (part.match) {
+          <mark class="rounded-xs bg-primary/25 text-inherit"
+            >{{ part.text }}</mark
+          >
+          } @else {<span>{{ part.text }}</span>} } </span
+        ><!-- A real space, or the two run together in the accessible name:
+             the gap beside them is a margin, which a screen reader does not
+             read. -->&ngsp;<span class="ml-2 text-sm text-muted">
+          @for (part of row.pageTitleParts; track $index) { @if (part.match) {
+          <mark class="rounded-xs bg-primary/25 text-inherit"
+            >{{ part.text }}</mark
+          >
+          } @else {<span>{{ part.text }}</span>} }
+        </span>
+        <p class="mt-1 max-w-[80ch] text-sm leading-relaxed text-muted">
+          @for (part of row.snippetParts; track $index) { @if (part.match) {
+          <mark class="rounded-xs bg-primary/25 text-inherit"
+            >{{ part.text }}</mark
+          >
+          } @else {<span>{{ part.text }}</span>} }
+        </p>
+      </a>
+    </li>
+    }
+  </ul>
+  } @else {
+  <p class="py-4 text-muted">
+    {{ t('pages.docs.search.empty', { query: search.query() }) }}
+  </p>
+  }
+</ng-container>

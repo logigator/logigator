@@ -11,14 +11,12 @@ import {
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 
 /**
- * A single-handle horizontal slider. `ControlValueAccessor` (value = `number`).
- * Pointer drag and keyboard (arrows step by `step`, Home/End jump to the
- * bounds) both move it; `role="slider"` + `aria-value*` keep it accessible.
- * Single handle only — no range/dual-handle, vertical, or custom animation.
+ * A single-handle horizontal slider, a `ControlValueAccessor` over a `number`.
+ * Single handle only: no range, no vertical.
  *
- * Name the handle with `inputId` (so an external `<label for>` resolves — the
- * handle is not a labelable element, so the id has to land on it), or with
- * `ariaLabel` / `ariaLabelledby` where there is no visible label.
+ * Name the handle with `inputId` — it is not a labelable element, so an
+ * external `<label for>` needs the id on it — or with `ariaLabel` /
+ * `ariaLabelledby` where there is no visible label.
  */
 @Component({
   selector: 'lg-slider',

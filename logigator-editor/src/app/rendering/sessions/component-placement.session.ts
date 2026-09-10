@@ -25,9 +25,9 @@ export class ComponentPlacementSession implements DragSession {
   readonly discardOnInvalidRelease = true;
 
   private readonly _ghost: PlacementGhost;
-  // Defense in depth: the palette already hides masters that would cycle while
-  // editing one, but a master may still reach here (stale `componentToPlace`,
-  // future paste). Decided up front so onEnd can refuse to commit.
+  // The palette hides masters that would cycle, but a stale
+  // `componentToPlace` can still reach here. Decided up front so onEnd can
+  // refuse to commit.
   private readonly _wouldCycle: boolean;
 
   constructor(
@@ -37,8 +37,7 @@ export class ComponentPlacementSession implements DragSession {
     placeConfig: ComponentConfig
   ) {
     this._wouldCycle = wouldCyclePlacement(project, placeConfig);
-    // Skip snapshotting a master that won't be committed; the master config
-    // renders the ghost fine on its own.
+    // No point snapshotting a master that will not be committed.
     const config = this._wouldCycle
       ? placeConfig
       : ComponentPlacementSession._resolvePlacementConfig(placeConfig);
@@ -63,14 +62,13 @@ export class ComponentPlacementSession implements DragSession {
       return;
     }
 
-    // Splits any wire whose interior passes under one of the placed component's ports.
+    // Splits any wire whose interior passes under one of the ports.
     const { toAdd, toRemove } = this.project.topology.integrate({
       addedComponentPorts: this._ghost.component.connectionPoints
     });
 
-    // The actions snapshot in their constructors, so build them before the
-    // mutations, then materialize the final state directly and register —
-    // the ghost instance itself becomes the placed component.
+    // Actions snapshot in their constructors, so build before mutating, then
+    // materialize and register. The ghost itself becomes the placed component.
     const action = new ActionContainer();
     if (toRemove.length > 0) {
       action.add(new RemoveWiresAction(...toRemove));
@@ -100,11 +98,9 @@ export class ComponentPlacementSession implements DragSession {
   }
 
   /**
-   * The palette lists custom **masters**, but a placed instance must wrap a
-   * **frozen snapshot** of the master's current state (snapshot-at-place-time).
-   * So when the config to place is a master, snapshot it now and place from the
-   * snapshot's config; placing the same master after editing it yields a fresh
-   * snapshot with the new shape. Built-ins (and snapshot configs) pass through.
+   * The palette lists custom masters, but a placed instance must wrap a frozen
+   * snapshot of the master's state at place time, so a master is snapshotted
+   * here and placed from the snapshot's config. Everything else passes through.
    */
   private static _resolvePlacementConfig(
     config: ComponentConfig

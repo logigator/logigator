@@ -26,27 +26,22 @@ import { SimulationTool } from './tools/simulation.tool';
 /**
  * The board's tool target: dispatches the primary-pointer stream from the
  * {@link PointerController} to the active mode's {@link BoardTool} and owns
- * the session lifecycle the tools open into (start/commit/cancel,
- * Escape-cancel, the undo lock and render ticker around a drag). Mode
- * behavior itself — what a press opens, what a hover previews — lives in the
- * tools under `tools/`. The paste flow stays router-level: it is
- * event-initiated (a `Project` emits a paste request), not mode-initiated.
+ * the session lifecycle (start/commit/cancel, Escape, the undo lock and render
+ * ticker around a drag). Mode behavior lives in `tools/`. Paste stays
+ * router-level because it is event-initiated, not mode-initiated.
  *
- * The router targets one project at a time — `setProject` re-homes it when
- * the active tab changes, cancelling any in-flight session on the old one.
- * Sessions render into the project's floating layer, which stays a purely
- * visual host.
+ * One project at a time; `setProject` re-homes the router and cancels any
+ * in-flight session on the old one.
  */
 export class WorkModeRouter implements PointerToolTarget, ToolHost {
   private _project: Project | null = null;
   private _mode: WorkMode = WorkMode.PAN;
   private _activeDrag: DragSession | null = null;
 
-  // Canvas-local position of the resting cursor, or null while there is none:
-  // touch never sets it and leaving the canvas clears it. An event-initiated
-  // paste puts its ghosts here. Kept in screen space, not grid space: pans and
-  // the zoom controls move the camera without a pointer move, so a grid
-  // coordinate recorded on the last hover would point somewhere else by now.
+  // Canvas-local position of the resting cursor; touch never sets it and
+  // leaving the canvas clears it. Screen space, not grid space: pan and zoom
+  // move the camera without a pointer move, so a recorded grid coordinate
+  // would go stale.
   private _cursorScreen: Point | null = null;
 
   private _pasteSub: Subscription | null = null;
@@ -67,8 +62,7 @@ export class WorkModeRouter implements PointerToolTarget, ToolHost {
   ]);
 
   // See ToolHost.gestureSeq: bumped on every gesture end / cancel / context
-  // switch so an async tool (the placement circuit load) can tell whether the
-  // gesture that started it is still live before opening its session.
+  // switch, so an async tool can tell whether its gesture is still live.
   private _gestureSeq = 0;
 
   constructor() {
@@ -134,8 +128,7 @@ export class WorkModeRouter implements PointerToolTarget, ToolHost {
    *  then applies the current mode's side effects to the new one. */
   public setProject(project: Project | null): void {
     this.abortActiveDrag();
-    // The outgoing project is destroyed whenever a tab closed or a document
-    // loaded — there are no previews left on it to tear down.
+    // A destroyed outgoing project has no previews left to tear down.
     if (this._project && !this._project.destroyed) {
       this._activeTool?.deactivate?.(this._project);
     }
@@ -170,15 +163,14 @@ export class WorkModeRouter implements PointerToolTarget, ToolHost {
   }
 
   /**
-   * The cancel shortcut (Escape) unwinds one layer of interaction state per
-   * press: an in-progress drag first, then a live selection, then the current
-   * tool — so a repeated Escape always ends up back at the pan tool from any
-   * mode. The pan escalation routes through `WorkModeService` so the toolbar
-   * highlight follows; simulation stays put (its editing lock forbids the swap).
+   * Unwinds one layer of interaction state per press: in-progress drag, then
+   * live selection, then the current tool, so repeated Escape ends at the pan
+   * tool. Routed through `WorkModeService` so the toolbar highlight follows;
+   * simulation stays put under its editing lock.
    */
   private _onCancel(): void {
-    // Always abort first: cancels any live session and invalidates a pending
-    // placement load (the gestureSeq bump), even with no session open yet.
+    // Abort first: also invalidates a pending placement load via gestureSeq,
+    // even with no session open.
     const hadDrag = this._activeDrag !== null;
     this.abortActiveDrag();
     if (hadDrag) return;
@@ -195,19 +187,13 @@ export class WorkModeRouter implements PointerToolTarget, ToolHost {
     }
   }
 
-  /**
-   * Cancels an in-progress drag without committing it — each session's
-   * `onCancel` reverts its in-progress effect. Fired by Escape, by a second
-   * finger landing (the multi-touch gesture takes over), and on project/mode
-   * switches.
-   */
+  /** Cancels an in-progress drag without committing it. */
   public abortActiveDrag(): void {
-    // Invalidate any not-yet-started placement load too — Escape / mode /
-    // project switches must cancel a gesture whose session has not opened yet.
+    // Invalidates a not-yet-started placement load too.
     this._gestureSeq++;
-    if (!this._activeDrag) return;
-    this._activeDrag.onCancel();
-    this._stopDrag();
+    const session = this._activeDrag;
+    if (!session) return;
+    this._endDrag(() => session.onCancel());
   }
 
   public down(input: PointerInput): void {
@@ -215,8 +201,8 @@ export class WorkModeRouter implements PointerToolTarget, ToolHost {
     if (!project) return;
 
     if (this._activeDrag) {
-      // A session that outlives its opening gesture (paste placement) decides
-      // what a new press means; anything else ignores extra presses.
+      // A session outliving its opening gesture decides what a new press
+      // means; anything else ignores extra presses.
       if (this._activeDrag.onDown && !this._activeDrag.onDown(input)) {
         this.abortActiveDrag();
       }
@@ -236,21 +222,18 @@ export class WorkModeRouter implements PointerToolTarget, ToolHost {
   }
 
   public up(): void {
-    // The pointer is released: invalidate any placement load still in flight
-    // so its session never opens for a gesture that has already ended.
+    // Invalidate any in-flight placement load: its gesture has ended.
     this._gestureSeq++;
     const session = this._activeDrag;
     if (!session) return;
     if (!session.canEnd()) {
-      // An invalid release either discards the session (placement) or leaves
-      // it frozen in place (move / paste) for the user to reposition — a
-      // frozen session is told, so it can let go of the ended gesture's anchor.
+      // An invalid release either discards the session or freezes it in place
+      // for repositioning; a frozen one is told, so it drops its anchor.
       if (session.discardOnInvalidRelease) this.abortActiveDrag();
       else session.onInvalidRelease?.();
       return;
     }
-    session.onEnd();
-    this._stopDrag();
+    this._endDrag(() => session.onEnd());
   }
 
   public cancel(): void {
@@ -260,8 +243,8 @@ export class WorkModeRouter implements PointerToolTarget, ToolHost {
   public hover(input: PointerInput): void {
     const project = this._project;
     if (!project) return;
-    // A lifted finger leaves no cursor behind: its last position is not where
-    // the user is looking, so touch input keeps paste on the centre fallback.
+    // A lifted finger leaves no cursor behind, so touch keeps paste on the
+    // centre fallback.
     if (input.pointerType !== 'touch') {
       this._cursorScreen = input.global.clone();
     }
@@ -281,10 +264,8 @@ export class WorkModeRouter implements PointerToolTarget, ToolHost {
   }
 
   /**
-   * Routes a rotate request (shortcut or toolbar/selection-bar button): an
-   * active session with turnable content spins in place; otherwise the
-   * committed selection rotates (see _startSelectionRotate). Inert in
-   * simulation mode — the editing lock applies.
+   * An active session with turnable content spins in place; otherwise the
+   * committed selection rotates. Inert in simulation mode.
    */
   private _onRotate(steps: number): void {
     if (!this._project || this._mode === WorkMode.SIMULATION) return;
@@ -297,28 +278,22 @@ export class WorkModeRouter implements PointerToolTarget, ToolHost {
   }
 
   /**
-   * After a discrete rotate/move on an already-open session: commit the moment
-   * a floating (not-yet-grabbed) selection edit becomes collision-free, so a
-   * recovery turn/step lands like the first op does instead of leaving a valid
-   * group floating until it is reverted by a click-off. `_stopDrag` (not a bare
-   * `onEnd`) is required here — unlike the first-op path, `_startDrag` already
-   * set `_activeDrag` and locked the action manager.
+   * Commits the moment a floating (not-yet-grabbed) selection edit becomes
+   * collision-free, so a recovery turn/step lands like the first op did.
+   * `_endDrag` rather than a bare `onEnd`: `_startDrag` already set
+   * `_activeDrag` and locked the action manager.
    */
   private _commitIfFloatingAndValid(): void {
     const session = this._activeDrag;
     if (!session?.isAwaitingGrab?.() || !session.canEnd()) return;
-    session.onEnd();
-    this._stopDrag();
+    this._endDrag(() => session.onEnd());
   }
 
   /**
    * Rotates the committed selection around its snapped centre through the
-   * selection-move session machinery: detach, turn, integrate, one undoable
-   * container (coalescing a live scissor cut). A collision-free result
-   * commits synchronously — the user sees an in-place rotate. A colliding one
-   * keeps the session open: the red-tinted group floats (still selected)
-   * until it is dragged or turned somewhere valid; Escape or a press off the
-   * selection reverts the rotation.
+   * selection-move session: detach, turn, integrate, one undoable container.
+   * Collision-free commits synchronously; a colliding result keeps the session
+   * open with the group floating until it lands somewhere valid.
    */
   private _startSelectionRotate(steps: number): void {
     const project = this._project;
@@ -342,10 +317,8 @@ export class WorkModeRouter implements PointerToolTarget, ToolHost {
   }
 
   /**
-   * Routes a move request (arrow keys): an active session's floating content
-   * shifts one grid unit in place; otherwise the committed selection moves
-   * (see _startSelectionMove). Inert in simulation mode — the editing lock
-   * applies.
+   * An active session's floating content shifts one grid unit; otherwise the
+   * committed selection moves. Inert in simulation mode.
    */
   private _onMoveSelection(dx: number, dy: number): void {
     if (!this._project || this._mode === WorkMode.SIMULATION) return;
@@ -357,15 +330,8 @@ export class WorkModeRouter implements PointerToolTarget, ToolHost {
     this._startSelectionMove(dx, dy);
   }
 
-  /**
-   * Moves the committed selection one grid step through the selection-move
-   * session machinery: detach, shift, integrate, one undoable container
-   * (coalescing a live scissor cut). A collision-free result commits
-   * synchronously — the user sees an in-place move. A colliding one keeps the
-   * session open exactly like a colliding rotate: the red-tinted group floats
-   * (still selected) until further arrow presses or a drag land it somewhere
-   * valid; Escape or a press off the selection reverts the move.
-   */
+  /** Moves the committed selection one grid step; see
+   *  {@link _startSelectionRotate} for the floating-until-valid behavior. */
   private _startSelectionMove(dx: number, dy: number): void {
     const project = this._project;
     if (!project) return;
@@ -404,14 +370,10 @@ export class WorkModeRouter implements PointerToolTarget, ToolHost {
   }
 
   /**
-   * Centres a pasted group on the cursor, or in the middle of the viewport
-   * when there is none. The fresh instances carry the copied coordinates, so
-   * without this they land wherever they were copied from — off screen as
-   * soon as the camera has moved since, where the ghosts wait for a press the
-   * user cannot see to give.
-   *
-   * The shift stays whole grid units: components sit on the lattice and wires
-   * on its half-step offsets, and both have to keep doing so.
+   * Centres a pasted group on the cursor, or on the viewport when there is
+   * none — the fresh instances carry the copied coordinates, which may be off
+   * screen. The shift stays whole grid units: components sit on the lattice
+   * and wires on its half-step offsets, and both must keep doing so.
    */
   private _positionPasteGroup(
     project: Project,
@@ -441,15 +403,27 @@ export class WorkModeRouter implements PointerToolTarget, ToolHost {
   }
 
   private _startDrag(session: DragSession): void {
-    // The session's ghosts own the canvas preview now.
     this._activeTool?.onSessionStart?.();
     this._activeDrag = session;
     if (this._project) {
-      // Sessions detach elements into the drag layer; a history operation
-      // touching them would corrupt the quad tree, so undo/redo are inert
-      // until the session ends (its commit registers before the unlock).
+      // Sessions detach elements into the drag layer, where a history
+      // operation would corrupt the quad tree, so undo/redo stay inert until
+      // the session ends (its commit registers before the unlock).
       this._project.actionManager.locked = true;
       this._project.triggerTicker('on');
+    }
+  }
+
+  /**
+   * Runs a session's terminal callback and retires it either way: a throw
+   * mid-commit still clears `_activeDrag`, so the next press, release or mode
+   * switch cannot re-enter a session whose state is already half-unwound.
+   */
+  private _endDrag(terminal: () => void): void {
+    try {
+      terminal();
+    } finally {
+      this._stopDrag();
     }
   }
 

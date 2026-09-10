@@ -1,0 +1,20 @@
+/* Type-check config for @logigator/docs. The package is never built: the editor
+   and the website both compile its source (via the workspace tsconfig `paths`
+   mapping), the same way `@logigator/core` is consumed.
+
+   It drops every `paths` mapping, so the member can only ever reach its own
+   files, and `rootDir` makes a relative escape into a sibling package fail too.
+   What it holds is content and pure data — the markdown itself is imported by
+   each app, never from here: the editor's loader emits a `.md` as a file and
+   the website's as text, so one import map could not serve both. */
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "rootDir": "src",
+    "types": [],
+    "paths": {}
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/*.spec.ts"]
+}

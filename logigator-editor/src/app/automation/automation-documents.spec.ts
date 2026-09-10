@@ -50,7 +50,6 @@ describe('AutomationApiService documents', () => {
       name: 'Main',
       type: 'project',
       source: 'browser',
-      hash: '',
       isPublic: false
     });
     projectService.setMainProject(main);
@@ -142,8 +141,8 @@ describe('AutomationApiService documents', () => {
     it('lists the masters, not the frozen copies placed from them', async () => {
       const editor = await createMaster('Half Adder', 'HA');
       const masterTypeId = masterTypeIdOf(editor);
-      // Placing takes a snapshot: a second definition, of the same component,
-      // that the library must not list.
+      // Placing takes a snapshot: a second definition of the same component,
+      // which the library must not list.
       const snapshot = registry.snapshot(masterTypeId);
       main.addComponent(
         provider.getComponent(snapshot.typeId)!.create({}) as CustomComponent
@@ -168,8 +167,8 @@ describe('AutomationApiService documents', () => {
       api.tabActivate(0);
       api.tabClose(1);
 
-      // The snapshot's type id is what a placed instance carries — it resolves
-      // back to the master through its provenance.
+      // A placed instance carries the snapshot's type id, which resolves back
+      // to the master through its provenance.
       const tab = await api.libraryEdit(snapshotTypeId);
 
       expect(tab).toMatchObject({ name: 'Half Adder', active: true });
@@ -191,9 +190,8 @@ describe('AutomationApiService documents', () => {
     it('refuses when the open failed, even from another component’s tab', async () => {
       const editor = await createMaster('Half Adder', 'HA');
       const other = await createMaster('Decoder', 'DEC');
-      // A failed open reports itself through a toast and returns, leaving
-      // whatever tab was active alone — here another *component's*, so "some
-      // component tab is active" would read the failure as success.
+      // A failed open leaves whatever tab was active alone — here another
+      // component's, so "some component tab is active" would read as success.
       vi.spyOn(customComponents, 'openComponentForEdit').mockResolvedValue();
 
       await expect(api.libraryEdit(masterTypeIdOf(editor))).rejects.toThrow(

@@ -13,24 +13,21 @@ export const MAX_DIAMETER = 10 * PX;
 /** On-screen border thickness, held constant at every zoom. */
 export const BORDER = PX;
 
-// Grid-unit dot size, applied as the bubble Graphics' transform: DIAMETER
-// across (so it scales with the board), clamped to a fixed pixel floor/ceiling
-// on screen — the `/ scale` on the bounds counter-scales the zoom.
+// Grid-unit dot size for the bubble Graphics' transform: DIAMETER across,
+// clamped to fixed on-screen bounds by counter-scaling the zoom.
 export function scaleForScale(scale: number): number {
   return clamp(DIAMETER, MIN_DIAMETER / scale, MAX_DIAMETER / scale);
 }
 
 /**
- * The IEC/ANSI inverter "bubble": a small white dot drawn at the body-edge end
- * of a negated port's stub. Filled white so it interrupts the stub, stroked
- * with the wire color (green in dark, black in light).
+ * The IEC/ANSI inverter bubble at the body-edge end of a negated port's stub:
+ * filled white so it interrupts the stub, stroked with the wire color.
  *
- * A unit-diameter circle transform-scaled by {@link scaleForScale}, so the dot
- * follows that size curve. The border must stay a constant on-screen thickness,
- * so it can't ride that transform: the baked width divides BORDER back out by
- * the dot's transform (`scaleForScale · zoom`), so it renders `BORDER · gridSize`
- * px (i.e. 1px) at every zoom. That makes the context zoom-dependent, re-fetched
- * per `applyScale` (like the component body outline).
+ * A unit-diameter circle transform-scaled by {@link scaleForScale}. The border
+ * must stay a constant on-screen thickness, so it cannot ride that transform:
+ * the baked width divides BORDER back out by `scaleForScale · zoom` to render
+ * 1px at every zoom. That makes the context zoom-dependent, re-fetched per
+ * `applyScale`.
  */
 export class NegationBubbleGraphics extends StaticGraphicsContext {
   constructor(scale: number) {

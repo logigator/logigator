@@ -1,8 +1,8 @@
 import { SerializedAction } from '../actions/serialized-action.model';
 
 /**
- * Product-analytics event names. Centralised so the taxonomy is auditable in
- * one place and callers can't drift into ad-hoc event strings.
+ * Product-analytics event names. Centralised so the taxonomy is auditable and
+ * callers can't drift into ad-hoc event strings.
  */
 export const AnalyticsEvent = {
   ToolSelected: 'tool_selected',
@@ -26,31 +26,28 @@ export const AnalyticsEvent = {
   WireRepairRun: 'wire_repair_run',
   ChangelogViewed: 'changelog_viewed',
   LegacyEditorOpened: 'legacy_editor_opened',
+  BrowserUnsupported: 'browser_unsupported',
   InspectionOpened: 'inspection_opened',
   ShareLinkGenerated: 'share_link_generated',
   TutorialStarted: 'tutorial_started',
   TutorialStepCompleted: 'tutorial_step_completed',
   TutorialCompleted: 'tutorial_completed',
   TutorialAbandoned: 'tutorial_abandoned',
-  DocPageOpened: 'doc_page_opened'
+  DocPageOpened: 'doc_page_opened',
+  DocsSearched: 'docs_searched'
 } as const;
 
 /**
  * Identifies each dialog to the `dialog_opened` / `dialog_closed` pair, passed
- * to the library as `DialogConfig.telemetryId`. Centralised for the same reason
- * as {@link AnalyticsEvent}, and because several dialogs open from more than
- * one place: the ids that repeat (`OpenProject`, `NewComponent`) are the same
- * surface reached by menu, toolbar and shortcut, while the share dialog splits
- * by what is being shared, which is the axis worth breaking down by.
+ * to the library as `DialogConfig.telemetryId`. One id per surface, not per
+ * entry point; the share dialog splits by what is shared, the axis worth
+ * breaking down by.
  *
- * The pair measures reach and abandonment — how often a surface is opened at
- * all, and how often it is opened and walked away from. It deliberately does
- * *not* measure task completion: `dialog_closed.resolved` only says whether the
- * dialog closed with a result, and several dialogs commit their work through
- * their own API instead (the share dialog PATCHes as you go) or have no result
- * to give (About, Changelog, Documentation, Shortcuts). The specific outcome
- * events — `share_link_generated`, `project_saved`, `project_uploaded`,
- * `bug_report_submitted` — remain the completion signal.
+ * The pair measures reach and abandonment, not task completion:
+ * `dialog_closed.resolved` only says the dialog closed with a result, and
+ * several dialogs commit through their own API or have no result to give. The
+ * outcome events (`share_link_generated`, `project_saved`, …) are the
+ * completion signal.
  */
 export const DialogId = {
   About: 'about',
@@ -78,12 +75,10 @@ export type DialogId = (typeof DialogId)[keyof typeof DialogId];
 const MAX_STRING_LENGTH = 256;
 
 /**
- * Enforces the "properties are structural/categorical only" rule as
- * defense-in-depth: keeps primitives (and flat arrays of them), truncates long
- * strings, and drops everything else (nested objects, functions) so a careless
- * caller can't leak user-authored content — component labels, tunnel names, ROM
- * blobs, option values — into analytics. The discipline still lives at the call
- * sites; this is the backstop.
+ * Backstop for the "properties are structural/categorical only" rule: keeps
+ * primitives and flat arrays of them, truncates long strings, drops everything
+ * else, so user-authored content (labels, tunnel names, ROM blobs, option
+ * values) cannot leak into analytics. The discipline lives at the call sites.
  */
 export function sanitizeProperties(
   properties: Record<string, unknown>
@@ -109,9 +104,8 @@ function sanitizeValue(value: unknown): unknown {
 
 /**
  * Maps a committed action's serialized form to the categorical properties for
- * the `editor_operation` event: operation kind, element counts, placed
- * component type ids, the changed option's key, and negation side/flag. Never
- * the values themselves, element ids, or labels.
+ * `editor_operation`: operation kind, counts, component type ids, the changed
+ * option's key, negation side/flag. Never values, element ids, or labels.
  */
 export function operationProperties(
   action: SerializedAction

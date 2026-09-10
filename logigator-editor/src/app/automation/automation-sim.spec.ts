@@ -63,8 +63,8 @@ describe('AutomationApiService simulation', () => {
   });
 
   it('enter resolves with a running session when auto-start is on', async () => {
-    // The shipped default — an agent hits this path, so the documented
-    // pause → setInput → step recipe has to work from a running session.
+    // The shipped default, so the documented pause → setInput → step recipe has
+    // to work from a running session.
     TestBed.inject(EditorSettingsService).autoStartSimulation.set(true);
     const lever = makeSwitch();
     project.addComponent(lever);
@@ -109,9 +109,8 @@ describe('AutomationApiService simulation', () => {
     await api.simStep(5);
 
     expect(fakeWorker.postedOfKind('step')).toHaveLength(5);
-    // The batch's own pull is posted behind all five ticks, so the state it
-    // resolves with is the state after the last one — and it is one pull, not
-    // one per tick.
+    // The pull is posted behind all five ticks, so it resolves with the state
+    // after the last one — one pull, not one per tick.
     const kinds = fakeWorker.posted.map((message) => message.kind);
     expect(kinds.indexOf('requestSnapshot')).toBe(5);
     expect(
@@ -186,8 +185,8 @@ describe('AutomationApiService simulation', () => {
     project.addComponent(lever);
     await api.simEnter();
 
-    // Power every link of the session directly through the applier — the same
-    // entry point the worker bridge uses for a snapshot.
+    // Power every link through the applier, the entry point the worker bridge
+    // uses for a snapshot.
     const links = simulation.board!.mapping.get(TOP_LEVEL_PATH)!.length;
     for (let link = 0; link < links; link++) {
       simulation.applier!.setLink(link, true);

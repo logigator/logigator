@@ -1,0 +1,26 @@
+{
+  "name": "@logigator/core",
+  "version": "0.0.0",
+  "description": "Rendering-free circuit code (file format, model, catalog) shared by the editor, the API and migration tooling",
+  "license": "AGPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/logigator/logigator.git"
+  },
+  "private": true,
+  "sideEffects": false,
+  "scripts": {
+    "lint": "eslint --config eslint.config.mjs src",
+    "lint:fix": "eslint --config eslint.config.mjs src --fix",
+    "test": "vitest run --passWithNoTests",
+    "test:watch": "vitest",
+    "typecheck": "tsc -p tsconfig.spec.json"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.9.1",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.68.0",
+    "vitest": "^4.1.11"
+  }
+}

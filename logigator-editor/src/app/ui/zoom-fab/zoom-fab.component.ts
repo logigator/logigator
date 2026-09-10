@@ -12,20 +12,22 @@ import { TranslateDirective } from '../../translation/translate.directive';
       *appTranslate="let t"
       class="flex flex-col gap-2 rounded-full bg-content p-1.5 shadow-lg"
     >
-      <lg-button
+      <button
+        lgButton
         icon="ph ph-plus"
         severity="secondary"
         rounded
         [ariaLabel]="t('toolBar.zoomIn')"
         (onClick)="zoomIn()"
-      ></lg-button>
-      <lg-button
+      ></button>
+      <button
+        lgButton
         icon="ph ph-minus"
         severity="secondary"
         rounded
         [ariaLabel]="t('toolBar.zoomOut')"
         (onClick)="zoomOut()"
-      ></lg-button>
+      ></button>
     </div>
   `
 })

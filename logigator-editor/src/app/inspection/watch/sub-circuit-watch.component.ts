@@ -31,15 +31,13 @@ import {
 } from '../../rendering/renderer.service';
 
 /**
- * Renderer for {@link SubCircuitWatch}: a canvas blitted through the shared
- * app renderer, showing the active level's headless project (the breadcrumb
- * trail lives in the hosting header via the inspection's `titleParts`). Fits
- * the content when a level first shows, then pans/zooms through the project's
- * own viewport controller. Input runs through the shared PointerController
- * (right-drag/wheel/pinch navigation); the tool stream is a PanSession whose
- * tap action routes to the model (inner input / drill-down / data inspector).
- * Re-blits on engine changes (`render$`), viewport/theme changes (the
- * project's `ticker$`), and host resizes.
+ * Renderer for {@link SubCircuitWatch}: a canvas blitted through the shared app
+ * renderer, showing the active level's headless project. Fits the content when
+ * a level first shows, then pans/zooms through the project's own viewport
+ * controller. Input runs through the shared PointerController; the tool stream
+ * is a PanSession whose tap action routes to the model (inner input /
+ * drill-down / data inspector). Re-blits on engine changes (`render$`),
+ * viewport/theme changes (`ticker$`) and host resizes.
  */
 @Component({
   selector: 'app-sub-circuit-watch',
@@ -67,11 +65,10 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
   private panSession: PanSession | null = null;
 
   /**
-   * The visible level's project, or null once there is none to draw: closing
-   * the watch (leaving simulation) destroys the model's sessions and empties
-   * its level stack while this component still lives for a cycle, so late
-   * pointer moves, resizes and re-blits must find nothing rather than a dead
-   * project.
+   * The visible level's project, or null once there is none to draw. Closing
+   * the watch destroys the model's sessions and empties its level stack while
+   * this component still lives for a cycle, so late pointer moves, resizes and
+   * re-blits must find nothing rather than a dead project.
    */
   private get project(): Project | null {
     const project = this.inspection().activeLevel()?.session.project;
@@ -90,8 +87,6 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
     this.controller = new PointerController({
       canvas: this.canvas.nativeElement,
       project: () => this.project,
-      // Unlike the zooms (their ticker events re-blit via the ticker
-      // subscription below), `Project.pan` emits nothing — render explicitly.
       nav: {
         pan: (delta) => this.pan(delta),
         zoomIn: (center) => this.project?.viewport.zoomIn(center),
@@ -117,8 +112,6 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
       }
     });
 
-    // Tracks breadcrumb navigation: rewires the ticker subscription and the
-    // viewport to whichever level is visible.
     effect(
       () => {
         const level = this.inspection().activeLevel();
@@ -156,7 +149,6 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
     this.lease = null;
   }
 
-  /** Drag-to-pan with tap-to-activate — the watch's only tool. */
   private startPanOrTap(input: PointerInput): void {
     const project = this.project;
     if (!project) {
@@ -176,9 +168,8 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
   }
 
   /**
-   * Swaps the view to a level: ticker rewire, sizing, one-time fit. The stack
-   * is empty once the watch closed — the effect fires that last time while
-   * this component still lives, with nothing left to show.
+   * Swaps the view to a level: ticker rewire, sizing, one-time fit. `level` is
+   * undefined once the watch closed, with nothing left to show.
    */
   private showLevel(level: WatchLevel | undefined): void {
     // A drag never survives a level swap — the session holds the old project.
@@ -190,7 +181,7 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
       return;
     }
     // Fires on zoom and theme re-tints — anything that changed the project
-    // without an engine snapshot. Panning renders directly (see pan()).
+    // without an engine snapshot. Panning renders directly.
     this.tickerSub = level.session.project.ticker$.subscribe(() =>
       this.render()
     );
@@ -203,15 +194,14 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
   }
 
   /**
-   * Pans and re-blits directly: unlike the zooms, `Project.pan` emits no
-   * ticker event (the board pans with its ticker already running).
+   * Pans and re-blits directly: unlike the zooms, `Project.pan` emits no ticker
+   * event (the board pans with its ticker already running).
    */
   private pan(delta: Point): void {
     this.project?.viewport.pan(delta);
     this.render();
   }
 
-  /** The component whose body contains the grid-space point, if any. */
   private componentAt(
     project: Project,
     gridPoint: Point
@@ -237,7 +227,6 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
     );
   }
 
-  /** Centers the content at a zoom that fits it, capped at 100%. */
   private fitToContent(): void {
     const project = this.project;
     if (!project) {
@@ -271,8 +260,8 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
     if (this.destroyed || !this.lease || !project) {
       return;
     }
-    // No cull pass runs on watch renders — force the subtree visible so stale
-    // `culled` bits can't hide content.
+    // No cull pass runs on watch renders — force the subtree visible so a
+    // stale `culled` bit can't hide content.
     uncullTree(project);
     this.lease.render(project, this.canvas.nativeElement);
   }

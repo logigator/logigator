@@ -1,0 +1,37 @@
+name: 'CI format'
+
+# Prettier runs over the whole repo, so this workflow deliberately has no path
+# filter: root files (README, CLAUDE.md, the compose files, these workflows) are
+# checked by nothing else, and the package workflows keep their narrow filters
+# instead of rebuilding an application for a documentation typo.
+on:
+  pull_request:
+  push:
+    branches:
+      - 'master'
+      - 'development'
+
+jobs:
+  ci:
+    name: 'CI format'
+    runs-on: 'ubuntu-latest'
+    steps:
+      - name: 'Checkout'
+        uses: actions/checkout@v5
+
+      - name: 'Setup Node'
+        uses: actions/setup-node@v5
+        with:
+          node-version: '24.x'
+          package-manager-cache: false
+
+      # Prettier is a root devDependency, so the workspace install is what makes
+      # it available. It shares the cache with the other workspace workflows.
+      - name: Install Dependencies
+        uses: ./.github/actions/yarn-install
+        with:
+          cache-prefix: workspace
+
+      - name: 'Format'
+        shell: bash
+        run: yarn run format

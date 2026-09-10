@@ -6,18 +6,17 @@
   }
 
   <div class="flex justify-end gap-2">
-    <lg-button
-      severity="danger"
-      [outlined]="true"
-      [label]="t('closeTab.discard')"
-      (onClick)="discard()"
-    />
-    <lg-button
+    <button lgButton severity="danger" [outlined]="true" (onClick)="discard()">
+      {{ t('closeTab.discard') }}
+    </button>
+    <button
+      lgButton
       severity="secondary"
       [outlined]="true"
-      [label]="t('closeTab.cancel')"
       (onClick)="cancel()"
-    />
-    <lg-button [label]="t('closeTab.save')" (onClick)="save()" />
+    >
+      {{ t('closeTab.cancel') }}
+    </button>
+    <button lgButton (onClick)="save()">{{ t('closeTab.save') }}</button>
   </div>
 </div>
