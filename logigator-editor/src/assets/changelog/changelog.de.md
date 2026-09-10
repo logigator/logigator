@@ -3,6 +3,26 @@
 Alle nennenswerten Änderungen am Logigator-Editor werden hier festgehalten. Die
 aktuellste Veröffentlichung steht ganz oben.
 
+## 2.1.2 — 2026-09-10
+
+### Korrekturen
+
+- Das Drehen eines Handys oder Tablets bringt den Editor nicht mehr zum Absturz.
+- Leitungen zu reparieren, während eine Simulation läuft, führt nicht mehr zum
+  Absturz. Die Simulation wird vorher beendet.
+- Ein Freigabelink zu einer benutzerdefinierten Komponente öffnet sie jetzt so
+  wie deine eigenen Komponenten: mit ihrem Namen in der Titelleiste und bereit,
+  in deine Komponenten geklont zu werden.
+- Wenn du mit dem Zurück-Button des Browsers zurückgehst, bleiben Menüs,
+  Auswahllisten und Tutorial-Hinweise nicht mehr hängen.
+- Links in der Hilfe und im Änderungsprotokoll des Editors springen jetzt in
+  jeder Sprache zur richtigen Überschrift.
+- Wo zwei Anschlussspitzen aufeinandertreffen, negiert ein Tippen mit dem
+  Leitungswerkzeug jetzt den Anschluss auf der Seite, auf die du getippt hast,
+  statt den gegenüberliegenden.
+- Der Editor lässt sich weiter bedienen, wenn ein Verschieben oder Einfügen
+  nicht abgeschlossen werden kann.
+
 ## 2.1.1 — 2026-08-31
 
 ### Korrekturen
