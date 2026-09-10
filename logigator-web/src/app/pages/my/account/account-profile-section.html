@@ -1,0 +1,96 @@
+<web-account-section
+  *webTranslate="let t"
+  [heading]="t('pages.my.account.profile.heading')"
+  [description]="t('pages.my.account.profile.description')"
+>
+  <div class="flex flex-col gap-6">
+    <div class="flex flex-wrap items-center gap-4">
+      <lg-avatar
+        size="xlarge"
+        shape="circle"
+        [image]="avatar()"
+        [label]="initials()"
+      />
+      <div class="flex flex-col gap-2">
+        <div class="flex flex-wrap gap-2">
+          <!-- A label rather than a button: the native picker is the control,
+               and a hidden input needs a label to be reachable by keyboard. -->
+          <label
+            class="inline-flex cursor-pointer items-center gap-2 rounded-md border border-border px-3 py-1.5 text-sm font-medium text-text hover:bg-content-hover focus-within:outline focus-within:outline-1 focus-within:outline-offset-2 focus-within:outline-primary"
+          >
+            <i class="ph ph-upload-simple" aria-hidden="true"></i>
+            {{ t('pages.my.account.profile.changePicture') }}
+            <input
+              type="file"
+              class="sr-only"
+              [accept]="accept"
+              [disabled]="avatarBusy()"
+              (change)="onFile($event)"
+            />
+          </label>
+
+          @if (avatar()) {
+          <button
+            lgButton
+            outlined
+            severity="secondary"
+            size="sm"
+            type="button"
+            [loading]="avatarBusy()"
+            (onClick)="removeAvatar()"
+          >
+            {{ t('pages.my.account.profile.removePicture') }}
+          </button>
+          }
+        </div>
+        <p class="text-sm text-muted">
+          {{ t('pages.my.account.profile.pictureHint') }}
+        </p>
+      </div>
+    </div>
+
+    @if (avatarError(); as message) {
+    <lg-message severity="danger">{{ t(message) }}</lg-message>
+    } @let usernameMessage = usernameError();
+
+    <form
+      class="flex flex-col gap-4 border-t border-border pt-6"
+      [formGroup]="form"
+      (ngSubmit)="submit()"
+    >
+      @if (formError(); as message) {
+      <lg-message severity="danger">{{ t(message) }}</lg-message>
+      } @else if (saved()) {
+      <lg-message severity="success">
+        {{ t('pages.my.account.profile.saved') }}
+      </lg-message>
+      }
+
+      <lg-form-field
+        #usernameField="lgFormField"
+        inputId="account-username"
+        required
+        class="max-w-sm"
+        [label]="t('auth.username')"
+        [error]="usernameMessage ? t(usernameMessage) : undefined"
+      >
+        <input
+          lgInputText
+          id="account-username"
+          type="text"
+          autocomplete="username"
+          class="w-full"
+          formControlName="username"
+          [invalid]="!!usernameMessage"
+          [attr.aria-describedby]="usernameField.describedBy()"
+        />
+      </lg-form-field>
+
+      <div>
+        <button lgButton type="submit" [loading]="saving()">
+          {{ t('pages.my.account.profile.save') }}
+        </button>
+      </div>
+    </form>
+  </div>
+</web-account-section>

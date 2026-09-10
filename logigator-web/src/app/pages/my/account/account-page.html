@@ -1,0 +1,26 @@
+<div class="page-wrap py-9 md:py-12" *webTranslate="let t">
+  <h1
+    class="text-[28px] leading-tight font-bold text-text-hover md:text-[32px]"
+  >
+    {{ t('pages.my.account.title') }}
+  </h1>
+  <p
+    class="mt-3 max-w-[62ch] text-[17px] leading-relaxed text-pretty text-muted"
+  >
+    {{ t('pages.my.account.lede') }}
+  </p>
+
+  @if (session.user()) {
+  <p class="mt-3 font-mono text-xs text-muted">
+    {{ t('pages.my.account.memberSince', { date: memberSince() }) }}
+  </p>
+  }
+
+  <div class="mt-8 flex max-w-3xl flex-col gap-5 border-t border-border pt-8">
+    <web-account-profile-section />
+    <web-account-email-section />
+    <web-account-password-section />
+    <web-account-google-section />
+    <web-account-delete-section />
+  </div>
+</div>

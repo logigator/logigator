@@ -1,0 +1,80 @@
+<web-account-section
+  *webTranslate="let t"
+  [heading]="t('pages.my.account.email.heading')"
+  [description]="t('pages.my.account.email.description')"
+>
+  @let emailMessage = emailError(); @let passwordMessage = passwordError();
+
+  <div class="flex flex-col gap-5">
+    <p class="text-sm text-muted">
+      {{ t('pages.my.account.email.current') }}
+      <span class="font-mono text-text-hover">{{ user()?.email }}</span>
+      @if (user() && !user()!.emailVerified) {
+      <span class="ml-2 text-warn-text">
+        {{ t('pages.my.account.email.unverified') }}
+      </span>
+      }
+    </p>
+
+    @if (awaitingConfirmation(); as pending) {
+    <lg-message severity="info">
+      {{ t('pages.my.account.email.pending', { email: pending }) }}
+    </lg-message>
+    }
+
+    <form class="flex flex-col gap-4" [formGroup]="form" (ngSubmit)="submit()">
+      @if (formError(); as message) {
+      <lg-message severity="danger">{{ t(message) }}</lg-message>
+      }
+
+      <lg-form-field
+        #emailField="lgFormField"
+        inputId="account-email"
+        required
+        class="max-w-sm"
+        [label]="t('pages.my.account.email.newLabel')"
+        [error]="emailMessage ? t(emailMessage) : undefined"
+      >
+        <input
+          lgInputText
+          id="account-email"
+          type="email"
+          autocomplete="email"
+          class="w-full"
+          formControlName="email"
+          [invalid]="!!emailMessage"
+          [attr.aria-describedby]="emailField.describedBy()"
+        />
+      </lg-form-field>
+
+      @if (needsPassword()) {
+      <lg-form-field
+        #passwordField="lgFormField"
+        inputId="account-email-password"
+        required
+        class="max-w-sm"
+        [label]="t('pages.my.account.currentPassword')"
+        [hint]="t('pages.my.account.email.passwordHint')"
+        [error]="passwordMessage ? t(passwordMessage) : undefined"
+      >
+        <input
+          lgInputText
+          id="account-email-password"
+          type="password"
+          autocomplete="current-password"
+          class="w-full"
+          formControlName="currentPassword"
+          [invalid]="!!passwordMessage"
+          [attr.aria-describedby]="passwordField.describedBy()"
+        />
+      </lg-form-field>
+      }
+
+      <div>
+        <button lgButton type="submit" [loading]="submitting()">
+          {{ t('pages.my.account.email.submit') }}
+        </button>
+      </div>
+    </form>
+  </div>
+</web-account-section>

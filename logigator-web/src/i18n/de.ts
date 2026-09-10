@@ -61,6 +61,9 @@ const de: TranslationSchema = {
       passwordComplexity:
         'Verwende mindestens einen Buchstaben und eine Ziffer.',
       passwordMismatch: 'Die beiden Passwörter stimmen nicht überein.',
+      nameRequired: 'Gib einen Namen ein.',
+      nameTooLong: 'Verwende höchstens 20 Zeichen.',
+      descriptionTooLong: 'Verwende höchstens 2048 Zeichen.',
       rateLimited:
         'Zu viele Versuche. Bitte warte einen Moment und versuche es erneut.',
       serviceUnavailable:
@@ -294,6 +297,159 @@ const de: TranslationSchema = {
         emptyBody: 'In dieser Kategorie gibt es nichts zu zeigen.',
         errorHeading: 'Das Profil konnte nicht geladen werden',
         listErrorHeading: 'Die Liste konnte nicht geladen werden'
+      }
+    },
+    my: {
+      nav: {
+        label: 'Meine Arbeit',
+        projects: 'Projekte',
+        components: 'Komponenten'
+      },
+      projects: {
+        title: 'Meine Projekte',
+        lede: 'Alle Schaltungen, die du in der Cloud gespeichert hast. Öffne eine zum Weiterbauen oder veröffentliche sie in der Community.',
+        create: 'Neues Projekt',
+        count: '{{count}} Projekte',
+        emptyHeading: 'Noch keine Projekte',
+        emptyBody:
+          'Schaltungen, die du im Editor in der Cloud speicherst, erscheinen hier.'
+      },
+      components: {
+        title: 'Meine Komponenten',
+        lede: 'Die wiederverwendbaren Bausteine deiner Bibliothek. Platziere sie in jeder Schaltung, die du baust.',
+        count: '{{count}} Komponenten',
+        emptyHeading: 'Noch keine Komponenten',
+        emptyBody:
+          'Eine Komponente entsteht im Editor, aus einer Schaltung, die du gebaut hast.'
+      },
+      list: {
+        searchLabel: 'Nach Namen suchen',
+        searchPlaceholder: 'Suchen..',
+        clearSearch: 'Suche zurücksetzen',
+        noMatchHeading: 'Nichts gefunden',
+        noMatchBody: 'Nichts von dir heißt „{{search}}“.',
+        errorHeading: 'Die Liste konnte nicht geladen werden',
+        openInEditor: '„{{name}}“ im Editor öffnen',
+        actionsFor: 'Aktionen für „{{name}}“',
+        public: 'Öffentlich',
+        private: 'Privat',
+        edit: 'Name & Beschreibung',
+        share: 'Teilen…',
+        delete: 'Löschen'
+      },
+      edit: {
+        heading: 'Name & Beschreibung',
+        nameLabel: 'Name',
+        descriptionLabel: 'Beschreibung',
+        descriptionHint:
+          'Wird auf der Community-Seite gezeigt, wenn die Schaltung veröffentlicht ist.',
+        save: 'Speichern',
+        cancel: 'Abbrechen'
+      },
+      share: {
+        heading: 'Teilen',
+        intro:
+          'Wer den Link unten hat, kann „{{name}}“ im Editor öffnen – veröffentlicht oder nicht.',
+        linkLabel: 'Link zum Teilen',
+        linkHint:
+          'Der Link öffnet eine schreibgeschützte Kopie. Deine Schaltung kann darüber niemand ändern.',
+        copy: 'Kopieren',
+        copied: 'Link kopiert.',
+        copyFailed:
+          'Der Link konnte nicht kopiert werden. Markiere ihn und kopiere ihn von Hand.',
+        publicLabel: 'In der Community veröffentlichen',
+        publicHintProject:
+          'Ein veröffentlichtes Projekt erscheint in den Community-Listen und kann markiert und kopiert werden.',
+        publicHintComponent:
+          'Eine veröffentlichte Komponente erscheint in den Community-Listen und kann von allen platziert werden.',
+        viewPublicPage: 'Community-Seite ansehen',
+        regenerateLabel: 'Link zurückziehen',
+        regenerateHint:
+          'Es wird ein neuer Link vergeben und der alte hört auf zu funktionieren – auch die Community-Seite, die unter dieser Adresse liegt.',
+        regenerate: 'Neuen Link vergeben',
+        close: 'Schließen'
+      },
+      delete: {
+        heading: 'Endgültig löschen?',
+        messageProject:
+          '„{{name}}“ und die Schaltung darin werden gelöscht. Das lässt sich nicht rückgängig machen.',
+        messageComponent:
+          '„{{name}}“ wird gelöscht. Schaltungen, die sie schon verwenden, laufen mit der darin gespeicherten Kopie weiter.',
+        confirm: 'Löschen',
+        cancel: 'Abbrechen',
+        done: '„{{name}}“ wurde gelöscht.',
+        failed: '„{{name}}“ konnte nicht gelöscht werden.'
+      },
+      account: {
+        title: 'Account',
+        lede: 'Dein Name und Bild, die Adresse für die Anmeldung und wie du dich anmeldest.',
+        memberSince: 'Mitglied seit {{date}}',
+        currentPassword: 'Aktuelles Passwort',
+        passwordIncorrect: 'Dieses Passwort ist nicht richtig.',
+        profile: {
+          heading: 'Profil',
+          description:
+            'Name und Bild, die neben allem stehen, was du veröffentlichst.',
+          changePicture: 'Bild ändern',
+          removePicture: 'Entfernen',
+          pictureHint:
+            'PNG, JPEG, WebP oder GIF. Es wird quadratisch zugeschnitten und neu kodiert.',
+          save: 'Speichern',
+          saved: 'Dein Profil wurde gespeichert.',
+          avatarRejected:
+            'Dieses Bild konnte nicht verwendet werden. Versuche ein kleineres PNG, JPEG oder WebP.'
+        },
+        email: {
+          heading: 'E-Mail-Adresse',
+          description:
+            'Die Adresse für deine Anmeldung, und wohin Bestätigungen gehen.',
+          current: 'Aktuell:',
+          unverified: 'nicht bestätigt',
+          newLabel: 'Neue E-Mail-Adresse',
+          passwordHint: 'Dein Passwort bestätigt, dass du es bist.',
+          submit: 'Bestätigung senden',
+          pending:
+            'Ein Bestätigungslink ist an {{email}} unterwegs. Deine Adresse wechselt, sobald du ihn öffnest.',
+          taken: 'Zu dieser E-Mail-Adresse gibt es schon einen Account.',
+          unchanged: 'Das ist bereits deine Adresse.',
+          mailFailed:
+            'Die Bestätigungsmail konnte nicht gesendet werden. Es hat sich nichts geändert – bitte versuche es erneut.'
+        },
+        password: {
+          heading: 'Passwort',
+          description:
+            'Zum Ändern gehört, dass du überall sonst abgemeldet wirst.',
+          setHeading: 'Passwort festlegen',
+          setDescription:
+            'Du hast dich mit Google registriert und hast noch kein Passwort. Mit einem hast du einen zweiten Weg hinein.',
+          newLabel: 'Neues Passwort',
+          submit: 'Passwort ändern',
+          setSubmit: 'Passwort festlegen',
+          saved: 'Dein Passwort wurde geändert.',
+          sessionsNotice:
+            'Deine anderen Sitzungen werden abgemeldet. Diese bleibt.'
+        },
+        google: {
+          heading: 'Google',
+          description:
+            'Anmelden mit deinem Google-Konto, zusätzlich zum Passwort.',
+          linked: 'Dein Google-Konto ist verknüpft.',
+          link: 'Google-Konto verknüpfen',
+          unlink: 'Verknüpfung lösen',
+          unlinkConfirm:
+            'Die Anmeldung mit Google funktioniert dann nicht mehr. Du kannst sie jederzeit wieder verknüpfen.',
+          needsPassword:
+            'Lege zuerst ein Passwort fest – Google ist gerade der einzige Weg in diesen Account.'
+        },
+        delete: {
+          heading: 'Account löschen',
+          description:
+            'Dein Account und alle Projekte, Komponenten und Markierungen darin werden gelöscht. Das lässt sich nicht rückgängig machen.',
+          submit: 'Meinen Account löschen',
+          confirm:
+            'Alles, was du auf Logigator gemacht hast, wird endgültig gelöscht.',
+          done: 'Dein Account wurde gelöscht.'
+        }
       }
     },
     docs: {

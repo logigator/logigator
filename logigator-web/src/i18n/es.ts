@@ -60,6 +60,9 @@ const es: TranslationSchema = {
       passwordTooLong: 'Usa como máximo 200 caracteres.',
       passwordComplexity: 'Usa al menos una letra y un dígito.',
       passwordMismatch: 'Las dos contraseñas no coinciden.',
+      nameRequired: 'Escribe un nombre.',
+      nameTooLong: 'Usa como máximo 20 caracteres.',
+      descriptionTooLong: 'Usa como máximo 2048 caracteres.',
       rateLimited:
         'Demasiados intentos. Espera un momento e inténtalo de nuevo.',
       serviceUnavailable:
@@ -292,6 +295,157 @@ const es: TranslationSchema = {
         emptyBody: 'No hay nada que mostrar en esta categoría.',
         errorHeading: 'No se pudo cargar el perfil',
         listErrorHeading: 'No se pudo cargar la lista'
+      }
+    },
+    my: {
+      nav: {
+        label: 'Mi trabajo',
+        projects: 'Proyectos',
+        components: 'Componentes'
+      },
+      projects: {
+        title: 'Mis proyectos',
+        lede: 'Todos los circuitos que has guardado en la nube. Abre uno para seguir construyendo, o publícalo en la comunidad.',
+        create: 'Nuevo proyecto',
+        count: '{{count}} proyectos',
+        emptyHeading: 'Todavía no hay proyectos',
+        emptyBody:
+          'Los circuitos que guardes en la nube desde el editor aparecen aquí.'
+      },
+      components: {
+        title: 'Mis componentes',
+        lede: 'Los bloques reutilizables de tu biblioteca. Colócalos en cualquier circuito que construyas.',
+        count: '{{count}} componentes',
+        emptyHeading: 'Todavía no hay componentes',
+        emptyBody:
+          'Un componente se crea en el editor, a partir de un circuito que hayas construido.'
+      },
+      list: {
+        searchLabel: 'Buscar por nombre',
+        searchPlaceholder: 'Buscar..',
+        clearSearch: 'Borrar la búsqueda',
+        noMatchHeading: 'No se encontró nada',
+        noMatchBody: 'Nada tuyo se llama «{{search}}».',
+        errorHeading: 'No se pudo cargar la lista',
+        openInEditor: 'Abrir «{{name}}» en el editor',
+        actionsFor: 'Acciones para «{{name}}»',
+        public: 'Público',
+        private: 'Privado',
+        edit: 'Nombre y descripción',
+        share: 'Compartir…',
+        delete: 'Eliminar'
+      },
+      edit: {
+        heading: 'Nombre y descripción',
+        nameLabel: 'Nombre',
+        descriptionLabel: 'Descripción',
+        descriptionHint:
+          'Se muestra en la página de la comunidad, si el circuito está publicado.',
+        save: 'Guardar',
+        cancel: 'Cancelar'
+      },
+      share: {
+        heading: 'Compartir',
+        intro:
+          'Cualquiera con el enlace de abajo puede abrir «{{name}}» en el editor, esté publicado o no.',
+        linkLabel: 'Enlace para compartir',
+        linkHint:
+          'El enlace abre una copia de solo lectura. Nadie puede cambiar tu circuito a través de él.',
+        copy: 'Copiar',
+        copied: 'Enlace copiado.',
+        copyFailed:
+          'No se pudo copiar el enlace. Selecciónalo y cópialo a mano.',
+        publicLabel: 'Publicar en la comunidad',
+        publicHintProject:
+          'Un proyecto publicado aparece en las listas de la comunidad y se puede marcar y copiar.',
+        publicHintComponent:
+          'Un componente publicado aparece en las listas de la comunidad y cualquiera puede colocarlo.',
+        viewPublicPage: 'Ver la página de la comunidad',
+        regenerateLabel: 'Revocar el enlace',
+        regenerateHint:
+          'Se emite un enlace nuevo y el anterior deja de funcionar, incluida la página de la comunidad, que vive en esa dirección.',
+        regenerate: 'Emitir un enlace nuevo',
+        close: 'Cerrar'
+      },
+      delete: {
+        heading: '¿Eliminar para siempre?',
+        messageProject:
+          '«{{name}}» y su circuito se eliminan. Esto no se puede deshacer.',
+        messageComponent:
+          '«{{name}}» se elimina. Los circuitos que ya lo usan siguen funcionando con la copia guardada dentro.',
+        confirm: 'Eliminar',
+        cancel: 'Cancelar',
+        done: '«{{name}}» se eliminó.',
+        failed: 'No se pudo eliminar «{{name}}».'
+      },
+      account: {
+        title: 'Cuenta',
+        lede: 'Tu nombre e imagen, la dirección con la que inicias sesión, y cómo inicias sesión.',
+        memberSince: 'Miembro desde el {{date}}',
+        currentPassword: 'Contraseña actual',
+        passwordIncorrect: 'Esa contraseña no es correcta.',
+        profile: {
+          heading: 'Perfil',
+          description:
+            'El nombre y la imagen que se muestran junto a todo lo que publicas.',
+          changePicture: 'Cambiar imagen',
+          removePicture: 'Quitar',
+          pictureHint:
+            'PNG, JPEG, WebP o GIF. Se recorta en cuadrado y se vuelve a codificar.',
+          save: 'Guardar',
+          saved: 'Tu perfil se guardó.',
+          avatarRejected:
+            'No se pudo usar esa imagen. Prueba con un PNG, JPEG o WebP más pequeño.'
+        },
+        email: {
+          heading: 'Dirección de correo',
+          description:
+            'La dirección con la que inicias sesión, y adonde se envían las confirmaciones.',
+          current: 'Actualmente:',
+          unverified: 'sin confirmar',
+          newLabel: 'Nueva dirección de correo',
+          passwordHint: 'Tu contraseña confirma que eres tú quien lo pide.',
+          submit: 'Enviar confirmación',
+          pending:
+            'Un enlace de confirmación va camino a {{email}}. Tu dirección cambia en cuanto lo abras.',
+          taken: 'Esa dirección de correo ya tiene una cuenta.',
+          unchanged: 'Esa ya es tu dirección.',
+          mailFailed:
+            'No se pudo enviar el correo de confirmación. No ha cambiado nada; inténtalo de nuevo.'
+        },
+        password: {
+          heading: 'Contraseña',
+          description: 'Cambiarla cierra tu sesión en todos los demás sitios.',
+          setHeading: 'Establecer una contraseña',
+          setDescription:
+            'Te registraste con Google y todavía no tienes contraseña. Establecer una te da una segunda forma de entrar.',
+          newLabel: 'Nueva contraseña',
+          submit: 'Cambiar contraseña',
+          setSubmit: 'Establecer contraseña',
+          saved: 'Tu contraseña se cambió.',
+          sessionsNotice: 'Tus otras sesiones se cierran. Esta se mantiene.'
+        },
+        google: {
+          heading: 'Google',
+          description:
+            'Iniciar sesión con tu cuenta de Google, además de con la contraseña.',
+          linked: 'Tu cuenta de Google está vinculada.',
+          link: 'Vincular cuenta de Google',
+          unlink: 'Desvincular',
+          unlinkConfirm:
+            'Iniciar sesión con Google dejará de funcionar. Puedes volver a vincularla cuando quieras.',
+          needsPassword:
+            'Establece antes una contraseña: Google es ahora mismo la única forma de entrar en esta cuenta.'
+        },
+        delete: {
+          heading: 'Eliminar cuenta',
+          description:
+            'Tu cuenta y todos los proyectos, componentes y favoritos que contiene se eliminan. Esto no se puede deshacer.',
+          submit: 'Eliminar mi cuenta',
+          confirm:
+            'Todo lo que has hecho en Logigator se elimina, para siempre.',
+          done: 'Tu cuenta se eliminó.'
+        }
       }
     },
     docs: {

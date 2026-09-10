@@ -30,17 +30,10 @@ import { zodValidator } from '../../../forms/zod-validator';
 import { SiteLinks } from '../../../layout/site-links';
 import { TranslateDirective } from '../../../translation/translate.directive';
 import { TranslationKey } from '../../../translation/translation-key.model';
+import { googleErrorKey } from '../../../user/google-auth-errors';
 import { SessionService } from '../../../user/session.service';
 import { AuthShell } from '../auth-shell';
 import { GoogleSignIn } from '../google-sign-in';
-
-/** What the API's Google round trip reports back on the return URL. */
-const GOOGLE_ERRORS: Record<string, TranslationKey> = {
-  google_failed: 'auth.googleErrors.failed',
-  google_state_invalid: 'auth.googleErrors.stateInvalid',
-  google_email_taken: 'auth.googleErrors.emailTaken',
-  google_already_linked: 'auth.googleErrors.alreadyLinked'
-};
 
 /**
  * Signing in with an address and a password, or through Google.
@@ -109,8 +102,7 @@ export class LoginPage {
 
   /** A round trip through Google that came back with a reason instead. */
   protected readonly googleError = computed<TranslationKey | null>(() => {
-    const failure = this.query()?.get('error');
-    return failure ? (GOOGLE_ERRORS[failure] ?? 'forms.errors.unknown') : null;
+    return googleErrorKey(this.query()?.get('error') ?? null);
   });
 
   protected async submit(): Promise<void> {

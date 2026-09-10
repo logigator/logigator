@@ -64,6 +64,9 @@ const en = {
       passwordTooLong: 'Use at most 200 characters.',
       passwordComplexity: 'Use at least one letter and one digit.',
       passwordMismatch: 'The two passwords do not match.',
+      nameRequired: 'Enter a name.',
+      nameTooLong: 'Use at most 20 characters.',
+      descriptionTooLong: 'Use at most 2048 characters.',
       rateLimited: 'Too many attempts. Please wait a moment and try again.',
       serviceUnavailable:
         'The service is temporarily unavailable. Please try again in a moment.',
@@ -293,6 +296,159 @@ const en = {
         emptyBody: 'There is nothing to show in this category.',
         errorHeading: 'The profile could not be loaded',
         listErrorHeading: 'The list could not be loaded'
+      }
+    },
+    my: {
+      nav: {
+        label: 'My work',
+        projects: 'Projects',
+        components: 'Components'
+      },
+      projects: {
+        title: 'My Projects',
+        lede: 'Every circuit you have saved to the cloud. Open one to keep building, or publish it to the community.',
+        create: 'New project',
+        /** Read after the figure, so it says “12 projects”. */
+        count: '{{count}} projects',
+        emptyHeading: 'No projects yet',
+        emptyBody:
+          'Circuits you save to the cloud from the editor show up here.'
+      },
+      components: {
+        title: 'My Components',
+        lede: 'The reusable building blocks in your library. Place one inside any circuit you build.',
+        /** Read after the figure, so it says “4 components”. */
+        count: '{{count}} components',
+        emptyHeading: 'No components yet',
+        emptyBody:
+          'A component is made in the editor, out of a circuit you have built.'
+      },
+      list: {
+        searchLabel: 'Search by name',
+        searchPlaceholder: 'Search..',
+        clearSearch: 'Clear the search',
+        noMatchHeading: 'Nothing found',
+        noMatchBody: 'Nothing of yours is called “{{search}}”.',
+        errorHeading: 'The list could not be loaded',
+        openInEditor: 'Open “{{name}}” in the editor',
+        actionsFor: 'Actions for “{{name}}”',
+        public: 'Public',
+        private: 'Private',
+        edit: 'Name & description',
+        share: 'Share…',
+        delete: 'Delete'
+      },
+      edit: {
+        heading: 'Name & description',
+        nameLabel: 'Name',
+        descriptionLabel: 'Description',
+        descriptionHint:
+          'Shown on the community page, if this circuit is published.',
+        save: 'Save',
+        cancel: 'Cancel'
+      },
+      share: {
+        heading: 'Share',
+        intro:
+          'Anyone with the link below can open “{{name}}” in the editor, whether or not it is published.',
+        linkLabel: 'Share link',
+        linkHint:
+          'The link opens a read-only copy. Nobody can change your circuit through it.',
+        copy: 'Copy',
+        copied: 'Link copied.',
+        copyFailed:
+          'The link could not be copied. Select it and copy it by hand.',
+        publicLabel: 'Publish to the community',
+        publicHintProject:
+          'A published project appears in the community listings and can be starred and copied.',
+        publicHintComponent:
+          'A published component appears in the community listings and can be placed by anyone.',
+        viewPublicPage: 'View the community page',
+        regenerateLabel: 'Revoke the link',
+        regenerateHint:
+          'A new link is issued and the old one stops working — including the community page, which lives at that address.',
+        regenerate: 'Issue a new link',
+        close: 'Close'
+      },
+      delete: {
+        heading: 'Delete for good?',
+        messageProject:
+          '“{{name}}” and its circuit are deleted. This cannot be undone.',
+        messageComponent:
+          '“{{name}}” is deleted. Circuits that already use it keep working from the copy saved inside them.',
+        confirm: 'Delete',
+        cancel: 'Cancel',
+        done: '“{{name}}” was deleted.',
+        failed: '“{{name}}” could not be deleted.'
+      },
+      account: {
+        title: 'Account',
+        lede: 'Your name and picture, the address you sign in with, and how you sign in.',
+        memberSince: 'Member since {{date}}',
+        currentPassword: 'Current password',
+        passwordIncorrect: 'That password is not correct.',
+        profile: {
+          heading: 'Profile',
+          description:
+            'The name and picture shown beside everything you publish.',
+          changePicture: 'Change picture',
+          removePicture: 'Remove',
+          pictureHint:
+            'PNG, JPEG, WebP or GIF. It is cropped square and re-encoded.',
+          save: 'Save',
+          saved: 'Your profile was saved.',
+          avatarRejected:
+            'That image could not be used. Try a smaller PNG, JPEG or WebP.'
+        },
+        email: {
+          heading: 'Email address',
+          description:
+            'The address you sign in with, and where confirmations are sent.',
+          current: 'Currently:',
+          unverified: 'not confirmed',
+          newLabel: 'New email address',
+          passwordHint: 'Your password confirms it is you asking.',
+          submit: 'Send confirmation',
+          pending:
+            'A confirmation link is on its way to {{email}}. Your address changes once you open it.',
+          taken: 'That email address already has an account.',
+          unchanged: 'That is already your address.',
+          mailFailed:
+            'The confirmation email could not be sent. Nothing has changed — please try again.'
+        },
+        password: {
+          heading: 'Password',
+          description: 'Signing out everywhere else is part of changing it.',
+          setHeading: 'Set a password',
+          setDescription:
+            'You signed up with Google and have no password yet. Setting one gives you a second way in.',
+          newLabel: 'New password',
+          submit: 'Change password',
+          setSubmit: 'Set password',
+          saved: 'Your password was changed.',
+          sessionsNotice: 'Your other sessions are signed out. This one stays.'
+        },
+        google: {
+          heading: 'Google',
+          description:
+            'Signing in with your Google account, as well as with your password.',
+          linked: 'Your Google account is linked.',
+          link: 'Link Google account',
+          unlink: 'Unlink',
+          unlinkConfirm:
+            'Signing in with Google stops working. You can link it again at any time.',
+          needsPassword:
+            'Set a password first — Google is currently the only way into this account.'
+        },
+        delete: {
+          heading: 'Delete account',
+          description:
+            'Your account and every project, component and star it owns are deleted. This cannot be undone.',
+          submit: 'Delete my account',
+          confirm:
+            'Everything you have made on Logigator is deleted, for good.',
+          done: 'Your account was deleted.'
+        }
       }
     },
     docs: {

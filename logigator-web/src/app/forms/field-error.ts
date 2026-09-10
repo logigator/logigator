@@ -15,7 +15,12 @@ import { TranslationKey } from '../translation/translation-key.model';
  * must not silently lose its messages.
  */
 export type FormFieldKind =
-  'email' | 'username' | 'password' | 'passwordRepeat';
+  | 'email'
+  | 'username'
+  | 'password'
+  | 'passwordRepeat'
+  | 'documentName'
+  | 'documentDescription';
 
 /** Error key a group carrying {@link passwordsMatch} sets when they differ. */
 const PASSWORD_MISMATCH = 'passwordMismatch';
@@ -130,6 +135,12 @@ function zodMessage(kind: FormFieldKind, codes: string[]): TranslationKey {
       if (tooSmall) return 'forms.errors.usernameTooShort';
       if (tooBig) return 'forms.errors.usernameTooLong';
       return 'forms.errors.usernamePattern';
+    // A trimmed empty name fails the schema's minimum rather than `required`,
+    // so the message for it lives here rather than beside the other one.
+    case 'documentName':
+      return tooBig ? 'forms.errors.nameTooLong' : 'forms.errors.nameRequired';
+    case 'documentDescription':
+      return 'forms.errors.descriptionTooLong';
     default:
       if (tooSmall) return 'forms.errors.passwordTooShort';
       if (tooBig) return 'forms.errors.passwordTooLong';

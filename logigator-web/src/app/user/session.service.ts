@@ -56,6 +56,24 @@ export class SessionService {
     this._user.set(user);
   }
 
+  /**
+   * Records the account after a change the caller made to it — a renamed
+   * profile, a new avatar, an unlinked provider. Every one of those answers
+   * with the account as it now stands, so the bar updates without a re-read.
+   */
+  public updated(user: UserResponse): void {
+    this._user.set(user);
+  }
+
+  /**
+   * Forgets the account without asking the API to end anything. What deleting
+   * an account leaves behind: the session went with the account, so a `logout`
+   * would spend a request on a session that no longer exists.
+   */
+  public signedOut(): void {
+    this._user.set(null);
+  }
+
   /** Ends the server session. The response clears the hint cookie. */
   public async logout(): Promise<void> {
     await firstValueFrom(this.userApi.logout());

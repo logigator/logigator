@@ -114,6 +114,15 @@ export class ApiBaseService {
     return this.discard(this.http.delete<unknown>(this.url(path)));
   }
 
+  /**
+   * `DELETE` carrying a body and answering `204`. Deleting an account takes the
+   * password that proves the intent, and there is no other verb for it: the
+   * resource being removed is the caller's own account.
+   */
+  public deleteWithBody(path: string, body: unknown): Observable<void> {
+    return this.discard(this.http.delete<unknown>(this.url(path), { body }));
+  }
+
   private validate<T>(
     path: string,
     schema: z.ZodType<T>,

@@ -61,6 +61,9 @@ const fr: TranslationSchema = {
       passwordTooLong: 'Utilise au plus 200 caractères.',
       passwordComplexity: 'Utilise au moins une lettre et un chiffre.',
       passwordMismatch: 'Les deux mots de passe ne correspondent pas.',
+      nameRequired: 'Saisis un nom.',
+      nameTooLong: 'Utilise 20 caractères au maximum.',
+      descriptionTooLong: 'Utilise 2048 caractères au maximum.',
       rateLimited: 'Trop de tentatives. Patiente un instant puis réessaie.',
       serviceUnavailable:
         'Le service est momentanément indisponible. Réessaie dans un instant.',
@@ -286,6 +289,159 @@ const fr: TranslationSchema = {
         emptyBody: 'Il n’y a rien à afficher dans cette catégorie.',
         errorHeading: 'Le profil n’a pas pu être chargé',
         listErrorHeading: 'La liste n’a pas pu être chargée'
+      }
+    },
+    my: {
+      nav: {
+        label: 'Mon travail',
+        projects: 'Projets',
+        components: 'Composants'
+      },
+      projects: {
+        title: 'Mes projets',
+        lede: 'Tous les circuits que tu as enregistrés dans le cloud. Ouvre-en un pour continuer, ou publie-le auprès de la communauté.',
+        create: 'Nouveau projet',
+        count: '{{count}} projets',
+        emptyHeading: 'Aucun projet pour l’instant',
+        emptyBody:
+          'Les circuits que tu enregistres dans le cloud depuis l’éditeur apparaissent ici.'
+      },
+      components: {
+        title: 'Mes composants',
+        lede: 'Les blocs réutilisables de ta bibliothèque. Place-les dans n’importe quel circuit que tu construis.',
+        count: '{{count}} composants',
+        emptyHeading: 'Aucun composant pour l’instant',
+        emptyBody:
+          'Un composant se crée dans l’éditeur, à partir d’un circuit que tu as construit.'
+      },
+      list: {
+        searchLabel: 'Rechercher par nom',
+        searchPlaceholder: 'Rechercher..',
+        clearSearch: 'Effacer la recherche',
+        noMatchHeading: 'Aucun résultat',
+        noMatchBody: 'Rien chez toi ne s’appelle « {{search}} ».',
+        errorHeading: 'La liste n’a pas pu être chargée',
+        openInEditor: 'Ouvrir « {{name}} » dans l’éditeur',
+        actionsFor: 'Actions pour « {{name}} »',
+        public: 'Public',
+        private: 'Privé',
+        edit: 'Nom et description',
+        share: 'Partager…',
+        delete: 'Supprimer'
+      },
+      edit: {
+        heading: 'Nom et description',
+        nameLabel: 'Nom',
+        descriptionLabel: 'Description',
+        descriptionHint:
+          'Affichée sur la page communautaire, si ce circuit est publié.',
+        save: 'Enregistrer',
+        cancel: 'Annuler'
+      },
+      share: {
+        heading: 'Partager',
+        intro:
+          'Toute personne disposant du lien ci-dessous peut ouvrir « {{name}} » dans l’éditeur, qu’il soit publié ou non.',
+        linkLabel: 'Lien de partage',
+        linkHint:
+          'Le lien ouvre une copie en lecture seule. Personne ne peut modifier ton circuit par ce biais.',
+        copy: 'Copier',
+        copied: 'Lien copié.',
+        copyFailed:
+          'Le lien n’a pas pu être copié. Sélectionne-le et copie-le à la main.',
+        publicLabel: 'Publier auprès de la communauté',
+        publicHintProject:
+          'Un projet publié apparaît dans les listes communautaires et peut être mis en favori et copié.',
+        publicHintComponent:
+          'Un composant publié apparaît dans les listes communautaires et peut être placé par tout le monde.',
+        viewPublicPage: 'Voir la page communautaire',
+        regenerateLabel: 'Révoquer le lien',
+        regenerateHint:
+          'Un nouveau lien est émis et l’ancien cesse de fonctionner — y compris la page communautaire, qui vit à cette adresse.',
+        regenerate: 'Émettre un nouveau lien',
+        close: 'Fermer'
+      },
+      delete: {
+        heading: 'Supprimer définitivement ?',
+        messageProject:
+          '« {{name}} » et son circuit seront supprimés. C’est irréversible.',
+        messageComponent:
+          '« {{name}} » sera supprimé. Les circuits qui l’utilisent déjà continuent avec la copie enregistrée à l’intérieur.',
+        confirm: 'Supprimer',
+        cancel: 'Annuler',
+        done: '« {{name}} » a été supprimé.',
+        failed: '« {{name}} » n’a pas pu être supprimé.'
+      },
+      account: {
+        title: 'Compte',
+        lede: 'Ton nom et ton image, l’adresse avec laquelle tu te connectes, et comment tu te connectes.',
+        memberSince: 'Membre depuis le {{date}}',
+        currentPassword: 'Mot de passe actuel',
+        passwordIncorrect: 'Ce mot de passe n’est pas correct.',
+        profile: {
+          heading: 'Profil',
+          description:
+            'Le nom et l’image affichés à côté de tout ce que tu publies.',
+          changePicture: 'Changer l’image',
+          removePicture: 'Retirer',
+          pictureHint:
+            'PNG, JPEG, WebP ou GIF. Elle est recadrée en carré et ré-encodée.',
+          save: 'Enregistrer',
+          saved: 'Ton profil a été enregistré.',
+          avatarRejected:
+            'Cette image n’a pas pu être utilisée. Essaie un PNG, JPEG ou WebP plus petit.'
+        },
+        email: {
+          heading: 'Adresse e-mail',
+          description:
+            'L’adresse avec laquelle tu te connectes, et où les confirmations sont envoyées.',
+          current: 'Actuellement :',
+          unverified: 'non confirmée',
+          newLabel: 'Nouvelle adresse e-mail',
+          passwordHint:
+            'Ton mot de passe confirme que c’est bien toi qui demandes.',
+          submit: 'Envoyer la confirmation',
+          pending:
+            'Un lien de confirmation est en route vers {{email}}. Ton adresse change dès que tu l’ouvres.',
+          taken: 'Cette adresse e-mail a déjà un compte.',
+          unchanged: 'C’est déjà ton adresse.',
+          mailFailed:
+            'L’e-mail de confirmation n’a pas pu être envoyé. Rien n’a changé — réessaie.'
+        },
+        password: {
+          heading: 'Mot de passe',
+          description: 'Le changer te déconnecte partout ailleurs.',
+          setHeading: 'Définir un mot de passe',
+          setDescription:
+            'Tu t’es inscrit avec Google et n’as pas encore de mot de passe. En définir un te donne un second accès.',
+          newLabel: 'Nouveau mot de passe',
+          submit: 'Changer le mot de passe',
+          setSubmit: 'Définir le mot de passe',
+          saved: 'Ton mot de passe a été changé.',
+          sessionsNotice:
+            'Tes autres sessions sont déconnectées. Celle-ci reste.'
+        },
+        google: {
+          heading: 'Google',
+          description:
+            'Se connecter avec ton compte Google, en plus du mot de passe.',
+          linked: 'Ton compte Google est lié.',
+          link: 'Lier le compte Google',
+          unlink: 'Délier',
+          unlinkConfirm:
+            'La connexion avec Google cessera de fonctionner. Tu peux la relier à tout moment.',
+          needsPassword:
+            'Définis d’abord un mot de passe — Google est actuellement le seul accès à ce compte.'
+        },
+        delete: {
+          heading: 'Supprimer le compte',
+          description:
+            'Ton compte et tous les projets, composants et favoris qu’il contient seront supprimés. C’est irréversible.',
+          submit: 'Supprimer mon compte',
+          confirm:
+            'Tout ce que tu as créé sur Logigator sera supprimé, définitivement.',
+          done: 'Ton compte a été supprimé.'
+        }
       }
     },
     docs: {

@@ -16,6 +16,26 @@ export const authProvidersGuard: CanActivateFn = async () => {
 };
 
 /**
+ * Keeps an anonymous visitor out of the account's own pages, sending them to
+ * the sign-in form with the page they asked for as the return path.
+ *
+ * The session is resolved before the first render, so this answers a server
+ * render too — and a `UrlTree` from a guard becomes a real `302` there, the
+ * final URL differing from the one asked for. Nothing under `my/*` is
+ * indexable, so there is no soft-404 problem to weigh: the visitor lands on the
+ * form and is sent back afterwards.
+ */
+export const authGuard: CanActivateFn = (_route, state) => {
+  const session = inject(SessionService);
+  const router = inject(Router);
+  if (session.user()) return true;
+
+  return router.createUrlTree([inject(SiteLinks).login()], {
+    queryParams: { [RETURN_PATH_PARAM]: state.url }
+  });
+};
+
+/**
  * Keeps a signed-in visitor off the sign-in pages, sending them where they were
  * headed instead. The session is resolved before the first render, so this
  * answers a server render too — a stale link from a mail or another tab lands
@@ -27,5 +47,16 @@ export const guestGuard: CanActivateFn = (route) => {
 
   const router = inject(Router);
   const returnPath = safeReturnPath(route.queryParamMap.get(RETURN_PATH_PARAM));
-  return router.parseUrl(returnPath ?? inject(SiteLinks).home());
+  const destination = router.parseUrl(returnPath ?? inject(SiteLinks).home());
+
+  // A `?error=` is carried to the destination rather than dropped with the
+  // page. A signed-in visitor lands here only from a Google round trip that
+  // was a *link* — the API's callback answers every failure on the configured
+  // sign-in URL, whichever the flow was for — and the page that offered the
+  // link is the one that has to report it failed.
+  const failure = route.queryParamMap.get('error');
+  if (failure) {
+    destination.queryParams = { ...destination.queryParams, error: failure };
+  }
+  return destination;
 };

@@ -1,0 +1,134 @@
+<div class="page-wrap py-9 md:py-12" *webTranslate="let t">
+  <!-- The inner-page header the examples page set: h1 plus lede, no eyebrow,
+       and no rule of its own — the control bar's `border-t` is the rule. -->
+  <h1
+    class="text-[28px] leading-tight font-bold text-text-hover md:text-[32px]"
+  >
+    {{ isProjects() ? t('pages.my.projects.title') :
+    t('pages.my.components.title') }}
+  </h1>
+  <p
+    class="mt-3 max-w-[62ch] text-[17px] leading-relaxed text-pretty text-muted"
+  >
+    {{ isProjects() ? t('pages.my.projects.lede') :
+    t('pages.my.components.lede') }}
+  </p>
+
+  <div
+    class="mt-7 flex flex-col gap-4 border-t border-border pt-5 lg:flex-row lg:items-center lg:justify-between"
+  >
+    <nav class="flex gap-1" [attr.aria-label]="t('pages.my.nav.label')">
+      <a
+        [routerLink]="links.myProjects()"
+        [class]="tabClass(isProjects())"
+        [attr.aria-current]="isProjects() ? 'page' : null"
+      >
+        {{ t('pages.my.nav.projects') }}
+      </a>
+      <a
+        [routerLink]="links.myComponents()"
+        [class]="tabClass(!isProjects())"
+        [attr.aria-current]="!isProjects() ? 'page' : null"
+      >
+        {{ t('pages.my.nav.components') }}
+      </a>
+    </nav>
+
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+      <!-- `action` and `method` are what a submit does with no script. No page
+           field: a new search starts at the first page. -->
+      <form
+        role="search"
+        method="get"
+        class="sm:w-64"
+        [action]="path()"
+        (submit)="onSearch($event)"
+      >
+        <lg-icon-field class="block">
+          <lg-input-icon class="ph ph-magnifying-glass" />
+          <input
+            lgInputText
+            type="search"
+            class="w-full"
+            name="search"
+            [attr.aria-label]="t('pages.my.list.searchLabel')"
+            [placeholder]="t('pages.my.list.searchPlaceholder')"
+            [value]="query().search"
+          />
+        </lg-icon-field>
+      </form>
+
+      @if (isProjects()) {
+      <!-- Creating is the editor's: it has owned new documents and their saves
+           since Phase 4, so this is a link out rather than a form here. -->
+      <a lgButton icon="ph ph-plus" [href]="links.editor">
+        {{ t('pages.my.projects.create') }}
+      </a>
+      }
+    </div>
+  </div>
+
+  <div class="mt-7">
+    @if (failureKey(); as failure) {
+    <web-section-error
+      [heading]="t('pages.my.list.errorHeading')"
+      [message]="t(failure)"
+      [retryLabel]="t('errors.retry')"
+      [retrying]="retrying()"
+      (retry)="retry()"
+    />
+    } @else if (rows(); as documents) { @if (documents.length === 0) {
+    <!-- Whose emptiness it is decides the words: a filter that matched
+         nothing offers to clear itself, an empty shelf says how to fill it. -->
+    <div class="lattice rounded-md border border-border">
+      @if (searched()) {
+      <web-empty-state
+        [heading]="t('pages.my.list.noMatchHeading')"
+        [body]="t('pages.my.list.noMatchBody', { search: query().search })"
+      >
+        <a
+          lgButton
+          outlined
+          severity="secondary"
+          size="sm"
+          [routerLink]="path()"
+        >
+          {{ t('pages.my.list.clearSearch') }}
+        </a>
+      </web-empty-state>
+      } @else {
+      <web-empty-state
+        [heading]="isProjects() ? t('pages.my.projects.emptyHeading') : t('pages.my.components.emptyHeading')"
+        [body]="isProjects() ? t('pages.my.projects.emptyBody') : t('pages.my.components.emptyBody')"
+      >
+        @if (isProjects()) {
+        <a lgButton size="sm" [href]="links.editor">
+          {{ t('pages.my.projects.create') }}
+        </a>
+        }
+      </web-empty-state>
+      }
+    </div>
+    } @else {
+    <web-my-document-tiles
+      [rows]="documents"
+      [kind]="kind()"
+      (action)="onCommand($event)"
+    />
+
+    <p class="mt-6 font-mono text-xs text-muted">
+      {{ isProjects() ? t('pages.my.projects.count', { count: totalLabel() }) :
+      t('pages.my.components.count', { count: totalLabel() }) }}
+    </p>
+
+    @if (pageCount() > 1) {
+    <lg-paginator
+      class="mt-4"
+      [first]="query().page * pageSize"
+      [rows]="pageSize"
+      [totalRecords]="total() ?? 0"
+      (onPageChange)="toPage($event.page)"
+    />
+    } } }
+  </div>
+</div>
