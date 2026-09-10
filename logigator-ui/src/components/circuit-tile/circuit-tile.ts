@@ -81,8 +81,8 @@ export class LgCircuitTileAuthor {}
             [attr.srcset]="p.srcset"
             [attr.sizes]="p.srcset ? PREVIEW_SIZES : null"
             alt=""
-            loading="lazy"
             class="h-full w-full object-contain"
+            [attr.loading]="loading()"
           />
         </picture>
       }
@@ -121,6 +121,14 @@ export class LgCircuitTile {
   readonly preview = input<readonly LgImageSource[] | null>();
   readonly stars = input<number>();
   readonly starsLabel = input<string>();
+
+  /**
+   * `eager` for a tile the page draws above the fold. Lazy by default, a tile
+   * usually being one of a grid most of which is scrolled to — but a lazy image
+   * that turns out to be the largest thing painted is a measurable delay, and
+   * the browser cannot know which it is.
+   */
+  readonly loading = input<'lazy' | 'eager'>('lazy');
 
   protected readonly author = contentChild(LgCircuitTileAuthor);
 
