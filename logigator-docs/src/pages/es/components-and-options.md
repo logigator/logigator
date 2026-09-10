@@ -90,6 +90,8 @@ Seleccionar una **ROM** muestra un botón de **Editar contenido**. Abre un edito
 
 Cualquier puerto de entrada o salida se puede **negar** para que la señal que pasa por él se invierta, sin añadir una puerta NO aparte. Elige la herramienta **Cable** y toca directamente sobre un puerto: una pequeña **burbuja de negación** aparece en él, y el puerto queda ahora invertido. Tócalo de nuevo para quitar la burbuja.
 
+Un **Túnel** y los conectores de **Entrada** / **Salida** solo transmiten una señal, y los puertos de un componente personalizado colocado pertenecen al circuito que hay dentro: ninguno de ellos admite una burbuja.
+
 Mientras la herramienta Cable está activa, pasar el cursor cerca de un puerto previsualiza la burbuja que añadiría un toque, para que veas exactamente qué puerto estás a punto de negar.
 
 ![Una puerta O con una burbuja de negación en su salida.](./images/negated-gate.gif)

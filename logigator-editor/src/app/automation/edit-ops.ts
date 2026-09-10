@@ -29,6 +29,7 @@ import { TogglePortNegationAction } from '../actions/actions/toggle-port-negatio
 import { Component, PortSide } from '../components/component';
 import { ComponentProviderService } from '../components/component-provider.service';
 import { wouldCyclePlacement } from '../components/custom/placement-cycle';
+import { acceptsPortNegation } from '../components/port-negation';
 import { NO_EXCLUDED_IDS, Project } from '../project/project';
 import { Direction, WireDirection } from '@logigator/core';
 import { offsetRect } from '../utils/grid';
@@ -236,6 +237,16 @@ export function applyEditOps(
           }
           const optionErrors = validateOptionValues(config, op.options ?? {});
           if (optionErrors) throw new EditOpError(index, op.op, optionErrors);
+          if (
+            (op.negInputs?.length || op.negOutputs?.length) &&
+            !acceptsPortNegation(op.type)
+          ) {
+            throw new EditOpError(
+              index,
+              op.op,
+              `type ${op.type} takes no port negation`
+            );
+          }
           // The palette hides masters that would cycle; an agent can name any
           // type id.
           if (wouldCyclePlacement(project, config)) {
@@ -515,6 +526,15 @@ export function applyEditOps(
               index,
               op.op,
               `${op.side} port ${op.index} is out of range (${count} ports)`
+            );
+          }
+          // Clearing one is always allowed, so a bubble an older batch left
+          // behind can still be taken off.
+          if (op.negated && !acceptsPortNegation(component.config.type)) {
+            throw new EditOpError(
+              index,
+              op.op,
+              `type ${component.config.type} takes no port negation`
             );
           }
           const action = new TogglePortNegationAction(

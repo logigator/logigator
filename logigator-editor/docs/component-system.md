@@ -76,7 +76,9 @@ the orbited position per entry.
 
 Also worth knowing: `ignoresWireCollision` (only `TextComponent`; wires may pass
 through), the per-side negation sets (out-of-range entries ignored on read and
-pruned on serialize, so a resize stays undo-safe), and `Component.serialize` /
+pruned on serialize, so a resize stays undo-safe), `isInputHigh` (the display
+components' read of an input, which a bubble inverts — see
+[Simulation](simulation.md#units-and-links)), and `Component.serialize` /
 `deserialize`, which store type, grid-unit position, direction (omitted when
 East) and raw option values keyed by name.
 

@@ -150,6 +150,10 @@ export abstract class Component<
   private readonly _negatedInputs = new Set<number>();
   private readonly _negatedOutputs = new Set<number>();
 
+  // Only a live session inverts a negated input for the display components:
+  // at rest the board draws nothing powered.
+  private _simulating = false;
+
   private _selected = false;
 
   private _initialized = false;
@@ -482,6 +486,28 @@ export abstract class Component<
   /** Resets transient simulation visual state (button pressed, switch on). */
   public clearSimState(): void {
     // Overridden by user-input components.
+  }
+
+  /**
+   * Marks a live simulation session, entered and left for every component of
+   * the simulated project. Overridden by the display components, which re-read
+   * their inputs through {@link isInputHigh}.
+   */
+  public setSimulating(active: boolean): void {
+    this._simulating = active;
+  }
+
+  /**
+   * The value a display reads off input `index`: a negated input reads high
+   * while its net is low. Only a live session inverts, so a bubble placed
+   * while editing does not light the board on its own. The stub keeps showing
+   * the net's own state either way, as a gate's negated input does.
+   */
+  public isInputHigh(index: number): boolean {
+    const powered = this.isPortPowered(index);
+    return this._simulating && this.isPortNegated('in', index)
+      ? !powered
+      : powered;
   }
 
   /** Stub graphics in `connectionPoints` order (rebuilt on every redraw). */

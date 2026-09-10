@@ -17,6 +17,7 @@ import {
   ComponentConfigView,
   resolveLocalizableText
 } from '../components/component-config.model';
+import { acceptsPortNegation } from '../components/port-negation';
 import { TranslationKey } from '../translation/translation-key.model';
 import { CatalogEntry, OptionDescriptor } from './automation-api.model';
 
@@ -123,6 +124,7 @@ export function describeCatalogEntry(
     description: resolveLocalizableText(config.description, context.translate),
     ...(config.source ? { source: config.source } : {}),
     ports: config.defaultPorts,
+    negatable: acceptsPortNegation(config.type),
     options: Object.entries(config.meta?.options ?? {}).map(([key, schema]) =>
       describeOption(key, schema, context.translate)
     )

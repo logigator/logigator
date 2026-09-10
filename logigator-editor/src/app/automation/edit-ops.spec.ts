@@ -13,6 +13,7 @@ import {
   Direction,
   WireDirection
 } from '@logigator/core';
+import { tunnelComponentConfig } from '../components/component-types/tunnel/tunnel.config';
 import { serializeProjectBody } from '../persistence/snapshots';
 import { EditOp } from './automation-api.model';
 import { applyEditOps, EditOpsContext } from './edit-ops';
@@ -258,6 +259,20 @@ describe('applyEditOps', () => {
         'unknown option'
       );
     });
+
+    it('refuses a bubble the simulation would never see', () => {
+      const result = apply({
+        op: 'addComponent',
+        type: BuiltInComponentType.TUNNEL,
+        pos: [0, 0],
+        options: { label: 'bus' },
+        negInputs: [0]
+      });
+      expect(!result.ok && result.errors[0].message).toContain(
+        'takes no port negation'
+      );
+      expect(project.componentCount).toBe(0);
+    });
   });
 
   describe('mutations', () => {
@@ -347,6 +362,32 @@ describe('applyEditOps', () => {
         negated: true
       });
       expect(!result.ok && result.errors[0].message).toContain('out of range');
+    });
+
+    it('refuses to negate a tunnel, as the wire tool does, but clears one', () => {
+      const tunnel = tunnelComponentConfig.create({
+        label: tunnelComponentConfig.options.label.clone('bus')
+      });
+      project.addComponent(tunnel);
+      const negate = (negated: boolean) =>
+        apply({
+          op: 'setPortNegation',
+          id: tunnel.id,
+          side: 'in',
+          index: 0,
+          negated
+        });
+
+      const result = negate(true);
+      expect(!result.ok && result.errors[0].message).toContain(
+        'takes no port negation'
+      );
+      expect(tunnel.isPortNegated('in', 0)).toBe(false);
+
+      // What an older batch left behind still comes off.
+      tunnel.setPortNegated('in', 0, true);
+      expect(negate(false).ok).toBe(true);
+      expect(tunnel.isPortNegated('in', 0)).toBe(false);
     });
 
     it('removes components and wires in one entry', () => {

@@ -219,6 +219,13 @@ export class SimulationService {
     );
     this._applier = applier;
     this._project = project;
+    // A negated input reads high while its net is low, and the displays that
+    // read it show that only inside a session. The engine reports a link that
+    // never changes, so nothing else would tell them.
+    for (const component of project.components) {
+      component.setSimulating(true);
+    }
+    project.triggerTicker('single');
     this._userInputSub = project.userInput$.subscribe((component) =>
       this._onUserInput(component)
     );
@@ -281,6 +288,7 @@ export class SimulationService {
     if (this._project && !this._project.destroyed) {
       for (const component of this._project.components) {
         component.clearSimState();
+        component.setSimulating(false);
       }
       this._project.triggerTicker('off');
     }

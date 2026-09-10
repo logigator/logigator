@@ -19,10 +19,12 @@ import {
   makeWire
 } from '../../../testing/factories';
 import { Direction, WireDirection } from '@logigator/core';
-import { Component } from '../../components/component';
+import { Component, PortSide } from '../../components/component';
 import { ComponentConfig } from '../../components/component-config.model';
 import { andComponentConfig } from '../../components/component-types/and/and.config';
 import { notComponentConfig } from '../../components/component-types/not/not.config';
+import { tunnelComponentConfig } from '../../components/component-types/tunnel/tunnel.config';
+import { inputComponentConfig } from '../../components/component-types/input/input.config';
 import { CustomComponentService } from '../../custom-component/custom-component.service';
 import { WorkModeService } from '../../work-mode/work-mode.service';
 import { ThemingService } from '../../theming/theming.service';
@@ -673,6 +675,46 @@ describe('WorkModeRouter wire-tool taps (WIRE_TOOL mode)', () => {
       expect.anything(),
       false
     );
+  });
+
+  /** A tunnel and an Input plug, the transparent types no bubble is offered on. */
+  function addNonNegatable(): Component[] {
+    const tunnel = tunnelComponentConfig.create({
+      label: tunnelComponentConfig.options.label.clone('bus')
+    });
+    tunnel.position.set(2, 2);
+    const plug = inputComponentConfig.create({
+      label: inputComponentConfig.options.label.clone(''),
+      index: inputComponentConfig.options.index.clone(0)
+    });
+    plug.position.set(8, 2);
+    project.addComponent(tunnel);
+    project.addComponent(plug);
+    return [tunnel, plug];
+  }
+
+  it('leaves a tunnel or a plug alone: their ports carry no negatable signal', () => {
+    const show = vi.spyOn(project.floatingLayer, 'showNegationGhost');
+
+    for (const comp of addNonNegatable()) {
+      const cp = comp.connectionPoints[0];
+      const side: PortSide = comp.numInputs > 0 ? 'in' : 'out';
+      router.hover(makeInput(cp.x, cp.y));
+      tap(cp.x, cp.y);
+      expect(comp.isPortNegated(side, 0)).toBe(false);
+    }
+    expect(show).not.toHaveBeenCalled();
+  });
+
+  it('still removes a bubble an older board left on one', () => {
+    for (const comp of addNonNegatable()) {
+      const side: PortSide = comp.numInputs > 0 ? 'in' : 'out';
+      comp.setPortNegated(side, 0, true);
+      const cp = comp.connectionPoints[0];
+
+      tap(cp.x, cp.y);
+      expect(comp.isPortNegated(side, 0)).toBe(false);
+    }
   });
 
   it('does nothing when the tap is outside port tolerance on empty canvas', () => {

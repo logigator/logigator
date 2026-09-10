@@ -68,6 +68,9 @@ export class WatchSession {
     }
     this.components = components;
     this.wires = wires;
+    // A watch only ever exists inside a live session, so its copies read a
+    // negated input the way the board's own components do.
+    for (const component of components) component.setSimulating(true);
     this.project = buildProject(components, wires);
 
     // Sparse render targets over the full link-id space: only this circuit's

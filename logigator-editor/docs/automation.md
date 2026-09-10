@@ -73,7 +73,7 @@ const [readout] = await api.sim.readPorts([id]);
 
 `version()` reports the contract version plus editor version/commit.
 `describeCatalog()` lists every registered type — category, symbol, names, port
-counts, option descriptors — by ascending type id. Shape data is read off each
+counts, `negatable`, option descriptors — by ascending type id. Shape data is read off each
 config's `ComponentMeta` (`@logigator/core`), never probed from a throwaway
 instance, so the reported constraints are the ones a document is validated
 against; an adjustable type's port counts come from an option whose `number`
@@ -127,6 +127,13 @@ anything to do.
 - **Option values are rejected, not clamped**, since the option model would
   silently clamp a number and strip forbidden characters: success means the
   value was stored verbatim.
+- **A bubble is refused where the simulation would never see it** — the plugs,
+  the tunnel and every placed custom component, the set the catalog reports as
+  `negatable: false` and the wire tool offers no bubble on
+  (`components/port-negation.ts` is the one rule both read). It covers
+  `addComponent`'s `negInputs`/`negOutputs` as well as `setPortNegation`.
+  _Clearing_ one is always accepted, so a board an older batch negated can be
+  put right.
 
 ### Busy refusal
 

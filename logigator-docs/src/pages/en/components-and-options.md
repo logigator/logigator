@@ -90,6 +90,8 @@ Selecting a **ROM** shows an **Edit contents** button. It opens a hex editor whe
 
 Any input or output port can be **negated** so the signal passing through it is inverted, without adding a separate NOT gate. Pick the **Wire** tool and tap directly on a port: a small **negation bubble** appears on it, and the port is now inverted. Tap it again to remove the bubble.
 
+A **Tunnel** and the **Input** / **Output** plugs only pass a signal along, and a placed custom component's ports belong to the circuit inside it, so none of these take a bubble.
+
 While the Wire tool is active, hovering near a port previews the bubble a tap would add, so you can see exactly which port you are about to negate.
 
 ![An OR gate with a negation bubble on its output.](./images/negated-gate.gif)

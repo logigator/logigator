@@ -1,7 +1,7 @@
 import { Point } from 'pixi.js';
 import { PointerInput } from '../app/rendering/interaction/pointer-input';
 import { Wire } from '../app/wires/wire';
-import { Direction, WireDirection } from '@logigator/core';
+import { Direction, SegmentBase, WireDirection } from '@logigator/core';
 import { AndComponent } from '../app/components/component-types/and/and.component';
 import { andComponentConfig } from '../app/components/component-types/and/and.config';
 import { NotComponent } from '../app/components/component-types/not/not.component';
@@ -11,6 +11,9 @@ import { ButtonComponent } from '../app/components/component-types/button/button
 import { SwitchComponent } from '../app/components/component-types/switch/switch.component';
 import { RomComponent } from '../app/components/component-types/rom/rom.component';
 import { romComponentConfig } from '../app/components/component-types/rom/rom.config';
+import { LedComponent } from '../app/components/component-types/led/led.component';
+import { SegmentDisplayComponent } from '../app/components/component-types/segment-display/segment-display.component';
+import { segmentDisplayComponentConfig } from '../app/components/component-types/segment-display/segment-display.config';
 
 /** AndComponent with the given port count, rotation, and grid position. */
 export function makeAnd(
@@ -83,6 +86,28 @@ export function makeRom(
   });
   rom.position.set(px, py);
   return rom;
+}
+
+/** LedComponent at the given grid position. */
+export function makeLed(px = 0, py = 0): LedComponent {
+  const led = new LedComponent({});
+  led.position.set(px, py);
+  return led;
+}
+
+/** SegmentDisplayComponent with the given input count, base and position. */
+export function makeSegmentDisplay(
+  numInputs = 4,
+  base: SegmentBase = SegmentBase.DEC,
+  px = 0,
+  py = 0
+): SegmentDisplayComponent {
+  const display = new SegmentDisplayComponent({
+    numInputs: segmentDisplayComponentConfig.options.numInputs.clone(numInputs),
+    base: segmentDisplayComponentConfig.options.base.clone(base)
+  });
+  display.position.set(px, py);
+  return display;
 }
 
 /** PointerInput sample at the given grid position (global mirrors it). */

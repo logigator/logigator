@@ -22,7 +22,8 @@ const BASE_FONT_SIZE = 0.4 / PX;
 /**
  * A display-only readout, not a simulator unit: it renders the binary value on
  * its input nets (input 0 = least significant bit) as a zero-padded number in
- * the configured base.
+ * the configured base. A negation bubble on an input inverts that bit at
+ * render time: the engine knows nothing about this component.
  */
 export class SegmentDisplayComponent extends Component<SegmentDisplayOptions> {
   public readonly config = segmentDisplayComponentConfig;
@@ -38,6 +39,17 @@ export class SegmentDisplayComponent extends Component<SegmentDisplayOptions> {
 
   public override setPortPowered(portIndex: number, powered: boolean): void {
     super.setPortPowered(portIndex, powered);
+    this._syncReadout();
+  }
+
+  // Entering and leaving a session flips every negated bit with no link change
+  // behind it — a net that stays low reports nothing.
+  public override setSimulating(active: boolean): void {
+    super.setSimulating(active);
+    this._syncReadout();
+  }
+
+  private _syncReadout(): void {
     if (this._readout) {
       this._readout.text = this._formatValue();
     } else {
@@ -105,7 +117,7 @@ export class SegmentDisplayComponent extends Component<SegmentDisplayOptions> {
   private _formatValue(): string {
     let value = 0;
     for (let i = this.numInputs - 1; i >= 0; i--) {
-      value = (value << 1) | (this.isPortPowered(i) ? 1 : 0);
+      value = (value << 1) | (this.isInputHigh(i) ? 1 : 0);
     }
     const base = this.options.base.value;
     const radix =

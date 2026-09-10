@@ -53,7 +53,17 @@ submission order defines the engine's `triggerInput` indices and output layout.
 - **`TUNNEL`** — no unit; tunnels sharing a label are net-unioned before
   emission, once per pass, so a label never leaves its circuit.
 - **`TEXT`, `INPUT`/`OUTPUT` plugs, `LED`, `SEGMENT_DISPLAY`** — no unit, but
-  their nets are mapped, so stubs and displays show power.
+  their nets are mapped, so stubs and displays show power. A bubble on a
+  display's input never reaches the engine, so `LedComponent` and
+  `SegmentDisplayComponent` invert it themselves, reading their inputs through
+  `Component.isInputHigh`. That only inverts inside a session
+  (`Component.setSimulating`, entered and left for every component in
+  `SimulationService`): the engine reports a link that never changes, and at
+  rest the board shows nothing powered. The stub keeps showing the net's own
+  state, as a gate's negated input does. Plugs and tunnels take no bubble at
+  all: `acceptsPortNegation` (`components/port-negation.ts`) is the one rule
+  the wire tool and the automation API both refuse by, an existing bubble
+  staying removable through either.
 - Anything else — a blocking `unsupported` diagnostic.
 
 Four types carry an engine `ops` blob (`_opsFor`): `ROM` (contents bit-packed by

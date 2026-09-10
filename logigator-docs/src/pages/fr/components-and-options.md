@@ -90,6 +90,8 @@ Sélectionner une **ROM** affiche un bouton **Modifier le contenu**. Il ouvre un
 
 Tout port d'entrée ou de sortie peut être **inversé** afin que le signal qui le traverse soit inversé, sans ajouter de porte NON séparée. Choisissez l'outil **Fil** et touchez directement un port : une petite **bulle d'inversion** apparaît dessus, et le port est désormais inversé. Touchez-la à nouveau pour retirer la bulle.
 
+Un **Tunnel** et les fiches **Entrée** / **Sortie** ne font que transmettre un signal, et les ports d'un composant personnalisé placé appartiennent au circuit qu'il contient : aucun d'eux n'accepte de bulle.
+
 Tant que l'outil Fil est actif, survoler à proximité d'un port prévisualise la bulle qu'un appui ajouterait, de sorte que vous voyez exactement quel port vous êtes sur le point d'inverser.
 
 ![Une porte OU avec une bulle d’inversion sur sa sortie.](./images/negated-gate.gif)

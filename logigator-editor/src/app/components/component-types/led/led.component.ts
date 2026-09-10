@@ -7,7 +7,9 @@ import { ledComponentConfig, LedOptions } from './led.config';
 /**
  * A display-only indicator: not a simulator unit — it lights up from the
  * powered state of the net its input is attached to, applied through the
- * regular {@link Component.setPortPowered} path.
+ * regular {@link Component.setPortPowered} path. A negation bubble on its
+ * input inverts what it reads, at render time: the engine knows nothing about
+ * this component.
  */
 export class LedComponent extends Component<LedOptions> {
   public readonly config = ledComponentConfig;
@@ -25,9 +27,21 @@ export class LedComponent extends Component<LedOptions> {
   // tint: the per-frame blink path must never redraw, which would force a
   // render-group instruction rebuild.
   public override setPortPowered(portIndex: number, powered: boolean): void {
-    const wasLit = this.isPortPowered(0);
+    const wasLit = this.isInputHigh(0);
     super.setPortPowered(portIndex, powered);
-    if (this.isPortPowered(0) === wasLit) {
+    this._syncLit(wasLit);
+  }
+
+  // Entering and leaving a session flips a negated input with no link change
+  // behind it — a net that stays low reports nothing.
+  public override setSimulating(active: boolean): void {
+    const wasLit = this.isInputHigh(0);
+    super.setSimulating(active);
+    this._syncLit(wasLit);
+  }
+
+  private _syncLit(wasLit: boolean): void {
+    if (this.isInputHigh(0) === wasLit) {
       return;
     }
     if (this._disc) {
@@ -39,7 +53,7 @@ export class LedComponent extends Component<LedOptions> {
 
   private _discTint(): number {
     const theme = this.themingService.currentTheme();
-    return this.isPortPowered(0) ? theme.ledOn : theme.ledOff;
+    return this.isInputHigh(0) ? theme.ledOn : theme.ledOff;
   }
 
   protected draw(): void {

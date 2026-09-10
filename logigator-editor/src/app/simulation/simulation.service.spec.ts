@@ -1,7 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { configureTestBed } from '../../testing/configure-test-bed';
-import { makeAnd, makeButton, makeSwitch } from '../../testing/factories';
+import {
+  makeAnd,
+  makeButton,
+  makeLed,
+  makeSwitch
+} from '../../testing/factories';
 import {
   FakeSimulationWorker,
   ManualFrameScheduler
@@ -269,6 +274,28 @@ describe('SimulationService', () => {
     );
     await vi.waitFor(() => expect(switchComp.isOn).toBe(false));
     expect(service.state()).toBe('ready');
+  });
+
+  it('lights a negated display for the length of the session', async () => {
+    // The LED's net stays low throughout, so the engine reports nothing about
+    // it: only the session's own start and end tell it to invert.
+    const led = makeLed(4, 0);
+    led.setPortNegated('in', 0, true);
+    project.addComponent(led);
+    project.addComponent(makeAnd(2, undefined, 0, 0));
+    expect(led.isInputHigh(0)).toBe(false);
+
+    await enterAndBoot();
+    expect(led.isInputHigh(0)).toBe(true);
+
+    service.stop();
+    await vi.waitFor(() =>
+      expect(fakeWorker.postedOfKind('stop')).toHaveLength(1)
+    );
+    expect(led.isInputHigh(0)).toBe(true);
+
+    service.exit();
+    expect(led.isInputHigh(0)).toBe(false);
   });
 
   it('toggles a switch on canvas user input and forwards a Cont event', async () => {

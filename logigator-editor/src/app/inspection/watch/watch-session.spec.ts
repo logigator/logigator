@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { Point } from 'pixi.js';
 import { configureTestBed } from '../../../testing/configure-test-bed';
-import { makeSwitch } from '../../../testing/factories';
+import { makeLed, makeSwitch } from '../../../testing/factories';
 import {
   FakeSimulationWorker,
   ManualFrameScheduler
@@ -68,9 +68,14 @@ describe('WatchSession', () => {
     project.destroy({ children: true });
   });
 
-  /** Snapshot with a switch driving its single output plug. */
+  /**
+   * Snapshot with a switch driving its single output plug, plus a stray LED
+   * whose input carries a negation bubble.
+   */
   function registerSwitchBox(): number {
     const switchComp = makeSwitch(0, 0);
+    const led = makeLed(4, 4);
+    led.setPortNegated('in', 0, true);
     const plug = Component.deserialize(
       { pos: [8, 0], options: { label: '', index: 0 } },
       outputComponentConfig
@@ -85,16 +90,18 @@ describe('WatchSession', () => {
         type: s.type,
         pos: s.pos,
         ...(s.direction ? { direction: s.direction } : {}),
+        ...(s.negInputs ? { negInputs: s.negInputs } : {}),
         options: s.options
       };
     };
     const w = Wire.serialize(wire);
     const circuit = {
-      components: [serialize(switchComp), serialize(plug)],
+      components: [serialize(switchComp), serialize(plug), serialize(led)],
       wires: [{ pos: w.pos, direction: w.direction, length: w.length }]
     };
     switchComp.destroy({ children: true });
     plug.destroy({ children: true });
+    led.destroy({ children: true });
     wire.destroy();
     return registry.registerSnapshot({
       kind: 'snapshot',
@@ -176,6 +183,18 @@ describe('WatchSession', () => {
     expect(copiedSwitch.isOn).toBe(true);
     // Nothing changed since.
     expect(session.onFrame()).toBe(false);
+    session.destroy();
+  });
+
+  it('opens its copies inside the session, so a negated display inverts', async () => {
+    // The copies are built after enter(), so its setSimulating pass never
+    // walked them.
+    const { instanceId } = await enterWithInstance();
+    const session = openSession(instanceId);
+
+    const led = session.components[2];
+    expect(led.isPortNegated('in', 0)).toBe(true);
+    expect(led.isInputHigh(0)).toBe(true);
     session.destroy();
   });
 

@@ -63,6 +63,20 @@ describe('automation catalog', () => {
     expect(entry?.source).toBe('browser');
     // A custom type reports its definition's counts rather than a meta's.
     expect(entry?.ports).toEqual({ inputs: 2, outputs: 1 });
+    // Its bubbles belong to the definition, not to the placed instance.
+    expect(entry?.negatable).toBe(false);
+  });
+
+  it('reports which types accept a negation bubble', () => {
+    const entries = describeCatalog(provider.allComponents(), CONTEXT);
+    const negatable = (type: number) =>
+      entries.find((e) => e.type === type)?.negatable;
+
+    expect(negatable(BuiltInComponentType.AND)).toBe(true);
+    // A plug and a tunnel pass a signal on; the simulation never sees a bubble
+    // on either, so `setPortNegation` refuses one.
+    expect(negatable(BuiltInComponentType.INPUT)).toBe(false);
+    expect(negatable(BuiltInComponentType.TUNNEL)).toBe(false);
   });
 
   it("reports a type's default port counts", () => {

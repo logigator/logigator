@@ -90,6 +90,8 @@ Wählst du ein **ROM** aus, erscheint eine Schaltfläche **Inhalt bearbeiten**. 
 
 Jeder Eingangs- oder Ausgangsanschluss kann **negiert** werden, sodass das Signal, das ihn durchläuft, invertiert wird, ohne ein separates NICHT-Gatter hinzuzufügen. Wähle das Werkzeug **Leitung** und tippe direkt auf einen Anschluss: Eine kleine **Negationsblase** erscheint darauf, und der Anschluss ist nun invertiert. Tippe erneut darauf, um die Blase zu entfernen.
 
+Ein **Tunnel** und die Stecker **Eingang** / **Ausgang** geben ein Signal nur weiter, und die Anschlüsse einer platzierten benutzerdefinierten Komponente gehören zu deren innerer Schaltung — keiner von ihnen nimmt eine Blase an.
+
 Solange das Leitungswerkzeug aktiv ist, zeigt das Bewegen nahe eines Anschlusses eine Vorschau der Blase, die ein Tippen hinzufügen würde, sodass du genau siehst, welchen Anschluss du gerade negieren wirst.
 
 ![Ein ODER-Gatter mit einer Negationsblase an seinem Ausgang.](./images/negated-gate.gif)

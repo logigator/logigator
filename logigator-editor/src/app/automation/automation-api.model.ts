@@ -81,6 +81,13 @@ export interface CatalogEntry {
   source?: 'server' | 'browser';
   /** Port counts of a default instance; an option drives adjustable ones. */
   ports: { inputs: number; outputs: number };
+  /**
+   * Whether a `setPortNegation` op may put a bubble on this type's ports.
+   * False for the plugs and the tunnel, whose signal the simulation never
+   * sees, and for every custom component, whose bubbles are its definition's.
+   * Clearing one is accepted either way.
+   */
+  negatable: boolean;
   options: OptionDescriptor[];
 }
 
@@ -181,6 +188,10 @@ export interface SetOptionOp {
   value: unknown;
 }
 
+/**
+ * Adds or clears one port's negation bubble. Adding is refused where the
+ * catalog reports `negatable: false`; clearing is always accepted.
+ */
 export interface SetPortNegationOp {
   op: 'setPortNegation';
   id: number;
