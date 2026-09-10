@@ -32,6 +32,7 @@ import { Project } from '../../project/project';
 import { WorkMode } from '../../work-mode/work-mode.enum';
 import { PointerInput } from './pointer-input';
 import { WorkModeRouter } from './work-mode-router';
+import { DragSession } from '../drag-session';
 import { groupGridBounds } from '../sessions/rotate-elements';
 
 /** PointerInput whose grid and global both sit at (x, y). */
@@ -640,6 +641,49 @@ describe('WorkModeRouter wire-tool taps (WIRE_TOOL mode)', () => {
     expect(toggleSpy).not.toHaveBeenCalled();
   });
 
+  it('picks the port on the tapped side where an output meets an input', () => {
+    // Bodies 2..4 and 5..7: the output stub tip and the input stub tip meet.
+    const driver = makeAnd(2, undefined, 2, 2);
+    const load = makeAnd(2, undefined, 5, 2);
+    project.addComponent(driver);
+    project.addComponent(load);
+    const tip = driver.connectionPoints[2];
+    expect(load.connectionPoints[0]).toEqual(tip);
+
+    tap(tip.x - 0.2, tip.y);
+    expect(driver.isPortNegated('out', 0)).toBe(true);
+    expect(load.isPortNegated('in', 0)).toBe(false);
+
+    tap(tip.x + 0.2, tip.y);
+    expect(load.isPortNegated('in', 0)).toBe(true);
+    expect(driver.isPortNegated('out', 0)).toBe(true);
+  });
+
+  it('previews the port on the hovered side of a met stub pair', () => {
+    const driver = makeAnd(2, undefined, 2, 2);
+    const load = makeAnd(2, undefined, 5, 2);
+    project.addComponent(driver);
+    project.addComponent(load);
+    const tip = driver.connectionPoints[2];
+    const show = vi.spyOn(project.floatingLayer, 'showNegationGhost');
+
+    router.hover(makeInput(tip.x - 0.2, tip.y));
+    expect(show).toHaveBeenLastCalledWith(
+      driver.negationBubbleAnchor('out', 0),
+      'out',
+      expect.anything(),
+      false
+    );
+
+    router.hover(makeInput(tip.x + 0.2, tip.y));
+    expect(show).toHaveBeenLastCalledWith(
+      load.negationBubbleAnchor('in', 0),
+      'in',
+      expect.anything(),
+      false
+    );
+  });
+
   it('does nothing when the tap is outside port tolerance on empty canvas', () => {
     const and = makeAnd(2, undefined, 2, 2);
     project.addComponent(and);
@@ -1115,5 +1159,63 @@ describe('WorkModeRouter paste placement', () => {
 
     router.setProject(null);
     other.destroy({ children: true });
+  });
+});
+
+describe('WorkModeRouter session retirement', () => {
+  let project: Project;
+  let router: WorkModeRouter;
+
+  beforeEach(() => {
+    configureTestBed();
+    project = new Project();
+    router = new WorkModeRouter();
+    router.setProject(project);
+  });
+
+  afterEach(() => {
+    router.destroy();
+    project.destroy({ children: true });
+  });
+
+  /** A session whose terminal callback fails the way a commit can. */
+  function makeFailingSession(on: 'end' | 'cancel'): DragSession {
+    return {
+      onMove: vi.fn(),
+      onEnd: vi.fn(() => {
+        if (on === 'end') throw new Error('commit failed');
+      }),
+      onCancel: vi.fn(() => {
+        if (on === 'cancel') throw new Error('cancel failed');
+      }),
+      canEnd: () => true
+    };
+  }
+
+  it('retires a session whose commit throws', () => {
+    const session = makeFailingSession('end');
+    router.startSession(session);
+
+    expect(() => router.up()).toThrow('commit failed');
+
+    expect(router.hasActiveSession).toBe(false);
+    expect(project.actionManager.locked).toBe(false);
+
+    // Nothing left for the next release to re-enter.
+    router.up();
+    expect(session.onEnd).toHaveBeenCalledTimes(1);
+  });
+
+  it('retires a session whose cancel throws', () => {
+    const session = makeFailingSession('cancel');
+    router.startSession(session);
+
+    expect(() => router.abortActiveDrag()).toThrow('cancel failed');
+
+    expect(router.hasActiveSession).toBe(false);
+    expect(project.actionManager.locked).toBe(false);
+
+    router.abortActiveDrag();
+    expect(session.onCancel).toHaveBeenCalledTimes(1);
   });
 });

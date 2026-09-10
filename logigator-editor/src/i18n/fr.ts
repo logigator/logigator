@@ -320,6 +320,9 @@ const fr: TranslationSchema = {
           cloneShare: {
             label: 'Cloner vers mes projets'
           },
+          cloneShareComponent: {
+            label: 'Cloner vers mes composants'
+          },
           exportFile: {
             label: 'Exporter vers un fichier'
           },
@@ -685,6 +688,7 @@ const fr: TranslationSchema = {
     loadDetected:
       'Ce circuit comporte {{count}} problème(s) de fils, ce qui peut faire réagir les connexions de façon inattendue.',
     repairAction: 'Réparer les fils',
+    leftSimulation: 'La simulation a été arrêtée pour réparer les fils.',
     clean: 'Aucun problème de fils détecté.'
   },
   bugReport: {
@@ -726,11 +730,11 @@ const fr: TranslationSchema = {
       "Ce projet a changé ailleurs — rechargez-le avant de l'enregistrer à nouveau.",
     loadFailed: 'Impossible de charger le projet.',
     componentLoadFailed: 'Impossible de charger le composant.',
-    shareLoadFailed: 'Impossible de charger le projet partagé.',
+    shareLoadFailed: 'Impossible de charger le circuit partagé.',
     shareAuthRequired:
-      'Connectez-vous pour ajouter ce projet partagé à votre bibliothèque cloud.',
-    shareCloned: 'Projet partagé cloné dans vos projets cloud.',
-    shareCloneFailed: 'Impossible de cloner le projet partagé.',
+      'Connectez-vous pour ajouter ce circuit partagé à votre bibliothèque cloud.',
+    shareCloned: 'Circuit partagé cloné dans votre bibliothèque cloud.',
+    shareCloneFailed: 'Impossible de cloner le circuit partagé.',
     dumpElementCountChanged:
       "Le nombre d'éléments du vidage de projet a changé au chargement — les identifiants et l'historique des actions n'ont pas été restaurés.",
     skippedCustomOne:

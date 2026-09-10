@@ -1,26 +1,46 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { configureTestBed } from '../../testing/configure-test-bed';
-import { makeAnd, makeButton, makeSwitch } from '../../testing/factories';
+import {
+  makeAnd,
+  makeButton,
+  makeNot,
+  makeSwitch
+} from '../../testing/factories';
 import {
   FakeSimulationWorker,
   ManualFrameScheduler
 } from '../../testing/fake-simulation-worker';
+import { Point } from 'pixi.js';
 import { Component } from '../components/component';
 import { ComponentProviderService } from '../components/component-provider.service';
 import { CustomComponentRegistry } from '../components/custom/custom-component-registry.service';
 import { ToastService } from '../logging/toast.service';
 import { EditorSettingsService } from '../settings/editor-settings.service';
 import { Project } from '../project/project';
+import { Wire } from '../wires/wire';
+import { WireDirection } from '../wires/wire-direction.enum';
 import { ProjectService } from '../project/project.service';
 import { WorkMode } from '../work-mode/work-mode.enum';
 import { WorkModeService } from '../work-mode/work-mode.service';
 import { SimulationService } from './simulation.service';
+import { TOP_LEVEL_PATH } from './compiler/compiled-board.model';
 import { packSnapshot } from './worker/protocol';
 import {
   FRAME_SCHEDULER,
   SIMULATION_WORKER_FACTORY
 } from './worker/simulation-worker.service';
+
+/** Wire spanning the two given half-grid termination points (axis-aligned). */
+function wireBetween(a: Point, b: Point): Wire {
+  const horizontal = a.y === b.y;
+  const wire = new Wire(
+    horizontal ? WireDirection.HORIZONTAL : WireDirection.VERTICAL,
+    horizontal ? Math.abs(b.x - a.x) : Math.abs(b.y - a.y)
+  );
+  wire.position.set(Math.min(a.x, b.x), Math.min(a.y, b.y));
+  return wire;
+}
 
 describe('SimulationService', () => {
   let service: SimulationService;
@@ -412,6 +432,31 @@ describe('SimulationService', () => {
       )
     });
     expect(watch.applyDelta).toHaveBeenCalledOnce();
+  });
+
+  it('completes the teardown when the visual reset throws', async () => {
+    const and = makeAnd(2, undefined, 0, 0);
+    const not = makeNot();
+    not.position.set(10, 0);
+    project.addComponent(and);
+    project.addComponent(not);
+    const wire = wireBetween(and.connectionPoints[2], not.connectionPoints[0]);
+    project.addWire(wire);
+    await enterAndBoot();
+
+    // A powered wire freed under the live session: the mapping still addresses
+    // it, so resetting its link writes to a destroyed PixiJS object.
+    const targets = service.board!.mapping.get(TOP_LEVEL_PATH)!;
+    const linkId = targets.findIndex((target) => target.wires.includes(wire));
+    service.applier!.setLink(linkId, true);
+    wire.destroy();
+
+    expect(() => service.exit()).toThrow();
+
+    expect(workModeService.mode()).toBe(WorkMode.PAN);
+    expect(service.board).toBeNull();
+    expect(service.applier).toBeNull();
+    expect(service.state()).toBe('inactive');
   });
 
   it('drops watch appliers on exit', async () => {

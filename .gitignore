@@ -1,7 +1,10 @@
-# compiled output
-/dist
-/node_modules
+# compiled output (root dist/ plus the shared packages' own dist/)
+dist/
 /out-tsc
+*.tsbuildinfo
+
+# Dependencies, plus the per-member node_modules Yarn and Vitest write into
+node_modules/
 
 # Angular / Yarn (workspace root)
 /.angular/cache
@@ -12,6 +15,10 @@
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+# Local environment files (committed as .env.example)
+.env
+.env.local
 
 # Logs
 logs
@@ -36,6 +43,10 @@ lerna-debug.log*
 *.launch
 .settings/
 *.sublime-workspace
+
+# Local planning and scratch notes
+plans/
+/todo.md
 
 # IDE - VSCode
 .vscode/*

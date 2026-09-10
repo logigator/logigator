@@ -95,11 +95,14 @@ export class Grid extends Container {
     }
 
     if (i < this.children.length) {
-      const indexFromWhichToRemove = i;
-      for (; i < this.children.length; ++i) {
-        this.children[i].destroy();
+      // Detach the surplus in one splice, then destroy what came back:
+      // destroy() removes the child from its parent, so destroying inside a
+      // loop over `children` shrinks the array being iterated. The guard is
+      // load-bearing — removeChildren over an empty range of a non-empty
+      // container throws a RangeError.
+      for (const child of this.removeChildren(i)) {
+        child.destroy();
       }
-      this.removeChildren(indexFromWhichToRemove);
     }
   }
 

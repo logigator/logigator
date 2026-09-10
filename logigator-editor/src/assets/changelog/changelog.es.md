@@ -3,6 +3,25 @@
 Todos los cambios notables del editor de Logigator se registran aquí. La versión
 más reciente se muestra primero.
 
+## 2.1.2 — 2026-09-10
+
+### Correcciones
+
+- Girar un teléfono o una tableta ya no hace que el editor se bloquee.
+- Reparar cables mientras se ejecuta una simulación ya no bloquea el editor. La
+  simulación se detiene antes.
+- Un enlace para compartir un componente personalizado ahora lo abre igual que
+  tus propios componentes: con su nombre en la barra de título y listo para
+  clonarlo a tus componentes.
+- Volver atrás con el botón del navegador ya no deja bloqueados los menús, las
+  listas desplegables ni los avisos del tutorial.
+- Los enlaces de la ayuda y del registro de cambios del editor ahora llevan al
+  título correcto en todos los idiomas.
+- Donde se juntan las puntas de dos puertos, tocar con la herramienta de cable
+  ahora niega el puerto del lado en el que tocaste, y no el de enfrente.
+- El editor sigue siendo utilizable cuando un movimiento o un pegado no se puede
+  completar.
+
 ## 2.1.1 — 2026-08-31
 
 ### Correcciones

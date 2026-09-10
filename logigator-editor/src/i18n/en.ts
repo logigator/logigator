@@ -315,6 +315,9 @@ const en = {
           cloneShare: {
             label: 'Clone to my projects'
           },
+          cloneShareComponent: {
+            label: 'Clone to my components'
+          },
           exportFile: {
             label: 'Export to file'
           },
@@ -672,6 +675,7 @@ const en = {
     loadDetected:
       'This circuit has {{count}} wire issue(s), which can make connections behave unexpectedly.',
     repairAction: 'Repair wires',
+    leftSimulation: 'Simulation stopped so the wires could be repaired.',
     clean: 'No wire issues found.'
   },
   bugReport: {
@@ -711,11 +715,11 @@ const en = {
       'This project changed elsewhere — reload before saving again.',
     loadFailed: 'Could not load the project.',
     componentLoadFailed: 'Could not load the component.',
-    shareLoadFailed: 'Could not load the shared project.',
+    shareLoadFailed: 'Could not load the shared circuit.',
     shareAuthRequired:
-      'Sign in to add this shared project to your cloud library.',
-    shareCloned: 'Shared project cloned to your cloud projects.',
-    shareCloneFailed: 'Could not clone the shared project.',
+      'Sign in to add this shared circuit to your cloud library.',
+    shareCloned: 'Shared circuit cloned to your cloud library.',
+    shareCloneFailed: 'Could not clone the shared circuit.',
     dumpElementCountChanged:
       'Project Dump element count changed on load — ids and action history were not restored.',
     skippedCustomOne:

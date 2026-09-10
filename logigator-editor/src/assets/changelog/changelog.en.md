@@ -3,6 +3,23 @@
 All notable changes to the Logigator editor are recorded here. The most recent
 release is listed first.
 
+## 2.1.2 — 2026-09-10
+
+### Fixes
+
+- Rotating a phone or tablet no longer crashes the editor.
+- Repairing wires while a simulation is running no longer crashes the editor. The
+  simulation is stopped first.
+- A share link to a custom component now opens it the way your own components
+  open: named in the title bar, and ready to be cloned into your components.
+- Coming back with the browser's back button no longer leaves menus, dropdowns
+  and tutorial hints stuck.
+- Links inside the editor's help and changelog now jump to the right heading in
+  every language.
+- Where two port tips meet, tapping with the wire tool now inverts the port on
+  the side you tapped instead of the one facing it.
+- The editor stays usable when a move or a paste cannot be completed.
+
 ## 2.1.1 — 2026-08-31
 
 ### Fixes

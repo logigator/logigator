@@ -1,4 +1,4 @@
-import { inject, Injectable } from '@angular/core';
+import { inject, Injectable, Injector } from '@angular/core';
 import { Project } from './project';
 import {
   auditWireInvariants,
@@ -15,6 +15,9 @@ import { TranslationService } from '../translation/translation.service';
 import { ProjectMetadataStore } from '../persistence/project-metadata.store';
 import { AnalyticsService } from '../analytics/analytics.service';
 import { AnalyticsEvent } from '../analytics/analytics.mapping';
+import { SimulationService } from '../simulation/simulation.service';
+import { WorkMode } from '../work-mode/work-mode.enum';
+import { WorkModeService } from '../work-mode/work-mode.service';
 
 /** Where a repair run came from. A `load-offer` run is also the acceptance of
  * the offer raised by {@link WireRepairService.offerRepairOnLoad}. */
@@ -37,6 +40,8 @@ export class WireRepairService {
   private readonly translation = inject(TranslationService);
   private readonly metadataStore = inject(ProjectMetadataStore);
   private readonly analytics = inject(AnalyticsService);
+  private readonly workModeService = inject(WorkModeService);
+  private readonly injector = inject(Injector);
 
   /**
    * Audits a freshly loaded document and, when it is broken, offers the repair
@@ -79,7 +84,8 @@ export class WireRepairService {
   /**
    * The Edit-menu command: audits, repairs, registers the change as a single
    * undoable history entry and always toasts the outcome — including the
-   * nothing-to-repair case.
+   * nothing-to-repair case. A live simulation session is left first, once the
+   * plan is known to change something.
    */
   public repairManually(
     project: Project,
@@ -128,6 +134,23 @@ export class WireRepairService {
       return;
     }
 
+    // The plan destroys the wires it replaces, and a live session's link →
+    // render mapping addresses those instances: a session left up writes
+    // powered state onto freed objects on its way out, over a compiled board
+    // that no longer describes the circuit. The offer toast never
+    // auto-dismisses, so it is clickable from inside a session that started
+    // after it was raised.
+    const leftSimulation = this.workModeService.mode() === WorkMode.SIMULATION;
+    if (leftSimulation) {
+      // Resolved here rather than injected: SimulationService reaches back to
+      // this service through the shortcut and save chain.
+      this.injector.get(SimulationService).exit();
+      this.toast.info(
+        this.translation.translate('wireRepair.leftSimulation'),
+        'WireRepairService'
+      );
+    }
+
     // The actions serialize state in their constructors — build them before
     // materializing, then register against the already-applied state.
     const action = new ActionContainer();
@@ -144,6 +167,7 @@ export class WireRepairService {
       kinds: distinctKinds(violations),
       removedWires: plan.removeWires.length,
       addedWires: plan.addWires.length,
+      leftSimulation,
       // Non-zero means a repair bug: the audit still fails on its own output.
       survivingViolations: this.verify(project)
     });

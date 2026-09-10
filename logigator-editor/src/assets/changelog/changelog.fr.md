@@ -3,6 +3,25 @@
 Toutes les modifications notables de l'éditeur Logigator sont consignées ici. La
 version la plus récente est indiquée en premier.
 
+## 2.1.2 — 2026-09-10
+
+### Correctifs
+
+- La rotation d'un téléphone ou d'une tablette ne fait plus planter l'éditeur.
+- Réparer les fils pendant une simulation ne fait plus planter l'éditeur. La
+  simulation est arrêtée au préalable.
+- Un lien de partage vers un composant personnalisé l'ouvre désormais comme vos
+  propres composants : nommé dans la barre de titre et prêt à être cloné vers
+  vos composants.
+- Revenir en arrière avec le bouton du navigateur ne laisse plus les menus, les
+  listes déroulantes et les bulles du tutoriel bloqués.
+- Les liens dans l'aide et le journal des modifications de l'éditeur mènent
+  désormais au bon titre dans toutes les langues.
+- Là où deux extrémités de ports se rejoignent, un appui avec l'outil fil
+  inverse désormais le port du côté où vous avez appuyé, et non celui d'en face.
+- L'éditeur reste utilisable lorsqu'un déplacement ou un collage ne peut pas
+  aboutir.
+
 ## 2.1.1 — 2026-08-31
 
 ### Correctifs

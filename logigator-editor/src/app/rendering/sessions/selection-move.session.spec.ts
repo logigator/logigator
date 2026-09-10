@@ -308,6 +308,38 @@ describe('SelectionMoveSession collision', () => {
         cpFwd
       );
     });
+
+    it('leaves the dots alone when a committed session is cancelled', () => {
+      const w1 = makeWire(0, 0, WireDirection.HORIZONTAL, 5);
+      const w2 = makeWire(5, 0, WireDirection.HORIZONTAL, 5);
+      const w3 = makeWire(5, 0, WireDirection.VERTICAL, 5);
+      project.addWire(w1);
+      project.addWire(w2);
+      project.addWire(w3);
+
+      project.selectionManager.commit(
+        new Rectangle(0, 0, 11, 6),
+        WorkMode.SELECT
+      );
+
+      const committed = new SelectionMoveSession(
+        project,
+        dragLayer,
+        new Set(),
+        new Set([w1, w2, w3]),
+        new Point(0, 0)
+      );
+      committed.onMove(makeMoveInput(0, 10));
+      // The commit destroys the dots it carried, so a cancel that followed it
+      // would be restoring freed instances.
+      committed.onEnd();
+
+      committed.onCancel();
+
+      const cp = project.connectionPoints.getCpAt(new Point(5.5, 10.5));
+      expect(cp).toBeDefined();
+      expect(cp!.destroyed).toBe(false);
+    });
   });
 
   // Regression: SELECT_EXACT cut + move must not duplicate wires in the quad

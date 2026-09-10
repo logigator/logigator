@@ -92,4 +92,19 @@ describe('OnboardingOverlayService', () => {
     expect(text).toContain('Add two Switches');
     expect(text).not.toContain('Place an AND gate');
   });
+
+  it('ends the tutorial when cdk disposes the overlays on navigation', async () => {
+    service.show(target, VIEW, handlers);
+    await settled();
+    tick();
+    expect(container()?.textContent).toContain('Place an AND gate');
+
+    // `disposeOnNavigation` takes the dim and the bubble behind the service's
+    // back; the runner has to hear about it, or the tutorial stays active with
+    // nothing on screen.
+    window.dispatchEvent(new PopStateEvent('popstate'));
+    tick();
+    expect(handlers.skip).toHaveBeenCalledTimes(1);
+    expect(container()?.textContent ?? '').not.toContain('Place an AND gate');
+  });
 });

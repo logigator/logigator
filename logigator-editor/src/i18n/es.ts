@@ -320,6 +320,9 @@ const es: TranslationSchema = {
           cloneShare: {
             label: 'Clonar a mis proyectos'
           },
+          cloneShareComponent: {
+            label: 'Clonar a mis componentes'
+          },
           exportFile: {
             label: 'Exportar a archivo'
           },
@@ -682,6 +685,7 @@ const es: TranslationSchema = {
     loadDetected:
       'Este circuito tiene {{count}} problema(s) de cables, lo que puede hacer que las conexiones se comporten de forma inesperada.',
     repairAction: 'Reparar cables',
+    leftSimulation: 'La simulación se detuvo para reparar los cables.',
     clean: 'No se encontraron problemas de cables.'
   },
   bugReport: {
@@ -723,11 +727,11 @@ const es: TranslationSchema = {
       'Este proyecto cambió en otro sitio: recárgalo antes de volver a guardarlo.',
     loadFailed: 'No se pudo cargar el proyecto.',
     componentLoadFailed: 'No se pudo cargar el componente.',
-    shareLoadFailed: 'No se pudo cargar el proyecto compartido.',
+    shareLoadFailed: 'No se pudo cargar el circuito compartido.',
     shareAuthRequired:
-      'Inicia sesión para añadir este proyecto compartido a tu biblioteca en la nube.',
-    shareCloned: 'Proyecto compartido clonado a tus proyectos en la nube.',
-    shareCloneFailed: 'No se pudo clonar el proyecto compartido.',
+      'Inicia sesión para añadir este circuito compartido a tu biblioteca en la nube.',
+    shareCloned: 'Circuito compartido clonado a tu biblioteca en la nube.',
+    shareCloneFailed: 'No se pudo clonar el circuito compartido.',
     dumpElementCountChanged:
       'El número de elementos del volcado del proyecto cambió al cargar: los identificadores y el historial de acciones no se restauraron.',
     skippedCustomOne:

@@ -320,6 +320,9 @@ const de: TranslationSchema = {
           cloneShare: {
             label: 'In meine Projekte klonen'
           },
+          cloneShareComponent: {
+            label: 'In meine Komponenten klonen'
+          },
           exportFile: {
             label: 'Als Datei exportieren'
           },
@@ -682,6 +685,8 @@ const de: TranslationSchema = {
     loadDetected:
       'Diese Schaltung hat {{count}} Leitungsproblem(e), wodurch sich Verbindungen unerwartet verhalten können.',
     repairAction: 'Leitungen reparieren',
+    leftSimulation:
+      'Die Simulation wurde beendet, um die Leitungen zu reparieren.',
     clean: 'Keine Leitungsprobleme gefunden.'
   },
   bugReport: {
@@ -724,11 +729,11 @@ const de: TranslationSchema = {
       'Dieses Projekt wurde anderswo geändert — lade neu, bevor du erneut speicherst.',
     loadFailed: 'Das Projekt konnte nicht geladen werden.',
     componentLoadFailed: 'Die Komponente konnte nicht geladen werden.',
-    shareLoadFailed: 'Das geteilte Projekt konnte nicht geladen werden.',
+    shareLoadFailed: 'Die geteilte Schaltung konnte nicht geladen werden.',
     shareAuthRequired:
-      'Melde dich an, um dieses geteilte Projekt zu deiner Cloud-Bibliothek hinzuzufügen.',
-    shareCloned: 'Geteiltes Projekt in deine Cloud-Projekte geklont.',
-    shareCloneFailed: 'Das geteilte Projekt konnte nicht geklont werden.',
+      'Melde dich an, um diese geteilte Schaltung zu deiner Cloud-Bibliothek hinzuzufügen.',
+    shareCloned: 'Geteilte Schaltung in deine Cloud-Bibliothek geklont.',
+    shareCloneFailed: 'Die geteilte Schaltung konnte nicht geklont werden.',
     dumpElementCountChanged:
       'Die Elementanzahl des Projekt-Dumps hat sich beim Laden geändert — IDs und Aktionsverlauf wurden nicht wiederhergestellt.',
     skippedCustomOne:

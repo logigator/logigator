@@ -13,8 +13,12 @@ import {
   ViewContainerRef,
   viewChild
 } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { LgFadeIn } from '../../internal/fade-in';
-import { createConnectedOverlay } from '../../internal/overlay';
+import {
+  createConnectedOverlay,
+  externalTeardown
+} from '../../internal/overlay';
 import { LgRipple } from '../ripple/ripple';
 import { LgShortcut } from '../shortcut/shortcut';
 import { MENU_ITEM_CLASS, MenuItem } from './menu-item.model';
@@ -181,6 +185,7 @@ export class LgMenubar implements OnDestroy {
   private readonly viewContainerRef = inject(ViewContainerRef);
 
   private overlayRef: OverlayRef | null = null;
+  private detachment: Subscription | null = null;
   private armed = false;
   private dismissAttached = false;
   private readonly onDocPointerDown = (event: Event): void => {
@@ -341,6 +346,10 @@ export class LgMenubar implements OnDestroy {
     this.overlayRef.attach(
       new TemplatePortal(this.submenu(), this.viewContainerRef)
     );
+    this.detachment = externalTeardown(this.overlayRef, () => {
+      this.overlayRef = null;
+      this.dismiss();
+    });
     this.armed = true;
     this.addDismissListener();
   }
@@ -376,6 +385,8 @@ export class LgMenubar implements OnDestroy {
   }
 
   private disposeOverlay(): void {
+    this.detachment?.unsubscribe();
+    this.detachment = null;
     this.overlayRef?.dispose();
     this.overlayRef = null;
   }
