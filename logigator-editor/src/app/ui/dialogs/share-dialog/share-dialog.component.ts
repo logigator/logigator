@@ -24,7 +24,7 @@ import { TranslateDirective } from '../../../translation/translate.directive';
 /** The share-mutating subset both the project and component PATCH accept. */
 interface ShareLinkPatch {
   public?: boolean;
-  updateLink?: boolean;
+  regenerateLink?: boolean;
 }
 
 /** What every dialog kind supplies up front. */
@@ -116,7 +116,7 @@ export class ShareDialogComponent extends LgDialogContent<ShareDialogData> {
     if (this.regenerating()) return;
     this.regenerating.set(true);
     try {
-      const summary = await this._patch({ updateLink: true });
+      const summary = await this._patch({ regenerateLink: true });
       const newLink = summary.link ?? this.link();
       this.link.set(newLink);
       this._persist({ link: newLink });
