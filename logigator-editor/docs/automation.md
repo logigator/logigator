@@ -104,7 +104,7 @@ const [readout] = await api.sim.readPorts([id]);
 | `describeCatalog()` | every registered type: ports, category, option descriptors |
 
 An `OptionDescriptor` carries the constraints a write must respect, keyed by
-`kind`: `number` (`min`/`max`), `select` (`values`), `text` (`maxLength`,
+`kind`: `number` (`min`/`max`, integers only), `select` (`values`), `text` (`maxLength`,
 `forbiddenChars` as a regex source string), `textarea`, `memory` (a base64
 bit-packed blob), `unknown`. `hidden` marks options the inspector does not show
 (system-managed, e.g. a plug's index).

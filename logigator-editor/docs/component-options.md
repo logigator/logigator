@@ -131,7 +131,7 @@ Each renderer's template starts with `*appTranslate="let t"` and uses `t(option(
 
 ### `NumberComponentOption`
 
-Numeric value with `min` and `max` bounds. The value setter clamps automatically. Renders as `<p-inputNumber>` with `[showButtons]`, `[min]`, `[max]`, `size="small"`.
+Integer value with `min` and `max` bounds. The setter _and_ the constructor round and clamp — the constructor because every clone-based path (deserialization, the v0 decode, placement ghosts) goes through it and would otherwise bypass the setter. That matters downstream: the numeric options the compiler emits land in the engine's `u32` fields, and a fraction makes it reject the whole board. Renders as `<lg-input-number>` with `[showButtons]`, `[min]`, `[max]`, `size="sm"`.
 
 ### `SelectButtonComponentOption<T>`
 

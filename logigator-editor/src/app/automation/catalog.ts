@@ -108,6 +108,11 @@ export function validateOptionValue(
     if (typeof value !== 'number' || !Number.isFinite(value)) {
       return 'expected a finite number';
     }
+    // Numeric options are integer-valued and round on write, so a fraction
+    // would be stored as something other than what was sent.
+    if (!Number.isInteger(value)) {
+      return 'expected an integer';
+    }
     if (value < option.min || value > option.max) {
       return `out of range [${option.min}, ${option.max}]`;
     }
