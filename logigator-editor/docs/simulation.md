@@ -327,7 +327,11 @@ inactive ──enter()──► starting ──worker ready──► ready ⇄ r
 - **`exit()`** — ends the worker session, resets the applier, clears every
   component's sim visuals (`clearSimState`), stops the ticker, drops the
   compiled artifacts, and returns to `PAN`. Also bound to the `CANCEL`
-  shortcut.
+  shortcut. The visual reset walks the live objects the mapping captured at
+  compile time, so it runs inside a `try`/`finally`: one freed under the session
+  throws there, and dropping the artifacts and the mode regardless keeps that a
+  single failure instead of a mode stuck at `SIMULATION` with no worker behind
+  it, which every retry re-enters and fails on again.
 
 A session is additionally forced to exit when another project takes the main
 slot (File → Open/New, a share clone, a logout reset): `PersistenceService`
@@ -337,6 +341,11 @@ _before_ the swap so `exit()` still reaches the outgoing project's visuals and
 ticker. The notification inverts the dependency: `SimulationService` cannot be
 injected into `PersistenceService`, which it already reaches through
 `ShortcutService` → `SaveCoordinatorService`.
+
+A board-wide wire repair exits for the same reason — it destroys the `Wire`
+instances the mapping holds — and reaches `exit()` through the `Injector`, that
+same chain being what stops it from injecting the service (`wires.md` §
+Board-wide repair).
 
 Compiled artifacts (`_board`, `_applier`) live for exactly one session; editing
 being locked in between is what keeps the mapping's live object references valid.
