@@ -11,8 +11,8 @@ The repo root is a **shared Angular CLI workspace** + **Yarn 4 workspace** (core
   contracts; zero runtime dependencies
 - `logigator-contract/` — `@logigator/contract`, the API surface as zod schemas; zod only
 - `logigator-docs/` — `@logigator/docs`, the authored documentation: eleven pages of markdown in
-  four locales, their screenshots, the page tree and the search matcher as pure data; no
-  dependencies at all
+  four locales, their screenshots, the page tree and the search matcher as pure data, plus the
+  changelog and its parser; no dependencies at all
 - `logigator-api/` — NestJS on Fastify, API only
 
 **One shared-code rule:** the four libraries are never built. Every consumer compiles their
@@ -292,7 +292,10 @@ path behaves the same in development).
     per locale in `content/<page>/<lang>.md`. `pages/docs/` is the editor's own manual, published:
     the index at `/:lang/docs` and one generated route per page under it, the topic tree beside the
     prose as real links, the pages and their screenshots coming from `@logigator/docs`. The index
-    is also the search results page (`?q=`), the one surface wide enough for them. The 404 sets
+    is also the search results page (`?q=`), the one surface wide enough for them.
+    `pages/changelog/` is every release of the editor, the version and date beside the notes, over
+    the same `@logigator/docs` markdown the editor's "what's new" dialog shows; the page draws the
+    release headings itself, so each carries the `id` its feed entry links to. The 404 sets
     the response status through `RESPONSE_INIT`; a soft 404 would be indexable.
 
 **Non-obvious details:**
@@ -393,6 +396,20 @@ path behaves the same in development).
   the same destination rewrite the renderer does — `resolveMarkdownUrls`, which lives in
   `@logigator/ui/internal/markdown-urls` so the SSR host can apply it without pulling in Angular —
   but roots the URLs, markdown carrying no `<base href="/">`.
+- **The changelog's Atom feed is `/:lang/changelog.atom`**, one feed per language, also answered by
+  `server.ts` and named in the page's head beside the twin (`SeoService.setAlternate` is addressed
+  by media type, the language alternates being matched by `hreflang`). Entry content is the release
+  notes rendered by `marked` and **escaped as text** — `content type="html"`, never CDATA — and each
+  entry's id is the release's heading on the page. Its feed-level name comes from the document's own
+  `# …` rather than a locale key: it is generated outside the Angular app, and the markdown is
+  already in the language the feed is for. It is also the one response whose body depends on the
+  host it was asked for, which is what `request-origin.ts` is: the origin as `@angular/ssr` derives
+  it (`createWebRequestFromNodeRequest` with the proxy headers `NG_TRUST_PROXY_HEADERS` names),
+  refused for a host outside `NG_ALLOWED_HOSTS` so a `Host:` of someone's choosing cannot end up
+  inside the feed's links. It refuses rather than allows what an unset list does not name — the
+  build target sets no `allowedHosts`, so Angular's own list is empty until the variable fills it
+  and a deployment that forgot it already answers nothing — leaving loopback alone, for the
+  developer running the process directly.
 - **PostHog is `posthog-js` behind a dynamic import**, in `analytics/analytics.service.ts` — the
   editor's service, trimmed to what a content site emits. A consent event for the `analytics`
   category is what loads the package and initialises it, so a declining session never downloads it
@@ -479,7 +496,8 @@ They are never built and have no `dist/`, `main` or `exports`.
   Response object schemas are `.loose()` on purpose: a client holding an older contract copy must
   tolerate fields the API added rather than reject or strip them. Clients can import the types only
   (`import type`) and pay nothing at runtime.
-- `logigator-docs/src/` — `pages/<lang>/<id>.md` and `pages/<lang>/images/`, plus `docs-structure.ts`
+- `logigator-docs/src/` — `pages/<lang>/<id>.md`, `pages/<lang>/images/` and `changelog/<lang>.md`,
+  plus `docs-structure.ts`
   (the section/page tree as ids, and the `DocPageId` union both viewers' targets are checked
   against), `images.ts` (the screenshot import map, written by the capture tool), `parseDocsLink`
   and `docs-search.ts` — the search matcher, so both viewers rank identically. It takes the
@@ -491,6 +509,10 @@ They are never built and have no `dist/`, `main` or `exports`.
   `file` loader — which works because an app's ambient `*.png`/`*.gif` declaration is program-global
   and reaches library source. A page's title is a translation key in each app rather than the
   markdown's own `# …`: both viewers build their navigation before any body is loaded.
+  `changelog.ts` is the changelog's own half of that split: the editor's dialog renders the document
+  whole, so `parseChangelog` exists for the website, which draws one block per release and one feed
+  entry per release. A `## <version> — <date>` heading that does not parse **throws** rather than
+  being skipped — a mistyped date would otherwise drop a release out of one language silently.
 
 ### API (logigator-api)
 
