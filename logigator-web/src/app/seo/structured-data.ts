@@ -102,6 +102,66 @@ export interface VideoObjectNode extends JsonLdNode {
   inLanguage: LanguageId;
 }
 
+/**
+ * A member, as the author of a document or the subject of a profile page. Only
+ * what a public profile actually publishes: no address, no real name — there is
+ * nothing else to leave out, so nothing here can leak by accident.
+ */
+export interface PersonNode extends JsonLdNode {
+  '@type': 'Person';
+  '@id': string;
+  name: string;
+  url: string;
+  image?: string;
+}
+
+/**
+ * A published circuit. `CreativeWork` rather than a narrower type: schema.org
+ * has no logic-circuit type, and the specific ones that come close
+ * (`SoftwareSourceCode`, `Dataset`) each claim something untrue about what a
+ * document is.
+ *
+ * `interactionStatistic` is where the star tally goes — the vocabulary's own
+ * shape for "this many people did this to it", which a consumer can read
+ * without knowing what a star is on this site.
+ */
+export interface CreativeWorkNode extends JsonLdNode {
+  '@type': 'CreativeWork';
+  '@id': string;
+  name: string;
+  url: string;
+  description?: string;
+  author: PersonNode | JsonLdRef;
+  /** The stored render, absolutized: a crawler resolves against nothing. */
+  image?: string;
+  dateCreated: string;
+  dateModified: string;
+  inLanguage?: LanguageId;
+  license?: string;
+  isPartOf?: JsonLdRef;
+  isBasedOn?: { '@type': 'CreativeWork'; name: string; url: string };
+  interactionStatistic?: {
+    '@type': 'InteractionCounter';
+    interactionType: string;
+    userInteractionCount: number;
+  };
+}
+
+/**
+ * A member's own page. `mainEntity` is the person; the page and the person are
+ * two nodes because a crawler asking "who is this" and one asking "what is this
+ * URL" are different questions.
+ */
+export interface ProfilePageNode extends JsonLdNode {
+  '@type': 'ProfilePage';
+  '@id': string;
+  url: string;
+  name: string;
+  dateCreated?: string;
+  mainEntity: PersonNode;
+  isPartOf?: JsonLdRef;
+}
+
 /** Where the page sits, for the trail a result shows above its title. */
 export interface BreadcrumbListNode extends JsonLdNode {
   '@type': 'BreadcrumbList';

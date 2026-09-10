@@ -92,6 +92,19 @@ export class ApiBaseService {
     );
   }
 
+  /**
+   * `DELETE` with a body to validate. Removing a star answers the state it
+   * produced rather than `204`, so the caller needs the count without a
+   * second read.
+   */
+  public delete<T>(path: string, schema: z.ZodType<T>): Observable<T> {
+    return this.validate(
+      path,
+      schema,
+      this.http.delete<unknown>(this.url(path))
+    );
+  }
+
   /** For the routes that answer `204`: no body, so no schema. */
   public postEmpty(path: string, body?: unknown): Observable<void> {
     return this.discard(this.http.post<unknown>(this.url(path), body ?? {}));

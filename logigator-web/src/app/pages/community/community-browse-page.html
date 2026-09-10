@@ -1,0 +1,140 @@
+<div class="page-wrap py-9 md:py-12" *webTranslate="let t">
+  <!-- The inner-page header the examples page set: h1 plus lede, no eyebrow,
+       and no rule of its own — the control bar's `border-t` is the rule. -->
+  <h1
+    class="text-[28px] leading-tight font-bold text-text-hover md:text-[32px]"
+  >
+    {{ isProjects() ? t('pages.community.browse.projectsTitle') :
+    t('pages.community.browse.componentsTitle') }}
+  </h1>
+  <p
+    class="mt-3 max-w-[62ch] text-[17px] leading-relaxed text-pretty text-muted"
+  >
+    {{ isProjects() ? t('pages.community.browse.projectsLede') :
+    t('pages.community.browse.componentsLede') }}
+  </p>
+
+  <!-- Which table, which ranking, and the filter — one bar, because all three
+       answer "what am I looking at". Every one of them is a link or a form, so
+       the page browses before any script has run. -->
+  <div
+    class="mt-7 flex flex-col gap-4 border-t border-border pt-5 lg:flex-row lg:items-center lg:justify-between"
+  >
+    <nav class="flex gap-1" [attr.aria-label]="t('header.community')">
+      <a
+        [routerLink]="links.communityProjects()"
+        [class]="tabClass(isProjects())"
+        [attr.aria-current]="isProjects() ? 'page' : null"
+      >
+        {{ t('pages.community.nav.projects') }}
+      </a>
+      <a
+        [routerLink]="links.communityComponents()"
+        [class]="tabClass(!isProjects())"
+        [attr.aria-current]="!isProjects() ? 'page' : null"
+      >
+        {{ t('pages.community.nav.components') }}
+      </a>
+    </nav>
+
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+      <div
+        class="flex items-center gap-1 text-sm"
+        role="group"
+        [attr.aria-label]="t('pages.community.browse.orderLabel')"
+      >
+        @for (order of orders(); track order.orderBy) {
+        <a
+          [routerLink]="path()"
+          [queryParams]="order.params"
+          [class]="orderClass(order.active)"
+          [attr.aria-current]="order.active ? 'true' : null"
+        >
+          {{ t(order.labelKey) }}
+        </a>
+        }
+      </div>
+
+      <!-- `action` and `method` are what a submit does with no script; the
+           ranking rides along as a hidden field so filtering does not silently
+           reset it. No page field: a new search starts at the first page. -->
+      <form
+        role="search"
+        method="get"
+        class="sm:w-64"
+        [action]="path()"
+        (submit)="onSearch($event)"
+      >
+        @if (query().orderBy !== defaultOrder) {
+        <input type="hidden" name="orderBy" [value]="query().orderBy" />
+        }
+        <lg-icon-field class="block">
+          <lg-input-icon class="ph ph-magnifying-glass" />
+          <input
+            lgInputText
+            type="search"
+            class="w-full"
+            name="search"
+            [attr.aria-label]="t('pages.community.browse.searchLabel')"
+            [placeholder]="t('pages.community.browse.searchPlaceholder')"
+            [value]="query().search"
+          />
+        </lg-icon-field>
+      </form>
+    </div>
+  </div>
+
+  <div class="mt-7">
+    @if (listing.failureKey(); as failure) {
+    <web-section-error
+      [heading]="t('pages.community.browse.errorHeading')"
+      [message]="t(failure)"
+      [retryLabel]="t('errors.retry')"
+      [retrying]="listing.retrying()"
+      (retry)="retry()"
+    />
+    } @else if (tiles().length === 0) {
+    <!-- Whose emptiness it is decides the words: a filter that matched
+           nothing offers to clear itself, an empty table says only that. -->
+    @if (searched()) {
+    <div class="lattice rounded-md border border-border">
+      <web-empty-state
+        [heading]="t('pages.community.browse.noMatchHeading')"
+        [body]="t('pages.community.browse.noMatchBody', { search: query().search })"
+      >
+        <a
+          lgButton
+          outlined
+          severity="secondary"
+          size="sm"
+          [routerLink]="path()"
+        >
+          {{ t('pages.community.browse.clearSearch') }}
+        </a>
+      </web-empty-state>
+    </div>
+    } @else {
+    <div class="lattice rounded-md border border-border">
+      <web-empty-state
+        [heading]="t('pages.community.browse.emptyHeading')"
+        [body]="t('pages.community.browse.emptyBody')"
+      />
+    </div>
+    } } @else {
+    <web-circuit-tiles [entries]="tiles()" aboveTheFold />
+
+    <p class="mt-6 font-mono text-xs text-muted">
+      {{ t('pages.community.browse.count', { count: totalLabel() }) }}
+    </p>
+
+    @if (pageCount() > 1) {
+    <lg-paginator
+      class="mt-4"
+      [first]="query().page * pageSize"
+      [rows]="pageSize"
+      [totalRecords]="listing.total() ?? 0"
+      (onPageChange)="toPage($event.page)"
+    />
+    } }
+  </div>
+</div>

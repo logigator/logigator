@@ -190,6 +190,11 @@ const es: TranslationSchema = {
           'Si no sabes qué son las compuertas lógicas o los circuitos lógicos, hemos animado una breve explicación para que la veas.',
         play: 'Reproducir el vídeo «{{title}}» en YouTube'
       },
+      stats: {
+        projects: 'circuitos públicos',
+        components: 'componentes públicos',
+        examples: 'ejemplos explicados'
+      },
       community: {
         projectsTitle: 'Proyectos de la Comunidad',
         projectsDescription:
@@ -217,6 +222,77 @@ const es: TranslationSchema = {
       emptyHeading: 'Todavía no hay ejemplos',
       emptyBody: 'Aún no se ha publicado nada para esta instalación.',
       failed: 'No se pudieron cargar los ejemplos'
+    },
+    community: {
+      nav: {
+        projects: 'Proyectos',
+        components: 'Componentes'
+      },
+      browse: {
+        projectsTitle: 'Proyectos de la comunidad',
+        projectsLede:
+          'Todos los circuitos que la comunidad ha publicado. Abre uno en el editor o guarda una copia y sigue construyendo.',
+        componentsTitle: 'Componentes de la comunidad',
+        componentsLede:
+          'Bloques reutilizables publicados por la comunidad. Coloca uno dentro de tu propio circuito.',
+        orderLabel: 'Ordenar por',
+        orderTrending: 'Tendencias',
+        orderStars: 'Más estrellas',
+        orderLatest: 'Más recientes',
+        searchLabel: 'Buscar por nombre',
+        searchPlaceholder: 'Buscar..',
+        count: '{{count}} resultados',
+        clearSearch: 'Borrar la búsqueda',
+        noMatchHeading: 'No se encontró nada',
+        noMatchBody: 'Ningún circuito publicado se llama «{{search}}».',
+        emptyHeading: 'Todavía no hay nada',
+        emptyBody: 'Hasta ahora no se ha compartido nada con la comunidad.',
+        errorHeading: 'No se pudo cargar la lista'
+      },
+      document: {
+        open: 'Abrir en el editor',
+        clone: 'Guardar una copia',
+        star: 'Dar estrella',
+        unstar: 'Con estrella',
+        symbol: 'símbolo',
+        inputs: 'ent',
+        outputs: 'sal',
+        components: 'componentes',
+        wires: 'cables',
+        edited: 'editado',
+        about: 'Sobre este circuito',
+        noDescription: 'No se proporcionó ninguna descripción.',
+        forkedFrom: 'Derivado de',
+        forkedFromBy: 'de {{author}}',
+        errorHeading: 'No se pudo cargar el circuito'
+      },
+      stargazers: {
+        title: 'Estrellas',
+        count: '{{count}} estrellas',
+        seeAll: 'Ver a todos los que dieron una estrella',
+        emptyHeading: 'Todavía no hay estrellas',
+        emptyBody: 'Nadie ha dado una estrella a este circuito.',
+        errorHeading: 'No se pudieron cargar las estrellas'
+      },
+      profile: {
+        title: 'Miembro',
+        tabTitle: '{{username}} – {{section}}',
+        metaDescription:
+          'Los circuitos y componentes que {{username}} ha publicado en Logigator.',
+        sections: 'Las listas de este miembro',
+        memberSince: 'Miembro desde',
+        projects: 'Proyectos',
+        components: 'Componentes',
+        starredProjects: 'Proyectos con estrella',
+        starredComponents: 'Componentes con estrella',
+        emptyProjects: 'Sin proyectos públicos',
+        emptyComponents: 'Sin componentes públicos',
+        emptyStarredProjects: 'Sin proyectos con estrella',
+        emptyStarredComponents: 'Sin componentes con estrella',
+        emptyBody: 'No hay nada que mostrar en esta categoría.',
+        errorHeading: 'No se pudo cargar el perfil',
+        listErrorHeading: 'No se pudo cargar la lista'
+      }
     },
     docs: {
       title: 'Documentación',

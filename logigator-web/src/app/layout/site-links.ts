@@ -1,5 +1,6 @@
 import { computed, inject, Injectable, Signal } from '@angular/core';
 import { DocPageId } from '@logigator/docs';
+import { CommunityKind } from '../api/services/community-api.service';
 import { environment } from '../../environments/environment';
 import { pathInLanguage } from '../translation/language-url';
 import { TranslationService } from '../translation/translation.service';
@@ -48,9 +49,39 @@ export class SiteLinks {
     return pathInLanguage(this.lang(), `/community/users/${id}`);
   }
 
+  /** One of a member's four public listings. */
+  public communityUserSection(
+    id: string,
+    section: '' | 'components' | 'starred/projects' | 'starred/components'
+  ): string {
+    const suffix = section ? `/${section}` : '';
+    return pathInLanguage(this.lang(), `/community/users/${id}${suffix}`);
+  }
+
+  /**
+   * A published document's own page, addressed by its share link — the token
+   * is the address, so regenerating it takes the public page down with it.
+   */
+  public communityDocument(kind: CommunityKind, link: string): string {
+    return pathInLanguage(this.lang(), `/community/${kind}/${link}`);
+  }
+
+  public communityStargazers(kind: CommunityKind, link: string): string {
+    return pathInLanguage(this.lang(), `/community/${kind}/${link}/stargazers`);
+  }
+
   /** The share link is a capability, so this opens without a session. */
   public editorShare(link: string): string {
     return `${this.editor}/share/${link}`;
+  }
+
+  /**
+   * A cloud document open for editing. `/project/:uuid` and `/component/:uuid`
+   * are the editor's own routes; this is where a clone lands, the copy being in
+   * the caller's account rather than reachable through the original's link.
+   */
+  public editorDocument(kind: CommunityKind, id: string): string {
+    return `${this.editor}/${kind === 'projects' ? 'project' : 'component'}/${id}`;
   }
 
   /** A path in this app, in the language the document renders in. */

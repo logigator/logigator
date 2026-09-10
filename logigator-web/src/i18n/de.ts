@@ -194,6 +194,11 @@ const de: TranslationSchema = {
           'Wenn du nicht weißt, was Logikschaltungen oder Logikgatter sind, haben wir eine kurze Erklärung für dich gemacht.',
         play: 'Video „{{title}}“ auf YouTube abspielen'
       },
+      stats: {
+        projects: 'öffentliche Schaltungen',
+        components: 'öffentliche Bausteine',
+        examples: 'erklärte Beispiele'
+      },
       community: {
         projectsTitle: 'Community erstellte Projekte',
         projectsDescription:
@@ -219,6 +224,77 @@ const de: TranslationSchema = {
       emptyHeading: 'Noch keine Beispiele',
       emptyBody: 'Für diese Installation wurde noch nichts veröffentlicht.',
       failed: 'Beispiele konnten nicht geladen werden'
+    },
+    community: {
+      nav: {
+        projects: 'Projekte',
+        components: 'Bausteine'
+      },
+      browse: {
+        projectsTitle: 'Community-Projekte',
+        projectsLede:
+          'Alle Schaltungen, die die Community veröffentlicht hat. Öffne eine im Editor oder speichere eine Kopie und baue darauf auf.',
+        componentsTitle: 'Community-Bausteine',
+        componentsLede:
+          'Wiederverwendbare Bausteine aus der Community. Platziere einen davon in einer eigenen Schaltung.',
+        orderLabel: 'Sortieren nach',
+        orderTrending: 'Im Trend',
+        orderStars: 'Meiste Sterne',
+        orderLatest: 'Neueste',
+        searchLabel: 'Nach Namen suchen',
+        searchPlaceholder: 'Suchen..',
+        count: '{{count}} Ergebnisse',
+        clearSearch: 'Suche zurücksetzen',
+        noMatchHeading: 'Nichts gefunden',
+        noMatchBody: 'Keine veröffentlichte Schaltung heißt „{{search}}“.',
+        emptyHeading: 'Noch nichts vorhanden',
+        emptyBody: 'Bisher wurde nichts mit der Community geteilt.',
+        errorHeading: 'Die Liste konnte nicht geladen werden'
+      },
+      document: {
+        open: 'Im Editor öffnen',
+        clone: 'Kopie speichern',
+        star: 'Stern geben',
+        unstar: 'Stern gegeben',
+        symbol: 'Symbol',
+        inputs: 'Ein',
+        outputs: 'Aus',
+        components: 'Bausteine',
+        wires: 'Leitungen',
+        edited: 'bearbeitet',
+        about: 'Über diese Schaltung',
+        noDescription: 'Es wurde keine Beschreibung angegeben.',
+        forkedFrom: 'Abgeleitet von',
+        forkedFromBy: 'von {{author}}',
+        errorHeading: 'Die Schaltung konnte nicht geladen werden'
+      },
+      stargazers: {
+        title: 'Sterne',
+        count: '{{count}} Sterne',
+        seeAll: 'Alle ansehen, die einen Stern gegeben haben',
+        emptyHeading: 'Noch keine Sterne',
+        emptyBody: 'Diese Schaltung hat noch niemand mit einem Stern versehen.',
+        errorHeading: 'Die Sterne konnten nicht geladen werden'
+      },
+      profile: {
+        title: 'Mitglied',
+        tabTitle: '{{username}} – {{section}}',
+        metaDescription:
+          'Die Schaltungen und Bausteine, die {{username}} auf Logigator veröffentlicht hat.',
+        sections: 'Die Listen dieses Mitglieds',
+        memberSince: 'Mitglied seit',
+        projects: 'Projekte',
+        components: 'Bausteine',
+        starredProjects: 'Projekte mit Stern',
+        starredComponents: 'Bausteine mit Stern',
+        emptyProjects: 'Keine öffentlichen Projekte',
+        emptyComponents: 'Keine öffentlichen Bausteine',
+        emptyStarredProjects: 'Keine Projekte mit Stern',
+        emptyStarredComponents: 'Keine Bausteine mit Stern',
+        emptyBody: 'In dieser Kategorie gibt es nichts zu zeigen.',
+        errorHeading: 'Das Profil konnte nicht geladen werden',
+        listErrorHeading: 'Die Liste konnte nicht geladen werden'
+      }
     },
     docs: {
       title: 'Dokumentation',

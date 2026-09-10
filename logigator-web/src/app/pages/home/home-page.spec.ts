@@ -109,6 +109,40 @@ describe('HomePage', () => {
     expect(el.textContent).toContain('Community Components');
   });
 
+  /**
+   * The community's size, from the `total` the three reads already carry. What
+   * is worth holding is that each figure is independent: a listing that failed
+   * has no count, and showing a zero there would state something false about
+   * the community rather than about the request.
+   */
+  it('states the community’s size from the counts the page already read', async () => {
+    const el = await render({
+      examples: { ...EMPTY_PAGE, total: 6 },
+      projects: { ...EMPTY_PAGE, total: 1284 },
+      components: { ...EMPTY_PAGE, total: 412 }
+    });
+
+    const figures = [...el.querySelectorAll('dl dd')].map((dd) =>
+      dd.textContent?.trim()
+    );
+    // Grouped per locale, which is why the strip formats rather than prints.
+    expect(figures).toEqual(['1,284', '412', '6']);
+    expect(el.textContent).toContain('public circuits');
+  });
+
+  it('omits the figure of a read that failed rather than showing a zero', async () => {
+    const el = await render({
+      examples: { ...EMPTY_PAGE, total: 6 },
+      projects: { ...EMPTY_PAGE, total: 1284 },
+      failComponents: true
+    });
+
+    const figures = [...el.querySelectorAll('dl dd')].map((dd) =>
+      dd.textContent?.trim()
+    );
+    expect(figures).toEqual(['1,284', '6']);
+  });
+
   it('says a list is empty rather than broken when the API answers nothing', async () => {
     const el = await render({});
 

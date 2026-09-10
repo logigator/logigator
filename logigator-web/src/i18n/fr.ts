@@ -186,6 +186,11 @@ const fr: TranslationSchema = {
           'Si vous ne savez pas ce que sont les portes logiques ou les circuits logiques, nous avons animé une brève explication pour que vous puissiez regarder.',
         play: 'Lire la vidéo « {{title}} » sur YouTube'
       },
+      stats: {
+        projects: 'circuits publics',
+        components: 'composants publics',
+        examples: 'exemples expliqués'
+      },
       community: {
         projectsTitle: 'Projets Communautaires',
         projectsDescription:
@@ -211,6 +216,77 @@ const fr: TranslationSchema = {
       emptyHeading: 'Pas encore d’exemples',
       emptyBody: "Rien n'a encore été publié pour cette installation.",
       failed: "Les exemples n'ont pas pu être chargés"
+    },
+    community: {
+      nav: {
+        projects: 'Projets',
+        components: 'Composants'
+      },
+      browse: {
+        projectsTitle: 'Projets de la communauté',
+        projectsLede:
+          'Tous les circuits publiés par la communauté. Ouvrez-en un dans l’éditeur, ou enregistrez-en une copie pour continuer dessus.',
+        componentsTitle: 'Composants de la communauté',
+        componentsLede:
+          'Des blocs réutilisables publiés par la communauté. Placez-en un dans votre propre circuit.',
+        orderLabel: 'Trier par',
+        orderTrending: 'Tendances',
+        orderStars: 'Les plus étoilés',
+        orderLatest: 'Les plus récents',
+        searchLabel: 'Rechercher par nom',
+        searchPlaceholder: 'Rechercher..',
+        count: '{{count}} résultats',
+        clearSearch: 'Effacer la recherche',
+        noMatchHeading: 'Aucun résultat',
+        noMatchBody: 'Aucun circuit publié ne s’appelle « {{search}} ».',
+        emptyHeading: 'Rien pour le moment',
+        emptyBody: 'Rien n’a encore été partagé avec la communauté.',
+        errorHeading: 'La liste n’a pas pu être chargée'
+      },
+      document: {
+        open: 'Ouvrir dans l’éditeur',
+        clone: 'Enregistrer une copie',
+        star: 'Ajouter une étoile',
+        unstar: 'Étoile ajoutée',
+        symbol: 'symbole',
+        inputs: 'ent',
+        outputs: 'sor',
+        components: 'composants',
+        wires: 'fils',
+        edited: 'modifié',
+        about: 'À propos de ce circuit',
+        noDescription: 'Aucune description n’a été fournie.',
+        forkedFrom: 'Dérivé de',
+        forkedFromBy: 'par {{author}}',
+        errorHeading: 'Le circuit n’a pas pu être chargé'
+      },
+      stargazers: {
+        title: 'Étoiles',
+        count: '{{count}} étoiles',
+        seeAll: 'Voir tous ceux qui ont mis une étoile',
+        emptyHeading: 'Aucune étoile',
+        emptyBody: 'Personne n’a encore mis d’étoile à ce circuit.',
+        errorHeading: 'Les étoiles n’ont pas pu être chargées'
+      },
+      profile: {
+        title: 'Membre',
+        tabTitle: '{{username}} – {{section}}',
+        metaDescription:
+          'Les circuits et composants que {{username}} a publiés sur Logigator.',
+        sections: 'Les listes de ce membre',
+        memberSince: 'Membre depuis',
+        projects: 'Projets',
+        components: 'Composants',
+        starredProjects: 'Projets étoilés',
+        starredComponents: 'Composants étoilés',
+        emptyProjects: 'Aucun projet public',
+        emptyComponents: 'Aucun composant public',
+        emptyStarredProjects: 'Aucun projet étoilé',
+        emptyStarredComponents: 'Aucun composant étoilé',
+        emptyBody: 'Il n’y a rien à afficher dans cette catégorie.',
+        errorHeading: 'Le profil n’a pas pu être chargé',
+        listErrorHeading: 'La liste n’a pas pu être chargée'
+      }
     },
     docs: {
       title: 'Documentation',

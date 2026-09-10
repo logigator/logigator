@@ -9,6 +9,7 @@ import { homeJsonLd } from './pages/home/home-json-ld';
 import { ExamplesPage } from './pages/examples/examples-page';
 import { examplesContentGuard } from './pages/examples/examples-content.guard';
 import { docsRoutes } from './pages/docs/docs-routes';
+import { communityRoutes } from './pages/community/community-routes';
 import { ChangelogPage } from './pages/changelog/changelog-page';
 import { changelogContentGuard } from './pages/changelog/changelog-content.guard';
 import { LegalPage } from './pages/legal/legal-page';
@@ -55,6 +56,7 @@ const localizedRoutes: Routes = [
     }
   },
   ...docsRoutes,
+  ...communityRoutes,
   {
     path: 'changelog',
     component: ChangelogPage,

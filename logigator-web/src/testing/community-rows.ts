@@ -1,4 +1,4 @@
-import type { CommunityProject } from '@logigator/contract';
+import type { CommunityComponent, CommunityProject } from '@logigator/contract';
 
 /** An empty page envelope, which is what an unseeded deployment answers. */
 export const EMPTY_PAGE = { entries: [], page: 0, pageSize: 4, total: 0 };
@@ -31,6 +31,26 @@ export function communityRow(
     },
     stars: 12,
     starred: false,
+    ...patch
+  };
+}
+
+/**
+ * The same row from the other table. A component answers with its port surface
+ * too, and the boundary rejects a response without it — so a spec that reuses
+ * the project row for a component listing tests a failed read.
+ */
+export function communityComponentRow(
+  name: string,
+  link: string,
+  patch: Partial<CommunityComponent> = {}
+): CommunityComponent {
+  return {
+    ...communityRow(name, link),
+    symbol: 'HA',
+    numInputs: 2,
+    numOutputs: 2,
+    labels: ['A', 'B', 'S', 'C'],
     ...patch
   };
 }

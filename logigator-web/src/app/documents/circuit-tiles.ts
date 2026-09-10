@@ -1,4 +1,5 @@
 import {
+  booleanAttribute,
   ChangeDetectionStrategy,
   Component,
   computed,
@@ -15,6 +16,9 @@ import {
 import { ThemingService } from '../theming/theming.service';
 import { TranslationService } from '../translation/translation.service';
 import { CircuitTileEntry } from './circuit-tile-entry';
+
+/** The widest the grid below goes; `lg:grid-cols-4` is where this comes from. */
+const GRID_COLUMNS = 4;
 
 /**
  * A list of circuits as tiles, either as a grid or as a rail that bleeds past
@@ -43,6 +47,7 @@ import { CircuitTileEntry } from './circuit-tile-entry';
           [preview]="tile.preview"
           [stars]="tile.stars"
           [starsLabel]="starsLabel()"
+          [loading]="tile.loading"
         >
           @if (tile.external) {
             <a
@@ -84,6 +89,16 @@ export class CircuitTiles {
   readonly entries = input.required<readonly CircuitTileEntry[]>();
   readonly layout = input<'grid' | 'rail'>('grid');
 
+  /**
+   * Whether this list is the first thing the page draws. The leading row then
+   * loads eagerly: a lazy image that turns out to be the largest thing painted
+   * costs a measurable delay, and the browser cannot know which one it is.
+   *
+   * How many tiles a row holds is this component's own knowledge — the grid
+   * template is here — so a page says *where it is*, not how many to prioritize.
+   */
+  readonly aboveTheFold = input(false, { transform: booleanAttribute });
+
   protected readonly starsLabel = computed(() =>
     this.translation.translate('documents.stars')
   );
@@ -97,8 +112,11 @@ export class CircuitTiles {
 
   protected readonly tiles = computed(() => {
     const dark = this.theming.isDark();
-    return this.entries().map((entry) => ({
+    // The widest the grid gets, which is where a whole row is above the fold.
+    const eagerUpTo = this.aboveTheFold() ? GRID_COLUMNS : 0;
+    return this.entries().map((entry, index) => ({
       id: entry.id,
+      loading: index < eagerUpTo ? ('eager' as const) : ('lazy' as const),
       name: entry.name,
       href: entry.href,
       external: entry.external,

@@ -107,6 +107,36 @@ export class HomePage {
     this.theming.isDark() ? heroDark : heroLight
   );
 
+  /**
+   * The community's size, from the `total` the three listings on this page
+   * already carry — every envelope counts the whole match rather than the page,
+   * so this costs no request and nothing new per render, and the figures are
+   * the public set by construction, every predicate behind them naming
+   * `public = true`.
+   *
+   * A figure whose read failed is left out rather than shown as a zero: each
+   * listing resolves independently, so one 503 must not blank the row. There is
+   * no floor — the strip renders whatever the counts are, a section that
+   * appears and disappears with the size of the database being a rule to
+   * maintain and a home page nobody can screenshot twice.
+   */
+  protected readonly stats = computed(() => {
+    const number = new Intl.NumberFormat(this.translation.activeLang());
+    return (
+      [
+        { key: 'projects', total: this.projects.total() },
+        { key: 'components', total: this.components.total() },
+        { key: 'examples', total: this.examples.total() }
+      ] as const
+    )
+      .filter((stat) => stat.total !== null)
+      .map((stat) => ({
+        key: stat.key,
+        value: number.format(stat.total!),
+        labelKey: `pages.home.stats.${stat.key}` as const
+      }));
+  });
+
   protected readonly videoCaption = computed(() => {
     const video = homeVideo(this.translation.activeLang());
     return `${video.title} · ${video.duration}`;

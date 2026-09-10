@@ -1,0 +1,68 @@
+@if (missing()) {
+<web-not-found-page />
+} @else if (failureKey(); as failure) {
+<div class="page-wrap py-12" *webTranslate="let t">
+  <web-section-error
+    [heading]="t('pages.community.profile.errorHeading')"
+    [message]="t(failure)"
+    [retryLabel]="t('errors.retry')"
+    [retrying]="retrying()"
+    (retry)="retry()"
+  />
+</div>
+} @else if (profile(); as member) {
+<div class="page-wrap py-9 md:py-12" *webTranslate="let t">
+  <div class="flex flex-wrap items-center gap-5">
+    <lg-avatar
+      size="xlarge"
+      shape="circle"
+      [image]="member.avatar ?? undefined"
+      [label]="initials()"
+    />
+    <div class="min-w-0">
+      <h1
+        class="text-[28px] leading-tight font-bold break-words text-text-hover md:text-[32px]"
+      >
+        {{ member.username }}
+      </h1>
+      <!-- Mono is data: the date and the two counts, and nothing else. -->
+      <p class="mt-2 font-mono text-xs text-muted">
+        <span
+          >{{ t('pages.community.profile.memberSince') }} {{ memberSince()
+          }}</span
+        >
+        <span aria-hidden="true"> · </span>
+        <span
+          >{{ counts()?.projects }} {{ t('pages.community.profile.projects')
+          }}</span
+        >
+        <span aria-hidden="true"> · </span>
+        <span
+          >{{ counts()?.components }} {{ t('pages.community.profile.components')
+          }}</span
+        >
+      </p>
+    </div>
+  </div>
+
+  <!-- Four links, not four states of one control: each tab is its own URL. -->
+  <nav
+    class="mt-8 flex gap-6 overflow-x-auto border-b border-border"
+    [attr.aria-label]="t('pages.community.profile.sections')"
+  >
+    @for (tab of tabs(); track tab.section) {
+    <a
+      [routerLink]="tab.href"
+      [class]="tabClass(tab.active)"
+      [attr.aria-current]="tab.active ? 'page' : null"
+    >
+      {{ t(tab.labelKey) }}
+    </a>
+    }
+  </nav>
+
+  <div class="mt-7">
+    <router-outlet />
+  </div>
+</div>
+}

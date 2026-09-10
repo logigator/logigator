@@ -10,12 +10,18 @@ import { TransferHandoffService } from './transfer-handoff.service';
  * English on a four-language site.
  */
 type SectionResult<TRow> =
-  { entries: readonly TRow[] } | { failureKey: TranslationKey };
+  { entries: readonly TRow[]; total: number } | { failureKey: TranslationKey };
 
 /** `entries` is empty for a working API with nothing published, `null` for a
  * read that failed. */
 export interface ContentSection<TRow> {
   readonly entries: Signal<readonly TRow[] | null>;
+  /**
+   * How many rows match, not how many this page holds — every listing envelope
+   * counts the whole match, which is what a paginator needs and what the home
+   * page states as the community's size. `null` for a read that failed.
+   */
+  readonly total: Signal<number | null>;
   readonly failureKey: Signal<TranslationKey | null>;
   readonly retrying: Signal<boolean>;
   resolve(): Promise<void>;
@@ -38,16 +44,17 @@ export interface ContentSection<TRow> {
  */
 export function contentSection<TRow>(
   name: string,
-  read: () => Observable<{ entries: TRow[] }>
+  read: () => Observable<{ entries: TRow[]; total: number }>
 ): ContentSection<TRow> {
   const handoff = inject(TransferHandoffService);
   const key = makeStateKey<SectionResult<TRow>>(name);
-  const result = signal<SectionResult<TRow>>({ entries: [] });
+  const result = signal<SectionResult<TRow>>({ entries: [], total: 0 });
   const retrying = signal(false);
 
   const fetch = async (): Promise<SectionResult<TRow>> => {
     try {
-      return { entries: (await firstValueFrom(read())).entries };
+      const { entries, total } = await firstValueFrom(read());
+      return { entries, total };
     } catch (error) {
       return { failureKey: genericFailureKey(error) };
     }
@@ -57,6 +64,10 @@ export function contentSection<TRow>(
     entries: computed(() => {
       const current = result();
       return 'entries' in current ? current.entries : null;
+    }),
+    total: computed(() => {
+      const current = result();
+      return 'total' in current ? current.total : null;
     }),
     failureKey: computed(() => {
       const current = result();

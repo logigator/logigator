@@ -188,6 +188,11 @@ const en = {
           "If you don't know what logic gates or logic circuits are, we animated a short explanation for you to watch.",
         play: 'Play the video “{{title}}” on YouTube'
       },
+      stats: {
+        projects: 'public circuits',
+        components: 'public components',
+        examples: 'guided examples'
+      },
       community: {
         projectsTitle: 'Community Projects',
         projectsDescription:
@@ -216,6 +221,79 @@ const en = {
       emptyHeading: 'No examples yet',
       emptyBody: 'Nothing has been published for this deployment.',
       failed: 'Examples could not be loaded'
+    },
+    community: {
+      nav: {
+        projects: 'Projects',
+        components: 'Components'
+      },
+      browse: {
+        projectsTitle: 'Community Projects',
+        projectsLede:
+          'Every circuit the community has published. Open one in the editor, or take a copy and build on it.',
+        componentsTitle: 'Community Components',
+        componentsLede:
+          'Reusable building blocks the community has published. Place one inside a circuit of your own.',
+        orderLabel: 'Sort by',
+        orderTrending: 'Trending',
+        orderStars: 'Most starred',
+        orderLatest: 'Newest',
+        searchLabel: 'Search by name',
+        searchPlaceholder: 'Search..',
+        /** Read after the figure, so it says “1,284 results”. */
+        count: '{{count}} results',
+        clearSearch: 'Clear the search',
+        noMatchHeading: 'Nothing found',
+        noMatchBody: 'No published circuit is called “{{search}}”.',
+        emptyHeading: 'Nothing here yet',
+        emptyBody: 'Nothing has been shared with the community so far.',
+        errorHeading: 'The list could not be loaded'
+      },
+      document: {
+        open: 'Open in editor',
+        clone: 'Save a copy',
+        star: 'Star',
+        unstar: 'Starred',
+        symbol: 'symbol',
+        inputs: 'in',
+        outputs: 'out',
+        components: 'components',
+        wires: 'wires',
+        edited: 'edited',
+        about: 'About this circuit',
+        noDescription: 'No description was provided.',
+        forkedFrom: 'Forked from',
+        forkedFromBy: 'by {{author}}',
+        errorHeading: 'The circuit could not be loaded'
+      },
+      stargazers: {
+        title: 'Stargazers',
+        /** Read after the figure, so it says “214 stars”. */
+        count: '{{count}} stars',
+        seeAll: 'See everyone who starred this',
+        emptyHeading: 'No stars yet',
+        emptyBody: 'Nobody has starred this circuit.',
+        errorHeading: 'The stargazers could not be loaded'
+      },
+      profile: {
+        title: 'Member',
+        tabTitle: '{{username}} – {{section}}',
+        metaDescription:
+          'The circuits and components {{username}} has published on Logigator.',
+        sections: 'This member’s lists',
+        memberSince: 'Member since',
+        projects: 'Projects',
+        components: 'Components',
+        starredProjects: 'Starred Projects',
+        starredComponents: 'Starred Components',
+        emptyProjects: 'No public projects',
+        emptyComponents: 'No public components',
+        emptyStarredProjects: 'No starred projects',
+        emptyStarredComponents: 'No starred components',
+        emptyBody: 'There is nothing to show in this category.',
+        errorHeading: 'The profile could not be loaded',
+        listErrorHeading: 'The list could not be loaded'
+      }
     },
     docs: {
       title: 'Documentation',

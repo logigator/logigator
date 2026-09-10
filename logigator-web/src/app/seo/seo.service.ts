@@ -1,4 +1,9 @@
-import { inject, Injectable } from '@angular/core';
+import {
+  EnvironmentInjector,
+  inject,
+  Injectable,
+  runInInjectionContext
+} from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 import { Meta, Title } from '@angular/platform-browser';
 import { AVAILABLE_LANGUAGES, LanguageId } from '@logigator/core';
@@ -39,6 +44,18 @@ export interface PageMeta {
   /** Key of the page's description; the site's own is the fallback. */
   descriptionKey?: TranslationKey;
   /**
+   * The page's title where it is not a translated string but the thing the page
+   * describes — a circuit's name, a member's username. Returning `null` falls
+   * back to `titleKey`, which is what a page whose read found nothing wants:
+   * the head then says so rather than naming a document that is not there.
+   *
+   * Run after the route's guards and inside an injection context, so it reads
+   * the same resolved content the page renders.
+   */
+  title?: () => string | null;
+  /** The same, for the description. */
+  description?: () => string | null;
+  /**
    * The page's own JSON-LD nodes, beside the site-level ones every page emits.
    * A factory rather than a value: the nodes name absolute URLs and read
    * translated strings, neither of which a route definition can know. It runs
@@ -58,6 +75,13 @@ export interface PageMeta {
    * names, like everything else in the head.
    */
   ancestors?: readonly { titleKey: TranslationKey; path: string }[];
+  /**
+   * The same steps where one of them names stored content — a document its
+   * child page hangs under, whose name is not a key. Wins over `ancestors`
+   * when it returns steps, and runs in an injection context so it reads what a
+   * guard resolved. Paths are already prefixed, being built from `SiteLinks`.
+   */
+  trail?: () => readonly { name: string; path: string }[];
   /**
    * Unprefixed path of the page's raw-markdown twin, where it has one. It is
    * announced in the head rather than left to be guessed, which is what makes
@@ -94,15 +118,18 @@ export class SeoService {
   private readonly meta = inject(Meta);
   private readonly translation = inject(TranslationService);
   private readonly links = inject(SiteLinks);
+  private readonly injector = inject(EnvironmentInjector);
   private readonly origin = inject(SITE_ORIGIN).replace(/\/+$/, '');
 
   /** Applies a page's head for the URL currently being rendered. */
   public apply(page: PageMeta, pathname: string): void {
     const siteName = this.translation.translate('site.name');
-    const pageTitle = this.translation.translate(page.titleKey);
-    const description = this.translation.translate(
-      page.descriptionKey ?? 'site.description'
-    );
+    // A page describing stored content names it; every other page names a key.
+    const pageTitle =
+      this.fromPage(page.title) ?? this.translation.translate(page.titleKey);
+    const description =
+      this.fromPage(page.description) ??
+      this.translation.translate(page.descriptionKey ?? 'site.description');
 
     this.title.setTitle(`${siteName} - ${pageTitle}`);
     this.meta.updateTag({ name: 'description', content: description });
@@ -173,9 +200,27 @@ export class SeoService {
     if (trail) {
       graph.push(trail);
     }
-    graph.push(...(page.jsonLd?.(context) ?? []));
+    // In an injection context, so a factory can read the listing or the
+    // document its own page's guard resolved. `updateTitle` is a router hook
+    // rather than an injection context, so the injector has to be carried here.
+    graph.push(
+      ...(page.jsonLd
+        ? runInInjectionContext(this.injector, () => page.jsonLd!(context))
+        : [])
+    );
 
     this.setScript('web-json-ld', serializeJsonLd(graph));
+  }
+
+  /**
+   * A value the page derives from what it rendered, or `null` where it declares
+   * none. Same injection context the graph's factory gets, and for the same
+   * reason.
+   */
+  private fromPage(read: (() => string | null) | undefined): string | null {
+    if (!read) return null;
+    const value = runInInjectionContext(this.injector, read);
+    return value?.trim() ? value : null;
   }
 
   /**
@@ -192,15 +237,25 @@ export class SeoService {
     if (page.breadcrumb === false || canonicalPath === '/') {
       return null;
     }
+    const resolved = page.trail
+      ? runInInjectionContext(this.injector, page.trail)
+      : [];
+    const between = resolved.length
+      ? resolved.map((step) => ({
+          name: step.name,
+          item: `${context.origin}${step.path}`
+        }))
+      : (page.ancestors ?? []).map((ancestor) => ({
+          name: context.translate(ancestor.titleKey),
+          item: `${context.origin}${pathInLanguage(context.lang, ancestor.path)}`
+        }));
+
     const steps = [
       {
         name: context.translate('site.name'),
         item: `${context.origin}/${context.lang}`
       },
-      ...(page.ancestors ?? []).map((ancestor) => ({
-        name: context.translate(ancestor.titleKey),
-        item: `${context.origin}${pathInLanguage(context.lang, ancestor.path)}`
-      })),
+      ...between,
       { name: pageTitle, item: context.url }
     ];
     return {

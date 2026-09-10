@@ -1,0 +1,183 @@
+@if (missing()) {
+<!-- The site's own 404, status and all: a share token that was regenerated
+       leaves exactly this URL behind, and a soft 404 would keep it indexed. -->
+<web-not-found-page />
+} @else if (failureKey(); as failure) {
+<div class="page-wrap py-12" *webTranslate="let t">
+  <web-section-error
+    [heading]="t('pages.community.document.errorHeading')"
+    [message]="t(failure)"
+    [retryLabel]="t('errors.retry')"
+    [retrying]="retrying()"
+    (retry)="retry()"
+  />
+</div>
+} @else if (document(); as doc) {
+<div class="page-wrap py-9 md:py-12" *webTranslate="let t">
+  <nav class="text-sm text-muted" [attr.aria-label]="t('header.community')">
+    <a
+      class="hover:text-text hover:underline"
+      [routerLink]="
+          isComponent() ? links.communityComponents() : links.communityProjects()
+        "
+    >
+      {{ isComponent() ? t('pages.community.browse.componentsTitle') :
+      t('pages.community.browse.projectsTitle') }}
+    </a>
+  </nav>
+
+  <!-- The figure takes the fixed column, so the identity beside it reflows
+         rather than the render. -->
+  <div
+    class="mt-5 grid gap-7 md:grid-cols-[minmax(0,21rem)_minmax(0,1fr)] md:gap-10"
+  >
+    <web-circuit-preview
+      [preview]="doc.preview"
+      [sizes]="PREVIEW_SIZES"
+      loading="eager"
+    />
+
+    <div class="flex min-w-0 flex-col items-start">
+      <h1
+        class="text-[28px] leading-tight font-bold break-words text-text-hover md:text-[32px]"
+      >
+        {{ doc.name }}
+      </h1>
+
+      <a
+        class="mt-4 flex items-center gap-2 text-sm text-muted hover:text-text"
+        [routerLink]="authorHref()"
+      >
+        <lg-avatar
+          size="small"
+          shape="circle"
+          [image]="doc.author.avatar ?? undefined"
+          [label]="initials()"
+        />
+        <span class="truncate font-medium">{{ doc.author.username }}</span>
+      </a>
+
+      <!-- Mono is data: the arity, the counts and the date, and nothing
+             decorative. -->
+      <dl
+        class="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-border pt-4 font-mono text-xs text-muted"
+      >
+        @if (ports(); as p) {
+        <div class="flex items-center gap-1.5">
+          <dt>{{ t('pages.community.document.symbol') }}</dt>
+          <dd><lg-tag severity="secondary">{{ p.symbol }}</lg-tag></dd>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <dt>{{ t('pages.community.document.inputs') }}</dt>
+          <dd class="text-text">{{ p.inputs }}</dd>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <dt>{{ t('pages.community.document.outputs') }}</dt>
+          <dd class="text-text">{{ p.outputs }}</dd>
+        </div>
+        }
+        <div class="flex items-center gap-1.5">
+          <dt>{{ t('pages.community.document.components') }}</dt>
+          <dd class="text-text">{{ counts()?.components }}</dd>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <dt>{{ t('pages.community.document.wires') }}</dt>
+          <dd class="text-text">{{ counts()?.wires }}</dd>
+        </div>
+        <div class="flex items-center gap-1.5">
+          <dt>{{ t('pages.community.document.edited') }}</dt>
+          <dd class="text-text">{{ edited() }}</dd>
+        </div>
+      </dl>
+
+      <div class="mt-6 flex flex-wrap items-center gap-3">
+        <a lgButton target="_blank" rel="noopener" [href]="openHref()">
+          <i class="ph ph-arrow-square-out" aria-hidden="true"></i>
+          {{ t('pages.community.document.open') }}
+        </a>
+        <button
+          lgButton
+          outlined
+          severity="secondary"
+          type="button"
+          [loading]="pendingAction() === 'clone'"
+          (click)="clone()"
+        >
+          <i class="ph ph-copy" aria-hidden="true"></i>
+          {{ t('pages.community.document.clone') }}
+        </button>
+        <!-- The state it wants, not a toggle: a retry lands where the reader
+               meant rather than undoing itself. -->
+        <button
+          lgButton
+          outlined
+          severity="secondary"
+          type="button"
+          [loading]="pendingAction() === 'star'"
+          [attr.aria-pressed]="starred()"
+          (click)="toggleStar()"
+        >
+          <i
+            [class]="starred() ? 'ph-fill ph-star text-primary' : 'ph ph-star'"
+            aria-hidden="true"
+          ></i>
+          <span
+            >{{ starred() ? t('pages.community.document.unstar') :
+            t('pages.community.document.star') }}</span
+          >
+          <span class="font-mono text-xs">{{ counts()?.stars }}</span>
+        </button>
+      </div>
+
+      @if (actionFailureKey(); as failure) {
+      <p class="mt-3 text-sm text-error" role="alert">{{ t(failure) }}</p>
+      } @if (doc.forkedFrom; as parent) {
+      <!-- Named even where the parent is no longer public: withholding the
+               credit because somebody unpublished turns a fork into original
+               work. The link may 404, which is the honest answer. -->
+      <p class="mt-5 text-sm text-muted">
+        {{ t('pages.community.document.forkedFrom') }}
+        <a class="text-primary hover:underline" [routerLink]="parentHref()">
+          {{ parent.name }}
+        </a>
+        <span
+          >{{ t('pages.community.document.forkedFromBy', { author:
+          parent.authorName }) }}</span
+        >
+      </p>
+      }
+    </div>
+  </div>
+
+  <!-- The description is the one thing on this page a tile has no room for,
+         so it gets a block of its own rather than a column. -->
+  <section class="mt-9 border-t border-border pt-7">
+    <h2 class="text-base font-semibold text-text-hover">
+      {{ t('pages.community.document.about') }}
+    </h2>
+    <p
+      class="mt-2.5 max-w-[70ch] leading-relaxed whitespace-pre-line text-pretty"
+      [class.text-muted]="!doc.description"
+    >
+      {{ doc.description || t('pages.community.document.noDescription') }}
+    </p>
+  </section>
+
+  <section class="mt-8 border-t border-border pt-7">
+    <h2 class="text-base font-semibold text-text-hover">
+      {{ t('pages.community.stargazers.title') }}
+    </h2>
+    <p class="mt-2 font-mono text-xs text-muted">
+      {{ t('pages.community.stargazers.count', { count: counts()?.stars }) }}
+    </p>
+    @if (stars() > 0) {
+    <a
+      class="mt-3 inline-block text-sm text-primary hover:underline"
+      [routerLink]="stargazersHref()"
+    >
+      {{ t('pages.community.stargazers.seeAll') }}
+    </a>
+    }
+  </section>
+</div>
+}

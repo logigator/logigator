@@ -25,11 +25,29 @@ const ENTRY: CircuitTileEntry = {
   }
 };
 
-function render(entries: CircuitTileEntry[]): HTMLElement {
+function render(
+  entries: CircuitTileEntry[],
+  aboveTheFold = false
+): HTMLElement {
   const fixture = TestBed.createComponent(CircuitTiles);
   fixture.componentRef.setInput('entries', entries);
+  fixture.componentRef.setInput('aboveTheFold', aboveTheFold);
   fixture.detectChanges();
   return fixture.nativeElement;
+}
+
+function loadingAttributes(el: HTMLElement): (string | null)[] {
+  return [...el.querySelectorAll('img')].map((img) =>
+    img.getAttribute('loading')
+  );
+}
+
+/** Six rows, so the leading row is distinguishable from the rest. */
+function entries(): CircuitTileEntry[] {
+  return Array.from({ length: 6 }, (_, index) => ({
+    ...ENTRY,
+    id: `id-${index}`
+  }));
 }
 
 describe('CircuitTiles', () => {
@@ -74,5 +92,35 @@ describe('CircuitTiles', () => {
       '/en/community/users/33333333-3333-4333-8333-333333333333'
     );
     expect(author.closest('a[lgCircuitTileLink]')).toBeNull();
+  });
+});
+
+/**
+ * A lazy image that turns out to be the largest thing painted is a measurable
+ * delay, and the browser cannot know which one it is — Angular says so as
+ * NG0913. A list that opens its page prioritizes its leading row; one further
+ * down the page prioritizes nothing.
+ */
+describe('CircuitTiles and the largest paint', () => {
+  beforeEach(() => {
+    TestBed.resetTestingModule();
+    configureTestBed();
+  });
+
+  it('loads the leading row eagerly where the list opens the page', () => {
+    expect(loadingAttributes(render(entries(), true))).toEqual([
+      'eager',
+      'eager',
+      'eager',
+      'eager',
+      'lazy',
+      'lazy'
+    ]);
+  });
+
+  it('loads nothing eagerly where the list is further down the page', () => {
+    // The home page's shelves are its fifth and sixth sections: the hero is
+    // what gets painted, and four eager requests there would compete with it.
+    expect(loadingAttributes(render(entries()))).toEqual(Array(6).fill('lazy'));
   });
 });

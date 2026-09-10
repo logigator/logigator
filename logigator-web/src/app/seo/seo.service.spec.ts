@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { configureTestBed } from '../../testing/configure-test-bed';
+import { TranslationService } from '../translation/translation.service';
 import { homeJsonLd } from '../pages/home/home-json-ld';
 import { PageMeta, SeoService } from './seo.service';
 import { SITE_ORIGIN } from './site-origin';
@@ -215,6 +216,68 @@ describe('SeoService', () => {
       duration: 'PT3M34S',
       thumbnailUrl: expect.stringContaining(ORIGIN)
     });
+  });
+
+  /**
+   * A page describing stored content names it — a circuit, a member — and the
+   * key stays the fallback for the case where the read found nothing, so the
+   * head never announces a document that is not on the page.
+   */
+  it('lets a page name what it rendered, and falls back to its key', async () => {
+    // The table loads through a dynamic import, and this asserts on the words.
+    await TestBed.inject(TranslationService).setActiveLang('en');
+    const seo = TestBed.inject(SeoService);
+
+    seo.apply(
+      {
+        titleKey: 'pages.community.browse.projectsTitle',
+        title: () => 'Half adder',
+        description: () => 'Two gates, one carry.'
+      },
+      '/en/community/projects/half-adder'
+    );
+    expect(document.title).toContain('Half adder');
+    expect(metaContent('og:title')).toEqual(['Half adder']);
+    expect(metaContent('og:description')).toEqual(['Two gates, one carry.']);
+
+    // Nothing resolved: the key answers rather than an empty title.
+    seo.apply(
+      {
+        titleKey: 'pages.community.browse.projectsTitle',
+        title: () => null,
+        description: () => '   '
+      },
+      '/en/community/projects/gone'
+    );
+    expect(document.title).toContain('Community Projects');
+    expect(metaContent('og:description')).toEqual([
+      'Build and simulate your own logic circuits with Logigator, a simple yet powerful web-based online tool.'
+    ]);
+  });
+
+  it('walks a trail whose steps are stored text rather than keys', () => {
+    // A stargazer list sits under a document, and the document's name is not a
+    // translation key — which is what `ancestors` alone cannot express.
+    TestBed.inject(SeoService).apply(
+      {
+        titleKey: 'pages.community.stargazers.title',
+        ancestors: [{ titleKey: 'pages.docs.title', path: '/docs' }],
+        trail: () => [
+          { name: 'Community Projects', path: '/en/community/projects' },
+          { name: 'Half adder', path: '/en/community/projects/abc' }
+        ]
+      },
+      '/en/community/projects/abc/stargazers'
+    );
+
+    const trail = graph().find((node) => node['@type'] === 'BreadcrumbList');
+    // The resolved steps win over the static ones; a page cannot carry both.
+    expect(trail?.['itemListElement']).toMatchObject([
+      { position: 1, item: `${ORIGIN}/en` },
+      { position: 2, name: 'Community Projects' },
+      { position: 3, name: 'Half adder' },
+      { position: 4, item: `${ORIGIN}/en/community/projects/abc/stargazers` }
+    ]);
   });
 
   it('rewrites the links a second navigation replaces', () => {
