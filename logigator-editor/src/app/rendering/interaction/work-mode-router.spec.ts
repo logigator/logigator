@@ -641,6 +641,49 @@ describe('WorkModeRouter wire-tool taps (WIRE_TOOL mode)', () => {
     expect(toggleSpy).not.toHaveBeenCalled();
   });
 
+  it('picks the port on the tapped side where an output meets an input', () => {
+    // Bodies 2..4 and 5..7: the output stub tip and the input stub tip meet.
+    const driver = makeAnd(2, undefined, 2, 2);
+    const load = makeAnd(2, undefined, 5, 2);
+    project.addComponent(driver);
+    project.addComponent(load);
+    const tip = driver.connectionPoints[2];
+    expect(load.connectionPoints[0]).toEqual(tip);
+
+    tap(tip.x - 0.2, tip.y);
+    expect(driver.isPortNegated('out', 0)).toBe(true);
+    expect(load.isPortNegated('in', 0)).toBe(false);
+
+    tap(tip.x + 0.2, tip.y);
+    expect(load.isPortNegated('in', 0)).toBe(true);
+    expect(driver.isPortNegated('out', 0)).toBe(true);
+  });
+
+  it('previews the port on the hovered side of a met stub pair', () => {
+    const driver = makeAnd(2, undefined, 2, 2);
+    const load = makeAnd(2, undefined, 5, 2);
+    project.addComponent(driver);
+    project.addComponent(load);
+    const tip = driver.connectionPoints[2];
+    const show = vi.spyOn(project.floatingLayer, 'showNegationGhost');
+
+    router.hover(makeInput(tip.x - 0.2, tip.y));
+    expect(show).toHaveBeenLastCalledWith(
+      driver.negationBubbleAnchor('out', 0),
+      'out',
+      expect.anything(),
+      false
+    );
+
+    router.hover(makeInput(tip.x + 0.2, tip.y));
+    expect(show).toHaveBeenLastCalledWith(
+      load.negationBubbleAnchor('in', 0),
+      'in',
+      expect.anything(),
+      false
+    );
+  });
+
   it('does nothing when the tap is outside port tolerance on empty canvas', () => {
     const and = makeAnd(2, undefined, 2, 2);
     project.addComponent(and);
