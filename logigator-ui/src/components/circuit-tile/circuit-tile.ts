@@ -24,6 +24,28 @@ import { LgImageSource } from '../../tokens/image-source';
 export class LgCircuitTileLink {}
 
 /**
+ * The tile's own controls — a menu trigger, typically — over the top-right
+ * corner of the render. `z-1` lifts them out from under
+ * {@link LgCircuitTileLink}'s overlay, the way the author link is lifted.
+ */
+@Directive({
+  selector: '[lgCircuitTileActions]',
+  host: { class: 'absolute top-2 right-2 z-1' }
+})
+export class LgCircuitTileActions {}
+
+/**
+ * The consumer's own line in the meta row, for a list where the author and the
+ * star count say nothing — a shelf of the reader's own work, where what matters
+ * is whether a document is published and when it was last touched.
+ */
+@Directive({
+  selector: '[lgCircuitTileMeta]',
+  host: { class: 'flex min-w-0 grow items-center justify-between gap-2.5' }
+})
+export class LgCircuitTileMeta {}
+
+/**
  * The author, as a destination of its own. `z-1` is what lifts it out from
  * under {@link LgCircuitTileLink}'s overlay.
  */
@@ -51,6 +73,10 @@ export class LgCircuitTileAuthor {}
  * `preview` is one theme's ladder, not both, since no `<picture>` can
  * negotiate a colour scheme. `starsLabel` is the word a screen reader reads
  * after the count.
+ *
+ * Two more slots serve a list of the reader's own documents, where an author
+ * and a star count say nothing: `[lgCircuitTileMeta]` replaces that row's
+ * content, and `[lgCircuitTileActions]` puts controls over the render.
  */
 @Component({
   selector: 'lg-circuit-tile',
@@ -93,11 +119,12 @@ export class LgCircuitTileAuthor {}
         name()
       }}</span>
 
-      @if (author() || stars() !== undefined) {
+      @if (author() || meta() || stars() !== undefined) {
         <span
           class="flex items-center justify-between gap-2.5 text-[13px] text-muted"
         >
           <ng-content select="a[lgCircuitTileAuthor]" />
+          <ng-content select="[lgCircuitTileMeta]" />
           @if (stars() !== undefined) {
             <span class="inline-flex shrink-0 items-center gap-1">
               <i class="ph ph-star" aria-hidden="true"></i>
@@ -114,6 +141,8 @@ export class LgCircuitTileAuthor {}
     </span>
 
     <ng-content select="a[lgCircuitTileLink]" />
+    <!-- After the overlay, so the controls stack above it as well as over it. -->
+    <ng-content select="[lgCircuitTileActions]" />
   `
 })
 export class LgCircuitTile {
@@ -131,6 +160,7 @@ export class LgCircuitTile {
   readonly loading = input<'lazy' | 'eager'>('lazy');
 
   protected readonly author = contentChild(LgCircuitTileAuthor);
+  protected readonly meta = contentChild(LgCircuitTileMeta);
 
   /** A quarter of a 1280px page at the widest, a whole phone at the narrowest. */
   protected readonly PREVIEW_SIZES = '(min-width: 1040px) 320px, 100vw';

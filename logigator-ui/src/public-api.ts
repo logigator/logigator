@@ -47,7 +47,9 @@ export { LgCard } from './components/card/card';
 export {
   LgCircuitTile,
   LgCircuitTileLink,
-  LgCircuitTileAuthor
+  LgCircuitTileAuthor,
+  LgCircuitTileActions,
+  LgCircuitTileMeta
 } from './components/circuit-tile/circuit-tile';
 export { LgList, LgListItem } from './components/list/list';
 export { LgRipple } from './components/ripple/ripple';
