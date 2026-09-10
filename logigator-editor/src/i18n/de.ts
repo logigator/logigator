@@ -423,6 +423,12 @@ const de: TranslationSchema = {
     loadError: 'Diese Seite konnte nicht geladen werden.',
     back: 'Alle Themen',
     learnMore: 'Mehr erfahren',
+    search: {
+      label: 'Dokumentation durchsuchen',
+      placeholder: 'Suchen..',
+      loading: 'Dokumentation wird geladen…',
+      empty: 'Nichts passt zu „{{query}}“.'
+    },
     sections: {
       basics: 'Grundlagen',
       building: 'Schaltungen bauen',

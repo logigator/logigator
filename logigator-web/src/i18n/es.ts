@@ -17,7 +17,7 @@ const es: TranslationSchema = {
   },
   header: {
     home: 'Inicio de Logigator',
-    features: 'Características',
+    docs: 'Documentación',
     examples: 'Ejemplos',
     community: 'Comunidad',
     myProjects: 'Mis Proyectos',
@@ -157,7 +157,6 @@ const es: TranslationSchema = {
         title: 'Características',
         description:
           'Construye y simula tus propios circuitos con Logigator, una herramienta en línea simple pero poderosa.',
-        more: 'Ver todas las características',
         performance: {
           title: 'Rendimiento',
           body: 'El editor de Logigator puede manejar incluso los proyectos más grandes con facilidad gracias a WebAssembly y WebGL.'
@@ -217,6 +216,36 @@ const es: TranslationSchema = {
       emptyHeading: 'Todavía no hay ejemplos',
       emptyBody: 'Aún no se ha publicado nada para esta instalación.',
       failed: 'No se pudieron cargar los ejemplos'
+    },
+    docs: {
+      title: 'Documentación',
+      lede: 'Cada parte del editor de Logigator, explicada: el tablero y sus herramientas, la construcción de circuitos, la simulación y cómo guardar tu trabajo.',
+      search: {
+        label: 'Buscar en la documentación',
+        placeholder: 'Buscar..',
+        empty: 'Nada coincide con «{{query}}».'
+      },
+      navLabel: 'Páginas de documentación',
+      allTopics: 'Todos los temas',
+      sections: {
+        basics: 'Conceptos básicos',
+        building: 'Construir circuitos',
+        simulation: 'Simulación',
+        projects: 'Proyectos y nube'
+      },
+      pages: {
+        gettingStarted: 'Primeros pasos',
+        boardAndTools: 'Tablero y herramientas',
+        shortcuts: 'Atajos de teclado',
+        settings: 'Ajustes y apariencia',
+        componentsAndOptions: 'Componentes y opciones',
+        wiresAndConnections: 'Cables y conexiones',
+        customComponents: 'Componentes personalizados',
+        simulation: 'Simulación',
+        inspection: 'Inspección y monitores',
+        savingAndFiles: 'Guardar y archivos',
+        cloud: 'Nube y compartir'
+      }
     },
     imprint: {
       title: 'Aviso Legal',

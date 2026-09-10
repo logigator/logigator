@@ -33,7 +33,8 @@ export const AnalyticsEvent = {
   TutorialStepCompleted: 'tutorial_step_completed',
   TutorialCompleted: 'tutorial_completed',
   TutorialAbandoned: 'tutorial_abandoned',
-  DocPageOpened: 'doc_page_opened'
+  DocPageOpened: 'doc_page_opened',
+  DocsSearched: 'docs_searched'
 } as const;
 
 /**

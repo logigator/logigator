@@ -31,7 +31,11 @@ export { LgTag } from './components/tag/tag';
 export { LgBadge } from './components/badge/badge';
 export { LgMessage } from './components/message/message';
 export { LgMarkdown } from './components/markdown/markdown';
-export type { LgMarkdownLinkClick } from './components/markdown/markdown';
+export type {
+  LgMarkdownLinkClick,
+  LgTextMatcher,
+  LgTextRange
+} from './components/markdown/markdown';
 // The slug a `#fragment` inside rendered markdown resolves against. Exported
 // because content that links to its own headings — the site's legal pages —
 // has to author those links by the same rule the renderer resolves them by.

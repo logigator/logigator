@@ -1,4 +1,5 @@
 import { computed, inject, Injectable, Signal } from '@angular/core';
+import { DocPageId } from '@logigator/docs';
 import { environment } from '../../environments/environment';
 import { pathInLanguage } from '../translation/language-url';
 import { TranslationService } from '../translation/translation.service';
@@ -16,7 +17,7 @@ export class SiteLinks {
   private readonly lang = inject(TranslationService).activeLang;
 
   public readonly home = this.path('/');
-  public readonly features = this.path('/features');
+  public readonly docs = this.path('/docs');
   public readonly examples = this.path('/examples');
   public readonly communityProjects = this.path('/community/projects');
   public readonly communityComponents = this.path('/community/components');
@@ -33,6 +34,11 @@ export class SiteLinks {
   public readonly editor = environment.editorUrl;
 
   public readonly repository = 'https://github.com/logigator/logigator';
+
+  /** One documentation page. Reactive when read in a reactive context. */
+  public docsPage(page: DocPageId): string {
+    return pathInLanguage(this.lang(), `/docs/${page}`);
+  }
 
   /** A member's public profile. Reactive when read in a reactive context. */
   public communityUser(id: string): string {

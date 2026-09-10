@@ -20,7 +20,7 @@ const en = {
   },
   header: {
     home: 'Logigator home',
-    features: 'Features',
+    docs: 'Documentation',
     examples: 'Examples',
     community: 'Community',
     myProjects: 'My Projects',
@@ -155,7 +155,6 @@ const en = {
         title: 'Features',
         description:
           'Build and simulate your own circuits with Logigator, a simple yet powerful online tool.',
-        more: 'See all features',
         performance: {
           title: 'Performance',
           body: "Logigators' editor can handle even the largest projects with ease thanks to WebAssembly and WebGL."
@@ -216,6 +215,36 @@ const en = {
       emptyHeading: 'No examples yet',
       emptyBody: 'Nothing has been published for this deployment.',
       failed: 'Examples could not be loaded'
+    },
+    docs: {
+      title: 'Documentation',
+      lede: 'Every part of the Logigator editor, explained: the board and its tools, building circuits, running a simulation, and keeping your work.',
+      search: {
+        label: 'Search the documentation',
+        placeholder: 'Search..',
+        empty: 'Nothing matches “{{query}}”.'
+      },
+      navLabel: 'Documentation pages',
+      allTopics: 'All topics',
+      sections: {
+        basics: 'Basics',
+        building: 'Building Circuits',
+        simulation: 'Simulation',
+        projects: 'Projects & Cloud'
+      },
+      pages: {
+        gettingStarted: 'Getting Started',
+        boardAndTools: 'Board & Tools',
+        shortcuts: 'Keyboard Shortcuts',
+        settings: 'Settings & Appearance',
+        componentsAndOptions: 'Components & Options',
+        wiresAndConnections: 'Wires & Connections',
+        customComponents: 'Custom Components',
+        simulation: 'Simulation',
+        inspection: 'Inspection & Watches',
+        savingAndFiles: 'Saving & Files',
+        cloud: 'Cloud & Sharing'
+      }
     },
     imprint: {
       title: 'Imprint',

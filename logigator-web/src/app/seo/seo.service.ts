@@ -50,11 +50,20 @@ export interface PageMeta {
    * Whether the page is a step in a trail. On by default, since every page but
    * the home page is one level under it. Off for a page that must not name
    * itself: a 404, and anything whose URL carries a one-shot token.
-   *
-   * A page deeper than one level declares its own ancestors when one exists —
-   * the community pages are the first, and none is built yet.
    */
   breadcrumb?: false;
+  /**
+   * The steps between the home page and this one, for a page deeper than one
+   * level. Unprefixed paths: the trail is emitted in the language the URL
+   * names, like everything else in the head.
+   */
+  ancestors?: readonly { titleKey: TranslationKey; path: string }[];
+  /**
+   * Unprefixed path of the page's raw-markdown twin, where it has one. It is
+   * announced in the head rather than left to be guessed, which is what makes
+   * a reader that prefers the source able to find it.
+   */
+  markdownPath?: string;
 }
 
 /**
@@ -117,6 +126,11 @@ export class SeoService {
     // `x-default` is the URL for a visitor no alternate matches; that is the
     // unprefixed one, which negotiates a language of its own.
     this.setLink('alternate', 'x-default', `${this.origin}${canonicalPath}`);
+    this.setMarkdownAlternate(
+      page.markdownPath
+        ? `${this.origin}${pathInLanguage(lang, page.markdownPath)}`
+        : null
+    );
 
     this.setStructuredData(
       page,
@@ -159,8 +173,9 @@ export class SeoService {
   }
 
   /**
-   * Home followed by the page, or nothing for the home page itself — a trail of
-   * one item says only that the page is where it is.
+   * Home, whatever the page declares between, and the page itself — or nothing
+   * for the home page, a trail of one item saying only that the page is where
+   * it is.
    */
   private breadcrumb(
     page: PageMeta,
@@ -171,23 +186,48 @@ export class SeoService {
     if (page.breadcrumb === false || canonicalPath === '/') {
       return null;
     }
+    const steps = [
+      {
+        name: context.translate('site.name'),
+        item: `${context.origin}/${context.lang}`
+      },
+      ...(page.ancestors ?? []).map((ancestor) => ({
+        name: context.translate(ancestor.titleKey),
+        item: `${context.origin}${pathInLanguage(context.lang, ancestor.path)}`
+      })),
+      { name: pageTitle, item: context.url }
+    ];
     return {
       '@type': 'BreadcrumbList',
-      itemListElement: [
-        {
-          '@type': 'ListItem',
-          position: 1,
-          name: context.translate('site.name'),
-          item: `${context.origin}/${context.lang}`
-        },
-        {
-          '@type': 'ListItem',
-          position: 2,
-          name: pageTitle,
-          item: context.url
-        }
-      ]
+      itemListElement: steps.map((step, index) => ({
+        '@type': 'ListItem',
+        position: index + 1,
+        name: step.name,
+        item: step.item
+      }))
     };
+  }
+
+  /**
+   * The raw-markdown twin of the page, or none. Removed rather than left
+   * pointing at the last page that had one: a client-side navigation reuses
+   * the document.
+   */
+  private setMarkdownAlternate(href: string | null): void {
+    const selector = 'link[rel="alternate"][type="text/markdown"]';
+    const existing =
+      this.document.head.querySelector<HTMLLinkElement>(selector);
+    if (href === null) {
+      existing?.remove();
+      return;
+    }
+    const link = existing ?? this.document.createElement('link');
+    link.rel = 'alternate';
+    link.type = 'text/markdown';
+    link.href = href;
+    if (!existing) {
+      this.document.head.appendChild(link);
+    }
   }
 
   /**

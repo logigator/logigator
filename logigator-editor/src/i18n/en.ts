@@ -418,6 +418,12 @@ const en = {
     loadError: 'This page could not be loaded.',
     back: 'All topics',
     learnMore: 'Learn more',
+    search: {
+      label: 'Search the documentation',
+      placeholder: 'Search..',
+      loading: 'Loading the documentation…',
+      empty: 'Nothing matches “{{query}}”.'
+    },
     sections: {
       basics: 'Basics',
       building: 'Building Circuits',

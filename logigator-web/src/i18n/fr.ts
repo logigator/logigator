@@ -17,7 +17,7 @@ const fr: TranslationSchema = {
   },
   header: {
     home: 'Accueil de Logigator',
-    features: 'Fonctionnalités',
+    docs: 'Documentation',
     examples: 'Exemples',
     community: 'Communauté',
     myProjects: 'Mes Projets',
@@ -153,7 +153,6 @@ const fr: TranslationSchema = {
         title: 'Fonctionnalités',
         description:
           'Construisez et simulez vos propres circuits avec Logigator, un outil en ligne simple mais puissant.',
-        more: 'Voir toutes les fonctionnalités',
         performance: {
           title: 'Performance',
           body: "L'éditeur de Logigator peut gérer même les plus grands projets facilement grâce à WebAssembly et WebGL."
@@ -211,6 +210,36 @@ const fr: TranslationSchema = {
       emptyHeading: 'Pas encore d’exemples',
       emptyBody: "Rien n'a encore été publié pour cette installation.",
       failed: "Les exemples n'ont pas pu être chargés"
+    },
+    docs: {
+      title: 'Documentation',
+      lede: "Chaque partie de l'éditeur Logigator, expliquée : le plan de travail et ses outils, la construction de circuits, la simulation et la conservation de votre travail.",
+      search: {
+        label: 'Rechercher dans la documentation',
+        placeholder: 'Rechercher..',
+        empty: 'Aucun résultat pour « {{query}} ».'
+      },
+      navLabel: 'Pages de documentation',
+      allTopics: 'Tous les sujets',
+      sections: {
+        basics: 'Bases',
+        building: 'Construction de circuits',
+        simulation: 'Simulation',
+        projects: 'Projets et cloud'
+      },
+      pages: {
+        gettingStarted: 'Prise en main',
+        boardAndTools: 'Plan de travail et outils',
+        shortcuts: 'Raccourcis clavier',
+        settings: 'Paramètres et apparence',
+        componentsAndOptions: 'Composants et options',
+        wiresAndConnections: 'Fils et connexions',
+        customComponents: 'Composants personnalisés',
+        simulation: 'Simulation',
+        inspection: 'Inspection et surveillances',
+        savingAndFiles: 'Enregistrement et fichiers',
+        cloud: 'Cloud et partage'
+      }
     },
     imprint: {
       title: 'Mentions légales',

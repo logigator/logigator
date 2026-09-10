@@ -129,6 +129,45 @@ describe('SeoService', () => {
     ]);
   });
 
+  it('walks a page deeper than one level through its ancestors', () => {
+    TestBed.inject(SeoService).apply(
+      {
+        titleKey: 'pages.docs.pages.cloud',
+        ancestors: [{ titleKey: 'pages.docs.title', path: '/docs' }]
+      },
+      '/de/docs/cloud'
+    );
+
+    const trail = graph().find((node) => node['@type'] === 'BreadcrumbList');
+    expect(trail?.['itemListElement']).toMatchObject([
+      { position: 1, item: `${ORIGIN}/de` },
+      { position: 2, item: `${ORIGIN}/de/docs` },
+      { position: 3, item: `${ORIGIN}/de/docs/cloud` }
+    ]);
+  });
+
+  /**
+   * The twin is announced rather than left to be guessed, and it is dropped
+   * again on the next page: a client-side navigation reuses the document, so
+   * one left behind would offer the last page's source for this one.
+   */
+  it('names the raw-markdown twin, in the page’s own language', () => {
+    const seo = TestBed.inject(SeoService);
+    const markdownLink = () =>
+      document.head.querySelector<HTMLLinkElement>(
+        'link[rel="alternate"][type="text/markdown"]'
+      )?.href ?? null;
+
+    seo.apply(
+      { titleKey: 'pages.docs.pages.cloud', markdownPath: '/docs/cloud.md' },
+      '/fr/docs/cloud'
+    );
+    expect(markdownLink()).toBe(`${ORIGIN}/fr/docs/cloud.md`);
+
+    seo.apply({ titleKey: 'pages.examples.title' }, '/fr/examples');
+    expect(markdownLink()).toBeNull();
+  });
+
   it('leaves out the trail a page must not name itself in', () => {
     // A crumb for `verify-email/<token>` would publish the token, and one for
     // a 404 would claim the URL is a page.

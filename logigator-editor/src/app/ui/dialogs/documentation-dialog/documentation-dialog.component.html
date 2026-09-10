@@ -2,9 +2,12 @@
   <ng-template #content>
     @if (markdown(); as md) {
       <lg-markdown
+        #view
         [data]="md"
         [assetUrls]="docImages()"
+        [highlightMatches]="highlightMatches()"
         (linkClick)="onLinkClick($event)"
+        (ready)="onRendered(view)"
       />
     } @else if (failed()) {
       <p class="text-muted text-sm">{{ t('documentation.loadError') }}</p>
@@ -13,13 +16,38 @@
     }
   </ng-template>
 
+  <ng-template #searchField>
+    <lg-icon-field class="block">
+      <lg-input-icon class="ph ph-magnifying-glass" />
+      <input
+        lgInputText
+        type="search"
+        class="w-full"
+        [attr.aria-label]="t('documentation.search.label')"
+        [placeholder]="t('documentation.search.placeholder')"
+        [value]="search.query()"
+        (input)="onSearchInput($event)"
+      />
+    </lg-icon-field>
+  </ng-template>
+
   @if (layout.isCompact()) {
     @if (showIndex()) {
-      <lg-navigation
-        class="min-h-0 grow overflow-y-auto py-2"
-        [items]="navItems()"
-        (selectedChange)="onNavSelect($event)"
-      />
+      <div class="shrink-0 px-3 pb-2">
+        <ng-container [ngTemplateOutlet]="searchField" />
+      </div>
+      @if (search.searching()) {
+        <app-docs-search-results
+          class="min-h-0 grow overflow-y-auto px-1 py-2"
+          (resultSelected)="onResultSelect($event)"
+        />
+      } @else {
+        <lg-navigation
+          class="min-h-0 grow overflow-y-auto py-2"
+          [items]="navItems()"
+          (selectedChange)="onNavSelect($event)"
+        />
+      }
     } @else {
       <div
         class="border-border flex shrink-0 items-center gap-2 border-b px-3 pb-2"
@@ -40,14 +68,23 @@
     }
   } @else {
     <div class="flex min-h-0 grow">
-      <lg-navigation
-        class="border-border w-60 shrink-0 overflow-y-auto border-r py-2"
-        [items]="navItems()"
-        [selected]="activePage()"
-        (selectedChange)="onNavSelect($event)"
-      />
+      <div class="border-border flex w-60 shrink-0 flex-col border-r">
+        <div class="shrink-0 p-2">
+          <ng-container [ngTemplateOutlet]="searchField" />
+        </div>
+        <lg-navigation
+          class="min-h-0 grow overflow-y-auto pb-2"
+          [items]="navItems()"
+          [selected]="activePage()"
+          (selectedChange)="onNavSelect($event)"
+        />
+      </div>
       <div #contentPane class="min-h-0 grow overflow-y-auto p-5">
-        <ng-container [ngTemplateOutlet]="content" />
+        @if (search.searching()) {
+          <app-docs-search-results (resultSelected)="onResultSelect($event)" />
+        } @else {
+          <ng-container [ngTemplateOutlet]="content" />
+        }
       </div>
     </div>
   }

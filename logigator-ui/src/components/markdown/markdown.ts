@@ -1,6 +1,8 @@
 import {
   Component,
   computed,
+  DestroyRef,
+  effect,
   ElementRef,
   inject,
   input,
@@ -9,27 +11,7 @@ import {
 } from '@angular/core';
 import { MarkdownComponent } from 'ngx-markdown';
 import { ImageZoomViewer } from '../image-zoom/image-zoom-viewer';
-
-/**
- * Rewrites markdown link/image destinations to their mapped URLs. Only the
- * destination matches, verbatim; an optional title is carried over and
- * unmapped destinations stay untouched.
- */
-export function resolveMarkdownUrls(
-  data: string | undefined,
-  urls: Readonly<Record<string, string>> | undefined
-): string | undefined {
-  if (data === undefined || urls === undefined) {
-    return data;
-  }
-  return data.replace(
-    /\]\(([^)\s]+)([^)]*)\)/g,
-    (match, destination: string, title: string) =>
-      Object.hasOwn(urls, destination)
-        ? `](${urls[destination]}${title})`
-        : match
-  );
-}
+import { resolveMarkdownUrls } from '../../internal/markdown-urls';
 
 /**
  * A heading's anchor slug, derived from its text: marked emits no heading ids,
@@ -49,6 +31,35 @@ export function headingSlug(text: string): string {
  * narrow, so the prose reads beside it instead of around whitespace.
  */
 const PORTRAIT_MAX_RATIO = 0.9;
+
+/** Where a match sits in a string, in the UTF-16 units a text node counts in. */
+export interface LgTextRange {
+  start: number;
+  end: number;
+}
+
+/**
+ * Finds what should be marked inside one run of rendered text. A function
+ * rather than a list of words, so the rule for what counts as a match — case,
+ * accents, whatever a consumer's search folds away — stays with the consumer.
+ */
+export type LgTextMatcher = (text: string) => readonly LgTextRange[];
+
+/**
+ * The registry name the marks are set under. One name, so `::highlight()` can
+ * be written in a stylesheet at all — which means one rendered document at a
+ * time carries marks, and that is all either viewer shows.
+ */
+const HIGHLIGHT_NAME = 'lg-markdown-match';
+
+/** Whether this browser can mark text without the content being rewritten. */
+function highlightsSupported(): boolean {
+  return (
+    typeof CSS !== 'undefined' &&
+    'highlights' in CSS &&
+    typeof Highlight !== 'undefined'
+  );
+}
 
 /** A click on a link inside rendered markdown content. */
 export interface LgMarkdownLinkClick {
@@ -86,8 +97,19 @@ export interface LgMarkdownLinkClick {
     '(click)': 'onContentClick($event)',
     '(keydown)': 'onContentKeydown($event)'
   },
-  template: `<markdown [data]="resolvedData()" [src]="src()" />`,
+  template: `<markdown
+    [data]="resolvedData()"
+    [src]="src()"
+    (ready)="onRendered()"
+  />`,
   styles: `
+    /* Only a handful of properties are allowed here; background and colour are
+       what a mark needs. Matches the results list's own marking. */
+    ::highlight(lg-markdown-match) {
+      background-color: color-mix(in srgb, var(--lg-primary) 25%, transparent);
+      color: inherit;
+    }
+
     lg-markdown {
       display: block;
       color: var(--lg-text);
@@ -286,6 +308,22 @@ export class LgMarkdown {
    * claims it, e.g. for an app-specific scheme the consumer routes itself.
    */
   readonly linkClick = output<LgMarkdownLinkClick>();
+  /**
+   * The rendered content is in the DOM. The renderer assigns it asynchronously,
+   * so this is the hook anything reading the result needs — {@link
+   * scrollToHeading} finds nothing when called before it.
+   */
+  readonly ready = output<void>();
+  /**
+   * Marks what it finds in the rendered text — a reader who arrived from a
+   * search sees the words that brought them here.
+   *
+   * Nothing is inserted into the content: the matches become `Range`s in the
+   * CSS Custom Highlight API, styled through `::highlight()`. Wrapping them in
+   * markup would mean rewriting HTML the renderer owns and re-doing it on
+   * every render. Where the API is missing the page simply carries no marks.
+   */
+  readonly highlightMatches = input<LgTextMatcher>();
 
   protected readonly resolvedData = computed(() =>
     resolveMarkdownUrls(this.data(), this.assetUrls())
@@ -295,6 +333,11 @@ export class LgMarkdown {
   private readonly imageZoom = inject(ImageZoomViewer);
 
   constructor() {
+    // Re-marked when the matcher changes; `ready` covers the other half, the
+    // content itself arriving.
+    effect(() => this.markMatches(this.highlightMatches()));
+    inject(DestroyRef).onDestroy(() => this.clearMatches());
+
     // The content is innerHTML, so `load` in the capture phase (it doesn't
     // bubble) is the only per-image hook; re-rendered content fires it again,
     // cache included. Only the image knows its aspect ratio, so the portrait
@@ -324,6 +367,52 @@ export class LgMarkdown {
     );
   }
 
+  /**
+   * Marks every run `find` reports across the rendered text, replacing whatever
+   * was marked before. Text nodes are matched one at a time, so a match broken
+   * up by inline markup — `**simu**lation` — is found in halves or not at all.
+   */
+  private markMatches(find: LgTextMatcher | undefined): void {
+    if (!highlightsSupported()) {
+      return;
+    }
+    this.clearMatches();
+    if (!find) {
+      return;
+    }
+    const walker = document.createTreeWalker(
+      this.host.nativeElement,
+      NodeFilter.SHOW_TEXT
+    );
+    const ranges: Range[] = [];
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      const text = node.nodeValue;
+      if (!text) {
+        continue;
+      }
+      for (const { start, end } of find(text)) {
+        // A range the text cannot carry throws and takes the render with it,
+        // so a matcher's offsets are checked rather than trusted.
+        if (start < 0 || end > text.length || start >= end) {
+          continue;
+        }
+        const range = document.createRange();
+        range.setStart(node, start);
+        range.setEnd(node, end);
+        ranges.push(range);
+      }
+    }
+    if (ranges.length > 0) {
+      CSS.highlights.set(HIGHLIGHT_NAME, new Highlight(...ranges));
+    }
+  }
+
+  private clearMatches(): void {
+    if (highlightsSupported()) {
+      CSS.highlights.delete(HIGHLIGHT_NAME);
+    }
+  }
+
   /** Scrolls the rendered heading whose {@link headingSlug} matches into view. */
   scrollToHeading(slug: string): void {
     const headings = this.host.nativeElement.querySelectorAll<HTMLElement>(
@@ -332,6 +421,12 @@ export class LgMarkdown {
     Array.from(headings)
       .find((heading) => headingSlug(heading.textContent ?? '') === slug)
       ?.scrollIntoView({ block: 'start' });
+  }
+
+  /** The renderer has written its content; anything reading it can run now. */
+  protected onRendered(): void {
+    this.markMatches(this.highlightMatches());
+    this.ready.emit();
   }
 
   protected onContentClick(event: MouseEvent): void {

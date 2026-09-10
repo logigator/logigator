@@ -6,6 +6,11 @@ import {
 } from '@angular/ssr/node';
 import express from 'express';
 import { join, sep } from 'node:path';
+import { isAvailableLanguage } from '@logigator/core';
+import { isDocPageId } from '@logigator/docs';
+import { resolveMarkdownUrls } from '@logigator/ui/internal/markdown-urls';
+import { docDestinations } from './app/pages/docs/doc-destinations';
+import { loadDocPage } from './app/pages/docs/doc-content';
 import {
   languageFromPath,
   pathInLanguage
@@ -131,6 +136,60 @@ app.use((req, res, next) => {
   const query = req.originalUrl.slice(req.path.length);
   res.redirect(302, pathInLanguage(lang, req.path) + query);
 });
+
+/** `/<lang>/docs/<page>.md`, the raw-markdown twin of a documentation page. */
+const DOC_TWIN_PATH = /^\/([a-z]{2})\/docs\/([a-z0-9-]+)\.md$/;
+
+/**
+ * A documentation page as the markdown it is written in, beside the page that
+ * renders it. A reader that would rather have the source — an agent, a script,
+ * anyone reading in a terminal — gets the document itself rather than the
+ * prose dug back out of an Angular render, and the page's head names this URL.
+ *
+ * The destinations are rewritten the way the renderer rewrites them, so a
+ * screenshot resolves to the file the build emitted and a cross link to the
+ * twin of the page it names. Rooted, unlike the rendered page's: markdown
+ * carries no `<base>`, so a relative `media/…` would resolve under this URL's
+ * own folder.
+ */
+app.use((req, res, next) => {
+  const match =
+    req.method === 'GET' || req.method === 'HEAD'
+      ? DOC_TWIN_PATH.exec(req.path)
+      : null;
+  if (!match) {
+    next();
+    return;
+  }
+  const [, lang, page] = match;
+  if (!isAvailableLanguage(lang) || !isDocPageId(page)) {
+    next();
+    return;
+  }
+  loadDocPage(page, lang)
+    .then((markdown) => {
+      const destinations = docDestinations(
+        lang,
+        (target) => pathInLanguage(lang, `/docs/${target}.md`),
+        rootRelative
+      );
+      res.setHeader('Content-Type', 'text/markdown; charset=utf-8');
+      res.setHeader(
+        'Cache-Control',
+        `public, max-age=${MUTABLE_ASSET_MAX_AGE}`
+      );
+      res.send(resolveMarkdownUrls(markdown, destinations));
+    })
+    .catch(next);
+});
+
+/** An emitted asset's URL as a path from the root, which `<base>` is not here. */
+function rootRelative(url: string): string {
+  if (/^[a-z][a-z0-9+.-]*:/i.test(url) || url.startsWith('/')) {
+    return url;
+  }
+  return `/${url.replace(/^\.\//, '')}`;
+}
 
 /**
  * Everything left is a page: render it.

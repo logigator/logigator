@@ -3,7 +3,9 @@ import { DialogRef, DialogService } from '@logigator/ui';
 import { LayoutService } from '../layout/layout.service';
 import { TranslationService } from '../translation/translation.service';
 import { DocumentationDialogComponent } from '../ui/dialogs/documentation-dialog/documentation-dialog.component';
-import { docPage, DocPageId } from './docs-pages';
+import { DocPageId } from '@logigator/docs';
+import { docPageUrl } from './docs-pages';
+import { DocsSearchService } from './docs-search.service';
 import { AnalyticsService } from '../analytics/analytics.service';
 import { AnalyticsEvent, DialogId } from '../analytics/analytics.mapping';
 
@@ -21,9 +23,11 @@ export class DocumentationService {
   private readonly translation = inject(TranslationService);
   private readonly layout = inject(LayoutService);
   private readonly analytics = inject(AnalyticsService);
+  private readonly search = inject(DocsSearchService);
 
   private readonly _page = signal<DocPageId | null>(null);
   private readonly _anchor = signal<string | null>(null);
+  private readonly _terms = signal<readonly string[]>([]);
   private dialogRef: DialogRef<unknown, DocumentationDialogComponent> | null =
     null;
 
@@ -31,15 +35,30 @@ export class DocumentationService {
   public readonly page = computed(this._page);
   /** Pending heading anchor of the last {@link open}, until consumed. */
   public readonly anchor = computed(this._anchor);
+  /**
+   * What the reader searched for, marked in the page a result opened. It rides
+   * with the open rather than being read back off the search field, which the
+   * same open clears.
+   */
+  public readonly terms = computed(this._terms);
 
   /**
    * Opens the viewer on `page`, or without one leaves it where it is: a fresh
    * open lands on the index/default page, an open viewer is left alone.
    */
-  public open(page?: DocPageId, anchor?: string): void {
+  public open(
+    page?: DocPageId,
+    anchor?: string,
+    terms: readonly string[] = []
+  ): void {
     if (page) {
       this._page.set(page);
       this._anchor.set(anchor ?? null);
+      this._terms.set(terms);
+      // Opening a page ends the search, whether it came from a result, the
+      // topic tree or a deep link: the viewer shows results *instead of* the
+      // page, so a page opened under them would be invisible.
+      this.search.clear();
     }
     if (page || !this.dialogRef) {
       this.analytics.capture(AnalyticsEvent.DocPageOpened, {
@@ -65,6 +84,7 @@ export class DocumentationService {
       // The next open starts at the index / default page again.
       this._page.set(null);
       this._anchor.set(null);
+      this._terms.set([]);
     });
   }
 
@@ -72,6 +92,7 @@ export class DocumentationService {
   public showIndex(): void {
     this._page.set(null);
     this._anchor.set(null);
+    this._terms.set([]);
   }
 
   /** Marks the pending anchor as applied so re-sending the same one fires. */
@@ -81,7 +102,6 @@ export class DocumentationService {
 
   /** Markdown URL of a page for the active language, English as fallback. */
   public resolveUrl(page: DocPageId): string {
-    const urls = docPage(page).urls;
-    return urls[this.translation.getActiveLang()] ?? urls['en'];
+    return docPageUrl(page, this.translation.getActiveLang());
   }
 }

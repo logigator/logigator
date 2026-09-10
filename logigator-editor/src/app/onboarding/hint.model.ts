@@ -1,6 +1,6 @@
 import { type LgOverlaySide } from '@logigator/ui';
 import { WorkMode } from '../work-mode/work-mode.enum';
-import { DocPageId } from '../documentation/docs-pages';
+import { DocPageId } from '@logigator/docs';
 import { StepText } from './tutorial.model';
 import { OnboardingPlatform } from './onboarding.service';
 

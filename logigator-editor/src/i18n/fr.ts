@@ -423,6 +423,12 @@ const fr: TranslationSchema = {
     loadError: 'Impossible de charger cette page.',
     back: 'Tous les sujets',
     learnMore: 'En savoir plus',
+    search: {
+      label: 'Rechercher dans la documentation',
+      placeholder: 'Rechercher..',
+      loading: 'Chargement de la documentation…',
+      empty: 'Aucun résultat pour « {{query}} ».'
+    },
     sections: {
       basics: 'Bases',
       building: 'Construction de circuits',

@@ -8,6 +8,7 @@ import { homeContentGuard } from './pages/home/home-content.guard';
 import { homeJsonLd } from './pages/home/home-json-ld';
 import { ExamplesPage } from './pages/examples/examples-page';
 import { examplesContentGuard } from './pages/examples/examples-content.guard';
+import { docsRoutes } from './pages/docs/docs-routes';
 import { LegalPage } from './pages/legal/legal-page';
 import { legalContentGuard } from './pages/legal/legal-content.guard';
 import { LegalRouteData } from './pages/legal/legal-document';
@@ -51,6 +52,7 @@ const localizedRoutes: Routes = [
       } satisfies PageMeta
     }
   },
+  ...docsRoutes,
   // Two documents, one page: which text it renders is route data, and the
   // guard loads it before the first byte.
   {

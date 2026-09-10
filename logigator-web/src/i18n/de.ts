@@ -17,7 +17,7 @@ const de: TranslationSchema = {
   },
   header: {
     home: 'Logigator Startseite',
-    features: 'Features',
+    docs: 'Dokumentation',
     examples: 'Beispiele',
     community: 'Community',
     myProjects: 'Meine Projekte',
@@ -161,7 +161,6 @@ const de: TranslationSchema = {
         title: 'Features',
         description:
           'Baue und simuliere deine eigenen Schaltungen mit Logigator, einem einfachen aber mächtigen online Tool.',
-        more: 'Alle Features ansehen',
         performance: {
           title: 'Performance',
           body: "Logigators' Editor kann dank WebAssembly und WebGL auch mit den größten Projekten umgehen."
@@ -219,6 +218,36 @@ const de: TranslationSchema = {
       emptyHeading: 'Noch keine Beispiele',
       emptyBody: 'Für diese Installation wurde noch nichts veröffentlicht.',
       failed: 'Beispiele konnten nicht geladen werden'
+    },
+    docs: {
+      title: 'Dokumentation',
+      lede: 'Jeder Teil des Logigator-Editors, erklärt: die Arbeitsfläche und ihre Werkzeuge, das Bauen von Schaltungen, das Simulieren und das Aufbewahren deiner Arbeit.',
+      search: {
+        label: 'Dokumentation durchsuchen',
+        placeholder: 'Suchen..',
+        empty: 'Nichts passt zu „{{query}}“.'
+      },
+      navLabel: 'Dokumentationsseiten',
+      allTopics: 'Alle Themen',
+      sections: {
+        basics: 'Grundlagen',
+        building: 'Schaltungen bauen',
+        simulation: 'Simulation',
+        projects: 'Projekte & Cloud'
+      },
+      pages: {
+        gettingStarted: 'Einstieg',
+        boardAndTools: 'Arbeitsfläche & Werkzeuge',
+        shortcuts: 'Tastaturbefehle',
+        settings: 'Einstellungen & Darstellung',
+        componentsAndOptions: 'Komponenten & Optionen',
+        wiresAndConnections: 'Leitungen & Verbindungen',
+        customComponents: 'Benutzerdefinierte Komponenten',
+        simulation: 'Simulation',
+        inspection: 'Inspektion & Beobachtungen',
+        savingAndFiles: 'Speichern & Dateien',
+        cloud: 'Cloud & Teilen'
+      }
     },
     imprint: {
       title: 'Impressum',

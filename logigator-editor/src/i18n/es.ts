@@ -423,6 +423,12 @@ const es: TranslationSchema = {
     loadError: 'No se pudo cargar esta página.',
     back: 'Todos los temas',
     learnMore: 'Más información',
+    search: {
+      label: 'Buscar en la documentación',
+      placeholder: 'Buscar..',
+      loading: 'Cargando la documentación…',
+      empty: 'Nada coincide con «{{query}}».'
+    },
     sections: {
       basics: 'Conceptos básicos',
       building: 'Construir circuitos',

@@ -14,8 +14,8 @@ FROM node:24 AS editor
 WORKDIR /app
 RUN corepack enable
 
-# The new editor is a Yarn/Angular workspace member: it compiles @logigator/ui
-# and @logigator/core from source via tsconfig path mapping, so the whole
+# The new editor is a Yarn/Angular workspace member: it compiles @logigator/ui,
+# @logigator/core and @logigator/docs from source via tsconfig path mapping, so the whole
 # workspace is built here, not just logigator-editor/. Manifests are copied
 # first for a cached install — every member's manifest, since the immutable
 # install validates the whole workspace against the lockfile.
@@ -23,6 +23,7 @@ COPY ["./package.json", "./yarn.lock", "./.yarnrc.yml", "./"]
 COPY ["./logigator-ui/package.json", "./logigator-ui/"]
 COPY ["./logigator-core/package.json", "./logigator-core/"]
 COPY ["./logigator-contract/package.json", "./logigator-contract/"]
+COPY ["./logigator-docs/package.json", "./logigator-docs/"]
 COPY ["./logigator-api/package.json", "./logigator-api/"]
 COPY ["./logigator-editor/package.json", "./logigator-editor/"]
 COPY ["./logigator-web/package.json", "./logigator-web/"]
@@ -36,6 +37,7 @@ COPY ["./angular.json", "./tsconfig.json", "./"]
 COPY ["./logigator-ui", "./logigator-ui/"]
 COPY ["./logigator-core", "./logigator-core/"]
 COPY ["./logigator-contract", "./logigator-contract/"]
+COPY ["./logigator-docs", "./logigator-docs/"]
 COPY ["./logigator-editor", "./logigator-editor/"]
 
 # Version stamping for the About dialog. Empty args fall back to the angular.json

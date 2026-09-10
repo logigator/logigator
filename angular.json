@@ -186,6 +186,7 @@
               ".jpeg": "file",
               ".webp": "file",
               ".avif": "file",
+              ".gif": "file",
               ".md": "text"
             },
             "define": {

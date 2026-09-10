@@ -7,7 +7,7 @@
  *   node tools/docs-screenshots/capture.mjs <out-dir> [options]
  *
  * Each language lands in its own sub-directory of <out-dir>, mirroring
- * `src/assets/docs/<lang>/images/`. The editor must have `automationApi` on and
+ * `logigator-docs/src/pages/<lang>/images/`. The editor must have `automationApi` on and
  * the debug decorations off — see the README.
  */
 import { createRequire } from 'node:module';

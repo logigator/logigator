@@ -1,7 +1,7 @@
 # Documentation screenshots
 
 Generates the images the in-editor documentation uses
-(`src/assets/docs/<lang>/images/`) by driving a real editor:
+(`logigator-docs/src/pages/<lang>/images/`) by driving a real editor:
 `window.__logigator` (the [automation API](../../docs/automation.md)) puts the
 circuit, camera, tool, simulation, selection, tabs and inspection windows where
 a shot needs them, and Playwright handles the rest — the chrome the API
@@ -37,7 +37,8 @@ probes for the facade and aborts rather than producing wrong shots. No source
 edit is needed for any of this.
 
 The script only writes into the directory you name. After copying the images
-over the tracked ones, regenerate the editor's registry:
+over the tracked ones, regenerate the shared image registry
+(`logigator-docs/src/images.ts`, which both the editor and the website read):
 
 ```bash
 node logigator-editor/tools/docs-screenshots/write-registry.mjs
