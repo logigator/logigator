@@ -284,19 +284,25 @@ export class SimulationService {
     this._state.set('inactive');
     this._watchAppliers.clear();
 
-    this._applier?.reset();
-    if (this._project && !this._project.destroyed) {
-      for (const component of this._project.components) {
-        component.clearSimState();
-        component.setSimulating(false);
+    // The reset walks live objects the board mapped at compile time, so one
+    // freed under the session throws here. Dropping the session regardless
+    // keeps that a single failure: a mode left at SIMULATION with the worker
+    // already gone makes every retry re-enter and fail again.
+    try {
+      this._applier?.reset();
+      if (this._project && !this._project.destroyed) {
+        for (const component of this._project.components) {
+          component.clearSimState();
+          component.setSimulating(false);
+        }
+        this._project.triggerTicker('off');
       }
-      this._project.triggerTicker('off');
+    } finally {
+      this._board = null;
+      this._applier = null;
+      this._project = null;
+      this.workModeService.setSimulationMode(false);
     }
-
-    this._board = null;
-    this._applier = null;
-    this._project = null;
-    this.workModeService.setSimulationMode(false);
   }
 
   /** Starts running in the selected mode; the ticker renders continuously. */

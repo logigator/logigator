@@ -692,6 +692,7 @@ const es: TranslationSchema = {
     loadDetected:
       'Este circuito tiene {{count}} problema(s) de cables, lo que puede hacer que las conexiones se comporten de forma inesperada.',
     repairAction: 'Reparar cables',
+    leftSimulation: 'La simulación se detuvo para reparar los cables.',
     clean: 'No se encontraron problemas de cables.'
   },
   bugReport: {

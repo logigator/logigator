@@ -682,6 +682,7 @@ const en = {
     loadDetected:
       'This circuit has {{count}} wire issue(s), which can make connections behave unexpectedly.',
     repairAction: 'Repair wires',
+    leftSimulation: 'Simulation stopped so the wires could be repaired.',
     clean: 'No wire issues found.'
   },
   bugReport: {

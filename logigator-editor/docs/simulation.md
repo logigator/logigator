@@ -234,7 +234,11 @@ custom-component tab), compiles it, then builds the applier, subscribes to
 session. It resolves with the diagnostics that blocked entry — empty on success,
 toasted by `enter()` itself, read by the automation API. `exit()` ends the session, resets
 the applier and every component's sim visuals, stops the ticker, drops the
-compiled artifacts and returns to `PAN`.
+compiled artifacts and returns to `PAN`. The visual reset walks the live objects
+the mapping captured at compile time, so it runs inside a `try`/`finally`: one
+freed under the session throws there, and dropping the artifacts and the mode
+regardless keeps that a single failure instead of a mode stuck at `SIMULATION`
+with no worker behind it, which every retry re-enters and fails on again.
 
 A session is also forced to exit when another project takes the main slot: the
 compiled mapping addresses the outgoing project by live object reference, and
@@ -243,6 +247,11 @@ synchronously _before_ the swap, so `exit()` still reaches that project's
 visuals and ticker. The notification inverts a dependency `SimulationService`
 cannot have, since `PersistenceService` already reaches it through
 `ShortcutService` → `SaveCoordinatorService`.
+
+A board-wide wire repair exits for the same reason — it destroys the `Wire`
+instances the mapping holds — and reaches `exit()` through the `Injector`, that
+same chain being what stops it from injecting the service (`wires.md` §
+Board-wide repair).
 
 ### Run controls and user input
 

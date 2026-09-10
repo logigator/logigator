@@ -695,6 +695,7 @@ const fr: TranslationSchema = {
     loadDetected:
       'Ce circuit comporte {{count}} problème(s) de fils, ce qui peut faire réagir les connexions de façon inattendue.',
     repairAction: 'Réparer les fils',
+    leftSimulation: 'La simulation a été arrêtée pour réparer les fils.',
     clean: 'Aucun problème de fils détecté.'
   },
   bugReport: {

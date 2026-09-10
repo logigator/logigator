@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { configureTestBed } from '../../testing/configure-test-bed';
 import { Project } from './project';
@@ -9,6 +9,9 @@ import { WireRepairService } from './wire-repair.service';
 import { makeAnd, makeWire } from '../../testing/factories';
 import { ToastMessage, ToastService as UiToastService } from '@logigator/ui';
 import { ProjectMetadataStore } from '../persistence/project-metadata.store';
+import { SimulationService } from '../simulation/simulation.service';
+import { WorkMode } from '../work-mode/work-mode.enum';
+import { WorkModeService } from '../work-mode/work-mode.service';
 
 const H = WireDirection.HORIZONTAL;
 const V = WireDirection.VERTICAL;
@@ -366,6 +369,39 @@ describe('WireRepairService', () => {
     project.addWire(makeWire(0, 0, H, 4));
     service.repairManually(project);
     expect(project.actionManager.undoAvailable).toBe(false);
+  });
+
+  it('repairManually leaves simulation while the wires it replaces are alive', () => {
+    corrupt();
+    const replaced = [...project.wires];
+    const workModeService = TestBed.inject(WorkModeService);
+    workModeService.setSimulationMode(true);
+
+    // The compiled session addresses these instances, so it has to be torn
+    // down before the repair frees them.
+    const simulation = TestBed.inject(SimulationService);
+    const exit = simulation.exit.bind(simulation);
+    let aliveAtExit: boolean | null = null;
+    vi.spyOn(simulation, 'exit').mockImplementation(() => {
+      aliveAtExit = replaced.every((wire) => !wire.destroyed);
+      exit();
+    });
+
+    service.repairManually(project);
+
+    expect(aliveAtExit).toBe(true);
+    expect(workModeService.mode()).not.toBe(WorkMode.SIMULATION);
+    expect(auditWireInvariants(project)).toEqual([]);
+  });
+
+  it('repairManually keeps a live simulation when there is nothing to repair', () => {
+    project.addWire(makeWire(0, 0, H, 4));
+    const workModeService = TestBed.inject(WorkModeService);
+    workModeService.setSimulationMode(true);
+
+    service.repairManually(project);
+
+    expect(workModeService.mode()).toBe(WorkMode.SIMULATION);
   });
 
   it('offerRepairOnLoad leaves the board alone until the offer is accepted', () => {

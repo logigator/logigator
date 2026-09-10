@@ -235,7 +235,12 @@ Both entry points are user-initiated; a load never repairs by itself.
 live scissor cut whose seam is a deliberate transient I3 violation the repair
 must not fuse. It registers the fix as one undoable entry, always toasts
 (including "no wire issues found") and re-audits, logging an error if anything
-survived. `offerRepairOnLoad` audits a freshly loaded document and raises a
+survived. A live simulation session is exited first, once the plan is known to
+change something: the compiled board's link → render mapping addresses the very
+`Wire` instances the plan destroys, so a session left up writes powered state
+onto freed objects on its way out. `SimulationService` is resolved through the
+`Injector` there, since injecting it would close a cycle back through the
+shortcut and save chain. `offerRepairOnLoad` audits a freshly loaded document and raises a
 warning toast whose action runs `repairManually`, touching nothing until the
 user accepts. That toast never auto-dismisses, so the handler re-checks
 `project.destroyed` — the offer can outlive its document. Read-only shares are
@@ -245,8 +250,8 @@ have nowhere to go.
 Analytics measure field corruption instead of inferring it from bug reports.
 `wire_repair_offered` carries the violation count and distinct kinds, never a
 detail string (those name elements); `wire_repair_run` carries `trigger`
-(`menu` / `load-offer`, the latter doubling as the offer's acceptance) and
-`outcome`. Two outcomes are bug signals rather than usage: `no-diff` means the
+(`menu` / `load-offer`, the latter doubling as the offer's acceptance),
+`outcome` and, on a repaired run, `leftSimulation`. Two outcomes are bug signals rather than usage: `no-diff` means the
 rebuild reproduced what the audit flagged, and a `repaired` run with non-zero
 `survivingViolations` means the audit still fails on the repair's own output.
 

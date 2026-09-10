@@ -692,6 +692,8 @@ const de: TranslationSchema = {
     loadDetected:
       'Diese Schaltung hat {{count}} Leitungsproblem(e), wodurch sich Verbindungen unerwartet verhalten können.',
     repairAction: 'Leitungen reparieren',
+    leftSimulation:
+      'Die Simulation wurde beendet, um die Leitungen zu reparieren.',
     clean: 'Keine Leitungsprobleme gefunden.'
   },
   bugReport: {
