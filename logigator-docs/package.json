@@ -1,7 +1,7 @@
 {
   "name": "@logigator/docs",
   "version": "0.0.0",
-  "description": "The authored documentation — markdown in four locales, its screenshots and the page structure — shared by the editor's viewer and the website's docs routes",
+  "description": "The authored documentation and the changelog — markdown in four locales, the screenshots and the page structure — shared by the editor's viewer and the website's docs routes",
   "license": "AGPL-3.0-only",
   "repository": {
     "type": "git",

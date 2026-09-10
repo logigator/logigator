@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { configureTestBed } from '../../testing/configure-test-bed';
 import { homeJsonLd } from '../pages/home/home-json-ld';
-import { SeoService } from './seo.service';
+import { PageMeta, SeoService } from './seo.service';
 import { SITE_ORIGIN } from './site-origin';
 import { jsonLdIds, JsonLdNode } from './structured-data';
 
@@ -151,22 +151,41 @@ describe('SeoService', () => {
    * again on the next page: a client-side navigation reuses the document, so
    * one left behind would offer the last page's source for this one.
    */
-  it('names the raw-markdown twin, in the page’s own language', () => {
-    const seo = TestBed.inject(SeoService);
-    const markdownLink = () =>
-      document.head.querySelector<HTMLLinkElement>(
-        'link[rel="alternate"][type="text/markdown"]'
-      )?.href ?? null;
+  it.each([
+    {
+      type: 'text/markdown',
+      page: {
+        titleKey: 'pages.docs.pages.cloud',
+        markdownPath: '/docs/cloud.md'
+      } satisfies PageMeta,
+      path: '/fr/docs/cloud',
+      href: '/fr/docs/cloud.md'
+    },
+    {
+      type: 'application/atom+xml',
+      page: {
+        titleKey: 'pages.changelog.title',
+        feedPath: '/changelog.atom'
+      } satisfies PageMeta,
+      path: '/fr/changelog',
+      href: '/fr/changelog.atom'
+    }
+  ])(
+    'names the $type twin, in the page’s own language',
+    ({ type, page, path, href }) => {
+      const seo = TestBed.inject(SeoService);
+      const alternate = () =>
+        document.head.querySelector<HTMLLinkElement>(
+          `link[rel="alternate"][type="${type}"]`
+        )?.href ?? null;
 
-    seo.apply(
-      { titleKey: 'pages.docs.pages.cloud', markdownPath: '/docs/cloud.md' },
-      '/fr/docs/cloud'
-    );
-    expect(markdownLink()).toBe(`${ORIGIN}/fr/docs/cloud.md`);
+      seo.apply(page, path);
+      expect(alternate()).toBe(`${ORIGIN}${href}`);
 
-    seo.apply({ titleKey: 'pages.examples.title' }, '/fr/examples');
-    expect(markdownLink()).toBeNull();
-  });
+      seo.apply({ titleKey: 'pages.examples.title' }, '/fr/examples');
+      expect(alternate()).toBeNull();
+    }
+  );
 
   it('leaves out the trail a page must not name itself in', () => {
     // A crumb for `verify-email/<token>` would publish the token, and one for

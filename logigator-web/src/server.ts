@@ -11,6 +11,9 @@ import { isDocPageId } from '@logigator/docs';
 import { resolveMarkdownUrls } from '@logigator/ui/internal/markdown-urls';
 import { docDestinations } from './app/pages/docs/doc-destinations';
 import { loadDocPage } from './app/pages/docs/doc-content';
+import { loadChangelog } from './app/pages/changelog/changelog-content';
+import { renderChangelogFeed } from './app/pages/changelog/changelog-feed';
+import { requestOrigin } from './request-origin';
 import {
   languageFromPath,
   pathInLanguage
@@ -179,6 +182,39 @@ app.use((req, res, next) => {
         `public, max-age=${MUTABLE_ASSET_MAX_AGE}`
       );
       res.send(resolveMarkdownUrls(markdown, destinations));
+    })
+    .catch(next);
+});
+
+/**
+ * Every release as an Atom feed, one per language, the entries carrying the
+ * same notes the page draws. Answered here rather than by a render: it is XML,
+ * and a feed reader is the one visitor this site has that never runs the app.
+ *
+ * A feed names absolute URLs, so this is the one response whose content depends
+ * on the host it was asked for — hence {@link requestOrigin}, which refuses one
+ * the deployment does not answer for and leaves it to the render's own check to
+ * say so.
+ */
+app.get('/:lang/changelog.atom', (req, res, next) => {
+  const { lang } = req.params;
+  if (!isAvailableLanguage(lang)) {
+    next();
+    return;
+  }
+  const origin = requestOrigin(req);
+  if (origin === null) {
+    next();
+    return;
+  }
+  loadChangelog(lang)
+    .then((changelog) => {
+      res.setHeader('Content-Type', 'application/atom+xml; charset=utf-8');
+      res.setHeader(
+        'Cache-Control',
+        `public, max-age=${MUTABLE_ASSET_MAX_AGE}`
+      );
+      res.send(renderChangelogFeed(changelog, { origin, lang }));
     })
     .catch(next);
 });

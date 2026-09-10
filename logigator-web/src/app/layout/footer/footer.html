@@ -2,6 +2,9 @@
   <div
     class="page-wrap flex flex-wrap items-center gap-x-6 gap-y-2 py-6 text-sm text-muted"
   >
+    <a class="hover:text-text" [routerLink]="links.changelog()"
+      >{{ t('footer.changelog') }}</a
+    >
     <a class="hover:text-text" [routerLink]="links.privacyPolicy()"
       >{{ t('footer.privacyPolicy') }}</a
     >

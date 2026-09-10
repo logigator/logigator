@@ -8,10 +8,10 @@ import { environment } from '../../environments/environment';
 import { CookieService } from '../storage/cookie.service';
 import { AnalyticsService } from '../analytics/analytics.service';
 import { AnalyticsEvent, DialogId } from '../analytics/analytics.mapping';
-import changelogEn from '@assets/changelog/changelog.en.md';
-import changelogDe from '@assets/changelog/changelog.de.md';
-import changelogFr from '@assets/changelog/changelog.fr.md';
-import changelogEs from '@assets/changelog/changelog.es.md';
+import changelogEn from '@logigator/docs/changelog/en.md';
+import changelogDe from '@logigator/docs/changelog/de.md';
+import changelogFr from '@logigator/docs/changelog/fr.md';
+import changelogEs from '@logigator/docs/changelog/es.md';
 
 const LAST_SEEN_KEY = 'logigator.changelog.lastSeenVersion';
 

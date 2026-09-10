@@ -37,6 +37,7 @@ const es: TranslationSchema = {
     skipToContent: 'Ir al contenido'
   },
   footer: {
+    changelog: 'Registro de cambios',
     privacyPolicy: 'Política de Privacidad',
     imprint: 'Aviso Legal',
     contributing: 'Contribuir'
@@ -246,6 +247,11 @@ const es: TranslationSchema = {
         savingAndFiles: 'Guardar y archivos',
         cloud: 'Nube y compartir'
       }
+    },
+    changelog: {
+      title: 'Registro de cambios',
+      lede: 'Cada versión del editor de Logigator, la más reciente primero: qué se añadió, qué cambió y qué se corrigió.',
+      feed: 'Suscribirse mediante Atom'
     },
     imprint: {
       title: 'Aviso Legal',

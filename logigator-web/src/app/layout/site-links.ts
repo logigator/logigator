@@ -27,6 +27,9 @@ export class SiteLinks {
   public readonly login = this.path('/login');
   public readonly register = this.path('/register');
   public readonly resetPassword = this.path('/reset-password');
+  public readonly changelog = this.path('/changelog');
+  /** The changelog's Atom feed, which the server writes rather than the app. */
+  public readonly changelogFeed = this.path('/changelog.atom');
   public readonly imprint = this.path('/imprint');
   public readonly privacyPolicy = this.path('/privacy-policy');
 

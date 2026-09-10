@@ -37,6 +37,7 @@ const de: TranslationSchema = {
     skipToContent: 'Zum Inhalt springen'
   },
   footer: {
+    changelog: 'Änderungsprotokoll',
     privacyPolicy: 'Datenschutzerklärung',
     imprint: 'Impressum',
     contributing: 'Mitwirken'
@@ -248,6 +249,11 @@ const de: TranslationSchema = {
         savingAndFiles: 'Speichern & Dateien',
         cloud: 'Cloud & Teilen'
       }
+    },
+    changelog: {
+      title: 'Änderungsprotokoll',
+      lede: 'Jede Version des Logigator-Editors, die neueste zuerst: was hinzugekommen ist, was sich geändert hat und was behoben wurde.',
+      feed: 'Per Atom abonnieren'
     },
     imprint: {
       title: 'Impressum',

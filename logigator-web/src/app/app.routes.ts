@@ -9,6 +9,8 @@ import { homeJsonLd } from './pages/home/home-json-ld';
 import { ExamplesPage } from './pages/examples/examples-page';
 import { examplesContentGuard } from './pages/examples/examples-content.guard';
 import { docsRoutes } from './pages/docs/docs-routes';
+import { ChangelogPage } from './pages/changelog/changelog-page';
+import { changelogContentGuard } from './pages/changelog/changelog-content.guard';
 import { LegalPage } from './pages/legal/legal-page';
 import { legalContentGuard } from './pages/legal/legal-content.guard';
 import { LegalRouteData } from './pages/legal/legal-document';
@@ -53,6 +55,18 @@ const localizedRoutes: Routes = [
     }
   },
   ...docsRoutes,
+  {
+    path: 'changelog',
+    component: ChangelogPage,
+    canActivate: [changelogContentGuard],
+    data: {
+      seo: {
+        titleKey: 'pages.changelog.title',
+        descriptionKey: 'pages.changelog.lede',
+        feedPath: '/changelog.atom'
+      } satisfies PageMeta
+    }
+  },
   // Two documents, one page: which text it renders is route data, and the
   // guard loads it before the first byte.
   {

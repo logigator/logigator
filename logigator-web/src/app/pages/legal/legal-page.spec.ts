@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { RouterTestingHarness } from '@angular/router/testing';
 import { marked } from 'marked';
 import { headingSlug } from '@logigator/ui';
 import { AVAILABLE_LANGUAGES } from '@logigator/core';
 import { configureTestBed } from '../../../testing/configure-test-bed';
+import { markdownPageNavigator } from '../../../testing/markdown-page-harness';
 import { LegalDocumentKind, loadLegalDocument } from './legal-document';
 
 const KINDS: LegalDocumentKind[] = ['imprint', 'privacy-policy'];
@@ -13,24 +13,8 @@ describe('the legal pages', () => {
     configureTestBed();
   });
 
-  /**
-   * Navigates the one harness a test may create, and returns the rendered
-   * page. Two navigations is how a language switch reaches this page.
-   */
-  async function navigator(): Promise<(url: string) => Promise<HTMLElement>> {
-    const harness = await RouterTestingHarness.create();
-    return async (url) => {
-      await harness.navigateByUrl(url);
-      // ngx-markdown assigns the parsed innerHTML asynchronously.
-      await harness.fixture.whenStable();
-      await new Promise((resolve) => setTimeout(resolve));
-      harness.detectChanges();
-      return harness.routeNativeElement!;
-    };
-  }
-
   it('renders the document its route names, whole', async () => {
-    const page = await (await navigator())('/en/imprint');
+    const page = await (await markdownPageNavigator())('/en/imprint');
 
     expect(page.querySelector('h1')?.textContent).toContain('Imprint');
     // The body's own headings start at h2: the page's h1 is its title, and two
@@ -43,7 +27,7 @@ describe('the legal pages', () => {
   });
 
   it('follows a language switch, which is a navigation to the same page', async () => {
-    const render = await navigator();
+    const render = await markdownPageNavigator();
     const english = await render('/en/imprint');
     expect(english.textContent).toContain('Liability for contents');
 
@@ -53,7 +37,7 @@ describe('the legal pages', () => {
   });
 
   it('renders the privacy policy with its table of contents', async () => {
-    const page = await (await navigator())('/en/privacy-policy');
+    const page = await (await markdownPageNavigator())('/en/privacy-policy');
 
     expect(page.querySelector('h1')?.textContent).toContain('Privacy Policy');
     expect(page.textContent).toContain('Table of contents');

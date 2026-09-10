@@ -64,6 +64,12 @@ export interface PageMeta {
    * a reader that prefers the source able to find it.
    */
   markdownPath?: string;
+  /**
+   * Unprefixed path of the page's feed, where it has one. Announced in the head
+   * the way the markdown twin is, which is how a reader offers to subscribe
+   * without the visitor having to find the link on the page.
+   */
+  feedPath?: string;
 }
 
 /**
@@ -126,11 +132,11 @@ export class SeoService {
     // `x-default` is the URL for a visitor no alternate matches; that is the
     // unprefixed one, which negotiates a language of its own.
     this.setLink('alternate', 'x-default', `${this.origin}${canonicalPath}`);
-    this.setMarkdownAlternate(
-      page.markdownPath
-        ? `${this.origin}${pathInLanguage(lang, page.markdownPath)}`
-        : null
-    );
+    // The page's other representations, each in the language this URL names.
+    const inThisLanguage = (path?: string): string | null =>
+      path ? `${this.origin}${pathInLanguage(lang, path)}` : null;
+    this.setAlternate('text/markdown', inThisLanguage(page.markdownPath));
+    this.setAlternate('application/atom+xml', inThisLanguage(page.feedPath));
 
     this.setStructuredData(
       page,
@@ -209,12 +215,15 @@ export class SeoService {
   }
 
   /**
-   * The raw-markdown twin of the page, or none. Removed rather than left
-   * pointing at the last page that had one: a client-side navigation reuses
-   * the document.
+   * Another representation of the page — its markdown twin, its feed — or none.
+   * Removed rather than left pointing at the last page that had one: a
+   * client-side navigation reuses the document.
+   *
+   * Addressed by its media type, which is what keeps the two apart: the
+   * language alternates are matched by `hreflang` instead.
    */
-  private setMarkdownAlternate(href: string | null): void {
-    const selector = 'link[rel="alternate"][type="text/markdown"]';
+  private setAlternate(type: string, href: string | null): void {
+    const selector = `link[rel="alternate"][type="${type}"]`;
     const existing =
       this.document.head.querySelector<HTMLLinkElement>(selector);
     if (href === null) {
@@ -223,7 +232,7 @@ export class SeoService {
     }
     const link = existing ?? this.document.createElement('link');
     link.rel = 'alternate';
-    link.type = 'text/markdown';
+    link.type = type;
     link.href = href;
     if (!existing) {
       this.document.head.appendChild(link);

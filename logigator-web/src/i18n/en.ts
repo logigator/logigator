@@ -40,6 +40,7 @@ const en = {
     skipToContent: 'Skip to content'
   },
   footer: {
+    changelog: 'Changelog',
     privacyPolicy: 'Privacy Policy',
     imprint: 'Imprint',
     contributing: 'Contributing'
@@ -245,6 +246,11 @@ const en = {
         savingAndFiles: 'Saving & Files',
         cloud: 'Cloud & Sharing'
       }
+    },
+    changelog: {
+      title: 'Changelog',
+      lede: 'Every release of the Logigator editor, newest first: what was added, what changed, and what was fixed.',
+      feed: 'Subscribe via Atom'
     },
     imprint: {
       title: 'Imprint',
