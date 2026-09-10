@@ -236,7 +236,7 @@ path behaves the same in development).
 - `transfer/` — `TransferHandoffService`, the consume-once server → browser hand-off. Every API read
   a server render resolves goes through it; skipping it silently repeats the request after
   hydration. `contentSection()` is the pattern packaged: one listing a page's guard resolves,
-  exposing `entries` / `failureKey` / `retry`, where a failed read **resolves to a translation key**
+  exposing `entries` / `total` / `failureKey` / `retry`, where a failed read **resolves to a translation key**
   rather than rejecting — a rejection transfers nothing, so hydration would repeat a request that
   already failed — and an empty list stays distinct from a failed one. The retry deliberately
   bypasses the hand-off: what it holds is the answer that failed.
@@ -245,15 +245,20 @@ path behaves the same in development).
   completed navigation, the server render included. Routes carry a `seo` data entry naming their
   title key. Each language version canonicalizes to **itself**, and the unprefixed URL is
   `x-default`'s alone. The language the head describes is read off the URL, not the translation
-  service. It also emits the page's **JSON-LD graph**: one `<script>` holding a `@graph` whose
+  service. A `seo` entry that is a **function** — `title`, `description`, `trail`, `jsonLd` — is run
+  through `runInInjectionContext` after the route's guards, which is what lets a page name the
+  circuit or member it resolved (with the key kept as the fallback, so a link naming nothing
+  published announces the listing rather than an empty title) and put stored text in its trail,
+  where `ancestors`' `{ titleKey, path }` pairs cannot.
+  It also emits the page's **JSON-LD graph**: one `<script>` holding a `@graph` whose
   nodes reference one another by `@id`, so the site is named once rather than in each. Site level
   is `WebSite` + `Organization`; a page adds its own through the route's `jsonLd` factory (the home
   page's is the editor as `SoftwareApplication`/`WebApplication` plus the explainer's
   `VideoObject`), and a two-step `BreadcrumbList` is derived from the URL unless the route sets
   `breadcrumb: false` — the 404 and `verify-email/:token`, whose crumb would name the token.
-  `structured-data.ts` holds the node types and the serializer; it escapes every `<`, because 5d
-  puts circuit names and usernames in the graph, and hands factories absolute URLs, a crawler
-  having no document to resolve the build's `./media/…` imports against.
+  `structured-data.ts` holds the node types and the serializer; it escapes every `<`, because the
+  community pages put circuit names, descriptions and usernames in the graph, and hands factories
+  absolute URLs, a crawler having no document to resolve the build's `./media/…` imports against.
 - `layout/` — the shell: the top bar, the compact navigation drawer, the footer, and the account
   menu. One 56px `bg-primary-400` bar at every width, the treatment the editor's title bar carries
   (the primary scale is scheme-independent, so bar and ink are the same in light and dark); its
@@ -274,7 +279,11 @@ path behaves the same in development).
   document's own page). Both pick the preview for the active theme in TypeScript — the two themes
   are separate renders, so a CSS-hidden second image would be downloaded for nothing; the tile does
   it because it takes one theme's ladder, the preview because it draws the `<picture>` itself
-  through `@logigator/ui`'s exported `pictureFor`.
+  through `@logigator/ui`'s exported `pictureFor`. `crawler-image.ts` is the other rule: the one URL
+  to hand a consumer that negotiates nothing — a crawler reading JSON-LD, a share surface reading
+  `og:image` — which is the widest rung in the format every consumer reads, and for a preview always
+  the **light** slot, line art on a transparent ground disappearing wherever the consumer
+  composites onto white.
 - `states/` — the shared empty and section-error objects (`web-empty-state`, `web-section-error`).
   There is no skeleton: every list is resolved by a guard, so the first byte carries content and a
   client-side navigation waits.
@@ -295,8 +304,17 @@ path behaves the same in development).
     is also the search results page (`?q=`), the one surface wide enough for them.
     `pages/changelog/` is every release of the editor, the version and date beside the notes, over
     the same `@logigator/docs` markdown the editor's "what's new" dialog shows; the page draws the
-    release headings itself, so each carries the `id` its feed entry links to. The 404 sets
-    the response status through `RESPONSE_INIT`; a soft 404 would be indexable.
+    release headings itself, so each carries the `id` its feed entry links to.
+    `pages/community/` is the public half of the API as pages: two browse listings, a document's own
+    page, its stargazer list and a member's four listings, all under `/community` and all resolved
+    by a guard. Documents are addressed by their **share link**, as the API addresses them, so
+    regenerating a token takes the public page down with it. Every listing control is a link or a
+    `<form method="get">` and writes the URL rather than component state — which is what makes a
+    ranking, a filter and a page shareable and the pages browsable with no script — so every listing
+    route carries `runGuardsAndResolvers: 'paramsOrQueryParamsChange'`, the router's default
+    re-running a guard only on a _path_ parameter change. The 404 sets
+    the response status through `RESPONSE_INIT`; a soft 404 would be indexable, and the document and
+    profile pages render that same component inline for a link naming nothing published.
 
 **Non-obvious details:**
 
@@ -449,7 +467,9 @@ TypeScript with no build step — it is _not_ a `package.json` dependency of eit
   projects two of them — `a[lgCircuitTileLink]`, an empty overlay stretched over the card, and
   `a[lgCircuitTileAuthor]`, lifted above it by `z-1` — and routes both itself, which is what keeps
   `@angular/router` out of the library. It takes one theme's preview ladder, not both, and the star
-  count's screen-reader word is an input like every other string it shows.
+  count's screen-reader word is an input like every other string it shows, and
+  `loading` is an input because whether a tile is the page's largest paint is
+  the consumer's knowledge, not the library's.
 - `internal/` — shared plumbing, not exported unless something outside genuinely needs the same
   rule: CDK-based `overlay`/`modal-overlay`, `focus-trap`, `key-manager`, `after-paint`, `caret`,
   `collapse`, `icon`, `picture` (the `<picture>`/`srcset` grouping the avatar and the circuit tile
@@ -612,9 +632,17 @@ the liveness probe; `GET /api/health/ready` probes Postgres and Redis (503 namin
   carries `public = true`**, which is why these queries live apart from the owner-scoped ones.
   Documents are addressed by their `link`, so regenerating the token takes the public page down with
   it. Star counts and "did the caller star it" are correlated subqueries (no counter column, no
-  `GROUP BY` to keep in step with the select list); ranking is stars then edit time, so paging is
-  stable. `@SessionUserId()` reads the session without requiring one — the reason `AuthGuard` is
-  per-route rather than global.
+  `GROUP BY` to keep in step with the select list). **Ranking is a chain and every chain ends at
+  `id`**, paging being `OFFSET`-based: `trending` (the default) leads with the stars collected
+  inside `TRENDING_WINDOW_DAYS` — a named constant, a ranking rule rather than an env var — then
+  falls through to the lifetime tally and edit time, which is what makes it safe as the default from
+  day one, a community with no recent stars degenerating to exactly what `stars` answers with. The
+  star indexes carry `starred_at` as their second column so the window is an indexed range.
+  `@SessionUserId()` reads the session without requiring one — the reason `AuthGuard` is
+  per-route rather than global. **Whose stars a listing shows and whose flag it reports are two
+  different accounts**: the public `users/:id/starred/*` routes list that member's stars while
+  `starred` on each row still answers for the caller, so the caller is a parameter of its own and
+  the caller-scoped `starred/*` routes pass the same id twice.
 - `reports/` — `POST /api/report-error`, keeping the path and field-by-field shape the editor sends.
   Unauthenticated and rate-limited; every report is one log line, and a configured `REPORT_MAIL_TO`
   also gets it with the circuit attached.
