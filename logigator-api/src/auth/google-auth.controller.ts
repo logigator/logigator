@@ -1,6 +1,8 @@
 import {
   Controller,
+  Delete,
   Get,
+  HttpStatus,
   Inject,
   Query,
   Req,
@@ -8,10 +10,15 @@ import {
   UseGuards
 } from '@nestjs/common';
 import type { FastifyReply, FastifyRequest } from 'fastify';
+import type { UserResponse } from '@logigator/contract';
 import { RETURN_PATH_PARAM } from '@logigator/core';
+import { ApiException } from '../common/api-exception';
 import { ENV, type Env } from '../config/env';
 import { RateLimit, RateLimitGuard } from '../common/rate-limit.guard';
+import { AuthGuard, CurrentUser } from './auth.guard';
+import type { UserRow } from '../database/schema';
 import { SessionService } from '../session/session.service';
+import { toUserResponse, UsersService } from '../users/users.service';
 import {
   GoogleAuthError,
   GoogleAuthService,
@@ -19,9 +26,11 @@ import {
 } from './google-auth.service';
 
 /**
- * The two browser-facing routes of the OAuth round trip. A user agent walks
- * through them, not a client library, so they answer with redirects and a
- * failure comes back as `?error=` on the return URL rather than an error body.
+ * Google as a sign-in method: the two browser-facing routes of the OAuth round
+ * trip, and the one that undoes what they linked. A user agent walks through
+ * the round trip, not a client library, so those two answer with redirects and
+ * a failure comes back as `?error=` on the return URL rather than an error
+ * body; the unlink is an ordinary authenticated call from the account page.
  */
 @Controller('auth/google')
 @UseGuards(RateLimitGuard)
@@ -29,6 +38,7 @@ export class GoogleAuthController {
   constructor(
     private readonly google: GoogleAuthService,
     private readonly session: SessionService,
+    private readonly users: UsersService,
     @Inject(ENV) private readonly env: Env
   ) {}
 
@@ -85,6 +95,47 @@ export class GoogleAuthController {
         302
       );
     }
+  }
+
+  /**
+   * Detaches the linked Google identity from the caller's own account.
+   *
+   * Refused where the account has no password: Google is then the only way
+   * back in, and removing it would lock its owner out of an account nobody
+   * else can reach either. Re-linking is one round trip through the route
+   * above, so this is not gated on the password the way a change of address
+   * is — it hands nobody control, and a stolen session gains nothing by it.
+   *
+   * The credential set changed, so the sessions it opened end with it, sparing
+   * the one that asked.
+   */
+  @Delete()
+  @UseGuards(AuthGuard)
+  async unlink(
+    @CurrentUser() user: UserRow,
+    @Req() request: FastifyRequest
+  ): Promise<UserResponse> {
+    if (!user.googleUserId) return toUserResponse(user);
+
+    if (!user.passwordHash) {
+      throw new ApiException(
+        HttpStatus.CONFLICT,
+        'conflict',
+        'Set a password before unlinking Google, or there is no way back in.'
+      );
+    }
+
+    const updated = await this.users.update(user.id, { googleUserId: null });
+    if (!updated) {
+      throw new ApiException(
+        HttpStatus.UNAUTHORIZED,
+        'unauthorized',
+        'This account no longer exists.'
+      );
+    }
+
+    await this.session.signOutEverywhere(user.id, request.session.sessionId);
+    return toUserResponse(updated);
   }
 
   /**

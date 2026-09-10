@@ -95,6 +95,11 @@ export async function findByLink(
 /**
  * One page of rows matching `where`, with the total the predicate matched. Two
  * statements rather than a `count(*) OVER ()` carried on every row of the page.
+ *
+ * The default order closes on `id`, as every community ranking does: paging is
+ * `OFFSET`-based, so a tie the database breaks differently between two requests
+ * drops or repeats a row — and two documents saved in the same operation share
+ * an edit time exactly.
  */
 export function pageOf(
   db: Queryable,
@@ -115,7 +120,7 @@ export async function pageOf(
   table: CircuitTable,
   where: SQL | undefined,
   query: PageQuery,
-  order: SQL[] = [desc(table.lastEditedAt)]
+  order: SQL[] = [desc(table.lastEditedAt), desc(table.id)]
 ): Promise<Page<CircuitRow>> {
   const [entries, [totals]] = await Promise.all([
     db
