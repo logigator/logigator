@@ -5,6 +5,8 @@ import type {
   ComponentSummary,
   ProjectSummary
 } from '@logigator/contract';
+import { eq, sql } from 'drizzle-orm';
+import { projectStars } from '../src/database/schema';
 import { circuitDocument, HALF_ADDER_BODY } from './circuits';
 import { CookieJar } from './cookie-jar';
 import { startE2eApp, type E2eApp } from './harness';
@@ -14,6 +16,7 @@ describe('the community surface', () => {
   let ada: CookieJar;
   let adaId: string;
   let grace: CookieJar;
+  let graceId: string;
 
   async function signUp(email: string, username: string): Promise<CookieJar> {
     const password = 'lovelace1';
@@ -54,6 +57,17 @@ describe('the community surface', () => {
     return response.json();
   }
 
+  /**
+   * Ages every star on a project. A ranking that reads a window can only be
+   * exercised against stars outside it, and there is no request that makes one
+   * old — so the rows are moved rather than the clock.
+   */
+  const backdateStars = (projectId: string, days: number) =>
+    api.db
+      .update(projectStars)
+      .set({ starredAt: sql`now() - make_interval(days => ${days})` })
+      .where(eq(projectStars.projectId, projectId));
+
   const publicProject = (name: string, cookies = ada) =>
     create<ProjectSummary>(
       'projects',
@@ -71,6 +85,13 @@ describe('the community surface', () => {
         method: 'GET',
         url: '/api/user',
         headers: ada.headers()
+      })
+    ).json().id;
+    graceId = (
+      await api.inject({
+        method: 'GET',
+        url: '/api/user',
+        headers: grace.headers()
       })
     ).json().id;
   });
@@ -152,7 +173,7 @@ describe('the community surface', () => {
 
       const byStars = await api.inject({
         method: 'GET',
-        url: '/api/community/projects?size=100'
+        url: '/api/community/projects?orderBy=stars&size=100'
       });
       const ids = byStars.json().entries.map((e: CommunityProject) => e.id);
       expect(ids.indexOf(hot.id)).toBeLessThan(ids.indexOf(cold.id));
@@ -164,6 +185,67 @@ describe('the community surface', () => {
       });
       const latest = byTime.json().entries.map((e: CommunityProject) => e.id);
       expect(latest.indexOf(cold.id)).toBeLessThan(latest.indexOf(hot.id));
+    });
+
+    it('rank by trending unasked, putting a recent star over an old tally', async () => {
+      // Two stars from long ago against one from today. Ranked by the lifetime
+      // tally the old favourite wins; the default ranking is what the window
+      // changes, and this is the pair that tells the two apart.
+      const oldFavourite = await publicProject('Popular back then');
+      const rising = await publicProject('Popular now');
+
+      for (const [project, who] of [
+        [oldFavourite, ada],
+        [oldFavourite, grace],
+        [rising, grace]
+      ] as const) {
+        await api.inject({
+          method: 'PUT',
+          url: `/api/community/projects/${project.link}/star`,
+          headers: who.headers()
+        });
+      }
+      await backdateStars(oldFavourite.id, 90);
+
+      const byStars = await api.inject({
+        method: 'GET',
+        url: '/api/community/projects?orderBy=stars&size=100'
+      });
+      const tally = byStars.json().entries.map((e: CommunityProject) => e.id);
+      expect(tally.indexOf(oldFavourite.id)).toBeLessThan(
+        tally.indexOf(rising.id)
+      );
+
+      const trending = await api.inject({
+        method: 'GET',
+        url: '/api/community/projects?size=100'
+      });
+      const ranked = trending.json().entries.map((e: CommunityProject) => e.id);
+      expect(ranked.indexOf(rising.id)).toBeLessThan(
+        ranked.indexOf(oldFavourite.id)
+      );
+    });
+
+    it('fall back to the lifetime tally where the window is empty', async () => {
+      // The day this ships every star is older than nothing, so trending has to
+      // degenerate to exactly the stars-then-newest order rather than to noise.
+      const starred = await publicProject('Starred long ago');
+      const unstarred = await publicProject('Never starred');
+      await api.inject({
+        method: 'PUT',
+        url: `/api/community/projects/${starred.link}/star`,
+        headers: grace.headers()
+      });
+      await backdateStars(starred.id, 400);
+
+      const trending = await api.inject({
+        method: 'GET',
+        url: '/api/community/projects?size=100'
+      });
+      const ranked = trending.json().entries.map((e: CommunityProject) => e.id);
+      expect(ranked.indexOf(starred.id)).toBeLessThan(
+        ranked.indexOf(unstarred.id)
+      );
     });
 
     it('report whether the caller starred each row', async () => {
@@ -378,6 +460,49 @@ describe('the community surface', () => {
       for (const entry of mine.json().entries) {
         expect(entry.starred).toBe(true);
       }
+    });
+
+    it('are listed publicly, with the caller’s own flag on each row', async () => {
+      // The two accounts are what makes this a real check: the rows are
+      // Grace's stars, but `starred` has to answer for whoever is reading, or
+      // a visitor's star control on somebody else's tab reads inverted.
+      const project = await publicProject('On somebody’s shelf');
+      await api.inject({
+        method: 'PUT',
+        url: `/api/community/projects/${project.link}/star`,
+        headers: grace.headers()
+      });
+
+      const anonymous = await api.inject({
+        method: 'GET',
+        url: `/api/community/users/${graceId}/starred/projects?size=100`
+      });
+      expect(anonymous.statusCode).toBe(200);
+      const seen = anonymous
+        .json()
+        .entries.find((e: CommunityProject) => e.id === project.id);
+      expect(seen).toMatchObject({ starred: false });
+
+      const asAda = await api.inject({
+        method: 'GET',
+        url: `/api/community/users/${graceId}/starred/projects?size=100`,
+        headers: ada.headers()
+      });
+      expect(
+        asAda.json().entries.find((e: CommunityProject) => e.id === project.id)
+          .starred
+      ).toBe(false);
+
+      const asGrace = await api.inject({
+        method: 'GET',
+        url: `/api/community/users/${graceId}/starred/projects?size=100`,
+        headers: grace.headers()
+      });
+      expect(
+        asGrace
+          .json()
+          .entries.find((e: CommunityProject) => e.id === project.id).starred
+      ).toBe(true);
     });
 
     it('stop being listed once the document is unpublished', async () => {

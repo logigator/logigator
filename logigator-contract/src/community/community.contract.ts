@@ -5,9 +5,18 @@ import { authorSchema } from '../document/document.contract';
 import { componentSummarySchema } from '../document/component.contract';
 import { projectSummarySchema } from '../document/project.contract';
 
-/** A community listing's query, ranked by stars unless asked for `latest`. */
+/**
+ * A community listing's query.
+ *
+ * `trending` is the default because a front page ranked by lifetime stars is
+ * frozen at whatever got popular years ago, which is the opposite of the signal
+ * a visitor deciding whether this community is alive needs. Defaulting it is
+ * safe from the day it ships: the ranking is a chain, and a community with no
+ * stars inside the window degenerates to exactly the stars-then-newest order
+ * `stars` answers with.
+ */
 export const communityQuerySchema = pageQuerySchema.extend({
-  orderBy: z.enum(['stars', 'latest']).default('stars')
+  orderBy: z.enum(['trending', 'stars', 'latest']).default('trending')
 });
 
 export type CommunityQuery = z.infer<typeof communityQuerySchema>;

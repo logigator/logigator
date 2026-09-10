@@ -38,3 +38,27 @@ export function starredByCaller(
      WHERE ${starredCircuit} = ${circuitId} AND ${starredBy} = ${userId}
   )`;
 }
+
+/**
+ * How many stars a row collected inside the trending window. A window rather
+ * than a decay score: weighting every star by its age reads every star row
+ * instead of an indexed range, and it cannot be explained to a visitor asking
+ * why one circuit sits above another.
+ *
+ * The interval is built in SQL from a day count rather than a timestamp
+ * computed here, so a long-lived process does not rank against the moment it
+ * booted.
+ */
+export function starCountSince(
+  stars: Table,
+  starredCircuit: Column,
+  circuitId: Column,
+  starredAt: Column,
+  days: number
+): SQL<number> {
+  return sql<number>`(
+    SELECT count(*) FROM ${stars}
+     WHERE ${starredCircuit} = ${circuitId}
+       AND ${starredAt} >= now() - make_interval(days => ${days})
+  )`;
+}

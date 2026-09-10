@@ -62,7 +62,7 @@ export class CommunityController {
     @CurrentUser() user: UserRow,
     @Query({ schema: pageQuerySchema }) query: PageQuery
   ): Promise<Page<CommunityProject>> {
-    return this.community.listStarredProjects(user.id, query);
+    return this.community.listStarredProjects(user.id, query, user.id);
   }
 
   @Get('starred/components')
@@ -71,7 +71,7 @@ export class CommunityController {
     @CurrentUser() user: UserRow,
     @Query({ schema: pageQuerySchema }) query: PageQuery
   ): Promise<Page<CommunityComponent>> {
-    return this.community.listStarredComponents(user.id, query);
+    return this.community.listStarredComponents(user.id, query, user.id);
   }
 
   @Get('projects/:link')
@@ -167,5 +167,30 @@ export class CommunityController {
     @SessionUserId() callerId: string | null
   ): Promise<Page<CommunityComponent>> {
     return this.community.listUserComponents(id, query, callerId);
+  }
+
+  /**
+   * What a member has starred, publicly. The caller-scoped `starred/*` routes
+   * above answer the same question about the session; these answer it about
+   * somebody else, which is what a public profile's starred tabs show — and
+   * the `starred` flag on a row is still the *caller's*, so the control reads
+   * correctly for whoever is looking.
+   */
+  @Get('users/:id/starred/projects')
+  userStarredProjects(
+    @Param('id', UuidParam) id: string,
+    @Query({ schema: pageQuerySchema }) query: PageQuery,
+    @SessionUserId() callerId: string | null
+  ): Promise<Page<CommunityProject>> {
+    return this.community.listStarredProjects(id, query, callerId);
+  }
+
+  @Get('users/:id/starred/components')
+  userStarredComponents(
+    @Param('id', UuidParam) id: string,
+    @Query({ schema: pageQuerySchema }) query: PageQuery,
+    @SessionUserId() callerId: string | null
+  ): Promise<Page<CommunityComponent>> {
+    return this.community.listStarredComponents(id, query, callerId);
   }
 }

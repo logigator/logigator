@@ -34,7 +34,7 @@ import {
   toProjectSummary
 } from '../documents/circuit-responses';
 import { AVATAR_VARIANTS, variantUrls } from '../storage/image-variants';
-import { starCount, starredByCaller } from './star-queries';
+import { starCount, starCountSince, starredByCaller } from './star-queries';
 
 /** The author columns every public response carries. */
 const authorColumns = {
@@ -45,6 +45,14 @@ const authorColumns = {
 
 /** A page of exactly one, for the detail endpoints. */
 const JUST_ONE: PageQuery = { page: 0, size: 1 };
+
+/**
+ * How far back a star still counts as trending. A named constant rather than an
+ * env var: it is a ranking rule, data in code the way the image matrices are,
+ * and two deployments ranking differently is a support question nobody could
+ * answer.
+ */
+const TRENDING_WINDOW_DAYS = 30;
 
 /**
  * Either star table. Both are a plain join of an account to a document; only
@@ -124,29 +132,36 @@ export class CommunityService {
   }
 
   /**
-   * What the caller has starred: the ordinary listing with the same `EXISTS`
+   * What an account has starred: the ordinary listing with the same `EXISTS`
    * that fills in `starred` as one more predicate. A star on something since
    * made private stops being listed.
+   *
+   * Whose stars are listed and whose flag is reported are two different
+   * accounts — a visitor reading somebody's public starred tab gets their own
+   * `starred` — so the caller is passed separately rather than reused. The
+   * caller-scoped route hands the same id twice.
    */
   listStarredProjects(
     userId: string,
-    query: PageQuery
+    query: PageQuery,
+    callerId: string | null
   ): Promise<Page<CommunityProject>> {
     return this.projectPage(
       and(eq(projects.public, true), this.projectStarredBy(userId)),
       query,
-      userId
+      callerId
     );
   }
 
   listStarredComponents(
     userId: string,
-    query: PageQuery
+    query: PageQuery,
+    callerId: string | null
   ): Promise<Page<CommunityComponent>> {
     return this.componentPage(
       and(eq(components.public, true), this.componentStarredBy(userId)),
       query,
-      userId
+      callerId
     );
   }
 
@@ -331,7 +346,7 @@ export class CommunityService {
     where: SQL | undefined,
     query: PageQuery,
     callerId: string | null,
-    order: SQL[] = [desc(projects.lastEditedAt)]
+    order: SQL[] = [desc(projects.lastEditedAt), desc(projects.id)]
   ) {
     return (
       this.db
@@ -356,7 +371,7 @@ export class CommunityService {
     where: SQL | undefined,
     query: PageQuery,
     callerId: string | null,
-    order: SQL[] = [desc(components.lastEditedAt)]
+    order: SQL[] = [desc(components.lastEditedAt), desc(components.id)]
   ) {
     return this.db
       .select({
@@ -467,30 +482,64 @@ export class CommunityService {
   }
 
   /**
-   * Most-starred first by default, newest-edited first on request. Stars alone
-   * leave every unstarred document tied, so edit time breaks the tie and paging
-   * stays stable.
+   * The three rankings, each a chain rather than a single key.
+   *
+   * `trending` leads with the stars collected inside the window, then falls
+   * through to the lifetime tally and to edit time — which is what makes it
+   * safe as the default from the day it ships: with no stars inside the window
+   * it degenerates to exactly what `stars` answers with.
+   *
+   * Every chain ends at `id`. Paging is `OFFSET`-based, so a tie the database
+   * is free to break differently between two requests drops or repeats a row.
    */
   private projectRanking(query: CommunityQuery): SQL[] {
-    const newest = desc(projects.lastEditedAt);
-    return query.orderBy === 'latest'
-      ? [newest]
-      : [
-          desc(starCount(projectStars, projectStars.projectId, projects.id)),
-          newest
-        ];
+    const total = starCount(projectStars, projectStars.projectId, projects.id);
+    const window = starCountSince(
+      projectStars,
+      projectStars.projectId,
+      projects.id,
+      projectStars.starredAt,
+      TRENDING_WINDOW_DAYS
+    );
+    return this.ranking(query.orderBy, total, window, [
+      desc(projects.lastEditedAt),
+      desc(projects.id)
+    ]);
   }
 
   private componentRanking(query: CommunityQuery): SQL[] {
-    const newest = desc(components.lastEditedAt);
-    return query.orderBy === 'latest'
-      ? [newest]
-      : [
-          desc(
-            starCount(componentStars, componentStars.componentId, components.id)
-          ),
-          newest
-        ];
+    const total = starCount(
+      componentStars,
+      componentStars.componentId,
+      components.id
+    );
+    const window = starCountSince(
+      componentStars,
+      componentStars.componentId,
+      components.id,
+      componentStars.starredAt,
+      TRENDING_WINDOW_DAYS
+    );
+    return this.ranking(query.orderBy, total, window, [
+      desc(components.lastEditedAt),
+      desc(components.id)
+    ]);
+  }
+
+  private ranking(
+    orderBy: CommunityQuery['orderBy'],
+    total: SQL<number>,
+    window: SQL<number>,
+    tail: SQL[]
+  ): SQL[] {
+    switch (orderBy) {
+      case 'latest':
+        return tail;
+      case 'stars':
+        return [desc(total), ...tail];
+      case 'trending':
+        return [desc(window), desc(total), ...tail];
+    }
   }
 
   private async tally(
@@ -521,7 +570,7 @@ export class CommunityService {
         .from(stars)
         .innerJoin(users, eq(users.id, starredBy))
         .where(where)
-        .orderBy(desc(starredAt))
+        .orderBy(desc(starredAt), desc(starredBy))
         .limit(query.size)
         .offset(query.page * query.size),
       this.db.select({ value: count() }).from(stars).where(where)
