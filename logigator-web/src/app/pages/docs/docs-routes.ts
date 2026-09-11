@@ -1,5 +1,6 @@
+import { inject } from '@angular/core';
 import { Routes } from '@angular/router';
-import { DOC_SECTIONS } from '@logigator/docs';
+import { DOC_SECTIONS, DocPageId, docPageSummary } from '@logigator/docs';
 import { PageMeta } from '../../seo/seo.service';
 import { DocPage } from './doc-page';
 import { DocsIndexPage } from './docs-index-page';
@@ -7,11 +8,16 @@ import { docsContentGuard } from './docs-content.guard';
 import { docsSearchGuard } from './docs-search.guard';
 import { DocsRouteData } from './docs-route-data';
 import { DOC_PAGE_TITLES } from './doc-titles';
+import { DocsContentService } from './docs-content.service';
 
 /** Where the trail names the index, above every page under it. */
 const DOCS_TRAIL: PageMeta['ancestors'] = [
   { titleKey: 'pages.docs.title', path: '/docs' }
 ];
+
+/** The markdown the route's guard resolved, in the document's language. */
+const pageMarkdown = (page: DocPageId): string | null =>
+  inject(DocsContentService).markdown(page)();
 
 /**
  * The index and one route per page, generated from the shared tree.
@@ -42,6 +48,11 @@ export const docsRoutes: Routes = [
         docPage: page,
         seo: {
           titleKey: DOC_PAGE_TITLES[page],
+          // The page's own opening paragraph, which the guard has already
+          // loaded — eleven pages sharing the site's description is the
+          // duplicate a search engine reports, and eleven more locale keys
+          // would be the same sentence written twice.
+          description: () => docPageSummary(pageMarkdown(page)),
           ancestors: DOCS_TRAIL,
           markdownPath: `/docs/${page}.md`
         } satisfies PageMeta

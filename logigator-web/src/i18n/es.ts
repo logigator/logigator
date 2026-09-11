@@ -97,6 +97,8 @@ const es: TranslationSchema = {
       title: 'Iniciar sesión',
       heading: 'Bienvenido de nuevo',
       submit: 'Iniciar sesión',
+      metaDescription:
+        'Inicia sesión en Logigator para abrir tus circuitos guardados, tu biblioteca de componentes y los proyectos que has marcado con estrella.',
       forgotPassword: '¿Has olvidado tu contraseña?',
       noAccount: '¿Aún no tienes cuenta?',
       registerLink: 'Registrarse',
@@ -109,6 +111,8 @@ const es: TranslationSchema = {
       title: 'Registrarse',
       heading: 'Crea tu cuenta',
       submit: 'Registrarse',
+      metaDescription:
+        'Crea una cuenta gratuita de Logigator para guardar tus circuitos en la nube, crear una biblioteca de componentes y compartir lo que haces.',
       emailTaken: 'Ya hay una cuenta con esa dirección de correo.',
       mailFailed:
         'Tu cuenta se ha creado, pero no se pudo enviar el correo de confirmación. Inicia sesión para pedirlo de nuevo.',

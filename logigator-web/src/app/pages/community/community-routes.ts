@@ -1,5 +1,6 @@
 import { inject } from '@angular/core';
 import { Route, Routes } from '@angular/router';
+import { shareCardUrl } from '../../documents/crawler-image';
 import { SiteLinks } from '../../layout/site-links';
 import { PageMeta } from '../../seo/seo.service';
 import { TranslationKey } from '../../translation/translation-key.model';
@@ -33,6 +34,16 @@ const ON_QUERY_CHANGE = 'paramsOrQueryParamsChange' as const;
 /** The document's own name, for the head of its page. */
 const documentName = (): string | null =>
   inject(CommunityDocumentService).document()?.name ?? null;
+
+/**
+ * The card a pasted link unfurls as, composed from this document. `null` for a
+ * link naming nothing published, which falls back to the site card — the same
+ * way the title falls back to the listing's.
+ */
+const documentCard = (): string | null => {
+  const link = inject(CommunityDocumentService).document()?.link;
+  return link ? shareCardUrl(link) : null;
+};
 
 /**
  * The listing and the document, as the two steps between the home page and a
@@ -148,6 +159,7 @@ function documentRoutes(
           title: documentName,
           description: () =>
             inject(CommunityDocumentService).document()?.description ?? null,
+          image: documentCard,
           jsonLd: communityDocumentJsonLd,
           ancestors: [{ titleKey, path: listingPath }]
         } satisfies PageMeta
@@ -165,6 +177,9 @@ function documentRoutes(
         communityKind: kind,
         seo: {
           titleKey: 'pages.community.stargazers.title',
+          // The page is about the document, so it unfurls as it: a list of
+          // usernames under the site card would say nothing about which one.
+          image: documentCard,
           trail: documentTrail
         } satisfies PageMeta
       } satisfies CommunityRouteData & { seo: PageMeta }

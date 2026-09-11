@@ -100,6 +100,8 @@ const de: TranslationSchema = {
       title: 'Anmelden',
       heading: 'Willkommen zurück',
       submit: 'Anmelden',
+      metaDescription:
+        'Melde dich bei Logigator an, um deine gespeicherten Schaltungen, deine Bauteilbibliothek und deine Projekte mit Stern zu öffnen.',
       forgotPassword: 'Passwort vergessen?',
       noAccount: 'Noch kein Konto?',
       registerLink: 'Registrieren',
@@ -112,6 +114,8 @@ const de: TranslationSchema = {
       title: 'Registrieren',
       heading: 'Konto erstellen',
       submit: 'Registrieren',
+      metaDescription:
+        'Erstelle ein kostenloses Logigator-Konto, um deine Schaltungen in der Cloud zu speichern, eine Bauteilbibliothek aufzubauen und deine Arbeit zu teilen.',
       emailTaken: 'Diese E-Mail-Adresse gehört bereits zu einem Konto.',
       mailFailed:
         'Dein Konto wurde erstellt, die Bestätigungsmail konnte aber nicht gesendet werden. Melde dich an, um sie erneut anzufordern.',

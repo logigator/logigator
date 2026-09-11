@@ -8,6 +8,7 @@ import { DOCUMENT } from '@angular/common';
 import { Meta, Title } from '@angular/platform-browser';
 import { AVAILABLE_LANGUAGES, LanguageId } from '@logigator/core';
 import {
+  languageAlternates,
   languageFromPath,
   pathInLanguage,
   pathWithoutLanguage
@@ -25,6 +26,16 @@ import {
   serializeJsonLd,
   siteNodes
 } from './structured-data';
+
+/**
+ * The picture every page unfurls as unless it has one of its own. A file in
+ * `public/`, so the URL is a contract: the editor's own Open Graph tags name it
+ * too.
+ */
+const SITE_CARD = '/assets/social-card.png';
+
+/** What every card this site names measures; the API composes to the same. */
+const CARD_SIZE = { width: 1200, height: 630 };
 
 /**
  * Open Graph names a locale in its `language_TERRITORY` form, so the bare
@@ -56,6 +67,15 @@ export interface PageMeta {
   /** The same, for the description. */
   description?: () => string | null;
   /**
+   * The picture a share surface unfurls the page as, where the page has one of
+   * its own. Returning `null` falls back to the site card, which is what a page
+   * whose read found nothing wants — the same way `title` degrades.
+   *
+   * Run after the route's guards and inside an injection context, so it can
+   * name what the page actually resolved.
+   */
+  image?: () => string | null;
+  /**
    * The page's own JSON-LD nodes, beside the site-level ones every page emits.
    * A factory rather than a value: the nodes name absolute URLs and read
    * translated strings, neither of which a route definition can know. It runs
@@ -63,6 +83,13 @@ export interface PageMeta {
    * describe what it actually rendered.
    */
   jsonLd?: (context: JsonLdContext) => JsonLdNode[];
+  /**
+   * Keeps the page out of an index while leaving it crawlable, for a URL that
+   * is an action rather than a document: the two carrying a one-shot mail
+   * token. `robots.txt` disallows them as well; this is what answers a fetcher
+   * that reads the markup anyway.
+   */
+  noindex?: true;
   /**
    * Whether the page is a step in a trail. On by default, since every page but
    * the home page is one level under it. Off for a page that must not name
@@ -144,21 +171,50 @@ export class SeoService {
     const canonicalPath = pathWithoutLanguage(pathname);
     const canonicalUrl = `${this.origin}${pathInLanguage(lang, canonicalPath)}`;
 
+    // The page's own picture where it has one — a composed card for a published
+    // document — and the site's everywhere else. Set here rather than left in
+    // `index.html`: a card per page needs the render, and two owners of one tag
+    // is how a page ends up unfurling as the wrong picture.
+    const image = absoluteAssetUrl(
+      this.origin,
+      this.fromPage(page.image) ?? SITE_CARD
+    );
+    this.meta.updateTag({ property: 'og:image', content: image });
+    this.meta.updateTag({ name: 'twitter:image', content: image });
+    // Beside the picture rather than in `index.html`, so one code path owns the
+    // card and its shape: the two are 1200×630 today by coincidence, and a
+    // profile or docs card of another size would otherwise be described wrong.
+    this.meta.updateTag({
+      property: 'og:image:width',
+      content: String(CARD_SIZE.width)
+    });
+    this.meta.updateTag({
+      property: 'og:image:height',
+      content: String(CARD_SIZE.height)
+    });
+
+    // Crawlable, but not a search result: the page is an action, and its URL
+    // carries the token that performs it.
+    if (page.noindex) {
+      this.meta.updateTag({ name: 'robots', content: 'noindex, follow' });
+    } else {
+      this.meta.removeTag('name="robots"');
+    }
+
     this.meta.updateTag({ property: 'og:url', content: canonicalUrl });
     this.setLink('canonical', undefined, canonicalUrl);
     this.meta.updateTag({ property: 'og:locale', content: OG_LOCALES[lang] });
     this.setLocaleAlternates(lang);
 
-    for (const { id } of AVAILABLE_LANGUAGES) {
+    // The same set the sitemap annotates every entry with: those two are what
+    // a crawler cross-checks, so they are one list rather than two.
+    for (const alternate of languageAlternates(canonicalPath)) {
       this.setLink(
         'alternate',
-        id,
-        `${this.origin}${pathInLanguage(id, canonicalPath)}`
+        alternate.hreflang,
+        `${this.origin}${alternate.path}`
       );
     }
-    // `x-default` is the URL for a visitor no alternate matches; that is the
-    // unprefixed one, which negotiates a language of its own.
-    this.setLink('alternate', 'x-default', `${this.origin}${canonicalPath}`);
     // The page's other representations, each in the language this URL names.
     const inThisLanguage = (path?: string): string | null =>
       path ? `${this.origin}${pathInLanguage(lang, path)}` : null;

@@ -93,6 +93,8 @@ const fr: TranslationSchema = {
       title: 'Connexion',
       heading: 'Content de te revoir',
       submit: 'Se connecter',
+      metaDescription:
+        'Connecte-toi à Logigator pour ouvrir tes circuits enregistrés, ta bibliothèque de composants et les projets que tu as étoilés.',
       forgotPassword: 'Mot de passe oublié ?',
       noAccount: 'Pas encore de compte ?',
       registerLink: 'S’inscrire',
@@ -105,6 +107,8 @@ const fr: TranslationSchema = {
       title: 'Inscription',
       heading: 'Crée ton compte',
       submit: 'S’inscrire',
+      metaDescription:
+        'Crée un compte Logigator gratuit pour enregistrer tes circuits dans le cloud, constituer une bibliothèque de composants et partager tes créations.',
       emailTaken: 'Un compte utilise déjà cette adresse e-mail.',
       mailFailed:
         'Ton compte a été créé, mais l’e-mail de confirmation n’a pas pu être envoyé. Connecte-toi pour le demander à nouveau.',

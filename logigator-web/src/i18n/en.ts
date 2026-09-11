@@ -96,6 +96,8 @@ const en = {
       title: 'Login',
       heading: 'Welcome back',
       submit: 'Log in',
+      metaDescription:
+        'Sign in to Logigator to open your saved circuits, your component library and the projects you starred.',
       forgotPassword: 'Forgot your password?',
       noAccount: 'No account yet?',
       registerLink: 'Sign up',
@@ -108,6 +110,8 @@ const en = {
       title: 'Sign up',
       heading: 'Create your account',
       submit: 'Sign up',
+      metaDescription:
+        'Create a free Logigator account to save your circuits in the cloud, build a component library and share what you make.',
       emailTaken: 'That email address already has an account.',
       mailFailed:
         'Your account was created, but the confirmation mail could not be sent. Sign in to have it sent again.',

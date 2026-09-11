@@ -101,20 +101,38 @@ const localizedRoutes: Routes = [
     path: 'login',
     component: LoginPage,
     canActivate: [guestGuard, authProvidersGuard],
-    data: { seo: { titleKey: 'pages.login.title' } satisfies PageMeta }
+    data: {
+      seo: {
+        titleKey: 'pages.login.title',
+        descriptionKey: 'pages.login.metaDescription'
+      } satisfies PageMeta
+    }
   },
   {
     path: 'register',
     component: RegisterPage,
     canActivate: [guestGuard, authProvidersGuard],
-    data: { seo: { titleKey: 'pages.register.title' } satisfies PageMeta }
+    data: {
+      seo: {
+        titleKey: 'pages.register.title',
+        descriptionKey: 'pages.register.metaDescription'
+      } satisfies PageMeta
+    }
   },
   // One page for both halves of a reset: the mail links straight to it with a
   // `?token=`, and without one it asks for the address to mail.
   {
     path: 'reset-password',
     component: ResetPasswordPage,
-    data: { seo: { titleKey: 'pages.resetPassword.title' } satisfies PageMeta }
+    // Not a document: with a `?token=` it performs a one-shot action, and
+    // without one it is a form. `robots.txt` closes it too.
+    data: {
+      seo: {
+        titleKey: 'pages.resetPassword.title',
+        descriptionKey: 'pages.resetPassword.requestLead',
+        noindex: true
+      } satisfies PageMeta
+    }
   },
   // The token is a path segment because that is the shape the API's mails
   // build, and those links are already in inboxes.
@@ -125,6 +143,8 @@ const localizedRoutes: Routes = [
     data: {
       seo: {
         titleKey: 'pages.verifyEmail.title',
+        // The URL is the token, so it is neither an index entry nor a step.
+        noindex: true,
         breadcrumb: false
       } satisfies PageMeta
     }

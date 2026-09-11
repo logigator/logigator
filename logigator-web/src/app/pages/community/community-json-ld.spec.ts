@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { HttpTestingController } from '@angular/common/http/testing';
-import { communityRow } from '../../../testing/community-rows';
+import { communityRow, publicProfile } from '../../../testing/community-rows';
 import { configureTestBed } from '../../../testing/configure-test-bed';
+import { clearSeoHead, jsonLdNode } from '../../../testing/json-ld';
 import { TranslationService } from '../../translation/translation.service';
 import { PageMeta, SeoService } from '../../seo/seo.service';
 import { SITE_ORIGIN } from '../../seo/site-origin';
-import { JsonLdNode } from '../../seo/structured-data';
 import { communityDocumentJsonLd } from './community-document-json-ld';
 import { CommunityDocumentService } from './community-document.service';
 import { profileJsonLd } from './profile-json-ld';
@@ -19,23 +19,6 @@ const USER = '33333333-3333-4333-8333-333333333333';
 const DETAIL_URL = `/api/community/projects/${LINK}`;
 const PROFILE_URL = `/api/community/users/${USER}`;
 
-type Node = JsonLdNode & Record<string, unknown>;
-
-/** The one graph in the head, as the objects a consumer would read. */
-function graph(): Node[] {
-  const scripts = document.head.querySelectorAll(
-    'script[type="application/ld+json"]'
-  );
-  expect(scripts).toHaveLength(1);
-  return (JSON.parse(scripts[0].textContent ?? '') as { '@graph': Node[] })[
-    '@graph'
-  ];
-}
-
-function node(type: string): Node | undefined {
-  return graph().find((entry) => entry['@type'] === type);
-}
-
 describe('the community pages’ JSON-LD', () => {
   let http: HttpTestingController;
 
@@ -43,11 +26,7 @@ describe('the community pages’ JSON-LD', () => {
     TestBed.resetTestingModule();
     configureTestBed([{ provide: SITE_ORIGIN, useValue: ORIGIN }]);
     http = TestBed.inject(HttpTestingController);
-    for (const tag of document.head.querySelectorAll(
-      'script[type="application/ld+json"]'
-    )) {
-      tag.remove();
-    }
+    clearSeoHead();
   });
 
   async function resolveDocument(patch = {}, forkedFrom = null): Promise<void> {
@@ -76,7 +55,7 @@ describe('the community pages’ JSON-LD', () => {
     await resolveDocument({ stars: 214 });
     apply(documentPage, `/en/community/projects/${LINK}`);
 
-    expect(node('CreativeWork')).toMatchObject({
+    expect(jsonLdNode('CreativeWork')).toMatchObject({
       name: 'Half adder',
       url: `${ORIGIN}/en/community/projects/${LINK}`,
       dateCreated: '2026-01-01T00:00:00.000Z',
@@ -93,7 +72,9 @@ describe('the community pages’ JSON-LD', () => {
     await resolveDocument({ stars: 0 });
     apply(documentPage, `/en/community/projects/${LINK}`);
 
-    expect(node('CreativeWork')).not.toHaveProperty('interactionStatistic');
+    expect(jsonLdNode('CreativeWork')).not.toHaveProperty(
+      'interactionStatistic'
+    );
   });
 
   it('names the parent a fork was built on', async () => {
@@ -105,7 +86,7 @@ describe('the community pages’ JSON-LD', () => {
     } as never);
     apply(documentPage, `/en/community/projects/${LINK}`);
 
-    expect(node('CreativeWork')?.['isBasedOn']).toMatchObject({
+    expect(jsonLdNode('CreativeWork')?.['isBasedOn']).toMatchObject({
       name: 'Adder',
       url: `${ORIGIN}/en/community/projects/${PARENT_LINK}`
     });
@@ -127,7 +108,7 @@ describe('the community pages’ JSON-LD', () => {
 
     // A graph describing a document that is not on the page is a lie a crawler
     // acts on; and the head falls back to the page's own key.
-    expect(node('CreativeWork')).toBeUndefined();
+    expect(jsonLdNode('CreativeWork')).toBeUndefined();
     expect(document.title).toContain('Community Projects');
   });
 
@@ -141,7 +122,7 @@ describe('the community pages’ JSON-LD', () => {
       'script[type="application/ld+json"]'
     );
     expect(script?.textContent).not.toContain('</script>');
-    expect(node('CreativeWork')?.['name']).toBe(
+    expect(jsonLdNode('CreativeWork')?.['name']).toBe(
       'Adder</script><script>alert(1)</script>'
     );
   });
@@ -149,14 +130,7 @@ describe('the community pages’ JSON-LD', () => {
   it('describes a member’s page and the member as two nodes', async () => {
     const content = TestBed.inject(ProfileService);
     const resolved = content.resolveProfile(USER);
-    http.expectOne(PROFILE_URL).flush({
-      id: USER,
-      username: 'marek_h',
-      avatar: null,
-      memberSince: '2024-03-09T00:00:00.000Z',
-      publicProjects: 4,
-      publicComponents: 2
-    });
+    http.expectOne(PROFILE_URL).flush(publicProfile({ id: USER }));
     await resolved;
 
     apply(
@@ -167,7 +141,7 @@ describe('the community pages’ JSON-LD', () => {
       `/en/community/users/${USER}/components`
     );
 
-    expect(node('ProfilePage')).toMatchObject({
+    expect(jsonLdNode('ProfilePage')).toMatchObject({
       // The tab's own URL: the four tabs are four pages, not one described four
       // times over.
       url: `${ORIGIN}/en/community/users/${USER}/components`,

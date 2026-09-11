@@ -1,4 +1,8 @@
-import type { CommunityComponent, CommunityProject } from '@logigator/contract';
+import type {
+  CommunityComponent,
+  CommunityProject,
+  PublicProfile
+} from '@logigator/contract';
 
 /** An empty page envelope, which is what an unseeded deployment answers. */
 export const EMPTY_PAGE = { entries: [], page: 0, pageSize: 4, total: 0 };
@@ -51,6 +55,25 @@ export function communityComponentRow(
     numInputs: 2,
     numOutputs: 2,
     labels: ['A', 'B', 'S', 'C'],
+    ...patch
+  };
+}
+
+/**
+ * One public profile, as `GET /api/community/users/:id` answers. Beside the
+ * listing rows for the reason they are here: the contract checks the uuids and
+ * the dates, so a hand-written object is a read that fails at the boundary.
+ */
+export function publicProfile(
+  patch: Partial<PublicProfile> = {}
+): PublicProfile {
+  return {
+    id: '33333333-3333-4333-8333-333333333333',
+    username: 'marek_h',
+    avatar: null,
+    memberSince: '2024-03-09T00:00:00.000Z',
+    publicProjects: 4,
+    publicComponents: 2,
     ...patch
   };
 }

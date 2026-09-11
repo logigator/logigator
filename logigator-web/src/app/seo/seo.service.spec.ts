@@ -1,11 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { configureTestBed } from '../../testing/configure-test-bed';
+import { clearSeoHead, jsonLdGraph } from '../../testing/json-ld';
 import { TranslationService } from '../translation/translation.service';
 import { homeJsonLd } from '../pages/home/home-json-ld';
 import { PageMeta, SeoService } from './seo.service';
 import { SITE_ORIGIN } from './site-origin';
-import { jsonLdIds, JsonLdNode } from './structured-data';
+import { jsonLdIds } from './structured-data';
 
 const ORIGIN = 'https://logigator.com';
 
@@ -15,20 +16,8 @@ function links(rel: string): { hreflang: string; href: string }[] {
   ].map((link) => ({ hreflang: link.hreflang, href: link.href }));
 }
 
-/** The one graph in the head, as the objects a consumer would read. */
-function graph(): (JsonLdNode & Record<string, unknown>)[] {
-  const scripts = document.head.querySelectorAll(
-    'script[type="application/ld+json"]'
-  );
-  expect(scripts).toHaveLength(1);
-  const parsed = JSON.parse(scripts[0].textContent ?? '') as {
-    '@graph': (JsonLdNode & Record<string, unknown>)[];
-  };
-  return parsed['@graph'];
-}
-
 function nodeTypes(): string[] {
-  return graph().flatMap((node) =>
+  return jsonLdGraph().flatMap((node) =>
     Array.isArray(node['@type'])
       ? [...node['@type']]
       : [node['@type'] as string]
@@ -50,11 +39,7 @@ describe('SeoService', () => {
 
   afterEach(() => {
     TestBed.resetTestingModule();
-    for (const tag of document.head.querySelectorAll(
-      'link[rel="canonical"], link[rel="alternate"], meta[property^="og:locale"], script[type="application/ld+json"]'
-    )) {
-      tag.remove();
-    }
+    clearSeoHead();
   });
 
   it('canonicalizes a language version to itself', () => {
@@ -110,7 +95,9 @@ describe('SeoService', () => {
     seo.apply({ titleKey: 'pages.examples.title' }, '/de/examples');
 
     expect(nodeTypes()).not.toContain('SoftwareApplication');
-    expect(graph().find((node) => node['@type'] === 'WebSite')).toMatchObject({
+    expect(
+      jsonLdGraph().find((node) => node['@type'] === 'WebSite')
+    ).toMatchObject({
       '@id': jsonLdIds(ORIGIN).site,
       inLanguage: 'de'
     });
@@ -123,7 +110,9 @@ describe('SeoService', () => {
     expect(nodeTypes()).not.toContain('BreadcrumbList');
 
     seo.apply({ titleKey: 'pages.examples.title' }, '/de/examples');
-    const trail = graph().find((node) => node['@type'] === 'BreadcrumbList');
+    const trail = jsonLdGraph().find(
+      (node) => node['@type'] === 'BreadcrumbList'
+    );
     expect(trail?.['itemListElement']).toMatchObject([
       { position: 1, item: `${ORIGIN}/de` },
       { position: 2, item: `${ORIGIN}/de/examples` }
@@ -139,7 +128,9 @@ describe('SeoService', () => {
       '/de/docs/cloud'
     );
 
-    const trail = graph().find((node) => node['@type'] === 'BreadcrumbList');
+    const trail = jsonLdGraph().find(
+      (node) => node['@type'] === 'BreadcrumbList'
+    );
     expect(trail?.['itemListElement']).toMatchObject([
       { position: 1, item: `${ORIGIN}/de` },
       { position: 2, item: `${ORIGIN}/de/docs` },
@@ -208,10 +199,10 @@ describe('SeoService', () => {
     );
 
     expect(
-      graph().find((node) => node['@id'] === jsonLdIds(ORIGIN).editor)
+      jsonLdGraph().find((node) => node['@id'] === jsonLdIds(ORIGIN).editor)
     ).toMatchObject({ url: `${ORIGIN}/editor` });
     expect(
-      graph().find((node) => node['@type'] === 'VideoObject')
+      jsonLdGraph().find((node) => node['@type'] === 'VideoObject')
     ).toMatchObject({
       duration: 'PT3M34S',
       thumbnailUrl: expect.stringContaining(ORIGIN)
@@ -270,7 +261,9 @@ describe('SeoService', () => {
       '/en/community/projects/abc/stargazers'
     );
 
-    const trail = graph().find((node) => node['@type'] === 'BreadcrumbList');
+    const trail = jsonLdGraph().find(
+      (node) => node['@type'] === 'BreadcrumbList'
+    );
     // The resolved steps win over the static ones; a page cannot carry both.
     expect(trail?.['itemListElement']).toMatchObject([
       { position: 1, item: `${ORIGIN}/en` },
@@ -278,6 +271,86 @@ describe('SeoService', () => {
       { position: 3, name: 'Half adder' },
       { position: 4, item: `${ORIGIN}/en/community/projects/abc/stargazers` }
     ]);
+  });
+
+  describe('the picture a share surface unfurls', () => {
+    function imageTags(): string[] {
+      return [
+        ...document.head.querySelectorAll<HTMLMetaElement>(
+          'meta[property="og:image"], meta[name="twitter:image"]'
+        )
+      ].map((tag) => tag.content);
+    }
+
+    it('is the site card for a page with none of its own', () => {
+      TestBed.inject(SeoService).apply(
+        { titleKey: 'pages.home.title' },
+        '/en/examples'
+      );
+
+      expect(imageTags()).toEqual([
+        `${ORIGIN}/assets/social-card.png`,
+        `${ORIGIN}/assets/social-card.png`
+      ]);
+    });
+
+    it("is the page's own where it declares one, made absolute", () => {
+      TestBed.inject(SeoService).apply(
+        {
+          titleKey: 'pages.community.browse.projectsTitle',
+          image: () => '/api/share/abc/card.png'
+        },
+        '/en/community/projects/abc'
+      );
+
+      expect(imageTags()).toEqual([
+        `${ORIGIN}/api/share/abc/card.png`,
+        `${ORIGIN}/api/share/abc/card.png`
+      ]);
+    });
+
+    it('falls back where the page resolved nothing to name', () => {
+      // The same degradation the title makes: a link naming nothing published
+      // unfurls as the site rather than as a card for a missing document.
+      const seo = TestBed.inject(SeoService);
+      seo.apply(
+        {
+          titleKey: 'pages.community.browse.projectsTitle',
+          image: () => '/api/share/abc/card.png'
+        },
+        '/en/community/projects/abc'
+      );
+      seo.apply(
+        {
+          titleKey: 'pages.community.browse.projectsTitle',
+          image: () => null
+        },
+        '/en/community/projects/gone'
+      );
+
+      expect(imageTags()).toEqual([
+        `${ORIGIN}/assets/social-card.png`,
+        `${ORIGIN}/assets/social-card.png`
+      ]);
+    });
+  });
+
+  it('keeps a one-shot token page out of an index, and only that page', () => {
+    const seo = TestBed.inject(SeoService);
+    seo.apply(
+      { titleKey: 'pages.verifyEmail.title', noindex: true },
+      '/en/verify-email/abc'
+    );
+
+    expect(
+      document.head.querySelector<HTMLMetaElement>('meta[name="robots"]')
+        ?.content
+    ).toBe('noindex, follow');
+
+    // Removed on the next navigation: the document is reused, so a tag left
+    // behind would drop the page the visitor moved to out of the index.
+    seo.apply({ titleKey: 'pages.home.title' }, '/en');
+    expect(document.head.querySelector('meta[name="robots"]')).toBeNull();
   });
 
   it('rewrites the links a second navigation replaces', () => {
