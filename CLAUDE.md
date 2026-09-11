@@ -606,7 +606,8 @@ the liveness probe; `GET /api/health/ready` probes Postgres and Redis (503 namin
   reset.
 - `mail/` — nodemailer plus rendering functions, four locales, HTML and text; unset `SMTP_URL` logs
   the mail with its link instead of sending.
-- `storage/` — images on a volume. Every upload is decoded and re-encoded by `ImageService`
+- `storage/` — images on a volume, plus `share-card/`, the one thing this server draws rather than
+  re-encodes. Every upload is decoded and re-encoded by `ImageService`
   (sharp/libvips) rather than stored: the bytes and the declared content type are the client's word,
   and accepted formats are checked against what libvips _detects_, so an SVG it would happily
   rasterize is refused. Each asset becomes a fixed matrix of size × format declared once in
@@ -636,8 +637,17 @@ the liveness probe; `GET /api/health/ready` probes Postgres and Redis (503 namin
   both replaced together; not an edit, so no version bump). `RenormalizeService` is the format-bump
   and re-extract job — keyset-paginated, one transaction per row, idempotent; it does not bump
   `version` but does put it in the `WHERE`, so a row a save reached first is skipped.
-- `sharing/` — reading a document by its share link and cloning it. The link is a **capability**:
-  the read needs no session and ignores `public`. A clone copies the whole transitive dependency
+- `sharing/` — reading a document by its share link, the card it unfurls as, and cloning it. The
+  link is a **capability**: the read needs no session and ignores `public`. `GET
+/share/:link/card.png` is the **composed 1200×630 share card** — `storage/share-card/` draws the
+  whole plate as one SVG that libvips rasterizes once, and this service resolves the row, the author
+  and the star tally, hashes them plus a layout version into the `ETag`, and keeps a small LRU with
+  an in-flight map so one pasted link composes once. Composed on demand rather than stored beside
+  the preview: a card denormalizes three rows on independent clocks, so a stored one needs a
+  re-compose trigger per clock. The typefaces are four TTFs in `storage/share-card/fonts/` that the
+  build copies beside the bundle — librsvg ignores a data-URI `@font-face` and fontconfig scans no
+  woff2, so nothing the editor and the site already carry is reachable, and a face that cannot be
+  found is substituted silently. A clone copies the whole transitive dependency
   graph (one recursive CTE with a path array as a cycle guard) and **rewrites every embedded
   snapshot's `source.id`** to the new copies; a snapshot whose master no longer exists loses its
   `source` instead. New ids are chosen before any insert, so insert order is irrelevant; copies go
@@ -709,6 +719,10 @@ ESM-only `@nestjs/*` packages; the settings mirror the CLI builder's own ESM bra
 - **`fastify` is pinned to the exact version `@nestjs/platform-fastify` depends on.** With two
   copies installed, a plugin's type augmentation lands on one and Nest's `register` reads the other,
   so `app.register(fastifyCookie)` fails to type-check.
+- **The share card's fonts are copied beside the bundle** like the migrations, and
+  `FONTCONFIG_FILE` is set to the `fonts.conf` among them at module scope — fontconfig reads the
+  variable once, when libvips first initialises it, which any image decode may trigger. libvips
+  brings its own fontconfig, pango and rsvg, so the runtime image needs no font packages.
 - **`migrate` and `renormalize` are the second and third Rspack entries**; a `CopyRspackPlugin` puts
   the migrations' `migration.sql` files in `dist/logigator-api/drizzle/`, since the runner reads them
   from disk and a release applies migrations with plain `node` — and so does the server's startup
