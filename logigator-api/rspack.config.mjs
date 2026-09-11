@@ -81,7 +81,12 @@ export default {
       }
     ]
   },
-  plugins: [emitModuleTypeMarker, copyMigrations(), pruneStaleMigrations],
+  plugins: [
+    emitModuleTypeMarker,
+    copyMigrations(),
+    pruneStaleMigrations,
+    copyCardFonts()
+  ],
   // Nest reflects on class and function names, so mangling breaks DI, and a
   // long-running server gains nothing from minification anyway.
   optimization: { minimize: false },
@@ -118,6 +123,25 @@ function copyMigrations() {
         context: `${here}drizzle`,
         from: '*/migration.sql',
         to: 'drizzle'
+      }
+    ]
+  });
+}
+
+/**
+ * Ships the share card's typefaces beside the bundle, where its `fonts.conf`
+ * names them relative to itself. libvips draws the card through the fontconfig
+ * compiled into sharp, which finds whatever the host carries and substitutes
+ * silently — so the faces travel with the artifact rather than being installed
+ * into an image.
+ */
+function copyCardFonts() {
+  return new CopyRspackPlugin({
+    patterns: [
+      {
+        context: `${here}src/storage/share-card/fonts`,
+        from: '*',
+        to: 'fonts'
       }
     ]
   });

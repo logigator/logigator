@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import sharp from 'sharp';
 import { eq } from 'drizzle-orm';
 import { CUSTOM_TYPE_ID_BASE } from '@logigator/core';
 import type { ComponentSummary, ProjectSummary } from '@logigator/contract';
@@ -476,6 +477,140 @@ describe('share links', () => {
         url: `/api/share/${project.link}/clone`
       });
       expect(response.statusCode).toBe(401);
+    });
+  });
+
+  describe('the card it unfurls as', () => {
+    /** A preview upload, as the editor sends it: both themes in one request. */
+    async function setPreview(id: string): Promise<void> {
+      const png = await sharp({
+        create: {
+          width: 64,
+          height: 64,
+          channels: 4,
+          background: { r: 20, g: 180, b: 90, alpha: 1 }
+        }
+      })
+        .png()
+        .toBuffer();
+
+      const form = new FormData();
+      for (const slot of ['light', 'dark']) {
+        form.set(
+          slot,
+          new Blob([new Uint8Array(png)], { type: 'image/png' }),
+          `${slot}.png`
+        );
+      }
+      const request = new Request('http://localhost', {
+        method: 'POST',
+        body: form
+      });
+
+      const response = await api.inject({
+        method: 'POST',
+        url: `/api/projects/${id}/preview`,
+        headers: {
+          ...ada.headers(),
+          'content-type': request.headers.get('content-type') as string
+        },
+        payload: Buffer.from(await request.arrayBuffer())
+      });
+      expect(response.statusCode).toBe(201);
+    }
+
+    function card(link: string, etag?: string) {
+      return api.inject({
+        method: 'GET',
+        url: `/api/share/${link}/card.png`,
+        headers: etag ? { 'if-none-match': etag } : {}
+      });
+    }
+
+    it('answers a picture at the size every share surface expects', async () => {
+      const project = await create<ProjectSummary>(
+        'projects',
+        { name: 'Card', document: circuitDocument('Card', HALF_ADDER_BODY) },
+        ada
+      );
+
+      // No session: the link is the capability here as much as it is for the
+      // document, which is what lets one route serve every unfurler.
+      const response = await card(project.link);
+
+      expect(response.statusCode).toBe(200);
+      expect(response.headers['content-type']).toBe('image/png');
+      expect(response.headers['cache-control']).toContain('max-age=');
+      const { width, height } = await sharp(response.rawPayload).metadata();
+      expect({ width, height }).toEqual({ width: 1200, height: 630 });
+    });
+
+    it('composes the stored render into it', async () => {
+      const project = await create<ProjectSummary>(
+        'projects',
+        { name: 'Rendered', document: circuitDocument('Rendered') },
+        ada
+      );
+
+      const before = await card(project.link);
+      await setPreview(project.id);
+      const after = await card(project.link);
+
+      // The picture is in the card, so a preview upload changes both the
+      // drawing and the tag — the asset id is part of what is hashed.
+      expect(after.headers['etag']).not.toBe(before.headers['etag']);
+      expect(after.rawPayload.equals(before.rawPayload)).toBe(false);
+    });
+
+    it('is revalidated by its tag, and re-composed when an input moves', async () => {
+      const project = await create<ProjectSummary>(
+        'projects',
+        { name: 'Tagged', document: circuitDocument('Tagged') },
+        ada
+      );
+
+      const first = await card(project.link);
+      const etag = first.headers['etag'] as string;
+      expect(etag).toBeTruthy();
+
+      const unchanged = await card(project.link, etag);
+      expect(unchanged.statusCode).toBe(304);
+      expect(unchanged.rawPayload.length).toBe(0);
+
+      await api.inject({
+        method: 'PATCH',
+        url: `/api/projects/${project.id}`,
+        headers: ada.headers(),
+        payload: { name: 'Renamed' }
+      });
+
+      // A rename is drawn on the card, so the tag a client holds has to stop
+      // matching — that is the whole of what keeps an on-demand card fresh.
+      const renamed = await card(project.link, etag);
+      expect(renamed.statusCode).toBe(200);
+    });
+
+    it('draws a library component from its symbol', async () => {
+      const component = await create<ComponentSummary>(
+        'components',
+        {
+          name: 'Adder',
+          symbol: 'ADD',
+          document: circuitDocument('Adder', HALF_ADDER_BODY)
+        },
+        ada
+      );
+
+      const response = await card(component.link);
+      expect(response.statusCode).toBe(200);
+      expect(response.headers['content-type']).toBe('image/png');
+    });
+
+    it('is a 404 for a link that names nothing', async () => {
+      const response = await card('00000000-0000-4000-8000-000000000000');
+
+      expect(response.statusCode).toBe(404);
+      expect(response.json().code).toBe('not_found');
     });
   });
 });

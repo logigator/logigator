@@ -77,6 +77,31 @@ export const PREVIEW_VARIANTS: readonly ImageVariantSpec[] =
   IMAGE_SLOTS.flatMap((slot) => matrix([256, 1024], ['webp', 'png'], slot));
 
 /**
+ * The file one rung of a matrix was written as, for the one consumer that reads
+ * a stored asset instead of pointing a client at it: the share card, which
+ * composites the dark render and the WebP avatar into a picture of its own.
+ * Looked up rather than spelled out, so a renamed rung breaks at boot.
+ */
+export function variantFile(
+  specs: readonly ImageVariantSpec[],
+  rung: Pick<ImageVariantSpec, 'slot' | 'width' | 'format'>
+): string {
+  const spec = specs.find(
+    (candidate) =>
+      candidate.slot === rung.slot &&
+      candidate.width === rung.width &&
+      candidate.format === rung.format
+  );
+
+  if (!spec) {
+    throw new Error(
+      `No ${rung.width}px ${rung.format} variant in this matrix${rung.slot ? ` for the ${rung.slot} slot` : ''}.`
+    );
+  }
+  return spec.file;
+}
+
+/**
  * The variants of one stored asset, from the matrix rather than the directory:
  * the files are written together or not at all, so listing needs no disk.
  */

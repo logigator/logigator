@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { mkdir, rm, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { ENV, type Env } from '../config/env';
@@ -83,6 +83,27 @@ export class FileStorageService {
     }
 
     return id;
+  }
+
+  /**
+   * One file out of an asset, or `null` where it is not there. Reading is what
+   * the share card needs and nothing else does — every other consumer is a
+   * client following a URL the static layer serves — so absence is an answer
+   * rather than an error: a row may point at a directory a crash left
+   * half-written, and a card composes without the picture.
+   */
+  async readAsset(
+    area: StorageArea,
+    id: string,
+    file: string
+  ): Promise<Buffer | null> {
+    if (!ASSET_ID.test(id)) return null;
+
+    try {
+      return await readFile(join(this.root, assetPath(area, id), file));
+    } catch {
+      return null;
+    }
   }
 
   /**
