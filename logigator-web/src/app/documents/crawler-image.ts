@@ -36,3 +36,27 @@ export function crawlerPreviewUrl(
 ): string | null {
   return crawlerImageUrl(preview?.light, 'png');
 }
+
+/**
+ * The picture a pasted link to a published document unfurls as: the API's
+ * composed 1200×630 card, drawn from the row and its stored render.
+ *
+ * Not the stored preview, which cannot serve as one at all — a preview is line
+ * art on a transparent ground, and a share surface composites that over
+ * whatever it picks, white on some and black on others. The card is flattened
+ * onto an opaque plate and sells the editor with the space that leaves over.
+ *
+ * Addressed by the share link, as everything about a document is: the token is
+ * the capability, so one route answers every consumer.
+ */
+export function shareCardUrl(link: string): string {
+  return `/api/share/${link}/card.png`;
+}
+
+/**
+ * The same route as the path pattern `robots.txt` has to allow, built from the
+ * one template so the rule cannot come to name a URL the site no longer emits —
+ * a mismatch nothing fails on, and that nobody sees until a pasted link unfurls
+ * blank.
+ */
+export const SHARE_CARD_PATH_PATTERN = shareCardUrl('*');

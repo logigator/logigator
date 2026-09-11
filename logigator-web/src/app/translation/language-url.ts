@@ -1,4 +1,8 @@
-import { isAvailableLanguage, LanguageId } from '@logigator/core';
+import {
+  AVAILABLE_LANGUAGES,
+  isAvailableLanguage,
+  LanguageId
+} from '@logigator/core';
 
 /**
  * Every page lives under a language segment (`/de/features`). The legacy
@@ -49,4 +53,32 @@ export function urlInLanguage(lang: LanguageId, url: string): string {
   const suffix = url.search(/[?#]/);
   const rest = suffix === -1 ? '' : url.slice(suffix);
   return pathInLanguage(lang, pathnameFromUrl(url)) + rest;
+}
+
+/** One `hreflang` annotation: what to call the language, and where it is. */
+export interface LanguageAlternate {
+  hreflang: LanguageId | 'x-default';
+  path: string;
+}
+
+/**
+ * The complete alternate set for a page: its four language versions, then the
+ * unprefixed URL as `x-default`.
+ *
+ * One definition because it is emitted twice — in every page's head and beside
+ * every entry of the sitemap — and those two are what a crawler cross-checks to
+ * decide the five URLs are translations of one another rather than duplicates.
+ * Two lists that disagree break exactly the pairing they exist to state.
+ */
+export function languageAlternates(pathname: string): LanguageAlternate[] {
+  const path = pathWithoutLanguage(pathname);
+  return [
+    ...AVAILABLE_LANGUAGES.map(({ id }) => ({
+      hreflang: id,
+      path: pathInLanguage(id, path)
+    })),
+    // The unprefixed URL negotiates a language of its own, which is the answer
+    // for a visitor no alternate matches — and its only job.
+    { hreflang: 'x-default' as const, path }
+  ];
 }

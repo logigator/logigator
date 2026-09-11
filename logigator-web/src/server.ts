@@ -16,10 +16,16 @@ import { renderChangelogFeed } from './app/pages/changelog/changelog-feed';
 import { requestOrigin } from './request-origin';
 import {
   languageFromPath,
-  pathInLanguage
+  pathInLanguage,
+  pathWithoutLanguage,
+  urlInLanguage
 } from './app/translation/language-url';
 import { negotiateRequestLanguage } from './app/translation/language-negotiation';
 import { canonicalPath } from './canonical-path';
+import { legacyRedirect } from './legacy-redirects';
+import { renderRobotsTxt } from './robots';
+import { communityPages } from './community-sitemap';
+import { renderSitemap, STATIC_PAGES } from './sitemap';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
@@ -109,6 +115,79 @@ app.use((req, res, next) => {
     return;
   }
   res.redirect(301, canonical + req.originalUrl.slice(req.path.length));
+});
+
+/**
+ * What a crawler may walk. Answered here rather than copied into `public/`
+ * because the `Sitemap:` line names an absolute URL, which only the request
+ * knows.
+ *
+ * It never fails. A `5xx` on this path is read as "crawl nothing", so a host
+ * {@link requestOrigin} will not vouch for gets the file without the sitemap
+ * line rather than an error — the rules are the same for every host either way.
+ */
+app.get('/robots.txt', (req, res) => {
+  const origin = requestOrigin(req);
+  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+  res.setHeader('Cache-Control', `public, max-age=${MUTABLE_ASSET_MAX_AGE}`);
+  res.send(renderRobotsTxt(origin && `${origin}/sitemap.xml`));
+});
+
+/**
+ * Every page this site has, in every language, plus what the community has
+ * published — read through the same public listings the browse pages use, so
+ * the file is a view of the database rather than a list somebody maintains. The
+ * legacy sitemap was hand-written and never named a single document.
+ *
+ * A read that fails takes the whole response with it rather than answering the
+ * static half: a sitemap that stops naming every document says those URLs are
+ * gone, which is worse than not answering at all. `robots.txt` is the opposite
+ * case, and is written the opposite way.
+ */
+app.get('/sitemap.xml', (req, res, next) => {
+  const origin = requestOrigin(req);
+  if (origin === null) {
+    next();
+    return;
+  }
+  communityPages()
+    .then((published) => {
+      res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+      res.setHeader(
+        'Cache-Control',
+        `public, max-age=${MUTABLE_ASSET_MAX_AGE}`
+      );
+      res.send(renderSitemap(origin, [...STATIC_PAGES, ...published]));
+    })
+    .catch(next);
+});
+
+/**
+ * A URL the legacy app answered, sent to whatever answers it now. Phase 5 took
+ * full structural freedom over the route tree and this is what paid for it: no
+ * address that was ever in an inbox or a bookmark stops resolving.
+ *
+ * Registered before the language redirect, so a legacy URL that carried no
+ * prefix is answered unprefixed and negotiates one below — two hops, each with
+ * the status that is true of it. A prefixed one keeps its language and takes
+ * only the first.
+ */
+app.use((req, res, next) => {
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    next();
+    return;
+  }
+  const lang = languageFromPath(req.path);
+  const [, query = ''] = req.originalUrl.split('?');
+  const target = legacyRedirect(
+    pathWithoutLanguage(req.path),
+    new URLSearchParams(query)
+  );
+  if (target === null) {
+    next();
+    return;
+  }
+  res.redirect(301, lang ? urlInLanguage(lang, target) : target);
 });
 
 /**

@@ -5,17 +5,11 @@ import {
   REQUEST
 } from '@angular/core';
 import { provideServerRendering, withRoutes } from '@angular/ssr';
+import { apiOrigin } from '../api-origin';
 import { appConfig } from './app.config';
 import { serverRoutes } from './app.routes.server';
 import { API_ORIGIN } from './api/server-api.interceptor';
 import { SITE_ORIGIN } from './seo/site-origin';
-
-/**
- * Where this process reaches the API. A deployment fact a bundle cannot know:
- * inside the compose network the API is a host of its own, while in the browser
- * it is a path on the same origin.
- */
-const API_ORIGIN_DEFAULT = 'http://localhost:3000';
 
 /** Only reachable if a render ever runs without a request; see `SITE_ORIGIN`. */
 const SITE_ORIGIN_FALLBACK = 'https://logigator.com';
@@ -25,7 +19,7 @@ const serverConfig: ApplicationConfig = {
     provideServerRendering(withRoutes(serverRoutes)),
     {
       provide: API_ORIGIN,
-      useFactory: () => process.env['API_ORIGIN'] ?? API_ORIGIN_DEFAULT
+      useFactory: apiOrigin
     },
     {
       // The request's own origin, which is the public one: Angular builds the

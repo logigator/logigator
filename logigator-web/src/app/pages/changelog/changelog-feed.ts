@@ -1,6 +1,7 @@
 import { marked } from 'marked';
 import { LanguageId } from '@logigator/core';
 import { Changelog, markdownToText, releaseInstant } from '@logigator/docs';
+import { escapeXml } from '../../../escape-xml';
 import { pathInLanguage } from '../../translation/language-url';
 
 /** Where a feed is served from and what it links back to. */
@@ -64,17 +65,4 @@ export function renderChangelogFeed(
     '</feed>',
     ''
   ].join('\n');
-}
-
-const XML_ENTITIES: Readonly<Record<string, string>> = {
-  '&': '&amp;',
-  '<': '&lt;',
-  '>': '&gt;',
-  '"': '&quot;',
-  "'": '&apos;'
-};
-
-/** Text as XML character data, in one pass over it. */
-function escapeXml(text: string): string {
-  return text.replaceAll(/[&<>"']/g, (character) => XML_ENTITIES[character]);
 }
