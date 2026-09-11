@@ -333,6 +333,36 @@ function snippet(section: IndexedSection, terms: string[]): string {
   return `…${text}${tail}`;
 }
 
+/**
+ * A page's opening paragraph, as the sentence that describes the whole page.
+ *
+ * Every page is authored the same way — an `# …` and then a line saying what it
+ * is for — so a summary is already written, in every language, and cannot drift
+ * from the page the way a separate translation key would. It lives here rather
+ * than in a viewer because both of them will want it and because the cut is
+ * this file's own: the same length and the same word boundary a search snippet
+ * takes, over `characters()` so a surrogate pair is never halved.
+ *
+ * Returns `null` for a page with nothing but a title, and skips an opening
+ * image, note or table — a page that starts with one of those has not said
+ * anything yet.
+ */
+export function docPageSummary(markdown: string | null): string | null {
+  if (!markdown) return null;
+
+  const paragraph = markdown
+    .split(/\n{2,}/)
+    .map((block) => block.trim())
+    .find((block) => /^[^#!>|]/.test(block));
+  const text = paragraph ? markdownToText(paragraph) : '';
+  if (!text) return null;
+
+  const source = characters(text);
+  return source.length <= SNIPPET_LENGTH
+    ? text
+    : `${cutAtWord(source.slice(0, SNIPPET_LENGTH), 'end')}…`;
+}
+
 /** Drops the partial word a fixed-length cut leaves at one end. */
 function cutAtWord(source: string[], end: 'start' | 'end'): string {
   const space = end === 'start' ? source.indexOf(' ') : source.lastIndexOf(' ');
