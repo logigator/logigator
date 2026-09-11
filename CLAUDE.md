@@ -245,7 +245,8 @@ path behaves the same in development).
   completed navigation, the server render included. Routes carry a `seo` data entry naming their
   title key. Each language version canonicalizes to **itself**, and the unprefixed URL is
   `x-default`'s alone. The language the head describes is read off the URL, not the translation
-  service. A `seo` entry that is a **function** — `title`, `description`, `trail`, `jsonLd` — is run
+  service. A `seo` entry that is a **function** — `title`, `description`, `image`, `trail`,
+  `jsonLd` — is run
   through `runInInjectionContext` after the route's guards, which is what lets a page name the
   circuit or member it resolved (with the key kept as the fallback, so a link naming nothing
   published announces the listing rather than an empty title) and put stored text in its trail,
@@ -259,6 +260,10 @@ path behaves the same in development).
   `structured-data.ts` holds the node types and the serializer; it escapes every `<`, because the
   community pages put circuit names, descriptions and usernames in the graph, and hands factories
   absolute URLs, a crawler having no document to resolve the build's `./media/…` imports against.
+  `og:image` is the service's too, not `index.html`'s: a published document (and its stargazer
+  list) names the API's composed card, everything else `social-card.png`, both resolved against the
+  origin the request arrived at. `noindex` is a `PageMeta` flag, set on the two pages whose URL
+  carries a one-shot token and **removed** on the next navigation, the document being reused.
 - `layout/` — the shell: the top bar, the compact navigation drawer, the footer, and the account
   menu. One 56px `bg-primary-400` bar at every width, the treatment the editor's title bar carries
   (the primary scale is scheme-independent, so bar and ink are the same in light and dark); its
@@ -374,6 +379,31 @@ path behaves the same in development).
   set that stays unhashed is fixed by contract: the consent bundle and its translations, the
   favicons and `site.webmanifest` (Angular rewrites its own tags in `index.html`, not these), and
   `social-card.png`, whose absolute URL the editor's own Open Graph tags name.
+- **Four plain modules beside `server.ts` are what the SSR host shares with the app**: `escape-xml.ts`
+  (both XML responses this origin writes carry stored text), `api-origin.ts` (the one reader of
+  `API_ORIGIN` and its default, for the render's provider and the sitemap's walk),
+  `canonical-path.ts` and `request-origin.ts`. Nothing here may import an Angular-injectable, which
+  is why `languageAlternates` — the four `hreflang` alternates plus `x-default`, emitted both in
+  every page's head and beside every sitemap entry, the two things a crawler cross-checks — lives in
+  `app/translation/language-url.ts` rather than in `SeoService`.
+- **`robots.txt`, `sitemap.xml` and the legacy 301 map are `server.ts` routes**, registered after
+  the canonical-path redirect and before the language one — the only slot where an unprefixed path
+  is still unprefixed. `robots.txt` names no crawler (allowing by omission is the decision, and the
+  file says so in a comment), closes `/share/` and `/api/` with an `Allow:` for the card path ahead
+  of it, and **never answers non-200**: a `5xx` there is read as "crawl nothing", so a host
+  `requestOrigin` will not vouch for costs the `Sitemap:` line rather than the answer. The sitemap
+  is the opposite — it fails whole rather than answering the static half, a sitemap that stops
+  naming documents saying those URLs are gone — and emits **one `<url>` per language**, each its own
+  canonical carrying all four alternates plus `x-default`; the unprefixed URL is the negotiating
+  `302` and so is never a `<loc>`. The community half is walked through the public listings ordered
+  by `latest` (trending re-ranks between requests), read with bounded concurrency once the first
+  response's `total` says how many pages there are, validated against the contract, and **held for
+  the same 300s the response declares, with in-flight requests deduplicated** — the walk is up to a
+  hundred requests, and two crawlers arriving together would otherwise each start their own.
+  `legacy-redirects.ts` is a pure function over an unprefixed path: the server strips the language
+  segment, looks up, and puts it back, so one entry covers all five forms of a legacy URL, and a
+  URL that carried no prefix takes two hops rather than one `301` whose target depends on the
+  visitor.
 - **`NG_ALLOWED_HOSTS` and `NG_TRUST_PROXY_HEADERS` are required behind Caddy.** Angular refuses a
   request whose `Host` it was not told to expect and only reads forwarded headers once trusted;
   `SITE_ORIGIN` is then derived from the request URL rather than configured a second time. An
@@ -536,7 +566,9 @@ They are never built and have no `dist/`, `main` or `exports`.
   against), `images.ts` (the screenshot import map, written by the capture tool), `parseDocsLink`
   and `docs-search.ts` — the search matcher, so both viewers rank identically. It takes the
   renderer's `headingSlug` as an argument rather than reimplementing it: a second definition of
-  that rule would send half the results to the top of the page.
+  that rule would send half the results to the top of the page. `docPageSummary` is beside it and
+  for the same reason: a page's opening paragraph is what the website's meta description is, and it
+  takes the same 160-character word-boundary cut a search snippet does.
   **The member imports no markdown**, and must not: the editor's loader emits a `.md` as a file and
   the website's as text, so each app writes its own import map out per page and language, the way
   `pages/legal/content/` is. The screenshots _are_ shared — both apps emit a picture through a
