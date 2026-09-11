@@ -442,14 +442,22 @@ function dataUri(png: Buffer): string {
  * Every string on the card is somebody's document name, username, symbol or
  * port label, and all of it goes into a document this server then parses. An
  * unescaped `<` would be markup of the author's choosing inside our own
- * renderer; a control character would make libxml2 reject the whole card,
+ * renderer; a character XML forbids would make libxml2 reject the whole card,
  * turning one hostile name into an endpoint that answers nothing.
+ *
+ * What is dropped is exactly what XML 1.0's `Char` production excludes and a
+ * name can actually carry: the C0 controls, and `U+FFFE`/`U+FFFF`. Neither is
+ * filtered anywhere upstream — the name schema is a length, not a character
+ * set — and both survive Postgres, so the route would answer `500` for that
+ * document until it was renamed. The noncharacters at `U+FDD0`-`U+FDEF` are
+ * legal `Char`s and stay; a lone surrogate cannot survive being encoded as
+ * UTF-8 and arrives as `U+FFFD`, which is legal too.
  */
 function escapeXml(value: string): string {
   return (
     value
       // eslint-disable-next-line no-control-regex
-      .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, '')
+      .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\ufffe\uffff]/g, '')
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')

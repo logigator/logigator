@@ -101,10 +101,15 @@ describe('the share card', () => {
 
   it('draws a document whose text is markup', async () => {
     // Every string here is the author's. Unescaped, the `<` would be markup
-    // inside our own renderer and the control character would make libxml2
-    // reject the document, so one hostile name would take the route down.
+    // inside our own renderer and the characters XML forbids would make
+    // libxml2 reject the document, so one hostile name would take the route
+    // down — permanently, for that document, until somebody renamed it.
+    //
+    // `\uFFFE` and `\uFFFF` are in here beside the control character because
+    // nothing upstream filters them either: the name schema is a length rather
+    // than a character set, and both survive Postgres intact.
     const card = await composeShareCard({
-      name: '</text><image href="x"/>\u0001',
+      name: '</text><image href="x"/>\u0001\ufffe\uffff',
       username: 'a & b',
       avatar: null,
       stars: 1,
@@ -117,6 +122,18 @@ describe('the share card', () => {
         labels: ['<a', '&b', "'s"]
       }
     });
+
+    const { width } = await sharp(card).metadata();
+    expect(width).toBe(CARD_WIDTH);
+  });
+
+  it('keeps the characters XML allows, including the ones that look hostile', async () => {
+    // The strip is `Char`, not "anything unusual": `U+FDD0` is a noncharacter
+    // that XML permits, and a name carrying one has to keep it rather than
+    // silently lose a letter.
+    const card = await composeShareCard(
+      project({ name: `a\ufdd0b\ufffd`, username: 'z\tz' })
+    );
 
     const { width } = await sharp(card).metadata();
     expect(width).toBe(CARD_WIDTH);
