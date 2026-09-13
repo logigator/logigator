@@ -2254,6 +2254,8 @@ __metadata:
   dependencies:
     "@angular/compiler": "npm:^22.1.0"
     "@angular/compiler-cli": "npm:^22.1.0"
+    katex: "npm:^0.16.0"
+    marked-katex-extension: "npm:^5.0.0"
     ng-packagr: "npm:^22.1.0"
     tslib: "npm:^2.8.1"
     typescript: "npm:~6.0.3"
@@ -5134,6 +5136,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"commander@npm:^8.3.0":
+  version: 8.3.0
+  resolution: "commander@npm:8.3.0"
+  checksum: 10c0/8b043bb8322ea1c39664a1598a95e0495bfe4ca2fad0d84a92d7d1d8d213e2a155b441d2470c8e08de7c4a28cf2bc6e169211c49e1b21d9f7edc6ae4d9356060
+  languageName: node
+  linkType: hard
+
 "common-path-prefix@npm:^3.0.0":
   version: 3.0.0
   resolution: "common-path-prefix@npm:3.0.0"
@@ -7184,6 +7193,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"katex@npm:^0.16.0":
+  version: 0.16.47
+  resolution: "katex@npm:0.16.47"
+  dependencies:
+    commander: "npm:^8.3.0"
+  bin:
+    katex: cli.js
+  checksum: 10c0/b10f4d0651c60771a48444879e4227255e26e2b2ec061b1ee4b08934863ad2324ba8dbb772455f7768aeb14dfcc13bcd309174a0ddd5ef954a607f644a197710
+  languageName: node
+  linkType: hard
+
 "keyv@npm:^4.5.4":
   version: 4.5.4
   resolution: "keyv@npm:4.5.4"
@@ -7531,7 +7551,9 @@ __metadata:
     "@phosphor-icons/web": "npm:^2.1.2"
     "@tailwindcss/postcss": "npm:^4.3.3"
     jsdom: "npm:^30.0.1"
+    katex: "npm:^0.16.0"
     marked: "npm:^18.0.7"
+    marked-katex-extension: "npm:^5.0.0"
     ngx-markdown: "npm:^22.0.0"
     ngxtension: "npm:^7.2.0"
     pixi.js: "npm:^8.19.0"
@@ -7575,7 +7597,9 @@ __metadata:
     "@types/node": "npm:^24.13.3"
     express: "npm:^5.1.0"
     jsdom: "npm:^30.0.1"
+    katex: "npm:^0.16.0"
     marked: "npm:^18.0.7"
+    marked-katex-extension: "npm:^5.0.0"
     ngx-markdown: "npm:^22.0.0"
     postcss: "npm:^8.5.25"
     posthog-js: "npm:^1.409.5"
@@ -7668,6 +7692,16 @@ __metadata:
     promise-retry: "npm:^2.0.1"
     ssri: "npm:^10.0.0"
   checksum: 10c0/df5f4dbb6d98153b751bccf4dc4cc500de85a96a9331db9805596c46aa9f99d9555983954e6c1266d9f981ae37a9e4647f42b9a4bb5466f867f4012e582c9e7e
+  languageName: node
+  linkType: hard
+
+"marked-katex-extension@npm:^5.0.0":
+  version: 5.1.12
+  resolution: "marked-katex-extension@npm:5.1.12"
+  peerDependencies:
+    katex: ">=0.16 <0.19"
+    marked: ">=4 <19"
+  checksum: 10c0/e3760af8e9eca99c5dd4b448d4e04d21d3aff2fb23b0376a32d80044a7e43d43a1195ce41e04c3dbedec1ab8ab7a966cb6ba896a3915c1efeecced539275dc2c
   languageName: node
   linkType: hard
 
