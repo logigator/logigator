@@ -20,6 +20,26 @@ The repo root is a **shared Angular CLI workspace** + **Yarn 4 workspace** (core
 the editor and the site, Rspack's for the API) inlines what it uses. No `dist/`, no `exports`, no
 build ordering.
 
+**The capture tool** (`logigator-editor/tools/screenshots`, package `logigator-screenshots`) is a
+standalone package with its own lockfile — outside the workspace, never installed by a root
+`yarn install`, and never a dependency of anything. It drives a real editor through
+`window.__logigator` and Playwright to generate the images the product shows. One run is one
+**target** (a folder under its `targets/`, whose config owns the shots, the colour schemes, the
+window it frames, where a capture lands and what it is called): `docs` writes `logigator-docs/`'s
+screenshots, `web` the website's tour figures. The shared half is the runner, the page driver and
+the encoder — **every image it writes is lossless WebP**, animated for the step-throughs, and
+`lib/webp.mjs` is its only encoder. A pass reaches the app as the origin-wide `preferences`
+cookie, whose codec `lib/origin.mjs` loads out of core rather than restating.
+
+**`ngx-markdown`'s two optional peers are installed rather than optional in practice.** It dynamically
+imports `marked-katex-extension` for its TeX path, and that package statically imports `katex` — so
+both are declared by the editor, the site and `@logigator/ui` beside `marked`, which is there for the
+same reason. Leave them out and the production pipeline cannot resolve the graph: `ng build`
+succeeds and the dev server reports a clean build, then 500s on every page load, which is how the
+documented `yarn start:editor:prod` capture workflow came to be broken without anyone noticing. The
+cost is 0.09 kB on the initial bundle and a 262 kB lazy chunk nothing fetches, since no markdown in
+either app enables KaTeX.
+
 `logigator-editor`, `logigator-web` and `logigator-ui` are Angular CLI projects (`angular.json`);
 the other three run on plain Yarn scripts. Each package holds the same config set: one primary
 tsconfig (`tsconfig.json`, or `tsconfig.app.json`/`tsconfig.lib.json` where angular.json points at
@@ -563,7 +583,8 @@ They are never built and have no `dist/`, `main` or `exports`.
 - `logigator-docs/src/` — `pages/<lang>/<id>.md`, `pages/<lang>/images/` and `changelog/<lang>.md`,
   plus `docs-structure.ts`
   (the section/page tree as ids, and the `DocPageId` union both viewers' targets are checked
-  against), `images.ts` (the screenshot import map, written by the capture tool), `parseDocsLink`
+  against), `images.ts` (the screenshot import map, written by the capture tool's `docs` target),
+  `parseDocsLink`
   and `docs-search.ts` — the search matcher, so both viewers rank identically. It takes the
   renderer's `headingSlug` as an argument rather than reimplementing it: a second definition of
   that rule would send half the results to the top of the page. `docPageSummary` is beside it and
@@ -572,8 +593,9 @@ They are never built and have no `dist/`, `main` or `exports`.
   **The member imports no markdown**, and must not: the editor's loader emits a `.md` as a file and
   the website's as text, so each app writes its own import map out per page and language, the way
   `pages/legal/content/` is. The screenshots _are_ shared — both apps emit a picture through a
-  `file` loader — which works because an app's ambient `*.png`/`*.gif` declaration is program-global
-  and reaches library source. A page's title is a translation key in each app rather than the
+  `file` loader — which works because an app's ambient `*.webp` declaration is program-global
+  and reaches library source. Every one of them is lossless **WebP**, the capture tool's only
+  output format, animated for the step-throughs. A page's title is a translation key in each app rather than the
   markdown's own `# …`: both viewers build their navigation before any body is loaded.
   `changelog.ts` is the changelog's own half of that split: the editor's dialog renders the document
   whole, so `parseChangelog` exists for the website, which draws one block per release and one feed
