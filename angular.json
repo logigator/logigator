@@ -39,7 +39,6 @@
               ".jpg": "file",
               ".jpeg": "file",
               ".webp": "file",
-              ".gif": "file",
               ".avif": "file"
             },
             "define": {
@@ -186,7 +185,6 @@
               ".jpeg": "file",
               ".webp": "file",
               ".avif": "file",
-              ".gif": "file",
               ".md": "text"
             },
             "define": {
