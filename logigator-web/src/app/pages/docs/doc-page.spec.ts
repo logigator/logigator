@@ -85,7 +85,7 @@ describe('the documentation pages', () => {
     )('/en/docs/getting-started');
     const image = page.querySelector('lg-markdown img');
 
-    expect(image?.getAttribute('src')).toMatch(/intro-banner-\w+\.png$/);
+    expect(image?.getAttribute('src')).toMatch(/intro-banner-\w+\.webp$/);
   });
 
   it('lists every page on the index', async () => {

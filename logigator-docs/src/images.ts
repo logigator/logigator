@@ -1,159 +1,159 @@
-import accountMenuEn from './pages/en/images/account-menu.png';
-import boardOverviewEn from './pages/en/images/board-overview.png';
-import componentPaletteEn from './pages/en/images/component-palette.png';
-import componentSettingsEn from './pages/en/images/component-settings.png';
-import customComponentShowcaseEn from './pages/en/images/custom-component-showcase.gif';
-import customComponentTabEn from './pages/en/images/custom-component-tab.png';
-import exportImageEn from './pages/en/images/export-image.png';
-import inspectionShowcaseEn from './pages/en/images/inspection-showcase.gif';
-import inspectionWindowMultilayerEn from './pages/en/images/inspection-window-multilayer.png';
-import introBannerEn from './pages/en/images/intro-banner.png';
-import menuBarEn from './pages/en/images/menu-bar.png';
-import negatedGateEn from './pages/en/images/negated-gate.gif';
-import openCloudEn from './pages/en/images/open-cloud.png';
-import openFileEn from './pages/en/images/open-file.png';
-import romInspectionEn from './pages/en/images/rom-inspection.gif';
-import scissorSelectEn from './pages/en/images/scissor-select.png';
-import shareComponentEn from './pages/en/images/share-component.png';
-import shortcutManagerEn from './pages/en/images/shortcut-manager.png';
-import simulationControlsEn from './pages/en/images/simulation-controls.png';
-import simulationShowcaseEn from './pages/en/images/simulation-showcase.gif';
-import toolButtonsEn from './pages/en/images/tool-buttons.png';
-import tunnelEn from './pages/en/images/tunnel.gif';
-import uploadToCloudEn from './pages/en/images/upload-to-cloud.png';
-import wireCircuitDisplayEn from './pages/en/images/wire-circuit-display.png';
-import wireJunctionEn from './pages/en/images/wire-junction.png';
-import accountMenuDe from './pages/de/images/account-menu.png';
-import boardOverviewDe from './pages/de/images/board-overview.png';
-import componentPaletteDe from './pages/de/images/component-palette.png';
-import componentSettingsDe from './pages/de/images/component-settings.png';
-import exportImageDe from './pages/de/images/export-image.png';
-import inspectionShowcaseDe from './pages/de/images/inspection-showcase.gif';
-import menuBarDe from './pages/de/images/menu-bar.png';
-import openCloudDe from './pages/de/images/open-cloud.png';
-import openFileDe from './pages/de/images/open-file.png';
-import romInspectionDe from './pages/de/images/rom-inspection.gif';
-import scissorSelectDe from './pages/de/images/scissor-select.png';
-import shareComponentDe from './pages/de/images/share-component.png';
-import shortcutManagerDe from './pages/de/images/shortcut-manager.png';
-import simulationControlsDe from './pages/de/images/simulation-controls.png';
-import simulationShowcaseDe from './pages/de/images/simulation-showcase.gif';
-import uploadToCloudDe from './pages/de/images/upload-to-cloud.png';
-import accountMenuFr from './pages/fr/images/account-menu.png';
-import boardOverviewFr from './pages/fr/images/board-overview.png';
-import componentPaletteFr from './pages/fr/images/component-palette.png';
-import componentSettingsFr from './pages/fr/images/component-settings.png';
-import exportImageFr from './pages/fr/images/export-image.png';
-import inspectionShowcaseFr from './pages/fr/images/inspection-showcase.gif';
-import menuBarFr from './pages/fr/images/menu-bar.png';
-import openCloudFr from './pages/fr/images/open-cloud.png';
-import openFileFr from './pages/fr/images/open-file.png';
-import romInspectionFr from './pages/fr/images/rom-inspection.gif';
-import scissorSelectFr from './pages/fr/images/scissor-select.png';
-import shareComponentFr from './pages/fr/images/share-component.png';
-import shortcutManagerFr from './pages/fr/images/shortcut-manager.png';
-import simulationControlsFr from './pages/fr/images/simulation-controls.png';
-import simulationShowcaseFr from './pages/fr/images/simulation-showcase.gif';
-import uploadToCloudFr from './pages/fr/images/upload-to-cloud.png';
-import accountMenuEs from './pages/es/images/account-menu.png';
-import boardOverviewEs from './pages/es/images/board-overview.png';
-import componentPaletteEs from './pages/es/images/component-palette.png';
-import componentSettingsEs from './pages/es/images/component-settings.png';
-import exportImageEs from './pages/es/images/export-image.png';
-import inspectionShowcaseEs from './pages/es/images/inspection-showcase.gif';
-import menuBarEs from './pages/es/images/menu-bar.png';
-import openCloudEs from './pages/es/images/open-cloud.png';
-import openFileEs from './pages/es/images/open-file.png';
-import romInspectionEs from './pages/es/images/rom-inspection.gif';
-import scissorSelectEs from './pages/es/images/scissor-select.png';
-import shareComponentEs from './pages/es/images/share-component.png';
-import shortcutManagerEs from './pages/es/images/shortcut-manager.png';
-import simulationShowcaseEs from './pages/es/images/simulation-showcase.gif';
-import uploadToCloudEs from './pages/es/images/upload-to-cloud.png';
+import accountMenuEn from './pages/en/images/account-menu.webp';
+import boardOverviewEn from './pages/en/images/board-overview.webp';
+import componentPaletteEn from './pages/en/images/component-palette.webp';
+import componentSettingsEn from './pages/en/images/component-settings.webp';
+import customComponentShowcaseEn from './pages/en/images/custom-component-showcase.webp';
+import customComponentTabEn from './pages/en/images/custom-component-tab.webp';
+import exportImageEn from './pages/en/images/export-image.webp';
+import inspectionShowcaseEn from './pages/en/images/inspection-showcase.webp';
+import inspectionWindowMultilayerEn from './pages/en/images/inspection-window-multilayer.webp';
+import introBannerEn from './pages/en/images/intro-banner.webp';
+import menuBarEn from './pages/en/images/menu-bar.webp';
+import negatedGateEn from './pages/en/images/negated-gate.webp';
+import openCloudEn from './pages/en/images/open-cloud.webp';
+import openFileEn from './pages/en/images/open-file.webp';
+import romInspectionEn from './pages/en/images/rom-inspection.webp';
+import scissorSelectEn from './pages/en/images/scissor-select.webp';
+import shareComponentEn from './pages/en/images/share-component.webp';
+import shortcutManagerEn from './pages/en/images/shortcut-manager.webp';
+import simulationControlsEn from './pages/en/images/simulation-controls.webp';
+import simulationShowcaseEn from './pages/en/images/simulation-showcase.webp';
+import toolButtonsEn from './pages/en/images/tool-buttons.webp';
+import tunnelEn from './pages/en/images/tunnel.webp';
+import uploadToCloudEn from './pages/en/images/upload-to-cloud.webp';
+import wireCircuitDisplayEn from './pages/en/images/wire-circuit-display.webp';
+import wireJunctionEn from './pages/en/images/wire-junction.webp';
+import accountMenuDe from './pages/de/images/account-menu.webp';
+import boardOverviewDe from './pages/de/images/board-overview.webp';
+import componentPaletteDe from './pages/de/images/component-palette.webp';
+import componentSettingsDe from './pages/de/images/component-settings.webp';
+import exportImageDe from './pages/de/images/export-image.webp';
+import inspectionShowcaseDe from './pages/de/images/inspection-showcase.webp';
+import menuBarDe from './pages/de/images/menu-bar.webp';
+import openCloudDe from './pages/de/images/open-cloud.webp';
+import openFileDe from './pages/de/images/open-file.webp';
+import romInspectionDe from './pages/de/images/rom-inspection.webp';
+import scissorSelectDe from './pages/de/images/scissor-select.webp';
+import shareComponentDe from './pages/de/images/share-component.webp';
+import shortcutManagerDe from './pages/de/images/shortcut-manager.webp';
+import simulationControlsDe from './pages/de/images/simulation-controls.webp';
+import simulationShowcaseDe from './pages/de/images/simulation-showcase.webp';
+import uploadToCloudDe from './pages/de/images/upload-to-cloud.webp';
+import accountMenuFr from './pages/fr/images/account-menu.webp';
+import boardOverviewFr from './pages/fr/images/board-overview.webp';
+import componentPaletteFr from './pages/fr/images/component-palette.webp';
+import componentSettingsFr from './pages/fr/images/component-settings.webp';
+import exportImageFr from './pages/fr/images/export-image.webp';
+import inspectionShowcaseFr from './pages/fr/images/inspection-showcase.webp';
+import menuBarFr from './pages/fr/images/menu-bar.webp';
+import openCloudFr from './pages/fr/images/open-cloud.webp';
+import openFileFr from './pages/fr/images/open-file.webp';
+import romInspectionFr from './pages/fr/images/rom-inspection.webp';
+import scissorSelectFr from './pages/fr/images/scissor-select.webp';
+import shareComponentFr from './pages/fr/images/share-component.webp';
+import shortcutManagerFr from './pages/fr/images/shortcut-manager.webp';
+import simulationControlsFr from './pages/fr/images/simulation-controls.webp';
+import simulationShowcaseFr from './pages/fr/images/simulation-showcase.webp';
+import uploadToCloudFr from './pages/fr/images/upload-to-cloud.webp';
+import accountMenuEs from './pages/es/images/account-menu.webp';
+import boardOverviewEs from './pages/es/images/board-overview.webp';
+import componentPaletteEs from './pages/es/images/component-palette.webp';
+import componentSettingsEs from './pages/es/images/component-settings.webp';
+import exportImageEs from './pages/es/images/export-image.webp';
+import inspectionShowcaseEs from './pages/es/images/inspection-showcase.webp';
+import menuBarEs from './pages/es/images/menu-bar.webp';
+import openCloudEs from './pages/es/images/open-cloud.webp';
+import openFileEs from './pages/es/images/open-file.webp';
+import romInspectionEs from './pages/es/images/rom-inspection.webp';
+import scissorSelectEs from './pages/es/images/scissor-select.webp';
+import shareComponentEs from './pages/es/images/share-component.webp';
+import shortcutManagerEs from './pages/es/images/shortcut-manager.webp';
+import simulationShowcaseEs from './pages/es/images/simulation-showcase.webp';
+import uploadToCloudEs from './pages/es/images/upload-to-cloud.webp';
 
 /** One language's screenshots, keyed by the destination the markdown uses. */
 const en: Readonly<Record<string, string>> = {
-  './images/account-menu.png': accountMenuEn,
-  './images/board-overview.png': boardOverviewEn,
-  './images/component-palette.png': componentPaletteEn,
-  './images/component-settings.png': componentSettingsEn,
-  './images/custom-component-showcase.gif': customComponentShowcaseEn,
-  './images/custom-component-tab.png': customComponentTabEn,
-  './images/export-image.png': exportImageEn,
-  './images/inspection-showcase.gif': inspectionShowcaseEn,
-  './images/inspection-window-multilayer.png': inspectionWindowMultilayerEn,
-  './images/intro-banner.png': introBannerEn,
-  './images/menu-bar.png': menuBarEn,
-  './images/negated-gate.gif': negatedGateEn,
-  './images/open-cloud.png': openCloudEn,
-  './images/open-file.png': openFileEn,
-  './images/rom-inspection.gif': romInspectionEn,
-  './images/scissor-select.png': scissorSelectEn,
-  './images/share-component.png': shareComponentEn,
-  './images/shortcut-manager.png': shortcutManagerEn,
-  './images/simulation-controls.png': simulationControlsEn,
-  './images/simulation-showcase.gif': simulationShowcaseEn,
-  './images/tool-buttons.png': toolButtonsEn,
-  './images/tunnel.gif': tunnelEn,
-  './images/upload-to-cloud.png': uploadToCloudEn,
-  './images/wire-circuit-display.png': wireCircuitDisplayEn,
-  './images/wire-junction.png': wireJunctionEn
+  './images/account-menu.webp': accountMenuEn,
+  './images/board-overview.webp': boardOverviewEn,
+  './images/component-palette.webp': componentPaletteEn,
+  './images/component-settings.webp': componentSettingsEn,
+  './images/custom-component-showcase.webp': customComponentShowcaseEn,
+  './images/custom-component-tab.webp': customComponentTabEn,
+  './images/export-image.webp': exportImageEn,
+  './images/inspection-showcase.webp': inspectionShowcaseEn,
+  './images/inspection-window-multilayer.webp': inspectionWindowMultilayerEn,
+  './images/intro-banner.webp': introBannerEn,
+  './images/menu-bar.webp': menuBarEn,
+  './images/negated-gate.webp': negatedGateEn,
+  './images/open-cloud.webp': openCloudEn,
+  './images/open-file.webp': openFileEn,
+  './images/rom-inspection.webp': romInspectionEn,
+  './images/scissor-select.webp': scissorSelectEn,
+  './images/share-component.webp': shareComponentEn,
+  './images/shortcut-manager.webp': shortcutManagerEn,
+  './images/simulation-controls.webp': simulationControlsEn,
+  './images/simulation-showcase.webp': simulationShowcaseEn,
+  './images/tool-buttons.webp': toolButtonsEn,
+  './images/tunnel.webp': tunnelEn,
+  './images/upload-to-cloud.webp': uploadToCloudEn,
+  './images/wire-circuit-display.webp': wireCircuitDisplayEn,
+  './images/wire-junction.webp': wireJunctionEn
 };
 
 const de: Readonly<Record<string, string>> = {
-  './images/account-menu.png': accountMenuDe,
-  './images/board-overview.png': boardOverviewDe,
-  './images/component-palette.png': componentPaletteDe,
-  './images/component-settings.png': componentSettingsDe,
-  './images/export-image.png': exportImageDe,
-  './images/inspection-showcase.gif': inspectionShowcaseDe,
-  './images/menu-bar.png': menuBarDe,
-  './images/open-cloud.png': openCloudDe,
-  './images/open-file.png': openFileDe,
-  './images/rom-inspection.gif': romInspectionDe,
-  './images/scissor-select.png': scissorSelectDe,
-  './images/share-component.png': shareComponentDe,
-  './images/shortcut-manager.png': shortcutManagerDe,
-  './images/simulation-controls.png': simulationControlsDe,
-  './images/simulation-showcase.gif': simulationShowcaseDe,
-  './images/upload-to-cloud.png': uploadToCloudDe
+  './images/account-menu.webp': accountMenuDe,
+  './images/board-overview.webp': boardOverviewDe,
+  './images/component-palette.webp': componentPaletteDe,
+  './images/component-settings.webp': componentSettingsDe,
+  './images/export-image.webp': exportImageDe,
+  './images/inspection-showcase.webp': inspectionShowcaseDe,
+  './images/menu-bar.webp': menuBarDe,
+  './images/open-cloud.webp': openCloudDe,
+  './images/open-file.webp': openFileDe,
+  './images/rom-inspection.webp': romInspectionDe,
+  './images/scissor-select.webp': scissorSelectDe,
+  './images/share-component.webp': shareComponentDe,
+  './images/shortcut-manager.webp': shortcutManagerDe,
+  './images/simulation-controls.webp': simulationControlsDe,
+  './images/simulation-showcase.webp': simulationShowcaseDe,
+  './images/upload-to-cloud.webp': uploadToCloudDe
 };
 
 const fr: Readonly<Record<string, string>> = {
-  './images/account-menu.png': accountMenuFr,
-  './images/board-overview.png': boardOverviewFr,
-  './images/component-palette.png': componentPaletteFr,
-  './images/component-settings.png': componentSettingsFr,
-  './images/export-image.png': exportImageFr,
-  './images/inspection-showcase.gif': inspectionShowcaseFr,
-  './images/menu-bar.png': menuBarFr,
-  './images/open-cloud.png': openCloudFr,
-  './images/open-file.png': openFileFr,
-  './images/rom-inspection.gif': romInspectionFr,
-  './images/scissor-select.png': scissorSelectFr,
-  './images/share-component.png': shareComponentFr,
-  './images/shortcut-manager.png': shortcutManagerFr,
-  './images/simulation-controls.png': simulationControlsFr,
-  './images/simulation-showcase.gif': simulationShowcaseFr,
-  './images/upload-to-cloud.png': uploadToCloudFr
+  './images/account-menu.webp': accountMenuFr,
+  './images/board-overview.webp': boardOverviewFr,
+  './images/component-palette.webp': componentPaletteFr,
+  './images/component-settings.webp': componentSettingsFr,
+  './images/export-image.webp': exportImageFr,
+  './images/inspection-showcase.webp': inspectionShowcaseFr,
+  './images/menu-bar.webp': menuBarFr,
+  './images/open-cloud.webp': openCloudFr,
+  './images/open-file.webp': openFileFr,
+  './images/rom-inspection.webp': romInspectionFr,
+  './images/scissor-select.webp': scissorSelectFr,
+  './images/share-component.webp': shareComponentFr,
+  './images/shortcut-manager.webp': shortcutManagerFr,
+  './images/simulation-controls.webp': simulationControlsFr,
+  './images/simulation-showcase.webp': simulationShowcaseFr,
+  './images/upload-to-cloud.webp': uploadToCloudFr
 };
 
 const es: Readonly<Record<string, string>> = {
-  './images/account-menu.png': accountMenuEs,
-  './images/board-overview.png': boardOverviewEs,
-  './images/component-palette.png': componentPaletteEs,
-  './images/component-settings.png': componentSettingsEs,
-  './images/export-image.png': exportImageEs,
-  './images/inspection-showcase.gif': inspectionShowcaseEs,
-  './images/menu-bar.png': menuBarEs,
-  './images/open-cloud.png': openCloudEs,
-  './images/open-file.png': openFileEs,
-  './images/rom-inspection.gif': romInspectionEs,
-  './images/scissor-select.png': scissorSelectEs,
-  './images/share-component.png': shareComponentEs,
-  './images/shortcut-manager.png': shortcutManagerEs,
-  './images/simulation-showcase.gif': simulationShowcaseEs,
-  './images/upload-to-cloud.png': uploadToCloudEs
+  './images/account-menu.webp': accountMenuEs,
+  './images/board-overview.webp': boardOverviewEs,
+  './images/component-palette.webp': componentPaletteEs,
+  './images/component-settings.webp': componentSettingsEs,
+  './images/export-image.webp': exportImageEs,
+  './images/inspection-showcase.webp': inspectionShowcaseEs,
+  './images/menu-bar.webp': menuBarEs,
+  './images/open-cloud.webp': openCloudEs,
+  './images/open-file.webp': openFileEs,
+  './images/rom-inspection.webp': romInspectionEs,
+  './images/scissor-select.webp': scissorSelectEs,
+  './images/share-component.webp': shareComponentEs,
+  './images/shortcut-manager.webp': shortcutManagerEs,
+  './images/simulation-showcase.webp': simulationShowcaseEs,
+  './images/upload-to-cloud.webp': uploadToCloudEs
 };
 
 /**
@@ -170,8 +170,11 @@ const es: Readonly<Record<string, string>> = {
  * only localized chrome is shot per language, and `docImages` falls back per
  * key, so a language lists exactly the pictures that differ.
  *
- * Generated by `logigator-editor/tools/docs-screenshots/write-registry.mjs` —
- * add a picture by dropping it under `pages/<lang>/images/` and running that.
+ * Every picture is lossless WebP — animated for the step-throughs — which is
+ * the capture tool's only output format.
+ *
+ * Generated by `logigator-editor/tools/screenshots` — add a picture by
+ * capturing it and running the `docs` target, which writes this file.
  */
 export const DOC_IMAGES: Readonly<
   Record<string, Readonly<Record<string, string>>>

@@ -2,7 +2,7 @@
 
 Les composants sont les blocs de construction d'un circuit — portes, mémoires, entrées, afficheurs et plus encore. Cette page explique où les trouver, comment les placer et comment configurer celui que vous avez sélectionné.
 
-![La palette de composants avec ses catégories dépliées.](./images/component-palette.png)
+![La palette de composants avec ses catégories dépliées.](./images/component-palette.webp)
 
 ## La palette de composants
 
@@ -60,7 +60,7 @@ Pour placer un composant, cliquez dessus dans la palette et il suit votre curseu
 
 Lorsque vous sélectionnez un seul composant placé — ou pendant que vous en placez un — une petite **carte de paramètres** apparaît près du plan de travail, montrant le nom de ce composant, une courte description et ses options ajustables. Sur un appareil tactile, les mêmes options s'ouvrent dans le tiroir **Paramètres** à la place.
 
-![La carte de paramètres d’une porte ET sélectionnée.](./images/component-settings.png)
+![La carte de paramètres d’une porte ET sélectionnée.](./images/component-settings.webp)
 
 ### Direction — sur chaque composant
 
@@ -94,7 +94,7 @@ Un **Tunnel** et les fiches **Entrée** / **Sortie** ne font que transmettre un 
 
 Tant que l'outil Fil est actif, survoler à proximité d'un port prévisualise la bulle qu'un appui ajouterait, de sorte que vous voyez exactement quel port vous êtes sur le point d'inverser.
 
-![Une porte OU avec une bulle d’inversion sur sa sortie.](./images/negated-gate.gif)
+![Une porte OU avec une bulle d’inversion sur sa sortie.](./images/negated-gate.webp)
 
 ## Placer du texte
 
