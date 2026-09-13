@@ -1,4 +1,5 @@
-import { BOARD_ZOOM, NARROW_VIEWPORT } from '../config.mjs';
+import { BOARD_ZOOM } from '../../lib/config.mjs';
+import { NARROW_VIEWPORT } from './config.mjs';
 
 /** Smallest clip covering every given rectangle. */
 function mergeRects(...rects) {
@@ -37,7 +38,7 @@ async function switchedFrames(ed, target, levers) {
  * arrives freshly loaded, dark-themed, tips and changelog popup suppressed,
  * with an empty draft; circuits come from `circuits/*.json`.
  *
- * `intro-banner.png` is absent: it is a designed banner, not a capture.
+ * `intro-banner.webp` is absent: it is a designed banner, not a capture.
  */
 export const SHOTS = [
   // -- Chrome ---------------------------------------------------------------
@@ -417,7 +418,7 @@ export const SHOTS = [
   },
   // -- Cloud ----------------------------------------------------------------
   //
-  // `context: { cloud: true }` runs the shot against `lib/mock-api.mjs`, not a
+  // `context: { cloud: true }` runs the shot against `lib/cloud-api.mjs`, not a
   // real backend.
   {
     name: 'account-menu',
@@ -435,9 +436,11 @@ export const SHOTS = [
       }
     },
     async run(ed) {
-      const trigger = ed.page.locator('app-user-settings > button');
+      // The shared account control: a trigger in the title bar and the panel it
+      // opens into an overlay.
+      const trigger = ed.page.locator('app-user-settings button');
       await trigger.click();
-      const panel = ed.page.locator('app-user-settings-panel');
+      const panel = ed.page.locator('lg-user-panel');
       await panel.waitFor({ state: 'visible' });
       await ed.waitStable(panel);
       await ed.parkPointer();

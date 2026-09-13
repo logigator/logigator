@@ -397,13 +397,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"gifenc@npm:1.0.3":
-  version: 1.0.3
-  resolution: "gifenc@npm:1.0.3"
-  checksum: 10c0/34fc6b2c66c305fc556cd2f475154ce2ad68384a52ceb8253b901c8c7d9c63f2c0a5d109ceb3cb46e44c2c6155009920a286cf08a621105863aa43468e345229
-  languageName: node
-  linkType: hard
-
 "graceful-fs@npm:^4.2.6":
   version: 4.2.11
   resolution: "graceful-fs@npm:4.2.11"
@@ -452,18 +445,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"logigator-docs-screenshots@workspace:.":
+"logigator-screenshots@workspace:.":
   version: 0.0.0-use.local
-  resolution: "logigator-docs-screenshots@workspace:."
+  resolution: "logigator-screenshots@workspace:."
   dependencies:
     commander: "npm:15.0.0"
-    gifenc: "npm:1.0.3"
     listr2: "npm:11.0.0"
     playwright: "npm:1.61.1"
-    pngjs: "npm:7.0.0"
     sharp: "npm:0.35.3"
   bin:
-    docs-screenshots: ./capture.mjs
+    screenshots: ./run.mjs
   languageName: unknown
   linkType: soft
 
@@ -558,13 +549,6 @@ __metadata:
   bin:
     playwright: cli.js
   checksum: 10c0/cea1bc4d2a64ec3ef683891606774029da7b8a8036ed98332565cec2f8e89549ca1fab9a89fbfba4e08e27e0d7e7d148031e965af66d5ff97bb3c34058cfcad0
-  languageName: node
-  linkType: hard
-
-"pngjs@npm:7.0.0":
-  version: 7.0.0
-  resolution: "pngjs@npm:7.0.0"
-  checksum: 10c0/0d4c7a0fd476a9c33df7d0a2a73e1d56537628a668841f6995c2bca070cf30819f9254a64363266bc14ef2fee47659dd3b4f2b18eec7ab65143015139f497b38
   languageName: node
   linkType: hard
 

@@ -1,20 +1,23 @@
 import path from 'node:path';
-import { pathToFileURL } from 'node:url';
-import { I18N_DIR } from '../config.mjs';
+import { fileURLToPath, pathToFileURL } from 'node:url';
+// Installs the typeless-package warning filter this module's imports need.
+import './origin.mjs';
+
+/** The editor's translation files — three directories up, then into its `src/`. */
+const I18N_DIR = path.join(
+  path.dirname(fileURLToPath(import.meta.url)),
+  '..',
+  '..',
+  '..',
+  'src',
+  'i18n'
+);
 
 /**
  * The editor's own translations, loaded straight from `src/i18n/<lang>.ts`, so
  * a reworded label moves the shots with it. Node strips the type annotations
  * and the only imports are `import type`, so the locale files load as they are.
- *
- * They sit outside any package declaring `"type": "module"`, which Node reports
- * as a typeless module — a warning that would print into the middle of the task
- * list, so that one is dropped here.
  */
-process.removeAllListeners('warning');
-process.on('warning', (warning) => {
-  if (warning.code !== 'MODULE_TYPELESS_PACKAGE_JSON') console.warn(warning);
-});
 
 const loaded = new Map();
 

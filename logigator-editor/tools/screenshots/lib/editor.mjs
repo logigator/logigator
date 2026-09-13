@@ -3,12 +3,11 @@ import {
   CIRCUITS_DIR,
   DEVICE_SCALE_FACTOR,
   GRID_SIZE,
-  LANG_STORAGE_KEY,
-  SEEDED_LOCAL_STORAGE,
-  VIEWPORT
-} from '../config.mjs';
+  SEEDED_LOCAL_STORAGE
+} from './config.mjs';
 import { loadTranslations, translate } from './i18n.mjs';
-import { installApiMocks } from './mock-api.mjs';
+import { installApiMocks } from './cloud-api.mjs';
+import { preferencesCookie } from './origin.mjs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
@@ -26,13 +25,18 @@ const PARKED_POINTER = { x: 2, y: 2 };
 export class Editor {
   /**
    * @param {import('playwright').Browser} browser
-   * @param {{ baseUrl: string, lang?: string,
+   * @param {{ baseUrl: string, lang: string, circuitsDir: string,
+   *          viewport?: { width?: number, height?: number },
+   *          colorScheme?: 'light' | 'dark',
    *          onProgress?: (step: string) => void }} options
    */
   constructor(browser, options) {
     this.browser = browser;
     this.baseUrl = options.baseUrl;
-    this.lang = options.lang ?? 'en';
+    this.lang = options.lang;
+    this.circuitsDir = options.circuitsDir ?? CIRCUITS_DIR;
+    this.defaultViewport = options.viewport ?? {};
+    this.colorScheme = options.colorScheme ?? 'dark';
     this.onProgress = options.onProgress;
     this.context = null;
     this.page = null;
@@ -50,31 +54,45 @@ export class Editor {
   }
 
   /**
-   * Opens the editor in a clean context. `cloud` installs the mocked backend
-   * and the signed-in session.
+   * Opens the editor in a clean context, staged by the one bag the caller
+   * composed: `{ viewport, cloud, cookies, localStorage }`, every field
+   * optional.
+   *
+   * The pass's language and colour scheme are installed as the origin-wide
+   * `preferences` cookie before the first request. That is the one mechanism
+   * both apps read them from, and setting it here rather than per target is
+   * what keeps a new target from pinning a key the app stopped reading — which
+   * fails silently, as a capture in the wrong language that nothing flags.
+   *
+   * `cloud` installs the mocked backend and the signed-in session.
    */
-  async open({ viewport, cloud, localStorage: overrides } = {}) {
+  async open({ viewport, cloud, cookies, localStorage } = {}) {
     this.report('opening the editor');
     this.translations = await loadTranslations(this.lang);
     this.context = await this.browser.newContext({
-      viewport: { ...VIEWPORT, ...viewport },
+      viewport: { ...this.defaultViewport, ...viewport },
       deviceScaleFactor: DEVICE_SCALE_FACTOR,
-      colorScheme: 'dark',
+      // What the pixels are of; `prefers-color-scheme` alone moves nothing.
+      colorScheme: this.colorScheme,
       reducedMotion: 'reduce',
       // `--base` may be an HTTPS instance with a self-signed certificate.
       ignoreHTTPSErrors: true
     });
+    await this.context.addCookies([
+      preferencesCookie(
+        this.lang,
+        this.colorScheme,
+        new URL(this.baseUrl).origin
+      ),
+      ...(cookies ?? [])
+    ]);
     await this.context.addInitScript(
       (entries) => {
         for (const [key, value] of Object.entries(entries)) {
           localStorage.setItem(key, value);
         }
       },
-      {
-        ...SEEDED_LOCAL_STORAGE,
-        [LANG_STORAGE_KEY]: this.lang,
-        ...overrides
-      }
+      { ...SEEDED_LOCAL_STORAGE, ...localStorage }
     );
 
     this.page = await this.context.newPage();
@@ -102,7 +120,6 @@ export class Editor {
       );
     }
     await this.parkPointer();
-    await this.settle();
     return this;
   }
 
@@ -134,10 +151,16 @@ export class Editor {
    */
   async load(name) {
     this.report(`loading ${name}`);
-    const file = path.join(CIRCUITS_DIR, `${name}.json`);
-    const json = await fs.readFile(file, 'utf8').catch(() => {
-      throw new Error(`no circuit file "${name}" in ${CIRCUITS_DIR}`);
-    });
+    const json = await fs
+      .readFile(path.join(this.circuitsDir, `${name}.json`), 'utf8')
+      .catch(() => {
+        throw new Error(`no circuit file "${name}" in ${this.circuitsDir}`);
+      });
+    await this.importProject(json);
+  }
+
+  /** Imports a document the target handed over as JSON text. */
+  async importProject(json) {
     await this.api((body) => window.__logigator.importProject(body), json);
     await this.settle();
   }
@@ -426,7 +449,7 @@ export class Editor {
   async requireSingleRowToolBar() {
     const [bar, button] = await Promise.all([
       this.page.locator('app-tool-bar').boundingBox(),
-      this.page.locator('app-tool-bar lg-button').first().boundingBox()
+      this.page.locator('app-tool-bar button[lgButton]').first().boundingBox()
     ]);
     if (bar.height > button.height * 1.6) {
       throw new Error(
