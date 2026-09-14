@@ -1,15 +1,11 @@
 <div class="page-wrap py-9 md:py-12" *webTranslate="let t">
   <!-- The inner-page header the examples page set: h1 plus lede, no eyebrow,
        and no rule of its own — the control bar's `border-t` is the rule. -->
-  <h1
-    class="text-[28px] leading-tight font-bold text-text-hover md:text-[32px]"
-  >
+  <h1 class="text-3xl leading-tight font-bold text-text-hover md:text-4xl">
     {{ isProjects() ? t('pages.my.projects.title') :
     t('pages.my.components.title') }}
   </h1>
-  <p
-    class="mt-3 max-w-[62ch] text-[17px] leading-relaxed text-pretty text-muted"
-  >
+  <p class="mt-3 max-w-prose text-lg leading-relaxed text-pretty text-muted">
     {{ isProjects() ? t('pages.my.projects.lede') :
     t('pages.my.components.lede') }}
   </p>

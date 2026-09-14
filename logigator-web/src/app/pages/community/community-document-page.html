@@ -39,7 +39,7 @@
 
     <div class="flex min-w-0 flex-col items-start">
       <h1
-        class="text-[28px] leading-tight font-bold break-words text-text-hover md:text-[32px]"
+        class="text-3xl leading-tight font-bold break-words text-text-hover md:text-4xl"
       >
         {{ doc.name }}
       </h1>
@@ -156,7 +156,7 @@
       {{ t('pages.community.document.about') }}
     </h2>
     <p
-      class="mt-2.5 max-w-[70ch] leading-relaxed whitespace-pre-line text-pretty"
+      class="mt-2.5 max-w-prose leading-relaxed whitespace-pre-line text-pretty"
       [class.text-muted]="!doc.description"
     >
       {{ doc.description || t('pages.community.document.noDescription') }}

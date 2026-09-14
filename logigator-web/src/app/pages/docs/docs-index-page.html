@@ -1,13 +1,11 @@
 <ng-container *webTranslate="let t">
   <header class="page-wrap pt-10 pb-8 md:pt-14 md:pb-10">
     <h1
-      class="text-2xl leading-tight font-bold tracking-[-0.01em] text-balance text-text-hover md:text-[32px]"
+      class="text-2xl leading-tight font-bold tracking-tight text-balance text-text-hover md:text-4xl"
     >
       {{ t('pages.docs.title') }}
     </h1>
-    <p
-      class="mt-3 max-w-[62ch] text-[17px] leading-relaxed text-pretty text-muted"
-    >
+    <p class="mt-3 max-w-prose text-lg leading-relaxed text-pretty text-muted">
       {{ t('pages.docs.lede') }}
     </p>
     <web-docs-search-field class="mt-6 block max-w-md" [live]="true" />

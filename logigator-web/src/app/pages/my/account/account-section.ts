@@ -11,8 +11,10 @@ import { ChangeDetectionStrategy, Component, input } from '@angular/core';
   host: { class: 'block' },
   template: `
     <section class="rounded-md border border-border bg-content p-5 md:p-6">
-      <h2 class="text-[17px] font-semibold text-text-hover">{{ heading() }}</h2>
-      <p class="mt-1.5 max-w-[62ch] text-sm leading-relaxed text-muted">
+      <h2 class="text-lg leading-normal font-semibold text-text-hover">
+        {{ heading() }}
+      </h2>
+      <p class="mt-1.5 max-w-prose text-sm leading-relaxed text-muted">
         {{ description() }}
       </p>
       <div class="mt-5"><ng-content /></div>

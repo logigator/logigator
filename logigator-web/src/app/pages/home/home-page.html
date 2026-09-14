@@ -16,11 +16,11 @@
     <div class="page-wrap relative pt-11 pb-38 lg:py-24">
       <div class="max-w-2xl lg:max-w-lg">
         <h1
-          class="text-3xl leading-[1.12] font-bold tracking-[-0.01em] text-balance text-text-hover md:text-4xl lg:text-[44px]"
+          class="text-3xl leading-tight font-bold tracking-tight text-balance text-text-hover md:text-4xl lg:text-5xl"
         >
           {{ t('pages.home.hero.headline') }}
         </h1>
-        <p class="mt-4 max-w-[46ch] text-[17px] leading-relaxed text-muted">
+        <p class="mt-4 max-w-[46ch] text-lg leading-relaxed text-muted">
           {{ t('pages.home.hero.lede') }}
         </p>
         <div class="mt-6.5 flex flex-wrap gap-2.5">
@@ -50,11 +50,11 @@
     >
       <div class="flex flex-col items-start gap-3">
         <h2
-          class="text-2xl leading-tight font-bold text-balance text-text-hover md:text-[28px]"
+          class="text-2xl leading-tight font-bold text-balance text-text-hover md:text-3xl"
         >
           {{ t('pages.home.features.title') }}
         </h2>
-        <p class="max-w-[62ch] leading-relaxed text-pretty text-muted">
+        <p class="max-w-prose leading-relaxed text-pretty text-muted">
           {{ t('pages.home.features.description') }}
         </p>
       </div>
@@ -65,7 +65,7 @@
         <div
           class="flex flex-col gap-2 border-border sm:px-6.5 sm:pb-6.5 sm:odd:pl-0 sm:even:border-l sm:even:pr-0 sm:nth-[n+3]:border-t sm:nth-[n+3]:pt-6.5 sm:nth-[n+3]:pb-0"
         >
-          <h3 class="text-[17px] font-medium text-text-hover">
+          <h3 class="text-lg leading-normal font-medium text-text-hover">
             {{ t(feature.title) }}
           </h3>
           <p class="text-sm leading-relaxed text-muted">
@@ -81,7 +81,7 @@
     <div class="page-wrap">
       <div class="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-4">
         <h2
-          class="text-2xl leading-tight font-bold text-balance text-text-hover md:text-[28px]"
+          class="text-2xl leading-tight font-bold text-balance text-text-hover md:text-3xl"
         >
           {{ t('pages.home.examples.title') }}
         </h2>
@@ -93,7 +93,7 @@
           <i class="ph ph-arrow-right text-sm" aria-hidden="true"></i>
         </a>
         <p
-          class="col-span-full mt-2 max-w-[62ch] leading-relaxed text-pretty text-muted"
+          class="col-span-full mt-2 max-w-prose leading-relaxed text-pretty text-muted"
         >
           {{ t('pages.home.examples.description') }}
         </p>
@@ -133,14 +133,10 @@
       class="page-wrap grid items-center gap-7 py-11 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] lg:gap-12 lg:py-16"
     >
       <div>
-        <h2
-          class="text-2xl leading-tight font-bold text-balance md:text-[28px]"
-        >
+        <h2 class="text-2xl leading-tight font-bold text-balance md:text-3xl">
           {{ t('pages.home.video.title') }}
         </h2>
-        <p
-          class="mt-3 max-w-[44ch] text-[15px] leading-relaxed text-surface-400"
-        >
+        <p class="mt-3 max-w-[44ch] text-sm leading-relaxed text-surface-400">
           {{ t('pages.home.video.description') }}
         </p>
         <p class="mt-4.5 font-mono text-xs text-surface-400">
@@ -170,7 +166,7 @@
         <div class="flex flex-col-reverse sm:px-7 sm:first:pl-0">
           <dt class="mt-1.5 text-sm text-muted">{{ t(stat.labelKey) }}</dt>
           <dd
-            class="font-mono text-[32px] leading-none font-medium text-text-hover"
+            class="font-mono text-3xl leading-none font-medium text-text-hover"
           >
             {{ stat.value }}
           </dd>
@@ -181,7 +177,7 @@
 
       <div class="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-4">
         <h2
-          class="text-2xl leading-tight font-bold text-balance text-text-hover md:text-[28px]"
+          class="text-2xl leading-tight font-bold text-balance text-text-hover md:text-3xl"
         >
           {{ t('pages.home.community.projectsTitle') }}
         </h2>
@@ -193,7 +189,7 @@
           <i class="ph ph-arrow-right text-sm" aria-hidden="true"></i>
         </a>
         <p
-          class="col-span-full mt-2 max-w-[62ch] leading-relaxed text-pretty text-muted"
+          class="col-span-full mt-2 max-w-prose leading-relaxed text-pretty text-muted"
         >
           {{ t('pages.home.community.projectsDescription') }}
         </p>
@@ -234,7 +230,7 @@
           <i class="ph ph-arrow-right text-sm" aria-hidden="true"></i>
         </a>
         <p
-          class="col-span-full mt-2 max-w-[62ch] leading-relaxed text-pretty text-muted"
+          class="col-span-full mt-2 max-w-prose leading-relaxed text-pretty text-muted"
         >
           {{ t('pages.home.community.componentsDescription') }}
         </p>

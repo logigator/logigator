@@ -9,7 +9,7 @@
         [queryParams]="{ q: search.query() }"
         [fragment]="row.anchor ?? undefined"
       >
-        <span class="text-[17px] font-medium text-text-hover">
+        <span class="text-lg leading-normal font-medium text-text-hover">
           @for (part of row.headingParts; track $index) { @if (part.match) {
           <mark class="rounded-xs bg-primary/25 text-inherit"
             >{{ part.text }}</mark
