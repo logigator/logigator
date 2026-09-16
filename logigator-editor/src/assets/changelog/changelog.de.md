@@ -3,6 +3,23 @@
 Alle nennenswerten Änderungen am Logigator-Editor werden hier festgehalten. Die
 aktuellste Veröffentlichung steht ganz oben.
 
+## 2.1.3 — 2026-09-16
+
+### Korrekturen
+
+- Eine Simulation startet nicht mehr fehl, wenn die Zahlen-Einstellung einer
+  Komponente einen Nachkommawert hat, etwa eine Verzögerung von 1,9 beim
+  Taktgeber, oder größer ist, als die Simulation annimmt. Eine so gespeicherte
+  Schaltung lädt mit gerundetem und begrenztem Wert und wird von da an als ganze
+  Zahl gespeichert.
+- Beim Platzieren einer benutzerdefinierten Komponente bleiben jetzt die Richtung
+  und die Optionen aus dem Einstellungsbereich erhalten, statt sie immer gleich
+  ausgerichtet und ohne sie abzulegen.
+- Eine Komponente, die du gerade platzieren willst, lässt sich vor dem Ablegen
+  drehen: mit R oder Shift+R oder über die Dreh-Buttons in der Werkzeugleiste.
+  Auch eine Platzierung, die du bereits ziehst, dreht sich damit, und die nächste
+  Komponente dieser Art startet in der Richtung, in die du diese gedreht hast.
+
 ## 2.1.2 — 2026-09-10
 
 ### Korrekturen

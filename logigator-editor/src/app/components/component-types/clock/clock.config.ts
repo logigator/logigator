@@ -5,6 +5,12 @@ import { ComponentOption } from '../../component-option';
 import { NumberComponentOption } from '../../component-options/number/number.component-option';
 import { ClockComponent } from './clock.component';
 
+/**
+ * Upper bound of the engine's `u32` half-cycle field. `Number.MAX_SAFE_INTEGER`
+ * would deserialize as a value out of `u32` range and be rejected outright.
+ */
+const MAX_HALF_CYCLE_TICKS = 4294967295;
+
 export interface ClockOptions {
   [key: string]: ComponentOption;
   speed: NumberComponentOption;
@@ -20,7 +26,7 @@ export const clockComponentConfig: ComponentConfig<ClockOptions> = {
     speed: new NumberComponentOption(
       'components.def.CLOCK.options.speed',
       1,
-      Number.MAX_SAFE_INTEGER,
+      MAX_HALF_CYCLE_TICKS,
       1
     )
   },

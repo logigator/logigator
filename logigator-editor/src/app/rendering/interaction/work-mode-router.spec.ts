@@ -911,6 +911,51 @@ describe('WorkModeRouter placement hover ghost (COMPONENT_PLACEMENT mode)', () =
     expect(ghosts()).toHaveLength(0);
   });
 
+  it('a rotate request repaints the ghost without waiting for a pointer move', () => {
+    router.hover(makeInput(2, 2));
+    const frames: string[] = [];
+    project.ticker$.subscribe((value) => frames.push(value));
+
+    project.requestSelectionRotation(1);
+
+    expect(frames).toContain('single');
+  });
+
+  it('a rotate request turns the hover ghost and sticks for the next one', () => {
+    router.hover(makeInput(2, 2));
+
+    project.requestSelectionRotation(1);
+
+    expect((ghosts()[0] as Component).direction).toBe(Direction.S);
+    // The selection rotate — and its undo entry — stayed out of it.
+    expect(router.hasActiveSession).toBe(false);
+    expect(project.actionManager.undoAvailable).toBe(false);
+
+    router.leave();
+    router.hover(makeInput(8, 8));
+    expect((ghosts()[0] as Component).direction).toBe(Direction.S);
+  });
+
+  it('a sticky direction chosen while hovering turns the standing ghost', () => {
+    router.hover(makeInput(2, 2));
+
+    TestBed.inject(WorkModeService).setPlacementDirection(
+      andComponentConfig.type,
+      Direction.W
+    );
+    router.hover(makeInput(3, 2));
+
+    expect((ghosts()[0] as Component).direction).toBe(Direction.W);
+  });
+
+  it('a rotate request with no ghost on the board still turns the next placement', () => {
+    project.requestSelectionRotation(1);
+
+    router.hover(makeInput(2, 2));
+
+    expect((ghosts()[0] as Component).direction).toBe(Direction.S);
+  });
+
   it('removes the ghost when switching modes', () => {
     router.hover(makeInput(2, 2));
 
