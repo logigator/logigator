@@ -3,6 +3,22 @@
 All notable changes to the Logigator editor are recorded here. The most recent
 release is listed first.
 
+## 2.1.3 — 2026-09-16
+
+### Fixes
+
+- Starting a simulation no longer fails when a component's number setting holds a
+  decimal value, such as a clock delay of 1.9, or one larger than the simulation
+  accepts. Such a circuit loads with the value rounded and capped, and saves back
+  as a whole number.
+- Placing a custom component now keeps the direction and the options you set for
+  it in the settings panel, instead of always dropping it facing the same way and
+  discarding them.
+- A component you are about to place can be turned before you drop it: press R or
+  Shift+R, or use the rotate buttons in the tool bar. A placement you are already
+  dragging turns too, and the next component of that type starts in the direction
+  you turned this one.
+
 ## 2.1.2 — 2026-09-10
 
 ### Fixes

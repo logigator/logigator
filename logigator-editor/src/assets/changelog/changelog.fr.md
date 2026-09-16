@@ -3,6 +3,24 @@
 Toutes les modifications notables de l'éditeur Logigator sont consignées ici. La
 version la plus récente est indiquée en premier.
 
+## 2.1.3 — 2026-09-16
+
+### Correctifs
+
+- Une simulation n'échoue plus au démarrage lorsque le réglage numérique d'un
+  composant contient une décimale, comme un retard d'horloge de 1,9, ou dépasse
+  ce que la simulation accepte. Un circuit enregistré ainsi se charge avec la
+  valeur arrondie et plafonnée, et s'enregistre ensuite sous forme de nombre
+  entier.
+- Placer un composant personnalisé conserve désormais la direction et les options
+  définies dans le panneau des paramètres, au lieu de toujours le déposer dans la
+  même orientation et de les ignorer.
+- Un composant que vous êtes sur le point de placer peut être tourné avant d'être
+  déposé : appuyez sur R ou Shift+R, ou utilisez les boutons de rotation de la
+  barre d'outils. Un placement que vous faites déjà glisser tourne aussi, et le
+  prochain composant de ce type démarre dans la direction dans laquelle vous avez
+  tourné celui-ci.
+
 ## 2.1.2 — 2026-09-10
 
 ### Correctifs
