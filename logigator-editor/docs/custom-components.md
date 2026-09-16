@@ -237,6 +237,10 @@ resolves the master config to a **fresh snapshot** of the master's current state
 (`registry.snapshot`), so the placed instance is frozen at place time; placing the
 same master again after editing it yields a new snapshot with the new shape.
 Repeated placements within one Project share that Project's snapshot type.
+The placement ghost is built from the **master** config and stays on it for the
+whole gesture, so what the settings panel edits while placing (direction,
+options) reaches the instance: the commit carries it onto the snapshot through
+`Component.serialize`/`deserialize`.
 
 ## Per-instance update
 

@@ -20,6 +20,8 @@ import {
 } from '../../../testing/factories';
 import { andComponentConfig } from '../../components/component-types/and/and.config';
 import { notComponentConfig } from '../../components/component-types/not/not.config';
+import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
+import { ComponentProviderService } from '../../components/component-provider.service';
 
 describe('ComponentPlacementSession collision', () => {
   let project: Project;
@@ -257,5 +259,115 @@ describe('ComponentPlacementSession collision', () => {
     const wires = project.queryWiresInRange(huge);
     expect(wires.length).toBe(1);
     expect(wires[0].length).toBe(5);
+  });
+});
+
+describe('ComponentPlacementSession custom masters', () => {
+  let project: Project;
+  let dragLayer: Container<Component | Wire>;
+  let registry: CustomComponentRegistry;
+  let masterConfig: ComponentConfig;
+  let workMode: WorkModeService;
+
+  beforeEach(() => {
+    configureTestBed();
+    project = new Project();
+    dragLayer = new Container<Component | Wire>();
+    registry = TestBed.inject(CustomComponentRegistry);
+    workMode = TestBed.inject(WorkModeService);
+    const masterTypeId = registry.createMaster(
+      { id: 'master', symbol: 'S', numInputs: 2, numOutputs: 1 },
+      'browser'
+    );
+    masterConfig = TestBed.inject(ComponentProviderService).getComponent(
+      masterTypeId
+    )! as unknown as ComponentConfig;
+  });
+
+  afterEach(() => {
+    dragLayer.destroy();
+    project.destroy({ children: true });
+  });
+
+  const placedComponents = () => [...project.components];
+
+  it('commits a frozen snapshot wearing the placement direction', () => {
+    // What the settings panel writes while a custom placement is armed.
+    workMode.setPlacementDirection(masterConfig.type, Direction.N);
+
+    new ComponentPlacementSession(
+      project,
+      dragLayer,
+      new Point(0, 0),
+      masterConfig
+    ).onEnd();
+
+    const placed = placedComponents();
+    expect(placed).toHaveLength(1);
+    expect(placed[0].direction).toBe(Direction.N);
+    // The instance wraps a snapshot of the master, not the master itself.
+    expect(placed[0].config.type).not.toBe(masterConfig.type);
+    expect(registry.getDefinition(placed[0].config.type)?.kind).toBe(
+      'snapshot'
+    );
+  });
+
+  it('freezes the ghost where it was dropped', () => {
+    const session = new ComponentPlacementSession(
+      project,
+      dragLayer,
+      new Point(0, 0),
+      masterConfig
+    );
+    session.onMove(makeMoveInput(5, 3));
+    session.onEnd();
+
+    const placed = placedComponents();
+    expect(placed).toHaveLength(1);
+    expect(placed[0].position).toMatchObject({ x: 5, y: 3 });
+  });
+
+  it('a mid-drag rotate turns the committed instance and sticks for the next one', () => {
+    const session = new ComponentPlacementSession(
+      project,
+      dragLayer,
+      new Point(0, 0),
+      masterConfig
+    );
+    session.rotate(1);
+    session.onEnd();
+
+    expect(placedComponents()[0].direction).toBe(Direction.S);
+    expect(workMode.placementDirectionFor(masterConfig.type)).toBe(Direction.S);
+
+    new ComponentPlacementSession(
+      project,
+      dragLayer,
+      new Point(0, 10),
+      masterConfig
+    ).onEnd();
+
+    expect(placedComponents()[1].direction).toBe(Direction.S);
+  });
+
+  it('undo and redo round-trip the frozen instance', () => {
+    workMode.setPlacementDirection(masterConfig.type, Direction.W);
+    new ComponentPlacementSession(
+      project,
+      dragLayer,
+      new Point(4, 2),
+      masterConfig
+    ).onEnd();
+    const typeId = placedComponents()[0].config.type;
+
+    project.actionManager.undo();
+    expect(placedComponents()).toHaveLength(0);
+
+    project.actionManager.redo();
+    const restored = placedComponents();
+    expect(restored).toHaveLength(1);
+    expect(restored[0].config.type).toBe(typeId);
+    expect(restored[0].direction).toBe(Direction.W);
+    expect(restored[0].position).toMatchObject({ x: 4, y: 2 });
   });
 });

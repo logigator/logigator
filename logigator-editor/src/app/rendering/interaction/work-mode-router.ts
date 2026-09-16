@@ -281,7 +281,8 @@ export class WorkModeRouter implements PointerToolTarget, ToolHost {
 
   /**
    * Routes a rotate request (shortcut or toolbar/selection-bar button): an
-   * active session with turnable content spins in place; otherwise the
+   * active session with turnable content spins in place, a tool holding only a
+   * hover preview turns that (the armed placement ghost); otherwise the
    * committed selection rotates (see _startSelectionRotate). Inert in
    * simulation mode — the editing lock applies.
    */
@@ -292,6 +293,7 @@ export class WorkModeRouter implements PointerToolTarget, ToolHost {
       this._commitIfFloatingAndValid();
       return;
     }
+    if (this._activeTool?.rotate?.(steps)) return;
     this._startSelectionRotate(steps);
   }
 

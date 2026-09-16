@@ -35,7 +35,9 @@ export class PlacementGhost {
     );
     this._component = config.create(options);
     // The ghost starts facing the type's sticky placement direction (set by
-    // the settings panel while placing; East until then).
+    // the settings panel or a rotate request while placing; East until then).
+    // Ghosts are always built from the palette config — the master, for a
+    // custom — which is the key that map is written under.
     const direction = getStaticDI(WorkModeService).placementDirectionFor(
       config.type
     );
@@ -56,13 +58,27 @@ export class PlacementGhost {
 
   /**
    * Ends preview duty and hands the component over for committing: drops the
-   * ghost's selection look so the instance is board-ready. The caller adds it
-   * to the project (re-parenting it out of the drag layer) and must not call
-   * {@link destroy} afterwards.
+   * ghost's selection look so the instance is board-ready. Only a pass-through
+   * commit (a built-in, which lands as the ghost itself) calls this; a frozen
+   * replacement destroys the ghost instead.
    */
   public release(): Component {
     this._component.selected = false;
     return this._component;
+  }
+
+  /**
+   * Turns the ghost to `direction` — the sticky placement direction its owner
+   * just wrote (the settings panel's row, or a rotate request). A turn
+   * resizes the body, so the collision tint is re-derived.
+   */
+  public setDirection(direction: Direction): void {
+    if (this._component.direction === direction) return;
+    this._component.direction = direction;
+    this._updateCollision();
+    // A turn is a visual change with no pointer move behind it (the rotate
+    // shortcut), so it asks for its own frame rather than waiting for one.
+    this.project.triggerTicker('single');
   }
 
   public get hasCollision(): boolean {

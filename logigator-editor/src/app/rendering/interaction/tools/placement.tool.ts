@@ -3,6 +3,7 @@ import { Project } from '../../../project/project';
 import { ComponentConfig } from '../../../components/component-config.model';
 import { CustomComponentService } from '../../../custom-component/custom-component.service';
 import { WorkMode } from '../../../work-mode/work-mode.enum';
+import { WorkModeService } from '../../../work-mode/work-mode.service';
 import { getStaticDI } from '../../../utils/get-di';
 import { roundToGrid } from '../../../utils/grid';
 import { PlacementGhost } from '../../placement-ghost';
@@ -61,6 +62,12 @@ export class PlacementTool implements BoardTool {
     }
     const snapped = roundToGrid(input.grid, true);
     if (this._hoverGhost) {
+      // The settings panel may have written the sticky direction since this
+      // ghost was built; it follows on the next move rather than waiting for
+      // the pointer to leave and re-enter the board.
+      this._hoverGhost.setDirection(
+        getStaticDI(WorkModeService).placementDirectionFor(config.type)
+      );
       this._hoverGhost.moveTo(snapped);
     } else {
       // A master previews from its own config — snapshotting stays a
@@ -79,6 +86,23 @@ export class PlacementTool implements BoardTool {
 
   public deactivate(): void {
     this._destroyHoverGhost();
+  }
+
+  /**
+   * A rotate request while the ghost is only hovering: steps the sticky
+   * placement direction and turns the live preview. Without a preview (the
+   * pointer is off the board) the step still sticks, so the ghost is already
+   * turned when it next appears.
+   */
+  public rotate(steps: number): boolean {
+    const config = this._config;
+    if (!config) return false;
+    const direction = getStaticDI(WorkModeService).rotatePlacementDirection(
+      config.type,
+      steps
+    );
+    this._hoverGhost?.setDirection(direction);
+    return true;
   }
 
   /** The session's own ghost takes over the preview (a visually identical

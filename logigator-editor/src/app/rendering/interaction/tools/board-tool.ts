@@ -38,6 +38,12 @@ export interface BoardTool {
   hover?(project: Project, input: PointerInput, host: ToolHost): void;
   /** The tool's context ended — tear down any hover previews on `project`. */
   deactivate?(project: Project): void;
+  /**
+   * A rotate request with no session open (the placement ghost before any
+   * press). Return true when the tool turned its own preview and the request
+   * is spent; false/omitted hands it to the router's selection rotate.
+   */
+  rotate?(steps: number): boolean;
   /** A session took over the canvas — previews yield to its ghosts. */
   onSessionStart?(): void;
 }
