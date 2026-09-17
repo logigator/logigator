@@ -3,6 +3,33 @@
 All notable changes to the Logigator editor are recorded here. The most recent
 release is listed first.
 
+## 2.2.0 — 2026-09-17
+
+### Features
+
+- **Add to a selection without clearing it.** Hold Ctrl — ⌘ on a Mac — and a
+  click adds the component or wire under the pointer to the selection, or takes
+  it back out, while a selection box adds what it covers to what you already
+  had. Rebind the key in the shortcut settings, beside Cut Wires at Selection
+  Edge.
+- **Select without leaving the Wire Tool.** A tap that hits neither a port nor a
+  crossing now selects the smallest element under the pointer, so you can delete,
+  copy or nudge it in place.
+- **Move a selection with the Pan tool.** Dragging the current selection moves it
+  instead of panning the board; a press anywhere else pans as before. The new
+  "Drag selection in Pan mode" setting turns this back off.
+
+### Fixes
+
+- A double click with the Wire Tool takes back the tap it repeats, so a double
+  click on a port draws the wire you were reaching for and leaves no stray
+  negation bubble behind.
+- Clicking the empty space inside your selection's outline no longer clears it.
+- Long menus and their submenus scroll instead of running off the bottom of the
+  window on a short screen.
+- On Apple platforms in Chromium-based browsers, ⌘ is recognized where Ctrl was
+  shown before.
+
 ## 2.1.3 — 2026-09-16
 
 ### Fixes

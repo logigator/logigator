@@ -3,6 +3,34 @@
 Todos los cambios notables del editor de Logigator se registran aquí. La versión
 más reciente se muestra primero.
 
+## 2.2.0 — 2026-09-17
+
+### Funciones
+
+- **Añadir a una selección sin borrarla.** Mantén Ctrl — ⌘ en un Mac — y un clic
+  añade a la selección el componente o cable que está bajo el puntero, o lo
+  quita, mientras que un marco de selección añade lo que cubre a lo que ya
+  tenías. Puedes reasignar la tecla en los atajos, junto a «Cortar cables en el
+  borde de la selección».
+- **Seleccionar sin salir de la Herramienta de cable.** Un toque que no alcanza
+  ni un puerto ni un cruce ahora selecciona el elemento más pequeño bajo el
+  puntero, para que puedas borrarlo, copiarlo o moverlo sin cambiar de
+  herramienta.
+- **Mover una selección con Desplazar.** Arrastrar la selección actual la mueve
+  en lugar de desplazar el lienzo; en cualquier otro sitio el toque desplaza como
+  antes. El nuevo ajuste «Arrastrar la selección en modo Desplazar» lo desactiva.
+
+### Correcciones
+
+- Un doble clic con la herramienta de cable retira el toque que repite: un doble
+  clic sobre un puerto dibuja el cable que buscabas y no deja ninguna burbuja de
+  negación suelta.
+- Un clic en el hueco dentro de tu selección ya no la borra.
+- Los menús largos y sus submenús se desplazan en vez de salirse por abajo de la
+  ventana en una pantalla pequeña.
+- En plataformas Apple con navegadores basados en Chromium, se reconoce ⌘ donde
+  antes se mostraba Ctrl.
+
 ## 2.1.3 — 2026-09-16
 
 ### Correcciones

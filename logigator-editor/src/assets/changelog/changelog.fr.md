@@ -3,6 +3,34 @@
 Toutes les modifications notables de l'éditeur Logigator sont consignées ici. La
 version la plus récente est indiquée en premier.
 
+## 2.2.0 — 2026-09-17
+
+### Fonctionnalités
+
+- **Ajouter à une sélection sans l'effacer.** Maintenez Ctrl — ⌘ sur un Mac — et
+  un clic ajoute à la sélection le composant ou le fil sous le pointeur, ou l'en
+  retire, tandis qu'un cadre de sélection ajoute ce qu'il couvre à ce que vous
+  aviez déjà. La touche est réassignable dans les raccourcis, à côté de « Couper
+  les fils au bord de la sélection ».
+- **Sélectionner sans quitter l'Outil fil.** Un appui qui n'atteint ni un port ni
+  une jonction sélectionne désormais le plus petit élément sous le pointeur, pour
+  le supprimer, le copier ou le déplacer sans changer d'outil.
+- **Déplacer une sélection avec l'outil Déplacement.** Faire glisser la sélection
+  actuelle la déplace au lieu de déplacer le plan de travail ; partout ailleurs,
+  l'appui déplace la vue comme avant. Le nouveau réglage « Faire glisser la
+  sélection en mode Déplacement » le désactive.
+
+### Correctifs
+
+- Un double clic avec l'Outil fil annule l'appui qu'il répète : un double clic
+  sur un port trace le fil que vous visiez et ne laisse aucune bulle d'inversion
+  isolée.
+- Un clic dans l'espace vide à l'intérieur de votre sélection ne l'efface plus.
+- Les menus longs et leurs sous-menus défilent au lieu de dépasser sous le bas de
+  la fenêtre sur un petit écran.
+- Sur les plateformes Apple avec des navigateurs basés sur Chromium, ⌘ est
+  reconnu là où Ctrl était affiché auparavant.
+
 ## 2.1.3 — 2026-09-16
 
 ### Correctifs
