@@ -280,7 +280,7 @@ const es: TranslationSchema = {
     modes: {
       pan: 'Desplazar: arrastra para mover el tablero · desplaza o pellizca para hacer zoom',
       wireTool:
-        'Herramienta de cable: arrastra para dibujar · toca un puerto para negarlo · toca un cruce para conectar/desconectar',
+        'Herramienta de cable: arrastra para dibujar · toca un puerto para negarlo · toca un cruce para conectar/desconectar · toca para seleccionar · {{additiveKey}} para añadir o quitar',
       sel: 'Seleccionar: arrastra un marco para seleccionar · arrastra la selección para moverla · mantén {{scissorKey}} para cortar cables',
       selExact:
         'Selección de corte: arrastra un marco para seleccionar · los cables se cortan en su borde',
@@ -876,6 +876,7 @@ const es: TranslationSchema = {
       toolWire: 'Herramienta de cable',
       toolSelect: 'Seleccionar',
       selectScissor: 'Cortar cables en el borde de la selección (mantener)',
+      selectAdditive: 'Añadir a la selección o quitarlo de ella (mantener)',
       toolErase: 'Borrar',
       toolPlaceText: 'Colocar texto',
       toggleSimulation: 'Iniciar/detener simulación',

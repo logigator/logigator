@@ -280,7 +280,7 @@ const de: TranslationSchema = {
     modes: {
       pan: 'Schwenken: ziehen, um die Arbeitsfläche zu verschieben · scrollen oder mit zwei Fingern zoomen',
       wireTool:
-        'Leitungswerkzeug: ziehen zum Zeichnen · auf einen Anschluss tippen zum Negieren · auf eine Kreuzung tippen zum Verbinden/Trennen',
+        'Leitungswerkzeug: ziehen zum Zeichnen · auf einen Anschluss tippen zum Negieren · auf eine Kreuzung tippen zum Verbinden/Trennen · tippen zum Auswählen · {{additiveKey}} zum Hinzufügen oder Entfernen',
       sel: 'Auswählen: Auswahlrahmen ziehen zum Selektieren · Auswahl ziehen zum Verschieben · {{scissorKey}} halten zum Schneiden von Leitungen',
       selExact:
         'Schneide-Auswahl: Auswahlrahmen ziehen zum Selektieren · Leitungen werden an seiner Kante geschnitten',
@@ -880,6 +880,7 @@ const de: TranslationSchema = {
       toolWire: 'Leitungswerkzeug',
       toolSelect: 'Auswählen',
       selectScissor: 'Leitungen an der Auswahlkante schneiden (halten)',
+      selectAdditive: 'Zur Auswahl hinzufügen oder daraus entfernen (halten)',
       toolErase: 'Radieren',
       toolPlaceText: 'Text platzieren',
       toggleSimulation: 'Simulation starten/stoppen',

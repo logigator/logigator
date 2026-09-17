@@ -39,14 +39,15 @@ Logigator es más rápido con el teclado. A continuación están las asignacione
 
 ## Herramientas
 
-| Acción                                               | Atajo |
-| ---------------------------------------------------- | ----- |
-| Desplazar                                            | `P`   |
-| Herramienta de cable                                 | `W`   |
-| Seleccionar                                          | `S`   |
-| Borrar                                               | `E`   |
-| Colocar texto                                        | `T`   |
-| Cortar cables en el borde de la selección (mantener) | `Alt` |
+| Acción                                               | Atajo  |
+| ---------------------------------------------------- | ------ |
+| Desplazar                                            | `P`    |
+| Herramienta de cable                                 | `W`    |
+| Seleccionar                                          | `S`    |
+| Borrar                                               | `E`    |
+| Colocar texto                                        | `T`    |
+| Cortar cables en el borde de la selección (mantener) | `Alt`  |
+| Añadir a la selección o quitarlo de ella (mantener)  | `Ctrl` |
 
 ## Interacción
 
@@ -57,7 +58,7 @@ Logigator es más rápido con el teclado. A continuación están las asignacione
 
 ## Atajos mantenidos
 
-La mayoría de los atajos se disparan una vez cuando los pulsas. Unos pocos se **mantienen** en su lugar: mantienes la tecla pulsada mientras haces otra cosa. El principal es **Cortar cables en el borde de la selección**: mantén `Alt` mientras arrastras un recuadro de selección con la [herramienta de selección](docs:board-and-tools) y los cables se cortan en el borde del recuadro mientras la tecla esté pulsada.
+La mayoría de los atajos se disparan una vez cuando los pulsas. Unos pocos se **mantienen** en su lugar: mantienes la tecla pulsada mientras haces otra cosa. El principal es **Cortar cables en el borde de la selección**: mantén `Alt` mientras arrastras un recuadro de selección con la [herramienta de selección](docs:board-and-tools) y los cables se cortan en el borde del recuadro mientras la tecla esté pulsada. El otro es **Añadir a la selección**: mantén `Ctrl` (`⌘` en un Mac) mientras haces clic en una componente o un cable con la [herramienta de cable](docs:board-and-tools) para añadirlo a la selección o quitarlo de ella; sin la tecla, un clic reemplaza la selección.
 
 ## Cambiar tus atajos
 

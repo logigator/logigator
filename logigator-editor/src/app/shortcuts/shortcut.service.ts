@@ -37,6 +37,7 @@ import { OpenProjectDialogComponent } from '../ui/dialogs/open-project-dialog/op
 import { NewComponentDialogComponent } from '../ui/dialogs/new-component-dialog/new-component-dialog.component';
 import { ToastService } from '../logging/toast.service';
 import { LoggingService } from '../logging/logging.service';
+import { isApplePlatform } from '../utils/platform';
 
 @Injectable({
   providedIn: 'root'
@@ -62,10 +63,7 @@ export class ShortcutService implements OnDestroy {
     Record<ShortcutActionEnum, Signal<ShortcutBinding | null>>
   >;
 
-  public readonly isMac: boolean = /Mac|iPod|iPhone|iPad/.test(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (navigator as any).userAgentData?.platform ?? navigator.platform
-  );
+  public readonly isMac = isApplePlatform();
 
   private _enabled = true;
 
@@ -180,6 +178,14 @@ export class ShortcutService implements OnDestroy {
       (own === 'shift' || this._heldShift === binding.shift) &&
       (own === 'alt' || this._heldAlt === binding.alt)
     );
+  }
+
+  /**
+   * The hold-style additive modifier: a click joins or toggles the selection
+   * instead of replacing it.
+   */
+  public isAdditiveHeld(): boolean {
+    return this.isHeld(ShortcutActionEnum.SELECT_ADDITIVE);
   }
 
   private _notifyHeldChange(): void {

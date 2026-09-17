@@ -280,7 +280,7 @@ const fr: TranslationSchema = {
     modes: {
       pan: 'Déplacement : faites glisser pour déplacer le plan de travail · molette ou pincement pour zoomer',
       wireTool:
-        "Outil fil : faites glisser pour tracer · touchez un port pour l'inverser · touchez une jonction pour connecter/déconnecter",
+        "Outil fil : faites glisser pour tracer · touchez un port pour l'inverser · touchez une jonction pour connecter/déconnecter · touchez pour sélectionner · {{additiveKey}} pour ajouter ou retirer",
       sel: 'Sélection : faites glisser un cadre pour sélectionner · faites glisser la sélection pour la déplacer · maintenez {{scissorKey}} pour couper les fils',
       selExact:
         'Sélection coupante : faites glisser un cadre pour sélectionner · les fils sont coupés à son bord',
@@ -879,6 +879,7 @@ const fr: TranslationSchema = {
       toolWire: 'Outil fil',
       toolSelect: 'Sélectionner',
       selectScissor: 'Couper les fils au bord de la sélection (maintenir)',
+      selectAdditive: 'Ajouter à la sélection ou l’en retirer (maintenir)',
       toolErase: 'Effacer',
       toolPlaceText: 'Placer du texte',
       toggleSimulation: 'Démarrer/Arrêter la simulation',
