@@ -18,7 +18,7 @@ import {
   createConnectedOverlay,
   externalTeardown
 } from '../../internal/overlay';
-import { MENU_ITEM_CLASS, MenuItem } from './menu-item.model';
+import { MENU_ITEM_CLASS, MENU_PANEL_CLASS, MenuItem } from './menu-item.model';
 
 /**
  * Edge-aligned drop positions (the panel hugs an edge of the trigger, not its
@@ -62,7 +62,8 @@ const MENU_POSITIONS: ConnectedPosition[] = [
  * block (large non-menu content) above the `model` items; each item uses the
  * `#item` slot (`$implicit` = the item) or default icon+label chrome. Items run
  * their `command` and close; dismisses on outside-click or Escape. Keyboard
- * focus roves the items with the arrow keys.
+ * focus roves the items with the arrow keys. A panel taller than the space
+ * beside its anchor scrolls.
  */
 @Component({
   selector: 'lg-menu',
@@ -73,7 +74,7 @@ const MENU_POSITIONS: ConnectedPosition[] = [
         role="menu"
         tabindex="-1"
         lgFadeIn
-        class="min-w-48 rounded-md border border-border bg-content p-1 shadow-md focus:outline-none"
+        [class]="panelClass"
         (keydown)="onKeydown($event)"
       >
         @if (startTemplate(); as tpl) {
@@ -123,6 +124,7 @@ export class LgMenu implements OnDestroy {
   private readonly panel = viewChild.required<TemplateRef<unknown>>('panel');
 
   protected readonly itemClass = MENU_ITEM_CLASS;
+  protected readonly panelClass = MENU_PANEL_CLASS;
 
   private readonly overlay = inject(Overlay);
   private readonly viewContainerRef = inject(ViewContainerRef);

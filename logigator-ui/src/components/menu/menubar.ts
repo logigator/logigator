@@ -21,7 +21,7 @@ import {
 } from '../../internal/overlay';
 import { LgRipple } from '../ripple/ripple';
 import { LgShortcut } from '../shortcut/shortcut';
-import { MENU_ITEM_CLASS, MenuItem } from './menu-item.model';
+import { MENU_ITEM_CLASS, MENU_PANEL_CLASS, MenuItem } from './menu-item.model';
 
 /**
  * Submenu drop positions: flush below/left-aligned (the panel hugs the bar),
@@ -126,7 +126,7 @@ const SUBMENU_POSITIONS: ConnectedPosition[] = [
         role="menu"
         tabindex="-1"
         lgFadeIn
-        class="min-w-48 rounded-md border border-border bg-content p-1 shadow-md focus:outline-none"
+        [class]="panelClass"
         (keydown)="onSubmenuKeydown($event)"
       >
         @for (sub of submenuItems(); track $index) {
@@ -177,6 +177,7 @@ export class LgMenubar implements OnDestroy {
     viewChild.required<TemplateRef<unknown>>('submenu');
 
   protected readonly itemClass = MENU_ITEM_CLASS;
+  protected readonly panelClass = MENU_PANEL_CLASS;
   protected readonly openIndex = signal(-1);
   protected readonly submenuItems = signal<readonly MenuItem[]>([]);
 
