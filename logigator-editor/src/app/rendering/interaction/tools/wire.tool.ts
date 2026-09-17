@@ -6,7 +6,10 @@ import { CUSTOM_TYPE_ID_BASE } from '../../../components/component-type.enum';
 import { WorkMode } from '../../../work-mode/work-mode.enum';
 import { Action } from '../../../actions/action';
 import { TogglePortNegationAction } from '../../../actions/actions/toggle-port-negation.action';
+import { ShortcutService } from '../../../shortcuts/shortcut.service';
+import { getStaticDI } from '../../../utils/get-di';
 import { roundToHalfGrid } from '../../../utils/grid';
+import { SelectionMoveSession } from '../../sessions/selection-move.session';
 import { WireToolSession } from '../../sessions/wire-tool.session';
 import { PointerInput } from '../pointer-input';
 import { BoardTool, ToolHost } from './board-tool';
@@ -36,6 +39,12 @@ interface TapOutcome {
   project: Project;
   /** The click run the tap's press belonged to — see {@link _collapseDoubleClick}. */
   clickCount: number;
+  /**
+   * The selection's version when the tap finished. A take-back only undoes a
+   * selection the tap itself made: anything else that changed it since — Escape
+   * clearing it, another click, a paste — means the record is stale.
+   */
+  selectionVersion: number;
   /** The circuit action the tap recorded, if it changed the circuit at all. */
   action: Action | null;
   /**
@@ -59,19 +68,40 @@ interface TapOutcome {
  * swallows its own tap.
  */
 export class WireTool implements BoardTool {
+  private readonly _shortcuts = getStaticDI(ShortcutService);
   private _lastTap: TapOutcome | null = null;
 
   public down(project: Project, input: PointerInput, host: ToolHost): void {
     // Cloned before the inline rounding below: the tap fallback needs the
     // unsnapped position for the port hit test.
     const tapPoint = input.grid.clone();
+
+    // Consumed on every press, whether it opens a wire or a move: a press that
+    // continues a double click takes the previous tap back either way.
     const continued = this._collapseDoubleClick(project, input.clickCount);
+    const tap = (): void =>
+      this._tap(project, tapPoint, input.clickCount, continued);
+
+    // A selected component's body drags it instead of starting a wire run that
+    // would collide with that body and be discarded. Everywhere a run can
+    // start, the wire tool keeps drawing: from a port, from a wire's interior
+    // or from a junction.
+    if (
+      !this._findPortAt(project, input.grid) &&
+      project.selectionManager.selectedBodyAt(input.grid)
+    ) {
+      host.startSession(
+        SelectionMoveSession.forSelection(project, input.grid, tap)
+      );
+      return;
+    }
+
     host.startSession(
       new WireToolSession(
         project,
         project.floatingLayer.dragLayer,
         roundToHalfGrid(input.grid, true),
-        () => this._tap(project, tapPoint, input.clickCount, continued)
+        tap
       )
     );
   }
@@ -95,9 +125,15 @@ export class WireTool implements BoardTool {
   /**
    * Previews what a tap at the point would do: the negation bubble for a port
    * in reach (which wins over a junction — same precedence as
-   * {@link _applyTap}), else the connection-toggle ghost, else nothing.
+   * {@link _applyTap}), else the connection-toggle ghost, else nothing. The
+   * additive modifier previews nothing: that tap only ever selects.
    */
   private _updateGhosts(project: Project, gridPoint: Point): void {
+    if (this._shortcuts.isAdditiveHeld()) {
+      project.floatingLayer.hideWireToolGhosts();
+      return;
+    }
+
     const hit = this._findPortAt(project, gridPoint);
     if (hit) {
       project.floatingLayer.hideConnectionGhost();
@@ -138,9 +174,10 @@ export class WireTool implements BoardTool {
 
   /**
    * Runs the tap in its precedence order and reports what it did: port
-   * negation, else the junction toggle, else the select click. The click point
-   * is the unsnapped one the port hit test uses — the selection picks what the
-   * pointer is really on, not what a junction snap would round it to.
+   * negation, else the junction toggle, else the select click — or, with the
+   * additive modifier held, that click alone. The click point is the unsnapped
+   * one the port hit test uses: the selection picks what the pointer is really
+   * on, not what a junction snap would round it to.
    */
   private _applyTap(
     project: Project,
@@ -148,15 +185,30 @@ export class WireTool implements BoardTool {
     clickCount: number
   ): TapOutcome {
     const previousSelection = this._snapshotSelection(project);
-    const hit = this._findPortAt(project, gridPoint);
-    const action = hit
-      ? this._togglePortNegation(project, hit)
-      : project.topology.toggleConnectionAt(roundToHalfGrid(gridPoint));
+
+    // The modifier outranks both circuit actions: a click that is building a
+    // selection never negates a port or toggles a junction on the way, so what
+    // it adds is never a surprise.
+    const additive = this._shortcuts.isAdditiveHeld();
+    const hit = additive ? null : this._findPortAt(project, gridPoint);
+
+    let action: Action | null = null;
+    if (hit) {
+      action = this._togglePortNegation(project, hit);
+    } else if (!additive) {
+      action = project.topology.toggleConnectionAt(roundToHalfGrid(gridPoint));
+    }
 
     if (!action) {
-      this._selectAt(project, gridPoint);
+      this._selectAt(project, gridPoint, additive);
     }
-    return { project, clickCount, action, previousSelection };
+    return {
+      project,
+      clickCount,
+      action,
+      previousSelection,
+      selectionVersion: project.selectionManager.selectionVersion
+    };
   }
 
   /** The selection as it stands, for a take-back to put back. */
@@ -181,11 +233,19 @@ export class WireTool implements BoardTool {
     return action;
   }
 
-  /** Selects the smallest element under the point, or clears the selection. */
-  private _selectAt(project: Project, gridPoint: Point): void {
+  /**
+   * The tap's select click: the element under the point becomes the selection,
+   * or joins it when the additive modifier is held.
+   */
+  private _selectAt(
+    project: Project,
+    gridPoint: Point,
+    additive: boolean
+  ): void {
     project.selectionManager.commit(
       new Rectangle(gridPoint.x, gridPoint.y, 0, 0),
-      WorkMode.SELECT
+      WorkMode.SELECT,
+      additive
     );
   }
 
@@ -205,7 +265,8 @@ export class WireTool implements BoardTool {
     if (
       !last ||
       last.project !== project ||
-      last.clickCount !== clickCount - 1
+      last.clickCount !== clickCount - 1 ||
+      last.selectionVersion !== project.selectionManager.selectionVersion
     ) {
       return false;
     }

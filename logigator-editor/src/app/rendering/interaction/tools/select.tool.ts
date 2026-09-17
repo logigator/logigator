@@ -1,3 +1,4 @@
+import { Point } from 'pixi.js';
 import { Project } from '../../../project/project';
 import { WorkMode } from '../../../work-mode/work-mode.enum';
 import { ShortcutService } from '../../../shortcuts/shortcut.service';
@@ -24,13 +25,36 @@ export class SelectTool implements BoardTool {
 
   constructor(private readonly mode: WorkMode.SELECT | WorkMode.SELECT_EXACT) {}
 
+  /**
+   * What a press on the selection that never moved means: the click the tools'
+   * taps make, so the modifier reads the same in every mode — narrow to the
+   * element under the press, or toggle it with the modifier held.
+   */
+  private _tapAt(project: Project, pressPoint: Point): () => void {
+    return () =>
+      project.selectionManager.clickInSelection(
+        pressPoint,
+        this._shortcuts.isAdditiveHeld()
+      );
+  }
+
   public down(project: Project, input: PointerInput, host: ToolHost): void {
     const localPoint = input.grid;
     // The persistent grab rect (the marquee as drawn) is the drag target
     // where one exists, so the gaps inside it are grabbable too; rect-less
     // selections (single click) fall back to element bounds.
     if (project.selectionManager.isGrabbedAt(localPoint)) {
-      host.startSession(SelectionMoveSession.forSelection(project, localPoint));
+      // Cloned: opening the session snaps the grab point in place, and the
+      // press point the tap fallback tests against has to stay where the
+      // pointer was.
+      const pressPoint = localPoint.clone();
+      host.startSession(
+        SelectionMoveSession.forSelection(
+          project,
+          localPoint,
+          this._tapAt(project, pressPoint)
+        )
+      );
     } else {
       host.startSession(
         new SelectRectSession(
@@ -38,7 +62,8 @@ export class SelectTool implements BoardTool {
           project.floatingLayer,
           localPoint,
           this.mode,
-          this._scissorKey
+          this._scissorKey,
+          () => this._shortcuts.isAdditiveHeld()
         )
       );
     }
