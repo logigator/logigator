@@ -21,11 +21,12 @@ Wähle eine aus dem **Sprache**-Dropdown; die Oberfläche aktualisiert sich sofo
 
 ## Editor-Einstellungen
 
-Drei Ein/Aus-Schalter ändern das Verhalten der Arbeitsfläche:
+Vier Ein/Aus-Schalter ändern das Verhalten der Arbeitsfläche:
 
 - **Raster anzeigen** — zeichnet das gepunktete Raster auf der Arbeitsfläche. Standardmäßig an. Schalte es aus für eine aufgeräumtere Fläche; Komponenten rasten so oder so am Raster ein.
-- **FPS-Anzeige** — zeigt eine kleine Bilder-pro-Sekunde-Anzeige über der Arbeitsfläche. Standardmäßig aus; praktisch, um die Leistung auf einer großen Schaltung zu prüfen.
 - **Simulation automatisch starten** — wenn an (der Standard), beginnt ein Druck auf **Simulation starten** sofort mit dem Laufenlassen der Schaltung. Schalte es aus, um die [Simulation](docs:simulation) pausiert zu betreten, sodass du sie vom allerersten Tick an durchsteppen kannst.
+- **Auswahl im Schwenkmodus verschieben** — wenn an (der Standard), verschiebt ein Ziehen mit dem Werkzeug **Schwenken** aus der aktuellen Auswahl heraus diese Auswahl statt der Arbeitsfläche, sodass du etwas neu positionieren kannst, ohne das Werkzeug zu wechseln. Schalte es aus, damit jeder Druck im Schwenkmodus die Arbeitsfläche bewegt.
+- **FPS-Anzeige** — zeigt eine kleine Bilder-pro-Sekunde-Anzeige über der Arbeitsfläche. Standardmäßig aus; praktisch, um die Leistung auf einer großen Schaltung zu prüfen.
 
 ## Einführungstipps
 

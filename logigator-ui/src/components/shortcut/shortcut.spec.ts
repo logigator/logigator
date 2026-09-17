@@ -69,4 +69,11 @@ describe('LgShortcut', () => {
     expect(formatShortcutLabel(binding, false)).toBe('Ctrl+Shift+Z');
     expect(formatShortcutLabel(binding, true)).toBe('⇧⌘Z');
   });
+
+  it('labels a bare primary-modifier binding by its platform key', () => {
+    // A hold-style binding names its key instead of setting its flag, so the
+    // two primary-modifier keys carry the labels the flags would have.
+    expect(formatShortcutLabel({ key: 'Control' }, false)).toBe('Ctrl');
+    expect(formatShortcutLabel({ key: 'Meta' }, true)).toBe('⌘');
+  });
 });

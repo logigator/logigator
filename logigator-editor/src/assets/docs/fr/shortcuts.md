@@ -47,6 +47,7 @@ Logigator est plus rapide au clavier. Vous trouverez ci-dessous les raccourcis p
 | Effacer                                             | `E`       |
 | Placer du texte                                     | `T`       |
 | Couper les fils au bord de la sélection (maintenir) | `Alt`     |
+| Ajouter à la sélection ou l’en retirer (maintenir)  | `Ctrl`    |
 
 ## Interaction
 
@@ -57,7 +58,7 @@ Logigator est plus rapide au clavier. Vous trouverez ci-dessous les raccourcis p
 
 ## Raccourcis maintenus
 
-La plupart des raccourcis se déclenchent une fois lorsque vous appuyez dessus. Quelques-uns sont **maintenus** à la place : vous gardez la touche enfoncée pendant que vous faites autre chose. Le principal est **Couper les fils au bord de la sélection** — maintenez `Alt` pendant que vous faites glisser un cadre de sélection avec l'[outil de sélection](docs:board-and-tools) et les fils sont coupés au bord du cadre tant que la touche reste enfoncée.
+La plupart des raccourcis se déclenchent une fois lorsque vous appuyez dessus. Quelques-uns sont **maintenus** à la place : vous gardez la touche enfoncée pendant que vous faites autre chose. Le principal est **Couper les fils au bord de la sélection** — maintenez `Alt` pendant que vous faites glisser un cadre de sélection avec l'[outil de sélection](docs:board-and-tools) et les fils sont coupés au bord du cadre tant que la touche reste enfoncée. L'autre est **Ajouter à la sélection** — maintenez `Ctrl` (`⌘` sur un Mac) pendant que vous cliquez sur une composante ou un fil avec l'[outil fil](docs:board-and-tools) pour l'ajouter à la sélection ou l'en retirer ; sans la touche, un clic remplace la sélection.
 
 ## Modifier vos raccourcis
 

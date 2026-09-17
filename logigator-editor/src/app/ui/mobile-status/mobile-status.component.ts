@@ -1,6 +1,6 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { Point } from 'pixi.js';
-import { formatShortcutLabel } from '@logigator/ui';
+import { bindingLabel } from '../../shortcuts/binding-label';
 import { TranslationService } from '../../translation/translation.service';
 import { WorkModeService } from '../../work-mode/work-mode.service';
 import { ComponentProviderService } from '../../components/component-provider.service';
@@ -29,7 +29,8 @@ import { TranslateDirective } from '../../translation/translate.directive';
       <span class="min-w-0 truncate">{{
         t(workMode(), {
           componentName: text(selectedComponentName()),
-          scissorKey: scissorKeyLabel()
+          scissorKey: scissorKeyLabel(),
+          additiveKey: additiveKeyLabel()
         })
       }}</span>
       <span class="shrink-0 opacity-50">&middot;</span>
@@ -56,13 +57,15 @@ export class MobileStatusComponent {
     () => `statusBar.modes.${this.workModeService.mode()}` as const
   );
 
-  /** The select-mode hint's hold-to-scissor key, tracking rebinds live. */
-  protected readonly scissorKeyLabel = computed(() => {
-    const binding = this.shortcutService.binding(
-      ShortcutActionEnum.SELECT_SCISSOR
-    )();
-    return binding ? formatShortcutLabel(binding) : '–';
-  });
+  /** The hints' hold-style keys, tracking rebinds live. */
+  protected readonly scissorKeyLabel = bindingLabel(
+    this.shortcutService,
+    ShortcutActionEnum.SELECT_SCISSOR
+  );
+  protected readonly additiveKeyLabel = bindingLabel(
+    this.shortcutService,
+    ShortcutActionEnum.SELECT_ADDITIVE
+  );
 
   protected readonly selectedComponentName = computed((): LocalizableText => {
     const comp = this.workModeService.selectedComponentType();

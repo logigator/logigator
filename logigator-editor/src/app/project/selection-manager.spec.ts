@@ -528,6 +528,152 @@ describe('SelectionManager', () => {
       expect(manager.isEmpty).toBe(true);
     });
 
+    // ── an additive click (the hold-style modifier) ───────────────────────────
+
+    it('adds the element under the point to the selection it finds', () => {
+      const first = makeComponent(2, 2, 2, 2); // covers (2..4, 2..4)
+      const second = makeComponent(8, 2, 2, 2); // covers (8..10, 2..4)
+      setComponents(project, first, second);
+      manager.commit(new Rectangle(3, 3, 0, 0), WorkMode.SELECT, true);
+
+      manager.commit(new Rectangle(9, 3, 0, 0), WorkMode.SELECT, true);
+
+      expect(manager.selectedComponents.has(first)).toBe(true);
+      expect(manager.selectedComponents.has(second)).toBe(true);
+      expect(second.selected).toBe(true);
+    });
+
+    it('takes an element that is already in the selection back out', () => {
+      const comp = makeComponent(2, 2, 2, 2);
+      setComponents(project, comp);
+      manager.commit(new Rectangle(3, 3, 0, 0), WorkMode.SELECT, true);
+      expect(manager.selectedComponents.size).toBe(1);
+
+      manager.commit(new Rectangle(3, 3, 0, 0), WorkMode.SELECT, true);
+
+      expect(manager.selectedComponents.has(comp)).toBe(false);
+      expect(comp.selected).toBe(false);
+      expect(manager.isEmpty).toBe(true);
+    });
+
+    it('re-derives the highlighted junctions for a toggled element', () => {
+      const comp = makeComponent(2, 2, 2, 2);
+      setComponents(project, comp);
+      manager.select([comp], []);
+      const retint = vi.spyOn(manager, 'retintCps');
+
+      manager.commit(new Rectangle(3, 3, 0, 0), WorkMode.SELECT, true);
+
+      expect(retint).toHaveBeenCalled();
+    });
+
+    it('leaves the selection alone over empty canvas', () => {
+      const comp = makeComponent(2, 2, 2, 2);
+      setComponents(project, comp);
+      manager.commit(new Rectangle(3, 3, 0, 0), WorkMode.SELECT, true);
+
+      manager.commit(new Rectangle(20, 20, 0, 0), WorkMode.SELECT, true);
+
+      expect(manager.selectedComponents.has(comp)).toBe(true);
+    });
+
+    it('keeps the committed marquee an additive click lands beside', () => {
+      const first = makeComponent(2, 2, 2, 2);
+      const second = makeComponent(8, 2, 2, 2);
+      setComponents(project, first, second);
+      // A programmatic selection, so the committed rect is the only one in
+      // play and the second component starts out unselected.
+      manager.select([first], []);
+      const rect = manager.grabRect();
+      expect(rect).not.toBeNull();
+
+      manager.commit(new Rectangle(9, 3, 0, 0), WorkMode.SELECT, true);
+
+      expect(manager.grabRect()).toMatchObject({
+        x: rect!.x,
+        y: rect!.y,
+        width: rect!.width,
+        height: rect!.height
+      });
+      expect(manager.selectedComponents.has(second)).toBe(true);
+    });
+
+    it('adds what an additive marquee touches, on top of the selection', () => {
+      const first = makeComponent(2, 2, 2, 2);
+      const second = makeComponent(8, 2, 2, 2);
+      setComponents(project, first, second);
+      manager.commit(new Rectangle(3, 3, 0, 0), WorkMode.SELECT, true);
+
+      manager.commit(new Rectangle(7, 1, 4, 4), WorkMode.SELECT, true);
+
+      expect(manager.selectedComponents.has(first)).toBe(true);
+      expect(manager.selectedComponents.has(second)).toBe(true);
+    });
+
+    it('narrows a multi-selection to the element a plain click lands on', () => {
+      const first = makeComponent(2, 2, 2, 2);
+      const second = makeComponent(8, 2, 2, 2);
+      setComponents(project, first, second);
+      manager.select([first, second], []);
+
+      manager.clickInSelection({ x: 9, y: 3 }, false);
+
+      expect(manager.selectedComponents.has(second)).toBe(true);
+      expect(manager.selectedComponents.has(first)).toBe(false);
+    });
+
+    it('leaves the selection alone when a click lands on the gap inside it', () => {
+      const first = makeComponent(2, 2, 2, 2);
+      setComponents(project, first);
+      manager.select([first], []);
+
+      manager.clickInSelection({ x: 20, y: 20 }, false);
+
+      expect(manager.selectedComponents.has(first)).toBe(true);
+    });
+
+    it('keeps the marquee where it was drawn as the selection changes', () => {
+      const first = makeComponent(2, 2, 2, 2);
+      const left = makeComponent(0, 0, 1, 1); // added later, left of the box
+      setComponents(project, first, left);
+      manager.select([first], []); // a committed rect around `first`
+      const drawn = manager.grabRect()!;
+
+      manager.commit(new Rectangle(0.5, 0.5, 0, 0), WorkMode.SELECT, true);
+      expect(manager.selectedComponents.has(left)).toBe(true);
+      // The bounds grew to the left, which moves the rect's anchor — the drawn
+      // marquee stays where the user drew it regardless.
+      expect(manager.grabRect()).toMatchObject({
+        x: drawn.x,
+        y: drawn.y,
+        width: drawn.width,
+        height: drawn.height
+      });
+
+      manager.commit(new Rectangle(0.5, 0.5, 0, 0), WorkMode.SELECT, true);
+      expect(manager.selectedComponents.has(left)).toBe(false);
+      expect(manager.grabRect()).toMatchObject({
+        x: drawn.x,
+        y: drawn.y,
+        width: drawn.width,
+        height: drawn.height
+      });
+    });
+
+    it('grabs an element the marquee does not cover', () => {
+      const inside = makeComponent(2, 2, 2, 2);
+      const outside = makeComponent(8, 2, 2, 2);
+      setComponents(project, inside, outside);
+      manager.select([inside], []);
+      manager.commit(new Rectangle(9, 3, 0, 0), WorkMode.SELECT, true);
+
+      // Pressing the added element drags the group just as pressing the
+      // marquee does, so a mixed selection stays movable.
+      expect(manager.isGrabbedAt({ x: 9, y: 3 })).toBe(true);
+      expect(manager.isGrabbedAt({ x: 2, y: 2 })).toBe(true);
+      expect(manager.isGrabbedAt({ x: 20, y: 20 })).toBe(false);
+    });
+
     it('selects the component when component and wire have equal bounding area', () => {
       // Click at (3,3). Both have area 1×1=1. Component wins (<=).
       const comp = makeComponent(3, 3, 1, 1);

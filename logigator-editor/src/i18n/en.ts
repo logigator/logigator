@@ -57,7 +57,8 @@ const en = {
     options: {
       fpsCounter: 'FPS Counter',
       showGrid: 'Show Grid',
-      autoStartSimulation: 'Auto-start simulation'
+      autoStartSimulation: 'Auto-start simulation',
+      dragSelectionInPanMode: 'Drag selection in Pan mode'
     }
   },
   minimap: {
@@ -277,7 +278,7 @@ const en = {
     modes: {
       pan: 'Pan: drag to move the board · scroll or pinch to zoom',
       wireTool:
-        'Wire tool: drag to draw · tap a port to negate · tap a junction to connect/disconnect',
+        'Wire tool: drag to draw · tap a port to negate · tap a junction to connect/disconnect · tap to select · {{additiveKey}} to add or remove',
       sel: 'Select: drag a marquee to select · drag the selection to move · hold {{scissorKey}} to cut wires',
       selExact:
         'Cut select: drag a marquee to select · wires are cut at its edge',
@@ -859,6 +860,7 @@ const en = {
       toolWire: 'Wire Tool',
       toolSelect: 'Select',
       selectScissor: 'Cut Wires at Selection Edge (hold)',
+      selectAdditive: 'Add to or Remove from Selection (hold)',
       toolErase: 'Erase',
       toolPlaceText: 'Place Text',
       toggleSimulation: 'Start/Stop Simulation',

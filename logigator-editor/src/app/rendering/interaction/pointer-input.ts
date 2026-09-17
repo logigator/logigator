@@ -16,6 +16,14 @@ export interface PointerInput {
   readonly global: Point;
   /** The same position in the project's grid coordinates. */
   readonly grid: Point;
+  /**
+   * How many primary presses in a row this sample belongs to — 1 for a fresh
+   * press, 2+ when it follows the previous one within the double-click window
+   * and slop (the DOM's own `MouseEvent.detail` rule). Only `down` acts on it;
+   * a tool that owns a click action reads it there to tell a double click from
+   * two deliberate single clicks.
+   */
+  readonly clickCount: number;
 }
 
 /**

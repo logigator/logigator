@@ -86,12 +86,21 @@ export function makeRom(
   return rom;
 }
 
-/** PointerInput sample at the given grid position (global mirrors it). */
-export function makeMoveInput(x: number, y: number): PointerInput {
+/**
+ * PointerInput sample at the given grid position (global mirrors it). The
+ * click count defaults to 1 — a fresh press, not the second half of a double
+ * click; pass 2 for a press that continues the previous one.
+ */
+export function makeMoveInput(
+  x: number,
+  y: number,
+  clickCount = 1
+): PointerInput {
   return {
     pointerId: 1,
     pointerType: 'mouse',
     global: new Point(x, y),
-    grid: new Point(x, y)
+    grid: new Point(x, y),
+    clickCount
   };
 }

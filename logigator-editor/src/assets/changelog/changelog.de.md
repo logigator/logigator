@@ -3,6 +3,34 @@
 Alle nennenswerten Änderungen am Logigator-Editor werden hier festgehalten. Die
 aktuellste Veröffentlichung steht ganz oben.
 
+## 2.2.0 — 2026-09-17
+
+### Funktionen
+
+- **Zur Auswahl hinzufügen, ohne sie zu leeren.** Halte Ctrl — auf einem Mac ⌘ —
+  und ein Klick fügt die Komponente oder Leitung unter dem Zeiger der Auswahl
+  hinzu oder nimmt sie wieder heraus, während ein Auswahlrahmen aufnimmt, was er
+  überdeckt. Die Taste lässt sich in den Tastenkürzeln neu belegen, neben
+  „Leitungen an der Auswahlkante schneiden“.
+- **Auswählen, ohne das Leitungswerkzeug zu verlassen.** Ein Tippen, das weder
+  einen Anschluss noch eine Kreuzung trifft, wählt jetzt das kleinste Element
+  unter dem Zeiger aus, sodass du es löschen, kopieren oder verschieben kannst.
+- **Eine Auswahl im Schwenkmodus verschieben.** Ziehst du die aktuelle Auswahl,
+  wird sie verschoben statt die Arbeitsfläche; überall sonst schwenkt der Druck
+  wie bisher. Die neue Einstellung „Auswahl im Schwenkmodus verschieben“ schaltet
+  das wieder ab.
+
+### Korrekturen
+
+- Ein Doppelklick mit dem Leitungswerkzeug nimmt das Tippen zurück, das er
+  wiederholt: Ein Doppelklick auf einen Anschluss zeichnet die Leitung, die du
+  erreichen wolltest, und lässt keine überflüssige Negationsblase zurück.
+- Ein Klick in die Lücke innerhalb deiner Auswahl hebt sie nicht mehr auf.
+- Lange Menüs und ihre Untermenüs scrollen, statt auf einem kleinen Bildschirm
+  unten aus dem Fenster zu laufen.
+- Auf Apple-Plattformen in Chromium-basierten Browsern wird ⌘ erkannt, wo bisher
+  Ctrl angezeigt wurde.
+
 ## 2.1.3 — 2026-09-16
 
 ### Korrekturen

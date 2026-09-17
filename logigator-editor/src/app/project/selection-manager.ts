@@ -13,6 +13,10 @@ import { getStaticDI } from '../utils/get-di';
 import { LoggingService } from '../logging/logging.service';
 import type { Project } from './project';
 
+/** The element a click lands on, tagged with the set it belongs in. */
+type ClickHit =
+  { kind: 'component'; element: Component } | { kind: 'wire'; element: Wire };
+
 export class SelectionManager {
   /**
    * Margin (grid units) around the content bounds for grab rects that have no
@@ -23,6 +27,10 @@ export class SelectionManager {
   private readonly _selectedComponents = new Set<Component>();
   private readonly _selectedWires = new Set<Wire>();
   private readonly _selectionChange$ = new Subject<void>();
+  // Bumped on every change, so provisional state elsewhere (the wire tool's
+  // double-click take-back) can tell whether the selection it recorded still
+  // stands or has been changed by something else.
+  private _version = 0;
   // The scissor cut this selection registered in the undo history, if any.
   // Live only while it is still the newest history entry (see hasLiveCut);
   // consumed by the move/delete that commits it, retracted by clear().
@@ -48,16 +56,38 @@ export class SelectionManager {
     });
   }
 
-  public commit(rect: Rectangle, mode: WorkMode): void {
+  /**
+   * Selects what the rect touches, or — for the zero-area rect a click makes —
+   * the one element under the point, and clears whatever was selected before.
+   *
+   * `additive` is the hold-style modifier: a click then *toggles* the element
+   * under it (see {@link _commitSingleClick}) and a marquee *joins* what it
+   * touches to
+   * the selection, instead of replacing it. A click has no rect to persist, so
+   * it leaves the committed one untouched; a marquee is the shape the user
+   * just drew and becomes it, as it does without the modifier.
+   */
+  public commit(rect: Rectangle, mode: WorkMode, additive = false): void {
     if (rect.width === 0 && rect.height === 0) {
-      this._commitSingleClick(rect.x, rect.y);
+      this._commitSingleClick(rect.x, rect.y, additive, true);
     } else {
-      this._commitRect(rect, mode);
+      this._commitRect(rect, mode, additive);
     }
   }
 
-  private _commitRect(rect: Rectangle, mode: WorkMode): void {
-    this.clear();
+  private _commitRect(
+    rect: Rectangle,
+    mode: WorkMode,
+    additive: boolean
+  ): void {
+    if (additive) {
+      // The cut this selection is still carrying would be orphaned by the one
+      // the scissor is about to register, and it cannot be taken back later
+      // without clearing the selection this commit is building.
+      this._retractLiveCut();
+    } else {
+      this.clear();
+    }
 
     for (const component of this.project.queryComponentsInRange(rect)) {
       component.selected = true;
@@ -77,7 +107,7 @@ export class SelectionManager {
     // re-fits to the content it caught.
     this._setGrabRect(rect.clone());
     this.retintCps();
-    this._selectionChange$.next();
+    this._notifySelectionChange();
   }
 
   private _scissorAndSelectWires(rect: Rectangle): void {
@@ -158,9 +188,90 @@ export class SelectionManager {
 
   // A zero-area rect fails PixiJS Rectangle.intersects(), so we build a 1×1
   // query rect and post-filter with gridBounds.contains().
-  private _commitSingleClick(px: number, py: number): void {
-    this.clear();
+  private _commitSingleClick(
+    px: number,
+    py: number,
+    additive: boolean,
+    /**
+     * What a click that lands on nothing does: a click on empty canvas clears
+     * the selection, while one inside the selection — aimed at one of its
+     * elements and missing — leaves it as it is.
+     */
+    missClears: boolean
+  ): void {
+    if (additive) {
+      const hit = this._pickAt(px, py);
+      if (!hit) return;
+      // Toggled in place. The rect is read first and re-anchored after: it is
+      // the shape the user drew, so a membership change must not carry it along
+      // with the bounds (freezeGrabRect emits the change).
+      const rect = this.grabRect();
+      this._setMember(hit, !this._isMember(hit));
+      this.freezeGrabRect(rect);
+      this.retintCps();
+      return;
+    }
 
+    // A click aimed inside the selection that misses — the gap in a marquee —
+    // leaves it alone. Tested without keeping the hit: what this selects is
+    // resolved after the clear below.
+    if (!missClears && !this._pickAt(px, py)) return;
+
+    // Cleared first: retracting a live scissor cut replaces the wires it cut,
+    // so a hit resolved before that could name an instance this destroys.
+    this.clear();
+    const hit = this._pickAt(px, py);
+    if (hit) this._setMember(hit, true);
+    // A click draws nothing, so a single-click selection gets no persistent
+    // rect; grabbing falls back to the element's own bounds (see isGrabbedAt).
+    this._setGrabRect(null);
+    this.retintCps();
+    this._notifySelectionChange();
+  }
+
+  /**
+   * What a press on the selection that never moved means: the element under
+   * the point becomes the whole selection, which is how a click inside a
+   * multi-selection narrows it to one element. With the additive modifier it
+   * toggles in place of that. A press that landed on the gap inside a marquee
+   * leaves the selection as it is — aiming beside a small element must not
+   * clear everything.
+   */
+  public clickInSelection(
+    point: { x: number; y: number },
+    additive: boolean
+  ): void {
+    this._commitSingleClick(point.x, point.y, additive, false);
+  }
+
+  /** Whether the clicked element is in the selection. */
+  private _isMember(hit: ClickHit): boolean {
+    return hit.kind === 'component'
+      ? this._selectedComponents.has(hit.element)
+      : this._selectedWires.has(hit.element);
+  }
+
+  /**
+   * Puts the clicked element in or out of the selection, its set and its
+   * `selected` flag together.
+   */
+  private _setMember(hit: ClickHit, selected: boolean): void {
+    if (hit.kind === 'component') {
+      if (selected) this._selectedComponents.add(hit.element);
+      else this._selectedComponents.delete(hit.element);
+    } else {
+      if (selected) this._selectedWires.add(hit.element);
+      else this._selectedWires.delete(hit.element);
+    }
+    hit.element.selected = selected;
+  }
+
+  /**
+   * The element a click at the point selects: the one whose bounds contain it,
+   * a component over a wire and the smaller bounding box over the larger —
+   * smaller = more precisely aimed.
+   */
+  private _pickAt(px: number, py: number): ClickHit | null {
     const queryRect = new Rectangle(px - 0.5, py - 0.5, 1, 1);
 
     let bestComponent: Component | null = null;
@@ -191,23 +302,13 @@ export class SelectionManager {
       }
     }
 
-    // Tie-break: smaller bounding-box area = more precisely-aimed target.
     if (
       bestComponent !== null &&
       (bestWire === null || bestComponentArea <= bestWireArea)
     ) {
-      bestComponent.selected = true;
-      this._selectedComponents.add(bestComponent);
-    } else if (bestWire !== null) {
-      bestWire.selected = true;
-      this._selectedWires.add(bestWire);
+      return { kind: 'component', element: bestComponent };
     }
-
-    // A click draws nothing, so a single-click selection gets no persistent
-    // rect; grabbing falls back to the element's own bounds (see isGrabbedAt).
-    this._setGrabRect(null);
-    this.retintCps();
-    this._selectionChange$.next();
+    return bestWire ? { kind: 'wire', element: bestWire } : null;
   }
 
   // Re-evaluates which connection points count as selected. A CP is highlighted
@@ -318,7 +419,7 @@ export class SelectionManager {
     this._selectedComponents.clear();
     this._selectedWires.clear();
     this._setGrabRect(null);
-    this._selectionChange$.next();
+    this._notifySelectionChange();
   }
 
   /**
@@ -368,7 +469,7 @@ export class SelectionManager {
       changed = this._selectedWires.delete(element);
     }
     if (changed) {
-      this._selectionChange$.next();
+      this._notifySelectionChange();
     }
   }
 
@@ -423,31 +524,72 @@ export class SelectionManager {
   }
 
   /**
-   * Whether a press at a grid point grabs the selection (starts a move). The
-   * grab rect decides when one exists; a rect-less selection (single click)
-   * falls back to the selected elements' own bounds.
+   * Whether a press at a grid point grabs the selection (starts a move): the
+   * drawn marquee where one exists, or the selected elements' own bounds —
+   * whichever is hit, so an element the marquee does not cover (added by the
+   * additive modifier, or hanging over the marquee's edge) still drags the
+   * group. A rect-less selection (single click) has only the bounds to go on.
    */
   public isGrabbedAt(gridPoint: { x: number; y: number }): boolean {
     const rect = this.grabRect();
-    if (rect) return rect.contains(gridPoint.x, gridPoint.y);
+    if (rect?.contains(gridPoint.x, gridPoint.y)) return true;
+    return this._selectedAt(gridPoint) !== null;
+  }
 
-    for (const component of this._selectedComponents) {
-      if (
-        !component.destroyed &&
-        component.gridBounds.contains(gridPoint.x, gridPoint.y)
-      ) {
-        return true;
+  /**
+   * A selected component whose body contains the point — the one test the wire
+   * tool makes against the selection, since a wire run started inside a body
+   * collides with it (see `WireTool`).
+   */
+  public selectedBodyAt(gridPoint: { x: number; y: number }): Component | null {
+    for (const component of this._nearbyComponents(gridPoint)) {
+      if (component.bodyGridBounds.contains(gridPoint.x, gridPoint.y)) {
+        return component;
       }
     }
-    for (const wire of this._selectedWires) {
-      if (
-        !wire.destroyed &&
-        wire.gridBounds.contains(gridPoint.x, gridPoint.y)
-      ) {
-        return true;
+    return null;
+  }
+
+  /**
+   * The selected element whose bounds contain the point, if any. Queried
+   * through the project's spatial index rather than by walking the selection:
+   * this answers every press, and a large selection must not cost a bounds
+   * allocation per member.
+   */
+  private _selectedAt(gridPoint: {
+    x: number;
+    y: number;
+  }): Component | Wire | null {
+    for (const component of this._nearbyComponents(gridPoint)) {
+      if (component.gridBounds.contains(gridPoint.x, gridPoint.y)) {
+        return component;
       }
     }
-    return false;
+    for (const wire of this._nearbyWires(gridPoint)) {
+      if (wire.gridBounds.contains(gridPoint.x, gridPoint.y)) {
+        return wire;
+      }
+    }
+    return null;
+  }
+
+  /** Selected components whose bounds cover the grid cell around the point. */
+  private _nearbyComponents(gridPoint: {
+    x: number;
+    y: number;
+  }): Iterable<Component> {
+    const queryRect = new Rectangle(gridPoint.x - 0.5, gridPoint.y - 0.5, 1, 1);
+    return [...this.project.queryComponentsInRange(queryRect)].filter(
+      (c) => !c.destroyed && this._selectedComponents.has(c)
+    );
+  }
+
+  /** Selected wires whose bounds cover the grid cell around the point. */
+  private _nearbyWires(gridPoint: { x: number; y: number }): Iterable<Wire> {
+    const queryRect = new Rectangle(gridPoint.x - 0.5, gridPoint.y - 0.5, 1, 1);
+    return [...this.project.queryWiresInRange(queryRect)].filter(
+      (w) => !w.destroyed && this._selectedWires.has(w)
+    );
   }
 
   /**
@@ -468,7 +610,7 @@ export class SelectionManager {
       changed = true;
     }
     if (changed) {
-      this._selectionChange$.next();
+      this._notifySelectionChange();
     }
   }
 
@@ -481,7 +623,7 @@ export class SelectionManager {
    */
   public freezeGrabRect(rect: Rectangle | null): void {
     this._setGrabRect(rect);
-    this._selectionChange$.next();
+    this._notifySelectionChange();
   }
 
   // Freezes the given rect (with the current bounds origin as its translation
@@ -500,7 +642,7 @@ export class SelectionManager {
   public clearGrabRect(): void {
     this._setGrabRect(null);
     this.retintCps();
-    this._selectionChange$.next();
+    this._notifySelectionChange();
   }
 
   public select(components: Component[], wires: Wire[]): void {
@@ -523,13 +665,23 @@ export class SelectionManager {
       this.boundingBox()?.pad(SelectionManager.GRAB_MARGIN) ?? null
     );
     this.retintCps();
-    this._selectionChange$.next();
+    this._notifySelectionChange();
   }
 
   public get isEmpty(): boolean {
     return (
       this._selectedComponents.size === 0 && this._selectedWires.size === 0
     );
+  }
+
+  /** The selection's version: it changes whenever the selection does. */
+  public get selectionVersion(): number {
+    return this._version;
+  }
+
+  private _notifySelectionChange(): void {
+    this._version++;
+    this._selectionChange$.next();
   }
 
   public get selectionChange$(): Observable<void> {

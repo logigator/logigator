@@ -7,7 +7,7 @@ Le plan de travail est la grille sur laquelle vous construisez votre circuit. Ce
 ## Se déplacer sur le plan de travail
 
 - **Zoom** — faites défiler la molette de la souris sur le plan de travail, ou pincez sur un appareil tactile. Vous pouvez aussi utiliser les boutons de zoom de la barre d'outils, **Affichage → Zoom avant / Zoom arrière**, ou **Affichage → Zoom 100 %** pour revenir à la taille réelle.
-- **Déplacement** — choisissez l'outil **Déplacement** (la main) et faites glisser. Vous pouvez aussi vous déplacer depuis _n'importe quel_ outil en faisant glisser avec le **bouton droit de la souris**, si bien que vous n'avez que rarement besoin de changer d'outil juste pour repositionner la vue.
+- **Déplacement** — choisissez l'outil **Déplacement** (la main) et faites glisser. Vous pouvez aussi vous déplacer depuis _n'importe quel_ outil en faisant glisser avec le **bouton droit de la souris**, si bien que vous n'avez que rarement besoin de changer d'outil juste pour repositionner la vue. Faire glisser depuis l'intérieur de la sélection courante déplace cette sélection plutôt que le plan de travail — désactivez-le avec **Faire glisser la sélection en mode Déplacement** dans les [paramètres de l'éditeur](docs:settings).
 - **Tactile** — faites glisser avec deux doigts pour vous déplacer et pincez pour zoomer à tout moment ; un glisser à un doigt ne déplace la vue que lorsque l'outil Déplacement est actif.
 
 La **barre d'état** en bas affiche toujours un bref rappel de ce que fait l'outil actif, ainsi que la position de votre curseur sur la grille.
@@ -16,13 +16,13 @@ La **barre d'état** en bas affiche toujours un bref rappel de ce que fait l'out
 
 Le groupe de droite de la barre d'outils contient les cinq outils de dessin. Un seul est actif à la fois ; chacun a également un raccourci à une touche.
 
-| Outil           | Raccourci | Ce qu'il fait                                                                                                                                                                     |
-| --------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Déplacement** | `P`       | Faites glisser pour déplacer le plan de travail ; faites défiler ou pincez pour zoomer.                                                                                           |
-| **Fil**         | `W`       | Faites glisser pour tracer des fils ; touchez un port pour l'inverser, ou touchez un croisement pour connecter ou séparer. Voir [Fils et connexions](docs:wires-and-connections). |
-| **Sélection**   | `S`       | Faites glisser un cadre pour sélectionner des éléments ; faites glisser la sélection pour la déplacer.                                                                            |
-| **Gomme**       | `E`       | Cliquez ou faites glisser sur les éléments pour les supprimer.                                                                                                                    |
-| **Texte**       | `T`       | Placez une étiquette de texte sur le plan de travail.                                                                                                                             |
+| Outil           | Raccourci | Ce qu'il fait                                                                                                                                                                                                                                                      |
+| --------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Déplacement** | `P`       | Faites glisser pour déplacer le plan de travail ou la sélection courante ; faites défiler ou pincez pour zoomer.                                                                                                                                                   |
+| **Fil**         | `W`       | Faites glisser pour tracer des fils ; touchez un port pour l'inverser, ou touchez un croisement pour connecter ou séparer ; un appui qui n'atteint ni l'un ni l'autre sélectionne ce qui se trouve dessous. Voir [Fils et connexions](docs:wires-and-connections). |
+| **Sélection**   | `S`       | Faites glisser un cadre pour sélectionner des éléments ; faites glisser la sélection pour la déplacer.                                                                                                                                                             |
+| **Gomme**       | `E`       | Cliquez ou faites glisser sur les éléments pour les supprimer.                                                                                                                                                                                                     |
+| **Texte**       | `T`       | Placez une étiquette de texte sur le plan de travail.                                                                                                                                                                                                              |
 
 ![Les cinq boutons d'outils de la barre d'outils.](./images/tool-buttons.png)
 

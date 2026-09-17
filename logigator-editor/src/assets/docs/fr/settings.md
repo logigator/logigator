@@ -21,11 +21,12 @@ Choisissez-en une dans la liste déroulante **Langue** ; l'interface se met à j
 
 ## Paramètres de l'éditeur
 
-Trois bascules on/off modifient le comportement du plan de travail :
+Quatre bascules on/off modifient le comportement du plan de travail :
 
 - **Afficher la grille** — dessine la grille pointillée sur le plan de travail. Activée par défaut. Désactivez-la pour un canevas plus épuré ; les composants s'alignent tout de même sur la grille dans les deux cas.
-- **Compteur FPS** — affiche un petit indicateur d'images par seconde au-dessus du plan de travail. Désactivé par défaut ; pratique pour vérifier les performances sur un grand circuit.
 - **Démarrage automatique de la simulation** — lorsqu'il est activé (par défaut), appuyer sur **Démarrer la simulation** lance immédiatement l'exécution du circuit. Désactivez-le pour entrer en [simulation](docs:simulation) en pause, afin de la parcourir pas à pas dès le tout premier tick.
+- **Faire glisser la sélection en mode Déplacement** — lorsqu'il est activé (par défaut), faire glisser avec l'outil **Déplacement** depuis l'intérieur de la sélection courante déplace cette sélection plutôt que le plan de travail, pour repositionner un élément sans changer d'outil. Désactivez-le pour que chaque pression en mode Déplacement déplace le plan de travail.
+- **Compteur FPS** — affiche un petit indicateur d'images par seconde au-dessus du plan de travail. Désactivé par défaut ; pratique pour vérifier les performances sur un grand circuit.
 
 ## Conseils d'intégration
 

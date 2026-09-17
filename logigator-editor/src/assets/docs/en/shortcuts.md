@@ -39,14 +39,15 @@ Logigator is faster with the keyboard. Below are the default bindings, followed 
 
 ## Tools
 
-| Action                             | Shortcut |
-| ---------------------------------- | -------- |
-| Pan                                | `P`      |
-| Wire Tool                          | `W`      |
-| Select                             | `S`      |
-| Erase                              | `E`      |
-| Place Text                         | `T`      |
-| Cut Wires at Selection Edge (hold) | `Alt`    |
+| Action                                 | Shortcut |
+| -------------------------------------- | -------- |
+| Pan                                    | `P`      |
+| Wire Tool                              | `W`      |
+| Select                                 | `S`      |
+| Erase                                  | `E`      |
+| Place Text                             | `T`      |
+| Cut Wires at Selection Edge (hold)     | `Alt`    |
+| Add to or Remove from Selection (hold) | `Ctrl`   |
 
 ## Interaction
 
@@ -57,7 +58,7 @@ Logigator is faster with the keyboard. Below are the default bindings, followed 
 
 ## Held shortcuts
 
-Most shortcuts fire once when you press them. A few are **held** instead: you keep the key down while doing something else. The main one is **Cut Wires at Selection Edge** — hold `Alt` while dragging a selection box with the [select tool](docs:board-and-tools) and wires are cut at the box edge for as long as the key is down.
+Most shortcuts fire once when you press them. A few are **held** instead: you keep the key down while doing something else. The main one is **Cut Wires at Selection Edge** — hold `Alt` while dragging a selection box with the [select tool](docs:board-and-tools) and wires are cut at the box edge for as long as the key is down. The other one is **Add to Selection** — hold `Ctrl` (`⌘` on a Mac) while clicking a component or wire in the [wire tool](docs:board-and-tools) to add it to the selection, or to take it back out; without the key a click replaces the selection.
 
 ## Changing your shortcuts
 

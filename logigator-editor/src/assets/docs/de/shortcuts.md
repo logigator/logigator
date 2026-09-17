@@ -39,14 +39,15 @@ Mit der Tastatur bist du in Logigator schneller. Nachfolgend die Standardbelegun
 
 ## Werkzeuge
 
-| Aktion                                           | Kürzel |
-| ------------------------------------------------ | ------ |
-| Schwenken                                        | `P`    |
-| Leitungswerkzeug                                 | `W`    |
-| Auswählen                                        | `S`    |
-| Radieren                                         | `E`    |
-| Text platzieren                                  | `T`    |
-| Leitungen an der Auswahlkante schneiden (halten) | `Alt`  |
+| Aktion                                                | Kürzel |
+| ----------------------------------------------------- | ------ |
+| Schwenken                                             | `P`    |
+| Leitungswerkzeug                                      | `W`    |
+| Auswählen                                             | `S`    |
+| Radieren                                              | `E`    |
+| Text platzieren                                       | `T`    |
+| Leitungen an der Auswahlkante schneiden (halten)      | `Alt`  |
+| Zur Auswahl hinzufügen oder daraus entfernen (halten) | `Ctrl` |
 
 ## Interaktion
 
@@ -57,7 +58,7 @@ Mit der Tastatur bist du in Logigator schneller. Nachfolgend die Standardbelegun
 
 ## Gehaltene Kürzel
 
-Die meisten Kürzel lösen einmal aus, wenn du sie drückst. Einige wenige werden stattdessen **gehalten**: Du hältst die Taste gedrückt, während du etwas anderes tust. Das wichtigste ist **Leitungen an der Auswahlkante schneiden** — halte `Alt`, während du mit dem [Auswahlwerkzeug](docs:board-and-tools) einen Auswahlrahmen ziehst, und Leitungen werden an der Rahmenkante geschnitten, solange die Taste gedrückt ist.
+Die meisten Kürzel lösen einmal aus, wenn du sie drückst. Einige wenige werden stattdessen **gehalten**: Du hältst die Taste gedrückt, während du etwas anderes tust. Das wichtigste ist **Leitungen an der Auswahlkante schneiden** — halte `Alt`, während du mit dem [Auswahlwerkzeug](docs:board-and-tools) einen Auswahlrahmen ziehst, und Leitungen werden an der Rahmenkante geschnitten, solange die Taste gedrückt ist. Das andere ist **Zur Auswahl hinzufügen** — halte `Ctrl` (auf einem Mac `⌘`), während du im [Leitungswerkzeug](docs:board-and-tools) auf eine Komponente oder Leitung klickst, um sie zur Auswahl hinzuzufügen oder wieder herauszunehmen; ohne die Taste ersetzt ein Klick die Auswahl.
 
 ## Deine Kürzel ändern
 
