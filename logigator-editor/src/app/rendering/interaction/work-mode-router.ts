@@ -324,13 +324,7 @@ export class WorkModeRouter implements PointerToolTarget, ToolHost {
     const selection = project.selectionManager;
     if (selection.isEmpty) return;
 
-    const session = new SelectionMoveSession(
-      project,
-      project.floatingLayer.dragLayer,
-      selection.selectedComponents,
-      selection.selectedWires,
-      null
-    );
+    const session = SelectionMoveSession.forSelection(project, null);
     session.rotate(steps);
     if (session.canEnd()) {
       session.onEnd();
@@ -370,13 +364,7 @@ export class WorkModeRouter implements PointerToolTarget, ToolHost {
     const selection = project.selectionManager;
     if (selection.isEmpty) return;
 
-    const session = new SelectionMoveSession(
-      project,
-      project.floatingLayer.dragLayer,
-      selection.selectedComponents,
-      selection.selectedWires,
-      null
-    );
+    const session = SelectionMoveSession.forSelection(project, null);
     session.moveBy(dx, dy);
     if (session.canEnd()) {
       session.onEnd();

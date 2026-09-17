@@ -68,6 +68,24 @@ export class SelectionMoveSession implements DragSession {
   // means the commit/cancel paths can treat the session as a pure move.
   private _netSteps = 0;
 
+  /**
+   * The project's committed selection as a session, to drag from `grabPoint`
+   * (a grid-space press) or floating without one (`null`).
+   */
+  public static forSelection(
+    project: Project,
+    grabPoint: Point | null
+  ): SelectionMoveSession {
+    const selection = project.selectionManager;
+    return new SelectionMoveSession(
+      project,
+      project.floatingLayer.dragLayer,
+      selection.selectedComponents,
+      selection.selectedWires,
+      grabPoint ? roundToGrid(grabPoint, true) : null
+    );
+  }
+
   constructor(
     private readonly project: Project,
     private readonly dragLayer: Container<Component | Wire | ConnectionPoint>,

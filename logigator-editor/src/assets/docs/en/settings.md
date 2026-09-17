@@ -21,11 +21,12 @@ Pick one from the **Language** dropdown; the interface updates right away.
 
 ## Editor settings
 
-Three on/off toggles change how the board behaves:
+Four on/off toggles change how the board behaves:
 
 - **Show Grid** — draws the dotted grid on the board. On by default. Turn it off for a cleaner canvas; components still snap to the grid either way.
 - **FPS Counter** — shows a small frames-per-second readout over the board. Off by default; handy when checking performance on a large circuit.
 - **Auto-start simulation** — when on (the default), pressing **Start simulation** begins running the circuit immediately. Turn it off to enter [simulation](docs:simulation) paused, so you can step through it from the very first tick.
+- **Drag selection in Pan mode** — when on (the default), dragging with the **Pan** tool from inside the current selection moves that selection instead of the board, so you can reposition something without switching tools. Turn it off to make every Pan press move the board.
 
 ## Onboarding tips
 

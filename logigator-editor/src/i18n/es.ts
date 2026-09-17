@@ -59,7 +59,8 @@ const es: TranslationSchema = {
     options: {
       fpsCounter: 'Contador de FPS',
       showGrid: 'Mostrar cuadrícula',
-      autoStartSimulation: 'Iniciar la simulación automáticamente'
+      autoStartSimulation: 'Iniciar la simulación automáticamente',
+      dragSelectionInPanMode: 'Arrastrar la selección en modo Desplazar'
     }
   },
   minimap: {

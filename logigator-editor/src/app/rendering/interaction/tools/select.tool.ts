@@ -3,7 +3,6 @@ import { WorkMode } from '../../../work-mode/work-mode.enum';
 import { ShortcutService } from '../../../shortcuts/shortcut.service';
 import { ShortcutActionEnum } from '../../../shortcuts/shortcut-action.enum';
 import { getStaticDI } from '../../../utils/get-di';
-import { roundToGrid } from '../../../utils/grid';
 import { SelectRectSession } from '../../sessions/select-rect.session';
 import { SelectionMoveSession } from '../../sessions/selection-move.session';
 import { PointerInput } from '../pointer-input';
@@ -31,15 +30,7 @@ export class SelectTool implements BoardTool {
     // where one exists, so the gaps inside it are grabbable too; rect-less
     // selections (single click) fall back to element bounds.
     if (project.selectionManager.isGrabbedAt(localPoint)) {
-      host.startSession(
-        new SelectionMoveSession(
-          project,
-          project.floatingLayer.dragLayer,
-          project.selectionManager.selectedComponents,
-          project.selectionManager.selectedWires,
-          roundToGrid(localPoint, true)
-        )
-      );
+      host.startSession(SelectionMoveSession.forSelection(project, localPoint));
     } else {
       host.startSession(
         new SelectRectSession(

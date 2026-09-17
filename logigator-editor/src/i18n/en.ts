@@ -57,7 +57,8 @@ const en = {
     options: {
       fpsCounter: 'FPS Counter',
       showGrid: 'Show Grid',
-      autoStartSimulation: 'Auto-start simulation'
+      autoStartSimulation: 'Auto-start simulation',
+      dragSelectionInPanMode: 'Drag selection in Pan mode'
     }
   },
   minimap: {
