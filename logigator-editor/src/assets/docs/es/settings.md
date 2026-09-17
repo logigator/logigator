@@ -24,9 +24,9 @@ Elige uno del desplegable **Idioma**; la interfaz se actualiza al instante.
 Cuatro alternancias de encendido/apagado cambian cómo se comporta el tablero:
 
 - **Mostrar cuadrícula**: dibuja la cuadrícula punteada en el tablero. Activada por defecto. Desactívala para un lienzo más limpio; los componentes siguen ajustándose a la cuadrícula de cualquier modo.
-- **Contador de FPS**: muestra una pequeña lectura de fotogramas por segundo sobre el tablero. Desactivada por defecto; útil al comprobar el rendimiento en un circuito grande.
 - **Iniciar la simulación automáticamente**: cuando está activada (el valor predeterminado), pulsar **Iniciar simulación** empieza a ejecutar el circuito de inmediato. Desactívala para entrar en la [simulación](docs:simulation) en pausa, de modo que puedas avanzar paso a paso desde el primerísimo tick.
 - **Arrastrar la selección en modo Desplazar**: cuando está activada (el valor predeterminado), arrastrar con la herramienta **Desplazar** desde dentro de la selección actual mueve esa selección en lugar del tablero, así puedes recolocar algo sin cambiar de herramienta. Desactívala para que cada pulsación en modo Desplazar mueva el tablero.
+- **Contador de FPS**: muestra una pequeña lectura de fotogramas por segundo sobre el tablero. Desactivada por defecto; útil al comprobar el rendimiento en un circuito grande.
 
 ## Consejos de introducción
 
