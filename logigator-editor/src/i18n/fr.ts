@@ -972,7 +972,7 @@ const fr: TranslationSchema = {
           moveAround: {
             title: 'Se déplacer',
             textDesktop:
-              'Faites défiler pour zoomer, faites glisser avec le bouton droit pour vous déplacer.',
+              'Faites défiler pour zoomer, faites glisser avec le bouton droit ou le bouton central pour vous déplacer.',
             textCompact:
               'Pincez pour zoomer, faites glisser avec deux doigts pour vous déplacer.'
           },

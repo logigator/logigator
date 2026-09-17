@@ -951,7 +951,8 @@ const en = {
           },
           moveAround: {
             title: 'Move around',
-            textDesktop: 'Scroll to zoom, right-drag to pan.',
+            textDesktop:
+              'Scroll to zoom, drag with the right or middle button to pan.',
             textCompact: 'Pinch to zoom, drag with two fingers to pan.'
           },
           placeAnd: {

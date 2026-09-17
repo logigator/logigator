@@ -22,6 +22,10 @@ export interface PointerEventLike {
 const DOUBLE_CLICK_MS = 500;
 const DOUBLE_CLICK_SLOP = 6;
 
+/** Middle and right: the two buttons a press pans with, whatever the tool. */
+const MIDDLE_BUTTON = 1;
+const RIGHT_BUTTON = 2;
+
 export interface WheelEventLike {
   clientX: number;
   clientY: number;
@@ -29,14 +33,14 @@ export interface WheelEventLike {
   preventDefault(): void;
 }
 
-/** Viewport navigation the controller drives (right-drag pan, wheel zoom,
- *  two-finger pan/pinch). Deltas and centers are canvas-local CSS pixels. */
+/** Viewport navigation the controller drives (middle/right-drag pan, wheel
+ *  zoom, two-finger pan/pinch). Deltas and centers are canvas-local CSS px. */
 export interface PointerNavTarget {
   pan(delta: Point): void;
   zoomIn(center: Point): void;
   zoomOut(center: Point): void;
   zoomBy(factor: number, center: Point): void;
-  /** Continuous-render toggle around right-drag pans and touch gestures. */
+  /** Continuous-render toggle around drag pans and touch gestures. */
   setActive(active: boolean): void;
 }
 
@@ -70,8 +74,8 @@ export interface PointerControllerOptions {
  *
  * - Primary button: captured, streamed to the tool target from down to up.
  *   Click-vs-drag semantics live in the sessions.
- * - Right button: pan-only drag by successive position deltas; the canvas
- *   context menu is suppressed outright.
+ * - Middle and right button: pan-only drag by successive position deltas; the
+ *   canvas context menu and the middle press's autoscroll are suppressed.
  * - Touch: pointers feed the {@link MultiTouchGesture} first; a second finger
  *   hands it navigation and cancels the tool stream, so a finger never both
  *   operates a tool and navigates.
@@ -128,6 +132,15 @@ export class PointerController {
     canvas.addEventListener('contextmenu', (e) => e.preventDefault(), {
       signal
     });
+    // Chromium and Firefox start autoscroll from the middle press's mousedown,
+    // which would keep scrolling the board after the pan ends.
+    canvas.addEventListener(
+      'mousedown',
+      (e) => {
+        if (e.button === MIDDLE_BUTTON) e.preventDefault();
+      },
+      { signal }
+    );
   }
 
   public destroy(): void {
@@ -163,7 +176,7 @@ export class PointerController {
       this._capture(e.pointerId);
       this._countClick(e, local);
       this.opts.tool.down(this._input(e, local, project));
-    } else if (e.button === 2) {
+    } else if (e.button === MIDDLE_BUTTON || e.button === RIGHT_BUTTON) {
       this._panPointer = e.pointerId;
       this._panLast.copyFrom(local);
       this._capture(e.pointerId);

@@ -973,7 +973,7 @@ const de: TranslationSchema = {
           moveAround: {
             title: 'Navigieren',
             textDesktop:
-              'Scrollen zum Zoomen, mit rechter Maustaste ziehen zum Schwenken.',
+              'Scrollen zum Zoomen, mit rechter oder mittlerer Maustaste ziehen zum Schwenken.',
             textCompact:
               'Spreizen zum Zoomen, mit zwei Fingern ziehen zum Schwenken.'
           },

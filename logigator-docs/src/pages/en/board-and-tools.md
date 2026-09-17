@@ -7,7 +7,7 @@ The board is the grid where you build your circuit. This page covers how to move
 ## Getting around the board
 
 - **Zoom** — scroll the mouse wheel over the board, or pinch on a touch device. You can also use the zoom buttons in the toolbar, **View → Zoom In / Zoom Out**, or **View → Zoom 100%** to reset to actual size.
-- **Pan** — pick the **Pan** tool (the hand) and drag. You can also pan from _any_ tool by dragging with the **right mouse button**, so you rarely need to switch tools just to reposition. Dragging from inside the current selection moves the selection instead of the board — see **Drag selection in Pan mode** in the [editor settings](docs:settings) to turn that off.
+- **Pan** — pick the **Pan** tool (the hand) and drag. You can also pan from _any_ tool by dragging with the **right or middle mouse button**, so you rarely need to switch tools just to reposition. Dragging from inside the current selection moves the selection instead of the board — see **Drag selection in Pan mode** in the [editor settings](docs:settings) to turn that off.
 - **Touch** — drag with two fingers to pan and pinch to zoom at any time; a one-finger drag pans only while the Pan tool is active.
 
 The **status bar** at the bottom always shows a short reminder of what the active tool does, plus your cursor's position on the grid.

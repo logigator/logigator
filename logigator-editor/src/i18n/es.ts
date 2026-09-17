@@ -969,7 +969,7 @@ const es: TranslationSchema = {
           moveAround: {
             title: 'Moverse',
             textDesktop:
-              'Desplaza para hacer zoom, arrastra con el botón derecho para desplazarte.',
+              'Desplaza para hacer zoom, arrastra con el botón derecho o el botón central para desplazarte.',
             textCompact:
               'Pellizca para hacer zoom, arrastra con dos dedos para desplazarte.'
           },

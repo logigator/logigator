@@ -7,7 +7,7 @@ Die Arbeitsfläche ist das Raster, auf dem du deine Schaltung baust. Diese Seite
 ## Sich auf der Arbeitsfläche bewegen
 
 - **Zoomen** — scrolle mit dem Mausrad über der Arbeitsfläche oder spreize die Finger auf einem Touch-Gerät. Du kannst auch die Zoom-Schaltflächen in der Werkzeugleiste, **Ansicht → Einzoomen / Auszoomen** oder **Ansicht → Zoom 100%** verwenden, um auf die tatsächliche Größe zurückzusetzen.
-- **Schwenken** — wähle das Werkzeug **Schwenken** (die Hand) und ziehe. Du kannst auch aus _jedem_ Werkzeug heraus schwenken, indem du mit der **rechten Maustaste** ziehst, sodass du selten das Werkzeug wechseln musst, nur um die Ansicht zu verschieben. Ein Ziehen aus der aktuellen Auswahl heraus verschiebt diese Auswahl statt der Arbeitsfläche — schalte das unter **Auswahl im Schwenkmodus verschieben** in den [Editor-Einstellungen](docs:settings) aus.
+- **Schwenken** — wähle das Werkzeug **Schwenken** (die Hand) und ziehe. Du kannst auch aus _jedem_ Werkzeug heraus schwenken, indem du mit der **rechten oder mittleren Maustaste** ziehst, sodass du selten das Werkzeug wechseln musst, nur um die Ansicht zu verschieben. Ein Ziehen aus der aktuellen Auswahl heraus verschiebt diese Auswahl statt der Arbeitsfläche — schalte das unter **Auswahl im Schwenkmodus verschieben** in den [Editor-Einstellungen](docs:settings) aus.
 - **Touch** — ziehe jederzeit mit zwei Fingern zum Schwenken und spreize sie zum Zoomen; ein Ziehen mit einem Finger schwenkt nur, solange das Werkzeug Schwenken aktiv ist.
 
 Die **Statusleiste** am unteren Rand zeigt stets eine kurze Erinnerung daran, was das aktive Werkzeug tut, sowie die Position deines Cursors auf dem Raster.

@@ -106,7 +106,7 @@ circuit**, split between the component layer and `inspection/watch/`:
   the CSS-pixel viewport transform up to the canvas's DPR-sized backing store.
 - **`SubCircuitWatchComponent`** — the canvas; the breadcrumb trail renders in
   the hosting header via `titleParts`. Input runs through the board's own
-  `PointerController` (shared right-drag/wheel/pinch navigation) with a
+  `PointerController` (shared middle/right-drag/wheel/pinch navigation) with a
   `PanSession` as its tool, whose tap action routes back to the model. A level
   is fit-and-centred when it first shows; re-blits ride `render$` (engine
   changes), the project's `ticker$` (zoom, theme) and host resizes —

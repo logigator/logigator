@@ -7,7 +7,7 @@ El tablero es la cuadrícula donde construyes tu circuito. Esta página explica 
 ## Moverse por el tablero
 
 - **Zoom**: desplaza la rueda del ratón sobre el tablero, o pellizca en un dispositivo táctil. También puedes usar los botones de zoom de la barra de herramientas, **Vista → Acercar / Alejar**, o **Vista → Zoom 100%** para restablecer el tamaño real.
-- **Desplazar**: elige la herramienta **Desplazar** (la mano) y arrastra. También puedes desplazarte desde _cualquier_ herramienta arrastrando con el **botón derecho del ratón**, así que rara vez necesitas cambiar de herramienta solo para reposicionar. Arrastrar desde dentro de la selección actual mueve la selección en lugar del tablero; puedes desactivarlo con **Arrastrar la selección en modo Desplazar** en los [ajustes del editor](docs:settings).
+- **Desplazar**: elige la herramienta **Desplazar** (la mano) y arrastra. También puedes desplazarte desde _cualquier_ herramienta arrastrando con el **botón derecho o el botón central del ratón**, así que rara vez necesitas cambiar de herramienta solo para reposicionar. Arrastrar desde dentro de la selección actual mueve la selección en lugar del tablero; puedes desactivarlo con **Arrastrar la selección en modo Desplazar** en los [ajustes del editor](docs:settings).
 - **Táctil**: arrastra con dos dedos para desplazarte y pellizca para hacer zoom en cualquier momento; un arrastre con un solo dedo solo se desplaza mientras la herramienta Desplazar está activa.
 
 La **barra de estado** de la parte inferior siempre muestra un breve recordatorio de lo que hace la herramienta activa, además de la posición de tu cursor en la cuadrícula.
