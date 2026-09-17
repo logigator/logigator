@@ -28,7 +28,10 @@ export class PanSession implements DragSession {
     private readonly project: Project,
     startGlobal: Point,
     clickPoint: Point,
-    private readonly onTap?: (clickPoint: Point) => void
+    private readonly onTap?: (clickPoint: Point) => void,
+    /** Live additive modifier: the tap joins what it hits to the selection
+     *  instead of replacing the selection with it. */
+    private readonly isAdditive?: () => boolean
   ) {
     this._lastGlobal = startGlobal.clone();
     this._startGlobal = startGlobal.clone();
@@ -59,7 +62,8 @@ export class PanSession implements DragSession {
     }
     this.project.selectionManager.commit(
       new Rectangle(this._clickPoint.x, this._clickPoint.y, 0, 0),
-      WorkMode.SELECT
+      WorkMode.SELECT,
+      this.isAdditive?.() ?? false
     );
   }
 

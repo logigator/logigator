@@ -79,10 +79,10 @@ instance, so the reported constraints are the ones a document is validated
 against; an adjustable type's port counts come from an option whose `number`
 descriptor gives the span.
 
-An `OptionDescriptor` is keyed by `kind`: `number` (`min`/`max`), `select`
-(`values`), `text` (`maxLength`, `forbiddenChars` as a regex source string),
-`textarea` (`maxLength`), `memory` (base64 bit-packed blob), `unknown`. Both
-select schema kinds flatten to one `select` — button-versus-dropdown is a
+An `OptionDescriptor` is keyed by `kind`: `number` (`min`/`max`, integers),
+`select` (`values`), `text` (`maxLength`, `forbiddenChars` as a regex source
+string), `textarea` (`maxLength`), `memory` (base64 bit-packed blob), `unknown`.
+Both select schema kinds flatten to one `select` — button-versus-dropdown is a
 rendering choice a driver has no use for. `hidden` marks system-managed options
 (e.g. a plug's index).
 

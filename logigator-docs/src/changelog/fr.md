@@ -3,6 +3,71 @@
 Toutes les modifications notables de l'éditeur Logigator sont consignées ici. La
 version la plus récente est indiquée en premier.
 
+## 2.2.0 — 2026-09-17
+
+### Fonctionnalités
+
+- **Ajouter à une sélection sans l'effacer.** Maintenez Ctrl — ⌘ sur un Mac — et
+  un clic ajoute à la sélection le composant ou le fil sous le pointeur, ou l'en
+  retire, tandis qu'un cadre de sélection ajoute ce qu'il couvre à ce que vous
+  aviez déjà. La touche est réassignable dans les raccourcis, à côté de « Couper
+  les fils au bord de la sélection ».
+- **Sélectionner sans quitter l'Outil fil.** Un appui qui n'atteint ni un port ni
+  une jonction sélectionne désormais le plus petit élément sous le pointeur, pour
+  le supprimer, le copier ou le déplacer sans changer d'outil.
+- **Déplacer une sélection avec l'outil Déplacement.** Faire glisser la sélection
+  actuelle la déplace au lieu de déplacer le plan de travail ; partout ailleurs,
+  l'appui déplace la vue comme avant. Le nouveau réglage « Faire glisser la
+  sélection en mode Déplacement » le désactive.
+
+### Correctifs
+
+- Un double clic avec l'Outil fil annule l'appui qu'il répète : un double clic
+  sur un port trace le fil que vous visiez et ne laisse aucune bulle d'inversion
+  isolée.
+- Un clic dans l'espace vide à l'intérieur de votre sélection ne l'efface plus.
+- Les menus longs et leurs sous-menus défilent au lieu de dépasser sous le bas de
+  la fenêtre sur un petit écran.
+- Sur les plateformes Apple avec des navigateurs basés sur Chromium, ⌘ est
+  reconnu là où Ctrl était affiché auparavant.
+
+## 2.1.3 — 2026-09-16
+
+### Correctifs
+
+- Une simulation n'échoue plus au démarrage lorsque le réglage numérique d'un
+  composant contient une décimale, comme un retard d'horloge de 1,9, ou dépasse
+  ce que la simulation accepte. Un circuit enregistré ainsi se charge avec la
+  valeur arrondie et plafonnée, et s'enregistre ensuite sous forme de nombre
+  entier.
+- Placer un composant personnalisé conserve désormais la direction et les options
+  définies dans le panneau des paramètres, au lieu de toujours le déposer dans la
+  même orientation et de les ignorer.
+- Un composant que vous êtes sur le point de placer peut être tourné avant d'être
+  déposé : appuyez sur R ou Shift+R, ou utilisez les boutons de rotation de la
+  barre d'outils. Un placement que vous faites déjà glisser tourne aussi, et le
+  prochain composant de ce type démarre dans la direction dans laquelle vous avez
+  tourné celui-ci.
+
+## 2.1.2 — 2026-09-10
+
+### Correctifs
+
+- La rotation d'un téléphone ou d'une tablette ne fait plus planter l'éditeur.
+- Réparer les fils pendant une simulation ne fait plus planter l'éditeur. La
+  simulation est arrêtée au préalable.
+- Un lien de partage vers un composant personnalisé l'ouvre désormais comme vos
+  propres composants : nommé dans la barre de titre et prêt à être cloné vers
+  vos composants.
+- Revenir en arrière avec le bouton du navigateur ne laisse plus les menus, les
+  listes déroulantes et les bulles du tutoriel bloqués.
+- Les liens dans l'aide et le journal des modifications de l'éditeur mènent
+  désormais au bon titre dans toutes les langues.
+- Là où deux extrémités de ports se rejoignent, un appui avec l'outil fil
+  inverse désormais le port du côté où vous avez appuyé, et non celui d'en face.
+- L'éditeur reste utilisable lorsqu'un déplacement ou un collage ne peut pas
+  aboutir.
+
 ## 2.1.1 — 2026-08-31
 
 ### Correctifs

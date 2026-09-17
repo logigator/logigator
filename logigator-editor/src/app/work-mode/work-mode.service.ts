@@ -3,6 +3,7 @@ import { WorkMode } from './work-mode.enum';
 import { ComponentType, Direction } from '@logigator/core';
 import { ComponentProviderService } from '../components/component-provider.service';
 import { LoggingService } from '../logging/logging.service';
+import { rotateDirection } from '../utils/rotation';
 
 @Injectable({
   providedIn: 'root'
@@ -25,8 +26,12 @@ export class WorkModeService {
       : null;
   });
 
-  // Sticky per-type placement direction, so consecutive placements keep facing
-  // the way the user chose. Session-lifetime, defaulting to East.
+  // Sticky per-type placement direction: written by the settings panel and by
+  // rotate requests while a placement is armed, and picked up by every fresh
+  // placement ghost of that type — so consecutive placements keep facing the
+  // way the user chose. Session-lifetime, defaulting to East for types never
+  // adjusted. Keyed by the palette entry's type id: a custom's **master**, the
+  // id every ghost of it is built from.
   private readonly _placementDirections = signal<
     ReadonlyMap<ComponentType, Direction>
   >(new Map());
@@ -40,6 +45,20 @@ export class WorkModeService {
     const next = new Map(this._placementDirections());
     next.set(type, value);
     this._placementDirections.set(next);
+  }
+
+  /**
+   * Steps the sticky placement direction for `type` clockwise by `steps`
+   * quarter-turns and returns the result — the rotate shortcut fired while a
+   * placement is armed, turning what the next ghost of that type would face.
+   */
+  public rotatePlacementDirection(
+    type: ComponentType,
+    steps: number
+  ): Direction {
+    const direction = rotateDirection(this.placementDirectionFor(type), steps);
+    this.setPlacementDirection(type, direction);
+    return direction;
   }
 
   public setMode(mode: WorkMode): void {

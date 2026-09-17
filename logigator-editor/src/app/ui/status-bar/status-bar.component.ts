@@ -1,5 +1,5 @@
 import { Component, computed, inject, input } from '@angular/core';
-import { formatShortcutLabel } from '@logigator/ui';
+import { bindingLabel } from '../../shortcuts/binding-label';
 import { WorkModeService } from '../../work-mode/work-mode.service';
 import { TranslationService } from '../../translation/translation.service';
 import { Point } from 'pixi.js';
@@ -47,13 +47,15 @@ export class StatusBarComponent {
     () => `statusBar.modes.${this.workModeService.mode()}` as const
   );
 
-  /** The select-mode hint's hold-to-scissor key, tracking rebinds live. */
-  protected readonly scissorKeyLabel = computed(() => {
-    const binding = this.shortcutService.binding(
-      ShortcutActionEnum.SELECT_SCISSOR
-    )();
-    return binding ? formatShortcutLabel(binding) : '–';
-  });
+  /** The hints' hold-style keys, tracking rebinds live. */
+  protected readonly scissorKeyLabel = bindingLabel(
+    this.shortcutService,
+    ShortcutActionEnum.SELECT_SCISSOR
+  );
+  protected readonly additiveKeyLabel = bindingLabel(
+    this.shortcutService,
+    ShortcutActionEnum.SELECT_ADDITIVE
+  );
 
   protected readonly selectedComponentName = computed((): LocalizableText => {
     const comp = this.workModeService.selectedComponentType();

@@ -24,8 +24,9 @@ describe('Grid chunk pool', () => {
     grid.resizeViewport(new Point(600, 600));
     expect(grid.children.length).toBe(9);
 
-    // One axis grows while the other shrinks, as on a device rotation: the
-    // only way a product of two factors >= 2 falls by exactly one.
+    // One axis grows while the other shrinks — the only way the chunk count
+    // (a product of two factors >= 2) falls by exactly one, which is what a
+    // device rotation does.
     grid.resizeViewport(new Point(1100, 400));
 
     expect(chunksFor(1100) * chunksFor(400)).toBe(8);

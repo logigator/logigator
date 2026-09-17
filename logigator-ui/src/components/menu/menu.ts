@@ -18,7 +18,7 @@ import {
   createConnectedOverlay,
   externalTeardown
 } from '../../internal/overlay';
-import { MENU_ITEM_CLASS, MenuItem } from './menu-item.model';
+import { MENU_ITEM_CLASS, MENU_PANEL_CLASS, MenuItem } from './menu-item.model';
 
 /** Edge-aligned, not centred: below/right first, then below/left, then flips. */
 const MENU_POSITIONS: ConnectedPosition[] = [
@@ -53,11 +53,14 @@ const MENU_POSITIONS: ConnectedPosition[] = [
 ];
 
 /**
- * A popup menu over `cdk/overlay`. A trigger calls `toggle($event)`, which
- * anchors to the event target, or `hide()`; `onShow`/`onHide` let the trigger
- * reflect the open state. An optional `#start` block sits above the `model`
- * items, and `#item` replaces a row's default icon+label chrome. Items run
- * their `command` and close; outside-click and Escape dismiss.
+ * A popup menu over `cdk/overlay`. A trigger calls `toggle($event)` (anchors to
+ * the event target) / `hide()`; `onShow`/`onHide` fire on open/close so the
+ * trigger can reflect the open state. Renders an optional projected `#start`
+ * block (large non-menu content) above the `model` items; each item uses the
+ * `#item` slot (`$implicit` = the item) or default icon+label chrome. Items run
+ * their `command` and close; dismisses on outside-click or Escape. Keyboard
+ * focus roves the items with the arrow keys. A panel taller than the space
+ * beside its anchor scrolls.
  */
 @Component({
   selector: 'lg-menu',
@@ -68,7 +71,7 @@ const MENU_POSITIONS: ConnectedPosition[] = [
         role="menu"
         tabindex="-1"
         lgFadeIn
-        class="min-w-48 rounded-md border border-border bg-content p-1 shadow-md focus:outline-none"
+        [class]="panelClass"
         (keydown)="onKeydown($event)"
       >
         @if (startTemplate(); as tpl) {
@@ -118,6 +121,7 @@ export class LgMenu implements OnDestroy {
   private readonly panel = viewChild.required<TemplateRef<unknown>>('panel');
 
   protected readonly itemClass = MENU_ITEM_CLASS;
+  protected readonly panelClass = MENU_PANEL_CLASS;
 
   private readonly overlay = inject(Overlay);
   private readonly viewContainerRef = inject(ViewContainerRef);

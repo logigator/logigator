@@ -4,6 +4,7 @@ import { of, scan, startWith, switchMap } from 'rxjs';
 import { ProjectService } from './project.service';
 import { SelectionInspectorService } from './selection-inspector.service';
 import { ClipboardService } from '../clipboard/clipboard.service';
+import { WorkModeService } from '../work-mode/work-mode.service';
 
 /**
  * Whether each editing command is currently a no-op, so a surface can disable
@@ -17,6 +18,7 @@ export class EditorCommandStateService {
   private readonly projectService = inject(ProjectService);
   private readonly selectionInspector = inject(SelectionInspectorService);
   private readonly clipboardService = inject(ClipboardService);
+  private readonly workModeService = inject(WorkModeService);
 
   private readonly historyTick = toSignal(
     toObservable(this.projectService.activeProject).pipe(
@@ -72,8 +74,20 @@ export class EditorCommandStateService {
     );
   });
 
-  /** True when anything is selected. */
+  /** True when anything is selected — gates copy/cut/delete. */
   public readonly hasSelection = this.selectionInspector.hasSelection;
+
+  /**
+   * True when a rotate request has a target: the selection, or an armed
+   * placement (the pending component turns instead — see
+   * `BoardTool.rotate`). Placement is armed exactly while a component type is
+   * selected for placing, which the mode switch clears.
+   */
+  public readonly canRotate = computed<boolean>(
+    () =>
+      this.hasSelection() ||
+      this.workModeService.selectedComponentType() !== null
+  );
 
   /** True when a project is open and the clipboard holds a copied snapshot. */
   public readonly canPaste = computed<boolean>(

@@ -3,6 +3,66 @@
 All notable changes to the Logigator editor are recorded here. The most recent
 release is listed first.
 
+## 2.2.0 — 2026-09-17
+
+### Features
+
+- **Add to a selection without clearing it.** Hold Ctrl — ⌘ on a Mac — and a
+  click adds the component or wire under the pointer to the selection, or takes
+  it back out, while a selection box adds what it covers to what you already
+  had. Rebind the key in the shortcut settings, beside Cut Wires at Selection
+  Edge.
+- **Select without leaving the Wire Tool.** A tap that hits neither a port nor a
+  crossing now selects the smallest element under the pointer, so you can delete,
+  copy or nudge it in place.
+- **Move a selection with the Pan tool.** Dragging the current selection moves it
+  instead of panning the board; a press anywhere else pans as before. The new
+  "Drag selection in Pan mode" setting turns this back off.
+
+### Fixes
+
+- A double click with the Wire Tool takes back the tap it repeats, so a double
+  click on a port draws the wire you were reaching for and leaves no stray
+  negation bubble behind.
+- Clicking the empty space inside your selection's outline no longer clears it.
+- Long menus and their submenus scroll instead of running off the bottom of the
+  window on a short screen.
+- On Apple platforms in Chromium-based browsers, ⌘ is recognized where Ctrl was
+  shown before.
+
+## 2.1.3 — 2026-09-16
+
+### Fixes
+
+- Starting a simulation no longer fails when a component's number setting holds a
+  decimal value, such as a clock delay of 1.9, or one larger than the simulation
+  accepts. Such a circuit loads with the value rounded and capped, and saves back
+  as a whole number.
+- Placing a custom component now keeps the direction and the options you set for
+  it in the settings panel, instead of always dropping it facing the same way and
+  discarding them.
+- A component you are about to place can be turned before you drop it: press R or
+  Shift+R, or use the rotate buttons in the tool bar. A placement you are already
+  dragging turns too, and the next component of that type starts in the direction
+  you turned this one.
+
+## 2.1.2 — 2026-09-10
+
+### Fixes
+
+- Rotating a phone or tablet no longer crashes the editor.
+- Repairing wires while a simulation is running no longer crashes the editor. The
+  simulation is stopped first.
+- A share link to a custom component now opens it the way your own components
+  open: named in the title bar, and ready to be cloned into your components.
+- Coming back with the browser's back button no longer leaves menus, dropdowns
+  and tutorial hints stuck.
+- Links inside the editor's help and changelog now jump to the right heading in
+  every language.
+- Where two port tips meet, tapping with the wire tool now inverts the port on
+  the side you tapped instead of the one facing it.
+- The editor stays usable when a move or a paste cannot be completed.
+
 ## 2.1.1 — 2026-08-31
 
 ### Fixes

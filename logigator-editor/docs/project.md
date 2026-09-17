@@ -151,6 +151,12 @@ unselected wires into the highlight. `suppressTintForRender()` neutralizes every
 highlight and returns a restorer, so an offscreen render (minimap, image export,
 server preview) never bakes it into committed content.
 
+`select(components, wires)` is the batch path a committed paste lands its
+instances through; `evict(element)` is what `Project.removeComponent` /
+`removeWire` call before `destroy()`. `selectionVersion` is a counter that
+changes whenever the selection does — how provisional state elsewhere (the wire
+tool's double-click take-back) tells whether what it recorded still stands.
+
 ### `commit` behavior
 
 **Rectangle drag** clears, selects every component the rect touches, then in
@@ -162,7 +168,21 @@ pieces. Cut originals are removed and pieces added directly, and the pair is
 **Single click** builds a 1×1 grid-unit rect around the point (PixiJS
 `Rectangle.intersects()` fails on a zero-area rect) and post-filters with
 `gridBounds.contains`. When a component and a wire both match, the smaller
-bounding-box area wins — the more precisely-aimed target.
+bounding-box area wins — the more precisely-aimed target. The hit comes from
+`_pickAt`, a `ClickHit` naming its element and kind, so the membership and
+toggle paths never resolve it a second time.
+
+`commit`'s `additive` flag (the hold-style modifier) changes what a click means:
+the element under the point **toggles** — in when it was out, out when it was in
+— and a marquee **joins** what it touches instead of replacing the selection; a
+live scissor cut is retracted either way, once before the hit is resolved (the
+clear may replace the wires it cut) and once with the selection standing.
+`clickInSelection(point, additive)` is the same click for a press **on** the
+selection that never moved — `SelectionMoveSession`'s tap fallback, which the
+select, hand and wire tools all open: it narrows the selection to the element
+under the press, toggles it with the modifier, and leaves the selection alone
+when the press landed on the gap inside a marquee, so aiming beside a small
+element never clears everything.
 
 ### Cut lifecycle
 

@@ -26,6 +26,12 @@ describe('validateOptionValue', () => {
     expect(validateOptionValue(number, '4')).toMatch('finite');
   });
 
+  it('rejects a fraction that is otherwise in range', () => {
+    // In bounds and finite, so only the integer rule refuses it — the option
+    // setters round, and accepting it would report success while storing 5.
+    expect(validateOptionValue(number, 4.5)).toMatch('integer');
+  });
+
   it('accepts only listed select values, both kinds', () => {
     const values = [{ value: 4 }, { value: 8 }];
     for (const kind of ['select-button', 'select-dropdown'] as const) {

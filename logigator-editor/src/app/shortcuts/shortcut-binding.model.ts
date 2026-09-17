@@ -1,3 +1,4 @@
+import { isApplePlatform } from '../utils/platform';
 import { ShortcutActionEnum } from './shortcut-action.enum';
 
 export interface ShortcutBinding {
@@ -122,6 +123,14 @@ export const DEFAULT_SHORTCUTS: Record<ShortcutActionEnum, ShortcutBinding> = {
   },
   [ShortcutActionEnum.SELECT_SCISSOR]: {
     key: 'Alt',
+    ctrl: false,
+    shift: false,
+    alt: false
+  },
+  // The platform's own primary modifier: ⌘ on Apple platforms, where a bare
+  // Ctrl is the system's secondary click.
+  [ShortcutActionEnum.SELECT_ADDITIVE]: {
+    key: isApplePlatform() ? 'Meta' : 'Control',
     ctrl: false,
     shift: false,
     alt: false

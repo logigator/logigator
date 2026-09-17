@@ -172,7 +172,11 @@ dependencies from its placed snapshots' `source.id`.
 
 The palette lists **masters**. Committing a placement resolves the master config
 to `registry.snapshot(...)`, so the instance is frozen at place time; placing
-again after editing the master yields a new snapshot with the new shape.
+again after editing the master yields a new snapshot with the new shape. The
+ghost is built from the **master** config and stays on it for the whole gesture,
+so what the settings panel writes while placing (options, direction) reaches the
+instance — the commit carries it onto the snapshot through
+`Component.serialize`/`deserialize`.
 
 ## Per-instance update
 

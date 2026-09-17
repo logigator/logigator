@@ -25,7 +25,10 @@ export class SelectRectSession implements DragSession {
     private readonly parent: Container,
     private readonly startPos: Point,
     private readonly mode: WorkMode,
-    private readonly scissorKey?: ScissorKeyState
+    private readonly scissorKey?: ScissorKeyState,
+    /** Live additive modifier, read at release: the marquee joins what it
+     *  touches to the selection instead of replacing it. */
+    private readonly isAdditive?: () => boolean
   ) {
     this.selectRect = new Graphics();
     this._scissorDrawn = this._isScissor();
@@ -53,7 +56,8 @@ export class SelectRectSession implements DragSession {
     this.selectRect.destroy();
     this.project.selectionManager.commit(
       rect,
-      this._isScissor() ? WorkMode.SELECT_EXACT : WorkMode.SELECT
+      this._isScissor() ? WorkMode.SELECT_EXACT : WorkMode.SELECT,
+      this.isAdditive?.() ?? false
     );
   }
 

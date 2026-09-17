@@ -58,14 +58,14 @@
     "format:fix": "prettier . -lw"
   },
   "devDependencies": {
-    "@angular-eslint/builder": "^22.1.0",
-    "@angular/cli": "^22.1.2",
+    "@angular-eslint/builder": "^22.5.0",
+    "@angular/cli": "^22.1.8",
     "@eslint/js": "^10.0.1",
-    "angular-eslint": "^22.1.0",
+    "angular-eslint": "^22.5.0",
     "concurrently": "^9.2.4",
-    "eslint": "^10.9.1",
-    "prettier": "^3.9.6",
+    "eslint": "^10.10.0",
+    "prettier": "^3.9.7",
     "typescript": "~6.0.3",
-    "typescript-eslint": "^8.68.0"
+    "typescript-eslint": "^8.70.0"
   }
 }

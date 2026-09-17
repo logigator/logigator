@@ -19,15 +19,19 @@ import { ComponentProviderService } from '../../components/component-provider.se
 import { ToastService } from '../../logging/toast.service';
 import { LoggingService } from '../../logging/logging.service';
 import { TranslationService } from '../../translation/translation.service';
+import { WorkModeService } from '../../work-mode/work-mode.service';
 
 export class ComponentPlacementSession implements DragSession {
   // A drop onto a colliding area clears the ghost rather than freezing it.
   readonly discardOnInvalidRelease = true;
 
   private readonly _ghost: PlacementGhost;
-  // The palette hides masters that would cycle, but a stale
-  // `componentToPlace` can still reach here. Decided up front so onEnd can
-  // refuse to commit.
+  // The config the palette armed — the master, for a custom — kept for the
+  // sticky placement direction its type id keys.
+  private readonly _config: ComponentConfig;
+  // Defense in depth: the palette already hides masters that would cycle while
+  // editing one, but a master may still reach here (stale `componentToPlace`,
+  // future paste). Decided up front so onEnd can refuse to commit.
   private readonly _wouldCycle: boolean;
 
   constructor(
@@ -37,11 +41,11 @@ export class ComponentPlacementSession implements DragSession {
     placeConfig: ComponentConfig
   ) {
     this._wouldCycle = wouldCyclePlacement(project, placeConfig);
-    // No point snapshotting a master that will not be committed.
-    const config = this._wouldCycle
-      ? placeConfig
-      : ComponentPlacementSession._resolvePlacementConfig(placeConfig);
-    this._ghost = new PlacementGhost(project, dragLayer, config, startPos);
+    this._config = placeConfig;
+    // The ghost is built from the palette config and stays on it for the whole
+    // gesture, so what the settings panel writes while placing — options,
+    // direction — lands on the very config the commit builds from.
+    this._ghost = new PlacementGhost(project, dragLayer, placeConfig, startPos);
   }
 
   onMove(input: PointerInput): void {
@@ -50,6 +54,15 @@ export class ComponentPlacementSession implements DragSession {
 
   canEnd(): boolean {
     return !this._ghost.hasCollision;
+  }
+
+  /** A rotate request mid-drag turns the ghost where it stands. */
+  rotate(steps: number): void {
+    const direction = getStaticDI(WorkModeService).rotatePlacementDirection(
+      this._config.type,
+      steps
+    );
+    this._ghost.setDirection(direction);
   }
 
   onEnd(): void {
@@ -62,24 +75,34 @@ export class ComponentPlacementSession implements DragSession {
       return;
     }
 
-    // Splits any wire whose interior passes under one of the ports.
+    const ghost = this._ghost.component;
+    // The instance the commit adds: a built-in is the ghost itself, a custom is
+    // re-frozen onto a placement snapshot.
+    const placed = ComponentPlacementSession._freeze(ghost);
+
+    // Splits any wire whose interior passes under one of the placed component's ports.
     const { toAdd, toRemove } = this.project.topology.integrate({
-      addedComponentPorts: this._ghost.component.connectionPoints
+      addedComponentPorts: placed.connectionPoints
     });
 
-    // Actions snapshot in their constructors, so build before mutating, then
-    // materialize and register. The ghost itself becomes the placed component.
+    // The actions snapshot in their constructors, so build them before the
+    // mutations, then materialize the final state directly and register.
     const action = new ActionContainer();
     if (toRemove.length > 0) {
       action.add(new RemoveWiresAction(...toRemove));
     }
-    action.add(new AddComponentsAction(this._ghost.component));
+    action.add(new AddComponentsAction(placed));
     if (toAdd.length > 0) {
       action.add(new AddWiresAction(...toAdd));
     }
 
+    // The ghost lands itself, minus its preview look; a frozen replacement is
+    // a separate instance, so the preview goes away instead.
+    if (placed === ghost) this._ghost.release();
+    else this._ghost.destroy();
+
     for (const w of toRemove) this.project.removeWire(w.id);
-    this.project.addComponent(this._ghost.release());
+    this.project.addComponent(placed);
     for (const w of toAdd) this.project.addWire(w);
 
     this.project.actionManager.register(action);
@@ -98,20 +121,26 @@ export class ComponentPlacementSession implements DragSession {
   }
 
   /**
-   * The palette lists custom masters, but a placed instance must wrap a frozen
-   * snapshot of the master's state at place time, so a master is snapshotted
-   * here and placed from the snapshot's config. Everything else passes through.
+   * The palette lists custom **masters**, but a placed instance must wrap a
+   * **frozen snapshot** of the master's current state (snapshot-at-place-time):
+   * placing the same master after editing it yields a fresh snapshot with the
+   * new shape, and the placed instance never follows later master edits.
+   *
+   * The ghost was built from the palette config, so freezing round-trips it
+   * through the serializer: position, direction, options and negations carry
+   * onto a fresh snapshot-config instance, and a setting added later is carried
+   * with no code here — every option already round-trips for save and undo.
+   * Built-ins (and snapshot configs) place as-is.
    */
-  private static _resolvePlacementConfig(
-    config: ComponentConfig
-  ): ComponentConfig {
+  private static _freeze(component: Component): Component {
     const registry = getStaticDI(CustomComponentRegistry);
-    const def = registry.getDefinition(config.type);
-    if (def?.kind !== 'master') return config;
-    const snapshot = registry.snapshot(def.typeId);
-    return (
-      getStaticDI(ComponentProviderService).getComponent(snapshot.typeId) ??
-      config
+    const def = registry.getDefinition(component.config.type);
+    if (def?.kind !== 'master') return component;
+    const config = getStaticDI(ComponentProviderService).getComponent(
+      registry.snapshot(def.typeId).typeId
     );
+    return config
+      ? Component.deserialize(Component.serialize(component), config)
+      : component;
   }
 }

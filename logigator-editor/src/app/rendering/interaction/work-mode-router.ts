@@ -264,8 +264,11 @@ export class WorkModeRouter implements PointerToolTarget, ToolHost {
   }
 
   /**
-   * An active session with turnable content spins in place; otherwise the
-   * committed selection rotates. Inert in simulation mode.
+   * Routes a rotate request (shortcut or toolbar/selection-bar button): an
+   * active session with turnable content spins in place, a tool holding only a
+   * hover preview turns that (the armed placement ghost); otherwise the
+   * committed selection rotates (see _startSelectionRotate). Inert in
+   * simulation mode — the editing lock applies.
    */
   private _onRotate(steps: number): void {
     if (!this._project || this._mode === WorkMode.SIMULATION) return;
@@ -274,6 +277,7 @@ export class WorkModeRouter implements PointerToolTarget, ToolHost {
       this._commitIfFloatingAndValid();
       return;
     }
+    if (this._activeTool?.rotate?.(steps)) return;
     this._startSelectionRotate(steps);
   }
 
@@ -301,13 +305,7 @@ export class WorkModeRouter implements PointerToolTarget, ToolHost {
     const selection = project.selectionManager;
     if (selection.isEmpty) return;
 
-    const session = new SelectionMoveSession(
-      project,
-      project.floatingLayer.dragLayer,
-      selection.selectedComponents,
-      selection.selectedWires,
-      null
-    );
+    const session = SelectionMoveSession.forSelection(project, null);
     session.rotate(steps);
     if (session.canEnd()) {
       session.onEnd();
@@ -338,13 +336,7 @@ export class WorkModeRouter implements PointerToolTarget, ToolHost {
     const selection = project.selectionManager;
     if (selection.isEmpty) return;
 
-    const session = new SelectionMoveSession(
-      project,
-      project.floatingLayer.dragLayer,
-      selection.selectedComponents,
-      selection.selectedWires,
-      null
-    );
+    const session = SelectionMoveSession.forSelection(project, null);
     session.moveBy(dx, dy);
     if (session.canEnd()) {
       session.onEnd();

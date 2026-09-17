@@ -521,9 +521,10 @@ export class EditorMenuService {
   }
 
   /**
-   * Which kind of read-only **share** is open as main, or `null` for anything
-   * else — a share is the only case that can be cloned into the user's own
-   * library. The kind decides both the label and the clone endpoint.
+   * Which kind of read-only **share** is open as main, or `null` when the main
+   * slot holds something else — a share is the only case that can be cloned
+   * into the user's own cloud library. Both kinds open as main, and the kind
+   * decides the label as well as the endpoint the clone goes through.
    */
   private cloneableShareKind(): 'project' | 'comp' | null {
     const project = this.projectService.mainProject();

@@ -13,7 +13,14 @@ export interface PointerEventLike {
   button: number;
   clientX: number;
   clientY: number;
+  /** `PointerEvent.timeStamp` — the clock the click count is measured on. */
+  timeStamp: number;
 }
+
+/** Time window (ms) and screen-space slop (canvas-local CSS px) within which a
+ *  primary press continues the previous one into a click run. */
+const DOUBLE_CLICK_MS = 500;
+const DOUBLE_CLICK_SLOP = 6;
 
 export interface WheelEventLike {
   clientX: number;
@@ -82,6 +89,12 @@ export class PointerController {
   private _panPointer: number | null = null;
   private readonly _panLast = new Point();
 
+  // Click counting, the DOM's rule (see PointerInput.clickCount): a primary
+  // press within the window and slop of the previous one continues its run.
+  private _clickCount = 0;
+  private _lastDownTime = 0;
+  private readonly _lastDownLocal = new Point();
+
   constructor(private readonly opts: PointerControllerOptions) {
     this._gesture = new MultiTouchGesture({
       pan: (delta) => opts.nav.pan(delta),
@@ -148,6 +161,7 @@ export class PointerController {
     if (e.button === 0) {
       this._toolPointer = e.pointerId;
       this._capture(e.pointerId);
+      this._countClick(e, local);
       this.opts.tool.down(this._input(e, local, project));
     } else if (e.button === 2) {
       this._panPointer = e.pointerId;
@@ -243,6 +257,27 @@ export class PointerController {
     return new Point(e.clientX - rect.left, e.clientY - rect.top);
   }
 
+  /**
+   * Advances the click run for a primary press: one within the window and slop
+   * of the previous press carries the run on, anything else starts a new one.
+   */
+  private _countClick(e: PointerEventLike, local: Point): void {
+    const dx = local.x - this._lastDownLocal.x;
+    const dy = local.y - this._lastDownLocal.y;
+    // A run cannot start before the first press, so the anchor means nothing
+    // until `_clickCount` has been set at least once.
+    const continues =
+      this._clickCount > 0 &&
+      e.timeStamp - this._lastDownTime <= DOUBLE_CLICK_MS &&
+      dx * dx + dy * dy <= DOUBLE_CLICK_SLOP * DOUBLE_CLICK_SLOP;
+
+    this._clickCount = continues ? this._clickCount + 1 : 1;
+    this._lastDownTime = e.timeStamp;
+    // The very same point travels on as `input.global`, which receivers are
+    // free to mutate — keep the anchor out of their reach.
+    this._lastDownLocal.copyFrom(local);
+  }
+
   private _input(
     e: PointerEventLike,
     local: Point,
@@ -252,7 +287,8 @@ export class PointerController {
       pointerId: e.pointerId,
       pointerType: e.pointerType,
       global: local,
-      grid: canvasToGrid(project, local)
+      grid: canvasToGrid(project, local),
+      clickCount: this._clickCount
     };
   }
 

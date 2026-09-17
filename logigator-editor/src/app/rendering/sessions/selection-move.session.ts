@@ -64,12 +64,44 @@ export class SelectionMoveSession implements DragSession {
   // commit/cancel paths treat the session as a pure move.
   private _netSteps = 0;
 
+  // Whether the gesture changed anything at all — a pointer move, an arrow-key
+  // step or a turn. Monotonic, like the sibling sessions' click-vs-drag flags:
+  // what returns to where it started is still not a click.
+  private _edited = false;
+
+  /**
+   * The project's committed selection as a session, to drag from `grabPoint`
+   * (a grid-space press) or floating without one (`null`).
+   */
+  public static forSelection(
+    project: Project,
+    grabPoint: Point | null,
+    onTap?: () => void
+  ): SelectionMoveSession {
+    const selection = project.selectionManager;
+    return new SelectionMoveSession(
+      project,
+      project.floatingLayer.dragLayer,
+      selection.selectedComponents,
+      selection.selectedWires,
+      grabPoint ? roundToGrid(grabPoint, true) : null,
+      onTap
+    );
+  }
+
   constructor(
     private readonly project: Project,
     private readonly dragLayer: Container<Component | Wire | ConnectionPoint>,
     components: ReadonlySet<Component>,
     wires: ReadonlySet<Wire>,
-    pointerStart: Point | null
+    pointerStart: Point | null,
+    /**
+     * What a press on the selection that never moved instead was — a click.
+     * The tools' additive modifier lives here, not in a bypass of this
+     * session: pressing the selection and dragging moves it with or without
+     * the modifier, and pressing it and letting go toggles.
+     */
+    private readonly onTap?: () => void
   ) {
     this._components = [...components];
     this._wires = [...wires];
@@ -129,15 +161,36 @@ export class SelectionMoveSession implements DragSession {
     // Hit-test and anchor in element space: subtracting the layer offset maps
     // the cursor onto the stored element positions.
     const local = new Point(input.grid.x - offset.x, input.grid.y - offset.y);
-    if (!this.project.selectionManager.isGrabbedAt(local)) return false;
+    if (!this._grabsAt(local)) return false;
     const gridPos = roundToGrid(input.grid);
     this._pointerStart = new Point(gridPos.x - offset.x, gridPos.y - offset.y);
     return true;
   }
 
   /**
-   * The drop landed on a collision, so the group keeps floating. Releasing the
-   * anchor puts the session back to awaiting a grab.
+   * Whether a press grabs what this session is floating: the selection's drawn
+   * marquee where it covers the point, else one of the detached elements' own
+   * bounds. The manager cannot answer this — detaching took the elements out of
+   * the project's spatial index, which is what every other press test reads.
+   */
+  private _grabsAt(local: Point): boolean {
+    const rect = this.project.selectionManager.grabRect();
+    if (rect?.contains(local.x, local.y)) return true;
+    return (
+      this._components.some(
+        (c) => !c.destroyed && c.gridBounds.contains(local.x, local.y)
+      ) ||
+      this._wires.some(
+        (w) => !w.destroyed && w.gridBounds.contains(local.x, local.y)
+      )
+    );
+  }
+
+  /**
+   * The drop landed on a collision, so the group stays floating for the user
+   * to reposition. Releasing the anchor puts the session back in the state the
+   * rotate flow opens in — awaiting a grab — so the next press anchors where
+   * it lands and a recovery rotate/move commits as soon as it clears.
    */
   onInvalidRelease(): void {
     this._pointerStart = null;
@@ -153,6 +206,8 @@ export class SelectionMoveSession implements DragSession {
     const position = this.dragLayer.position;
     if (position.x === x && position.y === y) return;
     position.set(x, y);
+    this._edited = true;
+    // The selection grab rect rides along with the dragged ghosts.
     this.project.floatingLayer.setSelectionRectOffset(position);
     this._collision.update();
   }
@@ -163,6 +218,7 @@ export class SelectionMoveSession implements DragSession {
    * offset instead of snapping the group back under the cursor.
    */
   moveBy(dx: number, dy: number): void {
+    this._edited = true;
     this.dragLayer.position.set(
       this.dragLayer.position.x + dx,
       this.dragLayer.position.y + dy
@@ -183,6 +239,7 @@ export class SelectionMoveSession implements DragSession {
   rotate(steps: number): void {
     const s = normalizeRotationSteps(steps);
     if (s === 0) return;
+    this._edited = true;
     const bounds = groupGridBounds(this._components, this._wires);
     if (!bounds) return;
     const pivot = rotationPivotFor(bounds);
@@ -251,6 +308,10 @@ export class SelectionMoveSession implements DragSession {
         'SelectionMoveSession'
       );
       this.project.connectionPoints.restoreDragCps(this._takeCapturedCps());
+      // Unwound first: what the click means is the tool's business, run
+      // against a project that is back exactly as the press found it. Only a
+      // press that never left its cell was a click at all.
+      if (!this._edited) this.onTap?.();
       return;
     }
 

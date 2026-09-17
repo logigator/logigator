@@ -88,6 +88,13 @@ option, eliding the back edge at runtime — no cycle, no `forwardRef`.
 Text writes are sanitized on every set — forbidden characters stripped, then
 clamped to `maxLength` — including the constructor's default value.
 
+`NumberComponentOption` rounds and clamps in the **constructor as well as** the
+setter: every clone-based path (deserialization, the v0 decode, placement ghosts)
+goes through the constructor and would otherwise bypass it. It matters
+downstream — a numeric option the compiler emits lands in the engine's `u32`
+field, and a fraction makes it reject the whole board. The clock's `speed` maxes
+at `MAX_HALF_CYCLE_TICKS` (4294967295), that field's own bound.
+
 `MemoryDataComponentOption` is **generic**: it knows nothing about ROM. Its
 value is the memory contents as an immutable base64 bit-packed blob (a string,
 so clone/paste/undo never alias a buffer), stored trailing-zero-trimmed. The

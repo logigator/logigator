@@ -5,6 +5,8 @@ import { ToolBarComponent } from './tool-bar.component';
 import { DialogService } from '@logigator/ui';
 import { configureTestBed } from '../../../testing/configure-test-bed';
 import { WorkModeService } from '../../work-mode/work-mode.service';
+import { WorkMode } from '../../work-mode/work-mode.enum';
+import { BuiltInComponentType } from '@logigator/core';
 
 describe('ToolBarComponent', () => {
   let fixture: ComponentFixture<ToolBarComponent>;
@@ -35,6 +37,34 @@ describe('ToolBarComponent', () => {
     expect(el.querySelector('.ph-play')).not.toBeNull(); // start simulation
     expect(el.querySelector('.ph-line-segment')).not.toBeNull(); // wire tool
     expect(el.querySelector('.ph-sign-out')).toBeNull(); // no exit button
+  });
+
+  const rotateButton = (el: HTMLElement): HTMLButtonElement =>
+    el.querySelector('.ph-arrow-clockwise')!.closest('button')!;
+
+  // `disabledInteractive` keeps these buttons hoverable, so the off state is
+  // `aria-disabled` rather than a native attribute.
+  const isDisabled = (el: HTMLElement): boolean =>
+    rotateButton(el).getAttribute('aria-disabled') === 'true';
+
+  it('enables the rotate buttons only while a rotate has a target', async () => {
+    const el = await waitForRender();
+    expect(isDisabled(el)).toBe(true);
+
+    // An armed placement turns the pending component, though nothing is
+    // selected yet.
+    const workMode = TestBed.inject(WorkModeService);
+    workMode.setMode(WorkMode.COMPONENT_PLACEMENT);
+    workMode.setSelectedComponentType(BuiltInComponentType.AND);
+    await waitForRender();
+
+    expect(isDisabled(el)).toBe(false);
+
+    // Leaving placement drops the target again.
+    workMode.setMode(WorkMode.SELECT);
+    await waitForRender();
+
+    expect(isDisabled(el)).toBe(true);
   });
 
   it('swaps to the simulation control set in simulation mode', async () => {

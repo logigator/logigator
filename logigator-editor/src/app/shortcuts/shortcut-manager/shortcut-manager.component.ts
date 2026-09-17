@@ -67,9 +67,10 @@ export class ShortcutManagerComponent {
         ShortcutActionEnum.TOOL_PAN,
         ShortcutActionEnum.TOOL_WIRE,
         ShortcutActionEnum.TOOL_SELECT,
-        ShortcutActionEnum.SELECT_SCISSOR,
         ShortcutActionEnum.TOOL_ERASE,
-        ShortcutActionEnum.TOOL_PLACE_TEXT
+        ShortcutActionEnum.TOOL_PLACE_TEXT,
+        ShortcutActionEnum.SELECT_SCISSOR,
+        ShortcutActionEnum.SELECT_ADDITIVE
       ]
     },
     {
@@ -78,9 +79,12 @@ export class ShortcutManagerComponent {
     }
   ];
 
-  /** The hold-style scissor modifier may be bound to a bare modifier key. */
+  /** The hold-style modifiers may be bound to a bare modifier key. */
   protected allowsModifierOnly(action: ShortcutActionEnum): boolean {
-    return action === ShortcutActionEnum.SELECT_SCISSOR;
+    return (
+      action === ShortcutActionEnum.SELECT_SCISSOR ||
+      action === ShortcutActionEnum.SELECT_ADDITIVE
+    );
   }
 
   protected isDefault(action: ShortcutActionEnum): boolean {

@@ -7,7 +7,7 @@ Die Arbeitsfläche ist das Raster, auf dem du deine Schaltung baust. Diese Seite
 ## Sich auf der Arbeitsfläche bewegen
 
 - **Zoomen** — scrolle mit dem Mausrad über der Arbeitsfläche oder spreize die Finger auf einem Touch-Gerät. Du kannst auch die Zoom-Schaltflächen in der Werkzeugleiste, **Ansicht → Einzoomen / Auszoomen** oder **Ansicht → Zoom 100%** verwenden, um auf die tatsächliche Größe zurückzusetzen.
-- **Schwenken** — wähle das Werkzeug **Schwenken** (die Hand) und ziehe. Du kannst auch aus _jedem_ Werkzeug heraus schwenken, indem du mit der **rechten Maustaste** ziehst, sodass du selten das Werkzeug wechseln musst, nur um die Ansicht zu verschieben.
+- **Schwenken** — wähle das Werkzeug **Schwenken** (die Hand) und ziehe. Du kannst auch aus _jedem_ Werkzeug heraus schwenken, indem du mit der **rechten Maustaste** ziehst, sodass du selten das Werkzeug wechseln musst, nur um die Ansicht zu verschieben. Ein Ziehen aus der aktuellen Auswahl heraus verschiebt diese Auswahl statt der Arbeitsfläche — schalte das unter **Auswahl im Schwenkmodus verschieben** in den [Editor-Einstellungen](docs:settings) aus.
 - **Touch** — ziehe jederzeit mit zwei Fingern zum Schwenken und spreize sie zum Zoomen; ein Ziehen mit einem Finger schwenkt nur, solange das Werkzeug Schwenken aktiv ist.
 
 Die **Statusleiste** am unteren Rand zeigt stets eine kurze Erinnerung daran, was das aktive Werkzeug tut, sowie die Position deines Cursors auf dem Raster.
@@ -16,13 +16,13 @@ Die **Statusleiste** am unteren Rand zeigt stets eine kurze Erinnerung daran, wa
 
 Die rechte Gruppe der Werkzeugleiste enthält die fünf Zeichenwerkzeuge. Nur eines ist jeweils aktiv; jedes hat außerdem ein Einzeltasten-Kürzel.
 
-| Werkzeug      | Kürzel | Was es tut                                                                                                                                                                                        |
-| ------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Schwenken** | `P`    | Ziehen, um die Arbeitsfläche zu bewegen; scrollen oder spreizen zum Zoomen.                                                                                                                       |
-| **Leitung**   | `W`    | Ziehen, um Leitungen zu zeichnen; auf einen Anschluss tippen zum Negieren oder auf eine Kreuzung tippen zum Verbinden oder Trennen. Siehe [Leitungen & Verbindungen](docs:wires-and-connections). |
-| **Auswahl**   | `S`    | Einen Rahmen ziehen, um Elemente auszuwählen; die Auswahl ziehen, um sie zu verschieben.                                                                                                          |
-| **Radieren**  | `E`    | Auf Elemente klicken oder darüberziehen, um sie zu löschen.                                                                                                                                       |
-| **Text**      | `T`    | Eine Textbeschriftung auf der Arbeitsfläche platzieren.                                                                                                                                           |
+| Werkzeug      | Kürzel | Was es tut                                                                                                                                                                                                                                                            |
+| ------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Schwenken** | `P`    | Ziehen, um die Arbeitsfläche oder die aktuelle Auswahl zu bewegen; scrollen oder spreizen zum Zoomen.                                                                                                                                                                 |
+| **Leitung**   | `W`    | Ziehen, um Leitungen zu zeichnen; auf einen Anschluss tippen zum Negieren oder auf eine Kreuzung tippen zum Verbinden oder Trennen; ein Tippen, das beides nicht trifft, wählt aus, was darunter liegt. Siehe [Leitungen & Verbindungen](docs:wires-and-connections). |
+| **Auswahl**   | `S`    | Einen Rahmen ziehen, um Elemente auszuwählen; die Auswahl ziehen, um sie zu verschieben.                                                                                                                                                                              |
+| **Radieren**  | `E`    | Auf Elemente klicken oder darüberziehen, um sie zu löschen.                                                                                                                                                                                                           |
+| **Text**      | `T`    | Eine Textbeschriftung auf der Arbeitsfläche platzieren.                                                                                                                                                                                                               |
 
 ![Die fünf Werkzeug-Schaltflächen in der Werkzeugleiste.](./images/tool-buttons.webp)
 

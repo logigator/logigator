@@ -7,7 +7,7 @@ El tablero es la cuadrícula donde construyes tu circuito. Esta página explica 
 ## Moverse por el tablero
 
 - **Zoom**: desplaza la rueda del ratón sobre el tablero, o pellizca en un dispositivo táctil. También puedes usar los botones de zoom de la barra de herramientas, **Vista → Acercar / Alejar**, o **Vista → Zoom 100%** para restablecer el tamaño real.
-- **Desplazar**: elige la herramienta **Desplazar** (la mano) y arrastra. También puedes desplazarte desde _cualquier_ herramienta arrastrando con el **botón derecho del ratón**, así que rara vez necesitas cambiar de herramienta solo para reposicionar.
+- **Desplazar**: elige la herramienta **Desplazar** (la mano) y arrastra. También puedes desplazarte desde _cualquier_ herramienta arrastrando con el **botón derecho del ratón**, así que rara vez necesitas cambiar de herramienta solo para reposicionar. Arrastrar desde dentro de la selección actual mueve la selección en lugar del tablero; puedes desactivarlo con **Arrastrar la selección en modo Desplazar** en los [ajustes del editor](docs:settings).
 - **Táctil**: arrastra con dos dedos para desplazarte y pellizca para hacer zoom en cualquier momento; un arrastre con un solo dedo solo se desplaza mientras la herramienta Desplazar está activa.
 
 La **barra de estado** de la parte inferior siempre muestra un breve recordatorio de lo que hace la herramienta activa, además de la posición de tu cursor en la cuadrícula.
@@ -16,13 +16,13 @@ La **barra de estado** de la parte inferior siempre muestra un breve recordatori
 
 El grupo de la derecha de la barra de herramientas contiene las cinco herramientas de dibujo. Solo una está activa a la vez; cada una tiene además un atajo de una sola tecla.
 
-| Herramienta     | Atajo | Qué hace                                                                                                                                                        |
-| --------------- | ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Desplazar**   | `P`   | Arrastra para mover el tablero; desplaza o pellizca para hacer zoom.                                                                                            |
-| **Cable**       | `W`   | Arrastra para dibujar cables; toca un puerto para negarlo, o toca un cruce para conectar o dividir. Consulta [Cables y conexiones](docs:wires-and-connections). |
-| **Seleccionar** | `S`   | Arrastra un recuadro para seleccionar elementos; arrastra la selección para moverla.                                                                            |
-| **Borrar**      | `E`   | Haz clic o arrastra sobre los elementos para eliminarlos.                                                                                                       |
-| **Texto**       | `T`   | Coloca una etiqueta de texto en el tablero.                                                                                                                     |
+| Herramienta     | Atajo | Qué hace                                                                                                                                                                                                                                 |
+| --------------- | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Desplazar**   | `P`   | Arrastra para mover el tablero o la selección actual; desplaza o pellizca para hacer zoom.                                                                                                                                               |
+| **Cable**       | `W`   | Arrastra para dibujar cables; toca un puerto para negarlo, o toca un cruce para conectar o dividir; un toque que no alcanza ninguno de los dos selecciona lo que hay debajo. Consulta [Cables y conexiones](docs:wires-and-connections). |
+| **Seleccionar** | `S`   | Arrastra un recuadro para seleccionar elementos; arrastra la selección para moverla.                                                                                                                                                     |
+| **Borrar**      | `E`   | Haz clic o arrastra sobre los elementos para eliminarlos.                                                                                                                                                                                |
+| **Texto**       | `T`   | Coloca una etiqueta de texto en el tablero.                                                                                                                                                                                              |
 
 ![Los cinco botones de herramienta de la barra de herramientas.](./images/tool-buttons.webp)
 

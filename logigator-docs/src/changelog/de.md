@@ -3,6 +3,71 @@
 Alle nennenswerten Änderungen am Logigator-Editor werden hier festgehalten. Die
 aktuellste Veröffentlichung steht ganz oben.
 
+## 2.2.0 — 2026-09-17
+
+### Funktionen
+
+- **Zur Auswahl hinzufügen, ohne sie zu leeren.** Halte Ctrl — auf einem Mac ⌘ —
+  und ein Klick fügt die Komponente oder Leitung unter dem Zeiger der Auswahl
+  hinzu oder nimmt sie wieder heraus, während ein Auswahlrahmen aufnimmt, was er
+  überdeckt. Die Taste lässt sich in den Tastenkürzeln neu belegen, neben
+  „Leitungen an der Auswahlkante schneiden“.
+- **Auswählen, ohne das Leitungswerkzeug zu verlassen.** Ein Tippen, das weder
+  einen Anschluss noch eine Kreuzung trifft, wählt jetzt das kleinste Element
+  unter dem Zeiger aus, sodass du es löschen, kopieren oder verschieben kannst.
+- **Eine Auswahl im Schwenkmodus verschieben.** Ziehst du die aktuelle Auswahl,
+  wird sie verschoben statt die Arbeitsfläche; überall sonst schwenkt der Druck
+  wie bisher. Die neue Einstellung „Auswahl im Schwenkmodus verschieben“ schaltet
+  das wieder ab.
+
+### Korrekturen
+
+- Ein Doppelklick mit dem Leitungswerkzeug nimmt das Tippen zurück, das er
+  wiederholt: Ein Doppelklick auf einen Anschluss zeichnet die Leitung, die du
+  erreichen wolltest, und lässt keine überflüssige Negationsblase zurück.
+- Ein Klick in die Lücke innerhalb deiner Auswahl hebt sie nicht mehr auf.
+- Lange Menüs und ihre Untermenüs scrollen, statt auf einem kleinen Bildschirm
+  unten aus dem Fenster zu laufen.
+- Auf Apple-Plattformen in Chromium-basierten Browsern wird ⌘ erkannt, wo bisher
+  Ctrl angezeigt wurde.
+
+## 2.1.3 — 2026-09-16
+
+### Korrekturen
+
+- Eine Simulation startet nicht mehr fehl, wenn die Zahlen-Einstellung einer
+  Komponente einen Nachkommawert hat, etwa eine Verzögerung von 1,9 beim
+  Taktgeber, oder größer ist, als die Simulation annimmt. Eine so gespeicherte
+  Schaltung lädt mit gerundetem und begrenztem Wert und wird von da an als ganze
+  Zahl gespeichert.
+- Beim Platzieren einer benutzerdefinierten Komponente bleiben jetzt die Richtung
+  und die Optionen aus dem Einstellungsbereich erhalten, statt sie immer gleich
+  ausgerichtet und ohne sie abzulegen.
+- Eine Komponente, die du gerade platzieren willst, lässt sich vor dem Ablegen
+  drehen: mit R oder Shift+R oder über die Dreh-Buttons in der Werkzeugleiste.
+  Auch eine Platzierung, die du bereits ziehst, dreht sich damit, und die nächste
+  Komponente dieser Art startet in der Richtung, in die du diese gedreht hast.
+
+## 2.1.2 — 2026-09-10
+
+### Korrekturen
+
+- Das Drehen eines Handys oder Tablets bringt den Editor nicht mehr zum Absturz.
+- Leitungen zu reparieren, während eine Simulation läuft, führt nicht mehr zum
+  Absturz. Die Simulation wird vorher beendet.
+- Ein Freigabelink zu einer benutzerdefinierten Komponente öffnet sie jetzt so
+  wie deine eigenen Komponenten: mit ihrem Namen in der Titelleiste und bereit,
+  in deine Komponenten geklont zu werden.
+- Wenn du mit dem Zurück-Button des Browsers zurückgehst, bleiben Menüs,
+  Auswahllisten und Tutorial-Hinweise nicht mehr hängen.
+- Links in der Hilfe und im Änderungsprotokoll des Editors springen jetzt in
+  jeder Sprache zur richtigen Überschrift.
+- Wo zwei Anschlussspitzen aufeinandertreffen, negiert ein Tippen mit dem
+  Leitungswerkzeug jetzt den Anschluss auf der Seite, auf die du getippt hast,
+  statt den gegenüberliegenden.
+- Der Editor lässt sich weiter bedienen, wenn ein Verschieben oder Einfügen
+  nicht abgeschlossen werden kann.
+
 ## 2.1.1 — 2026-08-31
 
 ### Korrekturen

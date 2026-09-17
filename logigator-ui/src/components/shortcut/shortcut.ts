@@ -17,6 +17,11 @@ const KEY_LABELS: Readonly<Record<string, string>> = {
   Escape: 'Esc',
   Delete: 'Del',
   Backspace: '⌫',
+  // A bare-modifier binding names its key rather than setting its flag (see
+  // MODIFIER_FLAG_BY_KEY in the editor), so the two primary-modifier keys get
+  // the labels the flags would have rendered.
+  Control: 'Ctrl',
+  Meta: '⌘',
   ArrowUp: '↑',
   ArrowDown: '↓',
   ArrowLeft: '←',
@@ -26,7 +31,14 @@ const KEY_LABELS: Readonly<Record<string, string>> = {
 
 const IS_MAC =
   typeof navigator !== 'undefined' &&
-  /Mac|iPod|iPhone|iPad/.test(navigator.platform);
+  // 'macOS' is what `userAgentData.platform` reports on Chromium, and
+  // `navigator.platform` is deprecated — fold case and prefer the modern one.
+  /mac|ipod|iphone|ipad/i.test(
+    (navigator as Navigator & { userAgentData?: { platform?: string } })
+      .userAgentData?.platform ??
+      navigator.platform ??
+      ''
+  );
 
 export function formatShortcutKey(key: string): string {
   return KEY_LABELS[key] ?? (key.length === 1 ? key.toUpperCase() : key);

@@ -3,6 +3,69 @@
 Todos los cambios notables del editor de Logigator se registran aquí. La versión
 más reciente se muestra primero.
 
+## 2.2.0 — 2026-09-17
+
+### Funciones
+
+- **Añadir a una selección sin borrarla.** Mantén Ctrl — ⌘ en un Mac — y un clic
+  añade a la selección el componente o cable que está bajo el puntero, o lo
+  quita, mientras que un marco de selección añade lo que cubre a lo que ya
+  tenías. Puedes reasignar la tecla en los atajos, junto a «Cortar cables en el
+  borde de la selección».
+- **Seleccionar sin salir de la Herramienta de cable.** Un toque que no alcanza
+  ni un puerto ni un cruce ahora selecciona el elemento más pequeño bajo el
+  puntero, para que puedas borrarlo, copiarlo o moverlo sin cambiar de
+  herramienta.
+- **Mover una selección con Desplazar.** Arrastrar la selección actual la mueve
+  en lugar de desplazar el lienzo; en cualquier otro sitio el toque desplaza como
+  antes. El nuevo ajuste «Arrastrar la selección en modo Desplazar» lo desactiva.
+
+### Correcciones
+
+- Un doble clic con la herramienta de cable retira el toque que repite: un doble
+  clic sobre un puerto dibuja el cable que buscabas y no deja ninguna burbuja de
+  negación suelta.
+- Un clic en el hueco dentro de tu selección ya no la borra.
+- Los menús largos y sus submenús se desplazan en vez de salirse por abajo de la
+  ventana en una pantalla pequeña.
+- En plataformas Apple con navegadores basados en Chromium, se reconoce ⌘ donde
+  antes se mostraba Ctrl.
+
+## 2.1.3 — 2026-09-16
+
+### Correcciones
+
+- Una simulación ya no falla al iniciarse cuando el ajuste numérico de un
+  componente tiene un decimal, como un retardo de reloj de 1,9, o es mayor de lo
+  que la simulación acepta. Un circuito guardado así se carga con el valor
+  redondeado y limitado, y a partir de ahí se guarda como número entero.
+- Al colocar un componente personalizado ahora se mantienen la dirección y las
+  opciones configuradas en el panel de ajustes, en lugar de colocarlo siempre en
+  la misma orientación y descartarlas.
+- Un componente que estás a punto de colocar se puede girar antes de soltarlo:
+  pulsa R o Shift+R, o usa los botones de giro de la barra de herramientas. Un
+  componente que ya estás arrastrando también gira, y el siguiente componente de
+  ese tipo empieza en la dirección en la que giraste este.
+
+## 2.1.2 — 2026-09-10
+
+### Correcciones
+
+- Girar un teléfono o una tableta ya no hace que el editor se bloquee.
+- Reparar cables mientras se ejecuta una simulación ya no bloquea el editor. La
+  simulación se detiene antes.
+- Un enlace para compartir un componente personalizado ahora lo abre igual que
+  tus propios componentes: con su nombre en la barra de título y listo para
+  clonarlo a tus componentes.
+- Volver atrás con el botón del navegador ya no deja bloqueados los menús, las
+  listas desplegables ni los avisos del tutorial.
+- Los enlaces de la ayuda y del registro de cambios del editor ahora llevan al
+  título correcto en todos los idiomas.
+- Donde se juntan las puntas de dos puertos, tocar con la herramienta de cable
+  ahora niega el puerto del lado en el que tocaste, y no el de enfrente.
+- El editor sigue siendo utilizable cuando un movimiento o un pegado no se puede
+  completar.
+
 ## 2.1.1 — 2026-08-31
 
 ### Correcciones

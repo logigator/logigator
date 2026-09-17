@@ -32,17 +32,33 @@ function mouse(
   pointerId: number,
   button: number,
   clientX: number,
-  clientY: number
+  clientY: number,
+  timeStamp = 0
 ): PointerEventLike {
-  return { pointerId, pointerType: 'mouse', button, clientX, clientY };
+  return {
+    pointerId,
+    pointerType: 'mouse',
+    button,
+    clientX,
+    clientY,
+    timeStamp
+  };
 }
 
 function touch(
   pointerId: number,
   clientX: number,
-  clientY: number
+  clientY: number,
+  timeStamp = 0
 ): PointerEventLike {
-  return { pointerId, pointerType: 'touch', button: 0, clientX, clientY };
+  return {
+    pointerId,
+    pointerType: 'touch',
+    button: 0,
+    clientX,
+    clientY,
+    timeStamp
+  };
 }
 
 describe('PointerController', () => {
@@ -178,6 +194,30 @@ describe('PointerController', () => {
 
     expect(tool.cancel).toHaveBeenCalledTimes(1);
     expect(tool.up).not.toHaveBeenCalled();
+  });
+
+  it('counts quick presses in the same spot as one click run', () => {
+    controller.onPointerDown(mouse(1, 0, 110, 60, 1000));
+    controller.onPointerUp(mouse(1, 0, 110, 60, 1020));
+    controller.onPointerDown(mouse(1, 0, 110, 60, 1300));
+    controller.onPointerUp(mouse(1, 0, 110, 60, 1320));
+    controller.onPointerDown(mouse(1, 0, 110, 60, 1600));
+
+    const counts = vi
+      .mocked(tool.down)
+      .mock.calls.map(([input]) => input.clickCount);
+    expect(counts).toEqual([1, 2, 3]);
+  });
+
+  it.each([
+    ['the window has passed', 1501, 110],
+    ['the press lands somewhere else', 1200, 130]
+  ])('starts a new run when %s', (_case, timeStamp, clientX) => {
+    controller.onPointerDown(mouse(1, 0, 110, 60, 1000));
+    controller.onPointerUp(mouse(1, 0, 110, 60, 1010));
+    controller.onPointerDown(mouse(1, 0, clientX, 60, timeStamp));
+
+    expect(vi.mocked(tool.down).mock.calls[1][0].clickCount).toBe(1);
   });
 
   it('reports cursor grid positions as fresh clones', () => {

@@ -31,6 +31,10 @@ export enum ShortcutActionEnum {
   // Hold-style binding: scissors wires at the marquee edge during a select
   // drag. Read through ShortcutService.isHeld, not on().
   SELECT_SCISSOR = 'selectScissor',
+  // Hold-style binding: a click adds to the selection instead of replacing it,
+  // and outranks the wire tool's port and junction taps (checked via
+  // ShortcutService.isHeld, not on()).
+  SELECT_ADDITIVE = 'selectAdditive',
   TOOL_ERASE = 'toolErase',
   TOOL_PLACE_TEXT = 'toolPlaceText',
 

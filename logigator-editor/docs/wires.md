@@ -245,7 +245,9 @@ warning toast whose action runs `repairManually`, touching nothing until the
 user accepts. That toast never auto-dismisses, so the handler re-checks
 `project.destroyed` — the offer can outlive its document. Read-only shares are
 skipped: a share can neither be saved nor exported, so an accepted repair would
-have nowhere to go.
+have nowhere to go. It is hooked at every document entry — the `_loadAsMain`
+skeleton, an import (`persistImportedProject`) and opening a component editor —
+so no route in skips the audit.
 
 Analytics measure field corruption instead of inferring it from bug reports.
 `wire_repair_offered` carries the violation count and distinct kinds, never a

@@ -232,13 +232,15 @@ inactive ──enter()──► starting ──worker ready──► ready ⇄ r
 custom-component tab), compiles it, then builds the applier, subscribes to
 `project.userInput$`, flips the work mode to `SIMULATION` and boots the worker
 session. It resolves with the diagnostics that blocked entry — empty on success,
-toasted by `enter()` itself, read by the automation API. `exit()` ends the session, resets
-the applier and every component's sim visuals, stops the ticker, drops the
-compiled artifacts and returns to `PAN`. The visual reset walks the live objects
-the mapping captured at compile time, so it runs inside a `try`/`finally`: one
-freed under the session throws there, and dropping the artifacts and the mode
-regardless keeps that a single failure instead of a mode stuck at `SIMULATION`
-with no worker behind it, which every retry re-enters and fails on again.
+toasted by `enter()` itself, read by the automation API. A worker that fails to
+boot toasts and exits. `exit()` ends the session, resets the applier and every
+component's sim visuals, stops the ticker, drops the compiled artifacts and
+returns to `PAN`; the `CANCEL` shortcut runs it too. The visual reset walks the
+live objects the mapping captured at compile time, so it runs inside a
+`try`/`finally`: one freed under the session throws there, and dropping the
+artifacts and the mode regardless keeps that a single failure instead of a mode
+stuck at `SIMULATION` with no worker behind it, which every retry re-enters and
+fails on again.
 
 A session is also forced to exit when another project takes the main slot: the
 compiled mapping addresses the outgoing project by live object reference, and
@@ -252,6 +254,9 @@ A board-wide wire repair exits for the same reason — it destroys the `Wire`
 instances the mapping holds — and reaches `exit()` through the `Injector`, that
 same chain being what stops it from injecting the service (`wires.md` §
 Board-wide repair).
+
+Compiled artifacts (`_board`, `_applier`) live for exactly one session; editing
+being locked in between is what keeps the mapping's live object references valid.
 
 ### Run controls and user input
 

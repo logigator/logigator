@@ -6,6 +6,7 @@ import {
   IntegrationOutput,
   WireIntegrator
 } from './wire-integrator';
+import { Action } from '../actions/action';
 import { ActionContainer } from '../actions/action-container';
 import { AddWiresAction } from '../actions/actions/add-wires.action';
 import { RemoveWiresAction } from '../actions/actions/remove-wires.action';
@@ -39,12 +40,15 @@ export class WireTopology {
     );
   }
 
-  public toggleConnectionAt(p: Point): void {
-    if (this.project.connectionPoints.hasCpAt(p)) {
-      this._joinAt(p);
-    } else {
-      this._splitAt(p);
-    }
+  /**
+   * Toggles the connection at a half-grid point: joins the wires meeting at an
+   * existing CP, splits a pure crossing, a no-op when neither applies. Returns
+   * the recorded action, or null when nothing happened.
+   */
+  public toggleConnectionAt(p: Point): Action | null {
+    return this.project.connectionPoints.hasCpAt(p)
+      ? this._joinAt(p)
+      : this._splitAt(p);
   }
 
   /**
@@ -63,14 +67,14 @@ export class WireTopology {
     return this._findCrossingAt(p) ? 'split' : null;
   }
 
-  private _joinAt(p: Point): void {
+  private _joinAt(p: Point): Action | null {
     const plan = this._planJoinAt(p);
     if (!plan) {
       this._logging.debug(
         `join at (${p.x}, ${p.y}) is a no-op: no collinear pair to merge, or the merge would re-split at the same point`,
         'WireTopology'
       );
-      return;
+      return null;
     }
 
     const action = new ActionContainer();
@@ -79,6 +83,7 @@ export class WireTopology {
     if (plan.toAdd.length > 0) action.add(new AddWiresAction(...plan.toAdd));
     plan.discard();
     this.project.actionManager.push(action);
+    return action;
   }
 
   /**
@@ -159,14 +164,14 @@ export class WireTopology {
     return hWire && vWire ? { hWire, vWire } : null;
   }
 
-  private _splitAt(p: Point): void {
+  private _splitAt(p: Point): Action | null {
     const crossing = this._findCrossingAt(p);
     if (!crossing) {
       this._logging.debug(
         `split at (${p.x}, ${p.y}) is a no-op: needs both a horizontal and a vertical wire crossing the point`,
         'WireTopology'
       );
-      return;
+      return null;
     }
 
     const [hLeft, hRight] = Wire.split(crossing.hWire, p);
@@ -188,5 +193,6 @@ export class WireTopology {
     // instances in the project. toRemove holds live tree wires; leave those.
     for (const w of [...addedWires, ...toAdd]) if (!w.destroyed) w.destroy();
     this.project.actionManager.push(action);
+    return action;
   }
 }

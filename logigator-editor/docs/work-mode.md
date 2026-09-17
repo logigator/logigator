@@ -43,6 +43,32 @@ action recorded while the cut is live dissolves the selection first, so an
 uncommitted split can never be orphaned behind newer history. Geometry and flow:
 `wires.md` § _Wire Scissor Cutting_ and § _Cut lifecycle_.
 
+### Taps and modifiers
+
+Which tap a tool runs is the tool's own business (`rendering.md` § _Tools_); two
+rules hold across all of them.
+
+**The additive modifier** (`SELECT_ADDITIVE`, a hold-style binding — Ctrl, or ⌘
+on Apple platforms, where a bare Ctrl is the system's secondary click) makes a
+click **toggle** the element under it, in every tool that can select. It outranks
+the wire tool's two circuit actions, so a click that is building a selection
+never negates a port or toggles a junction on its way; a click that hits nothing
+leaves the selection alone, where a plain click replaces it. A press on the
+selection is unaffected — it still starts the move, and letting go without moving
+runs the click instead of nothing (`SelectionMoveSession`'s `onTap`).
+
+**A double click cancels out.** A press that continues the previous tap — the
+controller counts them by the DOM's own rule, within 500 ms and 6 px of the last
+press, on `PointerInput.clickCount` — takes that tap back: its action out of the
+history (`ActionManager.retract`) and the selection it ran against restored
+(`SelectionManager.selectionVersion` says whether what it recorded still stands),
+then swallows its own tap, so the pair leaves no trace. People reach for a wire by
+double-clicking the port they start from, and the first click's footprint — a
+bubble left standing, a selection made where the wire is about to leave from —
+reads as a mark nobody asked for. A press that lands elsewhere or after the window
+is a fresh click: the collapse only ever pairs clicks that really are one double
+click.
+
 ## `WorkModeService`
 
 Root-provided; holds `mode` (initially `PAN`), `selectedComponentType` (non-null
@@ -61,7 +87,9 @@ placement type), called only by `SimulationService.enter()`/`exit()`.
 `placementDirectionFor(type)` / `setPlacementDirection(type, value)` hold the
 sticky per-type placement direction (session-lifetime, default East). The
 settings panel writes it while a placement is armed and every fresh ghost of
-that type picks it up, so consecutive placements keep facing the chosen way.
+that type picks it up, so consecutive placements keep facing the chosen way; a
+rotate request aimed at the armed ghost goes through
+`rotatePlacementDirection(type, steps)`, which steps and writes the same map.
 
 ## Integration Flow
 

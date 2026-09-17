@@ -35,10 +35,18 @@ export class EditorSettingsService {
     () => this.persist()
   );
 
+  public readonly dragSelectionInPanMode = new EditorSetting(
+    'dragSelectionInPanMode',
+    'settings.options.dragSelectionInPanMode',
+    this.stored['dragSelectionInPanMode'] ?? true,
+    () => this.persist()
+  );
+
   public readonly settings: readonly EditorSetting[] = [
-    this.fpsCounter,
     this.showGrid,
-    this.autoStartSimulation
+    this.autoStartSimulation,
+    this.dragSelectionInPanMode,
+    this.fpsCounter
   ];
 
   private load(): Record<string, boolean> {

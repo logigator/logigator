@@ -84,15 +84,20 @@ The same two classes drive the board and every watch canvas.
 
 Per-canvas listener bundle (pointer, wheel, contextmenu; detached through one
 `AbortController`). Every event becomes a `PointerInput` —
-`{ pointerId, pointerType, global, grid }`, where `global` is canvas-local CSS
-pixels (what `viewport.pan`/`zoomBy` expect) and `grid` is that point through
-`canvasToGrid`, which reads `project.position`/`scale` directly so it is fresh
-before the next render.
+`{ pointerId, pointerType, global, grid, clickCount }`, where `global` is
+canvas-local CSS pixels (what `viewport.pan`/`zoomBy` expect) and `grid` is that
+point through `canvasToGrid`, which reads `project.position`/`scale` directly so
+it is fresh before the next render.
 
 - **Primary button** — `setPointerCapture` (moves keep flowing when a drag
   leaves the canvas), streamed to the `PointerToolTarget`. Unpressed moves go to
   `hover`, `pointerleave` to `leave`. Click-vs-drag lives in the sessions
   (`PanSession`'s 5 px threshold), not here.
+- **Click count** — each primary press carries its position in a run of quick
+  presses, the DOM's own rule (within 500 ms and 6 px of the previous press,
+  counted from `event.timeStamp` on the press itself), so a tool can tell a
+  double click from two deliberate single clicks. Only the wire tool acts on it
+  (`work-mode.md` § _Taps and modifiers_).
 - **Right button** — pan-only drag by position deltas, bracketed by
   `nav.setActive(true/false)`. The canvas context menu is suppressed outright.
 - **Touch** — pointers feed `MultiTouchGesture` first; a second finger hands
@@ -153,6 +158,29 @@ ends, `onSessionStart` yields the preview to a starting session's ghosts.
 The wire tool's previews survive a press and hide only once the gesture becomes
 a drag; after a tap they re-derive in place. Its connection ghost dry-runs
 `topology.connectionToggleKindAt`, so a non-toggleable T-junction shows nothing.
+
+Per tool, beyond the table above:
+
+- **`PanTool`** — with `dragSelectionInPanMode` on (the default) a press that
+  grabs the committed selection opens a `SelectionMoveSession` instead, so a
+  selection made by a tap can be dragged without leaving the hand tool; every
+  other press pans, and the setting off pans on every press.
+- **`WireTool`** — a press inside a selected component's body opens a
+  `SelectionMoveSession` instead of drawing (a run from there collides with that
+  body and is discarded anyway). Tap precedence: port negation →
+  `topology.toggleConnectionAt` (which returns the action it recorded) → a plain
+  select click through `SelectionManager.commit`; with the additive modifier
+  held only that click or toggle happens, ahead of both circuit actions. A press
+  whose `clickCount` continues the previous tap takes that tap back and swallows
+  its own (`work-mode.md` § _Taps and modifiers_).
+- **`SelectTool`** — a press on the selection that never moved runs
+  `SelectionManager.clickInSelection`: narrow to the pressed element, or toggle
+  it with the additive modifier.
+- **`PlacementTool`** — `rotate(steps)` steps the sticky placement direction and
+  turns the live preview; a direction the settings panel changed mid-hover is
+  picked up on the next pointer move.
+- **`EraseTool`** — Escape during the sweep cancels the session, which re-adds
+  everything it removed.
 
 ---
 
@@ -263,6 +291,17 @@ unset and stay frozen until the user finds a valid drop.
 | `PastePlacementSession`     | Two-phase: ghosts wait where the router put them (`onMove` is a no-op) until a press inside the group's padded rect calls `beginDrag`; a press outside cancels and destroys the instances. |
 | `EraseSession`              | Sweep-erase, registers on release.                                                                                                                                                         |
 
+**Placement commit** — the ghost is built from the **palette config** (the
+master, for a custom) and stays on it for the whole gesture, so what the settings
+panel writes while placing (options, direction) lands on the very config the
+commit builds from. A custom master is frozen **at commit**: the ghost
+round-trips through `Component.serialize`/`deserialize` onto the placement
+snapshot's config, carrying position, direction, options and negations, so a
+setting added later is carried with no code in the session. A built-in lands as
+the ghost itself (`PlacementGhost.release()` drops the selection look) and a
+frozen replacement destroys it. `rotate(steps)` turns the ghost to the stepped
+sticky placement direction.
+
 **Paste positioning** — the router shifts the fresh instances by whole grid units
 onto the cursor, or onto `viewport.gridView`'s centre when there is none (touch
 never sets a cursor, leaving the canvas clears it). The resting cursor is stored
@@ -273,11 +312,14 @@ stale.
 **Rotate flow / move flow** — `R`/`Shift+R` and the arrow keys land in the router
 (the toolbar and mobile selection bar go through
 `Project.requestSelectionRotation`). Both forward to the open session's
-`rotate(steps)` / `moveBy(dx, dy)`; with none, they open a `SelectionMoveSession`
-over the committed selection with **no drag anchor**, apply one step, and commit
-synchronously when collision-free — an in-place edit, each press its own undo
-step. A colliding step instead leaves the red-tinted group floating (still
-selected) until a further step or drag lands it somewhere valid;
+`rotate(steps)` / `moveBy(dx, dy)`; with only a hover preview standing they ask
+the active tool first — `BoardTool.rotate?(steps)`, which turns the armed
+placement ghost and returns true when the request is spent; with none, they open
+a `SelectionMoveSession` over the committed selection with **no drag anchor**,
+apply one step, and commit synchronously when collision-free — an in-place edit,
+each press its own undo step. A colliding step instead leaves the red-tinted
+group floating (still selected) until a further step or drag lands it somewhere
+valid;
 `_commitIfFloatingAndValid` commits the instant it becomes valid, gated on
 `isAwaitingGrab()` so a turn mid-pointer-drag does not commit under the cursor.
 Escape or a press off the selection reverts.

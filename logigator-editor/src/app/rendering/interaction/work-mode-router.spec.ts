@@ -14,6 +14,7 @@ import { configureTestBed } from '../../../testing/configure-test-bed';
 import {
   makeAnd,
   makeButton,
+  makeMoveInput,
   makeSwitch,
   makeRom,
   makeWire
@@ -27,6 +28,7 @@ import { tunnelComponentConfig } from '../../components/component-types/tunnel/t
 import { inputComponentConfig } from '../../components/component-types/input/input.config';
 import { CustomComponentService } from '../../custom-component/custom-component.service';
 import { WorkModeService } from '../../work-mode/work-mode.service';
+import { EditorSettingsService } from '../../settings/editor-settings.service';
 import { ThemingService } from '../../theming/theming.service';
 import { environment } from '../../../environments/environment';
 import { Project } from '../../project/project';
@@ -36,14 +38,40 @@ import { WorkModeRouter } from './work-mode-router';
 import { DragSession } from '../drag-session';
 import { groupGridBounds } from '../sessions/rotate-elements';
 
-/** PointerInput whose grid and global both sit at (x, y). */
-function makeInput(x: number, y: number): PointerInput {
-  return {
-    pointerId: 1,
-    pointerType: 'mouse',
-    global: new Point(x, y),
-    grid: new Point(x, y)
-  };
+/**
+ * PointerInput whose grid and global both sit at (x, y). `clickCount` 1 is a
+ * fresh press; pass 2 for the second press of a double click.
+ */
+function makeInput(x: number, y: number, clickCount = 1): PointerInput {
+  return makeMoveInput(x, y, clickCount);
+}
+
+/** A press-and-release without movement on the router under test. */
+function tap(router: WorkModeRouter, x: number, y: number): void {
+  router.down(makeInput(x, y));
+  router.up();
+}
+
+/** A press that continues the previous tap into a double click. */
+function secondClick(router: WorkModeRouter, x: number, y: number): void {
+  router.down(makeInput(x, y, 2));
+  router.up();
+}
+
+/**
+ * Runs a gesture with the additive modifier held. The binding is a bare
+ * modifier key, so the shortcut service reports it through the live key state —
+ * and a tap resolves on release, which is inside this scope.
+ */
+function withAdditiveKey(body: () => void): void {
+  window.dispatchEvent(
+    new KeyboardEvent('keydown', { key: 'Control', ctrlKey: true })
+  );
+  try {
+    body();
+  } finally {
+    window.dispatchEvent(new KeyboardEvent('keyup', { key: 'Control' }));
+  }
 }
 
 describe('WorkModeRouter in SIMULATION mode', () => {
@@ -213,6 +241,95 @@ describe('WorkModeRouter in SELECT mode', () => {
     expect(comp.position.x).toBe(4);
   });
 
+  it('narrows the selection to the element a plain click lands on', () => {
+    const comp = makeAnd(2);
+    comp.position.set(3, 3);
+    const other = makeAnd(2, undefined, 8, 3);
+    project.addComponent(comp);
+    project.addComponent(other);
+    project.selectionManager.select([comp, other], []);
+
+    // A press on the selection, let go without moving: the move never happens
+    // and the click narrows the selection to what it landed on.
+    router.down(makeInput(9, 4));
+    router.up();
+
+    expect(project.selectionManager.selectedComponents.has(other)).toBe(true);
+    expect(project.selectionManager.selectedComponents.has(comp)).toBe(false);
+    expect(other.position.x).toBe(8);
+  });
+
+  it('toggles an element out on a modified click inside the marquee', () => {
+    // AND at (3,3): body x ∈ [3, 5], y ∈ [3, 5], with a second AND to keep.
+    const comp = makeAnd(2);
+    comp.position.set(3, 3);
+    const other = makeAnd(2, undefined, 8, 3);
+    project.addComponent(comp);
+    project.addComponent(other);
+    project.selectionManager.select([comp, other], []);
+
+    // A press on the selection, let go without moving: the move never happens,
+    // so the click toggles that one element out and leaves the rest.
+    withAdditiveKey(() => {
+      router.down(makeInput(4, 4));
+      router.up();
+    });
+
+    expect(project.selectionManager.selectedComponents.has(comp)).toBe(false);
+    expect(project.selectionManager.selectedComponents.has(other)).toBe(true);
+    expect(comp.position.x).toBe(3);
+  });
+
+  it('adds an element outside the selection on a modified click', () => {
+    const first = makeAnd(2);
+    first.position.set(3, 3);
+    const second = makeAnd(2, undefined, 8, 3);
+    project.addComponent(first);
+    project.addComponent(second);
+    project.selectionManager.select([first], []);
+
+    withAdditiveKey(() => {
+      router.down(makeInput(9, 4));
+      router.up();
+    });
+
+    expect(project.selectionManager.selectedComponents.has(first)).toBe(true);
+    expect(project.selectionManager.selectedComponents.has(second)).toBe(true);
+  });
+
+  it('moves the selection on a modified drag, as it does without the modifier', () => {
+    const comp = makeAnd(2);
+    comp.position.set(3, 3);
+    project.addComponent(comp);
+    project.selectionManager.select([comp], []);
+
+    withAdditiveKey(() => {
+      router.down(makeInput(4, 4));
+      router.move(makeInput(8, 4));
+      router.up();
+    });
+
+    expect(comp.position.x).toBe(7);
+  });
+
+  it('joins what a modified marquee touches to the selection', () => {
+    const first = makeAnd(2);
+    first.position.set(3, 3);
+    const second = makeAnd(2, undefined, 8, 3);
+    project.addComponent(first);
+    project.addComponent(second);
+    project.selectionManager.select([first], []);
+
+    withAdditiveKey(() => {
+      router.down(makeInput(6, 0)); // clear of the first AND
+      router.move(makeInput(12, 6)); // sweeping over the second
+      router.up();
+    });
+
+    expect(project.selectionManager.selectedComponents.has(first)).toBe(true);
+    expect(project.selectionManager.selectedComponents.has(second)).toBe(true);
+  });
+
   it('pressing outside the grab rect starts a new selection instead', () => {
     const comp = makeAnd(2);
     comp.position.set(3, 3);
@@ -238,6 +355,53 @@ describe('WorkModeRouter in SELECT mode', () => {
 
     expect(Array.from(project.wires)).toHaveLength(1);
     expect(project.selectionManager.selectedWires.has(wire)).toBe(true);
+  });
+
+  it('keeps a click on a scissor cut piece selecting a live wire', () => {
+    project.addWire(makeWire(0, 2, WireDirection.HORIZONTAL, 4));
+
+    // Alt + marquee: the cut registers and the inside piece is selected.
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Alt', altKey: true })
+    );
+    try {
+      router.down(makeInput(0, 0));
+      router.move(makeInput(2.5, 3));
+      router.up();
+    } finally {
+      window.dispatchEvent(new KeyboardEvent('keyup', { key: 'Alt' }));
+    }
+    const piece = Array.from(project.selectionManager.selectedWires)[0];
+    expect(piece).toBeDefined();
+
+    // Click the piece: the clear retracts the cut, which replaces the piece
+    // with the restored original — the click has to end up holding that one.
+    router.down(makeInput(1.5, 2.5));
+    router.up();
+
+    const selected = Array.from(project.selectionManager.selectedWires);
+    expect(selected).toHaveLength(1);
+    expect(selected[0].destroyed).toBe(false);
+    expect(selected[0]).not.toBe(piece);
+  });
+
+  it('does not turn a drag that returned to its start into a click', () => {
+    const comp = makeAnd(2);
+    comp.position.set(3, 3);
+    const other = makeAnd(2, undefined, 8, 3);
+    project.addComponent(comp);
+    project.addComponent(other);
+    project.selectionManager.select([comp, other], []);
+
+    router.down(makeInput(4, 4));
+    router.move(makeInput(9, 4)); // away
+    router.move(makeInput(4, 4)); // and back
+    router.up();
+
+    // The net delta is zero, but the pointer left its starting cell: this was
+    // a drag that ended where it began, not a click.
+    expect(project.selectionManager.selectedComponents.size).toBe(2);
+    expect(comp.position.x).toBe(3);
   });
 
   it('holding the scissor key scissors wires at the marquee edge', () => {
@@ -275,6 +439,191 @@ describe('WorkModeRouter in SELECT mode', () => {
     router.up();
 
     expect(Array.from(project.wires)).toHaveLength(2);
+  });
+});
+
+describe('WorkModeRouter in PAN mode', () => {
+  let project: Project;
+  let router: WorkModeRouter;
+
+  beforeEach(() => {
+    configureTestBed();
+    project = new Project();
+    router = new WorkModeRouter();
+    router.setProject(project);
+  });
+
+  afterEach(() => {
+    // The settings persist to localStorage, which outlives the TestBed: put
+    // the default back so nothing leaks into the describes that follow.
+    TestBed.inject(EditorSettingsService).dragSelectionInPanMode.set(true);
+    router.destroy();
+    project.destroy({ children: true });
+  });
+
+  it('drags the selection a tap just made, without panning', () => {
+    // AND at (3,3): body x ∈ [3, 5], y ∈ [3, 5].
+    const comp = makeAnd(2);
+    comp.position.set(3, 3);
+    project.addComponent(comp);
+    const panSpy = vi.spyOn(project.viewport, 'pan');
+
+    tap(router, 4, 4);
+    expect(project.selectionManager.selectedComponents.has(comp)).toBe(true);
+
+    router.down(makeInput(4, 4)); // pressing the selection grabs it
+    router.move(makeInput(8, 4));
+    router.up();
+
+    expect(comp.position.x).toBe(7);
+    expect(comp.position.y).toBe(3);
+    expect(panSpy).not.toHaveBeenCalled();
+    expect(project.actionManager.undoAvailable).toBe(true);
+  });
+
+  it('grabs a rect-less floating selection again, without cancelling it', () => {
+    const comp = makeAnd(2);
+    comp.position.set(3, 3);
+    const other = makeAnd(2, undefined, 8, 3);
+    project.addComponent(comp);
+    project.addComponent(other);
+    project.addComponent(makeAnd(2, undefined, 14, 3)); // the collision target
+
+    // A rect-less two-element selection: ctrl-clicks, so no grab rect exists.
+    withAdditiveKey(() => tap(router, 4, 4));
+    withAdditiveKey(() => tap(router, 9, 4));
+    expect(project.selectionManager.grabRect()).toBeNull();
+
+    // Dragging onto the third AND freezes the session, the elements detached.
+    router.down(makeInput(4, 4));
+    router.move(makeInput(15, 4));
+    router.up();
+    expect(router.hasActiveSession).toBe(true);
+
+    // Pressing the floating group anchors it again rather than cancelling —
+    // and dragging it clear of the third AND commits the move.
+    router.down(makeInput(15, 4));
+    router.move(makeInput(1, 4));
+    router.up();
+
+    expect(router.hasActiveSession).toBe(false);
+    expect(comp.position.x).toBe(0);
+  });
+
+  it('does not turn a keyboard round trip into a click', () => {
+    const comp = makeAnd(2);
+    comp.position.set(3, 3);
+    const other = makeAnd(2, undefined, 8, 3);
+    project.addComponent(comp);
+    project.addComponent(other);
+    project.selectionManager.select([comp, other], []);
+
+    router.down(makeInput(4, 4));
+    for (let i = 0; i < 4; i++) {
+      project.requestSelectionRotation(1); // four turns: net rotation zero
+    }
+    router.up();
+
+    // Nothing was committed, but the gesture turned the group: not a click.
+    expect(project.selectionManager.selectedComponents.size).toBe(2);
+  });
+
+  it('adds to the selection with the modifier held', () => {
+    const first = makeAnd(2);
+    first.position.set(3, 3);
+    const second = makeAnd(2, undefined, 8, 3);
+    project.addComponent(first);
+    project.addComponent(second);
+
+    tap(router, 4, 4); // selects `first`
+    withAdditiveKey(() => tap(router, 9, 4)); // the second AND's body
+
+    expect(project.selectionManager.selectedComponents.has(first)).toBe(true);
+    expect(project.selectionManager.selectedComponents.has(second)).toBe(true);
+  });
+
+  it('toggles a selected element out on a modified click, without panning', () => {
+    const comp = makeAnd(2);
+    comp.position.set(3, 3);
+    project.addComponent(comp);
+    project.selectionManager.select([comp], []);
+    const panSpy = vi.spyOn(project.viewport, 'pan');
+
+    withAdditiveKey(() => {
+      router.down(makeInput(4, 4));
+      router.up();
+    });
+
+    expect(project.selectionManager.isEmpty).toBe(true);
+    expect(panSpy).not.toHaveBeenCalled();
+    expect(comp.position.x).toBe(3);
+  });
+
+  it('moves the selection on a modified drag, as it does without the modifier', () => {
+    const comp = makeAnd(2);
+    comp.position.set(3, 3);
+    project.addComponent(comp);
+    project.selectionManager.select([comp], []);
+
+    withAdditiveKey(() => {
+      router.down(makeInput(4, 4));
+      router.move(makeInput(8, 4));
+      router.up();
+    });
+
+    expect(comp.position.x).toBe(7);
+  });
+
+  it('narrows the selection on a plain click on one of its elements', () => {
+    const comp = makeAnd(2);
+    comp.position.set(3, 3);
+    const other = makeAnd(2, undefined, 8, 3);
+    project.addComponent(comp);
+    project.addComponent(other);
+    project.selectionManager.select([comp, other], []);
+
+    router.down(makeInput(9, 4)); // inside the move grab, released without moving
+    router.up();
+
+    expect(project.selectionManager.selectedComponents.has(other)).toBe(true);
+    expect(project.selectionManager.selectedComponents.has(comp)).toBe(false);
+    expect(other.position.x).toBe(8);
+  });
+
+  it('pans instead when the press misses the selection', () => {
+    const comp = makeAnd(2);
+    comp.position.set(3, 3);
+    project.addComponent(comp);
+    project.selectionManager.select([comp], []);
+    const panSpy = vi.spyOn(project.viewport, 'pan');
+
+    router.down(makeInput(20, 20));
+    router.move(makeInput(60, 20));
+    router.up();
+
+    expect(panSpy).toHaveBeenCalled();
+    expect(comp.position.x).toBe(3);
+    // A pan is not a tap: the selection it started next to survives.
+    expect(project.selectionManager.selectedComponents.has(comp)).toBe(true);
+  });
+
+  it('pans over the selection with the setting turned off', () => {
+    const comp = makeAnd(2);
+    comp.position.set(3, 3);
+    project.addComponent(comp);
+    project.selectionManager.select([comp], []);
+    // Restored in afterEach: the setting persists to localStorage, which
+    // outlives the TestBed and would leak into every later describe.
+    TestBed.inject(EditorSettingsService).dragSelectionInPanMode.set(false);
+    const panSpy = vi.spyOn(project.viewport, 'pan');
+
+    router.down(makeInput(4, 4));
+    router.move(makeInput(44, 4));
+    router.up();
+
+    expect(panSpy).toHaveBeenCalled();
+    expect(comp.position.x).toBe(3);
+    expect(project.actionManager.undoAvailable).toBe(false);
   });
 });
 
@@ -578,18 +927,12 @@ describe('WorkModeRouter wire-tool taps (WIRE_TOOL mode)', () => {
     project.destroy({ children: true });
   });
 
-  /** A press-and-release without movement. */
-  function tap(x: number, y: number): void {
-    router.down(makeInput(x, y));
-    router.up();
-  }
-
   it('toggles negation on the tapped input port, undoably', () => {
     const and = makeAnd(2, undefined, 2, 2);
     project.addComponent(and);
     const cp = and.connectionPoints; // 0,1 inputs; 2 output
 
-    tap(cp[0].x, cp[0].y);
+    tap(router, cp[0].x, cp[0].y);
 
     expect(and.isPortNegated('in', 0)).toBe(true);
     expect(project.actionManager.undoAvailable).toBe(true);
@@ -603,10 +946,10 @@ describe('WorkModeRouter wire-tool taps (WIRE_TOOL mode)', () => {
     project.addComponent(and);
     const out = and.connectionPoints[2];
 
-    tap(out.x, out.y);
+    tap(router, out.x, out.y);
     expect(and.isPortNegated('out', 0)).toBe(true);
 
-    tap(out.x, out.y);
+    tap(router, out.x, out.y);
     expect(and.isPortNegated('out', 0)).toBe(false);
   });
 
@@ -615,10 +958,10 @@ describe('WorkModeRouter wire-tool taps (WIRE_TOOL mode)', () => {
     project.addWire(makeWire(0, 2, WireDirection.HORIZONTAL, 4));
     project.addWire(makeWire(2, 0, WireDirection.VERTICAL, 4));
 
-    tap(2.5, 2.5);
+    tap(router, 2.5, 2.5);
     expect(Array.from(project.wires)).toHaveLength(4);
 
-    tap(2.5, 2.5);
+    tap(router, 2.5, 2.5);
     expect(Array.from(project.wires)).toHaveLength(2);
   });
 
@@ -628,7 +971,7 @@ describe('WorkModeRouter wire-tool taps (WIRE_TOOL mode)', () => {
     const cp = and.connectionPoints[0];
     const toggleSpy = vi.spyOn(project.topology, 'toggleConnectionAt');
 
-    tap(cp.x, cp.y);
+    tap(router, cp.x, cp.y);
 
     expect(and.isPortNegated('in', 0)).toBe(true);
     expect(toggleSpy).not.toHaveBeenCalled();
@@ -643,11 +986,11 @@ describe('WorkModeRouter wire-tool taps (WIRE_TOOL mode)', () => {
     const tip = driver.connectionPoints[2];
     expect(load.connectionPoints[0]).toEqual(tip);
 
-    tap(tip.x - 0.2, tip.y);
+    tap(router, tip.x - 0.2, tip.y);
     expect(driver.isPortNegated('out', 0)).toBe(true);
     expect(load.isPortNegated('in', 0)).toBe(false);
 
-    tap(tip.x + 0.2, tip.y);
+    tap(router, tip.x + 0.2, tip.y);
     expect(load.isPortNegated('in', 0)).toBe(true);
     expect(driver.isPortNegated('out', 0)).toBe(true);
   });
@@ -700,7 +1043,7 @@ describe('WorkModeRouter wire-tool taps (WIRE_TOOL mode)', () => {
       const cp = comp.connectionPoints[0];
       const side: PortSide = comp.numInputs > 0 ? 'in' : 'out';
       router.hover(makeInput(cp.x, cp.y));
-      tap(cp.x, cp.y);
+      tap(router, cp.x, cp.y);
       expect(comp.isPortNegated(side, 0)).toBe(false);
     }
     expect(show).not.toHaveBeenCalled();
@@ -712,7 +1055,7 @@ describe('WorkModeRouter wire-tool taps (WIRE_TOOL mode)', () => {
       comp.setPortNegated(side, 0, true);
       const cp = comp.connectionPoints[0];
 
-      tap(cp.x, cp.y);
+      tap(router, cp.x, cp.y);
       expect(comp.isPortNegated(side, 0)).toBe(false);
     }
   });
@@ -723,10 +1066,257 @@ describe('WorkModeRouter wire-tool taps (WIRE_TOOL mode)', () => {
     const cp = and.connectionPoints[0];
 
     // 0.51gu away — within the quad-tree query box but past the 0.5gu hit test.
-    tap(cp.x + 0.51, cp.y);
+    tap(router, cp.x + 0.51, cp.y);
 
     expect(and.isPortNegated('in', 0)).toBe(false);
     expect(project.actionManager.undoAvailable).toBe(false);
+  });
+
+  it('moves a selected component on a drag instead of drawing a wire', () => {
+    const and = makeAnd(2, undefined, 2, 2); // body 2..4
+    project.addComponent(and);
+    tap(router, 3, 3); // selects it
+    expect(project.selectionManager.selectedComponents.has(and)).toBe(true);
+
+    router.down(makeInput(3, 3));
+    router.move(makeInput(7, 3));
+    router.up();
+
+    expect(and.position.x).toBe(6);
+    expect(Array.from(project.wires)).toHaveLength(0); // no run started
+  });
+
+  it('still draws from a port of a selected component', () => {
+    const and = makeAnd(2, undefined, 2, 2);
+    project.addComponent(and);
+    tap(router, 3, 3); // selects it
+    const tip = and.connectionPoints[2];
+
+    router.down(makeInput(tip.x, tip.y));
+    router.move(makeInput(tip.x + 4, tip.y));
+    router.up();
+
+    expect(and.position.x).toBe(2); // the component stayed put
+    expect(Array.from(project.wires)).toHaveLength(1);
+  });
+
+  it('adds to the selection with the modifier held, over a port', () => {
+    const first = makeAnd(2, undefined, 2, 2);
+    const second = makeAnd(2, undefined, 8, 2);
+    project.addComponent(first);
+    project.addComponent(second);
+
+    tap(router, 9, 3); // the second AND's body
+    // The first port tip sits on the component's own bounds, so this is both a
+    // port in reach and an element to select: the modifier takes the selection.
+    withAdditiveKey(() =>
+      tap(router, first.connectionPoints[0].x, first.connectionPoints[0].y)
+    );
+
+    expect(first.isPortNegated('in', 0)).toBe(false);
+    expect(project.selectionManager.selectedComponents.has(first)).toBe(true);
+    expect(project.selectionManager.selectedComponents.has(second)).toBe(true);
+  });
+
+  it('does not restore a selection something else changed since the tap', () => {
+    const and = makeAnd(2, undefined, 2, 2);
+    const other = makeAnd(2, undefined, 8, 2);
+    project.addComponent(and);
+    project.addComponent(other);
+    project.selectionManager.select([other], []);
+
+    tap(router, 3, 3); // selects the AND, recording `other` as what it replaced
+    expect(project.selectionManager.selectedComponents.has(and)).toBe(true);
+
+    project.selectionManager.clear(); // Escape, as the router runs it
+
+    secondClick(router, 3, 3);
+
+    // The record is stale — the selection changed under it — so the press is
+    // an ordinary click: it selects what it landed on and does not resurrect
+    // the pre-tap selection.
+    expect(project.selectionManager.selectedComponents.has(and)).toBe(true);
+    expect(project.selectionManager.selectedComponents.has(other)).toBe(false);
+  });
+
+  it('takes an element back out with the modifier held', () => {
+    const and = makeAnd(2, undefined, 2, 2);
+    project.addComponent(and);
+
+    tap(router, 3, 3);
+    expect(project.selectionManager.selectedComponents.has(and)).toBe(true);
+
+    withAdditiveKey(() => tap(router, 3, 3));
+
+    expect(project.selectionManager.selectedComponents.has(and)).toBe(false);
+    expect(project.selectionManager.isEmpty).toBe(true);
+  });
+
+  it('selects what is under a tap that would toggle nothing', () => {
+    const and = makeAnd(2, undefined, 2, 2);
+    project.addComponent(and);
+
+    tap(router, 3, 3); // body centre: no port in reach, no junction to toggle
+
+    expect(project.selectionManager.selectedComponents.has(and)).toBe(true);
+    expect(and.isPortNegated('in', 0)).toBe(false);
+    // A selection is not a circuit change: nothing lands in the history.
+    expect(project.actionManager.undoAvailable).toBe(false);
+  });
+
+  it('negates the tapped port instead of selecting it', () => {
+    const and = makeAnd(2, undefined, 2, 2);
+    project.addComponent(and);
+    const cp = and.connectionPoints[0];
+
+    tap(router, cp.x, cp.y);
+
+    expect(and.isPortNegated('in', 0)).toBe(true);
+    expect(project.selectionManager.isEmpty).toBe(true);
+  });
+
+  it('toggles a tapped junction instead of selecting the wires there', () => {
+    project.addWire(makeWire(0, 2, WireDirection.HORIZONTAL, 4));
+    project.addWire(makeWire(2, 0, WireDirection.VERTICAL, 4));
+
+    tap(router, 2.5, 2.5);
+
+    expect(Array.from(project.wires)).toHaveLength(4); // split, not selected
+    expect(project.selectionManager.isEmpty).toBe(true);
+  });
+
+  it('selects a wire body, and clears the selection on empty canvas', () => {
+    const wire = makeWire(0, 2, WireDirection.HORIZONTAL, 4);
+    project.addWire(wire);
+
+    tap(router, 2.5, 2.5);
+    expect(project.selectionManager.selectedWires.has(wire)).toBe(true);
+
+    tap(router, 20, 20);
+    expect(project.selectionManager.isEmpty).toBe(true);
+  });
+
+  it('leaves no negation bubble behind on a double click', () => {
+    const and = makeAnd(2, undefined, 2, 2);
+    project.addComponent(and);
+    const cp = and.connectionPoints[0];
+
+    tap(router, cp.x, cp.y);
+    expect(and.isPortNegated('in', 0)).toBe(true);
+
+    secondClick(router, cp.x, cp.y);
+
+    expect(and.isPortNegated('in', 0)).toBe(false);
+    // The pair cancels out: neither tap is left in the history.
+    expect(project.actionManager.undoAvailable).toBe(false);
+  });
+
+  it('takes the first click back when a double click starts a wire drag', () => {
+    const and = makeAnd(2, undefined, 2, 2);
+    project.addComponent(and);
+    const tip = and.connectionPoints[2];
+
+    tap(router, tip.x, tip.y);
+    expect(and.isPortNegated('out', 0)).toBe(true);
+
+    router.down(makeInput(tip.x, tip.y, 2)); // the wire starts on the second click
+    router.move(makeInput(tip.x + 4, tip.y, 2));
+    router.up();
+
+    expect(and.isPortNegated('out', 0)).toBe(false);
+    expect(Array.from(project.wires)).toHaveLength(1);
+    // Only the wire is undoable — the stray bubble left no history entry.
+    project.actionManager.undo();
+    expect(Array.from(project.wires)).toHaveLength(0);
+    expect(and.isPortNegated('out', 0)).toBe(false);
+  });
+
+  it('takes a select tap back when a double click follows it', () => {
+    const wire = makeWire(0, 2, WireDirection.HORIZONTAL, 4);
+    const and = makeAnd(2, undefined, 2, 6);
+    project.addWire(wire);
+    project.addComponent(and);
+    project.selectionManager.select([], [wire]);
+
+    tap(router, 3, 7); // the AND's body: the tap selects it in place of the wire
+    expect(project.selectionManager.selectedComponents.has(and)).toBe(true);
+    expect(project.selectionManager.selectedWires.has(wire)).toBe(false);
+
+    secondClick(router, 3, 7); // the second half of the double click
+
+    // The pair collapses: the AND is not left selected by the stray click, and
+    // the wire the user had picked is back.
+    expect(project.selectionManager.selectedComponents.has(and)).toBe(false);
+    expect(project.selectionManager.selectedWires.has(wire)).toBe(true);
+  });
+
+  it('gives a consumed wire back when the take-back undoes its own toggle', () => {
+    project.addWire(makeWire(0, 2, WireDirection.HORIZONTAL, 4));
+    project.addWire(makeWire(2, 0, WireDirection.VERTICAL, 4));
+    tap(router, 2.5, 2.5); // splits the crossing: four stubs, one junction
+    expect(Array.from(project.wires)).toHaveLength(4);
+
+    const stub = Array.from(project.wires)[0];
+    tap(router, 1.5, 2.5); // the stub's body — a select tap, clear of the junction
+    expect(project.selectionManager.selectedWires.has(stub)).toBe(true);
+
+    tap(router, 2.5, 2.5); // the double click's first half: joins the stubs,
+    expect(project.selectionManager.selectedWires.has(stub)).toBe(false); // consuming the stub
+    secondClick(router, 2.5, 2.5);
+
+    // The join is taken back and the stub is back with it — a fresh instance
+    // carrying the id the selection held, since the toggle destroyed the one
+    // the snapshot could have pointed at.
+    const selected = Array.from(
+      project.selectionManager.selectedWires,
+      (w) => w.id
+    );
+    expect(selected).toEqual([stub.id]);
+    expect(project.selectionManager.selectedWires.has(stub)).toBe(false);
+  });
+
+  it('does not pair across a press the router kept to itself', () => {
+    const and = makeAnd(2, undefined, 2, 2);
+    project.addComponent(and);
+    const tip = and.connectionPoints[2];
+
+    tap(router, tip.x, tip.y);
+    expect(and.isPortNegated('out', 0)).toBe(true);
+
+    // A paste session claims the next press and is cancelled by it, so the
+    // click run advanced without this tool recording anything: the click after
+    // it is not this tap's second half.
+    project.startPasteSession([makeAnd()], []);
+    router.down(makeInput(tip.x, tip.y, 2));
+    router.up();
+    expect(router.hasActiveSession).toBe(false);
+
+    router.down(makeInput(tip.x, tip.y, 3));
+    router.move(makeInput(tip.x + 4, tip.y, 3));
+    router.up();
+
+    expect(and.isPortNegated('out', 0)).toBe(true);
+  });
+
+  it('takes a junction toggle back when a double click starts a wire drag', () => {
+    // A crossing at (2.5, 2.5): the first click splits it into four wires.
+    project.addWire(makeWire(0, 2, WireDirection.HORIZONTAL, 4));
+    project.addWire(makeWire(2, 0, WireDirection.VERTICAL, 4));
+
+    tap(router, 2.5, 2.5);
+    expect(Array.from(project.wires)).toHaveLength(4);
+
+    router.down(makeInput(2.5, 2.5, 2));
+    router.move(makeInput(6.5, 2.5, 2));
+    router.up();
+
+    // The split is gone, so the drawn wire merged with the original horizontal
+    // one instead of with a stub — the vertical piece is still whole.
+    const lengths = () => Array.from(project.wires, (w) => w.length).sort();
+    expect(lengths()).toEqual([4, 6]);
+
+    project.actionManager.undo();
+    expect(lengths()).toEqual([4, 4]);
   });
 
   it('a drag draws a wire and triggers no tap action', () => {
@@ -798,6 +1388,18 @@ describe('WorkModeRouter wire-tool taps (WIRE_TOOL mode)', () => {
     expect(project.floatingLayer.negationGhostVisible).toBe(false);
   });
 
+  it('shows no circuit ghost while the additive modifier is held', () => {
+    const and = makeAnd(2, undefined, 2, 2);
+    project.addComponent(and);
+    const cp = and.connectionPoints[0];
+    const show = vi.spyOn(project.floatingLayer, 'showNegationGhost');
+
+    withAdditiveKey(() => router.hover(makeInput(cp.x, cp.y)));
+
+    expect(show).not.toHaveBeenCalled();
+    expect(project.floatingLayer.negationGhostVisible).toBe(false);
+  });
+
   it('hides the hover ghosts when leaving the mode', () => {
     const and = makeAnd(2, undefined, 2, 2);
     project.addComponent(and);
@@ -850,7 +1452,7 @@ describe('WorkModeRouter wire-tool taps (WIRE_TOOL mode)', () => {
     project.addWire(makeWire(2, 0, WireDirection.VERTICAL, 4));
     router.hover(makeInput(2.5, 2.5));
 
-    tap(2.5, 2.5); // splits — the point is now a joinable CP
+    tap(router, 2.5, 2.5); // splits — the point is now a joinable CP
 
     expect(project.floatingLayer.connectionGhostVisible).toBe(true);
     expect(project.topology.connectionToggleKindAt(new Point(2.5, 2.5))).toBe(
@@ -942,6 +1544,51 @@ describe('WorkModeRouter placement hover ghost (COMPONENT_PLACEMENT mode)', () =
     router.leave();
 
     expect(ghosts()).toHaveLength(0);
+  });
+
+  it('a rotate request repaints the ghost without waiting for a pointer move', () => {
+    router.hover(makeInput(2, 2));
+    const frames: string[] = [];
+    project.ticker$.subscribe((value) => frames.push(value));
+
+    project.requestSelectionRotation(1);
+
+    expect(frames).toContain('single');
+  });
+
+  it('a rotate request turns the hover ghost and sticks for the next one', () => {
+    router.hover(makeInput(2, 2));
+
+    project.requestSelectionRotation(1);
+
+    expect((ghosts()[0] as Component).direction).toBe(Direction.S);
+    // The selection rotate — and its undo entry — stayed out of it.
+    expect(router.hasActiveSession).toBe(false);
+    expect(project.actionManager.undoAvailable).toBe(false);
+
+    router.leave();
+    router.hover(makeInput(8, 8));
+    expect((ghosts()[0] as Component).direction).toBe(Direction.S);
+  });
+
+  it('a sticky direction chosen while hovering turns the standing ghost', () => {
+    router.hover(makeInput(2, 2));
+
+    TestBed.inject(WorkModeService).setPlacementDirection(
+      andComponentConfig.type,
+      Direction.W
+    );
+    router.hover(makeInput(3, 2));
+
+    expect((ghosts()[0] as Component).direction).toBe(Direction.W);
+  });
+
+  it('a rotate request with no ghost on the board still turns the next placement', () => {
+    project.requestSelectionRotation(1);
+
+    router.hover(makeInput(2, 2));
+
+    expect((ghosts()[0] as Component).direction).toBe(Direction.S);
   });
 
   it('removes the ghost when switching modes', () => {
@@ -1106,10 +1753,9 @@ describe('WorkModeRouter paste placement', () => {
    */
   function hoverOnGrid(gx: number, gy: number, pointerType = 'mouse'): void {
     router.hover({
-      pointerId: 1,
+      ...makeMoveInput(gx, gy),
       pointerType,
-      global: new Point(gx * environment.gridSize, gy * environment.gridSize),
-      grid: new Point(gx, gy)
+      global: new Point(gx * environment.gridSize, gy * environment.gridSize)
     });
   }
 
