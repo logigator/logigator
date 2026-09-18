@@ -24,6 +24,11 @@ function makeComponent(x: number, y: number, w: number, h: number): any {
     connectionPoints: [] as Point[],
     get gridBounds() {
       return new Rectangle(x, y, w, h);
+    },
+    // Drawing nothing beyond the footprint, like the base class: what a click
+    // selects by is the footprint.
+    get pickBounds() {
+      return this.gridBounds;
     }
   };
 }
@@ -38,6 +43,9 @@ function makeWire(x: number, y: number, w: number, h: number): any {
     ],
     get gridBounds() {
       return new Rectangle(x, y, w, h);
+    },
+    get pickBounds() {
+      return this.gridBounds;
     }
   };
 }

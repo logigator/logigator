@@ -9,6 +9,7 @@ import { AddWiresAction } from '../actions/actions/add-wires.action';
 import { RemoveWiresAction } from '../actions/actions/remove-wires.action';
 import { ActionContainer } from '../actions/action-container';
 import { ConnectionPoint } from '../connection-points/connection-point';
+import { WireDirection } from '@logigator/core';
 import { getStaticDI } from '../utils/get-di';
 import { LoggingService } from '../logging/logging.service';
 import type { Project } from './project';
@@ -16,6 +17,14 @@ import type { Project } from './project';
 /** The element a click lands on, tagged with the set it belongs in. */
 type ClickHit =
   { kind: 'component'; element: Component } | { kind: 'wire'; element: Wire };
+
+/**
+ * How far either side of a wire's centre-line (grid units, an eighth of a
+ * cell) a click still counts as landing on the cable itself, which outranks a
+ * text label drawn over it. A grid measure, not a screen one: the quarter-cell
+ * band is the same slice of the row at every zoom.
+ */
+const PICK_LINE_TOLERANCE_GRID = 0.125;
 
 export class SelectionManager {
   /** Margin (grid units) for grab rects with no user-drawn shape. */
@@ -174,7 +183,7 @@ export class SelectionManager {
   }
 
   // A zero-area rect fails PixiJS Rectangle.intersects(), hence the 1×1 query
-  // rect plus a gridBounds.contains() post-filter.
+  // rect plus the containment post-filters in _pickAt.
   private _commitSingleClick(
     px: number,
     py: number,
@@ -257,35 +266,65 @@ export class SelectionManager {
    * The element a click at the point selects: the one whose bounds contain it,
    * a component over a wire and the smaller bounding box over the larger —
    * smaller = more precisely aimed.
+   *
+   * A text label overflows its 1×1 footprint and a wire can run under it, so
+   * where the rules above would hand the click to a wire, a label drawn over
+   * the point takes it back — unless the pointer is on that wire's drawn line,
+   * which wins as the cable the user can see. The cable stays reachable exactly
+   * where it is visible, the label everywhere else on the glyphs.
    */
   private _pickAt(px: number, py: number): ClickHit | null {
     const queryRect = new Rectangle(px - 0.5, py - 0.5, 1, 1);
 
     let bestComponent: Component | null = null;
     let bestComponentArea = Infinity;
+    let bestLabel: Component | null = null;
+    let bestLabelArea = Infinity;
 
     for (const component of this.project.queryComponentsInRange(queryRect)) {
+      if (component.destroyed) continue;
       const bounds = component.gridBounds;
-      if (!component.destroyed && bounds.contains(px, py)) {
+      if (bounds.contains(px, py)) {
         const area = bounds.width * bounds.height;
         if (area < bestComponentArea) {
           bestComponentArea = area;
           bestComponent = component;
+        }
+        continue;
+      }
+      // Off the footprint, only a drawn overflow (a label) can still be aimed at.
+      const drawn = component.pickBounds;
+      if (drawn.contains(px, py)) {
+        const area = drawn.width * drawn.height;
+        if (area < bestLabelArea) {
+          bestLabelArea = area;
+          bestLabel = component;
         }
       }
     }
 
     let bestWire: Wire | null = null;
     let bestWireArea = Infinity;
+    let bestOnWire: Wire | null = null;
+    let bestOnWireArea = Infinity;
 
     for (const wire of this.project.queryWiresInRange(queryRect)) {
+      if (wire.destroyed) continue;
       const bounds = wire.gridBounds;
-      if (!wire.destroyed && bounds.contains(px, py)) {
-        const area = bounds.width * bounds.height;
-        if (area < bestWireArea) {
-          bestWireArea = area;
-          bestWire = wire;
-        }
+      if (!bounds.contains(px, py)) continue;
+      const area = bounds.width * bounds.height;
+      if (area < bestWireArea) {
+        bestWireArea = area;
+        bestWire = wire;
+      }
+      // Only a label contests a wire, so the line test is skipped otherwise.
+      if (
+        bestLabel !== null &&
+        area < bestOnWireArea &&
+        this._onWireLine(wire, px, py)
+      ) {
+        bestOnWireArea = area;
+        bestOnWire = wire;
       }
     }
 
@@ -295,7 +334,26 @@ export class SelectionManager {
     ) {
       return { kind: 'component', element: bestComponent };
     }
+    // A label takes the click back from a wire only, and never from a footprint
+    // under the point: a body is what the user sees, and keeps whatever the
+    // rule above gave it.
+    if (bestLabel !== null && bestComponent === null) {
+      return bestOnWire
+        ? { kind: 'wire', element: bestOnWire }
+        : { kind: 'component', element: bestLabel };
+    }
     return bestWire ? { kind: 'wire', element: bestWire } : null;
+  }
+
+  /**
+   * Whether the point lands on a wire's drawn line rather than merely in its
+   * row: a wire occupies a whole grid cell across, and the label yields only
+   * the middle quarter of that cell to the cable.
+   */
+  private _onWireLine(wire: Wire, px: number, py: number): boolean {
+    return wire.direction === WireDirection.HORIZONTAL
+      ? Math.abs(py - wire.position.y) <= PICK_LINE_TOLERANCE_GRID
+      : Math.abs(px - wire.position.x) <= PICK_LINE_TOLERANCE_GRID;
   }
 
   // A CP is highlighted only when the selection rect touches its grid cell, so
@@ -496,10 +554,11 @@ export class SelectionManager {
 
   /**
    * Whether a press at a grid point grabs the selection (starts a move): the
-   * drawn marquee where one exists, or the selected elements' own bounds —
-   * whichever is hit, so an element the marquee does not cover (added by the
-   * additive modifier, or hanging over the marquee's edge) still drags the
-   * group. A rect-less selection (single click) has only the bounds to go on.
+   * drawn marquee where one exists, or the selected elements' own bounds — a
+   * text's label among them, so it drags by the glyphs it was selected by.
+   * Either way an element the marquee does not cover (added by the additive
+   * modifier, or hanging over the marquee's edge) still drags the group. A
+   * rect-less selection (single click) has only the bounds to go on.
    */
   public isGrabbedAt(gridPoint: { x: number; y: number }): boolean {
     const rect = this.grabRect();
@@ -522,17 +581,18 @@ export class SelectionManager {
   }
 
   /**
-   * The selected element whose bounds contain the point, if any. Queried
-   * through the project's spatial index rather than by walking the selection:
-   * this answers every press, and a large selection must not cost a bounds
-   * allocation per member.
+   * The selected element whose bounds contain the point, if any. A text is
+   * grabbed by its label as well as by its anchor cell, matching what a click
+   * selects. Queried through the project's spatial index rather than by walking
+   * the selection: this answers every press, and a large selection must not
+   * cost a bounds allocation per member.
    */
   private _selectedAt(gridPoint: {
     x: number;
     y: number;
   }): Component | Wire | null {
     for (const component of this._nearbyComponents(gridPoint)) {
-      if (component.gridBounds.contains(gridPoint.x, gridPoint.y)) {
+      if (component.pickBounds.contains(gridPoint.x, gridPoint.y)) {
         return component;
       }
     }
@@ -544,7 +604,7 @@ export class SelectionManager {
     return null;
   }
 
-  /** Selected components whose bounds cover the grid cell around the point. */
+  /** Selected components whose pick bounds cover the grid cell around the point. */
   private _nearbyComponents(gridPoint: {
     x: number;
     y: number;

@@ -170,15 +170,16 @@ export class SelectionMoveSession implements DragSession {
   /**
    * Whether a press grabs what this session is floating: the selection's drawn
    * marquee where it covers the point, else one of the detached elements' own
-   * bounds. The manager cannot answer this — detaching took the elements out of
-   * the project's spatial index, which is what every other press test reads.
+   * bounds — a text's label among them, matching what a click selects by. The
+   * manager cannot answer this — detaching took the elements out of the
+   * project's spatial index, which is what every other press test reads.
    */
   private _grabsAt(local: Point): boolean {
     const rect = this.project.selectionManager.grabRect();
     if (rect?.contains(local.x, local.y)) return true;
     return (
       this._components.some(
-        (c) => !c.destroyed && c.gridBounds.contains(local.x, local.y)
+        (c) => !c.destroyed && c.pickBounds.contains(local.x, local.y)
       ) ||
       this._wires.some(
         (w) => !w.destroyed && w.gridBounds.contains(local.x, local.y)
