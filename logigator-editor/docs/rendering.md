@@ -378,6 +378,15 @@ allocation dominates. Implementations share the `overlapsRect` helper, and
 `Component` derives both from the same local extents in `component-geometry.ts`
 so the two cannot drift. `Connectable` adds `connectionPoints`.
 
+`pickBounds` / `intersectsPickBounds` are the pair `queryRange` tests: what a
+click selects by, which is the footprint unless the element draws beyond it — a
+text label widens it to its glyph box, so a click, a marquee or an eraser sweep
+reaches the element where the user sees it. The tree still **files** by
+`cullBounds`, which therefore has to cover the pick bounds; collision and the
+element's own bounds keep reading `gridBounds`, while everything that frames
+content — export, previews, the minimap, a watch view — reads `cullBounds`, so
+a label is inside the frame it is subtracted from.
+
 ### Tree structure
 
 Each `QuadTreeEntry` owns a **tight cell** (`region`, its slot in the quadrant

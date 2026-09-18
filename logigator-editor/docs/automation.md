@@ -88,8 +88,9 @@ rendering choice a driver has no use for. `hidden` marks system-managed options
 
 ### Reads
 
-`getProject()` returns name/id/documentType/source, dirty flag, content bounds,
-undo/redo availability, the current `busy` reason, and all elements.
+`getProject()` returns name/id/documentType/source, dirty flag, content bounds
+(each element's drawn extent, a text label included), undo/redo availability,
+the current `busy` reason, and all elements.
 `getElements(query)` filters by `componentIds` / `wireIds` / `bounds` (a
 quad-tree range query) / `types`; naming ids of one kind restricts the read to
 that kind.

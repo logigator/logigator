@@ -172,6 +172,18 @@ bounding-box area wins — the more precisely-aimed target. The hit comes from
 `_pickAt`, a `ClickHit` naming its element and kind, so the membership and
 toggle paths never resolve it a second time.
 
+**A text label is a click target of its own.** Its glyph box overflows the 1×1
+footprint (`pickBounds`, `rendering.md`), and a wire may run under it, so the
+resolution is: a component whose footprint contains the point wins; otherwise a
+label drawn over the point takes the click back from the wire — unless the
+pointer is within an eighth of a cell of that wire's centre-line, the
+quarter-cell band the cable keeps for itself. A grid measure, so the band is
+the same slice of the row at every zoom: the label takes everything else in the
+cell it covers.
+`_selectedAt` (the grab test) reads the same pick bounds, and so does the
+quad-tree query: a marquee or an eraser sweep that reaches the glyphs catches
+the element.
+
 `commit`'s `additive` flag (the hold-style modifier) changes what a click means:
 the element under the point **toggles** — in when it was out, out when it was in
 — and a marquee **joins** what it touches instead of replacing the selection; a

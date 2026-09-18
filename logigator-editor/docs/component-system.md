@@ -30,14 +30,15 @@ scalings cancel. **Subclasses add visual objects to `_visualSpace`, never to
 `this`.** `fromGrid` (`utils/grid.ts`) is still used inside `_visualSpace`, e.g.
 for stub offsets. Connection points come back out in grid units.
 
-`connectionPoints`, `gridBounds` and `bodyGridBounds` delegate to
+`connectionPoints`, `gridBounds`, `bodyGridBounds` and `pickBounds` delegate to
 `component-geometry.ts`, whose pure functions take a plain shape descriptor
 (direction, port counts, body extent, position) and involve no PixiJS. That is
 what keeps the lattice invariants — ports exactly on the half-grid, exact
 quarter-turn arithmetic instead of trig — pinned by `component-geometry.spec.ts`.
 `gridBounds` **includes** 0.5-unit stub padding (spatial index, component–component
 collision); `bodyGridBounds` excludes it, so a wire endpoint touching a stub tip
-is not a collision.
+is not a collision. `pickBounds` is what a click selects by: the footprint,
+except where a subclass draws beyond it — `TextComponent` adds the glyph box.
 
 ## `Component` (abstract base)
 
