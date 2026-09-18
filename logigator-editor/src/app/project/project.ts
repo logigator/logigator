@@ -217,9 +217,10 @@ export class Project extends Container {
   }
 
   /**
-   * Tight bounds in grid units over all committed content (component bodies
-   * incl. port stubs, plus wires), or `null` when the project is empty.
-   * Transient overlays are excluded.
+   * Bounds in grid units over all committed content, each element by its
+   * rendered extent (`cullBounds`) rather than its footprint — a text label
+   * hangs outside the anchor cell, and a screenshot framing the cell would cut
+   * it off. `null` when the project is empty; transient overlays are excluded.
    */
   public getContentBounds(): Rectangle | null {
     let minX = Infinity;
@@ -232,8 +233,8 @@ export class Project extends Container {
       if (b.right > maxX) maxX = b.right;
       if (b.bottom > maxY) maxY = b.bottom;
     };
-    for (const component of this._components.items) fold(component.gridBounds);
-    for (const wire of this._wires.items) fold(wire.gridBounds);
+    for (const component of this._components.items) fold(component.cullBounds);
+    for (const wire of this._wires.items) fold(wire.cullBounds);
     if (!Number.isFinite(minX)) return null;
     return new Rectangle(minX, minY, maxX - minX, maxY - minY);
   }

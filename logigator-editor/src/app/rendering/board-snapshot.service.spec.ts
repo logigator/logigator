@@ -10,6 +10,8 @@ import {
 import { TestBed } from '@angular/core/testing';
 import { configureTestBed } from '../../testing/configure-test-bed';
 import { Project } from '../project/project';
+import { Component } from '../components/component';
+import { textComponentConfig } from '../components/component-types/text/text.config';
 import { makeAnd } from '../../testing/factories';
 import { BoardSnapshotService } from './board-snapshot.service';
 import { RendererService } from './renderer.service';
@@ -90,6 +92,27 @@ describe('BoardSnapshotService', () => {
     expect(content.transform.d).toBeCloseTo(32);
     expect(content.transform.tx).toBeCloseTo(-48); // -region.x(1.5) × 32
     expect(content.transform.ty).toBeCloseTo(32); // -region.y(-1) × 32
+
+    texture.destroy(true);
+  });
+
+  it('frames a text label, not only its anchor cell', () => {
+    const text = Component.deserialize(
+      { pos: [0, 0], options: { fontSize: 12, text: 'x'.repeat(10) } },
+      textComponentConfig
+    );
+    project.addComponent(text);
+
+    const texture = service.renderProjectToTexture(project, {
+      multiplier: 1,
+      background: 'transparent'
+    });
+
+    // The glyphs reach ≈ 5.5 grid units; the frame holds them rounded out to
+    // 6, plus the 1-cell margin — 8 units, where the anchor cell alone would
+    // have framed 3 and cropped the label.
+    expect(texture.width).toBe(8 * 16);
+    expect(texture.height).toBe(3 * 16);
 
     texture.destroy(true);
   });

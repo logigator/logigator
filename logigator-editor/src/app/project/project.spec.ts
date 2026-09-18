@@ -6,6 +6,8 @@ import { SelectionManager } from './selection-manager';
 import { Wire } from '../wires/wire';
 import { Direction, WireDirection } from '@logigator/core';
 import { MoveComponentsAction } from '../actions/actions/move-components.action';
+import { Component } from '../components/component';
+import { textComponentConfig } from '../components/component-types/text/text.config';
 import { makeAnd, makeWire } from '../../testing/factories';
 import { environment } from '../../environments/environment';
 
@@ -641,6 +643,21 @@ describe('Project.getContentBounds', () => {
     expect(b.y).toBeCloseTo(0); // component top
     expect(b.right).toBeCloseTo(5.5); // component output stub tip
     expect(b.bottom).toBeCloseTo(10); // wire bottom
+  });
+
+  it('covers a text label hanging past its anchor cell', () => {
+    const text = Component.deserialize(
+      { pos: [0, 0], options: { fontSize: 12, text: 'x'.repeat(10) } },
+      textComponentConfig
+    );
+    project.addComponent(text);
+
+    const b = project.getContentBounds()!;
+
+    // Ten glyphs at 12px reach ≈ 5.5 grid units right of the anchor cell, so
+    // bounds holding the cell alone would crop the label off a screenshot.
+    expect(b.contains(5.5, 0.5)).toBe(true);
+    expect(b.width).toBeGreaterThan(text.gridBounds.width);
   });
 });
 
