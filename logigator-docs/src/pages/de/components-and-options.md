@@ -98,7 +98,7 @@ Solange das Leitungswerkzeug aktiv ist, zeigt das Bewegen nahe eines Anschlusses
 
 ## Text platzieren
 
-Die Palette enthält keinen Text — Beschriftungen werden mit dem Werkzeug **Text** in der Werkzeugleiste platziert. Wähle es, klicke auf die Arbeitsfläche und tippe deine Notiz; die Einstellungskarte der Beschriftung lässt dich den **Text bearbeiten** und ihre **Schriftgröße** ändern. Leitungen dürfen durch eine Textbeschriftung verlaufen, ohne sich mit ihr zu verbinden.
+Die Palette enthält keinen Text — Beschriftungen werden mit dem Werkzeug **Text** in der Werkzeugleiste platziert. Wähle es, klicke auf die Arbeitsfläche und tippe deine Notiz; die Einstellungskarte der Beschriftung lässt dich den **Text bearbeiten** und ihre **Schriftgröße** ändern. Leitungen dürfen durch eine Textbeschriftung verlaufen, ohne sich mit ihr zu verbinden. Ein Klick irgendwo auf der Beschriftung wählt sie aus. Verläuft eine Leitung darunter, lässt sie sich weiterhin anklicken — eine Beschriftung blockiert die Leitung, auf der sie liegt, also nie.
 
 ## Siehe auch
 

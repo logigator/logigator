@@ -98,7 +98,7 @@ Tant que l'outil Fil est actif, survoler à proximité d'un port prévisualise l
 
 ## Placer du texte
 
-La palette ne comprend pas de texte — les étiquettes sont placées avec l'outil **Texte** de la barre d'outils. Choisissez-le, cliquez sur le plan de travail, et saisissez votre note ; la carte de paramètres de l'étiquette vous permet de **Modifier le texte** et de changer sa **Taille de police**. Les fils peuvent traverser une étiquette de texte sans s'y connecter.
+La palette ne comprend pas de texte — les étiquettes sont placées avec l'outil **Texte** de la barre d'outils. Choisissez-le, cliquez sur le plan de travail, et saisissez votre note ; la carte de paramètres de l'étiquette vous permet de **Modifier le texte** et de changer sa **Taille de police**. Les fils peuvent traverser une étiquette de texte sans s'y connecter. Cliquer n'importe où sur l'étiquette la sélectionne. Si un fil passe dessous, il reste cliquable : une étiquette ne bloque donc jamais le fil sur lequel elle repose.
 
 ## Voir aussi
 

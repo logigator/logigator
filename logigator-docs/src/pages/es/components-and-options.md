@@ -98,7 +98,7 @@ Mientras la herramienta Cable está activa, pasar el cursor cerca de un puerto p
 
 ## Colocar texto
 
-La paleta no incluye texto: las etiquetas se colocan con la herramienta **Texto** de la barra de herramientas. Elígela, haz clic en el tablero y escribe tu nota; la tarjeta de ajustes de la etiqueta te permite **Editar texto** y cambiar su **Tamaño de fuente**. Los cables pueden pasar a través de una etiqueta de texto sin conectarse a ella.
+La paleta no incluye texto: las etiquetas se colocan con la herramienta **Texto** de la barra de herramientas. Elígela, haz clic en el tablero y escribe tu nota; la tarjeta de ajustes de la etiqueta te permite **Editar texto** y cambiar su **Tamaño de fuente**. Los cables pueden pasar a través de una etiqueta de texto sin conectarse a ella. Hacer clic en cualquier parte de la etiqueta la selecciona. Si un cable pasa por debajo, sigue siendo clicable: una etiqueta nunca bloquea el cable sobre el que está.
 
 ## Consulta también
 

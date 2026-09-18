@@ -98,7 +98,7 @@ While the Wire tool is active, hovering near a port previews the bubble a tap wo
 
 ## Placing text
 
-The palette does not include text — labels are placed with the **Text** tool in the toolbar. Pick it, click the board, and type your note; the label's settings card lets you **Edit text** and change its **Font size**. Wires may pass through a text label without connecting to it.
+The palette does not include text — labels are placed with the **Text** tool in the toolbar. Pick it, click the board, and type your note; the label's settings card lets you **Edit text** and change its **Font size**. Wires may pass through a text label without connecting to it. Clicking anywhere on the label selects it. Where a wire runs underneath, clicking the wire still picks the wire, so a label never blocks the cable it sits on.
 
 ## See also
 
