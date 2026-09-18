@@ -45,8 +45,8 @@ describe('LgConfirmDialog', () => {
     expect(dialog()).not.toBeNull();
     expect(container()?.querySelector('h2')?.textContent).toContain('Discard?');
     expect(container()?.textContent).toContain('Lose changes?');
-    const labels = Array.from(container()!.querySelectorAll('button span')).map(
-      (s) => s.textContent?.trim()
+    const labels = Array.from(container()!.querySelectorAll('button')).map(
+      (b) => b.textContent?.trim()
     );
     expect(labels).toContain('Keep');
     expect(labels).toContain('Discard');

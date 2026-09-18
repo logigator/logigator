@@ -6,8 +6,8 @@ import { AnalyticsEvent } from '../analytics/analytics.mapping';
 
 /**
  * The two device axes onboarding content is authored for. Derived from the
- * layout breakpoint (compact chrome vs. desktop bars) rather than input type:
- * step targets and gesture wording follow which UI is on screen.
+ * layout breakpoint rather than input type: step targets and gesture wording
+ * follow which UI is on screen.
  */
 export type OnboardingPlatform = 'desktop' | 'compact';
 
@@ -20,14 +20,11 @@ const SEEN_HINTS_KEY = 'logigator.onboarding.seen-hints';
 const NUDGE_DISMISSED_KEY = 'logigator.onboarding.nudge-dismissed';
 
 /**
- * Single orchestrator and persistence gate for the whole onboarding surface —
- * the hands-on tutorials (Phase 2) and the just-in-time hints (Phase 3) both
- * read their enable/seen/completed state from here.
- *
- * Persistence mirrors {@link ChangelogService}: plain `localStorage` under the
- * `onboarding.*` namespace, degrading silently when storage is unavailable
- * (private mode) so the editor never breaks over a preference write. The
- * user-visible "show tips" toggle is this same global flag.
+ * Orchestrator and persistence gate for the whole onboarding surface: the
+ * tutorials and the just-in-time hints both read their enable/seen/completed
+ * state from here, and the user-visible "show tips" toggle is the same flag.
+ * Storage is plain `localStorage`, degrading silently when it is unavailable so
+ * the editor never breaks over a preference write.
  */
 @Injectable({ providedIn: 'root' })
 export class OnboardingService {
@@ -43,14 +40,14 @@ export class OnboardingService {
     this.loadBool(NUDGE_DISMISSED_KEY, false)
   );
   /**
-   * Whether the first-run "take the tutorial" nudge has been dismissed. The
-   * nudge is the only launch path (there is no auto-start): it shows once for a
-   * new user and, once dismissed or once the tutorial starts, never returns.
+   * Whether the first-run "take the tutorial" nudge has been dismissed. It is
+   * the only launch path — there is no auto-start — and never returns once
+   * dismissed or once the tutorial starts.
    */
   public readonly nudgeDismissed = this._nudgeDismissed.asReadonly();
 
   private readonly _activeTutorial = signal<string | null>(null);
-  /** Id of the tutorial currently running, or null. The runner reacts to this. */
+  /** Id of the tutorial currently running, or null. */
   public readonly activeTutorial = this._activeTutorial.asReadonly();
 
   private readonly _completedTutorials = this.loadSet(COMPLETED_TUTORIALS_KEY);
@@ -83,10 +80,8 @@ export class OnboardingService {
   }
 
   /**
-   * Re-enables tips, forgets which hints have been seen (so the JIT hints
-   * surface again on their next trigger), clears completed tutorials (so they
-   * can be started again from the nudge), and restores the first-run tutorial
-   * nudge.
+   * Re-enables tips and forgets every seen hint, completed tutorial and the
+   * nudge dismissal, so the whole surface can be met again.
    */
   public showTipsAgain(): void {
     this.logging.debug('show tips again (reset)', 'OnboardingService');
@@ -128,7 +123,7 @@ export class OnboardingService {
     this.logging.debug('nudge dismissed', 'OnboardingService');
   }
 
-  /** Ends the active tutorial as skipped (not completed) — Skip button / Esc. */
+  /** Ends the active tutorial as skipped, not completed. */
   public skipCurrent(): void {
     this.endTutorial(false);
   }

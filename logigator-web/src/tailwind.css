@@ -1,0 +1,42 @@
+@import 'tailwindcss';
+
+/* @logigator/ui owns the palette (theme.css → --lg-*) and the Tailwind @theme
+   mapping (theme.tw.css → --color-* aliased to var(--lg-*)). */
+@import '../../logigator-ui/styles/theme.css';
+@import '../../logigator-ui/styles/theme.tw.css';
+
+/* The z-index layering scale (--lg-z-* + z-* utilities). */
+@import '../../logigator-ui/styles/layers.css';
+
+/* prefers-reduced-motion: the global off switch for every transition. */
+@import '../../logigator-ui/styles/motion.css';
+
+/* Scan the library's templates so their Tailwind utilities are generated. */
+@source '../../logigator-ui/src';
+
+@custom-variant dark (&:where(.dark-mode, .dark-mode *));
+
+@theme {
+  --font-sans: 'Roboto Variable', sans-serif;
+  --font-mono: 'Roboto Mono Variable', monospace;
+}
+
+/* The page's content column and its gutter, shared by the bar, the footer and
+   every section. The gutter grows with the viewport rather than stepping at a
+   breakpoint. */
+@utility page-wrap {
+  --page-gutter: clamp(1.25rem, 4vw, 2rem);
+  margin-inline: auto;
+  max-width: 80rem;
+  padding-inline: var(--page-gutter);
+}
+
+/* The editor's dot ground, as a section background. */
+@utility lattice {
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    var(--lg-border) 1px,
+    transparent 0
+  );
+  background-size: 16px 16px;
+}

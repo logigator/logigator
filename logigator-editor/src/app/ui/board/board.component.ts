@@ -59,9 +59,9 @@ export class BoardComponent implements OnInit, OnDestroy {
   private readonly destroy$ = new Subject<void>();
   private readonly projectChange$ = new Subject<Project | null>();
 
-  // The board draws through the app-wide shared renderer (see
-  // RendererService); this component owns only what is per-canvas: the render
-  // loop's ticker, the cull pass, and the viewport size.
+  // The board draws through the app-wide shared renderer, so this component
+  // owns only what is per-canvas: the render loop's ticker, the cull pass and
+  // the viewport size.
   private _lease: RendererLease | null = null;
   private readonly _ticker = new Ticker();
   private _destroyed = false;
@@ -70,11 +70,10 @@ export class BoardComponent implements OnInit, OnDestroy {
   /** The host's CSS box — fed to the project as its viewport size. */
   private readonly _view = new Rectangle();
 
-  // All canvas input runs through the DOM pointer controller (PixiJS event
-  // features never come into play — the shared renderer has no interactive
-  // scene): the router dispatches the primary-pointer stream into per-mode
-  // drag sessions, the controller handles navigation (right-drag pan, wheel
-  // zoom, two-finger pan/pinch) against whatever project is active.
+  // All canvas input runs through the DOM pointer controller; PixiJS event
+  // features never come into play, as the shared renderer has no interactive
+  // scene. The router dispatches the primary-pointer stream into per-mode drag
+  // sessions, the controller handles navigation against the active project.
   private readonly _router = new WorkModeRouter();
   private _controller: PointerController | null = null;
   private readonly _cursorMove$ = new Subject<Point>();
@@ -96,7 +95,7 @@ export class BoardComponent implements OnInit, OnDestroy {
       project.viewport.resizeViewport(this._view.width, this._view.height);
       this._ticker.update();
 
-      // One scheduler per project; drop the previous so its run-count and any
+      // One scheduler per project: drop the previous so its run count and any
       // queued frame don't leak across stages.
       this._renderScheduler?.destroy();
       this._renderScheduler = new TickerScheduler(
@@ -130,8 +129,7 @@ export class BoardComponent implements OnInit, OnDestroy {
     });
 
     // The clear color is read per render, so a theme switch only needs a
-    // repaint. Per-element colors are handled by each Project's own theme
-    // effect.
+    // repaint. Per-element colors are each Project's own theme effect.
     effect(() => {
       this.themingService.currentTheme();
       if (!this.loaded()) {
@@ -153,12 +151,12 @@ export class BoardComponent implements OnInit, OnDestroy {
       this._lease = lease;
 
       this._measureView();
-      // Published for the automation API's grid ↔ screen conversions, which
-      // need the canvas's page offset.
+      // Published for the grid ↔ screen conversions that need the canvas's
+      // page offset.
       this.boardSurface.register(this.canvas.nativeElement);
-      // The canvas fills the host via CSS; the backing store follows per render.
-      // Observe the host so layout changes that don't resize the window (e.g.
-      // the side bar disappearing in simulation mode) still resize the board.
+      // Observe the host, not the window: layout changes that leave the window
+      // alone (the side bar disappearing in simulation mode) must still resize
+      // the board.
       this._resizeObserver = new ResizeObserver(() => this._onHostResize());
       this._resizeObserver.observe(this.hostEl.nativeElement);
 
@@ -180,15 +178,13 @@ export class BoardComponent implements OnInit, OnDestroy {
 
       this.loaded.set(true);
 
-      // Records which backend (WebGPU/WebGL/Canvas) the shared renderer
-      // settled on when this board acquired it.
       this.loggingService.debug(
         'Renderer acquired: ' + this.rendererService.renderer?.type,
         'BoardComponent'
       );
     } catch (err) {
-      // The canvas otherwise silently never appears; keep `loaded` false so the
-      // board stays hidden rather than showing a dead surface.
+      // `loaded` stays false so the board hides rather than showing a dead
+      // surface, which would otherwise fail silently.
       this.toastService.error(
         this.translation.translate('editor.rendererInitFailed'),
         'BoardComponent',
@@ -212,14 +208,13 @@ export class BoardComponent implements OnInit, OnDestroy {
 
   /**
    * One board frame: cull the project's quad trees against the viewport, then
-   * blit through the shared renderer. The cull runs on every ticker-driven
-   * render, so the culled set stays current through pan/zoom without extra
-   * scheduling.
+   * blit through the shared renderer. Culling on every ticker-driven render
+   * keeps the culled set current through pan/zoom with no extra scheduling.
    */
   private _renderFrame(): void {
     const project = this.project();
     // The input trails the active project by a change-detection cycle, so a
-    // disposed project stays bound here for one rAF after its tab closes.
+    // disposed project stays bound for one rAF after its tab closes.
     if (!project || project.destroyed || !this._lease) {
       return;
     }

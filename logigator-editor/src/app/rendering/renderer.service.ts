@@ -21,10 +21,9 @@ export interface RendererLease {
 }
 
 /**
- * Marks a whole subtree un-culled. Manual renders (leased canvases, offscreen
- * snapshots) never run a cull pass, so a subtree that was culled against a
- * different viewport — or renders into a differently-framed target — must be
- * forced visible first; the next culled render re-culls against its own view.
+ * Marks a whole subtree un-culled. Manual renders never run a cull pass, so a
+ * subtree culled against a different viewport must be forced visible first;
+ * the next culled render re-culls against its own view.
  */
 export function uncullTree(container: Container): void {
   container.culled = false;
@@ -34,20 +33,14 @@ export function uncullTree(container: Container): void {
 }
 
 /**
- * Owns the single PixiJS renderer shared by every canvas in the app — the
- * board, every open watch — and by the offscreen consumers (minimap, image
- * export, server previews), so the page runs one rendering context no matter
- * how many canvases are live. Created lazily on the first lease with a
- * `webgl` → `canvas` ladder (WebGPU is deliberately disabled for now — see
- * `docs/webgpu.md` for the findings and re-enablement checklist); the WebGL
- * branch needs `multiView` (an off-DOM master canvas blitted to each target).
- * Destroyed when the last lease releases — in practice the board holds a
- * lease for its whole lifetime, so the renderer lives as long as a board is
- * mounted.
+ * Owns the single PixiJS renderer shared by every canvas and every offscreen
+ * consumer, so the page runs one rendering context however many canvases are
+ * live. Created lazily on the first lease with a `webgl` → `canvas` ladder;
+ * WebGL needs `multiView` (an off-DOM master canvas blitted to each target).
+ * Destroyed when the last lease releases.
  *
- * Offscreen consumers don't lease: they render into textures only while a
- * canvas host is alive, so they read {@link renderer} directly and gate on
- * {@link available}.
+ * Offscreen consumers don't lease: they read {@link renderer} directly and
+ * gate on {@link available}.
  */
 @Injectable({ providedIn: 'root' })
 export class RendererService {
@@ -92,9 +85,8 @@ export class RendererService {
       return;
     }
     this._creating ??= autoDetectRenderer({
-      // WebGPU is disabled: pixi 8.19's WebGPU backend needs several patches
-      // to work at all here, and even patched it loses the GPU device on
-      // AMD/D3D12. Findings, patches and the re-enablement checklist live in
+      // WebGPU is disabled: pixi 8.19's backend needs patches to work here at
+      // all, and even patched it loses the GPU device on AMD/D3D12. See
       // docs/webgpu.md.
       preference: 'webgl',
       webgl: { multiView: true },
@@ -103,8 +95,7 @@ export class RendererService {
       antialias: true,
       powerPreference: 'high-performance',
       hello: false,
-      // No scene node is interactive — every canvas gets its input from a
-      // PointerController. Keep PixiJS from listening on its master canvas.
+      // No scene node is interactive: input comes from PointerController.
       eventFeatures: {
         move: false,
         click: false,
@@ -136,13 +127,12 @@ export class RendererService {
     if (!renderer || container.destroyed) {
       return;
     }
-    // pixi caches one CanvasSource per target canvas and writes *its* size
-    // back onto the element every render, so the backing store must be sized
-    // through the source (CSS size at the DPR resolution), never via
-    // canvas.width directly — that also keeps the cached render target in
-    // step. A no-op when nothing changed. The root projection divides by the
-    // source resolution, so render space stays in CSS pixels — the container's
-    // own transform applies as-is and the DPR only sharpens the backing store.
+    // pixi caches one CanvasSource per target canvas and writes its size back
+    // onto the element every render, so the backing store must be sized
+    // through the source (CSS size at the DPR resolution) and never via
+    // canvas.width. The root projection divides by the source resolution, so
+    // render space stays CSS pixels and the DPR only sharpens the backing
+    // store. A no-op when nothing changed.
     getCanvasTexture(canvas).source.resize(
       Math.max(1, Math.round(canvas.clientWidth || 1)),
       Math.max(1, Math.round(canvas.clientHeight || 1)),

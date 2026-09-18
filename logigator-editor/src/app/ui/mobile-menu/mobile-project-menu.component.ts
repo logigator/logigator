@@ -5,10 +5,9 @@ import { MobileUiService } from '../../layout/mobile-ui.service';
 import { withSheetClose } from './with-sheet-close';
 
 /**
- * Content of the compact editor sheet, opened through the top bar's project
- * title: the flat list of editor actions. Every action also dismisses the
- * sheet, so a dialog it opens lands on an uncovered board. The burger sheet
- * next to it is the editor-agnostic account/settings panel.
+ * Content of the compact editor sheet: the flat list of editor actions. Every
+ * action also dismisses the sheet, so a dialog it opens lands on an uncovered
+ * board.
  */
 @Component({
   selector: 'app-mobile-project-menu',

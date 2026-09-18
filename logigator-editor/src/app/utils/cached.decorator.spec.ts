@@ -2,25 +2,22 @@ import { describe, expect, it } from 'vitest';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Cached } from './cached.decorator';
 
-// ---------------------------------------------------------------------------
-// Helper: build a fresh spy-tracked class each test so shared prototype cache
-// slots never bleed between test cases.
-// ---------------------------------------------------------------------------
+// A fresh class per test, so shared prototype cache slots never bleed between
+// cases.
 
 /** Creates a class whose `value` getter is tracked by a call-count spy. */
 function makeSimpleClass(returnValue: () => number) {
   class Fixture {
     callCount = 0;
 
-    // Applied manually below because the TypeScript legacy decorator syntax
-    // requires experimentalDecorators and works on pre-defined descriptors.
     get value(): number {
       this.callCount++;
       return returnValue();
     }
   }
 
-  // Apply @Cached() manually to the prototype descriptor.
+  // Applied manually: the legacy decorator syntax needs
+  // experimentalDecorators and a pre-defined descriptor.
   const proto = Fixture.prototype;
   const descriptor = Object.getOwnPropertyDescriptor(proto, 'value')!;
   const newDescriptor = Cached()(proto, 'value', descriptor);
@@ -45,7 +42,6 @@ function makeKeyedClass(
 
   const proto = Fixture.prototype;
   const descriptor = Object.getOwnPropertyDescriptor(proto, 'value')!;
-  // keyGenerator runs with `this` bound to the instance.
   const newDescriptor = Cached(function (this: any) {
     return keyFn(this);
   })(proto, 'value', descriptor);
@@ -53,10 +49,6 @@ function makeKeyedClass(
 
   return Fixture;
 }
-
-// ---------------------------------------------------------------------------
-// Tests
-// ---------------------------------------------------------------------------
 
 describe('Cached decorator', () => {
   describe('without keyGenerator', () => {
@@ -70,9 +62,8 @@ describe('Cached decorator', () => {
       expect(f.callCount).toBe(1);
     });
 
-    // Cached stores the cache object on the *prototype*
-    // (`target[cacheKey] = { key: null, val: null }`), not per-instance, so all
-    // instances of a decorated class share one cache slot.
+    // The cache object lives on the *prototype*, not per instance, so every
+    // instance of a decorated class shares one slot.
     it('instances share the same prototype-level cache slot (no keyGenerator)', () => {
       let counter = 0;
       const Fixture = makeSimpleClass(() => ++counter);
@@ -83,9 +74,8 @@ describe('Cached decorator', () => {
       const aValue = a.value; // computes, caches 1 on prototype slot
       const bValue = b.value; // hits shared cache, returns 1 (not 2)
 
-      // Both see the same cached value — the prototype slot is shared.
+      // Both see the same cached value: the prototype slot is shared.
       expect(aValue).toBe(bValue);
-      // The underlying getter was only invoked once total.
       expect(a.callCount + b.callCount).toBe(1);
     });
   });
@@ -132,7 +122,7 @@ describe('Cached decorator', () => {
     });
 
     it('getter is not recomputed when the key returns to the same value', () => {
-      // After key settles to 'a', a second read with key 'a' must be a cache hit.
+      // A second read at the settled key must hit the cache.
       const key = 'a';
       let returnVal = 5;
       const Fixture = makeKeyedClass(
@@ -146,15 +136,13 @@ describe('Cached decorator', () => {
       void f.value; // key='a' still, should NOT recompute
 
       expect(f.callCount).toBe(1);
-      // Stale value is returned from cache.
       expect(f.value).toBe(5);
     });
 
     it('with per-instance keys each instance gets its own correct value', () => {
-      // Use an instance-specific field as the key so the two instances
-      // never collide in key-space.  Because the prototype slot is shared
-      // the instances will thrash each other's cache, but each read still
-      // gets the correct value for its own current key.
+      // An instance-specific key keeps the two out of each other's key-space.
+      // The shared prototype slot makes them thrash, but each read still gets
+      // the right value for its own key.
       class Keyed {
         id: string;
         callCount = 0;
@@ -179,7 +167,6 @@ describe('Cached decorator', () => {
       const a = new Keyed('a');
       const b = new Keyed('b');
 
-      // Each instance gets a value derived from its own id.
       expect(a.prop).toBe('value-for-a');
       expect(b.prop).toBe('value-for-b');
     });
@@ -202,7 +189,6 @@ describe('Cached decorator', () => {
         result = Cached()(proto, 'myMethod', descriptor);
       }).not.toThrow();
 
-      // descriptor.get was undefined so Cached must return it unmodified.
       expect(result).toBe(descriptor);
       expect(result!.get).toBe(originalGet); // still undefined
     });

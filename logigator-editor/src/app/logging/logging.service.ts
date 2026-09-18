@@ -5,9 +5,9 @@ import { LogLevel } from './log-level.enum';
 
 /**
  * Log-line format string. `%c` applies {@link PREFIX_STYLE} to the bracketed
- * context; `%s` substitutes the context safely (even if it contains a `%`).
- * The message is always the trailing *bare* argument so the console renders it
- * natively (expandable object trees, interactive DOM view for `HTMLElement`s).
+ * context; `%s` substitutes the context safely even if it contains a `%`. The
+ * message stays a trailing *bare* argument so the console renders it natively,
+ * with expandable object trees.
  */
 const PREFIX = '%c[%s]';
 const PREFIX_STYLE = 'color:#888';
@@ -32,15 +32,13 @@ export class LoggingService {
   /**
    * Rolling record of recent log lines, kept independently of the console
    * verbosity so a bug report carries the run-up to an error even when those
-   * lines were never printed. Debug entries are excluded — they are too noisy
-   * to be useful history.
+   * lines were never printed. Debug entries are too noisy to include.
    */
   private readonly buffer: string[] = [];
 
   /**
-   * The last buffered entry's message content (without its timestamp), so
-   * consecutive duplicates collapse on the message rather than on the
-   * timestamped line — which would always differ and defeat the dedupe.
+   * The last buffered entry's content without its timestamp, so consecutive
+   * duplicates collapse on the message; the timestamped line always differs.
    */
   private lastContent: string | undefined;
 
@@ -88,12 +86,12 @@ export class LoggingService {
       raw.length > LOG_ENTRY_MAX_LENGTH
         ? `${raw.slice(0, LOG_ENTRY_MAX_LENGTH)}…`
         : raw;
-    // Collapse consecutive duplicates so an error storm can't evict the run-up
-    // history this buffer exists to preserve.
+    // Collapse consecutive duplicates so an error storm cannot evict the
+    // run-up history this buffer exists to preserve.
     if (this.lastContent === content) return;
     this.lastContent = content;
-    // Prefix a UTC time-of-day so a bug report shows when each line occurred
-    // relative to the crash. Matches the UTC `Date:` header of the report.
+    // UTC time-of-day, matching the report's `Date:` header, so a bug report
+    // shows when each line occurred relative to the crash.
     const timestamp = new Date().toISOString().slice(11, 23);
     this.buffer.push(`${timestamp} ${content}`);
     if (this.buffer.length > LOG_BUFFER_SIZE) this.buffer.shift();
@@ -113,14 +111,8 @@ export class LoggingService {
   }
 
   /**
-   * Starts a timer and returns a function that, when called, logs the elapsed
-   * milliseconds at debug level. Use to trace how long an operation took:
-   *
-   * ```ts
-   * const done = this.logging.time('compile board', 'BoardCompiler');
-   * // …work…
-   * done(); // → [BoardCompiler] compile board took 12.34 ms
-   * ```
+   * Starts a timer; the returned function logs the elapsed milliseconds at
+   * debug level.
    */
   public time(label: string, context: string): () => void {
     const start = performance.now();

@@ -7,13 +7,10 @@ import {
 import { IndexedDbStore, PROJECTS_STORE } from '../../storage/indexed-db-store';
 
 /**
- * CRUD over browser-local (IndexedDB) circuits, keyed by project id. It owns every
- * storage concern — id generation, timestamps and preserving `createdOn` across
- * updates — so callers only supply `{ name, content }`. The low-level IndexedDB
- * plumbing is shared with `BrowserComponentStore` via {@link IndexedDbStore}.
- *
- * It knows nothing about `Project`, metadata or circuit encoding; `PersistenceService`
- * orchestrates those, mirroring how it drives `ProjectApiService` for the server target.
+ * CRUD over IndexedDB circuits, keyed by project id. Owns every storage concern
+ * — id generation, timestamps, `createdOn` across updates — so callers supply
+ * only `{ name, content }`. It knows nothing about `Project`, metadata or
+ * circuit encoding; `PersistenceService` orchestrates those.
  */
 @Injectable({ providedIn: 'root' })
 export class BrowserProjectStore {
@@ -23,8 +20,7 @@ export class BrowserProjectStore {
 
   /**
    * Inserts or updates a project. Without an `id` a fresh one is generated and
-   * `createdOn` is stamped; with an existing `id` the original `createdOn` is
-   * preserved. `lastEdited` is always set to now. Returns the stored record.
+   * `createdOn` stamped; an existing record keeps its original `createdOn`.
    */
   async save(params: {
     id?: string;

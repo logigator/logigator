@@ -11,13 +11,26 @@ import {
 
 const gs = environment.gridSize;
 
-function makeCanvas(): HTMLCanvasElement {
-  return {
-    addEventListener: vi.fn(),
+/** A DOM listener the controller registered on the canvas, by event type. */
+type CanvasListener = (event: {
+  button: number;
+  preventDefault(): void;
+}) => void;
+
+function makeCanvas(): {
+  canvas: HTMLCanvasElement;
+  listeners: Map<string, CanvasListener>;
+} {
+  const listeners = new Map<string, CanvasListener>();
+  const canvas = {
+    addEventListener: vi.fn((type: string, listener: CanvasListener) =>
+      listeners.set(type, listener)
+    ),
     setPointerCapture: vi.fn(),
     releasePointerCapture: vi.fn(),
     getBoundingClientRect: () => ({ left: 100, top: 50 })
   } as unknown as HTMLCanvasElement;
+  return { canvas, listeners };
 }
 
 /** A stand-in exposing only the viewport transform canvasToGrid reads. */
@@ -63,13 +76,14 @@ function touch(
 
 describe('PointerController', () => {
   let canvas: HTMLCanvasElement;
+  let listeners: Map<string, CanvasListener>;
   let project: Project;
   let nav: PointerNavTarget;
   let tool: Required<PointerToolTarget>;
   let controller: PointerController;
 
   beforeEach(() => {
-    canvas = makeCanvas();
+    ({ canvas, listeners } = makeCanvas());
     project = makeProject();
     nav = {
       pan: vi.fn(),
@@ -121,21 +135,43 @@ describe('PointerController', () => {
     expect(tool.move).not.toHaveBeenCalled();
   });
 
-  it('right-drag pans by successive deltas and never reaches the tool', () => {
-    controller.onPointerDown(mouse(1, 2, 200, 150));
-    expect(tool.down).not.toHaveBeenCalled();
-    expect(nav.setActive).toHaveBeenCalledWith(true);
+  it.each([2, 1])(
+    'button-%i drag pans by successive deltas and never reaches the tool',
+    (button) => {
+      controller.onPointerDown(mouse(1, button, 200, 150));
+      expect(tool.down).not.toHaveBeenCalled();
+      expect(nav.setActive).toHaveBeenCalledWith(true);
 
-    controller.onPointerMove(mouse(1, 2, 210, 145));
-    expect(nav.pan).toHaveBeenCalledTimes(1);
-    expect(vi.mocked(nav.pan).mock.calls[0][0]).toMatchObject({ x: 10, y: -5 });
+      controller.onPointerMove(mouse(1, button, 210, 145));
+      expect(nav.pan).toHaveBeenCalledTimes(1);
+      expect(vi.mocked(nav.pan).mock.calls[0][0]).toMatchObject({
+        x: 10,
+        y: -5
+      });
 
-    controller.onPointerMove(mouse(1, 2, 230, 145));
-    expect(vi.mocked(nav.pan).mock.calls[1][0]).toMatchObject({ x: 20, y: 0 });
+      controller.onPointerMove(mouse(1, button, 230, 145));
+      expect(vi.mocked(nav.pan).mock.calls[1][0]).toMatchObject({
+        x: 20,
+        y: 0
+      });
 
-    controller.onPointerUp(mouse(1, 2, 230, 145));
-    expect(nav.setActive).toHaveBeenCalledWith(false);
-    expect(tool.up).not.toHaveBeenCalled();
+      controller.onPointerUp(mouse(1, button, 230, 145));
+      expect(nav.setActive).toHaveBeenCalledWith(false);
+      expect(tool.up).not.toHaveBeenCalled();
+    }
+  );
+
+  it('suppresses the middle press default and leaves the primary one alone', () => {
+    const mousedown = listeners.get('mousedown');
+    expect(mousedown).toBeDefined();
+
+    const middle = { button: 1, preventDefault: vi.fn() };
+    const primary = { button: 0, preventDefault: vi.fn() };
+    mousedown?.(middle);
+    mousedown?.(primary);
+
+    expect(middle.preventDefault).toHaveBeenCalled();
+    expect(primary.preventDefault).not.toHaveBeenCalled();
   });
 
   it('ignores a second button while an interaction is active', () => {
@@ -179,7 +215,6 @@ describe('PointerController', () => {
     expect(tool.cancel).toHaveBeenCalledTimes(1);
     expect(nav.setActive).toHaveBeenCalledWith(true);
 
-    // Centroid moves +10 → gesture pan; the tool stream stays silent.
     controller.onPointerMove(touch(1, 120, 60));
     expect(nav.pan).toHaveBeenCalled();
     expect(tool.move).not.toHaveBeenCalled();
@@ -260,9 +295,8 @@ describe('PointerController', () => {
     expect(nav.zoomOut).not.toHaveBeenCalled();
   });
 
-  // A disposed project stays reachable until the host's effect re-homes the
-  // controller; its `position`/`scale` are already gone, so mapping a canvas
-  // point through it would throw.
+  // A disposed project stays reachable until the host re-homes the
+  // controller, and mapping a canvas point through it would throw.
   it('drops all events while the project is destroyed', () => {
     controller = new PointerController({
       canvas,

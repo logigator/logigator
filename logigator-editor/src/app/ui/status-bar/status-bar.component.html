@@ -1,10 +1,8 @@
 <div *appTranslate="let t" class="flex border-t border-border">
-  <!-- min-w-0 lets the grow cell shrink below its content so the mode hint
-       truncates instead of wrapping the whole bar.
-       role=status on the three cells that report state the user acts on: the
-       work-mode hint, the saved/unsaved flag and the selection count are
-       otherwise announced nowhere. The cursor position is deliberately left
-       out — it changes on every pointer move. -->
+  <!-- min-w-0 lets the grow cell shrink below its content, so the mode hint
+       truncates instead of wrapping the whole bar. role=status marks the three
+       cells reporting state the user acts on, which nothing else announces;
+       the cursor position is left out, as it changes on every pointer move. -->
   <div role="status" class="grow min-w-0 truncate px-2 border-r border-border">
     {{
       t(workMode(), {

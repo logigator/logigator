@@ -1,10 +1,9 @@
 import { Component, input } from '@angular/core';
 
 /**
- * Positions a single {@link LgInputIcon} over a padded form field. A pure CSS
- * wrapper: the projected icon is absolutely positioned on the `iconPosition`
- * edge and the projected `<input>` gets matching padding so its text clears the
- * icon. Icon-library-agnostic.
+ * Positions a single {@link LgInputIcon} over a padded form field: the icon is
+ * absolutely positioned on the `iconPosition` edge and the projected `<input>`
+ * gets matching padding so its text clears it.
  */
 @Component({
   selector: 'lg-icon-field',

@@ -12,10 +12,9 @@ import { RomInspectionComponent } from './rom-inspection.component';
 
 /**
  * Live view of a ROM during simulation. The contents are static and already on
- * the main thread (the `data` option's packed blob) — the only live part is
- * the currently addressed word, derived from the address-input port power on
- * every frame. The engine addresses `Σ inᵢ << i`, so input port `i` (label
- * `A(i+1)`) is address bit `i`.
+ * the main thread, so the only live part is the addressed word, derived from
+ * the address-input port power each frame. The engine addresses `Σ inᵢ << i`,
+ * so input port `i` is address bit `i`.
  */
 export class RomInspection extends ComponentInspection {
   public readonly kind = 'rom';
@@ -26,7 +25,7 @@ export class RomInspection extends ComponentInspection {
     min: { width: 400, height: 240 }
   };
 
-  /** Bits per word / addressable words, frozen at open time (editing is locked). */
+  /** Frozen at open time; editing is locked during simulation. */
   public readonly wordSize: number;
   public readonly wordCount: number;
   /** The ROM image, sized to the full table. */

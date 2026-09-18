@@ -1,6 +1,6 @@
 import type { WorkMode } from '../app/work-mode/work-mode.enum';
 import type { ShortcutActionEnum } from '../app/shortcuts/shortcut-action.enum';
-import type { ComponentCategory } from '../app/components/component-category.enum';
+import type { ComponentCategory } from '@logigator/core';
 
 const en = {
   common: {
@@ -26,7 +26,8 @@ const en = {
     editorSettings: 'Editor Settings',
     account: 'Account',
     logOut: 'Log Out',
-    logIn: 'Log In'
+    logIn: 'Log In',
+    signUp: 'Sign Up'
   },
   theming: {
     light: 'Light',
@@ -418,6 +419,12 @@ const en = {
     loadError: 'This page could not be loaded.',
     back: 'All topics',
     learnMore: 'Learn more',
+    search: {
+      label: 'Search the documentation',
+      placeholder: 'Search..',
+      loading: 'Loading the documentation…',
+      empty: 'Nothing matches “{{query}}”.'
+    },
     sections: {
       basics: 'Basics',
       building: 'Building Circuits',
@@ -728,6 +735,10 @@ const en = {
     skippedCustomMany:
       '{{count}} custom components could not be loaded — their definitions are missing — and were skipped.'
   },
+  browserSupport: {
+    unsupported:
+      'This browser is not officially supported — you may encounter errors. If you run into problems, try updating your browser.'
+  },
   editor: {
     rendererInitFailed:
       'Could not start the graphics renderer. Your browser or GPU may be unsupported.',
@@ -940,7 +951,8 @@ const en = {
           },
           moveAround: {
             title: 'Move around',
-            textDesktop: 'Scroll to zoom, right-drag to pan.',
+            textDesktop:
+              'Scroll to zoom, drag with the right or middle button to pan.',
             textCompact: 'Pinch to zoom, drag with two fingers to pan.'
           },
           placeAnd: {

@@ -11,11 +11,10 @@ export class ConnectionPointManager {
 
   private readonly _cps = new PointMap<ConnectionPoint>();
 
-  // How many wire endpoints / component ports terminate at each "x,y". A dot
-  // exists iff this reaches 3 (see _evaluateAt), so maintaining it incrementally
-  // turns CP evaluation into a map lookup instead of a quad-tree range query.
-  // Kept in lock-step with the project's wire/component membership: every
-  // add/remove/move/detach path adjusts it at the affected points.
+  // Wire endpoints and component ports terminating at each "x,y". A dot exists
+  // iff this reaches 3, so maintaining it incrementally makes CP evaluation a
+  // map lookup instead of a range query. Every add/remove/move/detach path
+  // keeps it in lock-step with the project's membership.
   private readonly _terminationCounts = new PointMap<number>();
 
   constructor(private readonly getScale: () => number) {}
@@ -41,12 +40,10 @@ export class ConnectionPointManager {
   }
 
   /**
-   * Adjusts termination counts for a set of elements without recomputing any
-   * dots. Used by the drag lifecycle: detach removes the counts at the pre-drag
-   * positions, reattach re-adds them at the post-drag positions, keeping the
-   * count map mirroring quad-tree membership so the settle pass (and any wire
-   * splits/merges) sees correct counts. The visible dots are reconciled once at
-   * the end via recomputeCpsForMovedSelection.
+   * Adjusts termination counts without recomputing any dots, so a drag can drop
+   * them at the pre-drag positions and re-add them at the post-drag ones. The
+   * count map keeps mirroring quad-tree membership throughout; the visible dots
+   * are reconciled once at the end.
    */
   public addTerminations(
     components: Iterable<Component>,
@@ -66,18 +63,16 @@ export class ConnectionPointManager {
     allWires: Iterable<Wire>,
     allComponents: Iterable<Component>
   ): void {
-    // cp.destroy() detaches from the parent layer as well as freeing GPU resources.
+    // destroy() detaches from the layer as well as freeing GPU resources.
     for (const cp of this._cps) {
       cp.destroy();
     }
     this._cps.clear();
 
-    // items yields one-shot iterators, so materialize before the two passes.
+    // One-shot iterators, so materialize before the two passes.
     const components = [...allComponents];
     const wires = [...allWires];
 
-    // Rebuild the termination counts from scratch in one linear pass, then
-    // derive each unique candidate point from the map.
     this._terminationCounts.clear();
     this._changeTerminationsOf(components, wires, +1);
 
@@ -99,11 +94,9 @@ export class ConnectionPointManager {
   }
 
   /**
-   * Re-colours every existing CP for a theme change without touching topology.
-   * CP existence/position depend only on the circuit, not the theme, so a theme
-   * switch never adds or removes dots — it only re-derives their tint (the
-   * context is a shared theme-independent white base). Much cheaper than
-   * {@link recomputeAll}, which re-queries the quad tree.
+   * Re-colours every CP without touching topology: existence and position
+   * depend on the circuit alone, so a theme switch only re-derives tints (the
+   * shared context is a theme-independent white base).
    */
   public refreshTheme(): void {
     for (const cp of this._cps) {
@@ -172,8 +165,8 @@ export class ConnectionPointManager {
     const captured: ConnectionPoint[] = [];
     for (const p of points) {
       const cp = this.getCpAt(p);
-      // With `only` given, carry just those dots — the drag follows what looks
-      // selected, not every junction the dragged elements happen to touch.
+      // With `only` given the drag carries just those dots, following what
+      // looks selected rather than every junction it touches.
       if (cp && (!only || only.has(cp))) {
         this.detachCp(cp);
         dragLayer.addChild(cp);
@@ -251,10 +244,9 @@ export class ConnectionPointManager {
   }
 
   private _evaluateAt(p: Point): boolean {
-    // Under the split-on-touch invariants, wire interiors never contain a wire
-    // endpoint or component port, so termination counting collapses to exact
-    // endpoint-equality — which the maintained count map already holds. A CP
-    // exists iff at least 3 things terminate at P.
+    // A CP exists iff at least 3 things terminate at P. Under the
+    // split-on-touch invariants a wire interior never contains an endpoint or
+    // port, so counting collapses to the exact-equality map.
     return (this._terminationCounts.get(p) ?? 0) >= 3;
   }
 
@@ -268,8 +260,8 @@ export class ConnectionPointManager {
     wires: Iterable<Wire>,
     delta: number
   ): void {
-    // Multiplicity matters: two endpoints landing on one point count as two, so
-    // this never de-duplicates the way the candidate PointSet does.
+    // Multiplicity matters: two endpoints on one point count as two, so this
+    // never de-duplicates the way the candidate PointSet does.
     for (const c of components) {
       if (c.destroyed) continue;
       for (const p of c.connectionPoints) this._changeTermination(p, delta);

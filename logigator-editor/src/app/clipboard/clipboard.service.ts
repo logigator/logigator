@@ -10,7 +10,7 @@ import { RemoveComponentsAction } from '../actions/actions/remove-components.act
 import { RemoveWiresAction } from '../actions/actions/remove-wires.action';
 import { AddWiresAction } from '../actions/actions/add-wires.action';
 import { ComponentProviderService } from '../components/component-provider.service';
-import { ComponentCategory } from '../components/component-category.enum';
+import { ComponentCategory } from '@logigator/core';
 import { ProjectMetadataStore } from '../persistence/project-metadata.store';
 import { getStaticDI } from '../utils/get-di';
 import { LoggingService } from '../logging/logging.service';
@@ -30,14 +30,10 @@ export class ClipboardService {
 
   private readonly _clipboard = signal<ClipboardData | null>(null);
 
-  /** True once something has been copied — drives paste-button availability. */
+  /** True once something has been copied. */
   public readonly hasClipboard = computed(() => this._clipboard() !== null);
 
-  /**
-   * Drops the copied elements. The compact selection action bar stays on
-   * screen for as long as there is something to paste, so it offers this as
-   * its dismiss action.
-   */
+  /** Drops the copied elements. */
   public clear(): void {
     this._clipboard.set(null);
   }
@@ -75,9 +71,8 @@ export class ClipboardService {
 
   /**
    * Deserializes the clipboard into fresh instances and hands them to a
-   * placement session. The instances keep the copied geometry — where the
-   * group lands is the interaction layer's call (cursor, else the middle of
-   * the viewport), so only its relative shape matters here.
+   * placement session. They keep the copied geometry; where the group lands is
+   * the interaction layer's call, so only its relative shape matters here.
    */
   public paste(project: Project): void {
     const data = this._clipboard();
@@ -87,8 +82,8 @@ export class ClipboardService {
     const { components, wires } = data;
     const provider = getStaticDI(ComponentProviderService);
 
-    // Plugs define a custom component's ports — outside a custom-component
-    // document they are meaningless, so pasting there drops them.
+    // Plugs define a custom component's ports, so they are meaningless — and
+    // dropped — outside a custom-component document.
     const allowPlugs = this.metadataStore.getMetadata(project)?.type === 'comp';
 
     let skippedPlugs = 0;
@@ -123,7 +118,7 @@ export class ClipboardService {
       );
     }
 
-    // A clipboard component whose type is no longer registered is skipped
+    // Components whose type is no longer registered.
     const skipped = components.length - freshComponents.length - skippedPlugs;
     if (skipped > 0) {
       this.toast.warn(
@@ -132,8 +127,7 @@ export class ClipboardService {
       );
     }
 
-    // Everything was filtered out — an empty paste session would only offer
-    // a cancel gesture, so don't open one.
+    // An empty paste session would only offer a cancel gesture.
     if (freshComponents.length === 0 && freshWires.length === 0) {
       return;
     }
@@ -141,25 +135,23 @@ export class ClipboardService {
     project.startPasteSession(freshComponents, freshWires);
   }
 
-  // Callers gate on actionManager.locked first: while a drag session holds
-  // the selection detached, the removals below would silently no-op (the
-  // elements are unindexed) while the recorded action claims they happened —
-  // undo would then materialize duplicates.
+  // Requires an unlocked action manager: while a drag holds the selection
+  // detached the removals below no-op on unindexed elements, yet the recorded
+  // action claims they happened, so undo would materialize duplicates.
   private _applyDelete(project: Project): void {
     const sm = project.selectionManager;
 
-    // Snapshot before any mutation — evict() modifies these Sets
+    // evict() modifies these Sets, so snapshot before any mutation.
     const components = [...sm.selectedComponents];
     const wires = [...sm.selectedWires];
 
-    // Deleting a scissor selection commits its cut: consume it before the
-    // removals and coalesce below, so cut+delete stays one undo step.
+    // Deleting a scissor selection commits its cut: consumed here and
+    // coalesced below, so cut + delete stays one undo step.
     const cut = sm.consumeLiveCut();
 
-    // Restore the wire invariants around the removal: a collinear pair whose
-    // shared endpoint loses its last third terminator (a deleted wire's end or
-    // a deleted component's port) merges back into one wire. toRemove covers
-    // the selected wires plus any neighbours those merges absorb.
+    // A collinear pair whose shared endpoint loses its last third terminator
+    // merges back into one wire, so toRemove covers the selected wires plus
+    // any neighbours those merges absorb.
     const { toAdd, toRemove } = project.topology.integrate({
       removedWires: wires,
       removedComponentPorts: components.flatMap((c) => [...c.connectionPoints])
@@ -167,7 +159,7 @@ export class ClipboardService {
 
     const container = new ActionContainer();
 
-    // Serialize before removal — constructors capture positions eagerly
+    // The constructors capture positions eagerly, so build before removing.
     if (components.length > 0)
       container.add(new RemoveComponentsAction(...components));
     if (toRemove.length > 0) container.add(new RemoveWiresAction(...toRemove));

@@ -1,0 +1,98 @@
+<div class="flex flex-col gap-5" *webTranslate="let t">
+  <p class="text-sm leading-relaxed text-muted">
+    {{ t('pages.my.share.intro', { name: name }) }}
+  </p>
+
+  @if (failureKey(); as message) {
+  <lg-message severity="danger">{{ t(message) }}</lg-message>
+  }
+
+  <div class="flex flex-col gap-2">
+    <span class="text-sm font-medium text-text-hover">
+      {{ t('pages.my.share.linkLabel') }}
+    </span>
+    <div class="flex items-center gap-2">
+      <lg-icon-field class="min-w-0 flex-1">
+        <lg-input-icon class="ph ph-link" />
+        <input
+          lgInputText
+          readonly
+          class="w-full"
+          [attr.aria-label]="t('pages.my.share.linkLabel')"
+          [value]="shareUrl()"
+        />
+      </lg-icon-field>
+      <button lgButton type="button" icon="ph ph-copy" (onClick)="copyLink()">
+        {{ t('pages.my.share.copy') }}
+      </button>
+    </div>
+    <p class="text-sm leading-relaxed text-muted">
+      {{ t('pages.my.share.linkHint') }}
+    </p>
+  </div>
+
+  <div class="flex flex-col gap-2 border-t border-border pt-5">
+    <div class="flex items-center gap-2.5">
+      <lg-toggle-switch
+        inputId="share-document-public"
+        [ngModel]="isPublic()"
+        [disabled]="pending() !== null"
+        (ngModelChange)="setPublic($event)"
+      />
+      <label
+        class="text-sm font-medium text-text-hover"
+        for="share-document-public"
+      >
+        {{ t('pages.my.share.publicLabel') }}
+      </label>
+    </div>
+    <p class="text-sm leading-relaxed text-muted">
+      {{ kind === 'components' ? t('pages.my.share.publicHintComponent') :
+      t('pages.my.share.publicHintProject') }}
+    </p>
+    @if (isPublic()) {
+    <a
+      class="text-sm text-primary hover:underline"
+      [href]="communityUrl()"
+      target="_blank"
+      rel="noopener"
+      >{{ t('pages.my.share.viewPublicPage') }}</a
+    >
+    }
+  </div>
+
+  <div class="flex flex-col gap-2 border-t border-border pt-5">
+    <span class="text-sm font-medium text-text-hover">
+      {{ t('pages.my.share.regenerateLabel') }}
+    </span>
+    <p class="text-sm leading-relaxed text-muted">
+      {{ t('pages.my.share.regenerateHint') }}
+    </p>
+    <div>
+      <button
+        lgButton
+        outlined
+        severity="danger"
+        type="button"
+        class="mt-1"
+        icon="ph ph-arrows-clockwise"
+        [loading]="pending() === 'regenerate'"
+        (onClick)="regenerate()"
+      >
+        {{ t('pages.my.share.regenerate') }}
+      </button>
+    </div>
+  </div>
+
+  <div class="flex justify-end">
+    <button
+      lgButton
+      outlined
+      severity="secondary"
+      type="button"
+      (onClick)="close()"
+    >
+      {{ t('pages.my.share.close') }}
+    </button>
+  </div>
+</div>

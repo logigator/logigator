@@ -13,10 +13,9 @@ import { ShortcutActionEnum } from '../../shortcuts/shortcut-action.enum';
 import { TranslateDirective } from '../../translation/translate.directive';
 
 /**
- * Compact mode + grid-position pill, the top-right overlay that replaces the
- * 4-segment desktop status bar on `isCompact`. The host caps its width (see
- * app template), so the mode hint truncates while the coordinates — the part
- * that must stay readable — never wrap or shrink.
+ * Compact mode and grid-position pill, replacing the desktop status bar on
+ * `isCompact`. The host caps its width, so the mode hint truncates while the
+ * coordinates never wrap or shrink.
  */
 @Component({
   selector: 'app-mobile-status',

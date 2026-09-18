@@ -26,7 +26,7 @@ import { SubCircuitWatch } from '../components/custom/sub-circuit-watch';
 import { outputComponentConfig } from '../components/component-types/output/output.config';
 import { RomComponent } from '../components/component-types/rom/rom.component';
 import { Wire } from '../wires/wire';
-import { WireDirection } from '../wires/wire-direction.enum';
+import { WireDirection } from '@logigator/core';
 import { AutomationApiService } from './automation-api.service';
 
 describe('AutomationApiService inspection', () => {
@@ -141,9 +141,8 @@ describe('AutomationApiService inspection', () => {
     }
 
     /**
-     * A one-output custom: `driver` (whatever produces the signal) wired to an
-     * OUTPUT plug. Registered as a frozen snapshot, the way a placed instance
-     * carries its definition.
+     * A one-output custom: `driver` wired to an OUTPUT plug, registered as a
+     * frozen snapshot the way a placed instance carries its definition.
      */
     function registerBox(
       name: string,
@@ -265,7 +264,7 @@ describe('AutomationApiService inspection', () => {
       expect(camera.getViewport(id).zoom).toBeCloseTo(2, 5);
       expect(view.x + view.width / 2).toBeCloseTo(4, 5);
       // The renderer fits a level the first time it shows; a placement takes
-      // that turn, so it is not overwritten on the level's first frame.
+      // that turn instead of being overwritten on the first frame.
       expect(watch.levels()[0].needsFit).toBe(false);
     });
 

@@ -19,31 +19,33 @@
           (keydown.escape)="cancelRename()"
           (blur)="commitRename()"
         />
-        <lg-button
+        <button
+          lgButton
           icon="ph ph-x"
-          styleClass="text-surface-900!"
+          class="text-surface-900!"
           [text]="true"
           [ariaLabel]="t('titleBar.rename.cancel')"
           [lgTooltip]="t('titleBar.rename.cancel')"
           tooltipPosition="bottom"
           (mousedown)="$event.preventDefault()"
           (click)="cancelRename()"
-        />
+        ></button>
       </span>
     } @else {
       <span class="ml-2 flex items-center gap-1" *appTranslate="let t">
         <h1 class="text-xl font-bold">{{ projectName() }}</h1>
         @if (canRename()) {
-          <lg-button
+          <button
+            lgButton
             icon="ph ph-pencil-simple"
-            styleClass="text-surface-900!"
+            class="text-surface-900!"
             size="sm"
             [text]="true"
             [ariaLabel]="t('titleBar.rename.label')"
             [lgTooltip]="t('titleBar.rename.label')"
             tooltipPosition="bottom"
             (click)="startRename()"
-          />
+          ></button>
         }
       </span>
     }

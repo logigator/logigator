@@ -14,44 +14,38 @@ import {
 import { ThemingService } from '../theming/theming.service';
 
 /**
- * The transient overlay above the committed circuit: hosts drag-session
- * ghosts (placement previews, moved selections, paste ghosts) in its
- * `dragLayer` and the port-negation hover preview. Purely visual — input
+ * The transient overlay above the committed circuit: drag-session ghosts in
+ * its `dragLayer`, plus the wire tool's hover previews. Purely visual; input
  * routing and session lifecycle live in the `WorkModeRouter`.
  */
 export class FloatingLayer extends Container {
-  // A render group of its own: a drag moves the layer, and a render group's
-  // transform reaches its contents as the group's own matrix instead of being
-  // pushed down the tree. Without it every ghost — and every visual child of
-  // every ghost — is re-derived and re-batched on each frame of the drag.
+  // Its own render group: a drag moves the layer, and a render group's
+  // transform reaches its contents as the group's matrix instead of being
+  // pushed down the tree. Without it every ghost and every visual child of a
+  // ghost is re-derived and re-batched on each frame of the drag.
   private readonly _dragLayer = new Container<
     Component | Wire | ConnectionPoint
   >({ isRenderGroup: true });
 
-  // Ghost bubble shown under the cursor while the wire tool hovers a port,
-  // previewing the negation the next tap would toggle: translucent for the
-  // bubble a tap would add, opaque invalid-tinted over the existing bubble a
-  // tap would remove. Lazily created, hidden when no port is in range.
+  // Previews the negation a tap on the hovered port would toggle: translucent
+  // to add, opaque invalid-tinted over the existing bubble to remove.
   private _negationHoverGhost: Graphics | null = null;
 
-  // Ghost shown while the wire tool hovers a toggleable wire connection:
-  // 'split' previews the CP dot a tap would create, 'join' tints the existing
-  // dot the invalid color for removal. Lazily created, redrawn per kind/zoom
-  // (the drawn zoom is tracked so a show after zooming while hidden redraws).
+  // Previews a toggleable wire connection: 'split' the CP dot a tap creates,
+  // 'join' the existing dot tinted invalid. The drawn zoom is tracked so a
+  // show after zooming while hidden redraws.
   private _connectionGhost: Graphics | null = null;
   private _connectionGhostKind: 'join' | 'split' | null = null;
   private _connectionGhostScale: number | null = null;
 
-  // Persistent grab rect over the committed selection (the drag target after
-  // the marquee is released). Lazily created; styled like the live marquee so
-  // release-to-persist feels continuous. Sized via scale on a unit rect —
-  // fill-only, so no zoom retuning is needed.
+  // Persistent grab rect over the committed selection. Sized via scale on a
+  // unit rect — fill-only, so no zoom retuning is needed.
   private _selectionRect: Graphics | null = null;
   // The rect's base position (grid units); a mid-move offset adds onto it.
   private readonly _selectionRectBase = new Point();
 
-  // Latest zoom scale, so the negation ghost can size itself screen-constant on
-  // show (drag-session children get it fanned out in updateScale instead).
+  // Latest zoom scale, so the negation ghost sizes itself screen-constant on
+  // show; drag-session children get it fanned out in updateScale.
   private _currentScale = 1;
 
   constructor() {
@@ -82,11 +76,9 @@ export class FloatingLayer extends Container {
   }
 
   /**
-   * Shows the negation preview bubble pinned to a grid-space body-edge anchor,
-   * matching the real bubble: tangent-pivoted, rotated with the component, and
-   * grown outward at the current zoom's size. `willRemove` marks a port whose
-   * bubble the next tap would remove: the ghost then covers the existing
-   * bubble opaquely in the invalid color instead of previewing a new one.
+   * Shows the negation preview bubble pinned to a grid-space body-edge
+   * anchor, matching the real bubble. `willRemove` covers an existing bubble
+   * opaquely in the invalid color instead of previewing a new one.
    */
   public showNegationGhost(
     anchor: Point,
@@ -99,7 +91,7 @@ export class FloatingLayer extends Container {
     ghost.pivot.set(side === 'in' ? 0.5 : -0.5, 0);
     ghost.rotation = rotation;
     this._sizeNegationGhost(ghost, this._currentScale);
-    // The context's fill is white, so the tint IS the ghost's color.
+    // The context's fill is white, so the tint is the ghost's color.
     ghost.tint = willRemove
       ? getStaticDI(ThemingService).currentTheme().invalid
       : 0xffffff;
@@ -121,8 +113,8 @@ export class FloatingLayer extends Container {
   public showConnectionGhost(p: PointData, kind: 'join' | 'split'): void {
     const ghost = this._ensureConnectionGhost();
     ghost.position.copyFrom(p);
-    // The zoom may have changed while the ghost was hidden (updateScale only
-    // redraws a visible ghost), so a stale drawn scale forces a redraw too.
+    // updateScale only redraws a visible ghost, so a stale drawn scale from a
+    // zoom during the hidden period forces a redraw too.
     if (
       this._connectionGhostKind !== kind ||
       this._connectionGhostScale !== this._currentScale
@@ -169,10 +161,9 @@ export class FloatingLayer extends Container {
   }
 
   /**
-   * Displaces the selection rect from its base position while a move session
-   * drags the selection — the session mirrors its dragLayer offset here so the
-   * rect rides along with the ghosts. Reset to (0, 0) on drop/cancel; the
-   * post-commit redraw then re-fits the rect to the new bounds.
+   * Displaces the selection rect from its base position, mirroring a move
+   * session's dragLayer offset so the rect rides with the ghosts. Reset to
+   * (0, 0) on drop/cancel, where the redraw re-fits it to the new bounds.
    */
   public setSelectionRectOffset(offset: PointData): void {
     this._selectionRect?.position.set(
@@ -181,9 +172,8 @@ export class FloatingLayer extends Container {
     );
   }
 
-  // Sizes the ghost like a real bubble: transform sets the dot size, the
-  // zoom-dependent context keeps the border a fixed 1px (see
-  // NegationBubbleGraphics).
+  // Transform sets the dot size; the zoom-dependent context keeps the border
+  // a fixed 1px.
   private _sizeNegationGhost(ghost: Graphics, scale: number): void {
     ghost.context = getStaticDI(GraphicsProviderService).getGraphicsContext(
       NegationBubbleGraphics,
@@ -198,8 +188,7 @@ export class FloatingLayer extends Container {
       rect.rect(0, 0, 1, 1);
       rect.alpha = 0.3;
       rect.fill(0x0);
-      // Above the drag layer so the rect stays in front of the moved ghosts
-      // mid-drag, matching how it overlays the committed selection at rest.
+      // Above the drag layer, so the rect stays in front of moved ghosts.
       this.addChild(rect);
       this._selectionRect = rect;
     }
@@ -209,9 +198,7 @@ export class FloatingLayer extends Container {
   private _ensureNegationHoverGhost(): Graphics {
     if (!this._negationHoverGhost) {
       const ghost = new Graphics();
-      // Tint/alpha are per-show (add vs remove preview).
-      // Above components/wires since the floating layer is the top child of
-      // gridSpace; shares its grid-unit coordinate space.
+      // Tint/alpha are per-show. Shares gridSpace's grid-unit coordinates.
       this.addChild(ghost);
       this._negationHoverGhost = ghost;
     }
@@ -227,11 +214,8 @@ export class FloatingLayer extends Container {
     return this._connectionGhost;
   }
 
-  // Drawn per kind/zoom rather than via a shared context: both variants need
-  // CP-curve sizing at the current zoom (see connection-point.ts
-  // scaleForScale). Same square as a real CP dot — 'split' previews the dot a
-  // tap would create (translucent), 'join' covers the existing dot in the
-  // invalid color (reads as the dot tinted for removal).
+  // Drawn per kind/zoom rather than from a shared context: both variants need
+  // CP-curve sizing at the current zoom. Same square as a real CP dot.
   private _drawConnectionGhost(
     ghost: Graphics,
     kind: 'join' | 'split',

@@ -8,25 +8,25 @@
         <lg-input-icon class="ph ph-link"></lg-input-icon>
         <input lgInputText readonly class="w-full" [value]="shareUrl()" />
       </lg-icon-field>
-      <lg-button
-        icon="ph ph-copy"
-        [label]="t('shareDialog.copy')"
-        (onClick)="copyLink()"
-      />
+      <button lgButton icon="ph ph-copy" (onClick)="copyLink()">
+        {{ t('shareDialog.copy') }}
+      </button>
     </div>
   </div>
 
   <div class="flex flex-col gap-2">
     <div>
-      <lg-button
+      <button
+        lgButton
         severity="secondary"
         [outlined]="true"
         icon="ph ph-arrows-clockwise"
-        [label]="t('shareDialog.regenerate')"
         [loading]="regenerating()"
         [disabled]="regenerating()"
         (onClick)="regenerateLink()"
-      />
+      >
+        {{ t('shareDialog.regenerate') }}
+      </button>
     </div>
     <lg-message severity="warn">
       {{ t('shareDialog.regenerateWarning') }}
@@ -54,11 +54,8 @@
   </div>
 
   <div class="flex justify-end">
-    <lg-button
-      severity="secondary"
-      [outlined]="true"
-      [label]="t('shareDialog.close')"
-      (onClick)="close()"
-    />
+    <button lgButton severity="secondary" [outlined]="true" (onClick)="close()">
+      {{ t('shareDialog.close') }}
+    </button>
   </div>
 </div>

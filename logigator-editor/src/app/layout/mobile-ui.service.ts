@@ -4,9 +4,8 @@ import { computed, Injectable, signal } from '@angular/core';
 export type MobileSheet = 'palette' | 'settings' | 'ports' | 'menu' | 'project';
 
 /**
- * Single source of truth for which mobile sheet (Drawer) is open. Several
- * Drawers plus the HUD's "Parts" affordance need to agree, and only one sheet
- * shows at a time — opening one closes the rest.
+ * Single source of truth for which mobile sheet is open. Only one shows at a
+ * time, so opening one closes the rest.
  */
 @Injectable({ providedIn: 'root' })
 export class MobileUiService {

@@ -20,10 +20,7 @@ import {
 } from '../../internal/overlay';
 import { MENU_ITEM_CLASS, MENU_PANEL_CLASS, MenuItem } from './menu-item.model';
 
-/**
- * Edge-aligned drop positions (the panel hugs an edge of the trigger, not its
- * centre) — below/right-aligned first, then below/left, then the upward flips.
- */
+/** Edge-aligned, not centred: below/right first, then below/left, then flips. */
 const MENU_POSITIONS: ConnectedPosition[] = [
   {
     originX: 'end',
@@ -133,7 +130,6 @@ export class LgMenu implements OnDestroy {
   private subscriptions: Subscription | null = null;
   private trigger: HTMLElement | null = null;
 
-  /** Open anchored to the event target, or close if already open. */
   toggle(event: Event): void {
     if (this.overlayRef) {
       this.hide();
@@ -161,8 +157,8 @@ export class LgMenu implements OnDestroy {
   }
 
   protected onKeydown(event: KeyboardEvent): void {
-    // A nested control in the #start slot (e.g. an lg-select) handles its own
-    // keys and preventDefaults them; don't also rove/close the menu on those.
+    // A nested control in the #start slot handles and preventDefaults its own
+    // keys; those must not also rove or close the menu.
     if (event.defaultPrevented) {
       return;
     }
@@ -247,9 +243,8 @@ export class LgMenu implements OnDestroy {
   }
 
   /**
-   * Moves focus into the overlay so its keydown handler (Escape, roving) is
-   * reachable: the first item, or the panel itself when the menu is all
-   * `#start` content with no items.
+   * Moves focus into the overlay so its keydown handler is reachable: the
+   * first item, or the panel itself when the menu is all `#start` content.
    */
   private focusFirstItem(): void {
     queueMicrotask(() => {

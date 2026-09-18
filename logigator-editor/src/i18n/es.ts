@@ -1,6 +1,6 @@
 import type { WorkMode } from '../app/work-mode/work-mode.enum';
 import type { ShortcutActionEnum } from '../app/shortcuts/shortcut-action.enum';
-import type { ComponentCategory } from '../app/components/component-category.enum';
+import type { ComponentCategory } from '@logigator/core';
 import type { TranslationSchema } from '../app/translation/translation-schema.model';
 
 const es: TranslationSchema = {
@@ -28,7 +28,8 @@ const es: TranslationSchema = {
     editorSettings: 'Ajustes del editor',
     account: 'Cuenta',
     logOut: 'Cerrar sesión',
-    logIn: 'Iniciar sesión'
+    logIn: 'Iniciar sesión',
+    signUp: 'Registrarse'
   },
   theming: {
     light: 'Claro',
@@ -423,6 +424,12 @@ const es: TranslationSchema = {
     loadError: 'No se pudo cargar esta página.',
     back: 'Todos los temas',
     learnMore: 'Más información',
+    search: {
+      label: 'Buscar en la documentación',
+      placeholder: 'Buscar..',
+      loading: 'Cargando la documentación…',
+      empty: 'Nada coincide con «{{query}}».'
+    },
     sections: {
       basics: 'Conceptos básicos',
       building: 'Construir circuitos',
@@ -740,6 +747,10 @@ const es: TranslationSchema = {
     skippedCustomMany:
       'No se pudieron cargar {{count}} componentes personalizados (faltan sus definiciones) y se omitieron.'
   },
+  browserSupport: {
+    unsupported:
+      'Este navegador no es compatible oficialmente: pueden producirse errores. Si tienes problemas, prueba a actualizar tu navegador.'
+  },
   editor: {
     rendererInitFailed:
       'No se pudo iniciar el renderizador de gráficos. Puede que tu navegador o GPU no sean compatibles.',
@@ -958,7 +969,7 @@ const es: TranslationSchema = {
           moveAround: {
             title: 'Moverse',
             textDesktop:
-              'Desplaza para hacer zoom, arrastra con el botón derecho para desplazarte.',
+              'Desplaza para hacer zoom, arrastra con el botón derecho o el botón central para desplazarte.',
             textCompact:
               'Pellizca para hacer zoom, arrastra con dos dedos para desplazarte.'
           },

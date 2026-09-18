@@ -16,10 +16,9 @@ import { OnboardTargetDirective } from '../../onboarding/onboard-target.directiv
 import { TranslateDirective } from '../../translation/translate.directive';
 
 /**
- * The run controls shared by the desktop tool bar and the mobile sim bar:
- * play/pause/step/stop, target-speed input + unit, sync toggle, Hz/tick
- * readout. Driven entirely by SimulationService — no inputs/outputs — so both
- * surfaces stay in lockstep. Exit/enter live in the surrounding chrome.
+ * The run controls shared by the desktop tool bar and the mobile sim bar.
+ * Driven entirely by SimulationService, with no inputs or outputs, so both
+ * surfaces stay in lockstep. Exit and enter live in the surrounding chrome.
  */
 @Component({
   selector: 'app-simulation-controls',
@@ -40,9 +39,9 @@ export class SimulationControlsComponent {
   private readonly simulationService = inject(SimulationService);
 
   /**
-   * Desktop tool bar wraps the controls onto multiple rows when space is tight;
-   * the mobile sim bar instead lays them out as a single intrinsic-width row so
-   * its `overflow-x-auto` container scrolls cleanly rather than line-breaking.
+   * The desktop tool bar wraps the controls when space is tight; the mobile sim
+   * bar keeps one intrinsic-width row so its `overflow-x-auto` container
+   * scrolls rather than line-breaking.
    */
   public readonly wrap = input(true);
 

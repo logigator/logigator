@@ -1,6 +1,5 @@
 import { LgShortcutBinding } from '../shortcut/shortcut';
 
-/** The command event passed to a {@link MenuItem}'s `command` callback. */
 export interface MenuItemCommandEvent {
   originalEvent?: Event;
   item?: MenuItem;

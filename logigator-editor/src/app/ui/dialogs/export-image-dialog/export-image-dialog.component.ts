@@ -22,9 +22,9 @@ import { TranslateDirective } from '../../../translation/translate.directive';
 const DEFAULT_QUALITY_PERCENT = 92;
 
 /**
- * Collects image-export settings (project, format, resolution, background,
- * JPEG/WebP quality) and delegates the work to {@link ImageExportService}. The
- * dialog closes once the export resolves; success/failure surfaces as a toast.
+ * Collects image-export settings and delegates the work to
+ * {@link ImageExportService}. Closes once the export resolves; the outcome
+ * surfaces as a toast.
  */
 @Component({
   selector: 'app-export-image-dialog',
@@ -63,9 +63,8 @@ export class ExportImageDialogComponent {
     return [...(main ? [main] : []), ...this.projectService.openComponents()];
   });
 
-  // Options carry the array index (a primitive) rather than the Project itself:
-  // a Project is a deep, circular PixiJS Container, so binding the index keeps
-  // lg-select's by-value (===) option matching cheap and Project-free.
+  // Options carry the array index rather than the Project: a Project is a deep,
+  // circular PixiJS Container, and lg-select matches options by value.
   protected readonly projectOptions = computed(() =>
     this._projects().map((project, index) => ({
       label: this._projectName(project),

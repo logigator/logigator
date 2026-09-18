@@ -18,8 +18,8 @@ function caret(fixture: { nativeElement: HTMLElement }): HTMLElement {
 }
 
 describe('LgCaret', () => {
-  // The offset slides the caret along the edge it sits on, so which axis it
-  // moves along is decided by the side — the wrong one walks it off the panel.
+  // The side decides which axis the offset moves along; the wrong one walks
+  // the caret off the panel.
   it('offsets along the edge the caret sits on', () => {
     const fixture = TestBed.createComponent(Host);
     fixture.componentInstance.offset.set(24);

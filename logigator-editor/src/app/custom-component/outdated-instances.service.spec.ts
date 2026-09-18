@@ -8,7 +8,7 @@ import { ProjectService } from '../project/project.service';
 import { Project } from '../project/project';
 import { CustomComponent } from '../components/custom/custom-component';
 import { AddComponentsAction } from '../actions/actions/add-components.action';
-import { BuiltInComponentType } from '../components/component-type.enum';
+import { BuiltInComponentType } from '@logigator/core';
 import { makeAnd } from '../../testing/factories';
 
 describe('OutdatedInstancesService', () => {
@@ -27,7 +27,6 @@ describe('OutdatedInstancesService', () => {
 
     main = new Project();
     projectService.setMainProject(main);
-    // Subscribes the active-project bridge, so later action pushes tick.
     TestBed.tick();
   });
 
@@ -38,7 +37,7 @@ describe('OutdatedInstancesService', () => {
     );
   }
 
-  /** Snapshot the master's current state and place an instance, as placement does. */
+  /** Snapshots the master and places an instance, as placement does. */
   function place(masterTypeId: number, target = main): CustomComponent {
     const def = registry.snapshot(masterTypeId);
     const config = provider.getComponent(def.typeId)!;
@@ -73,7 +72,7 @@ describe('OutdatedInstancesService', () => {
 
     it('resolves a snapshot captured before an upload-to-cloud through the promotion alias', () => {
       const master = createMaster('CC');
-      // Frozen against the browser id, which promotion replaces with a server one.
+      // Frozen against the browser id, which promotion replaces.
       const snapshot = registry.snapshot(master);
 
       registry.promoteMaster(master, 'server-id', 2);
@@ -94,8 +93,7 @@ describe('OutdatedInstancesService', () => {
     it('is false for a snapshot with no version provenance', () => {
       const master = createMaster('CC');
       registry.setMasterVersion(master, 7);
-      // A document written before versions existed carries the master id but no
-      // version, so there is nothing to compare against.
+      // A master id with no version leaves nothing to compare against.
       const typeId = registry.registerSnapshot({
         kind: 'snapshot',
         source: 'browser',
@@ -117,7 +115,6 @@ describe('OutdatedInstancesService', () => {
     place(master);
     place(master);
     registry.setMasterVersion(master, 2);
-    // Placed after the bump, so it is already current.
     place(master);
     main.addComponent(makeAnd());
 
@@ -131,10 +128,8 @@ describe('OutdatedInstancesService', () => {
     const v2 = place(master);
     registry.setMasterVersion(master, 3);
 
-    // Two distinct snapshot type ids, one master.
     expect(v1.config.type).not.toBe(v2.config.type);
     expect(service.countFor(master)).toBe(2);
-    // Resolvable from a snapshot type id too, not just the master's.
     expect(service.countFor(v1.config.type)).toBe(2);
   });
 
@@ -148,7 +143,6 @@ describe('OutdatedInstancesService', () => {
   it('recounts after a board mutation and after the master version moves', () => {
     const master = createMaster('CC');
     const stale = place(master);
-    // Nothing is outdated until the master moves ahead of the placed snapshot.
     expect(service.countFor(master)).toBe(0);
 
     registry.setMasterVersion(master, 2);

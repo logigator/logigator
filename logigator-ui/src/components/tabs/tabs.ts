@@ -20,9 +20,8 @@ export abstract class LgTabsRef {
 }
 
 /**
- * A tab button in the tablist. Projects its label; reflects/sets the active
- * tab through the parent. The active tab draws the underline (a bottom border
- * overlapping the tablist's, via `-mb-px`).
+ * A tab button in the tablist. The active one draws the underline, a bottom
+ * border overlapping the tablist's via `-mb-px`.
  */
 @Component({
   selector: 'lg-tab',
@@ -81,9 +80,9 @@ export class LgTabPanel {
 }
 
 /**
- * A tab set. `value` is a `model()` two-way of the active tab's key. Tabs and
- * panels are projected (in any order); arrow/Home/End roving on the tablist is
- * driven off the rendered `[role=tab]` buttons.
+ * A tab set. `value` is a two-way `model()` of the active tab's key. Tabs and
+ * panels are projected in any order; roving reads the rendered `[role=tab]`
+ * buttons.
  */
 @Component({
   selector: 'lg-tabs',

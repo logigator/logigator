@@ -19,7 +19,7 @@ jobs:
           cancel_others: 'true'
           skip_after_successful_duplicate: 'true'
           github_token: ${{ github.token }}
-          paths: '["logigator-editor/**", "logigator-ui/**", "package.json", "yarn.lock", ".yarnrc.yml", "angular.json", "tsconfig.json", "eslint.config.js", ".prettierrc", ".prettierignore"]'
+          paths: '["logigator-editor/**", "logigator-ui/**", "logigator-core/**", "logigator-contract/**", "logigator-docs/**", "package.json", "yarn.lock", ".yarnrc.yml", "angular.json", "tsconfig.json", "eslint.config.mjs"]'
 
   ci:
     name: 'CI logigator-editor'
@@ -44,17 +44,28 @@ jobs:
       - name: 'Lint'
         shell: bash
         run: |
-          yarn run format
-          yarn run lint
+          yarn run lint:editor
+          yarn run lint:ui
+          yarn run lint:core
+          yarn run lint:contract
+          yarn run lint:docs
+
+      - name: 'Typecheck'
+        shell: bash
+        run: |
+          yarn run typecheck:core
+          yarn run typecheck:contract
+          yarn run typecheck:docs
 
       - name: 'Test'
         shell: bash
         run: |
-          yarn run test --watch=false
-          yarn run test:ui --watch=false
+          yarn run test:editor
+          yarn run test:ui
+          yarn run test:core
+          yarn run test:contract
+          yarn run test:docs
 
       - name: 'Build'
         shell: bash
-        run: |
-          yarn run build
-          yarn run build:ui
+        run: yarn run build:editor

@@ -15,7 +15,6 @@ import { lgLabel } from '../../tokens/labels';
 import { DialogConfig } from './dialog-config';
 import { DialogRef } from './dialog-ref';
 
-/** The component class {@link DialogService} renders inside the container. */
 export const DIALOG_CHILD_COMPONENT = new InjectionToken<Type<unknown>>(
   'lg-dialog-child-component'
 );
@@ -23,17 +22,13 @@ export const DIALOG_CHILD_COMPONENT = new InjectionToken<Type<unknown>>(
 let nextId = 0;
 
 /**
- * The chrome rendered inside a {@link DialogService}-opened overlay: a centred
- * card (mirroring {@link LgDialog}'s look) — or, with
- * {@link DialogConfig.fullscreen}, a viewport-filling takeover — with an
- * optional header + close button, hosting the dynamically-created child
- * component.
+ * The chrome inside a {@link DialogService}-opened overlay: a centred card, or
+ * a viewport-filling takeover under {@link DialogConfig.fullscreen}, hosting
+ * the dynamically-created child component.
  *
- * The child is created in `ngAfterViewInit` — after `open()` has returned and
- * the caller has subscribed to `onChildComponentLoaded` — and its `inputValues`
- * are applied via `setInput()` **before** the child's first change detection, so
- * `input.required` signals resolve. The real instance is then reported through
- * the ref. The panel scales/fades in, like {@link LgDialog}.
+ * The child is created in `ngAfterViewInit`, after `open()` has returned and
+ * the caller has subscribed to `onChildComponentLoaded`, with `inputValues`
+ * applied **before** its first change detection so `input.required` resolves.
  */
 @Component({
   selector: 'lg-dynamic-dialog-container',

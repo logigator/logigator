@@ -9,6 +9,7 @@ import { AddWiresAction } from '../actions/actions/add-wires.action';
 import { RemoveWiresAction } from '../actions/actions/remove-wires.action';
 import { ActionContainer } from '../actions/action-container';
 import { ConnectionPoint } from '../connection-points/connection-point';
+import { WireDirection } from '@logigator/core';
 import { getStaticDI } from '../utils/get-di';
 import { LoggingService } from '../logging/logging.service';
 import type { Project } from './project';
@@ -17,11 +18,16 @@ import type { Project } from './project';
 type ClickHit =
   { kind: 'component'; element: Component } | { kind: 'wire'; element: Wire };
 
+/**
+ * How far either side of a wire's centre-line (grid units, an eighth of a
+ * cell) a click still counts as landing on the cable itself, which outranks a
+ * text label drawn over it. A grid measure, not a screen one: the quarter-cell
+ * band is the same slice of the row at every zoom.
+ */
+const PICK_LINE_TOLERANCE_GRID = 0.125;
+
 export class SelectionManager {
-  /**
-   * Margin (grid units) around the content bounds for grab rects that have no
-   * user-drawn shape (programmatic {@link select}, e.g. a committed paste).
-   */
+  /** Margin (grid units) for grab rects with no user-drawn shape. */
   static readonly GRAB_MARGIN = 1;
 
   private readonly _selectedComponents = new Set<Component>();
@@ -31,26 +37,21 @@ export class SelectionManager {
   // double-click take-back) can tell whether the selection it recorded still
   // stands or has been changed by something else.
   private _version = 0;
-  // The scissor cut this selection registered in the undo history, if any.
-  // Live only while it is still the newest history entry (see hasLiveCut);
-  // consumed by the move/delete that commits it, retracted by clear().
+  // The scissor cut this selection registered, live only while it is still the
+  // newest history entry: consumed by the move/delete that commits it,
+  // retracted by clear().
   private _cutAction: Action | null = null;
   private _selectedConnectionPoints: ConnectionPoint[] = [];
-  // The grab rect as set (the drawn marquee, or padded bounds for select())
-  // plus the selection's bounding-box origin at that moment. grabRect()
-  // translates the stored rect by however far the bounds have moved since, so
-  // the rect follows a committed move (and its undo/redo) without resizing.
+  // The rect as set, plus the bounding-box origin at that moment. grabRect()
+  // translates by how far the bounds have moved since, so the rect follows a
+  // committed move without resizing.
   private _grabRect: Rectangle | null = null;
   private _grabAnchor: Point | null = null;
 
   constructor(private readonly project: Project) {
-    // Dissolve-on-external-action: a live cut only stays in history as long
-    // as a move or delete can still commit it. Any unrelated action recorded
-    // on top would orphan it as an invisible wire split, so clear the
-    // selection (retracting the cut) before that action lands. The cut's own
-    // register can't self-dissolve — `_cutAction` is only set afterwards.
-    // Same lifetime as the manager (both die with the project), so the
-    // disposer is never needed.
+    // An action recorded on top of a live cut would orphan it as an invisible
+    // wire split, so clear (retracting the cut) before that action lands. The
+    // cut's own register can't self-dissolve: `_cutAction` is set afterwards.
     project.actionManager.onBeforeRecord(() => {
       if (this.hasLiveCut) this.clear();
     });
@@ -103,16 +104,15 @@ export class SelectionManager {
       }
     }
 
-    // The marquee persists exactly as drawn — the user shaped it, so it never
-    // re-fits to the content it caught.
+    // The user shaped the marquee, so it never re-fits to what it caught.
     this._setGrabRect(rect.clone());
     this.retintCps();
     this._notifySelectionChange();
   }
 
   private _scissorAndSelectWires(rect: Rectangle): void {
-    // The query result is a snapshot, so the addWire/removeWire calls below —
-    // which update the quad tree synchronously — cannot disturb this iteration.
+    // A snapshot, so the synchronous addWire/removeWire calls below cannot
+    // disturb this iteration.
     const candidates = this.project.queryWiresInRange(rect);
 
     const wiresToKeep: Wire[] = [];
@@ -139,20 +139,17 @@ export class SelectionManager {
     }
 
     if (wiresToCut.length > 0) {
-      // The cut is a real history entry from the start: registered against
-      // the directly-materialized state so the inside piece is a live
-      // selectable Wire, undoable with one Ctrl+Z. A move/delete commit
-      // coalesces it into its own action (one undo step); cancelling the
-      // selection retracts it (see clear()), so an uncommitted cut leaves no
-      // trace. The action constructors snapshot the wires, so they are built
-      // before the mutations — originals at pre-cut geometry.
+      // A real history entry from the start, registered against the
+      // materialized state so the inside piece is a live selectable Wire. A
+      // move/delete commit coalesces it in; cancelling retracts it. Built
+      // before the mutations so its snapshots hold the pre-cut geometry.
       const cut = new ActionContainer(
         new RemoveWiresAction(...wiresToCut.map((w) => Wire.serialize(w))),
         new AddWiresAction(...newPieces.map((w) => Wire.serialize(w)))
       );
 
-      // Match the action order (remove originals, then add pieces) so the CP
-      // manager and quad tree see the same transitions as undo/redo.
+      // Match the action order so the CP manager and quad tree see the same
+      // transitions as undo/redo do.
       for (const wire of wiresToCut) {
         this.project.removeWire(wire.id);
       }
@@ -174,8 +171,7 @@ export class SelectionManager {
       this._selectedWires.add(wire);
     }
 
-    // Inside pieces are live in the project now; select them directly by ID.
-    // No re-query is needed because we added them synchronously above.
+    // Added synchronously above, so select by id rather than re-querying.
     if (insideIds.size > 0) {
       for (const piece of newPieces) {
         if (!piece.destroyed && insideIds.has(piece.id)) {
@@ -186,8 +182,8 @@ export class SelectionManager {
     }
   }
 
-  // A zero-area rect fails PixiJS Rectangle.intersects(), so we build a 1×1
-  // query rect and post-filter with gridBounds.contains().
+  // A zero-area rect fails PixiJS Rectangle.intersects(), hence the 1×1 query
+  // rect plus the containment post-filters in _pickAt.
   private _commitSingleClick(
     px: number,
     py: number,
@@ -270,35 +266,65 @@ export class SelectionManager {
    * The element a click at the point selects: the one whose bounds contain it,
    * a component over a wire and the smaller bounding box over the larger —
    * smaller = more precisely aimed.
+   *
+   * A text label overflows its 1×1 footprint and a wire can run under it, so
+   * where the rules above would hand the click to a wire, a label drawn over
+   * the point takes it back — unless the pointer is on that wire's drawn line,
+   * which wins as the cable the user can see. The cable stays reachable exactly
+   * where it is visible, the label everywhere else on the glyphs.
    */
   private _pickAt(px: number, py: number): ClickHit | null {
     const queryRect = new Rectangle(px - 0.5, py - 0.5, 1, 1);
 
     let bestComponent: Component | null = null;
     let bestComponentArea = Infinity;
+    let bestLabel: Component | null = null;
+    let bestLabelArea = Infinity;
 
     for (const component of this.project.queryComponentsInRange(queryRect)) {
+      if (component.destroyed) continue;
       const bounds = component.gridBounds;
-      if (!component.destroyed && bounds.contains(px, py)) {
+      if (bounds.contains(px, py)) {
         const area = bounds.width * bounds.height;
         if (area < bestComponentArea) {
           bestComponentArea = area;
           bestComponent = component;
+        }
+        continue;
+      }
+      // Off the footprint, only a drawn overflow (a label) can still be aimed at.
+      const drawn = component.pickBounds;
+      if (drawn.contains(px, py)) {
+        const area = drawn.width * drawn.height;
+        if (area < bestLabelArea) {
+          bestLabelArea = area;
+          bestLabel = component;
         }
       }
     }
 
     let bestWire: Wire | null = null;
     let bestWireArea = Infinity;
+    let bestOnWire: Wire | null = null;
+    let bestOnWireArea = Infinity;
 
     for (const wire of this.project.queryWiresInRange(queryRect)) {
+      if (wire.destroyed) continue;
       const bounds = wire.gridBounds;
-      if (!wire.destroyed && bounds.contains(px, py)) {
-        const area = bounds.width * bounds.height;
-        if (area < bestWireArea) {
-          bestWireArea = area;
-          bestWire = wire;
-        }
+      if (!bounds.contains(px, py)) continue;
+      const area = bounds.width * bounds.height;
+      if (area < bestWireArea) {
+        bestWireArea = area;
+        bestWire = wire;
+      }
+      // Only a label contests a wire, so the line test is skipped otherwise.
+      if (
+        bestLabel !== null &&
+        area < bestOnWireArea &&
+        this._onWireLine(wire, px, py)
+      ) {
+        bestOnWireArea = area;
+        bestOnWire = wire;
       }
     }
 
@@ -308,17 +334,33 @@ export class SelectionManager {
     ) {
       return { kind: 'component', element: bestComponent };
     }
+    // A label takes the click back from a wire only, and never from a footprint
+    // under the point: a body is what the user sees, and keeps whatever the
+    // rule above gave it.
+    if (bestLabel !== null && bestComponent === null) {
+      return bestOnWire
+        ? { kind: 'wire', element: bestOnWire }
+        : { kind: 'component', element: bestLabel };
+    }
     return bestWire ? { kind: 'wire', element: bestWire } : null;
   }
 
-  // Re-evaluates which connection points count as selected. A CP is highlighted
-  // only when the selection rectangle touches the grid-unit cell the CP sits in
-  // — selecting a wire does not drag its endpoint junctions (which may connect
-  // to unselected wires) into the highlight. Enumerating candidates from the
-  // selected elements' termination points is equivalent to a pure "CP cell in
-  // rect" test (any CP whose cell the rect touches has its terminating elements
-  // selected) and avoids needing a CP spatial index. A rect-less selection
-  // (single click) highlights no CPs.
+  /**
+   * Whether the point lands on a wire's drawn line rather than merely in its
+   * row: a wire occupies a whole grid cell across, and the label yields only
+   * the middle quarter of that cell to the cable.
+   */
+  private _onWireLine(wire: Wire, px: number, py: number): boolean {
+    return wire.direction === WireDirection.HORIZONTAL
+      ? Math.abs(py - wire.position.y) <= PICK_LINE_TOLERANCE_GRID
+      : Math.abs(px - wire.position.x) <= PICK_LINE_TOLERANCE_GRID;
+  }
+
+  // A CP is highlighted only when the selection rect touches its grid cell, so
+  // selecting a wire does not drag its endpoint junctions — which may connect
+  // to unselected wires — into the highlight. Enumerating candidates from the
+  // selected elements' terminations is equivalent to that test and needs no CP
+  // spatial index. A rect-less selection highlights nothing.
   public retintCps(): void {
     for (const cp of this._selectedConnectionPoints) {
       if (!cp.destroyed) cp.selected = false;
@@ -344,8 +386,7 @@ export class SelectionManager {
       }
     }
 
-    // Several selected elements can terminate at the same junction, so the
-    // point list carries duplicates — collapse to one entry per dot.
+    // Several selected elements can terminate at the same junction.
     this._selectedConnectionPoints = [
       ...new Set(this.project.connectionPoints.getCpsAtPoints(points))
     ];
@@ -354,10 +395,8 @@ export class SelectionManager {
     }
   }
 
-  // Whether the selection rect overlaps the 1×1 grid cell a connection point
-  // sits in. CPs sit at half-grid centres, so the cell is the integer square
-  // floor(p)..floor(p)+1. Inclusive on every edge so a rect merely grazing the
-  // cell still counts as touching it.
+  // CPs sit at half-grid centres, so their cell is the integer square
+  // floor(p)..floor(p)+1. Inclusive on every edge, so a grazing rect touches.
   private _rectTouchesCell(rect: Rectangle, p: Point): boolean {
     const cx = Math.floor(p.x);
     const cy = Math.floor(p.y);
@@ -370,13 +409,9 @@ export class SelectionManager {
   }
 
   /**
-   * Neutralizes the selection highlight on every selected element (and its
-   * selected connection points) so an off-screen render — minimap, image
-   * export, server preview — doesn't bake it into committed content. Lives
-   * here because `_selectedConnectionPoints` is private. Returns a closure
-   * that restores the flags; each re-derives the tint from whatever theme is
-   * active then (the dual-theme preview flow switches themes between renders).
-   * Destroyed nodes are skipped on both passes.
+   * Neutralizes the selection highlight so an off-screen render does not bake
+   * it into committed content. The returned closure restores the flags,
+   * re-deriving each tint from whatever theme is active by then.
    */
   public suppressTintForRender(): () => void {
     const suppressed: (Component | Wire | ConnectionPoint)[] = [];
@@ -398,8 +433,8 @@ export class SelectionManager {
   }
 
   public clear(): void {
-    // Retract any uncommitted scissor cut first so cancelled selections leave
-    // the project in its pre-cut state and the history without the entry.
+    // First, so a cancelled selection leaves the project in its pre-cut state
+    // and the history without the entry.
     this._retractLiveCut();
 
     for (const component of this._selectedComponents) {
@@ -424,9 +459,8 @@ export class SelectionManager {
 
   /**
    * Whether this selection's scissor cut is still committable: it exists and
-   * is the newest history entry. Lazily validated against the history — an
-   * undo that popped the cut, or (in principle) anything recorded on top,
-   * silently ends its live phase.
+   * is the newest history entry. Validated lazily, so an undo that popped the
+   * cut silently ends its live phase.
    */
   public get hasLiveCut(): boolean {
     return (
@@ -436,10 +470,8 @@ export class SelectionManager {
   }
 
   /**
-   * Hands the live cut over to the move/delete that commits it — the caller
-   * coalesces it with its own action into one undo step (see
-   * ActionManager.coalesceTop). Null when no cut is live; a stale reference
-   * is dropped either way.
+   * Hands the live cut over to be coalesced into the committing action's undo
+   * step. Null when no cut is live; a stale reference is dropped either way.
    */
   public consumeLiveCut(): Action | null {
     const cut = this.hasLiveCut ? this._cutAction : null;
@@ -447,20 +479,19 @@ export class SelectionManager {
     return cut;
   }
 
-  // Takes an uncommitted cut back out of the history (reverting it) so a
-  // cancelled scissor selection leaves no trace. A stale (non-live) cut stays
-  // where the history has it — undo/redo own it now.
+  // Reverts an uncommitted cut out of the history, so a cancelled scissor
+  // selection leaves no trace. A stale cut stays where the history has it.
   private _retractLiveCut(): void {
     const cut = this._cutAction;
     this._cutAction = null;
     if (!cut) return;
     // Retract runs cut.undo(): removeWire evicts the pieces from
-    // _selectedWires automatically; the re-added originals stay unselected.
+    // _selectedWires; the re-added originals stay unselected.
     this.project.actionManager.retract(cut);
   }
 
-  // Drops an element from the selection sets before it is destroyed, so they
-  // never retain a dead Container reference.
+  // Drops an element before it is destroyed, so the sets never retain a dead
+  // Container reference.
   public evict(element: Component | Wire): void {
     let changed: boolean;
     if (element instanceof Component) {
@@ -504,12 +535,10 @@ export class SelectionManager {
   }
 
   /**
-   * The selection's persistent rect: frozen at the shape it was set with
-   * (never re-fit to content), translated to track the selection's bounding
-   * box. Single source of truth for the rect visual and — when present — the
-   * router's move-vs-new-selection hit test, so the grab zone and what the
-   * user sees can never drift. Null for single-click selections (nothing was
-   * drawn) and while nothing is selected.
+   * The persistent rect: frozen at the shape it was set with, never re-fit to
+   * content, translated to track the bounding box. One source of truth for
+   * both the visual and the grab hit test, so the two cannot drift. Null for
+   * single-click selections and while nothing is selected.
    */
   public grabRect(): Rectangle | null {
     if (!this._grabRect || !this._grabAnchor) return null;
@@ -525,10 +554,11 @@ export class SelectionManager {
 
   /**
    * Whether a press at a grid point grabs the selection (starts a move): the
-   * drawn marquee where one exists, or the selected elements' own bounds —
-   * whichever is hit, so an element the marquee does not cover (added by the
-   * additive modifier, or hanging over the marquee's edge) still drags the
-   * group. A rect-less selection (single click) has only the bounds to go on.
+   * drawn marquee where one exists, or the selected elements' own bounds — a
+   * text's label among them, so it drags by the glyphs it was selected by.
+   * Either way an element the marquee does not cover (added by the additive
+   * modifier, or hanging over the marquee's edge) still drags the group. A
+   * rect-less selection (single click) has only the bounds to go on.
    */
   public isGrabbedAt(gridPoint: { x: number; y: number }): boolean {
     const rect = this.grabRect();
@@ -551,17 +581,18 @@ export class SelectionManager {
   }
 
   /**
-   * The selected element whose bounds contain the point, if any. Queried
-   * through the project's spatial index rather than by walking the selection:
-   * this answers every press, and a large selection must not cost a bounds
-   * allocation per member.
+   * The selected element whose bounds contain the point, if any. A text is
+   * grabbed by its label as well as by its anchor cell, matching what a click
+   * selects. Queried through the project's spatial index rather than by walking
+   * the selection: this answers every press, and a large selection must not
+   * cost a bounds allocation per member.
    */
   private _selectedAt(gridPoint: {
     x: number;
     y: number;
   }): Component | Wire | null {
     for (const component of this._nearbyComponents(gridPoint)) {
-      if (component.gridBounds.contains(gridPoint.x, gridPoint.y)) {
+      if (component.pickBounds.contains(gridPoint.x, gridPoint.y)) {
         return component;
       }
     }
@@ -573,7 +604,7 @@ export class SelectionManager {
     return null;
   }
 
-  /** Selected components whose bounds cover the grid cell around the point. */
+  /** Selected components whose pick bounds cover the grid cell around the point. */
   private _nearbyComponents(gridPoint: {
     x: number;
     y: number;
@@ -593,13 +624,10 @@ export class SelectionManager {
   }
 
   /**
-   * Adds a committed move/rotate's integration replacement wires to the live
-   * selection: the selected originals were evicted by their removal, so
-   * without this a merge or split would silently drop them from the
-   * selection. The caller re-freezes the grab rect afterwards (see
-   * {@link freezeGrabRect}) with a rect captured *before* the removals — the
-   * evictions can empty or shrink the bounding box the rect anchors to, so it
-   * cannot be re-derived here.
+   * Adds integration replacement wires to the live selection, since removing
+   * the originals evicted them. The grab rect must then be re-frozen
+   * ({@link freezeGrabRect}) from a rect captured *before* the removals: the
+   * evictions can shrink the bounding box it anchors to.
    */
   public adoptWires(wires: Iterable<Wire>): void {
     let changed = false;
@@ -615,19 +643,17 @@ export class SelectionManager {
   }
 
   /**
-   * Replaces the frozen rect wholesale (re-anchored to the current bounding
-   * box), or drops it with `null`. Rotate flows use this to turn the frozen
-   * rect together with the selection's geometry — the rect stays the shape it
-   * was drawn as, just rotated, never re-fit to content — and to restore it
-   * when a rotation is cancelled.
+   * Replaces the frozen rect wholesale, re-anchored to the current bounding
+   * box, or drops it with `null`. A rotate turns the rect with the geometry:
+   * still the shape it was drawn as, never re-fit to content.
    */
   public freezeGrabRect(rect: Rectangle | null): void {
     this._setGrabRect(rect);
     this._notifySelectionChange();
   }
 
-  // Freezes the given rect (with the current bounds origin as its translation
-  // anchor), or drops the rect entirely — also when the selection is empty.
+  // Anchors the rect to the current bounds origin, or drops it — also when
+  // the selection is empty.
   private _setGrabRect(rect: Rectangle | null): void {
     const box = rect ? this.boundingBox() : null;
     this._grabRect = box ? rect : null;
@@ -635,9 +661,8 @@ export class SelectionManager {
   }
 
   /**
-   * Drops the persistent rect while keeping the selection — for a programmatic
-   * selection that must not draw a marquee. Grabbing then falls back to the
-   * elements' own bounds, exactly like a single-click selection.
+   * Drops the persistent rect while keeping the selection, so grabbing falls
+   * back to the elements' own bounds.
    */
   public clearGrabRect(): void {
     this._setGrabRect(null);
@@ -659,8 +684,7 @@ export class SelectionManager {
         this._selectedWires.add(w);
       }
     }
-    // No user-drawn shape to freeze — a programmatic selection (a committed
-    // paste) rects its content bounds plus a margin.
+    // No user-drawn shape to freeze, so rect the content bounds plus a margin.
     this._setGrabRect(
       this.boundingBox()?.pad(SelectionManager.GRAB_MARGIN) ?? null
     );
@@ -696,8 +720,8 @@ export class SelectionManager {
     return this._selectedWires;
   }
 
-  // The junction dots currently highlighted — the ones a drag should carry so
-  // that what moves matches what looks selected. See retintCps for the rule.
+  // The highlighted junction dots — what a drag carries, so that what moves
+  // matches what looks selected.
   public get selectedConnectionPoints(): readonly ConnectionPoint[] {
     return this._selectedConnectionPoints;
   }

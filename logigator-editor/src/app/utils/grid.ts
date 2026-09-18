@@ -16,8 +16,8 @@ export function roundToGrid(point: Point, inline = false): Point {
 }
 
 /**
- * A rectangle translated by an offset — the grid-space bounds of a drag-layer
- * element as seen by the project (element bounds + the layer's drag offset).
+ * A rectangle translated by an offset: the grid-space bounds of a drag-layer
+ * element as the project sees them.
  */
 export function offsetRect(bounds: Rectangle, offset: PointData): Rectangle {
   return new Rectangle(
@@ -29,9 +29,9 @@ export function offsetRect(bounds: Rectangle, offset: PointData): Rectangle {
 }
 
 /**
- * {@link offsetRect} translating `bounds` itself, for callers holding a rect
- * nobody else owns — the bounds getters allocate one per call, so the copy is
- * redundant on the per-pointer-move paths.
+ * {@link offsetRect} translating `bounds` itself, for a caller holding a rect
+ * nobody else owns; the bounds getters allocate one per call, so the copy is
+ * redundant on per-pointer-move paths.
  */
 export function offsetRectInPlace(
   bounds: Rectangle,
@@ -44,11 +44,10 @@ export function offsetRectInPlace(
 
 /**
  * Whether `rect` overlaps the AABB given as loose scalars. Matches
- * `Rectangle.intersects` exactly — edge contact is not an overlap — but takes
- * the second box unmaterialized, so callers that derive their bounds on the fly
- * can test without allocating a Rectangle. Backs
- * {@link GridElement.intersectsGridBounds}, which runs once per candidate on
- * every quad-tree query.
+ * `Rectangle.intersects` exactly, edge contact included (not an overlap), but
+ * takes the second box unmaterialized so a caller deriving bounds on the fly
+ * tests without allocating. This runs once per candidate of every quad-tree
+ * query.
  */
 export function overlapsRect(
   rect: Rectangle,

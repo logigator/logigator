@@ -55,8 +55,8 @@ describe('deriveSummary', () => {
   });
 
   it('orders each group by the plug index option', () => {
-    // Placed out of index order — derivation must sort by `index`. Labels stay
-    // within the plug's 5-char limit (the `s` wire slot / backend column cap).
+    // Placed out of index order; derivation sorts by `index`. Labels stay
+    // within the plug's 5-char limit.
     addPlug('input', 'in1', 1, [0, 0]);
     addPlug('input', 'in0', 0, [0, 5]);
     addPlug('output', 'out1', 1, [10, 0]);
@@ -85,7 +85,7 @@ describe('deriveSummary', () => {
   });
 
   it('falls back to instance-id order for duplicate indices (never throws)', () => {
-    // Two inputs both at index 0 — defensive tiebreak by insertion/id order.
+    // Two inputs at index 0, tiebroken by id order.
     addPlug('input', 'A', 0, [0, 0]);
     addPlug('input', 'B', 0, [0, 5]);
 

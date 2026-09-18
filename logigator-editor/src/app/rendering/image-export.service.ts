@@ -30,9 +30,8 @@ export interface ImageExportOptions {
 }
 
 /**
- * Largest texture side (px) rendered in a single pass. Beyond it the multiplier
- * is clamped and the user warned, rather than tiling. Shared with the snapshot
- * service, which bounds its supersampling by the same cap.
+ * Largest texture side (px) per pass. Beyond it the multiplier is clamped and
+ * the user warned, rather than tiling.
  */
 export const MAX_EXPORT_DIMENSION = MAX_SNAPSHOT_DIMENSION;
 
@@ -50,9 +49,8 @@ const DEFAULT_QUALITY = 0.92;
 const DEFAULT_NAME = 'circuit';
 
 /**
- * Exports a project's canvas as a downloadable PNG / JPEG / WebP. Orchestration
- * only — the actual rendering and pixel extraction live in
- * {@link BoardSnapshotService}.
+ * Exports a project's canvas as a downloadable PNG / JPEG / WebP.
+ * Orchestration only; rendering lives in {@link BoardSnapshotService}.
  */
 @Injectable({
   providedIn: 'root'
@@ -64,18 +62,14 @@ export class ImageExportService {
   private readonly translation = inject(TranslationService);
   private readonly analytics = inject(AnalyticsService);
 
-  /**
-   * Largest multiplier whose output fits {@link MAX_EXPORT_DIMENSION} on both
-   * axes. Used to clamp the export and to drive the dialog's dimension preview.
-   */
+  /** Largest multiplier whose output fits {@link MAX_EXPORT_DIMENSION}. */
   public maxMultiplier(project: Project): number {
     return this._maxMultiplier(this.snapshot.computeRegion(project));
   }
 
   /**
-   * Output dimensions for a project at a multiplier, with the effective
-   * (possibly clamped) value applied. Drives the dialog's live size preview and
-   * needs no renderer (bounds-only).
+   * Output dimensions at a multiplier, with the effective (possibly clamped)
+   * value applied. Bounds-only, so it needs no renderer.
    */
   public previewSize(
     project: Project,
@@ -108,9 +102,8 @@ export class ImageExportService {
       canvas = this.snapshot.renderProjectToCanvas(options.project, {
         multiplier: effective,
         background: this._backgroundMode(options),
-        // Inert at the dialog's whole-number resolutions, which already put
-        // hairlines on whole pixels; earns its cost only if a fit-derived
-        // multiplier ever reaches here with room under the dimension cap.
+        // Inert at whole-number resolutions, which already put hairlines on
+        // whole pixels; only a fit-derived multiplier earns its cost.
         supersample: this.snapshot.subPixelSupersample(
           region,
           effective,
@@ -146,8 +139,8 @@ export class ImageExportService {
       background: options.background
     });
 
-    // A clamped export still succeeded; the clamp warning both confirms it and
-    // explains the reduced size, so it stands in for the success toast.
+    // A clamped export succeeded, and its warning stands in for the success
+    // toast by explaining the reduced size.
     if (clamped) {
       const { width, height } = this.snapshot.outputSize(region, effective);
       this.toast.warn(
@@ -167,8 +160,8 @@ export class ImageExportService {
 
   private _backgroundMode(options: ImageExportOptions): SnapshotBackground {
     if (options.background) return 'grid';
-    // JPEG has no alpha; flattening onto white happens in _toBlob, so render
-    // transparent here regardless of format.
+    // JPEG has no alpha, but _toBlob flattens onto white, so every format
+    // renders transparent here.
     return 'transparent';
   }
 

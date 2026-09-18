@@ -1,0 +1,63 @@
+{
+  "name": "logigator-api",
+  "version": "0.0.0",
+  "description": "Logigator API (NestJS on Fastify)",
+  "license": "AGPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/logigator/logigator.git"
+  },
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "rspack build",
+    "watch": "rspack build --watch",
+    "serve": "node --enable-source-maps ../dist/logigator-api/main.js",
+    "lint": "eslint --config eslint.config.mjs src test",
+    "lint:fix": "eslint --config eslint.config.mjs src test --fix",
+    "db:generate": "drizzle-kit generate",
+    "db:check": "drizzle-kit check",
+    "db:migrate": "rspack build && node ../dist/logigator-api/migrate.js",
+    "db:renormalize": "rspack build && node ../dist/logigator-api/renormalize.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "vitest run --config vitest.e2e.config.ts",
+    "typecheck": "tsc -p tsconfig.spec.json"
+  },
+  "dependencies": {
+    "@fastify/cookie": "^11.1.2",
+    "@fastify/multipart": "^10.1.1",
+    "@fastify/session": "^11.1.2",
+    "@nestjs/common": "^12.0.1",
+    "@nestjs/core": "^12.0.1",
+    "@nestjs/platform-fastify": "^12.0.1",
+    "@nestjs/schedule": "^12.0.1",
+    "@node-rs/bcrypt": "^1.10.8",
+    "@standard-schema/spec": "^1.1.0",
+    "drizzle-orm": "1.0.0-rc.4",
+    "fastify": "5.12.1",
+    "nodemailer": "^9.0.6",
+    "openid-client": "^6.8.7",
+    "pg": "^8.23.0",
+    "redis": "^6.2.1",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2",
+    "sharp": "^0.35.4",
+    "zod": "^4.5.2"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@nestjs/testing": "^12.0.1",
+    "@rspack/cli": "^2.2.1",
+    "@rspack/core": "^2.2.1",
+    "@types/node": "^24.13.3",
+    "@types/nodemailer": "^8.0.1",
+    "@types/pg": "^8.23.1",
+    "drizzle-kit": "1.0.0-rc.4",
+    "eslint": "^10.9.1",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.68.0",
+    "vitest": "^4.1.11",
+    "webpack-node-externals": "^3.0.0"
+  }
+}

@@ -3,11 +3,7 @@ import { GridElement } from './grid-element';
 import { formatIndexHistogram } from '../utils/histogram';
 import type { QuadTreeEntry, Quadrant } from './quad-tree-container';
 
-/**
- * The tuning numbers a measurement reads: the container's own capacity and
- * size thresholds, passed in because they belong to the tree, not to the
- * report. Reproduced verbatim in {@link QuadTreeStats.thresholds}.
- */
+/** The container's capacity and size thresholds, passed in to the reports. */
 export interface QuadTreeLimits {
   maxLeafElements: number;
   minBranchElements: number;
@@ -21,14 +17,13 @@ type Items<T extends GridElement> = ReadonlyMap<T, QuadTreeEntry<T>>;
 
 /** Shape and occupancy of a whole tree; see {@link collectQuadTreeStats}. */
 export interface QuadTreeStats {
-  /** Elements the tree tracks. */
   elements: number;
   entries: number;
   leaves: number;
   branches: number;
-  /** Entries large enough to be their own PixiJS render group. */
+  /** Entries large enough to be their own render group. */
   renderGroups: number;
-  /** Leaves holding nothing — a large share means minifyBranch is not merging. */
+  /** Leaves holding nothing; many means minifyBranch is not merging. */
   emptyLeaves: number;
   /** Entries the last cull pass flagged off-screen. */
   culledEntries: number;
@@ -38,25 +33,17 @@ export interface QuadTreeStats {
   entriesByDepth: number[];
   elementsByDepth: number[];
   /**
-   * Elements parked at a branch because they are too large for its children —
-   * wider or taller than half the branch cell — by depth. Every range query
-   * passing through that branch tests all of them, so the depth-0 count is
-   * paid by every query the tree ever answers. Only an element's size parks
-   * it at a branch; its position never does.
+   * By depth, elements parked at a branch because they exceed half its cell.
+   * Every range query passing through tests all of them, so the depth-0 count
+   * is paid by every query the tree answers.
    */
   branchOversizeByDepth: number[];
   branchOversize: number;
-  /**
-   * Elements too large for a child of the leaf they sit in. A split cannot
-   * move them down, so they are what puts a leaf legitimately over capacity.
-   */
+  /** Elements a split cannot move down; they may put a leaf over capacity. */
   leafOversize: number;
   /** Leaf count indexed by how many elements the leaf holds. */
   leafOccupancy: number[];
-  /**
-   * Leaves whose splittable elements exceed the capacity at a size a split
-   * could still relieve — an invariant violation.
-   */
+  /** Invariant violation: over capacity at a size a split could relieve. */
   overfullSplittableLeaves: number;
   /** Leaves over capacity that a split cannot relieve. */
   saturatedLeaves: number;
@@ -79,11 +66,7 @@ function describeElement(element: GridElement): string {
   return `${element.constructor.name} at ${describeRect(element.gridBounds)}`;
 }
 
-/**
- * Measures a live tree: its shape, where the elements sit in it, and how far
- * it drifted from the region it started with. Walks every entry, so it is a
- * debug-only call.
- */
+/** Measures a live tree. Walks every entry, so debug-only. */
 export function collectQuadTreeStats<T extends GridElement>(
   tree: QuadTreeEntry<T>,
   items: Items<T>,
@@ -116,7 +99,6 @@ export function collectQuadTreeStats<T extends GridElement>(
     },
     occupied: occupiedExtent(items),
     rootFill: 0,
-    // Copied so a measurement never hands out the container's own limits.
     thresholds: { ...limits }
   };
 
@@ -151,8 +133,6 @@ function collectStats<T extends GridElement>(
 
   const oversize = entry.oversizeItems.children.length;
   if (entry.branches) {
-    // Elements too large for a child cell park here, and every range query
-    // that passes through the entry on its way down tests each of them.
     stats.branches++;
     stats.branchOversize += oversize;
     stats.branchOversizeByDepth[depth] += oversize;
@@ -181,10 +161,9 @@ function collectStats<T extends GridElement>(
 }
 
 /**
- * Whether a leaf holds more splittable elements than its capacity at a size a
- * split could still relieve. Splitting only redistributes the elements a
- * child cell can hold, so a leaf over capacity through oversize elements, or
- * one already at the minimum size, is legitimately over it instead.
+ * Whether a leaf is over capacity at a size a split could relieve. Splitting
+ * only redistributes what a child cell can hold, so a leaf over capacity
+ * through oversize elements, or already at minimum size, is legitimately over.
  */
 function isOverfullSplittable<T extends GridElement>(
   entry: QuadTreeEntry<T>,
@@ -216,12 +195,7 @@ function occupiedExtent<T extends GridElement>(
   return new Rectangle(minX, minY, maxX - minX, maxY - minY);
 }
 
-/**
- * Charts the distributions {@link collectQuadTreeStats} counts — the part of a
- * measurement that a bar reads better than an array. The scalar counts stay in
- * the stats object itself.
- * @param s measurement to chart
- */
+/** Charts the distributions {@link collectQuadTreeStats} counts. */
 export function formatQuadTreeDistributions(s: QuadTreeStats): string {
   return [
     ...formatIndexHistogram('entries by depth', s.entriesByDepth),
@@ -238,10 +212,8 @@ export function formatQuadTreeDistributions(s: QuadTreeStats): string {
 }
 
 /**
- * Draws the entry hierarchy as an indented text tree, one line per entry
- * with its region and occupancy. Subtrees below `maxDepth` collapse into a
- * single summary line.
- * @param maxDepth deepest level to expand
+ * Draws the entry hierarchy as an indented text tree, one line per entry with
+ * its region and occupancy. Subtrees below `maxDepth` collapse.
  */
 export function formatQuadTree<T extends GridElement>(
   tree: QuadTreeEntry<T>,
@@ -323,11 +295,9 @@ function subtreeTotals<T extends GridElement>(
 }
 
 /**
- * Cross-checks a tree against its own invariants and returns one message
- * per problem — empty for a healthy tree. Catches the three states the
- * mutation paths panic on, a leaf a split should have relieved, and the silent
- * one they cannot see: an element that moved out of the region it is filed
- * under without being re-inserted.
+ * Cross-checks a tree against its invariants, one message per problem. Also
+ * catches the silent failure the mutation paths cannot see: an element that
+ * moved out of the region it is filed under without being re-inserted.
  */
 export function validateQuadTree<T extends GridElement>(
   tree: QuadTreeEntry<T>,

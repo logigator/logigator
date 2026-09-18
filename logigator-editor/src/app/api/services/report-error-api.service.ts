@@ -1,11 +1,11 @@
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import {
+  reportErrorResponseSchema,
+  type ReportErrorRequest,
+  type ReportErrorResponse
+} from '@logigator/contract';
 import { ApiBaseService } from './api-base.service';
-import type { ReportErrorRequest } from '../models/report-error';
-
-export interface ReportErrorResponse {
-  success: boolean;
-}
 
 @Injectable({ providedIn: 'root' })
 export class ReportErrorApiService {
@@ -14,6 +14,6 @@ export class ReportErrorApiService {
 
   /** POST /api/report-error — submit a client-side error report. */
   report(body: ReportErrorRequest): Observable<ReportErrorResponse> {
-    return this.api.post<ReportErrorResponse>(this.path, body);
+    return this.api.post(this.path, reportErrorResponseSchema, body);
   }
 }

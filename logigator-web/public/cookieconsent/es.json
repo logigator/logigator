@@ -1,0 +1,52 @@
+{
+  "consentModal": {
+    "title": "Configuración de cookies",
+    "description": "Utilizamos cookies y otras tecnologías de seguimiento para mejorar su experiencia de navegación en nuestro sitio web, mostrarle contenido personalizado, analizar el tráfico de nuestro sitio web y comprender de dónde provienen nuestros visitantes.",
+    "acceptAllBtn": "Aceptar todo",
+    "acceptNecessaryBtn": "Rechazar todo",
+    "showPreferencesBtn": "Administrar preferencias"
+  },
+  "preferencesModal": {
+    "title": "Preferencias de cookies",
+    "acceptAllBtn": "Aceptar todo",
+    "acceptNecessaryBtn": "Rechazar todo",
+    "savePreferencesBtn": "Guardar preferencias",
+    "closeIconLabel": "Cerrar",
+    "sections": [
+      {
+        "title": "Uso de cookies",
+        "description": "Utilizamos cookies y otras tecnologías de seguimiento para mejorar su experiencia de navegación en nuestro sitio web, mostrarle contenido personalizado, analizar el tráfico de nuestro sitio web y comprender de dónde provienen nuestros visitantes."
+      },
+      {
+        "title": "Cookies estrictamente necesarias",
+        "description": "Estas cookies son esenciales para el correcto funcionamiento del sitio web. Sin estas cookies, el sitio web no funcionaría correctamente.",
+        "linkedCategory": "necessary"
+      },
+      {
+        "title": "Cookies de rendimiento y análisis",
+        "description": "Estas cookies nos permiten analizar el tráfico de nuestro sitio web y comprender de dónde provienen nuestros visitantes. Utilizamos esta información para mejorar su experiencia de navegación en nuestro sitio web.",
+        "linkedCategory": "analytics",
+        "cookieTable": {
+          "headers": {
+            "name": "Nombre",
+            "domain": "Servicio",
+            "description": "Descripción",
+            "expiration": "Caducidad"
+          },
+          "body": [
+            {
+              "name": "ph_(id)_posthog",
+              "domain": "PostHog",
+              "description": "Cookie establecida por PostHog para almacenar un identificador anónimo de dispositivo y un id de sesión.",
+              "expiration": "Caduca después de 1 año"
+            }
+          ]
+        }
+      },
+      {
+        "title": "Más información",
+        "description": "Para cualquier consulta relacionada con nuestra política de cookies y sus opciones, consulte nuestra <a class=\"cc-link\" href=\"/privacy-policy\">política de privacidad</a>."
+      }
+    ]
+  }
+}

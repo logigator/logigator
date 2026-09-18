@@ -13,12 +13,9 @@ import {
 } from '../utils/segment-font';
 
 /**
- * Family the subset woff2 is registered under for atlas baking. Deliberately
- * a unique name: the app stylesheet registers lazy faces for the UI families,
- * and if the browser resolves the bake's fontFamily to one that is still
- * unloaded, canvas rasterization silently falls back to a default font and
- * the fallback gets baked into the atlas. A unique family only ever resolves
- * to the FontFace that Assets.load has already awaited.
+ * Family the subset woff2 is registered under for atlas baking. The name must
+ * be unique: resolving the bake's fontFamily to a UI family that is still
+ * lazy-loading bakes the fallback font into the atlas silently.
  */
 const BAKE_FONT_FAMILY = 'Roboto Mono Canvas';
 
@@ -46,8 +43,8 @@ export class AssetsService {
   }
 
   async init() {
-    // The FontFaces must be loaded before the installs below rasterize the
-    // atlases, or the glyphs get baked from a fallback font.
+    // The FontFaces must load before the installs rasterize the atlases, or
+    // the glyphs get baked from a fallback font.
     try {
       await Assets.load([
         BAKE_FONT_FAMILY,
@@ -63,21 +60,18 @@ export class AssetsService {
       throw err;
     }
 
-    // All canvas text renders as BitmapText from these atlases; zooming only
-    // scales glyph quads, so no text is ever re-rasterized. Glyphs are baked
-    // at 48 px × resolution 2 = 96 physical px — above the largest size
-    // built-in text can reach on screen (16 px symbols × 2.49 max zoom ×
-    // devicePixelRatio 2 ≈ 80 px), so built-in text stays crisp at every
-    // zoom. Only the free-text component at large user font sizes can exceed
-    // the bake and go slightly soft. dynamicFill keeps the atlas white so a
-    // BitmapText's fill acts as a per-instance tint (theme colors).
+    // All canvas text is BitmapText from these atlases, so zooming only
+    // scales glyph quads and nothing is re-rasterized. 48 px × resolution 2 =
+    // 96 physical px stays above the ~80 px built-in text can reach on screen;
+    // only the free-text component at large font sizes goes soft. dynamicFill
+    // keeps the atlas white so a BitmapText's fill acts as a tint.
     this._install(CANVAS_FONT_FAMILY, {
       style: { fontFamily: BAKE_FONT_FAMILY, fontSize: 48, fill: 0xffffff },
       chars: CANVAS_FONT_CHARS
     });
-    // The segment-display faces: digits only (DSEG7), digits + hex (DSEG14).
-    // The woff2 outlines are inherently bold-italic; the faces are registered
-    // with default descriptors, so the bake requests the default style too.
+    // Digits only (DSEG7), digits + hex (DSEG14). The woff2 outlines are
+    // inherently bold-italic and the faces carry default descriptors, so the
+    // bake requests the default style too.
     this._install(SEGMENT_FONT_7, {
       style: {
         fontFamily: BAKE_SEGMENT_7_FAMILY,

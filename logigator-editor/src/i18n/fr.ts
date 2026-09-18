@@ -1,6 +1,6 @@
 import type { WorkMode } from '../app/work-mode/work-mode.enum';
 import type { ShortcutActionEnum } from '../app/shortcuts/shortcut-action.enum';
-import type { ComponentCategory } from '../app/components/component-category.enum';
+import type { ComponentCategory } from '@logigator/core';
 import type { TranslationSchema } from '../app/translation/translation-schema.model';
 
 const fr: TranslationSchema = {
@@ -28,7 +28,8 @@ const fr: TranslationSchema = {
     editorSettings: "Paramètres de l'éditeur",
     account: 'Compte',
     logOut: 'Se déconnecter',
-    logIn: 'Se connecter'
+    logIn: 'Se connecter',
+    signUp: "S'inscrire"
   },
   theming: {
     light: 'Clair',
@@ -423,6 +424,12 @@ const fr: TranslationSchema = {
     loadError: 'Impossible de charger cette page.',
     back: 'Tous les sujets',
     learnMore: 'En savoir plus',
+    search: {
+      label: 'Rechercher dans la documentation',
+      placeholder: 'Rechercher..',
+      loading: 'Chargement de la documentation…',
+      empty: 'Aucun résultat pour « {{query}} ».'
+    },
     sections: {
       basics: 'Bases',
       building: 'Construction de circuits',
@@ -743,6 +750,10 @@ const fr: TranslationSchema = {
     skippedCustomMany:
       "{{count}} composants personnalisés n'ont pas pu être chargés — leurs définitions sont manquantes — et ont été ignorés."
   },
+  browserSupport: {
+    unsupported:
+      "Ce navigateur n'est pas officiellement pris en charge — des erreurs peuvent survenir. Si vous rencontrez des problèmes, essayez de mettre à jour votre navigateur."
+  },
   editor: {
     rendererInitFailed:
       "Impossible de démarrer le moteur de rendu graphique. Votre navigateur ou votre GPU n'est peut-être pas pris en charge.",
@@ -961,7 +972,7 @@ const fr: TranslationSchema = {
           moveAround: {
             title: 'Se déplacer',
             textDesktop:
-              'Faites défiler pour zoomer, faites glisser avec le bouton droit pour vous déplacer.',
+              'Faites défiler pour zoomer, faites glisser avec le bouton droit ou le bouton central pour vous déplacer.',
             textCompact:
               'Pincez pour zoomer, faites glisser avec deux doigts pour vous déplacer.'
           },

@@ -81,10 +81,8 @@
     </lg-message>
   }
   <div class="flex justify-end">
-    <lg-button
-      type="submit"
-      [label]="t('newComponentDialog.create')"
-      [disabled]="!canCreate"
-    />
+    <button lgButton type="submit" [disabled]="!canCreate">
+      {{ t('newComponentDialog.create') }}
+    </button>
   </div>
 </form>

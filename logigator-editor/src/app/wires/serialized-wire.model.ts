@@ -1,4 +1,4 @@
-import { WireDirection } from './wire-direction.enum';
+import { WireDirection } from '@logigator/core';
 
 export interface SerializedWire {
   /** Component ID */

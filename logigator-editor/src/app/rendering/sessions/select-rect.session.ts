@@ -15,12 +15,10 @@ export class SelectRectSession implements DragSession {
   private readonly _heldSub: Subscription | null;
 
   /**
-   * @param mode The active work mode — SELECT_EXACT scissors unconditionally.
+   * @param mode SELECT_EXACT scissors unconditionally.
    * @param scissorKey Live state of the hold-to-scissor key. `change$`
-   *   restyles the marquee the moment the key goes down or up, even under a
-   *   motionless pointer; `isHeld()` is also re-read on every move and at
-   *   commit. In SELECT mode the commit scissors when the key is held at
-   *   release.
+   *   restyles the marquee even under a motionless pointer; in SELECT mode the
+   *   commit scissors when the key is held at release.
    */
   constructor(
     private readonly project: Project,

@@ -4,6 +4,8 @@
 
 [![CI logigator-backend](https://github.com/logigator/logigator/workflows/CI%20logigator-backend/badge.svg)](https://github.com/logigator/logigator/actions?query=workflow%3A%22CI+logigator-backend%22)
 [![CI logigator-editor](https://github.com/logigator/logigator/workflows/CI%20logigator-editor/badge.svg)](https://github.com/logigator/logigator/actions?query=workflow%3A%22CI+logigator-editor%22)
+[![CI logigator-api](https://github.com/logigator/logigator/workflows/CI%20logigator-api/badge.svg)](https://github.com/logigator/logigator/actions?query=workflow%3A%22CI+logigator-api%22)
+[![CI format](https://github.com/logigator/logigator/workflows/CI%20format/badge.svg)](https://github.com/logigator/logigator/actions?query=workflow%3A%22CI+format%22)
 
 Logigator is a browser-based logic circuit editor and simulator. Users can place gates and wires on a canvas, wire them together, run a simulation, and save/share their projects. The editor renders entirely on a PixiJS canvas; the backend persists projects and components as JSON and exposes a REST API consumed by the SPA.
 
@@ -26,16 +28,19 @@ Logigator is a browser-based logic circuit editor and simulator. Users can place
 
 ## Repository layout
 
-The repo root is a **Yarn 4 + Angular CLI workspace** (managed via Corepack). Two of the four packages are workspace members; the other two are independent (their own `yarn.lock`, not part of the workspace):
+The repo root is a **Yarn 4 + Angular CLI workspace** (managed via Corepack). Five of the seven packages are workspace members; the two legacy ones are independent (their own `yarn.lock`, not part of the workspace):
 
-| Package | Workspace member | Description | Stack |
-|---|---|---|---|
-| `logigator-editor/` | ✅ | Active canvas editor (**current focus**) | Angular 22, PixiJS 8, Tailwind 4, `@logigator/ui` |
-| `logigator-ui/` | ✅ | `@logigator/ui` — in-house component library (replaces PrimeNG) | Angular 22, Angular CDK |
-| `logigator-backend/` | — | REST API + server-rendered pages | Node.js, Express, TypeORM, Handlebars |
-| `logigator-editor-legacy/` | — | Legacy editor (being replaced) | Angular 17, PixiJS 5 |
+| Package                    | Workspace member | Description                                                                                                                         | Stack                                                  |
+| -------------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| `logigator-editor/`        | ✅               | Active canvas editor (**current focus**)                                                                                            | Angular 22, PixiJS 8, Tailwind 4, `@logigator/ui`      |
+| `logigator-ui/`            | ✅               | `@logigator/ui` — in-house component library (replaces PrimeNG)                                                                     | Angular 22, Angular CDK                                |
+| `logigator-core/`          | ✅               | `@logigator/core` — rendering-free circuit code (file format, model, catalog) shared by the editor, the API and migration tooling   | Plain TypeScript, zero runtime dependencies            |
+| `logigator-contract/`      | ✅               | `@logigator/contract` — the API surface as zod schemas, imported by the server for validation and by its clients for typed requests | TypeScript, zod                                        |
+| `logigator-api/`           | ✅               | New API-only backend, replacing `logigator-backend`                                                                                 | NestJS on Fastify, PostgreSQL + Drizzle (from Phase 2) |
+| `logigator-backend/`       | —                | Legacy REST API + server-rendered pages (being replaced)                                                                            | Node.js, Express, TypeORM, Handlebars                  |
+| `logigator-editor-legacy/` | —                | Legacy editor (being replaced)                                                                                                      | Angular 17, PixiJS 5                                   |
 
-In development the editor consumes `@logigator/ui` directly from its TypeScript source via workspace path mapping — there is no separate build step. Commands run inside Docker containers — do not run `yarn` directly on the host.
+**The three libraries are never built.** Every consumer — the editor, the API, and the test runners — compiles their TypeScript source through workspace path mapping, and each application's bundler inlines what it uses. So there is no build ordering, no `dist/` to go stale, and none of them is a `package.json` dependency of its consumers. Commands run inside Docker containers — do not run `yarn` directly on the host.
 
 ---
 
@@ -84,26 +89,27 @@ The stack starts a Caddy reverse proxy on ports 80/443 with automatic self-signe
 
 **Services started by `docker compose up`:**
 
-| Service | Purpose | Exposed port |
-|---|---|---|
-| `proxy` | Caddy HTTPS reverse proxy | 80, 443 |
-| `backend` | Node.js API + dev server | — (proxied) |
-| `editor` | Angular dev server (HMR) | — (proxied) |
-| `editor-legacy` | Legacy Angular dev server | — (proxied) |
-| `mysql` | MySQL 8 database | 3306 (localhost only) |
-| `redis` | Session / cache store | — (internal) |
+| Service         | Purpose                   | Exposed port          |
+| --------------- | ------------------------- | --------------------- |
+| `proxy`         | Caddy HTTPS reverse proxy | 80, 443               |
+| `backend`       | Node.js API + dev server  | — (proxied)           |
+| `api`           | New NestJS API (watch)    | 3001 (localhost only) |
+| `editor`        | Angular dev server (HMR)  | — (proxied)           |
+| `editor-legacy` | Legacy Angular dev server | — (proxied)           |
+| `mysql`         | MySQL 8 database          | 3306 (localhost only) |
+| `redis`         | Session / cache store     | — (internal)          |
 
 ---
 
 ## Configuration
 
-All config files live in `logigator-backend/config/`. Create each from its `.example` counterpart.
+The legacy backend's config files live in `logigator-backend/config/`. Create each from its `.example` counterpart. The new API is configured by environment variables instead — see `logigator-api/.env.example`; every variable has a default, and the whole set is validated at startup.
 
 ### `environment.json`
 
 ```jsonc
 {
-  "context": "development",   // "development" or "production"
+  "context": "development", // "development" or "production"
   "port": 3000,
   "editor": "resources/editor",
   "editorLegacy": "resources/legacy-editor",
@@ -147,8 +153,16 @@ OAuth credentials for social login. Leave the placeholder values to disable OAut
 
 ```jsonc
 {
-  "google": { "clientID": "--", "clientSecret": "--", "callbackURL": "http://logigator.test/..." },
-  "twitter": { "consumerKey": "--", "consumerSecret": "--", "callbackURL": "http://logigator.test/..." }
+  "google": {
+    "clientID": "--",
+    "clientSecret": "--",
+    "callbackURL": "http://logigator.test/..."
+  },
+  "twitter": {
+    "consumerKey": "--",
+    "consumerSecret": "--",
+    "callbackURL": "http://logigator.test/..."
+  }
 }
 ```
 
@@ -165,7 +179,7 @@ Redis connection URL. The default `redis://redis:6379` matches the Docker networ
 ```jsonc
 {
   "secret": "change-me-in-production",
-  "maxAge": 2592000000   // 30 days in ms
+  "maxAge": 2592000000 // 30 days in ms
 }
 ```
 
@@ -185,36 +199,43 @@ docker compose exec editor yarn <command>
 docker compose exec backend yarn <command>
 ```
 
-### Workspace (`logigator-editor` + `logigator-ui`)
+### Workspace (editor, UI library, shared packages, API)
 
-The `editor` container mounts the whole workspace root, so these root Yarn scripts run inside it:
+The `editor` and `api` containers both mount the whole workspace root, so these root Yarn scripts run inside either:
 
-| Command | What it does |
-|---|---|
-| `yarn start` | Angular dev server with HMR (editor) |
-| `yarn build` | Editor production build (`ng build`) |
-| `yarn test --watch=false` | Full editor Vitest suite (single run) |
-| `yarn build:ui` | Build `@logigator/ui` with ng-packagr (publishing deferred) |
-| `yarn test:ui` | `@logigator/ui` Vitest suite |
-| `yarn lint` | `ng lint` across both projects |
-| `yarn format:fix` | Prettier formatting (both projects) |
+| Command                                                                     | What it does                                                                  |
+| --------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `yarn start:editor`                                                         | Angular dev server with HMR (`start:editor:prod` for the production config)   |
+| `yarn start:api`                                                            | API in watch mode, restarting on core/contract edits too, on `127.0.0.1:3001` |
+| `yarn build`                                                                | Both applications: editor production build + API bundle                       |
+| `yarn build:editor`                                                         | Editor production build into `dist/logigator-editor/`                         |
+| `yarn build:api`                                                            | Rspack bundle into `dist/logigator-api/`                                      |
+| `yarn test`                                                                 | Every package's suite, single run each                                        |
+| `yarn test:editor` / `test:ui` / `test:core` / `test:contract` / `test:api` | One package's Vitest suite                                                    |
+| `yarn typecheck`                                                            | `tsc` over each shared package and the API, specs included                    |
+| `yarn lint`                                                                 | ESLint across every workspace member (`lint:fix` writes the fixes)            |
+| `yarn format` / `format:fix`                                                | Prettier over the whole repo                                                  |
+
+A **bare verb runs it for every package that has it**, and `<verb>:<package>` runs it for one (`test:*` is always a single run) — there is no `:all` suffix and no bare shorthand for a single package. Not every package has every verb: only the two applications build, and `typecheck` covers the three packages where `tsc` is the only type gate, the Angular projects being type-checked by their own build and test targets. `@logigator/ui` has no build script at all, since every consumer compiles its source.
+
+The shared packages are type-checked with **no consumer in the program and no path mappings**, which is what catches an Angular, PixiJS or sibling-package import leaking into shared code — a relative escape fails on `rootDir` too. Their ESLint configs fence the same imports by name.
 
 Run a single test file:
 
 ```sh
-docker compose exec editor yarn test --watch=false --include='**/quad-tree-container.spec.ts'
+docker compose exec editor yarn test:editor --include='**/quad-tree-container.spec.ts'
 ```
 
 ### Backend (`logigator-backend`)
 
-| Command | What it does |
-|---|---|
-| `yarn start` | TypeScript watch + nodemon (dev) |
-| `yarn build` | `tsc` + Gulp asset pipeline (production) |
-| `yarn lint:backend` | ESLint on `src/` |
-| `yarn migration:run` | Apply pending TypeORM migrations |
+| Command                              | What it does                                 |
+| ------------------------------------ | -------------------------------------------- |
+| `yarn start`                         | TypeScript watch + nodemon (dev)             |
+| `yarn build`                         | `tsc` + Gulp asset pipeline (production)     |
+| `yarn lint:backend`                  | ESLint on `src/`                             |
+| `yarn migration:run`                 | Apply pending TypeORM migrations             |
 | `yarn migration:generate -- -n Name` | Generate a new migration from entity changes |
-| `yarn migration:revert` | Roll back the last migration |
+| `yarn migration:revert`              | Roll back the last migration                 |
 
 ---
 
@@ -226,6 +247,7 @@ Tests use **Vitest** via Angular's `@angular/build:unit-test` builder. Spec file
 - Pure-logic specs (rendering math, grid utilities, action system) do not.
 
 Shared test helpers in `logigator-editor/src/testing/`:
+
 - `fake-browser-stores.ts` — in-memory IndexedDB stand-ins
 - `factories.ts` — circuit-element and pointer-event stubs
 - `action-mocks.ts` — mocked `Action` with named `do`/`undo` spies
@@ -234,7 +256,7 @@ Shared test helpers in `logigator-editor/src/testing/`:
 Run the full suite:
 
 ```sh
-docker compose exec editor yarn test --watch=false
+docker compose exec editor yarn test
 ```
 
 ---
@@ -251,12 +273,12 @@ The stack reuses `logigator-backend/config/`, whose `domains.json` pins `https:/
 
 **Services started by the production stack:**
 
-| Service | Purpose | Exposed port |
-|---|---|---|
-| `proxy` | Caddy HTTPS reverse proxy (`Caddyfile.production`) | 80, 443 |
-| `app` | Built image: API, pages, and both editors | — (proxied) |
-| `mysql` | MySQL 8 database | 3306 (localhost only) |
-| `redis` | Session / cache store | — (internal) |
+| Service | Purpose                                            | Exposed port          |
+| ------- | -------------------------------------------------- | --------------------- |
+| `proxy` | Caddy HTTPS reverse proxy (`Caddyfile.production`) | 80, 443               |
+| `app`   | Built image: API, pages, and both editors          | — (proxied)           |
+| `mysql` | MySQL 8 database                                   | 3306 (localhost only) |
+| `redis` | Session / cache store                              | — (internal)          |
 
 Both compose files sit in the repo root and therefore share the Compose project name `logigator`, which has two consequences:
 
@@ -298,9 +320,25 @@ Detailed technical docs for each subsystem are in `logigator-editor/docs/`:
 
 `@logigator/ui` is an in-house **Angular 22 + Angular CDK** component library. Each component lives in its own folder under `logigator-ui/src/` (`button/`, `dialog/`, `select/`, `menu/`, …) and is re-exported from `public-api.ts`. Imperative services — `DialogService` (dynamic dialogs), `ConfirmationService`, and `ToastService` (toasts) — sit alongside the declarative components, with shared overlay/focus plumbing in `internal/` and design tokens in `tokens/`.
 
-Theming is **colors-only** via `--lg-*` CSS variables: `styles/theme.css` defines them and `styles/theme.tw.css` maps them into Tailwind's `@theme`. The editor imports the library straight from TypeScript source through workspace path mapping (`@logigator/ui` → `logigator-ui/src/public-api.ts`), so it is *not* a `package.json` dependency of the editor and changes are picked up with no build step.
+Theming is **colors-only** via `--lg-*` CSS variables: `styles/theme.css` defines them and `styles/theme.tw.css` maps them into Tailwind's `@theme`. The editor imports the library straight from TypeScript source through workspace path mapping (`@logigator/ui` → `logigator-ui/src/public-api.ts`), so it is _not_ a `package.json` dependency of the editor and changes are picked up with no build step.
 
-### Backend (`logigator-backend`)
+### Shared packages (`logigator-core`, `logigator-contract`)
+
+`@logigator/core` holds the rendering-free half of the circuit code — the versioned native file format, its migration chain, the codecs, and the component catalog — so the editor, the API and the migration tooling agree on one implementation instead of three. Its boundary rule is **data to data**: turning live PixiJS objects into documents (and back) stays in the editor. It has zero runtime dependencies and no framework or renderer imports, enforced by an ESLint import fence plus a standalone `tsc` run that sees no consumer.
+
+`@logigator/contract` describes the API surface as zod schemas. The server validates incoming requests with them; clients infer their request/response types from the same source, so a contract change fails at type-check time with no codegen step. It may import core, never the server.
+
+Both are consumed from source through workspace path mapping (`@logigator/core` → `logigator-core/src/public-api.ts`), exactly like `@logigator/ui`. Editing a core source file therefore reaches every consumer with no build step: the editor's dev server rebuilds, and `yarn start:api` restarts the API in well under a second.
+
+### API (`logigator-api`)
+
+**NestJS on the Fastify adapter** — API only: no server-side rendering, no asset pipeline. Configuration comes from environment variables validated by a zod schema at bootstrap (`src/config/env.ts`), so a misconfigured deployment fails at startup rather than on the first request that needs a value. `GET /api/meta` reports the circuit-file format version the server accepts, taken from `@logigator/core`.
+
+The build is **Rspack** (`rspack.config.mjs`, following [Rspack's NestJS guide](https://rspack.rs/guide/tech/nestjs)) into `dist/logigator-api/`, which is what lets the API compile the shared packages from source like every other consumer. NestJS 12 replaces its webpack builder with Rspack, so this is the direction upstream is taking; when v12 lands its CLI builder may replace this config.
+
+Details worth knowing: `builtin:swc-loader` runs with `legacyDecorator` + `decoratorMetadata` because Nest resolves constructor dependencies from `design:paramtypes`; `tsconfig.json` owns the workspace aliases and the bundler reads them from there, so the two cannot drift; dependencies stay external except the workspace packages, which must be allowlisted past `webpack-node-externals` (Yarn symlinks them into `node_modules`); and minification stays off, since a long-running server gains nothing and Nest reflects on class names.
+
+### Legacy backend (`logigator-backend`)
 
 Express server using **routing-controllers** (decorator routing), **TypeDI** (DI), **TypeORM** (MySQL), **Passport.js** (auth), and **Handlebars** (server-rendered pages).
 
@@ -317,7 +355,7 @@ The backend serves `logigator-editor` as a static SPA under the `/editor` path. 
 
 1. Fork the repository and create a feature branch.
 2. Keep changes scoped to a single package where possible.
-3. Run `yarn lint` and `yarn test --watch=false` before opening a PR.
+3. Run `yarn lint`, `yarn typecheck` and `yarn test` before opening a PR.
 4. Open a pull request against `master`.
 
 ---

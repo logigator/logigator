@@ -7,15 +7,11 @@ import { ClipboardService } from '../clipboard/clipboard.service';
 import { WorkModeService } from '../work-mode/work-mode.service';
 
 /**
- * Exposes whether each editing command is currently a no-op, so the tool bar
- * (and any other surface) can disable the matching buttons.
- *
- * The predicates live on the active project's `ActionManager`/`ViewportController`
- * as plain getters. Their change streams are folded into signals with the same
- * {@link switchMap} + {@link toSignal} bridge as {@link SelectionInspectorService}:
- * `startWith` reflects the project's current state the moment it becomes active,
- * and `scan` turns the void emissions into a monotonic counter so `toSignal`
- * doesn't dedupe identical `undefined`s and stall the computed.
+ * Whether each editing command is currently a no-op, so a surface can disable
+ * the matching buttons. The predicates are plain getters on the active
+ * project's `ActionManager`/`ViewportController`, folded into signals through
+ * the same {@link switchMap} + {@link toSignal} bridge as
+ * {@link SelectionInspectorService}.
  */
 @Injectable({ providedIn: 'root' })
 export class EditorCommandStateService {

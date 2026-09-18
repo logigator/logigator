@@ -21,42 +21,29 @@ import {
 const ANALYTICS_CATEGORY = 'analytics';
 
 /**
- * Identifies this app among the surfaces sharing the PostHog project — the
- * marketing/account website and the legacy editor both report to the same key.
- * `$pageview` and `$autocapture` are otherwise indistinguishable between them,
- * and the alternative — filtering insights on `$pathname` — silently breaks
- * whenever a surface is remounted at a different path. Kept in sync with the
- * `before_send` hooks in the two snippet-based surfaces (the backend's
- * `default.hbs` layout and the legacy editor's `index.html`).
+ * Distinguishes this app from the other surfaces sharing the PostHog project,
+ * whose `$pageview`/`$autocapture` events are otherwise identical. Kept in sync
+ * with the `before_send` hooks in the backend's `default.hbs` and the legacy
+ * editor's `index.html`.
  */
 const APP_ID = 'editor-v2';
 
+/** Ceiling on the {@link AnalyticsService.captureWhenReady} queue, so a session
+ * that never answers the consent prompt cannot grow it without bound. */
+const MAX_DEFERRED_EVENTS = 20;
+
 /**
- * Vendor-neutral product-analytics sink over the `posthog-js` package. Every
- * event goes through {@link capture}, which no-ops until PostHog has been
- * initialised — and it is initialised only once the user grants the
- * `analytics` consent category (see {@link wireConsent}), so instrumentation
- * may run unconditionally and simply drops on the floor before consent.
+ * Vendor-neutral product-analytics sink over `posthog-js`. PostHog is loaded
+ * and initialised only once the user grants the `analytics` consent category,
+ * so instrumentation may run unconditionally: every entry point is gated on
+ * {@link initialized} and drops on the floor before consent, except
+ * {@link captureWhenReady}, which holds its event until PostHog is up. The
+ * package sits behind a dynamic import, so a session that declines never
+ * downloads it.
  *
- * The `posthog-js` package itself is behind a dynamic import in
- * {@link loadPosthog}, so a session that never grants consent never downloads
- * it — 238 kB that would otherwise sit in the initial bundle. Nothing before
- * consent touches the network, and nothing before the import resolves touches
- * the module: every entry point is gated on {@link initialized}.
- *
- * {@link init} wires the self-contained observable sources (tool switches,
- * simulation lifecycle, tutorial start, per-project edit operations, and the
- * `app` and `ui_language` super properties every event carries); the rest are
- * emitted by direct {@link capture} calls at their method sites (persistence,
- * image export, promotion, compile diagnostics, docs, tutorial end, share-link,
- * custom-component create/delete, settings changes, bug reports, changelog,
- * inspection, wire repair, legacy-editor hand-off, errors). Dialog open/close
- * is a third path: the
- * library reports it through the hook `analytics/dialog-telemetry.ts` binds.
- *
- * Construction is deliberately dependency-free — the event sources are resolved
- * lazily in {@link init} — so the many services that inject this sink to report
- * events can never form a DI cycle with it.
+ * Construction is dependency-free and the event sources are resolved lazily in
+ * {@link init}, so the many services injecting this sink cannot form a DI cycle
+ * with it.
  */
 @Injectable({ providedIn: 'root' })
 export class AnalyticsService {
@@ -66,18 +53,22 @@ export class AnalyticsService {
   private subscribedProject: Project | null = null;
   private unsubscribeActions: (() => void) | null = null;
 
-  /** The lazily imported package, set once {@link loadPosthog} resolves. */
   private posthog: PostHog | null = null;
   /** In-flight (or settled) import, so concurrent consent events share one. */
   private posthogLoad: Promise<PostHog> | null = null;
-  /** The active UI language, mirrored so {@link registerSuperProperties} can
-   * restamp it whenever PostHog itself becomes available. */
+  /** Mirrored so {@link registerSuperProperties} can restamp it whenever
+   * PostHog becomes available. */
   private uiLanguage: string | null = null;
 
+  /** Events held by {@link captureWhenReady} until PostHog comes up. */
+  private readonly deferred: {
+    event: string;
+    properties?: Record<string, unknown>;
+  }[] = [];
+
   /** Sends an event, dropped silently until PostHog is initialised on consent.
-   * Never throws — some call sites (the `onBeforeRecord` edit hook) run inside a
-   * critical user gesture, and a failing third-party `capture` must not break
-   * the operation that emitted the event. */
+   * Never throws: some sources run inside a critical user gesture, and a
+   * failing third-party `capture` must not break the operation. */
   public capture(event: string, properties?: Record<string, unknown>): void {
     if (!this.initialized) return;
     try {
@@ -90,17 +81,46 @@ export class AnalyticsService {
     }
   }
 
-  /** Reports an uncaught error to PostHog Error Tracking as a native
-   * `$exception` event (grouped into issues, stack traces retained — client
-   * stacks are just the app's own bundle URLs). Gated and guarded like
-   * {@link capture}: dropped before consent-time init, and never throws, since
-   * it runs inside the global error handler. */
-  public captureError(error: unknown, correlationId?: string): void {
+  /**
+   * Sends an event that happens too early to have been consented to, holding it
+   * until PostHog is initialised instead of dropping it on the floor. A startup
+   * fact — which browser the session runs — is reportable no other way: the
+   * consent answer and the package import both land after it.
+   */
+  public captureWhenReady(
+    event: string,
+    properties?: Record<string, unknown>
+  ): void {
+    if (this.initialized) {
+      this.capture(event, properties);
+      return;
+    }
+    if (this.deferred.length < MAX_DEFERRED_EVENTS) {
+      this.deferred.push({ event, properties });
+    }
+  }
+
+  /** Reports an uncaught error as a native `$exception` event. Gated and
+   * guarded like {@link capture}, and never throws — it runs inside the global
+   * error handler.
+   *
+   * `properties` carries the machine-readable cause for a fault whose `Error`
+   * message is a translated, user-facing string. Riding the event rather than
+   * the message leaves issue grouping (exception type plus stack) intact. */
+  public captureError(
+    error: unknown,
+    correlationId?: string,
+    properties?: Record<string, unknown>
+  ): void {
     if (!this.initialized) return;
     try {
+      const eventProperties = {
+        ...(properties ? sanitizeProperties(properties) : {}),
+        ...(correlationId ? { correlation_id: correlationId } : {})
+      };
       this.posthog?.captureException(
         error,
-        correlationId ? { correlation_id: correlationId } : undefined
+        Object.keys(eventProperties).length > 0 ? eventProperties : undefined
       );
     } catch {
       // Analytics must never re-enter the error handler.
@@ -108,7 +128,7 @@ export class AnalyticsService {
   }
 
   /** Wires the consent gate and the observable event sources. Called once at
-   * app startup (from `main.ts`, after bootstrap). */
+   * app startup. */
   public init(): void {
     this.watchLanguage(this.injector.get(TranslationService));
     this.wireConsent();
@@ -119,12 +139,10 @@ export class AnalyticsService {
   }
 
   /**
-   * Gates PostHog on the `analytics` consent category. The consent bundle
-   * (vanilla-cookieconsent, loaded by `ConsentService`) dispatches `cc:onConsent`
-   * on load / first grant and `cc:onChange` on later preference changes; both
-   * re-evaluate here. PostHog is initialised once on first grant and toggled
-   * opt-in/opt-out afterwards. Under a bare `ng serve` the bundle never loads,
-   * so `window.CookieConsent` stays undefined and analytics stays inert.
+   * Gates PostHog on the `analytics` consent category: initialised once on the
+   * first grant, toggled opt-in/opt-out afterwards. Under a bare `ng serve` the
+   * consent bundle never loads, so `window.CookieConsent` stays undefined and
+   * analytics stays inert.
    */
   private wireConsent(): void {
     const sync = (): void => this.syncConsent();
@@ -140,9 +158,8 @@ export class AnalyticsService {
       void this.initPosthog();
     } else if (this.initialized) {
       if (granted) {
-        // Before opt-in, which emits `$opt_in` and the session's `$pageview`
-        // synchronously — a super property registered after them would miss
-        // both, and `$pageview` is the only event a bounced session produces.
+        // Before opt-in, which synchronously emits `$opt_in` and the
+        // session's `$pageview` — the only event a bounced session produces.
         this.registerSuperProperties();
         this.posthog?.opt_in_capturing();
       } else this.posthog?.opt_out_capturing();
@@ -150,19 +167,17 @@ export class AnalyticsService {
   }
 
   /**
-   * Downloads and initialises PostHog. Runs only on the first grant, so a
-   * session that declines analytics never fetches the package. Re-runs
+   * Downloads and initialises PostHog on the first grant. Re-runs
    * {@link syncConsent} afterwards because consent can be withdrawn while the
-   * import is in flight — by then {@link initialized} is set, so that pass
-   * takes the opt-in/opt-out branch instead of initialising twice.
+   * import is in flight; {@link initialized} is set by then, so that pass takes
+   * the opt-in/opt-out branch instead of initialising twice.
    */
   private async initPosthog(): Promise<void> {
     let posthog: PostHog;
     try {
       posthog = await this.loadPosthog();
     } catch {
-      // Offline, or the chunk failed to load. Analytics stays inert; a later
-      // consent event retries.
+      // Offline, or the chunk failed. A later consent event retries.
       return;
     }
     if (this.initialized) return;
@@ -184,21 +199,30 @@ export class AnalyticsService {
     });
     this.initialized = true;
     this.syncConsent();
+    this.flushDeferred();
   }
 
   /**
-   * Stamps {@link APP_ID} and the active UI language on every event as super
-   * properties.
+   * Replays what {@link captureWhenReady} held. Runs after
+   * {@link syncConsent}, so the super properties are stamped first and a
+   * consent withdrawn while the import was in flight has already opted out —
+   * which is what drops the queue for a session that declines.
+   */
+  private flushDeferred(): void {
+    for (const { event, properties } of this.deferred.splice(0)) {
+      this.capture(event, properties);
+    }
+  }
+
+  /**
+   * Stamps {@link APP_ID} and the active UI language on every event, so
+   * language is a breakdown on any event rather than a funnel over the one-off
+   * `setting_changed`. PostHog's `$browser_language` cannot stand in: the app
+   * resolves its language from the persisted setting, falling back to `en`,
+   * never from the browser.
    *
-   * Language is a super property so its usage is a breakdown on any event
-   * rather than a funnel over the one-off `setting_changed`. PostHog's own
-   * `$browser_language` cannot stand in: the app resolves its language from the
-   * persisted setting and otherwise falls back to `en`, never from the browser,
-   * so the two diverge for every session that has not picked a language. It is
-   * stamped only once known, whereas `app` is a constant and always stamped.
-   *
-   * Called on each language change and from every consent grant, since consent
-   * — and with it the package import — can land long after startup.
+   * Re-run on each language change and each consent grant, since the package
+   * import can land long after startup.
    */
   private registerSuperProperties(): void {
     if (!this.initialized) return;
@@ -213,13 +237,13 @@ export class AnalyticsService {
   }
 
   private watchLanguage(translation: TranslationService): void {
-    // Seeded synchronously: the effect's first run is scheduled, and PostHog
-    // may already be initialising by then.
+    // Seeded synchronously: the effect's first run is only scheduled, and
+    // PostHog may already be initialising by then.
     this.uiLanguage = translation.getActiveLang();
     effect(
       () => {
-        // `activeLang` fires before the language bundle resolves, which is what
-        // this wants — the id, not the translations.
+        // `activeLang` fires before the bundle resolves, which is what this
+        // wants: the id, not the translations.
         this.uiLanguage = translation.activeLang();
         this.registerSuperProperties();
       },
@@ -262,10 +286,10 @@ export class AnalyticsService {
         const state = simulation.state();
         const prev = previous;
         previous = state;
-        // Keyed on the session becoming active rather than on `ready` itself:
-        // with auto-start on, `ready` and `running` are set in one synchronous
-        // block, and the effect only ever observes the latter. Treating both as
-        // active also keeps pause/play from re-reporting a start.
+        // Keyed on the session becoming active rather than on `ready`: with
+        // auto-start, `ready` and `running` are set in one synchronous block
+        // and only the latter is observed. Also keeps pause/play from
+        // re-reporting a start.
         if (isActive(state) && !isActive(prev))
           this.capture(AnalyticsEvent.SimulationStarted, {
             runMode: untracked(() => simulation.mode())
@@ -284,8 +308,8 @@ export class AnalyticsService {
         const tutorial = onboarding.activeTutorial();
         const prev = previous;
         previous = tutorial;
-        // End (completed vs abandoned) is captured at endTutorial's call site,
-        // the only source carrying that distinction.
+        // End (completed vs abandoned) is captured where endTutorial runs,
+        // the only place carrying that distinction.
         if (tutorial && tutorial !== prev)
           this.capture(AnalyticsEvent.TutorialStarted, { tutorial });
       },
@@ -294,8 +318,8 @@ export class AnalyticsService {
   }
 
   private watchActiveProject(projects: ProjectService): void {
-    // ActionManager is per-project, so re-subscribe when the active project
-    // changes and tear down the previous hook to avoid leaks / double-counting.
+    // ActionManager is per-project, so re-subscribe on a project change and
+    // tear down the previous hook to avoid leaks and double-counting.
     effect(
       () => {
         const project = projects.activeProject();

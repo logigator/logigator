@@ -1,12 +1,10 @@
 import { PointData } from 'pixi.js';
 
 /**
- * Canonical string key for a grid-space point ("x,y"). Everything that matches
- * points by identity — connection-point termination counts, wire-integration
- * candidates, net extraction — relies on coordinates being lattice-exact, so
- * keys compare equal iff the coordinates are exactly equal (no rounding, no
- * epsilon). See the connection-point notes in `components/component.ts` for
- * why the producers guarantee exactness.
+ * Canonical string key for a grid-space point ("x,y"). Keys compare equal iff
+ * the coordinates are exactly equal — no rounding, no epsilon — so every
+ * consumer that matches points by identity depends on producers keeping
+ * coordinates lattice-exact (see `components/component.ts`).
  */
 export function pointKey(p: PointData): string {
   return `${p.x},${p.y}`;
@@ -30,8 +28,7 @@ export class PointSet<T extends PointData> implements Iterable<T> {
 
 /**
  * Map from grid-space points to values, keyed by {@link pointKey}. The point is
- * only a lookup key — it is not retained — so entries collapse whenever two
- * points share coordinates, exactly like the keys compare in {@link pointKey}.
+ * not retained, so entries collapse whenever two points share coordinates.
  */
 export class PointMap<V> implements Iterable<V> {
   private readonly _map = new Map<string, V>();
@@ -56,8 +53,8 @@ export class PointMap<V> implements Iterable<V> {
     this._map.clear();
   }
 
-  // Points are not retained (only their "x,y" key), so there is no meaningful
-  // [point, value] entry to yield — iteration walks the values, mirroring PointSet.
+  // Only the "x,y" key is retained, so there is no [point, value] entry to
+  // yield; iteration walks the values, mirroring PointSet.
   public [Symbol.iterator](): Iterator<V> {
     return this._map.values();
   }

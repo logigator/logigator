@@ -8,9 +8,12 @@ import { Project } from '../project/project';
 import { ComponentProviderService } from '../components/component-provider.service';
 import { CustomComponentRegistry } from '../components/custom/custom-component-registry.service';
 import { ProjectMetadataStore } from '../persistence/project-metadata.store';
-import { BuiltInComponentType } from '../components/component-type.enum';
-import { WireDirection } from '../wires/wire-direction.enum';
-import { Direction } from '../utils/direction';
+import {
+  BuiltInComponentType,
+  Direction,
+  WireDirection
+} from '@logigator/core';
+import { tunnelComponentConfig } from '../components/component-types/tunnel/tunnel.config';
 import { serializeProjectBody } from '../persistence/snapshots';
 import { EditOp } from './automation-api.model';
 import { applyEditOps, EditOpsContext } from './edit-ops';
@@ -76,8 +79,8 @@ describe('applyEditOps', () => {
       const frames: string[] = [];
       project.ticker$.subscribe((signal) => frames.push(signal));
 
-      // A negation toggle rebuilds the component's children without touching the
-      // quad trees, so nothing else along the way asks for a repaint.
+      // A negation toggle rebuilds children without touching the quad trees, so
+      // nothing else along the way asks for a repaint.
       apply({
         op: 'setPortNegation',
         id: and.id,
@@ -104,8 +107,8 @@ describe('applyEditOps', () => {
 
   describe('wire integration', () => {
     it('splits a crossed wire the way the wire tool does', () => {
-      // A vertical wire along x = 4.5; an AND at (5, 4) puts its two input port
-      // tips on that line, in the wire's interior — so it must split there.
+      // An AND at (5, 4) puts both input port tips in the interior of a wire
+      // along x = 4.5, so the wire must split there.
       project.addWire(makeWire(4, 0, WireDirection.VERTICAL, 10));
       const result = apply({
         op: 'addComponent',
@@ -221,8 +224,8 @@ describe('applyEditOps', () => {
     });
 
     it('refuses a placement that would close a dependency cycle', () => {
-      // Editing master A while placing A into itself — what the palette hides
-      // in the UI, and an agent can otherwise name by type id.
+      // Placing master A into itself: what the palette hides in the UI, and an
+      // agent can otherwise name by type id.
       const registry = TestBed.inject(CustomComponentRegistry);
       const master = registry.createMaster({ symbol: 'A', id: 'a' }, 'browser');
       TestBed.inject(ProjectMetadataStore).register(project, {
@@ -230,7 +233,6 @@ describe('applyEditOps', () => {
         name: 'A',
         type: 'comp',
         source: 'browser',
-        hash: '',
         isPublic: false
       });
 
@@ -256,6 +258,20 @@ describe('applyEditOps', () => {
       expect(!result.ok && result.errors[0].message).toContain(
         'unknown option'
       );
+    });
+
+    it('refuses a bubble the simulation would never see', () => {
+      const result = apply({
+        op: 'addComponent',
+        type: BuiltInComponentType.TUNNEL,
+        pos: [0, 0],
+        options: { label: 'bus' },
+        negInputs: [0]
+      });
+      expect(!result.ok && result.errors[0].message).toContain(
+        'takes no port negation'
+      );
+      expect(project.componentCount).toBe(0);
     });
   });
 
@@ -348,6 +364,32 @@ describe('applyEditOps', () => {
       expect(!result.ok && result.errors[0].message).toContain('out of range');
     });
 
+    it('refuses to negate a tunnel, as the wire tool does, but clears one', () => {
+      const tunnel = tunnelComponentConfig.create({
+        label: tunnelComponentConfig.options.label.clone('bus')
+      });
+      project.addComponent(tunnel);
+      const negate = (negated: boolean) =>
+        apply({
+          op: 'setPortNegation',
+          id: tunnel.id,
+          side: 'in',
+          index: 0,
+          negated
+        });
+
+      const result = negate(true);
+      expect(!result.ok && result.errors[0].message).toContain(
+        'takes no port negation'
+      );
+      expect(tunnel.isPortNegated('in', 0)).toBe(false);
+
+      // What an older batch left behind still comes off.
+      tunnel.setPortNegated('in', 0, true);
+      expect(negate(false).ok).toBe(true);
+      expect(tunnel.isPortNegated('in', 0)).toBe(false);
+    });
+
     it('removes components and wires in one entry', () => {
       const and = makeAnd(2, Direction.E, 0, 0);
       const wire = makeWire(20, 20, WireDirection.VERTICAL, 3);
@@ -388,7 +430,7 @@ describe('applyEditOps', () => {
       const wires = [...project.wires];
       expect(wires).toHaveLength(1);
       expect(wires[0].length).toBe(6);
-      // The requested wire is not an integration effect — only the absorbed
+      // The requested wire is not an integration effect; only the absorbed
       // halves and the merge result are reported.
       if (result.ok) {
         expect(result.integratedWires.removed.sort()).toEqual(

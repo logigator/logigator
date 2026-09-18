@@ -60,6 +60,7 @@ import { LoggingService } from './logging/logging.service';
 import { ToastService } from './logging/toast.service';
 import { SessionLifecycleService } from './user/session-lifecycle.service';
 import { ChangelogService } from './changelog/changelog.service';
+import { BrowserSupportService } from './browser-support/browser-support.service';
 import { TutorialRunnerService } from './onboarding/tutorial-runner.service';
 import { HintService } from './onboarding/hint.service';
 import { OnboardingNudgeComponent } from './onboarding/onboarding-nudge.component';
@@ -112,8 +113,8 @@ export class AppComponent {
   private readonly componentLibrary = inject(ComponentLibraryService);
   protected readonly projectService = inject(ProjectService);
   private readonly unsavedChangesGuard = inject(UnsavedChangesGuard);
-  // Injected for its side effects: follows the signed-in user (cloud library
-  // load/clear, logout teardown) from the first cookie read on.
+  // Injected for its side effects: follows the signed-in user from the first
+  // cookie read on.
   private readonly sessionLifecycleService = inject(SessionLifecycleService);
   private readonly location = inject(Location);
   private readonly workModeService = inject(WorkModeService);
@@ -131,8 +132,9 @@ export class AppComponent {
   private readonly toastService = inject(ToastService);
   private readonly translation = inject(TranslationService);
   private readonly changelogService = inject(ChangelogService);
-  // Injected for its side effects: the runtime driver reacts to the active
-  // tutorial signal, so it must live from startup to drive a nudge-launched run.
+  private readonly browserSupport = inject(BrowserSupportService);
+  // Injected for its side effects: the runner reacts to the active-tutorial
+  // signal, so it must live from startup to drive a nudge-launched run.
   private readonly tutorialRunner = inject(TutorialRunnerService);
   // Injected for its side effects: subscribes to hint triggers from startup.
   private readonly hintService = inject(HintService);
@@ -141,11 +143,10 @@ export class AppComponent {
   protected readonly cursorPosition = signal<Point>(new Point(0, 0));
 
   /**
-   * @logigator/ui stock labels for the shell's **long-lived** surfaces (the
-   * toasts, the window outlets, the drawers). `LG_LABELS` only resolves while a
-   * component is constructed, so these — alive for the app's whole lifetime —
-   * bind the inputs instead, and `translate()` keeps them live across a
-   * language switch.
+   * @logigator/ui stock labels for the shell's long-lived surfaces. `LG_LABELS`
+   * resolves only while a component is constructed, so surfaces alive for the
+   * app's whole lifetime bind the inputs instead; `translate()` keeps them live
+   * across a language switch.
    */
   protected readonly uiLabels = computed(() => ({
     close: this.translation.translate('common.close'),
@@ -153,7 +154,7 @@ export class AppComponent {
     dismiss: this.translation.translate('common.dismiss')
   }));
 
-  /** Names the board region the tab strip switches (its `aria-controls` target). */
+  /** Names the board region the tab strip switches (`aria-controls`). */
   protected readonly boardPanelLabel = computed(() =>
     this.translation.translate('board.panel')
   );
@@ -169,7 +170,8 @@ export class AppComponent {
     return this.metadataStore.getMetadata(project)?.name ?? '';
   });
 
-  /** True while the active tab is a custom-component editor — gates the Ports sheet. */
+  /** True while the active tab is a custom-component editor; gates the Ports
+   * sheet. */
   protected readonly isEditingComponent = computed(() => {
     const active = this.projectService.activeProject();
     return !!active && this.metadataStore.getMetadata(active)?.type === 'comp';
@@ -179,20 +181,18 @@ export class AppComponent {
     setStaticDIInjector(this.injector);
 
     // Installed here, not from an app initializer: the facade constructs model
-    // objects (Project, Component) that resolve their dependencies through the
-    // static injector, so it must not be reachable before the line above.
-    // Resolved inside the define guard rather than held in an `inject()` field:
-    // this is the only reference to the service, so a false AUTOMATION_API
-    // drops the whole automation module from the bundle (see define.d.ts).
+    // objects that resolve their dependencies through the static injector, so
+    // it must not be reachable before the line above. Resolved inside the
+    // define guard rather than held in an `inject()` field, so that a false
+    // AUTOMATION_API drops the module from the bundle (see define.d.ts).
     if (AUTOMATION_API) {
       this.injector.get(AutomationApiService).install();
     }
 
-    // Unconditional, unlike the facade above: the console command's whole point
-    // is reaching a build whose DEBUG_MENU define is false.
+    // Unconditional, unlike the facade above: the console command's point is
+    // reaching a build whose DEBUG_MENU define is false.
     this.debugMenuToggle.install();
 
-    // Keep the browser title in sync with the open project's name.
     effect(() => {
       const name = this.projectName();
       this.title.setTitle(
@@ -200,10 +200,9 @@ export class AppComponent {
       );
     });
 
-    // The mobile settings sheet is opened on demand from the selection action
-    // bar, never automatically. Close it once its component is deselected so it
-    // never lingers as a blank panel. Guarded to the settings sheet so another
-    // open sheet is left alone.
+    // The settings sheet opens on demand and never automatically, so close it
+    // once its component is deselected rather than leave a blank panel. Other
+    // open sheets are left alone.
     effect(() => {
       const selected = this.selectionInspector.selectedComponent();
       if (
@@ -215,11 +214,10 @@ export class AppComponent {
       }
     });
 
-    // Load promotion aliases first: the browser preload skips records whose id
-    // was promoted to the cloud, and snapshots embedded before a promotion
-    // resolve through the alias — both need the alias map in place. Cloud
-    // masters are not loaded here: they follow the signed-in user, so the
-    // session lifecycle owns their preload (and teardown).
+    // Aliases first: the browser preload skips records promoted to the cloud,
+    // and snapshots embedded before a promotion resolve through the alias.
+    // Cloud masters follow the signed-in user, so the session lifecycle owns
+    // their preload and teardown.
     void (async () => {
       try {
         await this.componentLibrary.preloadComponentIdAliases();
@@ -242,14 +240,13 @@ export class AppComponent {
 
     this.unsavedChangesGuard.attach();
 
-    // Greet a returning user with the changelog the first time they load a
-    // release newer than the one they last saw. A first-ever launch is
-    // acknowledged silently inside the service. The tutorial never auto-starts;
-    // its only entry is the first-run nudge (app-onboarding-nudge).
+    // The tutorial never auto-starts; its only entry is the first-run nudge.
     this.changelogService.maybeAutoOpen();
+
+    this.browserSupport.warnIfUnsupported();
   }
 
-  /** A Drawer reporting itself hidden (mask click / Esc) clears the active sheet. */
+  /** A Drawer reporting itself hidden clears the active sheet. */
   protected onSheetClosed(visible: boolean): void {
     if (!visible) this.mobileUi.close();
   }

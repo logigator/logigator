@@ -28,7 +28,7 @@ export class ComponentListCategoryComponent {
   private readonly mobileUi = inject(MobileUiService);
   private readonly outdatedInstances = inject(OutdatedInstancesService);
 
-  /** The palette tiles to render; already filtered by the parent's search. */
+  /** Already filtered by the parent's search. */
   public components = input<ComponentConfig[]>([]);
 
   /** Resolves display text: translates a key, returns a literal verbatim. */
@@ -39,8 +39,8 @@ export class ComponentListCategoryComponent {
   }
 
   /**
-   * How many instances of this type on the active board are behind their master.
-   * A map lookup into the service's single board scan, not a per-tile scan.
+   * How many instances of this type on the board are behind their master. A map
+   * lookup into the service's single board scan, not a per-tile scan.
    */
   protected outdatedCount(typeId: number): number {
     return this.outdatedInstances.countFor(typeId);
@@ -63,15 +63,14 @@ export class ComponentListCategoryComponent {
     );
   });
 
-  /** Arms the component for placement (sticky until another tool is chosen). */
+  /** Arms the component for placement, sticky until another tool is chosen. */
   public selectComponent(component: ComponentConfig): void {
-    // Arm placement only. A cloud master's circuit is fetched lazily when the
-    // component is actually placed on the canvas (see WorkModeRouter), not while
-    // it is merely browsed/armed in the palette.
+    // Arm only: a cloud master's circuit is fetched lazily when the component
+    // is actually placed, not while it is browsed in the palette.
     this.workModeService.setMode(WorkMode.COMPONENT_PLACEMENT);
     this.workModeService.setSelectedComponentType(component.type);
-    // On mobile the palette is a sheet; picking from it dismisses it so the
-    // canvas is clear for placement. A no-op on desktop (no sheet is open).
+    // On mobile the palette is a sheet, dismissed so the canvas is clear for
+    // placement. A no-op on desktop, where no sheet is open.
     this.mobileUi.close();
   }
 }

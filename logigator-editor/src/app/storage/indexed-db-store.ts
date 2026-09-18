@@ -5,10 +5,7 @@ const DB_NAME = 'logigator-editor';
 const DB_VERSION = 3;
 const LAST_EDITED_INDEX = 'lastEdited';
 
-/**
- * The logging service via the static injector, or `undefined` if it is not set
- * yet. Guarded so a diagnostic can never mask the real IndexedDB rejection.
- */
+/** Guarded so a diagnostic can never mask the real IndexedDB rejection. */
 function tryLogging(): LoggingService | undefined {
   try {
     return getStaticDI(LoggingService);
@@ -22,9 +19,8 @@ export const PROJECTS_STORE = 'projects';
 /** Object store holding library masters (`StoredBrowserComponent`). */
 export const COMPONENTS_STORE = 'components';
 /**
- * Object store mapping a master's old (pre-promotion) local id to the server id
- * it was promoted to (`StoredComponentIdMapping`). Lets snapshots that captured
- * the old id still resolve to the promoted master after an upload-to-cloud.
+ * Maps a master's pre-promotion local id to the server id it was promoted to,
+ * so snapshots holding the old id still resolve after an upload-to-cloud.
  */
 export const COMPONENT_ID_MAP_STORE = 'componentIdMap';
 
@@ -32,12 +28,9 @@ let dbPromise: Promise<IDBDatabase> | undefined;
 
 /**
  * Opens the shared editor database, creating every object store on demand. The
- * promise is cached module-wide so all {@link IndexedDbStore} instances share one
- * connection (and one `onupgradeneeded` pass).
- *
- * The version is bumped only to **create object stores** — it migrates no stored
- * records. Both stores are created here regardless of which store instance opens
- * the database first.
+ * promise is cached module-wide, so all {@link IndexedDbStore} instances share
+ * one connection and one `onupgradeneeded` pass. The version is bumped only to
+ * create stores; it migrates no records.
  */
 function openDatabase(): Promise<IDBDatabase> {
   if (!dbPromise) {
@@ -76,10 +69,9 @@ function openDatabase(): Promise<IDBDatabase> {
 }
 
 /**
- * A thin promise wrapper over a single IndexedDB object store keyed by `id`, with
- * a `lastEdited` index for ordered listing. It owns no domain logic — id
- * generation, timestamps and the stored record shape live in the typed store
- * classes (`BrowserProjectStore` / `BrowserComponentStore`) that compose it.
+ * A promise wrapper over one IndexedDB object store keyed by `id`, with a
+ * `lastEdited` index for ordered listing. No domain logic: id generation,
+ * timestamps and the record shape belong to the typed stores that compose it.
  */
 export class IndexedDbStore<T extends { id: string; lastEdited: number }> {
   constructor(private readonly storeName: string) {}
@@ -119,8 +111,7 @@ export class IndexedDbStore<T extends { id: string; lastEdited: number }> {
     return new Promise<R>((resolve, reject) => {
       const tx = db.transaction(this.storeName, mode);
       const request = op(tx.objectStore(this.storeName));
-      // Resolve on transaction completion (not request success) so the write
-      // is durable before the promise settles.
+      // Completion, not request success, so the write is durable first.
       tx.oncomplete = () => resolve(request.result as R);
       const fail = () => {
         tryLogging()?.debug(

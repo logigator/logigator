@@ -4,7 +4,7 @@ import { Point, Rectangle } from 'pixi.js';
 import { environment } from '../../environments/environment';
 import { Component } from '../components/component';
 import { ComponentProviderService } from '../components/component-provider.service';
-import { CUSTOM_TYPE_ID_BASE } from '../components/component-type.enum';
+import { CUSTOM_TYPE_ID_BASE } from '@logigator/core';
 import { CustomComponentRegistry } from '../components/custom/custom-component-registry.service';
 import { SubCircuitWatch } from '../components/custom/sub-circuit-watch';
 import { CustomComponentService } from '../custom-component/custom-component.service';
@@ -81,10 +81,7 @@ const DEFAULT_FOCUS_PADDING = 2;
 /** Zoom cap `focus()` respects, so framing one gate does not fill the screen. */
 const DEFAULT_FOCUS_MAX_ZOOM = 1;
 
-/**
- * The tools `setWorkMode` arms, contract name → mode. Simulation is missing on
- * purpose: it is a session, entered through `sim.enter()`.
- */
+/** Contract name → mode. Simulation is absent; `sim.enter()` enters it. */
 const WORK_MODES = new Map<WorkModeName, WorkMode>([
   ['pan', WorkMode.PAN],
   ['wireTool', WorkMode.WIRE_TOOL],
@@ -94,7 +91,7 @@ const WORK_MODES = new Map<WorkModeName, WorkMode>([
   ['placeComp', WorkMode.COMPONENT_PLACEMENT]
 ]);
 
-/** The contract name of a mode; the one absent from {@link WORK_MODES}. */
+/** Contract name of a mode; what {@link WORK_MODES} omits is simulation. */
 function workModeName(mode: WorkMode): WorkModeName {
   for (const [name, value] of WORK_MODES) {
     if (value === mode) return name;
@@ -103,17 +100,15 @@ function workModeName(mode: WorkMode): WorkModeName {
 }
 
 /**
- * The transport-agnostic automation facade: a semantic, JSON-in/JSON-out view
- * of the editor for scripts and agents. {@link install} publishes it as
- * `window.__logigator`.
+ * The transport-agnostic automation facade, published as `window.__logigator`
+ * by {@link install}.
  *
  * The gate is the `AUTOMATION_API` define at the single call site in
- * `AppComponent`, not a check in here: that is what keeps this whole module out
- * of a production bundle rather than merely inert inside it.
+ * `AppComponent`, not a check in here: that keeps this module out of a
+ * production bundle rather than merely inert inside it.
  *
- * Everything here targets the **active** project, resolved per call: an import
- * or a new-project call replaces the main slot (and destroys the old project),
- * so the facade never caches a `Project` reference.
+ * Every call resolves the active project afresh — an import or a new-project
+ * call replaces and destroys it, so no `Project` reference is ever cached.
  */
 @Injectable({ providedIn: 'root' })
 export class AutomationApiService {
@@ -135,22 +130,19 @@ export class AutomationApiService {
   private readonly settings = inject(EditorSettingsService);
   private readonly logging = inject(LoggingService);
 
-  // Port → link lookup for the current compiled board, rebuilt whenever the
-  // board identity changes (one per simulation session).
+  // Port → link lookup, rebuilt whenever the compiled board's identity changes.
   private _portIndex: PortLinkIndex | null = null;
   private _portIndexBoard: CompiledBoard | null = null;
 
-  // Handles for the open inspections. The service identifies them by object
-  // identity, which does not cross the boundary — ids are minted on first read
-  // and never reused, so a stale handle reports "no open inspection" rather
-  // than addressing whatever opened after it.
+  // Inspections are identified by object identity, which does not cross the
+  // boundary. Ids are minted on first read and never reused, so a stale handle
+  // reports "no open inspection" rather than addressing a newer one.
   private readonly _inspectionIds = new WeakMap<OpenInspection, number>();
   private _nextInspectionId = 1;
 
   /**
-   * Publishes the facade on `window`. Called once at startup, after the static
-   * DI injector is set — the facade builds model objects (`Project`,
-   * `Component`), which resolve their dependencies through it.
+   * Publishes the facade on `window`, after the static DI injector is set: the
+   * facade builds model objects that resolve their dependencies through it.
    */
   public install(): void {
     window.__logigator = this.buildApi();
@@ -161,9 +153,8 @@ export class AutomationApiService {
   }
 
   /**
-   * The frozen facade object. Methods are arrow properties so a driver may
-   * destructure them (`const { getProject } = window.__logigator`) without
-   * losing `this`.
+   * The frozen facade. Methods are arrow properties so a driver may destructure
+   * them without losing `this`.
    */
   public buildApi(): LogigatorAutomationApi {
     return Object.freeze({
@@ -296,8 +287,7 @@ export class AutomationApiService {
 
   public describeCatalog(): CatalogEntry[] {
     return describeCatalog(this.componentProvider.allComponents(), {
-      translate: (key) => this.translation.translate(key),
-      warn: (message) => this.logging.warn(message, 'AutomationApiService')
+      translate: (key) => this.translation.translate(key)
     });
   }
 
@@ -344,15 +334,15 @@ export class AutomationApiService {
       : null;
 
     // A bounds filter goes through the quad trees; without one every element is
-    // a candidate. Id/type filters then narrow whichever set that produced.
+    // a candidate.
     const components = bounds
       ? project.queryComponentsInRange(bounds)
       : project.components;
     const wires = bounds ? project.queryWiresInRange(bounds) : project.wires;
 
     const result: ElementList = { components: [], wires: [] };
-    // An explicit id list on the *other* kind means "only those elements" —
-    // asking for wire ids alone must not also return every component.
+    // An id list on the *other* kind means "only those": asking for wire ids
+    // alone must not also return every component.
     const wantComponents = !wireIds || !!componentIds;
     const wantWires = !componentIds || !!wireIds;
 
@@ -377,10 +367,7 @@ export class AutomationApiService {
 
   // -- Writes --------------------------------------------------------------
 
-  /**
-   * Applies a batch of edits as exactly one undo step. Refused (nothing
-   * touched) while the editor is busy — see {@link BusyReason}.
-   */
+  /** Applies a batch as one undo step; refused, untouched, while busy. */
   public applyEdit(ops: EditOp[]): EditResult {
     const refusal = this.refuseWhenBusy('applyEdit');
     if (refusal) return refusal;
@@ -409,8 +396,7 @@ export class AutomationApiService {
     const project = this.busyReason() === null ? this.activeProject : null;
     if (!project?.actionManager.undoAvailable) return false;
     project.actionManager.undo();
-    // See the frame request in `applyEditOps`: a visuals-only action does not
-    // request one itself.
+    // A visuals-only action does not request a frame itself.
     project.triggerTicker('single');
     return true;
   }
@@ -426,8 +412,7 @@ export class AutomationApiService {
   // -- Validation ----------------------------------------------------------
 
   /**
-   * Compiles the active circuit and reports the blocking diagnostics, so an
-   * agent can validate a design without entering simulation. Read-only: the
+   * Compiles the active circuit and reports the blocking diagnostics; the
    * compiled board is discarded.
    */
   public check(): CompileDiagnosticReport {
@@ -456,10 +441,8 @@ export class AutomationApiService {
   }
 
   /**
-   * Replaces the open document with one loaded from native file JSON (a `.lgix`
-   * payload's inner JSON, or a legacy `logigator-editor` export). Like the file
-   * import in the UI, the result is persisted as a browser draft and the URL
-   * moves to `/local/:id`.
+   * Replaces the open document with one loaded from native file JSON. The
+   * result is persisted as a browser draft and the URL moves to `/local/:id`.
    */
   public async importProject(json: string): Promise<ProjectState> {
     this.assertNotBusy('importProject');
@@ -477,9 +460,8 @@ export class AutomationApiService {
   // -- Simulation ----------------------------------------------------------
 
   /**
-   * Compiles the main project and starts a session, resolving once the engine
-   * is up. A blocked compile comes back as `state: 'inactive'` plus the
-   * diagnostics that blocked it — the same list {@link check} reports.
+   * Compiles the main project and starts a session. A blocked compile comes
+   * back as `state: 'inactive'` plus the diagnostics that blocked it.
    */
   public async simEnter(): Promise<SimStatus> {
     const diagnostics = await this.simulation.enter();
@@ -501,11 +483,8 @@ export class AutomationApiService {
 
   /**
    * `count` engine ticks while paused, resolved after the resulting snapshot
-   * has been applied — so a `readPorts` right after it sees the new state.
-   *
-   * The ticks are posted back to back and only the state after the last one is
-   * pulled: the worker processes its queue in order, so running a circuit to a
-   * settled state costs one round trip rather than one per tick.
+   * has been applied. The ticks are posted back to back and only the state
+   * after the last is pulled, so settling a circuit costs one round trip.
    */
   public async simStep(count = 1): Promise<SimStatus> {
     if (!Number.isInteger(count) || count < 1) {
@@ -519,10 +498,9 @@ export class AutomationApiService {
   }
 
   /**
-   * Drives a lever/button to an absolute state (see
-   * {@link SimulationService.setUserInput}). Resolves after one snapshot
-   * round-trip; the engine applies the input at its next tick, so the
-   * deterministic recipe is `pause()` → `setInput()` → `step()` → `readPorts()`.
+   * Drives a lever/button to an absolute state. The engine applies the input at
+   * its next tick, so the deterministic recipe is
+   * `pause()` → `setInput()` → `step()` → `readPorts()`.
    */
   public async simSetInput(componentId: number, value: boolean): Promise<void> {
     if (!this.simulation.setUserInput(componentId, value)) {
@@ -534,7 +512,7 @@ export class AutomationApiService {
   }
 
   /**
-   * Per-port powered state, resolved against a freshly pulled snapshot. Without
+   * Per-port powered state against a freshly pulled snapshot. Without
    * `componentIds`, every component carrying at least one mapped port.
    */
   public async simReadPorts(componentIds?: number[]): Promise<PortReadout[]> {
@@ -576,10 +554,9 @@ export class AutomationApiService {
   }
 
   /**
-   * Resolves once the next engine snapshot has been applied. A full snapshot is
+   * Resolves once the next engine snapshot has been applied. The snapshot is
    * requested explicitly, so this settles whether the simulation is running or
-   * paused; it resolves without a frame when no session is up, and gives up
-   * after {@link FRAME_WAIT_MS} rather than hanging a driver forever.
+   * paused, and gives up after {@link FRAME_WAIT_MS} rather than hanging.
    */
   private nextFrame(): Promise<void> {
     if (!this.simulation.isReady()) return Promise.resolve();
@@ -603,10 +580,9 @@ export class AutomationApiService {
 
   // -- Camera --------------------------------------------------------------
   //
-  // View operations are visual only: never a history entry, never part of a
-  // snapshot, and allowed during simulation. Agents speak grid units; the
-  // `ViewportController` speaks screen px, so every call converts through the
-  // current zoom here.
+  // Visual only: never a history entry, and allowed during simulation. Agents
+  // speak grid units, `ViewportController` speaks screen px, so every call
+  // converts through the current zoom.
 
   public getViewport(project: Project = this.requireProject()): ViewportInfo {
     const state = project.viewport.viewportState;
@@ -644,8 +620,8 @@ export class AutomationApiService {
   }
 
   /**
-   * Sets an absolute zoom factor (1 = 100%), clamped to the editor's zoom
-   * ladder, anchored on a grid point (the viewport centre by default).
+   * Absolute zoom factor (1 = 100%), clamped to the editor's zoom ladder and
+   * anchored on a grid point (the viewport centre by default).
    */
   public cameraSetZoom(
     factor: number,
@@ -662,11 +638,7 @@ export class AutomationApiService {
     );
   }
 
-  /**
-   * Frames a target: a grid rectangle, the union of some elements' bounds, or
-   * all content. Returns the resulting viewport so a caller can confirm what is
-   * on screen.
-   */
+  /** Frames a target and returns the resulting viewport. */
   public cameraFocus(
     target: FocusTarget,
     options: FocusOptions = {},
@@ -685,10 +657,9 @@ export class AutomationApiService {
 
   // -- Grid ↔ screen -------------------------------------------------------
   //
-  // The one place the contract leaves grid units. A driver that points at the
-  // board — a synthetic click, a screenshot clip — needs the camera's mapping
-  // *and* the canvas's page offset; reproducing either outside the editor
-  // duplicates `ViewportController` and hard-codes a DOM selector.
+  // The one place the contract leaves grid units. A driver pointing at the
+  // board needs the camera's mapping *and* the canvas's page offset;
+  // reproducing either outside the editor duplicates `ViewportController`.
 
   /** The board canvas's box in viewport CSS px. */
   public boardRect(): ScreenRect {
@@ -745,11 +716,7 @@ export class AutomationApiService {
     };
   }
 
-  /**
-   * Arms a tool, exactly as the tool bar's buttons do — which tool is active
-   * decides what a pointer gesture on the board does, and what floating chrome
-   * (the scissor pill, the placement ghost) is on screen.
-   */
+  /** Arms a tool, exactly as the tool bar's buttons do. */
   public setWorkMode(
     mode: WorkModeName,
     options: { componentType?: number } = {}
@@ -794,13 +761,11 @@ export class AutomationApiService {
   }
 
   /**
-   * Runs the pending view update so the whole tool swap lands before this call
-   * returns. The board picks the mode up in an effect, and the router's
-   * `setMode` aborts the live drag, deactivates the outgoing tool and clears the
-   * selection — so a caller that switched the tool and then selected something
-   * would have its selection wiped by that effect a frame later. A driver has no
-   * tick of its own to wait for; these calls have to be finished when they
-   * return.
+   * Runs the pending view update so the whole tool swap lands before the call
+   * returns. The board picks the mode up in an effect whose `setMode` clears
+   * the selection, so a caller that switched the tool and then selected
+   * something would have that selection wiped a frame later — and a driver has
+   * no tick of its own to wait for.
    */
   private flushModeSwitch(): void {
     this.appRef.tick();
@@ -809,21 +774,11 @@ export class AutomationApiService {
   // -- Selection -----------------------------------------------------------
 
   /**
-   * Selects a region — the same operation as picking the select tool and
-   * dragging a marquee over it: the elements it catches carry the selection
-   * tint, the drawn rectangle persists as the grab rect, and the selection is
-   * then movable/rotatable/deletable exactly like a user's. This is the "look
-   * here" idiom an agent pairs with `camera.focus` after an edit.
-   *
-   * `{ bounds }` is the marquee (a zero-area rectangle behaves like a click:
-   * the single element under the point); `{ elementIds }` selects those
-   * elements directly, rect-ing their padded bounds like a committed paste
-   * does. `cut` scissors the marquee and `rect: false` drops the grab rect —
-   * see {@link SelectOptions}.
-   *
-   * The work mode is switched to SELECT, so the selection is grabbable
-   * afterwards; a `cut` mirrors the held-scissor-key marquee rather than the
-   * scissor tool, so it does not leave the tool in scissor mode.
+   * Selects a region, exactly as picking the select tool and dragging a marquee
+   * does. A zero-area `bounds` behaves like a click; `{ elementIds }` rects
+   * their padded bounds like a committed paste. The work mode is switched to
+   * SELECT so the selection is grabbable afterwards, and a `cut` mirrors the
+   * held-scissor-key marquee, so it does not leave the tool in scissor mode.
    */
   public select(
     region: SelectRegion,
@@ -836,8 +791,8 @@ export class AutomationApiService {
     const project = this.activeProject!;
     const selection = project.selectionManager;
 
-    // Ahead of the selection, and flushed: switching tools clears the live
-    // selection, so the swap has to be finished before anything is selected.
+    // Switching tools clears the live selection, so the swap has to be finished
+    // before anything is selected.
     if (this.workMode.mode() !== WorkMode.SELECT) {
       this.workMode.setMode(WorkMode.SELECT);
       this.flushModeSwitch();
@@ -882,11 +837,10 @@ export class AutomationApiService {
 
   /**
    * Clears the selection, like clicking empty canvas — which also retracts an
-   * uncommitted scissor cut, so a cut nothing acted on leaves no trace.
+   * uncommitted scissor cut.
    */
   public clearSelection(): void {
-    // Tolerates a replaced or destroyed project: a new document brings a fresh
-    // selection, so there is nothing left to clear.
+    // A replaced document brings a fresh selection; nothing left to clear.
     const project = this.activeProject;
     if (!project) return;
     project.selectionManager.clear();
@@ -933,9 +887,9 @@ export class AutomationApiService {
 
   // -- Inspection ----------------------------------------------------------
   //
-  // The live views a tap opens while the simulation runs. A watch is a second
-  // board: its levels are fresh copies of the inner circuit, so its elements
-  // carry the copy's ids and its camera is the copy project's.
+  // A watch is a second board: its levels are fresh copies of the inner
+  // circuit, so its elements carry the copy's ids and its camera is the copy
+  // project's.
 
   /** Opens (or focuses) a component's inspection, as a tap on it would. */
   public inspectOpen(componentId: number): InspectionInfo {
@@ -976,7 +930,7 @@ export class AutomationApiService {
 
   /**
    * Moves and/or resizes the hosting window, clamped to the board it floats
-   * over — `null` when the inspection is not in a window (the compact sheet).
+   * over; `null` when the inspection is in the compact sheet instead.
    */
   public inspectSetBounds(
     inspectionId: number,
@@ -997,9 +951,8 @@ export class AutomationApiService {
   }
 
   /**
-   * Taps a component of the visible watch level — the watch's one gesture:
-   * drives an inner lever/button, drills into a nested custom (pushing a
-   * breadcrumb level), or opens the component's own inspection.
+   * Taps a component of the visible watch level: drives an inner lever/button,
+   * drills into a nested custom, or opens the component's own inspection.
    */
   public inspectActivate(
     inspectionId: number,
@@ -1033,10 +986,9 @@ export class AutomationApiService {
   }
 
   /**
-   * Same, for a camera write. A level that has not been on screen yet is still
-   * waiting for the renderer's one-time fit, which runs on the next frame and
-   * would overwrite whatever is placed here — so an explicit placement takes
-   * the fit's turn instead of racing it.
+   * Same, for a camera write. A level that has not been on screen yet still
+   * awaits the renderer's one-time fit, which would overwrite what is placed
+   * here — so an explicit placement takes the fit's turn instead.
    */
   private watchCameraProject(inspectionId: number): Project {
     const level = this.requireWatch(inspectionId).activeLevel();
@@ -1092,9 +1044,8 @@ export class AutomationApiService {
 
   // -- Documents -----------------------------------------------------------
   //
-  // The tab strip and the library behind it. Switching, closing and opening a
-  // component for edit are document-level state, not chrome: the same calls the
-  // tab strip and the settings card's Edit button make.
+  // Switching, closing and opening a component for edit are document-level
+  // state, not chrome: the same calls the tab strip and settings card make.
 
   public tabList(): TabInfo[] {
     const active = this.projectService.activeProject();
@@ -1119,8 +1070,8 @@ export class AutomationApiService {
   }
 
   /**
-   * Closes a component editor. A dirty one needs `discardChanges` — the UI asks
-   * the user at this point, and a driver has nobody to ask.
+   * Closes a component editor. A dirty one needs `discardChanges`: the UI asks
+   * the user here, and a driver has nobody to ask.
    */
   public tabClose(
     index: number,
@@ -1178,10 +1129,9 @@ export class AutomationApiService {
   }
 
   /**
-   * Opens a custom component's circuit in its own tab, taking either a master's
-   * type id or a placed instance's. An instance whose master is gone — its
-   * circuit only embedded — is restored into the browser library first, which
-   * is what the settings card's Edit / Restore & edit button does.
+   * Opens a custom component's circuit in its own tab, by master type id or
+   * placed-instance type id. An instance whose master is gone is restored into
+   * the browser library first.
    */
   public async libraryEdit(type: number): Promise<TabInfo> {
     this.assertNotBusy('library.edit');
@@ -1197,8 +1147,8 @@ export class AutomationApiService {
     }
 
     // Identified by the master's id rather than "some component tab is active":
-    // a failed open from another component's tab would leave that one active and
-    // read as success. A restore mints a new id, so it is resolved afterwards.
+    // a failed open from another component's tab would read as success. A
+    // restore mints a new id, so it is resolved afterwards.
     const openedId = this.registry.resolveMaster(type)?.master.id;
     const tab = this.tabList().find(
       (candidate) => candidate.active && candidate.id === openedId
@@ -1214,8 +1164,7 @@ export class AutomationApiService {
 
   // -- Editor settings -----------------------------------------------------
   //
-  // User preferences, not project edits: they persist exactly as if the user had
-  // flipped the controls and are never history entries. The boolean half is
+  // Preferences, not project edits: never history entries. The boolean half is
   // enumerated from `EditorSettingsService.settings`, so a preference added
   // later shows up here on its own.
 
@@ -1243,8 +1192,8 @@ export class AutomationApiService {
   }
 
   /**
-   * Applies a patch of preferences. The whole patch is validated first — an
-   * unknown key or an unaccepted value rejects it and applies nothing.
+   * Applies a patch of preferences. Validated as a whole first: an unknown key
+   * or an unaccepted value applies nothing.
    */
   public settingsSet(patch: Partial<SettingsState>): SettingsState {
     const booleans = new Map(
@@ -1304,10 +1253,9 @@ export class AutomationApiService {
   }
 
   /**
-   * Why a mutation would be refused right now: no project, a running
-   * simulation, or a live drag session (the router locks the action manager for
-   * the whole session, including a paste/rotate group still floating before its
-   * first grab).
+   * Why a mutation would be refused: no project, a running simulation, or a
+   * live drag session (the router locks the action manager for its whole
+   * duration, including a paste/rotate group floating before its first grab).
    */
   private busyReason(): BusyReason | null {
     const project = this.activeProject;
@@ -1318,8 +1266,8 @@ export class AutomationApiService {
   }
 
   /**
-   * The active project, or a thrown error — for the calls whose result has no
-   * room for a refusal (the driver sees the exception through `evaluate`).
+   * The active project, or a thrown error — for calls whose result has no room
+   * for a refusal.
    */
   private requireProject(): Project {
     const project = this.activeProject;

@@ -14,7 +14,9 @@
                 [allowModifierOnly]="allowsModifierOnly(action)"
                 (bindingChange)="onBindingChange(action, $event)"
               />
-              <lg-button
+              <button
+                lgButton
+                disabledInteractive
                 icon="ph ph-arrow-counter-clockwise"
                 severity="secondary"
                 [text]="true"
@@ -24,8 +26,10 @@
                 [ariaLabel]="t('shortcuts.manager.reset')"
                 tooltipPosition="bottom"
                 (onClick)="shortcutService.resetBinding(action)"
-              />
-              <lg-button
+              ></button>
+              <button
+                lgButton
+                disabledInteractive
                 icon="ph ph-trash"
                 severity="secondary"
                 [text]="true"
@@ -35,7 +39,7 @@
                 [ariaLabel]="t('shortcuts.manager.unassign')"
                 tooltipPosition="bottom"
                 (onClick)="shortcutService.setBinding(action, null)"
-              />
+              ></button>
             </div>
           </div>
         }
@@ -47,11 +51,8 @@
   </div>
 
   <div class="flex justify-end mt-4">
-    <lg-button
-      [label]="t('shortcuts.manager.resetAll')"
-      severity="danger"
-      [outlined]="true"
-      (onClick)="resetAll()"
-    />
+    <button lgButton severity="danger" [outlined]="true" (onClick)="resetAll()">
+      {{ t('shortcuts.manager.resetAll') }}
+    </button>
   </div>
 </ng-container>

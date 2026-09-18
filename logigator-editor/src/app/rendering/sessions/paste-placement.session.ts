@@ -28,10 +28,10 @@ export class PastePlacementSession implements DragSession {
   }
 
   /**
-   * The paste session outlives its opening gesture: the ghosts wait in place
-   * until the user presses again. A press inside the group's rect locks in the
-   * drag anchor; a press outside it asks the router to cancel (discarding the
-   * paste). Extra presses while already dragging are consumed and ignored.
+   * The session outlives its opening gesture: the ghosts wait until the user
+   * presses again. Inside the group's rect that locks the drag anchor in,
+   * outside it asks the router to cancel. Extra presses while dragging are
+   * consumed and ignored.
    */
   public onDown(input: PointerInput): boolean {
     if (this._isDragging) return true;
@@ -39,8 +39,7 @@ export class PastePlacementSession implements DragSession {
     const offset = this._dragLayer.position;
     const gridPos = roundToGrid(input.grid, true);
     // Anchor in element space: onMove derives the layer offset from it, so a
-    // press on ghosts that already carry an offset (a re-grab after a drop the
-    // collision blocked) must not fold that offset into the anchor.
+    // re-grab of ghosts already carrying an offset must not fold it in.
     this.beginDrag(new Point(gridPos.x - offset.x, gridPos.y - offset.y));
     return true;
   }
@@ -51,10 +50,9 @@ export class PastePlacementSession implements DragSession {
   }
 
   /**
-   * The drop landed on a collision, so the ghosts stay where they are for the
-   * user to reposition. Releasing the anchor puts the session back in the
-   * state it opens in — waiting for a press — so the next press grabs the
-   * ghosts where it lands instead of pulling them under the old anchor.
+   * The drop landed on a collision, so the ghosts stay put. Releasing the
+   * anchor puts the session back to waiting for a press, so the next one grabs
+   * where it lands rather than pulling the ghosts under the old anchor.
    */
   public onInvalidRelease(): void {
     this._isDragging = false;
@@ -62,10 +60,9 @@ export class PastePlacementSession implements DragSession {
   }
 
   /**
-   * The grab zone: the rect the ghosts wear, not their individual bounds. It
-   * is the zone a committed selection grabs by (`SelectionManager.isGrabbedAt`
-   * over the same padded content rect), so the gaps between pasted elements
-   * drag the group both before and after it is put down.
+   * The grab zone is the rect the ghosts wear, not their individual bounds —
+   * the same padded content rect a committed selection grabs by, so the gaps
+   * between pasted elements drag the group before and after it is put down.
    */
   public containsPoint(p: Point): boolean {
     const rect = this._grabRect();
@@ -85,8 +82,7 @@ export class PastePlacementSession implements DragSession {
     private readonly _components: Component[],
     private readonly _wires: Wire[]
   ) {
-    // Ghosts wear the selection look — on commit, select() keeps them
-    // selected, so the appearance carries over seamlessly.
+    // Ghosts wear the selection look; on commit select() keeps them selected.
     for (const c of _components) {
       c.selected = true;
       c.applyScale(_project.scale.x);
@@ -104,16 +100,14 @@ export class PastePlacementSession implements DragSession {
       _wires
     );
     this._collision.update();
-    // The pasted group wears its selection rect from the moment it appears —
-    // the same padded rect a committed paste keeps — so it reads as selected
-    // while it floats, not only once it is put down.
+    // The group wears its selection rect from the moment it appears, so it
+    // reads as selected while it floats.
     this._refreshSelectionRect();
   }
 
   // Shows the selection rect around the ghosts' padded bounds, translated by
-  // the current drag offset so it rides along with them. Called on any change
-  // to the group's own geometry (construction, rotation); a plain move only
-  // shifts the offset.
+  // the drag offset. Only needed when the group's own geometry changes; a
+  // plain move just shifts the offset.
   private _refreshSelectionRect(): void {
     const bounds = this._grabRect();
     if (!bounds) return;
@@ -128,9 +122,8 @@ export class PastePlacementSession implements DragSession {
     const cursor = roundToGrid(input.grid, true);
     const x = cursor.x - this._anchor!.x;
     const y = cursor.y - this._anchor!.y;
-    // Pointer moves arrive far faster than the cursor crosses grid cells, and
-    // the ghosts only ever sit on the grid: without the offset changing there
-    // is nothing to redraw and nothing new to collide with.
+    // Ghosts only ever sit on the grid, so an unchanged offset has nothing to
+    // redraw and nothing new to collide with.
     const position = this._dragLayer.position;
     if (position.x === x && position.y === y) return;
     position.set(x, y);
@@ -140,8 +133,8 @@ export class PastePlacementSession implements DragSession {
 
   /**
    * Turns the pasted ghosts clockwise around their snapped centre. Nothing
-   * else to track: the ghosts are fresh instances the commit serializes at
-   * their final geometry, and a cancel destroys them outright.
+   * else to track: they are fresh instances the commit serializes at their
+   * final geometry, and a cancel destroys them.
    */
   rotate(steps: number): void {
     const bounds = groupGridBounds(this._components, this._wires);
@@ -152,7 +145,6 @@ export class PastePlacementSession implements DragSession {
       rotationPivotFor(bounds),
       steps
     );
-    // The group's bounds turned with it — re-fit the rect to them.
     this._refreshSelectionRect();
     this._collision.update();
   }
@@ -190,17 +182,15 @@ export class PastePlacementSession implements DragSession {
     this._dragLayer.position.set(0, 0);
     this._collision.reset();
 
-    // The pasted wires' final geometry decides which integration results the
-    // selection adopts below: a merge/split successor shares a span with a
-    // pasted wire, an external wire's split pieces only touch at an endpoint.
+    // Decides which integration results the selection adopts: a merge/split
+    // successor shares a span, an external wire's pieces only touch an end.
     const pastedSpans = new SnapshotSpanIndex(
       this._wires.map((w) => Wire.snapshot(w))
     );
 
-    // Restore the wire invariants around the drop: a pasted wire dropped onto
-    // a collinear wire merges with it (and pasted split pieces merge with each
-    // other), a termination landing on an interior splits the crossed wire —
-    // on either side — and a pasted port splits the wire under it.
+    // Restore the wire invariants around the drop: collinear wires merge, a
+    // termination on an interior splits the crossed wire, and a pasted port
+    // splits the wire under it.
     const { toAdd, toRemove } = this._project.topology.integrate({
       addedWires: this._wires,
       addedComponentPorts: this._components.flatMap((c) => [
@@ -208,7 +198,7 @@ export class PastePlacementSession implements DragSession {
       ])
     });
 
-    // Build actions before mutating (they serialize state in their constructors)
+    // Actions serialize state in their constructors, so build before mutating.
     const action = new ActionContainer();
     if (toRemove.length > 0) {
       action.add(new RemoveWiresAction(...toRemove));
@@ -221,16 +211,13 @@ export class PastePlacementSession implements DragSession {
     }
 
     for (const w of toRemove) this._project.removeWire(w.id);
-    // Transfer elements from drag layer to project. Emptying the layer up front
-    // is what keeps the transfer linear: re-parenting drops each element from
-    // its old parent by index scan, so leaving them here has every addChild
-    // below search a layer still holding the rest of the paste.
+    // Emptying the layer up front keeps the transfer linear: re-parenting
+    // drops each element from its old parent by index scan.
     this._dragLayer.removeChildren();
     for (const c of this._components) this._project.addComponent(c);
     const committed = new Set(toAdd);
     for (const w of toAdd) this._project.addWire(w);
-    // A pasted wire consumed by integration (absorbed into a merge result)
-    // never enters the project — drop the ghost instance.
+    // A pasted wire absorbed by a merge never enters the project.
     for (const w of this._wires) {
       if (!committed.has(w) && !w.destroyed) w.destroy();
     }
@@ -240,7 +227,7 @@ export class PastePlacementSession implements DragSession {
       toAdd.filter((w) => pastedSpans.sharesSpan(Wire.snapshot(w)))
     );
 
-    // State already applied — register without calling do()
+    // State already applied, so register without calling do().
     this._project.actionManager.register(action);
     getStaticDI(LoggingService).debug(
       `committed paste: ${this._components.length} component(s) added, ${this._wires.length} wire(s) pasted; ` +
@@ -256,11 +243,9 @@ export class PastePlacementSession implements DragSession {
     );
     this._dragLayer.position.set(0, 0);
     this._collision.reset();
-    // The cancel path clears no selection, so nothing else drops the rect we
-    // showed for the discarded ghosts — hide it explicitly.
+    // Cancel clears no selection, so nothing else drops the ghosts' rect.
     this._project.floatingLayer.hideSelectionRect();
-    // Emptied in one pass — destroying in place would drop each ghost from the
-    // layer by index scan (see onEnd).
+    // Emptied in one pass; destroying in place drops each ghost by index scan.
     this._dragLayer.removeChildren();
     for (const c of this._components) c.destroy({ children: true });
     for (const w of this._wires) w.destroy();

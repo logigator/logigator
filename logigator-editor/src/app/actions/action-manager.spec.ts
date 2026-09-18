@@ -28,8 +28,6 @@ describe('ActionManager', () => {
     manager = new ActionManager(project);
   });
 
-  // ── Initial state ──────────────────────────────────────────────────────────
-
   describe('initial state', () => {
     it('undoAvailable is false on a new manager', () => {
       expect(manager.undoAvailable).toBe(false);
@@ -39,8 +37,6 @@ describe('ActionManager', () => {
       expect(manager.redoAvailable).toBe(false);
     });
   });
-
-  // ── push ──────────────────────────────────────────────────────────────────
 
   describe('push', () => {
     it('calls action.do() with the project', () => {
@@ -60,8 +56,6 @@ describe('ActionManager', () => {
       expect(manager.redoAvailable).toBe(false);
     });
   });
-
-  // ── undo ──────────────────────────────────────────────────────────────────
 
   describe('undo', () => {
     it('calls action.undo() with the project', () => {
@@ -85,7 +79,6 @@ describe('ActionManager', () => {
 
     it('does not call undo on any action when history is empty', () => {
       const action = makeAction();
-      // push then undo to empty undo stack, then undo again
       manager.push(action);
       manager.undo();
       action.undo.mockClear();
@@ -93,8 +86,6 @@ describe('ActionManager', () => {
       expect(action.undo).not.toHaveBeenCalled();
     });
   });
-
-  // ── redo ──────────────────────────────────────────────────────────────────
 
   describe('redo', () => {
     it('calls action.do() again after an undo', () => {
@@ -137,8 +128,6 @@ describe('ActionManager', () => {
     });
   });
 
-  // ── undo intercepts pending scissor cut ──────────────────────────────────
-
   describe('retract', () => {
     it('reverts and removes the newest done entry', () => {
       const action = makeAction();
@@ -170,7 +159,6 @@ describe('ActionManager', () => {
       manager.undo();
 
       expect(manager.retract(action)).toBe(false);
-      // Its single undo came from the history operation, not the retract.
       expect(action.undo).toHaveBeenCalledTimes(1);
       expect(manager.redoAvailable).toBe(true);
     });
@@ -275,8 +263,6 @@ describe('ActionManager', () => {
     });
   });
 
-  // ── locked (a drag session is live) ────────────────────────────────────────
-
   describe('locked', () => {
     it('ignores undo while locked, then undoes after unlocking', () => {
       const action = makeAction();
@@ -310,8 +296,6 @@ describe('ActionManager', () => {
     });
   });
 
-  // ── push after undo truncates future ──────────────────────────────────────
-
   describe('push after undo', () => {
     it('discards redo history when a new action is pushed after an undo', () => {
       const a1 = makeAction();
@@ -322,7 +306,7 @@ describe('ActionManager', () => {
       manager.push(a2);
       manager.undo(); // pointer now at a1; a2 is in redo history
 
-      manager.push(a3); // should truncate a2 from redo history
+      manager.push(a3); // truncates a2 from the redo history
 
       expect(manager.redoAvailable).toBe(false);
     });
@@ -338,7 +322,7 @@ describe('ActionManager', () => {
       a2.do.mockClear();
 
       manager.push(a3);
-      // redo is not available so this is a no-op; a2.do must not be called
+      // redo is unavailable, so a2.do must not be called.
       manager.redo();
       expect(a2.do).not.toHaveBeenCalled();
     });
@@ -354,8 +338,6 @@ describe('ActionManager', () => {
       expect(manager.undoAvailable).toBe(true);
     });
   });
-
-  // ── clear ─────────────────────────────────────────────────────────────────
 
   describe('clear', () => {
     it('resets undoAvailable to false', () => {
@@ -390,8 +372,6 @@ describe('ActionManager', () => {
       expect(action.do).not.toHaveBeenCalled();
     });
   });
-
-  // ── multi-step sequence ───────────────────────────────────────────────────
 
   describe('multi-step sequence', () => {
     it('push 3, undo 2, redo 1 — correct undoAvailable/redoAvailable state', () => {
@@ -469,11 +449,8 @@ describe('ActionManager', () => {
     });
   });
 
-  // ── actionChange$ stream ──────────────────────────────────────────────────
-  //
-  // Dirty tracking in PersistenceService depends on this Subject firing on
-  // every state transition. Cover all four entry points (push / undo / redo
-  // / register).
+  // Dirty tracking depends on this Subject firing on every state transition,
+  // so all four entry points are covered.
 
   describe('actionChange$', () => {
     it('emits on push', () => {

@@ -1,6 +1,6 @@
 import type { WorkMode } from '../app/work-mode/work-mode.enum';
 import type { ShortcutActionEnum } from '../app/shortcuts/shortcut-action.enum';
-import type { ComponentCategory } from '../app/components/component-category.enum';
+import type { ComponentCategory } from '@logigator/core';
 import type { TranslationSchema } from '../app/translation/translation-schema.model';
 
 const de: TranslationSchema = {
@@ -28,7 +28,8 @@ const de: TranslationSchema = {
     editorSettings: 'Editor-Einstellungen',
     account: 'Account',
     logOut: 'Abmelden',
-    logIn: 'Anmelden'
+    logIn: 'Anmelden',
+    signUp: 'Registrieren'
   },
   theming: {
     light: 'Hell',
@@ -423,6 +424,12 @@ const de: TranslationSchema = {
     loadError: 'Diese Seite konnte nicht geladen werden.',
     back: 'Alle Themen',
     learnMore: 'Mehr erfahren',
+    search: {
+      label: 'Dokumentation durchsuchen',
+      placeholder: 'Suchen..',
+      loading: 'Dokumentation wird geladen…',
+      empty: 'Nichts passt zu „{{query}}“.'
+    },
     sections: {
       basics: 'Grundlagen',
       building: 'Schaltungen bauen',
@@ -742,6 +749,10 @@ const de: TranslationSchema = {
     skippedCustomMany:
       '{{count}} benutzerdefinierte Komponenten konnten nicht geladen werden — ihre Definitionen fehlen — und wurden übersprungen.'
   },
+  browserSupport: {
+    unsupported:
+      'Dieser Browser wird nicht offiziell unterstützt — es können Fehler auftreten. Versuche bei Problemen, deinen Browser zu aktualisieren.'
+  },
   editor: {
     rendererInitFailed:
       'Der Grafik-Renderer konnte nicht gestartet werden. Dein Browser oder deine GPU wird möglicherweise nicht unterstützt.',
@@ -962,7 +973,7 @@ const de: TranslationSchema = {
           moveAround: {
             title: 'Navigieren',
             textDesktop:
-              'Scrollen zum Zoomen, mit rechter Maustaste ziehen zum Schwenken.',
+              'Scrollen zum Zoomen, mit rechter oder mittlerer Maustaste ziehen zum Schwenken.',
             textCompact:
               'Spreizen zum Zoomen, mit zwei Fingern ziehen zum Schwenken.'
           },

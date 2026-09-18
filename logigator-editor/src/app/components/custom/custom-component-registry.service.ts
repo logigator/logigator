@@ -3,37 +3,33 @@ import { filter, Observable, Subject } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 import { ComponentProviderService } from '../component-provider.service';
 import { LoggingService } from '../../logging/logging.service';
-import { CUSTOM_TYPE_ID_BASE } from '../component-type.enum';
-import {
-  CustomComponentDefinition,
-  CustomComponentSummaryPatch
-} from './custom-component-definition.model';
-import { buildCustomComponentConfig } from './custom-component.config';
 import {
   cloneCircuit,
+  CUSTOM_TYPE_ID_BASE,
+  CustomComponentDefinition,
+  CustomComponentSummaryPatch,
   remapComponentTypes,
   SerializedCircuitBody,
   SnapshotDefinition
-} from '../../persistence/serialized-circuit';
+} from '@logigator/core';
+import { buildCustomComponentConfig } from './custom-component.config';
 
 /** A definition without its (registry-allocated) type id. */
 type DefinitionInit = Omit<CustomComponentDefinition, 'typeId'>;
 
 /**
- * Session-global owner of custom-component **definitions**, of two kinds (see
- * {@link CustomComponentDefinition}):
+ * Session-global owner of custom-component definitions, of two kinds:
  *
- * - **masters** — editable library entries; what the palette places *from* and
- *   the user edits. Indexed by their persistent {@link CustomComponentDefinition.id}.
- * - **snapshots** — frozen copies embedded in projects; what a placed instance
- *   actually wraps. Each gets its own type id; they are **not** in the id index
- *   (many snapshots share one master id).
+ * - **masters** — editable library entries the palette places *from*, indexed
+ *   by their persistent id.
+ * - **snapshots** — frozen copies embedded in projects; what a placed
+ *   instance wraps. Each gets its own type id and none is in the id index,
+ *   since many snapshots share one master id.
  *
- * It is an app-root singleton so runtime-allocated type ids never collide across
- * open Projects — `typeId → definition` is a clean function (Invariant B). It
- * registers a matching {@link ComponentConfig} into {@link ComponentProviderService}
- * for every definition (so all existing resolvers keep working through
- * `getComponent`), and tracks the library dependency graph for cycle prevention.
+ * App-root singleton so runtime-allocated type ids never collide across open
+ * Projects: `typeId → definition` is a function. Every definition also gets a
+ * config in {@link ComponentProviderService}, so customs resolve through the
+ * same path as built-ins.
  */
 @Injectable({
   providedIn: 'root'
@@ -44,44 +40,28 @@ export class CustomComponentRegistry {
 
   private _nextTypeId = CUSTOM_TYPE_ID_BASE;
   private readonly _definitions = new Map<number, CustomComponentDefinition>();
-  // Masters only: persistent id -> masterTypeId. Snapshots are excluded — one id
-  // maps to many snapshot type ids, so the reverse lookup is masters-only.
+  // Masters only: one id maps to many snapshot type ids.
   private readonly _idToMasterTypeId = new Map<string, number>();
-  // Old (pre-promotion) id -> current id. A master promoted browser->server keeps
-  // its old local id here so snapshots that captured it still resolve to the
-  // now-server master. Populated live by promoteMaster and at startup from the
-  // persistent id-map (registerIdAlias).
+  // Old (pre-promotion) id -> current id: a master promoted browser->server
+  // keeps its old local id here, so snapshots that captured it still resolve.
   private readonly _idAliases = new Map<string, string>();
-  // Library dependency edges: masterTypeId -> the distinct master type ids its
-  // circuit places. Reverse-traversed by dependentsOf for cycle filtering.
+  // masterTypeId -> the distinct master type ids its circuit places.
   private readonly _dependencies = new Map<number, Set<number>>();
-  // Placement-time snapshot cache: masterTypeId -> the snapshot type id that
-  // represents the master's current state. Cleared by any method that mutates
-  // master content so subsequent placements get a fresh snapshot.
+  // Placement-time cache of the snapshot representing a master's current
+  // state; cleared by every mutation of master content.
   private readonly _masterToSnapshotTypeId = new Map<number, number>();
   private readonly _change$ = new Subject<CustomComponentDefinition>();
-  // Bumped on mutations that change a master's palette-visible metadata: its
-  // identity/source (promotion) or its last-edited time (a save). Lets
-  // signal-based readers (the settings panel chip + upload button, the palette's
-  // newest-first ordering) recompute after such a change.
   private readonly _revision = signal(0);
-  /**
-   * Increments whenever a master is promoted or re-stamped as edited; a
-   * dependency for reactive readers.
-   */
+  /** Bumped on changes to a master's palette-visible metadata. */
   public readonly revision = this._revision.asReadonly();
 
-  /**
-   * Registers a new editable library **master** and returns its type id. A
-   * browser master mints a store id when none is supplied; a server master
-   * carries the id from its create POST. Added to the masters id index.
-   */
+  /** A browser master mints a store id; a server master is given one. */
   public createMaster(
     meta: Partial<CustomComponentDefinition>,
     source: 'server' | 'browser'
   ): number {
-    // Match browser-project.store.ts: the `uuid` package, not crypto.randomUUID
-    // (which needs a secure context and would throw over plain HTTP).
+    // Not crypto.randomUUID: it needs a secure context and would throw over
+    // plain HTTP.
     const id = meta.id ?? uuidv4();
     const typeId = this._register({
       kind: 'master',
@@ -96,8 +76,7 @@ export class CustomComponentRegistry {
       labels: meta.labels ? [...meta.labels] : [],
       link: meta.link,
       isPublic: meta.isPublic,
-      // A master without a supplied timestamp is one being created now, so it
-      // sorts to the top of the palette; preloads pass the persisted value.
+      // No timestamp means it is being created now, so it sorts to the top.
       lastEdited: meta.lastEdited ?? Date.now(),
       circuit: meta.circuit ? cloneCircuit(meta.circuit) : undefined
     });
@@ -106,13 +85,10 @@ export class CustomComponentRegistry {
   }
 
   /**
-   * Freezes a master's **current** state into a snapshot definition (with
-   * `source`/`id`/`version` provenance) and returns it. Repeated calls for the
-   * same unchanged master return the cached snapshot so all placements share one
-   * type id and produce one definition in the save file. The cache is invalidated
-   * by {@link updateDefinition}, {@link setMasterCircuit}, and
-   * {@link setMasterVersion} — any of which mutate master content — so the next
-   * call after an edit always produces a fresh snapshot.
+   * Freezes a master's current state into a snapshot with `source`/`id`/
+   * `version` provenance. Repeated calls for an unchanged master return the
+   * cached snapshot, so every placement shares one type id and the save file
+   * holds one definition; every mutation of master content clears that cache.
    */
   public snapshot(masterTypeId: number): CustomComponentDefinition {
     const master = this._definitions.get(masterTypeId);
@@ -132,34 +108,26 @@ export class CustomComponentRegistry {
       numInputs: master.numInputs,
       numOutputs: master.numOutputs,
       labels: [...master.labels],
-      // Deep-copy: a frozen snapshot must never share circuit state with its
-      // master, so later edits to the master cannot mutate placed instances.
+      // A frozen snapshot must not share circuit state with its master.
       circuit: master.circuit ? cloneCircuit(master.circuit) : undefined
     });
     this._masterToSnapshotTypeId.set(masterTypeId, typeId);
     return this._definitions.get(typeId)!;
   }
 
-  /**
-   * Registers one frozen snapshot definition and returns its fresh type id. The
-   * lower-level primitive behind {@link snapshot}. Not added to the masters id
-   * index.
-   */
+  /** Registers one frozen snapshot; not added to the masters id index. */
   public registerSnapshot(def: DefinitionInit): number {
     return this._register(def);
   }
 
   /**
-   * Registers a document's embedded snapshots (the universal load path for file,
-   * browser, and server-new-client) and returns the `fileLocalType → sessionType`
-   * remap the caller applies to the document body.
+   * Registers a document's embedded snapshots and returns the
+   * `fileLocalType → sessionType` remap to apply to the document body.
    *
    * Two passes so nested references resolve: pass 1 allocates a session type id
-   * per incoming definition; pass 2 registers each, rewriting the type ids inside
-   * its own circuit body from file-local to session. The stored circuit therefore
-   * holds post-remap session ids, so re-saving or opening it resolves correctly
-   * (the id-space rule). Snapshots carry provenance + circuit but are not added to
-   * the masters id index.
+   * per definition, pass 2 registers each with the type ids inside its own
+   * circuit rewritten. A stored circuit therefore holds session ids, never
+   * file-local ones.
    */
   public ingestSnapshots(defs: SnapshotDefinition[]): Map<number, number> {
     const remap = new Map<number, number>();
@@ -171,9 +139,7 @@ export class CustomComponentRegistry {
       this._store({
         typeId,
         kind: 'snapshot',
-        // Record the master's library origin (server vs browser) when the
-        // document carried it, so an orphaned instance can be recovered
-        // correctly; default to 'browser' for older documents that omit it.
+        // Older documents omit the origin; assume browser.
         source: def.source?.origin ?? 'browser',
         id: def.source?.id,
         version: def.source?.version,
@@ -193,10 +159,9 @@ export class CustomComponentRegistry {
         }
       });
     }
-    // Pre-populate the placement cache for ingested snapshots whose source
-    // matches a currently-loaded library master at the same version. This
-    // ensures that palette placements after loading an existing project reuse
-    // the ingested type id instead of creating a duplicate definition on save.
+    // Where an ingested snapshot matches a loaded master at the same version,
+    // seed the placement cache with it: later placements then reuse that type
+    // id instead of writing a duplicate definition on save.
     for (const def of defs) {
       if (!def.source) continue;
       const masterTypeId = this._idToMasterTypeId.get(def.source.id);
@@ -216,10 +181,8 @@ export class CustomComponentRegistry {
   }
 
   /**
-   * Applies a summary change to a **master** in place (never replacing the
-   * object) and notifies the palette/editor via {@link definitionChange$}.
-   * No-ops for an unknown type id or a snapshot (snapshots are immutable).
-   * Does **not** bump `version` — that is a save-time stamp.
+   * Patches a master in place, never replacing the object. Leaves `version`
+   * alone: that is a save-time stamp.
    */
   public updateDefinition(
     masterTypeId: number,
@@ -243,13 +206,10 @@ export class CustomComponentRegistry {
   }
 
   /**
-   * Materialises a **master's** own circuit (from its open editor — see
-   * `DefinitionBinding` — or a lazily-fetched cloud circuit). Replaces `circuit`
-   * with a fresh deep copy rather than mutating in place, so snapshots taken
-   * earlier (which copied the previous object) stay frozen, and recomputes the
-   * master's direct library dependencies from the new circuit so cycle detection
-   * stays correct for any path that sets a circuit (not just an open editor).
-   * No-ops for a snapshot or unknown type id.
+   * Materialises a master's own circuit. Replaces `circuit` with a fresh deep
+   * copy rather than mutating in place, so earlier snapshots stay frozen, and
+   * recomputes the master's dependencies so cycle detection stays correct
+   * whatever path set the circuit.
    */
   public setMasterCircuit(
     masterTypeId: number,
@@ -266,10 +226,8 @@ export class CustomComponentRegistry {
   }
 
   /**
-   * Derives a master's direct library dependencies (the distinct master type ids
-   * behind the custom snapshots its circuit places, resolved through the promotion
-   * alias) and records them for cycle prevention. Built-ins (no registry def) and
-   * unresolvable types contribute no edge.
+   * The distinct master type ids behind the snapshots a circuit places,
+   * resolved through the promotion alias. Built-ins contribute no edge.
    */
   private _recomputeDependencies(
     masterTypeId: number,
@@ -289,7 +247,7 @@ export class CustomComponentRegistry {
     );
   }
 
-  /** Debug trail for a guard that no-ops on an unknown or non-master type id. */
+  /** Debug trail for a guard that no-ops on a non-master type id. */
   private _noopMaster(method: string, masterTypeId: number): void {
     this.logging.debug(
       `${method} no-op: type id ${masterTypeId} is unknown or not a master`,
@@ -298,13 +256,10 @@ export class CustomComponentRegistry {
   }
 
   /**
-   * Adopts the monotonic `version` a save returned for a **master** (the
-   * save-time stamp; {@link updateDefinition} deliberately leaves it alone).
-   * Snapshots placed afterwards carry it as `source.version`, so a placed
-   * instance can detect "a newer version exists". Bumps {@link revision}: the
-   * stamp is what makes already-placed instances outdated, which the settings
-   * panel's update actions and the palette's outdated indicator read. No-ops for
-   * a snapshot or unknown type id.
+   * Adopts the monotonic `version` a save returned. Snapshots placed afterwards
+   * carry it as `source.version`, which is how a placed instance detects that
+   * a newer version exists — the stamp is what makes existing instances
+   * outdated, hence the {@link revision} bump.
    */
   public setMasterVersion(masterTypeId: number, version: number): void {
     const def = this._definitions.get(masterTypeId);
@@ -317,11 +272,7 @@ export class CustomComponentRegistry {
     this._revision.update((r) => r + 1);
   }
 
-  /**
-   * Records a **master's** last-edited time (epoch ms; defaults to now) so the
-   * palette re-sorts it to the top after a save. Bumps {@link revision} to notify
-   * the signal-based ordering. No-ops for a snapshot or unknown type id.
-   */
+  /** Last-edited time (epoch ms, default now); the palette sorts by it. */
   public setMasterLastEdited(masterTypeId: number, lastEdited?: number): void {
     const def = this._definitions.get(masterTypeId);
     if (!def || def.kind !== 'master') {
@@ -333,10 +284,8 @@ export class CustomComponentRegistry {
   }
 
   /**
-   * Updates a **server master's** share link and/or public visibility after the
-   * share dialog mutates them, so the value stays fresh for the rest of the
-   * session (the dialog reads it back without a fetch). No revision bump — share
-   * info is not palette-visible. No-ops for a snapshot or unknown type id.
+   * Keeps a server master's share link and visibility fresh for the session.
+   * No revision bump: share info is not palette-visible.
    */
   public setMasterShareInfo(
     masterTypeId: number,
@@ -356,20 +305,17 @@ export class CustomComponentRegistry {
   }
 
   /**
-   * Masters-only reverse lookup: persistent id -> masterTypeId. Resolves through
-   * the promotion alias chain first (via {@link currentIdForId}), so an id
-   * captured before an upload-to-cloud still resolves to the (now-server) master
-   * under its current id.
+   * Masters-only reverse lookup, through the promotion alias chain: an id
+   * captured before an upload-to-cloud still resolves to the server master.
    */
   public masterTypeIdForId(id: string): number | undefined {
     return this._idToMasterTypeId.get(this.currentIdForId(id));
   }
 
   /**
-   * Records an old-id -> current-id alias (idempotent). Used at startup to hydrate
-   * the alias map from the persistent id-map so promotions survive a reload. Bumps
-   * the revision so signal readers that resolved before the aliases loaded
-   * re-resolve once they are in place.
+   * Records an old-id -> current-id alias, so promotions survive a reload.
+   * Bumps the revision: readers that resolved before the aliases loaded must
+   * re-resolve.
    */
   public registerIdAlias(oldId: string, newId: string): void {
     this._idAliases.set(oldId, newId);
@@ -377,24 +323,18 @@ export class CustomComponentRegistry {
   }
 
   /**
-   * Whether `id` is a recorded pre-promotion (old) id — i.e. a browser master
-   * with this id was uploaded to the cloud. The startup browser preload uses this
-   * to ignore a stale local record left behind by a partially-failed promotion.
+   * Whether a browser master with this id was uploaded to the cloud, which
+   * makes a surviving local record the residue of a failed promotion.
    */
   public isPromotedId(id: string): boolean {
     return this._idAliases.has(id);
   }
 
   /**
-   * Re-points an orphaned **snapshot** at a freshly-restored master by stamping
-   * its full provenance — id, browser origin, and frozen `version`. Used when the
-   * snapshot had no reusable id of its own (an anonymous/no-provenance local
-   * custom), so the placed instances resolve to the new master. The `version` is
-   * required: `collectSnapshots` drops the whole `source` (⇒ empty server mapping
-   * id ⇒ re-orphaned on reload) unless both id and version are present, and a
-   * no-provenance orphan is ingested with `version` undefined. Bumps the revision
-   * so signal readers (the settings panel chip / actions) re-resolve. No-op for a
-   * master or unknown type id.
+   * Re-points an orphaned snapshot at a freshly-restored master by stamping id,
+   * origin and frozen `version`. The `version` is required: without both id and
+   * version `collectSnapshots` drops the whole `source`, and the instance is
+   * orphaned again on the next reload. No-op for a master or unknown type id.
    */
   public relinkSnapshotProvenance(
     snapshotTypeId: number,
@@ -410,16 +350,15 @@ export class CustomComponentRegistry {
   }
 
   /**
-   * Resolves an id through the promotion alias map to its current value — the
-   * server id for a promoted browser id, the input unchanged otherwise. Serialize
-   * paths write this instead of a snapshot's captured provenance id, so a circuit
-   * saved after a dependency's upload references the cloud entry (and stays
-   * resolvable on other devices, where the local alias table does not exist).
+   * The server id for a promoted browser id, the input unchanged otherwise.
+   * Serialize paths write this rather than a snapshot's captured provenance id,
+   * so a circuit saved after a dependency's upload references the cloud entry
+   * and stays resolvable on a device with no local alias table.
    */
   public currentIdForId(id: string): string {
     let current = id;
-    // Promotion is one-way (browser -> server), so the chain is a single hop
-    // today; walk defensively with a cycle guard anyway.
+    // Promotion is one-way, so the chain is a single hop; the cycle guard is
+    // defensive.
     const seen = new Set<string>([current]);
     let next = this._idAliases.get(current);
     while (next !== undefined && !seen.has(next)) {
@@ -431,9 +370,8 @@ export class CustomComponentRegistry {
   }
 
   /**
-   * Resolves any custom type id to its master entry: a master returns itself, a
-   * snapshot follows its provenance id (through the promotion alias). Returns
-   * undefined for a built-in, unknown, or unresolvable type id.
+   * A master resolves to itself, a snapshot follows its provenance id through
+   * the promotion alias. Undefined for a built-in or unresolvable type id.
    */
   public resolveMaster(
     typeId: number
@@ -449,12 +387,9 @@ export class CustomComponentRegistry {
   }
 
   /**
-   * Promotes a **browser** master to the server library after its content has
-   * been saved server-side: flips `source`/`id`/`version`, re-points the masters
-   * id index to the new id while keeping the old id as an alias (so snapshots that
-   * already captured it still resolve), invalidates the placement-snapshot cache,
-   * re-registers the config (so the palette reflects the new source) and bumps the
-   * revision. No-op for a snapshot or unknown type id.
+   * Promotes a browser master to the server library once its content is saved
+   * server-side. The old id stays behind as an alias, so snapshots that
+   * already captured it still resolve.
    */
   public promoteMaster(
     masterTypeId: number,
@@ -475,7 +410,7 @@ export class CustomComponentRegistry {
     def.source = 'server';
     def.id = newId;
     def.version = version;
-    // The component gained its cloud identity, hence its share link + visibility.
+    // Cloud identity brings a share link and a visibility with it.
     def.link = shareInfo?.link;
     def.isPublic = shareInfo?.isPublic;
     this._idToMasterTypeId.set(newId, masterTypeId);
@@ -486,15 +421,11 @@ export class CustomComponentRegistry {
   }
 
   /**
-   * Removes a **master** from the session: definition, masters id index,
-   * placement-snapshot cache, dependency edges, and its palette config
-   * (provider unregister — the USER category updates reactively). Snapshots are
-   * untouched, so placed instances keep rendering; they merely stop resolving
-   * to a master (the same state as any unloaded library entry). Promotion
-   * aliases pointing at the removed id are kept — they resolve to an id with no
-   * master, which reads as "unloaded" and heals when the master is re-created
-   * under that id (e.g. the cloud preload after a re-login). No-op for a
-   * snapshot or unknown type id.
+   * Removes a master from the session. Snapshots are untouched, so placed
+   * instances keep rendering and merely stop resolving to a master — the same
+   * state as any unloaded library entry. Promotion aliases are kept too, so a
+   * master re-created under that id (a cloud preload after re-login) heals
+   * them.
    */
   public removeMaster(masterTypeId: number): void {
     const def = this._definitions.get(masterTypeId);
@@ -519,11 +450,9 @@ export class CustomComponentRegistry {
   }
 
   /**
-   * Removes every **server** master except those whose persistent id is in
-   * `keepIds` — the library half of a logout: the signed-out user's cloud
-   * palette entries disappear, while masters that must stay live (an open
-   * editor's binding writes into them) are kept and deduped against the next
-   * login's preload by the usual known-id skip.
+   * The library half of a logout: cloud palette entries disappear, except the
+   * ones in `keepIds` that must stay live because an open editor's binding
+   * writes into them. The next login's preload dedupes them by known id.
    */
   public removeServerMasters(keepIds: ReadonlySet<string>): void {
     for (const [typeId, def] of [...this._definitions]) {
@@ -538,11 +467,7 @@ export class CustomComponentRegistry {
     return this._definitions.get(typeId)?.id;
   }
 
-  /**
-   * Records a master's direct library dependencies (the distinct master type
-   * ids its circuit places). Recomputed whenever the master's contents change;
-   * consumed by {@link dependentsOf} for cycle prevention.
-   */
+  /** Records a master's direct library dependencies, for cycle prevention. */
   public setDependencies(masterTypeId: number, deps: Iterable<number>): void {
     this._dependencies.set(masterTypeId, new Set(deps));
   }
@@ -553,9 +478,8 @@ export class CustomComponentRegistry {
   }
 
   /**
-   * The transitive closure of masters that depend on `masterTypeId` (does not
-   * include it). Placing any of these inside its editor would close a cycle, so
-   * the palette excludes them while editing it.
+   * Transitive closure of masters depending on `masterTypeId`, excluding it.
+   * Placing any of them inside its editor would close a cycle.
    */
   public dependentsOf(masterTypeId: number): ReadonlySet<number> {
     const result = new Set<number>();
@@ -573,10 +497,9 @@ export class CustomComponentRegistry {
   }
 
   /**
-   * Whether placing master `placedMasterTypeId` inside the editor for master
-   * `hostMasterTypeId` would close a dependency cycle — true if it *is* the host
-   * or (transitively) depends on it. The single definition of "this placement
-   * cycles", shared by the palette filter and the placement-time guard ([§H]).
+   * Whether placing `placedMasterTypeId` inside the editor for
+   * `hostMasterTypeId` closes a dependency cycle: true if it is the host or
+   * transitively depends on it. The one definition of "this placement cycles".
    */
   public wouldCycle(
     hostMasterTypeId: number,
@@ -588,10 +511,7 @@ export class CustomComponentRegistry {
     );
   }
 
-  /**
-   * Emits whenever a **master's** summary changes (palette/editor refresh).
-   * Snapshots are frozen and never emit; a placed instance does not subscribe.
-   */
+  /** Emits on a master's summary change; frozen snapshots never emit. */
   public definitionChange$(
     typeId: number
   ): Observable<CustomComponentDefinition> {
@@ -608,10 +528,9 @@ export class CustomComponentRegistry {
   }
 
   /**
-   * Indexes a fully-formed definition (its type id already allocated) and
-   * registers the matching config so the serializer/actions/palette resolve this
-   * custom type through the same provider path as built-ins. Masters surface in
-   * the USER palette; snapshots are HIDDEN (resolvable, not listed).
+   * Indexes a definition whose type id is already allocated and registers its
+   * config, so customs resolve through the same provider path as built-ins.
+   * Masters surface in the USER palette; snapshots are HIDDEN.
    */
   private _store(def: CustomComponentDefinition): void {
     this._definitions.set(def.typeId, def);

@@ -24,14 +24,12 @@ export interface SaveProjectDialogResult {
   isPublic: boolean;
 }
 
-/** Mirrors the backend `UpdateProject`/`CreateProject` `name` `@MaxLength(20)`. */
+/** Mirrors the contract's `documentNameSchema` limit. */
 const NAME_MAX_LENGTH = 20;
 
 /**
- * Prompts for the name + destination of a never-saved project draft on its
- * first save. Collects input only — it closes the dialog with a
- * {@link SaveProjectDialogResult} (or `undefined` when cancelled) and leaves the
- * actual persistence to `SaveCoordinatorService`.
+ * Prompts for the name and destination of a never-saved draft on its first
+ * save. Collects input only; `SaveCoordinatorService` does the persisting.
  */
 @Component({
   selector: 'app-save-project-dialog',
@@ -66,7 +64,7 @@ export class SaveProjectDialogComponent extends LgDialogContent<
   ];
 
   protected readonly name = signal<string>(this.dialogData?.name ?? '');
-  /** Cloud for a signed-in user; local is the only saveable option otherwise. */
+  /** Cloud when signed in; local is the only saveable option otherwise. */
   protected readonly destination = signal<'server' | 'local'>(
     this.userService.user() ? 'server' : 'local'
   );

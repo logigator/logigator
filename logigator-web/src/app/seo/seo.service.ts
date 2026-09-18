@@ -1,0 +1,407 @@
+import {
+  EnvironmentInjector,
+  inject,
+  Injectable,
+  runInInjectionContext
+} from '@angular/core';
+import { DOCUMENT } from '@angular/common';
+import { Meta, Title } from '@angular/platform-browser';
+import { AVAILABLE_LANGUAGES, LanguageId } from '@logigator/core';
+import {
+  languageAlternates,
+  languageFromPath,
+  pathInLanguage,
+  pathWithoutLanguage
+} from '../translation/language-url';
+import { TranslationService } from '../translation/translation.service';
+import { TranslationKey } from '../translation/translation-key.model';
+import { SiteLinks } from '../layout/site-links';
+import { SITE_ORIGIN } from './site-origin';
+import {
+  absoluteAssetUrl,
+  BreadcrumbListNode,
+  JsonLdContext,
+  JsonLdNode,
+  jsonLdIds,
+  serializeJsonLd,
+  siteNodes
+} from './structured-data';
+
+/**
+ * The picture every page unfurls as unless it has one of its own. A file in
+ * `public/`, so the URL is a contract: the editor's own Open Graph tags name it
+ * too.
+ */
+const SITE_CARD = '/assets/social-card.png';
+
+/** What every card this site names measures; the API composes to the same. */
+const CARD_SIZE = { width: 1200, height: 630 };
+
+/**
+ * Open Graph names a locale in its `language_TERRITORY` form, so the bare
+ * language ids the rest of the origin speaks need a table of their own.
+ */
+const OG_LOCALES: Record<LanguageId, string> = {
+  en: 'en_US',
+  de: 'de_DE',
+  fr: 'fr_FR',
+  es: 'es_ES'
+};
+
+/** What a route tells {@link SeoService} about the page it renders. */
+export interface PageMeta {
+  /** Key of the page's own title; the site name is prepended. */
+  titleKey: TranslationKey;
+  /** Key of the page's description; the site's own is the fallback. */
+  descriptionKey?: TranslationKey;
+  /**
+   * The page's title where it is not a translated string but the thing the page
+   * describes — a circuit's name, a member's username. Returning `null` falls
+   * back to `titleKey`, which is what a page whose read found nothing wants:
+   * the head then says so rather than naming a document that is not there.
+   *
+   * Run after the route's guards and inside an injection context, so it reads
+   * the same resolved content the page renders.
+   */
+  title?: () => string | null;
+  /** The same, for the description. */
+  description?: () => string | null;
+  /**
+   * The picture a share surface unfurls the page as, where the page has one of
+   * its own. Returning `null` falls back to the site card, which is what a page
+   * whose read found nothing wants — the same way `title` degrades.
+   *
+   * Run after the route's guards and inside an injection context, so it can
+   * name what the page actually resolved.
+   */
+  image?: () => string | null;
+  /**
+   * The page's own JSON-LD nodes, beside the site-level ones every page emits.
+   * A factory rather than a value: the nodes name absolute URLs and read
+   * translated strings, neither of which a route definition can know. It runs
+   * after the route's guards, so a page whose content a guard resolved can
+   * describe what it actually rendered.
+   */
+  jsonLd?: (context: JsonLdContext) => JsonLdNode[];
+  /**
+   * Keeps the page out of an index while leaving it crawlable, for a URL that
+   * is an action rather than a document: the two carrying a one-shot mail
+   * token. `robots.txt` disallows them as well; this is what answers a fetcher
+   * that reads the markup anyway.
+   */
+  noindex?: true;
+  /**
+   * Whether the page is a step in a trail. On by default, since every page but
+   * the home page is one level under it. Off for a page that must not name
+   * itself: a 404, and anything whose URL carries a one-shot token.
+   */
+  breadcrumb?: false;
+  /**
+   * The steps between the home page and this one, for a page deeper than one
+   * level. Unprefixed paths: the trail is emitted in the language the URL
+   * names, like everything else in the head.
+   */
+  ancestors?: readonly { titleKey: TranslationKey; path: string }[];
+  /**
+   * The same steps where one of them names stored content — a document its
+   * child page hangs under, whose name is not a key. Wins over `ancestors`
+   * when it returns steps, and runs in an injection context so it reads what a
+   * guard resolved. Paths are already prefixed, being built from `SiteLinks`.
+   */
+  trail?: () => readonly { name: string; path: string }[];
+  /**
+   * Unprefixed path of the page's raw-markdown twin, where it has one. It is
+   * announced in the head rather than left to be guessed, which is what makes
+   * a reader that prefers the source able to find it.
+   */
+  markdownPath?: string;
+  /**
+   * Unprefixed path of the page's feed, where it has one. Announced in the head
+   * the way the markdown twin is, which is how a reader offers to subscribe
+   * without the visitor having to find the link on the page.
+   */
+  feedPath?: string;
+}
+
+/**
+ * The per-page head: title, description, canonical, the `hreflang` alternates,
+ * the Open Graph locale, and the page's JSON-LD graph.
+ *
+ * Every page exists in four languages under a prefix of its own. Each one
+ * canonicalizes to itself and names all four as alternates, the pairing that
+ * marks the set as translations of one another rather than duplicates.
+ * `x-default` names the unprefixed URL, which negotiates a language of its own
+ * for a visitor no alternate matches. `og:url` follows the canonical, a scraper
+ * reading it as the object's identity and re-fetching it.
+ *
+ * The links, and the graph's script tag, are rewritten in place rather than
+ * appended: a client-side navigation reuses the same document, and appending
+ * would leave every page the visitor passed through in the head.
+ */
+@Injectable({ providedIn: 'root' })
+export class SeoService {
+  private readonly document = inject(DOCUMENT);
+  private readonly title = inject(Title);
+  private readonly meta = inject(Meta);
+  private readonly translation = inject(TranslationService);
+  private readonly links = inject(SiteLinks);
+  private readonly injector = inject(EnvironmentInjector);
+  private readonly origin = inject(SITE_ORIGIN).replace(/\/+$/, '');
+
+  /** Applies a page's head for the URL currently being rendered. */
+  public apply(page: PageMeta, pathname: string): void {
+    const siteName = this.translation.translate('site.name');
+    // A page describing stored content names it; every other page names a key.
+    const pageTitle =
+      this.fromPage(page.title) ?? this.translation.translate(page.titleKey);
+    const description =
+      this.fromPage(page.description) ??
+      this.translation.translate(page.descriptionKey ?? 'site.description');
+
+    this.title.setTitle(`${siteName} - ${pageTitle}`);
+    this.meta.updateTag({ name: 'description', content: description });
+    this.meta.updateTag({ property: 'og:title', content: pageTitle });
+    this.meta.updateTag({ property: 'og:description', content: description });
+    this.meta.updateTag({ name: 'twitter:title', content: pageTitle });
+    this.meta.updateTag({ name: 'twitter:description', content: description });
+
+    // The language the URL names, so the head is a function of the page it
+    // describes rather than of whatever the translation service holds.
+    const lang = languageFromPath(pathname) ?? this.translation.getActiveLang();
+    const canonicalPath = pathWithoutLanguage(pathname);
+    const canonicalUrl = `${this.origin}${pathInLanguage(lang, canonicalPath)}`;
+
+    // The page's own picture where it has one — a composed card for a published
+    // document — and the site's everywhere else. Set here rather than left in
+    // `index.html`: a card per page needs the render, and two owners of one tag
+    // is how a page ends up unfurling as the wrong picture.
+    const image = absoluteAssetUrl(
+      this.origin,
+      this.fromPage(page.image) ?? SITE_CARD
+    );
+    this.meta.updateTag({ property: 'og:image', content: image });
+    this.meta.updateTag({ name: 'twitter:image', content: image });
+    // Beside the picture rather than in `index.html`, so one code path owns the
+    // card and its shape: the two are 1200×630 today by coincidence, and a
+    // profile or docs card of another size would otherwise be described wrong.
+    this.meta.updateTag({
+      property: 'og:image:width',
+      content: String(CARD_SIZE.width)
+    });
+    this.meta.updateTag({
+      property: 'og:image:height',
+      content: String(CARD_SIZE.height)
+    });
+
+    // Crawlable, but not a search result: the page is an action, and its URL
+    // carries the token that performs it.
+    if (page.noindex) {
+      this.meta.updateTag({ name: 'robots', content: 'noindex, follow' });
+    } else {
+      this.meta.removeTag('name="robots"');
+    }
+
+    this.meta.updateTag({ property: 'og:url', content: canonicalUrl });
+    this.setLink('canonical', undefined, canonicalUrl);
+    this.meta.updateTag({ property: 'og:locale', content: OG_LOCALES[lang] });
+    this.setLocaleAlternates(lang);
+
+    // The same set the sitemap annotates every entry with: those two are what
+    // a crawler cross-checks, so they are one list rather than two.
+    for (const alternate of languageAlternates(canonicalPath)) {
+      this.setLink(
+        'alternate',
+        alternate.hreflang,
+        `${this.origin}${alternate.path}`
+      );
+    }
+    // The page's other representations, each in the language this URL names.
+    const inThisLanguage = (path?: string): string | null =>
+      path ? `${this.origin}${pathInLanguage(lang, path)}` : null;
+    this.setAlternate('text/markdown', inThisLanguage(page.markdownPath));
+    this.setAlternate('application/atom+xml', inThisLanguage(page.feedPath));
+
+    this.setStructuredData(
+      page,
+      {
+        origin: this.origin,
+        lang,
+        url: canonicalUrl,
+        siteId: jsonLdIds(this.origin).site,
+        absolute: (url) => absoluteAssetUrl(this.origin, url),
+        translate: (key, ...params) =>
+          this.translation.translate(key, ...params)
+      },
+      canonicalPath,
+      pageTitle
+    );
+  }
+
+  /**
+   * The page's `@graph`: the site and its publisher, the trail the page sits on,
+   * and whatever the page itself declares.
+   *
+   * One script tag, replaced whole. A client-side navigation reuses the
+   * document, so a second graph appended beside the first would describe two
+   * pages at once and leave a consumer to guess which one it is reading.
+   */
+  private setStructuredData(
+    page: PageMeta,
+    context: JsonLdContext,
+    canonicalPath: string,
+    pageTitle: string
+  ): void {
+    const graph: JsonLdNode[] = siteNodes(context, this.links.repository);
+    const trail = this.breadcrumb(page, context, canonicalPath, pageTitle);
+    if (trail) {
+      graph.push(trail);
+    }
+    // In an injection context, so a factory can read the listing or the
+    // document its own page's guard resolved. `updateTitle` is a router hook
+    // rather than an injection context, so the injector has to be carried here.
+    graph.push(
+      ...(page.jsonLd
+        ? runInInjectionContext(this.injector, () => page.jsonLd!(context))
+        : [])
+    );
+
+    this.setScript('web-json-ld', serializeJsonLd(graph));
+  }
+
+  /**
+   * A value the page derives from what it rendered, or `null` where it declares
+   * none. Same injection context the graph's factory gets, and for the same
+   * reason.
+   */
+  private fromPage(read: (() => string | null) | undefined): string | null {
+    if (!read) return null;
+    const value = runInInjectionContext(this.injector, read);
+    return value?.trim() ? value : null;
+  }
+
+  /**
+   * Home, whatever the page declares between, and the page itself — or nothing
+   * for the home page, a trail of one item saying only that the page is where
+   * it is.
+   */
+  private breadcrumb(
+    page: PageMeta,
+    context: JsonLdContext,
+    canonicalPath: string,
+    pageTitle: string
+  ): BreadcrumbListNode | null {
+    if (page.breadcrumb === false || canonicalPath === '/') {
+      return null;
+    }
+    const resolved = page.trail
+      ? runInInjectionContext(this.injector, page.trail)
+      : [];
+    const between = resolved.length
+      ? resolved.map((step) => ({
+          name: step.name,
+          item: `${context.origin}${step.path}`
+        }))
+      : (page.ancestors ?? []).map((ancestor) => ({
+          name: context.translate(ancestor.titleKey),
+          item: `${context.origin}${pathInLanguage(context.lang, ancestor.path)}`
+        }));
+
+    const steps = [
+      {
+        name: context.translate('site.name'),
+        item: `${context.origin}/${context.lang}`
+      },
+      ...between,
+      { name: pageTitle, item: context.url }
+    ];
+    return {
+      '@type': 'BreadcrumbList',
+      itemListElement: steps.map((step, index) => ({
+        '@type': 'ListItem',
+        position: index + 1,
+        name: step.name,
+        item: step.item
+      }))
+    };
+  }
+
+  /**
+   * Another representation of the page — its markdown twin, its feed — or none.
+   * Removed rather than left pointing at the last page that had one: a
+   * client-side navigation reuses the document.
+   *
+   * Addressed by its media type, which is what keeps the two apart: the
+   * language alternates are matched by `hreflang` instead.
+   */
+  private setAlternate(type: string, href: string | null): void {
+    const selector = `link[rel="alternate"][type="${type}"]`;
+    const existing =
+      this.document.head.querySelector<HTMLLinkElement>(selector);
+    if (href === null) {
+      existing?.remove();
+      return;
+    }
+    const link = existing ?? this.document.createElement('link');
+    link.rel = 'alternate';
+    link.type = type;
+    link.href = href;
+    if (!existing) {
+      this.document.head.appendChild(link);
+    }
+  }
+
+  /**
+   * A `<script>` in the head, addressed by id so a navigation replaces the one
+   * it wrote. `textContent`, not `innerHTML`: script content is raw text, and
+   * the JSON is already escaped so that it cannot close the tag.
+   */
+  private setScript(id: string, json: string): void {
+    let script = this.document.head.querySelector<HTMLScriptElement>(
+      `script#${id}`
+    );
+    if (!script) {
+      script = this.document.createElement('script');
+      script.id = id;
+      script.type = 'application/ld+json';
+      this.document.head.appendChild(script);
+    }
+    script.textContent = json;
+  }
+
+  /**
+   * The other locales the page is available in. Removed and re-added rather
+   * than rewritten in place: which of the four they are moves with the active
+   * language, so there is no stable tag per position to update.
+   */
+  private setLocaleAlternates(active: LanguageId): void {
+    for (const tag of this.document.head.querySelectorAll(
+      'meta[property="og:locale:alternate"]'
+    )) {
+      tag.remove();
+    }
+    for (const { id } of AVAILABLE_LANGUAGES) {
+      if (id !== active) {
+        this.meta.addTag({
+          property: 'og:locale:alternate',
+          content: OG_LOCALES[id]
+        });
+      }
+    }
+  }
+
+  private setLink(rel: string, hreflang: string | undefined, href: string) {
+    const selector = hreflang
+      ? `link[rel="${rel}"][hreflang="${hreflang}"]`
+      : `link[rel="${rel}"]`;
+    let link = this.document.head.querySelector<HTMLLinkElement>(selector);
+    if (!link) {
+      link = this.document.createElement('link');
+      link.rel = rel;
+      if (hreflang) {
+        link.hreflang = hreflang;
+      }
+      this.document.head.appendChild(link);
+    }
+    link.href = href;
+  }
+}

@@ -8,7 +8,7 @@ import { ComponentConfig } from './component-config.model';
 import { andComponentConfig } from './component-types/and/and.config';
 import { romComponentConfig } from './component-types/rom/rom.config';
 import { PX } from '../utils/grid';
-import { Direction } from '../utils/direction';
+import { Direction } from '@logigator/core';
 import {
   makeAnd,
   makeButton,
@@ -81,11 +81,13 @@ describe('Component.gridBounds', () => {
   });
 
   it('has no phantom 0.5-unit left padding when numInputs is zero', () => {
-    const comp = makeAnd(2);
-    comp.numInputs = 0;
+    // A switch is output-only: arity follows the option values, and no
+    // built-in with a numInputs option allows zero.
+    const comp = makeSwitch();
+    expect(comp.numInputs).toBe(0);
 
-    // Without input stubs the left edge comes from the body stroke (~-sqrt(2)/gridSize),
-    // which is negligible (<0.1) and well above the -0.5 that a phantom stub would add.
+    // Without input stubs the left edge comes from the body stroke
+    // (~-sqrt(2)/gridSize), well above the -0.5 a phantom stub would add.
     expect(comp.gridBounds.x).toBeGreaterThan(-0.5);
 
     comp.destroy({ children: true });
@@ -109,9 +111,8 @@ describe('Component.bodyGridBounds', () => {
 
   // AndComponent: bodyGridWidth=2, bodyGridHeight=max(inputs,outputs)
 
-  // Construct with the direction (the constructor does not re-anchor) so these
-  // assert the bodyGridBounds geometry for a known position. The interactive
-  // re-anchoring of the `direction` setter is covered separately below.
+  // Construct with the direction, since the constructor does not re-anchor;
+  // the setter's re-anchoring is covered separately below.
 
   it('Right: origin at position, size = body only (no stubs)', () => {
     const comp = makeAnd(2, Direction.E, 3, 5); // height=2
@@ -268,10 +269,9 @@ describe('Component port-stub pixel side', () => {
     configureTestBed();
   });
 
-  // The stub's 1-px thickness hangs on one side of the port centre-line; the
-  // W/N rotations must mirror it (scale.y < 0) so it rasterizes onto the same
-  // screen-side pixel as a connecting wire (below for horizontal, left for
-  // vertical).
+  // The stub's 1-px thickness hangs on one side of the port centre-line, so
+  // W/N must mirror it (scale.y < 0) to rasterize onto the same screen-side
+  // pixel as a connecting wire.
   it.each([
     [Direction.E, 1],
     [Direction.S, 1],
@@ -334,9 +334,8 @@ describe('Component port-label anchoring', () => {
     return found!;
   }
 
-  // Labels anchor to the body edge they sit on (edge-facing texture point,
-  // fixed inset), so every label on an edge keeps the same depth regardless
-  // of its text width — in every direction.
+  // Labels anchor to the body edge they sit on, so every label keeps the same
+  // depth whatever its text width, in every direction.
   it.each([
     [Direction.E, { x: 0, y: 0.5 }, { x: 1, y: 0.5 }],
     [Direction.S, { x: 0.5, y: 0 }, { x: 0.5, y: 1 }],
@@ -441,7 +440,7 @@ describe('Component port-count re-anchoring (legacy-editor behavior)', () => {
       const anchorX = comp.bodyGridBounds.x;
       const anchorY = comp.bodyGridBounds.y;
 
-      comp.numInputs = 5;
+      comp.options.numInputs.value = 5;
 
       expect(comp.bodyGridBounds.x).toBeCloseTo(anchorX, 5);
       expect(comp.bodyGridBounds.y).toBeCloseTo(anchorY, 5);
@@ -454,7 +453,7 @@ describe('Component port-count re-anchoring (legacy-editor behavior)', () => {
     // E (horizontal): added inputs grow the body downward, width constant.
     const e = makeAnd(2, Direction.E, 0, 0);
     const eBefore = e.bodyGridBounds;
-    e.numInputs = 5;
+    e.options.numInputs.value = 5;
     expect(e.bodyGridBounds.width).toBeCloseTo(eBefore.width, 5);
     expect(e.bodyGridBounds.height).toBeGreaterThan(eBefore.height);
     e.destroy({ children: true });
@@ -462,7 +461,7 @@ describe('Component port-count re-anchoring (legacy-editor behavior)', () => {
     // S (vertical): added inputs grow the body rightward, height constant.
     const s = makeAnd(2, Direction.S, 0, 0);
     const sBefore = s.bodyGridBounds;
-    s.numInputs = 5;
+    s.options.numInputs.value = 5;
     expect(s.bodyGridBounds.height).toBeCloseTo(sBefore.height, 5);
     expect(s.bodyGridBounds.width).toBeGreaterThan(sBefore.width);
     s.destroy({ children: true });
@@ -622,13 +621,12 @@ describe('Component port negation', () => {
     comp.setPortNegated('in', 3, true);
     expect(comp.isPortNegated('in', 3)).toBe(true);
 
-    // Shrinking below the negated index keeps it: the setter never mutates the
-    // negation set, so a shrink-then-grow round-trip preserves negation and the
-    // count change stays undoable via ChangeOptionAction.
-    comp.numInputs = 2;
+    // Shrinking below the negated index keeps it: the setter never mutates
+    // the negation set, so a shrink-then-grow round-trip preserves negation.
+    comp.options.numInputs.value = 2;
     expect(comp.isPortNegated('in', 3)).toBe(true);
 
-    comp.numInputs = 5;
+    comp.options.numInputs.value = 5;
     expect(comp.isPortNegated('in', 3)).toBe(true);
 
     comp.destroy({ children: true });
@@ -703,10 +701,9 @@ describe('Component negation bubble rendering', () => {
     comp.setPortNegated('in', 0, true);
     comp.setPortNegated('out', 0, true);
 
-    // Stub container origins are x=-0.5 (inputs) / x=bodyGridWidth (outputs), so
-    // the body edge is at container-local x=0.5 (inputs) / x=0 (outputs). The
-    // bubble is pinned there by the tangent extreme of its unit circle (+0.5 for
-    // inputs, -0.5 for outputs), from which it grows outward along the stub.
+    // Stub container origins are x=-0.5 (inputs) / x=bodyGridWidth (outputs),
+    // so the body edge is at container-local x=0.5 / x=0. The bubble is pinned
+    // there by the tangent extreme of its unit circle.
     const inputBubble = comp.portBubbles.get(0)!;
     expect(inputBubble.position.x).toBeCloseTo(0.5, 5);
     expect(inputBubble.pivot.x).toBeCloseTo(0.5, 5);
@@ -733,9 +730,8 @@ describe('Component negation bubble rendering', () => {
   });
 
   it('keeps the bubble anchor at the body edge (half a unit from the tip) across all rotations', () => {
-    // The anchor sits on the body edge, i.e. half a grid unit from the
-    // connection-point tip. Rotation is rigid, so that offset is invariant —
-    // this pins the negationBubbleAnchor rotation math the hover ghost relies on.
+    // The anchor sits on the body edge, half a grid unit from the
+    // connection-point tip; rotation is rigid, so that offset is invariant.
     for (const dir of [Direction.E, Direction.S, Direction.W, Direction.N]) {
       const comp = makeAnd(2, dir, 5, 5);
       const anchor = comp.negationBubbleAnchor('in', 0);
@@ -765,12 +761,10 @@ describe('Component negation bubble rendering', () => {
   });
 
   it('bakes the border to a screen-constant BORDER·gridSize (1px) across the whole zoom curve', () => {
-    // The white dot rides the uniform transform (scaleForScale), which would
-    // drag the border with it — so the baked width divides it back out.
-    // Rendered border px = baked width × world scale, world scale = transform ×
-    // gridSize × zoom. Spans the curve's floored, scale-with-board, and capped
-    // regimes; the border reads the same in all three because the transform
-    // cancels identically in the dot size and the stroke.
+    // The white dot rides the uniform transform, which would drag the border
+    // with it, so the baked width divides it back out. Rendered border px =
+    // baked width × world scale (transform × gridSize × zoom). Spans the
+    // curve's floored, scale-with-board and capped regimes.
     for (const scale of [0.2, 0.5, 1, 3]) {
       const width = bubbleContext(scale).strokeStyle.width;
       const renderedPx =
@@ -812,7 +806,7 @@ describe('Component negation serialization', () => {
   it('drops out-of-range indices left by a shrink (normalize on serialize)', () => {
     const comp = makeAnd(5);
     comp.setPortNegated('in', 4, true);
-    comp.numInputs = 2; // index 4 stays in the set but is now out of range
+    comp.options.numInputs.value = 2; // index 4 stays in the set but is now out of range
 
     const s = Component.serialize(comp);
 

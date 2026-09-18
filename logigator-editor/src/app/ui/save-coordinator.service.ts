@@ -16,13 +16,10 @@ import {
 } from './dialogs/save-project-dialog/save-project-dialog.component';
 
 /**
- * Single entry point for the "Save" action shared by the title bar, tool bar
- * and Ctrl+S shortcut. A never-saved project draft (`type:'project'`,
- * `source:'browser'`, no id — i.e. the blank board created on a fresh page load
- * or via "New Project") is prompted once for a name + destination via
- * {@link SaveProjectDialogComponent} before its first write; everything already
- * persisted (server projects, browser projects with an id, component editors)
- * goes straight to {@link PersistenceService.saveProject}.
+ * Single entry point for the "Save" action. A never-saved draft — a browser
+ * project with no id, i.e. a blank board — is prompted once for a name and
+ * destination before its first write; everything already persisted goes
+ * straight to {@link PersistenceService.saveProject}.
  */
 @Injectable({ providedIn: 'root' })
 export class SaveCoordinatorService {
@@ -45,12 +42,10 @@ export class SaveCoordinatorService {
 
     try {
       if (!isFreshDraft) {
-        // A server document (project or component editor) that has gained a
-        // *promotable* local custom component can't be saved as-is — a cloud
-        // document may only contain cloud components. Route it through the upload
-        // flow to promote those first; cancelling aborts the save. An orphan
-        // (masterTypeId null) can't be promoted and rides along as an embedded
-        // copy, so it does not force the dialog — the save proceeds directly.
+        // A cloud document may only contain cloud components, so a server
+        // document that gained a *promotable* local one routes through the
+        // upload flow first; cancelling aborts the save. An orphan cannot be
+        // promoted and rides along embedded, so it does not force the dialog.
         if (
           metadata.source === 'server' &&
           this.promotion
@@ -71,10 +66,9 @@ export class SaveCoordinatorService {
       if (!result) return; // dialog cancelled
 
       if (result.destination === 'server') {
-        // A first server save runs through the upload flow so any local custom
-        // components the draft embeds are offered for cloud upload + linking,
-        // exactly like promoting an already-saved project. The coordinator owns
-        // its own dialog, error and success toasts.
+        // Through the upload flow so the draft's embedded local components are
+        // promoted and linked, exactly like promoting a saved project. The
+        // coordinator owns its own dialog and toasts.
         await this.uploadCoordinator.requestUpload({
           kind: 'draft-to-server',
           project,
@@ -85,8 +79,8 @@ export class SaveCoordinatorService {
         await this.persistence.saveDraftAsLocal(project, result.name);
       }
     } catch (err) {
-      // Signed-out / foreign-account rejections already toasted their specific
-      // reason at the guard; a generic failure on top would only obscure it.
+      // A signed-out or foreign-account rejection already toasted its specific
+      // reason at the guard; a generic failure on top would obscure it.
       if (isHandledSaveError(err)) return;
       this.toast.error(
         this.translation.translate('persistence.saveFailedGeneric'),

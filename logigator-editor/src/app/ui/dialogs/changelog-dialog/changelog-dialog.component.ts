@@ -5,9 +5,9 @@ import { ChangelogService } from '../../../changelog/changelog.service';
 import { TranslateDirective } from '../../../translation/translate.directive';
 
 /**
- * "What's new" dialog reached from the Help menu (and opened automatically on
- * the first load of a new release). Renders the changelog markdown and records
- * the newest version as seen, so the auto-open no longer fires for it.
+ * "What's new" dialog, also opened automatically on the first load of a new
+ * release. Renders the changelog markdown and records the newest version as
+ * seen, so the auto-open no longer fires for it.
  */
 @Component({
   selector: 'app-changelog-dialog',
@@ -22,8 +22,8 @@ export class ChangelogDialogComponent extends LgDialogContent {
 
   constructor() {
     super();
-    // Opening the dialog counts as seeing the release, so the auto-open no
-    // longer fires for it (this also covers a manual open from the Help menu).
+    // Opening the dialog at all — including manually — counts as seeing the
+    // release, so the auto-open no longer fires for it.
     this.changelog.acknowledge();
     this.changelog
       .load()

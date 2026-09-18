@@ -1,0 +1,506 @@
+import type { TranslationSchema } from '../app/translation/translation-schema.model';
+
+const es: TranslationSchema = {
+  common: {
+    close: 'Cerrar',
+    back: 'Volver',
+    dismiss: 'Descartar',
+    firstPage: 'Primera página',
+    previousPage: 'Página anterior',
+    nextPage: 'Página siguiente',
+    lastPage: 'Última página'
+  },
+  site: {
+    name: 'Logigator',
+    description:
+      'Construye y simula tus propios circuitos lógicos con Logigator, una herramienta en línea sencilla y potente.'
+  },
+  header: {
+    home: 'Inicio de Logigator',
+    docs: 'Documentación',
+    examples: 'Ejemplos',
+    community: 'Comunidad',
+    myProjects: 'Mis Proyectos',
+    myComponents: 'Mis Componentes',
+    login: 'Iniciar Sesión',
+    register: 'Registrarse',
+    account: 'Cuenta',
+    logout: 'Cerrar Sesión',
+    openNavigation: 'Abrir navegación',
+    navigation: 'Navegación',
+    userMenu: 'Menú de cuenta',
+    notSignedIn: 'Sesión no iniciada',
+    theme: 'Tema',
+    themeLight: 'Claro',
+    themeDark: 'Oscuro',
+    language: 'Idioma',
+    skipToContent: 'Ir al contenido'
+  },
+  footer: {
+    changelog: 'Registro de cambios',
+    privacyPolicy: 'Política de Privacidad',
+    imprint: 'Aviso Legal',
+    contributing: 'Contribuir'
+  },
+  documents: {
+    stars: 'estrellas'
+  },
+  errors: {
+    retry: 'Reintentar'
+  },
+  forms: {
+    errors: {
+      required: 'Este campo es obligatorio.',
+      invalid: 'Este valor no se aceptó.',
+      emailInvalid: 'Introduce una dirección de correo válida.',
+      usernameTooShort: 'Usa al menos 2 caracteres.',
+      usernameTooLong: 'Usa como máximo 20 caracteres.',
+      usernamePattern: 'Solo se permiten letras, dígitos, «_» y «-».',
+      passwordTooShort: 'Usa al menos 8 caracteres.',
+      passwordTooLong: 'Usa como máximo 200 caracteres.',
+      passwordComplexity: 'Usa al menos una letra y un dígito.',
+      passwordMismatch: 'Las dos contraseñas no coinciden.',
+      nameRequired: 'Escribe un nombre.',
+      nameTooLong: 'Usa como máximo 20 caracteres.',
+      descriptionTooLong: 'Usa como máximo 2048 caracteres.',
+      rateLimited:
+        'Demasiados intentos. Espera un momento e inténtalo de nuevo.',
+      serviceUnavailable:
+        'El servicio no está disponible temporalmente. Inténtalo de nuevo en un momento.',
+      validationFailed: 'Revisa lo que has introducido e inténtalo de nuevo.',
+      network:
+        'Sin conexión con el servidor. Comprueba tu red e inténtalo de nuevo.',
+      unknown: 'Algo ha salido mal. Inténtalo de nuevo.'
+    }
+  },
+  auth: {
+    email: 'Correo electrónico',
+    password: 'Contraseña',
+    passwordRepeat: 'Repetir contraseña',
+    passwordRules: 'Al menos 8 caracteres, con una letra y un dígito.',
+    username: 'Nombre de usuario',
+    or: 'o',
+    continueWithGoogle: 'Continuar con Google',
+    googleErrors: {
+      failed:
+        'El inicio de sesión con Google no ha funcionado. Inténtalo de nuevo.',
+      stateInvalid:
+        'Ese intento de inicio de sesión ha caducado. Empieza de nuevo.',
+      emailTaken:
+        'Ya hay una cuenta con esa dirección de correo. Inicia sesión con tu contraseña y luego vincula Google desde tu cuenta.',
+      alreadyLinked:
+        'Esa cuenta de Google pertenece a otra cuenta de Logigator.'
+    }
+  },
+  pages: {
+    login: {
+      title: 'Iniciar sesión',
+      heading: 'Bienvenido de nuevo',
+      submit: 'Iniciar sesión',
+      metaDescription:
+        'Inicia sesión en Logigator para abrir tus circuitos guardados, tu biblioteca de componentes y los proyectos que has marcado con estrella.',
+      forgotPassword: '¿Has olvidado tu contraseña?',
+      noAccount: '¿Aún no tienes cuenta?',
+      registerLink: 'Registrarse',
+      invalidCredentials: 'El correo o la contraseña no son correctos.',
+      notVerified: 'Confirma tu dirección de correo antes de iniciar sesión.',
+      resend: 'Volver a enviar el correo de confirmación',
+      resent: 'Correo de confirmación enviado. Revisa tu bandeja de entrada.'
+    },
+    register: {
+      title: 'Registrarse',
+      heading: 'Crea tu cuenta',
+      submit: 'Registrarse',
+      metaDescription:
+        'Crea una cuenta gratuita de Logigator para guardar tus circuitos en la nube, crear una biblioteca de componentes y compartir lo que haces.',
+      emailTaken: 'Ya hay una cuenta con esa dirección de correo.',
+      mailFailed:
+        'Tu cuenta se ha creado, pero no se pudo enviar el correo de confirmación. Inicia sesión para pedirlo de nuevo.',
+      privacyNoticeBefore: 'Al registrarte confirmas que has leído nuestra ',
+      privacyNoticeLink: 'política de privacidad',
+      privacyNoticeAfter: ' y que la aceptas.',
+      haveAccount: '¿Ya tienes una cuenta?',
+      loginLink: 'Iniciar sesión',
+      confirmHeading: 'Confirma tu dirección de correo',
+      confirmLead:
+        'Hemos enviado un enlace de confirmación a {{email}}. Ábrelo para terminar el registro.',
+      toLogin: 'Ir a iniciar sesión'
+    },
+    resetPassword: {
+      title: 'Restablecer contraseña',
+      requestHeading: 'Restablece tu contraseña',
+      requestLead:
+        'Introduce la dirección con la que te registraste y te enviaremos un enlace.',
+      requestSubmit: 'Enviar enlace',
+      requestSent:
+        'Si esa dirección tiene una cuenta, el enlace está en camino. Es válido durante una hora.',
+      backToLogin: 'Volver a iniciar sesión',
+      applyHeading: 'Elige una contraseña nueva',
+      applySubmit: 'Guardar contraseña',
+      applied: 'Tu contraseña se ha cambiado. Ya puedes iniciar sesión.',
+      tokenInvalid: 'Este enlace ya no es válido. Pide uno nuevo.',
+      requestNew: 'Pedir un enlace nuevo'
+    },
+    verifyEmail: {
+      title: 'Confirmación de correo',
+      pending: 'Confirmando tu dirección de correo',
+      pendingLead: 'Un momento, por favor.',
+      success: 'Tu dirección de correo está confirmada',
+      successLead: 'Ya puedes iniciar sesión.',
+      error: 'Este enlace no ha funcionado',
+      errorLead:
+        'Los enlaces de confirmación caducan al cabo de una hora. Puedes pedir uno nuevo desde la página de inicio de sesión.',
+      toLogin: 'Ir a iniciar sesión'
+    },
+    home: {
+      title: 'Construye y Simula Circuitos Lógicos',
+      hero: {
+        headline:
+          'Construye, simula y gestiona circuitos lógicos complejos de forma gratuita.',
+        lede: 'Compuertas, cables y subcircuitos reutilizables, en el navegador. La simulación corre sobre un motor WebAssembly y la placa se dibuja en la GPU, así que un circuito sigue funcionando a medida que crece.',
+        cta: 'Comenzar a Construir Ahora',
+        ctaSecondary: 'Ver ejemplos'
+      },
+      features: {
+        title: 'Características',
+        description:
+          'Construye y simula tus propios circuitos con Logigator, una herramienta en línea simple pero poderosa.',
+        performance: {
+          title: 'Rendimiento',
+          body: 'El editor de Logigator puede manejar incluso los proyectos más grandes con facilidad gracias a WebAssembly y WebGL.'
+        },
+        subcircuits: {
+          title: 'Subcircuitos',
+          body: 'Crea subcircuitos y úsalos en todos tus proyectos para ayudar a mantenerlos organizados.'
+        },
+        share: {
+          title: 'Compartir Proyectos',
+          body: 'Comparte tus circuitos con otros usuarios para que puedan aprender de tu trabajo.'
+        },
+        images: {
+          title: 'Exportar Imágenes',
+          body: 'Con Logigator puedes exportar imágenes de alta resolución en tres formatos diferentes (SVG, PNG, JPG) para usarlas en cualquier lugar.'
+        }
+      },
+      examples: {
+        title: 'Circuitos de Ejemplo',
+        description:
+          'Aprende a diseñar circuitos simples y más complejos a partir de nuestros ejemplos.',
+        more: 'Ver Más Ejemplos',
+        emptyHeading: 'Todavía no hay ejemplos',
+        emptyBody: 'Aún no se ha publicado nada para esta instalación.',
+        failed: 'No se pudieron cargar los ejemplos'
+      },
+      video: {
+        title: '¿Qué son los circuitos lógicos?',
+        description:
+          'Si no sabes qué son las compuertas lógicas o los circuitos lógicos, hemos animado una breve explicación para que la veas.',
+        play: 'Reproducir el vídeo «{{title}}» en YouTube'
+      },
+      stats: {
+        projects: 'circuitos públicos',
+        components: 'componentes públicos',
+        examples: 'ejemplos explicados'
+      },
+      community: {
+        projectsTitle: 'Proyectos de la Comunidad',
+        projectsDescription:
+          'Explora otros proyectos creados por nuestra comunidad. Tu proyecto podría ser el próximo en esta lista.',
+        moreProjects: 'Ver Más Proyectos',
+        projectsEmptyHeading: 'Todavía no hay proyectos públicos',
+        projectsEmptyBody:
+          'Hasta ahora no se ha compartido nada con la comunidad.',
+        projectsFailed: 'No se pudieron cargar los proyectos',
+        componentsTitle: 'Componentes de la Comunidad',
+        componentsDescription:
+          'Explora otros componentes creados por nuestra comunidad. Pueden ser útiles para ti.',
+        moreComponents: 'Ver Más Componentes',
+        componentsEmptyHeading: 'Todavía no hay componentes públicos',
+        componentsEmptyBody:
+          'Hasta ahora no se ha compartido nada con la comunidad.',
+        componentsFailed: 'No se pudieron cargar los componentes'
+      }
+    },
+    examples: {
+      title: 'Circuitos de Ejemplo',
+      lede: 'Aprende a diseñar circuitos simples y más complejos a partir de nuestros ejemplos. Todos se abren en el editor, listos para simular.',
+      open: 'Abrir en el editor',
+      openNamed: 'Abrir «{{name}}» en el editor',
+      emptyHeading: 'Todavía no hay ejemplos',
+      emptyBody: 'Aún no se ha publicado nada para esta instalación.',
+      failed: 'No se pudieron cargar los ejemplos'
+    },
+    community: {
+      nav: {
+        projects: 'Proyectos',
+        components: 'Componentes'
+      },
+      browse: {
+        projectsTitle: 'Proyectos de la comunidad',
+        projectsLede:
+          'Todos los circuitos que la comunidad ha publicado. Abre uno en el editor o guarda una copia y sigue construyendo.',
+        componentsTitle: 'Componentes de la comunidad',
+        componentsLede:
+          'Bloques reutilizables publicados por la comunidad. Coloca uno dentro de tu propio circuito.',
+        orderLabel: 'Ordenar por',
+        orderTrending: 'Tendencias',
+        orderStars: 'Más estrellas',
+        orderLatest: 'Más recientes',
+        searchLabel: 'Buscar por nombre',
+        searchPlaceholder: 'Buscar..',
+        count: '{{count}} resultados',
+        clearSearch: 'Borrar la búsqueda',
+        noMatchHeading: 'No se encontró nada',
+        noMatchBody: 'Ningún circuito publicado se llama «{{search}}».',
+        emptyHeading: 'Todavía no hay nada',
+        emptyBody: 'Hasta ahora no se ha compartido nada con la comunidad.',
+        errorHeading: 'No se pudo cargar la lista'
+      },
+      document: {
+        open: 'Abrir en el editor',
+        clone: 'Guardar una copia',
+        star: 'Dar estrella',
+        unstar: 'Con estrella',
+        symbol: 'símbolo',
+        inputs: 'ent',
+        outputs: 'sal',
+        components: 'componentes',
+        wires: 'cables',
+        edited: 'editado',
+        about: 'Sobre este circuito',
+        noDescription: 'No se proporcionó ninguna descripción.',
+        forkedFrom: 'Derivado de',
+        forkedFromBy: 'de {{author}}',
+        errorHeading: 'No se pudo cargar el circuito'
+      },
+      stargazers: {
+        title: 'Estrellas',
+        count: '{{count}} estrellas',
+        seeAll: 'Ver a todos los que dieron una estrella',
+        emptyHeading: 'Todavía no hay estrellas',
+        emptyBody: 'Nadie ha dado una estrella a este circuito.',
+        errorHeading: 'No se pudieron cargar las estrellas'
+      },
+      profile: {
+        title: 'Miembro',
+        tabTitle: '{{username}} – {{section}}',
+        metaDescription:
+          'Los circuitos y componentes que {{username}} ha publicado en Logigator.',
+        sections: 'Las listas de este miembro',
+        memberSince: 'Miembro desde',
+        projects: 'Proyectos',
+        components: 'Componentes',
+        starredProjects: 'Proyectos con estrella',
+        starredComponents: 'Componentes con estrella',
+        emptyProjects: 'Sin proyectos públicos',
+        emptyComponents: 'Sin componentes públicos',
+        emptyStarredProjects: 'Sin proyectos con estrella',
+        emptyStarredComponents: 'Sin componentes con estrella',
+        emptyBody: 'No hay nada que mostrar en esta categoría.',
+        errorHeading: 'No se pudo cargar el perfil',
+        listErrorHeading: 'No se pudo cargar la lista'
+      }
+    },
+    my: {
+      nav: {
+        label: 'Mi trabajo',
+        projects: 'Proyectos',
+        components: 'Componentes'
+      },
+      projects: {
+        title: 'Mis proyectos',
+        lede: 'Todos los circuitos que has guardado en la nube. Abre uno para seguir construyendo, o publícalo en la comunidad.',
+        create: 'Nuevo proyecto',
+        count: '{{count}} proyectos',
+        emptyHeading: 'Todavía no hay proyectos',
+        emptyBody:
+          'Los circuitos que guardes en la nube desde el editor aparecen aquí.'
+      },
+      components: {
+        title: 'Mis componentes',
+        lede: 'Los bloques reutilizables de tu biblioteca. Colócalos en cualquier circuito que construyas.',
+        count: '{{count}} componentes',
+        emptyHeading: 'Todavía no hay componentes',
+        emptyBody:
+          'Un componente se crea en el editor, a partir de un circuito que hayas construido.'
+      },
+      list: {
+        searchLabel: 'Buscar por nombre',
+        searchPlaceholder: 'Buscar..',
+        clearSearch: 'Borrar la búsqueda',
+        noMatchHeading: 'No se encontró nada',
+        noMatchBody: 'Nada tuyo se llama «{{search}}».',
+        errorHeading: 'No se pudo cargar la lista',
+        openInEditor: 'Abrir «{{name}}» en el editor',
+        actionsFor: 'Acciones para «{{name}}»',
+        public: 'Público',
+        private: 'Privado',
+        edit: 'Nombre y descripción',
+        share: 'Compartir…',
+        delete: 'Eliminar'
+      },
+      edit: {
+        heading: 'Nombre y descripción',
+        nameLabel: 'Nombre',
+        descriptionLabel: 'Descripción',
+        descriptionHint:
+          'Se muestra en la página de la comunidad, si el circuito está publicado.',
+        save: 'Guardar',
+        cancel: 'Cancelar'
+      },
+      share: {
+        heading: 'Compartir',
+        intro:
+          'Cualquiera con el enlace de abajo puede abrir «{{name}}» en el editor, esté publicado o no.',
+        linkLabel: 'Enlace para compartir',
+        linkHint:
+          'El enlace abre una copia de solo lectura. Nadie puede cambiar tu circuito a través de él.',
+        copy: 'Copiar',
+        copied: 'Enlace copiado.',
+        copyFailed:
+          'No se pudo copiar el enlace. Selecciónalo y cópialo a mano.',
+        publicLabel: 'Publicar en la comunidad',
+        publicHintProject:
+          'Un proyecto publicado aparece en las listas de la comunidad y se puede marcar y copiar.',
+        publicHintComponent:
+          'Un componente publicado aparece en las listas de la comunidad y cualquiera puede colocarlo.',
+        viewPublicPage: 'Ver la página de la comunidad',
+        regenerateLabel: 'Revocar el enlace',
+        regenerateHint:
+          'Se emite un enlace nuevo y el anterior deja de funcionar, incluida la página de la comunidad, que vive en esa dirección.',
+        regenerate: 'Emitir un enlace nuevo',
+        close: 'Cerrar'
+      },
+      delete: {
+        heading: '¿Eliminar para siempre?',
+        messageProject:
+          '«{{name}}» y su circuito se eliminan. Esto no se puede deshacer.',
+        messageComponent:
+          '«{{name}}» se elimina. Los circuitos que ya lo usan siguen funcionando con la copia guardada dentro.',
+        confirm: 'Eliminar',
+        cancel: 'Cancelar',
+        done: '«{{name}}» se eliminó.',
+        failed: 'No se pudo eliminar «{{name}}».'
+      },
+      account: {
+        title: 'Cuenta',
+        lede: 'Tu nombre e imagen, la dirección con la que inicias sesión, y cómo inicias sesión.',
+        memberSince: 'Miembro desde el {{date}}',
+        currentPassword: 'Contraseña actual',
+        passwordIncorrect: 'Esa contraseña no es correcta.',
+        profile: {
+          heading: 'Perfil',
+          description:
+            'El nombre y la imagen que se muestran junto a todo lo que publicas.',
+          changePicture: 'Cambiar imagen',
+          removePicture: 'Quitar',
+          pictureHint:
+            'PNG, JPEG, WebP o GIF. Se recorta en cuadrado y se vuelve a codificar.',
+          save: 'Guardar',
+          saved: 'Tu perfil se guardó.',
+          avatarRejected:
+            'No se pudo usar esa imagen. Prueba con un PNG, JPEG o WebP más pequeño.'
+        },
+        email: {
+          heading: 'Dirección de correo',
+          description:
+            'La dirección con la que inicias sesión, y adonde se envían las confirmaciones.',
+          current: 'Actualmente:',
+          unverified: 'sin confirmar',
+          newLabel: 'Nueva dirección de correo',
+          passwordHint: 'Tu contraseña confirma que eres tú quien lo pide.',
+          submit: 'Enviar confirmación',
+          pending:
+            'Un enlace de confirmación va camino a {{email}}. Tu dirección cambia en cuanto lo abras.',
+          taken: 'Esa dirección de correo ya tiene una cuenta.',
+          unchanged: 'Esa ya es tu dirección.',
+          mailFailed:
+            'No se pudo enviar el correo de confirmación. No ha cambiado nada; inténtalo de nuevo.'
+        },
+        password: {
+          heading: 'Contraseña',
+          description: 'Cambiarla cierra tu sesión en todos los demás sitios.',
+          setHeading: 'Establecer una contraseña',
+          setDescription:
+            'Te registraste con Google y todavía no tienes contraseña. Establecer una te da una segunda forma de entrar.',
+          newLabel: 'Nueva contraseña',
+          submit: 'Cambiar contraseña',
+          setSubmit: 'Establecer contraseña',
+          saved: 'Tu contraseña se cambió.',
+          sessionsNotice: 'Tus otras sesiones se cierran. Esta se mantiene.'
+        },
+        google: {
+          heading: 'Google',
+          description:
+            'Iniciar sesión con tu cuenta de Google, además de con la contraseña.',
+          linked: 'Tu cuenta de Google está vinculada.',
+          link: 'Vincular cuenta de Google',
+          unlink: 'Desvincular',
+          unlinkConfirm:
+            'Iniciar sesión con Google dejará de funcionar. Puedes volver a vincularla cuando quieras.',
+          needsPassword:
+            'Establece antes una contraseña: Google es ahora mismo la única forma de entrar en esta cuenta.'
+        },
+        delete: {
+          heading: 'Eliminar cuenta',
+          description:
+            'Tu cuenta y todos los proyectos, componentes y favoritos que contiene se eliminan. Esto no se puede deshacer.',
+          submit: 'Eliminar mi cuenta',
+          confirm:
+            'Todo lo que has hecho en Logigator se elimina, para siempre.',
+          done: 'Tu cuenta se eliminó.'
+        }
+      }
+    },
+    docs: {
+      title: 'Documentación',
+      lede: 'Cada parte del editor de Logigator, explicada: el tablero y sus herramientas, la construcción de circuitos, la simulación y cómo guardar tu trabajo.',
+      search: {
+        label: 'Buscar en la documentación',
+        placeholder: 'Buscar..',
+        empty: 'Nada coincide con «{{query}}».'
+      },
+      navLabel: 'Páginas de documentación',
+      allTopics: 'Todos los temas',
+      sections: {
+        basics: 'Conceptos básicos',
+        building: 'Construir circuitos',
+        simulation: 'Simulación',
+        projects: 'Proyectos y nube'
+      },
+      pages: {
+        gettingStarted: 'Primeros pasos',
+        boardAndTools: 'Tablero y herramientas',
+        shortcuts: 'Atajos de teclado',
+        settings: 'Ajustes y apariencia',
+        componentsAndOptions: 'Componentes y opciones',
+        wiresAndConnections: 'Cables y conexiones',
+        customComponents: 'Componentes personalizados',
+        simulation: 'Simulación',
+        inspection: 'Inspección y monitores',
+        savingAndFiles: 'Guardar y archivos',
+        cloud: 'Nube y compartir'
+      }
+    },
+    changelog: {
+      title: 'Registro de cambios',
+      lede: 'Cada versión del editor de Logigator, la más reciente primero: qué se añadió, qué cambió y qué se corrigió.',
+      feed: 'Suscribirse mediante Atom'
+    },
+    imprint: {
+      title: 'Aviso Legal',
+      lede: 'Quién gestiona Logigator y cómo contactar con nosotros.'
+    },
+    privacyPolicy: {
+      title: 'Política de Privacidad',
+      lede: 'Qué datos procesa Logigator, por qué los procesa y qué derechos tienes sobre ellos.'
+    },
+    notFound: {
+      title: 'Página no encontrada',
+      text: 'No se pudo encontrar la página solicitada.',
+      back: 'Volver a inicio'
+    }
+  }
+};
+
+export default es;

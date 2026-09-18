@@ -8,10 +8,8 @@ import { resolveMasterSignal } from './resolve-master.signal';
 import { TranslateDirective } from '../../../translation/translate.directive';
 
 /**
- * Renderer for {@link UploadComponentAction}: a button shown only when the
- * selected instance resolves to a **local** master, which hands that master to
- * the shared {@link UploadCoordinatorService} (dependency analysis + dialog +
- * upload). Disabled with a hint when signed out.
+ * Shown only when the selection resolves to a local master, and disabled with
+ * a hint when signed out.
  */
 @Component({
   selector: 'app-upload-component-action',
@@ -19,18 +17,21 @@ import { TranslateDirective } from '../../../translation/translate.directive';
   host: { class: 'contents' },
   template: `<ng-container *appTranslate="let t">
     @if (visible()) {
-      <lg-button
+      <button
+        lgButton
+        disabledInteractive
         size="sm"
         icon="ph ph-cloud-arrow-up"
         severity="info"
         [outlined]="true"
-        [label]="t('uploadComponent.button')"
         class="w-full"
         [disabled]="!authenticated()"
         [lgTooltip]="authenticated() ? '' : t('uploadComponent.signInTooltip')"
         tooltipPosition="top"
         (onClick)="upload()"
-      />
+      >
+        {{ t('uploadComponent.button') }}
+      </button>
     }
   </ng-container>`
 })

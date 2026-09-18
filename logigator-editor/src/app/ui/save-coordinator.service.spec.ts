@@ -19,7 +19,6 @@ function meta(overrides: Partial<ProjectMetadata> = {}): ProjectMetadata {
     name: 'Untitled',
     type: 'project',
     source: 'browser',
-    hash: '',
     isPublic: false,
     ...overrides
   };
@@ -95,8 +94,8 @@ describe('SaveCoordinatorService', () => {
 
     await service.requestSave(project);
 
-    // The local components are promoted before the save; saveProject is called
-    // by the coordinator, not directly here.
+    // The local components are promoted before the save, and the coordinator
+    // is what calls saveProject.
     expect(uploadCoordinator.requestUpload).toHaveBeenCalledWith({
       kind: 'save-server',
       project
@@ -134,8 +133,8 @@ describe('SaveCoordinatorService', () => {
 
     await service.requestSave(project);
 
-    // The server draft goes through the upload flow (so embedded local
-    // components are handled) rather than straight to saveDraftAsServer.
+    // The server draft goes through the upload flow, which handles its
+    // embedded local components, not straight to saveDraftAsServer.
     expect(uploadCoordinator.requestUpload).toHaveBeenCalledWith({
       kind: 'draft-to-server',
       project,

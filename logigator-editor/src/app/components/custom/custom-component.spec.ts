@@ -3,7 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { Container, BitmapText } from 'pixi.js';
 import { PX } from '../../utils/grid';
 import { CANVAS_FONT_FAMILY } from '../../utils/text-fit';
-import { Direction } from '../../utils/direction';
+import { Direction } from '@logigator/core';
 import { configureTestBed } from '../../../testing/configure-test-bed';
 import { Component } from '../component';
 import { ComponentProviderService } from '../component-provider.service';
@@ -11,7 +11,7 @@ import { Project } from '../../project/project';
 import { CustomComponentRegistry } from './custom-component-registry.service';
 import { CustomComponent } from './custom-component';
 
-/** All BitmapText nodes rendered anywhere under `container` (symbol + port labels). */
+/** Every BitmapText node under `container` (symbol + port labels). */
 function renderedTextNodes(container: Container): BitmapText[] {
   const out: BitmapText[] = [];
   const walk = (c: Container): void => {
@@ -24,7 +24,7 @@ function renderedTextNodes(container: Container): BitmapText[] {
   return out;
 }
 
-/** All BitmapText strings rendered anywhere under `container` (symbol + port labels). */
+/** Every BitmapText string under `container` (symbol + port labels). */
 function renderedTexts(container: Container): string[] {
   return renderedTextNodes(container).map((t) => t.text);
 }
@@ -39,7 +39,7 @@ describe('CustomComponent', () => {
     provider = TestBed.inject(ComponentProviderService);
   });
 
-  /** Place an instance by snapshotting the master's CURRENT state (the place flow). */
+  /** Places by snapshotting the master's current state, as placing does. */
   function placeLatest(masterTypeId: number): CustomComponent {
     const snap = registry.snapshot(masterTypeId);
     const config = provider.getComponent(snap.typeId)!;

@@ -1,0 +1,53 @@
+/*
+ * The consent banner's styles. The bundle at `/js/cookieconsent.js` links this
+ * file in itself, so the editor gets them by loading the script and nothing
+ * else — the same arrangement the legacy standalone bundle used.
+ *
+ * The library's stylesheet verbatim, then the brand on top. Every override
+ * resolves through a `--lg-*` token, so it needs no light/dark pair of its own:
+ * the tokens already flip with the `dark-mode` class both hosts set, and this
+ * block sits after the library's `.cc--darkmode` values, which it replaces in
+ * both schemes.
+ */
+
+@import 'vanilla-cookieconsent/dist/cookieconsent.css';
+
+:root {
+  --cc-font-family: 'Roboto Variable', sans-serif;
+  --cc-btn-border-radius: 0.375rem;
+
+  --cc-bg: var(--lg-content);
+  --cc-primary-color: var(--lg-text);
+  --cc-secondary-color: var(--lg-muted);
+
+  --cc-btn-primary-bg: var(--lg-primary);
+  --cc-btn-primary-color: var(--lg-primary-contrast);
+  --cc-btn-primary-border-color: var(--lg-primary);
+  --cc-btn-primary-hover-bg: var(--lg-primary-emphasis);
+  --cc-btn-primary-hover-color: var(--lg-primary-contrast);
+  --cc-btn-primary-hover-border-color: var(--lg-primary-emphasis);
+
+  --cc-btn-secondary-bg: var(--lg-surface-100);
+  --cc-btn-secondary-color: var(--lg-text);
+  --cc-btn-secondary-border-color: var(--lg-border);
+  --cc-btn-secondary-hover-bg: var(--lg-content-hover);
+  --cc-btn-secondary-hover-color: var(--lg-text-hover);
+  --cc-btn-secondary-hover-border-color: var(--lg-border);
+
+  --cc-separator-border-color: var(--lg-border);
+  --cc-link-color: var(--lg-primary);
+
+  --cc-toggle-on-bg: var(--lg-primary);
+  --cc-toggle-off-bg: var(--lg-surface-400);
+  --cc-toggle-readonly-bg: var(--lg-surface-300);
+
+  --cc-cookie-category-block-bg: var(--lg-surface-100);
+  --cc-cookie-category-block-border: var(--lg-border);
+  --cc-cookie-category-block-hover-bg: var(--lg-content-hover);
+  --cc-cookie-category-block-hover-border: var(--lg-border);
+  --cc-section-category-border: var(--lg-border);
+
+  --cc-footer-bg: var(--lg-surface-100);
+  --cc-footer-color: var(--lg-muted);
+  --cc-footer-border-color: var(--lg-border);
+}

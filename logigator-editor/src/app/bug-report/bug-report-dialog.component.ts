@@ -30,12 +30,10 @@ export interface BugReportDialogData {
 const MESSAGE_MAX_LENGTH = 512;
 
 /**
- * Collects a free-text description for a bug report. Opened either manually
- * from the badge or automatically when an uncaught error is caught. Returns the
- * typed message on send; dismissing (✕ / Escape / backdrop / Cancel) resolves
- * to `undefined`, which the caller treats as "send nothing". The surrounding
- * context (project, client info, logs, error) is assembled by
- * `BugReportService` — this dialog only owns the message.
+ * Collects a free-text description for a bug report, opened manually or by an
+ * uncaught error. Returns the typed message on send; any dismissal resolves to
+ * `undefined`, meaning send nothing. `BugReportService` assembles the
+ * surrounding context — this dialog owns only the message.
  */
 @Component({
   selector: 'app-bug-report-dialog',

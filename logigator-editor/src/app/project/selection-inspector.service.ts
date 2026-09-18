@@ -5,25 +5,22 @@ import { Component } from '../components/component';
 import { ProjectService } from './project.service';
 
 /**
- * Bridges canvas selection into the Angular settings panel. It tracks the
- * **active project's** selection and exposes the single selected placed
- * component — the one whose options the inspector should edit.
+ * Bridges the active project's canvas selection into the Angular settings
+ * panel, exposing the single selected placed component whose options the
+ * inspector edits.
  *
- * Selection fires from PixiJS pointer handlers, but no zone marshalling is
- * needed: the active project's `selectionChange$` is folded into a signal via
- * {@link toSignal}, so a write from any execution context notifies the change
+ * Selection fires outside Angular, but folding `selectionChange$` into a signal
+ * with {@link toSignal} means a write from any context notifies the change
  * detection scheduler. {@link switchMap} re-targets the stream when the active
- * project changes and tears the previous subscription down.
+ * project changes.
  */
 @Injectable({ providedIn: 'root' })
 export class SelectionInspectorService {
   private readonly projectService = inject(ProjectService);
 
-  // Re-emits on every selection change of the active project; `startWith`
-  // reflects the project's current selection the moment it becomes active.
-  // `scan` turns the void emissions into a monotonic counter so each one is a
-  // distinct value — otherwise toSignal's equality check would dedupe the
-  // identical `undefined`s and the computed below would never re-run.
+  // `startWith` reflects the project's selection the moment it becomes active.
+  // `scan` makes each void emission a distinct value, or toSignal's equality
+  // check would dedupe the identical `undefined`s and stall the computed.
   private readonly selectionTick = toSignal(
     toObservable(this.projectService.activeProject).pipe(
       switchMap((project) =>
@@ -53,7 +50,7 @@ export class SelectionInspectorService {
     return sm.selectedComponents.size + sm.selectedWires.size;
   });
 
-  /** True when anything is selected — drives the mobile selection action bar. */
+  /** True when anything is selected. */
   public readonly hasSelection = computed<boolean>(
     () => this.selectionCount() > 0
   );

@@ -4,16 +4,14 @@ import { environment } from '../../environments/environment';
 import { Grid } from '../rendering/grid';
 
 /**
- * The zoom ladder: every stepped zoom scale is `ZOOM_STEP_BASE^step` with
- * `step ∈ [ZOOM_STEP_MIN, ZOOM_STEP_MAX]`. Scale-keyed caches (shared
- * GraphicsContexts) only ever see these discrete scales from live zooming, so
- * offscreen consumers quantize onto the same ladder to reuse them.
+ * The zoom ladder: every stepped scale is `ZOOM_STEP_BASE^step` with
+ * `step ∈ [ZOOM_STEP_MIN, ZOOM_STEP_MAX]`. Scale-keyed caches only ever see
+ * these, so offscreen consumers quantize onto the same ladder to reuse them.
  */
 export const ZOOM_STEP_BASE = 1.2;
 export const ZOOM_STEP_MIN = -12;
 export const ZOOM_STEP_MAX = 5;
 
-/** Full camera state: what a viewport-dependent overlay needs to draw itself. */
 export interface ViewportState {
   /** Grid coordinates of the viewport's top-left corner. */
   gridOrigin: Point;
@@ -32,19 +30,17 @@ export class ViewportController {
   private _viewPortSize = new Point(0, 0);
   private readonly _viewportChange$ = new Subject<ViewportState>();
 
-  // The exact camera position — the source of truth for all camera math
-  // (pan accumulation, zoom anchoring, the grid-space accessors). The
-  // container only ever receives its device-pixel-snapped mirror (see
-  // _applyPosition), so sub-pixel pan deltas keep accumulating here and
-  // zoom cycles never collect snapping error.
+  // The exact camera position, source of truth for all camera math. The
+  // container only ever receives its device-pixel-snapped mirror, so sub-pixel
+  // pan deltas accumulate here and zoom cycles collect no snapping error.
   private readonly _truePosition = new Point(0, 0);
 
   constructor(
     private readonly _container: Container,
     private readonly _grid: Grid,
     private readonly _onApplyScale: (scale: number) => void,
-    // Requests one on-screen frame after a zoom. Pans don't request one —
-    // they only happen inside gestures that already hold the ticker on.
+    // One frame after a zoom. Pans need none: they only happen inside
+    // gestures that already hold the ticker on.
     private readonly _requestRender: () => void
   ) {}
 
@@ -63,15 +59,13 @@ export class ViewportController {
     this._viewportChange$.next(this.viewportState);
   }
 
-  /** Moves the camera without emitting — `_updateScale` composes position and
-   *  scale mutations and emits one consistent state at the end. */
+  /** Moves the camera without emitting, so `_updateScale` can compose position
+   *  and scale and emit one consistent state at the end. */
   private _applyPosition(point: Point): void {
     this._truePosition.copyFrom(point);
-    // Snap the rendered translation to whole device pixels. Wires are
-    // one-device-pixel antialiased hairlines, so a fractional translation
-    // sweeps their pixel-coverage phase while panning — they visibly shimmer
-    // brighter/dimmer. Snapping freezes the phase; _truePosition keeps the
-    // exact camera so the snap never accumulates into drift.
+    // Wires are one-device-pixel antialiased hairlines, so a fractional
+    // translation sweeps their pixel-coverage phase and they shimmer while
+    // panning. Snapping to whole device pixels freezes that phase.
     const dpr = window.devicePixelRatio || 1;
     this._container.position.set(
       Math.round(point.x * dpr) / dpr,
@@ -115,10 +109,9 @@ export class ViewportController {
   }
 
   /**
-   * Continuous zoom for pinch gestures: multiplies the current scale by
-   * `factor`, clamped to the same bounds the stepped zoom respects, anchored at
-   * `center`. Resyncs the discrete step so a later stepped zoomIn/zoomOut or a
-   * +/- button continues from the pinched scale rather than snapping back.
+   * Continuous zoom for pinch gestures, clamped to the stepped zoom's bounds
+   * and anchored at `center`. Resyncs the discrete step, so a later stepped
+   * zoom continues from the pinched scale rather than snapping back.
    */
   public zoomBy(factor: number, center?: Point): void {
     const min = Math.pow(this._scaleStepAmount, this._scaleStepMin);
@@ -135,16 +128,11 @@ export class ViewportController {
   }
 
   /**
-   * Frames a grid-space rectangle: zooms so it fits the viewport (with
-   * `paddingGrid` grid units of clearance on every side) and centres it. The
-   * scale is continuous — clamped to the same bounds the stepped zoom
-   * respects, optionally capped by `maxZoom` so framing a tiny target does not
-   * zoom to the maximum — and the discrete step is resynced afterwards, like
-   * {@link zoomBy}, so a later stepped zoom continues from here.
-   *
-   * A degenerate rectangle (zero width and height, e.g. a single element's
-   * point bounds) frames at `maxZoom` or the ladder maximum. Inert while the
-   * viewport has no size yet.
+   * Frames a grid-space rectangle: fits it in the viewport with `paddingGrid`
+   * grid units of clearance and centres it. The scale is continuous, clamped
+   * like {@link zoomBy} and optionally capped by `maxZoom` so a tiny target
+   * does not zoom to the maximum; a degenerate rectangle frames at that cap.
+   * Inert while the viewport has no size yet.
    */
   public fitBounds(
     gridRect: Rectangle,
@@ -172,8 +160,7 @@ export class ViewportController {
     );
 
     this._writeScale(target);
-    // Place the rect's centre at the viewport's centre: a grid point p renders
-    // at `position + p · scale · gridSize`.
+    // A grid point p renders at `position + p · scale · gridSize`.
     const factor = target * environment.gridSize;
     this._applyPosition(
       new Point(
@@ -246,7 +233,6 @@ export class ViewportController {
     this._viewportChange$.next(this.viewportState);
   }
 
-  /** Applies a scale to the container, the grid, and the scale listeners. */
   private _writeScale(scale: number): void {
     this._container.scale.set(scale);
     this._grid.updateScale(scale);

@@ -1,9 +1,8 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { Point } from 'pixi.js';
 import { configureTestBed } from '../../../testing/configure-test-bed';
-import { Direction } from '../../utils/direction';
+import { Direction, WireDirection } from '@logigator/core';
 import { rotatePointAroundPivot, rotationPivotFor } from '../../utils/rotation';
-import { WireDirection } from '../../wires/wire-direction.enum';
 import { Component } from '../../components/component';
 import { makeAnd, makeWire } from '../../../testing/factories';
 import { groupGridBounds, rotateElements } from './rotate-elements';
@@ -48,7 +47,6 @@ describe('rotateElements', () => {
   });
 
   it('orbits wire endpoints, swaps the axis and preserves the length', () => {
-    // Horizontal wire (2.5, 4.5) → (7.5, 4.5).
     const wire = makeWire(2, 4, WireDirection.HORIZONTAL, 5);
     const pivot = new Point(5, 5);
     const [oldStart, oldEnd] = wire.connectionPoints;
@@ -58,7 +56,6 @@ describe('rotateElements', () => {
     expect(wire.direction).toBe(WireDirection.VERTICAL);
     expect(wire.length).toBe(5);
     const [start, end] = wire.connectionPoints;
-    // The rotated endpoints, re-normalized so start is the lesser one.
     const a = rotatePointAroundPivot(pivot, oldStart, 1);
     const b = rotatePointAroundPivot(pivot, oldEnd, 1);
     expect({ x: start.x, y: start.y }).toEqual({
@@ -73,10 +70,9 @@ describe('rotateElements', () => {
   });
 
   it('returns the group to its exact start after four independent quarter-turns', () => {
-    // Each press re-derives the pivot from the current bounds, exactly like
-    // repeated R presses on a committed selection. An east-facing 2-input AND
-    // spans 3x2 grid units — the odd extent that used to walk the group right
-    // (clockwise) or down (counter-clockwise) once per full turn.
+    // Each press re-derives the pivot from the current bounds, like repeated
+    // R presses on a committed selection. An east-facing 2-input AND spans
+    // 3x2 grid units, the odd extent a full turn must not walk.
     for (const steps of [1, 3]) {
       const comp = makeAnd(2, Direction.E, 4, 0);
       const wire = makeWire(0, 0, WireDirection.HORIZONTAL, 3);
@@ -117,8 +113,7 @@ describe('rotateElements', () => {
   });
 
   it('keeps a wire attached to the port it fed across a group turn', () => {
-    // AND at (4, 0), inputs at (3.5, 0.5)/(3.5, 1.5); wire feeding the first
-    // input from the left.
+    // Inputs at (3.5, 0.5)/(3.5, 1.5), with a wire feeding the first.
     const comp = makeAnd(2, Direction.E, 4, 0);
     const wire = makeWire(0, 0, WireDirection.HORIZONTAL, 3);
     const [, wireEnd] = wire.connectionPoints;

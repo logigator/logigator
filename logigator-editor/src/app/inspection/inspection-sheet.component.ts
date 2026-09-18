@@ -5,9 +5,8 @@ import { SheetInspectionPresenter } from './sheet-inspection.presenter';
 
 /**
  * The compact inspection sheet: a non-modal bottom drawer over the running
- * simulation — no scrim and no focus trap, so the canvas above it stays live.
- * One inspection view at a time; a tab row switches between several. Closing
- * the sheet (✕ / Escape) dismisses every inspection in it.
+ * simulation — no scrim and no focus trap, so the canvas above stays live. One
+ * view at a time; a tab row switches between several.
  */
 @Component({
   selector: 'app-inspection-sheet',

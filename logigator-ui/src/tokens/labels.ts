@@ -1,10 +1,8 @@
 import { inject, InjectionToken, Provider } from '@angular/core';
 
 /**
- * The library's stock UI strings — the handful of words its components have to
- * put in the accessibility tree themselves (close/dismiss buttons, paginator
- * steps, the tab-strip's reorder announcement). Everything else a component
- * shows is consumer-supplied content.
+ * The library's stock UI strings: the words its components put in the
+ * accessibility tree themselves. Everything else they show is consumer content.
  */
 export interface LgLabels {
   /** Dialog / drawer / window / image-zoom close buttons. */
@@ -30,29 +28,22 @@ export const LG_DEFAULT_LABELS: LgLabels = {
   lastPage: 'Last page'
 };
 
-/**
- * Looks one stock label up on demand. Returning `undefined` falls back to
- * {@link LG_DEFAULT_LABELS}.
- */
+/** Returning `undefined` falls back to {@link LG_DEFAULT_LABELS}. */
 export type LgLabelResolver = (key: keyof LgLabels) => string | undefined;
 
 export const LG_LABELS = new InjectionToken<LgLabelResolver>('lg-labels');
 
 /**
- * Supply localized stock strings once, app-wide. Without this every component
- * falls back to {@link LG_DEFAULT_LABELS} (English) — which is why a localized
- * app should provide it: the alternative is passing a label to every dialog,
- * drawer and window individually, and missing the next one that gets added.
+ * Supply localized stock strings once, app-wide; without it every component
+ * falls back to English {@link LG_DEFAULT_LABELS}.
  *
- * Per-instance inputs (`closeLabel`, `dismissLabel`, …) still win where a
- * specific surface needs its own wording — and are the way to keep a
- * **long-lived** surface correct across a language switch, since a resolver is
- * only consulted while a component is being constructed.
+ * Per-instance inputs (`closeLabel`, `dismissLabel`, …) still win, and are the
+ * way to keep a **long-lived** surface correct across a language switch: a
+ * resolver is consulted only while a component is being constructed.
  *
- * A resolver rather than a plain object: DI caches a factory's result once per
- * injector, so an object of strings built at startup would pin every label to
- * the language active at bootstrap. `resolverFactory` runs once (to reach the
- * app's translation layer); the resolver it returns runs per lookup.
+ * A resolver rather than a plain object because DI caches a factory's result
+ * per injector, which would pin every label to the bootstrap language.
+ * `resolverFactory` runs once; the resolver it returns runs per lookup.
  */
 export function provideLgLabels(
   resolverFactory: () => LgLabelResolver
@@ -61,8 +52,8 @@ export function provideLgLabels(
 }
 
 /**
- * Resolve one stock label for a component's `input()` default. Call in a field
- * initializer — it runs inside the injection context.
+ * Resolve one stock label for a component's `input()` default. Call it in a
+ * field initializer, which runs inside the injection context.
  */
 export function lgLabel(key: keyof LgLabels): string {
   const resolved = inject(LG_LABELS, { optional: true })?.(key);

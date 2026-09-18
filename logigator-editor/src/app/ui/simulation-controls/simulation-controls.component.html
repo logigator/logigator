@@ -9,7 +9,9 @@
 >
   <!-- Run controls come alive once the worker session reports ready. -->
   <div class="flex flex-wrap gap-1">
-    <lg-button
+    <button
+      lgButton
+      disabledInteractive
       [lgTooltip]="t('toolBar.play')"
       [ariaLabel]="t('toolBar.play')"
       [disabled]="!isSimReady() || isSimRunning()"
@@ -17,8 +19,10 @@
       tooltipPosition="bottom"
       icon="ph ph-play"
       severity="secondary"
-    ></lg-button>
-    <lg-button
+    ></button>
+    <button
+      lgButton
+      disabledInteractive
       [lgTooltip]="t('toolBar.pause')"
       [ariaLabel]="t('toolBar.pause')"
       [disabled]="!isSimRunning()"
@@ -26,8 +30,10 @@
       tooltipPosition="bottom"
       icon="ph ph-pause"
       severity="secondary"
-    ></lg-button>
-    <lg-button
+    ></button>
+    <button
+      lgButton
+      disabledInteractive
       [lgTooltip]="t('toolBar.step')"
       [ariaLabel]="t('toolBar.step')"
       [disabled]="!isSimReady() || isSimRunning()"
@@ -35,8 +41,10 @@
       tooltipPosition="bottom"
       icon="ph ph-skip-forward"
       severity="secondary"
-    ></lg-button>
-    <lg-button
+    ></button>
+    <button
+      lgButton
+      disabledInteractive
       [lgTooltip]="t('toolBar.stopSim')"
       [ariaLabel]="t('toolBar.stopSim')"
       [disabled]="!isSimReady()"
@@ -44,11 +52,13 @@
       tooltipPosition="bottom"
       icon="ph ph-stop"
       severity="secondary"
-    ></lg-button>
+    ></button>
   </div>
   <lg-divider layout="vertical" class="mx-1"></lg-divider>
   <div class="flex flex-wrap items-center gap-2">
-    <lg-button
+    <button
+      lgButton
+      disabledInteractive
       [lgTooltip]="t('toolBar.targetMode')"
       [ariaLabel]="t('toolBar.targetMode')"
       [disabled]="!isSimReady()"
@@ -57,7 +67,7 @@
       tooltipPosition="bottom"
       icon="ph ph-gauge"
       severity="secondary"
-    ></lg-button>
+    ></button>
     <input
       lgInputText
       type="number"
@@ -82,7 +92,9 @@
       [ariaLabel]="t('toolBar.targetUnit')"
       tooltipPosition="bottom"
     ></lg-select>
-    <lg-button
+    <button
+      lgButton
+      disabledInteractive
       [lgTooltip]="t('toolBar.syncToFrame')"
       [ariaLabel]="t('toolBar.syncToFrame')"
       [disabled]="!isSimReady()"
@@ -91,7 +103,7 @@
       tooltipPosition="bottom"
       icon="ph ph-monitor-play"
       severity="secondary"
-    ></lg-button>
+    ></button>
     <span class="text-sm text-muted select-none">
       {{ t('toolBar.measuredHz', { hz: measuredHz() | si: 2 : 1000 }) }}
       &middot;

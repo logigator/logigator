@@ -1,5 +1,4 @@
-import { BitmapText, Container, DestroyOptions } from 'pixi.js';
-import { Subject, takeUntil } from 'rxjs';
+import { BitmapText, Container } from 'pixi.js';
 import { Component } from '../../component';
 import { PX } from '../../../utils/grid';
 import {
@@ -9,6 +8,10 @@ import {
 } from '../../../utils/segment-font';
 import {
   SegmentBase,
+  segmentDisplayMeta,
+  segmentReadoutDigits
+} from '@logigator/core';
+import {
   segmentDisplayComponentConfig,
   SegmentDisplayOptions
 } from './segment-display.config';
@@ -17,95 +20,41 @@ const READOUT_FONT_SIZE = 1.35 / PX;
 const BASE_FONT_SIZE = 0.4 / PX;
 
 /**
- * Digits the readout needs for the largest value `inputs` bits can carry —
- * the value is zero-padded to exactly this length.
- */
-export function segmentReadoutDigits(
-  base: SegmentBase,
-  inputs: number
-): number {
-  switch (base) {
-    case SegmentBase.HEX:
-      return Math.ceil(inputs / 4);
-    case SegmentBase.OCT:
-      return Math.ceil(inputs / 3);
-    default:
-      return Math.ceil(Math.log10(2 ** inputs + 1));
-  }
-}
-
-/**
- * A display-only readout: not a simulator unit — it renders the binary value
- * on its input nets (input 0 = least significant bit) as a zero-padded number
- * in the configured base, applied through the regular
- * {@link Component.setPortPowered} path.
+ * A display-only readout, not a simulator unit: it renders the binary value on
+ * its input nets (input 0 = least significant bit) as a zero-padded number in
+ * the configured base. A negation bubble on an input inverts that bit at
+ * render time: the engine knows nothing about this component.
  */
 export class SegmentDisplayComponent extends Component<SegmentDisplayOptions> {
   public readonly config = segmentDisplayComponentConfig;
 
-  private readonly destroy$ = new Subject<void>();
-
-  // Assigned in draw(); the class-field define runs after the base
-  // constructor's first draw and resets it to undefined, so a state change
-  // arriving before the next rebuild falls back to a full redraw.
+  // Assigned in draw(). The class-field define runs after the base
+  // constructor's first draw and resets this to undefined, so a state change
+  // before the next rebuild falls back to a full redraw.
   private _readout?: BitmapText;
 
   constructor(options: SegmentDisplayOptions) {
-    super(options.numInputs.value, 0, options);
-
-    this.options.numInputs.onChange$
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(() => {
-        this.numInputs = this.options.numInputs.value;
-      });
-
-    // Base changes swap the readout font, digit count and body width.
-    this.options.base.onChange$.pipe(takeUntil(this.destroy$)).subscribe(() => {
-      this.redraw();
-    });
+    super(segmentDisplayMeta, options);
   }
 
   public override setPortPowered(portIndex: number, powered: boolean): void {
     super.setPortPowered(portIndex, powered);
+    this._syncReadout();
+  }
+
+  // Entering and leaving a session flips every negated bit with no link change
+  // behind it — a net that stays low reports nothing.
+  public override setSimulating(active: boolean): void {
+    super.setSimulating(active);
+    this._syncReadout();
+  }
+
+  private _syncReadout(): void {
     if (this._readout) {
       this._readout.text = this._formatValue();
     } else {
       this.redraw();
     }
-  }
-
-  protected get inputLabels(): string[] {
-    const labels = [];
-    for (let i = 0; i < this.numInputs; i++) {
-      labels.push(String(i));
-    }
-    return labels;
-  }
-
-  protected get outputLabels(): string[] {
-    return [];
-  }
-
-  // Mirrors the legacy geometry (frozen for the v0 anchor math in
-  // legacy-anchor.ts): wide enough for the zero-padded readout when
-  // horizontal, a fixed 4 when standing upright.
-  protected get bodyGridWidth(): number {
-    if (this.direction % 2 === 1) {
-      return 4;
-    }
-    return (
-      2 +
-      segmentReadoutDigits(
-        this.options.base.value,
-        this.options.numInputs.value
-      )
-    );
-  }
-
-  // At least three rows tall so the readout fits beside few inputs (legacy
-  // geometry, mirrored by the frozen LEGACY_MIN_BODY_HEIGHTS entry).
-  protected override get bodyGridHeight(): number {
-    return Math.max(3, this.numInputs, this.numOutputs);
   }
 
   protected draw(): void {
@@ -146,9 +95,9 @@ export class SegmentDisplayComponent extends Component<SegmentDisplayOptions> {
       readout.tint = fontTint;
       baseIndicator.tint = fontTint;
     });
-    // The readout extents are computed arithmetically (see
-    // SEGMENT_FONT_METRICS) — measuring the BitmapText here resolves through
-    // a fallback font when the component draws before the atlases install.
+    // Extents are arithmetic (SEGMENT_FONT_METRICS): measuring the BitmapText
+    // resolves through a fallback font when the component draws before the
+    // atlases install.
     const metrics = SEGMENT_FONT_METRICS[font];
     const readoutEm = READOUT_FONT_SIZE * PX;
     baseIndicator.position.set(
@@ -168,7 +117,7 @@ export class SegmentDisplayComponent extends Component<SegmentDisplayOptions> {
   private _formatValue(): string {
     let value = 0;
     for (let i = this.numInputs - 1; i >= 0; i--) {
-      value = (value << 1) | (this.isPortPowered(i) ? 1 : 0);
+      value = (value << 1) | (this.isInputHigh(i) ? 1 : 0);
     }
     const base = this.options.base.value;
     const radix =
@@ -176,10 +125,5 @@ export class SegmentDisplayComponent extends Component<SegmentDisplayOptions> {
     return value
       .toString(radix)
       .padStart(segmentReadoutDigits(base, this.numInputs), '0');
-  }
-
-  public override destroy(options?: DestroyOptions): void {
-    this.destroy$.next();
-    super.destroy(options);
   }
 }

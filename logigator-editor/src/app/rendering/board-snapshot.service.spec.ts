@@ -10,6 +10,8 @@ import {
 import { TestBed } from '@angular/core/testing';
 import { configureTestBed } from '../../testing/configure-test-bed';
 import { Project } from '../project/project';
+import { Component } from '../components/component';
+import { textComponentConfig } from '../components/component-types/text/text.config';
 import { makeAnd } from '../../testing/factories';
 import { BoardSnapshotService } from './board-snapshot.service';
 import { RendererService } from './renderer.service';
@@ -94,6 +96,27 @@ describe('BoardSnapshotService', () => {
     texture.destroy(true);
   });
 
+  it('frames a text label, not only its anchor cell', () => {
+    const text = Component.deserialize(
+      { pos: [0, 0], options: { fontSize: 12, text: 'x'.repeat(10) } },
+      textComponentConfig
+    );
+    project.addComponent(text);
+
+    const texture = service.renderProjectToTexture(project, {
+      multiplier: 1,
+      background: 'transparent'
+    });
+
+    // The glyphs reach ≈ 5.5 grid units; the frame holds them rounded out to
+    // 6, plus the 1-cell margin — 8 units, where the anchor cell alone would
+    // have framed 3 and cropped the label.
+    expect(texture.width).toBe(8 * 16);
+    expect(texture.height).toBe(3 * 16);
+
+    texture.destroy(true);
+  });
+
   it('falls back to a fixed box for an empty project', () => {
     const texture = service.renderProjectToTexture(project, {
       multiplier: 1,
@@ -157,19 +180,16 @@ describe('BoardSnapshotService', () => {
     });
 
     // Below 1× the weight scale tracks the multiplier, snapped to the nearest
-    // ladder step (round(log₁.₂ 0.5) = -4) so the scale-keyed context cache
-    // sees only scales the live zoom also produces.
+    // ladder step (round(log₁.₂ 0.5) = -4).
     expect(spy.mock.calls.map((c) => c[0])).toContain(Math.pow(1.2, -4));
     texture.destroy(true);
   });
 
   describe('subPixelSupersample', () => {
-    // Component bounds are half-integers, so a full-project region starts at
-    // .5 — the same origin the export and preview paths pass.
+    // Component bounds are half-integers, so a region starts at .5.
     const region = new Rectangle(1.5, -1, 400, 400);
 
     it('declines when the output already lands hairlines on whole pixels', () => {
-      // The export dialog's resolutions: 16, 32 and 64 px per grid unit.
       for (const multiplier of [1, 2, 4]) {
         expect(service.subPixelSupersample(region, multiplier)).toBe(1);
       }
@@ -182,10 +202,9 @@ describe('BoardSnapshotService', () => {
     });
 
     it('declines rather than enlarging past the dimension cap', () => {
-      // Clamped big-board export: unaligned, but already at the cap.
+      // Unaligned, but already at the cap.
       const multiplier = 8192 / (region.width * 16);
       expect(service.subPixelSupersample(region, multiplier)).toBe(1);
-      // Same multiplier with room to grow does supersample.
       expect(service.subPixelSupersample(region, multiplier, 8192 * 3)).toBe(3);
     });
   });
@@ -209,9 +228,8 @@ describe('BoardSnapshotService', () => {
     expect(content.transform.a).toBeCloseTo(24);
     expect(content.transform.tx).toBeCloseTo(-36); // -region.x(1.5) × 24
 
-    // Weights still come from the display multiplier, so a stroke drawn one
-    // pixel wide at 0.5× covers three here and lands back at one after the
-    // caller's ÷3 downscale.
+    // Weights come from the display multiplier, so a stroke one pixel wide at
+    // 0.5× covers three here and lands back at one after the ÷3 downscale.
     expect(spy.mock.calls.map((c) => c[0])).toContain(Math.pow(1.2, -4));
     texture.destroy(true);
   });
@@ -295,9 +313,8 @@ describe('BoardSnapshotService', () => {
     expect(previews).not.toBeNull();
     expect(previews!.dark).toBeInstanceOf(Blob);
     expect(previews!.light).toBeInstanceOf(Blob);
-    // One render call per theme, each a transparent square. A preview's
-    // multiplier is fit-derived, so `subPixelSupersample` renders it 3× and
-    // the canvas is downscaled back to 512 on extraction.
+    // A preview's multiplier is fit-derived, so it renders 3× and is
+    // downscaled back to 512 on extraction.
     const side = 512 * 3;
     const squareTransparent = renderCalls.filter(
       (c) =>
@@ -307,7 +324,6 @@ describe('BoardSnapshotService', () => {
         (c.clearColor as number[]).every((v) => v === 0)
     );
     expect(squareTransparent.length).toBe(2);
-    // Both themes were visited and the original restored.
     expect(theming.currentThemeType()).toBe(original);
   });
 
@@ -325,10 +341,8 @@ describe('BoardSnapshotService', () => {
     expect(theming.currentThemeType()).toBe(original);
   });
 
-  // The invariant that lets every other part of the app ignore preview
-  // generation entirely: both scene passes and the theme restore complete
-  // synchronously, so nothing async (effects, on-screen paints, the minimap)
-  // can ever observe the temporary theme.
+  // Both scene passes and the theme restore complete synchronously, so
+  // nothing async can observe the temporary theme.
   it('generatePreviews restores the live theme before it first yields', () => {
     const comp = makeAnd(2);
     comp.position.set(0, 0);
@@ -343,8 +357,8 @@ describe('BoardSnapshotService', () => {
   });
 
   it('generatePreviews hides text when the content only fits at a tiny multiplier', async () => {
-    // Two gates ~100 grid units apart force the 512px square to a multiplier
-    // far below the hide-text threshold.
+    // Gates ~100 grid units apart force a multiplier far below the hide-text
+    // threshold.
     const near = makeAnd(2);
     near.position.set(0, 0);
     project.addComponent(near);
