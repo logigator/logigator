@@ -90,6 +90,58 @@ describe('TextComponent cull bounds', () => {
   });
 });
 
+describe('TextComponent pick bounds', () => {
+  beforeEach(() => {
+    configureTestBed();
+  });
+
+  it('covers the glyph run, which the 1×1 footprint does not reach', () => {
+    // Ten glyphs at 12px (0.6 em advance, 16px grid) ≈ 4.5 grid units of
+    // label, running right from x = 1.
+    const comp = makeText('x'.repeat(10));
+
+    expect(comp.pickBounds.contains(3, 0.5)).toBe(true);
+    expect(comp.gridBounds.contains(3, 0.5)).toBe(false);
+
+    // The anchor cell stays a target of its own.
+    expect(comp.pickBounds.contains(0.5, 0.5)).toBe(true);
+
+    comp.destroy({ children: true });
+  });
+
+  it('stays inside cullBounds, which over-covers it to whole cells', () => {
+    // Six lines take the label past the anchor cell vertically, so the two
+    // boxes differ on that axis too.
+    const comp = makeText('l1\nl2\nl3\nl4\nl5\nl6');
+    const pick = comp.pickBounds;
+    const cull = comp.cullBounds;
+
+    expect(pick.x).toBeGreaterThanOrEqual(cull.x);
+    expect(pick.y).toBeGreaterThanOrEqual(cull.y);
+    expect(pick.right).toBeLessThanOrEqual(cull.right);
+    expect(pick.bottom).toBeLessThanOrEqual(cull.bottom);
+
+    comp.destroy({ children: true });
+  });
+
+  it('hangs the pick box off the anchor cell the way the label is drawn', () => {
+    const label = 'l1\nl2\nl3\nl4\nl5\nl6';
+    const east = makeText(label, Direction.E);
+    const west = makeText(label, Direction.W);
+
+    // Same string, so the box is the same size — reflected onto the far side
+    // of the dot, and with it the way the lines hang off the anchor row.
+    expect(west.pickBounds.width).toBe(east.pickBounds.width);
+    expect(east.pickBounds.right).toBeGreaterThan(east.gridBounds.right);
+    expect(west.pickBounds.x).toBeLessThan(west.gridBounds.x);
+    expect(east.pickBounds.bottom).toBeGreaterThan(east.gridBounds.bottom);
+    expect(west.pickBounds.y).toBeLessThan(west.gridBounds.y);
+
+    east.destroy({ children: true });
+    west.destroy({ children: true });
+  });
+});
+
 describe('TextComponent re-files on edit', () => {
   let project: Project;
 

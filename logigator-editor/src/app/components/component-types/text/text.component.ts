@@ -6,6 +6,7 @@ import { scaleForScale } from '../../../connection-points/connection-point';
 import { BitmapText, Graphics, Rectangle } from 'pixi.js';
 import { PX } from '../../../utils/grid';
 import { CANVAS_FONT_FAMILY, monoTextWidth } from '../../../utils/text-fit';
+import { rotatedBoxIntersects } from '../../component-geometry';
 
 export class TextComponent extends Component<TextOptions> {
   public readonly config = textComponentConfig;
@@ -30,29 +31,84 @@ export class TextComponent extends Component<TextOptions> {
     });
   }
 
-  // The label overflows the 1×1 grid footprint far to the side, so culling
-  // needs its full extent or the text vanishes once the anchor cell pans off
-  // screen. gridBounds stays 1×1, leaving selection and collision unchanged.
-  // Width is arithmetic (Roboto Mono: 0.6 em/glyph), so it is right before the
-  // glyph atlas is baked.
-  public override get cullBounds(): Rectangle {
+  /**
+   * The label's glyph box in the unrotated (E) frame, hanging off the anchor
+   * dot's right edge at y = 0.5. `up`/`down` are the fractions of the line
+   * height above and below that centre: the W anchor flip mirrors them, so the
+   * label stays on the far side of the dot whichever way the element faces.
+   * Width is arithmetic (Roboto Mono: 0.6 em/glyph), so it is right before the
+   * glyph atlas is baked.
+   */
+  private get _labelBox(): {
+    x0: number;
+    y0: number;
+    x1: number;
+    y1: number;
+  } {
     const fontSize = this.options.fontSize.value;
     const lines = this.options.text.value.split('\n');
-    const widthGrid =
+    const width =
       Math.max(...lines.map((l) => monoTextWidth(l, fontSize))) * PX;
-    const heightGrid = lines.length * fontSize * PX;
-    // Local content box in the unrotated (E) frame: the dot cell [0, 1] plus
-    // the label from x = 1, centred on y = 0.5. Rounded outward to whole cells
-    // so the box always over-covers.
-    const x0 = 0;
-    const x1 = 1 + widthGrid;
-    const y0 = Math.min(0, 0.5 - 0.55 * heightGrid);
-    const y1 = Math.max(1, 0.5 + 0.45 * heightGrid);
+    const height = lines.length * fontSize * PX;
+    const [up, down] =
+      this.direction === Direction.W ? [0.45, 0.55] : [0.55, 0.45];
+    return {
+      x0: 1,
+      y0: 0.5 - up * height,
+      x1: 1 + width,
+      y1: 0.5 + down * height
+    };
+  }
+
+  /** {@link _labelBox} plus the 1×1 anchor cell the label hangs off. */
+  private get _drawnBox(): {
+    x0: number;
+    y0: number;
+    x1: number;
+    y1: number;
+  } {
+    const label = this._labelBox;
+    return {
+      x0: 0,
+      y0: Math.min(0, label.y0),
+      x1: Math.max(1, label.x1),
+      y1: Math.max(1, label.y1)
+    };
+  }
+
+  // The label overflows the 1×1 grid footprint far to the side, so culling
+  // needs its full extent or the text vanishes once the anchor cell pans off
+  // screen. gridBounds stays 1×1, leaving collision unchanged. Rounded outward
+  // to whole cells so the box always over-covers.
+  public override get cullBounds(): Rectangle {
+    const { x0, y0, x1, y1 } = this._drawnBox;
     return this._rotatedBox(
       Math.floor(x0),
       Math.floor(y0),
       Math.ceil(x1),
       Math.ceil(y1)
+    );
+  }
+
+  // The label is drawn, so it is what a click aims at: the glyph box selects
+  // the element like the anchor cell does. Unrounded — the pick needs the box
+  // the user sees, not the cull box built to over-cover it.
+  public override get pickBounds(): Rectangle {
+    const { x0, y0, x1, y1 } = this._drawnBox;
+    return this._rotatedBox(x0, y0, x1, y1);
+  }
+
+  /** Allocation-free mirror of {@link pickBounds} — the two must agree. */
+  public override intersectsPickBounds(rect: Rectangle): boolean {
+    const { x0, y0, x1, y1 } = this._drawnBox;
+    return rotatedBoxIntersects(
+      this.direction,
+      this.position,
+      x0,
+      y0,
+      x1,
+      y1,
+      rect
     );
   }
 
