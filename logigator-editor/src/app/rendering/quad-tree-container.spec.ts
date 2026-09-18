@@ -23,9 +23,38 @@ describe('QuadTreeContainer', () => {
       }
     };
     Object.defineProperty(c, 'gridBounds', bounds);
+    Object.defineProperty(c, 'pickBounds', bounds);
     Object.defineProperty(c, 'cullBounds', bounds);
-    // Must agree with gridBounds, which is the contract the tree relies on.
+    // Both mirrors must agree with the box they answer for, which is the
+    // contract the tree relies on.
     c.intersectsGridBounds = (rect) => rect.intersects(c.gridBounds);
+    c.intersectsPickBounds = (rect) => rect.intersects(c.pickBounds);
+    c.appliedScale = 1;
+    c.applyScale = (scale) => (c.appliedScale = scale);
+    return c;
+  }
+
+  /**
+   * An item drawn beyond its footprint, like a text label: the footprint is
+   * what it collides by, the pick box the drawn overflow a click can land on,
+   * and what it files by covers both.
+   */
+  function makeOverflowingItem(
+    x: number,
+    y: number,
+    pickWidth: number
+  ): TestItem {
+    const c = new Container({ position: { x, y } }) as TestItem;
+    const box = (width: number) => ({
+      get(this: TestItem) {
+        return new Rectangle(this.position.x, this.position.y, width, 1);
+      }
+    });
+    Object.defineProperty(c, 'gridBounds', box(1));
+    Object.defineProperty(c, 'pickBounds', box(pickWidth));
+    Object.defineProperty(c, 'cullBounds', box(pickWidth));
+    c.intersectsGridBounds = (rect) => rect.intersects(c.gridBounds);
+    c.intersectsPickBounds = (rect) => rect.intersects(c.pickBounds);
     c.appliedScale = 1;
     c.applyScale = (scale) => (c.appliedScale = scale);
     return c;
@@ -183,6 +212,20 @@ describe('QuadTreeContainer', () => {
       for (const c of items) tree.insert(c);
 
       expect(queryAll()).toEqual(arrayWithExactContents(items));
+    });
+  });
+
+  describe('pick bounds', () => {
+    it('finds an element by its pick bounds beyond its footprint', () => {
+      const item = makeOverflowingItem(0, 0, 10);
+      tree.insert(item);
+
+      // The drawn overflow is a query target of its own — this is what makes a
+      // click on a text label reach the text at all — while the element's own
+      // footprint still answers no overlap for the same rect.
+      const overflow = new Rectangle(5, 0, 1, 1);
+      expect(tree.queryRange(overflow)).toContain(item);
+      expect(item.gridBounds.intersects(overflow)).toBe(false);
     });
   });
 

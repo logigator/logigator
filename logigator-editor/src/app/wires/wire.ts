@@ -233,6 +233,16 @@ export class Wire extends Graphics implements Connectable {
       : overlapsRect(rect, x, y, 1, span);
   }
 
+  // A wire draws inside its row, so what a click selects by is the row.
+  public get pickBounds(): Rectangle {
+    return this.gridBounds;
+  }
+
+  /** Allocation-free mirror of {@link pickBounds} — the two must agree. */
+  public intersectsPickBounds(rect: Rectangle): boolean {
+    return this.intersectsGridBounds(rect);
+  }
+
   public get cullBounds(): Rectangle {
     return this.gridBounds;
   }

@@ -635,6 +635,18 @@ export abstract class Component<
     return gridBoundsIntersects(this._shape, rect);
   }
 
+  // What a click selects by. Subclasses whose visuals overflow the footprint
+  // widen it (see TextComponent); collision and the element's own bounds keep
+  // reading gridBounds.
+  public get pickBounds(): Rectangle {
+    return this.gridBounds;
+  }
+
+  /** Allocation-free mirror of {@link pickBounds} — the two must agree. */
+  public intersectsPickBounds(rect: Rectangle): boolean {
+    return this.intersectsGridBounds(rect);
+  }
+
   // Bounds the quad tree files and culls by. Components whose rendered extent
   // overflows their grid footprint widen this, so panning past the footprint
   // does not cull still-visible pixels.

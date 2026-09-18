@@ -104,7 +104,8 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
     }
 
     // File by cullBounds so an element lands in an entry wrapping its full
-    // rendered extent. queryRange still tests the tight gridBounds.
+    // rendered extent. queryRange tests the pickBounds, which stay inside it —
+    // a text label is clickable where it is drawn, not only on its anchor cell.
     const elBounds = element.cullBounds;
     const elSize = Math.max(elBounds.width, elBounds.height);
     const centerX = elBounds.x + elBounds.width / 2;
@@ -223,7 +224,7 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
     out: T[]
   ): void {
     for (const element of entry.oversizeItems.children) {
-      if (element.intersectsGridBounds(range)) out.push(element);
+      if (element.intersectsPickBounds(range)) out.push(element);
     }
 
     const branches = entry.branches;
@@ -235,7 +236,7 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
       this.collectBranch(branches.se, range, out);
     } else {
       for (const element of entry.leafItems!.children) {
-        if (element.intersectsGridBounds(range)) out.push(element);
+        if (element.intersectsPickBounds(range)) out.push(element);
       }
     }
   }
