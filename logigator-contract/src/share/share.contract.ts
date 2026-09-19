@@ -22,7 +22,13 @@ const shareFields = {
   dependencies: z.array(documentDependencySchema),
   /** Fork lineage, root-first, derived from the server's own records. */
   attribution: z.array(forkAttributionSchema),
-  author: authorSchema
+  author: authorSchema,
+  /**
+   * The lifetime tally, so a landing page for a shared link can draw what the
+   * composed card already draws. Spelled as the community listings spell it —
+   * there is no `starred` beside it, this read having no caller to answer for.
+   */
+  stars: z.number().int().nonnegative()
 } as const;
 
 export const shareResponseSchema = z.discriminatedUnion('kind', [

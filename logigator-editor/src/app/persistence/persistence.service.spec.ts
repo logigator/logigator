@@ -192,7 +192,8 @@ function shareDetailResponse(
     document: circuitDocument(name),
     dependencies: [],
     attribution: overrides.attribution ?? [],
-    author: { id: uuid('author-1'), username: 'alice', avatar: null }
+    author: { id: uuid('author-1'), username: 'alice', avatar: null },
+    stars: 0
   };
   return overrides.type === 'comp'
     ? {

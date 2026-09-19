@@ -1,10 +1,13 @@
 import { HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
 import type { ShareResponse } from '@logigator/contract';
+import { starTally } from '../community/star-queries';
 import { ApiException } from '../common/api-exception';
 import { DB, type Database } from '../database/database.module';
 import {
+  componentStars,
   components,
+  projectStars,
   projects,
   users,
   type ComponentRow,
@@ -65,20 +68,22 @@ export class ShareService {
     const target = await this.resolve(link);
     const table = target.kind === 'project' ? projects : components;
 
-    const [author, dependencies, lineage] = await Promise.all([
+    const [author, dependencies, lineage, stars] = await Promise.all([
       this.author(target.row.userId),
       this.dependencies.summaries(
         target.kind === 'project' ? PROJECT_EDGES : COMPONENT_EDGES,
         target.row.id
       ),
-      forkLineage(this.db, table, target.row)
+      forkLineage(this.db, table, target.row),
+      this.stars(target)
     ]);
 
     const shared = {
       document: this.documents.read(target.row.document, target.row.id),
       dependencies,
       attribution: toAttribution(lineage),
-      author
+      author,
+      stars
     };
 
     return target.kind === 'project'
@@ -88,6 +93,22 @@ export class ShareService {
           component: toComponentSummary(target.row),
           ...shared
         };
+  }
+
+  /**
+   * The document's own tally, which the landing page draws and the composed
+   * card draws beside it. Two tables, because a component's stars are a table
+   * of their own.
+   */
+  private stars(target: ShareTarget): Promise<number> {
+    return target.kind === 'project'
+      ? starTally(this.db, projectStars, projectStars.projectId, target.row.id)
+      : starTally(
+          this.db,
+          componentStars,
+          componentStars.componentId,
+          target.row.id
+        );
   }
 
   private async author(userId: string): Promise<ReturnType<typeof toAuthor>> {

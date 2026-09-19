@@ -547,6 +547,17 @@ const en = {
       'Public components are published on your profile and discoverable by everyone. Private components are reachable only via the share link.',
     visibilityUpdated: 'Visibility updated.',
     visibilityFailed: 'Could not update the visibility.',
+    share: 'Share',
+    embed: 'Embed',
+    embedHide: 'Hide embed',
+    embedCopy: 'Copy code',
+    embedCopied: 'Embed code copied to clipboard.',
+    embedCopyFailed: 'Could not copy the embed code to the clipboard.',
+    embedHint: 'Paste this into a forum post, a wiki page or a lesson.',
+    formatLabel: 'Format',
+    formatMarkdown: 'Markdown',
+    formatHtml: 'HTML',
+    formatBbcode: 'BBCode',
     close: 'Close'
   },
   shareComponent: {

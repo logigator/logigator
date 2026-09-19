@@ -22,6 +22,15 @@ describe('renderRobotsTxt', () => {
     expect(FILE).toContain('Disallow: /editor/share/');
   });
 
+  it('leaves the language-prefixed share page crawlable, to be read as noindex', () => {
+    // A `/*/share/` rule would look like the careful thing to add and would
+    // break two things at once: the crawler would never fetch the page that
+    // says "noindex, follow", and the rule also matches the share card under
+    // `/api/share/`, which the `Allow:` above it exists to keep reachable. The
+    // page is kept out of indexes by its own head instead.
+    expect(FILE).not.toContain('Disallow: /*/share/');
+  });
+
   it('allows the share card ahead of the rule that would hide it', () => {
     // Longest-match resolution makes the order irrelevant to Google; a
     // first-match reader is why it is written this way round.

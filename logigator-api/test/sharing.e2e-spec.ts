@@ -162,6 +162,51 @@ describe('share links', () => {
       expect(response.json().document.name).toBe('Shared');
     });
 
+    it('answers the tally from the table the document is in', async () => {
+      // Two star tables, and the arm that reads the other one is where a
+      // copy-paste error hides: a project must not be answered with a
+      // component's stars, nor with none at all.
+      const project = await create<ProjectSummary>(
+        'projects',
+        {
+          name: 'Starred',
+          public: true,
+          document: circuitDocument('Starred', HALF_ADDER_BODY)
+        },
+        ada
+      );
+      const component = await create<ComponentSummary>(
+        'components',
+        {
+          name: 'Starred part',
+          symbol: 'SP',
+          public: true,
+          document: circuitDocument('Starred part', HALF_ADDER_BODY)
+        },
+        ada
+      );
+
+      // Starring is a community action, so it needs the document published and
+      // an account that is not the author's.
+      await api.inject({
+        method: 'PUT',
+        url: `/api/community/components/${component.link}/star`,
+        headers: grace.headers()
+      });
+
+      const sharedProject = await api.inject({
+        method: 'GET',
+        url: `/api/share/${project.link}`
+      });
+      const sharedComponent = await api.inject({
+        method: 'GET',
+        url: `/api/share/${component.link}`
+      });
+
+      expect(sharedProject.json().stars).toBe(0);
+      expect(sharedComponent.json().stars).toBe(1);
+    });
+
     it('does not consult the public flag', async () => {
       const project = await create<ProjectSummary>(
         'projects',

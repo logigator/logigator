@@ -1,0 +1,72 @@
+<div class="flex flex-col gap-3" *webTranslate="let t">
+  <div class="flex flex-wrap items-center gap-3">
+    <button
+      lgButton
+      outlined
+      severity="secondary"
+      type="button"
+      (click)="share()"
+    >
+      <i
+        [class]="hasSheet() ? 'ph ph-share-network' : 'ph ph-copy'"
+        aria-hidden="true"
+      ></i>
+      {{ hasSheet() ? t('share.label') : t('share.copyLabel') }}
+    </button>
+    <button
+      lgButton
+      outlined
+      severity="secondary"
+      type="button"
+      aria-controls="share-embed"
+      [attr.aria-expanded]="embedding()"
+      (click)="embedding.set(!embedding())"
+    >
+      <i class="ph ph-code" aria-hidden="true"></i>
+      {{ embedding() ? t('share.embedHide') : t('share.embedLabel') }}
+    </button>
+  </div>
+
+  @if (embedding()) {
+  <div
+    id="share-embed"
+    class="flex flex-col gap-2.5 rounded-md border border-border p-3.5"
+  >
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <lg-select-button
+        [ariaLabel]="t('share.formatLabel')"
+        optionLabel="label"
+        optionValue="value"
+        [allowEmpty]="false"
+        [options]="formats()"
+        [ngModel]="format()"
+        [ngModelOptions]="{ standalone: true }"
+        (ngModelChange)="selectFormat($event)"
+      />
+      <button
+        lgButton
+        outlined
+        severity="secondary"
+        size="sm"
+        type="button"
+        (click)="copyEmbed()"
+      >
+        <i class="ph ph-copy" aria-hidden="true"></i>
+        {{ t('share.embedCopy') }}
+      </button>
+    </div>
+    <!-- Read-only rather than a value behind a button: clipboard access is
+           refused in more situations than it is granted, so the snippet has to
+           be selectable by hand. -->
+    <textarea
+      lgTextarea
+      readonly
+      rows="4"
+      class="w-full font-mono text-xs"
+      [attr.aria-label]="t('share.embedLabel')"
+      [value]="embed()"
+    ></textarea>
+    <p class="text-sm leading-relaxed text-muted">{{ t('share.embedHint') }}</p>
+  </div>
+  }
+</div>

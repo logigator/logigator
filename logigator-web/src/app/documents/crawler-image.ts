@@ -3,6 +3,9 @@ import type {
   ImageFormat,
   ImageVariant
 } from '@logigator/contract';
+import { shareCardUrl } from '@logigator/ui/internal/share';
+
+export { shareCardUrl };
 
 /**
  * The one URL to hand a consumer that can negotiate nothing: a crawler reading
@@ -46,13 +49,13 @@ export function crawlerPreviewUrl(
  * whatever it picks, white on some and black on others. The card is flattened
  * onto an opaque plate and sells the editor with the space that leaves over.
  *
- * Addressed by the share link, as everything about a document is: the token is
- * the capability, so one route answers every consumer.
+ * The rule moved into `@logigator/ui` when the editor grew an embed block that
+ * needs the same address: one template, so the editor's snippet and this
+ * page's `og:image` cannot come to name different pictures. Re-exported from
+ * here rather than imported everywhere, and reached through the library's
+ * internal path rather than its public entry — this module is in the SSR
+ * host's graph, which may not pull Angular in.
  */
-export function shareCardUrl(link: string): string {
-  return `/api/share/${link}/card.png`;
-}
-
 /**
  * The same route as the path pattern `robots.txt` has to allow, built from the
  * one template so the rule cannot come to name a URL the site no longer emits —

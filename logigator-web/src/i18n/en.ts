@@ -49,6 +49,24 @@ const en = {
     /** Read after the count, so a screen reader says “214 stars”. */
     stars: 'stars'
   },
+  // The share controls, which a community page, a shelf dialog and the share
+  // page itself all draw — so their words belong under none of those.
+  share: {
+    label: 'Share',
+    copyLabel: 'Copy link',
+    copied: 'Link copied.',
+    copyFailed: 'The link could not be copied.',
+    embedLabel: 'Embed',
+    embedHide: 'Hide embed',
+    embedCopy: 'Copy code',
+    embedCopied: 'Embed code copied.',
+    embedCopyFailed: 'The embed code could not be copied.',
+    embedHint: 'Paste this into a forum post, a wiki page or a lesson.',
+    formatLabel: 'Format',
+    formatMarkdown: 'Markdown',
+    formatHtml: 'HTML',
+    formatBbcode: 'BBCode'
+  },
   errors: {
     retry: 'Retry'
   },
@@ -302,6 +320,16 @@ const en = {
         listErrorHeading: 'The list could not be loaded'
       }
     },
+    // Where a link somebody was handed lands. It draws the document's own
+    // facts under the community page's wording for them — same words, same
+    // facts — and names only what is particular to this page.
+    share: {
+      title: 'Shared circuit',
+      description: 'A circuit somebody shared on Logigator.',
+      openInEditor: 'Open in editor',
+      viewCommunity: 'View the community page',
+      errorHeading: 'The shared circuit could not be loaded'
+    },
     my: {
       nav: {
         label: 'My work',
@@ -357,7 +385,7 @@ const en = {
           'Anyone with the link below can open “{{name}}” in the editor, whether or not it is published.',
         linkLabel: 'Share link',
         linkHint:
-          'The link opens a read-only copy. Nobody can change your circuit through it.',
+          'Anyone with this link can view the circuit and take their own copy. Nobody can change yours through it.',
         copy: 'Copy',
         copied: 'Link copied.',
         copyFailed:

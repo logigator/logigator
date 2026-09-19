@@ -45,6 +45,22 @@ const fr: TranslationSchema = {
   documents: {
     stars: 'étoiles'
   },
+  share: {
+    label: 'Partager',
+    copyLabel: 'Copier le lien',
+    copied: 'Lien copié.',
+    copyFailed: 'Le lien n’a pas pu être copié.',
+    embedLabel: 'Intégrer',
+    embedHide: 'Masquer l’intégration',
+    embedCopy: 'Copier le code',
+    embedCopied: 'Code d’intégration copié.',
+    embedCopyFailed: 'Le code d’intégration n’a pas pu être copié.',
+    embedHint: 'À coller dans un message de forum, une page wiki ou un cours.',
+    formatLabel: 'Format',
+    formatMarkdown: 'Markdown',
+    formatHtml: 'HTML',
+    formatBbcode: 'BBCode'
+  },
   errors: {
     retry: 'Réessayer'
   },
@@ -295,6 +311,13 @@ const fr: TranslationSchema = {
         listErrorHeading: 'La liste n’a pas pu être chargée'
       }
     },
+    share: {
+      title: 'Circuit partagé',
+      description: 'Un circuit que quelqu’un a partagé sur Logigator.',
+      openInEditor: 'Ouvrir dans l’éditeur',
+      viewCommunity: 'Voir la page communautaire',
+      errorHeading: 'Le circuit partagé n’a pas pu être chargé'
+    },
     my: {
       nav: {
         label: 'Mon travail',
@@ -348,7 +371,7 @@ const fr: TranslationSchema = {
           'Toute personne disposant du lien ci-dessous peut ouvrir « {{name}} » dans l’éditeur, qu’il soit publié ou non.',
         linkLabel: 'Lien de partage',
         linkHint:
-          'Le lien ouvre une copie en lecture seule. Personne ne peut modifier ton circuit par ce biais.',
+          'Toute personne disposant de ce lien peut voir le circuit et en faire sa propre copie. Personne ne peut modifier le tien par son intermédiaire.',
         copy: 'Copier',
         copied: 'Lien copié.',
         copyFailed:

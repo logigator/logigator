@@ -8,6 +8,7 @@ import {
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import {
+  copyText,
   LgButton,
   LgDialogContent,
   LgIconField,
@@ -17,10 +18,13 @@ import {
   LgToggleSwitch,
   ToastService
 } from '@logigator/ui';
+import { shareCardUrl } from '../../../documents/crawler-image';
+import { ShareControls } from '../../../documents/share-controls';
 import type { CommunityKind } from '../../../api/services/community-api.service';
 import { DocumentsApiService } from '../../../api/services/documents-api.service';
 import { genericFailureKey } from '../../../forms/api-failure';
 import { SiteLinks } from '../../../layout/site-links';
+import { SITE_ORIGIN } from '../../../seo/site-origin';
 import { TranslateDirective } from '../../../translation/translate.directive';
 import { TranslationKey } from '../../../translation/translation-key.model';
 import { TranslationService } from '../../../translation/translation.service';
@@ -63,6 +67,7 @@ type PendingAction = 'visibility' | 'regenerate' | null;
     LgInputText,
     LgMessage,
     LgToggleSwitch,
+    ShareControls,
     TranslateDirective
   ],
   templateUrl: './share-document-dialog.html',
@@ -75,6 +80,8 @@ export class ShareDocumentDialog extends LgDialogContent<ShareDocumentData> {
   private readonly translation = inject(TranslationService);
   private readonly siteLinks = inject(SiteLinks);
 
+  private readonly origin = inject(SITE_ORIGIN).replace(/\/+$/, '');
+
   private readonly data = this.dialogData!;
 
   protected readonly kind = this.data.kind;
@@ -85,9 +92,13 @@ export class ShareDocumentDialog extends LgDialogContent<ShareDocumentData> {
   protected readonly pending = signal<PendingAction>(null);
   protected readonly failureKey = signal<TranslationKey | null>(null);
 
-  /** The editor's own share route, which needs no session to open. */
+  /**
+   * The page a link handed out lands on, which is what this dialog is for —
+   * the editor's own `/share/:link` route is where that page sends a reader,
+   * not an address to pass on.
+   */
   protected readonly shareUrl = computed(() =>
-    this.siteLinks.editorShare(this.link())
+    this.absolute(this.siteLinks.shareLanding(this.link()))
   );
 
   /** Where the document's community page is, while it is published. */
@@ -95,22 +106,35 @@ export class ShareDocumentDialog extends LgDialogContent<ShareDocumentData> {
     this.siteLinks.communityDocument(this.kind, this.link())
   );
 
+  /** The card the link unfurls as, absolute — an embed is pasted elsewhere. */
+  protected readonly cardUrl = computed(() =>
+    this.absolute(shareCardUrl(this.link()))
+  );
+
+  /**
+   * An embed links to the community page while the document is published: it is
+   * a link from somebody else's site, and the page that can rank is the one it
+   * should carry. Unpublished, the share page is the only address there is.
+   */
+  protected readonly embedUrl = computed(() =>
+    this.isPublic() ? this.absolute(this.communityUrl()) : this.shareUrl()
+  );
+
   protected async copyLink(): Promise<void> {
-    try {
-      await navigator.clipboard.writeText(this.shareUrl());
-      this.toast.add({
-        severity: 'success',
-        summary: this.translation.translate('pages.my.share.copied')
-      });
-    } catch {
-      // Clipboard access is refused in more situations than it is granted —
-      // an insecure origin, a permission the visitor declined — and the URL is
-      // in a field they can select, so this is a note rather than a failure.
-      this.toast.add({
-        severity: 'warn',
-        summary: this.translation.translate('pages.my.share.copyFailed')
-      });
-    }
+    // The same rule the share controls use, so a refusal reads the same way
+    // here as it does there.
+    const copied = await copyText(this.shareUrl());
+    this.toast.add({
+      severity: copied ? 'success' : 'warn',
+      summary: this.translation.translate(
+        copied ? 'pages.my.share.copied' : 'pages.my.share.copyFailed'
+      )
+    });
+  }
+
+  /** Every URL this dialog shows is copied or pasted elsewhere. */
+  private absolute(path: string): string {
+    return `${this.origin}${path}`;
   }
 
   protected async setPublic(value: boolean): Promise<void> {

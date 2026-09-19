@@ -1,16 +1,32 @@
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { cloneResponseSchema, type CloneResponse } from '@logigator/contract';
+import {
+  cloneResponseSchema,
+  shareResponseSchema,
+  type CloneResponse,
+  type ShareResponse
+} from '@logigator/contract';
 import { ApiBaseService } from './api-base.service';
 
 /**
- * Share links. The site only ever clones through one — reading a document is
- * the editor's job, and opening a share needs no request from here at all,
- * `<editor>/share/<link>` being a plain link.
+ * Share links. A link is a capability — it needs no session and ignores whether
+ * the document is public — so reading one is what puts a handed-out URL on a
+ * page of its own, and cloning is what puts the document in the caller's
+ * account.
  */
 @Injectable({ providedIn: 'root' })
 export class ShareApiService {
   private readonly api = inject(ApiBaseService);
+
+  /**
+   * GET /api/share/:link. The document behind a token, which the landing page
+   * renders: a link that was regenerated answers `not_found`, and one naming
+   * nothing at all never reaches here — a malformed token is a `404` from the
+   * API's own uuid pipe.
+   */
+  public read(link: string): Observable<ShareResponse> {
+    return this.api.get(`/api/share/${link}`, shareResponseSchema);
+  }
 
   /**
    * POST /api/share/:link/clone. Copies the document and the library it needs

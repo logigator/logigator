@@ -103,13 +103,21 @@ describe('every page route', () => {
       .map((page) => page.path);
 
     expect(new Set(noindex)).toEqual(
-      new Set(['/:lang/reset-password', '/:lang/verify-email/:token'])
+      new Set([
+        '/:lang/reset-password',
+        '/:lang/verify-email/:token',
+        // A share token is a capability: it needs no session and ignores
+        // whether the document is public, so an index holding the URL holds a
+        // circuit its owner never published.
+        '/:lang/share/:link'
+      ])
     );
   });
 
   it('names no trail on a page that cannot be one', () => {
     // The 404 is not a step towards anything, a token page would publish its
-    // token, and nothing under `my/` is reachable without a session.
+    // token, a share page is an entry point somebody was handed rather than a
+    // place arrived at, and nothing under `my/` is reachable without a session.
     const noBreadcrumb = rendered
       .filter((page) => page.seo?.breadcrumb === false)
       .map((page) => page.path);
@@ -120,6 +128,7 @@ describe('every page route', () => {
         '/:lang/my/components',
         '/:lang/my/account',
         '/:lang/verify-email/:token',
+        '/:lang/share/:link',
         '/:lang/**'
       ])
     );

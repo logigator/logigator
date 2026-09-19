@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { Inject, Injectable } from '@nestjs/common';
-import { count, eq } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
+import { starTally } from '../community/star-queries';
 import { ENV, type Env } from '../config/env';
 import { DB, type Database } from '../database/database.module';
 import {
@@ -178,19 +179,15 @@ export class ShareCardService {
     return author;
   }
 
-  private async stars(target: ShareTarget): Promise<number> {
-    const [row] =
-      target.kind === 'project'
-        ? await this.db
-            .select({ value: count() })
-            .from(projectStars)
-            .where(eq(projectStars.projectId, target.row.id))
-        : await this.db
-            .select({ value: count() })
-            .from(componentStars)
-            .where(eq(componentStars.componentId, target.row.id));
-
-    return row?.value ?? 0;
+  private stars(target: ShareTarget): Promise<number> {
+    return target.kind === 'project'
+      ? starTally(this.db, projectStars, projectStars.projectId, target.row.id)
+      : starTally(
+          this.db,
+          componentStars,
+          componentStars.componentId,
+          target.row.id
+        );
   }
 }
 

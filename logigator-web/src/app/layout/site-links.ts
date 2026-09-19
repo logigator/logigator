@@ -70,6 +70,16 @@ export class SiteLinks {
     return pathInLanguage(this.lang(), `/community/${kind}/${link}/stargazers`);
   }
 
+  /**
+   * Where a link somebody was handed lands: this site's page for it, in the
+   * sharer's language. The editor's own `/share/:link` route is where that
+   * page sends a reader — it is a destination, not an address to hand out, a
+   * static SPA shell being unable to carry a per-document card.
+   */
+  public shareLanding(link: string): string {
+    return pathInLanguage(this.lang(), `/share/${link}`);
+  }
+
   /** The share link is a capability, so this opens without a session. */
   public editorShare(link: string): string {
     return `${this.editor}/share/${link}`;

@@ -12,6 +12,19 @@ export type { LgImageSource } from './tokens/image-source';
 // the tile and the avatar do, and a second copy of the rule would drift.
 export type { LgPicture, LgPictureGroup } from './internal/picture';
 export { pictureFor } from './internal/picture';
+// Handing a link to somebody, and the snippet that puts a circuit on another
+// page. The editor and the site both build these, and what a recipient receives
+// is one artifact either way — so the rules live here rather than twice over.
+export type { LgShareOutcome, LgShareTarget } from './internal/share';
+export {
+  canShare,
+  copyText,
+  shareCardUrl,
+  shareLandingPath,
+  shareOrCopy
+} from './internal/share';
+export type { LgEmbedFormat, LgEmbedInput } from './internal/embed';
+export { EMBED_FORMATS, embedSnippet } from './internal/embed';
 export type { LgLabels, LgLabelResolver } from './tokens/labels';
 export { LG_DEFAULT_LABELS, LG_LABELS, provideLgLabels } from './tokens/labels';
 export type {

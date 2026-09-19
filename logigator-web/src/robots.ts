@@ -24,8 +24,15 @@ export function renderRobotsTxt(sitemap: string | null): string {
 
 # The share link is a capability: it needs no session and ignores whether
 # the document is public, so a page under it would put private circuits
-# into an index — and a training set — by URL alone. The editor answers one
-# such URL today; the second is the landing page this origin may still grow.
+# into an index — and a training set — by URL alone. Both rules are anchored,
+# which covers the unprefixed redirect and the editor's own route. The landing
+# page this comment used to anticipate is now real, at /<lang>/share/<link>,
+# and is deliberately NOT closed here: it answers "robots: noindex, follow"
+# instead, which is the only lever that works on a URL reached by links, since
+# a crawler is never told to skip what it is forbidden to fetch and "indexed,
+# though blocked" is the outcome this line is meant to prevent. Adding a
+# Disallow for it would also match the card under /api/share/, which the Allow
+# below is what keeps reachable.
 Disallow: /editor/share/
 Disallow: /share/
 

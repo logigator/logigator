@@ -29,6 +29,16 @@
     <p class="text-sm leading-relaxed text-muted">
       {{ t('pages.my.share.linkHint') }}
     </p>
+
+    <!-- Hands out the same link the field above shows, and an embed pointing at
+           the community page while there is one to point at. -->
+    <web-share-controls
+      class="mt-2 block"
+      [url]="shareUrl()"
+      [embedUrl]="embedUrl()"
+      [image]="cardUrl()"
+      [title]="name"
+    />
   </div>
 
   <div class="flex flex-col gap-2 border-t border-border pt-5">

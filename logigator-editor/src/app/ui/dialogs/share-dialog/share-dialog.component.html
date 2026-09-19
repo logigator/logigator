@@ -8,10 +8,69 @@
         <lg-input-icon class="ph ph-link"></lg-input-icon>
         <input lgInputText readonly class="w-full" [value]="shareUrl()" />
       </lg-icon-field>
-      <button lgButton icon="ph ph-copy" (onClick)="copyLink()">
-        {{ t('shareDialog.copy') }}
+      @if (hasSheet) {
+        <button lgButton icon="ph ph-share-network" (onClick)="share()">
+          {{ t('shareDialog.share') }}
+        </button>
+      } @else {
+        <button lgButton icon="ph ph-copy" (onClick)="copyLink()">
+          {{ t('shareDialog.copy') }}
+        </button>
+      }
+    </div>
+  </div>
+
+  <div class="flex flex-col gap-2">
+    <div>
+      <button
+        lgButton
+        severity="secondary"
+        [outlined]="true"
+        icon="ph ph-code"
+        (onClick)="embedding.set(!embedding())"
+      >
+        {{ embedding() ? t('shareDialog.embedHide') : t('shareDialog.embed') }}
       </button>
     </div>
+
+    @if (embedding()) {
+      <div class="flex flex-col gap-2 rounded-md border border-border p-3">
+        <div class="flex flex-wrap gap-2 items-center justify-between">
+          <lg-select-button
+            [ariaLabel]="t('shareDialog.formatLabel')"
+            optionLabel="label"
+            optionValue="value"
+            [allowEmpty]="false"
+            [options]="formatChoices()"
+            [ngModel]="format()"
+            [ngModelOptions]="{ standalone: true }"
+            (ngModelChange)="format.set($event)"
+          />
+          <button
+            lgButton
+            severity="secondary"
+            [outlined]="true"
+            size="sm"
+            icon="ph ph-copy"
+            (onClick)="copyEmbed()"
+          >
+            {{ t('shareDialog.embedCopy') }}
+          </button>
+        </div>
+        <!-- Read-only rather than behind the button alone: clipboard access is
+             refused in more situations than it is granted, so the snippet has
+             to be selectable by hand. -->
+        <textarea
+          lgTextarea
+          readonly
+          rows="4"
+          class="w-full font-mono text-xs"
+          [attr.aria-label]="t('shareDialog.embed')"
+          [value]="embed()"
+        ></textarea>
+        <p class="m-0 text-sm">{{ t('shareDialog.embedHint') }}</p>
+      </div>
+    }
   </div>
 
   <div class="flex flex-col gap-2">

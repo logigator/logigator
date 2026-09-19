@@ -45,6 +45,23 @@ const de: TranslationSchema = {
   documents: {
     stars: 'Sterne'
   },
+  share: {
+    label: 'Teilen',
+    copyLabel: 'Link kopieren',
+    copied: 'Link kopiert.',
+    copyFailed: 'Der Link konnte nicht kopiert werden.',
+    embedLabel: 'Einbetten',
+    embedHide: 'Einbetten ausblenden',
+    embedCopy: 'Code kopieren',
+    embedCopied: 'Einbettungscode kopiert.',
+    embedCopyFailed: 'Der Einbettungscode konnte nicht kopiert werden.',
+    embedHint:
+      'Zum Einfügen in einen Forenbeitrag, eine Wiki-Seite oder eine Unterrichtsstunde.',
+    formatLabel: 'Format',
+    formatMarkdown: 'Markdown',
+    formatHtml: 'HTML',
+    formatBbcode: 'BBCode'
+  },
   errors: {
     retry: 'Erneut laden'
   },
@@ -303,6 +320,13 @@ const de: TranslationSchema = {
         listErrorHeading: 'Die Liste konnte nicht geladen werden'
       }
     },
+    share: {
+      title: 'Geteilter Schaltkreis',
+      description: 'Ein Schaltkreis, den jemand auf Logigator geteilt hat.',
+      openInEditor: 'Im Editor öffnen',
+      viewCommunity: 'Zur Community-Seite',
+      errorHeading: 'Der geteilte Schaltkreis konnte nicht geladen werden'
+    },
     my: {
       nav: {
         label: 'Meine Arbeit',
@@ -356,7 +380,7 @@ const de: TranslationSchema = {
           'Wer den Link unten hat, kann „{{name}}“ im Editor öffnen – veröffentlicht oder nicht.',
         linkLabel: 'Link zum Teilen',
         linkHint:
-          'Der Link öffnet eine schreibgeschützte Kopie. Deine Schaltung kann darüber niemand ändern.',
+          'Wer diesen Link hat, kann die Schaltung ansehen und eine eigene Kopie anlegen. Deine Schaltung kann darüber niemand ändern.',
         copy: 'Kopieren',
         copied: 'Link kopiert.',
         copyFailed:

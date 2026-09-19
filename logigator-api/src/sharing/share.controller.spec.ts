@@ -20,6 +20,23 @@ const ETAG = '"a-composed-card"';
  * cache may send the tag back marked weak, or several of them, and neither
  * means a different picture — the rest of the route is covered end to end.
  */
+/** What a share read answers, with the tally the landing page draws. */
+const SHARED = {
+  kind: 'project',
+  project: { id: LINK, name: 'Half adder', link: LINK },
+  document: {
+    version: 1,
+    name: 'Half adder',
+    components: [],
+    wires: '',
+    definitions: []
+  },
+  dependencies: [],
+  attribution: [],
+  author: { id: LINK, username: 'alice', avatar: null },
+  stars: 7
+};
+
 describe('the share card route', () => {
   let app: NestFastifyApplication;
   const png = Buffer.from('89504e470d0a1a0a', 'hex');
@@ -28,7 +45,10 @@ describe('the share card route', () => {
     const moduleRef = await Test.createTestingModule({
       controllers: [ShareController],
       providers: [
-        { provide: ShareService, useValue: {} },
+        {
+          provide: ShareService,
+          useValue: { read: () => Promise.resolve(SHARED) }
+        },
         { provide: CloneService, useValue: {} },
         {
           provide: ShareCardService,
@@ -86,5 +106,15 @@ describe('the share card route', () => {
     const response = await card('"a-different-card"');
 
     expect(response.statusCode).toBe(200);
+  });
+
+  it('answers the read whole, tally included', async () => {
+    // The route hands the service's answer back rather than rebuilding it: a
+    // controller that picked fields out would drop whatever it was not told
+    // about, and the landing page draws the tally.
+    const response = await app.inject({ method: 'GET', url: `/share/${LINK}` });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toEqual(SHARED);
   });
 });

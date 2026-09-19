@@ -1,4 +1,6 @@
-import { sql, type Column, type SQL, type Table } from 'drizzle-orm';
+import { count, eq, sql, type Column, type SQL, type Table } from 'drizzle-orm';
+import type { PgTable } from 'drizzle-orm/pg-core';
+import type { Queryable } from '../database/database.module';
 
 /**
  * The two derived fields every public listing carries, as correlated
@@ -61,4 +63,32 @@ export function starCountSince(
      WHERE ${starredCircuit} = ${circuitId}
        AND ${starredAt} >= now() - make_interval(days => ${days})
   )`;
+}
+
+/**
+ * The lifetime tally of one row whose id is already in hand — the third star
+ * query, and the only one that is not part of a select list.
+ *
+ * A star is set, a card is composed and a share link is read by three services
+ * that each hold the row already, so there is no outer query to correlate
+ * against and nothing to gain from `starCount`'s shape. It was written out
+ * three times before this; it is one query, so it is one function.
+ *
+ * `PgTable` rather than `Table` because the query builder, unlike the `sql`
+ * template the builders above use, needs a table it can name.
+ */
+export async function starTally(
+  db: Queryable,
+  stars: PgTable,
+  starredCircuit: Column,
+  circuitId: string
+): Promise<number> {
+  const [row] = await db
+    .select({ value: count() })
+    .from(stars)
+    .where(eq(starredCircuit, circuitId));
+
+  // `count()` maps its own result through `Number`, so the `bigint` `pg` hands
+  // over arrives as a number rather than a string.
+  return row?.value ?? 0;
 }

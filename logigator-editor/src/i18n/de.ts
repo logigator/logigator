@@ -555,6 +555,19 @@ const de: TranslationSchema = {
       'Öffentliche Komponenten werden auf deinem Profil veröffentlicht und sind für alle auffindbar. Private Komponenten sind nur über den Freigabelink erreichbar.',
     visibilityUpdated: 'Sichtbarkeit aktualisiert.',
     visibilityFailed: 'Die Sichtbarkeit konnte nicht aktualisiert werden.',
+    share: 'Teilen',
+    embed: 'Einbetten',
+    embedHide: 'Einbetten ausblenden',
+    embedCopy: 'Code kopieren',
+    embedCopied: 'Einbettungscode in die Zwischenablage kopiert.',
+    embedCopyFailed:
+      'Der Einbettungscode konnte nicht in die Zwischenablage kopiert werden.',
+    embedHint:
+      'Zum Einfügen in einen Forenbeitrag, eine Wiki-Seite oder eine Unterrichtsstunde.',
+    formatLabel: 'Format',
+    formatMarkdown: 'Markdown',
+    formatHtml: 'HTML',
+    formatBbcode: 'BBCode',
     close: 'Schließen'
   },
   shareComponent: {

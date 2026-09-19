@@ -28,6 +28,12 @@ export interface SitemapPage {
  * holds every indexable page route to an entry here, so a page added to the
  * router and forgotten here is a failing test rather than a URL that quietly
  * never gets crawled.
+ *
+ * A route carrying a parameter is exempt from that check, and must stay out:
+ * the community's own pages are read from the API below, and `share/:link` is
+ * absent by decision rather than by omission — a share token is a capability,
+ * and naming one here would publish a URL its owner never published. A literal
+ * `:link` in the file would be a URL that resolves to nothing.
  */
 export const STATIC_PAGES: readonly SitemapPage[] = [
   { path: '/', priority: 1 },

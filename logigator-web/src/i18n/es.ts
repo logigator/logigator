@@ -45,6 +45,22 @@ const es: TranslationSchema = {
   documents: {
     stars: 'estrellas'
   },
+  share: {
+    label: 'Compartir',
+    copyLabel: 'Copiar enlace',
+    copied: 'Enlace copiado.',
+    copyFailed: 'No se pudo copiar el enlace.',
+    embedLabel: 'Insertar',
+    embedHide: 'Ocultar inserción',
+    embedCopy: 'Copiar código',
+    embedCopied: 'Código de inserción copiado.',
+    embedCopyFailed: 'No se pudo copiar el código de inserción.',
+    embedHint: 'Pégalo en un mensaje de foro, una página wiki o una clase.',
+    formatLabel: 'Formato',
+    formatMarkdown: 'Markdown',
+    formatHtml: 'HTML',
+    formatBbcode: 'BBCode'
+  },
   errors: {
     retry: 'Reintentar'
   },
@@ -301,6 +317,13 @@ const es: TranslationSchema = {
         listErrorHeading: 'No se pudo cargar la lista'
       }
     },
+    share: {
+      title: 'Circuito compartido',
+      description: 'Un circuito que alguien compartió en Logigator.',
+      openInEditor: 'Abrir en el editor',
+      viewCommunity: 'Ver la página de la comunidad',
+      errorHeading: 'No se pudo cargar el circuito compartido'
+    },
     my: {
       nav: {
         label: 'Mi trabajo',
@@ -354,7 +377,7 @@ const es: TranslationSchema = {
           'Cualquiera con el enlace de abajo puede abrir «{{name}}» en el editor, esté publicado o no.',
         linkLabel: 'Enlace para compartir',
         linkHint:
-          'El enlace abre una copia de solo lectura. Nadie puede cambiar tu circuito a través de él.',
+          'Cualquiera con este enlace puede ver el circuito y hacer su propia copia. Nadie puede cambiar el tuyo a través de él.',
         copy: 'Copiar',
         copied: 'Enlace copiado.',
         copyFailed:

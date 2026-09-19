@@ -304,11 +304,16 @@ path behaves the same in development).
   document's own page). Both pick the preview for the active theme in TypeScript — the two themes
   are separate renders, so a CSS-hidden second image would be downloaded for nothing; the tile does
   it because it takes one theme's ladder, the preview because it draws the `<picture>` itself
-  through `@logigator/ui`'s exported `pictureFor`. `crawler-image.ts` is the other rule: the one URL
+  through `@logigator/ui`'s exported `pictureFor`. `web-share-controls` is the one share row — the
+  sheet where the browser has one, the clipboard where it has not, and the embed disclosure — drawn
+  by a community page, a shelf dialog and the share page alike, over the rules in `@logigator/ui`'s
+  `internal/share` and `internal/embed`. `crawler-image.ts` is the other rule: the one URL
   to hand a consumer that negotiates nothing — a crawler reading JSON-LD, a share surface reading
   `og:image` — which is the widest rung in the format every consumer reads, and for a preview always
   the **light** slot, line art on a transparent ground disappearing wherever the consumer
-  composites onto white.
+  composites onto white. The composed card's URL moved into `@logigator/ui` for the reason
+  `pictureFor` did and is re-exported here, so `robots.ts` derives its `Allow:` line from the same
+  template the editor's snippet names.
 - `states/` — the shared empty and section-error objects (`web-empty-state`, `web-section-error`).
   There is no skeleton: every list is resolved by a guard, so the first byte carries content and a
   client-side navigation waits.
@@ -340,6 +345,15 @@ path behaves the same in development).
     re-running a guard only on a _path_ parameter change. The 404 sets
     the response status through `RESPONSE_INIT`; a soft 404 would be indexable, and the document and
     profile pages render that same component inline for a link naming nothing published.
+    `pages/share/` is where a **handed-out share link lands**: `GET /api/share/:link` resolved by a
+    guard, drawn as the circuit, its author, the tally and the fork it came from, with _open in
+    editor_, _save a copy_ and the share row. It is the site's page rather than the editor's own
+    `/share/:link` route (which stays as the _open in editor_ destination) because a static SPA shell
+    cannot carry a per-document `og:image`, and the token — a capability that ignores `public` — is
+    the one thing here that must never reach an index: `noindex` on the page, with `robots.ts`
+    leaving the language-prefixed route crawlable on purpose so that the tag is there to be read.
+    The API says `component` and the routes say `components`; that mapping is made once, in the
+    service's `kind` computed.
     `pages/my/` is the same shape from the owning side: two shelves (`/my/projects`,
     `/my/components`) over the caller-scoped document routes, and `/my/account`. Every one is behind
     `authGuard`, which returns a `UrlTree` — a real `302` during a server render, `@angular/ssr`
@@ -410,7 +424,11 @@ path behaves the same in development).
   the canonical-path redirect and before the language one — the only slot where an unprefixed path
   is still unprefixed. `robots.txt` names no crawler (allowing by omission is the decision, and the
   file says so in a comment), closes `/share/` and `/api/` with an `Allow:` for the card path ahead
-  of it, and **never answers non-200**: a `5xx` there is read as "crawl nothing", so a host
+  of it, and leaves `/:lang/share/<link>` **deliberately open**: the two rules are anchored and cover
+  the unprefixed redirect and the editor's route, while the landing page carries `noindex` and a
+  crawler is never told to skip what it is forbidden to fetch. A `/*/share/` rule would undo that and
+  would also catch the card under `/api/share/` — `robots.spec.ts` holds both halves. It
+  **never answers non-200**: a `5xx` there is read as "crawl nothing", so a host
   `requestOrigin` will not vouch for costs the `Sitemap:` line rather than the answer. The sitemap
   is the opposite — it fails whole rather than answering the static half, a sitemap that stops
   naming documents saying those URLs are gone — and emits **one `<url>` per language**, each its own
@@ -539,7 +557,11 @@ TypeScript with no build step — it is _not_ a `package.json` dependency of eit
   `collapse`, `icon`, `picture` (the `<picture>`/`srcset` grouping the avatar and the circuit tile
   share, which turns an image ladder into one `<source>` per encoding in the caller's own preference
   order — `pictureFor` is in `public-api.ts` because a consumer drawing a preview of its own has to
-  group it the same way, and a second copy of the rule would drift).
+  group it the same way, and a second copy of the rule would drift), plus `share` and `embed` on the
+  same terms: the editor and the site hand out one link and paste one snippet, so `shareOrCopy` (with
+  its `AbortError`-is-dismissal rule), `shareCardUrl` and `embedSnippet` (with its escaping) are one
+  definition rather than two. Both modules are Angular-free, like `markdown-urls`, because the SSR
+  host reaches the card URL through `crawler-image.ts`.
 - `tokens/` — shared types (`LgSeverity`, `LgSize`, form-field tokens).
 - `styles/theme.css` defines the `--lg-*` vars; `styles/theme.tw.css` maps them into Tailwind's
   `@theme` for the editor and the site.
@@ -692,7 +714,9 @@ the liveness probe; `GET /api/health/ready` probes Postgres and Redis (503 namin
   and re-extract job — keyset-paginated, one transaction per row, idempotent; it does not bump
   `version` but does put it in the `WHERE`, so a row a save reached first is skipped.
 - `sharing/` — reading a document by its share link, the card it unfurls as, and cloning it. The
-  link is a **capability**: the read needs no session and ignores `public`. `GET
+  link is a **capability**: the read needs no session and ignores `public`. `GET /share/:link`
+  answers the document, its author, its dependencies, its fork lineage and its **star tally** — the
+  site's landing page draws the same number the composed card draws beside it. `GET
 /share/:link/card.png` is the **composed 1200×630 share card** — `storage/share-card/` draws the
   whole plate as one SVG that libvips rasterizes once, and this service resolves the row, the author
   and the star tally, hashes them plus a layout version into the `ETag`, and keeps a small LRU with
@@ -710,7 +734,9 @@ the liveness probe; `GET /api/health/ready` probes Postgres and Redis (503 namin
   carries `public = true`**, which is why these queries live apart from the owner-scoped ones.
   Documents are addressed by their `link`, so regenerating the token takes the public page down with
   it. Star counts and "did the caller star it" are correlated subqueries (no counter column, no
-  `GROUP BY` to keep in step with the select list). **Ranking is a chain and every chain ends at
+  `GROUP BY` to keep in step with the select list), and `star-queries.ts` holds their **single-row
+  sibling** too: setting a star, composing a card and reading a share link each hold the row already,
+  so one `starTally` serves all three rather than a query written out three times. **Ranking is a chain and every chain ends at
   `id`**, paging being `OFFSET`-based: `trending` (the default) leads with the stars collected
   inside `TRENDING_WINDOW_DAYS` — a named constant, a ranking rule rather than an env var — then
   falls through to the lifetime tally and edit time, which is what makes it safe as the default from

@@ -2,16 +2,27 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import {
+  canShare,
+  copyText,
+  EMBED_FORMATS,
+  embedSnippet,
   LgButton,
   LgDialogContent,
   LgIconField,
   LgInputIcon,
   LgInputText,
   LgMessage,
+  LgSelectButton,
+  LgTextarea,
   LgToggleSwitch,
-  LgTooltip
+  LgTooltip,
+  shareCardUrl,
+  shareOrCopy,
+  type LgEmbedFormat
 } from '@logigator/ui';
 import { TranslationService } from '../../../translation/translation.service';
+import { TranslationKey } from '../../../translation/translation-key.model';
+import { communityDocumentUrl, shareLandingUrl } from './share-url';
 import { ProjectApiService } from '../../../api/services/project-api.service';
 import { ComponentApiService } from '../../../api/services/component-api.service';
 import { ProjectMetadataStore } from '../../../persistence/project-metadata.store';
@@ -26,6 +37,17 @@ interface ShareLinkPatch {
   public?: boolean;
   regenerateLink?: boolean;
 }
+
+/**
+ * The formats an embed can be pasted as, under the key each is named by. Proper
+ * nouns, so the four locales say the same thing — but they come from the table
+ * anyway, so a translator who needs them spelled otherwise can say so.
+ */
+const FORMAT_LABELS: Record<LgEmbedFormat, TranslationKey> = {
+  markdown: 'shareDialog.formatMarkdown',
+  html: 'shareDialog.formatHtml',
+  bbcode: 'shareDialog.formatBbcode'
+};
 
 /** What every dialog kind supplies up front. */
 interface ShareDialogBase {
@@ -68,6 +90,8 @@ export type ShareDialogData =
     LgInputIcon,
     LgInputText,
     LgMessage,
+    LgSelectButton,
+    LgTextarea,
     LgToggleSwitch,
     LgTooltip,
     TranslateDirective
@@ -91,25 +115,116 @@ export class ShareDialogComponent extends LgDialogContent<ShareDialogData> {
   protected readonly link = signal(this.data.link);
   protected readonly isPublic = signal(this.data.isPublic);
   protected readonly regenerating = signal(false);
+  protected readonly embedding = signal(false);
+  protected readonly format = signal<LgEmbedFormat>(EMBED_FORMATS[0]);
 
-  protected readonly shareUrl = computed(
-    () => `${window.location.origin}/share/${this.link()}`
+  /**
+   * Whether this browser has a sheet to open, which decides what the share
+   * button does. Read directly rather than after a render, unlike the site's
+   * copy of these controls: the editor is never server-rendered, so there is
+   * no second render for the two to disagree with each other.
+   */
+  protected readonly hasSheet = canShare();
+
+  /**
+   * The site's page for this document, which is what a recipient is handed.
+   * A `computed` over the active language rather than a field: a URL captured
+   * once would keep the language the sharer has since switched away from.
+   */
+  protected readonly shareUrl = computed(() =>
+    shareLandingUrl(this.translation.activeLang(), this.link())
   );
 
-  protected async copyLink(): Promise<void> {
-    try {
-      await navigator.clipboard.writeText(this.shareUrl());
+  /** Absolute, because an embed is pasted onto somebody else's site. */
+  protected readonly cardUrl = computed(
+    () => `${window.location.origin}${shareCardUrl(this.link())}`
+  );
+
+  /**
+   * Where an embed sends a reader: the community page while the document is
+   * published, because a snippet is a link from somebody else's site and the
+   * page that can rank is the one it should carry. Unpublished, the share page
+   * is the only address there is.
+   */
+  protected readonly embedUrl = computed(() =>
+    this.isPublic()
+      ? communityDocumentUrl(
+          this.translation.activeLang(),
+          this.kind,
+          this.link()
+        )
+      : this.shareUrl()
+  );
+
+  protected readonly formatChoices = computed(() =>
+    EMBED_FORMATS.map((format) => ({
+      value: format,
+      label: this.translation.translate(FORMAT_LABELS[format])
+    }))
+  );
+
+  protected readonly embed = computed(() =>
+    embedSnippet(this.format(), {
+      url: this.embedUrl(),
+      image: this.cardUrl(),
+      title: this.name
+    })
+  );
+
+  /**
+   * The sheet where there is one, the clipboard where there is not. A visitor
+   * closing the sheet and the sheet's own acknowledgement are both silent: one
+   * is a choice, the other needs no announcement.
+   */
+  protected async share(): Promise<void> {
+    const outcome = await shareOrCopy({
+      title: this.name,
+      url: this.shareUrl()
+    });
+
+    if (outcome === 'copied') {
       this.toast.success(
         this.translation.translate('shareDialog.linkCopied'),
         'ShareDialogComponent'
       );
-    } catch (err) {
+    }
+    if (outcome === 'failed') {
       this.toast.error(
         this.translation.translate('shareDialog.copyFailed'),
-        'ShareDialogComponent',
-        err
+        'ShareDialogComponent'
       );
     }
+  }
+
+  protected async copyLink(): Promise<void> {
+    if (await copyText(this.shareUrl())) {
+      this.toast.success(
+        this.translation.translate('shareDialog.linkCopied'),
+        'ShareDialogComponent'
+      );
+      return;
+    }
+    // Refused in more situations than it is granted — an insecure origin, a
+    // permission the visitor declined — and the URL is in a field they can
+    // select, so this is a note rather than a failure.
+    this.toast.error(
+      this.translation.translate('shareDialog.copyFailed'),
+      'ShareDialogComponent'
+    );
+  }
+
+  protected async copyEmbed(): Promise<void> {
+    if (await copyText(this.embed())) {
+      this.toast.success(
+        this.translation.translate('shareDialog.embedCopied'),
+        'ShareDialogComponent'
+      );
+      return;
+    }
+    this.toast.error(
+      this.translation.translate('shareDialog.embedCopyFailed'),
+      'ShareDialogComponent'
+    );
   }
 
   protected async regenerateLink(): Promise<void> {

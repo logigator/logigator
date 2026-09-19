@@ -555,6 +555,18 @@ const fr: TranslationSchema = {
       'Les composants publics sont publiés sur votre profil et visibles par tous. Les composants privés ne sont accessibles que via le lien de partage.',
     visibilityUpdated: 'Visibilité mise à jour.',
     visibilityFailed: 'Impossible de mettre à jour la visibilité.',
+    share: 'Partager',
+    embed: 'Intégrer',
+    embedHide: 'Masquer l’intégration',
+    embedCopy: 'Copier le code',
+    embedCopied: 'Code d’intégration copié dans le presse-papiers.',
+    embedCopyFailed:
+      'Impossible de copier le code d’intégration dans le presse-papiers.',
+    embedHint: 'À coller dans un message de forum, une page wiki ou un cours.',
+    formatLabel: 'Format',
+    formatMarkdown: 'Markdown',
+    formatHtml: 'HTML',
+    formatBbcode: 'BBCode',
     close: 'Fermer'
   },
   shareComponent: {

@@ -34,7 +34,12 @@ import {
   toProjectSummary
 } from '../documents/circuit-responses';
 import { AVATAR_VARIANTS, variantUrls } from '../storage/image-variants';
-import { starCount, starCountSince, starredByCaller } from './star-queries';
+import {
+  starCount,
+  starCountSince,
+  starredByCaller,
+  starTally
+} from './star-queries';
 
 /** The author columns every public response carries. */
 const authorColumns = {
@@ -228,7 +233,12 @@ export class CommunityService {
 
     return {
       starred,
-      stars: await this.tally(projectStars, projectStars.projectId, row.id)
+      stars: await starTally(
+        this.db,
+        projectStars,
+        projectStars.projectId,
+        row.id
+      )
     };
   }
 
@@ -257,7 +267,8 @@ export class CommunityService {
 
     return {
       starred,
-      stars: await this.tally(
+      stars: await starTally(
+        this.db,
         componentStars,
         componentStars.componentId,
         row.id
@@ -540,18 +551,6 @@ export class CommunityService {
       case 'trending':
         return [desc(window), desc(total), ...tail];
     }
-  }
-
-  private async tally(
-    stars: StarTable,
-    starredCircuit: Column,
-    id: string
-  ): Promise<number> {
-    const [row] = await this.db
-      .select({ value: count() })
-      .from(stars)
-      .where(eq(starredCircuit, id));
-    return row?.value ?? 0;
   }
 
   /** Who starred it, most recent first. */

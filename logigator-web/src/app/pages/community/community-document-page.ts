@@ -9,8 +9,11 @@ import { firstValueFrom } from 'rxjs';
 import { LgAvatar, LgButton, LgTag } from '@logigator/ui';
 import { RETURN_PATH_PARAM } from '@logigator/core';
 import { ShareApiService } from '../../api/services/share-api.service';
+import { shareCardUrl } from '../../documents/crawler-image';
 import { CircuitPreview } from '../../documents/circuit-preview';
+import { ShareControls } from '../../documents/share-controls';
 import { SiteLinks } from '../../layout/site-links';
+import { SITE_ORIGIN } from '../../seo/site-origin';
 import { SectionError } from '../../states/section-error';
 import { NotFoundPage } from '../not-found/not-found-page';
 import { TranslateDirective } from '../../translation/translate.directive';
@@ -40,6 +43,7 @@ import { CommunityDocumentService } from './community-document.service';
     NotFoundPage,
     RouterLink,
     SectionError,
+    ShareControls,
     TranslateDirective
   ],
   templateUrl: './community-document-page.html',
@@ -51,6 +55,7 @@ export class CommunityDocumentPage {
   private readonly session = inject(SessionService);
   private readonly router = inject(Router);
   private readonly translation = inject(TranslationService);
+  private readonly origin = inject(SITE_ORIGIN).replace(/\/+$/, '');
 
   protected readonly links = inject(SiteLinks);
   protected readonly document = this.content.document;
@@ -120,6 +125,24 @@ export class CommunityDocumentPage {
   protected readonly openHref = computed(() => {
     const document = this.document();
     return document ? this.links.editorShare(document.link) : '';
+  });
+
+  /**
+   * What a reader passes on: this page, absolute. Not the share landing page
+   * the dialogs hand out — a published circuit's own page is the one that can
+   * rank, and it is the one the reader is looking at.
+   */
+  protected readonly shareUrl = computed(() => {
+    const document = this.document();
+    return document
+      ? `${this.origin}${this.links.communityDocument(document.kind, document.link)}`
+      : '';
+  });
+
+  /** Absolute, because an embed is pasted onto somebody else's site. */
+  protected readonly cardUrl = computed(() => {
+    const document = this.document();
+    return document ? `${this.origin}${shareCardUrl(document.link)}` : '';
   });
 
   protected readonly stargazersHref = computed(() => {
