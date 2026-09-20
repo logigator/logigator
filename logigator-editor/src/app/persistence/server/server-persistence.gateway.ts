@@ -11,9 +11,11 @@ import { LoggingService } from '../../logging/logging.service';
 import { Project } from '../../project/project';
 import {
   isApiError,
+  type DocumentVisibility,
   type ProjectPage,
   type ProjectSummary
 } from '@logigator/contract';
+import type { LgDocumentKind } from '@logigator/ui';
 import {
   type CustomComponentDetails,
   type FileForkAttributionV1,
@@ -116,7 +118,7 @@ export class ServerPersistenceGateway {
       type: 'project',
       source: 'server',
       version: detail.version,
-      isPublic: detail.public,
+      visibility: detail.visibility,
       link: detail.link,
       attribution: toMetadataAttribution(detail.attribution)
     });
@@ -124,14 +126,18 @@ export class ServerPersistenceGateway {
     return project;
   }
 
+  /**
+   * An absent visibility is left absent: the API's own default for one is
+   * `unlisted`, a link that resolves and is in no listing.
+   */
   async createProject(
     name: string,
     description?: string,
-    isPublic?: boolean
+    visibility?: DocumentVisibility
   ): Promise<{ project: Project; id: string }> {
     const project = new Project();
     const summary = await firstValueFrom(
-      this.projectApi.create({ name, description, public: isPublic ?? false })
+      this.projectApi.create({ name, description, visibility })
     );
     this.metadataStore.register(project, {
       id: summary.id,
@@ -139,7 +145,7 @@ export class ServerPersistenceGateway {
       type: 'project',
       source: 'server',
       version: summary.version,
-      isPublic: summary.public,
+      visibility: summary.visibility,
       link: summary.link
     });
     return { project, id: summary.id };
@@ -154,19 +160,22 @@ export class ServerPersistenceGateway {
   async promoteToServer(
     project: Project,
     name: string,
-    isPublic: boolean
+    visibility: DocumentVisibility
   ): Promise<string> {
     const attribution = this.metadataStore.getMetadata(project)?.attribution;
     const id = await this.metadataStore.withDirtyGuard(project, async () => {
-      const summary = await this._createServerProject(project, name, isPublic, {
-        attribution
-      });
+      const summary = await this._createServerProject(
+        project,
+        name,
+        visibility,
+        { attribution }
+      );
 
       this.metadataStore.update(project, {
         source: 'server',
         id: summary.id,
         name,
-        isPublic: summary.public,
+        visibility: summary.visibility,
         version: summary.version,
         link: summary.link
       });
@@ -184,10 +193,10 @@ export class ServerPersistenceGateway {
   async createServerProjectFromProject(
     project: Project,
     name: string,
-    isPublic: boolean,
+    visibility: DocumentVisibility,
     attribution?: FileForkAttributionV1[]
   ): Promise<string> {
-    const summary = await this._createServerProject(project, name, isPublic, {
+    const summary = await this._createServerProject(project, name, visibility, {
       attribution
     });
     return summary.id;
@@ -204,7 +213,7 @@ export class ServerPersistenceGateway {
   private _createServerProject(
     project: Project,
     name: string,
-    isPublic: boolean,
+    visibility: DocumentVisibility,
     opts?: { description?: string; attribution?: FileForkAttributionV1[] }
   ): Promise<ProjectSummary> {
     const { file } = this.circuitFile.toDocument(
@@ -216,7 +225,7 @@ export class ServerPersistenceGateway {
       this.projectApi.create({
         name,
         description: opts?.description,
-        public: isPublic,
+        visibility,
         document: file
       })
     );
@@ -274,10 +283,15 @@ export class ServerPersistenceGateway {
     );
   }
 
+  /**
+   * The kind is the API's, and part of the address: the link is the document's
+   * capability in one of two tables, not a key that names its own.
+   */
   async loadShare(
+    kind: LgDocumentKind,
     linkId: string
   ): Promise<{ project: Project; type: 'project' | 'comp' }> {
-    const detail = await firstValueFrom(this.shareApi.read(linkId));
+    const detail = await firstValueFrom(this.shareApi.read(kind, linkId));
     const summary =
       detail.kind === 'project' ? detail.project : detail.component;
     const type = detail.kind === 'project' ? 'project' : 'comp';
@@ -301,7 +315,7 @@ export class ServerPersistenceGateway {
         name: summary.name,
         type,
         source: 'share',
-        isPublic: summary.public,
+        visibility: summary.visibility,
         link: linkId,
         attribution: toMetadataAttribution(detail.attribution)
       },
@@ -311,12 +325,13 @@ export class ServerPersistenceGateway {
     return { project, type };
   }
 
-  /** One endpoint for both kinds: the link says what it points at. */
+  /** One endpoint per kind: the link alone does not say which table it is in. */
   async cloneFromShare(
+    kind: LgDocumentKind,
     linkId: string
   ): Promise<{ id: string; type: 'project' | 'comp' }> {
     try {
-      const response = await firstValueFrom(this.shareApi.clone(linkId));
+      const response = await firstValueFrom(this.shareApi.clone(kind, linkId));
       return response.kind === 'project'
         ? { id: response.project.id, type: 'project' }
         : { id: response.component.id, type: 'comp' };
@@ -340,14 +355,14 @@ export class ServerPersistenceGateway {
     name: string;
     symbol: string;
     description: string;
-    isPublic?: boolean;
+    visibility?: DocumentVisibility;
   }): Promise<{ project: Project; masterTypeId: number }> {
     const summary = await firstValueFrom(
       this.componentApi.create({
         name: meta.name,
         symbol: meta.symbol,
         description: meta.description,
-        public: meta.isPublic ?? false
+        visibility: meta.visibility
       })
     );
 
@@ -360,7 +375,7 @@ export class ServerPersistenceGateway {
         symbol: meta.symbol,
         description: meta.description,
         link: summary.link,
-        isPublic: summary.public
+        visibility: summary.visibility
       },
       'server'
     );
@@ -370,7 +385,7 @@ export class ServerPersistenceGateway {
       type: 'comp',
       source: 'server',
       version: summary.version,
-      isPublic: summary.public
+      visibility: summary.visibility
     });
 
     return { project, masterTypeId };
@@ -388,13 +403,13 @@ export class ServerPersistenceGateway {
       name: string;
       symbol: string;
       description: string;
-      isPublic?: boolean;
+      visibility?: DocumentVisibility;
     }
   ): Promise<{
     id: string;
     version: number;
     link?: string;
-    isPublic: boolean;
+    visibility: DocumentVisibility;
   }> {
     const { file } = this.circuitFile.toDocument(project, meta.name);
     const summary = await firstValueFrom(
@@ -402,7 +417,7 @@ export class ServerPersistenceGateway {
         name: meta.name,
         symbol: meta.symbol,
         description: meta.description,
-        public: meta.isPublic ?? false,
+        visibility: meta.visibility,
         document: file
       })
     );
@@ -411,7 +426,7 @@ export class ServerPersistenceGateway {
       id: summary.id,
       version: summary.version,
       link: summary.link,
-      isPublic: summary.public
+      visibility: summary.visibility
     };
   }
 
@@ -448,7 +463,7 @@ export class ServerPersistenceGateway {
           numOutputs: detail.numOutputs,
           labels: detail.labels,
           link: detail.link,
-          isPublic: detail.public,
+          visibility: detail.visibility,
           lastEdited: isoToEpoch(detail.lastEditedAt)
         },
         'server'
@@ -460,7 +475,7 @@ export class ServerPersistenceGateway {
       type: 'comp',
       source: 'server',
       version: detail.version,
-      isPublic: detail.public
+      visibility: detail.visibility
     });
 
     return { project, masterTypeId };
@@ -510,7 +525,7 @@ export class ServerPersistenceGateway {
             numOutputs: summary.numOutputs,
             labels: summary.labels,
             link: summary.link,
-            isPublic: summary.public,
+            visibility: summary.visibility,
             lastEdited: isoToEpoch(summary.lastEditedAt)
             // circuit omitted — fetched on demand
           },
@@ -581,7 +596,7 @@ export class ServerPersistenceGateway {
       type: 'comp',
       source: 'server',
       version,
-      isPublic: def.isPublic ?? false
+      visibility: def.visibility ?? 'private'
     });
 
     return { project, masterTypeId };

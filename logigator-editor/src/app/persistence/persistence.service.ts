@@ -14,7 +14,12 @@ import { ProjectService } from '../project/project.service';
 import { ToastService } from '../logging/toast.service';
 import { LoggingService } from '../logging/logging.service';
 import { Project } from '../project/project';
-import type { ProjectPage } from '@logigator/contract';
+import {
+  isApiError,
+  type DocumentVisibility,
+  type ProjectPage
+} from '@logigator/contract';
+import type { LgDocumentKind } from '@logigator/ui';
 import { CustomComponentRegistry } from '../components/custom/custom-component-registry.service';
 import { DefinitionBinding } from '../custom-component/definition-binding';
 import { buildProject } from './circuit-builder';
@@ -37,6 +42,32 @@ import {
 import { AnalyticsService } from '../analytics/analytics.service';
 import { AnalyticsEvent } from '../analytics/analytics.mapping';
 import { WireRepairService } from '../project/wire-repair.service';
+
+/**
+ * What a load-as-main attempt did. The failure travels with the flag rather
+ * than as a bare `false`, because one caller — the legacy kind-free share
+ * route — has to tell "this table holds no such link" from "the server did not
+ * answer" before it can decide whether the other table is worth asking.
+ *
+ * `loaded: false` with a `null` error is a third answer: the attempt was
+ * superseded and owns nothing. It is not a failure to report and not a
+ * document to act on, which is what a caller that reads the outcome has to
+ * know — see {@link PersistenceService._loadAsMain}.
+ */
+export type LoadOutcome = { loaded: true } | { loaded: false; error: unknown };
+
+/** How an attempt reports itself; see {@link LoadAttemptOptions.deferNotFound}. */
+export interface LoadAttemptOptions {
+  /**
+   * Treats a `not_found` as an answer rather than a failure: nothing is
+   * toasted, no blank draft is created, and the outcome comes back to the
+   * caller. Set only where a second attempt follows, so that a walk over
+   * candidate tables costs one report rather than one per attempt. Every other
+   * failure is reported as usual, a second attempt being certain to fail the
+   * same way.
+   */
+  deferNotFound?: boolean;
+}
 
 @Injectable({ providedIn: 'root' })
 export class PersistenceService {
@@ -121,13 +152,13 @@ export class PersistenceService {
   async createProject(
     name: string,
     description?: string,
-    isPublic?: boolean
+    visibility?: DocumentVisibility
   ): Promise<string> {
     this._requireSignedIn();
     const { project, id } = await this.server.createProject(
       name,
       description,
-      isPublic
+      visibility
     );
     this._replaceMainProject(project);
     this.location.go(`/project/${id}`);
@@ -188,9 +219,10 @@ export class PersistenceService {
   }
 
   loadShare(
+    kind: LgDocumentKind,
     linkId: string
   ): Promise<{ project: Project; type: 'project' | 'comp' }> {
-    return this.server.loadShare(linkId);
+    return this.server.loadShare(kind, linkId);
   }
 
   /**
@@ -198,8 +230,8 @@ export class PersistenceService {
    * main. Which library the clone landed in picks the load path: a cloned
    * component reopens through {@link loadComponentAsMain}, not as a project.
    */
-  async cloneShare(linkId: string): Promise<Project> {
-    const { id, type } = await this.server.cloneFromShare(linkId);
+  async cloneShare(kind: LgDocumentKind, linkId: string): Promise<Project> {
+    const { id, type } = await this.server.cloneFromShare(kind, linkId);
     if (type === 'comp') {
       await this.loadComponentAsMain(id);
     } else {
@@ -233,7 +265,7 @@ export class PersistenceService {
       name: 'Untitled',
       type: 'project',
       source: 'browser',
-      isPublic: false
+      visibility: 'private'
     });
 
     this._replaceMainProject(project);
@@ -346,7 +378,7 @@ export class PersistenceService {
       name,
       type: 'project',
       source: 'browser',
-      isPublic: false,
+      visibility: 'private',
       attribution
     });
 
@@ -368,15 +400,17 @@ export class PersistenceService {
    * disposed; a failure toasts `failureMessageKey` and falls back to a blank
    * draft when no main project exists at all.
    */
-  private async _loadAsMain<T>(opts: {
-    /** Where the loaded document came from, for analytics. */
-    source: 'server' | 'browser' | 'component' | 'share';
-    load: () => Promise<T>;
-    projectOf: (result: T) => Project;
-    onLoaded: (result: T) => void;
-    failureMessageKey: TranslationKey;
-    failureDetail: string;
-  }): Promise<void> {
+  private async _loadAsMain<T>(
+    opts: {
+      /** Where the loaded document came from, for analytics. */
+      source: 'server' | 'browser' | 'component' | 'share';
+      load: () => Promise<T>;
+      projectOf: (result: T) => Project;
+      onLoaded: (result: T) => void;
+      failureMessageKey: TranslationKey;
+      failureDetail: string;
+    } & LoadAttemptOptions
+  ): Promise<LoadOutcome> {
     // One race token for every entry point: they all fill the single main
     // slot, so starting any discards a pending load of the others.
     const token = ++this._mainLoadToken;
@@ -385,7 +419,11 @@ export class PersistenceService {
       const result = await opts.load();
       if (!isCurrent()) {
         this._disposeProject(opts.projectOf(result));
-        return;
+        // Not `loaded: true`: this attempt owned nothing, a newer entry point
+        // having taken the slot. A caller that acts on the outcome — the
+        // legacy share route, which rewrites the address bar — would otherwise
+        // rewrite it to this document while the page shows the other one.
+        return { loaded: false, error: null };
       }
       opts.onLoaded(result);
       // The offer reads metadata that is registered as the project is placed.
@@ -393,17 +431,31 @@ export class PersistenceService {
       this.analytics.capture(AnalyticsEvent.ProjectLoaded, {
         source: opts.source
       });
+      return { loaded: true };
     } catch (e) {
-      if (isCurrent()) {
-        this.toast.error(
-          this.translation.translate(opts.failureMessageKey),
-          'PersistenceService',
-          `${opts.failureDetail}: ${formatHttpError(e)}`
-        );
-        if (!this.projectService.mainProject()) {
-          this.createAndSetEmptyProject();
-        }
+      if (!isCurrent()) {
+        // Superseded, so this failure is about an attempt nobody is waiting on
+        // any more: it is not reported and the caller is given no error to act
+        // on — a `not_found` here would otherwise send the legacy share route
+        // to the other table, whose attempt bumps the token again and discards
+        // the load that superseded this one. See the success branch above.
+        return { loaded: false, error: null };
       }
+      // An answer rather than a failure: nothing is reported and there is no
+      // blank draft to fall back to, the caller having a second attempt to
+      // make. See {@link LoadAttemptOptions.deferNotFound}.
+      if (opts.deferNotFound && isApiError(e, 'not_found')) {
+        return { loaded: false, error: e };
+      }
+      this.toast.error(
+        this.translation.translate(opts.failureMessageKey),
+        'PersistenceService',
+        `${opts.failureDetail}: ${formatHttpError(e)}`
+      );
+      if (!this.projectService.mainProject()) {
+        this.createAndSetEmptyProject();
+      }
+      return { loaded: false, error: e };
     }
   }
 
@@ -433,23 +485,32 @@ export class PersistenceService {
   /**
    * Loads a share link into the main slot. A component share fills it too,
    * opening standalone as `/component/:uuid` does: as a tab it would leave the
-   * main slot empty on a `/share/:linkId` page load, since the matched route
-   * creates no blank draft.
+   * main slot empty on a `/share/{kind}/{link}` page load, since the matched
+   * route creates no blank draft.
+   *
+   * The kind is the API's, because the link no longer names a table: the
+   * caller has it from its own URL and maps it once, in
+   * `routing/document-kind.ts`.
    */
-  async loadShareAsMain(linkId: string): Promise<void> {
-    await this._loadAsMain({
+  async loadShareAsMain(
+    kind: LgDocumentKind,
+    linkId: string,
+    opts?: LoadAttemptOptions
+  ): Promise<LoadOutcome> {
+    return this._loadAsMain({
       source: 'share',
-      load: () => this.loadShare(linkId),
+      load: () => this.loadShare(kind, linkId),
       projectOf: ({ project }) => project,
       onLoaded: ({ project, type }) => {
         this._replaceMainProject(project);
         this.logging.info(
-          `Loaded share ${linkId} (${type})`,
+          `Loaded share ${kind} ${linkId} (${type})`,
           'PersistenceService'
         );
       },
       failureMessageKey: 'persistence.shareLoadFailed',
-      failureDetail: `Failed to load share ${linkId}`
+      failureDetail: `Failed to load share ${linkId}`,
+      ...opts
     });
   }
 
@@ -481,7 +542,7 @@ export class PersistenceService {
     name: string;
     symbol: string;
     description: string;
-    isPublic?: boolean;
+    visibility?: DocumentVisibility;
   }): Promise<{ project: Project; masterTypeId: number }> {
     this._requireSignedIn();
     return this.server.createComponent(meta);

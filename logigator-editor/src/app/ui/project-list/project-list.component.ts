@@ -18,6 +18,7 @@ import {
   LgInputIcon,
   LgInputText,
   LgPaginator,
+  type LgDocumentVisibility,
   type LgPaginatorState,
   LgTooltip
 } from '@logigator/ui';
@@ -31,8 +32,8 @@ export interface ProjectListItem {
   lastEdited: string | number;
   /** Cloud share token; present on server items. */
   link?: string;
-  /** Cloud public visibility; present on server items. */
-  isPublic?: boolean;
+  /** How far that link reaches; present on server items. */
+  visibility?: LgDocumentVisibility;
 }
 
 const PAGE_SIZE = 20;

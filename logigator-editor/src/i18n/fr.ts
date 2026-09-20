@@ -508,9 +508,7 @@ const fr: TranslationSchema = {
     destinationLocal: 'Local',
     notLoggedIn:
       'Vous devez être connecté pour enregistrer des projets dans le cloud.',
-    public: 'Public',
-    publicInfo:
-      'Les projets publics sont publiés sur votre profil et accessibles à tous via un lien de partage. Les projets privés ne sont visibles que par vous.',
+    visibilityLabel: 'Qui peut l’ouvrir',
     localWarning:
       "Les projets locaux ne sont pas conservés d'un appareil à l'autre et peuvent être perdus."
   },
@@ -523,9 +521,7 @@ const fr: TranslationSchema = {
     storeLocal: 'Local',
     notLoggedIn:
       'Vous devez être connecté pour enregistrer des composants dans le cloud.',
-    public: 'Public',
-    publicInfo:
-      'Les composants publics sont publiés sur votre profil et accessibles à tous via un lien de partage. Les composants privés ne sont visibles que par vous.',
+    visibilityLabel: 'Qui peut l’ouvrir',
     localWarning:
       "Les composants locaux ne sont pas conservés d'un appareil à l'autre et peuvent être perdus.",
     create: 'Créer'
@@ -534,25 +530,39 @@ const fr: TranslationSchema = {
     button: 'Téléverser vers le cloud',
     signInTooltip: 'Connectez-vous pour téléverser vers le cloud'
   },
+  visibility: {
+    private: {
+      label: 'Toi uniquement',
+      hint: 'Toi seul peux l’ouvrir — rien n’est accessible par un lien.'
+    },
+    unlisted: {
+      label: 'Toute personne avec le lien',
+      hint: 'Quiconque détient le lien peut l’ouvrir en lecture seule. Il reste hors des listes communautaires et hors des moteurs de recherche.'
+    },
+    public: {
+      label: 'Tout le monde',
+      hint: 'Dans les listes communautaires, ouvert à tout le monde et indexé par les moteurs de recherche.'
+    }
+  },
   shareDialog: {
     header: 'Partager le projet',
     headerComponent: 'Partager le composant',
-    intro:
-      'Toute personne disposant de ce lien peut ouvrir « {{name}} » en lecture seule et le cloner dans sa propre bibliothèque.',
+    intro: 'Choisis qui peut ouvrir « {{name}} ».',
+    visibilityLabel: 'Qui peut l’ouvrir',
     linkLabel: 'Lien de partage',
+    noLink:
+      'Tant que le document est privé, personne ne peut l’ouvrir. Le lien est conservé : choisis « Toute personne avec le lien » pour redonner la même URL — c’est aussi là que tu peux le remplacer.',
+    viewPublicPage: 'Voir la page communautaire',
     copy: 'Copier le lien',
     linkCopied: 'Lien de partage copié dans le presse-papiers.',
     copyFailed: 'Impossible de copier le lien dans le presse-papiers.',
     regenerate: 'Régénérer le lien',
     regenerateWarning:
-      "La régénération crée un nouveau lien et invalide définitivement le lien actuel — toute personne utilisant l'ancien lien perdra l'accès.",
+      'L’ancien lien cesse immédiatement de fonctionner, pour toutes les personnes qui l’ont. Le circuit lui-même reste inchangé.',
+    linkPublished:
+      'Le lien n’a pas été remplacé : ce document est publié, et son lien est l’adresse de sa page.',
     linkRegenerated: 'Un nouveau lien de partage a été généré.',
     regenerateFailed: 'Impossible de régénérer le lien de partage.',
-    public: 'Public',
-    publicInfoProject:
-      'Les projets publics sont publiés sur votre profil et visibles par tous. Les projets privés ne sont accessibles que via le lien de partage.',
-    publicInfoComponent:
-      'Les composants publics sont publiés sur votre profil et visibles par tous. Les composants privés ne sont accessibles que via le lien de partage.',
     visibilityUpdated: 'Visibilité mise à jour.',
     visibilityFailed: 'Impossible de mettre à jour la visibilité.',
     share: 'Partager',
@@ -596,11 +606,7 @@ const fr: TranslationSchema = {
       "Un projet cloud ne peut contenir que des composants cloud ; chacun de ceux-ci est donc d'abord téléversé dans votre bibliothèque cloud puis référencé.",
     unresolvableWarning:
       '{{count}} composant(s) intégré(s) ne peuvent plus être publiés (leur entrée de bibliothèque a disparu) et resteront de simples copies intégrées.',
-    public: 'Public',
-    publicInfoProject:
-      'Les projets publics sont publiés sur votre profil et accessibles à tous via un lien de partage. Les projets privés ne sont visibles que par vous.',
-    publicInfoComponent:
-      'Les composants publics sont publiés sur votre profil et accessibles à tous via un lien de partage. Les composants privés ne sont visibles que par vous.',
+    visibilityLabel: 'Qui peut l’ouvrir',
     notLoggedIn: 'Vous devez être connecté pour téléverser vers le cloud.',
     cancel: 'Annuler',
     upload: 'Téléverser',

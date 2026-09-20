@@ -1,4 +1,5 @@
 import { inject, Injectable, signal } from '@angular/core';
+import type { LgDocumentVisibility } from '@logigator/ui';
 import { filter, Observable, Subject } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 import { ComponentProviderService } from '../component-provider.service';
@@ -75,7 +76,7 @@ export class CustomComponentRegistry {
       numOutputs: meta.numOutputs ?? 0,
       labels: meta.labels ? [...meta.labels] : [],
       link: meta.link,
-      isPublic: meta.isPublic,
+      visibility: meta.visibility,
       // No timestamp means it is being created now, so it sorts to the top.
       lastEdited: meta.lastEdited ?? Date.now(),
       circuit: meta.circuit ? cloneCircuit(meta.circuit) : undefined
@@ -289,7 +290,7 @@ export class CustomComponentRegistry {
    */
   public setMasterShareInfo(
     masterTypeId: number,
-    patch: { link?: string; isPublic?: boolean }
+    patch: { link?: string; visibility?: LgDocumentVisibility }
   ): void {
     const def = this._definitions.get(masterTypeId);
     if (!def || def.kind !== 'master') {
@@ -297,7 +298,7 @@ export class CustomComponentRegistry {
       return;
     }
     if (patch.link !== undefined) def.link = patch.link;
-    if (patch.isPublic !== undefined) def.isPublic = patch.isPublic;
+    if (patch.visibility !== undefined) def.visibility = patch.visibility;
   }
 
   public getDefinition(typeId: number): CustomComponentDefinition | undefined {
@@ -395,7 +396,7 @@ export class CustomComponentRegistry {
     masterTypeId: number,
     newId: string,
     version: number,
-    shareInfo?: { link?: string; isPublic?: boolean }
+    shareInfo?: { link?: string; visibility?: LgDocumentVisibility }
   ): void {
     const def = this._definitions.get(masterTypeId);
     if (!def || def.kind !== 'master') {
@@ -412,7 +413,7 @@ export class CustomComponentRegistry {
     def.version = version;
     // Cloud identity brings a share link and a visibility with it.
     def.link = shareInfo?.link;
-    def.isPublic = shareInfo?.isPublic;
+    def.visibility = shareInfo?.visibility;
     this._idToMasterTypeId.set(newId, masterTypeId);
     this._masterToSnapshotTypeId.delete(masterTypeId);
     this._provider.register(buildCustomComponentConfig(def));

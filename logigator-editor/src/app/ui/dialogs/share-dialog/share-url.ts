@@ -1,11 +1,22 @@
 import { DEFAULT_LANGUAGE, isAvailableLanguage } from '@logigator/core';
-import { shareLandingPath } from '@logigator/ui';
+import { documentPath, type LgDocumentKind } from '@logigator/ui';
+import { routeKindOf } from '../../../routing/document-kind';
 
 /**
- * Where a shared link lands: the site's own page for it, under the sharer's
- * language — not the editor's own `/share/:link` route, which is where that
- * page sends a reader. A pasted link has to unfurl, and the editor is a static
- * SPA shell whose `index.html` carries one generic card for every URL.
+ * Where a shared link lands: the site's own page for the document, under the
+ * sharer's language — not the editor's own `/share/{kind}/{link}` route, which
+ * is where that page sends a reader. A pasted link has to unfurl, and the
+ * editor is a static SPA shell whose `index.html` carries one generic card for
+ * every URL.
+ *
+ * One builder for every state, because there is one address in every state: a
+ * document's page lives at `/community/{kind}/{link}` whether it is listed, and
+ * the link is what makes it resolve. What changes with the state is whether
+ * anybody else can open it, not where it is.
+ *
+ * The kind arrives in the API's spelling — that is what a dialog holds — and is
+ * spelled the way the route does it here, the one mapping being
+ * `routing/document-kind.ts`'s.
  *
  * The origin is `window.location`'s: the editor is served under `/editor` on
  * the origin whose root the site answers, so the two are the same host. There
@@ -17,22 +28,12 @@ import { shareLandingPath } from '@logigator/ui';
  * `preferences` cookie, which is client-writable and need not name a language
  * either app can render.
  */
-export function shareLandingUrl(lang: string, link: string): string {
-  return `${window.location.origin}${languageSegment(lang)}${shareLandingPath(link)}`;
-}
-
-/**
- * A published document's community page, for the embed a published document
- * gets: a snippet is a link from somebody else's site, and the page that can
- * rank is the one it should carry.
- */
-export function communityDocumentUrl(
+export function shareDocumentUrl(
   lang: string,
-  kind: 'project' | 'component',
+  kind: LgDocumentKind,
   link: string
 ): string {
-  const table = kind === 'project' ? 'projects' : 'components';
-  return `${window.location.origin}${languageSegment(lang)}/community/${table}/${link}`;
+  return `${window.location.origin}${languageSegment(lang)}${documentPath(routeKindOf(kind), link)}`;
 }
 
 /** `/de`, from whatever the cookie happened to hold. */

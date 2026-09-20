@@ -1,7 +1,7 @@
 import { inject, Injectable, Type } from '@angular/core';
 import { ProjectRoute } from './routes/project.route';
 import { ComponentRoute } from './routes/component.route';
-import { ShareRoute } from './routes/share.route';
+import { LegacyShareRoute, ShareRoute } from './routes/share.route';
 import { LocalProjectRoute } from './routes/local-project.route';
 import { Route } from './route.model';
 import { Location } from '@angular/common';
@@ -15,6 +15,9 @@ const ROUTES: Type<Route>[] = [
   ProjectRoute,
   ComponentRoute,
   ShareRoute,
+  // After the kind-carrying route: the two take different numbers of segments,
+  // so neither can shadow the other, and the legacy one is the fallback shape.
+  LegacyShareRoute,
   LocalProjectRoute
 ];
 

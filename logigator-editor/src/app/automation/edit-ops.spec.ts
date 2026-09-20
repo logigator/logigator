@@ -233,7 +233,7 @@ describe('applyEditOps', () => {
         name: 'A',
         type: 'comp',
         source: 'browser',
-        isPublic: false
+        visibility: 'private'
       });
 
       const result = apply({

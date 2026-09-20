@@ -6,13 +6,13 @@ import {
   LgInputText,
   LgMessage,
   LgSelectButton,
-  LgToggleSwitch,
-  LgTooltip
+  type LgDocumentVisibility
 } from '@logigator/ui';
 import { TranslationService } from '../../../translation/translation.service';
 import { CustomComponentService } from '../../../custom-component/custom-component.service';
 import { UserService } from '../../../user/user.service';
 import { TranslateDirective } from '../../../translation/translate.directive';
+import { VisibilityPickerComponent } from '../../visibility-picker/visibility-picker.component';
 
 /**
  * Collects the metadata for a new custom component and hands it to
@@ -24,12 +24,11 @@ import { TranslateDirective } from '../../../translation/translate.directive';
   imports: [
     FormsModule,
     LgInputText,
-    LgToggleSwitch,
     LgSelectButton,
-    LgTooltip,
     LgButton,
     TranslateDirective,
-    LgMessage
+    LgMessage,
+    VisibilityPickerComponent
   ],
   templateUrl: './new-component-dialog.component.html'
 })
@@ -53,7 +52,8 @@ export class NewComponentDialogComponent {
   protected readonly name = signal('');
   protected readonly symbol = signal('');
   protected readonly description = signal('');
-  protected readonly isPublic = signal(true);
+  /** Creating keeps publishing, which is what this dialog is for. */
+  protected readonly visibility = signal<LgDocumentVisibility>('public');
   /** Cloud when signed in; local is the only creatable option otherwise. */
   protected readonly source = signal<'server' | 'browser'>(
     this.userService.user() ? 'server' : 'browser'
@@ -75,7 +75,7 @@ export class NewComponentDialogComponent {
         name: this.name().trim(),
         symbol: this.symbol().trim(),
         description: this.description().trim(),
-        isPublic: this.isPublic(),
+        visibility: this.visibility(),
         source: this.source()
       })
       .catch(() => undefined);

@@ -59,7 +59,7 @@ describe('CustomComponentService', () => {
       name: 'Main',
       type: 'project',
       source: 'browser',
-      isPublic: false
+      visibility: 'private'
     });
     projectService.setMainProject(main);
   });

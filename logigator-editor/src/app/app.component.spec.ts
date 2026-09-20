@@ -117,7 +117,7 @@ describe('AppComponent', () => {
       name: 'P',
       type: 'project',
       source: 'browser',
-      isPublic: false
+      visibility: 'private'
     });
     projectService.setMainProject(project);
     fixture.detectChanges();

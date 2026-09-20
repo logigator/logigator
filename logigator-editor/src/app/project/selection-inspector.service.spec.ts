@@ -43,7 +43,7 @@ describe('SelectionInspectorService', () => {
       name: 'P',
       type: 'project',
       source: 'browser',
-      isPublic: false
+      visibility: 'private'
     });
     projectService.setMainProject(project);
     // Subscribe the inspector to this project's selection.

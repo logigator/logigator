@@ -94,7 +94,7 @@ describe('AutomationApiService', () => {
         name: 'My Circuit',
         type: 'project',
         source: 'browser',
-        isPublic: false
+        visibility: 'private'
       });
       project.addComponent(makeAnd(2, undefined, 2, 3));
 
@@ -204,7 +204,7 @@ describe('AutomationApiService', () => {
         name: 'Exported',
         type: 'project',
         source: 'browser',
-        isPublic: false
+        visibility: 'private'
       });
       project.addComponent(makeAnd(2, undefined, 1, 1));
 

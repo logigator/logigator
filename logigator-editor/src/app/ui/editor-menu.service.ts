@@ -548,7 +548,13 @@ export class EditorMenuService {
       : null;
     if (metadata?.source !== 'share' || !metadata.link) return;
     try {
-      await this.persistenceService.cloneShare(metadata.link);
+      // The clone goes through the API's own kind spelling, which is not the
+      // editor's `comp` — one conditional rather than a mapping table, the two
+      // values being what a `type` field has always had.
+      await this.persistenceService.cloneShare(
+        metadata.type === 'comp' ? 'component' : 'project',
+        metadata.link
+      );
       this.toastService.success(
         this.translation.translate('persistence.shareCloned'),
         'EditorMenuService'
@@ -580,7 +586,7 @@ export class EditorMenuService {
         projectId: metadata.id,
         name: metadata.name,
         link: metadata.link ?? '',
-        isPublic: metadata.isPublic ?? false
+        visibility: metadata.visibility
       }
     });
   }

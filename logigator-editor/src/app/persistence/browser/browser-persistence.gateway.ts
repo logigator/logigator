@@ -54,7 +54,7 @@ export class BrowserPersistenceGateway {
       name,
       type: 'project',
       source: 'browser',
-      isPublic: false,
+      visibility: 'private',
       attribution
     });
 
@@ -107,7 +107,7 @@ export class BrowserPersistenceGateway {
       name: record.name,
       type: 'comp',
       source: 'browser',
-      isPublic: false
+      visibility: 'private'
     });
 
     return { project, masterTypeId };

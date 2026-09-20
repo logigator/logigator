@@ -19,6 +19,7 @@ import {
   type SnapshotDefinition
 } from '@logigator/core';
 import { AuthRequiredError } from './persistence-errors';
+import type { DocumentVisibility } from '@logigator/contract';
 import { buildProject } from './circuit-builder';
 import { warnSkippedCustoms } from './load-warnings';
 import { AnalyticsService } from '../analytics/analytics.service';
@@ -67,14 +68,14 @@ export class PromotionService {
   async saveDraftAsServer(
     project: Project,
     name: string,
-    isPublic: boolean
+    visibility: DocumentVisibility
   ): Promise<void> {
     this._requireSignedIn();
-    const id = await this.server.promoteToServer(project, name, isPublic);
+    const id = await this.server.promoteToServer(project, name, visibility);
     this.location.go(`/project/${id}`);
     this.analytics.capture(AnalyticsEvent.ProjectUploaded, {
       kind: 'project',
-      isPublic
+      visibility
     });
   }
 
@@ -86,7 +87,7 @@ export class PromotionService {
    */
   async promoteProjectToServer(
     project: Project,
-    isPublic: boolean
+    visibility: DocumentVisibility
   ): Promise<void> {
     const metadata = this.metadataStore.getMetadata(project);
     if (
@@ -102,13 +103,13 @@ export class PromotionService {
 
     // The only fail-able, irreversible step: until it returns nothing local
     // has changed and the upload can be retried.
-    await this.server.promoteToServer(project, metadata.name, isPublic);
+    await this.server.promoteToServer(project, metadata.name, visibility);
     this.location.go(`/project/${this.metadataStore.getMetadata(project)!.id}`);
 
     await this._dropBrowserProjectRecord(oldId);
     this.analytics.capture(AnalyticsEvent.ProjectUploaded, {
       kind: 'project',
-      isPublic
+      visibility
     });
   }
 
@@ -120,12 +121,12 @@ export class PromotionService {
    */
   async uploadStoredProjectToServer(
     id: string,
-    isPublic: boolean
+    visibility: DocumentVisibility
   ): Promise<void> {
     this._requireSignedIn();
     const main = this.projectService.mainProject();
     if (main && this.metadataStore.getMetadata(main)?.id === id) {
-      await this.promoteProjectToServer(main, isPublic);
+      await this.promoteProjectToServer(main, visibility);
       return;
     }
 
@@ -138,7 +139,7 @@ export class PromotionService {
       this.server.createServerProjectFromProject(
         temp,
         record.name,
-        isPublic,
+        visibility,
         attribution
       )
     );
@@ -147,7 +148,7 @@ export class PromotionService {
     await this._dropBrowserProjectRecord(id);
     this.analytics.capture(AnalyticsEvent.ProjectUploaded, {
       kind: 'project',
-      isPublic
+      visibility
     });
   }
 
@@ -160,7 +161,10 @@ export class PromotionService {
    */
   async promoteComponentToServer(
     masterTypeId: number,
-    isPublic = false
+    // A caller with no opinion gets `unlisted`: a link that resolves for
+    // whoever holds it and is in no listing, which is what the API's own
+    // default for an absent field means.
+    visibility: DocumentVisibility = 'unlisted'
   ): Promise<void> {
     const def = this.registry.getDefinition(masterTypeId);
     if (!def || def.kind !== 'master' || def.source !== 'browser' || !def.id) {
@@ -179,13 +183,13 @@ export class PromotionService {
       id: newId,
       version,
       link: newLink,
-      isPublic: newIsPublic
+      visibility: newVisibility
     } = await this._withProjectFromContent(record.content, (temp) =>
       this.server.promoteComponentFromProject(temp, {
         name: def.name,
         symbol: def.symbol,
         description: def.description,
-        isPublic
+        visibility
       })
     );
 
@@ -206,11 +210,11 @@ export class PromotionService {
 
     this.registry.promoteMaster(masterTypeId, newId, version, {
       link: newLink,
-      isPublic: newIsPublic
+      visibility: newVisibility
     });
     this.analytics.capture(AnalyticsEvent.ProjectUploaded, {
       kind: 'component',
-      isPublic
+      visibility
     });
     this.logging.info(
       `Promoted component ${oldId} -> ${newId} (v${version})`,

@@ -66,7 +66,9 @@ export class ShareComponentActionComponent {
         masterTypeId: resolved.masterTypeId,
         name: master.name,
         link: master.link ?? '',
-        isPublic: master.isPublic ?? false
+        // A server master always carries both; the fallback keeps the dialog
+        // from offering a URL that no state backs.
+        visibility: master.visibility ?? 'private'
       }
     });
   }

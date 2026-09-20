@@ -50,7 +50,7 @@ describe('AutomationApiService documents', () => {
       name: 'Main',
       type: 'project',
       source: 'browser',
-      isPublic: false
+      visibility: 'private'
     });
     projectService.setMainProject(main);
   });

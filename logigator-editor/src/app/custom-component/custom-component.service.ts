@@ -10,6 +10,7 @@ import { ComponentLibraryService } from './component-library.service';
 import { PromotionService } from '../persistence/promotion.service';
 import { CustomComponentRegistry } from '../components/custom/custom-component-registry.service';
 import { CustomComponentDetails } from '@logigator/core';
+import type { DocumentVisibility } from '@logigator/contract';
 import { ComponentProviderService } from '../components/component-provider.service';
 import { CustomComponent } from '../components/custom/custom-component';
 import { Action } from '../actions/action';
@@ -33,7 +34,8 @@ export interface NewComponentMeta {
   name: string;
   symbol: string;
   description: string;
-  isPublic?: boolean;
+  /** Chosen by the user in the dialog; the API's default applies without one. */
+  visibility?: DocumentVisibility;
   /** Which library the new master lives in. Chosen by the user in the dialog. */
   source: 'server' | 'browser';
 }
@@ -106,7 +108,9 @@ export class CustomComponentService {
       name: meta.name,
       type: 'comp',
       source: 'browser',
-      isPublic: meta.isPublic ?? false
+      // No link reaches a local master; the chosen state is the API's to hold
+      // from the first cloud write on.
+      visibility: 'private'
     });
 
     this.metadataStore.markDirty(project);
@@ -225,7 +229,7 @@ export class CustomComponentService {
         name: def.name,
         type: 'comp',
         source: 'share',
-        isPublic: false
+        visibility: 'private'
       },
       false
     );

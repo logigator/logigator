@@ -501,9 +501,7 @@ const en = {
     destinationCloud: 'Cloud',
     destinationLocal: 'Local',
     notLoggedIn: 'You must be logged in to save projects to the cloud.',
-    public: 'Public',
-    publicInfo:
-      'Public projects are published on your profile and accessible to everyone via a share link. Private projects are only visible to you.',
+    visibilityLabel: 'Who can open it',
     localWarning:
       'Local projects are not persisted across devices and may be lost.'
   },
@@ -515,9 +513,7 @@ const en = {
     storeCloud: 'Cloud',
     storeLocal: 'Local',
     notLoggedIn: 'You must be logged in to save components to the cloud.',
-    public: 'Public',
-    publicInfo:
-      'Public components are published on your profile and accessible to everyone via a share link. Private components are only visible to you.',
+    visibilityLabel: 'Who can open it',
     localWarning:
       'Local components are not persisted across devices and may be lost.',
     create: 'Create'
@@ -526,25 +522,44 @@ const en = {
     button: 'Upload to cloud',
     signInTooltip: 'Sign in to upload to the cloud'
   },
+  // The three states a document's link can be in. The share dialog's picker and
+  // the three dialogs that create a cloud document all name them, so their
+  // words belong under none of those. Each state's `hint` says what it means
+  // for whoever holds the link, which is what the picker shows under the state
+  // it is on.
+  visibility: {
+    private: {
+      label: 'Only you',
+      hint: 'Only you can open it — nothing is reachable by a link.'
+    },
+    unlisted: {
+      label: 'Anyone with the link',
+      hint: 'Whoever holds the link can open it read-only. It stays out of the community listings and out of search engines.'
+    },
+    public: {
+      label: 'Everyone',
+      hint: 'Listed in the community, open to everyone, and indexed by search engines.'
+    }
+  },
   shareDialog: {
     header: 'Share project',
     headerComponent: 'Share component',
-    intro:
-      'Anyone with this link can open “{{name}}” read-only and clone it into their own library.',
+    intro: 'Choose who can open “{{name}}”.',
+    visibilityLabel: 'Who can open it',
     linkLabel: 'Share link',
+    noLink:
+      'Nobody can open the document while it is private. The link is kept: pick “Anyone with the link” to hand out the same URL again, and regenerate it from there.',
+    viewPublicPage: 'View the community page',
     copy: 'Copy link',
     linkCopied: 'Share link copied to clipboard.',
     copyFailed: 'Could not copy the link to the clipboard.',
     regenerate: 'Regenerate link',
     regenerateWarning:
-      'Regenerating creates a new link and permanently invalidates the current one — anyone using the old link will lose access.',
+      'The old link stops working immediately, for everyone who has it. Your circuit itself is unchanged.',
+    linkPublished:
+      'The link was not replaced: this document is published, and its link is the address of its page.',
     linkRegenerated: 'A new share link was generated.',
     regenerateFailed: 'Could not regenerate the share link.',
-    public: 'Public',
-    publicInfoProject:
-      'Public projects are published on your profile and discoverable by everyone. Private projects are reachable only via the share link.',
-    publicInfoComponent:
-      'Public components are published on your profile and discoverable by everyone. Private components are reachable only via the share link.',
     visibilityUpdated: 'Visibility updated.',
     visibilityFailed: 'Could not update the visibility.',
     share: 'Share',
@@ -587,11 +602,7 @@ const en = {
       'A cloud project can only contain cloud components, so each of these is uploaded to your cloud library first and then referenced.',
     unresolvableWarning:
       '{{count}} embedded component(s) can no longer be published (their library entry is gone) and will remain plain embedded copies.',
-    public: 'Public',
-    publicInfoProject:
-      'Public projects are published on your profile and accessible to everyone via a share link. Private projects are only visible to you.',
-    publicInfoComponent:
-      'Public components are published on your profile and accessible to everyone via a share link. Private components are only visible to you.',
+    visibilityLabel: 'Who can open it',
     notLoggedIn: 'You must be logged in to upload to the cloud.',
     cancel: 'Cancel',
     upload: 'Upload',

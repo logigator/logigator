@@ -13,6 +13,7 @@ import { ProjectMetadataStore } from '../../persistence/project-metadata.store';
 import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
 import { ToastService } from '../../logging/toast.service';
 import { Project } from '../../project/project';
+import type { DocumentVisibility } from '@logigator/contract';
 import {
   UploadDialogComponent,
   UploadDialogData,
@@ -36,7 +37,7 @@ export type UploadTarget =
       kind: 'draft-to-server';
       project: Project;
       name: string;
-      isPublic: boolean;
+      visibility: DocumentVisibility;
     }
   /**
    * A saved **server** project being re-saved after it gained local components,
@@ -85,24 +86,24 @@ export class UploadCoordinatorService {
     // promoted, so an orphan-only document (no library master) skips too.
     const resolvable = this._resolvable(dependencies);
     const preset = this._presetVisibility(target);
-    let isPublic: boolean;
+    let visibility: DocumentVisibility;
     if (preset !== undefined && resolvable.length === 0) {
-      isPublic = preset;
+      visibility = preset;
     } else {
       const result = await this._prompt(target, name, dependencies, preset);
       if (!result) return false;
-      isPublic = result.isPublic;
+      visibility = result.visibility;
     }
 
     // A cloud document may only contain cloud components, so promote every
     // resolvable local dependency. An unresolvable one cannot be promoted and
     // rides along as an embedded copy.
-    if (!(await this._uploadDependencies(resolvable, isPublic))) {
+    if (!(await this._uploadDependencies(resolvable, visibility))) {
       return false;
     }
 
     try {
-      await this._uploadTarget(target, isPublic);
+      await this._uploadTarget(target, visibility);
     } catch (err) {
       // `saveProject` surfaces its own error, and a signed-out or
       // foreign-account rejection is already toasted at the guard; every other
@@ -140,7 +141,7 @@ export class UploadCoordinatorService {
       const deps = this._resolvable(
         this.promotion.localDependenciesOfProject(project)
       );
-      if (!(await this._uploadDependencies(deps, metadata.isPublic))) {
+      if (!(await this._uploadDependencies(deps, metadata.visibility))) {
         return false;
       }
     }
@@ -155,12 +156,16 @@ export class UploadCoordinatorService {
   /**
    * The visibility already chosen outside the upload dialog, or `undefined`
    * when the dialog must ask. A first server save carries it from the save
-   * dialog, a re-save rides the project's own; either way the toggle locks.
+   * dialog, a re-save rides the project's own; either way the picker locks.
    */
-  private _presetVisibility(target: UploadTarget): boolean | undefined {
-    if (target.kind === 'draft-to-server') return target.isPublic;
+  private _presetVisibility(
+    target: UploadTarget
+  ): DocumentVisibility | undefined {
+    if (target.kind === 'draft-to-server') return target.visibility;
     if (target.kind === 'save-server') {
-      return this.metadataStore.getMetadata(target.project)?.isPublic ?? false;
+      return (
+        this.metadataStore.getMetadata(target.project)?.visibility ?? 'private'
+      );
     }
     return undefined;
   }
@@ -180,12 +185,12 @@ export class UploadCoordinatorService {
    */
   private async _uploadDependencies(
     masterTypeIds: number[],
-    isPublic: boolean
+    visibility: DocumentVisibility
   ): Promise<boolean> {
     for (const masterTypeId of masterTypeIds) {
       const depName = this.registry.getDefinition(masterTypeId)?.name ?? '';
       try {
-        await this.promotion.promoteComponentToServer(masterTypeId, isPublic);
+        await this.promotion.promoteComponentToServer(masterTypeId, visibility);
       } catch (err) {
         if (!isHandledSaveError(err)) {
           this.toast.error(
@@ -258,23 +263,29 @@ export class UploadCoordinatorService {
 
   private _uploadTarget(
     target: UploadTarget,
-    isPublic: boolean
+    visibility: DocumentVisibility
   ): Promise<void> {
     switch (target.kind) {
       case 'project':
-        return this.promotion.promoteProjectToServer(target.project, isPublic);
+        return this.promotion.promoteProjectToServer(
+          target.project,
+          visibility
+        );
       case 'stored-project':
-        return this.promotion.uploadStoredProjectToServer(target.id, isPublic);
+        return this.promotion.uploadStoredProjectToServer(
+          target.id,
+          visibility
+        );
       case 'component':
         return this.promotion.promoteComponentToServer(
           target.masterTypeId,
-          isPublic
+          visibility
         );
       case 'draft-to-server':
         return this.promotion.saveDraftAsServer(
           target.project,
           target.name,
-          isPublic
+          visibility
         );
       case 'save-server':
         return this.persistence.saveProject(target.project);
@@ -285,7 +296,7 @@ export class UploadCoordinatorService {
     target: UploadTarget,
     name: string,
     dependencies: LocalUploadDependency[],
-    presetIsPublic: boolean | undefined
+    presetVisibility: DocumentVisibility | undefined
   ): Promise<UploadDialogResult | undefined> {
     const ref = this.dialogService.open(UploadDialogComponent, {
       header: this.translation.translate('uploadDialog.header'),
@@ -297,8 +308,8 @@ export class UploadCoordinatorService {
         kind: this._dialogKind(target),
         name,
         dependencies,
-        // Locks the toggle when visibility is decided upstream.
-        presetIsPublic
+        // Locks the picker when visibility is decided upstream.
+        presetVisibility
       }
     });
     if (!ref) return Promise.resolve(undefined);

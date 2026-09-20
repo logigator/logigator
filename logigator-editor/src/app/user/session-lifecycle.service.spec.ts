@@ -99,7 +99,7 @@ describe('SessionLifecycleService', () => {
       name: 'Doc',
       type: 'project',
       source: 'server',
-      isPublic: false,
+      visibility: 'unlisted',
       ...patch
     });
   }

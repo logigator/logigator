@@ -59,7 +59,7 @@ describe('ComponentSettingsComponent', () => {
       name: 'P',
       type: 'project',
       source: 'browser',
-      isPublic: false
+      visibility: 'private'
     });
     projectService.setMainProject(project);
     project.selectionManager.commit(new Rectangle(0, 0, 3, 3), WorkMode.SELECT);
@@ -96,7 +96,7 @@ describe('ComponentSettingsComponent', () => {
       name: 'P',
       type: 'project',
       source: 'browser',
-      isPublic: false
+      visibility: 'private'
     });
     projectService.setMainProject(project);
     project.selectionManager.commit(new Rectangle(0, 0, 3, 3), WorkMode.SELECT);

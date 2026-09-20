@@ -379,7 +379,12 @@ Behavior beyond what the method names say:
 - **Share loads** register `source:'share'` with dirty tracking off, and **both
   kinds fill the main slot** — a component share opens standalone exactly as
   `/component/:uuid` does, so the title bar names it, its tab is the pinned one,
-  and the File menu's clone action has a document to read.
+  and the File menu's clone action has a document to read. The kind is the
+  API's, and the caller has it from its own URL: `/share/projects/{link}` maps
+  it once, in `routing/document-kind.ts`, and the legacy kind-free
+  `/share/{link}` asks projects first and components second — falling through
+  on a definitive `not_found` alone, never on a failure that the other table
+  would answer identically — then rewrites its URL to the kind-carrying form.
 - **`renameBrowserProject`** rewrites the blob's top-level `name` **and** the
   summary column, because the codec reads the blob on open, not the column.
 
@@ -437,11 +442,13 @@ tab) touches nothing but the library.
 **File:** `persistence/project-metadata.store.ts`
 
 Holds what a bare `Project` lacks: `{ id, name, type, source, version?,
-isPublic, link?, attribution? }`. `id` is the identifier **within the project's
-store**: the server uuid for `'server'`/`'share'`, the IndexedDB id for
-`'browser'`, or `''` for a browser project not yet written to storage. `version`
-is server-only — a browser record is the sole writer of its own blob and a share
-is read-only. `attribution` is carried read-only so fork lineage survives
+visibility, link?, attribution? }`. `id` is the identifier **within the
+project's store**: the server uuid for `'server'`/`'share'`, the IndexedDB id
+for `'browser'`, or `''` for a browser project not yet written to storage.
+`version` is server-only — a browser record is the sole writer of its own blob
+and a share is read-only. `visibility` is the document's link state as the API
+last answered it; a browser record or a draft carries `'private'`, no link
+reaching either. `attribution` is carried read-only so fork lineage survives
 export → import → upload.
 
 - `register(project, metadata, trackDirty = true)` subscribes to

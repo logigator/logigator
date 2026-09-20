@@ -35,24 +35,16 @@
   @if (userService.user()) {
     <!-- The sign-in warning shows regardless, so it lives outside this. -->
     @if (!visibilityLocked) {
-      <div class="flex gap-2 items-center">
-        <lg-toggle-switch
-          inputId="upload-public"
-          [ngModel]="isPublic()"
-          (ngModelChange)="isPublic.set($event)"
-          [ngModelOptions]="{ standalone: true }"
+      <div class="flex flex-col gap-2">
+        <span
+          id="upload-visibility-label"
+          class="text-sm font-medium text-text-hover"
+          >{{ t('uploadDialog.visibilityLabel') }}</span
+        >
+        <app-visibility-picker
+          labelledby="upload-visibility-label"
+          [(visibility)]="visibility"
         />
-        <label for="upload-public">{{ t('uploadDialog.public') }}</label>
-        <i
-          class="ph ph-info cursor-help text-muted"
-          [lgTooltip]="
-            t(
-              kind === 'component'
-                ? 'uploadDialog.publicInfoComponent'
-                : 'uploadDialog.publicInfoProject'
-            )
-          "
-        ></i>
       </div>
     }
   } @else {

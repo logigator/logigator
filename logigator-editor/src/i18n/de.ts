@@ -508,9 +508,7 @@ const de: TranslationSchema = {
     destinationLocal: 'Lokal',
     notLoggedIn:
       'Du musst angemeldet sein, um Projekte in der Cloud zu speichern.',
-    public: 'Öffentlich',
-    publicInfo:
-      'Öffentliche Projekte werden auf deinem Profil veröffentlicht und sind über einen Freigabelink für alle zugänglich. Private Projekte sind nur für dich sichtbar.',
+    visibilityLabel: 'Wer kann es öffnen',
     localWarning:
       'Lokale Projekte werden nicht geräteübergreifend gespeichert und können verloren gehen.'
   },
@@ -523,9 +521,7 @@ const de: TranslationSchema = {
     storeLocal: 'Lokal',
     notLoggedIn:
       'Du musst angemeldet sein, um Komponenten in der Cloud zu speichern.',
-    public: 'Öffentlich',
-    publicInfo:
-      'Öffentliche Komponenten werden auf deinem Profil veröffentlicht und sind über einen Freigabelink für alle zugänglich. Private Komponenten sind nur für dich sichtbar.',
+    visibilityLabel: 'Wer kann es öffnen',
     localWarning:
       'Lokale Komponenten werden nicht geräteübergreifend gespeichert und können verloren gehen.',
     create: 'Erstellen'
@@ -534,25 +530,39 @@ const de: TranslationSchema = {
     button: 'In die Cloud hochladen',
     signInTooltip: 'Melde dich an, um in die Cloud hochzuladen'
   },
+  visibility: {
+    private: {
+      label: 'Nur du',
+      hint: 'Nur du kannst es öffnen – über einen Link ist nichts erreichbar.'
+    },
+    unlisted: {
+      label: 'Alle mit dem Link',
+      hint: 'Wer den Link hat, kann es lesend öffnen. Es bleibt aus den Community-Listen und aus Suchmaschinen heraus.'
+    },
+    public: {
+      label: 'Alle',
+      hint: 'In der Community gelistet, für alle offen und von Suchmaschinen indexiert.'
+    }
+  },
   shareDialog: {
     header: 'Projekt teilen',
     headerComponent: 'Komponente teilen',
-    intro:
-      'Jeder mit diesem Link kann „{{name}}“ schreibgeschützt öffnen und in seine eigene Bibliothek klonen.',
+    intro: 'Wähle, wer „{{name}}“ öffnen kann.',
+    visibilityLabel: 'Wer kann es öffnen',
     linkLabel: 'Freigabelink',
+    noLink:
+      'Solange das Dokument privat ist, kann es niemand öffnen. Der Link bleibt erhalten: Wähle „Alle mit dem Link“, um dieselbe URL wieder herauszugeben – dort kannst du ihn auch ersetzen.',
+    viewPublicPage: 'Community-Seite ansehen',
     copy: 'Link kopieren',
     linkCopied: 'Freigabelink in die Zwischenablage kopiert.',
     copyFailed: 'Der Link konnte nicht in die Zwischenablage kopiert werden.',
     regenerate: 'Link neu generieren',
     regenerateWarning:
-      'Beim Neu-Generieren entsteht ein neuer Link und der aktuelle wird dauerhaft ungültig — wer den alten Link nutzt, verliert den Zugriff.',
+      'Der alte Link hört sofort auf zu funktionieren – für alle, die ihn haben. Die Schaltung selbst bleibt unverändert.',
+    linkPublished:
+      'Der Link wurde nicht ersetzt: Das Dokument ist veröffentlicht, und sein Link ist die Adresse seiner Seite.',
     linkRegenerated: 'Ein neuer Freigabelink wurde generiert.',
     regenerateFailed: 'Der Freigabelink konnte nicht neu generiert werden.',
-    public: 'Öffentlich',
-    publicInfoProject:
-      'Öffentliche Projekte werden auf deinem Profil veröffentlicht und sind für alle auffindbar. Private Projekte sind nur über den Freigabelink erreichbar.',
-    publicInfoComponent:
-      'Öffentliche Komponenten werden auf deinem Profil veröffentlicht und sind für alle auffindbar. Private Komponenten sind nur über den Freigabelink erreichbar.',
     visibilityUpdated: 'Sichtbarkeit aktualisiert.',
     visibilityFailed: 'Die Sichtbarkeit konnte nicht aktualisiert werden.',
     share: 'Teilen',
@@ -597,11 +607,7 @@ const de: TranslationSchema = {
       'Ein Cloud-Projekt kann nur Cloud-Komponenten enthalten, daher wird jede davon zuerst in deine Cloud-Bibliothek hochgeladen und dann referenziert.',
     unresolvableWarning:
       '{{count}} eingebettete Komponente(n) können nicht mehr veröffentlicht werden (ihr Bibliothekseintrag fehlt) und bleiben einfache eingebettete Kopien.',
-    public: 'Öffentlich',
-    publicInfoProject:
-      'Öffentliche Projekte werden auf deinem Profil veröffentlicht und sind über einen Freigabelink für alle zugänglich. Private Projekte sind nur für dich sichtbar.',
-    publicInfoComponent:
-      'Öffentliche Komponenten werden auf deinem Profil veröffentlicht und sind über einen Freigabelink für alle zugänglich. Private Komponenten sind nur für dich sichtbar.',
+    visibilityLabel: 'Wer kann es öffnen',
     notLoggedIn: 'Du musst angemeldet sein, um in die Cloud hochzuladen.',
     cancel: 'Abbrechen',
     upload: 'Hochladen',

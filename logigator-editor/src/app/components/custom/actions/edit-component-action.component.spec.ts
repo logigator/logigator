@@ -60,7 +60,7 @@ describe('EditComponentActionComponent', () => {
       name: 'Host',
       type: 'project',
       source,
-      isPublic: false
+      visibility: 'private'
     });
   }
 

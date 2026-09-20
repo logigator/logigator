@@ -19,7 +19,7 @@ function meta(overrides: Partial<ProjectMetadata> = {}): ProjectMetadata {
     name: 'Untitled',
     type: 'project',
     source: 'browser',
-    isPublic: false,
+    visibility: 'private',
     ...overrides
   };
 }
@@ -114,7 +114,7 @@ describe('SaveCoordinatorService', () => {
   });
 
   it('prompts a fresh draft and saves it locally', async () => {
-    setup({ name: 'My Circuit', destination: 'local', isPublic: false });
+    setup({ name: 'My Circuit', destination: 'local', visibility: 'private' });
     getMetadata.mockReturnValue(meta());
 
     await service.requestSave(project);
@@ -128,7 +128,11 @@ describe('SaveCoordinatorService', () => {
   });
 
   it('routes a fresh draft server save through the upload coordinator', async () => {
-    setup({ name: 'Server Circuit', destination: 'server', isPublic: true });
+    setup({
+      name: 'Server Circuit',
+      destination: 'server',
+      visibility: 'public'
+    });
     getMetadata.mockReturnValue(meta());
 
     await service.requestSave(project);
@@ -139,7 +143,7 @@ describe('SaveCoordinatorService', () => {
       kind: 'draft-to-server',
       project,
       name: 'Server Circuit',
-      isPublic: true
+      visibility: 'public'
     });
     expect(promotion.saveDraftAsServer).not.toHaveBeenCalled();
     expect(persistence.saveDraftAsLocal).not.toHaveBeenCalled();

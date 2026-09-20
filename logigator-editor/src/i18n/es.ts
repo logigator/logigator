@@ -508,9 +508,7 @@ const es: TranslationSchema = {
     destinationLocal: 'Local',
     notLoggedIn:
       'Debes haber iniciado sesión para guardar proyectos en la nube.',
-    public: 'Público',
-    publicInfo:
-      'Los proyectos públicos se publican en tu perfil y son accesibles para cualquiera mediante un enlace para compartir. Los proyectos privados solo son visibles para ti.',
+    visibilityLabel: 'Quién puede abrirlo',
     localWarning:
       'Los proyectos locales no se conservan entre dispositivos y pueden perderse.'
   },
@@ -523,9 +521,7 @@ const es: TranslationSchema = {
     storeLocal: 'Local',
     notLoggedIn:
       'Debes haber iniciado sesión para guardar componentes en la nube.',
-    public: 'Público',
-    publicInfo:
-      'Los componentes públicos se publican en tu perfil y son accesibles para cualquiera mediante un enlace para compartir. Los componentes privados solo son visibles para ti.',
+    visibilityLabel: 'Quién puede abrirlo',
     localWarning:
       'Los componentes locales no se conservan entre dispositivos y pueden perderse.',
     create: 'Crear'
@@ -534,25 +530,39 @@ const es: TranslationSchema = {
     button: 'Subir a la nube',
     signInTooltip: 'Inicia sesión para subir a la nube'
   },
+  visibility: {
+    private: {
+      label: 'Solo tú',
+      hint: 'Solo tú puedes abrirlo: nada es accesible mediante un enlace.'
+    },
+    unlisted: {
+      label: 'Cualquiera con el enlace',
+      hint: 'Quien tenga el enlace puede abrirlo en modo lectura. No aparece en las listas de la comunidad ni en los buscadores.'
+    },
+    public: {
+      label: 'Todo el mundo',
+      hint: 'Aparece en la comunidad, está abierto a todos y los buscadores lo indexan.'
+    }
+  },
   shareDialog: {
     header: 'Compartir proyecto',
     headerComponent: 'Compartir componente',
-    intro:
-      'Cualquiera que tenga este enlace puede abrir “{{name}}” en modo de solo lectura y clonarlo en su propia biblioteca.',
+    intro: 'Elige quién puede abrir «{{name}}».',
+    visibilityLabel: 'Quién puede abrirlo',
     linkLabel: 'Enlace para compartir',
+    noLink:
+      'Mientras el documento sea privado, nadie puede abrirlo. El enlace se conserva: elige «Cualquiera con el enlace» para volver a repartir la misma URL, y desde ahí también puedes sustituirlo.',
+    viewPublicPage: 'Ver la página de la comunidad',
     copy: 'Copiar enlace',
     linkCopied: 'Enlace para compartir copiado al portapapeles.',
     copyFailed: 'No se pudo copiar el enlace al portapapeles.',
     regenerate: 'Regenerar enlace',
     regenerateWarning:
-      'Regenerar crea un enlace nuevo e invalida permanentemente el actual: cualquiera que use el enlace antiguo perderá el acceso.',
+      'El enlace anterior deja de funcionar de inmediato, para todos los que lo tengan. El circuito en sí no cambia.',
+    linkPublished:
+      'El enlace no se ha sustituido: el documento está publicado y su enlace es la dirección de su página.',
     linkRegenerated: 'Se generó un nuevo enlace para compartir.',
     regenerateFailed: 'No se pudo regenerar el enlace para compartir.',
-    public: 'Público',
-    publicInfoProject:
-      'Los proyectos públicos se publican en tu perfil y cualquiera puede descubrirlos. Los proyectos privados solo son accesibles mediante el enlace para compartir.',
-    publicInfoComponent:
-      'Los componentes públicos se publican en tu perfil y cualquiera puede descubrirlos. Los componentes privados solo son accesibles mediante el enlace para compartir.',
     visibilityUpdated: 'Visibilidad actualizada.',
     visibilityFailed: 'No se pudo actualizar la visibilidad.',
     share: 'Compartir',
@@ -596,11 +606,7 @@ const es: TranslationSchema = {
       'Un proyecto en la nube solo puede contener componentes en la nube, así que cada uno de estos se sube primero a tu biblioteca en la nube y luego se referencia.',
     unresolvableWarning:
       '{{count}} componente(s) incrustado(s) ya no se pueden publicar (su entrada en la biblioteca ya no existe) y permanecerán como simples copias incrustadas.',
-    public: 'Público',
-    publicInfoProject:
-      'Los proyectos públicos se publican en tu perfil y son accesibles para cualquiera mediante un enlace para compartir. Los proyectos privados solo son visibles para ti.',
-    publicInfoComponent:
-      'Los componentes públicos se publican en tu perfil y son accesibles para cualquiera mediante un enlace para compartir. Los componentes privados solo son visibles para ti.',
+    visibilityLabel: 'Quién puede abrirlo',
     notLoggedIn: 'Debes haber iniciado sesión para subir a la nube.',
     cancel: 'Cancelar',
     upload: 'Subir',

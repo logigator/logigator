@@ -6,12 +6,12 @@ import {
   LgList,
   LgListItem,
   LgMessage,
-  LgToggleSwitch,
-  LgTooltip
+  type LgDocumentVisibility
 } from '@logigator/ui';
 import { UserService } from '../../../user/user.service';
 import { LocalUploadDependency } from '../../../persistence/promotion.service';
 import { TranslateDirective } from '../../../translation/translate.directive';
+import { VisibilityPickerComponent } from '../../visibility-picker/visibility-picker.component';
 
 export interface UploadDialogData {
   /** Wording variant; a stored project opens as `'project'`. */
@@ -20,14 +20,14 @@ export interface UploadDialogData {
   /** Local components the circuit embeds, children-before-parents. */
   dependencies: LocalUploadDependency[];
   /**
-   * When set, visibility is already decided upstream: the toggle is hidden and
+   * When set, visibility is already decided upstream: the picker is hidden and
    * this value is returned as-is.
    */
-  presetIsPublic?: boolean;
+  presetVisibility?: LgDocumentVisibility;
 }
 
 export interface UploadDialogResult {
-  isPublic: boolean;
+  visibility: LgDocumentVisibility;
 }
 
 /**
@@ -42,13 +42,12 @@ export interface UploadDialogResult {
   selector: 'app-upload-dialog',
   imports: [
     FormsModule,
-    LgToggleSwitch,
-    LgTooltip,
     LgButton,
     LgList,
     LgListItem,
     LgMessage,
-    TranslateDirective
+    TranslateDirective,
+    VisibilityPickerComponent
   ],
   templateUrl: './upload-dialog.component.html'
 })
@@ -64,9 +63,9 @@ export class UploadDialogComponent extends LgDialogContent<
   protected readonly name = this.data?.name ?? '';
   protected readonly dependencies = this.data?.dependencies ?? [];
 
-  /** Visibility chosen upstream: hide the toggle and return it as-is. */
-  protected readonly lockedIsPublic = this.data?.presetIsPublic;
-  protected readonly visibilityLocked = this.lockedIsPublic !== undefined;
+  /** Visibility chosen upstream: hide the picker and return it as-is. */
+  private readonly lockedVisibility = this.data?.presetVisibility;
+  protected readonly visibilityLocked = this.lockedVisibility !== undefined;
 
   /** Published alongside the target. */
   protected readonly publishedDependencies = this.dependencies.filter(
@@ -77,13 +76,16 @@ export class UploadDialogComponent extends LgDialogContent<
     (d) => d.masterTypeId === null
   ).length;
 
-  protected readonly isPublic = signal(this.lockedIsPublic ?? true);
+  /** Creating keeps publishing, which is what this dialog is for. */
+  protected readonly visibility = signal<LgDocumentVisibility>(
+    this.lockedVisibility ?? 'public'
+  );
 
   protected cancel(): void {
     this.dialogRef.close();
   }
 
   protected upload(): void {
-    this.dialogRef.close({ isPublic: this.isPublic() });
+    this.dialogRef.close({ visibility: this.visibility() });
   }
 }

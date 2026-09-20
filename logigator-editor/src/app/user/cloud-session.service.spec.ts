@@ -21,7 +21,7 @@ describe('CloudSessionService', () => {
       name: 'Doc',
       type: 'project',
       source: 'server',
-      isPublic: false
+      visibility: 'unlisted'
     });
     return project;
   }

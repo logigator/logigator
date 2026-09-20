@@ -73,7 +73,7 @@ export class SaveCoordinatorService {
           kind: 'draft-to-server',
           project,
           name: result.name,
-          isPublic: result.isPublic
+          visibility: result.visibility
         });
       } else {
         await this.persistence.saveDraftAsLocal(project, result.name);

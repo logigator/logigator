@@ -437,7 +437,7 @@ describe('WireRepairService', () => {
         name: 'Shared',
         type: 'project',
         source: 'share',
-        isPublic: true
+        visibility: 'public'
       },
       false
     );

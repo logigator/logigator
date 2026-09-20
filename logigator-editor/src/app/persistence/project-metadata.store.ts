@@ -3,6 +3,7 @@ import { Subscription } from 'rxjs';
 import { SignalMap } from 'ngxtension/collections';
 import { Project } from '../project/project';
 import type { FileForkAttributionV1 } from '@logigator/core';
+import type { DocumentVisibility } from '@logigator/contract';
 
 export interface ProjectMetadata {
   /**
@@ -22,7 +23,12 @@ export interface ProjectMetadata {
    * bump does to every row) is not a conflict.
    */
   version?: number;
-  isPublic: boolean;
+  /**
+   * How far the document's share link reaches. A browser record and a draft
+   * carry `'private'` — no link reaches them at all — and the API's own answer
+   * takes over at the first cloud read or write.
+   */
+  visibility: DocumentVisibility;
   link?: string;
   /**
    * Fork lineage, root-first, carried so it survives the document's round

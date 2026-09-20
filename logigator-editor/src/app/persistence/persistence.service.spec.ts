@@ -71,21 +71,22 @@ const COMPONENTS_URL = `${environment.apiUrl}/api/components`;
 const COMPONENTS_PAGE_URL = `${COMPONENTS_URL}?page=0&size=100`;
 const COMPONENT_URL = (id: string) =>
   `${environment.apiUrl}/api/components/${id}`;
-const SHARE_URL = (link: string) => `${environment.apiUrl}/api/share/${link}`;
-const CLONE_URL = (link: string) =>
-  `${environment.apiUrl}/api/share/${link}/clone`;
+const SHARE_URL = (kind: string, link: string) =>
+  `${environment.apiUrl}/api/share/${kind}/${link}`;
+const CLONE_URL = (kind: string, link: string) =>
+  `${environment.apiUrl}/api/share/${kind}/${link}/clone`;
 
 function circuitFields(o: {
   id: string;
   name: string;
   version?: number;
-  public?: boolean;
+  visibility?: 'private' | 'unlisted' | 'public';
 }) {
   return {
     id: o.id,
     name: o.name,
     description: '',
-    public: o.public ?? false,
+    visibility: o.visibility ?? 'unlisted',
     link: uuid(`${o.id}-link`),
     version: o.version ?? 1,
     componentCount: 0,
@@ -311,7 +312,7 @@ describe('PersistenceService', () => {
         type: 'project',
         source: 'server',
         version: 1,
-        isPublic: false
+        visibility: 'unlisted'
       });
 
       await service.saveProject(project);
@@ -328,7 +329,7 @@ describe('PersistenceService', () => {
           name: 'Shared',
           type: 'project',
           source: 'share',
-          isPublic: true
+          visibility: 'public'
         },
         false
       );
@@ -346,7 +347,7 @@ describe('PersistenceService', () => {
         name: 'Local',
         type: 'project',
         source: 'browser',
-        isPublic: false
+        visibility: 'private'
       });
       metadataStore.markDirty(project);
 
@@ -379,7 +380,7 @@ describe('PersistenceService', () => {
         type: 'project',
         source: 'server',
         version: 4,
-        isPublic: false
+        visibility: 'unlisted'
       });
       metadataStore.markDirty(project);
 
@@ -405,7 +406,7 @@ describe('PersistenceService', () => {
         type: 'project',
         source: 'server',
         version: 1,
-        isPublic: false
+        visibility: 'unlisted'
       });
       metadataStore.markDirty(project);
 
@@ -427,7 +428,7 @@ describe('PersistenceService', () => {
         type: 'project',
         source: 'server',
         version: 2,
-        isPublic: false
+        visibility: 'unlisted'
       });
       metadataStore.markDirty(project);
 
@@ -452,7 +453,7 @@ describe('PersistenceService', () => {
         type: 'project',
         source: 'server',
         version: 1,
-        isPublic: false
+        visibility: 'unlisted'
       });
       metadataStore.markDirty(project);
 
@@ -481,7 +482,7 @@ describe('PersistenceService', () => {
         type: 'project',
         source: 'server',
         version: 1,
-        isPublic: false
+        visibility: 'unlisted'
       });
       metadataStore.markDirty(project);
       return project;
@@ -531,7 +532,7 @@ describe('PersistenceService', () => {
         })
       ).rejects.toBeInstanceOf(AuthRequiredError);
       await expect(
-        promotion.saveDraftAsServer(new Project(), 'Draft', false)
+        promotion.saveDraftAsServer(new Project(), 'Draft', 'unlisted')
       ).rejects.toBeInstanceOf(AuthRequiredError);
     });
   });
@@ -573,7 +574,7 @@ describe('PersistenceService', () => {
         name: 'Open',
         type: 'comp',
         source: 'server',
-        isPublic: false
+        visibility: 'unlisted'
       });
 
       library.clearServerMasters();
@@ -722,9 +723,9 @@ describe('PersistenceService', () => {
 
   describe('loadShare / loadShareAsMain', () => {
     it('loadShare returns a non-dirty-tracked project with source=share', async () => {
-      const promise = service.loadShare('link-1');
+      const promise = service.loadShare('project', 'link-1');
 
-      const req = httpMock.expectOne(SHARE_URL('link-1'));
+      const req = httpMock.expectOne(SHARE_URL('project', 'link-1'));
       req.flush(shareDetailResponse({ id: uuid('share-1') }));
 
       const { project, type } = await promise;
@@ -744,10 +745,10 @@ describe('PersistenceService', () => {
           authorName: 'alice'
         }
       ];
-      const promise = service.loadShare('link-fork');
+      const promise = service.loadShare('project', 'link-fork');
 
       httpMock
-        .expectOne(SHARE_URL('link-fork'))
+        .expectOne(SHARE_URL('project', 'link-fork'))
         .flush(shareDetailResponse({ id: uuid('share-1'), attribution }));
 
       const { project } = await promise;
@@ -757,10 +758,10 @@ describe('PersistenceService', () => {
     });
 
     it('loadShareAsMain swaps main project for project-type shares', async () => {
-      const promise = service.loadShareAsMain('link-1');
+      const promise = service.loadShareAsMain('project', 'link-1');
 
       httpMock
-        .expectOne(SHARE_URL('link-1'))
+        .expectOne(SHARE_URL('project', 'link-1'))
         .flush(shareDetailResponse({ id: uuid('share-1'), type: 'project' }));
 
       await promise;
@@ -772,10 +773,10 @@ describe('PersistenceService', () => {
     it('loadShareAsMain fills the main slot for component-type shares', async () => {
       // A `/share/:linkId` page load creates no blank draft, so a component
       // share opened as a tab would leave the main slot empty.
-      const promise = service.loadShareAsMain('link-comp');
+      const promise = service.loadShareAsMain('component', 'link-comp');
 
       httpMock
-        .expectOne(SHARE_URL('link-comp'))
+        .expectOne(SHARE_URL('component', 'link-comp'))
         .flush(shareDetailResponse({ id: uuid('comp-1'), type: 'comp' }));
 
       await promise;
@@ -789,6 +790,47 @@ describe('PersistenceService', () => {
         })
       );
       expect(projectService.openComponents()).toEqual([]);
+    });
+
+    it('defers a not_found to the caller instead of falling back to a draft', async () => {
+      // What the legacy kind-free URL asks of the first table: whether the
+      // link is even its kind. A `404` there is an answer, so nothing is
+      // reported and no blank draft is placed behind it — a second attempt
+      // still has to load a document into the main slot.
+      const promise = service.loadShareAsMain('project', 'link-1', {
+        deferNotFound: true
+      });
+
+      httpMock
+        .expectOne(SHARE_URL('project', 'link-1'))
+        .flush(apiError('not_found'), { status: 404, statusText: 'Not Found' });
+
+      expect(await promise).toEqual({
+        loaded: false,
+        error: expect.objectContaining({ code: 'not_found' })
+      });
+      expect(projectService.mainProject()).toBeNull();
+    });
+
+    it('reports a failed share load and leaves a blank draft behind', async () => {
+      // The last attempt's failure is the failure, and the editor still needs
+      // a board to open on: the fallback is what `deferNotFound` suppresses.
+      const promise = service.loadShareAsMain('component', 'link-1');
+
+      httpMock
+        .expectOne(SHARE_URL('component', 'link-1'))
+        .flush(apiError('internal'), {
+          status: 500,
+          statusText: 'Server Error'
+        });
+
+      expect(await promise).toEqual({
+        loaded: false,
+        error: expect.objectContaining({ code: 'internal' })
+      });
+      expect(metadataStore.getMetadata(projectService.mainProject()!)).toEqual(
+        expect.objectContaining({ source: 'browser', id: '' })
+      );
     });
   });
 
@@ -817,18 +859,18 @@ describe('PersistenceService', () => {
       const promise = promotion.saveDraftAsServer(
         project,
         'My Server Circuit',
-        true
+        'public'
       );
 
       // One round trip: a create carries the document.
       const postReq = httpMock.expectOne(PROJECTS_LIST_URL);
       expect(postReq.request.method).toBe('POST');
       expect(postReq.request.body.name).toBe('My Server Circuit');
-      expect(postReq.request.body.public).toBe(true);
+      expect(postReq.request.body.visibility).toBe('public');
       expect(postReq.request.body.document.version).toBe(1);
       postReq.flush({
         ...projectSummaryResponse({ id: uuid('srv-uuid'), version: 1 }),
-        public: true
+        visibility: 'public'
       });
 
       await promise;
@@ -837,7 +879,7 @@ describe('PersistenceService', () => {
       expect(metadata.source).toBe('server');
       expect(metadata.id).toBe(uuid('srv-uuid'));
       expect(metadata.name).toBe('My Server Circuit');
-      expect(metadata.isPublic).toBe(true);
+      expect(metadata.visibility).toBe('public');
       expect(metadata.version).toBe(1);
       expect(locationGo).toHaveBeenCalledWith(`/project/${uuid('srv-uuid')}`);
       // The live instance is retained, so circuit and undo history survive.
@@ -854,21 +896,21 @@ describe('PersistenceService', () => {
         name: 'Local',
         type: 'project',
         source: 'browser',
-        isPublic: false
+        visibility: 'private'
       });
       metadataStore.markDirty(project);
       await service.saveProject(project);
       expect(browserStore.records.has('browser-1')).toBe(true);
 
-      const promise = promotion.promoteProjectToServer(project, true);
+      const promise = promotion.promoteProjectToServer(project, 'public');
 
       const postReq = httpMock.expectOne(PROJECTS_LIST_URL);
       expect(postReq.request.method).toBe('POST');
       expect(postReq.request.body.name).toBe('Local');
-      expect(postReq.request.body.public).toBe(true);
+      expect(postReq.request.body.visibility).toBe('public');
       postReq.flush({
         ...projectSummaryResponse({ id: uuid('srv-uuid') }),
-        public: true
+        visibility: 'public'
       });
 
       await promise;
@@ -876,7 +918,7 @@ describe('PersistenceService', () => {
       const metadata = metadataStore.getMetadata(project)!;
       expect(metadata.source).toBe('server');
       expect(metadata.id).toBe(uuid('srv-uuid'));
-      expect(metadata.isPublic).toBe(true);
+      expect(metadata.visibility).toBe('public');
       expect(locationGo).toHaveBeenCalledWith(`/project/${uuid('srv-uuid')}`);
       // Moved, not copied: the old browser record is gone.
       expect(browserStore.records.has('browser-1')).toBe(false);
@@ -885,7 +927,7 @@ describe('PersistenceService', () => {
     it('rejects a fresh draft (no stored id) without any HTTP call', async () => {
       const project = service.createAndSetEmptyProject();
       await expect(
-        promotion.promoteProjectToServer(project, false)
+        promotion.promoteProjectToServer(project, 'unlisted')
       ).rejects.toThrow();
     });
 
@@ -896,7 +938,7 @@ describe('PersistenceService', () => {
         name: 'Fork',
         type: 'project',
         source: 'browser',
-        isPublic: false,
+        visibility: 'private',
         attribution: [
           { projectId: 'root-id', projectName: 'Root', authorName: 'alice' },
           { projectId: 'parent-id', projectName: 'Parent', authorName: 'bob' }
@@ -905,7 +947,7 @@ describe('PersistenceService', () => {
       metadataStore.markDirty(project);
       await service.saveProject(project);
 
-      const promise = promotion.promoteProjectToServer(project, false);
+      const promise = promotion.promoteProjectToServer(project, 'unlisted');
 
       const postReq = httpMock.expectOne(PROJECTS_LIST_URL);
       // There is no request field for the fork parent: the claim travels
@@ -929,17 +971,20 @@ describe('PersistenceService', () => {
         name: 'Local',
         type: 'project',
         source: 'browser',
-        isPublic: false
+        visibility: 'private'
       });
       metadataStore.markDirty(project);
       await service.saveProject(project);
       projectService.setMainProject(project);
 
-      const promise = promotion.uploadStoredProjectToServer('browser-1', false);
+      const promise = promotion.uploadStoredProjectToServer(
+        'browser-1',
+        'unlisted'
+      );
 
       const postReq = httpMock.expectOne(PROJECTS_LIST_URL);
       expect(postReq.request.body.name).toBe('Local');
-      expect(postReq.request.body.public).toBe(false);
+      expect(postReq.request.body.visibility).toBe('unlisted');
       postReq.flush(projectSummaryResponse({ id: uuid('srv-uuid') }));
 
       await promise;
@@ -955,7 +1000,7 @@ describe('PersistenceService', () => {
         name: 'Archived',
         type: 'project',
         source: 'browser',
-        isPublic: false
+        visibility: 'private'
       });
       metadataStore.markDirty(stored);
       await service.saveProject(stored);
@@ -963,13 +1008,16 @@ describe('PersistenceService', () => {
 
       const main = service.createAndSetEmptyProject();
 
-      const promise = promotion.uploadStoredProjectToServer('stored-1', true);
+      const promise = promotion.uploadStoredProjectToServer(
+        'stored-1',
+        'public'
+      );
 
       // The temp path awaits the stored record before it POSTs.
       await Promise.resolve();
       const postReq = httpMock.expectOne(PROJECTS_LIST_URL);
       expect(postReq.request.body.name).toBe('Archived');
-      expect(postReq.request.body.public).toBe(true);
+      expect(postReq.request.body.visibility).toBe('public');
       postReq.flush(projectSummaryResponse({ id: uuid('srv-uuid') }));
 
       await promise;
@@ -982,7 +1030,11 @@ describe('PersistenceService', () => {
 
   describe('createProject', () => {
     it('POSTs an empty board, sets it as main and updates the URL', async () => {
-      const promise = service.createProject('My Project', undefined, false);
+      const promise = service.createProject(
+        'My Project',
+        undefined,
+        'unlisted'
+      );
 
       // No document: a create without one is an empty board server-side.
       const postReq = httpMock.expectOne(PROJECTS_LIST_URL);
@@ -990,7 +1042,7 @@ describe('PersistenceService', () => {
       expect(postReq.request.body).toEqual({
         name: 'My Project',
         description: undefined,
-        public: false
+        visibility: 'unlisted'
       });
       postReq.flush(
         projectSummaryResponse({ id: uuid('new-uuid'), version: 1 })
@@ -1005,11 +1057,11 @@ describe('PersistenceService', () => {
       expect(locationGo).toHaveBeenCalledWith(`/project/${uuid('new-uuid')}`);
     });
 
-    it('sends public:true when isPublic=true', async () => {
-      const promise = service.createProject('Pub', undefined, true);
+    it('creates with the state the caller chose', async () => {
+      const promise = service.createProject('Pub', undefined, 'public');
 
       const postReq = httpMock.expectOne(PROJECTS_LIST_URL);
-      expect(postReq.request.body.public).toBe(true);
+      expect(postReq.request.body.visibility).toBe('public');
       postReq.flush(projectSummaryResponse({ id: uuid('pub-uuid') }));
 
       await promise;
@@ -1020,10 +1072,10 @@ describe('PersistenceService', () => {
     it('rejects with AuthRequiredError when the clone needs a session', async () => {
       // Reading a share needs no session — the link is the capability — but
       // cloning writes into an account, and the API is what says so.
-      const promise = service.cloneShare('link-1');
+      const promise = service.cloneShare('project', 'link-1');
 
       httpMock
-        .expectOne(CLONE_URL('link-1'))
+        .expectOne(CLONE_URL('project', 'link-1'))
         .flush(apiError('unauthorized', 'Not signed in'), {
           status: 401,
           statusText: 'Unauthorized'
@@ -1033,9 +1085,9 @@ describe('PersistenceService', () => {
     });
 
     it('clones, loads, sets as main, and updates URL', async () => {
-      const promise = service.cloneShare('link-1');
+      const promise = service.cloneShare('project', 'link-1');
 
-      const clone = httpMock.expectOne(CLONE_URL('link-1'));
+      const clone = httpMock.expectOne(CLONE_URL('project', 'link-1'));
       expect(clone.request.method).toBe('POST');
       clone.flush(cloneResponse('project', uuid('cloned-uuid')));
       // Two async hops (clone, then loadProjectAsMain) before the project GET.
@@ -1060,10 +1112,10 @@ describe('PersistenceService', () => {
       // The copy must reopen as a component so it carries its
       // DefinitionBinding and lands in the component library.
       const tick = () => new Promise((r) => setTimeout(r, 0));
-      const promise = service.cloneShare('link-c');
+      const promise = service.cloneShare('component', 'link-c');
 
       httpMock
-        .expectOne(CLONE_URL('link-c'))
+        .expectOne(CLONE_URL('component', 'link-c'))
         .flush(cloneResponse('comp', uuid('cloned-comp')));
       await tick();
 
@@ -1130,7 +1182,7 @@ describe('PersistenceService', () => {
         name: 'My Circuit',
         type: 'project',
         source: 'server',
-        isPublic: false
+        visibility: 'unlisted'
       });
 
       const parsed = JSON.parse(service.exportProjectToJson(project));
@@ -1178,7 +1230,7 @@ describe('PersistenceService', () => {
         name: 'My Fork',
         type: 'project',
         source: 'server',
-        isPublic: false,
+        visibility: 'unlisted',
         attribution: lineage
       });
 
@@ -1230,7 +1282,7 @@ describe('PersistenceService', () => {
           name: 'Borrowed',
           type: 'project',
           source: 'share',
-          isPublic: false
+          visibility: 'unlisted'
         },
         false
       );
@@ -1517,7 +1569,7 @@ describe('PersistenceService', () => {
         type: 'project',
         source: 'server',
         version: 2,
-        isPublic: false
+        visibility: 'unlisted'
       });
 
       const promise = firstValueFrom(
@@ -1549,7 +1601,7 @@ describe('PersistenceService', () => {
         type: 'project',
         source: 'server',
         version: 2,
-        isPublic: false
+        visibility: 'unlisted'
       });
 
       const promise = service.renameOpenProject(project, 'After');
@@ -1591,7 +1643,7 @@ describe('PersistenceService', () => {
         name: 'Untitled',
         type: 'project',
         source: 'browser',
-        isPublic: false
+        visibility: 'private'
       });
 
       await service.renameOpenProject(project, 'Draft name');
@@ -1607,7 +1659,7 @@ describe('PersistenceService', () => {
         name: 'Shared',
         type: 'project',
         source: 'share',
-        isPublic: false
+        visibility: 'unlisted'
       });
 
       await service.renameOpenProject(project, 'Nope');
@@ -1623,7 +1675,7 @@ describe('PersistenceService', () => {
         name: 'Gate',
         type: 'comp',
         source: 'server',
-        isPublic: false
+        visibility: 'unlisted'
       });
 
       await service.renameOpenProject(project, 'Nope');
@@ -1657,7 +1709,7 @@ describe('PersistenceService', () => {
         name: 'Host',
         type: 'project',
         source: 'browser',
-        isPublic: false
+        visibility: 'private'
       });
       return project;
     }
@@ -1770,7 +1822,7 @@ describe('PersistenceService', () => {
         name: 'Comp',
         type: 'comp',
         source: 'browser',
-        isPublic: false
+        visibility: 'private'
       });
       metadataStore.markDirty(editor);
 
@@ -2000,7 +2052,7 @@ describe('PersistenceService', () => {
         name: 'Comp',
         type: 'comp',
         source: 'browser',
-        isPublic: false
+        visibility: 'private'
       });
       const tick = () => new Promise((r) => setTimeout(r, 0));
 
@@ -2427,7 +2479,9 @@ describe('PersistenceService', () => {
         name: 'Comp',
         symbol: 'C',
         description: 'd',
-        public: false
+        // Absent is a state of its own: the API's own default for a create is
+        // `unlisted`, so a caller with no opinion sends none.
+        visibility: undefined
       });
       post.flush(
         componentSummaryResponse({ id: uuid('srv-comp'), version: 1 })
@@ -2504,7 +2558,7 @@ describe('PersistenceService', () => {
         type: 'project',
         source: 'server',
         version: 1,
-        isPublic: false
+        visibility: 'unlisted'
       });
       placeSnapshot(project, master);
       metadataStore.markDirty(project);
@@ -2541,7 +2595,7 @@ describe('PersistenceService', () => {
         type: 'comp',
         source: 'server',
         version: 2,
-        isPublic: false
+        visibility: 'unlisted'
       });
       editor.addComponent(
         Component.deserialize(

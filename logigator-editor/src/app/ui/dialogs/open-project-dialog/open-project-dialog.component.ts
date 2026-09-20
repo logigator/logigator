@@ -209,7 +209,7 @@ export class OpenProjectDialogComponent implements OnInit {
           name: p.name,
           lastEdited: p.lastEditedAt,
           link: p.link,
-          isPublic: p.public
+          visibility: p.visibility
         }))
       );
       this.serverTotal.set(result.total);
@@ -284,7 +284,7 @@ export class OpenProjectDialogComponent implements OnInit {
         projectId: item.id,
         name: item.name,
         link: item.link ?? '',
-        isPublic: item.isPublic ?? false
+        visibility: item.visibility ?? 'private'
       }
     });
     // The share dialog PATCHes link and visibility; refresh so the row's stored

@@ -18,7 +18,7 @@ function makeMetadata(
     type: 'project',
     source: 'server',
     version: 1,
-    isPublic: false,
+    visibility: 'unlisted',
     ...overrides
   };
 }
