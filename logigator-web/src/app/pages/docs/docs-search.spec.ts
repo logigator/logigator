@@ -3,6 +3,8 @@ import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { DocsSearchService } from './docs-search.service';
+import { TranslationLoaderService } from '../../translation/translation-loader.service';
+import { TranslationService } from '../../translation/translation.service';
 import { configureTestBed } from '../../../testing/configure-test-bed';
 
 /** The renderer assigns its content asynchronously; a CI runner is not this one. */
@@ -23,12 +25,22 @@ describe('documentation search', () => {
   /**
    * Navigates, then settles: the index is built from eleven dynamic imports,
    * so a result appears some turns after the navigation resolves.
+   *
+   * The locale table is awaited *before* the navigation, and it is the one
+   * thing that is: a render is asserted the moment it resolves here, on
+   * purpose — see the first case — and the table is the one part of a render
+   * that `languageTableGuard` does not wait for when the URL names the language
+   * already active. Without it the assertion can meet a page rendering through
+   * its keys, which is a race in the test rather than in the app.
    */
   async function navigator(): Promise<
     (url: string) => Promise<() => HTMLElement>
   > {
     const harness = await RouterTestingHarness.create();
+    const loader = TestBed.inject(TranslationLoaderService);
+    const translation = TestBed.inject(TranslationService);
     return async (url) => {
+      await loader.getTranslation(translation.getActiveLang());
       await harness.navigateByUrl(url);
       return () => {
         harness.detectChanges();
