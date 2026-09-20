@@ -5,36 +5,66 @@ import { isApiError } from '@logigator/contract';
 import type { LgCommunityKind } from '@logigator/ui';
 import { PersistenceService } from '../../persistence/persistence.service';
 import { RouteKeys } from '../route-keys.model';
-import { apiKindOf, isRouteKind } from '../document-kind';
+import { apiKindOf } from '../document-kind';
 
 /**
- * `/share/:kind/:linkId` — a document somebody was handed, opened read-only in
- * the main slot. This is where the site's own page for a document sends a
- * reader (`/community/{kind}/{link}` → the editor), so the kind segment is the
- * route's plural and the API's singular is derived from it in
- * `routing/document-kind.ts`.
+ * `/share/projects/:linkId` and `/share/components/:linkId` — a document
+ * somebody was handed, opened read-only in the main slot. This is where the
+ * site's own page for a document sends a reader (`/community/{kind}/{link}` →
+ * the editor), so the kind segment is the route's plural and the API's singular
+ * is derived from it in `routing/document-kind.ts`.
  *
- * A segment that names no kind is not a route: answering `false` leaves the
- * router to its not-found handling rather than loading whatever table the
- * nonsense happened to select.
+ * The kind is a **literal in the tree**, one subclass per kind, because a
+ * pattern that matches a segment and then declines it has already claimed the
+ * path: nothing else matches, so `RouterService` answers not-found, and the
+ * startup's blank draft — created only when *no* pattern matches — never
+ * happens. A reader handed `/share/project/{link}` (the API's singular, which
+ * the card URL is built from) was left with a toast and an empty main slot
+ * rather than an editor. A path naming no kind now matches nothing at all,
+ * which is the not-found `/nonsense` has always been.
+ *
+ * What a subclass declares is its kind and nothing else, the pattern being
+ * composed from it below, so a kind and the URL it answers cannot drift apart.
+ * Both are `@Injectable({ providedIn: 'root' })`: `RouterService` instantiates
+ * each route class through DI rather than constructing it.
  */
-@Injectable({
-  providedIn: 'root'
-})
-export class ShareRoute implements Route {
+abstract class ShareRouteBase implements Route {
   private readonly persistenceService = inject(PersistenceService);
 
-  readonly route = '/share/:kind/:linkId';
+  /** The route's spelling of the kind, which is also its pattern segment. */
+  protected abstract readonly kind: LgCommunityKind;
 
-  async onActivation(params: RouteKeys<typeof this.route>): Promise<boolean> {
-    if (!isRouteKind(params.kind)) return false;
+  get route(): string {
+    return `/share/${this.kind}/:linkId`;
+  }
 
+  // Typed to the one parameter both patterns carry rather than
+  // `RouteKeys<typeof this.route>`: a base's pattern is not a literal type, so
+  // the keys would resolve to an index signature and `linkId` would come back
+  // as `string | null`.
+  async onActivation(params: { linkId: string }): Promise<boolean> {
     await this.persistenceService.loadShareAsMain(
-      apiKindOf(params.kind),
+      apiKindOf(this.kind),
       params.linkId
     );
     return true;
   }
+}
+
+/** The project table's share link. */
+@Injectable({
+  providedIn: 'root'
+})
+export class ShareProjectRoute extends ShareRouteBase {
+  protected override readonly kind = 'projects' as const;
+}
+
+/** The component table's share link. */
+@Injectable({
+  providedIn: 'root'
+})
+export class ShareComponentRoute extends ShareRouteBase {
+  protected override readonly kind = 'components' as const;
 }
 
 /**

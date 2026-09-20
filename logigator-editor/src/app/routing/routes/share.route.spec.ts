@@ -4,38 +4,55 @@ import { Location } from '@angular/common';
 import { ApiRequestError } from '@logigator/contract';
 import { PersistenceService } from '../../persistence/persistence.service';
 import { configureTestBed } from '../../../testing/configure-test-bed';
-import { LegacyShareRoute, ShareRoute } from './share.route';
+import { RouterService } from '../router.service';
+import {
+  LegacyShareRoute,
+  ShareComponentRoute,
+  ShareProjectRoute
+} from './share.route';
 
 const LINK = '11111111-1111-4111-8111-111111111111';
 
 /** A `not_found`, as the API answers for a link that is in no row of a table. */
 const NOT_FOUND = new ApiRequestError(404, 'not_found', 'No such document.');
 
-describe('ShareRoute', () => {
+describe('the share routes', () => {
   let loadShareAsMain: ReturnType<typeof vi.fn>;
   let replaceState: ReturnType<typeof vi.fn>;
+  let go: ReturnType<typeof vi.fn>;
 
   /**
-   * Both routes go through one load, so what they hand it is what these specs
-   * are about — and the two spellings of a kind are the point of it: a URL
-   * says `projects`, the API's tables say `project`.
+   * The share routes go through one load, so what they hand it is what these
+   * specs are about — and the two spellings of a kind are the point of it: a
+   * URL says `projects`, the API's tables say `project`.
    */
   function setup(): void {
     loadShareAsMain = vi.fn().mockResolvedValue({ loaded: true });
     replaceState = vi.fn();
+    go = vi.fn();
 
     configureTestBed([
       { provide: PersistenceService, useValue: { loadShareAsMain } },
-      { provide: Location, useValue: { replaceState } }
+      { provide: Location, useValue: { replaceState, go } }
     ]);
   }
 
   describe('the kind-carrying form', () => {
-    it('loads the table its kind segment names', async () => {
+    it('loads the projects table from the project route', async () => {
       setup();
 
-      const activated = await TestBed.inject(ShareRoute).onActivation({
-        kind: 'components',
+      const activated = await TestBed.inject(ShareProjectRoute).onActivation({
+        linkId: LINK
+      });
+
+      expect(activated).toBe(true);
+      expect(loadShareAsMain).toHaveBeenCalledWith('project', LINK);
+    });
+
+    it('loads the components table from the component route', async () => {
+      setup();
+
+      const activated = await TestBed.inject(ShareComponentRoute).onActivation({
         linkId: LINK
       });
 
@@ -43,28 +60,57 @@ describe('ShareRoute', () => {
       expect(loadShareAsMain).toHaveBeenCalledWith('component', LINK);
     });
 
-    // `toString` is in the list on purpose: a segment names a table only if the
-    // table has that key of its own, and every object has the prototype's.
-    it.each(['nonsense', 'toString'])(
-      'is not a route when the segment says %s',
+    // Each kind is a literal in the route tree, which is what makes a path
+    // naming one a path the router both matches and handles.
+    it.each(['projects', 'components'])(
+      'matches and activates /share/%s/{link}',
       async (kind) => {
-        // The pattern matches any segment, so one that names no table has to
-        // fall through to the router's own not-found handling rather than
-        // loading whatever the mistake happened to select.
         setup();
+        const router = TestBed.inject(RouterService);
+        const path = `/share/${kind}/${LINK}`;
 
-        const activated = await TestBed.inject(ShareRoute).onActivation({
-          kind,
-          linkId: LINK
-        });
+        expect(router.matches(path)).toBe(true);
+        expect(await router.navigate(path)).toBe(true);
+      }
+    );
 
-        expect(activated).toBe(false);
+    // The regression this replaced: `/share/:kind/:linkId` matched any word and
+    // then declined the ones naming no table, so the path was claimed by a route
+    // that handed it back — no other pattern was tried, and the startup's blank
+    // draft, created only when *no* pattern matches, never happened. A reader
+    // handed `/share/project/{link}` — the API's singular, which the card URL is
+    // built from — was left with a toast and nothing in the main slot.
+    //
+    // `toString` is in the list on purpose: a segment names a kind only if the
+    // pattern says so, and the prototype's own keys are what a runtime
+    // membership test had to guard against before.
+    it.each(['nonsense', 'toString'])(
+      'matches nothing at all when the kind segment says %s',
+      async (kind) => {
+        setup();
+        const router = TestBed.inject(RouterService);
+        const path = `/share/${kind}/${LINK}`;
+
+        // `matches` is what the startup decides its blank draft on, so a false
+        // here is the reader getting a usable editor back.
+        expect(router.matches(path)).toBe(false);
+        // The same fact from the router's side: nothing handles the path, so
+        // the not-found toast and the URL reset are what it answers with.
+        expect(await router.navigate(path)).toBe(false);
         expect(loadShareAsMain).not.toHaveBeenCalled();
       }
     );
   });
 
   describe('the legacy kind-free form', () => {
+    it('is still a route, one segment beside the kind-carrying two', () => {
+      setup();
+
+      expect(TestBed.inject(RouterService).matches(`/share/${LINK}`)).toBe(
+        true
+      );
+    });
+
     it('loads a project’s share and upgrades its URL', async () => {
       setup();
 

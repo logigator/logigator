@@ -7,14 +7,15 @@ import type { LgCommunityKind, LgDocumentKind } from '@logigator/ui';
  * lives in) and the **API's** singular names a row of one table
  * (`project | component`) — so a call site handed the wrong one does not
  * compile, and somebody still has to choose. Choosing happens here rather than
- * at each of them: the share route reads the plural off its URL and the API
- * takes the singular, the share dialog holds the singular and builds the site's
- * page URL, and a second table in any of those would be a second thing to keep
- * in step with `/api/share/{kind}/{link}`.
+ * at each of them: the share route's pattern names the plural and the API takes
+ * the singular, the share dialog holds the singular and builds the site's page
+ * URL, and a second table in any of those would be a second thing to keep in
+ * step with `/api/share/{kind}/{link}`.
  *
- * The one direction stated twice is the membership test the route needs before
- * it can trust a path segment; both live in this table, so a third kind is one
- * entry rather than a search for the places that spell them out.
+ * Kinds are trusted here rather than tested: the route tree names its own
+ * literally (`/share/projects/:linkId`, `/share/components/:linkId`), so a path
+ * whose kind segment says anything else is matched by no pattern at all and
+ * never reaches this table.
  */
 const API_KIND_OF: Record<LgCommunityKind, LgDocumentKind> = {
   projects: 'project',
@@ -29,18 +30,4 @@ export function apiKindOf(kind: LgCommunityKind): LgDocumentKind {
 /** The route's spelling of a kind, for a URL a reader is handed. */
 export function routeKindOf(kind: LgDocumentKind): LgCommunityKind {
   return kind === 'project' ? 'projects' : 'components';
-}
-
-/**
- * Whether a path segment names a kind at all. A route pattern matches any
- * segment, so `/share/nonsense/{link}` has to be turned away as not being a
- * route rather than loaded as one.
- *
- * Asked of the table's own keys rather than with `in`, which answers for
- * everything `Object.prototype` carries as well: `/share/toString/{link}` would
- * otherwise be a route, and the table would hand back a function to put in the
- * API's path.
- */
-export function isRouteKind(value: string): value is LgCommunityKind {
-  return Object.hasOwn(API_KIND_OF, value);
 }

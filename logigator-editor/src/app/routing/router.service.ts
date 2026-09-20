@@ -1,7 +1,11 @@
 import { inject, Injectable, Type } from '@angular/core';
 import { ProjectRoute } from './routes/project.route';
 import { ComponentRoute } from './routes/component.route';
-import { LegacyShareRoute, ShareRoute } from './routes/share.route';
+import {
+  LegacyShareRoute,
+  ShareComponentRoute,
+  ShareProjectRoute
+} from './routes/share.route';
 import { LocalProjectRoute } from './routes/local-project.route';
 import { Route } from './route.model';
 import { Location } from '@angular/common';
@@ -14,8 +18,11 @@ import { LoggingService } from '../logging/logging.service';
 const ROUTES: Type<Route>[] = [
   ProjectRoute,
   ComponentRoute,
-  ShareRoute,
-  // After the kind-carrying route: the two take different numbers of segments,
+  // One entry per kind, so a path naming a kind is matched by a pattern rather
+  // than claimed by a parameter and judged when the route runs.
+  ShareProjectRoute,
+  ShareComponentRoute,
+  // After the kind-carrying routes: the two take different numbers of segments,
   // so neither can shadow the other, and the legacy one is the fallback shape.
   LegacyShareRoute,
   LocalProjectRoute
@@ -58,6 +65,19 @@ export class RouterService {
     }
   }
 
+  /**
+   * Whether any route's pattern matches `path`, which the startup decides the
+   * blank draft on — it creates one when *no* pattern matches.
+   *
+   * **A pattern match implies the route activates.** A route that can turn a
+   * path away has to say so in its pattern instead: a path matched and then
+   * declined has already been claimed, no later pattern being tried, and the
+   * `false` it leaves behind is indistinguishable from a path no pattern
+   * matched. This one runs *before* the route does, so it reports `true` for
+   * such a path, the startup skips its blank draft, and the reader is left with
+   * a not-found toast, a rewritten URL and an empty main slot. The share routes
+   * state their kinds literally for this reason.
+   */
   public matches(path: string): boolean {
     return [...this._routes.values()].some((route) => route.pattern.test(path));
   }
