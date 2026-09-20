@@ -43,13 +43,13 @@ Les composants personnalisés peuvent être déplacés vers le cloud de la même
 
 Une fois qu'un projet est dans le cloud, **Fichier → Partager** ouvre la boîte de dialogue de partage. (Le partage n'est disponible que pour les projets cloud ; téléversez d'abord un projet local.)
 
-- **Lien de partage** — toute personne disposant du lien peut ouvrir votre projet **en lecture seule** et **le cloner dans sa propre bibliothèque** pour en partir. Utilisez **Copier le lien** pour le récupérer.
-- **Public** — un projet public est aussi publié sur votre profil et visible par tous. Un projet privé n'est accessible **que** via son lien de partage.
-- **Régénérer le lien** — crée un nouveau lien et invalide définitivement l'ancien ; toute personne utilisant encore l'ancien lien perd l'accès.
+- **Qui peut l'ouvrir** — **Toi uniquement** (personne d'autre ne peut l'ouvrir, et son lien n'est pas affiché), **Toute personne avec le lien** (quiconque détient le lien peut ouvrir votre projet **en lecture seule** et **le cloner dans sa propre bibliothèque**) ou **Tout le monde** (dans les listes communautaires et indexé par les moteurs de recherche).
+- **Lien de partage** — la page du projet sur le site, que le destinataire ouvre. Utilisez **Copier le lien** pour le récupérer. Un projet privé garde son lien : la ligne explique pourquoi il n'est pas affiché, et dès que vous choisissez **Toute personne avec le lien**, c'est la même adresse qui sert de nouveau.
+- **Régénérer le lien** — remplace le lien immédiatement. Toute personne utilisant encore l'ancien perd l'accès. L'action n'est proposée que lorsque le projet est sur **Toute personne avec le lien** : l'adresse d'une page publiée _est_ ce lien, et un projet privé n'affiche pas son lien du tout — repassez donc d'abord sur **Toute personne avec le lien**.
 
 Les composants personnalisés cloud peuvent être partagés de la même façon depuis le panneau de paramètres.
 
-![La boîte de dialogue de partage avec le lien de partage et la bascule public.](./images/share-component.webp)
+![La boîte de dialogue de partage avec le sélecteur de visibilité et le lien de partage.](./images/share-component.webp)
 
 ### Ce que voit le destinataire
 

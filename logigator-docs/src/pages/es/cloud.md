@@ -43,13 +43,13 @@ Los componentes personalizados se pueden trasladar a la nube de la misma manera,
 
 Una vez que un proyecto está en la nube, **Archivo → Compartir** abre el diálogo de compartir. (Compartir solo está disponible para proyectos en la nube; sube primero un proyecto local.)
 
-- **Enlace para compartir**: cualquiera que tenga el enlace puede abrir tu proyecto en **modo de solo lectura** y **clonarlo en su propia biblioteca** para construir sobre él. Usa **Copiar enlace** para obtenerlo.
-- **Público**: un proyecto público también se publica en tu perfil y cualquiera puede descubrirlo. Un proyecto privado es accesible **solo** a través de su enlace para compartir.
-- **Regenerar enlace**: crea un enlace nuevo e invalida permanentemente el antiguo; cualquiera que siga usando el enlace antiguo pierde el acceso.
+- **Quién puede abrirlo**: **Solo tú** (nadie más puede abrirlo, y su enlace no se muestra), **Cualquiera con el enlace** (quien tenga el enlace puede abrir tu proyecto en **modo de solo lectura** y **clonarlo en su propia biblioteca**) o **Todo el mundo** (aparece en la comunidad y los buscadores lo indexan).
+- **Enlace para compartir**: la página del proyecto en el sitio, que es lo que abre quien lo recibe. Usa **Copiar enlace** para obtenerlo. Un proyecto privado conserva su enlace: la fila explica por qué no se muestra, y en cuanto eliges **Cualquiera con el enlace** vuelve a servir la misma dirección.
+- **Regenerar enlace**: reemplaza el enlace de inmediato. Quien siga usando el antiguo pierde el acceso. La acción solo se ofrece mientras el proyecto está en **Cualquiera con el enlace**: la dirección de una página publicada _es_ ese enlace, y un proyecto privado no muestra su enlace en absoluto, así que cámbialo primero a **Cualquiera con el enlace**.
 
 Los componentes personalizados en la nube se pueden compartir de la misma manera desde el panel de ajustes.
 
-![El diálogo de compartir con el enlace para compartir y la alternancia de público.](./images/share-component.webp)
+![El diálogo de compartir con el selector de visibilidad y el enlace para compartir.](./images/share-component.webp)
 
 ### Qué ve el destinatario
 

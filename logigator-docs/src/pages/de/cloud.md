@@ -43,13 +43,13 @@ Benutzerdefinierte Komponenten können auf dieselbe Weise in die Cloud verschobe
 
 Sobald ein Projekt in der Cloud ist, öffnet **Datei → Teilen** den Teilen-Dialog. (Das Teilen ist nur für Cloud-Projekte verfügbar; lade zuerst ein lokales Projekt hoch.)
 
-- **Freigabelink** — jeder mit dem Link kann dein Projekt **schreibgeschützt** öffnen und **es in seine eigene Bibliothek klonen**, um darauf aufzubauen. Nutze **Link kopieren**, um ihn zu greifen.
-- **Öffentlich** — ein öffentliches Projekt wird zusätzlich auf deinem Profil veröffentlicht und ist für alle auffindbar. Ein privates Projekt ist **nur** über seinen Freigabelink erreichbar.
-- **Link neu generieren** — erzeugt einen frischen Link und macht den alten dauerhaft ungültig; wer den alten Link noch nutzt, verliert den Zugriff.
+- **Wer kann es öffnen** — **Nur du** (sonst kann es niemand öffnen, und sein Link wird nicht angezeigt), **Alle mit dem Link** (wer den Link hat, kann dein Projekt **schreibgeschützt** öffnen und **es in seine eigene Bibliothek klonen**) oder **Alle** (in der Community gelistet und von Suchmaschinen indexiert).
+- **Freigabelink** — die eigene Seite des Projekts auf der Website, die ein Empfänger öffnet. Nutze **Link kopieren**, um ihn zu greifen. Ein privates Projekt behält seinen Link – die Zeile sagt, warum er nicht angezeigt wird, und sobald du **Alle mit dem Link** wählst, gilt dieselbe Adresse wieder.
+- **Link neu generieren** — ersetzt den Link sofort. Wer den alten noch nutzt, verliert den Zugriff. Die Aktion wird nur angeboten, solange das Projekt **Alle mit dem Link** ist: Die Adresse einer veröffentlichten Seite _ist_ dieser Link, und ein privates Projekt zeigt seinen Link gar nicht an – stelle es also zuerst auf **Alle mit dem Link**.
 
 Benutzerdefinierte Cloud-Komponenten können auf dieselbe Weise aus dem Einstellungs-Panel geteilt werden.
 
-![Der Teilen-Dialog mit Freigabelink und Öffentlich-Schalter.](./images/share-component.webp)
+![Der Teilen-Dialog mit der Sichtbarkeitsauswahl und dem Freigabelink.](./images/share-component.webp)
 
 ### Was der Empfänger sieht
 

@@ -133,7 +133,7 @@ Angular 22 standalone components + PixiJS 8 canvas.
   heal invariant-violating boards; repairing is always user-initiated.
 - `persistence/` — `PersistenceService` (facade: load/save dispatch, file import/export, main-slot
   lifecycle) over two symmetric gateways (`server/`, `browser/`); `PromotionService`,
-  `ProjectMetadataStore` (name/source/dirty, `withDirtyGuard`). The cloud API transports the
+  `ProjectMetadataStore` (name/source/visibility/dirty, `withDirtyGuard`). The cloud API transports the
   **native versioned document**, so the server gateway has no codec of its own — it encodes with
   `CircuitFileService.toDocument` and decodes with `CircuitFileService.decode`, exactly as a file
   does — and concurrency is the document's integer `version` (a `version_conflict` is a 409).
@@ -282,8 +282,10 @@ path behaves the same in development).
   absolute URLs, a crawler having no document to resolve the build's `./media/…` imports against.
   `og:image` is the service's too, not `index.html`'s: a published document (and its stargazer
   list) names the API's composed card, everything else `social-card.png`, both resolved against the
-  origin the request arrived at. `noindex` is a `PageMeta` flag, set on the two pages whose URL
-  carries a one-shot token and **removed** on the next navigation, the document being reused.
+  origin the request arrived at. `noindex` is a `PageMeta` factory, run after the guards beside
+  `title` and `image`: `true` for the two pages whose URL carries a one-shot token, and for a
+  document whose resolved visibility is not `public` — which is why it has to ask rather than be
+  route data. It is **removed** on the next navigation, the document being reused.
 - `layout/` — the shell: the top bar, the compact navigation drawer, the footer, and the account
   menu. One 56px `bg-primary-400` bar at every width, the treatment the editor's title bar carries
   (the primary scale is scheme-independent, so bar and ink are the same in light and dark); its
@@ -306,8 +308,8 @@ path behaves the same in development).
   it because it takes one theme's ladder, the preview because it draws the `<picture>` itself
   through `@logigator/ui`'s exported `pictureFor`. `web-share-controls` is the one share row — the
   sheet where the browser has one, the clipboard where it has not, and the embed disclosure — drawn
-  by a community page, a shelf dialog and the share page alike, over the rules in `@logigator/ui`'s
-  `internal/share` and `internal/embed`. `crawler-image.ts` is the other rule: the one URL
+  by a community page and a shelf dialog alike, over the rules in `@logigator/ui`'s
+  `internal/share`, `internal/embed` and `internal/visibility`. `crawler-image.ts` is the other rule: the one URL
   to hand a consumer that negotiates nothing — a crawler reading JSON-LD, a share surface reading
   `og:image` — which is the widest rung in the format every consumer reads, and for a preview always
   the **light** slot, line art on a transparent ground disappearing wherever the consumer
@@ -337,23 +339,26 @@ path behaves the same in development).
     release headings itself, so each carries the `id` its feed entry links to.
     `pages/community/` is the public half of the API as pages: two browse listings, a document's own
     page, its stargazer list and a member's four listings, all under `/community` and all resolved
-    by a guard. Documents are addressed by their **share link**, as the API addresses them, so
-    regenerating a token takes the public page down with it. Every listing control is a link or a
+    by a guard. A document keeps one address there in every state — `/community/{kind}/{link}`, the
+    link being the address rather than a capability: `private` resolves for its owner alone,
+    `unlisted` for whoever holds that link and nothing else, `public` for everyone, listed and
+    indexed. A page that is not public carries the state chip that says so. Every listing control
+    is a link or a
     `<form method="get">` and writes the URL rather than component state — which is what makes a
     ranking, a filter and a page shareable and the pages browsable with no script — so every listing
     route carries `runGuardsAndResolvers: 'paramsOrQueryParamsChange'`, the router's default
     re-running a guard only on a _path_ parameter change. The 404 sets
     the response status through `RESPONSE_INIT`; a soft 404 would be indexable, and the document and
     profile pages render that same component inline for a link naming nothing published.
-    `pages/share/` is where a **handed-out share link lands**: `GET /api/share/:link` resolved by a
-    guard, drawn as the circuit, its author, the tally and the fork it came from, with _open in
-    editor_, _save a copy_ and the share row. It is the site's page rather than the editor's own
-    `/share/:link` route (which stays as the _open in editor_ destination) because a static SPA shell
-    cannot carry a per-document `og:image`, and the token — a capability that ignores `public` — is
-    the one thing here that must never reach an index: `noindex` on the page, with `robots.ts`
-    leaving the language-prefixed route crawlable on purpose so that the tag is there to be read.
-    The API says `component` and the routes say `components`; that mapping is made once, in the
-    service's `kind` computed.
+    The editor's own `/share/{kind}/{link}` route stays the _open in editor_ destination, and the
+    site hands a document over at `/editor/share/{kind}/{link}` — one address per document on either
+    side of the hand-off. The kind-free `/editor/share/{link}` the legacy editor minted for years
+    still resolves: the editor asks the API for one kind and then the other, and rewrites the URL to
+    the kind-carrying form, so an old link upgrades itself on first visit.
+    The API says `component` and the routes say `components`; each app maps the two in one place —
+    the site in `pages/community/community-kind.ts` (route → API, for a card and a clone), the
+    editor in `routing/document-kind.ts` (both directions, for its own route and the URL it hands
+    out).
     `pages/my/` is the same shape from the owning side: two shelves (`/my/projects`,
     `/my/components`) over the caller-scoped document routes, and `/my/account`. Every one is behind
     `authGuard`, which returns a `UrlTree` — a real `302` during a server render, `@angular/ssr`
@@ -364,7 +369,13 @@ path behaves the same in development).
     The card opens the **editor**, so it is an `href`; creating is the editor's too, and
     _New project_ is a link to it rather than a form. `MyDocumentsService` applies a metadata write
     over the resolved page instead of re-reading it: the API answers with the row it wrote, and a
-    re-read would re-sort the grid under the cursor, a rename bumping the edit time. `pages/my/account/`
+    re-read would re-sort the grid under the cursor, a rename bumping the edit time.
+    The share dialog is **one dialog in two apps**: this app's
+    `pages/my/dialogs/share-document-dialog` and the editor's `ui/dialogs/share-dialog` are held to
+    the same treatment element for element — size step, severities, spacing, wording — and both read
+    the state rules from `@logigator/ui`'s `internal/visibility`. Changing one is changing the
+    other.
+    `pages/my/account/`
     is one page of stacked sections rather than a route each — nothing under `my/*` is indexable, so
     decision 60's crawler argument does not apply — with every write putting its answer back into
     `SessionService`, which is what moves a changed username into the bar.
@@ -424,10 +435,10 @@ path behaves the same in development).
   the canonical-path redirect and before the language one — the only slot where an unprefixed path
   is still unprefixed. `robots.txt` names no crawler (allowing by omission is the decision, and the
   file says so in a comment), closes `/share/` and `/api/` with an `Allow:` for the card path ahead
-  of it, and leaves `/:lang/share/<link>` **deliberately open**: the two rules are anchored and cover
-  the unprefixed redirect and the editor's route, while the landing page carries `noindex` and a
-  crawler is never told to skip what it is forbidden to fetch. A `/*/share/` rule would undo that and
-  would also catch the card under `/api/share/` — `robots.spec.ts` holds both halves. It
+  of it — one wildcard per kind and one per token, a card being addressed by both. `/community/`
+  must never be closed: it is where a public document's page lives, and `noindex` on a page whose
+  resolved state is not public is what keeps it out of an index, a crawler never being told to skip
+  what it is forbidden to fetch. `robots.spec.ts` holds the pair. It
   **never answers non-200**: a `5xx` there is read as "crawl nothing", so a host
   `requestOrigin` will not vouch for costs the `Sitemap:` line rather than the answer. The sitemap
   is the opposite — it fails whole rather than answering the static half, a sitemap that stops
@@ -713,11 +724,20 @@ the liveness probe; `GET /api/health/ready` probes Postgres and Redis (503 namin
   both replaced together; not an edit, so no version bump). `RenormalizeService` is the format-bump
   and re-extract job — keyset-paginated, one transaction per row, idempotent; it does not bump
   `version` but does put it in the `WHERE`, so a row a save reached first is skipped.
-- `sharing/` — reading a document by its share link, the card it unfurls as, and cloning it. The
-  link is a **capability**: the read needs no session and ignores `public`. `GET /share/:link`
-  answers the document, its author, its dependencies, its fork lineage and its **star tally** — the
-  site's landing page draws the same number the composed card draws beside it. `GET
-/share/:link/card.png` is the **composed 1200×630 share card** — `storage/share-card/` draws the
+- `sharing/` — reading a document by its link, the card it unfurls as, and cloning it. The link is
+  the document's **address**, one per document, and what it resolves to is the state its owner set.
+  Every read here — the community page's own detail read included — carries the one predicate
+  `linkResolvesFor` in `documents/circuit-queries.ts`: everything but a private document, which
+  resolves for its owner alone. So no read needs a session, and none of them can serve a document
+  another calls missing. Each route names its table, `/api/share/{kind}/{link}`, the token no longer
+  identifying one. Rotating the link is refused while the document is `public` (409,
+  `link_published`) — an address out in the world is not a secret to rotate. **A visibility change
+  never touches the link**: `private → unlisted` hands out the same URL again, so an address
+  somebody already copied keeps working, and revoking is the explicit rotation rather than a side
+  effect of hiding. `GET /share/{kind}/{link}` answers the document, its
+  author, its dependencies, its fork lineage and its **star tally** — the site's page draws the same
+  number the composed card draws beside it. `GET /share/{kind}/{link}/card.png` is the **composed
+  1200×630 share card** — `storage/share-card/` draws the
   whole plate as one SVG that libvips rasterizes once, and this service resolves the row, the author
   and the star tally, hashes them plus a layout version into the `ETag`, and keeps a small LRU with
   an in-flight map so one pasted link composes once. Composed on demand rather than stored beside
@@ -729,11 +749,15 @@ the liveness probe; `GET /api/health/ready` probes Postgres and Redis (503 namin
   graph (one recursive CTE with a path array as a cycle guard) and **rewrites every embedded
   snapshot's `source.id`** to the new copies; a snapshot whose master no longer exists loses its
   `source` instead. New ids are chosen before any insert, so insert order is irrelevant; copies go
-  through the same write path, so their ports and edges are re-derived, and a copy is always private.
-- `community/` — the public half: listings, stars, stargazers, public profiles. **Every predicate
-  carries `public = true`**, which is why these queries live apart from the owner-scoped ones.
-  Documents are addressed by their `link`, so regenerating the token takes the public page down with
-  it. Star counts and "did the caller star it" are correlated subqueries (no counter column, no
+  through the same write path, so their ports and edges are re-derived, and a copy lands `unlisted`
+  — a working link, in no listing, which is what the boolean's `false` used to mean.
+- `community/` — the public half: listings, stars, stargazers, public profiles. **Every listing
+  predicate carries `visibility = 'public'`**, which is why these queries live apart from the
+  owner-scoped ones. The two detail reads are the exception, answering through the same
+  `linkResolvesFor` the share reads use, because a document's page is served to whoever its link
+  resolves for — its owner included, which is the preview the share dialog promises before anything
+  is published. **Stars stay public-only**: a link is not a way to star. Star counts and "did the
+  caller star it" are correlated subqueries (no counter column, no
   `GROUP BY` to keep in step with the select list), and `star-queries.ts` holds their **single-row
   sibling** too: setting a star, composing a card and reading a share link each hold the row already,
   so one `starTally` serves all three rather than a query written out three times. **Ranking is a chain and every chain ends at

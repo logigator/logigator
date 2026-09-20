@@ -43,13 +43,13 @@ Custom components can be moved to the cloud the same way, from their action in t
 
 Once a project is in the cloud, **File → Share** opens the share dialog. (Sharing is only available for cloud projects; upload a local project first.)
 
-- **Share link** — anyone with the link can open your project **read-only** and **clone it into their own library** to build on. Use **Copy link** to grab it.
-- **Public** — a public project is also published on your profile and discoverable by everyone. A private project is reachable **only** through its share link.
-- **Regenerate link** — creates a fresh link and permanently invalidates the old one; anyone still using the old link loses access.
+- **Who can open it** — **Only you** (nobody else can open it, and its link is not shown), **Anyone with the link** (whoever holds the link can open your project **read-only** and **clone it into their own library**) or **Everyone** (listed in the community and indexed by search engines).
+- **Share link** — the project's own page on the site, which is what a recipient opens. Use **Copy link** to grab it. A private project keeps its link — the row says why it isn't shown, and picking **Anyone with the link** hands out that same address again.
+- **Regenerate link** — replaces the link immediately. Anyone still using the old one loses access. The action is offered only while the document is **Anyone with the link**: a published page's address _is_ that link, and a private document doesn't show its link at all — switch to **Anyone with the link** first.
 
 Cloud custom components can be shared the same way from the settings panel.
 
-![The share dialog with the share link and the public toggle.](./images/share-component.webp)
+![The share dialog with the visibility picker and the share link.](./images/share-component.webp)
 
 ### What the recipient sees
 
