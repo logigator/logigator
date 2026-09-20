@@ -26,6 +26,13 @@ const SEGMENT_PADDING: Record<LgSize, string> = {
  * or the option itself when `optionValue` is unset. Options render their
  * `optionIcon` + `optionLabel`, or a projected `#item` template.
  *
+ * A label is one line, always, and a segment is never narrower than the text
+ * in it: `fluid` fills the group's width with what is left after every segment
+ * has what its own label needs, and a group too narrow for them breaks
+ * *between* segments instead of inside one. Both are what keeps a control with
+ * three long labels — the visibility picker names states, not values — from
+ * turning into a stack of wrapped words.
+ *
  * `allowEmpty` defaults to **false**: clicking the active option does not
  * clear the selection.
  */
@@ -107,7 +114,12 @@ export class LgSelectButton implements ControlValueAccessor {
   protected readonly groupClasses = computed(() =>
     [
       'rounded-md p-1 bg-surface-100 dark:bg-surface-950',
-      this.fluid() ? 'flex w-full' : 'inline-flex'
+      // `flex-wrap` is what makes the breaking happen between segments: a
+      // second row is a taller control, a label wrapped inside its own segment
+      // is an unreadable one. A `fluid` track reaches it first, being as wide
+      // as its container rather than as wide as its content, but an inline
+      // group is shrink-to-fit and reaches it too, so both carry it.
+      this.fluid() ? 'flex w-full flex-wrap' : 'inline-flex flex-wrap'
     ].join(' ')
   );
 
@@ -141,7 +153,14 @@ export class LgSelectButton implements ControlValueAccessor {
       'transition-colors duration-200 cursor-pointer select-none',
       'disabled:pointer-events-none disabled:opacity-60',
       'focus:outline-none focus-visible:outline focus-visible:outline-1 focus-visible:-outline-offset-1 focus-visible:outline-primary',
-      this.fluid() ? 'flex-1' : '',
+      // One line, so the button's own min-content width is the whole label and
+      // nothing can shrink it narrower than that.
+      'whitespace-nowrap',
+      // `grow` and not `flex-1`: a zero flex basis is what made every segment a
+      // third of the track whatever its text, so the longest label ran out of
+      // room and broke. Sized from its own content, a segment takes an equal
+      // share of the slack instead and the three read as one control.
+      this.fluid() ? 'grow' : '',
       pad,
       selected
         ? 'bg-surface-0 dark:bg-surface-800 text-surface-900 dark:text-text shadow-xs'
