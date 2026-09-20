@@ -1,8 +1,15 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { canShare, copyText, shareOrCopy } from './share';
+import {
+  canShare,
+  copyText,
+  documentPath,
+  SHARE_CARD_PATH_PATTERN,
+  shareCardUrl,
+  shareOrCopy
+} from './share';
 
-const LINK =
-  'https://logigator.com/de/share/2b0b6f0e-0000-4000-8000-000000000000';
+const TOKEN = '2b0b6f0e-0000-4000-8000-000000000000';
+const LINK = `https://logigator.com/de/community/projects/${TOKEN}`;
 
 /** Puts a member on the real `navigator`, removed again after every test. */
 function install(key: 'share' | 'clipboard', value: unknown): void {
@@ -101,5 +108,34 @@ describe('copyText', () => {
     });
 
     await expect(copyText('anything')).resolves.toBe(false);
+  });
+});
+
+describe('the two URLs a document is handed out as', () => {
+  it('names the document by its kind in both, each in its own spelling', () => {
+    // The two vocabularies are the point: the API names the table a row lives
+    // in, the route names the section its page lives in. A single builder
+    // spelling both the same way is the mistake this pair exists to prevent.
+    expect(documentPath('projects', TOKEN)).toBe(
+      `/community/projects/${TOKEN}`
+    );
+    expect(shareCardUrl('project', TOKEN)).toBe(
+      `/api/share/project/${TOKEN}/card.png`
+    );
+
+    expect(documentPath('components', TOKEN)).toBe(
+      `/community/components/${TOKEN}`
+    );
+    expect(shareCardUrl('component', TOKEN)).toBe(
+      `/api/share/component/${TOKEN}/card.png`
+    );
+  });
+
+  it('spells the card route as an access rule too', () => {
+    // `robots.txt` needs one line where the route has a kind and a token, and
+    // it is built from the same template so that a card the site stops
+    // serving cannot leave the rule behind naming it — a mismatch nothing
+    // fails on, and nobody sees until a pasted link unfurls blank.
+    expect(SHARE_CARD_PATH_PATTERN).toBe('/api/share/*/*/card.png');
   });
 });

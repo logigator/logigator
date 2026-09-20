@@ -4,7 +4,7 @@ import { EMBED_FORMATS, embedSnippet } from './embed';
 const URL =
   'https://logigator.com/de/community/projects/2b0b6f0e-0000-4000-8000-0000';
 const CARD =
-  'https://logigator.com/api/share/2b0b6f0e-0000-4000-8000-0000/card.png';
+  'https://logigator.com/api/share/project/2b0b6f0e-0000-4000-8000-0000/card.png';
 
 const input = (title: string) => ({ url: URL, image: CARD, title });
 

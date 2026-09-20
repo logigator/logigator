@@ -15,14 +15,27 @@ export { pictureFor } from './internal/picture';
 // Handing a link to somebody, and the snippet that puts a circuit on another
 // page. The editor and the site both build these, and what a recipient receives
 // is one artifact either way — so the rules live here rather than twice over.
-export type { LgShareOutcome, LgShareTarget } from './internal/share';
+export type {
+  LgCommunityKind,
+  LgDocumentKind,
+  LgShareOutcome,
+  LgShareTarget
+} from './internal/share';
 export {
   canShare,
   copyText,
+  documentPath,
   shareCardUrl,
-  shareLandingPath,
   shareOrCopy
 } from './internal/share';
+// What the three states mean for the link controls, so the editor's share
+// dialog and the site's cannot come to disagree about it.
+export type { LgDocumentVisibility } from './internal/visibility';
+export {
+  LG_DOCUMENT_VISIBILITIES,
+  canRotateLink,
+  hasLiveLink
+} from './internal/visibility';
 export type { LgEmbedFormat, LgEmbedInput } from './internal/embed';
 export { EMBED_FORMATS, embedSnippet } from './internal/embed';
 export type { LgLabels, LgLabelResolver } from './tokens/labels';

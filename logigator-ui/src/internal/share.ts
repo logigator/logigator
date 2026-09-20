@@ -12,6 +12,17 @@
 /** What a share attempt did. `dismissed` is the user closing the sheet. */
 export type LgShareOutcome = 'shared' | 'copied' | 'dismissed' | 'failed';
 
+/**
+ * A document's kind, in the two vocabularies that name it. The **API** names
+ * its tables in the singular — `/api/share/project/{link}` — because that is
+ * what one of its rows is; the **routes** spell the same thing in the plural,
+ * because a document's page lives in a section: `/community/projects/{link}`.
+ * Neither spelling is derived from the other here: two types rather than one
+ * union of four strings, so a call site cannot hand one to the other.
+ */
+export type LgDocumentKind = 'project' | 'component';
+export type LgCommunityKind = 'projects' | 'components';
+
 export interface LgShareTarget {
   readonly title: string;
   readonly text?: string;
@@ -75,27 +86,50 @@ export async function copyText(text: string): Promise<boolean> {
 }
 
 /**
- * The path a shared link lands on: the site's page for it. **Unprefixed** —
- * each app adds its own language segment, the site through `pathInLanguage`
- * and the editor through its own three lines, so that one of them cannot come
- * to carry a rule the other does not.
+ * The path a document's page lives at, in all three of its states: a link
+ * somebody was handed lands here whether the document is listed or not, and the
+ * reader never leaves the section the listing is in. **Unprefixed** — each app
+ * adds its own language segment, the site through `pathInLanguage` and the
+ * editor through its own three lines, so that one of them cannot come to carry
+ * a rule the other does not.
+ *
+ * The kind is the route's spelling (`LgCommunityKind`), which is what the
+ * site's `SiteLinks.communityDocument` takes: one string, built once, so the
+ * page the editor hands out and the page the site links to cannot drift apart.
  */
-export function shareLandingPath(link: string): string {
-  return `/share/${link}`;
+export function documentPath(kind: LgCommunityKind, link: string): string {
+  return `/community/${kind}/${link}`;
 }
 
 /**
  * The API's composed 1200×630 card: what every consumer that cannot negotiate
  * a `<picture>` gets, a share surface reading `og:image` and a forum post
- * rendering an embed alike. One route, the link being the capability.
+ * rendering an embed alike. One route per kind, because the link is a token in
+ * two tables rather than a key the server can look up on its own.
  *
  * A path rather than a URL, because a snippet is pasted onto somebody else's
  * site — where a relative `/api/…` would resolve against *their* host. The
  * caller supplies the origin.
  */
-export function shareCardUrl(link: string): string {
-  return `/api/share/${link}/card.png`;
+export function shareCardUrl(kind: LgDocumentKind, link: string): string {
+  return `/api/share/${kind}/${link}/card.png`;
 }
+
+/**
+ * The same route as an access rule spells it: both of the segments the route
+ * takes a variable in become `*`, which is what `robots.txt` matches a path by.
+ * The wildcard is legitimate here rather than loose — what it stands in for is
+ * a kind and a token, the only two things that can be there, so every URL the
+ * line matches is a card and nothing else. Both tables and every token are why
+ * it is one line rather than one per table.
+ *
+ * Derived from the builder above rather than written out, so that moving the
+ * route cannot leave `robots.txt` naming a URL nothing serves: a mismatch
+ * fails nothing, and nobody sees it until a pasted link unfurls blank. The cast
+ * is the one place allowed to say a `*` is not a kind — this is an access rule,
+ * not an address anything is ever fetched from.
+ */
+export const SHARE_CARD_PATH_PATTERN = shareCardUrl('*' as LgDocumentKind, '*');
 
 /** Whether an error is a visitor closing the sheet rather than a failure. */
 function isAbort(error: unknown): boolean {
