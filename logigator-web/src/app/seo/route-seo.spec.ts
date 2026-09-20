@@ -100,11 +100,13 @@ describe('every page route', () => {
   it('leaves the index to the pages that have to decide', () => {
     // Every page is a search result unless it says otherwise, so this is the
     // list of routes that opt out — and the shape of the list is the point:
-    // two pages of action, and the three routes whose answer is not the
-    // route's to give. A document's own page is the same URL whether it is
-    // listed or not, and its stargazer sibling names it whichever state it is
-    // in, so `noindex` is what keeps the two non-public states out of an index
-    // (the factory is held to that in `community-routes.spec.ts`).
+    // two pages of action, and the two routes whose answer is not the route's
+    // to give. A document's own page is the same URL whether it is listed or
+    // not, and it renders in all three states, so `noindex` is what keeps the
+    // two non-public ones out of an index (the factory is held to that in
+    // `community-routes.spec.ts`). Its stargazer sibling is not on the list:
+    // a document that is not public has no stargazer list, so that page is the
+    // site's 404 there, and a status of its own is what a crawler reads.
     const noindex = rendered
       .filter((page) => page.seo?.noindex)
       .map((page) => page.path);
@@ -114,9 +116,7 @@ describe('every page route', () => {
         '/:lang/reset-password',
         '/:lang/verify-email/:token',
         '/:lang/community/projects/:link',
-        '/:lang/community/components/:link',
-        '/:lang/community/projects/:link/stargazers',
-        '/:lang/community/components/:link/stargazers'
+        '/:lang/community/components/:link'
       ])
     );
   });

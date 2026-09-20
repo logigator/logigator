@@ -39,6 +39,16 @@ function documentRouteNoindex(): () => boolean {
   return noindex!;
 }
 
+/** The stargazer route's head, read off the tree for the same reason. */
+function stargazersRouteSeo(): PageMeta {
+  const route = communityRoutes.find(
+    (candidate) => candidate.path === 'community/projects/:link/stargazers'
+  );
+  const seo = (route?.data as { seo?: PageMeta } | undefined)?.seo;
+  expect(seo, 'the stargazer route declares no head').toBeDefined();
+  return seo!;
+}
+
 describe('the community routes', () => {
   let http: HttpTestingController;
   let router: Router;
@@ -219,5 +229,43 @@ describe('the community routes', () => {
       .flush(detail({ visibility: 'private' }));
     await priv;
     expect(TestBed.runInInjectionContext(noindex)).toBe(true);
+  });
+
+  /**
+   * The stargazer page's head is route data, so it has to follow the page: for
+   * a document the community does not list that page is the site's 404, and a
+   * `BreadcrumbList` step naming the document — or a card drawing it — would
+   * describe a page the reader is not on. The list itself is the one state
+   * where both belong.
+   */
+  it('names the document in the stargazer page’s head only where that page exists', async () => {
+    const seo = stargazersRouteSeo();
+    const content = TestBed.inject(CommunityDocumentService);
+    const trail = () => TestBed.runInInjectionContext(() => seo.trail!());
+    const image = () => TestBed.runInInjectionContext(() => seo.image!());
+
+    const published = content.resolve('projects', LINK);
+    http
+      .expectOne(`/api/community/projects/${LINK}`)
+      .flush(detail({ visibility: 'public' }));
+    await published;
+    expect(trail()).not.toEqual([]);
+    expect(image()).not.toBeNull();
+
+    const unlisted = content.resolve('projects', LINK);
+    http
+      .expectOne(`/api/community/projects/${LINK}`)
+      .flush(detail({ visibility: 'unlisted' }));
+    await unlisted;
+    expect(trail()).toEqual([]);
+    expect(image()).toBeNull();
+
+    const priv = content.resolve('projects', LINK);
+    http
+      .expectOne(`/api/community/projects/${LINK}`)
+      .flush(detail({ visibility: 'private' }));
+    await priv;
+    expect(trail()).toEqual([]);
+    expect(image()).toBeNull();
   });
 });

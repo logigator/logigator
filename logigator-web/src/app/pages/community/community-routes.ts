@@ -62,6 +62,20 @@ const documentNoindex = (): boolean =>
   inject(CommunityDocumentService).document()?.visibility !== 'public';
 
 /**
+ * Whether the stargazer page exists for the document a guard resolved — the
+ * question its body answers (`stargazers-page.ts`), asked of the same resolved
+ * document because the head has to agree with it.
+ *
+ * Only a published document has a list, so the page's other two states are the
+ * site's own 404: an unlisted document reached through the link somebody was
+ * handed, and a private one reached by its owner. What this gates is what would
+ * otherwise name the document on that 404 — a step for its trail and its card
+ * for the image, neither of which is in front of the reader.
+ */
+const stargazersPageExists = (): boolean =>
+  inject(CommunityDocumentService).document()?.visibility === 'public';
+
+/**
  * The listing and the document, as the two steps between the home page and a
  * page hanging under a document. `PageMeta.ancestors` cannot express it: the
  * second step's name is stored text rather than a key.
@@ -196,14 +210,15 @@ function documentRoutes(
           titleKey: 'pages.community.stargazers.title',
           // The page is about the document, so it unfurls as it: a list of
           // usernames under the site card would say nothing about which one.
-          image: documentCard,
-          // The document guard is what admits this page now, and it admits a
-          // document that is not public — so the stargazer list answers `404`
-          // for one, and the page that draws that failure has to be kept out of
-          // an index for the same reason the document's own page is: it names
-          // it in its heading and its trail.
-          noindex: documentNoindex,
-          trail: documentTrail
+          // Both this and the trail go quiet where the page is the 404 rather
+          // than that list, for the reason `stargazersPageExists` gives.
+          image: () => (stargazersPageExists() ? documentCard() : null),
+          // No `noindex` here, though the document's own page needs one: there
+          // the same URL renders in three states and two of them are pages that
+          // name the document, while here the two states it was added for are
+          // now the site's 404 — and a 404 is already no index entry, which is
+          // what the catch-all 404 route relies on as well.
+          trail: () => (stargazersPageExists() ? documentTrail() : [])
         } satisfies PageMeta
       } satisfies CommunityRouteData & { seo: PageMeta }
     }
