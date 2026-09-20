@@ -14,6 +14,24 @@ export const documentDescriptionSchema = z.string().trim().max(2048);
 export const componentSymbolSchema = z.string().trim().min(1).max(5);
 
 /**
+ * How far a document's link reaches. Three states rather than a boolean,
+ * because "not published" covers two different things: a link that still
+ * resolves for whoever holds it, and one that resolves for nobody but its
+ * owner.
+ *
+ * The order runs from the least to the most exposed, and it is part of the
+ * schema: both share dialogs draw their pickers in it, through
+ * `@logigator/ui`'s `LG_DOCUMENT_VISIBILITIES`.
+ */
+export const documentVisibilitySchema = z.enum([
+  'private',
+  'unlisted',
+  'public'
+]);
+
+export type DocumentVisibility = z.infer<typeof documentVisibilitySchema>;
+
+/**
  * The circuit document a write carries — checked here only for being an object.
  * The format has a versioned, migration-aware validator of its own in
  * `@logigator/core`; a second description in zod would drift. zod's job at this
@@ -115,8 +133,13 @@ export const circuitFields = {
   id: z.string().uuid(),
   name: z.string(),
   description: z.string(),
-  public: z.boolean(),
-  /** Share-link token — the capability `GET /share/:link` reads. */
+  visibility: documentVisibilitySchema,
+  /**
+   * Share-link token — the document's address rather than a grant. What it
+   * resolves to is `visibility`'s business, and it is not a key on its own: a
+   * stored document is named by its kind as well, `/api/share/{kind}/{link}`,
+   * because the same token column exists in two tables.
+   */
   link: z.string().uuid(),
   version: z.number().int(),
   componentCount: z.number().int().nonnegative(),

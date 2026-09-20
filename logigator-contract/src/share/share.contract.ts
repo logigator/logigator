@@ -13,9 +13,10 @@ import { projectSummarySchema } from '../document/project.contract';
  * with optional component fields, so a client that narrowed on `kind` is not
  * still asking whether `numInputs` is there.
  *
- * The link is a capability: the endpoint needs no session and ignores `public`,
- * because holding the URL is the grant — which is why revoking one means
- * minting a new token.
+ * The endpoint needs no session, and it answers for every document but a
+ * private one — which answers for its owner alone. `kind` is part of the
+ * address rather than something the server works out, `/share/{kind}/{link}`,
+ * the two documents of that name living in two tables.
  */
 const shareFields = {
   document: circuitDocumentSchema,

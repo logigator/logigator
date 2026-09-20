@@ -7,6 +7,7 @@ import {
   documentDependencySchema,
   documentDescriptionSchema,
   documentNameSchema,
+  documentVisibilitySchema,
   forkAttributionSchema,
   requireSomeField
 } from './document.contract';
@@ -44,11 +45,15 @@ export type ProjectResponse = z.infer<typeof projectResponseSchema>;
  * round trips. `name` is required either way and wins over the document's own:
  * the server writes it back into the stored document, so the column and the
  * document never disagree.
+ *
+ * `visibility` absent means `unlisted` — a link that resolves, in no listing —
+ * which is what a created-in-a-hurry document should be. The editor's create
+ * dialogs send a state of their own, publishing by default.
  */
 export const createProjectRequestSchema = z.object({
   name: documentNameSchema,
   description: documentDescriptionSchema.optional(),
-  public: z.boolean().optional(),
+  visibility: documentVisibilitySchema.optional(),
   document: circuitDocumentInputSchema.optional()
 });
 
@@ -57,12 +62,18 @@ export type CreateProjectRequest = z.infer<typeof createProjectRequestSchema>;
 /**
  * Changing a project's metadata. `regenerateLink` mints a new share token,
  * which is how a share is revoked: every URL under the old one stops resolving.
+ * It is refused while the document is public — the page's own address *is* that
+ * link — so a published document is moved back to `unlisted` first.
+ *
+ * `visibility` never touches the link. It is the document's address rather than
+ * a grant, so `private → unlisted` restores the same URL and a bookmark or a
+ * link somebody already copied keeps working; hiding a document revokes nothing.
  */
 export const updateProjectRequestSchema = requireSomeField(
   z.object({
     name: documentNameSchema.optional(),
     description: documentDescriptionSchema.optional(),
-    public: z.boolean().optional(),
+    visibility: documentVisibilitySchema.optional(),
     regenerateLink: z.boolean().optional()
   })
 );

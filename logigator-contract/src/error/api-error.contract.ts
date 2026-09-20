@@ -42,7 +42,13 @@ export const apiErrorCodeSchema = z.enum([
    * The write was against a version that is no longer current. The client
    * re-reads and decides; the server will not merge.
    */
-  'version_conflict'
+  'version_conflict',
+  /**
+   * A new share link was asked for while the document is public. Its page lives
+   * at `/community/{kind}/{link}`, so rotating the token would move an address
+   * that is already out in the world; the document has to be unlisted first.
+   */
+  'link_published'
 ]);
 
 export type ApiErrorCode = z.infer<typeof apiErrorCodeSchema>;

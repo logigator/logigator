@@ -47,8 +47,14 @@ export interface CustomComponentDefinition {
    * registered so the share dialog reads it without an extra fetch.
    */
   link?: string;
-  /** Server masters only: whether the component is published publicly. */
-  isPublic?: boolean;
+  /**
+   * Server masters only: how far that link reaches, captured with it. The three
+   * values are the contract's `documentVisibilitySchema` spelled out, which is
+   * the one thing this file cannot import — core sits below the contract — and
+   * spelled rather than named because they are the same literal union, so
+   * either side's value assigns to the other without a cast.
+   */
+  visibility?: 'private' | 'unlisted' | 'public';
   /**
    * The definition's own circuit in the native body encoding, holding session
    * type ids. A snapshot's travels embedded with the host document; a master's

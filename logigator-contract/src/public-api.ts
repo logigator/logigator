@@ -89,12 +89,14 @@ export {
   documentDependencySchema,
   documentDescriptionSchema,
   documentNameSchema,
+  documentVisibilitySchema,
   forkAttributionSchema,
   requireSomeField,
   saveCircuitRequestSchema,
   type Author,
   type CircuitPreview,
   type DocumentDependency,
+  type DocumentVisibility,
   type ForkAttribution,
   type SaveCircuitRequest
 } from './document/document.contract';

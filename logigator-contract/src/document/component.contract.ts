@@ -8,6 +8,7 @@ import {
   documentDependencySchema,
   documentDescriptionSchema,
   documentNameSchema,
+  documentVisibilitySchema,
   forkAttributionSchema,
   requireSomeField
 } from './document.contract';
@@ -51,13 +52,14 @@ export type ComponentResponse = z.infer<typeof componentResponseSchema>;
 /**
  * Creating a library component. `symbol` is the one piece of identity the
  * circuit cannot supply; the port surface is derived from whatever document the
- * row starts with, which for an empty one is no ports at all.
+ * row starts with, which for an empty one is no ports at all. An absent
+ * `visibility` means `unlisted`, as it does for a project.
  */
 export const createComponentRequestSchema = z.object({
   name: documentNameSchema,
   symbol: componentSymbolSchema,
   description: documentDescriptionSchema.optional(),
-  public: z.boolean().optional(),
+  visibility: documentVisibilitySchema.optional(),
   document: circuitDocumentInputSchema.optional()
 });
 
@@ -69,14 +71,17 @@ export type CreateComponentRequest = z.infer<
  * Changing a component's metadata. Name, symbol and description travel inside
  * every placed snapshot, so changing them bumps `version` and instances frozen
  * at an older one are offered an update. Visibility and the share link are not
- * snapshot content and leave the version alone.
+ * snapshot content and leave the version alone — and a component's `link`
+ * follows the same rule as a project's: `visibility` never touches it, only
+ * `regenerateLink` mints a token, and that one is refused while published.
+ * The two are the same document in two tables, so they are addressed alike.
  */
 export const updateComponentRequestSchema = requireSomeField(
   z.object({
     name: documentNameSchema.optional(),
     symbol: componentSymbolSchema.optional(),
     description: documentDescriptionSchema.optional(),
-    public: z.boolean().optional(),
+    visibility: documentVisibilitySchema.optional(),
     regenerateLink: z.boolean().optional()
   })
 );
