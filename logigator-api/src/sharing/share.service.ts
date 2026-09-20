@@ -15,7 +15,7 @@ import {
   type UserRow
 } from '../database/schema';
 import { CircuitDocumentService } from '../documents/circuit-document.service';
-import { findByLink, forkLineage } from '../documents/circuit-queries';
+import { findByResolvingLink, forkLineage } from '../documents/circuit-queries';
 import {
   toAttribution,
   toAuthor,
@@ -28,15 +28,25 @@ import {
   PROJECT_EDGES
 } from '../documents/dependencies.service';
 
+/** The two kinds of document a link can address, as the API spells them. */
+export type ShareKind = 'project' | 'component';
+
 /** What a share link turned out to point at. */
 export type ShareTarget =
   | { kind: 'project'; row: ProjectRow }
   | { kind: 'component'; row: ComponentRow };
 
 /**
- * Reading a document through its share link. The link is a **capability**:
- * holding the URL is the grant, so this needs no session and ignores `public`,
- * and revoking is minting a new token rather than tracking who was told.
+ * Reading a document through its share link. The link is the document's
+ * address, and what it resolves to is the state its owner put it in: everything
+ * but a private document, which resolves for its owner alone. Holding the URL
+ * is what lets a stranger read an unlisted one — no session needed — and
+ * revoking one is the explicit act of minting a new token. A state change only
+ * masks the address: a private document is one nobody else can open by it, and
+ * the same URL resolves again the moment it is unlisted.
+ *
+ * The kind is part of the address because the token no longer identifies its
+ * table on its own, `/share/{kind}/{link}` naming one row of one of them.
  *
  * Hence a uuid in its own column rather than the document's id, which is
  * guessable from any other reference and cannot be rotated.
@@ -49,13 +59,34 @@ export class ShareService {
     private readonly dependencies: DependenciesService
   ) {}
 
-  /** Whichever kind of document holds this token. */
-  async resolve(link: string): Promise<ShareTarget> {
-    const project = await findByLink(this.db, projects, link);
-    if (project) return { kind: 'project', row: project };
-
-    const component = await findByLink(this.db, components, link);
-    if (component) return { kind: 'component', row: component };
+  /**
+   * The row this link addresses, if it resolves for this caller. One branch per
+   * kind rather than a search across both tables: which one to look in is said
+   * by the URL, and a search would have to decide which table wins when a
+   * token — by now a random uuid in two independent columns — happened to name
+   * a row in each.
+   *
+   * The predicate is the read's own, not a check afterwards, so the card and
+   * the clone that come through here answer for exactly the documents the read
+   * does.
+   */
+  async resolve(
+    kind: ShareKind,
+    link: string,
+    callerId: string | null
+  ): Promise<ShareTarget> {
+    if (kind === 'component') {
+      const row = await findByResolvingLink(
+        this.db,
+        components,
+        link,
+        callerId
+      );
+      if (row) return { kind: 'component', row };
+    } else {
+      const row = await findByResolvingLink(this.db, projects, link, callerId);
+      if (row) return { kind: 'project', row };
+    }
 
     throw new ApiException(
       HttpStatus.NOT_FOUND,
@@ -64,8 +95,12 @@ export class ShareService {
     );
   }
 
-  async read(link: string): Promise<ShareResponse> {
-    const target = await this.resolve(link);
+  async read(
+    kind: ShareKind,
+    link: string,
+    callerId: string | null
+  ): Promise<ShareResponse> {
+    const target = await this.resolve(kind, link, callerId);
     const table = target.kind === 'project' ? projects : components;
 
     const [author, dependencies, lineage, stars] = await Promise.all([

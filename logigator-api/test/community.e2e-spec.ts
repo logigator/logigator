@@ -71,7 +71,11 @@ describe('the community surface', () => {
   const publicProject = (name: string, cookies = ada) =>
     create<ProjectSummary>(
       'projects',
-      { name, public: true, document: circuitDocument(name, HALF_ADDER_BODY) },
+      {
+        name,
+        visibility: 'public',
+        document: circuitDocument(name, HALF_ADDER_BODY)
+      },
       cookies
     );
 
@@ -147,7 +151,7 @@ describe('the community surface', () => {
         method: 'PATCH',
         url: `/api/projects/${project.id}`,
         headers: ada.headers(),
-        payload: { public: false }
+        payload: { visibility: 'unlisted' }
       });
 
       const response = await api.inject({
@@ -300,6 +304,14 @@ describe('the community surface', () => {
       expect(found.statusCode).toBe(200);
       expect(found.json()).toMatchObject({ id: project.id, forkedFrom: null });
 
+      // Out of the listing first, which is what a published document allows
+      // before its link may be rotated.
+      await api.inject({
+        method: 'PATCH',
+        url: `/api/projects/${project.id}`,
+        headers: ada.headers(),
+        payload: { visibility: 'unlisted' }
+      });
       await api.inject({
         method: 'PATCH',
         url: `/api/projects/${project.id}`,
@@ -307,7 +319,7 @@ describe('the community surface', () => {
         payload: { regenerateLink: true }
       });
 
-      // Regenerating the token takes the public page with it.
+      // Regenerating the token takes the page with it.
       const gone = await api.inject({
         method: 'GET',
         url: `/api/community/projects/${project.link}`
@@ -315,26 +327,53 @@ describe('the community surface', () => {
       expect(gone.statusCode).toBe(404);
     });
 
-    it('refuses an unpublished document even by its token', async () => {
-      const project = await create<ProjectSummary>(
+    it('serves an unlisted document by its link, but only its owner a private one', async () => {
+      // The state this page gained: a document that is not in the listing still
+      // has an address, because its link is what its owner hands out.
+      const unlisted = await create<ProjectSummary>(
         'projects',
-        { name: 'Not published' },
+        { name: 'Handed out' },
         ada
       );
-
-      const community = await api.inject({
+      const listing = await api.inject({
         method: 'GET',
-        url: `/api/community/projects/${project.link}`
+        url: '/api/community/projects?size=100'
       });
-      expect(community.statusCode).toBe(404);
+      expect(
+        listing.json().entries.map((e: CommunityProject) => e.id)
+      ).not.toContain(unlisted.id);
 
-      // The same token still opens the share: a link is a capability,
-      // publishing is a listing.
-      const share = await api.inject({
+      const page = await api.inject({
         method: 'GET',
-        url: `/api/share/${project.link}`
+        url: `/api/community/projects/${unlisted.link}`
       });
-      expect(share.statusCode).toBe(200);
+      expect(page.statusCode).toBe(200);
+      expect(page.json().visibility).toBe('unlisted');
+
+      // A private document has no page for anybody but its owner: the state
+      // withholds the address, which is a 404 rather than a page that happens
+      // to have no star button.
+      const priv = await create<ProjectSummary>(
+        'projects',
+        { name: 'Owner only', visibility: 'private' },
+        ada
+      );
+      const asVisitor = await api.inject({
+        method: 'GET',
+        url: `/api/community/projects/${priv.link}`
+      });
+      expect(asVisitor.statusCode).toBe(404);
+
+      const asOwner = await api.inject({
+        method: 'GET',
+        url: `/api/community/projects/${priv.link}`,
+        headers: ada.headers()
+      });
+      expect(asOwner.statusCode).toBe(200);
+      expect(asOwner.json()).toMatchObject({
+        id: priv.id,
+        visibility: 'private'
+      });
     });
 
     it('credits the document it was forked from', async () => {
@@ -342,7 +381,7 @@ describe('the community surface', () => {
       const clone = (
         await api.inject({
           method: 'POST',
-          url: `/api/share/${original.link}/clone`,
+          url: `/api/share/project/${original.link}/clone`,
           headers: grace.headers()
         })
       ).json();
@@ -351,7 +390,7 @@ describe('the community surface', () => {
         method: 'PATCH',
         url: `/api/projects/${clone.project.id}`,
         headers: grace.headers(),
-        payload: { public: true }
+        payload: { visibility: 'public' }
       });
 
       const response = await api.inject({
@@ -401,19 +440,34 @@ describe('the community surface', () => {
       expect(response.statusCode).toBe(401);
     });
 
-    it('cannot be given to something unpublished', async () => {
-      const project = await create<ProjectSummary>(
-        'projects',
-        { name: 'Private' },
-        ada
-      );
+    it('cannot be given to anything but a published document', async () => {
+      // The two rules are separate on purpose: a link resolves for an unlisted
+      // document, and a star is not something a link gets you. Both states are
+      // checked because loosening the star's guard to the read's predicate is
+      // the mistake this pair exists to catch.
+      for (const visibility of ['unlisted', 'private'] as const) {
+        const project = await create<ProjectSummary>(
+          'projects',
+          { name: `Not listed (${visibility})`, visibility },
+          ada
+        );
 
-      const response = await api.inject({
-        method: 'PUT',
-        url: `/api/community/projects/${project.link}/star`,
-        headers: grace.headers()
-      });
-      expect(response.statusCode).toBe(404);
+        const response = await api.inject({
+          method: 'PUT',
+          url: `/api/community/projects/${project.link}/star`,
+          headers: grace.headers()
+        });
+        expect(response.statusCode).toBe(404);
+
+        // Not even by the owner: the counter is a listing's, and this document
+        // is not in one.
+        const own = await api.inject({
+          method: 'PUT',
+          url: `/api/community/projects/${project.link}/star`,
+          headers: ada.headers()
+        });
+        expect(own.statusCode).toBe(404);
+      }
     });
 
     it('list who gave them, most recent first', async () => {
@@ -516,7 +570,7 @@ describe('the community surface', () => {
         method: 'PATCH',
         url: `/api/projects/${project.id}`,
         headers: ada.headers(),
-        payload: { public: false }
+        payload: { visibility: 'unlisted' }
       });
 
       const mine = await api.inject({
@@ -543,13 +597,13 @@ describe('the community surface', () => {
 
       await create<ProjectSummary>(
         'projects',
-        { name: 'Shown', public: true },
+        { name: 'Shown', visibility: 'public' },
         cookies
       );
       await create<ProjectSummary>('projects', { name: 'Hidden' }, cookies);
       await create<ComponentSummary>(
         'components',
-        { name: 'Part', symbol: 'PT', public: true },
+        { name: 'Part', symbol: 'PT', visibility: 'public' },
         cookies
       );
 
@@ -580,7 +634,7 @@ describe('the community surface', () => {
       });
       for (const entry of response.json().entries) {
         expect(entry.author.id).toBe(adaId);
-        expect(entry.public).toBe(true);
+        expect(entry.visibility).toBe('public');
       }
     });
 

@@ -4,6 +4,8 @@ import {
   desc,
   eq,
   ilike,
+  ne,
+  sql,
   type Column,
   type SQL
 } from 'drizzle-orm';
@@ -68,7 +70,11 @@ export async function findOwned(
   return row ?? null;
 }
 
-/** A row by its share token, whoever owns it — the token *is* the grant. */
+/**
+ * A row by its share token, whoever owns it. The token is the document's
+ * *address* rather than a grant: what it resolves to is decided by the
+ * predicate the caller adds, which is what {@link linkResolvesFor} below is.
+ */
 export function findByLink(
   db: Queryable,
   table: typeof projects,
@@ -88,6 +94,59 @@ export async function findByLink(
     .select()
     .from(table)
     .where(eq(table.link, link))
+    .limit(1);
+  return row ?? null;
+}
+
+/**
+ * The predicate every read addressed by a link carries: everything but a
+ * private document, which resolves for its owner alone. A visitor (`null`)
+ * holds no account to match, so that half of the rule cannot be satisfied.
+ *
+ * Stated once because the share read, its composed card, its clone and the
+ * community page are four routes to one document, addressed by the same token
+ * — they have to answer for the same documents, or one of them serves a page
+ * another calls missing. The other predicate, `visibility = 'public'`, belongs
+ * to the listings, which are a different question about the same rows.
+ */
+export function linkResolvesFor(
+  table: CircuitTable,
+  callerId: string | null
+): SQL {
+  const openToEverybody = ne(table.visibility, 'private');
+  if (callerId === null) return openToEverybody;
+
+  // Written out as SQL rather than through drizzle's `or()`, which is typed
+  // `SQL | undefined` for its empty-argument case: this predicate is the access
+  // rule of every link-addressed read, and it is composed again inside each
+  // caller's `and()`, where an `undefined` would drop out silently and leave
+  // the link comparison to stand on its own. The parentheses are the rule.
+  return sql`(${openToEverybody} or ${eq(table.userId, callerId)})`;
+}
+
+/** A row by its share token, if the link resolves for this caller. */
+export function findByResolvingLink(
+  db: Queryable,
+  table: typeof projects,
+  link: string,
+  callerId: string | null
+): Promise<ProjectRow | null>;
+export function findByResolvingLink(
+  db: Queryable,
+  table: typeof components,
+  link: string,
+  callerId: string | null
+): Promise<ComponentRow | null>;
+export async function findByResolvingLink(
+  db: Queryable,
+  table: CircuitTable,
+  link: string,
+  callerId: string | null
+): Promise<CircuitRow | null> {
+  const [row] = await db
+    .select()
+    .from(table)
+    .where(and(eq(table.link, link), linkResolvesFor(table, callerId)))
     .limit(1);
   return row ?? null;
 }

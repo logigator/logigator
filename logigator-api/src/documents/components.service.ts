@@ -14,7 +14,11 @@ import { DB, type Database } from '../database/database.module';
 import { components, type ComponentRow } from '../database/schema';
 import { FileStorageService } from '../storage/file-storage.service';
 import { CircuitDocumentService } from './circuit-document.service';
-import { circuitNotFound, versionConflict } from './circuit-errors';
+import {
+  circuitNotFound,
+  linkPublished,
+  versionConflict
+} from './circuit-errors';
 import {
   findOwned,
   forkLineage,
@@ -86,7 +90,9 @@ export class ComponentsService {
           name: body.name,
           symbol: body.symbol,
           description: body.description ?? '',
-          public: body.public ?? false,
+          // Absent means `unlisted`, as it does for a project: a component
+          // nobody was told about, with a link its author can hand out.
+          visibility: body.visibility ?? 'unlisted',
           document: ingested.document,
           formatVersion: ingested.formatVersion,
           componentCount: ingested.componentCount,
@@ -165,12 +171,24 @@ export class ComponentsService {
    * snapshot, so each bumps `version` and instances frozen at an older one are
    * offered the update. Visibility and the share token are not snapshot
    * content.
+   *
+   * A component's link follows the same rule a project's does: a visibility
+   * change never touches it, and only `regenerateLink` mints a token — refused
+   * while the component is public. That refusal is a decision about the state
+   * the document is in, which is why this reads the row before it writes; the
+   * body alone cannot say it.
    */
   async update(
     userId: string,
     id: string,
     body: UpdateComponentRequest
   ): Promise<ComponentSummary> {
+    const existing = await this.require(userId, id);
+
+    if (body.regenerateLink && existing.visibility === 'public') {
+      throw linkPublished('component');
+    }
+
     const contentChanged =
       body.name !== undefined ||
       body.symbol !== undefined ||
@@ -187,7 +205,7 @@ export class ComponentsService {
       ...(body.description === undefined
         ? {}
         : { description: body.description }),
-      ...(body.public === undefined ? {} : { public: body.public }),
+      ...(body.visibility === undefined ? {} : { visibility: body.visibility }),
       ...(body.regenerateLink ? { link: randomUUID() } : {}),
       ...(contentChanged
         ? { version: sql`${components.version} + 1`, lastEditedAt: new Date() }
@@ -195,7 +213,7 @@ export class ComponentsService {
     };
 
     if (Object.keys(changes).length === 0) {
-      return toComponentSummary(await this.require(userId, id));
+      return toComponentSummary(existing);
     }
 
     const [row] = await this.db

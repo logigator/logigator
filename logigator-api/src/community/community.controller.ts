@@ -31,6 +31,11 @@ import { CommunityService } from './community.service';
  * Only writes are guarded — these listings are why `AuthGuard` is per route
  * rather than global. They read the session when there is one, for the boolean
  * saying whether the caller starred a row; a visitor gets `false`.
+ *
+ * The two detail routes read it as well, and there it does more: a document's
+ * page is served to whoever its link resolves for, which for a private document
+ * is its owner — the preview the share dialog promises them before they publish
+ * anything.
  */
 @Controller('community')
 export class CommunityController {

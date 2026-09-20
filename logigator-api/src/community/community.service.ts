@@ -26,6 +26,7 @@ import {
 import {
   findByLink,
   forkLineage,
+  linkResolvesFor,
   nameMatches
 } from '../documents/circuit-queries';
 import {
@@ -67,16 +68,20 @@ const TRENDING_WINDOW_DAYS = 30;
 type StarTable = typeof projectStars | typeof componentStars;
 
 /**
- * What everybody can see: the documents their owners chose to publish.
+ * A document's page, and the section it lives in: everything a visitor who was
+ * not handed a link can reach.
  *
- * Every predicate here carries `public = true`. That is the whole access rule,
- * and it is why these queries live apart from the owner-scoped ones rather than
- * being the same ones with a flag flipped — sharing no query means no place to
- * forget the clause. A share link is the other way in, and independent of the
- * flag: publishing is `public`, sharing is the token.
+ * Two predicates, and nothing else. The **listings** — here, in the stars, the
+ * stargazers and a profile's counts — carry `visibility = 'public'`: a
+ * published document is the only kind a stranger is told about. A **read
+ * addressed by a link** carries `linkResolvesFor`, which answers an unlisted
+ * document for whoever holds the URL and a private one for its owner alone.
+ * The two are separate questions about the same rows, which is why these
+ * queries live apart from the owner-scoped ones rather than being those with a
+ * clause flipped: sharing no query means no place to forget one.
  *
  * Documents are addressed by their `link`, so regenerating the token takes the
- * public page down with it.
+ * page down with it.
  */
 @Injectable()
 export class CommunityService {
@@ -89,7 +94,7 @@ export class CommunityService {
     callerId: string | null
   ): Promise<Page<CommunityProject>> {
     const where = and(
-      eq(projects.public, true),
+      eq(projects.visibility, 'public'),
       nameMatches(projects.name, query.search)
     );
     return this.projectPage(where, query, callerId, this.projectRanking(query));
@@ -100,7 +105,7 @@ export class CommunityService {
     callerId: string | null
   ): Promise<Page<CommunityComponent>> {
     const where = and(
-      eq(components.public, true),
+      eq(components.visibility, 'public'),
       nameMatches(components.name, query.search)
     );
     return this.componentPage(
@@ -118,7 +123,7 @@ export class CommunityService {
     callerId: string | null
   ): Promise<Page<CommunityProject>> {
     return this.projectPage(
-      and(eq(projects.public, true), eq(projects.userId, userId)),
+      and(eq(projects.visibility, 'public'), eq(projects.userId, userId)),
       query,
       callerId
     );
@@ -130,7 +135,7 @@ export class CommunityService {
     callerId: string | null
   ): Promise<Page<CommunityComponent>> {
     return this.componentPage(
-      and(eq(components.public, true), eq(components.userId, userId)),
+      and(eq(components.visibility, 'public'), eq(components.userId, userId)),
       query,
       callerId
     );
@@ -152,7 +157,7 @@ export class CommunityService {
     callerId: string | null
   ): Promise<Page<CommunityProject>> {
     return this.projectPage(
-      and(eq(projects.public, true), this.projectStarredBy(userId)),
+      and(eq(projects.visibility, 'public'), this.projectStarredBy(userId)),
       query,
       callerId
     );
@@ -164,20 +169,28 @@ export class CommunityService {
     callerId: string | null
   ): Promise<Page<CommunityComponent>> {
     return this.componentPage(
-      and(eq(components.public, true), this.componentStarredBy(userId)),
+      and(eq(components.visibility, 'public'), this.componentStarredBy(userId)),
       query,
       callerId
     );
   }
 
-  // ---- one document's public page ----
+  // ---- one document's page, in whatever state it is in ----
 
+  /**
+   * A document's page, reached by the link its owner hands out — which is why
+   * this is the one read here that is not restricted to published documents. An
+   * unlisted document's page is drawn for whoever holds the URL, and a private
+   * one's for its owner, who is looking at the preview the dialogs promise
+   * them. Whether the page then offers a star, a trail or an index entry is the
+   * site's business: the state travels on the row, this answers the document.
+   */
   async projectDetail(
     link: string,
     callerId: string | null
   ): Promise<CommunityProjectDetail> {
     const [row] = await this.projectRows(
-      and(eq(projects.public, true), eq(projects.link, link)),
+      and(linkResolvesFor(projects, callerId), eq(projects.link, link)),
       JUST_ONE,
       callerId
     );
@@ -194,7 +207,7 @@ export class CommunityService {
     callerId: string | null
   ): Promise<CommunityComponentDetail> {
     const [row] = await this.componentRows(
-      and(eq(components.public, true), eq(components.link, link)),
+      and(linkResolvesFor(components, callerId), eq(components.link, link)),
       JUST_ONE,
       callerId
     );
@@ -332,11 +345,18 @@ export class CommunityService {
       this.db
         .select({ value: count() })
         .from(projects)
-        .where(and(eq(projects.userId, userId), eq(projects.public, true))),
+        .where(
+          and(eq(projects.userId, userId), eq(projects.visibility, 'public'))
+        ),
       this.db
         .select({ value: count() })
         .from(components)
-        .where(and(eq(components.userId, userId), eq(components.public, true)))
+        .where(
+          and(
+            eq(components.userId, userId),
+            eq(components.visibility, 'public')
+          )
+        )
     ]);
 
     return {
@@ -583,22 +603,29 @@ export class CommunityService {
     };
   }
 
+  /**
+   * A published document, for the things only a listing entry can be given: a
+   * star, and the list of who gave one. `linkResolvesFor` is deliberately not
+   * what is asked here — an unlisted document's link resolves, and it is still
+   * not in any listing for a star to hang off. Calling the state by its name is
+   * the whole rule.
+   */
   private async requirePublicProject(link: string): Promise<ProjectRow> {
     const row = await findByLink(this.db, projects, link);
-    if (!row?.public) throw notPublished();
+    if (row?.visibility !== 'public') throw notPublished();
     return row;
   }
 
   private async requirePublicComponent(link: string): Promise<ComponentRow> {
     const row = await findByLink(this.db, components, link);
-    if (!row?.public) throw notPublished();
+    if (row?.visibility !== 'public') throw notPublished();
     return row;
   }
 
   /**
    * The document this one was forked from — the last entry of the root-first
-   * lineage. Named even when the ancestor is not public: withholding the credit
-   * because they unpublished would turn a fork into original work.
+   * lineage. Named even when the ancestor is not published: withholding the
+   * credit because they unpublished would turn a fork into original work.
    */
   private async parentOf(
     table: typeof projects | typeof components,

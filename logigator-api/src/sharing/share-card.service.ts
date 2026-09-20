@@ -21,12 +21,31 @@ import {
   composeShareCard,
   type ShareCardInput
 } from '../storage/share-card/share-card';
-import { ShareService, type ShareTarget } from './share.service';
+import {
+  ShareService,
+  type ShareKind,
+  type ShareTarget
+} from './share.service';
 
 /** One composed card and the version of its inputs it was composed from. */
-export interface ShareCard {
+interface ComposedCard {
   readonly etag: string;
   readonly png: Buffer;
+}
+
+/**
+ * A composed card, with the one thing about it this request decided: whether
+ * anybody holding the link may fetch it, which is what the route's
+ * `Cache-Control` has to say.
+ *
+ * Not part of {@link ComposedCard}, and so not part of what is cached: the
+ * picture never depends on the caller, but *whether there is one at all* does
+ * — a private document's card composes for its owner alone. Marking that answer
+ * `public` would invite a shared cache to hand it to whoever the route itself
+ * answers `404` for.
+ */
+export interface ShareCard extends ComposedCard {
+  readonly publiclyReadable: boolean;
 }
 
 /**
@@ -68,19 +87,26 @@ const CACHE_SIZE = 64;
  * immutability, which buys nothing, since platforms cache by `og:url` and
  * re-fetch the image when they re-scrape.
  *
- * The link is the capability, so this needs no session and ignores `public`,
- * exactly as reading the document through the same token does.
+ * A card is drawn only for documents the read through the same token answers —
+ * it goes through `ShareService.resolve`, so a private document's card composes
+ * for its owner and for nobody else. What the caller decides is whether there
+ * is a card, never what is on it, which is why the composed card is cached by
+ * the document alone.
  */
 @Injectable()
 export class ShareCardService {
-  /** Insertion-ordered, so the oldest key is the first one `keys()` yields. */
-  private readonly cache = new Map<string, ShareCard>();
+  /**
+   * Insertion-ordered, so the oldest key is the first one `keys()` yields.
+   * Keyed by the kind as well as the token: the same uuid can name a row in
+   * either table, and a card drawn for one must never answer for the other.
+   */
+  private readonly cache = new Map<string, ComposedCard>();
   /**
    * Cards being composed right now. A link pasted into a chat is fetched by
    * every unfurler at once, and composing it once per fetcher is the only way
    * this route costs real CPU.
    */
-  private readonly inFlight = new Map<string, Promise<ShareCard>>();
+  private readonly inFlight = new Map<string, Promise<ComposedCard>>();
 
   constructor(
     @Inject(DB) private readonly db: Database,
@@ -89,21 +115,34 @@ export class ShareCardService {
     private readonly storage: FileStorageService
   ) {}
 
-  /** The card for a share link, composed or reused. */
-  async forLink(link: string): Promise<ShareCard> {
-    const target = await this.share.resolve(link);
+  /**
+   * The card for a document's link, composed or reused. `resolve` runs first
+   * and is the access check: a card is only ever drawn for a document the
+   * caller may read, so nothing below has to ask again.
+   */
+  async forLink(
+    kind: ShareKind,
+    link: string,
+    callerId: string | null
+  ): Promise<ShareCard> {
+    const target = await this.share.resolve(kind, link, callerId);
     const [author, stars] = await Promise.all([
       this.author(target.row.userId),
       this.stars(target)
     ]);
 
     const etag = cardEtag(target, author, stars);
+    const key = `${kind}:${link}`;
+    // The state this request resolved, not the one a cached card was composed
+    // under: it is the resolved state that says whether a stranger could have
+    // fetched this at all.
+    const publiclyReadable = target.row.visibility !== 'private';
 
-    const cached = this.cache.get(link);
-    if (cached?.etag === etag) return cached;
+    const cached = this.cache.get(key);
+    if (cached?.etag === etag) return { ...cached, publiclyReadable };
 
     const pending = this.inFlight.get(etag);
-    if (pending) return pending;
+    if (pending) return { ...(await pending), publiclyReadable };
 
     const composing = this.compose(target, author, stars, etag).finally(() =>
       this.inFlight.delete(etag)
@@ -111,8 +150,8 @@ export class ShareCardService {
     this.inFlight.set(etag, composing);
 
     const card = await composing;
-    this.remember(link, card);
-    return card;
+    this.remember(key, card);
+    return { ...card, publiclyReadable };
   }
 
   private async compose(
@@ -120,7 +159,7 @@ export class ShareCardService {
     author: CardAuthor,
     stars: number,
     etag: string
-  ): Promise<ShareCard> {
+  ): Promise<ComposedCard> {
     const [render, avatar] = await Promise.all([
       target.kind === 'project' && target.row.previewId
         ? this.storage.readAsset('preview', target.row.previewId, RENDER_FILE)
@@ -152,11 +191,11 @@ export class ShareCardService {
     return { etag, png: await composeShareCard(input) };
   }
 
-  private remember(link: string, card: ShareCard): void {
+  private remember(key: string, card: ComposedCard): void {
     // Re-inserting moves the key to the end, so what falls out is the card
     // nobody has asked for in longest.
-    this.cache.delete(link);
-    this.cache.set(link, card);
+    this.cache.delete(key);
+    this.cache.set(key, card);
 
     for (const stale of this.cache.keys()) {
       if (this.cache.size <= CACHE_SIZE) break;

@@ -25,7 +25,11 @@ import {
   PROJECT_EDGES
 } from '../documents/dependencies.service';
 import { transitiveDependencyIds } from './dependency-graph';
-import { ShareService, type ShareTarget } from './share.service';
+import {
+  ShareService,
+  type ShareKind,
+  type ShareTarget
+} from './share.service';
 
 /** Original component id → the id its copy will have. */
 type IdMap = ReadonlyMap<string, string>;
@@ -52,8 +56,15 @@ export class CloneService {
     private readonly dependencies: DependenciesService
   ) {}
 
-  async cloneByLink(userId: string, link: string): Promise<CloneResponse> {
-    const target = await this.share.resolve(link);
+  async cloneByLink(
+    userId: string,
+    kind: ShareKind,
+    link: string
+  ): Promise<CloneResponse> {
+    // The cloner is the caller, so a document they own is one they can copy
+    // out of its private state; anybody else's has to be one the link resolves
+    // for them.
+    const target = await this.share.resolve(kind, link, userId);
     const sources = await this.dependencyRows(target);
     const idMap = new Map(sources.map((row) => [row.id, randomUUID()]));
 
@@ -120,9 +131,11 @@ export class CloneService {
         userId,
         name: source.name,
         description: source.description,
-        // Inheriting the original's visibility would republish somebody else's
-        // work under a new owner as a side effect of taking a copy.
-        public: false,
+        // Inheriting the original's visibility would publish somebody else's
+        // work under a new owner as a side effect of taking a copy, so the copy
+        // starts unlisted: not in any listing, with a link its new owner holds
+        // alone and can revoke.
+        visibility: 'unlisted',
         document: ingested.document,
         formatVersion: ingested.formatVersion,
         componentCount: ingested.componentCount,
@@ -161,7 +174,7 @@ export class CloneService {
         name: source.name,
         symbol: source.symbol,
         description: source.description,
-        public: false,
+        visibility: 'unlisted',
         document: ingested.document,
         formatVersion: ingested.formatVersion,
         componentCount: ingested.componentCount,

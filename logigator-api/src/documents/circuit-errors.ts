@@ -26,3 +26,21 @@ export function versionConflict(): ApiException {
     'This has been saved elsewhere since you opened it. Reload to see the current version.'
   );
 }
+
+/**
+ * A new link was asked for while the document is public. A published address is
+ * not a secret — the page's own URL *is* this link, and a crawler, a bookmark
+ * and a chat log all hold it — so rotating it would move a page that is out in
+ * the world. Setting the document back to unlisted is what unlocks a new one,
+ * and that is a decision the owner makes, not a side effect of a save.
+ *
+ * `409` rather than a validation failure: the body is well formed and names
+ * something the API can do, in a state where it will not.
+ */
+export function linkPublished(kind: 'project' | 'component'): ApiException {
+  return new ApiException(
+    HttpStatus.CONFLICT,
+    'link_published',
+    `This ${kind} is published, so its link cannot be rotated. Set it back to unlisted to issue a new one.`
+  );
+}

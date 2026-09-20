@@ -20,7 +20,7 @@ function circuitFields(row: CircuitRow) {
     id: row.id,
     name: row.name,
     description: row.description,
-    public: row.public,
+    visibility: row.visibility,
     link: row.link,
     version: row.version,
     componentCount: row.componentCount,

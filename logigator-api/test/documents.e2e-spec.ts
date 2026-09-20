@@ -94,7 +94,9 @@ describe('stored circuits', () => {
       expect(created).toMatchObject({
         name: 'Empty',
         description: '',
-        public: false,
+        // A client that names no state gets a link that resolves and no
+        // listing: the create dialogs publish, and anything else is unlisted.
+        visibility: 'unlisted',
         version: 1,
         componentCount: 0,
         wireCount: 0,
@@ -788,16 +790,94 @@ describe('stored circuits', () => {
         method: 'PATCH',
         url: `/api/projects/${created.id}`,
         headers: jar.headers(),
-        payload: { public: true, regenerateLink: true }
+        payload: { visibility: 'public', regenerateLink: true }
       });
 
+      // The document was unlisted when the request arrived, so the rotation is
+      // allowed — the rule is about a published address, and this one is being
+      // published under the new token.
+      expect(patched.statusCode).toBe(200);
       // The same counter offers placed instances an update, so bumping it here
       // would ask every board to accept a change it cannot see.
       expect(patched.json()).toMatchObject({
-        public: true,
+        visibility: 'public',
         version: created.version
       });
       expect(patched.json().link).not.toBe(created.link);
+    });
+
+    it('refuses a rotation on a published document, and on a component too', async () => {
+      const project = await createProject({
+        name: 'Published',
+        visibility: 'public'
+      });
+      const component = await createComponent({
+        name: 'Published part',
+        symbol: 'PP',
+        visibility: 'public'
+      });
+
+      for (const [kind, row] of [
+        ['projects', project],
+        ['components', component]
+      ] as const) {
+        const response = await api.inject({
+          method: 'PATCH',
+          url: `/api/${kind}/${row.id}`,
+          headers: jar.headers(),
+          payload: { regenerateLink: true }
+        });
+
+        expect(response.statusCode).toBe(409);
+        expect(response.json().code).toBe('link_published');
+      }
+
+      // The rule is not a silent no-op: nothing about either row moved.
+      const opened = await api.inject({
+        method: 'GET',
+        url: `/api/projects/${project.id}`,
+        headers: jar.headers()
+      });
+      expect(opened.json().link).toBe(project.link);
+    });
+
+    it('leaves the link alone for a visibility change, and rotates it only on `regenerateLink`', async () => {
+      const patch = (kind: string, id: string, payload: object) =>
+        api.inject({
+          method: 'PATCH',
+          url: `/api/${kind}/${id}`,
+          headers: jar.headers(),
+          payload
+        });
+
+      for (const [kind, created] of [
+        ['projects', await createProject({ name: 'Withdrawn' })],
+        [
+          'components',
+          await createComponent({ name: 'Withdrawn part', symbol: 'WP' })
+        ]
+      ] as const) {
+        // The link is the document's address, and hiding a document does not
+        // move an address: a bookmark and a link somebody already copied keep
+        // working, whichever way the state goes.
+        const priv = await patch(kind, created.id, { visibility: 'private' });
+        expect(priv.json().link).toBe(created.link);
+
+        // Writing the state it is already in rotates nothing either, so there
+        // is no longer a guard for the old rule to have needed.
+        const again = await patch(kind, created.id, { visibility: 'private' });
+        expect(again.json().link).toBe(created.link);
+
+        const reopened = await patch(kind, created.id, {
+          visibility: 'unlisted'
+        });
+        expect(reopened.json().link).toBe(created.link);
+
+        // Revocation is the explicit act, and it is the one thing that does
+        // move the address.
+        const fresh = await patch(kind, created.id, { regenerateLink: true });
+        expect(fresh.json().link).not.toBe(created.link);
+      }
     });
 
     it('rejects an update that would change nothing', async () => {

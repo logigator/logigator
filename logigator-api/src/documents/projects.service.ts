@@ -14,7 +14,11 @@ import { DB, type Database } from '../database/database.module';
 import { projects, type ProjectRow } from '../database/schema';
 import { FileStorageService } from '../storage/file-storage.service';
 import { CircuitDocumentService } from './circuit-document.service';
-import { circuitNotFound, versionConflict } from './circuit-errors';
+import {
+  circuitNotFound,
+  linkPublished,
+  versionConflict
+} from './circuit-errors';
 import {
   findOwned,
   forkLineage,
@@ -96,7 +100,10 @@ export class ProjectsService {
           userId,
           name: body.name,
           description: body.description ?? '',
-          public: body.public ?? false,
+          // Absent means `unlisted`: a document created by a client that names
+          // no state is one nobody was told about, and a link that resolves is
+          // what its owner needs to hand it out.
+          visibility: body.visibility ?? 'unlisted',
           document: ingested.document,
           formatVersion: ingested.formatVersion,
           componentCount: ingested.componentCount,
@@ -178,12 +185,29 @@ export class ProjectsService {
    * it bumps for a rename or description and not for visibility or a fresh
    * share token — bumping it on those would offer every board using a component
    * an update it cannot see.
+   *
+   * The link is the document's address, and a visibility change leaves it
+   * exactly where it was: `private → unlisted` restores the same URL, so hiding
+   * a document never breaks a bookmark or a link somebody already copied.
+   * Revocation is the explicit act, `regenerateLink`, and that one is refused
+   * while the document is public — the page's own URL *is* this link. Which
+   * state the document is in is what decides the refusal, so this reads the row
+   * before it writes; the body alone cannot say it. Read only where the
+   * rotation is actually asked for: a rename or a visibility pick needs no such
+   * answer, and the update below reports a row that is not there.
    */
   async update(
     userId: string,
     id: string,
     body: UpdateProjectRequest
   ): Promise<ProjectSummary> {
+    if (body.regenerateLink) {
+      const existing = await this.require(userId, id);
+      if (existing.visibility === 'public') {
+        throw linkPublished('project');
+      }
+    }
+
     const contentChanged =
       body.name !== undefined || body.description !== undefined;
 
@@ -197,7 +221,7 @@ export class ProjectsService {
       ...(body.description === undefined
         ? {}
         : { description: body.description }),
-      ...(body.public === undefined ? {} : { public: body.public }),
+      ...(body.visibility === undefined ? {} : { visibility: body.visibility }),
       ...(body.regenerateLink ? { link: randomUUID() } : {}),
       ...(contentChanged
         ? { version: sql`${projects.version} + 1`, lastEditedAt: new Date() }

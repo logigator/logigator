@@ -75,6 +75,29 @@ async function onAdminDatabase(url: string, statement: string): Promise<void> {
   }
 }
 
+/** A database of this run's own, and the way to be rid of it. */
+export interface ThrowawayDatabase {
+  readonly url: string;
+  drop(): Promise<void>;
+}
+
+/**
+ * Creates one of the throwaway databases, and nothing else — no application, no
+ * migration. {@link startE2eApp} is this plus the rest; it is separate because
+ * the migration spec boots no application at all: it stages a schema behind the
+ * one the build ships, which needs a database and a client.
+ */
+export async function createThrowawayDatabase(): Promise<ThrowawayDatabase> {
+  const { databaseUrl } = requireServiceUrls();
+  const name = `logigator_e2e_${randomUUID().replaceAll('-', '').slice(0, 12)}`;
+  await onAdminDatabase(databaseUrl, `CREATE DATABASE "${name}"`);
+
+  return {
+    url: withDatabase(databaseUrl, name),
+    drop: () => onAdminDatabase(databaseUrl, `DROP DATABASE "${name}"`)
+  };
+}
+
 export interface E2eApp {
   app: NestFastifyApplication;
   env: Env;
@@ -98,20 +121,18 @@ export interface E2eApp {
 export async function startE2eApp(
   overrides: Record<string, string> = {}
 ): Promise<E2eApp> {
-  const { databaseUrl, redisUrl } = requireServiceUrls();
+  const { redisUrl } = requireServiceUrls();
   const run = randomUUID().replaceAll('-', '').slice(0, 12);
-  const database = `logigator_e2e_${run}`;
   const storageDir = await mkdtemp(join(tmpdir(), 'logigator-e2e-'));
 
-  await onAdminDatabase(databaseUrl, `CREATE DATABASE "${database}"`);
-  const testDatabaseUrl = withDatabase(databaseUrl, database);
-  await runMigrations(testDatabaseUrl, MIGRATIONS_FOLDER_PATH);
+  const database = await createThrowawayDatabase();
+  await runMigrations(database.url, MIGRATIONS_FOLDER_PATH);
 
   const keyPrefix = `e2e:${run}:`;
   const env = loadEnv({
     NODE_ENV: 'test',
     LOG_LEVEL: 'silent',
-    DATABASE_URL: testDatabaseUrl,
+    DATABASE_URL: database.url,
     REDIS_URL: redisUrl,
     REDIS_KEY_PREFIX: keyPrefix,
     STORAGE_DIR: storageDir,
@@ -150,7 +171,7 @@ export async function startE2eApp(
       await app.close();
       await deleteRedisKeys(redisUrl, keyPrefix);
       await rm(storageDir, { recursive: true, force: true });
-      await onAdminDatabase(databaseUrl, `DROP DATABASE "${database}"`);
+      await database.drop();
     }
   };
 }

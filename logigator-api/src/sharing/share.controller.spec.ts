@@ -40,6 +40,12 @@ const SHARED = {
 describe('the share card route', () => {
   let app: NestFastifyApplication;
   const png = Buffer.from('89504e470d0a1a0a', 'hex');
+  /**
+   * What the stand-in composer answers with. `publiclyReadable` is the one thing
+   * about a card the service decides per request, and it is what the route's
+   * `Cache-Control` is built from.
+   */
+  let readable = true;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -52,7 +58,10 @@ describe('the share card route', () => {
         { provide: CloneService, useValue: {} },
         {
           provide: ShareCardService,
-          useValue: { forLink: () => Promise.resolve({ etag: ETAG, png }) }
+          useValue: {
+            forLink: () =>
+              Promise.resolve({ etag: ETAG, png, publiclyReadable: readable })
+          }
         }
       ]
     })
@@ -71,10 +80,10 @@ describe('the share card route', () => {
     await app.close();
   });
 
-  function card(ifNoneMatch?: string) {
+  function card(ifNoneMatch?: string, kind = 'project') {
     return app.inject({
       method: 'GET',
-      url: `/share/${LINK}/card.png`,
+      url: `/share/${kind}/${LINK}/card.png`,
       headers: ifNoneMatch ? { 'if-none-match': ifNoneMatch } : {}
     });
   }
@@ -108,13 +117,50 @@ describe('the share card route', () => {
     expect(response.statusCode).toBe(200);
   });
 
+  it('does not offer a card nobody else may fetch to a shared cache', async () => {
+    // A private document's card is composed for its owner alone, so the answer
+    // must not be storable between callers: a cache holding it would hand the
+    // picture to exactly the caller the same route answers `404` for.
+    readable = false;
+    try {
+      const response = await card();
+
+      expect(response.statusCode).toBe(200);
+      expect(response.headers['cache-control']).toBe('private, no-store');
+    } finally {
+      readable = true;
+    }
+  });
+
   it('answers the read whole, tally included', async () => {
     // The route hands the service's answer back rather than rebuilding it: a
     // controller that picked fields out would drop whatever it was not told
-    // about, and the landing page draws the tally.
-    const response = await app.inject({ method: 'GET', url: `/share/${LINK}` });
+    // about, and the page draws the tally.
+    const response = await app.inject({
+      method: 'GET',
+      url: `/share/project/${LINK}`
+    });
 
     expect(response.statusCode).toBe(200);
     expect(response.json()).toEqual(SHARED);
   });
+
+  it.each(['boards', 'PROJECT', 'project/'])(
+    'answers 404 for %s, which names no table',
+    async (kind) => {
+      // The kinds are checked like the token is: a segment that names no table
+      // names no document, and answering 404 is both truer than a widened
+      // search and quieter than a driver error.
+      // The service here answers for any token it is handed, so a 404 is the
+      // route turning the request away rather than the document being missing.
+      // The error body — which this app does not register a filter for — is
+      // asserted end to end.
+      const response = await app.inject({
+        method: 'GET',
+        url: `/share/${kind}/${LINK}`
+      });
+
+      expect(response.statusCode).toBe(404);
+    }
+  );
 });

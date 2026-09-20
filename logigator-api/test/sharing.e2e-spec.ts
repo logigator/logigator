@@ -62,6 +62,26 @@ describe('share links', () => {
   }
 
   /**
+   * The composed card, as one of its consumers fetches it: an unfurler holds no
+   * session, the owner's browser holds theirs, and the two reach the same route.
+   */
+  function card(
+    kind: 'project' | 'component',
+    link: string,
+    etag?: string,
+    as?: CookieJar
+  ) {
+    return api.inject({
+      method: 'GET',
+      url: `/api/share/${kind}/${link}/card.png`,
+      headers: {
+        ...(as?.headers() ?? {}),
+        ...(etag ? { 'if-none-match': etag } : {})
+      }
+    });
+  }
+
+  /**
    * A two-level library: `outer` embeds `inner`, and a board embeds `outer`. A
    * one-level graph would pass with no recursion at all.
    */
@@ -138,7 +158,7 @@ describe('share links', () => {
   });
 
   describe('reading one', () => {
-    it('needs no session, because the link is the grant', async () => {
+    it('needs no session, because holding the address is the grant', async () => {
       const project = await create<ProjectSummary>(
         'projects',
         {
@@ -150,7 +170,7 @@ describe('share links', () => {
 
       const response = await api.inject({
         method: 'GET',
-        url: `/api/share/${project.link}`
+        url: `/api/share/project/${project.link}`
       });
 
       expect(response.statusCode).toBe(200);
@@ -170,7 +190,7 @@ describe('share links', () => {
         'projects',
         {
           name: 'Starred',
-          public: true,
+          visibility: 'public',
           document: circuitDocument('Starred', HALF_ADDER_BODY)
         },
         ada
@@ -180,7 +200,7 @@ describe('share links', () => {
         {
           name: 'Starred part',
           symbol: 'SP',
-          public: true,
+          visibility: 'public',
           document: circuitDocument('Starred part', HALF_ADDER_BODY)
         },
         ada
@@ -196,31 +216,54 @@ describe('share links', () => {
 
       const sharedProject = await api.inject({
         method: 'GET',
-        url: `/api/share/${project.link}`
+        url: `/api/share/project/${project.link}`
       });
       const sharedComponent = await api.inject({
         method: 'GET',
-        url: `/api/share/${component.link}`
+        url: `/api/share/component/${component.link}`
       });
 
       expect(sharedProject.json().stars).toBe(0);
       expect(sharedComponent.json().stars).toBe(1);
     });
 
-    it('does not consult the public flag', async () => {
+    it('defaults a document that names no state to unlisted', async () => {
       const project = await create<ProjectSummary>(
         'projects',
         { name: 'Unlisted' },
         ada
       );
-      expect(project.public).toBe(false);
 
-      // Holding the URL *is* the grant, so a share works with no account.
+      // The state that used to be the boolean's `false`: nobody is told about
+      // the document, and the link its owner holds still opens it.
+      expect(project.visibility).toBe('unlisted');
+
       const response = await api.inject({
         method: 'GET',
-        url: `/api/share/${project.link}`
+        url: `/api/share/project/${project.link}`
       });
       expect(response.statusCode).toBe(200);
+    });
+
+    it('answers for the table the kind names, not for a token it finds', async () => {
+      const component = await create<ComponentSummary>(
+        'components',
+        {
+          name: 'Not a project',
+          symbol: 'NAP',
+          document: circuitDocument('Not a project', HALF_ADDER_BODY)
+        },
+        ada
+      );
+
+      // The token exists — in the other table. The kind is part of the address,
+      // so a component's link addressed as a project names nothing, which is
+      // the whole point of carrying it.
+      const response = await api.inject({
+        method: 'GET',
+        url: `/api/share/project/${component.link}`
+      });
+      expect(response.statusCode).toBe(404);
     });
 
     it('resolves a component link to a component', async () => {
@@ -236,7 +279,7 @@ describe('share links', () => {
 
       const response = await api.inject({
         method: 'GET',
-        url: `/api/share/${component.link}`
+        url: `/api/share/component/${component.link}`
       });
       expect(response.json()).toMatchObject({
         kind: 'component',
@@ -251,19 +294,28 @@ describe('share links', () => {
         ada
       );
 
-      await api.inject({
+      const rotated = await api.inject({
         method: 'PATCH',
         url: `/api/projects/${project.id}`,
         headers: ada.headers(),
         payload: { regenerateLink: true }
       });
+      expect(rotated.statusCode).toBe(200);
+      expect(rotated.json().link).not.toBe(project.link);
 
-      // Every URL under the old token stops working: that is the revocation.
-      const response = await api.inject({
+      // Every URL under the old token stops working: that is the revocation,
+      // and the new one opens the same document.
+      const gone = await api.inject({
         method: 'GET',
-        url: `/api/share/${project.link}`
+        url: `/api/share/project/${project.link}`
       });
-      expect(response.statusCode).toBe(404);
+      expect(gone.statusCode).toBe(404);
+
+      const now = await api.inject({
+        method: 'GET',
+        url: `/api/share/project/${rotated.json().link}`
+      });
+      expect(now.statusCode).toBe(200);
     });
 
     it('answers 404 for an unknown or malformed token', async () => {
@@ -273,12 +325,216 @@ describe('share links', () => {
       ]) {
         const response = await api.inject({
           method: 'GET',
-          url: `/api/share/${link}`
+          url: `/api/share/project/${link}`
         });
         // A malformed token is not a comparison the uuid column can make, so
         // it is turned away before it becomes a 500.
         expect(response.statusCode).toBe(404);
       }
+    });
+  });
+
+  /**
+   * The three states, which is what the whole model turns on: an unlisted
+   * document is read by whoever holds its address, a private one by its owner
+   * alone, and a public one by the community too. Every read addressed by a
+   * link carries the same predicate — the share read, its card and its clone —
+   * so the states are exercised once here and followed through all three.
+   */
+  describe('the three states', () => {
+    async function withState(
+      visibility: 'private' | 'unlisted' | 'public',
+      name: string
+    ): Promise<ProjectSummary> {
+      return create<ProjectSummary>(
+        'projects',
+        {
+          name,
+          visibility,
+          document: circuitDocument(name, HALF_ADDER_BODY)
+        },
+        ada
+      );
+    }
+
+    const read = (link: string, as: CookieJar | null = null) =>
+      api.inject({
+        method: 'GET',
+        url: `/api/share/project/${link}`,
+        headers: as?.headers() ?? {}
+      });
+
+    it('reads an unlisted document for anybody holding the link', async () => {
+      const project = await withState('unlisted', 'Handed out');
+
+      expect((await read(project.link)).statusCode).toBe(200);
+      // And it is not in the community listings, which is the whole of what
+      // the state buys.
+      const listed = await api.inject({
+        method: 'GET',
+        url: '/api/community/projects?size=100'
+      });
+      expect(
+        listed.json().entries.map((e: ProjectSummary) => e.id)
+      ).not.toContain(project.id);
+    });
+
+    it('reads a private document for its owner, and for nobody else', async () => {
+      const project = await withState('private', 'Owner only');
+
+      expect((await read(project.link)).statusCode).toBe(404);
+      expect((await read(project.link, grace)).statusCode).toBe(404);
+      expect((await read(project.link, ada)).statusCode).toBe(200);
+    });
+
+    it('lets the owner open their own private document´s page', async () => {
+      const project = await withState('private', 'Previewed');
+
+      const asVisitor = await api.inject({
+        method: 'GET',
+        url: `/api/community/projects/${project.link}`
+      });
+      expect(asVisitor.statusCode).toBe(404);
+
+      // The same URL, with the owner's session: the preview the share dialog
+      // promises, at the address the published version would live at.
+      const asOwner = await api.inject({
+        method: 'GET',
+        url: `/api/community/projects/${project.link}`,
+        headers: ada.headers()
+      });
+      expect(asOwner.statusCode).toBe(200);
+      expect(asOwner.json()).toMatchObject({
+        id: project.id,
+        visibility: 'private'
+      });
+    });
+
+    it('composes a private document´s card for its owner alone', async () => {
+      const project = await withState('private', 'Unfurled');
+
+      expect((await card('project', project.link)).statusCode).toBe(404);
+      expect(
+        (await card('project', project.link, undefined, grace)).statusCode
+      ).toBe(404);
+
+      const asOwner = await card('project', project.link, undefined, ada);
+      expect(asOwner.statusCode).toBe(200);
+      expect(asOwner.headers['content-type']).toBe('image/png');
+    });
+
+    it('clones an unlisted document, and refuses a private one', async () => {
+      const unlisted = await withState('unlisted', 'Copyable');
+      const priv = await withState('private', 'Not copyable');
+
+      expect(
+        (
+          await api.inject({
+            method: 'POST',
+            url: `/api/share/project/${unlisted.link}/clone`,
+            headers: grace.headers()
+          })
+        ).statusCode
+      ).toBe(201);
+
+      expect(
+        (
+          await api.inject({
+            method: 'POST',
+            url: `/api/share/project/${priv.link}/clone`,
+            headers: grace.headers()
+          })
+        ).statusCode
+      ).toBe(404);
+
+      // The owner, though, can copy their own out of private — which is what
+      // the editor route does when somebody opens a link to their own work.
+      expect(
+        (
+          await api.inject({
+            method: 'POST',
+            url: `/api/share/project/${priv.link}/clone`,
+            headers: ada.headers()
+          })
+        ).statusCode
+      ).toBe(201);
+    });
+
+    it('refuses to rotate a published document´s link', async () => {
+      const project = await withState('public', 'Published');
+
+      const response = await api.inject({
+        method: 'PATCH',
+        url: `/api/projects/${project.id}`,
+        headers: ada.headers(),
+        payload: { regenerateLink: true }
+      });
+
+      // The page's own address is this link, so a new token would move a page
+      // that is out in the world. The refusal names the state, so a client can
+      // say which one it is in.
+      expect(response.statusCode).toBe(409);
+      expect(response.json().code).toBe('link_published');
+
+      // Nothing about the row changed with it.
+      const opened = await api.inject({
+        method: 'GET',
+        url: `/api/projects/${project.id}`,
+        headers: ada.headers()
+      });
+      expect(opened.json().link).toBe(project.link);
+    });
+
+    it('rotates the link once the document is unlisted again', async () => {
+      const project = await withState('public', 'Retracted');
+
+      // The two steps the dialog offers instead: out of the listing, then a
+      // new token — which is what takes the handed-out URL down.
+      await api.inject({
+        method: 'PATCH',
+        url: `/api/projects/${project.id}`,
+        headers: ada.headers(),
+        payload: { visibility: 'unlisted' }
+      });
+      const rotated = await api.inject({
+        method: 'PATCH',
+        url: `/api/projects/${project.id}`,
+        headers: ada.headers(),
+        payload: { regenerateLink: true }
+      });
+
+      expect(rotated.statusCode).toBe(200);
+      expect(rotated.json().link).not.toBe(project.link);
+      expect((await read(project.link)).statusCode).toBe(404);
+    });
+
+    it('keeps a withdrawn document´s address, so a reshare is the same URL', async () => {
+      const project = await withState('unlisted', 'Withdrawn');
+
+      const priv = await api.inject({
+        method: 'PATCH',
+        url: `/api/projects/${project.id}`,
+        headers: ada.headers(),
+        payload: { visibility: 'private' }
+      });
+
+      // The state is a mask rather than a revocation: the URL is still the
+      // document's address and its owner still opens it there, while everybody
+      // else gets the answer a private document gets.
+      expect(priv.json().link).toBe(project.link);
+      expect((await read(project.link)).statusCode).toBe(404);
+      expect((await read(project.link, ada)).statusCode).toBe(200);
+
+      // Coming back out restores that same URL, which is why withdrawing and
+      // re-sharing is a bookmark's friend rather than its enemy.
+      const reopened = await api.inject({
+        method: 'PATCH',
+        url: `/api/projects/${project.id}`,
+        headers: ada.headers(),
+        payload: { visibility: 'unlisted' }
+      });
+      expect(reopened.json().link).toBe(project.link);
+      expect((await read(project.link)).statusCode).toBe(200);
     });
   });
 
@@ -288,7 +544,7 @@ describe('share links', () => {
 
       const response = await api.inject({
         method: 'POST',
-        url: `/api/share/${board.link}/clone`,
+        url: `/api/share/project/${board.link}/clone`,
         headers: grace.headers()
       });
 
@@ -314,7 +570,7 @@ describe('share links', () => {
       const clone = (
         await api.inject({
           method: 'POST',
-          url: `/api/share/${board.link}/clone`,
+          url: `/api/share/project/${board.link}/clone`,
           headers: grace.headers()
         })
       ).json();
@@ -360,7 +616,7 @@ describe('share links', () => {
       const clone = (
         await api.inject({
           method: 'POST',
-          url: `/api/share/${board.link}/clone`,
+          url: `/api/share/project/${board.link}/clone`,
           headers: grace.headers()
         })
       ).json();
@@ -375,24 +631,32 @@ describe('share links', () => {
       ]);
     });
 
-    it('keeps the copy private whatever the original was', async () => {
+    it('keeps the copy out of every listing, whatever the original was', async () => {
       const project = await create<ProjectSummary>(
         'projects',
-        { name: 'Public one', public: true },
+        { name: 'Public one', visibility: 'public' },
         ada
       );
 
       const clone = (
         await api.inject({
           method: 'POST',
-          url: `/api/share/${project.link}/clone`,
+          url: `/api/share/project/${project.link}/clone`,
           headers: grace.headers()
         })
       ).json();
 
-      // Inheriting the visibility would republish somebody else's work under a
-      // new owner.
-      expect(clone.project.public).toBe(false);
+      // Inheriting the visibility would publish somebody else's work under a
+      // new owner as a side effect of taking a copy. The copy is unlisted, not
+      // private: nobody was told about it, and the cloner's own link works.
+      expect(clone.project.visibility).toBe('unlisted');
+      const published = await api.inject({
+        method: 'GET',
+        url: '/api/community/projects?size=100'
+      });
+      expect(
+        published.json().entries.map((e: ProjectSummary) => e.id)
+      ).not.toContain(clone.project.id);
     });
 
     it('re-derives a copied component´s ports rather than copying them', async () => {
@@ -409,7 +673,7 @@ describe('share links', () => {
       const clone = (
         await api.inject({
           method: 'POST',
-          url: `/api/share/${component.link}/clone`,
+          url: `/api/share/component/${component.link}/clone`,
           headers: grace.headers()
         })
       ).json();
@@ -430,7 +694,7 @@ describe('share links', () => {
       const clone = (
         await api.inject({
           method: 'POST',
-          url: `/api/share/${board.link}/clone`,
+          url: `/api/share/project/${board.link}/clone`,
           headers: newcomer.headers()
         })
       ).json();
@@ -466,7 +730,7 @@ describe('share links', () => {
 
       await api.inject({
         method: 'POST',
-        url: `/api/share/${board.link}/clone`,
+        url: `/api/share/project/${board.link}/clone`,
         headers: grace.headers()
       });
 
@@ -493,7 +757,7 @@ describe('share links', () => {
       const clone = (
         await api.inject({
           method: 'POST',
-          url: `/api/share/${board.link}/clone`,
+          url: `/api/share/project/${board.link}/clone`,
           headers: grace.headers()
         })
       ).json();
@@ -519,7 +783,7 @@ describe('share links', () => {
 
       const response = await api.inject({
         method: 'POST',
-        url: `/api/share/${project.link}/clone`
+        url: `/api/share/project/${project.link}/clone`
       });
       expect(response.statusCode).toBe(401);
     });
@@ -564,14 +828,6 @@ describe('share links', () => {
       expect(response.statusCode).toBe(201);
     }
 
-    function card(link: string, etag?: string) {
-      return api.inject({
-        method: 'GET',
-        url: `/api/share/${link}/card.png`,
-        headers: etag ? { 'if-none-match': etag } : {}
-      });
-    }
-
     it('answers a picture at the size every share surface expects', async () => {
       const project = await create<ProjectSummary>(
         'projects',
@@ -579,9 +835,9 @@ describe('share links', () => {
         ada
       );
 
-      // No session: the link is the capability here as much as it is for the
-      // document, which is what lets one route serve every unfurler.
-      const response = await card(project.link);
+      // No session: a card is fetched by whatever unfurls the link, and the
+      // document is unlisted, so holding the address is what it takes.
+      const response = await card('project', project.link);
 
       expect(response.statusCode).toBe(200);
       expect(response.headers['content-type']).toBe('image/png');
@@ -597,9 +853,9 @@ describe('share links', () => {
         ada
       );
 
-      const before = await card(project.link);
+      const before = await card('project', project.link);
       await setPreview(project.id);
-      const after = await card(project.link);
+      const after = await card('project', project.link);
 
       // The picture is in the card, so a preview upload changes both the
       // drawing and the tag — the asset id is part of what is hashed.
@@ -614,11 +870,11 @@ describe('share links', () => {
         ada
       );
 
-      const first = await card(project.link);
+      const first = await card('project', project.link);
       const etag = first.headers['etag'] as string;
       expect(etag).toBeTruthy();
 
-      const unchanged = await card(project.link, etag);
+      const unchanged = await card('project', project.link, etag);
       expect(unchanged.statusCode).toBe(304);
       expect(unchanged.rawPayload.length).toBe(0);
 
@@ -631,7 +887,7 @@ describe('share links', () => {
 
       // A rename is drawn on the card, so the tag a client holds has to stop
       // matching — that is the whole of what keeps an on-demand card fresh.
-      const renamed = await card(project.link, etag);
+      const renamed = await card('project', project.link, etag);
       expect(renamed.statusCode).toBe(200);
     });
 
@@ -646,13 +902,16 @@ describe('share links', () => {
         ada
       );
 
-      const response = await card(component.link);
+      const response = await card('component', component.link);
       expect(response.statusCode).toBe(200);
       expect(response.headers['content-type']).toBe('image/png');
     });
 
     it('is a 404 for a link that names nothing', async () => {
-      const response = await card('00000000-0000-4000-8000-000000000000');
+      const response = await card(
+        'project',
+        '00000000-0000-4000-8000-000000000000'
+      );
 
       expect(response.statusCode).toBe(404);
       expect(response.json().code).toBe('not_found');
