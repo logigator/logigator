@@ -11,7 +11,7 @@ import { communityDocumentJsonLd } from './community-document-json-ld';
 import { CommunityDocumentPage } from './community-document-page';
 import { communityDocumentGuard } from './community-document.guard';
 import { CommunityDocumentService } from './community-document.service';
-import { CommunityRouteData } from './community-kind';
+import { apiKindOf, CommunityRouteData } from './community-kind';
 import { profileJsonLd } from './profile-json-ld';
 import { ProfileListing } from './profile-listing';
 import { ProfilePage } from './profile-page';
@@ -37,13 +37,29 @@ const documentName = (): string | null =>
 
 /**
  * The card a pasted link unfurls as, composed from this document. `null` for a
- * link naming nothing published, which falls back to the site card — the same
- * way the title falls back to the listing's.
+ * link naming nothing this reader may open, which falls back to the site card —
+ * the same way the title falls back to the listing's.
  */
 const documentCard = (): string | null => {
-  const link = inject(CommunityDocumentService).document()?.link;
-  return link ? shareCardUrl(link) : null;
+  const document = inject(CommunityDocumentService).document();
+  return document
+    ? shareCardUrl(apiKindOf(document.kind), document.link)
+    : null;
 };
+
+/**
+ * Whether the page may be indexed. Asked of what the guard resolved, because
+ * the answer is the document's visibility and not the route's: an unlisted
+ * document's page is reached by whoever was handed its link, and its owner's
+ * preview of a private one is reached by nobody else — neither belongs in an
+ * index, and both are the same URL as the one that does.
+ *
+ * `noindex` rather than a `robots.txt` rule, which is the only lever that works
+ * on a URL arrived at by links: a crawler is never told to skip what it is
+ * forbidden to fetch, and a listed-by-URL page is the outcome that prevents.
+ */
+const documentNoindex = (): boolean =>
+  inject(CommunityDocumentService).document()?.visibility !== 'public';
 
 /**
  * The listing and the document, as the two steps between the home page and a
@@ -152,14 +168,15 @@ function documentRoutes(
       data: {
         communityKind: kind,
         seo: {
-          // The fallback for a link naming nothing published: the head then
-          // says which listing the reader is on rather than naming a document
-          // that is not there.
+          // The fallback for a link naming nothing this reader may open: the
+          // head then says which listing the reader is on rather than naming a
+          // document that is not there.
           titleKey,
           title: documentName,
           description: () =>
             inject(CommunityDocumentService).document()?.description ?? null,
           image: documentCard,
+          noindex: documentNoindex,
           jsonLd: communityDocumentJsonLd,
           ancestors: [{ titleKey, path: listingPath }]
         } satisfies PageMeta
@@ -180,6 +197,12 @@ function documentRoutes(
           // The page is about the document, so it unfurls as it: a list of
           // usernames under the site card would say nothing about which one.
           image: documentCard,
+          // The document guard is what admits this page now, and it admits a
+          // document that is not public — so the stargazer list answers `404`
+          // for one, and the page that draws that failure has to be kept out of
+          // an index for the same reason the document's own page is: it names
+          // it in its heading and its trail.
+          noindex: documentNoindex,
           trail: documentTrail
         } satisfies PageMeta
       } satisfies CommunityRouteData & { seo: PageMeta }

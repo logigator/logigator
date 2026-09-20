@@ -73,7 +73,7 @@ describe('HomePage', () => {
       a.getAttribute('href')
     );
     expect(hrefs).toEqual([
-      `/editor/share/${EXAMPLE_LINK}`,
+      `/editor/share/projects/${EXAMPLE_LINK}`,
       `/en/community/projects/${PROJECT_LINK}`
     ]);
   });

@@ -62,6 +62,20 @@ const de: TranslationSchema = {
     formatHtml: 'HTML',
     formatBbcode: 'BBCode'
   },
+  visibility: {
+    private: {
+      label: 'Nur du',
+      hint: 'Nur du kannst sie öffnen – über einen Link ist nichts erreichbar.'
+    },
+    unlisted: {
+      label: 'Alle mit dem Link',
+      hint: 'Wer den Link hat, kann sie lesend öffnen. Sie bleibt aus den Community-Listen und aus Suchmaschinen heraus.'
+    },
+    public: {
+      label: 'Alle',
+      hint: 'In der Community gelistet, für alle offen und von Suchmaschinen indexiert.'
+    }
+  },
   errors: {
     retry: 'Erneut laden'
   },
@@ -320,13 +334,6 @@ const de: TranslationSchema = {
         listErrorHeading: 'Die Liste konnte nicht geladen werden'
       }
     },
-    share: {
-      title: 'Geteilter Schaltkreis',
-      description: 'Ein Schaltkreis, den jemand auf Logigator geteilt hat.',
-      openInEditor: 'Im Editor öffnen',
-      viewCommunity: 'Zur Community-Seite',
-      errorHeading: 'Der geteilte Schaltkreis konnte nicht geladen werden'
-    },
     my: {
       nav: {
         label: 'Meine Arbeit',
@@ -359,8 +366,6 @@ const de: TranslationSchema = {
         errorHeading: 'Die Liste konnte nicht geladen werden',
         openInEditor: '„{{name}}“ im Editor öffnen',
         actionsFor: 'Aktionen für „{{name}}“',
-        public: 'Öffentlich',
-        private: 'Privat',
         edit: 'Name & Beschreibung',
         share: 'Teilen…',
         delete: 'Löschen'
@@ -376,25 +381,17 @@ const de: TranslationSchema = {
       },
       share: {
         heading: 'Teilen',
-        intro:
-          'Wer den Link unten hat, kann „{{name}}“ im Editor öffnen – veröffentlicht oder nicht.',
+        intro: 'Wähle, wer „{{name}}“ öffnen kann.',
+        visibilityLabel: 'Wer kann sie öffnen',
         linkLabel: 'Link zum Teilen',
-        linkHint:
-          'Wer diesen Link hat, kann die Schaltung ansehen und eine eigene Kopie anlegen. Deine Schaltung kann darüber niemand ändern.',
-        copy: 'Kopieren',
-        copied: 'Link kopiert.',
-        copyFailed:
-          'Der Link konnte nicht kopiert werden. Markiere ihn und kopiere ihn von Hand.',
-        publicLabel: 'In der Community veröffentlichen',
-        publicHintProject:
-          'Ein veröffentlichtes Projekt erscheint in den Community-Listen und kann markiert und kopiert werden.',
-        publicHintComponent:
-          'Eine veröffentlichte Komponente erscheint in den Community-Listen und kann von allen platziert werden.',
+        noLink:
+          'Solange die Schaltung privat ist, kann sie niemand öffnen. Der Link bleibt erhalten: Wähle „Alle mit dem Link“, um dieselbe URL wieder herauszugeben – dort kannst du ihn auch ersetzen.',
         viewPublicPage: 'Community-Seite ansehen',
-        regenerateLabel: 'Link zurückziehen',
-        regenerateHint:
-          'Es wird ein neuer Link vergeben und der alte hört auf zu funktionieren – auch die Community-Seite, die unter dieser Adresse liegt.',
+        regenerateWarning:
+          'Der alte Link hört sofort auf zu funktionieren – für alle, die ihn haben. Die Schaltung selbst bleibt unverändert.',
         regenerate: 'Neuen Link vergeben',
+        linkPublished:
+          'Der Link wurde nicht ersetzt: Die Schaltung ist veröffentlicht, und ihr Link ist die Adresse ihrer Seite.',
         close: 'Schließen'
       },
       delete: {

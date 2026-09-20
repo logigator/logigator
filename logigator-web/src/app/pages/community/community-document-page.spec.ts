@@ -55,6 +55,19 @@ describe('CommunityDocumentPage', () => {
   }
 
   /**
+   * The star control, by the icon it carries: the two states of it are two
+   * class lists, and a page that has none must be able to say so rather than
+   * fail on a missing label.
+   */
+  function starControl(el: HTMLElement): HTMLButtonElement | null {
+    return (
+      [...el.querySelectorAll('button')].find(
+        (candidate) => candidate.querySelector('i.ph-star') !== null
+      ) ?? null
+    );
+  }
+
+  /**
    * Puts the router on this page and intercepts where it goes next. Reading
    * `router.url` rather than navigating for real: activating the route would
    * run its guard, and the request that guard makes is the one the spec has
@@ -99,7 +112,7 @@ describe('CommunityDocumentPage', () => {
     expect(navigate).toHaveBeenCalledWith(['/en/login'], {
       queryParams: { [RETURN_PATH_PARAM]: PAGE_PATH }
     });
-    http.expectNone(`/api/share/${LINK}/clone`);
+    http.expectNone(`/api/share/project/${LINK}/clone`);
   });
 
   it('stars for a signed-in reader and shows the count the server returned', async () => {
@@ -149,7 +162,47 @@ describe('CommunityDocumentPage', () => {
    * page is a real 404 rather than a section that failed — a soft 404 stays
    * indexed, and a crawler has no other way to learn the URL is dead.
    */
-  it('renders the site’s 404 for a link that names nothing published', async () => {
+  /**
+   * The three states are one page at one URL, so what separates them is what
+   * the page draws: a listed document is left to the community it is in, and
+   * the two that are not listed say so — the chip is the only thing
+   * reconciling an address that looks like any other with a document the
+   * listing does not contain.
+   */
+  it('leaves a published document to the community it is listed in', async () => {
+    const { el } = await render({ visibility: 'public' });
+
+    expect(el.querySelector('web-visibility-tag')).toBeNull();
+    expect(starControl(el)).not.toBeNull();
+    expect(el.textContent).toContain('Stargazers');
+  });
+
+  it('states an unlisted document’s state and drops every star affordance', async () => {
+    const { el } = await render({ visibility: 'unlisted' });
+
+    // Starring is about a listing, and the API answers for the starred set
+    // with the same predicate the listings use — so a star control here would
+    // offer an action the server refuses.
+    expect(el.querySelector('web-visibility-tag')).not.toBeNull();
+    expect(starControl(el)).toBeNull();
+    expect(el.textContent).not.toContain('Stargazers');
+
+    // The link still works, so it is still worth handing on.
+    expect(el.querySelector('web-share-controls')).not.toBeNull();
+  });
+
+  it('renders the owner’s private document without a way to pass it on', async () => {
+    const { el } = await render({ visibility: 'private' });
+
+    expect(el.querySelector('web-visibility-tag')).not.toBeNull();
+    expect(starControl(el)).toBeNull();
+
+    // Nothing resolves the link but its owner, so a share sheet or an embed
+    // snippet would be offering to pass on a URL that opens nothing.
+    expect(el.querySelector('web-share-controls')).toBeNull();
+  });
+
+  it('renders the site’s 404 for a link that names nothing this reader may open', async () => {
     const { el } = await render(
       {},
       { status: 404, body: { code: 'not_found', message: 'gone' } }

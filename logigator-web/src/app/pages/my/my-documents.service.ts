@@ -10,7 +10,7 @@ export type MyDocumentRow = ProjectSummary | ComponentSummary;
 
 /** What a metadata edit can change about a row without re-reading the page. */
 export type MyDocumentPatch = Partial<
-  Pick<MyDocumentRow, 'name' | 'description' | 'public' | 'link'>
+  Pick<MyDocumentRow, 'name' | 'description' | 'visibility' | 'link'>
 >;
 
 /**

@@ -338,7 +338,7 @@ describe('SeoService', () => {
   it('keeps a one-shot token page out of an index, and only that page', () => {
     const seo = TestBed.inject(SeoService);
     seo.apply(
-      { titleKey: 'pages.verifyEmail.title', noindex: true },
+      { titleKey: 'pages.verifyEmail.title', noindex: () => true },
       '/en/verify-email/abc'
     );
 
@@ -350,6 +350,29 @@ describe('SeoService', () => {
     // Removed on the next navigation: the document is reused, so a tag left
     // behind would drop the page the visitor moved to out of the index.
     seo.apply({ titleKey: 'pages.home.title' }, '/en');
+    expect(document.head.querySelector('meta[name="robots"]')).toBeNull();
+  });
+
+  it('lets a page decide from what it resolved, on every navigation', () => {
+    // One route, two answers: a document's own page is a search result or not
+    // depending on the visibility its guard resolved, which the route
+    // definition cannot know — so the factory is read per render rather than
+    // resolved once at startup.
+    const seo = TestBed.inject(SeoService);
+    let published = false;
+    const documentPage: PageMeta = {
+      titleKey: 'pages.community.browse.projectsTitle',
+      noindex: () => !published
+    };
+
+    seo.apply(documentPage, '/en/community/projects/abc');
+    expect(
+      document.head.querySelector<HTMLMetaElement>('meta[name="robots"]')
+        ?.content
+    ).toBe('noindex, follow');
+
+    published = true;
+    seo.apply(documentPage, '/en/community/projects/abc');
     expect(document.head.querySelector('meta[name="robots"]')).toBeNull();
   });
 

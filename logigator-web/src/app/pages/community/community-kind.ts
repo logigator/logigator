@@ -1,4 +1,5 @@
 import { ActivatedRouteSnapshot } from '@angular/router';
+import type { LgDocumentKind } from '@logigator/ui';
 import type { CommunityKind } from '../../api/services/community-api.service';
 
 /**
@@ -10,6 +11,19 @@ import type { CommunityKind } from '../../api/services/community-api.service';
  */
 export interface CommunityRouteData {
   communityKind: CommunityKind;
+}
+
+/**
+ * The same kind in the API's spelling, for the URLs that address a table rather
+ * than a section: a card is `/api/share/project/{link}/card.png` and a clone is
+ * `POST /api/share/project/{link}/clone`, while every route here says
+ * `projects`. Made in one place rather than at each call site because the two
+ * spellings are deliberately distinct types — `@logigator/ui`'s card builder
+ * takes one and its page builder the other, so a call site handed the wrong one
+ * does not compile — and somebody still has to choose.
+ */
+export function apiKindOf(kind: CommunityKind): LgDocumentKind {
+  return kind === 'projects' ? 'project' : 'component';
 }
 
 export function communityKindOf(route: ActivatedRouteSnapshot): CommunityKind {

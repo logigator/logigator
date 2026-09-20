@@ -42,6 +42,10 @@ export class ExamplesPage {
   /**
    * An example opens in the editor by its share link, which needs no session,
    * and there is no page on this site to open instead.
+   *
+   * The kind is the route's spelling and a literal: the list is the seed
+   * account's projects by construction (`ExamplesContentService` reads that one
+   * listing), and a row carries no kind of its own to read it off.
    */
   protected readonly rows = computed(() =>
     (this.examples.entries() ?? []).map((row) => ({
@@ -49,7 +53,7 @@ export class ExamplesPage {
       name: row.name,
       description: row.description,
       preview: row.preview,
-      href: this.links.editorShare(row.link)
+      href: this.links.editorShare('projects', row.link)
     }))
   );
 

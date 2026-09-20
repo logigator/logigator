@@ -3,9 +3,6 @@ import type {
   ImageFormat,
   ImageVariant
 } from '@logigator/contract';
-import { shareCardUrl } from '@logigator/ui/internal/share';
-
-export { shareCardUrl };
 
 /**
  * The one URL to hand a consumer that can negotiate nothing: a crawler reading
@@ -55,11 +52,12 @@ export function crawlerPreviewUrl(
  * here rather than imported everywhere, and reached through the library's
  * internal path rather than its public entry — this module is in the SSR
  * host's graph, which may not pull Angular in.
+ *
+ * `SHARE_CARD_PATH_PATTERN` rides along beside it: `robots.ts` derives its
+ * `Allow:` line from the same template, and reaches it here rather than in the
+ * library for the reason above — the file is written by the SSR host.
  */
-/**
- * The same route as the path pattern `robots.txt` has to allow, built from the
- * one template so the rule cannot come to name a URL the site no longer emits —
- * a mismatch nothing fails on, and that nobody sees until a pasted link unfurls
- * blank.
- */
-export const SHARE_CARD_PATH_PATTERN = shareCardUrl('*');
+export {
+  SHARE_CARD_PATH_PATTERN,
+  shareCardUrl
+} from '@logigator/ui/internal/share';

@@ -28,11 +28,15 @@
   </div>
 
   @if (embedding()) {
+  <!-- The tighter of the two spacings this panel was drawn at, which is the
+         one the editor's share dialog uses: the panel appears in the same
+         column of both dialogs, so it is one panel in two apps and this is the
+         set they both take. -->
   <div
     id="share-embed"
-    class="flex flex-col gap-2.5 rounded-md border border-border p-3.5"
+    class="flex flex-col gap-2 rounded-md border border-border p-3"
   >
-    <div class="flex flex-wrap items-center justify-between gap-3">
+    <div class="flex flex-wrap items-center justify-between gap-2">
       <lg-select-button
         [ariaLabel]="t('share.formatLabel')"
         optionLabel="label"

@@ -6,9 +6,10 @@ import { ShareControls } from './share-controls';
 
 const SLUG = '11111111-1111-4111-8111-111111111111';
 const ORIGIN = 'https://logigator.com';
-const URL = `${ORIGIN}/de/share/${SLUG}`;
-const CARD = `${ORIGIN}/api/share/${SLUG}/card.png`;
-const COMMUNITY = `${ORIGIN}/de/community/projects/${SLUG}`;
+// The page a link resolves to, and the card it unfurls as: the two URLs every
+// caller of this component hands it, in the shapes the dialog builds them.
+const URL = `${ORIGIN}/de/community/projects/${SLUG}`;
+const CARD = `${ORIGIN}/api/share/project/${SLUG}/card.png`;
 
 /** Puts a member on the real `navigator`, removed again after every test. */
 function install(key: 'share' | 'clipboard', value: unknown): void {
@@ -32,16 +33,11 @@ describe('ShareControls', () => {
     Reflect.deleteProperty(navigator, 'clipboard');
   });
 
-  async function render(
-    embedUrl?: string
-  ): Promise<ComponentFixture<ShareControls>> {
+  async function render(): Promise<ComponentFixture<ShareControls>> {
     const fixture = TestBed.createComponent(ShareControls);
     fixture.componentRef.setInput('url', URL);
     fixture.componentRef.setInput('image', CARD);
     fixture.componentRef.setInput('title', 'Half adder');
-    if (embedUrl !== undefined) {
-      fixture.componentRef.setInput('embedUrl', embedUrl);
-    }
     await TestBed.inject(TranslationService).setActiveLang('en');
     fixture.detectChanges();
     return fixture;
@@ -100,17 +96,18 @@ describe('ShareControls', () => {
     expect(snippet(el)).toContain(URL);
   });
 
-  it('sends an embed to the page that can rank, when there is one', async () => {
-    const fixture = await render(COMMUNITY);
+  it('links the snippet to the page it is drawn on, and to no other', async () => {
+    // One address, in every state: a document's link *is* its page, so there
+    // is no second URL a snippet could carry — the override that used to
+    // point a published document's embed at its community page went with the
+    // separate share page that made the two differ.
+    const fixture = await render();
     const el: HTMLElement = fixture.nativeElement;
 
     button(el, 'Embed').click();
     fixture.detectChanges();
 
-    // The share page is noindex, so a snippet carrying it builds link equity
-    // into a URL no crawler may list.
-    expect(snippet(el)).toContain(COMMUNITY);
-    expect(snippet(el)).not.toContain(`](${URL})`);
+    expect(snippet(el)).toContain(`](${URL})`);
   });
 
   it('copies the snippet it shows', async () => {

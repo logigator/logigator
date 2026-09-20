@@ -144,11 +144,13 @@ export class HomePage {
 
   /**
    * The examples all belong to one account, so no `authorHref` and no meta
-   * row. They open in the editor by their share link, which needs no session.
+   * row. They open in the editor by their share link, which needs no session —
+   * and the kind is a literal, the list being that account's projects by
+   * construction, which is also why a row carries none.
    */
   protected readonly exampleTiles = computed(() =>
     toTileEntries(this.examples.entries() ?? [], {
-      href: (row) => this.links.editorShare(row.link),
+      href: (row) => this.links.editorShare('projects', row.link),
       external: true
     })
   );

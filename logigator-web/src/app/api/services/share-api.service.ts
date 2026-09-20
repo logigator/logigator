@@ -1,39 +1,31 @@
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import {
-  cloneResponseSchema,
-  shareResponseSchema,
-  type CloneResponse,
-  type ShareResponse
-} from '@logigator/contract';
+import { cloneResponseSchema, type CloneResponse } from '@logigator/contract';
+import type { LgDocumentKind } from '@logigator/ui';
 import { ApiBaseService } from './api-base.service';
 
 /**
- * Share links. A link is a capability — it needs no session and ignores whether
- * the document is public — so reading one is what puts a handed-out URL on a
- * page of its own, and cloning is what puts the document in the caller's
- * account.
+ * Taking a copy of somebody else's document. The link is the grant — cloning
+ * needs no more than holding it — and the copy lands in the caller's account,
+ * with its own masters rather than with somebody else's.
+ *
+ * Reading a link is not here: the page one lands on is the community page,
+ * which resolves the document through its own detail route.
  */
 @Injectable({ providedIn: 'root' })
 export class ShareApiService {
   private readonly api = inject(ApiBaseService);
 
   /**
-   * GET /api/share/:link. The document behind a token, which the landing page
-   * renders: a link that was regenerated answers `not_found`, and one naming
-   * nothing at all never reaches here — a malformed token is a `404` from the
-   * API's own uuid pipe.
+   * POST /api/share/{kind}/{link}/clone. The kind names the table the token was
+   * found in, which the server cannot work out on its own — a token is a column
+   * in both of them. A link that was regenerated, and one naming a document the
+   * caller may not open, are both `not_found`.
    */
-  public read(link: string): Observable<ShareResponse> {
-    return this.api.get(`/api/share/${link}`, shareResponseSchema);
-  }
-
-  /**
-   * POST /api/share/:link/clone. Copies the document and the library it needs
-   * into the caller's account, so the copy opens with its own masters rather
-   * than with somebody else's.
-   */
-  public clone(link: string): Observable<CloneResponse> {
-    return this.api.post(`/api/share/${link}/clone`, cloneResponseSchema);
+  public clone(kind: LgDocumentKind, link: string): Observable<CloneResponse> {
+    return this.api.post(
+      `/api/share/${kind}/${link}/clone`,
+      cloneResponseSchema
+    );
   }
 }

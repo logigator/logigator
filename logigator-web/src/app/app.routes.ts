@@ -8,10 +8,6 @@ import { homeContentGuard } from './pages/home/home-content.guard';
 import { homeJsonLd } from './pages/home/home-json-ld';
 import { ExamplesPage } from './pages/examples/examples-page';
 import { examplesContentGuard } from './pages/examples/examples-content.guard';
-import { shareCardUrl } from './documents/crawler-image';
-import { ShareLandingPage } from './pages/share/share-landing-page';
-import { shareLandingGuard } from './pages/share/share-landing.guard';
-import { ShareLandingService } from './pages/share/share-landing.service';
 import { docsRoutes } from './pages/docs/docs-routes';
 import { communityRoutes } from './pages/community/community-routes';
 import { myRoutes } from './pages/my/my-routes';
@@ -35,28 +31,6 @@ import { PageMeta } from './seo/seo.service';
  */
 const languagePrefix: CanMatchFn = (_route, segments) =>
   isAvailableLanguage(segments[0]?.path);
-
-/**
- * A shared circuit's own name, for the head of the page its link lands on —
- * read off the guard's read, which is what lets the head name the document
- * rather than a key. `null` for a token naming nothing, which falls back to the
- * key and so announces the page rather than an empty title.
- */
-const shareLandingName = (): string | null =>
-  inject(ShareLandingService).summary()?.name ?? null;
-
-const shareLandingDescription = (): string | null =>
-  inject(ShareLandingService).summary()?.description ?? null;
-
-/**
- * The card the link unfurls as, composed from the document. `null` for a token
- * naming nothing, which falls back to the site card — a 404 that unfurls as the
- * circuit somebody expected would be worse than one that does not.
- */
-const shareLandingCard = (): string | null => {
-  const link = inject(ShareLandingService).summary()?.link;
-  return link ? shareCardUrl(link) : null;
-};
 
 /** Routes below the language prefix; every page the site has lives here. */
 const localizedRoutes: Routes = [
@@ -85,30 +59,6 @@ const localizedRoutes: Routes = [
   ...docsRoutes,
   ...communityRoutes,
   ...myRoutes,
-  {
-    // Where a handed-out share link lands. The token is a capability, so the
-    // page is reachable by anyone holding it and kept out of every index — see
-    // `robots.ts`, which closes `/share/` and leaves this route crawlable on
-    // purpose so that the `noindex` below is there to be read.
-    path: 'share/:link',
-    component: ShareLandingPage,
-    canActivate: [shareLandingGuard],
-    data: {
-      seo: {
-        // The fallback for a token naming nothing: the page then announces
-        // itself rather than naming a circuit that is not there.
-        titleKey: 'pages.share.title',
-        descriptionKey: 'pages.share.description',
-        title: shareLandingName,
-        description: shareLandingDescription,
-        image: shareLandingCard,
-        noindex: true,
-        // A handed-out entry point is not a step towards anything, and a
-        // `BreadcrumbList` for a page no crawler may index has no reader.
-        breadcrumb: false
-      } satisfies PageMeta
-    }
-  },
   {
     path: 'changelog',
     component: ChangelogPage,
@@ -180,7 +130,7 @@ const localizedRoutes: Routes = [
       seo: {
         titleKey: 'pages.resetPassword.title',
         descriptionKey: 'pages.resetPassword.requestLead',
-        noindex: true
+        noindex: () => true
       } satisfies PageMeta
     }
   },
@@ -194,7 +144,7 @@ const localizedRoutes: Routes = [
       seo: {
         titleKey: 'pages.verifyEmail.title',
         // The URL is the token, so it is neither an index entry nor a step.
-        noindex: true,
+        noindex: () => true,
         breadcrumb: false
       } satisfies PageMeta
     }

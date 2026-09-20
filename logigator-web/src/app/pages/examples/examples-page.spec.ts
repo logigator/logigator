@@ -84,9 +84,12 @@ describe('ExamplesPage', () => {
     });
 
     // The share link is a capability, so the editor opens it without a
-    // session; there is no page on this site to open instead.
+    // session — and the editor's route carries the kind, which the listing
+    // these examples come from is what says.
     const action = el.querySelector('a[lgButton]')!;
-    expect(action.getAttribute('href')).toBe(`/editor/share/${HALF_ADDER}`);
+    expect(action.getAttribute('href')).toBe(
+      `/editor/share/projects/${HALF_ADDER}`
+    );
     expect(action.getAttribute('target')).toBe('_blank');
     // Every row's label reads the same, so the link is named by its example —
     // otherwise a screen reader lists six identical destinations.

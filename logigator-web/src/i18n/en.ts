@@ -49,8 +49,8 @@ const en = {
     /** Read after the count, so a screen reader says “214 stars”. */
     stars: 'stars'
   },
-  // The share controls, which a community page, a shelf dialog and the share
-  // page itself all draw — so their words belong under none of those.
+  // The share controls, which a document's own page and the shelf dialog both
+  // draw — so their words belong under neither of those.
   share: {
     label: 'Share',
     copyLabel: 'Copy link',
@@ -66,6 +66,25 @@ const en = {
     formatMarkdown: 'Markdown',
     formatHtml: 'HTML',
     formatBbcode: 'BBCode'
+  },
+  // The three states a document's link can be in. A shelf tile, the share
+  // dialog's picker and a document's own page all name them, so their words
+  // belong under none of those. Each state's `hint` says what it means for
+  // whoever holds the link, which is what a picker shows under the choice it
+  // is on.
+  visibility: {
+    private: {
+      label: 'Only you',
+      hint: 'Only you can open it — nothing is reachable by a link.'
+    },
+    unlisted: {
+      label: 'Anyone with the link',
+      hint: 'Whoever holds the link can open it read-only. It stays out of the community listings and out of search engines.'
+    },
+    public: {
+      label: 'Everyone',
+      hint: 'Listed in the community, open to everyone, and indexed by search engines.'
+    }
   },
   errors: {
     retry: 'Retry'
@@ -320,16 +339,6 @@ const en = {
         listErrorHeading: 'The list could not be loaded'
       }
     },
-    // Where a link somebody was handed lands. It draws the document's own
-    // facts under the community page's wording for them — same words, same
-    // facts — and names only what is particular to this page.
-    share: {
-      title: 'Shared circuit',
-      description: 'A circuit somebody shared on Logigator.',
-      openInEditor: 'Open in editor',
-      viewCommunity: 'View the community page',
-      errorHeading: 'The shared circuit could not be loaded'
-    },
     my: {
       nav: {
         label: 'My work',
@@ -364,8 +373,6 @@ const en = {
         errorHeading: 'The list could not be loaded',
         openInEditor: 'Open “{{name}}” in the editor',
         actionsFor: 'Actions for “{{name}}”',
-        public: 'Public',
-        private: 'Private',
         edit: 'Name & description',
         share: 'Share…',
         delete: 'Delete'
@@ -381,25 +388,17 @@ const en = {
       },
       share: {
         heading: 'Share',
-        intro:
-          'Anyone with the link below can open “{{name}}” in the editor, whether or not it is published.',
+        intro: 'Choose who can open “{{name}}”.',
+        visibilityLabel: 'Who can open it',
         linkLabel: 'Share link',
-        linkHint:
-          'Anyone with this link can view the circuit and take their own copy. Nobody can change yours through it.',
-        copy: 'Copy',
-        copied: 'Link copied.',
-        copyFailed:
-          'The link could not be copied. Select it and copy it by hand.',
-        publicLabel: 'Publish to the community',
-        publicHintProject:
-          'A published project appears in the community listings and can be starred and copied.',
-        publicHintComponent:
-          'A published component appears in the community listings and can be placed by anyone.',
+        noLink:
+          'Nobody can open the document while it is private. The link is kept: pick “Anyone with the link” to hand out the same URL again, and regenerate it from there.',
         viewPublicPage: 'View the community page',
-        regenerateLabel: 'Revoke the link',
-        regenerateHint:
-          'A new link is issued and the old one stops working — including the community page, which lives at that address.',
-        regenerate: 'Issue a new link',
+        regenerateWarning:
+          'The old link stops working immediately, for everyone who has it. Your circuit itself is unchanged.',
+        regenerate: 'Regenerate link',
+        linkPublished:
+          'The link was not replaced: this document is published, and its link is the address of its page.',
         close: 'Close'
       },
       delete: {

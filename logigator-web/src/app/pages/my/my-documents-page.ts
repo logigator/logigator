@@ -163,14 +163,17 @@ export class MyDocumentsPage {
   private openShare(row: MyDocumentRow): void {
     this.dialogs.open(ShareDocumentDialog, {
       header: this.translation.translate('pages.my.share.heading'),
-      width: '34rem',
+      // The width the editor's share dialog opens at, because the two are one
+      // dialog in two apps. This one used to be 2rem wider to fit the picker at
+      // its larger size step; the picker takes the smaller step in both now.
+      width: '32rem',
       closeLabel: this.translation.translate('common.close'),
       data: {
         kind: this.kind(),
         id: row.id,
         name: row.name,
         link: row.link,
-        public: row.public
+        visibility: row.visibility
       }
     });
   }

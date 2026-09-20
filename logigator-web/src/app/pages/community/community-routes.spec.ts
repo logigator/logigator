@@ -5,10 +5,39 @@ import {
   type TestRequest
 } from '@angular/common/http/testing';
 import { Router } from '@angular/router';
-import { EMPTY_PAGE } from '../../../testing/community-rows';
+import type {
+  CommunityProjectDetail,
+  DocumentVisibility
+} from '@logigator/contract';
+import { communityRow, EMPTY_PAGE } from '../../../testing/community-rows';
 import { configureTestBed } from '../../../testing/configure-test-bed';
+import { PageMeta } from '../../seo/seo.service';
+import { communityRoutes } from './community-routes';
+import { CommunityDocumentService } from './community-document.service';
 
 const USER = '33333333-3333-4333-8333-333333333333';
+const LINK = '11111111-1111-4111-8111-111111111111';
+
+/** One detail row, as the guard's read answers it. */
+function detail(patch: {
+  visibility: DocumentVisibility;
+}): CommunityProjectDetail {
+  return { ...communityRow('Half adder', LINK, patch), forkedFrom: null };
+}
+
+/**
+ * The `noindex` the document route declares. Read off the route tree rather
+ * than imported: the factory is route data, and a route tree that lost it
+ * would otherwise be a head that indexes what it should not.
+ */
+function documentRouteNoindex(): () => boolean {
+  const route = communityRoutes.find(
+    (candidate) => candidate.path === 'community/projects/:link'
+  );
+  const noindex = (route?.data as { seo?: PageMeta } | undefined)?.seo?.noindex;
+  expect(noindex, 'the document route declares no noindex').toBeDefined();
+  return noindex!;
+}
 
 describe('the community routes', () => {
   let http: HttpTestingController;
@@ -158,5 +187,37 @@ describe('the community routes', () => {
 
     expect(router.url).toBe('/en/community/nonsense');
     http.verify();
+  });
+
+  /**
+   * One URL, two answers. A document's own page is a search result or not
+   * depending on what its guard resolved, which the route definition cannot
+   * know — so the head asks the page, and the page is looked at again on every
+   * render rather than answered once at startup.
+   */
+  it('keeps a document’s page out of the index in every state but public', async () => {
+    const noindex = documentRouteNoindex();
+    const content = TestBed.inject(CommunityDocumentService);
+
+    const published = content.resolve('projects', LINK);
+    http
+      .expectOne(`/api/community/projects/${LINK}`)
+      .flush(detail({ visibility: 'public' }));
+    await published;
+    expect(TestBed.runInInjectionContext(noindex)).toBe(false);
+
+    const unlisted = content.resolve('projects', LINK);
+    http
+      .expectOne(`/api/community/projects/${LINK}`)
+      .flush(detail({ visibility: 'unlisted' }));
+    await unlisted;
+    expect(TestBed.runInInjectionContext(noindex)).toBe(true);
+
+    const priv = content.resolve('projects', LINK);
+    http
+      .expectOne(`/api/community/projects/${LINK}`)
+      .flush(detail({ visibility: 'private' }));
+    await priv;
+    expect(TestBed.runInInjectionContext(noindex)).toBe(true);
   });
 });

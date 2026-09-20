@@ -97,7 +97,14 @@ describe('every page route', () => {
     }
   });
 
-  it('keeps a page out of the index only where its URL is an action', () => {
+  it('leaves the index to the pages that have to decide', () => {
+    // Every page is a search result unless it says otherwise, so this is the
+    // list of routes that opt out — and the shape of the list is the point:
+    // two pages of action, and the three routes whose answer is not the
+    // route's to give. A document's own page is the same URL whether it is
+    // listed or not, and its stargazer sibling names it whichever state it is
+    // in, so `noindex` is what keeps the two non-public states out of an index
+    // (the factory is held to that in `community-routes.spec.ts`).
     const noindex = rendered
       .filter((page) => page.seo?.noindex)
       .map((page) => page.path);
@@ -106,18 +113,19 @@ describe('every page route', () => {
       new Set([
         '/:lang/reset-password',
         '/:lang/verify-email/:token',
-        // A share token is a capability: it needs no session and ignores
-        // whether the document is public, so an index holding the URL holds a
-        // circuit its owner never published.
-        '/:lang/share/:link'
+        '/:lang/community/projects/:link',
+        '/:lang/community/components/:link',
+        '/:lang/community/projects/:link/stargazers',
+        '/:lang/community/components/:link/stargazers'
       ])
     );
   });
 
   it('names no trail on a page that cannot be one', () => {
     // The 404 is not a step towards anything, a token page would publish its
-    // token, a share page is an entry point somebody was handed rather than a
-    // place arrived at, and nothing under `my/` is reachable without a session.
+    // token, and nothing under `my/` is reachable without a session. A
+    // document's own page is not on the list: it hangs under its listing in
+    // every state, which is where its reader came from.
     const noBreadcrumb = rendered
       .filter((page) => page.seo?.breadcrumb === false)
       .map((page) => page.path);
@@ -128,7 +136,6 @@ describe('every page route', () => {
         '/:lang/my/components',
         '/:lang/my/account',
         '/:lang/verify-email/:token',
-        '/:lang/share/:link',
         '/:lang/**'
       ])
     );

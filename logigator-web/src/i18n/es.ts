@@ -61,6 +61,20 @@ const es: TranslationSchema = {
     formatHtml: 'HTML',
     formatBbcode: 'BBCode'
   },
+  visibility: {
+    private: {
+      label: 'Solo tú',
+      hint: 'Solo tú puedes abrirlo: nada es accesible mediante un enlace.'
+    },
+    unlisted: {
+      label: 'Cualquiera con el enlace',
+      hint: 'Quien tenga el enlace puede abrirlo en modo lectura. No aparece en las listas de la comunidad ni en los buscadores.'
+    },
+    public: {
+      label: 'Todo el mundo',
+      hint: 'Aparece en la comunidad, está abierto a todos y los buscadores lo indexan.'
+    }
+  },
   errors: {
     retry: 'Reintentar'
   },
@@ -317,13 +331,6 @@ const es: TranslationSchema = {
         listErrorHeading: 'No se pudo cargar la lista'
       }
     },
-    share: {
-      title: 'Circuito compartido',
-      description: 'Un circuito que alguien compartió en Logigator.',
-      openInEditor: 'Abrir en el editor',
-      viewCommunity: 'Ver la página de la comunidad',
-      errorHeading: 'No se pudo cargar el circuito compartido'
-    },
     my: {
       nav: {
         label: 'Mi trabajo',
@@ -356,8 +363,6 @@ const es: TranslationSchema = {
         errorHeading: 'No se pudo cargar la lista',
         openInEditor: 'Abrir «{{name}}» en el editor',
         actionsFor: 'Acciones para «{{name}}»',
-        public: 'Público',
-        private: 'Privado',
         edit: 'Nombre y descripción',
         share: 'Compartir…',
         delete: 'Eliminar'
@@ -373,25 +378,17 @@ const es: TranslationSchema = {
       },
       share: {
         heading: 'Compartir',
-        intro:
-          'Cualquiera con el enlace de abajo puede abrir «{{name}}» en el editor, esté publicado o no.',
+        intro: 'Elige quién puede abrir «{{name}}».',
+        visibilityLabel: 'Quién puede abrirlo',
         linkLabel: 'Enlace para compartir',
-        linkHint:
-          'Cualquiera con este enlace puede ver el circuito y hacer su propia copia. Nadie puede cambiar el tuyo a través de él.',
-        copy: 'Copiar',
-        copied: 'Enlace copiado.',
-        copyFailed:
-          'No se pudo copiar el enlace. Selecciónalo y cópialo a mano.',
-        publicLabel: 'Publicar en la comunidad',
-        publicHintProject:
-          'Un proyecto publicado aparece en las listas de la comunidad y se puede marcar y copiar.',
-        publicHintComponent:
-          'Un componente publicado aparece en las listas de la comunidad y cualquiera puede colocarlo.',
+        noLink:
+          'Mientras el circuito sea privado, nadie puede abrirlo. El enlace se conserva: elige «Cualquiera con el enlace» para volver a repartir la misma URL, y desde ahí también puedes sustituirlo.',
         viewPublicPage: 'Ver la página de la comunidad',
-        regenerateLabel: 'Revocar el enlace',
-        regenerateHint:
-          'Se emite un enlace nuevo y el anterior deja de funcionar, incluida la página de la comunidad, que vive en esa dirección.',
+        regenerateWarning:
+          'El enlace anterior deja de funcionar de inmediato, para todos los que lo tengan. El circuito en sí no cambia.',
         regenerate: 'Emitir un enlace nuevo',
+        linkPublished:
+          'El enlace no se ha sustituido: el circuito está publicado y su enlace es la dirección de su página.',
         close: 'Cerrar'
       },
       delete: {

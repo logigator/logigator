@@ -11,9 +11,11 @@ import { SHARE_CARD_PATH_PATTERN } from './app/documents/crawler-image';
  * as policy and is stale the month a new one ships; its absence reads as what it
  * is. That is a decision, not an oversight: please do not "fix" it.
  *
- * The policy is defensible because of what is reachable. Every community query
- * carries `public = true`, so everything a crawler can walk was published by
- * whoever made it. The share link is the exception and is closed below.
+ * The policy is defensible because of what is reachable. Every listing query
+ * carries `visibility = 'public'`, so everything a crawler can walk from a
+ * listing was published by whoever made it. A URL somebody was handed is the
+ * other way in, and it is closed below — while the page such a URL lands on is
+ * left crawlable, so that the `noindex` it answers with is there to be read.
  *
  * @param sitemap absolute URL of the sitemap, or `null` where the origin of the
  *   request could not be established. The file is still answered without the
@@ -22,17 +24,16 @@ import { SHARE_CARD_PATH_PATTERN } from './app/documents/crawler-image';
 export function renderRobotsTxt(sitemap: string | null): string {
   return `${sitemap ? `Sitemap: ${sitemap}\n\n` : ''}User-agent: *
 
-# The share link is a capability: it needs no session and ignores whether
-# the document is public, so a page under it would put private circuits
-# into an index — and a training set — by URL alone. Both rules are anchored,
-# which covers the unprefixed redirect and the editor's own route. The landing
-# page this comment used to anticipate is now real, at /<lang>/share/<link>,
-# and is deliberately NOT closed here: it answers "robots: noindex, follow"
-# instead, which is the only lever that works on a URL reached by links, since
-# a crawler is never told to skip what it is forbidden to fetch and "indexed,
-# though blocked" is the outcome this line is meant to prevent. Adding a
-# Disallow for it would also match the card under /api/share/, which the Allow
-# below is what keeps reachable.
+# A link needs no session and resolves whatever the document's state, so the
+# editor route that opens one is closed here, along with the unprefixed
+# /share/ path the site's own landing page used to answer. The page a link
+# arrives at now, /<lang>/community/<kind>/<link>, is deliberately NOT closed:
+# it answers "robots: noindex, follow" whenever the document is not public,
+# which is the only lever that works on a URL reached by links. A crawler is
+# never told to skip what it is forbidden to fetch, and "indexed, though
+# blocked" is the outcome this file exists to prevent. Which is also why
+# /community/ must never be disallowed: that page lives in it, and a rule over
+# the section would put the tag out of reach with it.
 Disallow: /editor/share/
 Disallow: /share/
 

@@ -12,10 +12,10 @@ import {
   LgCircuitTileLink,
   LgCircuitTileMeta,
   LgMenu,
-  LgTag,
   type MenuItem
 } from '@logigator/ui';
 import type { CommunityKind } from '../../api/services/community-api.service';
+import { VisibilityTag } from '../../documents/visibility-tag';
 import { SiteLinks } from '../../layout/site-links';
 import { ThemingService } from '../../theming/theming.service';
 import { TranslateDirective } from '../../translation/translate.directive';
@@ -35,9 +35,10 @@ export interface MyDocumentCommand {
  *
  * The same `lg-circuit-tile` the community listings draw, filled differently:
  * an author and a star count say nothing on a shelf where every row is the
- * reader's, so the meta row states what does — whether the document is
- * published, and when it was last edited — and the corner carries the controls
- * for the three things a shelf can do to a row.
+ * reader's, so the meta row states what does — who the document's link reaches,
+ * which is one of three states rather than a published-or-not pair — and when
+ * it was last edited. The corner carries the controls for the three things a
+ * shelf can do to a row.
  *
  * The card itself opens the editor, which is a separate deployment sharing this
  * origin, so its link is a real `href` rather than a route.
@@ -54,8 +55,8 @@ export interface MyDocumentCommand {
     LgCircuitTileLink,
     LgCircuitTileMeta,
     LgMenu,
-    LgTag,
-    TranslateDirective
+    TranslateDirective,
+    VisibilityTag
   ],
   host: { class: 'block' },
   template: `
@@ -81,13 +82,7 @@ export interface MyDocumentCommand {
             ></a>
 
             <span lgCircuitTileMeta>
-              <lg-tag [severity]="tile.public ? 'success' : 'secondary'">
-                {{
-                  tile.public
-                    ? t('pages.my.list.public')
-                    : t('pages.my.list.private')
-                }}
-              </lg-tag>
+              <web-visibility-tag [visibility]="tile.visibility" />
               <span class="truncate font-mono text-xs">{{ tile.edited }}</span>
             </span>
 
@@ -146,7 +141,7 @@ export class MyDocumentTiles {
     return this.rows().map((row, index) => ({
       id: row.id,
       name: row.name,
-      public: row.public,
+      visibility: row.visibility,
       edited: dates.format(new Date(row.lastEditedAt)),
       editorHref: this.links.editorDocument(kind, row.id),
       loading: index < this.EAGER_ROW ? ('eager' as const) : ('lazy' as const),

@@ -34,7 +34,13 @@ type DetailResult =
 const DETAIL_STATE = makeStateKey<DetailResult>('community.document');
 
 /**
- * One published document's own page.
+ * One document's own page, in any of its three states.
+ *
+ * The read answers for a published document, for an unlisted one to whoever
+ * holds its link, and for a private one to its owner alone — so the page is
+ * reached by a visitor following a link they were handed as well as by a
+ * reader who picked it out of a listing. What it does with each state is
+ * {@link CommunityDocumentPage}'s.
  *
  * Resolved by a guard so the first byte carries the circuit, its author and its
  * star count — which is also what lets the head name the document rather than a
@@ -63,7 +69,11 @@ export class CommunityDocumentService {
     return 'document' in current ? current.document : null;
   });
 
-  /** True where the link names nothing published — the page's own 404. */
+  /**
+   * True where the link names nothing this reader may open — a document that
+   * was deleted, one whose token was regenerated, and a private document read
+   * by somebody who is not its owner all answer so.
+   */
   public readonly missing = computed(() => 'missing' in this.result());
 
   public readonly failureKey = computed(() => {
@@ -162,9 +172,11 @@ export class CommunityDocumentService {
             };
       return { document };
     } catch (error) {
-      // A link naming nothing published is indistinguishable from one that
-      // never existed, deliberately: the API answers `not_found` either way,
-      // and so does this page.
+      // A link naming nothing, and a private document read by somebody who is
+      // not its owner, are indistinguishable from one that never existed —
+      // deliberately, since telling the two apart would let anyone enumerate
+      // which tokens are in use. The API answers `not_found` either way, and
+      // so does this page.
       if (isApiError(error, 'not_found')) {
         return { missing: true };
       }

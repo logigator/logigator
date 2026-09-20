@@ -38,6 +38,15 @@
     />
 
     <div class="flex min-w-0 flex-col items-start">
+      <!-- The state, wherever it is not "public". The address says nothing
+             about it — an unlisted document's link and its owner's private one
+             both look exactly like a listed one's — so this chip is the only
+             thing reconciling the two, and a reader who arrived by a link they
+             were handed has no other way to know. -->
+      @if (!isPublic()) {
+      <web-visibility-tag class="mb-3" [visibility]="doc.visibility" />
+      }
+
       <h1
         class="text-3xl leading-tight font-bold break-words text-text-hover md:text-4xl"
       >
@@ -106,8 +115,11 @@
           <i class="ph ph-copy" aria-hidden="true"></i>
           {{ t('pages.community.document.clone') }}
         </button>
-        <!-- The state it wants, not a toggle: a retry lands where the reader
-               meant rather than undoing itself. -->
+        <!-- Starring is about a listing, so only a listed document has the
+               control: the API answers for the starred set with the same
+               predicate the listings use. The state it wants, not a toggle —
+               a retry lands where the reader meant rather than undoing itself. -->
+        @if (isPublic()) {
         <button
           lgButton
           outlined
@@ -127,18 +139,21 @@
           >
           <span class="font-mono text-xs">{{ counts()?.stars }}</span>
         </button>
+        }
       </div>
 
-      <!-- Shares this page rather than the share landing page: a reader on a
-             published circuit wants to point at the one that can rank. -->
+      <!-- Handing the page on, which is handing on its address. Withheld while
+             the document is private: the link resolves for nobody but its
+             owner, so a share sheet or an embed snippet would be offering to
+             pass on a URL that opens nothing. -->
+      @if (hasLink()) {
       <web-share-controls
         class="mt-4 block"
         [url]="shareUrl()"
         [image]="cardUrl()"
         [title]="doc.name"
       />
-
-      @if (actionFailureKey(); as failure) {
+      } @if (actionFailureKey(); as failure) {
       <p class="mt-3 text-sm text-error" role="alert">{{ t(failure) }}</p>
       } @if (doc.forkedFrom; as parent) {
       <!-- Named even where the parent is no longer public: withholding the
@@ -172,6 +187,9 @@
     </p>
   </section>
 
+  <!-- Only a listed document has stargazers to list, so a document that is not
+         in the community says nothing about them rather than counting zero. -->
+  @if (isPublic()) {
   <section class="mt-8 border-t border-border pt-7">
     <h2 class="text-base font-semibold text-text-hover">
       {{ t('pages.community.stargazers.title') }}
@@ -188,5 +206,6 @@
     </a>
     }
   </section>
+  }
 </div>
 }

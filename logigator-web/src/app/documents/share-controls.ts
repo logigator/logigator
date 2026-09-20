@@ -40,8 +40,8 @@ const FORMAT_LABELS: Record<LgEmbedFormat, TranslationKey> = {
  * clipboard where there is not, and the snippet that puts it on somebody else's
  * page.
  *
- * One component for the three surfaces that offer this — a community page, a
- * shelf dialog and a share page — because the rules behind them are shared
+ * One component for the two surfaces that offer this — a document's own page
+ * and the shelf dialog — because the rules behind them are shared
  * (`@logigator/ui`'s `share` and `embed` modules) and only the markup is
  * per-app. Every URL is absolute by contract: what is copied is pasted
  * elsewhere, where a path would resolve against somebody else's host.
@@ -62,18 +62,15 @@ export class ShareControls {
   private readonly toast = inject(ToastService);
   private readonly translation = inject(TranslationService);
 
-  /** What a recipient lands on — the page this control belongs to, or the
-   * share page where the document has one that may not be published. */
+  /**
+   * What a recipient lands on, and what a snippet links to. One address, in
+   * every state: a document's link *is* its page, so there is nothing an embed
+   * could point at instead.
+   */
   readonly url = input.required<string>();
   /** The composed card, which is the only render that survives being unfurled. */
   readonly image = input.required<string>();
   readonly title = input.required<string>();
-  /**
-   * What an embed links to, when that is not {@link url}: a snippet is a link
-   * from somebody else's page, and on a published document it should land on
-   * the page that can rank rather than on one no crawler may index.
-   */
-  readonly embedUrl = input<string>('');
 
   protected readonly embedding = signal(false);
   protected readonly format = signal<LgEmbedFormat>(EMBED_FORMATS[0]);
@@ -98,7 +95,7 @@ export class ShareControls {
 
   protected readonly embed = computed(() =>
     embedSnippet(this.format(), {
-      url: this.embedUrl() || this.url(),
+      url: this.url(),
       image: this.image(),
       title: this.title()
     })

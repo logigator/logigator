@@ -84,12 +84,18 @@ export interface PageMeta {
    */
   jsonLd?: (context: JsonLdContext) => JsonLdNode[];
   /**
-   * Keeps the page out of an index while leaving it crawlable, for a URL that
-   * is an action rather than a document: the two carrying a one-shot mail
-   * token. `robots.txt` disallows them as well; this is what answers a fetcher
-   * that reads the markup anyway.
+   * Whether the page stays out of an index while remaining crawlable. A
+   * factory rather than a flag, for the reason `title` is one: a document's own
+   * page is a search result or not depending on what its guard resolved — an
+   * unlisted circuit somebody was handed the link to, and its owner's preview
+   * of a private one, are both pages that must not be found by following links
+   * out of one. Run after the guards, in the same injection context.
+   *
+   * `true` for a URL that is an action rather than a document: the two
+   * carrying a one-shot mail token. `robots.txt` disallows those as well; this
+   * is what answers a fetcher that reads the markup anyway.
    */
-  noindex?: true;
+  noindex?: () => boolean;
   /**
    * Whether the page is a step in a trail. On by default, since every page but
    * the home page is one level under it. Off for a page that must not name
@@ -193,9 +199,9 @@ export class SeoService {
       content: String(CARD_SIZE.height)
     });
 
-    // Crawlable, but not a search result: the page is an action, and its URL
-    // carries the token that performs it.
-    if (page.noindex) {
+    // Crawlable, but not a search result: the page is an action, or describes
+    // something its owner never put in front of the world.
+    if (this.isNoindex(page)) {
       this.meta.updateTag({ name: 'robots', content: 'noindex, follow' });
     } else {
       this.meta.removeTag('name="robots"');
@@ -277,6 +283,17 @@ export class SeoService {
     if (!read) return null;
     const value = runInInjectionContext(this.injector, read);
     return value?.trim() ? value : null;
+  }
+
+  /**
+   * Whether the page asks to be kept out of an index. Its own resolver rather
+   * than `fromPage`, whose blank-string rule is about text: a page that
+   * declares `false` has decided, and there is nothing to fall back to.
+   */
+  private isNoindex(page: PageMeta): boolean {
+    return page.noindex
+      ? runInInjectionContext(this.injector, page.noindex)
+      : false;
   }
 
   /**

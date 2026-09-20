@@ -16,7 +16,7 @@ function row(id: string, name: string): ProjectSummary {
     id,
     name,
     description: '',
-    public: false,
+    visibility: 'unlisted',
     link: id,
     version: 1,
     componentCount: 0,
@@ -81,13 +81,13 @@ describe('MyDocumentsService', () => {
   it('shows what a metadata write answered rather than re-reading the page', async () => {
     await resolveWith([row(ID_A, 'Half adder'), row(ID_B, 'Latch')]);
 
-    documents.applyPatch(ID_A, { name: 'Full adder', public: true });
+    documents.applyPatch(ID_A, { name: 'Full adder', visibility: 'public' });
 
     expect(documents.rows()?.map((entry) => entry.name)).toEqual([
       'Full adder',
       'Latch'
     ]);
-    expect(documents.rows()?.[0]?.public).toBe(true);
+    expect(documents.rows()?.[0]?.visibility).toBe('public');
     // A re-read would also re-sort the grid: a rename bumps the edit time.
     http.verify();
   });

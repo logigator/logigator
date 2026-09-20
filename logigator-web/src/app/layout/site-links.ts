@@ -1,5 +1,6 @@
 import { computed, inject, Injectable, Signal } from '@angular/core';
 import { DocPageId } from '@logigator/docs';
+import { documentPath } from '@logigator/ui';
 import { CommunityKind } from '../api/services/community-api.service';
 import { environment } from '../../environments/environment';
 import { pathInLanguage } from '../translation/language-url';
@@ -59,30 +60,33 @@ export class SiteLinks {
   }
 
   /**
-   * A published document's own page, addressed by its share link — the token
-   * is the address, so regenerating it takes the public page down with it.
+   * A document's own page, addressed by its share link — the token is the
+   * address rather than a grant, so what it resolves to is the state's business
+   * and regenerating it takes the page down with it.
+   *
+   * The path is `@logigator/ui`'s, the one the editor's share dialog hands out:
+   * a document's page is a URL two apps emit, so it is built in one place
+   * rather than spelled the same way twice.
    */
   public communityDocument(kind: CommunityKind, link: string): string {
-    return pathInLanguage(this.lang(), `/community/${kind}/${link}`);
+    return pathInLanguage(this.lang(), documentPath(kind, link));
   }
 
   public communityStargazers(kind: CommunityKind, link: string): string {
-    return pathInLanguage(this.lang(), `/community/${kind}/${link}/stargazers`);
+    return pathInLanguage(this.lang(), `${documentPath(kind, link)}/stargazers`);
   }
 
   /**
-   * Where a link somebody was handed lands: this site's page for it, in the
-   * sharer's language. The editor's own `/share/:link` route is where that
-   * page sends a reader — it is a destination, not an address to hand out, a
-   * static SPA shell being unable to carry a per-document card.
+   * The editor, opening a document by its share link — which it loads without
+   * a session, a link being what resolves it rather than the caller's account.
+   *
+   * The kind is the route's spelling, as it is in {@link communityDocument}:
+   * the two spellings of it are different types, so a caller cannot hand this
+   * the API's. The editor resolves the kind-free `/editor/share/{link}` the
+   * legacy editor minted as well, and rewrites such a URL to this one.
    */
-  public shareLanding(link: string): string {
-    return pathInLanguage(this.lang(), `/share/${link}`);
-  }
-
-  /** The share link is a capability, so this opens without a session. */
-  public editorShare(link: string): string {
-    return `${this.editor}/share/${link}`;
+  public editorShare(kind: CommunityKind, link: string): string {
+    return `${this.editor}/share/${kind}/${link}`;
   }
 
   /**
