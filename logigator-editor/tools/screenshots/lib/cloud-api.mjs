@@ -29,13 +29,19 @@ const USER = fixture('user', {
 const SHARE_LINK = 'b3cad62c-aa17-4f0e-9c2f-5a1d8e77c410';
 const CREATED_AT = '2026-01-04T12:00:00.000Z';
 
-/** The fields a listing and a single read share. */
+/**
+ * The fields a listing and a single read share. `visibility` and not the
+ * boolean it replaced: the summaries are parsed against the schema the editor
+ * validates its own reads with, where the field is one of three states and
+ * `public` is not a key at all — a fixture still carrying it fails to parse
+ * before the first shot is taken.
+ */
 function circuitFields(id, name, lastEditedAt, extra = {}) {
   return {
     id,
     name,
     description: '',
-    public: true,
+    visibility: 'public',
     link: SHARE_LINK,
     version: 1,
     componentCount: 0,
