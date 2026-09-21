@@ -4,6 +4,7 @@ import {
   inject,
   isDevMode,
   provideAppInitializer,
+  provideBrowserGlobalErrorListeners,
   provideZonelessChangeDetection
 } from '@angular/core';
 import { GlobalErrorHandler } from './logging/global-error-handler';
@@ -26,6 +27,13 @@ import {
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    // Without zone.js nothing patches `addEventListener`, so the editor's raw
+    // DOM listeners (PointerController), rAF and ticker callbacks, worker
+    // message handlers and timers never cross an Angular-managed boundary —
+    // their exceptions, and every unhandled rejection, would otherwise reach
+    // the console and nothing else. This is the `window` 'error' /
+    // 'unhandledrejection' bridge into `GlobalErrorHandler`.
+    provideBrowserGlobalErrorListeners(),
     { provide: ErrorHandler, useClass: GlobalErrorHandler },
     provideZonelessChangeDetection(),
     provideTransloco({

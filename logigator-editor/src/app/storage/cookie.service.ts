@@ -85,7 +85,16 @@ export class CookieService implements OnDestroy {
   /** Drops the cookie from the reactive map at once, as {@link set} does. */
   delete(name: string): void {
     if (this._hasCookieStore) {
-      void window.cookieStore.delete(name);
+      // Best-effort, like the reads above: `cookieStore.delete` rejects on a
+      // name the store refuses or a context it will not write in, and the
+      // caller has no recourse — the reactive map is dropped either way. Logged
+      // rather than left floating, which would now open a bug report.
+      window.cookieStore.delete(name).catch((e: unknown) => {
+        this.loggingService.error(
+          `Failed to delete cookie "${name}": ${e}`,
+          'CookieService'
+        );
+      });
     } else {
       document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
     }

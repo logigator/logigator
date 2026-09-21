@@ -12,6 +12,7 @@ import { TranslationService } from '../translation/translation.service';
 import { Project } from '../project/project';
 import { Action } from '../actions/action';
 import { environment } from '../../environments/environment';
+import { LoggingService } from '../logging/logging.service';
 import {
   AnalyticsEvent,
   operationProperties,
@@ -155,7 +156,14 @@ export class AnalyticsService {
     const granted =
       !!window.CookieConsent?.acceptedCategory(ANALYTICS_CATEGORY);
     if (granted && !this.initialized && environment.analytics.posthogKey) {
-      void this.initPosthog();
+      // The import failure is handled inside; what is left is PostHog's own
+      // `init`/`opt_in_capturing`, third-party code whose failure costs the
+      // session nothing but analytics. Logged rather than left floating: a
+      // rejection here would open the bug-report dialog on page load, over a
+      // sink the rest of this class already refuses to let break anything.
+      this.initPosthog().catch((err: unknown) =>
+        this.injector.get(LoggingService, null)?.error(err, 'AnalyticsService')
+      );
     } else if (this.initialized) {
       if (granted) {
         // Before opt-in, which synchronously emits `$opt_in` and the
