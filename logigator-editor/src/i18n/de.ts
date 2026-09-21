@@ -769,6 +769,8 @@ const de: TranslationSchema = {
     saveFailed: 'Speichern fehlgeschlagen: {{detail}}',
     saveFailedGeneric: 'Das Projekt konnte nicht gespeichert werden.',
     createFailed: 'Das Projekt konnte nicht erstellt werden: {{detail}}',
+    saveTooLarge:
+      'Diese Schaltung ist zu groß, um in der Cloud gespeichert zu werden — entferne einige Komponenten und versuche es erneut.',
     versionMismatch:
       'Dieses Projekt wurde anderswo geändert — lade neu, bevor du erneut speicherst.',
     loadFailed: 'Das Projekt konnte nicht geladen werden.',

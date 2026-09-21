@@ -769,6 +769,8 @@ const fr: TranslationSchema = {
     saveFailed: "Impossible d'enregistrer : {{detail}}",
     saveFailedGeneric: "Impossible d'enregistrer le projet.",
     createFailed: 'Impossible de créer le projet : {{detail}}',
+    saveTooLarge:
+      'Ce circuit est trop volumineux pour être enregistré dans le cloud — supprimez des composants et réessayez.',
     versionMismatch:
       "Ce projet a changé ailleurs — rechargez-le avant de l'enregistrer à nouveau.",
     loadFailed: 'Impossible de charger le projet.',

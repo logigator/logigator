@@ -689,6 +689,10 @@ export class ServerPersistenceGateway {
    * `unauthorized` means the server session is gone underneath a still-true
    * auth cookie — flip to signed-out and ask for a fresh login; the unsaved
    * changes stay dirty.
+   *
+   * `payload_too_large` is the request never reaching a handler: the circuit
+   * is past the size the API accepts, which is about the board rather than
+   * about this save, so the generic detail would say nothing.
    */
   private _reportSaveError(err: unknown): void {
     if (isApiError(err, 'unauthorized')) {
@@ -701,6 +705,12 @@ export class ServerPersistenceGateway {
     } else if (isApiError(err, 'version_conflict')) {
       this.toast.error(
         this.translation.translate('persistence.versionMismatch'),
+        'ServerPersistenceGateway',
+        err
+      );
+    } else if (isApiError(err, 'payload_too_large')) {
+      this.toast.error(
+        this.translation.translate('persistence.saveTooLarge'),
         'ServerPersistenceGateway',
         err
       );

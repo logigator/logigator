@@ -145,6 +145,8 @@ describe('ApiExceptionFilter', () => {
       400,
       'bad_request'
     ],
+    // The one the client can act on without reading `message`: the request
+    // never reached a handler, so nothing but the status says why.
     [
       'a body over the limit',
       {
@@ -154,7 +156,7 @@ describe('ApiExceptionFilter', () => {
         headers: { 'content-type': 'application/json' }
       },
       413,
-      'bad_request'
+      'payload_too_large'
     ],
     [
       'an unhandled defect',
@@ -168,7 +170,7 @@ describe('ApiExceptionFilter', () => {
       'a plugin error blaming the caller',
       { method: 'GET', url: '/probe/plugin-refusal' },
       413,
-      'bad_request'
+      'payload_too_large'
     ],
     [
       'a plugin error blaming the server',

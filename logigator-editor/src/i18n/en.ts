@@ -758,6 +758,8 @@ const en = {
     saveFailed: 'Could not save: {{detail}}',
     saveFailedGeneric: 'Could not save the project.',
     createFailed: 'Could not create the project: {{detail}}',
+    saveTooLarge:
+      'This circuit is too large to save to the cloud — remove some components and try again.',
     versionMismatch:
       'This project changed elsewhere — reload before saving again.',
     loadFailed: 'Could not load the project.',

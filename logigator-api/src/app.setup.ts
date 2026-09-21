@@ -8,11 +8,15 @@ import { registerSessionPlugins } from './session/session.plugin';
  * Fastify options derived from the environment. `trustProxy` names the proxies
  * in front of the process, so `request.ip` is the caller's address rather than
  * Caddy's — the rate limiter counts per address.
+ *
+ * `bodyLimit` is set because Fastify's own default is 1 MiB, which a large
+ * board exceeds: the parser refuses it before any handler, pipe or guard runs.
  */
 export function apiServerOptions(env: Env): FastifyServerOptions {
   return {
     logger: { level: env.LOG_LEVEL },
-    trustProxy: env.TRUST_PROXY
+    trustProxy: env.TRUST_PROXY,
+    bodyLimit: env.REQUEST_MAX_BYTES
   };
 }
 

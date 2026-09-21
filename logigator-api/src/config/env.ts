@@ -21,6 +21,25 @@ const variables = z.object({
   LOG_LEVEL: z
     .enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'])
     .default('info'),
+  /**
+   * Fastify's `bodyLimit`, for every route. It bounds the *decompressed* body
+   * and the raw one with the same number, so one value is the whole story and
+   * no route needs a limit of its own.
+   *
+   * 10 MiB is a ceiling worth keeping in view rather than a comfortable
+   * multiple: the largest board on hand, `rendering_bench.json`, is 5.42 MB of
+   * JSON (99,328 components), so a board twice that size is refused. One worth
+   * looking at before this is raised.
+   *
+   * It is *not* what governs an upload: a multipart file never meets
+   * `bodyLimit`, because `@fastify/multipart` registers a streaming parser and
+   * bounds each file by `UPLOAD_MAX_BYTES` below. The two move together.
+   */
+  REQUEST_MAX_BYTES: z.coerce
+    .number()
+    .int()
+    .min(1024)
+    .default(10 * 1024 * 1024),
 
   DATABASE_URL: z
     .string()
@@ -78,11 +97,16 @@ const variables = z.object({
    * resolve from the working directory.
    */
   STORAGE_DIR: z.string().min(1).default('data/storage'),
+  /**
+   * The largest file a multipart upload may carry, per file. This is the limit
+   * an avatar or a preview render actually meets — `REQUEST_MAX_BYTES` never
+   * sees one — so the two are raised together or an upload notices nothing.
+   */
   UPLOAD_MAX_BYTES: z.coerce
     .number()
     .int()
     .min(1024)
-    .default(5 * 1024 * 1024),
+    .default(10 * 1024 * 1024),
   /**
    * How long an asset directory no row points at survives the sweep. An upload
    * in flight is a directory nothing names *yet*, indistinguishable from an

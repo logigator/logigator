@@ -26,6 +26,12 @@ export const apiErrorCodeSchema = z.enum([
   /** Too many attempts in the current window. */
   'rate_limited',
   /**
+   * The request body exceeded the size the API accepts. Raised by the HTTP
+   * layer before any handler runs, so it says nothing about the document
+   * itself — the circuit has to get smaller, not more correct.
+   */
+  'payload_too_large',
+  /**
    * The document did not survive the format pipeline: structurally invalid, its
    * compact encodings do not decode, or it names components or option values
    * the catalog does not have. Never stored, so a stored document is always

@@ -766,6 +766,8 @@ const es: TranslationSchema = {
     saveFailed: 'No se pudo guardar: {{detail}}',
     saveFailedGeneric: 'No se pudo guardar el proyecto.',
     createFailed: 'No se pudo crear el proyecto: {{detail}}',
+    saveTooLarge:
+      'Este circuito es demasiado grande para guardarlo en la nube: elimina algunos componentes e inténtalo de nuevo.',
     versionMismatch:
       'Este proyecto cambió en otro sitio: recárgalo antes de volver a guardarlo.',
     loadFailed: 'No se pudo cargar el proyecto.',

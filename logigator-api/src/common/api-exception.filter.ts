@@ -20,6 +20,7 @@ const CODE_BY_STATUS = new Map<number, ApiErrorCode>([
   [HttpStatus.FORBIDDEN, 'forbidden'],
   [HttpStatus.NOT_FOUND, 'not_found'],
   [HttpStatus.CONFLICT, 'conflict'],
+  [HttpStatus.PAYLOAD_TOO_LARGE, 'payload_too_large'],
   [HttpStatus.UNPROCESSABLE_ENTITY, 'validation_failed'],
   [HttpStatus.TOO_MANY_REQUESTS, 'rate_limited'],
   [HttpStatus.SERVICE_UNAVAILABLE, 'service_unavailable']
