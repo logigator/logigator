@@ -73,7 +73,10 @@ export class SiteLinks {
   }
 
   public communityStargazers(kind: CommunityKind, link: string): string {
-    return pathInLanguage(this.lang(), `${documentPath(kind, link)}/stargazers`);
+    return pathInLanguage(
+      this.lang(),
+      `${documentPath(kind, link)}/stargazers`
+    );
   }
 
   /**
