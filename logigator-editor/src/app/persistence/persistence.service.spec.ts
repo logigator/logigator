@@ -1348,11 +1348,13 @@ describe('PersistenceService', () => {
 
       const movedId = Array.from(source.components)[0].id;
       source.actionManager.push(
-        new MoveComponentsAction({
-          id: movedId,
-          oldPos: new Point(2, 3),
-          newPos: new Point(9, 9)
-        })
+        new MoveComponentsAction([
+          {
+            id: movedId,
+            oldPos: new Point(2, 3),
+            newPos: new Point(9, 9)
+          }
+        ])
       );
       const sourceComponentIds = Array.from(source.components).map((c) => c.id);
       const sourceWireIds = Array.from(source.wires).map((w) => w.id);
@@ -1439,11 +1441,13 @@ describe('PersistenceService', () => {
         })
       );
       source.actionManager.push(
-        new MoveComponentsAction({
-          id: Array.from(source.components)[0].id,
-          oldPos: new Point(2, 3),
-          newPos: new Point(9, 9)
-        })
+        new MoveComponentsAction([
+          {
+            id: Array.from(source.components)[0].id,
+            oldPos: new Point(2, 3),
+            newPos: new Point(9, 9)
+          }
+        ])
       );
 
       // An id list that no longer lines up with the body.
@@ -1453,6 +1457,55 @@ describe('PersistenceService', () => {
 
       expect(Array.from(restored.components).length).toBe(1);
       expect(restored.actionManager.history.length).toBe(0);
+    });
+
+    it('restores a history entry with more moves than a spread call can carry', async () => {
+      // The dump is what the bug-report dialog attaches, so it is taken from
+      // exactly the boards big enough to have broken. 70,000 is above V8's
+      // `new F(...arr)` ceiling of 62,302, which is what used to make both the
+      // move itself and the restore of its dump throw `RangeError`.
+      const entryCount = 70_000;
+      const source = await service.importProjectFromJson(
+        JSON.stringify({
+          version: 1,
+          name: 'Dumpee',
+          components: [{ type: 1, pos: [2, 3], options: {} }],
+          wires: '',
+          definitions: []
+        })
+      );
+      const movedId = Array.from(source.components)[0].id;
+      // register, not push: only the first entry names a real component, and
+      // the point of the spec is the size the codec carries.
+      source.actionManager.register(
+        new MoveComponentsAction(
+          Array.from({ length: entryCount }, (_, i) => ({
+            id: i === 0 ? movedId : movedId + i,
+            oldPos: new Point(2, 3),
+            newPos: new Point(9, 9)
+          }))
+        )
+      );
+
+      const restored = await dumpService.importDump(
+        JSON.stringify(dumpService.buildDump(source))
+      );
+
+      expect(restored.actionManager.history.length).toBe(1);
+      const entry = restored.actionManager.history[0].serialize();
+      expect(entry.type).toBe('moveComponents');
+      expect(entry.type === 'moveComponents' ? entry.entries.length : -1).toBe(
+        entryCount
+      );
+
+      // The restored entries are live, not just counted: the one that names a
+      // real component drives it. `register` recorded without applying, so the
+      // undo leaves it where it is and the redo is what has to move it.
+      const moved = restored.getComponentById(movedId)!;
+      restored.actionManager.undo();
+      expect([moved.position.x, moved.position.y]).toEqual([2, 3]);
+      restored.actionManager.redo();
+      expect([moved.position.x, moved.position.y]).toEqual([9, 9]);
     });
   });
 

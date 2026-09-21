@@ -817,11 +817,13 @@ describe('Project selection grab rect', () => {
     const before = show.mock.calls.at(-1)![0] as Rectangle;
 
     project.actionManager.push(
-      new MoveComponentsAction({
-        id: comp.id,
-        oldPos: new Point(3, 3),
-        newPos: new Point(10, 3)
-      })
+      new MoveComponentsAction([
+        {
+          id: comp.id,
+          oldPos: new Point(3, 3),
+          newPos: new Point(10, 3)
+        }
+      ])
     );
     const moved = show.mock.calls.at(-1)![0] as Rectangle;
     expect(moved.x).toBe(before.x + 7);

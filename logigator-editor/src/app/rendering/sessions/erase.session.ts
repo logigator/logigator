@@ -61,13 +61,13 @@ export class EraseSession implements DragSession {
 
     const action = new ActionContainer();
     if (this._deletedComponents.length > 0) {
-      action.add(new RemoveComponentsAction(...this._deletedComponents));
+      action.add(new RemoveComponentsAction(this._deletedComponents));
     }
     if (this._deletedWires.length > 0) {
-      action.add(new RemoveWiresAction(...this._deletedWires));
+      action.add(new RemoveWiresAction(this._deletedWires));
     }
-    if (toRemove.length > 0) action.add(new RemoveWiresAction(...toRemove));
-    if (toAdd.length > 0) action.add(new AddWiresAction(...toAdd));
+    if (toRemove.length > 0) action.add(new RemoveWiresAction(toRemove));
+    if (toAdd.length > 0) action.add(new AddWiresAction(toAdd));
 
     for (const w of toRemove) this.project.removeWire(w.id);
     for (const w of toAdd) this.project.addWire(w);

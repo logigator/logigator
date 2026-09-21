@@ -125,7 +125,7 @@ export class ActionManager {
     this._history.splice(
       this._pointer - 1,
       Infinity,
-      new ActionContainer(expectedTop, next)
+      new ActionContainer([expectedTop, next])
     );
     this._pointer = this._history.length;
     this.logging.debug(

@@ -23,7 +23,7 @@ export interface RotateComponentEntry {
 export class RotateComponentsAction extends Action {
   private readonly _entries: RotateComponentEntry[];
 
-  constructor(...entries: RotateComponentEntry[]) {
+  constructor(entries: readonly RotateComponentEntry[]) {
     super();
     this._entries = entries.map((e) => ({
       ...e,

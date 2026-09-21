@@ -189,11 +189,11 @@ export function applyEditOps(
     // Actions snapshot in their constructors, so each is built while the
     // project still holds the state that action reverts to.
     if (toRemove.length > 0) {
-      container.add(new RemoveWiresAction(...toRemove));
+      container.add(new RemoveWiresAction(toRemove));
     }
     place();
     if (toAdd.length > 0) {
-      container.add(new AddWiresAction(...toAdd));
+      container.add(new AddWiresAction(toAdd));
     }
     for (const wire of toRemove) {
       integrated.removed.push(wire.id);
@@ -282,7 +282,7 @@ export function applyEditOps(
             addedComponentPorts: component.connectionPoints
           });
           commitIntegration(toAdd, toRemove, () => {
-            container.add(new AddComponentsAction(component));
+            container.add(new AddComponentsAction([component]));
             project.addComponent(component);
           });
           createdIds.push({ index, componentId: component.id });
@@ -334,13 +334,13 @@ export function applyEditOps(
           });
           const requested = new Set(wires.map((w) => w.id));
           if (components.length > 0) {
-            container.add(new RemoveComponentsAction(...components));
+            container.add(new RemoveComponentsAction(components));
           }
           if (toRemove.length > 0) {
-            container.add(new RemoveWiresAction(...toRemove));
+            container.add(new RemoveWiresAction(toRemove));
           }
           if (toAdd.length > 0) {
-            container.add(new AddWiresAction(...toAdd));
+            container.add(new AddWiresAction(toAdd));
           }
           for (const component of components) {
             project.removeComponent(component.id);
@@ -366,11 +366,13 @@ export function applyEditOps(
 
           const oldPorts = component.connectionPoints;
           container.add(
-            new MoveComponentsAction({
-              id: component.id,
-              oldPos,
-              newPos: target
-            })
+            new MoveComponentsAction([
+              {
+                id: component.id,
+                oldPos,
+                newPos: target
+              }
+            ])
           );
           project.moveComponent(component.id, target);
           const { toAdd, toRemove } = project.topology.integrate({
@@ -403,7 +405,7 @@ export function applyEditOps(
           }
           const oldSnapshot = Wire.snapshot(wire);
           container.add(
-            new MoveWiresAction({ id: wire.id, oldPos, newPos: target })
+            new MoveWiresAction([{ id: wire.id, oldPos, newPos: target }])
           );
           project.moveWire(wire.id, target);
           const { toAdd, toRemove } = project.topology.integrate({
@@ -461,13 +463,15 @@ export function applyEditOps(
 
           const oldPorts = component.connectionPoints;
           container.add(
-            new RotateComponentsAction({
-              id: component.id,
-              oldPos: component.position.clone(),
-              newPos,
-              oldDirection: component.direction,
-              newDirection
-            })
+            new RotateComponentsAction([
+              {
+                id: component.id,
+                oldPos: component.position.clone(),
+                newPos,
+                oldDirection: component.direction,
+                newDirection
+              }
+            ])
           );
           // rotateComponent unindexes around the direction write, keeping the
           // project's own non-undoable integration out of the way so the

@@ -148,10 +148,10 @@ export class WireRepairService {
     // materializing and register against the applied state.
     const action = new ActionContainer();
     if (plan.removeWires.length > 0) {
-      action.add(new RemoveWiresAction(...plan.removeWires));
+      action.add(new RemoveWiresAction(plan.removeWires));
     }
     if (plan.addWires.length > 0) {
-      action.add(new AddWiresAction(...plan.addWires));
+      action.add(new AddWiresAction(plan.addWires));
     }
     this.materialize(project, plan);
     project.actionManager.register(action);

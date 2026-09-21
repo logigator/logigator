@@ -103,9 +103,9 @@ export class WireToolSession implements DragSession {
       // the project directly and the action registers against that state.
       const action = new ActionContainer();
       if (toRemove.length > 0) {
-        action.add(new RemoveWiresAction(...toRemove));
+        action.add(new RemoveWiresAction(toRemove));
       }
-      action.add(new AddWiresAction(...toAdd));
+      action.add(new AddWiresAction(toAdd));
 
       for (const w of toRemove) this.project.removeWire(w.id);
       // addWire re-parents a survived wire out of the drag layer, so cleanup

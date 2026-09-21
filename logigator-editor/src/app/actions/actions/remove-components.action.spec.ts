@@ -34,7 +34,7 @@ describe('RemoveComponentsAction', () => {
       const comp = makeAnd();
       compsToDestroy.push(comp);
       const compId = comp.id;
-      const action = new RemoveComponentsAction(comp);
+      const action = new RemoveComponentsAction([comp]);
 
       action.do(project);
 
@@ -49,7 +49,7 @@ describe('RemoveComponentsAction', () => {
       const id1 = comp1.id;
       const id2 = comp2.id;
       compsToDestroy.push(comp1, comp2);
-      const action = new RemoveComponentsAction(comp1, comp2);
+      const action = new RemoveComponentsAction([comp1, comp2]);
 
       action.do(project);
 
@@ -61,7 +61,7 @@ describe('RemoveComponentsAction', () => {
     it('does not call addComponent during do()', () => {
       const comp = makeAnd();
       compsToDestroy.push(comp);
-      const action = new RemoveComponentsAction(comp);
+      const action = new RemoveComponentsAction([comp]);
 
       action.do(project);
 
@@ -69,7 +69,7 @@ describe('RemoveComponentsAction', () => {
     });
 
     it('does not call removeComponent when constructed with no components', () => {
-      const action = new RemoveComponentsAction();
+      const action = new RemoveComponentsAction([]);
 
       expect(() => action.do(project)).not.toThrow();
       expect(project.removeComponent).not.toHaveBeenCalled();
@@ -80,7 +80,7 @@ describe('RemoveComponentsAction', () => {
     it('calls addComponent once for a single component', () => {
       const comp = makeAnd();
       compsToDestroy.push(comp);
-      const action = new RemoveComponentsAction(comp);
+      const action = new RemoveComponentsAction([comp]);
 
       action.undo(project);
 
@@ -90,7 +90,7 @@ describe('RemoveComponentsAction', () => {
     it('calls addComponent with an AndComponent instance', () => {
       const comp = makeAnd();
       compsToDestroy.push(comp);
-      const action = new RemoveComponentsAction(comp);
+      const action = new RemoveComponentsAction([comp]);
 
       action.undo(project);
 
@@ -104,7 +104,7 @@ describe('RemoveComponentsAction', () => {
       const comp2 = makeAnd();
       const comp3 = makeAnd();
       compsToDestroy.push(comp1, comp2, comp3);
-      const action = new RemoveComponentsAction(comp1, comp2, comp3);
+      const action = new RemoveComponentsAction([comp1, comp2, comp3]);
 
       action.undo(project);
 
@@ -114,7 +114,7 @@ describe('RemoveComponentsAction', () => {
     it('does not call removeComponent during undo()', () => {
       const comp = makeAnd();
       compsToDestroy.push(comp);
-      const action = new RemoveComponentsAction(comp);
+      const action = new RemoveComponentsAction([comp]);
 
       action.undo(project);
 
@@ -122,7 +122,7 @@ describe('RemoveComponentsAction', () => {
     });
 
     it('does not call addComponent when constructed with no components', () => {
-      const action = new RemoveComponentsAction();
+      const action = new RemoveComponentsAction([]);
 
       expect(() => action.undo(project)).not.toThrow();
       expect(project.addComponent).not.toHaveBeenCalled();
@@ -150,7 +150,7 @@ describe('RemoveComponentsAction negation round-trip', () => {
     const id = and.id;
 
     // The action snapshots the component, negation included, at construction.
-    project.actionManager.push(new RemoveComponentsAction(and));
+    project.actionManager.push(new RemoveComponentsAction([and]));
     expect(project.getComponentById(id)).toBeUndefined();
 
     project.actionManager.undo();

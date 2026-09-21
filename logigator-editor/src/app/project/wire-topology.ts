@@ -79,8 +79,8 @@ export class WireTopology {
 
     const action = new ActionContainer();
     if (plan.toRemove.length > 0)
-      action.add(new RemoveWiresAction(...plan.toRemove));
-    if (plan.toAdd.length > 0) action.add(new AddWiresAction(...plan.toAdd));
+      action.add(new RemoveWiresAction(plan.toRemove));
+    if (plan.toAdd.length > 0) action.add(new AddWiresAction(plan.toAdd));
     plan.discard();
     this.project.actionManager.push(action);
     return action;
@@ -112,12 +112,12 @@ export class WireTopology {
     const removedWires: Wire[] = [];
 
     if (hWires.length === 2) {
-      removedWires.push(...hWires);
+      for (const w of hWires) removedWires.push(w);
       addedWires.push(Wire.merge(hWires[0], hWires[1]));
     }
 
     if (vWires.length === 2) {
-      removedWires.push(...vWires);
+      for (const w of vWires) removedWires.push(w);
       addedWires.push(Wire.merge(vWires[0], vWires[1]));
     }
 
@@ -186,8 +186,8 @@ export class WireTopology {
     });
 
     const action = new ActionContainer();
-    if (toRemove.length > 0) action.add(new RemoveWiresAction(...toRemove));
-    if (toAdd.length > 0) action.add(new AddWiresAction(...toAdd));
+    if (toRemove.length > 0) action.add(new RemoveWiresAction(toRemove));
+    if (toAdd.length > 0) action.add(new AddWiresAction(toAdd));
     // The halves and whatever integration built on them are throwaway: the
     // actions snapshot their wires on construction and push() puts fresh
     // instances in the project. toRemove holds live tree wires; leave those.

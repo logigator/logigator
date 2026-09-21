@@ -488,7 +488,7 @@ describe('SelectionMoveSession collision', () => {
       // An unrelated history entry clears the selection and retracts the cut
       // first, so no orphaned split stays behind it.
       project.actionManager.push(
-        new AddWiresAction(makeWire(0, 20, WireDirection.HORIZONTAL, 2))
+        new AddWiresAction([makeWire(0, 20, WireDirection.HORIZONTAL, 2)])
       );
 
       expect(project.selectionManager.hasLiveCut).toBe(false);

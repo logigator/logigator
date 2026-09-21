@@ -262,8 +262,10 @@ export class BoardCompilerService {
     nets.forEach((net, netIndex) => {
       const link = linkOfClass.get(ctx.uf.find(netNodes[netIndex]));
       if (link === undefined) return;
-      targets[link].wires.push(...net.wires);
-      targets[link].ports.push(...net.ports);
+      // Plain loops, not `push(...net.wires)`: one net on a large board can
+      // hold more wires than a spread call has argument slots.
+      for (const wire of net.wires) targets[link].wires.push(wire);
+      for (const port of net.ports) targets[link].ports.push(port);
     });
     // LED-matrix cells map back onto their component as pseudo-ports past the
     // input range (row-major), so the standard applier lights them.

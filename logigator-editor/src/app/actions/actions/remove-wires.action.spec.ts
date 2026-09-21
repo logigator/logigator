@@ -32,7 +32,7 @@ describe('RemoveWiresAction', () => {
       const wire = new Wire(WireDirection.HORIZONTAL, 3);
       wiresToDestroy.push(wire);
       const wireId = wire.id;
-      const action = new RemoveWiresAction(wire);
+      const action = new RemoveWiresAction([wire]);
 
       action.do(project);
 
@@ -47,7 +47,7 @@ describe('RemoveWiresAction', () => {
       wiresToDestroy.push(wire1, wire2);
       const id1 = wire1.id;
       const id2 = wire2.id;
-      const action = new RemoveWiresAction(wire1, wire2);
+      const action = new RemoveWiresAction([wire1, wire2]);
 
       action.do(project);
 
@@ -59,7 +59,7 @@ describe('RemoveWiresAction', () => {
     it('does not call addWire during do()', () => {
       const wire = new Wire(WireDirection.HORIZONTAL, 3);
       wiresToDestroy.push(wire);
-      const action = new RemoveWiresAction(wire);
+      const action = new RemoveWiresAction([wire]);
 
       action.do(project);
 
@@ -67,7 +67,7 @@ describe('RemoveWiresAction', () => {
     });
 
     it('does not call removeWire when constructed with no wires', () => {
-      const action = new RemoveWiresAction();
+      const action = new RemoveWiresAction([]);
 
       expect(() => action.do(project)).not.toThrow();
       expect(project.removeWire).not.toHaveBeenCalled();
@@ -78,7 +78,7 @@ describe('RemoveWiresAction', () => {
     it('calls addWire once for a single wire', () => {
       const wire = new Wire(WireDirection.HORIZONTAL, 3);
       wiresToDestroy.push(wire);
-      const action = new RemoveWiresAction(wire);
+      const action = new RemoveWiresAction([wire]);
 
       action.undo(project);
 
@@ -88,7 +88,7 @@ describe('RemoveWiresAction', () => {
     it('calls addWire with a Wire instance', () => {
       const wire = new Wire(WireDirection.HORIZONTAL, 3);
       wiresToDestroy.push(wire);
-      const action = new RemoveWiresAction(wire);
+      const action = new RemoveWiresAction([wire]);
 
       action.undo(project);
 
@@ -100,7 +100,7 @@ describe('RemoveWiresAction', () => {
       const wire2 = new Wire(WireDirection.VERTICAL, 5);
       const wire3 = new Wire(WireDirection.HORIZONTAL, 2);
       wiresToDestroy.push(wire1, wire2, wire3);
-      const action = new RemoveWiresAction(wire1, wire2, wire3);
+      const action = new RemoveWiresAction([wire1, wire2, wire3]);
 
       action.undo(project);
 
@@ -110,7 +110,7 @@ describe('RemoveWiresAction', () => {
     it('does not call removeWire during undo()', () => {
       const wire = new Wire(WireDirection.HORIZONTAL, 3);
       wiresToDestroy.push(wire);
-      const action = new RemoveWiresAction(wire);
+      const action = new RemoveWiresAction([wire]);
 
       action.undo(project);
 
@@ -118,7 +118,7 @@ describe('RemoveWiresAction', () => {
     });
 
     it('does not call addWire when constructed with no wires', () => {
-      const action = new RemoveWiresAction();
+      const action = new RemoveWiresAction([]);
 
       expect(() => action.undo(project)).not.toThrow();
       expect(project.addWire).not.toHaveBeenCalled();

@@ -12,9 +12,9 @@ import { Component } from '../../components/component';
  */
 export class UpdateInstanceAction extends ActionContainer {
   constructor(oldInstance: Component, newInstance: Component) {
-    super(
-      new RemoveComponentsAction(oldInstance),
-      new AddComponentsAction(newInstance)
-    );
+    super([
+      new RemoveComponentsAction([oldInstance]),
+      new AddComponentsAction([newInstance])
+    ]);
   }
 }

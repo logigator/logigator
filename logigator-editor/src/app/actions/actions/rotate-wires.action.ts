@@ -22,7 +22,7 @@ export interface RotateWireEntry {
 export class RotateWiresAction extends Action {
   private readonly _entries: RotateWireEntry[];
 
-  constructor(...entries: RotateWireEntry[]) {
+  constructor(entries: readonly RotateWireEntry[]) {
     super();
     this._entries = entries.map((e) => ({
       ...e,

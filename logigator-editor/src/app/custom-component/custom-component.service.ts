@@ -487,7 +487,7 @@ export class CustomComponentService {
     const actions = instances
       .map((instance) => this.buildInstanceUpdate(instance))
       .filter((action): action is Action => action !== null);
-    return actions.length > 0 ? new ActionContainer(...actions) : null;
+    return actions.length > 0 ? new ActionContainer(actions) : null;
   }
 
   /**

@@ -16,7 +16,7 @@ export interface PlugReorderEntry {
 export class ReorderPlugsAction extends ActionContainer {
   constructor(entries: PlugReorderEntry[]) {
     super(
-      ...entries
+      entries
         .filter((entry) => entry.oldIndex !== entry.newIndex)
         .map(
           (entry) =>

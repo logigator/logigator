@@ -29,25 +29,23 @@ import { getStaticDI } from '../utils/get-di';
 export function deserializeAction(dto: SerializedAction): Action {
   switch (dto.type) {
     case 'addComponents':
-      return new AddComponentsAction(...dto.components);
+      return new AddComponentsAction(dto.components);
     case 'removeComponents':
-      return new RemoveComponentsAction(...dto.components);
+      return new RemoveComponentsAction(dto.components);
     case 'addWires':
-      return new AddWiresAction(...dto.wires);
+      return new AddWiresAction(dto.wires);
     case 'removeWires':
-      return new RemoveWiresAction(...dto.wires);
+      return new RemoveWiresAction(dto.wires);
     case 'moveComponents':
-      return new MoveComponentsAction(...deserializeMoveEntries(dto.entries));
+      return new MoveComponentsAction(deserializeMoveEntries(dto.entries));
     case 'moveWires':
-      return new MoveWiresAction(...deserializeMoveEntries(dto.entries));
+      return new MoveWiresAction(deserializeMoveEntries(dto.entries));
     case 'rotateComponents':
       return new RotateComponentsAction(
-        ...deserializeRotateComponentEntries(dto.entries)
+        deserializeRotateComponentEntries(dto.entries)
       );
     case 'rotateWires':
-      return new RotateWiresAction(
-        ...deserializeRotateWireEntries(dto.entries)
-      );
+      return new RotateWiresAction(deserializeRotateWireEntries(dto.entries));
     case 'changeOption':
       return new ChangeOptionAction(
         dto.componentId,
@@ -63,7 +61,7 @@ export function deserializeAction(dto: SerializedAction): Action {
         dto.negated
       );
     case 'container':
-      return new ActionContainer(...dto.actions.map(deserializeAction));
+      return new ActionContainer(dto.actions.map(deserializeAction));
     default:
       // Fail at parse time rather than leak `undefined` into the restored
       // stack, which would crash on the next undo/redo.

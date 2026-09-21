@@ -161,9 +161,9 @@ export class ClipboardService {
 
     // The constructors capture positions eagerly, so build before removing.
     if (components.length > 0)
-      container.add(new RemoveComponentsAction(...components));
-    if (toRemove.length > 0) container.add(new RemoveWiresAction(...toRemove));
-    if (toAdd.length > 0) container.add(new AddWiresAction(...toAdd));
+      container.add(new RemoveComponentsAction(components));
+    if (toRemove.length > 0) container.add(new RemoveWiresAction(toRemove));
+    if (toAdd.length > 0) container.add(new AddWiresAction(toAdd));
 
     for (const c of components) project.removeComponent(c.id);
     for (const w of toRemove) project.removeWire(w.id);

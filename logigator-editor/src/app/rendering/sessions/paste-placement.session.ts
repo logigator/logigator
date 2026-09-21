@@ -201,13 +201,13 @@ export class PastePlacementSession implements DragSession {
     // Actions serialize state in their constructors, so build before mutating.
     const action = new ActionContainer();
     if (toRemove.length > 0) {
-      action.add(new RemoveWiresAction(...toRemove));
+      action.add(new RemoveWiresAction(toRemove));
     }
     if (this._components.length > 0) {
-      action.add(new AddComponentsAction(...this._components));
+      action.add(new AddComponentsAction(this._components));
     }
     if (toAdd.length > 0) {
-      action.add(new AddWiresAction(...toAdd));
+      action.add(new AddWiresAction(toAdd));
     }
 
     for (const w of toRemove) this._project.removeWire(w.id);

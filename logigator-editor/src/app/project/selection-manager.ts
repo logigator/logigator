@@ -143,10 +143,10 @@ export class SelectionManager {
       // materialized state so the inside piece is a live selectable Wire. A
       // move/delete commit coalesces it in; cancelling retracts it. Built
       // before the mutations so its snapshots hold the pre-cut geometry.
-      const cut = new ActionContainer(
-        new RemoveWiresAction(...wiresToCut.map((w) => Wire.serialize(w))),
-        new AddWiresAction(...newPieces.map((w) => Wire.serialize(w)))
-      );
+      const cut = new ActionContainer([
+        new RemoveWiresAction(wiresToCut.map((w) => Wire.serialize(w))),
+        new AddWiresAction(newPieces.map((w) => Wire.serialize(w)))
+      ]);
 
       // Match the action order so the CP manager and quad tree see the same
       // transitions as undo/redo do.

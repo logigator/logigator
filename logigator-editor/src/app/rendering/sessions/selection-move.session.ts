@@ -344,7 +344,7 @@ export class SelectionMoveSession implements DragSession {
       if (hasRotation) {
         action.add(
           new RotateComponentsAction(
-            ...this._components.map((c) => ({
+            this._components.map((c) => ({
               id: c.id,
               oldPos: this._componentOldPos.get(c.id)!,
               newPos: c.position.clone(),
@@ -359,7 +359,7 @@ export class SelectionMoveSession implements DragSession {
           oldPos: this._componentOldPos.get(c.id)!,
           newPos: c.position.clone()
         }));
-        action.add(new MoveComponentsAction(...componentEntries));
+        action.add(new MoveComponentsAction(componentEntries));
       }
     }
 
@@ -370,7 +370,7 @@ export class SelectionMoveSession implements DragSession {
       if (hasRotation) {
         action.add(
           new RotateWiresAction(
-            ...survived.map((w) => {
+            survived.map((w) => {
               const snap = this._wireSnapshotsById.get(w.id)!;
               return {
                 id: w.id,
@@ -391,7 +391,7 @@ export class SelectionMoveSession implements DragSession {
             newPos: w.position.clone()
           };
         });
-        action.add(new MoveWiresAction(...entries));
+        action.add(new MoveWiresAction(entries));
       }
     };
 
@@ -412,12 +412,12 @@ export class SelectionMoveSession implements DragSession {
       );
 
       action.add(
-        new RemoveWiresAction(
+        new RemoveWiresAction([
           ...movedAndChangedSnapshots,
           ...externalAbsorbedSnapshots
-        )
+        ])
       );
-      action.add(new AddWiresAction(...toAdd));
+      action.add(new AddWiresAction(toAdd));
     } else {
       addSurvivedWireActions(this._wires);
     }

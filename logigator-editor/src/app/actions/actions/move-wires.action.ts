@@ -6,7 +6,7 @@ import { SerializedAction } from '../serialized-action.model';
 export class MoveWiresAction extends Action {
   private readonly _entries: MoveEntry[];
 
-  constructor(...entries: MoveEntry[]) {
+  constructor(entries: readonly MoveEntry[]) {
     super();
     this._entries = entries.map((e) => ({
       id: e.id,

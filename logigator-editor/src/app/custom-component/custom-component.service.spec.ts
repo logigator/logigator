@@ -187,7 +187,7 @@ describe('CustomComponentService', () => {
     });
     const masterTypeId = masterTypeIdOf(editor);
 
-    editor.actionManager.push(new AddComponentsAction(makeInput(0)));
+    editor.actionManager.push(new AddComponentsAction([makeInput(0)]));
     vi.advanceTimersByTime(1);
 
     expect(registry.getDefinition(masterTypeId)?.numInputs).toBe(1);
@@ -330,7 +330,7 @@ describe('CustomComponentService', () => {
     // Dirty tracking is off, so a tab that can never be saved cannot arm the
     // unsaved-changes prompt.
     tab.addComponent(makeInput(0));
-    tab.actionManager.push(new AddComponentsAction(makeInput(1)));
+    tab.actionManager.push(new AddComponentsAction([makeInput(1)]));
     expect(metadataStore.isDirty(tab)).toBe(false);
   });
 
@@ -413,7 +413,7 @@ describe('CustomComponentService', () => {
 
   it('a ChangeOptionAction marks the project dirty and undo reverts the value', () => {
     const input = makeInput(0);
-    main.actionManager.push(new AddComponentsAction(input));
+    main.actionManager.push(new AddComponentsAction([input]));
     const placed = [...main.components].find(
       (c): c is InputComponent => c instanceof InputComponent
     )!;
@@ -444,12 +444,12 @@ describe('CustomComponentService', () => {
     });
     const masterTypeId = masterTypeIdOf(editor);
 
-    editor.actionManager.push(new AddComponentsAction(makeInput(0)));
+    editor.actionManager.push(new AddComponentsAction([makeInput(0)]));
     vi.advanceTimersByTime(1);
     const instance = placeInstance(masterTypeId, main);
     expect(instance.numInputs).toBe(1);
 
-    editor.actionManager.push(new AddComponentsAction(makeInput(1)));
+    editor.actionManager.push(new AddComponentsAction([makeInput(1)]));
     vi.advanceTimersByTime(1);
     expect(registry.getDefinition(masterTypeId)?.numInputs).toBe(2);
     expect(instance.numInputs).toBe(1);
@@ -464,11 +464,11 @@ describe('CustomComponentService', () => {
     });
     const masterTypeId = masterTypeIdOf(editor);
 
-    editor.actionManager.push(new AddComponentsAction(makeInput(0)));
+    editor.actionManager.push(new AddComponentsAction([makeInput(0)]));
     vi.advanceTimersByTime(1);
     const instance = placeInstance(masterTypeId, main);
 
-    editor.actionManager.push(new AddComponentsAction(makeInput(1)));
+    editor.actionManager.push(new AddComponentsAction([makeInput(1)]));
     vi.advanceTimersByTime(1);
 
     const action = service.buildInstanceUpdate(instance)!;
@@ -496,13 +496,13 @@ describe('CustomComponentService', () => {
     });
     const masterTypeId = masterTypeIdOf(editor);
 
-    editor.actionManager.push(new AddComponentsAction(makeInput(0)));
+    editor.actionManager.push(new AddComponentsAction([makeInput(0)]));
     vi.advanceTimersByTime(1);
     const first = placeInstance(masterTypeId, main);
     const second = placeInstance(masterTypeId, main);
     const staleType = first.config.type;
 
-    editor.actionManager.push(new AddComponentsAction(makeInput(1)));
+    editor.actionManager.push(new AddComponentsAction([makeInput(1)]));
     vi.advanceTimersByTime(1);
 
     main.actionManager.push(service.buildInstancesUpdate([first, second])!);

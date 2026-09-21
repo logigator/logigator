@@ -149,7 +149,7 @@ describe('OutdatedInstancesService', () => {
     expect(service.countFor(master)).toBe(1);
 
     const config = provider.getComponent(stale.config.type)!;
-    main.actionManager.push(new AddComponentsAction(config.create({})));
+    main.actionManager.push(new AddComponentsAction([config.create({})]));
     expect(service.countFor(master)).toBe(2);
   });
 
