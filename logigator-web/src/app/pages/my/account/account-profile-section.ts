@@ -11,6 +11,7 @@ import {
   ReactiveFormsModule,
   Validators
 } from '@angular/forms';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { firstValueFrom, Observable } from 'rxjs';
 import {
   ApiRequestError,
@@ -26,6 +27,7 @@ import {
   LgButton,
   LgFormField,
   LgInputText,
+  LgMarkdownField,
   LgMessage,
   LgTextarea
 } from '@logigator/ui';
@@ -73,6 +75,7 @@ const LINK_FIELDS = ['link0', 'link1', 'link2'] as const;
     LgButton,
     LgFormField,
     LgInputText,
+    LgMarkdownField,
     LgMessage,
     LgTextarea,
     ReactiveFormsModule,
@@ -116,6 +119,15 @@ export class AccountProfileSection {
     name,
     error: fieldError(this.form.controls[name], 'url')
   }));
+
+  /**
+   * What the field's counter and preview read. A signal rather than
+   * `controls.bio.value`, which is a plain getter nothing re-reads when a save
+   * writes the trimmed bio back through `redraw`.
+   */
+  protected readonly bio = toSignal(this.form.controls.bio.valueChanges, {
+    initialValue: this.session.user()?.bio ?? ''
+  });
 
   protected readonly usernameError = fieldError(
     this.form.controls.username,

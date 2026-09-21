@@ -52,7 +52,7 @@ export class EditDetailsActionComponent {
     if (!resolved) return;
     this.dialogService.open(EditComponentDetailsDialogComponent, {
       header: this.translation.translate('editComponentDetails.header'),
-      width: '28rem',
+      width: '36rem',
       modal: true,
       closable: true,
       telemetryId: DialogId.ComponentDetails,

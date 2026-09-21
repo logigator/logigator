@@ -355,3 +355,75 @@ describe('LgMarkdown match marking', () => {
     expect(() => fixture.detectChanges()).not.toThrow();
   });
 });
+
+describe('LgMarkdown user content', () => {
+  @Component({
+    imports: [LgMarkdown],
+    template: `<lg-markdown [data]="data()" userContent />`
+  })
+  class UserHost {
+    readonly data = signal('');
+  }
+
+  function render(source: string) {
+    TestBed.configureTestingModule({ providers: [provideMarkdown()] });
+    const fixture = TestBed.createComponent(UserHost);
+    fixture.componentInstance.data.set(source);
+    fixture.detectChanges();
+    return fixture;
+  }
+
+  it('renders synchronously, so a server render carries the prose', () => {
+    // No `whenStable`, no timeout: one change detection and the text is there.
+    // The authored branch cannot promise this — ngx-markdown parses in a
+    // promise — and it is what puts a member's bio in the first byte.
+    const fixture = render('A **four-bit** adder.');
+    const host = fixture.nativeElement as HTMLElement;
+
+    expect(host.querySelector('strong')?.textContent).toBe('four-bit');
+  });
+
+  it('shows raw HTML as text and emits no live markup', () => {
+    const fixture = render('<img src=x onerror="alert(1)"> and <b>bold</b>');
+    const host = fixture.nativeElement as HTMLElement;
+
+    expect(host.querySelector('img')).toBeNull();
+    expect(host.querySelector('b')).toBeNull();
+    expect(host.textContent).toContain('<b>bold</b>');
+  });
+
+  it('marks a link as a visitor’s in the markup a crawler reads', () => {
+    const fixture = render('[docs](https://example.com)');
+    const anchor = (fixture.nativeElement as HTMLElement).querySelector('a');
+
+    expect(anchor?.getAttribute('rel')).toBe(
+      'nofollow ugc noopener noreferrer'
+    );
+    expect(anchor?.getAttribute('target')).toBe('_blank');
+  });
+
+  it('leaves the authored branch alone', async () => {
+    // The same string through the default path keeps ngx-markdown's own
+    // rendering, so the manual's own links are not marked as a stranger's.
+    @Component({
+      imports: [LgMarkdown],
+      template: `<lg-markdown [data]="data" />`
+    })
+    class AuthoredHost {
+      data = '[docs](https://example.com)';
+    }
+    TestBed.configureTestingModule({ providers: [provideMarkdown()] });
+    const fixture = TestBed.createComponent(AuthoredHost);
+    fixture.detectChanges();
+    // Awaited, where the user-content branch above is not: ngx-markdown
+    // resolves a promise before it writes, which is the whole reason the
+    // authored path could not be reused for text a server render must carry.
+    await fixture.whenStable();
+    await new Promise((resolve) => setTimeout(resolve));
+    fixture.detectChanges();
+
+    const anchor = (fixture.nativeElement as HTMLElement).querySelector('a');
+    expect(anchor).not.toBeNull();
+    expect(anchor?.getAttribute('rel')).toBeNull();
+  });
+});

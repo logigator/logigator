@@ -32,16 +32,18 @@
       [hint]="t('pages.my.edit.descriptionHint')"
       [error]="descriptionMessage ? t(descriptionMessage) : undefined"
     >
-      <textarea
-        lgTextarea
-        id="edit-document-description"
-        rows="4"
-        class="w-full"
-        maxlength="2048"
-        formControlName="description"
-        [invalid]="!!descriptionMessage"
-        [attr.aria-describedby]="descriptionField.describedBy()"
-      ></textarea>
+      <lg-markdown-field [value]="description()" [maxLength]="2048">
+        <textarea
+          lgTextarea
+          id="edit-document-description"
+          rows="4"
+          class="w-full"
+          maxlength="2048"
+          formControlName="description"
+          [invalid]="!!descriptionMessage"
+          [attr.aria-describedby]="descriptionField.describedBy()"
+        ></textarea>
+      </lg-markdown-field>
     </lg-form-field>
 
     <div class="flex justify-end gap-2">

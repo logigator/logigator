@@ -1,5 +1,6 @@
 import { inject } from '@angular/core';
 import { Route, Routes } from '@angular/router';
+import { markdownSummary } from '@logigator/docs';
 import { shareCardUrl } from '../../documents/crawler-image';
 import { SiteLinks } from '../../layout/site-links';
 import { PageMeta } from '../../seo/seo.service';
@@ -187,8 +188,13 @@ function documentRoutes(
           // document that is not there.
           titleKey,
           title: documentName,
+          // Flattened and cut: the description is markdown, and none of the
+          // three tags this feeds renders any. Untruncated it was the whole
+          // 2048 characters, asterisks included, in a crawler's snippet.
           description: () =>
-            inject(CommunityDocumentService).document()?.description ?? null,
+            markdownSummary(
+              inject(CommunityDocumentService).document()?.description ?? ''
+            ),
           image: documentCard,
           noindex: documentNoindex,
           jsonLd: communityDocumentJsonLd,

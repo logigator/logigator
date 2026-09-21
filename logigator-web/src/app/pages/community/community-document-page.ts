@@ -6,7 +6,13 @@ import {
 } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { hasLiveLink, LgAvatar, LgButton, LgTag } from '@logigator/ui';
+import {
+  hasLiveLink,
+  LgAvatar,
+  LgButton,
+  LgMarkdown,
+  LgTag
+} from '@logigator/ui';
 import { RETURN_PATH_PARAM } from '@logigator/core';
 import { ShareApiService } from '../../api/services/share-api.service';
 import { shareCardUrl } from '../../documents/crawler-image';
@@ -50,6 +56,7 @@ import { CommunityDocumentService } from './community-document.service';
     CircuitPreview,
     LgAvatar,
     LgButton,
+    LgMarkdown,
     LgTag,
     NotFoundPage,
     RouterLink,

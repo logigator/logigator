@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { updateUserRequestSchema, websiteUrlSchema } from './user.contract';
+import {
+  bioSchema,
+  updateUserRequestSchema,
+  websiteUrlSchema
+} from './user.contract';
 
 describe('updateUserRequestSchema', () => {
   it('carries the profile fields beside the credential ones', () => {
@@ -61,5 +65,39 @@ describe('websiteUrlSchema', () => {
     // The column distinguishes "no website" from "an empty one", and a client
     // clearing the field sends the state it means rather than a blank.
     expect(websiteUrlSchema.safeParse('').success).toBe(false);
+  });
+});
+
+describe('bioSchema', () => {
+  it('strips the invisibles that make stored text and drawn text disagree', () => {
+    // Trojan Source in a profile: the override reverses what a reader sees
+    // while the stored string says something else.
+    expect(bioSchema.parse('I maintain SAFE\u202etxt.exe')).toBe(
+      'I maintain SAFEtxt.exe'
+    );
+    expect(bioSchema.parse('zero\u200bwidth')).toBe('zerowidth');
+  });
+
+  it('keeps the joiners that ordinary text in these languages needs', () => {
+    const emoji = '\u{1f469}\u200d\u{1f4bb} building circuits';
+    expect(bioSchema.parse(emoji)).toBe(emoji);
+  });
+
+  it('caps the paste, then re-checks what normalizing produced', () => {
+    // The cheap cap is measured on what was sent, in the same UTF-16 units the
+    // textarea's own `maxlength` counts — so the browser refuses at the same
+    // point the API does, and a hand-built request gets the same answer.
+    expect(bioSchema.safeParse('a'.repeat(1025)).success).toBe(false);
+
+    // Under the cap, what is stored is the normalized string: shorter than
+    // what arrived, and free of anything invisible.
+    const stored = bioSchema.parse('a'.repeat(400) + '\u200b');
+    expect(stored).toBe('a'.repeat(400));
+  });
+
+  it('reports a too-long bio as too_big, which is the key the form maps', () => {
+    const result = bioSchema.safeParse('a'.repeat(1025));
+    expect(result.success).toBe(false);
+    expect(result.error?.issues[0]?.code).toBe('too_big');
   });
 });

@@ -292,7 +292,7 @@ export class ShortcutService implements OnDestroy {
         header: this.translation.translate(
           'titleBar.menuBar.file.items.newComponent.label'
         ),
-        width: '28rem',
+        width: '36rem',
         modal: true,
         closable: true,
         telemetryId: DialogId.NewComponent

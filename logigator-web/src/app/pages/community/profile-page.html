@@ -45,16 +45,14 @@
       </p>
       }
 
-      <!-- The member's own words. Interpolated as text and rendered as text:
-           nothing here is markdown, and nothing on this page is written by a
-           reader. `whitespace-pre-line` keeps the paragraph breaks they typed
-           into the textarea without opening the door to markup. -->
+      <!-- The member's own words, as markdown under the user-content rule:
+           emphasis and a link are theirs to write, markup on a page carrying
+           their name is not. The wrapper keeps the measure and the wrap, the
+           renderer setting no width of its own. -->
       @if (member.bio) {
-      <p
-        class="mt-3 max-w-prose text-sm leading-relaxed break-words whitespace-pre-line text-text"
-      >
-        {{ member.bio }}
-      </p>
+      <div class="mt-3 max-w-prose text-sm break-words">
+        <lg-markdown [data]="member.bio" userContent />
+      </div>
       }
 
       <!-- Mono is data: the date and the three counts, and nothing else. -->

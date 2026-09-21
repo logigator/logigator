@@ -39,12 +39,15 @@ export const users = pgTable(
      */
     avatarId: uuid('avatar_id'),
     /**
-     * What the member says about themselves. Plain text and stored as text: it
-     * is interpolated into the profile page and parsed nowhere, so nothing here
-     * has to be escaped twice or trusted twice. `documents.description` is the
-     * same column shape for the same reason.
+     * What the member says about themselves. **Markdown**, stored as the
+     * source a member wrote and parsed nowhere on this side: what it renders
+     * to is the reader's app deciding, under `@logigator/ui`'s user-content
+     * rule, and what may be in it at all is the contract's `bioSchema`. So
+     * this column is still the one place the text lives, and improving the
+     * renderer improves every row already in it.
+     * `documents.description` is the same column shape for the same reason.
      */
-    bio: varchar('bio', { length: 500 }).notNull().default(''),
+    bio: varchar('bio', { length: 1024 }).notNull().default(''),
     /**
      * The member's own site, kept apart from `socialLinks` because the profile
      * page treats it differently — its own line, more prominent than the row of

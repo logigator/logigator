@@ -4,7 +4,7 @@ import {
   computed,
   inject
 } from '@angular/core';
-import { LgButton } from '@logigator/ui';
+import { LgButton, LgMarkdown } from '@logigator/ui';
 import { CircuitPreview } from '../../documents/circuit-preview';
 import { SiteLinks } from '../../layout/site-links';
 import { EmptyState } from '../../states/empty-state';
@@ -27,6 +27,7 @@ import { ExamplesContentService } from './examples-content.service';
     CircuitPreview,
     EmptyState,
     LgButton,
+    LgMarkdown,
     SectionError,
     TranslateDirective
   ],

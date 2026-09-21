@@ -1,9 +1,16 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { LgButton, LgDialogContent, LgInputText } from '@logigator/ui';
+import {
+  LgButton,
+  LgDialogContent,
+  LgInputText,
+  LgMarkdownField,
+  LgTextarea
+} from '@logigator/ui';
 import { CustomComponentService } from '../../../custom-component/custom-component.service';
 import { CustomComponentRegistry } from '../../../components/custom/custom-component-registry.service';
 import { TranslateDirective } from '../../../translation/translate.directive';
+import { normalizeAuthoredText } from '@logigator/core';
 
 export interface EditComponentDetailsDialogData {
   /** The library master whose details are edited. */
@@ -15,9 +22,19 @@ export interface EditComponentDetailsDialogData {
  * the same limits as the new-component dialog. Placed instances are frozen
  * snapshots and keep their old details until explicitly updated.
  */
+/** Mirrors the contract's `documentDescriptionSchema` limit. */
+const DESCRIPTION_MAX_LENGTH = 2048;
+
 @Component({
   selector: 'app-edit-component-details-dialog',
-  imports: [FormsModule, LgInputText, LgButton, TranslateDirective],
+  imports: [
+    FormsModule,
+    LgInputText,
+    LgButton,
+    TranslateDirective,
+    LgMarkdownField,
+    LgTextarea
+  ],
   templateUrl: './edit-component-details-dialog.component.html'
 })
 export class EditComponentDetailsDialogComponent extends LgDialogContent<EditComponentDetailsDialogData> {
@@ -32,8 +49,14 @@ export class EditComponentDetailsDialogComponent extends LgDialogContent<EditCom
   protected readonly symbol = signal(this.master?.symbol ?? '');
   protected readonly description = signal(this.master?.description ?? '');
 
+  protected readonly descriptionMaxLength = DESCRIPTION_MAX_LENGTH;
+
   protected get canSave(): boolean {
-    return this.name().trim().length > 0 && this.symbol().trim().length > 0;
+    return (
+      this.name().trim().length > 0 &&
+      this.symbol().trim().length > 0 &&
+      this.description().length <= DESCRIPTION_MAX_LENGTH
+    );
   }
 
   protected save(): void {
@@ -45,7 +68,9 @@ export class EditComponentDetailsDialogComponent extends LgDialogContent<EditCom
       {
         name: this.name().trim(),
         symbol: this.symbol().trim(),
-        description: this.description().trim()
+        // Normalized here rather than only in the contract: an edit to a
+        // browser-stored component never passes through it.
+        description: normalizeAuthoredText(this.description())
       }
     );
     this.dialogRef.close();

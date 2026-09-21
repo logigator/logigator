@@ -179,12 +179,20 @@
     <h2 class="text-base font-semibold text-text-hover">
       {{ t('pages.community.document.about') }}
     </h2>
-    <p
-      class="mt-2.5 max-w-prose leading-relaxed whitespace-pre-line text-pretty"
-      [class.text-muted]="!doc.description"
-    >
-      {{ doc.description || t('pages.community.document.noDescription') }}
+    @if (doc.description) {
+    <!-- The author's own markdown, rendered under the user-content rule: the
+           tag set is closed to what markdown syntax emits, raw HTML comes out
+           as text and every link is marked as a visitor's. `max-w-prose` and
+           the wrap stay on a wrapper, the renderer setting no width of its
+           own and an unbroken 2048-character run having to wrap somewhere. -->
+    <div class="mt-2.5 max-w-prose break-words">
+      <lg-markdown [data]="doc.description" userContent />
+    </div>
+    } @else {
+    <p class="mt-2.5 max-w-prose leading-relaxed text-pretty text-muted">
+      {{ t('pages.community.document.noDescription') }}
     </p>
+    }
   </section>
 
   <!-- Only a listed document has stargazers to list, so a document that is not

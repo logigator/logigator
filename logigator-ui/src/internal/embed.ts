@@ -58,8 +58,14 @@ export function embedSnippet(
   }
 }
 
-/** `&` first, or the escapes the later replacements add would be escaped twice. */
-function escapeHtml(text: string): string {
+/**
+ * `&` first, or the escapes the later replacements add would be escaped twice.
+ *
+ * Exported because the user-content markdown renderer needs exactly this rule
+ * for the raw HTML it refuses to pass through, and a second copy of an
+ * escaping rule is a second chance to get it wrong somewhere nobody looks.
+ */
+export function escapeHtml(text: string): string {
   return text
     .replaceAll('&', '&amp;')
     .replaceAll('<', '&lt;')

@@ -15,6 +15,28 @@ export interface LgLabels {
   previousPage: string;
   nextPage: string;
   lastPage: string;
+  /**
+   * A markdown field's toolbar: the group's name, one per formatting button,
+   * and the two views it switches between. A button is icon-only, so its label
+   * is the only name it has in the accessibility tree.
+   */
+  formatting: string;
+  heading1: string;
+  heading2: string;
+  heading3: string;
+  bold: string;
+  italic: string;
+  code: string;
+  link: string;
+  bulletedList: string;
+  numberedList: string;
+  quote: string;
+  divider: string;
+  table: string;
+  viewMode: string;
+  write: string;
+  split: string;
+  preview: string;
 }
 
 /** The English defaults, used for any key the app does not provide. */
@@ -25,7 +47,24 @@ export const LG_DEFAULT_LABELS: LgLabels = {
   firstPage: 'First page',
   previousPage: 'Previous page',
   nextPage: 'Next page',
-  lastPage: 'Last page'
+  lastPage: 'Last page',
+  formatting: 'Formatting',
+  heading1: 'Heading 1',
+  heading2: 'Heading 2',
+  heading3: 'Heading 3',
+  bold: 'Bold',
+  italic: 'Italic',
+  code: 'Code',
+  link: 'Link',
+  bulletedList: 'Bulleted list',
+  numberedList: 'Numbered list',
+  quote: 'Quote',
+  divider: 'Divider',
+  table: 'Table',
+  viewMode: 'View',
+  write: 'Write',
+  split: 'Split',
+  preview: 'Preview'
 };
 
 /** Returning `undefined` falls back to {@link LG_DEFAULT_LABELS}. */

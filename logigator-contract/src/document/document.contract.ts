@@ -1,4 +1,5 @@
 import * as z from 'zod';
+import { normalizeAuthoredText } from '@logigator/core';
 import type { CurrentCircuitFile } from '@logigator/core';
 import { imageVariantSchema } from '../image/image.contract';
 
@@ -10,8 +11,46 @@ import { imageVariantSchema } from '../image/image.contract';
 
 /** Caps that mirror the columns behind them, so a write fails here, not there. */
 export const documentNameSchema = z.string().trim().min(1).max(20);
-export const documentDescriptionSchema = z.string().trim().max(2048);
 export const componentSymbolSchema = z.string().trim().min(1).max(5);
+const MAX_DESCRIPTION_LENGTH = 2048;
+
+/**
+ * What an author says about a circuit, normalized and capped at the column's
+ * length.
+ *
+ * Rendered as **markdown**, in the restricted form `@logigator/ui` renders
+ * every authored field in: the tag set is closed to what markdown syntax
+ * produces, raw HTML comes out as text, and a link carries `nofollow ugc`. So
+ * a description may carry a list, a link and emphasis, and still cannot put
+ * markup on the community page that shows it.
+ *
+ * What this schema owns is the other half — the characters.
+ * `normalizeAuthoredText` removes what no renderer can defend against, the
+ * invisibles that make stored text and drawn text disagree. The length is then
+ * checked against the normalized form, the way {@link socialUrlSchema} checks
+ * the normalized URL: composing can lengthen a string, and it is the result the
+ * column has to hold. The plain `.trim()` stays in front of the cap so the set
+ * of accepted values does not narrow, and so an oversized paste is refused
+ * before anything walks it character by character.
+ */
+export const documentDescriptionSchema = z
+  .string()
+  .trim()
+  .max(MAX_DESCRIPTION_LENGTH)
+  .transform((raw, ctx) => {
+    const description = normalizeAuthoredText(raw);
+    if (description.length > MAX_DESCRIPTION_LENGTH) {
+      ctx.addIssue({
+        code: 'too_big',
+        origin: 'string',
+        maximum: MAX_DESCRIPTION_LENGTH,
+        inclusive: true,
+        message: `must be at most ${MAX_DESCRIPTION_LENGTH} characters`
+      });
+      return z.NEVER;
+    }
+    return description;
+  });
 
 /**
  * How far a document's link reaches. Three states rather than a boolean,

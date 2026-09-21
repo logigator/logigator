@@ -33,13 +33,19 @@
         <h2 class="text-xl font-medium text-text-hover md:text-2xl">
           {{ row.name }}
         </h2>
-        <!-- Author-written text with its own line breaks, as text: the
-                 seed account is still an account. -->
-        <p
-          class="mt-3 max-w-prose leading-relaxed whitespace-pre-line text-muted"
-        >
-          {{ row.description }}
-        </p>
+        <!-- Author-written markdown under the user-content rule: the seed
+                 account is still an account. -->
+        <div class="mt-3 max-w-prose break-words">
+          <!-- Inline, and it has to be: the renderer sets its own `color` from
+                   a component stylesheet, which is unlayered, while every
+                   Tailwind utility sits in `@layer utilities` — so a class here
+                   loses the cascade however specific it is. -->
+          <lg-markdown
+            [style.color]="'var(--lg-muted)'"
+            [data]="row.description"
+            userContent
+          />
+        </div>
         <a
           lgButton
           class="mt-6"

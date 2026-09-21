@@ -293,6 +293,37 @@ describe('the signed-in user', () => {
       return response.json();
     };
 
+    it('stores a bio with the invisibles taken out of it', async () => {
+      const response = await api.inject({
+        method: 'PATCH',
+        url: '/api/user',
+        headers: jar.headers(),
+        payload: {
+          // A bidi override and a zero-width space: the two ways stored text
+          // and drawn text are made to disagree. Neither reaches the column.
+          bio: 'I maintain SAFE\u202etxt.exe and zero\u200bwidth things'
+        }
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.json().user.bio).toBe(
+        'I maintain SAFEtxt.exe and zerowidth things'
+      );
+    });
+
+    it('refuses an oversized bio rather than letting the column do it', async () => {
+      const response = await api.inject({
+        method: 'PATCH',
+        url: '/api/user',
+        headers: jar.headers(),
+        payload: { bio: 'a'.repeat(1025) }
+      });
+
+      // The contract refuses it, so it is the suite's usual 422 rather than
+      // the 500 a varchar overflow would answer with.
+      expect(response.statusCode).toBe(422);
+    });
+
     it('stores the links as submitted and answers them classified', async () => {
       const response = await api.inject({
         method: 'PATCH',

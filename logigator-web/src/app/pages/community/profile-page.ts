@@ -6,7 +6,7 @@ import {
 } from '@angular/core';
 import { RouterLink, RouterOutlet } from '@angular/router';
 import { socialHost, socialLinkLabel } from '@logigator/core';
-import { LgAvatar } from '@logigator/ui';
+import { LgAvatar, LgMarkdown } from '@logigator/ui';
 import { SiteLinks } from '../../layout/site-links';
 import { SOCIAL_ICONS } from './social-icons';
 import { SectionError } from '../../states/section-error';
@@ -52,6 +52,7 @@ const TABS = [
   selector: 'web-profile-page',
   imports: [
     LgAvatar,
+    LgMarkdown,
     NotFoundPage,
     RouterLink,
     RouterOutlet,

@@ -8,7 +8,24 @@ const de: TranslationSchema = {
     firstPage: 'Erste Seite',
     previousPage: 'Vorherige Seite',
     nextPage: 'Nächste Seite',
-    lastPage: 'Letzte Seite'
+    lastPage: 'Letzte Seite',
+    formatting: 'Formatierung',
+    heading1: 'Überschrift 1',
+    heading2: 'Überschrift 2',
+    heading3: 'Überschrift 3',
+    bold: 'Fett',
+    italic: 'Kursiv',
+    code: 'Code',
+    link: 'Link',
+    bulletedList: 'Aufzählung',
+    numberedList: 'Nummerierte Liste',
+    quote: 'Zitat',
+    divider: 'Trennlinie',
+    table: 'Tabelle',
+    viewMode: 'Ansicht',
+    write: 'Schreiben',
+    split: 'Geteilt',
+    preview: 'Vorschau'
   },
   site: {
     name: 'Logigator',
@@ -95,7 +112,7 @@ const de: TranslationSchema = {
       nameRequired: 'Gib einen Namen ein.',
       nameTooLong: 'Verwende höchstens 20 Zeichen.',
       descriptionTooLong: 'Verwende höchstens 2048 Zeichen.',
-      bioTooLong: 'Verwende höchstens 500 Zeichen.',
+      bioTooLong: 'Verwende höchstens 1024 Zeichen.',
       urlInvalid:
         'Gib einen vollständigen Link ein, beginnend mit http:// oder https://.',
       urlTooLong: 'Verwende höchstens 2048 Zeichen.',
@@ -425,6 +442,8 @@ const de: TranslationSchema = {
           pictureHint:
             'PNG, JPEG, WebP oder GIF. Es wird quadratisch zugeschnitten und neu kodiert.',
           bioLabel: 'Über mich',
+          bioHint:
+            'Wird in deinem öffentlichen Profil angezeigt. Markdown wird unterstützt.',
           websiteLabel: 'Webseite',
           linkLabel: 'Link {{n}}',
           save: 'Speichern',

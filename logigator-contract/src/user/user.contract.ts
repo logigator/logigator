@@ -1,4 +1,5 @@
 import * as z from 'zod';
+import { normalizeAuthoredText } from '@logigator/core';
 import { imageVariantSchema } from '../image/image.contract';
 import {
   MAX_SOCIAL_LINKS,
@@ -31,13 +32,48 @@ export const passwordSchema = z
   .regex(/[A-Za-z]/, 'must contain a letter')
   .regex(/[0-9]/, 'must contain a digit');
 
+/** Mirrors the column behind it, so a write fails here rather than there. */
+const MAX_BIO_LENGTH = 1024;
+
 /**
- * A member's own words about themselves, trimmed and capped at the column's
- * length. Plain text, rendered as text: it is interpolated into the profile
- * page and nowhere parsed as markup, so a bio is never a way to write a link
- * or a heading onto a page carrying somebody else's name.
+ * A member's own words about themselves, normalized and capped at the column's
+ * length.
+ *
+ * Rendered as **markdown**, in the restricted form `@logigator/ui` renders
+ * every authored field in: the tag set is closed to what markdown syntax
+ * produces, raw HTML comes out as text, and a link carries `nofollow ugc`. So
+ * a bio may carry emphasis and a link, and still cannot write markup onto a
+ * page that carries somebody else's name.
+ *
+ * What this schema owns is the other half — the characters. `normalizeAuthoredText`
+ * removes what no renderer can defend against, the invisibles that make stored
+ * text and drawn text disagree. The length is then checked against the
+ * normalized form, the way {@link socialUrlSchema} checks the normalized URL:
+ * composing can lengthen a string, and it is the result the column has to hold.
+ *
+ * The plain `.trim()` stays in front of the cap so the set of accepted values
+ * does not narrow — a bio pasted at the limit with a trailing newline was
+ * always accepted — and so an oversized paste is refused before anything walks
+ * it character by character.
  */
-export const bioSchema = z.string().trim().max(500);
+export const bioSchema = z
+  .string()
+  .trim()
+  .max(MAX_BIO_LENGTH)
+  .transform((raw, ctx) => {
+    const bio = normalizeAuthoredText(raw);
+    if (bio.length > MAX_BIO_LENGTH) {
+      ctx.addIssue({
+        code: 'too_big',
+        origin: 'string',
+        maximum: MAX_BIO_LENGTH,
+        inclusive: true,
+        message: `must be at most ${MAX_BIO_LENGTH} characters`
+      });
+      return z.NEVER;
+    }
+    return bio;
+  });
 
 /**
  * The one link shown beside the name, normalized like every other profile link

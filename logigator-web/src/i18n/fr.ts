@@ -8,7 +8,24 @@ const fr: TranslationSchema = {
     firstPage: 'Première page',
     previousPage: 'Page précédente',
     nextPage: 'Page suivante',
-    lastPage: 'Dernière page'
+    lastPage: 'Dernière page',
+    formatting: 'Mise en forme',
+    heading1: 'Titre 1',
+    heading2: 'Titre 2',
+    heading3: 'Titre 3',
+    bold: 'Gras',
+    italic: 'Italique',
+    code: 'Code',
+    link: 'Lien',
+    bulletedList: 'Liste à puces',
+    numberedList: 'Liste numérotée',
+    quote: 'Citation',
+    divider: 'Séparateur',
+    table: 'Tableau',
+    viewMode: 'Affichage',
+    write: 'Écrire',
+    split: 'Divisé',
+    preview: 'Aperçu'
   },
   site: {
     name: 'Logigator',
@@ -94,7 +111,7 @@ const fr: TranslationSchema = {
       nameRequired: 'Saisis un nom.',
       nameTooLong: 'Utilise 20 caractères au maximum.',
       descriptionTooLong: 'Utilise 2048 caractères au maximum.',
-      bioTooLong: 'Utilise 500 caractères au maximum.',
+      bioTooLong: 'Utilisez au maximum 1024 caractères.',
       urlInvalid: 'Saisis un lien complet commençant par http:// ou https://.',
       urlTooLong: 'Utilise 2048 caractères au maximum.',
       rateLimited: 'Trop de tentatives. Patiente un instant puis réessaie.',
@@ -415,6 +432,8 @@ const fr: TranslationSchema = {
           pictureHint:
             'PNG, JPEG, WebP ou GIF. Elle est recadrée en carré et ré-encodée.',
           bioLabel: 'À propos',
+          bioHint:
+            'Affichée sur votre profil public. Markdown est pris en charge.',
           websiteLabel: 'Site web',
           linkLabel: 'Lien {{n}}',
           save: 'Enregistrer',

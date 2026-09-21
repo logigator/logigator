@@ -1,4 +1,5 @@
 import { inject } from '@angular/core';
+import { markdownSummary } from '@logigator/docs';
 import { crawlerPreviewUrl } from '../../documents/crawler-image';
 import { SiteLinks } from '../../layout/site-links';
 import {
@@ -35,6 +36,9 @@ export function communityDocumentJsonLd(context: JsonLdContext): JsonLdNode[] {
   };
 
   const preview = crawlerPreviewUrl(document.preview);
+  // The description is markdown; a graph node is read by machines that render
+  // none of it, so what goes in is the sentence it reduces to.
+  const summary = markdownSummary(document.description);
   // The parent is named even where it is no longer public: withholding the
   // credit because somebody unpublished would turn a fork into original work.
   const parent = document.forkedFrom;
@@ -48,7 +52,7 @@ export function communityDocumentJsonLd(context: JsonLdContext): JsonLdNode[] {
     dateCreated: document.createdAt,
     dateModified: document.lastEditedAt,
     isPartOf: { '@id': context.siteId },
-    ...(document.description ? { description: document.description } : {}),
+    ...(summary ? { description: summary } : {}),
     ...(preview ? { image: context.absolute(preview) } : {}),
     ...(parent
       ? {

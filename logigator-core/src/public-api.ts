@@ -223,3 +223,6 @@ export {
 } from './social/social-platforms';
 export type { SocialPlatform } from './social/social-platforms';
 export { normalizeSocialUrl } from './social/social-url';
+
+// ---- text: how text a member wrote is cleaned on the way in ----
+export { normalizeAuthoredText } from './text/authored-text';

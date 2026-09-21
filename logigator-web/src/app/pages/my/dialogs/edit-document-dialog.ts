@@ -4,6 +4,7 @@ import {
   inject,
   signal
 } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import {
@@ -15,6 +16,7 @@ import {
   LgDialogContent,
   LgFormField,
   LgInputText,
+  LgMarkdownField,
   LgMessage,
   LgTextarea
 } from '@logigator/ui';
@@ -52,6 +54,7 @@ export interface EditDocumentData {
     LgButton,
     LgFormField,
     LgInputText,
+    LgMarkdownField,
     LgMessage,
     LgTextarea,
     ReactiveFormsModule,
@@ -76,6 +79,16 @@ export class EditDocumentDialog extends LgDialogContent<EditDocumentData> {
       validators: [zodValidator(documentDescriptionSchema)]
     })
   });
+
+  /**
+   * What the field's counter and preview read. A signal, not
+   * `controls.description.value`: that is a plain getter, and nothing in a
+   * zoneless app re-reads it when the control changes.
+   */
+  protected readonly description = toSignal(
+    this.form.controls.description.valueChanges,
+    { initialValue: this.data.description }
+  );
 
   protected readonly nameError = fieldError(
     this.form.controls.name,

@@ -43,6 +43,20 @@ function documentRouteNoindex(): () => boolean {
   return noindex!;
 }
 
+/** The document route's meta description factory, read off the tree. */
+function documentRouteDescription(): () => string | null {
+  const route = communityRoutes.find(
+    (candidate) => candidate.path === 'community/projects/:link'
+  );
+  const seo = (route?.data as { seo?: PageMeta } | undefined)?.seo;
+  const description = seo?.description;
+  expect(
+    typeof description,
+    'the document route declares no description factory'
+  ).toBe('function');
+  return description as () => string | null;
+}
+
 /** The stargazer route's head, read off the tree for the same reason. */
 function stargazersRouteSeo(): PageMeta {
   const route = communityRoutes.find(
@@ -150,6 +164,43 @@ describe('the community routes', () => {
    * their path outright. A relative navigation that resolved against the wrong
    * tree would leave the tab and re-read nothing.
    */
+  it('puts a summary of the description in the head, not the markdown', async () => {
+    const description = documentRouteDescription();
+    const content = TestBed.inject(CommunityDocumentService);
+
+    const long =
+      'A **four-bit** ripple-carry adder. ' +
+      'It carries between stages. '.repeat(40);
+    const resolved = content.resolve('projects', LINK);
+    http
+      .expectOne(`/api/community/projects/${LINK}`)
+      .flush({ ...detail({ visibility: 'public' }), description: long });
+    await resolved;
+
+    const head = TestBed.runInInjectionContext(description);
+    expect(head).not.toBeNull();
+    // Flattened: none of the three tags this feeds renders markdown.
+    expect(head).not.toContain('**');
+    expect(head).toContain('four-bit');
+    // Cut: untruncated this was the whole 2048-character column in a snippet.
+    expect(head!.length).toBeLessThanOrEqual(161);
+    expect(head!.endsWith('\u2026')).toBe(true);
+  });
+
+  it('lets the head fall back when a document has no description', async () => {
+    const description = documentRouteDescription();
+    const content = TestBed.inject(CommunityDocumentService);
+
+    const resolved = content.resolve('projects', LINK);
+    http
+      .expectOne(`/api/community/projects/${LINK}`)
+      .flush({ ...detail({ visibility: 'public' }), description: '' });
+    await resolved;
+
+    // `null` rather than an empty string: the head then uses the route's key.
+    expect(TestBed.runInInjectionContext(description)).toBeNull();
+  });
+
   it('pages a profile tab without leaving it', async () => {
     const opened = router.navigateByUrl(
       `/en/community/users/${USER}/components`

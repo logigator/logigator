@@ -66,6 +66,18 @@ export type {
 // because content that links to its own headings — the site's legal pages —
 // has to author those links by the same rule the renderer resolves them by.
 export { headingSlug } from './components/markdown/markdown';
+// The user-content rule, for a consumer that has to answer the same question
+// outside a rendered page — what a description reduces to in a meta tag, or
+// whether a destination would have survived at all.
+export {
+  isAllowedImageDestination,
+  isAllowedLinkDestination,
+  renderUserMarkdown
+} from './internal/user-markdown';
+
+export { LgMarkdownField } from './components/markdown-field/markdown-field';
+export type { LgMarkdownView } from './components/markdown-field/markdown-field';
+export type { LgMarkdownTool } from './internal/markdown-insert';
 
 export { LgImageZoom } from './components/image-zoom/image-zoom';
 export { LgAvatar } from './components/avatar/avatar';

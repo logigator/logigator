@@ -88,25 +88,29 @@
 
       @let bioMessage = bioError();
 
-      <!-- Plain text, and rendered as text: interpolation, a textarea and
-           nothing else. No markdown, no link detection — a bio is not a way to
-           write markup onto a page that carries the member's name. -->
+      <!-- Markdown, under the user-content rule: emphasis and a link are the
+           member's to write, markup on a page carrying their name is not. The
+           full toolbar: which of it suits a paragraph is the member's call. -->
       <lg-form-field
         #bioField="lgFormField"
         inputId="account-bio"
         class="max-w-prose"
         [label]="t('pages.my.account.profile.bioLabel')"
+        [hint]="t('pages.my.account.profile.bioHint')"
         [error]="bioMessage ? t(bioMessage) : undefined"
       >
-        <textarea
-          lgTextarea
-          id="account-bio"
-          rows="4"
-          class="w-full"
-          formControlName="bio"
-          [invalid]="!!bioMessage"
-          [attr.aria-describedby]="bioField.describedBy()"
-        ></textarea>
+        <lg-markdown-field [value]="bio()" [maxLength]="1024">
+          <textarea
+            lgTextarea
+            id="account-bio"
+            rows="4"
+            class="w-full"
+            maxlength="1024"
+            formControlName="bio"
+            [invalid]="!!bioMessage"
+            [attr.aria-describedby]="bioField.describedBy()"
+          ></textarea>
+        </lg-markdown-field>
       </lg-form-field>
 
       @let websiteMessage = websiteError();

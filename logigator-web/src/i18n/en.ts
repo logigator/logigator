@@ -11,7 +11,24 @@ const en = {
     firstPage: 'First page',
     previousPage: 'Previous page',
     nextPage: 'Next page',
-    lastPage: 'Last page'
+    lastPage: 'Last page',
+    formatting: 'Formatting',
+    heading1: 'Heading 1',
+    heading2: 'Heading 2',
+    heading3: 'Heading 3',
+    bold: 'Bold',
+    italic: 'Italic',
+    code: 'Code',
+    link: 'Link',
+    bulletedList: 'Bulleted list',
+    numberedList: 'Numbered list',
+    quote: 'Quote',
+    divider: 'Divider',
+    table: 'Table',
+    viewMode: 'View',
+    write: 'Write',
+    split: 'Split',
+    preview: 'Preview'
   },
   site: {
     name: 'Logigator',
@@ -104,7 +121,7 @@ const en = {
       nameRequired: 'Enter a name.',
       nameTooLong: 'Use at most 20 characters.',
       descriptionTooLong: 'Use at most 2048 characters.',
-      bioTooLong: 'Use at most 500 characters.',
+      bioTooLong: 'Use at most 1024 characters.',
       urlInvalid: 'Enter a full link starting with http:// or https://.',
       urlTooLong: 'Use at most 2048 characters.',
       rateLimited: 'Too many attempts. Please wait a moment and try again.',
@@ -431,6 +448,7 @@ const en = {
           pictureHint:
             'PNG, JPEG, WebP or GIF. It is cropped square and re-encoded.',
           bioLabel: 'Bio',
+          bioHint: 'Shown on your public profile. Markdown is supported.',
           websiteLabel: 'Website',
           /** Numbered: the three slots are the same field three times. */
           linkLabel: 'Link {{n}}',

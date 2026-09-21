@@ -1,4 +1,5 @@
 import { inject } from '@angular/core';
+import { markdownSummary } from '@logigator/docs';
 import { crawlerImageUrl } from '../../documents/crawler-image';
 import { SiteLinks } from '../../layout/site-links';
 import {
@@ -40,6 +41,9 @@ export function profileJsonLd(context: JsonLdContext): JsonLdNode[] {
     ...profile.socialLinks.map((link) => link.url)
   ];
 
+  // Markdown, flattened: a graph node renders none of it.
+  const bio = markdownSummary(profile.bio);
+
   const person: PersonNode = {
     '@type': 'Person',
     '@id': `${profileUrl}#person`,
@@ -49,7 +53,7 @@ export function profileJsonLd(context: JsonLdContext): JsonLdNode[] {
     // Both are omitted rather than emptied: a member with no bio and no links
     // has nothing for a consumer to read, and an empty string is a description
     // that says the member wrote nothing.
-    ...(profile.bio ? { description: profile.bio } : {}),
+    ...(bio ? { description: bio } : {}),
     ...(sameAs.length ? { sameAs } : {})
   };
 

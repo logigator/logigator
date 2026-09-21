@@ -52,6 +52,10 @@ function circuitColumns() {
   return {
     id: uuid('id').primaryKey().defaultRandom(),
     name: varchar('name', { length: 20 }).notNull(),
+    /**
+     * **Markdown**, stored as the source an author wrote and parsed nowhere
+     * on this side — the same shape, and the same reasoning, as `users.bio`.
+     */
     description: varchar('description', { length: 2048 }).notNull().default(''),
     /**
      * The native versioned document, always at the newest format version:

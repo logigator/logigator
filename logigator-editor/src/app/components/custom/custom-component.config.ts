@@ -10,6 +10,7 @@ import { UpdateAllInstancesComponentAction } from './actions/update-all-instance
 import { UploadComponentAction } from './actions/upload-component.component-action';
 import { ShareComponentAction } from './actions/share-component.component-action';
 import { DeleteComponentAction } from './actions/delete-component.component-action';
+import { markdownToText } from '@logigator/docs';
 
 /**
  * A custom component's port counts come from its definition, never from the
@@ -47,7 +48,10 @@ export function buildCustomComponentConfig(
       return { literal: def.name };
     },
     get description(): LocalizableText {
-      return { literal: def.description };
+      // Flattened, not rendered: this is the settings card's one-line
+      // subtitle, and the description is markdown wherever it is shown as
+      // prose. A `**bold**` there would read as asterisks on a single line.
+      return { literal: markdownToText(def.description) };
     },
     options: {},
     // Live like the fields above, so an instance placed from an edited master

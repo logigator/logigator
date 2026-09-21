@@ -29,14 +29,21 @@
     <label for="new-component-description">{{
       t('newComponentDialog.description')
     }}</label>
-    <input
-      lgInputText
-      id="new-component-description"
-      type="text"
-      [ngModel]="description()"
-      (ngModelChange)="description.set($event)"
-      [ngModelOptions]="{ standalone: true }"
-    />
+    <lg-markdown-field
+      [value]="description()"
+      [maxLength]="descriptionMaxLength"
+    >
+      <textarea
+        lgTextarea
+        id="new-component-description"
+        rows="3"
+        class="w-full"
+        [attr.maxlength]="descriptionMaxLength"
+        [ngModel]="description()"
+        (ngModelChange)="description.set($event)"
+        [ngModelOptions]="{ standalone: true }"
+      ></textarea>
+    </lg-markdown-field>
   </div>
   <div class="flex flex-col gap-1">
     <span id="new-component-store-label">{{

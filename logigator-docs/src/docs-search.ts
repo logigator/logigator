@@ -340,8 +340,8 @@ function snippet(section: IndexedSection, terms: string[]): string {
  * is for — so a summary is already written, in every language, and cannot drift
  * from the page the way a separate translation key would. It lives here rather
  * than in a viewer because both of them will want it and because the cut is
- * this file's own: the same length and the same word boundary a search snippet
- * takes, over `characters()` so a surrogate pair is never halved.
+ * this file's own — {@link markdownSummary}, the same length and the same word
+ * boundary a search snippet takes.
  *
  * Returns `null` for a page with nothing but a title, and skips an opening
  * image, note or table — a page that starts with one of those has not said
@@ -354,7 +354,25 @@ export function docPageSummary(markdown: string | null): string | null {
     .split(/\n{2,}/)
     .map((block) => block.trim())
     .find((block) => /^[^#!>|]/.test(block));
-  const text = paragraph ? markdownToText(paragraph) : '';
+  return markdownSummary(paragraph ?? '');
+}
+
+/**
+ * Markdown as the one line that stands in for it — flattened to text and cut
+ * to a snippet's length on a word boundary.
+ *
+ * {@link docPageSummary} is this over a page's opening paragraph; the website
+ * runs it over a circuit's description and a member's bio, which are markdown
+ * for the same reason and reach the same places: a `<meta name="description">`,
+ * an Open Graph card, a JSON-LD node. None of those render markup, and a
+ * crawler handed 2048 characters of it publishes the first 160 with the
+ * asterisks still in them.
+ *
+ * Over `characters()`, so a cut never halves a surrogate pair — an emoji in a
+ * bio is one character to a reader and two to `String.prototype.slice`.
+ */
+export function markdownSummary(markdown: string): string | null {
+  const text = markdownToText(markdown);
   if (!text) return null;
 
   const source = characters(text);

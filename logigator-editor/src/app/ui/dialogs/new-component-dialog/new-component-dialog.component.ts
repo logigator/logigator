@@ -4,8 +4,10 @@ import {
   DialogRef,
   LgButton,
   LgInputText,
+  LgMarkdownField,
   LgMessage,
   LgSelectButton,
+  LgTextarea,
   type LgDocumentVisibility
 } from '@logigator/ui';
 import { TranslationService } from '../../../translation/translation.service';
@@ -13,12 +15,16 @@ import { CustomComponentService } from '../../../custom-component/custom-compone
 import { UserService } from '../../../user/user.service';
 import { TranslateDirective } from '../../../translation/translate.directive';
 import { VisibilityPickerComponent } from '../../visibility-picker/visibility-picker.component';
+import { normalizeAuthoredText } from '@logigator/core';
 
 /**
  * Collects the metadata for a new custom component and hands it to
  * {@link CustomComponentService.createComponent}, which opens an empty editor
  * tab. The length limits mirror the contract's schemas.
  */
+/** Mirrors the contract's `documentDescriptionSchema` limit. */
+const DESCRIPTION_MAX_LENGTH = 2048;
+
 @Component({
   selector: 'app-new-component-dialog',
   imports: [
@@ -28,7 +34,9 @@ import { VisibilityPickerComponent } from '../../visibility-picker/visibility-pi
     LgButton,
     TranslateDirective,
     LgMessage,
-    VisibilityPickerComponent
+    VisibilityPickerComponent,
+    LgMarkdownField,
+    LgTextarea
   ],
   templateUrl: './new-component-dialog.component.html'
 })
@@ -62,9 +70,16 @@ export class NewComponentDialogComponent {
   protected get canCreate(): boolean {
     if (this.name().trim().length === 0 || this.symbol().trim().length === 0)
       return false;
+    // The description is capped too. The class comment above has claimed the
+    // limits mirror the contract's schemas since this dialog was written, and
+    // for the description alone it was not true: a component saved to the
+    // browser never meets the contract, so nothing else would refuse it.
+    if (this.description().length > DESCRIPTION_MAX_LENGTH) return false;
     if (this.source() === 'server' && !this.userService.user()) return false;
     return true;
   }
+
+  protected readonly descriptionMaxLength = DESCRIPTION_MAX_LENGTH;
 
   protected create(): void {
     if (!this.canCreate) return;
@@ -74,7 +89,10 @@ export class NewComponentDialogComponent {
       .createComponent({
         name: this.name().trim(),
         symbol: this.symbol().trim(),
-        description: this.description().trim(),
+        // Normalized here rather than only in the contract: a browser-stored
+        // component is written straight to IndexedDB, so this is the only
+        // place that sees it.
+        description: normalizeAuthoredText(this.description()),
         visibility: this.visibility(),
         source: this.source()
       })

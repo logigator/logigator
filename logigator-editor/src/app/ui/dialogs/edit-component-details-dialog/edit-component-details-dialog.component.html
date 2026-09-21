@@ -31,14 +31,21 @@
     <label for="edit-component-description">{{
       t('editComponentDetails.description')
     }}</label>
-    <input
-      lgInputText
-      id="edit-component-description"
-      type="text"
-      [ngModel]="description()"
-      (ngModelChange)="description.set($event)"
-      [ngModelOptions]="{ standalone: true }"
-    />
+    <lg-markdown-field
+      [value]="description()"
+      [maxLength]="descriptionMaxLength"
+    >
+      <textarea
+        lgTextarea
+        id="edit-component-description"
+        rows="3"
+        class="w-full"
+        [attr.maxlength]="descriptionMaxLength"
+        [ngModel]="description()"
+        (ngModelChange)="description.set($event)"
+        [ngModelOptions]="{ standalone: true }"
+      ></textarea>
+    </lg-markdown-field>
   </div>
   <p class="text-sm text-muted">
     {{ t('editComponentDetails.frozenInstancesHint') }}

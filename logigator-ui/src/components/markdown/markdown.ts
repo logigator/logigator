@@ -1,4 +1,6 @@
 import {
+  afterRenderEffect,
+  booleanAttribute,
   Component,
   computed,
   DestroyRef,
@@ -12,6 +14,7 @@ import {
 import { MarkdownComponent } from 'ngx-markdown';
 import { ImageZoomViewer } from '../image-zoom/image-zoom-viewer';
 import { resolveMarkdownUrls } from '../../internal/markdown-urls';
+import { renderUserMarkdown } from '../../internal/user-markdown';
 
 /**
  * A heading's anchor slug, derived from its text: marked emits no heading ids,
@@ -94,14 +97,15 @@ export interface LgMarkdownLinkClick {
   encapsulation: ViewEncapsulation.None,
   providers: [ImageZoomViewer],
   host: {
+    '[attr.data-user-content]': 'userContent() || null',
     '(click)': 'onContentClick($event)',
     '(keydown)': 'onContentKeydown($event)'
   },
-  template: `<markdown
-    [data]="resolvedData()"
-    [src]="src()"
-    (ready)="onRendered()"
-  />`,
+  template: `@if (userContent()) {
+      <div data-user-content [innerHTML]="userHtml()"></div>
+    } @else {
+      <markdown [data]="resolvedData()" [src]="src()" (ready)="onRendered()" />
+    }`,
   styles: `
     /* Only a handful of properties are allowed here; background and colour are
        what a mark needs. Matches the results list's own marking. */
@@ -155,6 +159,21 @@ export interface LgMarkdownLinkClick {
 
     lg-markdown > :last-child {
       margin-bottom: 0;
+    }
+
+    /* The user-content branch renders into a wrapper of its own, which would
+       otherwise be the only child the two rules above ever see. */
+    lg-markdown > [data-user-content] > :first-child {
+      margin-top: 0;
+    }
+
+    lg-markdown > [data-user-content] > :last-child {
+      margin-bottom: 0;
+    }
+
+    /* Nothing here opens, so nothing here invites a click. */
+    lg-markdown[data-user-content] img {
+      cursor: default;
     }
 
     lg-markdown p {
@@ -324,9 +343,31 @@ export class LgMarkdown {
    * every render. Where the API is missing the page simply carries no marks.
    */
   readonly highlightMatches = input<LgTextMatcher>();
+  /**
+   * Renders `data` as **text a member wrote**, under the restricted rule in
+   * `internal/user-markdown`: raw HTML comes out as text, a link is marked as
+   * a visitor's and an image may only be same-origin.
+   *
+   * It is a different parse, not a filter over the same one, and it is
+   * deliberately the consumer's choice rather than something inferred: what
+   * makes content trusted is where it came from, which only the consumer
+   * knows. Authored documentation renders without it and keeps its own links.
+   *
+   * Images also stop being zoomable here — an author cannot name one, so a
+   * zoom affordance would be a control leading nowhere.
+   */
+  readonly userContent = input(false, { transform: booleanAttribute });
 
   protected readonly resolvedData = computed(() =>
     resolveMarkdownUrls(this.data(), this.assetUrls())
+  );
+  /**
+   * Parsed synchronously, which is what lets a server render carry a member's
+   * own words in the first byte. The binding is `[innerHTML]`, so Angular's
+   * sanitizer runs over the result as a second layer.
+   */
+  protected readonly userHtml = computed(() =>
+    renderUserMarkdown(this.resolvedData() ?? '')
   );
 
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
@@ -337,6 +378,18 @@ export class LgMarkdown {
     // content itself arriving.
     effect(() => this.markMatches(this.highlightMatches()));
     inject(DestroyRef).onDestroy(() => this.clearMatches());
+
+    // The user-content branch writes through a binding rather than through
+    // ngx-markdown, so there is no `(ready)` to forward and this is that
+    // signal's other half. After the render, so the content is findable; never
+    // on the server, where nothing reads it.
+    afterRenderEffect(() => {
+      if (!this.userContent()) {
+        return;
+      }
+      this.userHtml();
+      this.onRendered();
+    });
 
     // The content is innerHTML, so `load` in the capture phase (it doesn't
     // bubble) is the only per-image hook; re-rendered content fires it again,
@@ -355,8 +408,9 @@ export class LgMarkdown {
             image.naturalWidth / image.naturalHeight < PORTRAIT_MAX_RATIO
           );
         }
-        // A linked image activates its (already focusable) link instead.
-        if (!image.closest('a')) {
+        // A linked image activates its (already focusable) link instead, and
+        // an author's image opens nothing at all.
+        if (!image.closest('a') && !this.userContent()) {
           // The role announces that Enter does something; the alt text is the
           // accessible name.
           image.tabIndex = 0;

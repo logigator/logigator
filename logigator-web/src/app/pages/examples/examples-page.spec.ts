@@ -110,9 +110,29 @@ describe('ExamplesPage', () => {
       ]
     });
 
-    expect(el.querySelector('article p')!.textContent?.trim()).toBe(
-      'A half adder adds two bits.\nCarry is the overflow.'
-    );
+    // A typed newline is a rendered break. It is a `<br>` now rather than
+    // `white-space: pre-line`, the text being markdown — which is why the
+    // renderer keeps `breaks: true`: these descriptions were written in a
+    // plain textarea, and a markdown default would run them together.
+    const description = el.querySelector('article lg-markdown')!;
+    expect(description.querySelector('br')).not.toBeNull();
+    expect(description.textContent).toContain('A half adder adds two bits.');
+    expect(description.textContent).toContain('Carry is the overflow.');
+  });
+
+  it('renders an author\u2019s markdown without letting it write markup', async () => {
+    const el = await render({
+      ...EMPTY_PAGE,
+      entries: [
+        communityRow('Half Adder', HALF_ADDER, {
+          description: 'A **half** adder.\n\n<img src=x onerror="alert(1)">'
+        })
+      ]
+    });
+
+    const description = el.querySelector('article lg-markdown')!;
+    expect(description.querySelector('strong')?.textContent).toBe('half');
+    expect(description.querySelector('img')).toBeNull();
   });
 
   it('draws one preview per row, from the active theme alone', async () => {
