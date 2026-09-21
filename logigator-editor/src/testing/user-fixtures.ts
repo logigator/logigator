@@ -11,6 +11,12 @@ export function makeUser(id: string): UserResponse {
     email: `${id}@example.test`,
     emailVerified: true,
     avatar: null,
+    // The profile fields `GET /api/user` answers with. The editor shows none
+    // of them — it has no profile UI — but the response schema is the shared
+    // one, so a fixture standing in for the response has to carry them.
+    bio: '',
+    websiteUrl: null,
+    socialLinks: [],
     memberSince: '2024-01-01T00:00:00.000Z',
     hasPassword: true,
     googleLinked: false

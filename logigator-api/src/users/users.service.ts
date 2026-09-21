@@ -4,6 +4,7 @@ import type { UserResponse } from '@logigator/contract';
 import { DB, type Database } from '../database/database.module';
 import { users, type NewUserRow, type UserRow } from '../database/schema';
 import { AVATAR_VARIANTS, variantUrls } from '../storage/image-variants';
+import { toSocialLinks } from './social-links';
 
 /**
  * Reads and writes of the `users` table. Addresses are normalized to lower case
@@ -82,7 +83,8 @@ export function normalizeEmail(email: string): string {
 
 /**
  * The row as clients see it. The avatar's variant list comes from the matrix
- * rather than the volume: the files are written together or not at all.
+ * rather than the volume: the files are written together or not at all, and the
+ * links are classified rather than stored.
  */
 export function toUserResponse(user: UserRow): UserResponse {
   return {
@@ -93,6 +95,9 @@ export function toUserResponse(user: UserRow): UserResponse {
     avatar: user.avatarId
       ? variantUrls('profile', user.avatarId, AVATAR_VARIANTS)
       : null,
+    bio: user.bio,
+    websiteUrl: user.websiteUrl,
+    socialLinks: toSocialLinks(user.socialLinks),
     memberSince: user.memberSince.toISOString(),
     hasPassword: user.passwordHash !== null,
     googleLinked: user.googleUserId !== null

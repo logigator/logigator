@@ -20,7 +20,11 @@ export type FormFieldKind =
   | 'password'
   | 'passwordRepeat'
   | 'documentName'
-  | 'documentDescription';
+  | 'documentDescription'
+  | 'bio'
+  /** Any profile link: the website beside the username, or one of the three
+   * slots under it. They carry the same schema and so the same message. */
+  | 'url';
 
 /** Error key a group carrying {@link passwordsMatch} sets when they differ. */
 const PASSWORD_MISMATCH = 'passwordMismatch';
@@ -141,6 +145,16 @@ function zodMessage(kind: FormFieldKind, codes: string[]): TranslationKey {
       return tooBig ? 'forms.errors.nameTooLong' : 'forms.errors.nameRequired';
     case 'documentDescription':
       return 'forms.errors.descriptionTooLong';
+    // No minimum to report: a bio may be empty, and being too long is the one
+    // rule it carries.
+    case 'bio':
+      return 'forms.errors.bioTooLong';
+    // One message for every way a link can be refused — wrong scheme, no
+    // scheme, credentials in it — because they are one instruction to a member:
+    // paste the address bar. Length is not one of them, since no paste fixes a
+    // link that is already too long.
+    case 'url':
+      return tooBig ? 'forms.errors.urlTooLong' : 'forms.errors.urlInvalid';
     default:
       if (tooSmall) return 'forms.errors.passwordTooShort';
       if (tooBig) return 'forms.errors.passwordTooLong';

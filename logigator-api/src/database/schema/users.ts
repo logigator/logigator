@@ -1,6 +1,7 @@
 import {
   boolean,
   index,
+  jsonb,
   pgTable,
   timestamp,
   uuid,
@@ -37,6 +38,37 @@ export const users = pgTable(
      * keeps the URLs behind it cacheable forever.
      */
     avatarId: uuid('avatar_id'),
+    /**
+     * What the member says about themselves. Plain text and stored as text: it
+     * is interpolated into the profile page and parsed nowhere, so nothing here
+     * has to be escaped twice or trusted twice. `documents.description` is the
+     * same column shape for the same reason.
+     */
+    bio: varchar('bio', { length: 500 }).notNull().default(''),
+    /**
+     * The member's own site, kept apart from `socialLinks` because the profile
+     * page treats it differently — its own line, more prominent than the row of
+     * icons. Nullable rather than defaulted to empty: "no website" is a state
+     * the page has to be able to tell from "an empty one".
+     */
+    websiteUrl: varchar('website_url', { length: 2048 }),
+    /**
+     * Up to three profile links, in the member's order, stored as the URLs they
+     * submitted and nothing else.
+     *
+     * **The platform is deliberately not stored.** It is derived from the host
+     * on every read, so extending the table in `@logigator/core` reclassifies
+     * every profile that exists without a migration — and a classification
+     * written down once would be one the server could not verify, since no host
+     * is ever fetched. `documents.document` is a jsonb column of a different
+     * kind: what it holds is expensive to derive and integrity-bearing, which
+     * this is not.
+     *
+     * A child table was the other candidate. It would need an order column and
+     * a join per read for a list that is three long and never searched, sorted
+     * or filtered.
+     */
+    socialLinks: jsonb('social_links').$type<string[]>().notNull().default([]),
     memberSince: timestamp('member_since', { withTimezone: true })
       .notNull()
       .defaultNow()

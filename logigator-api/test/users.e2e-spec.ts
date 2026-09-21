@@ -282,6 +282,135 @@ describe('the signed-in user', () => {
     credentials.password = 'babbage99';
   });
 
+  describe('the profile fields', () => {
+    /** Reads the account back, so what is asserted is what was stored. */
+    const readBack = async () => {
+      const response = await api.inject({
+        method: 'GET',
+        url: '/api/user',
+        headers: jar.headers()
+      });
+      return response.json();
+    };
+
+    it('stores the links as submitted and answers them classified', async () => {
+      const response = await api.inject({
+        method: 'PATCH',
+        url: '/api/user',
+        headers: jar.headers(),
+        payload: {
+          bio: '  Relay logic and old microprocessors.  ',
+          websiteUrl: 'https://Ada.Example/blog?utm_source=mail&page=2',
+          socialLinks: [
+            'https://GitHub.com/Ada?utm_campaign=profile',
+            'https://unknown.example/me',
+            'https://youtu.be/dQw4w9WgXcQ?si=share&t=30'
+          ]
+        }
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.json().user).toMatchObject({
+        bio: 'Relay logic and old microprocessors.',
+        websiteUrl: 'https://ada.example/blog?page=2',
+        socialLinks: [
+          { url: 'https://github.com/Ada', platform: 'github' },
+          { url: 'https://unknown.example/me', platform: 'other' },
+          // `si` is the share sheet's attribution and `t` is where in the
+          // video the link starts — one goes, one stays.
+          { url: 'https://youtu.be/dQw4w9WgXcQ?t=30', platform: 'youtube' }
+        ]
+      });
+
+      // The stored form is the normalized one, and the platform is not in the
+      // row: it is derived from the host on the way out.
+      await expect(readBack()).resolves.toMatchObject({
+        websiteUrl: 'https://ada.example/blog?page=2',
+        socialLinks: [
+          { url: 'https://github.com/Ada', platform: 'github' },
+          { url: 'https://unknown.example/me', platform: 'other' },
+          { url: 'https://youtu.be/dQw4w9WgXcQ?t=30', platform: 'youtube' }
+        ]
+      });
+    });
+
+    it('refuses a link it would not hand to a reader', async () => {
+      for (const url of [
+        'javascript:alert(1)',
+        'data:text/html,<script>x</script>',
+        // Reads as a GitHub link; the host is the part after the `@`.
+        'https://github.com@evil.example/x',
+        '//github.com/ada',
+        'github.com/ada'
+      ]) {
+        const response = await api.inject({
+          method: 'PATCH',
+          url: '/api/user',
+          headers: jar.headers(),
+          payload: { socialLinks: [url] }
+        });
+
+        expect(response.statusCode).toBe(422);
+        // Named down to the slot: the field's own message would say nothing
+        // about which of three links was refused.
+        expect(Object.keys(response.json().details)).toEqual(['socialLinks.0']);
+      }
+    });
+
+    it('holds three links, duplicates and all', async () => {
+      const url = 'https://codeberg.org/ada';
+      const stored = await api.inject({
+        method: 'PATCH',
+        url: '/api/user',
+        headers: jar.headers(),
+        payload: { socialLinks: [url, url, url] }
+      });
+      expect(stored.statusCode).toBe(200);
+      expect((await readBack()).socialLinks).toEqual([
+        { url, platform: 'codeberg' },
+        { url, platform: 'codeberg' },
+        { url, platform: 'codeberg' }
+      ]);
+
+      const tooMany = await api.inject({
+        method: 'PATCH',
+        url: '/api/user',
+        headers: jar.headers(),
+        payload: { socialLinks: [url, url, url, url] }
+      });
+      expect(tooMany.statusCode).toBe(422);
+    });
+
+    it('clears a field without touching the others', async () => {
+      await api.inject({
+        method: 'PATCH',
+        url: '/api/user',
+        headers: jar.headers(),
+        payload: {
+          bio: 'Ada',
+          websiteUrl: 'https://ada.example/',
+          socialLinks: ['https://github.com/ada']
+        }
+      });
+
+      const cleared = await api.inject({
+        method: 'PATCH',
+        url: '/api/user',
+        headers: jar.headers(),
+        payload: { websiteUrl: null, socialLinks: [] }
+      });
+
+      expect(cleared.statusCode).toBe(200);
+      expect(cleared.json().user).toMatchObject({
+        // Nulled and emptied, which is how a field is removed: the patch is
+        // partial, so what the body does not mention it does not touch.
+        websiteUrl: null,
+        socialLinks: [],
+        bio: 'Ada'
+      });
+    });
+  });
+
   it('re-encodes an avatar into every variant it advertises', async () => {
     const upload = await multipart(PNG, 'me.png', 'image/png');
     const response = await api.inject({

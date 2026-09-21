@@ -1,21 +1,17 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { HttpTestingController } from '@angular/common/http/testing';
-import { EMPTY_PAGE } from '../../../testing/community-rows';
+import { EMPTY_PAGE, publicProfile } from '../../../testing/community-rows';
 import { configureTestBed } from '../../../testing/configure-test-bed';
 import { ProfileService, type ProfileSection } from './profile.service';
 
 const USER = '33333333-3333-4333-8333-333333333333';
 const PROFILE_URL = `/api/community/users/${USER}`;
 
-const PROFILE = {
-  id: USER,
-  username: 'marek_h',
-  avatar: null,
-  memberSince: '2024-03-09T00:00:00.000Z',
-  publicProjects: 4,
-  publicComponents: 2
-};
+// Through the shared factory rather than a literal: the boundary validates the
+// response, so a fixture missing a field the API answers reads as a failed
+// request rather than as the row it was meant to be.
+const PROFILE = publicProfile({ id: USER });
 
 describe('ProfileService', () => {
   let http: HttpTestingController;

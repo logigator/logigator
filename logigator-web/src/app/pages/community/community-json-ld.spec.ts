@@ -127,6 +127,54 @@ describe('the community pages’ JSON-LD', () => {
     );
   });
 
+  async function resolveProfile(patch = {}): Promise<void> {
+    const content = TestBed.inject(ProfileService);
+    const resolved = content.resolveProfile(USER);
+    http.expectOne(PROFILE_URL).flush(publicProfile({ id: USER, ...patch }));
+    await resolved;
+
+    apply(
+      { titleKey: 'pages.community.profile.title', jsonLd: profileJsonLd },
+      `/en/community/users/${USER}`
+    );
+  }
+
+  it('names everywhere else the member is, and what they say about themselves', async () => {
+    await resolveProfile({
+      bio: 'Relay logic and old microprocessors.',
+      websiteUrl: 'https://ada.example/',
+      socialLinks: [
+        { url: 'https://github.com/ada', platform: 'github' },
+        { url: 'https://unknown.example/me', platform: 'other' }
+      ]
+    });
+
+    expect(jsonLdNode('ProfilePage')?.['mainEntity']).toMatchObject({
+      description: 'Relay logic and old microprocessors.',
+      // The website first, then the links in the member's own order. A link
+      // whose host the table does not know travels with the rest: `sameAs`
+      // claims the member is the same entity there, which is true of a place
+      // this site has no name for.
+      sameAs: [
+        'https://ada.example/',
+        'https://github.com/ada',
+        'https://unknown.example/me'
+      ]
+    });
+  });
+
+  it('leaves both out rather than emitting them empty', async () => {
+    await resolveProfile();
+
+    const person = jsonLdNode('ProfilePage')?.['mainEntity'] as
+      Record<string, unknown> | undefined;
+    // A member who has published nothing about themselves has nothing for a
+    // consumer to read, and an empty `description` would be a statement that
+    // they wrote nothing.
+    expect(person).not.toHaveProperty('description');
+    expect(person).not.toHaveProperty('sameAs');
+  });
+
   it('describes a member’s page and the member as two nodes', async () => {
     const content = TestBed.inject(ProfileService);
     const resolved = content.resolveProfile(USER);

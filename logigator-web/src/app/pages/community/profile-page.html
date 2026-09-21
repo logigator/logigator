@@ -25,7 +25,39 @@
       >
         {{ member.username }}
       </h1>
-      <!-- Mono is data: the date and the two counts, and nothing else. -->
+
+      <!-- The member's own site, and the only link the header gives this much
+           room: it is theirs, where the row below is their presence on
+           somebody else's. The text is the host, derived from the stored URL —
+           never the URL as typed, which could read as a link to somewhere it
+           does not go, and never the whole address, which nobody reads. -->
+      @if (website(); as site) {
+      <p class="mt-2 min-w-0">
+        <a
+          class="inline-flex max-w-full items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+          [href]="site.url"
+          target="_blank"
+          rel="noopener noreferrer ugc nofollow"
+        >
+          <i class="ph ph-globe shrink-0" aria-hidden="true"></i>
+          <span class="truncate">{{ site.host }}</span>
+        </a>
+      </p>
+      }
+
+      <!-- The member's own words. Interpolated as text and rendered as text:
+           nothing here is markdown, and nothing on this page is written by a
+           reader. `whitespace-pre-line` keeps the paragraph breaks they typed
+           into the textarea without opening the door to markup. -->
+      @if (member.bio) {
+      <p
+        class="mt-3 max-w-prose text-sm leading-relaxed break-words whitespace-pre-line text-text"
+      >
+        {{ member.bio }}
+      </p>
+      }
+
+      <!-- Mono is data: the date and the three counts, and nothing else. -->
       <p class="mt-2 font-mono text-xs text-muted">
         <span
           >{{ t('pages.community.profile.memberSince') }} {{ memberSince()
@@ -41,7 +73,34 @@
           >{{ counts()?.components }} {{ t('pages.community.profile.components')
           }}</span
         >
+        <span aria-hidden="true"> · </span>
+        <span
+          >{{ counts()?.stars }} {{ t('pages.community.profile.stars') }}</span
+        >
       </p>
+
+      <!-- The three slots, in the member's order. Tracking by index rather
+           than by URL: the same link twice is allowed, and a duplicated track
+           key throws. Each is named by its label — a platform's proper noun, or
+           the host for one the table does not know — which is what
+           `sr-only` carries, so the strip needs no translation of its own. -->
+      @if (socials().length) {
+      <ul class="mt-3 flex flex-wrap items-center gap-1">
+        @for (link of socials(); track $index) {
+        <li>
+          <a
+            class="inline-flex h-8 w-8 items-center justify-center rounded-md text-lg text-muted hover:bg-content-hover hover:text-text focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            [href]="link.url"
+            target="_blank"
+            rel="noopener noreferrer ugc nofollow"
+          >
+            <i [class]="link.icon" aria-hidden="true"></i>
+            <span class="sr-only">{{ link.label }}</span>
+          </a>
+        </li>
+        }
+      </ul>
+      }
     </div>
   </div>
 

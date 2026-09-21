@@ -104,6 +104,9 @@ const en = {
       nameRequired: 'Enter a name.',
       nameTooLong: 'Use at most 20 characters.',
       descriptionTooLong: 'Use at most 2048 characters.',
+      bioTooLong: 'Use at most 500 characters.',
+      urlInvalid: 'Enter a full link starting with http:// or https://.',
+      urlTooLong: 'Use at most 2048 characters.',
       rateLimited: 'Too many attempts. Please wait a moment and try again.',
       serviceUnavailable:
         'The service is temporarily unavailable. Please try again in a moment.',
@@ -328,6 +331,7 @@ const en = {
         memberSince: 'Member since',
         projects: 'Projects',
         components: 'Components',
+        stars: 'Stars',
         starredProjects: 'Starred Projects',
         starredComponents: 'Starred Components',
         emptyProjects: 'No public projects',
@@ -421,11 +425,15 @@ const en = {
         profile: {
           heading: 'Profile',
           description:
-            'The name and picture shown beside everything you publish.',
+            'The name, picture and profile shown beside everything you publish.',
           changePicture: 'Change picture',
           removePicture: 'Remove',
           pictureHint:
             'PNG, JPEG, WebP or GIF. It is cropped square and re-encoded.',
+          bioLabel: 'Bio',
+          websiteLabel: 'Website',
+          /** Numbered: the three slots are the same field three times. */
+          linkLabel: 'Link {{n}}',
           save: 'Save',
           saved: 'Your profile was saved.',
           avatarRejected:

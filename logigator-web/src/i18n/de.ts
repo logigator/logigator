@@ -95,6 +95,10 @@ const de: TranslationSchema = {
       nameRequired: 'Gib einen Namen ein.',
       nameTooLong: 'Verwende höchstens 20 Zeichen.',
       descriptionTooLong: 'Verwende höchstens 2048 Zeichen.',
+      bioTooLong: 'Verwende höchstens 500 Zeichen.',
+      urlInvalid:
+        'Gib einen vollständigen Link ein, beginnend mit http:// oder https://.',
+      urlTooLong: 'Verwende höchstens 2048 Zeichen.',
       rateLimited:
         'Zu viele Versuche. Bitte warte einen Moment und versuche es erneut.',
       serviceUnavailable:
@@ -323,6 +327,7 @@ const de: TranslationSchema = {
         memberSince: 'Mitglied seit',
         projects: 'Projekte',
         components: 'Bausteine',
+        stars: 'Sterne',
         starredProjects: 'Projekte mit Stern',
         starredComponents: 'Bausteine mit Stern',
         emptyProjects: 'Keine öffentlichen Projekte',
@@ -414,11 +419,14 @@ const de: TranslationSchema = {
         profile: {
           heading: 'Profil',
           description:
-            'Name und Bild, die neben allem stehen, was du veröffentlichst.',
+            'Name, Bild und Profil, die neben allem stehen, was du veröffentlichst.',
           changePicture: 'Bild ändern',
           removePicture: 'Entfernen',
           pictureHint:
             'PNG, JPEG, WebP oder GIF. Es wird quadratisch zugeschnitten und neu kodiert.',
+          bioLabel: 'Über mich',
+          websiteLabel: 'Webseite',
+          linkLabel: 'Link {{n}}',
           save: 'Speichern',
           saved: 'Dein Profil wurde gespeichert.',
           avatarRejected:

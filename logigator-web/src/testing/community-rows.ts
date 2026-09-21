@@ -73,9 +73,15 @@ export function publicProfile(
     id: '33333333-3333-4333-8333-333333333333',
     username: 'marek_h',
     avatar: null,
+    // A member who published nothing about themselves, which is what every
+    // account starts as — a spec that wants a bio or a link patches one in.
+    bio: '',
+    websiteUrl: null,
+    socialLinks: [],
     memberSince: '2024-03-09T00:00:00.000Z',
     publicProjects: 4,
     publicComponents: 2,
+    stars: 12,
     ...patch
   };
 }

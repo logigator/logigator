@@ -50,7 +50,12 @@ export class ProfileService {
     locale: Locale,
     currentSessionId?: string
   ): Promise<ProfileUpdateResult> {
-    const changes: Partial<Pick<UserRow, 'username' | 'passwordHash'>> = {};
+    const changes: Partial<
+      Pick<
+        UserRow,
+        'username' | 'passwordHash' | 'bio' | 'websiteUrl' | 'socialLinks'
+      >
+    > = {};
 
     // Once for both: bcrypt is deliberately expensive, and a combined change
     // would otherwise verify the same password twice.
@@ -60,6 +65,24 @@ export class ProfileService {
 
     if (body.username !== undefined) {
       changes.username = body.username;
+    }
+
+    // The profile's own fields, and none of them gated on the password: a bio
+    // or a link moves control of nothing. What arrives here has already been
+    // normalized by the contract — the URLs are the parser's canonical form
+    // with the tracking parameters gone, so what is stored is what a later read
+    // answers with.
+    if (body.bio !== undefined) {
+      changes.bio = body.bio;
+    }
+    if (body.websiteUrl !== undefined) {
+      changes.websiteUrl = body.websiteUrl;
+    }
+    if (body.socialLinks !== undefined) {
+      // The whole list, in the member's order. No deduplication: the same URL
+      // in two slots is allowed, and only the top-level update schema decides
+      // what may be written.
+      changes.socialLinks = body.socialLinks;
     }
 
     if (body.password !== undefined) {

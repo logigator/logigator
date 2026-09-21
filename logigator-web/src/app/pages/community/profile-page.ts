@@ -5,8 +5,10 @@ import {
   inject
 } from '@angular/core';
 import { RouterLink, RouterOutlet } from '@angular/router';
+import { socialHost, socialLinkLabel } from '@logigator/core';
 import { LgAvatar } from '@logigator/ui';
 import { SiteLinks } from '../../layout/site-links';
+import { SOCIAL_ICONS } from './social-icons';
 import { SectionError } from '../../states/section-error';
 import { NotFoundPage } from '../not-found/not-found-page';
 import { TranslateDirective } from '../../translation/translate.directive';
@@ -85,13 +87,44 @@ export class ProfilePage {
       : '';
   });
 
+  /**
+   * The member's own site, and the host to show for it. The text is the host
+   * and never the stored URL: a URL printed whole is a line nobody reads, and
+   * the host is the part that says where the link goes. What it came from is
+   * stored, so `socialHost` is a derivation rather than a second guess.
+   */
+  protected readonly website = computed(() => {
+    const url = this.profile()?.websiteUrl;
+    return url ? { url, host: socialHost(url) } : null;
+  });
+
+  /**
+   * The three slots as the strip draws them: order is the member's, the name is
+   * the platform's proper noun or the link's own host, and the glyph is the
+   * site's.
+   *
+   * Nothing here is a translation key. A platform's label is a brand name and a
+   * fallback's is a hostname — both are the same in every language, which is
+   * also why the strip needs no locale table.
+   */
+  protected readonly socials = computed(() =>
+    (this.profile()?.socialLinks ?? []).map((link) => ({
+      ...link,
+      label: socialLinkLabel(link.platform, link.url),
+      // Indexed by a platform the contract typed off the same table, so a
+      // platform added to core is a missing glyph here rather than a cast.
+      icon: SOCIAL_ICONS[link.platform]
+    }))
+  );
+
   protected readonly counts = computed(() => {
     const profile = this.profile();
     if (!profile) return null;
     const number = new Intl.NumberFormat(this.translation.activeLang());
     return {
       projects: number.format(profile.publicProjects),
-      components: number.format(profile.publicComponents)
+      components: number.format(profile.publicComponents),
+      stars: number.format(profile.stars)
     };
   });
 

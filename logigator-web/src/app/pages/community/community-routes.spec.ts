@@ -9,7 +9,11 @@ import type {
   CommunityProjectDetail,
   DocumentVisibility
 } from '@logigator/contract';
-import { communityRow, EMPTY_PAGE } from '../../../testing/community-rows';
+import {
+  communityRow,
+  EMPTY_PAGE,
+  publicProfile
+} from '../../../testing/community-rows';
 import { configureTestBed } from '../../../testing/configure-test-bed';
 import { PageMeta } from '../../seo/seo.service';
 import { communityRoutes } from './community-routes';
@@ -116,14 +120,9 @@ describe('the community routes', () => {
     const opened = router.navigateByUrl(`/en/community/users/${USER}`);
     (
       await waitForRequest((url) => url === `/api/community/users/${USER}`)
-    ).flush({
-      id: USER,
-      username: 'marek_h',
-      avatar: null,
-      memberSince: '2024-03-09T00:00:00.000Z',
-      publicProjects: 0,
-      publicComponents: 0
-    });
+    ).flush(
+      publicProfile({ id: USER, publicProjects: 0, publicComponents: 0 })
+    );
     (
       await waitForRequest(
         (url) => url === `/api/community/users/${USER}/projects`
@@ -157,14 +156,9 @@ describe('the community routes', () => {
     );
     (
       await waitForRequest((url) => url === `/api/community/users/${USER}`)
-    ).flush({
-      id: USER,
-      username: 'marek_h',
-      avatar: null,
-      memberSince: '2024-03-09T00:00:00.000Z',
-      publicProjects: 0,
-      publicComponents: 0
-    });
+    ).flush(
+      publicProfile({ id: USER, publicProjects: 0, publicComponents: 0 })
+    );
     (
       await waitForRequest(
         (url) => url === `/api/community/users/${USER}/components`

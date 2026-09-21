@@ -212,3 +212,14 @@ export {
   encodeLgix,
   hasLgixMagic
 } from './format/lgix-container';
+
+// ---- social: the profile links an account may carry ----
+export {
+  classifySocialUrl,
+  SOCIAL_PLATFORMS,
+  socialHost,
+  socialLinkLabel,
+  socialPlatformLabel
+} from './social/social-platforms';
+export type { SocialPlatform } from './social/social-platforms';
+export { normalizeSocialUrl } from './social/social-url';

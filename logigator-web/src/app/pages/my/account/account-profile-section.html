@@ -86,6 +86,82 @@
         />
       </lg-form-field>
 
+      @let bioMessage = bioError();
+
+      <!-- Plain text, and rendered as text: interpolation, a textarea and
+           nothing else. No markdown, no link detection — a bio is not a way to
+           write markup onto a page that carries the member's name. -->
+      <lg-form-field
+        #bioField="lgFormField"
+        inputId="account-bio"
+        class="max-w-prose"
+        [label]="t('pages.my.account.profile.bioLabel')"
+        [error]="bioMessage ? t(bioMessage) : undefined"
+      >
+        <textarea
+          lgTextarea
+          id="account-bio"
+          rows="4"
+          class="w-full"
+          formControlName="bio"
+          [invalid]="!!bioMessage"
+          [attr.aria-describedby]="bioField.describedBy()"
+        ></textarea>
+      </lg-form-field>
+
+      @let websiteMessage = websiteError();
+
+      <!-- A link, so the scheme is part of what is typed; the placeholder
+           spells out the half people leave off, which is the one shape the API
+           refuses. -->
+      <lg-form-field
+        #websiteField="lgFormField"
+        inputId="account-website"
+        class="max-w-sm"
+        [label]="t('pages.my.account.profile.websiteLabel')"
+        [error]="websiteMessage ? t(websiteMessage) : undefined"
+      >
+        <input
+          lgInputText
+          id="account-website"
+          type="url"
+          inputmode="url"
+          autocomplete="url"
+          placeholder="https://"
+          class="w-full"
+          formControlName="websiteUrl"
+          [invalid]="!!websiteMessage"
+          [attr.aria-describedby]="websiteField.describedBy()"
+        />
+      </lg-form-field>
+
+      <!-- Numbered rather than one repeated label: three fields with the same
+           accessible name are three fields a screen reader user cannot tell
+           apart. -->
+      @for (link of linkFields; track link.name; let index = $index) { @let
+      linkMessage = link.error();
+      <lg-form-field
+        #linkField="lgFormField"
+        [inputId]="'account-' + link.name"
+        class="max-w-sm"
+        [label]="t('pages.my.account.profile.linkLabel', { n: index + 1 })"
+        [error]="linkMessage ? t(linkMessage) : undefined"
+      >
+        <input
+          lgInputText
+          [id]="'account-' + link.name"
+          type="url"
+          inputmode="url"
+          autocomplete="url"
+          placeholder="https://"
+          class="w-full"
+          [formControlName]="link.name"
+          [invalid]="!!linkMessage"
+          [attr.aria-describedby]="linkField.describedBy()"
+        />
+      </lg-form-field>
+      }
+
       <div>
         <button lgButton type="submit" [loading]="saving()">
           {{ t('pages.my.account.profile.save') }}

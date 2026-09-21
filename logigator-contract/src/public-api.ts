@@ -43,9 +43,11 @@ export {
   type ReadinessResponse
 } from './health/health.contract';
 export {
+  bioSchema,
   emailSchema,
   passwordSchema,
   usernameSchema,
+  websiteUrlSchema,
   userResponseSchema,
   updateUserRequestSchema,
   updateUserResponseSchema,
@@ -55,6 +57,13 @@ export {
   type UpdateUserResponse,
   type DeleteUserRequest
 } from './user/user.contract';
+export {
+  MAX_SOCIAL_LINKS,
+  socialLinkSchema,
+  socialPlatformSchema,
+  socialUrlSchema,
+  type SocialLink
+} from './social/social.contract';
 export {
   registerRequestSchema,
   registerResponseSchema,

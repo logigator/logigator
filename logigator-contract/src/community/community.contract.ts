@@ -4,6 +4,7 @@ import { pageQuerySchema, pageSchema } from '../page/page.contract';
 import { authorSchema } from '../document/document.contract';
 import { componentSummarySchema } from '../document/component.contract';
 import { projectSummarySchema } from '../document/project.contract';
+import { socialLinkSchema } from '../social/social.contract';
 
 /**
  * A community listing's query.
@@ -91,9 +92,19 @@ export const publicProfileSchema = z
     id: z.string().uuid(),
     username: z.string(),
     avatar: z.array(imageVariantSchema).nullable(),
+    bio: z.string(),
+    websiteUrl: z.string().nullable(),
+    socialLinks: z.array(socialLinkSchema),
     memberSince: z.string(),
     publicProjects: z.number().int().nonnegative(),
-    publicComponents: z.number().int().nonnegative()
+    publicComponents: z.number().int().nonnegative(),
+    /**
+     * The stars the member's published documents have collected — received, not
+     * given. Counted over public rows only, like every other number here:
+     * a private document's stars are nobody else's business and folding them
+     * into a public tally would publish a count of work that is not published.
+     */
+    stars: z.number().int().nonnegative()
   })
   .loose();
 

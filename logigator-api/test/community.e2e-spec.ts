@@ -18,13 +18,22 @@ describe('the community surface', () => {
   let grace: CookieJar;
   let graceId: string;
 
+  /**
+   * A registered, signed-in member.
+   *
+   * **At most five per spec file**: registration is rate-limited per address,
+   * and every request here comes from one. The status is asserted rather than
+   * discarded, so a sixth is a rate-limit failure at this line instead of a
+   * member with no session in whichever test asked for one.
+   */
   async function signUp(email: string, username: string): Promise<CookieJar> {
     const password = 'lovelace1';
-    await api.inject({
+    const registered = await api.inject({
       method: 'POST',
       url: '/api/auth/register',
       payload: { username, email, password }
     });
+    expect(registered.statusCode).toBe(201);
     await api.inject({
       method: 'POST',
       url: '/api/auth/verify-email',
@@ -623,6 +632,140 @@ describe('the community surface', () => {
       // left out.
       expect(response.json().email).toBeUndefined();
       expect(response.json().hasPassword).toBeUndefined();
+    });
+
+    it('carries the bio, the website and the classified links', async () => {
+      const cookies = await signUp('enrich@example.com', 'Enrich');
+      const id = (
+        await api.inject({
+          method: 'GET',
+          url: '/api/user',
+          headers: cookies.headers()
+        })
+      ).json().id;
+
+      await api.inject({
+        method: 'PATCH',
+        url: '/api/user',
+        headers: cookies.headers(),
+        payload: {
+          bio: 'I build adders out of relays.',
+          websiteUrl: 'https://ada.example/',
+          socialLinks: ['https://github.com/ada', 'https://fosstodon.org/@ada']
+        }
+      });
+
+      const response = await api.inject({
+        method: 'GET',
+        url: `/api/community/users/${id}`
+      });
+
+      // Classified on read, by the same rule the account's own view uses — the
+      // public page and the account page cannot disagree about what a link is.
+      expect(response.json()).toMatchObject({
+        bio: 'I build adders out of relays.',
+        websiteUrl: 'https://ada.example/',
+        socialLinks: [
+          { url: 'https://github.com/ada', platform: 'github' },
+          { url: 'https://fosstodon.org/@ada', platform: 'mastodon' }
+        ]
+      });
+      // Nothing private travels with them.
+      expect(response.json().email).toBeUndefined();
+    });
+
+    it('counts the stars its published work received, and no others', async () => {
+      const cookies = await signUp('counted@example.com', 'Counted');
+      const id = (
+        await api.inject({
+          method: 'GET',
+          url: '/api/user',
+          headers: cookies.headers()
+        })
+      ).json().id;
+
+      const shown = await create<ProjectSummary>(
+        'projects',
+        {
+          name: 'Loved',
+          visibility: 'public',
+          document: circuitDocument('Loved', HALF_ADDER_BODY)
+        },
+        cookies
+      );
+      const hidden = await create<ProjectSummary>(
+        'projects',
+        { name: 'Secret' },
+        cookies
+      );
+      expect(hidden.visibility).not.toBe('public');
+
+      await api.inject({
+        method: 'PUT',
+        url: `/api/community/projects/${shown.link}/star`,
+        headers: grace.headers()
+      });
+
+      // A star on a document nobody may read. The public route refuses to set
+      // one on a private document, so the row is written where such a star
+      // would come from — a row that predates the document being unpublished,
+      // or one a later change put out of reach.
+      await api.db.insert(projectStars).values({
+        userId: graceId,
+        projectId: hidden.id
+      });
+
+      const response = await api.inject({
+        method: 'GET',
+        url: `/api/community/users/${id}`
+      });
+
+      // One, not two: `visibility = 'public'` is what makes the tally a count
+      // of published work rather than of everything the member owns.
+      expect(response.json().stars).toBe(1);
+
+      // And it follows the document: withdrawing it takes its stars off the
+      // profile, the way it takes them off every listing.
+      await api.inject({
+        method: 'PATCH',
+        url: `/api/projects/${shown.id}`,
+        headers: cookies.headers(),
+        payload: { visibility: 'private' }
+      });
+
+      const after = await api.inject({
+        method: 'GET',
+        url: `/api/community/users/${id}`
+      });
+      expect(after.json().stars).toBe(0);
+    });
+
+    it('counts stars received, not stars given', async () => {
+      const tally = async () =>
+        (
+          await api.inject({
+            method: 'GET',
+            url: `/api/community/users/${graceId}`
+          })
+        ).json().stars as number;
+
+      const before = await tally();
+
+      // Something of somebody else's to star. Grace's own number is what is
+      // asserted below, and it reads before and after rather than as a figure:
+      // what is being tested is that giving a star does not move the giver's
+      // own profile, whatever either number happens to be.
+      const hers = await publicProject('Ada´s gift');
+      const given = await api.inject({
+        method: 'PUT',
+        url: `/api/community/projects/${hers.link}/star`,
+        headers: grace.headers()
+      });
+
+      // The star landed — asserted, so the comparison below is about where the
+      // tally did not move rather than about a request that never happened.
+      expect(given.json()).toEqual({ starred: true, stars: 1 });
+      expect(await tally()).toBe(before);
     });
 
     it('lists only that user´s published documents', async () => {

@@ -16,6 +16,9 @@ const USER: UserResponse = {
   email: 'ada@example.com',
   emailVerified: true,
   avatar: null,
+  bio: '',
+  websiteUrl: null,
+  socialLinks: [],
   memberSince: '2026-01-01T00:00:00.000Z',
   hasPassword: true,
   googleLinked: false
@@ -33,14 +36,14 @@ describe('the account sections', () => {
    * nothing would test nothing. It costs no request — `resolve` is what reads
    * the API, and nothing calls it here.
    */
-  function render<T>(component: Type<T>): void {
+  function render<T>(component: Type<T>, user: UserResponse = USER): void {
     configureTestBed(
       [{ provide: SessionService, useClass: SessionService }],
       [component]
     );
     http = TestBed.inject(HttpTestingController);
     session = TestBed.inject(SessionService);
-    session.signedIn(USER);
+    session.signedIn(user);
 
     const fixture: ComponentFixture<T> = TestBed.createComponent(component);
     fixture.detectChanges();
@@ -72,7 +75,15 @@ describe('the account sections', () => {
 
     const request = http.expectOne('/api/user');
     expect(request.request.method).toBe('PATCH');
-    expect(request.request.body).toEqual({ username: 'ada_l' });
+    // The section's fields, written together: every one is on screen and one
+    // Save is what the form offers. The account's own empty profile is what
+    // the untouched fields send back.
+    expect(request.request.body).toEqual({
+      username: 'ada_l',
+      bio: '',
+      websiteUrl: null,
+      socialLinks: []
+    });
     request.flush({
       user: { ...USER, username: 'ada_l' },
       emailVerificationSent: false
@@ -80,6 +91,59 @@ describe('the account sections', () => {
     await settle();
 
     expect(session.user()?.username).toBe('ada_l');
+  });
+
+  /**
+   * The body is the request schema's own output, so this is the write path
+   * carrying the normalization rather than a second copy of it: what leaves the
+   * form is what a later read answers with, tracking parameters and all.
+   */
+  it('submits the profile links in the form the API stores them', async () => {
+    render(AccountProfileSection);
+    type('account-bio', '  Relays and old microprocessors.  ');
+    type('account-website', 'https://Ada.Example/blog?utm_source=mail&page=2');
+    type('account-link0', 'https://GitHub.com/ada?utm_campaign=profile');
+    root.querySelector('form')!.dispatchEvent(new Event('submit'));
+    await settle();
+
+    const request = http.expectOne('/api/user');
+    expect(request.request.body).toEqual({
+      username: 'ada',
+      bio: 'Relays and old microprocessors.',
+      websiteUrl: 'https://ada.example/blog?page=2',
+      // Two blank slots are no slots, so the list is the link alone.
+      socialLinks: ['https://github.com/ada']
+    });
+  });
+
+  it('clears the website by emptying its field', async () => {
+    render(AccountProfileSection, {
+      ...USER,
+      websiteUrl: 'https://ada.example/',
+      socialLinks: [{ url: 'https://github.com/ada', platform: 'github' }]
+    });
+    type('account-website', '');
+    root.querySelector('form')!.dispatchEvent(new Event('submit'));
+    await settle();
+
+    const request = http.expectOne('/api/user');
+    // Null and not an empty string: the column tells "no website" from "an
+    // empty one", and the profile page draws nothing for the first.
+    expect(request.request.body).toMatchObject({
+      websiteUrl: null,
+      socialLinks: ['https://github.com/ada']
+    });
+  });
+
+  it('refuses a link the API would refuse, without spending a request on it', async () => {
+    render(AccountProfileSection);
+    type('account-link0', 'javascript:alert(1)');
+    root.querySelector('form')!.dispatchEvent(new Event('submit'));
+    await settle();
+
+    // The field's own schema is the contract's, so the shape the API would
+    // answer 422 to never reaches it.
+    expect(http.match(() => true)).toHaveLength(0);
   });
 
   /**

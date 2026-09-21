@@ -35,7 +35,9 @@ import {
   toProjectSummary
 } from '../documents/circuit-responses';
 import { AVATAR_VARIANTS, variantUrls } from '../storage/image-variants';
+import { toSocialLinks } from '../users/social-links';
 import {
+  receivedStarCount,
   starCount,
   starCountSince,
   starredByCaller,
@@ -327,12 +329,18 @@ export class CommunityService {
    * group to get wrong.
    */
   async profile(userId: string): Promise<PublicProfile> {
-    const [user] = await this.db
-      .select()
+    // The tally rides in the same select rather than in the `Promise.all`
+    // below: it is a column of this answer, correlated on the row being read.
+    const [row] = await this.db
+      .select({
+        user: users,
+        stars: receivedStarCount(users.id)
+      })
       .from(users)
       .where(eq(users.id, userId))
       .limit(1);
 
+    const user = row?.user;
     if (!user) {
       throw new ApiException(
         HttpStatus.NOT_FOUND,
@@ -365,9 +373,14 @@ export class CommunityService {
       avatar: user.avatarId
         ? variantUrls('profile', user.avatarId, AVATAR_VARIANTS)
         : null,
+      bio: user.bio,
+      websiteUrl: user.websiteUrl,
+      socialLinks: toSocialLinks(user.socialLinks),
       memberSince: user.memberSince.toISOString(),
       publicProjects: projectCount?.value ?? 0,
-      publicComponents: componentCount?.value ?? 0
+      publicComponents: componentCount?.value ?? 0,
+      // `count(*)` is `bigint`; the sum of the two is one too.
+      stars: Number(row?.stars ?? 0)
     };
   }
 

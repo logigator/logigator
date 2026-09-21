@@ -1,6 +1,21 @@
-import { count, eq, sql, type Column, type SQL, type Table } from 'drizzle-orm';
+import {
+  count,
+  eq,
+  getColumnTable,
+  getTableName,
+  sql,
+  type Column,
+  type SQL,
+  type Table
+} from 'drizzle-orm';
 import type { PgTable } from 'drizzle-orm/pg-core';
 import type { Queryable } from '../database/database.module';
+import {
+  componentStars,
+  components,
+  projectStars,
+  projects
+} from '../database/schema';
 
 /**
  * The two derived fields every public listing carries, as correlated
@@ -66,8 +81,53 @@ export function starCountSince(
 }
 
 /**
- * The lifetime tally of one row whose id is already in hand — the third star
- * query, and the only one that is not part of a select list.
+ * The stars a member's published documents have collected — **received, not
+ * given**, which is the only tally a profile shows: what somebody gave away is
+ * on the document they gave it to.
+ *
+ * The one star query that spans both tables, because a member publishes
+ * projects and components and a profile counts their work rather than one kind
+ * of it. `starCount` counts one row's stars and is parameterised by the table
+ * it counts in; here the two are summed, so it is written out as two counts
+ * joined to the documents they belong to. It stays a correlated subquery in the
+ * outer `users` select rather than a query of its own — the profile read holds
+ * the row already, and this is one more column of the same answer.
+ *
+ * **`visibility = 'public'` is load-bearing, exactly as it is in every other
+ * community predicate.** A private document's stars would otherwise fold into a
+ * public number, which publishes a total that includes work nobody is allowed
+ * to see — and an unpublished document's page is not one a reader could reach
+ * to find out what the number was made of. The count therefore falls when a
+ * document is unpublished, which is the same rule the listings follow.
+ *
+ * `count(*)` is `bigint`, so `pg` hands the sum over as a string; callers
+ * convert, the way they do for `starCount`.
+ */
+export function receivedStarCount(circuitOwner: Column): SQL<number> {
+  // The outer column is spelled out with its table, which `starCount` can leave
+  // off: the only `id` in its subquery's scope is the outer one, while each half
+  // of this one joins a document table that has an `id` of its own — and a bare
+  // `"id"` binds to *that*, counting zero rather than failing loudly. Written as
+  // identifiers rather than as a `Column` chunk, which the builder renders
+  // unqualified in a select list.
+  const owner = sql`${sql.identifier(getTableName(getColumnTable(circuitOwner)))}.${sql.identifier(circuitOwner.name)}`;
+
+  return sql<number>`(
+    SELECT count(*) FROM ${projectStars} project_star
+      JOIN ${projects} project ON project.id = project_star.project_id
+     WHERE project.user_id = ${owner}
+       AND project.visibility = 'public'
+  ) + (
+    SELECT count(*) FROM ${componentStars} component_star
+      JOIN ${components} component ON component.id = component_star.component_id
+     WHERE component.user_id = ${owner}
+       AND component.visibility = 'public'
+  )`;
+}
+
+/**
+ * The lifetime tally of one row whose id is already in hand — the one star
+ * query that is not part of a select list.
  *
  * A star is set, a card is composed and a share link is read by three services
  * that each hold the row already, so there is no outer query to correlate

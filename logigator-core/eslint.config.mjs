@@ -56,8 +56,10 @@ export default defineConfig([
         }
       ],
       // Browser globals are as much of a leak as a browser import: core also
-      // runs in Node (API, migration script). `CompressionStream` is the one
-      // web API it may use — a Node >=18 global too.
+      // runs in Node (API, migration script). What it may use is what Node has
+      // as well, and nothing else: `CompressionStream` (the `.lgix`
+      // container), and `URL` with `URLSearchParams` (normalizing the links a
+      // profile carries, in `social/`).
       'no-restricted-globals': [
         'error',
         { name: 'window', message: 'core must run in Node as well.' },

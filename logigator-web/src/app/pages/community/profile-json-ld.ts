@@ -28,12 +28,29 @@ export function profileJsonLd(context: JsonLdContext): JsonLdNode[] {
   const avatarUrl = crawlerImageUrl(profile.avatar, 'jpeg');
   const avatar = avatarUrl ? context.absolute(avatarUrl) : null;
 
+  /**
+   * Everywhere else the same member is described: their own site first, then
+   * the three slots in the order they put them in. A link the table did not
+   * recognise is still one they chose to be identified by, so it travels with
+   * the rest — `sameAs` is a claim of identity, not a statement about which
+   * platform it is on.
+   */
+  const sameAs = [
+    ...(profile.websiteUrl ? [profile.websiteUrl] : []),
+    ...profile.socialLinks.map((link) => link.url)
+  ];
+
   const person: PersonNode = {
     '@type': 'Person',
     '@id': `${profileUrl}#person`,
     name: profile.username,
     url: profileUrl,
-    ...(avatar ? { image: avatar } : {})
+    ...(avatar ? { image: avatar } : {}),
+    // Both are omitted rather than emptied: a member with no bio and no links
+    // has nothing for a consumer to read, and an empty string is a description
+    // that says the member wrote nothing.
+    ...(profile.bio ? { description: profile.bio } : {}),
+    ...(sameAs.length ? { sameAs } : {})
   };
 
   const page: ProfilePageNode = {

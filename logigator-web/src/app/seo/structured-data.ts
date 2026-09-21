@@ -113,6 +113,17 @@ export interface PersonNode extends JsonLdNode {
   name: string;
   url: string;
   image?: string;
+  /** What the member says about themselves, where the page shows a bio. */
+  description?: string;
+  /**
+   * The member's other homes: the website they run and the profiles they keep
+   * elsewhere. A member is the same entity on each, which is the claim `sameAs`
+   * makes and the one a search engine uses to join the two.
+   *
+   * Absent rather than empty for a member who published none — a property with
+   * nothing behind it is left out, never emitted as an empty list.
+   */
+  sameAs?: string[];
 }
 
 /**
