@@ -16,11 +16,10 @@ const ENTRY: CircuitTileEntry = {
   },
   meta: {
     author: {
-      id: '33333333-3333-4333-8333-333333333333',
       username: 'marek_h',
-      avatar: null
+      avatar: null,
+      href: '/en/community/users/33333333-3333-4333-8333-333333333333'
     },
-    authorHref: '/en/community/users/33333333-3333-4333-8333-333333333333',
     stars: 12
   }
 };
@@ -92,6 +91,15 @@ describe('CircuitTiles', () => {
       '/en/community/users/33333333-3333-4333-8333-333333333333'
     );
     expect(author.closest('a[lgCircuitTileLink]')).toBeNull();
+  });
+
+  it('draws the tally on a tile that names no author', () => {
+    // A member's own page: the heading above says whose list it is, and the
+    // star count is the one thing the row still carries.
+    const el = render([{ ...ENTRY, meta: { author: null, stars: 12 } }]);
+
+    expect(el.textContent).toContain('12');
+    expect(el.querySelector('a[lgCircuitTileAuthor]')).toBeNull();
   });
 });
 

@@ -126,9 +126,9 @@ export class CircuitTiles {
           : entry.preview.light
         : null,
       stars: entry.meta?.stars,
-      author: entry.meta
+      author: entry.meta?.author
         ? {
-            href: entry.meta.authorHref,
+            href: entry.meta.author.href,
             name: entry.meta.author.username,
             avatar: entry.meta.author.avatar,
             initials: entry.meta.author.username.slice(0, 2).toUpperCase()

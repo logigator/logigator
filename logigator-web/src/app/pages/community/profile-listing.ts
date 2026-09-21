@@ -65,8 +65,10 @@ export class ProfileListing {
     const kind = section.endsWith('components') ? 'components' : 'projects';
     return toTileEntries(this.listing.entries() ?? [], {
       href: (row) => this.links.communityDocument(kind, row.link),
-      // Suppressed together with the star count, which is what a list whose
-      // rows all share an author wants.
+      // A member's own list names its author once, in the heading above, and
+      // keeps the tally — what each circuit collected is what they came to
+      // their own page to see. Their starred shelf is other people's, so each
+      // row names whose it is as well.
       ...(this.content.ownWork()
         ? {}
         : { authorHref: (row) => this.links.communityUser(row.author.id) })
