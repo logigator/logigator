@@ -7,6 +7,7 @@ import {
 } from '@angular/core';
 import { pictureFor } from '../../internal/picture';
 import { LgImageSource } from '../../tokens/image-source';
+import { LgPreviewPlaceholder } from '../preview-placeholder/preview-placeholder';
 
 /**
  * The tile's own destination, stretched over the whole card so anywhere that
@@ -71,8 +72,12 @@ export class LgCircuitTileAuthor {}
  * neither is inside the other.
  *
  * `preview` is one theme's ladder, not both, since no `<picture>` can
- * negotiate a colour scheme. `starsLabel` is the word a screen reader reads
- * after the count.
+ * negotiate a colour scheme. The render is line art on a transparent ground,
+ * so the frame carries the editor's dot ground — `lattice` — under it, which
+ * is what makes the render read as a board rather than as a drawing on a card.
+ * A circuit the editor has not rendered at all draws
+ * {@link LgPreviewPlaceholder} on that ground instead of leaving it blank.
+ * `starsLabel` is the word a screen reader reads after the count.
  *
  * Two more slots serve a list of the reader's own documents, where an author
  * and a star count say nothing: `[lgCircuitTileMeta]` replaces that row's
@@ -80,6 +85,7 @@ export class LgCircuitTileAuthor {}
  */
 @Component({
   selector: 'lg-circuit-tile',
+  imports: [LgPreviewPlaceholder],
   host: {
     class:
       'relative flex flex-col overflow-hidden rounded-md border border-border ' +
@@ -90,7 +96,7 @@ export class LgCircuitTileAuthor {}
          The padding keeps the board off the frame's edges, and containing it
          is what fits a preview of another shape rather than cutting it. -->
     <span
-      class="block aspect-square w-full border-b border-border bg-surface-100 p-2 dark:bg-surface-800"
+      class="lattice block aspect-square w-full border-b border-border bg-surface-100 p-2 dark:bg-surface-800"
     >
       @if (picture(); as p) {
         <!-- display:contents so the <img> sizes against the padded box. -->
@@ -111,6 +117,8 @@ export class LgCircuitTileAuthor {}
             [attr.loading]="loading()"
           />
         </picture>
+      } @else {
+        <lg-preview-placeholder />
       }
     </span>
 

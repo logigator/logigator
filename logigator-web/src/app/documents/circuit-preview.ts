@@ -5,7 +5,7 @@ import {
   inject,
   input
 } from '@angular/core';
-import { pictureFor } from '@logigator/ui';
+import { LgPreviewPlaceholder, pictureFor } from '@logigator/ui';
 // Aliased: the component below is what a page names, and the two would
 // otherwise collide in this file.
 import type { CircuitPreview as PreviewSources } from '@logigator/contract';
@@ -20,16 +20,19 @@ import { ThemingService } from '../theming/theming.service';
  * CSS would download both. Square, because the render is: `PREVIEW_VARIANTS` is
  * 256 and 1024, and a wider frame only bands or crops it.
  *
- * A circuit that has never been saved from the editor has no render at all, and
- * the empty frame is the editor's own empty board.
+ * The frame carries the editor's dot ground under whatever it draws: a render
+ * is line art on transparency, so the ground is what makes it the board it was
+ * taken from. A circuit that has never been saved from the editor has no render
+ * at all, and the frame then draws {@link LgPreviewPlaceholder} on that ground
+ * — an image glyph — so a missing render is never silent.
  */
 @Component({
   selector: 'web-circuit-preview',
+  imports: [LgPreviewPlaceholder],
   host: { class: 'block' },
   template: `
     <span
-      class="block aspect-square w-full rounded-md border border-border bg-surface-100 p-3 dark:bg-surface-800"
-      [class.lattice]="!picture()"
+      class="lattice block aspect-square w-full rounded-md border border-border bg-surface-100 p-3 dark:bg-surface-800"
     >
       @if (picture(); as p) {
         <!-- display:contents so the <img> sizes against the padded box. -->
@@ -50,6 +53,8 @@ import { ThemingService } from '../theming/theming.service';
             [attr.loading]="loading()"
           />
         </picture>
+      } @else {
+        <lg-preview-placeholder />
       }
     </span>
   `,

@@ -31,12 +31,6 @@
   padding-inline: var(--page-gutter);
 }
 
-/* The editor's dot ground, as a section background. */
-@utility lattice {
-  background-image: radial-gradient(
-    circle at 1px 1px,
-    var(--lg-border) 1px,
-    transparent 0
-  );
-  background-size: 16px 16px;
-}
+/* `lattice` — the editor's dot ground, as a section background — is imported
+   with the rest above: it moved into `@logigator/ui`'s `theme.tw.css` when the
+   library's own components started drawing it too. */

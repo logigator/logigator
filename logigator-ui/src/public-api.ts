@@ -77,6 +77,7 @@ export {
   LgCircuitTileActions,
   LgCircuitTileMeta
 } from './components/circuit-tile/circuit-tile';
+export { LgPreviewPlaceholder } from './components/preview-placeholder/preview-placeholder';
 export { LgList, LgListItem } from './components/list/list';
 export { LgRipple } from './components/ripple/ripple';
 export {

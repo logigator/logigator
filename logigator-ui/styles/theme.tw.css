@@ -67,3 +67,19 @@
   --color-error-surface-strong: var(--lg-error-surface-strong);
   --color-error-border: var(--lg-error-border);
 }
+
+/*
+ * The editor's dot ground: the board's own background, what a circuit's render
+ * is composited onto (a render is line art on transparency, so the ground is
+ * what makes it a board), and what an empty list's state is drawn on. It lives
+ * here rather than in an app because both apps draw it and so do the library's
+ * own components (the dot colour is `--lg-border`, one of the tokens above).
+ */
+@utility lattice {
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    var(--lg-border) 1px,
+    transparent 0
+  );
+  background-size: 16px 16px;
+}

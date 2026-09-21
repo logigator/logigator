@@ -60,10 +60,19 @@ describe('LgCircuitTile', () => {
     expect(img.getAttribute('srcset')).toBe('/p/320.png 320w');
   });
 
-  it('draws no image element for a circuit without a preview', () => {
+  it('stands a placeholder in for a circuit that has no preview', () => {
+    // An empty frame cannot be told from a board that is blank, so a circuit
+    // the editor never rendered says so instead of leaving a hole.
     const el = render({ preview: null });
     expect(el.querySelector('img')).toBeNull();
     expect(el.querySelector('picture')).toBeNull();
+    expect(el.querySelector('lg-preview-placeholder')).not.toBeNull();
+  });
+
+  it('draws the render, and no placeholder, where there is one', () => {
+    const el = render();
+    expect(el.querySelector('img')).not.toBeNull();
+    expect(el.querySelector('lg-preview-placeholder')).toBeNull();
   });
 
   it('keeps the author out of the tile link, so both are reachable', () => {
