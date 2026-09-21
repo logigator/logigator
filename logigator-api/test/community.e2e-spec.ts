@@ -448,7 +448,8 @@ describe('the community surface', () => {
       for (const visibility of ['unlisted', 'private'] as const) {
         const project = await create<ProjectSummary>(
           'projects',
-          { name: `Not listed (${visibility})`, visibility },
+          // Within the name column's 20 characters for both states.
+          { name: `Hidden ${visibility}`, visibility },
           ada
         );
 
