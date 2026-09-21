@@ -227,7 +227,10 @@ describe('SeoService', () => {
       },
       '/en/community/projects/half-adder'
     );
-    expect(document.title).toContain('Half adder');
+    // The page's own name first and the brand after it: a reader scanning a
+    // result list looks for the subject, which is the same words on none of
+    // them — the site name is the same words on all of them.
+    expect(document.title).toEqual('Half adder - Logigator');
     expect(metaContent('og:title')).toEqual(['Half adder']);
     expect(metaContent('og:description')).toEqual(['Two gates, one carry.']);
 

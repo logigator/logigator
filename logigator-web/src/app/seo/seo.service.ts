@@ -50,7 +50,7 @@ const OG_LOCALES: Record<LanguageId, string> = {
 
 /** What a route tells {@link SeoService} about the page it renders. */
 export interface PageMeta {
-  /** Key of the page's own title; the site name is prepended. */
+  /** Key of the page's own title; the site name is appended to it. */
   titleKey: TranslationKey;
   /** Key of the page's description; the site's own is the fallback. */
   descriptionKey?: TranslationKey;
@@ -164,7 +164,10 @@ export class SeoService {
       this.fromPage(page.description) ??
       this.translation.translate(page.descriptionKey ?? 'site.description');
 
-    this.title.setTitle(`${siteName} - ${pageTitle}`);
+    // The page first, the brand after it: what tells one result apart from the
+    // next is the page's subject, and the site name is the same on every one of
+    // them.
+    this.title.setTitle(`${pageTitle} - ${siteName}`);
     this.meta.updateTag({ name: 'description', content: description });
     this.meta.updateTag({ property: 'og:title', content: pageTitle });
     this.meta.updateTag({ property: 'og:description', content: description });
