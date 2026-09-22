@@ -8,4 +8,4 @@
  * and its re-normalization job. A document claiming a newer version is rejected
  * rather than stored.
  */
-export const CURRENT_FILE_VERSION = 1;
+export const CURRENT_FILE_VERSION = 2;

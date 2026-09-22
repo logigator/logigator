@@ -10,7 +10,11 @@ import { CustomComponentRegistry } from '../components/custom/custom-component-r
 import { Project } from '../project/project';
 import { ProjectService } from '../project/project.service';
 import { ProjectMetadataStore } from '../persistence/project-metadata.store';
-import { BuiltInComponentType, WireDirection } from '@logigator/core';
+import {
+  BuiltInComponentType,
+  CURRENT_FILE_VERSION,
+  WireDirection
+} from '@logigator/core';
 import { WorkModeService } from '../work-mode/work-mode.service';
 import { EditOp } from './automation-api.model';
 import { AutomationApiService } from './automation-api.service';
@@ -209,7 +213,10 @@ describe('AutomationApiService', () => {
       project.addComponent(makeAnd(2, undefined, 1, 1));
 
       const parsed: unknown = JSON.parse(api.exportProject());
-      expect(parsed).toMatchObject({ name: 'Exported', version: 1 });
+      expect(parsed).toMatchObject({
+        name: 'Exported',
+        version: CURRENT_FILE_VERSION
+      });
     });
 
     it('refuses to replace the document while the editor is busy', () => {

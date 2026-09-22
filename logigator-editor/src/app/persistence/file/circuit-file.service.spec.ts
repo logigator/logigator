@@ -12,6 +12,7 @@ import { CustomComponentRegistry } from '../../components/custom/custom-componen
 import {
   BuiltInComponentType,
   CUSTOM_TYPE_ID_BASE,
+  decodeComponentBlocks,
   decodeWireChain,
   InvalidFileError,
   ProjectElement,
@@ -31,6 +32,13 @@ interface BodyWire {
   pos: [number, number];
   direction: number;
   length: number;
+}
+
+/** The components a document's per-type blocks carry, absolute again. */
+function bodies(blocks: unknown): BodyComponent[] {
+  return decodeComponentBlocks(
+    (blocks ?? []) as Parameters<typeof decodeComponentBlocks>[0]
+  ) as BodyComponent[];
 }
 
 function sortComponents(components: BodyComponent[]): BodyComponent[] {
@@ -58,13 +66,13 @@ function normalize(json: string): string {
   return JSON.stringify({
     version: parsed.version,
     name: parsed.name,
-    components: sortComponents(parsed.components ?? []),
+    components: sortComponents(bodies(parsed.components)),
     wires: sortWires(decodeWireChain(parsed.wires ?? '')),
     definitions: [...(parsed.definitions ?? [])]
       .sort((a, b) => a.type - b.type)
       .map((d) => ({
         ...d,
-        components: sortComponents(d.components),
+        components: sortComponents(bodies(d.components)),
         wires: sortWires(decodeWireChain(d.wires))
       }))
   });
@@ -139,16 +147,14 @@ describe('CircuitFileService', () => {
       const project = buildProject([{ t: 2, p: [15, 3], i: 2, o: 1 }]);
       const json = JSON.parse(service.toJson(project, 'My Circuit'));
 
-      expect(json.version).toBe(1);
+      expect(json.version).toBe(2);
       expect(json.name).toBe('My Circuit');
       expect(json.wires).toBe('');
       expect(json.definitions).toEqual([]);
-      expect(json.components.length).toBe(1);
-      expect(json.components[0]).toEqual({
-        type: 2,
-        pos: [15, 3],
-        options: { numInputs: 2 }
-      });
+      // One block for the one type, its columns holding the one component.
+      expect(json.components).toEqual([
+        { type: 2, x: [15], y: [3], opt: { numInputs: [2] } }
+      ]);
     });
 
     it('omits the attribution field when no lineage is passed', () => {
@@ -164,12 +170,9 @@ describe('CircuitFileService', () => {
       ]);
       const json = JSON.parse(service.toJson(project, 'Plug'));
 
-      expect(json.components.length).toBe(1);
-      expect(json.components[0]).toEqual({
-        type: 100,
-        pos: [4, 4],
-        options: { label: 'CLK', index: 3 }
-      });
+      expect(json.components).toEqual([
+        { type: 100, x: [4], y: [4], opt: { label: ['CLK'], index: [3] } }
+      ]);
     });
   });
 
@@ -199,8 +202,8 @@ describe('CircuitFileService', () => {
       and.setPortNegated('out', 0, true);
 
       const parsed = JSON.parse(service.toJson(project, 'Neg'));
-      expect(parsed.components[0].negInputs).toEqual([2]);
-      expect(parsed.components[0].negOutputs).toEqual([0]);
+      expect(parsed.components[0].negIn).toEqual([[1], [[2]]]);
+      expect(bodies(parsed.components)[0].negOutputs).toEqual([0]);
 
       const reloaded = rebuild(service.toJson(project, 'Neg'));
       const restored = [...reloaded.components][0];
@@ -230,7 +233,7 @@ describe('CircuitFileService', () => {
       expect(parsed.definitions[0].type).toBe(1000);
       expect(parsed.definitions[0].numInputs).toBe(1);
       expect(
-        parsed.definitions[0].components.map((c: BodyComponent) => c.type)
+        bodies(parsed.definitions[0].components).map((c) => c.type)
       ).toEqual([BuiltInComponentType.INPUT, BuiltInComponentType.OUTPUT]);
       expect(parsed.components[0].type).toBe(1000);
 
@@ -264,16 +267,16 @@ describe('CircuitFileService', () => {
       place(project, registry.snapshot(master).typeId, [3, 3]);
 
       const parsed = JSON.parse(service.toJson(project, 'NegCustom'));
-      const andBody = parsed.definitions[0].components.find(
-        (c: BodyComponent) => c.type === BuiltInComponentType.AND
+      const andBody = bodies(parsed.definitions[0].components).find(
+        (c) => c.type === BuiltInComponentType.AND
       );
-      expect(andBody.negInputs).toEqual([1]);
+      expect(andBody!.negInputs).toEqual([1]);
 
       const json2 = service.toJson(rebuild(service.toJson(project, 'X')), 'X');
-      const reAnd = JSON.parse(json2).definitions[0].components.find(
-        (c: BodyComponent) => c.type === BuiltInComponentType.AND
+      const reAnd = bodies(JSON.parse(json2).definitions[0].components).find(
+        (c) => c.type === BuiltInComponentType.AND
       );
-      expect(reAnd.negInputs).toEqual([1]);
+      expect(reAnd!.negInputs).toEqual([1]);
     });
 
     it('round-trips a 2-deep nested custom and opens it post-load (id-space rule)', () => {
@@ -314,7 +317,7 @@ describe('CircuitFileService', () => {
       );
       expect(defA.type).toBe(1000);
       expect(defB.type).toBe(1001);
-      expect(defA.components.map((c: BodyComponent) => c.type)).toEqual([1001]);
+      expect(bodies(defA.components).map((c) => c.type)).toEqual([1001]);
 
       // On reload the main instance and its definition's nested reference both
       // resolve against the session id space.

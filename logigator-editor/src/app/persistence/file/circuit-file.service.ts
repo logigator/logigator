@@ -5,17 +5,18 @@ import { Wire } from '../../wires/wire';
 import { ComponentProviderService } from '../../components/component-provider.service';
 import {
   assembleCircuitFile,
+  ComponentBlockDecodeError,
   CurrentCircuitFile,
   CUSTOM_TYPE_ID_BASE,
-  decodeComponentPositions,
+  decodeComponentBlocks,
   decodeWireChain,
   FileForkAttributionV1,
   fromPersistedDefinition,
   InvalidFileError,
   migrateToCurrent,
   MigrationContext,
-  PersistedSnapshotDefinitionV1,
-  PositionDeltaDecodeError,
+  PersistedComponentBlockV2,
+  PersistedSnapshotDefinitionV2,
   remapComponentTypes,
   SerializedCircuitBody,
   SerializedComponentBody,
@@ -240,7 +241,7 @@ export class CircuitFileService {
   private _rethrowAsFileError(err: unknown): never {
     if (
       err instanceof WireChainDecodeError ||
-      err instanceof PositionDeltaDecodeError
+      err instanceof ComponentBlockDecodeError
     ) {
       throw new InvalidFileError(err.message);
     }
@@ -257,12 +258,12 @@ export class CircuitFileService {
     }
   }
 
-  /** Restores absolute positions from the delta-encoded components. */
+  /** Restores absolute positions from the per-type component blocks. */
   private _decodeComponents(
-    value: SerializedComponentBody[] | undefined
+    value: PersistedComponentBlockV2[] | undefined
   ): SerializedComponentBody[] {
     try {
-      return decodeComponentPositions(this._asArray(value, 'components'));
+      return decodeComponentBlocks(this._asArray(value, 'components'));
     } catch (err) {
       this._rethrowAsFileError(err);
     }
@@ -270,7 +271,7 @@ export class CircuitFileService {
 
   /** Revives persisted definitions into in-memory {@link SnapshotDefinition}s. */
   private _decodeDefinitions(
-    value: PersistedSnapshotDefinitionV1[] | undefined
+    value: PersistedSnapshotDefinitionV2[] | undefined
   ): SnapshotDefinition[] {
     return this._asArray(value, 'definitions').map((def) => {
       try {

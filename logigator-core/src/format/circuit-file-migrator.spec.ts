@@ -3,7 +3,7 @@ import { detectVersion, migrateToCurrent } from './circuit-file-migrator';
 import { MigrationContext } from './migrations/migration';
 import { builtInMeta } from '../catalog/built-in-meta';
 import { CURRENT_FILE_VERSION } from './circuit-file-version';
-import { CircuitFileV1 } from './circuit-file.types';
+import { CircuitFileV2 } from './circuit-file.types';
 import {
   InvalidFileError,
   UnsupportedVersionError
@@ -60,8 +60,8 @@ describe('circuit-file-migrator', () => {
     });
 
     it('returns an already-current document unchanged', () => {
-      const doc: CircuitFileV1 = {
-        version: 1,
+      const doc: CircuitFileV2 = {
+        version: 2,
         name: 'X',
         components: [],
         wires: '',
@@ -70,16 +70,21 @@ describe('circuit-file-migrator', () => {
       expect(migrateToCurrent(doc, ctx)).toBe(doc);
     });
 
-    it('runs the v0→v1 migration for a versionless document', () => {
+    // Every step of the chain runs, in order: the walk never jumps straight to
+    // the newest version, so a legacy document passes through v1 on its way.
+    it('walks a versionless document through the whole chain', () => {
       const legacy = {
         project: { name: 'Legacy', elements: [{ t: 1, p: [0, 0], i: 1, o: 1 }] }
       };
       const result = migrateToCurrent(legacy, ctx);
-      expect(result.version).toBe(1);
+      expect(result.version).toBe(CURRENT_FILE_VERSION);
       expect(result.name).toBe('Legacy');
-      expect(result.components.length).toBe(1);
+      expect(result.components).toEqual([{ type: 1, x: [0], y: [0] }]);
       expect(result.definitions).toEqual([]);
-      expect(messages).toEqual(['Migrated circuit 0 -> 1']);
+      expect(messages).toEqual([
+        'Migrated circuit 0 -> 1',
+        'Migrated circuit 1 -> 2'
+      ]);
     });
   });
 });

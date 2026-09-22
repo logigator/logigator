@@ -12,10 +12,11 @@ import {
   SerializedWireBody,
   SnapshotDefinition
 } from '../model/serialized-circuit';
+import { PersistedComponentBlockV2 } from '../model/persisted-circuit.types';
 import {
-  decodeComponentPositions,
-  PositionDeltaDecodeError
-} from '../codecs/position-delta.codec';
+  ComponentBlockDecodeError,
+  decodeComponentBlocks
+} from '../codecs/component-block.codec';
 import {
   decodeWireChain,
   WireChainDecodeError
@@ -303,10 +304,10 @@ function salvage(schema: OptionSchema, value: unknown): unknown {
 }
 
 function decodeComponents(
-  value: SerializedComponentBody[] | undefined
+  value: PersistedComponentBlockV2[] | undefined
 ): SerializedComponentBody[] {
   try {
-    return decodeComponentPositions(value ?? []);
+    return decodeComponentBlocks(value ?? []);
   } catch (err) {
     throw asFileError(err);
   }
@@ -332,14 +333,14 @@ function decodeDefinitions(file: CurrentCircuitFile): SnapshotDefinition[] {
 }
 
 /**
- * The structural validator only checks that `wires` is a string and `pos` a
- * number pair; the compact encodings decode after it, so their failures have to
- * become the same rejection.
+ * The structural validator only checks that `wires` is a string and that a
+ * block's columns line up; the compact encodings decode after it, so their
+ * failures have to become the same rejection.
  */
 function asFileError(err: unknown): unknown {
   if (
     err instanceof WireChainDecodeError ||
-    err instanceof PositionDeltaDecodeError
+    err instanceof ComponentBlockDecodeError
   ) {
     return new InvalidFileError(err.message);
   }

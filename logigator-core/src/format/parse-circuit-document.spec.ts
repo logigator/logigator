@@ -8,6 +8,8 @@ import {
 import { CURRENT_FILE_VERSION } from './circuit-file-version';
 import { decodeLgix, encodeLgix } from './lgix-container';
 import { BuiltInComponentType } from '../model/component-type.enum';
+import { encodeComponentBlocks } from '../codecs/component-block.codec';
+import { SerializedComponentBody } from '../model/serialized-circuit';
 
 import romV1 from './fixtures/rom.v1.json';
 import tunnelsV1 from './fixtures/tunnels.v1.json';
@@ -19,6 +21,10 @@ import halfAdderV0 from './fixtures/half-adder.v0.json';
  * the shipping save path rather than being written to satisfy the parser. The
  * v0 fixture is hand-authored, since the repo carries no committed v0 export.
  */
+
+/** Absolute component bodies as the per-type blocks a document carries. */
+const blocks = (...components: SerializedComponentBody[]) =>
+  encodeComponentBlocks(components).blocks;
 
 /** A structurally valid but empty current-version document. */
 const EMPTY = {
@@ -198,9 +204,9 @@ describe('parseCircuitDocument', () => {
   });
 
   describe('catalog integrity', () => {
-    const withComponent = (component: unknown) => ({
+    const withComponent = (component: SerializedComponentBody) => ({
       ...EMPTY,
-      components: [component]
+      components: blocks(component)
     });
 
     const cases: { name: string; doc: unknown; warning: string }[] = [
@@ -235,11 +241,19 @@ describe('parseCircuitDocument', () => {
       },
       {
         name: 'an option the type does not declare',
-        doc: withComponent({
-          type: BuiltInComponentType.AND,
-          pos: [0, 0],
-          options: { numInputs: 2, nonsense: 1 }
-        }),
+        // Hand-written: the encoder writes the catalog's key set and drops
+        // anything else, so only a document from a stranger carries this.
+        doc: {
+          ...EMPTY,
+          components: [
+            {
+              type: BuiltInComponentType.AND,
+              x: [0],
+              y: [0],
+              opt: { numInputs: [2], nonsense: [1] }
+            }
+          ]
+        },
         warning: 'unknown option "nonsense"'
       },
       {
@@ -255,9 +269,11 @@ describe('parseCircuitDocument', () => {
               numInputs: 2,
               numOutputs: 1,
               labels: ['a', 'b', 'c'],
-              components: [
-                { type: BuiltInComponentType.INPUT, pos: [0, 0], options: {} }
-              ],
+              components: blocks({
+                type: BuiltInComponentType.INPUT,
+                pos: [0, 0],
+                options: {}
+              }),
               wires: ''
             }
           ]
@@ -283,10 +299,10 @@ describe('parseCircuitDocument', () => {
       const result = parseCircuitDocument(
         {
           ...EMPTY,
-          components: [
+          components: blocks(
             { type: 99, pos: [0, 0], options: {} },
             { type: BuiltInComponentType.AND, pos: [0, 0], options: {} }
-          ]
+          )
         },
         { mode: 'lenient' }
       );
@@ -302,7 +318,7 @@ describe('parseCircuitDocument', () => {
       const result = parseCircuitDocument(
         {
           ...EMPTY,
-          components: [
+          components: blocks(
             {
               type: BuiltInComponentType.ROM,
               pos: [0, 0],
@@ -313,13 +329,19 @@ describe('parseCircuitDocument', () => {
               pos: [0, 0],
               options: { numInputs: 0 }
             }
-          ]
+          )
         },
         { mode: 'lenient' }
       );
-      expect(result.body.components[0].options['addressSize']).toBe(11);
-      expect(result.body.components[0].options['wordSize']).toBe(8);
-      expect(result.body.components[1].options['numInputs']).toBe(2);
+      const rom = result.body.components.find(
+        (c) => c.type === BuiltInComponentType.ROM
+      )!;
+      const and = result.body.components.find(
+        (c) => c.type === BuiltInComponentType.AND
+      )!;
+      expect(rom.options['addressSize']).toBe(11);
+      expect(rom.options['wordSize']).toBe(8);
+      expect(and.options['numInputs']).toBe(2);
     });
 
     it('lenient returns a document a later strict read accepts', () => {
@@ -328,14 +350,14 @@ describe('parseCircuitDocument', () => {
       const result = parseCircuitDocument(
         {
           ...EMPTY,
-          components: [
+          components: blocks(
             { type: 99, pos: [0, 0], options: {} },
             {
               type: BuiltInComponentType.ROM,
               pos: [1, 0],
               options: { wordSize: 8, addressSize: 16, data: 'QQ==' }
             }
-          ]
+          )
         },
         { mode: 'lenient' }
       );
@@ -351,27 +373,24 @@ describe('parseCircuitDocument', () => {
       const result = parseCircuitDocument(
         {
           ...EMPTY,
-          components: [
-            {
-              type: BuiltInComponentType.AND,
-              pos: [0, 0],
-              options: { numInputs: 'three' }
-            }
-          ]
+          components: blocks({
+            type: BuiltInComponentType.AND,
+            pos: [0, 0],
+            options: { numInputs: 'three' }
+          })
         },
         { mode: 'lenient' }
       );
       expect(result.body.components[0].options['numInputs']).toBe(2);
     });
 
-    it('fills an omitted option with its default in either mode', () => {
-      const result = parseCircuitDocument(
-        withComponent({
-          type: BuiltInComponentType.ROM,
-          pos: [0, 0],
-          options: {}
-        })
-      );
+    // A block with no `opt` at all is what a document written before the type
+    // had options looks like, and what a reader must keep accepting.
+    it('fills an option the document carries no column for', () => {
+      const result = parseCircuitDocument({
+        ...EMPTY,
+        components: [{ type: BuiltInComponentType.ROM, x: [0], y: [0] }]
+      });
       expect(result.body.components[0].options).toEqual({
         wordSize: 4,
         addressSize: 4,
@@ -385,10 +404,10 @@ describe('parseCircuitDocument', () => {
       // documents contain worse and the editor has a repair command for it.
       const result = parseCircuitDocument({
         ...EMPTY,
-        components: [
+        components: blocks(
           { type: BuiltInComponentType.AND, pos: [0, 0], options: {} },
           { type: BuiltInComponentType.AND, pos: [0, 0], options: {} }
-        ],
+        ),
         wires: '0,0:e5'
       });
       expect(result.stats.components).toBe(2);

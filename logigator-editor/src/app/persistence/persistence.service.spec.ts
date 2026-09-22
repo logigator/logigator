@@ -15,6 +15,7 @@ import { Project } from '../project/project';
 import {
   assembleCircuitFile,
   BuiltInComponentType,
+  CURRENT_FILE_VERSION,
   CUSTOM_TYPE_ID_BASE,
   encodeLgix,
   InvalidFileError,
@@ -394,7 +395,7 @@ describe('PersistenceService', () => {
       const sent = await gzippedBody(req);
       expect(req.request.method).toBe('PUT');
       expect(sent.version).toBe(4);
-      expect(sent.document.version).toBe(1);
+      expect(sent.document.version).toBe(CURRENT_FILE_VERSION);
       expect(sent.document.name).toBe('Test');
       req.flush(projectSummaryResponse({ version: 5 }));
 
@@ -873,7 +874,7 @@ describe('PersistenceService', () => {
       expect(postReq.request.method).toBe('POST');
       expect(sent.name).toBe('My Server Circuit');
       expect(sent.visibility).toBe('public');
-      expect(sent.document.version).toBe(1);
+      expect(sent.document.version).toBe(CURRENT_FILE_VERSION);
       postReq.flush({
         ...projectSummaryResponse({ id: uuid('srv-uuid'), version: 1 }),
         visibility: 'public'
@@ -1195,7 +1196,7 @@ describe('PersistenceService', () => {
       });
 
       const parsed = JSON.parse(service.exportProjectToJson(project));
-      expect(parsed.version).toBe(1);
+      expect(parsed.version).toBe(CURRENT_FILE_VERSION);
       expect(parsed.name).toBe('My Circuit');
       expect(parsed.components).toEqual([]);
       expect(parsed.wires).toBe('');
@@ -1393,15 +1394,14 @@ describe('PersistenceService', () => {
     it('re-stamps element ids by geometry when the encoders reorder', async () => {
       // Both fixtures decode into an insertion order that differs from the
       // encoders' emission order: the wire at (10,10) precedes the run at
-      // (0,0), and the component at (5,6) the one at (2,3).
+      // (0,0), and the component at (5,6) the one at (2,3). A document may
+      // carry its block in any order — the sort is the encoder's choice, and
+      // decoding is a prefix sum — so this one carries the reverse of it.
       const source = await service.importProjectFromJson(
         JSON.stringify({
-          version: 1,
+          version: CURRENT_FILE_VERSION,
           name: 'Dumpee',
-          components: [
-            { type: 1, pos: [5, 6], options: {} },
-            { type: 1, pos: [-3, -3], options: {} }
-          ],
+          components: [{ type: 1, x: [5, -3], y: [6, -3] }],
           wires: '10,10:e4;-10,-10:e4s3',
           definitions: []
         })
@@ -1590,6 +1590,8 @@ describe('PersistenceService', () => {
       expect(stored.name).toBe('New');
       const parsed = JSON.parse(stored.content);
       expect(parsed.name).toBe('New');
+      // A rename rewrites the name and nothing else, so an older blob stays at
+      // the version it was stored at until something re-encodes it.
       expect(parsed.version).toBe(1);
 
       // Reopening reads the blob, not the summary column.
@@ -2027,7 +2029,9 @@ describe('PersistenceService', () => {
       await tick();
       const post = await expectGzipped(httpMock, COMPONENTS_URL);
       expect(post.request.method).toBe('POST');
-      expect((await gzippedBody(post)).document.version).toBe(1);
+      expect((await gzippedBody(post)).document.version).toBe(
+        CURRENT_FILE_VERSION
+      );
       post.flush(
         componentSummaryResponse({ id: uuid('srv-comp'), version: 5 })
       );

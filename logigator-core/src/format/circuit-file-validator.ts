@@ -7,10 +7,18 @@ import { CURRENT_FILE_VERSION, CurrentCircuitFile } from './circuit-file.types';
  * can index into without shape checks. Runs after the migration chain, and
  * anything structurally wrong throws {@link InvalidFileError}.
  *
+ * A component block's invariant is **lengths**: `x.length` is the block's
+ * length and every other column matches it, a negation column's two columns
+ * match each other, and its index deltas sum to indices inside the block. Which
+ * option keys a block carries is deliberately *not* checked — a built-in that
+ * gains an option later leaves stored documents without that column, and they
+ * must keep parsing, the catalog step filling the missing key with its default.
+ * Writing every option of every component is an invariant of the encoder, not
+ * an assumption a reader may make.
+ *
  * Deliberate tolerances, matching decode: `components`/`wires`/`definitions`
- * may be absent (decoded as empty), `name` falls back to a default, and
- * `negInputs`/`negOutputs` are sanitized element-wise later. Option values are
- * not checked here — only that `options` is an object.
+ * may be absent (decoded as empty), `name` falls back to a default, and option
+ * values are not checked here — only the shape of the column holding them.
  */
 
 function fail(path: string, expected: string): never {
@@ -21,20 +29,91 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-function isNumberPair(value: unknown): boolean {
+function isNumberArray(value: unknown): value is number[] {
   return (
-    Array.isArray(value) &&
-    value.length >= 2 &&
-    typeof value[0] === 'number' &&
-    typeof value[1] === 'number'
+    Array.isArray(value) && value.every((entry) => typeof entry === 'number')
   );
 }
 
-function validateComponent(value: unknown, path: string): void {
+/** A column that must line up with the block's `x`. */
+function validateColumn(value: unknown, path: string, length: number): void {
+  if (!Array.isArray(value)) fail(path, 'an array');
+  if (value.length !== length) {
+    fail(path, `an array of ${length} values, matching "x"`);
+  }
+}
+
+/** The same, for a column the decoder does arithmetic on. */
+function validateNumberColumn(
+  value: unknown,
+  path: string,
+  length: number
+): void {
+  if (!isNumberArray(value)) fail(path, 'an array of numbers');
+  if (value.length !== length) {
+    fail(path, `an array of ${length} numbers, matching "x"`);
+  }
+}
+
+/**
+ * The index deltas walk the block once, so their running sum has to stay inside
+ * it: a delta running past the end would otherwise decode as a negation nothing
+ * carries.
+ */
+function validateNegationColumn(
+  value: unknown,
+  path: string,
+  length: number
+): void {
+  if (!Array.isArray(value) || value.length !== 2) {
+    fail(path, 'a pair of columns');
+  }
+  const [deltas, ports] = value as [unknown, unknown];
+  if (!isNumberArray(deltas)) fail(`${path}[0]`, 'an array of numbers');
+  if (!Array.isArray(ports)) fail(`${path}[1]`, 'an array');
+  if (ports.length !== deltas.length) {
+    fail(
+      `${path}[1]`,
+      `an array of ${deltas.length} values, matching "${path}[0]"`
+    );
+  }
+  ports.forEach((entry, i) => {
+    if (!isNumberArray(entry)) fail(`${path}[1][${i}]`, 'an array of numbers');
+  });
+
+  let index = -1;
+  for (const [i, delta] of deltas.entries()) {
+    index += delta;
+    if (!Number.isInteger(index) || index < 0 || index >= length) {
+      fail(`${path}[0][${i}]`, 'an index delta inside the block');
+    }
+  }
+}
+
+function validateComponentBlock(value: unknown, path: string): void {
   if (!isRecord(value)) fail(path, 'an object');
   if (typeof value['type'] !== 'number') fail(`${path}.type`, 'a number');
-  if (!isNumberPair(value['pos'])) fail(`${path}.pos`, 'a number pair');
-  if (!isRecord(value['options'])) fail(`${path}.options`, 'an object');
+  if (!isNumberArray(value['x'])) fail(`${path}.x`, 'an array of numbers');
+  const length = (value['x'] as number[]).length;
+
+  validateNumberColumn(value['y'], `${path}.y`, length);
+
+  const dir = value['dir'];
+  if (dir !== undefined) validateNumberColumn(dir, `${path}.dir`, length);
+
+  const opt = value['opt'];
+  if (opt !== undefined) {
+    if (!isRecord(opt)) fail(`${path}.opt`, 'an object');
+    for (const [key, column] of Object.entries(opt)) {
+      validateColumn(column, `${path}.opt.${key}`, length);
+    }
+  }
+
+  for (const field of ['negIn', 'negOut'] as const) {
+    const negation = value[field];
+    if (negation === undefined) continue;
+    validateNegationColumn(negation, `${path}.${field}`, length);
+  }
 }
 
 function validateDefinition(value: unknown, path: string): void {
@@ -58,7 +137,7 @@ function validateDefinition(value: unknown, path: string): void {
   const components = value['components'];
   if (!Array.isArray(components)) fail(`${path}.components`, 'an array');
   components.forEach((c, i) =>
-    validateComponent(c, `${path}.components[${i}]`)
+    validateComponentBlock(c, `${path}.components[${i}]`)
   );
   if (typeof value['wires'] !== 'string') fail(`${path}.wires`, 'a string');
   const source = value['source'];
@@ -99,7 +178,7 @@ export function validateCurrentCircuitFile(data: unknown): CurrentCircuitFile {
   const components = data['components'];
   if (components !== undefined) {
     if (!Array.isArray(components)) fail('components', 'an array');
-    components.forEach((c, i) => validateComponent(c, `components[${i}]`));
+    components.forEach((c, i) => validateComponentBlock(c, `components[${i}]`));
   }
 
   const wires = data['wires'];

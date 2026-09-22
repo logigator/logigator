@@ -7,21 +7,35 @@
  * shipped documents keep their meaning.
  *
  * The format is self-contained: it embeds a frozen snapshot of every custom
- * component it transitively uses in {@link PersistedCircuitV1.definitions}.
+ * component it transitively uses in {@link PersistedCircuitV2.definitions}.
  * Each `CircuitFileV<N>` is the envelope around the shared version payload in
  * `model/persisted-circuit.types.ts`.
  */
 import {
   PersistedCircuitV0,
-  PersistedCircuitV1
+  PersistedCircuitV1,
+  PersistedCircuitV2
 } from '../model/persisted-circuit.types';
 import { EmbeddedDependency } from '../model/dependencies';
 import { ProjectElement } from '../model/project-element';
 
 export { CURRENT_FILE_VERSION } from './circuit-file-version';
-export type CurrentCircuitFile = CircuitFileV1;
+export type CurrentCircuitFile = CircuitFileV2;
 
-// ---- Version 1 (current) ----
+// ---- Version 2 (current) ----
+
+/**
+ * Components as per-type column blocks; wires, definitions metadata and
+ * attribution unchanged from v1.
+ */
+export interface CircuitFileV2 extends PersistedCircuitV2 {
+  version: 2;
+  name: string;
+  /** See {@link CircuitFileV1.attribution} — same field, same rules. */
+  attribution?: FileForkAttributionV1[];
+}
+
+// ---- Version 1 ----
 
 export interface CircuitFileV1 extends PersistedCircuitV1 {
   version: 1;

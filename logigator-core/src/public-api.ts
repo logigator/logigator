@@ -71,10 +71,15 @@ export type {
 export type {
   PersistedCircuitV0,
   PersistedCircuitV1,
+  PersistedCircuitV2,
+  PersistedComponentBlockV2,
   PersistedComponentV0,
   PersistedComponentV1,
+  PersistedNegationColumnV2,
   PersistedSnapshotDefinitionV1,
-  PersistedWiresV1
+  PersistedSnapshotDefinitionV2,
+  PersistedWiresV1,
+  PersistedWiresV2
 } from './model/persisted-circuit.types';
 export {
   CUSTOM_BODY_GRID_WIDTH,
@@ -154,7 +159,7 @@ export {
   segmentReadoutDigits
 } from './catalog/built-ins/segment-display.meta';
 
-// ---- codecs: the compact encodings the v1 document uses ----
+// ---- codecs: the compact encodings the document format uses ----
 export {
   encodeWireChain,
   decodeWireChain,
@@ -168,7 +173,17 @@ export {
 } from './codecs/position-delta.codec';
 export type { EncodedComponentPositions } from './codecs/position-delta.codec';
 export {
+  ComponentBlockDecodeError,
+  decodeComponentBlocks,
+  encodeComponentBlocks
+} from './codecs/component-block.codec';
+export type {
+  ComponentCatalogLookup,
+  EncodedComponentBlocks
+} from './codecs/component-block.codec';
+export {
   toPersistedDefinition,
+  toPersistedDefinitionV1,
   fromPersistedDefinition
 } from './codecs/persisted-definition.codec';
 export {
@@ -183,6 +198,7 @@ export { CURRENT_FILE_VERSION } from './format/circuit-file-version';
 export type {
   CircuitFileV0,
   CircuitFileV1,
+  CircuitFileV2,
   CurrentCircuitFile,
   FileForkAttributionV1,
   LegacyComponentDefinition

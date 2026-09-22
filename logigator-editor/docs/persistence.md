@@ -73,12 +73,20 @@ see [`dependencies-and-promotion.md`](dependencies-and-promotion.md).
 
 Repeated JSON structure is free after gzip; what gzip cannot remove is the
 entropy of absolute coordinates. Both persisted encodings therefore sort
-elements spatially and store positions relative to the previous element — ~3–4×
-smaller gzipped per section. Wires become one SVG-path-style chain string
-(`wire-chain.codec.ts`); components sort by (type, y, x) with delta positions
-(`position-delta.codec.ts`). The in-memory wire model stays canonical
+elements spatially and store positions relative to the previous element. Wires
+become one SVG-path-style chain string (`wire-chain.codec.ts`); components
+become one **column block per type** (`component-block.codec.ts`), sorted
+(type, direction, y, x), with `x`/`y` delta columns reset per block, one total
+option column per key the type's catalog schema declares, and negations as
+index deltas beside their port arrays. The in-memory wire model stays canonical
 (`WireDirection` H/V, positive length, `pos` at the west/north endpoint) no
 matter which end the chain walk entered from, and decoding normalizes back.
+
+A block's structural invariant is **lengths**: `x.length` is the block's length
+and every other column matches it. Which option keys it carries is not one — a
+built-in that gains an option leaves stored documents without that column, and
+the catalog step fills the missing key with its default, so writing every
+option is the encoder's rule rather than the reader's assumption.
 
 Both encoders reorder elements, so the document's element order is the
 **emission order**. `toDocument()` returns it as `wireOrder`/`componentOrder`
@@ -86,12 +94,19 @@ for consumers aligning per-element data with the document
 (`ProjectDump.wireIds`/`componentIds`). Embedded definitions get the same
 treatment via `persisted-definition.codec.ts`, without order bookkeeping.
 
-### Legacy v0 is read-only
+### Older versions are read-only
 
 `CircuitFileV0` (the intermixed positional `ProjectElement[]`), the `v0ToV1`
 migration and the `legacyV0Slots` descriptors decode an old-editor `.json`
 export — supported indefinitely — and are what the Phase 6 database migration
 reads the legacy backend's stored blobs with. Nothing writes v0.
+
+`CircuitFileV1` (one object per component, positions a running delta chain over
+a (type, y, x) sort) is read the same way: `v1ToV2` prefix-sums the chain back
+to absolute positions, re-sorts and re-columns them, and carries the wires,
+definition metadata and attribution over untouched. `position-delta.codec.ts`
+stays beside `component-block.codec.ts`, frozen, because that migration is what
+still reads it.
 
 ### Name lives in metadata, not on `Project`
 

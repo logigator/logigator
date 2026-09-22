@@ -19,7 +19,7 @@ import {
 } from '../../model/legacy-anchor';
 import { encodeComponentPositions } from '../../codecs/position-delta.codec';
 import { encodeWireChain } from '../../codecs/wire-chain.codec';
-import { toPersistedDefinition } from '../../codecs/persisted-definition.codec';
+import { toPersistedDefinitionV1 } from '../../codecs/persisted-definition.codec';
 import {
   CircuitFileV0,
   CircuitFileV1,
@@ -349,7 +349,7 @@ export const v0ToV1Migration: Migration<CircuitFileV0, CircuitFileV1> = {
       components: encodeComponentPositions(components).components,
       wires: encodeWireChain(wires).text,
       definitions: [...dependencyDefinitions, ...legacyDefinitions].map(
-        toPersistedDefinition
+        toPersistedDefinitionV1
       )
     };
   }

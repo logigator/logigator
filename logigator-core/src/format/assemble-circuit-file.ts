@@ -7,7 +7,7 @@ import {
   SerializedCircuitBody,
   SnapshotDefinition
 } from '../model/serialized-circuit';
-import { encodeComponentPositions } from '../codecs/position-delta.codec';
+import { encodeComponentBlocks } from '../codecs/component-block.codec';
 import { encodeWireChain } from '../codecs/wire-chain.codec';
 import { toPersistedDefinition } from '../codecs/persisted-definition.codec';
 
@@ -36,15 +36,15 @@ export function assembleCircuitFile(
   attribution?: readonly FileForkAttributionV1[]
 ): AssembledCircuitFile {
   const wires = encodeWireChain(body.wires);
-  const components = encodeComponentPositions(body.components);
+  const components = encodeComponentBlocks(body.components);
 
   return {
     file: {
       version: CURRENT_FILE_VERSION,
       name,
-      components: components.components,
+      components: components.blocks,
       wires: wires.text,
-      definitions: definitions.map(toPersistedDefinition),
+      definitions: definitions.map((d) => toPersistedDefinition(d)),
       // Only present when there is a lineage; an empty field would read as a
       // checked-and-absent one.
       ...(attribution?.length ? { attribution: [...attribution] } : {})
