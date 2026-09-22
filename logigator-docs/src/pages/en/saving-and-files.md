@@ -38,7 +38,7 @@ If a project matters, save it to the **Cloud** (see [Cloud & Sharing](docs:cloud
 
 ### Opening old projects
 
-If you open a circuit made with the older Logigator editor, saving it here converts it to the new format. Reopening it in the old editor afterwards may drop or misrender custom components, so keep the original if you still need it.
+If you open a circuit made with the older Logigator editor, saving it here converts it to the new format.
 
 ## Circuit files (`.lgix`)
 

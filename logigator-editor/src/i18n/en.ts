@@ -409,9 +409,6 @@ const en = {
           changelog: {
             label: "What's New"
           },
-          legacyEditor: {
-            label: 'Open the old editor'
-          },
           cookieSettings: {
             label: 'Cookie Settings'
           },
@@ -748,8 +745,6 @@ const en = {
     errorIntro:
       'An unexpected error occurred. Tell us what you were doing so we can track it down.',
     errorDetails: 'Error details',
-    legacyEditorNotice: 'Blocked by this?',
-    legacyEditorLink: 'Open the old editor',
     placeholder: 'What happened?',
     dataNotice:
       'Your current project, browser details and recent activity are attached to help us reproduce the issue.',

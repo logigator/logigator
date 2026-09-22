@@ -38,7 +38,7 @@ Si un projet compte, enregistrez-le dans le **Cloud** (voir [Cloud et partage](d
 
 ### Ouvrir d'anciens projets
 
-Si vous ouvrez un circuit réalisé avec l'ancien éditeur Logigator, l'enregistrer ici le convertit au nouveau format. Le rouvrir ensuite dans l'ancien éditeur peut supprimer ou mal afficher les composants personnalisés, alors conservez l'original si vous en avez encore besoin.
+Si vous ouvrez un circuit réalisé avec l'ancien éditeur Logigator, l'enregistrer ici le convertit au nouveau format.
 
 ## Fichiers de circuit (`.lgix`)
 

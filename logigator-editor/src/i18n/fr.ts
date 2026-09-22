@@ -414,9 +414,6 @@ const fr: TranslationSchema = {
           changelog: {
             label: 'Nouveautés'
           },
-          legacyEditor: {
-            label: "Ouvrir l'ancien éditeur"
-          },
           cookieSettings: {
             label: 'Paramètres des cookies'
           },
@@ -757,8 +754,6 @@ const fr: TranslationSchema = {
     errorIntro:
       "Une erreur inattendue s'est produite. Dites-nous ce que vous faisiez pour que nous puissions la localiser.",
     errorDetails: "Détails de l'erreur",
-    legacyEditorNotice: 'Cela vous bloque ?',
-    legacyEditorLink: "Ouvrir l'ancien éditeur",
     placeholder: "Que s'est-il passé ?",
     dataNotice:
       'Votre projet actuel, les détails de votre navigateur et votre activité récente sont joints pour nous aider à reproduire le problème.',

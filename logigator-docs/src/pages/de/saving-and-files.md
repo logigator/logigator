@@ -38,7 +38,7 @@ Wenn ein Projekt wichtig ist, speichere es in der **Cloud** (siehe [Cloud & Teil
 
 ### Alte Projekte öffnen
 
-Wenn du eine Schaltung öffnest, die mit dem älteren Logigator-Editor erstellt wurde, wandelt das Speichern hier sie in das neue Format um. Wird sie danach wieder im alten Editor geöffnet, können benutzerdefinierte Komponenten fehlen oder falsch dargestellt werden, also behalte das Original, falls du es noch brauchst.
+Wenn du eine Schaltung öffnest, die mit dem älteren Logigator-Editor erstellt wurde, wandelt das Speichern hier sie in das neue Format um.
 
 ## Schaltungsdateien (`.lgix`)
 

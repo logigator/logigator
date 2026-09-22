@@ -25,7 +25,6 @@ export const AnalyticsEvent = {
   WireRepairOffered: 'wire_repair_offered',
   WireRepairRun: 'wire_repair_run',
   ChangelogViewed: 'changelog_viewed',
-  LegacyEditorOpened: 'legacy_editor_opened',
   BrowserUnsupported: 'browser_unsupported',
   InspectionOpened: 'inspection_opened',
   ShareLinkGenerated: 'share_link_generated',

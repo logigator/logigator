@@ -53,11 +53,6 @@ constructor: the services it goes on to touch construct model objects
   `dialog_closed.resolved` says only that a result came back — completion stays
   with the specific events. Drawer sheets and inspection windows are
   deliberately uninstrumented.
-- **Legacy-editor hand-off.** `LegacyEditorService.open(source)` is the only
-  place that names `/legacy-editor`; it reports `legacy_editor_opened` first.
-  Surfaces render a control, never an `<a href>`: a link's context menu leaves
-  the app without passing any handler, and measuring users who give up here is
-  the point of the event.
 
 ### Shared language and theme
 

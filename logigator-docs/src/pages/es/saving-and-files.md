@@ -38,7 +38,7 @@ Si un proyecto es importante, guárdalo en la **Nube** (consulta [Nube y compart
 
 ### Abrir proyectos antiguos
 
-Si abres un circuito hecho con el editor de Logigator antiguo, guardarlo aquí lo convierte al formato nuevo. Volver a abrirlo después en el editor antiguo puede descartar o representar mal los componentes personalizados, así que conserva el original si aún lo necesitas.
+Si abres un circuito hecho con el editor de Logigator antiguo, guardarlo aquí lo convierte al formato nuevo.
 
 ## Archivos de circuito (`.lgix`)
 

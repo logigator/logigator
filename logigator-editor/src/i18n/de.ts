@@ -414,9 +414,6 @@ const de: TranslationSchema = {
           changelog: {
             label: 'Neuigkeiten'
           },
-          legacyEditor: {
-            label: 'Alten Editor öffnen'
-          },
           cookieSettings: {
             label: 'Cookie-Einstellungen'
           },
@@ -756,8 +753,6 @@ const de: TranslationSchema = {
     errorIntro:
       'Ein unerwarteter Fehler ist aufgetreten. Sag uns, was du getan hast, damit wir ihn eingrenzen können.',
     errorDetails: 'Fehlerdetails',
-    legacyEditorNotice: 'Kommst du deshalb nicht weiter?',
-    legacyEditorLink: 'Alten Editor öffnen',
     placeholder: 'Was ist passiert?',
     dataNotice:
       'Dein aktuelles Projekt, Browser-Details und die jüngste Aktivität werden angehängt, damit wir das Problem nachvollziehen können.',
