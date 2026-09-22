@@ -12,7 +12,11 @@
 </div>
 } @else if (profile(); as member) {
 <div class="page-wrap py-9 md:py-12" *webTranslate="let t">
-  <div class="flex flex-wrap items-center gap-5">
+  <!-- Top-aligned, not centred: everything beside the avatar grows downwards
+       — a bio is a member's to write and as long as they like — and a centred
+       avatar would drift down the page with it, away from the name it belongs
+       to. -->
+  <div class="flex flex-wrap items-start gap-5">
     <lg-avatar
       size="xlarge"
       shape="circle"
@@ -47,11 +51,28 @@
 
       <!-- The member's own words, as markdown under the user-content rule:
            emphasis and a link are theirs to write, markup on a page carrying
-           their name is not. The wrapper keeps the measure and the wrap, the
-           renderer setting no width of its own. -->
+           their name is not. The wrapper keeps the wrap, the renderer setting
+           no width of its own.
+
+           Named and set inside a rule, which is the part the type alone
+           cannot do: everything above this belongs to the page, and this is a
+           quotation from the person the page is about. The heading is the
+           document page's, element for element — it is the same thing being
+           said about the same kind of content, and it has to be the page
+           speaking, which a muted caption is not: muted is what a member's
+           own words are drawn in. -->
       @if (member.bio) {
-      <div class="mt-3 max-w-prose text-sm break-words">
-        <lg-markdown [data]="member.bio" userContent />
+      <div class="mt-5">
+        <h2 class="text-base font-semibold text-text-hover">
+          {{ t('pages.community.profile.about') }}
+        </h2>
+        <!-- The rule encloses the quotation and nothing else. The heading
+             above it is the page naming what follows, so it stays outside —
+             inside, it would be the page's own voice drawn within the
+             boundary that says whose words these are. -->
+        <div class="mt-2.5 border-l-2 border-border pl-4 break-words">
+          <lg-markdown [data]="member.bio" userContent />
+        </div>
       </div>
       }
 
