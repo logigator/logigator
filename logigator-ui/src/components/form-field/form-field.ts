@@ -32,7 +32,11 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (label()) {
-      <label class="text-sm font-medium text-text" [attr.for]="inputId()">
+      <label
+        class="text-sm font-medium text-text"
+        [attr.id]="labelId()"
+        [attr.for]="inputId()"
+      >
         {{ label() }}
         @if (required()) {
           <span class="text-error" aria-hidden="true">*</span>
@@ -67,6 +71,18 @@ export class LgFormField {
   readonly describedBy = computed(() =>
     this.error() || this.hint() ? this.messageId() : undefined
   );
+
+  /**
+   * Id of the `<label>`, for a control that cannot be the target of `for`.
+   *
+   * `for` names one element, and a rich text surface is a `contenteditable`
+   * the field's own control is standing in for — so the label has to be
+   * pointed *at* from the other side, with `aria-labelledby`.
+   */
+  readonly labelId = computed(() => {
+    const id = this.inputId();
+    return id && this.label() ? `${id}-label` : undefined;
+  });
 
   protected readonly messageId = computed(() => {
     const id = this.inputId();

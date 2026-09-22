@@ -84,6 +84,12 @@ const SIZE: Record<LgSize, string> = {
   xl: 'min-h-13.5 min-w-13.5 px-4 py-3 text-xl'
 };
 
+// What a toggle button looks like while it is on. The same treatment a
+// selected option carries in `lg-select`, so "this one is the current one"
+// reads the same wherever the library says it.
+const PRESSED =
+  'bg-primary-100 text-primary-800 dark:bg-primary/24 dark:text-text';
+
 /** Drops the hover/active tokens a disabled control must not react with. */
 function withoutInteractionStates(severity: string): string {
   return severity
@@ -111,6 +117,7 @@ function withoutInteractionStates(severity: string): string {
     '[attr.disabled]': 'disabledAttr()',
     '[attr.aria-disabled]': 'ariaDisabledAttr()',
     '[attr.aria-label]': 'ariaLabel() ?? null',
+    '[attr.aria-pressed]': 'ariaPressedAttr()',
     '(click)': 'handleClick($event)'
   },
   template: `
@@ -135,6 +142,19 @@ export class LgButton {
   readonly disabled = input(false, { transform: booleanAttribute });
   readonly loading = input(false, { transform: booleanAttribute });
   readonly disabledInteractive = input(false, { transform: booleanAttribute });
+  /**
+   * A toggle that is currently on — a toolbar's **bold** while the caret is
+   * inside bold text.
+   *
+   * Setting it at all makes the button a toggle: it draws as selected and
+   * announces `aria-pressed`, which is the part a colour alone cannot say. A
+   * button that merely *does* something leaves it alone, so `aria-pressed`
+   * never appears on one where "pressed" has no meaning.
+   */
+  readonly pressed = input(undefined, {
+    transform: (value: unknown): boolean | undefined =>
+      value === undefined ? undefined : booleanAttribute(value)
+  });
   readonly type = input<'button' | 'submit' | 'reset'>('button');
   readonly ariaLabel = input<string>();
 
@@ -165,6 +185,11 @@ export class LgButton {
     this.suppressed() ? 'true' : null
   );
 
+  protected readonly ariaPressedAttr = computed(() => {
+    const pressed = this.pressed();
+    return pressed === undefined ? null : String(pressed);
+  });
+
   protected readonly hostClasses = computed(() => {
     const variant: LgButtonVariant = this.text()
       ? 'text'
@@ -178,7 +203,8 @@ export class LgButton {
       variant === 'outlined' ? '' : 'border-transparent',
       this.rounded() ? 'rounded-4xl' : 'rounded-md',
       SIZE[this.resolvedSize()],
-      this.inactive() ? withoutInteractionStates(severity) : severity
+      this.inactive() ? withoutInteractionStates(severity) : severity,
+      this.pressed() ? PRESSED : ''
     ]
       .filter(Boolean)
       .join(' ');
