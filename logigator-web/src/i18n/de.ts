@@ -406,6 +406,7 @@ const de: TranslationSchema = {
         actionsFor: 'Aktionen für „{{name}}“',
         edit: 'Name & Beschreibung',
         share: 'Teilen…',
+        communityPage: 'Community-Seite',
         delete: 'Löschen'
       },
       edit: {

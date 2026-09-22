@@ -396,6 +396,7 @@ const fr: TranslationSchema = {
         actionsFor: 'Actions pour « {{name}} »',
         edit: 'Nom et description',
         share: 'Partager…',
+        communityPage: 'Page communautaire',
         delete: 'Supprimer'
       },
       edit: {

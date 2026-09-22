@@ -412,6 +412,7 @@ const en = {
         actionsFor: 'Actions for “{{name}}”',
         edit: 'Name & description',
         share: 'Share…',
+        communityPage: 'Community page',
         delete: 'Delete'
       },
       edit: {

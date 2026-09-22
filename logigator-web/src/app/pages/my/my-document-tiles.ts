@@ -23,7 +23,7 @@ import { TranslationService } from '../../translation/translation.service';
 import type { MyDocumentRow } from './my-documents.service';
 
 /** Which control on a row was chosen, for the page that owns the dialogs. */
-export type MyDocumentAction = 'edit' | 'share' | 'delete';
+export type MyDocumentAction = 'edit' | 'share' | 'community' | 'delete';
 
 export interface MyDocumentCommand {
   action: MyDocumentAction;
@@ -37,8 +37,8 @@ export interface MyDocumentCommand {
  * an author and a star count say nothing on a shelf where every row is the
  * reader's, so the meta row states what does — who the document's link reaches,
  * which is one of three states rather than a published-or-not pair — and when
- * it was last edited. The corner carries the controls for the three things a
- * shelf can do to a row.
+ * it was last edited. The corner carries the controls for the things a shelf
+ * does with a row — the three it can do *to* one, and the page it has.
  *
  * The card itself opens the editor, which is a separate deployment sharing this
  * origin, so its link is a real `href` rather than a route.
@@ -165,6 +165,16 @@ export class MyDocumentTiles {
         label: this.translation.translate('pages.my.list.share'),
         icon: 'ph ph-share-network',
         command: () => this.action.emit({ action: 'share', row })
+      },
+      // Offered whatever the state, private included: a document's page is
+      // addressed by its link in every one of them, and a private link
+      // resolves for its owner — who is whoever is reading this shelf. It is
+      // the one place the owner sees what a recipient would, which is worth
+      // most before anything is published.
+      {
+        label: this.translation.translate('pages.my.list.communityPage'),
+        icon: 'ph ph-globe',
+        command: () => this.action.emit({ action: 'community', row })
       },
       { separator: true },
       {

@@ -30,9 +30,9 @@ import { MyDocumentsService, type MyDocumentRow } from './my-documents.service';
 import { MY_PAGE_SIZE, myListingParams } from './my-listing-query';
 
 /**
- * The reader's own projects or components: the grid, a filter, and the three
- * things a shelf does to a row — edit its name and description, manage its
- * share, delete it.
+ * The reader's own projects or components: the grid, a filter, and what a
+ * shelf does with a row — edit its name and description, manage its share,
+ * open its community page, delete it.
  *
  * The site never creates or saves a circuit. The editor has owned both since
  * Phase 4, so *New project* is a link into it rather than a form here, and a
@@ -106,6 +106,9 @@ export class MyDocumentsPage {
       case 'share':
         this.openShare(command.row);
         return;
+      case 'community':
+        void this.openCommunityPage(command.row);
+        return;
       case 'delete':
         this.confirmDelete(command.row);
     }
@@ -176,6 +179,19 @@ export class MyDocumentsPage {
         visibility: row.visibility
       }
     });
+  }
+
+  /**
+   * The document's own page, which is a route of this app rather than a link
+   * out: the shelf's card opens the editor, so this is the only way from here
+   * to what a recipient of the link sees. It resolves whatever the state is —
+   * a private document's link resolves for its owner alone, and the owner is
+   * who is reading this.
+   */
+  private openCommunityPage(row: MyDocumentRow): Promise<boolean> {
+    return this.router.navigateByUrl(
+      this.links.communityDocument(this.kind(), row.link)
+    );
   }
 
   /**
