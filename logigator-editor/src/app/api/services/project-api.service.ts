@@ -26,10 +26,11 @@ export class ProjectApiService {
 
   /**
    * POST /api/projects — create a project, optionally with its circuit already
-   * in it, which makes the upload one round trip.
+   * in it, which makes the upload one round trip. Gzipped, like every write
+   * that can carry a document.
    */
   create(body: CreateProjectRequest): Observable<ProjectSummary> {
-    return this.api.post(this.path, projectSummarySchema, body);
+    return this.api.postCompressed(this.path, projectSummarySchema, body);
   }
 
   /** GET /api/projects/:id — the document, its dependencies and its lineage. */
@@ -37,12 +38,15 @@ export class ProjectApiService {
     return this.api.get(`${this.path}/${projectId}`, projectResponseSchema);
   }
 
-  /** PUT /api/projects/:id — replace the circuit, against the version read. */
+  /**
+   * PUT /api/projects/:id — replace the circuit, against the version read.
+   * Gzipped: this is the big one, a large board being megabytes of JSON.
+   */
   save(
     projectId: string,
     body: SaveCircuitRequest
   ): Observable<ProjectSummary> {
-    return this.api.put(
+    return this.api.putCompressed(
       `${this.path}/${projectId}`,
       projectSummarySchema,
       body

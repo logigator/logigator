@@ -171,6 +171,12 @@ export {
   toPersistedDefinition,
   fromPersistedDefinition
 } from './codecs/persisted-definition.codec';
+export {
+  gunzipBytes,
+  gunzipJson,
+  gzipBytes,
+  gzipJson
+} from './codecs/gzip.codec';
 
 // ---- format: the versioned file envelope, its validator and its container ----
 export { CURRENT_FILE_VERSION } from './format/circuit-file-version';

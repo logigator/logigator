@@ -45,7 +45,11 @@ import {
   FakeComponentIdMapStore
 } from '../../testing/fake-browser-stores';
 import { configureTestBed } from '../../testing/configure-test-bed';
-import { arrayWithExactContents } from '../../testing/vitest-helpers';
+import {
+  arrayWithExactContents,
+  expectGzipped,
+  gzippedBody
+} from '../../testing/vitest-helpers';
 import { signal } from '@angular/core';
 import type { UserResponse } from '@logigator/contract';
 import { makeUser } from '../../testing/user-fixtures';
@@ -386,11 +390,12 @@ describe('PersistenceService', () => {
 
       const promise = service.saveProject(project);
 
-      const req = httpMock.expectOne(PROJECT_URL(uuid('test-uuid')));
+      const req = await expectGzipped(httpMock, PROJECT_URL(uuid('test-uuid')));
+      const sent = await gzippedBody(req);
       expect(req.request.method).toBe('PUT');
-      expect(req.request.body.version).toBe(4);
-      expect(req.request.body.document.version).toBe(1);
-      expect(req.request.body.document.name).toBe('Test');
+      expect(sent.version).toBe(4);
+      expect(sent.document.version).toBe(1);
+      expect(sent.document.name).toBe('Test');
       req.flush(projectSummaryResponse({ version: 5 }));
 
       await promise;
@@ -413,7 +418,7 @@ describe('PersistenceService', () => {
       const promise1 = service.saveProject(project);
       const promise2 = service.saveProject(project);
 
-      const req = httpMock.expectOne(PROJECT_URL(uuid('test-uuid')));
+      const req = await expectGzipped(httpMock, PROJECT_URL(uuid('test-uuid')));
       req.flush(projectSummaryResponse({ version: 2 }));
 
       await Promise.all([promise1, promise2]);
@@ -434,7 +439,7 @@ describe('PersistenceService', () => {
 
       const promise = service.saveProject(project);
 
-      const req = httpMock.expectOne(PROJECT_URL(uuid('test-uuid')));
+      const req = await expectGzipped(httpMock, PROJECT_URL(uuid('test-uuid')));
       req.flush(apiError('version_conflict', 'Somebody else saved first'), {
         status: 409,
         statusText: 'Conflict'
@@ -462,7 +467,7 @@ describe('PersistenceService', () => {
       // An edit landing while the save request is in flight.
       metadataStore.markDirty(project);
 
-      const req = httpMock.expectOne(PROJECT_URL(uuid('test-uuid')));
+      const req = await expectGzipped(httpMock, PROJECT_URL(uuid('test-uuid')));
       req.flush(projectSummaryResponse({ version: 2 }));
 
       await promise;
@@ -516,7 +521,7 @@ describe('PersistenceService', () => {
       user.set(makeUser('user-1'));
 
       const promise = service.saveProject(project);
-      const req = httpMock.expectOne(PROJECT_URL(uuid('test-uuid')));
+      const req = await expectGzipped(httpMock, PROJECT_URL(uuid('test-uuid')));
       req.flush(projectSummaryResponse());
       await promise;
       expect(metadataStore.isDirty(project)).toBe(false);
@@ -863,11 +868,12 @@ describe('PersistenceService', () => {
       );
 
       // One round trip: a create carries the document.
-      const postReq = httpMock.expectOne(PROJECTS_LIST_URL);
+      const postReq = await expectGzipped(httpMock, PROJECTS_LIST_URL);
+      const sent = await gzippedBody(postReq);
       expect(postReq.request.method).toBe('POST');
-      expect(postReq.request.body.name).toBe('My Server Circuit');
-      expect(postReq.request.body.visibility).toBe('public');
-      expect(postReq.request.body.document.version).toBe(1);
+      expect(sent.name).toBe('My Server Circuit');
+      expect(sent.visibility).toBe('public');
+      expect(sent.document.version).toBe(1);
       postReq.flush({
         ...projectSummaryResponse({ id: uuid('srv-uuid'), version: 1 }),
         visibility: 'public'
@@ -904,10 +910,11 @@ describe('PersistenceService', () => {
 
       const promise = promotion.promoteProjectToServer(project, 'public');
 
-      const postReq = httpMock.expectOne(PROJECTS_LIST_URL);
+      const postReq = await expectGzipped(httpMock, PROJECTS_LIST_URL);
+      const sent = await gzippedBody(postReq);
       expect(postReq.request.method).toBe('POST');
-      expect(postReq.request.body.name).toBe('Local');
-      expect(postReq.request.body.visibility).toBe('public');
+      expect(sent.name).toBe('Local');
+      expect(sent.visibility).toBe('public');
       postReq.flush({
         ...projectSummaryResponse({ id: uuid('srv-uuid') }),
         visibility: 'public'
@@ -949,11 +956,11 @@ describe('PersistenceService', () => {
 
       const promise = promotion.promoteProjectToServer(project, 'unlisted');
 
-      const postReq = httpMock.expectOne(PROJECTS_LIST_URL);
+      const postReq = await expectGzipped(httpMock, PROJECTS_LIST_URL);
       // There is no request field for the fork parent: the claim travels
       // inside the document, and the server checks the chain's last entry (the
       // immediate parent, the chain being root-first) against its own rows.
-      expect(postReq.request.body.document.attribution).toEqual([
+      expect((await gzippedBody(postReq)).document.attribution).toEqual([
         { projectId: 'root-id', projectName: 'Root', authorName: 'alice' },
         { projectId: 'parent-id', projectName: 'Parent', authorName: 'bob' }
       ]);
@@ -982,9 +989,10 @@ describe('PersistenceService', () => {
         'unlisted'
       );
 
-      const postReq = httpMock.expectOne(PROJECTS_LIST_URL);
-      expect(postReq.request.body.name).toBe('Local');
-      expect(postReq.request.body.visibility).toBe('unlisted');
+      const postReq = await expectGzipped(httpMock, PROJECTS_LIST_URL);
+      const sent = await gzippedBody(postReq);
+      expect(sent.name).toBe('Local');
+      expect(sent.visibility).toBe('unlisted');
       postReq.flush(projectSummaryResponse({ id: uuid('srv-uuid') }));
 
       await promise;
@@ -1015,9 +1023,10 @@ describe('PersistenceService', () => {
 
       // The temp path awaits the stored record before it POSTs.
       await Promise.resolve();
-      const postReq = httpMock.expectOne(PROJECTS_LIST_URL);
-      expect(postReq.request.body.name).toBe('Archived');
-      expect(postReq.request.body.visibility).toBe('public');
+      const postReq = await expectGzipped(httpMock, PROJECTS_LIST_URL);
+      const sent = await gzippedBody(postReq);
+      expect(sent.name).toBe('Archived');
+      expect(sent.visibility).toBe('public');
       postReq.flush(projectSummaryResponse({ id: uuid('srv-uuid') }));
 
       await promise;
@@ -1037,9 +1046,9 @@ describe('PersistenceService', () => {
       );
 
       // No document: a create without one is an empty board server-side.
-      const postReq = httpMock.expectOne(PROJECTS_LIST_URL);
+      const postReq = await expectGzipped(httpMock, PROJECTS_LIST_URL);
       expect(postReq.request.method).toBe('POST');
-      expect(postReq.request.body).toEqual({
+      expect(await gzippedBody(postReq)).toEqual({
         name: 'My Project',
         description: undefined,
         visibility: 'unlisted'
@@ -1060,8 +1069,8 @@ describe('PersistenceService', () => {
     it('creates with the state the caller chose', async () => {
       const promise = service.createProject('Pub', undefined, 'public');
 
-      const postReq = httpMock.expectOne(PROJECTS_LIST_URL);
-      expect(postReq.request.body.visibility).toBe('public');
+      const postReq = await expectGzipped(httpMock, PROJECTS_LIST_URL);
+      expect((await gzippedBody(postReq)).visibility).toBe('public');
       postReq.flush(projectSummaryResponse({ id: uuid('pub-uuid') }));
 
       await promise;
@@ -2016,9 +2025,9 @@ describe('PersistenceService', () => {
       const promise = promotion.promoteComponentToServer(masterTypeId);
 
       await tick();
-      const post = httpMock.expectOne(COMPONENTS_URL);
+      const post = await expectGzipped(httpMock, COMPONENTS_URL);
       expect(post.request.method).toBe('POST');
-      expect(post.request.body.document.version).toBe(1);
+      expect((await gzippedBody(post)).document.version).toBe(1);
       post.flush(
         componentSummaryResponse({ id: uuid('srv-comp'), version: 5 })
       );
@@ -2069,9 +2078,9 @@ describe('PersistenceService', () => {
 
       const promise = promotion.promoteComponentToServer(masterTypeId);
       await tick();
-      httpMock
-        .expectOne(COMPONENTS_URL)
-        .flush(componentSummaryResponse({ id: uuid('srv-comp'), version: 5 }));
+      (await expectGzipped(httpMock, COMPONENTS_URL)).flush(
+        componentSummaryResponse({ id: uuid('srv-comp'), version: 5 })
+      );
 
       await expect(promise).resolves.toBeUndefined();
       const def = registry.getDefinition(masterTypeId)!;
@@ -2111,9 +2120,9 @@ describe('PersistenceService', () => {
 
       const promise = promotion.promoteComponentToServer(masterTypeId);
       await tick();
-      httpMock
-        .expectOne(COMPONENTS_URL)
-        .flush(componentSummaryResponse({ id: uuid('srv-comp'), version: 5 }));
+      (await expectGzipped(httpMock, COMPONENTS_URL)).flush(
+        componentSummaryResponse({ id: uuid('srv-comp'), version: 5 })
+      );
       await promise;
 
       // The editor points at the cloud record, so a later save routes to the
@@ -2487,8 +2496,7 @@ describe('PersistenceService', () => {
       metadataStore.markDirty(project);
 
       const save = service.saveProject(project);
-      await tick();
-      const put = httpMock.expectOne(COMPONENT_URL(uuid('srv-inv')));
+      const put = await expectGzipped(httpMock, COMPONENT_URL(uuid('srv-inv')));
       expect(put.request.method).toBe('PUT');
       put.flush(componentSummaryResponse({ id: uuid('srv-inv'), version: 2 }));
       await save;
@@ -2526,9 +2534,9 @@ describe('PersistenceService', () => {
 
       // A new component starts on an empty board, so the create carries no
       // document.
-      const post = httpMock.expectOne(COMPONENTS_URL);
+      const post = await expectGzipped(httpMock, COMPONENTS_URL);
       expect(post.request.method).toBe('POST');
-      expect(post.request.body).toEqual({
+      expect(await gzippedBody(post)).toEqual({
         name: 'Comp',
         symbol: 'C',
         description: 'd',
@@ -2617,9 +2625,9 @@ describe('PersistenceService', () => {
       metadataStore.markDirty(project);
 
       const promise = service.saveProject(project);
-      const put = httpMock.expectOne(PROJECT_URL(uuid('proj-1')));
+      const put = await expectGzipped(httpMock, PROJECT_URL(uuid('proj-1')));
       expect(put.request.method).toBe('PUT');
-      const definition = put.request.body.document.definitions[0];
+      const definition = (await gzippedBody(put)).document.definitions[0];
       // Provenance, so the server can derive the dependency edge and a reader
       // can tell whether the master has moved on.
       expect(definition.source).toEqual({
@@ -2659,16 +2667,14 @@ describe('PersistenceService', () => {
       metadataStore.markDirty(editor);
 
       const promise = service.saveProject(editor);
-      const put = httpMock.expectOne(COMPONENT_URL(uuid('ec1')));
+      const put = await expectGzipped(httpMock, COMPONENT_URL(uuid('ec1')));
+      const sent = await gzippedBody(put);
       expect(put.request.method).toBe('PUT');
       // No port surface in the body: the plugs in the circuit are what a
       // component's ports *are*, so a client declaring them could only
       // disagree with the document it sent.
-      expect(Object.keys(put.request.body).sort()).toEqual([
-        'document',
-        'version'
-      ]);
-      expect(put.request.body.version).toBe(2);
+      expect(Object.keys(sent).sort()).toEqual(['document', 'version']);
+      expect(sent.version).toBe(2);
       put.flush(componentSummaryResponse({ id: uuid('ec1'), version: 7 }));
 
       await promise;

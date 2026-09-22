@@ -4,13 +4,24 @@ import {
   HttpErrorResponse,
   HttpParams
 } from '@angular/common/http';
-import { catchError, map, Observable, throwError } from 'rxjs';
+import { catchError, from, map, Observable, switchMap, throwError } from 'rxjs';
 import type { z } from 'zod';
 import { environment } from '../../../environments/environment';
 import { InvalidResponseError } from '@logigator/contract';
+import { gzipJson } from '@logigator/core';
 import { toApiRequestError } from '../api-error';
 
 export type QueryParams = Record<string, string | number | boolean | undefined>;
+
+/**
+ * What a gzipped write says about its body: the media type of the *decoded*
+ * body, and the encoding applied on top of it. No `LGIX` framing — that
+ * container is for bytes at rest; a proxy told `gzip` must find gzip.
+ */
+const COMPRESSED_HEADERS = {
+  'Content-Type': 'application/json',
+  'Content-Encoding': 'gzip'
+};
 
 function toHttpParams(params: QueryParams): HttpParams {
   let httpParams = new HttpParams();
@@ -73,6 +84,33 @@ export class ApiBaseService {
     );
   }
 
+  /**
+   * PUT with a gzipped JSON body, for the document writes. A browser never
+   * compresses a request body of its own — response encoding is negotiated,
+   * a request has no such handshake — so the client compresses and declares
+   * it, and the API inflates it in `preParsing`.
+   *
+   * Every document write takes this path, with no size threshold: a small
+   * board still shrinks, and a boundary would be one more branch that no test
+   * naturally sits on. The API accepts both forms, so this is a client rule.
+   */
+  putCompressed<T>(
+    path: string,
+    schema: z.ZodType<T>,
+    body?: unknown
+  ): Observable<T> {
+    return this._compressed('PUT', path, schema, body);
+  }
+
+  /** POST with a gzipped JSON body. See {@link putCompressed}. */
+  postCompressed<T>(
+    path: string,
+    schema: z.ZodType<T>,
+    body?: unknown
+  ): Observable<T> {
+    return this._compressed('POST', path, schema, body);
+  }
+
   /** POST with a `FormData` body, for the multipart upload routes. */
   postFormData<T>(
     path: string,
@@ -93,6 +131,33 @@ export class ApiBaseService {
 
   deleteEmpty(path: string): Observable<void> {
     return this._discard(this.http.delete<unknown>(this.url(path)));
+  }
+
+  /**
+   * Compression is async, so the request is a `switchMap` over it and the
+   * method still answers an `Observable<T>` — every call site keeps its shape.
+   * The body goes out as the `ArrayBuffer` behind the bytes: `HttpRequest`
+   * passes an `ArrayBuffer` through untouched, while a `TypedArray` falls to
+   * its object branch and would be `JSON.stringify`d into a digit map.
+   */
+  private _compressed<T>(
+    method: 'POST' | 'PUT',
+    path: string,
+    schema: z.ZodType<T>,
+    body: unknown
+  ): Observable<T> {
+    return this._validate(
+      path,
+      schema,
+      from(gzipJson(JSON.stringify(body ?? {}))).pipe(
+        switchMap((bytes) =>
+          this.http.request<unknown>(method, this.url(path), {
+            body: bytes.buffer,
+            headers: COMPRESSED_HEADERS
+          })
+        )
+      )
+    );
   }
 
   private _options(params?: QueryParams) {

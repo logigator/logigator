@@ -27,9 +27,13 @@ export class ComponentApiService {
     return this.api.get(this.path, componentPageSchema, { page, size, search });
   }
 
-  /** POST /api/components — create a component, optionally with its circuit. */
+  /**
+   * POST /api/components — create a component, optionally with its circuit,
+   * which is also how a browser master is promoted. Gzipped, like every write
+   * that can carry a document.
+   */
   create(body: CreateComponentRequest): Observable<ComponentSummary> {
-    return this.api.post(this.path, componentSummarySchema, body);
+    return this.api.postCompressed(this.path, componentSummarySchema, body);
   }
 
   /** GET /api/components/:id — the document, its dependencies and its lineage. */
@@ -40,12 +44,13 @@ export class ComponentApiService {
   /**
    * PUT /api/components/:id — replace the circuit, against the version read.
    * The port surface is derived server-side, so nothing here declares it.
+   * Gzipped, as the project save is.
    */
   save(
     componentId: string,
     body: SaveCircuitRequest
   ): Observable<ComponentSummary> {
-    return this.api.put(
+    return this.api.putCompressed(
       `${this.path}/${componentId}`,
       componentSummarySchema,
       body

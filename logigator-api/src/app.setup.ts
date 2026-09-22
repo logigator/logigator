@@ -1,3 +1,4 @@
+import fastifyCompress from '@fastify/compress';
 import fastifyMultipart from '@fastify/multipart';
 import type { FastifyServerOptions } from 'fastify';
 import type { NestFastifyApplication } from '@nestjs/platform-fastify';
@@ -35,6 +36,21 @@ export async function configureApiApp(
     // The plugin reports the limit by throwing from `toBuffer`, which the error
     // filter answers 500 to. Off, the truncation is a flag a handler reads.
     throwFileSizeLimit: false
+  });
+  // Requests only. The editor gzips every document write — a browser never
+  // compresses a request body of its own, there being no handshake for it —
+  // and this inflates it in `preParsing`, before the body parser. Responses
+  // stay Caddy's business: it already answers `encode zstd gzip`.
+  //
+  // The decompressor reports the encoded length on the stream it returns, so
+  // Fastify's own parser bounds the inflated body *and* the raw one against
+  // `bodyLimit`: the zip bomb is capped by `REQUEST_MAX_BYTES`, with nothing
+  // to count here. A request with no `content-encoding` passes through
+  // untouched, which is what keeps curl and every older build working.
+  await app.register(fastifyCompress, {
+    global: false,
+    globalDecompression: true,
+    requestEncodings: ['gzip']
   });
   await registerSessionPlugins(app, env);
 

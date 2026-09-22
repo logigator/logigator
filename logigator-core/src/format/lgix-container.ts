@@ -1,3 +1,4 @@
+import { gunzipBytes, gzipBytes } from '../codecs/gzip.codec';
 import {
   InvalidFileError,
   UnsupportedVersionError
@@ -41,54 +42,6 @@ const enum Compression {
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
-async function collect(
-  stream: ReadableStream<Uint8Array>
-): Promise<Uint8Array<ArrayBuffer>> {
-  const chunks: Uint8Array[] = [];
-  const reader = stream.getReader();
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    chunks.push(value);
-  }
-  const total = chunks.reduce((n, c) => n + c.length, 0);
-  const out = new Uint8Array(total);
-  let offset = 0;
-  for (const c of chunks) {
-    out.set(c, offset);
-    offset += c.length;
-  }
-  return out;
-}
-
-/**
- * Runs a byte buffer through a (de)compression transform. Write and close are
- * deliberately not awaited before {@link collect} starts, so a bounded internal
- * buffer cannot deadlock. A decompression failure rejects the stream.
- */
-async function transform(
-  data: Uint8Array<ArrayBuffer>,
-  stream: CompressionStream | DecompressionStream
-): Promise<Uint8Array<ArrayBuffer>> {
-  const writer = stream.writable.getWriter();
-  // The failure surfaces through the readable; swallow the mirrored
-  // writable-side rejection so it is not left unhandled.
-  const ignore = () => undefined;
-  void writer.write(data).catch(ignore);
-  void writer.close().catch(ignore);
-  return collect(stream.readable);
-}
-
-function gzip(data: Uint8Array<ArrayBuffer>): Promise<Uint8Array<ArrayBuffer>> {
-  return transform(data, new CompressionStream('gzip'));
-}
-
-function gunzip(
-  data: Uint8Array<ArrayBuffer>
-): Promise<Uint8Array<ArrayBuffer>> {
-  return transform(data, new DecompressionStream('gzip'));
-}
-
 /** Whether a buffer starts with the `.lgix` magic bytes. */
 export function hasLgixMagic(bytes: Uint8Array): boolean {
   if (bytes.length < MAGIC.length) return false;
@@ -99,7 +52,7 @@ export function hasLgixMagic(bytes: Uint8Array): boolean {
 export async function encodeLgix(
   json: string
 ): Promise<Uint8Array<ArrayBuffer>> {
-  const payload = await gzip(new Uint8Array(encoder.encode(json)));
+  const payload = await gzipBytes(new Uint8Array(encoder.encode(json)));
   const out = new Uint8Array(HEADER_LENGTH + payload.length);
   out.set(MAGIC, 0);
   out[VERSION_OFFSET] = LGIX_CONTAINER_VERSION;
@@ -131,7 +84,7 @@ export async function decodeLgix(bytes: Uint8Array): Promise<string> {
   }
   let json: Uint8Array;
   try {
-    json = await gunzip(new Uint8Array(bytes.subarray(HEADER_LENGTH)));
+    json = await gunzipBytes(new Uint8Array(bytes.subarray(HEADER_LENGTH)));
   } catch {
     throw new InvalidFileError('Corrupted .lgix payload');
   }

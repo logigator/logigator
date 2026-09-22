@@ -25,6 +25,7 @@
     "typecheck": "tsc -p tsconfig.spec.json"
   },
   "dependencies": {
+    "@fastify/compress": "9.2.0",
     "@fastify/cookie": "^11.1.2",
     "@fastify/multipart": "^10.1.1",
     "@fastify/session": "^11.1.2",
