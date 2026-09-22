@@ -28,17 +28,20 @@
     />
   </div>
   <div class="flex flex-col gap-1">
-    <label for="edit-component-description">{{
-      t('editComponentDetails.description')
-    }}</label>
+    <label
+      id="edit-component-description-label"
+      for="edit-component-description"
+      >{{ t('editComponentDetails.description') }}</label
+    >
     <lg-markdown-field
       [value]="description()"
       [maxLength]="descriptionMaxLength"
+      labelledBy="edit-component-description-label"
     >
       <textarea
         lgTextarea
         id="edit-component-description"
-        rows="3"
+        rows="7"
         class="w-full"
         [attr.maxlength]="descriptionMaxLength"
         [ngModel]="description()"

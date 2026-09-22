@@ -26,17 +26,20 @@
     />
   </div>
   <div class="flex flex-col gap-1">
-    <label for="new-component-description">{{
-      t('newComponentDialog.description')
-    }}</label>
+    <label
+      id="new-component-description-label"
+      for="new-component-description"
+      >{{ t('newComponentDialog.description') }}</label
+    >
     <lg-markdown-field
       [value]="description()"
       [maxLength]="descriptionMaxLength"
+      labelledBy="new-component-description-label"
     >
       <textarea
         lgTextarea
         id="new-component-description"
-        rows="3"
+        rows="7"
         class="w-full"
         [attr.maxlength]="descriptionMaxLength"
         [ngModel]="description()"
