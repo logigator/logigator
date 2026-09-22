@@ -99,11 +99,17 @@
         [hint]="t('pages.my.account.profile.bioHint')"
         [error]="bioMessage ? t(bioMessage) : undefined"
       >
-        <lg-markdown-field [value]="bio()" [maxLength]="1024">
+        <lg-markdown-field
+          [value]="bio()"
+          [maxLength]="1024"
+          [labelledBy]="bioField.labelId()"
+          [describedBy]="bioField.describedBy()"
+          [invalid]="!!bioMessage"
+        >
           <textarea
             lgTextarea
             id="account-bio"
-            rows="4"
+            rows="8"
             class="w-full"
             maxlength="1024"
             formControlName="bio"

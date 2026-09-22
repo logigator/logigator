@@ -20,12 +20,27 @@ const de: TranslationSchema = {
     bulletedList: 'Aufzählung',
     numberedList: 'Nummerierte Liste',
     quote: 'Zitat',
+    codeBlock: 'Codeblock',
     divider: 'Trennlinie',
     table: 'Tabelle',
+    linkTools: 'Link',
+    linkText: 'Link',
+    linkUrl: 'Linkadresse',
+    removeLink: 'Link entfernen',
+    tableTools: 'Tabelle',
+    insertRowAbove: 'Zeile oberhalb einfügen',
+    insertRowBelow: 'Zeile unterhalb einfügen',
+    insertColumnBefore: 'Spalte links einfügen',
+    insertColumnAfter: 'Spalte rechts einfügen',
+    deleteRow: 'Zeile löschen',
+    deleteColumn: 'Spalte löschen',
+    deleteTable: 'Tabelle löschen',
+    alignLeft: 'Linksbündig',
+    alignCenter: 'Zentriert',
+    alignRight: 'Rechtsbündig',
     viewMode: 'Ansicht',
-    write: 'Schreiben',
-    split: 'Geteilt',
-    preview: 'Vorschau'
+    richText: 'Formatiert',
+    markdownSource: 'Markdown'
   },
   site: {
     name: 'Logigator',
@@ -337,6 +352,7 @@ const de: TranslationSchema = {
       },
       profile: {
         title: 'Mitglied',
+        about: 'Über dieses Mitglied',
         tabTitle: '{{username}} – {{section}}',
         metaDescription:
           'Die Schaltungen und Bausteine, die {{username}} auf Logigator veröffentlicht hat.',

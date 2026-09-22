@@ -20,12 +20,27 @@ const es: TranslationSchema = {
     bulletedList: 'Lista con viñetas',
     numberedList: 'Lista numerada',
     quote: 'Cita',
+    codeBlock: 'Bloque de código',
     divider: 'Separador',
     table: 'Tabla',
+    linkTools: 'Enlace',
+    linkText: 'enlace',
+    linkUrl: 'Dirección del enlace',
+    removeLink: 'Eliminar enlace',
+    tableTools: 'Tabla',
+    insertRowAbove: 'Insertar fila arriba',
+    insertRowBelow: 'Insertar fila abajo',
+    insertColumnBefore: 'Insertar columna a la izquierda',
+    insertColumnAfter: 'Insertar columna a la derecha',
+    deleteRow: 'Eliminar fila',
+    deleteColumn: 'Eliminar columna',
+    deleteTable: 'Eliminar tabla',
+    alignLeft: 'Alinear a la izquierda',
+    alignCenter: 'Centrar',
+    alignRight: 'Alinear a la derecha',
     viewMode: 'Vista',
-    write: 'Escribir',
-    split: 'Dividido',
-    preview: 'Vista previa'
+    richText: 'Texto enriquecido',
+    markdownSource: 'Markdown'
   },
   site: {
     name: 'Logigator',
@@ -334,6 +349,7 @@ const es: TranslationSchema = {
       },
       profile: {
         title: 'Miembro',
+        about: 'Sobre este miembro',
         tabTitle: '{{username}} – {{section}}',
         metaDescription:
           'Los circuitos y componentes que {{username}} ha publicado en Logigator.',

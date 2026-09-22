@@ -32,11 +32,17 @@
       [hint]="t('pages.my.edit.descriptionHint')"
       [error]="descriptionMessage ? t(descriptionMessage) : undefined"
     >
-      <lg-markdown-field [value]="description()" [maxLength]="2048">
+      <lg-markdown-field
+        [value]="description()"
+        [maxLength]="2048"
+        [labelledBy]="descriptionField.labelId()"
+        [describedBy]="descriptionField.describedBy()"
+        [invalid]="!!descriptionMessage"
+      >
         <textarea
           lgTextarea
           id="edit-document-description"
-          rows="4"
+          rows="8"
           class="w-full"
           maxlength="2048"
           formControlName="description"

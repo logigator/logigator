@@ -23,12 +23,27 @@ const en = {
     bulletedList: 'Bulleted list',
     numberedList: 'Numbered list',
     quote: 'Quote',
+    codeBlock: 'Code block',
     divider: 'Divider',
     table: 'Table',
+    linkTools: 'Link',
+    linkText: 'link',
+    linkUrl: 'Link address',
+    removeLink: 'Remove link',
+    tableTools: 'Table',
+    insertRowAbove: 'Insert row above',
+    insertRowBelow: 'Insert row below',
+    insertColumnBefore: 'Insert column before',
+    insertColumnAfter: 'Insert column after',
+    deleteRow: 'Delete row',
+    deleteColumn: 'Delete column',
+    deleteTable: 'Delete table',
+    alignLeft: 'Align left',
+    alignCenter: 'Align center',
+    alignRight: 'Align right',
     viewMode: 'View',
-    write: 'Write',
-    split: 'Split',
-    preview: 'Preview'
+    richText: 'Rich text',
+    markdownSource: 'Markdown'
   },
   site: {
     name: 'Logigator',
@@ -341,6 +356,7 @@ const en = {
       },
       profile: {
         title: 'Member',
+        about: 'About this member',
         tabTitle: '{{username}} – {{section}}',
         metaDescription:
           'The circuits and components {{username}} has published on Logigator.',
