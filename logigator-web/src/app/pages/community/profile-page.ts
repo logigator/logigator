@@ -146,7 +146,7 @@ export class ProfilePage {
 
   protected tabClass(active: boolean): string {
     return (
-      '-mb-px border-b-2 px-1 pb-2.5 text-sm font-medium whitespace-nowrap ' +
+      'border-b-2 px-1 pb-2.5 text-sm font-medium whitespace-nowrap ' +
       (active
         ? 'border-primary text-text-hover'
         : 'border-transparent text-muted hover:border-border hover:text-text')

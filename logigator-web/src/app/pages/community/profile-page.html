@@ -123,21 +123,26 @@
     </div>
   </div>
 
-  <!-- Four links, not four states of one control: each tab is its own URL. -->
-  <nav
-    class="mt-8 flex gap-6 overflow-x-auto border-b border-border"
-    [attr.aria-label]="t('pages.community.profile.sections')"
-  >
-    @for (tab of tabs(); track tab.section) {
-    <a
-      [routerLink]="tab.href"
-      [class]="tabClass(tab.active)"
-      [attr.aria-current]="tab.active ? 'page' : null"
+  <!-- Four links, not four states of one control: each tab is its own URL.
+       The rule is the wrapper's and the overlap the scroller's: a tab carrying
+       the -1px itself would hang out of the scroll port and stand a vertical
+       scrollbar up beside four links that fit. -->
+  <div class="mt-8 border-b border-border">
+    <nav
+      class="-mb-px flex gap-6 overflow-x-auto"
+      [attr.aria-label]="t('pages.community.profile.sections')"
     >
-      {{ t(tab.labelKey) }}
-    </a>
-    }
-  </nav>
+      @for (tab of tabs(); track tab.section) {
+      <a
+        [routerLink]="tab.href"
+        [class]="tabClass(tab.active)"
+        [attr.aria-current]="tab.active ? 'page' : null"
+      >
+        {{ t(tab.labelKey) }}
+      </a>
+      }
+    </nav>
+  </div>
 
   <div class="mt-7">
     <router-outlet />
