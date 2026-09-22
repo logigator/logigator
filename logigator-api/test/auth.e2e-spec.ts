@@ -507,6 +507,25 @@ describe('credential rate limiting', () => {
   });
 });
 
+/**
+ * Resolves once the process clock has left the millisecond it was in.
+ *
+ * `touchIfStale` slides the session by writing `touchedAt = Date.now()`, and
+ * with `rolling` off `@fastify/session` re-sends the cookie exactly when a
+ * session field changed. Two responses inside one millisecond therefore write
+ * the same value, and the second carries no `Set-Cookie` at all — harmless in
+ * itself, since the first already slid the expiry and the hint stays paired
+ * with it, but it makes any assertion about *this* response's cookie a race
+ * against the one before it. Sign-in stamps `touchedAt` too, so the first
+ * request after it is the one that loses the coin toss.
+ */
+async function nextMillisecond(): Promise<void> {
+  const start = Date.now();
+  while (Date.now() === start) {
+    await new Promise((resolve) => setImmediate(resolve));
+  }
+}
+
 describe('a session refreshed on every response', () => {
   let api: E2eApp;
   const jar = new CookieJar();
@@ -540,6 +559,9 @@ describe('a session refreshed on every response', () => {
   });
 
   it('carries the session and its hint on the same response', async () => {
+    // Off the millisecond sign-in stamped, so this response is one that
+    // actually refreshes rather than one riding the login's own slide.
+    await nextMillisecond();
     const response = await api.inject({
       method: 'GET',
       url: '/api/user',
@@ -555,6 +577,7 @@ describe('a session refreshed on every response', () => {
   });
 
   it('pushes the expiry out as the clock moves', async () => {
+    await nextMillisecond();
     const first = await api.inject({
       method: 'GET',
       url: '/api/user',
