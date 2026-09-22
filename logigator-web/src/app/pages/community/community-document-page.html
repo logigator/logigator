@@ -14,15 +14,21 @@
 </div>
 } @else if (document(); as doc) {
 <div class="page-wrap py-9 md:py-12" *webTranslate="let t">
+  <!-- One link rather than a trail, and the caret is what says which way it
+       goes: a listing title on its own above a heading reads as a label of the
+       page under it. -->
   <nav class="text-sm text-muted" [attr.aria-label]="t('header.community')">
     <a
-      class="hover:text-text hover:underline"
+      class="inline-flex items-center gap-1.5 hover:text-text hover:underline"
       [routerLink]="
           isComponent() ? links.communityComponents() : links.communityProjects()
         "
     >
-      {{ isComponent() ? t('pages.community.browse.componentsTitle') :
-      t('pages.community.browse.projectsTitle') }}
+      <i class="ph ph-caret-left text-sm" aria-hidden="true"></i>
+      <span>
+        {{ isComponent() ? t('pages.community.browse.componentsTitle') :
+        t('pages.community.browse.projectsTitle') }}
+      </span>
     </a>
   </nav>
 
@@ -129,10 +135,10 @@
           [attr.aria-pressed]="starred()"
           (click)="toggleStar()"
         >
-          <i
-            [class]="starred() ? 'ph-fill ph-star text-primary' : 'ph ph-star'"
-            aria-hidden="true"
-          ></i>
+          <web-star-icon
+            [filled]="starred()"
+            [class.text-primary]="starred()"
+          />
           <span
             >{{ starred() ? t('pages.community.document.unstar') :
             t('pages.community.document.star') }}</span

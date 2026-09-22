@@ -18,9 +18,15 @@
 </div>
 } @else {
 <div class="page-wrap py-9 md:py-12" *webTranslate="let t">
+  <!-- The document this list belongs to, carrying the same caret the document
+       page's own way back carries: the two are one nav in two places. -->
   <nav class="text-sm text-muted" [attr.aria-label]="t('header.community')">
-    <a class="hover:text-text hover:underline" [routerLink]="documentHref()">
-      {{ document()?.name }}
+    <a
+      class="inline-flex items-center gap-1.5 hover:text-text hover:underline"
+      [routerLink]="documentHref()"
+    >
+      <i class="ph ph-caret-left text-sm" aria-hidden="true"></i>
+      <span>{{ document()?.name }}</span>
     </a>
   </nav>
 

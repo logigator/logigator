@@ -28,6 +28,7 @@ import { TranslationService } from '../../translation/translation.service';
 import { SessionService } from '../../user/session.service';
 import { apiKindOf } from './community-kind';
 import { CommunityDocumentService } from './community-document.service';
+import { StarIcon } from './star-icon';
 
 /**
  * One circuit, at the address its link is: its render, who made it, what it is
@@ -62,6 +63,7 @@ import { CommunityDocumentService } from './community-document.service';
     RouterLink,
     SectionError,
     ShareControls,
+    StarIcon,
     TranslateDirective,
     VisibilityTag
   ],

@@ -55,14 +55,14 @@ describe('CommunityDocumentPage', () => {
   }
 
   /**
-   * The star control, by the icon it carries: the two states of it are two
-   * class lists, and a page that has none must be able to say so rather than
-   * fail on a missing label.
+   * The star control, by the icon it carries: its label is one of two words
+   * depending on the state, and a page that has no star control at all must be
+   * able to say so rather than fail on a missing label.
    */
   function starControl(el: HTMLElement): HTMLButtonElement | null {
     return (
       [...el.querySelectorAll('button')].find(
-        (candidate) => candidate.querySelector('i.ph-star') !== null
+        (candidate) => candidate.querySelector('web-star-icon') !== null
       ) ?? null
     );
   }
