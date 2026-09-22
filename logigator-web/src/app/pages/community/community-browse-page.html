@@ -51,32 +51,21 @@
         }
       </div>
 
-      <!-- `action` and `method` are what a submit does with no script; the
-           ranking rides along as a hidden field so filtering does not silently
-           reset it. No page field: a new search starts at the first page. -->
-      <form
-        role="search"
-        method="get"
+      <!-- The ranking rides along as a hidden field so a submit with no script
+           does not silently reset it. No page field: a new search starts at the
+           first page. -->
+      <web-listing-search
         class="sm:w-64"
         [action]="path()"
-        (submit)="onSearch($event)"
+        [search]="query().search"
+        [label]="t('pages.community.browse.searchLabel')"
+        [placeholder]="t('pages.community.browse.searchPlaceholder')"
+        (searchChange)="onSearch($event)"
       >
         @if (query().orderBy !== defaultOrder) {
         <input type="hidden" name="orderBy" [value]="query().orderBy" />
         }
-        <lg-icon-field class="block">
-          <lg-input-icon class="ph ph-magnifying-glass" />
-          <input
-            lgInputText
-            type="search"
-            class="w-full"
-            name="search"
-            [attr.aria-label]="t('pages.community.browse.searchLabel')"
-            [placeholder]="t('pages.community.browse.searchPlaceholder')"
-            [value]="query().search"
-          />
-        </lg-icon-field>
-      </form>
+      </web-listing-search>
     </div>
   </div>
 

@@ -326,6 +326,13 @@ path behaves the same in development).
 - `states/` — the shared empty and section-error objects (`web-empty-state`, `web-section-error`).
   There is no skeleton: every list is resolved by a guard, so the first byte carries content and a
   client-side navigation waits.
+- `listings/` — `web-listing-search`, the filter the two community browse pages and the two shelves
+  all carry. Typing is what searches, debounced by the editor's own 300ms, and Enter answers without
+  waiting it out; the page writes the URL with `replaceUrl`, so a filter stays shareable without a
+  half-typed word being a history entry. The field keeps what was typed rather than mirroring the
+  URL — the answer comes back slower than the next keystroke, and putting it in the field would
+  swallow one — and adopts the URL only where something else moved it. `contentSection` drops a read
+  a newer one superseded for the same reason: several are in flight and nothing orders the answers.
 - `design/` — the design language's own visual devices, as components rather than markup a page
   repeats. `web-wire-run` is the orthogonal rule that steps and tees between two blocks; its
   1px borders are why it is not a scaled SVG.

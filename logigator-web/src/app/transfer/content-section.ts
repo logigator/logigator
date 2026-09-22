@@ -50,6 +50,13 @@ export function contentSection<TRow>(
   const key = makeStateKey<SectionResult<TRow>>(name);
   const result = signal<SectionResult<TRow>>({ entries: [], total: 0 });
   const retrying = signal(false);
+  /**
+   * Which read is the current one. A filter typed a character at a time asks
+   * for several within a round trip of each other, and two responses can land
+   * in either order — so a read that a newer one has already superseded must
+   * not paint its rows over the newer ones.
+   */
+  let generation = 0;
 
   const fetch = async (): Promise<SectionResult<TRow>> => {
     try {
@@ -75,13 +82,17 @@ export function contentSection<TRow>(
     }),
     retrying: retrying.asReadonly(),
     resolve: async () => {
-      result.set(await handoff.resolve(key, fetch));
+      const mine = ++generation;
+      const next = await handoff.resolve(key, fetch);
+      if (mine === generation) result.set(next);
     },
     // Not through the hand-off: what it holds is the answer that failed.
     retry: async () => {
+      const mine = ++generation;
       retrying.set(true);
       try {
-        result.set(await fetch());
+        const next = await fetch();
+        if (mine === generation) result.set(next);
       } finally {
         retrying.set(false);
       }

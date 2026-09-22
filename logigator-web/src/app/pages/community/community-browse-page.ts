@@ -5,16 +5,11 @@ import {
   inject
 } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
-import {
-  LgButton,
-  LgIconField,
-  LgInputIcon,
-  LgInputText,
-  LgPaginator
-} from '@logigator/ui';
+import { LgButton, LgPaginator } from '@logigator/ui';
 import { CircuitTiles } from '../../documents/circuit-tiles';
 import { toTileEntries } from '../../documents/circuit-tile-entry';
 import { SiteLinks } from '../../layout/site-links';
+import { ListingSearch } from '../../listings/listing-search';
 import { EmptyState } from '../../states/empty-state';
 import { SectionError } from '../../states/section-error';
 import { TranslateDirective } from '../../translation/translate.directive';
@@ -44,7 +39,8 @@ const ORDER_KEYS: Record<string, TranslationKey> = {
  * survive a reload and answer in the server's first byte. The kind switch and
  * the ranking are links and the filter is a real `<form method="get">`, so all
  * three work before any script has run; the paginator is the one control that
- * needs one.
+ * needs one. Where there is script, typing in the filter is what searches —
+ * see `ListingSearch`.
  */
 @Component({
   selector: 'web-community-browse-page',
@@ -52,10 +48,8 @@ const ORDER_KEYS: Record<string, TranslationKey> = {
     CircuitTiles,
     EmptyState,
     LgButton,
-    LgIconField,
-    LgInputIcon,
-    LgInputText,
     LgPaginator,
+    ListingSearch,
     RouterLink,
     SectionError,
     TranslateDirective
@@ -117,19 +111,14 @@ export class CommunityBrowsePage {
   );
 
   /**
-   * Claims the submit where there is script to claim it, so filtering is a
-   * router navigation rather than a document load. The form's own `action`
-   * answers where there is not.
+   * What the field asks for, on the URL. Replaced rather than pushed: typing is
+   * not a trail of history entries, and the back button belongs to wherever the
+   * reader came from rather than to the word they were halfway through.
    */
-  protected onSearch(event: Event): void {
-    event.preventDefault();
-    const form = event.target as HTMLFormElement;
-    const search = new FormData(form).get('search');
+  protected onSearch(search: string): void {
     void this.router.navigate([this.path()], {
-      queryParams: listingParams({
-        search: typeof search === 'string' ? search.trim() : '',
-        orderBy: this.query().orderBy
-      })
+      queryParams: listingParams({ search, orderBy: this.query().orderBy }),
+      replaceUrl: true
     });
   }
 

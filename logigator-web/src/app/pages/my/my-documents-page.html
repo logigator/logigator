@@ -31,28 +31,15 @@
     </nav>
 
     <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
-      <!-- `action` and `method` are what a submit does with no script. No page
-           field: a new search starts at the first page. -->
-      <form
-        role="search"
-        method="get"
+      <!-- No page field: a new search starts at the first page. -->
+      <web-listing-search
         class="sm:w-64"
         [action]="path()"
-        (submit)="onSearch($event)"
-      >
-        <lg-icon-field class="block">
-          <lg-input-icon class="ph ph-magnifying-glass" />
-          <input
-            lgInputText
-            type="search"
-            class="w-full"
-            name="search"
-            [attr.aria-label]="t('pages.my.list.searchLabel')"
-            [placeholder]="t('pages.my.list.searchPlaceholder')"
-            [value]="query().search"
-          />
-        </lg-icon-field>
-      </form>
+        [search]="query().search"
+        [label]="t('pages.my.list.searchLabel')"
+        [placeholder]="t('pages.my.list.searchPlaceholder')"
+        (searchChange)="onSearch($event)"
+      />
 
       @if (isProjects()) {
       <!-- Creating is the editor's: it has owned new documents and their saves

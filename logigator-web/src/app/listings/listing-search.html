@@ -1,0 +1,24 @@
+<!-- `action` and `method` are what a submit does with no script: a GET to the
+     listing's own path, which resolves the filter server-side. `<ng-content>`
+     is where a page puts the state it wants carried along as hidden fields. -->
+<form
+  role="search"
+  method="get"
+  [action]="action()"
+  (submit)="onSubmit($event)"
+>
+  <ng-content />
+  <lg-icon-field class="block">
+    <lg-input-icon class="ph ph-magnifying-glass" />
+    <input
+      lgInputText
+      type="search"
+      class="w-full"
+      name="search"
+      [attr.aria-label]="label()"
+      [placeholder]="placeholder()"
+      [value]="value()"
+      (input)="onInput($event)"
+    />
+  </lg-icon-field>
+</form>

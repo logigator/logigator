@@ -10,15 +10,13 @@ import {
   ConfirmationService,
   DialogService,
   LgButton,
-  LgIconField,
-  LgInputIcon,
-  LgInputText,
   LgPaginator,
   ToastService
 } from '@logigator/ui';
 import { DocumentsApiService } from '../../api/services/documents-api.service';
 import { genericFailureKey } from '../../forms/api-failure';
 import { SiteLinks } from '../../layout/site-links';
+import { ListingSearch } from '../../listings/listing-search';
 import { EmptyState } from '../../states/empty-state';
 import { SectionError } from '../../states/section-error';
 import { TranslateDirective } from '../../translation/translate.directive';
@@ -41,18 +39,17 @@ import { MY_PAGE_SIZE, myListingParams } from './my-listing-query';
  *
  * Both controls write the URL rather than component state — the guard reads it
  * back and re-resolves — so a filter and a page survive a reload and answer in
- * the server's first byte. The filter is a real `<form method="get">`; the
- * paginator is the one control that needs script.
+ * the server's first byte. The filter is a real `<form method="get">`, and
+ * where there is script typing in it is what searches — see `ListingSearch`;
+ * the paginator is the one control that needs script.
  */
 @Component({
   selector: 'web-my-documents-page',
   imports: [
     EmptyState,
     LgButton,
-    LgIconField,
-    LgInputIcon,
-    LgInputText,
     LgPaginator,
+    ListingSearch,
     MyDocumentTiles,
     RouterLink,
     SectionError,
@@ -115,18 +112,14 @@ export class MyDocumentsPage {
   }
 
   /**
-   * Claims the submit where there is script to claim it, so filtering is a
-   * router navigation rather than a document load. The form's own `action`
-   * answers where there is not.
+   * What the field asks for, on the URL. Replaced rather than pushed: typing is
+   * not a trail of history entries, and the back button belongs to wherever the
+   * reader came from rather than to the word they were halfway through.
    */
-  protected onSearch(event: Event): void {
-    event.preventDefault();
-    const form = event.target as HTMLFormElement;
-    const search = new FormData(form).get('search');
+  protected onSearch(search: string): void {
     void this.router.navigate([this.path()], {
-      queryParams: myListingParams({
-        search: typeof search === 'string' ? search.trim() : ''
-      })
+      queryParams: myListingParams({ search }),
+      replaceUrl: true
     });
   }
 
