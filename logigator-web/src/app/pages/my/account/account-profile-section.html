@@ -9,7 +9,7 @@
         size="xlarge"
         shape="circle"
         [image]="avatar()"
-        [label]="initials()"
+        [name]="session.user()?.username"
       />
       <div class="flex flex-col gap-2">
         <div class="flex flex-wrap gap-2">

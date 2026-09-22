@@ -79,6 +79,20 @@ describe('LgAvatar', () => {
     expect(img.hasAttribute('sizes')).toBe(false);
   });
 
+  it('reduces a name to its first letter, by code point', () => {
+    // Every avatar on the origin stands for an account the same way, so the
+    // rule is here rather than at each call site.
+    expect(render({ name: 'andreas' }).textContent).toContain('A');
+
+    // `slice` would cut this in half and draw half a surrogate pair.
+    expect(render({ name: '\u{1F642}bob' }).textContent).toContain('\u{1F642}');
+  });
+
+  it("draws a label in the name's place", () => {
+    const el = render({ name: 'andreas', label: 'ACME' });
+    expect(el.textContent?.trim()).toBe('ACME');
+  });
+
   it('falls back to the label when the ladder is empty', () => {
     const el = render({ image: [], label: 'A' });
     expect(el.querySelector('img')).toBeNull();

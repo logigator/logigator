@@ -72,10 +72,6 @@ export class ProfilePage {
   protected readonly failureKey = this.content.failureKey;
   protected readonly retrying = this.content.retrying;
 
-  protected readonly initials = computed(() =>
-    (this.profile()?.username ?? '').slice(0, 2).toUpperCase()
-  );
-
   /** A membership date is a calendar date; UTC, so no zone renames the day. */
   protected readonly memberSince = computed(() => {
     const profile = this.profile();

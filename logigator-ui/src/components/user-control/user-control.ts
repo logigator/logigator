@@ -45,7 +45,7 @@ import { LgUserPanel } from './user-panel';
         shape="circle"
         icon="ph ph-user"
         [image]="image()"
-        [label]="initial()"
+        [name]="username()"
       />
       <!-- Compact drops the name; the avatar and caret carry the control. -->
       <span class="hidden font-medium whitespace-nowrap sm:inline">{{
@@ -85,10 +85,6 @@ export class LgUserControl {
   protected readonly sections = contentChild<TemplateRef<unknown>>('sections');
 
   protected readonly open = signal(false);
-
-  protected readonly initial = computed(() =>
-    this.username()?.slice(0, 1).toUpperCase()
-  );
 
   protected readonly triggerClasses = computed(
     () =>

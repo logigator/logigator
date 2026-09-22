@@ -1,4 +1,4 @@
-import { Component, computed, input, output } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import { LgAvatar } from '../avatar/avatar';
 import { LgDivider } from '../divider/divider';
 import { LgRipple } from '../ripple/ripple';
@@ -31,7 +31,7 @@ import { LgImageSource } from '../../tokens/image-source';
         shape="circle"
         icon="ph ph-user"
         [image]="image()"
-        [label]="initial()"
+        [name]="username()"
       />
       @if (username(); as name) {
         <span class="text-lg font-semibold">{{ name }}</span>
@@ -80,10 +80,6 @@ export class LgUserPanel {
   readonly model = input<readonly MenuItem[]>([]);
   /** A row ran. */
   readonly action = output<void>();
-
-  protected readonly initial = computed(() =>
-    this.username()?.slice(0, 1).toUpperCase()
-  );
 
   protected run(item: MenuItem): void {
     item.command?.({ item });

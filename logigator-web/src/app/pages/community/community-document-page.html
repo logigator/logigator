@@ -67,7 +67,7 @@
           size="small"
           shape="circle"
           [image]="doc.author.avatar ?? undefined"
-          [label]="initials()"
+          [name]="doc.author.username"
         />
         <span class="truncate font-medium">{{ doc.author.username }}</span>
       </a>

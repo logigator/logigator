@@ -15,7 +15,8 @@ const BOX = {
 } as const;
 
 /**
- * A user/entity avatar, rendering `image`, else `label`, else `icon`.
+ * A user/entity avatar, rendering `image`, else the letter `name` reduces to
+ * (or `label` where the text is not a name), else `icon`.
  *
  * `image` takes a single URL or a list of {@link LgImageSource}s, which
  * becomes one `<source>` per encoding in the order given — the list's order is
@@ -50,8 +51,8 @@ const BOX = {
             class="h-full w-full object-cover"
           />
         </picture>
-      } @else if (label()) {
-        <span>{{ label() }}</span>
+      } @else if (fallback(); as text) {
+        <span>{{ text }}</span>
       } @else if (icon()) {
         <i [class]="icon()" aria-hidden="true"></i>
       }
@@ -60,6 +61,13 @@ const BOX = {
 })
 export class LgAvatar {
   readonly image = input<string | readonly LgImageSource[]>();
+  /**
+   * The account or entity this avatar stands for. With no picture, its first
+   * letter is drawn — the one definition of that rule, so every avatar on the
+   * origin reduces a name the same way.
+   */
+  readonly name = input<string>();
+  /** Drawn in `name`'s place where the text is not a name to reduce. */
   readonly label = input<string>();
   readonly icon = input<IconSlot>();
   readonly shape = input<'circle' | 'square'>('square');
@@ -79,4 +87,15 @@ export class LgAvatar {
 
   /** What to draw, or `undefined` when the label/icon fallbacks take over. */
   protected readonly picture = computed(() => pictureFor(this.image()));
+
+  /**
+   * The text standing in for a missing picture. `Array.from` rather than
+   * `slice`, so a name opening on an astral character is not cut in half.
+   */
+  protected readonly fallback = computed(() => {
+    const label = this.label();
+    if (label) return label;
+    const [first] = Array.from(this.name() ?? '');
+    return first?.toUpperCase();
+  });
 }

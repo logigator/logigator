@@ -212,10 +212,6 @@ export class CommunityDocumentPage {
       : '';
   });
 
-  protected readonly initials = computed(() =>
-    (this.document()?.author.username ?? '').slice(0, 2).toUpperCase()
-  );
-
   /**
    * Starring, or the sign-in that has to happen first. A visitor is sent to the
    * form with this page as the return path, so the star is one click away when

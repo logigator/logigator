@@ -71,7 +71,7 @@ const GRID_COLUMNS = 4;
                 size="small"
                 shape="circle"
                 [image]="author.avatar ?? undefined"
-                [label]="author.initials"
+                [name]="author.name"
               />
               <span class="truncate">{{ author.name }}</span>
             </a>
@@ -130,8 +130,7 @@ export class CircuitTiles {
         ? {
             href: entry.meta.author.href,
             name: entry.meta.author.username,
-            avatar: entry.meta.author.avatar,
-            initials: entry.meta.author.username.slice(0, 2).toUpperCase()
+            avatar: entry.meta.author.avatar
           }
         : null
     }));

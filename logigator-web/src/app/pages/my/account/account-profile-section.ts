@@ -86,7 +86,7 @@ const LINK_FIELDS = ['link0', 'link1', 'link2'] as const;
 })
 export class AccountProfileSection {
   private readonly userApi = inject(UserApiService);
-  private readonly session = inject(SessionService);
+  protected readonly session = inject(SessionService);
 
   protected readonly accept = ACCEPTED_TYPES;
 
@@ -151,10 +151,6 @@ export class AccountProfileSection {
     const variants = this.session.user()?.avatar;
     return variants?.length ? variants : undefined;
   });
-
-  protected readonly initials = computed(() =>
-    (this.session.user()?.username ?? '').slice(0, 2).toUpperCase()
-  );
 
   /** The stored links, which an account with none has an empty list of. */
   private storedLinks(): SocialLink[] {

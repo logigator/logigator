@@ -97,7 +97,6 @@ export class StargazersPage {
       id: author.id,
       name: author.username,
       avatar: author.avatar,
-      initials: author.username.slice(0, 2).toUpperCase(),
       href: this.links.communityUser(author.id)
     }))
   );

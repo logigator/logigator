@@ -40,7 +40,7 @@ export class UserApiService {
     return this.api.post('/api/user/avatar', userResponseSchema, body);
   }
 
-  /** DELETE /api/user/avatar — the account falls back to its initials. */
+  /** DELETE /api/user/avatar — the account falls back to its initial. */
   public removeAvatar(): Observable<UserResponse> {
     return this.api.delete('/api/user/avatar', userResponseSchema);
   }

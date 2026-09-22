@@ -54,8 +54,8 @@ export class LgCircuitTileMeta {}
  * A decoration set on the anchor is drawn through every in-flow descendant and
  * cannot be turned off by one — a flex item is not an atomic inline, so
  * `no-underline` on the avatar does nothing — and the line would run through an
- * avatar drawing its initials, which stand in for a picture and are no more
- * text than the picture would be.
+ * avatar drawing the author's initial, which stands in for a picture and is no
+ * more text than the picture would be.
  */
 @Directive({
   selector: 'a[lgCircuitTileAuthor]',
