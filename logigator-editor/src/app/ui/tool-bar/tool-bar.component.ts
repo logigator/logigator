@@ -118,7 +118,7 @@ export class ToolBarComponent {
       header: this.translation.translate(
         'titleBar.menuBar.file.items.newComponent.label'
       ),
-      width: '36rem',
+      width: '40rem',
       modal: true,
       closable: true,
       telemetryId: DialogId.NewComponent

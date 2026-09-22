@@ -149,7 +149,7 @@ export class MyDocumentsPage {
   private openEdit(row: MyDocumentRow): void {
     this.dialogs.open(EditDocumentDialog, {
       header: this.translation.translate('pages.my.edit.heading'),
-      width: '32rem',
+      width: '40rem',
       closeLabel: this.translation.translate('common.close'),
       data: {
         kind: this.kind(),
