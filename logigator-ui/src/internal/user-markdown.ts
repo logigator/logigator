@@ -117,6 +117,30 @@ const userMarked = new Marked({
     },
 
     /**
+     * A heading, two levels down from the one that was written, and carrying
+     * the level that *was* written as an attribute.
+     *
+     * A description and a bio are fragments quoted inside somebody else's
+     * page, and a `#` in one is not that page's first-level heading. Left
+     * alone it was exactly that: a bio opening with `# Hi` put a second `<h1>`
+     * on a profile beside the member's own name, and a crawler reading the
+     * outline found the member's words where the site's structure should be.
+     * Two levels down puts the deepest of them at `h6` and leaves `h1` and
+     * `h2` to the page.
+     *
+     * `data-level` is what the stylesheet sizes them by, because the tag no
+     * longer says which one an author asked for — and because the editor's
+     * own renderer numbers its headings from one and has to agree with this
+     * one about how they look.
+     */
+    heading({ tokens, depth }: Tokens.Heading): string {
+      const written = Math.min(Math.max(depth, 1), 6);
+      const level = Math.min(written + 2, 6);
+      const text = this.parser.parseInline(tokens);
+      return `<h${level} data-level="${written}">${text}</h${level}>\n`;
+    },
+
+    /**
      * A fenced or indented block, without the `language-…` class marked would
      * put on it. Neither app configures a highlighter, so the class styles
      * nothing — and dropping it makes the rule absolute and testable: no
