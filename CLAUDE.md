@@ -40,6 +40,13 @@ documented `yarn start:editor:prod` capture workflow came to be broken without a
 cost is 0.09 kB on the initial bundle and a 262 kB lazy chunk nothing fetches, since no markdown in
 either app enables KaTeX.
 
+**`yarn install` reports unmet `@codemirror/*` peers, and that is correct.** `@milkdown/kit` is a
+meta-package: it depends on `@milkdown/components`, whose Vue-based node views want CodeMirror, and
+on Vue itself. Nothing here imports a `@milkdown/kit/component/*` subpath, so neither reaches a
+bundle — the markdown field's chunk is ProseMirror, remark and the two presets. Installing
+CodeMirror or Vue to quiet the warning would add real dependencies to silence a warning about ones
+nothing uses.
+
 `logigator-editor`, `logigator-web` and `logigator-ui` are Angular CLI projects (`angular.json`);
 the other three run on plain Yarn scripts. Each package holds the same config set: one primary
 tsconfig (`tsconfig.json`, or `tsconfig.app.json`/`tsconfig.lib.json` where angular.json points at
@@ -563,6 +570,43 @@ TypeScript with no build step — it is _not_ a `package.json` dependency of eit
   count's screen-reader word is an input like every other string it shows, and
   `loading` is an input because whether a tile is the page's largest paint is
   the consumer's knowledge, not the library's.
+  `markdown-field/` is where a member writes a description or a bio, and it has **two surfaces over
+  one value**: the document itself, edited in place, and the markdown it is stored as. It projects
+  the consumer's own `<textarea>`, and that textarea stays the control in both modes — every rich
+  edit is serialized straight back into it through the `input` event a keystroke would have raised,
+  so the form, the counter and the validator keep reading the one string they already read, the
+  server's first byte carries a real control, and an author with no JavaScript still has one. The
+  rich half is **Milkdown over ProseMirror, in one lazy chunk** (`internal/rich-markdown/`,
+  ~122 kB gzip, fetched after the first render and never on the server); `contract.ts` is the half
+  the field imports statically, so nothing costs bytes until the chunk lands, and a load that never
+  lands leaves the field exactly what it was. The toolbar and the table controls are this library's
+  own components over Milkdown's commands, not Milkdown's UI: `@milkdown/crepe` is the only part
+  with a toolbar, and it is Vue. Three rules are load-bearing and each cost a bug to find:
+  **a document nobody edited is never serialized** (opening the editor parses and reports nothing,
+  so text that is only looked at keeps its exact bytes); **`@milkdown/plugin-listener` is not used**,
+  because it debounces by 200ms and a Save clicked inside that window would submit the previous
+  value — the `$prose` watcher serializes synchronously instead; and
+  **`remark-preserve-empty-line` is filtered out of the preset**, because it writes a literal
+  `<br />` into the markdown for a blank paragraph and `user-markdown` renders an author's HTML as
+  the text it was written as. The serializer's bullet and rule markers are pinned to what the source
+  toolbar writes, since those are re-spelled on every write; an inline mark carries its own marker
+  and is left as its author typed it. **The editing surface and the page are one stylesheet**
+  (`internal/prose-styles.ts`, scoped under `.lg-prose`, which both `lg-markdown` and the rich
+  surface carry) — that is the whole point of editing in place, and two copies would drift the first
+  time either was touched. Both components must render it with **`ViewEncapsulation.None`**: neither
+  owns the elements it selects (one assigns `innerHTML`, the other hands its element to ProseMirror),
+  so an emulated scope's attribute never reaches them and every rule silently matches nothing. The
+  one structural difference the two parsers have is that ProseMirror wraps a tight list item's and
+  every table cell's content in a `<p>`, which is why the shared sheet zeroes the bottom margin of
+  the last block inside one; `rich-editor.spec.ts` holds the two renderings to the same block and
+  inline sequence so nothing else can diverge unnoticed. **The two surfaces are one box**: the
+  projected textarea stays _in flow_ while the document has the floor (invisible, not `hidden`), so
+  its `rows` is still what sets the natural height and the modes cannot disagree about how big the
+  field is; the rich surface lies over it, and the box carries a single `resize: vertical` grip that
+  outlives a mode switch. Both wear the same `formFieldClasses` the textarea wears, `invalid`
+  included — which is why the field takes `invalid`/`size` inputs mirroring what the consumer gives
+  the textarea, and why the editor's view attributes are a **function** re-read through
+  `LgRichEditor.refresh()`.
 - `internal/` — shared plumbing, not exported unless something outside genuinely needs the same
   rule: CDK-based `overlay`/`modal-overlay`, `focus-trap`, `key-manager`, `after-paint`, `caret`,
   `collapse`, `icon`, `picture` (the `<picture>`/`srcset` grouping the avatar and the circuit tile
@@ -572,7 +616,18 @@ TypeScript with no build step — it is _not_ a `package.json` dependency of eit
   same terms: the editor and the site hand out one link and paste one snippet, so `shareOrCopy` (with
   its `AbortError`-is-dismissal rule), `shareCardUrl` and `embedSnippet` (with its escaping) are one
   definition rather than two. Both modules are Angular-free, like `markdown-urls`, because the SSR
-  host reaches the card URL through `crawler-image.ts`.
+  host reaches the card URL through `crawler-image.ts`. `rich-markdown/` is the markdown field's
+  lazy half and the **only** place `@milkdown/*` is imported; `markdown-insert.ts` beside it is the
+  source view's, and stays a pure string edit over a textarea. `prose-styles.ts` is how rendered
+  markdown looks, once, for the page and the editor both — and `LG_USER_PROSE_STYLES` beside it is
+  what changes when the prose is a **member's**. A description or a bio is a fragment quoted inside
+  somebody else's page, so no heading in one may reach the size of the page's own section heading,
+  the `h2` rule is gone and the body is muted. Levels are sized from `data-level` rather than from
+  the tag, because `user-markdown` moves a member's headings **two levels down** (`#` → `h3`, so a
+  bio cannot put a second `h1` beside the member's name or hijack the outline a crawler reads) while
+  the editor's schema numbers them from one; both emit the level that was _written_, which is the
+  thing that has to look the same in both. The rule applies wherever `data-user-content` is set,
+  which the editing surface carries too.
 - `tokens/` — shared types (`LgSeverity`, `LgSize`, form-field tokens).
 - `styles/theme.css` defines the `--lg-*` vars; `styles/theme.tw.css` maps them into Tailwind's
   `@theme` for the editor and the site.
