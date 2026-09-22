@@ -19,6 +19,7 @@ export type LgMarkdownTool =
   | 'bulletedList'
   | 'numberedList'
   | 'quote'
+  | 'codeBlock'
   | 'divider'
   | 'table';
 
@@ -37,6 +38,7 @@ export const LG_MARKDOWN_TOOLS: readonly LgMarkdownTool[] = [
   'bulletedList',
   'numberedList',
   'quote',
+  'codeBlock',
   'divider',
   'table'
 ];
@@ -97,6 +99,10 @@ const TABLE_SKELETON = '| Column | Column |\n| --- | --- |\n| Cell | Cell |\n';
 /** The text a link tool leaves selected, so the next keystroke replaces it. */
 const LINK_PLACEHOLDER = 'https://';
 
+/** A fence, and the text a fence with nothing to wrap is given to hold. */
+const CODE_FENCE = '```';
+const CODE_PLACEHOLDER = 'code';
+
 /**
  * The edit a tool makes to `value` over the range `[start, end)`.
  *
@@ -109,14 +115,16 @@ export function applyMarkdownTool(
   value: string,
   start: number,
   end: number,
-  tool: LgMarkdownTool
+  tool: LgMarkdownTool,
+  /** The word a link with nothing selected is hung on, in the reader's own language. */
+  linkText = 'link'
 ): LgMarkdownEdit {
   const wrapper = WRAPPERS[tool];
   if (wrapper) {
     return wrap(value, start, end, wrapper);
   }
   if (tool === 'link') {
-    return link(value, start, end);
+    return link(value, start, end, linkText);
   }
   if (tool === 'divider') {
     // Nothing in a rule is worth replacing, so the caret lands after it and
@@ -125,6 +133,9 @@ export function applyMarkdownTool(
   }
   if (tool === 'table') {
     return block(value, start, end, TABLE_SKELETON, true);
+  }
+  if (tool === 'codeBlock') {
+    return fence(value, start, end);
   }
   return prefixLines(value, start, end, PREFIXES[tool] ?? '');
 }
@@ -191,9 +202,14 @@ function wrap(
  * mean the field taking a dialog service, which is a dependency a text control
  * should not have.
  */
-function link(value: string, start: number, end: number): LgMarkdownEdit {
+function link(
+  value: string,
+  start: number,
+  end: number,
+  linkText: string
+): LgMarkdownEdit {
   const selected = value.slice(start, end);
-  const label = selected || 'link';
+  const label = selected || linkText;
   const replacement = `[${label}](${LINK_PLACEHOLDER})`;
   const from = label.length + 3;
   return {
@@ -202,6 +218,49 @@ function link(value: string, start: number, end: number): LgMarkdownEdit {
     selectTo: from + LINK_PLACEHOLDER.length,
     start,
     end
+  };
+}
+
+/**
+ * Fences the lines the range touches, or unfences them when they already are.
+ *
+ * Whole lines, like every other block tool: a fence is a property of the lines
+ * it wraps and not of the words inside one. A fence may interrupt a paragraph
+ * in CommonMark, so unlike a table it needs no blank line to separate it from
+ * what is above.
+ */
+function fence(value: string, start: number, end: number): LgMarkdownEdit {
+  const from = value.lastIndexOf('\n', Math.max(0, start - 1)) + 1;
+  const lineEnd = value.indexOf('\n', end);
+  const to = lineEnd === -1 ? value.length : lineEnd;
+
+  const lines = value.slice(from, to).split('\n');
+  const fenced =
+    lines.length >= 2 &&
+    lines[0]!.startsWith(CODE_FENCE) &&
+    lines[lines.length - 1]!.trim() === CODE_FENCE;
+
+  if (fenced) {
+    const inner = lines.slice(1, -1).join('\n');
+    return {
+      replacement: inner,
+      selectFrom: 0,
+      selectTo: inner.length,
+      start: from,
+      end: to
+    };
+  }
+
+  // A fence around nothing is a fence around a word to type over, the same
+  // bargain the table skeleton strikes.
+  const body = lines.join('\n') || CODE_PLACEHOLDER;
+  const opening = CODE_FENCE.length + 1;
+  return {
+    replacement: `${CODE_FENCE}\n${body}\n${CODE_FENCE}`,
+    selectFrom: opening,
+    selectTo: opening + body.length,
+    start: from,
+    end: to
   };
 }
 

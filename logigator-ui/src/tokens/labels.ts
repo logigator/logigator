@@ -17,8 +17,9 @@ export interface LgLabels {
   lastPage: string;
   /**
    * A markdown field's toolbar: the group's name, one per formatting button,
-   * and the two views it switches between. A button is icon-only, so its label
-   * is the only name it has in the accessibility tree.
+   * one per table control, and the two surfaces it switches between. Every
+   * button is icon-only, so its label is the only name it has in the
+   * accessibility tree.
    */
   formatting: string;
   heading1: string;
@@ -31,12 +32,28 @@ export interface LgLabels {
   bulletedList: string;
   numberedList: string;
   quote: string;
+  codeBlock: string;
   divider: string;
   table: string;
+  linkTools: string;
+  /** The word a link made with nothing selected is hung on. */
+  linkText: string;
+  linkUrl: string;
+  removeLink: string;
+  tableTools: string;
+  insertRowAbove: string;
+  insertRowBelow: string;
+  insertColumnBefore: string;
+  insertColumnAfter: string;
+  deleteRow: string;
+  deleteColumn: string;
+  deleteTable: string;
+  alignLeft: string;
+  alignCenter: string;
+  alignRight: string;
   viewMode: string;
-  write: string;
-  split: string;
-  preview: string;
+  richText: string;
+  markdownSource: string;
 }
 
 /** The English defaults, used for any key the app does not provide. */
@@ -59,12 +76,27 @@ export const LG_DEFAULT_LABELS: LgLabels = {
   bulletedList: 'Bulleted list',
   numberedList: 'Numbered list',
   quote: 'Quote',
+  codeBlock: 'Code block',
   divider: 'Divider',
   table: 'Table',
+  linkTools: 'Link',
+  linkText: 'link',
+  linkUrl: 'Link address',
+  removeLink: 'Remove link',
+  tableTools: 'Table',
+  insertRowAbove: 'Insert row above',
+  insertRowBelow: 'Insert row below',
+  insertColumnBefore: 'Insert column before',
+  insertColumnAfter: 'Insert column after',
+  deleteRow: 'Delete row',
+  deleteColumn: 'Delete column',
+  deleteTable: 'Delete table',
+  alignLeft: 'Align left',
+  alignCenter: 'Align center',
+  alignRight: 'Align right',
   viewMode: 'View',
-  write: 'Write',
-  split: 'Split',
-  preview: 'Preview'
+  richText: 'Rich text',
+  markdownSource: 'Markdown'
 };
 
 /** Returning `undefined` falls back to {@link LG_DEFAULT_LABELS}. */
