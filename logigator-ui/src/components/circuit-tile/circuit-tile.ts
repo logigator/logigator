@@ -49,13 +49,20 @@ export class LgCircuitTileMeta {}
 /**
  * The author, as a destination of its own. `z-1` is what lifts it out from
  * under {@link LgCircuitTileLink}'s overlay.
+ *
+ * **The name goes in a `<span>`**, and that span is what the hover underlines.
+ * A decoration set on the anchor is drawn through every in-flow descendant and
+ * cannot be turned off by one — a flex item is not an atomic inline, so
+ * `no-underline` on the avatar does nothing — and the line would run through an
+ * avatar drawing its initials, which stand in for a picture and are no more
+ * text than the picture would be.
  */
 @Directive({
   selector: 'a[lgCircuitTileAuthor]',
   host: {
     class:
       'relative z-1 inline-flex min-w-0 items-center gap-1.5 rounded-sm hover:text-text ' +
-      'hover:underline focus-visible:outline focus-visible:outline-1 ' +
+      'hover:[&>span]:underline focus-visible:outline focus-visible:outline-1 ' +
       'focus-visible:outline-offset-2 focus-visible:outline-primary'
   }
 })

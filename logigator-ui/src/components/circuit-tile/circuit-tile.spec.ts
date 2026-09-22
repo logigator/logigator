@@ -25,7 +25,7 @@ const PREVIEW: LgImageSource[] = [
   >
     <a lgCircuitTileLink href="/project" [attr.aria-label]="name"></a>
     @if (withAuthor) {
-      <a lgCircuitTileAuthor href="/author">marek_h</a>
+      <a lgCircuitTileAuthor href="/author"><span>marek_h</span></a>
     }
   </lg-circuit-tile>`
 })
