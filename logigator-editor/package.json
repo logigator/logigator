@@ -24,6 +24,7 @@
     "@jsverse/transloco-persist-lang": "^8.4.0",
     "@jsverse/utils": "1.0.0-beta.5",
     "@logigator/sim": "^0.4.0",
+    "@milkdown/kit": "^7.22.1",
     "katex": "^0.16.0",
     "marked": "^18.0.13",
     "marked-katex-extension": "^5.0.0",
