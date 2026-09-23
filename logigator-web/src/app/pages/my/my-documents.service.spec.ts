@@ -102,10 +102,35 @@ describe('MyDocumentsService', () => {
     expect(documents.pageCount()).toBe(2);
   });
 
+  it('leads the grid with a created row and counts it, a page staying a page', async () => {
+    const full = Array.from({ length: 24 }, (_, index) =>
+      row(
+        `00000000-0000-4000-8000-${String(index).padStart(12, '0')}`,
+        `R${index}`
+      )
+    );
+    await resolveWith(full, 30);
+    const last = full[23]!.id;
+
+    documents.addRow(row(ID_A, 'Half adder'));
+
+    const rows = documents.rows()!;
+    expect(rows[0]?.id).toBe(ID_A);
+    expect(rows).toHaveLength(24);
+    expect(rows.some((entry) => entry.id === last)).toBe(false);
+    expect(documents.total()).toBe(31);
+
+    // Deleting one brings back the tile the create pushed off.
+    documents.dropRow(ID_A);
+    expect(documents.rows()?.at(-1)?.id).toBe(last);
+    expect(documents.total()).toBe(30);
+  });
+
   it('drops the edits it made once the page is resolved again', async () => {
     await resolveWith([row(ID_A, 'Half adder')]);
     documents.applyPatch(ID_A, { name: 'Full adder' });
     documents.dropRow(ID_A);
+    documents.addRow(row(ID_B, 'Latch'));
 
     await resolveWith([row(ID_A, 'Half adder')]);
 

@@ -124,6 +124,8 @@ const es: TranslationSchema = {
       passwordMismatch: 'Las dos contraseñas no coinciden.',
       nameRequired: 'Escribe un nombre.',
       nameTooLong: 'Usa como máximo 20 caracteres.',
+      symbolRequired: 'Escribe un símbolo.',
+      symbolTooLong: 'Usa como máximo 5 caracteres.',
       descriptionTooLong: 'Usa como máximo 2048 caracteres.',
       bioTooLong: 'Usa como máximo 1024 caracteres.',
       urlInvalid:
@@ -387,10 +389,22 @@ const es: TranslationSchema = {
       components: {
         title: 'Mis componentes',
         lede: 'Los bloques reutilizables de tu biblioteca. Colócalos en cualquier circuito que construyas.',
+        create: 'Nuevo componente',
         count: '{{count}} componentes',
         emptyHeading: 'Todavía no hay componentes',
         emptyBody:
-          'Un componente se crea en el editor, a partir de un circuito que hayas construido.'
+          'Crea uno aquí, o hazlo en el editor a partir de un circuito que hayas construido.'
+      },
+      create: {
+        headingProject: 'Nuevo proyecto',
+        headingComponent: 'Nuevo componente',
+        nameLabel: 'Nombre',
+        symbolLabel: 'Símbolo',
+        symbolHint: 'Aparece en el componente dondequiera que se coloque.',
+        descriptionLabel: 'Descripción',
+        submit: 'Crear',
+        cancel: 'Cancelar',
+        done: '«{{name}}» se ha creado.'
       },
       list: {
         searchLabel: 'Buscar por nombre',

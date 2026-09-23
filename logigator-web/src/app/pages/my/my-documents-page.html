@@ -41,13 +41,12 @@
         (searchChange)="onSearch($event)"
       />
 
-      @if (isProjects()) {
-      <!-- Creating is the editor's: it has owned new documents and their saves
-           since Phase 4, so this is a link out rather than a form here. -->
-      <a lgButton icon="ph ph-plus" [href]="links.editor">
-        {{ t('pages.my.projects.create') }}
-      </a>
-      }
+      <!-- An empty document, made here and drawn at the head of the grid; the
+           editor is where it is filled in, one click on its tile away. -->
+      <button lgButton type="button" icon="ph ph-plus" (click)="openCreate()">
+        {{ isProjects() ? t('pages.my.projects.create') :
+        t('pages.my.components.create') }}
+      </button>
     </div>
   </div>
 
@@ -84,11 +83,10 @@
         [heading]="isProjects() ? t('pages.my.projects.emptyHeading') : t('pages.my.components.emptyHeading')"
         [body]="isProjects() ? t('pages.my.projects.emptyBody') : t('pages.my.components.emptyBody')"
       >
-        @if (isProjects()) {
-        <a lgButton size="sm" [href]="links.editor">
-          {{ t('pages.my.projects.create') }}
-        </a>
-        }
+        <button lgButton type="button" size="sm" (click)="openCreate()">
+          {{ isProjects() ? t('pages.my.projects.create') :
+          t('pages.my.components.create') }}
+        </button>
       </web-empty-state>
       }
     </div>

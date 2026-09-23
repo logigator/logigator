@@ -23,7 +23,10 @@ import {
 import { isApiError } from '@logigator/contract';
 import { shareCardUrl } from '../../../documents/crawler-image';
 import { ShareControls } from '../../../documents/share-controls';
-import { VISIBILITY_LABELS } from '../../../documents/visibility-tag';
+import {
+  VISIBILITY_HINTS,
+  VISIBILITY_LABELS
+} from '../../../documents/visibility-tag';
 import type { CommunityKind } from '../../../api/services/community-api.service';
 import { DocumentsApiService } from '../../../api/services/documents-api.service';
 import { genericFailureKey } from '../../../forms/api-failure';
@@ -59,17 +62,6 @@ interface SharePatch {
 /** Which write is waiting on the API, not whether one is: the two buttons sit
  * in different sections, and a single flag would busy the one nobody pressed. */
 type PendingWrite = 'visibility' | 'regenerate' | null;
-
-/**
- * What each state means, for the line under the picker. Only this dialog says
- * this much — the picker's own words are the chip's
- * ({@link VISIBILITY_LABELS}), which is why the two are separate tables.
- */
-const VISIBILITY_HINTS: Record<LgDocumentVisibility, TranslationKey> = {
-  private: 'visibility.private.hint',
-  unlisted: 'visibility.unlisted.hint',
-  public: 'visibility.public.hint'
-};
 
 /**
  * A document's share link, and who it reaches.

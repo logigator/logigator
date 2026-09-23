@@ -135,6 +135,8 @@ const en = {
       passwordMismatch: 'The two passwords do not match.',
       nameRequired: 'Enter a name.',
       nameTooLong: 'Use at most 20 characters.',
+      symbolRequired: 'Enter a symbol.',
+      symbolTooLong: 'Use at most 5 characters.',
       descriptionTooLong: 'Use at most 2048 characters.',
       bioTooLong: 'Use at most 1024 characters.',
       urlInvalid: 'Enter a full link starting with http:// or https://.',
@@ -395,11 +397,23 @@ const en = {
       components: {
         title: 'My Components',
         lede: 'The reusable building blocks in your library. Place one inside any circuit you build.',
+        create: 'New component',
         /** Read after the figure, so it says “4 components”. */
         count: '{{count}} components',
         emptyHeading: 'No components yet',
         emptyBody:
-          'A component is made in the editor, out of a circuit you have built.'
+          'Create one here, or make one in the editor out of a circuit you have built.'
+      },
+      create: {
+        headingProject: 'New project',
+        headingComponent: 'New component',
+        nameLabel: 'Name',
+        symbolLabel: 'Symbol',
+        symbolHint: 'Drawn on the component wherever it is placed.',
+        descriptionLabel: 'Description',
+        submit: 'Create',
+        cancel: 'Cancel',
+        done: '“{{name}}” was created.'
       },
       list: {
         searchLabel: 'Search by name',

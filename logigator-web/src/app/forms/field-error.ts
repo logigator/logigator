@@ -20,6 +20,7 @@ export type FormFieldKind =
   | 'password'
   | 'passwordRepeat'
   | 'documentName'
+  | 'componentSymbol'
   | 'documentDescription'
   | 'bio'
   /** Any profile link: the website beside the username, or one of the three
@@ -143,6 +144,10 @@ function zodMessage(kind: FormFieldKind, codes: string[]): TranslationKey {
     // so the message for it lives here rather than beside the other one.
     case 'documentName':
       return tooBig ? 'forms.errors.nameTooLong' : 'forms.errors.nameRequired';
+    case 'componentSymbol':
+      return tooBig
+        ? 'forms.errors.symbolTooLong'
+        : 'forms.errors.symbolRequired';
     case 'documentDescription':
       return 'forms.errors.descriptionTooLong';
     // No minimum to report: a bio may be empty, and being too long is the one

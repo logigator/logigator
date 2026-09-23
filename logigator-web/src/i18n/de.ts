@@ -126,6 +126,8 @@ const de: TranslationSchema = {
       passwordMismatch: 'Die beiden Passwörter stimmen nicht überein.',
       nameRequired: 'Gib einen Namen ein.',
       nameTooLong: 'Verwende höchstens 20 Zeichen.',
+      symbolRequired: 'Gib ein Symbol ein.',
+      symbolTooLong: 'Verwende höchstens 5 Zeichen.',
       descriptionTooLong: 'Verwende höchstens 2048 Zeichen.',
       bioTooLong: 'Verwende höchstens 1024 Zeichen.',
       urlInvalid:
@@ -390,10 +392,22 @@ const de: TranslationSchema = {
       components: {
         title: 'Meine Komponenten',
         lede: 'Die wiederverwendbaren Bausteine deiner Bibliothek. Platziere sie in jeder Schaltung, die du baust.',
+        create: 'Neue Komponente',
         count: '{{count}} Komponenten',
         emptyHeading: 'Noch keine Komponenten',
         emptyBody:
-          'Eine Komponente entsteht im Editor, aus einer Schaltung, die du gebaut hast.'
+          'Erstelle hier eine, oder mach im Editor eine aus einer Schaltung, die du gebaut hast.'
+      },
+      create: {
+        headingProject: 'Neues Projekt',
+        headingComponent: 'Neue Komponente',
+        nameLabel: 'Name',
+        symbolLabel: 'Symbol',
+        symbolHint: 'Steht auf der Komponente, wo immer sie platziert wird.',
+        descriptionLabel: 'Beschreibung',
+        submit: 'Erstellen',
+        cancel: 'Abbrechen',
+        done: '„{{name}}“ wurde erstellt.'
       },
       list: {
         searchLabel: 'Nach Namen suchen',

@@ -380,10 +380,12 @@ path behaves the same in development).
     A shelf reuses `LgCircuitTile` (decision 49) with the two slots the library grew for it: the
     meta row states what an author and a star count cannot on a shelf where every row is the
     reader's — published or not, and when it was last edited — and the corner carries the kebab.
-    The card opens the **editor**, so it is an `href`; creating is the editor's too, and
-    _New project_ is a link to it rather than a form. `MyDocumentsService` applies a metadata write
-    over the resolved page instead of re-reading it: the API answers with the row it wrote, and a
-    re-read would re-sort the grid under the cursor, a rename bumping the edit time.
+    The card opens the **editor**, so it is an `href`. _New project_ and _New component_ are a
+    dialog here that creates the row with **no document** — the API's create takes none, so the
+    board is empty and the site still never writes a circuit — and the reader stays on the shelf,
+    the new tile leading the grid. `MyDocumentsService` applies a metadata write, a create and a
+    delete over the resolved page instead of re-reading it: the API answers with the row it wrote,
+    and a re-read would re-sort the grid under the cursor, a rename bumping the edit time.
     The share dialog is **one dialog in two apps**: this app's
     `pages/my/dialogs/share-document-dialog` and the editor's `ui/dialogs/share-dialog` are held to
     the same treatment element for element — size step, severities, spacing, wording — and both read

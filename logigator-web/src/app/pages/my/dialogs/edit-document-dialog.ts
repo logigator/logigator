@@ -5,7 +5,12 @@ import {
   signal
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import {
+  FormControl,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators
+} from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import {
   documentDescriptionSchema,
@@ -72,7 +77,7 @@ export class EditDocumentDialog extends LgDialogContent<EditDocumentData> {
   protected readonly form = new FormGroup({
     name: new FormControl(this.data.name, {
       nonNullable: true,
-      validators: [zodValidator(documentNameSchema)]
+      validators: [Validators.required, zodValidator(documentNameSchema)]
     }),
     description: new FormControl(this.data.description, {
       nonNullable: true,

@@ -7,6 +7,8 @@ import {
   projectSummarySchema,
   type ComponentPage,
   type ComponentSummary,
+  type CreateComponentRequest,
+  type CreateProjectRequest,
   type ProjectPage,
   type ProjectSummary,
   type UpdateComponentRequest,
@@ -27,9 +29,10 @@ export interface DocumentListQuery {
  * only what the caller owns — the same rows the community endpoints show the
  * world, read from the side that may change them.
  *
- * The site never writes a circuit: creating and saving are the editor's, which
- * has owned them since Phase 4. What is left is the metadata a shelf edits —
- * a name, a description, whether it is published, and the share token.
+ * The site never writes a circuit: saving is the editor's, which has owned it
+ * since Phase 4. What is left is creating an empty document, which the API
+ * takes without one, and the metadata a shelf edits — a name, a description,
+ * whether it is published, and the share token.
  */
 @Injectable({ providedIn: 'root' })
 export class DocumentsApiService {
@@ -47,6 +50,18 @@ export class DocumentsApiService {
       componentPageSchema,
       toParams(query)
     );
+  }
+
+  /** POST /api/projects — no `document` in the body, so the board is empty. */
+  public createProject(body: CreateProjectRequest): Observable<ProjectSummary> {
+    return this.api.post('/api/projects', projectSummarySchema, body);
+  }
+
+  /** POST /api/components — an empty circuit, so no ports yet. */
+  public createComponent(
+    body: CreateComponentRequest
+  ): Observable<ComponentSummary> {
+    return this.api.post('/api/components', componentSummarySchema, body);
   }
 
   /**

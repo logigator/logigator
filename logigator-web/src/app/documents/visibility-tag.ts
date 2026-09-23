@@ -27,6 +27,17 @@ export const VISIBILITY_LABELS: Record<LgDocumentVisibility, TranslationKey> = {
 };
 
 /**
+ * What each state means, for the line under a picker — the share dialog's and
+ * the create dialog's. Only a picker says this much; the chip says the label
+ * alone, which is why the two are separate tables.
+ */
+export const VISIBILITY_HINTS: Record<LgDocumentVisibility, TranslationKey> = {
+  private: 'visibility.private.hint',
+  unlisted: 'visibility.unlisted.hint',
+  public: 'visibility.public.hint'
+};
+
+/**
  * How each state is tinted, here rather than at each surface that draws it: the
  * same state in green on one page and grey on another would read as two states.
  * Not a scale of danger — `secondary` is the muted treatment, the two states

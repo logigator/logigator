@@ -125,6 +125,8 @@ const fr: TranslationSchema = {
       passwordMismatch: 'Les deux mots de passe ne correspondent pas.',
       nameRequired: 'Saisis un nom.',
       nameTooLong: 'Utilise 20 caractères au maximum.',
+      symbolRequired: 'Saisis un symbole.',
+      symbolTooLong: 'Utilise 5 caractères au maximum.',
       descriptionTooLong: 'Utilise 2048 caractères au maximum.',
       bioTooLong: 'Utilisez au maximum 1024 caractères.',
       urlInvalid: 'Saisis un lien complet commençant par http:// ou https://.',
@@ -380,10 +382,22 @@ const fr: TranslationSchema = {
       components: {
         title: 'Mes composants',
         lede: 'Les blocs réutilisables de ta bibliothèque. Place-les dans n’importe quel circuit que tu construis.',
+        create: 'Nouveau composant',
         count: '{{count}} composants',
         emptyHeading: 'Aucun composant pour l’instant',
         emptyBody:
-          'Un composant se crée dans l’éditeur, à partir d’un circuit que tu as construit.'
+          'Crées-en un ici, ou fais-en un dans l’éditeur à partir d’un circuit que tu as construit.'
+      },
+      create: {
+        headingProject: 'Nouveau projet',
+        headingComponent: 'Nouveau composant',
+        nameLabel: 'Nom',
+        symbolLabel: 'Symbole',
+        symbolHint: 'Affiché sur le composant partout où il est placé.',
+        descriptionLabel: 'Description',
+        submit: 'Créer',
+        cancel: 'Annuler',
+        done: '« {{name}} » a été créé.'
       },
       list: {
         searchLabel: 'Rechercher par nom',

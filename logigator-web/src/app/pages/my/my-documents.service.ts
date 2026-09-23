@@ -26,6 +26,8 @@ export type MyDocumentPatch = Partial<
  * the row it wrote, and re-fetching would also re-sort the grid under the
  * cursor, a rename bumping the edit time. A delete drops its row and takes one
  * off the total, so the count under the grid keeps saying what the grid shows.
+ * A create is the same in reverse: the new row leads the page, where the API's
+ * edit-time order would put it, and adds one to the total.
  *
  * One hand-off key for both kinds: only one shelf renders per document, and
  * the key is consumed on hydration, so a later client-side navigation to the
@@ -43,6 +45,8 @@ export class MyDocumentsService {
     new Map()
   );
   private readonly removed = signal<ReadonlySet<string>>(new Set());
+  /** Rows created since, newest first. */
+  private readonly added = signal<readonly MyDocumentRow[]>([]);
 
   public readonly kind = this._kind.asReadonly();
   public readonly query = this._query.asReadonly();
@@ -67,26 +71,34 @@ export class MyDocumentsService {
   public readonly failureKey = this.listing.failureKey;
   public readonly retrying = this.listing.retrying;
 
-  /** The page as it now stands: what was resolved, minus what was deleted,
-   * with every edit since applied over it. */
+  /**
+   * The page as it now stands: what was created ahead of what was resolved,
+   * minus what was deleted, with every edit since applied over it — and no
+   * longer than a page, so a create pushes the last tile off rather than
+   * leaving one orphaned in a row of its own. A later delete brings it back,
+   * the resolved page still holding it.
+   */
   public readonly rows = computed(() => {
     const entries = this.listing.entries();
     if (!entries) return null;
 
     const patches = this.patches();
     const removed = this.removed();
-    return entries
+    return [...this.added(), ...entries]
       .filter((row) => !removed.has(row.id))
+      .slice(0, MY_PAGE_SIZE)
       .map((row) => {
         const patch = patches.get(row.id);
         return patch ? { ...row, ...patch } : row;
       });
   });
 
-  /** How many rows match, the deletions this page has seen taken off. */
+  /** How many rows match, with what this page has created and deleted. */
   public readonly total = computed(() => {
     const total = this.listing.total();
-    return total === null ? null : Math.max(0, total - this.removed().size);
+    return total === null
+      ? null
+      : Math.max(0, total + this.added().length - this.removed().size);
   });
 
   /** How many pages the match spans, at least one so the control has a state. */
@@ -103,6 +115,7 @@ export class MyDocumentsService {
     this._query.set(query);
     this.patches.set(new Map());
     this.removed.set(new Set());
+    this.added.set([]);
     await this.listing.resolve();
   }
 
@@ -117,6 +130,11 @@ export class MyDocumentsService {
       next.set(id, { ...next.get(id), ...patch });
       return next;
     });
+  }
+
+  /** Puts a row the API just created at the head of the grid. */
+  public addRow(row: MyDocumentRow): void {
+    this.added.update((current) => [row, ...current]);
   }
 
   public dropRow(id: string): void {

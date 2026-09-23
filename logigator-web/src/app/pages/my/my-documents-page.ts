@@ -21,6 +21,7 @@ import { EmptyState } from '../../states/empty-state';
 import { SectionError } from '../../states/section-error';
 import { TranslateDirective } from '../../translation/translate.directive';
 import { TranslationService } from '../../translation/translation.service';
+import { CreateDocumentDialog } from './dialogs/create-document-dialog';
 import { EditDocumentDialog } from './dialogs/edit-document-dialog';
 import { ShareDocumentDialog } from './dialogs/share-document-dialog';
 import { MyDocumentTiles, type MyDocumentCommand } from './my-document-tiles';
@@ -29,13 +30,12 @@ import { MY_PAGE_SIZE, myListingParams } from './my-listing-query';
 
 /**
  * The reader's own projects or components: the grid, a filter, and what a
- * shelf does with a row — edit its name and description, manage its share,
- * open its community page, delete it.
+ * shelf does with a row — create an empty one, edit its name and description,
+ * manage its share, open its community page, delete it.
  *
- * The site never creates or saves a circuit. The editor has owned both since
- * Phase 4, so *New project* is a link into it rather than a form here, and a
- * library component is made out of a circuit inside the editor, which is what
- * the empty shelf of components says instead of offering a button.
+ * The site never saves a circuit: the editor has owned that since Phase 4. A
+ * new document is made here with no circuit at all, the API taking a create
+ * without one, and the editor is where its tile opens.
  *
  * Both controls write the URL rather than component state — the guard reads it
  * back and re-resolves — so a filter and a page survive a reload and answer in
@@ -94,6 +94,38 @@ export class MyDocumentsPage {
       this.total() ?? 0
     )
   );
+
+  /**
+   * Opens the create dialog, which puts the new row on the grid itself. Where
+   * the grid is a search or a later page, that is not where a new document is
+   * drawn, so the reader is taken to the unfiltered first page — the edit-time
+   * order puts it at the head of it.
+   */
+  protected async openCreate(): Promise<void> {
+    const ref = this.dialogs.open(CreateDocumentDialog, {
+      header: this.translation.translate(
+        this.isProjects()
+          ? 'pages.my.create.headingProject'
+          : 'pages.my.create.headingComponent'
+      ),
+      width: '40rem',
+      closeLabel: this.translation.translate('common.close'),
+      data: { kind: this.kind() }
+    });
+
+    const created = await firstValueFrom(ref.onClose);
+    if (!created) return;
+
+    this.toasts.add({
+      severity: 'success',
+      summary: this.translation.translate('pages.my.create.done', {
+        name: created.name
+      })
+    });
+    if (this.searched() || this.query().page > 0) {
+      await this.router.navigate([this.path()]);
+    }
+  }
 
   protected onCommand(command: MyDocumentCommand): void {
     switch (command.action) {
