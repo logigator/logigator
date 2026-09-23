@@ -1,6 +1,13 @@
 import { computed, inject, Injectable } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { of, scan, startWith, switchMap } from 'rxjs';
+import {
+  distinctUntilChanged,
+  map,
+  of,
+  scan,
+  startWith,
+  switchMap
+} from 'rxjs';
 import { ProjectService } from './project.service';
 import { SelectionInspectorService } from './selection-inspector.service';
 import { ClipboardService } from '../clipboard/clipboard.service';
@@ -31,14 +38,20 @@ export class EditorCommandStateService {
     )
   );
 
-  private readonly viewportTick = toSignal(
+  // The active viewport's zoom scale, which is all the zoom predicates depend
+  // on. Deduplicated so a pan — a viewport change on every pointer move —
+  // never reaches change detection.
+  private readonly viewportScale = toSignal(
     toObservable(this.projectService.activeProject).pipe(
       switchMap((project) =>
         project
-          ? project.viewport.viewportChange$.pipe(startWith(void 0))
-          : of(void 0)
-      ),
-      scan((n) => n + 1, 0)
+          ? project.viewport.viewportChange$.pipe(
+              startWith(project.viewport.viewportState),
+              map((state) => state.scale),
+              distinctUntilChanged()
+            )
+          : of(null)
+      )
     )
   );
 
@@ -60,7 +73,7 @@ export class EditorCommandStateService {
 
   /** True until the viewport is at its closest zoom step. */
   public readonly canZoomIn = computed<boolean>(() => {
-    this.viewportTick();
+    this.viewportScale();
     return (
       this.projectService.activeProject()?.viewport.zoomInPossible ?? false
     );
@@ -68,7 +81,7 @@ export class EditorCommandStateService {
 
   /** True until the viewport is at its farthest zoom step. */
   public readonly canZoomOut = computed<boolean>(() => {
-    this.viewportTick();
+    this.viewportScale();
     return (
       this.projectService.activeProject()?.viewport.zoomOutPossible ?? false
     );
