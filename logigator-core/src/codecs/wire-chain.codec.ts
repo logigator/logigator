@@ -36,34 +36,17 @@ export interface EncodedWireChain {
 
 type GridPoint = [number, number];
 
-/** A wire's two endpoints; the second may lie west/north of `pos` for a
- * negative length, which encoding normalizes. */
-function endpointsOf(wire: SerializedWireBody): [GridPoint, GridPoint] {
-  const [x, y] = wire.pos;
-  return wire.direction === WireDirection.HORIZONTAL
-    ? [
-        [x, y],
-        [x + wire.length, y]
-      ]
-    : [
-        [x, y],
-        [x, y + wire.length]
-      ];
-}
+/** Walk directions, indexed as the letters are. */
+const LETTERS = 'eswn';
+const EAST = 0;
+const SOUTH = 1;
 
 const keyOf = (p: GridPoint): string => `${p[0]},${p[1]}`;
-
-/** A point of the wire graph and the wires incident to it, in canonical order.
- * A zero-length wire is incident twice, so its point's degree stays 2. */
-interface Vertex {
-  point: GridPoint;
-  wires: number[];
-}
 
 /** One completed walk, before the heads are delta-encoded against each other. */
 interface Chunk {
   head: GridPoint;
-  segments: string[];
+  text: string;
   /** Input indices of the wires this walk consumed, in walk order. */
   wires: number[];
 }
@@ -71,160 +54,176 @@ interface Chunk {
 /**
  * Encodes wires as chain text.
  *
- * The traversal is what makes the text compress. A walk starts at a **degree-1
- * vertex** wherever one is left — the end of an open run, so one chunk covers
- * the whole run rather than starting mid-run and dead-ending after a segment —
- * and at a junction it **continues straight** before it turns, so a straight
- * run reads as one repeated letter (`e2e2e2`) instead of an arbitrary zig-zag
- * through it. Together they make alike structures serialize alike, which is
- * what the compressor matches on. The win is not fewer chunks: the walk is
- * already at the theoretical floor of `max(1, odd-degree vertices / 2)` trails
- * per connected component (254,848 chunks against a floor of 254,707 over the
- * largest 100 corpus documents). It is more repetitive text.
+ * The traversal is what makes the text compress, and it is decided **locally
+ * at every vertex** rather than by a walk wandering the graph. Each vertex
+ * pairs up the wire ends that meet there — a pair is a place a walk passes
+ * through — and the walks are then just the chains the pairs form:
  *
- * Walks are formed in two passes over the vertices in (y, x) order: degree-1
- * vertices first, then every vertex, since a cycle has no degree-1 vertex and
- * would otherwise never be walked at all. Each vertex is **drained** rather
- * than walked once — a single walk leaves by one wire and can get stuck
- * elsewhere, so an odd-degree vertex is left holding wires no later vertex
- * would come back for. Overlapping collinear wires are what make that
- * reachable in practice; they violate the editor's wire invariants, but an
- * unrepaired board must not lose wires by being saved.
+ * - **Straight first.** East pairs with west and north with south, so a run
+ *   reads as one repeated letter (`e2e2e2`) and a bus runs through every tap
+ *   on it. A T's stem is the end left over, so a walk arriving along the stem
+ *   **ends at the bus** instead of turning into it and cutting it in two.
+ * - **Then bends.** Whatever cannot pair straight pairs in canonical order —
+ *   a corner's two wires, or overlapping collinear ones — until at most one end
+ *   is left, which is where a walk ends.
+ *
+ * So every odd-degree vertex ends exactly one walk and no even one ends any,
+ * which is the theoretical floor of `max(1, odd-degree vertices / 2)` walks per
+ * connected component; only a closed loop the pairing leaves over costs a
+ * chunk beyond it. The win over a greedy walk is not the count, though — it is
+ * that alike structures serialize alike, which is what the compressor matches
+ * on.
+ *
+ * A walk **starts at its port end** — the degree-1 one, where it has exactly
+ * one. A walk with a port at both ends starts furthest south, then east; one
+ * between two junctions furthest east, then south. Loops, having no
+ * end, start at their north-westernmost vertex. Ignoring the port end
+ * compresses markedly worse, whichever corner comes next.
  *
  * **Chunks are then emitted sorted by their head's (y, x)**, not in the order
  * the walks were formed — head deltas are measured against the previous
- * chunk's head, and a sorted sequence keeps them small and regular. (Grouping
- * chunks by walk text instead measured 0.912×, and measuring each delta from
- * the previous walk's end point 0.858×.)
+ * chunk's head, and a sorted sequence keeps them small and regular, with alike
+ * structures side by side on a row. (Grouping chunks by walk text or by
+ * connected component instead, or measuring each delta from the previous
+ * walk's end point, all compress worse.)
  *
- * Deterministic throughout, since a re-save of an untouched document has to
- * produce byte-identical text: every tie — which vertex starts a walk, which
- * of two equally straight wires it takes, which chunk is emitted first —
- * breaks by (y, x) and then by the wire's own shape, so the input's order
- * never reaches the output. `order` follows the **emission** order rather than
- * the walk order: `order[k]` is the input index of the k-th wire in the text,
- * which is what defines the body's wire order.
+ * Linear apart from sorting each vertex's ends and the chunks. Deterministic
+ * throughout, since a re-save of an untouched document has to produce
+ * byte-identical text: every choice is made from geometry — a wire end is
+ * identified by its point, direction and length — and chunks sharing a head
+ * are ordered by their text, so the input's order never reaches the output.
+ * `order` follows the **emission** order: `order[k]` is the input index of the
+ * k-th wire in the text, which is what defines the body's wire order.
  */
 export function encodeWireChain(
   wires: readonly SerializedWireBody[]
 ): EncodedWireChain {
-  const ends = wires.map(endpointsOf);
-  // Canonical start: the west/north endpoint, which equals `pos` unless a
-  // negative length swapped them.
-  const startOf = (i: number): GridPoint => {
-    const [a, b] = ends[i];
-    return b[1] < a[1] || (b[1] === a[1] && b[0] < a[0]) ? b : a;
-  };
-  // Wires in canonical order: start point, then the wire's own shape, so two
-  // inputs holding the same wires in a different order encode identically.
-  const sorted = wires
-    .map((_, i) => i)
-    .sort((u, v) => {
-      const a = startOf(u);
-      const b = startOf(v);
-      return (
-        a[1] - b[1] ||
-        a[0] - b[0] ||
-        wires[u].direction - wires[v].direction ||
-        Math.abs(wires[u].length) - Math.abs(wires[v].length) ||
-        u - v
-      );
-    });
-
-  // Incident lists inherit that canonical order, so "the first unused wire
-  // here" is a canonical choice rather than an input-order one.
-  const vertices = new Map<string, Vertex>();
-  for (const i of sorted) {
-    for (const p of ends[i]) {
-      const key = keyOf(p);
-      const vertex = vertices.get(key);
-      if (vertex) vertex.wires.push(i);
-      else vertices.set(key, { point: p, wires: [i] });
-    }
+  const count = wires.length;
+  // Each wire has two ends: `2i` at its west/north endpoint, where a walk
+  // leaves east or south, and `2i + 1` at the other, where it leaves west or
+  // north. Canonical endpoints, so a negative length changes nothing.
+  const lengths = new Array<number>(count);
+  const points = new Array<GridPoint>(2 * count);
+  for (let i = 0; i < count; i++) {
+    const { pos, direction, length } = wires[i];
+    const horizontal = direction === WireDirection.HORIZONTAL;
+    const far: GridPoint = horizontal
+      ? [pos[0] + length, pos[1]]
+      : [pos[0], pos[1] + length];
+    points[2 * i] = length < 0 ? far : pos;
+    points[2 * i + 1] = length < 0 ? pos : far;
+    lengths[i] = Math.abs(length);
   }
-  const points = [...vertices.values()].sort(
-    (a, b) => a.point[1] - b.point[1] || a.point[0] - b.point[0]
-  );
+  const letterOf = (end: number): number =>
+    (wires[end >> 1].direction === WireDirection.HORIZONTAL ? EAST : SOUTH) +
+    (end & 1) * 2;
 
-  const used = new Array<boolean>(wires.length).fill(false);
+  // The ends meeting at each point.
+  const vertices = new Map<string, number[]>();
+  for (let end = 0; end < 2 * count; end++) {
+    const key = keyOf(points[end]);
+    const ends = vertices.get(key);
+    if (ends) ends.push(end);
+    else vertices.set(key, [end]);
+  }
+  const degreeAt = (end: number): number =>
+    vertices.get(keyOf(points[end]))!.length;
+
+  // `mate[end]` is the end a walk arriving at `end` leaves by, or -1 where it
+  // stops.
+  const mate = new Int32Array(2 * count).fill(-1);
+  const pair = (a: number, b: number): void => {
+    mate[a] = b;
+    mate[b] = a;
+  };
+  for (const ends of vertices.values()) {
+    // Letter, then length: at one point that names the wire, so the order is
+    // canonical up to identical wires, which are interchangeable.
+    ends.sort(
+      (a, b) => letterOf(a) - letterOf(b) || lengths[a >> 1] - lengths[b >> 1]
+    );
+    if (ends.length < 2) continue;
+    const byLetter: number[][] = [[], [], [], []];
+    const bends: number[] = [];
+    for (const end of ends) {
+      // A zero-length wire has both ends here; pairing them straight would
+      // join the wire to itself.
+      if (lengths[end >> 1] === 0) bends.push(end);
+      else byLetter[letterOf(end)].push(end);
+    }
+    for (const [a, b] of [
+      [byLetter[0], byLetter[2]],
+      [byLetter[1], byLetter[3]]
+    ]) {
+      const straight = Math.min(a.length, b.length);
+      for (let k = 0; k < straight; k++) pair(a[k], b[k]);
+      for (let k = straight; k < a.length; k++) bends.push(a[k]);
+      for (let k = straight; k < b.length; k++) bends.push(b[k]);
+    }
+    bends.sort(
+      (a, b) => letterOf(a) - letterOf(b) || lengths[a >> 1] - lengths[b >> 1]
+    );
+    for (let k = 0; k + 1 < bends.length; k += 2) pair(bends[k], bends[k + 1]);
+  }
+
+  const used = new Array<boolean>(count).fill(false);
   const chunks: Chunk[] = [];
-
-  /** Walking `index` from `cur`: its letter, its length and where it lands.
-   * The letter comes from the wire's own direction and the sign of the delta,
-   * never from comparing the two points — a zero-length wire has to stay
-   * `e`/`s` per its direction for the decode to give the wire back. */
-  const stepFrom = (
-    cur: GridPoint,
-    index: number
-  ): [string, number, GridPoint] => {
-    const [a, b] = ends[index];
-    const other = a[0] === cur[0] && a[1] === cur[1] ? b : a;
-    const horizontal = wires[index].direction === WireDirection.HORIZONTAL;
-    const delta = horizontal ? other[0] - cur[0] : other[1] - cur[1];
-    const letter = horizontal ? (delta < 0 ? 'w' : 'e') : delta < 0 ? 'n' : 's';
-    return [letter, Math.abs(delta), other];
-  };
-
-  /** Walks one chunk out of `vertex`, or reports that none was left there. */
-  const walkFrom = (vertex: Vertex): boolean => {
-    let cur = vertex.point;
-    let last: string | null = null;
-    const segments: string[] = [];
+  /** Walks out of `start` along the pairs until they run out, or back into a
+   * wire already walked, which is how a loop closes. */
+  const walkFrom = (start: number): void => {
+    let text = '';
     const walked: number[] = [];
-    for (;;) {
-      const incident = vertices.get(keyOf(cur))?.wires ?? [];
-      let pick = -1;
-      let step: [string, number, GridPoint] | null = null;
-      for (const i of incident) {
-        if (used[i]) continue;
-        const candidate = stepFrom(cur, i);
-        // The first unused wire in canonical order, unless a later one
-        // carries the walk straight on.
-        if (pick === -1) {
-          pick = i;
-          step = candidate;
-        }
-        if (candidate[0] === last) {
-          pick = i;
-          step = candidate;
-          break;
-        }
-      }
-      if (step === null) break;
-      used[pick] = true;
-      walked.push(pick);
-      segments.push(step[0] + step[1]);
-      last = step[0];
-      cur = step[2];
+    for (let end = start; end !== -1 && !used[end >> 1];) {
+      used[end >> 1] = true;
+      walked.push(end >> 1);
+      text += LETTERS[letterOf(end)] + lengths[end >> 1];
+      end = mate[end ^ 1];
     }
-    if (segments.length === 0) return false;
-    chunks.push({ head: vertex.point, segments, wires: walked });
-    return true;
+    chunks.push({ head: points[start], text, wires: walked });
+  };
+  /** The unpaired end at the other side of the open walk out of `end`. */
+  const farEnd = (end: number): number => {
+    let at = end;
+    while (mate[at ^ 1] !== -1) at = mate[at ^ 1];
+    return at ^ 1;
   };
 
-  /** Walks `vertex` until nothing unused is left there. One walk is not
-   * enough: it leaves by one wire and can get stuck elsewhere, so a vertex of
-   * odd degree keeps wires the walk never came back for — and the sweep below
-   * passes each vertex once. Walks only ever consume, so a drained vertex
-   * stays drained, and every wire is taken at whichever of its two endpoints
-   * the sweep reaches first. */
-  const drain = (vertex: Vertex): void => {
-    while (walkFrom(vertex)) {
-      // Another chunk started here; keep going until none does.
-    }
-  };
-
-  // Open runs first, from the end rather than the middle.
-  for (const vertex of points) {
-    if (vertex.wires.length === 1) drain(vertex);
+  // Open walks: every unpaired end is one end of exactly one.
+  const done = new Array<boolean>(2 * count).fill(false);
+  for (let end = 0; end < 2 * count; end++) {
+    if (mate[end] !== -1 || done[end]) continue;
+    const other = farEnd(end);
+    done[end] = done[other] = true;
+    const portHere = degreeAt(end) === 1;
+    const portThere = degreeAt(other) === 1;
+    const [p, q] = [points[end], points[other]];
+    // A run between two junctions reads east-first, measured; anything with
+    // a port at both ends south-first.
+    const [major, minor] = portHere ? [1, 0] : [0, 1];
+    const startThere =
+      portHere !== portThere
+        ? portThere
+        : q[major] > p[major] || (q[major] === p[major] && q[minor] > p[minor]);
+    walkFrom(startThere ? other : end);
   }
-  // Then every vertex, which is what covers a run whose ends were consumed and
-  // a cycle, having no degree-1 vertex to have been started from.
-  for (const vertex of points) drain(vertex);
+  // Closed loops: whatever the open walks left, from the north-westernmost
+  // point first, so where a loop starts is canonical.
+  if (used.includes(false)) {
+    const byPoint = [...vertices.values()].sort((a, b) => {
+      const [p, q] = [points[a[0]], points[b[0]]];
+      return p[1] - q[1] || p[0] - q[0];
+    });
+    for (const ends of byPoint) {
+      for (const end of ends) if (!used[end >> 1]) walkFrom(end);
+    }
+  }
 
-  // Stable, so the chunks a drained vertex produced keep the order it walked
-  // them in — they share a head and cannot be told apart by it.
-  chunks.sort((a, b) => a.head[1] - b.head[1] || a.head[0] - b.head[0]);
+  chunks.sort(
+    (a, b) =>
+      a.head[1] - b.head[1] ||
+      a.head[0] - b.head[0] ||
+      (a.text < b.text ? -1 : a.text > b.text ? 1 : 0)
+  );
 
   const order: number[] = [];
   let prevHead: GridPoint = [0, 0];
@@ -233,7 +232,7 @@ export function encodeWireChain(
       for (const i of chunk.wires) order.push(i);
       const head = `${chunk.head[0] - prevHead[0]},${chunk.head[1] - prevHead[1]}`;
       prevHead = chunk.head;
-      return `${head}:${chunk.segments.join('')}`;
+      return `${head}:${chunk.text}`;
     })
     .join(';');
 

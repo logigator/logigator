@@ -24,15 +24,15 @@ const canon = (wires: SerializedWireBody[]): string[] =>
 describe('wire-chain codec', () => {
   it('encodes a connected L-run as a single chunk', () => {
     const { text } = encodeWireChain([wire(3, 4, H, 5), wire(8, 4, V, 2)]);
-    expect(text).toBe('3,4:e5s2');
+    expect(text).toBe('8,6:n2w5');
   });
 
   it('walks a wire entered from its far end as w/n with the same canonical decode', () => {
-    // Second wire's canonical pos (west end) is at the walk's far side: the
-    // walk reaches (10,4) and the next wire spans (6,4)–(10,4).
+    // The walk starts at the port (6,6), turns east and reaches (10,4), where
+    // the last wire's canonical pos (3,4) is at its far side.
     const input = [wire(3, 4, H, 7), wire(6, 6, V, -2), wire(6, 4, H, 4)];
     const { text } = encodeWireChain(input);
-    expect(text).toBe('3,4:e7w4s2');
+    expect(text).toBe('6,6:n2e4w7');
     expect(canon(decodeWireChain(text))).toEqual(
       canon([wire(3, 4, H, 7), wire(6, 4, V, 2), wire(6, 4, H, 4)])
     );
@@ -75,7 +75,7 @@ describe('wire-chain codec', () => {
   it('emits chunk heads relative to the previous chunk head', () => {
     const input = [wire(10, 10, H, 2), wire(4, 20, H, 2)];
     const { text } = encodeWireChain(input);
-    expect(text).toBe('10,10:e2;-6,10:e2');
+    expect(text).toBe('12,10:w2;-6,10:w2');
     expect(canon(decodeWireChain(text))).toEqual(canon(input));
   });
 
@@ -86,9 +86,10 @@ describe('wire-chain codec', () => {
   });
 
   it("starts a walk at a run's end, so an L is one chunk rather than two", () => {
-    // Both wires leave (0,0); a walk started there covers one and dead-ends.
+    // Both wires leave (0,0); a walk started there would cover one and
+    // dead-end, where one from either port passes the corner.
     const input = [wire(0, 0, H, 4), wire(0, 0, V, 4)];
-    expect(encodeWireChain(input).text).toBe('4,0:w4s4');
+    expect(encodeWireChain(input).text).toBe('0,4:n4e4');
   });
 
   it('emits a straight run as one chunk of repeated segments, whatever order it arrives in', () => {
@@ -99,7 +100,24 @@ describe('wire-chain codec', () => {
       wire(6, 0, H, 2)
     ];
     const scrambled = [run[2], run[0], run[3], run[1]];
-    expect(encodeWireChain(scrambled).text).toBe('0,0:e2e2e2e2');
+    expect(encodeWireChain(scrambled).text).toBe('8,0:w2w2w2w2');
+  });
+
+  it('runs a bus straight through its taps, ending each tap at the bus', () => {
+    // Every tap's port sorts before the bus, so a walk that turned wherever
+    // it arrived would enter the bus from a tap and cut it in pieces.
+    const input = [
+      wire(0, 5, H, 2),
+      wire(2, 5, H, 2),
+      wire(4, 5, H, 2),
+      wire(6, 5, H, 2),
+      wire(2, 0, V, 5),
+      wire(4, 0, V, 5),
+      wire(6, 0, V, 5)
+    ];
+    expect(encodeWireChain(input).text).toBe(
+      '2,0:s5;2,0:s5;2,0:s5;2,5:w2w2w2w2'
+    );
   });
 
   it('continues straight through a junction that also offers a turn', () => {
@@ -120,10 +138,9 @@ describe('wire-chain codec', () => {
   it('emits every wire of a graph whose vertices outlive one walk', () => {
     // Overlapping collinear wires — a board that violates the editor's wire
     // invariants, which is what `wire-repair` is for, and which must still
-    // survive a save. Two rails drawn both whole and in pieces: a walk leaves
-    // a vertex by one wire and can get stuck elsewhere, so an odd-degree
-    // vertex is left holding wires that only a second walk from it picks up.
-    // Reduced from a fuzz failure; exhaustively minimal for this lattice.
+    // survive a save. Two rails drawn both whole and in pieces, so a vertex
+    // holds several ends of one direction that cannot all pair straight.
+    // Reduced from a fuzz failure of an earlier traversal.
     const input = [
       wire(0, 0, H, 1),
       wire(0, 0, V, 2),
@@ -322,6 +339,23 @@ describe('wire-chain traversal', () => {
       }
     }
   );
+
+  it('covers a tree in the fewest walks there can be: one per two odd vertices', () => {
+    const input = tree();
+    const degree = new Map<string, number>();
+    for (const w of input) {
+      const far =
+        w.direction === H
+          ? [w.pos[0] + w.length, w.pos[1]]
+          : [w.pos[0], w.pos[1] + w.length];
+      for (const p of [w.pos, far]) {
+        const key = `${p[0]},${p[1]}`;
+        degree.set(key, (degree.get(key) ?? 0) + 1);
+      }
+    }
+    const odd = [...degree.values()].filter((d) => d % 2 === 1).length;
+    expect(encodeWireChain(input).text.split(';')).toHaveLength(odd / 2);
+  });
 
   it('re-encodes its own output unchanged, so a re-save is byte-identical', () => {
     for (const input of Object.values(GRAPHS)) {

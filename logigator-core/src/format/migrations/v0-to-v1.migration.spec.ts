@@ -68,11 +68,12 @@ describe('v0ToV1Migration', () => {
       text: 'Hello world'
     });
 
-    // Emission order: the walk starts at the (y, x)-smallest canonical start,
-    // so the vertical wire at y=2 comes first.
+    // Emission order: each wire is a walk of its own, headed at its south or
+    // east end, and heads sort by (y, x) — the horizontal wire's at y=5 comes
+    // before the vertical one's at y=7.
     expect(decodeWireChain(result.wires)).toEqual([
-      { pos: [5, 2], direction: 1, length: 5 },
-      { pos: [3, 5], direction: 0, length: 5 }
+      { pos: [3, 5], direction: 0, length: 5 },
+      { pos: [5, 2], direction: 1, length: 5 }
     ]);
   });
 
