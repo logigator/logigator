@@ -87,6 +87,7 @@ export {
   LgCircuitTileLink,
   LgCircuitTileAuthor,
   LgCircuitTileActions,
+  LgCircuitTileBadge,
   LgCircuitTileMeta
 } from './components/circuit-tile/circuit-tile';
 export { LgPreviewPlaceholder } from './components/preview-placeholder/preview-placeholder';

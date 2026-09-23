@@ -330,6 +330,8 @@ const fr: TranslationSchema = {
         edited: 'modifié',
         about: 'À propos de ce circuit',
         noDescription: 'Aucune description n’a été fournie.',
+        emptyNotice:
+          'Ce circuit est vide, il n’apparaît donc pas encore dans les listes communautaires. Il y figurera dès qu’il contiendra un composant ou un fil.',
         forkedFrom: 'Dérivé de',
         forkedFromBy: 'par {{author}}',
         errorHeading: 'Le circuit n’a pas pu être chargé'
@@ -411,6 +413,9 @@ const fr: TranslationSchema = {
         edit: 'Nom et description',
         share: 'Partager…',
         communityPage: 'Page communautaire',
+        emptyNotListed: 'Non listé',
+        emptyNotListedHint:
+          'Ce circuit est vide, il n’apparaît donc pas encore dans les listes communautaires.',
         delete: 'Supprimer'
       },
       edit: {

@@ -36,6 +36,18 @@ export class LgCircuitTileLink {}
 export class LgCircuitTileActions {}
 
 /**
+ * A note about the document over the top-left corner of the render, opposite
+ * {@link LgCircuitTileActions} — something the reader should notice before
+ * opening it, which the meta row has no width left to say. Lifted the same
+ * way, so a `title` on it can be hovered.
+ */
+@Directive({
+  selector: '[lgCircuitTileBadge]',
+  host: { class: 'absolute top-2 left-2 z-1' }
+})
+export class LgCircuitTileBadge {}
+
+/**
  * The consumer's own line in the meta row, for a list where the author and the
  * star count say nothing — a shelf of the reader's own work, where what matters
  * is whether a document is published and when it was last touched.
@@ -88,7 +100,8 @@ export class LgCircuitTileAuthor {}
  *
  * Two more slots serve a list of the reader's own documents, where an author
  * and a star count say nothing: `[lgCircuitTileMeta]` replaces that row's
- * content, and `[lgCircuitTileActions]` puts controls over the render.
+ * content, and `[lgCircuitTileActions]` puts controls over the render —
+ * `[lgCircuitTileBadge]` a note in the opposite corner.
  */
 @Component({
   selector: 'lg-circuit-tile',
@@ -157,6 +170,7 @@ export class LgCircuitTileAuthor {}
 
     <ng-content select="a[lgCircuitTileLink]" />
     <!-- After the overlay, so the controls stack above it as well as over it. -->
+    <ng-content select="[lgCircuitTileBadge]" />
     <ng-content select="[lgCircuitTileActions]" />
   `
 })

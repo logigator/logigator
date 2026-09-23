@@ -337,6 +337,8 @@ const es: TranslationSchema = {
         edited: 'editado',
         about: 'Sobre este circuito',
         noDescription: 'No se proporcionó ninguna descripción.',
+        emptyNotice:
+          'Este circuito está vacío, así que todavía no aparece en la comunidad. Aparecerá en cuanto tenga un componente o un cable.',
         forkedFrom: 'Derivado de',
         forkedFromBy: 'de {{author}}',
         errorHeading: 'No se pudo cargar el circuito'
@@ -418,6 +420,9 @@ const es: TranslationSchema = {
         edit: 'Nombre y descripción',
         share: 'Compartir…',
         communityPage: 'Página de la comunidad',
+        emptyNotListed: 'No listado',
+        emptyNotListedHint:
+          'Este circuito está vacío, así que todavía no aparece en la comunidad.',
         delete: 'Eliminar'
       },
       edit: {

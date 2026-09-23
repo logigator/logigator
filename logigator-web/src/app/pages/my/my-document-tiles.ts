@@ -9,12 +9,14 @@ import {
 import {
   LgCircuitTile,
   LgCircuitTileActions,
+  LgCircuitTileBadge,
   LgCircuitTileLink,
   LgCircuitTileMeta,
   LgMenu,
   type MenuItem
 } from '@logigator/ui';
 import type { CommunityKind } from '../../api/services/community-api.service';
+import { isPublishedButEmpty } from '../../documents/published-but-empty';
 import { VisibilityTag } from '../../documents/visibility-tag';
 import { SiteLinks } from '../../layout/site-links';
 import { ThemingService } from '../../theming/theming.service';
@@ -37,7 +39,9 @@ export interface MyDocumentCommand {
  * an author and a star count say nothing on a shelf where every row is the
  * reader's, so the meta row states what does — who the document's link reaches,
  * which is one of three states rather than a published-or-not pair — and when
- * it was last edited. The corner carries the controls for the things a shelf
+ * it was last edited. A published document with nothing on it says so in the
+ * render's other corner: the community leaves it out of every listing, and the
+ * shelf is where its owner looks for it first. The corner carries the controls for the things a shelf
  * does with a row — the three it can do *to* one, and the page it has.
  *
  * The card itself opens the editor, which is a separate deployment sharing this
@@ -52,6 +56,7 @@ export interface MyDocumentCommand {
   imports: [
     LgCircuitTile,
     LgCircuitTileActions,
+    LgCircuitTileBadge,
     LgCircuitTileLink,
     LgCircuitTileMeta,
     LgMenu,
@@ -85,6 +90,22 @@ export interface MyDocumentCommand {
               <web-visibility-tag [visibility]="tile.visibility" />
               <span class="truncate font-mono text-xs">{{ tile.edited }}</span>
             </span>
+
+            @if (tile.empty) {
+              <!-- Over the render rather than in the meta row, which has no
+                   width to spare — and an empty document's render is the
+                   placeholder, so the corner hides nothing. Styled as the menu
+                   trigger opposite it, so the two read as one pair of
+                   overlays. -->
+              <span
+                lgCircuitTileBadge
+                class="inline-flex h-8 items-center gap-1.5 rounded-md border border-border bg-content/90 px-2 text-xs whitespace-nowrap text-muted"
+                [title]="t('pages.my.list.emptyNotListedHint')"
+              >
+                <i class="ph ph-eye-slash text-sm" aria-hidden="true"></i>
+                {{ t('pages.my.list.emptyNotListed') }}
+              </span>
+            }
 
             <button
               lgCircuitTileActions
@@ -142,6 +163,7 @@ export class MyDocumentTiles {
       id: row.id,
       name: row.name,
       visibility: row.visibility,
+      empty: isPublishedButEmpty(row),
       edited: dates.format(new Date(row.lastEditedAt)),
       editorHref: this.links.editorDocument(kind, row.id),
       loading: index < this.EAGER_ROW ? ('eager' as const) : ('lazy' as const),

@@ -51,6 +51,14 @@
              were handed has no other way to know. -->
       @if (!isPublic()) {
       <web-visibility-tag class="mb-3" [visibility]="doc.visibility" />
+      } @else if (emptyNotice()) {
+      <!-- The one published state the chip cannot explain: the owner picked
+             "Everyone" and the document is still in no listing, because the
+             community lists nothing that is empty. Where the chip would be,
+             since it is the same question — who finds this, and how. -->
+      <lg-message class="mb-4 w-full" severity="info">
+        {{ t('pages.community.document.emptyNotice') }}
+      </lg-message>
       }
 
       <h1

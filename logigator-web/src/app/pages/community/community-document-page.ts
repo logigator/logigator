@@ -11,12 +11,14 @@ import {
   LgAvatar,
   LgButton,
   LgMarkdown,
+  LgMessage,
   LgTag
 } from '@logigator/ui';
 import { RETURN_PATH_PARAM } from '@logigator/core';
 import { ShareApiService } from '../../api/services/share-api.service';
 import { shareCardUrl } from '../../documents/crawler-image';
 import { CircuitPreview } from '../../documents/circuit-preview';
+import { isPublishedButEmpty } from '../../documents/published-but-empty';
 import { ShareControls } from '../../documents/share-controls';
 import { VisibilityTag } from '../../documents/visibility-tag';
 import { SiteLinks } from '../../layout/site-links';
@@ -58,6 +60,7 @@ import { StarIcon } from './star-icon';
     LgAvatar,
     LgButton,
     LgMarkdown,
+    LgMessage,
     LgTag,
     NotFoundPage,
     RouterLink,
@@ -105,6 +108,21 @@ export class CommunityDocumentPage {
   protected readonly isPublic = computed(
     () => this.document()?.visibility === 'public'
   );
+
+  /**
+   * Whether to tell the reader their published document is in no listing
+   * because it is empty. The owner's alone: to anybody else the page is an
+   * ordinary published one, and "not listed" is a fact about where the owner
+   * expected to find it.
+   */
+  protected readonly emptyNotice = computed(() => {
+    const document = this.document();
+    return (
+      !!document &&
+      document.author.id === this.session.user()?.id &&
+      isPublishedButEmpty(document)
+    );
+  });
 
   /**
    * Whether there is a URL worth handing on. Asked of `@logigator/ui` rather

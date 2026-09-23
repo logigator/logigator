@@ -20,13 +20,13 @@ export function communityRow(
     id: link,
     name,
     description: '',
-    // Published, which is what a listing row is: the community queries carry
-    // `visibility = 'public'` and nothing else reaches them.
+    // Published and not empty, which is what a listing row is: the community
+    // queries list nothing else.
     visibility: 'public',
     link,
     version: 1,
-    componentCount: 0,
-    wireCount: 0,
+    componentCount: 4,
+    wireCount: 2,
     preview: null,
     createdAt: '2026-01-01T00:00:00.000Z',
     lastEditedAt: '2026-01-01T00:00:00.000Z',

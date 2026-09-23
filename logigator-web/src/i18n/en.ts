@@ -343,6 +343,8 @@ const en = {
         edited: 'edited',
         about: 'About this circuit',
         noDescription: 'No description was provided.',
+        emptyNotice:
+          'This circuit is empty, so it isn’t listed in the community yet. It appears there as soon as it has a component or a wire on it.',
         forkedFrom: 'Forked from',
         forkedFromBy: 'by {{author}}',
         errorHeading: 'The circuit could not be loaded'
@@ -427,6 +429,9 @@ const en = {
         edit: 'Name & description',
         share: 'Share…',
         communityPage: 'Community page',
+        emptyNotListed: 'Not listed',
+        emptyNotListedHint:
+          'This circuit is empty, so the community doesn’t list it yet.',
         delete: 'Delete'
       },
       edit: {

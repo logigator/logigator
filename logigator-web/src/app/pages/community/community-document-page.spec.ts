@@ -177,6 +177,45 @@ describe('CommunityDocumentPage', () => {
     expect(el.textContent).toContain('Stargazers');
   });
 
+  /**
+   * The one published state the page has to explain: the community lists
+   * nothing empty, so an owner who picked "Everyone" finds the document in no
+   * listing. Only they are told — to anybody else it is an ordinary page — and
+   * only while it is empty.
+   */
+  it('tells the owner alone that an empty published document is not listed', async () => {
+    const EMPTY_NOTICE = 'isn’t listed in the community yet';
+    const owner = communityRow('Half adder', LINK).author;
+    const { el, detectChanges } = await render({
+      componentCount: 0,
+      wireCount: 0
+    });
+
+    expect(el.textContent).not.toContain(EMPTY_NOTICE);
+
+    const session = TestBed.inject(SessionService);
+    session.signedIn({ id: 'someone-else', username: 'ada' } as never);
+    detectChanges();
+    expect(el.textContent).not.toContain(EMPTY_NOTICE);
+
+    session.signedIn({ id: owner.id, username: owner.username } as never);
+    detectChanges();
+    expect(el.textContent).toContain(EMPTY_NOTICE);
+  });
+
+  it('says nothing about listing to the owner of a document with content', async () => {
+    const owner = communityRow('Half adder', LINK).author;
+    const { el, detectChanges } = await render({ componentCount: 0 });
+    TestBed.inject(SessionService).signedIn({
+      id: owner.id,
+      username: owner.username
+    } as never);
+    detectChanges();
+
+    // Wires alone are content: the rule is "empty", as the API's is.
+    expect(el.textContent).not.toContain('isn’t listed in the community yet');
+  });
+
   it('states an unlisted document’s state and drops every star affordance', async () => {
     const { el } = await render({ visibility: 'unlisted' });
 

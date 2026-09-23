@@ -340,6 +340,8 @@ const de: TranslationSchema = {
         edited: 'bearbeitet',
         about: 'Über diese Schaltung',
         noDescription: 'Es wurde keine Beschreibung angegeben.',
+        emptyNotice:
+          'Diese Schaltung ist leer und wird deshalb noch nicht in der Community gelistet. Sie erscheint dort, sobald sie einen Baustein oder eine Leitung enthält.',
         forkedFrom: 'Abgeleitet von',
         forkedFromBy: 'von {{author}}',
         errorHeading: 'Die Schaltung konnte nicht geladen werden'
@@ -421,6 +423,9 @@ const de: TranslationSchema = {
         edit: 'Name & Beschreibung',
         share: 'Teilen…',
         communityPage: 'Community-Seite',
+        emptyNotListed: 'Nicht gelistet',
+        emptyNotListedHint:
+          'Diese Schaltung ist leer und wird deshalb noch nicht in der Community gelistet.',
         delete: 'Löschen'
       },
       edit: {
