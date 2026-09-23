@@ -16,7 +16,8 @@ export interface Environment {
   /**
    * Where the editor is mounted on this origin. Links into it are built from
    * here rather than written out, since the site and the editor are separate
-   * deployments that only share a hostname.
+   * deployments that only share a hostname. No trailing slash: this is the
+   * editor's address, and the editor rewrites `/editor/` to it.
    */
   editorUrl: string;
   /**

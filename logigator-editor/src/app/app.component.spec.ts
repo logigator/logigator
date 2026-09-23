@@ -46,6 +46,7 @@ describe('AppComponent', () => {
           provide: Location,
           useValue: {
             path: () => '/',
+            prepareExternalUrl: (url: string) => url,
             go: () => undefined,
             replaceState: () => undefined,
             subscribe: () => ({ unsubscribe: () => undefined })

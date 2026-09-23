@@ -71,7 +71,7 @@ Neither value can be trusted on read: the cookie is client-writable and the
 server's language and theme sets need not match the editor's, so
 `isAvailableLanguage` and the theme table gate every read. Those fallbacks are
 load-bearing — the static bundle is served ahead of the middleware that writes
-the cookie, so a visitor whose first request is `/editor/` arrives without one.
+the cookie, so a visitor whose first request is `/editor` arrives without one.
 Their language is negotiated over the whole `Accept-Language` list
 (`negotiateBrowserLanguage`, then `defaultLang`; theme falls back to dark),
 matching what the server would pick, so the two agree once a page view

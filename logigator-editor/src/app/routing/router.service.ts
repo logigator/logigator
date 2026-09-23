@@ -8,9 +8,10 @@ import {
 } from './routes/share.route';
 import { LocalProjectRoute } from './routes/local-project.route';
 import { Route } from './route.model';
-import { Location } from '@angular/common';
+import { DOCUMENT, Location } from '@angular/common';
 import { parse } from 'regexparam';
 import { RouteKeys } from './route-keys.model';
+import { canonicalizeAddress } from './editor-location-strategy';
 import { TranslationService } from '../translation/translation.service';
 import { ToastService } from '../logging/toast.service';
 import { LoggingService } from '../logging/logging.service';
@@ -36,6 +37,7 @@ export class RouterService {
   private readonly logging = inject(LoggingService);
   private readonly translation = inject(TranslationService);
   private readonly location = inject(Location);
+  private readonly document = inject(DOCUMENT);
 
   private _routes: {
     instance: Route;
@@ -51,6 +53,15 @@ export class RouterService {
         instance
       });
     }
+  }
+
+  /**
+   * Rewrites the address the editor was opened at into the form it writes
+   * itself (`/editor/` → `/editor`), in place. The startup calls it before it
+   * first reads the address or writes one, so no stale entry is left behind.
+   */
+  public canonicalizeAddress(): void {
+    canonicalizeAddress(this.location, this.document.location);
   }
 
   public async processCurrentRoute(): Promise<void> {

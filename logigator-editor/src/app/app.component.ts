@@ -232,6 +232,8 @@ export class AppComponent {
       }
     })();
 
+    this.routerService.canonicalizeAddress();
+
     if (!this.routerService.matches(this.location.path())) {
       this.persistenceService.createAndSetEmptyProject();
     }

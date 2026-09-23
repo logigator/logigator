@@ -13,8 +13,14 @@ logigator.test {
 		reverse_proxy api:3000
 	}
 
+	# The editor's address is `/editor`. The dev server is mounted at `/editor/`
+	# (its base href) and redirects the bare path there, so it is handed that
+	# path rewritten instead. `/editor/` is served as well and never redirected:
+	# browsers still hold the legacy backend's cached `301` from `/editor` to it,
+	# and the editor rewrites the address itself.
 	@editor path /editor /editor/*
 	handle @editor {
+		rewrite /editor /editor/
 		reverse_proxy editor:4200
 	}
 

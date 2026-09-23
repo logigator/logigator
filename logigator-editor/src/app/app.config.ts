@@ -12,6 +12,7 @@ import { firstValueFrom } from 'rxjs';
 import { provideTransloco, TranslocoService } from '@jsverse/transloco';
 import { TranslationLoaderService } from './translation/translation-loader.service';
 import { provideHttpClient, HttpClient } from '@angular/common/http';
+import { LocationStrategy } from '@angular/common';
 import { provideTranslocoPersistLang } from '@jsverse/transloco-persist-lang';
 import { provideMarkdown } from 'ngx-markdown';
 import { provideLgLabels } from '@logigator/ui';
@@ -20,6 +21,7 @@ import { AnalyticsService } from './analytics/analytics.service';
 import { provideDialogAnalytics } from './analytics/dialog-telemetry';
 import { TranslationService } from './translation/translation.service';
 import { AVAILABLE_LANGUAGES } from '@logigator/core';
+import { EditorLocationStrategy } from './routing/editor-location-strategy';
 import {
   preferencesLangStorage,
   resolveStartupLang
@@ -36,6 +38,7 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     { provide: ErrorHandler, useClass: GlobalErrorHandler },
     provideZonelessChangeDetection(),
+    { provide: LocationStrategy, useClass: EditorLocationStrategy },
     provideTransloco({
       config: {
         defaultLang: 'en',
