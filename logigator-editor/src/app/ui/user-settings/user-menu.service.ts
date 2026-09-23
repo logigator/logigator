@@ -5,12 +5,23 @@ import { SessionLifecycleService } from '../../user/session-lifecycle.service';
 import { TranslationService } from '../../translation/translation.service';
 
 /**
+ * The website's pages the account rows open. Unprefixed: the site redirects
+ * to the language the shared cookie names, which is the editor's own.
+ */
+const ACCOUNT_URL = '/my/account';
+const LOGIN_URL = '/login';
+const REGISTER_URL = '/register';
+
+/**
  * The user panel's model — who is signed in, and the account action rows —
  * defined once for the title bar's control and the compact sheet that renders
  * the panel on its own.
  *
  * The rows are rebuilt whenever the active language changes, as every other
- * menu model is: `translate()` reads the post-load signal.
+ * menu model is: `translate()` reads the post-load signal. The pages they
+ * name belong to the website, so each is a link opening in a tab of its own —
+ * the board stays where it was, and the sign-in the tab completes reaches this
+ * one through the shared session cookie.
  */
 @Injectable({ providedIn: 'root' })
 export class UserMenuService {
@@ -44,7 +55,8 @@ export class UserMenuService {
       {
         label: this.translation.translate('userSettings.account'),
         icon: 'ph ph-user',
-        command: () => this.userService.openAccountSettings()
+        href: ACCOUNT_URL,
+        target: '_blank'
       },
       {
         label: this.translation.translate('userSettings.logOut'),
@@ -59,12 +71,14 @@ export class UserMenuService {
       {
         label: this.translation.translate('userSettings.logIn'),
         icon: 'ph ph-sign-in',
-        command: () => this.userService.login()
+        href: LOGIN_URL,
+        target: '_blank'
       },
       {
         label: this.translation.translate('userSettings.signUp'),
         icon: 'ph ph-user-plus',
-        command: () => this.userService.register()
+        href: REGISTER_URL,
+        target: '_blank'
       }
     ];
   }

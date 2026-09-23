@@ -21,7 +21,13 @@ import {
 } from '../../internal/overlay';
 import { LgRipple } from '../ripple/ripple';
 import { LgShortcut } from '../shortcut/shortcut';
-import { MENU_ITEM_CLASS, MENU_PANEL_CLASS, MenuItem } from './menu-item.model';
+import {
+  claimMenuItemClick,
+  ENABLED_MENU_ITEM_SELECTOR,
+  MENU_ITEM_CLASS,
+  MENU_PANEL_CLASS,
+  MenuItem
+} from './menu-item.model';
 
 /** Flush below and left-aligned, then flipping up, then right-aligned. */
 const SUBMENU_POSITIONS: ConnectedPosition[] = [
@@ -48,7 +54,8 @@ const SUBMENU_POSITIONS: ConnectedPosition[] = [
 /**
  * A horizontal menu bar with **one** level of pop-up submenu. `model` is the
  * top-level `MenuItem[]`; items with `items` open a submenu, leaf items run
- * their `command`.
+ * their `command`. A leaf with an `href` is a real link, whose plain click runs
+ * the `command` in place of the navigation.
  *
  * Optional content slots: `#start`/`#end` pin content to the edges, `#item`
  * replaces a menu row (context `{ $implicit: item, root }`, `root` marking a
@@ -74,38 +81,45 @@ const SUBMENU_POSITIONS: ConnectedPosition[] = [
     <div role="menubar" class="flex items-center">
       @for (item of model(); track $index; let i = $index) {
         @if (item.visible !== false) {
-          <button
-            type="button"
-            role="menuitem"
-            tabindex="-1"
-            lgRipple
-            [attr.data-index]="i"
-            [attr.aria-haspopup]="item.items?.length ? 'menu' : null"
-            [attr.aria-expanded]="item.items?.length ? openIndex() === i : null"
-            [class]="topItemClass(openIndex() === i)"
-            (click)="onTopClick(i, item, $event)"
-            (mouseenter)="onTopHover(i, $event)"
-            (keydown)="onTopKeydown(i, item, $event)"
-          >
-            @if (itemTemplate(); as tpl) {
+          @if (item.href && !item.items?.length) {
+            <a
+              role="menuitem"
+              tabindex="-1"
+              lgRipple
+              [attr.data-index]="i"
+              [attr.href]="item.disabled ? null : item.href"
+              [attr.target]="item.target ?? null"
+              [attr.aria-disabled]="item.disabled ? 'true' : null"
+              [class]="topItemClass(false)"
+              (click)="onTopClick(i, item, $event)"
+              (mouseenter)="onTopHover(i, $event)"
+              (keydown)="onTopKeydown(i, item, $event)"
+            >
               <ng-container
-                *ngTemplateOutlet="
-                  tpl;
-                  context: { $implicit: item, root: true }
-                "
+                *ngTemplateOutlet="topRow; context: { $implicit: item }"
               ></ng-container>
-            } @else {
-              <span class="flex items-center gap-2 px-3 py-2">
-                <span class="mr-auto">{{ item.label }}</span>
-                @if (item.shortcut) {
-                  <lg-shortcut class="pl-4" [binding]="item.shortcut" />
-                }
-                @if (item.items?.length) {
-                  <i class="ph ph-caret-down" aria-hidden="true"></i>
-                }
-              </span>
-            }
-          </button>
+            </a>
+          } @else {
+            <button
+              type="button"
+              role="menuitem"
+              tabindex="-1"
+              lgRipple
+              [attr.data-index]="i"
+              [attr.aria-haspopup]="item.items?.length ? 'menu' : null"
+              [attr.aria-expanded]="
+                item.items?.length ? openIndex() === i : null
+              "
+              [class]="topItemClass(openIndex() === i)"
+              (click)="onTopClick(i, item, $event)"
+              (mouseenter)="onTopHover(i, $event)"
+              (keydown)="onTopKeydown(i, item, $event)"
+            >
+              <ng-container
+                *ngTemplateOutlet="topRow; context: { $implicit: item }"
+              ></ng-container>
+            </button>
+          }
         }
       }
     </div>
@@ -115,6 +129,27 @@ const SUBMENU_POSITIONS: ConnectedPosition[] = [
         <ng-container *ngTemplateOutlet="tpl"></ng-container>
       </div>
     }
+
+    <ng-template #topRow let-item>
+      @if (itemTemplate(); as tpl) {
+        <ng-container
+          *ngTemplateOutlet="tpl; context: { $implicit: item, root: true }"
+        ></ng-container>
+      } @else {
+        <span
+          class="flex items-center gap-2 px-3 py-2"
+          [class]="item.styleClass"
+        >
+          <span class="mr-auto">{{ item.label }}</span>
+          @if (item.shortcut) {
+            <lg-shortcut class="pl-4" [binding]="item.shortcut" />
+          }
+          @if (item.items?.length) {
+            <i class="ph ph-caret-down" aria-hidden="true"></i>
+          }
+        </span>
+      }
+    </ng-template>
 
     <ng-template #submenu>
       <div
@@ -128,6 +163,21 @@ const SUBMENU_POSITIONS: ConnectedPosition[] = [
           @if (sub.visible !== false) {
             @if (sub.separator) {
               <div class="my-1 border-t border-border"></div>
+            } @else if (sub.href) {
+              <a
+                role="menuitem"
+                tabindex="-1"
+                lgRipple
+                [class]="itemClass"
+                [attr.href]="sub.disabled ? null : sub.href"
+                [attr.target]="sub.target ?? null"
+                [attr.aria-disabled]="sub.disabled ? 'true' : null"
+                (click)="runSub(sub, $event)"
+              >
+                <ng-container
+                  *ngTemplateOutlet="subRow; context: { $implicit: sub }"
+                ></ng-container>
+              </a>
             } @else {
               <button
                 type="button"
@@ -136,28 +186,34 @@ const SUBMENU_POSITIONS: ConnectedPosition[] = [
                 lgRipple
                 [class]="itemClass"
                 [disabled]="sub.disabled"
-                (click)="runSub(sub)"
+                (click)="runSub(sub, $event)"
               >
-                @if (itemTemplate(); as tpl) {
-                  <ng-container
-                    *ngTemplateOutlet="
-                      tpl;
-                      context: { $implicit: sub, root: false }
-                    "
-                  ></ng-container>
-                } @else {
-                  <span class="flex w-full items-center gap-2 px-3 py-2">
-                    <span class="mr-auto">{{ sub.label }}</span>
-                    @if (sub.shortcut) {
-                      <lg-shortcut class="pl-4" [binding]="sub.shortcut" />
-                    }
-                  </span>
-                }
+                <ng-container
+                  *ngTemplateOutlet="subRow; context: { $implicit: sub }"
+                ></ng-container>
               </button>
             }
           }
         }
       </div>
+    </ng-template>
+
+    <ng-template #subRow let-sub>
+      @if (itemTemplate(); as tpl) {
+        <ng-container
+          *ngTemplateOutlet="tpl; context: { $implicit: sub, root: false }"
+        ></ng-container>
+      } @else {
+        <span
+          class="flex w-full items-center gap-2 px-3 py-2"
+          [class]="sub.styleClass"
+        >
+          <span class="mr-auto">{{ sub.label }}</span>
+          @if (sub.shortcut) {
+            <lg-shortcut class="pl-4" [binding]="sub.shortcut" />
+          }
+        </span>
+      }
     </ng-template>
   `
 })
@@ -200,11 +256,12 @@ export class LgMenubar implements OnDestroy {
     return [
       'flex cursor-pointer items-center rounded-md transition-colors focus:outline-none',
       'hover:bg-content-hover hover:text-text focus-visible:bg-content-hover focus-visible:text-text',
+      'aria-disabled:pointer-events-none aria-disabled:opacity-50',
       active ? 'bg-content-hover text-text' : ''
     ].join(' ');
   }
 
-  protected onTopClick(i: number, item: MenuItem, event: Event): void {
+  protected onTopClick(i: number, item: MenuItem, event: MouseEvent): void {
     if (item.items?.length) {
       if (this.openIndex() === i) {
         this.dismiss();
@@ -212,8 +269,11 @@ export class LgMenubar implements OnDestroy {
         this.openSubmenu(i, item, event.currentTarget as HTMLElement);
       }
     } else {
+      const claimed = claimMenuItemClick(item, event);
       this.dismiss();
-      item.command?.({ item });
+      if (claimed) {
+        item.command?.({ originalEvent: event, item });
+      }
     }
   }
 
@@ -266,9 +326,12 @@ export class LgMenubar implements OnDestroy {
     }
   }
 
-  protected runSub(item: MenuItem): void {
+  protected runSub(item: MenuItem, event: MouseEvent): void {
+    const claimed = claimMenuItemClick(item, event);
     this.dismiss();
-    item.command?.({ item });
+    if (claimed) {
+      item.command?.({ originalEvent: event, item });
+    }
   }
 
   protected onSubmenuKeydown(event: KeyboardEvent): void {
@@ -427,7 +490,7 @@ export class LgMenubar implements OnDestroy {
     }
     return Array.from(
       this.overlayRef.overlayElement.querySelectorAll<HTMLElement>(
-        '[role=menuitem]:not([disabled])'
+        ENABLED_MENU_ITEM_SELECTOR
       )
     );
   }

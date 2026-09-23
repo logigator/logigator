@@ -68,16 +68,6 @@ export class UserService {
     });
   }
 
-  /** Open the login page in a new tab. */
-  login(): void {
-    window.open('/login', '_blank', 'noopener');
-  }
-
-  /** Open the registration page in a new tab. */
-  register(): void {
-    window.open('/register', '_blank', 'noopener');
-  }
-
   /**
    * Ends the server session. Pure transport: throws on failure and emits no
    * toast; `SessionLifecycleService` owns the surrounding flow. The server
@@ -95,11 +85,6 @@ export class UserService {
   sessionExpired(): void {
     this.cookieService.delete(AUTH_COOKIE);
     this._user.set(null);
-  }
-
-  /** Open the account settings page in a new tab. */
-  openAccountSettings(): void {
-    window.open('/my/account/profile', '_blank', 'noopener');
   }
 
   /**

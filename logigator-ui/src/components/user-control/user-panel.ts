@@ -1,8 +1,9 @@
+import { NgTemplateOutlet } from '@angular/common';
 import { Component, input, output } from '@angular/core';
 import { LgAvatar } from '../avatar/avatar';
 import { LgDivider } from '../divider/divider';
 import { LgRipple } from '../ripple/ripple';
-import { MenuItem } from '../menu/menu-item.model';
+import { claimMenuItemClick, MenuItem } from '../menu/menu-item.model';
 import { LgImageSource } from '../../tokens/image-source';
 
 /**
@@ -11,16 +12,18 @@ import { LgImageSource } from '../../tokens/image-source';
  *
  * The header, the divider rhythm and the row treatment are the shared part;
  * the sections are projected because they differ per app (a website's language
- * control has to be links, an editor carries its own settings). `action` fires
- * after a row's `command`, so a hosting overlay can dismiss itself — a section
- * never fires it, and changing a setting leaves the panel open.
+ * control has to be links, an editor carries its own settings). A row with an
+ * `href` is a real link, whose plain click runs the `command` in place of the
+ * navigation. `action` fires after any row is clicked, link or not, so a
+ * hosting overlay can dismiss itself — a section never fires it, and changing a
+ * setting leaves the panel open.
  *
  * Rendered by {@link LgUserControl} inside its menu, and directly wherever the
  * panel is the whole surface, as a compact sheet.
  */
 @Component({
   selector: 'lg-user-panel',
-  imports: [LgAvatar, LgDivider, LgRipple],
+  imports: [NgTemplateOutlet, LgAvatar, LgDivider, LgRipple],
   host: { class: 'block min-w-68' },
   template: `
     <div class="flex flex-col items-center gap-2 px-4 pt-4">
@@ -52,22 +55,43 @@ import { LgImageSource } from '../../tokens/image-source';
       @if (item.visible !== false) {
         @if (item.separator) {
           <lg-divider class="my-1" />
+        } @else if (item.href) {
+          <a
+            lgRipple
+            [class]="rowClass"
+            [attr.href]="item.disabled ? null : item.href"
+            [attr.target]="item.target ?? null"
+            [attr.aria-disabled]="item.disabled ? 'true' : null"
+            (click)="run(item, $event)"
+          >
+            <ng-container
+              *ngTemplateOutlet="row; context: { $implicit: item }"
+            ></ng-container>
+          </a>
         } @else {
           <button
             type="button"
             lgRipple
-            class="flex w-full cursor-pointer items-center gap-2 rounded px-3 py-2 text-left text-text hover:bg-content-hover disabled:pointer-events-none disabled:opacity-50"
+            [class]="rowClass"
             [disabled]="item.disabled"
-            (click)="run(item)"
+            (click)="run(item, $event)"
           >
-            @if (item.icon) {
-              <i [class]="item.icon" aria-hidden="true"></i>
-            }
-            <span>{{ item.label }}</span>
+            <ng-container
+              *ngTemplateOutlet="row; context: { $implicit: item }"
+            ></ng-container>
           </button>
         }
       }
     }
+
+    <ng-template #row let-item>
+      <span class="flex items-center gap-2" [class]="item.styleClass">
+        @if (item.icon) {
+          <i [class]="item.icon" aria-hidden="true"></i>
+        }
+        <span>{{ item.label }}</span>
+      </span>
+    </ng-template>
   `
 })
 export class LgUserPanel {
@@ -81,8 +105,14 @@ export class LgUserPanel {
   /** A row ran. */
   readonly action = output<void>();
 
-  protected run(item: MenuItem): void {
-    item.command?.({ item });
+  protected readonly rowClass =
+    'flex w-full cursor-pointer items-center rounded px-3 py-2 text-left text-text hover:bg-content-hover ' +
+    'disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50';
+
+  protected run(item: MenuItem, event: MouseEvent): void {
+    if (claimMenuItemClick(item, event)) {
+      item.command?.({ originalEvent: event, item });
+    }
     this.action.emit();
   }
 }

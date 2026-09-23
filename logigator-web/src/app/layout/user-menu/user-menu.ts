@@ -82,9 +82,10 @@ export class UserMenu {
   ]);
 
   /**
-   * The account rows. Commands rather than links, because the panel comes from
-   * a library that may not import the router; the destinations a visitor should
-   * be able to open in a tab of its own are in the bar and the drawer.
+   * The account rows. The destinations are real links, so each opens in a tab
+   * of its own; a plain click is routed here instead, because the panel comes
+   * from a library that may not import the router. The links are signals off
+   * the active language, which is what keeps them current across a switch.
    */
   protected readonly rows = computed<MenuItem[]>(() =>
     this.session.user() ? this.signedInRows() : this.signedOutRows()
@@ -110,6 +111,7 @@ export class UserMenu {
       {
         label: this.translation.translate('header.account'),
         icon: 'ph ph-user',
+        href: this.links.account(),
         command: () => void this.router.navigateByUrl(this.links.account())
       },
       {
@@ -125,11 +127,13 @@ export class UserMenu {
       {
         label: this.translation.translate('header.login'),
         icon: 'ph ph-sign-in',
+        href: this.links.login(),
         command: () => void this.router.navigateByUrl(this.links.login())
       },
       {
         label: this.translation.translate('header.register'),
         icon: 'ph ph-user-plus',
+        href: this.links.register(),
         command: () => void this.router.navigateByUrl(this.links.register())
       }
     ];

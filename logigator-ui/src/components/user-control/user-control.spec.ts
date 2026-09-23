@@ -24,15 +24,37 @@ import { MenuItem } from '../menu/menu-item.model';
 class HostComponent {
   readonly username = signal<string | undefined>('marek_h');
   readonly account = vi.fn();
+  readonly signIn = vi.fn();
   readonly toggled = vi.fn();
   readonly rows = signal<MenuItem[]>([
     { label: 'Account', icon: 'ph ph-user', command: () => this.account() },
-    { label: 'Hidden', visible: false }
+    { label: 'Hidden', visible: false },
+    { label: 'Sign in', href: '/login', command: () => this.signIn() },
+    { label: 'Help', href: '/help', target: '_blank' }
   ]);
 }
 
 function panel(): Element | null {
   return document.querySelector('.cdk-overlay-container lg-user-panel');
+}
+
+/**
+ * Clicks `el` and reports whether the component cancelled the click. A
+ * listener after it cancels whatever is left, so an unclaimed click on a link
+ * does not navigate the test document.
+ */
+function clickClaimed(el: HTMLElement, init: MouseEventInit = {}): boolean {
+  let claimed = false;
+  const record = (event: Event) => {
+    claimed = event.defaultPrevented;
+    event.preventDefault();
+  };
+  document.addEventListener('click', record);
+  el.dispatchEvent(
+    new MouseEvent('click', { bubbles: true, cancelable: true, ...init })
+  );
+  document.removeEventListener('click', record);
+  return claimed;
 }
 
 function setup() {
@@ -87,6 +109,30 @@ describe('LgUserControl', () => {
     (rows[0] as HTMLButtonElement).click();
     f.detectChanges();
     expect(f.componentInstance.account).toHaveBeenCalled();
+    expect(panel()).toBeNull();
+  });
+
+  it('renders a row with an href as a link, closing on any click but running it only on a plain one', () => {
+    const { f, trigger } = setup();
+    const link = () => panel()!.querySelector<HTMLAnchorElement>('a')!;
+
+    trigger.click();
+    f.detectChanges();
+    expect(link().getAttribute('href')).toBe('/login');
+    expect(link().hasAttribute('target')).toBe(false);
+    expect(
+      panel()!.querySelector('a[href="/help"]')?.getAttribute('target')
+    ).toBe('_blank');
+    expect(clickClaimed(link(), { shiftKey: true })).toBe(false);
+    f.detectChanges();
+    expect(f.componentInstance.signIn).not.toHaveBeenCalled();
+    expect(panel()).toBeNull();
+
+    trigger.click();
+    f.detectChanges();
+    expect(clickClaimed(link())).toBe(true);
+    f.detectChanges();
+    expect(f.componentInstance.signIn).toHaveBeenCalledTimes(1);
     expect(panel()).toBeNull();
   });
 });

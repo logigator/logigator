@@ -172,11 +172,11 @@ export class MyDocumentTiles {
           ? row.preview.dark
           : row.preview.light
         : null,
-      menu: this.menuFor(row)
+      menu: this.menuFor(row, kind)
     }));
   });
 
-  private menuFor(row: MyDocumentRow): MenuItem[] {
+  private menuFor(row: MyDocumentRow, kind: CommunityKind): MenuItem[] {
     return [
       {
         label: this.translation.translate('pages.my.list.edit'),
@@ -192,10 +192,12 @@ export class MyDocumentTiles {
       // addressed by its link in every one of them, and a private link
       // resolves for its owner — who is whoever is reading this shelf. It is
       // the one place the owner sees what a recipient would, which is worth
-      // most before anything is published.
+      // most before anything is published. A real link, so it opens in a tab
+      // of its own too; the page routes a plain click.
       {
         label: this.translation.translate('pages.my.list.communityPage'),
         icon: 'ph ph-globe',
+        href: this.links.communityDocument(kind, row.link),
         command: () => this.action.emit({ action: 'community', row })
       },
       { separator: true },
