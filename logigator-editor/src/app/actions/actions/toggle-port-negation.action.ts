@@ -50,5 +50,7 @@ export class TogglePortNegationAction extends Action {
       return;
     }
     component.setPortNegated(this.side, this.index, negated);
+    // A bubble redraw touches no ports, so nothing else asks for the frame.
+    project.triggerTicker('single');
   }
 }
