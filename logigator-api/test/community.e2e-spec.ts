@@ -7,7 +7,7 @@ import type {
 } from '@logigator/contract';
 import { eq, sql } from 'drizzle-orm';
 import { projectStars } from '../src/database/schema';
-import { circuitDocument, HALF_ADDER_BODY } from './circuits';
+import { circuitDocument, EMPTY_BODY, HALF_ADDER_BODY } from './circuits';
 import { CookieJar } from './cookie-jar';
 import { startE2eApp, type E2eApp } from './harness';
 
@@ -170,6 +170,89 @@ describe('the community surface', () => {
       expect(
         response.json().entries.map((e: CommunityProject) => e.id)
       ).not.toContain(project.id);
+    });
+
+    it('leave out a published document with nothing on it, everywhere', async () => {
+      const blank = await create<ProjectSummary>(
+        'projects',
+        { name: 'Blank board', visibility: 'public' },
+        ada
+      );
+      const blankPart = await create<ComponentSummary>(
+        'components',
+        { name: 'Blank part', symbol: 'BP', visibility: 'public' },
+        ada
+      );
+      // A lone wire is not nothing: the rule is "empty", not "useful".
+      const wired = await create<ProjectSummary>(
+        'projects',
+        {
+          name: 'Just a wire',
+          visibility: 'public',
+          document: circuitDocument('Just a wire', {
+            components: [],
+            wires: [{ pos: [0, 0], direction: 0, length: 3 }]
+          })
+        },
+        ada
+      );
+      await api.inject({
+        method: 'PUT',
+        url: `/api/community/projects/${blank.link}/star`,
+        headers: grace.headers()
+      });
+
+      const ids = async (url: string, cookies?: CookieJar) =>
+        (await api.inject({ method: 'GET', url, headers: cookies?.headers() }))
+          .json()
+          .entries.map((e: { id: string }) => e.id);
+
+      for (const url of [
+        '/api/community/projects?size=100',
+        '/api/community/projects?search=Blank&size=100',
+        `/api/community/users/${adaId}/projects?size=100`,
+        `/api/community/users/${graceId}/starred/projects?size=100`
+      ]) {
+        const listed = await ids(url);
+        expect(listed, url).not.toContain(blank.id);
+      }
+      expect(
+        await ids('/api/community/starred/projects?size=100', grace)
+      ).not.toContain(blank.id);
+      for (const url of [
+        '/api/community/components?size=100',
+        `/api/community/users/${adaId}/components?size=100`
+      ]) {
+        expect(await ids(url), url).not.toContain(blankPart.id);
+      }
+      expect(await ids('/api/community/projects?size=100')).toContain(wired.id);
+
+      // It is left unadvertised, not unpublished: its link still opens it.
+      const page = await api.inject({
+        method: 'GET',
+        url: `/api/community/projects/${blank.link}`
+      });
+      expect(page.statusCode).toBe(200);
+
+      // And the rule follows the document: drawing on it lists it, clearing it
+      // again takes it back out.
+      const save = (version: number, body = HALF_ADDER_BODY) =>
+        api.inject({
+          method: 'PUT',
+          url: `/api/projects/${blank.id}`,
+          headers: ada.headers(),
+          payload: { version, document: circuitDocument('Blank board', body) }
+        });
+      const drawn = await save(blank.version);
+      expect(drawn.statusCode).toBe(200);
+      expect(await ids('/api/community/projects?size=100')).toContain(blank.id);
+
+      expect((await save(drawn.json().version, EMPTY_BODY)).statusCode).toBe(
+        200
+      );
+      expect(await ids('/api/community/projects?size=100')).not.toContain(
+        blank.id
+      );
     });
 
     it('rank by stars, and break the tie so paging is stable', async () => {
@@ -607,13 +690,41 @@ describe('the community surface', () => {
 
       await create<ProjectSummary>(
         'projects',
-        { name: 'Shown', visibility: 'public' },
+        {
+          name: 'Shown',
+          visibility: 'public',
+          document: circuitDocument('Shown', HALF_ADDER_BODY)
+        },
         cookies
       );
-      await create<ProjectSummary>('projects', { name: 'Hidden' }, cookies);
+      await create<ProjectSummary>(
+        'projects',
+        {
+          name: 'Hidden',
+          document: circuitDocument('Hidden', HALF_ADDER_BODY)
+        },
+        cookies
+      );
       await create<ComponentSummary>(
         'components',
-        { name: 'Part', symbol: 'PT', visibility: 'public' },
+        {
+          name: 'Part',
+          symbol: 'PT',
+          visibility: 'public',
+          document: circuitDocument('Part', HALF_ADDER_BODY)
+        },
+        cookies
+      );
+      // Published but blank: in no listing, so in no count either — the number
+      // on the profile has to match the tab it heads.
+      await create<ProjectSummary>(
+        'projects',
+        { name: 'Blank', visibility: 'public' },
+        cookies
+      );
+      await create<ComponentSummary>(
+        'components',
+        { name: 'Blank part', symbol: 'BP', visibility: 'public' },
         cookies
       );
 

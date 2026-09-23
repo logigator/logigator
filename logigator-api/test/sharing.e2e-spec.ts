@@ -683,7 +683,11 @@ describe('share links', () => {
     it('keeps the copy out of every listing, whatever the original was', async () => {
       const project = await create<ProjectSummary>(
         'projects',
-        { name: 'Public one', visibility: 'public' },
+        {
+          name: 'Public one',
+          visibility: 'public',
+          document: circuitDocument('Public one', HALF_ADDER_BODY)
+        },
         ada
       );
 

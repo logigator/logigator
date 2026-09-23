@@ -6,8 +6,8 @@ import { CommunityService } from './community.service';
 
 /**
  * Published documents, stars and public profiles. Its own module and its own
- * queries because of the access rule: the listings here filter on
- * `visibility = 'public'` and the owner-scoped services filter on ownership, so
+ * queries because of the access rule: the listings here filter on published,
+ * non-empty documents and the owner-scoped services filter on ownership, so
  * forgetting a clause on one cannot reach the other. The one read that is not a
  * listing — a document's own page, reached by its link — carries
  * `linkResolvesFor` instead, and is the one place a document that is nobody

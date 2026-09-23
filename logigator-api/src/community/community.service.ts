@@ -1,5 +1,14 @@
 import { HttpStatus, Inject, Injectable } from '@nestjs/common';
-import { and, count, desc, eq, type Column, type SQL } from 'drizzle-orm';
+import {
+  and,
+  count,
+  desc,
+  eq,
+  gt,
+  sql,
+  type Column,
+  type SQL
+} from 'drizzle-orm';
 import type {
   Author,
   CommunityComponent,
@@ -73,9 +82,10 @@ type StarTable = typeof projectStars | typeof componentStars;
  * A document's page, and the section it lives in: everything a visitor who was
  * not handed a link can reach.
  *
- * Two predicates, and nothing else. The **listings** — here, in the stars, the
- * stargazers and a profile's counts — carry `visibility = 'public'`: a
- * published document is the only kind a stranger is told about. A **read
+ * Two predicates, and nothing else. The **listings** — the browse pages, a
+ * profile's tabs and counts, the starred tabs — carry {@link listed}: a
+ * published document with something on it is the only kind a stranger is told
+ * about (a star and its stargazers ask only that it be published). A **read
  * addressed by a link** carries `linkResolvesFor`, which answers an unlisted
  * document for whoever holds the URL and a private one for its owner alone.
  * The two are separate questions about the same rows, which is why these
@@ -96,7 +106,7 @@ export class CommunityService {
     callerId: string | null
   ): Promise<Page<CommunityProject>> {
     const where = and(
-      eq(projects.visibility, 'public'),
+      listed(projects),
       nameMatches(projects.name, query.search)
     );
     return this.projectPage(where, query, callerId, this.projectRanking(query));
@@ -107,7 +117,7 @@ export class CommunityService {
     callerId: string | null
   ): Promise<Page<CommunityComponent>> {
     const where = and(
-      eq(components.visibility, 'public'),
+      listed(components),
       nameMatches(components.name, query.search)
     );
     return this.componentPage(
@@ -125,7 +135,7 @@ export class CommunityService {
     callerId: string | null
   ): Promise<Page<CommunityProject>> {
     return this.projectPage(
-      and(eq(projects.visibility, 'public'), eq(projects.userId, userId)),
+      and(listed(projects), eq(projects.userId, userId)),
       query,
       callerId
     );
@@ -137,7 +147,7 @@ export class CommunityService {
     callerId: string | null
   ): Promise<Page<CommunityComponent>> {
     return this.componentPage(
-      and(eq(components.visibility, 'public'), eq(components.userId, userId)),
+      and(listed(components), eq(components.userId, userId)),
       query,
       callerId
     );
@@ -146,7 +156,7 @@ export class CommunityService {
   /**
    * What an account has starred: the ordinary listing with the same `EXISTS`
    * that fills in `starred` as one more predicate. A star on something since
-   * made private stops being listed.
+   * made private, or since emptied, stops being listed.
    *
    * Whose stars are listed and whose flag is reported are two different
    * accounts — a visitor reading somebody's public starred tab gets their own
@@ -159,7 +169,7 @@ export class CommunityService {
     callerId: string | null
   ): Promise<Page<CommunityProject>> {
     return this.projectPage(
-      and(eq(projects.visibility, 'public'), this.projectStarredBy(userId)),
+      and(listed(projects), this.projectStarredBy(userId)),
       query,
       callerId
     );
@@ -171,7 +181,7 @@ export class CommunityService {
     callerId: string | null
   ): Promise<Page<CommunityComponent>> {
     return this.componentPage(
-      and(eq(components.visibility, 'public'), this.componentStarredBy(userId)),
+      and(listed(components), this.componentStarredBy(userId)),
       query,
       callerId
     );
@@ -353,18 +363,11 @@ export class CommunityService {
       this.db
         .select({ value: count() })
         .from(projects)
-        .where(
-          and(eq(projects.userId, userId), eq(projects.visibility, 'public'))
-        ),
+        .where(and(eq(projects.userId, userId), listed(projects))),
       this.db
         .select({ value: count() })
         .from(components)
-        .where(
-          and(
-            eq(components.userId, userId),
-            eq(components.visibility, 'public')
-          )
-        )
+        .where(and(eq(components.userId, userId), listed(components)))
     ]);
 
     return {
@@ -656,6 +659,23 @@ export class CommunityService {
         }
       : null;
   }
+}
+
+/**
+ * The predicate every listing carries: published, and not empty. A document
+ * with neither a component nor a wire on it — the blank board the shelf's
+ * _New project_ creates, or one its author cleared — has nothing to show a
+ * stranger, and publishing it is more often a slip than a statement. Its page
+ * still resolves by its link and it can still be starred there: emptiness only
+ * decides whether it is *advertised*, which is the listings' question alone.
+ *
+ * Read off the two counts every write derives from the document, so the rule
+ * follows an edit without a column of its own. Written out as SQL for the same
+ * reason `linkResolvesFor` is: drizzle's `or()` is typed `SQL | undefined`, and
+ * an `undefined` inside the caller's `and()` would drop the rule silently.
+ */
+function listed(table: typeof projects | typeof components): SQL {
+  return sql`(${eq(table.visibility, 'public')} and (${gt(table.componentCount, 0)} or ${gt(table.wireCount, 0)}))`;
 }
 
 function notPublished(): ApiException {
