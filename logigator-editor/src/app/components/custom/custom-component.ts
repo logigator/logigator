@@ -12,9 +12,14 @@ import {
  * snapshot time and an instance carries no options, so these ignore the option
  * values and read `def`.
  */
-function geometryOf(def: CustomComponentDefinition): ComponentGeometrySource {
+interface CustomGeometry extends ComponentGeometrySource {
+  readonly definition: CustomComponentDefinition;
+}
+
+function geometryOf(def: CustomComponentDefinition): CustomGeometry {
   const ports = { inputs: def.numInputs, outputs: def.numOutputs };
   return {
+    definition: def,
     ports: () => ports,
     labels: () => ({
       inputs: def.labels.slice(0, def.numInputs),
@@ -40,32 +45,26 @@ function geometryOf(def: CustomComponentDefinition): ComponentGeometrySource {
 export class CustomComponent extends Component<CustomComponentOptions> {
   public readonly config: ComponentConfig<CustomComponentOptions>;
 
-  // Set after super(), so undefined during the base constructor's initial
-  // draw. Every read guards for that.
-  private readonly _def: CustomComponentDefinition | undefined;
-
   constructor(
     options: CustomComponentOptions,
     def: CustomComponentDefinition,
     config: ComponentConfig<CustomComponentOptions>
   ) {
     super(geometryOf(def), options);
-    this._def = def;
     this.config = config;
-
-    // The base constructor's initial draw ran without `_def` and so without
-    // the symbol; redraw to add it.
-    this.redraw();
   }
 
-  /** The frozen snapshot definition this instance renders from. */
+  /**
+   * The frozen snapshot definition this instance renders from. Read through
+   * the geometry the base holds, so the base constructor's draw already has
+   * it — a field of this class would not be assigned yet.
+   */
   public get definition(): CustomComponentDefinition {
-    return this._def!;
+    return (this.geometrySource as CustomGeometry).definition;
   }
 
-  // Null during the base constructor's draw; the redraw there adds it.
   protected override get symbol(): string | null {
-    return this._def?.symbol ?? null;
+    return this.definition.symbol;
   }
 
   protected draw(): void {

@@ -1,12 +1,14 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { Container, BitmapText } from 'pixi.js';
+import { Container, BitmapText, Graphics } from 'pixi.js';
 import { setStaticDIInjector } from '../utils/get-di';
 import { Component } from './component';
 import { ComponentConfig } from './component-config.model';
 import { andComponentConfig } from './component-types/and/and.config';
 import { romComponentConfig } from './component-types/rom/rom.config';
+import { dFfComponentConfig } from './component-types/d-ff/d-ff.config';
+import { segmentDisplayComponentConfig } from './component-types/segment-display/segment-display.config';
 import { PX } from '../utils/grid';
 import { Direction } from '@logigator/core';
 import {
@@ -65,6 +67,108 @@ describe('Component.deserialize (create() factory)', () => {
 
     comp.destroy({ children: true });
   });
+});
+
+/**
+ * Everything a draw decides, node by node: what each child is, where it sits,
+ * how it is turned and scaled, what it says and how it is anchored.
+ */
+function visualTree(node: Container): unknown {
+  return {
+    kind: node.constructor.name,
+    position: [node.position.x, node.position.y],
+    scale: [node.scale.x, node.scale.y],
+    pivot: [node.pivot.x, node.pivot.y],
+    rotation: node.rotation,
+    tint: node.tint,
+    context: node instanceof Graphics ? node.context.uid : undefined,
+    text: node instanceof BitmapText ? node.text : undefined,
+    anchor:
+      node instanceof BitmapText ? [node.anchor.x, node.anchor.y] : undefined,
+    children: node.children.map((c) => visualTree(c as Container))
+  };
+}
+
+describe('Component.deserialize draws once, in its final state', () => {
+  beforeEach(() => {
+    setStaticDIInjector(TestBed.inject(Injector));
+  });
+
+  /** The path deserialize used to take: build, then turn and negate. */
+  function buildThenMutate(
+    config: ComponentConfig,
+    options: Record<string, unknown>,
+    direction: Direction,
+    negInputs: number[],
+    negOutputs: number[]
+  ): Component {
+    const component = config.create(
+      Object.fromEntries(
+        Object.entries(config.options).map(([key, proto]) => [
+          key,
+          proto.clone(options[key])
+        ])
+      )
+    );
+    component.direction = direction;
+    component.position.set(5, 9);
+    component.setNegations(negInputs, negOutputs);
+    return component;
+  }
+
+  const cases: [string, ComponentConfig, Record<string, unknown>][] = [
+    ['AND', andComponentConfig as ComponentConfig, { numInputs: 3 }],
+    ['D flip-flop', dFfComponentConfig as ComponentConfig, {}],
+    // Its body keeps an upright width when turned.
+    ['segment display', segmentDisplayComponentConfig as ComponentConfig, {}]
+  ];
+  const directions = [Direction.E, Direction.S, Direction.W, Direction.N];
+
+  for (const [name, config, options] of cases) {
+    for (const direction of directions) {
+      for (const negated of [false, true]) {
+        it(`${name}, direction ${direction}${negated ? ', negated' : ''}`, () => {
+          const negInputs = negated ? [0] : [];
+          const negOutputs = negated ? [0] : [];
+          const expected = buildThenMutate(
+            config,
+            options,
+            direction,
+            negInputs,
+            negOutputs
+          );
+
+          const draw = vi.spyOn(
+            Object.getPrototypeOf(expected) as { draw(): void },
+            'draw'
+          );
+          const actual = Component.deserialize(
+            {
+              pos: [5, 9],
+              options,
+              ...(direction !== Direction.E ? { direction } : {}),
+              ...(negated ? { negInputs, negOutputs } : {})
+            },
+            config
+          );
+
+          expect(draw).toHaveBeenCalledTimes(1);
+          expect(actual.direction).toBe(direction);
+          expect([actual.position.x, actual.position.y]).toEqual([5, 9]);
+          expect(actual.connectionPoints).toEqual(expected.connectionPoints);
+          expect(actual.bodyGridBounds).toEqual(expected.bodyGridBounds);
+          expect([...actual.negatedInputs]).toEqual(negInputs);
+          expect([...actual.negatedOutputs]).toEqual(negOutputs);
+          expect(actual.portBubbles.size).toBe(expected.portBubbles.size);
+          expect(visualTree(actual)).toEqual(visualTree(expected));
+
+          draw.mockRestore();
+          expected.destroy({ children: true });
+          actual.destroy({ children: true });
+        });
+      }
+    }
+  }
 });
 
 describe('Component.gridBounds', () => {

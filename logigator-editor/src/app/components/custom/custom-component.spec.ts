@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { Container, BitmapText } from 'pixi.js';
 import { PX } from '../../utils/grid';
@@ -76,6 +76,43 @@ describe('CustomComponent', () => {
     expect(texts).toContain('B');
     expect(texts).toContain('Q');
 
+    instance.destroy({ children: true });
+  });
+
+  it('draws once when deserialized turned and negated, symbol included', () => {
+    const master = registry.createMaster(
+      { symbol: 'CC', numInputs: 2, numOutputs: 1, labels: ['A', 'B', 'Q'] },
+      'browser'
+    );
+    const snap = registry.snapshot(master);
+    const config = provider.getComponent(snap.typeId)!;
+    const draw = vi.spyOn(
+      CustomComponent.prototype as unknown as { draw(): void },
+      'draw'
+    );
+
+    const instance = Component.deserialize(
+      {
+        pos: [3, 4],
+        direction: Direction.S,
+        options: {},
+        negInputs: [1]
+      },
+      config
+    ) as CustomComponent;
+
+    expect(draw).toHaveBeenCalledTimes(1);
+    expect(instance.direction).toBe(Direction.S);
+    expect([instance.position.x, instance.position.y]).toEqual([3, 4]);
+    expect(instance.portBubbles.has(1)).toBe(true);
+    expect(renderedTexts(instance)).toEqual(
+      expect.arrayContaining(['CC', 'A', 'B', 'Q'])
+    );
+    const symbol = renderedTextNodes(instance).find((t) => t.text === 'CC')!;
+    // Counter-rotated upright, as the direction setter would leave it.
+    expect(symbol.rotation).toBeCloseTo(-instance.rotation, 10);
+
+    draw.mockRestore();
     instance.destroy({ children: true });
   });
 

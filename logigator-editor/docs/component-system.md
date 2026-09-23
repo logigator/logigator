@@ -83,6 +83,15 @@ components' read of an input, which a bubble inverts — see
 `deserialize`, which store type, grid-unit position, direction (omitted when
 East) and raw option values keyed by name.
 
+`deserialize` builds a component **drawn once, in its final state**: the
+direction and negations are handed to the constructor it triggers through
+`config.create` (a static the constructor consumes first thing) and applied
+before the constructor's one `_draw()`, rather than through the `direction`
+setter and `setNegations` afterwards, each of which rebuilds the whole visual
+tree — on a big board those two redraws were close to half the load's drawing.
+No `portsChange$` fires, there being nothing to re-anchor from. A setter used
+after construction behaves as before.
+
 ### Build vs. rescale vs. restyle
 
 The visual tree is rebuilt only on a **structural** change (construction,
@@ -112,8 +121,9 @@ content and font size).
 
 Instances are created with plain `new`, so `Component` reaches `ThemingService`
 and `GraphicsProviderService` through `getStaticDI()`. A `symbol` override must
-read a module-level config constant, not `this.config`: it is evaluated during
-the base constructor's draw, before the subclass field exists.
+read a module-level config constant or the protected `geometrySource`, not
+`this.config`: it is evaluated during the base constructor's draw, before the
+subclass field exists.
 
 ## `ComponentOption<T>` and `ComponentMeta`
 

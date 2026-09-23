@@ -127,10 +127,12 @@ ports and labels from the definition's counts (Inv. A), and a body of fixed
 width `CUSTOM_BODY_GRID_WIDTH`, so the box does not track how wide the symbol
 renders.
 
-**Init-order note:** the base constructor draws before the subclass `_def` field
-exists, so `symbol` returns `null` on that pass and the constructor calls
-`redraw()` once `_def` is set. Nothing reacts afterwards — the snapshot is
-frozen, so there is no `definitionChange$` subscription.
+**Init-order note:** the base constructor draws before any subclass field is
+assigned, so the definition travels inside the geometry source (`definition`
+beside `ports`/`labels`/`body`) and `CustomComponent.definition` and `symbol`
+read it through the base's `geometrySource`. The first draw therefore already
+carries the symbol and the instance is drawn once. Nothing reacts afterwards —
+the snapshot is frozen, so there is no `definitionChange$` subscription.
 
 ## `deriveSummary(project)`
 

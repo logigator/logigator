@@ -11,6 +11,7 @@ import {
   SEGMENT_FONT_14,
   SEGMENT_FONT_CHARS
 } from '../utils/segment-font';
+import { installAsciiGraphemeFastPath } from './grapheme-segmenter';
 
 /**
  * Family the subset woff2 is registered under for atlas baking. The name must
@@ -31,6 +32,8 @@ export class AssetsService {
   private readonly translation = inject(TranslationService);
 
   constructor() {
+    // Before any text is measured, the atlas bakes in init() included.
+    installAsciiGraphemeFastPath();
     for (const [alias, src] of [
       [BAKE_FONT_FAMILY, robotoMonoUrl],
       [BAKE_SEGMENT_7_FAMILY, dseg7Url],

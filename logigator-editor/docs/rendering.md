@@ -608,6 +608,14 @@ atlas.
 `BoardComponent.ngOnInit` awaits `init()` before acquiring the renderer lease, so
 the atlas exists before scene construction creates any `BitmapText`.
 
+Its constructor also installs `installAsciiGraphemeFastPath`
+(`grapheme-segmenter.ts`) over PixiJS's public
+`CanvasTextMetrics.graphemeSegmenter`, which every text layout calls — more than
+once per `BitmapText` — and whose default is an `Intl.Segmenter` pass: about
+670 ms on a big board's first full render. ASCII other than CR is split per
+character, which is exactly what the segmenter answers for it (CR LF is the one
+ASCII pair forming a single cluster); anything else goes to the original.
+
 ---
 
 ## `BoardComponent` wiring

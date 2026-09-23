@@ -88,6 +88,13 @@ const LABEL_FONT_SIZE = 0.4 / PX;
 const SYMBOL_FONT_SIZE = 1 / PX;
 const MIN_FONT_SIZE = 0.25 / PX;
 
+/** What {@link Component.deserialize} sets before the first draw. */
+interface InitialState {
+  direction: Direction;
+  negInputs: readonly number[];
+  negOutputs: readonly number[];
+}
+
 /** Which port group a negation index addresses (0-based within that group). */
 export type PortSide = 'in' | 'out';
 
@@ -101,6 +108,9 @@ export abstract class Component<
   implements Connectable
 {
   private static readonly _idAllocator = new IdAllocator();
+  // Handed from deserialize to the constructor it triggers through
+  // `config.create`, whose signature carries only the options.
+  private static _pendingInitialState: InitialState | null = null;
   public abstract readonly config: ComponentConfigView<TOptions>;
   public readonly ignoresWireCollision: boolean = false;
   public readonly options: TOptions;
@@ -206,24 +216,24 @@ export abstract class Component<
         proto.clone(serialized.options[key])
       ])
     );
-    const component = config.create(options);
+    // The direction and negations are applied before the constructor's one
+    // draw rather than through the setters afterwards, each of which would
+    // rebuild the whole visual tree again.
+    Component._pendingInitialState = {
+      direction: serialized.direction ?? Direction.E,
+      negInputs: serialized.negInputs ?? [],
+      negOutputs: serialized.negOutputs ?? []
+    };
+    let component: Component;
+    try {
+      component = config.create(options);
+    } finally {
+      Component._pendingInitialState = null;
+    }
     if (serialized.id !== undefined) {
       component.id = serialized.id;
     }
-    if (serialized.direction) {
-      // Before `pos`: the direction setter's fixed-body-anchor shift moves
-      // `position`, which the absolute write below overrides. East is the
-      // constructed default, so the common case pays no redraw.
-      component.direction = serialized.direction;
-    }
     component.position.set(serialized.pos[0], serialized.pos[1]);
-
-    if (serialized.negInputs?.length || serialized.negOutputs?.length) {
-      component.setNegations(
-        serialized.negInputs ?? [],
-        serialized.negOutputs ?? []
-      );
-    }
 
     return component;
   }
@@ -234,6 +244,10 @@ export abstract class Component<
   ) {
     super();
 
+    // Taken first, so no component constructed along the way can claim it.
+    const initial = Component._pendingInitialState;
+    Component._pendingInitialState = null;
+
     this._id = Component._idAllocator.next();
     this._geometry = geometry as ComponentGeometry;
     this.options = options as TOptions;
@@ -242,7 +256,13 @@ export abstract class Component<
     const ports = this._geometry.ports(this._optionValues);
     this._numInputs = ports.inputs;
     this._numOutputs = ports.outputs;
-    this._refreshBody();
+    if (initial) {
+      this._setDirectionState(initial.direction);
+      for (const i of initial.negInputs) this._negatedInputs.add(i);
+      for (const i of initial.negOutputs) this._negatedOutputs.add(i);
+    } else {
+      this._refreshBody();
+    }
 
     // Every option value feeds the geometry, so the base watches all of them.
     for (const option of Object.values(options)) {
@@ -294,6 +314,11 @@ export abstract class Component<
     this._bodyGridHeight = body.height;
   }
 
+  /** What the constructor was built from, for subclasses that extend it. */
+  protected get geometrySource(): ComponentGeometrySource {
+    return this._geometry;
+  }
+
   protected get inputLabels(): string[] {
     return this._geometry.labels(this._optionValues).inputs;
   }
@@ -315,8 +340,9 @@ export abstract class Component<
   /**
    * Symbol rendered centred in the body; null for components whose body is
    * its own visual identity (button, switch, free text). Overrides must read
-   * a module-level config constant, not `this.config` — this runs during the
-   * base constructor's draw, before the subclass `config` field is assigned.
+   * a module-level config constant or {@link geometrySource}, not
+   * `this.config` — this runs during the base constructor's draw, before the
+   * subclass `config` field is assigned.
    */
   // eslint-disable-next-line @typescript-eslint/class-literal-property-style
   protected get symbol(): string | null {
@@ -339,16 +365,7 @@ export abstract class Component<
   public set direction(value: Direction) {
     const oldPorts = this._initialized ? this.connectionPoints : null;
 
-    this._withFixedBodyAnchor(() => {
-      this._direction = value;
-      this.rotation = (value * Math.PI) / 2;
-      for (const container of this._rotationCounterContainers) {
-        container.rotation = -this.rotation;
-      }
-      // The body may be direction-dependent: the segment display keeps a
-      // fixed upright width when turned.
-      this._refreshBody();
-    });
+    this._withFixedBodyAnchor(() => this._setDirectionState(value));
 
     // Label anchors and the stub-thickness side depend on the direction.
     this._draw();
@@ -356,6 +373,17 @@ export abstract class Component<
     if (oldPorts) {
       this.portsChange$.next({ oldPorts, newPorts: this.connectionPoints });
     }
+  }
+
+  private _setDirectionState(value: Direction): void {
+    this._direction = value;
+    this.rotation = (value * Math.PI) / 2;
+    for (const container of this._rotationCounterContainers) {
+      container.rotation = -this.rotation;
+    }
+    // The body may be direction-dependent: the segment display keeps a fixed
+    // upright width when turned.
+    this._refreshBody();
   }
 
   /**
