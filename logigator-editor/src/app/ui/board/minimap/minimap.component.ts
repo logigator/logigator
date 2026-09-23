@@ -231,7 +231,7 @@ export class MinimapComponent implements OnDestroy {
 
   private _renderContent(): void {
     const project = this.project();
-    if (!project || !this.snapshots.available || !project.getContentBounds()) {
+    if (!project || !this.snapshots.available || project.isEmpty) {
       this.hasContent.set(false);
       this._frame = null;
       this._fit = null;

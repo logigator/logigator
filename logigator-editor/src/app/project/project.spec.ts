@@ -10,6 +10,9 @@ import { Component } from '../components/component';
 import { textComponentConfig } from '../components/component-types/text/text.config';
 import { makeAnd, makeWire } from '../../testing/factories';
 import { environment } from '../../environments/environment';
+import { TestBed } from '@angular/core/testing';
+import { ThemingService } from '../theming/theming.service';
+import { ThemeType } from '../theming/theme-type.enum';
 
 describe('Project.hasComponentCollision', () => {
   let project: Project;
@@ -658,6 +661,73 @@ describe('Project.getContentBounds', () => {
     // bounds holding the cell alone would crop the label off a screenshot.
     expect(b.contains(5.5, 0.5)).toBe(true);
     expect(b.width).toBeGreaterThan(text.gridBounds.width);
+  });
+});
+
+describe('Project.isEmpty', () => {
+  let project: Project;
+
+  beforeEach(() => {
+    configureTestBed();
+    project = new Project();
+  });
+
+  afterEach(() => {
+    project.destroy({ children: true });
+  });
+
+  it('agrees with getContentBounds finding nothing, as content comes and goes', () => {
+    const agrees = () =>
+      expect(project.isEmpty).toBe(project.getContentBounds() === null);
+    agrees();
+    expect(project.isEmpty).toBe(true);
+
+    const comp = makeAnd(2);
+    project.addComponent(comp);
+    agrees();
+    const wire = makeWire(2, 5, WireDirection.VERTICAL, 4);
+    project.addWire(wire);
+    agrees();
+    project.removeComponent(comp.id);
+    agrees();
+    expect(project.isEmpty).toBe(false);
+    project.removeWire(wire.id);
+    agrees();
+    expect(project.isEmpty).toBe(true);
+  });
+});
+
+describe('Project theme effect', () => {
+  let project: Project;
+
+  beforeEach(() => {
+    configureTestBed();
+    project = new Project();
+  });
+
+  afterEach(() => {
+    project.destroy({ children: true });
+    document.cookie =
+      'preferences=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+  });
+
+  it('restyles on a theme switch, but not on its first run', () => {
+    const comp = makeAnd(2);
+    project.addComponent(comp);
+    const refresh = vi.spyOn(comp, 'refreshTheme');
+
+    // The first run finds the theme everything was just drawn in.
+    TestBed.tick();
+    expect(refresh).not.toHaveBeenCalled();
+
+    const theming = TestBed.inject(ThemingService);
+    theming.setTheme(
+      theming.currentThemeType() === ThemeType.DARK
+        ? ThemeType.LIGHT
+        : ThemeType.DARK
+    );
+    TestBed.tick();
+    expect(refresh).toHaveBeenCalledTimes(1);
   });
 });
 

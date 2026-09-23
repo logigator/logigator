@@ -887,7 +887,7 @@ export class ServerPersistenceGateway {
     project: Project
   ): Promise<PreviewRender | null> {
     if (project.destroyed) return null;
-    if (!project.getContentBounds()) return 'empty';
+    if (project.isEmpty) return 'empty';
     return this.snapshot.generatePreviews(project);
   }
 

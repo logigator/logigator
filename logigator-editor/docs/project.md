@@ -68,7 +68,9 @@ re-tunes it to the live zoom, so a move is just "write position, then insert".
 and recompute **after** the tree reflects the post-state; adds mirror it. The CP
 manager queries the trees to decide. `evict` runs before `destroy()` for the same
 class of reason. Bulk loaders pass `deferConnectionPoints = true` and follow with
-one `recomputeConnectionPoints()` instead of a query per element.
+one `recomputeConnectionPoints()` instead of a query per element. `isEmpty`
+answers from the id maps what `getContentBounds() === null` answers by walking
+every element.
 
 `addComponent` subscribes to `component.portsChange$`. That handler **skips
 itself while the component is not indexed** (mid-drag, or inside
@@ -109,7 +111,10 @@ themselves stay put until the session settles them
 `rotateRequest$` (UI surfaces emit, the `WorkModeRouter` executes), `userInput$`
 and `inspectRequest$` (simulation-mode taps). A theme effect re-derives every
 theme-dependent color in place via `applyTheme()`, so a background tab the stage
-swap never redraws self-heals too.
+swap never redraws self-heals too. It acts only on a switch after the project
+was constructed: everything added is drawn in the theme current at the time, so
+the effect's first run has nothing to restyle — on a loaded board it used to
+re-theme every component the load had just drawn.
 
 ## `ProjectService`
 

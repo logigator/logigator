@@ -1,5 +1,5 @@
 import { Container, DestroyOptions, Point, Rectangle } from 'pixi.js';
-import { effect, EffectRef } from '@angular/core';
+import { effect, EffectRef, untracked } from '@angular/core';
 
 import { Grid } from '../rendering/grid';
 import { ThemingService } from '../theming/theming.service';
@@ -99,10 +99,16 @@ export class Project extends Container {
       () => this._ticker$.next('single')
     );
 
+    // Everything added to a project is drawn in the theme current at the time,
+    // so only a switch after construction has anything to restyle. The
+    // effect's first run is not one: on a loaded board it would re-theme
+    // every component the load has just drawn.
+    let appliedTheme = untracked(() => this._themingService.currentTheme());
     this._themeEffect = effect(
       () => {
-        // Establish the dependency, then rebuild against the new theme.
-        this._themingService.currentTheme();
+        const theme = this._themingService.currentTheme();
+        if (theme === appliedTheme) return;
+        appliedTheme = theme;
         this.applyTheme();
       },
       { injector: getStaticInjector() }
@@ -229,6 +235,14 @@ export class Project extends Container {
   /** O(1), unlike counting {@link components}. */
   public get componentCount(): number {
     return this._componentsById.size;
+  }
+
+  /**
+   * Whether the board holds no committed content: {@link getContentBounds}
+   * would be `null`. O(1), where that walks every element.
+   */
+  public get isEmpty(): boolean {
+    return this._componentsById.size === 0 && this._wiresById.size === 0;
   }
 
   public get wires(): Iterable<Wire> {

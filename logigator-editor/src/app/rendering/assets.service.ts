@@ -105,7 +105,11 @@ export class AssetsService {
       style: options.style,
       chars: options.chars,
       resolution: 2,
-      dynamicFill: true
+      dynamicFill: true,
+      // Every bake face is monospaced (Roboto Mono, DSEG7, DSEG14), so each
+      // pair's kerning is zero. Measuring it is a `measureText` per character
+      // pair, ~0.24 s at boot, and repeats for every glyph added later.
+      skipKerning: true
     });
   }
 }
