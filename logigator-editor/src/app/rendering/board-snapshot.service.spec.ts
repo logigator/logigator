@@ -260,11 +260,12 @@ describe('BoardSnapshotService', () => {
   });
 
   it('hideText hides every text for the pass; on-screen text comes back, off-screen text stays hidden', () => {
-    // Enough elements to split the tree, so the far ones sit in an entry the
+    // Enough elements to split the tree, so the far ones sit in a group the
     // viewport culls.
-    const near = [0, 3, 6].map(() => makeAnd(2));
-    const far = [0, 3, 6].map(() => makeAnd(2));
-    [0, 3, 6].forEach((x, i) => {
+    const columns = [0, 3, 6, 9, 12, 15, 18, 21, 24];
+    const near = columns.map(() => makeAnd(2));
+    const far = columns.map(() => makeAnd(2));
+    columns.forEach((x, i) => {
       near[i].position.set(x, 0);
       far[i].position.set(500 + x, 500);
     });

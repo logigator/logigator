@@ -182,9 +182,9 @@ export class Project extends Container {
   }
 
   /**
-   * Puts the whole board into a snapshot's presentation — every entry
+   * Puts the whole board into a snapshot's presentation — every render group
    * un-culled, at `presentation.scale`, text hidden or shown — for a render
-   * against no viewport. Entries already in that state are not touched, which
+   * against no viewport. Groups already in that state are not touched, which
    * is what keeps a repeated snapshot (the minimap) from re-tuning and
    * re-batching the whole board each time. Pair with
    * {@link restoreBoardPresentation}.
@@ -197,7 +197,7 @@ export class Project extends Container {
 
   /**
    * Returns what the viewport shows to the board's presentation after a
-   * snapshot. Off-screen entries keep the snapshot's state, render groups
+   * snapshot. Off-screen groups keep the snapshot's state, instruction sets
    * included, until a cull pass brings them on screen — so the restore costs
    * the viewport, not the board.
    */
@@ -207,9 +207,9 @@ export class Project extends Container {
   }
 
   /**
-   * Un-culls every quad-tree entry in the board's presentation, for a render
-   * that runs no cull pass (a watch canvas). Elements themselves are never
-   * culled, so only entries are visited.
+   * Un-culls every quad-tree render group in the board's presentation, for a
+   * render that runs no cull pass (a watch canvas). Nothing below a group
+   * root is ever culled, so only group roots are visited.
    */
   public uncull(): void {
     this._components.uncull();

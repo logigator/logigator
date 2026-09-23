@@ -15,6 +15,7 @@ export type Quadrant = 'nw' | 'ne' | 'sw' | 'se';
 // Entries this size and up are their own render group, so a cull flip
 // rebuilds one entry-sized region instead of the whole scene. Lower means
 // smaller rebuilds but more groups, each breaking batching. Tight cell size.
+// It is also the cull granularity: only these entries are culled and stamped.
 const RENDER_GROUP_MIN_SIZE = 32;
 
 /**
@@ -46,16 +47,18 @@ export class QuadTreeEntry<T extends GridElement> extends Container {
   /** The tight cell: this entry's slot in the quadrant lattice. */
   readonly region: Rectangle;
 
-  // What every element here is tuned to, or null when they may disagree (a
-  // merge absorbed entries in different states). The zoom walk stops at
-  // culled entries and a snapshot leaves off-screen ones in its own state, so
-  // the cull pass compares this stamp against the board's and catches an
-  // entry up as it comes on screen.
+  // On a group root (see isGroupRoot): what every element in its group is
+  // tuned to — its own and those of the entries below it down to the next
+  // group root — or null when they may disagree (a merge absorbed groups in
+  // different states). The zoom walk stops at culled groups and a snapshot
+  // leaves off-screen ones in its own state, so the cull pass compares this
+  // stamp against the board's and catches a group up as it comes on screen.
+  // Always null below a group root, whose elements its group's stamp covers.
   presentation: Presentation | null;
 
   // Stays at position (0, 0) so elements reparented between entries never
   // shift their world coordinates. The loose boundsArea also drives culling,
-  // which flips `culled` at entry level only — no element is bounds-checked.
+  // which flips `culled` on group roots only — no element is bounds-checked.
   constructor(
     x: number,
     y: number,
@@ -67,11 +70,24 @@ export class QuadTreeEntry<T extends GridElement> extends Container {
       isRenderGroup: size >= RENDER_GROUP_MIN_SIZE
     });
     this.region = new Rectangle(x, y, size, size);
-    this.presentation = presentation;
+    this.presentation = this.isGroupRoot ? presentation : null;
   }
 
   get size() {
     return this.region.width;
+  }
+
+  /**
+   * Whether this entry roots a render group — and so is the unit culling and
+   * the presentation stamps work in. Entries below one are never culled: a
+   * flip there rebuilds the whole containing group anyway, so culling finer
+   * saves only drawing the off-screen part of a group partly on screen, which
+   * the GPU clips, and it made the cull walk visit every entry of a
+   * zoomed-out board on every frame. The root is never smaller than
+   * `INITIAL_SIZE`, so every entry has a group root at or above it.
+   */
+  get isGroupRoot(): boolean {
+    return this.size >= RENDER_GROUP_MIN_SIZE;
   }
 }
 
@@ -93,13 +109,13 @@ function quadrantOf(region: Rectangle, cx: number, cy: number): Quadrant {
  * which is what lets the tree double as the render/cull hierarchy.
  */
 export class QuadTreeContainer<T extends GridElement> extends Container {
-  private static readonly MAX_LEAF_ELEMENTS = 4;
-  private static readonly MIN_BRANCH_ELEMENTS = 2;
+  private static readonly MAX_LEAF_ELEMENTS = 16;
+  private static readonly MIN_BRANCH_ELEMENTS = 8;
   private static readonly INITIAL_SIZE = 64;
   private static readonly MIN_LEAF_SIZE = 1;
 
   /** The tuning numbers the reports in `quad-tree-debug.ts` read. */
-  private static readonly LIMITS: QuadTreeLimits = {
+  public static readonly LIMITS: QuadTreeLimits = {
     maxLeafElements: QuadTreeContainer.MAX_LEAF_ELEMENTS,
     minBranchElements: QuadTreeContainer.MIN_BRANCH_ELEMENTS,
     minLeafSize: QuadTreeContainer.MIN_LEAF_SIZE,
@@ -134,11 +150,13 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
       this.expand(centerX, centerY);
     }
 
+    let group = this._tree;
     for (let entry = this._tree; ;) {
+      if (entry.isGroupRoot) group = entry;
       if (elSize > entry.size / 2) {
         // Too large for any child cell: this entry's size class is the
         // element's, wherever in the cell its center lies.
-        this.presentElement(element, entry);
+        this.presentElement(element, group);
         entry.oversizeItems.addChild(element);
         this._items.set(element, entry);
         return;
@@ -156,7 +174,7 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
           continue;
         }
 
-        this.presentElement(element, entry);
+        this.presentElement(element, group);
         entry.leafItems.addChild(element);
         this._items.set(element, entry);
         return;
@@ -219,7 +237,7 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
   public detach(element: T): boolean {
     const entry = this._items.get(element);
     if (!entry) return false;
-    const stamp = entry.presentation;
+    const stamp = this.groupOf(entry).presentation;
     this.remove(element);
     if (!samePresentation(stamp, this._board)) {
       this.presentElement(element, null);
@@ -294,9 +312,11 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
   }
 
   /**
-   * Culls entries against a view rectangle in grid coordinates: an entry whose
-   * loose bounds miss the view is culled and its subtree skipped. Pure
-   * rectangle math — the camera transform is folded into the view rect once.
+   * Culls group roots against a view rectangle in grid coordinates: one whose
+   * loose bounds miss the view is culled and its subtree skipped. Entries
+   * below a group root are left unculled (see {@link QuadTreeEntry.isGroupRoot}),
+   * so the walk ends there. Pure rectangle math — the camera transform is
+   * folded into the view rect once.
    */
   public cull(view: Rectangle): void {
     this.cullEntry(this._tree, view);
@@ -306,23 +326,24 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
     const culled = !view.intersects(entry.boundsArea);
     entry.culled = culled;
     if (culled) return;
-    // On screen, so an entry the zoom walk skipped or a snapshot left behind
+    // On screen, so a group the zoom walk skipped or a snapshot left behind
     // catches up before the frame draws it.
-    this.presentItems(entry, this._board);
-    if (!entry.branches) return;
-    this.cullEntry(entry.branches.nw, view);
-    this.cullEntry(entry.branches.ne, view);
-    this.cullEntry(entry.branches.sw, view);
-    this.cullEntry(entry.branches.se, view);
+    this.presentGroup(entry, this._board);
+    const branches = entry.branches;
+    if (!branches || !branches.nw.isGroupRoot) return;
+    this.cullEntry(branches.nw, view);
+    this.cullEntry(branches.ne, view);
+    this.cullEntry(branches.sw, view);
+    this.cullEntry(branches.se, view);
   }
 
   /**
-   * Re-tunes the screen-constant visuals of every visible element to `scale`,
-   * skipping culled entries until {@link cull} brings them back. Re-tuning one
+   * Re-tunes the screen-constant visuals of every visible group to `scale`,
+   * skipping culled groups until {@link cull} brings them back. Re-tuning one
    * element dirties its transform and swaps its cached context, dirtying its
-   * whole render group's instruction set, so skipping the culled entries is
+   * whole render group's instruction set, so skipping the culled groups is
    * what keeps a zoom step proportional to what is on screen. A tree nobody
-   * culls has no culled entries, so the same walk covers all of it.
+   * culls has no culled groups, so the same walk covers all of it.
    */
   public applyScale(scale: number): void {
     this._board = { scale, textHidden: false };
@@ -331,9 +352,9 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
 
   private applyScaleToEntry(entry: QuadTreeEntry<T>): void {
     if (entry.culled) return;
-    this.presentItems(entry, this._board);
+    this.presentGroup(entry, this._board);
     const branches = entry.branches;
-    if (!branches) return;
+    if (!branches || !branches.nw.isGroupRoot) return;
     this.applyScaleToEntry(branches.nw);
     this.applyScaleToEntry(branches.ne);
     this.applyScaleToEntry(branches.sw);
@@ -341,11 +362,11 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
   }
 
   /**
-   * Un-culls every entry and tunes it to `presentation`, for a render that
-   * draws the whole tree against no viewport (a snapshot). Only entries not
+   * Un-culls every group and tunes it to `presentation`, for a render that
+   * draws the whole tree against no viewport (a snapshot). Only groups not
    * already in that state are touched, and the board's own presentation is
-   * left as it is: {@link cull} returns what comes on screen to it, and an
-   * entry that stays off-screen keeps the snapshot's state — with its render
+   * left as it is: {@link cull} returns what comes on screen to it, and a
+   * group that stays off-screen keeps the snapshot's state — with its render
    * group's instruction set — for the next snapshot to find current.
    */
   public present(presentation: Presentation): void {
@@ -353,7 +374,7 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
   }
 
   /**
-   * Un-culls every entry in the board's presentation, for a render with no
+   * Un-culls every group in the board's presentation, for a render with no
    * cull pass of its own (a watch canvas).
    */
   public uncull(): void {
@@ -365,9 +386,9 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
     presentation: Presentation
   ): void {
     entry.culled = false;
-    this.presentItems(entry, presentation);
+    this.presentGroup(entry, presentation);
     const branches = entry.branches;
-    if (!branches) return;
+    if (!branches || !branches.nw.isGroupRoot) return;
     this.presentEntry(branches.nw, presentation);
     this.presentEntry(branches.ne, presentation);
     this.presentEntry(branches.sw, presentation);
@@ -375,39 +396,66 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
   }
 
   /**
-   * Brings an entry's elements to `presentation`, touching only the half of
-   * it that differs from the stamp: a scale change swaps contexts, a text
-   * flip is a structural change, and neither is free.
+   * Brings a group root's elements — its own and those below it down to the
+   * next group root — to `presentation`, touching only the half of it that
+   * differs from the stamp: a scale change swaps contexts, a text flip is a
+   * structural change, and neither is free.
    */
-  private presentItems(
-    entry: QuadTreeEntry<T>,
+  private presentGroup(
+    group: QuadTreeEntry<T>,
     presentation: Presentation
   ): void {
-    const stamp = entry.presentation;
+    const stamp = group.presentation;
     if (samePresentation(stamp, presentation)) return;
     const rescale = stamp === null || stamp.scale !== presentation.scale;
     const retext =
       stamp === null || stamp.textHidden !== presentation.textHidden;
-    const apply = (element: T): void => {
+    this.tuneGroupItems(group, presentation, rescale, retext);
+    group.presentation = presentation;
+  }
+
+  private tuneGroupItems(
+    entry: QuadTreeEntry<T>,
+    presentation: Presentation,
+    rescale: boolean,
+    retext: boolean
+  ): void {
+    for (const element of entry.oversizeItems.children) {
       if (rescale) element.applyScale(presentation.scale);
       if (retext) element.setTextHidden?.(presentation.textHidden);
-    };
-    for (const element of entry.oversizeItems.children) apply(element);
-    if (entry.leafItems) {
-      for (const element of entry.leafItems.children) apply(element);
     }
-    entry.presentation = presentation;
+    if (entry.leafItems) {
+      for (const element of entry.leafItems.children) {
+        if (rescale) element.applyScale(presentation.scale);
+        if (retext) element.setTextHidden?.(presentation.textHidden);
+      }
+    }
+    const branches = entry.branches;
+    // Children the same size are all group roots or none: nested groups
+    // carry stamps of their own.
+    if (!branches || branches.nw.isGroupRoot) return;
+    this.tuneGroupItems(branches.nw, presentation, rescale, retext);
+    this.tuneGroupItems(branches.ne, presentation, rescale, retext);
+    this.tuneGroupItems(branches.sw, presentation, rescale, retext);
+    this.tuneGroupItems(branches.se, presentation, rescale, retext);
   }
 
   /**
-   * Tunes an arriving element to the entry it files into, whatever state its
-   * previous host left it in — or to the board's when `entry` is null (it is
+   * Tunes an arriving element to the group it files into, whatever state its
+   * previous host left it in — or to the board's when `group` is null (it is
    * leaving the tree) or its stamp is unknown.
    */
-  private presentElement(element: T, entry: QuadTreeEntry<T> | null): void {
-    const presentation = entry?.presentation ?? this._board;
+  private presentElement(element: T, group: QuadTreeEntry<T> | null): void {
+    const presentation = group?.presentation ?? this._board;
     element.applyScale(presentation.scale);
     element.setTextHidden?.(presentation.textHidden);
+  }
+
+  /** The group root at or above `entry`, whose stamp covers its elements. */
+  private groupOf(entry: QuadTreeEntry<T>): QuadTreeEntry<T> {
+    let group = entry;
+    while (!group.isGroupRoot) group = group.parent as QuadTreeEntry<T>;
+    return group;
   }
 
   /** Doubles the tree's size toward the given center. */
@@ -498,7 +546,8 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
 
     const b = entry.region;
     const half = b.width / 2;
-    // The children take the leaf's elements as they are, so its stamp too.
+    // Children that root groups of their own take the leaf's elements as
+    // they are, so its stamp too; smaller ones stay under its stamp.
     const stamp = entry.presentation;
 
     entry.branches = {
@@ -559,7 +608,11 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
 
     if (childrenCount < QuadTreeContainer.MIN_BRANCH_ELEMENTS) {
       entry.leafItems = entry.addChild(new Container<T>());
-      entry.presentation = this.mergedPresentation(entry);
+      // Children below a group root were already under this entry's group
+      // stamp, so only absorbing groups of their own can change it.
+      if (entry.branches.nw.isGroupRoot) {
+        entry.presentation = this.mergedPresentation(entry);
+      }
 
       // A child holds nothing larger than half this entry's cell, so it all
       // fits leafItems here.
@@ -583,11 +636,11 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
     return childrenCount;
   }
   /**
-   * The stamp a merge leaves on `entry`: the one every element it gathers
-   * shares, or null when they disagree — absorbed children may have been
-   * culled, so lagging behind the live zoom or still in a snapshot's state,
-   * and null makes the next visit re-tune the merged set. An empty holder's
-   * stamp is true of anything, so it has no say.
+   * The stamp a merge leaves on a group root absorbing child groups: the one
+   * every element it gathers shares, or null when they disagree — absorbed
+   * groups may have been culled, so lagging behind the live zoom or still in
+   * a snapshot's state, and null makes the next visit re-tune the merged set.
+   * An empty holder's stamp is true of anything, so it has no say.
    */
   private mergedPresentation(entry: QuadTreeEntry<T>): Presentation | null {
     let merged: Presentation | null = null;

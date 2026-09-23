@@ -234,8 +234,8 @@ render while a canvas host is alive.
 - **Culling is the caller's concern.** The board culls before rendering; a
   watch calls `Project.uncull()` and a snapshot `Project.presentForSnapshot()`
   instead, since no cull pass runs for them and `culled` bits from another view
-  would hide content. Both visit quad-tree entries only — elements are never
-  culled.
+  would hide content. Both visit the quad trees' group roots only — nothing
+  below one, and no element, is ever culled.
 
 ---
 
@@ -405,9 +405,20 @@ Every entry sits at position `(0, 0)`; the spatial extent is `region`/
 | Constant              | Value | Meaning                                                      |
 | --------------------- | ----- | ------------------------------------------------------------ |
 | `INITIAL_SIZE`        | 64    | Root cell in grid units — a small circuit needs no expansion |
-| `MAX_LEAF_ELEMENTS`   | 4     | A leaf this full splits on the next insert                   |
-| `MIN_BRANCH_ELEMENTS` | 2     | A branch with fewer descendants collapses on remove          |
+| `MAX_LEAF_ELEMENTS`   | 16    | A leaf this full splits on the next insert                   |
+| `MIN_BRANCH_ELEMENTS` | 8     | A branch with fewer descendants collapses on remove          |
 | `MIN_LEAF_SIZE`       | 1     | One-cell leaves never split (stops infinite recursion)       |
+
+The leaf limits were measured on the 99k-component bench board
+(`plans/rendering_bench.json`), 4 against 8 against 16 with `MIN_BRANCH_ELEMENTS`
+at half. 16 halves the entries against 8 (components 17.6k vs 34.9k, wires 15.0k
+vs 24.0k; 4 made 47.0k and 44.3k) — each entry being three containers every
+render-group build recurses through — and built the board no slower (4 was
+clearly slowest). Queries barely moved: a marquee-sized query costs the same
+within noise, dominated by the elements it returns, and a drag-collision-sized
+one ~40 µs instead of ~30 µs, against a handful issued per pointer move. Leaf
+size no longer affects culling or rebuild granularity, both being the render
+group's.
 
 **Callers must use `insert`/`remove`, not `addChild`** — the container's
 `super.addChild` is reserved for the internal tree structure.
@@ -466,12 +477,24 @@ also covers demand-driven `'single'` frames and needs no scheduling of its own.
 (allocation-free) and `QuadTreeContainer.cull(view)` tests it against entry
 `boundsArea` regions — pure rectangle math, no matrices.
 
-**Culling happens at entry level only; elements are never bounds-checked.** A
-culled entry's subtree is skipped whole, so an off-screen branch costs one test
-regardless of content and per-frame cost tracks visible _branches_, not visible
-_elements_. For an entry that is its own render group, "skipped whole" depends
-on the local pixi.js patch described under [Render groups](#render-groups):
-stock PixiJS skips it only when drawing, and still transforms and builds it. `Grid` and `ConnectionPointLayer` are never culled: chunks are
+**Culling happens at render-group granularity only; elements are never
+bounds-checked.** The walk tests the entries that root a render group (size ≥
+`RENDER_GROUP_MIN_SIZE`, `QuadTreeEntry.isGroupRoot`) and stops there: entries
+below a group root are never culled, and a group on screen draws its whole
+subtree. A culled group is skipped whole, so an off-screen region costs one test
+regardless of content and per-frame cost tracks visible _groups_, not visible
+entries or elements. "Skipped whole" depends on the local pixi.js patch
+described under [Render groups](#render-groups): stock PixiJS skips it only when
+drawing, and still transforms and builds it.
+
+Culling finer than a group was dropped because it bought nothing and cost the
+most: a flip of an entry inside a group is a structural change that rebuilds the
+whole containing group, the same as the group itself flipping, and constant
+flips at the viewport edge kept rebuilding groups on a pan; what it saved was
+drawing the off-screen part of a group partly on screen, which the GPU clips.
+And the walk visited every entry of both trees on each frame of a zoomed-out
+pan — 1.37 s of 2.18 s of frame time in a trace of the bench board, with the
+main thread saturated. `Grid` and `ConnectionPointLayer` are never culled: chunks are
 repositioned every frame anyway, and a flat dot layer with no spatial index would
 cost an O(n) check per dot with nothing to prune.
 
@@ -480,39 +503,47 @@ queries and collision logic are unaffected.
 
 ### The cull pass also drives zoom re-tuning and snapshot restore
 
-Every entry carries a **presentation stamp** (`QuadTreeEntry.presentation`):
-the zoom scale its elements' screen-constant visuals (stroke widths, port stubs,
-dots) are tuned to, and whether their text is hidden. The board's presentation
-is the live zoom with text shown. Switching an entry is not cheap — a re-tune
-dirties every leaf's transform and swaps every body's cached context, a text
-flip is a structural change — and doing either board-wide is what made zoom
-and the minimap expensive. The payoff is viewport-sized, so the work is too:
+Every group root carries a **presentation stamp** (`QuadTreeEntry.presentation`):
+the zoom scale its group's elements' screen-constant visuals (stroke widths,
+port stubs, dots) are tuned to, and whether their text is hidden. A stamp covers
+the group's own elements and those of every entry below it down to the next
+group root, which stamps its own; entries below a group root carry none. The
+board's presentation is the live zoom with text shown. Switching a group is not
+cheap — a re-tune dirties every leaf's transform and swaps every body's cached
+context, a text flip is a structural change — and doing either board-wide is
+what made zoom and the minimap expensive. The payoff is viewport-sized, so the
+work is too:
 
 - **`applyScale(scale)`** (what `ViewportController` calls per step) moves the
-  board's presentation and re-tunes only entries that are not culled.
-- **`cull(view)`** compares each on-screen entry's stamp against the board's and
+  board's presentation and re-tunes only groups that are not culled — all of a
+  visible group, including the part of it off screen.
+- **`cull(view)`** compares each on-screen group's stamp against the board's and
   catches it up on mismatch. Running right before each blit, an element is
   current by the time it can be drawn, whether zoom, a pan or a snapshot left it
   behind. Only the half of the stamp that differs is applied.
 - **`present(presentation)`** is the snapshot's walk
-  (`Project.presentForSnapshot`): it un-culls every entry and switches the ones
+  (`Project.presentForSnapshot`): it un-culls every group and switches the ones
   not already in the snapshot's state. The restore is just the next
   **`cull`** (`Project.restoreBoardPresentation`), so only what the viewport
-  shows returns to the board. Off-screen entries keep the snapshot's state —
-  and, their render groups being skipped while culled, their instruction sets —
-  so a repeated snapshot (the minimap, after every committed action) finds them
-  current and costs what the viewport moved through, not the board.
+  shows returns to the board. Off-screen groups keep the snapshot's state —
+  and, being skipped while culled, their instruction sets — so a repeated
+  snapshot (the minimap, after every committed action) finds them current and
+  costs what the viewport moved through, not the board.
 - **`uncull()`** is `present` in the board's presentation, for the watch canvas,
   which renders a project no cull pass ever runs on.
-- **`insert`** tunes the arriving element to the stamp of the entry it lands in
-  (it may carry a drag layer's, a lagging entry's or a snapshot's state).
-  **`splitLeaf`** hands the leaf's stamp to the children it fills, **`expand`**
-  gives the new, empty entries the board's (any stamp is true of an empty
-  entry), and **`minifyBranch`** keeps a stamp only if every element it gathers
-  shares it — absorbing a culled child in another state is the one case a stamp
-  would otherwise vouch wrongly. **`detach`** (a drag session taking elements
-  out) returns them to the board's presentation, so a ghost is never dragged
-  at a snapshot's scale with its labels hidden.
+- **`insert`** tunes the arriving element to the stamp of the group it lands in
+  (it may carry a drag layer's, a lagging group's or a snapshot's state).
+  **`splitLeaf`** hands the leaf's stamp to children that root groups of their
+  own; smaller children stay under the group's. **`expand`** gives the new,
+  empty groups the board's (any stamp is true of an empty group), and
+  **`minifyBranch`** absorbing child groups keeps a stamp only if every element
+  it gathers shares it — absorbing a culled group in another state is the one
+  case a stamp would otherwise vouch wrongly; merging entries below a group root
+  leaves the stamp alone, their elements being under it already. The root never
+  shrinks below `INITIAL_SIZE`, so every entry has a group root at or above it.
+  **`detach`** (a drag session taking elements out) returns them to the board's
+  presentation, so a ghost is never dragged at a snapshot's scale with its
+  labels hidden.
 
 Text hiding needs no tree walk: a component registers every text node it draws
 through `Component.addText`, and `setTextHidden` flips those; the state survives
@@ -552,8 +583,10 @@ frame. The scene is split so rebuilds stay local:
 - **Quad-tree entries of size ≥ `RENDER_GROUP_MIN_SIZE` (32 grid units)** are
   their own groups, so a flip rebuilds one entry-sized region. Lower means
   smaller rebuilds but more groups, each breaking batching and adding fixed
-  per-frame cost. The threshold compares the tight cell, so the group population
-  tracks the lattice, not the doubled loose bounds.
+  per-frame cost for every visible one (a culled group costs nothing per frame,
+  given the patch above). The threshold compares the tight cell, so the group
+  population tracks the lattice, not the doubled loose bounds. It is also the
+  cull and stamp granularity (see [Culling](#culling)).
 - **`ConnectionPointLayer`** is one group, so dot churn during edits never
   re-batches the board.
 - **`Grid`** is one group: a zoom step swaps every chunk's context, which from
