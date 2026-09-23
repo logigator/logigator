@@ -1,25 +1,28 @@
-import { effect, inject, Injectable, Injector, untracked } from '@angular/core';
-import type { PostHog } from 'posthog-js';
-import { WorkModeService } from '../work-mode/work-mode.service';
-import { WorkMode } from '../work-mode/work-mode.enum';
 import {
-  SimulationService,
-  SimulationState
-} from '../simulation/simulation.service';
-import { OnboardingService } from '../onboarding/onboarding.service';
-import { ProjectService } from '../project/project.service';
+  effect,
+  inject,
+  Injectable,
+  InjectionToken,
+  Injector,
+  runInInjectionContext
+} from '@angular/core';
+import type { PostHog } from 'posthog-js';
 import { TranslationService } from '../translation/translation.service';
-import { Project } from '../project/project';
-import { Action } from '../actions/action';
 import { environment } from '../../environments/environment';
 import { LoggingService } from '../logging/logging.service';
-import {
-  AnalyticsEvent,
-  operationProperties,
-  sanitizeProperties
-} from './analytics.mapping';
+import { sanitizeProperties } from './analytics.mapping';
 
 const ANALYTICS_CATEGORY = 'analytics';
+
+/**
+ * Event sources {@link AnalyticsService.init} wires up, each run in the root
+ * injection context. Provided by the app rather than imported here, so the
+ * sink — which leaf services such as toasts import — never pulls in what the
+ * sources watch.
+ */
+export const ANALYTICS_SOURCES = new InjectionToken<readonly (() => void)[]>(
+  'ANALYTICS_SOURCES'
+);
 
 /**
  * Distinguishes this app from the other surfaces sharing the PostHog project,
@@ -42,17 +45,16 @@ const MAX_DEFERRED_EVENTS = 20;
  * package sits behind a dynamic import, so a session that declines never
  * downloads it.
  *
- * Construction is dependency-free and the event sources are resolved lazily in
- * {@link init}, so the many services injecting this sink cannot form a DI cycle
- * with it.
+ * Construction is dependency-free and the language source is resolved lazily
+ * in {@link init}, so the many services injecting this sink cannot form a DI
+ * cycle with it. The editor's other event sources arrive through
+ * {@link ANALYTICS_SOURCES}, so importing the sink never imports them either.
  */
 @Injectable({ providedIn: 'root' })
 export class AnalyticsService {
   private readonly injector = inject(Injector);
 
   private initialized = false;
-  private subscribedProject: Project | null = null;
-  private unsubscribeActions: (() => void) | null = null;
 
   private posthog: PostHog | null = null;
   /** In-flight (or settled) import, so concurrent consent events share one. */
@@ -133,10 +135,9 @@ export class AnalyticsService {
   public init(): void {
     this.watchLanguage(this.injector.get(TranslationService));
     this.wireConsent();
-    this.watchWorkMode(this.injector.get(WorkModeService));
-    this.watchSimulation(this.injector.get(SimulationService));
-    this.watchTutorial(this.injector.get(OnboardingService));
-    this.watchActiveProject(this.injector.get(ProjectService));
+    for (const wire of this.injector.get(ANALYTICS_SOURCES, [])) {
+      runInInjectionContext(this.injector, wire);
+    }
   }
 
   /**
@@ -271,88 +272,4 @@ export class AnalyticsService {
       throw err;
     });
   }
-
-  private watchWorkMode(workMode: WorkModeService): void {
-    let previous = workMode.mode();
-    effect(
-      () => {
-        const mode = workMode.mode();
-        const prev = previous;
-        previous = mode;
-        // SIMULATION is covered by the simulation lifecycle events.
-        if (mode === prev || mode === WorkMode.SIMULATION) return;
-        this.capture(AnalyticsEvent.ToolSelected, { mode });
-      },
-      { injector: this.injector }
-    );
-  }
-
-  private watchSimulation(simulation: SimulationService): void {
-    let previous = simulation.state();
-    effect(
-      () => {
-        const state = simulation.state();
-        const prev = previous;
-        previous = state;
-        // Keyed on the session becoming active rather than on `ready`: with
-        // auto-start, `ready` and `running` are set in one synchronous block
-        // and only the latter is observed. Also keeps pause/play from
-        // re-reporting a start.
-        if (isActive(state) && !isActive(prev))
-          this.capture(AnalyticsEvent.SimulationStarted, {
-            runMode: untracked(() => simulation.mode())
-          });
-        else if (state === 'inactive' && prev !== 'inactive')
-          this.capture(AnalyticsEvent.SimulationStopped);
-      },
-      { injector: this.injector }
-    );
-  }
-
-  private watchTutorial(onboarding: OnboardingService): void {
-    let previous = onboarding.activeTutorial();
-    effect(
-      () => {
-        const tutorial = onboarding.activeTutorial();
-        const prev = previous;
-        previous = tutorial;
-        // End (completed vs abandoned) is captured where endTutorial runs,
-        // the only place carrying that distinction.
-        if (tutorial && tutorial !== prev)
-          this.capture(AnalyticsEvent.TutorialStarted, { tutorial });
-      },
-      { injector: this.injector }
-    );
-  }
-
-  private watchActiveProject(projects: ProjectService): void {
-    // ActionManager is per-project, so re-subscribe on a project change and
-    // tear down the previous hook to avoid leaks and double-counting.
-    effect(
-      () => {
-        const project = projects.activeProject();
-        if (project === this.subscribedProject) return;
-        this.unsubscribeActions?.();
-        this.unsubscribeActions = null;
-        this.subscribedProject = project;
-        if (!project) return;
-        this.unsubscribeActions = project.actionManager.onBeforeRecord(
-          (action) => this.captureOperation(action)
-        );
-      },
-      { injector: this.injector }
-    );
-  }
-
-  private captureOperation(action: Action): void {
-    this.capture(
-      AnalyticsEvent.EditorOperation,
-      operationProperties(action.serialize())
-    );
-  }
-}
-
-/** Whether a simulation session is up — `starting` is not yet a session. */
-function isActive(state: SimulationState): boolean {
-  return state === 'ready' || state === 'running';
 }

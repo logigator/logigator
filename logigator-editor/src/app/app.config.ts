@@ -19,6 +19,7 @@ import { provideLgLabels } from '@logigator/ui';
 import { ConsentService } from './consent/consent.service';
 import { AnalyticsService } from './analytics/analytics.service';
 import { provideDialogAnalytics } from './analytics/dialog-telemetry';
+import { provideEditorAnalyticsSources } from './analytics/editor-analytics-sources';
 import { TranslationService } from './translation/translation.service';
 import { AVAILABLE_LANGUAGES } from '@logigator/core';
 import { EditorLocationStrategy } from './routing/editor-location-strategy';
@@ -79,6 +80,7 @@ export const appConfig: ApplicationConfig = {
     provideAppInitializer(() => {
       inject(AnalyticsService).init();
     }),
+    provideEditorAnalyticsSources(),
     // @logigator/ui's stock strings come from `common.*`, so every surface the
     // library renders is localized without its call site passing a label. The
     // resolver is consulted per component construction, so a short-lived
