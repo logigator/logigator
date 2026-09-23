@@ -257,6 +257,10 @@ export class PersistenceService {
    * Creates a blank project and sets it as main. It registers with an empty id
    * and is not written to storage: a draft leaves no record until its first
    * save, which generates the id and moves the URL to `/local/:id`.
+   *
+   * The URL moves to the root only if it is somewhere else. The startup lands
+   * here for every visit that names no document, already at the root, and an
+   * unconditional `go` would push a duplicate entry for Back to step onto.
    */
   createAndSetEmptyProject(): Project {
     const project = new Project();
@@ -269,7 +273,9 @@ export class PersistenceService {
     });
 
     this._replaceMainProject(project);
-    this.location.go('/');
+    if (!this.location.isCurrentPathEqualTo('/')) {
+      this.location.go('/');
+    }
     return project;
   }
 

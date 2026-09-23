@@ -244,6 +244,7 @@ describe('PersistenceService', () => {
   let projectService: ProjectService;
   let httpMock: HttpTestingController;
   let locationGo: Mock;
+  let atRoot: boolean;
   let browserStore: FakeBrowserProjectStore;
   let componentStore: FakeBrowserComponentStore;
   let idMapStore: FakeComponentIdMapStore;
@@ -256,6 +257,7 @@ describe('PersistenceService', () => {
   beforeEach(() => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
     locationGo = vi.fn();
+    atRoot = true;
     browserStore = new FakeBrowserProjectStore();
     componentStore = new FakeBrowserComponentStore();
     idMapStore = new FakeComponentIdMapStore();
@@ -266,6 +268,7 @@ describe('PersistenceService', () => {
         provide: Location,
         useValue: {
           path: () => '/',
+          isCurrentPathEqualTo: (path: string) => path === '/' && atRoot,
           go: locationGo,
           replaceState: () => undefined,
           subscribe: () => ({ unsubscribe: () => undefined })
@@ -309,6 +312,22 @@ describe('PersistenceService', () => {
       expect(metadataStore.isDirty(project)).toBe(false);
       expect(projectService.mainProject()).toBe(project);
       expect(browserStore.records.size).toBe(0);
+    });
+
+    // The startup's blank draft, for every visit naming no document: the URL
+    // is already the root, and a push would leave a Back step to the same page.
+    it('leaves the URL alone when the editor is already at its root', () => {
+      service.createAndSetEmptyProject();
+
+      expect(locationGo).not.toHaveBeenCalled();
+    });
+
+    it('moves the URL to the root from a document', () => {
+      atRoot = false;
+
+      service.createAndSetEmptyProject();
+
+      expect(locationGo).toHaveBeenCalledWith('/');
     });
   });
 
@@ -690,6 +709,8 @@ describe('PersistenceService', () => {
     });
 
     it('on 404: does not throw and falls back to an empty placeholder', async () => {
+      // Opened at the document's own URL, which the fallback moves off.
+      atRoot = false;
       const promise = service.loadProjectAsMain('missing');
 
       const req = httpMock.expectOne(PROJECT_URL('missing'));
