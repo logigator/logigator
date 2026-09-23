@@ -21,18 +21,6 @@ export interface RendererLease {
 }
 
 /**
- * Marks a whole subtree un-culled. Manual renders never run a cull pass, so a
- * subtree culled against a different viewport must be forced visible first;
- * the next culled render re-culls against its own view.
- */
-export function uncullTree(container: Container): void {
-  container.culled = false;
-  for (const child of container.children) {
-    uncullTree(child as Container);
-  }
-}
-
-/**
  * Owns the single PixiJS renderer shared by every canvas and every offscreen
  * consumer, so the page runs one rendering context however many canvases are
  * live. Created lazily on the first lease with a `webgl` → `canvas` ladder;

@@ -17,6 +17,20 @@ export type Quadrant = 'nw' | 'ne' | 'sw' | 'se';
 // smaller rebuilds but more groups, each breaking batching. Tight cell size.
 const RENDER_GROUP_MIN_SIZE = 32;
 
+/**
+ * How an entry's elements are tuned: the zoom scale their screen-constant
+ * visuals follow, and whether their text is hidden. The board shows its live
+ * zoom with text; a snapshot asks for its own pair. Compared by value.
+ */
+export interface Presentation {
+  readonly scale: number;
+  readonly textHidden: boolean;
+}
+
+function samePresentation(a: Presentation | null, b: Presentation): boolean {
+  return a !== null && a.scale === b.scale && a.textHidden === b.textHidden;
+}
+
 // A node in a loose quad tree (looseness 2): `region` is the tight lattice
 // cell, `boundsArea` that cell doubled and centered on it. Elements file by
 // center point into the deepest cell at least as large as they are, so an
@@ -32,20 +46,28 @@ export class QuadTreeEntry<T extends GridElement> extends Container {
   /** The tight cell: this entry's slot in the quadrant lattice. */
   readonly region: Rectangle;
 
-  // Zoom scale this entry's elements were last tuned to, or null while it
-  // holds none. The scale walk stops at culled entries, so the cull pass
-  // compares this stamp and catches a lagging entry up when it un-culls.
-  appliedScale: number | null = null;
+  // What every element here is tuned to, or null when they may disagree (a
+  // merge absorbed entries in different states). The zoom walk stops at
+  // culled entries and a snapshot leaves off-screen ones in its own state, so
+  // the cull pass compares this stamp against the board's and catches an
+  // entry up as it comes on screen.
+  presentation: Presentation | null;
 
   // Stays at position (0, 0) so elements reparented between entries never
   // shift their world coordinates. The loose boundsArea also drives culling,
   // which flips `culled` at entry level only — no element is bounds-checked.
-  constructor(x: number, y: number, size: number) {
+  constructor(
+    x: number,
+    y: number,
+    size: number,
+    presentation: Presentation | null
+  ) {
     super({
       boundsArea: new Rectangle(x - size / 2, y - size / 2, size * 2, size * 2),
       isRenderGroup: size >= RENDER_GROUP_MIN_SIZE
     });
     this.region = new Rectangle(x, y, size, size);
+    this.presentation = presentation;
   }
 
   get size() {
@@ -85,20 +107,17 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
     renderGroupMinSize: RENDER_GROUP_MIN_SIZE
   };
 
+  // The board's presentation — live zoom, text shown — that the per-entry
+  // stamps catch up to on screen. See applyScale and cull.
+  private _board: Presentation = { scale: 1, textHidden: false };
+
   private _tree = super.addChild(
-    new QuadTreeEntry<T>(0, 0, QuadTreeContainer.INITIAL_SIZE)
+    new QuadTreeEntry<T>(0, 0, QuadTreeContainer.INITIAL_SIZE, this._board)
   );
   private _items = new Map<T, QuadTreeEntry<T>>();
 
-  // Target zoom scale the per-entry stamps catch up to. See applyScale.
-  private _appliedScale = 1;
-
   /** Inserts an element into the quad tree. */
   public insert(element: T): void {
-    // An arriving element carries whatever scale its previous host tuned it
-    // to. Re-tuning one already current costs only a cache lookup.
-    element.applyScale(this._appliedScale);
-
     if (this._items.has(element)) {
       this.remove(element);
     }
@@ -119,6 +138,7 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
       if (elSize > entry.size / 2) {
         // Too large for any child cell: this entry's size class is the
         // element's, wherever in the cell its center lies.
+        this.presentElement(element, entry);
         entry.oversizeItems.addChild(element);
         this._items.set(element, entry);
         return;
@@ -136,6 +156,7 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
           continue;
         }
 
+        this.presentElement(element, entry);
         entry.leafItems.addChild(element);
         this._items.set(element, entry);
         return;
@@ -185,6 +206,24 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
     if (entry.parent !== this)
       this.minifyBranch(entry.parent as QuadTreeEntry<T>);
     this._items.delete(element);
+    return true;
+  }
+
+  /**
+   * Removes an element that lives on outside the tree — a drag session's
+   * ghost — returning it to the board's presentation first. An element taken
+   * from an entry a snapshot left in its own state would otherwise be dragged
+   * at the snapshot's scale with its text hidden. Plain {@link remove} skips
+   * this: a removed element is destroyed or re-inserted, and insert syncs it.
+   */
+  public detach(element: T): boolean {
+    const entry = this._items.get(element);
+    if (!entry) return false;
+    const stamp = entry.presentation;
+    this.remove(element);
+    if (!samePresentation(stamp, this._board)) {
+      this.presentElement(element, null);
+    }
     return true;
   }
 
@@ -267,11 +306,9 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
     const culled = !view.intersects(entry.boundsArea);
     entry.culled = culled;
     if (culled) return;
-    // On screen, so an entry the scale walk skipped while off-screen catches
-    // up before the frame draws it.
-    if (entry.appliedScale !== this._appliedScale) {
-      this.applyScaleToItems(entry, this._appliedScale);
-    }
+    // On screen, so an entry the zoom walk skipped or a snapshot left behind
+    // catches up before the frame draws it.
+    this.presentItems(entry, this._board);
     if (!entry.branches) return;
     this.cullEntry(entry.branches.nw, view);
     this.cullEntry(entry.branches.ne, view);
@@ -288,45 +325,89 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
    * culls has no culled entries, so the same walk covers all of it.
    */
   public applyScale(scale: number): void {
-    this._appliedScale = scale;
-    this.applyScaleToEntry(this._tree, scale, true);
+    this._board = { scale, textHidden: false };
+    this.applyScaleToEntry(this._tree);
+  }
+
+  private applyScaleToEntry(entry: QuadTreeEntry<T>): void {
+    if (entry.culled) return;
+    this.presentItems(entry, this._board);
+    const branches = entry.branches;
+    if (!branches) return;
+    this.applyScaleToEntry(branches.nw);
+    this.applyScaleToEntry(branches.ne);
+    this.applyScaleToEntry(branches.sw);
+    this.applyScaleToEntry(branches.se);
   }
 
   /**
-   * Re-tunes every element regardless of culling. For renders that draw the
-   * whole board un-culled (see `uncullTree`), where the visible-only walk
-   * would leave off-screen elements at a foreign scale.
+   * Un-culls every entry and tunes it to `presentation`, for a render that
+   * draws the whole tree against no viewport (a snapshot). Only entries not
+   * already in that state are touched, and the board's own presentation is
+   * left as it is: {@link cull} returns what comes on screen to it, and an
+   * entry that stays off-screen keeps the snapshot's state — with its render
+   * group's instruction set — for the next snapshot to find current.
    */
-  public applyScaleToAll(scale: number): void {
-    this._appliedScale = scale;
-    this.applyScaleToEntry(this._tree, scale, false);
+  public present(presentation: Presentation): void {
+    this.presentEntry(this._tree, presentation);
   }
 
-  private applyScaleToEntry(
+  /**
+   * Un-culls every entry in the board's presentation, for a render with no
+   * cull pass of its own (a watch canvas).
+   */
+  public uncull(): void {
+    this.presentEntry(this._tree, this._board);
+  }
+
+  private presentEntry(
     entry: QuadTreeEntry<T>,
-    scale: number,
-    skipCulled: boolean
+    presentation: Presentation
   ): void {
-    if (skipCulled && entry.culled) return;
-    this.applyScaleToItems(entry, scale);
+    entry.culled = false;
+    this.presentItems(entry, presentation);
     const branches = entry.branches;
     if (!branches) return;
-    this.applyScaleToEntry(branches.nw, scale, skipCulled);
-    this.applyScaleToEntry(branches.ne, scale, skipCulled);
-    this.applyScaleToEntry(branches.sw, scale, skipCulled);
-    this.applyScaleToEntry(branches.se, scale, skipCulled);
+    this.presentEntry(branches.nw, presentation);
+    this.presentEntry(branches.ne, presentation);
+    this.presentEntry(branches.sw, presentation);
+    this.presentEntry(branches.se, presentation);
   }
 
-  private applyScaleToItems(entry: QuadTreeEntry<T>, scale: number): void {
-    for (const element of entry.oversizeItems.children) {
-      element.applyScale(scale);
-    }
+  /**
+   * Brings an entry's elements to `presentation`, touching only the half of
+   * it that differs from the stamp: a scale change swaps contexts, a text
+   * flip is a structural change, and neither is free.
+   */
+  private presentItems(
+    entry: QuadTreeEntry<T>,
+    presentation: Presentation
+  ): void {
+    const stamp = entry.presentation;
+    if (samePresentation(stamp, presentation)) return;
+    const rescale = stamp === null || stamp.scale !== presentation.scale;
+    const retext =
+      stamp === null || stamp.textHidden !== presentation.textHidden;
+    const apply = (element: T): void => {
+      if (rescale) element.applyScale(presentation.scale);
+      if (retext) element.setTextHidden?.(presentation.textHidden);
+    };
+    for (const element of entry.oversizeItems.children) apply(element);
     if (entry.leafItems) {
-      for (const element of entry.leafItems.children) {
-        element.applyScale(scale);
-      }
+      for (const element of entry.leafItems.children) apply(element);
     }
-    entry.appliedScale = scale;
+    entry.presentation = presentation;
+  }
+
+  /**
+   * Tunes an arriving element to the entry it files into, whatever state its
+   * previous host left it in — or to the board's when `entry` is null (it is
+   * leaving the tree) or its stamp is unknown.
+   */
+  private presentElement(element: T, entry: QuadTreeEntry<T> | null): void {
+    const presentation = entry?.presentation ?? this._board;
+    element.applyScale(presentation.scale);
+    element.setTextHidden?.(presentation.textHidden);
   }
 
   /** Doubles the tree's size toward the given center. */
@@ -337,25 +418,35 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
     const newX = expandLeft ? oldRegion.x - oldRegion.width : oldRegion.x;
     const newY = expandUp ? oldRegion.y - oldRegion.height : oldRegion.y;
 
+    // The new entries start empty, so any stamp is true of them; the
+    // board's is the one an arriving element will usually already carry.
     const newRoot = super.addChild(
-      new QuadTreeEntry<T>(newX, newY, oldRegion.width * 2)
+      new QuadTreeEntry<T>(newX, newY, oldRegion.width * 2, this._board)
     );
 
-    const nwEntry = new QuadTreeEntry<T>(newX, newY, oldRegion.width);
+    const nwEntry = new QuadTreeEntry<T>(
+      newX,
+      newY,
+      oldRegion.width,
+      this._board
+    );
     const neEntry = new QuadTreeEntry<T>(
       newX + oldRegion.width,
       newY,
-      oldRegion.width
+      oldRegion.width,
+      this._board
     );
     const swEntry = new QuadTreeEntry<T>(
       newX,
       newY + oldRegion.height,
-      oldRegion.width
+      oldRegion.width,
+      this._board
     );
     const seEntry = new QuadTreeEntry<T>(
       newX + oldRegion.width,
       newY + oldRegion.height,
-      oldRegion.width
+      oldRegion.width,
+      this._board
     );
 
     // The old tree occupies the quadrant opposite the expansion direction
@@ -407,12 +498,16 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
 
     const b = entry.region;
     const half = b.width / 2;
+    // The children take the leaf's elements as they are, so its stamp too.
+    const stamp = entry.presentation;
 
     entry.branches = {
-      nw: entry.addChild(new QuadTreeEntry<T>(b.x, b.y, half)),
-      ne: entry.addChild(new QuadTreeEntry<T>(b.x + half, b.y, half)),
-      sw: entry.addChild(new QuadTreeEntry<T>(b.x, b.y + half, half)),
-      se: entry.addChild(new QuadTreeEntry<T>(b.x + half, b.y + half, half))
+      nw: entry.addChild(new QuadTreeEntry<T>(b.x, b.y, half, stamp)),
+      ne: entry.addChild(new QuadTreeEntry<T>(b.x + half, b.y, half, stamp)),
+      sw: entry.addChild(new QuadTreeEntry<T>(b.x, b.y + half, half, stamp)),
+      se: entry.addChild(
+        new QuadTreeEntry<T>(b.x + half, b.y + half, half, stamp)
+      )
     };
 
     for (const element of [...entry.leafItems.children]) {
@@ -464,9 +559,7 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
 
     if (childrenCount < QuadTreeContainer.MIN_BRANCH_ELEMENTS) {
       entry.leafItems = entry.addChild(new Container<T>());
-      // Absorbed children may have been culled, so lagging behind the live
-      // zoom. Drop the stamp so the next cull re-tunes the merged set.
-      entry.appliedScale = null;
+      entry.presentation = this.mergedPresentation(entry);
 
       // A child holds nothing larger than half this entry's cell, so it all
       // fits leafItems here.
@@ -489,6 +582,29 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
 
     return childrenCount;
   }
+  /**
+   * The stamp a merge leaves on `entry`: the one every element it gathers
+   * shares, or null when they disagree — absorbed children may have been
+   * culled, so lagging behind the live zoom or still in a snapshot's state,
+   * and null makes the next visit re-tune the merged set. An empty holder's
+   * stamp is true of anything, so it has no say.
+   */
+  private mergedPresentation(entry: QuadTreeEntry<T>): Presentation | null {
+    let merged: Presentation | null = null;
+    const holders = [entry, ...Object.values(entry.branches!)];
+    for (const holder of holders) {
+      const count =
+        holder.oversizeItems.children.length +
+        (holder === entry ? 0 : (holder.leafItems?.children.length ?? 0));
+      if (count === 0) continue;
+      const stamp = holder.presentation;
+      if (stamp === null) return null;
+      if (merged === null) merged = stamp;
+      else if (!samePresentation(merged, stamp)) return null;
+    }
+    return merged ?? entry.presentation;
+  }
+
   /** Measures the live tree. Walks every entry, so debug-only. */
   public stats(): QuadTreeStats {
     return collectQuadTreeStats(

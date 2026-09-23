@@ -4,8 +4,13 @@ import { QuadTreeContainer } from './quad-tree-container';
 import { GridElement } from './grid-element';
 import { arrayWithExactContents } from '../../testing/vitest-helpers';
 
-/** `appliedScale` records what the tree last re-tuned the item to. */
-type TestItem = Container & GridElement & { appliedScale: number };
+/**
+ * `appliedScale` and `textHidden` record what the tree last tuned the item to;
+ * `tunings` counts the calls, so a spec can tell an entry skipped as current
+ * from one re-tuned to the same values.
+ */
+type TestItem = Container &
+  GridElement & { appliedScale: number; textHidden: boolean; tunings: number };
 
 describe('QuadTreeContainer', () => {
   let tree: QuadTreeContainer<TestItem>;
@@ -13,6 +18,20 @@ describe('QuadTreeContainer', () => {
   beforeEach(() => {
     tree = new QuadTreeContainer<TestItem>();
   });
+
+  function track(c: TestItem): void {
+    c.appliedScale = 1;
+    c.textHidden = false;
+    c.tunings = 0;
+    c.applyScale = (scale) => {
+      c.appliedScale = scale;
+      c.tunings++;
+    };
+    c.setTextHidden = (hidden) => {
+      c.textHidden = hidden;
+      c.tunings++;
+    };
+  }
 
   /** Creates a Container with a fixed grid-space rectangle (x, y, w, h). */
   function makeItem(x: number, y: number, w: number, h: number): TestItem {
@@ -29,8 +48,7 @@ describe('QuadTreeContainer', () => {
     // contract the tree relies on.
     c.intersectsGridBounds = (rect) => rect.intersects(c.gridBounds);
     c.intersectsPickBounds = (rect) => rect.intersects(c.pickBounds);
-    c.appliedScale = 1;
-    c.applyScale = (scale) => (c.appliedScale = scale);
+    track(c);
     return c;
   }
 
@@ -55,8 +73,7 @@ describe('QuadTreeContainer', () => {
     Object.defineProperty(c, 'cullBounds', box(pickWidth));
     c.intersectsGridBounds = (rect) => rect.intersects(c.gridBounds);
     c.intersectsPickBounds = (rect) => rect.intersects(c.pickBounds);
-    c.appliedScale = 1;
-    c.applyScale = (scale) => (c.appliedScale = scale);
+    track(c);
     return c;
   }
 
@@ -798,16 +815,6 @@ describe('QuadTreeContainer', () => {
       expect(calls).toEqual([]);
     });
 
-    it('applyScaleToAll reaches culled elements too', () => {
-      const near = insertCluster(2, 2);
-      const far = insertCluster(40, 40);
-      tree.cull(new Rectangle(0, 0, 10, 10));
-
-      tree.applyScaleToAll(2);
-
-      for (const item of [...near, ...far]) expect(item.appliedScale).toBe(2);
-    });
-
     it('brings an inserted element to the live scale', () => {
       tree.applyScale(2);
 
@@ -837,6 +844,180 @@ describe('QuadTreeContainer', () => {
       tree.cull(new Rectangle(0, 0, 64, 64));
 
       expect(far.appliedScale).toBe(2);
+    });
+  });
+
+  describe('presentation', () => {
+    const SNAPSHOT = { scale: 0.25, textHidden: true };
+    const isCulled = (item: TestItem): boolean => {
+      for (let c: Container | null = item; c; c = c.parent) {
+        if (c.culled) return true;
+      }
+      return false;
+    };
+    const inSnapshot = (item: TestItem) =>
+      item.appliedScale === SNAPSHOT.scale && item.textHidden;
+    const onBoard = (item: TestItem, scale = 1) =>
+      item.appliedScale === scale && !item.textHidden;
+    const resetTunings = (items: TestItem[]) => {
+      for (const item of items) item.tunings = 0;
+    };
+
+    it('present un-culls and tunes every entry, culled ones included', () => {
+      const near = insertCluster(2, 2);
+      const far = insertCluster(40, 40);
+      tree.cull(new Rectangle(0, 0, 10, 10));
+
+      tree.present(SNAPSHOT);
+
+      for (const item of [...near, ...far]) {
+        expect(isCulled(item)).toBe(false);
+        expect(inSnapshot(item)).toBe(true);
+      }
+    });
+
+    it('a cull returns only on-screen entries to the board; the rest keep the snapshot', () => {
+      const near = insertCluster(2, 2);
+      const far = insertCluster(40, 40);
+      tree.applyScale(2);
+
+      tree.present(SNAPSHOT);
+      tree.cull(new Rectangle(0, 0, 10, 10));
+
+      for (const item of near) expect(onBoard(item, 2)).toBe(true);
+      for (const item of far) expect(inSnapshot(item)).toBe(true);
+
+      // Panning there later catches them up to the board's zoom.
+      tree.cull(new Rectangle(38, 38, 10, 10));
+      for (const item of far) expect(onBoard(item, 2)).toBe(true);
+    });
+
+    it('a repeated snapshot re-tunes only what the viewport returned to the board', () => {
+      const near = insertCluster(2, 2);
+      const far = insertCluster(40, 40);
+      tree.present(SNAPSHOT);
+      tree.cull(new Rectangle(0, 0, 10, 10));
+      resetTunings([...near, ...far]);
+
+      tree.present(SNAPSHOT);
+
+      for (const item of far) expect(item.tunings).toBe(0);
+      for (const item of near) expect(inSnapshot(item)).toBe(true);
+    });
+
+    it('touches only the half of the stamp that differs', () => {
+      const [item] = insertCluster(2, 2);
+      resetTunings([item]);
+      tree.present({ scale: 1, textHidden: true });
+
+      expect(item.textHidden).toBe(true);
+      // The scale already matched, so only the text flip ran.
+      expect(item.tunings).toBe(1);
+    });
+
+    it('insert tunes an element to the state of the entry it lands in', () => {
+      insertCluster(40, 40);
+      tree.present(SNAPSHOT);
+      tree.cull(new Rectangle(0, 0, 10, 10));
+
+      const offScreen = makeItem(41, 41, 1, 1);
+      const onScreen = makeItem(3, 3, 1, 1);
+      tree.insert(offScreen);
+      tree.insert(onScreen);
+
+      expect(inSnapshot(offScreen)).toBe(true);
+      expect(onBoard(onScreen)).toBe(true);
+      // Both stamps stay truthful: the next snapshot need not touch either.
+      resetTunings([offScreen]);
+      tree.present(SNAPSHOT);
+      expect(offScreen.tunings).toBe(0);
+    });
+
+    it('a leaf split hands its stamp to the children it fills', () => {
+      // A near cluster splits the root, so the far items fill a leaf of their
+      // own that the view below leaves culled.
+      insertCluster(2, 2);
+      const items = [
+        makeItem(40, 40, 1, 1),
+        makeItem(42, 40, 1, 1),
+        makeItem(40, 42, 1, 1),
+        makeItem(42, 42, 1, 1)
+      ];
+      for (const item of items) tree.insert(item);
+      tree.present(SNAPSHOT);
+      tree.cull(new Rectangle(0, 0, 10, 10));
+
+      // A fifth element overflows the leaf and splits it.
+      const fifth = makeItem(41, 41, 1, 1);
+      tree.insert(fifth);
+      resetTunings(items);
+
+      tree.present(SNAPSHOT);
+
+      for (const item of items) expect(item.tunings).toBe(0);
+      expect(inSnapshot(fifth)).toBe(true);
+    });
+
+    it('a merge of elements that agree keeps the stamp, one that disagrees drops it', () => {
+      // Four elements in nw, one in se; the snapshot leaves se behind.
+      const near = [
+        makeItem(2, 2, 1, 1),
+        makeItem(4, 2, 1, 1),
+        makeItem(2, 4, 1, 1),
+        makeItem(4, 4, 1, 1)
+      ];
+      const far = makeItem(40, 40, 1, 1);
+      for (const item of [...near, far]) tree.insert(item);
+      tree.present(SNAPSHOT);
+      tree.cull(new Rectangle(0, 0, 10, 10));
+      expect(inSnapshot(far)).toBe(true);
+
+      // Emptying nw collapses the branches around the lagging element: the
+      // merged stamp cannot vouch for it, so the next visit re-tunes it.
+      for (const item of near) tree.remove(item);
+      tree.cull(new Rectangle(0, 0, 64, 64));
+      expect(onBoard(far)).toBe(true);
+    });
+
+    it('expanding keeps the old tree in the state it was left in', () => {
+      const far = insertCluster(40, 40);
+      tree.present(SNAPSHOT);
+      tree.cull(new Rectangle(0, 0, 10, 10));
+
+      // Far outside the 64-unit root, so the tree grows around the old one.
+      const outlier = makeItem(500, 500, 1, 1);
+      tree.insert(outlier);
+      resetTunings(far);
+
+      tree.present(SNAPSHOT);
+
+      for (const item of far) expect(item.tunings).toBe(0);
+      expect(inSnapshot(outlier)).toBe(true);
+    });
+
+    it('detach returns an element to the board, whatever its entry was left in', () => {
+      const far = insertCluster(40, 40);
+      tree.applyScale(2);
+      tree.present(SNAPSHOT);
+      tree.cull(new Rectangle(0, 0, 10, 10));
+
+      tree.detach(far[0]);
+
+      expect(onBoard(far[0], 2)).toBe(true);
+      expect([...tree.items]).not.toContain(far[0]);
+    });
+
+    it('uncull un-culls in the board presentation', () => {
+      const far = insertCluster(40, 40);
+      tree.present(SNAPSHOT);
+      tree.cull(new Rectangle(0, 0, 10, 10));
+
+      tree.uncull();
+
+      for (const item of far) {
+        expect(isCulled(item)).toBe(false);
+        expect(onBoard(item)).toBe(true);
+      }
     });
   });
 });

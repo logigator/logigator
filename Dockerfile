@@ -31,6 +31,9 @@ COPY ["./logigator-web/package.json", "./logigator-web/"]
 # stub dir, so it must be copied in full (not package.json-only) for the
 # immutable install to reproduce the pinned hash.
 COPY ["./logigator-editor/packages/router-stub", "./logigator-editor/packages/router-stub/"]
+# pixi.js resolves through a local patch (see logigator-editor/docs/rendering.md),
+# which the lockfile names by path.
+COPY ["./.yarn/patches", "./.yarn/patches/"]
 RUN yarn install --immutable --inline-builds
 
 COPY ["./angular.json", "./tsconfig.json", "./"]

@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   BitmapText,
   Container,
+  Point,
   Rectangle,
   Renderer,
   RenderTexture
@@ -150,21 +151,29 @@ describe('BoardSnapshotService', () => {
     texture.destroy(true);
   });
 
-  it('renders at the reference scale (not the multiplier) and restores live scale', () => {
+  it('renders at the reference scale (not the multiplier) and returns on-screen content to the live zoom', () => {
     const comp = makeAnd(2);
     comp.position.set(0, 0);
     project.addComponent(comp);
-    const spy = vi.spyOn(comp, 'applyScale');
+    project.viewport.resizeViewport(800, 600);
+    project.viewport.zoomBy(2, new Point(0, 0));
+    const liveScale = project.scale.x;
+    expect(liveScale).not.toBe(1);
+
+    let scaleDuringRender: number | null = null;
+    (renderer.render as Mock).mockImplementation((opts: RenderCall) => {
+      renderCalls.push(opts);
+      scaleDuringRender = comp.appliedScale;
+    });
 
     const texture = service.renderProjectToTexture(project, {
       multiplier: 3,
       background: 'solid'
     });
 
-    const scales = spy.mock.calls.map((c) => c[0]);
-    expect(scales).toContain(1); // reference scale → proportional line weights
-    expect(scales).not.toContain(3); // not scaled by the multiplier
-    expect(scales.at(-1)).toBe(project.scale.x); // restored to live scale last
+    // Reference scale → proportional line weights, not the multiplier's.
+    expect(scaleDuringRender).toBe(1);
+    expect(comp.appliedScale).toBe(liveScale);
     texture.destroy(true);
   });
 
@@ -250,17 +259,27 @@ describe('BoardSnapshotService', () => {
     texture.destroy(true);
   });
 
-  it('hideText hides text nodes during the content pass and restores them', () => {
-    const comp = makeAnd(2);
-    comp.position.set(0, 0);
-    project.addComponent(comp);
-    const texts = collectBitmapTexts(project.gridSpace);
-    expect(texts.length).toBeGreaterThan(0);
+  it('hideText hides every text for the pass; on-screen text comes back, off-screen text stays hidden', () => {
+    // Enough elements to split the tree, so the far ones sit in an entry the
+    // viewport culls.
+    const near = [0, 3, 6].map(() => makeAnd(2));
+    const far = [0, 3, 6].map(() => makeAnd(2));
+    [0, 3, 6].forEach((x, i) => {
+      near[i].position.set(x, 0);
+      far[i].position.set(500 + x, 500);
+    });
+    for (const comp of [...near, ...far]) project.addComponent(comp);
+    project.viewport.resizeViewport(800, 600);
+    const textsOf = (comps: Component[]) =>
+      comps.flatMap((c) => collectBitmapTexts(c));
+    expect(textsOf(near).length).toBeGreaterThan(0);
 
     let hiddenDuringRender = false;
     (renderer.render as Mock).mockImplementation((opts: RenderCall) => {
       renderCalls.push(opts);
-      hiddenDuringRender = texts.every((t) => !t.renderable);
+      hiddenDuringRender = textsOf([...near, ...far]).every(
+        (t) => !t.renderable
+      );
     });
 
     const texture = service.renderProjectToTexture(project, {
@@ -270,7 +289,13 @@ describe('BoardSnapshotService', () => {
     });
 
     expect(hiddenDuringRender).toBe(true);
-    expect(texts.every((t) => t.renderable)).toBe(true);
+    expect(textsOf(near).every((t) => t.renderable)).toBe(true);
+    // Left for the next snapshot to find already hidden; the cull pass shows
+    // them when they come on screen.
+    expect(textsOf(far).every((t) => !t.renderable)).toBe(true);
+    project.viewport.setPosition(new Point(-500 * 16, -500 * 16));
+    project.cull();
+    expect(textsOf(far).every((t) => t.renderable)).toBe(true);
     texture.destroy(true);
   });
 

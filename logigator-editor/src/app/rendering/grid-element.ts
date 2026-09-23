@@ -29,6 +29,13 @@ export interface GridElement extends ContainerChild {
    * the live zoom, off-screen ones lag until the cull pass returns them.
    */
   applyScale(scale: number): void;
+  /**
+   * Hides or shows every text node the element draws, redraws included. The
+   * quad tree owns this too: a snapshot too small for glyphs hides them, and
+   * an off-screen entry keeps them hidden until the cull pass returns it.
+   * Elements that draw no text leave it out.
+   */
+  setTextHidden?(hidden: boolean): void;
 }
 
 export interface Connectable extends GridElement {

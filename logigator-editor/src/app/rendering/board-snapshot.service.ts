@@ -1,16 +1,14 @@
 import { effect, inject, Injectable, Injector } from '@angular/core';
 import {
-  BitmapText,
   Container,
   Graphics,
   Matrix,
   Rectangle,
   RendererType,
   RenderTexture,
-  Text,
   type ColorSource
 } from 'pixi.js';
-import { RendererService, uncullTree } from './renderer.service';
+import { RendererService } from './renderer.service';
 import { GraphicsProviderService } from './graphics-provider.service';
 import { GridGraphics } from './graphics/grid.graphics';
 import { ThemingService } from '../theming/theming.service';
@@ -32,7 +30,8 @@ export interface SnapshotOptions {
   marginGrid?: number;
   /**
    * Hides every text node during the content pass, for outputs too small for
-   * glyphs to read (minimap).
+   * glyphs to read (minimap). Off-screen content stays hidden afterwards
+   * until it comes on screen, so a repeated snapshot finds it already hidden.
    */
   hideText?: boolean;
   /**
@@ -420,20 +419,17 @@ export class BoardSnapshotService {
       .scale(pxPerUnit, pxPerUnit)
       .translate(tx, ty);
 
-    // The cull pass runs only on the on-screen ticker render, so off-screen
-    // quad-tree entries still carry last frame's `culled` bit and would be
-    // missing here. The next on-screen frame re-culls.
-    uncullTree(project.gridSpace);
+    // Render un-culled at `lineScale`, independent of the live zoom, with
+    // text hidden or shown as asked. Only entries not already in that state
+    // are touched, and the restore returns just the viewport to the board's
+    // state: off-screen entries keep the snapshot's, so the next snapshot
+    // (the minimap, after every edit) re-tunes and re-batches only what the
+    // viewport moved through. Nothing renders on-screen in between.
+    project.presentForSnapshot({
+      scale: lineScale,
+      textHidden: options.hideText ?? false
+    });
     project.setOverlayVisible(false);
-
-    // Render at `lineScale`, independent of the live zoom. Text is
-    // pre-rasterized, so glyph resolution is bumped separately. Everything is
-    // restored afterwards; nothing renders on-screen in between.
-    const liveScale = project.scale.x;
-    project.applyContentScale(lineScale);
-    const restoreText = options.hideText
-      ? this._hideTextNodes(project.gridSpace)
-      : this._tuneTextResolution(project.gridSpace, renderMultiplier);
     // Selection is a tint on the real scene objects, so a snapshot taken with
     // a live selection would bake the highlight in.
     const restoreTint = project.selectionManager.suppressTintForRender();
@@ -447,8 +443,7 @@ export class BoardSnapshotService {
       });
     } finally {
       restoreTint();
-      project.applyContentScale(liveScale);
-      restoreText();
+      project.restoreBoardPresentation();
       project.setOverlayVisible(true);
       grid?.destroy({ children: true });
     }
@@ -493,39 +488,5 @@ export class BoardSnapshotService {
       }
     }
     return container;
-  }
-
-  private _collectTextNodes(container: Container): (Text | BitmapText)[] {
-    const out: (Text | BitmapText)[] = [];
-    const visit = (node: Container): void => {
-      if (node instanceof Text || node instanceof BitmapText) out.push(node);
-      for (const child of node.children) visit(child as Container);
-    };
-    visit(container);
-    return out;
-  }
-
-  /** Hides every text node for the content pass; returns the restore. */
-  private _hideTextNodes(container: Container): () => void {
-    const nodes = this._collectTextNodes(container);
-    const renderable = nodes.map((n) => n.renderable);
-    for (const node of nodes) node.renderable = false;
-    return () => nodes.forEach((n, i) => (n.renderable = renderable[i]));
-  }
-
-  /**
-   * Bumps `Text` glyph resolution for the content pass; returns the restore.
-   * `BitmapText` draws from the shared atlas and has no per-node resolution.
-   */
-  private _tuneTextResolution(
-    container: Container,
-    resolution: number
-  ): () => void {
-    const nodes = this._collectTextNodes(container).filter(
-      (n): n is Text => n instanceof Text
-    );
-    const original = nodes.map((n) => n.resolution);
-    for (const node of nodes) node.resolution = resolution;
-    return () => nodes.forEach((n, i) => (n.resolution = original[i]));
   }
 }

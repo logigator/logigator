@@ -8205,7 +8205,7 @@ __metadata:
     marked-katex-extension: "npm:^5.0.0"
     ngx-markdown: "npm:^22.0.2"
     ngxtension: "npm:^7.3.0"
-    pixi.js: "npm:^8.21.0"
+    pixi.js: "patch:pixi.js@npm%3A8.21.0#~/.yarn/patches/pixi.js-npm-8.21.0-d776aa6eb9.patch"
     postcss: "npm:^8.5.28"
     posthog-js: "npm:^1.433.9"
     regexparam: "npm:^3.0.0"
@@ -9836,7 +9836,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pixi.js@npm:^8.21.0":
+"pixi.js@npm:8.21.0":
   version: 8.21.0
   resolution: "pixi.js@npm:8.21.0"
   dependencies:
@@ -9851,6 +9851,24 @@ __metadata:
     parse-svg-path: "npm:^0.2.0"
     tiny-lru: "npm:^11.4.7"
   checksum: 10c0/c21f1d33c489d86163457309d340a164ebaf0c300b2c6749d1a86afba84c4ef783d758c143a57cf22658a5fb31de482c2eaddde15dcaa2cb4242ecb3849c4b58
+  languageName: node
+  linkType: hard
+
+"pixi.js@patch:pixi.js@npm%3A8.21.0#~/.yarn/patches/pixi.js-npm-8.21.0-d776aa6eb9.patch":
+  version: 8.21.0
+  resolution: "pixi.js@patch:pixi.js@npm%3A8.21.0#~/.yarn/patches/pixi.js-npm-8.21.0-d776aa6eb9.patch::version=8.21.0&hash=c2d5e6"
+  dependencies:
+    "@pixi/colord": "npm:^2.9.6"
+    "@types/earcut": "npm:^3.0.0"
+    "@webgpu/types": "npm:^0.1.69"
+    "@xmldom/xmldom": "npm:^0.8.15"
+    earcut: "npm:^3.0.2"
+    eventemitter3: "npm:^5.0.1"
+    gifuct-js: "npm:^2.1.2"
+    ismobilejs: "npm:^1.1.1"
+    parse-svg-path: "npm:^0.2.0"
+    tiny-lru: "npm:^11.4.7"
+  checksum: 10c0/022279b49bca7193fb62fd71045785b514a84175080d9ca162f56a5d99768c60165874d8c0a54c5f94866caa1814c8ad1fde0ceb1c6be795f88d3b26bec5e0ef
   languageName: node
   linkType: hard
 

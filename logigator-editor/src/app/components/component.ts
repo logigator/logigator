@@ -140,6 +140,10 @@ export abstract class Component<
   private _rescalers: ((scale: number) => void)[] = [];
   // Reset on each _draw(); refreshTheme runs them in place.
   private _themeRestylers: (() => void)[] = [];
+  // Every text node the current draw made, so hiding them needs no tree walk.
+  // Reset on each _draw(); _textHidden survives it.
+  private _texts: Container[] = [];
+  private _textHidden = false;
   // Survives redraws; _drawConnections re-applies it to the rebuilt stubs.
   private readonly _poweredPorts = new Set<number>();
 
@@ -455,6 +459,34 @@ export abstract class Component<
     this.refreshTint();
   }
 
+  /**
+   * Registers a text node the draw made, so {@link setTextHidden} reaches it
+   * and a redraw keeps honouring the hidden state. Call from draw() for every
+   * text a component draws.
+   */
+  protected addText<T extends Container>(text: T): T {
+    this._texts.push(text);
+    text.renderable = !this._textHidden;
+    return text;
+  }
+
+  public get textHidden(): boolean {
+    return this._textHidden;
+  }
+
+  /**
+   * Hides or shows this component's text. The quad tree drives it: a snapshot
+   * too small for glyphs hides them, and an off-screen entry keeps them hidden
+   * until the cull pass brings it back on screen.
+   */
+  public setTextHidden(hidden: boolean): void {
+    if (hidden === this._textHidden) return;
+    this._textHidden = hidden;
+    for (const text of this._texts) {
+      text.renderable = !hidden;
+    }
+  }
+
   public override destroy(options?: DestroyOptions): void {
     this.destroy$.next();
     this.destroy$.complete();
@@ -712,6 +744,7 @@ export abstract class Component<
     this._portBubbles = new Map();
     this._rescalers = [];
     this._themeRestylers = [];
+    this._texts = [];
 
     this.draw();
     this._drawSymbol();
@@ -809,7 +842,7 @@ export abstract class Component<
     text.scale.set(PX);
     text.position.set(this.bodyGridWidth / 2, this.bodyGridHeight / 2);
     this.registerRotationCounterContainer(text);
-    this.addChild(text);
+    this.addChild(this.addText(text));
   }
 
   private _drawConnections(n: number, type: 'inputs' | 'outputs'): void {
@@ -895,7 +928,7 @@ export abstract class Component<
         }
 
         this.registerRotationCounterContainer(text);
-        container.addChild(text);
+        container.addChild(this.addText(text));
       }
     }
 

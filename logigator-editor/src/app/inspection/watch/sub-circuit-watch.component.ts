@@ -26,8 +26,7 @@ import type {
 } from '../../components/custom/sub-circuit-watch';
 import {
   RendererLease,
-  RendererService,
-  uncullTree
+  RendererService
 } from '../../rendering/renderer.service';
 
 /**
@@ -260,9 +259,9 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
     if (this.destroyed || !this.lease || !project) {
       return;
     }
-    // No cull pass runs on watch renders — force the subtree visible so a
+    // No cull pass runs on watch renders — force every entry visible so a
     // stale `culled` bit can't hide content.
-    uncullTree(project);
+    project.uncull();
     this.lease.render(project, this.canvas.nativeElement);
   }
 }

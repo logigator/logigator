@@ -102,7 +102,7 @@ circuit**, split between the component layer and `inspection/watch/`:
 - Watch canvases lease the **app-wide shared renderer**
   (`rendering/renderer.service.ts`), the board's own, so the page runs one
   rendering context however many watches are open. Each render force-unculls the
-  watch project (`uncullTree`; no cull pass runs on watch renders) and scales
+  watch project (`Project.uncull()`; no cull pass runs on watch renders) and scales
   the CSS-pixel viewport transform up to the canvas's DPR-sized backing store.
 - **`SubCircuitWatchComponent`** — the canvas; the breadcrumb trail renders in
   the hosting header via `titleParts`. Input runs through the board's own

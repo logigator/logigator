@@ -13,7 +13,10 @@ import { ActionManager } from '../actions/action-manager';
 import { SelectionManager } from './selection-manager';
 import { Wire } from '../wires/wire';
 import { Direction, WireDirection } from '@logigator/core';
-import { QuadTreeContainer } from '../rendering/quad-tree-container';
+import {
+  Presentation,
+  QuadTreeContainer
+} from '../rendering/quad-tree-container';
 import { WireTopology } from './wire-topology';
 import { ViewportController } from './viewport-controller';
 import { ConnectionPointManager } from '../connection-points/connection-point-manager';
@@ -173,14 +176,38 @@ export class Project extends Container {
   }
 
   /**
-   * Re-tunes every content element's scale-dependent visuals, culled entries
-   * included — what an un-culled whole-board render needs, since {@link cull}
-   * is what would otherwise catch the off-screen ones up.
+   * Puts the whole board into a snapshot's presentation — every entry
+   * un-culled, at `presentation.scale`, text hidden or shown — for a render
+   * against no viewport. Entries already in that state are not touched, which
+   * is what keeps a repeated snapshot (the minimap) from re-tuning and
+   * re-batching the whole board each time. Pair with
+   * {@link restoreBoardPresentation}.
    */
-  public applyContentScale(scale: number): void {
-    this._components.applyScaleToAll(scale);
-    this._wires.applyScaleToAll(scale);
-    this._connectionPoints.layer.applyScale(scale);
+  public presentForSnapshot(presentation: Presentation): void {
+    this._components.present(presentation);
+    this._wires.present(presentation);
+    this._connectionPoints.layer.applyScale(presentation.scale);
+  }
+
+  /**
+   * Returns what the viewport shows to the board's presentation after a
+   * snapshot. Off-screen entries keep the snapshot's state, render groups
+   * included, until a cull pass brings them on screen — so the restore costs
+   * the viewport, not the board.
+   */
+  public restoreBoardPresentation(): void {
+    this._connectionPoints.layer.applyScale(this.scale.x);
+    this.cull();
+  }
+
+  /**
+   * Un-culls every quad-tree entry in the board's presentation, for a render
+   * that runs no cull pass (a watch canvas). Elements themselves are never
+   * culled, so only entries are visited.
+   */
+  public uncull(): void {
+    this._components.uncull();
+    this._wires.uncull();
   }
 
   /**
@@ -460,11 +487,11 @@ export class Project extends Container {
     wires: readonly Wire[]
   ): void {
     for (const c of components) {
-      this._components.remove(c);
+      this._components.detach(c);
       this._componentsById.delete(c.id);
     }
     for (const w of wires) {
-      this._wires.remove(w);
+      this._wires.detach(w);
       this._wiresById.delete(w.id);
     }
     // Drop the termination counts at the old positions, keeping the count map

@@ -231,9 +231,11 @@ render while a canvas host is alive.
   `CanvasSource` (CSS box × DPR), never via `canvas.width`, which would desync
   pixi's cached render target. Render space stays CSS pixels; the DPR only
   sharpens.
-- **Culling is the caller's concern.** The board culls before rendering; watches
-  and offscreen snapshots call the exported `uncullTree` instead, since no cull
-  pass runs for them and `culled` bits from another view would hide content.
+- **Culling is the caller's concern.** The board culls before rendering; a
+  watch calls `Project.uncull()` and a snapshot `Project.presentForSnapshot()`
+  instead, since no cull pass runs for them and `culled` bits from another view
+  would hide content. Both visit quad-tree entries only — elements are never
+  culled.
 
 ---
 
@@ -467,31 +469,54 @@ also covers demand-driven `'single'` frames and needs no scheduling of its own.
 **Culling happens at entry level only; elements are never bounds-checked.** A
 culled entry's subtree is skipped whole, so an off-screen branch costs one test
 regardless of content and per-frame cost tracks visible _branches_, not visible
-_elements_. `Grid` and `ConnectionPointLayer` are never culled: chunks are
+_elements_. For an entry that is its own render group, "skipped whole" depends
+on the local pixi.js patch described under [Render groups](#render-groups):
+stock PixiJS skips it only when drawing, and still transforms and builds it. `Grid` and `ConnectionPointLayer` are never culled: chunks are
 repositioned every frame anyway, and a flat dot layer with no spatial index would
 cost an O(n) check per dot with nothing to prune.
 
 Culling only writes the `culled` flag and never touches the tree's arrays, so
 queries and collision logic are unaffected.
 
-### The cull pass also drives zoom re-tuning
+### The cull pass also drives zoom re-tuning and snapshot restore
 
-Screen-constant visuals (stroke widths, port stubs, dots) must be re-tuned on
-every zoom step, and doing that board-wide is what made zoom expensive: it
-dirties every leaf's transform and swaps every body's cached context, dirtying
-whole instruction sets. The payoff is viewport-sized, so the work is too:
+Every entry carries a **presentation stamp** (`QuadTreeEntry.presentation`):
+the zoom scale its elements' screen-constant visuals (stroke widths, port stubs,
+dots) are tuned to, and whether their text is hidden. The board's presentation
+is the live zoom with text shown. Switching an entry is not cheap — a re-tune
+dirties every leaf's transform and swaps every body's cached context, a text
+flip is a structural change — and doing either board-wide is what made zoom
+and the minimap expensive. The payoff is viewport-sized, so the work is too:
 
-- **`applyScale(scale)`** (what `ViewportController` calls per step) skips culled
-  entries and stamps each visited one with `appliedScale`.
-- **`cull(view)`** compares that stamp against the live scale and re-tunes on
-  mismatch. Running right before each blit, an element is current by the time it
-  can be drawn, whether zoom or a pan brought it on screen.
-- **`insert`** re-tunes the arriving element (it may carry a drag layer's or a
-  lagging entry's scale). **`minifyBranch`** clears the merged entry's stamp —
-  absorbing a lagging culled child is the one case a stamp would vouch wrongly.
-- **`applyScaleToAll(scale)`** ignores culling, for un-culled whole-board renders
-  (`Project.applyContentScale`, `BoardSnapshotService`). A tree nobody culls has
-  no culled entries, so the ordinary walk already covers it.
+- **`applyScale(scale)`** (what `ViewportController` calls per step) moves the
+  board's presentation and re-tunes only entries that are not culled.
+- **`cull(view)`** compares each on-screen entry's stamp against the board's and
+  catches it up on mismatch. Running right before each blit, an element is
+  current by the time it can be drawn, whether zoom, a pan or a snapshot left it
+  behind. Only the half of the stamp that differs is applied.
+- **`present(presentation)`** is the snapshot's walk
+  (`Project.presentForSnapshot`): it un-culls every entry and switches the ones
+  not already in the snapshot's state. The restore is just the next
+  **`cull`** (`Project.restoreBoardPresentation`), so only what the viewport
+  shows returns to the board. Off-screen entries keep the snapshot's state —
+  and, their render groups being skipped while culled, their instruction sets —
+  so a repeated snapshot (the minimap, after every committed action) finds them
+  current and costs what the viewport moved through, not the board.
+- **`uncull()`** is `present` in the board's presentation, for the watch canvas,
+  which renders a project no cull pass ever runs on.
+- **`insert`** tunes the arriving element to the stamp of the entry it lands in
+  (it may carry a drag layer's, a lagging entry's or a snapshot's state).
+  **`splitLeaf`** hands the leaf's stamp to the children it fills, **`expand`**
+  gives the new, empty entries the board's (any stamp is true of an empty
+  entry), and **`minifyBranch`** keeps a stamp only if every element it gathers
+  shares it — absorbing a culled child in another state is the one case a stamp
+  would otherwise vouch wrongly. **`detach`** (a drag session taking elements
+  out) returns them to the board's presentation, so a ghost is never dragged
+  at a snapshot's scale with its labels hidden.
+
+Text hiding needs no tree walk: a component registers every text node it draws
+through `Component.addText`, and `setTextHidden` flips those; the state survives
+`_draw()`, so a redraw's new texts are born hidden too.
 
 `ConnectionPointLayer` is not culled, so its dots are still re-tuned board-wide —
 the remaining floor. Between roughly 0.5× and 1.33× zoom `scaleForScale` returns a
@@ -499,6 +524,25 @@ constant, so the write is a no-op PixiJS discards; outside that band the clamp t
 a fixed screen diameter makes it zoom-dependent and every dot is dirtied.
 
 ## Render groups
+
+**pixi.js carries a local patch** (`.yarn/patches/pixi.js-npm-8.21.0-*.patch`,
+applied through the `patch:` protocol in `logigator-editor/package.json`). Stock
+`RenderGroupSystem._updateRenderGroups` recurses into every child render group
+without looking at whether it will be drawn, and `_buildInstructions` starts
+from the group root's children, past the root's own `culled` check. A culled
+entry was therefore skipped only when the frame was drawn: its transforms were
+updated and its instructions built — every `BitmapText` and `Graphics` set up on
+the GPU — like a visible one's. On a 99k-component board that was ~2.7 s of the
+first frame, for a viewport showing a few percent of it. The patch skips a child
+group whose root's `globalDisplayStatus` is below 7 (culled, invisible or
+unrenderable — exactly what makes the parent leave it out of its own
+instructions), with its descendants. Nothing is cleared: its
+`structureDidChange` and pending update lists wait, and the first visit after it
+comes back applies them. The GC's per-frame tick walk is separate and still
+reaches skipped groups, so their renderables count as used and are never
+unloaded while culled. `render-group-culling.spec.ts` fails if a pixi.js upgrade
+drops the patch; a new version needs the patch regenerated (`yarn patch
+pixi.js`), and `.angular/cache` cleared before `ng serve` serves it.
 
 PixiJS caches one instruction set per render group and rebuilds it **in full** on
 any structural change inside — a `culled` flip included. With the whole scene in

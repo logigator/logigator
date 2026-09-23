@@ -13,6 +13,8 @@ import {
   makeAnd,
   makeButton,
   makeInput,
+  makeRom,
+  makeSegmentDisplay,
   makeSwitch
 } from '../../testing/factories';
 import { AndComponent } from './component-types/and/and.component';
@@ -425,6 +427,51 @@ describe('Component symbol rendering', () => {
     // No labels → the full 1-grid body minus the clearance (12 px).
     expect(symbol!.style.fontSize).toBeCloseTo(12 / (0.6 * 2), 5);
 
+    comp.destroy({ children: true });
+  });
+});
+
+describe('Component text hiding', () => {
+  beforeEach(() => {
+    configureTestBed();
+  });
+
+  function texts(comp: Component): BitmapText[] {
+    const out: BitmapText[] = [];
+    const walk = (c: Container): void => {
+      for (const child of c.children) {
+        if (child instanceof BitmapText) out.push(child);
+        else walk(child as Container);
+      }
+    };
+    walk(comp);
+    return out;
+  }
+
+  it('reaches every text a component draws: symbol, port labels, readouts', () => {
+    for (const comp of [makeRom(), makeSegmentDisplay()]) {
+      expect(texts(comp).length).toBeGreaterThan(1);
+
+      comp.setTextHidden(true);
+      expect(texts(comp).every((t) => !t.renderable)).toBe(true);
+
+      comp.setTextHidden(false);
+      expect(texts(comp).every((t) => t.renderable)).toBe(true);
+      comp.destroy({ children: true });
+    }
+  });
+
+  it('keeps the hidden state across a redraw, whose texts are new objects', () => {
+    const comp = makeAnd(2);
+    comp.setTextHidden(true);
+    const before = texts(comp);
+
+    comp.direction = Direction.S;
+    comp.options.numInputs.value = 3;
+
+    const after = texts(comp);
+    expect(after.some((t) => before.includes(t))).toBe(false);
+    expect(after.every((t) => !t.renderable)).toBe(true);
     comp.destroy({ children: true });
   });
 });

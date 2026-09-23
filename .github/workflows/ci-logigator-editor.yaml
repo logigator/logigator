@@ -19,7 +19,7 @@ jobs:
           cancel_others: 'true'
           skip_after_successful_duplicate: 'true'
           github_token: ${{ github.token }}
-          paths: '["logigator-editor/**", "logigator-ui/**", "logigator-core/**", "logigator-contract/**", "logigator-docs/**", "package.json", "yarn.lock", ".yarnrc.yml", "angular.json", "tsconfig.json", "eslint.config.mjs"]'
+          paths: '["logigator-editor/**", "logigator-ui/**", "logigator-core/**", "logigator-contract/**", "logigator-docs/**", ".yarn/patches/**", "package.json", "yarn.lock", ".yarnrc.yml", "angular.json", "tsconfig.json", "eslint.config.mjs"]'
 
   ci:
     name: 'CI logigator-editor'

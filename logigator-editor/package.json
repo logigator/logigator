@@ -30,7 +30,7 @@
     "marked-katex-extension": "^5.0.0",
     "ngx-markdown": "^22.0.2",
     "ngxtension": "^7.3.0",
-    "pixi.js": "^8.21.0",
+    "pixi.js": "patch:pixi.js@npm%3A8.21.0#~/.yarn/patches/pixi.js-npm-8.21.0-d776aa6eb9.patch",
     "posthog-js": "^1.433.9",
     "regexparam": "^3.0.0",
     "rxjs": "~7.8.2",

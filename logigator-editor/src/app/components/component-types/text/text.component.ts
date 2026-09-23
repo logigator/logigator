@@ -152,6 +152,6 @@ export class TextComponent extends Component<TextOptions> {
       label.anchor.set(0, 0.55);
     }
     label.position.set(1, 0.5);
-    this.addChild(label);
+    this.addChild(this.addText(label));
   }
 }

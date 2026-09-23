@@ -107,8 +107,8 @@ export class SegmentDisplayComponent extends Component<SegmentDisplayOptions> {
     );
 
     const display = new Container();
-    display.addChild(readout);
-    display.addChild(baseIndicator);
+    display.addChild(this.addText(readout));
+    display.addChild(this.addText(baseIndicator));
     display.position.set(this.bodyGridWidth / 2, this.bodyGridHeight / 2);
     this.registerRotationCounterContainer(display);
     this.addChild(display);

@@ -199,6 +199,12 @@ Angular 22 standalone components + PixiJS 8 canvas.
 - Grid coordinates — `Project._gridSpace` has `scale = gridSize`, so circuit objects use **grid
   units as native `position`**. Visual children in `Component._visualSpace` (`scale = 1/gridSize`)
   keep pixel-authored geometry. Snapping: `roundToGrid` / `roundToHalfGrid`.
+- **pixi.js is patched** (`.yarn/patches/`, via the `patch:` protocol in the editor's manifest):
+  stock `RenderGroupSystem` still transforms and builds a render group whose root is culled, which
+  on a large board made the first frame build every quad-tree entry. The patch skips such a group
+  until it is drawable again (`docs/rendering.md`, Render groups); `render-group-culling.spec.ts`
+  fails if an upgrade drops it. A pixi.js bump means regenerating the patch, and `ng serve` only
+  picks a changed one up after `.angular/cache` is cleared.
 - `@logigator/sim` — external npm package (separate repo, Rust→WASM) holding the simulation engine.
   It runs in a Web Worker; the engine free-runs (or self-paces in target mode) while the main thread
   pulls one snapshot per `requestAnimationFrame`. Compilation is synchronous: nets via union-find
