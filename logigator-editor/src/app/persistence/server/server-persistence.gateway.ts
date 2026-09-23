@@ -36,6 +36,12 @@ import { whenIdle } from '../../utils/scheduling';
  */
 const PREVIEW_IDLE_TIMEOUT_MS = 2000;
 
+/**
+ * What a preview publish sends: both theme renders, or `empty` for a circuit
+ * with nothing on it.
+ */
+type PreviewRender = { dark: Blob; light: Blob } | 'empty';
+
 /** The API's page cap, so the library preload makes the fewest requests. */
 const LIBRARY_PAGE_SIZE = 100;
 
@@ -99,6 +105,21 @@ export class ServerPersistenceGateway {
     { body: SerializedCircuitBody; version: number }
   >();
 
+  /**
+   * One publish chain per document, so the render asked for last is the one
+   * written last; two saves' uploads racing could leave the older picture.
+   */
+  private readonly _previewChains = new Map<string, Promise<void>>();
+
+  /**
+   * Whether the server holds a preview for a document, as far as this session
+   * has seen: what the API reported on create, open and the library preload,
+   * and what this client wrote since. Opening one known to lack a preview
+   * draws it (see {@link _healPreview}); a document not in the map is left
+   * alone either way.
+   */
+  private readonly _hasPreview = new Map<string, boolean>();
+
   async loadProject(uuid: string): Promise<Project> {
     const detail = await firstValueFrom(this.projectApi.open(uuid));
     const { components, wires, skippedCustom } = this.circuitFile.decode(
@@ -122,6 +143,8 @@ export class ServerPersistenceGateway {
       link: detail.link,
       attribution: toMetadataAttribution(detail.attribution)
     });
+    this._hasPreview.set(uuid, detail.preview !== null);
+    this._healPreview('project', uuid, project);
 
     return project;
   }
@@ -139,6 +162,7 @@ export class ServerPersistenceGateway {
     const summary = await firstValueFrom(
       this.projectApi.create({ name, description, visibility })
     );
+    this._hasPreview.set(summary.id, false);
     this.metadataStore.register(project, {
       id: summary.id,
       name,
@@ -181,14 +205,15 @@ export class ServerPersistenceGateway {
       });
       return summary.id;
     });
-    void this._uploadPreview(project, id);
+    this._refreshPreview('project', id, project);
     return id;
   }
 
   /**
-   * Creates a server project from an arbitrary project's current circuit. Pure
-   * transport, touching no metadata store, preview or dirty state, so it is
-   * safe for a throwaway project built from a stored record.
+   * Creates a server project from an arbitrary project's current circuit,
+   * touching no metadata store or dirty state, so it is safe for a throwaway
+   * project built from a stored record. The preview is rendered before this
+   * resolves, so the caller may tear the project down straight after.
    */
   async createServerProjectFromProject(
     project: Project,
@@ -199,6 +224,7 @@ export class ServerPersistenceGateway {
     const summary = await this._createServerProject(project, name, visibility, {
       attribution
     });
+    this._publishPreviewOf('project', summary.id, project);
     return summary.id;
   }
 
@@ -210,7 +236,7 @@ export class ServerPersistenceGateway {
    * request field for it, the claim travels inside the document it describes,
    * and the server links `forkedFrom` from the chain's last entry.
    */
-  private _createServerProject(
+  private async _createServerProject(
     project: Project,
     name: string,
     visibility: DocumentVisibility,
@@ -221,7 +247,7 @@ export class ServerPersistenceGateway {
       name,
       opts?.attribution
     );
-    return firstValueFrom(
+    const summary = await firstValueFrom(
       this.projectApi.create({
         name,
         description: opts?.description,
@@ -229,6 +255,8 @@ export class ServerPersistenceGateway {
         document: file
       })
     );
+    this._hasPreview.set(summary.id, false);
+    return summary;
   }
 
   listProjects(page?: number, search?: string): Observable<ProjectPage> {
@@ -365,6 +393,7 @@ export class ServerPersistenceGateway {
         visibility: meta.visibility
       })
     );
+    this._hasPreview.set(summary.id, false);
 
     const project = new Project();
     const masterTypeId = this.registry.createMaster(
@@ -393,9 +422,10 @@ export class ServerPersistenceGateway {
 
   /**
    * Promotes a browser master to the server library, carrying the temp
-   * project's circuit. Pure transport — the caller owns the registry/metadata
-   * flip and removing the browser record — so a failed create leaves nothing
-   * to unwind.
+   * project's circuit. Transport and its preview only — the caller owns the
+   * registry/metadata flip and removing the browser record — so a failed
+   * create leaves nothing to unwind. The preview is rendered before this
+   * resolves, so the caller may tear the project down straight after.
    */
   async promoteComponentFromProject(
     project: Project,
@@ -421,6 +451,8 @@ export class ServerPersistenceGateway {
         document: file
       })
     );
+    this._hasPreview.set(summary.id, false);
+    this._publishPreviewOf('comp', summary.id, project);
 
     return {
       id: summary.id,
@@ -477,6 +509,8 @@ export class ServerPersistenceGateway {
       version: detail.version,
       visibility: detail.visibility
     });
+    this._hasPreview.set(uuid, detail.preview !== null);
+    this._healPreview('comp', uuid, project);
 
     return { project, masterTypeId };
   }
@@ -513,6 +547,7 @@ export class ServerPersistenceGateway {
       }
 
       for (const summary of result.entries) {
+        this._hasPreview.set(summary.id, summary.preview !== null);
         if (this.registry.masterTypeIdForId(summary.id) !== undefined) continue;
         this.registry.createMaster(
           {
@@ -598,6 +633,7 @@ export class ServerPersistenceGateway {
       version,
       visibility: def.visibility ?? 'private'
     });
+    this._healPreview('comp', uuid, project);
 
     return { project, masterTypeId };
   }
@@ -632,7 +668,7 @@ export class ServerPersistenceGateway {
       this.translation.translate('persistence.projectSaved'),
       'ServerPersistenceGateway'
     );
-    void this._uploadPreview(project, metadata.id);
+    this._refreshPreview('project', metadata.id, project);
   }
 
   /**
@@ -680,6 +716,7 @@ export class ServerPersistenceGateway {
       this.translation.translate('persistence.componentSaved'),
       'ServerPersistenceGateway'
     );
+    this._refreshPreview('comp', metadata.id, project);
   }
 
   /**
@@ -726,30 +763,138 @@ export class ServerPersistenceGateway {
   }
 
   /**
-   * Renders and uploads both theme thumbnails after a successful save.
-   * Fire-and-forget: a failure is logged and swallowed rather than failing the
-   * save. The parts are named for the theme each shows, so neither side
-   * depends on their order.
+   * Re-renders a live document's preview after a write. Cosmetic, so it waits
+   * for an idle slice rather than stacking the generation cost onto the frames
+   * doing the save's own UI work.
    */
-  private async _uploadPreview(
-    project: Project,
-    projectId: string
-  ): Promise<void> {
-    try {
-      // Cosmetic — wait for an idle slice rather than stacking the generation
-      // cost onto the frames doing the save's own UI work.
+  private _refreshPreview(
+    kind: 'project' | 'comp',
+    id: string,
+    project: Project
+  ): void {
+    this._publishPreview(kind, id, async () => {
       await whenIdle(PREVIEW_IDLE_TIMEOUT_MS);
-      const previews = await this.snapshot.generatePreviews(project);
-      if (!previews) return;
-      const formData = new FormData();
-      formData.append('light', previews.light, 'preview-light.png');
-      formData.append('dark', previews.dark, 'preview-dark.png');
-      await firstValueFrom(this.projectApi.setPreview(projectId, formData));
-    } catch (err) {
-      this.logging.warn(
-        `Preview upload failed: ${formatHttpError(err)}`,
-        'ServerPersistenceGateway'
+      return this._renderPreview(project);
+    });
+  }
+
+  /**
+   * For a project that only exists for the length of an upload: the scene is
+   * read synchronously, here, so the caller's teardown cannot outrun it, and
+   * only the readback and the upload are left to run on their own.
+   */
+  private _publishPreviewOf(
+    kind: 'project' | 'comp',
+    id: string,
+    project: Project
+  ): void {
+    const rendered = this._renderPreview(project).catch((err: unknown) => {
+      this._warnPreviewFailed(err);
+      return null;
+    });
+    this._publishPreview(kind, id, () => rendered);
+  }
+
+  /**
+   * Draws the preview of a document just opened when the server holds none.
+   * That covers every way one can end up without a preview this client did not
+   * see happen — a render or upload that failed, a clone of a document that had
+   * none, a write made before every path uploaded one — since opening a
+   * document the caller owns is where a renderer and its circuit first meet. A
+   * deep link opens its document before the board has leased a renderer, so
+   * this waits for one; the wait stays outside the chain so it cannot hold up
+   * a save's own upload.
+   */
+  private _healPreview(
+    kind: 'project' | 'comp',
+    id: string,
+    project: Project
+  ): void {
+    if (this._hasPreview.get(id) !== false) return;
+    void this.snapshot.whenAvailable().then(() =>
+      this._publishPreview(kind, id, async () => {
+        // A save, or the same document opened twice, may already have drawn it.
+        if (this._hasPreview.get(id) !== false) return null;
+        await whenIdle(PREVIEW_IDLE_TIMEOUT_MS);
+        return this._renderPreview(project);
+      })
+    );
+  }
+
+  /**
+   * Appends one publish to the document's chain. Fire-and-forget: a failure
+   * is logged and swallowed rather than failing the write it follows, and the
+   * document is drawn again the next time it is saved or opened.
+   */
+  private _publishPreview(
+    kind: 'project' | 'comp',
+    id: string,
+    render: () => Promise<PreviewRender | null>
+  ): void {
+    const previous = this._previewChains.get(id) ?? Promise.resolve();
+    const next = previous.then(async () => {
+      try {
+        const rendered = await render();
+        if (rendered) await this._sendPreview(kind, id, rendered);
+      } catch (err) {
+        this._warnPreviewFailed(err);
+      }
+    });
+    this._previewChains.set(id, next);
+    void next.then(() => {
+      if (this._previewChains.get(id) === next) this._previewChains.delete(id);
+    });
+  }
+
+  /**
+   * The parts are named for the theme each shows, so neither side depends on
+   * their order. An empty circuit clears the preview instead: saying there is
+   * nothing to show is the placeholder's job, and a transparent render would
+   * leave the tile a blank ground.
+   */
+  private async _sendPreview(
+    kind: 'project' | 'comp',
+    id: string,
+    rendered: PreviewRender
+  ): Promise<void> {
+    if (rendered === 'empty') {
+      if (this._hasPreview.get(id) !== true) return;
+      await firstValueFrom(
+        kind === 'project'
+          ? this.projectApi.clearPreview(id)
+          : this.componentApi.clearPreview(id)
       );
+      this._hasPreview.set(id, false);
+      return;
     }
+
+    const formData = new FormData();
+    formData.append('light', rendered.light, 'preview-light.png');
+    formData.append('dark', rendered.dark, 'preview-dark.png');
+    if (kind === 'project') {
+      await firstValueFrom(this.projectApi.setPreview(id, formData));
+    } else {
+      await firstValueFrom(this.componentApi.setPreview(id, formData));
+    }
+    this._hasPreview.set(id, true);
+  }
+
+  /**
+   * `null` where nothing can be drawn — no renderer yet, or the project was
+   * closed before its turn came.
+   */
+  private async _renderPreview(
+    project: Project
+  ): Promise<PreviewRender | null> {
+    if (project.destroyed) return null;
+    if (!project.getContentBounds()) return 'empty';
+    return this.snapshot.generatePreviews(project);
+  }
+
+  private _warnPreviewFailed(err: unknown): void {
+    this.logging.warn(
+      `Preview upload failed: ${formatHttpError(err)}`,
+      'ServerPersistenceGateway'
+    );
   }
 }

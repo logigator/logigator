@@ -812,7 +812,10 @@ the liveness probe; `GET /api/health/ready` probes Postgres and Redis (503 namin
   snapshot's `source.id`** to the new copies; a snapshot whose master no longer exists loses its
   `source` instead. New ids are chosen before any insert, so insert order is irrelevant; copies go
   through the same write path, so their ports and edges are re-derived, and a copy lands `unlisted`
-  — a working link, in no listing, which is what the boolean's `false` used to mean.
+  — a working link, in no listing, which is what the boolean's `false` used to mean. Each copy gets
+  a **copy of its original's preview asset** (`FileStorageService.copyAsset`, before the
+  transaction), never a second pointer at the same directory — replacing either row's preview
+  deletes the directory it names.
 - `community/` — the public half: listings, stars, stargazers, public profiles. **Every listing
   predicate carries `visibility = 'public'`**, which is why these queries live apart from the
   owner-scoped ones. The two detail reads are the exception, answering through the same

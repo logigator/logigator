@@ -162,6 +162,33 @@ rides inside the uploaded document, and the server checks its last entry (the
 immediate parent — the chain is root-first) against its own rows. A tampered
 chain can lose attribution; it cannot forge it.
 
+### Previews are the client's to draw
+
+The server renders nothing, so every write that leaves a circuit on it is
+followed by a preview upload from `ServerPersistenceGateway`: a project or
+component save, promoting a draft, and uploading a stored local project or
+library master. Each is fire-and-forget behind the write, and goes through a
+**per-document chain**, so two saves' uploads cannot land out of order.
+
+- **A throwaway project is drawn before it is torn down.** The upload-to-cloud
+  paths build a project from the stored record and destroy it when the create
+  returns; `generatePreviews` reads the scene only before its first `await`, so
+  the render is started while the project exists and only the readback and
+  upload outlive it.
+- **An empty circuit clears the preview** instead of uploading a transparent
+  render: nothing to show is the placeholder's job. The clear is sent only for
+  a document known to have a preview.
+- **Opening an owned document the server holds no preview for draws one.**
+  That heals every path this client did not see: an upload that failed, a clone
+  of something that had none, a write from before every path uploaded. It waits
+  for a renderer, which a deep link opens its document ahead of. The gateway
+  knows the state from what create, open and the library preload report
+  (`_hasPreview`); a document it has not heard about is left alone.
+
+A clone needs none of this: the API copies each original's preview asset for
+its copy, dependencies included, since re-pointing snapshot sources changes no
+pixel and a cloned master may never be opened.
+
 ### Errors are codes, not statuses
 
 Failures come back as `{ code, message, details? }`, which `ApiBaseService`

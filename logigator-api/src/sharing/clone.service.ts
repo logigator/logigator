@@ -24,6 +24,7 @@ import {
   DependenciesService,
   PROJECT_EDGES
 } from '../documents/dependencies.service';
+import { FileStorageService } from '../storage/file-storage.service';
 import { transitiveDependencyIds } from './dependency-graph';
 import {
   ShareService,
@@ -33,6 +34,9 @@ import {
 
 /** Original component id → the id its copy will have. */
 type IdMap = ReadonlyMap<string, string>;
+
+/** Original row id → the preview asset its copy points at. */
+type PreviewMap = ReadonlyMap<string, string>;
 
 /**
  * Taking a copy of a shared document into your own account.
@@ -46,6 +50,11 @@ type IdMap = ReadonlyMap<string, string>;
  * New ids are chosen before any insert, so insert order is irrelevant — every
  * document is rewritten against the complete map, with no topological sort and
  * no fix-up pass.
+ *
+ * Previews come along as copies of the originals' assets. Re-pointing sources
+ * changes no pixel, and the copy is not the only document that needs one: a
+ * dependency the cloner never opens would otherwise stay a placeholder on their
+ * shelf for good, the editor being the only thing that renders.
  */
 @Injectable()
 export class CloneService {
@@ -53,7 +62,8 @@ export class CloneService {
     @Inject(DB) private readonly db: Database,
     private readonly share: ShareService,
     private readonly documents: CircuitDocumentService,
-    private readonly dependencies: DependenciesService
+    private readonly dependencies: DependenciesService,
+    private readonly files: FileStorageService
   ) {}
 
   async cloneByLink(
@@ -67,35 +77,78 @@ export class CloneService {
     const target = await this.share.resolve(kind, link, userId);
     const sources = await this.dependencyRows(target);
     const idMap = new Map(sources.map((row) => [row.id, randomUUID()]));
+    const previews = await this.copyPreviews([target.row, ...sources]);
 
-    // One transaction over the lot: a half-cloned library is a set of documents
-    // whose snapshots name masters that were never created.
-    return this.db.transaction(async (tx) => {
-      const copies: ComponentSummary[] = [];
-      for (const source of sources) {
-        copies.push(
-          toComponentSummary(
-            await this.copyComponent(tx, userId, source, idMap)
-          )
+    try {
+      // One transaction over the lot: a half-cloned library is a set of
+      // documents whose snapshots name masters that were never created.
+      return await this.db.transaction(async (tx) => {
+        const copies: ComponentSummary[] = [];
+        for (const source of sources) {
+          copies.push(
+            toComponentSummary(
+              await this.copyComponent(tx, userId, source, idMap, previews)
+            )
+          );
+        }
+
+        if (target.kind === 'project') {
+          const project = await this.copyProject(
+            tx,
+            userId,
+            target.row,
+            idMap,
+            previews
+          );
+          return {
+            kind: 'project',
+            project: toProjectSummary(project),
+            dependencies: copies
+          };
+        }
+
+        const component = await this.copyComponent(
+          tx,
+          userId,
+          target.row,
+          idMap,
+          previews
         );
-      }
-
-      if (target.kind === 'project') {
-        const project = await this.copyProject(tx, userId, target.row, idMap);
         return {
-          kind: 'project',
-          project: toProjectSummary(project),
+          kind: 'component',
+          component: toComponentSummary(component),
           dependencies: copies
         };
-      }
+      });
+    } catch (error) {
+      // Nothing names the copies; removing them here saves the sweep the work.
+      await Promise.all(
+        [...previews.values()].map((id) =>
+          this.files.removeAsset('preview', id)
+        )
+      );
+      throw error;
+    }
+  }
 
-      const component = await this.copyComponent(tx, userId, target.row, idMap);
-      return {
-        kind: 'component',
-        component: toComponentSummary(component),
-        dependencies: copies
-      };
-    });
+  /**
+   * Written before the transaction opens, so it holds no rows while the disk
+   * works; a copy whose row never commits is an orphan the sweep's grace
+   * window already accounts for. A source whose asset is gone clones without a
+   * preview rather than failing the clone.
+   */
+  private async copyPreviews(
+    rows: readonly (ProjectRow | ComponentRow)[]
+  ): Promise<PreviewMap> {
+    const copies = await Promise.all(
+      rows.map(async (row) => {
+        const copy = row.previewId
+          ? await this.files.copyAsset('preview', row.previewId)
+          : null;
+        return copy ? ([row.id, copy] as const) : null;
+      })
+    );
+    return new Map(copies.filter((entry) => entry !== null));
   }
 
   /**
@@ -117,7 +170,8 @@ export class CloneService {
     tx: Transaction,
     userId: string,
     source: ProjectRow,
-    idMap: IdMap
+    idMap: IdMap,
+    previews: PreviewMap
   ): Promise<ProjectRow> {
     const ingested = this.documents.ingest(
       remapSources(source.document, idMap),
@@ -140,6 +194,7 @@ export class CloneService {
         formatVersion: ingested.formatVersion,
         componentCount: ingested.componentCount,
         wireCount: ingested.wireCount,
+        previewId: previews.get(source.id) ?? null,
         // The attribution trust anchor: every author in the chain is derived
         // from these keys.
         forkedFromId: source.id
@@ -159,7 +214,8 @@ export class CloneService {
     tx: Transaction,
     userId: string,
     source: ComponentRow,
-    idMap: IdMap
+    idMap: IdMap,
+    previews: PreviewMap
   ): Promise<ComponentRow> {
     const ingested = this.documents.ingest(
       remapSources(source.document, idMap),
@@ -184,6 +240,7 @@ export class CloneService {
         numInputs: ingested.summary.numInputs,
         numOutputs: ingested.summary.numOutputs,
         labels: ingested.summary.labels,
+        previewId: previews.get(source.id) ?? null,
         forkedFromId: source.id
       })
       .returning();

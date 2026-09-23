@@ -73,4 +73,24 @@ export class ComponentApiService {
   delete(componentId: string): Observable<void> {
     return this.api.deleteEmpty(`${this.path}/${componentId}`);
   }
+
+  /**
+   * POST /api/components/:id/preview — both theme renders in one request, each
+   * part named for the theme it shows.
+   */
+  setPreview(
+    componentId: string,
+    formData: FormData
+  ): Observable<ComponentSummary> {
+    return this.api.postFormData(
+      `${this.path}/${componentId}/preview`,
+      componentSummarySchema,
+      formData
+    );
+  }
+
+  /** DELETE /api/components/:id/preview — back to the placeholder. */
+  clearPreview(componentId: string): Observable<void> {
+    return this.api.deleteEmpty(`${this.path}/${componentId}/preview`);
+  }
 }

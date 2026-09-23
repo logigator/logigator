@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { ENV, type Env } from '../config/env';
@@ -83,6 +83,34 @@ export class FileStorageService {
     }
 
     return id;
+  }
+
+  /**
+   * Copies an asset into a fresh directory and answers the copy's id, or `null`
+   * where the source is not there. A copy rather than a second pointer at the
+   * same directory: replacing either row's asset deletes the directory it
+   * names, which would take the other's with it.
+   */
+  async copyAsset(area: StorageArea, id: string): Promise<string | null> {
+    if (!ASSET_ID.test(id)) return null;
+
+    const copy = randomUUID();
+    const directory = join(this.root, assetPath(area, copy));
+    await mkdir(join(directory, '..'), { recursive: true });
+
+    try {
+      await cp(join(this.root, assetPath(area, id)), directory, {
+        recursive: true,
+        errorOnExist: true,
+        force: false
+      });
+    } catch (error) {
+      await this.removeAsset(area, copy);
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') return null;
+      throw error;
+    }
+
+    return copy;
   }
 
   /**

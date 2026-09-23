@@ -84,4 +84,9 @@ export class ProjectApiService {
       formData
     );
   }
+
+  /** DELETE /api/projects/:id/preview — back to the placeholder. */
+  clearPreview(projectId: string): Observable<void> {
+    return this.api.deleteEmpty(`${this.path}/${projectId}/preview`);
+  }
 }

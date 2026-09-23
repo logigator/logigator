@@ -54,7 +54,9 @@ import {
 import { signal } from '@angular/core';
 import type { UserResponse } from '@logigator/contract';
 import { makeUser } from '../../testing/user-fixtures';
+import { makeNot } from '../../testing/factories';
 import { UserService } from '../user/user.service';
+import { BoardSnapshotService } from '../rendering/board-snapshot.service';
 
 /**
  * A stable uuid for a readable label. Every id the API answers with is a uuid,
@@ -80,6 +82,8 @@ const SHARE_URL = (kind: string, link: string) =>
   `${environment.apiUrl}/api/share/${kind}/${link}`;
 const CLONE_URL = (kind: string, link: string) =>
   `${environment.apiUrl}/api/share/${kind}/${link}/clone`;
+const PREVIEW_URL = (kind: 'projects' | 'components', id: string) =>
+  `${environment.apiUrl}/api/${kind}/${id}/preview`;
 
 function circuitFields(o: {
   id: string;
@@ -2684,6 +2688,200 @@ describe('PersistenceService', () => {
       await promise;
       expect(registry.getDefinition(masterType)!.version).toBe(7);
       expect(metadataStore.isDirty(editor)).toBe(false);
+    });
+  });
+  describe('previews', () => {
+    /** Each render the gateway asked for, and whether its project was alive. */
+    let renders: { project: Project; destroyed: boolean }[];
+
+    const ONE_GATE: SerializedCircuitBody = {
+      components: [
+        { type: BuiltInComponentType.NOT, pos: [0, 0], options: {} }
+      ],
+      wires: []
+    };
+    const STORED_PREVIEW = {
+      light: [
+        { url: '/files/l.webp', width: 256, height: 256, format: 'webp' }
+      ],
+      dark: [{ url: '/files/d.webp', width: 256, height: 256, format: 'webp' }]
+    };
+
+    /** Lets the idle wait and the publish chain run out. */
+    const settle = () => new Promise((resolve) => setTimeout(resolve, 20));
+
+    const expectPreviewUpload = (kind: 'projects' | 'components', id: string) =>
+      vi.waitFor(() => {
+        const req = httpMock.expectOne(PREVIEW_URL(kind, id));
+        expect(req.request.method).toBe('POST');
+        const body = req.request.body as FormData;
+        expect(body.has('light') && body.has('dark')).toBe(true);
+        return req;
+      });
+
+    async function openServerProject(detail: object): Promise<Project> {
+      const promise = service.loadProjectAsMain(uuid('test-uuid'));
+      httpMock.expectOne(PROJECT_URL(uuid('test-uuid'))).flush(detail);
+      await promise;
+      return projectService.mainProject()!;
+    }
+
+    async function saveServerProject(project: Project): Promise<void> {
+      metadataStore.markDirty(project);
+      const promise = service.saveProject(project);
+      const put = await expectGzipped(httpMock, PROJECT_URL(uuid('test-uuid')));
+      put.flush(projectSummaryResponse({ version: 2 }));
+      await promise;
+    }
+
+    beforeEach(() => {
+      renders = [];
+      const snapshot = TestBed.inject(BoardSnapshotService);
+      vi.spyOn(snapshot, 'whenAvailable').mockResolvedValue();
+      vi.spyOn(snapshot, 'generatePreviews').mockImplementation(
+        async (project) => {
+          renders.push({ project, destroyed: project.destroyed });
+          return { dark: new Blob(['dark']), light: new Blob(['light']) };
+        }
+      );
+    });
+
+    it('uploads a server component´s preview when it is saved', async () => {
+      registry.createMaster(
+        { id: uuid('ec1'), version: 2, symbol: 'E' },
+        'server'
+      );
+      const editor = new Project();
+      metadataStore.register(editor, {
+        id: uuid('ec1'),
+        name: 'E',
+        type: 'comp',
+        source: 'server',
+        version: 2,
+        visibility: 'unlisted'
+      });
+      editor.addComponent(makeNot());
+      metadataStore.markDirty(editor);
+
+      const promise = service.saveProject(editor);
+      (await expectGzipped(httpMock, COMPONENT_URL(uuid('ec1')))).flush(
+        componentSummaryResponse({ id: uuid('ec1'), version: 3 })
+      );
+      await promise;
+
+      (await expectPreviewUpload('components', uuid('ec1'))).flush(
+        componentSummaryResponse({ id: uuid('ec1'), version: 3 })
+      );
+      expect(renders.map((r) => r.project)).toEqual([editor]);
+    });
+
+    it('renders an uploaded local project before its throwaway copy is torn down', async () => {
+      const stored = new Project();
+      stored.addComponent(makeNot());
+      metadataStore.register(stored, {
+        id: 'stored-1',
+        name: 'Archived',
+        type: 'project',
+        source: 'browser',
+        visibility: 'private'
+      });
+      metadataStore.markDirty(stored);
+      await service.saveProject(stored);
+      service.createAndSetEmptyProject();
+
+      const promise = promotion.uploadStoredProjectToServer(
+        'stored-1',
+        'public'
+      );
+      await Promise.resolve();
+      (await expectGzipped(httpMock, PROJECTS_LIST_URL)).flush(
+        projectSummaryResponse({ id: uuid('srv-uuid') })
+      );
+      await promise;
+
+      // The upload returned and the copy is gone, but its picture was taken
+      // while it still existed.
+      expect(renders).toHaveLength(1);
+      expect(renders[0].destroyed).toBe(false);
+      expect(renders[0].project.destroyed).toBe(true);
+      (await expectPreviewUpload('projects', uuid('srv-uuid'))).flush(
+        projectSummaryResponse({ id: uuid('srv-uuid') })
+      );
+    });
+
+    it('draws the preview of an opened project the server holds none for', async () => {
+      const project = await openServerProject(
+        projectDetailResponse({ body: ONE_GATE })
+      );
+
+      (await expectPreviewUpload('projects', uuid('test-uuid'))).flush(
+        projectSummaryResponse()
+      );
+      expect(renders.map((r) => r.project)).toEqual([project]);
+    });
+
+    it('leaves an opened project´s stored preview alone', async () => {
+      await openServerProject({
+        ...projectDetailResponse({ body: ONE_GATE }),
+        preview: STORED_PREVIEW
+      });
+
+      await settle();
+      expect(
+        httpMock.match(PREVIEW_URL('projects', uuid('test-uuid')))
+      ).toEqual([]);
+      expect(renders).toEqual([]);
+    });
+
+    it('clears the preview of a circuit saved empty, rather than uploading a blank render', async () => {
+      const project = await openServerProject({
+        ...projectDetailResponse(),
+        preview: STORED_PREVIEW
+      });
+
+      await saveServerProject(project);
+
+      const cleared = await vi.waitFor(() =>
+        httpMock.expectOne(PREVIEW_URL('projects', uuid('test-uuid')))
+      );
+      expect(cleared.request.method).toBe('DELETE');
+      cleared.flush(projectSummaryResponse());
+      expect(renders).toEqual([]);
+    });
+
+    it('sends nothing for an empty circuit that never had a preview', async () => {
+      const project = await openServerProject(projectDetailResponse());
+
+      await saveServerProject(project);
+
+      await settle();
+      expect(
+        httpMock.match(PREVIEW_URL('projects', uuid('test-uuid')))
+      ).toEqual([]);
+    });
+
+    it('writes one document´s previews one at a time, so the last render lands last', async () => {
+      const project = await openServerProject({
+        ...projectDetailResponse({ body: ONE_GATE }),
+        preview: STORED_PREVIEW
+      });
+
+      await saveServerProject(project);
+      const first = await expectPreviewUpload('projects', uuid('test-uuid'));
+
+      await saveServerProject(project);
+      await settle();
+      // The second render waits for the first upload to answer.
+      expect(renders).toHaveLength(1);
+      expect(
+        httpMock.match(PREVIEW_URL('projects', uuid('test-uuid')))
+      ).toEqual([]);
+
+      first.flush(projectSummaryResponse());
+      (await expectPreviewUpload('projects', uuid('test-uuid'))).flush(
+        projectSummaryResponse()
+      );
+      expect(renders).toHaveLength(2);
     });
   });
 });

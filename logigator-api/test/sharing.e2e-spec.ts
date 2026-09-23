@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import sharp from 'sharp';
+import { readFile, stat } from 'node:fs/promises';
 import { eq } from 'drizzle-orm';
 import { CUSTOM_TYPE_ID_BASE } from '@logigator/core';
 import type { ComponentSummary, ProjectSummary } from '@logigator/contract';
@@ -10,6 +11,7 @@ import {
   HALF_ADDER_BODY,
   serverSnapshot
 } from './circuits';
+import { assetFilePath, assetIdOf } from './assets';
 import { CookieJar } from './cookie-jar';
 import { startE2eApp, type E2eApp } from './harness';
 
@@ -85,6 +87,53 @@ describe('share links', () => {
    * A two-level library: `outer` embeds `inner`, and a board embeds `outer`. A
    * one-level graph would pass with no recursion at all.
    */
+  /**
+   * A preview upload, as the editor sends it: both themes in one request.
+   * Answers the light render's URLs, which name the asset.
+   */
+  async function setPreview(
+    kind: 'projects' | 'components',
+    id: string
+  ): Promise<string[]> {
+    const png = await sharp({
+      create: {
+        width: 64,
+        height: 64,
+        channels: 4,
+        background: { r: 20, g: 180, b: 90, alpha: 1 }
+      }
+    })
+      .png()
+      .toBuffer();
+
+    const form = new FormData();
+    for (const slot of ['light', 'dark']) {
+      form.set(
+        slot,
+        new Blob([new Uint8Array(png)], { type: 'image/png' }),
+        `${slot}.png`
+      );
+    }
+    const request = new Request('http://localhost', {
+      method: 'POST',
+      body: form
+    });
+
+    const response = await api.inject({
+      method: 'POST',
+      url: `/api/${kind}/${id}/preview`,
+      headers: {
+        ...ada.headers(),
+        'content-type': request.headers.get('content-type') as string
+      },
+      payload: Buffer.from(await request.arrayBuffer())
+    });
+    expect(response.statusCode).toBe(201);
+    return response
+      .json()
+      .preview.light.map((variant: { url: string }) => variant.url);
+  }
+
   async function publishLibrary(): Promise<{
     inner: ComponentSummary;
     outer: ComponentSummary;
@@ -774,6 +823,71 @@ describe('share links', () => {
       expect(opened.json().componentCount).toBe(1);
     });
 
+    it('copies every preview along, so no copy is left a placeholder', async () => {
+      const { inner, outer, board } = await publishLibrary();
+      const boardPreview = await setPreview('projects', board.id);
+      const innerPreview = await setPreview('components', inner.id);
+
+      const clone = (
+        await api.inject({
+          method: 'POST',
+          url: `/api/share/project/${board.link}/clone`,
+          headers: grace.headers()
+        })
+      ).json();
+
+      const copiedInner = clone.dependencies.find(
+        (d: ComponentSummary) => d.name === 'Inner'
+      );
+      const copiedOuter = clone.dependencies.find(
+        (d: ComponentSummary) => d.name === 'Outer'
+      );
+      const lightUrls = (summary: ProjectSummary | ComponentSummary) =>
+        summary.preview!.light.map((variant) => variant.url);
+
+      // A master nobody opens needs one as much as the board does: the editor
+      // is the only thing that renders, and the cloner may never open it.
+      for (const [copy, original] of [
+        [clone.project, boardPreview],
+        [copiedInner, innerPreview]
+      ] as const) {
+        const urls = lightUrls(copy);
+        expect(assetIdOf(urls[0])).not.toBe(assetIdOf(original[0]));
+        for (const url of urls) {
+          expect(
+            (await readFile(assetFilePath(api, url))).equals(
+              await readFile(assetFilePath(api, original[urls.indexOf(url)]))
+            )
+          ).toBe(true);
+        }
+      }
+      // A source with none clones with none, rather than failing the clone.
+      expect(copiedOuter.preview).toBeNull();
+      expect(outer.preview).toBeNull();
+    });
+
+    it('keeps the copy´s preview when the original replaces its own', async () => {
+      const { board } = await publishLibrary();
+      await setPreview('projects', board.id);
+
+      const clone = (
+        await api.inject({
+          method: 'POST',
+          url: `/api/share/project/${board.link}/clone`,
+          headers: grace.headers()
+        })
+      ).json();
+      await setPreview('projects', board.id);
+
+      // Two pointers at one directory would lose the copy's files here, the
+      // replace deleting the asset it moved away from.
+      for (const variant of clone.project.preview.light) {
+        await expect(
+          stat(assetFilePath(api, variant.url))
+        ).resolves.toBeTruthy();
+      }
+    });
+
     it('needs a session', async () => {
       const project = await create<ProjectSummary>(
         'projects',
@@ -790,44 +904,6 @@ describe('share links', () => {
   });
 
   describe('the card it unfurls as', () => {
-    /** A preview upload, as the editor sends it: both themes in one request. */
-    async function setPreview(id: string): Promise<void> {
-      const png = await sharp({
-        create: {
-          width: 64,
-          height: 64,
-          channels: 4,
-          background: { r: 20, g: 180, b: 90, alpha: 1 }
-        }
-      })
-        .png()
-        .toBuffer();
-
-      const form = new FormData();
-      for (const slot of ['light', 'dark']) {
-        form.set(
-          slot,
-          new Blob([new Uint8Array(png)], { type: 'image/png' }),
-          `${slot}.png`
-        );
-      }
-      const request = new Request('http://localhost', {
-        method: 'POST',
-        body: form
-      });
-
-      const response = await api.inject({
-        method: 'POST',
-        url: `/api/projects/${id}/preview`,
-        headers: {
-          ...ada.headers(),
-          'content-type': request.headers.get('content-type') as string
-        },
-        payload: Buffer.from(await request.arrayBuffer())
-      });
-      expect(response.statusCode).toBe(201);
-    }
-
     it('answers a picture at the size every share surface expects', async () => {
       const project = await create<ProjectSummary>(
         'projects',
@@ -854,7 +930,7 @@ describe('share links', () => {
       );
 
       const before = await card('project', project.link);
-      await setPreview(project.id);
+      await setPreview('projects', project.id);
       const after = await card('project', project.link);
 
       // The picture is in the card, so a preview upload changes both the

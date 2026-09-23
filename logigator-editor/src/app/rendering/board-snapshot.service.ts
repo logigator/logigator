@@ -1,4 +1,4 @@
-import { inject, Injectable } from '@angular/core';
+import { effect, inject, Injectable, Injector } from '@angular/core';
 import {
   BitmapText,
   Container,
@@ -92,10 +92,29 @@ export class BoardSnapshotService {
   private readonly graphicsProvider = inject(GraphicsProviderService);
   private readonly themingService = inject(ThemingService);
   private readonly logging = inject(LoggingService);
+  private readonly injector = inject(Injector);
 
   /** Whether a renderer is live (false before the board has loaded). */
   public get available(): boolean {
     return this.rendererService.available();
+  }
+
+  /**
+   * Resolves once a renderer is live, for offscreen work that can be asked for
+   * before the board has leased one — a deep link loads its document first.
+   */
+  public whenAvailable(): Promise<void> {
+    if (this.available) return Promise.resolve();
+    return new Promise((resolve) => {
+      const watch = effect(
+        () => {
+          if (!this.rendererService.available()) return;
+          watch.destroy();
+          resolve();
+        },
+        { injector: this.injector }
+      );
+    });
   }
 
   /**
@@ -209,6 +228,10 @@ export class BoardSnapshotService {
    * restyling in place. Switch, restyle and offscreen render all happen
    * synchronously and the live theme is restored before the first `await`, so
    * no wrong-theme frame can paint and no effect observes it.
+   *
+   * The project is read only before that first `await` too; what follows works
+   * on the textures alone. A caller holding a project only for the upload may
+   * therefore tear it down as soon as this returns its promise.
    */
   public async generatePreviews(
     project: Project,
