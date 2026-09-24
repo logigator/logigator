@@ -2,6 +2,13 @@ import { Point } from 'pixi.js';
 import { Project } from '../../project/project';
 import { MultiTouchGesture } from '../multi-touch-gesture';
 import { canvasToGrid, PointerInput } from './pointer-input';
+import {
+  isPinch,
+  looksLikeTrackpad,
+  WHEEL_ZOOM_PER_PX,
+  WheelEventLike,
+  wheelPixels
+} from './wheel-input';
 
 /**
  * The subset of `PointerEvent`/`WheelEvent` the controller reads, so specs can
@@ -22,21 +29,29 @@ export interface PointerEventLike {
 const DOUBLE_CLICK_MS = 500;
 const DOUBLE_CLICK_SLOP = 6;
 
+// Wheel events closer together than this belong to one scroll or pinch, and
+// keep the device their burst was read as: a trackpad's momentum tail and the
+// events of a swipe arrive every frame, a mouse's separate notches further
+// apart when scrolled slowly.
+const WHEEL_BURST_GAP_MS = 150;
+// Zoom factor per pixel of trackpad pinch: `e^(-delta · k)`, so the zoom
+// follows the fingers continuously. A pinch's deltas are small (see isPinch),
+// so one event zooms by at most e^0.5.
+const PINCH_ZOOM_PER_PX = 0.01;
+
 /** Middle and right: the two buttons a press pans with, whatever the tool. */
 const MIDDLE_BUTTON = 1;
 const RIGHT_BUTTON = 2;
 
-export interface WheelEventLike {
-  clientX: number;
-  clientY: number;
-  deltaY: number;
-  preventDefault(): void;
-}
+export type { WheelEventLike } from './wheel-input';
 
 /** Viewport navigation the controller drives (middle/right-drag pan, wheel
  *  zoom, two-finger pan/pinch). Deltas and centers are canvas-local CSS px. */
 export interface PointerNavTarget {
   pan(delta: Point): void;
+  /** Pans outside any gesture — a two-finger trackpad scroll — and requests
+   *  its own frame, since no gesture holds the ticker on. */
+  scroll(delta: Point): void;
   zoomIn(center: Point): void;
   zoomOut(center: Point): void;
   zoomBy(factor: number, center: Point): void;
@@ -90,6 +105,10 @@ export class PointerController {
   private readonly _gesture: MultiTouchGesture;
 
   private _toolPointer: number | null = null;
+  // The current wheel burst: when its last event arrived, and whether it has
+  // shown itself to come from a trackpad.
+  private _wheelLast = -Infinity;
+  private _wheelTrackpad = false;
   private _panPointer: number | null = null;
   private readonly _panLast = new Point();
 
@@ -246,15 +265,43 @@ export class PointerController {
     return 'tool';
   }
 
+  /**
+   * A mouse wheel zooms continuously; a trackpad pans with two fingers and zooms
+   * with a pinch, which browsers deliver as a ctrl-wheel ({@link isPinch}).
+   * Whether a scroll came from a trackpad is guessed from its events
+   * ({@link looksLikeTrackpad}) and held for the rest of the burst, so a swipe
+   * that starts out looking like a wheel turns into a pan rather than flipping
+   * back and forth.
+   */
   public onWheel(e: WheelEventLike): void {
     e.preventDefault();
     if (!this._project()) return;
+    const now = e.timeStamp ?? performance.now();
+    if (now - this._wheelLast > WHEEL_BURST_GAP_MS) this._wheelTrackpad = false;
+    this._wheelLast = now;
+    if (looksLikeTrackpad(e)) this._wheelTrackpad = true;
+
     const center = this._localPosition(e);
-    if (e.deltaY > 0) {
-      this.opts.nav.zoomOut(center);
-    } else if (e.deltaY < 0) {
-      this.opts.nav.zoomIn(center);
+    if (isPinch(e)) {
+      this.opts.nav.zoomBy(Math.exp(-e.deltaY * PINCH_ZOOM_PER_PX), center);
+      return;
     }
+    if (this._wheelTrackpad && !e.ctrlKey) {
+      this.opts.nav.scroll(
+        new Point(-wheelPixels(e, e.deltaX ?? 0), -wheelPixels(e, e.deltaY))
+      );
+      return;
+    }
+
+    if (e.deltaY === 0) return;
+    // Continuous, proportional to the delta: a notch is one zoom-button step,
+    // input merged into one event zooms by all of it, and a high-resolution
+    // wheel zooms smoothly. The zoom buttons keep their ladder; `zoomBy`
+    // resyncs it so a button press continues from here.
+    this.opts.nav.zoomBy(
+      Math.exp(-wheelPixels(e, e.deltaY) * WHEEL_ZOOM_PER_PX),
+      center
+    );
   }
 
   /** Cancels the tool stream once the gesture owns navigation, so the pressed

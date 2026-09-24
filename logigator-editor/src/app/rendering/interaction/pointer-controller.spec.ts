@@ -6,6 +6,7 @@ import {
   PointerController,
   PointerEventLike,
   PointerNavTarget,
+  WheelEventLike,
   PointerToolTarget
 } from './pointer-controller';
 
@@ -87,6 +88,7 @@ describe('PointerController', () => {
     project = makeProject();
     nav = {
       pan: vi.fn(),
+      scroll: vi.fn(),
       zoomIn: vi.fn(),
       zoomOut: vi.fn(),
       zoomBy: vi.fn(),
@@ -183,28 +185,142 @@ describe('PointerController', () => {
     expect(nav.pan).not.toHaveBeenCalled();
   });
 
+  // One notch of 100 px is one zoom-button step.
+  const notches = (n: number) => Math.pow(1.2, n);
+  const lastZoom = () => vi.mocked(nav.zoomBy).mock.lastCall!;
+
   it('zooms at the cursor on wheel and suppresses the page scroll', () => {
     const preventDefault = vi.fn();
     controller.onWheel({
       clientX: 100 + 32,
       clientY: 50 + 16,
-      deltaY: 120,
+      deltaY: 100,
       preventDefault
     });
     expect(preventDefault).toHaveBeenCalled();
-    expect(nav.zoomOut).toHaveBeenCalledTimes(1);
-    expect(vi.mocked(nav.zoomOut).mock.calls[0][0]).toMatchObject({
-      x: 32,
-      y: 16
-    });
+    expect(lastZoom()[0]).toBeCloseTo(1 / notches(1), 10);
+    expect(lastZoom()[1]).toMatchObject({ x: 32, y: 16 });
 
     controller.onWheel({
       clientX: 100,
       clientY: 50,
-      deltaY: -120,
+      deltaY: -100,
       preventDefault
     });
-    expect(nav.zoomIn).toHaveBeenCalledTimes(1);
+    expect(lastZoom()[0]).toBeCloseTo(notches(1), 10);
+  });
+
+  it('zooms in proportion to the delta, so merged and fine input are not lost', () => {
+    const preventDefault = vi.fn();
+    // Five notches Chromium merged into one event over a slow frame.
+    controller.onWheel({
+      clientX: 100,
+      clientY: 50,
+      deltaY: 500,
+      preventDefault
+    });
+    expect(lastZoom()[0]).toBeCloseTo(1 / notches(5), 10);
+
+    // Firefox's line mode: two notches of three lines each.
+    controller.onWheel({
+      clientX: 100,
+      clientY: 50,
+      deltaY: -6,
+      deltaMode: 1,
+      preventDefault
+    });
+    expect(lastZoom()[0]).toBeCloseTo(notches(2), 10);
+
+    // A high-resolution wheel's fraction of a notch.
+    controller.onWheel({
+      clientX: 100,
+      clientY: 50,
+      deltaY: -25,
+      preventDefault
+    });
+    expect(lastZoom()[0]).toBeCloseTo(notches(0.25), 10);
+  });
+
+  it('zooms, not pans, for a high-resolution wheel reporting fractional deltas', () => {
+    // Chromium on Linux: a notch of a high-resolution wheel, no horizontal part.
+    controller.onWheel({
+      clientX: 100,
+      clientY: 50,
+      deltaY: 53.333,
+      deltaX: 0,
+      preventDefault: vi.fn()
+    });
+    expect(nav.scroll).not.toHaveBeenCalled();
+    expect(lastZoom()[0]).toBeCloseTo(1 / notches(0.53333), 10);
+  });
+
+  it('ignores a wheel event with no vertical delta', () => {
+    controller.onWheel({
+      clientX: 100,
+      clientY: 50,
+      deltaY: 0,
+      preventDefault: vi.fn()
+    });
+    expect(nav.zoomBy).not.toHaveBeenCalled();
+  });
+
+  describe('trackpad wheel input', () => {
+    const preventDefault = vi.fn();
+    const at = (timeStamp: number, fields: Partial<WheelEventLike>) =>
+      controller.onWheel({
+        clientX: 100 + 32,
+        clientY: 50 + 16,
+        deltaY: 0,
+        preventDefault,
+        timeStamp,
+        ...fields
+      });
+
+    it('pans with a two-finger scroll instead of zooming', () => {
+      at(0, { deltaX: 4, deltaY: -7 });
+
+      expect(nav.scroll).toHaveBeenCalledTimes(1);
+      expect(vi.mocked(nav.scroll).mock.calls[0][0]).toMatchObject({
+        x: -4,
+        y: 7
+      });
+      expect(nav.zoomBy).not.toHaveBeenCalled();
+    });
+
+    it('keeps panning for the rest of a burst once it has shown a trackpad', () => {
+      // Vertical only: no evidence of a trackpad yet, so it zooms.
+      at(0, { deltaY: 40 });
+      expect(nav.zoomBy).toHaveBeenCalledTimes(1);
+
+      at(16, { deltaX: 1, deltaY: 30 });
+      at(32, { deltaY: 40 });
+      expect(nav.scroll).toHaveBeenCalledTimes(2);
+      expect(nav.zoomBy).toHaveBeenCalledTimes(1);
+
+      // A pause ends the burst: the next notch is a wheel again.
+      at(400, { deltaY: 100 });
+      expect(nav.zoomBy).toHaveBeenCalledTimes(2);
+      expect(nav.scroll).toHaveBeenCalledTimes(2);
+    });
+
+    it('zooms continuously with a pinch, at the pinch center', () => {
+      at(0, { ctrlKey: true, deltaY: -5 });
+
+      expect(nav.zoomBy).toHaveBeenCalledTimes(1);
+      const [factor, center] = vi.mocked(nav.zoomBy).mock.calls[0];
+      expect(factor).toBeCloseTo(Math.exp(0.05), 10);
+      expect(center).toMatchObject({ x: 32, y: 16 });
+    });
+
+    it('zooms a ctrl-held mouse wheel in pixels at the wheel rate, not the pinch rate', () => {
+      at(0, { ctrlKey: true, deltaY: 100 });
+      expect(lastZoom()[0]).toBeCloseTo(1 / notches(1), 10);
+    });
+
+    it('zooms a ctrl-held mouse wheel by notches, not at the pinch rate', () => {
+      at(0, { ctrlKey: true, deltaY: 3, deltaMode: 1 });
+      expect(lastZoom()[0]).toBeCloseTo(1 / notches(1), 10);
+    });
   });
 
   it('a second finger cancels the tool stream and pans as a gesture', () => {
@@ -292,7 +408,7 @@ describe('PointerController', () => {
 
     expect(tool.down).not.toHaveBeenCalled();
     expect(tool.hover).not.toHaveBeenCalled();
-    expect(nav.zoomOut).not.toHaveBeenCalled();
+    expect(nav.zoomBy).not.toHaveBeenCalled();
   });
 
   // A disposed project stays reachable until the host re-homes the
@@ -319,6 +435,6 @@ describe('PointerController', () => {
     expect(tool.move).not.toHaveBeenCalled();
     expect(tool.hover).not.toHaveBeenCalled();
     expect(tool.up).not.toHaveBeenCalled();
-    expect(nav.zoomIn).not.toHaveBeenCalled();
+    expect(nav.zoomBy).not.toHaveBeenCalled();
   });
 });

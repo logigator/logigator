@@ -165,6 +165,11 @@ export class BoardComponent implements OnInit, OnDestroy {
         project: () => this._router.project,
         nav: {
           pan: (delta) => this._router.project?.viewport.pan(delta),
+          scroll: (delta) => {
+            const project = this._router.project;
+            project?.viewport.pan(delta);
+            project?.triggerTicker('single');
+          },
           zoomIn: (center) => this._router.project?.viewport.zoomIn(center),
           zoomOut: (center) => this._router.project?.viewport.zoomOut(center),
           zoomBy: (factor, center) =>

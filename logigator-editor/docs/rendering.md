@@ -105,7 +105,21 @@ it is fresh before the next render.
 - **Touch** — pointers feed `MultiTouchGesture` first; a second finger hands
   over to two-finger pan/pinch and cancels the tool stream, so one finger never
   both operates a tool and navigates.
-- **Wheel** — zoom at the cursor, non-passive so page scroll/zoom stops.
+- **Wheel** — non-passive, so page scroll/zoom stops. A mouse wheel zooms at
+  the cursor, continuously and in proportion to its delta (`zoomBy`): a 100 px
+  notch is one zoom-button step (×1.2). Proportional matters because Chromium
+  merges the wheel input between two frames into one event and sums its delta,
+  so a fast scroll over a slow frame is one event several notches long. The
+  1.2 ladder belongs to the zoom buttons alone; `zoomBy` resyncs it so a button
+  press continues from wherever the wheel left the zoom. A trackpad pans with two
+  fingers (`PointerNavTarget.scroll`, which requests its own frame) and zooms
+  continuously with a pinch, which browsers send as a ctrl-wheel. The DOM does
+  not say which device scrolled; `wheel-input.ts` reads a horizontal component
+  as a trackpad and holds that for the rest of a burst of events, and a
+  ctrl-wheel of small pixel deltas as a pinch. Nothing weaker counts: fractional
+  deltas come from high-resolution mice too (Chromium on Linux), and reading
+  them as a trackpad made a mouse pan. A vertical-only trackpad swipe therefore
+  zooms, smoothly, as the wheel does. Untuned against real trackpads.
 
 The `PointerNavTarget` comes from the host (the board maps it onto the active
 project plus ticker; a watch wraps `pan` to re-blit). Handlers are public so
