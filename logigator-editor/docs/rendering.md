@@ -113,7 +113,9 @@ it is fresh before the next render.
   1.2 ladder belongs to the zoom buttons alone; `zoomBy` resyncs it so a button
   press continues from wherever the wheel left the zoom. A trackpad pans with two
   fingers (`PointerNavTarget.scroll`, which requests its own frame) and zooms
-  continuously with a pinch, which browsers send as a ctrl-wheel. The DOM does
+  continuously with a pinch, which browsers send as a ctrl-wheel — always at
+  the pointer: the scroll events a browser interleaves with a pinch, carrying
+  the fingers' drift, are dropped until the pinch ends. The DOM does
   not say which device scrolled; `wheel-input.ts` reads a horizontal component
   as a trackpad and holds that for the rest of a burst of events, and a
   ctrl-wheel of small pixel deltas as a pinch. Nothing weaker counts: fractional

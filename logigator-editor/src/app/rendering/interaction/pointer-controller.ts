@@ -109,6 +109,10 @@ export class PointerController {
   // shown itself to come from a trackpad.
   private _wheelLast = -Infinity;
   private _wheelTrackpad = false;
+  // Whether the current burst is a pinch. A pinch always zooms at the pointer:
+  // the scroll events a browser interleaves with it, carrying the fingers'
+  // drift, are dropped rather than panned.
+  private _wheelPinch = false;
   private _panPointer: number | null = null;
   private readonly _panLast = new Point();
 
@@ -277,15 +281,20 @@ export class PointerController {
     e.preventDefault();
     if (!this._project()) return;
     const now = e.timeStamp ?? performance.now();
-    if (now - this._wheelLast > WHEEL_BURST_GAP_MS) this._wheelTrackpad = false;
+    if (now - this._wheelLast > WHEEL_BURST_GAP_MS) {
+      this._wheelTrackpad = false;
+      this._wheelPinch = false;
+    }
     this._wheelLast = now;
     if (looksLikeTrackpad(e)) this._wheelTrackpad = true;
 
     const center = this._localPosition(e);
     if (isPinch(e)) {
+      this._wheelPinch = true;
       this.opts.nav.zoomBy(Math.exp(-e.deltaY * PINCH_ZOOM_PER_PX), center);
       return;
     }
+    if (this._wheelPinch && !e.ctrlKey) return;
     if (this._wheelTrackpad && !e.ctrlKey) {
       this.opts.nav.scroll(
         new Point(-wheelPixels(e, e.deltaX ?? 0), -wheelPixels(e, e.deltaY))

@@ -303,7 +303,25 @@ describe('PointerController', () => {
       expect(nav.scroll).toHaveBeenCalledTimes(2);
     });
 
-    it('zooms continuously with a pinch, at the pinch center', () => {
+    it('neither pans nor moves the zoom point with the finger drift inside a pinch', () => {
+      at(0, { ctrlKey: true, deltaY: -5 });
+      // The fingers' midpoint moving, sent between the pinch's own events.
+      at(8, { deltaX: 6, deltaY: -3 });
+      at(16, { ctrlKey: true, deltaY: -4 });
+      at(24, { deltaX: -2, deltaY: 4 });
+
+      expect(nav.scroll).not.toHaveBeenCalled();
+      expect(nav.zoomBy).toHaveBeenCalledTimes(2);
+      for (const [, center] of vi.mocked(nav.zoomBy).mock.calls) {
+        expect(center).toMatchObject({ x: 32, y: 16 });
+      }
+
+      // Once the pinch has ended, a two-finger scroll pans again.
+      at(300, { deltaX: 6, deltaY: -3 });
+      expect(nav.scroll).toHaveBeenCalledTimes(1);
+    });
+
+    it('zooms continuously with a pinch, at the pointer', () => {
       at(0, { ctrlKey: true, deltaY: -5 });
 
       expect(nav.zoomBy).toHaveBeenCalledTimes(1);
