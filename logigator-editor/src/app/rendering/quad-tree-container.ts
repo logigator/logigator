@@ -326,8 +326,9 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
     const culled = !view.intersects(entry.boundsArea);
     entry.culled = culled;
     if (culled) return;
-    // On screen, so a group the zoom walk skipped or a snapshot left behind
-    // catches up before the frame draws it.
+    // On screen, so a group not yet at the board's zoom — a zoom step since
+    // the last frame, or a snapshot that left it behind — catches up before
+    // the frame draws it.
     this.presentGroup(entry, this._board);
     const branches = entry.branches;
     if (!branches || !branches.nw.isGroupRoot) return;
@@ -338,27 +339,18 @@ export class QuadTreeContainer<T extends GridElement> extends Container {
   }
 
   /**
-   * Re-tunes the screen-constant visuals of every visible group to `scale`,
-   * skipping culled groups until {@link cull} brings them back. Re-tuning one
-   * element dirties its transform and swaps its cached context, dirtying its
-   * whole render group's instruction set, so skipping the culled groups is
-   * what keeps a zoom step proportional to what is on screen. A tree nobody
-   * culls has no culled groups, so the same walk covers all of it.
+   * Sets the zoom scale the board shows, re-tuning nothing yet: the next
+   * {@link cull} re-tunes each group it finds on screen, and a group off screen
+   * waits until a cull reveals it. Re-tuning one element dirties its transform
+   * and swaps its cached context, dirtying its whole render group's
+   * instruction set, so leaving it to the cull keeps a zoom step proportional
+   * to what is on screen — and however many zoom steps land between two
+   * frames, each visible group is re-tuned once, to the scale the frame draws
+   * with. A render with no cull pass calls {@link uncull}, which tunes every
+   * group.
    */
-  public applyScale(scale: number): void {
+  public setBoardScale(scale: number): void {
     this._board = { scale, textHidden: false };
-    this.applyScaleToEntry(this._tree);
-  }
-
-  private applyScaleToEntry(entry: QuadTreeEntry<T>): void {
-    if (entry.culled) return;
-    this.presentGroup(entry, this._board);
-    const branches = entry.branches;
-    if (!branches || !branches.nw.isGroupRoot) return;
-    this.applyScaleToEntry(branches.nw);
-    this.applyScaleToEntry(branches.ne);
-    this.applyScaleToEntry(branches.sw);
-    this.applyScaleToEntry(branches.se);
   }
 
   /**

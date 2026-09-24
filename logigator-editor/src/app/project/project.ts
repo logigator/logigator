@@ -21,6 +21,7 @@ import { WireTopology } from './wire-topology';
 import { ViewportController } from './viewport-controller';
 import { ConnectionPointManager } from '../connection-points/connection-point-manager';
 import { LoggingService } from '../logging/logging.service';
+import { strokeScaleFor } from '../rendering/graphics/stroke-scale';
 
 /** Shared "exclude nothing" set, so a collision check allocates none. */
 export const NO_EXCLUDED_IDS: ReadonlySet<number> = new Set<number>();
@@ -42,6 +43,13 @@ export class Project extends Container {
 
   private readonly _viewport: ViewportController;
   private readonly _cullView = new Rectangle();
+  // A zoom scale the content has not been re-tuned to yet. Zoom steps only
+  // record it; the pass before the next render applies it once, so several
+  // wheel events inside one frame cost one re-tune, and the frame still
+  // draws every stroke at the scale it renders with.
+  private _pendingScale: number | null = null;
+  // The stroke rung the content is tuned to; see _applyPendingScale.
+  private _presentedScale = 1;
   // Reused by the collision helpers: one query per dragged element per move.
   private readonly _componentScratch: Component[] = [];
   private readonly _wireScratch: Wire[] = [];
@@ -89,12 +97,7 @@ export class Project extends Container {
       this,
       this._grid,
       (scale) => {
-        this._floatingLayer.updateScale(scale);
-        this._connectionPoints.layer.applyScale(scale);
-        // Only what the viewport can see; the cull pass catches off-screen
-        // entries up when it reveals them.
-        this._components.applyScale(scale);
-        this._wires.applyScale(scale);
+        this._pendingScale = scale;
       },
       () => this._ticker$.next('single')
     );
@@ -190,6 +193,7 @@ export class Project extends Container {
    * {@link restoreBoardPresentation}.
    */
   public presentForSnapshot(presentation: Presentation): void {
+    this._applyPendingScale();
     this._components.present(presentation);
     this._wires.present(presentation);
     this._connectionPoints.layer.applyScale(presentation.scale);
@@ -202,7 +206,7 @@ export class Project extends Container {
    * the viewport, not the board.
    */
   public restoreBoardPresentation(): void {
-    this._connectionPoints.layer.applyScale(this.scale.x);
+    this._connectionPoints.layer.applyScale(this._presentedScale);
     this.cull();
   }
 
@@ -212,20 +216,45 @@ export class Project extends Container {
    * root is ever culled, so only group roots are visited.
    */
   public uncull(): void {
+    this._applyPendingScale();
     this._components.uncull();
     this._wires.uncull();
   }
 
   /**
    * Flags quad-tree entries outside the viewport as culled, so their render
-   * groups are skipped. Also the catch-up point for the zoom re-tuning
-   * {@link ViewportController} skips over off-screen entries: an entry reaches
-   * the live scale on the frame that un-culls it.
+   * groups are skipped. Also where zoom is applied: it first takes any scale
+   * zoomed to since the last frame, then re-tunes every group it finds on
+   * screen that is not at the board's scale — so a group reaches the live
+   * scale on the frame that draws it, whether a zoom or a pan brought it there.
    */
   public cull(): void {
+    this._applyPendingScale();
     const view = this._viewport.gridView(this._cullView);
     this._wires.cull(view);
     this._components.cull(view);
+  }
+
+  /**
+   * Applies the zoom recorded since the last render pass. What the content is
+   * tuned to is the zoom's stroke rung ({@link strokeScaleFor}), not the raw
+   * scale: a continuous zoom that stays within one rung re-tunes nothing, and
+   * crossing one costs a single re-tune. Screen-constant widths are then held
+   * to ±2.5% rather than exactly — the rung spacing, and invisible at 1–2 px.
+   * The trees only take the new board scale: the cull or un-cull that follows
+   * re-tunes the groups it draws.
+   */
+  private _applyPendingScale(): void {
+    const scale = this._pendingScale;
+    if (scale === null) return;
+    this._pendingScale = null;
+    const presented = strokeScaleFor(scale);
+    if (presented === this._presentedScale) return;
+    this._presentedScale = presented;
+    this._floatingLayer.updateScale(presented);
+    this._connectionPoints.layer.applyScale(presented);
+    this._components.setBoardScale(presented);
+    this._wires.setBoardScale(presented);
   }
 
   public get components(): Iterable<Component> {

@@ -785,13 +785,32 @@ describe('QuadTreeContainer', () => {
     });
   });
 
-  describe('applyScale', () => {
+  describe('setBoardScale', () => {
+    it('re-tunes nothing itself; the next cull tunes each visible element once, to the last scale', () => {
+      const near = insertCluster(2, 2);
+      tree.cull(new Rectangle(0, 0, 10, 10));
+      for (const item of near) item.tunings = 0;
+
+      // Three zoom steps inside one frame.
+      tree.setBoardScale(1.2);
+      tree.setBoardScale(1.44);
+      tree.setBoardScale(1.728);
+      for (const item of near) expect(item.tunings).toBe(0);
+
+      tree.cull(new Rectangle(0, 0, 10, 10));
+      for (const item of near) {
+        expect(item.tunings).toBe(1);
+        expect(item.appliedScale).toBe(1.728);
+      }
+    });
+
     it('re-tunes on-screen elements and leaves culled ones behind', () => {
       const near = insertCluster(2, 2);
       const far = insertCluster(40, 40);
       tree.cull(new Rectangle(0, 0, 10, 10));
 
-      tree.applyScale(2);
+      tree.setBoardScale(2);
+      tree.cull(new Rectangle(0, 0, 10, 10));
 
       for (const item of near) expect(item.appliedScale).toBe(2);
       for (const item of far) expect(item.appliedScale).toBe(1);
@@ -800,7 +819,8 @@ describe('QuadTreeContainer', () => {
     it('catches a culled element up on the cull that reveals it', () => {
       const far = insertCluster(40, 40);
       tree.cull(new Rectangle(0, 0, 10, 10));
-      tree.applyScale(2);
+      tree.setBoardScale(2);
+      tree.cull(new Rectangle(0, 0, 10, 10));
 
       tree.cull(new Rectangle(38, 38, 10, 10));
 
@@ -810,7 +830,8 @@ describe('QuadTreeContainer', () => {
     it('re-tunes a revealed entry only once while the scale holds', () => {
       const [item] = insertCluster(40, 40);
       tree.cull(new Rectangle(0, 0, 10, 10));
-      tree.applyScale(2);
+      tree.setBoardScale(2);
+      tree.cull(new Rectangle(0, 0, 10, 10));
       tree.cull(new Rectangle(38, 38, 10, 10));
 
       const calls: number[] = [];
@@ -821,7 +842,8 @@ describe('QuadTreeContainer', () => {
     });
 
     it('brings an inserted element to the live scale', () => {
-      tree.applyScale(2);
+      tree.setBoardScale(2);
+      tree.cull(new Rectangle(0, 0, 64, 64));
 
       const item = makeItem(5, 5, 1, 1);
       tree.insert(item);
@@ -839,7 +861,8 @@ describe('QuadTreeContainer', () => {
       const far = makeItem(40, 40, 1, 1);
       for (const item of [...near, far]) tree.insert(item);
       tree.cull(new Rectangle(0, 0, 10, 10));
-      tree.applyScale(2);
+      tree.setBoardScale(2);
+      tree.cull(new Rectangle(0, 0, 10, 10));
       expect(far.appliedScale).toBe(1);
 
       for (const item of near) tree.remove(item);
@@ -881,7 +904,8 @@ describe('QuadTreeContainer', () => {
     it('a cull returns only on-screen entries to the board; the rest keep the snapshot', () => {
       const near = insertCluster(2, 2);
       const far = insertCluster(40, 40);
-      tree.applyScale(2);
+      tree.setBoardScale(2);
+      tree.cull(new Rectangle(0, 0, 64, 64));
 
       tree.present(SNAPSHOT);
       tree.cull(new Rectangle(0, 0, 10, 10));
@@ -993,7 +1017,8 @@ describe('QuadTreeContainer', () => {
 
     it('detach returns an element to the board, whatever its entry was left in', () => {
       const far = insertCluster(40, 40);
-      tree.applyScale(2);
+      tree.setBoardScale(2);
+      tree.cull(new Rectangle(0, 0, 64, 64));
       tree.present(SNAPSHOT);
       tree.cull(new Rectangle(0, 0, 10, 10));
 
@@ -1075,7 +1100,8 @@ describe('QuadTreeContainer', () => {
       const group = fillGroup(32, 32);
       tree.cull(new Rectangle(60, 60, 2, 2));
 
-      tree.applyScale(2);
+      tree.setBoardScale(2);
+      tree.cull(new Rectangle(60, 60, 2, 2));
 
       for (const item of group) expect(item.appliedScale).toBe(2);
       for (const item of near) expect(item.appliedScale).toBe(1);

@@ -514,13 +514,19 @@ context, a text flip is a structural change — and doing either board-wide is
 what made zoom and the minimap expensive. The payoff is viewport-sized, so the
 work is too:
 
-- **`applyScale(scale)`** (what `ViewportController` calls per step) moves the
-  board's presentation and re-tunes only groups that are not culled — all of a
-  visible group, including the part of it off screen.
+- **`setBoardScale(scale)`** moves the board's presentation and re-tunes
+  nothing. A zoom step only records its scale on the `Project`; the pass before
+  the next render (`Project.cull`, or `uncull`/`presentForSnapshot` for renders
+  without one) hands it to the trees, the connection-point layer and the
+  floating layer. Several wheel events inside one frame therefore cost one
+  re-tune, to the scale the frame draws with. This is not a debounce: the
+  re-tune still lands before the frame it affects, so no stroke is ever drawn
+  at a stale width.
 - **`cull(view)`** compares each on-screen group's stamp against the board's and
-  catches it up on mismatch. Running right before each blit, an element is
-  current by the time it can be drawn, whether zoom, a pan or a snapshot left it
-  behind. Only the half of the stamp that differs is applied.
+  catches it up on mismatch — all of a visible group, including the part of it
+  off screen. Running right before each blit, an element is current by the time
+  it can be drawn, whether zoom, a pan or a snapshot left it behind. Only the
+  half of the stamp that differs is applied.
 - **`present(presentation)`** is the snapshot's walk
   (`Project.presentForSnapshot`): it un-culls every group and switches the ones
   not already in the snapshot's state. The restore is just the next
@@ -619,6 +625,18 @@ The subclasses bake scale compensation so strokes stay screen-constant:
 construction), `GridGraphics` (`1/scale` dots), and the white unit rects of
 `WireGraphics` / `ConnectionPointGraphics`, whose color is the per-instance tint so
 the context stays theme-independent — plus the per-component shapes.
+
+**Scale-keyed contexts are baked at the zoom's stroke rung, never the raw
+scale** (`graphics/stroke-scale.ts`, `strokeScaleFor`): the nearest power of
+1.05, so a stroke is within ±2.5% of its intended width. The zoom itself is
+continuous (wheel, pinch), and the cache never evicts, so a raw-scale key would
+bake a new context per wheel event for every body size on screen, for the rest
+of the session. `Component.addScaledGraphics`, the negation bubble and ghost and
+the grid all snap. The board's content is tuned to the same rung
+(`Project._applyPendingScale`), so a zoom that stays within one rung re-tunes
+nothing and swaps no context — no render group rebuilds — and crossing a rung
+costs one re-tune. Transform-only compensation (port stubs, wires, dots) is
+tuned to the rung with everything else, holding it to the same ±2.5%.
 
 ## `AssetsService`
 

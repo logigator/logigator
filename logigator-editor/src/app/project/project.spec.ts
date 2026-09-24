@@ -10,6 +10,7 @@ import { Component } from '../components/component';
 import { textComponentConfig } from '../components/component-types/text/text.config';
 import { makeAnd, makeWire } from '../../testing/factories';
 import { environment } from '../../environments/environment';
+import { strokeScaleFor } from '../rendering/graphics/stroke-scale';
 import { TestBed } from '@angular/core/testing';
 import { ThemingService } from '../theming/theming.service';
 import { ThemeType } from '../theming/theme-type.enum';
@@ -694,6 +695,58 @@ describe('Project.isEmpty', () => {
     project.removeWire(wire.id);
     agrees();
     expect(project.isEmpty).toBe(true);
+  });
+});
+
+describe('Project zoom re-tuning', () => {
+  let project: Project;
+
+  beforeEach(() => {
+    configureTestBed();
+    project = new Project();
+    project.viewport.resizeViewport(800, 600);
+  });
+
+  afterEach(() => {
+    project.destroy({ children: true });
+  });
+
+  it('re-tunes on the render pass, once however many zoom steps preceded it', () => {
+    const comp = makeAnd(2);
+    comp.position.set(2, 2);
+    project.addComponent(comp);
+    project.cull();
+    const rescale = vi.spyOn(comp, 'applyScale');
+
+    const center = new Point(0, 0);
+    project.viewport.zoomIn(center);
+    project.viewport.zoomIn(center);
+    project.viewport.zoomIn(center);
+    expect(rescale).not.toHaveBeenCalled();
+
+    project.cull();
+    expect(rescale).toHaveBeenCalledTimes(1);
+    expect(rescale).toHaveBeenCalledWith(strokeScaleFor(project.scale.x));
+  });
+
+  it('re-tunes nothing for a continuous zoom that stays within one stroke rung', () => {
+    const comp = makeAnd(2);
+    comp.position.set(2, 2);
+    project.addComponent(comp);
+    project.cull();
+    const rescale = vi.spyOn(comp, 'applyScale');
+
+    const center = new Point(0, 0);
+    project.viewport.zoomBy(1.01, center);
+    project.cull();
+    project.viewport.zoomBy(0.995, center);
+    project.cull();
+    expect(rescale).not.toHaveBeenCalled();
+
+    // Crossing into the next rung re-tunes, once.
+    project.viewport.zoomBy(1.06, center);
+    project.cull();
+    expect(rescale).toHaveBeenCalledTimes(1);
   });
 });
 

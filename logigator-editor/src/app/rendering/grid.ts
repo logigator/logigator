@@ -3,6 +3,7 @@ import { GridGraphics } from './graphics/grid.graphics';
 import { GraphicsProviderService } from './graphics-provider.service';
 import { fromGrid } from '../utils/grid';
 import { getStaticDI } from '../utils/get-di';
+import { strokeScaleFor } from './graphics/stroke-scale';
 
 export class Grid extends Container {
   override sortableChildren = false;
@@ -64,10 +65,11 @@ export class Grid extends Container {
   }
 
   private draw(): void {
+    // Snapped like every cached context; chunk layout keeps the exact scale.
     const geometry = this._geometryService.getGraphicsContext(
       GridGraphics,
       this._chunkSize,
-      this._elScale
+      strokeScaleFor(this._elScale)
     );
 
     const viewportScaled = new Point(

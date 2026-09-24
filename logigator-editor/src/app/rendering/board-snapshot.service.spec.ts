@@ -17,6 +17,7 @@ import { makeAnd } from '../../testing/factories';
 import { BoardSnapshotService } from './board-snapshot.service';
 import { RendererService } from './renderer.service';
 import { ThemingService } from '../theming/theming.service';
+import { strokeScaleFor } from './graphics/stroke-scale';
 
 interface RenderCall {
   transform: { a: number; d: number; tx: number; ty: number };
@@ -173,7 +174,8 @@ describe('BoardSnapshotService', () => {
 
     // Reference scale → proportional line weights, not the multiplier's.
     expect(scaleDuringRender).toBe(1);
-    expect(comp.appliedScale).toBe(liveScale);
+    // Back on the board, tuned to the live zoom's stroke rung.
+    expect(comp.appliedScale).toBe(strokeScaleFor(liveScale));
     texture.destroy(true);
   });
 

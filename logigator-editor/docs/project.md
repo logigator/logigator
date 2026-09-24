@@ -47,9 +47,13 @@ under a fractional translation, and snapping the source would accumulate drift.
 `viewportChange$` / `viewportState` publish `{ gridOrigin, scale, viewportSize }`
 for overlays.
 
-A zoom re-tunes scale-dependent visuals through the quad trees' `applyScale`,
-which touch **on-screen entries only**; `Project.cull()` catches an off-screen
-entry up on the frame that un-culls it (`rendering.md` § Culling). Zoom methods
+A zoom step only records its scale; `Project.cull()`, run right before each
+render, applies it — at the scale's stroke rung (`rendering.md` § Shared
+graphics), so a zoom within one rung changes nothing — re-tuning scale-dependent visuals in **on-screen render
+groups only**, once per frame however many steps preceded it — and catches an
+off-screen group up on the frame that un-culls it (`rendering.md` § Culling).
+Renders without a cull pass (`uncull`, `presentForSnapshot`) apply it too. Zoom
+methods
 request one `'single'` render frame; pans don't — they only happen inside
 gestures that already hold the ticker on.
 

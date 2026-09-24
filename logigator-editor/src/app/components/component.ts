@@ -40,6 +40,7 @@ import { Connectable } from '../rendering/grid-element';
 import { IdAllocator } from '../utils/id-allocator';
 import { ComponentMeta, Direction, OptionValues } from '@logigator/core';
 import { CANVAS_FONT_FAMILY, fitMonoFontSize } from '../utils/text-fit';
+import { strokeScaleFor } from '../rendering/graphics/stroke-scale';
 
 export interface PortsChange {
   oldPorts: Point[];
@@ -439,14 +440,18 @@ export abstract class Component<
 
   /**
    * Adds a Graphics that swaps to the scale-keyed cached context on every
-   * applyScale. Affordable at zoom-gesture rate; never swap contexts per
+   * applyScale. `contextFor` receives the stroke scale ({@link strokeScaleFor}),
+   * not the raw zoom, so the cache stays bounded and a zoom within one rung
+   * swaps nothing. Affordable at zoom-gesture rate; never swap contexts per
    * simulation frame (see WireGraphics).
    */
   protected addScaledGraphics(
-    contextFor: (scale: number) => GraphicsContext
+    contextFor: (strokeScale: number) => GraphicsContext
   ): Graphics {
     const graphics = new Graphics();
-    this.onApplyScale((scale) => (graphics.context = contextFor(scale)));
+    this.onApplyScale(
+      (scale) => (graphics.context = contextFor(strokeScaleFor(scale)))
+    );
     return this.addChild(graphics);
   }
 
@@ -673,7 +678,7 @@ export abstract class Component<
   private _bubbleContext(scale: number): GraphicsContext {
     return this.geometryService.getGraphicsContext(
       NegationBubbleGraphics,
-      scale
+      strokeScaleFor(scale)
     );
   }
 

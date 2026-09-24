@@ -10,6 +10,7 @@ import { romComponentConfig } from './component-types/rom/rom.config';
 import { dFfComponentConfig } from './component-types/d-ff/d-ff.config';
 import { segmentDisplayComponentConfig } from './component-types/segment-display/segment-display.config';
 import { PX } from '../utils/grid';
+import { strokeScaleFor } from '../rendering/graphics/stroke-scale';
 import { Direction } from '@logigator/core';
 import {
   makeAnd,
@@ -905,8 +906,11 @@ describe('Component negation bubble rendering', () => {
     // Same Graphics instance (no rebuild), sized by transform...
     expect(comp.portBubbles.get(0)).toBe(bubbleBefore);
     expect(comp.portBubbles.get(0)!.scale.x).toBeCloseTo(scaleForScale(2), 5);
-    // ...with the context re-fetched for this zoom (keeps the border 1px).
-    expect(comp.portBubbles.get(0)!.context).toBe(bubbleContext(2));
+    // ...with the context re-fetched for this zoom's stroke rung (keeps the
+    // border 1px).
+    expect(comp.portBubbles.get(0)!.context).toBe(
+      bubbleContext(strokeScaleFor(2))
+    );
 
     comp.destroy({ children: true });
   });

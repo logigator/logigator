@@ -7,6 +7,7 @@ import {
 } from '../connection-points/connection-point';
 import { getStaticDI } from '../utils/get-di';
 import { GraphicsProviderService } from './graphics-provider.service';
+import { strokeScaleFor } from './graphics/stroke-scale';
 import {
   NegationBubbleGraphics,
   scaleForScale
@@ -177,7 +178,7 @@ export class FloatingLayer extends Container {
   private _sizeNegationGhost(ghost: Graphics, scale: number): void {
     ghost.context = getStaticDI(GraphicsProviderService).getGraphicsContext(
       NegationBubbleGraphics,
-      scale
+      strokeScaleFor(scale)
     );
     ghost.scale.set(scaleForScale(scale));
   }
