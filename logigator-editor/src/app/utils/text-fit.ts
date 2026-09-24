@@ -1,17 +1,15 @@
 /**
- * Canvas text width as pure arithmetic. All canvas text renders in Roboto
- * Mono, whose every glyph advances 0.6 em, so a string's width is
- * `0.6 × fontSize × length` — no canvas measurement and no wrong-before-the-
- * webfont-loads metrics. DOM text keeps measurement-based fitting (the UI font
- * is not pinned to a monospace), so these helpers are canvas-only.
+ * Canvas text width as pure arithmetic. All canvas text renders in Roboto Mono,
+ * whose every glyph advances 0.6 em, so a string's width is
+ * `0.6 × fontSize × length` — no measurement, and no wrong metrics before the
+ * webfont loads. DOM text is not pinned to a monospace, so this is canvas-only.
  */
 export const CANVAS_FONT_FAMILY = 'Roboto Mono';
 
 /**
- * Glyphs baked into the canvas bitmap-font atlas: printable ASCII, Latin-1
- * and Latin Extended-A. Characters outside this set are silently dropped by
- * BitmapText. The subset woff2 in assets/ was generated for exactly this set,
- * so the two must stay in sync.
+ * Glyphs baked into the canvas bitmap-font atlas: printable ASCII, Latin-1 and
+ * Latin Extended-A. BitmapText silently drops anything outside it, and the
+ * subset woff2 in assets/ covers exactly this set — keep the two in sync.
  */
 export const CANVAS_FONT_CHARS: string[][] = [
   [' ', '~'],
@@ -29,8 +27,7 @@ export function monoTextWidth(text: string, fontSize: number): number {
 
 /**
  * Largest font size ≤ `base` at which `text` fits into `maxWidth`, floored at
- * `min` — at the floor the text may overflow its slot (kept legible rather
- * than shrunk into noise).
+ * `min`. At the floor the text may overflow rather than shrink into noise.
  */
 export function fitMonoFontSize(
   text: string,

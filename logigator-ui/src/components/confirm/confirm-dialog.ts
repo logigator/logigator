@@ -5,12 +5,10 @@ import { Confirmation } from './confirmation';
 import { LgConfirmOutlet } from './confirm-outlet';
 
 /**
- * The keyless modal outlet for {@link ConfirmationService}. Shows the active
- * confirmation in an {@link LgDialog} (reused for chrome, focus trap and
- * scale-in) with reject/accept buttons built from the confirmation's
- * `*ButtonProps`. Escape or a backdrop click reject; the accept button runs the
- * `accept` callback. Handles only confirmations whose `key` matches its own
- * (both undefined for the bare keyless outlet).
+ * The modal outlet for {@link ConfirmationService}: the active confirmation in
+ * an {@link LgDialog}, with buttons built from its `*ButtonProps`. Escape and
+ * a backdrop click reject. It handles only confirmations whose `key` matches
+ * its own, both being undefined for the bare keyless outlet.
  */
 @Component({
   selector: 'lg-confirm-dialog',
@@ -26,18 +24,22 @@ import { LgConfirmOutlet } from './confirm-outlet';
     >
       <p class="text-text">{{ current()?.message }}</p>
       <ng-template #footer>
-        <lg-button
-          [label]="current()?.rejectLabel"
+        <button
+          lgButton
           [severity]="rejectSeverity()"
           [outlined]="rejectOutlined()"
           (onClick)="reject()"
-        />
-        <lg-button
-          [label]="current()?.acceptLabel"
+        >
+          {{ current()?.rejectLabel }}
+        </button>
+        <button
+          lgButton
           [severity]="acceptSeverity()"
           [outlined]="acceptOutlined()"
           (onClick)="accept()"
-        />
+        >
+          {{ current()?.acceptLabel }}
+        </button>
       </ng-template>
     </lg-dialog>
   `
@@ -46,9 +48,6 @@ export class LgConfirmDialog extends LgConfirmOutlet {
   protected present(confirmation: Confirmation): void {
     this.current.set(confirmation);
   }
-
-  // teardown() inherits the base no-op: the dialog's visibility derives from
-  // `current()`, which the base clears on settle.
 
   /** Escape / backdrop dismissal from the dialog rejects. */
   protected onVisibleChange(visible: boolean): void {

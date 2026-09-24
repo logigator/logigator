@@ -1,0 +1,56 @@
+<ng-container *appTranslate="let t">
+  @if (search.loading()) {
+    <p class="text-muted text-sm">{{ t('documentation.search.loading') }}</p>
+  } @else if (rows().length) {
+    <ul class="flex flex-col gap-1">
+      @for (row of rows(); track row.page + '#' + row.anchor) {
+        <li>
+          <button
+            type="button"
+            class="hover:bg-content-hover flex w-full flex-col items-start gap-0.5 rounded px-3 py-2 text-left"
+            (click)="resultSelected.emit(row)"
+          >
+            <span class="text-text-hover text-sm font-medium">
+              @for (part of row.headingParts; track $index) {
+                @if (part.match) {
+                  <mark class="bg-primary/25 rounded-xs text-inherit">{{
+                    part.text
+                  }}</mark>
+                } @else {
+                  <span>{{ part.text }}</span>
+                }
+              }</span
+            ><!-- A real space, or the two run together in the accessible name:
+                 they are separate lines visually, which a screen reader does
+                 not read. -->&ngsp;<span class="text-muted text-xs">
+              @for (part of row.pageTitleParts; track $index) {
+                @if (part.match) {
+                  <mark class="bg-primary/25 rounded-xs text-inherit">{{
+                    part.text
+                  }}</mark>
+                } @else {
+                  <span>{{ part.text }}</span>
+                }
+              }
+            </span>
+            <p class="text-muted line-clamp-2 text-sm">
+              @for (part of row.snippetParts; track $index) {
+                @if (part.match) {
+                  <mark class="bg-primary/25 rounded-xs text-inherit">{{
+                    part.text
+                  }}</mark>
+                } @else {
+                  <span>{{ part.text }}</span>
+                }
+              }
+            </p>
+          </button>
+        </li>
+      }
+    </ul>
+  } @else {
+    <p class="text-muted text-sm">
+      {{ t('documentation.search.empty', { query: search.query() }) }}
+    </p>
+  }
+</ng-container>

@@ -1,4 +1,4 @@
-import { BuiltInComponentType } from '../../components/component-type.enum';
+import { BuiltInComponentType } from '@logigator/core';
 import { WorkMode } from '../../work-mode/work-mode.enum';
 import { TutorialDefinition } from '../tutorial.model';
 import {
@@ -19,11 +19,10 @@ const SIM_START = 'sim-start';
 const MOBILE_COMPONENTS = 'mobile-components';
 
 /**
- * Compact palette targets: anchor the palette item while its sheet is open,
- * else the Parts (+) button that opens the sheet — the sheet is detached from
- * the DOM when closed, so the item id resolves to nothing and the fallback
- * wins. On compact both live at the bottom of the screen, so these steps
- * place their bubble on top.
+ * Compact palette targets: the palette item while its sheet is open, else the
+ * Parts (+) button that opens it — a closed sheet is detached, so the item id
+ * resolves to nothing and the fallback wins. Both sit at the bottom of the
+ * screen, so these steps place their bubble on top.
  */
 const compactPaletteTarget = (type: number): readonly string[] => [
   paletteItem(type),
@@ -32,10 +31,7 @@ const compactPaletteTarget = (type: number): readonly string[] => [
 
 /**
  * The flagship first-run tutorial: build two Switches → AND → LED, run it, and
- * flip the switches to see the LED light. Authored for desktop and compact;
- * step ordering and detection follow `plans/onboarding.md`. The palette steps
- * anchor to the component list on desktop and, on compact, to the palette item
- * or the Parts (+) button that opens its sheet — whichever is on screen.
+ * flip the switches to see the LED light. Authored for desktop and compact.
  */
 export const gettingStartedTutorial: TutorialDefinition = {
   id: 'getting-started',

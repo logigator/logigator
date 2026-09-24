@@ -1,6 +1,6 @@
 import type { WorkMode } from '../app/work-mode/work-mode.enum';
 import type { ShortcutActionEnum } from '../app/shortcuts/shortcut-action.enum';
-import type { ComponentCategory } from '../app/components/component-category.enum';
+import type { ComponentCategory } from '@logigator/core';
 import type { TranslationSchema } from '../app/translation/translation-schema.model';
 
 const es: TranslationSchema = {
@@ -15,6 +15,38 @@ const es: TranslationSchema = {
     previousPage: 'Página anterior',
     nextPage: 'Página siguiente',
     lastPage: 'Última página',
+    formatting: 'Formato',
+    heading1: 'Encabezado 1',
+    heading2: 'Encabezado 2',
+    heading3: 'Encabezado 3',
+    bold: 'Negrita',
+    italic: 'Cursiva',
+    code: 'Código',
+    link: 'Enlace',
+    bulletedList: 'Lista con viñetas',
+    numberedList: 'Lista numerada',
+    quote: 'Cita',
+    codeBlock: 'Bloque de código',
+    divider: 'Separador',
+    table: 'Tabla',
+    linkTools: 'Enlace',
+    linkText: 'enlace',
+    linkUrl: 'Dirección del enlace',
+    removeLink: 'Eliminar enlace',
+    tableTools: 'Tabla',
+    insertRowAbove: 'Insertar fila arriba',
+    insertRowBelow: 'Insertar fila abajo',
+    insertColumnBefore: 'Insertar columna a la izquierda',
+    insertColumnAfter: 'Insertar columna a la derecha',
+    deleteRow: 'Eliminar fila',
+    deleteColumn: 'Eliminar columna',
+    deleteTable: 'Eliminar tabla',
+    alignLeft: 'Alinear a la izquierda',
+    alignCenter: 'Centrar',
+    alignRight: 'Alinear a la derecha',
+    viewMode: 'Vista',
+    richText: 'Texto enriquecido',
+    markdownSource: 'Markdown',
     moved: 'Movido a la posición {{position}} de {{total}}'
   },
   user: {
@@ -28,7 +60,8 @@ const es: TranslationSchema = {
     editorSettings: 'Ajustes del editor',
     account: 'Cuenta',
     logOut: 'Cerrar sesión',
-    logIn: 'Iniciar sesión'
+    logIn: 'Iniciar sesión',
+    signUp: 'Registrarse'
   },
   theming: {
     light: 'Claro',
@@ -381,9 +414,6 @@ const es: TranslationSchema = {
           changelog: {
             label: 'Novedades'
           },
-          legacyEditor: {
-            label: 'Abrir el editor antiguo'
-          },
           cookieSettings: {
             label: 'Ajustes de cookies'
           },
@@ -423,6 +453,12 @@ const es: TranslationSchema = {
     loadError: 'No se pudo cargar esta página.',
     back: 'Todos los temas',
     learnMore: 'Más información',
+    search: {
+      label: 'Buscar en la documentación',
+      placeholder: 'Buscar..',
+      loading: 'Cargando la documentación…',
+      empty: 'Nada coincide con «{{query}}».'
+    },
     sections: {
       basics: 'Conceptos básicos',
       building: 'Construir circuitos',
@@ -501,9 +537,7 @@ const es: TranslationSchema = {
     destinationLocal: 'Local',
     notLoggedIn:
       'Debes haber iniciado sesión para guardar proyectos en la nube.',
-    public: 'Público',
-    publicInfo:
-      'Los proyectos públicos se publican en tu perfil y son accesibles para cualquiera mediante un enlace para compartir. Los proyectos privados solo son visibles para ti.',
+    visibilityLabel: 'Quién puede abrirlo',
     localWarning:
       'Los proyectos locales no se conservan entre dispositivos y pueden perderse.'
   },
@@ -516,9 +550,7 @@ const es: TranslationSchema = {
     storeLocal: 'Local',
     notLoggedIn:
       'Debes haber iniciado sesión para guardar componentes en la nube.',
-    public: 'Público',
-    publicInfo:
-      'Los componentes públicos se publican en tu perfil y son accesibles para cualquiera mediante un enlace para compartir. Los componentes privados solo son visibles para ti.',
+    visibilityLabel: 'Quién puede abrirlo',
     localWarning:
       'Los componentes locales no se conservan entre dispositivos y pueden perderse.',
     create: 'Crear'
@@ -527,27 +559,53 @@ const es: TranslationSchema = {
     button: 'Subir a la nube',
     signInTooltip: 'Inicia sesión para subir a la nube'
   },
+  visibility: {
+    private: {
+      label: 'Solo tú',
+      hint: 'Solo tú puedes abrirlo: nada es accesible mediante un enlace.'
+    },
+    unlisted: {
+      label: 'Cualquiera con el enlace',
+      hint: 'Quien tenga el enlace puede abrirlo en modo lectura. No aparece en las listas de la comunidad ni en los buscadores.'
+    },
+    public: {
+      label: 'Todo el mundo',
+      hint: 'Aparece en la comunidad, está abierto a todos y los buscadores lo indexan.'
+    }
+  },
   shareDialog: {
     header: 'Compartir proyecto',
     headerComponent: 'Compartir componente',
-    intro:
-      'Cualquiera que tenga este enlace puede abrir “{{name}}” en modo de solo lectura y clonarlo en su propia biblioteca.',
+    intro: 'Elige quién puede abrir «{{name}}».',
+    visibilityLabel: 'Quién puede abrirlo',
     linkLabel: 'Enlace para compartir',
+    noLink:
+      'Mientras el documento sea privado, nadie puede abrirlo. El enlace se conserva: elige «Cualquiera con el enlace» para volver a repartir la misma URL, y desde ahí también puedes sustituirlo.',
+    viewPublicPage: 'Ver la página de la comunidad',
     copy: 'Copiar enlace',
     linkCopied: 'Enlace para compartir copiado al portapapeles.',
     copyFailed: 'No se pudo copiar el enlace al portapapeles.',
     regenerate: 'Regenerar enlace',
     regenerateWarning:
-      'Regenerar crea un enlace nuevo e invalida permanentemente el actual: cualquiera que use el enlace antiguo perderá el acceso.',
+      'El enlace anterior deja de funcionar de inmediato, para todos los que lo tengan. El circuito en sí no cambia.',
+    linkPublished:
+      'El enlace no se ha sustituido: el documento está publicado y su enlace es la dirección de su página.',
     linkRegenerated: 'Se generó un nuevo enlace para compartir.',
     regenerateFailed: 'No se pudo regenerar el enlace para compartir.',
-    public: 'Público',
-    publicInfoProject:
-      'Los proyectos públicos se publican en tu perfil y cualquiera puede descubrirlos. Los proyectos privados solo son accesibles mediante el enlace para compartir.',
-    publicInfoComponent:
-      'Los componentes públicos se publican en tu perfil y cualquiera puede descubrirlos. Los componentes privados solo son accesibles mediante el enlace para compartir.',
     visibilityUpdated: 'Visibilidad actualizada.',
     visibilityFailed: 'No se pudo actualizar la visibilidad.',
+    share: 'Compartir',
+    embed: 'Insertar',
+    embedHide: 'Ocultar inserción',
+    embedCopy: 'Copiar código',
+    embedCopied: 'Código de inserción copiado al portapapeles.',
+    embedCopyFailed:
+      'No se pudo copiar el código de inserción al portapapeles.',
+    embedHint: 'Pégalo en un mensaje de foro, una página wiki o una clase.',
+    formatLabel: 'Formato',
+    formatMarkdown: 'Markdown',
+    formatHtml: 'HTML',
+    formatBbcode: 'BBCode',
     close: 'Cerrar'
   },
   shareComponent: {
@@ -577,11 +635,7 @@ const es: TranslationSchema = {
       'Un proyecto en la nube solo puede contener componentes en la nube, así que cada uno de estos se sube primero a tu biblioteca en la nube y luego se referencia.',
     unresolvableWarning:
       '{{count}} componente(s) incrustado(s) ya no se pueden publicar (su entrada en la biblioteca ya no existe) y permanecerán como simples copias incrustadas.',
-    public: 'Público',
-    publicInfoProject:
-      'Los proyectos públicos se publican en tu perfil y son accesibles para cualquiera mediante un enlace para compartir. Los proyectos privados solo son visibles para ti.',
-    publicInfoComponent:
-      'Los componentes públicos se publican en tu perfil y son accesibles para cualquiera mediante un enlace para compartir. Los componentes privados solo son visibles para ti.',
+    visibilityLabel: 'Quién puede abrirlo',
     notLoggedIn: 'Debes haber iniciado sesión para subir a la nube.',
     cancel: 'Cancelar',
     upload: 'Subir',
@@ -697,8 +751,6 @@ const es: TranslationSchema = {
     errorIntro:
       'Se ha producido un error inesperado. Cuéntanos qué estabas haciendo para que podamos localizarlo.',
     errorDetails: 'Detalles del error',
-    legacyEditorNotice: '¿Esto te bloquea?',
-    legacyEditorLink: 'Abrir el editor antiguo',
     placeholder: '¿Qué ha ocurrido?',
     dataNotice:
       'Tu proyecto actual, los detalles del navegador y la actividad reciente se adjuntan para ayudarnos a reproducir el problema.',
@@ -724,6 +776,8 @@ const es: TranslationSchema = {
     saveFailed: 'No se pudo guardar: {{detail}}',
     saveFailedGeneric: 'No se pudo guardar el proyecto.',
     createFailed: 'No se pudo crear el proyecto: {{detail}}',
+    saveTooLarge:
+      'Este circuito es demasiado grande para guardarlo en la nube: elimina algunos componentes e inténtalo de nuevo.',
     versionMismatch:
       'Este proyecto cambió en otro sitio: recárgalo antes de volver a guardarlo.',
     loadFailed: 'No se pudo cargar el proyecto.',
@@ -739,6 +793,10 @@ const es: TranslationSchema = {
       'No se pudo cargar un componente personalizado (falta su definición) y se omitió.',
     skippedCustomMany:
       'No se pudieron cargar {{count}} componentes personalizados (faltan sus definiciones) y se omitieron.'
+  },
+  browserSupport: {
+    unsupported:
+      'Este navegador no es compatible oficialmente: pueden producirse errores. Si tienes problemas, prueba a actualizar tu navegador.'
   },
   editor: {
     rendererInitFailed:
@@ -958,7 +1016,7 @@ const es: TranslationSchema = {
           moveAround: {
             title: 'Moverse',
             textDesktop:
-              'Desplaza para hacer zoom, arrastra con el botón derecho para desplazarte.',
+              'Desplaza para hacer zoom, arrastra con el botón derecho o el botón central para desplazarte.',
             textCompact:
               'Pellizca para hacer zoom, arrastra con dos dedos para desplazarte.'
           },

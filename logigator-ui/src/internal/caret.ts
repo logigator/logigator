@@ -7,14 +7,11 @@ import {
 } from './overlay';
 
 /**
- * The little diamond caret that an anchored overlay (Tooltip, Popover,
- * ConfirmPopup) parks on its edge to point at the anchor, carrying the panel's
- * border on its protruding edges. Place it as the last child of the panel's
- * `relative` container; it positions itself from `side` (the side the panel
- * sits on relative to the anchor) and takes its surface from `tone` —
- * `content` for `bg-content` panels, `raised` for the elevated chrome (the
- * tooltip bubble). Exported for consumers that build their own anchored
- * overlays on {@link LgOverlayService} (pair with `caretSideChanges`).
+ * The diamond caret an anchored overlay parks on its edge to point at the
+ * anchor. Place it as the last child of the panel's `relative` container; it
+ * positions itself from `side` and takes its surface from `tone`. Exported
+ * for consumers building their own overlays on {@link LgOverlayService},
+ * paired with `caretSideChanges`.
  */
 @Component({
   selector: 'lg-caret',
@@ -30,9 +27,8 @@ export class LgCaret {
   readonly side = input.required<LgOverlaySide>();
   readonly tone = input<LgCaretTone>('content');
   /**
-   * Pixels to slide the caret along the panel edge it sits on, from the centre
-   * it defaults to — see `caretOffsetFor`, which computes it. Positive is right
-   * (a panel above/below the anchor) or down (a panel beside it).
+   * Pixels to slide the caret along its edge, away from the default centre;
+   * `caretOffsetFor` computes it. Positive is right, or down on a side panel.
    */
   readonly offset = input(0);
 

@@ -15,10 +15,9 @@ import {
 } from './dynamic-dialog-container';
 
 /**
- * Opens components in a modal dialog imperatively. Centred over a `cdk/overlay`
- * global overlay with a backdrop, focus trap + restore, and Escape / (optional)
- * backdrop dismissal.
- * `root`-provided, so no provider wiring is needed at call sites.
+ * Opens components in a modal dialog imperatively: centred over a `cdk/overlay`
+ * global overlay with a backdrop, focus trap and restore, and Escape or
+ * optional backdrop dismissal.
  */
 @Injectable({ providedIn: 'root' })
 export class DialogService {
@@ -45,10 +44,9 @@ export class DialogService {
       overlayRef.dispose();
     });
 
-    // Wired before the child is attached, so a dialog that closes itself from
-    // its own constructor is still reported. Deliberately not added to
-    // `subscription`: the disposer unsubscribes that bag *before* `onClose`
-    // emits, which would swallow every close.
+    // Wired before the child attaches, so a dialog closing itself from its own
+    // constructor is still reported. Not on `subscription`: the disposer
+    // unsubscribes that bag *before* `onClose` emits.
     const telemetryId = config.telemetryId;
     if (telemetryId !== undefined) {
       this.notifyTelemetry(() => this.telemetry?.onOpen(telemetryId));
@@ -86,9 +84,8 @@ export class DialogService {
         overlayRef.backdropClick().subscribe(() => dialogRef.close())
       );
     }
-    // Any other teardown of the overlay (e.g. navigation) settles the ref too,
-    // so `firstValueFrom(onClose)` never hangs. The settled guard makes the
-    // close()→dispose()→detachment→close() re-entry a no-op.
+    // Any other teardown settles the ref too, so `firstValueFrom(onClose)`
+    // never hangs; the settled guard makes the re-entry a no-op.
     subscription.add(
       overlayRef.detachments().subscribe(() => dialogRef.close())
     );
@@ -96,13 +93,12 @@ export class DialogService {
     return dialogRef;
   }
 
-  /** Runs a telemetry callback in isolation — an observer that throws must not
-   * take down the dialog opening or tearing down around it. */
+  /** An observer that throws must not take the dialog down with it. */
   private notifyTelemetry(notify: () => void): void {
     try {
       notify();
     } catch {
-      // Telemetry is an observer; the dialog lifecycle does not depend on it.
+      // The dialog lifecycle does not depend on telemetry.
     }
   }
 }

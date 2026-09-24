@@ -5,7 +5,7 @@ import { TestBed } from '@angular/core/testing';
 import { setStaticDIInjector } from '../../utils/get-di';
 import { AddWiresAction } from './add-wires.action';
 import { Wire } from '../../wires/wire';
-import { WireDirection } from '../../wires/wire-direction.enum';
+import { WireDirection } from '@logigator/core';
 import type { Project } from '../../project/project';
 
 describe('AddWiresAction', () => {
@@ -31,7 +31,7 @@ describe('AddWiresAction', () => {
     it('calls addWire once for a single wire', () => {
       const wire = new Wire(WireDirection.HORIZONTAL, 3);
       wiresToDestroy.push(wire);
-      const action = new AddWiresAction(wire);
+      const action = new AddWiresAction([wire]);
 
       action.do(project);
 
@@ -41,7 +41,7 @@ describe('AddWiresAction', () => {
     it('calls addWire with a Wire instance', () => {
       const wire = new Wire(WireDirection.HORIZONTAL, 3);
       wiresToDestroy.push(wire);
-      const action = new AddWiresAction(wire);
+      const action = new AddWiresAction([wire]);
 
       action.do(project);
 
@@ -53,7 +53,7 @@ describe('AddWiresAction', () => {
       const wire2 = new Wire(WireDirection.VERTICAL, 5);
       const wire3 = new Wire(WireDirection.HORIZONTAL, 2);
       wiresToDestroy.push(wire1, wire2, wire3);
-      const action = new AddWiresAction(wire1, wire2, wire3);
+      const action = new AddWiresAction([wire1, wire2, wire3]);
 
       action.do(project);
 
@@ -63,7 +63,7 @@ describe('AddWiresAction', () => {
     it('does not call removeWire during do()', () => {
       const wire = new Wire(WireDirection.HORIZONTAL, 3);
       wiresToDestroy.push(wire);
-      const action = new AddWiresAction(wire);
+      const action = new AddWiresAction([wire]);
 
       action.do(project);
 
@@ -71,7 +71,7 @@ describe('AddWiresAction', () => {
     });
 
     it('does not call addWire when constructed with no wires', () => {
-      const action = new AddWiresAction();
+      const action = new AddWiresAction([]);
 
       expect(() => action.do(project)).not.toThrow();
       expect(project.addWire).not.toHaveBeenCalled();
@@ -83,7 +83,7 @@ describe('AddWiresAction', () => {
       const wire = new Wire(WireDirection.HORIZONTAL, 3);
       wiresToDestroy.push(wire);
       const wireId = wire.id;
-      const action = new AddWiresAction(wire);
+      const action = new AddWiresAction([wire]);
 
       action.undo(project);
 
@@ -98,7 +98,7 @@ describe('AddWiresAction', () => {
       wiresToDestroy.push(wire1, wire2);
       const id1 = wire1.id;
       const id2 = wire2.id;
-      const action = new AddWiresAction(wire1, wire2);
+      const action = new AddWiresAction([wire1, wire2]);
 
       action.undo(project);
 
@@ -110,7 +110,7 @@ describe('AddWiresAction', () => {
     it('does not call addWire during undo()', () => {
       const wire = new Wire(WireDirection.HORIZONTAL, 3);
       wiresToDestroy.push(wire);
-      const action = new AddWiresAction(wire);
+      const action = new AddWiresAction([wire]);
 
       action.undo(project);
 
@@ -118,7 +118,7 @@ describe('AddWiresAction', () => {
     });
 
     it('does not call removeWire when constructed with no wires', () => {
-      const action = new AddWiresAction();
+      const action = new AddWiresAction([]);
 
       expect(() => action.undo(project)).not.toThrow();
       expect(project.removeWire).not.toHaveBeenCalled();

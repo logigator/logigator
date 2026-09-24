@@ -13,8 +13,7 @@ const DEFAULT_SIZE = { width: 480, height: 400 };
 
 /**
  * The desktop presenter: one floating {@link WindowService} window per
- * inspection, rendered into the `lg-window-outlet` over the board. The
- * inspection model is handed to its renderer as the `inspection` input.
+ * inspection, rendered into the `lg-window-outlet` over the board.
  */
 @Injectable({ providedIn: 'root' })
 export class WindowInspectionPresenter implements InspectionPresenter {
@@ -32,8 +31,8 @@ export class WindowInspectionPresenter implements InspectionPresenter {
       maxSize: inspection.sizing?.max
     });
     this.refs.set(entry, ref);
-    // Fires on every teardown path; `close()` below removes the map entry
-    // first, so only user-driven closes reach the service.
+    // Fires on every teardown path; `close()` removes the map entry first, so
+    // only user-driven closes reach the service.
     ref.onClose.subscribe(() => {
       if (this.refs.delete(entry)) {
         dismissed();
@@ -52,8 +51,8 @@ export class WindowInspectionPresenter implements InspectionPresenter {
   }
 
   /**
-   * The entry's window box in viewport CSS px — `null` when it is not framed
-   * by a window (the compact sheet) or its chrome is not in the DOM yet.
+   * The entry's window box in viewport CSS px — `null` when it is not framed by
+   * a window, or its chrome is not in the DOM yet.
    */
   public boundsOf(entry: OpenInspection): WindowRect | null {
     return this.refs.get(entry)?.bounds ?? null;

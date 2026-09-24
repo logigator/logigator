@@ -1,7 +1,6 @@
 /**
  * Opens the browser's file picker and resolves with the chosen file's text, or
- * `null` if the read fails. Uses a transient `<input type="file">` so no markup
- * is needed at the call site. A cancelled picker never fires `change`, so the
+ * `null` if the read fails. A cancelled picker never fires `change`, so the
  * promise never resolves.
  */
 export function pickTextFile(accept = ''): Promise<string | null> {

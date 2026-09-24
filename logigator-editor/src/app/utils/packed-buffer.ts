@@ -2,9 +2,8 @@
  * Generic bit-packed byte-buffer helpers, independent of any component type.
  *
  * A buffer is a flat **LSB-first** bitstream: the `wordSize`-bit word at index
- * `i` occupies bits `[i * wordSize, i * wordSize + wordSize)`, where bit `b`
- * lives at byte `b >> 3`, bit `b & 7`. (Matches the `@logigator/sim` memory
- * `ops` layout, but nothing here depends on that.)
+ * `i` occupies bits `[i * wordSize, i * wordSize + wordSize)`, with bit `b` at
+ * byte `b >> 3`, bit `b & 7`. Matches the `@logigator/sim` memory `ops` layout.
  */
 
 /** Bytes needed to hold `wordCount` words of `wordSize` bits each. */
@@ -17,10 +16,7 @@ export function maxWord(wordSize: number): bigint {
   return (1n << BigInt(wordSize)) - 1n;
 }
 
-/**
- * Reads the `wordSize`-bit word at `index`. Bits past the end of `bytes` (e.g.
- * an under-sized buffer) read as zero.
- */
+/** Reads the `wordSize`-bit word at `index`; bits past the end read as zero. */
 export function readWord(
   bytes: Uint8Array,
   index: number,
@@ -39,8 +35,8 @@ export function readWord(
 }
 
 /**
- * Writes the `wordSize`-bit word at `index` into `bytes` (mutating). The caller
- * sizes `bytes` to {@link packedByteLength}; bits past the end are dropped.
+ * Writes the `wordSize`-bit word at `index` into `bytes`, mutating it. Size
+ * `bytes` to {@link packedByteLength}; bits past the end are dropped.
  */
 export function writeWord(
   bytes: Uint8Array,
@@ -62,10 +58,7 @@ export function writeWord(
   }
 }
 
-/**
- * Returns a copy of `bytes` resized to exactly `byteLength` — truncated if
- * longer, zero-padded if shorter.
- */
+/** A copy of `bytes` truncated or zero-padded to exactly `byteLength`. */
 export function resizeBuffer(
   bytes: Uint8Array,
   byteLength: number
@@ -76,9 +69,9 @@ export function resizeBuffer(
 }
 
 /**
- * Drops trailing zero bytes so a sparse or empty buffer encodes compactly (an
- * all-zero buffer ⇒ empty). Lossless against {@link readWord} (treats bytes
- * past the end as zero) and {@link resizeBuffer} (zero-pads back).
+ * Drops trailing zero bytes so a sparse buffer encodes compactly. Lossless
+ * against {@link readWord} and {@link resizeBuffer}, which both treat missing
+ * bytes as zero.
  */
 export function trimTrailingZeros(bytes: Uint8Array): Uint8Array {
   let end = bytes.length;

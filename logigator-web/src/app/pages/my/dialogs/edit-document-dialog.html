@@ -1,0 +1,70 @@
+<ng-container *webTranslate="let t">
+  @let nameMessage = nameError(); @let descriptionMessage = descriptionError();
+
+  <form class="flex flex-col gap-4" [formGroup]="form" (ngSubmit)="submit()">
+    @if (formError(); as message) {
+    <lg-message severity="danger">{{ t(message) }}</lg-message>
+    }
+
+    <lg-form-field
+      #nameField="lgFormField"
+      inputId="edit-document-name"
+      required
+      [label]="t('pages.my.edit.nameLabel')"
+      [error]="nameMessage ? t(nameMessage) : undefined"
+    >
+      <input
+        lgInputText
+        id="edit-document-name"
+        type="text"
+        class="w-full"
+        maxlength="20"
+        formControlName="name"
+        [invalid]="!!nameMessage"
+        [attr.aria-describedby]="nameField.describedBy()"
+      />
+    </lg-form-field>
+
+    <lg-form-field
+      #descriptionField="lgFormField"
+      inputId="edit-document-description"
+      [label]="t('pages.my.edit.descriptionLabel')"
+      [hint]="t('pages.my.edit.descriptionHint')"
+      [error]="descriptionMessage ? t(descriptionMessage) : undefined"
+    >
+      <lg-markdown-field
+        [value]="description()"
+        [maxLength]="2048"
+        [labelledBy]="descriptionField.labelId()"
+        [describedBy]="descriptionField.describedBy()"
+        [invalid]="!!descriptionMessage"
+      >
+        <textarea
+          lgTextarea
+          id="edit-document-description"
+          rows="8"
+          class="w-full"
+          maxlength="2048"
+          formControlName="description"
+          [invalid]="!!descriptionMessage"
+          [attr.aria-describedby]="descriptionField.describedBy()"
+        ></textarea>
+      </lg-markdown-field>
+    </lg-form-field>
+
+    <div class="flex justify-end gap-2">
+      <button
+        lgButton
+        outlined
+        severity="secondary"
+        type="button"
+        (click)="cancel()"
+      >
+        {{ t('pages.my.edit.cancel') }}
+      </button>
+      <button lgButton type="submit" [loading]="saving()">
+        {{ t('pages.my.edit.save') }}
+      </button>
+    </div>
+  </form>
+</ng-container>

@@ -13,9 +13,8 @@ export const POWERED_WIRE_PIVOT =
   (POWERED_WIRE_THICKNESS - 1) / (2 * POWERED_WIRE_THICKNESS);
 
 export class WireGraphics extends StaticGraphicsContext {
-  // White base: the wire's color (theme wire color, or the selection color)
-  // lives entirely in the per-instance tint — white × tint = the tint exactly.
-  // Keeps the context theme-independent, so a theme change retints instances
+  // White base, so the wire's color lives entirely in the per-instance tint.
+  // The context stays theme-independent and a theme change retints instances
   // instead of swapping contexts.
   public static override readonly themeIndependent = true;
 
@@ -23,12 +22,10 @@ export class WireGraphics extends StaticGraphicsContext {
     super();
 
     // A 1×1 rect hanging its thickness on the +y side of the centre-line.
-    // Powered thickness is expressed by the owning Graphics' cross-axis scale
-    // (with POWERED_WIRE_PIVOT keeping it centred), never by a context swap:
-    // reassigning a Graphics context detaches/re-attaches listeners on the
-    // shared context (a linear scan over every attached wire/stub) and flags
-    // the render group for a full instruction rebuild, while transform
-    // changes patch the batch in place.
+    // Powered thickness rides the owning Graphics' cross-axis scale, never a
+    // context swap: reassigning a context re-attaches listeners on the shared
+    // context and flags the render group for a full instruction rebuild,
+    // while a transform change patches the batch in place.
     this.rect(0, 0, 1, 1);
     this.fill(0xffffff);
   }

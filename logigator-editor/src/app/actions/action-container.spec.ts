@@ -21,8 +21,6 @@ describe('ActionContainer', () => {
     project = makeProject();
   });
 
-  // ── Empty container ───────────────────────────────────────────────────────
-
   describe('empty container', () => {
     it('do() does not throw on an empty container', () => {
       const container = new ActionContainer();
@@ -40,27 +38,23 @@ describe('ActionContainer', () => {
     });
   });
 
-  // ── length ────────────────────────────────────────────────────────────────
-
   describe('length', () => {
     it('returns the correct count for multiple constructor actions', () => {
-      const container = new ActionContainer(
+      const container = new ActionContainer([
         makeAction(),
         makeAction(),
         makeAction()
-      );
+      ]);
       expect(container.length).toBe(3);
     });
   });
-
-  // ── do() ─────────────────────────────────────────────────────────────────
 
   describe('do()', () => {
     it('calls do() on every contained action', () => {
       const a1 = makeAction();
       const a2 = makeAction();
       const a3 = makeAction();
-      const container = new ActionContainer(a1, a2, a3);
+      const container = new ActionContainer([a1, a2, a3]);
 
       container.do(project);
 
@@ -83,7 +77,7 @@ describe('ActionContainer', () => {
       a2.do.mockImplementation(() => callOrder.push(2));
       a3.do.mockImplementation(() => callOrder.push(3));
 
-      const container = new ActionContainer(a1, a2, a3);
+      const container = new ActionContainer([a1, a2, a3]);
       container.do(project);
 
       expect(callOrder).toEqual([1, 2, 3]);
@@ -92,7 +86,7 @@ describe('ActionContainer', () => {
     it('does not call undo() on any action during do()', () => {
       const a1 = makeAction();
       const a2 = makeAction();
-      const container = new ActionContainer(a1, a2);
+      const container = new ActionContainer([a1, a2]);
 
       container.do(project);
 
@@ -101,14 +95,12 @@ describe('ActionContainer', () => {
     });
   });
 
-  // ── undo() ────────────────────────────────────────────────────────────────
-
   describe('undo()', () => {
     it('calls undo() on every contained action', () => {
       const a1 = makeAction();
       const a2 = makeAction();
       const a3 = makeAction();
-      const container = new ActionContainer(a1, a2, a3);
+      const container = new ActionContainer([a1, a2, a3]);
 
       container.undo(project);
 
@@ -131,7 +123,7 @@ describe('ActionContainer', () => {
       a2.undo.mockImplementation(() => callOrder.push(2));
       a3.undo.mockImplementation(() => callOrder.push(3));
 
-      const container = new ActionContainer(a1, a2, a3);
+      const container = new ActionContainer([a1, a2, a3]);
       container.undo(project);
 
       expect(callOrder).toEqual([3, 2, 1]);
@@ -140,7 +132,7 @@ describe('ActionContainer', () => {
     it('does not call do() on any action during undo()', () => {
       const a1 = makeAction();
       const a2 = makeAction();
-      const container = new ActionContainer(a1, a2);
+      const container = new ActionContainer([a1, a2]);
 
       container.undo(project);
 
@@ -149,13 +141,11 @@ describe('ActionContainer', () => {
     });
   });
 
-  // ── add() ─────────────────────────────────────────────────────────────────
-
   describe('add()', () => {
     it('the added action is included in a subsequent do()', () => {
       const existing = makeAction();
       const added = makeAction();
-      const container = new ActionContainer(existing);
+      const container = new ActionContainer([existing]);
 
       container.add(added);
       container.do(project);
@@ -168,7 +158,7 @@ describe('ActionContainer', () => {
     it('the added action is included in a subsequent undo()', () => {
       const existing = makeAction();
       const added = makeAction();
-      const container = new ActionContainer(existing);
+      const container = new ActionContainer([existing]);
 
       container.add(added);
       container.undo(project);
@@ -186,7 +176,7 @@ describe('ActionContainer', () => {
       a1.do.mockImplementation(() => callOrder.push('a1'));
       a2.do.mockImplementation(() => callOrder.push('a2'));
 
-      const container = new ActionContainer(a1);
+      const container = new ActionContainer([a1]);
       container.add(a2);
       container.do(project);
 
@@ -201,7 +191,7 @@ describe('ActionContainer', () => {
       a1.undo.mockImplementation(() => callOrder.push('a1'));
       a2.undo.mockImplementation(() => callOrder.push('a2'));
 
-      const container = new ActionContainer(a1);
+      const container = new ActionContainer([a1]);
       container.add(a2);
       container.undo(project);
 

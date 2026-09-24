@@ -1,21 +1,24 @@
 import { computed, inject, Injectable } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { of, scan, startWith, switchMap } from 'rxjs';
+import {
+  distinctUntilChanged,
+  map,
+  of,
+  scan,
+  startWith,
+  switchMap
+} from 'rxjs';
 import { ProjectService } from './project.service';
 import { SelectionInspectorService } from './selection-inspector.service';
 import { ClipboardService } from '../clipboard/clipboard.service';
 import { WorkModeService } from '../work-mode/work-mode.service';
 
 /**
- * Exposes whether each editing command is currently a no-op, so the tool bar
- * (and any other surface) can disable the matching buttons.
- *
- * The predicates live on the active project's `ActionManager`/`ViewportController`
- * as plain getters. Their change streams are folded into signals with the same
- * {@link switchMap} + {@link toSignal} bridge as {@link SelectionInspectorService}:
- * `startWith` reflects the project's current state the moment it becomes active,
- * and `scan` turns the void emissions into a monotonic counter so `toSignal`
- * doesn't dedupe identical `undefined`s and stall the computed.
+ * Whether each editing command is currently a no-op, so a surface can disable
+ * the matching buttons. The predicates are plain getters on the active
+ * project's `ActionManager`/`ViewportController`, folded into signals through
+ * the same {@link switchMap} + {@link toSignal} bridge as
+ * {@link SelectionInspectorService}.
  */
 @Injectable({ providedIn: 'root' })
 export class EditorCommandStateService {
@@ -35,14 +38,20 @@ export class EditorCommandStateService {
     )
   );
 
-  private readonly viewportTick = toSignal(
+  // The active viewport's zoom scale, which is all the zoom predicates depend
+  // on. Deduplicated so a pan — a viewport change on every pointer move —
+  // never reaches change detection.
+  private readonly viewportScale = toSignal(
     toObservable(this.projectService.activeProject).pipe(
       switchMap((project) =>
         project
-          ? project.viewport.viewportChange$.pipe(startWith(void 0))
-          : of(void 0)
-      ),
-      scan((n) => n + 1, 0)
+          ? project.viewport.viewportChange$.pipe(
+              startWith(project.viewport.viewportState),
+              map((state) => state.scale),
+              distinctUntilChanged()
+            )
+          : of(null)
+      )
     )
   );
 
@@ -64,7 +73,7 @@ export class EditorCommandStateService {
 
   /** True until the viewport is at its closest zoom step. */
   public readonly canZoomIn = computed<boolean>(() => {
-    this.viewportTick();
+    this.viewportScale();
     return (
       this.projectService.activeProject()?.viewport.zoomInPossible ?? false
     );
@@ -72,7 +81,7 @@ export class EditorCommandStateService {
 
   /** True until the viewport is at its farthest zoom step. */
   public readonly canZoomOut = computed<boolean>(() => {
-    this.viewportTick();
+    this.viewportScale();
     return (
       this.projectService.activeProject()?.viewport.zoomOutPossible ?? false
     );

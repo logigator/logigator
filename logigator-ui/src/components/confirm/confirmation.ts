@@ -1,6 +1,5 @@
 import { LgSeverity } from '../../tokens/severity';
 
-/** The subset of button props a confirmation footer button accepts. */
 export interface ConfirmButtonProps {
   severity?: LgSeverity;
   outlined?: boolean;

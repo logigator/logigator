@@ -35,11 +35,10 @@ describe('ProjectService', () => {
   describe('removeOpenComponent', () => {
     it('resets activeProject to mainProject when the active component is removed', () => {
       const comp = {} as Project;
-      // setMainProject sets both mainProject and activeProject to comp
       service.setMainProject(comp);
       service.addOpenComponent(comp);
       service.removeOpenComponent(comp);
-      // After removal of the active project, activeProject falls back to mainProject
+      // Removing the active project falls back to the main one.
       expect(service.activeProject()).toBe(service.mainProject());
     });
 
@@ -50,7 +49,6 @@ describe('ProjectService', () => {
       service.setMainProject(main);
       service.addOpenComponent(comp1);
       service.addOpenComponent(comp2);
-      // activeProject is still main
       service.removeOpenComponent(comp1);
       expect(service.activeProject()).toBe(main);
     });

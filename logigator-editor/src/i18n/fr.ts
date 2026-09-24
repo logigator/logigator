@@ -1,6 +1,6 @@
 import type { WorkMode } from '../app/work-mode/work-mode.enum';
 import type { ShortcutActionEnum } from '../app/shortcuts/shortcut-action.enum';
-import type { ComponentCategory } from '../app/components/component-category.enum';
+import type { ComponentCategory } from '@logigator/core';
 import type { TranslationSchema } from '../app/translation/translation-schema.model';
 
 const fr: TranslationSchema = {
@@ -15,6 +15,38 @@ const fr: TranslationSchema = {
     previousPage: 'Page précédente',
     nextPage: 'Page suivante',
     lastPage: 'Dernière page',
+    formatting: 'Mise en forme',
+    heading1: 'Titre 1',
+    heading2: 'Titre 2',
+    heading3: 'Titre 3',
+    bold: 'Gras',
+    italic: 'Italique',
+    code: 'Code',
+    link: 'Lien',
+    bulletedList: 'Liste à puces',
+    numberedList: 'Liste numérotée',
+    quote: 'Citation',
+    codeBlock: 'Bloc de code',
+    divider: 'Séparateur',
+    table: 'Tableau',
+    linkTools: 'Lien',
+    linkText: 'lien',
+    linkUrl: 'Adresse du lien',
+    removeLink: 'Supprimer le lien',
+    tableTools: 'Tableau',
+    insertRowAbove: 'Insérer une ligne au-dessus',
+    insertRowBelow: 'Insérer une ligne en dessous',
+    insertColumnBefore: 'Insérer une colonne à gauche',
+    insertColumnAfter: 'Insérer une colonne à droite',
+    deleteRow: 'Supprimer la ligne',
+    deleteColumn: 'Supprimer la colonne',
+    deleteTable: 'Supprimer le tableau',
+    alignLeft: 'Aligner à gauche',
+    alignCenter: 'Centrer',
+    alignRight: 'Aligner à droite',
+    viewMode: 'Affichage',
+    richText: 'Texte enrichi',
+    markdownSource: 'Markdown',
     moved: 'Déplacé en position {{position}} sur {{total}}'
   },
   user: {
@@ -28,7 +60,8 @@ const fr: TranslationSchema = {
     editorSettings: "Paramètres de l'éditeur",
     account: 'Compte',
     logOut: 'Se déconnecter',
-    logIn: 'Se connecter'
+    logIn: 'Se connecter',
+    signUp: "S'inscrire"
   },
   theming: {
     light: 'Clair',
@@ -381,9 +414,6 @@ const fr: TranslationSchema = {
           changelog: {
             label: 'Nouveautés'
           },
-          legacyEditor: {
-            label: "Ouvrir l'ancien éditeur"
-          },
           cookieSettings: {
             label: 'Paramètres des cookies'
           },
@@ -423,6 +453,12 @@ const fr: TranslationSchema = {
     loadError: 'Impossible de charger cette page.',
     back: 'Tous les sujets',
     learnMore: 'En savoir plus',
+    search: {
+      label: 'Rechercher dans la documentation',
+      placeholder: 'Rechercher..',
+      loading: 'Chargement de la documentation…',
+      empty: 'Aucun résultat pour « {{query}} ».'
+    },
     sections: {
       basics: 'Bases',
       building: 'Construction de circuits',
@@ -501,9 +537,7 @@ const fr: TranslationSchema = {
     destinationLocal: 'Local',
     notLoggedIn:
       'Vous devez être connecté pour enregistrer des projets dans le cloud.',
-    public: 'Public',
-    publicInfo:
-      'Les projets publics sont publiés sur votre profil et accessibles à tous via un lien de partage. Les projets privés ne sont visibles que par vous.',
+    visibilityLabel: 'Qui peut l’ouvrir',
     localWarning:
       "Les projets locaux ne sont pas conservés d'un appareil à l'autre et peuvent être perdus."
   },
@@ -516,9 +550,7 @@ const fr: TranslationSchema = {
     storeLocal: 'Local',
     notLoggedIn:
       'Vous devez être connecté pour enregistrer des composants dans le cloud.',
-    public: 'Public',
-    publicInfo:
-      'Les composants publics sont publiés sur votre profil et accessibles à tous via un lien de partage. Les composants privés ne sont visibles que par vous.',
+    visibilityLabel: 'Qui peut l’ouvrir',
     localWarning:
       "Les composants locaux ne sont pas conservés d'un appareil à l'autre et peuvent être perdus.",
     create: 'Créer'
@@ -527,27 +559,53 @@ const fr: TranslationSchema = {
     button: 'Téléverser vers le cloud',
     signInTooltip: 'Connectez-vous pour téléverser vers le cloud'
   },
+  visibility: {
+    private: {
+      label: 'Toi uniquement',
+      hint: 'Toi seul peux l’ouvrir — rien n’est accessible par un lien.'
+    },
+    unlisted: {
+      label: 'Toute personne avec le lien',
+      hint: 'Quiconque détient le lien peut l’ouvrir en lecture seule. Il reste hors des listes communautaires et hors des moteurs de recherche.'
+    },
+    public: {
+      label: 'Tout le monde',
+      hint: 'Dans les listes communautaires, ouvert à tout le monde et indexé par les moteurs de recherche.'
+    }
+  },
   shareDialog: {
     header: 'Partager le projet',
     headerComponent: 'Partager le composant',
-    intro:
-      'Toute personne disposant de ce lien peut ouvrir « {{name}} » en lecture seule et le cloner dans sa propre bibliothèque.',
+    intro: 'Choisis qui peut ouvrir « {{name}} ».',
+    visibilityLabel: 'Qui peut l’ouvrir',
     linkLabel: 'Lien de partage',
+    noLink:
+      'Tant que le document est privé, personne ne peut l’ouvrir. Le lien est conservé : choisis « Toute personne avec le lien » pour redonner la même URL — c’est aussi là que tu peux le remplacer.',
+    viewPublicPage: 'Voir la page communautaire',
     copy: 'Copier le lien',
     linkCopied: 'Lien de partage copié dans le presse-papiers.',
     copyFailed: 'Impossible de copier le lien dans le presse-papiers.',
     regenerate: 'Régénérer le lien',
     regenerateWarning:
-      "La régénération crée un nouveau lien et invalide définitivement le lien actuel — toute personne utilisant l'ancien lien perdra l'accès.",
+      'L’ancien lien cesse immédiatement de fonctionner, pour toutes les personnes qui l’ont. Le circuit lui-même reste inchangé.',
+    linkPublished:
+      'Le lien n’a pas été remplacé : ce document est publié, et son lien est l’adresse de sa page.',
     linkRegenerated: 'Un nouveau lien de partage a été généré.',
     regenerateFailed: 'Impossible de régénérer le lien de partage.',
-    public: 'Public',
-    publicInfoProject:
-      'Les projets publics sont publiés sur votre profil et visibles par tous. Les projets privés ne sont accessibles que via le lien de partage.',
-    publicInfoComponent:
-      'Les composants publics sont publiés sur votre profil et visibles par tous. Les composants privés ne sont accessibles que via le lien de partage.',
     visibilityUpdated: 'Visibilité mise à jour.',
     visibilityFailed: 'Impossible de mettre à jour la visibilité.',
+    share: 'Partager',
+    embed: 'Intégrer',
+    embedHide: 'Masquer l’intégration',
+    embedCopy: 'Copier le code',
+    embedCopied: 'Code d’intégration copié dans le presse-papiers.',
+    embedCopyFailed:
+      'Impossible de copier le code d’intégration dans le presse-papiers.',
+    embedHint: 'À coller dans un message de forum, une page wiki ou un cours.',
+    formatLabel: 'Format',
+    formatMarkdown: 'Markdown',
+    formatHtml: 'HTML',
+    formatBbcode: 'BBCode',
     close: 'Fermer'
   },
   shareComponent: {
@@ -577,11 +635,7 @@ const fr: TranslationSchema = {
       "Un projet cloud ne peut contenir que des composants cloud ; chacun de ceux-ci est donc d'abord téléversé dans votre bibliothèque cloud puis référencé.",
     unresolvableWarning:
       '{{count}} composant(s) intégré(s) ne peuvent plus être publiés (leur entrée de bibliothèque a disparu) et resteront de simples copies intégrées.',
-    public: 'Public',
-    publicInfoProject:
-      'Les projets publics sont publiés sur votre profil et accessibles à tous via un lien de partage. Les projets privés ne sont visibles que par vous.',
-    publicInfoComponent:
-      'Les composants publics sont publiés sur votre profil et accessibles à tous via un lien de partage. Les composants privés ne sont visibles que par vous.',
+    visibilityLabel: 'Qui peut l’ouvrir',
     notLoggedIn: 'Vous devez être connecté pour téléverser vers le cloud.',
     cancel: 'Annuler',
     upload: 'Téléverser',
@@ -700,8 +754,6 @@ const fr: TranslationSchema = {
     errorIntro:
       "Une erreur inattendue s'est produite. Dites-nous ce que vous faisiez pour que nous puissions la localiser.",
     errorDetails: "Détails de l'erreur",
-    legacyEditorNotice: 'Cela vous bloque ?',
-    legacyEditorLink: "Ouvrir l'ancien éditeur",
     placeholder: "Que s'est-il passé ?",
     dataNotice:
       'Votre projet actuel, les détails de votre navigateur et votre activité récente sont joints pour nous aider à reproduire le problème.',
@@ -727,6 +779,8 @@ const fr: TranslationSchema = {
     saveFailed: "Impossible d'enregistrer : {{detail}}",
     saveFailedGeneric: "Impossible d'enregistrer le projet.",
     createFailed: 'Impossible de créer le projet : {{detail}}',
+    saveTooLarge:
+      'Ce circuit est trop volumineux pour être enregistré dans le cloud — supprimez des composants et réessayez.',
     versionMismatch:
       "Ce projet a changé ailleurs — rechargez-le avant de l'enregistrer à nouveau.",
     loadFailed: 'Impossible de charger le projet.',
@@ -742,6 +796,10 @@ const fr: TranslationSchema = {
       "Un composant personnalisé n'a pas pu être chargé — sa définition est manquante — et a été ignoré.",
     skippedCustomMany:
       "{{count}} composants personnalisés n'ont pas pu être chargés — leurs définitions sont manquantes — et ont été ignorés."
+  },
+  browserSupport: {
+    unsupported:
+      "Ce navigateur n'est pas officiellement pris en charge — des erreurs peuvent survenir. Si vous rencontrez des problèmes, essayez de mettre à jour votre navigateur."
   },
   editor: {
     rendererInitFailed:
@@ -961,7 +1019,7 @@ const fr: TranslationSchema = {
           moveAround: {
             title: 'Se déplacer',
             textDesktop:
-              'Faites défiler pour zoomer, faites glisser avec le bouton droit pour vous déplacer.',
+              'Faites défiler pour zoomer, faites glisser avec le bouton droit ou le bouton central pour vous déplacer.',
             textCompact:
               'Pincez pour zoomer, faites glisser avec deux doigts pour vous déplacer.'
           },

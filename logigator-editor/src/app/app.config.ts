@@ -4,6 +4,7 @@ import {
   inject,
   isDevMode,
   provideAppInitializer,
+  provideBrowserGlobalErrorListeners,
   provideZonelessChangeDetection
 } from '@angular/core';
 import { GlobalErrorHandler } from './logging/global-error-handler';
@@ -11,14 +12,17 @@ import { firstValueFrom } from 'rxjs';
 import { provideTransloco, TranslocoService } from '@jsverse/transloco';
 import { TranslationLoaderService } from './translation/translation-loader.service';
 import { provideHttpClient, HttpClient } from '@angular/common/http';
+import { LocationStrategy } from '@angular/common';
 import { provideTranslocoPersistLang } from '@jsverse/transloco-persist-lang';
 import { provideMarkdown } from 'ngx-markdown';
 import { provideLgLabels } from '@logigator/ui';
 import { ConsentService } from './consent/consent.service';
 import { AnalyticsService } from './analytics/analytics.service';
 import { provideDialogAnalytics } from './analytics/dialog-telemetry';
+import { provideEditorAnalyticsSources } from './analytics/editor-analytics-sources';
 import { TranslationService } from './translation/translation.service';
-import { AVAILABLE_LANGUAGES } from './translation/languages';
+import { AVAILABLE_LANGUAGES } from '@logigator/core';
+import { EditorLocationStrategy } from './routing/editor-location-strategy';
 import {
   preferencesLangStorage,
   resolveStartupLang
@@ -26,8 +30,16 @@ import {
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    // Without zone.js nothing patches `addEventListener`, so the editor's raw
+    // DOM listeners (PointerController), rAF and ticker callbacks, worker
+    // message handlers and timers never cross an Angular-managed boundary —
+    // their exceptions, and every unhandled rejection, would otherwise reach
+    // the console and nothing else. This is the `window` 'error' /
+    // 'unhandledrejection' bridge into `GlobalErrorHandler`.
+    provideBrowserGlobalErrorListeners(),
     { provide: ErrorHandler, useClass: GlobalErrorHandler },
     provideZonelessChangeDetection(),
+    { provide: LocationStrategy, useClass: EditorLocationStrategy },
     provideTransloco({
       config: {
         defaultLang: 'en',
@@ -38,10 +50,9 @@ export const appConfig: ApplicationConfig = {
       loader: TranslationLoaderService
     }),
     // The language lives in the `lang` field of the origin-wide `preferences`
-    // cookie, which the pages the editor is served alongside read and write too
-    // — so switching language on either side moves both. This provider's
+    // cookie, which the surrounding pages read and write too. This provider's
     // initializer runs before the ones below, so the language is active before
-    // `<html lang>` is stamped and before the bundle preload picks a language.
+    // `<html lang>` is stamped and before the bundle preload picks one.
     provideTranslocoPersistLang({
       storageKey: 'lang',
       storage: {
@@ -50,17 +61,15 @@ export const appConfig: ApplicationConfig = {
       getLangFn: resolveStartupLang
     }),
     provideAppInitializer(() => {
-      // Resolved for its side effect: constructing TranslationService puts the
-      // active language on <html lang> before first paint. Nothing else needs
-      // the service this early.
+      // Resolved for its side effect: constructing TranslationService puts
+      // the active language on <html lang> before first paint.
       inject(TranslationService);
     }),
     provideAppInitializer(() => {
       const transloco = inject(TranslocoService);
-      // load() ends with takeUntilDestroyed: if the injector is torn down
-      // before the lazy language bundle resolves, the stream completes without
-      // emitting. defaultValue resolves that empty completion instead of
-      // rejecting; a genuine load error still propagates.
+      // load() ends with takeUntilDestroyed, so a teardown before the lazy
+      // bundle resolves completes the stream without emitting. defaultValue
+      // resolves that instead of rejecting; a genuine error still propagates.
       return firstValueFrom(transloco.load(transloco.getActiveLang()), {
         defaultValue: undefined
       });
@@ -71,12 +80,11 @@ export const appConfig: ApplicationConfig = {
     provideAppInitializer(() => {
       inject(AnalyticsService).init();
     }),
-    // @logigator/ui's stock strings (close/back/dismiss buttons, paginator
-    // steps, reorder announcements) come from `common.*`, so every dialog,
-    // drawer and window the library renders is localized without each call site
-    // passing a label — including ones added later. The resolver is consulted
-    // per component construction, so a short-lived surface always opens in the
-    // current language; long-lived ones bind the input in their template.
+    provideEditorAnalyticsSources(),
+    // @logigator/ui's stock strings come from `common.*`, so every surface the
+    // library renders is localized without its call site passing a label. The
+    // resolver is consulted per component construction, so a short-lived
+    // surface opens in the current language; long-lived ones bind the input.
     provideLgLabels(() => {
       const translation = inject(TranslationService);
       return (key) => translation.translate(`common.${key}`);

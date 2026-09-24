@@ -7,12 +7,9 @@ import { lgLabel } from '../../tokens/labels';
 import { IMAGE_ZOOM_DATA, LgImageZoomOverlay } from './image-zoom-overlay';
 
 /**
- * Opens an image full-size in a modal overlay — the machinery behind
- * `LgImageZoom` and `LgMarkdown`'s zoomable content images. Component-provided
- * (not root) so an open overlay closes when the providing component is
- * destroyed.
- *
- * Dismiss is Escape, the backdrop, or a click on the enlarged image.
+ * Opens an image full-size in a modal overlay, dismissed by Escape, the
+ * backdrop, or a click on the image. Component-provided rather than root, so
+ * an open overlay closes with the providing component.
  */
 @Injectable()
 export class ImageZoomViewer implements OnDestroy {
@@ -23,9 +20,8 @@ export class ImageZoomViewer implements OnDestroy {
   );
 
   /**
-   * The stock label is resolved here rather than at each call site: LgMarkdown
-   * opens the viewer directly for images inside rendered markdown, so a default
-   * on the component alone would leave that path in English.
+   * Resolved here rather than per call site: LgMarkdown opens the viewer
+   * directly, so a default on the component alone leaves that path in English.
    */
   private readonly defaultCloseLabel = lgLabel('close');
 
@@ -46,8 +42,8 @@ export class ImageZoomViewer implements OnDestroy {
     this.overlay.open(new ComponentPortal(LgImageZoomOverlay, null, injector), {
       placement: 'center',
       dismissOnBackdrop: true,
-      // A click anywhere closes — image and backdrop alike — so the zoom-out
-      // cursor covers the whole viewport, not just the image.
+      // A click anywhere closes, so the zoom-out cursor covers the whole
+      // viewport rather than just the image.
       backdropClass: 'cursor-zoom-out',
       onDismiss: () => this.overlay.close()
     });

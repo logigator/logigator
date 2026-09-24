@@ -6,7 +6,7 @@ import { TranslationService } from '../translation/translation.service';
 import { AnalyticsService } from '../analytics/analytics.service';
 import { AnalyticsEvent, DialogId } from '../analytics/analytics.mapping';
 import { ReportErrorApiService } from '../api/services/report-error-api.service';
-import type { ReportErrorRequest } from '../api/models/report-error';
+import type { ReportErrorRequest } from '@logigator/contract';
 import { PersistenceService } from '../persistence/persistence.service';
 import { ProjectDumpService } from '../persistence/dump/project-dump.service';
 import { ProjectService } from '../project/project.service';
@@ -21,30 +21,39 @@ import {
 
 const CONTEXT = 'BugReportService';
 
-/** Backend field limits, mirrored here as client-side truncation backstops. */
-const MESSAGE_MAX = 2048;
-const STACK_MAX = 16384;
-const LOGS_MAX = 16384;
-const USER_AGENT_MAX = 512;
-/** Kept under the endpoint's 8 MB `projectDump` cap, with headroom. */
-const DUMP_MAX = 7_500_000;
+/**
+ * The bounds `reportErrorRequestSchema` enforces, mirrored here so an oversized
+ * field is trimmed instead of failing the whole report. `keepHead`/`keepTail`
+ * emit exactly `max` characters, which the schema accepts, so these match the
+ * contract rather than sitting under it.
+ */
+const MESSAGE_MAX = 4000;
+const STACK_MAX = 20_000;
+const LOGS_MAX = 100_000;
+const USER_AGENT_MAX = 500;
+/**
+ * The contract's `projectDump` bound. This one gates rather than truncates — a
+ * dump over it is dropped in favour of the next-richest payload — so it has to
+ * match the schema exactly, or the fallback ladder keeps handing the server
+ * something it refuses.
+ */
+const DUMP_MAX = 2_000_000;
 
 /**
- * After an error-triggered report closes, suppress further error-triggered
- * reports for this long so a cascade of follow-on errors can't reopen the
- * dialog repeatedly.
+ * How long error-triggered reports stay suppressed after one closes, so a
+ * cascade of follow-on errors cannot reopen the dialog repeatedly.
  */
 const ERROR_REPORT_COOLDOWN_MS = 15000;
 
 /**
- * Owns the bug-report flow: opening the dialog (manually from the badge, or
- * automatically from an uncaught error), assembling the report payload (client
- * environment, project dump, recent logs, error context) and submitting it.
+ * Owns the bug-report flow: opening the dialog (manually, or from an uncaught
+ * error), assembling the payload (client environment, project dump, recent
+ * logs, error context) and submitting it.
  *
- * Error-triggered reports use leading-edge lockout: the first error opens the
- * dialog and locks it (`_active`) so the cascade of follow-on errors it causes
- * is swallowed; a cooldown after close prevents immediate re-opening. Manual
- * reports bypass the cooldown but still respect the open-dialog lock.
+ * Error-triggered reports use leading-edge lockout: the first error opens and
+ * locks the dialog so the follow-on cascade is swallowed, and a cooldown after
+ * close prevents immediate re-opening. Manual reports bypass the cooldown but
+ * still respect the lock.
  */
 @Injectable({ providedIn: 'root' })
 export class BugReportService {
@@ -73,8 +82,8 @@ export class BugReportService {
 
   /**
    * Opens the report dialog for an uncaught error, subject to the lockout and
-   * cooldown. Safe to call from the global error handler on every error — only
-   * the first of a burst gets through.
+   * cooldown. Safe to call on every error; only the first of a burst gets
+   * through.
    */
   public handleUncaughtError(error: unknown, correlationId?: string): void {
     if (this.active || performance.now() < this.suppressErrorsUntil) return;
@@ -89,7 +98,7 @@ export class BugReportService {
 
   private async openDialog(data: BugReportDialogData): Promise<void> {
     if (this.active) return;
-    // Lock before opening: if opening the modal synchronously re-runs change
+    // Lock before opening: if the modal synchronously re-runs change
     // detection and re-throws, the lock is already in place to swallow it.
     this.active = true;
     try {
@@ -98,10 +107,9 @@ export class BugReportService {
         width: '36rem',
         modal: true,
         closable: true,
-        // Split by mode rather than reported as a property: when the dialog is
-        // dismissed there is no event of ours to carry the mode, and
-        // manual-vs-error is the distinction worth having on an abandoned
-        // report.
+        // Split by mode rather than carried as a property: a dismissal emits
+        // no event of ours, and manual-vs-error is the distinction worth
+        // having on an abandoned report.
         telemetryId:
           data.mode === 'error'
             ? DialogId.BugReportError
@@ -147,13 +155,12 @@ export class BugReportService {
   ): ReportErrorRequest {
     const payload: ReportErrorRequest = {
       source: 'editor-v2',
-      // Every report carries an id that links it to the matching PostHog event:
-      // an error report reuses the id the global error handler minted for its
-      // `$exception`, a manual report mints its own.
+      // Links the report to the matching PostHog event: an error report
+      // reuses the id minted for its `$exception`, a manual report mints one.
       correlationId: error?.correlationId ?? uuidv4(),
       userMessage: userMessage || undefined,
       // The raw UA is the most reliable client field; `client` also carries a
-      // coarse parsed browser/OS, but a mislabelled parse never loses this.
+      // coarse parsed browser/OS, which a mislabelled parse can get wrong.
       userAgent: this.keepHead(navigator.userAgent, USER_AGENT_MAX),
       client: this.clientInfo.collect()
     };
@@ -177,9 +184,8 @@ export class BugReportService {
 
   /**
    * The richest project payload that fits: the full debug dump (circuit + undo
-   * history) preferred, degrading to the plain circuit document if the dump is
-   * too large or fails, and finally to bare size metrics — so the biggest,
-   * most-worth-reporting projects never arrive with no project data at all.
+   * history), degrading to the plain circuit document and finally to bare size
+   * metrics, so the biggest projects still arrive with something.
    */
   private buildProjectDump(): string | undefined {
     const project = this.projectService.activeProject();

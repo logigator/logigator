@@ -89,11 +89,11 @@ export class ComponentPlacementSession implements DragSession {
     // mutations, then materialize the final state directly and register.
     const action = new ActionContainer();
     if (toRemove.length > 0) {
-      action.add(new RemoveWiresAction(...toRemove));
+      action.add(new RemoveWiresAction(toRemove));
     }
-    action.add(new AddComponentsAction(placed));
+    action.add(new AddComponentsAction([placed]));
     if (toAdd.length > 0) {
-      action.add(new AddWiresAction(...toAdd));
+      action.add(new AddWiresAction(toAdd));
     }
 
     // The ghost lands itself, minus its preview look; a frozen replacement is

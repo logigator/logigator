@@ -1,7 +1,8 @@
 <div class="flex items-center gap-2" *appTranslate="let t">
   @if (!isRecording()) {
     <lg-shortcut [binding]="binding()" />
-    <lg-button
+    <button
+      lgButton
       icon="ph ph-pencil"
       severity="secondary"
       [text]="true"
@@ -10,18 +11,19 @@
       [ariaLabel]="t('shortcuts.manager.edit')"
       tooltipPosition="bottom"
       (onClick)="startRecording()"
-    />
+    ></button>
   } @else {
     <span class="text-sm italic text-primary animate-pulse">{{
       t('shortcuts.manager.recordPrompt')
     }}</span>
-    <lg-button
+    <button
+      lgButton
       icon="ph ph-x"
       severity="warn"
       [text]="true"
       size="sm"
       [ariaLabel]="t('shortcuts.manager.cancelRecording')"
       (onClick)="stopRecording()"
-    />
+    ></button>
   }
 </div>

@@ -1,7 +1,7 @@
 import { Point } from 'pixi.js';
 import { Action } from '../action';
 import type { Project } from '../../project/project';
-import { WireDirection } from '../../wires/wire-direction.enum';
+import { WireDirection } from '@logigator/core';
 import {
   SerializedAction,
   SerializedRotateWireEntry
@@ -9,8 +9,7 @@ import {
 
 /**
  * One wire's share of a group rotation: the orbited start position plus the
- * axis it lands on (a quarter-turn swaps HORIZONTAL/VERTICAL; the length is
- * rotation-invariant and stays untouched).
+ * axis it lands on. The length is rotation-invariant and stays untouched.
  */
 export interface RotateWireEntry {
   id: number;
@@ -23,7 +22,7 @@ export interface RotateWireEntry {
 export class RotateWiresAction extends Action {
   private readonly _entries: RotateWireEntry[];
 
-  constructor(...entries: RotateWireEntry[]) {
+  constructor(entries: readonly RotateWireEntry[]) {
     super();
     this._entries = entries.map((e) => ({
       ...e,

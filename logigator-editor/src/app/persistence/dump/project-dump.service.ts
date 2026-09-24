@@ -12,10 +12,9 @@ import { deserializeAction } from '../../actions/action-codec';
 import { ProjectDump, PROJECT_DUMP_VERSION } from './project-dump.types';
 
 /**
- * Debug-only project dumps: the native circuit document plus the original
- * element ids (the file format drops them on load) and the serialized undo
- * history — enough to reconstruct the exact in-memory session. Driven by the
- * debug menu and the bug-report payload builder.
+ * Debug-only project dumps: the native circuit document, the original element
+ * ids the file format drops on load, and the serialized undo history — enough
+ * to reconstruct the in-memory session.
  */
 @Injectable({ providedIn: 'root' })
 export class ProjectDumpService {
@@ -28,9 +27,8 @@ export class ProjectDumpService {
   buildDump(project: Project): ProjectDump {
     const name = this.metadataStore.getMetadata(project)?.name ?? 'Untitled';
     const actionManager = project.actionManager;
-    // Both encoders reorder (chain walk, position-delta sort), so the
-    // document's element order is the emission order — the id lists must
-    // follow it, not the project's iteration order.
+    // Both encoders reorder, so the id lists follow the document's emission
+    // order rather than the project's iteration order.
     const components = [...project.components];
     const wires = [...project.wires];
     const { file, wireOrder, componentOrder } = this.circuitFile.toDocument(
@@ -60,12 +58,10 @@ export class ProjectDumpService {
   }
 
   /**
-   * Imports a debug {@link ProjectDump}: loads the circuit body exactly like a
-   * file import, re-stamps the saved element ids onto the freshly-built
-   * instances, then restores the undo history so undo/redo walks the real
-   * session. If the loaded element count no longer matches the id lists (e.g. a
-   * custom dropped because its definition is missing), id and history restoration
-   * are skipped with a warning — the circuit still loads.
+   * Loads the circuit body like a file import, re-stamps the saved element ids
+   * and restores the undo history. When the loaded element count no longer
+   * matches the id lists, ids and history are skipped with a warning and the
+   * circuit still loads.
    */
   async importDump(content: string): Promise<Project> {
     const dump = JSON.parse(content) as ProjectDump;

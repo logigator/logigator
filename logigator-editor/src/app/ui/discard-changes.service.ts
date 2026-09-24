@@ -5,9 +5,9 @@ import { ProjectMetadataStore } from '../persistence/project-metadata.store';
 import { ProjectService } from '../project/project.service';
 
 /**
- * The shared gate in front of replacing the main project: anything that swaps
- * a new document into the main slot throws the current one away, so a dirty
- * board must be confirmed first.
+ * The shared gate in front of replacing the main project: swapping a new
+ * document into the main slot throws the current one away, so a dirty board
+ * must be confirmed first.
  */
 @Injectable({ providedIn: 'root' })
 export class DiscardChangesService {
@@ -17,9 +17,8 @@ export class DiscardChangesService {
   private readonly projectService = inject(ProjectService);
 
   /**
-   * Resolves `true` when the main project may be discarded — it has no unsaved
-   * changes, or the user accepted the confirmation — and `false` when the user
-   * cancelled (rejecting or dismissing the dialog).
+   * Resolves `true` when the main project has no unsaved changes or the user
+   * accepted the confirmation, `false` when they cancelled.
    */
   public confirmDiscardMain(): Promise<boolean> {
     const project = this.projectService.mainProject();

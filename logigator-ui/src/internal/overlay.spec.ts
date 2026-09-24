@@ -11,11 +11,8 @@ describe('connectedPositions', () => {
   it('orders preferred → opposite → perpendicular', () => {
     const positions = connectedPositions('bottom');
     expect(positions).toHaveLength(4);
-    // preferred: overlay sits below the origin
     expect(positions[0]).toMatchObject({ originY: 'bottom', overlayY: 'top' });
-    // opposite second
     expect(positions[1]).toMatchObject({ originY: 'top', overlayY: 'bottom' });
-    // then the perpendicular sides
     expect(positions[2].overlayX).toBe('start');
     expect(positions[3].overlayX).toBe('end');
   });
@@ -56,8 +53,8 @@ describe('caretOffsetFor', () => {
   });
 
   it('stops short of the panel corners', () => {
-    // Far-off anchor: capped at half the edge less the caret's own inset,
-    // never past the corner, which is where the panel stops being straight.
+    // Capped at half the edge less the caret's inset, never past the corner
+    // where the panel stops being straight.
     const offset = caretOffsetFor(rect(2000, 400, 40, 40), panel, 'bottom');
     expect(offset).toBe(320 / 2 - 16);
     // The short edge caps sooner than the long one.

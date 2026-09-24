@@ -6,18 +6,32 @@ import {
   PointerController,
   PointerEventLike,
   PointerNavTarget,
+  WheelEventLike,
   PointerToolTarget
 } from './pointer-controller';
 
 const gs = environment.gridSize;
 
-function makeCanvas(): HTMLCanvasElement {
-  return {
-    addEventListener: vi.fn(),
+/** A DOM listener the controller registered on the canvas, by event type. */
+type CanvasListener = (event: {
+  button: number;
+  preventDefault(): void;
+}) => void;
+
+function makeCanvas(): {
+  canvas: HTMLCanvasElement;
+  listeners: Map<string, CanvasListener>;
+} {
+  const listeners = new Map<string, CanvasListener>();
+  const canvas = {
+    addEventListener: vi.fn((type: string, listener: CanvasListener) =>
+      listeners.set(type, listener)
+    ),
     setPointerCapture: vi.fn(),
     releasePointerCapture: vi.fn(),
     getBoundingClientRect: () => ({ left: 100, top: 50 })
   } as unknown as HTMLCanvasElement;
+  return { canvas, listeners };
 }
 
 /** A stand-in exposing only the viewport transform canvasToGrid reads. */
@@ -63,13 +77,14 @@ function touch(
 
 describe('PointerController', () => {
   let canvas: HTMLCanvasElement;
+  let listeners: Map<string, CanvasListener>;
   let project: Project;
   let nav: PointerNavTarget;
   let tool: Required<PointerToolTarget>;
   let controller: PointerController;
 
   beforeEach(() => {
-    canvas = makeCanvas();
+    ({ canvas, listeners } = makeCanvas());
     project = makeProject();
     nav = {
       pan: vi.fn(),
@@ -121,21 +136,43 @@ describe('PointerController', () => {
     expect(tool.move).not.toHaveBeenCalled();
   });
 
-  it('right-drag pans by successive deltas and never reaches the tool', () => {
-    controller.onPointerDown(mouse(1, 2, 200, 150));
-    expect(tool.down).not.toHaveBeenCalled();
-    expect(nav.setActive).toHaveBeenCalledWith(true);
+  it.each([2, 1])(
+    'button-%i drag pans by successive deltas and never reaches the tool',
+    (button) => {
+      controller.onPointerDown(mouse(1, button, 200, 150));
+      expect(tool.down).not.toHaveBeenCalled();
+      expect(nav.setActive).toHaveBeenCalledWith(true);
 
-    controller.onPointerMove(mouse(1, 2, 210, 145));
-    expect(nav.pan).toHaveBeenCalledTimes(1);
-    expect(vi.mocked(nav.pan).mock.calls[0][0]).toMatchObject({ x: 10, y: -5 });
+      controller.onPointerMove(mouse(1, button, 210, 145));
+      expect(nav.pan).toHaveBeenCalledTimes(1);
+      expect(vi.mocked(nav.pan).mock.calls[0][0]).toMatchObject({
+        x: 10,
+        y: -5
+      });
 
-    controller.onPointerMove(mouse(1, 2, 230, 145));
-    expect(vi.mocked(nav.pan).mock.calls[1][0]).toMatchObject({ x: 20, y: 0 });
+      controller.onPointerMove(mouse(1, button, 230, 145));
+      expect(vi.mocked(nav.pan).mock.calls[1][0]).toMatchObject({
+        x: 20,
+        y: 0
+      });
 
-    controller.onPointerUp(mouse(1, 2, 230, 145));
-    expect(nav.setActive).toHaveBeenCalledWith(false);
-    expect(tool.up).not.toHaveBeenCalled();
+      controller.onPointerUp(mouse(1, button, 230, 145));
+      expect(nav.setActive).toHaveBeenCalledWith(false);
+      expect(tool.up).not.toHaveBeenCalled();
+    }
+  );
+
+  it('suppresses the middle press default and leaves the primary one alone', () => {
+    const mousedown = listeners.get('mousedown');
+    expect(mousedown).toBeDefined();
+
+    const middle = { button: 1, preventDefault: vi.fn() };
+    const primary = { button: 0, preventDefault: vi.fn() };
+    mousedown?.(middle);
+    mousedown?.(primary);
+
+    expect(middle.preventDefault).toHaveBeenCalled();
+    expect(primary.preventDefault).not.toHaveBeenCalled();
   });
 
   it('ignores a second button while an interaction is active', () => {
@@ -147,28 +184,137 @@ describe('PointerController', () => {
     expect(nav.pan).not.toHaveBeenCalled();
   });
 
+  // One notch of 100 px is one zoom-button step.
+  const notches = (n: number) => Math.pow(1.2, n);
+  const lastZoom = () => vi.mocked(nav.zoomBy).mock.lastCall!;
+
   it('zooms at the cursor on wheel and suppresses the page scroll', () => {
     const preventDefault = vi.fn();
     controller.onWheel({
       clientX: 100 + 32,
       clientY: 50 + 16,
-      deltaY: 120,
+      deltaY: 100,
       preventDefault
     });
     expect(preventDefault).toHaveBeenCalled();
-    expect(nav.zoomOut).toHaveBeenCalledTimes(1);
-    expect(vi.mocked(nav.zoomOut).mock.calls[0][0]).toMatchObject({
-      x: 32,
-      y: 16
-    });
+    expect(lastZoom()[0]).toBeCloseTo(1 / notches(1), 10);
+    expect(lastZoom()[1]).toMatchObject({ x: 32, y: 16 });
 
     controller.onWheel({
       clientX: 100,
       clientY: 50,
-      deltaY: -120,
+      deltaY: -100,
       preventDefault
     });
-    expect(nav.zoomIn).toHaveBeenCalledTimes(1);
+    expect(lastZoom()[0]).toBeCloseTo(notches(1), 10);
+  });
+
+  it('zooms in proportion to the delta, so merged and fine input are not lost', () => {
+    const preventDefault = vi.fn();
+    // Five notches Chromium merged into one event over a slow frame.
+    controller.onWheel({
+      clientX: 100,
+      clientY: 50,
+      deltaY: 500,
+      preventDefault
+    });
+    expect(lastZoom()[0]).toBeCloseTo(1 / notches(5), 10);
+
+    // Firefox's line mode: two notches of three lines each.
+    controller.onWheel({
+      clientX: 100,
+      clientY: 50,
+      deltaY: -6,
+      deltaMode: 1,
+      preventDefault
+    });
+    expect(lastZoom()[0]).toBeCloseTo(notches(2), 10);
+
+    // A high-resolution wheel's fraction of a notch.
+    controller.onWheel({
+      clientX: 100,
+      clientY: 50,
+      deltaY: -25,
+      preventDefault
+    });
+    expect(lastZoom()[0]).toBeCloseTo(notches(0.25), 10);
+  });
+
+  it('zooms for a high-resolution wheel reporting fractional deltas', () => {
+    // Chromium on Linux: a notch of a high-resolution wheel.
+    controller.onWheel({
+      clientX: 100,
+      clientY: 50,
+      deltaY: 53.333,
+      preventDefault: vi.fn()
+    });
+    expect(lastZoom()[0]).toBeCloseTo(1 / notches(0.53333), 10);
+  });
+
+  it('ignores a wheel event with no vertical delta', () => {
+    controller.onWheel({
+      clientX: 100,
+      clientY: 50,
+      deltaY: 0,
+      preventDefault: vi.fn()
+    });
+    expect(nav.zoomBy).not.toHaveBeenCalled();
+  });
+
+  describe('trackpad input', () => {
+    const preventDefault = vi.fn();
+    const at = (timeStamp: number, fields: Partial<WheelEventLike>) =>
+      controller.onWheel({
+        clientX: 100 + 32,
+        clientY: 50 + 16,
+        deltaY: 0,
+        preventDefault,
+        timeStamp,
+        ...fields
+      });
+
+    it('zooms with a two-finger swipe, like a wheel', () => {
+      at(0, { deltaY: -7 });
+      expect(lastZoom()[0]).toBeCloseTo(notches(0.07), 10);
+      expect(lastZoom()[1]).toMatchObject({ x: 32, y: 16 });
+    });
+
+    it('drops the finger drift a browser interleaves with a pinch', () => {
+      at(0, { ctrlKey: true, deltaY: -5 });
+      // The fingers' midpoint moving, sent between the pinch's own events.
+      at(8, { deltaY: -3 });
+      at(16, { ctrlKey: true, deltaY: -4 });
+      at(24, { deltaY: 4 });
+
+      // Only the pinch's own events zoom, each at the pinch rate.
+      expect(vi.mocked(nav.zoomBy).mock.calls.map(([f]) => f)).toEqual([
+        Math.exp(0.075),
+        Math.exp(0.06)
+      ]);
+
+      // Once the pinch has ended, a swipe zooms again.
+      at(300, { deltaY: -3 });
+      expect(nav.zoomBy).toHaveBeenCalledTimes(3);
+    });
+
+    it('zooms continuously with a pinch, at the pointer', () => {
+      at(0, { ctrlKey: true, deltaY: -5 });
+
+      expect(nav.zoomBy).toHaveBeenCalledTimes(1);
+      const [factor, center] = vi.mocked(nav.zoomBy).mock.calls[0];
+      expect(factor).toBeCloseTo(Math.exp(0.075), 10);
+      expect(center).toMatchObject({ x: 32, y: 16 });
+    });
+
+    it('zooms a ctrl-held mouse wheel in pixels at the wheel rate, not the pinch rate', () => {
+      at(0, { ctrlKey: true, deltaY: 100 });
+      expect(lastZoom()[0]).toBeCloseTo(1 / notches(1), 10);
+    });
+
+    it('zooms a ctrl-held mouse wheel by notches, not at the pinch rate', () => {
+      at(0, { ctrlKey: true, deltaY: 3, deltaMode: 1 });
+      expect(lastZoom()[0]).toBeCloseTo(1 / notches(1), 10);
+    });
   });
 
   it('a second finger cancels the tool stream and pans as a gesture', () => {
@@ -179,7 +325,6 @@ describe('PointerController', () => {
     expect(tool.cancel).toHaveBeenCalledTimes(1);
     expect(nav.setActive).toHaveBeenCalledWith(true);
 
-    // Centroid moves +10 → gesture pan; the tool stream stays silent.
     controller.onPointerMove(touch(1, 120, 60));
     expect(nav.pan).toHaveBeenCalled();
     expect(tool.move).not.toHaveBeenCalled();
@@ -257,12 +402,11 @@ describe('PointerController', () => {
 
     expect(tool.down).not.toHaveBeenCalled();
     expect(tool.hover).not.toHaveBeenCalled();
-    expect(nav.zoomOut).not.toHaveBeenCalled();
+    expect(nav.zoomBy).not.toHaveBeenCalled();
   });
 
-  // A disposed project stays reachable until the host's effect re-homes the
-  // controller; its `position`/`scale` are already gone, so mapping a canvas
-  // point through it would throw.
+  // A disposed project stays reachable until the host re-homes the
+  // controller, and mapping a canvas point through it would throw.
   it('drops all events while the project is destroyed', () => {
     controller = new PointerController({
       canvas,
@@ -285,6 +429,6 @@ describe('PointerController', () => {
     expect(tool.move).not.toHaveBeenCalled();
     expect(tool.hover).not.toHaveBeenCalled();
     expect(tool.up).not.toHaveBeenCalled();
-    expect(nav.zoomIn).not.toHaveBeenCalled();
+    expect(nav.zoomBy).not.toHaveBeenCalled();
   });
 });

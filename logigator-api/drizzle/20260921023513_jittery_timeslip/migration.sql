@@ -1,0 +1,1 @@
+ALTER TABLE "users" ALTER COLUMN "bio" SET DATA TYPE varchar(1024) USING "bio"::varchar(1024);

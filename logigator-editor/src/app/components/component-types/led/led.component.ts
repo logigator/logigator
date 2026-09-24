@@ -1,4 +1,5 @@
 import { Graphics } from 'pixi.js';
+import { ledMeta } from '@logigator/core';
 import { Component } from '../../component';
 import { LedGraphics } from '../../../rendering/graphics/led.graphics';
 import { ledComponentConfig, LedOptions } from './led.config';
@@ -6,27 +7,41 @@ import { ledComponentConfig, LedOptions } from './led.config';
 /**
  * A display-only indicator: not a simulator unit — it lights up from the
  * powered state of the net its input is attached to, applied through the
- * regular {@link Component.setPortPowered} path.
+ * regular {@link Component.setPortPowered} path. A negation bubble on its
+ * input inverts what it reads, at render time: the engine knows nothing about
+ * this component.
  */
 export class LedComponent extends Component<LedOptions> {
   public readonly config = ledComponentConfig;
 
-  // Assigned in draw(); the class-field define runs after the base
-  // constructor's first draw and resets it to undefined, so a state change
-  // arriving before the next rebuild falls back to a full redraw.
+  // Assigned in draw(). The class-field define runs after the base
+  // constructor's first draw and resets this to undefined, so a state change
+  // before the next rebuild falls back to a full redraw.
   private _disc?: Graphics;
 
   constructor(options: LedOptions) {
-    super(1, 0, options);
+    super(ledMeta, options);
   }
 
-  // The lit state lives in the base's powered-port set (survives redraws) and
-  // renders as a pure tint on the white disc — the per-frame blink path must
-  // never redraw, which would force a render-group instruction rebuild.
+  // The lit state lives in the base's powered-port set and renders as a pure
+  // tint: the per-frame blink path must never redraw, which would force a
+  // render-group instruction rebuild.
   public override setPortPowered(portIndex: number, powered: boolean): void {
-    const wasLit = this.isPortPowered(0);
+    const wasLit = this.isInputHigh(0);
     super.setPortPowered(portIndex, powered);
-    if (this.isPortPowered(0) === wasLit) {
+    this._syncLit(wasLit);
+  }
+
+  // Entering and leaving a session flips a negated input with no link change
+  // behind it — a net that stays low reports nothing.
+  public override setSimulating(active: boolean): void {
+    const wasLit = this.isInputHigh(0);
+    super.setSimulating(active);
+    this._syncLit(wasLit);
+  }
+
+  private _syncLit(wasLit: boolean): void {
+    if (this.isInputHigh(0) === wasLit) {
       return;
     }
     if (this._disc) {
@@ -38,20 +53,7 @@ export class LedComponent extends Component<LedOptions> {
 
   private _discTint(): number {
     const theme = this.themingService.currentTheme();
-    return this.isPortPowered(0) ? theme.ledOn : theme.ledOff;
-  }
-
-  protected get inputLabels(): string[] {
-    return [];
-  }
-
-  protected get outputLabels(): string[] {
-    return [];
-  }
-
-  // eslint-disable-next-line @typescript-eslint/class-literal-property-style
-  protected get bodyGridWidth(): number {
-    return 1;
+    return this.isInputHigh(0) ? theme.ledOn : theme.ledOff;
   }
 
   protected draw(): void {
@@ -59,8 +61,8 @@ export class LedComponent extends Component<LedOptions> {
       this.geometryService.getGraphicsContext(LedGraphics)
     );
     this._disc = disc;
-    // Covers draw-time setup and theme restyles; the per-frame blink path
-    // writes the tint directly in setPortPowered.
+    // Draw-time setup and theme restyles; the blink path writes the tint
+    // directly in setPortPowered.
     this.onApplyTheme(() => (disc.tint = this._discTint()));
     this.addChild(disc);
   }

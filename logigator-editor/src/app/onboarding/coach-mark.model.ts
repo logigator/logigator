@@ -2,9 +2,8 @@
 export type CoachMarkPlacement = 'top' | 'right' | 'bottom' | 'left' | 'center';
 
 /**
- * Everything the presentational coach-mark bubble needs to render one step —
- * already resolved for the active platform and translated. The runner produces
- * this from a `TutorialStep`; the bubble knows nothing about tutorials.
+ * What the bubble needs to render one step, already resolved for the active
+ * platform and translated. The bubble itself knows nothing about tutorials.
  */
 export interface CoachMarkView {
   /** Translated heading. */
@@ -14,7 +13,7 @@ export interface CoachMarkView {
   /** 1-based position of this step within the tutorial. */
   readonly stepNumber: number;
   readonly totalSteps: number;
-  /** Show the Next button (manual/orientation steps that don't auto-advance). */
+  /** Show the Next button — manual steps that do not auto-advance. */
   readonly showNext: boolean;
   /** The last step: the Next button becomes "Finish" and Skip is hidden. */
   readonly isFinal: boolean;

@@ -4,7 +4,7 @@ import { configureTestBed } from '../../../testing/configure-test-bed';
 import { makeAnd, makeNot, makeWire } from '../../../testing/factories';
 import { Component } from '../../components/component';
 import { Wire } from '../../wires/wire';
-import { WireDirection } from '../../wires/wire-direction.enum';
+import { WireDirection } from '@logigator/core';
 import { extractNets, Net } from './net-extractor';
 
 /** Wire spanning the two given half-grid termination points (axis-aligned). */

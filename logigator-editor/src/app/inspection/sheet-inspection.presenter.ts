@@ -9,8 +9,8 @@ interface SheetEntry {
 /**
  * The compact presenter: every open inspection shares the single non-modal
  * bottom sheet ({@link InspectionSheetComponent}) — one active view, a tab row
- * when several are open. This service only holds the sheet's state; the
- * component renders it. Closing the sheet dismisses every inspection in it.
+ * when several are open. This service holds the sheet's state; the component
+ * renders it. Closing the sheet dismisses every inspection in it.
  */
 @Injectable({ providedIn: 'root' })
 export class SheetInspectionPresenter implements InspectionPresenter {

@@ -9,14 +9,10 @@ import {
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 
 /**
- * A binary checkbox. The interactive element is a native checkbox that covers
- * the whole control (so clicking anywhere on the box toggles it) but is
- * visually hidden behind the box + check-mark skin; `inputId` lets an external
- * `<label for>` toggle it too. The check mark is an inline SVG so the library
- * stays icon-agnostic.
- *
- * `ControlValueAccessor` (value = `boolean`) so template `ngModel` and reactive
- * forms both bind. Keyboard (space) works natively via the checkbox.
+ * A binary checkbox. A native checkbox covers the whole control and is hidden
+ * behind the box + check-mark skin, so clicking anywhere toggles it, space
+ * works natively, and `inputId` lets an external `<label for>` reach it. The
+ * check mark is an inline SVG, keeping the library icon-agnostic.
  */
 @Component({
   selector: 'lg-checkbox',
@@ -62,7 +58,7 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 })
 export class LgCheckbox implements ControlValueAccessor {
   readonly inputId = input<string>();
-  /** Disables interaction; combined with the forms-driven disabled state. */
+  /** Combined with the forms-driven disabled state. */
   readonly disabled = input(false, { transform: booleanAttribute });
 
   protected readonly checked = signal(false);

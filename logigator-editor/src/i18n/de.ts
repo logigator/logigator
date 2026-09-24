@@ -1,6 +1,6 @@
 import type { WorkMode } from '../app/work-mode/work-mode.enum';
 import type { ShortcutActionEnum } from '../app/shortcuts/shortcut-action.enum';
-import type { ComponentCategory } from '../app/components/component-category.enum';
+import type { ComponentCategory } from '@logigator/core';
 import type { TranslationSchema } from '../app/translation/translation-schema.model';
 
 const de: TranslationSchema = {
@@ -15,6 +15,38 @@ const de: TranslationSchema = {
     previousPage: 'Vorherige Seite',
     nextPage: 'Nächste Seite',
     lastPage: 'Letzte Seite',
+    formatting: 'Formatierung',
+    heading1: 'Überschrift 1',
+    heading2: 'Überschrift 2',
+    heading3: 'Überschrift 3',
+    bold: 'Fett',
+    italic: 'Kursiv',
+    code: 'Code',
+    link: 'Link',
+    bulletedList: 'Aufzählung',
+    numberedList: 'Nummerierte Liste',
+    quote: 'Zitat',
+    codeBlock: 'Codeblock',
+    divider: 'Trennlinie',
+    table: 'Tabelle',
+    linkTools: 'Link',
+    linkText: 'Link',
+    linkUrl: 'Linkadresse',
+    removeLink: 'Link entfernen',
+    tableTools: 'Tabelle',
+    insertRowAbove: 'Zeile oberhalb einfügen',
+    insertRowBelow: 'Zeile unterhalb einfügen',
+    insertColumnBefore: 'Spalte links einfügen',
+    insertColumnAfter: 'Spalte rechts einfügen',
+    deleteRow: 'Zeile löschen',
+    deleteColumn: 'Spalte löschen',
+    deleteTable: 'Tabelle löschen',
+    alignLeft: 'Linksbündig',
+    alignCenter: 'Zentriert',
+    alignRight: 'Rechtsbündig',
+    viewMode: 'Ansicht',
+    richText: 'Formatiert',
+    markdownSource: 'Markdown',
     moved: 'Auf Position {{position}} von {{total}} verschoben'
   },
   user: {
@@ -28,7 +60,8 @@ const de: TranslationSchema = {
     editorSettings: 'Editor-Einstellungen',
     account: 'Account',
     logOut: 'Abmelden',
-    logIn: 'Anmelden'
+    logIn: 'Anmelden',
+    signUp: 'Registrieren'
   },
   theming: {
     light: 'Hell',
@@ -381,9 +414,6 @@ const de: TranslationSchema = {
           changelog: {
             label: 'Neuigkeiten'
           },
-          legacyEditor: {
-            label: 'Alten Editor öffnen'
-          },
           cookieSettings: {
             label: 'Cookie-Einstellungen'
           },
@@ -423,6 +453,12 @@ const de: TranslationSchema = {
     loadError: 'Diese Seite konnte nicht geladen werden.',
     back: 'Alle Themen',
     learnMore: 'Mehr erfahren',
+    search: {
+      label: 'Dokumentation durchsuchen',
+      placeholder: 'Suchen..',
+      loading: 'Dokumentation wird geladen…',
+      empty: 'Nichts passt zu „{{query}}“.'
+    },
     sections: {
       basics: 'Grundlagen',
       building: 'Schaltungen bauen',
@@ -501,9 +537,7 @@ const de: TranslationSchema = {
     destinationLocal: 'Lokal',
     notLoggedIn:
       'Du musst angemeldet sein, um Projekte in der Cloud zu speichern.',
-    public: 'Öffentlich',
-    publicInfo:
-      'Öffentliche Projekte werden auf deinem Profil veröffentlicht und sind über einen Freigabelink für alle zugänglich. Private Projekte sind nur für dich sichtbar.',
+    visibilityLabel: 'Wer kann es öffnen',
     localWarning:
       'Lokale Projekte werden nicht geräteübergreifend gespeichert und können verloren gehen.'
   },
@@ -516,9 +550,7 @@ const de: TranslationSchema = {
     storeLocal: 'Lokal',
     notLoggedIn:
       'Du musst angemeldet sein, um Komponenten in der Cloud zu speichern.',
-    public: 'Öffentlich',
-    publicInfo:
-      'Öffentliche Komponenten werden auf deinem Profil veröffentlicht und sind über einen Freigabelink für alle zugänglich. Private Komponenten sind nur für dich sichtbar.',
+    visibilityLabel: 'Wer kann es öffnen',
     localWarning:
       'Lokale Komponenten werden nicht geräteübergreifend gespeichert und können verloren gehen.',
     create: 'Erstellen'
@@ -527,27 +559,54 @@ const de: TranslationSchema = {
     button: 'In die Cloud hochladen',
     signInTooltip: 'Melde dich an, um in die Cloud hochzuladen'
   },
+  visibility: {
+    private: {
+      label: 'Nur du',
+      hint: 'Nur du kannst es öffnen – über einen Link ist nichts erreichbar.'
+    },
+    unlisted: {
+      label: 'Alle mit dem Link',
+      hint: 'Wer den Link hat, kann es lesend öffnen. Es bleibt aus den Community-Listen und aus Suchmaschinen heraus.'
+    },
+    public: {
+      label: 'Alle',
+      hint: 'In der Community gelistet, für alle offen und von Suchmaschinen indexiert.'
+    }
+  },
   shareDialog: {
     header: 'Projekt teilen',
     headerComponent: 'Komponente teilen',
-    intro:
-      'Jeder mit diesem Link kann „{{name}}“ schreibgeschützt öffnen und in seine eigene Bibliothek klonen.',
+    intro: 'Wähle, wer „{{name}}“ öffnen kann.',
+    visibilityLabel: 'Wer kann es öffnen',
     linkLabel: 'Freigabelink',
+    noLink:
+      'Solange das Dokument privat ist, kann es niemand öffnen. Der Link bleibt erhalten: Wähle „Alle mit dem Link“, um dieselbe URL wieder herauszugeben – dort kannst du ihn auch ersetzen.',
+    viewPublicPage: 'Community-Seite ansehen',
     copy: 'Link kopieren',
     linkCopied: 'Freigabelink in die Zwischenablage kopiert.',
     copyFailed: 'Der Link konnte nicht in die Zwischenablage kopiert werden.',
     regenerate: 'Link neu generieren',
     regenerateWarning:
-      'Beim Neu-Generieren entsteht ein neuer Link und der aktuelle wird dauerhaft ungültig — wer den alten Link nutzt, verliert den Zugriff.',
+      'Der alte Link hört sofort auf zu funktionieren – für alle, die ihn haben. Die Schaltung selbst bleibt unverändert.',
+    linkPublished:
+      'Der Link wurde nicht ersetzt: Das Dokument ist veröffentlicht, und sein Link ist die Adresse seiner Seite.',
     linkRegenerated: 'Ein neuer Freigabelink wurde generiert.',
     regenerateFailed: 'Der Freigabelink konnte nicht neu generiert werden.',
-    public: 'Öffentlich',
-    publicInfoProject:
-      'Öffentliche Projekte werden auf deinem Profil veröffentlicht und sind für alle auffindbar. Private Projekte sind nur über den Freigabelink erreichbar.',
-    publicInfoComponent:
-      'Öffentliche Komponenten werden auf deinem Profil veröffentlicht und sind für alle auffindbar. Private Komponenten sind nur über den Freigabelink erreichbar.',
     visibilityUpdated: 'Sichtbarkeit aktualisiert.',
     visibilityFailed: 'Die Sichtbarkeit konnte nicht aktualisiert werden.',
+    share: 'Teilen',
+    embed: 'Einbetten',
+    embedHide: 'Einbetten ausblenden',
+    embedCopy: 'Code kopieren',
+    embedCopied: 'Einbettungscode in die Zwischenablage kopiert.',
+    embedCopyFailed:
+      'Der Einbettungscode konnte nicht in die Zwischenablage kopiert werden.',
+    embedHint:
+      'Zum Einfügen in einen Forenbeitrag, eine Wiki-Seite oder eine Unterrichtsstunde.',
+    formatLabel: 'Format',
+    formatMarkdown: 'Markdown',
+    formatHtml: 'HTML',
+    formatBbcode: 'BBCode',
     close: 'Schließen'
   },
   shareComponent: {
@@ -577,11 +636,7 @@ const de: TranslationSchema = {
       'Ein Cloud-Projekt kann nur Cloud-Komponenten enthalten, daher wird jede davon zuerst in deine Cloud-Bibliothek hochgeladen und dann referenziert.',
     unresolvableWarning:
       '{{count}} eingebettete Komponente(n) können nicht mehr veröffentlicht werden (ihr Bibliothekseintrag fehlt) und bleiben einfache eingebettete Kopien.',
-    public: 'Öffentlich',
-    publicInfoProject:
-      'Öffentliche Projekte werden auf deinem Profil veröffentlicht und sind über einen Freigabelink für alle zugänglich. Private Projekte sind nur für dich sichtbar.',
-    publicInfoComponent:
-      'Öffentliche Komponenten werden auf deinem Profil veröffentlicht und sind über einen Freigabelink für alle zugänglich. Private Komponenten sind nur für dich sichtbar.',
+    visibilityLabel: 'Wer kann es öffnen',
     notLoggedIn: 'Du musst angemeldet sein, um in die Cloud hochzuladen.',
     cancel: 'Abbrechen',
     upload: 'Hochladen',
@@ -698,8 +753,6 @@ const de: TranslationSchema = {
     errorIntro:
       'Ein unerwarteter Fehler ist aufgetreten. Sag uns, was du getan hast, damit wir ihn eingrenzen können.',
     errorDetails: 'Fehlerdetails',
-    legacyEditorNotice: 'Kommst du deshalb nicht weiter?',
-    legacyEditorLink: 'Alten Editor öffnen',
     placeholder: 'Was ist passiert?',
     dataNotice:
       'Dein aktuelles Projekt, Browser-Details und die jüngste Aktivität werden angehängt, damit wir das Problem nachvollziehen können.',
@@ -726,6 +779,8 @@ const de: TranslationSchema = {
     saveFailed: 'Speichern fehlgeschlagen: {{detail}}',
     saveFailedGeneric: 'Das Projekt konnte nicht gespeichert werden.',
     createFailed: 'Das Projekt konnte nicht erstellt werden: {{detail}}',
+    saveTooLarge:
+      'Diese Schaltung ist zu groß, um in der Cloud gespeichert zu werden — entferne einige Komponenten und versuche es erneut.',
     versionMismatch:
       'Dieses Projekt wurde anderswo geändert — lade neu, bevor du erneut speicherst.',
     loadFailed: 'Das Projekt konnte nicht geladen werden.',
@@ -741,6 +796,10 @@ const de: TranslationSchema = {
       'Eine benutzerdefinierte Komponente konnte nicht geladen werden — ihre Definition fehlt — und wurde übersprungen.',
     skippedCustomMany:
       '{{count}} benutzerdefinierte Komponenten konnten nicht geladen werden — ihre Definitionen fehlen — und wurden übersprungen.'
+  },
+  browserSupport: {
+    unsupported:
+      'Dieser Browser wird nicht offiziell unterstützt — es können Fehler auftreten. Versuche bei Problemen, deinen Browser zu aktualisieren.'
   },
   editor: {
     rendererInitFailed:
@@ -962,7 +1021,7 @@ const de: TranslationSchema = {
           moveAround: {
             title: 'Navigieren',
             textDesktop:
-              'Scrollen zum Zoomen, mit rechter Maustaste ziehen zum Schwenken.',
+              'Scrollen zum Zoomen, mit rechter oder mittlerer Maustaste ziehen zum Schwenken.',
             textCompact:
               'Spreizen zum Zoomen, mit zwei Fingern ziehen zum Schwenken.'
           },

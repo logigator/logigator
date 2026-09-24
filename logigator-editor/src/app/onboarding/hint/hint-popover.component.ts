@@ -9,15 +9,13 @@ import { TranslateDirective } from '../../translation/translate.directive';
 
 /**
  * Presentational just-in-time hint: a small, non-blocking popover with the hint
- * body and a dismiss button. Anchored (with a caret from `side`) or centered by
- * the controller; unlike the tutorial coach-mark it has no backdrop and no
- * persistent tutorial controls.
+ * body and a dismiss button, anchored or centred by the controller.
  */
 @Component({
   selector: 'app-hint-popover',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  // Block, so the controller can shift the popover inside its overlay pane —
-  // a transform has no effect on an inline host.
+  // Block, so the controller can shift the popover inside its overlay pane: a
+  // transform has no effect on an inline host.
   host: { class: 'block' },
   imports: [TranslateDirective, LgButton, LgCaret],
   template: `
@@ -33,30 +31,35 @@ import { TranslateDirective } from '../../translation/translate.directive';
       <p class="text-sm text-muted" [innerHTML]="text()"></p>
       <div class="flex items-center justify-end gap-1">
         @if (hasDocsLink()) {
-          <lg-button
+          <button
+            lgButton
             class="mr-auto"
             size="sm"
             severity="secondary"
             text
-            [label]="t('documentation.learnMore')"
             (onClick)="learnMore.emit()"
-          ></lg-button>
+          >
+            {{ t('documentation.learnMore') }}
+          </button>
         }
-        <lg-button
+        <button
+          lgButton
           size="sm"
           severity="secondary"
           text
-          [label]="t('onboarding.bubble.turnOff')"
           (onClick)="disableTips.emit()"
-        ></lg-button>
-        <lg-button
+        >
+          {{ t('onboarding.bubble.turnOff') }}
+        </button>
+        <button
+          lgButton
           size="sm"
           severity="secondary"
           text
           icon="ph ph-x"
           [ariaLabel]="t('onboarding.hints.dismiss')"
           (onClick)="dismiss.emit()"
-        ></lg-button>
+        ></button>
       </div>
     </div>
   `

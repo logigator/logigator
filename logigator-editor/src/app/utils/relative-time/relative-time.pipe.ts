@@ -3,10 +3,10 @@ import { formatRelativeTime } from './relative-time';
 import { TranslationService } from '../../translation/translation.service';
 
 /**
- * Formats an epoch-ms timestamp (or `Date`) as localized relative time in the
- * active language, e.g. "2 minutes ago"; empty string for nullish input. Pure:
- * it evaluates once per input change and does not tick, so pair it with a
- * transient view (a dialog) or re-key the input when a live value is needed.
+ * Formats an epoch-ms timestamp or `Date` as localized relative time; empty
+ * string for nullish input. Pure, so it evaluates once per input change and
+ * does not tick: pair it with a transient view, or re-key the input for a live
+ * value.
  */
 @Pipe({
   standalone: true,

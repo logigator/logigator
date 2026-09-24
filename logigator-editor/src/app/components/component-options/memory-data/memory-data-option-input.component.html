@@ -1,10 +1,12 @@
 <div *appTranslate="let t">
-  <lg-button
+  <button
+    lgButton
     class="float-right"
-    [label]="t(option().label)"
     icon="ph ph-pencil-simple"
     size="sm"
     severity="secondary"
     (onClick)="open()"
-  />
+  >
+    {{ t(option().label) }}
+  </button>
 </div>

@@ -3,10 +3,9 @@ import { HexEditorComponent } from '../../../ui/hex-editor/hex-editor.component'
 import type { RomInspection } from './rom-inspection';
 
 /**
- * Renderer for {@link RomInspection}: the hex editor in read-only mode. The
- * addressed word is highlighted and doubles as the active cell, so the
- * editor's own status box reads out the live address and value. Fills
- * whatever the presenter frames it in (window body / sheet).
+ * The hex editor in read-only mode. The addressed word is highlighted and
+ * doubles as the active cell, so the editor's own status box reads out the
+ * live address and value.
  */
 @Component({
   selector: 'app-rom-inspection',

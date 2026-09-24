@@ -1,16 +1,12 @@
 /*
- * @logigator/ui — Tailwind `@theme` mapping.
+ * @logigator/ui — Tailwind `@theme` mapping. Repoints Tailwind's `--color-*`
+ * tokens onto the `--lg-*` palette; import it AFTER `tailwindcss` and
+ * theme.css.
  *
- * Repoints Tailwind's `--color-*` utility tokens onto the `--lg-*` palette
- * (theme.css). Import this AFTER `tailwindcss` and `theme.css` in the app's
- * stylesheet.
- *
- * The split is deliberate and must be preserved: the primary + surface families
- * use `@theme inline`, the content/text/border + state families use plain
- * `@theme`. This is what makes the `/NN` opacity modifiers (`bg-primary-500/15`,
- * `bg-content/80`, `bg-error/10`, `border-border/50`) compile to a
- * `color-mix(...)` against the `var()` chain rather than dropping the variant.
- * Don't merge the two blocks.
+ * Don't merge the two blocks. The primary + surface families using
+ * `@theme inline` and the rest using plain `@theme` is what makes the `/NN`
+ * opacity modifiers compile to a `color-mix(...)` against the `var()` chain
+ * rather than dropping the variant.
  */
 
 @theme inline {
@@ -70,4 +66,20 @@
   --color-error-surface: var(--lg-error-surface);
   --color-error-surface-strong: var(--lg-error-surface-strong);
   --color-error-border: var(--lg-error-border);
+}
+
+/*
+ * The editor's dot ground: the board's own background, what a circuit's render
+ * is composited onto (a render is line art on transparency, so the ground is
+ * what makes it a board), and what an empty list's state is drawn on. It lives
+ * here rather than in an app because both apps draw it and so do the library's
+ * own components (the dot colour is `--lg-border`, one of the tokens above).
+ */
+@utility lattice {
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    var(--lg-border) 1px,
+    transparent 0
+  );
+  background-size: 16px 16px;
 }

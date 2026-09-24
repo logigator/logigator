@@ -53,13 +53,11 @@ describe('in-place theme restyle', () => {
     ];
   }
 
-  // The one failure mode of in-place restyling is a *missed* theme
-  // dependency: a draw() that bakes a theme color outside any registered
-  // callback goes silently stale after a toggle. A freshly built instance in
-  // the target theme is ground truth — every shared context is cached per
-  // (params, theme), so a restyled tree must hold identical context
-  // references and tints, node for node. Any miss — in today's types or a
-  // future one — shows up as a mismatch here.
+  // In-place restyling fails when a draw() bakes a theme color outside any
+  // registered callback. A freshly built instance in the target theme is
+  // ground truth: shared contexts are cached per (params, theme), so a
+  // restyled tree must hold identical context references and tints node for
+  // node.
   it('restyling into the other theme matches a fresh build for every built-in type', () => {
     for (const config of builtInConfigs()) {
       theming.setActiveThemeType(ThemeType.DARK);
@@ -81,9 +79,8 @@ describe('in-place theme restyle', () => {
           );
         }
         if (a[i] instanceof BitmapText) {
-          // Guards against a future draw() baking a theme color into the
-          // fill instead of following the white-base + tint pattern — such a
-          // text would restyle stale while its tint still matches.
+          // A draw() baking a theme color into the fill instead of using
+          // white-base + tint restyles stale while its tint still matches.
           expect((a[i] as BitmapText).style.fill, `${at}: fill`).toEqual(
             (b[i] as BitmapText).style.fill
           );

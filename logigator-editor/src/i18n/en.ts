@@ -1,6 +1,6 @@
 import type { WorkMode } from '../app/work-mode/work-mode.enum';
 import type { ShortcutActionEnum } from '../app/shortcuts/shortcut-action.enum';
-import type { ComponentCategory } from '../app/components/component-category.enum';
+import type { ComponentCategory } from '@logigator/core';
 
 const en = {
   common: {
@@ -14,6 +14,38 @@ const en = {
     previousPage: 'Previous page',
     nextPage: 'Next page',
     lastPage: 'Last page',
+    formatting: 'Formatting',
+    heading1: 'Heading 1',
+    heading2: 'Heading 2',
+    heading3: 'Heading 3',
+    bold: 'Bold',
+    italic: 'Italic',
+    code: 'Code',
+    link: 'Link',
+    bulletedList: 'Bulleted list',
+    numberedList: 'Numbered list',
+    quote: 'Quote',
+    codeBlock: 'Code block',
+    divider: 'Divider',
+    table: 'Table',
+    linkTools: 'Link',
+    linkText: 'link',
+    linkUrl: 'Link address',
+    removeLink: 'Remove link',
+    tableTools: 'Table',
+    insertRowAbove: 'Insert row above',
+    insertRowBelow: 'Insert row below',
+    insertColumnBefore: 'Insert column before',
+    insertColumnAfter: 'Insert column after',
+    deleteRow: 'Delete row',
+    deleteColumn: 'Delete column',
+    deleteTable: 'Delete table',
+    alignLeft: 'Align left',
+    alignCenter: 'Align center',
+    alignRight: 'Align right',
+    viewMode: 'View',
+    richText: 'Rich text',
+    markdownSource: 'Markdown',
     moved: 'Moved to position {{position}} of {{total}}'
   },
   user: {
@@ -26,7 +58,8 @@ const en = {
     editorSettings: 'Editor Settings',
     account: 'Account',
     logOut: 'Log Out',
-    logIn: 'Log In'
+    logIn: 'Log In',
+    signUp: 'Sign Up'
   },
   theming: {
     light: 'Light',
@@ -376,9 +409,6 @@ const en = {
           changelog: {
             label: "What's New"
           },
-          legacyEditor: {
-            label: 'Open the old editor'
-          },
           cookieSettings: {
             label: 'Cookie Settings'
           },
@@ -418,6 +448,12 @@ const en = {
     loadError: 'This page could not be loaded.',
     back: 'All topics',
     learnMore: 'Learn more',
+    search: {
+      label: 'Search the documentation',
+      placeholder: 'Search..',
+      loading: 'Loading the documentation…',
+      empty: 'Nothing matches “{{query}}”.'
+    },
     sections: {
       basics: 'Basics',
       building: 'Building Circuits',
@@ -494,9 +530,7 @@ const en = {
     destinationCloud: 'Cloud',
     destinationLocal: 'Local',
     notLoggedIn: 'You must be logged in to save projects to the cloud.',
-    public: 'Public',
-    publicInfo:
-      'Public projects are published on your profile and accessible to everyone via a share link. Private projects are only visible to you.',
+    visibilityLabel: 'Who can open it',
     localWarning:
       'Local projects are not persisted across devices and may be lost.'
   },
@@ -508,9 +542,7 @@ const en = {
     storeCloud: 'Cloud',
     storeLocal: 'Local',
     notLoggedIn: 'You must be logged in to save components to the cloud.',
-    public: 'Public',
-    publicInfo:
-      'Public components are published on your profile and accessible to everyone via a share link. Private components are only visible to you.',
+    visibilityLabel: 'Who can open it',
     localWarning:
       'Local components are not persisted across devices and may be lost.',
     create: 'Create'
@@ -519,27 +551,57 @@ const en = {
     button: 'Upload to cloud',
     signInTooltip: 'Sign in to upload to the cloud'
   },
+  // The three states a document's link can be in. The share dialog's picker and
+  // the three dialogs that create a cloud document all name them, so their
+  // words belong under none of those. Each state's `hint` says what it means
+  // for whoever holds the link, which is what the picker shows under the state
+  // it is on.
+  visibility: {
+    private: {
+      label: 'Only you',
+      hint: 'Only you can open it — nothing is reachable by a link.'
+    },
+    unlisted: {
+      label: 'Anyone with the link',
+      hint: 'Whoever holds the link can open it read-only. It stays out of the community listings and out of search engines.'
+    },
+    public: {
+      label: 'Everyone',
+      hint: 'Listed in the community, open to everyone, and indexed by search engines.'
+    }
+  },
   shareDialog: {
     header: 'Share project',
     headerComponent: 'Share component',
-    intro:
-      'Anyone with this link can open “{{name}}” read-only and clone it into their own library.',
+    intro: 'Choose who can open “{{name}}”.',
+    visibilityLabel: 'Who can open it',
     linkLabel: 'Share link',
+    noLink:
+      'Nobody can open the document while it is private. The link is kept: pick “Anyone with the link” to hand out the same URL again, and regenerate it from there.',
+    viewPublicPage: 'View the community page',
     copy: 'Copy link',
     linkCopied: 'Share link copied to clipboard.',
     copyFailed: 'Could not copy the link to the clipboard.',
     regenerate: 'Regenerate link',
     regenerateWarning:
-      'Regenerating creates a new link and permanently invalidates the current one — anyone using the old link will lose access.',
+      'The old link stops working immediately, for everyone who has it. Your circuit itself is unchanged.',
+    linkPublished:
+      'The link was not replaced: this document is published, and its link is the address of its page.',
     linkRegenerated: 'A new share link was generated.',
     regenerateFailed: 'Could not regenerate the share link.',
-    public: 'Public',
-    publicInfoProject:
-      'Public projects are published on your profile and discoverable by everyone. Private projects are reachable only via the share link.',
-    publicInfoComponent:
-      'Public components are published on your profile and discoverable by everyone. Private components are reachable only via the share link.',
     visibilityUpdated: 'Visibility updated.',
     visibilityFailed: 'Could not update the visibility.',
+    share: 'Share',
+    embed: 'Embed',
+    embedHide: 'Hide embed',
+    embedCopy: 'Copy code',
+    embedCopied: 'Embed code copied to clipboard.',
+    embedCopyFailed: 'Could not copy the embed code to the clipboard.',
+    embedHint: 'Paste this into a forum post, a wiki page or a lesson.',
+    formatLabel: 'Format',
+    formatMarkdown: 'Markdown',
+    formatHtml: 'HTML',
+    formatBbcode: 'BBCode',
     close: 'Close'
   },
   shareComponent: {
@@ -569,11 +631,7 @@ const en = {
       'A cloud project can only contain cloud components, so each of these is uploaded to your cloud library first and then referenced.',
     unresolvableWarning:
       '{{count}} embedded component(s) can no longer be published (their library entry is gone) and will remain plain embedded copies.',
-    public: 'Public',
-    publicInfoProject:
-      'Public projects are published on your profile and accessible to everyone via a share link. Private projects are only visible to you.',
-    publicInfoComponent:
-      'Public components are published on your profile and accessible to everyone via a share link. Private components are only visible to you.',
+    visibilityLabel: 'Who can open it',
     notLoggedIn: 'You must be logged in to upload to the cloud.',
     cancel: 'Cancel',
     upload: 'Upload',
@@ -687,8 +745,6 @@ const en = {
     errorIntro:
       'An unexpected error occurred. Tell us what you were doing so we can track it down.',
     errorDetails: 'Error details',
-    legacyEditorNotice: 'Blocked by this?',
-    legacyEditorLink: 'Open the old editor',
     placeholder: 'What happened?',
     dataNotice:
       'Your current project, browser details and recent activity are attached to help us reproduce the issue.',
@@ -712,6 +768,8 @@ const en = {
     saveFailed: 'Could not save: {{detail}}',
     saveFailedGeneric: 'Could not save the project.',
     createFailed: 'Could not create the project: {{detail}}',
+    saveTooLarge:
+      'This circuit is too large to save to the cloud — remove some components and try again.',
     versionMismatch:
       'This project changed elsewhere — reload before saving again.',
     loadFailed: 'Could not load the project.',
@@ -727,6 +785,10 @@ const en = {
       'A custom component could not be loaded — its definition is missing — and was skipped.',
     skippedCustomMany:
       '{{count}} custom components could not be loaded — their definitions are missing — and were skipped.'
+  },
+  browserSupport: {
+    unsupported:
+      'This browser is not officially supported — you may encounter errors. If you run into problems, try updating your browser.'
   },
   editor: {
     rendererInitFailed:
@@ -940,7 +1002,8 @@ const en = {
           },
           moveAround: {
             title: 'Move around',
-            textDesktop: 'Scroll to zoom, right-drag to pan.',
+            textDesktop:
+              'Scroll to zoom, drag with the right or middle button to pan.',
             textCompact: 'Pinch to zoom, drag with two fingers to pan.'
           },
           placeAnd: {

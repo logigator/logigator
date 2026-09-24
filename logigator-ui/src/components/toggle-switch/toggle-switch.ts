@@ -2,13 +2,9 @@ import { Component, forwardRef, input, signal } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 
 /**
- * An on/off switch. The interactive element is a `role="switch"` checkbox that
- * covers the whole control (so clicking the track toggles it) but is visually
- * hidden behind the track + handle skin; `inputId` lets an external
- * `<label for>` toggle it too.
- *
- * `ControlValueAccessor` (value = `boolean`) so template `ngModel` and reactive
- * forms both bind. Keyboard (space) works natively via the checkbox.
+ * An on/off switch. A `role="switch"` checkbox covers the whole control and is
+ * hidden behind the track + handle skin, so clicking the track toggles it,
+ * space works natively, and `inputId` lets an external `<label for>` reach it.
  */
 @Component({
   selector: 'lg-toggle-switch',

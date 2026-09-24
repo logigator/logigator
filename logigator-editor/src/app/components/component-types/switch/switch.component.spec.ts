@@ -1,8 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { configureTestBed } from '../../../../testing/configure-test-bed';
 import { makeSwitch } from '../../../../testing/factories';
-import { BuiltInComponentType } from '../../component-type.enum';
-import { Direction } from '../../../utils/direction';
+import { BuiltInComponentType, Direction } from '@logigator/core';
 import { switchComponentConfig } from './switch.config';
 
 describe('SwitchComponent', () => {
@@ -51,8 +50,8 @@ describe('SwitchComponent', () => {
       switchComp.direction = dir;
 
       // The body graphics is the first child drawn; its counter-rotation must
-      // cancel the container rotation so the square (and its on/off bar) renders
-      // upright on screen in every direction.
+      // cancel the container rotation so the square and its on/off bar render
+      // upright in every direction.
       const worldRotation =
         switchComp.children[0].rotation + switchComp.rotation;
       expect(Math.sin(worldRotation)).toBeCloseTo(0);

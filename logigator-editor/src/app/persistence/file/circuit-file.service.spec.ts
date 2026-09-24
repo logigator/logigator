@@ -6,20 +6,20 @@ import { of } from 'rxjs';
 import { TranslationService } from '../../translation/translation.service';
 import { configureTestBed } from '../../../testing/configure-test-bed';
 import { CircuitFileService } from './circuit-file.service';
-import { toCircuitFileV0 } from '../server/server-circuit.codec';
 import { LoggingService } from '../../logging/logging.service';
 import { ComponentProviderService } from '../../components/component-provider.service';
 import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
 import {
   BuiltInComponentType,
-  CUSTOM_TYPE_ID_BASE
-} from '../../components/component-type.enum';
+  CUSTOM_TYPE_ID_BASE,
+  decodeComponentBlocks,
+  decodeWireChain,
+  InvalidFileError,
+  ProjectElement,
+  SerializedCircuitBody
+} from '@logigator/core';
 import { Component } from '../../components/component';
 import { Project } from '../../project/project';
-import { ProjectElement } from '../../api/models/project-element';
-import { SerializedCircuitBody } from '../serialized-circuit';
-import { decodeWireChain } from '../wire-chain.codec';
-import { InvalidFileError } from './circuit-file.errors';
 
 interface BodyComponent {
   type: number;
@@ -32,6 +32,13 @@ interface BodyWire {
   pos: [number, number];
   direction: number;
   length: number;
+}
+
+/** The components a document's per-type blocks carry, absolute again. */
+function bodies(blocks: unknown): BodyComponent[] {
+  return decodeComponentBlocks(
+    (blocks ?? []) as Parameters<typeof decodeComponentBlocks>[0]
+  ) as BodyComponent[];
 }
 
 function sortComponents(components: BodyComponent[]): BodyComponent[] {
@@ -50,22 +57,22 @@ function sortWires(wires: BodyWire[]): BodyWire[] {
   );
 }
 
-// Sort components/wires (and recursively, embedded definitions) into a stable
-// order so structurally-equal documents with different element ordering compare
-// equal (mirrors server-circuit.codec.spec). Chain-encoded wires are decoded
-// first: two encodings are equal iff they decode to the same wire set.
+// Sorts components, wires and embedded definitions into a stable order, so
+// structurally-equal documents compare equal whatever their element order.
+// Chain-encoded wires decode first: two encodings are equal iff they decode to
+// the same wire set.
 function normalize(json: string): string {
   const parsed = JSON.parse(json);
   return JSON.stringify({
     version: parsed.version,
     name: parsed.name,
-    components: sortComponents(parsed.components ?? []),
+    components: sortComponents(bodies(parsed.components)),
     wires: sortWires(decodeWireChain(parsed.wires ?? '')),
     definitions: [...(parsed.definitions ?? [])]
       .sort((a, b) => a.type - b.type)
       .map((d) => ({
         ...d,
-        components: sortComponents(d.components),
+        components: sortComponents(bodies(d.components)),
         wires: sortWires(decodeWireChain(d.wires))
       }))
   });
@@ -78,7 +85,6 @@ describe('CircuitFileService', () => {
   let logging: LoggingService;
 
   beforeEach(() => {
-    // Suppress console output from expected warning/error paths exercised by the tests.
     vi.spyOn(console, 'warn').mockImplementation(() => {});
     vi.spyOn(console, 'error').mockImplementation(() => {});
     const translocoSpy = {
@@ -94,12 +100,11 @@ describe('CircuitFileService', () => {
     logging = TestBed.inject(LoggingService);
   });
 
-  // Build a Project from legacy positional elements via the server-read decode
-  // path (v0→v1 migration + instance build), the same route real server loads take.
+  // The route a legacy `.json` import takes: v0→v1 migration, then build.
   function buildProject(elements: ProjectElement[]): Project {
-    const { components, wires } = service.decode(
-      toCircuitFileV0({ name: 'x', elements })
-    );
+    const { components, wires } = service.decode({
+      project: { name: 'x', elements }
+    });
     const project = new Project();
     for (const c of components) project.addComponent(c);
     for (const w of wires) project.addWire(w);
@@ -119,8 +124,8 @@ describe('CircuitFileService', () => {
     project.addComponent(Component.deserialize({ pos, options: {} }, config));
   }
 
-  // A single INPUT + OUTPUT plug pair — the contents shared by the nested-custom
-  // fixtures, exercising plug round-tripping inside an embedded definition.
+  // Shared by the nested-custom fixtures: plug round-tripping inside an
+  // embedded definition.
   const plugCircuit: SerializedCircuitBody = {
     components: [
       {
@@ -142,16 +147,14 @@ describe('CircuitFileService', () => {
       const project = buildProject([{ t: 2, p: [15, 3], i: 2, o: 1 }]);
       const json = JSON.parse(service.toJson(project, 'My Circuit'));
 
-      expect(json.version).toBe(1);
+      expect(json.version).toBe(2);
       expect(json.name).toBe('My Circuit');
       expect(json.wires).toBe('');
       expect(json.definitions).toEqual([]);
-      expect(json.components.length).toBe(1);
-      expect(json.components[0]).toEqual({
-        type: 2,
-        pos: [15, 3],
-        options: { numInputs: 2 }
-      });
+      // One block for the one type, its columns holding the one component.
+      expect(json.components).toEqual([
+        { type: 2, x: [15], y: [3], opt: { numInputs: [2] } }
+      ]);
     });
 
     it('omits the attribution field when no lineage is passed', () => {
@@ -167,12 +170,9 @@ describe('CircuitFileService', () => {
       ]);
       const json = JSON.parse(service.toJson(project, 'Plug'));
 
-      expect(json.components.length).toBe(1);
-      expect(json.components[0]).toEqual({
-        type: 100,
-        pos: [4, 4],
-        options: { label: 'CLK', index: 3 }
-      });
+      expect(json.components).toEqual([
+        { type: 100, x: [4], y: [4], opt: { label: ['CLK'], index: [3] } }
+      ]);
     });
   });
 
@@ -202,8 +202,8 @@ describe('CircuitFileService', () => {
       and.setPortNegated('out', 0, true);
 
       const parsed = JSON.parse(service.toJson(project, 'Neg'));
-      expect(parsed.components[0].negInputs).toEqual([2]);
-      expect(parsed.components[0].negOutputs).toEqual([0]);
+      expect(parsed.components[0].negIn).toEqual([[1], [[2]]]);
+      expect(bodies(parsed.components)[0].negOutputs).toEqual([0]);
 
       const reloaded = rebuild(service.toJson(project, 'Neg'));
       const restored = [...reloaded.components][0];
@@ -233,7 +233,7 @@ describe('CircuitFileService', () => {
       expect(parsed.definitions[0].type).toBe(1000);
       expect(parsed.definitions[0].numInputs).toBe(1);
       expect(
-        parsed.definitions[0].components.map((c: BodyComponent) => c.type)
+        bodies(parsed.definitions[0].components).map((c) => c.type)
       ).toEqual([BuiltInComponentType.INPUT, BuiltInComponentType.OUTPUT]);
       expect(parsed.components[0].type).toBe(1000);
 
@@ -267,17 +267,16 @@ describe('CircuitFileService', () => {
       place(project, registry.snapshot(master).typeId, [3, 3]);
 
       const parsed = JSON.parse(service.toJson(project, 'NegCustom'));
-      const andBody = parsed.definitions[0].components.find(
-        (c: BodyComponent) => c.type === BuiltInComponentType.AND
+      const andBody = bodies(parsed.definitions[0].components).find(
+        (c) => c.type === BuiltInComponentType.AND
       );
-      expect(andBody.negInputs).toEqual([1]);
+      expect(andBody!.negInputs).toEqual([1]);
 
-      // The embedded negation survives a full reload + re-encode.
       const json2 = service.toJson(rebuild(service.toJson(project, 'X')), 'X');
-      const reAnd = JSON.parse(json2).definitions[0].components.find(
-        (c: BodyComponent) => c.type === BuiltInComponentType.AND
+      const reAnd = bodies(JSON.parse(json2).definitions[0].components).find(
+        (c) => c.type === BuiltInComponentType.AND
       );
-      expect(reAnd.negInputs).toEqual([1]);
+      expect(reAnd!.negInputs).toEqual([1]);
     });
 
     it('round-trips a 2-deep nested custom and opens it post-load (id-space rule)', () => {
@@ -310,7 +309,6 @@ describe('CircuitFileService', () => {
       const json = service.toJson(project, 'TwoDeep');
       const parsed = JSON.parse(json);
 
-      // A (1000) embeds a reference to B (1001) in its body.
       const defA = parsed.definitions.find(
         (d: { symbol: string }) => d.symbol === 'A'
       );
@@ -319,10 +317,10 @@ describe('CircuitFileService', () => {
       );
       expect(defA.type).toBe(1000);
       expect(defB.type).toBe(1001);
-      expect(defA.components.map((c: BodyComponent) => c.type)).toEqual([1001]);
+      expect(bodies(defA.components).map((c) => c.type)).toEqual([1001]);
 
-      // Reload: the main instance resolves, and its definition's nested ref also
-      // resolves against the session id space (nothing dangles).
+      // On reload the main instance and its definition's nested reference both
+      // resolve against the session id space.
       const { components } = service.fromJson(json);
       const reloadedType = components[0].config.type;
       const reloadedDefA = registry.getDefinition(reloadedType)!;
@@ -389,8 +387,8 @@ describe('CircuitFileService', () => {
 
     it('loads a legacy file custom component from its inline definition', () => {
       const warnSpy = vi.spyOn(logging, 'warn');
-      // The exact old-editor local-file shape: the sub-circuit definition lives
-      // in the top-level `components` array, and the body references it by id.
+      // The old-editor local-file shape: the sub-circuit definition sits in the
+      // top-level `components` array, referenced from the body by id.
       const legacy = JSON.stringify({
         project: {
           name: 'New Project',
@@ -421,7 +419,6 @@ describe('CircuitFileService', () => {
 
       const { components, skippedCustom } = service.fromJson(legacy);
 
-      // Both the AND and the custom instance load — nothing skipped.
       expect(components.length).toBe(2);
       expect(skippedCustom).toBe(0);
       expect(warnSpy).not.toHaveBeenCalled();
@@ -519,8 +516,7 @@ describe('CircuitFileService', () => {
 
     it('drops a custom whose snapshot is missing and counts the skip', () => {
       const warnSpy = vi.spyOn(logging, 'warn');
-      // A custom-range body element with no matching definition — an old
-      // reference-only / client-stripped document.
+      // A custom-range body element with no matching definition.
       const file = JSON.stringify({
         version: 1,
         name: 'x',
@@ -541,15 +537,15 @@ describe('CircuitFileService', () => {
         ),
         'CircuitFileService'
       );
-      // Unlike unknown built-ins, a missing custom is counted so the load
-      // entry points can surface it to the user.
+      // Unlike an unknown built-in, a missing custom is counted so the load
+      // entry points can surface it.
       expect(skippedCustom).toBe(1);
     });
 
     it('does not alias a missing custom snapshot to an unrelated session type', () => {
-      // Occupy session type id 1000 with an unrelated master, so a naive
+      // Session type id 1000 is an unrelated master here, so a naive
       // `remap.get(t) ?? t` fallthrough would resolve a missing file-local 1000
-      // to THIS component. The id-space branch must skip it instead.
+      // to it.
       const occupant = registry.createMaster({ symbol: 'Z' }, 'browser');
       expect(occupant).toBe(CUSTOM_TYPE_ID_BASE);
       vi.spyOn(logging, 'warn');

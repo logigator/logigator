@@ -1,0 +1,18 @@
+{
+  "name": "logigator-screenshots",
+  "version": "0.0.0",
+  "description": "Generates the images the documentation and the website show by driving a real editor",
+  "license": "AGPL-3.0-only",
+  "private": true,
+  "type": "module",
+  "packageManager": "yarn@4.14.1",
+  "bin": {
+    "screenshots": "./run.mjs"
+  },
+  "dependencies": {
+    "commander": "15.0.0",
+    "listr2": "11.0.0",
+    "playwright": "1.61.1",
+    "sharp": "0.35.3"
+  }
+}

@@ -1,9 +1,9 @@
 import { Directive, ElementRef, inject } from '@angular/core';
 
 /**
- * Material-style click ripple. On pointer down, injects a short-lived ripple
- * span at the pointer location that scales out and fades. Color is `currentColor`
- * (theme-adaptive). The host is made `position: relative; overflow: hidden`.
+ * Material-style click ripple: a short-lived span at the pointer location that
+ * scales out and fades in `currentColor`. The host is made
+ * `position: relative; overflow: hidden`.
  */
 @Directive({
   selector: '[lgRipple]',
@@ -33,8 +33,8 @@ export class LgRipple {
       ripple.style.transform = 'scale(1)';
       ripple.style.opacity = '0';
     });
-    // transitionend drives removal; a timeout guarantees cleanup when the
-    // transition never fires (reduced-motion / a `transition: none` override).
+    // The timeout covers a transition that never fires, under reduced motion
+    // or a `transition: none` override.
     const remove = () => ripple.remove();
     ripple.addEventListener('transitionend', remove, { once: true });
     setTimeout(remove, 600);

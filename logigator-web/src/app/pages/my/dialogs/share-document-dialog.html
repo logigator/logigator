@@ -1,0 +1,146 @@
+<div class="flex flex-col gap-4" *webTranslate="let t">
+  <p class="text-sm leading-relaxed text-muted">
+    {{ t('pages.my.share.intro', { name: name }) }}
+  </p>
+
+  @if (failureKey(); as message) {
+  <lg-message severity="danger">{{ t(message) }}</lg-message>
+  }
+
+  <!-- The state first, because it decides everything under it: whether there is
+         a link to hand out at all, and whether that link may be replaced. The
+         picker writes as it is picked, so what it shows is what the document is
+         and everything below moves with it. -->
+  <div class="flex flex-col gap-2">
+    <span
+      id="share-document-visibility"
+      class="text-sm font-medium text-text-hover"
+    >
+      {{ t('pages.my.share.visibilityLabel') }}
+    </span>
+    <!-- The `sm` step, as the editor's share dialog takes it: the two draw one
+           control in two apps, so the step is part of what they agree on. At
+           `md` the three French labels — the longest of the four locales —
+           measure 488px against the 494px of track a 34rem dialog leaves, which
+           only just holds; at `sm` they measure 437px. A narrower viewport still
+           breaks *between* segments rather than inside one, which is the
+           library's own rule. -->
+    <lg-select-button
+      fluid
+      size="sm"
+      optionLabel="label"
+      optionValue="value"
+      ariaLabelledby="share-document-visibility"
+      [allowEmpty]="false"
+      [options]="states()"
+      [ngModel]="visibility()"
+      [ngModelOptions]="{ standalone: true }"
+      (ngModelChange)="setVisibility($event)"
+    />
+    <!-- Drawn by this dialog rather than by a picker component of this app's
+           own — the editor's picker is the editor's, words and all — but in the
+           classes and at the distance the editor draws it. -->
+    <p class="text-sm leading-relaxed text-muted">{{ stateHint() }}</p>
+  </div>
+
+  <!-- The URL is the document's own, and it does not move when the state does:
+         a document taken private keeps it, so picking a state that resolves
+         again hands out the same link rather than a new one. -->
+  <div class="flex flex-col gap-2 border-t border-border pt-4">
+    <span class="text-sm font-medium text-text-hover">
+      {{ t('pages.my.share.linkLabel') }}
+    </span>
+
+    @if (hasLink()) {
+    <!-- Spelled the way the editor's dialog spells it: `iconPosition` is the
+           library's default and `block` its host display, but the two templates
+           saying the field identically is what makes a diff of them all signal. -->
+    <lg-icon-field class="block" iconPosition="left">
+      <lg-input-icon class="ph ph-link" />
+      <input
+        lgInputText
+        readonly
+        class="w-full"
+        [attr.aria-label]="t('pages.my.share.linkLabel')"
+        [value]="shareUrl()"
+      />
+    </lg-icon-field>
+
+    <!-- Hands out the same address the field above shows, and an embed naming
+           it: the page a link resolves to is the document's own page now, in
+           every state, so there is nothing for a snippet to point at instead.
+           It carries the copy and the embed together, which is why this dialog
+           draws neither of them itself. No margin of its own: the editor's
+           dialog sits its copy and embed a section's own gap under the field,
+           and the two are meant to be read side by side. -->
+    <web-share-controls
+      class="block"
+      [url]="shareUrl()"
+      [image]="cardUrl()"
+      [title]="name"
+    />
+
+    <!-- The page a recipient opens, in both of the states that resolve one:
+           who is handed a link is being told what it opens, and that reads the
+           same whether the document is listed or not. -->
+    <a
+      class="text-sm text-primary hover:underline"
+      [href]="shareUrl()"
+      target="_blank"
+      rel="noopener"
+      >{{ t('pages.my.share.viewPublicPage') }}</a
+    >
+    } @else {
+    <!-- No field, because there is no URL to hand out: nobody can open a
+           private document, and a link they cannot open is worse than no link
+           at all. The link itself is still there, waiting behind the state. -->
+    <p class="text-sm leading-relaxed text-muted">
+      {{ t('pages.my.share.noLink') }}
+    </p>
+    }
+  </div>
+
+  <!-- Only where a rotation can actually happen, and never disabled with a
+         reason under it: while the document is published its own address *is*
+         this link, and while it is private there is nothing on screen to
+         replace — a section about an action that cannot be taken is one more
+         thing to read for nothing. The caption and the hint paragraph that
+         stood here are gone with it: the banner under the button says what the
+         button does, in the words and the severity the editor's dialog warns
+         in, and a heading over one button was another line to read first. -->
+  @if (canRegenerate()) {
+  <div class="flex flex-col gap-2 border-t border-border pt-4">
+    <div>
+      <button
+        lgButton
+        outlined
+        severity="danger"
+        type="button"
+        icon="ph ph-arrows-clockwise"
+        [loading]="pending() === 'regenerate'"
+        [disabled]="pending() !== null"
+        (click)="regenerate()"
+      >
+        {{ t('pages.my.share.regenerate') }}
+      </button>
+    </div>
+    <lg-message severity="warn">
+      {{ t('pages.my.share.regenerateWarning') }}
+    </lg-message>
+  </div>
+  }
+
+  <!-- Every control above writes where it is used, so the dialog has nothing
+       left to commit and one way out is enough. -->
+  <div class="flex justify-end">
+    <button
+      lgButton
+      outlined
+      severity="secondary"
+      type="button"
+      (click)="close()"
+    >
+      {{ t('pages.my.share.close') }}
+    </button>
+  </div>
+</div>

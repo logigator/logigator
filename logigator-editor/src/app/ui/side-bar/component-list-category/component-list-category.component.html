@@ -22,10 +22,9 @@
         @if (comp.source; as source) {
           <app-source-indicator [source]="source" variant="badge" />
         }
-        <!-- Sits on the top edge directly right of the source badge (which
-             overhangs by 1.5 and is 4 wide, so this one starts at 3), reading as
-             its sibling. Not on the right edge: that overhang would land on the
-             next tile's source badge, and the corner holds the selected marker. -->
+        <!-- On the top edge just right of the source badge, reading as its
+             sibling. Not the right edge: that overhang would land on the next
+             tile's source badge, and the corner holds the selected marker. -->
         @if (outdatedCount(comp.type); as count) {
           <span
             class="absolute -top-1.5 left-3 flex items-center justify-center w-4 h-4 rounded-full bg-content border border-border"

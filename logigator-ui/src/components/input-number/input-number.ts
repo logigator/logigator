@@ -10,12 +10,12 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { controlPadding, LgSize } from '../../tokens/size';
 
 /**
- * A numeric input with optional stacked +/- spinner buttons.
- * `ControlValueAccessor` (value = `number`). Plain integer/decimal entry only —
- * no currency, locale, grouping, prefix/suffix or hold-to-repeat.
+ * A numeric input with optional stacked +/- spinner buttons, a
+ * `ControlValueAccessor` over a `number`. Plain integer or decimal entry only:
+ * no currency, locale, grouping, affixes or hold-to-repeat.
  *
- * The wrapper carries the field border (and the focus-within border switch);
- * the inner `<input>` is borderless. `min`/`max` clamp on step and on blur.
+ * The wrapper carries the field border and its focus-within switch, so the
+ * inner `<input>` is borderless. `min`/`max` clamp on step and on blur.
  */
 @Component({
   selector: 'lg-input-number',

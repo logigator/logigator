@@ -46,7 +46,6 @@ describe('LgToast', () => {
   });
 
   describe('announcements', () => {
-    /** Both live regions exist from the first render, before any toast lands. */
     it('keeps the live regions mounted while empty', () => {
       const { f } = setup();
       expect(liveRegion(f.nativeElement, 'polite')).toBeTruthy();
@@ -170,7 +169,6 @@ describe('LgToast', () => {
     f.detectChanges();
     expect(toasts(f.nativeElement)).toHaveLength(1);
 
-    // At its life the leave animation starts; the toast is still mounted.
     vi.advanceTimersByTime(1);
     f.detectChanges();
     const leaving = toasts(f.nativeElement);
@@ -189,8 +187,7 @@ describe('LgToast', () => {
     f.detectChanges();
     expect(toasts(f.nativeElement)).toHaveLength(2);
 
-    // The first hits its life and animates out; once the leave finishes only
-    // the second — still counting down — remains.
+    // Once the first's leave finishes, only the second remains counting down.
     vi.advanceTimersByTime(1000 + LEAVE_MS);
     f.detectChanges();
     const remaining = toasts(f.nativeElement);
@@ -217,7 +214,6 @@ describe('LgToast', () => {
     toast.dispatchEvent(new MouseEvent('mouseenter'));
     f.detectChanges();
 
-    // The progress bar reports paused so its animation freezes.
     expect(progressBar(toast)!.style.animationPlayState).toBe('paused');
 
     // Well past the original life — still present because the timer is frozen.
@@ -258,7 +254,7 @@ describe('LgToast', () => {
     expect(toasts(f.nativeElement)).toHaveLength(0);
   });
 
-  it('dismisses the toast when the lg-button is clicked', () => {
+  it('dismisses the toast when its close button is clicked', () => {
     const { f, service } = setup();
     service.add({ severity: 'info', summary: 'closable', life: 5000 });
     f.detectChanges();
@@ -268,7 +264,6 @@ describe('LgToast', () => {
 
     close.click();
     f.detectChanges();
-    // The leave animation plays before the toast leaves the DOM.
     const leaving = toasts(f.nativeElement);
     expect(leaving).toHaveLength(1);
     expect(leaving[0].className).toContain('-translate-x-6');
@@ -314,7 +309,6 @@ describe('LgToast', () => {
     const host = f.nativeElement.querySelector('lg-toast') as HTMLElement;
     expect(host.className).toContain('bottom-0');
     expect(host.className).toContain('left-0');
-    // The consumer's override class merges onto the host.
     expect(host.className).toContain('-mb-4');
   });
 });

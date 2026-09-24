@@ -2,11 +2,16 @@ import { Point } from 'pixi.js';
 import { Project } from '../../project/project';
 import { MultiTouchGesture } from '../multi-touch-gesture';
 import { canvasToGrid, PointerInput } from './pointer-input';
+import {
+  isPinch,
+  WHEEL_ZOOM_PER_PX,
+  WheelEventLike,
+  wheelPixels
+} from './wheel-input';
 
 /**
- * The DOM event surface the controller consumes — the subset of
- * `PointerEvent`/`WheelEvent` it reads, so specs can drive the handlers with
- * plain objects.
+ * The subset of `PointerEvent`/`WheelEvent` the controller reads, so specs can
+ * drive the handlers with plain objects.
  */
 export interface PointerEventLike {
   pointerId: number;
@@ -23,21 +28,29 @@ export interface PointerEventLike {
 const DOUBLE_CLICK_MS = 500;
 const DOUBLE_CLICK_SLOP = 6;
 
-export interface WheelEventLike {
-  clientX: number;
-  clientY: number;
-  deltaY: number;
-  preventDefault(): void;
-}
+// Wheel events closer together than this belong to one pinch: a pinch's
+// events, and the scroll events a browser interleaves with them, arrive
+// every frame.
+const WHEEL_BURST_GAP_MS = 150;
+// Zoom factor per pixel of trackpad pinch: `e^(-delta · k)`, so the zoom
+// follows the fingers continuously. A pinch's deltas are small (see isPinch),
+// so one event zooms by at most e^0.75.
+const PINCH_ZOOM_PER_PX = 0.015;
 
-/** Viewport navigation the controller drives (right-drag pan, wheel zoom,
- *  two-finger pan/pinch). Deltas and centers are canvas-local CSS pixels. */
+/** Middle and right: the two buttons a press pans with, whatever the tool. */
+const MIDDLE_BUTTON = 1;
+const RIGHT_BUTTON = 2;
+
+export type { WheelEventLike } from './wheel-input';
+
+/** Viewport navigation the controller drives (middle/right-drag pan, wheel
+ *  zoom and trackpad pinch, two-finger touch pan/pinch). Deltas and centers are canvas-local CSS px. */
 export interface PointerNavTarget {
   pan(delta: Point): void;
   zoomIn(center: Point): void;
   zoomOut(center: Point): void;
   zoomBy(factor: number, center: Point): void;
-  /** Continuous-render toggle around right-drag pans and touch gestures. */
+  /** Continuous-render toggle around drag pans and touch gestures. */
   setActive(active: boolean): void;
 }
 
@@ -65,30 +78,34 @@ export interface PointerControllerOptions {
 }
 
 /**
- * Normalizes DOM pointer input on a canvas into tool/navigation streams —
- * the single input path for the board and every watch canvas (the shared
- * watch renderer has no event system on its target canvases, and the board
- * disables PixiJS's via `eventFeatures`).
+ * Normalizes DOM pointer input on a canvas into tool/navigation streams — the
+ * single input path for the board and every watch canvas, since PixiJS's own
+ * event system is disabled.
  *
  * - Primary button: captured, streamed to the tool target from down to up.
- *   Click-vs-drag semantics live in the sessions (see `PanSession`).
- * - Right button: pan-only drag by successive position deltas; the canvas
- *   context menu is suppressed outright (there is no circuit context menu).
- * - Touch: pointers feed the {@link MultiTouchGesture} first; when a second
- *   finger lands the gesture takes over and the tool stream is cancelled, so
- *   a finger never both operates a tool and navigates.
- * - Wheel: zoom anchored at the cursor (non-passive, so page scroll/zoom is
- *   suppressed over the canvas).
+ *   Click-vs-drag semantics live in the sessions.
+ * - Middle and right button: pan-only drag by successive position deltas; the
+ *   canvas context menu and the middle press's autoscroll are suppressed.
+ * - Touch: pointers feed the {@link MultiTouchGesture} first; a second finger
+ *   hands it navigation and cancels the tool stream, so a finger never both
+ *   operates a tool and navigates.
+ * - Wheel: zoom anchored at the cursor, non-passive so page scroll/zoom is
+ *   suppressed over the canvas.
  *
  * Pointer capture keeps move/up flowing when a drag leaves the canvas.
- * Handlers are public so specs can drive them without synthesizing DOM
- * events; `destroy()` detaches all listeners.
+ * Handlers are public so specs can drive them without DOM events.
  */
 export class PointerController {
   private readonly _abort = new AbortController();
   private readonly _gesture: MultiTouchGesture;
 
   private _toolPointer: number | null = null;
+  // When the last wheel event arrived, and whether the burst it belongs to is
+  // a pinch. A pinch zooms at its own rate: the scroll events a browser
+  // interleaves with it, carrying the fingers' drift, are dropped rather than
+  // zooming at the wheel's.
+  private _wheelLast = -Infinity;
+  private _wheelPinch = false;
   private _panPointer: number | null = null;
   private readonly _panLast = new Point();
 
@@ -131,6 +148,15 @@ export class PointerController {
     canvas.addEventListener('contextmenu', (e) => e.preventDefault(), {
       signal
     });
+    // Chromium and Firefox start autoscroll from the middle press's mousedown,
+    // which would keep scrolling the board after the pan ends.
+    canvas.addEventListener(
+      'mousedown',
+      (e) => {
+        if (e.button === MIDDLE_BUTTON) e.preventDefault();
+      },
+      { signal }
+    );
   }
 
   public destroy(): void {
@@ -141,11 +167,9 @@ export class PointerController {
   }
 
   /**
-   * The current project, or null when there is none or it is destroyed. Hosts
-   * re-home the controller from a change-detection effect, so a closed tab or
-   * a freshly loaded document leaves the disposed project reachable here for
-   * one cycle — and a destroyed `Container` has no `position`/`scale` left to
-   * map canvas pixels through.
+   * The current project, or null when it is destroyed. Re-homing happens from
+   * a change-detection effect, so a disposed project stays reachable here for
+   * one cycle — and it has no `position`/`scale` left to map pixels through.
    */
   private _project(): Project | null {
     const project = this.opts.project();
@@ -168,7 +192,7 @@ export class PointerController {
       this._capture(e.pointerId);
       this._countClick(e, local);
       this.opts.tool.down(this._input(e, local, project));
-    } else if (e.button === 2) {
+    } else if (e.button === MIDDLE_BUTTON || e.button === RIGHT_BUTTON) {
       this._panPointer = e.pointerId;
       this._panLast.copyFrom(local);
       this._capture(e.pointerId);
@@ -211,18 +235,16 @@ export class PointerController {
   }
 
   /**
-   * The pointer left the canvas. While a pointer is captured this doesn't
-   * fire for the geometric boundary, so it only ends hover previews — an
-   * in-flight drag keeps streaming through move/up.
+   * Ends hover previews. While a pointer is captured this does not fire for
+   * the geometric boundary, so an in-flight drag keeps streaming.
    */
   public onPointerLeave(): void {
     this.opts.tool.leave?.();
   }
 
   /**
-   * Shared teardown for a lifted pointer (up and cancel): feeds the gesture,
-   * releases capture, and drops pan/tool ownership. Returns which stream the
-   * pointer owned so the caller can dispatch the final tool call.
+   * Teardown for a lifted pointer: feeds the gesture, releases capture, drops
+   * ownership. Returns which stream the pointer owned.
    */
   private _endPointer(e: PointerEventLike): 'pan' | 'tool' | null {
     if (e.pointerType === 'touch') {
@@ -240,19 +262,42 @@ export class PointerController {
     return 'tool';
   }
 
+  /**
+   * Every wheel input zooms at the pointer, continuously: a mouse wheel and a
+   * two-finger trackpad swipe alike. The DOM does not say which device
+   * scrolled, and no heuristic tells them apart reliably on every device, so
+   * nothing here tries — the board pans by drag. A trackpad pinch, which
+   * browsers deliver as a ctrl-wheel of small deltas ({@link isPinch}), zooms
+   * at its own rate.
+   */
   public onWheel(e: WheelEventLike): void {
     e.preventDefault();
     if (!this._project()) return;
+    const now = e.timeStamp ?? performance.now();
+    if (now - this._wheelLast > WHEEL_BURST_GAP_MS) this._wheelPinch = false;
+    this._wheelLast = now;
+
     const center = this._localPosition(e);
-    if (e.deltaY > 0) {
-      this.opts.nav.zoomOut(center);
-    } else if (e.deltaY < 0) {
-      this.opts.nav.zoomIn(center);
+    if (isPinch(e)) {
+      this._wheelPinch = true;
+      this.opts.nav.zoomBy(Math.exp(-e.deltaY * PINCH_ZOOM_PER_PX), center);
+      return;
     }
+    if (this._wheelPinch && !e.ctrlKey) return;
+
+    if (e.deltaY === 0) return;
+    // Continuous, proportional to the delta: a notch is one zoom-button step,
+    // input merged into one event zooms by all of it, and a high-resolution
+    // wheel zooms smoothly. The zoom buttons keep their ladder; `zoomBy`
+    // resyncs it so a button press continues from here.
+    this.opts.nav.zoomBy(
+      Math.exp(-wheelPixels(e, e.deltaY) * WHEEL_ZOOM_PER_PX),
+      center
+    );
   }
 
-  /** Cancels the tool stream (a second finger landed — the gesture owns
-   *  navigation now; the pressed finger must not commit a tool action). */
+  /** Cancels the tool stream once the gesture owns navigation, so the pressed
+   *  finger cannot commit a tool action. */
   private _cancelTool(): void {
     if (this._toolPointer === null) return;
     this._toolPointer = null;
@@ -300,9 +345,8 @@ export class PointerController {
   }
 
   private _capture(pointerId: number): void {
-    // The pointer may already be gone (e.g. a pen leaving the digitizer
-    // between down and capture) — losing capture only degrades off-canvas
-    // tracking, so don't let the exception kill the interaction.
+    // The pointer may already be gone (a pen leaving the digitizer between
+    // down and capture); losing capture only degrades off-canvas tracking.
     try {
       this.opts.canvas.setPointerCapture(pointerId);
     } catch {

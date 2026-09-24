@@ -1,10 +1,7 @@
 import { Component } from '../../components/component';
 import { Wire } from '../../wires/wire';
 
-/**
- * Minimal structural view of a circuit, so the same extraction serves the live
- * top-level Project and instantiated snapshot bodies.
- */
+/** Structural view of a circuit: a live Project or an instantiated body. */
 export interface CircuitElements {
   components: Iterable<Component>;
   wires: Iterable<Wire>;
@@ -29,9 +26,9 @@ export interface Net {
 }
 
 /**
- * Union-find over dense integer node ids, with path compression. Also the
- * global node arena for the board compiler — template instantiation allocates
- * fresh nodes and unions plug-bound nets into outer nets.
+ * Union-find over dense integer node ids, with path compression. Doubles as the
+ * board compiler's node arena: template instantiation allocates fresh nodes and
+ * unions plug-bound nets into outer nets.
  */
 export class UnionFind {
   private readonly _parent: number[] = [];
@@ -59,16 +56,10 @@ export class UnionFind {
 /**
  * Derives the electrical nets of a circuit from geometry. The wire-integration
  * invariants guarantee connections occur only where terminations coincide at a
- * half-grid point, so extraction is a union-find over termination points
- * (keyed `"x,y"` like `ConnectionPointManager`):
- *
- * 1. Each wire unions its two endpoint keys (a wire is one electrical node).
- * 2. Each component port attaches to whatever class its point lands in — but
- *    a component never unions its own ports.
- *
- * Every termination point belongs to a class; a net is a class. A dangling
- * port yields a singleton net; a port placed directly on another component's
- * port connects (their termination points coincide).
+ * half-grid point, so extraction is a union-find over `"x,y"` termination
+ * points: each wire unions its two endpoints, each component port joins
+ * whatever class its point lands in, and a component never unions its own
+ * ports. A net is one class — a dangling port yields a singleton.
  */
 export function extractNets(circuit: CircuitElements): Net[] {
   const uf = new UnionFind();

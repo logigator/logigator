@@ -16,11 +16,13 @@ describe('MoveWiresAction', () => {
   describe('do()', () => {
     it('calls moveWire with (id, newPos) for a single entry', () => {
       const newPos = new Point(5, 10);
-      const action = new MoveWiresAction({
-        id: 1,
-        oldPos: new Point(0, 0),
-        newPos
-      });
+      const action = new MoveWiresAction([
+        {
+          id: 1,
+          oldPos: new Point(0, 0),
+          newPos
+        }
+      ]);
 
       action.do(project);
 
@@ -30,11 +32,11 @@ describe('MoveWiresAction', () => {
     });
 
     it('calls moveWire once per entry for multiple entries', () => {
-      const action = new MoveWiresAction(
+      const action = new MoveWiresAction([
         { id: 1, oldPos: new Point(0, 0), newPos: new Point(3, 4) },
         { id: 2, oldPos: new Point(1, 1), newPos: new Point(7, 8) },
         { id: 3, oldPos: new Point(2, 2), newPos: new Point(9, 0) }
-      );
+      ]);
 
       action.do(project);
 
@@ -54,7 +56,7 @@ describe('MoveWiresAction', () => {
     });
 
     it('does not call moveWire when there are no entries', () => {
-      const action = new MoveWiresAction();
+      const action = new MoveWiresAction([]);
 
       expect(() => action.do(project)).not.toThrow();
       expect(project.moveWire).not.toHaveBeenCalled();
@@ -64,11 +66,13 @@ describe('MoveWiresAction', () => {
   describe('undo()', () => {
     it('calls moveWire with (id, oldPos) for a single entry', () => {
       const oldPos = new Point(0, 0);
-      const action = new MoveWiresAction({
-        id: 1,
-        oldPos,
-        newPos: new Point(5, 10)
-      });
+      const action = new MoveWiresAction([
+        {
+          id: 1,
+          oldPos,
+          newPos: new Point(5, 10)
+        }
+      ]);
 
       action.undo(project);
 
@@ -78,10 +82,10 @@ describe('MoveWiresAction', () => {
     });
 
     it('calls moveWire once per entry for multiple entries', () => {
-      const action = new MoveWiresAction(
+      const action = new MoveWiresAction([
         { id: 1, oldPos: new Point(0, 0), newPos: new Point(3, 4) },
         { id: 2, oldPos: new Point(1, 1), newPos: new Point(7, 8) }
-      );
+      ]);
 
       action.undo(project);
 
@@ -97,7 +101,7 @@ describe('MoveWiresAction', () => {
     });
 
     it('does not call moveWire when there are no entries', () => {
-      const action = new MoveWiresAction();
+      const action = new MoveWiresAction([]);
 
       expect(() => action.undo(project)).not.toThrow();
       expect(project.moveWire).not.toHaveBeenCalled();
@@ -107,11 +111,13 @@ describe('MoveWiresAction', () => {
   describe('constructor position cloning', () => {
     it('clones oldPos so mutating the original does not affect stored entry', () => {
       const oldPos = new Point(1, 2);
-      const action = new MoveWiresAction({
-        id: 1,
-        oldPos,
-        newPos: new Point(5, 6)
-      });
+      const action = new MoveWiresAction([
+        {
+          id: 1,
+          oldPos,
+          newPos: new Point(5, 6)
+        }
+      ]);
 
       oldPos.set(99, 99);
       action.undo(project);
@@ -126,11 +132,13 @@ describe('MoveWiresAction', () => {
 
     it('clones newPos so mutating the original does not affect stored entry', () => {
       const newPos = new Point(5, 6);
-      const action = new MoveWiresAction({
-        id: 1,
-        oldPos: new Point(1, 2),
-        newPos
-      });
+      const action = new MoveWiresAction([
+        {
+          id: 1,
+          oldPos: new Point(1, 2),
+          newPos
+        }
+      ]);
 
       newPos.set(99, 99);
       action.do(project);

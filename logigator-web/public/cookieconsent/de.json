@@ -1,0 +1,52 @@
+{
+  "consentModal": {
+    "title": "Cookie-Einstellungen",
+    "description": "Wir verwenden Cookies und andere Tracking-Technologien, um Ihr Surferlebnis auf unserer Website zu verbessern, Ihnen personalisierte Inhalte anzuzeigen, unseren Website-Verkehr zu analysieren und zu verstehen, woher unsere Besucher kommen.",
+    "acceptAllBtn": "Alle akzeptieren",
+    "acceptNecessaryBtn": "Alle ablehnen",
+    "showPreferencesBtn": "Einstellungen verwalten"
+  },
+  "preferencesModal": {
+    "title": "Cookie-Einstellungen",
+    "acceptAllBtn": "Alle akzeptieren",
+    "acceptNecessaryBtn": "Alle ablehnen",
+    "savePreferencesBtn": "Einstellungen speichern",
+    "closeIconLabel": "Schließen",
+    "sections": [
+      {
+        "title": "Cookie-Nutzung",
+        "description": "Wir verwenden Cookies und andere Tracking-Technologien, um Ihr Surferlebnis auf unserer Website zu verbessern, Ihnen personalisierte Inhalte anzuzeigen, unseren Website-Verkehr zu analysieren und zu verstehen, woher unsere Besucher kommen."
+      },
+      {
+        "title": "Unbedingt erforderliche Cookies",
+        "description": "Diese Cookies sind für das ordnungsgemäße Funktionieren der Website unerlässlich. Ohne diese Cookies würde die Website nicht ordnungsgemäß funktionieren.",
+        "linkedCategory": "necessary"
+      },
+      {
+        "title": "Leistungs- und Analyse-Cookies",
+        "description": "Diese Cookies ermöglichen es uns, unseren Website-Verkehr zu analysieren und zu verstehen, woher unsere Besucher kommen. Wir verwenden diese Informationen, um Ihr Surferlebnis auf unserer Website zu verbessern.",
+        "linkedCategory": "analytics",
+        "cookieTable": {
+          "headers": {
+            "name": "Name",
+            "domain": "Dienst",
+            "description": "Beschreibung",
+            "expiration": "Ablauf"
+          },
+          "body": [
+            {
+              "name": "ph_(id)_posthog",
+              "domain": "PostHog",
+              "description": "Von PostHog gesetztes Cookie, das eine anonyme Gerätekennung und eine Sitzungs-ID speichert.",
+              "expiration": "Läuft nach 1 Jahr ab"
+            }
+          ]
+        }
+      },
+      {
+        "title": "Weitere Informationen",
+        "description": "Bei Fragen zu unserer Cookie-Richtlinie und Ihren Auswahlmöglichkeiten lesen Sie bitte unsere <a class=\"cc-link\" href=\"/privacy-policy\">Datenschutzerklärung</a>."
+      }
+    ]
+  }
+}

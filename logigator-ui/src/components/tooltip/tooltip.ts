@@ -23,13 +23,11 @@ import { formatShortcutLabel, LgShortcutBinding } from '../shortcut/shortcut';
 import { LgTooltipPanel } from './tooltip-panel';
 
 /**
- * A hover/focus tooltip on any host element. The content is the `lgTooltip`
- * value; an **empty / null value is a no-op** (renders no tooltip). An optional
- * `tooltipShortcut` binding renders as key chips after the text. The bubble
- * is a `cdk/overlay` connected overlay with a caret tracking the anchor; the
- * directive never steals pointer or focus, and registers the text (plus the
- * shortcut's plain label) with `AriaDescriber` so it reaches screen readers via
- * `aria-describedby`.
+ * A hover/focus tooltip on any host element, its content the `lgTooltip`
+ * value; an **empty or null value renders nothing**. An optional
+ * `tooltipShortcut` renders as key chips after the text. The bubble is a
+ * connected overlay with a caret tracking the anchor; the directive never
+ * steals pointer or focus, and registers the text with `AriaDescriber`.
  */
 @Directive({
   selector: '[lgTooltip]',
@@ -58,8 +56,7 @@ export class LgTooltip implements OnDestroy {
   private subscriptions: Subscription | null = null;
 
   constructor() {
-    // Keep aria-describedby in sync with the content (cleanup removes the
-    // previous hidden description on change and on destroy).
+    // Cleanup removes the previous hidden description on change and destroy.
     effect((onCleanup) => {
       const text = this.content();
       const el = this.host.nativeElement;
@@ -70,8 +67,7 @@ export class LgTooltip implements OnDestroy {
       }
     });
 
-    // Keep an already-visible bubble in sync when the content changes (a cleared
-    // value hides it, matching show()'s no-op-on-empty contract).
+    // A cleared value hides an open bubble, matching show()'s no-op on empty.
     effect(() => {
       const text = this.content();
       const shortcut = this.tooltipShortcut();

@@ -19,8 +19,8 @@ describe('pacing', () => {
     });
 
     it('scales the deficit with the target rate, not a fixed cap', () => {
-      // A high target produces a correspondingly large deficit; the batch is
-      // bounded by wall-clock ms at the call site, not by clamping this value.
+      // The batch is bounded by wall-clock ms at the call site, not by
+      // clamping this value.
       expect(ticksDue(5_000_000, 1000, 0)).toBe(5_000_000);
     });
   });
@@ -36,7 +36,7 @@ describe('pacing', () => {
     });
 
     it('reschedules back-to-back when the budget cut the batch short', () => {
-      // due 5_000_000 but only 40_000 ran within the ms budget → still behind.
+      // Only 40_000 of 5_000_000 ran within the ms budget → still behind.
       expect(nextPaceDelayMs(5_000_000, 40_000)).toBe(0);
     });
   });

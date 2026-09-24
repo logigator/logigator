@@ -1,38 +1,28 @@
-import { Container, DestroyOptions, Graphics } from 'pixi.js';
-import { Subject, takeUntil } from 'rxjs';
+import { Container, Graphics } from 'pixi.js';
 import { Component } from '../../component';
 import { LedMatrixCellGraphics } from '../../../rendering/graphics/led-matrix-cell.graphics';
+import { ledMatrixMeta, ledMatrixShape } from '@logigator/core';
 import {
   ledMatrixComponentConfig,
-  LedMatrixOptions,
-  ledMatrixShape
+  LedMatrixOptions
 } from './led-matrix.config';
 
 /**
  * A size×size LED display driven like a RAM: a row is latched from the data
- * inputs on the rising clock edge. The LED cells are the engine unit's
- * outputs but exist only inside the simulator — the compiler maps their links
- * back onto this component as pseudo-ports at `numInputs + cellIndex`
- * (row-major), delivered through the regular {@link Component.setPortPowered}
- * path.
+ * inputs on the rising clock edge. The cells are the engine unit's outputs but
+ * exist only inside the simulator; the compiler maps their links back onto
+ * this component as pseudo-ports at `numInputs + cellIndex` (row-major).
  */
 export class LedMatrixComponent extends Component<LedMatrixOptions> {
   public readonly config = ledMatrixComponentConfig;
 
-  private readonly destroy$ = new Subject<void>();
-
-  // Cell graphics in row-major LED order. Assigned in draw(); the class-field
-  // define runs after the base constructor's first draw and resets it to
-  // undefined, so a state change arriving before the next rebuild falls back
-  // to a full redraw.
+  // Row-major cell graphics, assigned in draw(). The class-field define runs
+  // after the base constructor's first draw and resets this to undefined, so a
+  // state change before the next rebuild falls back to a full redraw.
   private _cells?: Graphics[];
 
   constructor(options: LedMatrixOptions) {
-    super(ledMatrixShape(options.size.value).numInputs, 0, options);
-
-    this.options.size.onChange$.pipe(takeUntil(this.destroy$)).subscribe(() => {
-      this.numInputs = ledMatrixShape(this.options.size.value).numInputs;
-    });
+    super(ledMatrixMeta, options);
   }
 
   public override setPortPowered(portIndex: number, powered: boolean): void {
@@ -52,41 +42,13 @@ export class LedMatrixComponent extends Component<LedMatrixOptions> {
     }
   }
 
-  protected get inputLabels(): string[] {
-    const { addressBits, dataBits } = ledMatrixShape(this.options.size.value);
-    const labels = [];
-    for (let a = 0; a < addressBits; a++) {
-      labels.push(`A${a}`);
-    }
-    for (let d = 0; d < dataBits; d++) {
-      labels.push(`D${d}`);
-    }
-    labels.push('CLK');
-    return labels;
-  }
-
-  protected get outputLabels(): string[] {
-    return [];
-  }
-
-  protected get bodyGridWidth(): number {
-    return ledMatrixShape(this.options.size.value).bodyCells;
-  }
-
-  // Square regardless of the port span (legacy geometry, mirrored by the
-  // frozen legacy-anchor matrix case).
-  protected override get bodyGridHeight(): number {
-    return this.bodyGridWidth;
-  }
-
   protected draw(): void {
     const { size, bodyCells } = ledMatrixShape(this.options.size.value);
     this.addBody(bodyCells, bodyCells);
 
-    // The LED grid spans the body minus a one-cell margin per side and is
-    // kept upright about the body centre — the square stays inside the body
-    // across rotations, so row 0 always lights along the top of the screen
-    // (legacy behavior).
+    // The grid spans the body minus a one-cell margin per side and stays
+    // upright about the body centre, so row 0 always lights along the top of
+    // the screen, as in the legacy editor.
     const context = this.geometryService.getGraphicsContext(
       LedMatrixCellGraphics
     );
@@ -108,8 +70,8 @@ export class LedMatrixComponent extends Component<LedMatrixOptions> {
         grid.addChild(cell);
       }
     }
-    // Covers draw-time setup and theme restyles (lit state is re-derived per
-    // cell); the per-frame path writes tints directly in setPortPowered.
+    // Draw-time setup and theme restyles; the per-frame path writes tints
+    // directly in setPortPowered.
     this.onApplyTheme(() => {
       const theme = this.themingService.currentTheme();
       cells.forEach((cell, i) => {
@@ -121,10 +83,5 @@ export class LedMatrixComponent extends Component<LedMatrixOptions> {
     grid.position.set(bodyCells / 2, bodyCells / 2);
     this.registerRotationCounterContainer(grid);
     this.addChild(grid);
-  }
-
-  public override destroy(options?: DestroyOptions): void {
-    this.destroy$.next();
-    super.destroy(options);
   }
 }

@@ -13,12 +13,9 @@ import {
 import { TranslateDirective } from '../../../translation/translate.directive';
 
 /**
- * Side-panel renderer for {@link MemoryDataComponentOption}. It opens the
- * generic {@link HexEditorComponent} in a dialog and adapts
- * between the stored value (a base64 bit-packed blob) and the editor's
- * `Uint8Array` + dimensions contract: decoding the blob and snapshotting the
- * dimensions as the dialog's input values, then trimming and re-encoding the
- * editor's `save` output. Nothing component-specific lives in the editor.
+ * Opens the generic {@link HexEditorComponent} in a dialog and adapts between
+ * the stored base64 bit-packed blob and the editor's `Uint8Array` +
+ * dimensions contract. Nothing component-specific lives in the hex editor.
  */
 @Component({
   selector: 'app-memory-data-option-input',
@@ -52,8 +49,7 @@ export class MemoryDataOptionInputComponent implements ComponentOptionInput<stri
     });
     if (!ref) return;
 
-    // The editor is decoupled from the dialog, so bridge its outputs here:
-    // commit + trim on save, close on either save or cancel.
+    // The editor is decoupled from the dialog, so bridge its outputs here.
     ref.onChildComponentLoaded.subscribe((editor) => {
       editor.saved.subscribe((bytes) => {
         this.commit()(bytesToBase64(trimTrailingZeros(bytes)));
