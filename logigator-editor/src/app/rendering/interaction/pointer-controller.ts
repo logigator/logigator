@@ -36,8 +36,8 @@ const DOUBLE_CLICK_SLOP = 6;
 const WHEEL_BURST_GAP_MS = 150;
 // Zoom factor per pixel of trackpad pinch: `e^(-delta · k)`, so the zoom
 // follows the fingers continuously. A pinch's deltas are small (see isPinch),
-// so one event zooms by at most e^0.5.
-const PINCH_ZOOM_PER_PX = 0.01;
+// so one event zooms by at most e^0.75.
+const PINCH_ZOOM_PER_PX = 0.015;
 
 /** Middle and right: the two buttons a press pans with, whatever the tool. */
 const MIDDLE_BUTTON = 1;

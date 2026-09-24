@@ -326,7 +326,7 @@ describe('PointerController', () => {
 
       expect(nav.zoomBy).toHaveBeenCalledTimes(1);
       const [factor, center] = vi.mocked(nav.zoomBy).mock.calls[0];
-      expect(factor).toBeCloseTo(Math.exp(0.05), 10);
+      expect(factor).toBeCloseTo(Math.exp(0.075), 10);
       expect(center).toMatchObject({ x: 32, y: 16 });
     });
 
