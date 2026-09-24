@@ -1,15 +1,13 @@
 import { ZOOM_STEP_BASE } from '../../project/viewport-controller';
 
 /**
- * What a `wheel` event needs to be read as a mouse wheel or a trackpad. Every
- * field but `deltaY` is optional, as the DOM leaves most of them out in some
- * browser.
+ * What the wheel handler reads off a `wheel` event. Every field but `deltaY`
+ * is optional, as the DOM leaves most of them out in some browser.
  */
 export interface WheelEventLike {
   clientX: number;
   clientY: number;
   deltaY: number;
-  deltaX?: number;
   /** `WheelEvent.deltaMode`: 0 pixels (the default), 1 lines, 2 pages. */
   deltaMode?: number;
   /** Set on a trackpad pinch, which browsers deliver as a ctrl-wheel. */
@@ -46,23 +44,6 @@ export function wheelPixels(
     default:
       return delta;
   }
-}
-
-/**
- * Whether an event carries evidence of a trackpad scroll. A heuristic — the DOM
- * does not say which device scrolled — on the one thing a mouse wheel cannot
- * produce: a horizontal component. A wheel scrolls one axis.
- *
- * Deliberately no more than that. Magnitude and fractional deltas are no
- * evidence: Chromium on Linux reports a high-resolution mouse wheel in
- * fractional ticks, and reading that as a trackpad turned a mouse's zoom into
- * a pan. A trackpad swipe that happens to stay vertical is read as a wheel and
- * zooms — proportionally to its small deltas, so smoothly — which is the
- * harmless side to be wrong on.
- */
-export function looksLikeTrackpad(e: WheelEventLike): boolean {
-  if (e.deltaMode !== undefined && e.deltaMode !== 0) return false;
-  return e.deltaX !== undefined && e.deltaX !== 0;
 }
 
 /**

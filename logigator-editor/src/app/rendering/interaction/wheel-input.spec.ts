@@ -1,10 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  isPinch,
-  looksLikeTrackpad,
-  WheelEventLike,
-  wheelPixels
-} from './wheel-input';
+import { isPinch, WheelEventLike, wheelPixels } from './wheel-input';
 
 const wheel = (fields: Partial<WheelEventLike>): WheelEventLike => ({
   clientX: 0,
@@ -12,24 +7,6 @@ const wheel = (fields: Partial<WheelEventLike>): WheelEventLike => ({
   deltaY: 0,
   preventDefault: () => undefined,
   ...fields
-});
-
-describe('looksLikeTrackpad', () => {
-  it('reads any vertical-only scroll as a wheel, fractional or fine deltas included', () => {
-    expect(looksLikeTrackpad(wheel({ deltaY: 100 }))).toBe(false);
-    expect(looksLikeTrackpad(wheel({ deltaY: 500, deltaX: 0 }))).toBe(false);
-    // A high-resolution wheel on Linux Chromium.
-    expect(looksLikeTrackpad(wheel({ deltaY: 53.333, deltaX: 0 }))).toBe(false);
-    expect(looksLikeTrackpad(wheel({ deltaY: 7 }))).toBe(false);
-  });
-
-  it('reads a horizontal component in pixels as a trackpad', () => {
-    expect(looksLikeTrackpad(wheel({ deltaX: 2, deltaY: 0 }))).toBe(true);
-    // Line mode is a notched wheel whatever else the event says.
-    expect(
-      looksLikeTrackpad(wheel({ deltaX: 1, deltaY: 3, deltaMode: 1 }))
-    ).toBe(false);
-  });
 });
 
 describe('isPinch', () => {

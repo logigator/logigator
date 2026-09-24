@@ -111,17 +111,15 @@ it is fresh before the next render.
   merges the wheel input between two frames into one event and sums its delta,
   so a fast scroll over a slow frame is one event several notches long. The
   1.2 ladder belongs to the zoom buttons alone; `zoomBy` resyncs it so a button
-  press continues from wherever the wheel left the zoom. A trackpad pans with two
-  fingers (`PointerNavTarget.scroll`, which requests its own frame) and zooms
-  continuously with a pinch, which browsers send as a ctrl-wheel — always at
-  the pointer: the scroll events a browser interleaves with a pinch, carrying
-  the fingers' drift, are dropped until the pinch ends. The DOM does
-  not say which device scrolled; `wheel-input.ts` reads a horizontal component
-  as a trackpad and holds that for the rest of a burst of events, and a
-  ctrl-wheel of small pixel deltas as a pinch. Nothing weaker counts: fractional
-  deltas come from high-resolution mice too (Chromium on Linux), and reading
-  them as a trackpad made a mouse pan. A vertical-only trackpad swipe therefore
-  zooms, smoothly, as the wheel does. Untuned against real trackpads.
+  press continues from wherever the wheel left the zoom. Every wheel input zooms
+  — a two-finger trackpad swipe as much as a mouse wheel. The DOM does not say
+  which device scrolled, and no heuristic tells them apart on every device (a
+  horizontal-component rule flipped near-vertical swipes between zoom and pan
+  mid-gesture, and fractional deltas come from high-resolution mice too), so
+  the board pans by drag only. A trackpad pinch, which browsers send as a
+  ctrl-wheel of small pixel deltas (`wheel-input.ts` `isPinch`), zooms at its
+  own rate, always at the pointer: the scroll events a browser interleaves with
+  a pinch, carrying the fingers' drift, are dropped until the pinch ends.
 
 The `PointerNavTarget` comes from the host (the board maps it onto the active
 project plus ticker; a watch wraps `pan` to re-blit). Handlers are public so

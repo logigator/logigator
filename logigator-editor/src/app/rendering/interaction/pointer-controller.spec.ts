@@ -88,7 +88,6 @@ describe('PointerController', () => {
     project = makeProject();
     nav = {
       pan: vi.fn(),
-      scroll: vi.fn(),
       zoomIn: vi.fn(),
       zoomOut: vi.fn(),
       zoomBy: vi.fn(),
@@ -241,16 +240,14 @@ describe('PointerController', () => {
     expect(lastZoom()[0]).toBeCloseTo(notches(0.25), 10);
   });
 
-  it('zooms, not pans, for a high-resolution wheel reporting fractional deltas', () => {
-    // Chromium on Linux: a notch of a high-resolution wheel, no horizontal part.
+  it('zooms for a high-resolution wheel reporting fractional deltas', () => {
+    // Chromium on Linux: a notch of a high-resolution wheel.
     controller.onWheel({
       clientX: 100,
       clientY: 50,
       deltaY: 53.333,
-      deltaX: 0,
       preventDefault: vi.fn()
     });
-    expect(nav.scroll).not.toHaveBeenCalled();
     expect(lastZoom()[0]).toBeCloseTo(1 / notches(0.53333), 10);
   });
 
@@ -264,7 +261,7 @@ describe('PointerController', () => {
     expect(nav.zoomBy).not.toHaveBeenCalled();
   });
 
-  describe('trackpad wheel input', () => {
+  describe('trackpad input', () => {
     const preventDefault = vi.fn();
     const at = (timeStamp: number, fields: Partial<WheelEventLike>) =>
       controller.onWheel({
@@ -276,49 +273,28 @@ describe('PointerController', () => {
         ...fields
       });
 
-    it('pans with a two-finger scroll instead of zooming', () => {
-      at(0, { deltaX: 4, deltaY: -7 });
-
-      expect(nav.scroll).toHaveBeenCalledTimes(1);
-      expect(vi.mocked(nav.scroll).mock.calls[0][0]).toMatchObject({
-        x: -4,
-        y: 7
-      });
-      expect(nav.zoomBy).not.toHaveBeenCalled();
+    it('zooms with a two-finger swipe, like a wheel', () => {
+      at(0, { deltaY: -7 });
+      expect(lastZoom()[0]).toBeCloseTo(notches(0.07), 10);
+      expect(lastZoom()[1]).toMatchObject({ x: 32, y: 16 });
     });
 
-    it('keeps panning for the rest of a burst once it has shown a trackpad', () => {
-      // Vertical only: no evidence of a trackpad yet, so it zooms.
-      at(0, { deltaY: 40 });
-      expect(nav.zoomBy).toHaveBeenCalledTimes(1);
-
-      at(16, { deltaX: 1, deltaY: 30 });
-      at(32, { deltaY: 40 });
-      expect(nav.scroll).toHaveBeenCalledTimes(2);
-      expect(nav.zoomBy).toHaveBeenCalledTimes(1);
-
-      // A pause ends the burst: the next notch is a wheel again.
-      at(400, { deltaY: 100 });
-      expect(nav.zoomBy).toHaveBeenCalledTimes(2);
-      expect(nav.scroll).toHaveBeenCalledTimes(2);
-    });
-
-    it('neither pans nor moves the zoom point with the finger drift inside a pinch', () => {
+    it('drops the finger drift a browser interleaves with a pinch', () => {
       at(0, { ctrlKey: true, deltaY: -5 });
       // The fingers' midpoint moving, sent between the pinch's own events.
-      at(8, { deltaX: 6, deltaY: -3 });
+      at(8, { deltaY: -3 });
       at(16, { ctrlKey: true, deltaY: -4 });
-      at(24, { deltaX: -2, deltaY: 4 });
+      at(24, { deltaY: 4 });
 
-      expect(nav.scroll).not.toHaveBeenCalled();
-      expect(nav.zoomBy).toHaveBeenCalledTimes(2);
-      for (const [, center] of vi.mocked(nav.zoomBy).mock.calls) {
-        expect(center).toMatchObject({ x: 32, y: 16 });
-      }
+      // Only the pinch's own events zoom, each at the pinch rate.
+      expect(vi.mocked(nav.zoomBy).mock.calls.map(([f]) => f)).toEqual([
+        Math.exp(0.075),
+        Math.exp(0.06)
+      ]);
 
-      // Once the pinch has ended, a two-finger scroll pans again.
-      at(300, { deltaX: 6, deltaY: -3 });
-      expect(nav.scroll).toHaveBeenCalledTimes(1);
+      // Once the pinch has ended, a swipe zooms again.
+      at(300, { deltaY: -3 });
+      expect(nav.zoomBy).toHaveBeenCalledTimes(3);
     });
 
     it('zooms continuously with a pinch, at the pointer', () => {

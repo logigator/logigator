@@ -88,7 +88,6 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
       project: () => this.project,
       nav: {
         pan: (delta) => this.pan(delta),
-        scroll: (delta) => this.pan(delta),
         zoomIn: (center) => this.project?.viewport.zoomIn(center),
         zoomOut: (center) => this.project?.viewport.zoomOut(center),
         zoomBy: (factor, center) =>

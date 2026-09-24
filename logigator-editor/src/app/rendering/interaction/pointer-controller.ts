@@ -4,7 +4,6 @@ import { MultiTouchGesture } from '../multi-touch-gesture';
 import { canvasToGrid, PointerInput } from './pointer-input';
 import {
   isPinch,
-  looksLikeTrackpad,
   WHEEL_ZOOM_PER_PX,
   WheelEventLike,
   wheelPixels
@@ -29,10 +28,9 @@ export interface PointerEventLike {
 const DOUBLE_CLICK_MS = 500;
 const DOUBLE_CLICK_SLOP = 6;
 
-// Wheel events closer together than this belong to one scroll or pinch, and
-// keep the device their burst was read as: a trackpad's momentum tail and the
-// events of a swipe arrive every frame, a mouse's separate notches further
-// apart when scrolled slowly.
+// Wheel events closer together than this belong to one pinch: a pinch's
+// events, and the scroll events a browser interleaves with them, arrive
+// every frame.
 const WHEEL_BURST_GAP_MS = 150;
 // Zoom factor per pixel of trackpad pinch: `e^(-delta · k)`, so the zoom
 // follows the fingers continuously. A pinch's deltas are small (see isPinch),
@@ -46,12 +44,9 @@ const RIGHT_BUTTON = 2;
 export type { WheelEventLike } from './wheel-input';
 
 /** Viewport navigation the controller drives (middle/right-drag pan, wheel
- *  zoom, two-finger pan/pinch). Deltas and centers are canvas-local CSS px. */
+ *  zoom and trackpad pinch, two-finger touch pan/pinch). Deltas and centers are canvas-local CSS px. */
 export interface PointerNavTarget {
   pan(delta: Point): void;
-  /** Pans outside any gesture — a two-finger trackpad scroll — and requests
-   *  its own frame, since no gesture holds the ticker on. */
-  scroll(delta: Point): void;
   zoomIn(center: Point): void;
   zoomOut(center: Point): void;
   zoomBy(factor: number, center: Point): void;
@@ -105,13 +100,11 @@ export class PointerController {
   private readonly _gesture: MultiTouchGesture;
 
   private _toolPointer: number | null = null;
-  // The current wheel burst: when its last event arrived, and whether it has
-  // shown itself to come from a trackpad.
+  // When the last wheel event arrived, and whether the burst it belongs to is
+  // a pinch. A pinch zooms at its own rate: the scroll events a browser
+  // interleaves with it, carrying the fingers' drift, are dropped rather than
+  // zooming at the wheel's.
   private _wheelLast = -Infinity;
-  private _wheelTrackpad = false;
-  // Whether the current burst is a pinch. A pinch always zooms at the pointer:
-  // the scroll events a browser interleaves with it, carrying the fingers'
-  // drift, are dropped rather than panned.
   private _wheelPinch = false;
   private _panPointer: number | null = null;
   private readonly _panLast = new Point();
@@ -270,23 +263,19 @@ export class PointerController {
   }
 
   /**
-   * A mouse wheel zooms continuously; a trackpad pans with two fingers and zooms
-   * with a pinch, which browsers deliver as a ctrl-wheel ({@link isPinch}).
-   * Whether a scroll came from a trackpad is guessed from its events
-   * ({@link looksLikeTrackpad}) and held for the rest of the burst, so a swipe
-   * that starts out looking like a wheel turns into a pan rather than flipping
-   * back and forth.
+   * Every wheel input zooms at the pointer, continuously: a mouse wheel and a
+   * two-finger trackpad swipe alike. The DOM does not say which device
+   * scrolled, and no heuristic tells them apart reliably on every device, so
+   * nothing here tries — the board pans by drag. A trackpad pinch, which
+   * browsers deliver as a ctrl-wheel of small deltas ({@link isPinch}), zooms
+   * at its own rate.
    */
   public onWheel(e: WheelEventLike): void {
     e.preventDefault();
     if (!this._project()) return;
     const now = e.timeStamp ?? performance.now();
-    if (now - this._wheelLast > WHEEL_BURST_GAP_MS) {
-      this._wheelTrackpad = false;
-      this._wheelPinch = false;
-    }
+    if (now - this._wheelLast > WHEEL_BURST_GAP_MS) this._wheelPinch = false;
     this._wheelLast = now;
-    if (looksLikeTrackpad(e)) this._wheelTrackpad = true;
 
     const center = this._localPosition(e);
     if (isPinch(e)) {
@@ -295,12 +284,6 @@ export class PointerController {
       return;
     }
     if (this._wheelPinch && !e.ctrlKey) return;
-    if (this._wheelTrackpad && !e.ctrlKey) {
-      this.opts.nav.scroll(
-        new Point(-wheelPixels(e, e.deltaX ?? 0), -wheelPixels(e, e.deltaY))
-      );
-      return;
-    }
 
     if (e.deltaY === 0) return;
     // Continuous, proportional to the delta: a notch is one zoom-button step,
