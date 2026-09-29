@@ -31,13 +31,19 @@ When a simulation is active, the toolbar swaps its drawing tools for the run con
 
 ## Simulation speed
 
-Beside the run controls is a set of speed options and a live readout. There are three ways to pace the simulation:
+Beside the run controls is the **speed button**. It names the current setting — **Every frame**, a rate such as `10 Hz`, or **Max speed** — and clicking it opens the speed panel:
 
-- **Sync to frame** — the circuit advances one tick per drawn frame, so its speed follows your display's refresh rate. This is the default and keeps fast-changing circuits easy to watch.
-- **Limit to target speed** — the circuit is paced to a fixed frequency you choose. Type a number in the speed box and pick its unit (`Hz`, `kHz` or `MHz`) from the dropdown. Turn on the **Limit to target speed** button to use it.
-- **Free run** — with neither **Sync to frame** nor **Limit to target speed** turned on, the circuit runs as fast as it possibly can.
+![The speed panel, opened from the speed button, with Fixed speed chosen.](./images/simulation-speed.webp)
 
-The readout to the right shows the **measured speed** the simulation is actually reaching (for example `1kHz`) alongside the total **ticks** elapsed since it started. The measured speed can fall short of a target you set if the circuit is too large to keep up.
+The panel offers three ways to pace the simulation. The highlighted one is in use; click another to switch, even while the circuit runs:
+
+- **Every frame** — the circuit advances one tick per screen refresh, so every change is drawn and the speed follows your display's refresh rate. This is the default.
+- **Fixed speed** — the circuit ticks at a rate you choose. Drag the slider to pick one between `1 Hz` and `10 MHz`, or type it into the box beside the slider: `20`, `2.5k` and `1M` all work. Typing also goes below the slider, down to `0.1 Hz` — one tick every ten seconds. Changing either one selects **Fixed speed**. If the box turns red, what you typed is not a rate, and the simulation keeps running at the last one that was.
+- **As fast as possible** — no limit: the circuit runs as fast as your computer allows, and the screen shows only some of the ticks.
+
+Under the three choices, **Clocks at this speed** lists the frequency each **Clock** in your circuit runs at. A clock's **Delay** is how many ticks it waits before flipping, so a full cycle takes twice that: at `10 Hz`, a clock with delay `1` runs at `5 Hz`. To slow a clock down, lower the speed or raise its delay. With a fixed speed the list is there straight away; with the other two it appears once the circuit has run for a moment, since their speed is only known by measuring it.
+
+Next to the speed button, a readout shows the **measured speed** the simulation is actually reaching while it runs, alongside the total **ticks** elapsed since it started. When a fixed speed is more than the circuit can keep up with, the readout is marked with a warning sign.
 
 ## Interacting with a running circuit
 

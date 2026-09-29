@@ -13,6 +13,8 @@ import { SwitchComponent } from '../app/components/component-types/switch/switch
 import { RomComponent } from '../app/components/component-types/rom/rom.component';
 import { romComponentConfig } from '../app/components/component-types/rom/rom.config';
 import { LedComponent } from '../app/components/component-types/led/led.component';
+import { ClockComponent } from '../app/components/component-types/clock/clock.component';
+import { clockComponentConfig } from '../app/components/component-types/clock/clock.config';
 import { SegmentDisplayComponent } from '../app/components/component-types/segment-display/segment-display.component';
 import { segmentDisplayComponentConfig } from '../app/components/component-types/segment-display/segment-display.config';
 
@@ -94,6 +96,15 @@ export function makeRom(
   });
   rom.position.set(px, py);
   return rom;
+}
+
+/** ClockComponent with the given half-period in ticks, at a grid position. */
+export function makeClock(speed = 1, px = 0, py = 0): ClockComponent {
+  const clock = new ClockComponent({
+    speed: clockComponentConfig.options.speed.clone(speed)
+  });
+  clock.position.set(px, py);
+  return clock;
 }
 
 /** LedComponent at the given grid position. */

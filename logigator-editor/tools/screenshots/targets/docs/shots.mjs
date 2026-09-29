@@ -266,6 +266,37 @@ export const SHOTS = [
     }
   },
   {
+    // The speed panel, on a fixed speed: its clock list is then filled from the
+    // rate asked for, with no run to measure and nothing that varies.
+    name: 'simulation-speed',
+    async run(ed) {
+      await ed.load('clock');
+      await ed.enterSimulation();
+      await ed.api(() => window.__logigator.sim.setTarget(10, 'Hz'));
+      await ed.settle();
+      // The chip is named by the setting it shows, the same in every language.
+      const controls = ed.page.locator('app-simulation-controls');
+      await controls.getByRole('button', { name: /^10\sHz$/ }).click();
+      const panel = ed.page.getByRole('group', { name: ed.t('toolBar.speed') });
+      await panel.waitFor({ state: 'visible' });
+      // Off the chip first, so its tooltip is gone before the panel is framed.
+      await ed.parkPointer();
+      await ed.waitStable(panel);
+      // Framed by the popover's card, which pads and borders the group. The
+      // run controls start 8 px from the window's edge, which is as far left as
+      // a clip can reach; more would be clamped and move to the right instead.
+      const card = panel.locator('xpath=..');
+      return {
+        clip: await ed.unionClip([controls, card], {
+          top: 8,
+          left: 8,
+          bottom: 20,
+          right: 20
+        })
+      };
+    }
+  },
+  {
     // Animated: two ticks of a clock, so the LED is dark then lit.
     name: 'simulation-showcase',
     // The run controls set the frame's width; a wider viewport only adds empty

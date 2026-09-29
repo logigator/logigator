@@ -4,6 +4,12 @@
  * top-level-imports the engine and worker globals).
  */
 
+/**
+ * Slowest rate target mode paces to: one tick every ten seconds, slow enough to
+ * watch a counter count.
+ */
+export const MIN_TARGET_HZ = 0.1;
+
 /** Pacing interval when caught up — small enough to keep input latency low. */
 export const PACE_INTERVAL_MS = 10;
 

@@ -7,6 +7,7 @@ import {
   makePulseButton,
   makeLed,
   makeNot,
+  makeClock,
   makeSwitch
 } from '../../testing/factories';
 import {
@@ -27,6 +28,7 @@ import { WorkMode } from '../work-mode/work-mode.enum';
 import { WorkModeService } from '../work-mode/work-mode.service';
 import { SimulationService } from './simulation.service';
 import { TOP_LEVEL_PATH } from './compiler/compiled-board.model';
+import { MIN_TARGET_HZ } from './worker/pacing';
 import { packSnapshot } from './worker/protocol';
 import {
   FRAME_SCHEDULER,
@@ -206,10 +208,10 @@ describe('SimulationService', () => {
     expect(service.state()).toBe('ready');
   });
 
-  it('starts a worker-paced run when sync mode is off', async () => {
+  it('starts a free run when as-fast-as-possible is chosen', async () => {
     project.addComponent(makeSwitch());
     await enterAndBoot();
-    service.toggleSyncMode(); // off → continuous
+    service.setMode('continuous');
 
     service.play();
 
@@ -224,8 +226,7 @@ describe('SimulationService', () => {
   it('re-paces a running target-mode simulation when the rate changes', async () => {
     project.addComponent(makeSwitch());
     await enterAndBoot();
-    service.toggleTargetMode();
-    expect(service.mode()).toBe('target');
+    service.setMode('target');
 
     service.play();
     await vi.waitFor(() =>
@@ -236,51 +237,54 @@ describe('SimulationService', () => {
       hz: 1000
     });
 
-    service.setTargetValue(250);
+    service.setTargetHz(0.5);
     await vi.waitFor(() =>
       expect(fakeWorker.postedOfKind('start')).toHaveLength(2)
     );
     expect(fakeWorker.postedOfKind('start')[1].config).toEqual({
       mode: 'target',
-      hz: 250
+      hz: 0.5
     });
   });
 
-  it('re-paces with the unit multiplier when the unit changes', async () => {
+  it('switches a running sync-mode simulation to target mode when a speed is entered', async () => {
     project.addComponent(makeSwitch());
     await enterAndBoot();
-    service.toggleTargetMode();
-    service.setTargetValue(5);
-
+    expect(service.mode()).toBe('sync');
     service.play();
+
+    // The current rate re-entered still counts as asking for it.
+    service.setTargetHz(1000);
+    expect(service.mode()).toBe('target');
     await vi.waitFor(() =>
       expect(fakeWorker.postedOfKind('start')).toHaveLength(1)
     );
     expect(fakeWorker.postedOfKind('start')[0].config).toEqual({
       mode: 'target',
-      hz: 5
-    });
-
-    // 5 read in kHz is 5000 Hz; the typed value is kept.
-    service.setTargetUnit('kHz');
-    await vi.waitFor(() =>
-      expect(fakeWorker.postedOfKind('start')).toHaveLength(2)
-    );
-    expect(service.targetValue()).toBe(5);
-    expect(service.targetHz()).toBe(5000);
-    expect(fakeWorker.postedOfKind('start')[1].config).toEqual({
-      mode: 'target',
-      hz: 5000
+      hz: 1000
     });
   });
 
-  it('ignores invalid target-speed input so the box is not rewritten mid-edit', () => {
-    service.setTargetValue(0);
-    expect(service.targetValue()).toBe(1000);
-    service.setTargetValue(Number.NaN);
-    expect(service.targetValue()).toBe(1000);
-    service.setTargetValue(-5);
-    expect(service.targetValue()).toBe(1000);
+  it('ignores a rate that is not finite or below the slowest pace', () => {
+    service.setTargetHz(MIN_TARGET_HZ / 2);
+    service.setTargetHz(Number.NaN);
+    service.setTargetHz(-5);
+    expect(service.targetHz()).toBe(1000);
+    expect(service.mode()).toBe('sync');
+
+    service.setTargetHz(MIN_TARGET_HZ);
+    expect(service.targetHz()).toBe(MIN_TARGET_HZ);
+  });
+
+  it('reports the distinct clock half-periods of the session board', async () => {
+    project.addComponent(makeClock(10, 0, 0));
+    project.addComponent(makeClock(1, 0, 4));
+    project.addComponent(makeClock(10, 0, 8));
+    await enterAndBoot();
+    expect(service.clockHalfPeriods()).toEqual([1, 10]);
+
+    service.exit();
+    expect(service.clockHalfPeriods()).toEqual([]);
   });
 
   it('steps only while paused', async () => {

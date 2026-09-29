@@ -3,6 +3,7 @@ import type { InputEvent } from '@logigator/sim/wasm';
 import { BoardDescriptor } from '../compiler/compiled-board.model';
 import {
   nextPaceDelayMs,
+  MIN_TARGET_HZ,
   PACE_BATCH_MS,
   PACE_INTERVAL_MS,
   ticksDue
@@ -90,7 +91,7 @@ async function handle(msg: MainToWorkerMessage): Promise<void> {
         });
       } else {
         runMode = 'target';
-        paceHz = Math.max(1, msg.config.hz);
+        paceHz = Math.max(MIN_TARGET_HZ, msg.config.hz);
         paceStart = {
           tick: simulation.getStatus().tick,
           time: performance.now()

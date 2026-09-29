@@ -31,13 +31,19 @@ Cuando una simulación está activa, la barra de herramientas cambia sus herrami
 
 ## Velocidad de simulación
 
-Junto a los controles de ejecución hay un conjunto de opciones de velocidad y una lectura en directo. Hay tres maneras de marcar el ritmo de la simulación:
+Junto a los controles de ejecución está el **botón de velocidad**. Indica el ajuste actual — **Cada fotograma**, una frecuencia como `10 Hz` o **Velocidad máx.** — y al hacer clic abre el panel de velocidad:
 
-- **Sincronizar con el fotograma**: el circuito avanza un tick por fotograma dibujado, así que su velocidad sigue la tasa de refresco de tu pantalla. Este es el valor predeterminado y mantiene fáciles de observar los circuitos que cambian rápido.
-- **Limitar a la velocidad objetivo**: el circuito se marca a una frecuencia fija que eliges. Escribe un número en el cuadro de velocidad y elige su unidad (`Hz`, `kHz` o `MHz`) del desplegable. Activa el botón **Limitar a la velocidad objetivo** para usarlo.
-- **Ejecución libre**: sin **Sincronizar con el fotograma** ni **Limitar a la velocidad objetivo** activados, el circuito se ejecuta tan rápido como es posible.
+![El panel de velocidad, abierto desde el botón de velocidad, con Velocidad fija elegida.](./images/simulation-speed.webp)
 
-La lectura de la derecha muestra la **velocidad medida** que la simulación está alcanzando realmente (por ejemplo `1kHz`) junto al total de **ticks** transcurridos desde que se inició. La velocidad medida puede quedarse por debajo de un objetivo que fijes si el circuito es demasiado grande para seguir el ritmo.
+El panel ofrece tres maneras de marcar el ritmo de la simulación. La opción resaltada es la que está en uso; haz clic en otra para cambiar, incluso mientras el circuito se ejecuta:
+
+- **Cada fotograma**: el circuito avanza un tick por cada refresco de pantalla, así que se dibuja cada cambio y la velocidad sigue la tasa de refresco de tu pantalla. Este es el valor predeterminado.
+- **Velocidad fija**: el circuito avanza al ritmo que elijas. Arrastra el control deslizante para elegir uno entre `1 Hz` y `10 MHz`, o escríbelo en el cuadro de al lado: `20`, `2,5k` y `1M` funcionan. Escribiendo también puedes bajar de lo que alcanza el control deslizante, hasta `0,1 Hz`: un tick cada diez segundos. Cambiar cualquiera de los dos selecciona **Velocidad fija**. Si el cuadro se vuelve rojo, lo que escribiste no es una frecuencia, y la simulación sigue con la última válida.
+- **Lo más rápido posible**: sin límite; el circuito se ejecuta tan rápido como lo permita tu ordenador, y la pantalla muestra solo algunos de los ticks.
+
+Debajo de las tres opciones, **Relojes a esta velocidad** muestra la frecuencia a la que funciona cada **Reloj** de tu circuito. El **Retardo** de un reloj es cuántos ticks espera antes de cambiar, así que un ciclo completo dura el doble: a `10 Hz`, un reloj con retardo `1` funciona a `5 Hz`. Para ralentizar un reloj, baja la velocidad o aumenta su retardo. Con una velocidad fija la lista aparece enseguida; con las otras dos, cuando el circuito lleva un momento en marcha, porque su velocidad solo se conoce midiéndola.
+
+Junto al botón de velocidad, una lectura muestra mientras se ejecuta la **velocidad medida** que la simulación está alcanzando realmente, junto al total de **ticks** transcurridos desde que se inició. Cuando una velocidad fija es más de lo que el circuito puede seguir, la lectura se marca con un signo de advertencia.
 
 ## Interactuar con un circuito en ejecución
 

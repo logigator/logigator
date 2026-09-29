@@ -15,10 +15,12 @@ import { WorkMode } from '../work-mode/work-mode.enum';
 import { WorkModeService } from '../work-mode/work-mode.service';
 import { AnalyticsService } from '../analytics/analytics.service';
 import { AnalyticsEvent } from '../analytics/analytics.mapping';
+import { BuiltInComponentType } from '@logigator/core';
 import { BoardCompilerService } from './compiler/board-compiler.service';
 import { CompiledBoard, TOP_LEVEL_PATH } from './compiler/compiled-board.model';
 import { CompileDiagnostic } from './compiler/compile-error';
 import { LinkStateApplier, SnapshotApplier } from './state/link-state-applier';
+import { MIN_TARGET_HZ } from './worker/pacing';
 import { INPUT_EVENT_CONT, INPUT_EVENT_PULSE } from './worker/protocol';
 import {
   SimulationRunMode,
@@ -32,15 +34,6 @@ const PULSE_BUTTON_FLASH_MS = 150;
  * worker boots the WASM engine, then `ready` (paused) ⇄ `running`.
  */
 export type SimulationState = 'inactive' | 'starting' | 'ready' | 'running';
-
-/** Unit the target speed is entered in; multiplies the typed value to Hz. */
-export type TargetSpeedUnit = 'Hz' | 'kHz' | 'MHz';
-
-const TARGET_SPEED_MULTIPLIER: Record<TargetSpeedUnit, number> = {
-  Hz: 1,
-  kHz: 1_000,
-  MHz: 1_000_000
-};
 
 /**
  * Facade for the simulation lifecycle: entering/leaving simulation mode,
@@ -70,15 +63,16 @@ export class SimulationService {
 
   private readonly _mode = signal<SimulationRunMode>('sync');
   public readonly mode = computed(this._mode);
-  // Switching unit keeps the typed value and re-reads it in the new unit
-  // (10 Hz → 10 kHz), so the value never changes on its own.
-  private readonly _targetValue = signal(1000);
-  public readonly targetValue = computed(this._targetValue);
-  private readonly _targetUnit = signal<TargetSpeedUnit>('Hz');
-  public readonly targetUnit = computed(this._targetUnit);
-  public readonly targetHz = computed(
-    () => this._targetValue() * TARGET_SPEED_MULTIPLIER[this._targetUnit()]
-  );
+  private readonly _targetHz = signal(1000);
+  public readonly targetHz = computed(this._targetHz);
+
+  private readonly _clockHalfPeriods = signal<readonly number[]>([]);
+  /**
+   * The distinct half-periods, in ticks, of every clock the session's board
+   * holds (custom components' inner clocks included), ascending — what turns a
+   * tick rate into the frequencies the circuit's clocks run at.
+   */
+  public readonly clockHalfPeriods = computed(this._clockHalfPeriods);
 
   public readonly measuredHz = this.workerService.measuredHz;
   public readonly tick = this.workerService.tick;
@@ -221,6 +215,7 @@ export class SimulationService {
     }
 
     this._board = board;
+    this._clockHalfPeriods.set(clockHalfPeriodsOf(board));
     const applier = new LinkStateApplier(
       board.mapping.get(TOP_LEVEL_PATH) ?? []
     );
@@ -308,6 +303,7 @@ export class SimulationService {
       }
     } finally {
       this._board = null;
+      this._clockHalfPeriods.set([]);
       this._applier = null;
       this._project = null;
       this.workModeService.setSimulationMode(false);
@@ -383,42 +379,33 @@ export class SimulationService {
   }
 
   /**
-   * Sets the typed target-speed value (in the current unit). Non-finite or
-   * non-positive input — an emptied field mid-edit — is ignored, so the last
-   * valid value keeps driving the sim and the box isn't rewritten under the
-   * user's caret.
+   * Sets the fixed-speed rate and switches to target mode, since entering a
+   * speed is asking for it. Non-finite input or a rate below
+   * {@link MIN_TARGET_HZ} is ignored, so the last valid rate keeps driving the
+   * sim.
    */
-  public setTargetValue(value: number): void {
-    if (!Number.isFinite(value) || value <= 0) {
+  public setTargetHz(hz: number): void {
+    if (!Number.isFinite(hz) || hz < MIN_TARGET_HZ) {
       return;
     }
-    if (value === this._targetValue()) {
+    if (hz === this._targetHz() && this._mode() === 'target') {
       return;
     }
-    this._targetValue.set(value);
-    if (this._mode() === 'target') {
-      this._restartIfRunning();
-    }
+    this._targetHz.set(hz);
+    this._paceToTarget();
   }
 
-  /** Switches the unit the typed value is read in, re-pacing if running. */
-  public setTargetUnit(unit: TargetSpeedUnit): void {
-    if (unit === this._targetUnit()) {
+  /** Selects how the run is paced, re-pacing an active run. */
+  public setMode(mode: SimulationRunMode): void {
+    if (mode === this._mode()) {
       return;
     }
-    this._targetUnit.set(unit);
-    if (this._mode() === 'target') {
-      this._restartIfRunning();
-    }
-  }
-
-  public toggleTargetMode(): void {
-    this._mode.update((m) => (m === 'target' ? 'continuous' : 'target'));
+    this._mode.set(mode);
     this._restartIfRunning();
   }
 
-  public toggleSyncMode(): void {
-    this._mode.update((m) => (m === 'sync' ? 'continuous' : 'sync'));
+  private _paceToTarget(): void {
+    this._mode.set('target');
     this._restartIfRunning();
   }
 
@@ -616,4 +603,14 @@ export class SimulationService {
     }
     repaint();
   }
+}
+
+function clockHalfPeriodsOf(board: CompiledBoard): number[] {
+  const halfPeriods = new Set<number>();
+  for (const unit of board.descriptor.components) {
+    if (unit.type === BuiltInComponentType.CLOCK && unit.ops) {
+      halfPeriods.add(unit.ops[0]);
+    }
+  }
+  return [...halfPeriods].sort((a, b) => a - b);
 }

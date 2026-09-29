@@ -710,11 +710,22 @@ const es: TranslationSchema = {
     pause: 'Pausar',
     step: 'Paso',
     stopSim: 'Detener',
-    targetSpeed: 'Velocidad objetivo',
-    targetUnit: 'Unidad de velocidad objetivo',
-    targetMode: 'Limitar a la velocidad objetivo',
-    syncToFrame: 'Sincronizar con el fotograma',
-    measuredHz: '{{hz}}Hz',
+    speed: 'Velocidad de simulación',
+    speedFrame: 'Cada fotograma',
+    speedFrameHint:
+      'Un tick por cada refresco de pantalla, así que se dibuja cada cambio.',
+    speedFixed: 'Velocidad fija',
+    speedFixedHint: 'Avanza al ritmo que elijas.',
+    speedMax: 'Lo más rápido posible',
+    speedMaxShort: 'Velocidad máx.',
+    speedMaxHint: 'Sin límite. La pantalla muestra solo algunos de los ticks.',
+    speedRate: 'Ticks por segundo',
+    speedRateHint: 'Por ejemplo 0,5 · 20 · 2,5k · 1M',
+    speedBehind:
+      'Más lento que la velocidad fija: el circuito es demasiado grande para seguir el ritmo.',
+    clocks: 'Relojes a esta velocidad',
+    clockDelay: 'Reloj, retardo {{delay}}',
+    clocksMore: '+{{count}} más',
     ticks: '{{ticks}} ticks'
   },
   mobile: {

@@ -31,13 +31,19 @@ Wenn eine Simulation aktiv ist, tauscht die Werkzeugleiste ihre Zeichenwerkzeuge
 
 ## Simulationsgeschwindigkeit
 
-Neben den Ausführungssteuerungen liegt ein Satz von Geschwindigkeitsoptionen und eine Live-Anzeige. Es gibt drei Wege, die Simulation zu takten:
+Neben den Ausführungssteuerungen liegt die **Geschwindigkeitsschaltfläche**. Sie nennt die aktuelle Einstellung — **Jedes Bild**, eine Rate wie `10 Hz` oder **Maximal** — und öffnet per Klick das Geschwindigkeitsfeld:
 
-- **Mit Bildrate synchronisieren** — die Schaltung rückt einen Tick pro gezeichnetem Bild vor, sodass ihre Geschwindigkeit der Bildwiederholrate deines Displays folgt. Dies ist der Standard und hält sich schnell ändernde Schaltungen leicht beobachtbar.
-- **Auf Zielfrequenz begrenzen** — die Schaltung wird auf eine feste, von dir gewählte Frequenz getaktet. Tippe eine Zahl in das Geschwindigkeitsfeld und wähle ihre Einheit (`Hz`, `kHz` oder `MHz`) aus dem Dropdown. Schalte die Schaltfläche **Auf Zielfrequenz begrenzen** ein, um sie zu nutzen.
-- **Freier Lauf** — sind weder **Mit Bildrate synchronisieren** noch **Auf Zielfrequenz begrenzen** eingeschaltet, läuft die Schaltung so schnell, wie sie irgend kann.
+![Das Geschwindigkeitsfeld, geöffnet über die Geschwindigkeitsschaltfläche, mit gewählter fester Geschwindigkeit.](./images/simulation-speed.webp)
 
-Die Anzeige rechts zeigt die **gemessene Geschwindigkeit**, die die Simulation tatsächlich erreicht (zum Beispiel `1kHz`), zusammen mit den insgesamt seit dem Start verstrichenen **Ticks**. Die gemessene Geschwindigkeit kann hinter einer von dir gesetzten Zielfrequenz zurückbleiben, wenn die Schaltung zu groß ist, um mitzuhalten.
+Das Feld bietet drei Wege, die Simulation zu takten. Die hervorgehobene Option ist aktiv; klicke eine andere an, um zu wechseln, auch während die Schaltung läuft:
+
+- **Jedes Bild** — die Schaltung rückt einen Tick pro Bildaufbau vor, sodass jede Änderung gezeichnet wird und die Geschwindigkeit der Bildwiederholrate deines Displays folgt. Dies ist der Standard.
+- **Feste Geschwindigkeit** — die Schaltung tickt mit einer von dir gewählten Rate. Ziehe den Schieberegler, um eine zwischen `1 Hz` und `10 MHz` zu wählen, oder tippe sie in das Feld daneben: `20`, `2,5k` und `1M` funktionieren alle. Getippt geht es auch unter den Schieberegler, bis hinab zu `0,1 Hz` — ein Tick alle zehn Sekunden. Sobald du eines von beiden änderst, ist **Feste Geschwindigkeit** gewählt. Wird das Feld rot, ist das Getippte keine Rate, und die Simulation läuft mit der letzten gültigen weiter.
+- **So schnell wie möglich** — keine Begrenzung: die Schaltung läuft so schnell, wie dein Computer es zulässt, und der Bildschirm zeigt nur einen Teil der Ticks.
+
+Unter den drei Optionen listet **Taktgeber bei dieser Geschwindigkeit** die Frequenz auf, mit der jeder **Taktgeber** deiner Schaltung läuft. Die **Verzögerung** eines Taktgebers gibt an, wie viele Ticks er wartet, bevor er umschaltet, ein voller Zyklus dauert also doppelt so lange: bei `10 Hz` läuft ein Taktgeber mit Verzögerung `1` mit `5 Hz`. Um einen Taktgeber zu verlangsamen, senke die Geschwindigkeit oder erhöhe seine Verzögerung. Bei fester Geschwindigkeit steht die Liste sofort da; bei den anderen beiden erscheint sie, sobald die Schaltung einen Moment gelaufen ist, denn ihre Geschwindigkeit ist erst durch Messen bekannt.
+
+Neben der Geschwindigkeitsschaltfläche zeigt eine Anzeige während des Laufs die **gemessene Geschwindigkeit**, die die Simulation tatsächlich erreicht, zusammen mit den insgesamt seit dem Start verstrichenen **Ticks**. Ist eine feste Geschwindigkeit mehr, als die Schaltung schafft, wird die Anzeige mit einem Warnzeichen markiert.
 
 ## Mit einer laufenden Schaltung interagieren
 

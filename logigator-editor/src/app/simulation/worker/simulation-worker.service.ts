@@ -209,7 +209,9 @@ export class SimulationWorkerService {
       return;
     }
     this.runMode = mode;
+    // A rate measured under the previous pacing says nothing about this one.
     this.lastStatus = null;
+    this._measuredHz.set(0);
     this._startFrameLoop();
     this._startStatusPolling();
   }

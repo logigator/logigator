@@ -31,13 +31,19 @@ Lorsqu'une simulation est active, la barre d'outils échange ses outils de dessi
 
 ## Vitesse de simulation
 
-À côté des contrôles d'exécution se trouve un ensemble d'options de vitesse et un indicateur en direct. Il y a trois façons de cadencer la simulation :
+À côté des contrôles d'exécution se trouve le **bouton de vitesse**. Il indique le réglage actuel — **Chaque image**, une fréquence comme `10 Hz` ou **Vitesse max** — et un clic dessus ouvre le panneau de vitesse :
 
-- **Synchroniser à l'image** — le circuit avance d'un tick par image dessinée, si bien que sa vitesse suit la fréquence de rafraîchissement de votre écran. C'est le réglage par défaut et il garde les circuits qui changent vite faciles à observer.
-- **Limiter à la vitesse cible** — le circuit est cadencé à une fréquence fixe que vous choisissez. Saisissez un nombre dans la zone de vitesse et choisissez son unité (`Hz`, `kHz` ou `MHz`) dans la liste déroulante. Activez le bouton **Limiter à la vitesse cible** pour l'utiliser.
-- **Exécution libre** — sans **Synchroniser à l'image** ni **Limiter à la vitesse cible** activé, le circuit tourne aussi vite qu'il le peut.
+![Le panneau de vitesse, ouvert depuis le bouton de vitesse, avec Vitesse fixe choisie.](./images/simulation-speed.webp)
 
-L'indicateur à droite montre la **vitesse mesurée** que la simulation atteint réellement (par exemple `1kHz`) ainsi que le nombre total de **ticks** écoulés depuis son démarrage. La vitesse mesurée peut rester en deçà d'une cible que vous fixez si le circuit est trop grand pour suivre.
+Le panneau propose trois façons de cadencer la simulation. L'option mise en évidence est celle utilisée ; cliquez sur une autre pour changer, même pendant que le circuit tourne :
+
+- **Chaque image** — le circuit avance d'un tick par rafraîchissement de l'écran, si bien que chaque changement est dessiné et que la vitesse suit la fréquence de rafraîchissement de votre écran. C'est le réglage par défaut.
+- **Vitesse fixe** — le circuit avance au rythme que vous choisissez. Faites glisser le curseur pour en choisir un entre `1 Hz` et `10 MHz`, ou saisissez-le dans la zone à côté du curseur : `20`, `2,5k` et `1M` fonctionnent tous. La saisie descend aussi sous le curseur, jusqu'à `0,1 Hz` — un tick toutes les dix secondes. Modifier l'un ou l'autre sélectionne **Vitesse fixe**. Si la zone devient rouge, ce que vous avez saisi n'est pas une fréquence, et la simulation continue au dernier rythme valide.
+- **Aussi vite que possible** — aucune limite : le circuit tourne aussi vite que votre ordinateur le permet, et l'écran n'affiche qu'une partie des ticks.
+
+Sous les trois choix, **Horloges à cette vitesse** indique la fréquence à laquelle tourne chaque **Horloge** de votre circuit. Le **Retard** d'une horloge est le nombre de ticks qu'elle attend avant de basculer, un cycle complet dure donc le double : à `10 Hz`, une horloge de retard `1` tourne à `5 Hz`. Pour ralentir une horloge, baissez la vitesse ou augmentez son retard. Avec une vitesse fixe, la liste s'affiche tout de suite ; avec les deux autres, elle apparaît une fois que le circuit a tourné un instant, car leur vitesse ne se connaît qu'en la mesurant.
+
+À côté du bouton de vitesse, un indicateur montre pendant l'exécution la **vitesse mesurée** que la simulation atteint réellement, ainsi que le nombre total de **ticks** écoulés depuis son démarrage. Quand une vitesse fixe dépasse ce que le circuit peut suivre, l'indicateur est marqué d'un signe d'avertissement.
 
 ## Interagir avec un circuit en cours d'exécution
 

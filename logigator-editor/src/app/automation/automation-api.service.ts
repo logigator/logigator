@@ -25,10 +25,7 @@ import { ProjectService } from '../project/project.service';
 import { BoardCompilerService } from '../simulation/compiler/board-compiler.service';
 import { CompiledBoard } from '../simulation/compiler/compiled-board.model';
 import { CompileDiagnostic } from '../simulation/compiler/compile-error';
-import {
-  SimulationService,
-  TargetSpeedUnit
-} from '../simulation/simulation.service';
+import { SimulationService } from '../simulation/simulation.service';
 import { EditorSettingsService } from '../settings/editor-settings.service';
 import { ThemeType } from '../theming/theme-type.enum';
 import { ThemingService } from '../theming/theming.service';
@@ -99,6 +96,14 @@ function workModeName(mode: WorkMode): WorkModeName {
   }
   return 'simulation';
 }
+
+type TargetSpeedUnit = 'Hz' | 'kHz' | 'MHz';
+
+const TARGET_SPEED_MULTIPLIER: Record<TargetSpeedUnit, number> = {
+  Hz: 1,
+  kHz: 1_000,
+  MHz: 1_000_000
+};
 
 /**
  * The transport-agnostic automation facade, published as `window.__logigator`
@@ -180,10 +185,8 @@ export class AutomationApiService {
         step: (count?: number): Promise<SimStatus> => this.simStep(count),
         stop: (): void => this.simulation.stop(),
         status: (): SimStatus => this.simStatus(),
-        setTarget: (value: number, unit: TargetSpeedUnit): void => {
-          this.simulation.setTargetValue(value);
-          this.simulation.setTargetUnit(unit);
-        },
+        setTarget: (value: number, unit: TargetSpeedUnit): void =>
+          this.simulation.setTargetHz(value * TARGET_SPEED_MULTIPLIER[unit]),
         setInput: (componentId: number, value: boolean): Promise<void> =>
           this.simSetInput(componentId, value),
         readPorts: (componentIds?: number[]): Promise<PortReadout[]> =>

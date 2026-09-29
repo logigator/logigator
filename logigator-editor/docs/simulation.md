@@ -260,9 +260,16 @@ being locked in between is what keeps the mapping's live object references valid
 
 ### Run controls and user input
 
-`play()` / `pause()` / `step()` / `stop()`, plus the mode toggles and the target
-rate, which is a typed value with a separate unit so switching unit re-reads the
-same number (10 Hz → 10 kHz). A mode or rate change re-paces an active run.
+`play()` / `pause()` / `step()` / `stop()`, plus `setMode` and `setTargetHz`.
+Setting a rate also selects `target` mode — entering a speed is asking for it —
+and the floor is `MIN_TARGET_HZ` (0.1 Hz, in `pacing.ts`, which the worker
+clamps to as well). A mode or rate change re-paces an active run, and resets the
+measured rate, since a sample taken under the old pacing says nothing about the
+new one. `clockHalfPeriods` lists the distinct clock half-periods of the
+session's flattened board, which is what lets the speed popover
+(`ui/simulation-controls/`) turn a tick rate into the frequency each clock runs
+at; the popover's slider stops, speed parsing and formatting are the pure
+`sim-speed.ts` beside it.
 
 Three user inputs exist, driven two ways. A **switch** and a **pulse button**
 act on a tap: `SimulationTool` starts a `PanSession` for them, so a drag pans
