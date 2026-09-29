@@ -113,7 +113,9 @@ themselves stay put until the session settles them
 
 `ticker$` (render-loop signals for the hosting canvas), `pasteRequest$` and
 `rotateRequest$` (UI surfaces emit, the `WorkModeRouter` executes), `userInput$`
-and `inspectRequest$` (simulation-mode taps). A theme effect re-derives every
+(simulation-mode operations of a user input, as `{ component, phase }` — a
+`tap`, or a button's `press` and `release`) and `inspectRequest$`
+(simulation-mode taps). A theme effect re-derives every
 theme-dependent color in place via `applyTheme()`, so a background tab the stage
 swap never redraws self-heals too. It acts only on a switch after the project
 was constructed: everything added is drawn in the theme current at the time, so

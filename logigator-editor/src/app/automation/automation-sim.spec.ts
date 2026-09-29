@@ -2,7 +2,12 @@ import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { configureTestBed } from '../../testing/configure-test-bed';
-import { makeAnd, makeButton, makeSwitch } from '../../testing/factories';
+import {
+  makeAnd,
+  makeButton,
+  makePulseButton,
+  makeSwitch
+} from '../../testing/factories';
 import {
   FakeSimulationWorker,
   ManualFrameScheduler
@@ -146,8 +151,24 @@ describe('AutomationApiService simulation', () => {
     await expect(api.simSetInput(and.id, true)).rejects.toThrow(/user input/);
   });
 
-  it('setInput pulses a button', async () => {
+  it('setInput holds a button until false releases it', async () => {
     const button = makeButton();
+    project.addComponent(button);
+    await api.simEnter();
+
+    await api.simSetInput(button.id, true);
+    await api.simSetInput(button.id, true);
+    expect(button.held).toBe(true);
+
+    await api.simSetInput(button.id, false);
+    expect(button.held).toBe(false);
+    expect(
+      fakeWorker.postedOfKind('triggerInput').map((msg) => msg.state)
+    ).toEqual([[true], [false]]);
+  });
+
+  it('setInput pulses a pulse button', async () => {
+    const button = makePulseButton();
     project.addComponent(button);
     await api.simEnter();
 

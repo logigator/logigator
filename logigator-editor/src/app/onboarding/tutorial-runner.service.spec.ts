@@ -7,6 +7,7 @@ import { configureTestBed } from '../../testing/configure-test-bed';
 import { Component } from '../components/component';
 import { BuiltInComponentType } from '@logigator/core';
 import { ConfirmationService } from '@logigator/ui';
+import { UserInputEvent } from '../project/project';
 import { ProjectService } from '../project/project.service';
 import { PersistenceService } from '../persistence/persistence.service';
 import { ProjectMetadataStore } from '../persistence/project-metadata.store';
@@ -64,7 +65,7 @@ describe('TutorialRunnerService', () => {
   let hide: ReturnType<typeof vi.fn>;
   let components: Component[];
   let actionChange$: Subject<void>;
-  let userInput$: Subject<Component>;
+  let userInput$: Subject<UserInputEvent>;
   let createAndSetEmptyProject: ReturnType<typeof vi.fn>;
   let confirm: ReturnType<typeof vi.fn<(config: ConfirmConfig) => void>>;
   let dirty: boolean;
@@ -85,7 +86,7 @@ describe('TutorialRunnerService', () => {
     hide = vi.fn();
     components = [];
     actionChange$ = new Subject<void>();
-    userInput$ = new Subject<Component>();
+    userInput$ = new Subject<UserInputEvent>();
     createAndSetEmptyProject = vi.fn();
     confirm = vi.fn<(config: ConfirmConfig) => void>();
     dirty = false;
@@ -132,7 +133,7 @@ describe('TutorialRunnerService', () => {
     tick();
     expect(lastView().stepNumber).toBe(1); // manual step
 
-    userInput$.next({} as Component); // drive an input mid-step
+    userInput$.next({ component: {} as Component, phase: 'tap' }); // drive an input mid-step
     tick();
 
     expect(lastView().stepNumber).toBe(1); // still waiting on Next

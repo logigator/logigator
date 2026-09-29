@@ -141,6 +141,7 @@ export { muxMeta } from './catalog/built-ins/mux.meta';
 export { notMeta } from './catalog/built-ins/not.meta';
 export { orMeta } from './catalog/built-ins/or.meta';
 export { outputMeta } from './catalog/built-ins/output.meta';
+export { pulseButtonMeta } from './catalog/built-ins/pulse-button.meta';
 export { ramMeta } from './catalog/built-ins/ram.meta';
 export { rngMeta } from './catalog/built-ins/rng.meta';
 export { romMeta } from './catalog/built-ins/rom.meta';

@@ -92,8 +92,10 @@ export interface PointerControllerOptions {
  * - Wheel: zoom anchored at the cursor, non-passive so page scroll/zoom is
  *   suppressed over the canvas.
  *
- * Pointer capture keeps move/up flowing when a drag leaves the canvas.
- * Handlers are public so specs can drive them without DOM events.
+ * Pointer capture keeps move/up flowing when a drag leaves the canvas; a
+ * pointer that loses it while still pressed ends its stream like a cancel,
+ * since its release may never reach the canvas. Handlers are public so specs
+ * can drive them without DOM events.
  */
 export class PointerController {
   private readonly _abort = new AbortController();
@@ -107,6 +109,7 @@ export class PointerController {
   private _wheelLast = -Infinity;
   private _wheelPinch = false;
   private _panPointer: number | null = null;
+  private _panButton = RIGHT_BUTTON;
   private readonly _panLast = new Point();
 
   // Click counting, the DOM's rule (see PointerInput.clickCount): a primary
@@ -137,6 +140,11 @@ export class PointerController {
     canvas.addEventListener('pointercancel', (e) => this.onPointerCancel(e), {
       signal
     });
+    canvas.addEventListener(
+      'lostpointercapture',
+      (e) => this.onLostPointerCapture(e),
+      { signal }
+    );
     canvas.addEventListener('pointerleave', () => this.onPointerLeave(), {
       signal
     });
@@ -180,6 +188,18 @@ export class PointerController {
     const project = this._project();
     if (!project) return;
     const local = this._localPosition(e);
+    // A press from the pointer that already owns a stream, with the same
+    // button, proves that stream's release was lost (released outside the
+    // window after an alt-tab, say): the stale stream ends as a cancel and the
+    // press starts afresh.
+    if (e.pointerId === this._toolPointer && e.button === 0) {
+      this._cancelTool();
+    } else if (
+      e.pointerId === this._panPointer &&
+      e.button === this._panButton
+    ) {
+      this._endPan();
+    }
     if (e.pointerType === 'touch') {
       this._gesture.onPointerDown(e.pointerId, local.x, local.y);
       if (this._gesture.isActive) return;
@@ -194,6 +214,7 @@ export class PointerController {
       this.opts.tool.down(this._input(e, local, project));
     } else if (e.button === MIDDLE_BUTTON || e.button === RIGHT_BUTTON) {
       this._panPointer = e.pointerId;
+      this._panButton = e.button;
       this._panLast.copyFrom(local);
       this._capture(e.pointerId);
       this.opts.nav.setActive(true);
@@ -232,6 +253,19 @@ export class PointerController {
   public onPointerCancel(e: PointerEventLike): void {
     if (this._endPointer(e) !== 'tool') return;
     this.opts.tool.cancel();
+  }
+
+  /**
+   * Capture lost while the pointer still owns a stream (a pointer-up has
+   * already dropped ownership by the time its own release is reported): the
+   * stream ends as a cancel.
+   */
+  public onLostPointerCapture(e: { pointerId: number }): void {
+    if (e.pointerId === this._panPointer) {
+      this._endPan();
+    } else if (e.pointerId === this._toolPointer) {
+      this._cancelTool();
+    }
   }
 
   /**
@@ -296,8 +330,13 @@ export class PointerController {
     );
   }
 
-  /** Cancels the tool stream once the gesture owns navigation, so the pressed
-   *  finger cannot commit a tool action. */
+  private _endPan(): void {
+    this._panPointer = null;
+    this.opts.nav.setActive(false);
+  }
+
+  /** Cancels the tool stream: once the gesture owns navigation, so the
+   *  pressed finger cannot commit a tool action, or once it is known dead. */
   private _cancelTool(): void {
     if (this._toolPointer === null) return;
     this._toolPointer = null;

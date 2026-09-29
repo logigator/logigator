@@ -185,7 +185,7 @@ describe('CircuitFileService', () => {
         { t: 7, p: [2, 2], n: [14], s: 'Hello' }, // TEXT
         { t: 100, p: [0, 8], o: 1, n: [0], s: 'A' }, // INPUT plug
         { t: 101, p: [20, 8], i: 1, n: [1], s: 'Q' }, // OUTPUT plug
-        { t: 200, p: [8, 8], o: 1, r: 1 }, // BUTTON
+        { t: 200, p: [8, 8], o: 1, r: 1 }, // PULSE_BUTTON
         { t: 201, p: [12, 8], o: 1 }, // SWITCH
         { t: 0, p: [7, 3], q: [15, 3] } // wire
       ];

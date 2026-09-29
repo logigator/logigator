@@ -92,7 +92,15 @@ it is fresh before the next render.
 - **Primary button** — `setPointerCapture` (moves keep flowing when a drag
   leaves the canvas), streamed to the `PointerToolTarget`. Unpressed moves go to
   `hover`, `pointerleave` to `leave`. Click-vs-drag lives in the sessions
-  (`PanSession`'s 5 px threshold), not here.
+  (`PanSession`'s 5 px threshold), not here. A pointer that loses capture while
+  still pressed (`lostpointercapture` before its `pointerup`) ends its stream
+  as a `cancel` — its release may never reach the canvas — and a pan pointer
+  likewise stops panning; the capture a `pointerup` itself releases arrives
+  after ownership is already dropped, so it ends nothing. A press from the very
+  pointer that still owns a stream, with the same button, proves that stream's
+  release was lost (let go outside the window after an alt-tab, say): the
+  stale stream ends as a `cancel` (a pan simply stops) and the press opens a
+  fresh one rather than being swallowed.
 - **Click count** — each primary press carries its position in a run of quick
   presses, the DOM's own rule (within 500 ms and 6 px of the previous press,
   counted from `event.timeStamp` on the press itself), so a tool can tell a
@@ -162,14 +170,14 @@ One `BoardTool` per work mode: `down` opens the session a press means, optional
 `hover` drives the previews, `deactivate` tears them down when the tool's context
 ends, `onSessionStart` yields the preview to a starting session's ghosts.
 
-| Tool             | Press opens                 | Notes                                                                                                                   |
-| ---------------- | --------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `PanTool`        | `PanSession`                | Tap single-selects.                                                                                                     |
-| `SimulationTool` | `PanSession`                | Tap activates: button/switch → `userInput$`, inspectable → `inspectRequest$`. The only canvas interaction while locked. |
-| `WireTool`       | `WireToolSession`           | Tap negates a port or toggles a junction; hovers preview the negation bubble / connection dot.                          |
-| `SelectTool`     | move or marquee session     | One instance per flavor (SELECT, SELECT_EXACT); a press inside the committed grab zone moves instead of marqueeing.     |
-| `PlacementTool`  | `ComponentPlacementSession` | Holds the palette config, follows the cursor with a `PlacementGhost`, awaits a cloud master's circuit load.             |
-| `EraseTool`      | `EraseSession`              |                                                                                                                         |
+| Tool             | Press opens                   | Notes                                                                                                                                                                                                         |
+| ---------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PanTool`        | `PanSession`                  | Tap single-selects.                                                                                                                                                                                           |
+| `SimulationTool` | `PanSession` or `HoldSession` | A press on a button holds it until the gesture ends and never pans. Otherwise a tap activates: pulse button/switch → `userInput$`, inspectable → `inspectRequest$`. The only canvas interaction while locked. |
+| `WireTool`       | `WireToolSession`             | Tap negates a port or toggles a junction; hovers preview the negation bubble / connection dot.                                                                                                                |
+| `SelectTool`     | move or marquee session       | One instance per flavor (SELECT, SELECT_EXACT); a press inside the committed grab zone moves instead of marqueeing.                                                                                           |
+| `PlacementTool`  | `ComponentPlacementSession`   | Holds the palette config, follows the cursor with a `PlacementGhost`, awaits a cloud master's circuit load.                                                                                                   |
+| `EraseTool`      | `EraseSession`                |                                                                                                                                                                                                               |
 
 The wire tool's previews survive a press and hide only once the gesture becomes
 a drag; after a tap they re-derive in place. Its connection ghost dry-runs
@@ -287,6 +295,18 @@ trees, so `Project.updateScale` would otherwise miss them.
 Each session in `rendering/sessions/` implements `DragSession`: `onMove`,
 `onEnd`, `onCancel`, `canEnd`, plus the optional `onDown` for sessions that
 outlive their opening gesture.
+
+**`HoldSession`** (`hold.session.ts`) is the one session that edits nothing: it
+holds a button for one gesture, on the board and in a watch alike. Both pick it
+through `interaction/body-hit.ts` — `buttonAt` prefers a button among every
+body under the press, `componentBodiesAt` lists them for the tap. It runs its
+`press` callback when constructed and its `release` callback exactly once,
+from `onEnd`, from `onCancel`, or when the window blurs or the document goes
+hidden — the only terminal routes that bypass the router, so the session
+listens for them itself and drops the listeners on release. Its `onMove` does
+nothing. Blur is scoped to this session rather than aborting every drag: the
+editing sessions keep the end routes they have, and only a hold left open
+would keep an output high with nobody holding it.
 
 **Commit convention** — every mutating session **materializes its final state in
 the live project**, then records via `ActionManager.register` (record without

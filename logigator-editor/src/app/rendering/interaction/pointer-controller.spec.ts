@@ -342,6 +342,71 @@ describe('PointerController', () => {
     expect(tool.up).not.toHaveBeenCalled();
   });
 
+  it('ends the tool stream as a cancel when a pressed pointer loses capture', () => {
+    controller.onPointerDown(mouse(1, 0, 110, 60));
+    controller.onLostPointerCapture({ pointerId: 1 });
+
+    expect(tool.cancel).toHaveBeenCalledTimes(1);
+    // The stream is over: its eventual release and moves go nowhere near it.
+    controller.onPointerMove(mouse(1, 0, 120, 60));
+    controller.onPointerUp(mouse(1, 0, 120, 60));
+    expect(tool.move).not.toHaveBeenCalled();
+    expect(tool.up).not.toHaveBeenCalled();
+
+    // Ownership was dropped, so the next press starts a fresh stream.
+    controller.onPointerDown(mouse(1, 0, 110, 60));
+    expect(tool.down).toHaveBeenCalledTimes(2);
+  });
+
+  it('leaves a released stream alone when capture is lost after the pointer-up', () => {
+    controller.onPointerDown(mouse(1, 0, 110, 60));
+    controller.onPointerUp(mouse(1, 0, 110, 60));
+    controller.onLostPointerCapture({ pointerId: 1 });
+
+    expect(tool.up).toHaveBeenCalledTimes(1);
+    expect(tool.cancel).not.toHaveBeenCalled();
+  });
+
+  it('ends a button pan when its pointer loses capture', () => {
+    controller.onPointerDown(mouse(1, 2, 200, 150));
+    controller.onLostPointerCapture({ pointerId: 1 });
+
+    expect(nav.setActive).toHaveBeenLastCalledWith(false);
+    controller.onPointerMove(mouse(1, 2, 210, 150));
+    expect(nav.pan).not.toHaveBeenCalled();
+  });
+
+  it('cancels a stream whose release was lost when its pointer presses again', () => {
+    controller.onPointerDown(mouse(1, 0, 110, 60));
+    controller.onPointerDown(mouse(1, 0, 130, 60)); // no pointer-up between
+
+    expect(tool.cancel).toHaveBeenCalledTimes(1);
+    expect(tool.down).toHaveBeenCalledTimes(2);
+
+    // The fresh press owns the stream now.
+    controller.onPointerUp(mouse(1, 0, 130, 60));
+    expect(tool.up).toHaveBeenCalledTimes(1);
+  });
+
+  it('ends a pan whose release was lost when its pointer presses again', () => {
+    controller.onPointerDown(mouse(1, 2, 200, 150));
+    controller.onPointerDown(mouse(1, 2, 300, 150)); // no pointer-up between
+
+    expect(nav.setActive).toHaveBeenNthCalledWith(2, false);
+    expect(nav.setActive).toHaveBeenLastCalledWith(true);
+    // Deltas run from the fresh press, not from the lost stream's last point.
+    controller.onPointerMove(mouse(1, 2, 310, 150));
+    expect(vi.mocked(nav.pan).mock.calls[0][0]).toMatchObject({ x: 10, y: 0 });
+  });
+
+  it('keeps a pan when its pointer presses another button', () => {
+    controller.onPointerDown(mouse(1, 2, 200, 150));
+    controller.onPointerDown(mouse(1, 0, 200, 150));
+
+    expect(tool.down).not.toHaveBeenCalled();
+    expect(nav.setActive).toHaveBeenCalledTimes(1);
+  });
+
   it('counts quick presses in the same spot as one click run', () => {
     controller.onPointerDown(mouse(1, 0, 110, 60, 1000));
     controller.onPointerUp(mouse(1, 0, 110, 60, 1020));

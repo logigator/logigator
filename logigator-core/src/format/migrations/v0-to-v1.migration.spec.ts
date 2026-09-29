@@ -203,6 +203,21 @@ describe('v0ToV1Migration', () => {
     ]);
   });
 
+  it('drops a button, which the legacy format never carried', () => {
+    const result = migrate({
+      project: {
+        elements: [{ t: BuiltInComponentType.BUTTON, p: [0, 0], o: 1 }]
+      }
+    });
+
+    expect(result.components).toEqual([]);
+    expect(warnings).toEqual([
+      expect.stringContaining(
+        `Unknown component type ID: ${BuiltInComponentType.BUTTON}`
+      )
+    ]);
+  });
+
   it('decodes tunnel labels from s, falling back to the legacy numeric id', () => {
     const result = migrate({
       project: {

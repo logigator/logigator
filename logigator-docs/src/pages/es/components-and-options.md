@@ -10,7 +10,7 @@ La paleta es el panel de la izquierda. Lista todos los componentes que puedes co
 
 - **Básicos**: los bloques lógicos del día a día: **Puerta NO**, **Puerta Y**, **Puerta O**, **Puerta XOR**, **Retardo**, **Reloj** y **Túnel**.
 - **Avanzados**: bloques de construcción más grandes: sumadores, memorias, biestables y piezas de encaminamiento (consulta la tabla de abajo).
-- **Entradas / Salidas**: el hardware con el que interactúas mientras se ejecuta una simulación: **Botón**, **Interruptor**, **LED**, **Display de segmentos** y **Matriz de LEDs**.
+- **Entradas / Salidas**: el hardware con el que interactúas mientras se ejecuta una simulación: **Botón**, **Botón de pulso**, **Interruptor**, **LED**, **Display de segmentos** y **Matriz de LEDs**.
 - **Componentes del usuario**: tus propias piezas reutilizables. Esta sección está vacía hasta que construyas una; consulta [Componentes personalizados](docs:custom-components).
 
 Una categoría **Puertos** aparece solo mientras editas un componente personalizado. Contiene los conectores de **Entrada** y **Salida** que usas para definir los puertos de ese componente; consulta [Componentes personalizados](docs:custom-components).
@@ -50,7 +50,8 @@ Para colocar un componente, haz clic en él en la paleta y sigue a tu cursor com
 
 | Componente               | Qué hace                                                                                                                  |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
-| **Botón**                | Un pulsador momentáneo: haz clic en él durante la simulación para emitir un único pulso.                                  |
+| **Botón**                | Un pulsador momentáneo: su salida permanece encendida mientras lo mantienes pulsado durante la simulación.                |
+| **Botón de pulso**       | Haz clic en él durante la simulación para emitir un único pulso de un tick, sin importar cuánto lo mantengas pulsado.     |
 | **Interruptor**          | Un interruptor con enclavamiento: haz clic en él durante la simulación para alternar su salida entre encendido y apagado. |
 | **LED**                  | Se enciende mientras el cable que alimenta su entrada está alimentado.                                                    |
 | **Display de segmentos** | Muestra el valor binario presente en sus entradas como un número en una base elegida.                                     |

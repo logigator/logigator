@@ -3,6 +3,7 @@ import { Point, Rectangle } from 'pixi.js';
 
 import { environment } from '../../environments/environment';
 import { Component } from '../components/component';
+import { ButtonComponent } from '../components/component-types/button/button.component';
 import { ComponentProviderService } from '../components/component-provider.service';
 import { CUSTOM_TYPE_ID_BASE } from '@logigator/core';
 import { CustomComponentRegistry } from '../components/custom/custom-component-registry.service';
@@ -226,6 +227,12 @@ export class AutomationApiService {
         ): ElementList => this.inspectGetElements(inspectionId, query),
         activate: (inspectionId: number, componentId: number): InspectionInfo =>
           this.inspectActivate(inspectionId, componentId),
+        setInput: (
+          inspectionId: number,
+          componentId: number,
+          value: boolean
+        ): Promise<void> =>
+          this.inspectSetInput(inspectionId, componentId, value),
         navigateTo: (inspectionId: number, level: number): InspectionInfo =>
           this.inspectNavigateTo(inspectionId, level),
         camera: Object.freeze({
@@ -498,7 +505,7 @@ export class AutomationApiService {
   }
 
   /**
-   * Drives a lever/button to an absolute state. The engine applies the input at
+   * Drives a lever, button or pulse button to an absolute state. The engine applies the input at
    * its next tick, so the deterministic recipe is
    * `pause()` → `setInput()` → `step()` → `readPorts()`.
    */
@@ -951,14 +958,58 @@ export class AutomationApiService {
   }
 
   /**
-   * Taps a component of the visible watch level: drives an inner lever/button,
-   * drills into a nested custom, or opens the component's own inspection.
+   * Taps a component of the visible watch level: drives an inner lever/pulse button,
+   * drills into a nested custom, or opens the component's own inspection. A
+   * button is level-driven, which a tap cannot express — it goes through
+   * {@link inspectSetInput}.
    */
   public inspectActivate(
     inspectionId: number,
     componentId: number
   ): InspectionInfo {
     const watch = this.requireWatch(inspectionId);
+    const component = this.requireWatchComponent(
+      watch,
+      inspectionId,
+      componentId
+    );
+    if (component instanceof ButtonComponent) {
+      throw new Error(
+        `logigator: component ${componentId} is a button, which a tap cannot hold — use inspect.setInput`
+      );
+    }
+    watch.activate(component);
+    return this.inspectionInfo(this.requireInspection(inspectionId));
+  }
+
+  /**
+   * {@link simSetInput} for a user input of the visible watch level: the same
+   * absolute semantics, through the unit the watch index resolves.
+   */
+  public async inspectSetInput(
+    inspectionId: number,
+    componentId: number,
+    value: boolean
+  ): Promise<void> {
+    const watch = this.requireWatch(inspectionId);
+    const component = this.requireWatchComponent(
+      watch,
+      inspectionId,
+      componentId
+    );
+    if (!watch.setInput(component, value)) {
+      throw new Error(
+        `logigator: component ${componentId} is not a user input of the visible level of inspection ${inspectionId}`
+      );
+    }
+    await this.nextFrame();
+  }
+
+  private requireWatchComponent(
+    watch: SubCircuitWatch,
+    inspectionId: number,
+    componentId: number
+  ): Component {
     const component = watch
       .activeLevel()
       .session.project.getComponentById(componentId);
@@ -967,8 +1018,7 @@ export class AutomationApiService {
         `logigator: no component ${componentId} in the visible level of inspection ${inspectionId}`
       );
     }
-    watch.activate(component);
-    return this.inspectionInfo(this.requireInspection(inspectionId));
+    return component;
   }
 
   /** Breadcrumb navigation: pops every level deeper than `level`. */

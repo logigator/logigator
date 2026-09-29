@@ -247,7 +247,12 @@ const es: TranslationSchema = {
       BUTTON: {
         name: 'Botón',
         description:
-          'Un pulsador momentáneo. Mientras la simulación está en marcha, al hacer clic emite un único pulso en su salida.'
+          'Un pulsador. Mientras la simulación está en marcha, su salida está encendida mientras se mantenga pulsado.'
+      },
+      PULSE_BUTTON: {
+        name: 'Botón de pulso',
+        description:
+          'Un botón de pulso. Mientras la simulación está en marcha, al hacer clic emite un único pulso de un tick en su salida.'
       },
       SWITCH: {
         name: 'Interruptor',
@@ -322,7 +327,7 @@ const es: TranslationSchema = {
       placeComp:
         'Colocando {{componentName}}: arrastra para posicionar · Esc para cancelar',
       simulation:
-        'Simulando: haz clic en botones e interruptores · arrastra para desplazar'
+        'Simulando: haz clic en interruptores, pulsa botones · arrastra para desplazar'
     } satisfies Record<WorkMode, string>,
     saved: 'Guardado',
     unsaved: 'Cambios sin guardar',
@@ -992,7 +997,7 @@ const es: TranslationSchema = {
         'La selección de tijera corta los cables en el borde del recuadro.',
       eraser: 'Arrastra sobre cualquier cosa para eliminarla.',
       simControls:
-        'La edición está bloqueada mientras se ejecuta. Usa estos controles para pausar, avanzar paso a paso y fijar la velocidad; los botones e interruptores siguen siendo clicables.',
+        'La edición está bloqueada mientras se ejecuta. Usa estos controles para pausar, avanzar paso a paso y fijar la velocidad; los interruptores y botones siguen funcionando.',
       selectionActions:
         'Gira la selección con estos botones, o pulsa <strong>R</strong> / <strong>Shift+R</strong>. Muévela con las <strong>teclas de flecha</strong>.',
       pastePlacementDesktop:

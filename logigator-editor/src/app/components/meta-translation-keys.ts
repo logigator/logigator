@@ -17,6 +17,7 @@ import {
   notMeta,
   orMeta,
   outputMeta,
+  pulseButtonMeta,
   ramMeta,
   rngMeta,
   romMeta,
@@ -78,6 +79,7 @@ export type BuiltInTranslationKeys =
   | MetaKeys<typeof notMeta>
   | MetaKeys<typeof orMeta>
   | MetaKeys<typeof outputMeta>
+  | MetaKeys<typeof pulseButtonMeta>
   | MetaKeys<typeof ramMeta>
   | MetaKeys<typeof rngMeta>
   | MetaKeys<typeof romMeta>

@@ -48,14 +48,23 @@ const UNIT_TYPES: ReadonlySet<number> = new Set([
   BuiltInComponentType.MUX,
   BuiltInComponentType.DEMUX,
   BuiltInComponentType.BUTTON,
+  BuiltInComponentType.PULSE_BUTTON,
   BuiltInComponentType.SWITCH,
   BuiltInComponentType.ROM
 ]);
 
+/** The user inputs, each emitted as {@link ENGINE_USER_INPUT_TYPE}. */
+const USER_INPUT_TYPES: ReadonlySet<number> = new Set([
+  BuiltInComponentType.BUTTON,
+  BuiltInComponentType.PULSE_BUTTON,
+  BuiltInComponentType.SWITCH
+]);
+
 /**
- * BUTTON and SWITCH both emit this type; the engine rejects any other id.
- * Button vs. switch is a `Pulse`/`Cont` distinction made at `triggerInput`
- * time from the component instance, not from the descriptor.
+ * BUTTON, PULSE_BUTTON and SWITCH all emit this type; the engine rejects any
+ * other id. Which one it is — a `Pulse` or a `Cont` event, and when — is
+ * decided at `triggerInput` time from the component instance, not from the
+ * descriptor.
  */
 const ENGINE_USER_INPUT_TYPE = 200;
 
@@ -117,7 +126,7 @@ interface EmitContext {
   uf: UnionFind;
   units: EmittedUnit[];
   diagnostics: CompileDiagnostic[];
-  /** Directly emitted button/switch: component id → unit index in this pass. */
+  /** Directly emitted user input: component id → unit index in this pass. */
   userInputs: Map<number, number>;
   /** Directly placed custom instances, keyed by component id. */
   instances: Map<number, EmittedInstance>;
@@ -391,9 +400,7 @@ export class BoardCompilerService {
     }
 
     if (UNIT_TYPES.has(type)) {
-      const isUserInput =
-        type === BuiltInComponentType.BUTTON ||
-        type === BuiltInComponentType.SWITCH;
+      const isUserInput = USER_INPUT_TYPES.has(type);
       if (isUserInput) {
         ctx.userInputs.set(component.id, ctx.units.length);
       }

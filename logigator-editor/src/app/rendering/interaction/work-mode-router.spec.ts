@@ -14,6 +14,7 @@ import { configureTestBed } from '../../../testing/configure-test-bed';
 import {
   makeAnd,
   makeButton,
+  makePulseButton,
   makeMoveInput,
   makeSwitch,
   makeRom,
@@ -31,7 +32,7 @@ import { WorkModeService } from '../../work-mode/work-mode.service';
 import { EditorSettingsService } from '../../settings/editor-settings.service';
 import { ThemingService } from '../../theming/theming.service';
 import { environment } from '../../../environments/environment';
-import { Project } from '../../project/project';
+import { Project, UserInputEvent } from '../../project/project';
 import { WorkMode } from '../../work-mode/work-mode.enum';
 import { PointerInput } from './pointer-input';
 import { WorkModeRouter } from './work-mode-router';
@@ -77,7 +78,7 @@ function withAdditiveKey(body: () => void): void {
 describe('WorkModeRouter in SIMULATION mode', () => {
   let project: Project;
   let router: WorkModeRouter;
-  let emissions: Component[];
+  let emissions: UserInputEvent[];
   let tickerValues: string[];
 
   beforeEach(() => {
@@ -87,7 +88,7 @@ describe('WorkModeRouter in SIMULATION mode', () => {
     router.setProject(project);
     emissions = [];
     tickerValues = [];
-    project.userInput$.subscribe((component) => emissions.push(component));
+    project.userInput$.subscribe((event) => emissions.push(event));
     project.ticker$.subscribe((value) => tickerValues.push(value));
   });
 
@@ -96,15 +97,15 @@ describe('WorkModeRouter in SIMULATION mode', () => {
     project.destroy({ children: true });
   });
 
-  it('emits userInput$ for a tapped button', () => {
-    const button = makeButton(2, 2);
+  it('emits userInput$ for a tapped pulse button', () => {
+    const button = makePulseButton(2, 2);
     project.addComponent(button);
     router.setMode(WorkMode.SIMULATION);
 
     router.down(makeInput(2.4, 2.6));
     router.up(); // a tap (no movement) activates the button
 
-    expect(emissions).toEqual([button]);
+    expect(emissions).toEqual([{ component: button, phase: 'tap' }]);
   });
 
   it('emits userInput$ for a tapped switch', () => {
@@ -115,7 +116,7 @@ describe('WorkModeRouter in SIMULATION mode', () => {
     router.down(makeInput(0.5, 0.5));
     router.up();
 
-    expect(emissions).toEqual([switchComp]);
+    expect(emissions).toEqual([{ component: switchComp, phase: 'tap' }]);
   });
 
   it('emits inspectRequest$ for a tapped inspectable component', () => {
@@ -147,7 +148,7 @@ describe('WorkModeRouter in SIMULATION mode', () => {
   });
 
   it('pans on a one-finger drag instead of activating a component', () => {
-    const button = makeButton(2, 2);
+    const button = makePulseButton(2, 2);
     project.addComponent(button);
     const panSpy = vi.spyOn(project.viewport, 'pan');
     router.setMode(WorkMode.SIMULATION);
@@ -158,6 +159,70 @@ describe('WorkModeRouter in SIMULATION mode', () => {
 
     expect(panSpy).toHaveBeenCalled();
     expect(emissions).toEqual([]); // it was a pan, not a tap
+  });
+
+  describe('a press on a button', () => {
+    let button: Component;
+
+    beforeEach(() => {
+      button = makeButton(2, 2);
+      project.addComponent(button);
+      router.setMode(WorkMode.SIMULATION);
+    });
+
+    const press = { component: expect.anything(), phase: 'press' };
+    const release = { component: expect.anything(), phase: 'release' };
+
+    it('presses on pointerdown and releases on pointerup', () => {
+      router.down(makeInput(2.4, 2.6));
+      expect(emissions).toEqual([{ component: button, phase: 'press' }]);
+
+      router.up();
+      expect(emissions).toEqual([
+        { component: button, phase: 'press' },
+        { component: button, phase: 'release' }
+      ]);
+      expect(router.hasActiveSession).toBe(false);
+    });
+
+    it('stays held and does not pan while the pointer moves', () => {
+      const panSpy = vi.spyOn(project.viewport, 'pan');
+
+      router.down(makeInput(2.4, 2.6));
+      router.move(makeInput(60, 60)); // far off the body, well past a tap
+      expect(emissions).toEqual([press]);
+
+      router.up();
+      expect(panSpy).not.toHaveBeenCalled();
+      expect(emissions).toEqual([press, release]);
+    });
+
+    it('releases when the pointer stream is cancelled', () => {
+      router.down(makeInput(2.4, 2.6));
+      router.cancel();
+      router.up(); // a late release finds no session
+
+      expect(emissions).toEqual([press, release]);
+    });
+
+    it('releases on Escape', () => {
+      router.down(makeInput(2.4, 2.6));
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+
+      expect(emissions).toEqual([press, release]);
+      expect(router.hasActiveSession).toBe(false);
+    });
+
+    it('releases when the mode changes or the project goes', () => {
+      router.down(makeInput(2.4, 2.6));
+      router.setMode(WorkMode.PAN);
+      expect(emissions).toEqual([press, release]);
+
+      router.setMode(WorkMode.SIMULATION);
+      router.down(makeInput(2.4, 2.6));
+      router.setProject(null);
+      expect(emissions).toEqual([press, release, press, release]);
+    });
   });
 
   it('entering simulation mode cancels an active drag', () => {

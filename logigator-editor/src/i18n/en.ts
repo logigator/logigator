@@ -245,7 +245,12 @@ const en = {
       BUTTON: {
         name: 'Button',
         description:
-          'A momentary push button. While the simulation is running, clicking it emits a single pulse on its output.'
+          'A push button. While the simulation is running, its output is on for as long as it is held down.'
+      },
+      PULSE_BUTTON: {
+        name: 'Pulse button',
+        description:
+          'A pulse button. While the simulation is running, clicking it emits a single one-tick pulse on its output.'
       },
       SWITCH: {
         name: 'Switch',
@@ -317,7 +322,7 @@ const en = {
         'Cut select: drag a marquee to select · wires are cut at its edge',
       erase: 'Eraser: click or drag across elements to delete them',
       placeComp: 'Placing {{componentName}}: drag to position · Esc to cancel',
-      simulation: 'Simulating: click buttons and switches · drag to pan'
+      simulation: 'Simulating: click switches, press buttons · drag to pan'
     } satisfies Record<WorkMode, string>,
     saved: 'Saved',
     unsaved: 'Unsaved changes',
@@ -979,7 +984,7 @@ const en = {
       scissorSelectCompact: 'Scissor select cuts wires at the box edge.',
       eraser: 'Drag across anything to delete it.',
       simControls:
-        'Editing is locked while running. Use these to pause, step, and set the speed — buttons and switches stay clickable.',
+        'Editing is locked while running. Use these to pause, step, and set the speed — switches and buttons stay usable.',
       selectionActions:
         'Rotate the selection with these buttons — or press <strong>R</strong> / <strong>Shift+R</strong>. Move it with the <strong>arrow keys</strong>.',
       pastePlacementDesktop:

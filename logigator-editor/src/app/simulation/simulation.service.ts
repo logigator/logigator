@@ -2,10 +2,11 @@ import { computed, inject, Injectable, signal } from '@angular/core';
 import { Observable, Subject, Subscription } from 'rxjs';
 import { Component } from '../components/component';
 import { ButtonComponent } from '../components/component-types/button/button.component';
+import { PulseButtonComponent } from '../components/component-types/pulse-button/pulse-button.component';
 import { SwitchComponent } from '../components/component-types/switch/switch.component';
 import { LoggingService } from '../logging/logging.service';
 import { ToastService } from '../logging/toast.service';
-import { Project } from '../project/project';
+import { Project, UserInputEvent, UserInputPhase } from '../project/project';
 import { ProjectService } from '../project/project.service';
 import { ShortcutActionEnum } from '../shortcuts/shortcut-action.enum';
 import { ShortcutService } from '../shortcuts/shortcut.service';
@@ -24,7 +25,7 @@ import {
   SimulationWorkerService
 } from './worker/simulation-worker.service';
 
-const BUTTON_FLASH_MS = 150;
+const PULSE_BUTTON_FLASH_MS = 150;
 
 /**
  * Session lifecycle: `inactive` outside simulation mode, `starting` while the
@@ -96,6 +97,12 @@ export class SimulationService {
   private _userInputSub?: Subscription;
   // Every snapshot applied to the board applier is fanned out to these too.
   private readonly _watchAppliers = new Set<SnapshotApplier>();
+  // Buttons currently held, the board's and a watch's copies alike, with what
+  // releasing each needs — so a stop or exit can release every one of them.
+  private readonly _held = new Map<
+    ButtonComponent,
+    { unitIndex: number | undefined; repaint: () => void }
+  >();
 
   constructor() {
     // The compiled session addresses the main project's live components and
@@ -226,8 +233,8 @@ export class SimulationService {
       component.setSimulating(true);
     }
     project.triggerTicker('single');
-    this._userInputSub = project.userInput$.subscribe((component) =>
-      this._onUserInput(component)
+    this._userInputSub = project.userInput$.subscribe((event) =>
+      this._onUserInput(event)
     );
     this.workModeService.setSimulationMode(true);
 
@@ -289,6 +296,8 @@ export class SimulationService {
     // keeps that a single failure: a mode left at SIMULATION with the worker
     // already gone makes every retry re-enter and fail again.
     try {
+      // With the engine gone a release is visual only.
+      this._releaseAllHeld();
       this._applier?.reset();
       if (this._project && !this._project.destroyed) {
         for (const component of this._project.components) {
@@ -357,6 +366,9 @@ export class SimulationService {
     this.workerService
       .reset()
       .then(() => {
+        // Released against the rebuilt engine: a press that landed while the
+        // reset was in flight reached it, and must not outlive its visual.
+        this._releaseAllHeld();
         this._applier?.reset();
         if (this._project && !this._project.destroyed) {
           for (const component of this._project.components) {
@@ -430,31 +442,38 @@ export class SimulationService {
     }
   }
 
-  private _onUserInput(component: Component): void {
-    this._activate(component, this._board?.userInputs.get(component.id), () =>
-      this._project?.triggerTicker('single')
+  private _onUserInput({ component, phase }: UserInputEvent): void {
+    this._drive(
+      component,
+      this._board?.userInputs.get(component.id),
+      phase,
+      () => this._project?.triggerTicker('single')
     );
   }
 
   /**
-   * Activates a switch/button whose engine unit index is already resolved: an
-   * inner user input clicked in a watch, where `component` is the watch's fresh
+   * Drives a user input whose engine unit index is already resolved: an inner
+   * user input operated in a watch, where `component` is the watch's fresh
    * copy and `unitIndex` comes from `infoFor(path).unitIndexFor(bodyIndex)`.
-   * `repaint` re-blits whatever canvas shows the component.
+   * A switch or pulse button acts on a `tap`, a button is held from `press` to
+   * `release`. `repaint` re-blits whatever canvas shows the component.
    */
   public triggerUnitInput(
     unitIndex: number,
     component: Component,
-    repaint: () => void
+    repaint: () => void,
+    phase: UserInputPhase = 'tap'
   ): void {
-    this._activate(component, unitIndex, repaint);
+    this._drive(component, unitIndex, phase, repaint);
   }
 
   /**
-   * Drives a top-level user input to an **absolute** state: a switch already at
-   * `value` is left alone, so repeating the call sends no further engine event;
-   * a button pulses on `true` and ignores `false`, holding no state to clear.
-   * Reports whether the component is a user input of the running session.
+   * Drives a top-level user input to an **absolute** state: a switch or button
+   * already at `value` is left alone, so repeating the call sends no further
+   * engine event; a button is held by `true` until a `false` releases it; a
+   * pulse button pulses on `true` and ignores `false`, holding no state to
+   * clear. Reports whether the component is a user input of the running
+   * session.
    */
   public setUserInput(componentId: number, value: boolean): boolean {
     const component = this._project?.getComponentById(componentId);
@@ -462,24 +481,109 @@ export class SimulationService {
     if (!component || unitIndex === undefined) {
       return false;
     }
+    return this._setAbsolute(component, unitIndex, value, () =>
+      this._project?.triggerTicker('single')
+    );
+  }
+
+  /**
+   * {@link setUserInput} for a user input whose engine unit index is already
+   * resolved — an inner one of a watch, as in {@link triggerUnitInput}.
+   * Reports whether the component is a user input.
+   */
+  public setUnitInput(
+    unitIndex: number,
+    component: Component,
+    value: boolean,
+    repaint: () => void
+  ): boolean {
+    return this._setAbsolute(component, unitIndex, value, repaint);
+  }
+
+  private _setAbsolute(
+    component: Component,
+    unitIndex: number,
+    value: boolean,
+    repaint: () => void
+  ): boolean {
+    if (component instanceof ButtonComponent) {
+      this._setHeld(component, unitIndex, value, repaint);
+      return true;
+    }
     if (component instanceof SwitchComponent) {
       if (component.isOn === value) {
         return true;
       }
-    } else if (component instanceof ButtonComponent) {
+    } else if (component instanceof PulseButtonComponent) {
       if (!value) {
         return true;
       }
     } else {
       return false;
     }
-    this._activate(component, unitIndex, () =>
-      this._project?.triggerTicker('single')
-    );
+    this._activate(component, unitIndex, repaint);
     return true;
   }
 
-  /** Shared switch/button activation: visuals plus the engine input event. */
+  private _drive(
+    component: Component,
+    unitIndex: number | undefined,
+    phase: UserInputPhase,
+    repaint: () => void
+  ): void {
+    if (phase === 'tap') {
+      this._activate(component, unitIndex, repaint);
+    } else if (component instanceof ButtonComponent) {
+      this._setHeld(component, unitIndex, phase === 'press', repaint);
+    }
+  }
+
+  /**
+   * Presses or releases a button; one already in that state is left alone, so
+   * the engine never sees a second press or release. A press obeys
+   * {@link _activate}'s readiness rule, while a release always clears the
+   * visual and reaches the engine whenever one is up.
+   */
+  private _setHeld(
+    button: ButtonComponent,
+    unitIndex: number | undefined,
+    held: boolean,
+    repaint: () => void
+  ): void {
+    if (button.held === held) {
+      return;
+    }
+    if (held) {
+      if (!this.isReady()) {
+        return;
+      }
+      this._held.set(button, { unitIndex, repaint });
+    } else {
+      this._held.delete(button);
+    }
+    button.setHeld(held);
+    if (unitIndex !== undefined && this.isReady()) {
+      this.workerService.triggerInput(unitIndex, INPUT_EVENT_CONT, [held]);
+    }
+    repaint();
+  }
+
+  private _releaseAllHeld(): void {
+    for (const [button, { unitIndex, repaint }] of [...this._held]) {
+      if (!button.destroyed) {
+        this._setHeld(button, unitIndex, false, repaint);
+        continue;
+      }
+      // A copy freed while held has nothing left to draw, but its engine
+      // unit still reads high.
+      this._held.delete(button);
+      if (unitIndex !== undefined && this.isReady()) {
+        this.workerService.triggerInput(unitIndex, INPUT_EVENT_CONT, [false]);
+      }
+    }
+  }
+
+  /** A switch or pulse button's tap: visuals plus the engine input event. */
   private _activate(
     component: Component,
     unitIndex: number | undefined,
@@ -498,7 +602,7 @@ export class SimulationService {
           component.isOn
         ]);
       }
-    } else if (component instanceof ButtonComponent) {
+    } else if (component instanceof PulseButtonComponent) {
       component.setPressed(true);
       if (unitIndex !== undefined) {
         this.workerService.triggerInput(unitIndex, INPUT_EVENT_PULSE, [true]);
@@ -508,7 +612,7 @@ export class SimulationService {
           component.setPressed(false);
           repaint();
         }
-      }, BUTTON_FLASH_MS);
+      }, PULSE_BUTTON_FLASH_MS);
     }
     repaint();
   }

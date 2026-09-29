@@ -85,10 +85,14 @@ circuit**, split between the component layer and `inspection/watch/`:
   `ComponentInspection` every custom config declares. It owns a **breadcrumb
   stack** of `WatchLevel`s (last one visible, title their joined names) and
   routes clicks on the visible copy through `activate(component)`: a nested
-  custom pushes a level, a switch/button triggers its engine unit
+  custom pushes a level, a switch/pulse button triggers its engine unit
   (`SimulationService.triggerUnitInput`, unit index from the watch index), any
   other inspectable opens its data inspector **on the watch copy** — tracked per
-  level and closed with it.
+  level and closed with it. A button is held rather than tapped: `holdFor`
+  hands out its `press` / `release`, both `triggerUnitInput` with that phase
+  and bound to the level they were resolved on, so a release arriving after a
+  level swap still reaches the unit it pressed. `setInput` is the absolute
+  path automation drives.
 - **`WatchSession`** (`watch-session.ts`) — one per level: a fresh headless
   `Project` from `instantiateBody` over the level's circuit body, plus a
   `LinkStateApplier` whose targets are **sparse over the full link-id space**
@@ -96,7 +100,9 @@ circuit**, split between the component layer and `inspection/watch/`:
   board's watch index (`board.watch.infoFor(path)`, see `simulation.md`). Index
   tables are keyed by body-array position, so a shape mismatch means the
   definition changed under the session: construction **throws** rather than
-  mis-lighting wires. The session registers with the snapshot fan-out and
+  mis-lighting wires. Destroying one releases any copied button still held,
+  which would otherwise leave its engine unit high with no copy left to
+  release it. The session registers with the snapshot fan-out and
   requests a full seed snapshot, which also poses copied switches from their
   output-link power.
 - Watch canvases lease the **app-wide shared renderer**
@@ -107,7 +113,9 @@ circuit**, split between the component layer and `inspection/watch/`:
 - **`SubCircuitWatchComponent`** — the canvas; the breadcrumb trail renders in
   the hosting header via `titleParts`. Input runs through the board's own
   `PointerController` (shared middle/right-drag/wheel/pinch navigation) with a
-  `PanSession` as its tool, whose tap action routes back to the model. A level
+  `PanSession` as its tool, whose tap action routes back to the model — or a
+  `HoldSession` over `holdFor` for a press on an inner button, cancelled like
+  any session by a level swap or the component going away. A level
   is fit-and-centred when it first shows; re-blits ride `render$` (engine
   changes), the project's `ticker$` (zoom, theme) and host resizes —
   `Project.pan` emits nothing, so panning renders explicitly.

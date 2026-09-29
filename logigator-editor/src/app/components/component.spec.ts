@@ -14,7 +14,7 @@ import { strokeScaleFor } from '../rendering/graphics/stroke-scale';
 import { Direction } from '@logigator/core';
 import {
   makeAnd,
-  makeButton,
+  makePulseButton,
   makeInput,
   makeRom,
   makeSegmentDisplay,
@@ -510,7 +510,7 @@ describe('Component symbol rendering', () => {
   });
 
   it('renders no symbol on components with a dedicated body visual', () => {
-    for (const comp of [makeButton(), makeSwitch()]) {
+    for (const comp of [makePulseButton(), makeSwitch()]) {
       let texts = 0;
       const walk = (c: Container): void => {
         for (const child of c.children) {

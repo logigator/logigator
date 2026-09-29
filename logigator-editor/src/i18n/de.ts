@@ -247,7 +247,12 @@ const de: TranslationSchema = {
       BUTTON: {
         name: 'Taster',
         description:
-          'Ein Taster (Momentschalter). Während die Simulation läuft, sendet ein Klick einen einzelnen Puls an seinem Ausgang.'
+          'Ein Taster. Während die Simulation läuft, ist sein Ausgang an, solange er gedrückt gehalten wird.'
+      },
+      PULSE_BUTTON: {
+        name: 'Impulstaster',
+        description:
+          'Ein Impulstaster. Während die Simulation läuft, sendet ein Klick einen einzelnen, einen Tick langen Puls an seinem Ausgang.'
       },
       SWITCH: {
         name: 'Schalter',
@@ -322,7 +327,7 @@ const de: TranslationSchema = {
       placeComp:
         '{{componentName}} platzieren: ziehen zum Positionieren · Esc zum Abbrechen',
       simulation:
-        'Simulation: auf Taster und Schalter klicken · ziehen zum Schwenken'
+        'Simulation: Schalter klicken, Taster drücken · ziehen zum Schwenken'
     } satisfies Record<WorkMode, string>,
     saved: 'Gespeichert',
     unsaved: 'Ungespeicherte Änderungen',
@@ -997,7 +1002,7 @@ const de: TranslationSchema = {
         'Die Schneide-Auswahl schneidet Leitungen an der Rahmenkante.',
       eraser: 'Ziehe über etwas, um es zu löschen.',
       simControls:
-        'Während des Laufens ist die Bearbeitung gesperrt. Damit kannst du pausieren, schrittweise gehen und die Geschwindigkeit einstellen — Taster und Schalter bleiben klickbar.',
+        'Während des Laufens ist die Bearbeitung gesperrt. Damit kannst du pausieren, schrittweise gehen und die Geschwindigkeit einstellen — Schalter und Taster bleiben bedienbar.',
       selectionActions:
         'Drehe die Auswahl mit diesen Schaltflächen — oder drücke <strong>R</strong> / <strong>Shift+R</strong>. Verschiebe sie mit den <strong>Pfeiltasten</strong>.',
       pastePlacementDesktop:

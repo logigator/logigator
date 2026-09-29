@@ -44,9 +44,10 @@ The readout to the right shows the **measured speed** the simulation is actually
 Only the circuit's inputs respond to clicks while it runs:
 
 - **Switch** — a latching input. Click it to toggle its output on or off; it stays where you left it.
-- **Button** — a momentary input. Click it to emit a single pulse on its output.
+- **Button** — a momentary input. Its output is on for as long as you hold it down, and goes off again when you let go.
+- **Pulse button** — click it to emit a single one-tick pulse on its output.
 
-As signals propagate, powered wires and ports **light up**, and output components show their state — LEDs glow, segment displays and LED matrices show their patterns. Drag anywhere on the board to pan; clicking empty space does nothing.
+As signals propagate, powered wires and ports **light up**, and output components show their state — LEDs glow, segment displays and LED matrices show their patterns. Drag anywhere on the board to pan — except from a button, which simply stays held down; clicking empty space does nothing.
 
 To look inside a running circuit — read a memory's contents or watch a custom component's inner circuit live — see [Inspection & Watches](docs:inspection).
 

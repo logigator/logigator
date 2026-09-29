@@ -1,5 +1,6 @@
 import { Component } from '../../components/component';
 import { ComponentProviderService } from '../../components/component-provider.service';
+import { ButtonComponent } from '../../components/component-types/button/button.component';
 import { SwitchComponent } from '../../components/component-types/switch/switch.component';
 import { LoggingService } from '../../logging/logging.service';
 import { LinkRenderTargets } from '../../simulation/compiler/compiled-board.model';
@@ -125,6 +126,24 @@ export class WatchSession {
 
   public destroy(): void {
     this.unregister();
+    // A copy still held is released first: once it is gone, nothing is left
+    // to release its engine unit.
+    const simulation = getStaticDI(SimulationService);
+    this.components.forEach((component, index) => {
+      const unitIndex = this.info.unitIndexFor(index);
+      if (
+        component instanceof ButtonComponent &&
+        component.held &&
+        unitIndex !== undefined
+      ) {
+        simulation.triggerUnitInput(
+          unitIndex,
+          component,
+          () => undefined,
+          'release'
+        );
+      }
+    });
     this.project.destroy({ children: true });
   }
 

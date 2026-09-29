@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { Point } from 'pixi.js';
 import { configureTestBed } from '../../../testing/configure-test-bed';
-import { makeSwitch } from '../../../testing/factories';
+import { makeButton, makeSwitch } from '../../../testing/factories';
 import { Component } from '../../components/component';
 import { ComponentProviderService } from '../../components/component-provider.service';
 import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
@@ -85,11 +85,12 @@ describe('BoardCompilerService watch index', () => {
   }
 
   /**
-   * A switch driving its single output plug, plus a wire connected to nothing.
-   * Body order: components [switchComp, plug], wires [switch→plug, floating].
+   * A switch — or another user input — driving its single output plug, plus a
+   * wire connected to nothing. Body order: components [input, plug], wires
+   * [input→plug, floating].
    */
-  function registerSwitchBox(): number {
-    const switchComp = makeSwitch(0, 0);
+  function registerSwitchBox(makeInput: () => Component = makeSwitch): number {
+    const switchComp = makeInput();
     const plug = makeOutPlug(0, [8, 0]);
     const wire = wireBetween(
       switchComp.connectionPoints[0],
@@ -163,6 +164,23 @@ describe('BoardCompilerService watch index', () => {
     expect(info.linkOfLocalNet[info.tables.wireNets[0]]).toBe(switchOutLink);
     expect(info.linkOfLocalNet[info.tables.portNets[0][0]]).toBe(switchOutLink);
     expect(info.linkOfLocalNet[info.tables.portNets[1][0]]).toBe(switchOutLink);
+  });
+
+  it('addresses an inner button as a user input, like a switch', () => {
+    const buttonBox = registerSwitchBox(() => makeButton(0, 0));
+    const outer = registerOuter(buttonBox);
+    const instance = placeByType(outer, [0, 0]);
+
+    const board = compiler.compile(project);
+
+    // The outer switch, then the nested box's button.
+    expect(board.descriptor.components).toEqual([
+      { type: 200, inputs: [], outputs: [0] },
+      { type: 200, inputs: [], outputs: [1] }
+    ]);
+    const innerInfo = board.watch.infoFor(`${instance.id}/1`)!;
+    expect(innerInfo.unitIndexFor(0)).toBe(1);
+    expect(innerInfo.unitIndexFor(1)).toBeUndefined();
   });
 
   it('gives a wire-only inner net a local id but no link', () => {

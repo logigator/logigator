@@ -10,7 +10,7 @@ The palette is the panel on the left. It lists every component you can place, gr
 
 - **Basic** — the everyday logic building blocks: **NOT Gate**, **AND Gate**, **OR Gate**, **XOR Gate**, **Delay**, **Clock** and **Tunnel**.
 - **Advanced** — larger building blocks: adders, memories, flip-flops, and routing parts (see the table below).
-- **Inputs / Outputs** — the hardware you interact with while a simulation runs: **Button**, **Switch**, **LED**, **Segment Display** and **LED Matrix**.
+- **Inputs / Outputs** — the hardware you interact with while a simulation runs: **Button**, **Pulse button**, **Switch**, **LED**, **Segment Display** and **LED Matrix**.
 - **User Components** — your own reusable parts. This section is empty until you build one; see [Custom Components](docs:custom-components).
 
 A **Ports** category appears only while you are editing a custom component. It holds the **Input** and **Output** plugs you use to define that component's ports — see [Custom Components](docs:custom-components).
@@ -50,7 +50,8 @@ To place a component, click it in the palette and it follows your cursor as a gh
 
 | Component           | What it does                                                                                     |
 | ------------------- | ------------------------------------------------------------------------------------------------ |
-| **Button**          | A momentary push button — click it during simulation to emit a single pulse.                     |
+| **Button**          | A momentary push button — its output stays on for as long as you hold it down during simulation. |
+| **Pulse button**    | Click it during simulation to emit a single one-tick pulse, however long you hold it.            |
 | **Switch**          | A latching switch — click it during simulation to toggle its output on and off.                  |
 | **LED**             | Lights up while the wire feeding its input is powered.                                           |
 | **Segment Display** | Shows the binary value on its inputs as a number in a chosen base.                               |

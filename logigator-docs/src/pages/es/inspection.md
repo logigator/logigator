@@ -31,7 +31,7 @@ Toca un [componente personalizado](docs:custom-components) colocado mientras la 
 
 Un monitor es interactivo:
 
-- **Acciona sus entradas**: haz clic en un **interruptor** o **botón** dentro del circuito monitorizado para operarlo, igual que en el tablero principal. Acciona la simulación real en ejecución, así que el efecto se propaga al resto de tu circuito.
+- **Acciona sus entradas**: haz clic en un **interruptor** o un **botón de pulso**, o mantén pulsado un **botón**, dentro del circuito monitorizado para operarlo, igual que en el tablero principal. Acciona la simulación real en ejecución, así que el efecto se propaga al resto de tu circuito.
 - **Profundiza en componentes anidados**: toca un componente personalizado dentro del monitor para descender a _su_ circuito interno. Un rastro de **migas de pan** en la parte superior muestra a qué profundidad estás; haz clic en un paso anterior para volver a salir.
 - **Desplázate y haz zoom**: arrastra para moverte por la vista interna y desplaza o pellizca para hacer zoom, igual que en el tablero.
 

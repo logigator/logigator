@@ -247,7 +247,12 @@ const fr: TranslationSchema = {
       BUTTON: {
         name: 'Bouton',
         description:
-          'Un bouton-poussoir momentané. Pendant que la simulation tourne, cliquer dessus émet une seule impulsion sur sa sortie.'
+          "Un bouton poussoir. Pendant que la simulation tourne, sa sortie est activée tant qu'il est maintenu enfoncé."
+      },
+      PULSE_BUTTON: {
+        name: 'Bouton à impulsion',
+        description:
+          "Un bouton à impulsion. Pendant que la simulation tourne, cliquer dessus émet une seule impulsion d'un tick sur sa sortie."
       },
       SWITCH: {
         name: 'Interrupteur',
@@ -322,7 +327,7 @@ const fr: TranslationSchema = {
       placeComp:
         'Placement de {{componentName}} : faites glisser pour positionner · Échap pour annuler',
       simulation:
-        'Simulation : cliquez sur les boutons et interrupteurs · faites glisser pour vous déplacer'
+        'Simulation : cliquez sur les interrupteurs, appuyez sur les boutons · faites glisser pour vous déplacer'
     } satisfies Record<WorkMode, string>,
     saved: 'Enregistré',
     unsaved: 'Modifications non enregistrées',
@@ -995,7 +1000,7 @@ const fr: TranslationSchema = {
         'La sélection coupante coupe les fils au bord du cadre.',
       eraser: "Faites glisser sur n'importe quel élément pour le supprimer.",
       simControls:
-        "L'édition est verrouillée pendant l'exécution. Utilisez ces contrôles pour mettre en pause, avancer pas à pas et régler la vitesse — les boutons et interrupteurs restent cliquables.",
+        "L'édition est verrouillée pendant l'exécution. Utilisez ces contrôles pour mettre en pause, avancer pas à pas et régler la vitesse — les interrupteurs et boutons restent utilisables.",
       selectionActions:
         'Faites pivoter la sélection avec ces boutons — ou appuyez sur <strong>R</strong> / <strong>Shift+R</strong>. Déplacez-la avec les <strong>touches fléchées</strong>.',
       pastePlacementDesktop:

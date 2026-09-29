@@ -8,7 +8,9 @@ export type ButtonOptions = Record<string, ComponentOption>;
 
 export const buttonComponentConfig: ComponentConfig<ButtonOptions> =
   configFromMeta(buttonMeta, {
-    // The square body and its inset inner square, unpressed.
-    symbolShape: { stroke: 'M1 1h16v16H1z M4 4h10v10H4z' },
+    // The square body and its inset circle, released.
+    symbolShape: {
+      stroke: 'M1 1h16v16H1z M9 4a5 5 0 1 0 0 10a5 5 0 1 0 0-10z'
+    },
     create: (options) => new ButtonComponent(options)
   });

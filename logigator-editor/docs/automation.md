@@ -175,11 +175,12 @@ so read the returned `state`.
 | `exit()`                 | leave simulation entirely, back to editing        |
 | `status()`               | state, mode, target/measured Hz, tick             |
 | `setTarget(value, unit)` | target speed; unit `'Hz' \| 'kHz' \| 'MHz'`       |
-| `setInput(id, value)`    | drive a lever/button                              |
+| `setInput(id, value)`    | drive a lever, button or pulse button             |
 | `readPorts(ids?)`        | per-port powered booleans, `inputs` and `outputs` |
 
-- `setInput` is **absolute**: a lever already at `value` sends no engine event,
-  a button pulses on `true` and ignores `false`. Never read-then-toggle.
+- `setInput` is **absolute**: a lever or button already at `value` sends no
+  engine event; a button is held by `true` until a `false` releases it; a pulse
+  button pulses on `true` and ignores `false`. Never read-then-toggle.
 - `step(count)` posts the ticks back to back and pulls **one** snapshot, so
   settling a circuit costs one round trip rather than one per tick.
 - `readPorts` builds a component → link-id reverse index once per compiled board
@@ -261,12 +262,18 @@ floats over and returning the box actually taken.
 
 A **watch** is a second board: each breadcrumb level is a fresh copy of the
 inner circuit, so its elements carry the copy's ids, not the placed instance's.
-Its four calls below all refuse a data inspection.
+Its five calls below all refuse a data inspection.
 
 - `getElements(id, query?)` — the visible level's circuit.
-- `activate(id, componentId)` — the watch's one gesture: drives an inner
-  lever/button, drills into a nested custom, or opens an inner component's own
-  inspection.
+- `activate(id, componentId)` — the watch's tap: drives an inner lever or
+  pulse button, drills into a nested custom, or opens an inner component's own
+  inspection. A tap cannot hold a button, so a button is refused with an error
+  naming `setInput`.
+- `setInput(id, componentId, value)` — `sim.setInput` for an inner user input
+  of the visible level, with the same absolute semantics: a button is held by
+  `true` until a `false` releases it, and a held one is also released when its
+  level closes (breadcrumb navigation, the watch closing). Anything but a user
+  input of that level is refused.
 - `navigateTo(id, level)` — pops every level deeper than `level`.
 - `camera.*` — `getViewport` / `pan` / `setCenter` / `setZoom` / `focus` against
   the visible level. A level fits its circuit once, when it first shows; a write

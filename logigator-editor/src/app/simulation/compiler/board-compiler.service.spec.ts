@@ -5,6 +5,7 @@ import { configureTestBed } from '../../../testing/configure-test-bed';
 import {
   makeAnd,
   makeButton,
+  makePulseButton,
   makeSwitch,
   makeNot
 } from '../../../testing/factories';
@@ -512,10 +513,11 @@ describe('BoardCompilerService', () => {
     });
   });
 
-  it('emits button/switch units and registers them as user inputs', () => {
+  it('emits every user input as a UserInput unit and registers it', () => {
     // The example-board shape (gate subset): user input feeding gates.
     const switchComp = place(makeSwitch(0, 0));
-    const button = place(makeButton(0, 4));
+    const button = place(makePulseButton(0, 4));
+    const held = place(makeButton(0, 8));
     const and = makeAnd(2, undefined, 8, 0);
     place(and);
     placeWire(switchComp.connectionPoints[0], and.connectionPoints[0]);
@@ -529,20 +531,22 @@ describe('BoardCompilerService', () => {
     const board = compiler.compile(project);
 
     expect(board.diagnostics).toEqual([]);
-    // Both emit the engine's UserInput type (200); it rejects any other id.
-    // Button vs. switch is a triggerInput-time distinction.
+    // All emit the engine's UserInput type (200); it rejects any other id.
+    // Which input it is only shows in the events sent at triggerInput time.
     expect(board.descriptor).toEqual({
-      links: 3,
+      links: 4,
       components: [
         { type: 200, inputs: [], outputs: [0] },
         { type: 200, inputs: [], outputs: [1] },
-        { type: 2, inputs: [0, 1], outputs: [2] }
+        { type: 200, inputs: [], outputs: [2] },
+        { type: 2, inputs: [0, 1], outputs: [3] }
       ]
     });
     expect(board.userInputs).toEqual(
       new Map([
         [switchComp.id, 0],
-        [button.id, 1]
+        [button.id, 1],
+        [held.id, 2]
       ])
     );
   });

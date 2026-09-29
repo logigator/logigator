@@ -64,7 +64,7 @@ export type LinkMapping = ReadonlyMap<string, LinkRenderTargets[]>;
 export interface CompiledBoard {
   descriptor: BoardDescriptor;
   mapping: LinkMapping;
-  /** Top-level button/switch `Component.id` → board submission index. */
+  /** Top-level user input `Component.id` → board submission index. */
   userInputs: ReadonlyMap<number, number>;
   diagnostics: CompileDiagnostic[];
   /** Path-addressable watch data for live inner-circuit views. */

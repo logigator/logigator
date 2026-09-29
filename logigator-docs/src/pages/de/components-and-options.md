@@ -10,7 +10,7 @@ Die Palette ist das Panel links. Sie listet jede Komponente auf, die du platzier
 
 - **Grundlegend** — die alltäglichen Logik-Bausteine: **NICHT-Gatter**, **UND-Gatter**, **ODER-Gatter**, **XOR-Gatter**, **Durchpass**, **Taktgeber** und **Tunnel**.
 - **Fortgeschritten** — größere Bausteine: Addierer, Speicher, Flip-Flops und Routing-Bauteile (siehe die Tabelle unten).
-- **Ein- / Ausgänge** — die Hardware, mit der du während einer laufenden Simulation interagierst: **Taster**, **Schalter**, **LED**, **Segment Display** und **LED-Matrix**.
+- **Ein- / Ausgänge** — die Hardware, mit der du während einer laufenden Simulation interagierst: **Taster**, **Impulstaster**, **Schalter**, **LED**, **Segment Display** und **LED-Matrix**.
 - **Benutzerdefiniert** — deine eigenen wiederverwendbaren Bauteile. Dieser Bereich ist leer, bis du eines baust; siehe [Benutzerdefinierte Komponenten](docs:custom-components).
 
 Eine Kategorie **Anschlüsse** erscheint nur, während du eine benutzerdefinierte Komponente bearbeitest. Sie enthält die Stecker **Eingang** und **Ausgang**, mit denen du die Anschlüsse dieser Komponente definierst — siehe [Benutzerdefinierte Komponenten](docs:custom-components).
@@ -48,13 +48,14 @@ Um eine Komponente zu platzieren, klicke sie in der Palette an, und sie folgt de
 
 ### Ein- / Ausgänge
 
-| Komponente          | Was sie tut                                                                                                             |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| **Taster**          | Ein Momentschalter — klicke ihn während der Simulation, um einen einzelnen Puls auszusenden.                            |
-| **Schalter**        | Ein rastender Schalter — klicke ihn während der Simulation, um seinen Ausgang an- und auszuschalten.                    |
-| **LED**             | Leuchtet, solange die Leitung, die ihren Eingang speist, unter Strom steht.                                             |
-| **Segment Display** | Zeigt den Binärwert an seinen Eingängen als Zahl in einer gewählten Basis.                                              |
-| **LED-Matrix**      | Ein quadratisches Raster aus LEDs, das ein Bild anzeigt, Zeile für Zeile bei der steigenden Flanke von CLK geschrieben. |
+| Komponente          | Was sie tut                                                                                                              |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| **Taster**          | Ein Momentschalter — sein Ausgang ist an, solange du ihn während der Simulation gedrückt hältst.                         |
+| **Impulstaster**    | Klicke ihn während der Simulation, um einen einzelnen, einen Tick langen Puls auszusenden, egal wie lange du ihn hältst. |
+| **Schalter**        | Ein rastender Schalter — klicke ihn während der Simulation, um seinen Ausgang an- und auszuschalten.                     |
+| **LED**             | Leuchtet, solange die Leitung, die ihren Eingang speist, unter Strom steht.                                              |
+| **Segment Display** | Zeigt den Binärwert an seinen Eingängen als Zahl in einer gewählten Basis.                                               |
+| **LED-Matrix**      | Ein quadratisches Raster aus LEDs, das ein Bild anzeigt, Zeile für Zeile bei der steigenden Flanke von CLK geschrieben.  |
 
 ## Eine Komponente konfigurieren
 

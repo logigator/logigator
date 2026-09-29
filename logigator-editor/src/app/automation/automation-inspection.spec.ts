@@ -4,7 +4,12 @@ import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Point } from 'pixi.js';
 import { configureTestBed } from '../../testing/configure-test-bed';
-import { makeAnd, makeRom, makeSwitch } from '../../testing/factories';
+import {
+  makeAnd,
+  makeButton,
+  makeRom,
+  makeSwitch
+} from '../../testing/factories';
 import {
   FakeSimulationWorker,
   ManualFrameScheduler
@@ -25,6 +30,7 @@ import { CustomComponentRegistry } from '../components/custom/custom-component-r
 import { SubCircuitWatch } from '../components/custom/sub-circuit-watch';
 import { outputComponentConfig } from '../components/component-types/output/output.config';
 import { RomComponent } from '../components/component-types/rom/rom.component';
+import { ButtonComponent } from '../components/component-types/button/button.component';
 import { Wire } from '../wires/wire';
 import { WireDirection } from '@logigator/core';
 import { AutomationApiService } from './automation-api.service';
@@ -203,9 +209,14 @@ describe('AutomationApiService inspection', () => {
       return instance;
     }
 
-    /** Outer(Inner(switch)) placed on the board — two levels to drill through. */
-    async function openNestedWatch(): Promise<number> {
-      const inner = registerBox('Inner', 'IN', makeSwitch());
+    /**
+     * Outer(Inner(switch)) placed on the board — two levels to drill through.
+     * `driver` swaps the switch for another component.
+     */
+    async function openNestedWatch(
+      driver: Component = makeSwitch()
+    ): Promise<number> {
+      const inner = registerBox('Inner', 'IN', driver);
       const outerHost = new Project();
       const outer = registerBox('Outer', 'OUT', place(inner, outerHost));
       outerHost.destroy({ children: true });
@@ -266,6 +277,36 @@ describe('AutomationApiService inspection', () => {
       // The renderer fits a level the first time it shows; a placement takes
       // that turn instead of being overwritten on the first frame.
       expect(watch.levels()[0].needsFit).toBe(false);
+    });
+
+    it('drives an inner button through setInput, refusing a tap on it', async () => {
+      const id = await openNestedWatch(makeButton());
+      const nested = api
+        .inspectGetElements(id)
+        .components.find((component) => component.type >= 1000)!;
+      api.inspectActivate(id, nested.id);
+      const watch = TestBed.inject(InspectionService).open()[0]
+        .inspection as SubCircuitWatch;
+      const copy = watch
+        .activeLevel()
+        .session.components.find(
+          (component) => component instanceof ButtonComponent
+        ) as ButtonComponent;
+
+      expect(() => api.inspectActivate(id, copy.id)).toThrow(/setInput/);
+      expect(copy.held).toBe(false);
+
+      await api.inspectSetInput(id, copy.id, true);
+      expect(copy.held).toBe(true);
+      await api.inspectSetInput(id, copy.id, false);
+      expect(copy.held).toBe(false);
+
+      const plug = watch
+        .activeLevel()
+        .session.components.find((component) => component !== copy)!;
+      await expect(api.inspectSetInput(id, plug.id, true)).rejects.toThrow(
+        /not a user input/
+      );
     });
 
     it('refuses a component that is not in the visible level', async () => {

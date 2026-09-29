@@ -44,9 +44,10 @@ L'indicateur à droite montre la **vitesse mesurée** que la simulation atteint 
 Seules les entrées du circuit répondent aux clics pendant qu'il tourne :
 
 - **Interrupteur** — une entrée à verrouillage. Cliquez dessus pour activer ou désactiver sa sortie ; elle reste là où vous l'avez laissée.
-- **Bouton** — une entrée momentanée. Cliquez dessus pour émettre une seule impulsion sur sa sortie.
+- **Bouton** — une entrée momentanée. Sa sortie est active tant que vous le maintenez enfoncé, et se désactive dès que vous le relâchez.
+- **Bouton à impulsion** — cliquez dessus pour émettre une seule impulsion d'un tick sur sa sortie.
 
-À mesure que les signaux se propagent, les fils et ports alimentés **s'illuminent**, et les composants de sortie affichent leur état — les LED brillent, les afficheurs à segments et les matrices de LED montrent leurs motifs. Faites glisser n'importe où sur le plan de travail pour vous déplacer ; cliquer dans le vide ne fait rien.
+À mesure que les signaux se propagent, les fils et ports alimentés **s'illuminent**, et les composants de sortie affichent leur état — les LED brillent, les afficheurs à segments et les matrices de LED montrent leurs motifs. Faites glisser n'importe où sur le plan de travail pour vous déplacer — sauf depuis un bouton, qui reste alors simplement enfoncé ; cliquer dans le vide ne fait rien.
 
 Pour regarder à l'intérieur d'un circuit en cours d'exécution — lire le contenu d'une mémoire ou observer le circuit interne d'un composant personnalisé en direct — voir [Inspection et surveillances](docs:inspection).
 

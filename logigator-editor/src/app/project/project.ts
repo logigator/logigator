@@ -26,6 +26,18 @@ import { strokeScaleFor } from '../rendering/graphics/stroke-scale';
 /** Shared "exclude nothing" set, so a collision check allocates none. */
 export const NO_EXCLUDED_IDS: ReadonlySet<number> = new Set<number>();
 
+/**
+ * How the pointer drove a user input: a switch or pulse button acts on a
+ * `tap`, a button is level-driven — `press` as its hold starts, `release` as
+ * the hold ends.
+ */
+export type UserInputPhase = 'tap' | 'press' | 'release';
+
+export interface UserInputEvent {
+  readonly component: Component;
+  readonly phase: UserInputPhase;
+}
+
 export class Project extends Container {
   public readonly actionManager = new ActionManager(this);
   public readonly selectionManager = new SelectionManager(this);
@@ -61,9 +73,9 @@ export class Project extends Container {
   }>();
   // Payload: clockwise quarter-turns.
   private readonly _rotateRequest$ = new Subject<number>();
-  // Button/switch components clicked during simulation. A Subject rather than
-  // a direct call keeps the model layer service-free.
-  private readonly _userInput$ = new Subject<Component>();
+  // User inputs operated during simulation. A Subject rather than a direct
+  // call keeps the model layer service-free.
+  private readonly _userInput$ = new Subject<UserInputEvent>();
   // Inspectable components tapped during simulation.
   private readonly _inspectRequest$ = new Subject<Component>();
 
@@ -317,12 +329,15 @@ export class Project extends Container {
     this._floatingLayer.renderable = visible;
   }
 
-  public get userInput$(): Observable<Component> {
+  public get userInput$(): Observable<UserInputEvent> {
     return this._userInput$.asObservable();
   }
 
-  public emitUserInput(component: Component): void {
-    this._userInput$.next(component);
+  public emitUserInput(
+    component: Component,
+    phase: UserInputPhase = 'tap'
+  ): void {
+    this._userInput$.next({ component, phase });
   }
 
   public get inspectRequest$(): Observable<Component> {

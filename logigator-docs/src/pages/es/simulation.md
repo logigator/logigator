@@ -44,9 +44,10 @@ La lectura de la derecha muestra la **velocidad medida** que la simulación est�
 Solo las entradas del circuito responden a los clics mientras se ejecuta:
 
 - **Interruptor**: una entrada con enclavamiento. Haz clic en él para alternar su salida entre encendido y apagado; permanece donde lo dejaste.
-- **Botón**: una entrada momentánea. Haz clic en él para emitir un único pulso en su salida.
+- **Botón**: una entrada momentánea. Su salida está encendida mientras lo mantienes pulsado y se apaga en cuanto lo sueltas.
+- **Botón de pulso**: haz clic en él para emitir un único pulso de un tick en su salida.
 
-A medida que las señales se propagan, los cables y puertos alimentados **se iluminan**, y los componentes de salida muestran su estado: los LED se encienden, los displays de segmentos y las matrices de LEDs muestran sus patrones. Arrastra en cualquier punto del tablero para desplazarte; hacer clic en un espacio vacío no hace nada.
+A medida que las señales se propagan, los cables y puertos alimentados **se iluminan**, y los componentes de salida muestran su estado: los LED se encienden, los displays de segmentos y las matrices de LEDs muestran sus patrones. Arrastra en cualquier punto del tablero para desplazarte, salvo desde un botón, que simplemente se mantiene pulsado; hacer clic en un espacio vacío no hace nada.
 
 Para mirar dentro de un circuito en ejecución —leer el contenido de una memoria o ver en directo el circuito interno de un componente personalizado— consulta [Inspección y monitores](docs:inspection).
 

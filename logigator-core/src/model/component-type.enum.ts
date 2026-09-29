@@ -24,12 +24,14 @@ export enum BuiltInComponentType {
   INPUT = 100,
   OUTPUT = 101,
   // User-input components driving a running simulation.
-  BUTTON = 200,
+  PULSE_BUTTON = 200,
   // The document format names id 201 a lever; shown as a switch here.
   SWITCH = 201,
   LED = 202,
   SEGMENT_DISPLAY = 203,
-  LED_MATRIX = 204
+  LED_MATRIX = 204,
+  // High for as long as it is held; absent from the legacy v0 format.
+  BUTTON = 205
 }
 
 /** A runtime-allocated custom component type id ({@link CUSTOM_TYPE_ID_BASE}+). */

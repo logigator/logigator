@@ -9,7 +9,7 @@ engine inside a Web Worker, and lights up the powered wires and ports. Owns the
 Project ──compile()──► CompiledBoard ─descriptor─► worker → WASM engine
                           │                                    │ snapshot (pulled per frame)
                           ├─ mapping (link id → wires + ports) ─┴─► SimulationWorkerService
-                          └─ userInputs (button/switch → unit index)   │ applyDelta / applyFull
+                          └─ userInputs (input → unit index)           │ applyDelta / applyFull
                                                                        ▼
                                                                 LinkStateApplier
 ```
@@ -43,8 +43,8 @@ Components are walked **sorted by id**: quad-tree order is not stable, and the
 submission order defines the engine's `triggerInput` indices and output layout.
 
 - **`UNIT_TYPES`** (gates, `DELAY`, `CLOCK`, adders, flip-flops, `RNG`, `RAM`,
-  coder/decoder, mux/demux, `BUTTON`, `SWITCH`, `ROM`) — one `EmittedUnit`,
-  pins as union-find node ids.
+  coder/decoder, mux/demux, `BUTTON`, `PULSE_BUTTON`, `SWITCH`, `ROM`) — one
+  `EmittedUnit`, pins as union-find node ids.
 - **`LED_MATRIX`** — a unit whose cell outputs sit on no net: fresh nodes per
   cell, mapped back onto the component as pseudo-ports past the input range
   (row-major). An inner matrix simulates but stays dark in a watch.
@@ -264,16 +264,42 @@ being locked in between is what keeps the mapping's live object references valid
 rate, which is a typed value with a separate unit so switching unit re-reads the
 same number (10 Hz → 10 kHz). A mode or rate change re-paces an active run.
 
-`SimulationTool` starts a `PanSession`, so a drag pans and only a tap acts: the
-tap hit-tests the component under the cursor and emits either user input or an
-inspect request. `_activate` toggles a **switch** and forwards
-`INPUT_EVENT_CONT`, or presses a **button**, forwards `INPUT_EVENT_PULSE` (one
-tick) and clears the visual after `BUTTON_FLASH_MS`. Top-level engine indices
-come from `CompiledBoard.userInputs` (`Component.id` → submission index); inner
-inputs clicked in a watch arrive through `triggerUnitInput` with the index
-already resolved by the watch index; the automation API's `setUserInput` drives
-an **absolute** state, leaving a switch already at `value` alone and ignoring
-`false` on a button, which holds no state to clear.
+Three user inputs exist, driven two ways. A **switch** and a **pulse button**
+act on a tap: `SimulationTool` starts a `PanSession` for them, so a drag pans
+and only a tap hit-tests the component under the cursor and emits either user
+input or an inspect request. `_activate` toggles a **switch** and forwards
+`INPUT_EVENT_CONT` with its new state, or presses a **pulse button**, forwards
+`INPUT_EVENT_PULSE` (one tick) and clears the visual after
+`PULSE_BUTTON_FLASH_MS`.
+
+A **button** is level-driven: its output is high for exactly as long as it is
+held. A pointerdown on one starts a `HoldSession` instead of a `PanSession` —
+the press never pans, however far the pointer moves — which presses it at once
+and releases it when the gesture ends by any route: pointer up, pointer cancel,
+lost pointer capture, window blur or a hidden document, Escape, a second touch
+finger, a mode or project switch. `Project.userInput$` carries each operation
+as `{ component, phase }`, phase `tap` for a switch or pulse button and
+`press` / `release` for a button. `_setHeld` handles the two: drawn held and
+`INPUT_EVENT_CONT` with `[true]`, then released and `[false]`. Both are
+idempotent — a button already in that state sends nothing — and a press
+obeys `_activate`'s readiness rule, while a release always clears the visual.
+
+The service keeps every held button — the board's and a watch's copies — so
+nothing outlives the session holding it high. `stop()` releases each against
+the rebuilt engine once the reset lands, which also catches a press that
+reached the engine while the reset was in flight; `exit()` releases them
+visually, the engine being gone. A hold still open afterwards releases
+nothing further.
+
+Top-level engine indices come from `CompiledBoard.userInputs` (`Component.id` →
+submission index); inner inputs operated in a watch arrive through
+`triggerUnitInput` with the index already resolved by the watch index — a held
+button in a watch pressing and releasing through the same call with phase
+`press` / `release`. The automation API's `setUserInput` (and `setUnitInput`,
+its watch counterpart) drives an **absolute** state: it leaves a switch or
+button already at `value` alone, holds a button on `true` and releases it on
+`false`, and ignores `false` on a pulse button, which holds no state to
+clear.
 
 ---
 
@@ -283,7 +309,12 @@ an **absolute** state, leaving a switch already at `value` alone and ignoring
 2. Add its `BuiltInComponentType` id to `UNIT_TYPES`; it then emits as a plain
    unit with pins in `connectionPoints` order.
 3. Encode any per-type engine `ops` in `_opsFor` (`ROM` is the worked example).
-4. A user input also emits from the `SimulationTool` tap handler and is handled
-   in `_activate`. `BUTTON` and `SWITCH` both submit as `ENGINE_USER_INPUT_TYPE`
-   (200) — the engine rejects any other id, and pulse-vs-continuous is decided
-   at `triggerInput` time from the component instance, not the descriptor.
+4. A user input is also added to `USER_INPUT_TYPES`, has to be reachable from
+   `SimulationTool` and is handled in `SimulationService`: a tap-driven one
+   (switch, pulse button) emits from the tap handler and is handled in
+   `_activate`, a level-driven one (button) emits from its `HoldSession`'s
+   press and release and is handled in `_setHeld`; `_setAbsolute` gives it its
+   automation semantics. `SWITCH`, `PULSE_BUTTON` and `BUTTON` all submit as
+   `ENGINE_USER_INPUT_TYPE` (200) — the engine rejects any other id, and
+   pulse-vs-continuous is decided at `triggerInput` time from the component
+   instance, not the descriptor.

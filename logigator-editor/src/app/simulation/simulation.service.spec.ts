@@ -4,6 +4,7 @@ import { configureTestBed } from '../../testing/configure-test-bed';
 import {
   makeAnd,
   makeButton,
+  makePulseButton,
   makeLed,
   makeNot,
   makeSwitch
@@ -74,6 +75,26 @@ describe('SimulationService', () => {
     service.exit();
     project.destroy({ children: true });
   });
+
+  /**
+   * The level the engine holds `unit` at: the last Cont event it was sent for
+   * it since its last rebuild, `false` if none — an input starts low.
+   */
+  function engineLevel(unit: number): boolean {
+    const posted = fakeWorker.posted;
+    const rebuilt = posted.map((msg) => msg.kind).lastIndexOf('stop');
+    let level = false;
+    for (const msg of posted.slice(rebuilt + 1)) {
+      if (
+        msg.kind === 'triggerInput' &&
+        msg.componentIndex === unit &&
+        msg.event === 0
+      ) {
+        level = msg.state[0];
+      }
+    }
+    return level;
+  }
 
   /** enter() plus the worker boot round-trip (ready → init → ok). */
   async function enterAndBoot(): Promise<void> {
@@ -337,6 +358,95 @@ describe('SimulationService', () => {
     });
   });
 
+  describe('a button', () => {
+    let button: ReturnType<typeof makeButton>;
+    let unit: number;
+
+    async function bootWithButton(): Promise<void> {
+      button = makeButton();
+      project.addComponent(button);
+      await enterAndBoot();
+      unit = service.board!.userInputs.get(button.id)!;
+    }
+
+    it('is held from press to release, one Cont event each way', async () => {
+      await bootWithButton();
+
+      project.emitUserInput(button, 'press');
+      expect(button.held).toBe(true);
+      expect(fakeWorker.postedOfKind('triggerInput')).toEqual([
+        expect.objectContaining({
+          componentIndex: unit,
+          event: 0,
+          state: [true]
+        })
+      ]);
+
+      project.emitUserInput(button, 'press'); // already held
+      expect(fakeWorker.postedOfKind('triggerInput')).toHaveLength(1);
+
+      project.emitUserInput(button, 'release');
+      expect(button.held).toBe(false);
+      project.emitUserInput(button, 'release'); // already released
+      expect(fakeWorker.postedOfKind('triggerInput')).toHaveLength(2);
+      expect(engineLevel(unit)).toBe(false);
+    });
+
+    it('ignores a press while the engine is still starting', () => {
+      button = makeButton();
+      project.addComponent(button);
+      service.enter();
+
+      project.emitUserInput(button, 'press');
+      project.emitUserInput(button, 'release');
+
+      expect(button.held).toBe(false);
+      expect(fakeWorker.postedOfKind('triggerInput')).toHaveLength(0);
+    });
+
+    it('does not act on a tap, which cannot hold it', async () => {
+      await bootWithButton();
+
+      project.emitUserInput(button);
+
+      expect(button.held).toBe(false);
+      expect(fakeWorker.postedOfKind('triggerInput')).toHaveLength(0);
+    });
+
+    it('is released by stop, against the rebuilt engine', async () => {
+      await bootWithButton();
+      project.emitUserInput(button, 'press');
+
+      service.stop();
+      await vi.waitFor(() => expect(button.held).toBe(false));
+
+      expect(engineLevel(unit)).toBe(false);
+      // The hold's own release, arriving later, sends nothing further.
+      const sent = fakeWorker.postedOfKind('triggerInput').length;
+      project.emitUserInput(button, 'release');
+      expect(fakeWorker.postedOfKind('triggerInput')).toHaveLength(sent);
+    });
+
+    it('never stays high after a press lands while a reset is in flight', async () => {
+      await bootWithButton();
+
+      service.stop();
+      project.emitUserInput(button, 'press'); // reaches the rebuilt engine
+      await vi.waitFor(() => expect(button.held).toBe(false));
+
+      expect(engineLevel(unit)).toBe(false);
+    });
+
+    it('is released by exit', async () => {
+      await bootWithButton();
+      project.emitUserInput(button, 'press');
+
+      service.exit();
+
+      expect(button.held).toBe(false);
+    });
+  });
+
   describe('setUserInput', () => {
     it('sets a switch absolutely, sending no event when already there', async () => {
       const switchComp = makeSwitch();
@@ -360,8 +470,28 @@ describe('SimulationService', () => {
       });
     });
 
-    it('pulses a button on true and ignores false', async () => {
+    it('holds a button on true and releases it on false, absolutely', async () => {
       const button = makeButton();
+      project.addComponent(button);
+      await enterAndBoot();
+      const unit = service.board!.userInputs.get(button.id)!;
+
+      expect(service.setUserInput(button.id, false)).toBe(true);
+      expect(fakeWorker.postedOfKind('triggerInput')).toHaveLength(0);
+
+      expect(service.setUserInput(button.id, true)).toBe(true);
+      expect(service.setUserInput(button.id, true)).toBe(true);
+      expect(button.held).toBe(true);
+      expect(fakeWorker.postedOfKind('triggerInput')).toHaveLength(1);
+      expect(engineLevel(unit)).toBe(true);
+
+      expect(service.setUserInput(button.id, false)).toBe(true);
+      expect(button.held).toBe(false);
+      expect(engineLevel(unit)).toBe(false);
+    });
+
+    it('pulses a pulse button on true and ignores false', async () => {
+      const button = makePulseButton();
       project.addComponent(button);
       await enterAndBoot();
 
@@ -385,8 +515,8 @@ describe('SimulationService', () => {
     });
   });
 
-  it('flashes a button on canvas user input and forwards a Pulse event', async () => {
-    const button = makeButton();
+  it('flashes a pulse button on canvas user input and forwards a Pulse event', async () => {
+    const button = makePulseButton();
     project.addComponent(button);
     await enterAndBoot();
     vi.useFakeTimers();

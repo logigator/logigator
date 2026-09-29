@@ -8,6 +8,7 @@ import { NotComponent } from '../app/components/component-types/not/not.componen
 import { InputComponent } from '../app/components/component-types/input/input.component';
 import { inputComponentConfig } from '../app/components/component-types/input/input.config';
 import { ButtonComponent } from '../app/components/component-types/button/button.component';
+import { PulseButtonComponent } from '../app/components/component-types/pulse-button/pulse-button.component';
 import { SwitchComponent } from '../app/components/component-types/switch/switch.component';
 import { RomComponent } from '../app/components/component-types/rom/rom.component';
 import { romComponentConfig } from '../app/components/component-types/rom/rom.config';
@@ -60,6 +61,13 @@ export function makeInput(index = 0): InputComponent {
 /** ButtonComponent at the given grid position. */
 export function makeButton(px = 0, py = 0): ButtonComponent {
   const button = new ButtonComponent({});
+  button.position.set(px, py);
+  return button;
+}
+
+/** PulseButtonComponent at the given grid position. */
+export function makePulseButton(px = 0, py = 0): PulseButtonComponent {
+  const button = new PulseButtonComponent({});
   button.position.set(px, py);
   return button;
 }

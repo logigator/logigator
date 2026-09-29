@@ -44,9 +44,10 @@ Die Anzeige rechts zeigt die **gemessene Geschwindigkeit**, die die Simulation t
 Nur die Eingänge der Schaltung reagieren auf Klicks, solange sie läuft:
 
 - **Schalter** — ein rastender Eingang. Klicke ihn, um seinen Ausgang an- oder auszuschalten; er bleibt, wo du ihn gelassen hast.
-- **Taster** — ein Momenteingang. Klicke ihn, um einen einzelnen Puls an seinem Ausgang auszusenden.
+- **Taster** — ein Momenteingang. Sein Ausgang ist an, solange du ihn gedrückt hältst, und geht aus, sobald du loslässt.
+- **Impulstaster** — klicke ihn, um einen einzelnen, einen Tick langen Puls an seinem Ausgang auszusenden.
 
-Während sich Signale ausbreiten, **leuchten** unter Strom stehende Leitungen und Anschlüsse auf, und Ausgangskomponenten zeigen ihren Zustand — LEDs glühen, Segment Displays und LED-Matrizen zeigen ihre Muster. Ziehe irgendwo auf der Arbeitsfläche zum Schwenken; das Klicken auf leeren Raum bewirkt nichts.
+Während sich Signale ausbreiten, **leuchten** unter Strom stehende Leitungen und Anschlüsse auf, und Ausgangskomponenten zeigen ihren Zustand — LEDs glühen, Segment Displays und LED-Matrizen zeigen ihre Muster. Ziehe irgendwo auf der Arbeitsfläche zum Schwenken — außer auf einem Taster, der dabei einfach gedrückt bleibt; das Klicken auf leeren Raum bewirkt nichts.
 
 Um in eine laufende Schaltung hineinzuschauen — den Inhalt eines Speichers zu lesen oder die innere Schaltung einer benutzerdefinierten Komponente live zu beobachten — siehe [Inspektion & Beobachtungen](docs:inspection).
 

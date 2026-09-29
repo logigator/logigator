@@ -433,7 +433,10 @@ export interface LogigatorAutomationApi {
     stop(): void;
     status(): SimStatus;
     setTarget(value: number, unit: 'Hz' | 'kHz' | 'MHz'): void;
-    /** Lever: absolute set. Button: pulse on `true`, ignored on `false`. */
+    /**
+     * Lever: absolute set. Button: absolute too — held by `true` until a
+     * `false` releases it. Pulse button: pulse on `true`, ignored on `false`.
+     */
     setInput(componentId: number, value: boolean): Promise<void>;
     readPorts(componentIds?: number[]): Promise<PortReadout[]>;
   };
@@ -470,7 +473,7 @@ export interface LogigatorAutomationApi {
   ): WorkModeState;
 
   /**
-   * Live inspections. `getElements`/`activate`/`navigateTo`/`camera` address a
+   * Live inspections. `getElements`/`activate`/`setInput`/`navigateTo`/`camera` address a
    * **watch**, whose levels are fresh copies of the inner circuit — their
    * element ids are the copy's, not the placed instance's.
    */
@@ -488,9 +491,21 @@ export interface LogigatorAutomationApi {
     getElements(inspectionId: number, query?: ElementQuery): ElementList;
     /**
      * Taps a component inside the visible watch level: drives an inner
-     * lever/button, drills into a nested custom, or opens its own inspection.
+     * lever/pulse button, drills into a nested custom, or opens its own
+     * inspection. A tap cannot hold a button, so a button is refused — that
+     * is `setInput`.
      */
     activate(inspectionId: number, componentId: number): InspectionInfo;
+    /**
+     * `sim.setInput` for a user input inside the visible watch level, with
+     * the same absolute semantics. A button held here is released when its
+     * level closes.
+     */
+    setInput(
+      inspectionId: number,
+      componentId: number,
+      value: boolean
+    ): Promise<void>;
     /** Breadcrumb navigation: pops every level deeper than `level`. */
     navigateTo(inspectionId: number, level: number): InspectionInfo;
     /**

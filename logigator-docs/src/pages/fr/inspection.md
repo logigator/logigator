@@ -31,7 +31,7 @@ Touchez un [composant personnalisé](docs:custom-components) placé pendant que 
 
 Une surveillance est interactive :
 
-- **Pilotez ses entrées** — cliquez sur un **interrupteur** ou un **bouton** à l'intérieur du circuit surveillé pour l'actionner, tout comme sur le plan de travail principal. Cela pilote la vraie simulation en cours, de sorte que l'effet se propage au reste de votre circuit.
+- **Pilotez ses entrées** — cliquez sur un **interrupteur** ou un **bouton à impulsion**, ou maintenez un **bouton** enfoncé, à l'intérieur du circuit surveillé pour l'actionner, tout comme sur le plan de travail principal. Cela pilote la vraie simulation en cours, de sorte que l'effet se propage au reste de votre circuit.
 - **Explorez les composants imbriqués** — touchez un composant personnalisé à l'intérieur de la surveillance pour descendre dans _son_ circuit interne. Un **fil d'Ariane** en haut indique à quelle profondeur vous êtes ; cliquez sur une étape antérieure pour remonter.
 - **Déplacez-vous et zoomez** — faites glisser pour vous déplacer dans la vue interne et faites défiler ou pincez pour zoomer, comme sur le plan de travail.
 

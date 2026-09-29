@@ -1,17 +1,30 @@
 import { beforeEach, describe, expect, it } from 'vitest';
+import { Graphics, GraphicsContext } from 'pixi.js';
 import { configureTestBed } from '../../../../testing/configure-test-bed';
 import { makeButton } from '../../../../testing/factories';
 import { BuiltInComponentType } from '@logigator/core';
+import { ButtonGraphics } from '../../../rendering/graphics/button.graphics';
+import { ButtonComponent } from './button.component';
 import { buttonComponentConfig } from './button.config';
+
+/** The context the button's body is currently drawn with. */
+function bodyContext(button: ButtonComponent): GraphicsContext {
+  const body = button.children.find(
+    (child): child is Graphics =>
+      child instanceof Graphics && child.context instanceof ButtonGraphics
+  );
+  expect(body).toBeDefined();
+  return body!.context;
+}
 
 describe('ButtonComponent', () => {
   beforeEach(() => {
     configureTestBed();
   });
 
-  it('has the BUTTON type id (200, mirroring legacy)', () => {
+  it('has the BUTTON type id, fixed at 205 by the document format', () => {
     expect(buttonComponentConfig.type).toBe(BuiltInComponentType.BUTTON);
-    expect(buttonComponentConfig.type).toBe(200);
+    expect(buttonComponentConfig.type).toBe(205);
   });
 
   it('exposes exactly one output and no inputs', () => {
@@ -21,24 +34,16 @@ describe('ButtonComponent', () => {
     button.destroy({ children: true });
   });
 
-  it('starts unpressed and reacts to setPressed', () => {
+  it('draws its held state, and clearSimState releases it', () => {
     const button = makeButton();
-    expect(button.pressed).toBe(false);
+    const released = bodyContext(button);
 
-    button.setPressed(true);
-    expect(button.pressed).toBe(true);
-    expect(button.children.length).toBeGreaterThan(0);
-
-    button.destroy({ children: true });
-  });
-
-  it('clearSimState resets the pressed state', () => {
-    const button = makeButton();
-    button.setPressed(true);
+    button.setHeld(true);
+    expect(bodyContext(button)).not.toBe(released);
 
     button.clearSimState();
-
-    expect(button.pressed).toBe(false);
+    expect(button.held).toBe(false);
+    expect(bodyContext(button)).toBe(released);
     button.destroy({ children: true });
   });
 });

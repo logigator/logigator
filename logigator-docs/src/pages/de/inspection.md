@@ -31,7 +31,7 @@ Tippe auf eine platzierte [benutzerdefinierte Komponente](docs:custom-components
 
 Eine Beobachtung ist interaktiv:
 
-- **Treibe ihre Eingänge** — klicke einen **Schalter** oder **Taster** innerhalb der beobachteten Schaltung an, um ihn zu betätigen, genau wie auf der Hauptarbeitsfläche. Er treibt die echte laufende Simulation, sodass sich die Wirkung auf den Rest deiner Schaltung ausbreitet.
+- **Treibe ihre Eingänge** — klicke innerhalb der beobachteten Schaltung einen **Schalter** oder **Impulstaster** an oder halte einen **Taster** gedrückt, um ihn zu betätigen, genau wie auf der Hauptarbeitsfläche. Er treibt die echte laufende Simulation, sodass sich die Wirkung auf den Rest deiner Schaltung ausbreitet.
 - **Steige in verschachtelte Komponenten hinein** — tippe auf eine benutzerdefinierte Komponente innerhalb der Beobachtung, um in _ihre_ innere Schaltung abzusteigen. Eine **Brotkrümel**-Spur oben zeigt, wie tief du bist; klicke einen früheren Schritt an, um wieder herauszuspringen.
 - **Schwenken und Zoomen** — ziehe, um dich in der inneren Ansicht zu bewegen, und scrolle oder spreize zum Zoomen, genau wie auf der Arbeitsfläche.
 

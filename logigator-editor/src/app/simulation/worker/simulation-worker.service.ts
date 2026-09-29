@@ -366,7 +366,7 @@ export class SimulationWorkerService {
    * went out. Nothing is posted before the session is {@link ready}: the worker
    * holds no `Simulation` until it acks `init`, and an uncorrelated op in that
    * window would come back as an uncorrelated error and tear down a session
-   * that was about to be usable. The switch/button tap path reaches this, since
+   * that was about to be usable. The switch/pulse-button tap path reaches this, since
    * simulation mode is entered while the engine is still starting. Dropping
    * beats queueing — an input predating the engine has no tick to apply at.
    */

@@ -28,7 +28,7 @@ describe('instantiateBody order contract', () => {
         { type: BuiltInComponentType.SWITCH, pos: [0, 0], options: {} },
         { type: BuiltInComponentType.AND, pos: [4, 0], options: {} },
         { type: BuiltInComponentType.NOT, pos: [10, 0], options: {} },
-        { type: BuiltInComponentType.BUTTON, pos: [0, 6], options: {} }
+        { type: BuiltInComponentType.PULSE_BUTTON, pos: [0, 6], options: {} }
       ],
       wires: [
         { pos: [2, 0], direction: 0, length: 2 },

@@ -108,13 +108,14 @@ render frame; `componentToPlace` forwards to the `PlacementTool`.
 `PointerController` streams the primary pointer to the router, which dispatches
 to the active mode's `BoardTool`:
 
-| Mode                    | Tool → session                                               |
-| ----------------------- | ------------------------------------------------------------ |
-| `PAN`, `SIMULATION`     | `PanTool` / `SimulationTool` → `PanSession`                  |
-| `COMPONENT_PLACEMENT`   | `PlacementTool` → `ComponentPlacementSession`                |
-| `WIRE_TOOL`             | `WireTool` → `WireToolSession`                               |
-| `SELECT`/`SELECT_EXACT` | `SelectTool` → `SelectionMoveSession` or `SelectRectSession` |
-| `ERASE`                 | `EraseTool` → `EraseSession`                                 |
+| Mode                      | Tool → session                                               |
+| ------------------------- | ------------------------------------------------------------ |
+| `PAN`, `SIMULATION`       | `PanTool` / `SimulationTool` → `PanSession`                  |
+| `SIMULATION`, on a button | `SimulationTool` → `HoldSession`                             |
+| `COMPONENT_PLACEMENT`     | `PlacementTool` → `ComponentPlacementSession`                |
+| `WIRE_TOOL`               | `WireTool` → `WireToolSession`                               |
+| `SELECT`/`SELECT_EXACT`   | `SelectTool` → `SelectionMoveSession` or `SelectRectSession` |
+| `ERASE`                   | `EraseTool` → `EraseSession`                                 |
 
 Press/hover/commit behavior lives in `rendering.md` § _Tools_. Three things are
 mode-specific rather than session-specific:
@@ -126,9 +127,17 @@ mode-specific rather than session-specific:
   microtask no-op except for a first, uncached master). The host's **gesture
   stamp**, bumped on pointer-up, cancel and context switches, keeps a load whose
   gesture already ended from opening a session with no pointer to drive it.
-- `SimulationTool`'s tap hit-tests the component body under the cursor: a
-  button/switch emits on `Project.userInput$`, an inspectable component emits an
-  inspect request. Editing stays locked; pan and zoom keep working.
+- `SimulationTool` hit-tests the component body under the cursor. A press on a
+  **button** opens a `HoldSession` instead of a pan: the button is pressed at
+  pointerdown (`Project.userInput$` phase `press`) and released when the
+  gesture ends (phase `release`) — pointer up or cancel, lost capture, window
+  blur or a hidden document, Escape, a second touch, a mode or project switch —
+  so its output is high exactly while held, and the board does not pan however
+  far the pointer moves. Anything else opens a `PanSession`, whose tap acts: a
+  pulse button/switch emits on `Project.userInput$` (phase `tap`), an
+  inspectable component emits an inspect request. Editing stays locked; pan
+  and zoom keep working, and the undo lock the router sets around every
+  session changes nothing here, since the editing lock already holds.
 
 `WorkModeRouter` also drives `project.ticker$` around session lifecycles —
 `'on'` at start, `'off'` at end/cancel, `'single'` after a mode change aborts

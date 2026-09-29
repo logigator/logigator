@@ -4,7 +4,7 @@ import { BoardDescriptor } from '../compiler/compiled-board.model';
 // values), so the wire values live here.
 /** Set-and-hold input event (switchComp). */
 export const INPUT_EVENT_CONT = 0;
-/** One-tick pulse input event (button). */
+/** One-tick pulse input event (pulse button). */
 export const INPUT_EVENT_PULSE = 1;
 export type InputEventKind = typeof INPUT_EVENT_CONT | typeof INPUT_EVENT_PULSE;
 

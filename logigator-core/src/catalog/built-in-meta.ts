@@ -18,6 +18,7 @@ import { muxMeta } from './built-ins/mux.meta';
 import { notMeta } from './built-ins/not.meta';
 import { orMeta } from './built-ins/or.meta';
 import { outputMeta } from './built-ins/output.meta';
+import { pulseButtonMeta } from './built-ins/pulse-button.meta';
 import { ramMeta } from './built-ins/ram.meta';
 import { rngMeta } from './built-ins/rng.meta';
 import { romMeta } from './built-ins/rom.meta';
@@ -51,11 +52,12 @@ const ALL = [
   demuxMeta,
   inputMeta,
   outputMeta,
-  buttonMeta,
+  pulseButtonMeta,
   switchMeta,
   ledMeta,
   segmentDisplayMeta,
-  ledMatrixMeta
+  ledMatrixMeta,
+  buttonMeta
 ];
 
 /**

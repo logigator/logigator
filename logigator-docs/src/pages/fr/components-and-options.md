@@ -10,7 +10,7 @@ La palette est le panneau de gauche. Elle liste tous les composants que vous pou
 
 - **Basique** — les blocs logiques du quotidien : **Porte NON**, **Porte ET**, **Porte OU**, **Porte XOR**, **Retard**, **Horloge** et **Tunnel**.
 - **Avancé** — les blocs plus grands : additionneurs, mémoires, bascules et pièces de routage (voir le tableau ci-dessous).
-- **Entrées / Sorties** — le matériel avec lequel vous interagissez pendant qu'une simulation tourne : **Bouton**, **Interrupteur**, **LED**, **Affichage à segments** et **Matrice de LED**.
+- **Entrées / Sorties** — le matériel avec lequel vous interagissez pendant qu'une simulation tourne : **Bouton**, **Bouton à impulsion**, **Interrupteur**, **LED**, **Affichage à segments** et **Matrice de LED**.
 - **Composants utilisateur** — vos propres pièces réutilisables. Cette section est vide jusqu'à ce que vous en construisiez une ; voir [Composants personnalisés](docs:custom-components).
 
 Une catégorie **Ports** n'apparaît que lorsque vous modifiez un composant personnalisé. Elle contient les fiches **Entrée** et **Sortie** que vous utilisez pour définir les ports de ce composant — voir [Composants personnalisés](docs:custom-components).
@@ -48,13 +48,14 @@ Pour placer un composant, cliquez dessus dans la palette et il suit votre curseu
 
 ### Entrées / Sorties
 
-| Composant                | Ce qu'il fait                                                                                               |
-| ------------------------ | ----------------------------------------------------------------------------------------------------------- |
-| **Bouton**               | Un bouton-poussoir momentané — cliquez dessus pendant la simulation pour émettre une seule impulsion.       |
-| **Interrupteur**         | Un interrupteur à verrouillage — cliquez dessus pendant la simulation pour activer et désactiver sa sortie. |
-| **LED**                  | S'allume tant que le fil qui alimente son entrée est alimenté.                                              |
-| **Affichage à segments** | Affiche la valeur binaire présente sur ses entrées sous forme de nombre dans une base choisie.              |
-| **Matrice de LED**       | Une grille carrée de LED qui affiche une image, écrite une ligne à la fois sur le front montant de CLK.     |
+| Composant                | Ce qu'il fait                                                                                                         |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------- |
+| **Bouton**               | Un bouton-poussoir momentané — sa sortie reste active tant que vous le maintenez enfoncé pendant la simulation.       |
+| **Bouton à impulsion**   | Cliquez dessus pendant la simulation pour émettre une seule impulsion d'un tick, quelle que soit la durée de l'appui. |
+| **Interrupteur**         | Un interrupteur à verrouillage — cliquez dessus pendant la simulation pour activer et désactiver sa sortie.           |
+| **LED**                  | S'allume tant que le fil qui alimente son entrée est alimenté.                                                        |
+| **Affichage à segments** | Affiche la valeur binaire présente sur ses entrées sous forme de nombre dans une base choisie.                        |
+| **Matrice de LED**       | Une grille carrée de LED qui affiche une image, écrite une ligne à la fois sur le front montant de CLK.               |
 
 ## Configurer un composant
 

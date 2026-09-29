@@ -11,13 +11,18 @@ import {
   ViewChild
 } from '@angular/core';
 import { TranslationService } from '../../translation/translation.service';
-import { Point, Rectangle } from 'pixi.js';
+import { Point } from 'pixi.js';
 import { Subscription } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { Component as CircuitComponent } from '../../components/component';
 import { ToastService } from '../../logging/toast.service';
+import {
+  buttonAt,
+  componentBodiesAt
+} from '../../rendering/interaction/body-hit';
 import { PointerController } from '../../rendering/interaction/pointer-controller';
 import { PointerInput } from '../../rendering/interaction/pointer-input';
+import { DragSession } from '../../rendering/drag-session';
+import { HoldSession } from '../../rendering/sessions/hold.session';
 import { PanSession } from '../../rendering/sessions/pan.session';
 import { Project } from '../../project/project';
 import type {
@@ -35,7 +40,8 @@ import {
  * a level first shows, then pans/zooms through the project's own viewport
  * controller. Input runs through the shared PointerController; the tool stream
  * is a PanSession whose tap action routes to the model (inner input /
- * drill-down / data inspector). Re-blits on engine changes (`render$`),
+ * drill-down / data inspector), or a HoldSession for a press on an inner
+ * button, which holds it for the gesture. Re-blits on engine changes (`render$`),
  * viewport/theme changes (`ticker$`) and host resizes.
  */
 @Component({
@@ -61,7 +67,7 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
   private tickerSub: Subscription | null = null;
 
   private controller: PointerController | null = null;
-  private panSession: PanSession | null = null;
+  private session: DragSession | null = null;
 
   /**
    * The visible level's project, or null once there is none to draw. Closing
@@ -95,19 +101,16 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
         setActive: () => undefined
       },
       tool: {
-        down: (input) => this.startPanOrTap(input),
+        down: (input) => this.startSession(input),
         move: (input) => {
-          this.panSession?.onMove(input);
+          this.session?.onMove(input);
           this.render();
         },
         up: () => {
-          this.panSession?.onEnd();
-          this.panSession = null;
+          this.session?.onEnd();
+          this.session = null;
         },
-        cancel: () => {
-          this.panSession?.onCancel();
-          this.panSession = null;
-        }
+        cancel: () => this.cancelSession()
       }
     });
 
@@ -140,6 +143,7 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.destroyed = true;
+    this.cancelSession();
     this.controller?.destroy();
     this.subs.unsubscribe();
     this.tickerSub?.unsubscribe();
@@ -148,22 +152,23 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
     this.lease = null;
   }
 
-  private startPanOrTap(input: PointerInput): void {
+  private startSession(input: PointerInput): void {
     const project = this.project;
     if (!project) {
       return;
     }
-    this.panSession = new PanSession(
-      project,
-      input.global,
-      input.grid,
-      (tap) => {
-        const component = this.componentAt(project, tap);
-        if (component) {
-          this.inspection().activate(component);
-        }
+    const button = buttonAt(project, input.grid);
+    const hold = button ? this.inspection().holdFor(button) : null;
+    if (hold) {
+      this.session = new HoldSession(hold.press, hold.release);
+      return;
+    }
+    this.session = new PanSession(project, input.global, input.grid, (tap) => {
+      const [component] = componentBodiesAt(project, tap);
+      if (component) {
+        this.inspection().activate(component);
       }
-    );
+    });
   }
 
   /**
@@ -172,8 +177,7 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
    */
   private showLevel(level: WatchLevel | undefined): void {
     // A drag never survives a level swap — the session holds the old project.
-    this.panSession?.onCancel();
-    this.panSession = null;
+    this.cancelSession();
     this.tickerSub?.unsubscribe();
     if (!level) {
       this.tickerSub = null;
@@ -192,6 +196,11 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
     this.render();
   }
 
+  private cancelSession(): void {
+    this.session?.onCancel();
+    this.session = null;
+  }
+
   /**
    * Pans and re-blits directly: unlike the zooms, `Project.pan` emits no ticker
    * event (the board pans with its ticker already running).
@@ -199,19 +208,6 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
   private pan(delta: Point): void {
     this.project?.viewport.pan(delta);
     this.render();
-  }
-
-  private componentAt(
-    project: Project,
-    gridPoint: Point
-  ): CircuitComponent | null {
-    const queryRect = new Rectangle(gridPoint.x - 0.5, gridPoint.y - 0.5, 1, 1);
-    for (const component of project.queryComponentsInRange(queryRect)) {
-      if (component.bodyGridBounds.contains(gridPoint.x, gridPoint.y)) {
-        return component;
-      }
-    }
-    return null;
   }
 
   /**

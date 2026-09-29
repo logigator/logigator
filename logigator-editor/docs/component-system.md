@@ -169,8 +169,8 @@ customs only). `name` and `description` are `LocalizableText` — a built-in's
 or the definition rather than probed by constructing an instance.
 
 `symbolShape` is SVG **path data** in an 18-unit box, carried only by types whose
-canvas body is a drawn shape rather than their symbol text (LED, switch, button,
-LED matrix, segment display), so a palette tile always previews what placing
+canvas body is a drawn shape rather than their symbol text (LED, switch,
+button, pulse button, LED matrix, segment display), so a palette tile always previews what placing
 yields. Path data rather than markup because it binds through `[attr.d]` —
 Angular's sanitizer drops SVG from `[innerHTML]` outright.
 

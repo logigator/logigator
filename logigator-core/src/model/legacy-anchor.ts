@@ -39,7 +39,7 @@ const LEGACY_BODY_WIDTHS: Record<number, number> = {
   [BuiltInComponentType.DEMUX]: 3,
   [BuiltInComponentType.INPUT]: 1,
   [BuiltInComponentType.OUTPUT]: 1,
-  [BuiltInComponentType.BUTTON]: 1,
+  [BuiltInComponentType.PULSE_BUTTON]: 1,
   [BuiltInComponentType.SWITCH]: 1,
   [BuiltInComponentType.LED]: 1
 };
