@@ -1551,8 +1551,9 @@ describe('WorkModeRouter placement hover ghost (COMPONENT_PLACEMENT mode)', () =
 
   const ghosts = () => project.floatingLayer.dragLayer.children;
 
-  it('hovering shows a grid-snapped ghost of the component to place', () => {
-    router.hover(makeInput(2.3, 3.4));
+  it('hovering shows a grid-snapped ghost of the component to place, centred on the cursor', () => {
+    // The AND's 2×2 body centred on (3.3, 4.4) snaps to (2, 3).
+    router.hover(makeInput(3.3, 4.4));
 
     expect(ghosts()).toHaveLength(1);
     expect(ghosts()[0].position).toMatchObject({ x: 2, y: 3 });
@@ -1562,7 +1563,7 @@ describe('WorkModeRouter placement hover ghost (COMPONENT_PLACEMENT mode)', () =
     router.hover(makeInput(2, 2));
     const ghost = ghosts()[0];
 
-    router.hover(makeInput(5.6, 1.2));
+    router.hover(makeInput(6.6, 2.2));
 
     expect(ghosts()).toEqual([ghost]);
     expect(ghost.position).toMatchObject({ x: 6, y: 1 });
@@ -1595,7 +1596,7 @@ describe('WorkModeRouter placement hover ghost (COMPONENT_PLACEMENT mode)', () =
     ensure.mockResolvedValue(true);
     router.hover(makeInput(2, 2));
 
-    router.down(makeInput(2.4, 2.4));
+    router.down(makeInput(3.4, 3.4));
     await Promise.resolve();
     await Promise.resolve();
 

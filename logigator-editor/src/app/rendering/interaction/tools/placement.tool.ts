@@ -5,7 +5,6 @@ import { CustomComponentService } from '../../../custom-component/custom-compone
 import { WorkMode } from '../../../work-mode/work-mode.enum';
 import { WorkModeService } from '../../../work-mode/work-mode.service';
 import { getStaticDI } from '../../../utils/get-di';
-import { roundToGrid } from '../../../utils/grid';
 import { PlacementGhost } from '../../placement-ghost';
 import { ComponentPlacementSession } from '../../sessions/component-placement.session';
 import { PointerInput } from '../pointer-input';
@@ -37,12 +36,8 @@ export class PlacementTool implements BoardTool {
 
   public down(project: Project, input: PointerInput, host: ToolHost): void {
     if (!this._config) return;
-    void this._beginPlacement(
-      project,
-      this._config,
-      roundToGrid(input.grid, true),
-      host
-    );
+    // Copied: the placement may open after an await, past this input's life.
+    void this._beginPlacement(project, this._config, input.grid.clone(), host);
   }
 
   /**
@@ -56,7 +51,6 @@ export class PlacementTool implements BoardTool {
       this._destroyHoverGhost();
       return;
     }
-    const snapped = roundToGrid(input.grid, true);
     if (this._hoverGhost) {
       // The settings panel may have written the sticky direction since this
       // ghost was built; it follows on the next move rather than waiting for
@@ -64,7 +58,7 @@ export class PlacementTool implements BoardTool {
       this._hoverGhost.setDirection(
         getStaticDI(WorkModeService).placementDirectionFor(config.type)
       );
-      this._hoverGhost.moveTo(snapped);
+      this._hoverGhost.moveTo(input.grid);
     } else {
       // A master previews from its own config; snapshotting stays a
       // commit-time effect of the placement session.
@@ -72,7 +66,7 @@ export class PlacementTool implements BoardTool {
         project,
         project.floatingLayer.dragLayer,
         config,
-        snapped
+        input.grid
       );
       this._hoverGhostConfig = config;
       this._hoverGhostProject = project;
@@ -117,7 +111,7 @@ export class PlacementTool implements BoardTool {
   private async _beginPlacement(
     project: Project,
     config: ComponentConfig,
-    startGrid: Point,
+    startCursor: Point,
     host: ToolHost
   ): Promise<void> {
     const seq = host.bumpGestureSeq();
@@ -135,7 +129,7 @@ export class PlacementTool implements BoardTool {
       new ComponentPlacementSession(
         project,
         project.floatingLayer.dragLayer,
-        startGrid,
+        startCursor,
         config
       )
     );

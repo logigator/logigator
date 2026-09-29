@@ -7,7 +7,6 @@ import { ComponentConfig } from '../../components/component-config.model';
 import { Wire } from '../../wires/wire';
 import { ConnectionPoint } from '../../connection-points/connection-point';
 import { PlacementGhost } from '../placement-ghost';
-import { roundToGrid } from '../../utils/grid';
 import { AddComponentsAction } from '../../actions/actions/add-components.action';
 import { ActionContainer } from '../../actions/action-container';
 import { RemoveWiresAction } from '../../actions/actions/remove-wires.action';
@@ -37,7 +36,7 @@ export class ComponentPlacementSession implements DragSession {
   constructor(
     private readonly project: Project,
     dragLayer: Container<Component | Wire | ConnectionPoint>,
-    startPos: Point,
+    startCursor: Point,
     placeConfig: ComponentConfig
   ) {
     this._wouldCycle = wouldCyclePlacement(project, placeConfig);
@@ -45,11 +44,16 @@ export class ComponentPlacementSession implements DragSession {
     // The ghost is built from the palette config and stays on it for the whole
     // gesture, so what the settings panel writes while placing — options,
     // direction — lands on the very config the commit builds from.
-    this._ghost = new PlacementGhost(project, dragLayer, placeConfig, startPos);
+    this._ghost = new PlacementGhost(
+      project,
+      dragLayer,
+      placeConfig,
+      startCursor
+    );
   }
 
   onMove(input: PointerInput): void {
-    this._ghost.moveTo(roundToGrid(input.grid, true));
+    this._ghost.moveTo(input.grid);
   }
 
   canEnd(): boolean {
