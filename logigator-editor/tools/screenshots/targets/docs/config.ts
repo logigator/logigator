@@ -1,4 +1,6 @@
 import path from 'node:path';
+import type { ViewportSize } from 'playwright';
+import type { Shot } from '../../lib/target.ts';
 
 /**
  * The documentation's own half of a run. What the origin speaks and how a
@@ -13,11 +15,11 @@ export const TARGET = {
    */
   base: 'http://localhost:4200/editor',
   /** Where the localized image folders land under the out-dir. */
-  layout: (lang) => path.join('src', 'pages', lang, 'images')
+  layout: (lang: string) => path.join('src', 'pages', lang, 'images')
 };
 
 /** One file per shot; there is no language or theme in the name. */
-export function fileName(shot) {
+export function fileName(shot: Shot): string {
   return `${shot.name}.webp`;
 }
 
@@ -32,4 +34,4 @@ export function fileName(shot) {
  * catches the day the bar outgrows it, which is how this number was found
  * wanting the last time.
  */
-export const NARROW_VIEWPORT = { width: 1210 };
+export const NARROW_VIEWPORT: Partial<ViewportSize> = { width: 1210 };

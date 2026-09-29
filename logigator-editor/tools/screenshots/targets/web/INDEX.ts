@@ -1,7 +1,8 @@
-import { DESKTOP_VIEWPORT, LOCALES, THEMES } from '../../lib/config.mjs';
-import { TARGET, fileName } from './config.mjs';
-import { writeRegistry } from './registry.mjs';
-import { SHOTS } from './shots.mjs';
+import { DESKTOP_VIEWPORT, LOCALES, THEMES } from '../../lib/config.ts';
+import type { Target } from '../../lib/target.ts';
+import { TARGET, fileName } from './config.ts';
+import { writeRegistry } from './registry.ts';
+import { SHOTS } from './shots.ts';
 
 /**
  * The website's tour figures, under `logigator-web/src/assets/tour/` — the
@@ -20,4 +21,4 @@ export default {
   shots: SHOTS,
   fileName,
   writeRegistry
-};
+} satisfies Target;

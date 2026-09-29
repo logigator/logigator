@@ -1,3 +1,5 @@
+import type { Shot } from '../../lib/target.ts';
+
 /**
  * The features page's tour figures: one row per capability, the figure a
  * capture of the editor doing it.
@@ -10,4 +12,4 @@
  * A shot's `name` is its capability, and the file name adds the language and
  * scheme the pass is in, which is what `webTourMedia` reads back.
  */
-export const SHOTS = [];
+export const SHOTS: Shot[] = [];

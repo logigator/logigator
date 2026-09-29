@@ -28,8 +28,12 @@ standalone package with its own lockfile — outside the workspace, never instal
 window it frames, where a capture lands and what it is called): `docs` writes `logigator-docs/`'s
 screenshots, `web` the website's tour figures. The shared half is the runner, the page driver and
 the encoder — **every image it writes is lossless WebP**, animated for the step-throughs, and
-`lib/webp.mjs` is its only encoder. A pass reaches the app as the origin-wide `preferences`
-cookie, whose codec `lib/origin.mjs` loads out of core rather than restating.
+`lib/webp.ts` is its only encoder. A pass reaches the app as the origin-wide `preferences`
+cookie, whose codec `lib/origin.ts` loads out of core rather than restating. It is TypeScript
+that Node runs unbuilt, its own modules type-stripped on load; the repo source it loads at run time
+is compiled by `lib/runtime.ts` through `transpileModule`, since core's `enum`s are syntax Node's
+stripping refuses. Its `yarn typecheck` checks the shots against the editor's automation facade
+and translation keys and the cloud fixtures against the contract — nothing in CI runs it.
 
 **`ngx-markdown`'s two optional peers are installed rather than optional in practice.** It dynamically
 imports `marked-katex-extension` for its TeX path, and that package statically imports `katex` — so

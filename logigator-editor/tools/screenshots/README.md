@@ -20,7 +20,7 @@ a capture lands and what it is called. Two exist:
   English still the fallback — per scheme now.
 
 **Every image is lossless WebP**, animated for the step-throughs. It is the
-tool's only output format; `lib/webp.mjs` is the only encoder in it.
+tool's only output format; `lib/webp.ts` is the only encoder in it.
 
 ## Setup and running
 
@@ -33,9 +33,25 @@ cd logigator-editor/tools/screenshots && yarn install   # once
 
 That also fetches a Chromium build into Playwright's shared browser cache.
 
+The tool is TypeScript that Node runs as it is — its own modules are stripped
+of their types on load, so they keep to syntax that can be erased, and relative
+imports name their `.ts`. Nothing is built; the type checker is a separate step:
+
+```bash
+yarn typecheck   # from logigator-editor/tools/screenshots
+```
+
+It checks the shots against the editor's own automation facade
+(`src/app/automation/automation-api.model.ts`) and translation keys, and the
+cloud fixtures against the contract's schemas, so a renamed call, a reworded key
+or a new required field is an error before it is a failed run. The repo source
+the tool loads at run time — core's origin codec, the contract's schemas — is
+written for the bundler rather than for Node, so `lib/runtime.ts` resolves its
+aliases and compiles it with TypeScript's `transpileModule` on load.
+
 ```bash
 yarn start:editor:prod --define "AUTOMATION_API=true"   # the editor to shoot
-node logigator-editor/tools/screenshots/run.mjs docs logigator-docs
+node logigator-editor/tools/screenshots/run.ts docs logigator-docs
 ```
 
 The second argument is **the consuming package's own root**, not a scratch
@@ -90,10 +106,10 @@ registry.
 
 ## What a shot is
 
-`targets/<name>/shots.mjs` is the shot list. Each entry names the image it
+`targets/<name>/shots.ts` is the shot list. Each entry names the image it
 produces and a `run(editor)` that stages the editor and returns what to capture:
 
-```js
+```ts
 {
   name: 'negated-gate',
   async run(ed) {
@@ -107,12 +123,13 @@ Every shot gets its own browser context with the theme, language and preferences
 pinned before the first paint, so nothing depends on run order. The language and
 the colour scheme travel as the origin-wide `preferences` cookie — the one
 mechanism every app on the origin reads them from, whose codec core owns and
-`lib/origin.mjs` loads rather than restates.
+`lib/origin.ts` loads rather than restates.
 
 Nothing in a shot spells an interface label out: menus, dialog tabs and buttons
-are named by translation key, which `lib/i18n.mjs` resolves out of the editor's
+are named by translation key, which `lib/i18n.ts` resolves out of the editor's
 own `src/i18n/<lang>.ts`. A reworded label moves the shot with it, and a key
-that no longer exists fails by name instead of timing out on a missing element.
+that no longer exists fails the type check, and by name at run time, instead of
+timing out on a missing element.
 Clips likewise come from element boxes rather than from markup added for the
 tool, and every grid ↔ CSS-px conversion goes through the camera's own mapping.
 
@@ -126,7 +143,7 @@ one scene, a tick or a switch apart. A shot captures frames into memory with
 `editor.snap()` and returns them; the runner encodes an animation instead of a
 still:
 
-```js
+```ts
 const frames = [await ed.snap({ clip })];
 await ed.setInput(lever.id, true);
 await ed.runUntilSettled();
@@ -140,7 +157,7 @@ that just flip a switch share `switchedFrames()`.
 ### Cloud shots
 
 `account-menu`, `open-cloud`, `upload-to-cloud` and `share-component` run
-against `lib/cloud-api.mjs` — fixed projects, components, dates and one share
+against `lib/cloud-api.ts` — fixed projects, components, dates and one share
 link, served by intercepting `/api/**` and setting the `isAuthenticated` cookie.
 The share link's host is whatever `--base` points at.
 
@@ -188,7 +205,7 @@ Point the script at a browser and give it software rendering:
 ```bash
 LOGIGATOR_SHOTS_BROWSER=/usr/local/bin/pw-chromium \
 LOGIGATOR_SHOTS_BROWSER_ARGS="--no-sandbox --use-gl=angle --use-angle=swiftshader --enable-unsafe-swiftshader" \
-node logigator-editor/tools/screenshots/run.mjs docs logigator-docs
+node logigator-editor/tools/screenshots/run.ts docs logigator-docs
 ```
 
 Software-rendered canvas output can differ subtly from a GPU machine's, so

@@ -1,4 +1,5 @@
-import { fixture } from './contract.mjs';
+import type { Page, Route } from 'playwright';
+import { fixture, type FixtureInput } from './contract.ts';
 
 /**
  * A fake Logigator backend for the shots that show cloud state. A live account
@@ -21,6 +22,9 @@ const USER = fixture('user', {
   email: 'demo@logigator.com',
   emailVerified: true,
   avatar: null,
+  bio: '',
+  websiteUrl: null,
+  socialLinks: [],
   memberSince: '2024-03-04T09:00:00.000Z',
   hasPassword: true,
   googleLinked: false
@@ -36,12 +40,17 @@ const CREATED_AT = '2026-01-04T12:00:00.000Z';
  * `public` is not a key at all — a fixture still carrying it fails to parse
  * before the first shot is taken.
  */
-function circuitFields(id, name, lastEditedAt, extra = {}) {
+function circuitFields<Extra extends object = object>(
+  id: string,
+  name: string,
+  lastEditedAt: string,
+  extra: Extra = {} as Extra
+) {
   return {
     id,
     name,
     description: '',
-    visibility: 'public',
+    visibility: 'public' as const,
     link: SHARE_LINK,
     version: 1,
     componentCount: 0,
@@ -53,37 +62,51 @@ function circuitFields(id, name, lastEditedAt, extra = {}) {
   };
 }
 
-const PROJECTS = [
-  [
-    '11111111-1111-4111-8111-111111111111',
-    'Example',
-    '2026-07-22T08:30:00.000Z'
-  ],
-  ['22222222-2222-4222-8222-222222222222', 'CPU', '2026-07-19T16:05:00.000Z'],
-  ['33333333-3333-4333-8333-333333333333', 'Test', '2026-07-09T11:20:00.000Z'],
-  [
-    '44444444-4444-4444-8444-444444444444',
-    'Untitled',
-    '2026-07-09T09:45:00.000Z'
-  ]
-].map((fields) => fixture('projectSummary', circuitFields(...fields)));
+/** What a component's summary carries beyond the fields a project's has. */
+type ComponentFields = Pick<
+  FixtureInput<'componentSummary'>,
+  'symbol' | 'numInputs' | 'numOutputs' | 'labels' | 'version'
+>;
 
-const COMPONENTS = [
+const PROJECTS = (
   [
-    'aaaaaaaa-1111-4111-8111-aaaaaaaaaaaa',
-    'Memory',
-    '2026-07-21T14:00:00.000Z',
-    { symbol: 'MEM', numInputs: 6, numOutputs: 4, labels: [], version: 3 }
-  ],
-  [
-    'bbbbbbbb-2222-4222-8222-bbbbbbbbbbbb',
-    'Register',
-    '2026-07-18T10:30:00.000Z',
-    { symbol: 'REG', numInputs: 5, numOutputs: 4, labels: [], version: 2 }
-  ]
-].map((fields) => fixture('componentSummary', circuitFields(...fields)));
+    [
+      '11111111-1111-4111-8111-111111111111',
+      'Example',
+      '2026-07-22T08:30:00.000Z'
+    ],
+    ['22222222-2222-4222-8222-222222222222', 'CPU', '2026-07-19T16:05:00.000Z'],
+    [
+      '33333333-3333-4333-8333-333333333333',
+      'Test',
+      '2026-07-09T11:20:00.000Z'
+    ],
+    [
+      '44444444-4444-4444-8444-444444444444',
+      'Untitled',
+      '2026-07-09T09:45:00.000Z'
+    ]
+  ] satisfies [string, string, string][]
+).map((fields) => fixture('projectSummary', circuitFields(...fields)));
 
-const pageOf = (entries) => ({
+const COMPONENTS = (
+  [
+    [
+      'aaaaaaaa-1111-4111-8111-aaaaaaaaaaaa',
+      'Memory',
+      '2026-07-21T14:00:00.000Z',
+      { symbol: 'MEM', numInputs: 6, numOutputs: 4, labels: [], version: 3 }
+    ],
+    [
+      'bbbbbbbb-2222-4222-8222-bbbbbbbbbbbb',
+      'Register',
+      '2026-07-18T10:30:00.000Z',
+      { symbol: 'REG', numInputs: 5, numOutputs: 4, labels: [], version: 2 }
+    ]
+  ] satisfies [string, string, string, ComponentFields][]
+).map((fields) => fixture('componentSummary', circuitFields(...fields)));
+
+const pageOf = <T>(entries: readonly T[]) => ({
   entries,
   page: 0,
   pageSize: Math.max(entries.length, 1),
@@ -95,7 +118,10 @@ const pageOf = (entries) => ({
  * editor watches the `isAuthenticated` cookie: flipping it true is what fetches
  * the user and brings the cloud tabs alive.
  */
-export async function installApiMocks(page, { baseUrl }) {
+export async function installApiMocks(
+  page: Page,
+  { baseUrl }: { baseUrl: string }
+): Promise<void> {
   await page
     .context()
     .addCookies([{ name: 'isAuthenticated', value: 'true', url: baseUrl }]);
@@ -135,23 +161,31 @@ export async function installApiMocks(page, { baseUrl }) {
 }
 
 /** A listing entry as the single-document read answers it. */
-function single(kind, summary) {
+function single<Kind extends 'project' | 'component'>(
+  kind: Kind,
+  summary: (typeof PROJECTS)[number] | (typeof COMPONENTS)[number]
+) {
+  // Which summary goes with which kind is the caller's pairing; the parse is
+  // what checks it.
   return fixture(kind, {
     ...summary,
     document: {},
     dependencies: [],
     attribution: []
-  });
+  } as FixtureInput<Kind>);
 }
 
-function filtered(entries, url) {
+function filtered<T extends { name: string }>(
+  entries: readonly T[],
+  url: URL
+): readonly T[] {
   const search = url.searchParams.get('search');
   if (!search) return entries;
   const needle = search.toLowerCase();
   return entries.filter((entry) => entry.name.toLowerCase().includes(needle));
 }
 
-function fulfil(route, body) {
+function fulfil(route: Route, body: unknown): Promise<void> {
   return route.fulfill({
     status: 200,
     contentType: 'application/json',

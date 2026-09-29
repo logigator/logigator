@@ -1,15 +1,56 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import type {
+  Browser,
+  BrowserContext,
+  Locator,
+  Page,
+  ViewportSize
+} from 'playwright';
+import type {
+  ApiComponent,
+  ElementList,
+  ElementQuery,
+  FocusOptions,
+  FocusTarget,
+  GridPoint,
+  GridRect,
+  InspectionInfo,
+  LogigatorAutomationApi,
+  ScreenPoint,
+  ScreenRect,
+  SelectOptions,
+  SelectRegion,
+  SelectionState,
+  SettingsState,
+  SimStatus,
+  WorkModeName
+} from '../../../src/app/automation/automation-api.model.ts';
 import {
   BOARD_ZOOM,
   CIRCUITS_DIR,
   DEVICE_SCALE_FACTOR,
   GRID_SIZE,
   SEEDED_LOCAL_STORAGE
-} from './config.mjs';
-import { loadTranslations, translate } from './i18n.mjs';
-import { installApiMocks } from './cloud-api.mjs';
-import { preferencesCookie } from './origin.mjs';
-import fs from 'node:fs/promises';
-import path from 'node:path';
+} from './config.ts';
+import {
+  loadTranslations,
+  translate,
+  type TranslationKey,
+  type TranslationSchema
+} from './i18n.ts';
+import { installApiMocks } from './cloud-api.ts';
+import { preferencesCookie, type LanguageId, type Theme } from './origin.ts';
+
+declare global {
+  /**
+   * The facade, as the page functions below reach it. The editor declares
+   * `window.__logigator` optional, it being absent from any build without the
+   * automation API; `Editor.open` refuses such a build before a shot runs, so
+   * past that point it is always there.
+   */
+  var __logigator: LogigatorAutomationApi;
+}
 
 /**
  * Where the pointer rests when a shot is not deliberately hovering something:
@@ -18,45 +59,87 @@ import path from 'node:path';
  */
 const PARKED_POINTER = { x: 2, y: 2 };
 
+export type { ApiComponent };
+
+/** A rectangle in viewport CSS px — what a Playwright clip is. */
+export type Clip = ScreenRect;
+
+/** What one frame is captured from: a viewport clip or an element's box. */
+export type SnapTarget = { clip: Clip } | { locator: Locator };
+
+/** An element to measure: a CSS selector or a locator. */
+export type Selector = string | Locator;
+
+/** Per-side padding for {@link Editor.unionClip}, in CSS px. */
+export type Padding =
+  number | { left?: number; right?: number; top?: number; bottom?: number };
+
+type ContextCookies = Parameters<BrowserContext['addCookies']>[0];
+
+/** How a shot's editor is staged before it runs; every field is optional. */
+export interface OpenOptions {
+  viewport?: Partial<ViewportSize>;
+  /** Runs against `lib/cloud-api.ts` with a signed-in session. */
+  cloud?: boolean;
+  cookies?: ContextCookies;
+  localStorage?: Record<string, string>;
+}
+
+export interface EditorOptions {
+  baseUrl: string;
+  lang: LanguageId;
+  circuitsDir?: string;
+  viewport: ViewportSize;
+  colorScheme?: Theme;
+  onProgress?: (step: string) => void;
+}
+
 /**
  * Drives one editor page for one shot. Each shot gets a fresh browser context,
  * so drafts, the component library and preferences never leak between shots.
  */
 export class Editor {
-  /**
-   * @param {import('playwright').Browser} browser
-   * @param {{ baseUrl: string, lang: string, circuitsDir: string,
-   *          viewport?: { width?: number, height?: number },
-   *          colorScheme?: 'light' | 'dark',
-   *          onProgress?: (step: string) => void }} options
-   */
-  constructor(browser, options) {
+  readonly lang: LanguageId;
+  private readonly browser: Browser;
+  private readonly baseUrl: string;
+  private readonly circuitsDir: string;
+  private readonly defaultViewport: ViewportSize;
+  private readonly colorScheme: Theme;
+  private readonly onProgress?: (step: string) => void;
+  private context: BrowserContext | null = null;
+  private _page: Page | null = null;
+  private translations: TranslationSchema | null = null;
+  private watch: InspectionInfo | null = null;
+
+  constructor(browser: Browser, options: EditorOptions) {
     this.browser = browser;
     this.baseUrl = options.baseUrl;
     this.lang = options.lang;
     this.circuitsDir = options.circuitsDir ?? CIRCUITS_DIR;
-    this.defaultViewport = options.viewport ?? {};
+    this.defaultViewport = options.viewport;
     this.colorScheme = options.colorScheme ?? 'dark';
     this.onProgress = options.onProgress;
-    this.context = null;
-    this.page = null;
-    this.translations = null;
-    this.watch = null;
   }
 
-  t(key) {
+  /** The open page; only reachable between {@link open} and {@link close}. */
+  get page(): Page {
+    if (!this._page) throw new Error('the editor is not open');
+    return this._page;
+  }
+
+  t(key: TranslationKey): string {
+    if (!this.translations) throw new Error('the editor is not open');
     return translate(this.translations, key);
   }
 
   /** Announces the step under way; only calls that can take seconds do. */
-  report(step) {
+  report(step: string): void {
     this.onProgress?.(step);
   }
 
   /**
    * Opens the editor in a clean context, staged by the one bag the caller
-   * composed: `{ viewport, cloud, cookies, localStorage }`, every field
-   * optional.
+   * composed.
    *
    * The pass's language and colour scheme are installed as the origin-wide
    * `preferences` cookie before the first request. That is the one mechanism
@@ -66,7 +149,12 @@ export class Editor {
    *
    * `cloud` installs the mocked backend and the signed-in session.
    */
-  async open({ viewport, cloud, cookies, localStorage } = {}) {
+  async open({
+    viewport,
+    cloud,
+    cookies,
+    localStorage: storage
+  }: OpenOptions = {}): Promise<this> {
     this.report('opening the editor');
     this.translations = await loadTranslations(this.lang);
     this.context = await this.browser.newContext({
@@ -92,10 +180,10 @@ export class Editor {
           localStorage.setItem(key, value);
         }
       },
-      { ...SEEDED_LOCAL_STORAGE, ...localStorage }
+      { ...SEEDED_LOCAL_STORAGE, ...storage }
     );
 
-    this.page = await this.context.newPage();
+    this._page = await this.context.newPage();
     if (cloud) await installApiMocks(this.page, { baseUrl: this.baseUrl });
 
     await this.page.goto(this.baseUrl, { waitUntil: 'load' });
@@ -111,7 +199,7 @@ export class Editor {
     // missing the calls this tool drives. Probing one beats a TypeError inside
     // whichever shot ran first.
     const complete = await this.api(
-      () => typeof window.__logigator.camera.toScreen === 'function'
+      () => typeof __logigator.camera.toScreen === 'function'
     );
     if (!complete) {
       throw new Error(
@@ -123,21 +211,23 @@ export class Editor {
     return this;
   }
 
-  async close() {
+  async close(): Promise<void> {
     await this.context?.close();
     this.context = null;
-    this.page = null;
+    this._page = null;
     this.watch = null;
   }
 
   // -- Automation API ------------------------------------------------------
 
   /**
-   * Runs `body(arg)` in the page, where the facade is `window.__logigator`.
+   * Runs `body(arg)` in the page, where the facade is `__logigator`.
    * Everything crossing this boundary must be structured-cloneable.
    */
-  api(body, arg) {
-    return this.page.evaluate(body, arg ?? null);
+  api<R>(body: () => R | Promise<R>): Promise<R>;
+  api<R, A>(body: (arg: A) => R | Promise<R>, arg: A): Promise<R>;
+  api(body: (arg: never) => unknown, arg?: unknown): Promise<unknown> {
+    return this.page.evaluate(body as (arg: unknown) => unknown, arg ?? null);
   }
 
   /**
@@ -149,7 +239,7 @@ export class Editor {
    * arrive as embedded copies rather than library masters; see
    * {@link Editor.openCustomForEdit}.
    */
-  async load(name) {
+  async load(name: string): Promise<void> {
     this.report(`loading ${name}`);
     const json = await fs
       .readFile(path.join(this.circuitsDir, `${name}.json`), 'utf8')
@@ -160,32 +250,38 @@ export class Editor {
   }
 
   /** Imports a document the target handed over as JSON text. */
-  async importProject(json) {
-    await this.api((body) => window.__logigator.importProject(body), json);
+  async importProject(json: string): Promise<void> {
+    await this.api((body) => __logigator.importProject(body), json);
     await this.settle();
   }
 
   /** The open document's elements, as the API's serialized bodies. */
-  elements(query) {
+  elements(query?: ElementQuery): Promise<ElementList> {
     return this.api(
-      (q) => window.__logigator.getElements(q ?? undefined),
-      query
+      (q) => __logigator.getElements(q ?? undefined),
+      query ?? null
     );
   }
 
-  async focus(target, opts) {
+  async focus(target: FocusTarget, opts?: FocusOptions): Promise<void> {
     await this.api(
-      (a) => window.__logigator.camera.focus(a.target, a.opts ?? undefined),
+      (a) => __logigator.camera.focus(a.target, a.opts ?? undefined),
       { target, opts: opts ?? null }
     );
     await this.settle();
   }
 
-  async setCamera({ center, zoom }) {
+  async setCamera({
+    center,
+    zoom
+  }: {
+    center?: GridPoint;
+    zoom?: number;
+  }): Promise<void> {
     await this.api(
       (a) => {
-        if (a.zoom) window.__logigator.camera.setZoom(a.zoom);
-        if (a.center) window.__logigator.camera.setCenter(a.center);
+        if (a.zoom) __logigator.camera.setZoom(a.zoom);
+        if (a.center) __logigator.camera.setCenter(a.center);
       },
       { center: center ?? null, zoom: zoom ?? null }
     );
@@ -193,8 +289,8 @@ export class Editor {
   }
 
   /** Scrolls the view by a grid-space delta; `+x` moves the view right. */
-  async panBy(delta) {
-    await this.api((d) => window.__logigator.camera.pan(d), delta);
+  async panBy(delta: GridPoint): Promise<void> {
+    await this.api((d) => __logigator.camera.pan(d), delta);
     await this.settle();
   }
 
@@ -204,7 +300,7 @@ export class Editor {
    * beside a floating window. Either axis may be left out. Measured from where
    * the content is, so it holds at any zoom and prior framing.
    */
-  async centerContentAt({ x, y }) {
+  async centerContentAt({ x, y }: { x?: number; y?: number }): Promise<void> {
     const bounds = await this.contentBounds();
     const board = await this.canvasBox();
     const centre = {
@@ -212,10 +308,10 @@ export class Editor {
       y: bounds.y + bounds.height / 2
     };
     // Both points in grid units, so the pan is their difference.
-    const target = await this.api(
-      (point) => window.__logigator.camera.toGrid(point),
-      { x: board.x + (x ?? 0), y: board.y + (y ?? 0) }
-    );
+    const target = await this.api((point) => __logigator.camera.toGrid(point), {
+      x: board.x + (x ?? 0),
+      y: board.y + (y ?? 0)
+    });
     await this.panBy({
       x: x === undefined ? 0 : centre.x - target.x,
       y: y === undefined ? 0 : centre.y - target.y
@@ -223,28 +319,34 @@ export class Editor {
   }
 
   /** The open circuit's tight content bounds, in grid units. */
-  async contentBounds() {
-    const bounds = await this.api(() => window.__logigator.getProject().bounds);
+  async contentBounds(): Promise<GridRect> {
+    const bounds = await this.api(() => __logigator.getProject().bounds);
     if (!bounds) throw new Error('the project is empty — nothing to frame');
     return bounds;
   }
 
-  settings(patch) {
-    return this.api((p) => window.__logigator.settings.set(p), patch);
+  settings(patch: Partial<SettingsState>): Promise<SettingsState> {
+    return this.api((p) => __logigator.settings.set(p), patch);
   }
 
-  async setWorkMode(mode, opts) {
+  async setWorkMode(
+    mode: WorkModeName,
+    opts?: { componentType?: number }
+  ): Promise<void> {
     await this.api(
-      (a) => window.__logigator.setWorkMode(a.mode, a.opts ?? undefined),
+      (a) => __logigator.setWorkMode(a.mode, a.opts ?? undefined),
       { mode, opts: opts ?? null }
     );
     await this.settle();
   }
 
   /** Selects as the select tool's marquee would. */
-  async select(region, opts) {
+  async select(
+    region: SelectRegion,
+    opts?: SelectOptions
+  ): Promise<SelectionState> {
     const state = await this.api(
-      (a) => window.__logigator.select(a.region, a.opts ?? undefined),
+      (a) => __logigator.select(a.region, a.opts ?? undefined),
       { region, opts: opts ?? null }
     );
     await this.settle();
@@ -259,7 +361,7 @@ export class Editor {
    * mid-scale rasterizes its border a subpixel off), and two frames painted —
    * the board renders on demand, so one frame after an edit is not enough.
    */
-  async settle() {
+  async settle(): Promise<void> {
     await this.page.evaluate(async () => {
       await document.fonts.ready;
       const running = document
@@ -271,12 +373,16 @@ export class Editor {
         Promise.all(running),
         new Promise((resolve) => setTimeout(resolve, 1000))
       ]);
-      await new Promise((resolve) => requestAnimationFrame(() => resolve()));
-      await new Promise((resolve) => requestAnimationFrame(() => resolve()));
+      await new Promise<void>((resolve) =>
+        requestAnimationFrame(() => resolve())
+      );
+      await new Promise<void>((resolve) =>
+        requestAnimationFrame(() => resolve())
+      );
     });
   }
 
-  async parkPointer() {
+  async parkPointer(): Promise<void> {
     await this.page.mouse.move(PARKED_POINTER.x, PARKED_POINTER.y);
     await this.settle();
   }
@@ -287,14 +393,14 @@ export class Editor {
   // own mapping: a copy of the editor's transform out here would drift.
 
   /** Bounding box of the board canvas, in CSS px relative to the viewport. */
-  canvasBox() {
-    return this.api(() => window.__logigator.camera.boardRect());
+  canvasBox(): Promise<ScreenRect> {
+    return this.api(() => __logigator.camera.boardRect());
   }
 
   /** Grid rectangle → CSS-px clip. `pad` is in grid units. */
-  async gridClip(rect, pad = 0) {
+  async gridClip(rect: GridRect, pad = 0): Promise<Clip> {
     const [box, canvas] = await Promise.all([
-      this.api((r) => window.__logigator.camera.toScreenRect(r), {
+      this.api((r) => __logigator.camera.toScreenRect(r), {
         x: rect.x - pad,
         y: rect.y - pad,
         width: rect.width + pad * 2,
@@ -308,26 +414,25 @@ export class Editor {
   }
 
   /** Grid point → viewport CSS px, for driving the mouse over the board. */
-  gridPoint(pos) {
-    return this.api((p) => window.__logigator.camera.toScreen(p), pos);
+  gridPoint(pos: GridPoint): Promise<ScreenPoint> {
+    return this.api((p) => __logigator.camera.toScreen(p), pos);
   }
 
   /** Viewport CSS px → grid point. */
-  gridOf(point) {
-    return this.api((p) => window.__logigator.camera.toGrid(p), point);
+  gridOf(point: ScreenPoint): Promise<GridPoint> {
+    return this.api((p) => __logigator.camera.toGrid(p), point);
   }
 
   /** Captures one frame into memory rather than to disk. */
-  snap(target) {
-    const options = { animations: 'disabled' };
-    return target.locator
+  snap(target: SnapTarget): Promise<Buffer> {
+    const options = { animations: 'disabled' } as const;
+    return 'locator' in target
       ? target.locator.screenshot(options)
       : this.page.screenshot({ ...options, clip: target.clip });
   }
 
-  async fullViewportClip() {
-    const size = await this.page.viewportSize();
-    return { x: 0, y: 0, ...size };
+  async fullViewportClip(): Promise<Clip> {
+    return { x: 0, y: 0, ...this.viewportSize() };
   }
 
   /**
@@ -340,7 +445,12 @@ export class Editor {
     zoom = BOARD_ZOOM,
     overlays = false,
     anchor = 'center'
-  } = {}) {
+  }: {
+    pad?: number;
+    zoom?: number;
+    overlays?: boolean;
+    anchor?: 'center' | 'top' | 'top-left';
+  } = {}): Promise<Clip> {
     const bounds = await this.contentBounds();
     if (!overlays) await this.hideOverlays();
 
@@ -381,10 +491,12 @@ export class Editor {
   /**
    * Padded clip covering every given selector's box, so shots of button groups
    * and adjacent bars anchor to real chrome rather than added markup.
-   * @arg pad {number|{left?: number, right?: number, top?: number, bottom?: number}}
    */
-  async unionClip(selectors, pad = 0) {
-    const boxes = [];
+  async unionClip(
+    selectors: Selector | readonly Selector[],
+    pad: Padding = 0
+  ): Promise<Clip> {
+    const boxes: Clip[] = [];
     for (const selector of [selectors].flat()) {
       const locator =
         typeof selector === 'string' ? this.page.locator(selector) : selector;
@@ -409,14 +521,28 @@ export class Editor {
       Math.max(...boxes.map((b) => b.y + b.height)) + bottomPadding;
     return clampTo(
       { x: left, y: top, width: right - left, height: bottom - top },
-      { x: 0, y: 0, ...(await this.page.viewportSize()) }
+      { x: 0, y: 0, ...this.viewportSize() }
     );
+  }
+
+  /** An element's box in viewport CSS px, refusing one that is not rendered. */
+  async box(locator: Locator): Promise<Clip> {
+    const box = await locator.boundingBox();
+    if (!box) throw new Error(`${locator} is not on screen`);
+    return box;
+  }
+
+  /** The page's viewport, which every context here is opened with. */
+  private viewportSize(): ViewportSize {
+    const size = this.page.viewportSize();
+    if (!size) throw new Error('the page has no fixed viewport');
+    return size;
   }
 
   // -- Chrome helpers ------------------------------------------------------
 
   /** Opens a top-level menu and picks an item, both by translation key. */
-  async menu(menuKey, itemKey) {
+  async menu(menuKey: TranslationKey, itemKey: TranslationKey): Promise<void> {
     await this.page.getByRole('menuitem', { name: this.t(menuKey) }).click();
     await this.page.getByRole('menuitem', { name: this.t(itemKey) }).click();
     await this.settle();
@@ -426,17 +552,20 @@ export class Editor {
    * Clicks a chrome button by translation key. Arming a tool goes through
    * {@link Editor.setWorkMode} instead.
    */
-  async clickButton(key, options) {
+  async clickButton(
+    key: TranslationKey,
+    options?: Parameters<Locator['click']>[0]
+  ): Promise<void> {
     await this.button(key).click(options);
     await this.settle();
   }
 
   /** A chrome button, by the key behind its accessible name. */
-  button(key) {
+  button(key: TranslationKey): Locator {
     return this.page.getByRole('button', { name: this.t(key), exact: true });
   }
 
-  async clickTab(key) {
+  async clickTab(key: TranslationKey): Promise<void> {
     await this.page.getByRole('tab', { name: this.t(key) }).click();
     await this.settle();
   }
@@ -446,10 +575,10 @@ export class Editor {
    * `flex-wrap`, so a viewport fitting the English bar silently folds a longer
    * language in two and every shot of the chrome comes out a row taller.
    */
-  async requireSingleRowToolBar() {
+  async requireSingleRowToolBar(): Promise<void> {
     const [bar, button] = await Promise.all([
-      this.page.locator('app-tool-bar').boundingBox(),
-      this.page.locator('app-tool-bar button[lgButton]').first().boundingBox()
+      this.box(this.page.locator('app-tool-bar')),
+      this.box(this.page.locator('app-tool-bar button[lgButton]').first())
     ]);
     if (bar.height > button.height * 1.6) {
       throw new Error(
@@ -461,7 +590,7 @@ export class Editor {
   }
 
   /** Hides the controls docked over the board, which a close-up would catch. */
-  async hideOverlays() {
+  async hideOverlays(): Promise<void> {
     await this.page.addStyleTag({
       content: 'app-minimap, app-bug-report-badge { display: none !important }'
     });
@@ -469,7 +598,7 @@ export class Editor {
   }
 
   /** Waits for a deferred piece of chrome, such as the debounced minimap. */
-  async waitVisible(selector) {
+  async waitVisible(selector: string): Promise<void> {
     await this.page.locator(selector).waitFor({ state: 'visible' });
     await this.settle();
   }
@@ -479,9 +608,9 @@ export class Editor {
    * a clip measured mid-animation lands a pixel or two off — enough to make an
    * unchanged shot a new file on every run.
    */
-  async waitStable(locator, attempts = 20) {
+  async waitStable(locator: Locator, attempts = 20): Promise<void> {
     this.report('waiting for the overlay to settle');
-    let previous = null;
+    let previous: Clip | null = null;
     for (let i = 0; i < attempts; i++) {
       const box = await locator.boundingBox();
       if (previous && JSON.stringify(box) === JSON.stringify(previous)) return;
@@ -492,14 +621,14 @@ export class Editor {
   }
 
   /** Saves the draft as a named local project; needs no session. */
-  async saveAs(name) {
+  async saveAs(name: string): Promise<void> {
     await this.menu(
       'titleBar.menuBar.file.label',
       'titleBar.menuBar.file.items.save.label'
     );
     const dialog = this.dialog();
     await dialog.locator('#save-project-name').fill(name);
-    const button = (key) =>
+    const button = (key: TranslationKey) =>
       dialog.getByRole('button', { name: this.t(key), exact: true });
     await button('saveProjectDialog.destinationLocal').click();
     await button('common.save').click();
@@ -508,7 +637,7 @@ export class Editor {
   }
 
   /** Placed components of one catalog type, addressed by symbol. */
-  async componentsOfType(symbol) {
+  async componentsOfType(symbol: string): Promise<ApiComponent[]> {
     const type = await this.typeOf(symbol);
     const { components } = await this.elements({ types: [type] });
     if (components.length === 0) {
@@ -518,10 +647,10 @@ export class Editor {
   }
 
   /** Type id of a catalog entry, by its unique symbol or name. */
-  async typeOf(nameOrSymbol) {
+  async typeOf(nameOrSymbol: string): Promise<number> {
     const type = await this.api(
       (needle) =>
-        window.__logigator
+        __logigator
           .describeCatalog()
           .find((e) => e.symbol === needle || e.name === needle)?.type ?? null,
       nameOrSymbol
@@ -535,7 +664,7 @@ export class Editor {
    * A point one grid unit in from a component's anchor: inside every body the
    * palette can place, and clear of the port stubs.
    */
-  bodyPoint(component) {
+  bodyPoint(component: ApiComponent): GridPoint {
     return { x: component.pos[0] + 1, y: component.pos[1] + 1 };
   }
 
@@ -545,17 +674,14 @@ export class Editor {
    * into the browser library first — which is also what fills the palette's
    * User Components section.
    */
-  async openCustomForEdit() {
+  async openCustomForEdit(): Promise<void> {
     const [instance] = await this.customInstances();
-    await this.api(
-      (type) => window.__logigator.library.edit(type),
-      instance.type
-    );
+    await this.api((type) => __logigator.library.edit(type), instance.type);
     await this.settle();
   }
 
   /** Selects the first custom instance, opening its settings card. */
-  async selectCustomInstance() {
+  async selectCustomInstance(): Promise<ApiComponent> {
     const [instance] = await this.customInstances();
     // A zero-area region is a click: one element, no marquee in the shot.
     const point = this.bodyPoint(instance);
@@ -566,21 +692,21 @@ export class Editor {
   }
 
   /** Switches back to the pinned main-project tab. */
-  async openMainTab() {
-    await this.api(() => window.__logigator.tabs.activate(0));
+  async openMainTab(): Promise<void> {
+    await this.api(() => __logigator.tabs.activate(0));
     await this.settle();
   }
 
   /** Placed instances of custom masters, above the built-in type ids. */
-  async customInstances() {
+  async customInstances(): Promise<ApiComponent[]> {
     const custom = await this.api(() => {
       const builtIn = new Set(
-        window.__logigator
+        __logigator
           .describeCatalog()
           .filter((e) => !e.source)
           .map((e) => e.type)
       );
-      return window.__logigator
+      return __logigator
         .getElements()
         .components.filter((c) => !builtIn.has(c.type));
     });
@@ -591,8 +717,8 @@ export class Editor {
   }
 
   /** Absolute lever/button input, resolved after the engine's snapshot lands. */
-  async setInput(componentId, value) {
-    await this.api((a) => window.__logigator.sim.setInput(a.id, a.value), {
+  async setInput(componentId: number, value: boolean): Promise<void> {
+    await this.api((a) => __logigator.sim.setInput(a.id, a.value), {
       id: componentId,
       value
     });
@@ -600,23 +726,24 @@ export class Editor {
   }
 
   /** Opens a component's live inspection; the handle is kept for later. */
-  async openWatch(symbol) {
+  async openWatch(symbol: string): Promise<InspectionInfo> {
     this.report('opening the inspection');
     const [instance] = await this.componentsOfType(symbol);
-    this.watch = await this.api(
-      (id) => window.__logigator.inspect.open(id),
+    const watch = await this.api(
+      (id) => __logigator.inspect.open(id),
       instance.id
     );
+    this.watch = watch;
     await this.watchWindow().waitFor({ state: 'visible' });
     await this.settle();
-    return this.watch;
+    return watch;
   }
 
-  watchWindow() {
+  watchWindow(): Locator {
     return this.page.locator('lg-window').first();
   }
 
-  requireWatch() {
+  requireWatch(): number {
     if (!this.watch) throw new Error('no inspection is open');
     return this.watch.id;
   }
@@ -626,12 +753,15 @@ export class Editor {
    * clamped to the board, so a target that does not fit is refused rather than
    * silently reframing the shot.
    */
-  async moveWatch({ x, y }) {
+  async moveWatch({ x, y }: ScreenPoint): Promise<void> {
     const placed = await this.api(
-      (a) => window.__logigator.inspect.setBounds(a.id, { x: a.x, y: a.y }),
+      (a) => __logigator.inspect.setBounds(a.id, { x: a.x, y: a.y }),
       { id: this.requireWatch(), x, y }
     );
     await this.settle();
+    if (!placed) {
+      throw new Error('the inspection is not hosted in a window');
+    }
     if (Math.abs(placed.x - x) > 2 || Math.abs(placed.y - y) > 2) {
       throw new Error(
         `the window was clamped to ${Math.round(placed.x)},${Math.round(placed.y)} ` +
@@ -645,10 +775,10 @@ export class Editor {
    * Frames the watch's circuit at an absolute zoom. A watch fits its circuit at
    * 100 % at most, so a small circuit in a large window needs this to fill it.
    */
-  async zoomWatch(zoom) {
+  async zoomWatch(zoom: number): Promise<void> {
     await this.api(
       (a) => {
-        const { camera } = window.__logigator.inspect;
+        const { camera } = __logigator.inspect;
         camera.setZoom(a.id, a.zoom);
         camera.focus(a.id, 'content', { maxZoom: a.zoom });
       },
@@ -658,17 +788,17 @@ export class Editor {
   }
 
   /** `ticks` engine ticks, resolved after the resulting snapshot is applied. */
-  async stepSimulation(ticks = 1) {
+  async stepSimulation(ticks = 1): Promise<void> {
     this.report('settling the simulation');
     await this.api(async (n) => {
-      window.__logigator.sim.pause();
-      await window.__logigator.sim.step(n);
+      __logigator.sim.pause();
+      await __logigator.sim.step(n);
     }, ticks);
     await this.settle();
   }
 
   /** Runs until the inputs reach the outputs, then pauses. */
-  runUntilSettled(ticks = 12) {
+  runUntilSettled(ticks = 12): Promise<void> {
     return this.stepSimulation(ticks);
   }
 
@@ -677,10 +807,10 @@ export class Editor {
    * level, as a tap would. Each level is a fresh copy of the inner circuit, so
    * its ids are the copy's.
    */
-  async drillIntoWatch() {
+  async drillIntoWatch(): Promise<void> {
     const id = this.requireWatch();
     const inner = await this.api((watchId) => {
-      const api = window.__logigator;
+      const api = __logigator;
       const builtIn = new Set(
         api
           .describeCatalog()
@@ -697,13 +827,13 @@ export class Editor {
       throw new Error('the watched circuit has no nested custom to drill into');
     }
     this.watch = await this.api(
-      (a) => window.__logigator.inspect.activate(a.id, a.componentId),
+      (a) => __logigator.inspect.activate(a.id, a.componentId),
       { id, componentId: inner.id }
     );
     await this.settle();
   }
 
-  dialog() {
+  dialog(): Locator {
     return this.page.locator('.cdk-overlay-pane [role="dialog"]').first();
   }
 
@@ -712,9 +842,9 @@ export class Editor {
    * controls mid-boot. Auto-start is off in the seeded preferences, so the
    * session comes up paused.
    */
-  async enterSimulation() {
+  async enterSimulation(): Promise<SimStatus> {
     this.report('entering simulation');
-    const status = await this.api(() => window.__logigator.sim.enter());
+    const status = await this.api(() => __logigator.sim.enter());
     if (status.state === 'inactive') {
       throw new Error(
         `simulation refused: ${JSON.stringify(status.diagnostics ?? [])}`
@@ -726,7 +856,7 @@ export class Editor {
 }
 
 /** Rounds a clip to whole CSS px and trims it to the given container box. */
-function clampTo(rect, container) {
+function clampTo(rect: Clip, container: Clip): Clip {
   const x = Math.max(Math.round(container.x), Math.round(rect.x));
   const y = Math.max(Math.round(container.y), Math.round(rect.y));
   return {

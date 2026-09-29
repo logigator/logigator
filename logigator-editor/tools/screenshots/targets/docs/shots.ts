@@ -1,8 +1,16 @@
-import { BOARD_ZOOM } from '../../lib/config.mjs';
-import { NARROW_VIEWPORT } from './config.mjs';
+import { BOARD_ZOOM } from '../../lib/config.ts';
+import type {
+  ApiComponent,
+  Clip,
+  Editor,
+  SnapTarget
+} from '../../lib/editor.ts';
+import type { TranslationKey } from '../../lib/i18n.ts';
+import type { Shot, ShotResult } from '../../lib/target.ts';
+import { NARROW_VIEWPORT } from './config.ts';
 
 /** Smallest clip covering every given rectangle. */
-function mergeRects(...rects) {
+function mergeRects(...rects: Clip[]): Clip {
   const x = Math.min(...rects.map((r) => r.x));
   const y = Math.min(...rects.map((r) => r.y));
   return {
@@ -18,8 +26,12 @@ function mergeRects(...rects) {
  * flipped between them. The engine is settled for each, so both are
  * deterministic. Both frames share one `target`, as every animated shot's must.
  */
-async function switchedFrames(ed, target, levers) {
-  const frames = [];
+async function switchedFrames(
+  ed: Editor,
+  target: SnapTarget,
+  levers: readonly ApiComponent[]
+): Promise<ShotResult> {
+  const frames: Buffer[] = [];
   for (const on of [false, true]) {
     for (const lever of levers) {
       await ed.setInput(lever.id, on);
@@ -40,7 +52,7 @@ async function switchedFrames(ed, target, levers) {
  *
  * `intro-banner.webp` is absent: it is a designed banner, not a capture.
  */
-export const SHOTS = [
+export const SHOTS: Shot[] = [
   // -- Chrome ---------------------------------------------------------------
   {
     name: 'menu-bar',
@@ -55,13 +67,15 @@ export const SHOTS = [
     name: 'tool-buttons',
     async run(ed) {
       await ed.requireSingleRowToolBar();
-      const tools = [
-        'toolBar.pan',
-        'toolBar.wireTool',
-        'toolBar.select',
-        'toolBar.eraser',
-        'toolBar.text'
-      ].map((key) => ed.button(key));
+      const tools = (
+        [
+          'toolBar.pan',
+          'toolBar.wireTool',
+          'toolBar.select',
+          'toolBar.eraser',
+          'toolBar.text'
+        ] satisfies TranslationKey[]
+      ).map((key) => ed.button(key));
       return { clip: await ed.unionClip(tools, 6) };
     }
   },
@@ -174,7 +188,7 @@ export const SHOTS = [
       // wire read. The pill is docked to the top of the board, so the circuit
       // is panned up under it rather than the crop reaching down.
       const pill = ed.button('toolBar.selExact');
-      const pillBox = await pill.boundingBox();
+      const pillBox = await ed.box(pill);
       // Where the pill sits, in grid units, so the pan needs no px-per-grid.
       const under = await ed.gridOf({
         x: pillBox.x + pillBox.width / 2,
@@ -229,7 +243,7 @@ export const SHOTS = [
       const drive = [
         levers.find((lever) => lever.pos[1] < middle),
         levers.find((lever) => lever.pos[1] >= middle)
-      ].filter(Boolean);
+      ].filter((lever) => lever !== undefined);
 
       await ed.enterSimulation();
       const clip = await ed.contentClip({ pad: 2, zoom: 1.2 ** 2 });
@@ -272,7 +286,7 @@ export const SHOTS = [
     async run(ed) {
       await ed.load('clock');
       await ed.enterSimulation();
-      await ed.api(() => window.__logigator.sim.setTarget(10, 'Hz'));
+      await ed.api(() => __logigator.sim.setTarget(10, 'Hz'));
       await ed.settle();
       // The chip is named by the setting it shows, the same in every language.
       const controls = ed.page.locator('app-simulation-controls');
@@ -317,7 +331,7 @@ export const SHOTS = [
       const bars = await ed.unionClip(['app-title-bar', 'app-tool-bar']);
       const clip = mergeRects(bars, circuit);
 
-      const frames = [];
+      const frames: Buffer[] = [];
       for (let tick = 0; tick < 2; tick++) {
         await ed.stepSimulation();
         await ed.parkPointer();
@@ -389,7 +403,7 @@ export const SHOTS = [
       // The window goes flush to the board's right edge and the circuit into
       // the middle of what is left, whatever size the window came up.
       const board = await ed.canvasBox();
-      const watch = await ed.watchWindow().boundingBox();
+      const watch = await ed.box(ed.watchWindow());
       const margin = 16;
       // The window is as tall as the board allows: margin only on the sides.
       const left = Math.max(0, board.width - watch.width - margin);
@@ -449,7 +463,7 @@ export const SHOTS = [
   },
   // -- Cloud ----------------------------------------------------------------
   //
-  // `context: { cloud: true }` runs the shot against `lib/cloud-api.mjs`, not a
+  // `context: { cloud: true }` runs the shot against `lib/cloud-api.ts`, not a
   // real backend.
   {
     name: 'account-menu',
@@ -527,8 +541,14 @@ export const SHOTS = [
       const type = await ed.typeOf('Memory');
       await ed.api(
         (t) =>
-          window.__logigator.applyEdit([
-            { op: 'addComponent', type: t, pos: [4, 4], direction: 0 }
+          __logigator.applyEdit([
+            {
+              op: 'addComponent',
+              type: t,
+              pos: [4, 4],
+              direction: 0,
+              options: {}
+            }
           ]),
         type
       );

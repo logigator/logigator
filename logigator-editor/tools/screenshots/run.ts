@@ -4,7 +4,7 @@
  * (the automation API), plus Playwright for the chrome the API does not model —
  * menus, dialogs, drag gestures.
  *
- *   node tools/screenshots/run.mjs <target> <out-dir> [options]
+ *   node tools/screenshots/run.ts <target> <out-dir> [options]
  *
  * Every target is one folder under `targets/`: it owns its shot list, the
  * colour schemes to run, where a capture lands and what it is called. This file
@@ -14,24 +14,53 @@
  * The editor must have the automation API on and the debug decorations off —
  * see the README.
  */
-import { createRequire } from 'node:module';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Command } from 'commander';
-import { Listr, PRESET_TIMER } from 'listr2';
-import { launchOptions } from './lib/config.mjs';
-import { Editor } from './lib/editor.mjs';
-import { encodeCapture } from './lib/webp.mjs';
+import { Listr, PRESET_TIMER, type ListrTask } from 'listr2';
+import { chromium, type Browser } from 'playwright';
+import { launchOptions } from './lib/config.ts';
+import { Editor } from './lib/editor.ts';
+import type { Pass, Shot, Target } from './lib/target.ts';
+import { encodeCapture } from './lib/webp.ts';
 
 const TARGETS_DIR = path.join(
   path.dirname(fileURLToPath(import.meta.url)),
   'targets'
 );
-const require = createRequire(import.meta.url);
 
-async function main(options) {
-  const { chromium } = require('playwright');
+/** What the command line asks for, with its unset options defaulted. */
+interface RunOptions {
+  target: LoadedTarget;
+  out: string;
+  only: string[];
+  lang: readonly string[];
+  theme: readonly string[];
+  base?: string;
+  baseline: boolean;
+  headed?: boolean;
+}
+
+/** A target as the runner holds it: what it declares, plus its folder's name. */
+type LoadedTarget = Target & { name: string };
+
+/** What every shot of one pass shares. */
+interface PassContext {
+  target: LoadedTarget;
+  browser: Browser;
+  base: string;
+  pass: Pass;
+  isBaseline: boolean;
+  /** A scheme's baseline captures by shot; `null` under `--no-baseline`. */
+  baseline: Map<string, Buffer> | null;
+  out: string;
+}
+
+/** The handle listr2 gives a running task; a shot writes its title and output. */
+type ShotTask = Parameters<ListrTask['task']>[1];
+
+async function main(options: RunOptions): Promise<void> {
   const browser = await chromium.launch({
     ...launchOptions(),
     headless: !options.headed
@@ -50,8 +79,8 @@ async function main(options) {
  * Both refusals happen here so a mistyped target or a half-written one is
  * answered before the browser opens.
  */
-async function loadTarget(name) {
-  const file = path.join(TARGETS_DIR, name, 'INDEX.mjs');
+async function loadTarget(name: string): Promise<LoadedTarget> {
+  const file = path.join(TARGETS_DIR, name, 'INDEX.ts');
   if (!(await exists(file))) {
     const entries = await fs.readdir(TARGETS_DIR, { withFileTypes: true });
     const known = entries
@@ -63,12 +92,15 @@ async function loadTarget(name) {
       `unknown target "${name}" — ${known}, or add targets/${name}/`
     );
   }
-  const target = { ...(await import(file)).default, name };
+  const module = (await import(file)) as { default: Target };
+  const target = { ...module.default, name };
   requireTargetShape(target);
   return target;
 }
 
-async function runTarget(options) {
+async function runTarget(
+  options: RunOptions & { browser: Browser }
+): Promise<void> {
   const { target, browser } = options;
 
   // A target with nothing to shoot is a mistake, not a no-op run.
@@ -84,7 +116,7 @@ async function runTarget(options) {
   const themes = intersect(target.themes, options.theme, 'colour scheme');
   // Every language of a scheme, in the declared order — English first, so the
   // first pass of each scheme is the one the rest of that scheme falls back to.
-  const passes = themes.flatMap((theme) =>
+  const passes: Pass[] = themes.flatMap((theme) =>
     locales.map((lang) => ({ lang, theme }))
   );
   const base = options.base ?? target.base;
@@ -92,8 +124,8 @@ async function runTarget(options) {
   // deterministic, so equality is a comparison of pictures rather than of runs:
   // a board shot carries no interface text and captures identically in every
   // language, so only one copy of it is written per scheme.
-  const baseline = options.baseline ? new Map() : null;
-  const isBaseline = (pass) => pass.lang === locales[0];
+  const baseline = options.baseline ? new Map<string, Buffer>() : null;
+  const isBaseline = (pass: Pass) => pass.lang === locales[0];
 
   const runner = new Listr(
     passes.map((pass) =>
@@ -143,7 +175,7 @@ async function runTarget(options) {
  * `shots` is not here: an empty list is refused below with its own message,
  * that being a target written before its page exists rather than a broken one.
  */
-const REQUIRED = [
+const REQUIRED: readonly (keyof Target)[] = [
   'locales',
   'themes',
   'viewport',
@@ -152,7 +184,7 @@ const REQUIRED = [
   'layout'
 ];
 
-function requireTargetShape(target) {
+function requireTargetShape(target: LoadedTarget): void {
   const missing = REQUIRED.filter((field) => target[field] === undefined);
   if (missing.length > 0) {
     throw new Error(
@@ -163,7 +195,7 @@ function requireTargetShape(target) {
 }
 
 /** One pass's subtask list: every shot, in the target's own order. */
-function passTasks(shots, context) {
+function passTasks(shots: readonly Shot[], context: PassContext): ListrTask {
   return {
     title: `${context.pass.lang} · ${context.pass.theme}`,
     task: (_ctx, group) =>
@@ -187,7 +219,11 @@ function passTasks(shots, context) {
  * — and `localStorage` merges per key, so a shot overriding one preference
  * keeps the rest of the run's.
  */
-async function capture(shot, task, context) {
+async function capture(
+  shot: Shot,
+  task: ShotTask,
+  context: PassContext
+): Promise<void> {
   const { target, browser, base, pass } = context;
   const staged = target.before?.(pass) ?? {};
   const editor = new Editor(browser, {
@@ -206,13 +242,14 @@ async function capture(shot, task, context) {
     const result = await shot.run(editor);
 
     task.output = 'capturing';
-    const frames = result.frames ?? [await editor.snap(result)];
+    const frames =
+      'frames' in result ? result.frames : [await editor.snap(result)];
     task.output = 'encoding';
     const bytes = await encodeCapture(frames, result.delay);
 
     const file = target.fileName(shot, pass);
     await write(file, bytes, shot, task, context);
-    if (result.frames) {
+    if ('frames' in result) {
       // Both: a piped log has already printed the title, and only the output
       // line still reaches it.
       const count = `${result.frames.length} frames`;
@@ -231,12 +268,12 @@ async function capture(shot, task, context) {
  * the reader is in.
  */
 async function write(
-  file,
-  bytes,
-  shot,
-  task,
-  { baseline, pass, isBaseline, out }
-) {
+  file: string,
+  bytes: Buffer,
+  shot: Shot,
+  task: ShotTask,
+  { baseline, pass, isBaseline, out }: PassContext
+): Promise<void> {
   const key = `${shot.name}:${pass.theme}`;
   if (isBaseline) baseline?.set(key, bytes);
   else if (baseline?.get(key)?.equals(bytes)) {
@@ -249,7 +286,10 @@ async function write(
 }
 
 /** A failing shot is reported, not fatal, so the rest of the run still happens. */
-function report(tasks, { total, out, baseline }) {
+function report(
+  tasks: Listr['tasks'],
+  { total, out, baseline }: { total: number; out: string; baseline: boolean }
+): void {
   const groups = tasks.flatMap((task) => task.subtasks ?? []);
   const failed = groups.filter((task) => task.hasFailed()).length;
   console.log(`\n${total - failed}/${total} → ${out}`);
@@ -262,7 +302,10 @@ function report(tasks, { total, out, baseline }) {
 }
 
 /** The shots named by `--only`, in the target's own order. */
-function selectShots(target, only) {
+function selectShots(
+  target: LoadedTarget,
+  only: readonly string[]
+): readonly Shot[] {
   if (only.length === 0) return target.shots;
   return only.map((name) => {
     const shot = target.shots.find((candidate) => candidate.name === name);
@@ -272,10 +315,14 @@ function selectShots(target, only) {
 }
 
 /** The declared values the request asks for, refusing one the target lacks. */
-function intersect(declared, requested, what) {
+function intersect<T extends string>(
+  declared: readonly T[],
+  requested: readonly string[],
+  what: string
+): T[] {
   const selected = declared.filter((value) => requested.includes(value));
   for (const value of requested) {
-    if (!selected.includes(value)) {
+    if (!(selected as readonly string[]).includes(value)) {
       throw new Error(
         `unknown ${what} "${value}" — try ${declared.join(', ')}`
       );
@@ -284,7 +331,7 @@ function intersect(declared, requested, what) {
   return selected;
 }
 
-function exists(file) {
+function exists(file: string): Promise<boolean> {
   return fs.access(file).then(
     () => true,
     () => false
@@ -297,7 +344,7 @@ function exists(file) {
 process.on('SIGINT', () => process.stdout.write('\u001B[?25h'));
 
 const program = new Command()
-  .name('run.mjs')
+  .name('run.ts')
   .description("Generates a target's images by driving the editor")
   .argument('<target>', 'target to capture, one folder under targets/')
   .argument(
@@ -330,7 +377,7 @@ const program = new Command()
     'write every pass instead of falling back to the first one'
   )
   .option('--headed', 'run the browser headed')
-  .action(async (name, out, options) => {
+  .action(async (name: string, out: string, options) => {
     const target = await loadTarget(name);
     await main({
       ...options,
@@ -346,6 +393,6 @@ try {
   // Commander reports usage errors itself; this catches the run.
   await program.parseAsync();
 } catch (error) {
-  console.error(error.message);
+  console.error(error instanceof Error ? error.message : error);
   process.exit(1);
 }

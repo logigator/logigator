@@ -7,12 +7,19 @@
   "type": "module",
   "packageManager": "yarn@4.14.1",
   "bin": {
-    "screenshots": "./run.mjs"
+    "screenshots": "./run.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p ."
   },
   "dependencies": {
     "commander": "15.0.0",
     "listr2": "11.0.0",
     "playwright": "1.61.1",
-    "sharp": "0.35.3"
+    "sharp": "0.35.3",
+    "typescript": "6.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.0"
   }
 }

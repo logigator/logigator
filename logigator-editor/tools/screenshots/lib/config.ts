@@ -1,19 +1,21 @@
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
-import { LANGUAGES, LOCALES, THEMES } from './origin.mjs';
+import type { LaunchOptions, ViewportSize } from 'playwright';
+import { LANGUAGES, LOCALES, THEMES } from './origin.ts';
 
 /**
  * Facts about the editor and the browser, shared by every target: how a
  * capture is framed, where the scenes live, and how a pass reaches the app.
  * Anything a target could reasonably want differently — where its captures
  * land, what they are called, which colour schemes it wants — belongs in that
- * target's own `config.mjs`.
+ * target's own `config.ts`.
  *
  * The origin's own vocabulary — what it speaks, and the two schemes — is
- * `lib/origin.mjs`'s, and re-exported here because a target reaches it through
+ * `lib/origin.ts`'s, and re-exported here because a target reaches it through
  * this module.
  */
 export { LANGUAGES, LOCALES, THEMES };
+export type { LanguageId, Theme } from './origin.ts';
 
 /**
  * "200% zoom": two device pixels per CSS pixel, so the canvas (PixiJS
@@ -27,7 +29,7 @@ export const DEVICE_SCALE_FACTOR = 2;
  * 64rem`) with room for the 320 px side-bar plus a board framing the example
  * circuits.
  */
-export const DESKTOP_VIEWPORT = { width: 1280, height: 860 };
+export const DESKTOP_VIEWPORT: ViewportSize = { width: 1280, height: 860 };
 
 /**
  * The recorded scenes, as ordinary editor exports, one per scene. They are
@@ -59,7 +61,7 @@ export const BOARD_ZOOM = 1.2 ** 3;
  * would be pinning a key the app stopped reading — which is what the language
  * did here until the cookie took over, and it failed silently.
  */
-export const SEEDED_LOCAL_STORAGE = {
+export const SEEDED_LOCAL_STORAGE: Readonly<Record<string, string>> = {
   'logigator.settings': JSON.stringify({
     fpsCounter: false,
     showGrid: true,
@@ -79,9 +81,9 @@ export const SEEDED_LOCAL_STORAGE = {
  * Playwright's bundled build. A GPU-less container needs SwiftShader and a
  * browser outside Playwright's registry.
  */
-export function launchOptions() {
-  const executablePath = process.env.LOGIGATOR_SHOTS_BROWSER;
-  const extraArgs = process.env.LOGIGATOR_SHOTS_BROWSER_ARGS;
+export function launchOptions(): LaunchOptions {
+  const executablePath = process.env['LOGIGATOR_SHOTS_BROWSER'];
+  const extraArgs = process.env['LOGIGATOR_SHOTS_BROWSER_ARGS'];
   return {
     headless: true,
     ...(executablePath ? { executablePath } : {}),

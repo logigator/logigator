@@ -1,4 +1,5 @@
 import path from 'node:path';
+import type { Pass, Shot } from '../../lib/target.ts';
 
 /**
  * The tour figures' captures, as the site consumes them. The languages and the
@@ -27,6 +28,6 @@ export const REGISTRY_FILE = path.join(
  * English's copy has to be addressable beside the others rather than standing
  * in for them.
  */
-export function fileName(shot, pass) {
+export function fileName(shot: Shot, pass: Pass): string {
   return `${shot.name}-${pass.lang}-${pass.theme}.webp`;
 }

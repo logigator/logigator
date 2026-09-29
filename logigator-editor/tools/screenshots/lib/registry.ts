@@ -17,7 +17,7 @@ import path from 'node:path';
  * WebP is the tool's only output format, so a file that is not one is not a
  * capture and is left out rather than emitted as an import nothing can resolve.
  */
-export function captureFiles(dir) {
+export function captureFiles(dir: string): string[] {
   if (!fs.existsSync(dir)) {
     return [];
   }
@@ -28,7 +28,7 @@ export function captureFiles(dir) {
 }
 
 /** `menu-bar` → `menuBar`: a dashed name, as the camel-case part of one. */
-export function camelCase(stem) {
+export function camelCase(stem: string): string {
   return stem
     .split('-')
     .map((part, index) =>
@@ -45,7 +45,12 @@ export function camelCase(stem) {
  * The specifier is resolved from the registry's own directory, so moving the
  * media folder cannot leave a stale relative path behind.
  */
-export function importLines(files, registry, media, ident) {
+export function importLines(
+  files: readonly string[],
+  registry: string,
+  media: string,
+  ident: (file: string) => string
+): string[] {
   const relative = path.relative(path.dirname(registry), media);
   // A sibling directory needs the `./`; one reached by going up does not, and
   // `./../` is a specifier no reader should have to parse.
@@ -56,7 +61,11 @@ export function importLines(files, registry, media, ident) {
 }
 
 /** Writes the generated file and reports what went into it. */
-export function writeGenerated(registry, source, summary) {
+export function writeGenerated(
+  registry: string,
+  source: string,
+  summary: string
+): string {
   fs.mkdirSync(path.dirname(registry), { recursive: true });
   fs.writeFileSync(registry, source);
   console.log(summary);

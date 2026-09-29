@@ -17,14 +17,17 @@ export const DEFAULT_FRAME_DELAY = 1200;
  * while lossless is a third of it. libwebp is deterministic, so an unchanged
  * capture re-encodes to identical bytes and leaves the tracked file alone.
  */
-export function encodeCapture(frames, delay = DEFAULT_FRAME_DELAY) {
+export function encodeCapture(
+  frames: readonly Buffer[],
+  delay: number = DEFAULT_FRAME_DELAY
+): Promise<Buffer> {
   return frames.length === 1
     ? encodeStill(frames[0])
     : encodeAnimation(frames, delay);
 }
 
 /** Encodes one captured frame. */
-function encodeStill(buffer) {
+function encodeStill(buffer: Buffer): Promise<Buffer> {
   return sharp(buffer).webp({ lossless: true }).toBuffer();
 }
 
@@ -39,10 +42,13 @@ function encodeStill(buffer) {
  * held frame followed by a flicker. The step-throughs hold every frame alike,
  * so the one delay is repeated rather than the callers each assembling a list.
  */
-async function encodeAnimation(frames, delay) {
+async function encodeAnimation(
+  frames: readonly Buffer[],
+  delay: number
+): Promise<Buffer> {
   await assertSameSize(frames);
 
-  return sharp(frames, { join: { animated: true } })
+  return sharp([...frames], { join: { animated: true } })
     .webp({ lossless: true, delay: frames.map(() => delay) })
     .toBuffer();
 }
@@ -52,7 +58,7 @@ async function encodeAnimation(frames, delay) {
  * animated file whose frames disagree — so the sizes are checked here, with the
  * sizes in the message.
  */
-async function assertSameSize(frames) {
+async function assertSameSize(frames: readonly Buffer[]): Promise<void> {
   const sizes = await Promise.all(
     frames.map(async (frame) => {
       const { width, height } = await sharp(frame).metadata();

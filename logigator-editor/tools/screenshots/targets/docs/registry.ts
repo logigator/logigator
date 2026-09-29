@@ -7,13 +7,13 @@
  * the folders rather than a hand-kept list.
  */
 import path from 'node:path';
-import { LOCALES } from '../../lib/config.mjs';
+import { LOCALES } from '../../lib/config.ts';
 import {
   camelCase,
   captureFiles,
   importLines,
   writeGenerated
-} from '../../lib/registry.mjs';
+} from '../../lib/registry.ts';
 
 /**
  * Writes the registry for the tree at `dest` — the docs package's own root, so
@@ -25,7 +25,7 @@ import {
  * harm commits. Reaching here with nothing to describe means the out-dir is
  * not the tree the run captured into.
  */
-export function writeRegistry(dest) {
+export function writeRegistry(dest: string): string {
   const root = path.resolve(dest, 'src');
   const registry = path.join(root, 'images.ts');
 
@@ -43,7 +43,7 @@ export function writeRegistry(dest) {
 
   // `menu-bar.webp` in `de` → `menuBarDe`: the picture and the language that
   // has it, since the same shot is a file in each.
-  const ident = (lang, file) =>
+  const ident = (lang: string, file: string) =>
     `${camelCase(path.parse(file).name)}${lang[0].toUpperCase()}${lang.slice(1)}`;
 
   const imports = groups

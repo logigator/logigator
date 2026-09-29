@@ -10,14 +10,14 @@
  * `docImages` does, across one more axis.
  */
 import path from 'node:path';
-import { LOCALES, THEMES } from '../../lib/config.mjs';
+import { LOCALES, THEMES } from '../../lib/config.ts';
 import {
   camelCase,
   captureFiles,
   importLines,
   writeGenerated
-} from '../../lib/registry.mjs';
-import { MEDIA_DIR, REGISTRY_FILE } from './config.mjs';
+} from '../../lib/registry.ts';
+import { MEDIA_DIR, REGISTRY_FILE } from './config.ts';
 
 /** The name `fileName` composes, read back: capability, language, scheme. */
 const FILE = new RegExp(`^(.+)-(${LOCALES.join('|')})-(${THEMES.join('|')})$`);
@@ -26,7 +26,7 @@ const FILE = new RegExp(`^(.+)-(${LOCALES.join('|')})-(${THEMES.join('|')})$`);
  * Writes the import map for the tree at `dest` — the site's own root, so the
  * file lands at `<dest>/src/app/pages/features/tour-media.ts`.
  */
-export function writeRegistry(dest) {
+export function writeRegistry(dest: string): string {
   const root = path.resolve(dest);
   const media = path.join(root, MEDIA_DIR);
   const registry = path.join(root, REGISTRY_FILE);
@@ -46,7 +46,7 @@ export function writeRegistry(dest) {
 
   // `board-and-tools-en-light.webp` → `boardAndToolsEnLight`: the whole name,
   // which is already capability, language and scheme in one.
-  const ident = (file) => camelCase(path.parse(file).name);
+  const ident = (file: string) => camelCase(path.parse(file).name);
 
   const imports = importLines(
     entries.map((entry) => entry.file),
