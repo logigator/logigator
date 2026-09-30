@@ -19,6 +19,7 @@ import { ToastService } from '../../logging/toast.service';
 import { LoggingService } from '../../logging/logging.service';
 import { TranslationService } from '../../translation/translation.service';
 import { WorkModeService } from '../../work-mode/work-mode.service';
+import { appendPlugIndices } from '../../custom-component/definition-derivation';
 
 export class ComponentPlacementSession implements DragSession {
   // A drop onto a colliding area clears the ghost rather than freezing it.
@@ -83,6 +84,8 @@ export class ComponentPlacementSession implements DragSession {
     // The instance the commit adds: a built-in is the ghost itself, a custom is
     // re-frozen onto a placement snapshot.
     const placed = ComponentPlacementSession._freeze(ghost);
+    // A new plug is the last port of its kind, not tied with the first one.
+    appendPlugIndices(this.project, [placed]);
 
     // Splits any wire whose interior passes under one of the placed component's ports.
     const { toAdd, toRemove } = this.project.topology.integrate({

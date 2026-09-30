@@ -17,6 +17,7 @@ import { DragCollisionState } from './drag-collision';
 import { SelectionManager } from '../../project/selection-manager';
 import { getStaticDI } from '../../utils/get-di';
 import { LoggingService } from '../../logging/logging.service';
+import { appendPlugIndices } from '../../custom-component/definition-derivation';
 
 export class PastePlacementSession implements DragSession {
   private readonly _collision: DragCollisionState;
@@ -197,6 +198,9 @@ export class PastePlacementSession implements DragSession {
         ...c.connectionPoints
       ])
     });
+
+    // Pasted plugs become the last ports, in the order they were copied in.
+    appendPlugIndices(this._project, this._components);
 
     // Actions serialize state in their constructors, so build before mutating.
     const action = new ActionContainer();

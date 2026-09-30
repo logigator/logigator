@@ -5,7 +5,7 @@ import { Project } from '../project/project';
 import { inputComponentConfig } from '../components/component-types/input/input.config';
 import { outputComponentConfig } from '../components/component-types/output/output.config';
 import { andComponentConfig } from '../components/component-types/and/and.config';
-import { deriveSummary } from './definition-derivation';
+import { appendPlugIndices, deriveSummary } from './definition-derivation';
 
 describe('deriveSummary', () => {
   let project: Project;
@@ -19,19 +19,24 @@ describe('deriveSummary', () => {
     project.destroy({ children: true });
   });
 
+  function makePlug(
+    kind: 'input' | 'output',
+    label: string,
+    index: number,
+    pos: [number, number]
+  ): Component {
+    const config =
+      kind === 'input' ? inputComponentConfig : outputComponentConfig;
+    return Component.deserialize({ pos, options: { label, index } }, config);
+  }
+
   function addPlug(
     kind: 'input' | 'output',
     label: string,
     index: number,
     pos: [number, number]
   ): void {
-    const config =
-      kind === 'input' ? inputComponentConfig : outputComponentConfig;
-    const plug = Component.deserialize(
-      { pos, options: { label, index } },
-      config
-    );
-    project.addComponent(plug);
+    project.addComponent(makePlug(kind, label, index, pos));
   }
 
   it('returns an empty summary for a circuit with no plugs', () => {
@@ -92,5 +97,36 @@ describe('deriveSummary', () => {
     const summary = deriveSummary(project);
     expect(summary.numInputs).toBe(2);
     expect(summary.labels).toEqual(['A', 'B']);
+  });
+
+  describe('appendPlugIndices', () => {
+    // A fresh plug carries the default index 0, which after a reorder is the
+    // first port's; appending is what keeps it from sorting in second.
+    it('makes a new plug the last port of its kind', () => {
+      addPlug('input', 'A', 0, [0, 0]);
+      addPlug('input', 'B', 1, [0, 5]);
+      addPlug('output', 'Q', 0, [10, 0]);
+
+      const plug = makePlug('input', 'C', 0, [0, 10]);
+      appendPlugIndices(project, [plug]);
+      project.addComponent(plug);
+
+      expect(deriveSummary(project).labels).toEqual(['A', 'B', 'C', 'Q']);
+    });
+
+    it('appends several plugs in the order they arrived in', () => {
+      addPlug('input', 'A', 0, [0, 0]);
+      addPlug('output', 'Q', 0, [10, 0]);
+
+      const pasted = [
+        makePlug('input', 'Y', 7, [0, 10]),
+        makePlug('input', 'X', 3, [0, 15]),
+        makePlug('output', 'R', 0, [10, 10])
+      ];
+      appendPlugIndices(project, pasted);
+      for (const plug of pasted) project.addComponent(plug);
+
+      expect(deriveSummary(project).labels).toEqual(['A', 'X', 'Y', 'Q', 'R']);
+    });
   });
 });
