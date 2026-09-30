@@ -489,7 +489,7 @@ const fr: TranslationSchema = {
   aboutDialog: {
     header: 'À propos de Logigator',
     tagline:
-      'Un éditeur et simulateur de circuits logiques numériques open source.',
+      'Un éditeur et simulateur de circuits logiques, gratuit et open source.',
     version: 'Version',
     commit: 'Commit',
     buildDate: 'Date de compilation',
@@ -581,6 +581,8 @@ const fr: TranslationSchema = {
     }
   },
   shareDialog: {
+    /** Sent with the link by a share sheet, and the embed's alt text. */
+    caption: '« {{name}} » sur Logigator',
     header: 'Partager le projet',
     headerComponent: 'Partager le composant',
     intro: 'Choisissez qui peut ouvrir « {{name}} ».',

@@ -485,7 +485,7 @@ const en = {
   },
   aboutDialog: {
     header: 'About Logigator',
-    tagline: 'An open-source digital logic circuit editor and simulator.',
+    tagline: 'A free, open-source logic circuit editor and simulator.',
     version: 'Version',
     commit: 'Commit',
     buildDate: 'Build date',
@@ -580,6 +580,8 @@ const en = {
     }
   },
   shareDialog: {
+    /** Sent with the link by a share sheet, and the embed's alt text. */
+    caption: '“{{name}}” on Logigator',
     header: 'Share project',
     headerComponent: 'Share component',
     intro: 'Choose who can open “{{name}}”.',

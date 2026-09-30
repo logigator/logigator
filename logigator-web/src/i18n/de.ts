@@ -46,7 +46,7 @@ const de: TranslationSchema = {
   site: {
     name: 'Logigator',
     description:
-      'Erstelle und simuliere deine eigenen Logikschaltungen mit Logigator, einem einfachen und zugleich mächtigen Online-Werkzeug.'
+      'Baue Logikschaltungen aus Gattern und Leitungen im Browser, simuliere sie live und verwende jede Schaltung als Komponente wieder. Kostenlos und Open Source.'
   },
   header: {
     home: 'Logigator Startseite',
@@ -81,6 +81,8 @@ const de: TranslationSchema = {
     stars: 'Sterne'
   },
   share: {
+    /** Sent with the link by a share sheet, and the embed's alt text. */
+    caption: '„{{name}}“ auf Logigator',
     label: 'Teilen',
     copyLabel: 'Link kopieren',
     copied: 'Link kopiert.',
@@ -230,24 +232,23 @@ const de: TranslationSchema = {
       toLogin: 'Zur Anmeldung'
     },
     home: {
-      title: 'Der Editor für Logikschaltungen',
+      title: 'Logikschaltungen online bauen und simulieren',
       hero: {
-        headline: 'Baue, simuliere und verwalte komplexe Logikschaltungen.',
-        lede: 'Gatter, Leitungen und wiederverwendbare Unterschaltungen, direkt im Browser. Die Simulation läuft auf einer WebAssembly-Engine, das Board rendert die GPU — die Schaltung läuft also weiter, während sie wächst.',
+        headline:
+          'Baue, simuliere und teile komplexe Logikschaltungen – kostenlos.',
+        lede: 'Setze Gatter, zieh Leitungen und sieh zu, wie die Signale durch sie fließen, direkt im Browser.',
         cta: 'Zum Editor',
         ctaSecondary: 'Beispiele ansehen'
       },
       features: {
         title: 'Features',
-        description:
-          'Baue und simuliere deine eigenen Schaltungen mit Logigator, einem einfachen aber mächtigen online Tool.',
         performance: {
           title: 'Performance',
-          body: "Logigators' Editor kann dank WebAssembly und WebGL auch mit den größten Projekten umgehen."
+          body: 'Die Simulation läuft auf WebAssembly und das Board wird auf der GPU gezeichnet, so bleiben auch die größten Projekte flüssig.'
         },
-        subcircuits: {
-          title: 'Unterschaltungen',
-          body: 'Erstelle deine eigenen Komponenten und verwende sie in all deinen Projekten. Somit können deine Projekte übersichtlich und einfach gehalten werden.'
+        components: {
+          title: 'Eigene Komponenten',
+          body: 'Mach aus jeder Schaltung eine Komponente und setze sie als Unterschaltung in größere ein. Einen Volladdierer baust du einmal und verwendest ihn achtmal.'
         },
         share: {
           title: 'Projekte teilen',
@@ -255,14 +256,14 @@ const de: TranslationSchema = {
         },
         images: {
           title: 'Bilder exportieren',
-          body: 'Mit Logigator kannst du hochauflösende Bilder in verschieden Formaten (SVG, PNG, JPG) generieren, um sie überall zu verwenden.'
+          body: 'Exportiere das Board als PNG, JPEG oder WebP in hoher Auflösung, für Folien, Arbeitsblätter oder Dokumentation.'
         }
       },
       examples: {
         title: 'Beispielschaltungen',
         description:
           'Lerne mit unseren Beispielen einfache, als auch komplexere Schaltungen zu bauen.',
-        more: 'Weitere Beispielschaltungen',
+        more: 'Alle Beispiele',
         emptyHeading: 'Noch keine Beispiele',
         emptyBody: 'Für diese Installation wurde noch nichts veröffentlicht.',
         failed: 'Beispiele konnten nicht geladen werden'
@@ -281,15 +282,14 @@ const de: TranslationSchema = {
       community: {
         projectsTitle: 'Community erstellte Projekte',
         projectsDescription:
-          'Erkunde andere Projekte unserer User. Dein Projekt könnte das nächste auf dieser Liste sein.',
-        moreProjects: 'Weitere Projekte',
+          'Alle Schaltungen, die die Community veröffentlicht hat.',
+        moreProjects: 'Alle Community-Projekte',
         projectsEmptyHeading: 'Noch keine öffentlichen Projekte',
         projectsEmptyBody: 'Bisher wurde nichts mit der Community geteilt.',
         projectsFailed: 'Projekte konnten nicht geladen werden',
         componentsTitle: 'Community erstellte Komponenten',
-        componentsDescription:
-          'Erkunde andere Komponenten unserer User. Sie sind vielleicht hilfreich für dich.',
-        moreComponents: 'Weitere Komponenten',
+        componentsDescription: 'Wiederverwendbare Bausteine aus der Community.',
+        moreComponents: 'Alle Community-Komponenten',
         componentsEmptyHeading: 'Noch keine öffentlichen Komponenten',
         componentsEmptyBody: 'Bisher wurde nichts mit der Community geteilt.',
         componentsFailed: 'Komponenten konnten nicht geladen werden'

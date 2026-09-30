@@ -46,7 +46,7 @@ const es: TranslationSchema = {
   site: {
     name: 'Logigator',
     description:
-      'Construye y simula tus propios circuitos lógicos con Logigator, una herramienta en línea sencilla y potente.'
+      'Construye circuitos lógicos con compuertas y cables en el navegador, simúlalos en vivo y reutiliza cualquiera como componente. Gratis y open source.'
   },
   header: {
     home: 'Inicio de Logigator',
@@ -81,6 +81,8 @@ const es: TranslationSchema = {
     stars: 'estrellas'
   },
   share: {
+    /** Sent with the link by a share sheet, and the embed's alt text. */
+    caption: '«{{name}}» en Logigator',
     label: 'Compartir',
     copyLabel: 'Copiar enlace',
     copied: 'Enlace copiado.',
@@ -224,25 +226,23 @@ const es: TranslationSchema = {
       toLogin: 'Ir a iniciar sesión'
     },
     home: {
-      title: 'Construye y Simula Circuitos Lógicos',
+      title: 'Construye y Simula Circuitos Lógicos en Línea',
       hero: {
         headline:
-          'Construye, simula y gestiona circuitos lógicos complejos de forma gratuita.',
-        lede: 'Compuertas, cables y subcircuitos reutilizables, en el navegador. La simulación corre sobre un motor WebAssembly y la placa se dibuja en la GPU, así que un circuito sigue funcionando a medida que crece.',
-        cta: 'Comenzar a Construir Ahora',
+          'Construye, simula y comparte circuitos lógicos complejos de forma gratuita.',
+        lede: 'Coloca compuertas, traza cables y observa cómo fluyen las señales por ellos, directamente en tu navegador.',
+        cta: 'Empezar a construir',
         ctaSecondary: 'Ver ejemplos'
       },
       features: {
         title: 'Características',
-        description:
-          'Construye y simula tus propios circuitos con Logigator, una herramienta en línea simple pero poderosa.',
         performance: {
           title: 'Rendimiento',
-          body: 'El editor de Logigator puede manejar incluso los proyectos más grandes con facilidad gracias a WebAssembly y WebGL.'
+          body: 'La simulación corre sobre WebAssembly y la placa se dibuja en la GPU, así que incluso los proyectos más grandes se mantienen fluidos.'
         },
-        subcircuits: {
-          title: 'Subcircuitos',
-          body: 'Crea subcircuitos y úsalos en todos tus proyectos para ayudar a mantenerlos organizados.'
+        components: {
+          title: 'Componentes Personalizados',
+          body: 'Convierte cualquier circuito en un componente y colócalo como subcircuito dentro de otros más grandes. Construye un sumador completo una vez y úsalo ocho veces.'
         },
         share: {
           title: 'Compartir Proyectos',
@@ -250,14 +250,14 @@ const es: TranslationSchema = {
         },
         images: {
           title: 'Exportar Imágenes',
-          body: 'Con Logigator puedes exportar imágenes de alta resolución en tres formatos diferentes (SVG, PNG, JPG) para usarlas en cualquier lugar.'
+          body: 'Exporta la placa como PNG, JPEG o WebP en alta resolución, para presentaciones, hojas de trabajo o documentación.'
         }
       },
       examples: {
         title: 'Circuitos de Ejemplo',
         description:
           'Aprende a diseñar circuitos simples y más complejos a partir de nuestros ejemplos.',
-        more: 'Ver Más Ejemplos',
+        more: 'Todos los ejemplos',
         emptyHeading: 'Todavía no hay ejemplos',
         emptyBody: 'Aún no se ha publicado nada para esta instalación.',
         failed: 'No se pudieron cargar los ejemplos'
@@ -276,16 +276,16 @@ const es: TranslationSchema = {
       community: {
         projectsTitle: 'Proyectos de la Comunidad',
         projectsDescription:
-          'Explora otros proyectos creados por nuestra comunidad. Tu proyecto podría ser el próximo en esta lista.',
-        moreProjects: 'Ver Más Proyectos',
+          'Todos los circuitos que la comunidad ha publicado.',
+        moreProjects: 'Todos los proyectos de la comunidad',
         projectsEmptyHeading: 'Todavía no hay proyectos públicos',
         projectsEmptyBody:
           'Hasta ahora no se ha compartido nada con la comunidad.',
         projectsFailed: 'No se pudieron cargar los proyectos',
         componentsTitle: 'Componentes de la Comunidad',
         componentsDescription:
-          'Explora otros componentes creados por nuestra comunidad. Pueden ser útiles para ti.',
-        moreComponents: 'Ver Más Componentes',
+          'Bloques reutilizables publicados por la comunidad.',
+        moreComponents: 'Todos los componentes de la comunidad',
         componentsEmptyHeading: 'Todavía no hay componentes públicos',
         componentsEmptyBody:
           'Hasta ahora no se ha compartido nada con la comunidad.',

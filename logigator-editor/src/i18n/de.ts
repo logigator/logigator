@@ -490,7 +490,7 @@ const de: TranslationSchema = {
   aboutDialog: {
     header: 'Über Logigator',
     tagline:
-      'Ein Open-Source-Editor und -Simulator für digitale Logikschaltungen.',
+      'Ein kostenloser Open-Source-Editor und -Simulator für Logikschaltungen.',
     version: 'Version',
     commit: 'Commit',
     buildDate: 'Build-Datum',
@@ -582,6 +582,8 @@ const de: TranslationSchema = {
     }
   },
   shareDialog: {
+    /** Sent with the link by a share sheet, and the embed's alt text. */
+    caption: '„{{name}}“ auf Logigator',
     header: 'Projekt teilen',
     headerComponent: 'Komponente teilen',
     intro: 'Wähle, wer „{{name}}“ öffnen kann.',

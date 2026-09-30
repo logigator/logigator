@@ -77,7 +77,11 @@ describe('ShareControls', () => {
     control.click();
 
     await vi.waitFor(() =>
-      expect(share).toHaveBeenCalledWith({ title: 'Half adder', url: URL })
+      expect(share).toHaveBeenCalledWith({
+        title: 'Half adder',
+        text: '“Half adder” on Logigator',
+        url: URL
+      })
     );
     expect(stub.writeText).not.toHaveBeenCalled();
   });

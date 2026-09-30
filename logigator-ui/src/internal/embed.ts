@@ -22,7 +22,7 @@ export interface LgEmbedInput {
   readonly url: string;
   /** Absolute URL of the composed card. */
   readonly image: string;
-  /** The document's name: the alt text and the title attribute. */
+  /** The alt text and the title attribute, carrying the document's name. */
   readonly title: string;
 }
 

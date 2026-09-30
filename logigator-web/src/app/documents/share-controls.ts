@@ -93,11 +93,15 @@ export class ShareControls {
     }))
   );
 
+  protected readonly caption = computed(() =>
+    this.translation.translate('share.caption', { name: this.title() })
+  );
+
   protected readonly embed = computed(() =>
     embedSnippet(this.format(), {
       url: this.url(),
       image: this.image(),
-      title: this.title()
+      title: this.caption()
     })
   );
 
@@ -110,7 +114,11 @@ export class ShareControls {
    * one needs no announcement, and the other is a choice rather than a failure.
    */
   protected async share(): Promise<void> {
-    const outcome = await shareOrCopy({ title: this.title(), url: this.url() });
+    const outcome = await shareOrCopy({
+      title: this.title(),
+      text: this.caption(),
+      url: this.url()
+    });
 
     if (outcome === 'copied') this.copied('share.copied');
     if (outcome === 'failed') this.failed('share.copyFailed');

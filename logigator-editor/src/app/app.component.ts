@@ -200,7 +200,7 @@ export class AppComponent {
     effect(() => {
       const name = this.projectName();
       this.title.setTitle(
-        name ? `${name} - Logigator: Editor` : 'Logigator: Editor'
+        name ? `${name} – Editor – Logigator` : 'Editor – Logigator'
       );
     });
 

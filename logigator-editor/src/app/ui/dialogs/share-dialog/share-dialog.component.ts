@@ -216,11 +216,15 @@ export class ShareDialogComponent extends LgDialogContent<ShareDialogData> {
    * all three states, so there is no second address for a published document
    * to point at instead.
    */
+  protected readonly caption = computed(() =>
+    this.translation.translate('shareDialog.caption', { name: this.name })
+  );
+
   protected readonly embed = computed(() =>
     embedSnippet(this.format(), {
       url: this.shareUrl(),
       image: this.cardUrl(),
-      title: this.name
+      title: this.caption()
     })
   );
 
@@ -279,6 +283,7 @@ export class ShareDialogComponent extends LgDialogContent<ShareDialogData> {
   protected async share(): Promise<void> {
     const outcome = await shareOrCopy({
       title: this.name,
+      text: this.caption(),
       url: this.shareUrl()
     });
 

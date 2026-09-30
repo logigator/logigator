@@ -76,9 +76,9 @@ export class HomePage {
       body: 'pages.home.features.performance.body'
     },
     {
-      key: 'subcircuits',
-      title: 'pages.home.features.subcircuits.title',
-      body: 'pages.home.features.subcircuits.body'
+      key: 'components',
+      title: 'pages.home.features.components.title',
+      body: 'pages.home.features.components.body'
     },
     {
       key: 'share',

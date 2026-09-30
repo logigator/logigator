@@ -167,7 +167,7 @@ export class SeoService {
     // The page first, the brand after it: what tells one result apart from the
     // next is the page's subject, and the site name is the same on every one of
     // them.
-    this.title.setTitle(`${pageTitle} - ${siteName}`);
+    this.title.setTitle(`${pageTitle} – ${siteName}`);
     this.meta.updateTag({ name: 'description', content: description });
     this.meta.updateTag({ property: 'og:title', content: pageTitle });
     this.meta.updateTag({ property: 'og:description', content: description });

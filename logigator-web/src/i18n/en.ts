@@ -50,7 +50,7 @@ const en = {
   site: {
     name: 'Logigator',
     description:
-      'Build and simulate your own logic circuits with Logigator, a simple yet powerful web-based online tool.'
+      'Build logic circuits from gates and wires in your browser, simulate them live, and turn any circuit into a component you can reuse. Free and open source.'
   },
   header: {
     home: 'Logigator home',
@@ -90,6 +90,8 @@ const en = {
   // The share controls, which a document's own page and the shelf dialog both
   // draw — so their words belong under neither of those.
   share: {
+    /** Sent with the link by a share sheet, and the embed's alt text. */
+    caption: '“{{name}}” on Logigator',
     label: 'Share',
     copyLabel: 'Copy link',
     copied: 'Link copied.',
@@ -232,24 +234,22 @@ const en = {
       toLogin: 'Go to login'
     },
     home: {
-      title: 'Build and Simulate Logic Circuits',
+      title: 'Build and Simulate Logic Circuits Online',
       hero: {
-        headline: 'Build, simulate and manage complex logic circuits for free.',
-        lede: 'Gates, wires and reusable subcircuits, in the browser. The simulation runs on a WebAssembly engine and the board renders on the GPU, so a circuit keeps stepping as it grows.',
-        cta: 'Start Building Now',
+        headline: 'Build, simulate and share complex logic circuits for free.',
+        lede: 'Place gates, draw wires and watch the signals flow through them, right in your browser.',
+        cta: 'Start building',
         ctaSecondary: 'Browse examples'
       },
       features: {
         title: 'Features',
-        description:
-          'Build and simulate your own circuits with Logigator, a simple yet powerful online tool.',
         performance: {
           title: 'Performance',
-          body: "Logigators' editor can handle even the largest projects with ease thanks to WebAssembly and WebGL."
+          body: 'The simulation runs on WebAssembly and the board is drawn on the GPU, so even the largest projects stay smooth.'
         },
-        subcircuits: {
-          title: 'Subcircuits',
-          body: 'Create subcircuits and use them all over your projects to help keep them organized.'
+        components: {
+          title: 'Custom components',
+          body: 'Turn any circuit into a component and place it as a subcircuit inside bigger ones. Build a full adder once, then use it eight times.'
         },
         share: {
           title: 'Share Projects',
@@ -257,14 +257,14 @@ const en = {
         },
         images: {
           title: 'Export Images',
-          body: 'With Logigator you can export high resolution images in three different formats (SVG, PNG, JPG) to use them anywhere.'
+          body: 'Export the board as PNG, JPEG or WebP in high resolution, for slides, worksheets or documentation.'
         }
       },
       examples: {
         title: 'Example Circuits',
         description:
           'Learn to design simple and more complex circuits from our examples.',
-        more: 'See More Examples',
+        more: 'All examples',
         emptyHeading: 'No examples yet',
         emptyBody: 'Nothing has been published for this deployment.',
         failed: 'Examples could not be loaded'
@@ -282,16 +282,15 @@ const en = {
       },
       community: {
         projectsTitle: 'Community Projects',
-        projectsDescription:
-          'Explore other projects created by our community. Your Project could be the next on this list.',
-        moreProjects: 'See More Projects',
+        projectsDescription: 'Every circuit the community has published.',
+        moreProjects: 'All community projects',
         projectsEmptyHeading: 'No public projects yet',
         projectsEmptyBody: 'Nothing has been shared with the community so far.',
         projectsFailed: 'Projects could not be loaded',
         componentsTitle: 'Community Components',
         componentsDescription:
-          'Explore other components created by our community. They may be useful for you.',
-        moreComponents: 'See More Components',
+          'Reusable building blocks the community has published.',
+        moreComponents: 'All community components',
         componentsEmptyHeading: 'No public components yet',
         componentsEmptyBody:
           'Nothing has been shared with the community so far.',
