@@ -2,6 +2,7 @@ import { forwardRef, Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
 import { MailModule } from '../mail/mail.module';
 import { ProfileService } from './profile.service';
+import { UnverifiedAccountSweepService } from './unverified-account-sweep.service';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 
@@ -13,7 +14,7 @@ import { UsersService } from './users.service';
 @Module({
   imports: [forwardRef(() => AuthModule), MailModule],
   controllers: [UsersController],
-  providers: [UsersService, ProfileService],
+  providers: [UsersService, ProfileService, UnverifiedAccountSweepService],
   exports: [UsersService]
 })
 export class UsersModule {}
