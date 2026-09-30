@@ -95,8 +95,8 @@ const fr: TranslationSchema = {
   },
   visibility: {
     private: {
-      label: 'Toi uniquement',
-      hint: 'Toi seul peux l’ouvrir — rien n’est accessible par un lien.'
+      label: 'Vous uniquement',
+      hint: 'Personne d’autre que vous ne peut l’ouvrir, même avec le lien.'
     },
     unlisted: {
       label: 'Toute personne avec le lien',
@@ -114,29 +114,31 @@ const fr: TranslationSchema = {
     errors: {
       required: 'Ce champ est obligatoire.',
       invalid: 'Cette valeur n’a pas été acceptée.',
-      emailInvalid: 'Saisis une adresse e-mail valide.',
-      usernameTooShort: 'Utilise au moins 2 caractères.',
-      usernameTooLong: 'Utilise au plus 20 caractères.',
+      emailInvalid: 'Saisissez une adresse e-mail valide.',
+      usernameTooShort: 'Utilisez au moins 2 caractères.',
+      usernameTooLong: 'Utilisez au plus 20 caractères.',
       usernamePattern:
         'Seuls les lettres, les chiffres, « _ » et « - » sont autorisés.',
-      passwordTooShort: 'Utilise au moins 8 caractères.',
-      passwordTooLong: 'Utilise au plus 200 caractères.',
-      passwordComplexity: 'Utilise au moins une lettre et un chiffre.',
+      passwordTooShort: 'Utilisez au moins 8 caractères.',
+      passwordTooLong: 'Utilisez au plus 200 caractères.',
+      passwordComplexity: 'Utilisez au moins une lettre et un chiffre.',
       passwordMismatch: 'Les deux mots de passe ne correspondent pas.',
-      nameRequired: 'Saisis un nom.',
-      nameTooLong: 'Utilise 20 caractères au maximum.',
-      symbolRequired: 'Saisis un symbole.',
-      symbolTooLong: 'Utilise 5 caractères au maximum.',
-      descriptionTooLong: 'Utilise 2048 caractères au maximum.',
+      nameRequired: 'Saisissez un nom.',
+      nameTooLong: 'Utilisez 20 caractères au maximum.',
+      symbolRequired: 'Saisissez un symbole.',
+      symbolTooLong: 'Utilisez 5 caractères au maximum.',
+      descriptionTooLong: 'Utilisez 2048 caractères au maximum.',
       bioTooLong: 'Utilisez au maximum 1024 caractères.',
-      urlInvalid: 'Saisis un lien complet commençant par http:// ou https://.',
-      urlTooLong: 'Utilise 2048 caractères au maximum.',
-      rateLimited: 'Trop de tentatives. Patiente un instant puis réessaie.',
+      urlInvalid:
+        'Saisissez un lien complet commençant par http:// ou https://.',
+      urlTooLong: 'Utilisez 2048 caractères au maximum.',
+      rateLimited: 'Trop de tentatives. Patientez un instant puis réessayez.',
       serviceUnavailable:
-        'Le service est momentanément indisponible. Réessaie dans un instant.',
-      validationFailed: 'Vérifie tes saisies puis réessaie.',
-      network: 'Aucune connexion au serveur. Vérifie ton réseau puis réessaie.',
-      unknown: 'Une erreur est survenue. Réessaie.'
+        'Le service est momentanément indisponible. Réessayez dans un instant.',
+      validationFailed: 'Vérifiez vos saisies puis réessayez.',
+      network:
+        'Aucune connexion au serveur. Vérifiez votre réseau puis réessayez.',
+      unknown: 'Une erreur est survenue. Réessayez.'
     }
   },
   auth: {
@@ -148,71 +150,72 @@ const fr: TranslationSchema = {
     or: 'ou',
     continueWithGoogle: 'Continuer avec Google',
     googleErrors: {
-      failed: 'La connexion avec Google a échoué. Réessaie.',
-      stateInvalid: 'Cette tentative de connexion a expiré. Recommence.',
+      failed: 'La connexion avec Google a échoué. Réessayez.',
+      stateInvalid: 'Cette tentative de connexion a expiré. Recommencez.',
       emailTaken:
-        'Un compte utilise déjà cette adresse e-mail. Connecte-toi avec ton mot de passe, puis associe Google depuis ton compte.',
+        'Un compte utilise déjà cette adresse e-mail. Connectez-vous avec votre mot de passe, puis associez Google depuis votre compte.',
       alreadyLinked: 'Ce compte Google appartient à un autre compte Logigator.'
     }
   },
   pages: {
     login: {
       title: 'Connexion',
-      heading: 'Content de te revoir',
+      heading: 'Content de vous revoir',
       submit: 'Se connecter',
       metaDescription:
-        'Connecte-toi à Logigator pour ouvrir tes circuits enregistrés, ta bibliothèque de composants et les projets que tu as étoilés.',
+        'Connectez-vous à Logigator pour ouvrir vos circuits enregistrés, votre bibliothèque de composants et les projets que vous avez étoilés.',
       forgotPassword: 'Mot de passe oublié ?',
       noAccount: 'Pas encore de compte ?',
       registerLink: 'S’inscrire',
       invalidCredentials: 'L’adresse e-mail ou le mot de passe est incorrect.',
-      notVerified: 'Confirme ton adresse e-mail avant de te connecter.',
+      notVerified: 'Confirmez votre adresse e-mail avant de vous connecter.',
       resend: 'Renvoyer l’e-mail de confirmation',
-      resent: 'E-mail de confirmation envoyé. Consulte ta boîte de réception.'
+      resent:
+        'E-mail de confirmation envoyé. Consultez votre boîte de réception.'
     },
     register: {
       title: 'Inscription',
-      heading: 'Crée ton compte',
+      heading: 'Créez votre compte',
       submit: 'S’inscrire',
       metaDescription:
-        'Crée un compte Logigator gratuit pour enregistrer tes circuits dans le cloud, constituer une bibliothèque de composants et partager tes créations.',
+        'Créez un compte Logigator gratuit pour enregistrer vos circuits dans le cloud, constituer une bibliothèque de composants et partager vos créations.',
       emailTaken: 'Un compte utilise déjà cette adresse e-mail.',
       mailFailed:
-        'Ton compte a été créé, mais l’e-mail de confirmation n’a pas pu être envoyé. Connecte-toi pour le demander à nouveau.',
-      privacyNoticeBefore: 'En t’inscrivant, tu confirmes avoir lu notre ',
+        'Votre compte a été créé, mais l’e-mail de confirmation n’a pas pu être envoyé. Connectez-vous pour le demander à nouveau.',
+      privacyNoticeBefore: 'En vous inscrivant, vous confirmez avoir lu notre ',
       privacyNoticeLink: 'politique de confidentialité',
       privacyNoticeAfter: ' et l’accepter.',
-      haveAccount: 'Tu as déjà un compte ?',
+      haveAccount: 'Vous avez déjà un compte ?',
       loginLink: 'Se connecter',
-      confirmHeading: 'Confirme ton adresse e-mail',
+      confirmHeading: 'Confirmez votre adresse e-mail',
       confirmLead:
-        'Nous avons envoyé un lien de confirmation à {{email}}. Ouvre-le pour terminer ton inscription.',
+        'Nous avons envoyé un lien de confirmation à {{email}}. Ouvrez-le pour terminer votre inscription.',
       toLogin: 'Aller à la connexion'
     },
     resetPassword: {
       title: 'Réinitialiser le mot de passe',
-      requestHeading: 'Réinitialise ton mot de passe',
+      requestHeading: 'Réinitialisez votre mot de passe',
       requestLead:
-        'Indique l’adresse avec laquelle tu t’es inscrit et nous t’enverrons un lien.',
+        'Indiquez l’adresse utilisée pour votre inscription et nous vous enverrons un lien.',
       requestSubmit: 'Envoyer le lien',
       requestSent:
         'Si un compte existe pour cette adresse, le lien est en route. Il est valable une heure.',
       backToLogin: 'Retour à la connexion',
-      applyHeading: 'Choisis un nouveau mot de passe',
+      applyHeading: 'Choisissez un nouveau mot de passe',
       applySubmit: 'Enregistrer le mot de passe',
-      applied: 'Ton mot de passe a été modifié. Tu peux te connecter.',
-      tokenInvalid: 'Ce lien n’est plus valable. Demandes-en un nouveau.',
+      applied: 'Votre mot de passe a été modifié. Vous pouvez vous connecter.',
+      tokenInvalid: 'Ce lien n’est plus valable. Demandez-en un nouveau.',
       requestNew: 'Demander un nouveau lien'
     },
     verifyEmail: {
       title: 'Confirmation de l’e-mail',
-      pending: 'Confirmation de ton adresse e-mail',
+      pending: 'Confirmation de votre adresse e-mail',
       pendingLead: 'Un instant.',
-      success: 'Ton adresse e-mail est confirmée',
-      successLead: 'Tu peux te connecter.',
+      success: 'Votre adresse e-mail est confirmée',
+      successLead: 'Vous pouvez vous connecter.',
       error: 'Ce lien n’a pas fonctionné',
       errorLead:
-        'Les liens de confirmation expirent au bout d’une heure. Tu peux en demander un nouveau depuis la page de connexion.',
+        'Les liens de confirmation expirent au bout d’une heure. Vous pouvez en demander un nouveau depuis la page de connexion.',
       toLogin: 'Aller à la connexion'
     },
     home: {
@@ -374,21 +377,21 @@ const fr: TranslationSchema = {
       },
       projects: {
         title: 'Mes projets',
-        lede: 'Tous les circuits que tu as enregistrés dans le cloud. Ouvre-en un pour continuer, ou publie-le auprès de la communauté.',
+        lede: 'Tous les circuits que vous avez enregistrés dans le cloud. Ouvrez-en un pour continuer, ou publiez-le auprès de la communauté.',
         create: 'Nouveau projet',
         count: '{{count}} projets',
         emptyHeading: 'Aucun projet pour l’instant',
         emptyBody:
-          'Les circuits que tu enregistres dans le cloud depuis l’éditeur apparaissent ici.'
+          'Les circuits que vous enregistrez dans le cloud depuis l’éditeur apparaissent ici.'
       },
       components: {
         title: 'Mes composants',
-        lede: 'Les blocs réutilisables de ta bibliothèque. Place-les dans n’importe quel circuit que tu construis.',
+        lede: 'Les blocs réutilisables de votre bibliothèque. Placez-les dans n’importe quel circuit que vous construisez.',
         create: 'Nouveau composant',
         count: '{{count}} composants',
         emptyHeading: 'Aucun composant pour l’instant',
         emptyBody:
-          'Crées-en un ici, ou fais-en un dans l’éditeur à partir d’un circuit que tu as construit.'
+          'Créez-en un ici, ou faites-en un dans l’éditeur à partir d’un circuit que vous avez construit.'
       },
       create: {
         headingProject: 'Nouveau projet',
@@ -406,7 +409,7 @@ const fr: TranslationSchema = {
         searchPlaceholder: 'Rechercher..',
         clearSearch: 'Effacer la recherche',
         noMatchHeading: 'Aucun résultat',
-        noMatchBody: 'Rien chez toi ne s’appelle « {{search}} ».',
+        noMatchBody: 'Aucun de vos éléments ne s’appelle « {{search}} ».',
         errorHeading: 'La liste n’a pas pu être chargée',
         openInEditor: 'Ouvrir « {{name}} » dans l’éditeur',
         actionsFor: 'Actions pour « {{name}} »',
@@ -429,11 +432,11 @@ const fr: TranslationSchema = {
       },
       share: {
         heading: 'Partager',
-        intro: 'Choisis qui peut ouvrir « {{name}} ».',
+        intro: 'Choisissez qui peut ouvrir « {{name}} ».',
         visibilityLabel: 'Qui peut l’ouvrir',
         linkLabel: 'Lien de partage',
         noLink:
-          'Tant que le circuit est privé, personne ne peut l’ouvrir. Le lien est conservé : choisis « Toute personne avec le lien » pour redonner la même URL — c’est aussi là que tu peux le remplacer.',
+          'Tant que le circuit est privé, personne d’autre que vous ne peut l’ouvrir. Le lien ne change pas : choisissez « Toute personne avec le lien » pour le redonner ou pour le régénérer.',
         viewPublicPage: 'Voir la page communautaire',
         regenerateWarning:
           'L’ancien lien cesse immédiatement de fonctionner, pour toutes les personnes qui l’ont. Le circuit lui-même reste inchangé.',
@@ -455,14 +458,14 @@ const fr: TranslationSchema = {
       },
       account: {
         title: 'Compte',
-        lede: 'Ton nom et ton image, l’adresse avec laquelle tu te connectes, et comment tu te connectes.',
+        lede: 'Votre nom et votre image, l’adresse avec laquelle vous vous connectez, et comment vous vous connectez.',
         memberSince: 'Membre depuis le {{date}}',
         currentPassword: 'Mot de passe actuel',
         passwordIncorrect: 'Ce mot de passe n’est pas correct.',
         profile: {
           heading: 'Profil',
           description:
-            'Le nom, l’image et le profil affichés à côté de tout ce que tu publies.',
+            'Le nom, l’image et le profil affichés à côté de tout ce que vous publiez.',
           changePicture: 'Changer l’image',
           removePicture: 'Retirer',
           pictureHint:
@@ -473,60 +476,60 @@ const fr: TranslationSchema = {
           websiteLabel: 'Site web',
           linkLabel: 'Lien {{n}}',
           save: 'Enregistrer',
-          saved: 'Ton profil a été enregistré.',
+          saved: 'Votre profil a été enregistré.',
           avatarRejected:
-            'Cette image n’a pas pu être utilisée. Essaie un PNG, JPEG ou WebP plus petit.'
+            'Cette image n’a pas pu être utilisée. Essayez un PNG, JPEG ou WebP plus petit.'
         },
         email: {
           heading: 'Adresse e-mail',
           description:
-            'L’adresse avec laquelle tu te connectes, et où les confirmations sont envoyées.',
+            'L’adresse avec laquelle vous vous connectez, et où les confirmations sont envoyées.',
           current: 'Actuellement :',
           unverified: 'non confirmée',
           newLabel: 'Nouvelle adresse e-mail',
           passwordHint:
-            'Ton mot de passe confirme que c’est bien toi qui demandes.',
+            'Votre mot de passe confirme que c’est bien vous qui faites la demande.',
           submit: 'Envoyer la confirmation',
           pending:
-            'Un lien de confirmation est en route vers {{email}}. Ton adresse change dès que tu l’ouvres.',
+            'Un lien de confirmation est en route vers {{email}}. Votre adresse change dès que vous l’ouvrez.',
           taken: 'Cette adresse e-mail a déjà un compte.',
-          unchanged: 'C’est déjà ton adresse.',
+          unchanged: 'C’est déjà votre adresse.',
           mailFailed:
-            'L’e-mail de confirmation n’a pas pu être envoyé. Rien n’a changé — réessaie.'
+            'L’e-mail de confirmation n’a pas pu être envoyé. Rien n’a changé. Réessayez.'
         },
         password: {
           heading: 'Mot de passe',
-          description: 'Le changer te déconnecte partout ailleurs.',
+          description: 'Le changer vous déconnecte partout ailleurs.',
           setHeading: 'Définir un mot de passe',
           setDescription:
-            'Tu t’es inscrit avec Google et n’as pas encore de mot de passe. En définir un te donne un second accès.',
+            'Votre compte a été créé avec Google et n’a pas encore de mot de passe. En définir un vous donne un second accès.',
           newLabel: 'Nouveau mot de passe',
           submit: 'Changer le mot de passe',
           setSubmit: 'Définir le mot de passe',
-          saved: 'Ton mot de passe a été changé.',
+          saved: 'Votre mot de passe a été changé.',
           sessionsNotice:
-            'Tes autres sessions sont déconnectées. Celle-ci reste.'
+            'Vos autres sessions sont déconnectées. Celle-ci reste.'
         },
         google: {
           heading: 'Google',
           description:
-            'Se connecter avec ton compte Google, en plus du mot de passe.',
-          linked: 'Ton compte Google est lié.',
+            'Se connecter avec votre compte Google, en plus du mot de passe.',
+          linked: 'Votre compte Google est lié.',
           link: 'Lier le compte Google',
           unlink: 'Délier',
           unlinkConfirm:
-            'La connexion avec Google cessera de fonctionner. Tu peux la relier à tout moment.',
+            'La connexion avec Google cessera de fonctionner. Vous pouvez la relier à tout moment.',
           needsPassword:
-            'Définis d’abord un mot de passe — Google est actuellement le seul accès à ce compte.'
+            'Définissez d’abord un mot de passe : Google est actuellement le seul accès à ce compte.'
         },
         delete: {
           heading: 'Supprimer le compte',
           description:
-            'Ton compte et tous les projets, composants et favoris qu’il contient seront supprimés. C’est irréversible.',
+            'Votre compte et tous les projets, composants et favoris qu’il contient seront supprimés. C’est irréversible.',
           submit: 'Supprimer mon compte',
           confirm:
-            'Tout ce que tu as créé sur Logigator sera supprimé, définitivement.',
-          done: 'Ton compte a été supprimé.'
+            'Tout ce que vous avez créé sur Logigator sera supprimé, définitivement.',
+          done: 'Votre compte a été supprimé.'
         }
       }
     },
@@ -572,7 +575,7 @@ const fr: TranslationSchema = {
     },
     privacyPolicy: {
       title: 'Politique de confidentialité',
-      lede: 'Quelles données Logigator traite, pourquoi elles le sont et quels droits tu as sur elles.'
+      lede: 'Quelles données Logigator traite, pourquoi elles le sont et quels droits vous avez sur elles.'
     },
     notFound: {
       title: 'Page introuvable',

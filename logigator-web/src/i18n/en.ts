@@ -107,7 +107,7 @@ const en = {
   visibility: {
     private: {
       label: 'Only you',
-      hint: 'Only you can open it — nothing is reachable by a link.'
+      hint: 'Only you can open it, even with the link.'
     },
     unlisted: {
       label: 'Anyone with the link',
@@ -449,7 +449,7 @@ const en = {
         visibilityLabel: 'Who can open it',
         linkLabel: 'Share link',
         noLink:
-          'Nobody can open the document while it is private. The link is kept: pick “Anyone with the link” to hand out the same URL again, and regenerate it from there.',
+          'Only you can open the document while it is private. The link stays the same: pick “Anyone with the link” to hand it out again or to regenerate it.',
         viewPublicPage: 'View the community page',
         regenerateWarning:
           'The old link stops working immediately, for everyone who has it. Your circuit itself is unchanged.',

@@ -97,7 +97,7 @@ const de: TranslationSchema = {
   visibility: {
     private: {
       label: 'Nur du',
-      hint: 'Nur du kannst sie öffnen – über einen Link ist nichts erreichbar.'
+      hint: 'Nur du kannst sie öffnen, auch mit dem Link.'
     },
     unlisted: {
       label: 'Alle mit dem Link',
@@ -443,7 +443,7 @@ const de: TranslationSchema = {
         visibilityLabel: 'Wer kann sie öffnen',
         linkLabel: 'Link zum Teilen',
         noLink:
-          'Solange die Schaltung privat ist, kann sie niemand öffnen. Der Link bleibt erhalten: Wähle „Alle mit dem Link“, um dieselbe URL wieder herauszugeben – dort kannst du ihn auch ersetzen.',
+          'Solange die Schaltung privat ist, kannst nur du sie öffnen. Der Link bleibt derselbe: Wähle „Alle mit dem Link“, um ihn wieder herauszugeben oder neu zu generieren.',
         viewPublicPage: 'Community-Seite ansehen',
         regenerateWarning:
           'Der alte Link hört sofort auf zu funktionieren – für alle, die ihn haben. Die Schaltung selbst bleibt unverändert.',

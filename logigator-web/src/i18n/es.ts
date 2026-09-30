@@ -96,7 +96,7 @@ const es: TranslationSchema = {
   visibility: {
     private: {
       label: 'Solo tú',
-      hint: 'Solo tú puedes abrirlo: nada es accesible mediante un enlace.'
+      hint: 'Solo tú puedes abrirlo, incluso con el enlace.'
     },
     unlisted: {
       label: 'Cualquiera con el enlace',
@@ -440,7 +440,7 @@ const es: TranslationSchema = {
         visibilityLabel: 'Quién puede abrirlo',
         linkLabel: 'Enlace para compartir',
         noLink:
-          'Mientras el circuito sea privado, nadie puede abrirlo. El enlace se conserva: elige «Cualquiera con el enlace» para volver a repartir la misma URL, y desde ahí también puedes sustituirlo.',
+          'Mientras el circuito sea privado, solo tú puedes abrirlo. El enlace no cambia: elige «Cualquiera con el enlace» para volver a repartirlo o para regenerarlo.',
         viewPublicPage: 'Ver la página de la comunidad',
         regenerateWarning:
           'El enlace anterior deja de funcionar de inmediato, para todos los que lo tengan. El circuito en sí no cambia.',
