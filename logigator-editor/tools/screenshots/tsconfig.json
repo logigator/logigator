@@ -27,6 +27,9 @@
     "types": ["node"],
     "paths": {
       "@logigator/core": ["../../../logigator-core/src/public-api.ts"],
+      "@logigator/core/consent-text/*": [
+        "../../../logigator-core/src/origin/consent-text/*"
+      ],
       "@logigator/core/*": ["../../../logigator-core/src/*"],
       "@logigator/contract": ["../../../logigator-contract/src/public-api.ts"]
     }

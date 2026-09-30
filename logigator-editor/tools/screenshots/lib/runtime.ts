@@ -73,6 +73,17 @@ registerHooks({
         shortCircuit: true
       };
     }
+    // The root tsconfig's one folder-level alias: a locale file imports its
+    // consent text by language, the barrel re-exporting none of them.
+    if (specifier.startsWith('@logigator/core/consent-text/')) {
+      const lang = specifier.slice('@logigator/core/consent-text/'.length);
+      return {
+        url: pathToFileURL(
+          member('logigator-core', 'origin', 'consent-text', `${lang}.ts`)
+        ).href,
+        shortCircuit: true
+      };
+    }
     if (specifier.startsWith('@logigator/core/')) {
       const rest = specifier.slice('@logigator/core/'.length);
       return {
