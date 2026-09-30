@@ -49,7 +49,7 @@ const en = {
     moved: 'Moved to position {{position}} of {{total}}'
   },
   user: {
-    loadFailed: 'Failed to load user data. Please log in again.'
+    loadFailed: 'Could not load your account. Please log in again.'
   },
   userSettings: {
     notSignedIn: 'Not signed in',
@@ -159,7 +159,7 @@ const en = {
       ROM: {
         name: 'ROM',
         description:
-          'A read-only memory (ROM) is a type of non-volatile memory used in computers and other electronic devices. Data stored in ROM cannot be electronically modified after the manufacture of the memory device.',
+          'Read-only memory. The outputs carry the word stored at the address on the A inputs. Its contents are set with “Edit contents” and cannot change while the simulation runs.',
         options: {
           wordSize: 'Word Size',
           addressSize: 'Address Size',
@@ -190,7 +190,7 @@ const en = {
       RAM: {
         name: 'RAM',
         description:
-          'Random access memory. On the rising edge of CLK it reads the addressed word onto the outputs — or, while WE is HIGH, stores the word on the data inputs at the current address instead.',
+          'Random access memory. On the rising edge of CLK it reads the addressed word onto the outputs. While WE is HIGH, it stores the word on the data inputs at that address instead.',
         options: {
           wordSize: 'Word Size',
           addressSize: 'Address Size'
@@ -228,7 +228,7 @@ const en = {
           "A text annotation placed on the canvas. The dot marks the label's anchor point.",
         options: {
           text: 'Edit text',
-          placeholder: 'Enter text...',
+          placeholder: 'Enter text…',
           fontSize: 'Font size'
         }
       },
@@ -289,7 +289,7 @@ const en = {
   },
   sideBar: {
     title: 'Components',
-    search: 'Search..',
+    search: 'Search…',
     outdatedInstances:
       '{{count}} placed instance(s) of this component are out of date'
   },
@@ -317,9 +317,8 @@ const en = {
       pan: 'Pan: drag to move the board · scroll or pinch to zoom',
       wireTool:
         'Wire tool: drag to draw · tap a port to negate · tap a junction to connect/disconnect · tap to select · {{additiveKey}} to add or remove',
-      sel: 'Select: drag a marquee to select · drag the selection to move · hold {{scissorKey}} to cut wires',
-      selExact:
-        'Cut select: drag a marquee to select · wires are cut at its edge',
+      sel: 'Select: drag a box to select · drag the selection to move · hold {{scissorKey}} to cut wires',
+      selExact: 'Cut wires: drag a box to select · wires are cut at its edge',
       erase: 'Eraser: click or drag across elements to delete them',
       placeComp: 'Placing {{componentName}}: drag to position · Esc to cancel',
       simulation: 'Simulating: click switches, press buttons · drag to pan'
@@ -346,22 +345,22 @@ const en = {
             label: 'Save'
           },
           uploadCloud: {
-            label: 'Upload to cloud'
+            label: 'Upload to Cloud'
           },
           share: {
             label: 'Share'
           },
           cloneShare: {
-            label: 'Clone to my projects'
+            label: 'Clone to My Projects'
           },
           cloneShareComponent: {
-            label: 'Clone to my components'
+            label: 'Clone to My Components'
           },
           exportFile: {
-            label: 'Export to file'
+            label: 'Export to File'
           },
           generateImage: {
-            label: 'Generate image'
+            label: 'Generate Image'
           }
         }
       },
@@ -455,7 +454,7 @@ const en = {
     learnMore: 'Learn more',
     search: {
       label: 'Search the documentation',
-      placeholder: 'Search..',
+      placeholder: 'Search…',
       loading: 'Loading the documentation…',
       empty: 'Nothing matches “{{query}}”.'
     },
@@ -501,7 +500,7 @@ const en = {
     fromFile: 'From File',
     notLoggedIn: 'Log in to see your cloud projects',
     close: 'Close',
-    loading: 'Loading...',
+    loading: 'Loading…',
     uploadPrompt: 'Open a circuit file saved on your device.',
     chooseFile: 'Choose File',
     deleteProject: 'Delete Project',
@@ -510,10 +509,10 @@ const en = {
     shareProject: 'Share',
     cancelRename: 'Cancel',
     deleteConfirmMessage:
-      'Are you sure you want to delete "{{name}}"? This cannot be undone.',
+      'Are you sure you want to delete “{{name}}”? This cannot be undone.',
     deleteAccept: 'Delete',
     deleteReject: 'Cancel',
-    searchPlaceholder: 'Search projects...',
+    searchPlaceholder: 'Search projects…',
     searchButton: 'Search',
     noSearchResults: 'No projects found',
     lastEdited: 'Last edited',
@@ -538,7 +537,7 @@ const en = {
     notLoggedIn: 'You must be logged in to save projects to the cloud.',
     visibilityLabel: 'Who can open it',
     localWarning:
-      'Local projects are not persisted across devices and may be lost.'
+      "A local project exists only in this browser. Clearing the browser's site data deletes it."
   },
   newComponentDialog: {
     name: 'Name',
@@ -550,7 +549,7 @@ const en = {
     notLoggedIn: 'You must be logged in to save components to the cloud.',
     visibilityLabel: 'Who can open it',
     localWarning:
-      'Local components are not persisted across devices and may be lost.',
+      "A local component exists only in this browser. Clearing the browser's site data deletes it.",
     create: 'Create'
   },
   uploadComponent: {
@@ -565,7 +564,7 @@ const en = {
   visibility: {
     private: {
       label: 'Only you',
-      hint: 'Only you can open it — nothing is reachable by a link.'
+      hint: 'Only you can open it, even with the link.'
     },
     unlisted: {
       label: 'Anyone with the link',
@@ -583,7 +582,7 @@ const en = {
     visibilityLabel: 'Who can open it',
     linkLabel: 'Share link',
     noLink:
-      'Nobody can open the document while it is private. The link is kept: pick “Anyone with the link” to hand out the same URL again, and regenerate it from there.',
+      'Only you can open the document while it is private. The link stays the same: pick “Anyone with the link” to hand it out again or to regenerate it.',
     viewPublicPage: 'View the community page',
     copy: 'Copy link',
     linkCopied: 'Share link copied to clipboard.',
@@ -632,25 +631,25 @@ const en = {
       '“{{name}}” is moved out of your local library and stored in your cloud library, so you can use it from any device.',
     introDraft:
       '“{{name}}” embeds these local components. They will be uploaded to your cloud library alongside it.',
-    depsTitle: 'These local components will also be published',
+    depsTitle: 'These local components will also be uploaded',
     depsHint:
       'A cloud project can only contain cloud components, so each of these is uploaded to your cloud library first and then referenced.',
     unresolvableWarning:
-      '{{count}} embedded component(s) can no longer be published (their library entry is gone) and will remain plain embedded copies.',
+      '{{count}} embedded component(s) can no longer be uploaded because their library entry is gone. They stay embedded copies.',
     visibilityLabel: 'Who can open it',
     notLoggedIn: 'You must be logged in to upload to the cloud.',
     cancel: 'Cancel',
     upload: 'Upload',
     analyzeFailed: 'Could not read the circuit to prepare the upload.',
     dependencyFailed:
-      'Could not upload component “{{name}}”. Nothing further was uploaded — try again.',
+      'Could not upload component “{{name}}”. The upload stopped there, so try again.',
     uploadFailed: 'Could not upload “{{name}}” to the cloud.'
   },
   closeTab: {
     header: 'Unsaved changes',
     message: '“{{name}}” has unsaved changes. Save them before closing?',
     promotionWarning:
-      'Saving will also publish {{count}} local component(s) to your cloud library.',
+      'Saving also uploads {{count}} local component(s) to your cloud library.',
     save: 'Save',
     discard: 'Discard',
     cancel: 'Cancel'
@@ -658,8 +657,8 @@ const en = {
   sourceIndicator: {
     cloudTitle: 'Saved in your cloud library',
     localTitle: 'Saved in this browser only',
-    draftTitle: 'Not saved yet — save it to the cloud or locally',
-    shareTitle: 'Opened from a share link — read-only',
+    draftTitle: 'Not saved yet. Save it to the cloud or in this browser.',
+    shareTitle: 'Opened from a share link (read-only)',
     label: {
       server: 'Cloud',
       browser: 'Local',
@@ -672,7 +671,7 @@ const en = {
       browser: 'Saved in this browser only',
       draft: 'Not saved yet',
       share: 'Opened from a share link',
-      embedded: 'Embedded copy — its library component is no longer available'
+      embedded: 'Embedded copy: its library component no longer exists'
     }
   },
   toolBar: {
@@ -735,20 +734,20 @@ const en = {
     info: 'Info',
     debug: 'Debug',
     unexpectedError:
-      'Something went wrong. Some actions may not have completed — see the browser console for details.'
+      'Something went wrong, and some actions may not have finished. The browser console has the details.'
   },
   clipboard: {
     clear: 'Clear clipboard',
     pastePartial:
-      'Some elements could not be pasted — their component type is no longer available.',
+      'Some elements were not pasted because their component type no longer exists.',
     pastePlugsSkipped:
-      'Input and output plugs were not pasted — they are only supported inside custom components.'
+      'Input and output plugs were not pasted. They only work inside a custom component.'
   },
   wireRepair: {
     repaired:
       'Repaired {{count}} wire issue(s). Please check that your circuit still works as expected before saving.',
     loadDetected:
-      'This circuit has {{count}} wire issue(s), which can make connections behave unexpectedly.',
+      'This circuit has {{count}} wire issue(s), such as overlapping wires. A wire with an issue can be connected differently from how it looks.',
     repairAction: 'Repair wires',
     leftSimulation: 'Simulation stopped so the wires could be repaired.',
     clean: 'No wire issues found.'
@@ -757,7 +756,7 @@ const en = {
     title: 'Report a problem',
     badgeTooltip: 'Report a bug',
     intro:
-      'Found a bug? Describe what you were doing when it happened — the more detail, the easier it is to fix.',
+      'Describe what you were doing when the bug happened. Steps we can follow to make it happen again help the most.',
     errorIntro:
       'An unexpected error occurred. Tell us what you were doing so we can track it down.',
     errorDetails: 'Error details',
@@ -766,7 +765,7 @@ const en = {
       'Your current project, browser details and recent activity are attached to help us reproduce the issue.',
     send: 'Send report',
     cancel: 'Cancel',
-    sent: 'Thanks — your report was sent.',
+    sent: 'Thanks, your report was sent.',
     failed: 'Could not send the report. Please try again.'
   },
   persistence: {
@@ -785,9 +784,9 @@ const en = {
     saveFailedGeneric: 'Could not save the project.',
     createFailed: 'Could not create the project: {{detail}}',
     saveTooLarge:
-      'This circuit is too large to save to the cloud — remove some components and try again.',
+      'This circuit is too large to save to the cloud. Remove some components and try again.',
     versionMismatch:
-      'This project changed elsewhere — reload before saving again.',
+      'This project was changed somewhere else. Reload it before saving again.',
     loadFailed: 'Could not load the project.',
     componentLoadFailed: 'Could not load the component.',
     shareLoadFailed: 'Could not load the shared circuit.',
@@ -798,21 +797,22 @@ const en = {
     dumpElementCountChanged:
       'Project Dump element count changed on load — ids and action history were not restored.',
     skippedCustomOne:
-      'A custom component could not be loaded — its definition is missing — and was skipped.',
+      'A custom component was skipped because its definition is missing.',
     skippedCustomMany:
-      '{{count}} custom components could not be loaded — their definitions are missing — and were skipped.'
+      '{{count}} custom components were skipped because their definitions are missing.'
   },
   browserSupport: {
     unsupported:
-      'This browser is not officially supported — you may encounter errors. If you run into problems, try updating your browser.'
+      'This browser is not supported, so parts of the editor may not work. If you run into problems, try updating it.'
   },
   editor: {
     rendererInitFailed:
       'Could not start the graphics renderer. Your browser or GPU may be unsupported.',
-    fontLoadFailed: 'Editor fonts failed to load — some labels may look wrong.',
+    fontLoadFailed:
+      'The editor fonts did not load, so some labels may look wrong.',
     eraseRestoreFailed: 'Some erased components could not be restored.',
     circularDependency:
-      'Cannot place this component here — it would create a circular dependency.'
+      'Cannot place this component here. It would create a circular dependency.'
   },
   simulation: {
     workerMessageUnreadable:
@@ -821,20 +821,20 @@ const en = {
       'Could not start the simulation engine. Your browser may not support WebAssembly.',
     workerCrashed: 'The simulation stopped unexpectedly.',
     unsupportedComponent:
-      'Component "{{symbol}}" is not supported by the simulator.',
+      'Component “{{symbol}}” is not supported by the simulator.',
     recursiveComponent:
-      'Custom component "{{name}}" recursively places itself.',
+      'Custom component “{{name}}” places itself inside its own circuit.',
     componentNoCircuit:
-      'Custom component "{{name}}" has no circuit to simulate.',
+      'Custom component “{{name}}” has no circuit to simulate.',
     plugMismatch:
-      'Custom component "{{name}}" declares {{declaredInputs}}/{{declaredOutputs}} ports but its circuit has {{actualInputs}}/{{actualOutputs}} plugs.'
+      'Custom component “{{name}}” declares {{declaredInputs}}/{{declaredOutputs}} ports but its circuit has {{actualInputs}}/{{actualOutputs}} plugs.'
   },
   watch: {
     rendererFailed:
-      'Could not open the watch view — the renderer failed to start.',
+      'Could not open the watch view because the renderer did not start.',
     noInnerCircuit: 'This component has no inner circuit to inspect.',
     circuitMismatch:
-      'The inner circuit does not match the compiled simulation — restart the simulation to inspect it.'
+      'The inner circuit does not match the compiled simulation. Restart the simulation to inspect it.'
   },
   componentActions: {
     edit: 'Edit circuit',
@@ -845,10 +845,10 @@ const en = {
     cloudLoadFailed: 'Could not load the component from the cloud.',
     view: 'View inside',
     viewTooltip:
-      'Open this component read-only. It belongs to the shared circuit, so nothing is added to your library — clone the share to keep a copy.',
+      'Open this component read-only. It belongs to the shared circuit, so nothing is added to your library. Clone the share to keep a copy.',
     restore: 'Restore & edit',
     restoreTooltip:
-      "This component's library master is gone, but its circuit is embedded. Restore it to your local library to edit it.",
+      "This component's library entry is gone, but its circuit is embedded in the project. Restore it to your local library to edit it.",
     restored: 'Component restored to your local library.',
     restoreFailed: 'Could not restore this component.',
     signInToEdit: 'Sign in to edit',
@@ -862,7 +862,7 @@ const en = {
     symbol: 'Symbol',
     description: 'Description',
     frozenInstancesHint:
-      'Already-placed instances keep their current details; use "Update to latest" on a selected instance to apply them.',
+      'Placed instances keep their current details. Use “Update to latest” on a selected instance to apply the new ones.',
     save: 'Save',
     saved: 'Component details updated.',
     saveFailed: 'Could not update the component details.'
@@ -875,7 +875,7 @@ const en = {
     message:
       'These cloud documents have unsaved changes. Save them before logging out?',
     promotionWarning:
-      'Saving will also publish {{count}} local component(s) to your cloud library.',
+      'Saving also uploads {{count}} local component(s) to your cloud library.',
     save: 'Save & Log Out',
     discard: 'Log Out without Saving',
     cancel: 'Cancel',
@@ -960,9 +960,8 @@ const en = {
       recordPrompt: 'Press keys…'
     },
     toast: {
-      reassignedFrom: 'Shortcut unassigned from "{{action}}"',
-      loadFailed:
-        'Could not load configured shortcuts, falling back to defaults.'
+      reassignedFrom: 'Shortcut unassigned from “{{action}}”',
+      loadFailed: 'Could not load your shortcuts, so the defaults are used.'
     }
   },
   onboarding: {
@@ -970,7 +969,7 @@ const en = {
       showTips: 'Show onboarding tips'
     },
     menu: {
-      showTipsAgain: 'Show tips again'
+      showTipsAgain: 'Show Tips Again'
     },
     nudge: {
       text: 'New here? Build your first circuit in a quick tutorial.',
@@ -991,21 +990,22 @@ const en = {
       wireTapActions:
         'Drag to draw wires. <strong>Tap a port</strong> to add or remove a negation bubble, or tap a crossing to connect or split wires.',
       scissorSelectDesktop:
-        'Scissor select cuts wires at the box edge. Hold <strong>Alt</strong> to toggle it while box-selecting.',
-      scissorSelectCompact: 'Scissor select cuts wires at the box edge.',
+        '<strong>Cut wires</strong> cuts every wire at the edge of the selection box. Hold <strong>Alt</strong> while dragging a box to turn it on.',
+      scissorSelectCompact:
+        '<strong>Cut wires</strong> cuts every wire at the edge of the selection box.',
       eraser: 'Drag across anything to delete it.',
       simControls:
-        'Editing is locked while running. Use these to pause, step, and set the speed — switches and buttons stay usable.',
+        'Editing is locked while the simulation runs. These buttons pause it, step it and set its speed. Switches and buttons on the board still respond.',
       selectionActions:
-        'Rotate the selection with these buttons — or press <strong>R</strong> / <strong>Shift+R</strong>. Move it with the <strong>arrow keys</strong>.',
+        'Rotate the selection with these buttons or with <strong>R</strong> and <strong>Shift+R</strong>. The arrow keys move it.',
       pastePlacementDesktop:
-        'The pasted items land as a ghost — drag them to a free spot and release to drop them, or press Esc to cancel.',
+        'Pasted items float over the board until you drop them. Drag them to a free spot and release, or press Esc to cancel.',
       pastePlacementCompact:
-        'The pasted items land as a ghost — drag them to a free spot and lift to drop them, or tap away to cancel.',
+        'Pasted items float over the board until you drop them. Drag them to a free spot and lift your finger, or tap elsewhere to cancel.',
       portsPanelDesktop:
         "This component's plugs live here: place <strong>Input</strong> and <strong>Output</strong> from this panel, then drag the rows to set the port order and type to name them.",
       portsPanelCompact:
-        "This component's plugs live in here: place <strong>Input</strong> and <strong>Output</strong> from this panel, then drag the rows to set the port order and type to name them.",
+        "This component's plugs live here: place <strong>Input</strong> and <strong>Output</strong> from this panel, then drag the rows to set the port order and type to name them.",
       panZoomCompact:
         'Drag with two fingers to pan, pinch to zoom. One finger pans only in pan mode.'
     },
@@ -1029,21 +1029,21 @@ const en = {
             textCompact:
               'Tap <strong>+</strong> to open your building blocks, pick <strong>AND</strong>, then tap the canvas to drop it.',
             nudge:
-              'That is not an AND gate — pick <strong>AND</strong> for this one (you can remove parts with the eraser).'
+              'That is not an AND gate. Pick <strong>AND</strong> for this step. The eraser removes the other part.'
           },
           addSwitches: {
             title: 'Add two switches',
             textDesktop:
               'Now place two <strong>switch</strong> inputs to the left of the gate. ({{placed}} of {{total}} placed)',
             textCompact:
-              'Tap <strong>+</strong>, pick a <strong>switch</strong>, then tap the canvas — place two to the left of the gate. ({{placed}} of {{total}} placed)'
+              'Tap <strong>+</strong>, pick a <strong>switch</strong>, then tap the canvas to the left of the gate. Place two. ({{placed}} of {{total}} placed)'
           },
           addLed: {
             title: 'Add an LED',
             textDesktop:
-              "Place one <strong>LED</strong> to the right — that's your output.",
+              "Place an <strong>LED</strong> to the right of the gate. It shows the gate's output.",
             textCompact:
-              "Tap <strong>+</strong>, pick the <strong>LED</strong>, then tap to the right of the gate — that's your output."
+              "Tap <strong>+</strong>, pick the <strong>LED</strong>, then tap to the right of the gate. It shows the gate's output."
           },
           wireUp: {
             title: 'Wire it up',
@@ -1051,7 +1051,7 @@ const en = {
           },
           startSim: {
             title: 'Start the simulation',
-            text: 'Hit <strong>Start</strong> to power your circuit. Editing locks while it runs.'
+            text: 'Press <strong>Start</strong> to run your circuit. Editing is locked while it runs.'
           },
           flipSwitch: {
             title: 'Flip a switch',
@@ -1061,11 +1061,11 @@ const en = {
               'Tap a switch to toggle it. Turn <strong>both</strong> on and watch the LED light up.'
           },
           complete: {
-            title: "You're all set!",
+            title: 'Your circuit works',
             textDesktop:
-              "You built a working AND gate and lit the LED — nicely done!<br>From here, make it your own: add more components, wire up bigger circuits, and save your work when you like it.<br><br>Need a hand later? The <strong>Help</strong> menu has this tutorial again, What's New, and more. Have fun building!",
+              'The LED is on only while both switches are on: an AND gate outputs HIGH only when every input is HIGH.<br><br>To take this tutorial again, choose “Show Tips Again” in the <strong>Help</strong> menu. The documentation is in the same menu.',
             textCompact:
-              "You built a working AND gate and lit the LED — nicely done!<br>From here, make it your own: add more components, wire up bigger circuits, and save your work when you like it.<br><br>Need a hand later? Open the <strong>menu</strong> for this tutorial again, What's New, and more. Have fun building!"
+              'The LED is on only while both switches are on: an AND gate outputs HIGH only when every input is HIGH.<br><br>To take this tutorial again, choose “Show Tips Again” in the <strong>menu</strong>. The documentation is in the same menu.'
           }
         }
       }

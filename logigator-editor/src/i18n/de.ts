@@ -51,7 +51,7 @@ const de: TranslationSchema = {
   },
   user: {
     loadFailed:
-      'Benutzerdaten konnten nicht geladen werden. Bitte melde dich erneut an.'
+      'Dein Account konnte nicht geladen werden. Bitte melde dich erneut an.'
   },
   userSettings: {
     notSignedIn: 'Nicht angemeldet',
@@ -161,7 +161,7 @@ const de: TranslationSchema = {
       ROM: {
         name: 'ROM',
         description:
-          'Ein Festwertspeicher (ROM) ist eine Art nichtflüchtiger Speicher, der in Computern und anderen elektronischen Geräten verwendet wird. Im ROM gespeicherte Daten können nach der Herstellung des Speicherbausteins nicht mehr elektronisch verändert werden.',
+          'Festwertspeicher. Die Ausgänge führen das Wort, das an der Adresse an den A-Eingängen gespeichert ist. Der Inhalt wird mit „Inhalt bearbeiten“ festgelegt und ändert sich nicht, während die Simulation läuft.',
         options: {
           wordSize: 'Wortbreite',
           addressSize: 'Adressgröße',
@@ -192,7 +192,7 @@ const de: TranslationSchema = {
       RAM: {
         name: 'RAM',
         description:
-          'Speicher mit wahlfreiem Zugriff. Bei der steigenden Flanke von CLK liest er das adressierte Wort an die Ausgänge — oder speichert, solange WE HIGH ist, stattdessen das an den Dateneingängen anliegende Wort an der aktuellen Adresse.',
+          'Speicher mit wahlfreiem Zugriff. Bei der steigenden Flanke von CLK liest er das adressierte Wort an die Ausgänge. Solange WE HIGH ist, speichert er stattdessen das Wort an den Dateneingängen an dieser Adresse.',
         options: {
           wordSize: 'Wortbreite',
           addressSize: 'Adressgröße'
@@ -230,7 +230,7 @@ const de: TranslationSchema = {
           'Eine Textnotiz, die auf der Arbeitsfläche platziert wird. Der Punkt markiert den Ankerpunkt der Beschriftung.',
         options: {
           text: 'Text bearbeiten',
-          placeholder: 'Text eingeben...',
+          placeholder: 'Text eingeben…',
           fontSize: 'Schriftgröße'
         }
       },
@@ -262,7 +262,7 @@ const de: TranslationSchema = {
       LED: {
         name: 'LED',
         description:
-          'Leuchtet, solange die an seinen Eingang angeschlossene Leitung unter Strom steht.'
+          'Leuchtet, solange die an ihren Eingang angeschlossene Leitung unter Strom steht.'
       },
       SEGMENT_DISPLAY: {
         name: 'Segment Display',
@@ -291,7 +291,7 @@ const de: TranslationSchema = {
   },
   sideBar: {
     title: 'Komponenten',
-    search: 'Suchen..',
+    search: 'Suchen…',
     outdatedInstances:
       '{{count}} platzierte Instanz(en) dieser Komponente sind veraltet'
   },
@@ -321,7 +321,7 @@ const de: TranslationSchema = {
         'Leitungswerkzeug: ziehen zum Zeichnen · auf einen Anschluss tippen zum Negieren · auf eine Kreuzung tippen zum Verbinden/Trennen · tippen zum Auswählen · {{additiveKey}} zum Hinzufügen oder Entfernen',
       sel: 'Auswählen: Auswahlrahmen ziehen zum Selektieren · Auswahl ziehen zum Verschieben · {{scissorKey}} halten zum Schneiden von Leitungen',
       selExact:
-        'Schneide-Auswahl: Auswahlrahmen ziehen zum Selektieren · Leitungen werden an seiner Kante geschnitten',
+        'Leitungen schneiden: Auswahlrahmen ziehen zum Selektieren · Leitungen werden an seiner Kante geschnitten',
       erase:
         'Radiergummi: auf Elemente klicken oder darüberziehen, um sie zu löschen',
       placeComp:
@@ -460,7 +460,7 @@ const de: TranslationSchema = {
     learnMore: 'Mehr erfahren',
     search: {
       label: 'Dokumentation durchsuchen',
-      placeholder: 'Suchen..',
+      placeholder: 'Suchen…',
       loading: 'Dokumentation wird geladen…',
       empty: 'Nichts passt zu „{{query}}“.'
     },
@@ -507,7 +507,7 @@ const de: TranslationSchema = {
     fromFile: 'Aus Datei',
     notLoggedIn: 'Melde dich an, um deine Cloud-Projekte zu sehen',
     close: 'Schließen',
-    loading: 'Wird geladen...',
+    loading: 'Wird geladen…',
     uploadPrompt: 'Öffne eine auf deinem Gerät gespeicherte Schaltungsdatei.',
     chooseFile: 'Datei auswählen',
     deleteProject: 'Projekt löschen',
@@ -516,10 +516,10 @@ const de: TranslationSchema = {
     shareProject: 'Teilen',
     cancelRename: 'Abbrechen',
     deleteConfirmMessage:
-      'Möchtest du "{{name}}" wirklich löschen? Dies kann nicht rückgängig gemacht werden.',
+      'Möchtest du „{{name}}“ wirklich löschen? Das kann nicht rückgängig gemacht werden.',
     deleteAccept: 'Löschen',
     deleteReject: 'Abbrechen',
-    searchPlaceholder: 'Projekte suchen...',
+    searchPlaceholder: 'Projekte suchen…',
     searchButton: 'Suchen',
     noSearchResults: 'Keine Projekte gefunden',
     lastEdited: 'Zuletzt bearbeitet',
@@ -545,7 +545,7 @@ const de: TranslationSchema = {
       'Du musst angemeldet sein, um Projekte in der Cloud zu speichern.',
     visibilityLabel: 'Wer kann es öffnen',
     localWarning:
-      'Lokale Projekte werden nicht geräteübergreifend gespeichert und können verloren gehen.'
+      'Ein lokales Projekt gibt es nur in diesem Browser. Wenn du die Websitedaten des Browsers löschst, ist es weg.'
   },
   newComponentDialog: {
     name: 'Name',
@@ -558,7 +558,7 @@ const de: TranslationSchema = {
       'Du musst angemeldet sein, um Komponenten in der Cloud zu speichern.',
     visibilityLabel: 'Wer kann es öffnen',
     localWarning:
-      'Lokale Komponenten werden nicht geräteübergreifend gespeichert und können verloren gehen.',
+      'Eine lokale Komponente gibt es nur in diesem Browser. Wenn du die Websitedaten des Browsers löschst, ist sie weg.',
     create: 'Erstellen'
   },
   uploadComponent: {
@@ -568,7 +568,7 @@ const de: TranslationSchema = {
   visibility: {
     private: {
       label: 'Nur du',
-      hint: 'Nur du kannst es öffnen – über einen Link ist nichts erreichbar.'
+      hint: 'Nur du kannst es öffnen, auch mit dem Link.'
     },
     unlisted: {
       label: 'Alle mit dem Link',
@@ -586,14 +586,14 @@ const de: TranslationSchema = {
     visibilityLabel: 'Wer kann es öffnen',
     linkLabel: 'Freigabelink',
     noLink:
-      'Solange das Dokument privat ist, kann es niemand öffnen. Der Link bleibt erhalten: Wähle „Alle mit dem Link“, um dieselbe URL wieder herauszugeben – dort kannst du ihn auch ersetzen.',
+      'Solange das Dokument privat ist, kannst nur du es öffnen. Der Link bleibt derselbe: Wähle „Alle mit dem Link“, um ihn wieder herauszugeben oder neu zu generieren.',
     viewPublicPage: 'Community-Seite ansehen',
     copy: 'Link kopieren',
     linkCopied: 'Freigabelink in die Zwischenablage kopiert.',
     copyFailed: 'Der Link konnte nicht in die Zwischenablage kopiert werden.',
     regenerate: 'Link neu generieren',
     regenerateWarning:
-      'Der alte Link hört sofort auf zu funktionieren – für alle, die ihn haben. Die Schaltung selbst bleibt unverändert.',
+      'Der alte Link funktioniert ab sofort für niemanden mehr. Die Schaltung selbst bleibt unverändert.',
     linkPublished:
       'Der Link wurde nicht ersetzt: Das Dokument ist veröffentlicht, und sein Link ist die Adresse seiner Seite.',
     linkRegenerated: 'Ein neuer Freigabelink wurde generiert.',
@@ -637,18 +637,18 @@ const de: TranslationSchema = {
       '„{{name}}“ wird aus deiner lokalen Bibliothek in deine Cloud-Bibliothek verschoben, sodass du sie von jedem Gerät nutzen kannst.',
     introDraft:
       '„{{name}}“ bettet diese lokalen Komponenten ein. Sie werden gemeinsam damit in deine Cloud-Bibliothek hochgeladen.',
-    depsTitle: 'Diese lokalen Komponenten werden ebenfalls veröffentlicht',
+    depsTitle: 'Diese lokalen Komponenten werden ebenfalls hochgeladen',
     depsHint:
       'Ein Cloud-Projekt kann nur Cloud-Komponenten enthalten, daher wird jede davon zuerst in deine Cloud-Bibliothek hochgeladen und dann referenziert.',
     unresolvableWarning:
-      '{{count}} eingebettete Komponente(n) können nicht mehr veröffentlicht werden (ihr Bibliothekseintrag fehlt) und bleiben einfache eingebettete Kopien.',
+      '{{count}} eingebettete Komponente(n) können nicht mehr hochgeladen werden, weil ihr Bibliothekseintrag fehlt. Sie bleiben eingebettete Kopien.',
     visibilityLabel: 'Wer kann es öffnen',
     notLoggedIn: 'Du musst angemeldet sein, um in die Cloud hochzuladen.',
     cancel: 'Abbrechen',
     upload: 'Hochladen',
     analyzeFailed: 'Die Schaltung konnte für den Upload nicht gelesen werden.',
     dependencyFailed:
-      'Die Komponente „{{name}}“ konnte nicht hochgeladen werden. Es wurde nichts weiter hochgeladen — versuche es erneut.',
+      'Die Komponente „{{name}}“ konnte nicht hochgeladen werden. Der Upload hat dort aufgehört, versuche es also erneut.',
     uploadFailed: '„{{name}}“ konnte nicht in die Cloud hochgeladen werden.'
   },
   closeTab: {
@@ -656,7 +656,7 @@ const de: TranslationSchema = {
     message:
       '„{{name}}“ hat ungespeicherte Änderungen. Vor dem Schließen speichern?',
     promotionWarning:
-      'Beim Speichern werden außerdem {{count}} lokale Komponente(n) in deine Cloud-Bibliothek veröffentlicht.',
+      'Beim Speichern werden außerdem {{count}} lokale Komponente(n) in deine Cloud-Bibliothek hochgeladen.',
     save: 'Speichern',
     discard: 'Verwerfen',
     cancel: 'Abbrechen'
@@ -664,8 +664,9 @@ const de: TranslationSchema = {
   sourceIndicator: {
     cloudTitle: 'In deiner Cloud-Bibliothek gespeichert',
     localTitle: 'Nur in diesem Browser gespeichert',
-    draftTitle: 'Noch nicht gespeichert — speichere es in der Cloud oder lokal',
-    shareTitle: 'Über einen Freigabelink geöffnet — schreibgeschützt',
+    draftTitle:
+      'Noch nicht gespeichert. Speichere es in der Cloud oder in diesem Browser.',
+    shareTitle: 'Über einen Freigabelink geöffnet (schreibgeschützt)',
     label: {
       server: 'Cloud',
       browser: 'Lokal',
@@ -679,7 +680,7 @@ const de: TranslationSchema = {
       draft: 'Noch nicht gespeichert',
       share: 'Über einen Freigabelink geöffnet',
       embedded:
-        'Eingebettete Kopie — ihre Bibliothekskomponente ist nicht mehr verfügbar'
+        'Eingebettete Kopie: Ihre Bibliothekskomponente gibt es nicht mehr'
     }
   },
   toolBar: {
@@ -744,20 +745,20 @@ const de: TranslationSchema = {
     info: 'Info',
     debug: 'Debug',
     unexpectedError:
-      'Etwas ist schiefgelaufen. Einige Aktionen wurden möglicherweise nicht abgeschlossen — Details findest du in der Browser-Konsole.'
+      'Etwas ist schiefgelaufen, und einige Aktionen wurden möglicherweise nicht abgeschlossen. Details stehen in der Browser-Konsole.'
   },
   clipboard: {
     clear: 'Zwischenablage leeren',
     pastePartial:
-      'Einige Elemente konnten nicht eingefügt werden — ihr Komponententyp ist nicht mehr verfügbar.',
+      'Einige Elemente wurden nicht eingefügt, weil es ihren Komponententyp nicht mehr gibt.',
     pastePlugsSkipped:
-      'Ein- und Ausgangsstecker wurden nicht eingefügt — sie werden nur innerhalb benutzerdefinierter Komponenten unterstützt.'
+      'Ein- und Ausgangsstecker wurden nicht eingefügt. Sie funktionieren nur innerhalb einer benutzerdefinierten Komponente.'
   },
   wireRepair: {
     repaired:
       '{{count}} Leitungsproblem(e) behoben. Bitte prüfe vor dem Speichern, ob deine Schaltung noch wie erwartet funktioniert.',
     loadDetected:
-      'Diese Schaltung hat {{count}} Leitungsproblem(e), wodurch sich Verbindungen unerwartet verhalten können.',
+      'Diese Schaltung hat {{count}} Leitungsproblem(e), zum Beispiel überlappende Leitungen. Eine Leitung mit einem Problem kann anders verbunden sein, als sie aussieht.',
     repairAction: 'Leitungen reparieren',
     leftSimulation:
       'Die Simulation wurde beendet, um die Leitungen zu reparieren.',
@@ -767,7 +768,7 @@ const de: TranslationSchema = {
     title: 'Problem melden',
     badgeTooltip: 'Fehler melden',
     intro:
-      'Einen Fehler gefunden? Beschreibe, was du getan hast, als er auftrat — je mehr Details, desto einfacher lässt er sich beheben.',
+      'Beschreibe, was du getan hast, als der Fehler auftrat. Am meisten helfen Schritte, mit denen wir ihn wieder auslösen können.',
     errorIntro:
       'Ein unerwarteter Fehler ist aufgetreten. Sag uns, was du getan hast, damit wir ihn eingrenzen können.',
     errorDetails: 'Fehlerdetails',
@@ -776,7 +777,7 @@ const de: TranslationSchema = {
       'Dein aktuelles Projekt, Browser-Details und die jüngste Aktivität werden angehängt, damit wir das Problem nachvollziehen können.',
     send: 'Bericht senden',
     cancel: 'Abbrechen',
-    sent: 'Danke — dein Bericht wurde gesendet.',
+    sent: 'Danke, dein Bericht wurde gesendet.',
     failed:
       'Der Bericht konnte nicht gesendet werden. Bitte versuche es erneut.'
   },
@@ -798,9 +799,9 @@ const de: TranslationSchema = {
     saveFailedGeneric: 'Das Projekt konnte nicht gespeichert werden.',
     createFailed: 'Das Projekt konnte nicht erstellt werden: {{detail}}',
     saveTooLarge:
-      'Diese Schaltung ist zu groß, um in der Cloud gespeichert zu werden — entferne einige Komponenten und versuche es erneut.',
+      'Diese Schaltung ist zu groß, um in der Cloud gespeichert zu werden. Entferne einige Komponenten und versuche es erneut.',
     versionMismatch:
-      'Dieses Projekt wurde anderswo geändert — lade neu, bevor du erneut speicherst.',
+      'Dieses Projekt wurde an anderer Stelle geändert. Lade es neu, bevor du erneut speicherst.',
     loadFailed: 'Das Projekt konnte nicht geladen werden.',
     componentLoadFailed: 'Die Komponente konnte nicht geladen werden.',
     shareLoadFailed: 'Die geteilte Schaltung konnte nicht geladen werden.',
@@ -811,23 +812,23 @@ const de: TranslationSchema = {
     dumpElementCountChanged:
       'Die Elementanzahl des Projekt-Dumps hat sich beim Laden geändert — IDs und Aktionsverlauf wurden nicht wiederhergestellt.',
     skippedCustomOne:
-      'Eine benutzerdefinierte Komponente konnte nicht geladen werden — ihre Definition fehlt — und wurde übersprungen.',
+      'Eine benutzerdefinierte Komponente wurde übersprungen, weil ihre Definition fehlt.',
     skippedCustomMany:
-      '{{count}} benutzerdefinierte Komponenten konnten nicht geladen werden — ihre Definitionen fehlen — und wurden übersprungen.'
+      '{{count}} benutzerdefinierte Komponenten wurden übersprungen, weil ihre Definitionen fehlen.'
   },
   browserSupport: {
     unsupported:
-      'Dieser Browser wird nicht offiziell unterstützt — es können Fehler auftreten. Versuche bei Problemen, deinen Browser zu aktualisieren.'
+      'Dieser Browser wird nicht unterstützt, daher funktionieren Teile des Editors möglicherweise nicht. Versuche bei Problemen, ihn zu aktualisieren.'
   },
   editor: {
     rendererInitFailed:
       'Der Grafik-Renderer konnte nicht gestartet werden. Dein Browser oder deine GPU wird möglicherweise nicht unterstützt.',
     fontLoadFailed:
-      'Die Editor-Schriftarten konnten nicht geladen werden — einige Beschriftungen sehen möglicherweise falsch aus.',
+      'Die Editor-Schriftarten wurden nicht geladen, daher sehen einige Beschriftungen möglicherweise falsch aus.',
     eraseRestoreFailed:
       'Einige gelöschte Komponenten konnten nicht wiederhergestellt werden.',
     circularDependency:
-      'Diese Komponente kann hier nicht platziert werden — es würde eine zirkuläre Abhängigkeit entstehen.'
+      'Diese Komponente kann hier nicht platziert werden. Es würde eine zirkuläre Abhängigkeit entstehen.'
   },
   simulation: {
     workerMessageUnreadable:
@@ -836,21 +837,21 @@ const de: TranslationSchema = {
       'Die Simulations-Engine konnte nicht gestartet werden. Dein Browser unterstützt möglicherweise kein WebAssembly.',
     workerCrashed: 'Die Simulation wurde unerwartet beendet.',
     unsupportedComponent:
-      'Die Komponente "{{symbol}}" wird vom Simulator nicht unterstützt.',
+      'Die Komponente „{{symbol}}“ wird vom Simulator nicht unterstützt.',
     recursiveComponent:
-      'Die benutzerdefinierte Komponente "{{name}}" platziert sich rekursiv selbst.',
+      'Die benutzerdefinierte Komponente „{{name}}“ platziert sich in ihrer eigenen Schaltung.',
     componentNoCircuit:
-      'Die benutzerdefinierte Komponente "{{name}}" hat keine Schaltung zum Simulieren.',
+      'Die benutzerdefinierte Komponente „{{name}}“ hat keine Schaltung zum Simulieren.',
     plugMismatch:
-      'Die benutzerdefinierte Komponente "{{name}}" deklariert {{declaredInputs}}/{{declaredOutputs}} Anschlüsse, aber ihre Schaltung hat {{actualInputs}}/{{actualOutputs}} Stecker.'
+      'Die benutzerdefinierte Komponente „{{name}}“ deklariert {{declaredInputs}}/{{declaredOutputs}} Anschlüsse, aber ihre Schaltung hat {{actualInputs}}/{{actualOutputs}} Stecker.'
   },
   watch: {
     rendererFailed:
-      'Die Beobachtungsansicht konnte nicht geöffnet werden — der Renderer ließ sich nicht starten.',
+      'Die Beobachtungsansicht konnte nicht geöffnet werden, weil der Renderer nicht gestartet ist.',
     noInnerCircuit:
       'Diese Komponente hat keine innere Schaltung zum Inspizieren.',
     circuitMismatch:
-      'Die innere Schaltung stimmt nicht mit der kompilierten Simulation überein — starte die Simulation neu, um sie zu inspizieren.'
+      'Die innere Schaltung stimmt nicht mit der kompilierten Simulation überein. Starte die Simulation neu, um sie zu inspizieren.'
   },
   componentActions: {
     edit: 'Schaltung bearbeiten',
@@ -862,10 +863,10 @@ const de: TranslationSchema = {
       'Die Komponente konnte nicht aus der Cloud geladen werden.',
     view: 'Hineinsehen',
     viewTooltip:
-      'Öffnet diese Komponente schreibgeschützt. Sie gehört zur geteilten Schaltung, deiner Bibliothek wird nichts hinzugefügt — klone den Share, um eine Kopie zu behalten.',
+      'Öffnet diese Komponente schreibgeschützt. Sie gehört zur geteilten Schaltung, daher wird deiner Bibliothek nichts hinzugefügt. Klone die geteilte Schaltung, um eine Kopie zu behalten.',
     restore: 'Wiederherstellen & bearbeiten',
     restoreTooltip:
-      'Das Bibliotheksoriginal dieser Komponente fehlt, aber ihre Schaltung ist eingebettet. Stelle sie in deiner lokalen Bibliothek wieder her, um sie zu bearbeiten.',
+      'Der Bibliothekseintrag dieser Komponente fehlt, aber ihre Schaltung ist im Projekt eingebettet. Stelle sie in deiner lokalen Bibliothek wieder her, um sie zu bearbeiten.',
     restored: 'Komponente in deiner lokalen Bibliothek wiederhergestellt.',
     restoreFailed: 'Diese Komponente konnte nicht wiederhergestellt werden.',
     signInToEdit: 'Zum Bearbeiten anmelden',
@@ -879,7 +880,7 @@ const de: TranslationSchema = {
     symbol: 'Symbol',
     description: 'Beschreibung',
     frozenInstancesHint:
-      'Bereits platzierte Instanzen behalten ihre aktuellen Details; nutze „Auf neueste Version aktualisieren“ bei einer ausgewählten Instanz, um sie zu übernehmen.',
+      'Platzierte Instanzen behalten ihre aktuellen Details. Nutze „Auf neueste Version aktualisieren“ bei einer ausgewählten Instanz, um die neuen zu übernehmen.',
     save: 'Speichern',
     saved: 'Komponentendetails aktualisiert.',
     saveFailed: 'Die Komponentendetails konnten nicht aktualisiert werden.'
@@ -892,7 +893,7 @@ const de: TranslationSchema = {
     message:
       'Diese Cloud-Dokumente haben ungespeicherte Änderungen. Vor dem Abmelden speichern?',
     promotionWarning:
-      'Beim Speichern werden außerdem {{count}} lokale Komponente(n) in deine Cloud-Bibliothek veröffentlicht.',
+      'Beim Speichern werden außerdem {{count}} lokale Komponente(n) in deine Cloud-Bibliothek hochgeladen.',
     save: 'Speichern & Abmelden',
     discard: 'Ohne Speichern abmelden',
     cancel: 'Abbrechen',
@@ -981,7 +982,7 @@ const de: TranslationSchema = {
     toast: {
       reassignedFrom: 'Tastenkürzel von „{{action}}“ entfernt',
       loadFailed:
-        'Konfigurierte Tastenkürzel konnten nicht geladen werden, es werden die Standardwerte verwendet.'
+        'Deine Tastenkürzel konnten nicht geladen werden, daher gelten die Standardwerte.'
     }
   },
   onboarding: {
@@ -1010,22 +1011,22 @@ const de: TranslationSchema = {
       wireTapActions:
         'Ziehen, um Leitungen zu zeichnen. <strong>Tippe auf einen Anschluss</strong>, um eine Negationsblase hinzuzufügen oder zu entfernen, oder tippe auf eine Kreuzung, um Leitungen zu verbinden oder zu trennen.',
       scissorSelectDesktop:
-        'Die Schneide-Auswahl schneidet Leitungen an der Rahmenkante. Halte <strong>Alt</strong>, um sie während der Rahmenauswahl umzuschalten.',
+        '<strong>Leitungen schneiden</strong> schneidet jede Leitung an der Kante des Auswahlrahmens. Halte <strong>Alt</strong>, während du einen Rahmen ziehst, um es einzuschalten.',
       scissorSelectCompact:
-        'Die Schneide-Auswahl schneidet Leitungen an der Rahmenkante.',
+        '<strong>Leitungen schneiden</strong> schneidet jede Leitung an der Kante des Auswahlrahmens.',
       eraser: 'Ziehe über etwas, um es zu löschen.',
       simControls:
-        'Während des Laufens ist die Bearbeitung gesperrt. Damit kannst du pausieren, schrittweise gehen und die Geschwindigkeit einstellen — Schalter und Taster bleiben bedienbar.',
+        'Während die Simulation läuft, ist die Bearbeitung gesperrt. Diese Schaltflächen pausieren sie, führen einen Schritt aus und stellen die Geschwindigkeit ein. Schalter und Taster auf der Arbeitsfläche reagieren weiterhin.',
       selectionActions:
-        'Drehe die Auswahl mit diesen Schaltflächen — oder drücke <strong>R</strong> / <strong>Shift+R</strong>. Verschiebe sie mit den <strong>Pfeiltasten</strong>.',
+        'Drehe die Auswahl mit diesen Schaltflächen oder mit <strong>R</strong> und <strong>Shift+R</strong>. Die Pfeiltasten verschieben sie.',
       pastePlacementDesktop:
-        'Die eingefügten Elemente erscheinen als Vorschau — ziehe sie an eine freie Stelle und lass los, um sie abzulegen, oder drücke Esc zum Abbrechen.',
+        'Eingefügte Elemente schweben über der Arbeitsfläche, bis du sie ablegst. Ziehe sie an eine freie Stelle und lass los, oder drücke Esc zum Abbrechen.',
       pastePlacementCompact:
-        'Die eingefügten Elemente erscheinen als Vorschau — ziehe sie an eine freie Stelle und hebe den Finger, um sie abzulegen, oder tippe daneben zum Abbrechen.',
+        'Eingefügte Elemente schweben über der Arbeitsfläche, bis du sie ablegst. Ziehe sie an eine freie Stelle und hebe den Finger, oder tippe daneben zum Abbrechen.',
       portsPanelDesktop:
         'Hier liegen die Stecker dieser Komponente: Platziere <strong>Eingang</strong> und <strong>Ausgang</strong> aus diesem Panel, ziehe dann die Zeilen für die Port-Reihenfolge und tippe Namen ein.',
       portsPanelCompact:
-        'Hier drin liegen die Stecker dieser Komponente: Platziere <strong>Eingang</strong> und <strong>Ausgang</strong> aus diesem Panel, ziehe dann die Zeilen für die Port-Reihenfolge und tippe Namen ein.',
+        'Hier liegen die Stecker dieser Komponente: Platziere <strong>Eingang</strong> und <strong>Ausgang</strong> aus diesem Panel, ziehe dann die Zeilen für die Port-Reihenfolge und tippe Namen ein.',
       panZoomCompact:
         'Ziehe mit zwei Fingern zum Schwenken, spreize sie zum Zoomen. Mit einem Finger wird nur im Schwenkmodus geschwenkt.'
     },
@@ -1050,21 +1051,21 @@ const de: TranslationSchema = {
             textCompact:
               'Tippe auf <strong>+</strong>, um deine Bausteine zu öffnen, wähle <strong>UND</strong> und tippe dann auf die Arbeitsfläche, um es abzulegen.',
             nudge:
-              'Das ist kein UND-Gatter — wähle hierfür <strong>UND</strong> (mit dem Radiergummi kannst du Bauteile entfernen).'
+              'Das ist kein UND-Gatter. Wähle für diesen Schritt <strong>UND</strong>. Mit dem Radiergummi entfernst du das andere Bauteil.'
           },
           addSwitches: {
             title: 'Füge zwei Schalter hinzu',
             textDesktop:
               'Platziere nun zwei <strong>Schalter</strong> als Eingänge links vom Gatter. ({{placed}} von {{total}} platziert)',
             textCompact:
-              'Tippe auf <strong>+</strong>, wähle einen <strong>Schalter</strong> und tippe dann auf die Arbeitsfläche — platziere zwei links vom Gatter. ({{placed}} von {{total}} platziert)'
+              'Tippe auf <strong>+</strong>, wähle einen <strong>Schalter</strong> und tippe dann links vom Gatter auf die Arbeitsfläche. Platziere zwei. ({{placed}} von {{total}} platziert)'
           },
           addLed: {
             title: 'Füge eine LED hinzu',
             textDesktop:
-              'Platziere eine <strong>LED</strong> rechts — das ist dein Ausgang.',
+              'Platziere eine <strong>LED</strong> rechts vom Gatter. Sie zeigt den Ausgang des Gatters.',
             textCompact:
-              'Tippe auf <strong>+</strong>, wähle die <strong>LED</strong> und tippe dann rechts vom Gatter — das ist dein Ausgang.'
+              'Tippe auf <strong>+</strong>, wähle die <strong>LED</strong> und tippe dann rechts vom Gatter. Sie zeigt den Ausgang des Gatters.'
           },
           wireUp: {
             title: 'Verdrahte es',
@@ -1072,7 +1073,7 @@ const de: TranslationSchema = {
           },
           startSim: {
             title: 'Starte die Simulation',
-            text: 'Drücke <strong>Start</strong>, um deine Schaltung mit Strom zu versorgen. Während sie läuft, ist die Bearbeitung gesperrt.'
+            text: 'Drücke <strong>Start</strong>, um deine Schaltung laufen zu lassen. Während sie läuft, ist die Bearbeitung gesperrt.'
           },
           flipSwitch: {
             title: 'Betätige einen Schalter',
@@ -1082,11 +1083,11 @@ const de: TranslationSchema = {
               'Tippe einen Schalter, um ihn umzuschalten. Schalte <strong>beide</strong> ein und beobachte, wie die LED aufleuchtet.'
           },
           complete: {
-            title: 'Alles bereit!',
+            title: 'Deine Schaltung funktioniert',
             textDesktop:
-              'Du hast ein funktionierendes UND-Gatter gebaut und die LED zum Leuchten gebracht — gut gemacht!<br>Von hier aus kannst du es zu deinem eigenen machen: Füge weitere Komponenten hinzu, verdrahte größere Schaltungen und speichere deine Arbeit, wenn sie dir gefällt.<br><br>Später Hilfe nötig? Im <strong>Hilfe</strong>-Menü findest du dieses Tutorial erneut, die Neuigkeiten und mehr. Viel Spaß beim Bauen!',
+              'Die LED leuchtet nur, solange beide Schalter an sind: Ein UND-Gatter gibt nur HIGH aus, wenn alle Eingänge HIGH sind.<br><br>Um dieses Tutorial noch einmal zu machen, wähle „Tipps erneut anzeigen“ im Menü <strong>Hilfe</strong>. Dort findest du auch die Dokumentation.',
             textCompact:
-              'Du hast ein funktionierendes UND-Gatter gebaut und die LED zum Leuchten gebracht — gut gemacht!<br>Von hier aus kannst du es zu deinem eigenen machen: Füge weitere Komponenten hinzu, verdrahte größere Schaltungen und speichere deine Arbeit, wenn sie dir gefällt.<br><br>Später Hilfe nötig? Öffne das <strong>Menü</strong> für dieses Tutorial erneut, die Neuigkeiten und mehr. Viel Spaß beim Bauen!'
+              'Die LED leuchtet nur, solange beide Schalter an sind: Ein UND-Gatter gibt nur HIGH aus, wenn alle Eingänge HIGH sind.<br><br>Um dieses Tutorial noch einmal zu machen, wähle „Tipps erneut anzeigen“ im <strong>Menü</strong>. Dort findest du auch die Dokumentation.'
           }
         }
       }
