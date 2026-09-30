@@ -32,6 +32,12 @@ export class CookieService {
    *
    * The value is written raw, matching what {@link get} returns, so a caller
    * storing anything but unreserved characters encodes it itself.
+   *
+   * `SameSite=Lax` is spelled out because only some browsers default to it;
+   * `Strict` would drop the cookie from a navigation arriving from another
+   * site, and that page would render as if nothing had been chosen. `Secure`
+   * follows the page's scheme: a browser refuses a secure cookie written from
+   * a plain-HTTP page, which would lose the write altogether.
    */
   public set(
     name: string,
@@ -41,7 +47,9 @@ export class CookieService {
     if (this.isServer) {
       return;
     }
-    this.document.cookie = `${name}=${value}; path=/; max-age=${maxAgeSeconds}`;
+    const secure =
+      this.document.location.protocol === 'https:' ? '; secure' : '';
+    this.document.cookie = `${name}=${value}; path=/; max-age=${maxAgeSeconds}; samesite=lax${secure}`;
   }
 
   public delete(name: string): void {

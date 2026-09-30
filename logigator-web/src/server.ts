@@ -56,15 +56,14 @@ function toUrlPath(absolutePath: string): string {
 }
 
 /**
- * The built browser assets, including the consent bundle and the icons the
- * editor and the legacy pages link to by absolute path. Served before the
- * language redirect, so a file request is never rewritten.
+ * The built browser assets, including the icons the editor and the legacy pages
+ * link to by absolute path. Served before the language redirect, so a file
+ * request is never rewritten.
  *
- * Only a hashed name may be held forever. `public/` is copied verbatim and the
- * consent bundle keeps its own name — that URL is a contract with the editor —
- * so those expire instead, which is what lets a change to the consent text or
- * the analytics snippet reach a visitor who has been here before. `ETag` and
- * `Last-Modified` then make the re-check a `304`, not a transfer.
+ * Only a hashed name may be held forever. `public/` is copied verbatim, so its
+ * files expire instead, which is what lets a changed icon or manifest reach a
+ * visitor who has been here before. `ETag` and `Last-Modified` then make the
+ * re-check a `304`, not a transfer.
  */
 app.use(
   express.static(browserDistFolder, {
@@ -80,20 +79,6 @@ app.use(
     }
   })
 );
-
-/**
- * The consent bundle, at the URL the editor injects. `@angular/build` cannot
- * emit a bundle into a subdirectory — a bundle name may not contain a slash —
- * and the path is a contract with the editor rather than a build detail, so it
- * is answered here rather than by changing the editor.
- *
- * A redirect rather than serving the file: in development the bundle never
- * reaches disk, the CLI's own server holds it, so anything reading
- * `browserDistFolder` would work in production only.
- */
-app.get('/js/cookieconsent.js', (_req, res) => {
-  res.redirect(302, '/cookieconsent.js');
-});
 
 /**
  * A URL whose path is not canonical is redirected to the one that is,

@@ -1,4 +1,5 @@
 import type { TranslationSchema } from '../app/translation/translation-schema.model';
+import { consentDe } from '@logigator/core/consent-text/de';
 
 const de: TranslationSchema = {
   common: {
@@ -72,8 +73,10 @@ const de: TranslationSchema = {
     changelog: 'Änderungsprotokoll',
     privacyPolicy: 'Datenschutzerklärung',
     imprint: 'Impressum',
-    contributing: 'Mitwirken'
+    contributing: 'Mitwirken',
+    cookieSettings: 'Cookie-Einstellungen'
   },
+  consent: consentDe,
   documents: {
     stars: 'Sterne'
   },

@@ -192,7 +192,7 @@ export class EditorMenuService {
           this.documentationItem(),
           this.changelogItem(),
           this.showTipsAgainItem(),
-          ...this.cookieSettingsItems(),
+          this.cookieSettingsItem(),
           this.aboutItem()
         ]
       }
@@ -224,7 +224,7 @@ export class EditorMenuService {
       this.documentationItem(),
       this.changelogItem(),
       this.showTipsAgainItem(),
-      ...this.cookieSettingsItems(),
+      this.cookieSettingsItem(),
       this.aboutItem()
     ];
 
@@ -376,20 +376,14 @@ export class EditorMenuService {
     });
   }
 
-  private cookieSettingsItems(): MenuItem[] {
-    // The consent banner comes from the backend-served bundle; without it
-    // (bare ng serve) there are no preferences to manage. It loads
-    // asynchronously, so the signal read recomputes the menus once it arrives.
-    if (!this.consentService.available()) return [];
-    return [
-      {
-        label: this.translation.translate(
-          'titleBar.menuBar.help.items.cookieSettings.label'
-        ),
-        icon: 'ph ph-cookie',
-        command: () => this.consentService.showPreferences()
-      }
-    ];
+  private cookieSettingsItem(): MenuItem {
+    return {
+      label: this.translation.translate(
+        'titleBar.menuBar.help.items.cookieSettings.label'
+      ),
+      icon: 'ph ph-cookie',
+      command: () => void this.consentService.showPreferences()
+    };
   }
 
   private aboutItem(): MenuItem {

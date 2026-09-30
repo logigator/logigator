@@ -12,8 +12,8 @@
  *
  * Most of it is the circuit document. The `origin/` half is the other kind of
  * shared truth: the small contracts every app on the origin has to agree about
- * — the `preferences` cookie and the language set — which qualify for the same
- * reason, being pure data with no platform of their own.
+ * — the `preferences` and `consent` cookies and the language set — which
+ * qualify for the same reason, being pure data with no platform of their own.
  */
 
 // ---- origin: what every app on the origin must agree about ----
@@ -24,6 +24,25 @@ export {
   PREFERENCES_COOKIE
 } from './origin/preferences-cookie';
 export type { Preferences } from './origin/preferences-cookie';
+export {
+  CONSENT_CATEGORIES,
+  CONSENT_COOKIE,
+  CONSENT_REVISION,
+  decodeConsent,
+  encodeConsent
+} from './origin/consent-cookie';
+export type { ConsentCategory } from './origin/consent-cookie';
+export { consentCopy } from './origin/consent-text/consent-text';
+export type {
+  ConsentCopy,
+  ConsentCopyCategory,
+  ConsentText,
+  ConsentTextKey,
+  ConsentTopic
+} from './origin/consent-text/consent-text';
+// The text itself is one module per language and is not re-exported here: a
+// locale file imports its own language by path, so the language's chunk is the
+// only one carrying it (see `origin/consent-text/consent-text.ts`).
 export {
   AVAILABLE_LANGUAGES,
   DEFAULT_LANGUAGE,

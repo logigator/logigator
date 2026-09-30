@@ -2,6 +2,7 @@ import type { WorkMode } from '../app/work-mode/work-mode.enum';
 import type { ShortcutActionEnum } from '../app/shortcuts/shortcut-action.enum';
 import type { ComponentCategory } from '@logigator/core';
 import type { TranslationSchema } from '../app/translation/translation-schema.model';
+import { consentDe } from '@logigator/core/consent-text/de';
 
 const de: TranslationSchema = {
   common: {
@@ -67,6 +68,7 @@ const de: TranslationSchema = {
     light: 'Hell',
     dark: 'Dunkel'
   },
+  consent: consentDe,
   hexEditor: {
     wordView: 'Wörter',
     byteView: 'Bytes',

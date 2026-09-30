@@ -12,6 +12,16 @@
   >{{ t('header.skipToContent') }}</a
 >
 
+<!-- Early in the document, so a keyboard reaches the question right after the
+     skip link rather than after the whole page it is pinned over. -->
+@if (consent.pending()) {
+<lg-consent-banner
+  [copy]="consent.copy()"
+  (decide)="consent.decide($event)"
+  (customize)="consent.showPreferences()"
+/>
+}
+
 <div class="flex min-h-dvh flex-col bg-surface-0 dark:bg-surface-950">
   <web-top-bar />
   <main id="content" class="flex-1">

@@ -137,6 +137,15 @@ export { LgUserControl } from './components/user-control/user-control';
 export { LgUserPanel } from './components/user-control/user-panel';
 export { LgUserPanelSection } from './components/user-control/user-panel-section';
 export { LgFileUpload } from './components/file-upload/file-upload';
+// The consent question the site and the editor both ask. Presentational: the
+// copy is the consumer's translation and the answer is the consumer's to store.
+export { LgConsentBanner } from './components/consent/consent-banner';
+export { LgConsentPreferences } from './components/consent/consent-preferences';
+export type { LgConsentPreferencesData } from './components/consent/consent-preferences';
+export type {
+  LgConsentCategory,
+  LgConsentCopy
+} from './components/consent/consent-copy';
 export { LgScroller } from './components/scroller/scroller';
 
 export { DialogService } from './components/dynamic-dialog/dialog.service';

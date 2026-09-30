@@ -11,6 +11,13 @@
     <a class="hover:text-text" [routerLink]="links.imprint()"
       >{{ t('footer.imprint') }}</a
     >
+    <button
+      type="button"
+      class="cursor-pointer hover:text-text"
+      (click)="consent.showPreferences()"
+    >
+      {{ t('footer.cookieSettings') }}
+    </button>
     <a
       class="hover:text-text"
       target="_blank"

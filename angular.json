@@ -192,26 +192,7 @@
               "GIT_COMMIT": "''",
               "BUILD_DATE": "''"
             },
-            "styles": [
-              "logigator-web/src/styles.scss",
-              {
-                "input": "logigator-web/src/consent/cookieconsent.css",
-                "bundleName": "cookieconsent",
-                "inject": false
-              }
-            ],
-            "scripts": [
-              {
-                "input": "node_modules/vanilla-cookieconsent/dist/cookieconsent.umd.js",
-                "bundleName": "cookieconsent",
-                "inject": false
-              },
-              {
-                "input": "logigator-web/src/consent/cookieconsent-init.js",
-                "bundleName": "cookieconsent",
-                "inject": false
-              }
-            ],
+            "styles": ["logigator-web/src/styles.scss"],
             "allowedCommonJsDependencies": ["extend"]
           },
           "configurations": {

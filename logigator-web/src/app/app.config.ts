@@ -92,8 +92,8 @@ export const appConfig: ApplicationConfig = {
     }),
     provideAppInitializer(() => inject(SessionService).resolve()),
     provideAppInitializer(() => {
-      // Inert until the consent bundle reports the `analytics` category, and
-      // inert altogether on the server.
+      // Inert until the visitor grants the `analytics` category, and inert
+      // altogether on the server.
       inject(AnalyticsService).init();
     }),
     providePageviewTracking(),

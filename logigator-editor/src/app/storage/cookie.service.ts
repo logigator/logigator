@@ -75,10 +75,17 @@ export class CookieService implements OnDestroy {
    *
    * The value is written raw, matching what {@link get} returns, so a caller
    * storing anything but unreserved characters encodes it itself.
+   *
+   * `SameSite=Lax` is spelled out because only some browsers default to it;
+   * `Strict` would drop the cookie from a navigation arriving from another
+   * site, and the website would render that page as if nothing had been
+   * chosen. `Secure` follows the page's scheme: a browser refuses a secure
+   * cookie written from a plain-HTTP page, which would lose the write.
    */
   set(name: string, value: string, maxAgeSeconds = ONE_YEAR_IN_SECONDS): void {
     // `cookieStore.set` is async, so the map update would race the write.
-    document.cookie = `${name}=${value}; path=/; max-age=${maxAgeSeconds}`;
+    const secure = location.protocol === 'https:' ? '; secure' : '';
+    document.cookie = `${name}=${value}; path=/; max-age=${maxAgeSeconds}; samesite=lax${secure}`;
     this._cookies.set(name, value);
   }
 

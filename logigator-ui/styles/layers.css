@@ -10,6 +10,9 @@
  *   navbar          a page's own top bar, over the content that scrolls under
  *                   it and under every panel it opens
  *   skip-link       the focused skip link, over the bar it jumps past
+ *   banner          a notice pinned across the viewport's edge (the consent
+ *                   bar), over the page and its bars, under every overlay so
+ *                   a dialog it opens covers it
  *   overlay         the shared cdk/overlay container, whose panes order among
  *                   themselves by open order
  *   toast           above dialogs, so they stay visible
@@ -21,6 +24,7 @@
   --lg-z-window: 20;
   --lg-z-navbar: 24;
   --lg-z-skip-link: 26;
+  --lg-z-banner: 28;
   --lg-z-overlay: 30;
   --lg-z-toast: 40;
   --lg-z-max: 100;
@@ -37,6 +41,9 @@
 }
 @utility z-skip-link {
   z-index: var(--lg-z-skip-link);
+}
+@utility z-banner {
+  z-index: var(--lg-z-banner);
 }
 @utility z-overlay {
   z-index: var(--lg-z-overlay);

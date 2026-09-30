@@ -8257,7 +8257,6 @@ __metadata:
     tailwindcss: "npm:^4.3.3"
     tslib: "npm:^2.8.1"
     typescript: "npm:~6.0.3"
-    vanilla-cookieconsent: "npm:^3.1.0"
     vitest: "npm:^4.1.11"
     zod: "npm:^4.5.2"
   languageName: unknown
@@ -11649,13 +11648,6 @@ __metadata:
   version: 8.0.0
   resolution: "validate-npm-package-name@npm:8.0.0"
   checksum: 10c0/ec44abe7f8dd39f263d2571a538973e9c1864a99a0b0899092e50cae914fd9d7d25d69f52d3c9a422f04e75d2fa6d4a6bae8dc24cd6ae3a20e60d3d92e1b752e
-  languageName: node
-  linkType: hard
-
-"vanilla-cookieconsent@npm:^3.1.0":
-  version: 3.1.0
-  resolution: "vanilla-cookieconsent@npm:3.1.0"
-  checksum: 10c0/f344d9786ea74850ec4274d85c9049b4d36b3ff368ddb4a0e446bad2dc0ccfad03542e97f40f7eb103b9e06d8b4d5381f63f8f0f80d898f80c5bf3e96e877382
   languageName: node
   linkType: hard
 

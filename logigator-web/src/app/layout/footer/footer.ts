@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { ConsentService } from '../../consent/consent.service';
 import { SiteLinks } from '../site-links';
 import { TranslateDirective } from '../../translation/translate.directive';
 
@@ -11,4 +12,5 @@ import { TranslateDirective } from '../../translation/translate.directive';
 })
 export class Footer {
   protected readonly links = inject(SiteLinks);
+  protected readonly consent = inject(ConsentService);
 }

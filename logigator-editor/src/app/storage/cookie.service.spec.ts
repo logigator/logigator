@@ -45,6 +45,9 @@ describe('CookieService', () => {
     // Written for `/`: a path-scoped copy shadows the origin-wide cookie on
     // editor requests and is invisible to the rest of the site.
     expect(write).toHaveBeenCalledWith(expect.stringContaining('path=/'));
+    expect(write).toHaveBeenCalledWith(expect.stringContaining('samesite=lax'));
+    // The test page is plain HTTP, where a secure cookie would be refused.
+    expect(write).not.toHaveBeenCalledWith(expect.stringContaining('secure'));
     // The mirror into the reactive map is synchronous; cookieStore change
     // events arrive a task later.
     expect(service.get('tutorials')).toBe('abc');

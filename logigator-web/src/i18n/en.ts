@@ -1,3 +1,5 @@
+import { consentEn } from '@logigator/core/consent-text/en';
+
 const en = {
   /**
    * `@logigator/ui`'s stock strings, wired up through `provideLgLabels`, so
@@ -75,8 +77,12 @@ const en = {
     changelog: 'Changelog',
     privacyPolicy: 'Privacy Policy',
     imprint: 'Imprint',
-    contributing: 'Contributing'
+    contributing: 'Contributing',
+    cookieSettings: 'Cookie settings'
   },
+  // Written once in @logigator/core: one decision covers the whole origin,
+  // so the site and the editor ask it in the same words.
+  consent: consentEn,
   documents: {
     /** Read after the count, so a screen reader says “214 stars”. */
     stars: 'stars'

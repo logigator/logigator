@@ -80,8 +80,8 @@ migrations exist, so it is `DATABASE_MIGRATION_CHECK=false` or a database droppe
 again.
 
 Caddy serves **`logigator-web` at the origin root**, so the legacy backend is off the dev origin
-entirely — the same shape the Phase 6 cutover produces, and the reason the site owns the consent
-bundle and the icons the other stacks link to by absolute path.
+entirely — the same shape the Phase 6 cutover produces, and the reason the site owns the icons the
+other stacks link to by absolute path.
 
 ## Commands
 
@@ -447,8 +447,7 @@ path behaves the same in development).
   `media/` and the root bundles are `immutable`, everything else expires, matched **by position, not
   by the shape of a name** — a `public/` file called `feature-overview.png` also ends in eight
   characters after a dash, and pinning one of those forever is a mistake only a rename can undo. The
-  set that stays unhashed is fixed by contract: the consent bundle and its translations, the
-  favicons and `site.webmanifest` (Angular rewrites its own tags in `index.html`, not these), and
+  set that stays unhashed is fixed by contract: the favicons and `site.webmanifest` (Angular rewrites its own tags in `index.html`, not these), and
   `social-card.png`, whose absolute URL the editor's own Open Graph tags name.
 - **Four plain modules beside `server.ts` are what the SSR host shares with the app**: `escape-xml.ts`
   (both XML responses this origin writes carry stored text), `api-origin.ts` (the one reader of
@@ -486,13 +485,18 @@ path behaves the same in development).
   the API hop passes on — `x-forwarded-for`, which the rate limiter buckets by. The scheme has to be
   trusted for the request URL to carry it, and the hop then reads that URL rather than the header,
   so a deployment told to trust nothing forwards nothing.
-- **The consent bundle** is `vanilla-cookieconsent` plus `src/consent/cookieconsent-init.js`,
-  concatenated by two `scripts` entries sharing one `bundleName` — non-injected bundles keep their
-  name even under `outputHashing: all`. A bundle name may not contain a slash, so `server.ts`
-  redirects `/js/cookieconsent.js` (the URL the editor injects, and a contract with it) to
-  `/cookieconsent.js`. The stylesheet is the library's with the `--lg-*` tokens mapped over it, and
-  the bundle links it in itself, so the editor gets the styles by loading the script and nothing
-  else.
+- **Consent is one question for the whole origin**, asked by both apps and answered once: the
+  `consent` cookie's codec, its categories and its `CONSENT_REVISION` are core's
+  (`origin/consent-cookie.ts`), the bar and the preferences dialog are `@logigator/ui`'s, and each
+  app's `ConsentService` is the glue — cookie in, copy out. The **text is core's too**
+  (`origin/consent-text/`, one module per language): both apps' locale files mount it under
+  `consent`, and `consentCopy` builds the banner's copy through the app's own `translate`. A locale
+  file imports its language **by path** (`@logigator/core/consent-text/de`) — the barrel
+  does not re-export them, since anything it re-exports is reachable from the main bundle and all
+  four languages would land there. The root tsconfig maps that one folder and nothing else of core
+  by path, so the barrel stays the package's only other entry. A change to what a category covers is a revision bump, which
+  asks every visitor again. The site reads the cookie off the request, so the bar is in the first
+  byte for a visitor who has not decided and absent for one who has.
 - **A legal page's text is a chunk, not a locale key.** `.md` is a `text` loader in the build, so
   each `pages/legal/content/<page>/<lang>.md` compiles into a dynamic-import chunk of its own on
   both bundles. The locale table stays the size of the interface's strings — the privacy policy
@@ -548,7 +552,7 @@ path behaves the same in development).
   and a deployment that forgot it already answers nothing — leaving loopback alone, for the
   developer running the process directly.
 - **PostHog is `posthog-js` behind a dynamic import**, in `analytics/analytics.service.ts` — the
-  editor's service, trimmed to what a content site emits. A consent event for the `analytics`
+  editor's service, trimmed to what a content site emits. Granting the `analytics` consent
   category is what loads the package and initialises it, so a declining session never downloads it
   and a server render never reaches the import. `app = 'website'` and the page's language are
   registered from `init`'s `loaded` callback, which runs before the timeout the session's own
@@ -578,6 +582,10 @@ TypeScript with no build step — it is _not_ a `package.json` dependency of eit
   `form-field/` is the stringless label/hint/error scaffold around one projected control; it hands
   the consumer a `describedBy` through `exportAs` rather than writing attributes into projected
   content, so the wiring is in the server's first byte.
+  `consent/` is the consent question both apps ask — `lg-consent-banner`, a non-blocking bar across
+  the viewport's bottom, and `LgConsentPreferences`, opened through `DialogService`. Both are
+  presentational: the consumer hands over every word as one `LgConsentCopy` and stores the answer,
+  which arrives as the granted category ids, required ones never among them.
   `user-control/` is the account control both bars share — trigger, panel scaffold and section
   caption; the sections themselves are projected through a `#sections` template rather than
   `<ng-content>`, the panel's overlay being built again on every open.
@@ -671,8 +679,8 @@ They are never built and have no `dist/`, `main` or `exports`.
   → catalog integrity → dependency extraction, `strict` on writes and `lenient` for the Phase 6
   migration), `catalog/` (one `ComponentMeta` per built-in — option schemas plus
   `ports`/`labels`/`body` as pure functions of the option values —, and `validateOptionValue`, the
-  single definition of a legal option value), and `origin/` (the `preferences` cookie codec, the
-  language set with its `Accept-Language` negotiation, and `safeReturnPath` — what every app on the
+  single definition of a legal option value), and `origin/` (the `preferences` and `consent` cookie
+  codecs, the language set with its `Accept-Language` negotiation, and `safeReturnPath` — what every app on the
   origin has to agree about, here for the same reason as the rest: pure data with no platform of its
   own).
   Boundary rule: **core = data↔data, editor = live↔data** — snapshotting live PixiJS objects stays

@@ -32,12 +32,14 @@ import { UnsavedChangesGuard } from './persistence/unsaved-changes.guard';
 import {
   LgConfirmDialog,
   LgConfirmPopup,
+  LgConsentBanner,
   LgDrawer,
   LgToast,
   LgWindowOutlet
 } from '@logigator/ui';
 import { InspectionService } from './inspection/inspection.service';
 import { InspectionSheetComponent } from './inspection/inspection-sheet.component';
+import { ConsentService } from './consent/consent.service';
 import { TranslationService } from './translation/translation.service';
 import { WorkMode } from './work-mode/work-mode.enum';
 import { WorkModeService } from './work-mode/work-mode.service';
@@ -83,6 +85,7 @@ import { TranslateDirective } from './translation/translate.directive';
     ComponentSettingsComponent,
     LgConfirmPopup,
     LgConfirmDialog,
+    LgConsentBanner,
     LgToast,
     LgDrawer,
     LgWindowOutlet,
@@ -130,6 +133,7 @@ export class AppComponent {
   private readonly inspectionService = inject(InspectionService);
   private readonly loggingService = inject(LoggingService);
   private readonly toastService = inject(ToastService);
+  protected readonly consent = inject(ConsentService);
   private readonly translation = inject(TranslationService);
   private readonly changelogService = inject(ChangelogService);
   private readonly browserSupport = inject(BrowserSupportService);

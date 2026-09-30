@@ -1,10 +1,16 @@
-import { effect, inject, Injectable, PLATFORM_ID } from '@angular/core';
+import {
+  effect,
+  inject,
+  Injectable,
+  Injector,
+  PLATFORM_ID,
+  untracked
+} from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import type { PostHog } from 'posthog-js';
+import { ConsentService } from '../consent/consent.service';
 import { environment } from '../../environments/environment';
 import { TranslationService } from '../translation/translation.service';
-
-const ANALYTICS_CATEGORY = 'analytics';
 
 /**
  * Distinguishes this surface from the two editors sharing the PostHog project,
@@ -25,6 +31,8 @@ const APP_ID = 'website';
 @Injectable({ providedIn: 'root' })
 export class AnalyticsService {
   private readonly translation = inject(TranslationService);
+  private readonly consent = inject(ConsentService);
+  private readonly injector = inject(Injector);
   private readonly isBrowser = isPlatformBrowser(inject(PLATFORM_ID));
 
   private initialized = false;
@@ -68,20 +76,20 @@ export class AnalyticsService {
 
   /**
    * Gates PostHog on the `analytics` consent category: initialised once on the
-   * first grant, toggled opt-in/opt-out afterwards. Under a bare `ng serve`
-   * without the consent bundle, `window.CookieConsent` stays undefined and
-   * analytics stays inert.
+   * first grant, toggled opt-in/opt-out afterwards.
    */
   private wireConsent(): void {
-    const sync = (): void => this.syncConsent();
-    window.addEventListener('cc:onConsent', sync);
-    window.addEventListener('cc:onChange', sync);
-    this.syncConsent();
+    effect(
+      () => {
+        const granted = this.consent.isGranted('analytics');
+        // PostHog's own calls run inside; nothing they read is a dependency.
+        untracked(() => this.syncConsent(granted));
+      },
+      { injector: this.injector }
+    );
   }
 
-  private syncConsent(): void {
-    const granted =
-      !!window.CookieConsent?.acceptedCategory(ANALYTICS_CATEGORY);
+  private syncConsent(granted: boolean): void {
     if (granted && !this.initialized && environment.analytics.posthogKey) {
       void this.initPosthog();
     } else if (this.initialized) {
@@ -118,7 +126,7 @@ export class AnalyticsService {
       loaded: () => this.registerSuperProperties(posthog)
     });
     this.initialized = true;
-    this.syncConsent();
+    this.syncConsent(this.consent.isGranted('analytics'));
   }
 
   /**

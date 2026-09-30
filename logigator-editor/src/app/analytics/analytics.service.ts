@@ -4,15 +4,15 @@ import {
   Injectable,
   InjectionToken,
   Injector,
-  runInInjectionContext
+  runInInjectionContext,
+  untracked
 } from '@angular/core';
 import type { PostHog } from 'posthog-js';
 import { TranslationService } from '../translation/translation.service';
+import { ConsentService } from '../consent/consent.service';
 import { environment } from '../../environments/environment';
 import { LoggingService } from '../logging/logging.service';
 import { sanitizeProperties } from './analytics.mapping';
-
-const ANALYTICS_CATEGORY = 'analytics';
 
 /**
  * Event sources {@link AnalyticsService.init} wires up, each run in the root
@@ -59,6 +59,8 @@ export class AnalyticsService {
   private posthog: PostHog | null = null;
   /** In-flight (or settled) import, so concurrent consent events share one. */
   private posthogLoad: Promise<PostHog> | null = null;
+  /** Resolved in {@link init}, like the language source. */
+  private consent: ConsentService | null = null;
   /** Mirrored so {@link registerSuperProperties} can restamp it whenever
    * PostHog becomes available. */
   private uiLanguage: string | null = null;
@@ -134,7 +136,7 @@ export class AnalyticsService {
    * app startup. */
   public init(): void {
     this.watchLanguage(this.injector.get(TranslationService));
-    this.wireConsent();
+    this.wireConsent(this.injector.get(ConsentService));
     for (const wire of this.injector.get(ANALYTICS_SOURCES, [])) {
       runInInjectionContext(this.injector, wire);
     }
@@ -142,20 +144,21 @@ export class AnalyticsService {
 
   /**
    * Gates PostHog on the `analytics` consent category: initialised once on the
-   * first grant, toggled opt-in/opt-out afterwards. Under a bare `ng serve` the
-   * consent bundle never loads, so `window.CookieConsent` stays undefined and
-   * analytics stays inert.
+   * first grant, toggled opt-in/opt-out afterwards.
    */
-  private wireConsent(): void {
-    const sync = (): void => this.syncConsent();
-    window.addEventListener('cc:onConsent', sync);
-    window.addEventListener('cc:onChange', sync);
-    this.syncConsent();
+  private wireConsent(consent: ConsentService): void {
+    this.consent = consent;
+    effect(
+      () => {
+        const granted = consent.isGranted('analytics');
+        // PostHog's own calls run inside; nothing they read is a dependency.
+        untracked(() => this.syncConsent(granted));
+      },
+      { injector: this.injector }
+    );
   }
 
-  private syncConsent(): void {
-    const granted =
-      !!window.CookieConsent?.acceptedCategory(ANALYTICS_CATEGORY);
+  private syncConsent(granted: boolean): void {
     if (granted && !this.initialized && environment.analytics.posthogKey) {
       // The import failure is handled inside; what is left is PostHog's own
       // `init`/`opt_in_capturing`, third-party code whose failure costs the
@@ -207,7 +210,7 @@ export class AnalyticsService {
       }
     });
     this.initialized = true;
-    this.syncConsent();
+    this.syncConsent(!!this.consent?.isGranted('analytics'));
     this.flushDeferred();
   }
 

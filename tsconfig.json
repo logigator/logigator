@@ -23,6 +23,9 @@
       "@logigator/ui": ["logigator-ui/src/public-api.ts"],
       "@logigator/ui/*": ["logigator-ui/src/*"],
       "@logigator/core": ["logigator-core/src/public-api.ts"],
+      "@logigator/core/consent-text/*": [
+        "logigator-core/src/origin/consent-text/*"
+      ],
       "@logigator/contract": ["logigator-contract/src/public-api.ts"],
       "@logigator/docs": ["logigator-docs/src/public-api.ts"],
       "@logigator/docs/*": ["logigator-docs/src/*"],

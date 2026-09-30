@@ -22,6 +22,7 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
       role="switch"
       class="peer absolute inset-0 z-10 m-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-default"
       [id]="inputId()"
+      [attr.aria-describedby]="describedBy() ?? null"
       [checked]="checked()"
       [disabled]="disabled()"
       (change)="onChangeEvent($event)"
@@ -41,6 +42,8 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 })
 export class LgToggleSwitch implements ControlValueAccessor {
   readonly inputId = input<string>();
+  /** Ids of the text describing the switch, beside the label naming it. */
+  readonly describedBy = input<string>();
 
   protected readonly checked = signal(false);
   protected readonly disabled = signal(false);

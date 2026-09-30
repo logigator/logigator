@@ -45,9 +45,9 @@ logigator.test {
 	}
 
 	# The website, at the origin root. It owns everything the legacy backend's
-	# pages used to answer — including the consent bundle the editor loads by
-	# absolute path — so from here on the legacy backend is off the dev origin
-	# entirely, which is what the cutover will do to it in production.
+	# pages used to answer — including the icons the editor links to by absolute
+	# path — so from here on the legacy backend is off the dev origin entirely,
+	# which is what the cutover will do to it in production.
 	handle {
 		reverse_proxy web:4200
 	}

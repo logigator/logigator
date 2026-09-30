@@ -1,6 +1,7 @@
 import type { WorkMode } from '../app/work-mode/work-mode.enum';
 import type { ShortcutActionEnum } from '../app/shortcuts/shortcut-action.enum';
 import type { ComponentCategory } from '@logigator/core';
+import { consentEn } from '@logigator/core/consent-text/en';
 
 const en = {
   common: {
@@ -65,6 +66,9 @@ const en = {
     light: 'Light',
     dark: 'Dark'
   },
+  // Written once in @logigator/core: one decision covers the whole origin,
+  // so the site and the editor ask it in the same words.
+  consent: consentEn,
   hexEditor: {
     wordView: 'Words',
     byteView: 'Bytes',

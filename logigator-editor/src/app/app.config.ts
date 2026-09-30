@@ -16,7 +16,6 @@ import { LocationStrategy } from '@angular/common';
 import { provideTranslocoPersistLang } from '@jsverse/transloco-persist-lang';
 import { provideMarkdown } from 'ngx-markdown';
 import { provideLgLabels } from '@logigator/ui';
-import { ConsentService } from './consent/consent.service';
 import { AnalyticsService } from './analytics/analytics.service';
 import { provideDialogAnalytics } from './analytics/dialog-telemetry';
 import { provideEditorAnalyticsSources } from './analytics/editor-analytics-sources';
@@ -73,9 +72,6 @@ export const appConfig: ApplicationConfig = {
       return firstValueFrom(transloco.load(transloco.getActiveLang()), {
         defaultValue: undefined
       });
-    }),
-    provideAppInitializer(() => {
-      inject(ConsentService).load();
     }),
     provideAppInitializer(() => {
       inject(AnalyticsService).init();

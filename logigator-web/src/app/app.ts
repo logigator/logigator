@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink, RouterOutlet } from '@angular/router';
-import { LgConfirmDialog, LgToast } from '@logigator/ui';
+import { LgConfirmDialog, LgConsentBanner, LgToast } from '@logigator/ui';
+import { ConsentService } from './consent/consent.service';
 import { TopBar } from './layout/top-bar/top-bar';
 import { Footer } from './layout/footer/footer';
 import { TranslateDirective } from './translation/translate.directive';
@@ -10,7 +11,8 @@ import { TranslateDirective } from './translation/translate.directive';
  * two imperative surfaces behind them — the toast that replaces the legacy
  * one-shot info popups (server-rendered modal dialogs keyed on a session flash,
  * where a toast says the same thing without interrupting), and the confirmation
- * modal the account pages ask through before anything irreversible.
+ * modal the account pages ask through before anything irreversible — plus the
+ * consent bar, for a visitor who has not answered yet.
  */
 @Component({
   selector: 'web-root',
@@ -18,6 +20,7 @@ import { TranslateDirective } from './translation/translate.directive';
     RouterLink,
     RouterOutlet,
     LgConfirmDialog,
+    LgConsentBanner,
     LgToast,
     TopBar,
     Footer,
@@ -26,4 +29,6 @@ import { TranslateDirective } from './translation/translate.directive';
   templateUrl: './app.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class App {}
+export class App {
+  protected readonly consent = inject(ConsentService);
+}
