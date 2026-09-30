@@ -500,7 +500,7 @@ path behaves the same in development).
 - **A legal page's text is a chunk, not a locale key.** `.md` is a `text` loader in the build, so
   each `pages/legal/content/<page>/<lang>.md` compiles into a dynamic-import chunk of its own on
   both bundles. The locale table stays the size of the interface's strings — the privacy policy
-  alone is 60–75 kB per language, and that table travels in every page's first byte — while a guard
+  alone is 10–13 kB per language, and that table travels in every page's first byte — while a guard
   awaits the import, so the server render carries the whole document and the browser downloads
   exactly the language it draws, hashed and cached past the visit. Nothing crosses through
   `TransferHandoffService`: what it would carry is that same text a second time. The imports are
