@@ -19,8 +19,10 @@ a capture lands and what it is called. Two exist:
   (`logigator-web/src/assets/tour/`), four languages × two colour schemes,
   English still the fallback — per scheme now.
 
-**Every image is lossless WebP**, animated for the step-throughs. It is the
-tool's only output format; `lib/webp.ts` is the only encoder in it.
+**Every image a target writes is lossless WebP**, animated for the
+step-throughs. It is the targets' only output format; `lib/webp.ts` is the only
+encoder they go through. The one exception is the site's social card, which is
+not a target at all — see [The social card](#the-social-card).
 
 ## Setup and running
 
@@ -51,8 +53,12 @@ aliases and compiles it with TypeScript's `transpileModule` on load.
 
 ```bash
 yarn start:editor:prod --define "AUTOMATION_API=true"   # the editor to shoot
-node logigator-editor/tools/screenshots/run.ts docs logigator-docs
+cd logigator-editor/tools/screenshots
+yarn capture docs ../../../logigator-docs
 ```
+
+`yarn capture` is `node run.ts`, run from the tool's own directory, which is
+what relative paths on its command line resolve against.
 
 The second argument is **the consuming package's own root**, not a scratch
 directory: the captures land where the app imports them from and the run then
@@ -195,6 +201,32 @@ libwebp is deterministic, so re-capturing an unchanged shot produces identical
 bytes and leaves the tracked image alone. Captures themselves repeat to within a
 handful of antialiased border pixels.
 
+## The social card
+
+`social-card.ts` composes `logigator-web/public/assets/social-card.png`, the
+`og:image` of every site page that has no card of its own and of the editor. It
+drives no editor: the card is the home page's hero in the dark scheme, so it
+composes the hero render the site already ships
+(`logigator-web/src/assets/hero-board-dark.webp`) under the same scrim, with the
+wordmark and the line on the left and the API share card's chrome — the green
+top edge, the domain, the ground.
+
+```bash
+yarn social-card   # from logigator-editor/tools/screenshots
+```
+
+It passes the website's package root, which is the one argument
+`social-card.ts` takes. Everything a later adjustment
+touches is a named constant at the top of the file: `HEADLINE` (the line, broken
+by hand, with the accented words marked), `BOARD` (zoom and focus of the crop,
+read like `object-position`), `SCRIM`, `WORDMARK` and `DOMAIN`. A re-shot hero is
+a re-run away from a matching card.
+
+It is PNG, not WebP: link unfurlers rather than browsers read an `og:image`,
+several of them read no WebP, and nothing negotiates a format with them. The
+type is the API card's own TTFs, found through its `fonts.conf`, since sharp's
+fontconfig substitutes a missing face silently.
+
 ## Running in a container
 
 Point the script at a browser and give it software rendering:
@@ -202,7 +234,7 @@ Point the script at a browser and give it software rendering:
 ```bash
 LOGIGATOR_SHOTS_BROWSER=/usr/local/bin/pw-chromium \
 LOGIGATOR_SHOTS_BROWSER_ARGS="--no-sandbox --use-gl=angle --use-angle=swiftshader --enable-unsafe-swiftshader" \
-node logigator-editor/tools/screenshots/run.ts docs logigator-docs
+yarn capture docs ../../../logigator-docs
 ```
 
 Software-rendered canvas output can differ subtly from a GPU machine's, so

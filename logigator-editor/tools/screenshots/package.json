@@ -10,6 +10,8 @@
     "screenshots": "./run.ts"
   },
   "scripts": {
+    "capture": "node run.ts",
+    "social-card": "node social-card.ts ../../../logigator-web",
     "typecheck": "tsc -p ."
   },
   "dependencies": {

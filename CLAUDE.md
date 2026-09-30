@@ -27,8 +27,10 @@ standalone package with its own lockfile — outside the workspace, never instal
 **target** (a folder under its `targets/`, whose config owns the shots, the colour schemes, the
 window it frames, where a capture lands and what it is called): `docs` writes `logigator-docs/`'s
 screenshots, `web` the website's tour figures. The shared half is the runner, the page driver and
-the encoder — **every image it writes is lossless WebP**, animated for the step-throughs, and
-`lib/webp.ts` is its only encoder. A pass reaches the app as the origin-wide `preferences`
+the encoder — **every image a target writes is lossless WebP**, animated for the step-throughs,
+and `lib/webp.ts` is its only encoder. Beside the runner, `social-card.ts` composes the site's
+`og:image` (`logigator-web/public/assets/social-card.png`) from the home page's hero render — no
+editor involved, and PNG, since link unfurlers are not all WebP readers. A pass reaches the app as the origin-wide `preferences`
 cookie, whose codec `lib/origin.ts` loads out of core rather than restating. It is TypeScript
 that Node runs unbuilt, its own modules type-stripped on load; the repo source it loads at run time
 is compiled by `lib/runtime.ts` through `transpileModule`, since core's `enum`s are syntax Node's
