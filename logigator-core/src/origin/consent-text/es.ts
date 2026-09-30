@@ -1,8 +1,8 @@
 import type { ConsentText } from './consent-text';
 
 export const consentEs: ConsentText = {
-  title: 'Cookies y estadísticas',
-  text: 'Logigator usa algunas cookies imprescindibles para funcionar, como la que mantiene tu sesión iniciada. Si lo permites, también usamos PostHog para ver cómo se usan el sitio web y el editor, incluidas grabaciones de sesiones del editor, y así saber qué mejorar.',
+  title: 'Cookies',
+  text: 'Logigator usa algunas cookies imprescindibles para funcionar. Si lo permites, también recopilamos estadísticas de uso para saber qué mejorar.',
   privacy: 'Política de privacidad',
   acceptAll: 'Aceptar todo',
   rejectAll: 'Rechazar todo',
@@ -15,12 +15,12 @@ export const consentEs: ConsentText = {
     necessary: {
       title: 'Necesarias',
       description:
-        'Mantienen tu sesión iniciada, recuerdan tu idioma, tu tema y los ajustes del editor, guardan tu trabajo en este navegador y almacenan esta elección. Siempre activas, porque Logigator no funciona sin ellas.'
+        'Mantienen tu sesión iniciada y recuerdan tus ajustes. Siempre activas, porque Logigator no funciona sin ellas.'
     },
     analytics: {
       title: 'Estadísticas',
       description:
-        'PostHog registra las páginas que abres, dónde haces clic, lo rápido que cargan las páginas y, en el editor, una grabación de tu sesión. Los datos se vinculan a un identificador aleatorio y no a tu cuenta, y se almacenan en la UE. No se recopila nada a menos que lo actives.'
+        'Las estadísticas de uso que recopilamos con PostHog, incluidas grabaciones de sesiones del editor, nos muestran qué mejorar. Se almacenan en la UE y no se vinculan a tu cuenta.'
     }
   }
 };

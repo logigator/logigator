@@ -5,8 +5,8 @@ import type { ConsentText } from './consent-text';
  * the apps' typed translation keys read a message's placeholders from.
  */
 export const consentEn = {
-  title: 'Cookies and analytics',
-  text: 'Logigator sets a few cookies it needs to work, such as the one that keeps you signed in. If you allow it, we also use PostHog to see how the website and the editor are used, including recordings of editor sessions, so we know what to improve.',
+  title: 'Cookies',
+  text: 'Logigator uses a few cookies it needs to work. With your permission, we also collect usage statistics to see what to improve.',
   privacy: 'Privacy policy',
   acceptAll: 'Accept all',
   rejectAll: 'Reject all',
@@ -19,12 +19,12 @@ export const consentEn = {
     necessary: {
       title: 'Necessary',
       description:
-        'Keep you signed in, remember your language, theme and editor settings, keep your work in this browser, and store this choice. Always on, since Logigator cannot work without them.'
+        'Keep you signed in and remember your settings. Always on, since Logigator cannot work without them.'
     },
     analytics: {
       title: 'Analytics',
       description:
-        'PostHog records the pages you open, what you click, how quickly pages load and, in the editor, a recording of your session. The data is linked to a random ID rather than your account and stored in the EU. Nothing is collected unless you turn this on.'
+        'Usage statistics collected with PostHog, including recordings of editor sessions, show us what to improve. They are stored in the EU and not linked to your account.'
     }
   }
 } as const satisfies ConsentText;
