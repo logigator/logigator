@@ -113,12 +113,12 @@ const es: TranslationSchema = {
       NOT: {
         name: 'Puerta NO',
         description:
-          'Una puerta NO es una puerta lógica digital que implementa la negación lógica. Se comporta según la tabla de verdad mostrada a la derecha. La salida es ALTA (1) si la entrada es BAJA (0), y BAJA (0) si la entrada es ALTA (1).'
+          'Una puerta NO es una puerta lógica digital que implementa la negación lógica. Una entrada ALTA (1) da una salida BAJA (0), y una entrada BAJA (0) una salida ALTA (1).'
       },
       AND: {
         name: 'Puerta Y',
         description:
-          'Una puerta Y es una puerta lógica digital que implementa la conjunción lógica. Se comporta según la tabla de verdad mostrada a la derecha. La salida es ALTA (1) solo si ambas entradas de la puerta Y son ALTAS (1). Si ninguna o solo una de las entradas es ALTA, la salida es BAJA.'
+          'Una puerta Y es una puerta lógica digital que implementa la conjunción lógica. La salida es ALTA (1) solo si todas las entradas de la puerta Y son ALTAS (1). Si alguna entrada es BAJA (0), la salida es BAJA.'
       },
       OR: {
         name: 'Puerta O',

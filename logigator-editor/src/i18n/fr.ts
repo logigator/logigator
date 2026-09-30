@@ -113,12 +113,12 @@ const fr: TranslationSchema = {
       NOT: {
         name: 'Porte NON',
         description:
-          "Une porte NON est une porte logique numérique qui réalise la négation logique. Elle se comporte selon la table de vérité affichée à droite. Une sortie HIGH (1) est produite si les entrées ne sont pas égales. Si l'entrée est LOW (0), alors la sortie sera HIGH (1)."
+          'Une porte NON est une porte logique numérique qui réalise la négation logique. Une entrée HIGH (1) donne une sortie LOW (0), et une entrée LOW (0) une sortie HIGH (1).'
       },
       AND: {
         name: 'Porte ET',
         description:
-          "Une porte ET est une porte logique numérique qui réalise la conjonction logique. Elle se comporte selon la table de vérité affichée à droite. Une sortie HIGH (1) n'est produite que si les deux entrées de la porte ET sont HIGH (1). Si aucune entrée, ou une seule, de la porte ET est HIGH, la sortie est LOW."
+          "Une porte ET est une porte logique numérique qui réalise la conjonction logique. Une sortie HIGH (1) n'est produite que si toutes les entrées de la porte ET sont HIGH (1). Si une entrée est LOW (0), la sortie est LOW."
       },
       OR: {
         name: 'Porte OU',

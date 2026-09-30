@@ -113,12 +113,12 @@ const de: TranslationSchema = {
       NOT: {
         name: 'NICHT-Gatter',
         description:
-          'Ein NICHT-Gatter ist ein digitales Logikgatter, das die logische Negation umsetzt. Es verhält sich gemäß der rechts gezeigten Wahrheitstabelle. Ein HIGH-Ausgang (1) ergibt sich, wenn die Eingänge nicht gleich sind. Ist der Eingang LOW (0), ist der Ausgang HIGH (1).'
+          'Ein NICHT-Gatter ist ein digitales Logikgatter, das die logische Negation umsetzt. Ein HIGH-Eingang (1) ergibt einen LOW-Ausgang (0), ein LOW-Eingang (0) einen HIGH-Ausgang (1).'
       },
       AND: {
         name: 'UND-Gatter',
         description:
-          'Ein UND-Gatter ist ein digitales Logikgatter, das die logische Konjunktion umsetzt. Es verhält sich gemäß der rechts gezeigten Wahrheitstabelle. Ein HIGH-Ausgang (1) ergibt sich nur, wenn beide Eingänge des UND-Gatters HIGH (1) sind. Ist keiner oder nur einer der Eingänge HIGH, ergibt sich ein LOW-Ausgang.'
+          'Ein UND-Gatter ist ein digitales Logikgatter, das die logische Konjunktion umsetzt. Ein HIGH-Ausgang (1) ergibt sich nur, wenn alle Eingänge des UND-Gatters HIGH (1) sind. Ist ein Eingang LOW (0), ergibt sich ein LOW-Ausgang.'
       },
       OR: {
         name: 'ODER-Gatter',

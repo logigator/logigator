@@ -111,12 +111,12 @@ const en = {
       NOT: {
         name: 'NOT Gate',
         description:
-          'A NOT gate is a digital logic gate that implements logical negation. It behaves according to the truth table shown at right. A HIGH output (1) results if the inputs are not equal. If the input is LOW (0), then the output will be HIGH (1).'
+          'A NOT gate is a digital logic gate that implements logical negation. A HIGH input (1) gives a LOW output (0), and a LOW input (0) gives a HIGH output (1).'
       },
       AND: {
         name: 'AND Gate',
         description:
-          'A AND gate is a digital logic gate that implements logical conjunction. It behaves according to the truth table shown at right. A HIGH output (1) results only if both the inputs to the AND gate are HIGH (1). If neither or only one input to the AND gate is HIGH, a LOW output results.'
+          'An AND gate is a digital logic gate that implements logical conjunction. A HIGH output (1) results only if every input to the AND gate is HIGH (1). If any input is LOW (0), a LOW output results.'
       },
       OR: {
         name: 'OR Gate',
