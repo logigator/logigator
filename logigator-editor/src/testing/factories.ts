@@ -98,7 +98,7 @@ export function makeRom(
   return rom;
 }
 
-/** ClockComponent with the given half-period in ticks, at a grid position. */
+/** ClockComponent with the given delay in ticks, at a grid position. */
 export function makeClock(speed = 1, px = 0, py = 0): ClockComponent {
   const clock = new ClockComponent({
     speed: clockComponentConfig.options.speed.clone(speed)

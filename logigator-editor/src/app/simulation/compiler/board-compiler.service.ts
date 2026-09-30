@@ -191,8 +191,9 @@ export class BoardCompilerService {
 
   /**
    * Per-type `ops` blob for the engine: ROM contents bit-packed to a byte table
-   * sized `addressSize` × `wordSize` (`rom-data.codec.ts`), the clock's period
-   * in ticks, the MUX's select-line count.
+   * sized `addressSize` × `wordSize` (`rom-data.codec.ts`), the clock's delay
+   * (the ticks it stays low between one-tick pulses), the MUX's select-line
+   * count.
    */
   private _opsFor(component: Component): { ops?: number[] } {
     switch (component.config.type) {

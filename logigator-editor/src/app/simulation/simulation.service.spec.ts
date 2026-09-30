@@ -276,15 +276,15 @@ describe('SimulationService', () => {
     expect(service.targetHz()).toBe(MIN_TARGET_HZ);
   });
 
-  it('reports the distinct clock half-periods of the session board', async () => {
+  it('reports the distinct clock delays of the session board', async () => {
     project.addComponent(makeClock(10, 0, 0));
     project.addComponent(makeClock(1, 0, 4));
     project.addComponent(makeClock(10, 0, 8));
     await enterAndBoot();
-    expect(service.clockHalfPeriods()).toEqual([1, 10]);
+    expect(service.clockDelays()).toEqual([1, 10]);
 
     service.exit();
-    expect(service.clockHalfPeriods()).toEqual([]);
+    expect(service.clockDelays()).toEqual([]);
   });
 
   it('steps only while paused', async () => {

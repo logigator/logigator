@@ -3,10 +3,10 @@ import { ComponentCategory } from '../../model/component-category.enum';
 import { ComponentMeta } from '../component-meta';
 
 /**
- * Upper bound of the engine's `u32` half-cycle field. `Number.MAX_SAFE_INTEGER`
+ * Upper bound of the engine's `u32` delay field. `Number.MAX_SAFE_INTEGER`
  * would deserialize as a value out of `u32` range and be rejected outright.
  */
-const MAX_HALF_CYCLE_TICKS = 4294967295;
+const MAX_DELAY_TICKS = 4294967295;
 
 export const clockMeta = {
   type: BuiltInComponentType.CLOCK,
@@ -19,7 +19,7 @@ export const clockMeta = {
       kind: 'number',
       label: 'components.def.CLOCK.options.speed',
       min: 1,
-      max: MAX_HALF_CYCLE_TICKS,
+      max: MAX_DELAY_TICKS,
       default: 1
     }
   },

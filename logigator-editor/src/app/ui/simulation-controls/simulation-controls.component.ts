@@ -15,6 +15,7 @@ import { TranslateDirective } from '../../translation/translate.directive';
 import { TranslationService } from '../../translation/translation.service';
 import { TranslationKey } from '../../translation/translation-key.model';
 import {
+  clockHz,
   formatHz,
   nearestStopIndex,
   parseSpeed,
@@ -153,18 +154,15 @@ export class SimulationControlsComponent {
       return [];
     }
     return this.simulationService
-      .clockHalfPeriods()
+      .clockDelays()
       .slice(0, MAX_CLOCK_ROWS)
       .map((delay) => ({
         delay,
-        frequency: formatHz(rate / (2 * delay), this.lang())
+        frequency: formatHz(clockHz(rate, delay), this.lang())
       }));
   });
   protected readonly hiddenClocks = computed(() =>
-    Math.max(
-      0,
-      this.simulationService.clockHalfPeriods().length - MAX_CLOCK_ROWS
-    )
+    Math.max(0, this.simulationService.clockDelays().length - MAX_CLOCK_ROWS)
   );
 
   protected playSimulation(): void {

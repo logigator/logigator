@@ -60,6 +60,15 @@ export function parseSpeed(text: string): number | null {
 }
 
 /**
+ * The frequency a clock runs at when the simulation ticks at `tickHz`. A clock
+ * is high for one tick and then low for `delay` ticks, so one cycle takes
+ * `delay + 1` ticks.
+ */
+export function clockHz(tickHz: number, delay: number): number {
+  return tickHz / (delay + 1);
+}
+
+/**
  * A rate to three significant digits in Hz, kHz or MHz, in the reader's
  * number format. Ungrouped, so what the speed field shows parses back.
  */

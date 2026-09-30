@@ -66,13 +66,13 @@ export class SimulationService {
   private readonly _targetHz = signal(1000);
   public readonly targetHz = computed(this._targetHz);
 
-  private readonly _clockHalfPeriods = signal<readonly number[]>([]);
+  private readonly _clockDelays = signal<readonly number[]>([]);
   /**
-   * The distinct half-periods, in ticks, of every clock the session's board
-   * holds (custom components' inner clocks included), ascending — what turns a
-   * tick rate into the frequencies the circuit's clocks run at.
+   * The distinct delays, in ticks, of every clock the session's board holds
+   * (custom components' inner clocks included), ascending — what turns a tick
+   * rate into the frequencies the circuit's clocks run at.
    */
-  public readonly clockHalfPeriods = computed(this._clockHalfPeriods);
+  public readonly clockDelays = computed(this._clockDelays);
 
   public readonly measuredHz = this.workerService.measuredHz;
   public readonly tick = this.workerService.tick;
@@ -215,7 +215,7 @@ export class SimulationService {
     }
 
     this._board = board;
-    this._clockHalfPeriods.set(clockHalfPeriodsOf(board));
+    this._clockDelays.set(clockDelaysOf(board));
     const applier = new LinkStateApplier(
       board.mapping.get(TOP_LEVEL_PATH) ?? []
     );
@@ -303,7 +303,7 @@ export class SimulationService {
       }
     } finally {
       this._board = null;
-      this._clockHalfPeriods.set([]);
+      this._clockDelays.set([]);
       this._applier = null;
       this._project = null;
       this.workModeService.setSimulationMode(false);
@@ -605,12 +605,12 @@ export class SimulationService {
   }
 }
 
-function clockHalfPeriodsOf(board: CompiledBoard): number[] {
-  const halfPeriods = new Set<number>();
+function clockDelaysOf(board: CompiledBoard): number[] {
+  const delays = new Set<number>();
   for (const unit of board.descriptor.components) {
     if (unit.type === BuiltInComponentType.CLOCK && unit.ops) {
-      halfPeriods.add(unit.ops[0]);
+      delays.add(unit.ops[0]);
     }
   }
-  return [...halfPeriods].sort((a, b) => a - b);
+  return [...delays].sort((a, b) => a - b);
 }
