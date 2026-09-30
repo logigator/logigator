@@ -1,79 +1,67 @@
 # Enregistrement et fichiers
 
-Où vit votre travail : dans votre navigateur, dans votre compte, ou dans un fichier sur votre appareil. Cette page explique l'enregistrement dans le navigateur, l'export vers un fichier et la génération d'une image de votre circuit.
+Un projet est stocké à l'un de deux endroits : dans ce navigateur (Local) ou dans votre compte Logigator (Cloud). Les fichiers sur votre appareil servent à exporter et importer, pas de troisième lieu de stockage. L'éditeur n'enregistre pas automatiquement.
 
-## Enregistrer votre projet
+## Enregistrer un projet
 
-Enregistrez avec **Fichier → Enregistrer** ou `Ctrl+S`. Le bouton se trouve aussi dans la barre d'outils.
+Fichier → Enregistrer, le bouton d'enregistrement de la barre d'outils ou `Ctrl+S` enregistre le projet ouvert. Un nouveau projet reste un brouillon jusqu'au premier enregistrement, qui ouvre la fenêtre « Enregistrer » :
 
-Un projet qui n'a jamais été enregistré est un **Brouillon** — la puce à côté du nom du projet l'indique. La première fois que vous enregistrez un Brouillon, Logigator demande deux choses :
+- Nom, 20 caractères au plus.
+- Destination, Local ou Cloud. Cloud nécessite d'être connecté et est alors présélectionné.
+- Qui peut l'ouvrir, pour Cloud uniquement. Tout le monde est présélectionné : le projet apparaît alors dans la communauté et peut être trouvé par les moteurs de recherche. Choisissez « Toi uniquement » pour le garder privé. Voir [Cloud et partage](docs:cloud).
 
-- **Nom** — comment appeler le projet.
-- **Destination** — **Local** (stocké dans ce navigateur) ou **Cloud** (stocké dans votre compte Logigator, si vous êtes connecté).
+![La fenêtre « Enregistrer » avec Cloud choisi et les options de visibilité en dessous.](./images/save-project.webp)
 
-Après ce premier enregistrement, **Enregistrer** écrit directement là où le projet réside — plus aucune invite. Voir [Cloud et partage](docs:cloud) pour ce qu'apportent la connexion et la destination Cloud.
+Les enregistrements suivants retournent directement au même endroit. Seule exception : un projet cloud qui utilise des composants personnalisés locaux. L'enregistrer ouvre d'abord la fenêtre « Téléverser vers le cloud », car un projet cloud ne peut utiliser que des composants cloud.
 
-### Savoir où un projet est stocké
+Les projets locaux restent dans le navigateur qui les a enregistrés. Comme l'indique la fenêtre, ils ne sont pas conservés d'un appareil à l'autre et peuvent être perdus si les données du site sont effacées. Enregistrez dans le cloud ou exportez dans un fichier ce que vous voulez garder.
 
-La puce à côté du nom du projet indique toujours le foyer du projet :
+## Où un projet est stocké
 
-| Puce          | Signification                                                            |
-| ------------- | ------------------------------------------------------------------------ |
-| **Brouillon** | Jamais encore enregistré — enregistrez-le pour le conserver.             |
-| **Local**     | Enregistré uniquement dans ce navigateur.                                |
-| **Cloud**     | Enregistré dans votre compte, accessible depuis n'importe quel appareil. |
-| **Partagé**   | Ouvert en lecture seule depuis le lien de partage de quelqu'un.          |
+L'étiquette à côté du nom du projet indique où se trouve le projet ouvert :
 
-### L'indicateur enregistré / non enregistré
+| Étiquette | Signification                                                                        |
+| --------- | ------------------------------------------------------------------------------------ |
+| Brouillon | Pas encore enregistré.                                                               |
+| Local     | Enregistré dans ce navigateur.                                                       |
+| Cloud     | Enregistré dans votre compte.                                                        |
+| Partagé   | Ouvert depuis le lien de partage de quelqu'un d'autre. Vous ne pouvez pas l'écraser. |
 
-La **barre d'état** en bas de l'éditeur affiche **Enregistré** lorsque tout est écrit, et **Modifications non enregistrées** dès que vous faites une modification. Utilisez-la comme vérification rapide avant de fermer l'onglet.
+Une étiquette Fork à côté signifie que le projet a été copié à partir de celui de quelqu'un d'autre. Survolez-la pour voir de qui.
 
-### Une note sur les projets locaux
+La barre d'état affiche « Enregistré » ou « Modifications non enregistrées ». Ouvrir un autre projet ou en commencer un nouveau avec des modifications non enregistrées demande s'il faut les abandonner, et le navigateur vous avertit avant de fermer l'onglet.
 
-Les projets locaux vivent uniquement dans le navigateur dans lequel vous les avez enregistrés. Comme le prévient la boîte de dialogue d'enregistrement :
+## Ouvrir, renommer et supprimer
 
-> Les projets locaux ne sont pas conservés d'un appareil à l'autre et peuvent être perdus.
+Fichier → Ouvrir (`Ctrl+O`) a trois onglets : Projets locaux, Projets cloud et À partir d'un fichier. Chaque liste peut être filtrée par recherche, et chaque ligne a des boutons pour renommer ou supprimer le projet. Les lignes locales peuvent aussi être téléversées vers le cloud, et les lignes cloud partagées.
 
-Si un projet compte, enregistrez-le dans le **Cloud** (voir [Cloud et partage](docs:cloud)) ou **exportez-le vers un fichier** pour avoir une copie que vous maîtrisez.
+![La fenêtre « Ouvrir un projet » sur l'onglet « À partir d'un fichier ».](./images/open-file.webp)
 
-### Ouvrir d'anciens projets
+Le crayon à côté du nom du projet, dans la barre de titre, renomme le projet ouvert.
 
-Si vous ouvrez un circuit réalisé avec l'ancien éditeur Logigator, l'enregistrer ici le convertit au nouveau format.
+## Fichiers de circuit
 
-## Fichiers de circuit (`.lgix`)
+Fichier → Exporter vers un fichier télécharge le projet ouvert sous forme de fichier `.lgix`. Le fichier contient le plan de travail et une copie de chaque composant personnalisé utilisé, il s'ouvre donc complet sur n'importe quel ordinateur. Il est compressé mais ni chiffré ni signé : n'importe qui peut le lire. Exporter ne change pas l'endroit où le projet est enregistré.
 
-Vous pouvez aussi conserver un circuit sous forme de fichier sur votre propre appareil.
+Pour importer, ouvrez Fichier → Ouvrir → À partir d'un fichier et choisissez un fichier. L'éditeur lit les fichiers `.lgix` et les fichiers `.json` exportés par l'ancien éditeur Logigator. L'import est aussitôt enregistré comme nouveau projet local.
 
-- **Exporter** — **Fichier → Exporter vers un fichier** télécharge le projet ouvert sous forme de fichier `.lgix`.
-- **Importer** — **Fichier → Ouvrir → À partir d'un fichier**, puis **Choisir un fichier**, recharge un fichier `.lgix` dans l'éditeur sous forme de nouveau projet local.
+Un projet ouvert depuis un lien de partage ne peut pas être exporté. Clonez-le d'abord (voir [Cloud et partage](docs:cloud)).
 
-Un fichier n'est jamais qu'un export ou un import — ce n'est pas un endroit où votre projet « vit » comme le sont les stockages Local et Cloud. Exporter ne change pas l'endroit où votre projet est enregistré.
+## Exporter une image
 
-### Ce que contient un fichier `.lgix`
+Fichier → Générer une image ouvre la fenêtre « Exporter une image » :
 
-Un fichier `.lgix` est un instantané compressé et autonome de votre circuit. Il regroupe le plan de travail lui-même **et** une copie figée de chaque [composant personnalisé](docs:custom-components) que le circuit utilise, de sorte qu'il s'ouvre correctement sur n'importe quelle machine, même si cette machine n'a jamais vu ces composants.
+- Format : PNG, JPEG ou WebP.
+- Résolution : 1×, 2× ou 4×, 2× étant présélectionné. Si l'image dépassait ce que votre appareil peut afficher, elle est réduite et la fenêtre le signale.
+- Arrière-plan : activé, il dessine la couleur de fond du thème et la grille. Désactivé, il donne un PNG ou WebP transparent, ou un JPEG blanc.
+- Qualité, de 10 à 100 %, pour JPEG et WebP. PNG est sans perte.
 
-Le fichier est compressé mais ni chiffré ni verrouillé — traitez-le comme un paquet pratique, non comme un paquet sécurisé ou infalsifiable. Logigator peut aussi importer les fichiers de circuit `.json` exportés par l'ancien éditeur.
+La fenêtre affiche la taille finale en pixels avant l'export. Si l'onglet d'un composant personnalisé est ouvert, un champ « Projet » choisit le circuit à exporter.
 
-> Les projets en lecture seule ouverts depuis un lien de partage ne peuvent pas être exportés vers un fichier. Clonez d'abord le projet partagé dans votre propre bibliothèque — voir [Cloud et partage](docs:cloud).
-
-![La boîte de dialogue Ouvrir un projet, onglet À partir d'un fichier.](./images/open-file.webp)
-
-## Générer une image
-
-Pour exporter une image de votre circuit, choisissez **Fichier → Générer une image**. La boîte de dialogue vous permet de définir :
-
-- **Format** — **PNG**, **JPEG** ou **WebP**.
-- **Résolution** — la taille de sortie ; les très grandes tailles sont automatiquement réduites pour respecter les limites de votre appareil.
-- **Arrière-plan** — la couleur du thème actuel et la grille.
-- **Qualité** — la qualité de compression (affichée pour JPEG et WebP ; le PNG est sans perte).
-
-La boîte de dialogue prévisualise les dimensions finales en pixels avant l'export.
-
-![La boîte de dialogue Exporter une image avec ses options de format et de résolution.](./images/export-image.webp)
+![La fenêtre « Exporter une image ».](./images/export-image.webp)
 
 ## Voir aussi
 
-- [Cloud et partage](docs:cloud) — connexion, stockage cloud, téléversement et liens de partage
-- [Composants personnalisés](docs:custom-components) — les pièces réutilisables qu'un fichier emporte avec lui
-- [Raccourcis clavier](docs:shortcuts) — modifier le raccourci `Ctrl+S` et d'autres
+- [Cloud et partage](docs:cloud) : téléverser, partager et cloner
+- [Composants personnalisés](docs:custom-components) : les composants qu'un fichier emporte
+- [Raccourcis clavier](docs:shortcuts) : changer les touches d'enregistrement et d'ouverture

@@ -1,82 +1,53 @@
 # Tastaturbefehle
 
-Mit der Tastatur bist du in Logigator schneller. Nachfolgend die Standardbelegungen, gefolgt davon, wie man sie ändert.
+Das sind die Standardbelegungen, in der Reihenfolge, in der Bearbeiten → Tastaturbefehle sie auflistet. Auf dem Mac funktioniert `⌘` überall, wo die Tabelle `Ctrl` nennt, und `Ctrl` funktioniert ebenfalls.
 
-> Unter macOS verwenden `Ctrl`-Kürzel stattdessen die Taste **⌘ Command** — Speichern ist zum Beispiel `⌘S`.
+## Standardbelegung
 
-## Datei
+| Aktion                                                 | Standard       |
+| ------------------------------------------------------ | -------------- |
+| Speichern                                              | `Ctrl+S`       |
+| Öffnen                                                 | `Ctrl+O`       |
+| Neue Komponente                                        | `Alt+N`        |
+| Rückgängig                                             | `Ctrl+Z`       |
+| Wiederholen                                            | `Ctrl+Shift+Z` |
+| Kopieren                                               | `Ctrl+C`       |
+| Ausschneiden                                           | `Ctrl+X`       |
+| Einfügen                                               | `Ctrl+V`       |
+| Löschen                                                | `Delete`       |
+| Im Uhrzeigersinn drehen                                | `R`            |
+| Gegen den Uhrzeigersinn drehen                         | `Shift+R`      |
+| Auswahl nach oben / unten / links / rechts verschieben | Pfeiltasten    |
+| Einzoomen                                              | `Ctrl++`       |
+| Auszoomen                                              | `Ctrl+-`       |
+| Zoom 100%                                              | `Ctrl+0`       |
+| Schwenken                                              | `P`            |
+| Leitungswerkzeug                                       | `W`            |
+| Auswählen                                              | `S`            |
+| Radieren                                               | `E`            |
+| Text platzieren                                        | `T`            |
+| Leitungen an der Auswahlkante schneiden (halten)       | `Alt`          |
+| Zur Auswahl hinzufügen oder daraus entfernen (halten)  | `Ctrl`         |
+| Simulation starten/stoppen                             | `Enter`        |
+| Abbrechen                                              | `Escape`       |
 
-| Aktion          | Kürzel   |
-| --------------- | -------- |
-| Speichern       | `Ctrl+S` |
-| Öffnen          | `Ctrl+O` |
-| Neue Komponente | `Alt+N`  |
+Während du in ein Textfeld tippst, reagiert kein Kürzel außer `Escape`. In einer Simulation sind die Bearbeitungskürzel abgeschaltet, und `Escape` verlässt die Simulation.
 
-## Bearbeiten
+## Gehaltene Tasten
 
-| Aktion                          | Kürzel         |
-| ------------------------------- | -------------- |
-| Rückgängig                      | `Ctrl+Z`       |
-| Wiederholen                     | `Ctrl+Shift+Z` |
-| Kopieren                        | `Ctrl+C`       |
-| Ausschneiden                    | `Ctrl+X`       |
-| Einfügen                        | `Ctrl+V`       |
-| Löschen                         | `Delete`       |
-| Im Uhrzeigersinn drehen         | `R`            |
-| Gegen den Uhrzeigersinn drehen  | `Shift+R`      |
-| Auswahl nach oben verschieben   | `↑`            |
-| Auswahl nach unten verschieben  | `↓`            |
-| Auswahl nach links verschieben  | `←`            |
-| Auswahl nach rechts verschieben | `→`            |
+Die beiden mit „halten“ markierten Aktionen wirken, solange die Taste gedrückt ist, statt einmal auszulösen. Halte `Alt`, während du einen Auswahlrahmen loslässt, um die Leitungen an seiner Kante zu schneiden (siehe [Arbeitsfläche und Werkzeuge](docs:board-and-tools)). Halte `Ctrl` beim Klicken oder Aufziehen eines Rahmens, um zur Auswahl hinzuzufügen oder daraus zu entfernen. Das funktioniert mit Auswählen, Schwenken und dem Leitungswerkzeug.
 
-## Ansicht
+## Eine Belegung ändern
 
-| Aktion    | Kürzel   |
-| --------- | -------- |
-| Einzoomen | `Ctrl++` |
-| Auszoomen | `Ctrl+-` |
-| Zoom 100% | `Ctrl+0` |
+![Die Verwaltung der Tastaturbefehle.](./images/shortcut-manager.webp)
 
-## Werkzeuge
+Bearbeiten → Tastaturbefehle listet jede Aktion. Klicke auf den Stift daneben und drücke die neue Kombination. `Escape` bricht die Aufzeichnung ab und lässt sich deshalb nicht anders belegen. Eine einzelne Modifikatortaste wie `Alt` kann nur einer der beiden Halte-Aktionen zugewiesen werden.
 
-| Aktion                                                | Kürzel |
-| ----------------------------------------------------- | ------ |
-| Schwenken                                             | `P`    |
-| Leitungswerkzeug                                      | `W`    |
-| Auswählen                                             | `S`    |
-| Radieren                                              | `E`    |
-| Text platzieren                                       | `T`    |
-| Leitungen an der Auswahlkante schneiden (halten)      | `Alt`  |
-| Zur Auswahl hinzufügen oder daraus entfernen (halten) | `Ctrl` |
+Gehört die Kombination schon zu einer anderen Aktion, verliert diese sie, und eine Meldung nennt sie. „Zurücksetzen“ stellt die Standardbelegung einer Aktion wieder her, „Zuweisung aufheben“ lässt sie ohne Kürzel, und „Alle zurücksetzen“ stellt alle Standardbelegungen wieder her.
 
-## Interaktion
-
-| Aktion                     | Kürzel   |
-| -------------------------- | -------- |
-| Simulation starten/stoppen | `Enter`  |
-| Abbrechen                  | `Escape` |
-
-## Gehaltene Kürzel
-
-Die meisten Kürzel lösen einmal aus, wenn du sie drückst. Einige wenige werden stattdessen **gehalten**: Du hältst die Taste gedrückt, während du etwas anderes tust. Das wichtigste ist **Leitungen an der Auswahlkante schneiden** — halte `Alt`, während du mit dem [Auswahlwerkzeug](docs:board-and-tools) einen Auswahlrahmen ziehst, und Leitungen werden an der Rahmenkante geschnitten, solange die Taste gedrückt ist. Das andere ist **Zur Auswahl hinzufügen** — halte `Ctrl` (auf einem Mac `⌘`), während du im [Leitungswerkzeug](docs:board-and-tools) auf eine Komponente oder Leitung klickst, um sie zur Auswahl hinzuzufügen oder wieder herauszunehmen; ohne die Taste ersetzt ein Klick die Auswahl.
-
-## Deine Kürzel ändern
-
-Öffne **Bearbeiten → Tastaturbefehle**, um jede Aktion und ihre aktuelle Belegung zu sehen.
-
-![Der Dialog zum Verwalten der Tastaturbefehle.](./images/shortcut-manager.webp)
-
-Für jede Aktion kannst du:
-
-- **Bearbeiten** — klicke sie an und drücke dann die gewünschte Tastenkombination. Der Manager zeichnet genau auf, was du drückst.
-- **Zuweisung aufheben** — eine Aktion ganz ohne Kürzel lassen.
-- **Zurücksetzen** — die Standardbelegung dieser Aktion wiederherstellen, oder nutze **Alle zurücksetzen**, um jede Standardbelegung wiederherzustellen.
-
-Wenn du eine Kombination zuweist, die bereits von einer anderen Aktion belegt ist, wird sie dieser Aktion entzogen (Logigator sagt dir, welcher), sodass sich nie zwei Aktionen eine Belegung teilen.
-
-Deine benutzerdefinierten Belegungen werden in diesem Browser gemerkt. Das Löschen der Website-Daten des Browsers setzt sie auf die Standardwerte zurück.
+Deine Belegungen werden in diesem Browser gespeichert. Löschst du die Website-Daten, gelten wieder die Standardwerte.
 
 ## Siehe auch
 
-- [Arbeitsfläche & Werkzeuge](docs:board-and-tools) — die Werkzeuge und Aktionen, die diese Kürzel auslösen
-- [Einstieg](docs:getting-started) — ein Rundgang durch den Editor
+- [Arbeitsfläche und Werkzeuge](docs:board-and-tools): die Werkzeuge und Aktionen hinter diesen Tasten
+- [Simulation](docs:simulation): was Enter und Escape dort tun

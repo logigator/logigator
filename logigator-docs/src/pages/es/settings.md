@@ -1,43 +1,27 @@
-# Ajustes y apariencia
+# Ajustes
 
-Logigator tiene un puñado de preferencias para adaptar el editor a tu gusto. Las encontrarás todas en un solo lugar: abre el **menú de cuenta** en la esquina superior derecha del editor. (En un teléfono o tableta, abre el menú desde la esquina superior izquierda.)
+Todos los ajustes están en el menú de la cuenta, que abres con el botón de cuenta del extremo derecho de la barra de título. En la vista táctil es el avatar de arriba a la izquierda.
 
-![El menú de cuenta con los ajustes de tema, idioma y editor.](./images/account-menu.webp)
+![El menú de la cuenta con el tema, el idioma y los ajustes del editor.](./images/account-menu.webp)
 
-## Tema
+## Tema e idioma
 
-Cambia entre una apariencia **Clara** y una **Oscura**. La elección se aplica de inmediato en todo el editor.
-
-## Idioma
-
-Logigator está disponible en varios idiomas:
-
-- **English** (inglés)
-- **Deutsch** (alemán)
-- **Français** (francés)
-- **Español**
-
-Elige uno del desplegable **Idioma**; la interfaz se actualiza al instante.
+Tema cambia entre Claro y Oscuro. Oscuro es el predeterminado. Idioma ofrece English, Deutsch, Français y Español. Ambos se aplican al instante y valen también para el sitio web de Logigator: si cambias el idioma en el editor, cambia también en el sitio, y al revés.
 
 ## Ajustes del editor
 
-Cuatro alternancias de encendido/apagado cambian cómo se comporta el tablero:
+| Ajuste                                   | Predeterminado | Qué hace                                                                                                                       |
+| ---------------------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Mostrar cuadrícula                       | activado       | Dibuja la cuadrícula de puntos. Los componentes se ajustan a ella en cualquier caso.                                           |
+| Iniciar la simulación automáticamente    | activado       | Pone en marcha el circuito en cuanto entras en la [simulación](docs:simulation). Desactivado, espera en pausa en el tick 0.    |
+| Arrastrar la selección en modo Desplazar | activado       | Un arrastre con Desplazar que empieza dentro de la selección mueve la selección. Desactivado, todo arrastre desplaza la vista. |
+| Contador de FPS                          | desactivado    | Muestra los fotogramas por segundo en la esquina del tablero.                                                                  |
+| Mostrar consejos de introducción         | activado       | Muestra un consejo la primera vez que usas ciertas herramientas. Consulta [Primeros pasos](docs:getting-started).              |
 
-- **Mostrar cuadrícula**: dibuja la cuadrícula punteada en el tablero. Activada por defecto. Desactívala para un lienzo más limpio; los componentes siguen ajustándose a la cuadrícula de cualquier modo.
-- **Iniciar la simulación automáticamente**: cuando está activada (el valor predeterminado), pulsar **Iniciar simulación** empieza a ejecutar el circuito de inmediato. Desactívala para entrar en la [simulación](docs:simulation) en pausa, de modo que puedas avanzar paso a paso desde el primerísimo tick.
-- **Arrastrar la selección en modo Desplazar**: cuando está activada (el valor predeterminado), arrastrar con la herramienta **Desplazar** desde dentro de la selección actual mueve esa selección en lugar del tablero, así puedes recolocar algo sin cambiar de herramienta. Desactívala para que cada pulsación en modo Desplazar mueva el tablero.
-- **Contador de FPS**: muestra una pequeña lectura de fotogramas por segundo sobre el tablero. Desactivada por defecto; útil al comprobar el rendimiento en un circuito grande.
+Estos cinco ajustes, tus atajos de teclado y el estado del minimapa se guardan solo en este navegador. Otro navegador u otro dispositivo empieza con los valores predeterminados, y borrar los datos del sitio los restablece.
 
-## Consejos de introducción
+## Ver también
 
-La alternancia **Mostrar consejos de introducción** controla las pistas justo a tiempo que aparecen la primera vez que usas una función. Desactívala para silenciarlas, o vuelve a activarla para verlas de nuevo. El mismo interruptor lo restablece **Ayuda → Mostrar los consejos de nuevo**, que también vuelve a ofrecer el tutorial guiado. Consulta [Primeros pasos](docs:getting-started).
-
-## Dónde se almacenan estos ajustes
-
-Todas estas preferencias —tema, idioma, las alternancias del editor y tus ajustes de consejos— se guardan en **este navegador**, en este dispositivo. No están vinculadas a tu cuenta, así que un navegador o dispositivo distinto parte de los valores predeterminados. Borrar los datos del sitio del navegador las restablece.
-
-## Consulta también
-
-- [Nube y compartir](docs:cloud): tu cuenta, iniciar y cerrar sesión, y el almacenamiento en la nube
-- [Primeros pasos](docs:getting-started): el tutorial guiado y un recorrido por el editor
-- [Simulación](docs:simulation): dónde surte efecto la opción Iniciar la simulación automáticamente
+- [Primeros pasos](docs:getting-started): el tutorial y los consejos
+- [Simulación](docs:simulation): dónde actúa el inicio automático
+- [Nube y compartir](docs:cloud): inicio de sesión y tu cuenta

@@ -7,12 +7,12 @@ import customComponentTabEn from './pages/en/images/custom-component-tab.webp';
 import exportImageEn from './pages/en/images/export-image.webp';
 import inspectionShowcaseEn from './pages/en/images/inspection-showcase.webp';
 import inspectionWindowMultilayerEn from './pages/en/images/inspection-window-multilayer.webp';
-import introBannerEn from './pages/en/images/intro-banner.webp';
-import menuBarEn from './pages/en/images/menu-bar.webp';
 import negatedGateEn from './pages/en/images/negated-gate.webp';
 import openCloudEn from './pages/en/images/open-cloud.webp';
 import openFileEn from './pages/en/images/open-file.webp';
+import phoneLayoutEn from './pages/en/images/phone-layout.webp';
 import romInspectionEn from './pages/en/images/rom-inspection.webp';
+import saveProjectEn from './pages/en/images/save-project.webp';
 import scissorSelectEn from './pages/en/images/scissor-select.webp';
 import shareComponentEn from './pages/en/images/share-component.webp';
 import shortcutManagerEn from './pages/en/images/shortcut-manager.webp';
@@ -22,7 +22,6 @@ import simulationSpeedEn from './pages/en/images/simulation-speed.webp';
 import toolButtonsEn from './pages/en/images/tool-buttons.webp';
 import tunnelEn from './pages/en/images/tunnel.webp';
 import uploadToCloudEn from './pages/en/images/upload-to-cloud.webp';
-import wireCircuitDisplayEn from './pages/en/images/wire-circuit-display.webp';
 import wireJunctionEn from './pages/en/images/wire-junction.webp';
 import accountMenuDe from './pages/de/images/account-menu.webp';
 import boardOverviewDe from './pages/de/images/board-overview.webp';
@@ -30,10 +29,11 @@ import componentPaletteDe from './pages/de/images/component-palette.webp';
 import componentSettingsDe from './pages/de/images/component-settings.webp';
 import exportImageDe from './pages/de/images/export-image.webp';
 import inspectionShowcaseDe from './pages/de/images/inspection-showcase.webp';
-import menuBarDe from './pages/de/images/menu-bar.webp';
 import openCloudDe from './pages/de/images/open-cloud.webp';
 import openFileDe from './pages/de/images/open-file.webp';
+import phoneLayoutDe from './pages/de/images/phone-layout.webp';
 import romInspectionDe from './pages/de/images/rom-inspection.webp';
+import saveProjectDe from './pages/de/images/save-project.webp';
 import scissorSelectDe from './pages/de/images/scissor-select.webp';
 import shareComponentDe from './pages/de/images/share-component.webp';
 import shortcutManagerDe from './pages/de/images/shortcut-manager.webp';
@@ -47,10 +47,11 @@ import componentPaletteFr from './pages/fr/images/component-palette.webp';
 import componentSettingsFr from './pages/fr/images/component-settings.webp';
 import exportImageFr from './pages/fr/images/export-image.webp';
 import inspectionShowcaseFr from './pages/fr/images/inspection-showcase.webp';
-import menuBarFr from './pages/fr/images/menu-bar.webp';
 import openCloudFr from './pages/fr/images/open-cloud.webp';
 import openFileFr from './pages/fr/images/open-file.webp';
+import phoneLayoutFr from './pages/fr/images/phone-layout.webp';
 import romInspectionFr from './pages/fr/images/rom-inspection.webp';
+import saveProjectFr from './pages/fr/images/save-project.webp';
 import scissorSelectFr from './pages/fr/images/scissor-select.webp';
 import shareComponentFr from './pages/fr/images/share-component.webp';
 import shortcutManagerFr from './pages/fr/images/shortcut-manager.webp';
@@ -64,10 +65,11 @@ import componentPaletteEs from './pages/es/images/component-palette.webp';
 import componentSettingsEs from './pages/es/images/component-settings.webp';
 import exportImageEs from './pages/es/images/export-image.webp';
 import inspectionShowcaseEs from './pages/es/images/inspection-showcase.webp';
-import menuBarEs from './pages/es/images/menu-bar.webp';
 import openCloudEs from './pages/es/images/open-cloud.webp';
 import openFileEs from './pages/es/images/open-file.webp';
+import phoneLayoutEs from './pages/es/images/phone-layout.webp';
 import romInspectionEs from './pages/es/images/rom-inspection.webp';
+import saveProjectEs from './pages/es/images/save-project.webp';
 import scissorSelectEs from './pages/es/images/scissor-select.webp';
 import shareComponentEs from './pages/es/images/share-component.webp';
 import shortcutManagerEs from './pages/es/images/shortcut-manager.webp';
@@ -87,12 +89,12 @@ const en: Readonly<Record<string, string>> = {
   './images/export-image.webp': exportImageEn,
   './images/inspection-showcase.webp': inspectionShowcaseEn,
   './images/inspection-window-multilayer.webp': inspectionWindowMultilayerEn,
-  './images/intro-banner.webp': introBannerEn,
-  './images/menu-bar.webp': menuBarEn,
   './images/negated-gate.webp': negatedGateEn,
   './images/open-cloud.webp': openCloudEn,
   './images/open-file.webp': openFileEn,
+  './images/phone-layout.webp': phoneLayoutEn,
   './images/rom-inspection.webp': romInspectionEn,
+  './images/save-project.webp': saveProjectEn,
   './images/scissor-select.webp': scissorSelectEn,
   './images/share-component.webp': shareComponentEn,
   './images/shortcut-manager.webp': shortcutManagerEn,
@@ -102,7 +104,6 @@ const en: Readonly<Record<string, string>> = {
   './images/tool-buttons.webp': toolButtonsEn,
   './images/tunnel.webp': tunnelEn,
   './images/upload-to-cloud.webp': uploadToCloudEn,
-  './images/wire-circuit-display.webp': wireCircuitDisplayEn,
   './images/wire-junction.webp': wireJunctionEn
 };
 
@@ -113,10 +114,11 @@ const de: Readonly<Record<string, string>> = {
   './images/component-settings.webp': componentSettingsDe,
   './images/export-image.webp': exportImageDe,
   './images/inspection-showcase.webp': inspectionShowcaseDe,
-  './images/menu-bar.webp': menuBarDe,
   './images/open-cloud.webp': openCloudDe,
   './images/open-file.webp': openFileDe,
+  './images/phone-layout.webp': phoneLayoutDe,
   './images/rom-inspection.webp': romInspectionDe,
+  './images/save-project.webp': saveProjectDe,
   './images/scissor-select.webp': scissorSelectDe,
   './images/share-component.webp': shareComponentDe,
   './images/shortcut-manager.webp': shortcutManagerDe,
@@ -133,10 +135,11 @@ const fr: Readonly<Record<string, string>> = {
   './images/component-settings.webp': componentSettingsFr,
   './images/export-image.webp': exportImageFr,
   './images/inspection-showcase.webp': inspectionShowcaseFr,
-  './images/menu-bar.webp': menuBarFr,
   './images/open-cloud.webp': openCloudFr,
   './images/open-file.webp': openFileFr,
+  './images/phone-layout.webp': phoneLayoutFr,
   './images/rom-inspection.webp': romInspectionFr,
+  './images/save-project.webp': saveProjectFr,
   './images/scissor-select.webp': scissorSelectFr,
   './images/share-component.webp': shareComponentFr,
   './images/shortcut-manager.webp': shortcutManagerFr,
@@ -153,10 +156,11 @@ const es: Readonly<Record<string, string>> = {
   './images/component-settings.webp': componentSettingsEs,
   './images/export-image.webp': exportImageEs,
   './images/inspection-showcase.webp': inspectionShowcaseEs,
-  './images/menu-bar.webp': menuBarEs,
   './images/open-cloud.webp': openCloudEs,
   './images/open-file.webp': openFileEs,
+  './images/phone-layout.webp': phoneLayoutEs,
   './images/rom-inspection.webp': romInspectionEs,
+  './images/save-project.webp': saveProjectEs,
   './images/scissor-select.webp': scissorSelectEs,
   './images/share-component.webp': shareComponentEs,
   './images/shortcut-manager.webp': shortcutManagerEs,

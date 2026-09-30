@@ -1,76 +1,66 @@
 # Plan de travail et outils
 
-Le plan de travail est la grille sur laquelle vous construisez votre circuit. Cette page explique comment vous y déplacer et comment fonctionne chaque outil d'édition.
+Le plan de travail est la grille sur laquelle vous construisez. Composants et fils s'y alignent, et la barre d'état en bas affiche la position sur la grille sous le curseur.
 
-![L'éditeur avec la palette de composants, le plan de travail et la barre d'outils.](./images/board-overview.webp)
+## Se déplacer
 
-## Se déplacer sur le plan de travail
+La molette de la souris zoome à l'endroit du pointeur, tout comme un balayage à deux doigts ou un pincement sur le pavé tactile. Les boutons de zoom de la barre d'outils et Affichage → Zoom avant, Zoom arrière et Zoom 100 % font de même par paliers fixes.
 
-- **Zoom** — faites défiler la molette de la souris sur le plan de travail, ou pincez sur un appareil tactile. Vous pouvez aussi utiliser les boutons de zoom de la barre d'outils, **Affichage → Zoom avant / Zoom arrière**, ou **Affichage → Zoom 100 %** pour revenir à la taille réelle.
-- **Déplacement** — choisissez l'outil **Déplacement** (la main) et faites glisser. Vous pouvez aussi vous déplacer depuis _n'importe quel_ outil en faisant glisser avec le **bouton droit ou le bouton central de la souris**, si bien que vous n'avez que rarement besoin de changer d'outil juste pour repositionner la vue. Faire glisser depuis l'intérieur de la sélection courante déplace cette sélection plutôt que le plan de travail — désactivez-le avec **Faire glisser la sélection en mode Déplacement** dans les [paramètres de l'éditeur](docs:settings).
-- **Tactile** — faites glisser avec deux doigts pour vous déplacer et pincez pour zoomer à tout moment ; un glisser à un doigt ne déplace la vue que lorsque l'outil Déplacement est actif.
+Pour déplacer la vue, faites glisser avec le bouton droit ou central de la souris. Cela fonctionne avec tous les outils. Quand l'outil Déplacement est actif, un glisser avec le bouton gauche déplace aussi la vue.
 
-La **barre d'état** en bas affiche toujours un bref rappel de ce que fait l'outil actif, ainsi que la position de votre curseur sur la grille.
+La minicarte, dans le coin inférieur droit, montre tout le circuit avec un cadre autour de la partie visible. Cliquez ou faites glisser dedans pour y amener la vue. « Masquer la minicarte » la replie, et l'éditeur s'en souvient.
 
-## Les outils de la barre d'outils
+## Outils
 
-Le groupe de droite de la barre d'outils contient les cinq outils de dessin. Un seul est actif à la fois ; chacun a également un raccourci à une touche.
+Un seul outil est actif à la fois. Chacun a un bouton dans la barre d'outils et un raccourci d'une touche.
 
-| Outil           | Raccourci | Ce qu'il fait                                                                                                                                                                                                                                                      |
-| --------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Déplacement** | `P`       | Faites glisser pour déplacer le plan de travail ou la sélection courante ; faites défiler ou pincez pour zoomer.                                                                                                                                                   |
-| **Fil**         | `W`       | Faites glisser pour tracer des fils ; touchez un port pour l'inverser, ou touchez un croisement pour connecter ou séparer ; un appui qui n'atteint ni l'un ni l'autre sélectionne ce qui se trouve dessous. Voir [Fils et connexions](docs:wires-and-connections). |
-| **Sélection**   | `S`       | Faites glisser un cadre pour sélectionner des éléments ; faites glisser la sélection pour la déplacer.                                                                                                                                                             |
-| **Gomme**       | `E`       | Cliquez ou faites glisser sur les éléments pour les supprimer.                                                                                                                                                                                                     |
-| **Texte**       | `T`       | Placez une étiquette de texte sur le plan de travail.                                                                                                                                                                                                              |
+| Outil        | Touche | Ce que fait un glisser                                                        |
+| ------------ | ------ | ----------------------------------------------------------------------------- |
+| Déplacement  | `P`    | Déplace la vue, ou la sélection si vous commencez à l'intérieur               |
+| Outil fil    | `W`    | Trace un fil (voir [Fils et connexions](docs:wires-and-connections))          |
+| Sélectionner | `S`    | Trace un cadre de sélection, ou déplace la sélection si vous commencez dedans |
+| Gomme        | `E`    | Supprime tout ce qu'elle traverse                                             |
+| Texte        | `T`    | Place une étiquette de texte (un clic suffit)                                 |
 
-![Les cinq boutons d'outils de la barre d'outils.](./images/tool-buttons.webp)
+Un clic sans glisser sélectionne l'élément sous le pointeur avec Déplacement, Outil fil et Sélectionner. L'outil fil vérifie d'abord si vous avez touché un port ou un croisement de fils, car un appui dessus inverse ou connecte à la place.
+
+![Les cinq boutons d'outils dans la barre d'outils.](./images/tool-buttons.webp)
 
 ## Placer des composants
 
-Pour ajouter un composant, choisissez-le dans la [palette de composants](docs:components-and-options) à gauche. Un fantôme du composant suit alors votre curseur sur le plan de travail — amenez-le où vous voulez, puis appuyez et relâchez pour le déposer. Le placement reste armé, de sorte que vous pouvez déposer plusieurs fois le même composant à la suite. Appuyez sur `Escape`, ou choisissez un autre outil, pour arrêter le placement.
+Cliquez sur un composant dans la palette et un aperçu suit le curseur. Un clic sur le plan de travail le pose. L'aperçu reste ensuite attaché au curseur, ce qui permet d'en poser plusieurs à la suite. `R` et `Shift+R` tournent l'aperçu avant de le poser, et le composant suivant garde cette orientation.
 
-Un composant ne peut pas être déposé par-dessus un autre élément ; le fantôme montre où il va atterrir.
+Rien n'est placé là où l'aperçu chevauche un autre composant. `Escape` ou le choix d'un autre outil arrête le placement.
 
-## Sélectionner, déplacer et faire pivoter
+## Sélectionner et déplacer
 
-Avec l'outil **Sélection**, faites glisser un cadre par-dessus les éléments souhaités. Tout ce que le cadre touche — composants et fils — devient sélectionné. Pour déplacer une sélection, faites glisser depuis l'intérieur de celle-ci vers un nouvel emplacement.
+Avec Sélectionner, tracez un cadre sur les éléments voulus. Chaque composant et chaque fil touché par le cadre est sélectionné. Maintenez `Ctrl` (`⌘` sur Mac) pour modifier la sélection au lieu de la remplacer : un clic ajoute ou retire un élément, et un cadre ajoute ce qu'il couvre. Cela fonctionne aussi avec Déplacement et l'outil fil.
 
-Une fois quelque chose sélectionné, vous pouvez :
+Faites glisser la sélection pour la déplacer. `R` la tourne dans le sens horaire, `Shift+R` dans le sens antihoraire, et les flèches la déplacent d'un pas de grille. Si la sélection atterrit sur autre chose, elle reste soulevée et suit vos mouvements suivants jusqu'à trouver une place libre.
 
-- **Le faire pivoter** — appuyez sur `R` pour le sens horaire, `Shift+R` pour le sens antihoraire, ou utilisez les boutons de rotation de la barre d'outils.
-- **Le déplacer** d'un pas de grille à la fois avec les **touches fléchées**.
-
-Comme pour le placement, un déplacement ou une rotation ne se valide que lorsque les éléments atterrissent à un emplacement libre.
+`Escape` agit par étapes : il annule un glisser en cours, sinon vide la sélection, sinon passe à Déplacement.
 
 ## Couper les fils au bord de la sélection
 
-L'outil de sélection possède un mode **ciseaux** qui rogne les fils exactement au bord de votre cadre de sélection, au lieu de saisir des fils entiers. C'est pratique pour découper un fil au milieu d'un bus.
+Normalement, un cadre de sélection prend des fils entiers. En mode découpe, il coupe chaque fil qui traverse son bord et ne sélectionne que les morceaux à l'intérieur, ce qui permet d'extraire une section du milieu d'un bus.
 
-Une petite pastille flotte au-dessus du plan de travail tant que l'outil de sélection est actif — cliquez dessus pour activer le mode ciseaux. Sur bureau, vous pouvez aussi simplement **maintenir `Alt`** pendant que vous faites glisser le cadre de sélection pour couper le temps de ce seul glisser ; la pastille s'allume pour indiquer que le mode est engagé. Tout ce que le cadre contient entièrement reste sélectionné, et les fils qui traversent le bord du cadre y sont coupés.
+Tant que Sélectionner est actif, un bouton « Couper les fils » flotte en haut du plan de travail et active ou désactive ce mode. Au clavier, vous pouvez aussi maintenir `Alt` en relâchant le cadre pour couper une seule fois.
 
-![La pastille de bascule des ciseaux flottant au-dessus du plan de travail.](./images/scissor-select.webp)
+![Le bouton « Couper les fils » au-dessus d'un fil coupé au bord de la sélection.](./images/scissor-select.webp)
 
-## Copier, couper, coller et supprimer
+## Copier, coller et supprimer
 
-L'édition standard agit sur la sélection en cours :
+Copier (`Ctrl+C`), Couper (`Ctrl+X`), Coller (`Ctrl+V`) et Supprimer (`Delete`) se trouvent dans la barre d'outils et le menu Édition. Les éléments collés apparaissent comme un aperçu sous le curseur, ou au milieu de la vue si le pointeur n'est pas sur le plan de travail. Faites glisser l'aperçu vers une place libre et relâchez pour le poser. `Escape` ou un clic en dehors de l'aperçu annule.
 
-- **Copier** (`Ctrl+C`) et **Couper** (`Ctrl+X`) placent la sélection dans le presse-papiers ; couper la retire aussi.
-- **Coller** (`Ctrl+V`) ramène les éléments copiés sous le curseur, ou au centre de la vue sur écran tactile. Ils arrivent sous forme de fantôme que vous positionnez — faites-les glisser vers un emplacement libre et relâchez pour les déposer, ou appuyez sur `Escape` pour annuler.
-- **Supprimer** (`Delete`) retire la sélection.
-
-Ces commandes se trouvent aussi dans la barre d'outils et dans le menu **Édition**. Chaque modification peut être annulée avec **Annuler** (`Ctrl+Z`) et rétablie avec **Rétablir** (`Ctrl+Shift+Z`).
+Annuler (`Ctrl+Z`) et Rétablir (`Ctrl+Shift+Z`) valent pour chaque modification.
 
 ## Effacer
 
-L'outil **Gomme** (la gomme) est le moyen le plus rapide de retirer des éléments : cliquez sur un élément pour le supprimer, ou faites glisser sur plusieurs pour tous les balayer. Appuyez sur `Escape` en cours de glisser pour annuler et restaurer ce que vous avez effacé.
-
-## La minicarte
-
-La minicarte dans le coin inférieur droit montre tout votre circuit d'un coup, avec un cadre marquant la partie que vous visualisez actuellement — utile pour vous repérer sur un grand plan de travail. Réduisez-la avec son bouton de bascule quand vous avez besoin de place.
+Avec la gomme, cliquez sur un élément pour le supprimer ou faites glisser sur plusieurs. Si vous appuyez sur `Escape` avant de relâcher, tout ce que ce glisser a effacé revient.
 
 ## Voir aussi
 
-- [Fils et connexions](docs:wires-and-connections) — tracer des fils, jonctions et basculer les connexions
-- [Composants et options](docs:components-and-options) — les pièces que vous placez et configurez
-- [Raccourcis clavier](docs:shortcuts) — modifier n'importe lequel des raccourcis utilisés ici
+- [Fils et connexions](docs:wires-and-connections) : tracer des fils et connecter des croisements
+- [Composants et options](docs:components-and-options) : les pièces que vous placez
+- [Téléphones et tablettes](docs:phones-and-tablets) : les mêmes outils en disposition tactile
+- [Raccourcis clavier](docs:shortcuts) : modifier les touches utilisées ici

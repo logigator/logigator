@@ -1,67 +1,44 @@
 # Prise en main
 
-Bienvenue sur Logigator — un éditeur et simulateur open source de circuits logiques numériques qui fonctionne entièrement dans votre navigateur.
+Logigator est un simulateur de circuits logiques qui fonctionne dans le navigateur. Vous placez des portes sur une grille, tracez des fils entre elles et cliquez sur « Démarrer la simulation » pour voir les signaux parcourir le circuit. Un circuit terminé peut être enregistré comme [composant personnalisé](docs:custom-components) et utilisé comme un seul bloc dans un circuit plus grand.
 
-![Le logo Logigator et son slogan.](./images/intro-banner.webp)
+Aucun compte n'est nécessaire. Sans compte, vous enregistrez vos projets dans le navigateur ou les [exportez dans un fichier](docs:saving-and-files). Une fois connecté, vous disposez en plus du [stockage cloud et des liens de partage](docs:cloud).
 
-## Qu'est-ce que Logigator ?
+![L'éditeur avec un demi-additionneur sur le plan de travail.](./images/board-overview.webp)
 
-Logigator vous permet de dessiner des circuits logiques numériques — d'une simple porte ET à un processeur complet — puis de les exécuter pour voir les signaux circuler. Vous placez des composants sur une grille, câblez leurs ports ensemble et appuyez sur lecture pour simuler.
+## La fenêtre de l'éditeur
 
-Vous pouvez :
+- Le plan de travail, au centre, est la grille sur laquelle vous construisez. La molette de la souris zoome, et un glisser avec le bouton droit ou central déplace la vue.
+- La barre de titre affiche le nom du projet et l'endroit où il est stocké (Brouillon, Local, Cloud ou Partagé), puis les menus Fichier, Édition, Affichage et Aide. Le crayon à côté du nom renomme le projet.
+- La barre d'outils contient les boutons pour enregistrer et ouvrir, le presse-papiers, la rotation, l'annulation et le zoom, puis les cinq [outils](docs:board-and-tools), et « Démarrer la simulation » tout à droite.
+- La palette de composants, à gauche, liste toutes les pièces que vous pouvez placer.
+- La barre d'état, en bas, affiche une indication sur l'outil actif, la position du curseur sur la grille, « Enregistré » ou « Modifications non enregistrées », et le nombre d'éléments sélectionnés.
+- La minicarte et le bouton « Signaler un bug » se trouvent dans le coin inférieur droit du plan de travail.
 
-- Construire des circuits à partir de portes logiques, bascules, mémoires, multiplexeurs, afficheurs et plus encore
-- Câbler des composants en réseaux et voir les fils alimentés s'illuminer pendant la simulation
-- Empaqueter un circuit terminé dans votre propre [composant personnalisé](docs:custom-components) réutilisable
-- Enregistrer votre travail dans ce navigateur, [l'exporter vers un fichier](docs:saving-and-files) ou le conserver dans votre [compte Logigator dans le cloud](docs:cloud)
+Lorsque vous modifiez un composant personnalisé, une barre d'onglets apparaît au-dessus du plan de travail, avec le projet principal et un onglet par composant ouvert.
 
-Tout fonctionne sans compte. La connexion ajoute le stockage cloud et les liens de partage.
+Dans une fenêtre de 1024 px de large ou moins, l'éditeur passe à une disposition tactile aux commandes différentes. Voir [Téléphones et tablettes](docs:phones-and-tablets).
 
-## Visite guidée de l'éditeur
+## Tutoriel et conseils
 
-L'éditeur est organisé en quelques zones fixes autour du plan de travail central :
+Lors de votre première visite, une carte au-dessus du plan de travail propose un tutoriel qui construit une porte ET avec deux interrupteurs et une LED. Il prend environ une minute. « Démarrer le tutoriel » le lance, le ✕ ferme la carte, et « Ignorer le tutoriel » l'arrête à n'importe quelle étape.
 
-- **Le plan de travail** — la grille au centre où vous placez les composants et tracez les fils. Faites défiler pour zoomer et faites glisser pour vous déplacer.
-- **La barre d'outils** (en haut) — les actions rapides à gauche (enregistrer, ouvrir, copier/coller, annuler/rétablir, zoom) et les outils de dessin à droite (déplacement, fil, sélection, gomme, texte). Le bouton **Démarrer la simulation** se trouve tout à droite.
-- **La barre de menus** (en haut à gauche) — les menus **Fichier**, **Édition**, **Affichage** et **Aide**. Chaque commande s'y trouve, la plupart avec un raccourci clavier affiché à côté.
-- **La palette de composants** (panneau de gauche) — tous les composants que vous pouvez placer, regroupés en catégories. Voir [Composants et options](docs:components-and-options).
-- **La barre d'état** (en bas) — un indice sur une ligne pour l'outil actif, la position de votre curseur sur la grille, si le projet comporte des modifications non enregistrées, et combien d'éléments sont sélectionnés.
-- **La minicarte** (en bas à droite) — un petit aperçu de tout le circuit que vous pouvez réduire.
+La première fois que vous utilisez certains outils, comme l'outil fil ou la découpe au bord de la sélection, un court conseil les explique. Chaque conseil n'apparaît qu'une fois. « Désactiver tous les conseils » dans un conseil, ou le paramètre « Afficher les conseils d'intégration », les coupe. Aide → Afficher à nouveau les conseils les réactive, réaffiche ceux déjà vus et fait revenir la carte du tutoriel.
 
-Le nom du projet figure à côté des menus en haut ; cliquez dessus pour renommer le projet, et la puce à côté indique où le projet est stocké (**Local**, **Cloud**, **Brouillon** ou **Partagé**).
+## Le menu Aide
 
-![La barre de menus et la barre d'outils en haut de l'éditeur.](./images/menu-bar.webp)
-
-## Le tutoriel guidé
-
-Le moyen le plus rapide d'apprendre les bases est le tutoriel intégré, qui vous accompagne dans la construction d'un petit circuit fonctionnel en une minute environ.
-
-La première fois que vous ouvrez l'éditeur, une carte apparaît près du haut du plan de travail : **« Nouveau ici ? Construisez votre premier circuit dans un tutoriel rapide. »** Choisissez **Démarrer le tutoriel** pour commencer, ou **Ignorer** pour le passer. Vous pouvez ignorer le tutoriel à tout moment une fois qu'il a démarré.
-
-Pour le relancer plus tard — ou faire revenir les conseils contextuels décrits ci-dessous — ouvrez **Aide → Afficher à nouveau les conseils**.
-
-## Conseils au bon moment
-
-Lorsque vous utilisez un outil pour la première fois, Logigator affiche un court conseil expliquant son fonctionnement — par exemple, comment l'[outil fil](docs:wires-and-connections) trace et bascule les connexions, ou ce que fait la sélection coupante aux ciseaux. Chaque conseil peut être ignoré et ne reviendra pas une fois que vous l'avez vu.
-
-Pour désactiver entièrement les conseils, ouvrez le menu de compte en haut à droite et désactivez **Afficher les conseils d'intégration** dans les **Paramètres de l'éditeur**, ou choisissez **Désactiver tous les conseils** depuis n'importe quel conseil. Voir [Paramètres et apparence](docs:settings).
-
-## Se tenir au courant des changements
-
-Logigator est mis à jour régulièrement. Ouvrez **Aide → Nouveautés** pour voir un résumé de ce qui a changé dans les versions récentes. La première fois qu'une nouvelle version introduit quelque chose d'important à connaître, cela apparaît automatiquement.
+- Nouveautés liste les changements de chaque version. Il s'ouvre de lui-même une fois après chaque mise à jour.
+- Documentation ouvre ces pages dans l'éditeur.
+- À propos affiche la version utilisée, la licence (GNU AGPL v3) et des liens vers le code source, la politique de confidentialité et les mentions légales.
+- Paramètres des cookies rouvre la fenêtre de consentement. Cette entrée n'existe que lorsque l'éditeur fonctionne avec le bandeau de cookies.
 
 ## Signaler un problème
 
-Vous avez trouvé un bug ? Utilisez le bouton **Signaler un bug** dans le coin inférieur droit du plan de travail. Décrivez ce que vous faisiez au moment où il s'est produit — votre projet actuel, les détails de votre navigateur et votre activité récente sont joints pour aider à localiser le problème. Si une erreur inattendue vous interrompt, la même fenêtre de rapport s'ouvre d'elle-même.
-
-## Informations sur la version et la licence
-
-**Aide → À propos** affiche la version exacte que vous utilisez, ainsi que les détails de compilation, la licence (Logigator est un logiciel libre sous **GNU AGPL v3**) et des liens vers le dépôt source et la politique de confidentialité.
+Le bouton en forme d'insecte, dans le coin inférieur droit, ouvre « Signaler un problème ». Décrivez ce que vous faisiez avant l'erreur. Votre projet actuel, des informations sur le navigateur et l'activité récente sont joints au rapport. Si l'éditeur rencontre une erreur inattendue, le même formulaire s'ouvre de lui-même, avec les détails de l'erreur.
 
 ## Voir aussi
 
-- [Plan de travail et outils](docs:board-and-tools) — se déplacer, placer des composants, sélectionner et effacer
-- [Composants et options](docs:components-and-options) — les blocs de construction et comment les configurer
-- [Fils et connexions](docs:wires-and-connections) — connecter les composants en circuits fonctionnels
-- [Simulation](docs:simulation) — exécuter votre circuit et interagir avec lui
-- [Raccourcis clavier](docs:shortcuts) — tous les raccourcis et comment les modifier
+- [Plan de travail et outils](docs:board-and-tools) : se déplacer, placer, sélectionner et effacer
+- [Composants et options](docs:components-and-options) : toutes les pièces et leurs options
+- [Simulation](docs:simulation) : faire fonctionner un circuit
+- [Raccourcis clavier](docs:shortcuts) : tous les raccourcis et comment les modifier

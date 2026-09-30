@@ -1,67 +1,44 @@
 # Einstieg
 
-Willkommen bei Logigator — einem Open-Source-Editor und -Simulator für digitale Logikschaltungen, der vollständig in deinem Browser läuft.
+Logigator ist ein Logiksimulator, der im Browser läuft. Du setzt Gatter auf ein Raster, ziehst Leitungen zwischen ihnen und startest mit „Simulation starten“, um zu sehen, wie die Signale durch die Schaltung laufen. Eine fertige Schaltung lässt sich als [benutzerdefinierte Komponente](docs:custom-components) speichern und in einer größeren als ein einzelner Baustein verwenden.
 
-![Das Logigator-Logo mit seinem Slogan.](./images/intro-banner.webp)
+Ein Account ist nicht nötig. Ohne Account speicherst du Projekte im Browser oder [exportierst sie als Datei](docs:saving-and-files). Mit Anmeldung kommen [Cloud-Speicher und Freigabelinks](docs:cloud) dazu.
 
-## Was ist Logigator?
+![Der Editor mit einem Halbaddierer auf der Arbeitsfläche.](./images/board-overview.webp)
 
-Mit Logigator zeichnest du digitale Logikschaltungen — vom einzelnen UND-Gatter bis zum vollständigen Prozessor — und lässt sie dann laufen, um die Signale fließen zu sehen. Du platzierst Komponenten auf einem Raster, verdrahtest ihre Anschlüsse miteinander und drückst auf Start, um zu simulieren.
+## Das Editorfenster
 
-Du kannst:
+- Die Arbeitsfläche in der Mitte ist das Raster, auf dem du baust. Das Mausrad zoomt, Ziehen mit der rechten oder mittleren Maustaste verschiebt die Ansicht.
+- Die Titelleiste zeigt den Namen des Projekts und wo es gespeichert ist (Entwurf, Lokal, Cloud oder Geteilt), danach die Menüs Datei, Bearbeiten, Ansicht und Hilfe. Mit dem Stift neben dem Namen benennst du das Projekt um.
+- Die Werkzeugleiste enthält Schaltflächen zum Speichern und Öffnen, für die Zwischenablage, zum Drehen, Rückgängigmachen und Zoomen, dann die fünf [Werkzeuge](docs:board-and-tools) und ganz rechts „Simulation starten“.
+- Die Komponentenpalette links listet alle Bauteile, die du platzieren kannst.
+- Die Statusleiste unten zeigt einen Hinweis zum aktiven Werkzeug, die Rasterposition des Cursors, „Gespeichert“ oder „Ungespeicherte Änderungen“ und wie viele Elemente ausgewählt sind.
+- Die Minimap und die Schaltfläche „Fehler melden“ liegen in der rechten unteren Ecke der Arbeitsfläche.
 
-- Schaltungen aus Logikgattern, Flip-Flops, Speichern, Multiplexern, Anzeigen und mehr bauen
-- Komponenten zu Netzen verdrahten und während der Simulation zusehen, wie unter Strom stehende Leitungen aufleuchten
-- Eine fertige Schaltung in deine eigene wiederverwendbare [benutzerdefinierte Komponente](docs:custom-components) verpacken
-- Deine Arbeit in diesem Browser speichern, sie [in eine Datei exportieren](docs:saving-and-files) oder sie in deinem [Logigator-Account in der Cloud](docs:cloud) behalten
+Wenn du eine benutzerdefinierte Komponente bearbeitest, erscheint über der Arbeitsfläche eine Tab-Leiste mit dem Hauptprojekt und je einem Tab pro geöffneter Komponente.
 
-Alles funktioniert ohne Account. Das Anmelden fügt Cloud-Speicher und Freigabelinks hinzu.
+In einem Fenster mit 1024 px Breite oder weniger wechselt der Editor zu einer Touch-Ansicht mit anderen Bedienelementen. Siehe [Smartphones und Tablets](docs:phones-and-tablets).
 
-## Ein Rundgang durch den Editor
+## Tutorial und Tipps
 
-Der Editor ist in einige feste Bereiche rund um die zentrale Arbeitsfläche gegliedert:
+Beim ersten Besuch bietet eine Karte über der Arbeitsfläche ein Tutorial an, in dem du ein UND-Gatter mit zwei Schaltern und einer LED baust. Es dauert etwa eine Minute. „Tutorial starten“ beginnt es, das ✕ schließt die Karte, und „Tutorial überspringen“ beendet das Tutorial bei jedem Schritt.
 
-- **Die Arbeitsfläche** — das Raster in der Mitte, auf dem du Komponenten platzierst und Leitungen zeichnest. Scrollen zum Zoomen, ziehen zum Schwenken.
-- **Die Werkzeugleiste** (oben) — schnelle Aktionen links (Speichern, Öffnen, Kopieren/Einfügen, Rückgängig/Wiederholen, Zoom) und die Zeichenwerkzeuge rechts (Schwenken, Leitung, Auswahl, Radieren, Text). Die Schaltfläche **Simulation starten** sitzt ganz rechts.
-- **Die Menüleiste** (oben links) — die Menüs **Datei**, **Bearbeiten**, **Ansicht** und **Hilfe**. Jeder Befehl liegt hier, die meisten mit einem daneben angezeigten Tastenkürzel.
-- **Die Komponentenpalette** (linkes Panel) — alle Komponenten, die du platzieren kannst, in Kategorien gruppiert. Siehe [Komponenten & Optionen](docs:components-and-options).
-- **Die Statusleiste** (unten) — ein einzeiliger Hinweis zum aktiven Werkzeug, deine Cursorposition auf dem Raster, ob das Projekt ungespeicherte Änderungen hat und wie viele Elemente ausgewählt sind.
-- **Die Minimap** (unten rechts) — eine kleine Übersicht der gesamten Schaltung, die du einklappen kannst.
+Wenn du bestimmte Werkzeuge zum ersten Mal benutzt, etwa das Leitungswerkzeug oder das Schneiden an der Auswahlkante, erklärt ein kurzer Tipp sie. Jeder Tipp erscheint einmal. „Alle Tipps deaktivieren“ in einem Tipp oder die Einstellung „Einführungstipps anzeigen“ schaltet sie ab. Hilfe → Tipps erneut anzeigen schaltet sie wieder ein, zeigt auch die schon gesehenen noch einmal und bringt die Tutorial-Karte zurück.
 
-Der Name des Projekts steht oben neben den Menüs; klicke ihn an, um das Projekt umzubenennen, und das Kennzeichen daneben zeigt, wo das Projekt gespeichert ist (**Lokal**, **Cloud**, **Entwurf** oder **Geteilt**).
+## Das Hilfe-Menü
 
-![Menüleiste und Werkzeugleiste am oberen Rand des Editors.](./images/menu-bar.webp)
-
-## Das geführte Tutorial
-
-Der schnellste Weg, die Grundlagen zu lernen, ist das eingebaute Tutorial, das dich in etwa einer Minute durch den Bau einer kleinen, funktionierenden Schaltung führt.
-
-Beim ersten Öffnen des Editors erscheint eine Karte nahe dem oberen Rand der Arbeitsfläche: **„Neu hier? Bau deine erste Schaltung in einem kurzen Tutorial.“** Wähle **Tutorial starten**, um zu beginnen, oder **Ausblenden**, um es zu überspringen. Du kannst das Tutorial jederzeit überspringen, sobald es begonnen hat.
-
-Um es später erneut auszuführen — oder die unten beschriebenen kontextbezogenen Tipps zurückzuholen — öffne **Hilfe → Tipps erneut anzeigen**.
-
-## Just-in-Time-Tipps
-
-Sobald du zum ersten Mal zu einem Werkzeug greifst, zeigt Logigator einen kurzen Tipp, der erklärt, wie es funktioniert — zum Beispiel, wie das [Leitungswerkzeug](docs:wires-and-connections) zeichnet und Verbindungen umschaltet oder was die Schneide-Auswahl tut. Jeder Tipp lässt sich ausblenden und kehrt nicht zurück, sobald du ihn gesehen hast.
-
-Um Tipps ganz auszuschalten, öffne das Account-Menü oben rechts und deaktiviere **Einführungstipps anzeigen** unter **Editor-Einstellungen**, oder wähle **Alle Tipps deaktivieren** in einem beliebigen Tipp. Siehe [Einstellungen & Darstellung](docs:settings).
-
-## Über Änderungen auf dem Laufenden bleiben
-
-Logigator wird regelmäßig aktualisiert. Öffne **Hilfe → Neuigkeiten**, um eine Zusammenfassung dessen zu sehen, was sich in den jüngsten Veröffentlichungen geändert hat. Beim ersten Mal, wenn eine neue Version etwas Wissenswertes einführt, erscheint dies automatisch.
+- Neuigkeiten listet die Änderungen jeder Version. Nach einem Update öffnet es sich einmal von selbst.
+- Dokumentation öffnet diese Seiten im Editor.
+- Über zeigt die laufende Version, die Lizenz (GNU AGPL v3) und Links zum Quellcode, zur Datenschutzerklärung und zum Impressum.
+- Cookie-Einstellungen öffnet den Einwilligungsdialog erneut. Den Eintrag gibt es nur, wenn der Editor mit dem Cookie-Banner läuft.
 
 ## Ein Problem melden
 
-Einen Fehler gefunden? Nutze die Schaltfläche **Fehler melden** in der unteren rechten Ecke der Arbeitsfläche. Beschreibe, was du getan hast, als er auftrat — dein aktuelles Projekt, Browser-Details und die jüngste Aktivität werden angehängt, um das Problem einzugrenzen. Sollte dich je ein unerwarteter Fehler unterbrechen, öffnet sich dasselbe Meldefenster von selbst.
-
-## Versions- & Lizenzinfo
-
-**Hilfe → Über** zeigt die genaue Version, die du ausführst, zusammen mit den Build-Details, der Lizenz (Logigator ist freie Software unter der **GNU AGPL v3**) und Links zum Quell-Repository und zur Datenschutzerklärung.
+Die Käfer-Schaltfläche in der rechten unteren Ecke öffnet „Problem melden“. Beschreibe, was du getan hast, bevor der Fehler auftrat. Dein aktuelles Projekt, Browserdetails und die letzten Aktivitäten werden dem Bericht angehängt. Tritt im Editor ein unerwarteter Fehler auf, öffnet sich dasselbe Formular von selbst, mit den Fehlerdetails.
 
 ## Siehe auch
 
-- [Arbeitsfläche & Werkzeuge](docs:board-and-tools) — bewegen, Komponenten platzieren, auswählen und radieren
-- [Komponenten & Optionen](docs:components-and-options) — die Bausteine und wie man sie konfiguriert
-- [Leitungen & Verbindungen](docs:wires-and-connections) — Komponenten zu funktionierenden Schaltungen verbinden
-- [Simulation](docs:simulation) — deine Schaltung laufen lassen und mit ihr interagieren
-- [Tastaturbefehle](docs:shortcuts) — jede Belegung und wie man sie ändert
+- [Arbeitsfläche und Werkzeuge](docs:board-and-tools): bewegen, platzieren, auswählen und radieren
+- [Komponenten und Optionen](docs:components-and-options): alle Bauteile und ihre Optionen
+- [Simulation](docs:simulation): eine Schaltung laufen lassen
+- [Tastaturbefehle](docs:shortcuts): alle Tastenkürzel und wie du sie änderst

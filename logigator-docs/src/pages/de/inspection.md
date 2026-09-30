@@ -1,46 +1,31 @@
-# Inspektion & Beobachtungen
+# Inspektion und Beobachtungen
 
-Manche Komponenten lassen dich in sie hineinschauen, während deine Schaltung läuft. Du kannst den Inhalt eines Speichers an der Adresse lesen, die er gerade liest, oder eine live-interaktive Ansicht der inneren Schaltung einer benutzerdefinierten Komponente öffnen.
+Während einer [Simulation](docs:simulation), ob laufend oder pausiert, lassen sich zwei Arten von Komponenten öffnen, um hineinzusehen. Ein Klick auf ein ROM zeigt seinen Inhalt, das gerade gelesene Wort hervorgehoben. Ein Klick auf eine benutzerdefinierte Komponente öffnet eine Beobachtung, eine Live-Ansicht ihrer inneren Schaltung.
 
-![Ein Beobachtungsfenster über einer laufenden Schaltung.](./images/inspection-showcase.webp)
+![Ein Beobachtungsfenster neben der laufenden Schaltung, zu der es gehört.](./images/inspection-showcase.webp)
 
-Die Inspektion ist nur verfügbar, **während eine [Simulation](docs:simulation) läuft**. Betritt zuerst die Simulation, tippe dann auf eine Komponente, die die Inspektion unterstützt, um ihre Ansicht zu öffnen. Erneutes Tippen holt dieselbe Ansicht wieder nach vorn, und das Verlassen der Simulation schließt alles.
+Am Desktop öffnet sich jede Ansicht als Fenster, das du verschieben und in der Größe ändern kannst. Ein erneuter Klick auf die Komponente holt ihr Fenster nach vorn. In der [Touch-Ansicht](docs:phones-and-tablets) teilen sich ROM-Ansichten eine Leiste am unteren Bildschirmrand, und eine Beobachtung füllt den ganzen Bildschirm. Verlässt du die Simulation, schließen sich alle.
 
-Auf dem Desktop öffnen sich diese Ansichten als schwebende Fenster, die du herumziehen und über der Arbeitsfläche stapeln kannst. Auf Smartphones und schmalen Bildschirmen erscheinen sie stattdessen als ein Panel, das von unten hochgleitet, und Beobachtungen übernehmen den ganzen Bildschirm — die laufende Schaltung bleibt dahinter sichtbar und interaktiv.
+## ROM-Inhalt
 
-## Speicherinhalt inspizieren
+![Die ROM-Ansicht folgt der Adresse, während sie sich ändert.](./images/rom-inspection.webp)
 
-Tippe auf ein **ROM**, während die Simulation läuft, um einen schreibgeschützten Betrachter seiner gespeicherten Daten zu öffnen. Das Wort, das die Schaltung **gerade adressiert**, ist hervorgehoben und aktualisiert sich live, während sich die Adresse ändert, sodass du genau verfolgen kannst, was der Speicher in die Schaltung zurückspeist.
+Die Ansicht ist schreibgeschützt; den Inhalt änderst du beim Bearbeiten in den Einstellungen des ROM. Das Wort an der aktuellen Adresse ist hervorgehoben, und mit „Folgen“ (standardmäßig an) scrollt die Tabelle mit, wenn sich die Adresse ändert. Die Zeile unten zeigt Adresse und Wert der hervorgehobenen Zelle. Ein Klick auf eine andere Zelle zeigt stattdessen diese, bis sich die Adresse das nächste Mal ändert.
 
-![Das Speicher-Inspektionsfenster mit hervorgehobenem adressiertem Wort.](./images/rom-inspection.webp)
+Die Schaltflächen über der Tabelle wählen Wörter oder Bytes und das Zahlensystem: Hex, Dezimal, Oktal oder Binär. Um zu einer Adresse zu springen, tippe sie hexadezimal in das Feld „Adresse…“. „Kopieren“ legt die ganze Tabelle als Text in die Zwischenablage, in der gewählten Ansicht und Basis.
 
-Der Betrachter dient nur dem Lesen — du kannst den Inhalt hier nicht ändern. Seine Steuerungen lassen dich wählen, wie die Daten angezeigt werden:
+## Beobachtungen
 
-- **Wörter / Bytes** — jeden gespeicherten Wert ganz zeigen oder in einzelne Bytes aufteilen.
-- **Hex / Dezimal / Oktal / Binär** — die Zahlenbasis, in der jeder Wert angezeigt wird.
-- **Zu Adresse springen** — direkt zu einer bestimmten Adresse springen.
-- **Folgen** — das gerade adressierte Wort im Blick behalten, während sich die Adresse bewegt.
+![Eine Beobachtung, von Outer in Inner hineingegangen, mit dem Pfad im Titel.](./images/inspection-window-multilayer.webp)
 
-Eine **Adresse**- und **Wert**-Anzeige zeigt die Adresse des hervorgehobenen Worts und seinen Inhalt.
+Eine Beobachtung zeichnet die innere Schaltung der Komponente mit denselben leuchtenden Leitungen wie die Arbeitsfläche. Du kannst darin verschieben und zoomen und die Schalter und Taster darin bedienen. Sie steuern die echte Simulation, also reagiert auch der Rest der Schaltung.
 
-## Die innere Schaltung einer benutzerdefinierten Komponente beobachten
+Ein Klick auf eine benutzerdefinierte Komponente innerhalb einer Beobachtung öffnet deren Schaltung im selben Fenster, und der Titel zeigt den Pfad, etwa Outer › Inner. Klicke auf einen früheren Namen, um wieder hinaufzugehen. Ein ROM in einer Beobachtung öffnet seine eigene Ansicht.
 
-Tippe auf eine platzierte [benutzerdefinierte Komponente](docs:custom-components), während die Simulation läuft, um eine **Beobachtung** zu öffnen — eine Live-Ansicht der Schaltung in ihr. Die inneren Leitungen und Anschlüsse leuchten genau so auf, wie die laufende Schaltung sie treibt, sodass du sehen kannst, was eine Ebene tiefer geschieht, ohne die Komponente auszupacken.
-
-![Ein Beobachtungsfenster mit Brotkrümel-Spur in eine verschachtelte Komponente.](./images/inspection-window-multilayer.webp)
-
-Eine Beobachtung ist interaktiv:
-
-- **Treibe ihre Eingänge** — klicke innerhalb der beobachteten Schaltung einen **Schalter** oder **Impulstaster** an oder halte einen **Taster** gedrückt, um ihn zu betätigen, genau wie auf der Hauptarbeitsfläche. Er treibt die echte laufende Simulation, sodass sich die Wirkung auf den Rest deiner Schaltung ausbreitet.
-- **Steige in verschachtelte Komponenten hinein** — tippe auf eine benutzerdefinierte Komponente innerhalb der Beobachtung, um in _ihre_ innere Schaltung abzusteigen. Eine **Brotkrümel**-Spur oben zeigt, wie tief du bist; klicke einen früheren Schritt an, um wieder herauszuspringen.
-- **Schwenken und Zoomen** — ziehe, um dich in der inneren Ansicht zu bewegen, und scrolle oder spreize zum Zoomen, genau wie auf der Arbeitsfläche.
-
-Wenn eine Komponente nicht beobachtet werden kann, siehst du eine kurze Meldung: Sie hat vielleicht **keine innere Schaltung** zum Inspizieren, oder ihre innere Schaltung stimmt womöglich nicht mehr mit der laufenden Simulation überein — in diesem Fall **starte die Simulation neu** und versuche es erneut.
-
-> **Kompakte Bildschirme:** Beobachtungen öffnen sich als Vollbildansicht mit einer Zurück-Schaltfläche anstelle der Schließen-Schaltfläche des Fensters; die Brotkrümel lassen dich weiterhin durch verschachtelte Ebenen zurückschreiten.
+Meldet die Beobachtung, dass die innere Schaltung nicht zur kompilierten Simulation passt, wurde die Komponente nach dem Start der Simulation geändert. Verlasse die Simulation und starte sie neu.
 
 ## Siehe auch
 
-- [Simulation](docs:simulation) — deine Schaltung laufen lassen und mit ihr interagieren
-- [Benutzerdefinierte Komponenten](docs:custom-components) — wiederverwendbare Komponenten bauen und verwenden
-- [Komponenten & Optionen](docs:components-and-options) — Speicher, Schalter, Taster und andere Bausteine
+- [Simulation](docs:simulation): eine Schaltung laufen lassen
+- [Benutzerdefinierte Komponenten](docs:custom-components): die Komponenten bauen, die du beobachtest
+- [Komponenten und Optionen](docs:components-and-options): Optionen und Inhalt eines ROM

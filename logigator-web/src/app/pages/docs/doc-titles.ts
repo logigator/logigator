@@ -14,6 +14,7 @@ import { TranslationKey } from '../../translation/translation-key.model';
 export const DOC_PAGE_TITLES: Record<DocPageId, TranslationKey> = {
   'getting-started': 'pages.docs.pages.gettingStarted',
   'board-and-tools': 'pages.docs.pages.boardAndTools',
+  'phones-and-tablets': 'pages.docs.pages.phonesAndTablets',
   shortcuts: 'pages.docs.pages.shortcuts',
   settings: 'pages.docs.pages.settings',
   'components-and-options': 'pages.docs.pages.componentsAndOptions',

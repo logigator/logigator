@@ -1,77 +1,65 @@
 # Simulation
 
-Once your circuit is built, run it to watch the signals flow. In simulation you power the circuit, flip its inputs, and see the results light up live on the board.
+Start simulation, at the right end of the toolbar, powers the circuit: powered wires light up, LEDs and displays show their state, and switches and buttons respond to clicks. `Enter` does the same.
 
-![A circuit running in simulation, with the run controls in the toolbar.](./images/simulation-showcase.webp)
+![A clock driving an LED in a running simulation.](./images/simulation-showcase.webp)
 
-## Starting and leaving a simulation
+## Entering and leaving
 
-Press the **Start simulation** button at the far right of the toolbar to power your circuit. You can also press `Enter`.
+The simulation always runs the main project. If a custom component's tab is open, the editor switches back to Main project first.
 
-While a simulation runs the board is **locked for editing** — you can't place, move, wire or delete anything. You can still pan and zoom freely, and you can click the circuit's inputs (see [Interacting with a running circuit](#interacting-with-a-running-circuit)).
+While it runs, the board is locked. You can pan and zoom, operate inputs and [inspect](docs:inspection) ROMs and custom components, but not place, move, wire or delete anything. Exit simulation, `Enter` or `Escape` returns to editing with the Pan tool.
 
-To go back to editing, press **Exit simulation** (where the Start button was), or press `Enter` again or `Escape`.
+With the Auto-start simulation setting on (the default), the circuit starts running as soon as you enter. With it off, the simulation waits paused at tick 0 so you can step from the start.
 
-Whether the simulation begins **running** or begins **paused** depends on the **Auto-start simulation** setting. When it's on, the circuit starts running the moment you enter; when it's off, it enters paused so you can start it yourself. See [Settings & Appearance](docs:settings).
+## Run controls
 
-## The run controls
+While a simulation is active, the toolbar is replaced by four buttons, the speed button and a readout.
 
-When a simulation is active, the toolbar swaps its drawing tools for the run controls.
+| Button | What it does                                                                                 |
+| ------ | -------------------------------------------------------------------------------------------- |
+| Run    | Starts or resumes the simulation.                                                            |
+| Pause  | Stops at the current tick and keeps the state.                                               |
+| Step   | Advances one tick. Only available while paused.                                              |
+| Stop   | Resets the circuit to tick 0, turns every switch off and pauses. You stay in the simulation. |
 
-| Control   | What it does                                                                                                                |
-| --------- | --------------------------------------------------------------------------------------------------------------------------- |
-| **Run**   | Starts (or resumes) the simulation.                                                                                         |
-| **Pause** | Freezes the simulation where it is, keeping its current state so you can resume or step.                                    |
-| **Step**  | Advances the circuit by a single tick. Available while paused — handy for tracing a signal one step at a time.              |
-| **Stop**  | Resets the circuit back to the start and clears every lit wire. The simulation stays active and paused, ready to run again. |
+The readout shows the ticks since the start and, while running, the speed actually reached.
 
-**Stop** and **Exit simulation** are different: **Stop** rewinds the running circuit to the beginning but keeps you in simulation, while **Exit simulation** leaves simulation entirely and returns you to editing.
+![The run controls and the speed button.](./images/simulation-controls.webp)
 
-![The run controls and the speed settings in the toolbar.](./images/simulation-controls.webp)
+## Speed
 
-## Simulation speed
+The speed button shows the current setting. Clicking it opens a panel with three modes, which you can switch while the circuit runs:
 
-Beside the run controls is the **speed button**. It names the current setting — **Every frame**, a rate such as `10 Hz`, or **Max speed** — and clicking it opens the speed panel:
+- Every frame, the default, advances one tick per screen refresh, so the speed follows your display's refresh rate.
+- Fixed speed ticks at a rate you set, 1 kHz to begin with. The slider goes from 1 Hz to 10 MHz. In the box next to it you can type any rate from 0.1 Hz up, such as `20`, `2.5k` or `1M`. A red box means the input is not a rate, and the last valid one stays in effect. If the circuit is too large to keep up, a warning sign appears next to the readout.
+- As fast as possible runs without a limit. The screen then shows only some of the ticks.
 
-![The speed panel, opened from the speed button, with Fixed speed chosen.](./images/simulation-speed.webp)
+![The speed panel with Fixed speed set to 10 Hz.](./images/simulation-speed.webp)
 
-The panel offers three ways to pace the simulation. The highlighted one is in use; click another to switch, even while the circuit runs:
+Under the modes, Clocks at this speed lists the frequency each clock delay in the circuit produces. A clock is on for one tick and off for Delay ticks, so one cycle takes Delay + 1 ticks: at 10 Hz, a clock with delay 1 runs at 5 Hz and one with delay 4 at 2 Hz. With Fixed speed the list is there right away. In the other two modes the rate has to be measured first, so the list appears about a second after the circuit starts running.
 
-- **Every frame** — the circuit advances one tick per screen refresh, so every change is drawn and the speed follows your display's refresh rate. This is the default.
-- **Fixed speed** — the circuit ticks at a rate you choose. Drag the slider to pick one between `1 Hz` and `10 MHz`, or type it into the box beside the slider: `20`, `2.5k` and `1M` all work. Typing also goes below the slider, down to `0.1 Hz` — one tick every ten seconds. Changing either one selects **Fixed speed**. If the box turns red, what you typed is not a rate, and the simulation keeps running at the last one that was.
-- **As fast as possible** — no limit: the circuit runs as fast as your computer allows, and the screen shows only some of the ticks.
+## Operating inputs
 
-Under the three choices, **Clocks at this speed** lists the frequency each **Clock** in your circuit runs at. A clock's **Delay** is how many ticks it waits before flipping, so a full cycle takes twice that: at `10 Hz`, a clock with delay `1` runs at `5 Hz`. To slow a clock down, lower the speed or raise its delay. With a fixed speed the list is there straight away; with the other two it appears once the circuit has run for a moment, since their speed is only known by measuring it.
+- A Switch toggles with each click and stays where you left it.
+- A Button is on for as long as you hold it down.
+- A Pulse button sends a pulse of one tick per click, however long you hold it.
 
-Next to the speed button, a readout shows the **measured speed** the simulation is actually reaching while it runs, alongside the total **ticks** elapsed since it started. When a fixed speed is more than the circuit can keep up with, the readout is marked with a warning sign.
+Dragging from anywhere else on the board pans it.
 
-## Interacting with a running circuit
+## When the simulation won't start
 
-Only the circuit's inputs respond to clicks while it runs:
+The editor refuses to start and shows a message naming the component when:
 
-- **Switch** — a latching input. Click it to toggle its output on or off; it stays where you left it.
-- **Button** — a momentary input. Its output is on for as long as you hold it down, and goes off again when you let go.
-- **Pulse button** — click it to emit a single one-tick pulse on its output.
+- a custom component contains itself, directly or through another one,
+- a custom component has no circuit inside it,
+- a custom component's ports no longer match the Input and Output plugs in its circuit.
 
-As signals propagate, powered wires and ports **light up**, and output components show their state — LEDs glow, segment displays and LED matrices show their patterns. Drag anywhere on the board to pan — except from a button, which simply stays held down; clicking empty space does nothing.
-
-To look inside a running circuit — read a memory's contents or watch a custom component's inner circuit live — see [Inspection & Watches](docs:inspection).
-
-## When a simulation won't start
-
-Some problems stop a circuit from simulating at all. If any are present, **Start simulation** shows an error message and stays in editing mode so you can fix them. The most common ones:
-
-- **An unsupported component** — a component the simulator can't run. Remove or replace it.
-- **A custom component that places itself** — a [custom component](docs:custom-components) whose inner circuit contains itself, directly or through another custom, which can never resolve. Break the loop.
-- **A custom component with no circuit** — a custom component that has nothing inside it to simulate. Give it an inner circuit, or remove it.
-- **A port mismatch** — a custom component whose declared input/output ports don't match the input and output plugs actually inside its circuit. Line the plugs up with the ports.
-
-Each message names the component involved so you can find it.
+Fix the named component and start again. If the message says the simulation engine could not start, your browser does not support WebAssembly.
 
 ## See also
 
-- [Inspection & Watches](docs:inspection) — reading memory and watching inner circuits live
-- [Components & Options](docs:components-and-options) — switches, buttons, LEDs and other building blocks
-- [Custom Components](docs:custom-components) — packaging a circuit into a reusable part
-- [Settings & Appearance](docs:settings) — the Auto-start simulation option
-- [Keyboard Shortcuts](docs:shortcuts) — every binding, and how to change them
+- [Inspection and watches](docs:inspection): ROM contents and watches
+- [Components and options](docs:components-and-options): what each input and display does
+- [Settings](docs:settings): Auto-start simulation
+- [Phones and tablets](docs:phones-and-tablets): the run controls in the touch layout

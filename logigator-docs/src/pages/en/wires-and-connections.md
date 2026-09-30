@@ -1,58 +1,39 @@
-# Wires & Connections
+# Wires and connections
 
-Wires carry signals between component ports. This page covers drawing them, controlling where they connect, and joining parts wirelessly with tunnels.
-
-![Wires drawn between components, with connection dots.](./images/wire-circuit-display.webp)
+Wires carry signals between ports. They run horizontally and vertically along the grid, and a signal spreads through every wire that is connected to it.
 
 ## Drawing wires
 
-Pick the **Wire** tool from the toolbar (shortcut `W`), then drag on the board. Wires are always straight, running horizontally or vertically along the grid. Drag diagonally and the wire routes as an **L-shape**: the direction you move first sets the first leg, and the bend follows your cursor.
+Pick the Wire tool (`W`) and drag. A drag that moves diagonally draws an L: the direction you move in first becomes the first leg. To change your mind, go back to the starting point and set off in the other direction.
 
-Release to place the wire. A wire endpoint that lands on a component port connects to it automatically. While you drag, a segment that would run through a component's body turns red and won't be placed — route around it instead.
+A wire can start at a port, at a junction or anywhere along another wire, and it connects wherever it ends on a port. While you drag, a leg that would run through a component turns red. Releasing with a red leg places nothing.
 
-To extend a run, just draw another wire starting from the end of an existing one. Wires that meet end-to-end join into a single connected path.
+A wire drawn over an existing one merges into it, and two wires that meet end to end in a straight line become one.
 
-## Junctions: when wires connect
+## Where wires connect
 
-Where wires meet, Logigator follows a simple rule so you stay in control of your circuit:
+A wire that ends on another wire connects to it, and a wire that runs across a port's tip connects to that port. Two wires that only cross, with neither ending there, stay separate. That lets you route wires over each other without connecting them.
 
-- A wire that **ends on** another wire connects to it. A small **connection dot** marks the join.
-- Two wires that simply **cross** — neither one ending at the crossing — pass over each other **without** connecting. There is no dot, and no signal flows between them.
+A connection dot appears wherever three or more wire ends and port tips meet. A plain crossing has no dot.
 
-This lets you route wires across each other freely without creating accidental connections.
+![Two crossings: the left one separate, the right one connected.](./images/wire-junction.webp)
 
-![Two crossings: one without a dot, one joined by a connection dot.](./images/wire-junction.webp)
+To connect a crossing, tap it with the Wire tool. A dot appears and the four legs are connected. Tap the dot again to separate them. Hovering a crossing shows what a tap would do. A dot where a wire ends on another one can't be removed this way; delete or move the wire instead.
 
-### Toggling a crossing
+## Tunnels
 
-To connect two wires that merely cross, pick the **Wire** tool and tap the crossing point: a connection dot appears and the wires are now joined. Tap the same dot again to split them back apart. Hovering the crossing with the Wire tool previews what a tap will do — the dot it would add, or the existing dot it would remove.
+A Tunnel connects to every other tunnel on the same board that has the same label, as if a wire ran between them. Use them to carry a clock or a bus across a large board. Every new tunnel starts with the label 0, so two new tunnels are connected until you change one of them. Labels are case-sensitive and up to 10 characters long.
 
-You will also see connection dots appear on their own wherever three or more wire ends (or a wire end and a component port) come together. These dots are just a visual cue showing where things are electrically connected; you don't place or select them.
+Tunnels only connect within one circuit. A tunnel inside a custom component never connects to one outside it.
 
-## Negating a port
+![A switch lighting an LED through two tunnels with the same label.](./images/tunnel.webp)
 
-With the **Wire** tool you can also tap directly on a component's port to invert the signal there — a small **negation bubble** appears on the port. This is covered in full on the [Components & Options](docs:components-and-options) page.
+## Repairing wires
 
-## Tunnels: wireless connections
-
-A **Tunnel** connects points on your board without a wire running between them. Every tunnel carrying the same **label** is electrically joined, as if a wire linked them. This keeps busy boards tidy — for example, routing a clock or a shared bus across the circuit without drawing long wires.
-
-To use tunnels:
-
-1. Place a **Tunnel** from the palette's **Basic** category and wire it to the signal you want to carry.
-2. Place another Tunnel wherever you want that signal to reappear.
-3. Select each Tunnel and give them the **same Label** in the settings card.
-
-All tunnels with matching labels behave as one connected net; tunnels with different labels stay independent.
-
-![Two tunnels carrying the same label, with no wire between them.](./images/tunnel.webp)
-
-## Cutting and rearranging wires
-
-The **Select** tool moves and removes wires along with anything else you select, and its scissor mode trims a wire exactly at the edge of your selection box — handy for slicing one wire out of a bundle. The **Erase** tool deletes wires you click or drag across. Both are covered in [Board & Tools](docs:board-and-tools).
+Edit → Repair Wires checks the board for wire problems, such as overlapping pieces, that make connections behave unexpectedly, and fixes them. When a loaded circuit has such problems, the editor offers the repair with a Repair wires button. Check afterwards that the circuit still does what it should. Repairing during a simulation stops the simulation first.
 
 ## See also
 
-- [Components & Options](docs:components-and-options) — the parts these wires connect, and port negation
-- [Simulation](docs:simulation) — running the circuit and watching powered wires light up
-- [Board & Tools](docs:board-and-tools) — the Wire tool, selecting, cutting and erasing
+- [Board and tools](docs:board-and-tools): selecting, cutting and erasing wires
+- [Components and options](docs:components-and-options): negating a port
+- [Simulation](docs:simulation): watching powered wires light up

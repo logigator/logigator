@@ -1,66 +1,55 @@
 # Nube y compartir
 
-Tu cuenta de Logigator mantiene proyectos y componentes en la nube, accesibles desde cualquier dispositivo, y te permite compartirlos con un enlace. Todo en el editor funciona sin cuenta; iniciar sesión añade almacenamiento en la nube y compartición.
+Con una cuenta de Logigator, los proyectos y componentes personalizados se guardan en la nube y se abren en cualquier dispositivo en el que inicies sesión. Los documentos de la nube se pueden compartir con un enlace o publicar en la comunidad del sitio web de Logigator. Todo lo demás del editor funciona sin cuenta.
 
-## Iniciar sesión y tu cuenta
+## Iniciar y cerrar sesión
 
-Abre el menú de cuenta en la esquina superior derecha. Con la sesión cerrada ofrece **Iniciar sesión**; con la sesión iniciada muestra tu **Cuenta** y una opción de **Cerrar sesión**, junto a los ajustes de **Tema** e **Idioma** (consulta [Ajustes y apariencia](docs:settings)).
+El menú de la cuenta, en el extremo derecho de la barra de título, muestra «Iniciar sesión» y «Registrarse» mientras no has iniciado sesión. Ambos abren el sitio web de Logigator en una pestaña nueva, y el editor detecta por sí solo cuando has iniciado sesión allí. Con la sesión iniciada, el menú muestra «Cuenta», que abre tu página de cuenta en el sitio, y «Cerrar sesión».
 
-Iniciar sesión te da:
+Si un proyecto o componente de la nube tiene cambios sin guardar al cerrar sesión, el editor pregunta si quieres guardarlos antes: «Guardar y cerrar sesión», «Cerrar sesión sin guardar» o «Cancelar». Tras cerrar sesión, un proyecto de la nube abierto se sustituye por un borrador vacío y se cierran las pestañas de los componentes de la nube. Los proyectos y componentes locales no se tocan.
 
-- **Almacenamiento en la nube** para proyectos y componentes personalizados, disponible en cada dispositivo desde el que inicies sesión.
-- **Enlaces para compartir** de tus proyectos y componentes en la nube.
+## Local y nube
 
-Cerrar sesión borra tu biblioteca en la nube de esta sesión; tus proyectos locales (del navegador) permanecen en su sitio.
+Los documentos locales viven en este navegador y desaparecen si se borran sus datos del sitio. Los de la nube viven en tu cuenta. La etiqueta junto al nombre del proyecto indica cuál es el caso del proyecto abierto, y Archivo → Abrir los lista en pestañas separadas, Proyectos locales y Proyectos en la nube. Con la sesión iniciada, el diálogo se abre en Proyectos en la nube.
 
-## Almacenamiento local frente al de la nube
+![El diálogo «Abrir proyecto» en la pestaña «Proyectos en la nube».](./images/open-cloud.webp)
 
-Cada proyecto y componente personalizado reside en uno de dos lugares:
+En el sitio web, Mis proyectos y Mis componentes listan también tus documentos de la nube. Allí puedes crearlos, renombrarlos, compartirlos, eliminarlos y abrirlos en el editor.
 
-- **Local**: almacenado en el navegador que estás usando. Rápido y sin cuenta, pero atado a ese único navegador y sin copia de seguridad.
-- **Nube**: almacenado en tu cuenta. Accesible desde cualquier dispositivo una vez que inicias sesión.
+## Subir a la nube
 
-La etiqueta junto al nombre del proyecto muestra cuál de los dos usa el proyecto abierto (**Local**, **Nube**, o **Borrador** si aún no se ha guardado). Consulta [Guardar y archivos](docs:saving-and-files) para el flujo de guardado.
+Para mover un proyecto local guardado a tu cuenta, elige Archivo → Subir a la nube, o el botón de subir de su fila en el diálogo «Abrir proyecto». Para guardar un borrador directamente en la nube, elige Nube en el diálogo «Guardar». Para un componente personalizado local, usa «Subir a la nube» en su tarjeta de ajustes.
 
-El diálogo **Archivo → Abrir** mantiene los dos separados en pestañas distintas —**Proyectos locales** y **Proyectos en la nube**— más una pestaña **Desde archivo** para importar un archivo de circuito. Si tienes la sesión cerrada, la pestaña Proyectos en la nube te pide que inicies sesión.
+Un proyecto de la nube solo puede usar componentes de la nube. Si el tuyo usa componentes locales, el diálogo los lista y los sube con él. También pregunta quién puede abrir lo que subes, con Todo el mundo preseleccionado, y la misma elección vale para los componentes subidos. Subir mueve los documentos: las copias locales se eliminan.
 
-![El diálogo Abrir proyecto en la pestaña Proyectos en la nube.](./images/open-cloud.webp)
+![El diálogo «Subir a la nube» con un componente que se subirá también.](./images/upload-to-cloud.webp)
 
-## Trasladar el trabajo a la nube
+## Compartir
 
-Hay dos maneras de llevar un proyecto a tu biblioteca en la nube:
+Archivo → Compartir abre el diálogo de compartir de un proyecto de la nube. El botón «Compartir» en una fila de la pestaña Proyectos en la nube hace lo mismo, y un componente de la nube tiene «Compartir» en su tarjeta de ajustes. Los documentos locales hay que subirlos primero.
 
-1. **Guardar un Borrador directamente en la nube**: cuando guardas por primera vez un proyecto nuevo, elige **Destino: Nube** en el diálogo de guardado.
-2. **Subir un proyecto local existente**: con un proyecto Local guardado abierto, elige **Archivo → Subir a la nube**. También puedes subir un proyecto desde la lista del diálogo **Abrir**.
+![El diálogo de compartir de un componente.](./images/share-component.webp)
 
-Subir _traslada_ el proyecto fuera del almacenamiento local a tu biblioteca en la nube. Si el proyecto usa componentes personalizados locales, estos se publican en tu biblioteca en la nube junto con él: un proyecto en la nube solo puede contener componentes en la nube, así que cada uno se sube primero y luego se referencia. El diálogo de subida lista exactamente qué componentes se publicarán antes de que confirmes.
+«Quién puede abrirlo» tiene tres opciones, y cada cambio se aplica al momento:
 
-Los componentes personalizados se pueden trasladar a la nube de la misma manera, desde su acción en el panel de ajustes.
+| Opción                   | Quién puede abrirlo                                                                                                 |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| Solo tú                  | Nadie más. El enlace no se muestra.                                                                                 |
+| Cualquiera con el enlace | Quien tenga el enlace. El documento queda fuera de los listados de la comunidad y de los buscadores.                |
+| Todo el mundo            | Todo el mundo. El documento aparece en la comunidad y los buscadores pueden encontrarlo, en cuanto tiene contenido. |
 
-![El diálogo Subir a la nube con los componentes que se publicarán.](./images/upload-to-cloud.webp)
+El enlace para compartir lleva a la página del documento en el sitio web de Logigator. El botón «Compartir» lo pasa al menú de compartir de tu dispositivo, o lo copia si no hay ninguno. «Insertar» da un fragmento en Markdown, HTML o BBCode, con una imagen del circuito que enlaza a su página, para pegarlo en un foro o una wiki. «Ver la página de la comunidad» abre esa página.
 
-## Compartir un proyecto
+«Regenerar enlace» sustituye el enlace, y el antiguo deja de funcionar al instante para todos los que lo tengan. Solo se ofrece con «Cualquiera con el enlace»: la dirección de un documento publicado es su enlace, y uno privado no muestra enlace. Si pasas un documento de «Cualquiera con el enlace» a «Solo tú» y vuelves, el enlace sigue siendo el mismo.
 
-Una vez que un proyecto está en la nube, **Archivo → Compartir** abre el diálogo de compartir. (Compartir solo está disponible para proyectos en la nube; sube primero un proyecto local.)
+## Abrir el enlace de otra persona
 
-- **Quién puede abrirlo**: **Solo tú** (nadie más puede abrirlo, y su enlace no se muestra), **Cualquiera con el enlace** (quien tenga el enlace puede abrir tu proyecto en **modo de solo lectura** y **clonarlo en su propia biblioteca**) o **Todo el mundo** (aparece en la comunidad y los buscadores lo indexan).
-- **Enlace para compartir**: la página del proyecto en el sitio, que es lo que abre quien lo recibe. Usa **Copiar enlace** para obtenerlo. Un proyecto privado conserva su enlace: la fila explica por qué no se muestra, y en cuanto eliges **Cualquiera con el enlace** vuelve a servir la misma dirección.
-- **Regenerar enlace**: reemplaza el enlace de inmediato. Quien siga usando el antiguo pierde el acceso. La acción solo se ofrece mientras el proyecto está en **Cualquiera con el enlace**: la dirección de una página publicada _es_ ese enlace, y un proyecto privado no muestra su enlace en absoluto, así que cámbialo primero a **Cualquiera con el enlace**.
+Un enlace para compartir abre la página del documento en el sitio web, con «Abrir en el editor» y «Guardar una copia». «Guardar una copia» te pide iniciar sesión, copia el documento en tu biblioteca de la nube y abre la copia. En los documentos con Todo el mundo, la página también permite dar una estrella.
 
-Los componentes personalizados en la nube se pueden compartir de la misma manera desde el panel de ajustes.
+En el editor, un documento compartido lleva la etiqueta Compartido. Puedes cambiarlo y probarlo, pero no guardarlo ni exportarlo. Archivo → Clonar a mis proyectos, o Clonar a mis componentes para un componente, guarda una copia en tu biblioteca de la nube. La copia se hace a partir de la versión que guardó su propietario, sin tus cambios, y empieza como «Cualquiera con el enlace». Los cambios posteriores en un lado no afectan al otro.
 
-![El diálogo de compartir con el selector de visibilidad y el enlace para compartir.](./images/share-component.webp)
+## Ver también
 
-### Qué ve el destinatario
-
-Alguien que abre tu enlace para compartir obtiene una copia de **solo lectura**: la etiqueta indica **Compartido** y no puede guardar cambios sobre los tuyos ni exportarlo a un archivo. Para hacerlo suyo, **clona** el proyecto en su biblioteca, lo que le da una copia completa y editable que puede guardar y editar libremente. Su clon es independiente; las ediciones posteriores en cualquiera de los lados no afectan al otro.
-
-## Ajustes de cookies y consentimiento
-
-Cuando Logigator se sirve con su banner de consentimiento, puedes revisar tus preferencias de cookies y consentimiento en cualquier momento desde **Ayuda → Ajustes de cookies**. (Esta entrada solo aparece donde el banner de consentimiento está disponible.)
-
-## Consulta también
-
-- [Guardar y archivos](docs:saving-and-files): guardar localmente, archivos `.lgix` y exportación de imágenes
-- [Componentes personalizados](docs:custom-components): las piezas reutilizables que viajan con un proyecto compartido
-- [Ajustes y apariencia](docs:settings): ajustes de tema, idioma y cuenta
+- [Guardar y archivos](docs:saving-and-files): guardar, archivos y exportar imágenes
+- [Componentes personalizados](docs:custom-components): componentes que viajan con un proyecto
+- [Ajustes](docs:settings): el menú de la cuenta

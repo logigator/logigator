@@ -1,79 +1,67 @@
 # Guardar y archivos
 
-Dónde reside tu trabajo: en tu navegador, en tu cuenta o en un archivo de tu dispositivo. Esta página explica cómo guardar en el navegador, exportar a un archivo y generar una imagen de tu circuito.
+Un proyecto se guarda en uno de dos sitios: en este navegador (Local) o en tu cuenta de Logigator (Nube). Los archivos de tu dispositivo sirven para exportar e importar, no son un tercer lugar donde guardar. El editor no guarda automáticamente.
 
-## Guardar tu proyecto
+## Guardar un proyecto
 
-Guarda con **Archivo → Guardar** o `Ctrl+S`. El botón también está en la barra de herramientas.
+Archivo → Guardar, el botón de guardar de la barra de herramientas o `Ctrl+S` guarda el proyecto abierto. Un proyecto nuevo es un borrador hasta que lo guardas por primera vez, lo que abre el diálogo «Guardar»:
 
-Un proyecto que nunca se ha guardado es un **Borrador**: la etiqueta junto al nombre del proyecto lo indica. La primera vez que guardas un Borrador, Logigator pide dos cosas:
+- Nombre, hasta 20 caracteres.
+- Destino, Local o Nube. Nube requiere haber iniciado sesión y en ese caso viene preseleccionada.
+- Quién puede abrirlo, solo con Nube. Viene preseleccionado Todo el mundo: el proyecto aparece entonces en la comunidad y los buscadores pueden encontrarlo. Elige «Solo tú» para mantenerlo privado. Consulta [Nube y compartir](docs:cloud).
 
-- **Nombre**: cómo llamar al proyecto.
-- **Destino**: **Local** (almacenado en este navegador) o **Nube** (almacenado en tu cuenta de Logigator, si has iniciado sesión).
+![El diálogo «Guardar» con Nube elegida y las opciones de visibilidad debajo.](./images/save-project.webp)
 
-Después de ese primer guardado, **Guardar** escribe directamente de vuelta allí donde reside el proyecto, sin más avisos. Consulta [Nube y compartir](docs:cloud) para saber qué añaden iniciar sesión y el destino Nube.
+Las siguientes veces se guarda directamente en el mismo sitio. La única excepción es un proyecto de la nube que usa componentes personalizados locales: al guardarlo se abre primero el diálogo «Subir a la nube», porque un proyecto de la nube solo puede usar componentes de la nube.
 
-### Saber dónde está almacenado un proyecto
+Los proyectos locales se quedan en el navegador que los guardó. Como advierte el diálogo, no se conservan entre dispositivos y pueden perderse si se borran los datos del sitio. Guarda en la nube o exporta a un archivo lo que quieras conservar.
 
-La etiqueta junto al nombre del proyecto siempre muestra el hogar del proyecto:
+## Dónde está guardado un proyecto
 
-| Etiqueta       | Significado                                                                |
-| -------------- | -------------------------------------------------------------------------- |
-| **Borrador**   | Aún sin guardar: guárdalo para almacenarlo.                                |
-| **Local**      | Guardado solo en este navegador.                                           |
-| **Nube**       | Guardado en tu cuenta, accesible desde cualquier dispositivo.              |
-| **Compartido** | Abierto en modo de solo lectura desde el enlace para compartir de alguien. |
+La etiqueta junto al nombre del proyecto indica dónde está el proyecto abierto:
 
-### El indicador de guardado / sin guardar
+| Etiqueta   | Significado                                                                       |
+| ---------- | --------------------------------------------------------------------------------- |
+| Borrador   | Aún sin guardar.                                                                  |
+| Local      | Guardado en este navegador.                                                       |
+| Nube       | Guardado en tu cuenta.                                                            |
+| Compartido | Abierto desde el enlace para compartir de otra persona. No puedes sobrescribirlo. |
 
-La **barra de estado** en la parte inferior del editor muestra **Guardado** cuando todo está escrito, y **Cambios sin guardar** en el momento en que haces una edición. Úsalo como comprobación rápida antes de cerrar la pestaña.
+Una etiqueta Bifurcar al lado indica que el proyecto se copió del de otra persona. Pasa el puntero por encima para ver de quién.
 
-### Una nota sobre los proyectos locales
+La barra de estado muestra «Guardado» o «Cambios sin guardar». Si abres otro proyecto o empiezas uno nuevo con cambios sin guardar, el editor pregunta si quieres descartarlos, y el navegador te avisa antes de cerrar la pestaña.
 
-Los proyectos locales residen solo en el navegador en el que los guardaste. Como advierte el diálogo de guardado:
+## Abrir, renombrar y eliminar
 
-> Los proyectos locales no se conservan entre dispositivos y pueden perderse.
+Archivo → Abrir (`Ctrl+O`) tiene tres pestañas: Proyectos locales, Proyectos en la nube y Desde archivo. En cada lista se puede buscar, y cada fila tiene botones para renombrar o eliminar el proyecto. Las filas locales se pueden además subir a la nube, y las de la nube compartir.
 
-Si un proyecto es importante, guárdalo en la **Nube** (consulta [Nube y compartir](docs:cloud)) o **expórtalo a un archivo** para tener una copia que tú controlas.
+![El diálogo «Abrir proyecto» en la pestaña «Desde archivo».](./images/open-file.webp)
 
-### Abrir proyectos antiguos
+El lápiz junto al nombre del proyecto, en la barra de título, cambia el nombre del proyecto abierto.
 
-Si abres un circuito hecho con el editor de Logigator antiguo, guardarlo aquí lo convierte al formato nuevo.
+## Archivos de circuito
 
-## Archivos de circuito (`.lgix`)
+Archivo → Exportar a archivo descarga el proyecto abierto como archivo `.lgix`. El archivo contiene el tablero y una copia de cada componente personalizado que usa, así que se abre completo en cualquier ordenador. Está comprimido, pero no cifrado ni firmado: cualquiera puede leerlo. Exportar no cambia dónde está guardado el proyecto.
 
-También puedes conservar un circuito como un archivo en tu propio dispositivo.
+Para importar, abre Archivo → Abrir → Desde archivo y elige un archivo. El editor lee archivos `.lgix` y los archivos `.json` que exportaba el antiguo editor de Logigator. La importación se guarda al momento como un proyecto local nuevo.
 
-- **Exportar**: **Archivo → Exportar a archivo** descarga el proyecto abierto como un archivo `.lgix`.
-- **Importar**: **Archivo → Abrir → Desde archivo**, luego **Elegir archivo**, carga un archivo `.lgix` de vuelta en el editor como un nuevo proyecto local.
+Un proyecto abierto desde un enlace para compartir no se puede exportar. Clónalo primero (consulta [Nube y compartir](docs:cloud)).
 
-Un archivo es solo siempre una exportación o una importación: no es un lugar donde tu proyecto «reside» como lo son el almacenamiento Local y en la Nube. Exportar no cambia dónde está guardado tu proyecto.
+## Exportar una imagen
 
-### Qué hay en un archivo `.lgix`
+Archivo → Generar imagen abre el diálogo «Exportar imagen»:
 
-Un archivo `.lgix` es una instantánea comprimida y autocontenida de tu circuito. Reúne el propio tablero **y** una copia congelada de cada [componente personalizado](docs:custom-components) que usa el circuito, de modo que se abre correctamente en cualquier máquina aunque esa máquina nunca haya visto esos componentes.
+- Formato: PNG, JPEG o WebP.
+- Resolución: 1×, 2× o 4×, con 2× preseleccionado. Si la imagen fuera más grande de lo que tu dispositivo puede dibujar, se reduce y el diálogo lo indica.
+- Fondo: activado dibuja el color de fondo del tema y la cuadrícula. Desactivado da un PNG o WebP transparente, o un JPEG blanco.
+- Calidad, de 10 a 100 %, para JPEG y WebP. PNG no tiene pérdidas.
 
-El archivo está comprimido pero no cifrado ni bloqueado: trátalo como un paquete cómodo, no como uno seguro o a prueba de manipulaciones. Logigator también puede importar los archivos de circuito `.json` exportados por el editor antiguo.
+El diálogo muestra el tamaño final en píxeles antes de exportar. Si hay abierta la pestaña de un componente personalizado, un campo «Proyecto» elige qué circuito exportar.
 
-> Los proyectos de solo lectura abiertos desde un enlace para compartir no se pueden exportar a un archivo. Clona primero el proyecto compartido en tu propia biblioteca; consulta [Nube y compartir](docs:cloud).
+![El diálogo «Exportar imagen».](./images/export-image.webp)
 
-![El diálogo Abrir proyecto en la pestaña Desde archivo.](./images/open-file.webp)
+## Ver también
 
-## Generar una imagen
-
-Para exportar una imagen de tu circuito, elige **Archivo → Generar imagen**. El diálogo te permite fijar:
-
-- **Formato**: **PNG**, **JPEG** o **WebP**.
-- **Resolución**: el tamaño de salida; los tamaños muy grandes se reducen automáticamente para ajustarse a los límites de tu dispositivo.
-- **Fondo**: el color del tema actual y la cuadrícula.
-- **Calidad**: la calidad de compresión (se muestra para JPEG y WebP; PNG es sin pérdidas).
-
-El diálogo previsualiza las dimensiones finales en píxeles antes de que exportes.
-
-![El diálogo Exportar imagen con sus opciones de formato y resolución.](./images/export-image.webp)
-
-## Consulta también
-
-- [Nube y compartir](docs:cloud): iniciar sesión, almacenamiento en la nube, subir y enlaces para compartir
-- [Componentes personalizados](docs:custom-components): las piezas reutilizables que un archivo lleva consigo
-- [Atajos de teclado](docs:shortcuts): cambia la asignación `Ctrl+S` y otras
+- [Nube y compartir](docs:cloud): subir, compartir y clonar
+- [Componentes personalizados](docs:custom-components): los componentes que lleva un archivo
+- [Atajos de teclado](docs:shortcuts): cambiar las teclas de guardar y abrir

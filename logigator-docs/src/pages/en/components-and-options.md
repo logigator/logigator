@@ -1,109 +1,80 @@
-# Components & Options
+# Components and options
 
-Components are the building blocks of a circuit — gates, memories, inputs, displays and more. This page covers where to find them, how to place them, and how to configure the one you have selected.
+Components are the parts a circuit is made of: gates, memories, inputs and displays. You pick them from the palette on the left and set their options in the settings card.
 
-![The component palette with its categories expanded.](./images/component-palette.webp)
+![The component palette.](./images/component-palette.webp)
 
-## The component palette
+## The palette
 
-The palette is the panel on the left. It lists every component you can place, grouped into categories. Use the search box at the top to filter by name, and click a category header to expand or collapse it.
+The search field at the top filters the palette by name. The categories are Basic, Advanced and Inputs / Outputs, plus User Components once you have built a [custom component](docs:custom-components). Click a category header to fold it. How placing works is described in [Board and tools](docs:board-and-tools).
 
-- **Basic** — the everyday logic building blocks: **NOT Gate**, **AND Gate**, **OR Gate**, **XOR Gate**, **Delay**, **Clock** and **Tunnel**.
-- **Advanced** — larger building blocks: adders, memories, flip-flops, and routing parts (see the table below).
-- **Inputs / Outputs** — the hardware you interact with while a simulation runs: **Button**, **Pulse button**, **Switch**, **LED**, **Segment Display** and **LED Matrix**.
-- **User Components** — your own reusable parts. This section is empty until you build one; see [Custom Components](docs:custom-components).
-
-A **Ports** category appears only while you are editing a custom component. It holds the **Input** and **Output** plugs you use to define that component's ports — see [Custom Components](docs:custom-components).
-
-To place a component, click it in the palette and it follows your cursor as a ghost; move it where you want and press to drop it. Placing stays armed so you can drop several in a row — press `Escape` or pick another tool to stop. See [Board & Tools](docs:board-and-tools) for more on placing, moving and rotating.
+Every component takes one tick to pass a change on to its output. The tables list each component's options besides Direction, which every component has.
 
 ### Basic
 
-| Component    | What it does                                                                                                                               |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| **NOT Gate** | Inverts its input: HIGH in gives LOW out, and vice versa.                                                                                  |
-| **AND Gate** | Output is HIGH only when every input is HIGH.                                                                                              |
-| **OR Gate**  | Output is HIGH when at least one input is HIGH.                                                                                            |
-| **XOR Gate** | Output is HIGH when an odd number of inputs are HIGH.                                                                                      |
-| **Delay**    | Passes its input through unchanged, adding one simulation tick of delay.                                                                   |
-| **Clock**    | Emits a repeating one-tick pulse; the delay between pulses is configurable, and driving its STP input HIGH pauses it.                      |
-| **Tunnel**   | A wireless connection — all tunnels sharing the same label are electrically joined. See [Wires & Connections](docs:wires-and-connections). |
+| Component | What it does                                                                                                                 | Options                    |
+| --------- | ---------------------------------------------------------------------------------------------------------------------------- | -------------------------- |
+| NOT Gate  | Inverts its input.                                                                                                           |                            |
+| AND Gate  | Outputs 1 when every input is 1.                                                                                             | Inputs, 2 to 64            |
+| OR Gate   | Outputs 1 when at least one input is 1.                                                                                      | Inputs, 2 to 64            |
+| XOR Gate  | Outputs 1 when an odd number of inputs are 1.                                                                                | Inputs, 2 to 64            |
+| Delay     | Passes its input through unchanged, one tick later.                                                                          |                            |
+| Clock     | Sends a one-tick pulse, then stays at 0 for Delay ticks, and repeats. While its STP input is 1, it stays at 0.               | Delay, from 1              |
+| Tunnel    | Connects to every other tunnel with the same label, without a wire. See [Wires and connections](docs:wires-and-connections). | Label, up to 10 characters |
 
 ### Advanced
 
-| Component                   | What it does                                                                                    |
-| --------------------------- | ----------------------------------------------------------------------------------------------- |
-| **Half Adder**              | Adds two 1-bit numbers; S is the sum bit, C the carry.                                          |
-| **Full Adder**              | Adds two summands plus a carry-in; S is the sum bit, C the carry.                               |
-| **ROM**                     | Read-only memory whose stored contents you edit by hand.                                        |
-| **RAM**                     | Random-access memory: reads the addressed word on a clock edge, or stores one while WE is HIGH. |
-| **D Flip-Flop**             | Stores one bit; captures D on the rising edge of CLK.                                           |
-| **JK Flip-Flop**            | Stores one bit; J sets, K resets, both toggle, on the rising edge of CLK.                       |
-| **SR Flip-Flop**            | Stores one bit; S sets and R resets on the rising edge of CLK.                                  |
-| **Random Number Generator** | Produces random data on its outputs on every rising edge of CLK.                                |
-| **Decoder**                 | Drives the one output whose index equals the binary value on its inputs.                        |
-| **Encoder**                 | Outputs the binary index of its highest powered input.                                          |
-| **Multiplexer**             | Routes the data input chosen by the select lines to the single output.                          |
-| **Demultiplexer**           | Routes the single data input to the output chosen by the select lines.                          |
+| Component               | What it does                                                                                                              | Options                                                |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| Half Adder              | Adds A and B. S is the sum bit, C the carry.                                                                              |                                                        |
+| Full Adder              | Adds A, B and the carry-in Cin. S is the sum bit, C the carry.                                                            |                                                        |
+| ROM                     | Outputs the stored word at the address on its inputs. It has no clock.                                                    | Word Size 1 to 64, Address Size 1 to 11, Edit contents |
+| D Flip-Flop             | Stores D on the rising edge of CLK. Q is the stored bit, !Q its inverse.                                                  |                                                        |
+| JK Flip-Flop            | On the rising edge of CLK, J sets the bit, K resets it, and both together toggle it.                                      |                                                        |
+| SR Flip-Flop            | On the rising edge of CLK, S sets the bit and R resets it.                                                                |                                                        |
+| Random Number Generator | Puts a new random value on its outputs on every rising edge of CLK.                                                       | Outputs, 1 to 64                                       |
+| RAM                     | On the rising edge of CLK, reads the word at the address onto the outputs, or stores the data inputs there while WE is 1. | Word Size 1 to 64, Address Size 1 to 16                |
+| Decoder                 | Turns on the one output whose number is the binary value on the inputs.                                                   | Inputs, 1 to 6                                         |
+| Encoder                 | Outputs the number of the highest input that is 1.                                                                        | Outputs, 1 to 6                                        |
+| Multiplexer             | Passes the data input chosen by the select lines to its output. There are 2ⁿ data inputs for n select lines.              | Select lines, 1 to 6                                   |
+| Demultiplexer           | Passes input I to the output chosen by the select lines.                                                                  | Select lines, 1 to 6                                   |
 
 ### Inputs / Outputs
 
-| Component           | What it does                                                                                     |
-| ------------------- | ------------------------------------------------------------------------------------------------ |
-| **Button**          | A momentary push button — its output stays on for as long as you hold it down during simulation. |
-| **Pulse button**    | Click it during simulation to emit a single one-tick pulse, however long you hold it.            |
-| **Switch**          | A latching switch — click it during simulation to toggle its output on and off.                  |
-| **LED**             | Lights up while the wire feeding its input is powered.                                           |
-| **Segment Display** | Shows the binary value on its inputs as a number in a chosen base.                               |
-| **LED Matrix**      | A square grid of LEDs that displays an image, written a row at a time on the rising edge of CLK. |
+| Component       | What it does                                                                                                                                                      | Options                                    |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| Switch          | Toggles between 0 and 1 with each click during a simulation.                                                                                                      |                                            |
+| Button          | Outputs 1 for as long as you hold it down.                                                                                                                        |                                            |
+| Pulse button    | Outputs a one-tick pulse per click.                                                                                                                               |                                            |
+| LED             | Lights up while its input is 1.                                                                                                                                   |                                            |
+| Segment Display | Shows the binary number on its inputs, input 0 being the lowest bit.                                                                                              | Inputs 1 to 16, Base decimal, hex or octal |
+| LED Matrix      | A square grid of LEDs. On the rising edge of CLK, the data inputs are written into the row the address inputs select. At 16 × 16, each address covers half a row. | Width/Height 4, 8 or 16                    |
 
-## Configuring a component
+## The settings card
 
-When you select a single placed component — or while you are placing one — a small **settings card** appears by the board showing that component's name, a short description, and its adjustable options. On a touch device the same options open in the **Settings** drawer instead.
+Selecting a single component, or picking one to place, shows its settings card next to the board: the name, a description, and the options. Direction has four arrow buttons that turn the component. A direction chosen while placing is kept for the next component of that type. The card is hidden during a simulation.
 
-![The settings card for a selected AND gate.](./images/component-settings.webp)
+![The settings card of a selected AND gate.](./images/component-settings.webp)
 
-### Direction — on every component
+Changing Inputs, Outputs or a size option changes the number of ports right away.
 
-Every component has a **Direction** control: four arrows for East, South, West and North. It turns the component to face the way you want, which is the same as rotating it. (You can also rotate a selection on the board with `R` and `Shift+R` — see [Board & Tools](docs:board-and-tools).)
-
-### Type-specific options
-
-Everything beyond Direction depends on the component. Many components have none at all (a NOT gate, for instance). The ones that do:
-
-| Component                                | Options                                                                                  |
-| ---------------------------------------- | ---------------------------------------------------------------------------------------- |
-| **AND / OR / XOR Gate**, **Decoder**     | **Inputs** — how many input ports.                                                       |
-| **Encoder**, **Random Number Generator** | **Outputs** — how many output ports.                                                     |
-| **Clock**                                | **Delay** — the number of ticks between pulses.                                          |
-| **Tunnel**                               | **Label** — the name that pairs it with other tunnels.                                   |
-| **ROM**                                  | **Word Size**, **Address Size**, and **Edit contents** (see below).                      |
-| **RAM**                                  | **Word Size** and **Address Size**.                                                      |
-| **Multiplexer / Demultiplexer**          | **Select lines** — how many select inputs, which sets the number of data lines.          |
-| **Segment Display**                      | **Inputs** — how many input bits — and **Base** — the number base the value is shown in. |
-| **LED Matrix**                           | **Width/Height** — the size of the LED grid.                                             |
-
-### Editing ROM contents
-
-Selecting a **ROM** shows an **Edit contents** button. It opens a hex editor where you type the memory's stored words; the **Word Size** and **Address Size** options set how wide each word is and how many words there are. Your edits are saved with the circuit. The same read-only hex view is available while a simulation runs — see [Inspection & Watches](docs:inspection).
+For a ROM, Edit contents opens a hex editor for the stored words. Word Size sets how many bits a word has and Address Size how many address inputs there are, so a ROM with Address Size 4 holds 16 words. The contents are saved with the circuit.
 
 ## Negating a port
 
-Any input or output port can be **negated** so the signal passing through it is inverted, without adding a separate NOT gate. Pick the **Wire** tool and tap directly on a port: a small **negation bubble** appears on it, and the port is now inverted. Tap it again to remove the bubble.
+With the Wire tool, tap an input or output port to add a negation bubble. The signal through that port is then inverted, with no extra delay. Tap the bubble again to remove it. While you hover a port, the Wire tool shows what a tap would do. A bubble on a flip-flop's CLK input makes it react to the falling edge instead.
 
-A **Tunnel** and the **Input** / **Output** plugs only pass a signal along, and a placed custom component's ports belong to the circuit inside it, so none of these take a bubble.
+Tunnels, Input and Output plugs and the ports of a placed custom component can't be negated.
 
-While the Wire tool is active, hovering near a port previews the bubble a tap would add, so you can see exactly which port you are about to negate.
+![An OR gate with a negated output.](./images/negated-gate.webp)
 
-![An OR gate with a negation bubble on its output.](./images/negated-gate.webp)
+## Text labels
 
-## Placing text
-
-The palette does not include text — labels are placed with the **Text** tool in the toolbar. Pick it, click the board, and type your note; the label's settings card lets you **Edit text** and change its **Font size**. Wires may pass through a text label without connecting to it. Clicking anywhere on the label selects it. Where a wire runs underneath, clicking the wire still picks the wire, so a label never blocks the cable it sits on.
+Text isn't in the palette. With the Text tool (`T`), click the board to place a label reading "[insert text]". Edit text in its settings card opens a dialog for the text, which can run over several lines, and Font size ranges from 2 to 128. Wires pass through labels without connecting. Clicking a wire that runs under a label selects the wire.
 
 ## See also
 
-- [Wires & Connections](docs:wires-and-connections) — connecting ports into working circuits
-- [Custom Components](docs:custom-components) — packaging a circuit into your own reusable part
-- [Simulation](docs:simulation) — running the circuit and interacting with buttons, switches and displays
-- [Board & Tools](docs:board-and-tools) — placing, selecting, moving and rotating
+- [Wires and connections](docs:wires-and-connections): connecting ports
+- [Custom components](docs:custom-components): building your own parts
+- [Simulation](docs:simulation): operating switches and buttons
+- [Board and tools](docs:board-and-tools): placing, moving and rotating

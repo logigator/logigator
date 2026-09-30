@@ -1,61 +1,49 @@
 # Composants personnalisés
 
-Un composant personnalisé empaquette tout un circuit dans une seule pièce réutilisable dotée de son propre symbole et de ports nommés. Construisez un compteur ou une UAL une fois, puis déposez-le dans de plus grands circuits comme un bloc bien rangé.
+Un composant personnalisé transforme un circuit en une seule pièce avec son propre symbole et des ports nommés. Construisez un compteur une fois, et chaque copie sur le plan de travail est un bloc au lieu d'une douzaine de portes.
 
-![Un composant personnalisé à côté du circuit de portes qu’il remplace.](./images/custom-component-showcase.webp)
+![Un circuit de portes et le composant personnalisé qui en est tiré, fonctionnant côte à côte.](./images/custom-component-showcase.webp)
 
 ## Créer un composant
 
-Choisissez **Fichier → Nouveau composant** pour ouvrir la boîte de dialogue de nouveau composant. Renseignez :
+Fichier → Nouveau composant (`Alt+N`), ou le bouton « Nouveau composant » de la barre d'outils, ouvre une fenêtre :
 
-- **Nom** — comment le composant est appelé dans votre bibliothèque et votre palette.
-- **Symbole** — une courte étiquette dessinée sur la boîte du composant.
-- **Description** — une note facultative sur ce qu'il fait.
-- **Stockage** — où il réside : **Cloud** (votre compte Logigator, accessible depuis n'importe quel appareil) ou **Local** (ce navigateur seulement). Le stockage cloud nécessite que vous soyez connecté ; les composants locaux ne sont pas synchronisés entre appareils et peuvent être perdus.
+- Nom, 20 caractères au plus, est le nom affiché dans la palette.
+- Symbole, 5 caractères au plus, est dessiné sur le bloc.
+- Description est facultative.
+- Stockage détermine où le composant est conservé. Local le garde dans ce navigateur. Cloud le garde dans votre compte, nécessite d'être connecté et demande aussi qui peut l'ouvrir, Tout le monde étant présélectionné (voir [Cloud et partage](docs:cloud)).
 
-Choisir **Créer** ouvre le nouveau composant dans son propre onglet, avec un plan de travail vide prêt pour que vous construisiez son circuit.
+« Créer » ouvre le composant dans un nouvel onglet avec un plan de travail vide. Enregistrer (`Ctrl+S`) dans cet onglet enregistre le composant.
 
-## Définir les entrées et les sorties
+## Ports
 
-À l'intérieur de l'éditeur d'un composant, la palette gagne une catégorie **Ports** contenant deux fiches :
+Tant que l'onglet d'un composant est actif, un panneau Ports se trouve au-dessus de la palette. Placez-en des fiches Entrée et Sortie et reliez-les au circuit. Chaque fiche devient un port du composant terminé.
 
-- **Entrée** — définit un port d'entrée sur le composant terminé.
-- **Sortie** — définit un port de sortie.
+Le panneau liste les fiches. Tapez dans une ligne pour nommer le port, en 5 caractères au plus ; ce nom s'affiche à côté du port sur le bloc. Faites glisser les lignes pour changer l'ordre des ports ; la position des fiches sur le plan de travail ne compte pas.
 
-Placez une fiche Entrée ou Sortie pour chaque port souhaité, puis câblez-la dans votre circuit comme n'importe quel autre composant. Sélectionnez une fiche et définissez son **Étiquette** dans la carte de paramètres — cette étiquette nomme le port et est affichée sur la boîte du composant lorsqu'il est placé. L'ordre des fiches fixe l'ordre des ports.
+![L'onglet d'un composant avec ses fiches Entrée et Sortie.](./images/custom-component-tab.webp)
 
-Un panneau **Ports** dédié liste les entrées et sorties que vous avez définies jusqu'à présent, afin que vous gardiez le fil à mesure que le composant prend forme.
+## Placer et mettre à jour
 
-![Un onglet d’éditeur de composant avec des fiches Entrée et Sortie.](./images/custom-component-tab.webp)
+Les composants enregistrés apparaissent dans la palette sous Composants utilisateur, le dernier modifié en premier. Placez-les comme n'importe quelle autre pièce. Chaque copie sur le plan de travail est un bloc avec le symbole et un port par fiche.
 
-## Placer vos composants
+Une copie placée garde le circuit que le composant avait au moment du placement. Modifier le composant ensuite ne change aucune copie tant que vous ne la mettez pas à jour. La carte de paramètres d'une copie périmée propose « Mettre à jour vers la dernière version » pour cette copie et « Mettre à jour toutes les instances » pour toutes les copies périmées du circuit ouvert, avec leur nombre entre parenthèses. Les deux peuvent être annulés. La tuile de la palette porte une flèche tant que des copies sont périmées.
 
-Les composants personnalisés enregistrés apparaissent dans la palette sous **Composants utilisateur**. Placez-en un exactement comme une pièce intégrée : cliquez dessus et déposez-le sur le plan de travail. Il apparaît sous forme d'une seule boîte portant votre symbole, avec un port pour chaque fiche Entrée et Sortie que vous avez définie.
+Pour changer le circuit, choisissez « Modifier le circuit » dans la carte de paramètres d'une copie placée ou de la tuile de la palette. « Modifier les détails » change le nom, le symbole et la description.
 
-Un composant placé est une copie autonome du circuit tel qu'il était lorsque vous l'avez placé, de sorte que vos circuits continuent de fonctionner même si vous modifiez ou retirez l'original par la suite.
+## Imbrication
 
-## Modifier un composant et mettre à jour les instances
+Les composants peuvent en contenir d'autres. Un composant ne peut jamais se contenir lui-même, ni directement ni via un autre ; pendant que vous en modifiez un, la palette masque donc tous les composants qui créeraient une telle boucle.
 
-Pour changer le circuit d'un composant personnalisé, ouvrez-le dans son propre onglet : choisissez **Modifier le circuit** depuis sa carte de paramètres pendant qu'une instance est sélectionnée, ou ouvrez-le depuis votre bibliothèque. Pour changer son nom, son symbole ou sa description à la place, choisissez **Modifier les détails**. Modifier le composant ne change **pas** automatiquement les pièces déjà placées — chaque instance placée reste telle qu'elle était.
+Quand vous enregistrez, partagez ou exportez un circuit, les composants qu'il utilise sont inclus, pour qu'il s'ouvre complet partout.
 
-Lorsqu'une instance placée est en retard par rapport à la dernière version de son composant, sa carte de paramètres propose **Mettre à jour vers la dernière version**. La choisir remplace cette instance par la version actuelle, en conservant sa position et sa direction. La mise à jour se fait par instance et peut être annulée, de sorte que vous décidez exactement quelles copies avancent. Pour faire avancer toutes les copies d'un coup, utilisez **Mettre à jour toutes les instances** : le bouton apparaît sur la carte de paramètres (pour une instance sélectionnée ou pour le composant choisi dans la palette) tant que le circuit actuel contient une copie obsolète, et le nombre affiché indique combien de copies sont concernées. L'ensemble ne compte que pour une seule annulation. Une tuile de la palette porte également un petit marqueur en forme de flèche tant que des copies placées sont en retard.
+## Supprimer
 
-## Imbrication et dépendances
-
-Un composant personnalisé peut contenir d'autres composants personnalisés, de sorte que vous pouvez bâtir des petites pièces vers les grandes. Logigator empêche les boucles : un composant ne peut jamais se contenir lui-même, directement ou indirectement, si bien que pendant que vous en modifiez un, les composants qui créeraient une telle boucle sont indisponibles dans la palette.
-
-Lorsque vous enregistrez ou partagez un composant, les pièces qu'il utilise voyagent avec lui, de sorte qu'il s'ouvre toujours complet sur un autre appareil ou dans la bibliothèque de quelqu'un d'autre.
-
-## Partager et regarder à l'intérieur
-
-- Pour déplacer un composant local vers votre compte, ou pour le partager avec un lien, voir [Cloud et partage](docs:cloud). Enregistrer un composant cloud qui utilise des pièces locales publie d'abord ces pièces dans votre bibliothèque cloud.
-- Pour jeter un œil à l'intérieur d'une instance en cours d'exécution et observer ses signaux internes, voir [Inspection et surveillances](docs:inspection).
-- Pour retirer un composant de votre bibliothèque, utilisez **Supprimer** dans sa carte de paramètres. Les copies déjà placées restent sous forme de pièces intégrées que vous pourrez restaurer plus tard.
+« Supprimer » dans la carte de paramètres retire le composant de votre bibliothèque. Les copies déjà placées restent dans leurs circuits et affichent l'étiquette Intégré. « Restaurer et modifier » sur une telle copie la ramène dans votre bibliothèque locale. Supprimer un composant cloud rend aussi son lien de partage inutilisable.
 
 ## Voir aussi
 
-- [Composants et options](docs:components-and-options) — les pièces intégrées dont vos composants sont faits
-- [Fils et connexions](docs:wires-and-connections) — câbler les fiches dans le circuit de votre composant
-- [Inspection et surveillances](docs:inspection) — observer une instance en cours d'exécution de l'intérieur
-- [Cloud et partage](docs:cloud) — publier et partager vos composants
-- [Enregistrement et fichiers](docs:saving-and-files) — comment les circuits et leurs composants sont stockés
+- [Composants et options](docs:components-and-options) : les pièces intégrées
+- [Inspection et surveillances](docs:inspection) : regarder dans une copie en fonctionnement
+- [Cloud et partage](docs:cloud) : téléverser et partager des composants
+- [Enregistrement et fichiers](docs:saving-and-files) : comment les composants voyagent dans les fichiers

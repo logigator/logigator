@@ -1,61 +1,49 @@
 # Benutzerdefinierte Komponenten
 
-Eine benutzerdefinierte Komponente verpackt eine ganze Schaltung in ein einziges wiederverwendbares Bauteil mit eigenem Symbol und benannten Anschlüssen. Baue einen Zähler oder eine ALU einmal und lass sie dann als einen ordentlichen Block in größere Schaltungen fallen.
+Eine benutzerdefinierte Komponente macht aus einer Schaltung ein einzelnes Bauteil mit eigenem Symbol und benannten Anschlüssen. Baue einen Zähler einmal, und jede Kopie davon ist auf der Arbeitsfläche ein Kasten statt eines Dutzends Gatter.
 
-![Eine benutzerdefinierte Komponente neben der Gatter-Schaltung, die sie ersetzt.](./images/custom-component-showcase.webp)
+![Eine Gatterschaltung und die daraus gebaute Komponente, nebeneinander in Betrieb.](./images/custom-component-showcase.webp)
 
 ## Eine Komponente erstellen
 
-Wähle **Datei → Neue Komponente**, um den Dialog für neue Komponenten zu öffnen. Fülle aus:
+Datei → Neue Komponente (`Alt+N`) oder die Schaltfläche „Neue Komponente“ in der Werkzeugleiste öffnet einen Dialog:
 
-- **Name** — wie die Komponente in deiner Bibliothek und Palette heißt.
-- **Symbol** — eine kurze Beschriftung, die auf dem Kasten der Komponente gezeichnet wird.
-- **Beschreibung** — eine optionale Notiz darüber, was sie tut.
-- **Speicherort** — wo sie liegt: **Cloud** (dein Logigator-Account, von jedem Gerät erreichbar) oder **Lokal** (nur dieser Browser). Cloud-Speicher erfordert, dass du angemeldet bist; lokale Komponenten werden nicht zwischen Geräten synchronisiert und können verloren gehen.
+- Name, bis 20 Zeichen, ist der Name in der Palette.
+- Symbol, bis 5 Zeichen, steht auf dem Kasten.
+- Beschreibung ist optional.
+- Speicherort legt fest, wo die Komponente liegt. Lokal hält sie in diesem Browser. Cloud hält sie in deinem Account, setzt eine Anmeldung voraus und fragt zusätzlich, wer sie öffnen kann, mit Alle als Vorauswahl (siehe [Cloud und Teilen](docs:cloud)).
 
-Die Wahl von **Erstellen** öffnet die neue Komponente in einem eigenen Tab, mit einer leeren Arbeitsfläche, bereit für dich, ihre Schaltung zu bauen.
+„Erstellen“ öffnet die Komponente in einem neuen Tab mit leerer Arbeitsfläche. Speichern (`Ctrl+S`) in diesem Tab speichert die Komponente.
 
-## Eingänge und Ausgänge definieren
+## Anschlüsse
 
-Innerhalb des Editors einer Komponente erhält die Palette eine Kategorie **Anschlüsse** mit zwei Steckern:
+Solange der Tab einer Komponente aktiv ist, steht über der Palette ein Anschlüsse-Bereich. Setze daraus Eingangs- und Ausgangsstecker und verbinde sie mit der Schaltung. Jeder Stecker wird ein Anschluss der fertigen Komponente.
 
-- **Eingang** — definiert einen Eingangsanschluss an der fertigen Komponente.
-- **Ausgang** — definiert einen Ausgangsanschluss.
+Der Bereich listet die Stecker. Tippe in eine Zeile, um den Anschluss zu benennen, mit bis zu 5 Zeichen; der Name steht neben dem Anschluss auf dem Kasten. Ziehe die Zeilen, um die Reihenfolge der Anschlüsse zu ändern; wo die Stecker auf der Arbeitsfläche liegen, spielt keine Rolle.
 
-Platziere einen Eingangs- oder Ausgangsstecker für jeden gewünschten Anschluss und verdrahte ihn dann wie jede andere Komponente in deine Schaltung. Wähle einen Stecker aus und lege seine **Beschriftung** in der Einstellungskarte fest — diese Beschriftung benennt den Anschluss und wird auf dem Kasten der Komponente angezeigt, wenn sie platziert ist. Die Reihenfolge der Stecker bestimmt die Reihenfolge der Anschlüsse.
+![Der Tab einer Komponente mit ihren Eingangs- und Ausgangssteckern.](./images/custom-component-tab.webp)
 
-Ein eigenes Panel **Anschlüsse** listet die bislang definierten Ein- und Ausgänge auf, sodass du den Überblick behältst, während die Komponente Gestalt annimmt.
+## Platzieren und aktualisieren
 
-![Ein Komponenten-Editor-Tab mit Eingangs- und Ausgangssteckern.](./images/custom-component-tab.webp)
+Gespeicherte Komponenten erscheinen in der Palette unter Benutzerdefiniert, die zuletzt bearbeitete zuerst. Du platzierst sie wie jedes andere Bauteil. Jede Kopie auf der Arbeitsfläche ist ein Kasten mit dem Symbol und einem Anschluss pro Stecker.
 
-## Deine Komponenten platzieren
+Eine platzierte Kopie behält die Schaltung, die die Komponente beim Platzieren hatte. Spätere Änderungen an der Komponente betreffen keine Kopie, bis du sie aktualisierst. Die Einstellungskarte einer veralteten Kopie bietet „Auf neueste Version aktualisieren“ für diese Kopie und „Alle Instanzen aktualisieren“ für jede veraltete Kopie in der offenen Schaltung, mit der Anzahl in Klammern. Beides lässt sich rückgängig machen. Die Kachel in der Palette trägt einen Pfeil, solange Kopien veraltet sind.
 
-Gespeicherte benutzerdefinierte Komponenten erscheinen in der Palette unter **Benutzerdefiniert**. Platziere eine genau wie ein eingebautes Bauteil: Klicke sie an und lass sie auf der Arbeitsfläche fallen. Sie erscheint als einzelner Kasten, der dein Symbol trägt, mit einem Anschluss für jeden Eingangs- und Ausgangsstecker, den du definiert hast.
+Um die Schaltung zu ändern, wähle „Schaltung bearbeiten“ in der Einstellungskarte einer platzierten Kopie oder der Palettenkachel. „Details bearbeiten“ ändert Name, Symbol und Beschreibung.
 
-Eine platzierte Komponente ist eine in sich geschlossene Kopie der Schaltung, so wie sie beim Platzieren war, sodass deine Schaltungen weiterfunktionieren, selbst wenn du später das Original änderst oder entfernst.
+## Verschachteln
 
-## Eine Komponente bearbeiten und Instanzen aktualisieren
+Komponenten können andere Komponenten enthalten. Eine Komponente kann sich nie selbst enthalten, weder direkt noch über eine andere, daher blendet die Palette beim Bearbeiten jede Komponente aus, die eine solche Schleife erzeugen würde.
 
-Um die Schaltung einer benutzerdefinierten Komponente zu ändern, öffne sie in einem eigenen Tab: Wähle **Schaltung bearbeiten** aus ihrer Einstellungskarte, während eine Instanz ausgewählt ist, oder öffne sie aus deiner Bibliothek. Um stattdessen ihren Namen, ihr Symbol oder ihre Beschreibung zu ändern, wähle **Details bearbeiten**. Das Bearbeiten der Komponente ändert **nicht** automatisch bereits platzierte Bauteile — jede platzierte Instanz bleibt, wie sie war.
+Wenn du eine Schaltung speicherst, teilst oder exportierst, gehören die verwendeten Komponenten dazu, sodass sie überall vollständig öffnet.
 
-Wenn eine platzierte Instanz hinter der neuesten Version ihrer Komponente zurückliegt, bietet ihre Einstellungskarte **Auf neueste Version aktualisieren**. Die Wahl dessen tauscht diese Instanz gegen die aktuelle Version aus und behält ihre Position und Richtung. Das Aktualisieren erfolgt pro Instanz und lässt sich rückgängig machen, sodass du genau entscheidest, welche Kopien vorwärtsgehen. Um alle Kopien auf einmal zu aktualisieren, nutze **Alle Instanzen aktualisieren** — die Schaltfläche erscheint auf der Einstellungskarte (bei einer ausgewählten Instanz oder bei der in der Palette gewählten Komponente), solange die aktuelle Schaltung eine veraltete Kopie enthält; die Zahl in der Beschriftung nennt, wie viele davon betroffen sind. Der ganze Vorgang ist ein einziger Rückgängig-Schritt. Eine Palettenkachel trägt außerdem eine kleine Pfeilmarkierung, solange platzierte Kopien zurückliegen.
+## Löschen
 
-## Verschachtelung und Abhängigkeiten
-
-Eine benutzerdefinierte Komponente kann andere benutzerdefinierte Komponenten enthalten, sodass du von kleinen Bauteilen zu großen aufbauen kannst. Logigator verhindert Schleifen: Eine Komponente kann sich niemals selbst enthalten, weder direkt noch indirekt, sodass während du eine bearbeitest, die Komponenten, die eine solche Schleife erzeugen würden, in der Palette nicht verfügbar sind.
-
-Wenn du eine Komponente speicherst oder teilst, reisen die Bauteile, die sie verwendet, mit ihr, sodass sie auf einem anderen Gerät oder in der Bibliothek einer anderen Person stets vollständig öffnet.
-
-## Teilen und hineinschauen
-
-- Um eine lokale Komponente in deinen Account zu verschieben oder sie mit einem Link zu teilen, siehe [Cloud & Teilen](docs:cloud). Das Speichern einer Cloud-Komponente, die lokale Bauteile verwendet, veröffentlicht diese Bauteile zuerst in deiner Cloud-Bibliothek.
-- Um in eine laufende Instanz zu spähen und ihre inneren Signale zu beobachten, siehe [Inspektion & Beobachtungen](docs:inspection).
-- Um eine Komponente aus deiner Bibliothek zu entfernen, nutze **Löschen** in ihrer Einstellungskarte. Bereits platzierte Kopien bleiben als eingebettete Bauteile erhalten, die du später wiederherstellen kannst.
+„Löschen“ in der Einstellungskarte entfernt die Komponente aus deiner Bibliothek. Bereits platzierte Kopien bleiben in ihren Schaltungen und zeigen das Kennzeichen Eingebettet. „Wiederherstellen & bearbeiten“ auf einer solchen Kopie holt sie in deine lokale Bibliothek zurück. Löschst du eine Cloud-Komponente, funktioniert auch ihr Freigabelink nicht mehr.
 
 ## Siehe auch
 
-- [Komponenten & Optionen](docs:components-and-options) — die eingebauten Bauteile, aus denen deine Komponenten bestehen
-- [Leitungen & Verbindungen](docs:wires-and-connections) — Stecker in die Schaltung deiner Komponente verdrahten
-- [Inspektion & Beobachtungen](docs:inspection) — eine laufende Instanz von innen beobachten
-- [Cloud & Teilen](docs:cloud) — deine Komponenten veröffentlichen und teilen
-- [Speichern & Dateien](docs:saving-and-files) — wie Schaltungen und ihre Komponenten gespeichert werden
+- [Komponenten und Optionen](docs:components-and-options): die eingebauten Bauteile
+- [Inspektion und Beobachtungen](docs:inspection): in eine laufende Kopie hineinsehen
+- [Cloud und Teilen](docs:cloud): Komponenten hochladen und teilen
+- [Speichern und Dateien](docs:saving-and-files): wie Komponenten in Dateien mitreisen

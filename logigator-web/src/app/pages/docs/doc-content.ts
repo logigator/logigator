@@ -6,7 +6,7 @@ import { DocPageId } from '@logigator/docs';
  *
  * The text is not in the locale table, for the reason the legal documents are
  * not: that table is loaded for every page and travels in each document's
- * first byte, where eleven pages in four languages would dwarf the interface's
+ * first byte, where twelve pages in four languages would dwarf the interface's
  * own strings. `.md` is a `text` loader here, so each import compiles into a
  * chunk of its own — the server render reads the one it draws off disk and the
  * browser downloads exactly that language's page, hashed and cached past the
@@ -32,6 +32,12 @@ const CONTENT: Record<
     de: () => import('@logigator/docs/pages/de/board-and-tools.md'),
     fr: () => import('@logigator/docs/pages/fr/board-and-tools.md'),
     es: () => import('@logigator/docs/pages/es/board-and-tools.md')
+  },
+  'phones-and-tablets': {
+    en: () => import('@logigator/docs/pages/en/phones-and-tablets.md'),
+    de: () => import('@logigator/docs/pages/de/phones-and-tablets.md'),
+    fr: () => import('@logigator/docs/pages/fr/phones-and-tablets.md'),
+    es: () => import('@logigator/docs/pages/es/phones-and-tablets.md')
   },
   shortcuts: {
     en: () => import('@logigator/docs/pages/en/shortcuts.md'),

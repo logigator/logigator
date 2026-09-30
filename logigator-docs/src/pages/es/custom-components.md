@@ -1,61 +1,49 @@
 # Componentes personalizados
 
-Un componente personalizado empaqueta todo un circuito en una única pieza reutilizable con su propio símbolo y puertos con nombre. Construye un contador o una ALU una vez y luego colócalo en circuitos más grandes como un bloque ordenado.
+Un componente personalizado convierte un circuito en una sola pieza con su propio símbolo y puertos con nombre. Construye un contador una vez, y cada copia en el tablero es un bloque en lugar de una docena de puertas.
 
-![Un componente personalizado junto al circuito de puertas al que sustituye.](./images/custom-component-showcase.webp)
+![Un circuito de puertas y el componente personalizado hecho con él, funcionando uno junto al otro.](./images/custom-component-showcase.webp)
 
 ## Crear un componente
 
-Elige **Archivo → Nuevo componente** para abrir el diálogo de nuevo componente. Rellena:
+Archivo → Nuevo componente (`Alt+N`), o el botón «Nuevo componente» de la barra de herramientas, abre un diálogo:
 
-- **Nombre**: cómo se llama el componente en tu biblioteca y paleta.
-- **Símbolo**: una etiqueta corta dibujada en la caja del componente.
-- **Descripción**: una nota opcional sobre lo que hace.
-- **Almacenar**: dónde reside: **Nube** (tu cuenta de Logigator, accesible desde cualquier dispositivo) o **Local** (solo este navegador). El almacenamiento en la nube requiere que hayas iniciado sesión; los componentes locales no se sincronizan entre dispositivos y pueden perderse.
+- Nombre, hasta 20 caracteres, es como aparece en la paleta.
+- Símbolo, hasta 5 caracteres, se dibuja en el bloque.
+- Descripción es opcional.
+- Almacenar decide dónde se guarda el componente. Local lo guarda en este navegador. Nube lo guarda en tu cuenta, requiere haber iniciado sesión y pregunta además quién puede abrirlo, con Todo el mundo preseleccionado (consulta [Nube y compartir](docs:cloud)).
 
-Elegir **Crear** abre el nuevo componente en su propia pestaña, con un tablero vacío listo para que construyas su circuito.
+«Crear» abre el componente en una pestaña nueva con el tablero vacío. Guardar (`Ctrl+S`) en esa pestaña guarda el componente.
 
-## Definir entradas y salidas
+## Puertos
 
-Dentro del editor de un componente, la paleta gana una categoría **Puertos** que contiene dos conectores:
+Mientras la pestaña de un componente está activa, hay un panel Puertos encima de la paleta. Coloca desde él conectores Entrada y Salida y conéctalos al circuito. Cada conector se convierte en un puerto del componente terminado.
 
-- **Entrada**: define un puerto de entrada en el componente terminado.
-- **Salida**: define un puerto de salida.
+El panel lista los conectores. Escribe en una fila para dar nombre al puerto, con hasta 5 caracteres; el nombre aparece junto al puerto en el bloque. Arrastra las filas para cambiar el orden de los puertos; la posición de los conectores en el tablero no importa.
 
-Coloca un conector de Entrada o Salida por cada puerto que quieras, luego cablealo en tu circuito como cualquier otro componente. Selecciona un conector y fija su **Etiqueta** en la tarjeta de ajustes: esa etiqueta nombra el puerto y se muestra en la caja del componente cuando se coloca. El orden de los conectores fija el orden de los puertos.
+![La pestaña de un componente con sus conectores Entrada y Salida.](./images/custom-component-tab.webp)
 
-Un panel dedicado de **Puertos** lista las entradas y salidas que has definido hasta ahora, para que puedas llevar la cuenta a medida que el componente toma forma.
+## Colocar y actualizar
 
-![Una pestaña de editor de componente con conectores de Entrada y Salida.](./images/custom-component-tab.webp)
+Los componentes guardados aparecen en la paleta en Componentes del usuario, el último editado primero. Se colocan como cualquier otra pieza. Cada copia en el tablero es un bloque con el símbolo y un puerto por conector.
 
-## Colocar tus componentes
+Una copia colocada conserva el circuito que tenía el componente cuando la colocaste. Editar el componente después no cambia ninguna copia hasta que la actualices. La tarjeta de ajustes de una copia desactualizada ofrece «Actualizar a la última versión» para esa copia y «Actualizar todas las instancias» para todas las copias desactualizadas del circuito abierto, con el número entre paréntesis. Ambas se pueden deshacer. La casilla de la paleta lleva una flecha mientras haya copias desactualizadas.
 
-Los componentes personalizados guardados aparecen en la paleta bajo **Componentes del usuario**. Coloca uno exactamente como una pieza integrada: haz clic en él y suéltalo en el tablero. Aparece como una única caja que lleva tu símbolo, con un puerto por cada conector de Entrada y Salida que definiste.
+Para cambiar el circuito, elige «Editar circuito» en la tarjeta de ajustes de una copia colocada o de la casilla de la paleta. «Editar detalles» cambia el nombre, el símbolo y la descripción.
 
-Un componente colocado es una copia autocontenida del circuito tal como estaba cuando lo colocaste, así que tus circuitos siguen funcionando aunque más tarde cambies o elimines el original.
+## Anidar
 
-## Editar un componente y actualizar instancias
+Los componentes pueden contener otros componentes. Un componente nunca puede contenerse a sí mismo, ni directamente ni a través de otro; por eso, mientras editas uno, la paleta oculta todos los componentes que crearían ese bucle.
 
-Para cambiar el circuito de un componente personalizado, ábrelo en su propia pestaña: elige **Editar circuito** en su tarjeta de ajustes mientras una instancia está seleccionada, o ábrelo desde tu biblioteca. Para cambiar en su lugar su nombre, símbolo o descripción, elige **Editar detalles**. Editar el componente **no** cambia automáticamente las piezas que ya colocaste: cada instancia colocada permanece tal como estaba.
+Cuando guardas, compartes o exportas un circuito, los componentes que usa van incluidos, así que se abre completo en cualquier sitio.
 
-Cuando una instancia colocada va por detrás de la última versión de su componente, su tarjeta de ajustes ofrece **Actualizar a la última versión**. Elegirla cambia esa instancia por la versión actual, conservando su posición y dirección. La actualización es por instancia y se puede deshacer, así que tú decides exactamente qué copias avanzan. Para actualizar todas las copias a la vez, usa **Actualizar todas las instancias**: aparece en la tarjeta de ajustes (con una instancia seleccionada o con el componente elegido en la paleta) mientras el circuito actual conserve una copia desactualizada, y el número de su etiqueta indica cuántas abarca. Todo el lote es un solo paso de deshacer. Además, la casilla de la paleta muestra una pequeña marca de flecha mientras alguna de sus copias colocadas esté desactualizada.
+## Eliminar
 
-## Anidamiento y dependencias
+«Eliminar» en la tarjeta de ajustes quita el componente de tu biblioteca. Las copias ya colocadas siguen en sus circuitos y muestran la etiqueta Incrustado. «Restaurar y editar» en una de esas copias la devuelve a tu biblioteca local. Al eliminar un componente de la nube, su enlace para compartir también deja de funcionar.
 
-Un componente personalizado puede contener otros componentes personalizados, así que puedes construir desde piezas pequeñas hasta grandes. Logigator evita los bucles: un componente nunca puede contenerse a sí mismo, directa o indirectamente, así que mientras editas uno, los componentes que crearían tal bucle no están disponibles en la paleta.
+## Ver también
 
-Cuando guardas o compartes un componente, las piezas que usa viajan con él, de modo que siempre se abre completo en otro dispositivo o en la biblioteca de otra persona.
-
-## Compartir y mirar dentro
-
-- Para trasladar un componente local a tu cuenta, o para compartirlo con un enlace, consulta [Nube y compartir](docs:cloud). Guardar un componente de la nube que usa piezas locales publica primero esas piezas en tu biblioteca en la nube.
-- Para asomarte dentro de una instancia en ejecución y ver sus señales internas, consulta [Inspección y monitores](docs:inspection).
-- Para quitar un componente de tu biblioteca, usa **Eliminar** en su tarjeta de ajustes. Las copias que ya colocaste permanecen como piezas incrustadas que puedes restaurar más adelante.
-
-## Consulta también
-
-- [Componentes y opciones](docs:components-and-options): las piezas integradas de las que están hechos tus componentes
-- [Cables y conexiones](docs:wires-and-connections): cablear los conectores en el circuito de tu componente
-- [Inspección y monitores](docs:inspection): observar una instancia en ejecución desde dentro
-- [Nube y compartir](docs:cloud): publicar y compartir tus componentes
-- [Guardar y archivos](docs:saving-and-files): cómo se almacenan los circuitos y sus componentes
+- [Componentes y opciones](docs:components-and-options): las piezas integradas
+- [Inspección y monitores](docs:inspection): mirar dentro de una copia en marcha
+- [Nube y compartir](docs:cloud): subir y compartir componentes
+- [Guardar y archivos](docs:saving-and-files): cómo viajan los componentes en los archivos

@@ -1,46 +1,31 @@
 # Inspection et surveillances
 
-Certains composants vous permettent de regarder à l'intérieur pendant que votre circuit tourne. Vous pouvez lire le contenu d'une mémoire à l'adresse qu'elle lit actuellement, ou ouvrir une vue interactive et en direct du circuit interne d'un composant personnalisé.
+Pendant une [simulation](docs:simulation), en cours ou en pause, deux sortes de composants peuvent être ouverts pour voir à l'intérieur. Un clic sur une ROM affiche son contenu, avec le mot en cours de lecture en surbrillance. Un clic sur un composant personnalisé ouvre une surveillance, une vue en direct de son circuit interne.
 
-![Une fenêtre de surveillance ouverte au-dessus d'un circuit en cours d'exécution.](./images/inspection-showcase.webp)
+![Une fenêtre de surveillance à côté du circuit en cours auquel elle appartient.](./images/inspection-showcase.webp)
 
-L'inspection n'est disponible **que pendant qu'une [simulation](docs:simulation) tourne**. Entrez d'abord en simulation, puis touchez un composant qui prend en charge l'inspection pour ouvrir sa vue. Le toucher à nouveau ramène la même vue au premier plan, et quitter la simulation ferme tout.
+Sur ordinateur, chaque vue s'ouvre dans une fenêtre que vous pouvez déplacer et redimensionner. Un nouveau clic sur le composant ramène sa fenêtre au premier plan. En [disposition tactile](docs:phones-and-tablets), les vues de ROM partagent un panneau en bas de l'écran, et une surveillance occupe tout l'écran. Quitter la simulation les ferme toutes.
 
-Sur bureau, ces vues s'ouvrent sous forme de fenêtres flottantes que vous pouvez déplacer et empiler par-dessus le plan de travail. Sur téléphones et écrans étroits, elles apparaissent à la place sous forme d'un panneau qui glisse depuis le bas, et les surveillances prennent tout l'écran — le circuit en cours d'exécution reste visible et interactif derrière elles.
+## Contenu d'une ROM
 
-## Inspecter le contenu d'une mémoire
+![La vue de la ROM qui suit l'adresse quand elle change.](./images/rom-inspection.webp)
 
-Touchez une **ROM** pendant que la simulation tourne pour ouvrir un visualiseur en lecture seule de ses données stockées. Le mot que le circuit **adresse actuellement** est mis en évidence, et se met à jour en direct à mesure que l'adresse change, de sorte que vous pouvez suivre exactement ce que la mémoire renvoie dans le circuit.
+La vue est en lecture seule ; le contenu se modifie pendant l'édition, dans les paramètres de la ROM. Le mot à l'adresse actuelle est en surbrillance, et avec « Suivre » (activé par défaut) le tableau défile quand l'adresse change. La ligne du bas affiche l'adresse et la valeur de la cellule en surbrillance. Un clic sur une autre cellule affiche celle-ci jusqu'au prochain changement d'adresse.
 
-![La fenêtre d’inspection de mémoire avec le mot adressé mis en évidence.](./images/rom-inspection.webp)
+Les boutons au-dessus du tableau choisissent Mots ou Octets et la base : Hex, Décimal, Octal ou Binaire. Pour aller à une adresse, tapez-la en hexadécimal dans le champ « Adresse… ». « Copier » place tout le tableau dans le presse-papiers sous forme de texte, dans la vue et la base choisies.
 
-Le visualiseur sert uniquement à la lecture — vous ne pouvez pas en modifier le contenu ici. Ses contrôles vous permettent de choisir comment les données sont affichées :
+## Surveillances
 
-- **Mots / Octets** — montrer chaque valeur stockée en entier, ou la scinder en octets individuels.
-- **Hex / Décimal / Octal / Binaire** — la base numérique dans laquelle chaque valeur est affichée.
-- **Aller à l'adresse** — sauter directement à une adresse précise.
-- **Suivre** — garder le mot actuellement adressé à l'écran à mesure que l'adresse se déplace.
+![Une surveillance descendue de Outer dans Inner, avec le chemin dans son titre.](./images/inspection-window-multilayer.webp)
 
-Un indicateur **Adresse** et **Valeur** montre l'adresse du mot mis en évidence et son contenu.
+Une surveillance dessine le circuit interne du composant avec les mêmes fils allumés que le plan de travail. Vous pouvez y déplacer la vue, zoomer et utiliser les interrupteurs et boutons qu'il contient. Ils pilotent la vraie simulation, donc le reste du circuit réagit.
 
-## Surveiller le circuit interne d'un composant personnalisé
+Un clic sur un composant personnalisé à l'intérieur d'une surveillance ouvre son circuit dans la même fenêtre, et le titre montre le chemin, par exemple Outer › Inner. Cliquez sur un nom précédent pour remonter. Une ROM à l'intérieur d'une surveillance ouvre sa propre vue.
 
-Touchez un [composant personnalisé](docs:custom-components) placé pendant que la simulation tourne pour ouvrir une **surveillance** — une vue en direct du circuit qu'il contient. Les fils et ports internes s'illuminent exactement comme le circuit en cours d'exécution les pilote, de sorte que vous pouvez voir ce qui se passe un niveau en dessous sans déballer le composant.
-
-![Une fenêtre de surveillance avec un fil d’Ariane vers un composant imbriqué.](./images/inspection-window-multilayer.webp)
-
-Une surveillance est interactive :
-
-- **Pilotez ses entrées** — cliquez sur un **interrupteur** ou un **bouton à impulsion**, ou maintenez un **bouton** enfoncé, à l'intérieur du circuit surveillé pour l'actionner, tout comme sur le plan de travail principal. Cela pilote la vraie simulation en cours, de sorte que l'effet se propage au reste de votre circuit.
-- **Explorez les composants imbriqués** — touchez un composant personnalisé à l'intérieur de la surveillance pour descendre dans _son_ circuit interne. Un **fil d'Ariane** en haut indique à quelle profondeur vous êtes ; cliquez sur une étape antérieure pour remonter.
-- **Déplacez-vous et zoomez** — faites glisser pour vous déplacer dans la vue interne et faites défiler ou pincez pour zoomer, comme sur le plan de travail.
-
-Si un composant ne peut pas être surveillé, vous verrez un court message : il peut n'avoir **aucun circuit interne** à inspecter, ou son circuit interne peut ne plus correspondre à la simulation en cours — dans ce cas, **redémarrez la simulation** et réessayez.
-
-> **Écrans compacts :** les surveillances s'ouvrent en vue plein écran avec un bouton de retour à la place du bouton de fermeture de la fenêtre ; le fil d'Ariane vous permet toujours de remonter à travers les niveaux imbriqués.
+Si la surveillance signale que le circuit interne ne correspond pas à la simulation compilée, le composant a été modifié après le démarrage de la simulation. Quittez la simulation et relancez-la.
 
 ## Voir aussi
 
-- [Simulation](docs:simulation) — exécuter votre circuit et interagir avec lui
-- [Composants personnalisés](docs:custom-components) — construire et utiliser des composants réutilisables
-- [Composants et options](docs:components-and-options) — mémoires, interrupteurs, boutons et autres blocs de construction
+- [Simulation](docs:simulation) : faire fonctionner un circuit
+- [Composants personnalisés](docs:custom-components) : construire les composants que vous surveillez
+- [Composants et options](docs:components-and-options) : options et contenu d'une ROM

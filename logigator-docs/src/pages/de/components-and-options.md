@@ -1,109 +1,80 @@
-# Komponenten & Optionen
+# Komponenten und Optionen
 
-Komponenten sind die Bausteine einer Schaltung — Gatter, Speicher, Eingänge, Anzeigen und mehr. Diese Seite behandelt, wo du sie findest, wie du sie platzierst und wie du die gerade ausgewählte konfigurierst.
+Komponenten sind die Bauteile, aus denen eine Schaltung besteht: Gatter, Speicher, Eingaben und Anzeigen. Du wählst sie in der Palette links aus und stellst ihre Optionen in der Einstellungskarte ein.
 
-![Die Komponentenpalette mit ausgeklappten Kategorien.](./images/component-palette.webp)
+![Die Komponentenpalette.](./images/component-palette.webp)
 
-## Die Komponentenpalette
+## Die Palette
 
-Die Palette ist das Panel links. Sie listet jede Komponente auf, die du platzieren kannst, in Kategorien gruppiert. Nutze das Suchfeld oben, um nach Namen zu filtern, und klicke eine Kategorieüberschrift an, um sie aus- oder einzuklappen.
+Das Suchfeld oben filtert die Palette nach Namen. Die Kategorien sind Grundlegend, Fortgeschritten und Ein- / Ausgänge, dazu Benutzerdefiniert, sobald du eine [benutzerdefinierte Komponente](docs:custom-components) gebaut hast. Ein Klick auf eine Kategorie klappt sie zu. Wie das Platzieren funktioniert, steht unter [Arbeitsfläche und Werkzeuge](docs:board-and-tools).
 
-- **Grundlegend** — die alltäglichen Logik-Bausteine: **NICHT-Gatter**, **UND-Gatter**, **ODER-Gatter**, **XOR-Gatter**, **Durchpass**, **Taktgeber** und **Tunnel**.
-- **Fortgeschritten** — größere Bausteine: Addierer, Speicher, Flip-Flops und Routing-Bauteile (siehe die Tabelle unten).
-- **Ein- / Ausgänge** — die Hardware, mit der du während einer laufenden Simulation interagierst: **Taster**, **Impulstaster**, **Schalter**, **LED**, **Segment Display** und **LED-Matrix**.
-- **Benutzerdefiniert** — deine eigenen wiederverwendbaren Bauteile. Dieser Bereich ist leer, bis du eines baust; siehe [Benutzerdefinierte Komponenten](docs:custom-components).
-
-Eine Kategorie **Anschlüsse** erscheint nur, während du eine benutzerdefinierte Komponente bearbeitest. Sie enthält die Stecker **Eingang** und **Ausgang**, mit denen du die Anschlüsse dieser Komponente definierst — siehe [Benutzerdefinierte Komponenten](docs:custom-components).
-
-Um eine Komponente zu platzieren, klicke sie in der Palette an, und sie folgt deinem Cursor als Vorschau; bewege sie an die gewünschte Stelle und drücke, um sie abzulegen. Das Platzieren bleibt scharfgeschaltet, sodass du mehrere nacheinander ablegen kannst — drücke `Escape` oder wähle ein anderes Werkzeug, um aufzuhören. Siehe [Arbeitsfläche & Werkzeuge](docs:board-and-tools) für mehr zum Platzieren, Verschieben und Drehen.
+Jede Komponente braucht einen Tick, um eine Änderung an ihren Ausgang weiterzugeben. Die Tabellen nennen die Optionen jeder Komponente außer Richtung, die alle haben.
 
 ### Grundlegend
 
-| Komponente       | Was sie tut                                                                                                                                                 |
-| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **NICHT-Gatter** | Invertiert seinen Eingang: HIGH hinein ergibt LOW heraus, und umgekehrt.                                                                                    |
-| **UND-Gatter**   | Der Ausgang ist HIGH, nur wenn jeder Eingang HIGH ist.                                                                                                      |
-| **ODER-Gatter**  | Der Ausgang ist HIGH, wenn mindestens ein Eingang HIGH ist.                                                                                                 |
-| **XOR-Gatter**   | Der Ausgang ist HIGH, wenn eine ungerade Anzahl an Eingängen HIGH ist.                                                                                      |
-| **Durchpass**    | Reicht seinen Eingang unverändert durch und fügt einen Simulations-Tick Verzögerung hinzu.                                                                  |
-| **Taktgeber**    | Gibt einen sich wiederholenden, ein Tick langen Puls aus; die Verzögerung zwischen den Pulsen ist einstellbar, und ein HIGH am STP-Eingang pausiert ihn.    |
-| **Tunnel**       | Eine drahtlose Verbindung — alle Tunnel mit derselben Beschriftung sind elektrisch verbunden. Siehe [Leitungen & Verbindungen](docs:wires-and-connections). |
+| Komponente   | Was sie tut                                                                                                                                      | Optionen                     |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------- |
+| NICHT-Gatter | Invertiert seinen Eingang.                                                                                                                       |                              |
+| UND-Gatter   | Gibt 1 aus, wenn alle Eingänge 1 sind.                                                                                                           | Eingänge, 2 bis 64           |
+| ODER-Gatter  | Gibt 1 aus, wenn mindestens ein Eingang 1 ist.                                                                                                   | Eingänge, 2 bis 64           |
+| XOR-Gatter   | Gibt 1 aus, wenn eine ungerade Anzahl von Eingängen 1 ist.                                                                                       | Eingänge, 2 bis 64           |
+| Durchpass    | Gibt seinen Eingang unverändert weiter, einen Tick später.                                                                                       |                              |
+| Taktgeber    | Sendet einen Impuls von einem Tick, bleibt dann für Verzögerung Ticks auf 0 und wiederholt das. Solange sein Eingang STP 1 ist, bleibt er auf 0. | Verzögerung, ab 1            |
+| Tunnel       | Ist ohne Leitung mit jedem anderen Tunnel gleicher Beschriftung verbunden. Siehe [Leitungen und Verbindungen](docs:wires-and-connections).       | Beschriftung, bis 10 Zeichen |
 
 ### Fortgeschritten
 
-| Komponente           | Was sie tut                                                                                                                 |
-| -------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| **Halbaddierer**     | Addiert zwei 1-Bit-Zahlen; S ist das Summenbit, C der Übertrag.                                                             |
-| **Volladdierer**     | Addiert zwei Summanden plus einen Übertrag-Eingang; S ist das Summenbit, C der Übertrag.                                    |
-| **ROM**              | Festwertspeicher, dessen gespeicherten Inhalt du von Hand bearbeitest.                                                      |
-| **RAM**              | Speicher mit wahlfreiem Zugriff: liest das adressierte Wort bei einer Taktflanke oder speichert eines, solange WE HIGH ist. |
-| **D-Flip-Flop**      | Speichert ein Bit; erfasst D bei der steigenden Flanke von CLK.                                                             |
-| **JK-Flip-Flop**     | Speichert ein Bit; J setzt, K setzt zurück, beide schalten um, bei der steigenden Flanke von CLK.                           |
-| **SR-Flip-Flop**     | Speichert ein Bit; S setzt und R setzt zurück bei der steigenden Flanke von CLK.                                            |
-| **Zufallsgenerator** | Erzeugt bei jeder steigenden Flanke von CLK zufällige Daten an seinen Ausgängen.                                            |
-| **Dekodierer**       | Treibt den einen Ausgang, dessen Index dem Binärwert an seinen Eingängen entspricht.                                        |
-| **Enkodierer**       | Gibt den Binärindex seines höchsten aktiven Eingangs aus.                                                                   |
-| **Multiplexer**      | Leitet den durch die Auswahlleitungen gewählten Dateneingang an den einzelnen Ausgang.                                      |
-| **Demultiplexer**    | Leitet den einzelnen Dateneingang an den durch die Auswahlleitungen gewählten Ausgang.                                      |
+| Komponente       | Was sie tut                                                                                                                                | Optionen                                                     |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------ |
+| Halbaddierer     | Addiert A und B. S ist das Summenbit, C der Übertrag.                                                                                      |                                                              |
+| Volladdierer     | Addiert A, B und den Übertragseingang Cin. S ist das Summenbit, C der Übertrag.                                                            |                                                              |
+| ROM              | Gibt das gespeicherte Wort an der Adresse an seinen Eingängen aus. Es hat keinen Takt.                                                     | Wortbreite 1 bis 64, Adressgröße 1 bis 11, Inhalt bearbeiten |
+| D-Flip-Flop      | Speichert D bei der steigenden Flanke von CLK. Q ist das gespeicherte Bit, !Q sein Gegenteil.                                              |                                                              |
+| JK-Flip-Flop     | Bei der steigenden Flanke von CLK setzt J das Bit, K setzt es zurück, beide zusammen kippen es.                                            |                                                              |
+| SR-Flip-Flop     | Bei der steigenden Flanke von CLK setzt S das Bit und R setzt es zurück.                                                                   |                                                              |
+| Zufallsgenerator | Legt bei jeder steigenden Flanke von CLK einen neuen Zufallswert an seine Ausgänge.                                                        | Ausgänge, 1 bis 64                                           |
+| RAM              | Liest bei der steigenden Flanke von CLK das Wort an der Adresse auf die Ausgänge, oder speichert dort die Dateneingänge, solange WE 1 ist. | Wortbreite 1 bis 64, Adressgröße 1 bis 16                    |
+| Dekodierer       | Schaltet den einen Ausgang ein, dessen Nummer dem Binärwert an den Eingängen entspricht.                                                   | Eingänge, 1 bis 6                                            |
+| Enkodierer       | Gibt die Nummer des höchsten Eingangs aus, der 1 ist.                                                                                      | Ausgänge, 1 bis 6                                            |
+| Multiplexer      | Gibt den Dateneingang, den die Auswahlleitungen wählen, an seinen Ausgang weiter. Bei n Auswahlleitungen gibt es 2ⁿ Dateneingänge.         | Auswahlleitungen, 1 bis 6                                    |
+| Demultiplexer    | Gibt Eingang I an den Ausgang weiter, den die Auswahlleitungen wählen.                                                                     | Auswahlleitungen, 1 bis 6                                    |
 
 ### Ein- / Ausgänge
 
-| Komponente          | Was sie tut                                                                                                              |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| **Taster**          | Ein Momentschalter — sein Ausgang ist an, solange du ihn während der Simulation gedrückt hältst.                         |
-| **Impulstaster**    | Klicke ihn während der Simulation, um einen einzelnen, einen Tick langen Puls auszusenden, egal wie lange du ihn hältst. |
-| **Schalter**        | Ein rastender Schalter — klicke ihn während der Simulation, um seinen Ausgang an- und auszuschalten.                     |
-| **LED**             | Leuchtet, solange die Leitung, die ihren Eingang speist, unter Strom steht.                                              |
-| **Segment Display** | Zeigt den Binärwert an seinen Eingängen als Zahl in einer gewählten Basis.                                               |
-| **LED-Matrix**      | Ein quadratisches Raster aus LEDs, das ein Bild anzeigt, Zeile für Zeile bei der steigenden Flanke von CLK geschrieben.  |
+| Komponente      | Was sie tut                                                                                                                                                                                           | Optionen                                                 |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| Schalter        | Wechselt während einer Simulation mit jedem Klick zwischen 0 und 1.                                                                                                                                   |                                                          |
+| Taster          | Gibt 1 aus, solange du ihn gedrückt hältst.                                                                                                                                                           |                                                          |
+| Impulstaster    | Gibt pro Klick einen Impuls von einem Tick aus.                                                                                                                                                       |                                                          |
+| LED             | Leuchtet, solange ihr Eingang 1 ist.                                                                                                                                                                  |                                                          |
+| Segment Display | Zeigt die Binärzahl an seinen Eingängen, Eingang 0 ist das niedrigste Bit.                                                                                                                            | Eingänge 1 bis 16, Basis dezimal, hexadezimal oder oktal |
+| LED-Matrix      | Ein quadratisches LED-Raster. Bei der steigenden Flanke von CLK werden die Dateneingänge in die Zeile geschrieben, die die Adresseingänge wählen. Bei 16 × 16 deckt jede Adresse eine halbe Zeile ab. | Breite/Höhe 4, 8 oder 16                                 |
 
-## Eine Komponente konfigurieren
+## Die Einstellungskarte
 
-Wenn du eine einzelne platzierte Komponente auswählst — oder während du eine platzierst — erscheint eine kleine **Einstellungskarte** neben der Arbeitsfläche, die den Namen dieser Komponente, eine kurze Beschreibung und ihre einstellbaren Optionen zeigt. Auf einem Touch-Gerät öffnen sich dieselben Optionen stattdessen in der Schublade **Einstellungen**.
+Wählst du genau eine Komponente aus oder nimmst eine zum Platzieren, erscheint neben der Arbeitsfläche ihre Einstellungskarte: Name, Beschreibung und Optionen. Richtung hat vier Pfeil-Schaltflächen, die die Komponente drehen. Eine beim Platzieren gewählte Richtung bleibt für die nächste Komponente desselben Typs erhalten. Während einer Simulation ist die Karte ausgeblendet.
 
 ![Die Einstellungskarte eines ausgewählten UND-Gatters.](./images/component-settings.webp)
 
-### Richtung — bei jeder Komponente
+Änderst du Eingänge, Ausgänge oder eine Größenoption, ändert sich die Zahl der Anschlüsse sofort.
 
-Jede Komponente hat eine **Richtung**-Steuerung: vier Pfeile für Osten, Süden, Westen und Norden. Sie dreht die Komponente in die gewünschte Blickrichtung, was demselben Drehen entspricht. (Du kannst eine Auswahl auf der Arbeitsfläche auch mit `R` und `Shift+R` drehen — siehe [Arbeitsfläche & Werkzeuge](docs:board-and-tools).)
-
-### Typspezifische Optionen
-
-Alles über die Richtung hinaus hängt von der Komponente ab. Viele Komponenten haben gar keine (ein NICHT-Gatter etwa). Die, die welche haben:
-
-| Komponente                                    | Optionen                                                                                                 |
-| --------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| **UND- / ODER- / XOR-Gatter**, **Dekodierer** | **Eingänge** — wie viele Eingangsanschlüsse.                                                             |
-| **Enkodierer**, **Zufallsgenerator**          | **Ausgänge** — wie viele Ausgangsanschlüsse.                                                             |
-| **Taktgeber**                                 | **Verzögerung** — die Anzahl der Ticks zwischen den Pulsen.                                              |
-| **Tunnel**                                    | **Beschriftung** — der Name, der ihn mit anderen Tunneln paart.                                          |
-| **ROM**                                       | **Wortbreite**, **Adressgröße** und **Inhalt bearbeiten** (siehe unten).                                 |
-| **RAM**                                       | **Wortbreite** und **Adressgröße**.                                                                      |
-| **Multiplexer / Demultiplexer**               | **Auswahlleitungen** — wie viele Auswahleingänge, was die Anzahl der Datenleitungen festlegt.            |
-| **Segment Display**                           | **Eingänge** — wie viele Eingangsbits — und **Basis** — die Zahlenbasis, in der der Wert angezeigt wird. |
-| **LED-Matrix**                                | **Breite/Höhe** — die Größe des LED-Rasters.                                                             |
-
-### ROM-Inhalt bearbeiten
-
-Wählst du ein **ROM** aus, erscheint eine Schaltfläche **Inhalt bearbeiten**. Sie öffnet einen Hex-Editor, in dem du die gespeicherten Wörter des Speichers eintippst; die Optionen **Wortbreite** und **Adressgröße** legen fest, wie breit jedes Wort ist und wie viele Wörter es gibt. Deine Änderungen werden mit der Schaltung gespeichert. Dieselbe schreibgeschützte Hex-Ansicht ist verfügbar, während eine Simulation läuft — siehe [Inspektion & Beobachtungen](docs:inspection).
+Bei einem ROM öffnet „Inhalt bearbeiten“ einen Hex-Editor für die gespeicherten Wörter. Wortbreite legt fest, wie viele Bits ein Wort hat, Adressgröße, wie viele Adresseingänge es gibt. Ein ROM mit Adressgröße 4 hält also 16 Wörter. Der Inhalt wird mit der Schaltung gespeichert.
 
 ## Einen Anschluss negieren
 
-Jeder Eingangs- oder Ausgangsanschluss kann **negiert** werden, sodass das Signal, das ihn durchläuft, invertiert wird, ohne ein separates NICHT-Gatter hinzuzufügen. Wähle das Werkzeug **Leitung** und tippe direkt auf einen Anschluss: Eine kleine **Negationsblase** erscheint darauf, und der Anschluss ist nun invertiert. Tippe erneut darauf, um die Blase zu entfernen.
+Tippe mit dem Leitungswerkzeug auf einen Ein- oder Ausgang, um einen Negationskreis hinzuzufügen. Das Signal durch diesen Anschluss wird dann invertiert, ohne zusätzliche Verzögerung. Tippe erneut auf den Kreis, um ihn zu entfernen. Fährst du über einen Anschluss, zeigt das Leitungswerkzeug, was ein Tippen bewirken würde. Ein Kreis am CLK-Eingang eines Flip-Flops lässt es auf die fallende Flanke reagieren.
 
-Ein **Tunnel** und die Stecker **Eingang** / **Ausgang** geben ein Signal nur weiter, und die Anschlüsse einer platzierten benutzerdefinierten Komponente gehören zu deren innerer Schaltung — keiner von ihnen nimmt eine Blase an.
+Tunnel, Eingangs- und Ausgangsstecker und die Anschlüsse einer platzierten benutzerdefinierten Komponente lassen sich nicht negieren.
 
-Solange das Leitungswerkzeug aktiv ist, zeigt das Bewegen nahe eines Anschlusses eine Vorschau der Blase, die ein Tippen hinzufügen würde, sodass du genau siehst, welchen Anschluss du gerade negieren wirst.
+![Ein ODER-Gatter mit negiertem Ausgang.](./images/negated-gate.webp)
 
-![Ein ODER-Gatter mit einer Negationsblase an seinem Ausgang.](./images/negated-gate.webp)
+## Textbeschriftungen
 
-## Text platzieren
-
-Die Palette enthält keinen Text — Beschriftungen werden mit dem Werkzeug **Text** in der Werkzeugleiste platziert. Wähle es, klicke auf die Arbeitsfläche und tippe deine Notiz; die Einstellungskarte der Beschriftung lässt dich den **Text bearbeiten** und ihre **Schriftgröße** ändern. Leitungen dürfen durch eine Textbeschriftung verlaufen, ohne sich mit ihr zu verbinden. Ein Klick irgendwo auf der Beschriftung wählt sie aus. Verläuft eine Leitung darunter, lässt sie sich weiterhin anklicken — eine Beschriftung blockiert die Leitung, auf der sie liegt, also nie.
+Text steht nicht in der Palette. Klicke mit dem Werkzeug Text (`T`) auf die Arbeitsfläche, um eine Beschriftung „[insert text]“ zu setzen. „Text bearbeiten“ in ihrer Einstellungskarte öffnet einen Dialog für den Text, der über mehrere Zeilen gehen kann, und die Schriftgröße reicht von 2 bis 128. Leitungen laufen durch Beschriftungen, ohne sich mit ihnen zu verbinden. Ein Klick auf eine Leitung unter einer Beschriftung wählt die Leitung aus.
 
 ## Siehe auch
 
-- [Leitungen & Verbindungen](docs:wires-and-connections) — Anschlüsse zu funktionierenden Schaltungen verbinden
-- [Benutzerdefinierte Komponenten](docs:custom-components) — eine Schaltung in dein eigenes wiederverwendbares Bauteil verpacken
-- [Simulation](docs:simulation) — die Schaltung laufen lassen und mit Tastern, Schaltern und Anzeigen interagieren
-- [Arbeitsfläche & Werkzeuge](docs:board-and-tools) — platzieren, auswählen, verschieben und drehen
+- [Leitungen und Verbindungen](docs:wires-and-connections): Anschlüsse verbinden
+- [Benutzerdefinierte Komponenten](docs:custom-components): eigene Bauteile bauen
+- [Simulation](docs:simulation): Schalter und Taster bedienen
+- [Arbeitsfläche und Werkzeuge](docs:board-and-tools): platzieren, verschieben und drehen

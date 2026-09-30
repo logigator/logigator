@@ -133,9 +133,6 @@ timing out on a missing element.
 Clips likewise come from element boxes rather than from markup added for the
 tool, and every grid ↔ CSS-px conversion goes through the camera's own mapping.
 
-`intro-banner.webp` is the one doc image not produced here — a designed banner,
-not a capture.
-
 ### Animated shots
 
 The animated images are step-throughs, not motion capture: two settled states of

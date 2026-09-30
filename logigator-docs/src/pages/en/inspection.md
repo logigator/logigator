@@ -1,46 +1,31 @@
-# Inspection & Watches
+# Inspection and watches
 
-Some components let you look inside them while your circuit runs. You can read a memory's contents at the address it's currently reading, or open a live, interactive view of a custom component's inner circuit.
+During a [simulation](docs:simulation), running or paused, two kinds of component can be opened to see inside them. Clicking a ROM shows its contents with the word it is currently reading highlighted. Clicking a custom component opens a watch, a live view of its inner circuit.
 
-![A watch window open over a running circuit.](./images/inspection-showcase.webp)
+![A watch window beside the running circuit it belongs to.](./images/inspection-showcase.webp)
 
-Inspection is only available **while a [simulation](docs:simulation) is running**. Enter simulation first, then tap a component that supports inspection to open its view. Tapping it again brings the same view back to the front, and leaving simulation closes everything.
+On a desktop, each view opens as a window that you can move and resize. Clicking the component again brings its window to the front. In the [touch layout](docs:phones-and-tablets), ROM views share a sheet at the bottom of the screen and a watch fills the whole screen. Leaving the simulation closes all of them.
 
-On desktop these views open as floating windows you can drag around and stack over the board. On phones and narrow screens they appear instead as a panel that slides up from the bottom, and watches take over the full screen — the running circuit stays visible and interactive behind them.
+## ROM contents
 
-## Inspecting memory contents
+![The ROM viewer following the address as it changes.](./images/rom-inspection.webp)
 
-Tap a **ROM** while the simulation runs to open a read-only viewer of its stored data. The word the circuit is **currently addressing** is highlighted, and updates live as the address changes, so you can follow exactly what the memory is feeding back into the circuit.
+The viewer is read-only; you change the contents in the ROM's settings while editing. The word at the current address is highlighted, and with Follow on (the default) the table scrolls along as the address changes. The line at the bottom shows the address and value of the highlighted cell. Clicking another cell shows that one instead until the address next changes.
 
-![The memory inspection window with the addressed word highlighted.](./images/rom-inspection.webp)
+The buttons above the table choose Words or Bytes and the number base: Hex, Decimal, Octal or Binary. To jump to an address, type it in hex into the Address… field. Copy puts the whole table on the clipboard as text, in the view and base you picked.
 
-The viewer is for reading only — you can't change the contents here. Its controls let you choose how the data is shown:
+## Watches
 
-- **Words / Bytes** — show each stored value whole, or split into individual bytes.
-- **Hex / Decimal / Octal / Binary** — the number base every value is shown in.
-- **Go to address** — jump straight to a specific address.
-- **Follow** — keep the currently-addressed word scrolled into view as the address moves.
+![A watch drilled down from Outer into Inner, with the path in its title.](./images/inspection-window-multilayer.webp)
 
-An **Address** and **Value** readout shows the highlighted word's address and its contents.
+A watch draws the component's inner circuit with the same lit wires as the board. You can pan and zoom inside it, and operate the switches and buttons it contains. They drive the real simulation, so the rest of the circuit reacts.
 
-## Watching a custom component's inner circuit
+Clicking a custom component inside a watch opens its circuit in the same window, and the title shows the path, such as Outer › Inner. Click an earlier name to go back up. A ROM inside a watch opens its own viewer.
 
-Tap a placed [custom component](docs:custom-components) while the simulation runs to open a **watch** — a live view of the circuit inside it. The inner wires and ports light up exactly as the running circuit drives them, so you can see what's happening one level down without unpacking the component.
-
-![A watch window with a breadcrumb trail into a nested component.](./images/inspection-window-multilayer.webp)
-
-A watch is interactive:
-
-- **Drive its inputs** — click a **switch** or **pulse button**, or hold down a **button**, inside the watched circuit to operate it, just like on the main board. It drives the real running simulation, so the effect ripples out to the rest of your circuit.
-- **Drill into nested components** — tap a custom component inside the watch to descend into _its_ inner circuit. A **breadcrumb** trail across the top shows how deep you are; click an earlier step to jump back out.
-- **Pan and zoom** — drag to move around the inner view and scroll or pinch to zoom, the same as on the board.
-
-If a component can't be watched you'll see a short message: it may have **no inner circuit** to inspect, or its inner circuit may no longer match the running simulation — in that case, **restart the simulation** and try again.
-
-> **Compact screens:** watches open as a full-screen view with a back button in place of the window's close button; the breadcrumb still lets you step back through nested levels.
+If the watch reports that the inner circuit does not match the compiled simulation, the component was changed after the simulation started. Leave the simulation and start it again.
 
 ## See also
 
-- [Simulation](docs:simulation) — running your circuit and interacting with it
-- [Custom Components](docs:custom-components) — building and using reusable components
-- [Components & Options](docs:components-and-options) — memories, switches, buttons and other building blocks
+- [Simulation](docs:simulation): running a circuit
+- [Custom components](docs:custom-components): building the components you watch
+- [Components and options](docs:components-and-options): ROM options and contents

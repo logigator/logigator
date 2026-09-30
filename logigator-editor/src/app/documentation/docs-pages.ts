@@ -3,6 +3,7 @@ import { LanguageId } from '@logigator/core';
 import { TranslationKey } from '../translation/translation-key.model';
 import gettingStartedEn from '@logigator/docs/pages/en/getting-started.md';
 import boardAndToolsEn from '@logigator/docs/pages/en/board-and-tools.md';
+import phonesAndTabletsEn from '@logigator/docs/pages/en/phones-and-tablets.md';
 import shortcutsEn from '@logigator/docs/pages/en/shortcuts.md';
 import settingsEn from '@logigator/docs/pages/en/settings.md';
 import componentsAndOptionsEn from '@logigator/docs/pages/en/components-and-options.md';
@@ -14,6 +15,7 @@ import savingAndFilesEn from '@logigator/docs/pages/en/saving-and-files.md';
 import cloudEn from '@logigator/docs/pages/en/cloud.md';
 import gettingStartedDe from '@logigator/docs/pages/de/getting-started.md';
 import boardAndToolsDe from '@logigator/docs/pages/de/board-and-tools.md';
+import phonesAndTabletsDe from '@logigator/docs/pages/de/phones-and-tablets.md';
 import shortcutsDe from '@logigator/docs/pages/de/shortcuts.md';
 import settingsDe from '@logigator/docs/pages/de/settings.md';
 import componentsAndOptionsDe from '@logigator/docs/pages/de/components-and-options.md';
@@ -25,6 +27,7 @@ import savingAndFilesDe from '@logigator/docs/pages/de/saving-and-files.md';
 import cloudDe from '@logigator/docs/pages/de/cloud.md';
 import gettingStartedFr from '@logigator/docs/pages/fr/getting-started.md';
 import boardAndToolsFr from '@logigator/docs/pages/fr/board-and-tools.md';
+import phonesAndTabletsFr from '@logigator/docs/pages/fr/phones-and-tablets.md';
 import shortcutsFr from '@logigator/docs/pages/fr/shortcuts.md';
 import settingsFr from '@logigator/docs/pages/fr/settings.md';
 import componentsAndOptionsFr from '@logigator/docs/pages/fr/components-and-options.md';
@@ -36,6 +39,7 @@ import savingAndFilesFr from '@logigator/docs/pages/fr/saving-and-files.md';
 import cloudFr from '@logigator/docs/pages/fr/cloud.md';
 import gettingStartedEs from '@logigator/docs/pages/es/getting-started.md';
 import boardAndToolsEs from '@logigator/docs/pages/es/board-and-tools.md';
+import phonesAndTabletsEs from '@logigator/docs/pages/es/phones-and-tablets.md';
 import shortcutsEs from '@logigator/docs/pages/es/shortcuts.md';
 import settingsEs from '@logigator/docs/pages/es/settings.md';
 import componentsAndOptionsEs from '@logigator/docs/pages/es/components-and-options.md';
@@ -49,7 +53,7 @@ import cloudEs from '@logigator/docs/pages/es/cloud.md';
 /**
  * Each page's markdown, one build-time hashed URL per language. The bodies are
  * fetched only when a page is shown; the editor's loader emits a `.md` as a
- * file, which is what keeps 44 documents out of the bundle.
+ * file, which is what keeps 48 documents out of the bundle.
  *
  * The imports are written out rather than assembled from a template literal:
  * the record then makes a page or a language with no file a compile error
@@ -67,6 +71,12 @@ const DOC_PAGE_URLS: Record<DocPageId, Record<LanguageId, string>> = {
     de: boardAndToolsDe,
     fr: boardAndToolsFr,
     es: boardAndToolsEs
+  },
+  'phones-and-tablets': {
+    en: phonesAndTabletsEn,
+    de: phonesAndTabletsDe,
+    fr: phonesAndTabletsFr,
+    es: phonesAndTabletsEs
   },
   shortcuts: {
     en: shortcutsEn,
@@ -133,6 +143,7 @@ const DOC_PAGE_URLS: Record<DocPageId, Record<LanguageId, string>> = {
 export const DOC_PAGE_TITLES: Record<DocPageId, TranslationKey> = {
   'getting-started': 'documentation.pages.gettingStarted',
   'board-and-tools': 'documentation.pages.boardAndTools',
+  'phones-and-tablets': 'documentation.pages.phonesAndTablets',
   shortcuts: 'documentation.pages.shortcuts',
   settings: 'documentation.pages.settings',
   'components-and-options': 'documentation.pages.componentsAndOptions',

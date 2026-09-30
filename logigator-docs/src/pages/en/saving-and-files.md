@@ -1,79 +1,67 @@
-# Saving & Files
+# Saving and files
 
-Where your work lives: in your browser, in your account, or in a file on your device. This page covers saving in the browser, exporting to a file, and generating an image of your circuit.
+A project is stored in one of two places: in this browser (Local) or in your Logigator account (Cloud). Files on your device are for exporting and importing, not a third place to save to. The editor doesn't save automatically.
 
-## Saving your project
+## Saving a project
 
-Save with **File → Save** or `Ctrl+S`. The button also sits in the toolbar.
+File → Save, the toolbar's save button or `Ctrl+S` saves the open project. A new project is a Draft until its first save, which opens the Save dialog:
 
-A project that has never been saved is a **Draft** — the chip beside the project name says so. The first time you save a Draft, Logigator asks for two things:
+- Name, up to 20 characters.
+- Destination, Local or Cloud. Cloud needs you to be signed in and is preselected when you are.
+- Who can open it, for Cloud only. Everyone is preselected, which lists the project in the community and lets search engines find it. Pick Only you to keep it private. See [Cloud and sharing](docs:cloud).
 
-- **Name** — what to call the project.
-- **Destination** — **Local** (stored in this browser) or **Cloud** (stored in your Logigator account, if you are signed in).
+![The Save dialog with Cloud chosen and the visibility options below.](./images/save-project.webp)
 
-After that first save, **Save** writes straight back to wherever the project lives — no more prompts. See [Cloud & Sharing](docs:cloud) for what signing in and the Cloud destination add.
+Later saves go straight back to the same place. The one exception is a cloud project that uses local custom components: saving it first opens the Upload to cloud dialog, because a cloud project can only use cloud components.
 
-### Knowing where a project is stored
+Local projects stay in the browser that saved them. As the Save dialog warns, they are not persisted across devices and may be lost when the browser's site data is cleared. Save anything you want to keep to the cloud or export it to a file.
 
-The chip next to the project name always shows the project's home:
+## Where a project is stored
 
-| Chip       | Meaning                                           |
-| ---------- | ------------------------------------------------- |
-| **Draft**  | Never saved yet — save it to store it.            |
-| **Local**  | Saved in this browser only.                       |
-| **Cloud**  | Saved in your account, reachable from any device. |
-| **Shared** | Opened read-only from someone's share link.       |
+The chip next to the project name shows where the open project lives:
 
-### The saved / unsaved indicator
+| Chip   | Meaning                                                        |
+| ------ | -------------------------------------------------------------- |
+| Draft  | Not saved yet.                                                 |
+| Local  | Saved in this browser.                                         |
+| Cloud  | Saved in your account.                                         |
+| Shared | Opened from someone else's share link. You can't save over it. |
 
-The **status bar** at the bottom of the editor shows **Saved** when everything is written, and **Unsaved changes** the moment you make an edit. Use it as a quick check before you close the tab.
+A Fork chip beside it means the project was copied from someone else's. Hover it to see from whom.
 
-### A note on local projects
+The status bar shows Saved or Unsaved changes. Opening another project or starting a new one with unsaved changes asks whether to discard them, and the browser warns you before you close the tab.
 
-Local projects live only in the browser you saved them in. As the save dialog warns:
+## Opening, renaming and deleting
 
-> Local projects are not persisted across devices and may be lost.
+File → Open (`Ctrl+O`) has three tabs: Local Projects, Cloud Projects and From File. Each list can be searched, and each row has buttons to rename or delete the project. Local rows can also be uploaded to the cloud, and cloud rows shared.
 
-If a project matters, save it to the **Cloud** (see [Cloud & Sharing](docs:cloud)) or **export it to a file** so you have a copy you control.
+![The Open dialog on the From File tab.](./images/open-file.webp)
 
-### Opening old projects
+The pencil next to the project name in the title bar renames the open project.
 
-If you open a circuit made with the older Logigator editor, saving it here converts it to the new format.
+## Circuit files
 
-## Circuit files (`.lgix`)
+File → Export to file downloads the open project as a `.lgix` file. The file contains the board and a copy of every custom component it uses, so it opens complete on any computer. It is compressed but not encrypted or signed, so anyone can read it. Exporting doesn't change where the project is saved.
 
-You can also keep a circuit as a file on your own device.
+To import, open File → Open → From File and choose a file. The editor reads `.lgix` files and the `.json` files the old Logigator editor exported. The import is saved right away as a new Local project.
 
-- **Export** — **File → Export to file** downloads the open project as a `.lgix` file.
-- **Import** — **File → Open → From File**, then **Choose File**, loads a `.lgix` file back into the editor as a new local project.
+A project opened from a share link can't be exported. Clone it first (see [Cloud and sharing](docs:cloud)).
 
-A file is only ever an export or an import — it is not a place your project "lives" the way Local and Cloud storage are. Exporting doesn't change where your project is saved.
+## Exporting an image
 
-### What's in a `.lgix` file
+File → Generate image opens the Export image dialog:
 
-A `.lgix` file is a compressed, self-contained snapshot of your circuit. It bundles the board itself **and** a frozen copy of every [custom component](docs:custom-components) the circuit uses, so it opens correctly on any machine even if that machine has never seen those components.
+- Format: PNG, JPEG or WebP.
+- Resolution: 1×, 2× or 4×, with 2× preselected. If the image would be larger than your device can render, it is scaled down and the dialog says so.
+- Background: on draws the theme's background colour and the grid. Off gives a transparent PNG or WebP, or a white JPEG.
+- Quality, 10 to 100 %, for JPEG and WebP. PNG is lossless.
 
-The file is compressed but not encrypted or locked — treat it as a convenient package, not a secure or tamper-proof one. Logigator can also import the older editor's exported `.json` circuit files.
+The dialog shows the final size in pixels before you export. With a custom component's tab open, a Project field chooses which circuit to export.
 
-> Read-only projects opened from a share link cannot be exported to a file. Clone the shared project into your own library first — see [Cloud & Sharing](docs:cloud).
-
-![The Open Project dialog on the From File tab.](./images/open-file.webp)
-
-## Generating an image
-
-To export a picture of your circuit, choose **File → Generate image**. The dialog lets you set:
-
-- **Format** — **PNG**, **JPEG** or **WebP**.
-- **Resolution** — the output size; very large sizes are automatically reduced to fit your device's limits.
-- **Background** — the current theme color and the grid.
-- **Quality** — the compression quality (shown for JPEG and WebP; PNG is lossless).
-
-The dialog previews the final pixel dimensions before you export.
-
-![The Export image dialog with its format and resolution options.](./images/export-image.webp)
+![The Export image dialog.](./images/export-image.webp)
 
 ## See also
 
-- [Cloud & Sharing](docs:cloud) — signing in, cloud storage, uploading and share links
-- [Custom Components](docs:custom-components) — the reusable parts a file carries with it
-- [Keyboard Shortcuts](docs:shortcuts) — change the `Ctrl+S` binding and others
+- [Cloud and sharing](docs:cloud): uploading, sharing and cloning
+- [Custom components](docs:custom-components): the components a file carries
+- [Keyboard shortcuts](docs:shortcuts): changing the Save and Open keys

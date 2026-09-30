@@ -1,76 +1,66 @@
 # Tablero y herramientas
 
-El tablero es la cuadrícula donde construyes tu circuito. Esta página explica cómo moverte por él y cómo funciona cada herramienta de edición.
+El tablero es la cuadrícula en la que construyes. Los componentes y los cables se ajustan a ella, y la barra de estado de abajo muestra la posición de la cuadrícula bajo el cursor.
 
-![El editor con la paleta de componentes, el tablero y la barra de herramientas.](./images/board-overview.webp)
+## Moverse
 
-## Moverse por el tablero
+La rueda del ratón hace zoom en la posición del puntero, igual que deslizar dos dedos o pellizcar en el panel táctil. Los botones de zoom de la barra de herramientas y Vista → Acercar, Alejar y Zoom 100% hacen lo mismo en pasos fijos.
 
-- **Zoom**: desplaza la rueda del ratón sobre el tablero, o pellizca en un dispositivo táctil. También puedes usar los botones de zoom de la barra de herramientas, **Vista → Acercar / Alejar**, o **Vista → Zoom 100%** para restablecer el tamaño real.
-- **Desplazar**: elige la herramienta **Desplazar** (la mano) y arrastra. También puedes desplazarte desde _cualquier_ herramienta arrastrando con el **botón derecho o el botón central del ratón**, así que rara vez necesitas cambiar de herramienta solo para reposicionar. Arrastrar desde dentro de la selección actual mueve la selección en lugar del tablero; puedes desactivarlo con **Arrastrar la selección en modo Desplazar** en los [ajustes del editor](docs:settings).
-- **Táctil**: arrastra con dos dedos para desplazarte y pellizca para hacer zoom en cualquier momento; un arrastre con un solo dedo solo se desplaza mientras la herramienta Desplazar está activa.
+Para desplazar la vista, arrastra con el botón derecho o central del ratón. Funciona con cualquier herramienta. Con la herramienta Desplazar activa, arrastrar con el botón izquierdo también desplaza.
 
-La **barra de estado** de la parte inferior siempre muestra un breve recordatorio de lo que hace la herramienta activa, además de la posición de tu cursor en la cuadrícula.
+El minimapa, en la esquina inferior derecha, muestra todo el circuito con un marco alrededor de la parte visible. Haz clic o arrastra en él para llevar la vista allí. «Ocultar minimapa» lo pliega, y el editor lo recuerda.
 
-## Las herramientas de la barra de herramientas
+## Herramientas
 
-El grupo de la derecha de la barra de herramientas contiene las cinco herramientas de dibujo. Solo una está activa a la vez; cada una tiene además un atajo de una sola tecla.
+Solo hay una herramienta activa a la vez. Cada una tiene un botón en la barra de herramientas y un atajo de una tecla.
 
-| Herramienta     | Atajo | Qué hace                                                                                                                                                                                                                                 |
-| --------------- | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Desplazar**   | `P`   | Arrastra para mover el tablero o la selección actual; desplaza o pellizca para hacer zoom.                                                                                                                                               |
-| **Cable**       | `W`   | Arrastra para dibujar cables; toca un puerto para negarlo, o toca un cruce para conectar o dividir; un toque que no alcanza ninguno de los dos selecciona lo que hay debajo. Consulta [Cables y conexiones](docs:wires-and-connections). |
-| **Seleccionar** | `S`   | Arrastra un recuadro para seleccionar elementos; arrastra la selección para moverla.                                                                                                                                                     |
-| **Borrar**      | `E`   | Haz clic o arrastra sobre los elementos para eliminarlos.                                                                                                                                                                                |
-| **Texto**       | `T`   | Coloca una etiqueta de texto en el tablero.                                                                                                                                                                                              |
+| Herramienta          | Tecla | Qué hace un arrastre                                                         |
+| -------------------- | ----- | ---------------------------------------------------------------------------- |
+| Desplazar            | `P`   | Desplaza la vista, o la selección si empiezas dentro de ella                 |
+| Herramienta de cable | `W`   | Traza un cable (consulta [Cables y conexiones](docs:wires-and-connections))  |
+| Seleccionar          | `S`   | Traza un marco de selección, o mueve la selección si empiezas dentro de ella |
+| Borrador             | `E`   | Elimina todo lo que atraviesa                                                |
+| Texto                | `T`   | Coloca una etiqueta de texto (basta un clic)                                 |
 
-![Los cinco botones de herramienta de la barra de herramientas.](./images/tool-buttons.webp)
+Un clic sin arrastrar selecciona el elemento bajo el puntero en Desplazar, Herramienta de cable y Seleccionar. La herramienta de cable comprueba antes si has tocado un puerto o un cruce de cables, porque tocarlos niega o conecta en su lugar.
+
+![Los cinco botones de herramientas en la barra de herramientas.](./images/tool-buttons.webp)
 
 ## Colocar componentes
 
-Para añadir un componente, elígelo de la [paleta de componentes](docs:components-and-options) de la izquierda. Un fantasma del componente sigue entonces a tu cursor por el tablero; muévelo donde quieras, luego pulsa y suelta para colocarlo. La colocación permanece activa, así que puedes colocar varios del mismo componente seguidos. Pulsa `Escape`, o elige otra herramienta, para dejar de colocar.
+Haz clic en un componente de la paleta y una vista previa sigue al cursor. Un clic en el tablero lo coloca. La vista previa sigue en el cursor después, así que puedes colocar varios seguidos. `R` y `Shift+R` giran la vista previa antes de colocarla, y el siguiente componente conserva esa dirección.
 
-Un componente no se puede colocar encima de otro elemento; el fantasma muestra dónde caerá.
+No se coloca nada donde la vista previa se solapa con otro componente. `Escape` o elegir otra herramienta termina la colocación.
 
-## Seleccionar, mover y girar
+## Seleccionar y mover
 
-Con la herramienta **Seleccionar**, arrastra un recuadro (un marco) sobre los elementos que quieras. Todo lo que el recuadro toque —componentes y cables— queda seleccionado. Para mover una selección, arrastra desde dentro de ella hasta un nuevo sitio.
+Con Seleccionar, traza un marco sobre los elementos que quieras. Se selecciona cada componente y cada cable que toque el marco. Mantén `Ctrl` (`⌘` en Mac) para cambiar la selección en lugar de sustituirla: un clic añade o quita un elemento, y un marco añade lo que cubre. También funciona en Desplazar y en la herramienta de cable.
 
-Una vez que algo está seleccionado puedes:
+Arrastra la selección para moverla. `R` la gira en sentido horario, `Shift+R` en sentido antihorario, y las flechas la mueven un paso de la cuadrícula. Si la selección cae encima de otra cosa, queda levantada y sigue tus movimientos siguientes hasta llegar a un sitio libre.
 
-- **Girarlo**: pulsa `R` para el sentido horario, `Shift+R` para el sentido antihorario, o usa los botones de girar de la barra de herramientas.
-- **Moverlo** un solo paso de cuadrícula a la vez con las **teclas de flecha**.
-
-Como al colocar, un movimiento o una rotación solo se confirman cuando los elementos caen en un sitio libre.
+`Escape` actúa por pasos: cancela un arrastre en curso; si no lo hay, vacía la selección; y si tampoco, cambia a Desplazar.
 
 ## Cortar cables en el borde de la selección
 
-La herramienta de selección tiene un modo **tijera** que recorta los cables exactamente en el borde de tu recuadro de selección, en lugar de agarrar cables enteros. Esto es útil para extraer un cable del medio de un bus.
+Normalmente un marco de selección toma cables enteros. En el modo de corte, corta cada cable que cruza su borde y selecciona solo los trozos de dentro, con lo que puedes sacar un tramo del centro de un bus.
 
-Una pequeña pastilla flota sobre el tablero mientras la herramienta de selección está activa; haz clic en ella para activar el modo tijera. En el escritorio también puedes simplemente **mantener `Alt`** mientras arrastras el recuadro de selección para cortar durante ese arrastre; la pastilla se ilumina para indicar que el modo está activado. Todo lo que el recuadro contenga por completo permanece seleccionado, y los cables que cruzan el borde del recuadro se cortan ahí.
+Mientras Seleccionar está activa, un botón «Cortar cables» flota en la parte superior del tablero y activa o desactiva el modo. Con teclado también puedes mantener `Alt` al soltar el marco para cortar solo esa vez.
 
-![La pastilla de alternancia de tijera flotando sobre el tablero.](./images/scissor-select.webp)
+![El botón «Cortar cables» sobre un cable cortado en el borde de la selección.](./images/scissor-select.webp)
 
-## Copiar, cortar, pegar y eliminar
+## Copiar, pegar y eliminar
 
-La edición estándar funciona sobre la selección actual:
+Copiar (`Ctrl+C`), Cortar (`Ctrl+X`), Pegar (`Ctrl+V`) y Eliminar (`Delete`) están en la barra de herramientas y en el menú Editar. Los elementos pegados aparecen como vista previa bajo el cursor, o en el centro de la vista si el puntero no está sobre el tablero. Arrastra la vista previa a un sitio libre y suelta para colocarla. `Escape` o un clic fuera de la vista previa cancela.
 
-- **Copiar** (`Ctrl+C`) y **Cortar** (`Ctrl+X`) colocan la selección en el portapapeles; cortar además la elimina.
-- **Pegar** (`Ctrl+V`) trae de vuelta los elementos copiados bajo el cursor, o en el centro de la vista en pantallas táctiles. Llegan como un fantasma que posicionas: arrástralos a un sitio libre y suelta para colocarlos, o pulsa `Escape` para cancelar.
-- **Eliminar** (`Delete`) elimina la selección.
-
-Estos comandos también están en la barra de herramientas y en el menú **Editar**. Toda edición se puede deshacer con **Deshacer** (`Ctrl+Z`) y rehacer con **Rehacer** (`Ctrl+Shift+Z`).
+Deshacer (`Ctrl+Z`) y Rehacer (`Ctrl+Shift+Z`) sirven para cualquier edición.
 
 ## Borrar
 
-La herramienta **Borrar** (el borrador) es la forma más rápida de quitar cosas: haz clic en un elemento para eliminarlo, o arrastra sobre varios para barrerlos todos. Pulsa `Escape` a mitad de un arrastre para cancelar y restaurar lo que borraste.
+Con el borrador, haz clic en un elemento para eliminarlo o arrastra sobre varios. Si pulsas `Escape` antes de soltar, vuelve todo lo que ese arrastre borró.
 
-## El minimapa
+## Ver también
 
-El minimapa de la esquina inferior derecha muestra todo tu circuito a la vez, con un marco que señala la parte que estás viendo actualmente, útil para orientarte en un tablero grande. Contráelo con su alternancia cuando necesites el espacio.
-
-## Consulta también
-
-- [Cables y conexiones](docs:wires-and-connections): dibujar cables, cruces y alternar conexiones
-- [Componentes y opciones](docs:components-and-options): las piezas que colocas y configuras
-- [Atajos de teclado](docs:shortcuts): cambia cualquiera de las asignaciones usadas aquí
+- [Cables y conexiones](docs:wires-and-connections): trazar cables y conectar cruces
+- [Componentes y opciones](docs:components-and-options): las piezas que colocas
+- [Móviles y tabletas](docs:phones-and-tablets): las mismas herramientas en la vista táctil
+- [Atajos de teclado](docs:shortcuts): cambiar las teclas usadas aquí

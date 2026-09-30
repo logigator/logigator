@@ -1,67 +1,44 @@
 # Primeros pasos
 
-Bienvenido a Logigator: un editor y simulador open source para circuitos lógicos digitales que se ejecuta por completo en tu navegador.
+Logigator es un simulador de circuitos lógicos que funciona en el navegador. Colocas puertas en una cuadrícula, trazas cables entre ellas y pulsas «Iniciar simulación» para ver cómo recorren las señales el circuito. Un circuito terminado se puede guardar como [componente personalizado](docs:custom-components) y usar como un solo bloque dentro de otro más grande.
 
-![El logotipo de Logigator y su eslogan.](./images/intro-banner.webp)
+No necesitas una cuenta. Sin ella, guardas los proyectos en el navegador o los [exportas a un archivo](docs:saving-and-files). Al iniciar sesión tienes además [almacenamiento en la nube y enlaces para compartir](docs:cloud).
 
-## ¿Qué es Logigator?
+![El editor con un semisumador en el tablero.](./images/board-overview.webp)
 
-Logigator te permite dibujar circuitos lógicos digitales —desde una sola puerta Y hasta un procesador completo— y luego ejecutarlos para ver fluir las señales. Colocas componentes en una cuadrícula, cableas sus puertos entre sí y pulsas reproducir para simular.
+## La ventana del editor
 
-Puedes:
+- El tablero, en el centro, es la cuadrícula en la que construyes. La rueda del ratón hace zoom, y arrastrar con el botón derecho o central desplaza la vista.
+- La barra de título muestra el nombre del proyecto y dónde está guardado (Borrador, Local, Nube o Compartido), seguido de los menús Archivo, Editar, Vista y Ayuda. El lápiz junto al nombre cambia el nombre del proyecto.
+- La barra de herramientas tiene botones para guardar y abrir, el portapapeles, girar, deshacer y hacer zoom, luego las cinco [herramientas](docs:board-and-tools) y, en el extremo derecho, «Iniciar simulación».
+- La paleta de componentes, a la izquierda, lista todas las piezas que puedes colocar.
+- La barra de estado, abajo, muestra una indicación sobre la herramienta activa, la posición del cursor en la cuadrícula, «Guardado» o «Cambios sin guardar» y cuántos elementos hay seleccionados.
+- El minimapa y el botón «Informar de un error» están en la esquina inferior derecha del tablero.
 
-- Construir circuitos con puertas lógicas, biestables, memorias, multiplexores, displays y más
-- Cablear componentes en redes y ver cómo se iluminan los cables alimentados durante la simulación
-- Empaquetar un circuito terminado en tu propio [componente personalizado](docs:custom-components) reutilizable
-- Guardar tu trabajo en este navegador, [exportarlo a un archivo](docs:saving-and-files) o conservarlo en tu [cuenta de Logigator en la nube](docs:cloud)
+Cuando editas un componente personalizado, aparece sobre el tablero una barra de pestañas con el proyecto principal y una pestaña por cada componente abierto.
 
-Todo funciona sin cuenta. Iniciar sesión añade almacenamiento en la nube y enlaces para compartir.
+En una ventana de 1024 px de ancho o menos, el editor cambia a una vista táctil con otros controles. Consulta [Móviles y tabletas](docs:phones-and-tablets).
 
-## Un recorrido por el editor
+## Tutorial y consejos
 
-El editor está organizado en unas pocas áreas fijas alrededor del tablero central:
+En tu primera visita, una tarjeta sobre el tablero ofrece un tutorial en el que construyes una puerta Y con dos interruptores y un LED. Dura alrededor de un minuto. «Empezar el tutorial» lo inicia, la ✕ cierra la tarjeta y «Omitir el tutorial» lo termina en cualquier paso.
 
-- **El tablero**: la cuadrícula del centro donde colocas componentes y dibujas cables. Desplaza para hacer zoom y arrastra para desplazarte.
-- **La barra de herramientas** (en la parte superior): acciones rápidas a la izquierda (guardar, abrir, copiar/pegar, deshacer/rehacer, zoom) y las herramientas de dibujo a la derecha (desplazar, cable, seleccionar, borrar, texto). El botón **Iniciar simulación** se sitúa en el extremo derecho.
-- **La barra de menús** (arriba a la izquierda): los menús **Archivo**, **Editar**, **Vista** y **Ayuda**. Todos los comandos están aquí, la mayoría con un atajo de teclado mostrado al lado.
-- **La paleta de componentes** (panel izquierdo): todos los componentes que puedes colocar, agrupados en categorías. Consulta [Componentes y opciones](docs:components-and-options).
-- **La barra de estado** (abajo): una pista de una línea para la herramienta activa, la posición de tu cursor en la cuadrícula, si el proyecto tiene cambios sin guardar y cuántos elementos hay seleccionados.
-- **El minimapa** (abajo a la derecha): una vista general de todo el circuito que puedes contraer.
+La primera vez que usas ciertas herramientas, como la herramienta de cable o el corte en el borde de la selección, un breve consejo las explica. Cada consejo aparece una sola vez. «Desactivar todos los consejos» en un consejo, o el ajuste «Mostrar consejos de introducción», los apaga. Ayuda → Mostrar los consejos de nuevo los vuelve a activar, muestra otra vez los que ya viste y recupera la tarjeta del tutorial.
 
-El nombre del proyecto se sitúa junto a los menús en la parte superior; haz clic en él para renombrar el proyecto, y la etiqueta a su lado muestra dónde está almacenado el proyecto (**Local**, **Nube**, **Borrador** o **Compartido**).
+## El menú Ayuda
 
-![La barra de menús y la barra de herramientas en la parte superior del editor.](./images/menu-bar.webp)
-
-## El tutorial guiado
-
-La forma más rápida de aprender lo básico es el tutorial integrado, que te guía en la construcción de un pequeño circuito funcional en aproximadamente un minuto.
-
-La primera vez que abras el editor, aparece una tarjeta cerca de la parte superior del tablero: **«¿Eres nuevo aquí? Construye tu primer circuito en un tutorial rápido.»** Elige **Empezar el tutorial** para comenzar, o **Descartar** para omitirlo. Puedes omitir el tutorial en cualquier momento una vez que haya comenzado.
-
-Para volver a ejecutarlo más adelante —o recuperar los consejos contextuales que se describen abajo— abre **Ayuda → Mostrar los consejos de nuevo**.
-
-## Consejos justo a tiempo
-
-A medida que echas mano de una herramienta por primera vez, Logigator muestra un breve consejo que explica cómo funciona: por ejemplo, cómo la [herramienta de cable](docs:wires-and-connections) dibuja y alterna conexiones, o qué hace la selección de tijera. Cada consejo se puede descartar y no volverá a aparecer una vez que lo hayas visto.
-
-Para desactivar los consejos por completo, abre el menú de cuenta en la esquina superior derecha y desactiva **Mostrar consejos de introducción** en **Ajustes del editor**, o elige **Desactivar todos los consejos** en cualquier consejo. Consulta [Ajustes y apariencia](docs:settings).
-
-## Mantenerse al día con los cambios
-
-Logigator se actualiza con regularidad. Abre **Ayuda → Novedades** para ver un resumen de lo que cambió en las versiones recientes. La primera vez que una nueva versión introduce algo digno de conocer, esto aparece automáticamente.
+- Novedades lista los cambios de cada versión. Se abre solo una vez después de cada actualización.
+- Documentación abre estas páginas dentro del editor.
+- Acerca de muestra la versión que usas, la licencia (GNU AGPL v3) y enlaces al código fuente, la política de privacidad y el pie de imprenta.
+- Ajustes de cookies vuelve a abrir el diálogo de consentimiento. Esta entrada solo existe cuando el editor funciona con el banner de cookies.
 
 ## Informar de un problema
 
-¿Has encontrado un error? Usa el botón **Informar de un error** en la esquina inferior derecha del tablero. Describe qué estabas haciendo cuando ocurrió: tu proyecto actual, los detalles del navegador y la actividad reciente se adjuntan para ayudar a localizar el problema. Si un error inesperado llegara a interrumpirte, la misma ventana de informe se abre por sí sola.
+El botón con forma de insecto, en la esquina inferior derecha, abre «Informar de un problema». Describe lo que hacías antes de que fallara. Tu proyecto actual, datos del navegador y la actividad reciente se adjuntan al informe. Si el editor sufre un error inesperado, el mismo formulario se abre solo, con los detalles del error.
 
-## Información de versión y licencia
+## Ver también
 
-**Ayuda → Acerca de** muestra la versión exacta que estás ejecutando, junto con los detalles de la compilación, la licencia (Logigator es software libre bajo la **GNU AGPL v3**) y enlaces al repositorio de código fuente y a la política de privacidad.
-
-## Consulta también
-
-- [Tablero y herramientas](docs:board-and-tools): moverse, colocar componentes, seleccionar y borrar
-- [Componentes y opciones](docs:components-and-options): los bloques de construcción y cómo configurarlos
-- [Cables y conexiones](docs:wires-and-connections): conectar componentes en circuitos funcionales
-- [Simulación](docs:simulation): ejecutar tu circuito e interactuar con él
-- [Atajos de teclado](docs:shortcuts): cada asignación y cómo cambiarla
+- [Tablero y herramientas](docs:board-and-tools): moverse, colocar, seleccionar y borrar
+- [Componentes y opciones](docs:components-and-options): todas las piezas y sus opciones
+- [Simulación](docs:simulation): hacer funcionar un circuito
+- [Atajos de teclado](docs:shortcuts): todos los atajos y cómo cambiarlos

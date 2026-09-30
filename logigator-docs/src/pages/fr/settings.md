@@ -1,43 +1,27 @@
-# Paramètres et apparence
+# Paramètres
 
-Logigator dispose d'une poignée de préférences pour adapter l'éditeur à vos goûts. Vous les trouverez toutes au même endroit : ouvrez le **menu de compte** dans le coin supérieur droit de l'éditeur. (Sur un téléphone ou une tablette, ouvrez le menu depuis le coin supérieur gauche.)
+Tous les paramètres se trouvent dans le menu du compte, ouvert par le bouton de compte à l'extrémité droite de la barre de titre. Dans la disposition tactile, c'est l'avatar en haut à gauche.
 
-![Le menu de compte avec les paramètres de thème, de langue et de l'éditeur.](./images/account-menu.webp)
+![Le menu du compte avec le thème, la langue et les paramètres de l'éditeur.](./images/account-menu.webp)
 
-## Thème
+## Thème et langue
 
-Basculez entre une apparence **Claire** et **Sombre**. Le choix s'applique immédiatement à tout l'éditeur.
-
-## Langue
-
-Logigator est disponible en plusieurs langues :
-
-- **English** (anglais)
-- **Deutsch** (allemand)
-- **Français**
-- **Español** (espagnol)
-
-Choisissez-en une dans la liste déroulante **Langue** ; l'interface se met à jour aussitôt.
+Thème bascule entre Clair et Sombre. Sombre est la valeur par défaut. Langue propose English, Deutsch, Français et Español. Les deux s'appliquent immédiatement et valent aussi pour le site Logigator : changer la langue dans l'éditeur la change aussi sur le site, et inversement.
 
 ## Paramètres de l'éditeur
 
-Quatre bascules on/off modifient le comportement du plan de travail :
+| Paramètre                                      | Par défaut | Effet                                                                                                                    |
+| ---------------------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Afficher la grille                             | activé     | Dessine la grille de points. Les composants s'alignent sur la grille dans tous les cas.                                  |
+| Démarrage automatique de la simulation         | activé     | Lance le circuit dès que vous entrez en [simulation](docs:simulation). Désactivé, elle attend en pause au tick 0.        |
+| Faire glisser la sélection en mode Déplacement | activé     | Un glisser avec Déplacement qui commence dans la sélection déplace la sélection. Désactivé, tout glisser déplace la vue. |
+| Compteur FPS                                   | désactivé  | Affiche les images par seconde dans le coin du plan de travail.                                                          |
+| Afficher les conseils d'intégration            | activé     | Affiche un conseil la première fois que vous utilisez certains outils. Voir [Prise en main](docs:getting-started).       |
 
-- **Afficher la grille** — dessine la grille pointillée sur le plan de travail. Activée par défaut. Désactivez-la pour un canevas plus épuré ; les composants s'alignent tout de même sur la grille dans les deux cas.
-- **Démarrage automatique de la simulation** — lorsqu'il est activé (par défaut), appuyer sur **Démarrer la simulation** lance immédiatement l'exécution du circuit. Désactivez-le pour entrer en [simulation](docs:simulation) en pause, afin de la parcourir pas à pas dès le tout premier tick.
-- **Faire glisser la sélection en mode Déplacement** — lorsqu'il est activé (par défaut), faire glisser avec l'outil **Déplacement** depuis l'intérieur de la sélection courante déplace cette sélection plutôt que le plan de travail, pour repositionner un élément sans changer d'outil. Désactivez-le pour que chaque pression en mode Déplacement déplace le plan de travail.
-- **Compteur FPS** — affiche un petit indicateur d'images par seconde au-dessus du plan de travail. Désactivé par défaut ; pratique pour vérifier les performances sur un grand circuit.
-
-## Conseils d'intégration
-
-La bascule **Afficher les conseils d'intégration** contrôle les conseils au bon moment qui apparaissent la première fois que vous utilisez une fonctionnalité. Désactivez-la pour les faire taire, ou réactivez-la pour les revoir. Le même interrupteur est réinitialisé par **Aide → Afficher à nouveau les conseils**, qui propose aussi de nouveau le tutoriel guidé. Voir [Prise en main](docs:getting-started).
-
-## Où ces paramètres sont stockés
-
-Toutes ces préférences — thème, langue, les bascules de l'éditeur et vos réglages de conseils — sont enregistrées dans **ce navigateur**, sur cet appareil. Elles ne sont pas liées à votre compte, si bien qu'un autre navigateur ou appareil part des valeurs par défaut. Effacer les données de site du navigateur les réinitialise.
+Ces cinq paramètres, vos raccourcis clavier et l'état de la minicarte sont enregistrés uniquement dans ce navigateur. Un autre navigateur ou appareil démarre avec les valeurs par défaut, et effacer les données du site les réinitialise.
 
 ## Voir aussi
 
-- [Cloud et partage](docs:cloud) — votre compte, la connexion et la déconnexion, et le stockage cloud
-- [Prise en main](docs:getting-started) — le tutoriel guidé et une visite de l'éditeur
-- [Simulation](docs:simulation) — où l'option Démarrage automatique de la simulation prend effet
+- [Prise en main](docs:getting-started) : le tutoriel et les conseils
+- [Simulation](docs:simulation) : où agit le démarrage automatique
+- [Cloud et partage](docs:cloud) : connexion et compte

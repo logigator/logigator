@@ -473,8 +473,9 @@ const fr: TranslationSchema = {
     pages: {
       gettingStarted: 'Prise en main',
       boardAndTools: 'Plan de travail et outils',
+      phonesAndTablets: 'Téléphones et tablettes',
       shortcuts: 'Raccourcis clavier',
-      settings: 'Paramètres et apparence',
+      settings: 'Paramètres',
       componentsAndOptions: 'Composants et options',
       wiresAndConnections: 'Fils et connexions',
       customComponents: 'Composants personnalisés',

@@ -556,22 +556,23 @@ const en = {
       allTopics: 'All topics',
       sections: {
         basics: 'Basics',
-        building: 'Building Circuits',
+        building: 'Building circuits',
         simulation: 'Simulation',
-        projects: 'Projects & Cloud'
+        projects: 'Projects and cloud'
       },
       pages: {
-        gettingStarted: 'Getting Started',
-        boardAndTools: 'Board & Tools',
-        shortcuts: 'Keyboard Shortcuts',
-        settings: 'Settings & Appearance',
-        componentsAndOptions: 'Components & Options',
-        wiresAndConnections: 'Wires & Connections',
-        customComponents: 'Custom Components',
+        gettingStarted: 'Getting started',
+        boardAndTools: 'Board and tools',
+        phonesAndTablets: 'Phones and tablets',
+        shortcuts: 'Keyboard shortcuts',
+        settings: 'Settings',
+        componentsAndOptions: 'Components and options',
+        wiresAndConnections: 'Wires and connections',
+        customComponents: 'Custom components',
         simulation: 'Simulation',
-        inspection: 'Inspection & Watches',
-        savingAndFiles: 'Saving & Files',
-        cloud: 'Cloud & Sharing'
+        inspection: 'Inspection and watches',
+        savingAndFiles: 'Saving and files',
+        cloud: 'Cloud and sharing'
       }
     },
     changelog: {

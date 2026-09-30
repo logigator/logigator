@@ -23,7 +23,7 @@ describe('documentation search', () => {
   });
 
   /**
-   * Navigates, then settles: the index is built from eleven dynamic imports,
+   * Navigates, then settles: the index is built from twelve dynamic imports,
    * so a result appears some turns after the navigation resolves.
    *
    * The locale table is awaited *before* the navigation, and it is the one
@@ -61,7 +61,7 @@ describe('documentation search', () => {
     // that led there — and still does after a reload or a paste.
     expect(
       page().querySelector(
-        'a[href="/en/docs/simulation?q=run%20controls#the-run-controls"]'
+        'a[href="/en/docs/simulation?q=run%20controls#run-controls"]'
       )
     ).not.toBeNull();
     expect(page().querySelector('.ph-file-text')).toBeNull();
@@ -174,15 +174,13 @@ describe('documentation search', () => {
     const scrolls = vi.fn();
     Element.prototype.scrollIntoView = scrolls;
 
-    const page = await (
-      await navigator()
-    )('/en/docs/simulation#the-run-controls');
+    const page = await (await navigator())('/en/docs/simulation#run-controls');
 
     await vi.waitFor(() => {
       page();
       expect(scrolls).toHaveBeenCalled();
       const scrolled = scrolls.mock.instances[0] as HTMLElement;
-      expect(scrolled.textContent).toBe('The run controls');
+      expect(scrolled.textContent).toBe('Run controls');
     }, WAIT);
   });
 });

@@ -134,8 +134,8 @@ export function searchTerms(query: string): string[] {
  * pictures drop out, a link keeps its label, and the marks around emphasis,
  * code and headings go.
  *
- * A table's rule row goes and its cells are joined by a dash: five of the
- * eleven pages carry tables and the shortcut reference is one, so a quote left
+ * A table's rule row goes and its cells are joined by a dash: seven of the
+ * twelve pages carry tables and the shortcut reference is one, so a quote left
  * as pipes and dashes would be half the snippets a reader ever sees.
  *
  * It is deliberately not a parser. What it feeds is a substring match and a

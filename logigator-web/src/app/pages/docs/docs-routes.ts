@@ -49,8 +49,8 @@ export const docsRoutes: Routes = [
         seo: {
           titleKey: DOC_PAGE_TITLES[page],
           // The page's own opening paragraph, which the guard has already
-          // loaded — eleven pages sharing the site's description is the
-          // duplicate a search engine reports, and eleven more locale keys
+          // loaded — twelve pages sharing the site's description is the
+          // duplicate a search engine reports, and twelve more locale keys
           // would be the same sentence written twice.
           description: () => docPageSummary(pageMarkdown(page)),
           ancestors: DOCS_TRAIL,

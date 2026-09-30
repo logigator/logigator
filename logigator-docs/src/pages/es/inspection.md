@@ -1,46 +1,31 @@
 # Inspección y monitores
 
-Algunos componentes te permiten mirar dentro de ellos mientras tu circuito se ejecuta. Puedes leer el contenido de una memoria en la dirección que está leyendo actualmente, o abrir una vista interactiva y en directo del circuito interno de un componente personalizado.
+Durante una [simulación](docs:simulation), en marcha o en pausa, dos tipos de componente se pueden abrir para ver su interior. Un clic en una ROM muestra su contenido, con la palabra que está leyendo resaltada. Un clic en un componente personalizado abre un monitor, una vista en directo de su circuito interno.
 
-![Una ventana de monitor abierta sobre un circuito en ejecución.](./images/inspection-showcase.webp)
+![Una ventana de monitor junto al circuito en marcha al que pertenece.](./images/inspection-showcase.webp)
 
-La inspección solo está disponible **mientras se ejecuta una [simulación](docs:simulation)**. Entra primero en la simulación y luego toca un componente que admita inspección para abrir su vista. Tocarlo de nuevo trae la misma vista de vuelta al frente, y salir de la simulación lo cierra todo.
+En el escritorio, cada vista se abre en una ventana que puedes mover y cambiar de tamaño. Otro clic en el componente trae su ventana al frente. En la [vista táctil](docs:phones-and-tablets), las vistas de ROM comparten un panel en la parte inferior de la pantalla, y un monitor ocupa toda la pantalla. Al salir de la simulación se cierran todas.
 
-En el escritorio, estas vistas se abren como ventanas flotantes que puedes arrastrar y apilar sobre el tablero. En teléfonos y pantallas estrechas aparecen en su lugar como un panel que se desliza hacia arriba desde abajo, y los monitores ocupan toda la pantalla: el circuito en ejecución permanece visible e interactivo detrás de ellos.
+## Contenido de una ROM
 
-## Inspeccionar el contenido de una memoria
+![La vista de la ROM siguiendo la dirección mientras cambia.](./images/rom-inspection.webp)
 
-Toca una **ROM** mientras la simulación se ejecuta para abrir un visor de solo lectura de sus datos almacenados. La palabra que el circuito está **direccionando actualmente** se resalta y se actualiza en directo a medida que cambia la dirección, para que puedas seguir exactamente qué está devolviendo la memoria al circuito.
+La vista es de solo lectura; el contenido se cambia al editar, en los ajustes de la ROM. La palabra de la dirección actual está resaltada, y con «Seguir» (activado por defecto) la tabla se desplaza a medida que cambia la dirección. La línea de abajo muestra la dirección y el valor de la celda resaltada. Un clic en otra celda muestra esa hasta el siguiente cambio de dirección.
 
-![La ventana de inspección de memoria con la palabra direccionada resaltada.](./images/rom-inspection.webp)
+Los botones sobre la tabla eligen Palabras o Bytes y la base: Hex, Decimal, Octal o Binario. Para ir a una dirección, escríbela en hexadecimal en el campo «Dirección…». «Copiar» pone toda la tabla en el portapapeles como texto, en la vista y la base elegidas.
 
-El visor es solo para leer: aquí no puedes cambiar el contenido. Sus controles te permiten elegir cómo se muestran los datos:
+## Monitores
 
-- **Palabras / Bytes**: muestra cada valor almacenado entero, o dividido en bytes individuales.
-- **Hex / Decimal / Octal / Binario**: la base numérica en que se muestra cada valor.
-- **Ir a la dirección**: salta directamente a una dirección específica.
-- **Seguir**: mantiene la palabra direccionada actualmente desplazada a la vista a medida que la dirección se mueve.
+![Un monitor que ha bajado de Outer a Inner, con la ruta en el título.](./images/inspection-window-multilayer.webp)
 
-Una lectura de **Dirección** y **Valor** muestra la dirección de la palabra resaltada y su contenido.
+Un monitor dibuja el circuito interno del componente con los mismos cables iluminados que el tablero. Dentro puedes desplazar la vista, hacer zoom y usar los interruptores y botones que contiene. Controlan la simulación real, así que el resto del circuito reacciona.
 
-## Monitorizar el circuito interno de un componente personalizado
+Un clic en un componente personalizado dentro de un monitor abre su circuito en la misma ventana, y el título muestra la ruta, por ejemplo Outer › Inner. Haz clic en un nombre anterior para volver a subir. Una ROM dentro de un monitor abre su propia vista.
 
-Toca un [componente personalizado](docs:custom-components) colocado mientras la simulación se ejecuta para abrir un **monitor**: una vista en directo del circuito que hay dentro de él. Los cables y puertos internos se iluminan exactamente como los alimenta el circuito en ejecución, para que puedas ver qué está ocurriendo un nivel más abajo sin desempaquetar el componente.
+Si el monitor avisa de que el circuito interno no coincide con la simulación compilada, el componente se cambió después de iniciar la simulación. Sal de la simulación y vuelve a iniciarla.
 
-![Una ventana de monitor con un rastro de migas de pan hacia un componente anidado.](./images/inspection-window-multilayer.webp)
+## Ver también
 
-Un monitor es interactivo:
-
-- **Acciona sus entradas**: haz clic en un **interruptor** o un **botón de pulso**, o mantén pulsado un **botón**, dentro del circuito monitorizado para operarlo, igual que en el tablero principal. Acciona la simulación real en ejecución, así que el efecto se propaga al resto de tu circuito.
-- **Profundiza en componentes anidados**: toca un componente personalizado dentro del monitor para descender a _su_ circuito interno. Un rastro de **migas de pan** en la parte superior muestra a qué profundidad estás; haz clic en un paso anterior para volver a salir.
-- **Desplázate y haz zoom**: arrastra para moverte por la vista interna y desplaza o pellizca para hacer zoom, igual que en el tablero.
-
-Si un componente no se puede monitorizar, verás un breve mensaje: puede que no tenga **circuito interno** para inspeccionar, o que su circuito interno ya no coincida con la simulación en ejecución; en ese caso, **reinicia la simulación** e inténtalo de nuevo.
-
-> **Pantallas compactas:** los monitores se abren como una vista a pantalla completa con un botón de retroceso en lugar del botón de cerrar de la ventana; las migas de pan aún te permiten retroceder por los niveles anidados.
-
-## Consulta también
-
-- [Simulación](docs:simulation): ejecutar tu circuito e interactuar con él
-- [Componentes personalizados](docs:custom-components): construir y usar componentes reutilizables
-- [Componentes y opciones](docs:components-and-options): memorias, interruptores, botones y otros bloques de construcción
+- [Simulación](docs:simulation): hacer funcionar un circuito
+- [Componentes personalizados](docs:custom-components): construir los componentes que observas
+- [Componentes y opciones](docs:components-and-options): opciones y contenido de una ROM

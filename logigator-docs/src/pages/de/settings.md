@@ -1,43 +1,27 @@
-# Einstellungen & Darstellung
+# Einstellungen
 
-Logigator hat eine Handvoll Einstellungen, um den Editor an deinen Geschmack anzupassen. Du findest sie alle an einem Ort: Öffne das **Account-Menü** in der oberen rechten Ecke des Editors. (Auf einem Smartphone oder Tablet öffnest du das Menü oben links.)
+Alle Einstellungen findest du im Account-Menü, das du mit der Account-Schaltfläche am rechten Ende der Titelleiste öffnest. In der Touch-Ansicht ist es der Avatar oben links.
 
-![Das Account-Menü mit Design-, Sprach- und Editor-Einstellungen.](./images/account-menu.webp)
+![Das Account-Menü mit Design, Sprache und Editor-Einstellungen.](./images/account-menu.webp)
 
-## Design
+## Design und Sprache
 
-Wechsle zwischen einer **hellen** und einer **dunklen** Darstellung. Die Wahl wird sofort im gesamten Editor angewendet.
-
-## Sprache
-
-Logigator ist in mehreren Sprachen verfügbar:
-
-- **English** (Englisch)
-- **Deutsch**
-- **Français** (Französisch)
-- **Español** (Spanisch)
-
-Wähle eine aus dem **Sprache**-Dropdown; die Oberfläche aktualisiert sich sofort.
+Design wechselt zwischen Hell und Dunkel. Standard ist Dunkel. Unter Sprache stehen English, Deutsch, Français und Español zur Wahl. Beides wirkt sofort und gilt auch für die Logigator-Website: Stellst du im Editor die Sprache um, ändert sie sich auch auf der Website, und umgekehrt.
 
 ## Editor-Einstellungen
 
-Vier Ein/Aus-Schalter ändern das Verhalten der Arbeitsfläche:
+| Einstellung                         | Standard | Was sie bewirkt                                                                                                          |
+| ----------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Raster anzeigen                     | an       | Zeichnet das Punktraster. Komponenten rasten in beiden Fällen ein.                                                       |
+| Simulation automatisch starten      | an       | Lässt die Schaltung laufen, sobald du die [Simulation](docs:simulation) betrittst. Aus wartet sie pausiert bei Tick 0.   |
+| Auswahl im Schwenkmodus verschieben | an       | Ein Ziehen mit „Schwenken“, das in der Auswahl beginnt, verschiebt die Auswahl. Aus verschiebt jedes Ziehen die Ansicht. |
+| FPS-Anzeige                         | aus      | Zeigt die Bilder pro Sekunde in der Ecke der Arbeitsfläche.                                                              |
+| Einführungstipps anzeigen           | an       | Zeigt einen Tipp, wenn du bestimmte Werkzeuge zum ersten Mal benutzt. Siehe [Einstieg](docs:getting-started).            |
 
-- **Raster anzeigen** — zeichnet das gepunktete Raster auf der Arbeitsfläche. Standardmäßig an. Schalte es aus für eine aufgeräumtere Fläche; Komponenten rasten so oder so am Raster ein.
-- **Simulation automatisch starten** — wenn an (der Standard), beginnt ein Druck auf **Simulation starten** sofort mit dem Laufenlassen der Schaltung. Schalte es aus, um die [Simulation](docs:simulation) pausiert zu betreten, sodass du sie vom allerersten Tick an durchsteppen kannst.
-- **Auswahl im Schwenkmodus verschieben** — wenn an (der Standard), verschiebt ein Ziehen mit dem Werkzeug **Schwenken** aus der aktuellen Auswahl heraus diese Auswahl statt der Arbeitsfläche, sodass du etwas neu positionieren kannst, ohne das Werkzeug zu wechseln. Schalte es aus, damit jeder Druck im Schwenkmodus die Arbeitsfläche bewegt.
-- **FPS-Anzeige** — zeigt eine kleine Bilder-pro-Sekunde-Anzeige über der Arbeitsfläche. Standardmäßig aus; praktisch, um die Leistung auf einer großen Schaltung zu prüfen.
-
-## Einführungstipps
-
-Der Schalter **Einführungstipps anzeigen** steuert die Just-in-Time-Hinweise, die beim ersten Verwenden einer Funktion erscheinen. Schalte ihn aus, um sie stummzuschalten, oder wieder an, um sie erneut zu sehen. Derselbe Schalter wird durch **Hilfe → Tipps erneut anzeigen** zurückgesetzt, was auch das geführte Tutorial erneut anbietet. Siehe [Einstieg](docs:getting-started).
-
-## Wo diese Einstellungen gespeichert werden
-
-All diese Einstellungen — Design, Sprache, die Editor-Schalter und deine Tipp-Einstellungen — werden in **diesem Browser**, auf diesem Gerät gespeichert. Sie sind nicht an deinen Account gebunden, sodass ein anderer Browser oder ein anderes Gerät mit den Standardwerten beginnt. Das Löschen der Website-Daten des Browsers setzt sie zurück.
+Diese fünf Einstellungen, deine Tastaturbefehle und der Zustand der Minimap werden nur in diesem Browser gespeichert. Ein anderer Browser oder ein anderes Gerät beginnt mit den Standardwerten, und das Löschen der Website-Daten setzt sie zurück.
 
 ## Siehe auch
 
-- [Cloud & Teilen](docs:cloud) — dein Account, An- und Abmelden und Cloud-Speicher
-- [Einstieg](docs:getting-started) — das geführte Tutorial und ein Rundgang durch den Editor
-- [Simulation](docs:simulation) — wo die Option „Simulation automatisch starten“ wirkt
+- [Einstieg](docs:getting-started): das Tutorial und die Tipps
+- [Simulation](docs:simulation): wo „Simulation automatisch starten“ wirkt
+- [Cloud und Teilen](docs:cloud): Anmeldung und dein Account

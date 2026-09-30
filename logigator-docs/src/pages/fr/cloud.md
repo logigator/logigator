@@ -1,66 +1,55 @@
 # Cloud et partage
 
-Votre compte Logigator conserve projets et composants dans le cloud, accessibles depuis n'importe quel appareil — et vous permet de les partager avec un lien. Tout dans l'éditeur fonctionne sans compte ; la connexion ajoute le stockage cloud et le partage.
+Avec un compte Logigator, projets et composants personnalisés sont stockés dans le cloud et s'ouvrent sur tout appareil où vous êtes connecté. Les documents cloud peuvent être partagés par lien ou publiés dans la communauté sur le site Logigator. Tout le reste de l'éditeur fonctionne sans compte.
 
-## Se connecter et votre compte
+## Se connecter et se déconnecter
 
-Ouvrez le menu de compte dans le coin supérieur droit. Lorsque vous êtes déconnecté, il propose **Se connecter** ; lorsque vous êtes connecté, il affiche votre **Compte** et une option **Se déconnecter**, aux côtés des paramètres **Thème** et **Langue** (voir [Paramètres et apparence](docs:settings)).
+Le menu du compte, à l'extrémité droite de la barre de titre, affiche « Se connecter » et « S'inscrire » tant que vous n'êtes pas connecté. Les deux ouvrent le site Logigator dans un nouvel onglet, et l'éditeur remarque de lui-même que vous vous y êtes connecté. Une fois connecté, le menu affiche « Compte », qui ouvre votre page de compte sur le site, et « Se déconnecter ».
 
-Se connecter vous donne :
+Si un projet ou un composant cloud a des modifications non enregistrées au moment de la déconnexion, l'éditeur demande s'il faut d'abord enregistrer : « Enregistrer et se déconnecter », « Se déconnecter sans enregistrer » ou « Annuler ». Après la déconnexion, un projet cloud ouvert est remplacé par un brouillon vide, et les onglets des composants cloud se ferment. Les projets et composants locaux ne sont pas touchés.
 
-- Le **stockage cloud** pour les projets et composants personnalisés, disponible sur chaque appareil depuis lequel vous vous connectez.
-- Des **liens de partage** pour vos projets et composants cloud.
+## Local et cloud
 
-Se déconnecter efface votre bibliothèque cloud de cette session ; vos projets locaux (du navigateur) restent en place.
+Les documents locaux vivent dans ce navigateur et disparaissent si ses données de site sont effacées. Les documents cloud vivent dans votre compte. L'étiquette à côté du nom du projet indique lequel des deux est ouvert, et Fichier → Ouvrir les liste dans des onglets séparés, Projets locaux et Projets cloud. Si vous êtes connecté, la fenêtre s'ouvre sur Projets cloud.
 
-## Stockage local vs. cloud
+![La fenêtre « Ouvrir un projet » sur l'onglet « Projets cloud ».](./images/open-cloud.webp)
 
-Chaque projet et composant personnalisé réside dans l'un de deux endroits :
+Sur le site, Mes projets et Mes composants listent aussi vos documents cloud. Vous pouvez les y créer, renommer, partager, supprimer et les ouvrir dans l'éditeur.
 
-- **Local** — stocké dans le navigateur que vous utilisez. Rapide et sans compte, mais lié à ce seul navigateur et non sauvegardé.
-- **Cloud** — stocké dans votre compte. Accessible depuis n'importe quel appareil une fois connecté.
+## Téléverser vers le cloud
 
-La puce à côté du nom du projet indique lequel des deux le projet ouvert utilise (**Local**, **Cloud**, ou **Brouillon** s'il n'a pas encore été enregistré). Voir [Enregistrement et fichiers](docs:saving-and-files) pour le déroulement de l'enregistrement.
+Pour déplacer un projet local enregistré vers votre compte, choisissez Fichier → Téléverser vers le cloud, ou le bouton de téléversement sur sa ligne dans la fenêtre « Ouvrir un projet ». Pour enregistrer directement un brouillon dans le cloud, choisissez Cloud dans la fenêtre « Enregistrer ». Pour un composant personnalisé local, utilisez « Téléverser vers le cloud » dans sa carte de paramètres.
 
-La boîte de dialogue **Fichier → Ouvrir** garde les deux séparés dans des onglets distincts — **Projets locaux** et **Projets cloud** — plus un onglet **À partir d'un fichier** pour importer un fichier de circuit. Si vous êtes déconnecté, l'onglet Projets cloud vous invite à vous connecter.
+Un projet cloud ne peut utiliser que des composants cloud. Si le vôtre en utilise des locaux, la fenêtre les liste et les téléverse avec lui. Elle demande aussi qui peut ouvrir ce que vous téléversez, Tout le monde étant présélectionné, et le même choix s'applique aux composants téléversés. Téléverser déplace les documents : les copies locales sont supprimées.
 
-![La boîte de dialogue Ouvrir un projet, onglet Projets cloud.](./images/open-cloud.webp)
+![La fenêtre « Téléverser vers le cloud » listant un composant qui sera téléversé aussi.](./images/upload-to-cloud.webp)
 
-## Déplacer un travail vers le cloud
+## Partager
 
-Il y a deux façons d'amener un projet dans votre bibliothèque cloud :
+Fichier → Partager ouvre la fenêtre de partage d'un projet cloud. Le bouton « Partager » sur une ligne de l'onglet Projets cloud fait de même, et un composant cloud a « Partager » dans sa carte de paramètres. Les documents locaux doivent d'abord être téléversés.
 
-1. **Enregistrer un Brouillon directement dans le cloud** — lorsque vous enregistrez un nouveau projet pour la première fois, choisissez **Destination : Cloud** dans la boîte de dialogue d'enregistrement.
-2. **Téléverser un projet local existant** — avec un projet Local enregistré ouvert, choisissez **Fichier → Téléverser vers le cloud**. Vous pouvez aussi téléverser un projet depuis la liste dans la boîte de dialogue **Ouvrir**.
+![La fenêtre de partage d'un composant.](./images/share-component.webp)
 
-Le téléversement _déplace_ le projet du stockage local vers votre bibliothèque cloud. Si le projet utilise des composants personnalisés locaux, ceux-ci sont publiés dans votre bibliothèque cloud en même temps que lui — un projet cloud ne peut contenir que des composants cloud, si bien que chacun est d'abord téléversé puis référencé. La boîte de dialogue de téléversement liste exactement quels composants seront publiés avant que vous ne confirmiez.
+« Qui peut l'ouvrir » propose trois choix, et chaque changement s'applique immédiatement :
 
-Les composants personnalisés peuvent être déplacés vers le cloud de la même façon, depuis leur action dans le panneau de paramètres.
+| Choix                       | Qui peut l'ouvrir                                                                                                              |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Toi uniquement              | Personne d'autre. Le lien n'est pas affiché.                                                                                   |
+| Toute personne avec le lien | Quiconque a le lien. Le document reste hors des listes de la communauté et des moteurs de recherche.                           |
+| Tout le monde               | Tout le monde. Le document figure dans la communauté et peut être trouvé par les moteurs de recherche, dès qu'il a du contenu. |
 
-![La boîte de dialogue Téléverser vers le cloud listant les composants qui seront publiés.](./images/upload-to-cloud.webp)
+Le lien de partage mène à la page du document sur le site Logigator. Le bouton « Partager » le transmet au menu de partage de votre appareil, ou le copie s'il n'y en a pas. « Intégrer » fournit un extrait en Markdown, HTML ou BBCode, avec une image du circuit renvoyant vers sa page, à coller dans un message de forum ou un wiki. « Voir la page communautaire » ouvre cette page.
 
-## Partager un projet
+« Régénérer le lien » remplace le lien, et l'ancien cesse aussitôt de fonctionner pour tous ceux qui l'ont. Ce n'est proposé que pour « Toute personne avec le lien » : l'adresse d'un document publié est son lien, et un document privé n'affiche pas de lien. Passer un document de « Toute personne avec le lien » à « Toi uniquement » puis revenir garde le même lien.
 
-Une fois qu'un projet est dans le cloud, **Fichier → Partager** ouvre la boîte de dialogue de partage. (Le partage n'est disponible que pour les projets cloud ; téléversez d'abord un projet local.)
+## Ouvrir le lien de quelqu'un d'autre
 
-- **Qui peut l'ouvrir** — **Toi uniquement** (personne d'autre ne peut l'ouvrir, et son lien n'est pas affiché), **Toute personne avec le lien** (quiconque détient le lien peut ouvrir votre projet **en lecture seule** et **le cloner dans sa propre bibliothèque**) ou **Tout le monde** (dans les listes communautaires et indexé par les moteurs de recherche).
-- **Lien de partage** — la page du projet sur le site, que le destinataire ouvre. Utilisez **Copier le lien** pour le récupérer. Un projet privé garde son lien : la ligne explique pourquoi il n'est pas affiché, et dès que vous choisissez **Toute personne avec le lien**, c'est la même adresse qui sert de nouveau.
-- **Régénérer le lien** — remplace le lien immédiatement. Toute personne utilisant encore l'ancien perd l'accès. L'action n'est proposée que lorsque le projet est sur **Toute personne avec le lien** : l'adresse d'une page publiée _est_ ce lien, et un projet privé n'affiche pas son lien du tout — repassez donc d'abord sur **Toute personne avec le lien**.
+Un lien de partage ouvre la page du document sur le site, avec « Ouvrir dans l'éditeur » et « Enregistrer une copie ». « Enregistrer une copie » vous demande de vous connecter, copie le document dans votre bibliothèque cloud et ouvre la copie. Pour les documents réglés sur Tout le monde, la page permet aussi d'ajouter une étoile.
 
-Les composants personnalisés cloud peuvent être partagés de la même façon depuis le panneau de paramètres.
-
-![La boîte de dialogue de partage avec le sélecteur de visibilité et le lien de partage.](./images/share-component.webp)
-
-### Ce que voit le destinataire
-
-Quelqu'un qui ouvre votre lien de partage obtient une copie en **lecture seule** — la puce indique **Partagé** et il ne peut ni enregistrer de modifications par-dessus les vôtres ni l'exporter vers un fichier. Pour se l'approprier, il le **clone** dans sa bibliothèque, ce qui lui donne une copie complète et modifiable qu'il peut enregistrer et modifier librement. Son clone est indépendant ; les modifications ultérieures d'un côté ou de l'autre n'affectent pas l'autre.
-
-## Paramètres de cookies et de consentement
-
-Lorsque Logigator est servi avec sa bannière de consentement, vous pouvez revoir vos préférences de cookies et de consentement à tout moment depuis **Aide → Paramètres des cookies**. (Cette entrée n'apparaît que là où la bannière de consentement est disponible.)
+Dans l'éditeur, un document partagé porte l'étiquette Partagé. Vous pouvez le modifier et l'essayer, mais ni l'enregistrer ni l'exporter. Fichier → Cloner vers mes projets, ou Cloner vers mes composants pour un composant, enregistre une copie dans votre bibliothèque cloud. La copie est faite à partir de la version enregistrée par son propriétaire, sans vos modifications, et commence en « Toute personne avec le lien ». Les modifications ultérieures d'un côté n'affectent pas l'autre.
 
 ## Voir aussi
 
-- [Enregistrement et fichiers](docs:saving-and-files) — enregistrer localement, fichiers `.lgix` et export d'image
-- [Composants personnalisés](docs:custom-components) — les pièces réutilisables qui voyagent avec un projet partagé
-- [Paramètres et apparence](docs:settings) — thème, langue et paramètres de compte
+- [Enregistrement et fichiers](docs:saving-and-files) : enregistrement, fichiers et export d'image
+- [Composants personnalisés](docs:custom-components) : les composants qui voyagent avec un projet
+- [Paramètres](docs:settings) : le menu du compte

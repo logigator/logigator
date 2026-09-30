@@ -1,58 +1,39 @@
 # Fils et connexions
 
-Les fils transportent les signaux entre les ports des composants. Cette page explique comment les tracer, contrôler où ils se connectent, et relier des pièces sans fil grâce aux tunnels.
-
-![Des fils tracés entre des composants, avec des points de connexion.](./images/wire-circuit-display.webp)
+Les fils transportent les signaux entre les ports. Ils suivent la grille à l'horizontale et à la verticale, et un signal se propage dans chaque fil qui lui est relié.
 
 ## Tracer des fils
 
-Choisissez l'outil **Fil** dans la barre d'outils (raccourci `W`), puis faites glisser sur le plan de travail. Les fils sont toujours droits, horizontaux ou verticaux le long de la grille. Faites glisser en diagonale et le fil se route en **L** : la direction dans laquelle vous vous déplacez d'abord fixe le premier segment, et le coude suit votre curseur.
+Choisissez l'outil fil (`W`) et faites glisser. Un glisser en diagonale trace un L : la direction dans laquelle vous partez en premier devient la première branche. Pour changer d'avis, revenez au point de départ et repartez dans l'autre direction.
 
-Relâchez pour placer le fil. Une extrémité de fil qui atterrit sur un port de composant s'y connecte automatiquement. Pendant que vous faites glisser, un segment qui traverserait le corps d'un composant devient rouge et ne sera pas placé — contournez-le à la place.
+Un fil peut partir d'un port, d'une jonction ou de n'importe quel point d'un autre fil, et il se connecte partout où il se termine sur un port. Pendant le glisser, une branche qui traverserait un composant devient rouge. Relâcher avec une branche rouge ne place rien.
 
-Pour prolonger un tracé, tracez simplement un autre fil en partant de l'extrémité d'un fil existant. Les fils qui se rejoignent bout à bout fusionnent en un seul chemin connecté.
+Un fil tracé par-dessus un fil existant fusionne avec lui, et deux fils qui se rejoignent bout à bout dans le même alignement n'en font plus qu'un.
 
-## Jonctions : quand les fils se connectent
+## Où les fils se connectent
 
-Là où les fils se rencontrent, Logigator suit une règle simple pour que vous gardiez le contrôle de votre circuit :
+Un fil qui se termine sur un autre fil s'y connecte, et un fil qui passe sur la pointe d'un port se connecte à ce port. Deux fils qui ne font que se croiser, sans que l'un se termine là, restent séparés. Vous pouvez ainsi faire passer des fils les uns sur les autres sans les relier.
 
-- Un fil qui **se termine sur** un autre fil s'y connecte. Un petit **point de connexion** marque la jonction.
-- Deux fils qui se **croisent** simplement — sans que l'un se termine au croisement — passent l'un sur l'autre **sans** se connecter. Il n'y a pas de point, et aucun signal ne circule entre eux.
+Un point de connexion apparaît partout où trois extrémités de fil et pointes de port ou plus se rejoignent. Un simple croisement n'a pas de point.
 
-Cela vous permet de router librement des fils les uns par-dessus les autres sans créer de connexions accidentelles.
+![Deux croisements : celui de gauche séparé, celui de droite connecté.](./images/wire-junction.webp)
 
-![Deux croisements : l’un sans point, l’autre relié par un point de connexion.](./images/wire-junction.webp)
+Pour connecter un croisement, appuyez dessus avec l'outil fil. Un point apparaît et les quatre branches sont reliées. Appuyez de nouveau sur le point pour les séparer. Au survol d'un croisement, vous voyez l'effet qu'aurait un appui. Un point où un fil se termine sur un autre ne se retire pas ainsi ; supprimez ou déplacez plutôt le fil.
 
-### Basculer un croisement
+## Tunnels
 
-Pour connecter deux fils qui ne font que se croiser, choisissez l'outil **Fil** et touchez le point de croisement : un point de connexion apparaît et les fils sont désormais reliés. Touchez à nouveau le même point pour les séparer. Survoler le croisement avec l'outil Fil prévisualise ce qu'un appui fera — le point qu'il ajouterait, ou le point existant qu'il retirerait.
+Un tunnel est relié à tous les autres tunnels du même plan de travail qui portent la même étiquette, comme si un fil les joignait. Utilisez-les pour faire passer une horloge ou un bus à travers un grand circuit. Chaque nouveau tunnel commence avec l'étiquette 0, donc deux nouveaux tunnels sont reliés jusqu'à ce que vous changiez l'un d'eux. Les étiquettes distinguent majuscules et minuscules et font 10 caractères au plus.
 
-Vous verrez aussi des points de connexion apparaître d'eux-mêmes partout où trois extrémités de fil ou plus (ou une extrémité de fil et un port de composant) se rejoignent. Ces points ne sont qu'un repère visuel montrant où les éléments sont électriquement connectés ; vous ne les placez ni ne les sélectionnez.
+Les tunnels ne se relient qu'à l'intérieur d'un même circuit. Un tunnel dans un composant personnalisé ne se relie jamais à un tunnel extérieur.
 
-## Inverser un port
+![Un interrupteur qui allume une LED à travers deux tunnels de même étiquette.](./images/tunnel.webp)
 
-Avec l'outil **Fil**, vous pouvez aussi toucher directement le port d'un composant pour inverser le signal à cet endroit — une petite **bulle d'inversion** apparaît sur le port. Cela est traité en détail sur la page [Composants et options](docs:components-and-options).
+## Réparer les fils
 
-## Tunnels : connexions sans fil
-
-Un **Tunnel** connecte des points de votre plan de travail sans qu'un fil ne coure entre eux. Chaque tunnel portant la même **étiquette** est électriquement relié, comme si un fil les reliait. Cela garde les plans de travail chargés bien ordonnés — par exemple, pour router une horloge ou un bus partagé à travers le circuit sans tracer de longs fils.
-
-Pour utiliser les tunnels :
-
-1. Placez un **Tunnel** depuis la catégorie **Basique** de la palette et câblez-le au signal que vous voulez transporter.
-2. Placez un autre Tunnel là où vous voulez que ce signal réapparaisse.
-3. Sélectionnez chaque Tunnel et donnez-leur la **même Étiquette** dans la carte de paramètres.
-
-Tous les tunnels avec des étiquettes correspondantes se comportent comme un seul réseau connecté ; les tunnels avec des étiquettes différentes restent indépendants.
-
-![Deux tunnels portant la même étiquette, sans fil entre eux.](./images/tunnel.webp)
-
-## Couper et réagencer les fils
-
-L'outil **Sélection** déplace et retire les fils avec tout ce que vous sélectionnez d'autre, et son mode ciseaux rogne un fil exactement au bord de votre cadre de sélection — pratique pour découper un fil d'un faisceau. L'outil **Gomme** supprime les fils sur lesquels vous cliquez ou faites glisser. Les deux sont traités dans [Plan de travail et outils](docs:board-and-tools).
+Édition → Réparer les fils recherche sur le plan de travail les défauts de fils, comme des morceaux qui se chevauchent, qui font se comporter les connexions de façon inattendue, et les corrige. Quand un circuit chargé présente de tels défauts, l'éditeur propose la réparation avec un bouton « Réparer les fils ». Vérifiez ensuite que le circuit fait toujours ce qu'il doit. Une réparation pendant une simulation arrête d'abord la simulation.
 
 ## Voir aussi
 
-- [Composants et options](docs:components-and-options) — les pièces que ces fils connectent, et l'inversion de port
-- [Simulation](docs:simulation) — exécuter le circuit et regarder les fils alimentés s'illuminer
-- [Plan de travail et outils](docs:board-and-tools) — l'outil Fil, sélectionner, couper et effacer
+- [Plan de travail et outils](docs:board-and-tools) : sélectionner, couper et effacer des fils
+- [Composants et options](docs:components-and-options) : inverser un port
+- [Simulation](docs:simulation) : voir les fils alimentés s'allumer

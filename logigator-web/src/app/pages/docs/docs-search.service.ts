@@ -32,7 +32,7 @@ interface SeededHits {
  * Full-text search over the documentation.
  *
  * The index is built out of the same per-language chunks the pages themselves
- * are — around 18 kB gzipped for all eleven, hashed and immutable, so it is
+ * are — around 18 kB gzipped for all twelve, hashed and immutable, so it is
  * paid once and the page a result opens is already downloaded. A generated
  * index would be the same prose a second time in the repository, going stale
  * whenever the copy is edited.

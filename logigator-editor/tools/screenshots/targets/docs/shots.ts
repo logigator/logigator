@@ -49,20 +49,9 @@ async function switchedFrames(
  * viewport-relative), a `locator`, or `frames` for an animated one. The editor
  * arrives freshly loaded, dark-themed, tips and changelog popup suppressed,
  * with an empty draft; circuits come from `circuits/*.json`.
- *
- * `intro-banner.webp` is absent: it is a designed banner, not a capture.
  */
 export const SHOTS: Shot[] = [
   // -- Chrome ---------------------------------------------------------------
-  {
-    name: 'menu-bar',
-    // The bars span the window, so the narrowest viewport crops them tightest.
-    context: { viewport: NARROW_VIEWPORT },
-    async run(ed) {
-      await ed.requireSingleRowToolBar();
-      return { clip: await ed.unionClip(['app-title-bar', 'app-tool-bar']) };
-    }
-  },
   {
     name: 'tool-buttons',
     async run(ed) {
@@ -109,15 +98,31 @@ export const SHOTS: Shot[] = [
       return { clip: await ed.unionClip('app-component-settings lg-card', 8) };
     }
   },
-
-  // -- Board ----------------------------------------------------------------
   {
-    name: 'wire-circuit-display',
+    // The touch layout, which a window of 64rem or narrower gets: a selected
+    // gate puts the action bar above the tool bar, so both show at once.
+    name: 'phone-layout',
+    context: { viewport: { width: 390, height: 760 } },
     async run(ed) {
-      await ed.load('wiring-showcase');
-      return { clip: await ed.contentClip({ pad: 2 }) };
+      await ed.load('half-adder');
+      await ed.focus('content', { paddingGrid: 4, maxZoom: BOARD_ZOOM });
+      // Left of the controls docked to the right edge, and above the bars at
+      // the bottom, so none of them covers the circuit.
+      const board = await ed.canvasBox();
+      await ed.centerContentAt({
+        x: (board.width - 96) / 2,
+        y: board.height * 0.4
+      });
+      const [gate] = await ed.componentsOfType('&');
+      await ed.select({
+        bounds: { ...ed.bodyPoint(gate), width: 0, height: 0 }
+      });
+      await ed.parkPointer();
+      return { clip: await ed.fullViewportClip() };
     }
   },
+
+  // -- Board ----------------------------------------------------------------
   {
     name: 'wire-junction',
     async run(ed) {
@@ -437,6 +442,26 @@ export const SHOTS: Shot[] = [
   },
 
   // -- Dialogs --------------------------------------------------------------
+  {
+    // A draft's first save while signed in: Cloud is preselected, which is
+    // what brings up the visibility choice below it.
+    name: 'save-project',
+    context: { cloud: true },
+    async run(ed) {
+      // A draft, not a loaded circuit: an import is stored as a local project
+      // straight away, and saving one opens no dialog.
+      await ed.menu(
+        'titleBar.menuBar.file.label',
+        'titleBar.menuBar.file.items.save.label'
+      );
+      const dialog = ed.dialog();
+      await dialog.locator('#save-project-name').fill('Half adder');
+      await dialog.locator('#save-project-visibility-label').waitFor();
+      await ed.parkPointer();
+      await ed.waitStable(dialog);
+      return { locator: dialog };
+    }
+  },
   {
     name: 'open-file',
     async run(ed) {

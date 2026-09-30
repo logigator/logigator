@@ -17,7 +17,13 @@ export interface DocSection {
 export const DOC_SECTIONS = [
   {
     id: 'basics',
-    pages: ['getting-started', 'board-and-tools', 'shortcuts', 'settings']
+    pages: [
+      'getting-started',
+      'board-and-tools',
+      'phones-and-tablets',
+      'shortcuts',
+      'settings'
+    ]
   },
   {
     id: 'building',

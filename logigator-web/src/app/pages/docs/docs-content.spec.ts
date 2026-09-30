@@ -11,7 +11,7 @@ import {
 import { headingSlug } from '@logigator/ui';
 import { loadDocPage } from './doc-content';
 
-/** Every authored page in every language: 11 × 4 documents. */
+/** Every authored page in every language: 12 × 4 documents. */
 const DOCUMENTS: { page: DocPageId; lang: LanguageId }[] = DOC_PAGE_IDS.flatMap(
   (page) => AVAILABLE_LANGUAGES.map(({ id }) => ({ page, lang: id }))
 );

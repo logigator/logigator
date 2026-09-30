@@ -1,82 +1,53 @@
-# Keyboard Shortcuts
+# Keyboard shortcuts
 
-Logigator is faster with the keyboard. Below are the default bindings, followed by how to change them.
+These are the default bindings, in the order Edit → Keyboard Shortcuts lists them. On a Mac, `⌘` works wherever the table says `Ctrl`, and `Ctrl` works as well.
 
-> On macOS, `Ctrl` shortcuts use the **⌘ Command** key instead — for example, Save is `⌘S`.
+## Default bindings
 
-## File
+| Action                                  | Default        |
+| --------------------------------------- | -------------- |
+| Save                                    | `Ctrl+S`       |
+| Open                                    | `Ctrl+O`       |
+| New Component                           | `Alt+N`        |
+| Undo                                    | `Ctrl+Z`       |
+| Redo                                    | `Ctrl+Shift+Z` |
+| Copy                                    | `Ctrl+C`       |
+| Cut                                     | `Ctrl+X`       |
+| Paste                                   | `Ctrl+V`       |
+| Delete                                  | `Delete`       |
+| Rotate Clockwise                        | `R`            |
+| Rotate Counter-Clockwise                | `Shift+R`      |
+| Move Selection Up / Down / Left / Right | arrow keys     |
+| Zoom In                                 | `Ctrl++`       |
+| Zoom Out                                | `Ctrl+-`       |
+| Zoom 100%                               | `Ctrl+0`       |
+| Pan                                     | `P`            |
+| Wire Tool                               | `W`            |
+| Select                                  | `S`            |
+| Erase                                   | `E`            |
+| Place Text                              | `T`            |
+| Cut Wires at Selection Edge (hold)      | `Alt`          |
+| Add to or Remove from Selection (hold)  | `Ctrl`         |
+| Start/Stop Simulation                   | `Enter`        |
+| Cancel                                  | `Escape`       |
 
-| Action        | Shortcut |
-| ------------- | -------- |
-| Save          | `Ctrl+S` |
-| Open          | `Ctrl+O` |
-| New Component | `Alt+N`  |
+Shortcuts do nothing while you type in a text field, except `Escape`. During a simulation, the editing shortcuts are switched off and `Escape` leaves the simulation.
 
-## Edit
+## Held keys
 
-| Action                   | Shortcut       |
-| ------------------------ | -------------- |
-| Undo                     | `Ctrl+Z`       |
-| Redo                     | `Ctrl+Shift+Z` |
-| Copy                     | `Ctrl+C`       |
-| Cut                      | `Ctrl+X`       |
-| Paste                    | `Ctrl+V`       |
-| Delete                   | `Delete`       |
-| Rotate Clockwise         | `R`            |
-| Rotate Counter-Clockwise | `Shift+R`      |
-| Move Selection Up        | `↑`            |
-| Move Selection Down      | `↓`            |
-| Move Selection Left      | `←`            |
-| Move Selection Right     | `→`            |
+The two actions marked "hold" act while the key is down instead of firing once. Hold `Alt` while releasing a selection box to cut the wires at its edge (see [Board and tools](docs:board-and-tools)). Hold `Ctrl` while clicking or drawing a box to add to the selection or remove from it. That works with Select, Pan and the Wire tool.
 
-## View
+## Changing a binding
 
-| Action    | Shortcut |
-| --------- | -------- |
-| Zoom In   | `Ctrl++` |
-| Zoom Out  | `Ctrl+-` |
-| Zoom 100% | `Ctrl+0` |
+![The keyboard shortcut manager.](./images/shortcut-manager.webp)
 
-## Tools
+Edit → Keyboard Shortcuts lists every action. Click the pencil next to one and press the new combination. `Escape` cancels the recording, which is why it can't be bound to anything else. A single modifier key such as `Alt` can only be bound to the two held actions.
 
-| Action                                 | Shortcut |
-| -------------------------------------- | -------- |
-| Pan                                    | `P`      |
-| Wire Tool                              | `W`      |
-| Select                                 | `S`      |
-| Erase                                  | `E`      |
-| Place Text                             | `T`      |
-| Cut Wires at Selection Edge (hold)     | `Alt`    |
-| Add to or Remove from Selection (hold) | `Ctrl`   |
+If the combination already belongs to another action, that action loses it and a message says which one. Reset puts one action back to its default, Unassign leaves it without a shortcut, and Reset All restores every default.
 
-## Interaction
-
-| Action                  | Shortcut |
-| ----------------------- | -------- |
-| Start / Stop Simulation | `Enter`  |
-| Cancel                  | `Escape` |
-
-## Held shortcuts
-
-Most shortcuts fire once when you press them. A few are **held** instead: you keep the key down while doing something else. The main one is **Cut Wires at Selection Edge** — hold `Alt` while dragging a selection box with the [select tool](docs:board-and-tools) and wires are cut at the box edge for as long as the key is down. The other one is **Add to Selection** — hold `Ctrl` (`⌘` on a Mac) while clicking a component or wire in the [wire tool](docs:board-and-tools) to add it to the selection, or to take it back out; without the key a click replaces the selection.
-
-## Changing your shortcuts
-
-Open **Edit → Keyboard Shortcuts** to see every action and its current binding.
-
-![The keyboard shortcut manager dialog.](./images/shortcut-manager.webp)
-
-For any action you can:
-
-- **Edit** — click it, then press the key combination you want. The manager records exactly what you press.
-- **Unassign** — leave an action with no shortcut at all.
-- **Reset** — restore that action's default binding, or use **Reset All** to restore every default.
-
-If you assign a combination that's already used by another action, it's taken away from that action (Logigator tells you which one) so no two actions ever share a binding.
-
-Your custom bindings are remembered in this browser. Clearing the browser's site data resets them to the defaults.
+Your bindings are stored in this browser. Clearing the site data resets them.
 
 ## See also
 
-- [Board & Tools](docs:board-and-tools) — the tools and actions these shortcuts trigger
-- [Getting Started](docs:getting-started) — a tour of the editor
+- [Board and tools](docs:board-and-tools): the tools and actions these keys trigger
+- [Simulation](docs:simulation): what Enter and Escape do there

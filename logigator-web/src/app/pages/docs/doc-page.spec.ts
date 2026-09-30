@@ -21,20 +21,20 @@ describe('the documentation pages', () => {
     )('/en/docs/getting-started');
 
     expect(page.querySelector('lg-markdown h1')?.textContent).toContain(
-      'Getting Started'
+      'Getting started'
     );
-    expect(page.textContent).toContain('A tour of the editor');
+    expect(page.textContent).toContain('The editor window');
   });
 
   it('follows a language switch, which is a navigation to the same page', async () => {
     const render = await markdownPageNavigator();
     expect((await render('/en/docs/cloud')).textContent).toContain(
-      'Cloud & Sharing'
+      'Cloud and sharing'
     );
 
     const german = await render('/de/docs/cloud');
-    expect(german.textContent).toContain('Cloud & Teilen');
-    expect(german.textContent).not.toContain('Cloud & Sharing');
+    expect(german.textContent).toContain('Cloud und Teilen');
+    expect(german.textContent).not.toContain('Cloud and sharing');
   });
 
   /**
@@ -85,7 +85,7 @@ describe('the documentation pages', () => {
     )('/en/docs/getting-started');
     const image = page.querySelector('lg-markdown img');
 
-    expect(image?.getAttribute('src')).toMatch(/intro-banner-\w+\.webp$/);
+    expect(image?.getAttribute('src')).toMatch(/board-overview-\w+\.webp$/);
   });
 
   it('lists every page on the index', async () => {

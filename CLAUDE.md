@@ -10,7 +10,7 @@ The repo root is a **shared Angular CLI workspace** + **Yarn 4 workspace** (core
 - `logigator-core/` — `@logigator/core`, rendering-free circuit code plus the origin-wide
   contracts; zero runtime dependencies
 - `logigator-contract/` — `@logigator/contract`, the API surface as zod schemas; zod only
-- `logigator-docs/` — `@logigator/docs`, the authored documentation: eleven pages of markdown in
+- `logigator-docs/` — `@logigator/docs`, the authored documentation: twelve pages of markdown in
   four locales, their screenshots, the page tree and the search matcher as pure data, plus the
   changelog and its parser; no dependencies at all
 - `logigator-api/` — NestJS on Fastify, API only
@@ -185,7 +185,7 @@ Angular 22 standalone components + PixiJS 8 canvas.
   editor's half of them — `docs-pages.ts` maps each id to its hashed markdown URL per language (`en`
   fallback, the changelog's hashed-import pattern) and to the title key it is shown under.
   `DocumentationService.open(pageId?, anchor?)` is the single deep-link entry point.
-  `DocsSearchService` is the viewer's search field: it fetches all eleven pages of the active
+  `DocsSearchService` is the viewer's search field: it fetches all twelve pages of the active
   language once, indexes them through the member's matcher, and the results replace the content
   pane.
 - `automation/` — programmatic control surface for scripts and agents, installed as

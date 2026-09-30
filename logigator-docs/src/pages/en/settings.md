@@ -1,43 +1,27 @@
-# Settings & Appearance
+# Settings
 
-Logigator has a handful of preferences for tailoring the editor to your taste. You'll find them all in one place: open the **account menu** in the top-right corner of the editor. (On a phone or tablet, open the menu from the top-left.)
+All settings are in the account menu, opened from the account button at the right end of the title bar. In the touch layout it is the avatar at the top left.
 
-![The account menu with the theme, language and editor settings.](./images/account-menu.webp)
+![The account menu with theme, language and editor settings.](./images/account-menu.webp)
 
-## Theme
+## Theme and language
 
-Switch between a **Light** and a **Dark** appearance. The choice applies immediately across the whole editor.
-
-## Language
-
-Logigator is available in several languages:
-
-- **English**
-- **Deutsch** (German)
-- **Français** (French)
-- **Español** (Spanish)
-
-Pick one from the **Language** dropdown; the interface updates right away.
+Theme switches between Light and Dark. Dark is the default. Language offers English, Deutsch, Français and Español. Both apply immediately, and both are shared with the Logigator website: changing the language in the editor changes it on the site too, and the other way round.
 
 ## Editor settings
 
-Four on/off toggles change how the board behaves:
+| Setting                    | Default | What it does                                                                                                   |
+| -------------------------- | ------- | -------------------------------------------------------------------------------------------------------------- |
+| Show Grid                  | on      | Draws the dot grid. Components snap to the grid either way.                                                    |
+| Auto-start simulation      | on      | Starts the circuit running as soon as you enter [simulation](docs:simulation). Off, it waits paused at tick 0. |
+| Drag selection in Pan mode | on      | A drag with the Pan tool that starts inside the selection moves the selection. Off, every drag pans.           |
+| FPS Counter                | off     | Shows frames per second in the corner of the board.                                                            |
+| Show onboarding tips       | on      | Shows a tip the first time you use certain tools. See [Getting started](docs:getting-started).                 |
 
-- **Show Grid** — draws the dotted grid on the board. On by default. Turn it off for a cleaner canvas; components still snap to the grid either way.
-- **Auto-start simulation** — when on (the default), pressing **Start simulation** begins running the circuit immediately. Turn it off to enter [simulation](docs:simulation) paused, so you can step through it from the very first tick.
-- **Drag selection in Pan mode** — when on (the default), dragging with the **Pan** tool from inside the current selection moves that selection instead of the board, so you can reposition something without switching tools. Turn it off to make every Pan press move the board.
-- **FPS Counter** — shows a small frames-per-second readout over the board. Off by default; handy when checking performance on a large circuit.
-
-## Onboarding tips
-
-The **Show onboarding tips** toggle controls the just-in-time hints that appear the first time you use a feature. Turn it off to silence them, or back on to see them again. The same switch is reset by **Help → Show tips again**, which also re-offers the guided tutorial. See [Getting Started](docs:getting-started).
-
-## Where these settings are stored
-
-All of these preferences — theme, language, the editor toggles and your tip settings — are saved in **this browser**, on this device. They aren't tied to your account, so a different browser or device starts from the defaults. Clearing the browser's site data resets them.
+These five settings, your keyboard shortcuts and the minimap's state are stored in this browser only. A different browser or device starts with the defaults, and clearing the site data resets them.
 
 ## See also
 
-- [Cloud & Sharing](docs:cloud) — your account, signing in and out, and cloud storage
-- [Getting Started](docs:getting-started) — the guided tutorial and a tour of the editor
-- [Simulation](docs:simulation) — where the Auto-start simulation option takes effect
+- [Getting started](docs:getting-started): the tutorial and tips
+- [Simulation](docs:simulation): where Auto-start simulation applies
+- [Cloud and sharing](docs:cloud): signing in and your account

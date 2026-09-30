@@ -24,7 +24,7 @@ interface ResultRow extends DocsSearchHit {
 /**
  * The search results, in place of the page the viewer would otherwise show.
  *
- * A row is a heading rather than a page: eleven pages would be a list of the
+ * A row is a heading rather than a page: twelve pages would be a list of the
  * navigation tree, where what a reader is after is the paragraph.
  */
 @Component({

@@ -1,66 +1,55 @@
-# Cloud & Sharing
+# Cloud and sharing
 
-Your Logigator account keeps projects and components in the cloud, reachable from any device — and lets you share them with a link. Everything in the editor works without an account; signing in adds cloud storage and sharing.
+With a Logigator account, projects and custom components are stored in the cloud and open on any device you sign in on. Cloud documents can be shared by link or published in the community on the Logigator website. Everything else in the editor works without an account.
 
-## Signing in and your account
+## Signing in and out
 
-Open the account menu in the top-right corner. When signed out it offers **Log In**; when signed in it shows your **Account** and a **Log Out** option, alongside the **Theme** and **Language** settings (see [Settings & Appearance](docs:settings)).
+The account menu at the right end of the title bar shows Log In and Sign Up while you are signed out. Both open the Logigator website in a new tab, and the editor notices by itself once you have signed in there. Signed in, the menu shows Account, which opens your account page on the website, and Log Out.
 
-Signing in gives you:
+If a cloud project or component has unsaved changes when you log out, the editor asks whether to save first: Save & Log Out, Log Out without Saving, or Cancel. After logging out, an open cloud project is replaced by an empty Draft and cloud components' tabs close. Local projects and components are not affected.
 
-- **Cloud storage** for projects and custom components, available on every device you log in from.
-- **Share links** for your cloud projects and components.
+## Local and cloud
 
-Logging out clears your cloud library from this session; your local (browser) projects stay put.
+Local documents live in this browser and are gone if its site data is cleared. Cloud documents live in your account. The chip next to the project name says which one the open project is, and File → Open lists them in separate tabs, Local Projects and Cloud Projects. The Open dialog starts on Cloud Projects when you are signed in.
 
-## Local vs. cloud storage
+![The Open dialog on the Cloud Projects tab.](./images/open-cloud.webp)
 
-Every project and custom component lives in one of two places:
+On the website, My projects and My components list your cloud documents as well. You can create, rename, share and delete them there, and open them in the editor.
 
-- **Local** — stored in the browser you're using. Fast and account-free, but tied to that one browser and not backed up.
-- **Cloud** — stored in your account. Reachable from any device once you sign in.
+## Uploading to the cloud
 
-The chip beside the project name shows which one the open project uses (**Local**, **Cloud**, or **Draft** if it hasn't been saved yet). See [Saving & Files](docs:saving-and-files) for the save flow.
+To move a saved local project to your account, choose File → Upload to cloud, or the upload button on its row in the Open dialog. To save a Draft to the cloud directly, pick Cloud in the Save dialog. For a local custom component, use Upload to cloud in its settings card.
 
-The **File → Open** dialog keeps the two apart in separate tabs — **Local Projects** and **Cloud Projects** — plus a **From File** tab for importing a circuit file. If you're signed out, the Cloud Projects tab prompts you to log in.
+A cloud project can only use cloud components. If yours uses local ones, the upload dialog lists them and uploads them along with it. The dialog also asks who can open the upload, with Everyone preselected, and the same choice applies to the uploaded components. Uploading moves the documents: the local copies are deleted.
 
-![The Open Project dialog on the Cloud Projects tab.](./images/open-cloud.webp)
+![The Upload to cloud dialog listing a component that will be uploaded too.](./images/upload-to-cloud.webp)
 
-## Moving work to the cloud
+## Sharing
 
-There are two ways to get a project into your cloud library:
+File → Share opens the share dialog for a cloud project. The Share button on a row of the Cloud Projects tab does the same, and a cloud component has Share in its settings card. Local documents have to be uploaded first.
 
-1. **Save a Draft straight to the cloud** — when you first save a new project, pick **Destination: Cloud** in the save dialog.
-2. **Upload an existing local project** — with a saved Local project open, choose **File → Upload to cloud**. You can also upload a project from the list in the **Open** dialog.
+![The share dialog for a component.](./images/share-component.webp)
 
-Uploading _moves_ the project out of local storage into your cloud library. If the project uses local custom components, those are published to your cloud library alongside it — a cloud project can only contain cloud components, so each one is uploaded first and then referenced. The upload dialog lists exactly which components will be published before you confirm.
+Who can open it has three choices, and each change applies right away:
 
-Custom components can be moved to the cloud the same way, from their action in the settings panel.
+| Choice               | Who can open it                                                                                            |
+| -------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Only you             | Nobody else. The link is not shown.                                                                        |
+| Anyone with the link | Whoever has the link. It stays out of the community listings and out of search engines.                    |
+| Everyone             | Everyone. The document is listed in the community and can be found by search engines, once it has content. |
 
-![The Upload to cloud dialog listing the components that will be published.](./images/upload-to-cloud.webp)
+The share link leads to the document's page on the Logigator website. The Share button hands it to your device's share menu, or copies it where there is none. Embed gives a snippet in Markdown, HTML or BBCode, with a picture of the circuit linking to its page, to paste into a forum post or a wiki. View the community page opens that page.
 
-## Sharing a project
+Regenerate link replaces the link, and the old one stops working at once for everyone who has it. It is only offered for Anyone with the link: a published document's address is its link, and a private one has no link on display. Switching a document from Anyone with the link to Only you and back keeps the same link.
 
-Once a project is in the cloud, **File → Share** opens the share dialog. (Sharing is only available for cloud projects; upload a local project first.)
+## Opening someone else's link
 
-- **Who can open it** — **Only you** (nobody else can open it, and its link is not shown), **Anyone with the link** (whoever holds the link can open your project **read-only** and **clone it into their own library**) or **Everyone** (listed in the community and indexed by search engines).
-- **Share link** — the project's own page on the site, which is what a recipient opens. Use **Copy link** to grab it. A private project keeps its link — the row says why it isn't shown, and picking **Anyone with the link** hands out that same address again.
-- **Regenerate link** — replaces the link immediately. Anyone still using the old one loses access. The action is offered only while the document is **Anyone with the link**: a published page's address _is_ that link, and a private document doesn't show its link at all — switch to **Anyone with the link** first.
+A share link opens the document's page on the website, with Open in editor and Save a copy. Save a copy asks you to sign in, copies the document into your cloud library and opens the copy. For documents set to Everyone, the page can also be starred.
 
-Cloud custom components can be shared the same way from the settings panel.
-
-![The share dialog with the visibility picker and the share link.](./images/share-component.webp)
-
-### What the recipient sees
-
-Someone opening your share link gets a **read-only** copy — the chip reads **Shared** and they can't save changes over yours or export it to a file. To make it their own, they **clone** it into their library, which gives them a full, editable copy they can save and edit freely. Their clone is independent; later edits on either side don't affect the other.
-
-## Cookie & consent settings
-
-When Logigator is served with its consent banner, you can revisit your cookie and consent preferences at any time from **Help → Cookie Settings**. (This entry only appears where the consent banner is available.)
+In the editor, a shared document carries the Shared chip. You can change it and try it out, but you can't save it or export it. File → Clone to my projects, or Clone to my components for a component, saves a copy to your cloud library. The copy is made from the version the owner saved, without your changes, and starts out as Anyone with the link. Later edits on either side don't affect the other.
 
 ## See also
 
-- [Saving & Files](docs:saving-and-files) — saving locally, `.lgix` files and image export
-- [Custom Components](docs:custom-components) — the reusable parts that travel with a shared project
-- [Settings & Appearance](docs:settings) — theme, language and account settings
+- [Saving and files](docs:saving-and-files): saving, files and image export
+- [Custom components](docs:custom-components): components that travel with a project
+- [Settings](docs:settings): the account menu

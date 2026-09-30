@@ -554,20 +554,21 @@ const de: TranslationSchema = {
         basics: 'Grundlagen',
         building: 'Schaltungen bauen',
         simulation: 'Simulation',
-        projects: 'Projekte & Cloud'
+        projects: 'Projekte und Cloud'
       },
       pages: {
         gettingStarted: 'Einstieg',
-        boardAndTools: 'Arbeitsfläche & Werkzeuge',
+        boardAndTools: 'Arbeitsfläche und Werkzeuge',
+        phonesAndTablets: 'Smartphones und Tablets',
         shortcuts: 'Tastaturbefehle',
-        settings: 'Einstellungen & Darstellung',
-        componentsAndOptions: 'Komponenten & Optionen',
-        wiresAndConnections: 'Leitungen & Verbindungen',
+        settings: 'Einstellungen',
+        componentsAndOptions: 'Komponenten und Optionen',
+        wiresAndConnections: 'Leitungen und Verbindungen',
         customComponents: 'Benutzerdefinierte Komponenten',
         simulation: 'Simulation',
-        inspection: 'Inspektion & Beobachtungen',
-        savingAndFiles: 'Speichern & Dateien',
-        cloud: 'Cloud & Teilen'
+        inspection: 'Inspektion und Beobachtungen',
+        savingAndFiles: 'Speichern und Dateien',
+        cloud: 'Cloud und Teilen'
       }
     },
     changelog: {

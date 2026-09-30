@@ -1,76 +1,66 @@
-# Arbeitsfläche & Werkzeuge
+# Arbeitsfläche und Werkzeuge
 
-Die Arbeitsfläche ist das Raster, auf dem du deine Schaltung baust. Diese Seite behandelt, wie du dich darauf bewegst und wie jedes Bearbeitungswerkzeug funktioniert.
+Die Arbeitsfläche ist das Raster, auf dem du baust. Komponenten und Leitungen rasten darauf ein, und die Statusleiste unten zeigt die Rasterposition unter dem Cursor.
 
-![Der Editor mit Komponentenpalette, Arbeitsfläche und Werkzeugleiste.](./images/board-overview.webp)
+## Bewegen
 
-## Sich auf der Arbeitsfläche bewegen
+Das Mausrad zoomt an der Zeigerposition, ebenso ein Wischen mit zwei Fingern oder Aufziehen auf dem Trackpad. Die Zoom-Schaltflächen in der Werkzeugleiste und Ansicht → Einzoomen, Auszoomen und Zoom 100% tun dasselbe in festen Stufen.
 
-- **Zoomen** — scrolle mit dem Mausrad über der Arbeitsfläche oder spreize die Finger auf einem Touch-Gerät. Du kannst auch die Zoom-Schaltflächen in der Werkzeugleiste, **Ansicht → Einzoomen / Auszoomen** oder **Ansicht → Zoom 100%** verwenden, um auf die tatsächliche Größe zurückzusetzen.
-- **Schwenken** — wähle das Werkzeug **Schwenken** (die Hand) und ziehe. Du kannst auch aus _jedem_ Werkzeug heraus schwenken, indem du mit der **rechten oder mittleren Maustaste** ziehst, sodass du selten das Werkzeug wechseln musst, nur um die Ansicht zu verschieben. Ein Ziehen aus der aktuellen Auswahl heraus verschiebt diese Auswahl statt der Arbeitsfläche — schalte das unter **Auswahl im Schwenkmodus verschieben** in den [Editor-Einstellungen](docs:settings) aus.
-- **Touch** — ziehe jederzeit mit zwei Fingern zum Schwenken und spreize sie zum Zoomen; ein Ziehen mit einem Finger schwenkt nur, solange das Werkzeug Schwenken aktiv ist.
+Zum Verschieben der Ansicht ziehst du mit der rechten oder mittleren Maustaste. Das funktioniert in jedem Werkzeug. Ist das Werkzeug „Schwenken“ aktiv, verschiebt auch Ziehen mit der linken Taste.
 
-Die **Statusleiste** am unteren Rand zeigt stets eine kurze Erinnerung daran, was das aktive Werkzeug tut, sowie die Position deines Cursors auf dem Raster.
+Die Minimap in der rechten unteren Ecke zeigt die ganze Schaltung mit einem Rahmen um den sichtbaren Ausschnitt. Klicke oder ziehe darin, um die Ansicht dorthin zu bewegen. „Minimap ausblenden“ klappt sie ein, und der Editor merkt sich das.
 
-## Die Werkzeuge der Werkzeugleiste
+## Werkzeuge
 
-Die rechte Gruppe der Werkzeugleiste enthält die fünf Zeichenwerkzeuge. Nur eines ist jeweils aktiv; jedes hat außerdem ein Einzeltasten-Kürzel.
+Es ist immer ein Werkzeug aktiv. Jedes hat eine Schaltfläche in der Werkzeugleiste und ein Kürzel mit einer Taste.
 
-| Werkzeug      | Kürzel | Was es tut                                                                                                                                                                                                                                                            |
-| ------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Schwenken** | `P`    | Ziehen, um die Arbeitsfläche oder die aktuelle Auswahl zu bewegen; scrollen oder spreizen zum Zoomen.                                                                                                                                                                 |
-| **Leitung**   | `W`    | Ziehen, um Leitungen zu zeichnen; auf einen Anschluss tippen zum Negieren oder auf eine Kreuzung tippen zum Verbinden oder Trennen; ein Tippen, das beides nicht trifft, wählt aus, was darunter liegt. Siehe [Leitungen & Verbindungen](docs:wires-and-connections). |
-| **Auswahl**   | `S`    | Einen Rahmen ziehen, um Elemente auszuwählen; die Auswahl ziehen, um sie zu verschieben.                                                                                                                                                                              |
-| **Radieren**  | `E`    | Auf Elemente klicken oder darüberziehen, um sie zu löschen.                                                                                                                                                                                                           |
-| **Text**      | `T`    | Eine Textbeschriftung auf der Arbeitsfläche platzieren.                                                                                                                                                                                                               |
+| Werkzeug         | Taste | Was Ziehen bewirkt                                                                     |
+| ---------------- | ----- | -------------------------------------------------------------------------------------- |
+| Schwenken        | `P`   | Verschiebt die Ansicht, oder die Auswahl, wenn du in ihr beginnst                      |
+| Leitungswerkzeug | `W`   | Zeichnet eine Leitung (siehe [Leitungen und Verbindungen](docs:wires-and-connections)) |
+| Auswählen        | `S`   | Zieht einen Auswahlrahmen auf, oder verschiebt die Auswahl, wenn du in ihr beginnst    |
+| Radiergummi      | `E`   | Löscht alles, worüber es fährt                                                         |
+| Text             | `T`   | Setzt eine Textbeschriftung (ein Klick genügt)                                         |
+
+Ein Klick ohne Ziehen wählt in Schwenken, Leitungswerkzeug und Auswählen das Element unter dem Zeiger aus. Das Leitungswerkzeug prüft vorher, ob du einen Anschluss oder eine Leitungskreuzung getroffen hast, denn ein Tippen darauf negiert oder verbindet stattdessen.
 
 ![Die fünf Werkzeug-Schaltflächen in der Werkzeugleiste.](./images/tool-buttons.webp)
 
 ## Komponenten platzieren
 
-Um eine Komponente hinzuzufügen, wähle sie aus der [Komponentenpalette](docs:components-and-options) links. Eine Vorschau der Komponente folgt dann deinem Cursor auf der Arbeitsfläche — bewege sie an die gewünschte Stelle, dann drücke und lass los, um sie abzulegen. Das Platzieren bleibt scharfgeschaltet, sodass du mehrere derselben Komponente nacheinander ablegen kannst. Drücke `Escape` oder wähle ein anderes Werkzeug, um das Platzieren zu beenden.
+Klicke eine Komponente in der Palette an, und sie folgt dem Cursor als Vorschau. Ein Klick auf die Arbeitsfläche setzt sie ab. Die Vorschau bleibt danach am Cursor, sodass du mehrere hintereinander setzen kannst. `R` und `Shift+R` drehen die Vorschau vor dem Absetzen, und die nächste Komponente behält diese Richtung.
 
-Eine Komponente kann nicht auf einem anderen Element abgelegt werden; die Vorschau zeigt, wo sie landen wird.
+Wo die Vorschau eine andere Komponente überlappt, wird nichts platziert. Mit `Escape` oder einem anderen Werkzeug hörst du auf zu platzieren.
 
-## Auswählen, Verschieben und Drehen
+## Auswählen und verschieben
 
-Ziehe mit dem Werkzeug **Auswahl** einen Rahmen (ein Auswahlrechteck) über die gewünschten Elemente. Alles, was der Rahmen berührt — Komponenten und Leitungen — wird ausgewählt. Um eine Auswahl zu verschieben, ziehe von innerhalb an eine neue Stelle.
+Ziehe mit „Auswählen“ einen Rahmen über die gewünschten Elemente. Jede Komponente und jede Leitung, die der Rahmen berührt, wird ausgewählt. Halte `Ctrl` (`⌘` auf dem Mac), um die Auswahl zu ändern statt sie zu ersetzen: Ein Klick fügt ein Element hinzu oder entfernt es, ein Rahmen fügt hinzu, was er abdeckt. Das funktioniert auch in Schwenken und im Leitungswerkzeug.
 
-Sobald etwas ausgewählt ist, kannst du:
+Ziehe die Auswahl, um sie zu verschieben. `R` dreht sie im Uhrzeigersinn, `Shift+R` dagegen, und die Pfeiltasten verschieben sie um einen Rasterschritt. Landet die Auswahl auf etwas anderem, bleibt sie angehoben und folgt deinen nächsten Bewegungen, bis sie auf einem freien Platz liegt.
 
-- Es **drehen** — drücke `R` für im Uhrzeigersinn, `Shift+R` für gegen den Uhrzeigersinn, oder nutze die Dreh-Schaltflächen in der Werkzeugleiste.
-- Es mit den **Pfeiltasten** um jeweils eine Rastereinheit **verschieben**.
-
-Wie beim Platzieren wird ein Verschieben oder Drehen erst übernommen, wenn die Elemente auf einer freien Stelle landen.
+`Escape` wirkt in Stufen: Es bricht ein laufendes Ziehen ab, sonst hebt es die Auswahl auf, sonst wechselt es zu Schwenken.
 
 ## Leitungen an der Auswahlkante schneiden
 
-Das Auswahlwerkzeug hat einen **Scheren**-Modus, der Leitungen exakt an der Kante deines Auswahlrahmens abschneidet, statt ganze Leitungen zu greifen. Das ist praktisch, um eine Leitung aus der Mitte eines Busses herauszuschneiden.
+Normalerweise erfasst ein Auswahlrahmen ganze Leitungen. Im Schneidemodus schneidet er jede Leitung, die seine Kante kreuzt, und wählt nur die Stücke innerhalb aus. So hebst du einen Abschnitt aus der Mitte eines Busses heraus.
 
-Ein kleines Pill schwebt über der Arbeitsfläche, solange das Auswahlwerkzeug aktiv ist — klicke es an, um den Scherenmodus zu aktivieren. Auf dem Desktop kannst du auch einfach `Alt` **gedrückt halten**, während du den Auswahlrahmen ziehst, um für dieses eine Ziehen zu schneiden; das Pill leuchtet auf, um zu zeigen, dass der Modus aktiv ist. Alles, was der Rahmen vollständig enthält, bleibt ausgewählt, und Leitungen, die die Rahmenkante kreuzen, werden dort geschnitten.
+Solange „Auswählen“ aktiv ist, schwebt oben auf der Arbeitsfläche die Schaltfläche „Leitungen schneiden“, die den Modus ein- und ausschaltet. Mit Tastatur kannst du auch `Alt` gedrückt halten, während du den Rahmen loslässt, um nur dieses eine Mal zu schneiden.
 
-![Das schwebende Scheren-Umschalt-Pill über der Arbeitsfläche.](./images/scissor-select.webp)
+![Die Schaltfläche „Leitungen schneiden“ über einer an der Auswahlkante geschnittenen Leitung.](./images/scissor-select.webp)
 
-## Kopieren, Ausschneiden, Einfügen und Löschen
+## Kopieren, Einfügen und Löschen
 
-Das Standard-Bearbeiten wirkt auf die aktuelle Auswahl:
+Kopieren (`Ctrl+C`), Ausschneiden (`Ctrl+X`), Einfügen (`Ctrl+V`) und Löschen (`Delete`) findest du in der Werkzeugleiste und im Menü Bearbeiten. Eingefügte Elemente erscheinen als Vorschau unter dem Cursor, oder in der Mitte der Ansicht, wenn der Zeiger nicht über der Arbeitsfläche ist. Ziehe die Vorschau auf einen freien Platz und lass los, um sie abzusetzen. `Escape` oder ein Klick außerhalb der Vorschau bricht ab.
 
-- **Kopieren** (`Ctrl+C`) und **Ausschneiden** (`Ctrl+X`) legen die Auswahl in die Zwischenablage; Ausschneiden entfernt sie zudem.
-- **Einfügen** (`Ctrl+V`) bringt die kopierten Elemente unter dem Mauszeiger zurück, auf Touchgeräten in der Mitte der Ansicht. Sie erscheinen als Vorschau, die du positionierst — ziehe sie an eine freie Stelle und lass los, um sie abzulegen, oder drücke `Escape` zum Abbrechen.
-- **Löschen** (`Delete`) entfernt die Auswahl.
-
-Diese Befehle finden sich auch in der Werkzeugleiste und im Menü **Bearbeiten**. Jede Bearbeitung lässt sich mit **Rückgängig** (`Ctrl+Z`) rückgängig machen und mit **Wiederholen** (`Ctrl+Shift+Z`) wiederholen.
+Rückgängig (`Ctrl+Z`) und Wiederholen (`Ctrl+Shift+Z`) gelten für jede Bearbeitung.
 
 ## Radieren
 
-Das Werkzeug **Radieren** (der Radiergummi) ist der schnellste Weg, Dinge zu entfernen: Klicke ein Element an, um es zu löschen, oder ziehe über mehrere, um sie alle wegzuwischen. Drücke `Escape` mitten im Ziehen, um abzubrechen und das Radierte wiederherzustellen.
-
-## Die Minimap
-
-Die Minimap in der unteren rechten Ecke zeigt deine gesamte Schaltung auf einmal, mit einem Rahmen, der den Teil markiert, den du gerade betrachtest — nützlich, um sich auf einer großen Arbeitsfläche zurechtzufinden. Klappe sie mit ihrem Umschalter ein, wenn du den Platz brauchst.
+Klicke mit dem Radiergummi ein Element an, um es zu löschen, oder ziehe über mehrere. Drückst du `Escape`, bevor du loslässt, kommt alles zurück, was dieses Ziehen gelöscht hat.
 
 ## Siehe auch
 
-- [Leitungen & Verbindungen](docs:wires-and-connections) — Leitungen zeichnen, Kreuzungen und Verbindungen umschalten
-- [Komponenten & Optionen](docs:components-and-options) — die Bauteile, die du platzierst und konfigurierst
-- [Tastaturbefehle](docs:shortcuts) — ändere jede der hier verwendeten Belegungen
+- [Leitungen und Verbindungen](docs:wires-and-connections): Leitungen zeichnen und Kreuzungen verbinden
+- [Komponenten und Optionen](docs:components-and-options): die Bauteile, die du platzierst
+- [Smartphones und Tablets](docs:phones-and-tablets): dieselben Werkzeuge in der Touch-Ansicht
+- [Tastaturbefehle](docs:shortcuts): die hier verwendeten Tasten ändern

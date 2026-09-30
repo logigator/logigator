@@ -553,8 +553,9 @@ const es: TranslationSchema = {
       pages: {
         gettingStarted: 'Primeros pasos',
         boardAndTools: 'Tablero y herramientas',
+        phonesAndTablets: 'Móviles y tabletas',
         shortcuts: 'Atajos de teclado',
-        settings: 'Ajustes y apariencia',
+        settings: 'Ajustes',
         componentsAndOptions: 'Componentes y opciones',
         wiresAndConnections: 'Cables y conexiones',
         customComponents: 'Componentes personalizados',

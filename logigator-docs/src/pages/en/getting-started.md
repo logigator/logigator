@@ -1,67 +1,44 @@
-# Getting Started
+# Getting started
 
-Welcome to Logigator — an open-source editor and simulator for digital logic circuits that runs entirely in your browser.
+Logigator is a logic circuit simulator that runs in the browser. You place gates on a grid, draw wires between them and press Start simulation to watch signals move through the circuit. A finished circuit can be saved as a [custom component](docs:custom-components) and used as a single block inside a bigger one.
 
-![The Logigator logo and tagline.](./images/intro-banner.webp)
+You don't need an account. Without one, projects are saved in the browser or [exported to a file](docs:saving-and-files). Signing in adds [cloud storage and share links](docs:cloud).
 
-## What is Logigator?
+![The editor with a half adder on the board.](./images/board-overview.webp)
 
-Logigator lets you draw digital logic circuits — from a single AND gate to a full processor — and then run them to watch the signals flow. You place components on a grid, wire their ports together, and press play to simulate.
+## The editor window
 
-You can:
+- The board in the middle is the grid you build on. The mouse wheel zooms, and dragging with the right or middle button pans.
+- The title bar shows the project's name and where it is stored (Draft, Local, Cloud or Shared), followed by the File, Edit, View and Help menus. The pencil next to the name renames the project.
+- The toolbar holds buttons for saving and opening, the clipboard, rotating, undo and zoom, then the five [tools](docs:board-and-tools), and Start simulation at the right end.
+- The component palette on the left lists every part you can place.
+- The status bar at the bottom shows a hint for the active tool, the cursor's grid position, Saved or Unsaved changes, and how many elements are selected.
+- The minimap and the Report a bug button sit in the bottom-right corner of the board.
 
-- Build circuits from logic gates, flip-flops, memories, multiplexers, displays and more
-- Wire components into nets and see powered wires light up during simulation
-- Package a finished circuit into your own reusable [custom component](docs:custom-components)
-- Save your work in this browser, [export it to a file](docs:saving-and-files), or keep it in your [Logigator account in the cloud](docs:cloud)
+When you edit a custom component, a tab bar appears above the board with Main project and one tab per open component.
 
-Everything works without an account. Signing in adds cloud storage and share links.
+In a window 1024 px wide or narrower, the editor switches to a touch layout with different controls. See [Phones and tablets](docs:phones-and-tablets).
 
-## A tour of the editor
+## Tutorial and tips
 
-The editor is organized into a few fixed areas around the central board:
+On your first visit, a card over the board offers a tutorial that builds an AND gate with two switches and an LED. It takes about a minute. Start tutorial begins it, the ✕ closes the card, and Skip tutorial ends the tutorial at any step.
 
-- **The board** — the grid in the middle where you place components and draw wires. Scroll to zoom and drag to pan.
-- **The toolbar** (across the top) — quick actions on the left (save, open, copy/paste, undo/redo, zoom) and the drawing tools on the right (pan, wire, select, erase, text). The **Start simulation** button sits at the far right.
-- **The menu bar** (top-left) — the **File**, **Edit**, **View** and **Help** menus. Every command lives here, most with a keyboard shortcut shown beside it.
-- **The component palette** (left panel) — all the components you can place, grouped into categories. See [Components & Options](docs:components-and-options).
-- **The status bar** (bottom) — a one-line hint for the active tool, your cursor position on the grid, whether the project has unsaved changes, and how many elements are selected.
-- **The minimap** (bottom-right) — a small overview of the whole circuit that you can collapse.
+The first time you use certain tools, such as the Wire tool or scissor select, a short tip explains them. Each tip appears once. Turn off all tips in any tip, or the Show onboarding tips setting, stops them. Help → Show tips again turns them back on, shows the ones you have already seen again, and brings back the tutorial card.
 
-The project's name sits next to the menus at the top; click it to rename the project, and the chip beside it shows where the project is stored (**Local**, **Cloud**, **Draft** or **Shared**).
+## Help menu
 
-![The menu bar and toolbar at the top of the editor.](./images/menu-bar.webp)
-
-## The guided tutorial
-
-The fastest way to learn the basics is the built-in tutorial, which walks you through building a small working circuit in about a minute.
-
-The first time you open the editor, a card appears near the top of the board: **"New here? Build your first circuit in a quick tutorial."** Choose **Start tutorial** to begin, or **Dismiss** to skip it. You can skip the tutorial at any point once it has started.
-
-To run it again later — or bring back the contextual tips described below — open **Help → Show tips again**.
-
-## Just-in-time tips
-
-As you reach for a tool for the first time, Logigator shows a short tip explaining how it works — for example, how the [wire tool](docs:wires-and-connections) draws and toggles connections, or what the scissor select does. Each tip can be dismissed, and it won't come back once you've seen it.
-
-To turn tips off entirely, open the account menu in the top-right and toggle off **Show onboarding tips** in **Editor Settings**, or choose **Turn off all tips** from any tip. See [Settings & Appearance](docs:settings).
-
-## Keeping up with changes
-
-Logigator is updated regularly. Open **Help → What's New** to see a summary of what changed in recent releases. The first time a new version introduces something worth knowing, this appears automatically.
+- What's New lists the changes in each release. It opens by itself once after each update.
+- Documentation opens these pages inside the editor.
+- About shows the version you are running, the license (GNU AGPL v3) and links to the source code, the privacy policy and the imprint.
+- Cookie Settings reopens the consent dialog. It is only there when the editor runs with the consent banner.
 
 ## Reporting a problem
 
-Found a bug? Use the **Report a bug** button in the bottom-right corner of the board. Describe what you were doing when it happened — your current project, browser details and recent activity are attached to help track the issue down. If an unexpected error ever interrupts you, the same report window opens on its own.
-
-## Version & license info
-
-**Help → About** shows the exact version you're running, along with the build details, the license (Logigator is free software under the **GNU AGPL v3**), and links to the source repository and privacy policy.
+The bug button in the bottom-right corner opens Report a problem. Describe what you did before it went wrong. Your current project, browser details and recent activity are attached to the report. If the editor hits an unexpected error, the same form opens by itself with the error details included.
 
 ## See also
 
-- [Board & Tools](docs:board-and-tools) — moving around, placing components, selecting and erasing
-- [Components & Options](docs:components-and-options) — the building blocks and how to configure them
-- [Wires & Connections](docs:wires-and-connections) — connecting components into working circuits
-- [Simulation](docs:simulation) — running your circuit and interacting with it
-- [Keyboard Shortcuts](docs:shortcuts) — every binding, and how to change them
+- [Board and tools](docs:board-and-tools): moving around, placing, selecting and erasing
+- [Components and options](docs:components-and-options): every part and its options
+- [Simulation](docs:simulation): running a circuit
+- [Keyboard shortcuts](docs:shortcuts): every binding and how to change it

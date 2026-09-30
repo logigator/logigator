@@ -1,77 +1,65 @@
 # Simulación
 
-Una vez construido tu circuito, ejecútalo para ver fluir las señales. En la simulación alimentas el circuito, accionas sus entradas y ves los resultados iluminarse en directo en el tablero.
+«Iniciar simulación», en el extremo derecho de la barra de herramientas, pone el circuito en marcha: los cables con corriente se iluminan, los LEDs y las pantallas muestran su estado, y los interruptores y botones responden a los clics. `Enter` hace lo mismo.
 
-![Un circuito en ejecución, con los controles de ejecución en la barra de herramientas.](./images/simulation-showcase.webp)
+![Un reloj que controla un LED en una simulación en marcha.](./images/simulation-showcase.webp)
 
-## Iniciar y salir de una simulación
+## Entrar y salir
 
-Pulsa el botón **Iniciar simulación** en el extremo derecho de la barra de herramientas para alimentar tu circuito. También puedes pulsar `Enter`.
+La simulación siempre ejecuta el proyecto principal. Si la pestaña de un componente personalizado está abierta, el editor vuelve antes al proyecto principal.
 
-Mientras se ejecuta una simulación, el tablero está **bloqueado para la edición**: no puedes colocar, mover, cablear ni eliminar nada. Aún puedes desplazarte y hacer zoom libremente, y puedes hacer clic en las entradas del circuito (consulta [Interactuar con un circuito en ejecución](#interactuar-con-un-circuito-en-ejecución)).
+Mientras se ejecuta, el tablero está bloqueado. Puedes desplazar la vista y hacer zoom, usar las entradas e [inspeccionar](docs:inspection) ROMs y componentes personalizados, pero no colocar, mover, cablear ni eliminar nada. «Salir de la simulación», `Enter` o `Escape` vuelve a la edición con la herramienta Desplazar.
 
-Para volver a la edición, pulsa **Salir de la simulación** (donde estaba el botón Iniciar), o pulsa `Enter` de nuevo o `Escape`.
+Con «Iniciar la simulación automáticamente» activado (lo predeterminado), el circuito arranca en cuanto entras. Desactivado, la simulación espera en pausa en el tick 0 para que avances paso a paso desde el principio.
 
-Que la simulación comience **en ejecución** o comience **en pausa** depende del ajuste **Iniciar la simulación automáticamente**. Cuando está activado, el circuito empieza a ejecutarse en el momento en que entras; cuando está desactivado, entra en pausa para que lo inicies tú mismo. Consulta [Ajustes y apariencia](docs:settings).
+## Controles
 
-## Los controles de ejecución
+Durante una simulación, la barra de herramientas se sustituye por cuatro botones, el botón de velocidad y un contador.
 
-Cuando una simulación está activa, la barra de herramientas cambia sus herramientas de dibujo por los controles de ejecución.
+| Botón    | Qué hace                                                                                        |
+| -------- | ----------------------------------------------------------------------------------------------- |
+| Ejecutar | Inicia o reanuda la simulación.                                                                 |
+| Pausar   | Se detiene en el tick actual y conserva el estado.                                              |
+| Paso     | Avanza un tick. Solo disponible en pausa.                                                       |
+| Detener  | Devuelve el circuito al tick 0, apaga todos los interruptores y pausa. Sigues en la simulación. |
 
-| Control      | Qué hace                                                                                                                                     |
-| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Ejecutar** | Inicia (o reanuda) la simulación.                                                                                                            |
-| **Pausar**   | Congela la simulación donde está, conservando su estado actual para que puedas reanudar o avanzar paso a paso.                               |
-| **Paso**     | Avanza el circuito un solo tick. Disponible en pausa, útil para rastrear una señal paso a paso.                                              |
-| **Detener**  | Reinicia el circuito al comienzo y borra todos los cables encendidos. La simulación sigue activa y en pausa, lista para ejecutarse de nuevo. |
+El contador muestra los ticks desde el inicio y, mientras se ejecuta, la velocidad alcanzada realmente.
 
-**Detener** y **Salir de la simulación** son diferentes: **Detener** rebobina el circuito en ejecución al principio pero te mantiene en la simulación, mientras que **Salir de la simulación** abandona la simulación por completo y te devuelve a la edición.
+![Los controles de simulación y el botón de velocidad.](./images/simulation-controls.webp)
 
-![Los controles de ejecución y los ajustes de velocidad en la barra de herramientas.](./images/simulation-controls.webp)
+## Velocidad
 
-## Velocidad de simulación
+El botón de velocidad muestra el ajuste actual. Un clic abre un panel con tres modos, entre los que puedes cambiar mientras el circuito se ejecuta:
 
-Junto a los controles de ejecución está el **botón de velocidad**. Indica el ajuste actual — **Cada fotograma**, una frecuencia como `10 Hz` o **Velocidad máx.** — y al hacer clic abre el panel de velocidad:
+- Cada fotograma, lo predeterminado, avanza un tick por cada refresco de pantalla, así que la velocidad sigue la frecuencia de tu pantalla.
+- Velocidad fija avanza al ritmo que elijas, 1 kHz al principio. El control deslizante va de 1 Hz a 10 MHz. En el campo de al lado puedes escribir cualquier ritmo desde 0,1 Hz, como `20`, `2,5k` o `1M`. Un campo rojo significa que lo escrito no es un ritmo, y sigue valiendo el último válido. Si el circuito no puede seguir el ritmo, aparece un signo de advertencia junto al contador.
+- Lo más rápido posible funciona sin límite. La pantalla muestra entonces solo una parte de los ticks.
 
-![El panel de velocidad, abierto desde el botón de velocidad, con Velocidad fija elegida.](./images/simulation-speed.webp)
+![El panel de velocidad con una velocidad fija de 10 Hz.](./images/simulation-speed.webp)
 
-El panel ofrece tres maneras de marcar el ritmo de la simulación. La opción resaltada es la que está en uso; haz clic en otra para cambiar, incluso mientras el circuito se ejecuta:
+Bajo los modos, «Relojes a esta velocidad» lista la frecuencia que da cada retardo de reloj del circuito. Un reloj está activo un tick e inactivo durante Retardo ticks, así que un ciclo dura Retardo + 1 ticks: a 10 Hz, un reloj con retardo 1 funciona a 5 Hz y uno con retardo 4 a 2 Hz. Con velocidad fija, la lista aparece enseguida. En los otros dos modos hay que medir antes el ritmo, así que la lista aparece alrededor de un segundo después de que el circuito arranque.
 
-- **Cada fotograma**: el circuito avanza un tick por cada refresco de pantalla, así que se dibuja cada cambio y la velocidad sigue la tasa de refresco de tu pantalla. Este es el valor predeterminado.
-- **Velocidad fija**: el circuito avanza al ritmo que elijas. Arrastra el control deslizante para elegir uno entre `1 Hz` y `10 MHz`, o escríbelo en el cuadro de al lado: `20`, `2,5k` y `1M` funcionan. Escribiendo también puedes bajar de lo que alcanza el control deslizante, hasta `0,1 Hz`: un tick cada diez segundos. Cambiar cualquiera de los dos selecciona **Velocidad fija**. Si el cuadro se vuelve rojo, lo que escribiste no es una frecuencia, y la simulación sigue con la última válida.
-- **Lo más rápido posible**: sin límite; el circuito se ejecuta tan rápido como lo permita tu ordenador, y la pantalla muestra solo algunos de los ticks.
+## Usar las entradas
 
-Debajo de las tres opciones, **Relojes a esta velocidad** muestra la frecuencia a la que funciona cada **Reloj** de tu circuito. El **Retardo** de un reloj es cuántos ticks espera antes de cambiar, así que un ciclo completo dura el doble: a `10 Hz`, un reloj con retardo `1` funciona a `5 Hz`. Para ralentizar un reloj, baja la velocidad o aumenta su retardo. Con una velocidad fija la lista aparece enseguida; con las otras dos, cuando el circuito lleva un momento en marcha, porque su velocidad solo se conoce midiéndola.
+- Un interruptor cambia con cada clic y se queda donde lo dejas.
+- Un botón está activo mientras lo mantienes pulsado.
+- Un botón de pulso envía un pulso de un tick por clic, lo mantengas pulsado el tiempo que sea.
 
-Junto al botón de velocidad, una lectura muestra mientras se ejecuta la **velocidad medida** que la simulación está alcanzando realmente, junto al total de **ticks** transcurridos desde que se inició. Cuando una velocidad fija es más de lo que el circuito puede seguir, la lectura se marca con un signo de advertencia.
+Arrastrar en cualquier otro punto del tablero desplaza la vista.
 
-## Interactuar con un circuito en ejecución
+## Cuando la simulación no arranca
 
-Solo las entradas del circuito responden a los clics mientras se ejecuta:
+El editor no arranca y muestra un mensaje con el componente afectado cuando:
 
-- **Interruptor**: una entrada con enclavamiento. Haz clic en él para alternar su salida entre encendido y apagado; permanece donde lo dejaste.
-- **Botón**: una entrada momentánea. Su salida está encendida mientras lo mantienes pulsado y se apaga en cuanto lo sueltas.
-- **Botón de pulso**: haz clic en él para emitir un único pulso de un tick en su salida.
+- un componente personalizado se contiene a sí mismo, directamente o a través de otro,
+- un componente personalizado no tiene ningún circuito dentro,
+- los puertos de un componente personalizado ya no coinciden con los conectores Entrada y Salida de su circuito.
 
-A medida que las señales se propagan, los cables y puertos alimentados **se iluminan**, y los componentes de salida muestran su estado: los LED se encienden, los displays de segmentos y las matrices de LEDs muestran sus patrones. Arrastra en cualquier punto del tablero para desplazarte, salvo desde un botón, que simplemente se mantiene pulsado; hacer clic en un espacio vacío no hace nada.
+Corrige el componente indicado y vuelve a empezar. Si el mensaje dice que el motor de simulación no pudo arrancar, tu navegador no admite WebAssembly.
 
-Para mirar dentro de un circuito en ejecución —leer el contenido de una memoria o ver en directo el circuito interno de un componente personalizado— consulta [Inspección y monitores](docs:inspection).
+## Ver también
 
-## Cuando una simulación no arranca
-
-Algunos problemas impiden por completo que un circuito se simule. Si hay alguno presente, **Iniciar simulación** muestra un mensaje de error y permanece en modo de edición para que puedas corregirlos. Los más comunes:
-
-- **Un componente no compatible**: un componente que el simulador no puede ejecutar. Quítalo o sustitúyelo.
-- **Un componente personalizado que se coloca a sí mismo**: un [componente personalizado](docs:custom-components) cuyo circuito interno se contiene a sí mismo, directamente o a través de otro componente personalizado, lo que nunca puede resolverse. Rompe el bucle.
-- **Un componente personalizado sin circuito**: un componente personalizado que no tiene nada dentro que simular. Dale un circuito interno, o quítalo.
-- **Un desajuste de puertos**: un componente personalizado cuyos puertos de entrada/salida declarados no coinciden con los conectores de entrada y salida realmente dentro de su circuito. Alinea los conectores con los puertos.
-
-Cada mensaje nombra el componente implicado para que puedas encontrarlo.
-
-## Consulta también
-
-- [Inspección y monitores](docs:inspection): leer memoria y ver circuitos internos en directo
-- [Componentes y opciones](docs:components-and-options): interruptores, botones, LED y otros bloques de construcción
-- [Componentes personalizados](docs:custom-components): empaquetar un circuito en una pieza reutilizable
-- [Ajustes y apariencia](docs:settings): la opción Iniciar la simulación automáticamente
-- [Atajos de teclado](docs:shortcuts): cada asignación y cómo cambiarla
+- [Inspección y monitores](docs:inspection): contenido de ROMs y monitores
+- [Componentes y opciones](docs:components-and-options): qué hace cada entrada y pantalla
+- [Ajustes](docs:settings): el inicio automático de la simulación
+- [Móviles y tabletas](docs:phones-and-tablets): los controles en la vista táctil

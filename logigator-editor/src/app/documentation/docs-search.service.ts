@@ -81,7 +81,7 @@ export class DocsSearchService {
 
   /**
    * Counts one settled query, against the index that answers it: the first
-   * search of a session is typed while eleven pages are still being fetched,
+   * search of a session is typed while twelve pages are still being fetched,
    * and a query counted before its answer arrived would be counted as having
    * found nothing — the one thing this event is here to tell apart.
    */

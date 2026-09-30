@@ -1,82 +1,53 @@
 # Raccourcis clavier
 
-Logigator est plus rapide au clavier. Vous trouverez ci-dessous les raccourcis par défaut, suivis de la façon de les modifier.
+Voici les raccourcis par défaut, dans l'ordre où Édition → Raccourcis clavier les liste. Sur Mac, `⌘` fonctionne partout où le tableau indique `Ctrl`, et `Ctrl` fonctionne aussi.
 
-> Sur macOS, les raccourcis `Ctrl` utilisent la touche **⌘ Commande** à la place — par exemple, Enregistrer est `⌘S`.
+## Raccourcis par défaut
 
-## Fichier
+| Action                                                     | Par défaut     |
+| ---------------------------------------------------------- | -------------- |
+| Enregistrer                                                | `Ctrl+S`       |
+| Ouvrir                                                     | `Ctrl+O`       |
+| Nouveau composant                                          | `Alt+N`        |
+| Annuler                                                    | `Ctrl+Z`       |
+| Rétablir                                                   | `Ctrl+Shift+Z` |
+| Copier                                                     | `Ctrl+C`       |
+| Couper                                                     | `Ctrl+X`       |
+| Coller                                                     | `Ctrl+V`       |
+| Supprimer                                                  | `Delete`       |
+| Rotation horaire                                           | `R`            |
+| Rotation antihoraire                                       | `Shift+R`      |
+| Déplacer la sélection vers le haut / bas / gauche / droite | flèches        |
+| Zoom avant                                                 | `Ctrl++`       |
+| Zoom arrière                                               | `Ctrl+-`       |
+| Zoom 100 %                                                 | `Ctrl+0`       |
+| Déplacement                                                | `P`            |
+| Outil fil                                                  | `W`            |
+| Sélectionner                                               | `S`            |
+| Effacer                                                    | `E`            |
+| Placer du texte                                            | `T`            |
+| Couper les fils au bord de la sélection (maintenir)        | `Alt`          |
+| Ajouter à la sélection ou l'en retirer (maintenir)         | `Ctrl`         |
+| Démarrer/Arrêter la simulation                             | `Enter`        |
+| Annuler                                                    | `Escape`       |
 
-| Action            | Raccourci |
-| ----------------- | --------- |
-| Enregistrer       | `Ctrl+S`  |
-| Ouvrir            | `Ctrl+O`  |
-| Nouveau composant | `Alt+N`   |
+Pendant la saisie dans un champ de texte, seul `Escape` réagit. Pendant une simulation, les raccourcis d'édition sont désactivés, et `Escape` quitte la simulation.
 
-## Édition
+## Touches maintenues
 
-| Action                               | Raccourci      |
-| ------------------------------------ | -------------- |
-| Annuler                              | `Ctrl+Z`       |
-| Rétablir                             | `Ctrl+Shift+Z` |
-| Copier                               | `Ctrl+C`       |
-| Couper                               | `Ctrl+X`       |
-| Coller                               | `Ctrl+V`       |
-| Supprimer                            | `Delete`       |
-| Rotation horaire                     | `R`            |
-| Rotation antihoraire                 | `Shift+R`      |
-| Déplacer la sélection vers le haut   | `↑`            |
-| Déplacer la sélection vers le bas    | `↓`            |
-| Déplacer la sélection vers la gauche | `←`            |
-| Déplacer la sélection vers la droite | `→`            |
+Les deux actions marquées « maintenir » agissent tant que la touche est enfoncée, au lieu de se déclencher une fois. Maintenez `Alt` en relâchant un cadre de sélection pour couper les fils à son bord (voir [Plan de travail et outils](docs:board-and-tools)). Maintenez `Ctrl` en cliquant ou en traçant un cadre pour ajouter à la sélection ou en retirer. Cela fonctionne avec Sélectionner, Déplacement et l'outil fil.
 
-## Affichage
+## Modifier un raccourci
 
-| Action       | Raccourci |
-| ------------ | --------- |
-| Zoom avant   | `Ctrl++`  |
-| Zoom arrière | `Ctrl+-`  |
-| Zoom 100 %   | `Ctrl+0`  |
+![Le gestionnaire de raccourcis clavier.](./images/shortcut-manager.webp)
 
-## Outils
+Édition → Raccourcis clavier liste chaque action. Cliquez sur le crayon à côté et appuyez sur la nouvelle combinaison. `Escape` annule l'enregistrement, et ne peut donc pas être attribué à autre chose. Une touche de modification seule, comme `Alt`, ne peut être attribuée qu'aux deux actions maintenues.
 
-| Action                                              | Raccourci |
-| --------------------------------------------------- | --------- |
-| Déplacement                                         | `P`       |
-| Outil fil                                           | `W`       |
-| Sélection                                           | `S`       |
-| Effacer                                             | `E`       |
-| Placer du texte                                     | `T`       |
-| Couper les fils au bord de la sélection (maintenir) | `Alt`     |
-| Ajouter à la sélection ou l’en retirer (maintenir)  | `Ctrl`    |
+Si la combinaison appartient déjà à une autre action, celle-ci la perd et un message indique laquelle. « Réinitialiser » rétablit le raccourci par défaut d'une action, « Désassigner » la laisse sans raccourci, et « Tout réinitialiser » rétablit tous les raccourcis par défaut.
 
-## Interaction
-
-| Action                           | Raccourci |
-| -------------------------------- | --------- |
-| Démarrer / Arrêter la simulation | `Enter`   |
-| Annuler                          | `Escape`  |
-
-## Raccourcis maintenus
-
-La plupart des raccourcis se déclenchent une fois lorsque vous appuyez dessus. Quelques-uns sont **maintenus** à la place : vous gardez la touche enfoncée pendant que vous faites autre chose. Le principal est **Couper les fils au bord de la sélection** — maintenez `Alt` pendant que vous faites glisser un cadre de sélection avec l'[outil de sélection](docs:board-and-tools) et les fils sont coupés au bord du cadre tant que la touche reste enfoncée. L'autre est **Ajouter à la sélection** — maintenez `Ctrl` (`⌘` sur un Mac) pendant que vous cliquez sur une composante ou un fil avec l'[outil fil](docs:board-and-tools) pour l'ajouter à la sélection ou l'en retirer ; sans la touche, un clic remplace la sélection.
-
-## Modifier vos raccourcis
-
-Ouvrez **Édition → Raccourcis clavier** pour voir chaque action et son raccourci actuel.
-
-![La boîte de dialogue du gestionnaire de raccourcis clavier.](./images/shortcut-manager.webp)
-
-Pour chaque action, vous pouvez :
-
-- **Modifier** — cliquez dessus, puis appuyez sur la combinaison de touches souhaitée. Le gestionnaire enregistre exactement ce que vous appuyez.
-- **Désassigner** — laisser une action sans aucun raccourci.
-- **Réinitialiser** — restaurer le raccourci par défaut de cette action, ou utiliser **Tout réinitialiser** pour restaurer tous les raccourcis par défaut.
-
-Si vous assignez une combinaison déjà utilisée par une autre action, elle est retirée à cette action (Logigator vous indique laquelle) afin que deux actions ne partagent jamais un raccourci.
-
-Vos raccourcis personnalisés sont mémorisés dans ce navigateur. Effacer les données de site du navigateur les réinitialise aux valeurs par défaut.
+Vos raccourcis sont enregistrés dans ce navigateur. Effacer les données du site les réinitialise.
 
 ## Voir aussi
 
-- [Plan de travail et outils](docs:board-and-tools) — les outils et actions que ces raccourcis déclenchent
-- [Prise en main](docs:getting-started) — une visite guidée de l'éditeur
+- [Plan de travail et outils](docs:board-and-tools) : les outils et actions derrière ces touches
+- [Simulation](docs:simulation) : ce que font Enter et Escape pendant la simulation

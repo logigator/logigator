@@ -1,82 +1,53 @@
 # Atajos de teclado
 
-Logigator es más rápido con el teclado. A continuación están las asignaciones predeterminadas, seguidas de cómo cambiarlas.
+Estos son los atajos predeterminados, en el orden en que los lista Editar → Atajos de teclado. En Mac, `⌘` funciona en todos los sitios donde la tabla dice `Ctrl`, y `Ctrl` también funciona.
 
-> En macOS, los atajos con `Ctrl` usan la tecla **⌘ Command** en su lugar; por ejemplo, Guardar es `⌘S`.
+## Atajos predeterminados
 
-## Archivo
+| Acción                                                        | Predeterminado |
+| ------------------------------------------------------------- | -------------- |
+| Guardar                                                       | `Ctrl+S`       |
+| Abrir                                                         | `Ctrl+O`       |
+| Nuevo componente                                              | `Alt+N`        |
+| Deshacer                                                      | `Ctrl+Z`       |
+| Rehacer                                                       | `Ctrl+Shift+Z` |
+| Copiar                                                        | `Ctrl+C`       |
+| Cortar                                                        | `Ctrl+X`       |
+| Pegar                                                         | `Ctrl+V`       |
+| Eliminar                                                      | `Delete`       |
+| Girar en sentido horario                                      | `R`            |
+| Girar en sentido antihorario                                  | `Shift+R`      |
+| Mover la selección hacia arriba / abajo / izquierda / derecha | flechas        |
+| Acercar                                                       | `Ctrl++`       |
+| Alejar                                                        | `Ctrl+-`       |
+| Zoom 100%                                                     | `Ctrl+0`       |
+| Desplazar                                                     | `P`            |
+| Herramienta de cable                                          | `W`            |
+| Seleccionar                                                   | `S`            |
+| Borrar                                                        | `E`            |
+| Colocar texto                                                 | `T`            |
+| Cortar cables en el borde de la selección (mantener)          | `Alt`          |
+| Añadir a la selección o quitarlo de ella (mantener)           | `Ctrl`         |
+| Iniciar/detener simulación                                    | `Enter`        |
+| Cancelar                                                      | `Escape`       |
 
-| Acción           | Atajo    |
-| ---------------- | -------- |
-| Guardar          | `Ctrl+S` |
-| Abrir            | `Ctrl+O` |
-| Nuevo componente | `Alt+N`  |
+Mientras escribes en un campo de texto, ningún atajo responde salvo `Escape`. Durante una simulación, los atajos de edición están desactivados y `Escape` sale de la simulación.
 
-## Editar
+## Teclas mantenidas
 
-| Acción                            | Atajo          |
-| --------------------------------- | -------------- |
-| Deshacer                          | `Ctrl+Z`       |
-| Rehacer                           | `Ctrl+Shift+Z` |
-| Copiar                            | `Ctrl+C`       |
-| Cortar                            | `Ctrl+X`       |
-| Pegar                             | `Ctrl+V`       |
-| Eliminar                          | `Delete`       |
-| Girar en sentido horario          | `R`            |
-| Girar en sentido antihorario      | `Shift+R`      |
-| Mover la selección arriba         | `↑`            |
-| Mover la selección abajo          | `↓`            |
-| Mover la selección a la izquierda | `←`            |
-| Mover la selección a la derecha   | `→`            |
+Las dos acciones marcadas con «mantener» actúan mientras la tecla está pulsada, en lugar de dispararse una vez. Mantén `Alt` al soltar un marco de selección para cortar los cables en su borde (consulta [Tablero y herramientas](docs:board-and-tools)). Mantén `Ctrl` al hacer clic o trazar un marco para añadir a la selección o quitar de ella. Funciona con Seleccionar, Desplazar y la herramienta de cable.
 
-## Vista
+## Cambiar un atajo
 
-| Acción    | Atajo    |
-| --------- | -------- |
-| Acercar   | `Ctrl++` |
-| Alejar    | `Ctrl+-` |
-| Zoom 100% | `Ctrl+0` |
+![El gestor de atajos de teclado.](./images/shortcut-manager.webp)
 
-## Herramientas
+Editar → Atajos de teclado lista cada acción. Haz clic en el lápiz junto a una y pulsa la nueva combinación. `Escape` cancela la grabación, por eso no se puede asignar a otra cosa. Una tecla modificadora sola, como `Alt`, solo puede asignarse a las dos acciones mantenidas.
 
-| Acción                                               | Atajo  |
-| ---------------------------------------------------- | ------ |
-| Desplazar                                            | `P`    |
-| Herramienta de cable                                 | `W`    |
-| Seleccionar                                          | `S`    |
-| Borrar                                               | `E`    |
-| Colocar texto                                        | `T`    |
-| Cortar cables en el borde de la selección (mantener) | `Alt`  |
-| Añadir a la selección o quitarlo de ella (mantener)  | `Ctrl` |
+Si la combinación ya pertenece a otra acción, esa acción la pierde y un mensaje dice cuál. «Restablecer» devuelve el atajo predeterminado de una acción, «Desasignar» la deja sin atajo y «Restablecer todo» restaura todos los predeterminados.
 
-## Interacción
+Tus atajos se guardan en este navegador. Borrar los datos del sitio los restablece.
 
-| Acción                       | Atajo    |
-| ---------------------------- | -------- |
-| Iniciar / detener simulación | `Enter`  |
-| Cancelar                     | `Escape` |
+## Ver también
 
-## Atajos mantenidos
-
-La mayoría de los atajos se disparan una vez cuando los pulsas. Unos pocos se **mantienen** en su lugar: mantienes la tecla pulsada mientras haces otra cosa. El principal es **Cortar cables en el borde de la selección**: mantén `Alt` mientras arrastras un recuadro de selección con la [herramienta de selección](docs:board-and-tools) y los cables se cortan en el borde del recuadro mientras la tecla esté pulsada. El otro es **Añadir a la selección**: mantén `Ctrl` (`⌘` en un Mac) mientras haces clic en una componente o un cable con la [herramienta de cable](docs:board-and-tools) para añadirlo a la selección o quitarlo de ella; sin la tecla, un clic reemplaza la selección.
-
-## Cambiar tus atajos
-
-Abre **Editar → Atajos de teclado** para ver todas las acciones y su asignación actual.
-
-![El diálogo del gestor de atajos de teclado.](./images/shortcut-manager.webp)
-
-Para cualquier acción puedes:
-
-- **Editar**: haz clic en ella y luego pulsa la combinación de teclas que quieras. El gestor registra exactamente lo que pulsas.
-- **Desasignar**: deja una acción sin ningún atajo en absoluto.
-- **Restablecer**: restaura la asignación predeterminada de esa acción, o usa **Restablecer todo** para restaurar todos los valores predeterminados.
-
-Si asignas una combinación que ya usa otra acción, se le quita a esa acción (Logigator te dice cuál) para que dos acciones nunca compartan una asignación.
-
-Tus asignaciones personalizadas se recuerdan en este navegador. Borrar los datos del sitio del navegador las restablece a los valores predeterminados.
-
-## Consulta también
-
-- [Tablero y herramientas](docs:board-and-tools): las herramientas y acciones que activan estos atajos
-- [Primeros pasos](docs:getting-started): un recorrido por el editor
+- [Tablero y herramientas](docs:board-and-tools): las herramientas y acciones detrás de estas teclas
+- [Simulación](docs:simulation): qué hacen Enter y Escape allí
