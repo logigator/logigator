@@ -20,6 +20,8 @@ import { homeVideo } from './home-video';
 import { VideoEmbed } from './video-embed';
 import heroLight from '../../../assets/hero-board-light.webp';
 import heroDark from '../../../assets/hero-board-dark.webp';
+import heroLightAnimated from '../../../assets/hero-board-animated-light.webp';
+import heroDarkAnimated from '../../../assets/hero-board-animated-dark.webp';
 
 /**
  * The landing page: a board hero, the features, the examples shelf, the
@@ -102,9 +104,15 @@ export class HomePage {
   protected readonly projects = this.content.projects;
   protected readonly components = this.content.components;
 
-  /** One image, not two hidden by CSS: a `display:none` image still downloads. */
+  /**
+   * One scheme's pair, not both hidden by CSS: a `display:none` image still
+   * downloads. The still is the animation's first frame, which is what a
+   * reader who asked for reduced motion gets instead.
+   */
   protected readonly heroBoard = computed(() =>
-    this.theming.isDark() ? heroDark : heroLight
+    this.theming.isDark()
+      ? { still: heroDark, animated: heroDarkAnimated }
+      : { still: heroLight, animated: heroLightAnimated }
   );
 
   /**

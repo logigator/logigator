@@ -1,12 +1,18 @@
 <ng-container *webTranslate="let t">
   <section class="relative overflow-hidden">
-    <img
-      class="absolute inset-0 h-full w-full scale-115 object-cover object-[68%_50%]"
-      alt=""
-      aria-hidden="true"
-      fetchpriority="high"
-      [src]="heroBoard()"
-    />
+    <picture>
+      <source
+        media="(prefers-reduced-motion: reduce)"
+        [attr.srcset]="heroBoard().still"
+      />
+      <img
+        class="absolute inset-0 h-full w-full object-cover object-[68%_0%]"
+        alt=""
+        aria-hidden="true"
+        fetchpriority="high"
+        [src]="heroBoard().animated"
+      />
+    </picture>
     <!-- Opaque under the copy, clear over the board: down the page while the
          board sits below the copy, across it once there is room beside it. -->
     <div
