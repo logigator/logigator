@@ -13,7 +13,9 @@ import { OpenInspection } from '../inspection/inspection-presenter';
 import { InspectionService } from '../inspection/inspection.service';
 import { WindowInspectionPresenter } from '../inspection/window-inspection.presenter';
 import { LoggingService } from '../logging/logging.service';
+import { BoardSnapshotService } from '../rendering/board-snapshot.service';
 import { BoardSurfaceService } from '../rendering/board-surface.service';
+import { ImageExportService } from '../rendering/image-export.service';
 import { PersistenceService } from '../persistence/persistence.service';
 import { ProjectMetadataStore } from '../persistence/project-metadata.store';
 import {
@@ -53,6 +55,8 @@ import {
   PerOpError,
   PortReadout,
   ProjectState,
+  RenderedImage,
+  RenderImageOptions,
   ScreenPoint,
   ScreenRect,
   SelectionState,
@@ -129,6 +133,8 @@ export class AutomationApiService {
   private readonly inspection = inject(InspectionService);
   private readonly windowPresenter = inject(WindowInspectionPresenter);
   private readonly boardSurface = inject(BoardSurfaceService);
+  private readonly snapshot = inject(BoardSnapshotService);
+  private readonly imageExport = inject(ImageExportService);
   private readonly customComponents = inject(CustomComponentService);
   private readonly registry = inject(CustomComponentRegistry);
   private readonly translation = inject(TranslationService);
@@ -177,6 +183,8 @@ export class AutomationApiService {
       importProject: (json: string): Promise<ProjectState> =>
         this.importProject(json),
       newProject: (): ProjectState => this.newProject(),
+      renderImage: (opts: RenderImageOptions): Promise<RenderedImage> =>
+        this.renderImage(opts),
       sim: Object.freeze({
         enter: (): Promise<SimStatus> => this.simEnter(),
         exit: (): void => this.simulation.exit(),
@@ -465,6 +473,39 @@ export class AutomationApiService {
     this.assertNotBusy('newProject');
     this.persistence.createAndSetEmptyProject();
     return this.getProject();
+  }
+
+  // -- Image ---------------------------------------------------------------
+
+  /**
+   * The active circuit as a PNG, rendered by the image export itself — the
+   * live scene graph, so a running simulation's state is in the picture, and
+   * independent of the camera. A multiplier past the export's size cap is
+   * refused rather than clamped: a smaller picture is not the one asked for.
+   */
+  public async renderImage(
+    options: RenderImageOptions
+  ): Promise<RenderedImage> {
+    const project = this.requireProject();
+    const max = this.imageExport.maxMultiplier(project, options.margin);
+    if (!(options.multiplier > 0 && options.multiplier <= max)) {
+      throw new Error(
+        `logigator: renderImage multiplier ${options.multiplier} is outside ` +
+          `(0, ${max.toFixed(3)}] for this circuit`
+      );
+    }
+    await this.snapshot.whenAvailable();
+    const canvas = this.imageExport.renderCanvas(project, {
+      multiplier: options.multiplier,
+      background: options.background ?? true,
+      marginGrid: options.margin
+    });
+    const png = canvas.toDataURL('image/png');
+    return {
+      width: canvas.width,
+      height: canvas.height,
+      png: png.slice(png.indexOf(',') + 1)
+    };
   }
 
   // -- Simulation ----------------------------------------------------------

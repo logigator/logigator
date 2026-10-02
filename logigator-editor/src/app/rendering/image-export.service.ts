@@ -6,8 +6,7 @@ import { ProjectMetadataStore } from '../persistence/project-metadata.store';
 import { ToastService } from '../logging/toast.service';
 import {
   BoardSnapshotService,
-  MAX_SNAPSHOT_DIMENSION,
-  SnapshotBackground
+  MAX_SNAPSHOT_DIMENSION
 } from './board-snapshot.service';
 import { downloadBlob } from '../utils/download';
 import { environment } from '../../environments/environment';
@@ -27,6 +26,16 @@ export interface ImageExportOptions {
   quality?: number;
   /** File name without extension; defaults to the project's metadata name. */
   fileName?: string;
+}
+
+/** What one export picture is, before it becomes a file. */
+export interface ImageRenderOptions {
+  /** Output pixels per grid unit = `gridSize × multiplier`. */
+  multiplier: number;
+  /** `true` = theme color + dot-grid; `false` = transparent. */
+  background: boolean;
+  /** Grid units kept around the content; defaults to the export margin. */
+  marginGrid?: number;
 }
 
 /**
@@ -63,8 +72,10 @@ export class ImageExportService {
   private readonly analytics = inject(AnalyticsService);
 
   /** Largest multiplier whose output fits {@link MAX_EXPORT_DIMENSION}. */
-  public maxMultiplier(project: Project): number {
-    return this._maxMultiplier(this.snapshot.computeRegion(project));
+  public maxMultiplier(project: Project, marginGrid?: number): number {
+    return this._maxMultiplier(
+      this.snapshot.computeRegion(project, marginGrid)
+    );
   }
 
   /**
@@ -99,16 +110,9 @@ export class ImageExportService {
 
     let canvas: HTMLCanvasElement;
     try {
-      canvas = this.snapshot.renderProjectToCanvas(options.project, {
+      canvas = this.renderCanvas(options.project, {
         multiplier: effective,
-        background: this._backgroundMode(options),
-        // Inert at whole-number resolutions, which already put hairlines on
-        // whole pixels; only a fit-derived multiplier earns its cost.
-        supersample: this.snapshot.subPixelSupersample(
-          region,
-          effective,
-          MAX_EXPORT_DIMENSION
-        )
+        background: options.background
       });
     } catch (err) {
       this.toast.error(
@@ -158,11 +162,31 @@ export class ImageExportService {
     }
   }
 
-  private _backgroundMode(options: ImageExportOptions): SnapshotBackground {
-    if (options.background) return 'grid';
-    // JPEG has no alpha, but _toBlob flattens onto white, so every format
-    // renders transparent here.
-    return 'transparent';
+  /**
+   * The picture an export is, as a canvas: the content plus its margin at
+   * `multiplier`, which is taken as given — clamping is the caller's. Throws
+   * without a renderer.
+   *
+   * Without a background it is transparent in every format: JPEG has no
+   * alpha, and `_toBlob` flattens it onto white afterwards.
+   */
+  public renderCanvas(
+    project: Project,
+    options: ImageRenderOptions
+  ): HTMLCanvasElement {
+    const region = this.snapshot.computeRegion(project, options.marginGrid);
+    return this.snapshot.renderProjectToCanvas(project, {
+      multiplier: options.multiplier,
+      background: options.background ? 'grid' : 'transparent',
+      marginGrid: options.marginGrid,
+      // Inert at whole-number resolutions, which already put hairlines on
+      // whole pixels; only a fit-derived multiplier earns its cost.
+      supersample: this.snapshot.subPixelSupersample(
+        region,
+        options.multiplier,
+        MAX_EXPORT_DIMENSION
+      )
+    });
   }
 
   private _maxMultiplier(region: Rectangle): number {

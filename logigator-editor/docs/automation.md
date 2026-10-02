@@ -160,6 +160,17 @@ native file JSON (a `.lgix` export's inner payload); `importProject(json)`
 replaces the open document and persists it as a browser draft, like the UI's
 file import; `newProject()` opens an empty draft.
 
+### Image
+
+`renderImage({ multiplier, background?, margin? })` resolves the active circuit
+as a base64 PNG with its pixel size: the picture **File → Export image** would
+download, rendered by the same `ImageExportService` path. `multiplier` is output
+px per grid unit over the grid size, `background` (default `true`) is the theme
+colour plus the dot grid rather than transparency, and `margin` is the grid
+units kept around the content. It renders the live scene graph offscreen, so it
+ignores the camera and the docked controls and includes a simulation's state as
+it stands. A multiplier past the export's 8192 px cap is refused, not clamped.
+
 ### Simulation
 
 `sim.enter()` compiles and boots the engine, resolving once it is up — or with

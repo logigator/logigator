@@ -241,6 +241,25 @@ export interface CompileDiagnosticReport {
   }[];
 }
 
+// -- Image -----------------------------------------------------------------
+
+/** What `renderImage` renders — the image export's own options. */
+export interface RenderImageOptions {
+  /** Output px per grid unit = the grid size (16) × `multiplier`. */
+  multiplier: number;
+  /** Theme color + dot grid (`true`, the default) or transparent. */
+  background?: boolean;
+  /** Grid units kept around the content; defaults to the export's margin. */
+  margin?: number;
+}
+
+export interface RenderedImage {
+  width: number;
+  height: number;
+  /** The PNG, base64-encoded: a string crosses every driver's serializer. */
+  png: string;
+}
+
 // -- Simulation ------------------------------------------------------------
 
 export interface SimStatus {
@@ -417,6 +436,9 @@ export interface LogigatorAutomationApi {
   exportProject(): string;
   importProject(json: string): Promise<ProjectState>;
   newProject(): ProjectState;
+
+  // image — the picture File → Export image downloads, as it would be now
+  renderImage(opts: RenderImageOptions): Promise<RenderedImage>;
 
   // simulation
   sim: {
