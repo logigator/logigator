@@ -26,7 +26,8 @@ standalone package with its own lockfile — outside the workspace, never instal
 `window.__logigator` and Playwright to generate the images the product shows. One run is one
 **target** (a folder under its `targets/`, whose config owns the shots, the colour schemes, the
 window it frames, where a capture lands and what it is called): `docs` writes `logigator-docs/`'s
-screenshots, `web` the website's tour figures. The shared half is the runner, the page driver and
+screenshots, `web` the website's tour figures, `hero` the home page's running board — rendered
+through the editor's own image export rather than screenshotted. The shared half is the runner, the page driver and
 the encoder — **every image a target writes is lossless WebP**, animated for the step-throughs,
 and `lib/webp.ts` is its only encoder. Beside the runner, `social-card.ts` composes the site's
 `og:image` (`logigator-web/public/assets/social-card.png`) from the home page's hero render — no

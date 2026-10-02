@@ -8,7 +8,7 @@ Playwright handles the rest — the chrome the API deliberately does not model
 
 One run is one **target**, and a target owns what is specific to the images it
 produces: its shot list, the colour schemes it runs, the window it frames, where
-a capture lands and what it is called. Two exist:
+a capture lands and what it is called. Three exist:
 
 - **`docs`** — the in-editor documentation's screenshots
   (`logigator-docs/src/pages/<lang>/images/`), dark and single-themed. Every
@@ -18,6 +18,9 @@ a capture lands and what it is called. Two exist:
 - **`web`** — the features page's tour figures
   (`logigator-web/src/assets/tour/`), four languages × two colour schemes,
   English still the fallback — per scheme now.
+- **`hero`** — the home page's hero board (`logigator-web/src/assets/`): the
+  `hero-marquee` circuit running, as a still and as its animated loop, in both
+  colour schemes. See [The hero board](#the-hero-board).
 
 **Every image a target writes is lossless WebP**, animated for the
 step-throughs. It is the targets' only output format; `lib/webp.ts` is the only
@@ -200,6 +203,37 @@ whole tree came out 1.89× smaller than the quantized PNGs and GIFs it replaced.
 libwebp is deterministic, so re-capturing an unchanged shot produces identical
 bytes and leaves the tracked image alone. Captures themselves repeat to within a
 handful of antialiased border pixels.
+
+## The hero board
+
+```bash
+yarn capture hero ../../../logigator-web
+```
+
+Two files per colour scheme, which the home page imports by name:
+`hero-board-<scheme>.webp`, the still, and `hero-board-animated-<scheme>.webp`,
+the loop. The page serves the loop and swaps in the still under
+`prefers-reduced-motion`; the still is the loop's first frame, so the two show
+the same picture. The target writes no registry — its names are fixed.
+
+Neither is a screenshot. The frames come out of the editor's own image export
+(`editor.renderImage`, over the automation API's `renderImage`): the whole
+circuit at 16 px a cell plus a margin of board, whatever the window and the
+camera, with the simulation's state in it. The shot boots the simulation,
+runs one lap to fill the RAM, and then samples twice per displayed frame for
+one lap — 256 frames at 50 ms, a column of scroll every 100 ms. Each sample is
+pushed later by a fixed pseudo-random amount, up to the whole gap to the next,
+so the counter, the clock pulse and the clocks gated from it are not caught in
+the same phase every time and look as busy as they are. Every constant it
+depends on is named at the top of `targets/hero/shots.ts`.
+
+To change the circuit, edit `circuits/hero-marquee.json` as any other scene —
+open it in the editor, redraw, export it back over the same name — and run the
+target again, then the social card, which is cut from the dark still. The
+clock's speed is read off the circuit. How many pulses draw one displayed frame
+and how many frames make a lap are not in the file, so they are constants; the
+animated shot checks that a lap comes back to its first frame and fails with
+their names if it does not, rather than writing a loop that jumps.
 
 ## The social card
 

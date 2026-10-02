@@ -163,7 +163,8 @@ async function runTarget(
     process.exitCode = 1;
     return;
   }
-  const file = await target.writeRegistry(path.resolve(options.out));
+  if (!target.writeRegistry) return;
+  const file = target.writeRegistry(path.resolve(options.out));
   console.log(`registry → ${path.relative(process.cwd(), file)}`);
 }
 
@@ -249,10 +250,10 @@ async function capture(
 
     const file = target.fileName(shot, pass);
     await write(file, bytes, shot, task, context);
-    if ('frames' in result) {
+    if (frames.length > 1) {
       // Both: a piped log has already printed the title, and only the output
       // line still reaches it.
-      const count = `${result.frames.length} frames`;
+      const count = `${frames.length} frames`;
       task.output = count;
       task.title += `  ${count}`;
     }

@@ -41,8 +41,12 @@ export interface Target {
   layout(lang: LanguageId): string;
   shots: readonly Shot[];
   fileName(shot: Shot, pass: Pass): string;
-  /** Writes the import map over what was captured; returns its path. */
-  writeRegistry(dest: string): string;
+  /**
+   * Writes the import map over what was captured; returns its path. A target
+   * whose captures have fixed names, imported by the consumer directly, has
+   * none.
+   */
+  writeRegistry?(dest: string): string;
   /** Staging every shot of a pass gets, beneath the shot's own. */
   before?(pass: Pass): OpenOptions;
 }

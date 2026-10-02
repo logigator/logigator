@@ -17,6 +17,7 @@ import type {
   GridRect,
   InspectionInfo,
   LogigatorAutomationApi,
+  RenderImageOptions,
   ScreenPoint,
   ScreenRect,
   SelectOptions,
@@ -421,6 +422,21 @@ export class Editor {
   /** Viewport CSS px → grid point. */
   gridOf(point: ScreenPoint): Promise<GridPoint> {
     return this.api((p) => __logigator.camera.toGrid(p), point);
+  }
+
+  /**
+   * Renders the open circuit through the editor's own image export: the whole
+   * circuit at an exact resolution, whatever the camera and the window, with
+   * the simulation's state as it stands. A frame like {@link snap}'s, without
+   * a clip to measure.
+   */
+  async renderImage(options: RenderImageOptions): Promise<Buffer> {
+    this.report('rendering the board');
+    const { png } = await this.api(
+      (opts) => __logigator.renderImage(opts),
+      options
+    );
+    return Buffer.from(png, 'base64');
   }
 
   /** Captures one frame into memory rather than to disk. */
