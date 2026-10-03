@@ -217,23 +217,30 @@ the loop. The page serves the loop and swaps in the still under
 the same picture. The target writes no registry — its names are fixed.
 
 Neither is a screenshot. The frames come out of the editor's own image export
-(`editor.renderImage`, over the automation API's `renderImage`): the whole
-circuit at 16 px a cell plus a margin of board, whatever the window and the
-camera, with the simulation's state in it. The shot boots the simulation,
-runs one lap to fill the RAM, and then samples twice per displayed frame for
-one lap — 256 frames at 50 ms, a column of scroll every 100 ms. Each sample is
-pushed later by a fixed pseudo-random amount, up to the whole gap to the next,
-so the counter, the clock pulse and the clocks gated from it are not caught in
-the same phase every time and look as busy as they are. Every constant it
-depends on is named at the top of `targets/hero/shots.ts`.
+(`editor.renderImage`, over the automation API's `renderImage`), with the
+simulation's state in them, whatever the window and the camera. They cover
+only what the page shows: the matrices, the board right of them, and the board
+left of them as far as centres the matrices in the render's right half — which
+is what a narrow page zooms onto, the rest lying under a wide page's copy. The
+region is computed from where the matrices are (`getBounds`), so a redrawn
+circuit moves it along.
+
+The shot boots the simulation, runs one lap to fill the RAM, and then takes one
+frame per displayed frame for a lap — 128 frames at 125 ms — always at the same
+point of the circuit's cycle: just past a frame boundary, where the matrices'
+clock fires and the display still holds the finished frame. Only what moves
+once a column moves changes on screen, so the loop reads as a circuit at work
+rather than as flicker.
 
 To change the circuit, edit `circuits/hero-marquee.json` as any other scene —
 open it in the editor, redraw, export it back over the same name — and run the
 target again, then the social card, which is cut from the dark still. The
-clock's speed is read off the circuit. How many pulses draw one displayed frame
-and how many frames make a lap are not in the file, so they are constants; the
-animated shot checks that a lap comes back to its first frame and fails with
-their names if it does not, rather than writing a loop that jumps.
+clock's speed is read off the circuit. How many pulses draw one displayed
+frame, how many frames make a lap and where in the cycle the display holds
+still are not in the file, so they are constants at the top of
+`targets/hero/shots.ts`; the shots check the display is not redrawing at the
+sampling point and that a lap comes back to its first frame, and fail naming
+the constant to update rather than writing a torn or jumping loop.
 
 ## The social card
 

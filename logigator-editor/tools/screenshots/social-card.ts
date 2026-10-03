@@ -62,9 +62,9 @@ const COLORS = {
  * How the board is cut out of the hero render. `zoom` is on top of covering
  * the card, and `focusX`/`focusY` place the crop the way `object-position`
  * does, `0` pinning the render's left or top edge and `1` its right or bottom.
- * The home page draws it with `scale-115` at `68% 50%`.
+ * The home page pins it top-right, where the matrices are.
  */
-const BOARD = { zoom: 1.04, focusX: 0.9, focusY: 0.5 } as const;
+const BOARD = { zoom: 1.04, focusX: 1, focusY: 0 } as const;
 
 /**
  * The home page's wide scrim, as offsets across the card and the ground's

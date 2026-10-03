@@ -1,3 +1,4 @@
+import type { GridRect } from '../../../../src/app/automation/automation-api.model.ts';
 import type { Editor } from '../../lib/editor.ts';
 import type { Shot } from '../../lib/target.ts';
 
@@ -6,11 +7,8 @@ import type { Shot } from '../../lib/target.ts';
  * matrices, driven by a counter, a font ROM and a RAM holding the picture.
  */
 const CIRCUIT = 'hero-marquee';
-
-/** Output px per grid unit over the grid size — 16 px a cell. */
-const MULTIPLIER = 1;
-/** Cells of board kept around the circuit, so the page's crop has room. */
-const MARGIN = 3;
+/** The display, by catalog name; the pictures are framed around it. */
+const MATRIX = 'LED Matrix';
 
 /**
  * Clock pulses per displayed frame. A fact of the circuit's design that its
@@ -23,99 +21,121 @@ const LAP_FRAMES = 128;
 /** Where the loop starts within a lap, which is what the still shows. */
 const START_FRAME = 46;
 /**
- * Samples per displayed frame. One would show only finished pictures, with
- * every bus feeding the matrices in the same state each time; two also catch
- * a frame half-written.
+ * Ticks past a frame boundary each frame is sampled at: the matrices' clock
+ * fires for the next frame's first half-row, so the lines into them are lit,
+ * while the display still holds the finished frame — it latches a few ticks
+ * later. Found by stepping across the boundary a tick at a time; the shots
+ * check the display against the boundary's, so a retimed circuit fails rather
+ * than tearing.
  */
-const SAMPLES_PER_FRAME = 2;
-/** How long each sample is held: a column of scroll every 100 ms. */
-const SAMPLE_DELAY = 100 / SAMPLES_PER_FRAME;
+const SAMPLE_PHASE = 33;
+/**
+ * How long each frame is held — one column of scroll. A frame is one sample,
+ * at the same point of the circuit's cycle every time, so only what changes
+ * once a column moves changes on screen: a circuit at work, not flicker.
+ */
+const FRAME_DELAY = 125;
+
+/** Output px per grid unit over the grid size — 20 px a cell. */
+const MULTIPLIER = 1.25;
 
 /**
- * A fixed pseudo-random offset in `[0, range)` for sample `n` of the loop,
- * and none for its first: the still is that sample, and the loop's closing
- * sample has to land exactly a lap after it. Fibonacci hashing reads the
- * product's high bits, which spread consecutive indices evenly; the low bits
- * would step through the range in a fixed stride. The same on every run, so
- * an unchanged circuit captures to the same bytes.
+ * What the pictures cover: the matrices, everything right of them, and the
+ * board to their left as far as puts the matrices' centre at three-quarters
+ * of the width — the centre of the right half, which a narrow page doubles
+ * about the top-right corner to show. A wide page shows the rest beside its
+ * copy, which covers what lies further left, so that is not rendered. The
+ * circuit's whole height, either way.
  */
-function jitter(n: number, range: number): number {
-  if (n === 0) return 0;
-  const hash = Math.imul(n, 0x9e3779b1) >>> 0;
-  return Math.floor((hash / 2 ** 32) * range);
+function region(matrices: GridRect, content: GridRect): GridRect {
+  const right = content.x + content.width + 3;
+  const centre = matrices.x + matrices.width / 2;
+  const width = 4 * (right - centre);
+  return {
+    x: right - width,
+    y: content.y - 3,
+    width,
+    height: content.height + 6
+  };
 }
 
 /**
- * `count` consecutive samples of the running marquee, from {@link START_FRAME}
+ * `count` consecutive frames of the running marquee, from {@link START_FRAME}
  * of its second lap: the first lap scrolls out of an empty RAM, so it is not
  * part of the loop. The clock's speed is read off the circuit, so retiming the
  * clock moves the sampling with it.
- *
- * Evenly spaced samples would catch the circuit in the same phase every time:
- * each counter bit faster than the spacing, the one-tick clock pulse and every
- * clock gated from it would read the same in every frame and look idle, and
- * the display would always be caught redrawing the same row. So each sample is
- * pushed later by an amount that differs from sample to sample and may reach
- * the whole gap to the next — less than the gap, so the samples stay in order
- * and the scroll averages one column a frame. Sample 0 is on the frame
- * boundary, where the display holds a finished frame.
  */
-async function marqueeSamples(ed: Editor, count: number): Promise<Buffer[]> {
+async function marqueeFrames(ed: Editor, count: number): Promise<Buffer[]> {
   await ed.load(CIRCUIT);
   const [clock] = await ed.componentsOfType('clk');
   const period = Number(clock.options['speed']) + 1;
   const frameTicks = PULSES_PER_FRAME * period;
-  const gap = Math.floor(frameTicks / SAMPLES_PER_FRAME);
-  const loop = LAP_FRAMES * SAMPLES_PER_FRAME;
+  const matrices = await boundsOf(ed, await ed.componentsOfType(MATRIX));
+  const area = region(matrices, await ed.contentBounds());
+  const render = (area: GridRect, multiplier: number) =>
+    ed.renderImage({ multiplier, region: area, margin: 0 });
   await ed.enterSimulation();
 
-  const start = frameTicks * (LAP_FRAMES + START_FRAME);
-  let tick = 0;
-  const samples: Buffer[] = [];
-  for (let i = 0; i < count; i++) {
-    const target =
-      start +
-      Math.floor((i * frameTicks) / SAMPLES_PER_FRAME) +
-      jitter(i % loop, gap);
-    await ed.stepSimulation(target - tick);
-    tick = target;
-    samples.push(
-      await ed.renderImage({ multiplier: MULTIPLIER, margin: MARGIN })
+  await ed.stepSimulation(frameTicks * (LAP_FRAMES + START_FRAME));
+  // The rows above the pins, which light at the sampling tick by design.
+  const display = { ...matrices, height: matrices.height - 2 };
+  const finished = await render(display, 0.5);
+  await ed.stepSimulation(SAMPLE_PHASE);
+  if (!(await render(display, 0.5)).equals(finished)) {
+    throw new Error(
+      `the display is redrawing ${SAMPLE_PHASE} ticks past a frame boundary ` +
+        '— find SAMPLE_PHASE again for the edited circuit'
     );
   }
-  return samples;
+
+  const frames: Buffer[] = [];
+  for (let i = 0; i < count; i++) {
+    if (i > 0) await ed.stepSimulation(frameTicks);
+    frames.push(await render(area, MULTIPLIER));
+  }
+  return frames;
+}
+
+/** The grid rectangle covering every given component. */
+async function boundsOf(
+  ed: Editor,
+  components: readonly { id: number }[]
+): Promise<GridRect> {
+  const bounds = await ed.api(
+    (ids) => __logigator.getBounds({ elementIds: ids }),
+    components.map((component) => component.id)
+  );
+  if (!bounds) throw new Error('the components cover nothing');
+  return bounds;
 }
 
 /**
- * The board behind the home page's headline: the whole circuit through the
- * editor's own image export, so the picture is the circuit at a fixed scale
- * rather than whatever a window frames of it.
+ * The board behind the home page's headline, through the editor's own image
+ * export. The still is the loop's first frame, for reduced motion and for
+ * crawlers.
  */
 export const SHOTS: Shot[] = [
   {
-    // The first frame of the animation, so the page can stand one in for the
-    // other: under reduced motion, and wherever only a still is read.
     name: 'hero-board',
     async run(ed) {
-      return { frames: await marqueeSamples(ed, 1) };
+      return { frames: await marqueeFrames(ed, 1) };
     }
   },
   {
     name: 'hero-board-animated',
     async run(ed) {
-      const loop = LAP_FRAMES * SAMPLES_PER_FRAME;
-      // One more sample than the loop holds: the lap has to come back to where
-      // it started, or the constants above no longer describe the circuit and
-      // the loop would jump on every repeat.
-      const frames = await marqueeSamples(ed, loop + 1);
+      // One more frame than the loop holds: the lap has to return to its
+      // first frame, or the constants above no longer describe the circuit
+      // and the loop would jump on every repeat.
+      const frames = await marqueeFrames(ed, LAP_FRAMES + 1);
       const next = frames.pop()!;
       if (!next.equals(frames[0])) {
         throw new Error(
-          `the marquee is not back at its first frame after ${loop} samples ` +
+          `the marquee is not back at its first frame after ${LAP_FRAMES} ` +
             '— update PULSES_PER_FRAME or LAP_FRAMES for the edited circuit'
         );
       }
-      return { frames, delay: SAMPLE_DELAY };
+      return { frames, delay: FRAME_DELAY };
     }
   }
 ];
