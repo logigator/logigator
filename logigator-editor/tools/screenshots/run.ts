@@ -246,7 +246,7 @@ async function capture(
     const frames =
       'frames' in result ? result.frames : [await editor.snap(result)];
     task.output = 'encoding';
-    const bytes = await encodeCapture(frames, result.delay);
+    const bytes = await encodeCapture(frames, result.delay, result.keyframes);
 
     const file = target.fileName(shot, pass);
     await write(file, bytes, shot, task, context);

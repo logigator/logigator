@@ -204,6 +204,16 @@ libwebp is deterministic, so re-capturing an unchanged shot produces identical
 bytes and leaves the tracked image alone. Captures themselves repeat to within a
 handful of antialiased border pixels.
 
+A long loop can name a keyframe interval (`keyframes` on what a shot returns).
+sharp's animated encoder offers no such setting and stores every frame as a
+change to the one before, so a browser showing a frame it skipped to decodes
+the loop from its start. For such a loop `lib/webp.ts` writes the container
+itself: every Nth frame whole, the rest as the rectangle that changed with its
+unchanged pixels transparent and blended over the frame before — each frame
+still encoded by sharp. It decodes what it wrote and compares every frame
+before handing it back. The step-throughs name no interval and keep sharp's own
+encoder, and with it their tracked bytes.
+
 ## The hero board
 
 ```bash
@@ -218,8 +228,10 @@ frame; the loop is only the top of the board, down to the lowest row any frame
 changes, which the shot finds by comparing the frames. That keeps each frame a
 third of the board to decode, which is what a browser pays for every frame it
 skips when a page comes back from the background, and lets the small still
-paint before the loop has arrived. The target writes no registry — its names
-are fixed.
+paint before the loop has arrived. Every sixteenth frame is stored whole — see
+[Framing and encoding](#framing-and-encoding) — so that skip decodes back no
+further than that: in Chromium, a fresh decoder reaches frame 120 in about
+40 ms rather than 560. The target writes no registry — its names are fixed.
 
 Neither is a screenshot. The frames come out of the editor's own image export
 (`editor.renderImage`, over the automation API's `renderImage`), with the

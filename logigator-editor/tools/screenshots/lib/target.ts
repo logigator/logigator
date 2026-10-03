@@ -20,6 +20,12 @@ export interface Pass {
  */
 export type ShotResult = (SnapTarget | { frames: Buffer[] }) & {
   delay?: number;
+  /**
+   * Stores every this-many-th frame whole, so a browser showing a frame it
+   * skipped to decodes back no further than that. For long loops; a
+   * step-through leaves it unset.
+   */
+  keyframes?: number;
 };
 
 export interface Shot {

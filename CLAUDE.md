@@ -29,7 +29,8 @@ window it frames, where a capture lands and what it is called): `docs` writes `l
 screenshots, `web` the website's tour figures, `hero` the home page's running board — rendered
 through the editor's own image export rather than screenshotted. The shared half is the runner, the page driver and
 the encoder — **every image a target writes is lossless WebP**, animated for the step-throughs,
-and `lib/webp.ts` is its only encoder. Beside the runner, `social-card.ts` composes the site's
+and `lib/webp.ts` is its only encoder — for a long loop that names a keyframe interval it writes the
+animated container itself, sharp's encoder having no such setting. Beside the runner, `social-card.ts` composes the site's
 `og:image` (`logigator-web/public/assets/social-card.png`) from the home page's hero render — no
 editor involved, and PNG, since link unfurlers are not all WebP readers. A pass reaches the app as the origin-wide `preferences`
 cookie, whose codec `lib/origin.ts` loads out of core rather than restating. It is TypeScript

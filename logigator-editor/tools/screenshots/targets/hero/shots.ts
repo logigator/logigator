@@ -31,6 +31,13 @@ const START_FRAME = 46;
  */
 const SAMPLE_PHASE = 33;
 /**
+ * Frames between two the loop stores whole. A browser decodes a frame it
+ * skipped to from the last whole one — a page coming back from the
+ * background skips to where the loop is by the clock — so this bounds that
+ * work, at the price of one whole frame of bytes per interval.
+ */
+const KEYFRAME_INTERVAL = 16;
+/**
  * How long each frame is held — one column of scroll. A frame is one sample,
  * at the same point of the circuit's cycle every time, so only what changes
  * once a column moves changes on screen: a circuit at work, not flicker.
@@ -184,7 +191,11 @@ export const SHOTS: Shot[] = [
             .toBuffer()
         )
       );
-      return { frames: strip, delay: FRAME_DELAY };
+      return {
+        frames: strip,
+        delay: FRAME_DELAY,
+        keyframes: KEYFRAME_INTERVAL
+      };
     }
   }
 ];
