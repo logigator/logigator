@@ -6,16 +6,26 @@
  * The board is a background rather than an <img>: hydration writes an
  * element's attributes again, and writing `src` or `srcset` — even unchanged
  * — sends an animated image back to its first frame, while a background keeps
- * playing. Which file it is is decided here too, so a page downloads only the
- * one the reader's scheme and motion preference name.
+ * playing. Which files it is is decided here too, so a page downloads only the
+ * ones the reader's scheme and motion preference name.
+ *
+ * The loop lies over the still. The still is the whole board and paints first,
+ * being a fraction of the loop's size; the loop is only the top of the board,
+ * where anything moves, and its first frame is that part of the still. Both
+ * start at the board's top edge, so the one size and position the template
+ * gives them lines them up.
  */
 
 .hero-board {
-  background-image: url('../../../assets/hero-board-animated-light.webp');
+  background-image:
+    url('../../../assets/hero-board-animated-light.webp'),
+    url('../../../assets/hero-board-light.webp');
 }
 
 :host-context(.dark-mode) .hero-board {
-  background-image: url('../../../assets/hero-board-animated-dark.webp');
+  background-image:
+    url('../../../assets/hero-board-animated-dark.webp'),
+    url('../../../assets/hero-board-dark.webp');
 }
 
 @media (prefers-reduced-motion: reduce) {
