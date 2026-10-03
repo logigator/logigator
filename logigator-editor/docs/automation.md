@@ -162,12 +162,15 @@ file import; `newProject()` opens an empty draft.
 
 ### Image
 
-`renderImage({ multiplier, background?, margin? })` resolves the active circuit
-as a base64 PNG with its pixel size: the picture **File → Export image** would
-download, rendered by the same `ImageExportService` path. `multiplier` is output
-px per grid unit over the grid size, `background` (default `true`) is the theme
-colour plus the dot grid rather than transparency, and `margin` is the grid
-units kept around the content. It renders the live scene graph offscreen, so it
+`renderImage({ multiplier, background?, region?, margin? })` resolves the
+active circuit as a base64 PNG with its pixel size: the picture **File → Export
+image** would download, rendered by the same `ImageExportService` path.
+`multiplier` is output px per grid unit over the grid size, `background`
+(default `true`) is the theme colour plus the dot grid rather than transparency,
+`region` is a `FocusTarget` — a `GridRect`, `{ elementIds }` or `'content'`, the
+default — and `margin` is the grid units kept around it. `getBounds(target)`
+reads the grid rectangle a `FocusTarget` covers, which is how a caller composes
+a region out of where elements are. It renders the live scene graph offscreen, so it
 ignores the camera and the docked controls and includes a simulation's state as
 it stands. A multiplier past the export's 8192 px cap is refused, not clamped.
 

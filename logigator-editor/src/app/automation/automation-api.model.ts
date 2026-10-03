@@ -249,7 +249,9 @@ export interface RenderImageOptions {
   multiplier: number;
   /** Theme color + dot grid (`true`, the default) or transparent. */
   background?: boolean;
-  /** Grid units kept around the content; defaults to the export's margin. */
+  /** What to cover, as `camera.focus` names it; the whole content by default. */
+  region?: FocusTarget;
+  /** Grid units kept around it; defaults to the export's margin. */
   margin?: number;
 }
 
@@ -423,6 +425,8 @@ export interface LogigatorAutomationApi {
   // read
   getProject(): ProjectState;
   getElements(query?: ElementQuery): ElementList;
+  /** The grid rectangle a target covers, `null` when it covers nothing. */
+  getBounds(target: FocusTarget): GridRect | null;
 
   // write — one batch is one undo step
   applyEdit(ops: EditOp[]): EditResult;

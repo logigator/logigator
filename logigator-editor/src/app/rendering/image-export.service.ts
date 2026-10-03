@@ -6,6 +6,7 @@ import { ProjectMetadataStore } from '../persistence/project-metadata.store';
 import { ToastService } from '../logging/toast.service';
 import {
   BoardSnapshotService,
+  EXPORT_MARGIN_GRID,
   MAX_SNAPSHOT_DIMENSION
 } from './board-snapshot.service';
 import { downloadBlob } from '../utils/download';
@@ -28,14 +29,20 @@ export interface ImageExportOptions {
   fileName?: string;
 }
 
+/** Which part of a project one export picture covers. */
+export interface ImageFraming {
+  /** Grid rectangle to cover instead of the whole content. */
+  region?: Rectangle;
+  /** Grid units kept around it; defaults to the export margin. */
+  marginGrid?: number;
+}
+
 /** What one export picture is, before it becomes a file. */
-export interface ImageRenderOptions {
+export interface ImageRenderOptions extends ImageFraming {
   /** Output pixels per grid unit = `gridSize × multiplier`. */
   multiplier: number;
   /** `true` = theme color + dot-grid; `false` = transparent. */
   background: boolean;
-  /** Grid units kept around the content; defaults to the export margin. */
-  marginGrid?: number;
 }
 
 /**
@@ -72,10 +79,8 @@ export class ImageExportService {
   private readonly analytics = inject(AnalyticsService);
 
   /** Largest multiplier whose output fits {@link MAX_EXPORT_DIMENSION}. */
-  public maxMultiplier(project: Project, marginGrid?: number): number {
-    return this._maxMultiplier(
-      this.snapshot.computeRegion(project, marginGrid)
-    );
+  public maxMultiplier(project: Project, framing: ImageFraming = {}): number {
+    return this._maxMultiplier(this._region(project, framing));
   }
 
   /**
@@ -163,9 +168,9 @@ export class ImageExportService {
   }
 
   /**
-   * The picture an export is, as a canvas: the content plus its margin at
-   * `multiplier`, which is taken as given — clamping is the caller's. Throws
-   * without a renderer.
+   * The picture an export is, as a canvas: the content — or the given region —
+   * plus its margin at `multiplier`, which is taken as given; clamping is the
+   * caller's. Throws without a renderer.
    *
    * Without a background it is transparent in every format: JPEG has no
    * alpha, and `_toBlob` flattens it onto white afterwards.
@@ -174,11 +179,10 @@ export class ImageExportService {
     project: Project,
     options: ImageRenderOptions
   ): HTMLCanvasElement {
-    const region = this.snapshot.computeRegion(project, options.marginGrid);
-    return this.snapshot.renderProjectToCanvas(project, {
+    const region = this._region(project, options);
+    return this.snapshot.renderRegionToCanvas(project, region, {
       multiplier: options.multiplier,
       background: options.background ? 'grid' : 'transparent',
-      marginGrid: options.marginGrid,
       // Inert at whole-number resolutions, which already put hairlines on
       // whole pixels; only a fit-derived multiplier earns its cost.
       supersample: this.snapshot.subPixelSupersample(
@@ -187,6 +191,18 @@ export class ImageExportService {
         MAX_EXPORT_DIMENSION
       )
     });
+  }
+
+  /** The grid rectangle a picture covers, margin included. */
+  private _region(project: Project, framing: ImageFraming): Rectangle {
+    const { region, marginGrid = EXPORT_MARGIN_GRID } = framing;
+    if (!region) return this.snapshot.computeRegion(project, marginGrid);
+    return new Rectangle(
+      region.x - marginGrid,
+      region.y - marginGrid,
+      region.width + 2 * marginGrid,
+      region.height + 2 * marginGrid
+    );
   }
 
   private _maxMultiplier(region: Rectangle): number {

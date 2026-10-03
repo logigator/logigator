@@ -175,6 +175,8 @@ export class AutomationApiService {
       getProject: (): ProjectState => this.getProject(),
       getElements: (query?: ElementQuery): ElementList =>
         this.getElements(query),
+      getBounds: (target: FocusTarget): GridRect | null =>
+        this.getBounds(target),
       applyEdit: (ops: EditOp[]): EditResult => this.applyEdit(ops),
       undo: (): boolean => this.undo(),
       redo: (): boolean => this.redo(),
@@ -331,6 +333,11 @@ export class AutomationApiService {
     };
   }
 
+  public getBounds(target: FocusTarget): GridRect | null {
+    const rect = this.resolveFocusTarget(target, this.requireProject());
+    return rect ? toGridRect(rect) : null;
+  }
+
   public getElements(
     query: ElementQuery = {},
     project: Project | null = this.activeProject
@@ -478,16 +485,24 @@ export class AutomationApiService {
   // -- Image ---------------------------------------------------------------
 
   /**
-   * The active circuit as a PNG, rendered by the image export itself — the
-   * live scene graph, so a running simulation's state is in the picture, and
-   * independent of the camera. A multiplier past the export's size cap is
+   * The active circuit, or a region of it, as a PNG, rendered by the image
+   * export itself — the live scene graph, so a running simulation's state is
+   * in the picture, and independent of the camera. A multiplier past the export's size cap is
    * refused rather than clamped: a smaller picture is not the one asked for.
    */
   public async renderImage(
     options: RenderImageOptions
   ): Promise<RenderedImage> {
     const project = this.requireProject();
-    const max = this.imageExport.maxMultiplier(project, options.margin);
+    // No region is the export's own framing, an empty board included.
+    const region = options.region
+      ? this.resolveFocusTarget(options.region, project)
+      : undefined;
+    if (region === null) {
+      throw new Error('logigator: renderImage region covers nothing');
+    }
+    const framing = { region, marginGrid: options.margin };
+    const max = this.imageExport.maxMultiplier(project, framing);
     if (!(options.multiplier > 0 && options.multiplier <= max)) {
       throw new Error(
         `logigator: renderImage multiplier ${options.multiplier} is outside ` +
@@ -498,7 +513,7 @@ export class AutomationApiService {
     const canvas = this.imageExport.renderCanvas(project, {
       multiplier: options.multiplier,
       background: options.background ?? true,
-      marginGrid: options.margin
+      ...framing
     });
     const png = canvas.toDataURL('image/png');
     return {
