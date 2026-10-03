@@ -16,8 +16,8 @@ const SEVERITY: Record<'primary' | LgSeverity, string> = {
 };
 
 /**
- * A small count/label pill. Its content is projected, so it can hold plain text,
- * a number, or an icon + label. `rounded` makes it a full pill (default rounded-md).
+ * A small count/label pill holding projected text, a number, or an icon and
+ * label. `rounded` makes it a full pill.
  */
 @Component({
   selector: 'lg-badge',

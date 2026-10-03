@@ -3,9 +3,8 @@ import { GraphicsContext } from 'pixi.js';
 import { ThemingService } from '../theming/theming.service';
 import { StaticGraphicsContext } from './graphics/static-graphics-context';
 
-// Cached contexts are shared across many Graphics and live forever, which is
-// exactly the contract StaticGraphicsContext encodes — plain GraphicsContext
-// subclasses are not cacheable here.
+// Cached contexts are shared across many Graphics and live forever, the
+// contract StaticGraphicsContext encodes; a plain one is not cacheable here.
 type CacheableGraphics = (new (...args: never[]) => StaticGraphicsContext) &
   Pick<typeof StaticGraphicsContext, 'themeIndependent'>;
 

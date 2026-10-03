@@ -1,15 +1,13 @@
 import { Component, computed, effect, input, signal } from '@angular/core';
 
 /**
- * Internal animated vertical-collapse region: the shared idiom behind
- * accordion panels, panel-menu groups, and navigation groups. Collapsing
- * animates `grid-template-rows` between `1fr` and `0fr`, so the content needs
- * no measured height.
+ * Internal animated vertical-collapse region, shared by accordion panels,
+ * panel-menu groups and navigation groups. It animates `grid-template-rows`
+ * between `1fr` and `0fr`, so the content needs no measured height.
  *
- * The body clips its overflow while closed or mid-animation (so the height
- * collapse hides the content); once fully open it stops clipping, so projected
- * content — focus rings, corner badges — can bleed past the region's bounds.
- * Horizontal overflow is never clipped (the collapse is purely vertical).
+ * The body clips while closed or animating and stops once fully open, so
+ * projected focus rings and corner badges can bleed past the bounds.
+ * Horizontal overflow is never clipped.
  */
 @Component({
   selector: 'lg-collapse',
@@ -30,18 +28,13 @@ export class LgCollapse {
   /** True while the open/close height transition is running. */
   private readonly animating = signal(false);
 
-  /**
-   * Clip the body while it is closed or animating so the collapse hides the
-   * content; leave a fully-open region unclipped so projected content can
-   * overflow the bounds.
-   */
   protected readonly clipped = computed(() => !this.open() || this.animating());
 
   constructor() {
     let initialized = false;
     effect(() => {
-      // Track open state. Skip the initial run: a region that starts open has
-      // no transition to wait on and must render unclipped straight away.
+      // Skip the initial run: a region that starts open has no transition to
+      // wait on and must render unclipped straight away.
       this.open();
       if (!initialized) {
         initialized = true;

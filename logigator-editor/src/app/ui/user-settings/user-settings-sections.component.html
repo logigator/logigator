@@ -1,0 +1,11 @@
+<ng-container *appTranslate="let t">
+  <lg-user-panel-section [label]="t('userSettings.theme')">
+    <app-theme-switcher />
+  </lg-user-panel-section>
+  <lg-user-panel-section [label]="t('userSettings.language')">
+    <app-language-switcher />
+  </lg-user-panel-section>
+  <lg-user-panel-section [label]="t('userSettings.editorSettings')">
+    <app-settings />
+  </lg-user-panel-section>
+</ng-container>

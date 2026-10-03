@@ -5,12 +5,11 @@ import {
 } from '../../storage/indexed-db-store';
 
 /**
- * One persisted alias: a master's old (pre-promotion) local id and the server id
- * it was promoted to. `lastEdited` exists only to satisfy the shared
- * {@link IndexedDbStore} record shape (the store's ordered-listing index).
+ * One persisted alias. `lastEdited` exists only to satisfy the shared
+ * {@link IndexedDbStore} record shape.
  */
 export interface StoredComponentIdMapping {
-  /** The old (pre-promotion) local id — the store key. */
+  /** The pre-promotion local id, and the store key. */
   id: string;
   /** The server id the component was promoted to. */
   newId: string;
@@ -19,9 +18,8 @@ export interface StoredComponentIdMapping {
 
 /**
  * Durable old-local-id → server-id alias map, written when a browser master is
- * promoted to the cloud ({@link PromotionService.promoteComponentToServer}).
- * Loaded into the registry at startup so snapshots embedded before the promotion
- * still resolve to the now-server master (their captured id is the old local id).
+ * promoted. Loaded into the registry at startup so a snapshot that captured the
+ * old local id still resolves to the now-server master.
  */
 @Injectable({ providedIn: 'root' })
 export class ComponentIdMapStore {

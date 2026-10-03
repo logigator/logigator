@@ -12,11 +12,10 @@ import {
 import { LgCollapse } from '../../internal/collapse';
 
 /**
- * A disclosure accordion. Open panels are tracked by their `value` keys in a
- * `model()` `string[]` (two-way bindable). `multiple` allows several open at
- * once; otherwise opening one closes the rest. Panels are vertically padded and
- * flush horizontally (the side-bar layout); a caller wanting different padding
- * sets it on its own projected header/content.
+ * A disclosure accordion, its open panels tracked by `value` key in a two-way
+ * `model()`. `multiple` allows several at once; otherwise opening one closes
+ * the rest. Panels are vertically padded and horizontally flush, and a caller
+ * wanting other padding sets it on its own projected content.
  */
 @Component({
   selector: 'lg-accordion',
@@ -42,11 +41,9 @@ export class LgAccordion {
 }
 
 /**
- * One panel of an {@link LgAccordion}. Identified by `value`; renders the
- * `#header` template in the clickable header (with a caret) and its projected
- * body in an animated height-collapsing region ({@link LgCollapse}). A bottom
- * divider separates panels; the last panel drops it automatically
- * (`last:border-b-0`).
+ * One panel of an {@link LgAccordion}, identified by `value`. The `#header`
+ * template fills the clickable header; the projected body sits in an animated
+ * {@link LgCollapse} region.
  */
 @Component({
   selector: 'lg-accordion-panel',

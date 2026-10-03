@@ -1,20 +1,11 @@
 /*
- * @logigator/ui — reduced-motion contract.
- *
- * Honors `prefers-reduced-motion: reduce` for every animated surface in one
- * place: the library's overlays (dialog, drawer, window, popover, select,
- * menu), the shared collapse region behind accordion / panel-menu / navigation,
- * ripples, toasts, and the app's own transitions (coach marks, the board's
- * fade-in). Components author motion normally; this is the global off switch.
+ * @logigator/ui — reduced-motion contract. Components author motion normally;
+ * this is the one global off switch. Library-internal, like layers.css.
  *
  * Durations collapse to `0.01ms` rather than `none` on purpose: several
- * surfaces advance their state from a `transitionend` listener — the collapse
- * region un-clips its overflow there, and the ripple removes its element —
- * and `transition: none` suppresses the event entirely, which would leave them
- * stuck. A near-zero duration is visually instant but still fires.
- *
- * Library-internal, like layers.css: not part of the colors-only theme
- * contract in theme.css.
+ * surfaces advance their state from a `transitionend` listener, and
+ * `transition: none` suppresses that event entirely, leaving them stuck. A
+ * near-zero duration is visually instant but still fires.
  */
 
 @media (prefers-reduced-motion: reduce) {
@@ -28,10 +19,8 @@
   }
 
   /*
-   * The toast countdown bar is motion with no other purpose — it visualizes a
-   * timer that keeps running either way. Collapsing its duration would drain it
-   * instantly and read as "already expired", so drop the bar instead. Auto
-   * dismiss is timer-driven and unaffected.
+   * A collapsed duration would drain the countdown bar instantly and read as
+   * "already expired", so drop the bar. Auto dismiss is timer-driven anyway.
    */
   .lg-toast-progress {
     display: none !important;

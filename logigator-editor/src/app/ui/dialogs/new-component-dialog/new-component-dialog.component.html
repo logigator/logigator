@@ -26,17 +26,27 @@
     />
   </div>
   <div class="flex flex-col gap-1">
-    <label for="new-component-description">{{
-      t('newComponentDialog.description')
-    }}</label>
-    <input
-      lgInputText
-      id="new-component-description"
-      type="text"
-      [ngModel]="description()"
-      (ngModelChange)="description.set($event)"
-      [ngModelOptions]="{ standalone: true }"
-    />
+    <label
+      id="new-component-description-label"
+      for="new-component-description"
+      >{{ t('newComponentDialog.description') }}</label
+    >
+    <lg-markdown-field
+      [value]="description()"
+      [maxLength]="descriptionMaxLength"
+      labelledBy="new-component-description-label"
+    >
+      <textarea
+        lgTextarea
+        id="new-component-description"
+        rows="7"
+        class="w-full"
+        [attr.maxlength]="descriptionMaxLength"
+        [ngModel]="description()"
+        (ngModelChange)="description.set($event)"
+        [ngModelOptions]="{ standalone: true }"
+      ></textarea>
+    </lg-markdown-field>
   </div>
   <div class="flex flex-col gap-1">
     <span id="new-component-store-label">{{
@@ -59,20 +69,16 @@
         {{ t('newComponentDialog.notLoggedIn') }}
       </lg-message>
     } @else {
-      <div class="flex gap-2 items-center">
-        <lg-toggle-switch
-          inputId="new-component-public"
-          [ngModel]="isPublic()"
-          (ngModelChange)="isPublic.set($event)"
-          [ngModelOptions]="{ standalone: true }"
+      <div class="flex flex-col gap-2">
+        <span
+          id="new-component-visibility-label"
+          class="text-sm font-medium text-text-hover"
+          >{{ t('newComponentDialog.visibilityLabel') }}</span
+        >
+        <app-visibility-picker
+          labelledby="new-component-visibility-label"
+          [(visibility)]="visibility"
         />
-        <label for="new-component-public">{{
-          t('newComponentDialog.public')
-        }}</label>
-        <i
-          class="ph ph-info cursor-help text-surface-500"
-          [lgTooltip]="t('newComponentDialog.publicInfo')"
-        ></i>
       </div>
     }
   } @else {
@@ -81,10 +87,8 @@
     </lg-message>
   }
   <div class="flex justify-end">
-    <lg-button
-      type="submit"
-      [label]="t('newComponentDialog.create')"
-      [disabled]="!canCreate"
-    />
+    <button lgButton type="submit" [disabled]="!canCreate">
+      {{ t('newComponentDialog.create') }}
+    </button>
   </div>
 </form>

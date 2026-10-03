@@ -1,0 +1,62 @@
+/*
+ * A five-stop gradient that swaps shape at a breakpoint reads as noise in
+ * arbitrary-value classes; `--hero-page` carries the scheme in, so the rule
+ * itself needs no dark variant. 1024px is Tailwind's `lg`.
+ *
+ * The board is a background rather than an <img>: hydration writes an
+ * element's attributes again, and writing `src` or `srcset` — even unchanged
+ * — sends an animated image back to its first frame, while a background keeps
+ * playing. Which files it is is decided here too, so a page downloads only the
+ * ones the reader's scheme and motion preference name.
+ *
+ * The loop lies over the still. The still is the whole board and paints first,
+ * being a fraction of the loop's size; the loop is only the top of the board,
+ * where anything moves, and its first frame is that part of the still. Both
+ * start at the board's top edge, so the one size and position the template
+ * gives them lines them up.
+ */
+
+.hero-board {
+  background-image:
+    url('../../../assets/hero-board-animated-light.webp'),
+    url('../../../assets/hero-board-light.webp');
+}
+
+:host-context(.dark-mode) .hero-board {
+  background-image:
+    url('../../../assets/hero-board-animated-dark.webp'),
+    url('../../../assets/hero-board-dark.webp');
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-board {
+    background-image: url('../../../assets/hero-board-light.webp');
+  }
+
+  :host-context(.dark-mode) .hero-board {
+    background-image: url('../../../assets/hero-board-dark.webp');
+  }
+}
+
+.hero-scrim {
+  background: linear-gradient(
+    to bottom,
+    var(--hero-page) 0%,
+    color-mix(in srgb, var(--hero-page) 30%, transparent) 8%,
+    color-mix(in srgb, var(--hero-page) 30%, transparent) 70%,
+    var(--hero-page) 100%
+  );
+}
+
+@media (min-width: 1024px) {
+  .hero-scrim {
+    background: linear-gradient(
+      to right,
+      var(--hero-page) 0%,
+      var(--hero-page) 42%,
+      color-mix(in srgb, var(--hero-page) 66%, transparent) 60%,
+      color-mix(in srgb, var(--hero-page) 16%, transparent) 82%,
+      transparent 100%
+    );
+  }
+}

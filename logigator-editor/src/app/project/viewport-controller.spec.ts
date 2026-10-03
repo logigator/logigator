@@ -45,7 +45,7 @@ describe('ViewportController', () => {
     });
 
     it('zoomIn clamps at max scale steps', () => {
-      // 5 max steps — calling 10 times should not exceed max
+      // Ten calls must not exceed the five-step maximum.
       for (let i = 0; i < 10; i++) viewport.zoomIn(new Point(0, 0));
       const maxScale = Math.pow(1.2, 5);
       expect(container.scale.x).toBeCloseTo(maxScale, 5);
@@ -95,7 +95,7 @@ describe('ViewportController', () => {
     });
 
     it('resyncs the step so a later stepped zoomIn continues from the pinched scale', () => {
-      // 1.2^3 ≈ 1.728; nearest step is 3, so zoomIn should land on 1.2^4.
+      // 1.2^3 ≈ 1.728, so the nearest step is 3 and zoomIn lands on 1.2^4.
       viewport.zoomBy(Math.pow(1.2, 3), new Point(0, 0));
       viewport.zoomIn(new Point(0, 0));
       expect(container.scale.x).toBeCloseTo(Math.pow(1.2, 4), 5);
@@ -114,7 +114,7 @@ describe('ViewportController', () => {
     });
 
     it('scales so the limiting axis exactly spans the viewport', () => {
-      // 20 × 5 into a 40 × 20 viewport: x needs 2, y allows 4 — x limits.
+      // 20 × 5 into a 40 × 20 viewport: x needs 2 and y allows 4, so x limits.
       viewport.fitBounds(new Rectangle(0, 0, 20, 5));
       expect(container.scale.x).toBeCloseTo(2, 5);
       expect(visibleRect().width).toBeCloseTo(20, 5);
@@ -149,7 +149,6 @@ describe('ViewportController', () => {
     it('honours maxZoom instead of filling the viewport', () => {
       viewport.fitBounds(new Rectangle(0, 0, 2, 2), 0, 1);
       expect(container.scale.x).toBeCloseTo(1, 5);
-      // Still centred, just not zoomed in.
       const view = visibleRect();
       expect(view.x + view.width / 2).toBeCloseTo(1, 5);
     });
@@ -164,7 +163,7 @@ describe('ViewportController', () => {
 
     it('resyncs the step so a later stepped zoomOut continues from the fit', () => {
       viewport.fitBounds(new Rectangle(0, 0, 20, 5));
-      // 2 sits between 1.2^3 and 1.2^4; the nearest step is 4, so zoomOut lands on 1.2^3.
+      // 2 sits between 1.2^3 and 1.2^4, so the nearest step is 4.
       viewport.zoomOut(new Point(0, 0));
       expect(container.scale.x).toBeCloseTo(Math.pow(1.2, 3), 5);
     });
@@ -264,7 +263,7 @@ describe('ViewportController', () => {
       viewport.zoomIn(new Point(0, 0));
 
       const view = viewport.gridView(new Rectangle());
-      // Zoom anchored at the (panned) origin keeps the top-left corner fixed.
+      // Zoom anchored at the panned origin keeps the top-left corner fixed.
       expect(view.x).toBeCloseTo(5, 5);
       expect(view.y).toBeCloseTo(3, 5);
       expect(view.width).toBeCloseTo(40 / 1.2, 5);
@@ -341,8 +340,7 @@ describe('ViewportController', () => {
   describe('resizeViewport', () => {
     it('zoom centres on viewport middle by default', () => {
       viewport.resizeViewport(800, 600);
-      // center = (400, 300), old_pos = (0,0), old_scale = 1, new_scale = 1.2
-      // new_pos = center + (old_pos - center) * new_scale = (-80, -60)
+      // new_pos = center + (old_pos - center) · new_scale = (-80, -60).
       viewport.zoomIn();
       expect(container.position.x).toBeCloseTo(-80, 5);
       expect(container.position.y).toBeCloseTo(-60, 5);

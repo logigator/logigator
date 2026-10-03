@@ -1,0 +1,39 @@
+/* Type-check config for the capture tool. Nothing is emitted: Node runs the
+   `.ts` files as they are and strips the types while loading them, which is why
+   relative imports carry their extension.
+
+   The program reaches into the repo for the contracts the tool has to agree
+   with — the automation facade and the translation keys from the editor, the
+   origin codec from core, the response schemas from the contract — all through
+   `import type` or an `import()` `lib/runtime.ts` resolves, so the paths below
+   mirror its hooks. Resolution is the bundler's because that source is written
+   for one: it leaves extensions off its relative imports. */
+{
+  "compilerOptions": {
+    "target": "ES2024",
+    "lib": ["ES2024", "DOM", "DOM.Iterable"],
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    // The program contains the repo's source beside the tool's own.
+    "rootDir": "../../..",
+    "strict": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
+    "types": ["node"],
+    "paths": {
+      "@logigator/core": ["../../../logigator-core/src/public-api.ts"],
+      "@logigator/core/consent-text/*": [
+        "../../../logigator-core/src/origin/consent-text/*"
+      ],
+      "@logigator/core/*": ["../../../logigator-core/src/*"],
+      "@logigator/contract": ["../../../logigator-contract/src/public-api.ts"]
+    }
+  },
+  "include": ["**/*.ts"],
+  "exclude": ["node_modules"]
+}

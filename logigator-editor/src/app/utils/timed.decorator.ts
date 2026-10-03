@@ -31,8 +31,8 @@ function setupTimedDecorator(
     const result = originalMethod.apply(this, args);
     const end = performance.now();
 
-    // Gate on the same verbosity as LoggingService.debug; this decorator has no
-    // DI so it reads the environment directly rather than injecting the service.
+    // Same verbosity gate as LoggingService.debug, read from the environment
+    // because a decorator has no DI.
     if (LogLevel.Debug >= environment.loggingVerbosity) {
       // eslint-disable-next-line no-console
       console.debug(

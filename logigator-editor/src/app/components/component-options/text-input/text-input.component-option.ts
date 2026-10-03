@@ -6,18 +6,17 @@ const DEFAULT_MAX_LENGTH = 1000;
 
 export interface TextInputComponentOptionConfig {
   placeholder?: TranslationKey;
-  /** Hard cap on the value length; unbounded when omitted. */
+  /** Hard cap on the value length; `DEFAULT_MAX_LENGTH` when omitted. */
   maxLength?: number;
   /** Characters stripped from the value on every write; none when omitted. */
   forbiddenChars?: RegExp;
 }
 
 /**
- * A short, single-line text option (`<input type="text">`), counterpart to the
- * dialog `<textarea>` {@link TextAreaComponentOption}. Generic: length/character
- * constraints come from the consumer via {@link TextInputComponentOptionConfig},
- * not baked in. (Port labels configure `maxLength: 5` + `forbiddenChars: /,/g`
- * for the backend's comma-joined label column.)
+ * A short, single-line text option, counterpart to the dialog `<textarea>` of
+ * {@link TextAreaComponentOption}. Length and character constraints come from
+ * the consumer, not baked in: port labels ask for `maxLength: 5` and
+ * `forbiddenChars: /,/g` because the label column is comma-joined.
  */
 export class TextInputComponentOption extends ComponentOption<string> {
   public readonly renderer = TextInputOptionInputComponent;

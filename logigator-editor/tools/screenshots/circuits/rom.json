@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "name": "ROM",
+  "components": [
+    {
+      "type": 12,
+      "pos": [10, 1],
+      "options": { "wordSize": 4, "addressSize": 4, "data": "QQ==" }
+    },
+    { "type": 201, "pos": [-4, 0], "options": {} },
+    { "type": 201, "pos": [0, 1], "options": {} },
+    { "type": 201, "pos": [0, 1], "options": {} },
+    { "type": 201, "pos": [0, 1], "options": {} },
+    { "type": 202, "pos": [10, -3], "options": {} },
+    { "type": 202, "pos": [0, 1], "options": {} },
+    { "type": 202, "pos": [0, 1], "options": {} },
+    { "type": 202, "pos": [0, 1], "options": {} }
+  ],
+  "wires": "7,1:e2;6,0:e2;-6,1:e2;6,0:e2;-6,1:e2;6,0:e2;-6,1:e2;6,0:e2",
+  "definitions": []
+}

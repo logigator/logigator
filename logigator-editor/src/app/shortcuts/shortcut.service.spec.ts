@@ -197,7 +197,7 @@ describe('ShortcutService', () => {
     );
     expect(service.isHeld(ShortcutActionEnum.SELECT_SCISSOR)).toBe(true);
 
-    // The matching keyup goes to another window (alt-tab) — blur must not
+    // The matching keyup goes to another window (alt-tab); blur must not
     // leave the key stuck held.
     window.dispatchEvent(new Event('blur'));
     expect(service.isHeld(ShortcutActionEnum.SELECT_SCISSOR)).toBe(false);

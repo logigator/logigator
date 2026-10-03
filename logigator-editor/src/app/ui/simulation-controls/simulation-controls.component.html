@@ -9,7 +9,9 @@
 >
   <!-- Run controls come alive once the worker session reports ready. -->
   <div class="flex flex-wrap gap-1">
-    <lg-button
+    <button
+      lgButton
+      disabledInteractive
       [lgTooltip]="t('toolBar.play')"
       [ariaLabel]="t('toolBar.play')"
       [disabled]="!isSimReady() || isSimRunning()"
@@ -17,8 +19,10 @@
       tooltipPosition="bottom"
       icon="ph ph-play"
       severity="secondary"
-    ></lg-button>
-    <lg-button
+    ></button>
+    <button
+      lgButton
+      disabledInteractive
       [lgTooltip]="t('toolBar.pause')"
       [ariaLabel]="t('toolBar.pause')"
       [disabled]="!isSimRunning()"
@@ -26,8 +30,10 @@
       tooltipPosition="bottom"
       icon="ph ph-pause"
       severity="secondary"
-    ></lg-button>
-    <lg-button
+    ></button>
+    <button
+      lgButton
+      disabledInteractive
       [lgTooltip]="t('toolBar.step')"
       [ariaLabel]="t('toolBar.step')"
       [disabled]="!isSimReady() || isSimRunning()"
@@ -35,8 +41,10 @@
       tooltipPosition="bottom"
       icon="ph ph-skip-forward"
       severity="secondary"
-    ></lg-button>
-    <lg-button
+    ></button>
+    <button
+      lgButton
+      disabledInteractive
       [lgTooltip]="t('toolBar.stopSim')"
       [ariaLabel]="t('toolBar.stopSim')"
       [disabled]="!isSimReady()"
@@ -44,58 +52,135 @@
       tooltipPosition="bottom"
       icon="ph ph-stop"
       severity="secondary"
-    ></lg-button>
+    ></button>
   </div>
   <lg-divider layout="vertical" class="mx-1"></lg-divider>
-  <div class="flex flex-wrap items-center gap-2">
-    <lg-button
-      [lgTooltip]="t('toolBar.targetMode')"
-      [ariaLabel]="t('toolBar.targetMode')"
+  <div class="flex items-center gap-2">
+    <button
+      lgButton
+      disabledInteractive
+      [lgTooltip]="t('toolBar.speed')"
       [disabled]="!isSimReady()"
-      [outlined]="simMode() !== 'target'"
-      (onClick)="toggleTargetMode()"
+      [icon]="modeIcons[simMode()]"
+      (onClick)="speedPopover.toggle($event)"
       tooltipPosition="bottom"
-      icon="ph ph-gauge"
       severity="secondary"
-    ></lg-button>
-    <input
-      lgInputText
-      type="number"
-      min="1"
-      step="any"
-      class="w-24"
-      [disabled]="!isSimReady()"
-      [lgTooltip]="t('toolBar.targetSpeed')"
-      [ariaLabel]="t('toolBar.targetSpeed')"
+      class="whitespace-nowrap"
+    >
+      @switch (simMode()) {
+        @case ('sync') {
+          {{ t('toolBar.speedFrame') }}
+        }
+        @case ('target') {
+          {{ targetLabel() }}
+        }
+        @case ('continuous') {
+          {{ t('toolBar.speedMaxShort') }}
+        }
+      }
+      <i class="ph ph-caret-down text-xs" aria-hidden="true"></i>
+    </button>
+    <span
+      class="whitespace-nowrap text-sm select-none"
+      [class]="isBehind() ? 'text-warn-text' : 'text-muted'"
+      [lgTooltip]="isBehind() ? t('toolBar.speedBehind') : null"
       tooltipPosition="bottom"
-      [value]="targetValue()"
-      (input)="onTargetValueInput($event)"
-    />
-    <lg-select
-      [options]="targetUnitOptions"
-      [ngModel]="targetUnit()"
-      (ngModelChange)="onTargetUnitChange($event)"
-      [disabled]="!isSimReady()"
-      optionLabel="label"
-      optionValue="value"
-      [lgTooltip]="t('toolBar.targetUnit')"
-      [ariaLabel]="t('toolBar.targetUnit')"
-      tooltipPosition="bottom"
-    ></lg-select>
-    <lg-button
-      [lgTooltip]="t('toolBar.syncToFrame')"
-      [ariaLabel]="t('toolBar.syncToFrame')"
-      [disabled]="!isSimReady()"
-      [outlined]="simMode() !== 'sync'"
-      (onClick)="toggleSyncMode()"
-      tooltipPosition="bottom"
-      icon="ph ph-monitor-play"
-      severity="secondary"
-    ></lg-button>
-    <span class="text-sm text-muted select-none">
-      {{ t('toolBar.measuredHz', { hz: measuredHz() | si: 2 : 1000 }) }}
-      &middot;
+    >
+      @if (isBehind()) {
+        <i class="ph ph-warning" aria-hidden="true"></i>
+      }
+      @if (measuredLabel(); as measured) {
+        {{ measured }} &middot;
+      }
       {{ t('toolBar.ticks', { ticks: simTick() }) }}
     </span>
   </div>
 </div>
+
+<lg-popover #speedPopover>
+  <div
+    *appTranslate="let t"
+    role="group"
+    [attr.aria-label]="t('toolBar.speed')"
+    class="flex w-72 max-w-[calc(100vw-2rem)] flex-col gap-1"
+  >
+    @for (option of modeOptions; track option.mode) {
+      <button
+        type="button"
+        [attr.aria-pressed]="simMode() === option.mode"
+        (click)="setMode(option.mode)"
+        class="flex w-full items-start gap-3 rounded-md border px-2 py-1.5 text-left outline-none focus-visible:outline-2 focus-visible:outline-primary"
+        [class]="
+          simMode() === option.mode
+            ? 'border-primary-500 bg-primary-500/15'
+            : 'border-transparent hover:bg-content-hover'
+        "
+      >
+        <i
+          [class]="modeIcons[option.mode]"
+          class="mt-0.5 text-lg"
+          aria-hidden="true"
+        ></i>
+        <span class="flex flex-col">
+          <span class="font-medium">{{ t(option.label) }}</span>
+          <span class="text-sm text-muted">{{ t(option.hint) }}</span>
+        </span>
+      </button>
+      @if (option.mode === 'target') {
+        <!-- Always live: moving either one is choosing the fixed speed. -->
+        <div class="flex flex-col gap-1 pb-1 pl-9 pr-2">
+          <div class="flex items-center gap-3">
+            <lg-slider
+              class="min-w-0 flex-1"
+              [min]="0"
+              [max]="lastStop"
+              [step]="1"
+              [ngModel]="stopIndex()"
+              (ngModelChange)="onStopChange($event)"
+              [ariaLabel]="t('toolBar.speedRate')"
+            ></lg-slider>
+            <input
+              lgInputText
+              type="text"
+              inputmode="decimal"
+              autocomplete="off"
+              spellcheck="false"
+              class="w-24"
+              size="sm"
+              [invalid]="fieldInvalid()"
+              [value]="fieldText()"
+              [attr.aria-label]="t('toolBar.speedRate')"
+              [attr.aria-invalid]="fieldInvalid() || null"
+              (input)="onFieldInput($event)"
+              (blur)="onFieldCommit()"
+              (keydown.enter)="onFieldCommit()"
+            />
+          </div>
+          @if (fieldInvalid()) {
+            <span class="text-sm text-error">{{
+              t('toolBar.speedRateHint')
+            }}</span>
+          }
+        </div>
+      }
+    }
+
+    @if (clockRows().length > 0) {
+      <lg-divider class="my-1"></lg-divider>
+      <div class="flex flex-col gap-0.5 px-2 text-sm">
+        <span class="font-medium">{{ t('toolBar.clocks') }}</span>
+        @for (row of clockRows(); track row.delay) {
+          <span class="flex justify-between gap-3 text-muted">
+            <span>{{ t('toolBar.clockDelay', { delay: row.delay }) }}</span>
+            <span class="tabular-nums">{{ row.frequency }}</span>
+          </span>
+        }
+        @if (hiddenClocks() > 0) {
+          <span class="text-muted">{{
+            t('toolBar.clocksMore', { count: hiddenClocks() })
+          }}</span>
+        }
+      </div>
+    }
+  </div>
+</lg-popover>

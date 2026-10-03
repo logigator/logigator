@@ -9,11 +9,10 @@ import { CoachMarkView } from '../coach-mark.model';
 import { TranslateDirective } from '../../translation/translate.directive';
 
 /**
- * Presentational coach-mark bubble for one tutorial step. Knows nothing about
- * tutorials — it renders a {@link CoachMarkView} and emits the three controls
- * (Next / Skip / Turn off all tips). Positioning and the dim/highlight are the
- * overlay controller's job; this only draws the caret from `side` (the side the
- * bubble sits on relative to its anchor, `null` when centered).
+ * Presentational coach-mark bubble for one tutorial step: renders a
+ * {@link CoachMarkView} and emits Next / Skip / Turn off all tips. Positioning
+ * and the dim are the overlay controller's job; this only draws the caret from
+ * `side`, which is `null` when the bubble is centred.
  */
 @Component({
   selector: 'app-coach-mark',

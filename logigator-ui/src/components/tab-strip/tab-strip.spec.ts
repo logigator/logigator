@@ -45,10 +45,9 @@ class HostComponent {
   }
 
   /**
-   * Applies the move, as a real consumer does — the strip owns no tab order, so
-   * without this the list never actually changes and nothing the reorder is
-   * supposed to cause (a moved DOM node, focus following it) can be observed.
-   * Indices are in the movable subset, which sits after the fixed tabs.
+   * Applies the move, as a real consumer does: the strip owns no tab order, so
+   * without this nothing the reorder causes is observable. Indices are in the
+   * movable subset, which sits after the fixed tabs.
    */
   onReorder(event: LgTabReorder): void {
     this.reordered.set(event);
@@ -105,7 +104,6 @@ describe('LgTabStrip', () => {
     close.click();
     f.detectChanges();
     expect(f.componentInstance.closed()).toBe('a');
-    // Closing must not have selected the tab.
     expect(f.componentInstance.selected()).toBeNull();
   });
 
@@ -156,7 +154,6 @@ describe('LgTabStrip', () => {
       f.detectChanges();
 
       expect(document.activeElement).toBe(tabs[1]);
-      // Focus moved, but the panel must not have been swapped.
       expect(f.componentInstance.selected()).toBeNull();
       expect(tabs[1].getAttribute('tabindex')).toBe('0');
       expect(tabs[0].getAttribute('tabindex')).toBe('-1');
@@ -206,12 +203,10 @@ describe('LgTabStrip', () => {
       f.detectChanges();
       expect(f.componentInstance.reordered()).toBeNull();
 
-      // First movable tab cannot move further left.
       key(tabs[1], { key: 'ArrowLeft', ctrlKey: true });
       f.detectChanges();
       expect(f.componentInstance.reordered()).toBeNull();
 
-      // Last movable tab cannot move further right.
       key(tabs[2], { key: 'ArrowRight', ctrlKey: true });
       f.detectChanges();
       expect(f.componentInstance.reordered()).toBeNull();
@@ -228,11 +223,8 @@ describe('LgTabStrip', () => {
       expect(f.componentInstance.reordered()).toBeNull();
     });
 
-    /**
-     * The consumer re-renders the strip, which moves the tab's DOM node — and
-     * detaching a focused node blurs it. Without the restore, a second Ctrl+Arrow
-     * would land on <body> and do nothing.
-     */
+    // Re-rendering moves the tab's DOM node, and detaching a focused node
+    // blurs it, so a second Ctrl+Arrow would land on <body> and do nothing.
     it('keeps focus on the tab it moved', async () => {
       const { f, tabs } = setup();
       tabs[1].focus();

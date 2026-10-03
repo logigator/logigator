@@ -16,14 +16,14 @@ import { pickTextFile } from '../utils/file-picker';
 
 /**
  * Builds the title-bar "Debug" menu and owns its commands. Output goes to the
- * console (and a toast where a console object is not enough); these are
- * developer tools and are intentionally untranslated.
+ * console, and to a toast where a console object is not enough; developer
+ * tools, so intentionally untranslated.
  *
- * The gate is `DebugMenuToggleService.enabled()` at the call sites in
- * `EditorMenuService`, not a check in here. This module ships in every build so
- * the `window.__logigatorDebug()` console command can reach it in production;
- * resolving the service inside that guard is what keeps the services these
- * commands inject unconstructed until the menu is switched on.
+ * The gate is `DebugMenuToggleService.enabled()` at the menu-building sites,
+ * not a check in here: this module ships in every build so
+ * `window.__logigatorDebug()` can reach it in production, and resolving the
+ * service behind that guard is what keeps the services these commands inject
+ * unconstructed until the menu is switched on.
  */
 @Injectable({ providedIn: 'root' })
 export class DebugMenuService {
@@ -36,7 +36,6 @@ export class DebugMenuService {
   private readonly toast = inject(ToastService);
   private readonly clientInfo = inject(ClientInfoService);
 
-  /** The top-level "Debug" menubar item. */
   public buildMenuItem(): MenuItem {
     return {
       label: 'Debug',
@@ -115,19 +114,15 @@ export class DebugMenuService {
     this.toast.info('Client info printed to console.', 'DebugMenuService');
   }
 
-  /**
-   * Throws an uncaught error to exercise the global error handler and the
-   * bug-report dialog it opens.
-   */
+  /** Exercises the global error handler and the bug-report dialog it opens. */
   private throwTestError(): void {
     throw new Error('Test error thrown from the debug menu.');
   }
 
   /**
-   * Dumps the running session's snapshot tallies: full vs delta snapshot
-   * counts and the average number of visible link flips per snapshot (how
-   * active the board is). A high full-snapshot share means the engine keeps
-   * exceeding its delta threshold — a very busy board.
+   * Full vs delta snapshot counts and the average visible link flips per
+   * snapshot. A high full-snapshot share means the engine keeps exceeding its
+   * delta threshold, i.e. a very busy board.
    */
   private printSnapshotStats(): void {
     const stats = this.simulation.snapshotStats;
@@ -156,9 +151,8 @@ export class DebugMenuService {
   }
 
   /**
-   * Reports the shape and occupancy of the active project's two spatial
-   * indexes: the measurement itself, plus its distributions charted because a
-   * bar reads better than an array of counts.
+   * Shape and occupancy of the active project's two spatial indexes, with the
+   * distributions charted because a bar reads better than an array of counts.
    */
   private printQuadTreeStats(): void {
     this.forEachQuadTree((label, tree) => {
@@ -168,7 +162,7 @@ export class DebugMenuService {
     });
   }
 
-  /** Prints the entry hierarchy of both spatial indexes as text trees. */
+  /** Prints both spatial indexes' entry hierarchies as text trees. */
   private printQuadTreeStructure(): void {
     this.forEachQuadTree((label, tree) => {
       console.log(`[debug] ${label} quad tree\n${tree.formatTree()}`);
@@ -204,10 +198,6 @@ export class DebugMenuService {
     }
   }
 
-  /**
-   * Runs `report` over the active project's component and wire trees, or warns
-   * when there is no project to inspect.
-   */
   private forEachQuadTree(
     report: (label: string, tree: QuadTreeContainer<GridElement>) => void
   ): void {
@@ -220,7 +210,7 @@ export class DebugMenuService {
     report('wire', project.quadTrees.wires);
   }
 
-  /** Fires one toast of every severity to eyeball the stack and its styling. */
+  /** One toast of every severity, to eyeball the stack and its styling. */
   private spawnTestToasts(): void {
     this.toast.success('A success toast.', 'DebugMenuService');
     this.toast.info('An info toast.', 'DebugMenuService');
@@ -265,7 +255,7 @@ export class DebugMenuService {
     });
   }
 
-  /** Resolves which backend the live renderer is running on. */
+  /** Which backend the live renderer is running on. */
   private rendererMode(renderer: Renderer): string {
     switch (renderer.type) {
       case RendererType.WEBGPU:

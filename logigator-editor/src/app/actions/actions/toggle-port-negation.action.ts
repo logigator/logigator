@@ -7,9 +7,8 @@ import { getStaticDI } from '../../utils/get-di';
 
 /**
  * Toggles negation on a single component port. `negated` is the post-`do`
- * state, so one undo step flips it either way (mirroring ChangeOptionAction's
- * old/new pairing). The component is resolved fresh each time so the action
- * survives undo across other edits.
+ * state, so one undo step flips it either way. The component is resolved fresh
+ * each time, so the action survives undo across other edits.
  */
 export class TogglePortNegationAction extends Action {
   private readonly logging = getStaticDI(LoggingService);
@@ -51,5 +50,7 @@ export class TogglePortNegationAction extends Action {
       return;
     }
     component.setPortNegated(this.side, this.index, negated);
+    // A bubble redraw touches no ports, so nothing else asks for the frame.
+    project.triggerTicker('single');
   }
 }

@@ -24,35 +24,33 @@ type Plug = InputComponent | OutputComponent;
 
 interface PlugRow {
   component: Plug;
-  /** The plug's current label (empty until named). */
+  /** Empty until named. */
   label: string;
   /**
-   * Fallback shown when unlabeled, using the plug's creation-order ordinal.
-   * Deliberately *not* the row's position: it names the plug, so a reorder
-   * moves it along with the row instead of renumbering in place — which would
-   * leave a list of unlabeled ports looking untouched after a drag.
+   * Fallback shown when unlabeled, numbered by creation order. Deliberately
+   * *not* the row's position: it names the plug, so a reorder moves it along
+   * with the row rather than renumbering in place, which would leave a list of
+   * unlabeled ports looking untouched after a drag.
    */
   placeholder: string;
-  /** The plug's 1-based port position, i.e. the row's place in the list. */
+  /** 1-based port position, i.e. the row's place in the list. */
   position: number;
 }
 
 /**
- * The component-level Ports panel: two reorderable lists (inputs, then
- * outputs) that configure a custom component's port order and labels. Shown only
- * while editing a component.
+ * Two reorderable lists — inputs, then outputs — configuring a custom
+ * component's port order and labels. Shown only while editing a component.
  *
- * It is a **live view** of the open editor Project's INPUT/OUTPUT plugs (same
- * scan as `deriveSummary`): adding/removing a plug on the canvas adds/removes a
- * row. Two writes flow back, both through `ActionManager` (undo + dirty for
- * free): a drag rewrites every plug's `index` to a clean `0..n-1` via
- * {@link ReorderPlugsAction}; an inline edit writes the plug's `label` via
- * {@link ChangeOptionAction} — the same option surfaced when the plug is selected
- * on the canvas, so both views stay consistent.
+ * A **live view** of the project's INPUT/OUTPUT plugs (the same scan as
+ * `deriveSummary`), so adding or removing a plug on the canvas adds or removes
+ * a row. Both writes back go through `ActionManager`, for undo and dirty
+ * tracking: a drag rewrites every plug's `index` to a clean `0..n-1`, an
+ * inline edit writes the plug's `label` — the same option the canvas surfaces
+ * when the plug is selected, so the two views stay consistent.
  *
- * Each row shows two ordinals, and the split matters: the leading number is the
- * live port position, while the name field's placeholder identifies the plug by
- * creation order. Only the former renumbers on a drag.
+ * The two ordinals per row differ on purpose: the leading number is the live
+ * port position, the placeholder identifies the plug by creation order. Only
+ * the former renumbers on a drag.
  */
 @Component({
   selector: 'app-ports-panel',
@@ -73,13 +71,11 @@ export class PortsPanelComponent {
   private readonly translation = inject(TranslationService);
 
   // Re-emits on every action in the active project so the derived plug lists
-  // stay live; `startWith` seeds the first render when a project becomes
-  // active, and switchMap re-targets the stream on project change. As a signal
-  // it notifies change detection regardless of which context the action fired
-  // from (e.g. PixiJS plug add/delete handlers). `scan` turns the void
-  // emissions into a monotonic counter so each one is a distinct value that
-  // survives toSignal's equality check (otherwise identical `undefined`s would
-  // be deduped and the lists would not refresh).
+  // stay live, whichever context the action fired from. `startWith` seeds the
+  // first render, `switchMap` re-targets on project change, and `scan` turns
+  // the void emissions into a counter so each survives toSignal's equality
+  // check — identical `undefined`s would be deduped and the lists never
+  // refresh.
   private readonly actionTick = toSignal(
     toObservable(this.projectService.activeProject).pipe(
       switchMap((project) =>
@@ -158,13 +154,12 @@ export class PortsPanelComponent {
     const plugs = [...project.components].filter(
       (c): c is Plug => c instanceof ctor
     );
-    // Same ordering as deriveSummary: index, then instance id as a defensive
-    // tiebreaker against gappy/duplicate indices in externally-authored data.
+    // Same ordering as deriveSummary: index, then instance id as a tiebreaker
+    // against gappy or duplicate indices in externally-authored data.
     plugs.sort(
       (a, b) => a.options.index.value - b.options.index.value || a.id - b.id
     );
-    // Placeholder ordinals number the plugs by creation order (ascending
-    // instance id), which no drag can change — see PlugRow.placeholder.
+    // Creation order (ascending instance id), which no drag can change.
     const nameOrdinals = new Map<number, number>(
       [...plugs].sort((a, b) => a.id - b.id).map((c, i) => [c.id, i + 1])
     );

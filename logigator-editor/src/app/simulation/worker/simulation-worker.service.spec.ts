@@ -97,12 +97,10 @@ describe('SimulationWorkerService', () => {
     scheduler.fire();
     expect(fakeWorker.postedOfKind('requestSnapshot')).toHaveLength(1);
 
-    // The response has not arrived yet — a second frame must not stack
-    // another request.
+    // The response has not arrived — a second frame must not stack a request.
     scheduler.fire();
     expect(fakeWorker.postedOfKind('requestSnapshot')).toHaveLength(1);
 
-    // After the response is applied, the next frame requests again.
     await vi.waitFor(() =>
       expect(fakeWorker.postedOfKind('returnBuffer')).toHaveLength(1)
     );
@@ -122,7 +120,7 @@ describe('SimulationWorkerService', () => {
     expect(fakeWorker.postedOfKind('step')).toHaveLength(1);
     expect(fakeWorker.postedOfKind('requestSnapshot')).toHaveLength(1);
 
-    // In-flight snapshot also skips the tick, capping at the frame rate.
+    // An in-flight snapshot skips the tick, capping at the frame rate.
     scheduler.fire();
     expect(fakeWorker.postedOfKind('step')).toHaveLength(1);
   });
@@ -160,7 +158,7 @@ describe('SimulationWorkerService', () => {
     expect(returns).toHaveLength(1);
     expect(returns[0].buffer).toBe(packed.buffer);
 
-    // Idle session (no run started): the snapshot triggers a repaint.
+    // Idle session: the snapshot triggers a repaint.
     expect(hooks.repaint).toHaveBeenCalledOnce();
   });
 
@@ -181,9 +179,8 @@ describe('SimulationWorkerService', () => {
   });
 
   it('holds powered links across an empty delta instead of clearing them', async () => {
-    // An empty delta (nothing changed since the last poll) must be a no-op:
-    // falling through to applyFull with an empty buffer would read every link
-    // as 0 and clear the board on every quiescent frame.
+    // An empty delta must be a no-op: falling through to applyFull with an
+    // empty buffer would read every link as 0 and clear the board.
     const wire = { setPowered: vi.fn() };
     const realApplier = new LinkStateApplier([
       { wires: [wire], ports: [] }
@@ -191,7 +188,6 @@ describe('SimulationWorkerService', () => {
     const applyFullSpy = vi.spyOn(realApplier, 'applyFull');
     await service.startSession(DESCRIPTOR, { ...hooks, applier: realApplier });
 
-    // A non-empty delta powers link 0.
     fakeWorker.emit({
       kind: 'snapshot',
       reqId: 1,
@@ -205,7 +201,7 @@ describe('SimulationWorkerService', () => {
     });
     expect(wire.setPowered).toHaveBeenCalledExactlyOnceWith(true);
 
-    // An empty delta must not touch the link: no applyFull, link stays on.
+    // No applyFull, and the link stays on.
     fakeWorker.emit({
       kind: 'snapshot',
       reqId: 2,
@@ -247,7 +243,6 @@ describe('SimulationWorkerService', () => {
 
     expect(service.snapshotCounts).toEqual({ full: 1, delta: 2 });
 
-    // A fresh session resets the tallies.
     await service.startSession(DESCRIPTOR, hooks);
     expect(service.snapshotCounts).toEqual({ full: 0, delta: 0 });
   });
@@ -288,7 +283,7 @@ describe('SimulationWorkerService', () => {
     expect(fakeWorker.postedOfKind('requestSnapshot')).toHaveLength(1);
     expect(service.measuredHz()).toBe(0);
 
-    // The flushed snapshot arrives while idle — repaint must fire.
+    // The flushed snapshot arrives while idle.
     await vi.waitFor(() => expect(hooks.repaint).toHaveBeenCalled());
   });
 
@@ -340,8 +335,7 @@ describe('SimulationWorkerService', () => {
     );
     await service.startSession(DESCRIPTOR, hooks);
 
-    // Caught here and shown as a toast, so `GlobalErrorHandler` — the only
-    // other `$exception` source — never sees it.
+    // Caught and shown as a toast, so `GlobalErrorHandler` never sees it.
     fakeWorker.emit({ kind: 'error', reqId: null, message: 'engine died' });
     expect(captureError).toHaveBeenCalledOnce();
     expect(captureError.mock.calls[0][0]).toMatchObject({
@@ -353,6 +347,33 @@ describe('SimulationWorkerService', () => {
     expect(captureError).not.toHaveBeenCalled();
   });
 
+  it('reports the untranslated reason behind a coded engine failure', async () => {
+    const captureError = vi.spyOn(
+      TestBed.inject(AnalyticsService),
+      'captureError'
+    );
+    await service.startSession(DESCRIPTOR, hooks);
+
+    const detail =
+      'Failed to initialize the simulation engine: CompileError: expected magic word';
+    fakeWorker.emit({
+      kind: 'error',
+      reqId: null,
+      code: 'engineInitFailed',
+      message: detail
+    });
+
+    // The message is the localised catch-all toast text; what names the reason
+    // rides along as properties.
+    const [error, , properties] = captureError.mock.calls[0];
+    expect((error as Error).message).not.toContain('CompileError');
+    expect(properties).toEqual({
+      source: 'workerError',
+      code: 'engineInitFailed',
+      detail
+    });
+  });
+
   it('drops user inputs sent before the engine is initialized', async () => {
     autoRespond = false;
     const session = service.startSession(DESCRIPTOR, hooks);
@@ -361,9 +382,8 @@ describe('SimulationWorkerService', () => {
       expect(fakeWorker.postedOfKind('init')).toHaveLength(1)
     );
 
-    // A switch tapped in the window between entering simulation mode and the
-    // engine coming up. Reaching the worker, it would fail there with nothing
-    // to correlate against and take the whole session down.
+    // A switch tapped before the engine is up: reaching the worker, it would
+    // fail there uncorrelated and take the session down.
     service.triggerInput(3, 0, [true]);
     expect(fakeWorker.postedOfKind('triggerInput')).toHaveLength(0);
 
@@ -396,8 +416,8 @@ describe('SimulationWorkerService', () => {
     });
     await session;
 
-    // Dropped, not lost: it is reissued — still as a full snapshot, since a
-    // fresh applier has no baseline to apply a delta over.
+    // Dropped, not lost: reissued, and still full — a fresh applier has no
+    // baseline to apply a delta over.
     const requests = fakeWorker.postedOfKind('requestSnapshot');
     expect(requests).toHaveLength(1);
     expect(requests[0].full).toBe(true);

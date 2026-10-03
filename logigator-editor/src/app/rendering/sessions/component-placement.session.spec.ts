@@ -5,9 +5,8 @@ import { configureTestBed } from '../../../testing/configure-test-bed';
 import { WorkModeService } from '../../work-mode/work-mode.service';
 import { Project } from '../../project/project';
 import { Wire } from '../../wires/wire';
-import { WireDirection } from '../../wires/wire-direction.enum';
+import { Direction, WireDirection } from '@logigator/core';
 import { textComponentConfig } from '../../components/component-types/text/text.config';
-import { Direction } from '../../utils/direction';
 import { Component } from '../../components/component';
 import { ComponentConfig } from '../../components/component-config.model';
 import { ComponentOption } from '../../components/component-option';
@@ -44,11 +43,14 @@ describe('ComponentPlacementSession collision', () => {
     project.destroy({ children: true });
   });
 
+  // The session follows a cursor: an AND's 2×2 body centres on it, so a
+  // cursor at (x+1, y+1) places the gate at (x, y).
+
   it('canEnd() is true when placed on empty ground', () => {
     session = new ComponentPlacementSession(
       project,
       dragLayer,
-      new Point(0, 0),
+      new Point(1, 1),
       placeConfig
     );
     expect(session.canEnd()).toBe(true);
@@ -61,21 +63,20 @@ describe('ComponentPlacementSession collision', () => {
     session = new ComponentPlacementSession(
       project,
       dragLayer,
-      new Point(0, 0),
+      new Point(1, 1),
       placeConfig
     );
     expect(session.canEnd()).toBe(false);
   });
 
   it('canEnd() is false when body lands on a wire — catches missing wire check bug', () => {
-    // Body at startPos=(5,0): Rectangle(5,0,2,2).
-    // Wire gx=3, len=3: gridBounds=[3,7)×[0,1) → enters body at x=5.
+    // Body Rectangle(5,0,2,2); wire gridBounds [3,7)×[0,1) enters it at x=5.
     const wire = makeWire(3, 0, WireDirection.HORIZONTAL, 3);
     project.addWire(wire);
     session = new ComponentPlacementSession(
       project,
       dragLayer,
-      new Point(5, 0),
+      new Point(6, 1),
       placeConfig
     );
     expect(session.canEnd()).toBe(false);
@@ -83,14 +84,13 @@ describe('ComponentPlacementSession collision', () => {
   });
 
   it('canEnd() is true when wire ends at the stub boundary (not inside body)', () => {
-    // Body at (5,0): Rectangle(5,0,2,2). Wire gx=0, len=4: gridBounds=[0,5)×[0,1).
-    // Wire right=5 equals body left=5 → no intersection (touches but does not overlap).
+    // Wire right = 5 equals body left = 5: touching, not overlapping.
     const wire = makeWire(0, 0, WireDirection.HORIZONTAL, 4);
     project.addWire(wire);
     session = new ComponentPlacementSession(
       project,
       dragLayer,
-      new Point(5, 0),
+      new Point(6, 1),
       placeConfig
     );
     expect(session.canEnd()).toBe(true);
@@ -103,12 +103,12 @@ describe('ComponentPlacementSession collision', () => {
     session = new ComponentPlacementSession(
       project,
       dragLayer,
-      new Point(5, 0),
+      new Point(6, 1),
       placeConfig
     );
     expect(session.canEnd()).toBe(false);
 
-    session.onMove(makeMoveInput(20, 0));
+    session.onMove(makeMoveInput(21, 1));
     expect(session.canEnd()).toBe(true);
     wire.destroy();
   });
@@ -119,20 +119,19 @@ describe('ComponentPlacementSession collision', () => {
     session = new ComponentPlacementSession(
       project,
       dragLayer,
-      new Point(0, 10),
+      new Point(1, 11),
       placeConfig
     );
     expect(session.canEnd()).toBe(true);
 
-    session.onMove(makeMoveInput(5, 0));
+    session.onMove(makeMoveInput(6, 1));
     expect(session.canEnd()).toBe(false);
     wire.destroy();
   });
 
   it('placing a component whose port lands on a wire interior splits the wire', () => {
-    // AND at (4, 0) facing East has input ports at (3.5, 0.5) and (3.5, 1.5).
-    // V wire (3.5, -2.5)→(3.5, 2.5) passes through both ports in its interior
-    // without overlapping the body (body x∈[4,6), wire gridBounds.right=4 — touch only).
+    // The vertical wire passes through both input ports in its interior while
+    // only touching the body (body x ∈ [4,6), wire right = 4).
     const v = new Wire(WireDirection.VERTICAL, 5);
     v.position.set(3.5, -2.5);
     project.addWire(v);
@@ -140,7 +139,7 @@ describe('ComponentPlacementSession collision', () => {
     session = new ComponentPlacementSession(
       project,
       dragLayer,
-      new Point(4, 0),
+      new Point(5, 1),
       placeConfig
     );
     expect(session.canEnd()).toBe(true);
@@ -152,22 +151,20 @@ describe('ComponentPlacementSession collision', () => {
     const verticals = wires.filter(
       (w) => w.direction === WireDirection.VERTICAL
     );
-    // Two ports split V into three pieces.
     expect(verticals.length).toBe(3);
     const lengths = verticals.map((w) => w.length).sort();
     expect(lengths).toEqual([1, 1, 3]);
   });
 
-  // NOT gate geometry (bodyGridWidth=2, bodyGridHeight=1, 1 input, 1 output):
-  //   East at (0,0):  body [0,2]×[0,1],  output stub tip at (2.5, 0.5)
-  //   North at (2,0): body [2,3]×[-2,0], input  stub tip at (2.5,  0.5)
-  // The two stubs share the region [2,2.5]×[0,0.5] — stub-on-stub, not stub-on-body.
+  // East at (0,0): body [0,2]×[0,1], output stub tip (2.5, 0.5).
+  // North at (2,0): body [2,3]×[-2,0] (centred on (2.5,-1)), input stub tip
+  // (2.5, 0.5).
+  // The stubs share [2,2.5]×[0,0.5]: stub-on-stub, not stub-on-body.
   it('canEnd() is true when perpendicular NOT gates meet only at stub ends', () => {
     const existing = makeNot(Direction.E);
     existing.position.set(0, 0);
     project.addComponent(existing);
 
-    // The session's ghost starts facing the type's sticky placement direction.
     TestBed.inject(WorkModeService).setPlacementDirection(
       notComponentConfig.type,
       Direction.N
@@ -178,14 +175,14 @@ describe('ComponentPlacementSession collision', () => {
     session = new ComponentPlacementSession(
       project,
       dragLayer,
-      new Point(2, 0),
+      new Point(2.5, -1),
       placeConfig
     );
     expect(session.canEnd()).toBe(true);
   });
 
-  // North at (2,1): body [2,3]×[-1,1].  East output stub [2,2.5]×[0,1] extends
-  // into that body — stub-in-body is a real collision.
+  // North at (2,1) has body [2,3]×[-1,1] (centred on (2.5,0)); the East output
+  // stub [2,2.5]×[0,1] extends into it, which is a real collision.
   it('canEnd() is false when perpendicular NOT gate output stub enters existing body', () => {
     const existing = makeNot(Direction.E);
     existing.position.set(0, 0);
@@ -201,14 +198,14 @@ describe('ComponentPlacementSession collision', () => {
     session = new ComponentPlacementSession(
       project,
       dragLayer,
-      new Point(2, 1),
+      new Point(2.5, 0),
       placeConfig
     );
     expect(session.canEnd()).toBe(false);
   });
 
   it('TEXT under a wire: canEnd() is true (ignoresWireCollision)', () => {
-    // Wire at (0,0) horizontal length 5. TEXT placed at (1,0) — body inside wire.
+    // The TEXT body at (1,0) sits inside the wire.
     const wire = makeWire(0, 0, WireDirection.HORIZONTAL, 5);
     project.addWire(wire);
     placeConfig = textComponentConfig as unknown as ComponentConfig<
@@ -217,7 +214,7 @@ describe('ComponentPlacementSession collision', () => {
     session = new ComponentPlacementSession(
       project,
       dragLayer,
-      new Point(1, 0),
+      new Point(1.5, 0.5),
       placeConfig
     );
     expect(session.canEnd()).toBe(true);
@@ -234,10 +231,69 @@ describe('ComponentPlacementSession collision', () => {
     session = new ComponentPlacementSession(
       project,
       dragLayer,
-      new Point(1, 0),
+      new Point(1.5, 0.5),
       placeConfig
     );
     expect(session.canEnd()).toBe(false);
+  });
+
+  // The nearest a snapped body can get: its centre within half a cell.
+  const expectBodyCentredOn = (component: Component, cursor: Point) => {
+    const body = component.bodyGridBounds;
+    expect(Math.abs(body.x + body.width / 2 - cursor.x)).toBeLessThanOrEqual(
+      0.5
+    );
+    expect(Math.abs(body.y + body.height / 2 - cursor.y)).toBeLessThanOrEqual(
+      0.5
+    );
+  };
+
+  it('centres the placed body under the cursor in every direction', () => {
+    placeConfig = notComponentConfig as unknown as ComponentConfig<
+      Record<string, ComponentOption>
+    >;
+    const workMode = TestBed.inject(WorkModeService);
+    const directions = [Direction.E, Direction.S, Direction.W, Direction.N];
+    // Off the lattice, and apart so the gates never touch.
+    const cursors = directions.map((_, i) => new Point(10.2 + i * 10, -3.7));
+    directions.forEach((direction, i) => {
+      workMode.setPlacementDirection(placeConfig.type, direction);
+      const placing = new ComponentPlacementSession(
+        project,
+        dragLayer,
+        new Point(0, 0),
+        placeConfig
+      );
+      placing.onMove(makeMoveInput(cursors[i].x, cursors[i].y));
+      placing.onEnd();
+    });
+
+    const placed = [...project.components];
+    expect(placed.map((c) => c.direction)).toEqual(directions);
+    placed.forEach((component, i) => {
+      expect(Number.isInteger(component.position.x)).toBe(true);
+      expect(Number.isInteger(component.position.y)).toBe(true);
+      expectBodyCentredOn(component, cursors[i]);
+    });
+  });
+
+  it('a mid-drag rotate turns the ghost about the cursor', () => {
+    placeConfig = notComponentConfig as unknown as ComponentConfig<
+      Record<string, ComponentOption>
+    >;
+    const cursor = new Point(7.5, 4);
+    session = new ComponentPlacementSession(
+      project,
+      dragLayer,
+      cursor,
+      placeConfig
+    );
+    session.rotate(1);
+    session.onEnd();
+
+    const [placed] = [...project.components];
+    expect(placed.direction).toBe(Direction.S);
+    expectBodyCentredOn(placed, cursor);
   });
 
   it('undo of a placement-with-split restores the original wire', () => {
@@ -248,7 +304,7 @@ describe('ComponentPlacementSession collision', () => {
     session = new ComponentPlacementSession(
       project,
       dragLayer,
-      new Point(4, 0),
+      new Point(5, 1),
       placeConfig
     );
     session.onEnd();
@@ -319,7 +375,8 @@ describe('ComponentPlacementSession custom masters', () => {
       new Point(0, 0),
       masterConfig
     );
-    session.onMove(makeMoveInput(5, 3));
+    // The 3×2 body centred on (6.5, 4) puts the component at (5, 3).
+    session.onMove(makeMoveInput(6.5, 4));
     session.onEnd();
 
     const placed = placedComponents();
@@ -352,10 +409,11 @@ describe('ComponentPlacementSession custom masters', () => {
 
   it('undo and redo round-trip the frozen instance', () => {
     workMode.setPlacementDirection(masterConfig.type, Direction.W);
+    // Facing West, the body at (4,2) is [1,4]×[0,2], centred on (2.5, 1).
     new ComponentPlacementSession(
       project,
       dragLayer,
-      new Point(4, 2),
+      new Point(2.5, 1),
       masterConfig
     ).onEnd();
     const typeId = placedComponents()[0].config.type;

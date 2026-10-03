@@ -4,8 +4,7 @@ import { configureTestBed } from '../../../testing/configure-test-bed';
 import { HexEditorComponent } from './hex-editor.component';
 
 /**
- * Exercises the editor's grid model directly (no dialog render): seed via the
- * inputs, run the open-time reset, then drive the cell/save logic. The bit
+ * Exercises the grid model directly, without rendering a dialog. The bit
  * packing itself is covered by packed-buffer.spec.
  */
 describe('HexEditorComponent', () => {

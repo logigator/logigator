@@ -9,10 +9,8 @@ export interface InvalidTintable {
 
 /**
  * Tints an element with the theme's invalid color, or restores its own tint.
- * The elements are tinted directly rather than through a parent container: a
- * container tint multiplies with the children's own tints (wires carry their
- * color AS tint over a white base), which would darken the invalid red toward
- * black.
+ * Directly, not through a parent container: a container tint multiplies with
+ * the children's own tints and would darken the invalid red toward black.
  */
 export function applyInvalidTint(el: InvalidTintable, invalid: boolean): void {
   if (invalid) {

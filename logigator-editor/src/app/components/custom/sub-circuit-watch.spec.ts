@@ -2,13 +2,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { Point } from 'pixi.js';
 import { configureTestBed } from '../../../testing/configure-test-bed';
-import { makeSwitch } from '../../../testing/factories';
+import { makeButton, makeSwitch } from '../../../testing/factories';
 import {
   FakeSimulationWorker,
   ManualFrameScheduler
 } from '../../../testing/fake-simulation-worker';
 import { Component } from '../component';
 import { ComponentProviderService } from '../component-provider.service';
+import { ButtonComponent } from '../component-types/button/button.component';
 import { SwitchComponent } from '../component-types/switch/switch.component';
 import { outputComponentConfig } from '../component-types/output/output.config';
 import { Project } from '../../project/project';
@@ -20,7 +21,7 @@ import {
   SIMULATION_WORKER_FACTORY
 } from '../../simulation/worker/simulation-worker.service';
 import { Wire } from '../../wires/wire';
-import { WireDirection } from '../../wires/wire-direction.enum';
+import { WireDirection } from '@logigator/core';
 import { CustomComponentRegistry } from './custom-component-registry.service';
 import { CustomComponent } from './custom-component';
 import { SubCircuitWatch } from './sub-circuit-watch';
@@ -89,9 +90,14 @@ describe('SubCircuitWatch', () => {
     project.destroy({ children: true });
   });
 
-  /** SwitchBox nested inside Outer; a placed Outer instance in the project. */
-  async function placeNestedFixture(): Promise<CustomComponent> {
-    const switchComp = makeSwitch(0, 0);
+  /**
+   * SwitchBox nested inside Outer; a placed Outer instance in the project.
+   * `makeInput` swaps the box's switch for another user input.
+   */
+  async function placeNestedFixture(
+    makeInput: () => Component = makeSwitch
+  ): Promise<CustomComponent> {
+    const switchComp = makeInput();
     const plug = Component.deserialize(
       { pos: [8, 0], options: { label: '', index: 0 } },
       outputComponentConfig
@@ -193,5 +199,60 @@ describe('SubCircuitWatch', () => {
     });
 
     watch.destroy();
+  });
+
+  describe('an inner button', () => {
+    let watch: SubCircuitWatch;
+    let buttonCopy: ButtonComponent;
+
+    beforeEach(async () => {
+      const instance = await placeNestedFixture(() => makeButton(0, 0));
+      watch = instance.config.inspection!(instance) as SubCircuitWatch;
+      watch.activate(watch.activeLevel().session.components[0]);
+      buttonCopy = watch.activeLevel().session.components[0] as ButtonComponent;
+      expect(buttonCopy).toBeInstanceOf(ButtonComponent);
+    });
+
+    afterEach(() => watch.destroy());
+
+    /** Cont events sent to the flattened board's only unit, the button. */
+    const levels = () =>
+      fakeWorker
+        .postedOfKind('triggerInput')
+        .filter((msg) => msg.componentIndex === 0 && msg.event === 0)
+        .map((msg) => msg.state[0]);
+
+    it('is held for as long as its hold lasts', () => {
+      const hold = watch.holdFor(buttonCopy)!;
+
+      hold.press();
+      expect(buttonCopy.held).toBe(true);
+      expect(levels()).toEqual([true]);
+
+      hold.release();
+      expect(buttonCopy.held).toBe(false);
+      expect(levels()).toEqual([true, false]);
+    });
+
+    it('is released when its level closes under the hold', () => {
+      const hold = watch.holdFor(buttonCopy)!;
+      hold.press();
+
+      watch.navigateTo(0);
+      expect(levels()).toEqual([true, false]);
+
+      // The hold's own release, cancelled by the level swap, sends nothing.
+      hold.release();
+      expect(levels()).toEqual([true, false]);
+    });
+
+    it('takes an absolute value through setInput', () => {
+      expect(watch.setInput(buttonCopy, true)).toBe(true);
+      expect(watch.setInput(buttonCopy, true)).toBe(true);
+      expect(levels()).toEqual([true]);
+
+      expect(watch.setInput(buttonCopy, false)).toBe(true);
+      expect(levels()).toEqual([true, false]);
+    });
   });
 });

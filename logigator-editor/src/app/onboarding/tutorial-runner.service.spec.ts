@@ -5,8 +5,9 @@ import { firstValueFrom, Subject } from 'rxjs';
 import { TranslocoService } from '@jsverse/transloco';
 import { configureTestBed } from '../../testing/configure-test-bed';
 import { Component } from '../components/component';
-import { BuiltInComponentType } from '../components/component-type.enum';
+import { BuiltInComponentType } from '@logigator/core';
 import { ConfirmationService } from '@logigator/ui';
+import { UserInputEvent } from '../project/project';
 import { ProjectService } from '../project/project.service';
 import { PersistenceService } from '../persistence/persistence.service';
 import { ProjectMetadataStore } from '../persistence/project-metadata.store';
@@ -23,8 +24,8 @@ import { TUTORIALS } from './tutorials/registry';
 
 const SW = BuiltInComponentType.SWITCH;
 
-// Two manual steps around one action step, so the runner mechanics can be
-// exercised without depending on the real script's detectors.
+// Two manual steps around one action step, exercising the runner mechanics
+// without depending on the real script's detectors.
 const TEST_TUTORIAL: TutorialDefinition = {
   id: 'test',
   steps: [
@@ -64,7 +65,7 @@ describe('TutorialRunnerService', () => {
   let hide: ReturnType<typeof vi.fn>;
   let components: Component[];
   let actionChange$: Subject<void>;
-  let userInput$: Subject<Component>;
+  let userInput$: Subject<UserInputEvent>;
   let createAndSetEmptyProject: ReturnType<typeof vi.fn>;
   let confirm: ReturnType<typeof vi.fn<(config: ConfirmConfig) => void>>;
   let dirty: boolean;
@@ -85,7 +86,7 @@ describe('TutorialRunnerService', () => {
     hide = vi.fn();
     components = [];
     actionChange$ = new Subject<void>();
-    userInput$ = new Subject<Component>();
+    userInput$ = new Subject<UserInputEvent>();
     createAndSetEmptyProject = vi.fn();
     confirm = vi.fn<(config: ConfirmConfig) => void>();
     dirty = false;
@@ -132,7 +133,7 @@ describe('TutorialRunnerService', () => {
     tick();
     expect(lastView().stepNumber).toBe(1); // manual step
 
-    userInput$.next({} as Component); // drive an input mid-step
+    userInput$.next({ component: {} as Component, phase: 'tap' }); // drive an input mid-step
     tick();
 
     expect(lastView().stepNumber).toBe(1); // still waiting on Next
@@ -228,8 +229,7 @@ describe('TutorialRunnerService', () => {
     (TUTORIALS as Record<string, TutorialDefinition>)['candidates'] =
       candidates;
 
-    // A registered-but-detached top candidate (a closed sheet's palette item)
-    // and a connected fallback (the button that opens it).
+    // A registered-but-detached top candidate and a connected fallback.
     const detached = document.createElement('div');
     const fallback = document.createElement('div');
     document.body.appendChild(fallback);
@@ -242,8 +242,8 @@ describe('TutorialRunnerService', () => {
     // The detached primary is skipped; the connected fallback wins.
     expect(show.mock.calls.at(-1)![0]).toBe(fallback);
 
-    // The primary attaches without re-registering (a sheet opening its
-    // already-registered, projected content); a sheet toggle re-anchors it.
+    // The primary attaches without re-registering, as a sheet opening its
+    // projected content does; the sheet toggle re-anchors it.
     document.body.appendChild(detached);
     TestBed.inject(MobileUiService).open('palette');
     tick();

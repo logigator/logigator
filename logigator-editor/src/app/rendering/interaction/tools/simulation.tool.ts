@@ -1,18 +1,30 @@
-import { Point, Rectangle } from 'pixi.js';
+import { Point } from 'pixi.js';
 import { Project } from '../../../project/project';
-import { BuiltInComponentType } from '../../../components/component-type.enum';
+import { BuiltInComponentType } from '@logigator/core';
+import { HoldSession } from '../../sessions/hold.session';
 import { PanSession } from '../../sessions/pan.session';
+import { buttonAt, componentBodiesAt } from '../body-hit';
 import { PointerInput } from '../pointer-input';
 import { BoardTool, ToolHost } from './board-tool';
 
 /**
- * The simulation mode's canvas behavior: editing stays structurally locked,
- * but one-finger / left-drag pans the viewport like the hand tool. A tap that
- * never crosses the pan threshold instead activates the component under the
- * cursor — the only canvas interaction allowed while editing is locked.
+ * Editing stays structurally locked, but a drag pans like the hand tool and a
+ * tap activates the component under the cursor — the only canvas interaction
+ * allowed while the lock holds. A press on a button holds it for the gesture
+ * instead, and never pans.
  */
 export class SimulationTool implements BoardTool {
   public down(project: Project, input: PointerInput, host: ToolHost): void {
+    const button = buttonAt(project, input.grid);
+    if (button) {
+      host.startSession(
+        new HoldSession(
+          () => project.emitUserInput(button, 'press'),
+          () => project.emitUserInput(button, 'release')
+        )
+      );
+      return;
+    }
     host.startSession(
       new PanSession(project, input.global, input.grid, (clickPoint) =>
         this._emitUserInputAt(project, clickPoint)
@@ -21,24 +33,15 @@ export class SimulationTool implements BoardTool {
   }
 
   /**
-   * Activates the component whose body contains the grid-space point, if any:
-   * a button/switch emits user input, an inspectable component (its config
-   * declares an inspection) emits an inspect request.
+   * Activates the component whose body contains the point: a pulse
+   * button/switch emits user input, an inspectable component an inspect
+   * request.
    */
   private _emitUserInputAt(project: Project, localPoint: Point): void {
-    const queryRect = new Rectangle(
-      localPoint.x - 0.5,
-      localPoint.y - 0.5,
-      1,
-      1
-    );
-    for (const comp of project.queryComponentsInRange(queryRect)) {
-      if (!comp.bodyGridBounds.contains(localPoint.x, localPoint.y)) {
-        continue;
-      }
+    for (const comp of componentBodiesAt(project, localPoint)) {
       const type = comp.config.type;
       if (
-        type === BuiltInComponentType.BUTTON ||
+        type === BuiltInComponentType.PULSE_BUTTON ||
         type === BuiltInComponentType.SWITCH
       ) {
         project.emitUserInput(comp);

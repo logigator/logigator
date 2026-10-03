@@ -2,17 +2,13 @@ import { effect, EffectRef, inject, Injectable, Injector } from '@angular/core';
 import { ProjectMetadataStore } from './project-metadata.store';
 
 /**
- * Registers a {@link https://developer.mozilla.org/en-US/docs/Web/API/Window/beforeunload_event | beforeunload}
- * listener that triggers the browser's built-in "leave site?" dialog when any
- * registered project has unsaved changes.
+ * Triggers the browser's built-in "leave site?" dialog when any registered
+ * project has unsaved changes. The text is the browser's, not customisable.
  *
- * The listener is bound and unbound as `anyDirty()` flips rather than kept for
- * the whole session: a registered `beforeunload` listener disqualifies the page
- * from the back/forward cache whether or not it ever fires, so an editor with
- * nothing to lose would otherwise trade bfcache — and a cold start on every
- * back-navigation — for nothing.
- *
- * The dialog text is controlled by the browser and cannot be customised.
+ * The listener is bound and unbound as `anyDirty()` flips: a registered
+ * `beforeunload` listener disqualifies the page from the back/forward cache
+ * whether or not it fires, so an editor with nothing to lose would trade
+ * bfcache, and a cold start on every back-navigation, for nothing.
  */
 @Injectable({ providedIn: 'root' })
 export class UnsavedChangesGuard {
@@ -48,8 +44,7 @@ export class UnsavedChangesGuard {
     if (this._handler) return;
 
     this._handler = (e: BeforeUnloadEvent): void => {
-      // Re-checked rather than assumed from the listener's presence: effects are
-      // scheduled, so a just-saved project can still have the listener bound.
+      // Effects are scheduled, so a just-saved project can still be bound.
       if (this.metadataStore.anyDirty()) {
         e.preventDefault();
       }

@@ -33,16 +33,13 @@ import { AnalyticsService } from '../analytics/analytics.service';
 import { AnalyticsEvent } from '../analytics/analytics.mapping';
 
 /**
- * Drives a running tutorial: reacts to {@link OnboardingService.activeTutorial},
- * filters the script to the current platform, and for each step subscribes to
- * the matching editor stream, evaluates the completion predicate, and renders
- * the coach-mark via {@link OnboardingOverlayService}. The onboarding-state
- * enable/seen/completed gate stays in {@link OnboardingService}.
+ * Drives a running tutorial: filters the script to the current platform and,
+ * per step, subscribes to the matching editor stream, evaluates the completion
+ * predicate and renders the coach-mark. The enable/seen/completed gate stays in
+ * {@link OnboardingService}.
  *
- * {@link launch} is the entry point that starts a tutorial: it swaps in a fresh
- * empty board first (a tutorial builds a real sample circuit and must not
- * pollute the user's work) before setting the active tutorial the effect reacts
- * to. Instantiated by the app shell (which hosts the coach-mark).
+ * {@link launch} swaps in a fresh empty board before starting — a tutorial
+ * builds a real sample circuit and must not pollute the user's work.
  */
 @Injectable({ providedIn: 'root' })
 export class TutorialRunnerService {
@@ -73,32 +70,28 @@ export class TutorialRunnerService {
   private stepSub = new Subscription();
 
   constructor() {
-    // Start/stop with the active tutorial. Untracked so re-resolving the
-    // platform, project, etc. inside the body doesn't re-trigger the effect.
+    // Untracked so re-resolving the platform, project etc. inside the body does
+    // not re-trigger the effect.
     effect(() => {
       const active = this.onboarding.activeTutorial();
       untracked(() => this.onActiveChange(active));
     });
 
-    // Keep the coach-mark anchored to the current step's target as it registers,
-    // moves, or is re-created, and re-render its text/target when the breakpoint
-    // flips the platform — all reactively, so there is no querySelector timing
-    // race. The advance subscriptions and baseline stay put across a platform
-    // flip (no sub-count reset), since only the presentation changes here.
+    // Keeps the coach-mark anchored as its target registers, moves or is
+    // re-created, and re-renders on a platform flip. Only presentation changes
+    // here — the advance subscriptions and baseline stay put.
     effect(() => {
       const step = this.currentStep();
       if (!step) return;
       const platform = this.onboarding.platform();
-      // A compact palette target lives inside a Drawer that only attaches its
-      // content while open, so the element flips between attached and detached
-      // without the registry map (keyed on element identity) changing. Track the
-      // open sheet so a toggle re-runs this effect; see resolveTarget's
-      // connected-element filter.
+      // A compact palette target lives in a Drawer that attaches its content
+      // only while open, so the element flips attached/detached without the
+      // registry map changing; tracking the open sheet re-runs this on a
+      // toggle.
       this.mobileUi.activeSheet();
       this.resolveTarget(step, platform); // track the target element(s)
-      // Anchor after the render settles, not inline: opening the sheet attaches
-      // the palette item only when the Drawer stamps its template — later in the
-      // same cycle than this effect — so an inline measure would resolve to the
+      // Anchor after the render settles: the Drawer stamps the palette item
+      // later in the same cycle, so an inline measure would resolve to the
       // sheet opener and never re-anchor once the item connects.
       afterNextRender(() => this.showStep(step), { injector: this.injector });
     });
@@ -106,9 +99,7 @@ export class TutorialRunnerService {
 
   /**
    * Retires the first-run nudge and starts `tutorialId` on a fresh, empty
-   * board. If the current board has unsaved changes, asks to discard them
-   * first ({@link DiscardChangesService}); on cancel nothing happens and the
-   * nudge stays put.
+   * board. Unsaved changes are confirmed first; on cancel nothing happens.
    */
   public async launch(tutorialId: string): Promise<void> {
     if (!(await this.discardChanges.confirmDiscardMain())) return;
@@ -165,8 +156,7 @@ export class TutorialRunnerService {
     this.stepSub = new Subscription();
 
     if (this.index >= this.steps.length) {
-      // The final step's own coach-mark is the completion acknowledgment, so
-      // there is nothing more to show here — just record the completion.
+      // The final step's own coach-mark is the completion acknowledgment.
       this.logging.debug('all steps complete', 'TutorialRunnerService');
       this.onboarding.endTutorial(true);
       return;
@@ -187,9 +177,8 @@ export class TutorialRunnerService {
     );
 
     // Record lever/button drives for the whole step so predicates can read
-    // `userInteracted` (e.g. the flip-a-switch step). Only a `userInput` step
-    // treats a drive as its advance trigger — other kinds advance off their own
-    // stream (mode/action/frame), so a drive here must not skip them.
+    // `userInteracted`. Only a `userInput` step treats a drive as its advance
+    // trigger; other kinds advance off their own stream.
     this.stepSub.add(
       project.userInput$.subscribe(() => {
         this.userInteracted = true;
@@ -197,7 +186,7 @@ export class TutorialRunnerService {
       })
     );
     this.subscribeAdvance(step);
-    // Publish the step; the show effect renders and keeps it anchored.
+    // The show effect renders the published step and keeps it anchored.
     this.currentStep.set(step);
   }
 
@@ -252,8 +241,8 @@ export class TutorialRunnerService {
       if (predicate(ctx)) {
         this.advance();
       } else if (advanceOn.kind === 'action') {
-        // Still building: refresh so live sub-counts and any nudge show. Only
-        // action steps re-render — a per-frame simFrame refresh would churn.
+        // Refresh so live sub-counts and any nudge show. Action steps only — a
+        // per-frame simFrame refresh would churn.
         this.showStep(step);
       }
       return;
@@ -328,14 +317,11 @@ export class TutorialRunnerService {
   }
 
   /**
-   * First live element among the platform's target candidates. Reads the
-   * registry for every candidate (a reactive read, so the anchoring effect
-   * re-runs when any of them registers or unregisters) and returns the
-   * highest-priority one that is currently attached to the document. A
-   * registered element can be detached without unregistering — e.g. a palette
-   * item whose Drawer is closed keeps its projected-content registration but is
-   * not in the DOM — so `isConnected` skips those and lets a lower-priority
-   * candidate (the button that opens the sheet) win.
+   * Highest-priority attached element among the platform's target candidates.
+   * Every candidate is read from the registry, so the anchoring effect re-runs
+   * when any registers or unregisters. A registered element can be detached
+   * without unregistering (a palette item whose Drawer is closed), so
+   * `isConnected` lets a lower-priority candidate win instead.
    */
   private resolveTarget(
     step: TutorialStep,
