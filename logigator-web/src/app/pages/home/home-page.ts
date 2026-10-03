@@ -12,16 +12,11 @@ import { toTileEntries } from '../../documents/circuit-tile-entry';
 import { EmptyState } from '../../states/empty-state';
 import { SectionError } from '../../states/section-error';
 import { SiteLinks } from '../../layout/site-links';
-import { ThemingService } from '../../theming/theming.service';
 import { TranslateDirective } from '../../translation/translate.directive';
 import { TranslationService } from '../../translation/translation.service';
 import { HomeContentService } from './home-content.service';
 import { homeVideo } from './home-video';
 import { VideoEmbed } from './video-embed';
-import heroLight from '../../../assets/hero-board-light.webp';
-import heroDark from '../../../assets/hero-board-dark.webp';
-import heroLightAnimated from '../../../assets/hero-board-animated-light.webp';
-import heroDarkAnimated from '../../../assets/hero-board-animated-dark.webp';
 
 /**
  * The landing page: a board hero, the features, the examples shelf, the
@@ -40,34 +35,7 @@ import heroDarkAnimated from '../../../assets/hero-board-animated-dark.webp';
     WireRun
   ],
   templateUrl: './home-page.html',
-  // A five-stop gradient that swaps axis at a breakpoint reads as noise in
-  // arbitrary-value classes; `--hero-page` carries the scheme in, so the rule
-  // itself needs no dark variant. 1024px is Tailwind's `lg`.
-  styles: `
-    .hero-scrim {
-      background: linear-gradient(
-        to bottom,
-        var(--hero-page) 0%,
-        var(--hero-page) 20%,
-        color-mix(in srgb, var(--hero-page) 84%, transparent) 48%,
-        color-mix(in srgb, var(--hero-page) 26%, transparent) 80%,
-        transparent 100%
-      );
-    }
-
-    @media (min-width: 1024px) {
-      .hero-scrim {
-        background: linear-gradient(
-          to right,
-          var(--hero-page) 0%,
-          var(--hero-page) 42%,
-          color-mix(in srgb, var(--hero-page) 66%, transparent) 60%,
-          color-mix(in srgb, var(--hero-page) 16%, transparent) 82%,
-          transparent 100%
-        );
-      }
-    }
-  `,
+  styleUrl: './home-page.css',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class HomePage {
@@ -94,7 +62,6 @@ export class HomePage {
     }
   ] as const;
 
-  private readonly theming = inject(ThemingService);
   private readonly translation = inject(TranslationService);
   private readonly content = inject(HomeContentService);
 
@@ -103,17 +70,6 @@ export class HomePage {
   protected readonly examples = this.content.examples;
   protected readonly projects = this.content.projects;
   protected readonly components = this.content.components;
-
-  /**
-   * One scheme's pair, not both hidden by CSS: a `display:none` image still
-   * downloads. The still is the animation's first frame, which is what a
-   * reader who asked for reduced motion gets instead.
-   */
-  protected readonly heroBoard = computed(() =>
-    this.theming.isDark()
-      ? { still: heroDark, animated: heroDarkAnimated }
-      : { still: heroLight, animated: heroLightAnimated }
-  );
 
   /**
    * The community's size, from the `total` the three listings on this page

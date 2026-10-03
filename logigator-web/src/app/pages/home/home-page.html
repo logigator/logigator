@@ -1,25 +1,28 @@
 <ng-container *webTranslate="let t">
-  <section class="relative overflow-hidden">
-    <picture>
-      <source
-        media="(prefers-reduced-motion: reduce)"
-        [attr.srcset]="heroBoard().still"
-      />
-      <img
-        class="absolute inset-0 h-full w-full object-cover object-[68%_0%]"
-        alt=""
-        aria-hidden="true"
-        fetchpriority="high"
-        [src]="heroBoard().animated"
-      />
-    </picture>
-    <!-- Opaque under the copy, clear over the board: down the page while the
-         board sits below the copy, across it once there is room beside it. -->
+  <section class="relative flex flex-col overflow-hidden lg:block">
+    <!-- Beside the copy once there is room for it; below it until then, as a
+         band of the render doubled about its top-right corner: the render
+         centres the matrices in its right half. The zoom is relative to the
+         band, so it eases as the band widens, keeping the matrices a sensible
+         size and letting the board around them in. Beside the copy it keeps
+         one size, about 10.4px a grid cell, and grows with the page past
+         1920px, so its left edge never shows through the scrim. 1024px is
+         Tailwind's `lg`; which file it is lives in the component's styles. -->
     <div
-      class="hero-scrim absolute inset-0 [--hero-page:var(--lg-surface-0)] dark:[--hero-page:var(--lg-surface-950)]"
-    ></div>
+      class="relative order-last aspect-2/1 overflow-hidden sm:aspect-5/2 lg:static lg:order-none lg:aspect-auto"
+    >
+      <div
+        class="hero-board absolute inset-0 bg-size-[200%_auto] bg-right-top bg-no-repeat sm:bg-size-[150%_auto] lg:bg-size-[max(78.25rem,65.25%)_auto]"
+        aria-hidden="true"
+      ></div>
+      <!-- Down the band, a tint that blends its edges into the page; across
+           the page, opaque under the copy and lifting over the board. -->
+      <div
+        class="hero-scrim absolute inset-0 [--hero-page:var(--lg-surface-0)] dark:[--hero-page:var(--lg-surface-950)]"
+      ></div>
+    </div>
 
-    <div class="page-wrap relative pt-11 pb-38 lg:py-24">
+    <div class="page-wrap relative pt-11 pb-8 lg:py-24">
       <div class="max-w-2xl lg:max-w-lg">
         <h1
           class="text-3xl leading-tight font-bold tracking-tight text-balance text-text-hover md:text-4xl lg:text-5xl"
