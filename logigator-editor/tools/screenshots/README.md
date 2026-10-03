@@ -210,11 +210,16 @@ handful of antialiased border pixels.
 yarn capture hero ../../../logigator-web
 ```
 
-Two files per colour scheme, which the home page imports by name:
+Two files per colour scheme, which the home page names in its stylesheet:
 `hero-board-<scheme>.webp`, the still, and `hero-board-animated-<scheme>.webp`,
-the loop. The page serves the loop and swaps in the still under
-`prefers-reduced-motion`; the still is the loop's first frame, so the two show
-the same picture. The target writes no registry — its names are fixed.
+the loop. The page lays the loop over the still, and drops the loop under
+`prefers-reduced-motion`. The still is the whole board and the loop's first
+frame; the loop is only the top of the board, down to the lowest row any frame
+changes, which the shot finds by comparing the frames. That keeps each frame a
+third of the board to decode, which is what a browser pays for every frame it
+skips when a page comes back from the background, and lets the small still
+paint before the loop has arrived. The target writes no registry — its names
+are fixed.
 
 Neither is a screenshot. The frames come out of the editor's own image export
 (`editor.renderImage`, over the automation API's `renderImage`), with the

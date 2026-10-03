@@ -1,3 +1,4 @@
+import sharp from 'sharp';
 import type { GridRect } from '../../../../src/app/automation/automation-api.model.ts';
 import type { Editor } from '../../lib/editor.ts';
 import type { Shot } from '../../lib/target.ts';
@@ -110,9 +111,45 @@ async function boundsOf(
 }
 
 /**
+ * The rows a sequence moves in: from the top down to the lowest pixel that
+ * differs between any two consecutive frames. Everything below is the same in
+ * every frame, so the still under the loop already shows it.
+ */
+async function movingRows(frames: readonly Buffer[]): Promise<number> {
+  let previous: Buffer | null = null;
+  let width = 0;
+  let bottom = 0;
+  for (const frame of frames) {
+    const { data, info } = await sharp(frame)
+      .raw()
+      .toBuffer({ resolveWithObject: true });
+    width = info.width * info.channels;
+    if (previous) {
+      for (let row = info.height - 1; row >= bottom; row--) {
+        const start = row * width;
+        if (
+          !data
+            .subarray(start, start + width)
+            .equals(previous.subarray(start, start + width))
+        ) {
+          bottom = row + 1;
+          break;
+        }
+      }
+    }
+    previous = data;
+  }
+  return bottom;
+}
+
+/**
  * The board behind the home page's headline, through the editor's own image
- * export. The still is the loop's first frame, for reduced motion and for
- * crawlers.
+ * export. The page lays the loop over the still: the still is the whole board
+ * and the loop's first frame, the loop only the top of the board, where
+ * anything moves — a third of the picture to decode per frame, which is what
+ * a browser pays again for every frame it skips when a page comes back from
+ * the background. Both start at the board's top edge, so they line up by
+ * sharing a width.
  */
 export const SHOTS: Shot[] = [
   {
@@ -135,7 +172,19 @@ export const SHOTS: Shot[] = [
             '— update PULSES_PER_FRAME or LAP_FRAMES for the edited circuit'
         );
       }
-      return { frames, delay: FRAME_DELAY };
+      ed.report('cropping to the rows that move');
+      // The wrap from the last frame back to the first moves pixels too.
+      const height = await movingRows([...frames, frames[0]]);
+      const { width } = await sharp(frames[0]).metadata();
+      const strip = await Promise.all(
+        frames.map((frame) =>
+          sharp(frame)
+            .extract({ left: 0, top: 0, width: width!, height })
+            .png()
+            .toBuffer()
+        )
+      );
+      return { frames: strip, delay: FRAME_DELAY };
     }
   }
 ];
