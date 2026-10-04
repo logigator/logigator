@@ -5,6 +5,7 @@ import { configureTestBed } from '../../../testing/configure-test-bed';
 import {
   makeAnd,
   makeButton,
+  makePulseButton,
   makeSwitch,
   makeNot
 } from '../../../testing/factories';
@@ -19,10 +20,9 @@ import { clockComponentConfig } from '../../components/component-types/clock/clo
 import { tunnelComponentConfig } from '../../components/component-types/tunnel/tunnel.config';
 import { ledMatrixComponentConfig } from '../../components/component-types/led-matrix/led-matrix.config';
 import { bytesToBase64 } from '../../utils/packed-buffer';
-import { SerializedCircuitBody } from '../../persistence/serialized-circuit';
+import { SerializedCircuitBody, WireDirection } from '@logigator/core';
 import { Project } from '../../project/project';
 import { Wire } from '../../wires/wire';
-import { WireDirection } from '../../wires/wire-direction.enum';
 import { BoardCompilerService } from './board-compiler.service';
 
 /** Wire spanning the two given half-grid termination points (axis-aligned). */
@@ -115,7 +115,7 @@ describe('BoardCompilerService', () => {
     return place(Component.deserialize({ pos, options: {} }, config));
   }
 
-  /** Registers a snapshot wrapping a single NOT behind one in and one out plug. */
+  /** Registers a snapshot wrapping a NOT behind an in and an out plug. */
   function registerWrapNot(): number {
     const inPlug = makePlug('input', 0, [0, 0]);
     const not = makeNot();
@@ -147,8 +147,8 @@ describe('BoardCompilerService', () => {
 
     const board = compiler.compile(project);
 
-    // Emission order is ascending component id (creation order here); link
-    // ids are dense in pin-visit order: NOT.in, NOT.out, AND.in1, AND.out.
+    // Emission order is ascending component id; link ids are dense in
+    // pin-visit order: NOT.in, NOT.out, AND.in1, AND.out.
     expect(board.descriptor).toEqual({
       links: 4,
       components: [
@@ -260,8 +260,8 @@ describe('BoardCompilerService', () => {
     const andUnit = board.descriptor.components.find((c) => c.type === 2)!;
     expect(andUnit.inputs[0]).toBe(notUnit.outputs[0]);
 
-    // Both tunnel stubs render from the shared link; the lone tunnel's net
-    // has no unit pin, so it gets no link at all.
+    // Both tunnel stubs render from the shared link; the lone tunnel's net has
+    // no unit pin, so it gets no link at all.
     const targets = board.mapping.get('')!;
     expect(targets[notUnit.outputs[0]].ports).toEqual(
       expect.arrayContaining([
@@ -358,7 +358,7 @@ describe('BoardCompilerService', () => {
       ]
     });
 
-    // The template is built once and cached for the session.
+    // Built once, cached for the session.
     expect(
       getDefinition.mock.calls.filter(([typeId]) => typeId === wrapNot)
     ).toHaveLength(1);
@@ -382,7 +382,7 @@ describe('BoardCompilerService', () => {
   it('expands customs nested inside customs', () => {
     const wrapNot = registerWrapNot();
 
-    // A second snapshot whose circuit places a WrapNot instance between plugs.
+    // A snapshot placing a WrapNot instance between plugs.
     const inPlug = makePlug('input', 0, [0, 0]);
     const inner = Component.deserialize(
       { pos: [4, 0], options: {} },
@@ -513,10 +513,11 @@ describe('BoardCompilerService', () => {
     });
   });
 
-  it('emits button/switch units and registers them as user inputs', () => {
+  it('emits every user input as a UserInput unit and registers it', () => {
     // The example-board shape (gate subset): user input feeding gates.
     const switchComp = place(makeSwitch(0, 0));
-    const button = place(makeButton(0, 4));
+    const button = place(makePulseButton(0, 4));
+    const held = place(makeButton(0, 8));
     const and = makeAnd(2, undefined, 8, 0);
     place(and);
     placeWire(switchComp.connectionPoints[0], and.connectionPoints[0]);
@@ -530,20 +531,22 @@ describe('BoardCompilerService', () => {
     const board = compiler.compile(project);
 
     expect(board.diagnostics).toEqual([]);
-    // Both switch and button emit the engine's UserInput type (200); the engine
-    // rejects any other id. Button vs. switch is a triggerInput-time distinction.
+    // All emit the engine's UserInput type (200); it rejects any other id.
+    // Which input it is only shows in the events sent at triggerInput time.
     expect(board.descriptor).toEqual({
-      links: 3,
+      links: 4,
       components: [
         { type: 200, inputs: [], outputs: [0] },
         { type: 200, inputs: [], outputs: [1] },
-        { type: 2, inputs: [0, 1], outputs: [2] }
+        { type: 200, inputs: [], outputs: [2] },
+        { type: 2, inputs: [0, 1], outputs: [3] }
       ]
     });
     expect(board.userInputs).toEqual(
       new Map([
         [switchComp.id, 0],
-        [button.id, 1]
+        [button.id, 1],
+        [held.id, 2]
       ])
     );
   });

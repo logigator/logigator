@@ -32,20 +32,16 @@
         {{ t('saveProjectDialog.notLoggedIn') }}
       </lg-message>
     } @else {
-      <div class="flex gap-2 items-center">
-        <lg-toggle-switch
-          inputId="save-project-public"
-          [ngModel]="isPublic()"
-          (ngModelChange)="isPublic.set($event)"
-          [ngModelOptions]="{ standalone: true }"
+      <div class="flex flex-col gap-2">
+        <span
+          id="save-project-visibility-label"
+          class="text-sm font-medium text-text-hover"
+          >{{ t('saveProjectDialog.visibilityLabel') }}</span
+        >
+        <app-visibility-picker
+          labelledby="save-project-visibility-label"
+          [(visibility)]="visibility"
         />
-        <label for="save-project-public">{{
-          t('saveProjectDialog.public')
-        }}</label>
-        <i
-          class="ph ph-info cursor-help text-surface-500"
-          [lgTooltip]="t('saveProjectDialog.publicInfo')"
-        ></i>
       </div>
     }
   } @else {
@@ -54,6 +50,8 @@
     </lg-message>
   }
   <div class="flex justify-end">
-    <lg-button type="submit" [label]="t('common.save')" [disabled]="!canSave" />
+    <button lgButton type="submit" [disabled]="!canSave">
+      {{ t('common.save') }}
+    </button>
   </div>
 </form>

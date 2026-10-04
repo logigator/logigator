@@ -28,26 +28,34 @@
     />
   </div>
   <div class="flex flex-col gap-1">
-    <label for="edit-component-description">{{
-      t('editComponentDetails.description')
-    }}</label>
-    <input
-      lgInputText
-      id="edit-component-description"
-      type="text"
-      [ngModel]="description()"
-      (ngModelChange)="description.set($event)"
-      [ngModelOptions]="{ standalone: true }"
-    />
+    <label
+      id="edit-component-description-label"
+      for="edit-component-description"
+      >{{ t('editComponentDetails.description') }}</label
+    >
+    <lg-markdown-field
+      [value]="description()"
+      [maxLength]="descriptionMaxLength"
+      labelledBy="edit-component-description-label"
+    >
+      <textarea
+        lgTextarea
+        id="edit-component-description"
+        rows="7"
+        class="w-full"
+        [attr.maxlength]="descriptionMaxLength"
+        [ngModel]="description()"
+        (ngModelChange)="description.set($event)"
+        [ngModelOptions]="{ standalone: true }"
+      ></textarea>
+    </lg-markdown-field>
   </div>
   <p class="text-sm text-muted">
     {{ t('editComponentDetails.frozenInstancesHint') }}
   </p>
   <div class="flex justify-end">
-    <lg-button
-      type="submit"
-      [label]="t('editComponentDetails.save')"
-      [disabled]="!canSave"
-    />
+    <button lgButton type="submit" [disabled]="!canSave">
+      {{ t('editComponentDetails.save') }}
+    </button>
   </div>
 </form>

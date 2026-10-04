@@ -1,6 +1,16 @@
 <lg-confirm-popup key="inline" />
 <lg-confirm-dialog />
 
+<!-- Ahead of the editor in the document, so a keyboard reaches the question
+     first rather than after every control it is pinned over. -->
+@if (consent.pending()) {
+  <lg-consent-banner
+    [copy]="consent.copy()"
+    (decide)="consent.decide($event)"
+    (customize)="consent.showPreferences()"
+  />
+}
+
 <!-- Banner: the same landmark holds the top bars on every breakpoint. flex-col
      keeps the bars block-level flex items inside the wrapper. -->
 <header class="flex flex-col">

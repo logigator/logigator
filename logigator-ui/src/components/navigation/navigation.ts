@@ -7,15 +7,14 @@ const ROW =
   'hover:bg-content-hover disabled:pointer-events-none disabled:opacity-50';
 
 /**
- * An inline navigation tree over selectable pages: leaves highlight the
- * `selected` id and update it on activation; items with `items` render as
- * collapsible group headers (one nesting level, like {@link LgPanelMenu}).
- * Groups start expanded, and the group containing a newly selected leaf
- * expands itself — selection is never hidden by a collapsed group.
+ * An inline navigation tree over selectable pages. Items with `items` render
+ * as collapsible group headers, one nesting level deep; groups start expanded
+ * and the group holding a newly selected leaf expands itself, so a collapsed
+ * group never hides the selection.
  *
- * The visual sibling of `LgPanelMenu`, but stateful instead of command-driven:
- * the model is pure {@link NavigationItem} data and the single output is the
- * two-way `selected` binding.
+ * The visual sibling of {@link LgPanelMenu}, but stateful instead of
+ * command-driven: pure {@link NavigationItem} data in, a two-way `selected`
+ * binding out.
  */
 @Component({
   selector: 'lg-navigation',
@@ -81,8 +80,8 @@ export class LgNavigation {
   private readonly collapsed = signal<ReadonlySet<string>>(new Set());
 
   constructor() {
-    // A collapsed group re-expands when one of its leaves becomes selected
-    // (e.g. an outside jump to a page), so the selection is always visible.
+    // A collapsed group re-expands when one of its leaves becomes selected,
+    // so an outside jump to a page is never hidden.
     effect(() => {
       const selected = this.selected();
       if (selected === undefined) return;

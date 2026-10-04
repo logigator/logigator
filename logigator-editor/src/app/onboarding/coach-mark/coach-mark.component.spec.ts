@@ -16,8 +16,8 @@ const BASE: CoachMarkView = {
   placement: 'center'
 };
 
-// Buttons render in a fixed order: [skip, (next)] — matching by order keeps the
-// assertions independent of the resolved translation text.
+// Buttons render in a fixed order, [skip, (next)], so matching by order keeps
+// the assertions independent of the translated text.
 function buttons(
   fixture: ComponentFixture<CoachMarkComponent>
 ): HTMLButtonElement[] {

@@ -52,9 +52,8 @@ describe('ComponentListCategoryComponent', () => {
     expect(mobileUi.activeSheet()).toBeNull();
   });
 
-  // A shape declaring neither path — or an empty one — replaces the symbol text
-  // with nothing, leaving a blank tile that no type check catches. Covers every
-  // registered config, so a newly shaped component gets audited too.
+  // A shape declaring neither path, or an empty one, replaces the symbol text
+  // with nothing and leaves a blank tile no type check catches.
   it('draws geometry for every shape a config declares', () => {
     const shaped = TestBed.inject(ComponentProviderService)
       .allComponents()
@@ -81,11 +80,10 @@ describe('ComponentListCategoryComponent', () => {
 
 describe('ComponentListCategoryComponent language reactivity', () => {
   it('re-renders a tile label when the active language changes', async () => {
-    // The label is produced by a template method (`text()` -> the translation
-    // service) rather than the *appTranslate directive. Under zoneless change
-    // detection this only stays live because the service's translate() reads a
-    // signal that fires after the new language bundle loads, and that read is
-    // tracked even though it happens inside a method invoked from the template.
+    // The label comes from a template method rather than the *appTranslate
+    // directive. Under zoneless change detection it stays live only because
+    // translate() reads a post-load signal, and that read is tracked even
+    // inside a method the template invokes.
     configureTestBed(
       [{ provide: TRANSLOCO_LOADER, useClass: TwoLangLoader }],
       [ComponentListCategoryComponent]
@@ -101,10 +99,9 @@ describe('ComponentListCategoryComponent language reactivity', () => {
 
     transloco.setActiveLang('de');
     await firstValueFrom(transloco.load('de'));
-    // No forced detectChanges: the label only updates if the language change
-    // actually marks the view dirty, which is the property under test. The
-    // auto-detecting zoneless fixture refreshes on `whenStable()` iff the signal
-    // read inside the template-invoked `text()` was tracked.
+    // No forced detectChanges: whether the language change marks the view
+    // dirty is the property under test. The zoneless fixture refreshes on
+    // `whenStable()` only if that signal read was tracked.
     await fixture.whenStable();
 
     expect(fixture.nativeElement.textContent).toContain('UND-Gatter');

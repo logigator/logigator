@@ -11,13 +11,18 @@ import {
   ViewChild
 } from '@angular/core';
 import { TranslationService } from '../../translation/translation.service';
-import { Point, Rectangle } from 'pixi.js';
+import { Point } from 'pixi.js';
 import { Subscription } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { Component as CircuitComponent } from '../../components/component';
 import { ToastService } from '../../logging/toast.service';
+import {
+  buttonAt,
+  componentBodiesAt
+} from '../../rendering/interaction/body-hit';
 import { PointerController } from '../../rendering/interaction/pointer-controller';
 import { PointerInput } from '../../rendering/interaction/pointer-input';
+import { DragSession } from '../../rendering/drag-session';
+import { HoldSession } from '../../rendering/sessions/hold.session';
 import { PanSession } from '../../rendering/sessions/pan.session';
 import { Project } from '../../project/project';
 import type {
@@ -26,20 +31,18 @@ import type {
 } from '../../components/custom/sub-circuit-watch';
 import {
   RendererLease,
-  RendererService,
-  uncullTree
+  RendererService
 } from '../../rendering/renderer.service';
 
 /**
- * Renderer for {@link SubCircuitWatch}: a canvas blitted through the shared
- * app renderer, showing the active level's headless project (the breadcrumb
- * trail lives in the hosting header via the inspection's `titleParts`). Fits
- * the content when a level first shows, then pans/zooms through the project's
- * own viewport controller. Input runs through the shared PointerController
- * (right-drag/wheel/pinch navigation); the tool stream is a PanSession whose
- * tap action routes to the model (inner input / drill-down / data inspector).
- * Re-blits on engine changes (`render$`), viewport/theme changes (the
- * project's `ticker$`), and host resizes.
+ * Renderer for {@link SubCircuitWatch}: a canvas blitted through the shared app
+ * renderer, showing the active level's headless project. Fits the content when
+ * a level first shows, then pans/zooms through the project's own viewport
+ * controller. Input runs through the shared PointerController; the tool stream
+ * is a PanSession whose tap action routes to the model (inner input /
+ * drill-down / data inspector), or a HoldSession for a press on an inner
+ * button, which holds it for the gesture. Re-blits on engine changes (`render$`),
+ * viewport/theme changes (`ticker$`) and host resizes.
  */
 @Component({
   selector: 'app-sub-circuit-watch',
@@ -64,14 +67,13 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
   private tickerSub: Subscription | null = null;
 
   private controller: PointerController | null = null;
-  private panSession: PanSession | null = null;
+  private session: DragSession | null = null;
 
   /**
-   * The visible level's project, or null once there is none to draw: closing
-   * the watch (leaving simulation) destroys the model's sessions and empties
-   * its level stack while this component still lives for a cycle, so late
-   * pointer moves, resizes and re-blits must find nothing rather than a dead
-   * project.
+   * The visible level's project, or null once there is none to draw. Closing
+   * the watch destroys the model's sessions and empties its level stack while
+   * this component still lives for a cycle, so late pointer moves, resizes and
+   * re-blits must find nothing rather than a dead project.
    */
   private get project(): Project | null {
     const project = this.inspection().activeLevel()?.session.project;
@@ -90,8 +92,6 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
     this.controller = new PointerController({
       canvas: this.canvas.nativeElement,
       project: () => this.project,
-      // Unlike the zooms (their ticker events re-blit via the ticker
-      // subscription below), `Project.pan` emits nothing — render explicitly.
       nav: {
         pan: (delta) => this.pan(delta),
         zoomIn: (center) => this.project?.viewport.zoomIn(center),
@@ -101,24 +101,19 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
         setActive: () => undefined
       },
       tool: {
-        down: (input) => this.startPanOrTap(input),
+        down: (input) => this.startSession(input),
         move: (input) => {
-          this.panSession?.onMove(input);
+          this.session?.onMove(input);
           this.render();
         },
         up: () => {
-          this.panSession?.onEnd();
-          this.panSession = null;
+          this.session?.onEnd();
+          this.session = null;
         },
-        cancel: () => {
-          this.panSession?.onCancel();
-          this.panSession = null;
-        }
+        cancel: () => this.cancelSession()
       }
     });
 
-    // Tracks breadcrumb navigation: rewires the ticker subscription and the
-    // viewport to whichever level is visible.
     effect(
       () => {
         const level = this.inspection().activeLevel();
@@ -148,6 +143,7 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.destroyed = true;
+    this.cancelSession();
     this.controller?.destroy();
     this.subs.unsubscribe();
     this.tickerSub?.unsubscribe();
@@ -156,41 +152,39 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
     this.lease = null;
   }
 
-  /** Drag-to-pan with tap-to-activate — the watch's only tool. */
-  private startPanOrTap(input: PointerInput): void {
+  private startSession(input: PointerInput): void {
     const project = this.project;
     if (!project) {
       return;
     }
-    this.panSession = new PanSession(
-      project,
-      input.global,
-      input.grid,
-      (tap) => {
-        const component = this.componentAt(project, tap);
-        if (component) {
-          this.inspection().activate(component);
-        }
+    const button = buttonAt(project, input.grid);
+    const hold = button ? this.inspection().holdFor(button) : null;
+    if (hold) {
+      this.session = new HoldSession(hold.press, hold.release);
+      return;
+    }
+    this.session = new PanSession(project, input.global, input.grid, (tap) => {
+      const [component] = componentBodiesAt(project, tap);
+      if (component) {
+        this.inspection().activate(component);
       }
-    );
+    });
   }
 
   /**
-   * Swaps the view to a level: ticker rewire, sizing, one-time fit. The stack
-   * is empty once the watch closed — the effect fires that last time while
-   * this component still lives, with nothing left to show.
+   * Swaps the view to a level: ticker rewire, sizing, one-time fit. `level` is
+   * undefined once the watch closed, with nothing left to show.
    */
   private showLevel(level: WatchLevel | undefined): void {
     // A drag never survives a level swap — the session holds the old project.
-    this.panSession?.onCancel();
-    this.panSession = null;
+    this.cancelSession();
     this.tickerSub?.unsubscribe();
     if (!level) {
       this.tickerSub = null;
       return;
     }
     // Fires on zoom and theme re-tints — anything that changed the project
-    // without an engine snapshot. Panning renders directly (see pan()).
+    // without an engine snapshot. Panning renders directly.
     this.tickerSub = level.session.project.ticker$.subscribe(() =>
       this.render()
     );
@@ -202,27 +196,18 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
     this.render();
   }
 
+  private cancelSession(): void {
+    this.session?.onCancel();
+    this.session = null;
+  }
+
   /**
-   * Pans and re-blits directly: unlike the zooms, `Project.pan` emits no
-   * ticker event (the board pans with its ticker already running).
+   * Pans and re-blits directly: unlike the zooms, `Project.pan` emits no ticker
+   * event (the board pans with its ticker already running).
    */
   private pan(delta: Point): void {
     this.project?.viewport.pan(delta);
     this.render();
-  }
-
-  /** The component whose body contains the grid-space point, if any. */
-  private componentAt(
-    project: Project,
-    gridPoint: Point
-  ): CircuitComponent | null {
-    const queryRect = new Rectangle(gridPoint.x - 0.5, gridPoint.y - 0.5, 1, 1);
-    for (const component of project.queryComponentsInRange(queryRect)) {
-      if (component.bodyGridBounds.contains(gridPoint.x, gridPoint.y)) {
-        return component;
-      }
-    }
-    return null;
   }
 
   /**
@@ -237,7 +222,6 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
     );
   }
 
-  /** Centers the content at a zoom that fits it, capped at 100%. */
   private fitToContent(): void {
     const project = this.project;
     if (!project) {
@@ -271,9 +255,9 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
     if (this.destroyed || !this.lease || !project) {
       return;
     }
-    // No cull pass runs on watch renders — force the subtree visible so stale
-    // `culled` bits can't hide content.
-    uncullTree(project);
+    // No cull pass runs on watch renders — force every entry visible so a
+    // stale `culled` bit can't hide content.
+    project.uncull();
     this.lease.render(project, this.canvas.nativeElement);
   }
 }

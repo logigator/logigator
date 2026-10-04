@@ -1,6 +1,6 @@
 import { Point, Rectangle } from 'pixi.js';
 import { Wire } from '../wires/wire';
-import { WireDirection } from '../wires/wire-direction.enum';
+import { WireDirection } from '@logigator/core';
 import { WireSnapshot } from '../wires/wire-snapshot.model';
 import type { Component } from '../components/component';
 import { getStaticDI } from '../utils/get-di';
@@ -23,36 +23,32 @@ export interface IntegrationInput {
   addedWires?: readonly Wire[];
   // Live wire instances currently in the project tree, about to be removed.
   removedWires?: readonly Wire[];
-  // Wires already moved to their new positions in the project tree; oldSnapshot
-  // captures the pre-move geometry so candidate points at old positions are seeded.
+  // Already at their new positions in the project tree; oldSnapshot seeds
+  // candidate points at the pre-move geometry.
   movedWires?: readonly MovedWireEntry[];
   // Ports of a component about to be added (not yet in the project).
   addedComponentPorts?: readonly Point[];
   // Ports of a component currently in the project, about to be removed.
   removedComponentPorts?: readonly Point[];
-  // Components already at their new positions in the project; queries reflect
-  // newPorts already, so the integrator only needs oldPorts to mark candidates.
+  // Already at their new positions, so queries return newPorts; oldPorts is
+  // only needed to mark candidates.
   movedComponentPorts?: readonly MovedComponentPortsEntry[];
-  // Termination points of elements a caller already removed from the tree
-  // (the eraser deletes live during its sweep, so by integration time the
-  // removed instances no longer exist). Seeds candidates so the merge pass
-  // heals a collinear pair whose third terminator vanished; the split pass's
-  // termination guard keeps a vacated point with no current terminator from
-  // splitting anything.
+  // Terminations of elements already gone from the tree (the eraser deletes
+  // live during its sweep). Seeds candidates so the merge pass heals a
+  // collinear pair whose third terminator vanished; the split pass's
+  // termination guard stops a vacated point from splitting anything.
   vacatedPoints?: readonly Point[];
 }
 
 export interface IntegrationOutput {
-  // Fresh Wire instances the caller should add to the project tree
-  // (split or merge results, plus addedWires that survived integration).
+  // To add: split/merge results plus addedWires that survived integration.
   toAdd: Wire[];
-  // Live Wire instances currently in the project tree the caller should remove
-  // (absorbed by merges or split into pieces).
+  // To remove from the tree: absorbed by a merge, or split into pieces.
   toRemove: Wire[];
 }
 
-// Bounds the fixed-point loop. In practice integration converges in 1–2 passes;
-// hitting the cap implies a bug, so we throw rather than silently doing the wrong thing.
+// Integration converges in 1–2 passes, so hitting the cap means a bug — throw
+// rather than silently emit the wrong thing.
 const MAX_ITERATIONS = 8;
 
 export class WireIntegrator {
@@ -78,20 +74,17 @@ export class WireIntegrator {
       if (!candidates.has(k)) candidates.set(k, p.clone());
     };
 
-    // Wires the caller is treating as live but that are not yet in the project
-    // tree. Starts with addedWires; grows as the integrator creates split/merge
-    // results. Indexed rather than a plain Set: pasting a large selection puts
-    // the whole pasted set in here, and the per-candidate lookups below would
-    // otherwise scan all of it — quadratic in the size of the paste.
+    // Live to the caller but not yet in the project tree: addedWires plus the
+    // split/merge results. Indexed rather than a Set because a large paste
+    // lands here whole, making the per-candidate lookups below quadratic.
     const freshLive = new WireRowColumnIndex();
-    // Wires currently in the project tree that the caller should remove.
-    // Starts with removedWires; grows as splits/merges consume tree wires.
+    // In the tree and due for removal: removedWires plus what splits and
+    // merges consume.
     const liveOriginalsToRemove = new Set<Wire>();
-    // Wire instances created inside the integrator (not provided by the caller).
-    // If they get consumed before becoming output, destroy them so they don't leak.
+    // Created inside the integrator; destroyed if consumed before becoming
+    // output, so they don't leak.
     const internalWires = new Set<Wire>();
 
-    // Seed candidates and initial state from input.
     for (const w of addedWires) {
       if (w.length === 0) continue;
       const [s, e] = w.connectionPoints;
@@ -122,11 +115,9 @@ export class WireIntegrator {
     }
     for (const p of vacatedPoints) addCandidate(p);
 
-    // Net port-presence delta at each position relative to what queries return.
-    // addedComponentPorts are not yet in the tree → +1. removedComponentPorts are
-    // still in the tree but should be treated as gone → -1. movedComponentPorts
-    // need no delta: the component is already at its new position, so queries
-    // return new ports correctly and old port positions return nothing.
+    // Port-presence delta against what queries return: added ports are not in
+    // the tree yet (+1), removed ones are still in it (-1). Moved components
+    // need no delta — they are already at their new positions.
     const portDelta = new Map<string, number>();
     const bumpPort = (p: Point, delta: number) => {
       const k = pointKey(p);
@@ -135,7 +126,7 @@ export class WireIntegrator {
     for (const p of addedComponentPorts) bumpPort(p, 1);
     for (const p of removedComponentPorts) bumpPort(p, -1);
 
-    // hasPort: does the post-state contain a port at P?
+    // Does the post-state contain a port at P?
     const hasPort = (p: Point): boolean => {
       const queryRect = new Rectangle(p.x - 1, p.y - 1, 2, 2);
       let count = 0;
@@ -148,8 +139,8 @@ export class WireIntegrator {
       return count > 0;
     };
 
-    // Returns the wires in the working set whose gridBounds touch a 2×2 rect around P.
-    // Working set = (project tree query) − liveOriginalsToRemove + freshLive.
+    // Working set = project tree − liveOriginalsToRemove + freshLive, filtered
+    // to a 2×2 rect around P.
     const collectWorkingWiresAt = (p: Point): Wire[] => {
       const queryRect = new Rectangle(p.x - 1, p.y - 1, 2, 2);
       const result: Wire[] = [];
@@ -179,14 +170,12 @@ export class WireIntegrator {
       }
     };
 
-    // Junction points that consolidation buries inside a merged span. A wire
-    // endpoint sitting on a perpendicular wire's endpoint is a junction the user
-    // connected; absorbing that collinear wire turns the endpoint into interior,
+    // Junctions consolidation buries inside a merged span. Absorbing a
+    // collinear wire turns a user-made perpendicular junction into interior,
     // so the perpendicular pair loses its third terminator and the merge pass
-    // fuses it — silently disconnecting the junction. Remembering the point keeps
-    // the merge pass off it, and the split pass re-splits the merged span there.
-    // Ports need no such protection: hasPort() reports them independently of the
-    // wires, so a port keeps blocking the merge and forcing the split on its own.
+    // would fuse it, silently disconnecting the junction. Remembering the
+    // point keeps the merge pass off it and the split pass re-cuts there.
+    // Ports need no protection: hasPort() reports them independently.
     const preservedJunctions = new Set<string>();
     const notePreservedJunctions = (merged: Wire, a: Wire, b: Wire) => {
       for (const absorbed of [a, b]) {
@@ -196,8 +185,8 @@ export class WireIntegrator {
           if (!this._interiorContains(merged, p)) continue;
           for (const other of collectWorkingWiresAt(p)) {
             if (other === a || other === b) continue;
-            // A collinear neighbour ending at P overlaps the merged span and is
-            // absorbed too, so only a perpendicular endpoint marks a junction.
+            // A collinear neighbour is absorbed too, so only a perpendicular
+            // endpoint marks a junction.
             if (other.direction === merged.direction) continue;
             if (this._endpointEquals(other, p)) {
               preservedJunctions.add(k);
@@ -208,11 +197,9 @@ export class WireIntegrator {
       }
     };
 
-    // Consolidate pass: absorb collinear-overlapping wires into a single one. This
-    // runs once per added/moved wire. Without it, the split pass would split each
-    // participant of an overlap and produce duplicate pieces — overlaps are only
-    // possible because a caller-provided wire may have been drawn or moved onto an
-    // existing collinear span, and the integrator's job is to restore invariants.
+    // Absorbs collinear-overlapping wires into one, once per added/moved wire.
+    // Without it the split pass would cut every participant of an overlap and
+    // produce duplicate pieces.
     const consolidateWire = (initialWire: Wire) => {
       let mergedW = initialWire;
       let changed = true;
@@ -269,8 +256,8 @@ export class WireIntegrator {
       consolidateWire(wire);
     }
 
-    // Seed candidates with stationary endpoints/ports that lie strictly inside an
-    // added or moved wire's body — these are the points that force a split-on-add.
+    // Stationary endpoints/ports strictly inside an added or moved wire's body
+    // are what force a split-on-add.
     const scanForInteriorCandidates = (w: Wire) => {
       if (w.length === 0 || w.destroyed) return;
       const bounds = w.gridBounds;
@@ -287,20 +274,16 @@ export class WireIntegrator {
         }
       }
     };
-    // Scan all current freshLive wires (consolidate may have produced new ones
-    // in place of the caller's addedWires).
+    // freshLive, not addedWires: consolidate may have replaced them.
     for (const w of freshLive.all) scanForInteriorCandidates(w);
-    // Plus any moved wires that survived consolidation (they live in the project
-    // tree, not in freshLive).
+    // Moved wires that survived consolidation live in the tree, not freshLive.
     for (const { wire } of movedWires) {
       if (liveOriginalsToRemove.has(wire)) continue;
       scanForInteriorCandidates(wire);
     }
 
-    // isTermination: P is a candidate for being "inside W's interior in violation
-    // of I1/I2". A split is only justified if P is actually a termination of
-    // something else — a candidate that drifted in from a removal/move without a
-    // current terminator there must not trigger a spurious split.
+    // A split is only justified where something else actually terminates: a
+    // candidate that drifted in from a removal or move must not cause one.
     const isTermination = (p: Point, excludeWire: Wire): boolean => {
       if (hasPort(p)) return true;
       for (const w of collectWorkingWiresAt(p)) {
@@ -310,9 +293,8 @@ export class WireIntegrator {
       return false;
     };
 
-    // Fixed-point loop. Each pass snapshots the candidate set so cascading updates
-    // land in the next iteration — this keeps iteration order independent of the
-    // hash-iteration order of the Map.
+    // Each pass snapshots the candidate set so cascading updates land in the
+    // next iteration, keeping the result independent of Map iteration order.
     let iteration = 0;
     let changed = true;
     while (changed) {
@@ -333,21 +315,15 @@ export class WireIntegrator {
       iteration++;
       changed = false;
 
-      // --- Merge pass ---
-      // For each candidate point P, find pairs of collinear wires (same axis,
-      // each ending at P) and merge them iff nothing else terminates at P.
-      // Runs before the split pass: at a point where a collinear pair's shared
-      // endpoint sits on a third wire's interior, merge and split are each
-      // self-justifying — the pair's endpoints are the only terminations that
-      // would justify splitting the third wire, and the split pieces would be
-      // the only terminators blocking the merge. Merging first resolves the
-      // ambiguity toward a plain crossing, so moving both halves of a
-      // previously split wire across another wire behaves like moving one
-      // unsplit wire.
+      // Merge pass: at each candidate P, fuse a collinear pair ending there iff
+      // nothing else terminates at P. It runs before the split pass because
+      // where the pair's shared endpoint sits on a third wire's interior, merge
+      // and split are each self-justifying; merging first resolves that toward
+      // a plain crossing, so moving both halves of a split wire across another
+      // behaves like moving one unsplit wire.
       const mergeSnapshot = [...candidates.values()];
       for (const p of mergeSnapshot) {
-        // A junction consolidation buried keeps its terminations: the wires that
-        // still end here stay split, and the split pass re-cuts the merged span.
+        // A buried junction keeps its terminations; the split pass re-cuts it.
         if (preservedJunctions.has(pointKey(p))) continue;
         for (const direction of [
           WireDirection.HORIZONTAL,
@@ -380,11 +356,9 @@ export class WireIntegrator {
         }
       }
 
-      // --- Split pass ---
-      // For each candidate point P, split any wire whose interior contains P,
-      // but only if some OTHER termination (endpoint or port) sits at P — i.e.,
-      // the I1/I2 invariant is actually violated. Pure candidates left over
-      // from a removal/move with no current terminator must not cause a split.
+      // Split pass: cut any wire whose interior contains a candidate P, but
+      // only where some other endpoint or port sits at P — i.e. where I1/I2 is
+      // actually violated.
       const splitSnapshot = [...candidates.values()];
       for (const p of splitSnapshot) {
         for (const w of collectWorkingWiresAt(p)) {

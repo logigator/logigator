@@ -1,0 +1,44 @@
+@if (providers.googleAvailable()) {
+<web-account-section
+  *webTranslate="let t"
+  [heading]="t('pages.my.account.google.heading')"
+  [description]="t('pages.my.account.google.description')"
+>
+  <div class="flex flex-col gap-4">
+    @if (failureKey(); as message) {
+    <lg-message severity="danger">{{ t(message) }}</lg-message>
+    } @if (linked()) {
+    <p class="flex items-center gap-2 text-sm text-text-hover">
+      <i class="ph ph-check-circle text-lg text-success" aria-hidden="true"></i>
+      {{ t('pages.my.account.google.linked') }}
+    </p>
+
+    @if (canUnlink()) {
+    <div>
+      <button
+        lgButton
+        outlined
+        severity="danger"
+        type="button"
+        [loading]="working()"
+        (onClick)="confirmUnlink()"
+      >
+        {{ t('pages.my.account.google.unlink') }}
+      </button>
+    </div>
+    } @else {
+    <lg-message severity="info">
+      {{ t('pages.my.account.google.needsPassword') }}
+    </lg-message>
+    } } @else {
+    <div>
+      <!-- A plain link, not a router one: the flow leaves the app for the API
+           and Google, and comes back to the path it carries. -->
+      <a lgButton outlined severity="secondary" [href]="linkUrl()">
+        {{ t('pages.my.account.google.link') }}
+      </a>
+    </div>
+    }
+  </div>
+</web-account-section>
+}

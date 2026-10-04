@@ -19,13 +19,9 @@ export interface SurfaceRect {
 }
 
 /**
- * Where the board canvas sits on the page. The camera speaks grid units and the
- * viewport controller speaks board-local px; a driver that wants to point at
- * something (a screenshot clip, a synthetic click) needs the page offset those
- * two are missing, and it is a DOM fact neither of them owns.
- *
- * {@link BoardComponent} registers its canvas once it is live and drops it on
- * teardown, so this reads `null` whenever no board is mounted.
+ * Where the board canvas sits on the page. The camera speaks grid units and
+ * the viewport controller board-local px, so a driver pointing at something on
+ * the page needs the offset neither of them owns. `null` with no board mounted.
  */
 @Injectable({ providedIn: 'root' })
 export class BoardSurfaceService {

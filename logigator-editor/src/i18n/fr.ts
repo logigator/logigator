@@ -1,7 +1,8 @@
 import type { WorkMode } from '../app/work-mode/work-mode.enum';
 import type { ShortcutActionEnum } from '../app/shortcuts/shortcut-action.enum';
-import type { ComponentCategory } from '../app/components/component-category.enum';
+import type { ComponentCategory } from '@logigator/core';
 import type { TranslationSchema } from '../app/translation/translation-schema.model';
+import { consentFr } from '@logigator/core/consent-text/fr';
 
 const fr: TranslationSchema = {
   common: {
@@ -15,11 +16,42 @@ const fr: TranslationSchema = {
     previousPage: 'Page précédente',
     nextPage: 'Page suivante',
     lastPage: 'Dernière page',
+    formatting: 'Mise en forme',
+    heading1: 'Titre 1',
+    heading2: 'Titre 2',
+    heading3: 'Titre 3',
+    bold: 'Gras',
+    italic: 'Italique',
+    code: 'Code',
+    link: 'Lien',
+    bulletedList: 'Liste à puces',
+    numberedList: 'Liste numérotée',
+    quote: 'Citation',
+    codeBlock: 'Bloc de code',
+    divider: 'Séparateur',
+    table: 'Tableau',
+    linkTools: 'Lien',
+    linkText: 'lien',
+    linkUrl: 'Adresse du lien',
+    removeLink: 'Supprimer le lien',
+    tableTools: 'Tableau',
+    insertRowAbove: 'Insérer une ligne au-dessus',
+    insertRowBelow: 'Insérer une ligne en dessous',
+    insertColumnBefore: 'Insérer une colonne à gauche',
+    insertColumnAfter: 'Insérer une colonne à droite',
+    deleteRow: 'Supprimer la ligne',
+    deleteColumn: 'Supprimer la colonne',
+    deleteTable: 'Supprimer le tableau',
+    alignLeft: 'Aligner à gauche',
+    alignCenter: 'Centrer',
+    alignRight: 'Aligner à droite',
+    viewMode: 'Affichage',
+    richText: 'Texte enrichi',
+    markdownSource: 'Markdown',
     moved: 'Déplacé en position {{position}} sur {{total}}'
   },
   user: {
-    loadFailed:
-      'Impossible de charger les données utilisateur. Veuillez vous reconnecter.'
+    loadFailed: 'Impossible de charger votre compte. Veuillez vous reconnecter.'
   },
   userSettings: {
     notSignedIn: 'Non connecté',
@@ -28,12 +60,14 @@ const fr: TranslationSchema = {
     editorSettings: "Paramètres de l'éditeur",
     account: 'Compte',
     logOut: 'Se déconnecter',
-    logIn: 'Se connecter'
+    logIn: 'Se connecter',
+    signUp: "S'inscrire"
   },
   theming: {
     light: 'Clair',
     dark: 'Sombre'
   },
+  consent: consentFr,
   hexEditor: {
     wordView: 'Mots',
     byteView: 'Octets',
@@ -80,12 +114,12 @@ const fr: TranslationSchema = {
       NOT: {
         name: 'Porte NON',
         description:
-          "Une porte NON est une porte logique numérique qui réalise la négation logique. Elle se comporte selon la table de vérité affichée à droite. Une sortie HIGH (1) est produite si les entrées ne sont pas égales. Si l'entrée est LOW (0), alors la sortie sera HIGH (1)."
+          'Une porte NON est une porte logique numérique qui réalise la négation logique. Une entrée HIGH (1) donne une sortie LOW (0), et une entrée LOW (0) une sortie HIGH (1).'
       },
       AND: {
         name: 'Porte ET',
         description:
-          "Une porte ET est une porte logique numérique qui réalise la conjonction logique. Elle se comporte selon la table de vérité affichée à droite. Une sortie HIGH (1) n'est produite que si les deux entrées de la porte ET sont HIGH (1). Si aucune entrée, ou une seule, de la porte ET est HIGH, la sortie est LOW."
+          "Une porte ET est une porte logique numérique qui réalise la conjonction logique. Une sortie HIGH (1) n'est produite que si toutes les entrées de la porte ET sont HIGH (1). Si une entrée est LOW (0), la sortie est LOW."
       },
       OR: {
         name: 'Porte OU',
@@ -128,7 +162,7 @@ const fr: TranslationSchema = {
       ROM: {
         name: 'ROM',
         description:
-          'Une mémoire morte (ROM) est un type de mémoire non volatile utilisée dans les ordinateurs et autres appareils électroniques. Les données stockées en ROM ne peuvent pas être modifiées électroniquement après la fabrication du dispositif de mémoire.',
+          'Mémoire morte. Les sorties portent le mot stocké à l’adresse présente sur les entrées A. Son contenu se définit avec « Modifier le contenu » et ne peut pas changer pendant la simulation.',
         options: {
           wordSize: 'Taille de mot',
           addressSize: "Taille d'adresse",
@@ -159,7 +193,7 @@ const fr: TranslationSchema = {
       RAM: {
         name: 'RAM',
         description:
-          "Mémoire vive. Sur le front montant de CLK, elle lit le mot adressé sur les sorties — ou, tant que WE est à HIGH, stocke à la place le mot présent sur les entrées de données à l'adresse courante.",
+          'Mémoire vive. Sur le front montant de CLK, elle lit le mot adressé sur les sorties. Tant que WE est à HIGH, elle stocke à la place le mot présent sur les entrées de données à cette adresse.',
         options: {
           wordSize: 'Taille de mot',
           addressSize: "Taille d'adresse"
@@ -197,7 +231,7 @@ const fr: TranslationSchema = {
           "Une annotation textuelle placée sur le canevas. Le point marque le point d'ancrage de l'étiquette.",
         options: {
           text: 'Modifier le texte',
-          placeholder: 'Saisissez du texte...',
+          placeholder: 'Saisissez du texte…',
           fontSize: 'Taille de police'
         }
       },
@@ -214,7 +248,12 @@ const fr: TranslationSchema = {
       BUTTON: {
         name: 'Bouton',
         description:
-          'Un bouton-poussoir momentané. Pendant que la simulation tourne, cliquer dessus émet une seule impulsion sur sa sortie.'
+          "Un bouton poussoir. Pendant que la simulation tourne, sa sortie est activée tant qu'il est maintenu enfoncé."
+      },
+      PULSE_BUTTON: {
+        name: 'Bouton à impulsion',
+        description:
+          "Un bouton à impulsion. Pendant que la simulation tourne, cliquer dessus émet une seule impulsion d'un tick sur sa sortie."
       },
       SWITCH: {
         name: 'Interrupteur',
@@ -253,7 +292,7 @@ const fr: TranslationSchema = {
   },
   sideBar: {
     title: 'Composants',
-    search: 'Rechercher..',
+    search: 'Rechercher…',
     outdatedInstances:
       '{{count}} instance(s) placée(s) de ce composant ne sont plus à jour'
   },
@@ -283,13 +322,13 @@ const fr: TranslationSchema = {
         "Outil fil : faites glisser pour tracer · touchez un port pour l'inverser · touchez une jonction pour connecter/déconnecter · touchez pour sélectionner · {{additiveKey}} pour ajouter ou retirer",
       sel: 'Sélection : faites glisser un cadre pour sélectionner · faites glisser la sélection pour la déplacer · maintenez {{scissorKey}} pour couper les fils',
       selExact:
-        'Sélection coupante : faites glisser un cadre pour sélectionner · les fils sont coupés à son bord',
+        'Couper les fils : faites glisser un cadre pour sélectionner · les fils sont coupés à son bord',
       erase:
         'Gomme : cliquez ou faites glisser sur les éléments pour les supprimer',
       placeComp:
         'Placement de {{componentName}} : faites glisser pour positionner · Échap pour annuler',
       simulation:
-        'Simulation : cliquez sur les boutons et interrupteurs · faites glisser pour vous déplacer'
+        'Simulation : cliquez sur les interrupteurs, appuyez sur les boutons · faites glisser pour vous déplacer'
     } satisfies Record<WorkMode, string>,
     saved: 'Enregistré',
     unsaved: 'Modifications non enregistrées',
@@ -381,9 +420,6 @@ const fr: TranslationSchema = {
           changelog: {
             label: 'Nouveautés'
           },
-          legacyEditor: {
-            label: "Ouvrir l'ancien éditeur"
-          },
           cookieSettings: {
             label: 'Paramètres des cookies'
           },
@@ -423,6 +459,12 @@ const fr: TranslationSchema = {
     loadError: 'Impossible de charger cette page.',
     back: 'Tous les sujets',
     learnMore: 'En savoir plus',
+    search: {
+      label: 'Rechercher dans la documentation',
+      placeholder: 'Rechercher…',
+      loading: 'Chargement de la documentation…',
+      empty: 'Aucun résultat pour « {{query}} ».'
+    },
     sections: {
       basics: 'Bases',
       building: 'Construction de circuits',
@@ -432,8 +474,9 @@ const fr: TranslationSchema = {
     pages: {
       gettingStarted: 'Prise en main',
       boardAndTools: 'Plan de travail et outils',
+      phonesAndTablets: 'Téléphones et tablettes',
       shortcuts: 'Raccourcis clavier',
-      settings: 'Paramètres et apparence',
+      settings: 'Paramètres',
       componentsAndOptions: 'Composants et options',
       wiresAndConnections: 'Fils et connexions',
       customComponents: 'Composants personnalisés',
@@ -446,7 +489,7 @@ const fr: TranslationSchema = {
   aboutDialog: {
     header: 'À propos de Logigator',
     tagline:
-      'Un éditeur et simulateur de circuits logiques numériques open source.',
+      'Un éditeur et simulateur de circuits logiques, gratuit et open source.',
     version: 'Version',
     commit: 'Commit',
     buildDate: 'Date de compilation',
@@ -465,7 +508,7 @@ const fr: TranslationSchema = {
     fromFile: "À partir d'un fichier",
     notLoggedIn: 'Connectez-vous pour voir vos projets cloud',
     close: 'Fermer',
-    loading: 'Chargement...',
+    loading: 'Chargement…',
     uploadPrompt: 'Ouvrez un fichier de circuit enregistré sur votre appareil.',
     chooseFile: 'Choisir un fichier',
     deleteProject: 'Supprimer le projet',
@@ -477,7 +520,7 @@ const fr: TranslationSchema = {
       'Voulez-vous vraiment supprimer « {{name}} » ? Cette action est irréversible.',
     deleteAccept: 'Supprimer',
     deleteReject: 'Annuler',
-    searchPlaceholder: 'Rechercher des projets...',
+    searchPlaceholder: 'Rechercher des projets…',
     searchButton: 'Rechercher',
     noSearchResults: 'Aucun projet trouvé',
     lastEdited: 'Dernière modification',
@@ -501,11 +544,9 @@ const fr: TranslationSchema = {
     destinationLocal: 'Local',
     notLoggedIn:
       'Vous devez être connecté pour enregistrer des projets dans le cloud.',
-    public: 'Public',
-    publicInfo:
-      'Les projets publics sont publiés sur votre profil et accessibles à tous via un lien de partage. Les projets privés ne sont visibles que par vous.',
+    visibilityLabel: 'Qui peut l’ouvrir',
     localWarning:
-      "Les projets locaux ne sont pas conservés d'un appareil à l'autre et peuvent être perdus."
+      'Un projet local n’existe que dans ce navigateur. Effacer les données de site du navigateur le supprime.'
   },
   newComponentDialog: {
     name: 'Nom',
@@ -516,38 +557,64 @@ const fr: TranslationSchema = {
     storeLocal: 'Local',
     notLoggedIn:
       'Vous devez être connecté pour enregistrer des composants dans le cloud.',
-    public: 'Public',
-    publicInfo:
-      'Les composants publics sont publiés sur votre profil et accessibles à tous via un lien de partage. Les composants privés ne sont visibles que par vous.',
+    visibilityLabel: 'Qui peut l’ouvrir',
     localWarning:
-      "Les composants locaux ne sont pas conservés d'un appareil à l'autre et peuvent être perdus.",
+      'Un composant local n’existe que dans ce navigateur. Effacer les données de site du navigateur le supprime.',
     create: 'Créer'
   },
   uploadComponent: {
     button: 'Téléverser vers le cloud',
     signInTooltip: 'Connectez-vous pour téléverser vers le cloud'
   },
+  visibility: {
+    private: {
+      label: 'Vous uniquement',
+      hint: 'Personne d’autre que vous ne peut l’ouvrir, même avec le lien.'
+    },
+    unlisted: {
+      label: 'Toute personne avec le lien',
+      hint: 'Quiconque détient le lien peut l’ouvrir en lecture seule. Il reste hors des listes communautaires et hors des moteurs de recherche.'
+    },
+    public: {
+      label: 'Tout le monde',
+      hint: 'Dans les listes communautaires, ouvert à tout le monde et indexé par les moteurs de recherche.'
+    }
+  },
   shareDialog: {
+    /** Sent with the link by a share sheet, and the embed's alt text. */
+    caption: '« {{name}} » sur Logigator',
     header: 'Partager le projet',
     headerComponent: 'Partager le composant',
-    intro:
-      'Toute personne disposant de ce lien peut ouvrir « {{name}} » en lecture seule et le cloner dans sa propre bibliothèque.',
+    intro: 'Choisissez qui peut ouvrir « {{name}} ».',
+    visibilityLabel: 'Qui peut l’ouvrir',
     linkLabel: 'Lien de partage',
+    noLink:
+      'Tant que le document est privé, personne d’autre que vous ne peut l’ouvrir. Le lien ne change pas : choisissez « Toute personne avec le lien » pour le redonner ou pour le régénérer.',
+    viewPublicPage: 'Voir la page communautaire',
     copy: 'Copier le lien',
     linkCopied: 'Lien de partage copié dans le presse-papiers.',
     copyFailed: 'Impossible de copier le lien dans le presse-papiers.',
     regenerate: 'Régénérer le lien',
     regenerateWarning:
-      "La régénération crée un nouveau lien et invalide définitivement le lien actuel — toute personne utilisant l'ancien lien perdra l'accès.",
+      'L’ancien lien cesse immédiatement de fonctionner, pour toutes les personnes qui l’ont. Le circuit lui-même reste inchangé.',
+    linkPublished:
+      'Le lien n’a pas été remplacé : ce document est publié, et son lien est l’adresse de sa page.',
     linkRegenerated: 'Un nouveau lien de partage a été généré.',
     regenerateFailed: 'Impossible de régénérer le lien de partage.',
-    public: 'Public',
-    publicInfoProject:
-      'Les projets publics sont publiés sur votre profil et visibles par tous. Les projets privés ne sont accessibles que via le lien de partage.',
-    publicInfoComponent:
-      'Les composants publics sont publiés sur votre profil et visibles par tous. Les composants privés ne sont accessibles que via le lien de partage.',
     visibilityUpdated: 'Visibilité mise à jour.',
     visibilityFailed: 'Impossible de mettre à jour la visibilité.',
+    share: 'Partager',
+    embed: 'Intégrer',
+    embedHide: 'Masquer l’intégration',
+    embedCopy: 'Copier le code',
+    embedCopied: 'Code d’intégration copié dans le presse-papiers.',
+    embedCopyFailed:
+      'Impossible de copier le code d’intégration dans le presse-papiers.',
+    embedHint: 'À coller dans un message de forum, une page wiki ou un cours.',
+    formatLabel: 'Format',
+    formatMarkdown: 'Markdown',
+    formatHtml: 'HTML',
+    formatBbcode: 'BBCode',
     close: 'Fermer'
   },
   shareComponent: {
@@ -572,23 +639,19 @@ const fr: TranslationSchema = {
       "« {{name}} » est déplacé de votre bibliothèque locale vers votre bibliothèque cloud, afin que vous puissiez l'utiliser depuis n'importe quel appareil.",
     introDraft:
       '« {{name}} » intègre ces composants locaux. Ils seront téléversés dans votre bibliothèque cloud en même temps que lui.',
-    depsTitle: 'Ces composants locaux seront également publiés',
+    depsTitle: 'Ces composants locaux seront également téléversés',
     depsHint:
       "Un projet cloud ne peut contenir que des composants cloud ; chacun de ceux-ci est donc d'abord téléversé dans votre bibliothèque cloud puis référencé.",
     unresolvableWarning:
-      '{{count}} composant(s) intégré(s) ne peuvent plus être publiés (leur entrée de bibliothèque a disparu) et resteront de simples copies intégrées.',
-    public: 'Public',
-    publicInfoProject:
-      'Les projets publics sont publiés sur votre profil et accessibles à tous via un lien de partage. Les projets privés ne sont visibles que par vous.',
-    publicInfoComponent:
-      'Les composants publics sont publiés sur votre profil et accessibles à tous via un lien de partage. Les composants privés ne sont visibles que par vous.',
+      '{{count}} composant(s) intégré(s) ne peuvent plus être téléversés, car leur entrée de bibliothèque a disparu. Ils restent des copies intégrées.',
+    visibilityLabel: 'Qui peut l’ouvrir',
     notLoggedIn: 'Vous devez être connecté pour téléverser vers le cloud.',
     cancel: 'Annuler',
     upload: 'Téléverser',
     analyzeFailed:
       'Impossible de lire le circuit pour préparer le téléversement.',
     dependencyFailed:
-      "Impossible de téléverser le composant « {{name}} ». Rien d'autre n'a été téléversé — réessayez.",
+      'Impossible de téléverser le composant « {{name}} ». Le téléversement s’est arrêté là, réessayez.',
     uploadFailed: 'Impossible de téléverser « {{name}} » vers le cloud.'
   },
   closeTab: {
@@ -596,7 +659,7 @@ const fr: TranslationSchema = {
     message:
       '« {{name}} » comporte des modifications non enregistrées. Les enregistrer avant de fermer ?',
     promotionWarning:
-      "L'enregistrement publiera également {{count}} composant(s) local(aux) dans votre bibliothèque cloud.",
+      'L’enregistrement téléverse aussi {{count}} composant(s) local(aux) dans votre bibliothèque cloud.',
     save: 'Enregistrer',
     discard: 'Abandonner',
     cancel: 'Annuler'
@@ -605,8 +668,8 @@ const fr: TranslationSchema = {
     cloudTitle: 'Enregistré dans votre bibliothèque cloud',
     localTitle: 'Enregistré uniquement dans ce navigateur',
     draftTitle:
-      'Pas encore enregistré — enregistrez-le dans le cloud ou localement',
-    shareTitle: 'Ouvert depuis un lien de partage — lecture seule',
+      'Pas encore enregistré. Enregistrez-le dans le cloud ou dans ce navigateur.',
+    shareTitle: 'Ouvert depuis un lien de partage (lecture seule)',
     label: {
       server: 'Cloud',
       browser: 'Local',
@@ -619,8 +682,7 @@ const fr: TranslationSchema = {
       browser: 'Enregistré uniquement dans ce navigateur',
       draft: 'Pas encore enregistré',
       share: 'Ouvert depuis un lien de partage',
-      embedded:
-        "Copie intégrée — son composant de bibliothèque n'est plus disponible"
+      embedded: 'Copie intégrée : son composant de bibliothèque n’existe plus'
     }
   },
   toolBar: {
@@ -654,11 +716,22 @@ const fr: TranslationSchema = {
     pause: 'Pause',
     step: 'Pas à pas',
     stopSim: 'Arrêter',
-    targetSpeed: 'Vitesse cible',
-    targetUnit: 'Unité de vitesse cible',
-    targetMode: 'Limiter à la vitesse cible',
-    syncToFrame: "Synchroniser à l'image",
-    measuredHz: '{{hz}} Hz',
+    speed: 'Vitesse de simulation',
+    speedFrame: 'Chaque image',
+    speedFrameHint:
+      "Un tick par rafraîchissement de l'écran, si bien que chaque changement est dessiné.",
+    speedFixed: 'Vitesse fixe',
+    speedFixedHint: 'Avance au rythme que vous choisissez.',
+    speedMax: 'Aussi vite que possible',
+    speedMaxShort: 'Vitesse max',
+    speedMaxHint: "Aucune limite. L'écran n'affiche qu'une partie des ticks.",
+    speedRate: 'Ticks par seconde',
+    speedRateHint: 'Par exemple 0,5 · 20 · 2,5k · 1M',
+    speedBehind:
+      'Plus lent que la vitesse fixe : le circuit est trop grand pour suivre.',
+    clocks: 'Horloges à cette vitesse',
+    clockDelay: 'Horloge, retard {{delay}}',
+    clocksMore: '+{{count}} autres',
     ticks: '{{ticks}} ticks'
   },
   mobile: {
@@ -674,20 +747,20 @@ const fr: TranslationSchema = {
     info: 'Info',
     debug: 'Débogage',
     unexpectedError:
-      "Une erreur s'est produite. Certaines actions n'ont peut-être pas abouti — consultez la console du navigateur pour plus de détails."
+      'Une erreur s’est produite, et certaines actions n’ont peut-être pas abouti. La console du navigateur contient les détails.'
   },
   clipboard: {
     clear: 'Vider le presse-papiers',
     pastePartial:
-      "Certains éléments n'ont pas pu être collés — leur type de composant n'est plus disponible.",
+      'Certains éléments n’ont pas été collés, car leur type de composant n’existe plus.',
     pastePlugsSkipped:
-      "Les fiches d'entrée et de sortie n'ont pas été collées — elles ne sont prises en charge qu'à l'intérieur des composants personnalisés."
+      'Les fiches d’entrée et de sortie n’ont pas été collées. Elles ne fonctionnent qu’à l’intérieur d’un composant personnalisé.'
   },
   wireRepair: {
     repaired:
       "{{count}} problème(s) de fils réparé(s). Vérifiez que votre circuit fonctionne toujours comme prévu avant de l'enregistrer.",
     loadDetected:
-      'Ce circuit comporte {{count}} problème(s) de fils, ce qui peut faire réagir les connexions de façon inattendue.',
+      'Ce circuit comporte {{count}} problème(s) de fils, comme des fils qui se chevauchent. Un fil qui a un problème peut être connecté autrement qu’il n’y paraît.',
     repairAction: 'Réparer les fils',
     leftSimulation: 'La simulation a été arrêtée pour réparer les fils.',
     clean: 'Aucun problème de fils détecté.'
@@ -696,18 +769,16 @@ const fr: TranslationSchema = {
     title: 'Signaler un problème',
     badgeTooltip: 'Signaler un bug',
     intro:
-      "Vous avez trouvé un bug ? Décrivez ce que vous faisiez au moment où il s'est produit — plus il y a de détails, plus il est facile à corriger.",
+      'Décrivez ce que vous faisiez quand le bug s’est produit. Les étapes qui permettent de le reproduire nous aident le plus.',
     errorIntro:
       "Une erreur inattendue s'est produite. Dites-nous ce que vous faisiez pour que nous puissions la localiser.",
     errorDetails: "Détails de l'erreur",
-    legacyEditorNotice: 'Cela vous bloque ?',
-    legacyEditorLink: "Ouvrir l'ancien éditeur",
     placeholder: "Que s'est-il passé ?",
     dataNotice:
       'Votre projet actuel, les détails de votre navigateur et votre activité récente sont joints pour nous aider à reproduire le problème.',
     send: 'Envoyer le rapport',
     cancel: 'Annuler',
-    sent: 'Merci — votre rapport a été envoyé.',
+    sent: 'Merci, votre rapport a été envoyé.',
     failed: "Impossible d'envoyer le rapport. Veuillez réessayer."
   },
   persistence: {
@@ -727,8 +798,10 @@ const fr: TranslationSchema = {
     saveFailed: "Impossible d'enregistrer : {{detail}}",
     saveFailedGeneric: "Impossible d'enregistrer le projet.",
     createFailed: 'Impossible de créer le projet : {{detail}}',
+    saveTooLarge:
+      'Ce circuit est trop volumineux pour être enregistré dans le cloud. Supprimez des composants et réessayez.',
     versionMismatch:
-      "Ce projet a changé ailleurs — rechargez-le avant de l'enregistrer à nouveau.",
+      'Ce projet a été modifié ailleurs. Rechargez-le avant de l’enregistrer à nouveau.',
     loadFailed: 'Impossible de charger le projet.',
     componentLoadFailed: 'Impossible de charger le composant.',
     shareLoadFailed: 'Impossible de charger le circuit partagé.',
@@ -739,19 +812,23 @@ const fr: TranslationSchema = {
     dumpElementCountChanged:
       "Le nombre d'éléments du vidage de projet a changé au chargement — les identifiants et l'historique des actions n'ont pas été restaurés.",
     skippedCustomOne:
-      "Un composant personnalisé n'a pas pu être chargé — sa définition est manquante — et a été ignoré.",
+      'Un composant personnalisé a été ignoré, car sa définition est manquante.',
     skippedCustomMany:
-      "{{count}} composants personnalisés n'ont pas pu être chargés — leurs définitions sont manquantes — et ont été ignorés."
+      '{{count}} composants personnalisés ont été ignorés, car leurs définitions sont manquantes.'
+  },
+  browserSupport: {
+    unsupported:
+      'Ce navigateur n’est pas pris en charge, certaines parties de l’éditeur peuvent donc ne pas fonctionner. Si vous rencontrez des problèmes, essayez de le mettre à jour.'
   },
   editor: {
     rendererInitFailed:
       "Impossible de démarrer le moteur de rendu graphique. Votre navigateur ou votre GPU n'est peut-être pas pris en charge.",
     fontLoadFailed:
-      "Échec du chargement des polices de l'éditeur — certaines étiquettes peuvent s'afficher incorrectement.",
+      'Les polices de l’éditeur ne se sont pas chargées, certaines étiquettes peuvent donc s’afficher incorrectement.',
     eraseRestoreFailed:
       "Certains composants effacés n'ont pas pu être restaurés.",
     circularDependency:
-      'Impossible de placer ce composant ici — cela créerait une dépendance circulaire.'
+      'Impossible de placer ce composant ici. Cela créerait une dépendance circulaire.'
   },
   simulation: {
     workerMessageUnreadable:
@@ -762,7 +839,7 @@ const fr: TranslationSchema = {
     unsupportedComponent:
       "Le composant « {{symbol}} » n'est pas pris en charge par le simulateur.",
     recursiveComponent:
-      'Le composant personnalisé « {{name}} » se place lui-même de manière récursive.',
+      'Le composant personnalisé « {{name}} » se place lui-même dans son propre circuit.',
     componentNoCircuit:
       "Le composant personnalisé « {{name}} » n'a aucun circuit à simuler.",
     plugMismatch:
@@ -770,10 +847,10 @@ const fr: TranslationSchema = {
   },
   watch: {
     rendererFailed:
-      "Impossible d'ouvrir la vue de surveillance — le moteur de rendu n'a pas pu démarrer.",
+      'Impossible d’ouvrir la vue de surveillance, car le moteur de rendu n’a pas démarré.',
     noInnerCircuit: "Ce composant n'a aucun circuit interne à inspecter.",
     circuitMismatch:
-      "Le circuit interne ne correspond pas à la simulation compilée — redémarrez la simulation pour l'inspecter."
+      'Le circuit interne ne correspond pas à la simulation compilée. Redémarrez la simulation pour l’inspecter.'
   },
   componentActions: {
     edit: 'Modifier le circuit',
@@ -784,10 +861,10 @@ const fr: TranslationSchema = {
     cloudLoadFailed: 'Impossible de charger le composant depuis le cloud.',
     view: 'Voir le contenu',
     viewTooltip:
-      "Ouvre ce composant en lecture seule. Il appartient au circuit partagé : rien n'est ajouté à votre bibliothèque — clonez le partage pour en garder une copie.",
+      'Ouvrez ce composant en lecture seule. Il appartient au circuit partagé, donc rien n’est ajouté à votre bibliothèque. Clonez le partage pour en garder une copie.',
     restore: 'Restaurer et modifier',
     restoreTooltip:
-      'Le composant maître de ce composant dans la bibliothèque a disparu, mais son circuit est intégré. Restaurez-le dans votre bibliothèque locale pour le modifier.',
+      'L’entrée de bibliothèque de ce composant a disparu, mais son circuit est intégré au projet. Restaurez-le dans votre bibliothèque locale pour le modifier.',
     restored: 'Composant restauré dans votre bibliothèque locale.',
     restoreFailed: 'Impossible de restaurer ce composant.',
     signInToEdit: 'Connectez-vous pour modifier',
@@ -801,7 +878,7 @@ const fr: TranslationSchema = {
     symbol: 'Symbole',
     description: 'Description',
     frozenInstancesHint:
-      'Les instances déjà placées conservent leurs détails actuels ; utilisez « Mettre à jour vers la dernière version » sur une instance sélectionnée pour les appliquer.',
+      'Les instances placées conservent leurs détails actuels. Utilisez « Mettre à jour vers la dernière version » sur une instance sélectionnée pour appliquer les nouveaux.',
     save: 'Enregistrer',
     saved: 'Détails du composant mis à jour.',
     saveFailed: 'Impossible de mettre à jour les détails du composant.'
@@ -814,7 +891,7 @@ const fr: TranslationSchema = {
     message:
       'Ces documents cloud comportent des modifications non enregistrées. Les enregistrer avant de vous déconnecter ?',
     promotionWarning:
-      "L'enregistrement publiera également {{count}} composant(s) local(aux) dans votre bibliothèque cloud.",
+      'L’enregistrement téléverse aussi {{count}} composant(s) local(aux) dans votre bibliothèque cloud.',
     save: 'Enregistrer et se déconnecter',
     discard: 'Se déconnecter sans enregistrer',
     cancel: 'Annuler',
@@ -903,7 +980,7 @@ const fr: TranslationSchema = {
     toast: {
       reassignedFrom: 'Raccourci désassigné de « {{action}} »',
       loadFailed:
-        'Impossible de charger les raccourcis configurés, retour aux valeurs par défaut.'
+        'Impossible de charger vos raccourcis, les valeurs par défaut sont donc utilisées.'
     }
   },
   onboarding: {
@@ -932,22 +1009,22 @@ const fr: TranslationSchema = {
       wireTapActions:
         "Faites glisser pour tracer des fils. <strong>Touchez un port</strong> pour ajouter ou retirer une bulle d'inversion, ou touchez un croisement pour connecter ou séparer les fils.",
       scissorSelectDesktop:
-        "La sélection coupante coupe les fils au bord du cadre. Maintenez <strong>Alt</strong> pour l'activer pendant une sélection par cadre.",
+        '<strong>Couper les fils</strong> coupe chaque fil au bord du cadre de sélection. Maintenez <strong>Alt</strong> pendant que vous tracez un cadre pour l’activer.',
       scissorSelectCompact:
-        'La sélection coupante coupe les fils au bord du cadre.',
+        '<strong>Couper les fils</strong> coupe chaque fil au bord du cadre de sélection.',
       eraser: "Faites glisser sur n'importe quel élément pour le supprimer.",
       simControls:
-        "L'édition est verrouillée pendant l'exécution. Utilisez ces contrôles pour mettre en pause, avancer pas à pas et régler la vitesse — les boutons et interrupteurs restent cliquables.",
+        'L’édition est verrouillée pendant la simulation. Ces boutons la mettent en pause, la font avancer pas à pas et règlent sa vitesse. Les interrupteurs et boutons du plan de travail réagissent toujours.',
       selectionActions:
-        'Faites pivoter la sélection avec ces boutons — ou appuyez sur <strong>R</strong> / <strong>Shift+R</strong>. Déplacez-la avec les <strong>touches fléchées</strong>.',
+        'Faites pivoter la sélection avec ces boutons ou avec <strong>R</strong> et <strong>Shift+R</strong>. Les touches fléchées la déplacent.',
       pastePlacementDesktop:
-        'Les éléments collés apparaissent comme un fantôme — faites-les glisser vers un emplacement libre et relâchez pour les déposer, ou appuyez sur Échap pour annuler.',
+        'Les éléments collés flottent au-dessus du plan de travail jusqu’à ce que vous les déposiez. Faites-les glisser vers un emplacement libre et relâchez, ou appuyez sur Échap pour annuler.',
       pastePlacementCompact:
-        'Les éléments collés apparaissent comme un fantôme — faites-les glisser vers un emplacement libre et levez le doigt pour les déposer, ou touchez ailleurs pour annuler.',
+        'Les éléments collés flottent au-dessus du plan de travail jusqu’à ce que vous les déposiez. Faites-les glisser vers un emplacement libre et levez le doigt, ou touchez ailleurs pour annuler.',
       portsPanelDesktop:
-        "Les fiches de ce composant vivent ici : placez <strong>Entrée</strong> et <strong>Sortie</strong> depuis ce panneau, puis faites glisser les lignes pour définir l'ordre des ports et saisissez leurs noms.",
+        "Les fiches de ce composant se trouvent ici : placez <strong>Entrée</strong> et <strong>Sortie</strong> depuis ce panneau, puis faites glisser les lignes pour définir l'ordre des ports et saisissez leurs noms.",
       portsPanelCompact:
-        "Les fiches de ce composant vivent là-dedans : placez <strong>Entrée</strong> et <strong>Sortie</strong> depuis ce panneau, puis faites glisser les lignes pour définir l'ordre des ports et saisissez leurs noms.",
+        "Les fiches de ce composant se trouvent ici : placez <strong>Entrée</strong> et <strong>Sortie</strong> depuis ce panneau, puis faites glisser les lignes pour définir l'ordre des ports et saisissez leurs noms.",
       panZoomCompact:
         "Faites glisser avec deux doigts pour vous déplacer, pincez pour zoomer. Un seul doigt ne déplace la vue qu'en mode déplacement."
     },
@@ -961,7 +1038,7 @@ const fr: TranslationSchema = {
           moveAround: {
             title: 'Se déplacer',
             textDesktop:
-              'Faites défiler pour zoomer, faites glisser avec le bouton droit pour vous déplacer.',
+              'Faites défiler pour zoomer, faites glisser avec le bouton droit ou le bouton central pour vous déplacer.',
             textCompact:
               'Pincez pour zoomer, faites glisser avec deux doigts pour vous déplacer.'
           },
@@ -972,21 +1049,21 @@ const fr: TranslationSchema = {
             textCompact:
               'Touchez <strong>+</strong> pour ouvrir vos blocs de construction, choisissez <strong>ET</strong>, puis touchez le canevas pour la déposer.',
             nudge:
-              "Ce n'est pas une porte ET — choisissez <strong>ET</strong> pour celle-ci (vous pouvez retirer des pièces avec la gomme)."
+              'Ce n’est pas une porte ET. Choisissez <strong>ET</strong> pour cette étape. La gomme retire l’autre pièce.'
           },
           addSwitches: {
             title: 'Ajouter deux interrupteurs',
             textDesktop:
               'Placez maintenant deux entrées <strong>interrupteur</strong> à gauche de la porte. ({{placed}} sur {{total}} placés)',
             textCompact:
-              'Touchez <strong>+</strong>, choisissez un <strong>interrupteur</strong>, puis touchez le canevas — placez-en deux à gauche de la porte. ({{placed}} sur {{total}} placés)'
+              'Touchez <strong>+</strong>, choisissez un <strong>interrupteur</strong>, puis touchez le canevas à gauche de la porte. Placez-en deux. ({{placed}} sur {{total}} placés)'
           },
           addLed: {
             title: 'Ajouter une LED',
             textDesktop:
-              "Placez une <strong>LED</strong> à droite — c'est votre sortie.",
+              'Placez une <strong>LED</strong> à droite de la porte. Elle affiche la sortie de la porte.',
             textCompact:
-              "Touchez <strong>+</strong>, choisissez la <strong>LED</strong>, puis touchez à droite de la porte — c'est votre sortie."
+              'Touchez <strong>+</strong>, choisissez la <strong>LED</strong>, puis touchez à droite de la porte. Elle affiche la sortie de la porte.'
           },
           wireUp: {
             title: 'Câbler le circuit',
@@ -994,7 +1071,7 @@ const fr: TranslationSchema = {
           },
           startSim: {
             title: 'Démarrer la simulation',
-            text: "Appuyez sur <strong>Démarrer</strong> pour alimenter votre circuit. L'édition est verrouillée pendant l'exécution."
+            text: 'Appuyez sur <strong>Démarrer</strong> pour lancer votre circuit. L’édition est verrouillée pendant la simulation.'
           },
           flipSwitch: {
             title: 'Actionner un interrupteur',
@@ -1004,11 +1081,11 @@ const fr: TranslationSchema = {
               "Touchez un interrupteur pour le basculer. Activez-les <strong>tous les deux</strong> et regardez la LED s'allumer."
           },
           complete: {
-            title: 'Tout est prêt !',
+            title: 'Votre circuit fonctionne',
             textDesktop:
-              "Vous avez construit une porte ET fonctionnelle et allumé la LED — bien joué !<br>À partir d'ici, personnalisez : ajoutez d'autres composants, câblez des circuits plus grands, et enregistrez votre travail quand il vous plaît.<br><br>Besoin d'aide plus tard ? Le menu <strong>Aide</strong> propose à nouveau ce tutoriel, les Nouveautés, et bien plus. Amusez-vous bien !",
+              'La LED n’est allumée que lorsque les deux interrupteurs le sont : une porte ET ne donne HIGH que si toutes ses entrées sont à HIGH.<br><br>Pour refaire ce tutoriel, choisissez « Afficher à nouveau les conseils » dans le menu <strong>Aide</strong>. La documentation se trouve dans le même menu.',
             textCompact:
-              "Vous avez construit une porte ET fonctionnelle et allumé la LED — bien joué !<br>À partir d'ici, personnalisez : ajoutez d'autres composants, câblez des circuits plus grands, et enregistrez votre travail quand il vous plaît.<br><br>Besoin d'aide plus tard ? Ouvrez le <strong>menu</strong> pour retrouver ce tutoriel, les Nouveautés, et bien plus. Amusez-vous bien !"
+              'La LED n’est allumée que lorsque les deux interrupteurs le sont : une porte ET ne donne HIGH que si toutes ses entrées sont à HIGH.<br><br>Pour refaire ce tutoriel, choisissez « Afficher à nouveau les conseils » dans le <strong>menu</strong>. La documentation se trouve dans le même menu.'
           }
         }
       }

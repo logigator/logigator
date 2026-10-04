@@ -1,26 +1,22 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { Injector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { configureTestBed } from '../../testing/configure-test-bed';
 import { setStaticDIInjector } from '../utils/get-di';
 import { ComponentProviderService } from '../components/component-provider.service';
-import { BuiltInComponentType } from '../components/component-type.enum';
-import { ComponentCategory } from '../components/component-category.enum';
+import {
+  andMeta,
+  BuiltInComponentType,
+  ComponentCategory,
+  inputMeta,
+  ledMatrixMeta,
+  romMeta
+} from '@logigator/core';
 import { ComponentConfig } from '../components/component-config.model';
 import { NotComponent } from '../components/component-types/not/not.component';
-import { NumberComponentOption } from '../components/component-options/number/number.component-option';
-import { SelectButtonComponentOption } from '../components/component-options/select-button/select-button.component-option';
-import { TextInputComponentOption } from '../components/component-options/text-input/text-input.component-option';
-import { MemoryDataComponentOption } from '../components/component-options/memory-data/memory-data.component-option';
-import { andComponentConfig } from '../components/component-types/and/and.config';
 import { CatalogContext, describeCatalog, describeOption } from './catalog';
 
-const CONTEXT: CatalogContext = {
-  translate: (key) => key,
-  warn: () => {
-    /* silent in tests */
-  }
-};
+const CONTEXT: CatalogContext = { translate: (key) => key };
 
 describe('automation catalog', () => {
   let provider: ComponentProviderService;
@@ -49,6 +45,7 @@ describe('automation catalog', () => {
       description: { literal: 'A runtime custom' },
       source: 'browser',
       options: {},
+      defaultPorts: { inputs: 2, outputs: 1 },
       create: () => new NotComponent({})
     };
     expect(
@@ -64,76 +61,57 @@ describe('automation catalog', () => {
     );
     expect(entry?.name).toBe('My Component');
     expect(entry?.source).toBe('browser');
+    // A custom type reports its definition's counts rather than a meta's.
+    expect(entry?.ports).toEqual({ inputs: 2, outputs: 1 });
+    // Its bubbles belong to the definition, not to the placed instance.
+    expect(entry?.negatable).toBe(false);
   });
 
-  it('probes port counts from a default instance', () => {
+  it('reports which types accept a negation bubble', () => {
+    const entries = describeCatalog(provider.allComponents(), CONTEXT);
+    const negatable = (type: number) =>
+      entries.find((e) => e.type === type)?.negatable;
+
+    expect(negatable(BuiltInComponentType.AND)).toBe(true);
+    // A plug and a tunnel pass a signal on; the simulation never sees a bubble
+    // on either, so `setPortNegation` refuses one.
+    expect(negatable(BuiltInComponentType.INPUT)).toBe(false);
+    expect(negatable(BuiltInComponentType.TUNNEL)).toBe(false);
+  });
+
+  it("reports a type's default port counts", () => {
     const entries = describeCatalog(provider.allComponents(), CONTEXT);
     const and = entries.find((e) => e.type === BuiltInComponentType.AND);
     // AND defaults to two inputs and one output.
     expect(and?.ports).toEqual({ inputs: 2, outputs: 1 });
   });
 
-  it('reports — rather than throws on — a type that cannot be instantiated', () => {
-    const warn = vi.fn();
-    const broken: ComponentConfig = {
-      type: 4322,
-      category: ComponentCategory.USER,
-      symbol: 'B',
-      name: { literal: 'Broken' },
-      description: { literal: '' },
-      options: {},
-      create: () => {
-        throw new Error('nope');
-      }
-    };
-    provider.register(broken);
-
-    const entry = describeCatalog(provider.allComponents(), {
-      ...CONTEXT,
-      warn
-    }).find((e) => e.type === 4322);
-    expect(entry?.ports).toBeUndefined();
-    expect(warn).toHaveBeenCalledOnce();
-  });
-
   describe('describeOption', () => {
     it("carries a number option's range", () => {
-      const descriptor = describeOption(
-        'numInputs',
-        andComponentConfig.options.numInputs,
-        (key) => key
-      );
-      expect(descriptor.kind).toBe('number');
-      expect(descriptor).toMatchObject({
-        min: (andComponentConfig.options.numInputs as NumberComponentOption)
-          .min,
-        max: (andComponentConfig.options.numInputs as NumberComponentOption).max
+      expect(
+        describeOption('numInputs', andMeta.options.numInputs, (key) => key)
+      ).toMatchObject({
+        kind: 'number',
+        min: andMeta.options.numInputs.min,
+        max: andMeta.options.numInputs.max,
+        default: andMeta.options.numInputs.default
       });
     });
 
-    it("carries a select option's allowed values", () => {
-      const option = new SelectButtonComponentOption(
-        'settings.options.showGrid',
-        [{ value: 'a' }, { value: 'b' }],
-        'a'
-      );
-      expect(describeOption('mode', option, (key) => key)).toMatchObject({
+    it('flattens both select kinds to one descriptor carrying the allowed values', () => {
+      expect(
+        describeOption('size', ledMatrixMeta.options.size, (key) => key)
+      ).toMatchObject({
         kind: 'select',
-        values: ['a', 'b'],
-        default: 'a'
+        values: [4, 8, 16],
+        default: 4
       });
     });
 
     it("sends a text option's forbidden characters as a cloneable string", () => {
-      const option = new TextInputComponentOption(
-        'components.def.AND.name',
-        '',
-        {
-          maxLength: 5,
-          forbiddenChars: /,/g
-        }
-      );
-      expect(describeOption('label', option, (key) => key)).toMatchObject({
+      expect(
+        describeOption('label', inputMeta.options.label, (key) => key)
+      ).toMatchObject({
         kind: 'text',
         maxLength: 5,
         forbiddenChars: ','
@@ -141,13 +119,12 @@ describe('automation catalog', () => {
     });
 
     it('marks an inspector-hidden option as hidden', () => {
-      const option = new MemoryDataComponentOption(
-        'components.def.ROM.name'
-      ).hideFromInspector();
-      expect(describeOption('data', option, (key) => key)).toMatchObject({
-        kind: 'memory',
-        hidden: true
-      });
+      expect(
+        describeOption('index', inputMeta.options.index, (key) => key)
+      ).toMatchObject({ kind: 'number', hidden: true });
+      expect(
+        describeOption('data', romMeta.options.data, (key) => key)
+      ).toMatchObject({ kind: 'memory', hidden: false });
     });
   });
 });

@@ -1,17 +1,22 @@
 import { Point } from 'pixi.js';
 import { PointerInput } from '../app/rendering/interaction/pointer-input';
 import { Wire } from '../app/wires/wire';
-import { WireDirection } from '../app/wires/wire-direction.enum';
+import { Direction, SegmentBase, WireDirection } from '@logigator/core';
 import { AndComponent } from '../app/components/component-types/and/and.component';
 import { andComponentConfig } from '../app/components/component-types/and/and.config';
 import { NotComponent } from '../app/components/component-types/not/not.component';
 import { InputComponent } from '../app/components/component-types/input/input.component';
 import { inputComponentConfig } from '../app/components/component-types/input/input.config';
 import { ButtonComponent } from '../app/components/component-types/button/button.component';
+import { PulseButtonComponent } from '../app/components/component-types/pulse-button/pulse-button.component';
 import { SwitchComponent } from '../app/components/component-types/switch/switch.component';
 import { RomComponent } from '../app/components/component-types/rom/rom.component';
 import { romComponentConfig } from '../app/components/component-types/rom/rom.config';
-import { Direction } from '../app/utils/direction';
+import { LedComponent } from '../app/components/component-types/led/led.component';
+import { ClockComponent } from '../app/components/component-types/clock/clock.component';
+import { clockComponentConfig } from '../app/components/component-types/clock/clock.config';
+import { SegmentDisplayComponent } from '../app/components/component-types/segment-display/segment-display.component';
+import { segmentDisplayComponentConfig } from '../app/components/component-types/segment-display/segment-display.config';
 
 /** AndComponent with the given port count, rotation, and grid position. */
 export function makeAnd(
@@ -62,6 +67,13 @@ export function makeButton(px = 0, py = 0): ButtonComponent {
   return button;
 }
 
+/** PulseButtonComponent at the given grid position. */
+export function makePulseButton(px = 0, py = 0): PulseButtonComponent {
+  const button = new PulseButtonComponent({});
+  button.position.set(px, py);
+  return button;
+}
+
 /** SwitchComponent at the given grid position. */
 export function makeSwitch(px = 0, py = 0): SwitchComponent {
   const switchComp = new SwitchComponent({});
@@ -84,6 +96,37 @@ export function makeRom(
   });
   rom.position.set(px, py);
   return rom;
+}
+
+/** ClockComponent with the given delay in ticks, at a grid position. */
+export function makeClock(speed = 1, px = 0, py = 0): ClockComponent {
+  const clock = new ClockComponent({
+    speed: clockComponentConfig.options.speed.clone(speed)
+  });
+  clock.position.set(px, py);
+  return clock;
+}
+
+/** LedComponent at the given grid position. */
+export function makeLed(px = 0, py = 0): LedComponent {
+  const led = new LedComponent({});
+  led.position.set(px, py);
+  return led;
+}
+
+/** SegmentDisplayComponent with the given input count, base and position. */
+export function makeSegmentDisplay(
+  numInputs = 4,
+  base: SegmentBase = SegmentBase.DEC,
+  px = 0,
+  py = 0
+): SegmentDisplayComponent {
+  const display = new SegmentDisplayComponent({
+    numInputs: segmentDisplayComponentConfig.options.numInputs.clone(numInputs),
+    base: segmentDisplayComponentConfig.options.base.clone(base)
+  });
+  display.position.set(px, py);
+  return display;
 }
 
 /**

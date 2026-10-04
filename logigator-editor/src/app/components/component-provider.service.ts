@@ -1,6 +1,6 @@
 import { computed, inject, Injectable, Signal, signal } from '@angular/core';
 import { ComponentConfig } from './component-config.model';
-import { ComponentCategory } from './component-category.enum';
+import { ComponentCategory } from '@logigator/core';
 import { LoggingService } from '../logging/logging.service';
 import { notComponentConfig } from './component-types/not/not.config';
 import { andComponentConfig } from './component-types/and/and.config';
@@ -25,6 +25,7 @@ import { textComponentConfig } from './component-types/text/text.config';
 import { inputComponentConfig } from './component-types/input/input.config';
 import { outputComponentConfig } from './component-types/output/output.config';
 import { buttonComponentConfig } from './component-types/button/button.config';
+import { pulseButtonComponentConfig } from './component-types/pulse-button/pulse-button.config';
 import { switchComponentConfig } from './component-types/switch/switch.config';
 import { ledComponentConfig } from './component-types/led/led.config';
 import { segmentDisplayComponentConfig } from './component-types/segment-display/segment-display.config';
@@ -54,8 +55,9 @@ const BUILT_IN_COMPONENTS: ComponentConfig<any>[] = [
   textComponentConfig,
   inputComponentConfig,
   outputComponentConfig,
-  buttonComponentConfig,
   switchComponentConfig,
+  buttonComponentConfig,
+  pulseButtonComponentConfig,
   ledComponentConfig,
   segmentDisplayComponentConfig,
   ledMatrixComponentConfig
@@ -65,9 +67,9 @@ const BUILT_IN_COMPONENTS: ComponentConfig<any>[] = [
   providedIn: 'root'
 })
 export class ComponentProviderService {
-  // Keyed by numeric type id (not the closed `ComponentType` enum) so
-  // runtime-allocated custom configs can be registered alongside built-ins.
-  // A signal so the reactive category lists below update on register/unregister.
+  // Keyed by numeric type id, not the closed `ComponentType` enum, so
+  // runtime-allocated custom configs register alongside built-ins. A signal so
+  // the category lists below update on register/unregister.
   private readonly _configs = signal<ReadonlyMap<number, ComponentConfig>>(
     new Map(BUILT_IN_COMPONENTS.map((config) => [config.type, config]))
   );
@@ -84,8 +86,7 @@ export class ComponentProviderService {
   public readonly portComponents = this._categorySignal(ComponentCategory.PORT);
   public readonly userComponents = this._categorySignal(ComponentCategory.USER);
 
-  /** Every registered type, hidden ones included — the registry-derived source
-   *  the automation catalog is generated from. */
+  /** Every registered type, hidden ones included. */
   public readonly allComponents = computed(() => [...this._configs().values()]);
 
   public getComponent(type: number): ComponentConfig | undefined {

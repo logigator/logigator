@@ -6,26 +6,19 @@ import { AnalyticsEvent } from '../analytics/analytics.mapping';
 import { LoggingService } from './logging.service';
 
 /**
- * UI-facing service for translated toast notifications.
+ * UI-facing service for translated toast notifications. Inject
+ * {@link LoggingService} directly for console-only output.
  *
- * Every toast mirrors to {@link LoggingService}, so each user-facing message
- * leaves a console trail; the mandatory `context` (originating class name)
- * identifies the origin, since bundling obscures the native call site.
- * `error`/`warn` take an optional trailing `cause` — the underlying error,
- * logged in place of the user-facing message. `error`/`warn` log at their own
- * level; `success`/`info` log at info (suppressed by a production
- * `loggingVerbosity` of `Warn`).
+ * Every toast already mirrors to {@link LoggingService}, so callers must not
+ * log the same thing again. The mandatory `context` names the originating
+ * class, since bundling obscures the call site; the optional trailing `cause`
+ * on `error`/`warn` is logged in place of the user-facing message.
+ * `error`/`warn` log at their own level, `success`/`info` at info.
  *
- * Error toasts additionally emit {@link AnalyticsEvent.ErrorShown}, so failures
- * the app *handles* — which never reach the {@link GlobalErrorHandler} and thus
- * never become a PostHog `$exception` — are still visible in analytics. The
- * `context`, the shown message and the cause's identity travel, each truncated
- * by the sanitizer. They are the one place free-form text — toast details
- * interpolate project and component names, file names, diagnostic text —
- * reaches analytics.
- *
- * Inject this where the user needs feedback; inject {@link LoggingService}
- * directly for console-only output.
+ * Error toasts also emit {@link AnalyticsEvent.ErrorShown}, so failures the app
+ * *handles* — which never become a PostHog `$exception` — stay visible in
+ * analytics. Context, message and cause identity travel, truncated by the
+ * sanitizer; this is the one place free-form text reaches analytics.
  */
 @Injectable({
   providedIn: 'root'
@@ -62,8 +55,8 @@ export class ToastService {
   }
 
   /**
-   * A warning that offers a one-click follow-up. It never auto-dismisses: an
-   * offer that expires before the user reads it is worse than one they close.
+   * A warning offering a one-click follow-up. It never auto-dismisses: an offer
+   * that expires before the user reads it is worse than one they close.
    */
   public warnWithAction(
     message: string,
@@ -103,19 +96,17 @@ export class ToastService {
 
 /**
  * Renders a cause for {@link AnalyticsEvent.ErrorShown}: the error's identity,
- * never its stack — stacks belong to `$exception`, and an object of unknown
- * shape becomes its class name rather than its contents (a name the production
- * bundler mangles, so that branch says little beyond "some object"; call sites
- * wanting a readable cause pass a string or an `Error`). `undefined` is dropped
- * by the sanitizer, so a cause-less toast simply omits the property.
+ * never its stack, which belongs to `$exception`. An object of unknown shape
+ * becomes its class name — mangled in production, so pass a string or an
+ * `Error` for a readable cause.
  */
 function formatCause(cause: unknown): string | undefined {
   if (cause === undefined) return undefined;
   if (cause instanceof Error) return `${cause.name}: ${cause.message}`;
   if (typeof cause === 'string') return cause;
   if (typeof cause !== 'object') return typeof cause;
-  // Deliberately no `String(cause)`: it throws on a null prototype and dumps a
-  // function's source. This runs on the error path and outside the guard in
-  // `AnalyticsService.capture`, so it must be total.
+  // Deliberately no `String(cause)`: it throws on a null prototype and dumps
+  // a function's source. This runs outside `AnalyticsService.capture`'s guard,
+  // so it must be total.
   return cause?.constructor?.name ?? 'object';
 }

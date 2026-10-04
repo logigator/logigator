@@ -1,0 +1,24 @@
+<ng-container *webTranslate="let t">
+  @switch (state()) { @case ('confirmed') {
+  <web-auth-shell
+    [heading]="t('pages.verifyEmail.success')"
+    [lead]="t('pages.verifyEmail.successLead')"
+  >
+    <a lgButton class="w-full" [routerLink]="links.login()">
+      {{ t('pages.verifyEmail.toLogin') }}
+    </a>
+  </web-auth-shell>
+  } @case ('failed') {
+  <web-auth-shell [heading]="t('pages.verifyEmail.error')">
+    <lg-message severity="danger">{{ t(failure()) }}</lg-message>
+    <a lgButton outlined class="mt-4 w-full" [routerLink]="links.login()"
+      >{{ t('pages.verifyEmail.toLogin') }}</a
+    >
+  </web-auth-shell>
+  } @default {
+  <web-auth-shell
+    [heading]="t('pages.verifyEmail.pending')"
+    [lead]="t('pages.verifyEmail.pendingLead')"
+  />
+  } }
+</ng-container>

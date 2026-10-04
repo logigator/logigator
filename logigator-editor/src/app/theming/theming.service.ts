@@ -11,9 +11,9 @@ const THEMES: Record<ThemeType, Theme> = {
 };
 
 /**
- * Field of the origin-wide `preferences` cookie holding the theme, shared with
- * the pages the editor is served alongside — the editor's `light`/`dark` are the
- * values they use as well, so switching theme on either side moves both.
+ * Field of the origin-wide `preferences` cookie holding the theme. The
+ * surrounding pages use the same `light`/`dark` values, so a switch on either
+ * side moves both.
  */
 const PREFERENCE_FIELD = 'theme';
 
@@ -33,7 +33,7 @@ export class ThemingService {
     this.loadTheme();
   }
 
-  /** Every selectable theme — the keys of the theme table itself. */
+  /** Every selectable theme. */
   public readonly availableThemes = Object.keys(THEMES) as ThemeType[];
 
   public setTheme(theme: ThemeType): void {
@@ -42,10 +42,10 @@ export class ThemingService {
   }
 
   /**
-   * Applies the shared preference, or dark for a user who has no theme yet.
-   * Applying without writing back keeps the editor from asserting a theme for the
-   * whole origin on a load where the user chose nothing: the server establishes
-   * the cookie on the next page view, from the same default.
+   * Applies the shared preference, or dark where there is none. Applying
+   * without writing back keeps the editor from asserting a theme for the whole
+   * origin when the user chose nothing; the server establishes the cookie on
+   * the next page view, from the same default.
    */
   public loadTheme(): void {
     const theme = this.preferences.get(PREFERENCE_FIELD) as ThemeType | null;
@@ -61,10 +61,9 @@ export class ThemingService {
   }
 
   /**
-   * Sets the active theme type without the DOM-class / localStorage side
-   * effects of {@link setTheme}. Intended for briefly switching theme to render
-   * an offscreen snapshot (dual-theme previews); always pair it with a
-   * synchronous restore.
+   * Sets the active theme type without {@link setTheme}'s DOM-class and cookie
+   * side effects, for briefly switching theme to render an offscreen snapshot.
+   * Always pair it with a synchronous restore.
    */
   public setActiveThemeType(type: ThemeType): void {
     this._currentThemeType.set(type);

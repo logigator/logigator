@@ -31,8 +31,8 @@ describe('LgPaginator', () => {
 
   it('disables first/prev on the first page', () => {
     const { buttons } = setup(0, 10, 35);
-    expect(buttons[0].disabled).toBe(true); // first
-    expect(buttons[1].disabled).toBe(true); // prev
+    expect(buttons[0].disabled).toBe(true);
+    expect(buttons[1].disabled).toBe(true);
   });
 
   it('emits the next page with computed first/pageCount', () => {

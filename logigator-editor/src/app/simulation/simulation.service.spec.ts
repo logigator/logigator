@@ -4,7 +4,10 @@ import { configureTestBed } from '../../testing/configure-test-bed';
 import {
   makeAnd,
   makeButton,
+  makePulseButton,
+  makeLed,
   makeNot,
+  makeClock,
   makeSwitch
 } from '../../testing/factories';
 import {
@@ -19,12 +22,13 @@ import { ToastService } from '../logging/toast.service';
 import { EditorSettingsService } from '../settings/editor-settings.service';
 import { Project } from '../project/project';
 import { Wire } from '../wires/wire';
-import { WireDirection } from '../wires/wire-direction.enum';
+import { WireDirection } from '@logigator/core';
 import { ProjectService } from '../project/project.service';
 import { WorkMode } from '../work-mode/work-mode.enum';
 import { WorkModeService } from '../work-mode/work-mode.service';
 import { SimulationService } from './simulation.service';
 import { TOP_LEVEL_PATH } from './compiler/compiled-board.model';
+import { MIN_TARGET_HZ } from './worker/pacing';
 import { packSnapshot } from './worker/protocol';
 import {
   FRAME_SCHEDULER,
@@ -63,8 +67,7 @@ describe('SimulationService', () => {
     service = TestBed.inject(SimulationService);
     workModeService = TestBed.inject(WorkModeService);
     toastService = TestBed.inject(ToastService);
-    // These tests drive the run controls by hand and assert on a paused boot;
-    // keep auto-start off (its own test below covers the on path).
+    // These tests drive the run controls by hand and assert on a paused boot.
     TestBed.inject(EditorSettingsService).autoStartSimulation.set(false);
     project = new Project();
     TestBed.inject(ProjectService).setMainProject(project);
@@ -74,6 +77,26 @@ describe('SimulationService', () => {
     service.exit();
     project.destroy({ children: true });
   });
+
+  /**
+   * The level the engine holds `unit` at: the last Cont event it was sent for
+   * it since its last rebuild, `false` if none — an input starts low.
+   */
+  function engineLevel(unit: number): boolean {
+    const posted = fakeWorker.posted;
+    const rebuilt = posted.map((msg) => msg.kind).lastIndexOf('stop');
+    let level = false;
+    for (const msg of posted.slice(rebuilt + 1)) {
+      if (
+        msg.kind === 'triggerInput' &&
+        msg.componentIndex === unit &&
+        msg.event === 0
+      ) {
+        level = msg.state[0];
+      }
+    }
+    return level;
+  }
 
   /** enter() plus the worker boot round-trip (ready → init → ok). */
   async function enterAndBoot(): Promise<void> {
@@ -129,8 +152,7 @@ describe('SimulationService', () => {
 
   it('refuses to enter on diagnostics and reports via toast', () => {
     const error = vi.spyOn(toastService, 'error');
-    // A custom whose circuit has no plugs but declares one port compiles to a
-    // blocking plug-mismatch diagnostic.
+    // No plugs but one declared port: a blocking plug-mismatch diagnostic.
     const broken = TestBed.inject(CustomComponentRegistry).registerSnapshot({
       kind: 'snapshot',
       source: 'browser',
@@ -174,7 +196,7 @@ describe('SimulationService', () => {
 
     service.play();
     expect(service.isRunning()).toBe(true);
-    // Default mode is sync-to-frame: the worker idles, frames drive ticks.
+    // Sync-to-frame is the default: the worker idles, frames drive ticks.
     expect(fakeWorker.postedOfKind('start')).toHaveLength(0);
 
     await vi.waitFor(() =>
@@ -186,10 +208,10 @@ describe('SimulationService', () => {
     expect(service.state()).toBe('ready');
   });
 
-  it('starts a worker-paced run when sync mode is off', async () => {
+  it('starts a free run when as-fast-as-possible is chosen', async () => {
     project.addComponent(makeSwitch());
     await enterAndBoot();
-    service.toggleSyncMode(); // off → continuous
+    service.setMode('continuous');
 
     service.play();
 
@@ -204,8 +226,7 @@ describe('SimulationService', () => {
   it('re-paces a running target-mode simulation when the rate changes', async () => {
     project.addComponent(makeSwitch());
     await enterAndBoot();
-    service.toggleTargetMode();
-    expect(service.mode()).toBe('target');
+    service.setMode('target');
 
     service.play();
     await vi.waitFor(() =>
@@ -216,51 +237,54 @@ describe('SimulationService', () => {
       hz: 1000
     });
 
-    service.setTargetValue(250);
+    service.setTargetHz(0.5);
     await vi.waitFor(() =>
       expect(fakeWorker.postedOfKind('start')).toHaveLength(2)
     );
     expect(fakeWorker.postedOfKind('start')[1].config).toEqual({
       mode: 'target',
-      hz: 250
+      hz: 0.5
     });
   });
 
-  it('re-paces with the unit multiplier when the unit changes', async () => {
+  it('switches a running sync-mode simulation to target mode when a speed is entered', async () => {
     project.addComponent(makeSwitch());
     await enterAndBoot();
-    service.toggleTargetMode();
-    service.setTargetValue(5);
-
+    expect(service.mode()).toBe('sync');
     service.play();
+
+    // The current rate re-entered still counts as asking for it.
+    service.setTargetHz(1000);
+    expect(service.mode()).toBe('target');
     await vi.waitFor(() =>
       expect(fakeWorker.postedOfKind('start')).toHaveLength(1)
     );
     expect(fakeWorker.postedOfKind('start')[0].config).toEqual({
       mode: 'target',
-      hz: 5
-    });
-
-    // 5 read in kHz is 5000 Hz; the typed value is kept, not converted.
-    service.setTargetUnit('kHz');
-    await vi.waitFor(() =>
-      expect(fakeWorker.postedOfKind('start')).toHaveLength(2)
-    );
-    expect(service.targetValue()).toBe(5);
-    expect(service.targetHz()).toBe(5000);
-    expect(fakeWorker.postedOfKind('start')[1].config).toEqual({
-      mode: 'target',
-      hz: 5000
+      hz: 1000
     });
   });
 
-  it('ignores invalid target-speed input so the box is not rewritten mid-edit', () => {
-    service.setTargetValue(0);
-    expect(service.targetValue()).toBe(1000);
-    service.setTargetValue(Number.NaN);
-    expect(service.targetValue()).toBe(1000);
-    service.setTargetValue(-5);
-    expect(service.targetValue()).toBe(1000);
+  it('ignores a rate that is not finite or below the slowest pace', () => {
+    service.setTargetHz(MIN_TARGET_HZ / 2);
+    service.setTargetHz(Number.NaN);
+    service.setTargetHz(-5);
+    expect(service.targetHz()).toBe(1000);
+    expect(service.mode()).toBe('sync');
+
+    service.setTargetHz(MIN_TARGET_HZ);
+    expect(service.targetHz()).toBe(MIN_TARGET_HZ);
+  });
+
+  it('reports the distinct clock delays of the session board', async () => {
+    project.addComponent(makeClock(10, 0, 0));
+    project.addComponent(makeClock(1, 0, 4));
+    project.addComponent(makeClock(10, 0, 8));
+    await enterAndBoot();
+    expect(service.clockDelays()).toEqual([1, 10]);
+
+    service.exit();
+    expect(service.clockDelays()).toEqual([]);
   });
 
   it('steps only while paused', async () => {
@@ -293,6 +317,28 @@ describe('SimulationService', () => {
     expect(service.state()).toBe('ready');
   });
 
+  it('lights a negated display for the length of the session', async () => {
+    // The LED's net stays low throughout, so the engine reports nothing about
+    // it: only the session's own start and end tell it to invert.
+    const led = makeLed(4, 0);
+    led.setPortNegated('in', 0, true);
+    project.addComponent(led);
+    project.addComponent(makeAnd(2, undefined, 0, 0));
+    expect(led.isInputHigh(0)).toBe(false);
+
+    await enterAndBoot();
+    expect(led.isInputHigh(0)).toBe(true);
+
+    service.stop();
+    await vi.waitFor(() =>
+      expect(fakeWorker.postedOfKind('stop')).toHaveLength(1)
+    );
+    expect(led.isInputHigh(0)).toBe(true);
+
+    service.exit();
+    expect(led.isInputHigh(0)).toBe(false);
+  });
+
   it('toggles a switch on canvas user input and forwards a Cont event', async () => {
     const switchComp = makeSwitch();
     project.addComponent(switchComp);
@@ -316,6 +362,95 @@ describe('SimulationService', () => {
     });
   });
 
+  describe('a button', () => {
+    let button: ReturnType<typeof makeButton>;
+    let unit: number;
+
+    async function bootWithButton(): Promise<void> {
+      button = makeButton();
+      project.addComponent(button);
+      await enterAndBoot();
+      unit = service.board!.userInputs.get(button.id)!;
+    }
+
+    it('is held from press to release, one Cont event each way', async () => {
+      await bootWithButton();
+
+      project.emitUserInput(button, 'press');
+      expect(button.held).toBe(true);
+      expect(fakeWorker.postedOfKind('triggerInput')).toEqual([
+        expect.objectContaining({
+          componentIndex: unit,
+          event: 0,
+          state: [true]
+        })
+      ]);
+
+      project.emitUserInput(button, 'press'); // already held
+      expect(fakeWorker.postedOfKind('triggerInput')).toHaveLength(1);
+
+      project.emitUserInput(button, 'release');
+      expect(button.held).toBe(false);
+      project.emitUserInput(button, 'release'); // already released
+      expect(fakeWorker.postedOfKind('triggerInput')).toHaveLength(2);
+      expect(engineLevel(unit)).toBe(false);
+    });
+
+    it('ignores a press while the engine is still starting', () => {
+      button = makeButton();
+      project.addComponent(button);
+      service.enter();
+
+      project.emitUserInput(button, 'press');
+      project.emitUserInput(button, 'release');
+
+      expect(button.held).toBe(false);
+      expect(fakeWorker.postedOfKind('triggerInput')).toHaveLength(0);
+    });
+
+    it('does not act on a tap, which cannot hold it', async () => {
+      await bootWithButton();
+
+      project.emitUserInput(button);
+
+      expect(button.held).toBe(false);
+      expect(fakeWorker.postedOfKind('triggerInput')).toHaveLength(0);
+    });
+
+    it('is released by stop, against the rebuilt engine', async () => {
+      await bootWithButton();
+      project.emitUserInput(button, 'press');
+
+      service.stop();
+      await vi.waitFor(() => expect(button.held).toBe(false));
+
+      expect(engineLevel(unit)).toBe(false);
+      // The hold's own release, arriving later, sends nothing further.
+      const sent = fakeWorker.postedOfKind('triggerInput').length;
+      project.emitUserInput(button, 'release');
+      expect(fakeWorker.postedOfKind('triggerInput')).toHaveLength(sent);
+    });
+
+    it('never stays high after a press lands while a reset is in flight', async () => {
+      await bootWithButton();
+
+      service.stop();
+      project.emitUserInput(button, 'press'); // reaches the rebuilt engine
+      await vi.waitFor(() => expect(button.held).toBe(false));
+
+      expect(engineLevel(unit)).toBe(false);
+    });
+
+    it('is released by exit', async () => {
+      await bootWithButton();
+      project.emitUserInput(button, 'press');
+
+      service.exit();
+
+      expect(button.held).toBe(false);
+    });
+  });
+
   describe('setUserInput', () => {
     it('sets a switch absolutely, sending no event when already there', async () => {
       const switchComp = makeSwitch();
@@ -326,7 +461,7 @@ describe('SimulationService', () => {
       expect(switchComp.isOn).toBe(true);
       expect(fakeWorker.postedOfKind('triggerInput')).toHaveLength(1);
 
-      // Repeating the same absolute value is a no-op — no second engine event.
+      // Repeating an absolute value sends no second engine event.
       expect(service.setUserInput(switchComp.id, true)).toBe(true);
       expect(switchComp.isOn).toBe(true);
       expect(fakeWorker.postedOfKind('triggerInput')).toHaveLength(1);
@@ -339,8 +474,28 @@ describe('SimulationService', () => {
       });
     });
 
-    it('pulses a button on true and ignores false', async () => {
+    it('holds a button on true and releases it on false, absolutely', async () => {
       const button = makeButton();
+      project.addComponent(button);
+      await enterAndBoot();
+      const unit = service.board!.userInputs.get(button.id)!;
+
+      expect(service.setUserInput(button.id, false)).toBe(true);
+      expect(fakeWorker.postedOfKind('triggerInput')).toHaveLength(0);
+
+      expect(service.setUserInput(button.id, true)).toBe(true);
+      expect(service.setUserInput(button.id, true)).toBe(true);
+      expect(button.held).toBe(true);
+      expect(fakeWorker.postedOfKind('triggerInput')).toHaveLength(1);
+      expect(engineLevel(unit)).toBe(true);
+
+      expect(service.setUserInput(button.id, false)).toBe(true);
+      expect(button.held).toBe(false);
+      expect(engineLevel(unit)).toBe(false);
+    });
+
+    it('pulses a pulse button on true and ignores false', async () => {
+      const button = makePulseButton();
       project.addComponent(button);
       await enterAndBoot();
 
@@ -364,8 +519,8 @@ describe('SimulationService', () => {
     });
   });
 
-  it('flashes a button on canvas user input and forwards a Pulse event', async () => {
-    const button = makeButton();
+  it('flashes a pulse button on canvas user input and forwards a Pulse event', async () => {
+    const button = makePulseButton();
     project.addComponent(button);
     await enterAndBoot();
     vi.useFakeTimers();
@@ -392,7 +547,6 @@ describe('SimulationService', () => {
     const unregister = service.registerApplier(watch);
     service.requestSnapshot();
 
-    // The seed request forces a full snapshot.
     const requests = fakeWorker.postedOfKind('requestSnapshot');
     expect(requests).toHaveLength(1);
     expect(requests[0].full).toBe(true);
@@ -501,13 +655,13 @@ describe('SimulationService', () => {
     project.emitUserInput(switchComp);
     const replacement = new Project();
 
-    // Opening or creating a project; the outgoing one is destroyed right after.
+    // The outgoing project is destroyed right after this notification.
     TestBed.inject(ProjectService).setMainProject(replacement);
 
     expect(workModeService.mode()).toBe(WorkMode.PAN);
     expect(service.state()).toBe('inactive');
     expect(service.board).toBeNull();
-    // The teardown ran while the outgoing project was still live.
+    // The teardown ran while the outgoing project was live.
     expect(switchComp.isOn).toBe(false);
     expect(fakeWorker.terminated).toBe(true);
 

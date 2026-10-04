@@ -19,6 +19,8 @@ import { MenuItem } from './menu-item.model';
 class HostComponent {
   readonly undo = vi.fn();
   readonly help = vi.fn();
+  readonly docs = vi.fn();
+  readonly changelog = vi.fn();
   readonly items = signal<MenuItem[]>([
     {
       label: 'Edit',
@@ -32,7 +34,18 @@ class HostComponent {
       label: 'View',
       items: [{ label: 'Zoom In' }]
     },
-    { label: 'Help', command: () => this.help() }
+    { label: 'Help', command: () => this.help() },
+    {
+      label: 'About',
+      items: [
+        {
+          label: 'Changelog',
+          href: '/changelog',
+          command: () => this.changelog()
+        }
+      ]
+    },
+    { label: 'Docs', href: '/docs', command: () => this.docs() }
   ]);
 }
 
@@ -48,6 +61,25 @@ function topButtons(host: HTMLElement): HTMLButtonElement[] {
   return Array.from(
     host.querySelectorAll('[role=menubar] > [role=menuitem]')
   ) as HTMLButtonElement[];
+}
+
+/**
+ * Clicks `el` and reports whether the component cancelled the click. A
+ * listener after it cancels whatever is left, so an unclaimed click on a link
+ * does not navigate the test document.
+ */
+function clickClaimed(el: HTMLElement, init: MouseEventInit = {}): boolean {
+  let claimed = false;
+  const record = (event: Event) => {
+    claimed = event.defaultPrevented;
+    event.preventDefault();
+  };
+  document.addEventListener('click', record);
+  el.dispatchEvent(
+    new MouseEvent('click', { bubbles: true, cancelable: true, ...init })
+  );
+  document.removeEventListener('click', record);
+  return claimed;
 }
 
 function setup() {
@@ -69,7 +101,7 @@ describe('LgMenubar', () => {
     expect(host.querySelector('.brand')?.textContent).toContain('LOGO');
     expect(host.querySelector('.user')?.textContent).toContain('USER');
     const labels = topButtons(host).map((b) => b.textContent?.trim());
-    expect(labels).toEqual(['Edit', 'View', 'Help']);
+    expect(labels).toEqual(['Edit', 'View', 'Help', 'About', 'Docs']);
   });
 
   it('passes root=true to top-level items', () => {
@@ -223,5 +255,50 @@ describe('LgMenubar', () => {
     topButtons(host)[0].click();
     f.detectChanges();
     expect(openMenu()).not.toBeNull();
+  });
+
+  it('renders a top-level leaf with an href as a link, and parents as buttons', () => {
+    const { host } = setup();
+    expect(
+      topButtons(host).map((item) => [item.tagName, item.getAttribute('href')])
+    ).toEqual([
+      ['BUTTON', null],
+      ['BUTTON', null],
+      ['BUTTON', null],
+      ['BUTTON', null],
+      ['A', '/docs']
+    ]);
+  });
+
+  it('runs a top-level link on a plain click and leaves a modified one to the browser', () => {
+    const { f, host } = setup();
+    const docs = topButtons(host)[4];
+    expect(clickClaimed(docs, { ctrlKey: true })).toBe(false);
+    expect(f.componentInstance.docs).not.toHaveBeenCalled();
+
+    expect(clickClaimed(docs)).toBe(true);
+    expect(f.componentInstance.docs).toHaveBeenCalledTimes(1);
+  });
+
+  it('closes on a submenu link click, running it only on a plain one', () => {
+    const { f, host } = setup();
+    const about = topButtons(host)[3];
+    const changelog = () =>
+      container()!.querySelector<HTMLElement>('a[role=menuitem]')!;
+
+    about.click();
+    f.detectChanges();
+    expect(changelog().getAttribute('href')).toBe('/changelog');
+    expect(clickClaimed(changelog(), { metaKey: true })).toBe(false);
+    f.detectChanges();
+    expect(f.componentInstance.changelog).not.toHaveBeenCalled();
+    expect(openMenu()).toBeNull();
+
+    about.click();
+    f.detectChanges();
+    expect(clickClaimed(changelog())).toBe(true);
+    f.detectChanges();
+    expect(f.componentInstance.changelog).toHaveBeenCalledTimes(1);
+    expect(openMenu()).toBeNull();
   });
 });

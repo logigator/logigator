@@ -1,0 +1,151 @@
+@if (missing()) {
+<web-not-found-page />
+} @else if (failureKey(); as failure) {
+<div class="page-wrap py-12" *webTranslate="let t">
+  <web-section-error
+    [heading]="t('pages.community.profile.errorHeading')"
+    [message]="t(failure)"
+    [retryLabel]="t('errors.retry')"
+    [retrying]="retrying()"
+    (retry)="retry()"
+  />
+</div>
+} @else if (profile(); as member) {
+<div class="page-wrap py-9 md:py-12" *webTranslate="let t">
+  <!-- Top-aligned, not centred: everything beside the avatar grows downwards
+       — a bio is a member's to write and as long as they like — and a centred
+       avatar would drift down the page with it, away from the name it belongs
+       to. -->
+  <div class="flex flex-wrap items-start gap-5">
+    <lg-avatar
+      size="xlarge"
+      shape="circle"
+      [image]="member.avatar ?? undefined"
+      [name]="member.username"
+    />
+    <div class="min-w-0">
+      <h1
+        class="text-3xl leading-tight font-bold break-words text-text-hover md:text-4xl"
+      >
+        {{ member.username }}
+      </h1>
+
+      <!-- The member's own site, and the only link the header gives this much
+           room: it is theirs, where the row below is their presence on
+           somebody else's. The text is the host, derived from the stored URL —
+           never the URL as typed, which could read as a link to somewhere it
+           does not go, and never the whole address, which nobody reads. -->
+      @if (website(); as site) {
+      <p class="mt-2 min-w-0">
+        <a
+          class="inline-flex max-w-full items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+          [href]="site.url"
+          target="_blank"
+          rel="noopener noreferrer ugc nofollow"
+        >
+          <i class="ph ph-globe shrink-0" aria-hidden="true"></i>
+          <span class="truncate">{{ site.host }}</span>
+        </a>
+      </p>
+      }
+
+      <!-- The member's own words, as markdown under the user-content rule:
+           emphasis and a link are theirs to write, markup on a page carrying
+           their name is not. The wrapper keeps the wrap, the renderer setting
+           no width of its own.
+
+           Named and set inside a rule, which is the part the type alone
+           cannot do: everything above this belongs to the page, and this is a
+           quotation from the person the page is about. The heading is the
+           document page's, element for element — it is the same thing being
+           said about the same kind of content, and it has to be the page
+           speaking, which a muted caption is not: muted is what a member's
+           own words are drawn in. -->
+      @if (member.bio) {
+      <div class="mt-5">
+        <h2 class="text-base font-semibold text-text-hover">
+          {{ t('pages.community.profile.about') }}
+        </h2>
+        <!-- The rule encloses the quotation and nothing else. The heading
+             above it is the page naming what follows, so it stays outside —
+             inside, it would be the page's own voice drawn within the
+             boundary that says whose words these are. -->
+        <div class="mt-2.5 border-l-2 border-border pl-4 break-words">
+          <lg-markdown [data]="member.bio" userContent />
+        </div>
+      </div>
+      }
+
+      <!-- Mono is data: the date and the three counts, and nothing else. -->
+      <p class="mt-2 font-mono text-xs text-muted">
+        <span
+          >{{ t('pages.community.profile.memberSince') }} {{ memberSince()
+          }}</span
+        >
+        <span aria-hidden="true"> · </span>
+        <span
+          >{{ counts()?.projects }} {{ t('pages.community.profile.projects')
+          }}</span
+        >
+        <span aria-hidden="true"> · </span>
+        <span
+          >{{ counts()?.components }} {{ t('pages.community.profile.components')
+          }}</span
+        >
+        <span aria-hidden="true"> · </span>
+        <span
+          >{{ counts()?.stars }} {{ t('pages.community.profile.stars') }}</span
+        >
+      </p>
+
+      <!-- The three slots, in the member's order. Tracking by index rather
+           than by URL: the same link twice is allowed, and a duplicated track
+           key throws. Each is named by its label — a platform's proper noun, or
+           the host for one the table does not know — which is what
+           `sr-only` carries, so the strip needs no translation of its own. -->
+      @if (socials().length) {
+      <ul class="mt-3 flex flex-wrap items-center gap-1">
+        @for (link of socials(); track $index) {
+        <li>
+          <a
+            class="inline-flex h-8 w-8 items-center justify-center rounded-md text-lg text-muted hover:bg-content-hover hover:text-text focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            [href]="link.url"
+            target="_blank"
+            rel="noopener noreferrer ugc nofollow"
+          >
+            <i [class]="link.icon" aria-hidden="true"></i>
+            <span class="sr-only">{{ link.label }}</span>
+          </a>
+        </li>
+        }
+      </ul>
+      }
+    </div>
+  </div>
+
+  <!-- Four links, not four states of one control: each tab is its own URL.
+       The rule is the wrapper's and the overlap the scroller's: a tab carrying
+       the -1px itself would hang out of the scroll port and stand a vertical
+       scrollbar up beside four links that fit. -->
+  <div class="mt-8 border-b border-border">
+    <nav
+      class="-mb-px flex gap-6 overflow-x-auto"
+      [attr.aria-label]="t('pages.community.profile.sections')"
+    >
+      @for (tab of tabs(); track tab.section) {
+      <a
+        [routerLink]="tab.href"
+        [class]="tabClass(tab.active)"
+        [attr.aria-current]="tab.active ? 'page' : null"
+      >
+        {{ t(tab.labelKey) }}
+      </a>
+      }
+    </nav>
+  </div>
+
+  <div class="mt-7">
+    <router-outlet />
+  </div>
+</div>
+}

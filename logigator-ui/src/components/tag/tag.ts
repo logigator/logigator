@@ -4,7 +4,7 @@ import { LgSeverity } from '../../tokens/severity';
 const BASE =
   'inline-flex items-center gap-1 px-2 py-1 text-sm font-bold leading-none';
 
-// Subtle (tinted) treatment per severity, on the themeable surface/state palette.
+// Subtle tinted treatment, on the themeable surface/state palette.
 const SEVERITY: Record<'primary' | LgSeverity, string> = {
   primary: 'bg-primary-100 text-primary-700',
   none: 'bg-transparent text-muted',

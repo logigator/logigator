@@ -9,10 +9,9 @@ export interface OpenInspection {
 
 /**
  * Hosts inspection views in one presentation style — a floating window per
- * inspection on desktop, the shared bottom sheet on compact. Presenters only
- * own the framing: {@link InspectionService} owns the inspections' lifecycle
- * and is told through `dismissed` when the user closes a view from the
- * presenter's own chrome (window ✕, sheet swipe-down, Escape).
+ * inspection on desktop, the shared bottom sheet on compact. A presenter owns
+ * only the framing; `dismissed` reports a close from its own chrome (window ✕,
+ * sheet swipe-down, Escape) to the inspection lifecycle's owner.
  */
 export interface InspectionPresenter {
   /** Present the inspection; `dismissed` reports a user-driven close. */

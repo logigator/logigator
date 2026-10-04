@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "name": "Nested",
+  "components": [
+    { "type": 201, "pos": [1, 1], "options": {} },
+    { "type": 201, "pos": [0, 1], "options": {} },
+    { "type": 202, "pos": [12, -1], "options": {} },
+    { "type": 202, "pos": [0, 1], "options": {} },
+    { "type": 1000, "pos": [-7, -1], "options": {} }
+  ],
+  "wires": "2,1:e3;7,0:e3;-7,1:e3;7,0:e3",
+  "definitions": [
+    {
+      "type": 1000,
+      "source": {
+        "id": "5f8e1ef8-7aae-4dd2-a64a-18d9c11cbfa6",
+        "version": 3,
+        "origin": "browser"
+      },
+      "name": "Outer",
+      "symbol": "OTR",
+      "description": "Wraps the Inner component.",
+      "numInputs": 2,
+      "numOutputs": 2,
+      "labels": ["", "", "", ""],
+      "components": [
+        { "type": 100, "pos": [0, 0], "options": { "label": "", "index": 0 } },
+        { "type": 100, "pos": [0, 1], "options": { "label": "", "index": 0 } },
+        {
+          "type": 101,
+          "pos": [19, -1],
+          "options": { "label": "", "index": 0 }
+        },
+        { "type": 101, "pos": [0, 1], "options": { "label": "", "index": 0 } },
+        { "type": 1001, "pos": [-11, -1], "options": {} }
+      ],
+      "wires": "1,0:e6;10,0:e7;-10,1:e6;10,0:e7"
+    },
+    {
+      "type": 1001,
+      "source": {
+        "id": "edfa0ee6-3128-4331-ba7b-4e91a10e1b0b",
+        "version": 3,
+        "origin": "browser"
+      },
+      "name": "Inner",
+      "symbol": "INR",
+      "description": "A XOR and an AND sharing two inputs.",
+      "numInputs": 2,
+      "numOutputs": 2,
+      "labels": ["", "", "", ""],
+      "components": [
+        { "type": 2, "pos": [10, 4], "options": { "numInputs": 2 } },
+        { "type": 4, "pos": [0, -4], "options": { "numInputs": 2 } },
+        {
+          "type": 100,
+          "pos": [-10, 0],
+          "options": { "label": "", "index": 0 }
+        },
+        { "type": 100, "pos": [0, 1], "options": { "label": "", "index": 0 } },
+        {
+          "type": 101,
+          "pos": [20, -1],
+          "options": { "label": "", "index": 0 }
+        },
+        { "type": 101, "pos": [0, 1], "options": { "label": "", "index": 0 } }
+      ],
+      "wires": "1,0:e2s4e6;2,0:e6;9,0:e7;-11,1:e4s4e4;4,0:e4;11,0:s3w4;0,0:e3"
+    }
+  ]
+}

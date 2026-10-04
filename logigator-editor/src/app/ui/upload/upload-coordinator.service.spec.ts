@@ -78,18 +78,18 @@ describe('UploadCoordinatorService', () => {
   });
 
   it('uploads the project and toasts success when there are no dependencies', async () => {
-    setup({ isPublic: true });
+    setup({ visibility: 'public' });
     const result = await service.requestUpload({ kind: 'project', project });
     expect(result).toBe(true);
     expect(promotion.promoteProjectToServer).toHaveBeenCalledWith(
       project,
-      true
+      'public'
     );
     expect(toast.success).toHaveBeenCalledOnce();
   });
 
   it('promotes every resolvable dependency before the target, children-first', async () => {
-    setup({ isPublic: false });
+    setup({ visibility: 'private' });
     // The analysis (not the dialog) determines what is promoted — all resolvable.
     promotion.localDependenciesOfProject.mockReturnValue([
       { name: 'a', masterTypeId: 11 },
@@ -111,7 +111,7 @@ describe('UploadCoordinatorService', () => {
   });
 
   it('stops and does not upload the target when a dependency fails', async () => {
-    setup({ isPublic: false });
+    setup({ visibility: 'private' });
     promotion.localDependenciesOfProject.mockReturnValue([
       { name: 'a', masterTypeId: 11 },
       { name: 'b', masterTypeId: 22 }
@@ -130,17 +130,20 @@ describe('UploadCoordinatorService', () => {
   });
 
   it('routes a component target to promoteComponentToServer', async () => {
-    setup({ isPublic: true });
+    setup({ visibility: 'public' });
     const result = await service.requestUpload({
       kind: 'component',
       masterTypeId: 42
     });
     expect(result).toBe(true);
-    expect(promotion.promoteComponentToServer).toHaveBeenCalledWith(42, true);
+    expect(promotion.promoteComponentToServer).toHaveBeenCalledWith(
+      42,
+      'public'
+    );
   });
 
   it('routes a stored-project target to uploadStoredProjectToServer', async () => {
-    setup({ isPublic: false });
+    setup({ visibility: 'private' });
     await service.requestUpload({
       kind: 'stored-project',
       id: 'abc',
@@ -148,12 +151,12 @@ describe('UploadCoordinatorService', () => {
     });
     expect(promotion.uploadStoredProjectToServer).toHaveBeenCalledWith(
       'abc',
-      false
+      'private'
     );
   });
 
   it('toasts and returns false when analysis throws, without prompting', async () => {
-    setup({ isPublic: false });
+    setup({ visibility: 'private' });
     promotion.localDependenciesOfStoredProject.mockRejectedValue(
       new Error('no record')
     );
@@ -178,7 +181,7 @@ describe('UploadCoordinatorService', () => {
         kind: 'draft-to-server',
         project,
         name: 'Fresh',
-        isPublic: true
+        visibility: 'public'
       });
 
       expect(result).toBe(true);
@@ -186,13 +189,13 @@ describe('UploadCoordinatorService', () => {
       expect(promotion.saveDraftAsServer).toHaveBeenCalledWith(
         project,
         'Fresh',
-        true
+        'public'
       );
       expect(toast.success).toHaveBeenCalledOnce();
     });
 
     it('prompts, uploads dependencies first, then saves the draft', async () => {
-      setup({ isPublic: false });
+      setup({ visibility: 'private' });
       // The dialog is shown because the draft embeds local components.
       promotion.localDependenciesOfProject.mockReturnValue([
         { name: 'a', masterTypeId: 11 },
@@ -212,18 +215,18 @@ describe('UploadCoordinatorService', () => {
         kind: 'draft-to-server',
         project,
         name: 'Fresh',
-        isPublic: true
+        visibility: 'public'
       });
 
       expect(result).toBe(true);
       expect(dialogOpen).toHaveBeenCalledOnce();
       // Visibility from the save dialog is locked into the upload dialog data.
-      expect(dialogOpen.mock.calls[0][1].data.presetIsPublic).toBe(true);
+      expect(dialogOpen.mock.calls[0][1].data.presetVisibility).toBe('public');
       expect(order).toEqual(['dep-11', 'dep-22', 'save']);
     });
 
     it('does not save the draft when a dependency upload fails', async () => {
-      setup({ isPublic: true });
+      setup({ visibility: 'public' });
       promotion.localDependenciesOfProject.mockReturnValue([
         { name: 'a', masterTypeId: 11 }
       ]);
@@ -233,7 +236,7 @@ describe('UploadCoordinatorService', () => {
         kind: 'draft-to-server',
         project,
         name: 'Fresh',
-        isPublic: true
+        visibility: 'public'
       });
 
       expect(result).toBe(false);
@@ -249,11 +252,11 @@ describe('UploadCoordinatorService', () => {
       // so the preset (project's own visibility) resolves.
       TestBed.inject(ProjectMetadataStore).getMetadata = vi
         .fn()
-        .mockReturnValue({ name: 'P', isPublic: false });
+        .mockReturnValue({ name: 'P', visibility: 'unlisted' });
     }
 
     it('prompts, promotes the chosen components, then re-saves the project', async () => {
-      setupWithMeta({ isPublic: false });
+      setupWithMeta({ visibility: 'unlisted' });
       promotion.localDependenciesOfProject.mockReturnValue([
         { name: 'a', masterTypeId: 11 }
       ]);

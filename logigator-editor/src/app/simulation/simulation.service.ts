@@ -2,10 +2,11 @@ import { computed, inject, Injectable, signal } from '@angular/core';
 import { Observable, Subject, Subscription } from 'rxjs';
 import { Component } from '../components/component';
 import { ButtonComponent } from '../components/component-types/button/button.component';
+import { PulseButtonComponent } from '../components/component-types/pulse-button/pulse-button.component';
 import { SwitchComponent } from '../components/component-types/switch/switch.component';
 import { LoggingService } from '../logging/logging.service';
 import { ToastService } from '../logging/toast.service';
-import { Project } from '../project/project';
+import { Project, UserInputEvent, UserInputPhase } from '../project/project';
 import { ProjectService } from '../project/project.service';
 import { ShortcutActionEnum } from '../shortcuts/shortcut-action.enum';
 import { ShortcutService } from '../shortcuts/shortcut.service';
@@ -14,18 +15,19 @@ import { WorkMode } from '../work-mode/work-mode.enum';
 import { WorkModeService } from '../work-mode/work-mode.service';
 import { AnalyticsService } from '../analytics/analytics.service';
 import { AnalyticsEvent } from '../analytics/analytics.mapping';
+import { BuiltInComponentType } from '@logigator/core';
 import { BoardCompilerService } from './compiler/board-compiler.service';
 import { CompiledBoard, TOP_LEVEL_PATH } from './compiler/compiled-board.model';
 import { CompileDiagnostic } from './compiler/compile-error';
 import { LinkStateApplier, SnapshotApplier } from './state/link-state-applier';
+import { MIN_TARGET_HZ } from './worker/pacing';
 import { INPUT_EVENT_CONT, INPUT_EVENT_PULSE } from './worker/protocol';
 import {
   SimulationRunMode,
   SimulationWorkerService
 } from './worker/simulation-worker.service';
 
-/** How long a clicked button shows its pressed state. */
-const BUTTON_FLASH_MS = 150;
+const PULSE_BUTTON_FLASH_MS = 150;
 
 /**
  * Session lifecycle: `inactive` outside simulation mode, `starting` while the
@@ -33,19 +35,10 @@ const BUTTON_FLASH_MS = 150;
  */
 export type SimulationState = 'inactive' | 'starting' | 'ready' | 'running';
 
-/** Unit the target speed is entered in; multiplies the typed value to Hz. */
-export type TargetSpeedUnit = 'Hz' | 'kHz' | 'MHz';
-
-const TARGET_SPEED_MULTIPLIER: Record<TargetSpeedUnit, number> = {
-  Hz: 1,
-  kHz: 1_000,
-  MHz: 1_000_000
-};
-
 /**
  * Facade for the simulation lifecycle: entering/leaving simulation mode,
- * compiling the active circuit, the run controls (play/pause/step/stop and
- * the run-mode selection), and forwarding canvas user input to the engine.
+ * compiling the active circuit, the run controls, and forwarding canvas user
+ * input to the engine.
  */
 @Injectable({
   providedIn: 'root'
@@ -70,44 +63,46 @@ export class SimulationService {
 
   private readonly _mode = signal<SimulationRunMode>('sync');
   public readonly mode = computed(this._mode);
-  // Target speed is held as the typed value plus its unit; the Hz the engine
-  // is paced at is derived. Switching unit keeps the typed value and re-reads
-  // it in the new unit (10 Hz → 10 kHz), so the value never changes on its own.
-  private readonly _targetValue = signal(1000);
-  public readonly targetValue = computed(this._targetValue);
-  private readonly _targetUnit = signal<TargetSpeedUnit>('Hz');
-  public readonly targetUnit = computed(this._targetUnit);
-  public readonly targetHz = computed(
-    () => this._targetValue() * TARGET_SPEED_MULTIPLIER[this._targetUnit()]
-  );
+  private readonly _targetHz = signal(1000);
+  public readonly targetHz = computed(this._targetHz);
+
+  private readonly _clockDelays = signal<readonly number[]>([]);
+  /**
+   * The distinct delays, in ticks, of every clock the session's board holds
+   * (custom components' inner clocks included), ascending — what turns a tick
+   * rate into the frequencies the circuit's clocks run at.
+   */
+  public readonly clockDelays = computed(this._clockDelays);
 
   public readonly measuredHz = this.workerService.measuredHz;
   public readonly tick = this.workerService.tick;
 
-  // The per-snapshot frame hook, fanned out to live inspections. A plain
-  // Subject (not a signal): it marks "fresh engine state is on the components"
-  // rather than carrying a value, and fires at snapshot rate.
+  // A Subject, not a signal: it marks "fresh engine state is on the
+  // components" rather than carrying a value, and fires at snapshot rate.
   private readonly _frame$ = new Subject<void>();
   /** Emits after each applied snapshot (and after a stop()'s visual reset). */
   public readonly frame$: Observable<void> = this._frame$.asObservable();
 
-  // Compiled artifacts live for one session: rebuilt on every enter(),
-  // discarded on exit(). Editing is locked in between, so the mapping's live
-  // object references stay valid.
+  // Compiled artifacts live for one session. Editing is locked in between, so
+  // the mapping's live object references stay valid.
   private _board: CompiledBoard | null = null;
   private _applier: LinkStateApplier | null = null;
   private _project: Project | null = null;
   private _userInputSub?: Subscription;
-  // Watch appliers registered by open inner-circuit views; every snapshot the
-  // bridge applies to the board applier is fanned out to these too.
+  // Every snapshot applied to the board applier is fanned out to these too.
   private readonly _watchAppliers = new Set<SnapshotApplier>();
+  // Buttons currently held, the board's and a watch's copies alike, with what
+  // releasing each needs — so a stop or exit can release every one of them.
+  private readonly _held = new Map<
+    ButtonComponent,
+    { unitIndex: number | undefined; repaint: () => void }
+  >();
 
   constructor() {
-    // Opening or creating another project replaces the main slot and destroys
-    // the outgoing project. The compiled session addresses that project's live
-    // components and wires, so the session cannot outlive it: leave simulation
-    // here. The notification is synchronous and fires before the swap, so this
-    // teardown still reaches the outgoing project's sim visuals and ticker.
+    // The compiled session addresses the main project's live components and
+    // wires, so it cannot outlive a main-slot swap. The notification fires
+    // synchronously before the swap, so this teardown still reaches the
+    // outgoing project's sim visuals and ticker.
     this.projectService.mainProjectReplaced$.subscribe(() => this.exit());
 
     const shortcutService = inject(ShortcutService);
@@ -121,20 +116,17 @@ export class SimulationService {
     });
   }
 
-  /** The current session's link applier (the worker bridge feeds it deltas). */
   public get applier(): LinkStateApplier | null {
     return this._applier;
   }
 
-  /** The current session's compiled board. */
   public get board(): CompiledBoard | null {
     return this._board;
   }
 
   /**
-   * Debug telemetry for the running session: how many full vs delta snapshots
-   * have been applied, and how many visible link flips they carried on average.
-   * Null when no session's applier exists.
+   * Debug telemetry: full vs delta snapshots applied, and how many visible link
+   * flips they carried on average. Null when no session is live.
    */
   public get snapshotStats(): {
     full: number;
@@ -167,9 +159,8 @@ export class SimulationService {
 
   /**
    * Registers a secondary applier (a watch over an inner circuit) to receive
-   * every snapshot alongside the board applier. Returns the unregister
-   * function. The registration does not survive the session — exit() clears
-   * all watch appliers.
+   * every snapshot alongside the board applier, returning its unregister
+   * function. Registrations do not survive the session.
    */
   public registerApplier(applier: SnapshotApplier): () => void {
     this._watchAppliers.add(applier);
@@ -177,8 +168,8 @@ export class SimulationService {
   }
 
   /**
-   * Pulls one full snapshot from the engine (running or paused) — call after
-   * registering a watch applier so it starts from complete state instead of
+   * Pulls one full snapshot from the engine (running or paused), so a freshly
+   * registered watch applier starts from complete state instead of
    * accumulating future deltas over darkness.
    */
   public requestSnapshot(): void {
@@ -187,20 +178,17 @@ export class SimulationService {
 
   /**
    * Switches to the main project, compiles it, enters simulation mode, and
-   * boots the worker. On compile diagnostics, surfaces a toast and stays in
-   * the previous mode; on worker failure, reports and leaves simulation mode.
-   *
-   * Resolves once the engine is up (or the attempt was abandoned) with the
-   * diagnostics that blocked it — empty when the session started. UI callers
-   * ignore both; a programmatic caller (the automation API) awaits readiness
-   * and reports *why* entry was refused.
+   * boots the worker. Any compile diagnostic blocks entry, surfacing as a toast
+   * with the previous mode kept; a worker failure reports and leaves simulation
+   * mode. Resolves once the engine is up (or the attempt was abandoned) with
+   * the diagnostics that blocked it.
    */
   public async enter(): Promise<CompileDiagnostic[]> {
     if (this.workModeService.mode() === WorkMode.SIMULATION) {
       return [];
     }
-    // Simulation always runs the main project. If a custom-component editor is
-    // the active tab, switch back to the main project before compiling.
+    // Simulation always runs the main project, even with a custom-component
+    // editor as the active tab.
     const mainProject = this.projectService.mainProject();
     if (mainProject && this.projectService.activeProject() !== mainProject) {
       this.projectService.setActiveProject(mainProject);
@@ -227,20 +215,27 @@ export class SimulationService {
     }
 
     this._board = board;
+    this._clockDelays.set(clockDelaysOf(board));
     const applier = new LinkStateApplier(
       board.mapping.get(TOP_LEVEL_PATH) ?? []
     );
     this._applier = applier;
     this._project = project;
-    this._userInputSub = project.userInput$.subscribe((component) =>
-      this._onUserInput(component)
+    // A negated input reads high while its net is low, and the displays that
+    // read it show that only inside a session. The engine reports a link that
+    // never changes, so nothing else would tell them.
+    for (const component of project.components) {
+      component.setSimulating(true);
+    }
+    project.triggerTicker('single');
+    this._userInputSub = project.userInput$.subscribe((event) =>
+      this._onUserInput(event)
     );
     this.workModeService.setSimulationMode(true);
 
     this._state.set('starting');
     await this.workerService
       .startSession(board.descriptor, {
-        // Fan-out: the board applier first, then every registered watch.
         applier: {
           applyDelta: (ids, values) => {
             applier.applyDelta(ids, values);
@@ -296,15 +291,19 @@ export class SimulationService {
     // keeps that a single failure: a mode left at SIMULATION with the worker
     // already gone makes every retry re-enter and fail again.
     try {
+      // With the engine gone a release is visual only.
+      this._releaseAllHeld();
       this._applier?.reset();
       if (this._project && !this._project.destroyed) {
         for (const component of this._project.components) {
           component.clearSimState();
+          component.setSimulating(false);
         }
         this._project.triggerTicker('off');
       }
     } finally {
       this._board = null;
+      this._clockDelays.set([]);
       this._applier = null;
       this._project = null;
       this.workModeService.setSimulationMode(false);
@@ -363,6 +362,9 @@ export class SimulationService {
     this.workerService
       .reset()
       .then(() => {
+        // Released against the rebuilt engine: a press that landed while the
+        // reset was in flight reached it, and must not outlive its visual.
+        this._releaseAllHeld();
         this._applier?.reset();
         if (this._project && !this._project.destroyed) {
           for (const component of this._project.components) {
@@ -370,53 +372,43 @@ export class SimulationService {
           }
           this._project.triggerTicker('single');
         }
-        // The reset changed port power without a snapshot; refresh inspections.
+        // The reset changed port power without a snapshot.
         this._frame$.next();
       })
       .catch((err: Error) => this._onRunControlError(err));
   }
 
   /**
-   * Sets the typed target-speed value (in the current unit). Invalid input —
-   * non-finite or non-positive, e.g. an emptied field mid-edit — is ignored so
-   * the last valid value keeps driving the sim and the box isn't rewritten
-   * under the user's caret.
+   * Sets the fixed-speed rate and switches to target mode, since entering a
+   * speed is asking for it. Non-finite input or a rate below
+   * {@link MIN_TARGET_HZ} is ignored, so the last valid rate keeps driving the
+   * sim.
    */
-  public setTargetValue(value: number): void {
-    if (!Number.isFinite(value) || value <= 0) {
+  public setTargetHz(hz: number): void {
+    if (!Number.isFinite(hz) || hz < MIN_TARGET_HZ) {
       return;
     }
-    if (value === this._targetValue()) {
+    if (hz === this._targetHz() && this._mode() === 'target') {
       return;
     }
-    this._targetValue.set(value);
-    if (this._mode() === 'target') {
-      this._restartIfRunning();
-    }
+    this._targetHz.set(hz);
+    this._paceToTarget();
   }
 
-  /** Switches the unit the typed value is read in, re-pacing if running. */
-  public setTargetUnit(unit: TargetSpeedUnit): void {
-    if (unit === this._targetUnit()) {
+  /** Selects how the run is paced, re-pacing an active run. */
+  public setMode(mode: SimulationRunMode): void {
+    if (mode === this._mode()) {
       return;
     }
-    this._targetUnit.set(unit);
-    if (this._mode() === 'target') {
-      this._restartIfRunning();
-    }
-  }
-
-  public toggleTargetMode(): void {
-    this._mode.update((m) => (m === 'target' ? 'continuous' : 'target'));
+    this._mode.set(mode);
     this._restartIfRunning();
   }
 
-  public toggleSyncMode(): void {
-    this._mode.update((m) => (m === 'sync' ? 'continuous' : 'sync'));
+  private _paceToTarget(): void {
+    this._mode.set('target');
     this._restartIfRunning();
   }
 
-  /** Re-paces an active run after a mode or target-rate change. */
   private _restartIfRunning(): void {
     if (this._state() !== 'running') {
       return;
@@ -437,34 +429,38 @@ export class SimulationService {
     }
   }
 
-  private _onUserInput(component: Component): void {
-    this._activate(component, this._board?.userInputs.get(component.id), () =>
-      this._project?.triggerTicker('single')
+  private _onUserInput({ component, phase }: UserInputEvent): void {
+    this._drive(
+      component,
+      this._board?.userInputs.get(component.id),
+      phase,
+      () => this._project?.triggerTicker('single')
     );
   }
 
   /**
-   * Activates a switch/button whose engine unit index is already resolved —
-   * the path for inner user inputs clicked in a watch, where `component` is
-   * the watch's fresh copy (its visuals toggle/flash) and `unitIndex` comes
-   * from the watch index (`infoFor(path).unitIndexFor(bodyIndex)`). `repaint`
-   * re-blits whatever canvas shows the component.
+   * Drives a user input whose engine unit index is already resolved: an inner
+   * user input operated in a watch, where `component` is the watch's fresh
+   * copy and `unitIndex` comes from `infoFor(path).unitIndexFor(bodyIndex)`.
+   * A switch or pulse button acts on a `tap`, a button is held from `press` to
+   * `release`. `repaint` re-blits whatever canvas shows the component.
    */
   public triggerUnitInput(
     unitIndex: number,
     component: Component,
-    repaint: () => void
+    repaint: () => void,
+    phase: UserInputPhase = 'tap'
   ): void {
-    this._activate(component, unitIndex, repaint);
+    this._drive(component, unitIndex, phase, repaint);
   }
 
   /**
-   * Drives a top-level user input to an **absolute** state, the programmatic
-   * counterpart to the canvas tap: a switch already at `value` is left alone (so
-   * repeating the call sends no further engine event), a button pulses on
-   * `value: true` and ignores `value: false` — it holds no state to clear.
-   * Reports whether the component is a user input of the running session; the
-   * engine applies the event at its next tick boundary.
+   * Drives a top-level user input to an **absolute** state: a switch or button
+   * already at `value` is left alone, so repeating the call sends no further
+   * engine event; a button is held by `true` until a `false` releases it; a
+   * pulse button pulses on `true` and ignores `false`, holding no state to
+   * clear. Reports whether the component is a user input of the running
+   * session.
    */
   public setUserInput(componentId: number, value: boolean): boolean {
     const component = this._project?.getComponentById(componentId);
@@ -472,33 +468,117 @@ export class SimulationService {
     if (!component || unitIndex === undefined) {
       return false;
     }
+    return this._setAbsolute(component, unitIndex, value, () =>
+      this._project?.triggerTicker('single')
+    );
+  }
+
+  /**
+   * {@link setUserInput} for a user input whose engine unit index is already
+   * resolved — an inner one of a watch, as in {@link triggerUnitInput}.
+   * Reports whether the component is a user input.
+   */
+  public setUnitInput(
+    unitIndex: number,
+    component: Component,
+    value: boolean,
+    repaint: () => void
+  ): boolean {
+    return this._setAbsolute(component, unitIndex, value, repaint);
+  }
+
+  private _setAbsolute(
+    component: Component,
+    unitIndex: number,
+    value: boolean,
+    repaint: () => void
+  ): boolean {
+    if (component instanceof ButtonComponent) {
+      this._setHeld(component, unitIndex, value, repaint);
+      return true;
+    }
     if (component instanceof SwitchComponent) {
       if (component.isOn === value) {
         return true;
       }
-    } else if (component instanceof ButtonComponent) {
+    } else if (component instanceof PulseButtonComponent) {
       if (!value) {
         return true;
       }
     } else {
       return false;
     }
-    this._activate(component, unitIndex, () =>
-      this._project?.triggerTicker('single')
-    );
+    this._activate(component, unitIndex, repaint);
     return true;
   }
 
-  /** Shared switch/button activation: visuals plus the engine input event. */
+  private _drive(
+    component: Component,
+    unitIndex: number | undefined,
+    phase: UserInputPhase,
+    repaint: () => void
+  ): void {
+    if (phase === 'tap') {
+      this._activate(component, unitIndex, repaint);
+    } else if (component instanceof ButtonComponent) {
+      this._setHeld(component, unitIndex, phase === 'press', repaint);
+    }
+  }
+
+  /**
+   * Presses or releases a button; one already in that state is left alone, so
+   * the engine never sees a second press or release. A press obeys
+   * {@link _activate}'s readiness rule, while a release always clears the
+   * visual and reaches the engine whenever one is up.
+   */
+  private _setHeld(
+    button: ButtonComponent,
+    unitIndex: number | undefined,
+    held: boolean,
+    repaint: () => void
+  ): void {
+    if (button.held === held) {
+      return;
+    }
+    if (held) {
+      if (!this.isReady()) {
+        return;
+      }
+      this._held.set(button, { unitIndex, repaint });
+    } else {
+      this._held.delete(button);
+    }
+    button.setHeld(held);
+    if (unitIndex !== undefined && this.isReady()) {
+      this.workerService.triggerInput(unitIndex, INPUT_EVENT_CONT, [held]);
+    }
+    repaint();
+  }
+
+  private _releaseAllHeld(): void {
+    for (const [button, { unitIndex, repaint }] of [...this._held]) {
+      if (!button.destroyed) {
+        this._setHeld(button, unitIndex, false, repaint);
+        continue;
+      }
+      // A copy freed while held has nothing left to draw, but its engine
+      // unit still reads high.
+      this._held.delete(button);
+      if (unitIndex !== undefined && this.isReady()) {
+        this.workerService.triggerInput(unitIndex, INPUT_EVENT_CONT, [false]);
+      }
+    }
+  }
+
+  /** A switch or pulse button's tap: visuals plus the engine input event. */
   private _activate(
     component: Component,
     unitIndex: number | undefined,
     repaint: () => void
   ): void {
-    // Taps are live as soon as simulation mode is entered, which happens while
-    // the engine is still starting. The worker drops inputs from that window,
-    // so toggling the visuals would leave a switch showing a state the engine
-    // never received.
+    // Taps are live from the moment simulation mode is entered, while the
+    // engine is still starting. The worker drops inputs from that window, so
+    // toggling the visuals would show a state the engine never received.
     if (!this.isReady()) {
       return;
     }
@@ -509,7 +589,7 @@ export class SimulationService {
           component.isOn
         ]);
       }
-    } else if (component instanceof ButtonComponent) {
+    } else if (component instanceof PulseButtonComponent) {
       component.setPressed(true);
       if (unitIndex !== undefined) {
         this.workerService.triggerInput(unitIndex, INPUT_EVENT_PULSE, [true]);
@@ -519,8 +599,18 @@ export class SimulationService {
           component.setPressed(false);
           repaint();
         }
-      }, BUTTON_FLASH_MS);
+      }, PULSE_BUTTON_FLASH_MS);
     }
     repaint();
   }
+}
+
+function clockDelaysOf(board: CompiledBoard): number[] {
+  const delays = new Set<number>();
+  for (const unit of board.descriptor.components) {
+    if (unit.type === BuiltInComponentType.CLOCK && unit.ops) {
+      delays.add(unit.ops[0]);
+    }
+  }
+  return [...delays].sort((a, b) => a - b);
 }

@@ -1,5 +1,4 @@
-<!-- Navigation landmark: the tab strip is where the user switches documents.
-     The strip keeps its own role=tablist semantics inside. -->
+<!-- Navigation landmark; the strip keeps its own role=tablist inside. -->
 <nav *appTranslate="let t" [attr.aria-label]="t('tabBar.landmark')">
   <lg-tab-strip
     [tabs]="tabs()"

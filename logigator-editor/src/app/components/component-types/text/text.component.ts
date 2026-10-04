@@ -1,79 +1,87 @@
 import { Component } from '../../component';
 import { textComponentConfig, TextOptions } from './text.config';
-import { Direction } from '../../../utils/direction';
+import { Direction, textMeta } from '@logigator/core';
 import { ConnectionPointGraphics } from '../../../rendering/graphics/connection-point.graphics';
 import { scaleForScale } from '../../../connection-points/connection-point';
-import { BitmapText, DestroyOptions, Graphics, Rectangle } from 'pixi.js';
-import { Subject, takeUntil } from 'rxjs';
+import { BitmapText, Graphics, Rectangle } from 'pixi.js';
 import { PX } from '../../../utils/grid';
 import { CANVAS_FONT_FAMILY, monoTextWidth } from '../../../utils/text-fit';
+import { rotatedBoxIntersects } from '../../component-geometry';
 
 export class TextComponent extends Component<TextOptions> {
   public readonly config = textComponentConfig;
   public override readonly ignoresWireCollision = true;
 
-  private readonly _destroy$ = new Subject<void>();
-
   constructor(options: TextOptions) {
-    super(0, 0, options);
-
-    this.options.text.onChange$
-      .pipe(takeUntil(this._destroy$))
-      .subscribe(() => this._redrawAndRefile());
-    this.options.fontSize.onChange$
-      .pipe(takeUntil(this._destroy$))
-      .subscribe(() => this._redrawAndRefile());
+    super(textMeta, options);
   }
 
-  // A text/fontSize edit resizes cullBounds, so the element must be re-bucketed
-  // in the quad tree — redraw() rebuilds only the visuals. portsChange$ is the
-  // established re-file signal; the text component has no ports, so it fires
-  // with empty port sets (wire integration and connection-point updates no-op).
-  private _redrawAndRefile(): void {
+  /**
+   * A text or font-size edit resizes {@link cullBounds}, so the element must be
+   * re-bucketed in the quad tree, which the base's visual-only redraw does not
+   * do. `portsChange$` is the re-file signal; this component has no ports, so
+   * it fires with empty sets and the wire/connection-point work no-ops.
+   */
+  protected override onOptionsChanged(): void {
     const ports = this.connectionPoints;
-    this.redraw();
+    super.onOptionsChanged();
     this.portsChange$.next({
       oldPorts: ports,
       newPorts: this.connectionPoints
     });
   }
 
-  protected get inputLabels(): string[] {
-    return [];
-  }
-
-  protected get outputLabels(): string[] {
-    return [];
-  }
-
-  // eslint-disable-next-line @typescript-eslint/class-literal-property-style
-  protected get bodyGridWidth(): number {
-    return 1;
-  }
-
-  protected override get bodyGridHeight(): number {
-    return 1;
-  }
-
-  // The rendered label overflows the 1×1 grid footprint far to the side, so
-  // report its full extent for culling — otherwise the label vanishes once the
-  // 1×1 anchor cell pans off screen while its glyphs are still visible.
-  // gridBounds stays 1×1, so selection and collision are unchanged. Width is
-  // arithmetic (Roboto Mono: 0.6 em/glyph), correct on the first insert and on
-  // file-load before the glyph atlas is baked.
-  public override get cullBounds(): Rectangle {
+  /**
+   * The label's glyph box in the unrotated (E) frame, hanging off the anchor
+   * dot's right edge at y = 0.5. `up`/`down` are the fractions of the line
+   * height above and below that centre: the W anchor flip mirrors them, so the
+   * label stays on the far side of the dot whichever way the element faces.
+   * Width is arithmetic (Roboto Mono: 0.6 em/glyph), so it is right before the
+   * glyph atlas is baked.
+   */
+  private get _labelBox(): {
+    x0: number;
+    y0: number;
+    x1: number;
+    y1: number;
+  } {
     const fontSize = this.options.fontSize.value;
     const lines = this.options.text.value.split('\n');
-    const widthGrid =
+    const width =
       Math.max(...lines.map((l) => monoTextWidth(l, fontSize))) * PX;
-    const heightGrid = lines.length * fontSize * PX;
-    // Local content box in the unrotated (E) frame: the dot cell [0, 1] plus the
-    // label, which starts at x = 1 and is vertically centred on y = 0.5 (anchor
-    // 0.55). Round outward to whole grid cells so the box always over-covers.
-    const x0 = 0;
-    const x1 = 1 + widthGrid;
-    const y0 = Math.min(0, 0.5 - 0.55 * heightGrid);
-    const y1 = Math.max(1, 0.5 + 0.45 * heightGrid);
+    const height = lines.length * fontSize * PX;
+    const [up, down] =
+      this.direction === Direction.W ? [0.45, 0.55] : [0.55, 0.45];
+    return {
+      x0: 1,
+      y0: 0.5 - up * height,
+      x1: 1 + width,
+      y1: 0.5 + down * height
+    };
+  }
+
+  /** {@link _labelBox} plus the 1×1 anchor cell the label hangs off. */
+  private get _drawnBox(): {
+    x0: number;
+    y0: number;
+    x1: number;
+    y1: number;
+  } {
+    const label = this._labelBox;
+    return {
+      x0: 0,
+      y0: Math.min(0, label.y0),
+      x1: Math.max(1, label.x1),
+      y1: Math.max(1, label.y1)
+    };
+  }
+
+  // The label overflows the 1×1 grid footprint far to the side, so culling
+  // needs its full extent or the text vanishes once the anchor cell pans off
+  // screen. gridBounds stays 1×1, leaving collision unchanged. Rounded outward
+  // to whole cells so the box always over-covers.
+  public override get cullBounds(): Rectangle {
+    const { x0, y0, x1, y1 } = this._drawnBox;
     return this._rotatedBox(
       Math.floor(x0),
       Math.floor(y0),
@@ -82,25 +90,45 @@ export class TextComponent extends Component<TextOptions> {
     );
   }
 
+  // The label is drawn, so it is what a click aims at: the glyph box selects
+  // the element like the anchor cell does. Unrounded — the pick needs the box
+  // the user sees, not the cull box built to over-cover it.
+  public override get pickBounds(): Rectangle {
+    const { x0, y0, x1, y1 } = this._drawnBox;
+    return this._rotatedBox(x0, y0, x1, y1);
+  }
+
+  /** Allocation-free mirror of {@link pickBounds} — the two must agree. */
+  public override intersectsPickBounds(rect: Rectangle): boolean {
+    const { x0, y0, x1, y1 } = this._drawnBox;
+    return rotatedBoxIntersects(
+      this.direction,
+      this.position,
+      x0,
+      y0,
+      x1,
+      y1,
+      rect
+    );
+  }
+
   protected draw(): void {
     const dot = new Graphics();
     dot.context = this.geometryService.getGraphicsContext(
       ConnectionPointGraphics
     );
-    // The shared dot context is a white base (see ConnectionPointGraphics);
-    // the theme's wire color is applied as tint, like a real connection point.
+    // White-base shared context, themed by tint, like a real connection point.
     this.onApplyTheme(
       () => (dot.tint = this.themingService.currentTheme().wire)
     );
     dot.pivot.set(0.5, 0.5);
     dot.position.set(0.5, 0.5);
-    // ConnectionPointGraphics is a 1×1 unit square; size it identically to a
-    // connection point via the shared size curve.
+    // A 1×1 unit square, sized by the shared connection-point curve.
     this.onApplyScale((scale) => dot.scale.set(scaleForScale(scale)));
     this.addChild(dot);
 
-    // fontSize is a user-set pixel value; scale.set(PX) converts the label
-    // from pixel space to grid space so it can be positioned in grid units.
+    // fontSize is a user-set pixel value; scale.set(PX) takes the label from
+    // pixel space to grid space.
     const label = new BitmapText({
       text: this.options.text.value,
       style: {
@@ -114,9 +142,9 @@ export class TextComponent extends Component<TextOptions> {
       () => (label.tint = this.themingService.currentTheme().fontTint)
     );
     label.scale.set(PX);
-    // For W direction the component is rotated 180°, which would flip the glyphs upside-down.
-    // Counter-rotating the label by π keeps glyphs upright; flipping the anchor mirrors
-    // the layout so the text still sits on the far side of the dot (left instead of right).
+    // W rotates the component 180°, which would flip the glyphs upside-down.
+    // Counter-rotating by π keeps them upright; flipping the anchor mirrors the
+    // layout so the text still sits on the far side of the dot.
     if (this.direction === Direction.W) {
       label.anchor.set(1, 0.55);
       label.rotation = Math.PI;
@@ -124,11 +152,6 @@ export class TextComponent extends Component<TextOptions> {
       label.anchor.set(0, 0.55);
     }
     label.position.set(1, 0.5);
-    this.addChild(label);
-  }
-
-  public override destroy(options?: DestroyOptions): void {
-    this._destroy$.next();
-    super.destroy(options);
+    this.addChild(this.addText(label));
   }
 }

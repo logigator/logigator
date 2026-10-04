@@ -1,7 +1,7 @@
 {
   "name": "Logigator",
   "short_name": "Logigator",
-  "description": "Build and simulate your own logic circuits with Logigator, a simple yet powerful web-based online tool.",
+  "description": "Build logic circuits from gates and wires in your browser, simulate them live, and turn any circuit into a component you can reuse. Free and open source.",
   "icons": [
     {
       "src": "android-chrome-192x192.png",

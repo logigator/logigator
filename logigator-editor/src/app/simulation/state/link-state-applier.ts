@@ -1,9 +1,8 @@
 import { LinkRenderTargets } from '../compiler/compiled-board.model';
 
 /**
- * The snapshot-consuming face of {@link LinkStateApplier}: what the worker
- * bridge feeds engine snapshots into. The simulation service fans one incoming
- * snapshot out to the board's applier and every registered watch applier.
+ * The snapshot-consuming face of {@link LinkStateApplier}. One incoming
+ * snapshot fans out to the board's applier and every registered watch applier.
  */
 export interface SnapshotApplier {
   applyDelta(ids: Uint32Array, packedValues: Uint8Array): void;
@@ -12,14 +11,11 @@ export interface SnapshotApplier {
 
 /**
  * Applies simulator link states to the canvas: powered links draw their wires
- * and port stubs thick. Constructed per simulation session with the top-level
- * {@link LinkRenderTargets}; tracks current per-link state so full snapshots
- * only touch changed links. Callers own frame scheduling — while running, the
- * ticker is already `'on'`; a manual step triggers `'single'`.
+ * and port stubs thick. Tracks current per-link state, so full snapshots only
+ * touch changed links. Callers own frame scheduling.
  *
- * Watch appliers are additional instances over sparse target arrays sized to
- * the full link count: only the watched circuit's links carry targets, the
- * rest stay empty.
+ * A watch applier is another instance over a sparse target array sized to the
+ * full link count: only the watched circuit's links carry targets.
  */
 export class LinkStateApplier implements SnapshotApplier {
   private readonly _powered: boolean[];
@@ -53,26 +49,20 @@ export class LinkStateApplier implements SnapshotApplier {
     return this._powered[linkId] === true;
   }
 
-  /**
-   * Whether any *targeted* link changed since the last call; consuming resets
-   * the flag. Drives on-demand re-renders of watch canvases.
-   */
+  /** Whether any *targeted* link changed since the last call; consuming
+   * resets the flag. Drives on-demand re-renders of watch canvases. */
   public consumeChanged(): boolean {
     const changed = this._changed;
     this._changed = false;
     return changed;
   }
 
-  /**
-   * Debug count of visible link-state flips since construction — a link with
-   * at least one wire or port stub, counted each time its powered state
-   * actually changes.
-   */
+  /** Debug count of flips on links that have a wire or port stub. */
   public get switchedLinks(): number {
     return this._switchedLinks;
   }
 
-  /** Total number of links in the session (the dense link-id space). */
+  /** Size of the dense link-id space. */
   public get totalLinks(): number {
     return this._powered.length;
   }

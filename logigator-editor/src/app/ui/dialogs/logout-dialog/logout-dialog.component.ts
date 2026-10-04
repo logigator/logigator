@@ -12,28 +12,25 @@ import { TranslateDirective } from '../../../translation/translate.directive';
 /** One dirty cloud document the dialog offers to save. */
 export interface LogoutDialogItem {
   name: string;
-  /** Epoch-ms of its last local edit; absent if unknown (no subtitle shown). */
+  /** Epoch-ms of its last local edit; absent when unknown, hiding the
+   *  subtitle. */
   lastEditedAt?: number;
 }
 
 export interface LogoutDialogData {
-  /** The dirty cloud documents that would be affected. */
   items: LogoutDialogItem[];
-  /**
-   * When saving would also publish embedded local components to the cloud
-   * library, the warning shown for it. Absent otherwise.
-   */
+  /** Warning shown when saving would also publish embedded local components. */
   promotionWarning?: string;
 }
 
-/** What the user chose; dismissing the dialog (X / Escape) means cancel. */
+/** Dismissing the dialog means cancel. */
 export type LogoutChoice = 'save' | 'discard';
 
 /**
  * Confirms logging out while cloud documents have unsaved changes: save them
- * first, log out without saving, or cancel. Dismissing (the ✕, Escape, or
- * backdrop) is the safe default — it cancels and keeps the session. Collects
- * the choice only; `SessionLifecycleService` performs the saves and the logout.
+ * first, log out without saving, or cancel. Dismissing is the safe default and
+ * keeps the session. Collects the choice only; `SessionLifecycleService`
+ * performs the saves and the logout.
  */
 @Component({
   selector: 'app-logout-dialog',

@@ -1,10 +1,14 @@
 import { GraphicsContext } from 'pixi.js';
+import { environment } from '../../../environments/environment';
 
 /**
- * Events that carry no information on a static context: `update` fires only
- * on a post-bake mutation and `unload` only from the renderer's GC, and the
- * class rules out both.
+ * Supersampling factor for {@link StaticGraphicsContext.smoothCircle}. It
+ * cancels the grid scale exactly, so a grid-unit circle tessellates from its
+ * zoom-1 pixel radius.
  */
+const CIRCLE_SUPERSAMPLE = environment.gridSize;
+
+/** `update` needs a post-bake mutation and `unload` the GC; neither happens. */
 const DROPPED_EVENTS: ReadonlySet<string | symbol> = new Set([
   'update',
   'unload'
@@ -14,28 +18,47 @@ const DROPPED_EVENTS: ReadonlySet<string | symbol> = new Set([
  * Base class for the shared contexts cached by `GraphicsProviderService`:
  * baked once in the constructor, immutable afterwards.
  *
- * Immutability makes the `update`/`unload` subscriptions every attached
- * Graphics holds pure dead weight, so `on`/`once` drop them. This keeps the
- * listener lists empty, making a context swap (`graphics.context = other`)
- * O(1) per Graphics — with listeners present, eventemitter3's removeListener
- * rebuilds the whole listener array, so re-pointing the thousands of Graphics
- * of a big board on every zoom step degrades quadratically.
+ * Immutability makes every attached Graphics' `update`/`unload` subscription
+ * dead weight, so `on`/`once` drop them. Empty listener lists keep a context
+ * swap O(1) per Graphics: eventemitter3's removeListener rebuilds the whole
+ * array, so re-pointing a big board's Graphics on each zoom step would
+ * degrade quadratically.
  */
 export class StaticGraphicsContext extends GraphicsContext {
   /**
-   * Contexts that bake no theme colors (white-base geometry colored via
-   * per-instance tint) share one cache entry across themes — the provider
-   * drops the theme from their cache key.
+   * Contexts baking no theme colors (white-base geometry tinted per instance)
+   * share one cache entry: the provider drops the theme from their key.
    */
   public static readonly themeIndependent: boolean = false;
 
   constructor() {
     super();
-    // Opting out of the renderer's GC guarantees `unload` can never fire:
-    // attached Graphics keep clones of the baked batches and, with the
-    // subscription dropped, would never learn about a reclaim. The GPU data
-    // simply lives as long as the context itself (the provider never evicts).
+    // Opting out of the GC guarantees `unload` can never fire: attached
+    // Graphics keep clones of the baked batches and, with the subscription
+    // dropped, would never learn about a reclaim. The GPU data lives as long
+    // as the context (the provider never evicts).
     this.autoGarbageCollect = false;
+  }
+
+  /**
+   * A circle whose tessellation holds up at every zoom. PixiJS bakes a
+   * circle's segment count once from its local radius (`4·⌈2.3·√(2r)⌉`
+   * vertices), and at the sub-unit radii of grid-space geometry that is an
+   * 8- to 12-gon. Drawing the circle `CIRCLE_SUPERSAMPLE`× larger under an equal
+   * counter-scale tessellates it from the large radius and scales the baked
+   * points back down, so the disc bakes as it measures on screen at zoom 1.
+   * The counter-scale is scoped to this one shape; a stroke's width is applied
+   * after the transform and is unaffected.
+   */
+  protected smoothCircle(x: number, y: number, radius: number): this {
+    return this.save()
+      .scale(1 / CIRCLE_SUPERSAMPLE)
+      .circle(
+        x * CIRCLE_SUPERSAMPLE,
+        y * CIRCLE_SUPERSAMPLE,
+        radius * CIRCLE_SUPERSAMPLE
+      )
+      .restore();
   }
 
   public override on(...args: Parameters<GraphicsContext['on']>): this {

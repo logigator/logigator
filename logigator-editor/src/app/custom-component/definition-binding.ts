@@ -5,20 +5,13 @@ import { serializeProjectBody } from '../persistence/snapshots';
 import { deriveSummary } from './definition-derivation';
 
 /**
- * Keeps a custom **master**'s summary in sync with its open editor Project. One
- * binding per open component editor.
+ * Keeps a custom master's summary in sync with its open editor Project, one
+ * binding per editor. Every plug change — add, remove, label edit, index
+ * reorder — flows through `ActionManager`, so one `actionChange$` listener
+ * coalesced with `auditTime(0)` is enough.
  *
- * Every plug change — add/remove ({@link AddComponentsAction}/Remove), label edit
- * and index reorder (both {@link ChangeOptionAction}) — flows through
- * `ActionManager`, so a single `actionChange$` listener (coalesced with
- * `auditTime(0)`) is enough. On each change it re-derives `{numInputs, numOutputs,
- * labels}` and pushes it to the master via `updateDefinition`, materialises the
- * master's circuit (so snapshots capture the current contents), and recomputes the
- * master's direct library dependencies (the distinct masters its placed snapshots
- * came from) for cycle prevention.
- *
- * It only ever touches the **master** definition; placed snapshots are frozen and
- * untouched, so editing a master never changes already-placed instances.
+ * Only the master definition is touched; placed snapshots are frozen, so
+ * editing a master never changes already-placed instances.
  */
 export class DefinitionBinding {
   private readonly _sub: Subscription;
@@ -38,8 +31,8 @@ export class DefinitionBinding {
     const summary = deriveSummary(this.project);
     this.registry.updateDefinition(this.masterTypeId, summary);
 
-    // Materialise the master's circuit so snapshots capture the current
-    // contents; also recomputes the master's library dependencies.
+    // Materialising the circuit lets snapshots capture the current contents,
+    // and recomputes the master's library dependencies for cycle prevention.
     this.registry.setMasterCircuit(
       this.masterTypeId,
       serializeProjectBody(this.project)

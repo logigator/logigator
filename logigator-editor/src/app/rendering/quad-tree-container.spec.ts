@@ -1,11 +1,19 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { Container, Rectangle } from 'pixi.js';
-import { QuadTreeContainer } from './quad-tree-container';
+import { QuadTreeContainer, QuadTreeEntry } from './quad-tree-container';
 import { GridElement } from './grid-element';
 import { arrayWithExactContents } from '../../testing/vitest-helpers';
 
-/** `appliedScale` records what the tree last re-tuned the item to. */
-type TestItem = Container & GridElement & { appliedScale: number };
+/**
+ * `appliedScale` and `textHidden` record what the tree last tuned the item to;
+ * `tunings` counts the calls, so a spec can tell an entry skipped as current
+ * from one re-tuned to the same values.
+ */
+type TestItem = Container &
+  GridElement & { appliedScale: number; textHidden: boolean; tunings: number };
+
+/** What a leaf holds before the next arrival splits it. */
+const CAPACITY = QuadTreeContainer.LIMITS.maxLeafElements;
 
 describe('QuadTreeContainer', () => {
   let tree: QuadTreeContainer<TestItem>;
@@ -13,6 +21,20 @@ describe('QuadTreeContainer', () => {
   beforeEach(() => {
     tree = new QuadTreeContainer<TestItem>();
   });
+
+  function track(c: TestItem): void {
+    c.appliedScale = 1;
+    c.textHidden = false;
+    c.tunings = 0;
+    c.applyScale = (scale) => {
+      c.appliedScale = scale;
+      c.tunings++;
+    };
+    c.setTextHidden = (hidden) => {
+      c.textHidden = hidden;
+      c.tunings++;
+    };
+  }
 
   /** Creates a Container with a fixed grid-space rectangle (x, y, w, h). */
   function makeItem(x: number, y: number, w: number, h: number): TestItem {
@@ -23,25 +45,49 @@ describe('QuadTreeContainer', () => {
       }
     };
     Object.defineProperty(c, 'gridBounds', bounds);
-    // Real elements default cullBounds to gridBounds; mirror that here.
+    Object.defineProperty(c, 'pickBounds', bounds);
     Object.defineProperty(c, 'cullBounds', bounds);
-    // Real elements derive this without allocating; here it just has to agree
-    // with gridBounds, which is the contract the tree relies on.
+    // Both mirrors must agree with the box they answer for, which is the
+    // contract the tree relies on.
     c.intersectsGridBounds = (rect) => rect.intersects(c.gridBounds);
-    c.appliedScale = 1;
-    c.applyScale = (scale) => (c.appliedScale = scale);
+    c.intersectsPickBounds = (rect) => rect.intersects(c.pickBounds);
+    track(c);
     return c;
   }
 
-  /** Inserts a 5-item cluster (forces a leaf split) around (x, y). */
+  /**
+   * An item drawn beyond its footprint, like a text label: the footprint is
+   * what it collides by, the pick box the drawn overflow a click can land on,
+   * and what it files by covers both.
+   */
+  function makeOverflowingItem(
+    x: number,
+    y: number,
+    pickWidth: number
+  ): TestItem {
+    const c = new Container({ position: { x, y } }) as TestItem;
+    const box = (width: number) => ({
+      get(this: TestItem) {
+        return new Rectangle(this.position.x, this.position.y, width, 1);
+      }
+    });
+    Object.defineProperty(c, 'gridBounds', box(1));
+    Object.defineProperty(c, 'pickBounds', box(pickWidth));
+    Object.defineProperty(c, 'cullBounds', box(pickWidth));
+    c.intersectsGridBounds = (rect) => rect.intersects(c.gridBounds);
+    c.intersectsPickBounds = (rect) => rect.intersects(c.pickBounds);
+    track(c);
+    return c;
+  }
+
+  /**
+   * Inserts one more unit item than a leaf holds, five to a row from (x, y),
+   * so the cluster alone forces a leaf split.
+   */
   function insertCluster(x: number, y: number): TestItem[] {
-    const items = [
-      makeItem(x, y, 1, 1),
-      makeItem(x + 2, y, 1, 1),
-      makeItem(x, y + 2, 1, 1),
-      makeItem(x + 2, y + 2, 1, 1),
-      makeItem(x + 1, y + 1, 1, 1)
-    ];
+    const items = Array.from({ length: CAPACITY + 1 }, (_, i) =>
+      makeItem(x + (i % 5), y + Math.floor(i / 5), 1, 1)
+    );
     for (const item of items) tree.insert(item);
     return items;
   }
@@ -58,8 +104,6 @@ describe('QuadTreeContainer', () => {
     const half = Number.MAX_SAFE_INTEGER / 2;
     return tree.queryRange(new Rectangle(-half, -half, half * 2, half * 2));
   }
-
-  // ── insert / queryRange (no split) ────────────────────────────────────────
 
   describe('insert / queryRange', () => {
     it('empty tree returns no items', () => {
@@ -99,7 +143,6 @@ describe('QuadTreeContainer', () => {
     });
 
     it('multiple items in the same leaf are all returned', () => {
-      // ≤ MAX_LEAF_ELEMENTS (4) items, no split triggered
       const items = [
         makeItem(2, 2, 3, 3),
         makeItem(20, 20, 3, 3),
@@ -111,7 +154,7 @@ describe('QuadTreeContainer', () => {
     });
 
     it('items placed in different quadrants are all returned (pre-split)', () => {
-      // Only 4 items: they all stay in the root leaf, no split
+      // Four items stay in the root leaf: no split.
       const nw = makeItem(2, 2, 3, 3);
       const ne = makeItem(40, 2, 3, 3);
       const sw = makeItem(2, 40, 3, 3);
@@ -127,7 +170,7 @@ describe('QuadTreeContainer', () => {
       tree.insert(nw);
       tree.insert(ne);
 
-      // Query only the NW half (initial size = 64, midline 32)
+      // The NW half: initial size 64, midline 32.
       const result = tree.queryRange(new Rectangle(0, 0, 32, 32));
       expect(result).toEqual([nw]);
       expect(result).not.toContain(ne);
@@ -181,9 +224,8 @@ describe('QuadTreeContainer', () => {
       expect(result).not.toContain(far);
     });
 
-    it('leaf splits when more than 4 items accumulate in the same area and all are still returned', () => {
-      // 5 items in the same region exceeds MAX_LEAF_ELEMENTS and forces a split
-      const items = Array.from({ length: 5 }, (_, i) =>
+    it('leaf splits when more items than it holds accumulate in the same area and all are still returned', () => {
+      const items = Array.from({ length: CAPACITY + 1 }, (_, i) =>
         makeItem(i * 2, i * 2, 1, 1)
       );
       for (const c of items) tree.insert(c);
@@ -192,15 +234,24 @@ describe('QuadTreeContainer', () => {
     });
   });
 
-  // ── oversize items and loose filing ───────────────────────────────────────
+  describe('pick bounds', () => {
+    it('finds an element by its pick bounds beyond its footprint', () => {
+      const item = makeOverflowingItem(0, 0, 10);
+      tree.insert(item);
+
+      // The drawn overflow is a query target of its own — this is what makes a
+      // click on a text label reach the text at all — while the element's own
+      // footprint still answers no overlap for the same rect.
+      const overflow = new Rectangle(5, 0, 1, 1);
+      expect(tree.queryRange(overflow)).toContain(item);
+      expect(item.gridBounds.intersects(overflow)).toBe(false);
+    });
+  });
 
   describe('oversize items and loose filing', () => {
-    // The initial tree spans (0, 0, 64, 64). An entry files an element into a
-    // child only when the element fits the child's cell (max dimension at most
-    // half the entry); larger elements park in the entry's oversizeItems.
-    // Position never parks an element high: an entry accepts anything centered
-    // in its cell through its loose bounds (the cell doubled, centered), so an
-    // item across a cell boundary files as deep as one in the cell's middle.
+    // The initial tree spans (0, 0, 64, 64). An element files into a child
+    // only if its max dimension is at most half the entry; larger ones park in
+    // oversizeItems. Position never parks an element high.
 
     it('item wider than half the root is inserted and retrieved', () => {
       const wide = makeItem(2, 30, 40, 1); // maxDim 40 > 32
@@ -217,7 +268,7 @@ describe('QuadTreeContainer', () => {
     it('oversize item is returned by a query range that partially overlaps it', () => {
       const wide = makeItem(2, 30, 40, 1);
       tree.insert(wide);
-      // range ends at x=4 but the item extends to x=42; they overlap x:2-4
+      // The range ends at x=4, the item at x=42: they overlap x:2-4.
       expect(tree.queryRange(new Rectangle(0, 0, 4, 40))).toContain(wide);
     });
 
@@ -240,9 +291,9 @@ describe('QuadTreeContainer', () => {
     it('only size parks an item at a branch — midline-crossing items file deep', () => {
       const wide = makeItem(2, 30, 40, 1);
       tree.insert(wide);
-      // Five items across the x=32 midline force splits along their column.
-      const crossers = Array.from({ length: 5 }, (_, i) =>
-        makeItem(31, 2 + i * 2, 2, 1)
+      // Items across the x=32 midline force splits along their column.
+      const crossers = Array.from({ length: CAPACITY + 1 }, (_, i) =>
+        makeItem(31, 2 + i, 2, 1)
       );
       for (const c of crossers) tree.insert(c);
 
@@ -252,9 +303,8 @@ describe('QuadTreeContainer', () => {
     });
 
     it('query pruning honors loose bounds: an item overhanging its cell is found', () => {
-      // The cluster's centers all sit east of the x=32 midline, so every item
-      // files in cells at x >= 32 — but the first one's extent reaches back to
-      // x=31. A query strictly left of every cell must still return it.
+      // Every center sits east of the x=32 midline, but the first item's
+      // extent reaches back to x=31; a query left of every cell must find it.
       const poker = makeItem(31, 2, 2, 1); // center x=32
       tree.insert(poker);
       const rest = [
@@ -268,8 +318,6 @@ describe('QuadTreeContainer', () => {
       expect(tree.queryRange(new Rectangle(30, 0, 1.5, 10))).toEqual([poker]);
     });
   });
-
-  // ── remove ────────────────────────────────────────────────────────────────
 
   describe('remove', () => {
     it('returns false for an element not in the tree', () => {
@@ -312,8 +360,7 @@ describe('QuadTreeContainer', () => {
     });
 
     it('tree compacts after enough elements are removed', () => {
-      // Insert 5 items to force a split, then remove 4 to trigger minification
-      const items = Array.from({ length: 5 }, (_, i) =>
+      const items = Array.from({ length: CAPACITY + 1 }, (_, i) =>
         makeItem(i * 2, i * 2, 1, 1)
       );
       for (const c of items) tree.insert(c);
@@ -324,30 +371,31 @@ describe('QuadTreeContainer', () => {
     });
 
     it('multi-level compaction: remaining item is still retrievable after a two-level split collapses', () => {
-      // With INITIAL_SIZE=64, root NW = (0,0,32,32), NW sub-quadrants are 16x16.
-      // 1 NE item + 5 NW items forces: root to split, then NW to split.
-      // The NW items are spread across all four NW sub-quadrants so NW.nw
-      // never overflows a third time — the tree is exactly two levels deep.
+      // Root NW is (0,0,32,32) with 16x16 sub-quadrants. One NE item and a
+      // leaf's worth of NW items split the root, one more splits NW; the NW
+      // items spread across all four sub-quadrants, each holding fewer than a
+      // leaf, so the tree stays exactly two levels deep.
       const ne = makeItem(40, 2, 3, 3);
-      const nw = [
-        makeItem(2, 2, 3, 3), // → NW.nw after NW splits
-        makeItem(18, 2, 3, 3), // → NW.ne after NW splits
-        makeItem(2, 18, 3, 3), // → NW.sw after NW splits
-        makeItem(18, 18, 3, 3), // → NW.se after NW splits
-        makeItem(8, 8, 3, 3) // survivor, also in NW.nw
-      ];
+      const corners = [
+        [2, 2],
+        [18, 2],
+        [2, 18],
+        [18, 18]
+      ] as const;
+      const nw = Array.from({ length: CAPACITY + 1 }, (_, i) => {
+        const [x, y] = corners[i % 4];
+        return makeItem(x + Math.floor(i / 4), y, 1, 1);
+      });
 
       tree.insert(ne);
       for (const c of nw) tree.insert(c);
 
       tree.remove(ne);
-      for (const c of nw.slice(0, 4)) tree.remove(c);
+      for (const c of nw.slice(1)) tree.remove(c);
 
-      expect(queryAll()).toEqual([nw[4]]);
+      expect(queryAll()).toEqual([nw[0]]);
     });
   });
-
-  // ── negative coordinates ─────────────────────────────────────────────────
 
   describe('negative coordinates', () => {
     it('item with negative x is retrievable', () => {
@@ -415,11 +463,8 @@ describe('QuadTreeContainer', () => {
     });
   });
 
-  // ── panned parent ────────────────────────────────────────────────────────
-  //
-  // queryRange/insert operate on the items' gridBounds, which are pure data
-  // independent of the scene graph. Panning the parent must not affect query
-  // results — these tests guard that invariant.
+  // queryRange/insert operate on gridBounds, which are independent of the
+  // scene graph: panning the parent must not affect query results.
 
   describe('with a panned parent', () => {
     let parent: Container;
@@ -442,7 +487,7 @@ describe('QuadTreeContainer', () => {
       tree.insert(c);
       parent.x = 500;
       parent.y = 300;
-      // if pan leaked into grid coords, the item would appear at (510, 310)
+      // A pan leaking into grid coords would put the item at (510, 310).
       expect(tree.queryRange(new Rectangle(510, 310, 5, 5))).not.toContain(c);
     });
 
@@ -480,7 +525,6 @@ describe('QuadTreeContainer', () => {
     it('leaf split triggered while panned preserves all items', () => {
       parent.x = 500;
       parent.y = 300;
-      // 5 items exceed MAX_LEAF_ELEMENTS and force a split
       const items = Array.from({ length: 5 }, (_, i) =>
         makeItem(i * 2, i * 2, 1, 1)
       );
@@ -561,8 +605,6 @@ describe('QuadTreeContainer', () => {
     });
   });
 
-  // ── re-insertion ──────────────────────────────────────────────────────────
-
   describe('re-insertion', () => {
     it('re-inserting an item with a new position relocates it', () => {
       const c = makeItem(10, 10, 5, 5);
@@ -584,8 +626,6 @@ describe('QuadTreeContainer', () => {
     });
   });
 
-  // ── debug introspection ───────────────────────────────────────────────────
-
   describe('validate', () => {
     /** Inserts, moves and removes enough elements to split, expand and minify. */
     function churn(): TestItem[] {
@@ -595,7 +635,6 @@ describe('QuadTreeContainer', () => {
         items.push(c);
         tree.insert(c);
       }
-      // A larger item, an expansion into negative space, and re-insertions.
       items.push(makeItem(30, 30, 6, 6), makeItem(-400, -400, 5, 5));
       for (const c of items.slice(-2)) tree.insert(c);
       for (const c of items.slice(0, 150)) {
@@ -621,13 +660,13 @@ describe('QuadTreeContainer', () => {
     });
 
     it('accepts oversize items parked at branches under a grown root', () => {
-      // Expansion stacks new ancestors above the entries without re-filing
-      // anything; an element too large for the old root's children stays
-      // parked there — several levels below the new root — and still
-      // validates, because its size class matches that entry regardless of
-      // what hangs above it.
+      // Expansion stacks ancestors above the entries without re-filing, so an
+      // element parked deep below the new root still validates: its size class
+      // matches its entry regardless of what hangs above.
       tree.insert(makeItem(2, 20, 40, 5)); // maxDim 40 > 32: parks at the root
-      for (let i = 0; i < 12; i++) tree.insert(makeItem(i * 2, i, 3, 3));
+      for (let i = 0; i < CAPACITY + 4; i++) {
+        tree.insert(makeItem(i * 2, i, 3, 3));
+      }
       tree.insert(makeItem(5000, 5000, 5, 5)); // forces the expansions
 
       expect(tree.stats().branchOversize).toBeGreaterThan(0);
@@ -659,9 +698,8 @@ describe('QuadTreeContainer', () => {
     });
 
     it('counts leaves over capacity as saturated only where a split cannot help', () => {
-      // Stacked at one point: the tree subdivides until the elements are too
-      // large for any child of the cell they land in, where splitting stops
-      // helping and the leaf grows past its capacity for good.
+      // Stacked at one point, the tree subdivides until the elements exceed
+      // any child cell and splitting stops helping.
       for (let i = 0; i < 20; i++) tree.insert(makeItem(0, 0, 1, 1));
       const stats = tree.stats();
 
@@ -680,8 +718,6 @@ describe('QuadTreeContainer', () => {
       expect(stats.root.expansions).toBeGreaterThan(0);
     });
   });
-
-  // ── cull ──────────────────────────────────────────────────────────────────
 
   describe('cull', () => {
     /** True if the item renders as culled, i.e. any ancestor entry is culled. */
@@ -715,7 +751,8 @@ describe('QuadTreeContainer', () => {
       const far = insertCluster(40, 40);
 
       tree.cull(new Rectangle(0, 0, 10, 10));
-      tree.cull(new Rectangle(38, 38, 10, 10));
+      // Clear of the near group's loose bounds, which reach x = y = 48.
+      tree.cull(new Rectangle(50, 50, 10, 10));
 
       for (const item of far) expect(isCulled(item)).toBe(false);
       for (const item of near) expect(isCulled(item)).toBe(true);
@@ -734,18 +771,13 @@ describe('QuadTreeContainer', () => {
     });
 
     it('honors loose bounds: an item overhanging its cell is not culled away', () => {
-      // Same shape as the loose-filing query test: the item's center puts it
-      // in cells east of x=32, but its extent reaches back to x=31. A view
-      // ending left of every cell must keep it visible.
+      // The center files it east of x=32 but its extent reaches back to x=31,
+      // so a view ending left of every cell must keep it visible.
       const poker = makeItem(31, 2, 2, 1); // center x=32
       tree.insert(poker);
-      for (const c of [
-        makeItem(33, 2, 1, 1),
-        makeItem(33, 4, 1, 1),
-        makeItem(35, 2, 1, 1),
-        makeItem(35, 4, 1, 1)
-      ]) {
-        tree.insert(c);
+      // Enough company east of the midline to split the root into groups.
+      for (let i = 0; i < CAPACITY; i++) {
+        tree.insert(makeItem(33 + (i % 5), 4 + Math.floor(i / 5), 1, 1));
       }
 
       tree.cull(new Rectangle(30, 0, 1.5, 10));
@@ -753,15 +785,32 @@ describe('QuadTreeContainer', () => {
     });
   });
 
-  // ── applyScale ────────────────────────────────────────────────────────────
+  describe('setBoardScale', () => {
+    it('re-tunes nothing itself; the next cull tunes each visible element once, to the last scale', () => {
+      const near = insertCluster(2, 2);
+      tree.cull(new Rectangle(0, 0, 10, 10));
+      for (const item of near) item.tunings = 0;
 
-  describe('applyScale', () => {
+      // Three zoom steps inside one frame.
+      tree.setBoardScale(1.2);
+      tree.setBoardScale(1.44);
+      tree.setBoardScale(1.728);
+      for (const item of near) expect(item.tunings).toBe(0);
+
+      tree.cull(new Rectangle(0, 0, 10, 10));
+      for (const item of near) {
+        expect(item.tunings).toBe(1);
+        expect(item.appliedScale).toBe(1.728);
+      }
+    });
+
     it('re-tunes on-screen elements and leaves culled ones behind', () => {
       const near = insertCluster(2, 2);
       const far = insertCluster(40, 40);
       tree.cull(new Rectangle(0, 0, 10, 10));
 
-      tree.applyScale(2);
+      tree.setBoardScale(2);
+      tree.cull(new Rectangle(0, 0, 10, 10));
 
       for (const item of near) expect(item.appliedScale).toBe(2);
       for (const item of far) expect(item.appliedScale).toBe(1);
@@ -770,7 +819,8 @@ describe('QuadTreeContainer', () => {
     it('catches a culled element up on the cull that reveals it', () => {
       const far = insertCluster(40, 40);
       tree.cull(new Rectangle(0, 0, 10, 10));
-      tree.applyScale(2);
+      tree.setBoardScale(2);
+      tree.cull(new Rectangle(0, 0, 10, 10));
 
       tree.cull(new Rectangle(38, 38, 10, 10));
 
@@ -780,7 +830,8 @@ describe('QuadTreeContainer', () => {
     it('re-tunes a revealed entry only once while the scale holds', () => {
       const [item] = insertCluster(40, 40);
       tree.cull(new Rectangle(0, 0, 10, 10));
-      tree.applyScale(2);
+      tree.setBoardScale(2);
+      tree.cull(new Rectangle(0, 0, 10, 10));
       tree.cull(new Rectangle(38, 38, 10, 10));
 
       const calls: number[] = [];
@@ -790,18 +841,9 @@ describe('QuadTreeContainer', () => {
       expect(calls).toEqual([]);
     });
 
-    it('applyScaleToAll reaches culled elements too', () => {
-      const near = insertCluster(2, 2);
-      const far = insertCluster(40, 40);
-      tree.cull(new Rectangle(0, 0, 10, 10));
-
-      tree.applyScaleToAll(2);
-
-      for (const item of [...near, ...far]) expect(item.appliedScale).toBe(2);
-    });
-
     it('brings an inserted element to the live scale', () => {
-      tree.applyScale(2);
+      tree.setBoardScale(2);
+      tree.cull(new Rectangle(0, 0, 64, 64));
 
       const item = makeItem(5, 5, 1, 1);
       tree.insert(item);
@@ -810,27 +852,310 @@ describe('QuadTreeContainer', () => {
     });
 
     it('re-tunes an element a merge pulls out of a culled entry', () => {
-      // Five elements split the root: four in its nw child, one in its se
-      // child. The view sees nw and the root but misses se's loose bounds, so
-      // the lone se element lags the scale. Emptying nw then collapses the
-      // root's branches, merging that lagging element into the root — whose
-      // own stamp says "current".
-      const near = [
-        makeItem(2, 2, 1, 1),
-        makeItem(4, 2, 1, 1),
-        makeItem(2, 4, 1, 1),
-        makeItem(4, 4, 1, 1)
-      ];
+      // A leaf's worth in nw, one in se. The view misses se's loose bounds, so
+      // that element lags the scale; emptying nw then collapses the branches
+      // and merges the lagging element into a root whose stamp says current.
+      const near = Array.from({ length: CAPACITY }, (_, i) =>
+        makeItem(2 + (i % 5), 2 + Math.floor(i / 5), 1, 1)
+      );
       const far = makeItem(40, 40, 1, 1);
       for (const item of [...near, far]) tree.insert(item);
       tree.cull(new Rectangle(0, 0, 10, 10));
-      tree.applyScale(2);
+      tree.setBoardScale(2);
+      tree.cull(new Rectangle(0, 0, 10, 10));
       expect(far.appliedScale).toBe(1);
 
       for (const item of near) tree.remove(item);
       tree.cull(new Rectangle(0, 0, 64, 64));
 
       expect(far.appliedScale).toBe(2);
+    });
+  });
+
+  describe('presentation', () => {
+    const SNAPSHOT = { scale: 0.25, textHidden: true };
+    const isCulled = (item: TestItem): boolean => {
+      for (let c: Container | null = item; c; c = c.parent) {
+        if (c.culled) return true;
+      }
+      return false;
+    };
+    const inSnapshot = (item: TestItem) =>
+      item.appliedScale === SNAPSHOT.scale && item.textHidden;
+    const onBoard = (item: TestItem, scale = 1) =>
+      item.appliedScale === scale && !item.textHidden;
+    const resetTunings = (items: TestItem[]) => {
+      for (const item of items) item.tunings = 0;
+    };
+
+    it('present un-culls and tunes every entry, culled ones included', () => {
+      const near = insertCluster(2, 2);
+      const far = insertCluster(40, 40);
+      tree.cull(new Rectangle(0, 0, 10, 10));
+
+      tree.present(SNAPSHOT);
+
+      for (const item of [...near, ...far]) {
+        expect(isCulled(item)).toBe(false);
+        expect(inSnapshot(item)).toBe(true);
+      }
+    });
+
+    it('a cull returns only on-screen entries to the board; the rest keep the snapshot', () => {
+      const near = insertCluster(2, 2);
+      const far = insertCluster(40, 40);
+      tree.setBoardScale(2);
+      tree.cull(new Rectangle(0, 0, 64, 64));
+
+      tree.present(SNAPSHOT);
+      tree.cull(new Rectangle(0, 0, 10, 10));
+
+      for (const item of near) expect(onBoard(item, 2)).toBe(true);
+      for (const item of far) expect(inSnapshot(item)).toBe(true);
+
+      // Panning there later catches them up to the board's zoom.
+      tree.cull(new Rectangle(38, 38, 10, 10));
+      for (const item of far) expect(onBoard(item, 2)).toBe(true);
+    });
+
+    it('a repeated snapshot re-tunes only what the viewport returned to the board', () => {
+      const near = insertCluster(2, 2);
+      const far = insertCluster(40, 40);
+      tree.present(SNAPSHOT);
+      tree.cull(new Rectangle(0, 0, 10, 10));
+      resetTunings([...near, ...far]);
+
+      tree.present(SNAPSHOT);
+
+      for (const item of far) expect(item.tunings).toBe(0);
+      for (const item of near) expect(inSnapshot(item)).toBe(true);
+    });
+
+    it('touches only the half of the stamp that differs', () => {
+      const [item] = insertCluster(2, 2);
+      resetTunings([item]);
+      tree.present({ scale: 1, textHidden: true });
+
+      expect(item.textHidden).toBe(true);
+      // The scale already matched, so only the text flip ran.
+      expect(item.tunings).toBe(1);
+    });
+
+    it('insert tunes an element to the state of the entry it lands in', () => {
+      insertCluster(40, 40);
+      tree.present(SNAPSHOT);
+      tree.cull(new Rectangle(0, 0, 10, 10));
+
+      const offScreen = makeItem(41, 41, 1, 1);
+      const onScreen = makeItem(3, 3, 1, 1);
+      tree.insert(offScreen);
+      tree.insert(onScreen);
+
+      expect(inSnapshot(offScreen)).toBe(true);
+      expect(onBoard(onScreen)).toBe(true);
+      // Both stamps stay truthful: the next snapshot need not touch either.
+      resetTunings([offScreen]);
+      tree.present(SNAPSHOT);
+      expect(offScreen.tunings).toBe(0);
+    });
+
+    it('a leaf split hands its stamp to the children it fills', () => {
+      // A near cluster splits the root, so the far items fill a leaf of their
+      // own that the view below leaves culled.
+      insertCluster(2, 2);
+      const items = Array.from({ length: CAPACITY }, (_, i) =>
+        makeItem(40 + (i % 5), 40 + Math.floor(i / 5), 1, 1)
+      );
+      for (const item of items) tree.insert(item);
+      tree.present(SNAPSHOT);
+      tree.cull(new Rectangle(0, 0, 10, 10));
+
+      // One more overflows the leaf and splits it.
+      const fifth = makeItem(45, 45, 1, 1);
+      tree.insert(fifth);
+      resetTunings(items);
+
+      tree.present(SNAPSHOT);
+
+      for (const item of items) expect(item.tunings).toBe(0);
+      expect(inSnapshot(fifth)).toBe(true);
+    });
+
+    it('a merge of elements that agree keeps the stamp, one that disagrees drops it', () => {
+      // A leaf's worth in nw, one in se; the snapshot leaves se behind.
+      const near = Array.from({ length: CAPACITY }, (_, i) =>
+        makeItem(2 + (i % 5), 2 + Math.floor(i / 5), 1, 1)
+      );
+      const far = makeItem(40, 40, 1, 1);
+      for (const item of [...near, far]) tree.insert(item);
+      tree.present(SNAPSHOT);
+      tree.cull(new Rectangle(0, 0, 10, 10));
+      expect(inSnapshot(far)).toBe(true);
+
+      // Emptying nw collapses the branches around the lagging element: the
+      // merged stamp cannot vouch for it, so the next visit re-tunes it.
+      for (const item of near) tree.remove(item);
+      tree.cull(new Rectangle(0, 0, 64, 64));
+      expect(onBoard(far)).toBe(true);
+    });
+
+    it('expanding keeps the old tree in the state it was left in', () => {
+      const far = insertCluster(40, 40);
+      tree.present(SNAPSHOT);
+      tree.cull(new Rectangle(0, 0, 10, 10));
+
+      // Far outside the 64-unit root, so the tree grows around the old one.
+      const outlier = makeItem(500, 500, 1, 1);
+      tree.insert(outlier);
+      resetTunings(far);
+
+      tree.present(SNAPSHOT);
+
+      for (const item of far) expect(item.tunings).toBe(0);
+      expect(inSnapshot(outlier)).toBe(true);
+    });
+
+    it('detach returns an element to the board, whatever its entry was left in', () => {
+      const far = insertCluster(40, 40);
+      tree.setBoardScale(2);
+      tree.cull(new Rectangle(0, 0, 64, 64));
+      tree.present(SNAPSHOT);
+      tree.cull(new Rectangle(0, 0, 10, 10));
+
+      tree.detach(far[0]);
+
+      expect(onBoard(far[0], 2)).toBe(true);
+      expect([...tree.items]).not.toContain(far[0]);
+    });
+
+    it('uncull un-culls in the board presentation', () => {
+      const far = insertCluster(40, 40);
+      tree.present(SNAPSHOT);
+      tree.cull(new Rectangle(0, 0, 10, 10));
+
+      tree.uncull();
+
+      for (const item of far) {
+        expect(isCulled(item)).toBe(false);
+        expect(onBoard(item)).toBe(true);
+      }
+    });
+  });
+
+  describe('render-group granularity', () => {
+    const SNAPSHOT = { scale: 0.25, textHidden: true };
+    const isCulled = (item: TestItem): boolean => {
+      for (let c: Container | null = item; c; c = c.parent) {
+        if (c.culled) return true;
+      }
+      return false;
+    };
+    /** The entries an item hangs under, nearest first. */
+    const entriesOf = (item: TestItem): QuadTreeEntry<TestItem>[] => {
+      const out: QuadTreeEntry<TestItem>[] = [];
+      for (let c: Container | null = item.parent; c; c = c.parent) {
+        if (c instanceof QuadTreeEntry) out.push(c as QuadTreeEntry<TestItem>);
+      }
+      return out;
+    };
+    const inSnapshot = (item: TestItem) =>
+      item.appliedScale === SNAPSHOT.scale && item.textHidden;
+    const onBoard = (item: TestItem, scale = 1) =>
+      item.appliedScale === scale && !item.textHidden;
+
+    /**
+     * A 10×10 lattice of unit items inside the 32-unit cell at (x0, y0),
+     * dense enough to split that cell's group well below the group size.
+     */
+    function fillGroup(x0: number, y0: number): TestItem[] {
+      const items: TestItem[] = [];
+      for (let i = 0; i < 10; i++) {
+        for (let j = 0; j < 10; j++) {
+          const item = makeItem(x0 + 1 + i * 3, y0 + 1 + j * 3, 1, 1);
+          tree.insert(item);
+          items.push(item);
+        }
+      }
+      return items;
+    }
+
+    it('never culls an entry below a render group, whatever the view misses', () => {
+      insertCluster(2, 2);
+      const group = fillGroup(32, 32);
+      expect(group.some((item) => entriesOf(item)[0].size < 16)).toBe(true);
+
+      // One corner of the group is on screen; most of its sub-entries are not.
+      tree.cull(new Rectangle(33, 33, 2, 2));
+
+      for (const item of group) {
+        expect(isCulled(item)).toBe(false);
+        for (const entry of entriesOf(item)) {
+          if (!entry.isGroupRoot) expect(entry.culled).toBe(false);
+        }
+      }
+    });
+
+    it('a zoom re-tunes all of a visible group, off-screen sub-entries included', () => {
+      const near = insertCluster(2, 2);
+      const group = fillGroup(32, 32);
+      tree.cull(new Rectangle(60, 60, 2, 2));
+
+      tree.setBoardScale(2);
+      tree.cull(new Rectangle(60, 60, 2, 2));
+
+      for (const item of group) expect(item.appliedScale).toBe(2);
+      for (const item of near) expect(item.appliedScale).toBe(1);
+    });
+
+    it('one stamp covers a culled group through inserts, a split and merges below it', () => {
+      insertCluster(2, 2);
+      const group = fillGroup(32, 32);
+      tree.present(SNAPSHOT);
+      tree.cull(new Rectangle(0, 0, 4, 4));
+      expect(group.every((item) => isCulled(item))).toBe(true);
+
+      // Into a deep leaf of the culled group: it takes the group's state.
+      const arrival = makeItem(34, 35, 1, 1);
+      tree.insert(arrival);
+      expect(inSnapshot(arrival)).toBe(true);
+
+      // A leaf's worth in one sub-cell splits it; the stamp still holds.
+      const packed = Array.from({ length: CAPACITY }, (_, i) =>
+        makeItem(50 + (i % 4) * 0.5, 50 + Math.floor(i / 4) * 0.5, 0.25, 0.25)
+      );
+      for (const item of packed) tree.insert(item);
+      const all = [...group, arrival, ...packed];
+      for (const item of all) item.tunings = 0;
+      tree.present(SNAPSHOT);
+      for (const item of all) expect(item.tunings).toBe(0);
+
+      // Emptying most of it merges sub-entries back; still nothing to redo.
+      const kept = all.filter((_, i) => i % 9 === 0);
+      for (const item of all) if (!kept.includes(item)) tree.remove(item);
+      tree.present(SNAPSHOT);
+      for (const item of kept) expect(item.tunings).toBe(0);
+      expect(tree.validate()).toEqual([]);
+
+      // Coming on screen returns the lot to the board in one catch-up.
+      tree.cull(new Rectangle(32, 32, 32, 32));
+      for (const item of kept) expect(onBoard(item)).toBe(true);
+    });
+
+    it('nested groups keep their own stamps', () => {
+      // Wider than a 32-unit child, so it parks at the 64-unit root group.
+      const wide = makeItem(2, 30, 40, 1);
+      tree.insert(wide);
+      const near = insertCluster(2, 2);
+      const far = insertCluster(40, 40);
+      tree.present(SNAPSHOT);
+
+      tree.cull(new Rectangle(0, 0, 10, 10));
+
+      // The root is on screen, so its own element returns; its child groups
+      // answer for themselves.
+      expect(onBoard(wide)).toBe(true);
+      for (const item of near) expect(onBoard(item)).toBe(true);
+      for (const item of far) expect(inSnapshot(item)).toBe(true);
     });
   });
 });

@@ -1,6 +1,7 @@
 import { computed, signal, Signal } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
 import { Component } from '../component';
+import { ButtonComponent } from '../component-types/button/button.component';
 import {
   ComponentInspection,
   InspectionTitlePart
@@ -8,7 +9,7 @@ import {
 import { InspectionService } from '../../inspection/inspection.service';
 import { WatchSession } from '../../inspection/watch/watch-session';
 import { SubCircuitWatchComponent } from '../../inspection/watch/sub-circuit-watch.component';
-import { SerializedCircuitBody } from '../../persistence/serialized-circuit';
+import { SerializedCircuitBody } from '@logigator/core';
 import { CompiledBoard } from '../../simulation/compiler/compiled-board.model';
 import { SimulationService } from '../../simulation/simulation.service';
 import { LoggingService } from '../../logging/logging.service';
@@ -27,16 +28,13 @@ export interface WatchLevel {
 }
 
 /**
- * Live view of a placed custom component's inner circuit during simulation —
- * the inspection every custom config declares. Opens a fresh headless copy of
- * the instance's frozen snapshot circuit whose wires/ports light from the
- * running engine (via a {@link WatchSession} resolved through the compiled
- * board's watch index). Fully interactive: inner switches/buttons drive their
- * engine units, nested customs drill down as breadcrumb levels (parents kept
- * for back navigation), and inner inspectables (ROM) open their regular data
- * inspectors on the watch copies — tracked so they close when their level
- * goes away. The renderer owns canvas and viewport; this model owns the
- * level stack.
+ * Live view of a placed custom component's inner circuit during simulation.
+ * Opens a fresh headless copy of the instance's frozen snapshot circuit, lit
+ * from the running engine through a {@link WatchSession}. Fully interactive:
+ * inner user inputs drive their engine units, nested customs drill
+ * down as breadcrumb levels, and inner inspectables open their regular data
+ * inspectors on the watch copies. The renderer owns canvas and viewport; this
+ * model owns the level stack.
  */
 export class SubCircuitWatch extends ComponentInspection {
   public readonly kind = 'watch';
@@ -46,8 +44,7 @@ export class SubCircuitWatch extends ComponentInspection {
     initial: { width: 640, height: 480 },
     min: { width: 320, height: 240 }
   };
-  // The canvas needs the space — on compact the watch takes the screen over
-  // instead of sharing the bottom sheet.
+  // The canvas needs the whole screen on compact, not a shared bottom sheet.
   public override readonly compactPresentation = 'fullscreen' as const;
 
   private readonly simulation = getStaticDI(SimulationService);
@@ -60,8 +57,8 @@ export class SubCircuitWatch extends ComponentInspection {
     () => this._levels()[this._levels().length - 1]
   );
 
-  // Data inspections opened on this watch's copies, with the level depth
-  // they belong to — closed when that level (or the watch) goes away.
+  // Data inspections opened on this watch's copies, with the depth they
+  // belong to; closed when that level or the watch goes away.
   private readonly _spawned: { depth: number; component: Component }[] = [];
 
   private readonly _render$ = new Subject<void>();
@@ -92,10 +89,7 @@ export class SubCircuitWatch extends ComponentInspection {
     );
   }
 
-  /**
-   * The breadcrumb trail for the hosting header: one segment per level,
-   * ancestors clickable (navigate back), the visible level plain.
-   */
+  /** One segment per level; ancestors navigate back, the last is plain. */
   public override readonly titleParts: Signal<readonly InspectionTitlePart[]> =
     computed(() =>
       this._levels().map((level, index, levels) => ({
@@ -130,6 +124,49 @@ export class SubCircuitWatch extends ComponentInspection {
     }
   }
 
+  /**
+   * The hold a press on a button of the active level's copy starts: `press`
+   * and `release` drive its engine unit, both bound to this level, so a
+   * release arriving after a level swap still reaches the unit it pressed.
+   * Null for a component that is not one of the level's buttons.
+   */
+  public holdFor(
+    button: ButtonComponent
+  ): { press(): void; release(): void } | null {
+    const level = this.activeLevel();
+    const bodyIndex = level.session.components.indexOf(button);
+    const unitIndex =
+      bodyIndex < 0 ? undefined : level.session.info.unitIndexFor(bodyIndex);
+    if (unitIndex === undefined) {
+      return null;
+    }
+    const repaint = () => level.session.project.triggerTicker('single');
+    return {
+      press: () =>
+        this.simulation.triggerUnitInput(unitIndex, button, repaint, 'press'),
+      release: () =>
+        this.simulation.triggerUnitInput(unitIndex, button, repaint, 'release')
+    };
+  }
+
+  /**
+   * Drives a user input of the active level's copy to an **absolute** state,
+   * as `SimulationService.setUserInput` does a top-level one. Reports whether
+   * the component is one of the level's user inputs.
+   */
+  public setInput(component: Component, value: boolean): boolean {
+    const level = this.activeLevel();
+    const bodyIndex = level.session.components.indexOf(component);
+    const unitIndex =
+      bodyIndex < 0 ? undefined : level.session.info.unitIndexFor(bodyIndex);
+    if (unitIndex === undefined) {
+      return false;
+    }
+    return this.simulation.setUnitInput(unitIndex, component, value, () =>
+      level.session.project.triggerTicker('single')
+    );
+  }
+
   /** Breadcrumb navigation: pops every level deeper than `index`. */
   public navigateTo(index: number): void {
     const levels = this._levels();
@@ -144,8 +181,8 @@ export class SubCircuitWatch extends ComponentInspection {
   }
 
   public override onFrame(): void {
-    // Every level stays registered while open, so background (parent) levels
-    // keep tracking the engine — cheap, and back navigation is instant.
+    // Parent levels stay registered so they keep tracking the engine: cheap,
+    // and back navigation is instant.
     let needsRender = false;
     for (const level of this._levels()) {
       if (level.session.onFrame() && level === this.activeLevel()) {

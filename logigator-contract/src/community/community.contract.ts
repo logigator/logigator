@@ -1,0 +1,126 @@
+import * as z from 'zod';
+import { imageVariantSchema } from '../image/image.contract';
+import { pageQuerySchema, pageSchema } from '../page/page.contract';
+import { authorSchema } from '../document/document.contract';
+import { componentSummarySchema } from '../document/component.contract';
+import { projectSummarySchema } from '../document/project.contract';
+import { socialLinkSchema } from '../social/social.contract';
+
+/**
+ * A community listing's query.
+ *
+ * `trending` is the default because a front page ranked by lifetime stars is
+ * frozen at whatever got popular years ago, which is the opposite of the signal
+ * a visitor deciding whether this community is alive needs. Defaulting it is
+ * safe from the day it ships: the ranking is a chain, and a community with no
+ * stars inside the window degenerates to exactly the stars-then-newest order
+ * `stars` answers with.
+ */
+export const communityQuerySchema = pageQuerySchema.extend({
+  orderBy: z.enum(['trending', 'stars', 'latest']).default('trending')
+});
+
+export type CommunityQuery = z.infer<typeof communityQuerySchema>;
+
+/**
+ * What a public listing adds to a summary: who made it, how many stars it has,
+ * and whether the caller is one of them. `starred` is `false` rather than
+ * absent for an anonymous caller, so a browse page renders the same control
+ * either way.
+ */
+const communityFields = {
+  author: authorSchema,
+  stars: z.number().int().nonnegative(),
+  starred: z.boolean()
+} as const;
+
+/** The immediate parent of a fork, with the link its community page lives at. */
+const forkedFromSchema = z
+  .object({
+    id: z.string().uuid(),
+    name: z.string(),
+    link: z.string().uuid(),
+    authorName: z.string()
+  })
+  .loose()
+  .nullable();
+
+export const communityProjectSchema =
+  projectSummarySchema.extend(communityFields);
+
+export type CommunityProject = z.infer<typeof communityProjectSchema>;
+
+export const communityComponentSchema =
+  componentSummarySchema.extend(communityFields);
+
+export type CommunityComponent = z.infer<typeof communityComponentSchema>;
+
+export const communityProjectPageSchema = pageSchema(communityProjectSchema);
+export const communityComponentPageSchema = pageSchema(
+  communityComponentSchema
+);
+
+export type CommunityProjectPage = z.infer<typeof communityProjectPageSchema>;
+export type CommunityComponentPage = z.infer<
+  typeof communityComponentPageSchema
+>;
+
+/** A public document's own page: the listing entry plus its fork parent. */
+export const communityProjectDetailSchema = communityProjectSchema.extend({
+  forkedFrom: forkedFromSchema
+});
+
+export type CommunityProjectDetail = z.infer<
+  typeof communityProjectDetailSchema
+>;
+
+export const communityComponentDetailSchema = communityComponentSchema.extend({
+  forkedFrom: forkedFromSchema
+});
+
+export type CommunityComponentDetail = z.infer<
+  typeof communityComponentDetailSchema
+>;
+
+/**
+ * A public profile. A different shape from `UserResponse` rather than the same
+ * one with fields omitted: the address, verification state and credentials are
+ * the account holder's business, and nothing here can leak them by accident.
+ */
+export const publicProfileSchema = z
+  .object({
+    id: z.string().uuid(),
+    username: z.string(),
+    avatar: z.array(imageVariantSchema).nullable(),
+    bio: z.string(),
+    websiteUrl: z.string().nullable(),
+    socialLinks: z.array(socialLinkSchema),
+    memberSince: z.string(),
+    publicProjects: z.number().int().nonnegative(),
+    publicComponents: z.number().int().nonnegative(),
+    /**
+     * The stars the member's published documents have collected — received, not
+     * given. Counted over public rows only, like every other number here:
+     * a private document's stars are nobody else's business and folding them
+     * into a public tally would publish a count of work that is not published.
+     */
+    stars: z.number().int().nonnegative()
+  })
+  .loose();
+
+export type PublicProfile = z.infer<typeof publicProfileSchema>;
+
+/** Who starred something, for the stargazer list on a detail page. */
+export const stargazerPageSchema = pageSchema(authorSchema);
+
+export type StargazerPage = z.infer<typeof stargazerPageSchema>;
+
+/** What a star toggle answers: the new state, and the count it produced. */
+export const starResponseSchema = z
+  .object({
+    starred: z.boolean(),
+    stars: z.number().int().nonnegative()
+  })
+  .loose();
+
+export type StarResponse = z.infer<typeof starResponseSchema>;

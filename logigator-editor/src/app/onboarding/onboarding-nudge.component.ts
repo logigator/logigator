@@ -17,11 +17,8 @@ import { TranslateDirective } from '../translation/translate.directive';
 
 /**
  * The single launch path for the getting-started tutorial — there is no
- * auto-start. A soft, dismissible prompt shown once to a first-time user (until
- * dismissed or the tutorial started), regardless of what's on the canvas.
- * Clicking Start hands off to {@link TutorialRunnerService.launch}, which swaps
- * in a fresh empty board (behind a discard-changes confirm) before running the
- * tutorial, and retires the nudge.
+ * auto-start. A soft, dismissible prompt shown once to a first-time user, until
+ * dismissed or the tutorial starts.
  */
 @Component({
   selector: 'app-onboarding-nudge',
@@ -34,19 +31,18 @@ import { TranslateDirective } from '../translation/translate.directive';
         class="pointer-events-auto mx-auto flex w-fit max-w-xl items-center gap-3 rounded-lg border border-border bg-content/95 px-4 py-3 shadow-lg backdrop-blur"
       >
         <span class="text-sm text-muted">{{ t('onboarding.nudge.text') }}</span>
-        <lg-button
-          size="sm"
-          [label]="t('onboarding.nudge.start')"
-          (onClick)="start()"
-        ></lg-button>
-        <lg-button
+        <button lgButton size="sm" (onClick)="start()">
+          {{ t('onboarding.nudge.start') }}
+        </button>
+        <button
+          lgButton
           size="sm"
           severity="secondary"
           text
           icon="ph ph-x"
           [ariaLabel]="t('onboarding.nudge.dismiss')"
           (onClick)="dismiss()"
-        ></lg-button>
+        ></button>
       </div>
     }
   `
@@ -64,7 +60,7 @@ export class OnboardingNudgeComponent {
       !this.onboarding.hasCompletedTutorial(GETTING_STARTED_TUTORIAL) &&
       this.onboarding.activeTutorial() === null &&
       this.workMode.mode() !== WorkMode.SIMULATION &&
-      // Only over the main board — the tutorial targets the main project, not a
+      // Only over the main board: the tutorial targets the main project, not a
       // custom-component edit tab that happens to be active.
       this.projectService.activeProject() === this.projectService.mainProject()
   );

@@ -1,10 +1,8 @@
 import { inject, InjectionToken, Provider } from '@angular/core';
 
 /**
- * The library's stock UI strings — the handful of words its components have to
- * put in the accessibility tree themselves (close/dismiss buttons, paginator
- * steps, the tab-strip's reorder announcement). Everything else a component
- * shows is consumer-supplied content.
+ * The library's stock UI strings: the words its components put in the
+ * accessibility tree themselves. Everything else they show is consumer content.
  */
 export interface LgLabels {
   /** Dialog / drawer / window / image-zoom close buttons. */
@@ -17,6 +15,45 @@ export interface LgLabels {
   previousPage: string;
   nextPage: string;
   lastPage: string;
+  /**
+   * A markdown field's toolbar: the group's name, one per formatting button,
+   * one per table control, and the two surfaces it switches between. Every
+   * button is icon-only, so its label is the only name it has in the
+   * accessibility tree.
+   */
+  formatting: string;
+  heading1: string;
+  heading2: string;
+  heading3: string;
+  bold: string;
+  italic: string;
+  code: string;
+  link: string;
+  bulletedList: string;
+  numberedList: string;
+  quote: string;
+  codeBlock: string;
+  divider: string;
+  table: string;
+  linkTools: string;
+  /** The word a link made with nothing selected is hung on. */
+  linkText: string;
+  linkUrl: string;
+  removeLink: string;
+  tableTools: string;
+  insertRowAbove: string;
+  insertRowBelow: string;
+  insertColumnBefore: string;
+  insertColumnAfter: string;
+  deleteRow: string;
+  deleteColumn: string;
+  deleteTable: string;
+  alignLeft: string;
+  alignCenter: string;
+  alignRight: string;
+  viewMode: string;
+  richText: string;
+  markdownSource: string;
 }
 
 /** The English defaults, used for any key the app does not provide. */
@@ -27,32 +64,57 @@ export const LG_DEFAULT_LABELS: LgLabels = {
   firstPage: 'First page',
   previousPage: 'Previous page',
   nextPage: 'Next page',
-  lastPage: 'Last page'
+  lastPage: 'Last page',
+  formatting: 'Formatting',
+  heading1: 'Heading 1',
+  heading2: 'Heading 2',
+  heading3: 'Heading 3',
+  bold: 'Bold',
+  italic: 'Italic',
+  code: 'Code',
+  link: 'Link',
+  bulletedList: 'Bulleted list',
+  numberedList: 'Numbered list',
+  quote: 'Quote',
+  codeBlock: 'Code block',
+  divider: 'Divider',
+  table: 'Table',
+  linkTools: 'Link',
+  linkText: 'link',
+  linkUrl: 'Link address',
+  removeLink: 'Remove link',
+  tableTools: 'Table',
+  insertRowAbove: 'Insert row above',
+  insertRowBelow: 'Insert row below',
+  insertColumnBefore: 'Insert column before',
+  insertColumnAfter: 'Insert column after',
+  deleteRow: 'Delete row',
+  deleteColumn: 'Delete column',
+  deleteTable: 'Delete table',
+  alignLeft: 'Align left',
+  alignCenter: 'Align center',
+  alignRight: 'Align right',
+  viewMode: 'View',
+  richText: 'Rich text',
+  markdownSource: 'Markdown'
 };
 
-/**
- * Looks one stock label up on demand. Returning `undefined` falls back to
- * {@link LG_DEFAULT_LABELS}.
- */
+/** Returning `undefined` falls back to {@link LG_DEFAULT_LABELS}. */
 export type LgLabelResolver = (key: keyof LgLabels) => string | undefined;
 
 export const LG_LABELS = new InjectionToken<LgLabelResolver>('lg-labels');
 
 /**
- * Supply localized stock strings once, app-wide. Without this every component
- * falls back to {@link LG_DEFAULT_LABELS} (English) — which is why a localized
- * app should provide it: the alternative is passing a label to every dialog,
- * drawer and window individually, and missing the next one that gets added.
+ * Supply localized stock strings once, app-wide; without it every component
+ * falls back to English {@link LG_DEFAULT_LABELS}.
  *
- * Per-instance inputs (`closeLabel`, `dismissLabel`, …) still win where a
- * specific surface needs its own wording — and are the way to keep a
- * **long-lived** surface correct across a language switch, since a resolver is
- * only consulted while a component is being constructed.
+ * Per-instance inputs (`closeLabel`, `dismissLabel`, …) still win, and are the
+ * way to keep a **long-lived** surface correct across a language switch: a
+ * resolver is consulted only while a component is being constructed.
  *
- * A resolver rather than a plain object: DI caches a factory's result once per
- * injector, so an object of strings built at startup would pin every label to
- * the language active at bootstrap. `resolverFactory` runs once (to reach the
- * app's translation layer); the resolver it returns runs per lookup.
+ * A resolver rather than a plain object because DI caches a factory's result
+ * per injector, which would pin every label to the bootstrap language.
+ * `resolverFactory` runs once; the resolver it returns runs per lookup.
  */
 export function provideLgLabels(
   resolverFactory: () => LgLabelResolver
@@ -61,8 +123,8 @@ export function provideLgLabels(
 }
 
 /**
- * Resolve one stock label for a component's `input()` default. Call in a field
- * initializer — it runs inside the injection context.
+ * Resolve one stock label for a component's `input()` default. Call it in a
+ * field initializer, which runs inside the injection context.
  */
 export function lgLabel(key: keyof LgLabels): string {
   const resolved = inject(LG_LABELS, { optional: true })?.(key);

@@ -30,6 +30,10 @@
 !**/.vscode/launch.json
 !**/.vscode/extensions.json
 
+# local environment files (the API reads env vars, never a baked file)
+**/.env
+**/.env.local
+
 # dependencies
 **/node_modules
 **/.pnp.*
@@ -66,7 +70,8 @@
 !/logigator-backend/resources/private/components/.gitkeep
 
 # EDITOR (workspace member — build output lands in the root dist/)
-/dist
+# `**/dist` also covers the shared packages, which are rebuilt inside the image.
+**/dist
 /out-tsc
 /.angular/cache
 

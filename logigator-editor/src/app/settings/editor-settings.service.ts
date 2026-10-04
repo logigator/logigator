@@ -4,10 +4,9 @@ import { EditorSetting } from './editor-setting';
 const STORAGE_KEY = 'logigator.settings';
 
 /**
- * User-toggleable editor preferences. All settings are persisted together as a
- * single JSON object under one localStorage key. Expose every setting through
- * `settings` so the settings UI can render them generically; named accessors
- * stay for type-safe direct reads.
+ * User-toggleable editor preferences, persisted together as one JSON object
+ * under a single localStorage key. Every setting is exposed through `settings`
+ * so the UI can render them generically; named accessors give typed reads.
  */
 @Injectable({
   providedIn: 'root'

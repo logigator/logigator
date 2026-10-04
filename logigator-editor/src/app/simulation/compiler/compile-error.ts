@@ -9,9 +9,8 @@ export type CompileDiagnosticKind =
   | 'plug-mismatch';
 
 /**
- * One blocking compile failure. Any diagnostic prevents entering simulation —
- * a board missing components would be semantically wrong, so nothing is
- * silently skipped.
+ * One compile failure. Any diagnostic blocks entering simulation — a board
+ * missing components would be semantically wrong, so nothing is skipped.
  */
 export interface CompileDiagnostic {
   kind: CompileDiagnosticKind;
@@ -24,6 +23,6 @@ export interface CompileDiagnostic {
   componentType: number;
   /** The offending component's id within its circuit, when applicable. */
   componentId?: number;
-  /** Human-readable summary, surfaced when entering simulation is refused. */
+  /** Human-readable summary, shown when entry is refused. */
   message: string;
 }

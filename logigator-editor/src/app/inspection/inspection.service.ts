@@ -16,15 +16,14 @@ import { AnalyticsEvent } from '../analytics/analytics.mapping';
 
 /**
  * Orchestrates live component inspections: while a simulation runs, tapping an
- * inspectable component (its config declares an `inspection` factory) opens a
- * live view of it — at most one per component instance; a second tap focuses
- * the existing one. Views are framed by an {@link InspectionPresenter} —
- * floating windows on desktop, the shared bottom sheet on compact, re-homed
- * live when the breakpoint flips. Leaving simulation mode closes everything.
+ * inspectable component opens a live view of it — at most one per instance, a
+ * second tap focuses the existing one. An {@link InspectionPresenter} frames
+ * the views and re-homes them when the breakpoint flips. Leaving simulation
+ * mode closes everything.
  *
  * Live data is pull-based: {@link SimulationService.frame$} fires after each
- * applied snapshot and this service fans it out to every open inspection's
- * `onFrame`, which re-reads main-thread state (options, port power).
+ * applied snapshot and fans out to every open inspection's `onFrame`, which
+ * re-reads main-thread state (options, port power).
  */
 @Injectable({ providedIn: 'root' })
 export class InspectionService {
@@ -48,15 +47,12 @@ export class InspectionService {
       .pipe(takeUntilDestroyed())
       .subscribe(() => this._onFrame());
 
-    // Simulation mode drives the session: listen for inspect taps on the
-    // active project while simulating, tear everything down on exit.
+    // Listen for inspect taps while simulating, tear down on exit.
     effect(() => {
       const simulating = this.workModeService.mode() === WorkMode.SIMULATION;
       untracked(() => this._onSimulationToggled(simulating));
     });
 
-    // Re-home open inspections when the breakpoint flips mid-session:
-    // windows become sheet tabs and back.
     let wasCompact = this.layout.isCompact();
     effect(() => {
       const compact = this.layout.isCompact();
@@ -85,7 +81,7 @@ export class InspectionService {
     try {
       inspection = factory(component);
     } catch (err) {
-      // A watch can legitimately fail to open (e.g. the definition no longer
+      // A watch can legitimately fail to open (the definition no longer
       // matches the compiled board) — surface it instead of crashing the tap.
       this.toastService.error(
         err instanceof Error ? err.message : String(err),
@@ -114,10 +110,9 @@ export class InspectionService {
   }
 
   /**
-   * The presenter framing an entry: windows on desktop; on compact, the
-   * shared sheet — except `compactPresentation: 'fullscreen'` inspections
-   * (watches), which stay windows everywhere (the compact window outlet
-   * renders them as fullscreen takeovers).
+   * The presenter framing an entry: windows on desktop; on compact, the shared
+   * sheet — except `compactPresentation: 'fullscreen'` inspections, which stay
+   * windows everywhere and render as fullscreen takeovers.
    */
   private _presenterFor(
     entry: OpenInspection,
@@ -130,9 +125,9 @@ export class InspectionService {
   }
 
   /**
-   * Moves every open inspection from the previous presenter to the new one.
-   * Entries whose presenter doesn't change (watches — windows on both
-   * breakpoints) keep their window entry; only the outlet swaps around them.
+   * Moves every open inspection to the presenter the new breakpoint calls for.
+   * Entries framed by windows on both breakpoints keep their window entry;
+   * only the outlet swaps around them.
    */
   private _rehome(compact: boolean): void {
     for (const entry of this._open()) {

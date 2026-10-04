@@ -11,8 +11,7 @@ describe('LoggingService', () => {
   const originalVerbosity = environment.loggingVerbosity;
 
   beforeEach(() => {
-    // Spy on console methods and suppress output — these tests assert on the spy
-    // calls, not the actual console output.
+    // Suppress output; the assertions are on the spy calls.
     vi.spyOn(console, 'error')
       .mockImplementation(() => {})
       .mockClear();

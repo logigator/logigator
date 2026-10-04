@@ -15,9 +15,8 @@ import { TranslationKey } from './translation-key.model';
 import { configureTestBed } from '../../testing/configure-test-bed';
 
 /**
- * The key/params contract, asserted at compile time — a regression here fails the
- * build (and this spec's compilation), since an unfulfilled `@ts-expect-error` is
- * itself an error. Never invoked.
+ * The key/params contract, asserted at compile time: an unfulfilled
+ * `@ts-expect-error` is itself an error. Never invoked.
  */
 function typeContract(t: TranslateFn, dynamicKey: TranslationKey): void {
   t('common.save');
@@ -88,15 +87,14 @@ describe('TranslateDirective', () => {
     const transloco = TestBed.inject(TranslocoService);
     transloco.setActiveLang('de');
     await firstValueFrom(transloco.load('de'));
-    // No forced detectChanges: the text only changes if the post-load signal read
-    // inside `t()` marked this view dirty, which is what makes the directive work
-    // under zoneless change detection.
+    // No forced detectChanges: the text changes only if the post-load signal
+    // read inside `t()` marked this view dirty, which is what makes the
+    // directive work under zoneless change detection.
     await fixture.whenStable();
 
     expect(element.textContent).toBe('Speichern');
-    // The same element survives — bindings update rather than the view being
-    // destroyed and recreated, so state inside the block (focus, scroll, child
-    // components) outlives a language switch.
+    // The same element survives: bindings update rather than the view being
+    // recreated, so focus, scroll and child state outlive a language switch.
     expect(fixture.nativeElement.querySelector('#host')).toBe(element);
   });
 

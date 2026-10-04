@@ -1,5 +1,5 @@
 import { Component } from '../../components/component';
-import { BuiltInComponentType } from '../../components/component-type.enum';
+import { BuiltInComponentType } from '@logigator/core';
 import { Project } from '../../project/project';
 import { SimulationService } from '../../simulation/simulation.service';
 import { extractNets, Net } from '../../simulation/compiler/net-extractor';
@@ -42,15 +42,12 @@ function firstOfType(project: Project, type: number): Component | null {
 
 /**
  * Whether the canonical two-Switch → AND → LED circuit is wired: the AND's
- * output shares a net with an LED input, and each of its two inputs is driven by
- * a distinct Switch output. Uses the compiler's own net extraction (union-find
- * over termination points), so any wiring path that forms the nets counts — a
- * port is an output when its index is `>= component.numInputs` (a Switch has no
- * inputs, so all its ports are outputs).
+ * output shares a net with an LED input, and each of its inputs is driven by a
+ * *distinct* Switch output. Both switches on one input, the other floating,
+ * would keep the AND output low forever, so it must not count as complete.
  *
- * The per-input matching matters: both switches wired to a single AND input
- * (the other left floating) would keep the AND output low forever, so it must
- * not count as complete.
+ * Nets come from the compiler's own extraction, so any wiring path that forms
+ * them counts. A port is an output when its index is `>= numInputs`.
  */
 export function netComplete(project: Project): boolean {
   const and = firstOfType(project, AND);
@@ -84,8 +81,7 @@ export function netComplete(project: Project): boolean {
   });
   if (!outputReachesLed) return false;
 
-  // The switch(es) reachable from each AND input, kept separate per input so a
-  // matching can assign a distinct switch to distinct inputs.
+  // Kept separate per input so the matching can assign distinct switches.
   const switchesPerInput: Component[][] = [];
   for (let portIndex = 0; portIndex < and.numInputs; portIndex++) {
     const net = netOfPort(and, portIndex);
@@ -105,9 +101,8 @@ export function netComplete(project: Project): boolean {
 }
 
 /**
- * Maximum number of AND inputs that can each be paired with a *different* switch
- * (bipartite matching, Kuhn's algorithm). Two switches sharing one input net
- * therefore only satisfy one input, not both.
+ * How many AND inputs can each be paired with a *different* switch (bipartite
+ * matching, Kuhn's). Two switches on one input net satisfy only that one.
  */
 function distinctMatchCount(
   switchesPerInput: readonly (readonly Component[])[]
@@ -147,9 +142,8 @@ function anyPort(
 }
 
 /**
- * Whether an LED input link is currently powered in the running simulation —
- * read from the top-level link → render mapping and the live link applier, so
- * the step only completes once the user has actually seen the LED light.
+ * Whether an LED input link is powered in the running simulation, read from the
+ * live applier — so the step completes only once the LED has actually lit.
  */
 export function ledPowered(sim: SimulationService): boolean {
   const board = sim.board;

@@ -14,8 +14,12 @@ import { ProjectService } from '../project/project.service';
 import { ToastService } from '../logging/toast.service';
 import { LoggingService } from '../logging/logging.service';
 import { Project } from '../project/project';
-import { ForkAttributionEntry, ProjectSummary } from '../api/models/project';
-import { Page } from '../api/models/shared';
+import {
+  isApiError,
+  type DocumentVisibility,
+  type ProjectPage
+} from '@logigator/contract';
+import type { LgDocumentKind } from '@logigator/ui';
 import { CustomComponentRegistry } from '../components/custom/custom-component-registry.service';
 import { DefinitionBinding } from '../custom-component/definition-binding';
 import { buildProject } from './circuit-builder';
@@ -29,10 +33,41 @@ import { ServerPersistenceGateway } from './server/server-persistence.gateway';
 import { BrowserPersistenceGateway } from './browser/browser-persistence.gateway';
 import { downloadBlob } from '../utils/download';
 import { warnSkippedCustoms } from './load-warnings';
-import { decodeLgix, encodeLgix, hasLgixMagic } from './file/lgix-container';
+import {
+  decodeLgix,
+  encodeLgix,
+  hasLgixMagic,
+  type FileForkAttributionV1
+} from '@logigator/core';
 import { AnalyticsService } from '../analytics/analytics.service';
 import { AnalyticsEvent } from '../analytics/analytics.mapping';
 import { WireRepairService } from '../project/wire-repair.service';
+
+/**
+ * What a load-as-main attempt did. The failure travels with the flag rather
+ * than as a bare `false`, because one caller — the legacy kind-free share
+ * route — has to tell "this table holds no such link" from "the server did not
+ * answer" before it can decide whether the other table is worth asking.
+ *
+ * `loaded: false` with a `null` error is a third answer: the attempt was
+ * superseded and owns nothing. It is not a failure to report and not a
+ * document to act on, which is what a caller that reads the outcome has to
+ * know — see {@link PersistenceService._loadAsMain}.
+ */
+export type LoadOutcome = { loaded: true } | { loaded: false; error: unknown };
+
+/** How an attempt reports itself; see {@link LoadAttemptOptions.deferNotFound}. */
+export interface LoadAttemptOptions {
+  /**
+   * Treats a `not_found` as an answer rather than a failure: nothing is
+   * toasted, no blank draft is created, and the outcome comes back to the
+   * caller. Set only where a second attempt follows, so that a walk over
+   * candidate tables costs one report rather than one per attempt. Every other
+   * failure is reported as usual, a second attempt being certain to fail the
+   * same way.
+   */
+  deferNotFound?: boolean;
+}
 
 @Injectable({ providedIn: 'root' })
 export class PersistenceService {
@@ -53,9 +88,8 @@ export class PersistenceService {
 
   private _mainLoadToken = 0;
   private readonly _saveInFlight = new WeakMap<Project, Promise<void>>();
-  // Bindings for component editors opened **as main** (the /component/:uuid
-  // route). Tab-opened editors track their own bindings in CustomComponentService;
-  // these are disposed in _disposeProject when the main slot is replaced.
+  // Bindings for component editors opened as main; tab-opened editors track
+  // their own in CustomComponentService. Disposed with the main slot.
   private readonly _componentBindings = new WeakMap<
     Project,
     DefinitionBinding
@@ -68,12 +102,10 @@ export class PersistenceService {
   }
 
   /**
-   * Persists a project to its backing store, dispatching on `source`: `'server'`
-   * projects are PUT to the API, `'browser'` projects are written to IndexedDB
-   * (the native file format). File is never a save target — only an export. A
-   * fresh `'browser'` project with no id yet is promoted into storage here (an id
-   * is generated and the URL becomes `/local/:id`). No-op for non-dirty projects
-   * and for read-only shares.
+   * Persists a project to its backing store, dispatching on `source`. A file is
+   * never a save target, only an export. A fresh `'browser'` project with no id
+   * is promoted into storage here (id generated, URL becomes `/local/:id`).
+   * No-op for non-dirty projects and for read-only shares.
    */
   async saveProject(project: Project): Promise<void> {
     const existing = this._saveInFlight.get(project);
@@ -95,7 +127,6 @@ export class PersistenceService {
       } else if (metadata.source === 'browser') {
         work = this.browser.saveComponent(project);
       }
-      // comp + share is read-only: nothing to save.
     } else if (metadata.source === 'server') {
       work = this.server.saveProject(project);
     } else if (metadata.source === 'browser') {
@@ -121,13 +152,13 @@ export class PersistenceService {
   async createProject(
     name: string,
     description?: string,
-    isPublic?: boolean
+    visibility?: DocumentVisibility
   ): Promise<string> {
     this._requireSignedIn();
     const { project, id } = await this.server.createProject(
       name,
       description,
-      isPublic
+      visibility
     );
     this._replaceMainProject(project);
     this.location.go(`/project/${id}`);
@@ -138,10 +169,7 @@ export class PersistenceService {
     return id;
   }
 
-  listProjects(
-    page?: number,
-    search?: string
-  ): Observable<Page<ProjectSummary>> {
+  listProjects(page?: number, search?: string): Observable<ProjectPage> {
     return this.server.listProjects(page, search);
   }
 
@@ -155,33 +183,26 @@ export class PersistenceService {
     return this.browser.deleteProject(id);
   }
 
-  /** Removes a server project via the API. */
   deleteProject(uuid: string): Observable<void> {
     return this.server.deleteProject(uuid);
   }
 
   /**
-   * Renames a browser-stored project from the Open Project dialog (both the
-   * stored blob's top-level `name` and the summary column; an open project's
-   * in-memory metadata is synced too).
+   * Rewrites the stored blob's `name`, the summary column and, when the project
+   * is open, its live metadata.
    */
   renameBrowserProject(id: string, name: string): Promise<void> {
     return this.browser.renameProject(id, name);
   }
 
-  /** Renames a server project via the API (PATCH metadata). */
   renameProject(uuid: string, name: string): Observable<void> {
     return this.server.renameProject(uuid, name);
   }
 
   /**
-   * Renames the currently-open project (e.g. from the title bar's inline
-   * editor), dispatching by source so the name persists where it lives: server
-   * projects PATCH their metadata, browser projects rewrite their stored blob,
-   * and a never-saved draft (browser, no id) updates its in-memory metadata only
-   * — the name is picked up at its first save. All three sync the live metadata,
-   * so the title bar reflects the change reactively. Scoped to `type:'project'`;
-   * component editors are not renamable inline. Shares are read-only.
+   * Renames the open project where it lives, dispatching by source; a
+   * never-saved draft updates its metadata only and is named at its first save.
+   * Component editors are not renamable inline, and shares are read-only.
    */
   async renameOpenProject(project: Project, name: string): Promise<void> {
     const metadata = this.metadataStore.getMetadata(project);
@@ -198,20 +219,19 @@ export class PersistenceService {
   }
 
   loadShare(
+    kind: LgDocumentKind,
     linkId: string
   ): Promise<{ project: Project; type: 'project' | 'comp' }> {
-    return this.server.loadShare(linkId);
+    return this.server.loadShare(kind, linkId);
   }
 
   /**
    * Copies a share into the viewer's own cloud library and opens the copy as
-   * main. `type` selects both the clone endpoint and the load path, so a cloned
-   * component lands in the components library and reopens through
-   * {@link loadComponentAsMain} (which attaches its `DefinitionBinding`), not as
-   * a project.
+   * main. Which library the clone landed in picks the load path: a cloned
+   * component reopens through {@link loadComponentAsMain}, not as a project.
    */
-  async cloneShare(linkId: string, type: 'project' | 'comp'): Promise<Project> {
-    const id = await this.server.cloneFromShare(linkId, type);
+  async cloneShare(kind: LgDocumentKind, linkId: string): Promise<Project> {
+    const { id, type } = await this.server.cloneFromShare(kind, linkId);
     if (type === 'comp') {
       await this.loadComponentAsMain(id);
     } else {
@@ -221,15 +241,12 @@ export class PersistenceService {
   }
 
   /**
-   * First save of a fresh draft to the **browser** store: applies the
-   * user-chosen name, then writes to IndexedDB (which generates the id and
-   * updates the URL to `/local/:id`). Bypasses the `saveProject` dirty-guard so
-   * a pristine, never-edited new board can still be named and persisted.
+   * First save of a fresh draft to the browser store. Bypasses the
+   * `saveProject` dirty-guard so a pristine board can still be persisted.
    */
   async saveDraftAsLocal(project: Project, name: string): Promise<void> {
     this.metadataStore.update(project, { name });
     await this.browser.saveProject(project);
-    // First local save routes through the gateway directly, not saveProject.
     this.analytics.capture(AnalyticsEvent.ProjectSaved, {
       source: 'browser',
       type: this.metadataStore.getMetadata(project)?.type ?? 'project'
@@ -237,10 +254,13 @@ export class PersistenceService {
   }
 
   /**
-   * Creates a blank project and sets it as main. It registers as a `'browser'`
-   * project with an empty id and is **not** written to storage yet — a fresh draft
-   * leaves no record until the first `saveProject` of a dirty project (which
-   * generates the id and updates the URL to `/local/:id`).
+   * Creates a blank project and sets it as main. It registers with an empty id
+   * and is not written to storage: a draft leaves no record until its first
+   * save, which generates the id and moves the URL to `/local/:id`.
+   *
+   * The URL moves to the root only if it is somewhere else. The startup lands
+   * here for every visit that names no document, already at the root, and an
+   * unconditional `go` would push a duplicate entry for Back to step onto.
    */
   createAndSetEmptyProject(): Project {
     const project = new Project();
@@ -249,18 +269,18 @@ export class PersistenceService {
       name: 'Untitled',
       type: 'project',
       source: 'browser',
-      hash: '',
-      isPublic: false
+      visibility: 'private'
     });
 
     this._replaceMainProject(project);
-    this.location.go('/');
+    if (!this.location.isCurrentPathEqualTo('/')) {
+      this.location.go('/');
+    }
     return project;
   }
 
   /**
-   * Serializes a project to the current native file format. The name and fork
-   * attribution are read from project metadata (the `Project` itself has
+   * The name and fork attribution come from the metadata (a `Project` has
    * neither), so an exported fork keeps naming its original creators.
    */
   exportProjectToJson(project: Project): string {
@@ -273,14 +293,11 @@ export class PersistenceService {
   }
 
   /**
-   * Serializes a project to the current native file format and triggers a
-   * browser download of a compressed `.lgix` file (gzipped JSON in a magic-byte
-   * container — see {@link encodeLgix}).
+   * Downloads the project as a compressed `.lgix` (see {@link encodeLgix}).
    *
-   * Refuses a borrowed `source:'share'` document: a share is read-only, and
-   * exporting one to a file would let it be re-imported as the user's own. The
-   * menu hides the action for shares; this guard is the defense-in-depth behind
-   * it (the format carries no enforceable ownership).
+   * Refuses a borrowed `source:'share'` document: exporting one would let it be
+   * re-imported as the user's own. The menu already hides the action; the
+   * format carries no enforceable ownership, so this guard backs it up.
    */
   async exportProjectToFile(project: Project): Promise<void> {
     const metadata = this.metadataStore.getMetadata(project);
@@ -296,10 +313,8 @@ export class PersistenceService {
   }
 
   /**
-   * Serializes a project to the current native file format and triggers a
-   * browser download of the **uncompressed** JSON document — the same content
-   * {@link exportProjectToFile} gzips into a `.lgix`, saved as a plain `.json`
-   * for inspection. A debug-only convenience; the shipped export path is
+   * The same document {@link exportProjectToFile} gzips, downloaded
+   * uncompressed for inspection. Debug-only; the shipped export path is
    * `.lgix`.
    */
   exportProjectToJsonFile(project: Project): void {
@@ -310,11 +325,9 @@ export class PersistenceService {
   }
 
   /**
-   * Imports a circuit from a picked file's raw bytes, transparently handling
-   * both the compressed `.lgix` container and a plain-text `.json` document (the
-   * permanently-supported legacy `logigator-editor` export). Branches on the
-   * `.lgix` magic; anything else is decoded as UTF-8 JSON. Delegates to
-   * {@link importProjectFromJson} once unwrapped.
+   * Imports a picked file's raw bytes, branching on the `.lgix` magic; anything
+   * else is decoded as UTF-8 JSON, which covers the permanently-supported plain
+   * `.json` export.
    */
   async importProjectFromFile(data: ArrayBuffer): Promise<Project> {
     const bytes = new Uint8Array(data);
@@ -330,13 +343,10 @@ export class PersistenceService {
   }
 
   /**
-   * Loads a circuit from file content into a new project, **persists it
-   * immediately as a browser project** (IndexedDB), sets it as main and navigates
-   * to `/local/:id`. Importing is the one path that writes a fresh draft to
-   * storage up front (so a reload restores it). Throws (`InvalidFileError` /
-   * `UnsupportedVersionError`) on an unreadable file — unlike server loads, there
-   * is no fallback here; the caller decides how to surface it. Unsupported
-   * component types are dropped silently (warning only).
+   * Loads file content into a new project and persists it as a browser project
+   * straight away, so a reload restores it. Throws on an unreadable file rather
+   * than falling back, leaving the caller to surface it; unsupported component
+   * types are dropped with a warning.
    */
   async importProjectFromJson(content: string): Promise<Project> {
     const { name, attribution, components, wires, skippedCustom } =
@@ -353,37 +363,33 @@ export class PersistenceService {
   }
 
   /**
-   * Common tail of the import paths (file import here, dump import in
-   * `ProjectDumpService`): registers metadata, writes a fresh browser draft
-   * (so a reload restores it), then sets the project as main and navigates to
-   * `/local/:id`.
+   * Common tail of the import paths: register metadata, write a browser draft,
+   * set the project as main.
    *
    * Imported customs are never adopted into the library: each resolves through
    * its provenance id to a local or cloud master when one exists, and stays an
-   * embedded (restorable) snapshot otherwise.
-   *
-   * The file's fork attribution (if any) is carried into the metadata and the
-   * stored blob, so a later upload still credits the original creators.
+   * embedded (restorable) snapshot otherwise. The file's fork attribution
+   * travels into the metadata and the stored blob, so a later upload still
+   * credits the original creators.
    */
   async persistImportedProject(
     project: Project,
     name: string,
-    attribution?: ForkAttributionEntry[]
+    attribution?: FileForkAttributionV1[]
   ): Promise<void> {
     // addComponent/addWire don't push to the ActionManager, so the project
-    // starts non-dirty even though it was just populated.
+    // starts non-dirty despite having just been populated.
     this.metadataStore.register(project, {
       id: '',
       name,
       type: 'project',
       source: 'browser',
-      hash: '',
-      isPublic: false,
+      visibility: 'private',
       attribution
     });
 
-    // Re-encode through the file codec so the stored blob is always at the
-    // current format version (the imported content may have been older).
+    // Re-encode through the file codec so the stored blob is at the current
+    // format version whatever the import carried.
     const record = await this.browserStore.save({
       name,
       content: this.circuitFile.toJson(project, name, attribution)
@@ -396,49 +402,66 @@ export class PersistenceService {
   }
 
   /**
-   * Shared skeleton of the load-as-main entry points: allocates a race token,
-   * runs `load`, and — only when this load is still the current one — hands the
-   * result to `onLoaded` (which places the project, logs, and updates the URL).
-   * A stale result is disposed; a failure toasts `failureMessageKey` and falls
-   * back to a blank draft when no main project exists at all.
+   * Shared skeleton of the load-as-main entry points. A stale result is
+   * disposed; a failure toasts `failureMessageKey` and falls back to a blank
+   * draft when no main project exists at all.
    */
-  private async _loadAsMain<T>(opts: {
-    /** Where the loaded document came from, for analytics. */
-    source: 'server' | 'browser' | 'component' | 'share';
-    load: () => Promise<T>;
-    projectOf: (result: T) => Project;
-    onLoaded: (result: T) => void;
-    failureMessageKey: TranslationKey;
-    failureDetail: string;
-  }): Promise<void> {
-    // One race token for every entry point: they all fill the single main slot,
-    // so starting any of them discards a still-pending load of the others.
+  private async _loadAsMain<T>(
+    opts: {
+      /** Where the loaded document came from, for analytics. */
+      source: 'server' | 'browser' | 'component' | 'share';
+      load: () => Promise<T>;
+      projectOf: (result: T) => Project;
+      onLoaded: (result: T) => void;
+      failureMessageKey: TranslationKey;
+      failureDetail: string;
+    } & LoadAttemptOptions
+  ): Promise<LoadOutcome> {
+    // One race token for every entry point: they all fill the single main
+    // slot, so starting any discards a pending load of the others.
     const token = ++this._mainLoadToken;
     const isCurrent = (): boolean => token === this._mainLoadToken;
     try {
       const result = await opts.load();
       if (!isCurrent()) {
         this._disposeProject(opts.projectOf(result));
-        return;
+        // Not `loaded: true`: this attempt owned nothing, a newer entry point
+        // having taken the slot. A caller that acts on the outcome — the
+        // legacy share route, which rewrites the address bar — would otherwise
+        // rewrite it to this document while the page shows the other one.
+        return { loaded: false, error: null };
       }
       opts.onLoaded(result);
-      // After onLoaded: the offer reads the document's metadata, which is
-      // registered as the project is placed.
+      // The offer reads metadata that is registered as the project is placed.
       this.wireRepair.offerRepairOnLoad(opts.projectOf(result));
       this.analytics.capture(AnalyticsEvent.ProjectLoaded, {
         source: opts.source
       });
+      return { loaded: true };
     } catch (e) {
-      if (isCurrent()) {
-        this.toast.error(
-          this.translation.translate(opts.failureMessageKey),
-          'PersistenceService',
-          `${opts.failureDetail}: ${formatHttpError(e)}`
-        );
-        if (!this.projectService.mainProject()) {
-          this.createAndSetEmptyProject();
-        }
+      if (!isCurrent()) {
+        // Superseded, so this failure is about an attempt nobody is waiting on
+        // any more: it is not reported and the caller is given no error to act
+        // on — a `not_found` here would otherwise send the legacy share route
+        // to the other table, whose attempt bumps the token again and discards
+        // the load that superseded this one. See the success branch above.
+        return { loaded: false, error: null };
       }
+      // An answer rather than a failure: nothing is reported and there is no
+      // blank draft to fall back to, the caller having a second attempt to
+      // make. See {@link LoadAttemptOptions.deferNotFound}.
+      if (opts.deferNotFound && isApiError(e, 'not_found')) {
+        return { loaded: false, error: e };
+      }
+      this.toast.error(
+        this.translation.translate(opts.failureMessageKey),
+        'PersistenceService',
+        `${opts.failureDetail}: ${formatHttpError(e)}`
+      );
+      if (!this.projectService.mainProject()) {
+        this.createAndSetEmptyProject();
+      }
+      return { loaded: false, error: e };
     }
   }
 
@@ -466,36 +489,38 @@ export class PersistenceService {
   }
 
   /**
-   * Loads a share link into the main slot. Both kinds fill it: a component
-   * share opens standalone exactly as `/component/:uuid` does, so the title
-   * bar names it, its tab is the pinned one, and the clone affordance reads the
-   * document the viewer is actually looking at. Opening one as a *tab* instead
-   * would leave the main slot empty on a `/share/:linkId` page load (the route
-   * matched, so no blank draft was created), and closing that tab would leave
-   * no project at all.
+   * Loads a share link into the main slot. A component share fills it too,
+   * opening standalone as `/component/:uuid` does: as a tab it would leave the
+   * main slot empty on a `/share/{kind}/{link}` page load, since the matched
+   * route creates no blank draft.
+   *
+   * The kind is the API's, because the link no longer names a table: the
+   * caller has it from its own URL and maps it once, in
+   * `routing/document-kind.ts`.
    */
-  async loadShareAsMain(linkId: string): Promise<void> {
-    await this._loadAsMain({
+  async loadShareAsMain(
+    kind: LgDocumentKind,
+    linkId: string,
+    opts?: LoadAttemptOptions
+  ): Promise<LoadOutcome> {
+    return this._loadAsMain({
       source: 'share',
-      load: () => this.loadShare(linkId),
+      load: () => this.loadShare(kind, linkId),
       projectOf: ({ project }) => project,
       onLoaded: ({ project, type }) => {
         this._replaceMainProject(project);
         this.logging.info(
-          `Loaded share ${linkId} (${type})`,
+          `Loaded share ${kind} ${linkId} (${type})`,
           'PersistenceService'
         );
       },
       failureMessageKey: 'persistence.shareLoadFailed',
-      failureDetail: `Failed to load share ${linkId}`
+      failureDetail: `Failed to load share ${linkId}`,
+      ...opts
     });
   }
 
-  /**
-   * Loads a browser-stored circuit (IndexedDB) into a new project and registers
-   * it as a `'browser'` project. Mirrors `loadProject` for the server target.
-   * Rejects if no record exists for `id`.
-   */
+  /** Rejects if no browser record exists for `id`. */
   loadLocalProject(id: string): Promise<Project> {
     return this.browser.loadProject(id);
   }
@@ -506,9 +531,8 @@ export class PersistenceService {
   }
 
   /**
-   * Loads a browser-stored **library master** into a fresh editor Project for
-   * a tab, returning the Project + master type id so the caller can attach a
-   * `DefinitionBinding`. See {@link BrowserPersistenceGateway.loadComponentForEdit}.
+   * Loads a browser-stored library master for a tab, returning the master type
+   * id so the caller can attach a `DefinitionBinding`.
    */
   loadComponentForEdit(
     id: string
@@ -517,25 +541,22 @@ export class PersistenceService {
   }
 
   /**
-   * Creates a new **server** library master: POSTs to `/api/component`, registers
-   * the master, opens an empty editor Project and persists the initial empty
-   * circuit to establish a hash. Returns the Project + master type id so the
-   * caller (`CustomComponentService`) opens the tab and attaches a binding.
+   * Creates a server library master and an empty editor Project, returning the
+   * master type id so the caller can attach a binding.
    */
   async createServerComponent(meta: {
     name: string;
     symbol: string;
     description: string;
-    isPublic?: boolean;
+    visibility?: DocumentVisibility;
   }): Promise<{ project: Project; masterTypeId: number }> {
     this._requireSignedIn();
     return this.server.createComponent(meta);
   }
 
   /**
-   * Loads a **server** library master into a fresh editor Project. Returns the
-   * Project + master type id for the caller to open a tab / set as main and
-   * attach a binding.
+   * Loads a server library master into a fresh editor Project, returning the
+   * master type id so the caller can attach a binding.
    */
   loadServerComponent(
     uuid: string
@@ -544,10 +565,8 @@ export class PersistenceService {
   }
 
   /**
-   * Loads a server master **for editing**, reusing the session-wide circuit
-   * cache so a component fetched for placement (or a previous edit) is not
-   * re-fetched. Falls back to a full load for a master that is not yet
-   * registered. See {@link ServerPersistenceGateway.loadComponentForEdit}.
+   * Loads a server master for editing out of the session-wide circuit cache,
+   * falling back to a full load for a master that is not registered yet.
    */
   loadServerComponentForEdit(
     uuid: string
@@ -556,10 +575,9 @@ export class PersistenceService {
   }
 
   /**
-   * Loads a server component **as the main project** for standalone editing
-   * (the `/component/:uuid` route, mirroring `loadProjectAsMain`). Attaches a
-   * `DefinitionBinding` so its summary stays current; the binding is disposed
-   * when the main slot is later replaced (`_disposeProject`).
+   * Loads a server component as the main project (the `/component/:uuid`
+   * route). Its `DefinitionBinding` keeps the summary current and is disposed
+   * when the main slot is replaced.
    */
   async loadComponentAsMain(
     uuid: string,
@@ -614,11 +632,9 @@ export class PersistenceService {
   // -- Private helpers -----------------------------------------------------
 
   /**
-   * Rejects a cloud save that cannot land in the right account: signed out
-   * (external logout / expired session) or a document loaded under a different
-   * user than the one now signed in. Toasts the specific reason here — the
-   * single choke point — and throws a marker error the outer save flows
-   * recognize as already surfaced (see {@link isHandledSaveError}).
+   * Rejects a cloud save that cannot land in the right account: signed out, or
+   * a document loaded under a different user. The single choke point, so it
+   * toasts and throws a marker error the save flows read as already surfaced.
    */
   private _assertCloudSavable(project: Project, name: string): void {
     const verdict = this.cloudSession.verdict(project);
@@ -638,9 +654,8 @@ export class PersistenceService {
   }
 
   /**
-   * Rejects creating a *new* cloud record (create / promote / upload) while
-   * signed out — the proactive counterpart to the 401 the API would return.
-   * Toasts once and throws the same marker error as {@link _assertCloudSavable}.
+   * Rejects creating a new cloud record while signed out — the proactive
+   * counterpart to the API's 401.
    */
   private _requireSignedIn(): void {
     if (this.cloudSession.isSignedIn()) return;

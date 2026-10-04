@@ -32,7 +32,7 @@ describe('AddComponentsAction', () => {
     it('calls addComponent once for a single component', () => {
       const comp = makeAnd();
       compsToDestroy.push(comp);
-      const action = new AddComponentsAction(comp);
+      const action = new AddComponentsAction([comp]);
 
       action.do(project);
 
@@ -42,7 +42,7 @@ describe('AddComponentsAction', () => {
     it('calls addComponent with an AndComponent instance', () => {
       const comp = makeAnd();
       compsToDestroy.push(comp);
-      const action = new AddComponentsAction(comp);
+      const action = new AddComponentsAction([comp]);
 
       action.do(project);
 
@@ -56,7 +56,7 @@ describe('AddComponentsAction', () => {
       const comp2 = makeAnd();
       const comp3 = makeAnd();
       compsToDestroy.push(comp1, comp2, comp3);
-      const action = new AddComponentsAction(comp1, comp2, comp3);
+      const action = new AddComponentsAction([comp1, comp2, comp3]);
 
       action.do(project);
 
@@ -66,7 +66,7 @@ describe('AddComponentsAction', () => {
     it('does not call removeComponent during do()', () => {
       const comp = makeAnd();
       compsToDestroy.push(comp);
-      const action = new AddComponentsAction(comp);
+      const action = new AddComponentsAction([comp]);
 
       action.do(project);
 
@@ -74,7 +74,7 @@ describe('AddComponentsAction', () => {
     });
 
     it('does not call addComponent when constructed with no components', () => {
-      const action = new AddComponentsAction();
+      const action = new AddComponentsAction([]);
 
       expect(() => action.do(project)).not.toThrow();
       expect(project.addComponent).not.toHaveBeenCalled();
@@ -86,7 +86,7 @@ describe('AddComponentsAction', () => {
       const comp = makeAnd();
       compsToDestroy.push(comp);
       const compId = comp.id;
-      const action = new AddComponentsAction(comp);
+      const action = new AddComponentsAction([comp]);
 
       action.undo(project);
 
@@ -101,7 +101,7 @@ describe('AddComponentsAction', () => {
       const id1 = comp1.id;
       const id2 = comp2.id;
       compsToDestroy.push(comp1, comp2);
-      const action = new AddComponentsAction(comp1, comp2);
+      const action = new AddComponentsAction([comp1, comp2]);
 
       action.undo(project);
 
@@ -113,7 +113,7 @@ describe('AddComponentsAction', () => {
     it('does not call addComponent during undo()', () => {
       const comp = makeAnd();
       compsToDestroy.push(comp);
-      const action = new AddComponentsAction(comp);
+      const action = new AddComponentsAction([comp]);
 
       action.undo(project);
 
@@ -121,7 +121,7 @@ describe('AddComponentsAction', () => {
     });
 
     it('does not call removeComponent when constructed with no components', () => {
-      const action = new AddComponentsAction();
+      const action = new AddComponentsAction([]);
 
       expect(() => action.undo(project)).not.toThrow();
       expect(project.removeComponent).not.toHaveBeenCalled();

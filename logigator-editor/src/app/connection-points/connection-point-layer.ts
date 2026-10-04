@@ -3,10 +3,8 @@ import { ConnectionPoint } from './connection-point';
 
 export class ConnectionPointLayer extends Container<ConnectionPoint> {
   constructor() {
-    // Junction dots live board-wide in this one layer, so give it its own
-    // render group: dot insertions/removals dirty only this group's
-    // instruction set instead of forcing the root group to re-collect and
-    // re-batch the full scene.
+    // Its own render group, so a dot insertion or removal dirties only this
+    // group's instruction set instead of re-batching the whole scene.
     super({ isRenderGroup: true });
   }
 

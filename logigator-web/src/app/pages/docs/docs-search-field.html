@@ -1,0 +1,24 @@
+<!-- `action` and `method` are what a submit does with no JavaScript: a GET to
+     the index, which resolves the query server-side. The handler claims the
+     submit where there is script to claim it. -->
+<form
+  *webTranslate="let t"
+  role="search"
+  method="get"
+  [action]="indexHref()"
+  (submit)="onSubmit($event)"
+>
+  <lg-icon-field class="block">
+    <lg-input-icon class="ph ph-magnifying-glass" />
+    <input
+      lgInputText
+      type="search"
+      class="w-full"
+      name="q"
+      [attr.aria-label]="t('pages.docs.search.label')"
+      [placeholder]="t('pages.docs.search.placeholder')"
+      [value]="search.query()"
+      (input)="onInput($event)"
+    />
+  </lg-icon-field>
+</form>

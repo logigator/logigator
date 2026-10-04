@@ -3,16 +3,14 @@ import { ComponentSymbolShape } from '../../../components/component-config.model
 
 /**
  * Draws a palette tile's mini-shape for the built-ins whose canvas body is a
- * drawn shape rather than their symbol text — so the tile previews what placing
- * the component yields, the same way a gate's `&` tile does.
+ * drawn shape rather than their symbol text, so the tile previews what placing
+ * the component yields.
  *
- * The geometry belongs to each component's config ({@link
- * ComponentSymbolShape}); this only paints it, filling whatever box the host
- * gives it — the tile owns the size and the margin around the shape. Strokes are
- * `currentColor`: `non-scaling-stroke` holds them at a constant device width
- * whatever the tile scales to, as the canvas bodies are drawn at `PX` width, and
- * inheriting the colour is what makes the shapes track the active theme and
- * palette preset.
+ * The geometry belongs to each component's config; this only paints it into
+ * whatever box the host gives it. Strokes are `currentColor` with
+ * `non-scaling-stroke`: inheriting the colour tracks the active theme and
+ * palette preset, and the constant device width matches the canvas bodies,
+ * which are drawn at `PX` width.
  */
 @Component({
   selector: 'app-component-symbol',
@@ -41,6 +39,5 @@ import { ComponentSymbolShape } from '../../../components/component-config.model
   </svg>`
 })
 export class ComponentSymbolComponent {
-  /** The geometry to paint, from the component's config. */
   public shape = input.required<ComponentSymbolShape>();
 }
