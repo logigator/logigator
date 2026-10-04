@@ -5,14 +5,14 @@
          centres the matrices in its right half. The zoom is relative to the
          band, so it eases as the band widens, keeping the matrices a sensible
          size and letting the board around them in. Beside the copy it keeps
-         one size, about 10.4px a grid cell, and grows with the page past
-         1920px, so its left edge never shows through the scrim. 1024px is
-         Tailwind's `lg`; which file it is lives in the component's styles. -->
+         one size, about 10.4px a grid cell, and its place relative to the
+         copy's column; the component's styles hold that geometry and which
+         file it is. 1024px is Tailwind's `lg`. -->
     <div
       class="relative order-last aspect-2/1 overflow-hidden sm:aspect-5/2 lg:static lg:order-none lg:aspect-auto"
     >
       <div
-        class="hero-board absolute inset-0 bg-size-[200%_auto] bg-right-top bg-no-repeat sm:bg-size-[150%_auto] lg:bg-size-[max(78.25rem,65.25%)_auto]"
+        class="hero-board absolute inset-0 bg-size-[200%_auto] bg-right-top bg-no-repeat sm:bg-size-[150%_auto]"
         aria-hidden="true"
       ></div>
       <!-- Down the band, a tint that blends its edges into the page; across
