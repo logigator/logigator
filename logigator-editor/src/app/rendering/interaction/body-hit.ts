@@ -1,6 +1,6 @@
 import { Point, Rectangle } from 'pixi.js';
 import { Component } from '../../components/component';
-import { ButtonComponent } from '../../components/component-types/button/button.component';
+import { isUserInput, UserInput } from '../../components/user-input';
 import { Project } from '../../project/project';
 
 /** The components whose body contains the grid point. */
@@ -17,17 +17,21 @@ export function componentBodiesAt(
 }
 
 /**
- * The button a press at the grid point holds, if one's body is under it —
- * preferred over any other body there, since a press on it never pans.
+ * The `hold` user input a press at the grid point holds, if one's body is
+ * under it — preferred over any other body there, since a press on it never
+ * pans. Only one operated on the canvas counts: an input that declares an
+ * inspection is played in it, and a tap opens that instead.
  */
-export function buttonAt(
+export function holdInputAt(
   project: Project,
   gridPoint: Point
-): ButtonComponent | null {
+): (Component & UserInput) | null {
   return (
     componentBodiesAt(project, gridPoint).find(
-      (component): component is ButtonComponent =>
-        component instanceof ButtonComponent
+      (component): component is Component & UserInput =>
+        isUserInput(component) &&
+        component.gesture === 'hold' &&
+        !component.config.inspection
     ) ?? null
   );
 }

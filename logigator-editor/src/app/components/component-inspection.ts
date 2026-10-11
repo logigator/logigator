@@ -15,6 +15,23 @@ export interface InspectionTitlePart {
 }
 
 /**
+ * Where an inspection sends the presses it is played with, so it never
+ * resolves an engine unit itself: the top-level board's user-input stream, or
+ * the watch level its component is a copy in. `slot` is the user input's
+ * slot.
+ */
+export interface InputRoute {
+  press(slot: number): void;
+  release(slot: number): void;
+}
+
+/** What an inspection is opened with, beside its component. */
+export interface InspectionContext {
+  /** The route for the component's own presses, bound where it was opened. */
+  readonly input: InputRoute;
+}
+
+/**
  * A live view into a component instance while the simulation runs — the
  * inspection analog of {@link ComponentOption} / {@link ComponentAction}. A
  * config declares one via its `inspection` factory; a presenter (a floating

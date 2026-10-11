@@ -23,6 +23,15 @@ inspection reads what the main thread already holds — the component's options
 and its per-port link power (`Component.isPortPowered`, maintained by
 `LinkStateApplier`) — and exposes it as signals its OnPush renderer picks up.
 
+The factory also receives an `InspectionContext` whose **`InputRoute`**
+(`press(slot)` / `release(slot)`) is where a user input played inside the
+inspection sends its presses, so the inspection never resolves an engine unit
+itself. Where the component was opened decides the route: on the board it
+emits on the main project's `userInput$` (`emitUserInput(component, phase,
+slot)`), exactly as a press on the canvas does; in a watch it holds the copy's
+slot through that level (`SubCircuitWatch.holdFor`). The ROM and the watch
+ignore it.
+
 ## Orchestration: `InspectionService`
 
 Root-provided and instantiated by `AppComponent`, since nothing renders it and
@@ -30,7 +39,8 @@ it must live from startup. It subscribes to the active project's
 `inspectRequest$` while the mode is `SIMULATION` (leaving it closes everything),
 opens at most one inspection per component instance — a second tap focuses the
 existing view — and fans `SimulationService.frame$` out to every open
-inspection's `onFrame()`. A factory that **throws** (a watch can legitimately
+inspection's `onFrame()`. `openFor(component, { input })` takes the route the
+factory receives, defaulting to the top-level one. A factory that **throws** (a watch can legitimately
 fail to open when the definition no longer matches the compiled board) surfaces
 as an error toast instead of crashing the tap.
 
@@ -85,14 +95,18 @@ circuit**, split between the component layer and `inspection/watch/`:
   `ComponentInspection` every custom config declares. It owns a **breadcrumb
   stack** of `WatchLevel`s (last one visible, title their joined names) and
   routes clicks on the visible copy through `activate(component)`: a nested
-  custom pushes a level, a switch/pulse button triggers its engine unit
-  (`SimulationService.triggerUnitInput`, unit index from the watch index), any
-  other inspectable opens its data inspector **on the watch copy** — tracked per
-  level and closed with it. A button is held rather than tapped: `holdFor`
-  hands out its `press` / `release`, both `triggerUnitInput` with that phase
-  and bound to the level they were resolved on, so a release arriving after a
-  level swap still reaches the unit it pressed. `setInput` is the absolute
-  path automation drives.
+  custom pushes a level; any other component that declares an inspection opens
+  it **on the watch copy**, with an `InputRoute` bound to the level — checked
+  before anything would trigger it as a user input, so an input played in its
+  own inspection is opened rather than pressed — tracked per level and closed
+  with it; any other user input gets a `tap` on its slot `0`
+  (`SimulationService.triggerUnitInput`, unit index from the watch index),
+  which its gesture reads as a toggle or a pulse. A `hold` input is held
+  rather than tapped: `holdFor(component, slot)` hands out the slot's
+  `press` / `release`, both `triggerUnitInput` with that phase and
+  bound to the level they were resolved on, so a release arriving after a
+  level swap still reaches the unit it pressed. `setInput(component, value,
+slot)` is the absolute path automation drives.
 - **`WatchSession`** (`watch-session.ts`) — one per level: a fresh headless
   `Project` from `instantiateBody` over the level's circuit body, plus a
   `LinkStateApplier` whose targets are **sparse over the full link-id space**
@@ -100,11 +114,12 @@ circuit**, split between the component layer and `inspection/watch/`:
   board's watch index (`board.watch.infoFor(path)`, see `simulation.md`). Index
   tables are keyed by body-array position, so a shape mismatch means the
   definition changed under the session: construction **throws** rather than
-  mis-lighting wires. Destroying one releases any copied button still held,
-  which would otherwise leave its engine unit high with no copy left to
-  release it. The session registers with the snapshot fan-out and
-  requests a full seed snapshot, which also poses copied switches from their
-  output-link power.
+  mis-lighting wires. Destroying one sets every high `level` slot of its
+  copies low, held or toggled, which would otherwise leave their engine units
+  high with no copy left to reset them. The session registers with the
+  snapshot fan-out and requests a full seed snapshot, which also poses the
+  copies' `toggle` slots from their output-link power — a powered one adopted
+  through `SimulationService.adoptHighLevel`, so a stop resets it too.
 - Watch canvases lease the **app-wide shared renderer**
   (`rendering/renderer.service.ts`), the board's own, so the page runs one
   rendering context however many watches are open. Each render force-unculls the
@@ -114,7 +129,8 @@ circuit**, split between the component layer and `inspection/watch/`:
   the hosting header via `titleParts`. Input runs through the board's own
   `PointerController` (shared middle/right-drag/wheel/pinch navigation) with a
   `PanSession` as its tool, whose tap action routes back to the model — or a
-  `HoldSession` over `holdFor` for a press on an inner button, cancelled like
+  `HoldSession` over `holdFor` (slot `0`) for a press on an inner `hold` input
+  operated on the canvas (`holdInputAt`), cancelled like
   any session by a level swap or the component going away. A level
   is fit-and-centred when it first shows; re-blits ride `render$` (engine
   changes), the project's `ticker$` (zoom, theme) and host resizes —

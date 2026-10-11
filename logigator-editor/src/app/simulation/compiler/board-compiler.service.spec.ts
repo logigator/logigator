@@ -9,6 +9,7 @@ import {
   makeSwitch,
   makeNot
 } from '../../../testing/factories';
+import { FakeUserInput } from '../../../testing/fake-user-input';
 import { Component } from '../../components/component';
 import { ComponentProviderService } from '../../components/component-provider.service';
 import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
@@ -24,6 +25,7 @@ import { SerializedCircuitBody, WireDirection } from '@logigator/core';
 import { Project } from '../../project/project';
 import { Wire } from '../../wires/wire';
 import { BoardCompilerService } from './board-compiler.service';
+import { TOP_LEVEL_PATH } from './compiled-board.model';
 
 /** Wire spanning the two given half-grid termination points (axis-aligned). */
 function wireBetween(a: Point, b: Point): Wire {
@@ -549,6 +551,38 @@ describe('BoardCompilerService', () => {
         [held.id, 2]
       ])
     );
+  });
+
+  it('emits one single-output UserInput unit per port of a user input, contiguous from its base', () => {
+    const and = place(makeAnd(2, undefined, 8, 0));
+    const input = new FakeUserInput(3);
+    input.setPortNegated('out', 1, true);
+    place(input);
+
+    const board = compiler.compile(project);
+
+    expect(board.diagnostics).toEqual([]);
+    const base = board.userInputs.get(input.id)!;
+    // Ids order emission: the AND's unit comes first.
+    expect(base).toBe(1);
+    expect(board.descriptor.components).toHaveLength(base + 3);
+    const targets = board.mapping.get(TOP_LEVEL_PATH)!;
+    for (let port = 0; port < 3; port++) {
+      const unit = board.descriptor.components[base + port];
+      // A bubble on port i negates unit i's only output, and no other.
+      expect(unit).toEqual({
+        type: 200,
+        inputs: [],
+        outputs: [expect.any(Number)],
+        ...(port === 1 ? { negOutputs: [0] } : {})
+      });
+      // Unit i drives the net on port i.
+      expect(targets[unit.outputs[0]].ports).toContainEqual({
+        component: input,
+        portIndex: port
+      });
+    }
+    expect(board.userInputs.has(and.id)).toBe(false);
   });
 
   it('compiles deterministically', () => {

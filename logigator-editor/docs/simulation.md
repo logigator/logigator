@@ -9,7 +9,7 @@ engine inside a Web Worker, and lights up the powered wires and ports. Owns the
 Project ──compile()──► CompiledBoard ─descriptor─► worker → WASM engine
                           │                                    │ snapshot (pulled per frame)
                           ├─ mapping (link id → wires + ports) ─┴─► SimulationWorkerService
-                          └─ userInputs (input → unit index)           │ applyDelta / applyFull
+                          └─ userInputs (input → first unit)           │ applyDelta / applyFull
                                                                        ▼
                                                                 LinkStateApplier
 ```
@@ -43,8 +43,17 @@ Components are walked **sorted by id**: quad-tree order is not stable, and the
 submission order defines the engine's `triggerInput` indices and output layout.
 
 - **`UNIT_TYPES`** (gates, `DELAY`, `CLOCK`, adders, flip-flops, `RNG`, `RAM`,
-  coder/decoder, mux/demux, `BUTTON`, `PULSE_BUTTON`, `SWITCH`, `ROM`) — one
-  `EmittedUnit`, pins as union-find node ids.
+  coder/decoder, mux/demux, `ROM`) — one `EmittedUnit`, pins as union-find node
+  ids.
+- **User inputs** — any component implementing `UserInput`
+  (`components/user-input.ts`; `BUTTON`, `PULSE_BUTTON`, `SWITCH`), recognised
+  by the `isUserInput` guard rather than by type id — one
+  `ENGINE_USER_INPUT_TYPE` (200) unit **per slot**, one output each,
+  contiguously in slot order (`_emitUserInput`). Slot `i` is output port `i` —
+  a type whose `inputSlots` differs from its output count is refused with an
+  error — and `userInputs` records the first unit, so slot `i` is that index
+  plus `i`. A bubble on port `i` becomes `negOutputs: [0]` on unit `i`. Every
+  built-in user input has one slot, so one unit.
 - **`LED_MATRIX`** — a unit whose cell outputs sit on no net: fresh nodes per
   cell, mapped back onto the component as pseudo-ports past the input range
   (row-major). An inner matrix simulates but stays dark in a watch.
@@ -101,7 +110,8 @@ tables only** — render targets need live objects, and a watch builds its own a
 open time from a fresh `instantiateBody` run.
 
 Per-template tables (`wireNets`, `portNets`, `userInputs`, `children`) are keyed
-by **element position in the body arrays**, deterministic across
+by **element position in the body arrays**, `userInputs` holding each input's
+first unit as the top-level map does, deterministic across
 `instantiateBody` runs where live ids are session-assigned. Template compression
 gives **every** net class a local id so every wire is addressable: unit pins and
 plug bindings first, since their ids feed emission and must stay deterministic,
@@ -158,8 +168,8 @@ SIMULATION mode (and with it the tap path) while the engine is still booting. An
 input arriving then has no promise to fail, so the worker's error would come
 back uncorrelated and kill a session that was about to work. Hence the gate
 here, a matching drop in the worker for the three advisory kinds, and the
-`isReady()` guard in `_activate` so a dropped tap cannot leave a switch showing
-a state the engine never received. Such inputs are dropped rather than queued:
+`isReady()` guard in `_setLevel` and `_pulse` so a dropped input cannot leave a
+slot showing a state the engine never received. Such inputs are dropped rather than queued:
 they have no tick to apply at. `requestSnapshot` is the exception —
 `wantFullSnapshot` survives the drop and is reissued once `init` acks.
 
@@ -271,42 +281,65 @@ session's flattened board, which is what lets the speed popover
 at; the popover's slider stops, speed parsing and formatting are the pure
 `sim-speed.ts` beside it.
 
-Three user inputs exist, driven two ways. A **switch** and a **pulse button**
-act on a tap: `SimulationTool` starts a `PanSession` for them, so a drag pans
-and only a tap hit-tests the component under the cursor and emits either user
-input or an inspect request. `_activate` toggles a **switch** and forwards
-`INPUT_EVENT_CONT` with its new state, or presses a **pulse button**, forwards
-`INPUT_EVENT_PULSE` (one tick) and clears the visual after
-`PULSE_BUTTON_FLASH_MS`.
+Every user input is a **`UserInput`** (`components/user-input.ts`, see
+[component-system.md](component-system.md)), and the service knows it by that
+interface alone, never by class. It has **slots**, one per output port and
+engine unit (see [Units and links](#units-and-links)); the three built-ins have
+the one slot `0`. Two independent properties describe it:
 
-A **button** is level-driven: its output is high for exactly as long as it is
-held. A pointerdown on one starts a `HoldSession` instead of a `PanSession` —
-the press never pans, however far the pointer moves — which presses it at once
-and releases it when the gesture ends by any route: pointer up, pointer cancel,
-lost pointer capture, window blur or a hidden document, Escape, a second touch
-finger, a mode or project switch. `Project.userInput$` carries each operation
-as `{ component, phase }`, phase `tap` for a switch or pulse button and
-`press` / `release` for a button. `_setHeld` handles the two: drawn held and
-`INPUT_EVENT_CONT` with `[true]`, then released and `[false]`. Both are
-idempotent — a button already in that state sends nothing — and a press
-obeys `_activate`'s readiness rule, while a release always clears the visual.
+- **`drive`** — what the engine receives, and the service's only two
+  operations. `level` (button, switch): `_setLevel` sends `INPUT_EVENT_CONT`
+  with the slot's new state, which latches until the next one; it is
+  idempotent per slot — a slot already there sends nothing. `pulse` (pulse
+  button): `_pulse` sends `INPUT_EVENT_PULSE` (one tick) and flashes the slot
+  active for `PULSE_BUTTON_FLASH_MS`. Setting a level high and pulsing obey
+  the readiness rule; setting a level low always clears the visual and
+  reaches the engine whenever one is up.
+- **`gesture`** — how a pointer operates it, mapped onto a value in one
+  place, `_operate`: `hold` (button) is high on `press` and low on `release`,
+  `toggle` (switch) flips on a `tap`, `tap` (pulse button) is `true` on a
+  `tap`. Any other phase is ignored.
 
-The service keeps every held button — the board's and a watch's copies — so
-nothing outlives the session holding it high. `stop()` releases each against
-the rebuilt engine once the reset lands, which also catches a press that
-reached the engine while the reset was in flight; `exit()` releases them
-visually, the engine being gone. A hold still open afterwards releases
-nothing further.
+Only three pairs exist, and only they type-check: `UserInput` is the union of
+`LevelUserInput` (`level` with `hold` or `toggle`) and `PulseUserInput`
+(`pulse` with `tap`), and `isUserInput` refuses any other pair at run time.
 
-Top-level engine indices come from `CompiledBoard.userInputs` (`Component.id` →
-submission index); inner inputs operated in a watch arrive through
-`triggerUnitInput` with the index already resolved by the watch index — a held
-button in a watch pressing and releasing through the same call with phase
-`press` / `release`. The automation API's `setUserInput` (and `setUnitInput`,
-its watch counterpart) drives an **absolute** state: it leaves a switch or
-button already at `value` alone, holds a button on `true` and releases it on
-`false`, and ignores `false` on a pulse button, which holds no state to
-clear.
+On the board, `SimulationTool` picks the gesture's session. A pointerdown on a
+`hold` input operated on the canvas (`holdInputAt` in `body-hit.ts` — one that
+declares no inspection) starts a `HoldSession` instead of a `PanSession` — the
+press never pans, however far the pointer moves — which presses its slot `0` at
+once and releases it when the gesture ends by any route: pointer up, pointer
+cancel, lost pointer capture, window blur or a hidden document, Escape, a
+second touch finger, a mode or project switch. Anything else gets a
+`PanSession`, so a drag pans and only a tap hit-tests the component under the
+cursor, emitting an inspect request for one that declares an inspection and a
+`tap` on slot `0` for any other user input. An input that declares an
+inspection is played in it, its presses arriving through the inspection's
+`InputRoute` ([inspection.md](inspection.md)). `Project.userInput$` carries
+each operation as `{ component, phase, slot }`. A slot outside `inputSlots` is
+ignored.
+
+The service keeps every high `level` slot — toggled and held alike, per
+input, the board's and a watch's copies — so nothing outlives the session
+holding it high. `stop()` sets each low against the rebuilt engine once the
+reset lands, which also catches a press or toggle that reached the engine
+while the reset was in flight; `exit()` clears them visually, the engine being
+gone. A hold still open afterwards releases nothing further. A watch copy
+whose `toggle` slot is posed high from its link on open is entered through
+`adoptHighLevel`, which tracks it without an engine event — the engine already
+holds it — so it is reset like any other.
+
+Callers pass an input's **first** unit and a slot, and the service is the one
+place that adds them (`unitOfSlot`). Top-level first units come from
+`CompiledBoard.userInputs` (`Component.id` → submission index); inner inputs
+operated in a watch arrive through `triggerUnitInput` with the first unit
+already resolved by the watch index and the phase read through the same
+gesture mapping. The automation API's `setUserInput` (and `setUnitInput`, its
+watch counterpart) drives one slot to an **absolute** state, which follows
+from the drive alone: a `level` slot is set to `value`, one already there
+being left alone, and a `pulse` slot pulses on `true` and ignores `false`,
+holding no state to clear. Both report `false` for a slot the input does not
+have.
 
 ---
 
@@ -316,12 +349,13 @@ clear.
 2. Add its `BuiltInComponentType` id to `UNIT_TYPES`; it then emits as a plain
    unit with pins in `connectionPoints` order.
 3. Encode any per-type engine `ops` in `_opsFor` (`ROM` is the worked example).
-4. A user input is also added to `USER_INPUT_TYPES`, has to be reachable from
-   `SimulationTool` and is handled in `SimulationService`: a tap-driven one
-   (switch, pulse button) emits from the tap handler and is handled in
-   `_activate`, a level-driven one (button) emits from its `HoldSession`'s
-   press and release and is handled in `_setHeld`; `_setAbsolute` gives it its
-   automation semantics. `SWITCH`, `PULSE_BUTTON` and `BUTTON` all submit as
-   `ENGINE_USER_INPUT_TYPE` (200) — the engine rejects any other id, and
-   pulse-vs-continuous is decided at `triggerInput` time from the component
-   instance, not the descriptor.
+4. A user input instead implements `UserInput`, with one slot per output port,
+   choosing a `drive` (what the engine receives: `level` or `pulse`) and a
+   `gesture` (how a pointer operates it: `hold`, `toggle` or `tap`). It needs
+   no type id in any set and no branch anywhere: the compiler emits it as one
+   `ENGINE_USER_INPUT_TYPE` (200) unit per slot — the engine rejects any other
+   id, and pulse-vs-continuous is decided at `triggerInput` time from the
+   drive, not the descriptor — the service drives each slot through its own
+   unit, and the canvas, the watch and the automation API operate and address
+   it by slot. With an `inspection` declared, a tap opens that instead and the
+   inspection plays it through its `InputRoute`.

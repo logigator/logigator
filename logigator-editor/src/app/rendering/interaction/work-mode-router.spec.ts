@@ -105,7 +105,7 @@ describe('WorkModeRouter in SIMULATION mode', () => {
     router.down(makeInput(2.4, 2.6));
     router.up(); // a tap (no movement) activates the button
 
-    expect(emissions).toEqual([{ component: button, phase: 'tap' }]);
+    expect(emissions).toEqual([{ component: button, phase: 'tap', slot: 0 }]);
   });
 
   it('emits userInput$ for a tapped switch', () => {
@@ -116,7 +116,9 @@ describe('WorkModeRouter in SIMULATION mode', () => {
     router.down(makeInput(0.5, 0.5));
     router.up();
 
-    expect(emissions).toEqual([{ component: switchComp, phase: 'tap' }]);
+    expect(emissions).toEqual([
+      { component: switchComp, phase: 'tap', slot: 0 }
+    ]);
   });
 
   it('emits inspectRequest$ for a tapped inspectable component', () => {
@@ -170,17 +172,19 @@ describe('WorkModeRouter in SIMULATION mode', () => {
       router.setMode(WorkMode.SIMULATION);
     });
 
-    const press = { component: expect.anything(), phase: 'press' };
-    const release = { component: expect.anything(), phase: 'release' };
+    const press = { component: expect.anything(), phase: 'press', slot: 0 };
+    const release = { component: expect.anything(), phase: 'release', slot: 0 };
 
     it('presses on pointerdown and releases on pointerup', () => {
       router.down(makeInput(2.4, 2.6));
-      expect(emissions).toEqual([{ component: button, phase: 'press' }]);
+      expect(emissions).toEqual([
+        { component: button, phase: 'press', slot: 0 }
+      ]);
 
       router.up();
       expect(emissions).toEqual([
-        { component: button, phase: 'press' },
-        { component: button, phase: 'release' }
+        { component: button, phase: 'press', slot: 0 },
+        { component: button, phase: 'release', slot: 0 }
       ]);
       expect(router.hasActiveSession).toBe(false);
     });

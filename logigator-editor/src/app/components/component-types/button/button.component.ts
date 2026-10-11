@@ -1,16 +1,21 @@
 import { Component } from '../../component';
 import { buttonMeta } from '@logigator/core';
 import { ButtonGraphics } from '../../../rendering/graphics/button.graphics';
+import { LevelUserInput } from '../../user-input';
 import { buttonComponentConfig, ButtonOptions } from './button.config';
 
 /**
  * A button (simulation user input, Cont event): its output is high for as long
- * as it is held. The held state is transient sim visuals on the instance — not
- * an option: it is not undoable and not persisted, and is cleared on
- * simulation stop/exit.
+ * as it is held. A {@link LevelUserInput} operated by `hold`, one slot.
  */
-export class ButtonComponent extends Component<ButtonOptions> {
+export class ButtonComponent
+  extends Component<ButtonOptions>
+  implements LevelUserInput
+{
   public readonly config = buttonComponentConfig;
+  public readonly drive = 'level';
+  public readonly gesture = 'hold';
+  public readonly inputSlots = 1;
 
   private _held = false;
 
@@ -18,14 +23,14 @@ export class ButtonComponent extends Component<ButtonOptions> {
     super(buttonMeta, options);
   }
 
-  public get held(): boolean {
+  public isActive(slot: number): boolean {
     // The base constructor's initial draw runs before field initializers —
     // an unassigned `_held` must read as released.
-    return this._held === true;
+    return slot === 0 && this._held === true;
   }
 
-  public setHeld(held: boolean): void {
-    if (this.held === held) {
+  public setActive(slot: number, held: boolean): void {
+    if (slot !== 0 || this.isActive(0) === held) {
       return;
     }
     this._held = held;
@@ -33,13 +38,17 @@ export class ButtonComponent extends Component<ButtonOptions> {
   }
 
   public override clearSimState(): void {
-    this.setHeld(false);
+    this.setActive(0, false);
   }
 
   protected draw(): void {
     // The square button body replaces the standard chamfered body entirely.
     this.addScaledGraphics((scale) =>
-      this.geometryService.getGraphicsContext(ButtonGraphics, scale, this.held)
+      this.geometryService.getGraphicsContext(
+        ButtonGraphics,
+        scale,
+        this.isActive(0)
+      )
     );
   }
 }

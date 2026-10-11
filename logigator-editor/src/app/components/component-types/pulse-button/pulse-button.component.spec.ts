@@ -23,12 +23,12 @@ describe('PulseButtonComponent', () => {
     button.destroy({ children: true });
   });
 
-  it('starts unpressed and reacts to setPressed', () => {
+  it('starts unpressed and draws a pressed slot', () => {
     const button = makePulseButton();
-    expect(button.pressed).toBe(false);
+    expect(button.isActive(0)).toBe(false);
 
-    button.setPressed(true);
-    expect(button.pressed).toBe(true);
+    button.setActive(0, true);
+    expect(button.isActive(0)).toBe(true);
     expect(button.children.length).toBeGreaterThan(0);
 
     button.destroy({ children: true });
@@ -36,11 +36,11 @@ describe('PulseButtonComponent', () => {
 
   it('clearSimState resets the pressed state', () => {
     const button = makePulseButton();
-    button.setPressed(true);
+    button.setActive(0, true);
 
     button.clearSimState();
 
-    expect(button.pressed).toBe(false);
+    expect(button.isActive(0)).toBe(false);
     button.destroy({ children: true });
   });
 });

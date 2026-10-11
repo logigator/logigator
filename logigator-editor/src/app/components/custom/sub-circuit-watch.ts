@@ -1,11 +1,12 @@
 import { computed, signal, Signal } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
 import { Component } from '../component';
-import { ButtonComponent } from '../component-types/button/button.component';
 import {
   ComponentInspection,
+  InputRoute,
   InspectionTitlePart
 } from '../component-inspection';
+import { isUserInput, UserInput } from '../user-input';
 import { InspectionService } from '../../inspection/inspection.service';
 import { WatchSession } from '../../inspection/watch/watch-session';
 import { SubCircuitWatchComponent } from '../../inspection/watch/sub-circuit-watch.component';
@@ -100,7 +101,12 @@ export class SubCircuitWatch extends ComponentInspection {
       }))
     );
 
-  /** Routes a click on a component of the active level's fresh copy. */
+  /**
+   * Routes a click on a component of the active level's fresh copy. A
+   * component that declares an inspection opens it, with a route bound to
+   * this level, before anything would trigger it as a user input; a user
+   * input's tap acts on its slot 0, which a `hold` input ignores.
+   */
   public activate(component: Component): void {
     const level = this.activeLevel();
     const bodyIndex = level.session.components.indexOf(component);
@@ -111,59 +117,62 @@ export class SubCircuitWatch extends ComponentInspection {
       this._drillInto(level, bodyIndex, component);
       return;
     }
-    const unitIndex = level.session.info.unitIndexFor(bodyIndex);
-    if (unitIndex !== undefined) {
-      this.simulation.triggerUnitInput(unitIndex, component, () =>
-        level.session.project.triggerTicker('single')
-      );
+    if (component.config.inspection) {
+      getStaticDI(InspectionService).openFor(component, {
+        input: this._routeFor(level, component)
+      });
+      this._spawned.push({ depth: this._levels().length - 1, component });
       return;
     }
-    if (component.config.inspection) {
-      getStaticDI(InspectionService).openFor(component);
-      this._spawned.push({ depth: this._levels().length - 1, component });
+    const unitIndex = level.session.info.unitIndexFor(bodyIndex);
+    if (isUserInput(component) && unitIndex !== undefined) {
+      this.simulation.triggerUnitInput(
+        unitIndex,
+        component,
+        () => level.session.project.triggerTicker('single'),
+        'tap',
+        0
+      );
     }
   }
 
   /**
-   * The hold a press on a button of the active level's copy starts: `press`
-   * and `release` drive its engine unit, both bound to this level, so a
-   * release arriving after a level swap still reaches the unit it pressed.
-   * Null for a component that is not one of the level's buttons.
+   * The hold a press on one slot of a `hold` user input of the active level's
+   * copy starts: `press` and `release` drive the slot's engine unit, both
+   * bound to this level, so a release arriving after a level swap still
+   * reaches the unit it pressed. Null for a component that is not one of the
+   * level's `hold` inputs.
    */
   public holdFor(
-    button: ButtonComponent
+    input: Component & UserInput,
+    slot = 0
   ): { press(): void; release(): void } | null {
-    const level = this.activeLevel();
-    const bodyIndex = level.session.components.indexOf(button);
-    const unitIndex =
-      bodyIndex < 0 ? undefined : level.session.info.unitIndexFor(bodyIndex);
-    if (unitIndex === undefined) {
-      return null;
-    }
-    const repaint = () => level.session.project.triggerTicker('single');
-    return {
-      press: () =>
-        this.simulation.triggerUnitInput(unitIndex, button, repaint, 'press'),
-      release: () =>
-        this.simulation.triggerUnitInput(unitIndex, button, repaint, 'release')
-    };
+    return this._holdAt(this.activeLevel(), input, slot);
+  }
+
+  /** Whether the component is a user input of the active level's copy. */
+  public isLevelInput(component: Component): boolean {
+    return this._unitIndexAt(this.activeLevel(), component) !== undefined;
   }
 
   /**
-   * Drives a user input of the active level's copy to an **absolute** state,
-   * as `SimulationService.setUserInput` does a top-level one. Reports whether
-   * the component is one of the level's user inputs.
+   * Drives one slot of a user input of the active level's copy to an
+   * **absolute** state, as `SimulationService.setUserInput` does a top-level
+   * one. Reports whether the component is one of the level's user inputs
+   * with that slot.
    */
-  public setInput(component: Component, value: boolean): boolean {
+  public setInput(component: Component, value: boolean, slot = 0): boolean {
     const level = this.activeLevel();
-    const bodyIndex = level.session.components.indexOf(component);
-    const unitIndex =
-      bodyIndex < 0 ? undefined : level.session.info.unitIndexFor(bodyIndex);
+    const unitIndex = this._unitIndexAt(level, component);
     if (unitIndex === undefined) {
       return false;
     }
-    return this.simulation.setUnitInput(unitIndex, component, value, () =>
-      level.session.project.triggerTicker('single')
+    return this.simulation.setUnitInput(
+      unitIndex,
+      component,
+      value,
+      () => level.session.project.triggerTicker('single'),
+      slot
     );
   }
 
@@ -240,6 +249,59 @@ export class SubCircuitWatch extends ComponentInspection {
       path,
       session: new WatchSession(circuit, info, this.board.descriptor.links),
       needsFit: true
+    };
+  }
+
+  /** The first engine unit of a user input of `level`'s copy. */
+  private _unitIndexAt(
+    level: WatchLevel,
+    component: Component
+  ): number | undefined {
+    const bodyIndex = level.session.components.indexOf(component);
+    return bodyIndex < 0
+      ? undefined
+      : level.session.info.unitIndexFor(bodyIndex);
+  }
+
+  private _holdAt(
+    level: WatchLevel,
+    input: Component,
+    slot: number
+  ): { press(): void; release(): void } | null {
+    const unitIndex = this._unitIndexAt(level, input);
+    if (
+      !isUserInput(input) ||
+      input.gesture !== 'hold' ||
+      unitIndex === undefined
+    ) {
+      return null;
+    }
+    const repaint = () => level.session.project.triggerTicker('single');
+    return {
+      press: () =>
+        this.simulation.triggerUnitInput(
+          unitIndex,
+          input,
+          repaint,
+          'press',
+          slot
+        ),
+      release: () =>
+        this.simulation.triggerUnitInput(
+          unitIndex,
+          input,
+          repaint,
+          'release',
+          slot
+        )
+    };
+  }
+
+  /** An inspection's route into `level`: its presses hold the copy's slots. */
+  private _routeFor(level: WatchLevel, component: Component): InputRoute {
+    return {
+      press: (slot) => this._holdAt(level, component, slot)?.press(),
+      release: (slot) => this._holdAt(level, component, slot)?.release()
     };
   }
 

@@ -230,15 +230,15 @@ describe('SubCircuitWatchComponent', () => {
     const start = levelProject.position.clone();
 
     press(0.5, 0.5);
-    expect(button.held).toBe(true);
+    expect(button.isActive(0)).toBe(true);
     expect(levels(0)).toEqual([true]);
 
     canvas.dispatchEvent(pointer('pointermove', ...clientAt(20, 20)));
-    expect(button.held).toBe(true);
+    expect(button.isActive(0)).toBe(true);
     expect(levelProject.position).toEqual(start);
 
     canvas.dispatchEvent(pointer('pointerup', ...clientAt(20, 20)));
-    expect(button.held).toBe(false);
+    expect(button.isActive(0)).toBe(false);
     expect(levels(0)).toEqual([true, false]);
   });
 
@@ -251,7 +251,7 @@ describe('SubCircuitWatchComponent', () => {
     fixture.detectChanges();
 
     expect(watch.levels()).toHaveLength(2);
-    expect(outerButton.held).toBe(false);
+    expect(outerButton.isActive(0)).toBe(false);
     expect(levels(0)).toEqual([true, false]);
     // The release reached the outer button's unit, not the new level's.
     expect(levels(1)).toEqual([]);

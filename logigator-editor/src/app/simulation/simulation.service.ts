@@ -1,9 +1,12 @@
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { Observable, Subject, Subscription } from 'rxjs';
 import { Component } from '../components/component';
-import { ButtonComponent } from '../components/component-types/button/button.component';
-import { PulseButtonComponent } from '../components/component-types/pulse-button/pulse-button.component';
-import { SwitchComponent } from '../components/component-types/switch/switch.component';
+import {
+  isUserInput,
+  LevelUserInput,
+  PulseUserInput,
+  UserInput
+} from '../components/user-input';
 import { LoggingService } from '../logging/logging.service';
 import { ToastService } from '../logging/toast.service';
 import { Project, UserInputEvent, UserInputPhase } from '../project/project';
@@ -91,11 +94,12 @@ export class SimulationService {
   private _userInputSub?: Subscription;
   // Every snapshot applied to the board applier is fanned out to these too.
   private readonly _watchAppliers = new Set<SnapshotApplier>();
-  // Buttons currently held, the board's and a watch's copies alike, with what
-  // releasing each needs — so a stop or exit can release every one of them.
-  private readonly _held = new Map<
-    ButtonComponent,
-    { unitIndex: number | undefined; repaint: () => void }
+  // `level` slots currently high, the board's and a watch's copies alike,
+  // with what setting each low needs — so a stop or exit can reset every one
+  // of them.
+  private readonly _highLevels = new Map<
+    Component & LevelUserInput,
+    Map<number, { unitIndex: number | undefined; repaint: () => void }>
   >();
 
   constructor() {
@@ -291,8 +295,8 @@ export class SimulationService {
     // keeps that a single failure: a mode left at SIMULATION with the worker
     // already gone makes every retry re-enter and fail again.
     try {
-      // With the engine gone a release is visual only.
-      this._releaseAllHeld();
+      // With the engine gone, setting a level low is visual only.
+      this._resetLevels();
       this._applier?.reset();
       if (this._project && !this._project.destroyed) {
         for (const component of this._project.components) {
@@ -362,9 +366,10 @@ export class SimulationService {
     this.workerService
       .reset()
       .then(() => {
-        // Released against the rebuilt engine: a press that landed while the
-        // reset was in flight reached it, and must not outlive its visual.
-        this._releaseAllHeld();
+        // Set low against the rebuilt engine: a press or toggle that landed
+        // while the reset was in flight reached it, and must not outlive its
+        // visual.
+        this._resetLevels();
         this._applier?.reset();
         if (this._project && !this._project.destroyed) {
           for (const component of this._project.components) {
@@ -429,180 +434,262 @@ export class SimulationService {
     }
   }
 
-  private _onUserInput({ component, phase }: UserInputEvent): void {
-    this._drive(
+  private _onUserInput({ component, phase, slot }: UserInputEvent): void {
+    this._operate(
       component,
       this._board?.userInputs.get(component.id),
       phase,
-      () => this._project?.triggerTicker('single')
+      () => this._project?.triggerTicker('single'),
+      slot
     );
   }
 
   /**
    * Drives a user input whose engine unit index is already resolved: an inner
    * user input operated in a watch, where `component` is the watch's fresh
-   * copy and `unitIndex` comes from `infoFor(path).unitIndexFor(bodyIndex)`.
-   * A switch or pulse button acts on a `tap`, a button is held from `press` to
-   * `release`. `repaint` re-blits whatever canvas shows the component.
+   * copy and `unitIndex` comes from `infoFor(path).unitIndexFor(bodyIndex)` —
+   * the input's first unit, which `slot` offsets. `phase` is read through the
+   * input's `gesture`, as a canvas operation is. `repaint` re-blits whatever
+   * canvas shows the component.
    */
   public triggerUnitInput(
     unitIndex: number,
     component: Component,
     repaint: () => void,
-    phase: UserInputPhase = 'tap'
+    phase: UserInputPhase = 'tap',
+    slot = 0
   ): void {
-    this._drive(component, unitIndex, phase, repaint);
+    this._operate(component, unitIndex, phase, repaint, slot);
   }
 
   /**
-   * Drives a top-level user input to an **absolute** state: a switch or button
-   * already at `value` is left alone, so repeating the call sends no further
-   * engine event; a button is held by `true` until a `false` releases it; a
-   * pulse button pulses on `true` and ignores `false`, holding no state to
-   * clear. Reports whether the component is a user input of the running
-   * session.
+   * Drives one slot of a top-level user input to an **absolute** state,
+   * which its `drive` alone decides: a `level` slot is set to `value` — one
+   * already there is left alone, so repeating the call sends no further
+   * engine event — and a `pulse` slot pulses on `true` and ignores `false`,
+   * holding no state to clear. Reports whether the component is a user input
+   * of the running session with that slot.
    */
-  public setUserInput(componentId: number, value: boolean): boolean {
+  public setUserInput(componentId: number, value: boolean, slot = 0): boolean {
     const component = this._project?.getComponentById(componentId);
     const unitIndex = this._board?.userInputs.get(componentId);
     if (!component || unitIndex === undefined) {
       return false;
     }
-    return this._setAbsolute(component, unitIndex, value, () =>
-      this._project?.triggerTicker('single')
+    return this._setAbsolute(
+      component,
+      unitIndex,
+      value,
+      () => this._project?.triggerTicker('single'),
+      slot
     );
   }
 
   /**
    * {@link setUserInput} for a user input whose engine unit index is already
    * resolved — an inner one of a watch, as in {@link triggerUnitInput}.
-   * Reports whether the component is a user input.
+   * Reports whether the component is a user input with that slot.
    */
   public setUnitInput(
     unitIndex: number,
     component: Component,
     value: boolean,
-    repaint: () => void
+    repaint: () => void,
+    slot = 0
   ): boolean {
-    return this._setAbsolute(component, unitIndex, value, repaint);
+    return this._setAbsolute(component, unitIndex, value, repaint, slot);
   }
 
   private _setAbsolute(
     component: Component,
     unitIndex: number,
     value: boolean,
-    repaint: () => void
+    repaint: () => void,
+    slot: number
   ): boolean {
-    if (component instanceof ButtonComponent) {
-      this._setHeld(component, unitIndex, value, repaint);
-      return true;
-    }
-    if (component instanceof SwitchComponent) {
-      if (component.isOn === value) {
-        return true;
-      }
-    } else if (component instanceof PulseButtonComponent) {
-      if (!value) {
-        return true;
-      }
-    } else {
+    if (!isUserInput(component) || !isSlotOf(component, slot)) {
       return false;
     }
-    this._activate(component, unitIndex, repaint);
+    const unit = unitOfSlot(unitIndex, slot);
+    if (component.drive === 'level') {
+      this._setLevel(component, slot, unit, value, repaint);
+    } else if (value) {
+      this._pulse(component, slot, unit, repaint);
+    }
     return true;
   }
 
-  private _drive(
+  /**
+   * Records a `level` slot the engine already holds high — a watch copy posed
+   * from its output link — as active, sending no event, so a stop, an exit or
+   * the copy's teardown sets it low like any other. `unitIndex` is the
+   * input's first unit, as in {@link triggerUnitInput}.
+   */
+  public adoptHighLevel(
+    unitIndex: number,
+    component: Component,
+    repaint: () => void,
+    slot = 0
+  ): void {
+    if (
+      !this.isReady() ||
+      !isUserInput(component) ||
+      component.drive !== 'level' ||
+      !isSlotOf(component, slot)
+    ) {
+      return;
+    }
+    this._trackLevel(component, slot, unitOfSlot(unitIndex, slot), repaint);
+    component.setActive(slot, true);
+    repaint();
+  }
+
+  /**
+   * A pointer operation on a slot, mapped through the input's `gesture`: a
+   * `hold` slot is set high on press and low on release, a `toggle` slot
+   * flips on a tap, a `tap` (pulse) slot pulses on a tap. A phase the gesture
+   * does not use, and a slot the input does not have, is ignored.
+   */
+  private _operate(
     component: Component,
     unitIndex: number | undefined,
     phase: UserInputPhase,
-    repaint: () => void
+    repaint: () => void,
+    slot: number
   ): void {
-    if (phase === 'tap') {
-      this._activate(component, unitIndex, repaint);
-    } else if (component instanceof ButtonComponent) {
-      this._setHeld(component, unitIndex, phase === 'press', repaint);
+    if (!isUserInput(component) || !isSlotOf(component, slot)) {
+      return;
+    }
+    const unit = unitOfSlot(unitIndex, slot);
+    if (component.drive === 'pulse') {
+      if (phase === 'tap') {
+        this._pulse(component, slot, unit, repaint);
+      }
+    } else if (component.gesture === 'hold') {
+      if (phase !== 'tap') {
+        this._setLevel(component, slot, unit, phase === 'press', repaint);
+      }
+    } else if (phase === 'tap') {
+      this._setLevel(component, slot, unit, !component.isActive(slot), repaint);
     }
   }
 
   /**
-   * Presses or releases a button; one already in that state is left alone, so
-   * the engine never sees a second press or release. A press obeys
-   * {@link _activate}'s readiness rule, while a release always clears the
-   * visual and reaches the engine whenever one is up.
+   * Sets one `level` slot high or low with `INPUT_EVENT_CONT`; a slot already
+   * there is left alone, so the engine never sees the same state twice.
+   * Setting it high obeys {@link _pulse}'s readiness rule, while setting it
+   * low always clears the visual and reaches the engine whenever one is up.
+   * `unitIndex` is the slot's own unit.
    */
-  private _setHeld(
-    button: ButtonComponent,
+  private _setLevel(
+    input: Component & LevelUserInput,
+    slot: number,
     unitIndex: number | undefined,
-    held: boolean,
+    high: boolean,
     repaint: () => void
   ): void {
-    if (button.held === held) {
+    if (input.isActive(slot) === high) {
       return;
     }
-    if (held) {
+    if (high) {
       if (!this.isReady()) {
         return;
       }
-      this._held.set(button, { unitIndex, repaint });
+      this._trackLevel(input, slot, unitIndex, repaint);
     } else {
-      this._held.delete(button);
+      this._forgetLevel(input, slot);
     }
-    button.setHeld(held);
+    input.setActive(slot, high);
     if (unitIndex !== undefined && this.isReady()) {
-      this.workerService.triggerInput(unitIndex, INPUT_EVENT_CONT, [held]);
+      this.workerService.triggerInput(unitIndex, INPUT_EVENT_CONT, [high]);
     }
     repaint();
   }
 
-  private _releaseAllHeld(): void {
-    for (const [button, { unitIndex, repaint }] of [...this._held]) {
-      if (!button.destroyed) {
-        this._setHeld(button, unitIndex, false, repaint);
-        continue;
-      }
-      // A copy freed while held has nothing left to draw, but its engine
-      // unit still reads high.
-      this._held.delete(button);
-      if (unitIndex !== undefined && this.isReady()) {
-        this.workerService.triggerInput(unitIndex, INPUT_EVENT_CONT, [false]);
-      }
-    }
-  }
-
-  /** A switch or pulse button's tap: visuals plus the engine input event. */
-  private _activate(
-    component: Component,
+  private _trackLevel(
+    input: Component & LevelUserInput,
+    slot: number,
     unitIndex: number | undefined,
     repaint: () => void
   ): void {
-    // Taps are live from the moment simulation mode is entered, while the
+    let slots = this._highLevels.get(input);
+    if (!slots) {
+      slots = new Map();
+      this._highLevels.set(input, slots);
+    }
+    slots.set(slot, { unitIndex, repaint });
+  }
+
+  private _forgetLevel(input: Component & LevelUserInput, slot: number): void {
+    const slots = this._highLevels.get(input);
+    slots?.delete(slot);
+    if (slots?.size === 0) {
+      this._highLevels.delete(input);
+    }
+  }
+
+  /** Sets every high `level` slot low, the engine's unit included. */
+  private _resetLevels(): void {
+    for (const [input, slots] of [...this._highLevels]) {
+      for (const [slot, { unitIndex, repaint }] of [...slots]) {
+        if (!input.destroyed) {
+          this._setLevel(input, slot, unitIndex, false, repaint);
+          continue;
+        }
+        // A copy freed while high has nothing left to draw, but its engine
+        // unit still reads high.
+        this._forgetLevel(input, slot);
+        if (unitIndex !== undefined && this.isReady()) {
+          this.workerService.triggerInput(unitIndex, INPUT_EVENT_CONT, [false]);
+        }
+      }
+    }
+  }
+
+  /**
+   * Pulses one `pulse` slot: `INPUT_EVENT_PULSE` (one tick), with the slot
+   * flashing active for {@link PULSE_BUTTON_FLASH_MS}.
+   */
+  private _pulse(
+    input: Component & PulseUserInput,
+    slot: number,
+    unitIndex: number | undefined,
+    repaint: () => void
+  ): void {
+    // Inputs are live from the moment simulation mode is entered, while the
     // engine is still starting. The worker drops inputs from that window, so
-    // toggling the visuals would show a state the engine never received.
+    // changing the visuals would show a state the engine never received.
     if (!this.isReady()) {
       return;
     }
-    if (component instanceof SwitchComponent) {
-      component.toggle();
-      if (unitIndex !== undefined) {
-        this.workerService.triggerInput(unitIndex, INPUT_EVENT_CONT, [
-          component.isOn
-        ]);
-      }
-    } else if (component instanceof PulseButtonComponent) {
-      component.setPressed(true);
-      if (unitIndex !== undefined) {
-        this.workerService.triggerInput(unitIndex, INPUT_EVENT_PULSE, [true]);
-      }
-      setTimeout(() => {
-        if (!component.destroyed) {
-          component.setPressed(false);
-          repaint();
-        }
-      }, PULSE_BUTTON_FLASH_MS);
+    input.setActive(slot, true);
+    if (unitIndex !== undefined) {
+      this.workerService.triggerInput(unitIndex, INPUT_EVENT_PULSE, [true]);
     }
+    setTimeout(() => {
+      if (!input.destroyed) {
+        input.setActive(slot, false);
+        repaint();
+      }
+    }, PULSE_BUTTON_FLASH_MS);
     repaint();
   }
+}
+
+function isSlotOf(input: UserInput, slot: number): boolean {
+  return Number.isInteger(slot) && slot >= 0 && slot < input.inputSlots;
+}
+
+/**
+ * Where a slot becomes an engine unit: a user input's units are contiguous
+ * from its first, `base`, slot `i` at `base + i`. Callers resolve and pass
+ * the base only.
+ */
+function unitOfSlot(
+  base: number | undefined,
+  slot: number
+): number | undefined {
+  return base === undefined ? undefined : base + slot;
 }
 
 function clockDelaysOf(board: CompiledBoard): number[] {

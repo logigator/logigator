@@ -16,8 +16,8 @@ import { Subscription } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ToastService } from '../../logging/toast.service';
 import {
-  buttonAt,
-  componentBodiesAt
+  componentBodiesAt,
+  holdInputAt
 } from '../../rendering/interaction/body-hit';
 import { PointerController } from '../../rendering/interaction/pointer-controller';
 import { PointerInput } from '../../rendering/interaction/pointer-input';
@@ -41,8 +41,9 @@ import {
  * controller. Input runs through the shared PointerController; the tool stream
  * is a PanSession whose tap action routes to the model (inner input /
  * drill-down / data inspector), or a HoldSession for a press on an inner
- * button, which holds it for the gesture. Re-blits on engine changes (`render$`),
- * viewport/theme changes (`ticker$`) and host resizes.
+ * `hold` user input operated on the canvas, which holds its slot 0 for the
+ * gesture. Re-blits on engine changes (`render$`), viewport/theme changes
+ * (`ticker$`) and host resizes.
  */
 @Component({
   selector: 'app-sub-circuit-watch',
@@ -157,8 +158,8 @@ export class SubCircuitWatchComponent implements AfterViewInit, OnDestroy {
     if (!project) {
       return;
     }
-    const button = buttonAt(project, input.grid);
-    const hold = button ? this.inspection().holdFor(button) : null;
+    const holdInput = holdInputAt(project, input.grid);
+    const hold = holdInput ? this.inspection().holdFor(holdInput, 0) : null;
     if (hold) {
       this.session = new HoldSession(hold.press, hold.release);
       return;

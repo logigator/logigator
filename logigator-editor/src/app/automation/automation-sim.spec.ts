@@ -12,6 +12,7 @@ import {
   FakeSimulationWorker,
   ManualFrameScheduler
 } from '../../testing/fake-simulation-worker';
+import { FakeUserInput } from '../../testing/fake-user-input';
 import { setStaticDIInjector } from '../utils/get-di';
 import { Component } from '../components/component';
 import { ComponentProviderService } from '../components/component-provider.service';
@@ -139,7 +140,7 @@ describe('AutomationApiService simulation', () => {
     await api.simSetInput(lever.id, true);
     await api.simSetInput(lever.id, true);
 
-    expect(lever.isOn).toBe(true);
+    expect(lever.isActive(0)).toBe(true);
     expect(fakeWorker.postedOfKind('triggerInput')).toHaveLength(1);
   });
 
@@ -158,13 +159,147 @@ describe('AutomationApiService simulation', () => {
 
     await api.simSetInput(button.id, true);
     await api.simSetInput(button.id, true);
-    expect(button.held).toBe(true);
+    expect(button.isActive(0)).toBe(true);
 
     await api.simSetInput(button.id, false);
-    expect(button.held).toBe(false);
+    expect(button.isActive(0)).toBe(false);
     expect(
       fakeWorker.postedOfKind('triggerInput').map((msg) => msg.state)
     ).toEqual([[true], [false]]);
+  });
+
+  describe('setInput with a slot address', () => {
+    let input: FakeUserInput;
+    let base: number;
+
+    beforeEach(async () => {
+      input = new FakeUserInput(3, { slotIds: ['up', 'a', 'b'] });
+      project.addComponent(input);
+      await api.simEnter();
+      base = simulation.board!.userInputs.get(input.id)!;
+    });
+
+    /** Cont events sent per unit, in order. */
+    const sent = () =>
+      fakeWorker
+        .postedOfKind('triggerInput')
+        .map((msg) => [msg.componentIndex, msg.state[0]]);
+
+    it('reaches the same unit by slot id and by index', async () => {
+      await api.simSetInput(input.id, true, 'b');
+      expect(input.isActive(2)).toBe(true);
+      expect(sent()).toEqual([[base + 2, true]]);
+
+      await api.simSetInput(input.id, false, 2);
+      expect(input.isActive(2)).toBe(false);
+      expect(sent()).toEqual([
+        [base + 2, true],
+        [base + 2, false]
+      ]);
+    });
+
+    it('drives slot 0 without an address', async () => {
+      await api.simSetInput(input.id, true);
+
+      expect(input.isActive(0)).toBe(true);
+      expect(sent()).toEqual([[base, true]]);
+    });
+
+    it('rejects an address the input does not have, naming the valid ones', async () => {
+      await expect(api.simSetInput(input.id, true, 'start')).rejects.toThrow(
+        /0–2, ids "up", "a", "b"/
+      );
+      await expect(api.simSetInput(input.id, true, 3)).rejects.toThrow(
+        /0–2, ids "up", "a", "b"/
+      );
+      expect(sent()).toEqual([]);
+    });
+  });
+
+  describe('setInput with a value for every slot', () => {
+    let input: FakeUserInput;
+    let base: number;
+
+    beforeEach(async () => {
+      input = new FakeUserInput(3, { slotIds: ['up', 'a', 'b'] });
+      project.addComponent(input);
+      await api.simEnter();
+      base = simulation.board!.userInputs.get(input.id)!;
+    });
+
+    const sent = () =>
+      fakeWorker
+        .postedOfKind('triggerInput')
+        .map((msg) => [msg.componentIndex, msg.state[0]]);
+
+    it('sets each slot absolutely, sending only for the ones that change', async () => {
+      await api.simSetInput(input.id, [true, false, true]);
+      expect(sent()).toEqual([
+        [base, true],
+        [base + 2, true]
+      ]);
+
+      await api.simSetInput(input.id, [true, false, true]);
+      expect(sent()).toHaveLength(2);
+
+      await api.simSetInput(input.id, [false, false, true]);
+      expect(sent()).toEqual([
+        [base, true],
+        [base + 2, true],
+        [base, false]
+      ]);
+    });
+
+    it('rejects a wrong length or an address beside it, applying nothing', async () => {
+      await expect(api.simSetInput(input.id, [true, true])).rejects.toThrow(
+        /has 3 slots/
+      );
+      await expect(
+        api.simSetInput(input.id, [true, true, true, true])
+      ).rejects.toThrow(/has 3 slots/);
+      await expect(
+        api.simSetInput(input.id, [true, false, true], 'a')
+      ).rejects.toThrow(/has 3 slots/);
+
+      expect(sent()).toEqual([]);
+      expect([0, 1, 2].some((slot) => input.isActive(slot))).toBe(false);
+    });
+  });
+
+  it('setInput takes a one-element array on a lever', async () => {
+    const lever = makeSwitch();
+    project.addComponent(lever);
+    await api.simEnter();
+
+    await api.simSetInput(lever.id, [true]);
+
+    expect(lever.isActive(0)).toBe(true);
+    expect(fakeWorker.postedOfKind('triggerInput')).toHaveLength(1);
+  });
+
+  it('setInput rejects a slot past 0 on a lever', async () => {
+    const lever = makeSwitch();
+    project.addComponent(lever);
+    await api.simEnter();
+
+    await expect(api.simSetInput(lever.id, true, 1)).rejects.toThrow(
+      /only slot is 0/
+    );
+    expect(lever.isActive(0)).toBe(false);
+  });
+
+  it('setInput takes a one-element array on a pulse button, pulsing only on true', async () => {
+    const button = makePulseButton();
+    project.addComponent(button);
+    await api.simEnter();
+
+    await api.simSetInput(button.id, [false]);
+    expect(fakeWorker.postedOfKind('triggerInput')).toHaveLength(0);
+
+    await api.simSetInput(button.id, [true]);
+    expect(fakeWorker.postedOfKind('triggerInput')).toEqual([
+      expect.objectContaining({ event: 1, state: [true] })
+    ]);
   });
 
   it('setInput pulses a pulse button', async () => {

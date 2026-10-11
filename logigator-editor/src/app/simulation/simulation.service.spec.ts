@@ -14,6 +14,7 @@ import {
   FakeSimulationWorker,
   ManualFrameScheduler
 } from '../../testing/fake-simulation-worker';
+import { FakeUserInput } from '../../testing/fake-user-input';
 import { Point } from 'pixi.js';
 import { Component } from '../components/component';
 import { ComponentProviderService } from '../components/component-provider.service';
@@ -306,14 +307,14 @@ describe('SimulationService', () => {
     project.addComponent(switchComp);
     await enterAndBoot();
     project.emitUserInput(switchComp);
-    expect(switchComp.isOn).toBe(true);
+    expect(switchComp.isActive(0)).toBe(true);
 
     service.stop();
 
     await vi.waitFor(() =>
       expect(fakeWorker.postedOfKind('stop')).toHaveLength(1)
     );
-    await vi.waitFor(() => expect(switchComp.isOn).toBe(false));
+    await vi.waitFor(() => expect(switchComp.isActive(0)).toBe(false));
     expect(service.state()).toBe('ready');
   });
 
@@ -345,7 +346,7 @@ describe('SimulationService', () => {
     await enterAndBoot();
 
     project.emitUserInput(switchComp);
-    expect(switchComp.isOn).toBe(true);
+    expect(switchComp.isActive(0)).toBe(true);
 
     const inputs = fakeWorker.postedOfKind('triggerInput');
     expect(inputs).toHaveLength(1);
@@ -355,7 +356,7 @@ describe('SimulationService', () => {
     );
 
     project.emitUserInput(switchComp);
-    expect(switchComp.isOn).toBe(false);
+    expect(switchComp.isActive(0)).toBe(false);
     expect(fakeWorker.postedOfKind('triggerInput')[1]).toMatchObject({
       event: 0,
       state: [false]
@@ -377,7 +378,7 @@ describe('SimulationService', () => {
       await bootWithButton();
 
       project.emitUserInput(button, 'press');
-      expect(button.held).toBe(true);
+      expect(button.isActive(0)).toBe(true);
       expect(fakeWorker.postedOfKind('triggerInput')).toEqual([
         expect.objectContaining({
           componentIndex: unit,
@@ -390,7 +391,7 @@ describe('SimulationService', () => {
       expect(fakeWorker.postedOfKind('triggerInput')).toHaveLength(1);
 
       project.emitUserInput(button, 'release');
-      expect(button.held).toBe(false);
+      expect(button.isActive(0)).toBe(false);
       project.emitUserInput(button, 'release'); // already released
       expect(fakeWorker.postedOfKind('triggerInput')).toHaveLength(2);
       expect(engineLevel(unit)).toBe(false);
@@ -404,7 +405,7 @@ describe('SimulationService', () => {
       project.emitUserInput(button, 'press');
       project.emitUserInput(button, 'release');
 
-      expect(button.held).toBe(false);
+      expect(button.isActive(0)).toBe(false);
       expect(fakeWorker.postedOfKind('triggerInput')).toHaveLength(0);
     });
 
@@ -413,7 +414,7 @@ describe('SimulationService', () => {
 
       project.emitUserInput(button);
 
-      expect(button.held).toBe(false);
+      expect(button.isActive(0)).toBe(false);
       expect(fakeWorker.postedOfKind('triggerInput')).toHaveLength(0);
     });
 
@@ -422,7 +423,7 @@ describe('SimulationService', () => {
       project.emitUserInput(button, 'press');
 
       service.stop();
-      await vi.waitFor(() => expect(button.held).toBe(false));
+      await vi.waitFor(() => expect(button.isActive(0)).toBe(false));
 
       expect(engineLevel(unit)).toBe(false);
       // The hold's own release, arriving later, sends nothing further.
@@ -436,7 +437,7 @@ describe('SimulationService', () => {
 
       service.stop();
       project.emitUserInput(button, 'press'); // reaches the rebuilt engine
-      await vi.waitFor(() => expect(button.held).toBe(false));
+      await vi.waitFor(() => expect(button.isActive(0)).toBe(false));
 
       expect(engineLevel(unit)).toBe(false);
     });
@@ -447,7 +448,177 @@ describe('SimulationService', () => {
 
       service.exit();
 
-      expect(button.held).toBe(false);
+      expect(button.isActive(0)).toBe(false);
+    });
+  });
+
+  describe('a hold input with several slots', () => {
+    let input: FakeUserInput;
+    let base: number;
+
+    async function bootWithInput(): Promise<void> {
+      // An AND with a lower id, so the input's units do not start at 0.
+      project.addComponent(makeAnd(2, undefined, 8, 0));
+      input = new FakeUserInput(3);
+      project.addComponent(input);
+      await enterAndBoot();
+      base = service.board!.userInputs.get(input.id)!;
+    }
+
+    it('drives each slot through its own unit, once per change', async () => {
+      await bootWithInput();
+
+      project.emitUserInput(input, 'press', 2);
+      project.emitUserInput(input, 'press', 2); // already held
+      expect(fakeWorker.postedOfKind('triggerInput')).toEqual([
+        expect.objectContaining({
+          componentIndex: base + 2,
+          event: 0,
+          state: [true]
+        })
+      ]);
+      expect(input.isActive(2)).toBe(true);
+      expect(input.isActive(0)).toBe(false);
+
+      expect(service.setUserInput(input.id, true, 0)).toBe(true);
+      expect(engineLevel(base)).toBe(true);
+      expect(engineLevel(base + 1)).toBe(false);
+      expect(engineLevel(base + 2)).toBe(true);
+    });
+
+    it('refuses a slot the input does not have', async () => {
+      await bootWithInput();
+
+      project.emitUserInput(input, 'press', 3);
+      expect(service.setUserInput(input.id, true, 3)).toBe(false);
+      expect(service.setUserInput(input.id, true, -1)).toBe(false);
+
+      expect(fakeWorker.postedOfKind('triggerInput')).toHaveLength(0);
+      expect(input.isActive(3)).toBe(false);
+    });
+
+    it('has every held slot released by stop, against the rebuilt engine', async () => {
+      await bootWithInput();
+      project.emitUserInput(input, 'press', 0);
+      project.emitUserInput(input, 'press', 2);
+
+      service.stop();
+      await vi.waitFor(() => expect(input.isActive(2)).toBe(false));
+
+      expect(input.isActive(0)).toBe(false);
+      expect(engineLevel(base)).toBe(false);
+      expect(engineLevel(base + 2)).toBe(false);
+    });
+  });
+
+  describe('a slot, by drive and gesture', () => {
+    let base: number;
+
+    /** Boots a 3-slot input of the given kind, its units not starting at 0. */
+    async function bootWith(input: FakeUserInput): Promise<void> {
+      project.addComponent(makeAnd(2, undefined, 8, 0));
+      project.addComponent(input);
+      await enterAndBoot();
+      base = service.board!.userInputs.get(input.id)!;
+    }
+
+    const sent = () =>
+      fakeWorker
+        .postedOfKind('triggerInput')
+        .map((msg) => [msg.componentIndex, msg.event, msg.state[0]]);
+
+    it('sets a level slot absolutely, sending nothing when it is already there', async () => {
+      const input = new FakeUserInput(3, { gesture: 'toggle' });
+      await bootWith(input);
+
+      expect(service.setUserInput(input.id, true, 1)).toBe(true);
+      expect(service.setUserInput(input.id, true, 1)).toBe(true);
+      expect(service.setUserInput(input.id, false, 1)).toBe(true);
+
+      expect(sent()).toEqual([
+        [base + 1, 0, true],
+        [base + 1, 0, false]
+      ]);
+    });
+
+    it('pulses a pulse slot on every true and ignores false', async () => {
+      const input = new FakeUserInput(3, { drive: 'pulse', gesture: 'tap' });
+      await bootWith(input);
+
+      expect(service.setUserInput(input.id, false, 1)).toBe(true);
+      expect(service.setUserInput(input.id, true, 1)).toBe(true);
+      expect(service.setUserInput(input.id, true, 1)).toBe(true);
+
+      expect(sent()).toEqual([
+        [base + 1, 1, true],
+        [base + 1, 1, true]
+      ]);
+    });
+
+    it('flips only the tapped slot of a toggle input', async () => {
+      const input = new FakeUserInput(3, { gesture: 'toggle' });
+      await bootWith(input);
+
+      project.emitUserInput(input, 'tap', 1);
+      expect([0, 1, 2].map((slot) => input.isActive(slot))).toEqual([
+        false,
+        true,
+        false
+      ]);
+      project.emitUserInput(input, 'tap', 1);
+
+      expect(input.isActive(1)).toBe(false);
+      expect(sent()).toEqual([
+        [base + 1, 0, true],
+        [base + 1, 0, false]
+      ]);
+    });
+
+    it('sends one pulse for a tap on a pulse slot and clears it after the flash', async () => {
+      const input = new FakeUserInput(3, { drive: 'pulse', gesture: 'tap' });
+      await bootWith(input);
+      vi.useFakeTimers();
+      try {
+        project.emitUserInput(input, 'tap', 1);
+        expect(input.isActive(1)).toBe(true);
+        expect(sent()).toEqual([[base + 1, 1, true]]);
+
+        vi.runAllTimers();
+        expect(input.isActive(1)).toBe(false);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('has a toggled-on level slot set low by stop, against the rebuilt engine', async () => {
+      const input = new FakeUserInput(3, { gesture: 'toggle' });
+      await bootWith(input);
+      project.emitUserInput(input, 'tap', 1);
+
+      service.stop();
+      await vi.waitFor(() => expect(input.isActive(1)).toBe(false));
+
+      const posted = fakeWorker.posted;
+      const rebuilt = posted.map((msg) => msg.kind).lastIndexOf('stop');
+      expect(posted.slice(rebuilt + 1)).toContainEqual(
+        expect.objectContaining({
+          kind: 'triggerInput',
+          componentIndex: base + 1,
+          event: 0,
+          state: [false]
+        })
+      );
+    });
+
+    it('never leaves a slot toggled while a reset is in flight high', async () => {
+      const input = new FakeUserInput(3, { gesture: 'toggle' });
+      await bootWith(input);
+
+      service.stop();
+      project.emitUserInput(input, 'tap', 1); // reaches the rebuilt engine
+      await vi.waitFor(() => expect(input.isActive(1)).toBe(false));
+
+      expect(engineLevel(base + 1)).toBe(false);
     });
   });
 
@@ -458,16 +629,16 @@ describe('SimulationService', () => {
       await enterAndBoot();
 
       expect(service.setUserInput(switchComp.id, true)).toBe(true);
-      expect(switchComp.isOn).toBe(true);
+      expect(switchComp.isActive(0)).toBe(true);
       expect(fakeWorker.postedOfKind('triggerInput')).toHaveLength(1);
 
       // Repeating an absolute value sends no second engine event.
       expect(service.setUserInput(switchComp.id, true)).toBe(true);
-      expect(switchComp.isOn).toBe(true);
+      expect(switchComp.isActive(0)).toBe(true);
       expect(fakeWorker.postedOfKind('triggerInput')).toHaveLength(1);
 
       expect(service.setUserInput(switchComp.id, false)).toBe(true);
-      expect(switchComp.isOn).toBe(false);
+      expect(switchComp.isActive(0)).toBe(false);
       expect(fakeWorker.postedOfKind('triggerInput')[1]).toMatchObject({
         event: 0,
         state: [false]
@@ -485,12 +656,12 @@ describe('SimulationService', () => {
 
       expect(service.setUserInput(button.id, true)).toBe(true);
       expect(service.setUserInput(button.id, true)).toBe(true);
-      expect(button.held).toBe(true);
+      expect(button.isActive(0)).toBe(true);
       expect(fakeWorker.postedOfKind('triggerInput')).toHaveLength(1);
       expect(engineLevel(unit)).toBe(true);
 
       expect(service.setUserInput(button.id, false)).toBe(true);
-      expect(button.held).toBe(false);
+      expect(button.isActive(0)).toBe(false);
       expect(engineLevel(unit)).toBe(false);
     });
 
@@ -517,6 +688,16 @@ describe('SimulationService', () => {
       expect(service.setUserInput(and.id, true)).toBe(false);
       expect(service.setUserInput(999999, true)).toBe(false);
     });
+
+    it('refuses a slot past 0 on a lever, which has only one', async () => {
+      const switchComp = makeSwitch();
+      project.addComponent(switchComp);
+      await enterAndBoot();
+
+      expect(service.setUserInput(switchComp.id, true, 1)).toBe(false);
+      expect(switchComp.isActive(0)).toBe(false);
+      expect(fakeWorker.postedOfKind('triggerInput')).toHaveLength(0);
+    });
   });
 
   it('flashes a pulse button on canvas user input and forwards a Pulse event', async () => {
@@ -526,14 +707,14 @@ describe('SimulationService', () => {
     vi.useFakeTimers();
     try {
       project.emitUserInput(button);
-      expect(button.pressed).toBe(true);
+      expect(button.isActive(0)).toBe(true);
 
       const inputs = fakeWorker.postedOfKind('triggerInput');
       expect(inputs).toHaveLength(1);
       expect(inputs[0]).toMatchObject({ event: 1, state: [true] });
 
       vi.runAllTimers();
-      expect(button.pressed).toBe(false);
+      expect(button.isActive(0)).toBe(false);
     } finally {
       vi.useRealTimers();
     }
@@ -641,7 +822,7 @@ describe('SimulationService', () => {
     service.exit();
 
     expect(workModeService.mode()).toBe(WorkMode.PAN);
-    expect(switchComp.isOn).toBe(false);
+    expect(switchComp.isActive(0)).toBe(false);
     expect(service.board).toBeNull();
     expect(service.applier).toBeNull();
     expect(service.state()).toBe('inactive');
@@ -662,7 +843,7 @@ describe('SimulationService', () => {
     expect(service.state()).toBe('inactive');
     expect(service.board).toBeNull();
     // The teardown ran while the outgoing project was live.
-    expect(switchComp.isOn).toBe(false);
+    expect(switchComp.isActive(0)).toBe(false);
     expect(fakeWorker.terminated).toBe(true);
 
     replacement.destroy({ children: true });
@@ -686,6 +867,6 @@ describe('SimulationService', () => {
 
     project.emitUserInput(switchComp);
 
-    expect(switchComp.isOn).toBe(false);
+    expect(switchComp.isActive(0)).toBe(false);
   });
 });

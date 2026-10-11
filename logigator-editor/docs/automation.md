@@ -181,20 +181,37 @@ it stands. A multiplier past the export's 8192 px cap is refused, not clamped.
 `'running'` rather than `'ready'` when the user's auto-start preference is on,
 so read the returned `state`.
 
-| call                     | does                                              |
-| ------------------------ | ------------------------------------------------- |
-| `play()` / `pause()`     | run / hold the engine                             |
-| `step(count?)`           | `count` ticks while paused (default 1)            |
-| `stop()`                 | reset to tick 0, session stays up                 |
-| `exit()`                 | leave simulation entirely, back to editing        |
-| `status()`               | state, mode, target/measured Hz, tick             |
-| `setTarget(value, unit)` | target speed; unit `'Hz' \| 'kHz' \| 'MHz'`       |
-| `setInput(id, value)`    | drive a lever, button or pulse button             |
-| `readPorts(ids?)`        | per-port powered booleans, `inputs` and `outputs` |
+| call                          | does                                              |
+| ----------------------------- | ------------------------------------------------- |
+| `play()` / `pause()`          | run / hold the engine                             |
+| `step(count?)`                | `count` ticks while paused (default 1)            |
+| `stop()`                      | reset to tick 0, session stays up                 |
+| `exit()`                      | leave simulation entirely, back to editing        |
+| `status()`                    | state, mode, target/measured Hz, tick             |
+| `setTarget(value, unit)`      | target speed; unit `'Hz' \| 'kHz' \| 'MHz'`       |
+| `setInput(id, value, input?)` | drive a lever, button or pulse button             |
+| `readPorts(ids?)`             | per-port powered booleans, `inputs` and `outputs` |
 
-- `setInput` is **absolute**: a lever or button already at `value` sends no
-  engine event; a button is held by `true` until a `false` releases it; a pulse
-  button pulses on `true` and ignores `false`. Never read-then-toggle.
+- `setInput` is **absolute**, and what that means follows from the input's
+  `drive` alone, whatever its gesture: a `level` slot (lever, button) is set to
+  `value` — one already there sends no engine event, and a button is held by
+  `true` until a `false` releases it; a `pulse` slot (pulse button) pulses on
+  `true` and ignores `false`. Never read-then-toggle.
+- `input` addresses one **slot** of the user input — output port `i` is slot
+  `i`, each its own engine unit — by index or by one of the component's slot
+  ids (`UserInput.slotIds`), never by a free-text name. It defaults to `0`, and
+  a lever, button or pulse button has only that one. An address the component
+  does not have is an error naming its valid indices and ids
+  (`resolveInputSlot`).
+- `value` is a boolean for the one addressed slot, or a **boolean array** that
+  sets every slot at once, element `i` for slot `i` — `[true]` on a lever, and
+  `[false]` on a pulse button the usual no-op. The array has exactly one
+  element per slot and takes no `input`; either mistake is an error naming the
+  slot count. It is validated whole before any slot is touched
+  (`resolveInputWrites`, shared by `sim.` and `inspect.setInput`), then applied
+  slot by slot through the same absolute path, so an unchanged slot sends
+  nothing. Paused, every slot lands on the same next tick, which is what lets
+  the recipe above set a whole input in one `setInput` before its `step`.
 - `step(count)` posts the ticks back to back and pulls **one** snapshot, so
   settling a circuit costs one round trip rather than one per tick.
 - `readPorts` builds a component → link-id reverse index once per compiled board
@@ -281,13 +298,13 @@ Its five calls below all refuse a data inspection.
 - `getElements(id, query?)` — the visible level's circuit.
 - `activate(id, componentId)` — the watch's tap: drives an inner lever or
   pulse button, drills into a nested custom, or opens an inner component's own
-  inspection. A tap cannot hold a button, so a button is refused with an error
-  naming `setInput`.
-- `setInput(id, componentId, value)` — `sim.setInput` for an inner user input
-  of the visible level, with the same absolute semantics: a button is held by
-  `true` until a `false` releases it, and a held one is also released when its
-  level closes (breadcrumb navigation, the watch closing). Anything but a user
-  input of that level is refused.
+  inspection. A tap cannot hold a button, so a `hold` input operated on the
+  canvas is refused with an error naming `setInput`.
+- `setInput(id, componentId, value, input?)` — `sim.setInput` for an inner user
+  input of the visible level, with the same absolute semantics, values and slot
+  address: a button is held by `true` until a `false` releases it, and a held
+  one is also released when its level closes (breadcrumb navigation, the watch
+  closing). Anything but a user input of that level is refused.
 - `navigateTo(id, level)` — pops every level deeper than `level`.
 - `camera.*` — `getViewport` / `pan` / `setCenter` / `setZoom` / `focus` against
   the visible level. A level fits its circuit once, when it first shows; a write

@@ -294,12 +294,12 @@ describe('AutomationApiService inspection', () => {
         ) as ButtonComponent;
 
       expect(() => api.inspectActivate(id, copy.id)).toThrow(/setInput/);
-      expect(copy.held).toBe(false);
+      expect(copy.isActive(0)).toBe(false);
 
       await api.inspectSetInput(id, copy.id, true);
-      expect(copy.held).toBe(true);
+      expect(copy.isActive(0)).toBe(true);
       await api.inspectSetInput(id, copy.id, false);
-      expect(copy.held).toBe(false);
+      expect(copy.isActive(0)).toBe(false);
 
       const plug = watch
         .activeLevel()

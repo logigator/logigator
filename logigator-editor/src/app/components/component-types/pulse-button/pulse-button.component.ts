@@ -1,6 +1,7 @@
 import { Component } from '../../component';
 import { pulseButtonMeta } from '@logigator/core';
 import { PulseButtonGraphics } from '../../../rendering/graphics/pulse-button.graphics';
+import { PulseUserInput } from '../../user-input';
 import {
   pulseButtonComponentConfig,
   PulseButtonOptions
@@ -8,12 +9,17 @@ import {
 
 /**
  * A pulse button (simulation user input, Pulse event): a click emits a single
- * one-tick pulse on its output, however long it is held. The pressed
- * state is transient sim visuals on the instance — not an option: it is not
- * undoable and not persisted, and is cleared on simulation stop/exit.
+ * one-tick pulse on its output, however long it is held, and its body flashes
+ * pressed. A {@link PulseUserInput} operated by `tap`, one slot.
  */
-export class PulseButtonComponent extends Component<PulseButtonOptions> {
+export class PulseButtonComponent
+  extends Component<PulseButtonOptions>
+  implements PulseUserInput
+{
   public readonly config = pulseButtonComponentConfig;
+  public readonly drive = 'pulse';
+  public readonly gesture = 'tap';
+  public readonly inputSlots = 1;
 
   private _pressed = false;
 
@@ -21,14 +27,14 @@ export class PulseButtonComponent extends Component<PulseButtonOptions> {
     super(pulseButtonMeta, options);
   }
 
-  public get pressed(): boolean {
+  public isActive(slot: number): boolean {
     // The base constructor's initial draw runs before field initializers —
     // an unassigned `_pressed` must read as unpressed.
-    return this._pressed === true;
+    return slot === 0 && this._pressed === true;
   }
 
-  public setPressed(pressed: boolean): void {
-    if (this.pressed === pressed) {
+  public setActive(slot: number, pressed: boolean): void {
+    if (slot !== 0 || this.isActive(0) === pressed) {
       return;
     }
     this._pressed = pressed;
@@ -36,7 +42,7 @@ export class PulseButtonComponent extends Component<PulseButtonOptions> {
   }
 
   public override clearSimState(): void {
-    this.setPressed(false);
+    this.setActive(0, false);
   }
 
   protected draw(): void {
@@ -45,7 +51,7 @@ export class PulseButtonComponent extends Component<PulseButtonOptions> {
       this.geometryService.getGraphicsContext(
         PulseButtonGraphics,
         scale,
-        this.pressed
+        this.isActive(0)
       )
     );
   }

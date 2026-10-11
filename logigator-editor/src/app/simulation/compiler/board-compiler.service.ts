@@ -2,6 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { TranslationService } from '../../translation/translation.service';
 import { LoggingService } from '../../logging/logging.service';
 import { Component } from '../../components/component';
+import { isUserInput, UserInput } from '../../components/user-input';
 import { ComponentProviderService } from '../../components/component-provider.service';
 import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
 import {
@@ -47,23 +48,13 @@ const UNIT_TYPES: ReadonlySet<number> = new Set([
   BuiltInComponentType.ENCODER,
   BuiltInComponentType.MUX,
   BuiltInComponentType.DEMUX,
-  BuiltInComponentType.BUTTON,
-  BuiltInComponentType.PULSE_BUTTON,
-  BuiltInComponentType.SWITCH,
   BuiltInComponentType.ROM
 ]);
 
-/** The user inputs, each emitted as {@link ENGINE_USER_INPUT_TYPE}. */
-const USER_INPUT_TYPES: ReadonlySet<number> = new Set([
-  BuiltInComponentType.BUTTON,
-  BuiltInComponentType.PULSE_BUTTON,
-  BuiltInComponentType.SWITCH
-]);
-
 /**
- * BUTTON, PULSE_BUTTON and SWITCH all emit this type; the engine rejects any
- * other id. Which one it is — a `Pulse` or a `Cont` event, and when — is
- * decided at `triggerInput` time from the component instance, not from the
+ * Every user input emits this type; the engine rejects any other id. Which
+ * one it is — a `Pulse` or a `Cont` event, and when — is decided at
+ * `triggerInput` time from the component's `drive`, not from the
  * descriptor.
  */
 const ENGINE_USER_INPUT_TYPE = 200;
@@ -126,7 +117,10 @@ interface EmitContext {
   uf: UnionFind;
   units: EmittedUnit[];
   diagnostics: CompileDiagnostic[];
-  /** Directly emitted user input: component id → unit index in this pass. */
+  /**
+   * Directly emitted user input: component id → its first unit's index in
+   * this pass.
+   */
   userInputs: Map<number, number>;
   /** Directly placed custom instances, keyed by component id. */
   instances: Map<number, EmittedInstance>;
@@ -400,13 +394,14 @@ export class BoardCompilerService {
       return;
     }
 
+    if (isUserInput(component)) {
+      this._emitUserInput(component, pinNodes, ctx);
+      return;
+    }
+
     if (UNIT_TYPES.has(type)) {
-      const isUserInput = USER_INPUT_TYPES.has(type);
-      if (isUserInput) {
-        ctx.userInputs.set(component.id, ctx.units.length);
-      }
       ctx.units.push({
-        type: isUserInput ? ENGINE_USER_INPUT_TYPE : type,
+        type,
         inputs: pinNodes.slice(0, component.numInputs),
         outputs: pinNodes.slice(component.numInputs),
         ...this._opsFor(component),
@@ -439,6 +434,37 @@ export class BoardCompilerService {
       message: this.translation.translate('simulation.unsupportedComponent', {
         symbol: component.config.symbol
       })
+    });
+  }
+
+  /**
+   * A {@link UserInput}: one single-output {@link ENGINE_USER_INPUT_TYPE} unit
+   * per slot — slot `i` being output port `i` — contiguously in slot order, so
+   * slot `i` is unit `first + i` from the index `userInputs` records. A bubble
+   * on output port `i` negates unit `i`'s only output. User inputs have no
+   * inputs, and a slot count other than the output count is a broken type,
+   * refused here rather than mis-wired.
+   */
+  private _emitUserInput(
+    component: Component & UserInput,
+    pinNodes: number[],
+    ctx: EmitContext
+  ): void {
+    if (component.inputSlots !== component.numOutputs) {
+      throw new Error(
+        `${component.config.symbol}: ${component.inputSlots} input slots ` +
+          `for ${component.numOutputs} outputs`
+      );
+    }
+    ctx.userInputs.set(component.id, ctx.units.length);
+    const negated = new Set(this._negationFor(component).negOutputs);
+    pinNodes.slice(component.numInputs).forEach((node, slot) => {
+      ctx.units.push({
+        type: ENGINE_USER_INPUT_TYPE,
+        inputs: [],
+        outputs: [node],
+        ...(negated.has(slot) ? { negOutputs: [0] } : {})
+      });
     });
   }
 

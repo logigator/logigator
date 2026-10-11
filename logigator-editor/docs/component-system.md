@@ -75,6 +75,20 @@ rightward (S/N) instead of jumping. Group rotation is different — it pivots ab
 the selection midpoint, and `RotateComponentsAction` stores the direction _and_
 the orbited position per entry.
 
+A component the user drives during simulation implements **`UserInput`**
+(`components/user-input.ts`; `isUserInput` is the guard): `inputSlots` — one
+per output port, each driven by its own engine unit — optional `slotIds` for
+addressing one by name, `isActive(slot)` / `setActive(slot, active)`, and two
+independent properties: `drive`, what the engine receives (`level` or
+`pulse`), and `gesture`, how a pointer operates it (`hold`, `toggle` or
+`tap`). `UserInput` is a union of `LevelUserInput` and `PulseUserInput`, so
+only the sensible pairs type-check: the button is `level`/`hold`, the switch
+`level`/`toggle`, the pulse button `pulse`/`tap`, each with one slot. A slot's active state is transient
+sim visuals, never an option, and `clearSimState()` resets every slot. The
+compiler, the simulation, the canvas, the watch and the automation API know a
+user input only through this interface (see
+[Simulation](simulation.md#run-controls-and-user-input)).
+
 Also worth knowing: `ignoresWireCollision` (only `TextComponent`; wires may pass
 through), the per-side negation sets (out-of-range entries ignored on read and
 pruned on serialize, so a resize stays undo-safe), `isInputHigh` (the display

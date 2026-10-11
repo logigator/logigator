@@ -1,7 +1,6 @@
 import { Component } from '../../components/component';
 import { ComponentProviderService } from '../../components/component-provider.service';
-import { ButtonComponent } from '../../components/component-types/button/button.component';
-import { SwitchComponent } from '../../components/component-types/switch/switch.component';
+import { isUserInput } from '../../components/user-input';
 import { LoggingService } from '../../logging/logging.service';
 import { LinkRenderTargets } from '../../simulation/compiler/compiled-board.model';
 import { WatchLevelInfo } from '../../simulation/compiler/watch-index';
@@ -95,7 +94,7 @@ export class WatchSession {
     });
 
     this.applier = new LinkStateApplier(targets);
-    // Only a *full* snapshot triggers the one-time switch pose sync; deltas
+    // Only a *full* snapshot triggers the one-time toggle pose sync; deltas
     // arriving before the seed don't count.
     const sessionApplier: SnapshotApplier = {
       applyDelta: (ids, values) => this.applier.applyDelta(ids, values),
@@ -110,15 +109,16 @@ export class WatchSession {
 
   /**
    * Per-frame pull: returns whether the view needs a re-render. The first full
-   * snapshot additionally poses the copied switches from their output-port
-   * power — a switch drives its output link directly, so the link state *is*
-   * the switch state.
+   * snapshot additionally poses the copies' `toggle` slots from their
+   * output-port power — a `level` slot drives its output link directly, so
+   * the link state *is* the slot's state. A `hold` copy is not posed: its
+   * held state is the one operating it.
    */
   public onFrame(): boolean {
     const changed = this.applier.consumeChanged();
     if (this.needsSwitchSync) {
       this.needsSwitchSync = false;
-      this._syncSwitches();
+      this._syncToggles();
       return true;
     }
     return changed;
@@ -126,36 +126,57 @@ export class WatchSession {
 
   public destroy(): void {
     this.unregister();
-    // A copy still held is released first: once it is gone, nothing is left
-    // to release its engine unit.
+    // Every high `level` slot of a copy is set low first: once the copy is
+    // gone, nothing is left to reset its engine unit.
     const simulation = getStaticDI(SimulationService);
     this.components.forEach((component, index) => {
       const unitIndex = this.info.unitIndexFor(index);
       if (
-        component instanceof ButtonComponent &&
-        component.held &&
-        unitIndex !== undefined
+        !isUserInput(component) ||
+        component.drive !== 'level' ||
+        unitIndex === undefined
       ) {
-        simulation.triggerUnitInput(
-          unitIndex,
-          component,
-          () => undefined,
-          'release'
-        );
+        return;
+      }
+      for (let slot = 0; slot < component.inputSlots; slot++) {
+        if (component.isActive(slot)) {
+          simulation.setUnitInput(
+            unitIndex,
+            component,
+            false,
+            () => undefined,
+            slot
+          );
+        }
       }
     });
     this.project.destroy({ children: true });
   }
 
-  private _syncSwitches(): void {
+  /**
+   * A powered `toggle` slot is adopted through the simulation service, which
+   * tracks it like any other high level slot without telling the engine what
+   * it already holds.
+   */
+  private _syncToggles(): void {
+    const simulation = getStaticDI(SimulationService);
+    const repaint = () => this.project.triggerTicker('single');
     this.components.forEach((component, index) => {
-      if (!(component instanceof SwitchComponent)) {
+      const unitIndex = this.info.unitIndexFor(index);
+      if (
+        !isUserInput(component) ||
+        component.gesture !== 'toggle' ||
+        unitIndex === undefined
+      ) {
         return;
       }
-      const outputNet = this.info.tables.portNets[index][component.numInputs];
-      const link = outputNet >= 0 ? this.info.linkOfLocalNet[outputNet] : -1;
-      if (link >= 0) {
-        component.setOn(this.applier.isPowered(link));
+      for (let slot = 0; slot < component.inputSlots; slot++) {
+        const outputNet =
+          this.info.tables.portNets[index][component.numInputs + slot];
+        const link = outputNet >= 0 ? this.info.linkOfLocalNet[outputNet] : -1;
+        if (link >= 0 && this.applier.isPowered(link)) {
+          simulation.adoptHighLevel(unitIndex, component, repaint, slot);
+        }
       }
     });
   }

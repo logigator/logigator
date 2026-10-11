@@ -3,8 +3,8 @@ import { Point, Rectangle } from 'pixi.js';
 
 import { environment } from '../../environments/environment';
 import { Component } from '../components/component';
-import { ButtonComponent } from '../components/component-types/button/button.component';
 import { ComponentProviderService } from '../components/component-provider.service';
+import { isUserInput, UserInput } from '../components/user-input';
 import { CUSTOM_TYPE_ID_BASE } from '@logigator/core';
 import { CustomComponentRegistry } from '../components/custom/custom-component-registry.service';
 import { SubCircuitWatch } from '../components/custom/sub-circuit-watch';
@@ -49,6 +49,8 @@ import {
   FocusTarget,
   GridPoint,
   GridRect,
+  InputSlot,
+  InputValue,
   InspectionInfo,
   LibraryEntry,
   LogigatorAutomationApi,
@@ -197,8 +199,11 @@ export class AutomationApiService {
         status: (): SimStatus => this.simStatus(),
         setTarget: (value: number, unit: TargetSpeedUnit): void =>
           this.simulation.setTargetHz(value * TARGET_SPEED_MULTIPLIER[unit]),
-        setInput: (componentId: number, value: boolean): Promise<void> =>
-          this.simSetInput(componentId, value),
+        setInput: (
+          componentId: number,
+          value: InputValue,
+          input?: InputSlot
+        ): Promise<void> => this.simSetInput(componentId, value, input),
         readPorts: (componentIds?: number[]): Promise<PortReadout[]> =>
           this.simReadPorts(componentIds)
       }),
@@ -243,9 +248,10 @@ export class AutomationApiService {
         setInput: (
           inspectionId: number,
           componentId: number,
-          value: boolean
+          value: InputValue,
+          input?: InputSlot
         ): Promise<void> =>
-          this.inspectSetInput(inspectionId, componentId, value),
+          this.inspectSetInput(inspectionId, componentId, value, input),
         navigateTo: (inspectionId: number, level: number): InspectionInfo =>
           this.inspectNavigateTo(inspectionId, level),
         camera: Object.freeze({
@@ -564,15 +570,34 @@ export class AutomationApiService {
   }
 
   /**
-   * Drives a lever, button or pulse button to an absolute state. The engine applies the input at
-   * its next tick, so the deterministic recipe is
+   * Drives one slot, or every slot, of a lever, button or pulse button to an absolute state. The
+   * engine applies the input at its next tick — every slot of an array the same one while
+   * paused — so the deterministic recipe is
    * `pause()` → `setInput()` → `step()` → `readPorts()`.
    */
-  public async simSetInput(componentId: number, value: boolean): Promise<void> {
-    if (!this.simulation.setUserInput(componentId, value)) {
-      throw new Error(
+  public async simSetInput(
+    componentId: number,
+    value: InputValue,
+    input?: InputSlot
+  ): Promise<void> {
+    const notAnInput = () =>
+      new Error(
         `logigator: component ${componentId} is not a user input of the running simulation`
       );
+    const component = this.projectService
+      .mainProject()
+      ?.getComponentById(componentId);
+    if (
+      !component ||
+      !isUserInput(component) ||
+      !this.simulation.board?.userInputs.has(componentId)
+    ) {
+      throw notAnInput();
+    }
+    for (const write of resolveInputWrites(component, value, input)) {
+      if (!this.simulation.setUserInput(componentId, write.value, write.slot)) {
+        throw notAnInput();
+      }
     }
     await this.nextFrame();
   }
@@ -1032,7 +1057,11 @@ export class AutomationApiService {
       inspectionId,
       componentId
     );
-    if (component instanceof ButtonComponent) {
+    if (
+      isUserInput(component) &&
+      component.gesture === 'hold' &&
+      !component.config.inspection
+    ) {
       throw new Error(
         `logigator: component ${componentId} is a button, which a tap cannot hold — use inspect.setInput`
       );
@@ -1043,12 +1072,13 @@ export class AutomationApiService {
 
   /**
    * {@link simSetInput} for a user input of the visible watch level: the same
-   * absolute semantics, through the unit the watch index resolves.
+   * absolute semantics and values, through the unit the watch index resolves.
    */
   public async inspectSetInput(
     inspectionId: number,
     componentId: number,
-    value: boolean
+    value: InputValue,
+    input?: InputSlot
   ): Promise<void> {
     const watch = this.requireWatch(inspectionId);
     const component = this.requireWatchComponent(
@@ -1056,10 +1086,17 @@ export class AutomationApiService {
       inspectionId,
       componentId
     );
-    if (!watch.setInput(component, value)) {
-      throw new Error(
+    const notAnInput = () =>
+      new Error(
         `logigator: component ${componentId} is not a user input of the visible level of inspection ${inspectionId}`
       );
+    if (!isUserInput(component) || !watch.isLevelInput(component)) {
+      throw notAnInput();
+    }
+    for (const write of resolveInputWrites(component, value, input)) {
+      if (!watch.setInput(component, write.value, write.slot)) {
+        throw notAnInput();
+      }
     }
     await this.nextFrame();
   }
@@ -1447,4 +1484,70 @@ export function toGridRect(rect: Rectangle): GridRect {
     width: rect.width,
     height: rect.height
   };
+}
+
+/**
+ * The slot writes a `setInput` value stands for, validated whole before any
+ * is applied: a boolean is one write to the slot `input` addresses, an array
+ * one write per slot, in slot order. An array must have one element per slot
+ * (`inputSlots`) and takes no address.
+ */
+function resolveInputWrites(
+  component: Component & UserInput,
+  value: InputValue,
+  input: InputSlot | undefined
+): { slot: number; value: boolean }[] {
+  if (typeof value === 'boolean') {
+    return [{ slot: resolveInputSlot(component, input), value }];
+  }
+  const count = component.inputSlots;
+  const expected = `component ${component.id} has ${count} slot${count === 1 ? '' : 's'}, so an array sets it with exactly ${count} boolean${count === 1 ? '' : 's'}`;
+  if (Array.isArray(value) && input !== undefined) {
+    throw new Error(
+      `logigator: an array sets every slot and takes no slot address — ${expected}`
+    );
+  }
+  if (
+    !Array.isArray(value) ||
+    value.length !== count ||
+    value.some((state) => typeof state !== 'boolean')
+  ) {
+    throw new Error(
+      `logigator: ${JSON.stringify(value)} is not a value for every slot — ${expected}`
+    );
+  }
+  return value.map((state, slot) => ({ slot, value: state }));
+}
+
+/**
+ * The slot index an address names on a user input: the index itself, or the
+ * position of a slot id in the component's `slotIds`; slot `0` without one.
+ * An address the component does not have is an error naming the ones it
+ * does.
+ */
+function resolveInputSlot(
+  component: Component & UserInput,
+  input: InputSlot | undefined
+): number {
+  if (input === undefined) {
+    return 0;
+  }
+  const count = component.inputSlots;
+  const ids = component.slotIds ?? [];
+  const slot =
+    typeof input === 'string'
+      ? ids.indexOf(input)
+      : Number.isInteger(input) && input >= 0 && input < count
+        ? input
+        : -1;
+  if (slot >= 0) {
+    return slot;
+  }
+  const indices =
+    count === 1 ? 'its only slot is 0' : `its slots are 0–${count - 1}`;
+  const named =
+    ids.length > 0 ? `, ids ${ids.map((id) => `"${id}"`).join(', ')}` : '';
+  throw new Error(
+    `logigator: component ${component.id} has no input slot ${JSON.stringify(input)} — ${indices}${named}`
+  );
 }

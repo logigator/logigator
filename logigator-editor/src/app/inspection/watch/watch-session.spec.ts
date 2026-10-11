@@ -19,7 +19,8 @@ import { SimulationService } from '../../simulation/simulation.service';
 import { packSnapshot } from '../../simulation/worker/protocol';
 import {
   FRAME_SCHEDULER,
-  SIMULATION_WORKER_FACTORY
+  SIMULATION_WORKER_FACTORY,
+  SimulationWorkerService
 } from '../../simulation/worker/simulation-worker.service';
 import { Wire } from '../../wires/wire';
 import { WireDirection } from '@logigator/core';
@@ -180,9 +181,46 @@ describe('WatchSession', () => {
     expect(setPowered).toHaveBeenCalledWith(true);
     // The first frame after the seed poses the switch.
     expect(session.onFrame()).toBe(true);
-    expect(copiedSwitch.isOn).toBe(true);
+    expect(copiedSwitch.isActive(0)).toBe(true);
     // Nothing changed since.
     expect(session.onFrame()).toBe(false);
+    session.destroy();
+  });
+
+  it('has a synced-on switch copy set low by stop, sending nothing to sync it', async () => {
+    const { instanceId } = await enterWithInstance();
+    const session = openSession(instanceId);
+    const copiedSwitch = session.components[0] as SwitchComponent;
+    const switchLink = simulation.board!.descriptor.components[0].outputs[0];
+    fakeWorker.emit({
+      kind: 'snapshot',
+      reqId: 99,
+      tick: 1,
+      isDelta: false,
+      ...packSnapshot(
+        undefined,
+        null,
+        fullBits(simulation.board!.descriptor.links, [switchLink])
+      )
+    });
+    session.onFrame();
+    expect(copiedSwitch.isActive(0)).toBe(true);
+    // The engine already holds it high.
+    expect(fakeWorker.postedOfKind('triggerInput')).toHaveLength(0);
+
+    const reset = vi.spyOn(TestBed.inject(SimulationWorkerService), 'reset');
+    simulation.stop();
+    await reset.mock.results[0].value;
+    expect(copiedSwitch.isActive(0)).toBe(false);
+
+    // Set low against the rebuilt engine (the board's only unit is the
+    // switch), and no longer tracked: a second stop sends nothing for it.
+    expect(fakeWorker.postedOfKind('triggerInput')).toEqual([
+      expect.objectContaining({ componentIndex: 0, event: 0, state: [false] })
+    ]);
+    simulation.stop();
+    await reset.mock.results[1].value;
+    expect(fakeWorker.postedOfKind('triggerInput')).toHaveLength(1);
     session.destroy();
   });
 

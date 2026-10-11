@@ -2,6 +2,7 @@ import { effect, inject, Injectable, signal, untracked } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subscription } from 'rxjs';
 import { Component } from '../components/component';
+import { InputRoute } from '../components/component-inspection';
 import { LayoutService } from '../layout/layout.service';
 import { ToastService } from '../logging/toast.service';
 import { ProjectService } from '../project/project.service';
@@ -64,8 +65,12 @@ export class InspectionService {
     });
   }
 
-  /** Opens (or focuses) the inspection for an inspectable component. */
-  public openFor(component: Component): void {
+  /**
+   * Opens (or focuses) the inspection for an inspectable component. `input`
+   * routes the presses played in it; without one they go to the top-level
+   * board, as a press on the canvas does.
+   */
+  public openFor(component: Component, context?: { input?: InputRoute }): void {
     const existing = this._open().find(
       (entry) => entry.component === component
     );
@@ -79,7 +84,9 @@ export class InspectionService {
     }
     let inspection;
     try {
-      inspection = factory(component);
+      inspection = factory(component, {
+        input: context?.input ?? this._topLevelRoute(component)
+      });
     } catch (err) {
       // A watch can legitimately fail to open (the definition no longer
       // matches the compiled board) — surface it instead of crashing the tap.
@@ -157,6 +164,19 @@ export class InspectionService {
     for (const entry of this._open()) {
       entry.inspection.onFrame?.();
     }
+  }
+
+  private _topLevelRoute(component: Component): InputRoute {
+    return {
+      press: (slot) =>
+        this.projectService
+          .mainProject()
+          ?.emitUserInput(component, 'press', slot),
+      release: (slot) =>
+        this.projectService
+          .mainProject()
+          ?.emitUserInput(component, 'release', slot)
+    };
   }
 
   /** Idempotent removal — safe when the entry is already gone. */

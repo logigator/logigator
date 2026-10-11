@@ -8,6 +8,7 @@ import {
   ManualFrameScheduler
 } from '../../../testing/fake-simulation-worker';
 import { Component } from '../component';
+import { ComponentInspection } from '../component-inspection';
 import { ComponentProviderService } from '../component-provider.service';
 import { ButtonComponent } from '../component-types/button/button.component';
 import { SwitchComponent } from '../component-types/switch/switch.component';
@@ -15,6 +16,7 @@ import { outputComponentConfig } from '../component-types/output/output.config';
 import { Project } from '../../project/project';
 import { ProjectService } from '../../project/project.service';
 import { EditorSettingsService } from '../../settings/editor-settings.service';
+import { InspectionService } from '../../inspection/inspection.service';
 import { SimulationService } from '../../simulation/simulation.service';
 import {
   FRAME_SCHEDULER,
@@ -188,7 +190,7 @@ describe('SubCircuitWatch', () => {
     expect(switchCopy).toBeInstanceOf(SwitchComponent);
     watch.activate(switchCopy);
 
-    expect((switchCopy as SwitchComponent).isOn).toBe(true);
+    expect((switchCopy as SwitchComponent).isActive(0)).toBe(true);
     const inputs = fakeWorker.postedOfKind('triggerInput');
     expect(inputs).toHaveLength(1);
     // The flattened board's only unit is the inner switch — index 0.
@@ -226,11 +228,11 @@ describe('SubCircuitWatch', () => {
       const hold = watch.holdFor(buttonCopy)!;
 
       hold.press();
-      expect(buttonCopy.held).toBe(true);
+      expect(buttonCopy.isActive(0)).toBe(true);
       expect(levels()).toEqual([true]);
 
       hold.release();
-      expect(buttonCopy.held).toBe(false);
+      expect(buttonCopy.isActive(0)).toBe(false);
       expect(levels()).toEqual([true, false]);
     });
 
@@ -243,6 +245,32 @@ describe('SubCircuitWatch', () => {
 
       // The hold's own release, cancelled by the level swap, sends nothing.
       hold.release();
+      expect(levels()).toEqual([true, false]);
+    });
+
+    it('opens the inspection it declares instead of triggering, routed to the copy', () => {
+      const openFor = vi
+        .spyOn(TestBed.inject(InspectionService), 'openFor')
+        .mockImplementation(() => undefined);
+      Object.defineProperty(buttonCopy, 'config', {
+        value: {
+          ...buttonCopy.config,
+          inspection: () => ({}) as ComponentInspection
+        }
+      });
+
+      watch.activate(buttonCopy);
+
+      expect(openFor).toHaveBeenCalledWith(buttonCopy, {
+        input: expect.anything()
+      });
+      expect(levels()).toEqual([]);
+
+      const route = openFor.mock.calls[0][1]!.input!;
+      route.press(0);
+      expect(buttonCopy.isActive(0)).toBe(true);
+      expect(levels()).toEqual([true]);
+      route.release(0);
       expect(levels()).toEqual([true, false]);
     });
 

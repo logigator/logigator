@@ -21,16 +21,16 @@ describe('SwitchComponent', () => {
     switchComp.destroy({ children: true });
   });
 
-  it('starts off and toggles', () => {
+  it('starts off and switches on and off', () => {
     const switchComp = makeSwitch();
-    expect(switchComp.isOn).toBe(false);
+    expect(switchComp.isActive(0)).toBe(false);
 
-    switchComp.toggle();
-    expect(switchComp.isOn).toBe(true);
+    switchComp.setActive(0, true);
+    expect(switchComp.isActive(0)).toBe(true);
     expect(switchComp.children.length).toBeGreaterThan(0);
 
-    switchComp.toggle();
-    expect(switchComp.isOn).toBe(false);
+    switchComp.setActive(0, false);
+    expect(switchComp.isActive(0)).toBe(false);
 
     switchComp.destroy({ children: true });
   });
@@ -77,11 +77,11 @@ describe('SwitchComponent', () => {
 
   it('clearSimState resets the on state', () => {
     const switchComp = makeSwitch();
-    switchComp.setOn(true);
+    switchComp.setActive(0, true);
 
     switchComp.clearSimState();
 
-    expect(switchComp.isOn).toBe(false);
+    expect(switchComp.isActive(0)).toBe(false);
     switchComp.destroy({ children: true });
   });
 });

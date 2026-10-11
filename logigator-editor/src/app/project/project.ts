@@ -27,15 +27,17 @@ import { strokeScaleFor } from '../rendering/graphics/stroke-scale';
 export const NO_EXCLUDED_IDS: ReadonlySet<number> = new Set<number>();
 
 /**
- * How the pointer drove a user input: a switch or pulse button acts on a
- * `tap`, a button is level-driven — `press` as its hold starts, `release` as
- * the hold ends.
+ * How the pointer drove a user input's slot: a `toggle` or `pulse` input acts
+ * on a `tap`, a `hold` input is level-driven — `press` as its hold starts,
+ * `release` as the hold ends.
  */
 export type UserInputPhase = 'tap' | 'press' | 'release';
 
 export interface UserInputEvent {
   readonly component: Component;
   readonly phase: UserInputPhase;
+  /** The user input's slot the operation drives. */
+  readonly slot: number;
 }
 
 export class Project extends Container {
@@ -335,9 +337,10 @@ export class Project extends Container {
 
   public emitUserInput(
     component: Component,
-    phase: UserInputPhase = 'tap'
+    phase: UserInputPhase = 'tap',
+    slot = 0
   ): void {
-    this._userInput$.next({ component, phase });
+    this._userInput$.next({ component, phase, slot });
   }
 
   public get inspectRequest$(): Observable<Component> {

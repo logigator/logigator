@@ -38,11 +38,11 @@ describe('ButtonComponent', () => {
     const button = makeButton();
     const released = bodyContext(button);
 
-    button.setHeld(true);
+    button.setActive(0, true);
     expect(bodyContext(button)).not.toBe(released);
 
     button.clearSimState();
-    expect(button.held).toBe(false);
+    expect(button.isActive(0)).toBe(false);
     expect(bodyContext(button)).toBe(released);
     button.destroy({ children: true });
   });

@@ -11,6 +11,19 @@ import { SerializedComponentBody, SerializedWireBody } from '@logigator/core';
 /** Contract version, independent of the editor's release version. */
 export const AUTOMATION_API_VERSION = 1;
 
+/**
+ * Which slot of a user input a write drives: a slot index, or one of the
+ * component's slot ids. Slot `i` is output port `i`; a lever, button or pulse
+ * button has the one slot `0`.
+ */
+export type InputSlot = number | string;
+
+/**
+ * What a user-input write sets: one slot's state, or every slot's at once —
+ * element `i` for slot `i`, as many elements as the input has slots.
+ */
+export type InputValue = boolean | readonly boolean[];
+
 export interface ApiInfo {
   apiVersion: number;
   editorVersion: string;
@@ -462,8 +475,14 @@ export interface LogigatorAutomationApi {
     /**
      * Lever: absolute set. Button: absolute too — held by `true` until a
      * `false` releases it. Pulse button: pulse on `true`, ignored on `false`.
+     * A boolean sets the one slot `input` addresses (default `0`); an array
+     * sets every slot, element `i` for slot `i`, and takes no `input`.
      */
-    setInput(componentId: number, value: boolean): Promise<void>;
+    setInput(
+      componentId: number,
+      value: InputValue,
+      input?: InputSlot
+    ): Promise<void>;
     readPorts(componentIds?: number[]): Promise<PortReadout[]>;
   };
 
@@ -524,13 +543,14 @@ export interface LogigatorAutomationApi {
     activate(inspectionId: number, componentId: number): InspectionInfo;
     /**
      * `sim.setInput` for a user input inside the visible watch level, with
-     * the same absolute semantics. A button held here is released when its
-     * level closes.
+     * the same absolute semantics, values and slot address. A button held
+     * here is released when its level closes.
      */
     setInput(
       inspectionId: number,
       componentId: number,
-      value: boolean
+      value: InputValue,
+      input?: InputSlot
     ): Promise<void>;
     /** Breadcrumb navigation: pops every level deeper than `level`. */
     navigateTo(inspectionId: number, level: number): InspectionInfo;

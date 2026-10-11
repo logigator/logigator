@@ -8,7 +8,7 @@ import {
 import { TranslationKey } from '../translation/translation-key.model';
 import { ComponentOption } from './component-option';
 import { ComponentAction } from './component-action';
-import { ComponentInspection } from './component-inspection';
+import { ComponentInspection, InspectionContext } from './component-inspection';
 import { Component } from './component';
 
 /**
@@ -80,9 +80,13 @@ export interface ComponentConfigView<
   actions?: ComponentAction[];
   /**
    * Builds the live inspection opened by tapping an instance during
-   * simulation. Types without one are not inspectable.
+   * simulation. Types without one are not inspectable. The context's route
+   * is where an input played in the inspection sends its presses.
    */
-  inspection?(component: Component): ComponentInspection;
+  inspection?(
+    component: Component,
+    context?: InspectionContext
+  ): ComponentInspection;
   /** Present on built-ins that exist in the v0 format; v0 has no customs. */
   legacyV0Slots?: LegacyV0Slots;
 }

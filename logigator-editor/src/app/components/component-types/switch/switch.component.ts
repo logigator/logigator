@@ -1,15 +1,21 @@
 import { Component } from '../../component';
 import { switchMeta } from '@logigator/core';
 import { SwitchGraphics } from '../../../rendering/graphics/switch.graphics';
+import { LevelUserInput } from '../../user-input';
 import { switchComponentConfig, SwitchOptions } from './switch.config';
 
 /**
- * A latching switch (simulation user input, Cont event). The on/off state is
- * transient sim visuals on the instance — not an option: it is not undoable
- * and not persisted, and is cleared on simulation stop/exit.
+ * A latching switch (simulation user input, Cont event): a tap flips its
+ * output. A {@link LevelUserInput} operated by `toggle`, one slot.
  */
-export class SwitchComponent extends Component<SwitchOptions> {
+export class SwitchComponent
+  extends Component<SwitchOptions>
+  implements LevelUserInput
+{
   public readonly config = switchComponentConfig;
+  public readonly drive = 'level';
+  public readonly gesture = 'toggle';
+  public readonly inputSlots = 1;
 
   private _on = false;
 
@@ -17,26 +23,22 @@ export class SwitchComponent extends Component<SwitchOptions> {
     super(switchMeta, options);
   }
 
-  public get isOn(): boolean {
+  public isActive(slot: number): boolean {
     // The base constructor's initial draw runs before field initializers —
     // an unassigned `_on` must read as off.
-    return this._on === true;
+    return slot === 0 && this._on === true;
   }
 
-  public setOn(on: boolean): void {
-    if (this.isOn === on) {
+  public setActive(slot: number, on: boolean): void {
+    if (slot !== 0 || this.isActive(0) === on) {
       return;
     }
     this._on = on;
     this.redraw();
   }
 
-  public toggle(): void {
-    this.setOn(!this.isOn);
-  }
-
   public override clearSimState(): void {
-    this.setOn(false);
+    this.setActive(0, false);
   }
 
   protected draw(): void {
@@ -45,7 +47,11 @@ export class SwitchComponent extends Component<SwitchOptions> {
     // reads the same way. Counter-rotating about local (0.5, 0.5) keeps the
     // square in its rotation-invariant footprint at zero net screen rotation.
     const body = this.addScaledGraphics((scale) =>
-      this.geometryService.getGraphicsContext(SwitchGraphics, scale, this.isOn)
+      this.geometryService.getGraphicsContext(
+        SwitchGraphics,
+        scale,
+        this.isActive(0)
+      )
     );
     body.pivot.set(0.5, 0.5);
     body.position.set(0.5, 0.5);

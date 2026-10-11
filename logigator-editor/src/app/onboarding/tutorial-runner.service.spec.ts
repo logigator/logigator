@@ -133,7 +133,7 @@ describe('TutorialRunnerService', () => {
     tick();
     expect(lastView().stepNumber).toBe(1); // manual step
 
-    userInput$.next({ component: {} as Component, phase: 'tap' }); // drive an input mid-step
+    userInput$.next({ component: {} as Component, phase: 'tap', slot: 0 }); // drive an input mid-step
     tick();
 
     expect(lastView().stepNumber).toBe(1); // still waiting on Next
