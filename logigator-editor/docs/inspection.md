@@ -137,3 +137,46 @@ slot)` is the absolute path automation drives.
   is fit-and-centred when it first shows; re-blits ride `render$` (engine
   changes), the project's `ticker$` (zoom, theme) and host resizes —
   `Project.pan` emits nothing, so panning renders explicitly.
+
+## Gamepad Keys
+
+A gamepad is played from the keyboard through two root services.
+
+**`GamepadBindingsService`** (`shortcuts/gamepad-bindings.service.ts`) holds
+one key per control, shared by every gamepad: `bindings` (control →
+`KeyboardEvent.code` or `null`), `controlFor(code)`, `assign` / `clear` /
+`reset`. Bindings are by **`code`**, the key's position, not by `key` as
+`ShortcutService`'s are — a Shift pressed in between changes `key` between
+keydown and keyup, which would leave a control stuck. No two controls share a
+code: `assign` swaps with the control that held it and returns that control.
+Escape and Tab are never bound. The map persists at
+`localStorage['logigator.gamepad.keys']` as `{ v: 1, keys }`, resolved **per
+control** on read, so one bad entry costs only that entry, and a `storage`
+event re-reads it, so a rebind in one tab reaches the others. `keyLabel(code)`
+names a key for its keycap: in the user's layout where Chromium's
+`navigator.keyboard.getLayoutMap()` reports it (loaded once, into a signal),
+otherwise from a fixed table (`gamepad-key-labels.ts`); `keyIcon(code)` is the
+Phosphor class for the keys drawn as icons (the arrows, Enter), and `keyCaps`
+is every control's label and icon at once.
+
+**`GamepadKeyboardService`** (`inspection/gamepad/gamepad-keyboard.service.ts`)
+routes keys by **DOM focus**: an open pad view registers a `GamepadKeyTarget`
+(`host`, `keyDown`, `keyUp`, `releaseKeys`), and a key goes to the target
+whose `host` contains `document.activeElement`, to nobody otherwise. Its
+`keydown`/`keyup` listeners are on `window` in the **capture** phase, so they
+run before `ShortcutService`'s bubble-phase ones. A keydown passes through
+untouched when no host holds the focus, the simulation is not ready, the
+target is a text field (`input`, `textarea`, `select`, contenteditable), Ctrl,
+Meta or Alt is held (unless it is the key itself), or the code is unbound.
+Anything else is consumed (`preventDefault` + `stopImmediatePropagation`), so
+**a bound key shadows its shortcut while a pad has focus** — Enter presses
+Start rather than toggling the simulation; a repeat is consumed without a
+second press. Escape is never bound, so it always reaches the window or the
+board.
+
+The service records which codes it pressed and on which target. A keyup for
+one of them is consumed and released on that target, wherever focus has gone
+since. A `focusout` leaving a host releases that target's keys
+(`releaseKeys()`); a `window` blur, `visibilitychange` to hidden and
+unregistering release theirs too. Listeners attach on the first registration
+and are removed with the service.
