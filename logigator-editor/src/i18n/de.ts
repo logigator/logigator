@@ -251,6 +251,16 @@ const de: TranslationSchema = {
         description:
           'Ein Taster. Während die Simulation läuft, ist sein Ausgang an, solange er gedrückt gehalten wird.'
       },
+      GAMEPAD: {
+        name: 'Gamepad',
+        description:
+          'Ein Gamecontroller mit einem Ausgang pro Taste: Jeder Ausgang ist an, solange seine Taste gedrückt gehalten wird. Während die Simulation läuft, öffnet ein Klick einen Controller auf dem Bildschirm, den du mit Tastatur, Maus oder einem echten Gamecontroller bedienst.',
+        options: {
+          face: 'Aktionstasten',
+          shoulders: 'Schultertasten',
+          menu: 'Menütasten'
+        }
+      },
       PULSE_BUTTON: {
         name: 'Impulstaster',
         description:

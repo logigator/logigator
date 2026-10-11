@@ -251,6 +251,16 @@ const en = {
         description:
           'A push button. While the simulation is running, its output is on for as long as it is held down.'
       },
+      GAMEPAD: {
+        name: 'Gamepad',
+        description:
+          'A game controller with one output per button, on for as long as the button is held down. While the simulation is running, clicking it opens an on-screen controller you play with the keyboard, the mouse or a physical game controller.',
+        options: {
+          face: 'Face buttons',
+          shoulders: 'Shoulder buttons',
+          menu: 'Menu buttons'
+        }
+      },
       PULSE_BUTTON: {
         name: 'Pulse button',
         description:

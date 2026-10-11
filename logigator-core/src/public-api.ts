@@ -151,6 +151,7 @@ export { delayMeta } from './catalog/built-ins/delay.meta';
 export { demuxMeta } from './catalog/built-ins/demux.meta';
 export { encoderMeta } from './catalog/built-ins/encoder.meta';
 export { fullAdderMeta } from './catalog/built-ins/full-adder.meta';
+export { gamepadMeta } from './catalog/built-ins/gamepad.meta';
 export { halfAdderMeta } from './catalog/built-ins/half-adder.meta';
 export { inputMeta } from './catalog/built-ins/input.meta';
 export { jkFfMeta } from './catalog/built-ins/jk-ff.meta';
@@ -174,6 +175,20 @@ export {
   ledMatrixShape,
   type LedMatrixSize
 } from './catalog/built-ins/led-matrix.meta';
+export {
+  GAMEPAD_CONTROLS,
+  GAMEPAD_DEFAULT_LABELS,
+  GAMEPAD_GLYPH_COLUMN_WIDTH,
+  gamepadControls,
+  gamepadGroups,
+  gamepadLabelColumnWidth
+} from './catalog/built-ins/gamepad.meta';
+export type {
+  GamepadControlId,
+  GamepadGroup,
+  GamepadGroupId,
+  GamepadGroupValues
+} from './catalog/built-ins/gamepad.meta';
 export {
   SegmentBase,
   segmentReadoutDigits

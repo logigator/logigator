@@ -250,6 +250,16 @@ const es: TranslationSchema = {
         description:
           'Un pulsador. Mientras la simulación está en marcha, su salida está encendida mientras se mantenga pulsado.'
       },
+      GAMEPAD: {
+        name: 'Mando',
+        description:
+          'Un mando de juego con una salida por botón, encendida mientras el botón se mantenga pulsado. Mientras la simulación está en marcha, al hacer clic se abre un mando en pantalla que se maneja con el teclado, el ratón o un mando físico.',
+        options: {
+          face: 'Botones de acción',
+          shoulders: 'Botones laterales',
+          menu: 'Botones de menú'
+        }
+      },
       PULSE_BUTTON: {
         name: 'Botón de pulso',
         description:

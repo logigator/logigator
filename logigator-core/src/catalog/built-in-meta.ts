@@ -8,6 +8,7 @@ import { decoderMeta } from './built-ins/decoder.meta';
 import { delayMeta } from './built-ins/delay.meta';
 import { demuxMeta } from './built-ins/demux.meta';
 import { encoderMeta } from './built-ins/encoder.meta';
+import { gamepadMeta } from './built-ins/gamepad.meta';
 import { fullAdderMeta } from './built-ins/full-adder.meta';
 import { halfAdderMeta } from './built-ins/half-adder.meta';
 import { inputMeta } from './built-ins/input.meta';
@@ -57,7 +58,8 @@ const ALL = [
   ledMeta,
   segmentDisplayMeta,
   ledMatrixMeta,
-  buttonMeta
+  buttonMeta,
+  gamepadMeta
 ];
 
 /**

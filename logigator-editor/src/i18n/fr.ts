@@ -250,6 +250,16 @@ const fr: TranslationSchema = {
         description:
           "Un bouton poussoir. Pendant que la simulation tourne, sa sortie est activée tant qu'il est maintenu enfoncé."
       },
+      GAMEPAD: {
+        name: 'Manette',
+        description:
+          "Une manette de jeu avec une sortie par bouton, activée tant que le bouton est maintenu enfoncé. Pendant que la simulation tourne, cliquer dessus ouvre une manette à l'écran que vous pilotez au clavier, à la souris ou avec une manette physique.",
+        options: {
+          face: "Boutons d'action",
+          shoulders: 'Boutons de tranche',
+          menu: 'Boutons de menu'
+        }
+      },
       PULSE_BUTTON: {
         name: 'Bouton à impulsion',
         description:

@@ -8,6 +8,7 @@ import {
   demuxMeta,
   encoderMeta,
   fullAdderMeta,
+  gamepadMeta,
   halfAdderMeta,
   inputMeta,
   jkFfMeta,
@@ -70,6 +71,7 @@ export type BuiltInTranslationKeys =
   | MetaKeys<typeof demuxMeta>
   | MetaKeys<typeof encoderMeta>
   | MetaKeys<typeof fullAdderMeta>
+  | MetaKeys<typeof gamepadMeta>
   | MetaKeys<typeof halfAdderMeta>
   | MetaKeys<typeof inputMeta>
   | MetaKeys<typeof jkFfMeta>

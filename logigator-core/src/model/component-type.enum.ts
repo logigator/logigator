@@ -31,7 +31,9 @@ export enum BuiltInComponentType {
   SEGMENT_DISPLAY = 203,
   LED_MATRIX = 204,
   // High for as long as it is held; absent from the legacy v0 format.
-  BUTTON = 205
+  BUTTON = 205,
+  // One output per controller button; absent from the legacy v0 format.
+  GAMEPAD = 206
 }
 
 /** A runtime-allocated custom component type id ({@link CUSTOM_TYPE_ID_BASE}+). */
