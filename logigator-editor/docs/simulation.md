@@ -284,8 +284,8 @@ at; the popover's slider stops, speed parsing and formatting are the pure
 Every user input is a **`UserInput`** (`components/user-input.ts`, see
 [component-system.md](component-system.md)), and the service knows it by that
 interface alone, never by class. It has **slots**, one per output port and
-engine unit (see [Units and links](#units-and-links)); the three built-ins have
-the one slot `0`. Two independent properties describe it:
+engine unit (see [Units and links](#units-and-links)); the button, switch and
+pulse button have the one slot `0`, the gamepad one per control. Two independent properties describe it:
 
 - **`drive`** — what the engine receives, and the service's only two
   operations. `level` (button, switch): `_setLevel` sends `INPUT_EVENT_CONT`
@@ -304,16 +304,20 @@ Only three pairs exist, and only they type-check: `UserInput` is the union of
 `LevelUserInput` (`level` with `hold` or `toggle`) and `PulseUserInput`
 (`pulse` with `tap`), and `isUserInput` refuses any other pair at run time.
 
-On the board, `SimulationTool` picks the gesture's session. A pointerdown on a
-`hold` input operated on the canvas (`holdInputAt` in `body-hit.ts` — one that
-declares no inspection) starts a `HoldSession` instead of a `PanSession` — the
-press never pans, however far the pointer moves — which presses its slot `0` at
-once and releases it when the gesture ends by any route: pointer up, pointer
-cancel, lost pointer capture, window blur or a hidden document, Escape, a
-second touch finger, a mode or project switch. Anything else gets a
-`PanSession`, so a drag pans and only a tap hit-tests the component under the
-cursor, emitting an inspect request for one that declares an inspection and a
-`tap` on slot `0` for any other user input. An input that declares an
+On the board, `SimulationTool` picks the gesture's session. Only an input
+**operated on the canvas** is pressed or tapped there (`isCanvasOperatedInput`
+in `body-hit.ts`): one with a single slot that declares no inspection. A press
+on a body can only address one slot, so a multi-slot input (the gamepad) is
+operated through its inspection, and a press or tap on its body on the board
+operates nothing. A pointerdown on a `hold` input operated on the canvas
+(`holdInputAt`) starts a `HoldSession` instead of a `PanSession` — the press
+never pans, however far the pointer moves — which presses its slot `0` at once
+and releases it when the gesture ends by any route: pointer up, pointer cancel,
+lost pointer capture, window blur or a hidden document, Escape, a second touch
+finger, a mode or project switch. Anything else gets a `PanSession`, so a drag
+pans and only a tap hit-tests the component under the cursor, emitting an
+inspect request for one that declares an inspection and a `tap` on slot `0` for
+any other user input operated on the canvas. An input that declares an
 inspection is played in it, its presses arriving through the inspection's
 `InputRoute` ([inspection.md](inspection.md)). `Project.userInput$` carries
 each operation as `{ component, phase, slot }`. A slot outside `inputSlots` is

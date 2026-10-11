@@ -1,7 +1,12 @@
 import { Point } from 'pixi.js';
 import { PointerInput } from '../app/rendering/interaction/pointer-input';
 import { Wire } from '../app/wires/wire';
-import { Direction, SegmentBase, WireDirection } from '@logigator/core';
+import {
+  Direction,
+  NameMap,
+  SegmentBase,
+  WireDirection
+} from '@logigator/core';
 import { AndComponent } from '../app/components/component-types/and/and.component';
 import { andComponentConfig } from '../app/components/component-types/and/and.config';
 import { NotComponent } from '../app/components/component-types/not/not.component';
@@ -17,6 +22,8 @@ import { ClockComponent } from '../app/components/component-types/clock/clock.co
 import { clockComponentConfig } from '../app/components/component-types/clock/clock.config';
 import { SegmentDisplayComponent } from '../app/components/component-types/segment-display/segment-display.component';
 import { segmentDisplayComponentConfig } from '../app/components/component-types/segment-display/segment-display.config';
+import { GamepadComponent } from '../app/components/component-types/gamepad/gamepad.component';
+import { gamepadComponentConfig } from '../app/components/component-types/gamepad/gamepad.config';
 
 /** AndComponent with the given port count, rotation, and grid position. */
 export function makeAnd(
@@ -127,6 +134,33 @@ export function makeSegmentDisplay(
   });
   display.position.set(px, py);
   return display;
+}
+
+/**
+ * GamepadComponent with the given group options (the defaults where omitted:
+ * two face buttons, no shoulders, Select + Start) and custom names, at a grid
+ * position.
+ */
+export function makeGamepad(
+  options: {
+    face?: number;
+    shoulders?: number;
+    menu?: number;
+    names?: NameMap;
+  } = {},
+  px = 0,
+  py = 0
+): GamepadComponent {
+  const defaults = gamepadComponentConfig.options;
+  const pad = new GamepadComponent({
+    face: defaults.face.clone(options.face),
+    shoulders: defaults.shoulders.clone(options.shoulders),
+    menu: defaults.menu.clone(options.menu),
+    label: defaults.label.clone(),
+    names: defaults.names.clone(options.names)
+  });
+  pad.position.set(px, py);
+  return pad;
 }
 
 /**

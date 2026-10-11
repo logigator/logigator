@@ -192,7 +192,7 @@ so read the returned `state`.
 | `exit()`                      | leave simulation entirely, back to editing        |
 | `status()`                    | state, mode, target/measured Hz, tick             |
 | `setTarget(value, unit)`      | target speed; unit `'Hz' \| 'kHz' \| 'MHz'`       |
-| `setInput(id, value, input?)` | drive a lever, button or pulse button             |
+| `setInput(id, value, input?)` | drive a lever, button, pulse button or gamepad    |
 | `readPorts(ids?)`             | per-port powered booleans, `inputs` and `outputs` |
 
 - `setInput` is **absolute**, and what that means follows from the input's
@@ -202,9 +202,15 @@ so read the returned `state`.
   `true` and ignores `false`. Never read-then-toggle.
 - `input` addresses one **slot** of the user input — output port `i` is slot
   `i`, each its own engine unit — by index or by one of the component's slot
-  ids (`UserInput.slotIds`), never by a free-text name. It defaults to `0`, and
-  a lever, button or pulse button has only that one. An address the component
-  does not have is an error naming its valid indices and ids
+  ids (`UserInput.slotIds`). It defaults to `0`, and a lever, button or pulse
+  button has only that one. A gamepad has one slot per control, its slot ids
+  being the control ids in port order (`up`, `down`, `left`, `right`, then
+  whichever of `a`, `b`, `x`, `y`, `l`, `r`, `select`, `start` its options
+  switch on), so a control's index moves with the options and its id does
+  not. A custom button name (the
+  `names` option, written like any other option through `setOption`) is never
+  a slot address: names are free text and need not be unique. An address the
+  component does not have is an error naming its valid indices and ids
   (`resolveInputSlot`).
 - `value` is a boolean for the one addressed slot, or a **boolean array** that
   sets every slot at once, element `i` for slot `i` — `[true]` on a lever, and
@@ -301,8 +307,9 @@ Its five calls below all refuse a data inspection.
 - `getElements(id, query?)` — the visible level's circuit.
 - `activate(id, componentId)` — the watch's tap: drives an inner lever or
   pulse button, drills into a nested custom, or opens an inner component's own
-  inspection. A tap cannot hold a button, so a `hold` input operated on the
-  canvas is refused with an error naming `setInput`.
+  inspection. A user input a tap cannot operate is refused with an error
+  naming `setInput`: a single-slot `hold` input, which a tap cannot hold, and
+  a multi-slot input without an inspection, whose body cannot address a slot.
 - `setInput(id, componentId, value, input?)` — `sim.setInput` for an inner user
   input of the visible level, with the same absolute semantics, values and slot
   address: a button is held by `true` until a `false` releases it, and a held

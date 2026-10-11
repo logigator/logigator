@@ -2,7 +2,11 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { Point } from 'pixi.js';
 import { configureTestBed } from '../../../testing/configure-test-bed';
-import { makeButton, makeSwitch } from '../../../testing/factories';
+import {
+  makeButton,
+  makeGamepad,
+  makeSwitch
+} from '../../../testing/factories';
 import { Component } from '../../components/component';
 import { ComponentProviderService } from '../../components/component-provider.service';
 import { CustomComponentRegistry } from '../../components/custom/custom-component-registry.service';
@@ -181,6 +185,56 @@ describe('BoardCompilerService watch index', () => {
     const innerInfo = board.watch.infoFor(`${instance.id}/1`)!;
     expect(innerInfo.unitIndexFor(0)).toBe(1);
     expect(innerInfo.unitIndexFor(1)).toBeUndefined();
+  });
+
+  it('addresses an inner gamepad through its first unit, slot k driving unit base + k', () => {
+    // A switch ahead of the pad in the body, so the pad's units do not start
+    // at 0; only the pad's `start` output is wired to the plug.
+    const lead = makeSwitch(0, 0);
+    const pad = makeGamepad({ face: 4 }, 0, 2);
+    const plug = makeOutPlug(0, [12, 0]);
+    const start = pad.slotIds.indexOf('start');
+    const corner = new Point(10.5, pad.connectionPoints[start].y);
+    const wires = [
+      wireBetween(pad.connectionPoints[start], corner),
+      wireBetween(corner, new Point(10.5, plug.connectionPoints[0].y)),
+      wireBetween(
+        new Point(10.5, plug.connectionPoints[0].y),
+        plug.connectionPoints[0]
+      )
+    ];
+    const box = registry.registerSnapshot({
+      kind: 'snapshot',
+      source: 'browser',
+      name: 'PadBox',
+      symbol: 'PB',
+      description: '',
+      numInputs: 0,
+      numOutputs: 1,
+      labels: ['O'],
+      circuit: liveToBody([lead, pad, plug], wires)
+    });
+    const instance = placeByType(box, [0, 0]);
+
+    const board = compiler.compile(project);
+    const info = board.watch.infoFor(String(instance.id))!;
+
+    const base = info.unitIndexFor(1)!;
+    expect(base).toBe(info.unitIndexFor(0)! + 1);
+    const units = board.descriptor.components;
+    expect(units).toHaveLength(base + 10);
+    for (let slot = 0; slot < 10; slot++) {
+      const portNet = info.tables.portNets[1][slot];
+      expect(units[base + slot]).toEqual({
+        type: 200,
+        inputs: [],
+        outputs: [info.linkOfLocalNet[portNet]]
+      });
+    }
+    // The wired-out control's unit drives the plug's net.
+    expect(units[base + start].outputs[0]).toBe(
+      info.linkOfLocalNet[info.tables.portNets[2][0]]
+    );
   });
 
   it('gives a wire-only inner net a local id but no link', () => {

@@ -42,8 +42,8 @@ export type GamepadGroupId = 'dpad' | 'face' | 'shoulders' | 'menu';
 
 /**
  * Each control's default port label, shared by the canvas and the controller
- * window. The D-pad is spelled out rather than drawn as arrows: the canvas
- * font atlas carries no arrow glyphs.
+ * window. The D-pad is spelled out rather than drawn as arrows: Roboto Mono,
+ * the canvas face, has no arrow glyphs.
  */
 export const GAMEPAD_DEFAULT_LABELS: Readonly<
   Record<GamepadControlId, string>

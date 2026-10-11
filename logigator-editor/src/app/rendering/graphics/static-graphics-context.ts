@@ -2,9 +2,9 @@ import { GraphicsContext } from 'pixi.js';
 import { environment } from '../../../environments/environment';
 
 /**
- * Supersampling factor for {@link StaticGraphicsContext.smoothCircle}. It
- * cancels the grid scale exactly, so a grid-unit circle tessellates from its
- * zoom-1 pixel radius.
+ * Supersampling factor for {@link StaticGraphicsContext.smoothCircle} and
+ * {@link StaticGraphicsContext.smoothRoundRect}. It cancels the grid scale
+ * exactly, so a grid-unit arc tessellates from its zoom-1 pixel radius.
  */
 const CIRCLE_SUPERSAMPLE = environment.gridSize;
 
@@ -56,6 +56,30 @@ export class StaticGraphicsContext extends GraphicsContext {
       .circle(
         x * CIRCLE_SUPERSAMPLE,
         y * CIRCLE_SUPERSAMPLE,
+        radius * CIRCLE_SUPERSAMPLE
+      )
+      .restore();
+  }
+
+  /**
+   * A rounded rectangle whose corner arcs hold up at every zoom, supersampled
+   * like {@link smoothCircle}: PixiJS bakes each corner's segment count from
+   * its local radius too.
+   */
+  protected smoothRoundRect(
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    radius: number
+  ): this {
+    return this.save()
+      .scale(1 / CIRCLE_SUPERSAMPLE)
+      .roundRect(
+        x * CIRCLE_SUPERSAMPLE,
+        y * CIRCLE_SUPERSAMPLE,
+        width * CIRCLE_SUPERSAMPLE,
+        height * CIRCLE_SUPERSAMPLE,
         radius * CIRCLE_SUPERSAMPLE
       )
       .restore();

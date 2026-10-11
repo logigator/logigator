@@ -89,6 +89,23 @@ compiler, the simulation, the canvas, the watch and the automation API know a
 user input only through this interface (see
 [Simulation](simulation.md#run-controls-and-user-input)).
 
+The **gamepad** (`component-types/gamepad/`) is the one built-in with several
+slots: `level`/`hold`, one slot per control in port order, `slotIds` the
+control ids from core's `gamepadControls`. Its body is a strip — a 3-cell glyph
+column beside the label column the base draws, each group's glyph (D-pad
+cross, face buttons, shoulder bars, menu pills) in a square of side
+`min(rows, 3)` centred on its own port rows, thin rules between the groups.
+Each glyph is a rotation-counter container, so the D-pad's up stays up on a
+turned pad. Every control is two pre-built `Graphics` (`gamepad.graphics.ts`):
+a scale-keyed outline and a white, theme-independent fill tinted to the wire
+color, and a press is **only an alpha write on the fill** — no redraw, no
+context swap, as the per-frame rule asks; a rebuild re-applies the stored
+state. A press on a body can only address slot 0, so a canvas operates
+single-slot inputs alone (`isCanvasOperatedInput`): a multi-slot input is
+operated through its inspection, and a press on a gamepad's body on the board
+operates no slot. The names option's key resolver is attached in the
+constructor, as `RomComponent` attaches its memory dimensions.
+
 Also worth knowing: `ignoresWireCollision` (only `TextComponent`; wires may pass
 through), the per-side negation sets (out-of-range entries ignored on read and
 pruned on serialize, so a resize stays undo-safe), `isInputHigh` (the display
@@ -184,8 +201,8 @@ or the definition rather than probed by constructing an instance.
 
 `symbolShape` is SVG **path data** in an 18-unit box, carried only by types whose
 canvas body is a drawn shape rather than their symbol text (LED, switch,
-button, pulse button, LED matrix, segment display), so a palette tile always previews what placing
-yields. Path data rather than markup because it binds through `[attr.d]` —
+button, pulse button, LED matrix, segment display, gamepad), so a palette tile
+always previews what placing yields. Path data rather than markup because it binds through `[attr.d]` —
 Angular's sanitizer drops SVG from `[innerHTML]` outright.
 
 `ComponentConfig` adds `create(options)`. A factory rather than a constructor

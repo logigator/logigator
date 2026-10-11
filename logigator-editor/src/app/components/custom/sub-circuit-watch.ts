@@ -10,6 +10,7 @@ import { isUserInput, UserInput } from '../user-input';
 import { InspectionService } from '../../inspection/inspection.service';
 import { WatchSession } from '../../inspection/watch/watch-session';
 import { SubCircuitWatchComponent } from '../../inspection/watch/sub-circuit-watch.component';
+import { isCanvasOperatedInput } from '../../rendering/interaction/body-hit';
 import { SerializedCircuitBody } from '@logigator/core';
 import { CompiledBoard } from '../../simulation/compiler/compiled-board.model';
 import { SimulationService } from '../../simulation/simulation.service';
@@ -104,8 +105,9 @@ export class SubCircuitWatch extends ComponentInspection {
   /**
    * Routes a click on a component of the active level's fresh copy. A
    * component that declares an inspection opens it, with a route bound to
-   * this level, before anything would trigger it as a user input; a user
-   * input's tap acts on its slot 0, which a `hold` input ignores.
+   * this level, before anything would trigger it as a user input. A user
+   * input operated on the canvas gets a tap on its one slot, which a `hold`
+   * input ignores; a multi-slot one without an inspection gets nothing.
    */
   public activate(component: Component): void {
     const level = this.activeLevel();
@@ -125,7 +127,7 @@ export class SubCircuitWatch extends ComponentInspection {
       return;
     }
     const unitIndex = level.session.info.unitIndexFor(bodyIndex);
-    if (isUserInput(component) && unitIndex !== undefined) {
+    if (isCanvasOperatedInput(component) && unitIndex !== undefined) {
       this.simulation.triggerUnitInput(
         unitIndex,
         component,

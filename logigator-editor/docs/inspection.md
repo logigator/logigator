@@ -99,9 +99,11 @@ circuit**, split between the component layer and `inspection/watch/`:
   it **on the watch copy**, with an `InputRoute` bound to the level — checked
   before anything would trigger it as a user input, so an input played in its
   own inspection is opened rather than pressed — tracked per level and closed
-  with it; any other user input gets a `tap` on its slot `0`
-  (`SimulationService.triggerUnitInput`, unit index from the watch index),
-  which its gesture reads as a toggle or a pulse. A `hold` input is held
+  with it; any other user input operated on the canvas — one slot, no
+  inspection, the board's rule (`isCanvasOperatedInput`) — gets a `tap` on
+  its slot `0` (`SimulationService.triggerUnitInput`, unit index from the
+  watch index), which its gesture reads as a toggle or a pulse. A multi-slot
+  input without an inspection is neither tapped nor held there. A `hold` input is held
   rather than tapped: `holdFor(component, slot)` hands out the slot's
   `press` / `release`, both `triggerUnitInput` with that phase and
   bound to the level they were resolved on, so a release arriving after a

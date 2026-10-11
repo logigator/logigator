@@ -17,10 +17,25 @@ export function componentBodiesAt(
 }
 
 /**
+ * Whether a pointer on a canvas operates the component directly: a user input
+ * with a single slot that declares no inspection. A press on a body can only
+ * address one slot, so a multi-slot input is operated through its inspection,
+ * and one that declares an inspection is played in it.
+ */
+export function isCanvasOperatedInput(
+  component: Component
+): component is Component & UserInput {
+  return (
+    isUserInput(component) &&
+    component.inputSlots === 1 &&
+    !component.config.inspection
+  );
+}
+
+/**
  * The `hold` user input a press at the grid point holds, if one's body is
  * under it — preferred over any other body there, since a press on it never
- * pans. Only one operated on the canvas counts: an input that declares an
- * inspection is played in it, and a tap opens that instead.
+ * pans. Only one operated on the canvas counts ({@link isCanvasOperatedInput}).
  */
 export function holdInputAt(
   project: Project,
@@ -29,9 +44,7 @@ export function holdInputAt(
   return (
     componentBodiesAt(project, gridPoint).find(
       (component): component is Component & UserInput =>
-        isUserInput(component) &&
-        component.gesture === 'hold' &&
-        !component.config.inspection
+        isCanvasOperatedInput(component) && component.gesture === 'hold'
     ) ?? null
   );
 }

@@ -41,7 +41,7 @@ import {
  * controller. Input runs through the shared PointerController; the tool stream
  * is a PanSession whose tap action routes to the model (inner input /
  * drill-down / data inspector), or a HoldSession for a press on an inner
- * `hold` user input operated on the canvas, which holds its slot 0 for the
+ * `hold` user input operated on the canvas, which holds its one slot for the
  * gesture. Re-blits on engine changes (`render$`), viewport/theme changes
  * (`ticker$`) and host resizes.
  */

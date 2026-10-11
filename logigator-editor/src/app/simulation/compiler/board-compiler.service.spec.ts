@@ -5,6 +5,7 @@ import { configureTestBed } from '../../../testing/configure-test-bed';
 import {
   makeAnd,
   makeButton,
+  makeGamepad,
   makePulseButton,
   makeSwitch,
   makeNot
@@ -583,6 +584,33 @@ describe('BoardCompilerService', () => {
       });
     }
     expect(board.userInputs.has(and.id)).toBe(false);
+  });
+
+  it('compiles a gamepad to one single-output unit per control, a bubble negating only its own', () => {
+    const pad = makeGamepad({ face: 4, shoulders: 2 });
+    place(pad);
+    const slotB = pad.slotIds.indexOf('b');
+    pad.setPortNegated('out', slotB, true);
+
+    const board = compiler.compile(project);
+
+    expect(board.diagnostics).toEqual([]);
+    const base = board.userInputs.get(pad.id)!;
+    const units = board.descriptor.components.slice(base);
+    expect(units).toHaveLength(12);
+    const targets = board.mapping.get(TOP_LEVEL_PATH)!;
+    units.forEach((unit, slot) => {
+      expect(unit).toEqual({
+        type: 200,
+        inputs: [],
+        outputs: [expect.any(Number)],
+        ...(slot === slotB ? { negOutputs: [0] } : {})
+      });
+      expect(targets[unit.outputs[0]].ports).toContainEqual({
+        component: pad,
+        portIndex: slot
+      });
+    });
   });
 
   it('compiles deterministically', () => {

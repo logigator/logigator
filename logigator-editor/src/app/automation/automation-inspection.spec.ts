@@ -7,6 +7,7 @@ import { configureTestBed } from '../../testing/configure-test-bed';
 import {
   makeAnd,
   makeButton,
+  makeGamepad,
   makeRom,
   makeSwitch
 } from '../../testing/factories';
@@ -31,6 +32,7 @@ import { SubCircuitWatch } from '../components/custom/sub-circuit-watch';
 import { outputComponentConfig } from '../components/component-types/output/output.config';
 import { RomComponent } from '../components/component-types/rom/rom.component';
 import { ButtonComponent } from '../components/component-types/button/button.component';
+import { GamepadComponent } from '../components/component-types/gamepad/gamepad.component';
 import { Wire } from '../wires/wire';
 import { WireDirection } from '@logigator/core';
 import { AutomationApiService } from './automation-api.service';
@@ -293,7 +295,9 @@ describe('AutomationApiService inspection', () => {
           (component) => component instanceof ButtonComponent
         ) as ButtonComponent;
 
-      expect(() => api.inspectActivate(id, copy.id)).toThrow(/setInput/);
+      expect(() => api.inspectActivate(id, copy.id)).toThrow(
+        /tap cannot express — use inspect\.setInput$/
+      );
       expect(copy.isActive(0)).toBe(false);
 
       await api.inspectSetInput(id, copy.id, true);
@@ -307,6 +311,29 @@ describe('AutomationApiService inspection', () => {
       await expect(api.inspectSetInput(id, plug.id, true)).rejects.toThrow(
         /not a user input/
       );
+    });
+
+    it('refuses a tap on an inner multi-slot input, which a body cannot address, and drives it by slot', async () => {
+      const id = await openNestedWatch(makeGamepad());
+      const nested = api
+        .inspectGetElements(id)
+        .components.find((component) => component.type >= 1000)!;
+      api.inspectActivate(id, nested.id);
+      const watch = TestBed.inject(InspectionService).open()[0]
+        .inspection as SubCircuitWatch;
+      const pad = watch
+        .activeLevel()
+        .session.components.find(
+          (component) => component instanceof GamepadComponent
+        ) as GamepadComponent;
+
+      expect(() => api.inspectActivate(id, pad.id)).toThrow(
+        /has 8 slots.*inspect\.setInput with a slot/
+      );
+      expect(pad.slotIds.some((_, slot) => pad.isActive(slot))).toBe(false);
+
+      await api.inspectSetInput(id, pad.id, true, 'a');
+      expect(pad.isActive(pad.slotIds.indexOf('a'))).toBe(true);
     });
 
     it('refuses a component that is not in the visible level', async () => {

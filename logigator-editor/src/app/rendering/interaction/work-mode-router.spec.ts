@@ -14,6 +14,7 @@ import { configureTestBed } from '../../../testing/configure-test-bed';
 import {
   makeAnd,
   makeButton,
+  makeGamepad,
   makePulseButton,
   makeMoveInput,
   makeSwitch,
@@ -147,6 +148,25 @@ describe('WorkModeRouter in SIMULATION mode', () => {
     router.up();
 
     expect(emissions).toEqual([]);
+  });
+
+  it('operates no slot of a multi-slot input on the canvas, by press or by tap', () => {
+    // A hold input with several slots and no inspection: a press could only
+    // name slot 0, so it neither holds nor taps.
+    const pad = makeGamepad({}, 2, 2);
+    project.addComponent(pad);
+    const inspections: Component[] = [];
+    project.inspectRequest$.subscribe((component) =>
+      inspections.push(component)
+    );
+    router.setMode(WorkMode.SIMULATION);
+
+    router.down(makeInput(3, 3));
+    expect(emissions).toEqual([]);
+    router.up();
+
+    expect(emissions).toEqual([]);
+    expect(inspections).toEqual([]);
   });
 
   it('pans on a one-finger drag instead of activating a component', () => {

@@ -30,6 +30,7 @@ import { switchComponentConfig } from './component-types/switch/switch.config';
 import { ledComponentConfig } from './component-types/led/led.config';
 import { segmentDisplayComponentConfig } from './component-types/segment-display/segment-display.config';
 import { ledMatrixComponentConfig } from './component-types/led-matrix/led-matrix.config';
+import { gamepadComponentConfig } from './component-types/gamepad/gamepad.config';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const BUILT_IN_COMPONENTS: ComponentConfig<any>[] = [
@@ -60,7 +61,8 @@ const BUILT_IN_COMPONENTS: ComponentConfig<any>[] = [
   pulseButtonComponentConfig,
   ledComponentConfig,
   segmentDisplayComponentConfig,
-  ledMatrixComponentConfig
+  ledMatrixComponentConfig,
+  gamepadComponentConfig
 ];
 
 @Injectable({

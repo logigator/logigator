@@ -5,6 +5,7 @@ import { environment } from '../../environments/environment';
 import { Component } from '../components/component';
 import { ComponentProviderService } from '../components/component-provider.service';
 import { isUserInput, UserInput } from '../components/user-input';
+import { isCanvasOperatedInput } from '../rendering/interaction/body-hit';
 import { CUSTOM_TYPE_ID_BASE } from '@logigator/core';
 import { CustomComponentRegistry } from '../components/custom/custom-component-registry.service';
 import { SubCircuitWatch } from '../components/custom/sub-circuit-watch';
@@ -1044,8 +1045,8 @@ export class AutomationApiService {
   /**
    * Taps a component of the visible watch level: drives an inner lever/pulse button,
    * drills into a nested custom, or opens the component's own inspection. A
-   * button is level-driven, which a tap cannot express — it goes through
-   * {@link inspectSetInput}.
+   * user input a tap cannot operate is refused ({@link tapRefusal}); it goes
+   * through {@link inspectSetInput}.
    */
   public inspectActivate(
     inspectionId: number,
@@ -1057,14 +1058,9 @@ export class AutomationApiService {
       inspectionId,
       componentId
     );
-    if (
-      isUserInput(component) &&
-      component.gesture === 'hold' &&
-      !component.config.inspection
-    ) {
-      throw new Error(
-        `logigator: component ${componentId} is a button, which a tap cannot hold — use inspect.setInput`
-      );
+    const refusal = tapRefusal(component);
+    if (refusal) {
+      throw new Error(`logigator: component ${componentId} ${refusal}`);
     }
     watch.activate(component);
     return this.inspectionInfo(this.requireInspection(inspectionId));
@@ -1550,4 +1546,24 @@ function resolveInputSlot(
   throw new Error(
     `logigator: component ${component.id} has no input slot ${JSON.stringify(input)} — ${indices}${named}`
   );
+}
+
+/**
+ * Why a tap on `component` in a watch operates nothing, or null when it does.
+ * A tap reaches one slot of an input operated on the canvas, and a `hold` slot
+ * needs a press and a release rather than a tap; an input that declares an
+ * inspection opens it instead.
+ */
+function tapRefusal(component: Component): string | null {
+  if (!isUserInput(component) || component.config.inspection) {
+    return null;
+  }
+  // Read before the guard, whose false branch narrows a user input to never.
+  const slots = component.inputSlots;
+  if (!isCanvasOperatedInput(component)) {
+    return `has ${slots} slots, which a tap on its body cannot address — use inspect.setInput with a slot, or its inspection`;
+  }
+  return component.gesture === 'hold'
+    ? 'is held for as long as it is pressed, which a tap cannot express — use inspect.setInput'
+    : null;
 }

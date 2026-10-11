@@ -5,6 +5,7 @@ import { configureTestBed } from '../../testing/configure-test-bed';
 import {
   makeAnd,
   makeButton,
+  makeGamepad,
   makePulseButton,
   makeSwitch
 } from '../../testing/factories';
@@ -264,6 +265,43 @@ describe('AutomationApiService simulation', () => {
       expect(sent()).toEqual([]);
       expect([0, 1, 2].some((slot) => input.isActive(slot))).toBe(false);
     });
+  });
+
+  it('drives a gamepad by control id and as an array, with names written as an option', async () => {
+    const pad = makeGamepad();
+    project.addComponent(pad);
+    const edit = api.applyEdit([
+      { op: 'setOption', id: pad.id, key: 'face', value: 4 },
+      { op: 'setOption', id: pad.id, key: 'names', value: { a: 'Jump' } }
+    ]);
+    expect(edit.ok).toBe(true);
+    expect(pad.options.names.value).toEqual({ a: 'Jump' });
+
+    await api.simEnter();
+    const base = simulation.board!.userInputs.get(pad.id)!;
+    const sent = () =>
+      fakeWorker
+        .postedOfKind('triggerInput')
+        .map((msg) => [msg.componentIndex, msg.state[0]]);
+
+    // Addressed by id, never by the custom name; the ids follow the options.
+    await api.simSetInput(pad.id, true, 'a');
+    await api.simSetInput(pad.id, true, 'x');
+    expect(sent()).toEqual([
+      [base + 4, true],
+      [base + 6, true]
+    ]);
+    await expect(api.simSetInput(pad.id, true, 'Jump')).rejects.toThrow(/"a"/);
+
+    const all = pad.slotIds.map((id) => id === 'up' || id === 'start');
+    await api.simSetInput(pad.id, all);
+    expect(pad.slotIds.map((_, slot) => pad.isActive(slot))).toEqual(all);
+    expect(sent().slice(2)).toEqual([
+      [base, true],
+      [base + 4, false],
+      [base + 6, false],
+      [base + 9, true]
+    ]);
   });
 
   it('setInput takes a one-element array on a lever', async () => {
