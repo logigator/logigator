@@ -8,6 +8,8 @@ import {
   andMeta,
   BuiltInComponentType,
   ComponentCategory,
+  GAMEPAD_CONTROLS,
+  gamepadMeta,
   inputMeta,
   ledMatrixMeta,
   romMeta
@@ -114,6 +116,21 @@ describe('automation catalog', () => {
       ).toMatchObject({
         kind: 'text',
         maxLength: 5,
+        forbiddenChars: ','
+      });
+    });
+
+    it('names the keys and length cap a name map accepts', () => {
+      const descriptor = describeOption(
+        'names',
+        gamepadMeta.options.names,
+        (key) => key
+      );
+      expect(descriptor).toMatchObject({
+        kind: 'name-map',
+        default: {},
+        keys: [...GAMEPAD_CONTROLS],
+        maxLength: 8,
         forbiddenChars: ','
       });
     });

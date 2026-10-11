@@ -258,7 +258,8 @@ const de: TranslationSchema = {
         options: {
           face: 'Aktionstasten',
           shoulders: 'Schultertasten',
-          menu: 'Menütasten'
+          menu: 'Menütasten',
+          names: 'Tastennamen'
         }
       },
       PULSE_BUTTON: {
@@ -298,7 +299,10 @@ const de: TranslationSchema = {
       inputs: 'Eingänge',
       outputs: 'Ausgänge',
       label: 'Beschriftung',
-      index: 'Index'
+      index: 'Index',
+      nameMap: {
+        summary: '{{count}} benannt'
+      }
     }
   },
   sideBar: {

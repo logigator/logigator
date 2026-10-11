@@ -97,7 +97,7 @@ export class ComponentSettingsComponent {
         options: selected.options,
         commit: (key: string, value: unknown) => {
           const option = selected.options[key];
-          if (option.value === value) return;
+          if (option.isCurrent(value)) return;
           project.actionManager.push(
             new ChangeOptionAction(selected.id, key, option.value, value)
           );

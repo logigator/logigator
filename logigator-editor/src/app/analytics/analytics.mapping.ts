@@ -58,6 +58,7 @@ export const DialogId = {
   Documentation: 'documentation',
   ExportImage: 'export-image',
   Logout: 'logout',
+  NameMapEditor: 'name-map-editor',
   NewComponent: 'new-component',
   OpenProject: 'open-project',
   RomDataEditor: 'rom-data-editor',

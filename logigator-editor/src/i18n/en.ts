@@ -258,7 +258,8 @@ const en = {
         options: {
           face: 'Face buttons',
           shoulders: 'Shoulder buttons',
-          menu: 'Menu buttons'
+          menu: 'Menu buttons',
+          names: 'Button names'
         }
       },
       PULSE_BUTTON: {
@@ -298,7 +299,10 @@ const en = {
       inputs: 'Inputs',
       outputs: 'Outputs',
       label: 'Label',
-      index: 'Index'
+      index: 'Index',
+      nameMap: {
+        summary: '{{count}} named'
+      }
     }
   },
   sideBar: {

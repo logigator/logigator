@@ -14,6 +14,19 @@ import { NumberOptionInputComponent } from '../../components/component-options/n
 import { LgSelectButton } from '@logigator/ui';
 import { WorkMode } from '../../work-mode/work-mode.enum';
 import { makeAnd } from '../../../testing/factories';
+import { Component, input, model, output } from '@angular/core';
+import { NameMap } from '@logigator/core';
+import { NameMapComponentOption } from '../../components/component-options/name-map/name-map.component-option';
+import { NameMapOptionInputComponent } from '../../components/component-options/name-map/name-map-option-input.component';
+import { NameMapEditor } from '../../components/component-options/name-map/name-map-editor';
+
+@Component({ selector: 'app-test-names-editor', template: '' })
+class TestNamesEditor implements NameMapEditor {
+  public readonly keys = input.required<readonly string[]>();
+  public readonly names = model.required<NameMap>();
+  public readonly maxLength = input.required<number>();
+  public readonly save = output<void>();
+}
 
 describe('ComponentSettingsComponent', () => {
   let fixture: ComponentFixture<ComponentSettingsComponent>;
@@ -143,5 +156,54 @@ describe('ComponentSettingsComponent', () => {
     expect(
       workModeService.placementDirectionFor(BuiltInComponentType.AND)
     ).toBe(Direction.E);
+  });
+
+  it('records a name-map commit only when the names change by value', () => {
+    const projectService = TestBed.inject(ProjectService);
+    const metadataStore = TestBed.inject(ProjectMetadataStore);
+
+    const project = new Project();
+    const and = makeAnd();
+    and.position.set(0, 0);
+    // No built-in the editor places carries a name map yet, so one rides on
+    // an AND gate; the panel and the action only see an option under a key.
+    const names = new NameMapComponentOption(
+      'components.def.GAMEPAD.options.names',
+      ['a', 'b'],
+      { a: 'Jump', b: 'Fire' },
+      { maxLength: 8 }
+    ).attachEditor(TestNamesEditor);
+    (and.options as Record<string, unknown>)['names'] = names;
+    project.addComponent(and);
+    metadataStore.register(project, {
+      id: 'p',
+      name: 'P',
+      type: 'project',
+      source: 'browser',
+      visibility: 'private'
+    });
+    projectService.setMainProject(project);
+    project.selectionManager.commit(new Rectangle(0, 0, 3, 3), WorkMode.SELECT);
+    fixture.detectChanges();
+
+    const row = fixture.debugElement.query(
+      By.directive(NameMapOptionInputComponent)
+    ).componentInstance as NameMapOptionInputComponent;
+    const history = () => project.actionManager.history.length;
+    const before = history();
+
+    // Equal by value: another object, other key order, untrimmed.
+    row.commit()({ b: 'Fire ', a: 'Jump' });
+    expect(history()).toBe(before);
+    expect(metadataStore.isDirty(project)).toBe(false);
+
+    row.commit()({ a: 'Jump', b: 'Run' });
+    expect(history()).toBe(before + 1);
+    expect(names.value).toEqual({ a: 'Jump', b: 'Run' });
+
+    project.actionManager.undo();
+    expect(names.value).toEqual({ a: 'Jump', b: 'Fire' });
+
+    project.destroy({ children: true });
   });
 });

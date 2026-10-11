@@ -35,6 +35,14 @@ export abstract class ComponentOption<T = any> {
     this.onChange$.next(value);
   }
 
+  /**
+   * Whether writing `value` would leave the option as it is. Identity by
+   * default; a kind whose value is an object compares what it would store.
+   */
+  public isCurrent(value: T): boolean {
+    return this._value === value;
+  }
+
   /** Returns `this`, for fluent use in config definitions. */
   public hideFromInspector(): this {
     this.inspectorHidden = true;

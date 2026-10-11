@@ -81,7 +81,10 @@ descriptor gives the span.
 
 An `OptionDescriptor` is keyed by `kind`: `number` (`min`/`max`, integers),
 `select` (`values`), `text` (`maxLength`, `forbiddenChars` as a regex source
-string), `textarea` (`maxLength`), `memory` (base64 bit-packed blob), `unknown`.
+string), `textarea` (`maxLength`), `memory` (base64 bit-packed blob),
+`name-map` (a plain object of names keyed by `keys`, each at most `maxLength`
+and free of `forbiddenChars`; a key left out or set to `''` keeps its default
+name), `unknown`.
 Both select schema kinds flatten to one `select` — button-versus-dropdown is a
 rendering choice a driver has no use for. `hidden` marks system-managed options
 (e.g. a plug's index).

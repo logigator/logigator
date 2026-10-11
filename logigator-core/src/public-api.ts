@@ -126,9 +126,11 @@ export type {
   PortLabels,
   Ports
 } from './catalog/component-meta';
-export { defaultOptionValues } from './catalog/option-schema';
+export { canonicalNameMap, defaultOptionValues } from './catalog/option-schema';
 export type {
   MemoryOptionSchema,
+  NameMap,
+  NameMapOptionSchema,
   NumberOptionSchema,
   OptionSchema,
   OptionValues,

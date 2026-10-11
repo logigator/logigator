@@ -1,7 +1,7 @@
 import { BuiltInComponentType } from '../../model/component-type.enum';
 import { ComponentCategory } from '../../model/component-category.enum';
 import { ComponentMeta } from '../component-meta';
-import { SelectOptionValue } from '../option-schema';
+import { canonicalNameMap, NameMap, SelectOptionValue } from '../option-schema';
 
 /** One logical control of a gamepad; each present control is one output. */
 export type GamepadControlId =
@@ -109,6 +109,7 @@ export interface GamepadGroupValues {
 
 interface GamepadValues extends GamepadGroupValues {
   label: string;
+  names: NameMap;
 }
 
 /**
@@ -168,9 +169,15 @@ export function gamepadLabelColumnWidth(labels: readonly string[]): number {
   return longest <= 2 ? 1 : longest <= 5 ? 2 : 3;
 }
 
-function portLabels(options: GamepadGroupValues): string[] {
+/**
+ * Each present control's port label: its custom name where one is set,
+ * otherwise its default. Names of controls the options switch off stay in the
+ * value and are simply not shown.
+ */
+function portLabels(options: GamepadValues): string[] {
+  const names = canonicalNameMap(GAMEPAD_CONTROLS, options.names);
   return gamepadControls(options).map(
-    (control) => GAMEPAD_DEFAULT_LABELS[control]
+    (control) => names[control] ?? GAMEPAD_DEFAULT_LABELS[control]
   );
 }
 
@@ -222,6 +229,14 @@ export const gamepadMeta = {
       maxLength: 8,
       forbiddenChars: ',',
       default: ''
+    },
+    names: {
+      kind: 'name-map',
+      label: 'components.def.GAMEPAD.options.names',
+      keys: GAMEPAD_CONTROLS,
+      maxLength: 8,
+      forbiddenChars: ',',
+      default: Object.freeze({})
     }
   },
   ports: (o) => ({ inputs: 0, outputs: gamepadControls(o).length }),

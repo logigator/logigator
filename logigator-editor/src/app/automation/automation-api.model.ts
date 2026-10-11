@@ -79,6 +79,20 @@ export type OptionDescriptor = {
   | { kind: 'textarea'; default: string; maxLength: number }
   /** Word-addressed memory contents as a base64 bit-packed blob. */
   | { kind: 'memory'; default: string }
+  /**
+   * Custom names keyed by `keys`, as a plain object. A key left out, or named
+   * `''`, keeps its default name.
+   */
+  | {
+      kind: 'name-map';
+      default: Record<string, string>;
+      /** The only keys a name may be set for. */
+      keys: string[];
+      /** Longest name allowed for any one key. */
+      maxLength: number;
+      /** Source of the character class no name may contain, if any. */
+      forbiddenChars?: string;
+    }
   | { kind: 'unknown'; default: unknown }
 );
 

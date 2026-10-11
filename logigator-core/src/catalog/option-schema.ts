@@ -77,13 +77,33 @@ export interface MemoryOptionSchema extends OptionSchemaBase {
   readonly default: string;
 }
 
+/** Custom names for a fixed set of keys, keyed by those keys. */
+export type NameMap = Readonly<Record<string, string>>;
+
+/**
+ * Optional custom names for a fixed set of keys, as one value. A key that is
+ * missing, or maps to an empty string, keeps its default name, which is the
+ * owner's knowledge rather than the schema's.
+ */
+export interface NameMapOptionSchema extends OptionSchemaBase {
+  readonly kind: 'name-map';
+  /** The keys a name may be set for, in display order. */
+  readonly keys: readonly string[];
+  /** Longest name allowed for any one key. */
+  readonly maxLength: number;
+  /** Source of the character class no name may contain, as for `text`. */
+  readonly forbiddenChars?: string;
+  readonly default: NameMap;
+}
+
 export type OptionSchema =
   | NumberOptionSchema
   | SelectButtonOptionSchema
   | SelectDropdownOptionSchema
   | TextOptionSchema
   | TextAreaOptionSchema
-  | MemoryOptionSchema;
+  | MemoryOptionSchema
+  | NameMapOptionSchema;
 
 /** A component's option values, keyed the same way as its schemas. */
 export type OptionValues = Readonly<Record<string, unknown>>;
@@ -97,4 +117,25 @@ export function defaultOptionValues(
     values[key] = schema.default;
   }
   return values;
+}
+
+/**
+ * The one spelling of a name map: every name trimmed, keys that end up empty
+ * dropped, and the rest in `keys` order. A key outside `keys` or a value that
+ * is not a string is dropped too. Two maps naming the same keys the same way
+ * are then equal entry for entry and serialize to the same text.
+ */
+export function canonicalNameMap(
+  keys: readonly string[],
+  names: Readonly<Record<string, unknown>>
+): Record<string, string> {
+  const canonical: Record<string, string> = {};
+  for (const key of keys) {
+    if (!Object.hasOwn(names, key)) continue;
+    const name = names[key];
+    if (typeof name !== 'string') continue;
+    const trimmed = name.trim();
+    if (trimmed) canonical[key] = trimmed;
+  }
+  return canonical;
 }

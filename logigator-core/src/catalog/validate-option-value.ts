@@ -55,5 +55,27 @@ export function validateOptionValue(
 
     case 'memory':
       return typeof value === 'string' ? null : 'expected a base64 blob string';
+
+    case 'name-map': {
+      if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+        return 'expected an object of names';
+      }
+      for (const [key, name] of Object.entries(value)) {
+        if (!schema.keys.includes(key)) {
+          return `unknown key "${key}", not one of ${JSON.stringify(schema.keys)}`;
+        }
+        if (typeof name !== 'string') return `"${key}": expected a string`;
+        if (name.length > schema.maxLength) {
+          return `"${key}": longer than ${schema.maxLength} characters`;
+        }
+        if (
+          schema.forbiddenChars &&
+          new RegExp(schema.forbiddenChars).test(name)
+        ) {
+          return `"${key}": contains forbidden characters (/${schema.forbiddenChars}/)`;
+        }
+      }
+      return null;
+    }
   }
 }

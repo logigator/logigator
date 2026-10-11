@@ -257,7 +257,8 @@ const fr: TranslationSchema = {
         options: {
           face: "Boutons d'action",
           shoulders: 'Boutons de tranche',
-          menu: 'Boutons de menu'
+          menu: 'Boutons de menu',
+          names: 'Noms des boutons'
         }
       },
       PULSE_BUTTON: {
@@ -297,7 +298,10 @@ const fr: TranslationSchema = {
       inputs: 'Entrées',
       outputs: 'Sorties',
       label: 'Étiquette',
-      index: 'Index'
+      index: 'Index',
+      nameMap: {
+        summary: '{{count}} nommé(s)'
+      }
     }
   },
   sideBar: {

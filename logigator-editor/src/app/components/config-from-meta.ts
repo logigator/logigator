@@ -15,6 +15,7 @@ import { SelectDropdownComponentOption } from './component-options/select-dropdo
 import { TextInputComponentOption } from './component-options/text-input/text-input.component-option';
 import { TextAreaComponentOption } from './component-options/text-area/text-area.component-option';
 import { MemoryDataComponentOption } from './component-options/memory-data/memory-data.component-option';
+import { NameMapComponentOption } from './component-options/name-map/name-map.component-option';
 
 /**
  * Meta owns everything both the editor and the server need — identity, option
@@ -87,6 +88,14 @@ function buildOption(
       });
     case 'memory':
       return new MemoryDataComponentOption(label, schema.default);
+    case 'name-map':
+      return new NameMapComponentOption(label, schema.keys, schema.default, {
+        maxLength: schema.maxLength,
+        // Per config, for the same reason as the text kind's.
+        forbiddenChars: schema.forbiddenChars
+          ? new RegExp(schema.forbiddenChars, 'g')
+          : undefined
+      });
   }
 }
 

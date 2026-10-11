@@ -79,6 +79,17 @@ export function describeOption(
       };
     case 'memory':
       return { ...base, kind: 'memory', default: schema.default };
+    case 'name-map':
+      return {
+        ...base,
+        kind: 'name-map',
+        default: { ...schema.default },
+        keys: [...schema.keys],
+        maxLength: schema.maxLength,
+        ...(schema.forbiddenChars
+          ? { forbiddenChars: schema.forbiddenChars }
+          : {})
+      };
   }
 }
 

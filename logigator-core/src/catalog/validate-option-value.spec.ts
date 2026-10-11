@@ -67,4 +67,57 @@ describe('validateOptionValue', () => {
     expect(validateOptionValue(schema, 'a,')).toMatch('forbidden');
     expect(validateOptionValue(schema, 'a,')).toMatch('forbidden');
   });
+
+  describe('name-map', () => {
+    const schema: OptionSchema = {
+      kind: 'name-map',
+      label: 'l',
+      keys: ['a', 'b', 'c'],
+      maxLength: 4,
+      forbiddenChars: ',',
+      default: {}
+    };
+
+    it('accepts no names, some names and an empty name', () => {
+      expect(validateOptionValue(schema, {})).toBeNull();
+      expect(validateOptionValue(schema, { b: 'Fire' })).toBeNull();
+      expect(validateOptionValue(schema, { a: 'Jump', c: '' })).toBeNull();
+    });
+
+    it('refuses anything but a plain object', () => {
+      for (const value of [null, undefined, 'a', 3, ['Jump'], []]) {
+        expect(validateOptionValue(schema, value)).toMatch(
+          'expected an object'
+        );
+      }
+    });
+
+    it('refuses a key outside the schema´s keys', () => {
+      expect(validateOptionValue(schema, { a: 'Jump', d: 'X' })).toMatch(
+        'unknown key "d"'
+      );
+    });
+
+    it('refuses a name that is not a string', () => {
+      expect(validateOptionValue(schema, { a: 1 })).toMatch(
+        '"a": expected a string'
+      );
+      expect(validateOptionValue(schema, { a: null })).toMatch(
+        '"a": expected a string'
+      );
+    });
+
+    it('refuses a name over the length cap', () => {
+      expect(validateOptionValue(schema, { b: 'abcd' })).toBeNull();
+      expect(validateOptionValue(schema, { b: 'abcde' })).toMatch(
+        '"b": longer than 4'
+      );
+    });
+
+    it('refuses a forbidden character on every test', () => {
+      // A shared /g instance would carry lastIndex and pass the second call.
+      expect(validateOptionValue(schema, { c: 'a,' })).toMatch('forbidden');
+      expect(validateOptionValue(schema, { c: 'a,' })).toMatch('forbidden');
+    });
+  });
 });

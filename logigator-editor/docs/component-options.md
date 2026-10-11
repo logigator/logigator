@@ -11,8 +11,9 @@ Rotation is **not** an option: `direction` is first-class `Component` state, and
 the settings panel renders a fixed direction row above the option rows (see
 `ui.md`).
 
-`component-options/` holds one folder per kind — `memory-data/`, `number/`,
-`select-button/`, `select-dropdown/`, `text-area/`, `text-input/` — each with
+`component-options/` holds one folder per kind — `memory-data/`, `name-map/`,
+`number/`, `select-button/`, `select-dropdown/`, `text-area/`, `text-input/` —
+each with
 `<kind>.component-option.ts` (model) beside
 `<kind>-option-input.component.{ts,html}` (renderer).
 
@@ -20,7 +21,7 @@ the settings panel renders a fixed direction row above the option rows (see
 
 Each class pairs with one kind of pure `OptionSchema` in `@logigator/core`
 (`catalog/option-schema.ts`): `number`, `select-button`, `select-dropdown`,
-`text`, `textarea`, `memory`. The schema owns the constraints (range, allowed
+`text`, `textarea`, `memory`, `name-map`. The schema owns the constraints (range, allowed
 values, max length, forbidden characters, default, `hidden`); the class adds the
 renderer, the live value and the clamping setter. `optionFromSchema` in
 `components/config-from-meta.ts` owns the one kind → class table, so a built-in's
@@ -84,6 +85,7 @@ option, eliding the back edge at runtime — no cycle, no `forwardRef`.
 | `TextInputComponentOption`         | inline `input[lgInputText]`; `maxLength` + `forbiddenChars` per use  |
 | `TextAreaComponentOption`          | button opening an `lg-dialog` textarea with draft/save/cancel        |
 | `MemoryDataComponentOption`        | button opening `HexEditorComponent` in a dynamic dialog              |
+| `NameMapComponentOption`           | row button opening the owner's names editor in a dynamic dialog      |
 
 Text writes are sanitized on every set — forbidden characters stripped, then
 clamped to `maxLength` — including the constructor's default value.
@@ -107,19 +109,44 @@ trims + re-encodes on save. For ROM that same blob is the legacy v0 `s`-slot
 value and, via `rom-data.codec.ts`, the engine's ROM `ops` table; the buffer/bit
 math is `utils/packed-buffer.ts`.
 
+`NameMapComponentOption` is generic in the same way: custom names for a fixed
+set of keys (a gamepad's controls), one value rather than one text row per key.
+The value is a frozen object in core's canonical form (`canonicalNameMap`:
+trimmed, empty names dropped, keys in schema order), and every write — the
+constructor's included — strips forbidden characters, clamps each name to
+`maxLength` and canonicalises into a new object, so equal name sets are equal by
+value and serialize identically, and nothing aliases them. A missing key is the
+owner's default name. Two things are the owner's to attach: `attachKeys(() =>
+keys)`, which keys the dialog lists right now (names of keys it does not list
+stay in the value), and `attachEditor(Type<NameMapEditor>)`, the dialog body.
+Without an editor the renderer draws no row. The dialog (`NameMapDialogComponent`)
+frames the editor with Save and Cancel and binds it through
+`ViewContainerRef.createComponent` bindings: `keys` and `maxLength` as inputs,
+the draft `names` two-way, and a `save` output that saves as Save does. Save
+commits the draft once, so a whole rename is one undo step; Cancel commits
+nothing. Both attachments survive `clone`; an owner whose key resolver reads its
+own options attaches it again in its constructor, which every clone path runs.
+
+A renderer's commit is dropped when `option.isCurrent(value)` holds — identity
+for every kind but this one, whose override compares the sanitized maps — so
+saving an unchanged name set records no undo entry.
+
 ## Adding a new option kind
 
 1. Add the schema arm to core's `OptionSchema` union and handle it in
    `validateOptionValue`.
 2. Create `component-options/<name>/` with the model class extending
-   `ComponentOption<T>`: override `renderer`, implement `cloneWithValue`. Add
+   `ComponentOption<T>`: override `renderer`, implement `cloneWithValue`. A
+   kind whose value is an object overrides `isCurrent` too. Add
    the kind to `config-from-meta.ts`'s table. A built-in that must round-trip
    through the legacy v0 format also needs `legacyV0Slots` on its meta (see
    `persistence.md`).
 3. Write the renderer as a standalone OnPush `ComponentOptionInput<T>` with
    `option` + `commit` inputs; `import type` the option. Its template owns the
    row and reports edits through `commit()`.
-4. Add option-model and renderer specs alongside the source.
+4. Describe the kind in the automation catalog (`automation/catalog.ts` and
+   `OptionDescriptor` in `automation-api.model.ts`) and in `automation.md`.
+5. Add option-model and renderer specs alongside the source.
 
 `ComponentSettingsComponent` needs no change — it picks the renderer up through
 `option.renderer`.

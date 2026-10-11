@@ -257,7 +257,8 @@ const es: TranslationSchema = {
         options: {
           face: 'Botones de acción',
           shoulders: 'Botones laterales',
-          menu: 'Botones de menú'
+          menu: 'Botones de menú',
+          names: 'Nombres de botones'
         }
       },
       PULSE_BUTTON: {
@@ -297,7 +298,10 @@ const es: TranslationSchema = {
       inputs: 'Entradas',
       outputs: 'Salidas',
       label: 'Etiqueta',
-      index: 'Índice'
+      index: 'Índice',
+      nameMap: {
+        summary: '{{count}} con nombre'
+      }
     }
   },
   sideBar: {

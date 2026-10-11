@@ -155,8 +155,8 @@ The pure half of each lives in the meta:
   types and asserts the union against the translation schema, so a typo fails the
   editor's type check.
 - `options: Record<string, OptionSchema>` — one schema per option kind
-  (`number`, `select-button`, `select-dropdown`, `text`, `textarea`, `memory`)
-  carrying its constraints and default. `validateOptionValue(schema, value)` is
+  (`number`, `select-button`, `select-dropdown`, `text`, `textarea`, `memory`,
+  `name-map`) carrying its constraints and default. `validateOptionValue(schema, value)` is
   the single definition of a legal value, shared by the automation write path and
   the server.
 - `ports(options)`, `labels(options)`, `body(options, direction)` — pure
