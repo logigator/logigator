@@ -182,8 +182,7 @@ export {
   GAMEPAD_DEFAULT_LABELS,
   GAMEPAD_GLYPH_COLUMN_WIDTH,
   gamepadControls,
-  gamepadGroups,
-  gamepadLabelColumnWidth
+  gamepadGroups
 } from './catalog/built-ins/gamepad.meta';
 export type {
   GamepadControlId,

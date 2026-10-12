@@ -160,13 +160,11 @@ export function gamepadGroups(options: GamepadGroupValues): GamepadGroup[] {
 export const GAMEPAD_GLYPH_COLUMN_WIDTH = 3;
 
 /**
- * Grid cells the label column needs for `labels`, by the longest one: one cell
- * up to 2 characters, two up to 5, three beyond.
+ * Width of the label column beside the glyph column. It is the same for every
+ * name: a long one is drawn smaller to fit it, down to the canvas's smallest
+ * label size, and the longest names then reach into the glyph column.
  */
-export function gamepadLabelColumnWidth(labels: readonly string[]): number {
-  const longest = Math.max(0, ...labels.map((label) => label.length));
-  return longest <= 2 ? 1 : longest <= 5 ? 2 : 3;
-}
+const GAMEPAD_LABEL_COLUMN_WIDTH = 1;
 
 /**
  * Each present control's port label: its custom name where one is set,
@@ -233,11 +231,8 @@ export const gamepadMeta = {
   },
   ports: (o) => ({ inputs: 0, outputs: gamepadControls(o).length }),
   labels: (o) => ({ inputs: [], outputs: portLabels(o) }),
-  body: (o) => {
-    const labels = portLabels(o);
-    return {
-      width: GAMEPAD_GLYPH_COLUMN_WIDTH + gamepadLabelColumnWidth(labels),
-      height: labels.length
-    };
-  }
+  body: (o) => ({
+    width: GAMEPAD_GLYPH_COLUMN_WIDTH + GAMEPAD_LABEL_COLUMN_WIDTH,
+    height: gamepadControls(o).length
+  })
 } as const satisfies ComponentMeta<GamepadValues>;

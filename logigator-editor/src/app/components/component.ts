@@ -339,6 +339,16 @@ export abstract class Component<
   protected abstract draw(): void;
 
   /**
+   * Grid cells along the body's width that one side's port labels may span
+   * when the body faces E or W. Half the body, since the input and output
+   * labels share a row; a body that draws something of its own beside its
+   * labels narrows it. A label longer than its room is drawn smaller to fit.
+   */
+  protected get portLabelRoom(): number {
+    return this.bodyGridWidth / 2;
+  }
+
+  /**
    * Symbol rendered centred in the body; null for components whose body is
    * its own visual identity (button, switch, free text). Overrides must read
    * a module-level config constant or {@link geometrySource}, not
@@ -926,11 +936,11 @@ export abstract class Component<
             ? this._direction
             : (((this._direction + 2) % 4) as Direction);
         // Room before a label collides with its neighbour: in S/N labels sit
-        // one grid pitch apart, in E/W the input and output labels share the
-        // body row, each keeping its 2-px inset plus centre clearance.
+        // one grid pitch apart, in E/W a label spans its side's label room,
+        // keeping its 2-px inset plus 2 px of clearance on the far side.
         const labelSlot = this._isVertical
           ? 1 / PX - 2
-          : this.bodyGridWidth / 2 / PX - 4;
+          : this.portLabelRoom / PX - 4;
         const text = new BitmapText({
           text: labels[i],
           style: {

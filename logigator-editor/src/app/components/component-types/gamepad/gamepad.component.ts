@@ -169,6 +169,11 @@ export class GamepadComponent
     }
   }
 
+  /** The label column: the body beside the glyph column. */
+  protected override get portLabelRoom(): number {
+    return this.bodyGridWidth - GAMEPAD_GLYPH_COLUMN_WIDTH;
+  }
+
   private get _groupValues(): GamepadGroupValues {
     return {
       face: this.options.face.value,

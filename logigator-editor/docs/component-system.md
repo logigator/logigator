@@ -66,6 +66,14 @@ emits `portsChange$`. `Project` reacts to that by re-running `topology.integrate
 and the CP markers (see `project.md` and
 [Wire Integration Invariants](wires.md#wire-integration-invariants)).
 
+**Port labels** are fitted to their room: a label longer than it is drawn
+smaller (`fitMonoFontSize`, `utils/text-fit.ts`), down to a floor below which
+it overflows rather than shrink into noise. Labels stay upright, so the room
+follows the direction: in S/N labels sit one grid pitch apart, in E/W each
+side's labels span `portLabelRoom` grid cells — half the body by default, since
+input and output labels share a row; a subclass that draws beside its labels
+overrides it with what is left.
+
 **Body re-anchoring.** The body is drawn from, and rotated around, the local
 origin, so the `direction` setter and every arity change run through
 `_withFixedBodyAnchor`, which holds the body's top-left corner fixed by shifting
@@ -91,10 +99,13 @@ user input only through this interface (see
 
 The **gamepad** (`component-types/gamepad/`) is the one built-in with several
 slots: `level`/`hold`, one slot per control in port order, `slotIds` the
-control ids from core's `gamepadControls`. Its body is a strip — a 3-cell glyph
-column beside the label column the base draws, each group's glyph (D-pad
-cross, face buttons, shoulder bars, menu pills) in a square of side
-`min(rows, 3)` centred on its own port rows, thin rules between the groups.
+control ids from core's `gamepadControls`. Its body is a strip of one width
+for every option and name — a 3-cell glyph column beside a 1-cell label column
+the base draws (its `portLabelRoom`). A long button name is drawn smaller
+rather than widening the pad, and at the longest lengths, held at the smallest
+label size, it runs into the glyph drawings. Each group's glyph (D-pad cross,
+face buttons, shoulder bars, menu pills) sits in a square of side
+`min(rows, 3)` centred on its own port rows, with thin rules between the groups.
 Each glyph is a rotation-counter container, so the D-pad's up stays up on a
 turned pad. Every control is two pre-built `Graphics` (`gamepad.graphics.ts`):
 a scale-keyed outline and a white, theme-independent fill tinted to the wire

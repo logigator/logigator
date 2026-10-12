@@ -12,7 +12,6 @@ import {
   GamepadGroupValues,
   gamepadControls,
   gamepadGroups,
-  gamepadLabelColumnWidth,
   gamepadMeta
 } from './gamepad.meta';
 
@@ -113,21 +112,18 @@ describe('gamepadMeta', () => {
     expect(validateOptionValue(menu, 3)).not.toBeNull();
   });
 
-  it('widens the body with the default labels it draws', () => {
-    // Every default label fits the narrowest label column.
+  it('keeps one body width for every control set and every name length', () => {
+    const width = gamepadMeta.body(NES).width;
+    expect(width).toBeGreaterThan(GAMEPAD_GLYPH_COLUMN_WIDTH);
     for (const options of ALL_COMBINATIONS) {
-      expect(gamepadMeta.body(options).width).toBe(
-        GAMEPAD_GLYPH_COLUMN_WIDTH + 1
-      );
+      expect(gamepadMeta.body(options).width).toBe(width);
+      for (let length = 1; length <= 8; length++) {
+        const names = Object.fromEntries(
+          GAMEPAD_CONTROLS.map((control) => [control, 'x'.repeat(length)])
+        );
+        expect(gamepadMeta.body({ ...options, names }).width).toBe(width);
+      }
     }
-  });
-});
-
-describe('gamepadLabelColumnWidth', () => {
-  it('steps at 2, 5 and 8 characters', () => {
-    const widthFor = (length: number) =>
-      gamepadLabelColumnWidth(['A', 'x'.repeat(length), 'ST']);
-    expect([1, 2, 3, 5, 6, 8].map(widthFor)).toEqual([1, 1, 2, 2, 3, 3]);
   });
 });
 
@@ -147,22 +143,13 @@ describe('gamepad button names', () => {
     ]);
   });
 
-  it('widens the label column for an eight-character name', () => {
-    const options = { ...NES, names: { up: 'Forwards' } };
-    expect(gamepadMeta.body(options)).toEqual({
-      width: GAMEPAD_GLYPH_COLUMN_WIDTH + 3,
-      height: 8
-    });
-  });
-
-  it('ignores the names of switched-off controls in labels and width', () => {
+  it('ignores the names of switched-off controls', () => {
     // NES has no X, Y or shoulders; their names stay in the value unseen.
     const options = {
       ...NES,
       names: { x: 'Forwards', l: 'Backward' }
     };
     expect(gamepadMeta.labels(options)).toEqual(gamepadMeta.labels(NES));
-    expect(gamepadMeta.body(options)).toEqual(gamepadMeta.body(NES));
   });
 
   it('accepts up to eight characters per name and no commas', () => {

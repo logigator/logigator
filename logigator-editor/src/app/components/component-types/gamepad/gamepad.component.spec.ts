@@ -1,9 +1,22 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { Container, Graphics, GraphicsContext } from 'pixi.js';
+import {
+  BitmapText,
+  Container,
+  Graphics,
+  GraphicsContext,
+  Point
+} from 'pixi.js';
 import { configureTestBed } from '../../../../testing/configure-test-bed';
 import { makeGamepad } from '../../../../testing/factories';
-import { Direction } from '@logigator/core';
+import {
+  Direction,
+  GAMEPAD_CONTROLS,
+  GAMEPAD_GLYPH_COLUMN_WIDTH,
+  gamepadMeta
+} from '@logigator/core';
 import { Component } from '../../component';
+import { monoTextWidth } from '../../../utils/text-fit';
+import { PX } from '../../../utils/grid';
 import { gamepadComponentConfig } from './gamepad.config';
 import { GamepadComponent } from './gamepad.component';
 
@@ -101,6 +114,55 @@ describe('GamepadComponent', () => {
       return fresh;
     });
     pad.destroy({ children: true });
+  });
+
+  it('fits a name to the label column, shrinking it as far as the smallest label size', () => {
+    // The base's smallest label size: 0.25 grid units in pixels.
+    const floor = 0.25 / PX;
+    const fullSize = (pad: GamepadComponent) =>
+      flatten(pad).find((node) => node instanceof BitmapText)!.style.fontSize;
+    const defaultSize = fullSize(makeGamepad());
+
+    for (let length = 1; length <= 8; length++) {
+      const names = Object.fromEntries(
+        GAMEPAD_CONTROLS.map((control) => [control, 'x'.repeat(length)])
+      );
+      const values = { face: 4, shoulders: 2, menu: 2, names };
+      const pad = makeGamepad(values);
+      const width = gamepadMeta.body(values).width;
+
+      for (const direction of [Direction.E, Direction.W]) {
+        pad.direction = direction;
+        const labels = flatten(pad).filter(
+          (node): node is BitmapText => node instanceof BitmapText
+        );
+        expect(labels).toHaveLength(GAMEPAD_CONTROLS.length);
+        for (const label of labels) {
+          // The label's x extent in the unrotated body frame, where the glyph
+          // column spans x 0..3 and the label column the rest. Canvas text is
+          // monospaced, so its width is arithmetic rather than a measurement.
+          const size = label.style.fontSize;
+          const w = monoTextWidth(label.text, size);
+          const xs = [
+            pad.toLocal(new Point(-label.anchor.x * w, 0), label).x,
+            pad.toLocal(new Point((1 - label.anchor.x) * w, 0), label).x
+          ];
+          const inColumn =
+            Math.min(...xs) >= GAMEPAD_GLYPH_COLUMN_WIDTH &&
+            Math.max(...xs) <= width;
+
+          if (length <= 3) {
+            expect(size).toBe(defaultSize);
+            expect(inColumn).toBe(true);
+          } else {
+            // Shrunk to the column, or as small as a label gets.
+            expect(size).toBeLessThan(defaultSize);
+            expect(inColumn || size === floor).toBe(true);
+          }
+        }
+      }
+      pad.destroy({ children: true });
+    }
   });
 
   it('offers names for exactly the controls its own options switch on, on every clone', () => {
