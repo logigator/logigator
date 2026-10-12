@@ -88,11 +88,14 @@ option, eliding the back edge at runtime — no cycle, no `forwardRef`.
 | `NameMapComponentOption`           | button opening the owner's names editor in a dynamic dialog          |
 
 The three dialog-opening kinds share one row, `DialogOptionButtonComponent`
-(`component-options/dialog-option-button/`): a small secondary button named
-after the option at the row's end, with an optional icon (the pencil for the
-two editors) and an optional muted summary of the value at the row's start.
-The renderer keeps its dialog and hands the row the translated summary, if
-any: the memory row reads _12 of 256 words set_ (`nonZeroWords()` out of the
+(`component-options/dialog-option-button/`): a full-width small secondary
+button with an optional icon (the pencil for the two editors), the option's
+label at its start and an optional summary of the value at its end. The label
+is the button's accessible name and the summary its description
+(`aria-describedby`); a summary too long for the panel is truncated, the label
+never. The summary keeps the button's own text colour at normal weight, since
+a lighter surface step falls below 4.5:1 on the light fill. The renderer keeps
+its dialog and hands the row the translated summary, if any: the memory row reads _12 of 256 words set_ (`nonZeroWords()` out of the
 attached word count, recounted when the value or a dimension changes) or
 _Empty_, the names row _3 named_ over the keys it lists, or nothing when none
 is named. The textarea row has none.
