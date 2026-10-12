@@ -392,7 +392,10 @@ export interface InspectionInfo {
   componentType: number;
   /** Inspection kind — `rom` for the data inspector, `watch` for a sub-circuit. */
   kind: string;
-  /** Flat title (the watch's breadcrumb trail joined). */
+  /**
+   * Flat title, as the window reads it: a watch's breadcrumb trail joined,
+   * and for a view opened from a watch, that watch's levels ahead of its own.
+   */
   title: string;
   /** Watches: one label per open level, the visible one last. */
   trail?: string[];

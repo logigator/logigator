@@ -108,6 +108,8 @@ describe('GamepadHardwareService', () => {
   ): ReturnType<typeof playedPad> {
     const result = playedPad(options);
     components.push(result.pad);
+    // An open inspection is a target until it closes.
+    disposers.push(() => result.inspection.destroy());
     return result;
   }
 
@@ -147,7 +149,6 @@ describe('GamepadHardwareService', () => {
     const controller = fakePad(0);
     pads[0] = controller;
     const { inspection, calls } = played();
-    register(inspection);
 
     setButton(controller, 12, true);
     frames.fire();
@@ -189,8 +190,7 @@ describe('GamepadHardwareService', () => {
   it('plays nothing on a control the pad does not have', () => {
     const controller = fakePad(0);
     pads[0] = controller;
-    const { inspection, calls } = played({ shoulders: 0 });
-    register(inspection);
+    const { calls } = played({ shoulders: 0 });
 
     setButton(controller, 4, true);
     controller.buttons[7] = { pressed: true, value: 1 };
@@ -204,7 +204,6 @@ describe('GamepadHardwareService', () => {
     const controller = fakePad(0);
     pads[0] = controller;
     const { inspection, calls } = played();
-    register(inspection);
     setButton(controller, 1, true);
     frames.fire();
 
@@ -257,8 +256,6 @@ describe('GamepadHardwareService', () => {
     pads[0] = controller;
     const one = played();
     const two = played();
-    register(one.inspection);
-    register(two.inspection);
     expect(service.assignmentOf(one.inspection)()).toBe(0);
     expect(service.assignmentOf(two.inspection)()).toBeNull();
 
@@ -295,8 +292,7 @@ describe('GamepadHardwareService', () => {
   it('stops polling and releases when the simulation stops being ready, and resumes after', () => {
     const controller = fakePad(0);
     pads[0] = controller;
-    const { inspection, calls } = played();
-    register(inspection);
+    const { calls } = played();
     setButton(controller, 1, true);
     frames.fire();
 
@@ -316,8 +312,7 @@ describe('GamepadHardwareService', () => {
   it('releases and stops polling when the page is hidden', () => {
     const controller = fakePad(0);
     pads[0] = controller;
-    const { inspection, calls } = played();
-    register(inspection);
+    const { calls } = played();
     setButton(controller, 9, true);
     frames.fire();
 
@@ -333,7 +328,6 @@ describe('GamepadHardwareService', () => {
     const controller = fakePad(0);
     pads[0] = controller;
     const { inspection, calls } = played();
-    register(inspection);
     setButton(controller, 0, true);
     frames.fire();
 
@@ -350,12 +344,13 @@ describe('GamepadHardwareService', () => {
     const controller = fakePad(0);
     pads[0] = controller;
     const closed = played();
-    const dispose = service.register(closed.inspection);
+    expect(service.assignmentOf(closed.inspection)()).toBe(0);
     setButton(controller, 1, true);
     frames.fire();
 
-    dispose();
+    closed.inspection.destroy();
     expect(closed.calls).toEqual(['press a', 'release a']);
+    expect(service.assignmentOf(closed.inspection)()).toBeNull();
 
     const next = new RecordingTarget();
     register(next);

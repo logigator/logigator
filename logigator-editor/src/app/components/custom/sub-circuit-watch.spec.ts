@@ -2,7 +2,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import { Point } from 'pixi.js';
 import { configureTestBed } from '../../../testing/configure-test-bed';
-import { makeButton, makeSwitch } from '../../../testing/factories';
+import {
+  makeButton,
+  makeGamepad,
+  makeSwitch
+} from '../../../testing/factories';
 import {
   FakeSimulationWorker,
   ManualFrameScheduler
@@ -11,6 +15,8 @@ import { Component } from '../component';
 import { ComponentInspection } from '../component-inspection';
 import { ComponentProviderService } from '../component-provider.service';
 import { ButtonComponent } from '../component-types/button/button.component';
+import { GamepadComponent } from '../component-types/gamepad/gamepad.component';
+import { GamepadInspection } from '../component-types/gamepad/gamepad-inspection';
 import { SwitchComponent } from '../component-types/switch/switch.component';
 import { outputComponentConfig } from '../component-types/output/output.config';
 import { Project } from '../../project/project';
@@ -23,7 +29,9 @@ import {
   SIMULATION_WORKER_FACTORY
 } from '../../simulation/worker/simulation-worker.service';
 import { Wire } from '../../wires/wire';
+import { WindowService } from '@logigator/ui';
 import { WireDirection } from '@logigator/core';
+import { OpenInspection } from '../../inspection/inspection-presenter';
 import { CustomComponentRegistry } from './custom-component-registry.service';
 import { CustomComponent } from './custom-component';
 import { SubCircuitWatch } from './sub-circuit-watch';
@@ -262,7 +270,8 @@ describe('SubCircuitWatch', () => {
       watch.activate(buttonCopy);
 
       expect(openFor).toHaveBeenCalledWith(buttonCopy, {
-        input: expect.anything()
+        input: expect.anything(),
+        place: ['Outer', 'SwitchBox']
       });
       expect(levels()).toEqual([]);
 
@@ -281,6 +290,132 @@ describe('SubCircuitWatch', () => {
 
       expect(watch.setInput(buttonCopy, false)).toBe(true);
       expect(levels()).toEqual([true, false]);
+    });
+  });
+
+  describe('an inner gamepad', () => {
+    let inspections: InspectionService;
+    let watchEntry: OpenInspection;
+    let watch: SubCircuitWatch;
+    let padCopy: GamepadComponent;
+    /** The engine unit of the copy's slot 0. */
+    let base: number;
+    /** The gamepad's window, opened by a tap on the copy. */
+    let played: GamepadInspection;
+
+    beforeEach(async () => {
+      const instance = await placeNestedFixture(() => makeGamepad());
+      inspections = TestBed.inject(InspectionService);
+      inspections.openFor(instance);
+      watchEntry = inspections.open()[0];
+      watch = watchEntry.inspection as SubCircuitWatch;
+      watch.activate(watch.activeLevel().session.components[0]);
+      padCopy = watch.activeLevel().session.components[0] as GamepadComponent;
+      expect(padCopy).toBeInstanceOf(GamepadComponent);
+      base = watch.activeLevel().session.info.unitIndexFor(0)!;
+
+      watch.activate(padCopy);
+      played = inspections.open().at(-1)!.inspection as GamepadInspection;
+      expect(played).toBeInstanceOf(GamepadInspection);
+    });
+
+    afterEach(() => inspections.closeAll());
+
+    /** Cont events sent to the unit of one of the copy's controls. */
+    const levelsOf = (control: string) =>
+      fakeWorker
+        .postedOfKind('triggerInput')
+        .filter(
+          (msg) =>
+            msg.componentIndex ===
+              base + padCopy.slotIds.indexOf(control as never) &&
+            msg.event === 0
+        )
+        .map((msg) => msg.state[0]);
+
+    /** Stops the simulation and waits for the reset to land. */
+    async function stop(): Promise<void> {
+      simulation.stop();
+      await new Promise((resolve) => setTimeout(resolve));
+      expect(fakeWorker.postedOfKind('stop')).toHaveLength(1);
+    }
+
+    const anyActive = () =>
+      padCopy.slotIds.some((_, slot) => padCopy.isActive(slot));
+
+    it('plays the inner unit from its window, lighting the copy through its level, under the breadcrumb', () => {
+      const repaint = vi.spyOn(
+        watch.activeLevel().session.project,
+        'triggerTicker'
+      );
+
+      played.keyDown('a', 'KeyX');
+
+      expect(levelsOf('a')).toEqual([true]);
+      expect(padCopy.isActive(padCopy.slotIds.indexOf('a'))).toBe(true);
+      expect(repaint).toHaveBeenCalledWith('single');
+      expect([...played.pressed()]).toEqual(['a']);
+
+      const window = TestBed.inject(WindowService)
+        .windows()
+        .find(
+          (candidate) => candidate.config.inputValues?.['inspection'] === played
+        )!;
+      const title = window.config.title as () => string;
+      expect(title()).toBe(`Outer › SwitchBox › ${played.title()}`);
+    });
+
+    it('closes with the level it lives on, letting go of its slot once', async () => {
+      played.keyDown('a', 'KeyX');
+      played.pointerDown('a', 1);
+
+      watch.navigateTo(0);
+
+      expect(levelsOf('a')).toEqual([true, false]);
+      expect(inspections.open()).toEqual([watchEntry]);
+
+      // Nothing is left tracked: a stop has no slot of the copy to reset.
+      await stop();
+      expect(levelsOf('a')).toEqual([true, false]);
+    });
+
+    it('sends one release per held slot when the watch closes under it', () => {
+      played.keyDown('a', 'KeyX');
+      played.pointerDown('a', 1);
+      played.pointerDown('up', 2);
+
+      inspections.close(watchEntry);
+
+      expect(levelsOf('a')).toEqual([true, false]);
+      expect(levelsOf('up')).toEqual([true, false]);
+      expect(inspections.open()).toEqual([]);
+      expect(anyActive()).toBe(false);
+    });
+
+    it('is set low against the rebuilt engine by a stop, and plays again once let go', async () => {
+      played.keyDown('a', 'KeyX');
+
+      await stop();
+
+      const posted = fakeWorker.posted;
+      const reset = posted.findIndex((msg) => msg.kind === 'stop');
+      const low = posted.findIndex(
+        (msg) =>
+          msg.kind === 'triggerInput' &&
+          msg.componentIndex === base + padCopy.slotIds.indexOf('a') &&
+          msg.state[0] === false
+      );
+      expect(reset).toBeGreaterThanOrEqual(0);
+      expect(low).toBeGreaterThan(reset);
+      expect(anyActive()).toBe(false);
+      expect(played.pressed().size).toBe(0);
+
+      // The key the stop cut off lets go without a second release.
+      played.keyUp('a', 'KeyX');
+      expect(levelsOf('a')).toEqual([true, false]);
+
+      played.keyDown('a', 'KeyX');
+      expect(levelsOf('a')).toEqual([true, false, true]);
     });
   });
 });

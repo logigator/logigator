@@ -40,8 +40,14 @@ it must live from startup. It subscribes to the active project's
 `inspectRequest$` while the mode is `SIMULATION` (leaving it closes everything),
 opens at most one inspection per component instance — a second tap focuses the
 existing view — and fans `SimulationService.frame$` out to every open
-inspection's `onFrame()`. `openFor(component, { input })` takes the route the
-factory receives, defaulting to the top-level one. A factory that **throws** (a watch can legitimately
+inspection's `onFrame()`. `openFor(component, { input, place })` takes the
+route the factory receives, defaulting to the top-level one, and the **place**
+of a watch's copy: the names of the watch levels down to the one holding it.
+The entry keeps the place, and `entryTitle` / `entryTitleParts`
+(`inspection-presenter.ts`) put it ahead of the inspection's own title, so a
+view opened from a watch reads _Outer › Inner › ROM_ in its window's title
+bar, the sheet's header and automation's `title`; a sheet tab keeps the short
+title. A factory that **throws** (a watch can legitimately
 fail to open when the definition no longer matches the compiled board) surfaces
 as an error toast instead of crashing the tap.
 
@@ -64,7 +70,11 @@ changes; watches keep their window entry, re-rendered by the other outlet.
 - **Compact** — `SheetInspectionPresenter` (state) + `InspectionSheetComponent`
   (view): all inspections share one bottom `lg-drawer` with `[modal]="false"`,
   so the running circuit stays visible and interactive. One active view, a tab
-  row when several are open; closing the sheet dismisses all of them.
+  row when several are open; closing the sheet dismisses all of them. The view
+  is keyed by its entry, so a tab switch destroys the shown view and builds
+  the next one, even between two inspections with the same renderer: a view
+  is bound to the inspection it was built for, and `NgComponentOutlet` alone
+  would hand it the other tab's inspection as a new input instead.
 - **Compact fullscreen** — the _same_ window presenter through a second,
   `fullscreen` `lg-window-outlet`. The app template swaps the two outlets under
   `@if (layout.isCompact())`; exactly one may be alive at a time, since two
@@ -97,7 +107,8 @@ circuit**, split between the component layer and `inspection/watch/`:
   stack** of `WatchLevel`s (last one visible, title their joined names) and
   routes clicks on the visible copy through `activate(component)`: a nested
   custom pushes a level; any other component that declares an inspection opens
-  it **on the watch copy**, with an `InputRoute` bound to the level — checked
+  it **on the watch copy**, with an `InputRoute` bound to the level and the
+  breadcrumb as its place — checked
   before anything would trigger it as a user input, so an input played in its
   own inspection is opened rather than pressed — tracked per level and closed
   with it; any other user input operated on the canvas — one slot, no
@@ -209,7 +220,9 @@ every holder through the same path and refuses new ones until
 `setAssigning(false)`, so the window plays nothing while it assigns keys; the
 flag lives on the inspection, so a view rebuilt by a breakpoint flip resumes
 it, and closing the window ends it. The title is the `label` option, or
-the type's name.
+the type's name. The inspection is also the pad's `GamepadHardwareService`
+target from opening to closing (see Physical Controllers), whether a view of
+it is on screen or not.
 
 **`GamepadInspectionComponent`** is the window body: the pad in `play` over a
 footer reading _Keyboard active_ while focus is inside the frame, and _Click
@@ -230,6 +243,31 @@ mode is reached from that footer, so only where it shows. The footer also shows
 on compact whenever a controller is connected, holding only the controller
 select until a keyboard is at hand, since a phone or tablet can pair a
 controller.
+
+**In a watch.** A tap on a gamepad copy opens its window through
+`SubCircuitWatch.activate`, with the level's route and the breadcrumb as its
+place, so the title reads _Outer › Inner › P1_. Its presses hold the inner
+engine units (`holdFor`), light the copy and re-blit the level through the
+level project's ticker. Keys and controllers reach it as they reach a
+top-level pad; only the route differs. Popping its level, navigating the
+breadcrumb above it or closing the watch closes the window first, and its
+`destroy()` sets every held slot low through that route while the copy still
+exists; the session's own teardown then finds nothing high, so each held slot
+gets exactly one `CONT false`. A `stop()` sets the copy's slots low against
+the rebuilt engine like any tracked level slot and leaves the window open:
+its holders stay until they let go, which sends nothing more, and the next
+press plays again.
+
+**On compact** the window is a sheet tab (the default `compactPresentation`).
+Each tab switch builds a fresh view, which registers the drawer panel as its
+keyboard host and focuses itself, while the view going away unregisters and
+releases its keys, so keys reach only the visible pad. A controller stays on
+its pad behind another tab and keeps playing it, since the assignment belongs
+to the inspection, not the view. A breakpoint flip re-homes the view the same
+way: the old view lets go of its pointers and keys, and assign mode and the
+controller, holds included, carry over. The pad's area is `touch-none`, so a
+finger landing between controls is never a scroll of the sheet or a page zoom
+that would cancel the other fingers' holds.
 
 **Assign mode.** _Assign keys_ unregisters the view from
 `GamepadKeyboardService`, which releases the keys the pad held, then calls
@@ -322,10 +360,11 @@ Browsers expose a controller only after one of its buttons is pressed while the
 page has focus, and only in a secure context; where `getGamepads` is missing,
 `available` is `false` and the service does nothing.
 
-**Assignment.** A pad view registers its `GamepadInspection` as a
+**Assignment.** A `GamepadInspection` registers itself as a
 `GamepadPadTarget` (`padDown(control, input)`, `padUp(control, input)`,
-`releasePad()`), with a disposer; a target registered twice, as a breakpoint
-flip can do while the old view goes, stays until both registrations have gone.
+`releasePad()`) when it opens and unregisters when it closes, so a controller
+plays a pad whether or not a view of it is on screen. Registrations are
+counted: a target registered twice stays until both registrations have gone.
 `assign(index, target)`, `unassign(target)` and `assignmentOf(target)` (a
 signal of the index or `null`) are the window's select.
 

@@ -105,7 +105,8 @@ export class SubCircuitWatch extends ComponentInspection {
   /**
    * Routes a click on a component of the active level's fresh copy. A
    * component that declares an inspection opens it, with a route bound to
-   * this level, before anything would trigger it as a user input. A user
+   * this level and the breadcrumb leading its title, before anything would
+   * trigger it as a user input. A user
    * input operated on the canvas gets a tap on its one slot, which a `hold`
    * input ignores; a multi-slot one without an inspection gets nothing.
    */
@@ -121,7 +122,8 @@ export class SubCircuitWatch extends ComponentInspection {
     }
     if (component.config.inspection) {
       getStaticDI(InspectionService).openFor(component, {
-        input: this._routeFor(level, component)
+        input: this._routeFor(level, component),
+        place: this._levels().map((each) => each.name)
       });
       this._spawned.push({ depth: this._levels().length - 1, component });
       return;

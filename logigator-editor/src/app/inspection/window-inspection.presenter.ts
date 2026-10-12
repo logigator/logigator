@@ -5,8 +5,12 @@ import {
   WindowService,
   WindowTitlePart
 } from '@logigator/ui';
-import { ComponentInspection } from '../components/component-inspection';
-import { InspectionPresenter, OpenInspection } from './inspection-presenter';
+import {
+  entryTitle,
+  entryTitleParts,
+  InspectionPresenter,
+  OpenInspection
+} from './inspection-presenter';
 
 /** Default window size for inspections that bring no sizing of their own. */
 const DEFAULT_SIZE = { width: 480, height: 400 };
@@ -23,8 +27,8 @@ export class WindowInspectionPresenter implements InspectionPresenter {
   public show(entry: OpenInspection, dismissed: () => void): void {
     const { inspection } = entry;
     const ref = this.windowService.open(inspection.renderer, {
-      title: inspection.title,
-      titleParts: this._titleParts(inspection),
+      title: entryTitle(entry),
+      titleParts: this._titleParts(entry),
       inputValues: { inspection },
       initialSize: inspection.sizing?.initial ?? DEFAULT_SIZE,
       minSize: inspection.sizing?.min,
@@ -68,9 +72,9 @@ export class WindowInspectionPresenter implements InspectionPresenter {
 
   /** Breadcrumb segments for the title bar (`navigate` → clickable). */
   private _titleParts(
-    inspection: ComponentInspection
+    entry: OpenInspection
   ): Signal<readonly WindowTitlePart[]> | undefined {
-    const parts = inspection.titleParts;
+    const parts = entryTitleParts(entry);
     if (!parts) {
       return undefined;
     }

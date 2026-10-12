@@ -68,9 +68,13 @@ export class InspectionService {
   /**
    * Opens (or focuses) the inspection for an inspectable component. `input`
    * routes the presses played in it; without one they go to the top-level
-   * board, as a press on the canvas does.
+   * board, as a press on the canvas does. `place` names the watch levels a
+   * copy lives in, which lead its title.
    */
-  public openFor(component: Component, context?: { input?: InputRoute }): void {
+  public openFor(
+    component: Component,
+    context?: { input?: InputRoute; place?: readonly string[] }
+  ): void {
     const existing = this._open().find(
       (entry) => entry.component === component
     );
@@ -97,7 +101,11 @@ export class InspectionService {
       );
       return;
     }
-    const entry: OpenInspection = { component, inspection };
+    const entry: OpenInspection = {
+      component,
+      inspection,
+      ...(context?.place?.length ? { place: context.place } : {})
+    };
     this._open.update((entries) => [...entries, entry]);
     this._presenterFor(entry).show(entry, () => this._remove(entry));
     this.analytics.capture(AnalyticsEvent.InspectionOpened, {

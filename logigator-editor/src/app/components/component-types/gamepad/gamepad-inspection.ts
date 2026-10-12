@@ -2,7 +2,10 @@ import { computed, signal, Signal } from '@angular/core';
 import { GamepadControlId, NameMap } from '@logigator/core';
 import { TranslationService } from '../../../translation/translation.service';
 import { getStaticDI } from '../../../utils/get-di';
-import type { GamepadPadTarget } from '../../../inspection/gamepad/gamepad-hardware.service';
+import {
+  GamepadHardwareService,
+  GamepadPadTarget
+} from '../../../inspection/gamepad/gamepad-hardware.service';
 import { ComponentInspection, InputRoute } from '../../component-inspection';
 import type { GamepadComponent } from './gamepad.component';
 import { GamepadInspectionComponent } from './gamepad-inspection.component';
@@ -28,6 +31,11 @@ const PAD_HOLDER = 'pad:';
  * the holders: {@link pressed} re-reads it on every frame and after every
  * route call, so a press that arrived any other way shows too, and a press
  * the simulation dropped does not.
+ *
+ * The inspection is a {@link GamepadHardwareService} target from opening to
+ * closing, whether a view of it is on screen or not: a controller keeps
+ * playing a pad behind another sheet tab, and its assignment outlives a view
+ * rebuilt in another frame.
  */
 export class GamepadInspection
   extends ComponentInspection
@@ -59,6 +67,8 @@ export class GamepadInspection
   public readonly controls: readonly GamepadControlId[];
   public readonly names: NameMap;
 
+  private readonly unregisterPad: () => void;
+
   constructor(
     public readonly component: GamepadComponent,
     private readonly route: InputRoute
@@ -72,6 +82,7 @@ export class GamepadInspection
       () => label || translation.translate('components.def.GAMEPAD.name')
     );
     this.refresh();
+    this.unregisterPad = getStaticDI(GamepadHardwareService).register(this);
   }
 
   /** A bound key went down while the window had focus. */
@@ -130,8 +141,9 @@ export class GamepadInspection
     this.refresh();
   }
 
-  /** Nothing stays held once the window is gone. */
+  /** Nothing stays held, and no controller stays assigned, once it closes. */
   public override destroy(): void {
+    this.unregisterPad();
     this.letGoWhere(() => true);
   }
 

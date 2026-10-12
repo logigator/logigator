@@ -52,10 +52,10 @@ interface ControllerOption {
  * footer and keycap chips show only once a keyboard is known to be at hand:
  * a fine pointer exists, or a key has been pressed since the view opened.
  *
- * A physical controller plays the pad wherever focus is: the view registers
- * the inspection with {@link GamepadHardwareService}, and the footer's
- * controller select, shown once the browser reports a controller, picks which
- * one. Before that, on desktop, the footer hints that a button press connects
+ * A physical controller plays the pad wherever focus is: the inspection is
+ * registered with {@link GamepadHardwareService} for as long as it is open,
+ * and the footer's controller select, shown once the browser reports a
+ * controller, picks which one. Before that, on desktop, the footer hints that a button press connects
  * one. On compact the select shows even with no keyboard at hand, since a
  * phone or tablet can pair a controller.
  *
@@ -86,8 +86,11 @@ interface ControllerOption {
     '(focusout)': 'onFocusOut($event)'
   },
   template: `
+    <!-- No touch on the pad's area is a browser gesture, so a finger
+         landing between controls never scrolls the sheet or zooms the page
+         while others hold controls. -->
     <div
-      class="flex min-h-0 grow items-center justify-center [container-type:size]"
+      class="flex min-h-0 grow touch-none items-center justify-center [container-type:size]"
     >
       <app-gamepad-pad
         [style.width]="padWidth"
@@ -309,8 +312,6 @@ export class GamepadInspectionComponent {
       );
 
       if (!this.inspection().assigning()) this.routeKeys();
-      const unregisterPad = this.hardware.register(this.inspection());
-      destroyRef.onDestroy(unregisterPad);
 
       this.host.focus({ preventScroll: true });
       this.focused.set(frame.contains(document.activeElement));

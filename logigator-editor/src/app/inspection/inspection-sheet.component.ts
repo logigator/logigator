@@ -1,12 +1,17 @@
 import { NgComponentOutlet } from '@angular/common';
 import { Component, computed, inject } from '@angular/core';
 import { LgDrawer } from '@logigator/ui';
+import { entryTitle, OpenInspection } from './inspection-presenter';
 import { SheetInspectionPresenter } from './sheet-inspection.presenter';
 
 /**
  * The compact inspection sheet: a non-modal bottom drawer over the running
  * simulation — no scrim and no focus trap, so the canvas above stays live. One
  * view at a time; a tab row switches between several.
+ *
+ * The view is keyed by its entry, so switching tabs destroys one view and
+ * builds the next, even between two inspections sharing a renderer: a view
+ * is bound to the inspection it was built for, and never handed another.
  */
 @Component({
   selector: 'app-inspection-sheet',
@@ -38,7 +43,7 @@ import { SheetInspectionPresenter } from './sheet-inspection.presenter';
             }
           </div>
         }
-        @if (presenter.active(); as active) {
+        @for (active of shown(); track active) {
           <div class="min-h-0 grow">
             <ng-container
               *ngComponentOutlet="
@@ -55,9 +60,16 @@ import { SheetInspectionPresenter } from './sheet-inspection.presenter';
 export class InspectionSheetComponent {
   protected readonly presenter = inject(SheetInspectionPresenter);
 
-  protected readonly title = computed(
-    () => this.presenter.active()?.inspection.title() ?? ''
-  );
+  /** The active entry, as the one-element list the view is keyed by. */
+  protected readonly shown = computed<readonly OpenInspection[]>(() => {
+    const active = this.presenter.active();
+    return active ? [active] : [];
+  });
+
+  protected readonly title = computed(() => {
+    const active = this.presenter.active();
+    return active ? entryTitle(active)() : '';
+  });
 
   protected onVisibleChange(visible: boolean): void {
     if (!visible) {

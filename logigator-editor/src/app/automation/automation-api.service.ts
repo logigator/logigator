@@ -10,7 +10,7 @@ import { CUSTOM_TYPE_ID_BASE } from '@logigator/core';
 import { CustomComponentRegistry } from '../components/custom/custom-component-registry.service';
 import { SubCircuitWatch } from '../components/custom/sub-circuit-watch';
 import { CustomComponentService } from '../custom-component/custom-component.service';
-import { OpenInspection } from '../inspection/inspection-presenter';
+import { entryTitle, OpenInspection } from '../inspection/inspection-presenter';
 import { InspectionService } from '../inspection/inspection.service';
 import { WindowInspectionPresenter } from '../inspection/window-inspection.presenter';
 import { LoggingService } from '../logging/logging.service';
@@ -1176,7 +1176,7 @@ export class AutomationApiService {
       componentId: entry.component.id,
       componentType: entry.component.config.type,
       kind: inspection.kind,
-      title: inspection.title(),
+      title: entryTitle(entry)(),
       ...(inspection instanceof SubCircuitWatch
         ? { trail: inspection.levels().map((level) => level.name) }
         : {}),

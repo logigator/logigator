@@ -295,8 +295,9 @@ for a component whose config declares no inspection.
 
 `inspect.open(componentId)` opens or focuses one and returns an
 `InspectionInfo`: a session `id` (the handle every other call takes), the
-component, the `kind`, the title, the window `bounds` in viewport CSS px (`null`
-in the compact sheet) and, for a watch, the breadcrumb `trail`. Then `list()`,
+component, the `kind`, the title as the window reads it (for a view opened
+from a watch, that watch's levels lead it), the window `bounds` in viewport CSS
+px (`null` in the compact sheet) and, for a watch, the breadcrumb `trail`. Then `list()`,
 `close(id)`, `closeAll()`, and `setBounds(id, box)`, clamped to the board it
 floats over and returning the box actually taken.
 
