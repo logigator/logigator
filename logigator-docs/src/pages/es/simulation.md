@@ -50,7 +50,7 @@ Arrastrar en cualquier otro punto del tablero desplaza la vista.
 
 ## Jugar con un mando
 
-Un clic en un mando abre una ventana con el mando dibujado, que lleva por título la etiqueta del componente. Un botón que mantienes pulsado ahí pone su salida a 1 hasta que lo sueltas, y se ilumina también en el tablero.
+Un clic en un mando abre una ventana con el mando dibujado. Un botón que mantienes pulsado ahí pone su salida a 1 hasta que lo sueltas, y se ilumina también en el tablero.
 
 ![La ventana de un mando con A y Derecha pulsados, junto al mando en el tablero.](./images/gamepad-window.webp)
 

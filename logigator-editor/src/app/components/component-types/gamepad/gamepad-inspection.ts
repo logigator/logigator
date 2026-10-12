@@ -76,10 +76,9 @@ export class GamepadInspection
     super();
     this.controls = component.slotIds;
     this.names = component.options.names.value;
-    const label = component.options.label.value.trim();
     const translation = getStaticDI(TranslationService);
-    this.title = computed(
-      () => label || translation.translate('components.def.GAMEPAD.name')
+    this.title = computed(() =>
+      translation.translate('components.def.GAMEPAD.name')
     );
     this.refresh();
     this.unregisterPad = getStaticDI(GamepadHardwareService).register(this);

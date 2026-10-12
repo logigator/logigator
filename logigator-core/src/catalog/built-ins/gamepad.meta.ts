@@ -108,7 +108,6 @@ export interface GamepadGroupValues {
 }
 
 interface GamepadValues extends GamepadGroupValues {
-  label: string;
   names: NameMap;
 }
 
@@ -222,13 +221,6 @@ export const gamepadMeta = {
       label: 'components.def.GAMEPAD.options.menu',
       values: setValues(MENU_SETS),
       default: 2
-    },
-    label: {
-      kind: 'text',
-      label: 'components.options.label',
-      maxLength: 8,
-      forbiddenChars: ',',
-      default: ''
     },
     names: {
       kind: 'name-map',

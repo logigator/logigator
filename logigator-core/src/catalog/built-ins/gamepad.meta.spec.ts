@@ -19,7 +19,7 @@ import {
 const listed = (key: 'face' | 'shoulders' | 'menu') =>
   gamepadMeta.options[key].values.map((v) => v.value);
 
-type Values = GamepadGroupValues & { label: string; names: NameMap };
+type Values = GamepadGroupValues & { names: NameMap };
 
 const ALL_COMBINATIONS: Values[] = listed('face').flatMap((face) =>
   listed('shoulders').flatMap((shoulders) =>
@@ -27,14 +27,13 @@ const ALL_COMBINATIONS: Values[] = listed('face').flatMap((face) =>
       face,
       shoulders,
       menu,
-      label: '',
       names: {}
     }))
   )
 );
 
 /** The default NES set: D-pad, A B, Select Start. */
-const NES: Values = { face: 2, shoulders: 0, menu: 2, label: '', names: {} };
+const NES: Values = { face: 2, shoulders: 0, menu: 2, names: {} };
 
 describe('gamepadMeta', () => {
   it('offers 24 distinct control sets', () => {
@@ -205,7 +204,7 @@ describe('gamepad names in a document', () => {
   });
 
   it('writes a pad without the option exactly like one with no names', () => {
-    const withoutNames = { face: 2, shoulders: 0, menu: 2, label: '' };
+    const withoutNames = { face: 2, shoulders: 0, menu: 2 };
     expect(roundTrip(pad([0, 0], withoutNames)).text).toBe(
       roundTrip(pad([0, 0], NES)).text
     );

@@ -50,7 +50,7 @@ Ziehen an jeder anderen Stelle der Arbeitsfläche verschiebt die Ansicht.
 
 ## Ein Gamepad spielen
 
-Ein Klick auf ein Gamepad öffnet ein Fenster mit einem gezeichneten Controller, betitelt mit der Beschriftung des Gamepads. Eine Taste, die du dort gedrückt hältst, setzt ihren Ausgang auf 1, bis du loslässt, und leuchtet auch auf der Arbeitsfläche.
+Ein Klick auf ein Gamepad öffnet ein Fenster mit einem gezeichneten Controller. Eine Taste, die du dort gedrückt hältst, setzt ihren Ausgang auf 1, bis du loslässt, und leuchtet auch auf der Arbeitsfläche.
 
 ![Das Controller-Fenster eines Gamepads mit gedrücktem A und Rechts, neben dem Gamepad auf der Arbeitsfläche.](./images/gamepad-window.webp)
 

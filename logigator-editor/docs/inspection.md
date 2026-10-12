@@ -219,8 +219,7 @@ simulation closes it) leaves nothing held. `setAssigning(true)` lets go of
 every holder through the same path and refuses new ones until
 `setAssigning(false)`, so the window plays nothing while it assigns keys; the
 flag lives on the inspection, so a view rebuilt by a breakpoint flip resumes
-it, and closing the window ends it. The title is the `label` option, or
-the type's name. The inspection is also the pad's `GamepadHardwareService`
+it, and closing the window ends it. The title is the type's name. The inspection is also the pad's `GamepadHardwareService`
 target from opening to closing (see Physical Controllers), whether a view of
 it is on screen or not.
 
@@ -246,7 +245,7 @@ controller.
 
 **In a watch.** A tap on a gamepad copy opens its window through
 `SubCircuitWatch.activate`, with the level's route and the breadcrumb as its
-place, so the title reads _Outer › Inner › P1_. Its presses hold the inner
+place, so the title reads _Outer › Inner › Gamepad_. Its presses hold the inner
 engine units (`holdFor`), light the copy and re-blit the level through the
 level project's ticker. Keys and controllers reach it as they reach a
 top-level pad; only the route differs. Popping its level, navigating the

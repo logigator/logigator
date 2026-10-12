@@ -41,15 +41,15 @@ Every component takes one tick to pass a change on to its output. The tables lis
 
 ### Inputs / Outputs
 
-| Component       | What it does                                                                                                                                                      | Options                                                           |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| Switch          | Toggles between 0 and 1 with each click during a simulation.                                                                                                      |                                                                   |
-| Button          | Outputs 1 for as long as you hold it down.                                                                                                                        |                                                                   |
-| Pulse button    | Outputs a one-tick pulse per click.                                                                                                                               |                                                                   |
-| LED             | Lights up while its input is 1.                                                                                                                                   |                                                                   |
-| Segment Display | Shows the binary number on its inputs, input 0 being the lowest bit.                                                                                              | Inputs 1 to 16, Base decimal, hex or octal                        |
-| LED Matrix      | A square grid of LEDs. On the rising edge of CLK, the data inputs are written into the row the address inputs select. At 16 × 16, each address covers half a row. | Width/Height 4, 8 or 16                                           |
-| Gamepad         | One output per button, 1 while the button is held. The D-pad is always there. During a simulation, clicking it opens a controller to play.                        | Face buttons, Shoulder buttons, Menu buttons, Label, Button names |
+| Component       | What it does                                                                                                                                                      | Options                                                    |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| Switch          | Toggles between 0 and 1 with each click during a simulation.                                                                                                      |                                                            |
+| Button          | Outputs 1 for as long as you hold it down.                                                                                                                        |                                                            |
+| Pulse button    | Outputs a one-tick pulse per click.                                                                                                                               |                                                            |
+| LED             | Lights up while its input is 1.                                                                                                                                   |                                                            |
+| Segment Display | Shows the binary number on its inputs, input 0 being the lowest bit.                                                                                              | Inputs 1 to 16, Base decimal, hex or octal                 |
+| LED Matrix      | A square grid of LEDs. On the rising edge of CLK, the data inputs are written into the row the address inputs select. At 16 × 16, each address covers half a row. | Width/Height 4, 8 or 16                                    |
+| Gamepad         | One output per button, 1 while the button is held. The D-pad is always there. During a simulation, clicking it opens a controller to play.                        | Face buttons, Shoulder buttons, Menu buttons, Button names |
 
 ## The settings card
 
@@ -61,7 +61,7 @@ Changing Inputs, Outputs or a size option changes the number of ports right away
 
 For a ROM, Edit contents opens a hex editor for the stored words. Word Size sets how many bits a word has and Address Size how many address inputs there are, so a ROM with Address Size 4 holds 16 words. The contents are saved with the circuit.
 
-A Gamepad always has the four D-pad directions. Face buttons is 0, A, A B or A B X Y, Shoulder buttons is 0 or L R, and Menu buttons is 0, ST or SL ST, where SL is Select and ST is Start. The defaults, A B and SL ST with no shoulder buttons, give eight outputs; with every group switched on there are twelve. The ports are labelled UP, DN, LT, RT, A, B, X, Y, L, R, SL and ST, in that order. Label, up to 8 characters, is the title of the gamepad's controller window during a simulation.
+A Gamepad always has the four D-pad directions. Face buttons is 0, A, A B or A B X Y, Shoulder buttons is 0 or L R, and Menu buttons is 0, ST or SL ST, where SL is Select and ST is Start. The defaults, A B and SL ST with no shoulder buttons, give eight outputs; with every group switched on there are twelve. The ports are labelled UP, DN, LT, RT, A, B, X, Y, L, R, SL and ST, in that order.
 
 Button names opens a picture of the controller with a field at each button. A name of up to 8 characters replaces the button's port label on the board and is shown beside the button in the controller window, and an empty field keeps the default label. Names of buttons you switch off are kept and come back when you switch them on again.
 

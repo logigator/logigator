@@ -399,7 +399,7 @@ export const SHOTS: Shot[] = [
               type: t,
               pos: [4, 4],
               direction: 0,
-              options: { face: 4, shoulders: 2, menu: 2, label: 'P1' }
+              options: { face: 4, shoulders: 2, menu: 2 }
             }
           ]),
         type

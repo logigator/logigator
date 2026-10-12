@@ -50,7 +50,7 @@ Dragging from anywhere else on the board pans it.
 
 ## Playing a gamepad
 
-Clicking a Gamepad opens a window with a controller drawn in it, titled with the gamepad's Label. A button held there sets its output to 1 until you let go, and lights up on the board too.
+Clicking a Gamepad opens a window with a controller drawn in it. A button held there sets its output to 1 until you let go, and lights up on the board too.
 
 ![A gamepad's controller window with A and right held, beside the gamepad on the board.](./images/gamepad-window.webp)
 

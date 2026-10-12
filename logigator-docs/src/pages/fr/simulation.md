@@ -50,7 +50,7 @@ Un glisser n'importe où ailleurs sur le plan de travail déplace la vue.
 
 ## Jouer avec une manette
 
-Un clic sur une manette ouvre une fenêtre où la manette est dessinée, avec l'étiquette du composant pour titre. Un bouton maintenu enfoncé dans cette fenêtre met sa sortie à 1 jusqu'à ce que vous le relâchiez, et s'allume aussi sur le plan de travail.
+Un clic sur une manette ouvre une fenêtre où la manette est dessinée. Un bouton maintenu enfoncé dans cette fenêtre met sa sortie à 1 jusqu'à ce que vous le relâchiez, et s'allume aussi sur le plan de travail.
 
 ![La fenêtre d'une manette avec A et Droite enfoncés, à côté de la manette sur le plan de travail.](./images/gamepad-window.webp)
 

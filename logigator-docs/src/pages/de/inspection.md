@@ -22,7 +22,7 @@ Eine Beobachtung zeichnet die innere Schaltung der Komponente mit denselben leuc
 
 Ein Klick auf eine benutzerdefinierte Komponente innerhalb einer Beobachtung öffnet deren Schaltung im selben Fenster, und der Titel zeigt den Pfad, etwa Outer › Inner. Klicke auf einen früheren Namen, um wieder hinaufzugehen. Ein ROM in einer Beobachtung öffnet seine eigene Ansicht.
 
-Ein Klick auf ein Gamepad in einer Beobachtung öffnet seinen Controller in einem eigenen Fenster, dessen Titel den Pfad zeigt, etwa Outer › Inner › P1. Es spielt sich wie ein Gamepad auf der Arbeitsfläche (siehe [Simulation](docs:simulation#ein-gamepad-spielen)). Gehst du über seine Ebene hinaus nach oben oder schließt die Beobachtung, schließt sich auch der Controller.
+Ein Klick auf ein Gamepad in einer Beobachtung öffnet seinen Controller in einem eigenen Fenster, dessen Titel den Pfad zeigt, etwa Outer › Inner › Gamepad. Es spielt sich wie ein Gamepad auf der Arbeitsfläche (siehe [Simulation](docs:simulation#ein-gamepad-spielen)). Gehst du über seine Ebene hinaus nach oben oder schließt die Beobachtung, schließt sich auch der Controller.
 
 Meldet die Beobachtung, dass die innere Schaltung nicht zur kompilierten Simulation passt, wurde die Komponente nach dem Start der Simulation geändert. Verlasse die Simulation und starte sie neu.
 

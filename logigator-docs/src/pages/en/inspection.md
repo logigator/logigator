@@ -22,7 +22,7 @@ A watch draws the component's inner circuit with the same lit wires as the board
 
 Clicking a custom component inside a watch opens its circuit in the same window, and the title shows the path, such as Outer › Inner. Click an earlier name to go back up. A ROM inside a watch opens its own viewer.
 
-Clicking a gamepad inside a watch opens its controller in a window of its own, titled with the path, such as Outer › Inner › P1. It plays like a gamepad on the board (see [Simulation](docs:simulation#playing-a-gamepad)). Going back up past its level or closing the watch closes the controller too.
+Clicking a gamepad inside a watch opens its controller in a window of its own, titled with the path, such as Outer › Inner › Gamepad. It plays like a gamepad on the board (see [Simulation](docs:simulation#playing-a-gamepad)). Going back up past its level or closing the watch closes the controller too.
 
 If the watch reports that the inner circuit does not match the compiled simulation, the component was changed after the simulation started. Leave the simulation and start it again.
 
