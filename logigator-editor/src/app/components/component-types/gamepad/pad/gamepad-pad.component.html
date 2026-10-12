@@ -94,7 +94,7 @@
     [class.text-primary-contrast]="down"
     [class.text-text]="!down"
     [style]="entry.glyphStyle"
-    [style.transform]="down ? 'translate(-50%, calc(-50% + 1px))' : null"
+    [style.transform]="down ? 'translate(-50%, calc(-50% + 1px))' : undefined"
     aria-hidden="true"
   >
     @switch (entry.layout.glyph.kind) {
