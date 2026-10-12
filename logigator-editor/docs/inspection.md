@@ -2,9 +2,10 @@
 
 Tapping an inspectable component in `SIMULATION` mode opens a live view of it:
 a floating window over the board on desktop; on compact, the shared non-modal
-bottom sheet, or a fullscreen takeover for canvas-hosting views. Two content
-kinds exist — the ROM's data inspector and the custom component's
-[watch](#the-custom-component-watch).
+bottom sheet, or a fullscreen takeover for canvas-hosting views. Three content
+kinds exist — the ROM's data inspector, the custom component's
+[watch](#the-custom-component-watch) and the [gamepad](#the-gamepad)'s
+controller.
 
 ## The Model: `ComponentInspection`
 
@@ -29,8 +30,8 @@ inspection sends its presses, so the inspection never resolves an engine unit
 itself. Where the component was opened decides the route: on the board it
 emits on the main project's `userInput$` (`emitUserInput(component, phase,
 slot)`), exactly as a press on the canvas does; in a watch it holds the copy's
-slot through that level (`SubCircuitWatch.holdFor`). The ROM and the watch
-ignore it.
+slot through that level (`SubCircuitWatch.holdFor`). The gamepad plays its
+slots through it; the ROM and the watch ignore it.
 
 ## Orchestration: `InspectionService`
 
@@ -137,6 +138,80 @@ slot)` is the absolute path automation drives.
   is fit-and-centred when it first shows; re-blits ride `render$` (engine
   changes), the project's `ticker$` (zoom, theme) and host resizes —
   `Project.pan` emits nothing, so panning renders explicitly.
+
+## The Gamepad
+
+A gamepad has one slot per control and declares an inspection, so a tap on the
+canvas opens its controller rather than pressing anything. Three pieces live in
+`components/component-types/gamepad/`.
+
+**`GamepadPadComponent`** (`pad/`) is the only drawing of the controller in the
+DOM, and holds no simulation state. Inputs: `controls` (port order), `names`
+(a `model`), `mode` (`play`, `names`; `assign` is admitted and draws the play
+layout with nothing pressable), and for `play` the `pressed` set, `keyCaps`,
+`keyboardActive` (chips dim, the body's accent outline drops),
+`keyboardPresent` (chips show even on a touch-only device, where
+`(hover: none)` hides them otherwise) and `enlarged` (hit regions grown past
+the shapes). Outputs: `controlDown` / `controlUp` (`{ control, pointerId }`,
+transitions only) and `save`. One SVG behind draws the fixed silhouette and the
+control shapes; every control, glyph, caption and keycap chip is an HTML
+element over it, placed in percent from **one layout table** in viewBox units
+(`pad/gamepad-pad-layout.ts`, `padLayout(controls)`), which the SVG draws from
+too, so the two cannot drift, and a caption can be an `<input>` without
+`foreignObject`. The silhouette is fixed: absent controls are not drawn, and
+only the face and menu groups rearrange by how many buttons they have. The host
+keeps the viewBox's aspect ratio from its width and is an inline-size
+container, so glyphs and text scale with it. A custom name is a caption beside
+its control, clipped with an ellipsis, in full in `title`; the glyph stays on
+the button, and the `aria-label` reads the custom name, the control's spoken
+name (`components.def.GAMEPAD.controls.*`: Up, Select, … rather than the port
+labels `UP`, `SL`) and the key; the names inputs are labelled by the spoken name
+too, while their placeholders stay the port labels an empty name shows on the
+board. In `play`
+every control is a `<button>` held through pointer capture, one hold per
+pointer id, so fingers hold controls independently; a pointer ends on
+`pointerup`, `pointercancel` or `lostpointercapture`. In `names` the buttons
+are `aria-disabled` and out of the tab order, each caption is an input, and the
+inputs follow port order in the DOM, so Tab walks the D-pad, face, shoulder and
+menu buttons in that order; a focused input widens over its neighbours to fit
+a whole name.
+
+**The D-pad** is one hit region over its four arm buttons. The pointer's offset
+from its centre picks one of **eight 45° sectors**, a diagonal holding both
+neighbours, with a dead zone of 20 % of the radius that holds nothing
+(`pad/dpad-sectors.ts`, pure). `pointermove` re-evaluates and only the
+difference goes out (`heldChanges`), so a thumb rolls from ← over ↖ to ↑,
+pressing ↑ once and releasing ← once.
+
+**`GamepadInspection`** merges every source. Each control has a set of
+**holders**, `key:<code>` and `ptr:<pointerId>`, and is pressed while the set
+is non-empty; only an empty ↔ non-empty transition goes out, as
+`route.press(slot)` / `route.release(slot)`, the slot read from
+`component.slotIds` at the call. Holding a key and clicking the same control,
+then letting go of either, keeps it held. `releaseKeys()` drops only `key:`
+holders, so pointer holds survive the window losing focus. What the window
+draws as pressed is not the holders but the component's own slot state,
+re-read into `pressed` on every frame and after every route call, so a press
+from automation or a second view shows, and one the simulation dropped does
+not. `destroy()` lets go of every holder, so closing the window (leaving
+simulation closes it) leaves nothing held. The title is the `label` option, or
+the type's name.
+
+**`GamepadInspectionComponent`** is the window body: the pad in `play` over a
+footer reading _Keyboard active_ while focus is inside the frame, and _Click
+here to use the keyboard_ otherwise; the footer keeps a marked place for the
+controller select and the key-assignment toggle. The frame is the nearest
+`[role="dialog"]` ancestor (the `lg-window` host on desktop, the drawer panel
+in the sheet), and it is registered with `GamepadKeyboardService` as the
+target's `host`, so a click on the title bar, which focuses the window, hands
+the keyboard over too. The view **focuses itself once rendered**, so keys work
+at once, and on any `pointerdown` it takes the focus when the frame lacks it,
+since some browsers give a clicked button none. Unregistering releases its
+keys; its own teardown also drops the inspection's pointer holders, since a
+breakpoint flip re-renders the view while the inspection lives on. On compact
+the pad fills the sheet's width with enlarged hit regions, and the footer and
+chips show only once a keyboard is known to be at hand: an
+`(any-pointer: fine)` device, or a key pressed since the view opened.
 
 ## Gamepad Keys
 

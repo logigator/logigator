@@ -32,8 +32,15 @@ import { segmentDisplayComponentConfig } from './component-types/segment-display
 import { ledMatrixComponentConfig } from './component-types/led-matrix/led-matrix.config';
 import { gamepadComponentConfig } from './component-types/gamepad/gamepad.config';
 
+/**
+ * Every built-in's config. A function rather than a module-level array: a
+ * config's own imports (its inspection's renderer and the services that one
+ * injects) can lead back here, and a list built while such a config module is
+ * still loading would hold `undefined` for it. Read at construction, every
+ * module has finished loading.
+ */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const BUILT_IN_COMPONENTS: ComponentConfig<any>[] = [
+const builtInComponents = (): ComponentConfig<any>[] => [
   notComponentConfig,
   andComponentConfig,
   orComponentConfig,
@@ -73,7 +80,7 @@ export class ComponentProviderService {
   // runtime-allocated custom configs register alongside built-ins. A signal so
   // the category lists below update on register/unregister.
   private readonly _configs = signal<ReadonlyMap<number, ComponentConfig>>(
-    new Map(BUILT_IN_COMPONENTS.map((config) => [config.type, config]))
+    new Map(builtInComponents().map((config) => [config.type, config]))
   );
 
   private readonly logging = inject(LoggingService);

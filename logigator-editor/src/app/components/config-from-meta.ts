@@ -6,7 +6,7 @@ import {
 } from './component-config.model';
 import { Component } from './component';
 import { ComponentAction } from './component-action';
-import { ComponentInspection } from './component-inspection';
+import { ComponentInspection, InspectionContext } from './component-inspection';
 import { ComponentOption } from './component-option';
 import { TranslationKey } from '../translation/translation-key.model';
 import { NumberComponentOption } from './component-options/number/number.component-option';
@@ -36,7 +36,10 @@ export interface ConfigExtras<
   create(options: TOptions): Component<TOptions>;
   symbolShape?: ComponentSymbolShape;
   actions?: ComponentAction[];
-  inspection?(component: Component): ComponentInspection;
+  inspection?(
+    component: Component,
+    context?: InspectionContext
+  ): ComponentInspection;
 }
 
 /** Instantiates the option class paired with `schema`'s kind. */

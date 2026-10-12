@@ -259,6 +259,36 @@ const fr: TranslationSchema = {
           shoulders: 'Boutons de tranche',
           menu: 'Boutons de menu',
           names: 'Noms des boutons'
+        },
+        controls: {
+          up: 'Haut',
+          down: 'Bas',
+          left: 'Gauche',
+          right: 'Droite',
+          a: 'A',
+          b: 'B',
+          x: 'X',
+          y: 'Y',
+          l: 'L',
+          r: 'R',
+          select: 'Select',
+          start: 'Start'
+        },
+        pad: {
+          control: '{{control}}, touche {{key}}',
+          namedControl: '{{name}}, {{control}}, touche {{key}}',
+          unboundControl: '{{control}}, aucune touche',
+          namedUnboundControl: '{{name}}, {{control}}, aucune touche',
+          nameFor: 'Nom de {{control}}'
+        },
+        window: {
+          keyboardActive: 'Clavier actif',
+          keyboardInactive: 'Cliquez ici pour utiliser le clavier'
+        },
+        names: {
+          hint: "Les noms s'affichent à côté des boutons et sur les ports. Un champ vide garde le nom par défaut.",
+          outsideFont:
+            'Certains de ces caractères ne peuvent pas être dessinés sur la carte : les libellés des ports les omettent.'
         }
       },
       PULSE_BUTTON: {

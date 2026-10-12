@@ -260,6 +260,36 @@ const de: TranslationSchema = {
           shoulders: 'Schultertasten',
           menu: 'Menütasten',
           names: 'Tastennamen'
+        },
+        controls: {
+          up: 'Hoch',
+          down: 'Runter',
+          left: 'Links',
+          right: 'Rechts',
+          a: 'A',
+          b: 'B',
+          x: 'X',
+          y: 'Y',
+          l: 'L',
+          r: 'R',
+          select: 'Select',
+          start: 'Start'
+        },
+        pad: {
+          control: '{{control}}, Taste {{key}}',
+          namedControl: '{{name}}, {{control}}, Taste {{key}}',
+          unboundControl: '{{control}}, keine Taste',
+          namedUnboundControl: '{{name}}, {{control}}, keine Taste',
+          nameFor: 'Name für {{control}}'
+        },
+        window: {
+          keyboardActive: 'Tastatur aktiv',
+          keyboardInactive: 'Hier klicken, um die Tastatur zu nutzen'
+        },
+        names: {
+          hint: 'Namen stehen neben den Tasten und an den Anschlüssen. Ein leeres Feld behält den Standardnamen.',
+          outsideFont:
+            'Einige dieser Zeichen kann das Board nicht darstellen, daher fehlen sie in den Anschlussbeschriftungen.'
         }
       },
       PULSE_BUTTON: {

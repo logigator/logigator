@@ -2,6 +2,7 @@ import { Component, inject, input } from '@angular/core';
 import { NameMap } from '@logigator/core';
 import { DialogService, LgButton } from '@logigator/ui';
 import { DialogId } from '../../../analytics/analytics.mapping';
+import { LayoutService } from '../../../layout/layout.service';
 import { TranslationService } from '../../../translation/translation.service';
 import { TranslateDirective } from '../../../translation/translate.directive';
 import { ComponentOptionInput } from '../../component-option';
@@ -25,6 +26,7 @@ import { NameMapDialogComponent } from './name-map-dialog.component';
 export class NameMapOptionInputComponent implements ComponentOptionInput<NameMap> {
   private readonly dialogService = inject(DialogService);
   private readonly translation = inject(TranslationService);
+  private readonly layout = inject(LayoutService);
 
   public readonly option = input.required<NameMapComponentOption>();
   public readonly commit = input.required<(value: NameMap) => void>();
@@ -48,6 +50,8 @@ export class NameMapOptionInputComponent implements ComponentOptionInput<NameMap
       telemetryId: DialogId.NameMapEditor,
       width: '40rem',
       style: { maxWidth: '100dvw', maxHeight: '100dvh' },
+      // An editor drawing its keys spatially gets the screen's width.
+      fullscreen: this.layout.isCompact,
       data: {
         editor: opt.editor,
         keys: opt.visibleKeys(),

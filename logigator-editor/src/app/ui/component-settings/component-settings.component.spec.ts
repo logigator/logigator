@@ -13,20 +13,8 @@ import { Project } from '../../project/project';
 import { NumberOptionInputComponent } from '../../components/component-options/number/number-option-input.component';
 import { LgSelectButton } from '@logigator/ui';
 import { WorkMode } from '../../work-mode/work-mode.enum';
-import { makeAnd } from '../../../testing/factories';
-import { Component, input, model, output } from '@angular/core';
-import { NameMap } from '@logigator/core';
-import { NameMapComponentOption } from '../../components/component-options/name-map/name-map.component-option';
+import { makeAnd, makeGamepad } from '../../../testing/factories';
 import { NameMapOptionInputComponent } from '../../components/component-options/name-map/name-map-option-input.component';
-import { NameMapEditor } from '../../components/component-options/name-map/name-map-editor';
-
-@Component({ selector: 'app-test-names-editor', template: '' })
-class TestNamesEditor implements NameMapEditor {
-  public readonly keys = input.required<readonly string[]>();
-  public readonly names = model.required<NameMap>();
-  public readonly maxLength = input.required<number>();
-  public readonly save = output<void>();
-}
 
 describe('ComponentSettingsComponent', () => {
   let fixture: ComponentFixture<ComponentSettingsComponent>;
@@ -163,18 +151,9 @@ describe('ComponentSettingsComponent', () => {
     const metadataStore = TestBed.inject(ProjectMetadataStore);
 
     const project = new Project();
-    const and = makeAnd();
-    and.position.set(0, 0);
-    // No built-in the editor places carries a name map yet, so one rides on
-    // an AND gate; the panel and the action only see an option under a key.
-    const names = new NameMapComponentOption(
-      'components.def.GAMEPAD.options.names',
-      ['a', 'b'],
-      { a: 'Jump', b: 'Fire' },
-      { maxLength: 8 }
-    ).attachEditor(TestNamesEditor);
-    (and.options as Record<string, unknown>)['names'] = names;
-    project.addComponent(and);
+    const pad = makeGamepad({ names: { a: 'Jump', b: 'Fire' } });
+    const names = pad.options.names;
+    project.addComponent(pad);
     metadataStore.register(project, {
       id: 'p',
       name: 'P',
@@ -183,7 +162,10 @@ describe('ComponentSettingsComponent', () => {
       visibility: 'private'
     });
     projectService.setMainProject(project);
-    project.selectionManager.commit(new Rectangle(0, 0, 3, 3), WorkMode.SELECT);
+    project.selectionManager.commit(
+      new Rectangle(-1, -1, 20, 20),
+      WorkMode.SELECT
+    );
     fixture.detectChanges();
 
     const row = fixture.debugElement.query(

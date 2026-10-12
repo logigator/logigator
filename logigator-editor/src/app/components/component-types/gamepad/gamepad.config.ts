@@ -6,6 +6,7 @@ import { SelectButtonComponentOption } from '../../component-options/select-butt
 import { TextInputComponentOption } from '../../component-options/text-input/text-input.component-option';
 import { NameMapComponentOption } from '../../component-options/name-map/name-map.component-option';
 import { GamepadComponent } from './gamepad.component';
+import { GamepadInspection } from './gamepad-inspection';
 
 export interface GamepadOptions {
   [key: string]: ComponentOption;
@@ -26,6 +27,17 @@ export const gamepadComponentConfig: ComponentConfig<GamepadOptions> =
         'M4.3 7h1.4v1.3H7v1.4H5.7V11H4.3V9.7H3V8.3h1.3z ' +
         'M10.5 10.2a1 1 0 1 0 2 0a1 1 0 1 0-2 0z ' +
         'M12.8 7.8a1 1 0 1 0 2 0a1 1 0 1 0-2 0z'
+    },
+    // The inspection service always hands over the route for where the pad
+    // was opened; a gamepad without one could play nothing.
+    inspection: (component, context) => {
+      if (!context) {
+        throw new Error('A gamepad inspection needs an input route');
+      }
+      return new GamepadInspection(
+        component as GamepadComponent,
+        context.input
+      );
     },
     create: (options) => new GamepadComponent(options)
   });

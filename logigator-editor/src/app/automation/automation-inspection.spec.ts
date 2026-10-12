@@ -33,6 +33,7 @@ import { outputComponentConfig } from '../components/component-types/output/outp
 import { RomComponent } from '../components/component-types/rom/rom.component';
 import { ButtonComponent } from '../components/component-types/button/button.component';
 import { GamepadComponent } from '../components/component-types/gamepad/gamepad.component';
+import { GamepadInspection } from '../components/component-types/gamepad/gamepad-inspection';
 import { Wire } from '../wires/wire';
 import { WireDirection } from '@logigator/core';
 import { AutomationApiService } from './automation-api.service';
@@ -313,27 +314,35 @@ describe('AutomationApiService inspection', () => {
       );
     });
 
-    it('refuses a tap on an inner multi-slot input, which a body cannot address, and drives it by slot', async () => {
+    it('opens an inner gamepad’s own inspection on the copy, played through the level, and drives it by slot', async () => {
       const id = await openNestedWatch(makeGamepad());
       const nested = api
         .inspectGetElements(id)
         .components.find((component) => component.type >= 1000)!;
       api.inspectActivate(id, nested.id);
-      const watch = TestBed.inject(InspectionService).open()[0]
-        .inspection as SubCircuitWatch;
+      const inspections = TestBed.inject(InspectionService);
+      const watch = inspections.open()[0].inspection as SubCircuitWatch;
       const pad = watch
         .activeLevel()
         .session.components.find(
           (component) => component instanceof GamepadComponent
         ) as GamepadComponent;
+      const slotA = pad.slotIds.indexOf('a');
 
-      expect(() => api.inspectActivate(id, pad.id)).toThrow(
-        /has 8 slots.*inspect\.setInput with a slot/
-      );
+      api.inspectActivate(id, pad.id);
+      const opened = inspections.open().at(-1)!;
+      expect(opened.component).toBe(pad);
+      expect(opened.inspection).toBeInstanceOf(GamepadInspection);
       expect(pad.slotIds.some((_, slot) => pad.isActive(slot))).toBe(false);
 
+      const played = opened.inspection as GamepadInspection;
+      played.pointerDown('a', 1);
+      expect(pad.isActive(slotA)).toBe(true);
+      played.pointerUp('a', 1);
+      expect(pad.isActive(slotA)).toBe(false);
+
       await api.inspectSetInput(id, pad.id, true, 'a');
-      expect(pad.isActive(pad.slotIds.indexOf('a'))).toBe(true);
+      expect(pad.isActive(slotA)).toBe(true);
     });
 
     it('refuses a component that is not in the visible level', async () => {

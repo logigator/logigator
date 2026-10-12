@@ -259,6 +259,36 @@ const es: TranslationSchema = {
           shoulders: 'Botones laterales',
           menu: 'Botones de menú',
           names: 'Nombres de botones'
+        },
+        controls: {
+          up: 'Arriba',
+          down: 'Abajo',
+          left: 'Izquierda',
+          right: 'Derecha',
+          a: 'A',
+          b: 'B',
+          x: 'X',
+          y: 'Y',
+          l: 'L',
+          r: 'R',
+          select: 'Select',
+          start: 'Start'
+        },
+        pad: {
+          control: '{{control}}, tecla {{key}}',
+          namedControl: '{{name}}, {{control}}, tecla {{key}}',
+          unboundControl: '{{control}}, sin tecla',
+          namedUnboundControl: '{{name}}, {{control}}, sin tecla',
+          nameFor: 'Nombre de {{control}}'
+        },
+        window: {
+          keyboardActive: 'Teclado activo',
+          keyboardInactive: 'Haz clic aquí para usar el teclado'
+        },
+        names: {
+          hint: 'Los nombres aparecen junto a los botones y en los puertos. Un campo vacío mantiene el nombre predeterminado.',
+          outsideFont:
+            'Algunos de estos caracteres no se pueden dibujar en la placa, así que las etiquetas de los puertos los omiten.'
         }
       },
       PULSE_BUTTON: {

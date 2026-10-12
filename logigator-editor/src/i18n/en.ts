@@ -260,6 +260,36 @@ const en = {
           shoulders: 'Shoulder buttons',
           menu: 'Menu buttons',
           names: 'Button names'
+        },
+        controls: {
+          up: 'Up',
+          down: 'Down',
+          left: 'Left',
+          right: 'Right',
+          a: 'A',
+          b: 'B',
+          x: 'X',
+          y: 'Y',
+          l: 'L',
+          r: 'R',
+          select: 'Select',
+          start: 'Start'
+        },
+        pad: {
+          control: '{{control}}, key {{key}}',
+          namedControl: '{{name}}, {{control}}, key {{key}}',
+          unboundControl: '{{control}}, no key',
+          namedUnboundControl: '{{name}}, {{control}}, no key',
+          nameFor: 'Name for {{control}}'
+        },
+        window: {
+          keyboardActive: 'Keyboard active',
+          keyboardInactive: 'Click here to use the keyboard'
+        },
+        names: {
+          hint: 'Names show beside the buttons and as port labels. An empty field keeps the default name.',
+          outsideFont:
+            "Some of these characters can't be drawn on the board, so its port labels leave them out."
         }
       },
       PULSE_BUTTON: {

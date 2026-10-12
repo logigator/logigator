@@ -126,6 +126,18 @@ the draft `names` two-way, and a `save` output that saves as Save does. Save
 commits the draft once, so a whole rename is one undo step; Cancel commits
 nothing. Both attachments survive `clone`; an owner whose key resolver reads its
 own options attaches it again in its constructor, which every clone path runs.
+On compact the dialog is fullscreen (`DialogConfig.fullscreen` bound to
+`LayoutService.isCompact`), so an editor that draws its keys spatially gets the
+screen's width.
+
+The gamepad is the one owner. `GamepadComponent`'s constructor attaches its
+`slotIds` as the keys and `GamepadNamesEditorComponent` as the editor
+(`component-types/gamepad/`): the controller drawing the simulation window
+plays (`GamepadPadComponent`, see `inspection.md`) in `names` mode, laid out for
+the pad's present controls, every caption an input with the default name as its
+placeholder, Enter saving. A note appears when a name holds a character outside
+the canvas font (`CANVAS_FONT_CHARS`): the window draws it, the port labels drop
+it, so it is pointed out rather than refused.
 
 A renderer's commit is dropped when `option.isCurrent(value)` holds — identity
 for every kind but this one, whose override compares the sanitized maps — so

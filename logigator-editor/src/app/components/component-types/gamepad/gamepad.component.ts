@@ -18,6 +18,7 @@ import {
 } from '../../../rendering/graphics/gamepad.graphics';
 import { strokeScaleFor } from '../../../rendering/graphics/stroke-scale';
 import { gamepadComponentConfig, GamepadOptions } from './gamepad.config';
+import { GamepadNamesEditorComponent } from './gamepad-names-editor.component';
 
 /** One control of a group's glyph, placed relative to the glyph's centre. */
 interface ControlGlyph {
@@ -132,7 +133,9 @@ export class GamepadComponent
 
     // Which controls the pad has is the pad's knowledge; doing it here rather
     // than in the config keeps the link alive across every clone path.
-    this.options.names.attachKeys(() => this.slotIds);
+    this.options.names
+      .attachKeys(() => this.slotIds)
+      .attachEditor(GamepadNamesEditorComponent);
   }
 
   public get inputSlots(): number {

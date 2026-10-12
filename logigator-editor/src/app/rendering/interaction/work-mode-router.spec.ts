@@ -21,6 +21,7 @@ import {
   makeRom,
   makeWire
 } from '../../../testing/factories';
+import { FakeUserInput } from '../../../testing/fake-user-input';
 import { Direction, WireDirection } from '@logigator/core';
 import { Component, PortSide } from '../../components/component';
 import { ComponentConfig } from '../../components/component-config.model';
@@ -153,6 +154,24 @@ describe('WorkModeRouter in SIMULATION mode', () => {
   it('operates no slot of a multi-slot input on the canvas, by press or by tap', () => {
     // A hold input with several slots and no inspection: a press could only
     // name slot 0, so it neither holds nor taps.
+    const pad = new FakeUserInput(4);
+    pad.position.set(2, 2);
+    project.addComponent(pad);
+    const inspections: Component[] = [];
+    project.inspectRequest$.subscribe((component) =>
+      inspections.push(component)
+    );
+    router.setMode(WorkMode.SIMULATION);
+
+    router.down(makeInput(2.5, 3));
+    expect(emissions).toEqual([]);
+    router.up();
+
+    expect(emissions).toEqual([]);
+    expect(inspections).toEqual([]);
+  });
+
+  it('opens a multi-slot input that declares an inspection rather than pressing it', () => {
     const pad = makeGamepad({}, 2, 2);
     project.addComponent(pad);
     const inspections: Component[] = [];
@@ -162,11 +181,10 @@ describe('WorkModeRouter in SIMULATION mode', () => {
     router.setMode(WorkMode.SIMULATION);
 
     router.down(makeInput(3, 3));
-    expect(emissions).toEqual([]);
     router.up();
 
     expect(emissions).toEqual([]);
-    expect(inspections).toEqual([]);
+    expect(inspections).toEqual([pad]);
   });
 
   it('pans on a one-finger drag instead of activating a component', () => {
