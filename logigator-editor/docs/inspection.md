@@ -147,13 +147,14 @@ canvas opens its controller rather than pressing anything. Three pieces live in
 
 **`GamepadPadComponent`** (`pad/`) is the only drawing of the controller in the
 DOM, and holds no simulation state. Inputs: `controls` (port order), `names`
-(a `model`), `mode` (`play`, `names`; `assign` is admitted and draws the play
-layout with nothing pressable), and for `play` the `pressed` set, `keyCaps`,
+(a `model`), `mode` (`play`, `assign`, `names`), and for `play` the `pressed`
+set, `keyCaps`,
 `keyboardActive` (chips dim, the body's accent outline drops),
 `keyboardPresent` (chips show even on a touch-only device, where
 `(hover: none)` hides them otherwise) and `enlarged` (hit regions grown past
-the shapes). Outputs: `controlDown` / `controlUp` (`{ control, pointerId }`,
-transitions only) and `save`. One SVG behind draws the fixed silhouette and the
+the shapes); for `assign`, `capturing` and `flashed` (one control each, or
+`null`). Outputs: `controlDown` / `controlUp` (`{ control, pointerId }`,
+transitions only), `controlSelect` and `save`. One SVG behind draws the fixed silhouette and the
 control shapes; every control, glyph, caption and keycap chip is an HTML
 element over it, placed in percent from **one layout table** in viewBox units
 (`pad/gamepad-pad-layout.ts`, `padLayout(controls)`), which the SVG draws from
@@ -174,7 +175,13 @@ pointer id, so fingers hold controls independently; a pointer ends on
 are `aria-disabled` and out of the tab order, each caption is an input, and the
 inputs follow port order in the DOM, so Tab walks the D-pad, face, shoulder and
 menu buttons in that order; a focused input widens over its neighbours to fit
-a whole name.
+a whole name. In `assign` the silhouette and glyphs dim, the chips give way to
+each present control's key drawn large on its face (`—` when unbound), and the
+buttons stay focusable but press nothing: a click, or Enter or Space on a
+focused one, focuses it and emits `controlSelect`. The `capturing` control
+pulses with _Press a key…_ and the `flashed` one is highlighted; both animate
+only under `prefers-reduced-motion: no-preference`, the colours carrying the
+state otherwise.
 
 **The D-pad** is one hit region over its four arm buttons. The pointer's offset
 from its centre picks one of **eight 45° sectors**, a diagonal holding both
@@ -194,13 +201,17 @@ draws as pressed is not the holders but the component's own slot state,
 re-read into `pressed` on every frame and after every route call, so a press
 from automation or a second view shows, and one the simulation dropped does
 not. `destroy()` lets go of every holder, so closing the window (leaving
-simulation closes it) leaves nothing held. The title is the `label` option, or
+simulation closes it) leaves nothing held. `setAssigning(true)` lets go of
+every holder through the same path and refuses new ones until
+`setAssigning(false)`, so the window plays nothing while it assigns keys; the
+flag lives on the inspection, so a view rebuilt by a breakpoint flip resumes
+it, and closing the window ends it. The title is the `label` option, or
 the type's name.
 
 **`GamepadInspectionComponent`** is the window body: the pad in `play` over a
 footer reading _Keyboard active_ while focus is inside the frame, and _Click
-here to use the keyboard_ otherwise; the footer keeps a marked place for the
-controller select and the key-assignment toggle. The frame is the nearest
+here to use the keyboard_ otherwise, and _Assign keys_; the footer keeps a
+marked place for the controller select. The frame is the nearest
 `[role="dialog"]` ancestor (the `lg-window` host on desktop, the drawer panel
 in the sheet), and it is registered with `GamepadKeyboardService` as the
 target's `host`, so a click on the title bar, which focuses the window, hands
@@ -211,7 +222,34 @@ keys; its own teardown also drops the inspection's pointer holders, since a
 breakpoint flip re-renders the view while the inspection lives on. On compact
 the pad fills the sheet's width with enlarged hit regions, and the footer and
 chips show only once a keyboard is known to be at hand: an
-`(any-pointer: fine)` device, or a key pressed since the view opened.
+`(any-pointer: fine)` device, or a key pressed since the view opened. Assign
+mode is reached from that footer, so only where it shows.
+
+**Assign mode.** _Assign keys_ unregisters the view from
+`GamepadKeyboardService`, which releases the keys the pad held, then calls
+`setAssigning(true)`; the footer becomes _Click a control, then press a key_ ·
+_Reset to defaults_ · _Done_, and _Done_ sets it back and registers again, so
+play keys route at once. Unregistering for the whole mode is what lets a
+capture see a key the service would otherwise consume in its capture-phase
+listener. Picking a control starts its **capture**; picking another moves it,
+and picking the same one cancels it. The next keydown is handled on the view's
+own host, so it needs focus inside the content, which picking a control gives
+it, and focus leaving the captured control ends the capture:
+
+- `Tab` passes untouched and moves focus as ever.
+- Anything else is consumed: `preventDefault` + `stopPropagation`, so it
+  reaches neither the window's Escape-to-close on the frame nor
+  `ShortcutService` on `window`. A repeat is consumed and does nothing, so the
+  Enter that started a capture cannot end it by being held.
+- `Escape` cancels the capture, leaving the window open.
+- `Backspace` / `Delete` unbinds the control (`clear`).
+- Any other bindable code is `assign`ed. A swap returns the control that took
+  the old key, which is `flashed` for 600 ms.
+
+Bindings are the service's signal, so every open gamepad redraws at once.
+_Reset to defaults_ calls `reset()` without asking. Each step is spoken by a
+polite `aria-live` region (_Press a key for Up_, _Up: X (swapped with B)_, the
+unbind and the reset), naming controls by their spoken names.
 
 ## Gamepad Keys
 
@@ -224,7 +262,8 @@ one key per control, shared by every gamepad: `bindings` (control →
 `ShortcutService`'s are — a Shift pressed in between changes `key` between
 keydown and keyup, which would leave a control stuck. No two controls share a
 code: `assign` swaps with the control that held it and returns that control.
-Escape and Tab are never bound. The map persists at
+Escape and Tab are never bound; keys are assigned in the window's assign mode
+(see The Gamepad). The map persists at
 `localStorage['logigator.gamepad.keys']` as `{ v: 1, keys }`, resolved **per
 control** on read, so one bad entry costs only that entry, and a `storage`
 event re-reads it, so a rebind in one tab reaches the others. `keyLabel(code)`
@@ -247,7 +286,8 @@ Anything else is consumed (`preventDefault` + `stopImmediatePropagation`), so
 **a bound key shadows its shortcut while a pad has focus** — Enter presses
 Start rather than toggling the simulation; a repeat is consumed without a
 second press. Escape is never bound, so it always reaches the window or the
-board.
+board. A view assigning keys is not registered at all, so its window gets
+every key itself.
 
 The service records which codes it pressed and on which target. A keyup for
 one of them is consumed and released on that target, wherever focus has gone

@@ -279,11 +279,23 @@ const fr: TranslationSchema = {
           namedControl: '{{name}}, {{control}}, touche {{key}}',
           unboundControl: '{{control}}, aucune touche',
           namedUnboundControl: '{{name}}, {{control}}, aucune touche',
-          nameFor: 'Nom de {{control}}'
+          nameFor: 'Nom de {{control}}',
+          pressKey: 'Appuyez sur une touche…'
         },
         window: {
           keyboardActive: 'Clavier actif',
-          keyboardInactive: 'Cliquez ici pour utiliser le clavier'
+          keyboardInactive: 'Cliquez ici pour utiliser le clavier',
+          assignKeys: 'Attribuer les touches'
+        },
+        assign: {
+          hint: 'Cliquez sur une commande, puis appuyez sur une touche',
+          reset: 'Rétablir les valeurs par défaut',
+          done: 'Terminé',
+          prompt: 'Appuyez sur une touche pour {{control}}',
+          assigned: '{{control}} : {{key}}',
+          swapped: '{{control}} : {{key}} (échangée avec {{other}})',
+          cleared: '{{control}} : aucune touche',
+          resetDone: 'Touches rétablies par défaut'
         },
         names: {
           hint: "Les noms s'affichent à côté des boutons et sur les ports. Un champ vide garde le nom par défaut.",

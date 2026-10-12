@@ -280,11 +280,23 @@ const en = {
           namedControl: '{{name}}, {{control}}, key {{key}}',
           unboundControl: '{{control}}, no key',
           namedUnboundControl: '{{name}}, {{control}}, no key',
-          nameFor: 'Name for {{control}}'
+          nameFor: 'Name for {{control}}',
+          pressKey: 'Press a key…'
         },
         window: {
           keyboardActive: 'Keyboard active',
-          keyboardInactive: 'Click here to use the keyboard'
+          keyboardInactive: 'Click here to use the keyboard',
+          assignKeys: 'Assign keys'
+        },
+        assign: {
+          hint: 'Click a control, then press a key',
+          reset: 'Reset to defaults',
+          done: 'Done',
+          prompt: 'Press a key for {{control}}',
+          assigned: '{{control}}: {{key}}',
+          swapped: '{{control}}: {{key}} (swapped with {{other}})',
+          cleared: '{{control}}: no key',
+          resetDone: 'Keys reset to defaults'
         },
         names: {
           hint: 'Names show beside the buttons and as port labels. An empty field keeps the default name.',

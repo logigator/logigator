@@ -279,11 +279,23 @@ const es: TranslationSchema = {
           namedControl: '{{name}}, {{control}}, tecla {{key}}',
           unboundControl: '{{control}}, sin tecla',
           namedUnboundControl: '{{name}}, {{control}}, sin tecla',
-          nameFor: 'Nombre de {{control}}'
+          nameFor: 'Nombre de {{control}}',
+          pressKey: 'Pulsa una tecla…'
         },
         window: {
           keyboardActive: 'Teclado activo',
-          keyboardInactive: 'Haz clic aquí para usar el teclado'
+          keyboardInactive: 'Haz clic aquí para usar el teclado',
+          assignKeys: 'Asignar teclas'
+        },
+        assign: {
+          hint: 'Haz clic en un control y pulsa una tecla',
+          reset: 'Restablecer valores predeterminados',
+          done: 'Listo',
+          prompt: 'Pulsa una tecla para {{control}}',
+          assigned: '{{control}}: {{key}}',
+          swapped: '{{control}}: {{key}} (intercambiada con {{other}})',
+          cleared: '{{control}}: sin tecla',
+          resetDone: 'Teclas restablecidas a los valores predeterminados'
         },
         names: {
           hint: 'Los nombres aparecen junto a los botones y en los puertos. Un campo vacío mantiene el nombre predeterminado.',

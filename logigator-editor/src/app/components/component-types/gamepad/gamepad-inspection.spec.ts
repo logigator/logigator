@@ -1,12 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { ApplicationRef } from '@angular/core';
-import { TestBed } from '@angular/core/testing';
+import { ApplicationRef, signal } from '@angular/core';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { configureTestBed } from '../../../../testing/configure-test-bed';
 import { makeGamepad } from '../../../../testing/factories';
 import {
   GamepadKeyboardService,
   GamepadKeyTarget
 } from '../../../inspection/gamepad/gamepad-keyboard.service';
+import { SimulationService } from '../../../simulation/simulation.service';
+import {
+  GAMEPAD_KEYS_STORAGE_KEY,
+  GamepadBindingsService
+} from '../../../shortcuts/gamepad-bindings.service';
 import { InputRoute } from '../../component-inspection';
 import { GamepadComponent } from './gamepad.component';
 import { GamepadInspection } from './gamepad-inspection';
@@ -182,5 +187,182 @@ describe('GamepadInspectionComponent', () => {
 
     expect(route.calls).toEqual(['release a']);
     expect(view.inspection.pressed().has('b')).toBe(true);
+  });
+});
+
+describe('GamepadInspectionComponent in assign mode', () => {
+  let pad: GamepadComponent;
+  let route: ReturnType<typeof recordingRoute>;
+  let frame: HTMLElement;
+  let fixture: ComponentFixture<GamepadInspectionComponent>;
+  let inspection: GamepadInspection;
+  let bindings: GamepadBindingsService;
+  /** Key events that reached the frame, where the window closes on Escape. */
+  let atFrame: string[];
+  /** Key events that reached `window` in the bubble phase, as shortcuts do. */
+  let atWindow: string[];
+
+  const onFrame = (e: KeyboardEvent): void => {
+    atFrame.push(e.code);
+  };
+  const onWindow = (e: KeyboardEvent): void => {
+    atWindow.push(e.code);
+  };
+
+  /** Dispatches on the focused element, as the browser does. */
+  function press(code: string, init: KeyboardEventInit = {}): KeyboardEvent {
+    const event = new KeyboardEvent('keydown', {
+      code,
+      key: code,
+      bubbles: true,
+      cancelable: true,
+      ...init
+    });
+    (document.activeElement ?? document.body).dispatchEvent(event);
+    return event;
+  }
+
+  function release(code: string): void {
+    (document.activeElement ?? document.body).dispatchEvent(
+      new KeyboardEvent('keyup', { code, key: code, bubbles: true })
+    );
+  }
+
+  function control(id: string): HTMLButtonElement {
+    return (fixture.nativeElement as HTMLElement).querySelector(
+      `button[data-control="${id}"]`
+    )!;
+  }
+
+  function enterAssign(): void {
+    fixture.componentInstance.enterAssign();
+    fixture.detectChanges();
+  }
+
+  /** Clicks a control in assign mode, which starts its capture. */
+  function pick(id: string): void {
+    control(id).click();
+    fixture.detectChanges();
+  }
+
+  beforeEach(() => {
+    localStorage.removeItem(GAMEPAD_KEYS_STORAGE_KEY);
+    configureTestBed(
+      [{ provide: SimulationService, useValue: { isReady: signal(true) } }],
+      [GamepadInspectionComponent]
+    );
+    bindings = TestBed.inject(GamepadBindingsService);
+    pad = makeGamepad({ face: 4, shoulders: 2 });
+    route = recordingRoute(pad);
+    inspection = new GamepadInspection(pad, route);
+
+    frame = document.createElement('div');
+    frame.setAttribute('role', 'dialog');
+    document.body.appendChild(frame);
+    atFrame = [];
+    atWindow = [];
+    frame.addEventListener('keydown', onFrame);
+    window.addEventListener('keydown', onWindow);
+
+    fixture = TestBed.createComponent(GamepadInspectionComponent);
+    frame.appendChild(fixture.nativeElement as HTMLElement);
+    fixture.componentRef.setInput('inspection', inspection);
+    fixture.detectChanges();
+    TestBed.inject(ApplicationRef).tick();
+  });
+
+  afterEach(() => {
+    window.removeEventListener('keydown', onWindow);
+    fixture.destroy();
+    frame.remove();
+    pad.destroy({ children: true });
+    TestBed.resetTestingModule();
+    localStorage.removeItem(GAMEPAD_KEYS_STORAGE_KEY);
+  });
+
+  it('releases every hold through the route on entry, and plays no key while assigning', () => {
+    press('KeyZ');
+    inspection.pointerDown('a', 4);
+    expect(route.calls).toEqual(['press b', 'press a']);
+
+    enterAssign();
+    expect([...route.calls.slice(2)].sort()).toEqual([
+      'release a',
+      'release b'
+    ]);
+    expect(pad.slotIds.some((_, slot) => pad.isActive(slot))).toBe(false);
+
+    route.calls.length = 0;
+    control('x').focus();
+    press('KeyS');
+    release('KeyS');
+    control('y').dispatchEvent(
+      new MouseEvent('pointerdown', { bubbles: true })
+    );
+    expect(route.calls).toEqual([]);
+  });
+
+  it('routes play keys to the pad again once assign mode is left', () => {
+    enterAssign();
+    fixture.componentInstance.leaveAssign();
+    fixture.detectChanges();
+
+    const down = press('KeyX');
+    expect(down.defaultPrevented).toBe(true);
+    expect(route.calls).toEqual(['press a']);
+  });
+
+  it('assigns the next key to the picked control and consumes it', () => {
+    enterAssign();
+    pick('up');
+    const down = press('KeyK');
+
+    expect(down.defaultPrevented).toBe(true);
+    expect(atWindow).toEqual([]);
+    expect(bindings.bindings().up).toBe('KeyK');
+    expect(fixture.componentInstance.capturing()).toBeNull();
+    expect(route.calls).toEqual([]);
+  });
+
+  it('flashes the control a swap moved onto the old key', () => {
+    enterAssign();
+    pick('up');
+    press('KeyX');
+
+    expect(bindings.bindings().up).toBe('KeyX');
+    expect(bindings.bindings().a).toBe('ArrowUp');
+    expect(fixture.componentInstance.flashed()).toBe('a');
+  });
+
+  it('cancels the capture on Escape without the window seeing it', () => {
+    enterAssign();
+    pick('up');
+    const escape = press('Escape');
+
+    expect(atFrame).toEqual([]);
+    expect(escape.defaultPrevented).toBe(true);
+    expect(fixture.componentInstance.capturing()).toBeNull();
+
+    press('KeyK');
+    expect(bindings.bindings().up).toBe('ArrowUp');
+  });
+
+  it('lets Tab through rather than capturing it', () => {
+    enterAssign();
+    pick('up');
+    const tab = press('Tab', { key: 'Tab' });
+
+    expect(tab.defaultPrevented).toBe(false);
+    expect(atFrame).toEqual(['Tab']);
+    expect(bindings.bindings().up).toBe('ArrowUp');
+  });
+
+  it('unbinds the capturing control on Backspace', () => {
+    enterAssign();
+    pick('b');
+    press('Backspace');
+
+    expect(bindings.bindings().b).toBeNull();
+    expect(bindings.controlFor('KeyZ')).toBeNull();
   });
 });

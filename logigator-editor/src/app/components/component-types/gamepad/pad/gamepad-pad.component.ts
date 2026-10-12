@@ -29,9 +29,9 @@ import {
 } from './gamepad-pad-layout';
 
 /**
- * What the controller is drawn for: `play` presses controls, `names` edits
- * each control's name in place of its caption, and `assign` draws the play
- * layout with nothing pressable.
+ * What the controller is drawn for: `play` presses controls, `assign` picks
+ * the control a key is captured for, and `names` edits each control's name in
+ * place of its caption.
  */
 export type GamepadPadMode = 'play' | 'assign' | 'names';
 
@@ -118,6 +118,7 @@ interface PadEntry {
   readonly keyCap: GamepadKeyCap | null;
   readonly buttonStyle: Record<string, string>;
   readonly glyphStyle: Record<string, string>;
+  readonly keyStyle: Record<string, string>;
   readonly captionStyle: Record<string, string>;
   readonly inputStyle: Record<string, string>;
   readonly chipStyle: Record<string, string>;
@@ -150,7 +151,10 @@ const DPAD_CONTROLS: ReadonlySet<GamepadControlId> = new Set([
  * a diagonal holds two directions, and a moving pointer re-evaluates, rolling
  * from one direction to the next without lifting. In `names` the controls are
  * inert and each caption is an input, in port order in the DOM, so Tab walks
- * the controls in port order whatever the layout.
+ * the controls in port order whatever the layout. In `assign` the drawing
+ * dims and each control shows its key large on its face; a click, or Enter or
+ * Space on a focused control, goes out through `controlSelect`, and the
+ * control named by `capturing` pulses with a prompt instead of its key.
  */
 @Component({
   selector: 'app-gamepad-pad',
@@ -161,6 +165,27 @@ const DPAD_CONTROLS: ReadonlySet<GamepadControlId> = new Set([
     @media (hover: none) {
       .chip-touch {
         display: none;
+      }
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .key-capturing {
+        animation: pad-key-pulse 1.2s ease-in-out infinite;
+      }
+      .key-flashed {
+        animation: pad-key-flash 0.6s ease-out;
+      }
+    }
+
+    @keyframes pad-key-pulse {
+      50% {
+        opacity: 0.45;
+      }
+    }
+
+    @keyframes pad-key-flash {
+      from {
+        scale: 1.35;
       }
     }
   `,
@@ -196,11 +221,17 @@ export class GamepadPadComponent {
   public readonly enlarged = input(false);
   /** The longest name an input takes in `names`. */
   public readonly maxLength = input(8);
+  /** The control waiting for a key in `assign`, or `null`. */
+  public readonly capturing = input<GamepadControlId | null>(null);
+  /** The control whose key just moved in `assign`, drawn highlighted. */
+  public readonly flashed = input<GamepadControlId | null>(null);
 
   public readonly controlDown = output<GamepadPadPointer>();
   public readonly controlUp = output<GamepadPadPointer>();
   /** Enter in a name input. */
   public readonly save = output<void>();
+  /** A control was picked in `assign`, to capture its key or stop doing so. */
+  public readonly controlSelect = output<GamepadControlId>();
 
   protected readonly viewBox = `0 0 ${PAD_VIEWBOX.width} ${PAD_VIEWBOX.height}`;
   protected readonly aspectRatio = `${PAD_VIEWBOX.width} / ${PAD_VIEWBOX.height}`;
@@ -213,9 +244,14 @@ export class GamepadPadComponent {
     () => this.playing() && this.keyboardActive()
   );
   protected readonly editingNames = computed(() => this.mode() === 'names');
-  protected readonly showChips = computed(() => this.mode() !== 'names');
+  protected readonly assigning = computed(() => this.mode() === 'assign');
+  protected readonly showChips = computed(() => this.playing());
 
   private readonly layout = computed(() => padLayout(this.controls()));
+
+  protected readonly pressKeyPrompt = computed(() =>
+    this.translation.translate('components.def.GAMEPAD.pad.pressKey')
+  );
 
   protected readonly hasDpad = computed(() =>
     this.controls().some((control) => DPAD_CONTROLS.has(control))
@@ -262,6 +298,7 @@ export class GamepadPadComponent {
           transform: 'translate(-50%, -50%)',
           'font-size': `${(layout.glyphSize / PAD_VIEWBOX.width) * 100}cqw`
         },
+        keyStyle: pointStyle(layout.glyphAt),
         captionStyle: captionStyle(layout.caption),
         inputStyle: anchorStyle(layout.caption),
         chipStyle: pointStyle(layout.chip),
@@ -285,6 +322,24 @@ export class GamepadPadComponent {
 
   protected isPressed(control: GamepadControlId): boolean {
     return this.pressed().has(control);
+  }
+
+  /** Held down in `play`, waiting for a key in `assign`. */
+  protected ariaPressed(control: GamepadControlId): boolean | null {
+    if (this.playing()) return this.isPressed(control);
+    if (this.assigning()) return this.capturing() === control;
+    return null;
+  }
+
+  /**
+   * A click in `assign`, by pointer or by Enter or Space. The control takes
+   * the focus first, where the browser gives a clicked button none, so the
+   * key that follows is typed on it.
+   */
+  protected onControlClick(event: MouseEvent, control: GamepadControlId): void {
+    if (!this.assigning()) return;
+    (event.currentTarget as HTMLElement | null)?.focus({ preventScroll: true });
+    this.controlSelect.emit(control);
   }
 
   protected onControlDown(

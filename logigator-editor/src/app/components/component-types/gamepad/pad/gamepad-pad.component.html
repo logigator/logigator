@@ -1,5 +1,6 @@
 <svg
-  class="pointer-events-none absolute inset-0 size-full overflow-visible"
+  class="pointer-events-none absolute inset-0 size-full overflow-visible transition-opacity"
+  [class.opacity-40]="assigning()"
   [attr.viewBox]="viewBox"
   aria-hidden="true"
 >
@@ -73,13 +74,14 @@
   <button
     type="button"
     class="absolute z-[1] cursor-pointer touch-none outline-primary focus-visible:outline-2 focus-visible:outline-offset-2"
-    [class.pointer-events-none]="!playing()"
+    [class.pointer-events-none]="editingNames()"
     [style]="entry.buttonStyle"
     [attr.data-control]="entry.control"
     [attr.aria-label]="entry.ariaLabel"
-    [attr.aria-pressed]="playing() ? down : null"
-    [attr.aria-disabled]="playing() ? null : 'true'"
+    [attr.aria-pressed]="ariaPressed(entry.control)"
+    [attr.aria-disabled]="editingNames() ? 'true' : null"
     [attr.tabindex]="editingNames() ? -1 : null"
+    (click)="onControlClick($event, entry.control)"
     (pointerdown)="onControlDown($event, entry.control)"
     (pointerup)="onPointerEnd($event)"
     (pointercancel)="onPointerEnd($event)"
@@ -88,6 +90,7 @@
 
   <span
     class="pointer-events-none absolute z-[2] leading-none font-semibold"
+    [class.opacity-40]="assigning()"
     [class.text-primary-contrast]="down"
     [class.text-text]="!down"
     [style]="entry.glyphStyle"
@@ -127,6 +130,39 @@
       aria-hidden="true"
       >{{ entry.name }}</span
     >
+  }
+
+  @if (assigning()) {
+    @let capturingThis = capturing() === entry.control;
+    @let flashedThis = flashed() === entry.control;
+    <!-- The key, large on the control's face; the pulse and the flash
+         animate only where motion is welcome, the colours show either way. -->
+    <span
+      class="pointer-events-none absolute z-[3] flex -translate-x-1/2 -translate-y-1/2 items-center rounded border px-[0.4em] py-[0.15em] font-mono text-[clamp(11px,3.4cqw,20px)] leading-tight font-semibold whitespace-nowrap shadow-sm transition-colors duration-300 motion-reduce:transition-none"
+      [class.key-capturing]="capturingThis"
+      [class.key-flashed]="flashedThis"
+      [class.border-primary]="capturingThis || flashedThis"
+      [class.border-border]="!capturingThis && !flashedThis"
+      [class.bg-primary]="flashedThis && !capturingThis"
+      [class.text-primary-contrast]="flashedThis && !capturingThis"
+      [class.bg-content]="!flashedThis || capturingThis"
+      [class.text-primary]="capturingThis"
+      [class.text-text]="!capturingThis && !flashedThis"
+      [style]="entry.keyStyle"
+      aria-hidden="true"
+    >
+      @if (capturingThis) {
+        <span class="text-[0.6em]">{{ pressKeyPrompt() }}</span>
+      } @else if (entry.keyCap; as cap) {
+        @if (cap.icon) {
+          <i [class]="cap.icon"></i>
+        } @else {
+          {{ cap.label }}
+        }
+      } @else {
+        —
+      }
+    </span>
   }
 
   @if (showChips() && entry.keyCap; as cap) {

@@ -41,6 +41,13 @@ export class GamepadInspection extends ComponentInspection {
   /** The controls whose slot is active, as the board shows them. */
   public readonly pressed = this._pressed.asReadonly();
 
+  private readonly _assigning = signal(false);
+  /**
+   * Whether the window is assigning keys rather than playing. It holds for
+   * the inspection's lifetime, so a view rebuilt in another frame resumes it.
+   */
+  public readonly assigning = this._assigning.asReadonly();
+
   /** The controls at open time; options cannot change during simulation. */
   public readonly controls: readonly GamepadControlId[];
   public readonly names: NameMap;
@@ -87,6 +94,17 @@ export class GamepadInspection extends ComponentInspection {
     this.letGoWhere((holder) => holder.startsWith(POINTER_HOLDER));
   }
 
+  /**
+   * Switches between playing and assigning keys. Assigning lets go of every
+   * holder through the route and takes no new one, so the window plays
+   * nothing until it is back to playing.
+   */
+  public setAssigning(assigning: boolean): void {
+    if (this._assigning() === assigning) return;
+    this._assigning.set(assigning);
+    if (assigning) this.letGoWhere(() => true);
+  }
+
   public override onFrame(): void {
     this.refresh();
   }
@@ -97,7 +115,7 @@ export class GamepadInspection extends ComponentInspection {
   }
 
   private hold(control: GamepadControlId, holder: string): void {
-    if (this.slotOf(control) < 0) return;
+    if (this._assigning() || this.slotOf(control) < 0) return;
     let held = this.holders.get(control);
     if (!held) {
       held = new Set();

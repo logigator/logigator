@@ -280,11 +280,23 @@ const de: TranslationSchema = {
           namedControl: '{{name}}, {{control}}, Taste {{key}}',
           unboundControl: '{{control}}, keine Taste',
           namedUnboundControl: '{{name}}, {{control}}, keine Taste',
-          nameFor: 'Name für {{control}}'
+          nameFor: 'Name für {{control}}',
+          pressKey: 'Taste drücken…'
         },
         window: {
           keyboardActive: 'Tastatur aktiv',
-          keyboardInactive: 'Hier klicken, um die Tastatur zu nutzen'
+          keyboardInactive: 'Hier klicken, um die Tastatur zu nutzen',
+          assignKeys: 'Tasten zuweisen'
+        },
+        assign: {
+          hint: 'Ein Bedienelement anklicken, dann eine Taste drücken',
+          reset: 'Standard wiederherstellen',
+          done: 'Fertig',
+          prompt: 'Taste für {{control}} drücken',
+          assigned: '{{control}}: {{key}}',
+          swapped: '{{control}}: {{key}} (getauscht mit {{other}})',
+          cleared: '{{control}}: keine Taste',
+          resetDone: 'Tasten auf Standard zurückgesetzt'
         },
         names: {
           hint: 'Namen stehen neben den Tasten und an den Anschlüssen. Ein leeres Feld behält den Standardnamen.',
